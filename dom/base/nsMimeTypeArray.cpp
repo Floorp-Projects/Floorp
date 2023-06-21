@@ -80,11 +80,7 @@ void nsMimeTypeArray::GetSupportedNames(nsTArray<nsString>& retval) {
   }
 }
 
-bool nsMimeTypeArray::ForceNoPlugins() {
-  return StaticPrefs::pdfjs_disabled() &&
-         !nsGlobalWindowInner::Cast(mWindow)->ShouldResistFingerprinting(
-             RFPTarget::Unknown);
-}
+bool nsMimeTypeArray::ForceNoPlugins() { return StaticPrefs::pdfjs_disabled(); }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsMimeType, mPluginElement)
 
