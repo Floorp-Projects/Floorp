@@ -1239,6 +1239,49 @@ bool js::temporal::ToTemporalOverflow(JSContext* cx, Handle<JSObject*> options,
 }
 
 /**
+ * ToTemporalDisambiguation ( options )
+ */
+bool js::temporal::ToTemporalDisambiguation(
+    JSContext* cx, Handle<JSObject*> options,
+    TemporalDisambiguation* disambiguation) {
+  // Step 1. (Not applicable)
+
+  // Step 2.
+  Rooted<JSString*> string(cx);
+  if (!GetStringOption(cx, options, cx->names().disambiguation, &string)) {
+    return false;
+  }
+
+  // Caller should fill in the fallback.
+  if (!string) {
+    return true;
+  }
+
+  JSLinearString* linear = string->ensureLinear(cx);
+  if (!linear) {
+    return false;
+  }
+
+  if (StringEqualsLiteral(linear, "compatible")) {
+    *disambiguation = TemporalDisambiguation::Compatible;
+  } else if (StringEqualsLiteral(linear, "earlier")) {
+    *disambiguation = TemporalDisambiguation::Earlier;
+  } else if (StringEqualsLiteral(linear, "later")) {
+    *disambiguation = TemporalDisambiguation::Later;
+  } else if (StringEqualsLiteral(linear, "reject")) {
+    *disambiguation = TemporalDisambiguation::Reject;
+  } else {
+    if (auto chars = QuoteString(cx, linear, '"')) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_INVALID_OPTION_VALUE, "disambiguation",
+                               chars.get());
+    }
+    return false;
+  }
+  return true;
+}
+
+/**
  * ToTimeZoneNameOption ( normalizedOptions )
  */
 bool js::temporal::ToTimeZoneNameOption(JSContext* cx,

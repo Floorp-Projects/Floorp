@@ -282,6 +282,14 @@ enum class TemporalOverflow { Constrain, Reject };
 bool ToTemporalOverflow(JSContext* cx, JS::Handle<JSObject*> options,
                         TemporalOverflow* result);
 
+enum class TemporalDisambiguation { Compatible, Earlier, Later, Reject };
+
+/**
+ * ToTemporalDisambiguation ( options )
+ */
+bool ToTemporalDisambiguation(JSContext* cx, JS::Handle<JSObject*> options,
+                              TemporalDisambiguation* disambiguation);
+
 enum class TimeZoneNameOption { Auto, Never, Critical };
 
 bool ToTimeZoneNameOption(JSContext* cx, JS::Handle<JSObject*> options,
