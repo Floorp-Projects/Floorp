@@ -340,6 +340,46 @@ bool CopyDataPropertiesIgnoreUndefined(JSContext* cx,
                                        JS::Handle<PlainObject*> target,
                                        JS::Handle<JSObject*> source);
 
+enum class TemporalDifference { Since, Until };
+
+inline const char* ToName(TemporalDifference difference) {
+  return difference == TemporalDifference::Since ? "since" : "until";
+}
+
+struct DifferenceSettings final {
+  TemporalUnit smallestUnit = TemporalUnit::Auto;
+  TemporalUnit largestUnit = TemporalUnit::Auto;
+  TemporalRoundingMode roundingMode = TemporalRoundingMode::Trunc;
+  Increment roundingIncrement = Increment{1};
+};
+
+/**
+ * GetDifferenceSettings ( operation, options, unitGroup, disallowedUnits,
+ * fallbackSmallestUnit, smallestLargestDefaultUnit )
+ */
+bool GetDifferenceSettings(JSContext* cx, TemporalDifference operation,
+                           JS::Handle<JSObject*> options,
+                           TemporalUnitGroup unitGroup,
+                           TemporalUnit smallestAllowedUnit,
+                           TemporalUnit fallbackSmallestUnit,
+                           TemporalUnit smallestLargestDefaultUnit,
+                           DifferenceSettings* result);
+
+/**
+ * GetDifferenceSettings ( operation, options, unitGroup, disallowedUnits,
+ * fallbackSmallestUnit, smallestLargestDefaultUnit )
+ */
+inline bool GetDifferenceSettings(JSContext* cx, TemporalDifference operation,
+                                  JS::Handle<JSObject*> options,
+                                  TemporalUnitGroup unitGroup,
+                                  TemporalUnit fallbackSmallestUnit,
+                                  TemporalUnit smallestLargestDefaultUnit,
+                                  DifferenceSettings* result) {
+  return GetDifferenceSettings(cx, operation, options, unitGroup,
+                               TemporalUnit::Nanosecond, fallbackSmallestUnit,
+                               smallestLargestDefaultUnit, result);
+}
+
 } /* namespace js::temporal */
 
 #endif /* builtin_temporal_Temporal_h */

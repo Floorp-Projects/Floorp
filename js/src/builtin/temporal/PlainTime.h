@@ -132,6 +132,11 @@ PlainTimeObject* CreateTemporalTime(JSContext* cx, const PlainTime& time);
 bool ToTemporalTime(JSContext* cx, JS::Handle<JS::Value> item,
                     PlainTime* result);
 
+/**
+ * DifferenceTime ( h1, min1, s1, ms1, mus1, ns1, h2, min2, s2, ms2, mus2, ns2 )
+ */
+TimeDuration DifferenceTime(const PlainTime& time1, const PlainTime& time2);
+
 struct TimeRecord final {
   double hour = 0;
   double minute = 0;

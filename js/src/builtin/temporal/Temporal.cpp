@@ -1616,6 +1616,94 @@ bool js::temporal::CopyDataPropertiesIgnoreUndefined(
   return true;
 }
 
+/**
+ * GetDifferenceSettings ( operation, options, unitGroup, disallowedUnits,
+ * fallbackSmallestUnit, smallestLargestDefaultUnit )
+ */
+bool js::temporal::GetDifferenceSettings(
+    JSContext* cx, TemporalDifference operation, Handle<JSObject*> options,
+    TemporalUnitGroup unitGroup, TemporalUnit smallestAllowedUnit,
+    TemporalUnit fallbackSmallestUnit, TemporalUnit smallestLargestDefaultUnit,
+    DifferenceSettings* result) {
+  // Steps 1-2.
+  auto largestUnit = TemporalUnit::Auto;
+  if (!GetTemporalUnit(cx, options, TemporalUnitKey::LargestUnit, unitGroup,
+                       &largestUnit)) {
+    return false;
+  }
+
+  // Step 3.
+  if (largestUnit > smallestAllowedUnit) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INVALID_UNIT_OPTION,
+                              TemporalUnitToString(largestUnit), "largestUnit");
+    return false;
+  }
+
+  // Step 4.
+  auto roundingIncrement = Increment{1};
+  if (!ToTemporalRoundingIncrement(cx, options, &roundingIncrement)) {
+    return false;
+  }
+
+  // Step 5.
+  auto roundingMode = TemporalRoundingMode::Trunc;
+  if (!ToTemporalRoundingMode(cx, options, &roundingMode)) {
+    return false;
+  }
+
+  // Step 6.
+  if (operation == TemporalDifference::Since) {
+    roundingMode = NegateTemporalRoundingMode(roundingMode);
+  }
+
+  // Step 7.
+  auto smallestUnit = fallbackSmallestUnit;
+  if (!GetTemporalUnit(cx, options, TemporalUnitKey::SmallestUnit, unitGroup,
+                       &smallestUnit)) {
+    return false;
+  }
+
+  // Step 8.
+  if (smallestUnit > smallestAllowedUnit) {
+    JS_ReportErrorNumberASCII(
+        cx, GetErrorMessage, nullptr, JSMSG_TEMPORAL_INVALID_UNIT_OPTION,
+        TemporalUnitToString(smallestUnit), "smallestUnit");
+    return false;
+  }
+
+  // Step 9. (Inlined call to LargerOfTwoTemporalUnits)
+  auto defaultLargestUnit = std::min(smallestLargestDefaultUnit, smallestUnit);
+
+  // Step 10.
+  if (largestUnit == TemporalUnit::Auto) {
+    largestUnit = defaultLargestUnit;
+  }
+
+  // Step 11.
+  if (largestUnit > smallestUnit) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INVALID_UNIT_RANGE);
+    return false;
+  }
+
+  // Steps 12-13.
+  if (smallestUnit > TemporalUnit::Day) {
+    // Step 12.
+    auto maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
+
+    // Step 13.
+    if (!ValidateTemporalRoundingIncrement(cx, roundingIncrement, maximum,
+                                           false)) {
+      return false;
+    }
+  }
+
+  // Step 14.
+  *result = {smallestUnit, largestUnit, roundingMode, roundingIncrement};
+  return true;
+}
+
 static JSObject* CreateTemporalObject(JSContext* cx, JSProtoKey key) {
   RootedObject proto(cx, &cx->global()->getObjectPrototype());
 
