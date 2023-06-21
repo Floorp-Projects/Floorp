@@ -19,11 +19,13 @@
 #include "NamespaceImports.h"
 
 #include "builtin/temporal/Calendar.h"
+#include "builtin/temporal/Duration.h"
 #include "builtin/temporal/PlainDate.h"
 #include "builtin/temporal/Temporal.h"
 #include "builtin/temporal/TemporalFields.h"
 #include "builtin/temporal/TemporalParser.h"
 #include "builtin/temporal/TemporalTypes.h"
+#include "builtin/temporal/TemporalUnit.h"
 #include "builtin/temporal/Wrapped.h"
 #include "ds/IdValuePair.h"
 #include "gc/AllocKind.h"
@@ -387,6 +389,138 @@ static JSString* TemporalYearMonthToString(
 
   // Step 10.
   return result.finishString();
+}
+
+enum class PlainYearMonthDuration { Add, Subtract };
+
+/**
+ * AddDurationToOrSubtractDurationFromPlainYearMonth ( operation, yearMonth,
+ * temporalDurationLike, options )
+ */
+static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
+    JSContext* cx, PlainYearMonthDuration operation, const CallArgs& args) {
+  Rooted<PlainYearMonthObject*> yearMonth(
+      cx, &args.thisv().toObject().as<PlainYearMonthObject>());
+
+  // Step 1.
+  Duration duration;
+  if (!ToTemporalDurationRecord(cx, args.get(0), &duration)) {
+    return false;
+  }
+
+  // Step 2.
+  if (operation == PlainYearMonthDuration::Subtract) {
+    duration = duration.negate();
+  }
+
+  // Step 3.
+  TimeDuration balanceResult;
+  if (!BalanceDuration(cx, duration, TemporalUnit::Day, &balanceResult)) {
+    return false;
+  }
+
+  // Step 4.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(1)) {
+    const char* name =
+        operation == PlainYearMonthDuration::Add ? "add" : "subtract";
+    options = RequireObjectArg(cx, "options", name, args[1]);
+  } else {
+    options = NewPlainObjectWithProto(cx, nullptr);
+  }
+  if (!options) {
+    return false;
+  }
+
+  // Step 5.
+  Rooted<JSObject*> calendar(cx, yearMonth->calendar());
+
+  // Step 6.
+  JS::RootedVector<PropertyKey> fieldNames(cx);
+  if (!CalendarFields(cx, calendar,
+                      {CalendarField::MonthCode, CalendarField::Year},
+                      &fieldNames)) {
+    return false;
+  }
+
+  // Step 7.
+  Rooted<PlainObject*> fields(cx,
+                              PrepareTemporalFields(cx, yearMonth, fieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Step 8.
+  int32_t sign = DurationSign(
+      {duration.years, duration.months, duration.weeks, balanceResult.days});
+
+  // Steps 9-10.
+  Rooted<Value> day(cx);
+  if (sign < 0) {
+    // Step 9.
+    Rooted<Value> yearMonthValue(cx, ObjectValue(*yearMonth));
+    if (!CalendarDaysInMonth(cx, calendar, yearMonthValue, &day)) {
+      return false;
+    }
+  } else {
+    // Step 10.
+    day.setInt32(1);
+  }
+
+  // Step 11.
+  if (!DefineDataProperty(cx, fields, cx->names().day, day)) {
+    return false;
+  }
+
+  // Step 12.
+  Rooted<Wrapped<PlainDateObject*>> date(
+      cx, CalendarDateFromFields(cx, calendar, fields));
+  if (!date) {
+    return false;
+  }
+
+  // Step 13.
+  Rooted<DurationObject*> durationToAdd(
+      cx, CreateTemporalDuration(cx, {duration.years, duration.months,
+                                      duration.weeks, balanceResult.days}));
+  if (!durationToAdd) {
+    return false;
+  }
+
+  // Step 14.
+  Rooted<PlainObject*> optionsCopy(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!optionsCopy) {
+    return false;
+  }
+
+  // Step 15.
+  if (!CopyDataProperties(cx, optionsCopy, options)) {
+    return false;
+  }
+
+  // Step 16.
+  Rooted<Wrapped<PlainDateObject*>> addedDate(
+      cx, CalendarDateAdd(cx, calendar, date, durationToAdd, options));
+  if (!addedDate) {
+    return false;
+  }
+
+  // Step 17.
+  Rooted<PlainObject*> addedDateFields(
+      cx, PrepareTemporalFields(cx, addedDate, fieldNames));
+  if (!addedDateFields) {
+    return false;
+  }
+
+  // Step 18.
+  auto obj =
+      CalendarYearMonthFromFields(cx, calendar, addedDateFields, optionsCopy);
+  if (!obj) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
 }
 
 /**
@@ -783,6 +917,45 @@ static bool PlainYearMonth_with(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.PlainYearMonth.prototype.add ( temporalDurationLike [ , options ] )
+ */
+static bool PlainYearMonth_add(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  return AddDurationToOrSubtractDurationFromPlainYearMonth(
+      cx, PlainYearMonthDuration::Add, args);
+}
+
+/**
+ * Temporal.PlainYearMonth.prototype.add ( temporalDurationLike [ , options ] )
+ */
+static bool PlainYearMonth_add(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_add>(cx, args);
+}
+
+/**
+ * Temporal.PlainYearMonth.prototype.subtract ( temporalDurationLike [ , options
+ * ] )
+ */
+static bool PlainYearMonth_subtract(JSContext* cx, const CallArgs& args) {
+  // Step 3.
+  return AddDurationToOrSubtractDurationFromPlainYearMonth(
+      cx, PlainYearMonthDuration::Subtract, args);
+}
+
+/**
+ * Temporal.PlainYearMonth.prototype.subtract ( temporalDurationLike [ , options
+ * ] )
+ */
+static bool PlainYearMonth_subtract(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsPlainYearMonth, PlainYearMonth_subtract>(cx,
+                                                                         args);
+}
+
+/**
  * Temporal.PlainYearMonth.prototype.equals ( other )
  */
 static bool PlainYearMonth_equals(JSContext* cx, const CallArgs& args) {
@@ -1102,6 +1275,8 @@ static const JSFunctionSpec PlainYearMonth_methods[] = {
 
 static const JSFunctionSpec PlainYearMonth_prototype_methods[] = {
     JS_FN("with", PlainYearMonth_with, 1, 0),
+    JS_FN("add", PlainYearMonth_add, 1, 0),
+    JS_FN("subtract", PlainYearMonth_subtract, 1, 0),
     JS_FN("equals", PlainYearMonth_equals, 1, 0),
     JS_FN("toString", PlainYearMonth_toString, 0, 0),
     JS_FN("toLocaleString", PlainYearMonth_toLocaleString, 0, 0),
