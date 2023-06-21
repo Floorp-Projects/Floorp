@@ -225,6 +225,8 @@ static bool IsAtomsZoneKind(AllocKind kind) {
 }
 #endif
 
+#if defined(DEBUG) || defined(JS_GC_ZEAL) || defined(JS_OOM_BREAKPOINT)
+
 static inline void CheckAllocZone(Zone* zone, AllocKind kind) {
   MOZ_ASSERT_IF(zone->isAtomsZone(),
                 IsAtomsZoneKind(kind) || kind == AllocKind::JITCODE);
@@ -239,7 +241,6 @@ static inline void CheckAllocZone(Zone* zone, AllocKind kind) {
 //  - possibly fails the allocation for OOM testing
 //
 // This is a no-op in release builds.
-#if defined(DEBUG) || defined(JS_GC_ZEAL) || defined(JS_OOM_BREAKPOINT)
 template <AllowGC allowGC>
 bool CellAllocator::PreAllocChecks(JS::RootingContext* rcx, AllocKind kind) {
   auto* cx = JSContext::from(rcx);
@@ -279,6 +280,7 @@ template bool CellAllocator::PreAllocChecks<NoGC>(JS::RootingContext* cx,
                                                   AllocKind kind);
 template bool CellAllocator::PreAllocChecks<CanGC>(JS::RootingContext* cx,
                                                    AllocKind kind);
+
 #endif  // DEBUG || JS_GC_ZEAL || JS_OOM_BREAKPOINT
 
 #ifdef DEBUG
