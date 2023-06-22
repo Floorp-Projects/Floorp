@@ -7,7 +7,13 @@
     <form method="POST" action="file_bug1773192_3.sjs"></form>
     <script>
       history.replaceState({}, "", document.referrer);
-      document.forms[0].submit();
+      setTimeout(() => {
+        // The test relies on this page not going into the BFCache, so that
+        // when we come back to it we load the URL from the replaceState
+        // instead.
+        window.blockBFCache = new RTCPeerConnection();
+        document.forms[0].submit();
+      }, 0);
     </script>
   </body>
 </html>
