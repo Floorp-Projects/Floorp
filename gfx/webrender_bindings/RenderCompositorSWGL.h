@@ -69,7 +69,7 @@ class RenderCompositorSWGL : public RenderCompositor {
   RefPtr<gfx::DataSourceSurface> mSurface;
   uint8_t* mMappedData = nullptr;
   int32_t mMappedStride = 0;
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   // On Wayland we need to request full render if widget size is changed
   // because SW rendering backend reallocates and clears target surface.
   LayoutDeviceIntSize mLastRenderWidgetSize;
