@@ -233,7 +233,11 @@ class InputQueue {
                                  CancelableBlockState* aBlock);
   void MainThreadTimeout(uint64_t aInputBlockId);
   void MaybeLongTapTimeout(uint64_t aInputBlockId);
-  void ProcessQueue();
+
+  // Returns true if there's one more queued event we need to process as a
+  // result of switching the active block back to the original touch block from
+  // the touch block for long-tap.
+  bool ProcessQueue();
   bool CanDiscardBlock(InputBlockState* aBlock);
   void UpdateActiveApzc(const RefPtr<AsyncPanZoomController>& aNewActive);
 
