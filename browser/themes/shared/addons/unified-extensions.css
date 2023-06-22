@@ -166,7 +166,7 @@ unified-extensions-item > .subviewbutton {
 }
 
 .unified-extensions-message-bar {
-  padding-bottom: 2px;
+  margin-bottom: 2px;
 }
 
 /* Stack each child in the message bar. */

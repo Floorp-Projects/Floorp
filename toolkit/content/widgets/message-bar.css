@@ -17,9 +17,6 @@
   --close-icon-size: 24px;
 }
 
-/* MessageBar colors by message type */
-/* Colors from: https://design.firefox.com/photon/components/message-bars.html#type-specific-style */
-
 :host {
   --message-bar-background-color: var(--in-content-box-info-background);
   --message-bar-text-color: var(--in-content-text-color);
@@ -27,44 +24,21 @@
   /* The default values of --in-content-button* are sufficient, even for dark themes */
 }
 
-:host([type=warning]:not([message-bar-type=infobar])) {
-  --message-bar-background-color: var(--yellow-50);
-  --message-bar-text-color: var(--yellow-90);
-
-  --in-content-button-background: var(--yellow-60);
-  --in-content-button-background-hover: var(--yellow-70);
-  --in-content-button-background-active: var(--yellow-80);
-
-  --close-fill-color: var(--message-bar-text-color);
-}
 :host([type=warning]) {
   --message-bar-icon-url: var(--warn-icon-url);
 }
 
 :host([type=success]:not([message-bar-type=infobar])) {
-  --message-bar-background-color: var(--green-50);
-  --message-bar-text-color: var(--green-90);
-
   --message-bar-icon-url: var(--success-icon-url);
-  --in-content-button-background: var(--green-60);
-  --in-content-button-background-hover: var(--green-70);
-  --in-content-button-background-active: var(--green-80);
 }
 
-:host([type=error]:not([message-bar-type=infobar])) {
-  --message-bar-background-color: var(--red-60);
-  --message-bar-text-color: #ffffff;
-
-  --in-content-button-background: var(--red-70);
-  --in-content-button-background-hover: var(--red-80);
-  --in-content-button-background-active: var(--red-90);
-}
 :host([type=error]),
 :host([type=critical]) {
   --message-bar-icon-url: var(--error-icon-url);
 }
 
 :host {
+  border: 1px solid transparent;
   border-radius: 4px;
 }
 
@@ -84,7 +58,7 @@
   background: var(--message-bar-background-color);
   color: var(--message-bar-text-color);
 
-  padding: 4px 8px;
+  padding: 3px 7px;
   position: relative;
 
   border-radius: 4px;
@@ -151,10 +125,68 @@
   flex-shrink: 0;
 }
 
+@media (prefers-contrast) {
+  :host {
+    border-color: CanvasText;
+  }
+
+  .container.infobar::before {
+    background-color: CanvasText;
+  }
+}
+
 @media not (prefers-contrast) {
+  /* MessageBar colors by message type */
+  /* Colors from: https://design.firefox.com/photon/components/message-bars.html#type-specific-style */
+
+  :host([type=warning]:not([message-bar-type=infobar])) {
+    --message-bar-background-color: var(--yellow-50);
+    --message-bar-text-color: var(--yellow-90);
+
+    --in-content-button-background: var(--yellow-60);
+    --in-content-button-background-hover: var(--yellow-70);
+    --in-content-button-background-active: var(--yellow-80);
+
+    --close-fill-color: var(--message-bar-text-color);
+  }
+
+  :host([type=success]:not([message-bar-type=infobar])) {
+    --message-bar-background-color: var(--green-50);
+    --message-bar-text-color: var(--green-90);
+
+    --in-content-button-background: var(--green-60);
+    --in-content-button-background-hover: var(--green-70);
+    --in-content-button-background-active: var(--green-80);
+  }
+
+  :host([type=error]:not([message-bar-type=infobar])) {
+    --message-bar-background-color: var(--red-60);
+    --message-bar-text-color: #ffffff;
+
+    --in-content-button-background: var(--red-70);
+    --in-content-button-background-hover: var(--red-80);
+    --in-content-button-background-active: var(--red-90);
+  }
+
+  :host([type=info]) .icon {
+    color: rgb(0,144,237);
+  }
+
+  :host([type=warning]) .icon {
+    color: rgb(255,164,54);
+  }
+
+  :host([type=critical]) .icon {
+    color: rgb(226,40,80);
+  }
+
   .container.infobar {
     box-shadow: 0 1px 2px rgba(58, 57, 68, 0.1);
     background: var(--in-content-page-background);
+  }
+
+  .container.infobar::before {
+    background-image: linear-gradient(0deg, #9059ff 0%, #ff4aa2 52.08%, #ffbd4f 100%);
   }
 
   .close {
@@ -166,6 +198,18 @@
      * with black on black text. */
     .container.infobar {
       background: rgb(66,65,77);
+    }
+
+    :host([type=info]) .icon {
+      color: rgb(128,235,255);
+    }
+
+    :host([type=warning]) .icon {
+      color: rgb(255,189,79);
+    }
+
+    :host([type=critical]) .icon {
+      color: rgb(255,154,162);
     }
   }
 }
@@ -189,7 +233,6 @@
   display: block;
   width: 2px;
   position: absolute;
-  background-image: linear-gradient(0deg, #9059ff 0%, #ff4aa2 52.08%, #ffbd4f 100%);
   top: 0;
   inset-inline-start: 0;
   height: 100%;
@@ -264,25 +307,4 @@ strong {
 
 :host([type=system]) .icon {
   display: none;
-}
-:host([type=info]) .icon {
-  color: rgb(0,144,237);
-}
-:host([type=warning]) .icon {
-  color: rgb(255,164,54);
-}
-:host([type=critical]) .icon {
-  color: rgb(226,40,80);
-}
-
-@media (prefers-color-scheme: dark) {
-  :host([type=info]) .icon {
-    color: rgb(128,235,255);
-  }
-  :host([type=warning]) .icon {
-    color: rgb(255,189,79);
-  }
-  :host([type=critical]) .icon {
-    color: rgb(255,154,162);
-  }
 }
