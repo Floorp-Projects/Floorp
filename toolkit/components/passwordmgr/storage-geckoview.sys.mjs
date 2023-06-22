@@ -51,7 +51,12 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
    */
   terminate() {}
 
-  async addLoginsAsync(logins, continueOnDuplicates = false) {
+  addLogin(
+    login,
+    preEncrypted = false,
+    plaintextUsername = null,
+    plaintextPassword = null
+  ) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 

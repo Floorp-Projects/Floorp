@@ -214,11 +214,6 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
   info("Capture a new HTTP login which matches a stored HTTPS one.");
   await Services.logins.addLoginAsync(login1HTTPS);
 
-  const storageChangedPromise = TestUtils.topicObserved(
-    "passwordmgr-storage-changed",
-    (_, data) => data == "addLogin"
-  );
-
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function (fieldValues) {
@@ -245,8 +240,6 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
       clickDoorhangerButton(notif, REMEMBER_BUTTON);
     }
   );
-
-  await storageChangedPromise;
 
   let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 2, "Should have both HTTP and HTTPS logins");

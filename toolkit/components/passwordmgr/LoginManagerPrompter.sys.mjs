@@ -388,7 +388,7 @@ export class LoginManagerPrompter {
         .toggleHistoryPopup();
     };
 
-    let persistData = async () => {
+    let persistData = () => {
       let foundLogins = lazy.LoginHelper.searchLoginsWithObject({
         formActionOrigin: login.formActionOrigin,
         origin: login.origin,
@@ -438,7 +438,7 @@ export class LoginManagerPrompter {
         // Create a new login, don't update an original.
         // The original login we have been provided with might have its own
         // metadata, but we don't want it propagated to the newly created one.
-        await Services.logins.addLoginAsync(
+        Services.logins.addLogin(
           new LoginInfo(
             login.origin,
             login.formActionOrigin,
@@ -479,16 +479,11 @@ export class LoginManagerPrompter {
       }
     };
 
-    const supportedHistogramNames = {
-      PWMGR_PROMPT_REMEMBER_ACTION: true,
-      PWMGR_PROMPT_UPDATE_ACTION: true,
-    };
-
     // The main action is the "Save" or "Update" button.
     let mainAction = {
       label: this._getLocalizedString(initialMsgNames.buttonLabel),
       accessKey: this._getLocalizedString(initialMsgNames.buttonAccessKey),
-      callback: async () => {
+      callback: () => {
         readDataFromUI();
         if (
           type == "password-save" &&
@@ -506,7 +501,11 @@ export class LoginManagerPrompter {
           }
         }
         histogram.add(PROMPT_ADD_OR_UPDATE);
-        if (!supportedHistogramNames[histogramName]) {
+        if (histogramName == "PWMGR_PROMPT_REMEMBER_ACTION") {
+          Services.obs.notifyObservers(browser, "LoginStats:NewSavedPassword");
+        } else if (histogramName == "PWMGR_PROMPT_UPDATE_ACTION") {
+          Services.obs.notifyObservers(browser, "LoginStats:LoginUpdateSaved");
+        } else {
           throw new Error("Unknown histogram");
         }
 
@@ -521,12 +520,6 @@ export class LoginManagerPrompter {
           );
         }
 
-        // The popup does not wait until this promise is resolved, but is
-        // closed immediately when the function is returned. Therefore, we set
-        // the focus before awaiting the asynchronous operation.
-        browser.focus();
-        await persistData();
-
         Services.telemetry.recordEvent(
           "pwmgr",
           "doorhanger_submitted",
@@ -535,17 +528,13 @@ export class LoginManagerPrompter {
           wasModifiedEvent
         );
 
-        if (histogramName == "PWMGR_PROMPT_REMEMBER_ACTION") {
-          Services.obs.notifyObservers(browser, "LoginStats:NewSavedPassword");
-        } else if (histogramName == "PWMGR_PROMPT_UPDATE_ACTION") {
-          Services.obs.notifyObservers(browser, "LoginStats:LoginUpdateSaved");
-        }
-
+        persistData();
         Services.obs.notifyObservers(
           null,
           "weave:telemetry:histogram",
           histogramName
         );
+        browser.focus();
       },
     };
 
