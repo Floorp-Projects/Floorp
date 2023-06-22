@@ -73,6 +73,7 @@ ExtensionManager = {
     );
     Services.cpmm.addMessageListener("Extension:UpdateContentScripts", this);
     Services.cpmm.addMessageListener("Extension:UpdatePermissions", this);
+    Services.cpmm.addMessageListener("Extension:UpdateIgnoreQuarantine", this);
 
     this.updateStubExtensions();
 
@@ -350,6 +351,14 @@ ExtensionManager = {
           if (data.permissions.length && extensions.has(policy)) {
             // Notify ChildApiManager of permission changes.
             extensions.get(policy).emit("update-permissions");
+          }
+          break;
+        }
+
+        case "Extension:UpdateIgnoreQuarantine": {
+          let policy = WebExtensionPolicy.getByID(data.id);
+          if (policy?.active) {
+            policy.ignoreQuarantine = data.ignoreQuarantine;
           }
           break;
         }

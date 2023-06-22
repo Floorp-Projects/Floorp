@@ -120,7 +120,7 @@ interface WebExtensionPolicy {
   attribute boolean active;
 
   /**
-   * True if this extension is exemmpt from quarantine.
+   * True if this extension is exempt from quarantine.
    */
   [Cached, Pure]
   attribute boolean ignoreQuarantine;

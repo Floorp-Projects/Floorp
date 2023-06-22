@@ -708,17 +708,13 @@ export var QuarantinedDomains = {
     );
   },
   async _onUserAllowedPrefChanged(_subject, _topic, prefName) {
-    // Compute the addon id from prefName, so that the listener
-    // will not need to determine which addon the `.userAllowed` pref
-    // change is related to.
     let addonId = prefName.slice(this.PREF_ADDONS_BRANCH_NAME.length);
     // Sanity check.
     if (!addonId || prefName !== this.getUserAllowedAddonIdPrefName(addonId)) {
       return;
     }
-    // Notify onPropertyChanged addon listeners about quarantineUserAllowed property
-    // value change (e.g. to make sure the property is updated also in the details
-    // included in the TelemetryEnvironment).
+
+    // Notify listeners, e.g. to update details in TelemetryEnvironment.
     const addon = await lazy.AddonManager.getAddonByID(addonId);
     lazy.AddonManagerPrivate.callAddonListeners("onPropertyChanged", addon, [
       "quarantineIgnoredByUser",

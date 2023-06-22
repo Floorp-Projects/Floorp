@@ -63,6 +63,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   extensionStorageSync: "resource://gre/modules/ExtensionStorageSync.sys.mjs",
   permissionToL10nId:
     "resource://gre/modules/ExtensionPermissionMessages.sys.mjs",
+  QuarantinedDomains: "resource://gre/modules/ExtensionPermissions.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "resourceProtocol", () =>
@@ -629,6 +630,22 @@ var ExtensionAddonObserver = {
     if (!Services.prefs.getBoolPref(LEAVE_UUID_PREF, false)) {
       // Clear the entry in the UUID map
       UUIDMap.remove(addon.id);
+    }
+  },
+
+  onPropertyChanged(addon, properties) {
+    let extension = GlobalManager.extensionMap.get(addon.id);
+    if (extension && properties.includes("quarantineIgnoredByUser")) {
+      extension.ignoreQuarantine = addon.quarantineIgnoredByUser;
+      extension.policy.ignoreQuarantine = addon.quarantineIgnoredByUser;
+
+      extension.setSharedData("", extension.serialize());
+      Services.ppmm.sharedData.flush();
+
+      extension.broadcast("Extension:UpdateIgnoreQuarantine", {
+        id: extension.id,
+        ignoreQuarantine: addon.quarantineIgnoredByUser,
+      });
     }
   },
 };
@@ -2735,7 +2752,9 @@ export class Extension extends ExtensionData {
     // practice (but we still set the ignoreQuarantine flag here accordingly
     // to the expected behavior for consistency).
     this.ignoreQuarantine =
-      addonData.isPrivileged || !!addonData.recommendationState?.states?.length;
+      addonData.isPrivileged ||
+      !!addonData.recommendationState?.states?.length ||
+      lazy.QuarantinedDomains.isUserAllowedAddonId(this.id);
 
     this.views = new Set();
     this._backgroundPageFrameLoader = null;

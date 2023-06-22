@@ -8,6 +8,20 @@ AddonTestUtils.createAppInfo(
   "43"
 );
 
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.usePrivilegedSignatures = id => id.startsWith("privileged");
+
+add_setup(async () => {
+  await AddonTestUtils.promiseStartupManager();
+});
+
+const server = createHttpServer({ hosts: ["example.org", "example.net"] });
+server.registerPathHandler("/", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "text/html; charset=utf-8", false);
+  response.write("<!DOCTYPE html><html></html>");
+});
+
 const ADDONS_RESTRICTED_DOMAINS_PREF =
   "extensions.webextensions.addons-restricted-domains@mozilla.com.disabled";
 
@@ -39,6 +53,28 @@ function makeCS(policy) {
   });
 }
 
+function makeExtension({ id }) {
+  return ExtensionTestUtils.loadExtension({
+    manifest: {
+      browser_specific_settings: { gecko: { id } },
+      permissions: ["<all_urls>"],
+      content_scripts: [
+        {
+          js: ["script.js"],
+          matches: ["<all_urls>"],
+        },
+      ],
+    },
+    useAddonManager: "permanent",
+    files: {
+      "script.js": `
+        browser.test.sendMessage("tld", location.host.split(".").at(-1));
+        browser.test.sendMessage("cs");
+      `,
+    },
+  });
+}
+
 function expectQuarantined(expectedDomains) {
   for (let domain of DOMAINS) {
     let uri = Services.io.newURI(`https://${domain}/`);
@@ -53,7 +89,7 @@ function expectQuarantined(expectedDomains) {
 }
 
 function expectAccess(policy, cs, expected) {
-  for (let domain of DOMAINS) {
+  for (let domain of Object.keys(expected)) {
     let uri = Services.io.newURI(`https://${domain}/`);
     let access = expected[domain];
     let match = access;
@@ -204,6 +240,118 @@ add_task(async function test_QuarantinedDomains() {
   expectHost("domain with prefix", "pretest.example.com", false);
   expectHost("domain with suffix", "test.example.comsuf", false);
 });
+
+function setIgnorePref(id, value = false) {
+  Services.prefs.setBoolPref(`extensions.quarantineIgnoredByUser.${id}`, value);
+}
+
+// Test that ignore prefs take effect in the content process.
+add_task(
+  { pref_set: [["extensions.quarantinedDomains.list", "example.net"]] },
+  async function test_QuarantinedDomains_ignored() {
+    const EXPECT_DEFAULTS = { "example.org": true, "example.net": false };
+    const CAN_ACCESS_ALL = { "example.org": true, "example.net": true };
+
+    let alpha = makeExtension({ id: "alpha@test" });
+    let beta = makeExtension({ id: "beta@test" });
+    let system = makeExtension({ id: "privileged@test" });
+
+    let page = await ExtensionTestUtils.loadContentPage("about:blank");
+
+    await alpha.startup();
+    await beta.startup();
+    await system.startup();
+
+    equal(system.extension.isPrivileged, true, "is privileged");
+
+    let alphaPolicy = alpha.extension.policy;
+    let betaPolicy = beta.extension.policy;
+
+    let alphaCounters = { org: 0, net: 0 };
+    let betaCounters = { org: 0, net: 0 };
+
+    alpha.onMessage("tld", tld => alphaCounters[tld]++);
+    beta.onMessage("tld", tld => betaCounters[tld]++);
+    system.onMessage("tld", () => {});
+
+    async function testTLD(tld, expectAlpha, expectBeta) {
+      let alphaCount = alphaCounters[tld];
+      let betaCount = betaCounters[tld];
+
+      await page.loadURL(`http://example.${tld}/`);
+      if (expectAlpha) {
+        await alpha.awaitMessage("cs");
+        alphaCount++;
+      }
+      if (expectBeta) {
+        await beta.awaitMessage("cs");
+        betaCount++;
+      }
+      // Sanity check, plus always having something to await.
+      await system.awaitMessage("cs");
+
+      equal(alphaCount, alphaCounters[tld], `Expected ${tld} alpha CS counter`);
+      equal(betaCount, betaCounters[tld], `Expected ${tld} beta CS counter`);
+    }
+
+    info("Test defaults, example.org is accessible, example.net is not.");
+
+    await testTLD("org", true, true);
+    await testTLD("net", false, false);
+
+    expectAccess(alphaPolicy, alphaPolicy.contentScripts[0], EXPECT_DEFAULTS);
+    expectAccess(betaPolicy, betaPolicy.contentScripts[0], EXPECT_DEFAULTS);
+
+    info("Test setting the pref for alpha@test.");
+    setIgnorePref("alpha@test", true);
+
+    await testTLD("net", true, false);
+    await testTLD("org", true, true);
+
+    expectAccess(alphaPolicy, alphaPolicy.contentScripts[0], CAN_ACCESS_ALL);
+    expectAccess(betaPolicy, betaPolicy.contentScripts[0], EXPECT_DEFAULTS);
+
+    info("Test setting the pref for beta@test.");
+    setIgnorePref("beta@test", true);
+
+    await testTLD("org", true, true);
+    await testTLD("net", true, true);
+    expectAccess(betaPolicy, betaPolicy.contentScripts[0], CAN_ACCESS_ALL);
+
+    info("Test unsetting the pref for alpha@test.");
+    setIgnorePref("alpha@test", false);
+
+    await testTLD("net", false, true);
+    await testTLD("org", true, true);
+
+    info("Test unsetting the pref for beta@test.");
+    setIgnorePref("beta@test", false);
+
+    await testTLD("org", true, true);
+    await testTLD("net", false, false);
+
+    expectAccess(alphaPolicy, alphaPolicy.contentScripts[0], EXPECT_DEFAULTS);
+    expectAccess(betaPolicy, betaPolicy.contentScripts[0], EXPECT_DEFAULTS);
+
+    Assert.deepEqual(
+      alphaCounters,
+      { org: 5, net: 2 },
+      "Expected final Alpha content script counters."
+    );
+
+    Assert.deepEqual(
+      betaCounters,
+      { org: 5, net: 2 },
+      "Expected final Beta content script counters."
+    );
+
+    await system.unload();
+    await beta.unload();
+    await alpha.unload();
+
+    await page.close();
+  }
+);
 
 // Make sure we honor the system add-on pref.
 add_task(
