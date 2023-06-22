@@ -54,13 +54,6 @@ bool InputBlockState::SetConfirmedTargetApzc(
   MOZ_ASSERT(aState == TargetConfirmationState::eConfirmed ||
              aState == TargetConfirmationState::eTimedOut);
 
-  if (mTargetConfirmed == TargetConfirmationState::eTimedOut &&
-      aState == TargetConfirmationState::eConfirmed) {
-    // The main thread finally responded. We had already timed out the
-    // confirmation, but we want to update the state internally so that we
-    // can record the time for telemetry purposes.
-    mTargetConfirmed = TargetConfirmationState::eTimedOutAndMainThreadResponded;
-  }
   // Sometimes, bugs in compositor hit testing can lead to APZ confirming
   // a different target than the main thread. If this happens for a drag
   // block created for a scrollbar drag, the consequences can be fairly
@@ -145,12 +138,6 @@ uint64_t InputBlockState::GetBlockId() const { return mBlockId; }
 
 bool InputBlockState::IsTargetConfirmed() const {
   return mTargetConfirmed != TargetConfirmationState::eUnconfirmed;
-}
-
-bool InputBlockState::HasReceivedRealConfirmedTarget() const {
-  return mTargetConfirmed == TargetConfirmationState::eConfirmed ||
-         mTargetConfirmed ==
-             TargetConfirmationState::eTimedOutAndMainThreadResponded;
 }
 
 bool InputBlockState::ShouldDropEvents() const {
