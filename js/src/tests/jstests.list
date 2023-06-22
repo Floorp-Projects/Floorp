@@ -1266,3 +1266,18 @@ skip script test262/intl402/Temporal/Calendar/prototype/monthDayFromFields/one-o
 skip script test262/intl402/Temporal/Calendar/prototype/yearMonthFromFields/one-of-era-erayear-undefined.js
 skip script test262/intl402/Temporal/Calendar/prototype/dateFromFields/one-of-era-erayear-undefined.js
 skip script test262/intl402/Temporal/Calendar/prototype/monthDayFromFields/reference-year-1972.js
+
+skip script test262/staging/Temporal/ZonedDateTime/old/construction-and-properties.js
+skip script test262/staging/Intl402/Temporal/old/date-time-format.js
+skip script test262/staging/Intl402/Temporal/old/date-toLocaleString.js
+skip script test262/staging/Intl402/Temporal/old/time-toLocaleString.js
+skip script test262/staging/Intl402/Temporal/old/zoneddatetime-toLocaleString.js
+skip script test262/staging/Intl402/Temporal/old/hebrew-leap-months.js
+skip script test262/staging/Intl402/Temporal/old/addition-across-lunisolar-leap-months.js
+skip script test262/staging/Intl402/Temporal/old/yearmonth-toLocaleString.js
+skip script test262/staging/Intl402/Temporal/old/datetime-toLocaleString.js
+skip script test262/staging/Intl402/Temporal/old/japanese-era.js
+skip script test262/staging/Intl402/Temporal/old/monthday-toLocaleString.js
+skip script test262/staging/Intl402/Temporal/old/non-iso-calendars.js
+skip script test262/staging/Intl402/Temporal/old/indian-calendar.js
+skip script test262/staging/Intl402/Temporal/old/instant-toLocaleString.js
