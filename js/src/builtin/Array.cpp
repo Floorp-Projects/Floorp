@@ -42,6 +42,7 @@
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/SelfHosting.h"
 #include "vm/Shape.h"
+#include "vm/StringType.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 #include "vm/TypedArrayObject.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
@@ -5244,6 +5245,19 @@ ArrayObject* js::NewDenseUnallocatedArray(
 // values must point at already-rooted Value objects
 ArrayObject* js::NewDenseCopiedArray(
     JSContext* cx, uint32_t length, const Value* values,
+    NewObjectKind newKind /* = GenericObject */) {
+  ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, newKind);
+  if (!arr) {
+    return nullptr;
+  }
+
+  arr->initDenseElements(values, length);
+  return arr;
+}
+
+// values must point at already-rooted Value objects
+ArrayObject* js::NewDenseCopiedArray(
+    JSContext* cx, uint32_t length, JSLinearString** values,
     NewObjectKind newKind /* = GenericObject */) {
   ArrayObject* arr = NewArray<UINT32_MAX>(cx, length, newKind);
   if (!arr) {

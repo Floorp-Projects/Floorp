@@ -70,6 +70,12 @@ extern ArrayObject* NewDenseCopiedArray(JSContext* cx, uint32_t length,
                                         const Value* values,
                                         NewObjectKind newKind = GenericObject);
 
+// Create a dense array from the given (linear)string values, which must be
+// rooted
+extern ArrayObject* NewDenseCopiedArray(JSContext* cx, uint32_t length,
+                                        JSLinearString** values,
+                                        NewObjectKind newKind = GenericObject);
+
 // Like NewDenseCopiedArray, but the array will have |proto| as prototype (or
 // Array.prototype if |proto| is nullptr).
 extern ArrayObject* NewDenseCopiedArrayWithProto(JSContext* cx, uint32_t length,

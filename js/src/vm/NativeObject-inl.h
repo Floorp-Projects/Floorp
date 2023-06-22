@@ -22,6 +22,7 @@
 #include "vm/JSContext.h"
 #include "vm/PlainObject.h"
 #include "vm/PropertyResult.h"
+#include "vm/StringType.h"
 #include "vm/TypedArrayObject.h"
 
 #include "gc/Heap-inl.h"
@@ -165,6 +166,22 @@ inline void NativeObject::initDenseElements(const Value* src, uint32_t count) {
 #endif
 
   memcpy(reinterpret_cast<Value*>(elements_), src, count * sizeof(Value));
+  elementsRangePostWriteBarrier(0, count);
+}
+
+inline void NativeObject::initDenseElements(JSLinearString** src,
+                                            uint32_t count) {
+  MOZ_ASSERT(getDenseInitializedLength() == 0);
+  MOZ_ASSERT(count <= getDenseCapacity());
+  MOZ_ASSERT(src);
+  MOZ_ASSERT(isExtensible());
+
+  setDenseInitializedLength(count);
+  Value* elementsBase = reinterpret_cast<Value*>(elements_);
+  for (size_t i = 0; i < count; i++) {
+    elementsBase[i].setString(src[i]);
+  }
+
   elementsRangePostWriteBarrier(0, count);
 }
 
