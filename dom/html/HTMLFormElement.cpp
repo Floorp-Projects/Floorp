@@ -246,11 +246,23 @@ void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
     return;
   }
 
+  RefPtr<PresShell> presShell = doc->GetPresShell();
+  if (!presShell) {
+    // We need the nsPresContext for dispatching the submit event. In some
+    // rare cases we need to flush notifications to force creation of the
+    // nsPresContext here (for example when a script calls form.requestSubmit()
+    // from script early during page load). We only flush the notifications
+    // if the PresShell hasn't been created yet, to limit the performance
+    // impact.
+    doc->FlushPendingNotifications(FlushType::EnsurePresShellInitAndFrames);
+    presShell = doc->GetPresShell();
+  }
+
   // If |PresShell::Destroy| has been called due to handling the event the pres
   // context will return a null pres shell. See bug 125624. Using presShell to
   // dispatch the event. It makes sure that event is not handled if the window
   // is being destroyed.
-  if (RefPtr<PresShell> presShell = doc->GetPresShell()) {
+  if (presShell) {
     SubmitEventInit init;
     init.mBubbles = true;
     init.mCancelable = true;
