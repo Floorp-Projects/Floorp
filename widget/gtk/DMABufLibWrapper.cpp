@@ -5,11 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "DMABufLibWrapper.h"
-#ifdef MOZ_WAYLAND
-#  include "nsWaylandDisplay.h"
-#endif
 #include "base/message_loop.h"  // for MessageLoop
+#include "nsWaylandDisplay.h"
+#include "DMABufLibWrapper.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -23,8 +21,6 @@
 #include <fcntl.h>
 #include <dlfcn.h>
 #include <mutex>
-#include <unistd.h>
-#include "gbm.h"
 
 using namespace mozilla::gfx;
 
@@ -200,9 +196,7 @@ void DMABufDevice::Configure() {
     return;
   }
 
-#ifdef MOZ_WAYLAND
   LoadFormatModifiers();
-#endif
 
   LOGDMABUF(("DMABuf is enabled"));
 }
@@ -226,7 +220,6 @@ bool DMABufDevice::IsDMABufWebGLEnabled() {
          StaticPrefs::widget_dmabuf_webgl_enabled();
 }
 
-#ifdef MOZ_WAYLAND
 void DMABufDevice::SetModifiersToGfxVars() {
   gfxVars::SetDMABufModifiersXRGB(mXRGBFormat.mModifiers);
   gfxVars::SetDMABufModifiersARGB(mARGBFormat.mModifiers);
@@ -236,7 +229,6 @@ void DMABufDevice::GetModifiersFromGfxVars() {
   mXRGBFormat.mModifiers = gfxVars::DMABufModifiersXRGB().Clone();
   mARGBFormat.mModifiers = gfxVars::DMABufModifiersARGB().Clone();
 }
-#endif
 
 void DMABufDevice::DisableDMABufWebGL() { sUseWebGLDmabufBackend = false; }
 
@@ -245,7 +237,6 @@ GbmFormat* DMABufDevice::GetGbmFormat(bool aHasAlpha) {
   return format->mIsSupported ? format : nullptr;
 }
 
-#ifdef MOZ_WAYLAND
 void DMABufDevice::AddFormatModifier(bool aHasAlpha, int aFormat,
                                      uint32_t mModifierHi,
                                      uint32_t mModifierLo) {
@@ -324,7 +315,6 @@ void DMABufDevice::LoadFormatModifiers() {
     GetModifiersFromGfxVars();
   }
 }
-#endif
 
 DMABufDevice* GetDMABufDevice() {
   static DMABufDevice dmaBufDevice;

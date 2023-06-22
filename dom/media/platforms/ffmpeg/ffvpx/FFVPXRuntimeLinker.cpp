@@ -59,7 +59,7 @@ bool FFVPXRuntimeLinker::Init() {
   MOZ_ASSERT(NS_IsMainThread());
   sLinkStatus = LinkStatus_FAILED;
 
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
   sFFVPXLib.LinkVAAPILibs();
 #endif
 
