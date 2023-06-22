@@ -28,10 +28,10 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
   private static final String LOGTAG = "GVPrintDocumentAdapter";
-  private String mPrintName = "Document";
+  private static final String PRINT_NAME_DEFAULT = "Document";
+  private String mPrintName = PRINT_NAME_DEFAULT;
   private File mPdfFile;
-  private InputStream mPdfInputStream;
-  private Context mContext;
+  private GeckoResult<File> mGeneratedPdfFile;
   private Boolean mDoDeleteTmpPdf;
   private GeckoResult<Boolean> mPrintDialogFinish = null;
 
@@ -44,9 +44,8 @@ public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
    */
   public GeckoViewPrintDocumentAdapter(
       @NonNull final InputStream pdfInputStream, @NonNull final Context context) {
-    this.mPdfInputStream = pdfInputStream;
-    this.mContext = context;
     this.mDoDeleteTmpPdf = true;
+    this.mGeneratedPdfFile = pdfInputStreamToFile(pdfInputStream, context);
   }
 
   /**
@@ -61,9 +60,8 @@ public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
       @NonNull final InputStream pdfInputStream,
       @NonNull final Context context,
       @Nullable final GeckoResult<Boolean> printDialogFinish) {
-    this.mPdfInputStream = pdfInputStream;
-    this.mContext = context;
     this.mDoDeleteTmpPdf = true;
+    this.mGeneratedPdfFile = pdfInputStreamToFile(pdfInputStream, context);
     this.mPrintDialogFinish = printDialogFinish;
   }
 
@@ -112,15 +110,21 @@ public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
     return file;
   }
 
-  @Override
-  public void onStart() {
-    // Making the PDF file late, if needed, so that the UI reflects that it is preparing
-    if (mPdfFile == null && mPdfInputStream != null && mContext != null) {
-      this.mPdfFile = makeTempPdfFile(mPdfInputStream, mContext);
-      if (mPdfFile != null) {
-        this.mPrintName = mPdfFile.getName();
-      }
-    }
+  /**
+   * Utility to make a PDF file from the input stream in the background.
+   *
+   * @param pdfInputStream - InputStream containing a PDF
+   * @param context context that should be used for making a temporary file
+   * @return gecko result with the file
+   */
+  private @NonNull GeckoResult<File> pdfInputStreamToFile(
+      final @NonNull InputStream pdfInputStream, final @NonNull Context context) {
+    final GeckoResult<File> result = new GeckoResult<>();
+    ThreadUtils.postToBackgroundThread(
+        () -> {
+          result.complete(makeTempPdfFile(pdfInputStream, context));
+        });
+    return result;
   }
 
   @Override
@@ -141,39 +145,63 @@ public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
     layoutResultCallback.onLayoutFinished(pdi, true);
   }
 
+  /**
+   * Handles onWrite functionality. Recommend running on a background thread as onWrite is on the
+   * main thread.
+   *
+   * @param pdfFile - PDF file to generate print preview with.
+   * @param parcelFileDescriptor - onWrite parcelFileDescriptor
+   * @param writeResultCallback - onWrite writeResultCallback
+   */
+  private void onWritePdf(
+      final @Nullable File pdfFile,
+      final @NonNull ParcelFileDescriptor parcelFileDescriptor,
+      final @NonNull WriteResultCallback writeResultCallback) {
+    InputStream input = null;
+    OutputStream output = null;
+    try {
+      input = new FileInputStream(pdfFile);
+      output = new FileOutputStream(parcelFileDescriptor.getFileDescriptor());
+      final int bufferSize = 8192;
+      final byte[] buffer = new byte[bufferSize];
+      int bytesRead;
+      while ((bytesRead = input.read(buffer)) > 0) {
+        output.write(buffer, 0, bytesRead);
+      }
+      writeResultCallback.onWriteFinished(new PageRange[] {PageRange.ALL_PAGES});
+    } catch (final Exception ex) {
+      Log.e(LOGTAG, "Could not complete onWrite for printing: ", ex);
+      writeResultCallback.onWriteFailed(null);
+    } finally {
+      try {
+        input.close();
+        output.close();
+      } catch (final Exception ex) {
+        Log.e(LOGTAG, "Could not close i/o stream: ", ex);
+      }
+    }
+  }
+
   @Override
   public void onWrite(
       final PageRange[] pageRanges,
       final ParcelFileDescriptor parcelFileDescriptor,
       final CancellationSignal cancellationSignal,
       final WriteResultCallback writeResultCallback) {
+
     ThreadUtils.postToBackgroundThread(
-        new Runnable() {
-          @Override
-          public void run() {
-            InputStream input = null;
-            OutputStream output = null;
-            try {
-              input = new FileInputStream(mPdfFile);
-              output = new FileOutputStream(parcelFileDescriptor.getFileDescriptor());
-              final int bufferSize = 8192;
-              final byte[] buffer = new byte[bufferSize];
-              int bytesRead;
-              while ((bytesRead = input.read(buffer)) > 0) {
-                output.write(buffer, 0, bytesRead);
-              }
-              writeResultCallback.onWriteFinished(new PageRange[] {PageRange.ALL_PAGES});
-            } catch (final Exception ex) {
-              Log.e(LOGTAG, "Could not complete onWrite for printing: ", ex);
-              writeResultCallback.onWriteFailed(null);
-            } finally {
-              try {
-                input.close();
-                output.close();
-              } catch (final Exception ex) {
-                Log.e(LOGTAG, "Could not close i/o stream: ", ex);
-              }
-            }
+        () -> {
+          if (mGeneratedPdfFile != null) {
+            mGeneratedPdfFile.then(
+                file -> {
+                  if (mPrintName == PRINT_NAME_DEFAULT) {
+                    mPrintName = file.getName();
+                  }
+                  onWritePdf(file, parcelFileDescriptor, writeResultCallback);
+                  return null;
+                });
+          } else {
+            onWritePdf(mPdfFile, parcelFileDescriptor, writeResultCallback);
           }
         });
   }
@@ -182,8 +210,17 @@ public class GeckoViewPrintDocumentAdapter extends PrintDocumentAdapter {
   public void onFinish() {
     // Remove the temporary file when the printing system is finished.
     try {
-      if (mPdfFile != null && mDoDeleteTmpPdf) {
-        mPdfFile.delete();
+      if (mDoDeleteTmpPdf) {
+        if (mPdfFile != null) {
+          mPdfFile.delete();
+        }
+        if (mGeneratedPdfFile != null) {
+          mGeneratedPdfFile.then(
+              file -> {
+                file.delete();
+                return null;
+              });
+        }
       }
     } catch (final NullPointerException npe) {
       // Silence the exception. We only want to delete a real file. We don't
