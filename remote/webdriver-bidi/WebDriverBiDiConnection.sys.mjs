@@ -127,10 +127,10 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
   /**
    * Called by the `transport` when the connection is closed.
    */
-  onClosed() {
+  onConnectionClose() {
     this.unregisterSession();
 
-    super.onClosed();
+    super.onConnectionClose();
   }
 
   /**
@@ -194,6 +194,14 @@ export class WebDriverBiDiConnection extends WebSocketConnection {
       }
 
       this.sendResult(id, result);
+
+      // Session clean up.
+      if (module === "session" && command === "end") {
+        // TODO Bug 1838269. Implement session ending logic
+        // for the case of classic + bidi session.
+        // We currently only support one session, see Bug 1720707.
+        lazy.RemoteAgent.webDriverBiDi.deleteSession();
+      }
     } catch (e) {
       this.sendError(id, e);
     }
