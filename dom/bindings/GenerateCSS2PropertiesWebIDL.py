@@ -30,6 +30,11 @@ def generate(output, idlFilename, dataFile):
         if "Style" not in p.rules:
             continue
 
+        if p.type() == "alias":
+            if p.pref == propsData[p.prop_id].pref:
+                # We already added this as a BindingAlias for the original prop.
+                continue
+
         # Unfortunately, even some of the getters here are fallible
         # (e.g. on nsComputedDOMStyle).
         extendedAttrs = [
@@ -46,36 +51,47 @@ def generate(output, idlFilename, dataFile):
             else:
                 extendedAttrs.append('Pref="%s"' % p.pref)
 
-        prop = p.method
+        def add_extra_accessors(p):
+            prop = p.method
 
-        # webkit properties get a camelcase "webkitFoo" accessor
-        # as well as a capitalized "WebkitFoo" alias (added here).
-        if prop.startswith("Webkit"):
-            extendedAttrs.append('BindingAlias="%s"' % prop)
+            # webkit properties get a camelcase "webkitFoo" accessor
+            # as well as a capitalized "WebkitFoo" alias (added here).
+            if prop.startswith("Webkit"):
+                extendedAttrs.append('BindingAlias="%s"' % prop)
 
-        # Generate a name with camelCase spelling of property-name (or capitalized,
-        # for Moz-prefixed properties):
-        if not prop.startswith("Moz"):
-            prop = prop[0].lower() + prop[1:]
+            # Generate a name with camelCase spelling of property-name (or capitalized,
+            # for Moz-prefixed properties):
+            if not prop.startswith("Moz"):
+                prop = prop[0].lower() + prop[1:]
 
-        # Per spec, what's actually supposed to happen here is that we're supposed
-        # to have properties for:
-        #
-        # 1) Each supported CSS property name, camelCased.
-        # 2) Each supported name that contains or starts with dashes,
-        #    without any changes to the name.
-        # 3) cssFloat
-        #
-        # Note that "float" will cause a property called "float" to exist due to (1)
-        # in that list.
-        #
-        # In practice, cssFloat is the only case in which "name" doesn't contain
-        # "-" but also doesn't match "prop".  So the generateLine() call will
-        # cover (3) and all of (1) except "float".  If we now add an alias
-        # for all the cases where "name" doesn't match "prop", that will cover
-        # "float" and (2).
-        if prop != p.name:
-            extendedAttrs.append('BindingAlias="%s"' % p.name)
+            # Per spec, what's actually supposed to happen here is that we're supposed
+            # to have properties for:
+            #
+            # 1) Each supported CSS property name, camelCased.
+            # 2) Each supported name that contains or starts with dashes,
+            #    without any changes to the name.
+            # 3) cssFloat
+            #
+            # Note that "float" will cause a property called "float" to exist due to (1)
+            # in that list.
+            #
+            # In practice, cssFloat is the only case in which "name" doesn't contain
+            # "-" but also doesn't match "prop".  So the generateLine() call will
+            # cover (3) and all of (1) except "float".  If we now add an alias
+            # for all the cases where "name" doesn't match "prop", that will cover
+            # "float" and (2).
+            if prop != p.name:
+                extendedAttrs.append('BindingAlias="%s"' % p.name)
+
+            return prop
+
+        prop = add_extra_accessors(p)
+
+        if p.type() != "alias":
+            for a in p.aliases:
+                if p.pref == propsData[a].pref:
+                    newProp = add_extra_accessors(propsData[a])
+                    extendedAttrs.append('BindingAlias="%s"' % newProp)
 
         props += generateLine(prop, extendedAttrs)
 
