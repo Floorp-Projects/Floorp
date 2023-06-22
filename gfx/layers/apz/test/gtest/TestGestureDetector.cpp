@@ -527,8 +527,7 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
 
     MultiTouchInput mti =
         CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_MOVE, mcc->Time());
-    mti.mTouches.AppendElement(SingleTouchData(
-        0, ParentLayerPoint(touchX, touchEndY), ScreenSize(0, 0), 0, 0));
+    mti.mTouches.AppendElement(CreateSingleTouchData(0, touchX, touchEndY));
     result = apzc->ReceiveInputEvent(mti);
     EXPECT_EQ(nsEventStatus_eConsumeDoDefault, result.GetStatus());
 
