@@ -23,8 +23,8 @@ add_task(async function () {
   Services.prefs.clearUserPref(PREF_CACHED_FILE_EXISTENCE);
   setupTest();
 
-  let { DistributionCustomizer } = ChromeUtils.import(
-    "resource:///modules/distribution.js"
+  let { DistributionCustomizer } = ChromeUtils.importESModule(
+    "resource:///modules/distribution.sys.mjs"
   );
   let distribution = new DistributionCustomizer();
 

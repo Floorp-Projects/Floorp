@@ -47,8 +47,8 @@ registerCleanupFunction(function () {
 });
 
 add_task(async function () {
-  let { DistributionCustomizer } = ChromeUtils.import(
-    "resource:///modules/distribution.js"
+  let { DistributionCustomizer } = ChromeUtils.importESModule(
+    "resource:///modules/distribution.sys.mjs"
   );
   let distribution = new DistributionCustomizer();
 

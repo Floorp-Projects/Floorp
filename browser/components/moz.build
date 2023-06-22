@@ -7,7 +7,7 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("distribution.js"):
+with Files("distribution.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Distributions")
 
 with Files("tests/**"):
@@ -92,7 +92,7 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
     "BrowserContentHandler.sys.mjs",
     "BrowserGlue.sys.mjs",
-    "distribution.js",
+    "distribution.sys.mjs",
 ]
 
 if CONFIG["MOZ_DEBUG"] or CONFIG["MOZ_DEV_EDITION"] or CONFIG["NIGHTLY_BUILD"]:
