@@ -148,7 +148,7 @@ async function test_save_change({
         }
       );
 
-      const formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
+      let formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
       await SpecialPowers.spawn(browser, [], async function () {
         let doc = this.content.document;
         doc.getElementById("form-basic").submit();
@@ -156,11 +156,11 @@ async function test_save_change({
       await formSubmittedPromise;
 
       info("Waiting for doorhanger of type: " + expectedDoorhanger);
-      const notif = await waitForDoorhanger(browser, expectedDoorhanger);
+      let notif = await waitForDoorhanger(browser, expectedDoorhanger);
 
       await checkDoorhangerUsernamePassword(expectedUsername, expectedPassword);
 
-      const promiseLogin = TestUtils.topicObserved(
+      let promiseLogin = TestUtils.topicObserved(
         "passwordmgr-storage-changed",
         (_, data) => data == expectedNotification
       );
