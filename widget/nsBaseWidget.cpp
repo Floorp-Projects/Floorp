@@ -1092,8 +1092,10 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
   UniquePtr<WidgetEvent> original(aEvent->Duplicate());
   DispatchEvent(aEvent, status);
 
-  if (mAPZC && !InputAPZContext::WasRoutedToChildProcess() && inputBlockId) {
-    // EventStateManager did not route the event into the child process.
+  if (mAPZC && !InputAPZContext::WasRoutedToChildProcess() &&
+      !InputAPZContext::WasDropped() && inputBlockId) {
+    // EventStateManager did not route the event into the child process and
+    // the event was dispatched in the parent process.
     // It's safe to communicate to APZ that the event has been processed.
     // Note that here aGuid.mLayersId might be different from
     // mCompositorSession->RootLayerTreeId() because the event might have gotten

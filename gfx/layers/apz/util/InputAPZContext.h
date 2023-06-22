@@ -34,6 +34,9 @@ class MOZ_STACK_CLASS InputAPZContext {
 
   // State that is set in deeper code and propagated upwards.
   static bool sRoutedToChildProcess;
+  // True if the WidgetInputEvent was dropped (which means the event wasn't
+  // dispatched) on the main-thread.
+  static bool sDropped;
 
  public:
   // Functions to access downwards-propagated data
@@ -45,6 +48,8 @@ class MOZ_STACK_CLASS InputAPZContext {
   // Functions to access upwards-propagated data
   static bool WasRoutedToChildProcess();
 
+  static bool WasDropped();
+
   // Constructor sets the data to be propagated downwards
   InputAPZContext(const ScrollableLayerGuid& aGuid, const uint64_t& aBlockId,
                   const nsEventStatus& aApzResponse,
@@ -53,6 +58,7 @@ class MOZ_STACK_CLASS InputAPZContext {
 
   // Functions to set data to be propagated upwards
   static void SetRoutedToChildProcess();
+  static void SetDropped();
 
  private:
   ScrollableLayerGuid mOldGuid;
@@ -61,6 +67,7 @@ class MOZ_STACK_CLASS InputAPZContext {
   bool mOldPendingLayerization;
 
   bool mOldRoutedToChildProcess;
+  bool mOldDropped;
 };
 
 }  // namespace layers
