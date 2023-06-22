@@ -79,11 +79,12 @@ class GtkCompositorWidget : public CompositorWidget,
   // Resume rendering with to given aXWindow (X11) or nsWindow (Wayland).
   void EnableRendering(const uintptr_t aXWindow, const bool aShaped) override;
 
+  void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
+
 #if defined(MOZ_X11)
   Window XWindow() const { return mXWindow; }
 #endif
 #if defined(MOZ_WAYLAND)
-  void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
   RefPtr<mozilla::layers::NativeLayerRoot> GetNativeLayerRoot() override;
 #endif
 
