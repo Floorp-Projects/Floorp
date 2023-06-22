@@ -1799,7 +1799,6 @@ void RecordedEvent::RecordStrokeOptions(
   CapStyle capStyle = aStrokeOptions.mLineCap;
 
   WriteElement(aStream, uint64_t(aStrokeOptions.mDashLength));
-  WriteElement(aStream, aStrokeOptions.mDashOffset);
   WriteElement(aStream, aStrokeOptions.mLineWidth);
   WriteElement(aStream, aStrokeOptions.mMiterLimit);
   WriteElement(aStream, joinStyle);
@@ -1809,6 +1808,7 @@ void RecordedEvent::RecordStrokeOptions(
     return;
   }
 
+  WriteElement(aStream, aStrokeOptions.mDashOffset);
   aStream.write((char*)aStrokeOptions.mDashPattern,
                 sizeof(Float) * aStrokeOptions.mDashLength);
 }
@@ -1821,7 +1821,6 @@ void RecordedEvent::ReadStrokeOptions(S& aStream,
   CapStyle capStyle;
 
   ReadElement(aStream, dashLength);
-  ReadElement(aStream, aStrokeOptions.mDashOffset);
   ReadElement(aStream, aStrokeOptions.mLineWidth);
   ReadElement(aStream, aStrokeOptions.mMiterLimit);
   ReadElementConstrained(aStream, joinStyle, JoinStyle::BEVEL,
@@ -1836,6 +1835,8 @@ void RecordedEvent::ReadStrokeOptions(S& aStream,
   if (!aStrokeOptions.mDashLength || !aStream.good()) {
     return;
   }
+
+  ReadElement(aStream, aStrokeOptions.mDashOffset);
 
   mDashPatternStorage.resize(aStrokeOptions.mDashLength);
   aStrokeOptions.mDashPattern = &mDashPatternStorage.front();
