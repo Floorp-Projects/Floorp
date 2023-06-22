@@ -59,11 +59,11 @@ class RTCStatsTimestampMaker;
 }  // namespace dom
 
 struct MediaPipelineReceiveControlInterface {
-  virtual AbstractCanonical<bool>* CanonicalReceiving() = 0;
+  virtual Canonical<bool>& CanonicalReceiving() = 0;
 };
 
 struct MediaPipelineTransmitControlInterface {
-  virtual AbstractCanonical<bool>* CanonicalTransmitting() = 0;
+  virtual Canonical<bool>& CanonicalTransmitting() = 0;
 };
 
 // A class that represents the pipeline of audio and video
