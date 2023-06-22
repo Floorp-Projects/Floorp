@@ -1927,7 +1927,7 @@ class CGAbstractMethod(CGThing):
             prologue += indent(
                 fill(
                     """
-                BindingCallContext ${cxname}(cx_, "${label}");
+                BindingCallContext ${cxname}(cx_, ${label});
                 """,
                     cxname=cxname,
                     label=error_reporting_label,
@@ -8991,6 +8991,14 @@ class CGPerSignatureCall(CGThing):
     dontSetSlot should be set to True if the value should not be cached in a
     slot (even if the attribute is marked as StoreInSlot or Cached in the
     WebIDL).
+
+    errorReportingLabel can contain a custom label to use for error reporting.
+    It will be inserted as is in the code, so if it needs to be a literal
+    string in C++ it should be quoted.
+
+    additionalArgsPre contains additional arguments that are added after the
+    arguments that CGPerSignatureCall itself adds (JSContext, global, …), and
+    before the actual arguments.
     """
 
     # XXXbz For now each entry in the argument list is either an
@@ -9015,6 +9023,8 @@ class CGPerSignatureCall(CGThing):
         objectName="obj",
         dontSetSlot=False,
         extendedAttributes=None,
+        errorReportingLabel=None,
+        additionalArgsPre=[],
     ):
         assert idlNode.isMethod() == (not getter and not setter)
         assert idlNode.isAttr() == (getter or setter)
@@ -9324,14 +9334,17 @@ class CGPerSignatureCall(CGThing):
             assert setter
             cgThings.append(CGObservableArraySetterGenerator(descriptor, idlNode))
         else:
-            context = GetLabelForErrorReporting(descriptor, idlNode, isConstructor)
-            if getter:
-                context = context + " getter"
-            elif setter:
-                context = context + " setter"
-            # Callee expects a quoted string for the context if
-            # there's a context.
-            context = '"%s"' % context
+            if errorReportingLabel is None:
+                context = GetLabelForErrorReporting(descriptor, idlNode, isConstructor)
+                if getter:
+                    context = context + " getter"
+                elif setter:
+                    context = context + " setter"
+                # Callee expects a quoted string for the context if
+                # there's a context.
+                context = '"%s"' % context
+            else:
+                context = errorReportingLabel
 
             if idlNode.isMethod() and idlNode.getExtendedAttribute("WebExtensionStub"):
                 [
@@ -9348,7 +9361,7 @@ class CGPerSignatureCall(CGThing):
                     needsCallerType(idlNode),
                     isChromeOnly(idlNode),
                     args,
-                    argsPre,
+                    argsPre + additionalArgsPre,
                     returnType,
                     self.extendedAttributes,
                     descriptor,
@@ -10227,6 +10240,8 @@ class CGGetterCall(CGPerSignatureCall):
         nativeMethodName,
         descriptor,
         attr,
+        errorReportingLabel=None,
+        argsPre=[],
         dontSetSlot=False,
         extendedAttributes=None,
     ):
@@ -10251,6 +10266,8 @@ class CGGetterCall(CGPerSignatureCall):
             useCounterName=useCounterName,
             dontSetSlot=dontSetSlot,
             extendedAttributes=extendedAttributes,
+            errorReportingLabel=errorReportingLabel,
+            additionalArgsPre=argsPre,
         )
 
 
@@ -10287,7 +10304,15 @@ class CGSetterCall(CGPerSignatureCall):
     setter.
     """
 
-    def __init__(self, argType, nativeMethodName, descriptor, attr):
+    def __init__(
+        self,
+        argType,
+        nativeMethodName,
+        descriptor,
+        attr,
+        errorReportingLabel=None,
+        argsPre=[],
+    ):
         if attr.getExtendedAttribute("UseCounter"):
             useCounterName = "%s_%s_setter" % (
                 descriptor.interface.identifier.name,
@@ -10307,6 +10332,8 @@ class CGSetterCall(CGPerSignatureCall):
             attr,
             setter=True,
             useCounterName=useCounterName,
+            errorReportingLabel=errorReportingLabel,
+            additionalArgsPre=argsPre,
         )
 
     def wrap_return_value(self):
@@ -10588,7 +10615,7 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
             descriptor, idlMethod
         ):
             return None
-        return GetLabelForErrorReporting(descriptor, idlMethod, isConstructor)
+        return '"%s"' % GetLabelForErrorReporting(descriptor, idlMethod, isConstructor)
 
     def error_reporting_label(self):
         return CGSpecializedMethod.error_reporting_label_helper(
@@ -10598,7 +10625,9 @@ class CGSpecializedMethod(CGAbstractStaticMethod):
     @staticmethod
     def makeNativeName(descriptor, method):
         if method.underlyingAttr:
-            return CGSpecializedGetter.makeNativeName(descriptor, method.underlyingAttr)
+            return CGSpecializedGetterCommon.makeNativeName(
+                descriptor, method.underlyingAttr
+            )
         name = method.identifier.name
         return MakeNativeName(descriptor.binaryNameFor(name, method.isStatic()))
 
@@ -10991,21 +11020,25 @@ class CGStaticMethod(CGAbstractStaticBindingMethod):
         )
 
 
-class CGSpecializedGetter(CGAbstractStaticMethod):
+class CGSpecializedGetterCommon(CGAbstractStaticMethod):
     """
     A class for generating the code for a specialized attribute getter
     that the JIT can call with lower overhead.
     """
 
-    def __init__(self, descriptor, attr):
-        self.attr = attr
-        name = "get_" + IDLToCIdentifier(attr.identifier.name)
-        args = [
-            Argument("JSContext*", "cx"),
-            Argument("JS::Handle<JSObject*>", "obj"),
-            Argument("void*", "void_self"),
-            Argument("JSJitGetterCallArgs", "args"),
-        ]
+    def __init__(
+        self,
+        descriptor,
+        name,
+        nativeName,
+        attr,
+        args,
+        errorReportingLabel=None,
+        additionalArg=None,
+    ):
+        self.nativeName = nativeName
+        self.errorReportingLabel = errorReportingLabel
+        self.additionalArgs = [] if additionalArg is None else [additionalArg]
         # StoreInSlot attributes have their getters called from Wrap().  We
         # really hope they can't run script, and don't want to annotate Wrap()
         # methods as doing that anyway, so let's not annotate them as
@@ -11015,7 +11048,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             descriptor,
             name,
             "bool",
-            args,
+            args + self.additionalArgs,
             canRunScript=not attr.getExtendedAttribute("StoreInSlot"),
         )
 
@@ -11043,7 +11076,13 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             # backing object from the slot, this requires its own generator.
             return prefix + getObservableArrayGetterBody(self.descriptor, self.attr)
 
-        nativeName = CGSpecializedGetter.makeNativeName(self.descriptor, self.attr)
+        if self.nativeName is None:
+            nativeName = CGSpecializedGetterCommon.makeNativeName(
+                self.descriptor, self.attr
+            )
+        else:
+            nativeName = self.nativeName
+
         type = self.attr.type
         if self.attr.getExtendedAttribute("CrossOriginReadable"):
             remoteType = type
@@ -11076,6 +11115,8 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                         nativeName,
                         self.descriptor,
                         self.attr,
+                        self.errorReportingLabel,
+                        argsPre=[a.name for a in self.additionalArgs],
                         dontSetSlot=True,
                         extendedAttributes=extendedAttributes,
                     ).define(),
@@ -11146,21 +11187,30 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
             )
 
         return (
-            prefix + CGGetterCall(type, nativeName, self.descriptor, self.attr).define()
+            prefix
+            + CGGetterCall(
+                type,
+                nativeName,
+                self.descriptor,
+                self.attr,
+                self.errorReportingLabel,
+                argsPre=[a.name for a in self.additionalArgs],
+            ).define()
         )
 
-    def auto_profiler_label(self):
+    def auto_profiler_label(self, profilerLabel=None):
+        if profilerLabel is None:
+            profilerLabel = '"' + self.attr.identifier.name + '"'
         interface_name = self.descriptor.interface.identifier.name
-        attr_name = self.attr.identifier.name
         return fill(
             """
             AUTO_PROFILER_LABEL_DYNAMIC_FAST(
-              "${interface_name}", "${attr_name}", DOM, cx,
+              "${interface_name}", ${attr_name}, DOM, cx,
               uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_GETTER) |
               uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
             interface_name=interface_name,
-            attr_name=attr_name,
+            attr_name=profilerLabel,
         )
 
     def error_reporting_label(self):
@@ -11177,6 +11227,112 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
         if resultOutParam or attr.type.nullable() or canFail:
             nativeName = "Get" + nativeName
         return nativeName
+
+
+class CGSpecializedGetter(CGSpecializedGetterCommon):
+    """
+    A class for generating the code for a specialized attribute getter
+    that the JIT can call with lower overhead.
+    """
+
+    def __init__(self, descriptor, attr):
+        self.attr = attr
+        name = "get_" + IDLToCIdentifier(attr.identifier.name)
+        args = [
+            Argument("JSContext*", "cx"),
+            Argument("JS::Handle<JSObject*>", "obj"),
+            Argument("void*", "void_self"),
+            Argument("JSJitGetterCallArgs", "args"),
+        ]
+        CGSpecializedGetterCommon.__init__(self, descriptor, name, None, attr, args)
+
+
+class CGTemplateForSpecializedGetter(CGSpecializedGetterCommon):
+    """
+    A class for generating the code for a specialized attribute getter
+    that can be used as the common getter that templated attribute
+    getters can forward to.
+    """
+
+    def __init__(self, descriptor, template):
+        self.attr = template.attr
+        self.attrNameString = template.attrNameString
+        args = [
+            Argument("JSContext*", "cx"),
+            Argument("JS::Handle<JSObject*>", "obj"),
+            Argument("void*", "void_self"),
+            Argument("JSJitGetterCallArgs", "args"),
+        ]
+        errorDescription = (
+            'ErrorDescriptionFor<ErrorFor::getter>{ "%s", attrName }'
+            % descriptor.interface.identifier.name
+        )
+        CGSpecializedGetterCommon.__init__(
+            self,
+            descriptor,
+            template.getter,
+            template.getter,
+            self.attr,
+            args,
+            errorReportingLabel=errorDescription,
+            additionalArg=Argument(template.argument.type, template.argument.name),
+        )
+
+    def auto_profiler_label(self):
+        return (
+            fill(
+                """
+                const char* attrName = ${attrNameString};
+                """,
+                attrNameString=self.attrNameString,
+            )
+            + CGSpecializedGetterCommon.auto_profiler_label(self, "attrName")
+        )
+
+
+class CGSpecializedTemplatedGetter(CGAbstractStaticMethod):
+    """
+    A class for generating the code for a specialized templated attribute
+    getter that forwards to a common template getter.
+    """
+
+    def __init__(self, descriptor, attr, template, additionalArg):
+        self.attr = attr
+        self.template = template
+        self.additionalArg = additionalArg
+        name = "get_" + IDLToCIdentifier(attr.identifier.name)
+        args = [
+            Argument("JSContext*", "cx"),
+            Argument("JS::Handle<JSObject*>", "obj"),
+            Argument("void*", "void_self"),
+            Argument("JSJitGetterCallArgs", "args"),
+        ]
+        assert not attr.getExtendedAttribute("StoreInSlot")
+        CGAbstractStaticMethod.__init__(
+            self,
+            descriptor,
+            name,
+            "bool",
+            args,
+            canRunScript=True,
+        )
+
+    def definition_body(self):
+        if self.additionalArg is None:
+            additionalArg = self.attr.identifier.name
+        else:
+            additionalArg = self.additionalArg
+
+        return fill(
+            """
+            return ${namespace}::${getter}(cx, obj, void_self, args, ${additionalArg});
+            """,
+            namespace=toBindingNamespace(
+                self.template.descriptor.interface.identifier.name
+            ),
+            getter=self.template.getter,
+            additionalArg=additionalArg,
+        )
 
 
 class CGGetterPromiseWrapper(CGAbstractStaticMethod):
@@ -11222,7 +11378,9 @@ class CGStaticGetter(CGAbstractStaticBindingMethod):
         CGAbstractStaticBindingMethod.__init__(self, descriptor, name)
 
     def generate_code(self):
-        nativeName = CGSpecializedGetter.makeNativeName(self.descriptor, self.attr)
+        nativeName = CGSpecializedGetterCommon.makeNativeName(
+            self.descriptor, self.attr
+        )
         return CGGetterCall(self.attr.type, nativeName, self.descriptor, self.attr)
 
     def auto_profiler_label(self):
@@ -11244,29 +11402,44 @@ class CGStaticGetter(CGAbstractStaticBindingMethod):
         return None
 
 
-class CGSpecializedSetter(CGAbstractStaticMethod):
+class CGSpecializedSetterCommon(CGAbstractStaticMethod):
     """
     A class for generating the code for a specialized attribute setter
     that the JIT can call with lower overhead.
     """
 
-    def __init__(self, descriptor, attr):
-        self.attr = attr
-        name = "set_" + IDLToCIdentifier(attr.identifier.name)
-        args = [
-            Argument("JSContext*", "cx"),
-            Argument("JS::Handle<JSObject*>", "obj"),
-            Argument("void*", "void_self"),
-            Argument("JSJitSetterCallArgs", "args"),
-        ]
+    def __init__(
+        self,
+        descriptor,
+        name,
+        nativeName,
+        attr,
+        args,
+        errorReportingLabel=None,
+        additionalArg=None,
+    ):
+        self.nativeName = nativeName
+        self.errorReportingLabel = errorReportingLabel
+        self.additionalArgs = [] if additionalArg is None else [additionalArg]
         CGAbstractStaticMethod.__init__(
-            self, descriptor, name, "bool", args, canRunScript=True
+            self,
+            descriptor,
+            name,
+            "bool",
+            args + self.additionalArgs,
+            canRunScript=True,
         )
 
     def definition_body(self):
-        nativeName = CGSpecializedSetter.makeNativeName(self.descriptor, self.attr)
         type = self.attr.type
-        call = CGSetterCall(type, nativeName, self.descriptor, self.attr).define()
+        call = CGSetterCall(
+            type,
+            self.nativeName,
+            self.descriptor,
+            self.attr,
+            self.errorReportingLabel,
+            [a.name for a in self.additionalArgs],
+        ).define()
         prefix = ""
         if self.attr.getExtendedAttribute("CrossOriginWritable"):
             if type.isGeckoInterface() and not type.unroll().inner.isExternal():
@@ -11300,18 +11473,19 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
             call=call,
         )
 
-    def auto_profiler_label(self):
+    def auto_profiler_label(self, profilerLabel=None):
         interface_name = self.descriptor.interface.identifier.name
-        attr_name = self.attr.identifier.name
+        if profilerLabel is None:
+            profilerLabel = '"' + self.attr.identifier.name + '"'
         return fill(
             """
             AUTO_PROFILER_LABEL_DYNAMIC_FAST(
-              "${interface_name}", "${attr_name}", DOM, cx,
+              "${interface_name}", ${attr_name}, DOM, cx,
               uint32_t(js::ProfilingStackFrame::Flags::STRING_TEMPLATE_SETTER) |
               uint32_t(js::ProfilingStackFrame::Flags::RELEVANT_FOR_JS));
             """,
             interface_name=interface_name,
-            attr_name=attr_name,
+            attr_name=profilerLabel,
         )
 
     @staticmethod
@@ -11322,19 +11496,132 @@ class CGSpecializedSetter(CGAbstractStaticMethod):
             attr.type, descriptor, allowTreatNonCallableAsNull=True
         ):
             return None
-        return (
+        return '"%s"' % (
             GetLabelForErrorReporting(descriptor, attr, isConstructor=False) + " setter"
         )
 
     def error_reporting_label(self):
-        return CGSpecializedSetter.error_reporting_label_helper(
+        errorReportingLabel = CGSpecializedSetterCommon.error_reporting_label_helper(
             self.descriptor, self.attr
         )
+        if errorReportingLabel is None:
+            return None
+        if self.errorReportingLabel:
+            return self.errorReportingLabel
+        return errorReportingLabel
 
     @staticmethod
     def makeNativeName(descriptor, attr):
         name = attr.identifier.name
         return "Set" + MakeNativeName(descriptor.binaryNameFor(name, attr.isStatic()))
+
+
+class CGSpecializedSetter(CGSpecializedSetterCommon):
+    """
+    A class for generating the code for a specialized attribute setter
+    that the JIT can call with lower overhead.
+    """
+
+    def __init__(self, descriptor, attr):
+        self.attr = attr
+        name = "set_" + IDLToCIdentifier(attr.identifier.name)
+        args = [
+            Argument("JSContext*", "cx"),
+            Argument("JS::Handle<JSObject*>", "obj"),
+            Argument("void*", "void_self"),
+            Argument("JSJitSetterCallArgs", "args"),
+        ]
+        CGSpecializedSetterCommon.__init__(
+            self,
+            descriptor,
+            name,
+            CGSpecializedSetterCommon.makeNativeName(descriptor, attr),
+            attr,
+            args,
+        )
+
+
+class CGTemplateForSpecializedSetter(CGSpecializedSetterCommon):
+    """
+    A class for generating the code for a specialized attribute setter
+    that can be used as the common setter that templated attribute
+    setters can forward to.
+    """
+
+    def __init__(self, descriptor, template):
+        self.attr = template.attr
+        self.attrNameString = template.attrNameString
+        args = [
+            Argument("JSContext*", "cx"),
+            Argument("JS::Handle<JSObject*>", "obj"),
+            Argument("void*", "void_self"),
+            Argument("JSJitSetterCallArgs", "args"),
+        ]
+        errorDescription = (
+            'ErrorDescriptionFor<ErrorFor::setter>{ "%s", attrName }'
+            % descriptor.interface.identifier.name
+        )
+        CGSpecializedSetterCommon.__init__(
+            self,
+            descriptor,
+            template.setter,
+            template.setter,
+            self.attr,
+            args,
+            errorReportingLabel=errorDescription,
+            additionalArg=Argument(template.argument.type, template.argument.name),
+        )
+
+    def auto_profiler_label(self):
+        return (
+            fill(
+                """
+                const char* attrName = ${attrNameString};
+                """,
+                attrNameString=self.attrNameString,
+            )
+            + CGSpecializedSetterCommon.auto_profiler_label(self, "attrName")
+        )
+
+
+class CGSpecializedTemplatedSetter(CGAbstractStaticMethod):
+    """
+    A class for generating the code for a specialized templated attribute
+    setter that forwards to a common template setter.
+    """
+
+    def __init__(self, descriptor, attr, template, additionalArg):
+        self.attr = attr
+        self.template = template
+        self.additionalArg = additionalArg
+        name = "set_" + IDLToCIdentifier(attr.identifier.name)
+        args = [
+            Argument("JSContext*", "cx"),
+            Argument("JS::Handle<JSObject*>", "obj"),
+            Argument("void*", "void_self"),
+            Argument("JSJitSetterCallArgs", "args"),
+        ]
+        CGAbstractStaticMethod.__init__(
+            self, descriptor, name, "bool", args, canRunScript=True
+        )
+
+    def definition_body(self):
+        additionalArgs = []
+        if self.additionalArg is None:
+            additionalArgs.append(self.attr.identifier.name)
+        else:
+            additionalArgs.append(self.additionalArg)
+
+        return fill(
+            """
+            return ${namespace}::${setter}(cx, obj, void_self, args, ${additionalArgs});
+            """,
+            namespace=toBindingNamespace(
+                self.template.descriptor.interface.identifier.name
+            ),
+            setter=self.template.setter,
+            additionalArgs=", ".join(additionalArgs),
+        )
 
 
 class CGStaticSetter(CGAbstractStaticBindingMethod):
@@ -11348,7 +11635,9 @@ class CGStaticSetter(CGAbstractStaticBindingMethod):
         CGAbstractStaticBindingMethod.__init__(self, descriptor, name)
 
     def generate_code(self):
-        nativeName = CGSpecializedSetter.makeNativeName(self.descriptor, self.attr)
+        nativeName = CGSpecializedSetterCommon.makeNativeName(
+            self.descriptor, self.attr
+        )
         checkForArg = CGGeneric(
             fill(
                 """
@@ -11377,7 +11666,7 @@ class CGStaticSetter(CGAbstractStaticBindingMethod):
         )
 
     def error_reporting_label(self):
-        return CGSpecializedSetter.error_reporting_label_helper(
+        return CGSpecializedSetterCommon.error_reporting_label_helper(
             self.descriptor, self.attr
         )
 
@@ -11418,7 +11707,7 @@ class CGSpecializedForwardingSetter(CGSpecializedSetter):
 
     def error_reporting_label(self):
         # We always need to be able to throw.
-        return (
+        return '"%s"' % (
             GetLabelForErrorReporting(self.descriptor, self.attr, isConstructor=False)
             + " setter"
         )
@@ -14833,7 +15122,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             if error_label:
                 cxDecl = fill(
                     """
-                    BindingCallContext cx(cx_, "${error_label}");
+                    BindingCallContext cx(cx_, ${error_label});
                     """,
                     error_label=error_label,
                 )
@@ -14885,7 +15174,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
             if error_label:
                 set += fill(
                     """
-                    BindingCallContext cx(cx_, "${error_label}");
+                    BindingCallContext cx(cx_, ${error_label});
                     """,
                     error_label=error_label,
                 )
@@ -15646,7 +15935,7 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
             if error_label:
                 cxDecl = fill(
                     """
-                    BindingCallContext cx(cx_, "${error_label}");
+                    BindingCallContext cx(cx_, ${error_label});
                     """,
                     error_label=error_label,
                 )
@@ -15679,7 +15968,7 @@ class CGDOMJSProxyHandler_setCustom(ClassMethod):
             if error_label:
                 cxDecl = fill(
                     """
-                    BindingCallContext cx(cx_, "${error_label}");
+                    BindingCallContext cx(cx_, ${error_label});
                     """,
                     error_label=error_label,
                 )
@@ -16313,7 +16602,7 @@ def memberProperties(m, descriptor):
 
 
 class CGDescriptor(CGThing):
-    def __init__(self, descriptor):
+    def __init__(self, descriptor, attributeTemplates):
         CGThing.__init__(self)
 
         assert (
@@ -16373,10 +16662,23 @@ class CGDescriptor(CGThing):
         defaultToJSONMethod = None
         needCrossOriginPropertyArrays = False
         unscopableNames = list()
+
         for n in descriptor.interface.legacyFactoryFunctions:
             cgThings.append(
                 CGClassConstructor(descriptor, n, LegacyFactoryFunctionName(n))
             )
+
+        if descriptor.attributeTemplates is not None:
+            for template in descriptor.attributeTemplates:
+                if template.getter is not None:
+                    cgThings.append(
+                        CGTemplateForSpecializedGetter(descriptor, template)
+                    )
+                if template.setter is not None:
+                    cgThings.append(
+                        CGTemplateForSpecializedSetter(descriptor, template)
+                    )
+
         for m in descriptor.interface.members:
             if m.isMethod() and m.identifier.name == "QueryInterface":
                 continue
@@ -16425,7 +16727,28 @@ class CGDescriptor(CGThing):
                     assert descriptor.interface.hasInterfaceObject()
                     cgThings.append(CGStaticGetter(descriptor, m))
                 elif descriptor.interface.hasInterfacePrototypeObject():
-                    specializedGetter = CGSpecializedGetter(descriptor, m)
+                    template = m.getExtendedAttribute("BindingTemplate")
+                    if template is not None:
+                        templateName = template[0][0]
+                        additionalArg = template[0][1]
+                        if not (m.type.isPrimitive() or m.type.isString()):
+                            raise TypeError(
+                                "We only support primitives or strings on templated attributes. "
+                                "Attribute '%s' on interface '%s' has type '%s' but tries to "
+                                "use template '%s'"
+                                % (
+                                    m.identifier.name,
+                                    descriptor.interface.identifier.name,
+                                    m.type,
+                                    templateName,
+                                )
+                            )
+                        template = attributeTemplates.get(templateName)
+                        specializedGetter = CGSpecializedTemplatedGetter(
+                            descriptor, m, template, additionalArg
+                        )
+                    else:
+                        specializedGetter = CGSpecializedGetter(descriptor, m)
                     cgThings.append(specializedGetter)
                     if m.type.isPromise():
                         cgThings.append(
@@ -16438,7 +16761,21 @@ class CGDescriptor(CGThing):
                         assert descriptor.interface.hasInterfaceObject()
                         cgThings.append(CGStaticSetter(descriptor, m))
                     elif descriptor.interface.hasInterfacePrototypeObject():
-                        cgThings.append(CGSpecializedSetter(descriptor, m))
+                        template = m.getExtendedAttribute("BindingTemplate")
+                        if template is not None:
+                            if isinstance(template[0], list):
+                                templateName = template[0][0]
+                                additionalArg = template[0][1]
+                            else:
+                                templateName = template[0]
+                                additionalArg = None
+                            template = attributeTemplates.get(templateName)
+                            specializedSetter = CGSpecializedTemplatedSetter(
+                                descriptor, m, template, additionalArg
+                            )
+                        else:
+                            specializedSetter = CGSpecializedSetter(descriptor, m)
+                        cgThings.append(specializedSetter)
                         if props.isCrossOriginSetter:
                             needCrossOriginPropertyArrays = True
                 elif m.getExtendedAttribute("PutForwards"):
@@ -18716,7 +19053,9 @@ class CGBindingRoot(CGThing):
                 cgthings.append(CGNamespace("binding_detail", CGFastCallback(t)))
 
         # Do codegen for all the descriptors
-        cgthings.extend([CGDescriptor(x) for x in descriptors])
+        cgthings.extend(
+            [CGDescriptor(x, config.attributeTemplates) for x in descriptors]
+        )
 
         # Do codegen for all the callback interfaces.
         cgthings.extend([CGCallbackInterface(x) for x in callbackDescriptors])
@@ -19332,7 +19671,7 @@ class CGExampleGetter(CGNativeMember):
             self,
             descriptor,
             attr,
-            CGSpecializedGetter.makeNativeName(descriptor, attr),
+            CGSpecializedGetterCommon.makeNativeName(descriptor, attr),
             (attr.type, []),
             descriptor.getExtendedAttributes(attr, getter=True),
         )
@@ -19357,7 +19696,7 @@ class CGExampleSetter(CGNativeMember):
             self,
             descriptor,
             attr,
-            CGSpecializedSetter.makeNativeName(descriptor, attr),
+            CGSpecializedSetterCommon.makeNativeName(descriptor, attr),
             (
                 BuiltinTypes[IDLBuiltinType.Types.undefined],
                 [FakeArgument(attr.type)],
@@ -19480,7 +19819,7 @@ class CGBindingImplClass(CGClass):
                 m
                 for m in iface.members
                 if m.isAttr()
-                and CGSpecializedGetter.makeNativeName(descriptor, m) == "Length"
+                and CGSpecializedGetterCommon.makeNativeName(descriptor, m) == "Length"
             )
             if not haveLengthAttr:
                 self.methodDecls.append(
@@ -20031,7 +20370,7 @@ class CGJSImplGetter(CGJSImplMember):
             self,
             descriptor,
             attr,
-            CGSpecializedGetter.makeNativeName(descriptor, attr),
+            CGSpecializedGetterCommon.makeNativeName(descriptor, attr),
             (attr.type, []),
             descriptor.getExtendedAttributes(attr, getter=True),
             passJSBitsAsNeeded=False,
@@ -20056,7 +20395,7 @@ class CGJSImplSetter(CGJSImplMember):
             self,
             descriptor,
             attr,
-            CGSpecializedSetter.makeNativeName(descriptor, attr),
+            CGSpecializedSetterCommon.makeNativeName(descriptor, attr),
             (
                 BuiltinTypes[IDLBuiltinType.Types.undefined],
                 [FakeArgument(attr.type)],
@@ -23600,7 +23939,7 @@ class CGEventGetter(CGNativeMember):
             self,
             descriptor,
             attr,
-            CGSpecializedGetter.makeNativeName(descriptor, attr),
+            CGSpecializedGetterCommon.makeNativeName(descriptor, attr),
             (attr.type, []),
             ea,
             resultNotAddRefed=not attr.type.isSequence(),
@@ -23940,7 +24279,7 @@ class CGEventClass(CGBindingImplClass):
                     # either.
                     extraMethods.append(
                         ClassMethod(
-                            CGSpecializedGetter.makeNativeName(descriptor, m),
+                            CGSpecializedGetterCommon.makeNativeName(descriptor, m),
                             "void",
                             [Argument("JS::MutableHandle<JS::Value>", "aRetVal")],
                             const=True,

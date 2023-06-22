@@ -5725,6 +5725,7 @@ class IDLAttribute(IDLInterfaceMember):
             or identifier == "ReturnValueNeedsContainsHack"
             or identifier == "BinaryName"
             or identifier == "NonEnumerable"
+            or identifier == "BindingTemplate"
         ):
             # Known attributes that we don't need to do anything with here
             pass
@@ -5734,6 +5735,9 @@ class IDLAttribute(IDLInterfaceMember):
                 [attr.location],
             )
         IDLInterfaceMember.handleExtendedAttribute(self, attr)
+
+    def getExtendedAttributes(self):
+        return self._extendedAttrDict
 
     def resolve(self, parentScope):
         assert isinstance(parentScope, IDLScope)

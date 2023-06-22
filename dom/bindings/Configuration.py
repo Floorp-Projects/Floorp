@@ -52,6 +52,31 @@ class Configuration(DescriptorProvider):
         exec(io.open(filename, encoding="utf-8").read(), glbl)
         config = glbl["DOMInterfaces"]
 
+        class IDLAttrGetterOrSetterTemplate:
+            def __init__(self, template, getter, setter, argument, attrName):
+                class TemplateAdditionalArg:
+                    def __init__(self, type, name, value=None):
+                        self.type = type
+                        self.name = name
+                        self.value = value
+
+                self.descriptor = None
+                self.usedInOtherInterfaces = False
+                self.getter = getter
+                self.setter = setter
+                self.argument = TemplateAdditionalArg(*argument)
+                self.attrNameString = attrName
+                self.attr = None
+
+        self.attributeTemplates = dict()
+        attributeTemplatesByInterface = dict()
+        for interface, templates in glbl["TemplatedAttributes"].items():
+            for template in templates:
+                name = template.get("template")
+                t = IDLAttrGetterOrSetterTemplate(**template)
+                self.attributeTemplates[name] = t
+                attributeTemplatesByInterface.setdefault(interface, list()).append(t)
+
         webRoots = tuple(map(os.path.normpath, webRoots))
 
         def isInWebIDLRoot(path):
@@ -137,7 +162,12 @@ class Configuration(DescriptorProvider):
             entry = config.get(iface.identifier.name, {})
             assert not isinstance(entry, list)
 
-            desc = Descriptor(self, iface, entry)
+            desc = Descriptor(
+                self,
+                iface,
+                entry,
+                attributeTemplatesByInterface.get(iface.identifier.name),
+            )
             self.descriptors.append(desc)
             # Setting up descriptorsByName while iterating through interfaces
             # means we can get the nativeType of iterable interfaces without
@@ -273,6 +303,183 @@ class Configuration(DescriptorProvider):
         # name.
         offsets = accumulate(map(lambda n: len(n) + 1, names), initial=0)
         self.namesStringOffsets = list(zip(names, offsets))
+
+        allTemplatedAttributes = (
+            (m, d)
+            for d in self.descriptors
+            if not d.interface.isExternal()
+            for m in d.interface.members
+            if m.isAttr() and m.getExtendedAttribute("BindingTemplate") is not None
+        )
+        # attributesPerTemplate will have the template names as keys, and a
+        # list of tuples as values. Every tuple contains an IDLAttribute and a
+        # descriptor.
+        attributesPerTemplate = dict()
+        for m, d in allTemplatedAttributes:
+            t = m.getExtendedAttribute("BindingTemplate")
+            if isinstance(t[0], list):
+                t = t[0]
+            l = attributesPerTemplate.setdefault(t[0], list())
+            # We want the readonly attributes last, because we use the first
+            # attribute in the list as the canonical attribute for the
+            # template, and if there are any writable attributes the
+            # template should have support for that.
+            if not m.readonly:
+                l.insert(0, (m, d))
+            else:
+                l.append((m, d))
+
+        for name, attributes in attributesPerTemplate.items():
+            # We use the first attribute to generate a canonical implementation
+            # of getter and setter.
+            firstAttribute, firstDescriptor = attributes[0]
+            template = self.attributeTemplates.get(name)
+            if template is None:
+                raise TypeError(
+                    "Unknown BindingTemplate with name %s for %s on %s"
+                    % (
+                        name,
+                        firstAttribute.identifier.name,
+                        firstDescriptor.interface.identifier.name,
+                    )
+                )
+
+            # This mimics a real IDL attribute for templated bindings.
+            class TemplateIDLAttribute:
+                def __init__(self, attr):
+                    assert attr.isAttr()
+                    assert not attr.isMaplikeOrSetlikeAttr()
+                    assert not attr.slotIndices
+
+                    self.identifier = attr.identifier
+                    self.type = attr.type
+                    self.extendedAttributes = attr.getExtendedAttributes()
+                    self.slotIndices = None
+
+                def getExtendedAttribute(self, name):
+                    return self.extendedAttributes.get(name)
+
+                def isAttr(self):
+                    return True
+
+                def isMaplikeOrSetlikeAttr(self):
+                    return False
+
+                def isMethod(self):
+                    return False
+
+                def isStatic(self):
+                    return False
+
+            template.attr = TemplateIDLAttribute(firstAttribute)
+
+            def filterExtendedAttributes(extendedAttributes):
+                # These are the extended attributes that we allow to have
+                # different values among all atributes that use the same
+                # template.
+                ignoredAttributes = {
+                    "BindingTemplate",
+                    "BindingAlias",
+                    "Pure",
+                    "Pref",
+                    "Func",
+                    "Throws",
+                    "GetterThrows",
+                    "SetterThrows",
+                }
+                return dict(
+                    filter(
+                        lambda i: i[0] not in ignoredAttributes,
+                        extendedAttributes.items(),
+                    )
+                )
+
+            firstExtAttrs = filterExtendedAttributes(
+                firstAttribute.getExtendedAttributes()
+            )
+
+            for a, d in attributes:
+                # We want to make sure all getters or setters grouped by a
+                # template have the same WebIDL signatures, so make sure
+                # their types are the same.
+                if template.attr.type != a.type:
+                    raise TypeError(
+                        "%s on %s and %s on %s have different type, but they're using the same template %s."
+                        % (
+                            firstAttribute.identifier.name,
+                            firstDescriptor.interface.identifier.name,
+                            a.identifier.name,
+                            d.interface.identifier.name,
+                            name,
+                        )
+                    )
+
+                extAttrs = filterExtendedAttributes(a.getExtendedAttributes())
+                if template.attr.extendedAttributes != extAttrs:
+                    for k in extAttrs.keys() - firstExtAttrs.keys():
+                        raise TypeError(
+                            "%s on %s has extended attribute %s and %s on %s does not, but they're using the same template %s."
+                            % (
+                                a.identifier.name,
+                                d.interface.identifier.name,
+                                k,
+                                firstAttribute.identifier.name,
+                                firstDescriptor.interface.identifier.name,
+                                name,
+                            )
+                        )
+                    for k in firstExtAttrs.keys() - extAttrs.keys():
+                        raise TypeError(
+                            "%s on %s has extended attribute %s and %s on %s does not, but they're using the same template %s."
+                            % (
+                                firstAttribute.identifier.name,
+                                firstDescriptor.interface.identifier.name,
+                                k,
+                                a.identifier.name,
+                                d.interface.identifier.name,
+                                name,
+                            )
+                        )
+                    for (k, v) in firstExtAttrs.items():
+                        if extAttrs[k] != v:
+                            raise TypeError(
+                                "%s on %s and %s on %s have different values for extended attribute %s, but they're using the same template %s."
+                                % (
+                                    firstAttribute.identifier.name,
+                                    firstDescriptor.interface.identifier.name,
+                                    a.identifier.name,
+                                    d.interface.identifier.name,
+                                    k,
+                                    name,
+                                )
+                            )
+
+                def sameThrows(getter=False, setter=False):
+                    extAttrs1 = firstDescriptor.getExtendedAttributes(
+                        firstAttribute, getter=getter, setter=setter
+                    )
+                    extAttrs2 = d.getExtendedAttributes(a, getter=getter, setter=setter)
+                    return ("needsErrorResult" in extAttrs1) == (
+                        "needsErrorResult" in extAttrs2
+                    )
+
+                if not sameThrows(getter=True) or (
+                    not a.readonly and not sameThrows(setter=True)
+                ):
+                    raise TypeError(
+                        "%s on %s and %s on %s have different annotations about throwing, but they're using the same template %s."
+                        % (
+                            firstAttribute.identifier.name,
+                            firstDescriptor.interface.identifier.name,
+                            a.identifier.name,
+                            d.interface.identifier.name,
+                            name,
+                        )
+                    )
+
+        for name, template in self.attributeTemplates.items():
+            if template.attr is None:
+                print("Template %s is unused, please remove it." % name)
 
     def getInterface(self, ifname):
         return self.interfaces[ifname]
@@ -427,10 +634,14 @@ class Descriptor(DescriptorProvider):
     Represents a single descriptor for an interface. See Bindings.conf.
     """
 
-    def __init__(self, config, interface, desc):
+    def __init__(self, config, interface, desc, attributeTemplates):
         DescriptorProvider.__init__(self)
         self.config = config
         self.interface = interface
+        self.attributeTemplates = attributeTemplates
+        if self.attributeTemplates is not None:
+            for t in self.attributeTemplates:
+                t.descriptor = self
 
         self.wantsXrays = not interface.isExternal() and interface.isExposedInWindow()
 
