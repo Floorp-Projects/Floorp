@@ -84,7 +84,6 @@ jobs:
             keep-artifacts: false
         fetches:
             toolchain:
-                - linux64-cctools-port
                 - linux64-clang
                 - linux64-hfsplus
                 - linux64-libdmg
