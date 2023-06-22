@@ -898,8 +898,8 @@ export function BrowserGlue() {
   );
 
   XPCOMUtils.defineLazyGetter(this, "_distributionCustomizer", function () {
-    const { DistributionCustomizer } = ChromeUtils.import(
-      "resource:///modules/distribution.js"
+    const { DistributionCustomizer } = ChromeUtils.importESModule(
+      "resource:///modules/distribution.sys.mjs"
     );
     return new DistributionCustomizer();
   });
