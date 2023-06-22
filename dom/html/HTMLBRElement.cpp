@@ -6,9 +6,10 @@
 
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/HTMLBRElementBinding.h"
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsAttrValueInlines.h"
 #include "nsStyleConsts.h"
+#include "nsMappedAttributes.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(BR)
 
@@ -41,14 +42,14 @@ bool HTMLBRElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-void HTMLBRElement::MapAttributesIntoRule(MappedDeclarationsBuilder& aBuilder) {
-  if (!aBuilder.PropertyIsSet(eCSSProperty_clear)) {
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::clear);
-    if (value && value->Type() == nsAttrValue::eEnum) {
-      aBuilder.SetKeywordValue(eCSSProperty_clear, value->GetEnumValue());
-    }
+void HTMLBRElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                          MappedDeclarations& aDecls) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_clear)) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::clear);
+    if (value && value->Type() == nsAttrValue::eEnum)
+      aDecls.SetKeywordValue(eCSSProperty_clear, value->GetEnumValue());
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

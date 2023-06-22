@@ -232,12 +232,16 @@ bool HTMLObjectElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLObjectElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  MapImageAlignAttributeInto(aBuilder);
-  MapImageBorderAttributeInto(aBuilder);
-  MapImageMarginAttributeInto(aBuilder);
-  MapImageSizeAttributesInto(aBuilder);
-  MapCommonAttributesInto(aBuilder);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  nsGenericHTMLFormControlElement::MapImageAlignAttributeInto(aAttributes,
+                                                              aDecls);
+  nsGenericHTMLFormControlElement::MapImageBorderAttributeInto(aAttributes,
+                                                               aDecls);
+  nsGenericHTMLFormControlElement::MapImageMarginAttributeInto(aAttributes,
+                                                               aDecls);
+  nsGenericHTMLFormControlElement::MapImageSizeAttributesInto(aAttributes,
+                                                              aDecls);
+  nsGenericHTMLFormControlElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

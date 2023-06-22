@@ -88,27 +88,37 @@ class HTMLBodyElement final : public nsGenericHTMLElement {
     SetHTMLAttr(nsGkAtoms::background, aBackground, aError);
   }
 
-  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                      const nsAString& aValue,
-                      nsIPrincipal* aMaybeScriptedPrincipal,
-                      nsAttrValue& aResult) override;
-  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
+      const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  already_AddRefed<EditorBase> GetAssociatedEditor() override;
-  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  virtual already_AddRefed<EditorBase> GetAssociatedEditor() override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  bool IsEventAttributeNameInternal(nsAtom* aName) override;
-  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  virtual bool IsEventAttributeNameInternal(nsAtom* aName) override;
 
-  void FrameMarginsChanged();
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  /**
+   * Called when an attribute has just been changed
+   */
+  virtual void AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aSubjectPrincipal,
+                            bool aNotify) override;
 
  protected:
   virtual ~HTMLBodyElement();
 
-  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    MappedDeclarations&);
 };
 
 }  // namespace dom

@@ -22,10 +22,12 @@
 #include "nsAttrValue.h"
 #include "nsCaseTreatment.h"
 
+class nsMappedAttributes;
+class nsMappedAttributeElement;
+
 namespace mozilla {
 class AttributeStyles;
-struct StyleLockedDeclarationBlock;
-}  // namespace mozilla
+}
 
 class AttrArray {
   using BorrowedAttrInfo = mozilla::dom::BorrowedAttrInfo;
@@ -34,9 +36,11 @@ class AttrArray {
   AttrArray() = default;
   ~AttrArray() = default;
 
-  bool HasAttrs() const { return !!AttrCount(); }
+  bool HasAttrs() const { return NonMappedAttrCount() || MappedAttrCount(); }
 
-  uint32_t AttrCount() const { return mImpl ? mImpl->mAttrCount : 0; }
+  uint32_t AttrCount() const {
+    return NonMappedAttrCount() + MappedAttrCount();
+  }
 
   const nsAttrValue* GetAttr(const nsAtom* aLocalName,
                              int32_t aNamespaceID = kNameSpaceID_None) const;
@@ -57,20 +61,6 @@ class AttrArray {
   nsresult SetAndSwapAttr(mozilla::dom::NodeInfo* aName, nsAttrValue& aValue,
                           bool* aHadValue);
 
-  // This stores the argument and clears the pending mapped attribute evaluation
-  // bit, so after calling this IsPendingMappedAttributeEvaluation() is
-  // guaranteed to return false.
-  void SetMappedDeclarationBlock(
-      already_AddRefed<mozilla::StyleLockedDeclarationBlock>);
-
-  bool IsPendingMappedAttributeEvaluation() const {
-    return mImpl && mImpl->mMappedAttributeBits & 1;
-  }
-
-  mozilla::StyleLockedDeclarationBlock* GetMappedDeclarationBlock() const {
-    return mImpl ? mImpl->GetMappedDeclarationBlock() : nullptr;
-  }
-
   // Remove the attr at position aPos.  The value of the attr is placed in
   // aValue; any value that was already in aValue is destroyed.
   nsresult RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue);
@@ -88,27 +78,34 @@ class AttrArray {
   int32_t IndexOfAttr(const nsAtom* aLocalName,
                       int32_t aNamespaceID = kNameSpaceID_None) const;
 
+  // SetAndSwapMappedAttr swaps the current attribute value with aValue.
+  // If the attribute was unset, an empty value will be swapped into aValue
+  // and aHadValue will be set to false. Otherwise, aHadValue will be set to
+  // true.
+  nsresult SetAndSwapMappedAttr(nsAtom* aLocalName, nsAttrValue& aValue,
+                                nsMappedAttributeElement* aContent,
+                                bool* aHadValue);
+
+  // Update the rule mapping function on our mapped attributes, if we have any.
+  // We take a nsMappedAttributeElement, not a nsMapRuleToAttributesFunc,
+  // because the latter is defined in a header we can't include here.
+  nsresult UpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement) {
+    if (!mImpl || !mImpl->mMappedAttrs) {
+      return NS_OK;
+    }
+    return DoUpdateMappedAttrRuleMapper(aElement);
+  }
+
   void Compact();
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  // Mark the element as pending mapped attribute evaluation. This should be
-  // called when a mapped attribute is changed (regardless of connectedness).
-  bool MarkAsPendingPresAttributeEvaluation() {
-    // It'd be great to be able to assert that mImpl is non-null or we're the
-    // <body> element.
-    if (MOZ_UNLIKELY(!mImpl) && !GrowBy(1)) {
-      return false;
-    }
-    InfallibleMarkAsPendingPresAttributeEvaluation();
-    return true;
+  bool HasMappedAttrs() const { return !!GetMapped(); }
+  const nsMappedAttributes* GetMapped() const {
+    return mImpl ? mImpl->mMappedAttrs : nullptr;
   }
 
-  // See above.
-  void InfallibleMarkAsPendingPresAttributeEvaluation() {
-    MOZ_ASSERT(mImpl);
-    mImpl->mMappedAttributeBits |= 1;
-  }
+  // Force this to have mapped attributes, even if those attributes are empty.
+  nsresult ForceMapped(nsMappedAttributeElement* aContent);
 
   // Clear the servo declaration block on the mapped attributes, if any
   // Will assert off main thread
@@ -161,6 +158,8 @@ class AttrArray {
     return val && val->Equals(aValue, aCaseSensitive);
   }
 
+  nsresult SetMappedAttributeStyles(mozilla::AttributeStyles* aNewStyles);
+
   struct InternalAttr {
     nsAttrName mName;
     nsAttrValue mValue;
@@ -170,6 +169,20 @@ class AttrArray {
   AttrArray& operator=(const AttrArray& aOther) = delete;
 
  private:
+  uint32_t NonMappedAttrCount() const { return mImpl ? mImpl->mAttrCount : 0; }
+
+  uint32_t MappedAttrCount() const {
+    return mImpl && mImpl->mMappedAttrs ? DoGetMappedAttrCount() : 0;
+  }
+
+  uint32_t DoGetMappedAttrCount() const;
+
+  // Returns a non-null zero-refcount object.
+  nsMappedAttributes* ModifiableMapped(nsMappedAttributeElement* aContent,
+                                       bool aWillAddAttr,
+                                       int32_t aAttrCount = 1);
+  nsresult MakeMappedUnique(nsMappedAttributes* aAttributes);
+
   bool GrowBy(uint32_t aGrowSize);
 
   // Tries to create an attribute, growing the buffer if needed, with the given
@@ -182,22 +195,30 @@ class AttrArray {
   template <typename Name>
   nsresult AddNewAttribute(Name*, nsAttrValue&);
 
+  /**
+   * Guts of UpdateMappedAttrRuleMapper for the case  when we have mapped attrs.
+   */
+  nsresult DoUpdateMappedAttrRuleMapper(nsMappedAttributeElement& aElement);
+
+#ifdef _MSC_VER
+// Disable MSVC warning 'nonstandard extension used: zero-sized array in
+// struct/union'
+#  pragma warning(push)
+#  pragma warning(disable : 4200)
+#endif
   class Impl {
    public:
     constexpr static size_t AllocationSizeForAttributes(uint32_t aAttrCount) {
       return sizeof(Impl) + aAttrCount * sizeof(InternalAttr);
     }
 
-    mozilla::StyleLockedDeclarationBlock* GetMappedDeclarationBlock() const {
-      return reinterpret_cast<mozilla::StyleLockedDeclarationBlock*>(
-          mMappedAttributeBits & ~uintptr_t(1));
-    }
-
-    auto Attrs() const {
+    auto NonMappedAttrs() const {
       return mozilla::Span<const InternalAttr>{mBuffer, mAttrCount};
     }
 
-    auto Attrs() { return mozilla::Span<InternalAttr>{mBuffer, mAttrCount}; }
+    auto NonMappedAttrs() {
+      return mozilla::Span<InternalAttr>{mBuffer, mAttrCount};
+    }
 
     Impl(const Impl&) = delete;
     Impl(Impl&&) = delete;
@@ -206,25 +227,23 @@ class AttrArray {
     uint32_t mAttrCount;
     uint32_t mCapacity;  // In number of InternalAttrs
 
-    // mMappedAttributeBits is a tagged pointer of a
-    // StyleLockedDeclarationBlock, which holds the style information that our
-    // attributes map to.
-    //
-    // If the lower bit is set, then our mapped attributes are dirty. This just
-    // means that we might have mapped attributes (or used to and no longer
-    // have), and are pending an update to recompute our declaration.
-    uintptr_t mMappedAttributeBits = 0;
+    // Manually refcounted.
+    nsMappedAttributes* mMappedAttrs;
 
     // Allocated in the same buffer as `Impl`.
     InternalAttr mBuffer[0];
   };
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
 
-  mozilla::Span<InternalAttr> Attrs() {
-    return mImpl ? mImpl->Attrs() : mozilla::Span<InternalAttr>();
+  mozilla::Span<InternalAttr> NonMappedAttrs() {
+    return mImpl ? mImpl->NonMappedAttrs() : mozilla::Span<InternalAttr>();
   }
 
-  mozilla::Span<const InternalAttr> Attrs() const {
-    return mImpl ? mImpl->Attrs() : mozilla::Span<const InternalAttr>();
+  mozilla::Span<const InternalAttr> NonMappedAttrs() const {
+    return mImpl ? mImpl->NonMappedAttrs()
+                 : mozilla::Span<const InternalAttr>();
   }
 
   mozilla::UniquePtr<Impl> mImpl;

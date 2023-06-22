@@ -8,7 +8,7 @@
 #define mozilla_dom_MathMLElement_h_
 
 #include "mozilla/Attributes.h"
-#include "nsStyledElement.h"
+#include "nsMappedAttributeElement.h"
 #include "Link.h"
 
 class nsCSSValue;
@@ -18,12 +18,13 @@ class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
 
-using MathMLElementBase = nsStyledElement;
+typedef nsMappedAttributeElement MathMLElementBase;
 
 /*
  * The base class for MathML elements.
  */
-class MathMLElement final : public MathMLElementBase, public Link {
+class MathMLElement final : public MathMLElementBase,
+                            public mozilla::dom::Link {
  public:
   explicit MathMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   explicit MathMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -55,9 +56,8 @@ class MathMLElement final : public MathMLElementBase, public Link {
   static bool ParseNumericValue(const nsString& aString, nsCSSValue& aCSSValue,
                                 uint32_t aFlags, Document* aDocument);
 
-  static void MapGlobalMathMLAttributesInto(
-      mozilla::MappedDeclarationsBuilder&);
-  static void MapMTableAttributesInto(mozilla::MappedDeclarationsBuilder&);
+  static void MapMathMLAttributesInto(const nsMappedAttributes* aAttributes,
+                                      mozilla::MappedDeclarations&);
 
   void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT

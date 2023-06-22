@@ -9,11 +9,12 @@
 #include "mozilla/dom/HTMLOListElementBinding.h"
 #include "mozilla/dom/HTMLUListElementBinding.h"
 
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
+#include "nsMappedAttributes.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(SharedList)
 
@@ -66,28 +67,28 @@ bool HTMLSharedListElement::ParseAttribute(
 }
 
 void HTMLSharedListElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  if (!aBuilder.PropertyIsSet(eCSSProperty_list_style_type)) {
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::type);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_list_style_type)) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
     if (value && value->Type() == nsAttrValue::eEnum) {
-      aBuilder.SetKeywordValue(eCSSProperty_list_style_type,
-                               value->GetEnumValue());
+      aDecls.SetKeywordValue(eCSSProperty_list_style_type,
+                             value->GetEnumValue());
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 void HTMLSharedListElement::MapOLAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  if (!aBuilder.PropertyIsSet(eCSSProperty_counter_reset)) {
-    const nsAttrValue* startAttr = aBuilder.GetAttr(nsGkAtoms::start);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_counter_reset)) {
+    const nsAttrValue* startAttr = aAttributes->GetAttr(nsGkAtoms::start);
     bool haveStart = startAttr && startAttr->Type() == nsAttrValue::eInteger;
     int32_t start = 0;
     if (haveStart) {
       start = startAttr->GetIntegerValue() - 1;
     }
-    bool haveReversed = !!aBuilder.GetAttr(nsGkAtoms::reversed);
+    bool haveReversed = !!aAttributes->GetAttr(nsGkAtoms::reversed);
     if (haveReversed) {
       if (haveStart) {
         start += 2;  // i.e. the attr value + 1
@@ -96,11 +97,11 @@ void HTMLSharedListElement::MapOLAttributesIntoRule(
       }
     }
     if (haveStart || haveReversed) {
-      aBuilder.SetCounterResetListItem(start, haveReversed);
+      aDecls.SetCounterResetListItem(start, haveReversed);
     }
   }
 
-  HTMLSharedListElement::MapAttributesIntoRule(aBuilder);
+  HTMLSharedListElement::MapAttributesIntoRule(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

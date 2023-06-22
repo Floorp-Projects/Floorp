@@ -6,8 +6,9 @@
 
 #include "mozilla/dom/HTMLTableCaptionElement.h"
 
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsAttrValueInlines.h"
+#include "nsMappedAttributes.h"
 #include "nsStyleConsts.h"
 #include "mozilla/dom/HTMLTableCaptionElementBinding.h"
 
@@ -41,15 +42,14 @@ bool HTMLTableCaptionElement::ParseAttribute(
 }
 
 void HTMLTableCaptionElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  if (!aBuilder.PropertyIsSet(eCSSProperty_caption_side)) {
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::align);
-    if (value && value->Type() == nsAttrValue::eEnum) {
-      aBuilder.SetKeywordValue(eCSSProperty_caption_side,
-                               value->GetEnumValue());
-    }
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_caption_side)) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::align);
+    if (value && value->Type() == nsAttrValue::eEnum)
+      aDecls.SetKeywordValue(eCSSProperty_caption_side, value->GetEnumValue());
   }
-  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
+
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

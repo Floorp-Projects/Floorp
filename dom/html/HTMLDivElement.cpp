@@ -7,6 +7,7 @@
 #include "HTMLDivElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStyleConsts.h"
+#include "nsMappedAttributes.h"
 #include "mozilla/dom/HTMLDivElementBinding.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Div)
@@ -35,9 +36,9 @@ bool HTMLDivElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLDivElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  MapDivAlignAttributeInto(aBuilder);
-  MapCommonAttributesInto(aBuilder);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

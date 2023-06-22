@@ -84,7 +84,8 @@ class HTMLTableRowElement final : public nsGenericHTMLElement {
   RefPtr<nsContentList> mCells;
 
  private:
-  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    MappedDeclarations&);
 };
 
 }  // namespace mozilla::dom

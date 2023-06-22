@@ -266,7 +266,8 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
   nsresult CopyInnerTo(HTMLCanvasElement* aDest);
 
-  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    MappedDeclarations&);
 
   /*
    * Helpers called by various users of Canvas

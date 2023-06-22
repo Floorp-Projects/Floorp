@@ -16,7 +16,7 @@
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElementBinding.h"
 #include "mozilla/dom/UnionTypes.h"
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
 #include "mozilla/Maybe.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
@@ -30,6 +30,7 @@
 #include "nsListControlFrame.h"
 #include "nsISelectControlFrame.h"
 #include "nsLayoutUtils.h"
+#include "nsMappedAttributes.h"
 #include "mozilla/PresState.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStyleConsts.h"
@@ -1166,10 +1167,11 @@ bool HTMLSelectElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLSelectElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   nsGenericHTMLFormControlElementWithState::MapImageAlignAttributeInto(
-      aBuilder);
-  nsGenericHTMLFormControlElementWithState::MapCommonAttributesInto(aBuilder);
+      aAttributes, aDecls);
+  nsGenericHTMLFormControlElementWithState::MapCommonAttributesInto(aAttributes,
+                                                                    aDecls);
 }
 
 nsChangeHint HTMLSelectElement::GetAttributeChangeHint(const nsAtom* aAttribute,

@@ -340,6 +340,7 @@
 #include "nsJSUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsLiteralString.h"
+#include "nsMappedAttributes.h"
 #include "nsMargin.h"
 #include "nsMimeTypes.h"
 #include "nsNameSpaceManager.h"
@@ -1965,6 +1966,7 @@ void nsContentUtils::Shutdown() {
   }
 
   TextControlState::Shutdown();
+  nsMappedAttributes::Shutdown();
 }
 
 /**

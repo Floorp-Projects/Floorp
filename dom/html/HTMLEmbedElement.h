@@ -33,27 +33,28 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
   }
 
   // EventTarget
-  void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
+  virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
-  nsresult BindToTree(BindContext&, nsINode& aParent) override;
-  void UnbindFromTree(bool aNullParent = true) override;
+  virtual nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  virtual void UnbindFromTree(bool aNullParent = true) override;
 
-  bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
-                       int32_t* aTabIndex) override;
+  virtual bool IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
+                               int32_t* aTabIndex) override;
 
-  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                      const nsAString& aValue,
-                      nsIPrincipal* aMaybeScriptedPrincipal,
-                      nsAttrValue& aResult) override;
-  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
+      const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  ElementState IntrinsicState() const override;
-  void DestroyContent() override;
+  virtual ElementState IntrinsicState() const override;
+  virtual void DestroyContent() override;
 
   // nsObjectLoadingContent
-  uint32_t GetCapabilities() const override;
+  virtual uint32_t GetCapabilities() const override;
 
-  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   nsresult CopyInnerTo(HTMLEmbedElement* aDest);
 
@@ -105,21 +106,25 @@ class HTMLEmbedElement final : public nsGenericHTMLElement,
   // Override for nsImageLoadingContent.
   nsIContent* AsContent() override { return this; }
 
-  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
-  void OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
-                              const nsAttrValueOrString& aValue,
-                              bool aNotify) override;
+  virtual void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
+                            const nsAttrValue* aValue,
+                            const nsAttrValue* aOldValue,
+                            nsIPrincipal* aSubjectPrincipal,
+                            bool aNotify) override;
+  virtual void OnAttrSetButNotChanged(int32_t aNamespaceID, nsAtom* aName,
+                                      const nsAttrValueOrString& aValue,
+                                      bool aNotify) override;
 
  private:
   ~HTMLEmbedElement();
 
   nsContentPolicyType GetContentPolicyType() const override;
 
-  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
-  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    MappedDeclarations&);
 
   /**
    * This function is called by AfterSetAttr and OnAttrSetButNotChanged.

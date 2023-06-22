@@ -321,6 +321,14 @@ const ServoElementSnapshotTable& ServoStyleSet::Snapshots() {
   return GetPresContext()->RestyleManager()->Snapshots();
 }
 
+void ServoStyleSet::ResolveMappedAttrDeclarationBlocks() {
+  if (AttributeStyles* attrStyles = mDocument->GetAttributeStyles()) {
+    attrStyles->CalculateMappedServoDeclarations();
+  }
+
+  mDocument->ResolveScheduledSVGPresAttrs();
+}
+
 void ServoStyleSet::PreTraverseSync() {
   // Get the Document's root element to ensure that the cache is valid before
   // calling into the (potentially-parallel) Servo traversal, where a cache hit
@@ -333,7 +341,7 @@ void ServoStyleSet::PreTraverseSync() {
   // can end up doing editing stuff, which adds stylesheets etc...
   mDocument->FlushUserFontSet();
 
-  mDocument->ResolveScheduledPresAttrs();
+  ResolveMappedAttrDeclarationBlocks();
 
   LookAndFeel::NativeInit();
 

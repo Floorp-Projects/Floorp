@@ -21,13 +21,14 @@ class HTMLLIElement final : public nsGenericHTMLElement {
   // nsISupports
   NS_INLINE_DECL_REFCOUNTING_INHERITED(HTMLLIElement, nsGenericHTMLElement)
 
-  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                      const nsAString& aValue,
-                      nsIPrincipal* aMaybeScriptedPrincipal,
-                      nsAttrValue& aResult) override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
-  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
+      const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   // WebIDL API
   void GetType(DOMString& aType) { GetHTMLAttr(nsGkAtoms::type, aType); }
@@ -42,10 +43,12 @@ class HTMLLIElement final : public nsGenericHTMLElement {
  protected:
   virtual ~HTMLLIElement();
 
-  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapNode(JSContext* aCx,
+                             JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    MappedDeclarations&);
 };
 
 }  // namespace mozilla::dom

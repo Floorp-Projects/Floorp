@@ -725,9 +725,9 @@ nsChangeHint HTMLCanvasElement::GetAttributeChangeHint(const nsAtom* aAttribute,
 }
 
 void HTMLCanvasElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  MapAspectRatioInto(aBuilder);
-  MapCommonAttributesInto(aBuilder);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  MapAspectRatioInto(aAttributes, aDecls);
+  MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 nsMapRuleToAttributesFunc HTMLCanvasElement::GetAttributeMappingFunction()

@@ -13,7 +13,7 @@
 #include "mozilla/dom/HTMLTextAreaElementBinding.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresState.h"
 #include "mozilla/TextControlState.h"
@@ -32,6 +32,8 @@
 #include "nsITextControlFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsLinebreakConverter.h"
+#include "nsMappedAttributes.h"
+#include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
@@ -376,18 +378,20 @@ bool HTMLTextAreaElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 void HTMLTextAreaElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   // wrap=off
-  if (!aBuilder.PropertyIsSet(eCSSProperty_white_space)) {
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::wrap);
+  if (!aDecls.PropertyIsSet(eCSSProperty_white_space)) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::wrap);
     if (value && value->Type() == nsAttrValue::eString &&
         value->Equals(nsGkAtoms::OFF, eIgnoreCase)) {
-      aBuilder.SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::Pre);
+      aDecls.SetKeywordValue(eCSSProperty_white_space, StyleWhiteSpace::Pre);
     }
   }
 
-  nsGenericHTMLFormControlElementWithState::MapDivAlignAttributeInto(aBuilder);
-  nsGenericHTMLFormControlElementWithState::MapCommonAttributesInto(aBuilder);
+  nsGenericHTMLFormControlElementWithState::MapDivAlignAttributeInto(
+      aAttributes, aDecls);
+  nsGenericHTMLFormControlElementWithState::MapCommonAttributesInto(aAttributes,
+                                                                    aDecls);
 }
 
 nsChangeHint HTMLTextAreaElement::GetAttributeChangeHint(

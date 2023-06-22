@@ -1379,25 +1379,25 @@ class Document : public nsINode,
 
   void NotifyLayerManagerRecreated();
 
-  // Add an element to the list of elements that need their mapped attributes
-  // resolved to a declaration block.
-  //
-  // These are weak pointers, manually unschedule them when an element is
-  // removed from the tree.
-  void ScheduleForPresAttrEvaluation(Element* aElement);
-
-  // Un-schedule an element scheduled by ScheduleForPresAttrEvaluation,
-  // generally when it's unbound from the tree.
-  void UnscheduleForPresAttrEvaluation(Element* aElement);
-
-  // Resolve all presentational attributes scheduled in
-  // ScheduleForPresAttrEvaluation
-  void ResolveScheduledPresAttrs() {
-    if (mLazyPresElements.IsEmpty()) {
-      return;
-    }
-    DoResolveScheduledPresAttrs();
+  /**
+   * Add an SVG element to the list of elements that need
+   * their mapped attributes resolved to a Servo declaration block.
+   *
+   * These are weak pointers, please manually unschedule them when an element
+   * is removed.
+   */
+  void ScheduleSVGForPresAttrEvaluation(SVGElement* aSVG) {
+    mLazySVGPresElements.Insert(aSVG);
   }
+
+  // Unschedule an element scheduled by ScheduleFrameRequestCallback (e.g. for
+  // when it is destroyed)
+  void UnscheduleSVGForPresAttrEvaluation(SVGElement* aSVG) {
+    mLazySVGPresElements.Remove(aSVG);
+  }
+
+  // Resolve all SVG pres attrs scheduled in ScheduleSVGForPresAttrEvaluation
+  void ResolveScheduledSVGPresAttrs();
 
   Maybe<ClientInfo> GetClientInfo() const;
   Maybe<ClientState> GetClientState() const;
@@ -1563,8 +1563,6 @@ class Document : public nsINode,
   void PostUnblockOnloadEvent();
 
   void DoUnblockOnload();
-
-  void DoResolveScheduledPresAttrs();
 
   void RetrieveRelevantHeaders(nsIChannel* aChannel);
 
@@ -5259,9 +5257,10 @@ class Document : public nsINode,
 
   RefPtr<DOMStyleSheetSetList> mStyleSheetSetList;
 
-  // We lazily calculate declaration blocks for elements with mapped
-  // attributes. This set contains all elements which need lazy resolution.
-  nsTHashSet<Element*> mLazyPresElements;
+  // We lazily calculate declaration blocks for SVG elements with mapped
+  // attributes in Servo mode. This list contains all elements which need lazy
+  // resolution.
+  nsTHashSet<SVGElement*> mLazySVGPresElements;
 
   nsTHashSet<RefPtr<nsAtom>> mLanguagesUsed;
 

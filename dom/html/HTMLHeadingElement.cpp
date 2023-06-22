@@ -7,8 +7,12 @@
 #include "mozilla/dom/HTMLHeadingElement.h"
 #include "mozilla/dom/HTMLHeadingElementBinding.h"
 
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsGkAtoms.h"
+#include "nsStyleConsts.h"
+#include "nsMappedAttributes.h"
+#include "mozAutoDocUpdate.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Heading)
 
@@ -37,9 +41,9 @@ bool HTMLHeadingElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 void HTMLHeadingElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  nsGenericHTMLElement::MapDivAlignAttributeInto(aBuilder);
-  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)
