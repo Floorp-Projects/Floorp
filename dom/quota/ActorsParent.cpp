@@ -17,6 +17,7 @@
 #include "OriginInfo.h"
 #include "QuotaCommon.h"
 #include "QuotaManager.h"
+#include "SanitizationUtils.h"
 #include "ScopedLogExtraInfo.h"
 #include "UsageInfo.h"
 
@@ -2112,26 +2113,6 @@ class RestoreDirectoryMetadata2Helper final : public StorageOperationBase {
  private:
   nsresult ProcessOriginDirectory(const OriginProps& aOriginProps) override;
 };
-
-auto MakeSanitizedOriginCString(const nsACString& aOrigin) {
-#ifdef XP_WIN
-  NS_ASSERTION(!strcmp(QuotaManager::kReplaceChars,
-                       FILE_ILLEGAL_CHARACTERS FILE_PATH_SEPARATOR),
-               "Illegal file characters have changed!");
-#endif
-
-  nsAutoCString res{aOrigin};
-
-  res.ReplaceChar(QuotaManager::kReplaceChars, '+');
-
-  return res;
-}
-
-auto MakeSanitizedOriginString(const nsACString& aOrigin) {
-  // An origin string is ASCII-only, since it is obtained via
-  // nsIPrincipal::GetOrigin, which returns an ACString.
-  return NS_ConvertASCIItoUTF16(MakeSanitizedOriginCString(aOrigin));
-}
 
 Result<nsAutoString, nsresult> GetPathForStorage(
     nsIFile& aBaseDir, const nsAString& aStorageName) {
