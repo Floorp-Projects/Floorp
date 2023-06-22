@@ -167,14 +167,4 @@ void AsyncEventDispatcher::RequireNodeInDocument() {
   mCheckStillInDoc = true;
 }
 
-/******************************************************************************
- * mozilla::LoadBlockingAsyncEventDispatcher
- ******************************************************************************/
-
-LoadBlockingAsyncEventDispatcher::~LoadBlockingAsyncEventDispatcher() {
-  if (mBlockedDoc) {
-    mBlockedDoc->UnblockOnload(true);
-  }
-}
-
 }  // namespace mozilla
