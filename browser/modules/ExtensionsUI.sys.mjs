@@ -8,6 +8,7 @@ import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AMBrowserExtensionsImport: "resource://gre/modules/AddonManager.sys.mjs",
   AMTelemetry: "resource://gre/modules/AddonManager.sys.mjs",
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
@@ -56,6 +57,9 @@ export var ExtensionsUI = {
     Services.obs.addObserver(this, "webextension-install-notify");
     Services.obs.addObserver(this, "webextension-optional-permission-prompt");
     Services.obs.addObserver(this, "webextension-defaultsearch-prompt");
+    Services.obs.addObserver(this, "webextension-imported-addons-cancelled");
+    Services.obs.addObserver(this, "webextension-imported-addons-complete");
+    Services.obs.addObserver(this, "webextension-imported-addons-pending");
 
     await Services.wm.getMostRecentWindow("navigator:browser")
       .delayedStartupPromise;
@@ -101,7 +105,10 @@ export var ExtensionsUI = {
   },
 
   _updateNotifications() {
-    if (this.sideloaded.size + this.updates.size == 0) {
+    const { sideloaded, updates } = this;
+    const { importedAddonIDs } = lazy.AMBrowserExtensionsImport;
+
+    if (importedAddonIDs.length + sideloaded.size + updates.size == 0) {
       lazy.AppMenuNotifications.removeNotification("addon-alert");
     } else {
       lazy.AppMenuNotifications.showBadgeOnlyNotification("addon-alert");
@@ -308,6 +315,14 @@ export var ExtensionsUI = {
       }
 
       this.showDefaultSearchPrompt(browser, strings, icon).then(respond);
+    } else if (
+      [
+        "webextension-imported-addons-cancelled",
+        "webextension-imported-addons-complete",
+        "webextension-imported-addons-pending",
+      ].includes(topic)
+    ) {
+      this._updateNotifications();
     }
   },
 

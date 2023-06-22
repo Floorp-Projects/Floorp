@@ -41,7 +41,7 @@ const assertStageInstallsResult = (result, importedAddonIDs) => {
 
 const cancelInstalls = async importedAddonIDs => {
   const promiseTopic = TestUtils.topicObserved(
-    "webextension-notify-imported-addons-cancelled"
+    "webextension-imported-addons-cancelled"
   );
   // We want to verify that we received a `onInstallCancelled` event per
   // (cancelled) install (i.e. per imported add-on).
@@ -135,11 +135,15 @@ add_task(async function test_stage_and_complete_installs() {
   });
   const importedAddonIDs = ["ff@ext-1", "ff@ext-2"];
 
+  let promiseTopic = TestUtils.topicObserved(
+    "webextension-imported-addons-pending"
+  );
   const result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
     extensionIDs,
     addonRepository
   );
+  await promiseTopic;
   assertStageInstallsResult(result, importedAddonIDs);
 
   // Make sure the prompt handler is the one from `AMBrowserExtensionsImport`
@@ -152,8 +156,8 @@ add_task(async function test_stage_and_complete_installs() {
     );
   }
 
-  const promiseTopic = TestUtils.topicObserved(
-    "webextension-notify-imported-addons-complete"
+  promiseTopic = TestUtils.topicObserved(
+    "webextension-imported-addons-complete"
   );
   const endedPromises = importedAddonIDs.map(id =>
     AddonTestUtils.promiseInstallEvent(
@@ -169,7 +173,8 @@ add_task(async function test_stage_and_complete_installs() {
     "expected no pending imported add-ons"
   );
   Assert.ok(
-    !AMBrowserExtensionsImport._importInProgress,
+    !AMBrowserExtensionsImport._canCompleteOrCancelInstalls &&
+      !AMBrowserExtensionsImport._importInProgress,
     "expected internal state to be consistent"
   );
 
@@ -190,11 +195,15 @@ add_task(async function test_stage_and_cancel_installs() {
   });
   const importedAddonIDs = ["ff@ext-1", "ff@ext-2"];
 
+  const promiseTopic = TestUtils.topicObserved(
+    "webextension-imported-addons-pending"
+  );
   const result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
     extensionIDs,
     addonRepository
   );
+  await promiseTopic;
   assertStageInstallsResult(result, importedAddonIDs);
 
   await cancelInstalls(importedAddonIDs);
@@ -211,11 +220,15 @@ add_task(async function test_call_stageInstalls_twice() {
   });
   const importedAddonIDs = ["ff@ext-1"];
 
+  const promiseTopic = TestUtils.topicObserved(
+    "webextension-imported-addons-pending"
+  );
   let result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
     extensionIDs,
     addonRepository
   );
+  await promiseTopic;
   assertStageInstallsResult(result, importedAddonIDs);
 
   await Assert.rejects(
@@ -260,7 +273,8 @@ add_task(async function test_call_stageInstalls_no_addons() {
     "expected no pending imported add-ons"
   );
   Assert.ok(
-    !AMBrowserExtensionsImport._importInProgress,
+    !AMBrowserExtensionsImport._canCompleteOrCancelInstalls &&
+      !AMBrowserExtensionsImport._importInProgress,
     "expected internal state to be consistent"
   );
 });
@@ -275,16 +289,20 @@ add_task(async function test_import_twice() {
   });
   const importedAddonIDs = ["ff@ext-1", "ff@ext-2"];
 
+  let promiseTopic = TestUtils.topicObserved(
+    "webextension-imported-addons-pending"
+  );
   let result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
     extensionIDs,
     addonRepository
   );
+  await promiseTopic;
   assertStageInstallsResult(result, importedAddonIDs);
 
   // Finalize the installs.
-  const promiseTopic = TestUtils.topicObserved(
-    "webextension-notify-imported-addons-complete"
+  promiseTopic = TestUtils.topicObserved(
+    "webextension-imported-addons-complete"
   );
   const endedPromises = importedAddonIDs.map(id =>
     AddonTestUtils.promiseInstallEvent(
@@ -308,7 +326,8 @@ add_task(async function test_import_twice() {
     "expected no pending imported add-ons"
   );
   Assert.ok(
-    !AMBrowserExtensionsImport._importInProgress,
+    !AMBrowserExtensionsImport._canCompleteOrCancelInstalls &&
+      !AMBrowserExtensionsImport._importInProgress,
     "expected internal state to be consistent"
   );
 
@@ -374,7 +393,8 @@ add_task(async function test_stage_installs_with_download_aborted() {
     "expected pending imported add-ons"
   );
   Assert.ok(
-    AMBrowserExtensionsImport._importInProgress,
+    AMBrowserExtensionsImport._canCompleteOrCancelInstalls &&
+      AMBrowserExtensionsImport._importInProgress,
     "expected internal state to be consistent"
   );
 
