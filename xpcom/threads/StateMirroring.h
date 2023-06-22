@@ -144,8 +144,8 @@ class Canonical {
       MOZ_ASSERT(OwnerThread()->IsCurrentThreadIn());
       MOZ_ASSERT(OwnerThread()->RequiresTailDispatch(aMirror->OwnerThread()),
                  "Can't get coherency without tail dispatch");
-      mMirrors.AppendElement(aMirror);
       aMirror->ConnectedOnCanonicalThread(this);
+      AddMirror(aMirror);
     }
 
     void AddMirror(AbstractMirror<T>* aMirror) override {
