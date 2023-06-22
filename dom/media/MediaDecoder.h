@@ -743,36 +743,31 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   Maybe<SeekTarget> mDelayedSeekTarget;
 
  public:
-  AbstractCanonical<double>* CanonicalVolume() { return &mVolume; }
-  AbstractCanonical<bool>* CanonicalPreservesPitch() {
-    return &mPreservesPitch;
+  Canonical<double>& CanonicalVolume() { return mVolume; }
+  Canonical<bool>& CanonicalPreservesPitch() { return mPreservesPitch; }
+  Canonical<bool>& CanonicalLooping() { return mLooping; }
+  Canonical<nsAutoString>& CanonicalStreamName() { return mStreamName; }
+  Canonical<RefPtr<AudioDeviceInfo>>& CanonicalSinkDevice() {
+    return mSinkDevice;
   }
-  AbstractCanonical<bool>* CanonicalLooping() { return &mLooping; }
-  AbstractCanonical<nsAutoString>* CanonicalStreamName() {
-    return &mStreamName;
+  Canonical<RefPtr<VideoFrameContainer>>& CanonicalSecondaryVideoContainer() {
+    return mSecondaryVideoContainer;
   }
-  AbstractCanonical<RefPtr<AudioDeviceInfo>>* CanonicalSinkDevice() {
-    return &mSinkDevice;
+  Canonical<OutputCaptureState>& CanonicalOutputCaptureState() {
+    return mOutputCaptureState;
   }
-  AbstractCanonical<RefPtr<VideoFrameContainer>>*
-  CanonicalSecondaryVideoContainer() {
-    return &mSecondaryVideoContainer;
-  }
-  AbstractCanonical<OutputCaptureState>* CanonicalOutputCaptureState() {
-    return &mOutputCaptureState;
-  }
-  AbstractCanonical<nsMainThreadPtrHandle<SharedDummyTrack>>*
+  Canonical<nsMainThreadPtrHandle<SharedDummyTrack>>&
   CanonicalOutputDummyTrack() {
-    return &mOutputDummyTrack;
+    return mOutputDummyTrack;
   }
-  AbstractCanonical<CopyableTArray<RefPtr<ProcessedMediaTrack>>>*
+  Canonical<CopyableTArray<RefPtr<ProcessedMediaTrack>>>&
   CanonicalOutputTracks() {
-    return &mOutputTracks;
+    return mOutputTracks;
   }
-  AbstractCanonical<PrincipalHandle>* CanonicalOutputPrincipal() {
-    return &mOutputPrincipal;
+  Canonical<PrincipalHandle>& CanonicalOutputPrincipal() {
+    return mOutputPrincipal;
   }
-  AbstractCanonical<PlayState>* CanonicalPlayState() { return &mPlayState; }
+  Canonical<PlayState>& CanonicalPlayState() { return mPlayState; }
 
   void UpdateTelemetryHelperBasedOnPlayState(PlayState aState) const;
 
