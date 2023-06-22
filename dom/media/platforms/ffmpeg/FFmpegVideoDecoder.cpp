@@ -28,7 +28,7 @@
 #  include "va/va.h"
 #endif
 
-#if defined(MOZ_AV1) && defined(MOZ_WIDGET_GTK) && \
+#if defined(MOZ_AV1) && defined(MOZ_WAYLAND) && \
     (defined(FFVPX_VERSION) || LIBAVCODEC_VERSION_MAJOR >= 59)
 #  define FFMPEG_AV1_DECODE 1
 #  include "AOMDecoder.h"
@@ -1752,7 +1752,7 @@ nsTArray<AVCodecID> FFmpegVideoDecoder<LIBAV_VER>::GetAcceleratedFormats() {
     FFMPEG_LOG("  vaQueryConfigProfiles() failed %s", vaErrorStr(status));
     return supportedHWCodecs;
   }
-  numProfiles = std::min(numProfiles, maxProfiles);
+  numProfiles = MIN(numProfiles, maxProfiles);
 
   entryPoints = new VAEntrypoint[maxEntryPoints];
   for (int p = 0; p < numProfiles; p++) {
@@ -1771,7 +1771,7 @@ nsTArray<AVCodecID> FFmpegVideoDecoder<LIBAV_VER>::GetAcceleratedFormats() {
                  vaErrorStr(status), (int)profile);
       continue;
     }
-    numEntryPoints = std::min(numEntryPoints, maxEntryPoints);
+    numEntryPoints = MIN(numEntryPoints, maxEntryPoints);
 
     FFMPEG_LOG("  Profile %s:", VAProfileName(profile));
     for (int e = 0; e < numEntryPoints; e++) {
