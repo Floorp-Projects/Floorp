@@ -1573,67 +1573,6 @@ class PluginOptions extends AddonOptions {
 }
 customElements.define("plugin-options", PluginOptions);
 
-class FiveStarRating extends HTMLElement {
-  static get observedAttributes() {
-    return ["rating"];
-  }
-
-  constructor() {
-    super();
-    this.attachShadow({ mode: "open" });
-    this.shadowRoot.append(importTemplate("five-star-rating"));
-  }
-
-  set rating(v) {
-    this.setAttribute("rating", v);
-  }
-
-  get rating() {
-    let v = parseFloat(this.getAttribute("rating"), 10);
-    if (v >= 0 && v <= 5) {
-      return v;
-    }
-    return 0;
-  }
-
-  get ratingBuckets() {
-    // 0    <= x <  0.25 = empty
-    // 0.25 <= x <  0.75 = half
-    // 0.75 <= x <= 1    = full
-    // ... et cetera, until x <= 5.
-    let { rating } = this;
-    return [0, 1, 2, 3, 4].map(ratingStart => {
-      let distanceToFull = rating - ratingStart;
-      if (distanceToFull < 0.25) {
-        return "empty";
-      }
-      if (distanceToFull < 0.75) {
-        return "half";
-      }
-      return "full";
-    });
-  }
-
-  connectedCallback() {
-    this.renderRating();
-  }
-
-  attributeChangedCallback() {
-    this.renderRating();
-  }
-
-  renderRating() {
-    let starElements = this.shadowRoot.querySelectorAll(".rating-star");
-    for (let [i, part] of this.ratingBuckets.entries()) {
-      starElements[i].setAttribute("fill", part);
-    }
-    document.l10n.setAttributes(this, "five-star-rating", {
-      rating: this.rating,
-    });
-  }
-}
-customElements.define("five-star-rating", FiveStarRating);
-
 class ProxyContextMenu extends HTMLElement {
   openPopupAtScreen(...args) {
     // prettier-ignore
@@ -2349,7 +2288,7 @@ class AddonDetails extends HTMLElement {
     // Rating.
     let ratingRow = this.querySelector(".addon-detail-row-rating");
     if (addon.averageRating) {
-      ratingRow.querySelector("five-star-rating").rating = addon.averageRating;
+      ratingRow.querySelector("moz-five-star").rating = addon.averageRating;
       let reviews = ratingRow.querySelector("a");
       reviews.href = formatUTMParams(
         "addons-manager-reviews-link",
@@ -3133,9 +3072,9 @@ class RecommendedAddonCard extends HTMLElement {
     let hasStats = false;
     if (addon.averageRating) {
       hasStats = true;
-      card.querySelector("five-star-rating").rating = addon.averageRating;
+      card.querySelector("moz-five-star").rating = addon.averageRating;
     } else {
-      card.querySelector("five-star-rating").hidden = true;
+      card.querySelector("moz-five-star").hidden = true;
     }
 
     if (addon.dailyUsers) {

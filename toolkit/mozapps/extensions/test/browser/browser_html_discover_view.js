@@ -310,12 +310,12 @@ add_task(async function discopane_with_real_api_data() {
       );
       checkContent(".disco-description-main", expectations.editorialBody);
 
-      let ratingElem = card.querySelector("five-star-rating");
+      let mozFiveStar = card.querySelector("moz-five-star");
       if (expectations.rating) {
-        is(ratingElem.rating, expectations.rating, "Expected rating value");
-        ok(ratingElem.offsetWidth, "Rating element is visible");
+        is(mozFiveStar.rating, expectations.rating, "Expected rating value");
+        ok(mozFiveStar.offsetWidth, "Rating element is visible");
       } else {
-        is(ratingElem.offsetWidth, 0, "Rating element is not visible");
+        is(mozFiveStar.offsetWidth, 0, "Rating element is not visible");
       }
 
       let userCountElem = card.querySelector(".disco-user-count");

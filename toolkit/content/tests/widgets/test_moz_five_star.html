@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MozFiveStar Tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="module" src="chrome://global/content/elements/moz-five-star.mjs"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="max-width: fit-content">
+  <moz-five-star label="Label" rating="2.5"></moz-five-star>
+</div>
+<pre id="test">
+  <script class="testbody" type="application/javascript">
+    const { BrowserTestUtils } = ChromeUtils.importESModule("resource://testing-common/BrowserTestUtils.sys.mjs");
+    add_task(async function testMozFiveStar() {
+      const mozFiveStar = document.querySelector("moz-five-star");
+      ok(mozFiveStar, "moz-five-star is rendered");
+
+      const stars = mozFiveStar.starEls;
+      ok(stars, "moz-five-star has stars");
+      is(stars.length, 5, "moz-five-star stars count is 5");
+
+      const rating = mozFiveStar.rating;
+      ok(rating, "moz-five-star has a rating");
+      is(rating, 2.5, "moz-five-star rating is 2.5");
+    });
+
+    add_task(async function testMozFiveStarsDisplay() {
+      const mozFiveStar = document.querySelector("moz-five-star");
+      ok(mozFiveStar, "moz-five-star is rendered");
+
+      async function testRating(rating, ratingRounded, expectation) {
+        mozFiveStar.rating = rating;
+        await mozFiveStar.updateComplete;
+        if (mozFiveStar.ownerDocument.hasPendingL10nMutations) {
+          await BrowserTestUtils.waitForEvent(
+            mozFiveStar.ownerDocument,
+            "L10nMutationsFinished"
+          );
+        }
+        let starsString = Array.from(mozFiveStar.starEls)
+          .map(star => star.getAttribute("fill"))
+          .join(",");
+        is(starsString, expectation, `Rendering of rating ${rating}`);
+
+        is(
+          mozFiveStar.starsWrapperEl.title,
+          `Rated ${ratingRounded} out of 5`,
+          "Rendered title must contain at most one fractional digit"
+        );
+      }
+
+      await testRating(0.0, "0", "empty,empty,empty,empty,empty");
+      await testRating(0.249, "0.2", "empty,empty,empty,empty,empty");
+      await testRating(0.25, "0.3", "half,empty,empty,empty,empty");
+      await testRating(0.749, "0.7", "half,empty,empty,empty,empty");
+      await testRating(0.99, "1", "full,empty,empty,empty,empty");
+      await testRating(1.0, "1", "full,empty,empty,empty,empty");
+      await testRating(2, "2", "full,full,empty,empty,empty");
+      await testRating(3.0, "3", "full,full,full,empty,empty");
+      await testRating(4.001, "4", "full,full,full,full,empty");
+      await testRating(4.249, "4.2", "full,full,full,full,empty");
+      await testRating(4.25, "4.3", "full,full,full,full,half");
+      await testRating(4.749, "4.7", "full,full,full,full,half");
+      await testRating(4.89, "4.9", "full,full,full,full,full");
+      await testRating(5.0, "5", "full,full,full,full,full");
+    });
+  </script>
+</pre>
+</body>
+</html>
