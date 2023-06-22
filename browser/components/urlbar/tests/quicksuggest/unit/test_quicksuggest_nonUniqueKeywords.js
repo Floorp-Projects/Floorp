@@ -204,6 +204,7 @@ add_task(async function () {
             : "firefox-suggest-urlbar-block",
         },
         source: "remote-settings",
+        provider: "AdmWikipedia",
       },
     });
   }

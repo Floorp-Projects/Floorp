@@ -1631,6 +1631,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       originalUrl: {
         type: "string",
       },
+      provider: {
+        type: "string",
+      },
       qsSuggestion: {
         type: "string",
       },

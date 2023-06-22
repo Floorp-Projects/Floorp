@@ -65,6 +65,7 @@ const EXPECTED_SPONSORED_URLBAR_RESULT = {
         : "firefox-suggest-urlbar-block",
     },
     source: "remote-settings",
+    provider: "AdmWikipedia",
   },
 };
 
@@ -99,6 +100,7 @@ const EXPECTED_NONSPONSORED_URLBAR_RESULT = {
         : "firefox-suggest-urlbar-block",
     },
     source: "remote-settings",
+    provider: "AdmWikipedia",
   },
 };
 

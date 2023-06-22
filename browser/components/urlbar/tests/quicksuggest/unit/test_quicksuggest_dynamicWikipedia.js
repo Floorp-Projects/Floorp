@@ -82,6 +82,7 @@ function makeExpectedResult() {
       icon: "icon",
       qsSuggestion: "full_keyword",
       source: "merino",
+      provider: "wikipedia",
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
         id: "urlbar-result-menu-learn-more-about-firefox-suggest",

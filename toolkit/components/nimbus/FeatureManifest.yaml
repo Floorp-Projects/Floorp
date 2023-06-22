@@ -290,6 +290,16 @@ urlbar:
         - history
         - offline
         - online
+    quickSuggestScoreMap:
+      type: json
+      description: >-
+        A JSON object that maps telemetry result types to suggestion scores. If
+        a telemetry result type is present in this map, the client will use the
+        corresponding score as the score for all suggestions of the type,
+        overriding all other sources of scores for the type. In other words,
+        the scores in this map will override scores that are set in remote
+        settings and Merino as well as scores that are hardcoded in the client.
+        Example entries: `"amo": 0.5`, `"adm_sponsored": 0.9`
     quickSuggestShouldShowOnboardingDialog:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.shouldShowOnboardingDialog

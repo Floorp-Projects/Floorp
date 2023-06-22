@@ -21,12 +21,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
 });
 
-const FEATURE_NAMES_BY_TELEMETRY_TYPE = {
-  adm: "AdmWikipedia",
-  amo: "AddonSuggestions",
-  pocket: "PocketSuggestions",
-};
-
 const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
 
 const TELEMETRY_SCALARS = {
@@ -161,7 +155,26 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return;
     }
 
-    let suggestions = values.flat().sort((a, b) => b.score - a.score);
+    let suggestions = values.flat();
+
+    // Override suggestion scores with the ones defined in the Nimbus variable
+    // `quickSuggestScoreMap`. It maps telemetry types to scores.
+    let scoreMap = lazy.UrlbarPrefs.get("quickSuggestScoreMap");
+    if (scoreMap) {
+      for (let i = 0; i < suggestions.length; i++) {
+        let telemetryType = this.#getSuggestionTelemetryType(suggestions[i]);
+        if (scoreMap.hasOwnProperty(telemetryType)) {
+          let score = parseFloat(scoreMap[telemetryType]);
+          if (!isNaN(score)) {
+            // Don't modify the original suggestion object in case the feature
+            // that provided it returns the same object to all callers.
+            suggestions[i] = { ...suggestions[i], score };
+          }
+        }
+      }
+    }
+
+    suggestions.sort((a, b) => b.score - a.score);
 
     // Add a result for the first suggestion that can be shown.
     for (let suggestion of suggestions) {
@@ -255,23 +268,57 @@ class ProviderQuickSuggest extends UrlbarProvider {
     return this.#getFeatureByResult(result)?.getResultCommands?.(result);
   }
 
+  /**
+   * Gets the `BaseFeature` instance that implements suggestions for a source
+   * and provider name. The source and provider name can be supplied from either
+   * a suggestion object or the payload of a `UrlbarResult` object.
+   *
+   * @param {object} options
+   *   Options object.
+   * @param {string} options.source
+   *   The suggestion source, one of: "remote-settings", "merino"
+   * @param {string} options.provider
+   *   If the suggestion source is remote settings, this should be the name of
+   *   the `BaseFeature` instance (`feature.name`) that manages the suggestion
+   *   type. If the suggestion source is Merino, this should be the name of the
+   *   Merino provider that serves the suggestion type.
+   * @returns {BaseFeature}
+   *   The feature instance or null if no feature was found.
+   */
+  #getFeature({ source, provider }) {
+    return source == "remote-settings"
+      ? lazy.QuickSuggest.getFeature(provider)
+      : lazy.QuickSuggest.getFeatureByMerinoProvider(provider);
+  }
+
   #getFeatureByResult(result) {
-    return lazy.QuickSuggest.getFeature(
-      FEATURE_NAMES_BY_TELEMETRY_TYPE[result.payload.telemetryType]
-    );
+    return this.#getFeature(result.payload);
+  }
+
+  /**
+   * Returns the telemetry type for a suggestion. A telemetry type uniquely
+   * identifies a type of suggestion as well as the kind of `UrlbarResult`
+   * instances created from it.
+   *
+   * @param {object} suggestion
+   *   A suggestion from remote settings or Merino.
+   * @returns {string}
+   *   The telemetry type. If the suggestion type is managed by a `BaseFeature`
+   *   instance, the telemetry type is retrieved from it. Otherwise the
+   *   suggestion type is assumed to come from Merino, and `suggestion.provider`
+   *   (the Merino provider name) is returned.
+   */
+  #getSuggestionTelemetryType(suggestion) {
+    let feature = this.#getFeature(suggestion);
+    if (feature) {
+      return feature.getSuggestionTelemetryType(suggestion);
+    }
+    return suggestion.provider;
   }
 
   async #makeResult(queryContext, suggestion) {
-    // For suggestions from remote settings, `suggestion.provider` will be the
-    // feature name. For suggestions from Merino, it will be the Merino provider
-    // name, which is also used as the `telemetryType`.
-    let feature =
-      lazy.QuickSuggest.getFeature(suggestion.provider) ||
-      lazy.QuickSuggest.getFeature(
-        FEATURE_NAMES_BY_TELEMETRY_TYPE[suggestion.provider]
-      );
-
     let result;
+    let feature = this.#getFeature(suggestion);
     if (!feature) {
       result = this.#makeDefaultResult(queryContext, suggestion);
     } else {
@@ -285,6 +332,17 @@ class ProviderQuickSuggest extends UrlbarProvider {
         return null;
       }
     }
+
+    // `source` will be one of: "remote-settings", "merino"
+    result.payload.source = suggestion.source;
+
+    // If the suggestion source is remote settings, `provider` will be the name
+    // of the `BaseFeature` instance (`feature.name`) that manages the
+    // suggestion type. If the source is Merino, it will be the name of the
+    // Merino provider that served the suggestion.
+    result.payload.provider = suggestion.provider;
+
+    result.payload.telemetryType = this.#getSuggestionTelemetryType(suggestion);
 
     if (!result.hasSuggestedIndex) {
       // When `bestMatchEnabled` is true, a "Top pick" checkbox appears in
@@ -322,8 +380,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
       url: suggestion.url,
       icon: suggestion.icon,
       isSponsored: suggestion.is_sponsored,
-      source: suggestion.source,
-      telemetryType: suggestion.provider,
       helpUrl: lazy.QuickSuggest.HELP_URL,
       helpL10n: {
         id: "urlbar-result-menu-learn-more-about-firefox-suggest",

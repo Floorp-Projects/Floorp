@@ -64,6 +64,16 @@ export class BaseFeature {
   }
 
   /**
+   * @returns {string}
+   *   If the feature manages suggestions served by Merino, the subclass should
+   *   override this getter and return the name of the specific Merino provider
+   *   that serves them.
+   */
+  get merinoProvider() {
+    return "";
+  }
+
+  /**
    * This method should initialize or uninitialize any state related to the
    * feature.
    *
@@ -96,6 +106,22 @@ export class BaseFeature {
    *   The `RemoteSettings` client object.
    */
   async onRemoteSettingsSync(rs) {}
+
+  /**
+   * If the feature manages suggestions that either aren't served by Merino or
+   * whose telemetry type is different from `merinoProvider`, the subclass
+   * should override this method. It should return the telemetry type for the
+   * given suggestion. A telemetry type uniquely identifies a type of suggestion
+   * as well as the kind of `UrlbarResult` instances created from it.
+   *
+   * @param {object} suggestion
+   *   A suggestion from either remote settings or Merino.
+   * @returns {string}
+   *   The suggestion's telemetry type.
+   */
+  getSuggestionTelemetryType(suggestion) {
+    return this.merinoProvider;
+  }
 
   /**
    * If the feature corresponds to a type of suggestion, the subclass should

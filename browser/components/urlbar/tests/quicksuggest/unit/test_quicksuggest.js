@@ -106,6 +106,7 @@ const EXPECTED_SPONSORED_RESULT = {
     },
     displayUrl: "http://test.com/q=frabbits",
     source: "remote-settings",
+    provider: "AdmWikipedia",
   },
 };
 
@@ -140,6 +141,7 @@ const EXPECTED_NONSPONSORED_RESULT = {
     },
     displayUrl: "http://test.com/?q=nonsponsored",
     source: "remote-settings",
+    provider: "AdmWikipedia",
   },
 };
 
@@ -174,6 +176,7 @@ const EXPECTED_HTTP_RESULT = {
     },
     displayUrl: "http://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
     source: "remote-settings",
+    provider: "AdmWikipedia",
   },
 };
 
@@ -208,6 +211,7 @@ const EXPECTED_HTTPS_RESULT = {
     },
     displayUrl: PREFIX_SUGGESTIONS_STRIPPED_URL,
     source: "remote-settings",
+    provider: "AdmWikipedia",
   },
 };
 
@@ -240,6 +244,31 @@ add_setup(async function init() {
       },
     ],
   });
+});
+
+add_task(async function telemetryType_sponsored() {
+  Assert.equal(
+    QuickSuggest.getFeature("AdmWikipedia").getSuggestionTelemetryType({
+      is_sponsored: true,
+    }),
+    "adm_sponsored",
+    "Telemetry type should be 'adm_sponsored'"
+  );
+});
+
+add_task(async function telemetryType_nonsponsored() {
+  Assert.equal(
+    QuickSuggest.getFeature("AdmWikipedia").getSuggestionTelemetryType({
+      is_sponsored: false,
+    }),
+    "adm_nonsponsored",
+    "Telemetry type should be 'adm_nonsponsored'"
+  );
+  Assert.equal(
+    QuickSuggest.getFeature("AdmWikipedia").getSuggestionTelemetryType({}),
+    "adm_nonsponsored",
+    "Telemetry type should be 'adm_nonsponsored' if `is_sponsored` not defined"
+  );
 });
 
 // Tests with only non-sponsored suggestions enabled with a matching search
@@ -1024,6 +1053,7 @@ add_task(async function dedupeAgainstURL_timestamps() {
           : "firefox-suggest-urlbar-block",
       },
       source: "remote-settings",
+      provider: "AdmWikipedia",
     },
   };
 

@@ -171,6 +171,7 @@ function createExpectedQuickSuggestResult(suggest) {
       },
       displayUrl: suggest.url,
       source: "remote-settings",
+      provider: "AdmWikipedia",
     },
   };
 }

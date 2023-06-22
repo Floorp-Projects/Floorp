@@ -141,6 +141,9 @@ class _QuickSuggest {
       let { [name]: ctor } = ChromeUtils.importESModule(uri);
       let feature = new ctor();
       this.#features[name] = feature;
+      if (feature.merinoProvider) {
+        this.#featuresByMerinoProvider.set(feature.merinoProvider, feature);
+      }
 
       // Update the map from enabling preferences to features.
       let prefs = feature.enablingPreferences;
@@ -171,6 +174,21 @@ class _QuickSuggest {
    */
   getFeature(name) {
     return this.#features[name];
+  }
+
+  /**
+   * Returns a quick suggest feature by the name of the Merino provider that
+   * serves its suggestions (as defined by `feature.merinoProvider`). Not all
+   * features correspond to a Merino provider.
+   *
+   * @param {string} provider
+   *   The name of a Merino provider.
+   * @returns {BaseFeature}
+   *   The feature object, an instance of a subclass of `BaseFeature`, or null
+   *   if no feature corresponds to the Merino provider.
+   */
+  getFeatureByMerinoProvider(provider) {
+    return this.#featuresByMerinoProvider.get(provider);
   }
 
   /**
@@ -470,6 +488,9 @@ class _QuickSuggest {
 
   // Maps from quick suggest feature class names to feature instances.
   #features = {};
+
+  // Maps from Merino provider names to quick suggest feature class names.
+  #featuresByMerinoProvider = new Map();
 
   // Maps from preference names to the `Set` of feature instances they enable.
   #featuresByEnablingPrefs = new Map();

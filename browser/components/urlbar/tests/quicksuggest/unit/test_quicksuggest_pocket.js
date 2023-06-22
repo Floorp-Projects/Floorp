@@ -45,6 +45,14 @@ add_setup(async function init() {
   });
 });
 
+add_task(async function telemetryType() {
+  Assert.equal(
+    QuickSuggest.getFeature("PocketSuggestions").getSuggestionTelemetryType({}),
+    "pocket",
+    "Telemetry type should be 'pocket'"
+  );
+});
+
 // When non-sponsored suggestions are disabled, Pocket suggestions should be
 // disabled.
 add_task(async function nonsponsoredDisabled() {
@@ -256,6 +264,7 @@ function makeExpectedResult({
     heuristic: false,
     payload: {
       source,
+      provider: source == "remote-settings" ? "PocketSuggestions" : "pocket",
       telemetryType: "pocket",
       title: suggestion.title,
       url: suggestion.url,
