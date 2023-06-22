@@ -2,7 +2,7 @@
 # cargo-vet config file
 
 [cargo-vet]
-version = "0.7"
+version = "0.8"
 
 [imports.bytecode-alliance]
 url = "https://raw.githubusercontent.com/bytecodealliance/wasmtime/main/supply-chain/audits.toml"
@@ -420,10 +420,6 @@ criteria = "safe-to-run"
 [[exemptions.fuchsia-zircon-sys]]
 version = "0.3.3"
 criteria = "safe-to-run"
-
-[[exemptions.futures]]
-version = "0.3.21"
-criteria = "safe-to-deploy"
 
 [[exemptions.futures-macro]]
 version = "0.3.21"
