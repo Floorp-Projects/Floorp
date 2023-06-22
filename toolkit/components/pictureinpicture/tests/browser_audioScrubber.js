@@ -36,11 +36,15 @@ add_task(async function test_audioScrubber() {
       let pipWin = await triggerPictureInPicture(browser, videoID);
       ok(pipWin, "Got Picture-in-Picture window.");
 
-      // Resize the PiP window so we know the audio scrubber is visible
-      let resizePromise = BrowserTestUtils.waitForEvent(pipWin, "resize");
-      let ratio = pipWin.innerWidth * pipWin.innerHeight;
-      pipWin.resizeTo(750 * ratio, 750);
-      await resizePromise;
+      let ratio = pipWin.innerWidth / pipWin.innerHeight;
+      let height = 750;
+      let width = Math.floor(ratio * height);
+      if (pipWin.innerHeight < height || pipWin.innerWidth < width) {
+        // Resize the PiP window so we know the audio scrubber is visible
+        let resizePromise = BrowserTestUtils.waitForEvent(pipWin, "resize");
+        pipWin.resizeTo(width, height);
+        await resizePromise;
+      }
 
       let audioScrubber = pipWin.document.getElementById("audio-scrubber");
       audioScrubber.focus();
