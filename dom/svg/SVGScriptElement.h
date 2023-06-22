@@ -39,7 +39,6 @@ class SVGScriptElement final : public SVGScriptElementBase,
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIScriptElement
-  bool GetScriptType(nsAString& type) override;
   void GetScriptText(nsAString& text) const override;
   void GetScriptCharset(nsAString& charset) override;
   void FreezeExecutionAttrs(Document* aOwnerDoc) override;

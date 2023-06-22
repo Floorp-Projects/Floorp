@@ -142,30 +142,6 @@ void HTMLScriptElement::SetText(const nsAString& aValue, ErrorResult& aRv) {
 // variation of this code in SVGScriptElement - check if changes
 // need to be transfered when modifying
 
-bool HTMLScriptElement::GetScriptType(nsAString& aType) {
-  nsAutoString type;
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::type, type)) {
-    return false;
-  }
-
-  // ASCII whitespace https://infra.spec.whatwg.org/#ascii-whitespace:
-  // U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or U+0020 SPACE.
-  static const char kASCIIWhitespace[] = "\t\n\f\r ";
-
-  const bool wasEmptyBeforeTrim = type.IsEmpty();
-  type.Trim(kASCIIWhitespace);
-
-  // If the value before trim was not empty and the value is now empty, do not
-  // trim as we want to retain pure whitespace (by restoring original value)
-  // because we need to treat "" and " " (etc) differently.
-  if (!wasEmptyBeforeTrim && type.IsEmpty()) {
-    return GetAttr(kNameSpaceID_None, nsGkAtoms::type, aType);
-  }
-
-  aType.Assign(type);
-  return true;
-}
-
 void HTMLScriptElement::GetScriptText(nsAString& text) const {
   GetText(text, IgnoreErrors());
 }

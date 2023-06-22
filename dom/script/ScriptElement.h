@@ -36,6 +36,8 @@ class ScriptElement : public nsIScriptElement, public nsStubMutationObserver {
 
   virtual nsresult FireErrorEvent() override;
 
+  virtual bool GetScriptType(nsAString& aType) override;
+
  protected:
   // Internal methods
 
