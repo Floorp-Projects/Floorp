@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>preventDefault() in touchmove prevents scrolling even after a long tap event</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+</head>
+<body>
+  <!-- make the root scroll container scrollable -->
+  <div style="height: 200vh;"></div>
+</body>
+<script type="application/javascript">
+
+const searchParams = new URLSearchParams(location.search);
+
+async function test() {
+  // Setup a touchmove event listener where we do preventDefault() to prevent
+  // scrolling.
+  let touchmoveCount = 0;
+  document.scrollingElement.addEventListener("touchmove", e => {
+    info("Got a touchmove");
+    touchmoveCount++;
+    e.preventDefault();
+  }, { passive: false });
+
+  // Setup touchstart/touchend event listeners just for debugging purpose.
+  document.scrollingElement.addEventListener("touchstart", () => {
+    info("Got a touchstart");
+  }, { passive: false });
+  document.scrollingElement.addEventListener("touchend", () => {
+    info("Got a touchend");
+  }, { passive: false });
+
+  document.scrollingElement.addEventListener("scroll", () => {
+    ok(false, "The content should never be scrolled");
+  });
+
+  let contextmenuPromise = promiseOneEvent(window, "contextmenu", e => {
+    if (searchParams.get("prevent") == "contextmenu") {
+      e.preventDefault();
+    }
+    return true;
+  });
+
+  // Ensure that the setup-ed information has reached to APZ.
+  await promiseApzFlushedRepaints();
+
+  // Start a touch.
+  await synthesizeNativeTouch(window, 100, 100, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
+
+  // And wait for a contextmenu event (i.e. a long-tap event)
+  await contextmenuPromise;
+
+  // Extend apz.content_response_timeout to avoid timeout on waiting the content
+  // response.
+  await SpecialPowers.pushPrefEnv({ set: [["apz.content_response_timeout", 40000]] });
+
+  // Make sure the touch start does nothing.
+  is(window.scrollY, 0, "The original scroll position is zero");
+
+  // Try to scroll down by touch moving.
+  for (let i = 1; i < 50; i++) {
+    synthesizeNativeTouch(window, 100, 100 - i, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
+  }
+  await synthesizeNativeTouch(window, 100, 50, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+
+  await waitToClearOutAnyPotentialScrolls();
+
+  ok(touchmoveCount > 0, "There should be at least one touch-move event");
+  is(window.scrollY, 0, "The scroll position should stay the original position");
+}
+
+if (getPlatform() == "windows") {
+  // On Windows every context menu on touch screens opens __after__ lifting the
+  // finger.
+  ok(true, "Test doesn't need to run on Windows");
+  subtestDone();
+} else {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+}
+
+</script>
+</html>
