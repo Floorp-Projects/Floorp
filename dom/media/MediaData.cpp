@@ -321,7 +321,7 @@ bool VideoData::UseUseNV12ForSoftwareDecodedVideoIfPossible(
 
   if (StaticPrefs::gfx_video_convert_i420_to_nv12_force_enabled_AtStartup() ||
       (gfx::DeviceManagerDx::Get()->CanUseNV12() &&
-       gfx::gfxVars::UseWebRenderDCompSwVideoOverlayWin() &&
+       gfx::gfxVars::UseWebRenderDCompVideoSwOverlayWin() &&
        aAllocator->GetCompositorUseDComp())) {
     return true;
   }

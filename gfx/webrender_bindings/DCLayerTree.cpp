@@ -148,7 +148,8 @@ bool DCLayerTree::Initialize(HWND aHwnd, nsACString& aError) {
     return false;
   }
 
-  if (gfx::gfxVars::UseWebRenderDCompVideoOverlayWin()) {
+  if (gfx::gfxVars::UseWebRenderDCompVideoHwOverlayWin() ||
+      gfx::gfxVars::UseWebRenderDCompVideoSwOverlayWin()) {
     if (!InitializeVideoOverlaySupport()) {
       RenderThread::Get()->HandleWebRenderError(WebRenderError::VIDEO_OVERLAY);
     }
@@ -1247,8 +1248,15 @@ void DCSurfaceVideo::PresentVideo() {
   }
 
   if (mSlowPresentCount > maxSlowPresentCount) {
-    gfxCriticalNoteOnce << "Video swapchain present is slow";
-    RenderThread::Get()->HandleWebRenderError(WebRenderError::VIDEO_OVERLAY);
+    if (mRenderTextureHost->IsSoftwareDecodedVideo()) {
+      gfxCriticalNoteOnce << "Sw video swapchain present is slow";
+      RenderThread::Get()->NotifyWebRenderError(
+          wr::WebRenderError::VIDEO_SW_OVERLAY);
+    } else {
+      gfxCriticalNoteOnce << "Hw video swapchain present is slow";
+      RenderThread::Get()->NotifyWebRenderError(
+          wr::WebRenderError::VIDEO_HW_OVERLAY);
+    }
   }
 }
 

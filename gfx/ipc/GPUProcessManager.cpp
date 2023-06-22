@@ -653,7 +653,8 @@ bool GPUProcessManager::DisableWebRenderConfig(wr::WebRenderError aError,
 
   // Disable WebRender
   bool wantRestart = FallbackFromAcceleration(aError, aMsg);
-  gfx::gfxVars::SetUseWebRenderDCompVideoOverlayWin(false);
+  gfxVars::SetUseWebRenderDCompVideoHwOverlayWin(false);
+  gfxVars::SetUseWebRenderDCompVideoSwOverlayWin(false);
 
   // If we still have the GPU process, and we fallback to a new configuration
   // that prefers to have the GPU process, reset the counter. Because we
@@ -682,14 +683,29 @@ void GPUProcessManager::DisableWebRender(wr::WebRenderError aError,
 
 void GPUProcessManager::NotifyWebRenderError(wr::WebRenderError aError) {
   gfxCriticalNote << "Handling webrender error " << (unsigned int)aError;
-  if (aError == wr::WebRenderError::VIDEO_OVERLAY) {
 #ifdef XP_WIN
-    gfxVars::SetUseWebRenderDCompVideoOverlayWin(false);
-#else
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-#endif
+  if (aError == wr::WebRenderError::VIDEO_OVERLAY) {
+    gfxVars::SetUseWebRenderDCompVideoHwOverlayWin(false);
+    gfxVars::SetUseWebRenderDCompVideoSwOverlayWin(false);
     return;
   }
+  if (aError == wr::WebRenderError::VIDEO_HW_OVERLAY) {
+    gfxVars::SetUseWebRenderDCompVideoHwOverlayWin(false);
+    return;
+  }
+  if (aError == wr::WebRenderError::VIDEO_SW_OVERLAY) {
+    gfxVars::SetUseWebRenderDCompVideoSwOverlayWin(false);
+    return;
+  }
+#else
+  if (aError == wr::WebRenderError::VIDEO_OVERLAY ||
+      aError == wr::WebRenderError::VIDEO_HW_OVERLAY ||
+      aError == wr::WebRenderError::VIDEO_SW_OVERLAY) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return;
+  }
+#endif
+
   DisableWebRender(aError, nsCString());
 }
 

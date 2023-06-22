@@ -951,9 +951,12 @@ void DXGITextureHostD3D11::UnlockInternal() {
 
 void DXGITextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
-  RefPtr<wr::RenderTextureHost> texture =
+  RefPtr<wr::RenderDXGITextureHost> texture =
       new wr::RenderDXGITextureHost(mHandle, mGpuProcessTextureId, mArrayIndex,
                                     mFormat, mColorSpace, mColorRange, mSize);
+  if (mFlags & TextureFlags::SOFTWARE_DECODED_VIDEO) {
+    texture->SetIsSoftwareDecodedVideo();
+  }
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
@@ -1097,9 +1100,15 @@ bool DXGITextureHostD3D11::SupportsExternalCompositing(
     return true;
   }
   // XXX Add P010 and P016 support.
-  if (GetFormat() == gfx::SurfaceFormat::NV12 &&
-      gfx::gfxVars::UseWebRenderDCompVideoOverlayWin()) {
-    return true;
+  if (GetFormat() == gfx::SurfaceFormat::NV12) {
+    if ((mFlags & TextureFlags::SOFTWARE_DECODED_VIDEO) &&
+        (gfx::gfxVars::UseWebRenderDCompVideoSwOverlayWin())) {
+      return true;
+    }
+    if (!(mFlags & TextureFlags::SOFTWARE_DECODED_VIDEO) &&
+        (gfx::gfxVars::UseWebRenderDCompVideoHwOverlayWin())) {
+      return true;
+    }
   }
   return false;
 }

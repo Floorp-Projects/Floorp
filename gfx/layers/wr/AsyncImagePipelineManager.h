@@ -240,7 +240,8 @@ class AsyncImagePipelineManager final {
   bool mDestroyed;
 
 #ifdef XP_WIN
-  bool mUseWebRenderDCompVideoOverlayWin;
+  bool mUseWebRenderDCompVideoHwOverlayWin;
+  bool mUseWebRenderDCompVideoSwOverlayWin;
 #endif
 
   // Render time for the current composition.
