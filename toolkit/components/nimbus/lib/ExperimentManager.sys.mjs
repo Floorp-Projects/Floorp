@@ -110,6 +110,24 @@ export class _ExperimentManager {
         return this.store.getAllActiveRollouts().map(rollout => rollout.slug);
       },
     });
+    Object.defineProperty(context, "previousExperiments", {
+      get: async () => {
+        await this.store.ready();
+        return this.store
+          .getAll()
+          .filter(enrollment => !enrollment.active && !enrollment.isRollout)
+          .map(exp => exp.slug);
+      },
+    });
+    Object.defineProperty(context, "previousRollouts", {
+      get: async () => {
+        await this.store.ready();
+        return this.store
+          .getAll()
+          .filter(enrollment => !enrollment.active && enrollment.isRollout)
+          .map(rollout => rollout.slug);
+      },
+    });
     return context;
   }
 

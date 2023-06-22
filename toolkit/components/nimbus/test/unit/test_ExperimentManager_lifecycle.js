@@ -462,3 +462,47 @@ add_task(async function test_onFinalize_rollout_unenroll() {
 
   await cleanupStore(manager.store);
 });
+
+add_task(async function test_context_paramters() {
+  const manager = ExperimentFakes.manager();
+
+  await manager.onStartup();
+  await manager.store.ready();
+
+  const experiment = ExperimentFakes.recipe("experiment", {
+    bucketConfig: {
+      ...ExperimentFakes.recipe.bucketConfig,
+      count: 1000,
+    },
+  });
+
+  const rollout = ExperimentFakes.recipe("rollout", {
+    bucketConfig: experiment.bucketConfig,
+    isRollout: true,
+  });
+
+  let targetingCtx = manager.createTargetingContext();
+
+  Assert.deepEqual(await targetingCtx.activeExperiments, []);
+  Assert.deepEqual(await targetingCtx.activeRollouts, []);
+  Assert.deepEqual(await targetingCtx.previousExperiments, []);
+  Assert.deepEqual(await targetingCtx.previousRollouts, []);
+
+  await manager.enroll(experiment, "test");
+  await manager.enroll(rollout, "test");
+
+  targetingCtx = manager.createTargetingContext();
+  Assert.deepEqual(await targetingCtx.activeExperiments, ["experiment"]);
+  Assert.deepEqual(await targetingCtx.activeRollouts, ["rollout"]);
+  Assert.deepEqual(await targetingCtx.previousExperiments, []);
+  Assert.deepEqual(await targetingCtx.previousRollouts, []);
+
+  manager.unenroll(experiment.slug);
+  manager.unenroll(rollout.slug);
+
+  targetingCtx = manager.createTargetingContext();
+  Assert.deepEqual(await targetingCtx.activeExperiments, []);
+  Assert.deepEqual(await targetingCtx.activeRollouts, []);
+  Assert.deepEqual(await targetingCtx.previousExperiments, ["experiment"]);
+  Assert.deepEqual(await targetingCtx.previousRollouts, ["rollout"]);
+});
