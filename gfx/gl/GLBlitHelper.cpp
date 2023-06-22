@@ -41,10 +41,9 @@
 #  include "mozilla/layers/D3D11YCbCrImage.h"
 #endif
 
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
 #  include "mozilla/widget/DMABufSurface.h"
-#  include "mozilla/widget/DMABufLibWrapper.h"
 #endif
 
 using mozilla::layers::PlanarYCbCrData;
@@ -877,7 +876,7 @@ bool GLBlitHelper::BlitSdToFramebuffer(const layers::SurfaceDescriptor& asd,
       return Blit(surfaceTexture, destSize, destOrigin);
     }
 #endif
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
     case layers::SurfaceDescriptor::TSurfaceDescriptorDMABuf: {
       const auto& sd = asd.get_SurfaceDescriptorDMABuf();
       RefPtr<DMABufSurface> surface = DMABufSurface::CreateDMABufSurface(sd);
@@ -947,7 +946,7 @@ bool GLBlitHelper::BlitImageToFramebuffer(layers::Image* const srcImage,
       return false;
 #endif
     case ImageFormat::DMABUF:
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
       return BlitImage(static_cast<layers::DMABUFSurfaceImage*>(srcImage),
                        destSize, destOrigin);
 #else
@@ -1426,7 +1425,7 @@ bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
   const auto& subdescUnion =
       desc.get_SurfaceDescriptorRemoteDecoder().subdesc();
   switch (subdescUnion.type()) {
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
     case layers::RemoteDecoderVideoSubDescriptor::TSurfaceDescriptorDMABuf: {
       const auto& subdesc = subdescUnion.get_SurfaceDescriptorDMABuf();
       RefPtr<DMABufSurface> surface =
@@ -1469,7 +1468,7 @@ bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
 }
 
 // -------------------------------------
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
 bool GLBlitHelper::Blit(DMABufSurface* surface, const gfx::IntSize& destSize,
                         OriginPos destOrigin) const {
   const auto& srcOrigin = OriginPos::BottomLeft;

@@ -29,7 +29,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdarg.h>
-#include <gdk/gdk.h>
+
+#ifdef MOZ_WAYLAND
+#  include <gdk/gdk.h>
+#endif
 
 #if defined(MOZ_ASAN) || defined(FUZZING)
 #  include <signal.h>
@@ -276,6 +279,7 @@ static void get_pci_status() {
   log("GLX_TEST: get_pci_status finished\n");
 }
 
+#ifdef MOZ_WAYLAND
 static void set_render_device_path(const char* render_device_path) {
   record_value("DRM_RENDERDEVICE\n%s\n", render_device_path);
 }
@@ -382,6 +386,7 @@ static bool get_render_name(const char* name) {
   free(devices);
   return result;
 }
+#endif
 
 static bool get_egl_gl_status(EGLDisplay dpy,
                               PFNEGLGETPROCADDRESS eglGetProcAddress) {
@@ -534,6 +539,7 @@ static bool get_egl_gl_status(EGLDisplay dpy,
         strstr(deviceExtensions, "EGL_MESA_device_software")) {
       record_value("MESA_ACCELERATED\nFALSE\n");
     } else {
+#ifdef MOZ_WAYLAND
       const char* deviceString =
           eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
       if (!deviceString || !get_render_name(deviceString)) {
@@ -543,6 +549,7 @@ static bool get_egl_gl_status(EGLDisplay dpy,
           set_render_device_path(renderNodeString);
         }
       }
+#endif
     }
   }
 

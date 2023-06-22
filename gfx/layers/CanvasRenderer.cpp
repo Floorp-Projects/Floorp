@@ -14,9 +14,8 @@
 #include "PersistentBufferProvider.h"
 #include "WebGLTypes.h"
 
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
 #  include "mozilla/widget/DMABufSurface.h"
-#  include "mozilla/widget/DMABufLibWrapper.h"
 #endif
 
 namespace mozilla {
@@ -111,8 +110,8 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
     return TextureType::MacIOSurface;
   }
 
-#ifdef MOZ_WIDGET_GTK
-  if (kIsLinux) {
+#ifdef MOZ_WAYLAND
+  if (kIsWayland) {
     if (!knowsCompositor->UsingSoftwareWebRender() &&
         widget::DMABufDevice::IsDMABufWebGLEnabled()) {
       return TextureType::DMABUF;

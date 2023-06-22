@@ -46,13 +46,11 @@
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/layers/TextureD3D11.h"
 #endif
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
 #  include <gtk/gtkx.h>
+
 #  include "gfxPlatformGtk.h"
 #  include "mozilla/layers/DMABUFTextureClientOGL.h"
-#  include "mozilla/widget/DMABufLibWrapper.h"
-#endif
-#ifdef MOZ_WAYLAND
 #  include "mozilla/widget/nsWaylandDisplay.h"
 #endif
 
@@ -274,7 +272,7 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
   }
 #endif
 
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
   if ((layersBackend == LayersBackend::LAYERS_WR &&
        !aKnowsCompositor->UsingSoftwareWebRender()) &&
       widget::DMABufDevice::IsDMABufTexturesEnabled() &&
@@ -340,7 +338,7 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
     textureType = TextureType::Unknown;
   }
 
-#if defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
+#if defined(XP_MACOSX) || defined(MOZ_WAYLAND)
   gfx::BackendType moz2DBackend = BackendTypeForBackendSelector(
       aKnowsCompositor->GetCompositorBackendType(), aSelector);
 #endif
@@ -351,7 +349,7 @@ TextureData* TextureData::Create(TextureForwarder* aAllocator,
       return D3D11TextureData::Create(aSize, aFormat, aAllocFlags);
 #endif
 
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
     case TextureType::DMABUF:
       return DMABUFTextureData::Create(aSize, aFormat, moz2DBackend);
 #endif

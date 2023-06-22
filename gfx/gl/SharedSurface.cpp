@@ -31,7 +31,7 @@
 #  include "SharedSurfaceIO.h"
 #endif
 
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
 #  include "gfxPlatformGtk.h"
 #  include "SharedSurfaceDMABUF.h"
 #endif
@@ -98,7 +98,7 @@ UniquePtr<SurfaceFactory> SurfaceFactory::Create(
 #endif
 
     case layers::TextureType::DMABUF:
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
       if (gl.GetContextType() == GLContextType::EGL &&
           widget::DMABufDevice::IsDMABufWebGLEnabled()) {
         return SurfaceFactory_DMABUF::Create(gl);

@@ -17,7 +17,7 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
 #  include "mozilla/WidgetUtilsGtk.h"
 #  include "mozilla/widget/GtkCompositorWidget.h"
 #endif
@@ -38,7 +38,7 @@ extern LazyLogModule gRenderThreadLog;
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
-  if (kIsLinux && !gfx::gfxVars::UseEGL()) {
+  if ((kIsWayland || kIsX11) && !gfx::gfxVars::UseEGL()) {
     return nullptr;
   }
   RefPtr<gl::GLContext> gl = RenderThread::Get()->SingletonGL(aError);
@@ -83,12 +83,12 @@ RenderCompositorEGL::~RenderCompositorEGL() {
 }
 
 bool RenderCompositorEGL::BeginFrame() {
-  if (kIsLinux && mEGLSurface == EGL_NO_SURFACE) {
+  if ((kIsWayland || kIsX11) && mEGLSurface == EGL_NO_SURFACE) {
     gfxCriticalNote
         << "We don't have EGLSurface to draw into. Called too early?";
     return false;
   }
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
   if (mWidget->AsGTK()) {
     mWidget->AsGTK()->SetEGLNativeWindowSize(GetBufferSize());
   }
@@ -127,7 +127,7 @@ RenderedFrameId RenderCompositorEGL::EndFrame(
 #endif
 
   RenderedFrameId frameId = GetNextRenderFrameId();
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
   if (mWidget->IsHidden()) {
     return frameId;
   }
@@ -192,7 +192,7 @@ bool RenderCompositorEGL::Resume() {
     mHandlingNewSurfaceError = false;
 
     gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
-  } else if (kIsLinux) {
+  } else if (kIsWayland || kIsX11) {
     // Destroy EGLSurface if it exists and create a new one. We will set the
     // swap interval after MakeCurrent() has been called.
     DestroyEGLSurface();
