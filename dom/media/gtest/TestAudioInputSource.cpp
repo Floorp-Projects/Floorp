@@ -10,7 +10,7 @@
 #include "gtest/gtest.h"
 
 #include "MockCubeb.h"
-#include "WaitFor.h"
+#include "mozilla/gtest/WaitFor.h"
 #include "nsContentUtils.h"
 
 using namespace mozilla;
