@@ -30,11 +30,13 @@
 #include "vm/DateObject.h"
 #include "vm/EqualityOperations.h"  // js::SameValue
 #include "vm/ErrorObject.h"
+#include "vm/Iteration.h"
 #include "vm/JSContext.h"
 #include "vm/NumberObject.h"
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/RegExpObject.h"
 #include "vm/StringObject.h"
+#include "vm/StringType.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 #include "vm/Watchtower.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
@@ -1489,6 +1491,34 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
   RootedValueVector properties(cx);
   RootedValue key(cx);
   RootedValue value(cx);
+
+  if (kind == EnumerableOwnPropertiesKind::Keys) {
+    // If possible, attempt to use the shape's iterator cache.
+    Rooted<PropertyIteratorObject*> piter(cx,
+                                          LookupInShapeIteratorCache(cx, nobj));
+    if (piter) {
+      do {
+        NativeIterator* ni = piter->getNativeIterator();
+        MOZ_ASSERT(ni->isReusable());
+
+        // Guard against indexes.
+        if (ni->mayHavePrototypeProperties()) {
+          break;
+        }
+
+        JSLinearString** properties =
+            ni->propertiesBegin()->unbarrieredAddress();
+        JSObject* array = NewDenseCopiedArray(cx, ni->numKeys(), properties);
+        if (!array) {
+          return false;
+        }
+
+        rval.setObject(*array);
+        return true;
+
+      } while (false);
+    }
+  }
 
   // We have ensured |nobj| contains no extra indexed properties, so the
   // only indexed properties we need to handle here are dense and typed
