@@ -54,7 +54,7 @@ from manifestparser.filters import (
 )
 from manifestparser.util import normsep
 from mozgeckoprofiler import symbolicate_profile_json, view_gecko_profile
-from mozserve import DoHServer, Http3Server
+from mozserve import DoHServer, Http2Server, Http3Server
 
 try:
     from marionette_driver.addons import Addons
@@ -1402,10 +1402,7 @@ class MochitestDesktop(object):
             self.http3Server = None
             raise RuntimeError("Error: Unable to start Http/3 server")
 
-    def startDoHServer(self, options):
-        """
-        Start a DoH test server.
-        """
+    def findNodeBin(self):
         # We try to find the node executable in the path given to us by the user in
         # the MOZ_NODE_PATH environment variable
         nodeBin = os.getenv("MOZ_NODE_PATH", None)
@@ -1413,15 +1410,37 @@ class MochitestDesktop(object):
         if not nodeBin and build:
             nodeBin = build.substs.get("NODEJS")
             self.log.info("Use build node at %s" % (nodeBin))
+        return nodeBin
 
+    def startHttp2Server(self, options):
+        """
+        Start a Http2 test server.
+        """
+        serverOptions = {}
+        serverOptions["serverPath"] = os.path.join(
+            SCRIPT_DIR, "Http2Server", "http2_server.js"
+        )
+        serverOptions["nodeBin"] = self.findNodeBin()
+        serverOptions["isWin"] = mozinfo.isWin
+        serverOptions["port"] = options.http2ServerPort
+        env = test_environment(xrePath=options.xrePath, log=self.log)
+        self.http2Server = Http2Server(serverOptions, env, self.log)
+        self.http2Server.start()
+
+        port = self.http2Server.port()
+        if port != options.http2ServerPort:
+            raise RuntimeError("Error: Unable to start Http2 server")
+
+    def startDoHServer(self, options, dstServerPort, alpn):
         serverOptions = {}
         serverOptions["serverPath"] = os.path.join(
             SCRIPT_DIR, "DoHServer", "doh_server.js"
         )
-        serverOptions["nodeBin"] = nodeBin
-        serverOptions["dstServerPort"] = options.http3ServerPort
+        serverOptions["nodeBin"] = self.findNodeBin()
+        serverOptions["dstServerPort"] = dstServerPort
         serverOptions["isWin"] = mozinfo.isWin
         serverOptions["port"] = options.dohServerPort
+        serverOptions["alpn"] = alpn
         env = test_environment(xrePath=options.xrePath, log=self.log)
         self.dohServer = DoHServer(serverOptions, env, self.log)
         self.dohServer.start()
@@ -1466,10 +1485,14 @@ class MochitestDesktop(object):
 
         self.log.info("use http3 server: %d" % options.useHttp3Server)
         self.http3Server = None
+        self.http2Server = None
         self.dohServer = None
         if options.useHttp3Server:
             self.startHttp3Server(options)
-            self.startDoHServer(options)
+            self.startDoHServer(options, options.http3ServerPort, "h3")
+        elif options.useHttp2Server:
+            self.startHttp2Server(options)
+            self.startDoHServer(options, options.http2ServerPort, "h2")
 
     def stopServers(self):
         """Servers are no longer needed, and perhaps more importantly, anything they
@@ -1507,6 +1530,11 @@ class MochitestDesktop(object):
                 self.http3Server.stop()
             except Exception:
                 self.log.critical("Exception stopping http3 server")
+        if self.http2Server is not None:
+            try:
+                self.http2Server.stop()
+            except Exception:
+                self.log.critical("Exception stopping http2 server")
         if self.dohServer is not None:
             try:
                 self.dohServer.stop()
@@ -2254,6 +2282,12 @@ toolbar#nav-bar {
             proxyOptions["dohServerPort"] = options.dohServerPort
             self.log.info("use doh server at port: %d" % options.dohServerPort)
             self.log.info("use http3 server at port: %d" % options.http3ServerPort)
+        elif options.useHttp2Server:
+            options.dohServerPort = self.findFreePort(socket.SOCK_STREAM)
+            options.http2ServerPort = self.findFreePort(socket.SOCK_STREAM)
+            proxyOptions["dohServerPort"] = options.dohServerPort
+            self.log.info("use doh server at port: %d" % options.dohServerPort)
+            self.log.info("use http2 server at port: %d" % options.http2ServerPort)
         return proxyOptions
 
     def merge_base_profiles(self, options, category):
