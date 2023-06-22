@@ -349,7 +349,7 @@ BROWSER_PROCESS += [
     DllBlocklistEntry("kisfdpro64.dll", ALL_VERSIONS),
 
     # Kingsoft internet security (bug 1837246)
-    DllBlocklistEntry("dghmpg64.dll", (2023, 5, 31, 1367)),
+    DllBlocklistEntry("dghmpg64.dll", ALL_VERSIONS),
 ]
 
 CHILD_PROCESSES += [
