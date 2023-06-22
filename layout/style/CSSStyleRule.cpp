@@ -212,18 +212,24 @@ uint32_t CSSStyleRule::SelectorCount() const {
   return Servo_StyleRule_GetSelectorCount(mRawRule);
 }
 
+static void CollectStyleRules(CSSStyleRule& aDeepestRule, bool aDesugared,
+                              nsTArray<const StyleLockedStyleRule*>& aResult) {
+  aResult.AppendElement(aDeepestRule.Raw());
+  if (aDesugared) {
+    for (auto* rule = aDeepestRule.GetParentRule(); rule;
+         rule = rule->GetParentRule()) {
+      if (rule->Type() == StyleCssRuleType::Style) {
+        aResult.AppendElement(static_cast<CSSStyleRule*>(rule)->Raw());
+      }
+    }
+  }
+}
+
 void CSSStyleRule::GetSelectorDataAtIndex(uint32_t aSelectorIndex,
                                           bool aDesugared, nsACString* aText,
                                           uint64_t* aSpecificity) {
   AutoTArray<const StyleLockedStyleRule*, 8> rules;
-  rules.AppendElement(Raw());
-  if (aDesugared) {
-    for (auto* rule = GetParentRule(); rule; rule = rule->GetParentRule()) {
-      if (rule->Type() == StyleCssRuleType::Style) {
-        rules.AppendElement(static_cast<CSSStyleRule*>(rule)->Raw());
-      }
-    }
-  }
+  CollectStyleRules(*this, aDesugared, rules);
   Servo_StyleRule_GetSelectorDataAtIndex(&rules, aSelectorIndex, aText,
                                          aSpecificity);
 }
@@ -275,8 +281,11 @@ bool CSSStyleRule::SelectorMatchesElement(uint32_t aSelectorIndex,
     return nullptr;
   }();
 
+  AutoTArray<const StyleLockedStyleRule*, 8> rules;
+  CollectStyleRules(*this, /* aDesugared = */ true, rules);
+
   return Servo_StyleRule_SelectorMatchesElement(
-      mRawRule, &aElement, aSelectorIndex, host, *pseudoType,
+      &rules, &aElement, aSelectorIndex, host, *pseudoType,
       aRelevantLinkVisited);
 }
 
