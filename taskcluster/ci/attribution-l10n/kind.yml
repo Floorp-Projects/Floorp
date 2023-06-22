@@ -6,6 +6,7 @@ loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
     - gecko_taskgraph.transforms.split_by_locale:transforms
+    - gecko_taskgraph.transforms.attribution:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -70,15 +71,8 @@ jobs:
             build_platform: win32-devedition
         treeherder:
             platform: win32-devedition/opt
-        fetches:
-            repackage-signing-l10n:
-                - "{locale}/target.stub-installer.exe"
         dependencies:
             repackage-signing-l10n: repackage-signing-l10n-{locale}-win32-devedition/opt
-        run:
-            command:
-                - --input
-                - /builds/worker/fetches/target.stub-installer.exe
 
     win32-shippable/opt:
         label: attribution-win32-{locale}-shippable/opt
@@ -88,15 +82,8 @@ jobs:
             build_platform: win32-shippable
         treeherder:
             platform: win32-shippable/opt
-        fetches:
-            repackage-signing-l10n:
-                - "{locale}/target.stub-installer.exe"
         dependencies:
             repackage-signing-l10n: repackage-signing-l10n-{locale}-win32-shippable/opt
-        run:
-            command:
-                - --input
-                - /builds/worker/fetches/target.stub-installer.exe
 
     win64-devedition/opt:
         label: attribution-win64-{locale}-devedition/opt
