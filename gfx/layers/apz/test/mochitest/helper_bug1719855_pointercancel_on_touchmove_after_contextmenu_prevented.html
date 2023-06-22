@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+  <!-- make the root scroll container scrollable -->
+  <div style="height: 200vh;"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  let pointercancelCount = 0;
+  let pointercancelPromise = new Promise(resolve => {
+    window.addEventListener("pointercancel", () => {
+      pointercancelCount++;
+      resolve();
+    });
+  });
+
+  let scrollendCount = 0;
+  let scrollendPromise = new Promise(resolve => {
+    window.addEventListener("scrollend", () => {
+      scrollendCount++;
+      resolve();
+    });
+  });
+
+  let contextmenuPromise = promiseOneEvent(window, "contextmenu", e => {
+    // Do preventDefault() to prevent opening a context menu, it will suppress
+    // a pointercancel event triggered by the context menu.
+    e.preventDefault();
+    return true;
+  });
+
+  // Ensure that above setup-ed information has reached to APZ.
+  await promiseApzFlushedRepaints();
+
+  // Start a touch.
+  await synthesizeNativeTouch(window, 100, 100, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
+
+  // And wait for a contextmenu event (i.e. a long-tap event)
+  await contextmenuPromise;
+
+  // Try to scroll down by touch moving.
+  for (let i = 1; i < 50; i++) {
+    synthesizeNativeTouch(window, 100, 100 - i, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
+  }
+  await synthesizeNativeTouch(window, 100, 50, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE);
+
+  // Now the content should have been scrolled and there should be a
+  // pointercancel event.
+  await Promise.all([ pointercancelPromise, scrollendPromise ]);
+  is(pointercancelCount, 1, "There should be only one pointercancel event");
+  // This `todo` will be fixed by the next commit.
+  todo_is(scrollendCount, 1, "There should be only one scrollend event");
+}
+
+if (getPlatform() == "windows") {
+  // On Windows every context menu on touch screens opens __after__ lifting the
+  // finger.
+  ok(true, "Test doesn't need to run on Windows");
+  subtestDone();
+} else {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+}
+
+</script>
+</html>
