@@ -7,7 +7,7 @@ import PropTypes from "prop-types";
 import { Tab, Tabs, TabList, TabPanels } from "react-aria-components/src/tabs";
 
 import actions from "../../actions";
-import { getSelectedPrimaryPaneTab, getContext } from "../../selectors";
+import { getSelectedPrimaryPaneTab } from "../../selectors";
 import { prefs } from "../../utils/prefs";
 import { connect } from "../../utils/connect";
 import { primaryPaneTabs } from "../../constants";
@@ -38,7 +38,6 @@ class PrimaryPanes extends Component {
 
   static get propTypes() {
     return {
-      cx: PropTypes.object.isRequired,
       projectRootName: PropTypes.string.isRequired,
       selectedTab: PropTypes.oneOf(tabs).isRequired,
       setPrimaryPaneTab: PropTypes.func.isRequired,
@@ -118,7 +117,6 @@ class PrimaryPanes extends Component {
 
 const mapStateToProps = state => {
   return {
-    cx: getContext(state),
     selectedTab: getSelectedPrimaryPaneTab(state),
   };
 };
