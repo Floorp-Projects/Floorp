@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test InspectorUtils.parseStyleSheet with nested rules</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <style>
+      h1 {
+        .mySpan {
+          background: gold;
+          &.mySpan {
+            color: red;
+          }
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Hello<span class="mySpan">world</span>
+    <script>
+      add_task(function() {
+        info("Flush layout");
+        // This is important to reproduce the original issue
+        document.documentElement.getBoundingClientRect();
+
+        const InspectorUtils = SpecialPowers.InspectorUtils;
+        const sheet = document.styleSheets[0];
+        const spanEl = document.querySelector(".mySpan");
+
+        is(
+          sheet.cssRules[0].cssRules[0].cssRules[0].cssText,
+          `&.mySpan { color: red; }`,
+          "Nested rule has expected initial text"
+        );
+
+        is(
+          InspectorUtils.getCSSStyleRules(spanEl).length,
+          2,
+          "getCSSStyleRules returned 2 rules for .mySpan"
+        );
+
+        info("Modify stylesheet using InspectorUtils.parseStyleSheet");
+        InspectorUtils.parseStyleSheet(
+          sheet,
+          `h1 {
+            .mySpan {
+              background: gold;
+              &.mySpan {
+                color: black;
+              }
+            }
+          }`
+        );
+
+        is(
+          sheet.cssRules[0].cssRules[0].cssRules[0].cssText,
+          `&.mySpan { color: black; }`,
+          "Nested rule has expected text after updating the stylesheet"
+        );
+
+        info("Flush layout");
+        // This is important to reproduce the original issue
+        document.documentElement.getBoundingClientRect();
+
+        is(
+          getComputedStyle(spanEl).color,
+          "rgb(0, 0, 0)",
+          "the color of the span element was properly updated"
+        );
+        const rules = InspectorUtils.getCSSStyleRules(spanEl);
+        is(
+          rules.length,
+          2,
+          "getCSSStyleRules still returned 2 rules for .mySpan after stylesheet was updated"
+        );
+        is(rules[1].style.color, "black", "rule was properly updated");
+      });
+    </script>
+  </body>
+</html>
