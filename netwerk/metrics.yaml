@@ -92,3 +92,75 @@ networking:
     range_max: 315360000000
     bucket_count: 100
     histogram_type: exponential
+
+  dns_lookup_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time for a successful DNS resolution (msec) |
+      Migrated from Firefox Telemetry's `DNS_LOOKUP_TIME`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838240
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838240#c6
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: DNS_LOOKUP_TIME
+
+  dns_renewal_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time for a renewed DNS OS resolution (msec) |
+      Migrated from Firefox Telemetry's `DNS_RENEWAL_TIME`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838240
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838240#c6
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: DNS_RENEWAL_TIME
+
+  dns_renewal_time_for_ttl:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time for a DNS OS resolution (msec) used to get TTL |
+      Migrated from Firefox Telemetry's `DNS_RENEWAL_TIME_FOR_TTL`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838240
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838240#c6
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: DNS_RENEWAL_TIME_FOR_TTL
+
+  dns_failed_lookup_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Time for an unsuccessful DNS OS resolution (msec) |
+      Migrated from Firefox Telemetry's `DNS_FAILED_LOOKUP_TIME`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838240
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838240#c6
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: never
+    telemetry_mirror: DNS_FAILED_LOOKUP_TIME
