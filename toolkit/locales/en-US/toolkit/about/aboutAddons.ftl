@@ -393,12 +393,6 @@ addon-detail-rating-label = Rating
 install-postponed-message = This extension will be updated when { -brand-short-name } restarts.
 install-postponed-button = Update Now
 
-# The average rating that the add-on has received.
-# Variables:
-#   $rating (number) - A number between 0 and 5. The translation should show at most one digit after the comma.
-five-star-rating =
-  .title = Rated { NUMBER($rating, maximumFractionDigits: 1) } out of 5
-
 # This string is used to show that an add-on is disabled.
 # Variables:
 #   $name (string) - The name of the add-on
