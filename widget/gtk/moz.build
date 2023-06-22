@@ -47,16 +47,29 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.widget += [
+    "CompositorWidgetChild.h",
+    "CompositorWidgetParent.h",
+    "DMABufLibWrapper.h",
+    "DMABufSurface.h",
+    "gbm.h",
+    "GtkCompositorWidget.h",
+    "InProcessGtkCompositorWidget.h",
+    "va_drmcommon.h",
     "WindowSurface.h",
     "WindowSurfaceProvider.h",
 ]
 
 UNIFIED_SOURCES += [
     "AsyncGtkClipboardRequest.cpp",
+    "CompositorWidgetChild.cpp",
+    "CompositorWidgetParent.cpp",
+    "DMABufLibWrapper.cpp",
+    "DMABufSurface.cpp",
     "GfxInfo.cpp",
     "gtk3drawing.cpp",
     "GtkCompositorWidget.cpp",
     "IMContextWrapper.cpp",
+    "InProcessGtkCompositorWidget.cpp",
     "MozContainer.cpp",
     "MPRISServiceHandler.cpp",
     "NativeKeyBindings.cpp",
@@ -74,6 +87,7 @@ UNIFIED_SOURCES += [
     "nsLookAndFeel.cpp",
     "nsSound.cpp",
     "nsToolkit.cpp",
+    "nsUserIdleServiceGTK.cpp",
     "nsWidgetFactory.cpp",
     "ScreenHelperGTK.cpp",
     "TaskbarProgress.cpp",
@@ -93,8 +107,6 @@ SOURCES += [
 
 if CONFIG["MOZ_WAYLAND"]:
     UNIFIED_SOURCES += [
-        "DMABufLibWrapper.cpp",
-        "DMABufSurface.cpp",
         "MozContainerWayland.cpp",
         "nsClipboardWayland.cpp",
         "nsWaylandDisplay.cpp",
@@ -102,25 +114,9 @@ if CONFIG["MOZ_WAYLAND"]:
         "WindowSurfaceWaylandMultiBuffer.cpp",
     ]
     EXPORTS.mozilla.widget += [
-        "DMABufLibWrapper.h",
-        "DMABufSurface.h",
         "MozContainerWayland.h",
         "nsWaylandDisplay.h",
         "WaylandBuffer.h",
-    ]
-
-if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:
-    UNIFIED_SOURCES += [
-        "CompositorWidgetChild.cpp",
-        "CompositorWidgetParent.cpp",
-        "InProcessGtkCompositorWidget.cpp",
-        "nsUserIdleServiceGTK.cpp",
-    ]
-    EXPORTS.mozilla.widget += [
-        "CompositorWidgetChild.h",
-        "CompositorWidgetParent.h",
-        "GtkCompositorWidget.h",
-        "InProcessGtkCompositorWidget.h",
     ]
 
 if CONFIG["MOZ_X11"]:
@@ -157,12 +153,8 @@ LOCAL_INCLUDES += [
     "/third_party/cups/include",
     "/widget",
     "/widget/headless",
+    "/widget/x11",
 ]
-
-if CONFIG["MOZ_X11"] or CONFIG["MOZ_WAYLAND"]:
-    LOCAL_INCLUDES += [
-        "/widget/x11",
-    ]
 
 DEFINES["CAIRO_GFX"] = True
 
