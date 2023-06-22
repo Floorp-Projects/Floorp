@@ -11,7 +11,7 @@
 #include "mozilla/Types.h"
 #include "PlatformDecoderModule.h"
 #include "prlink.h"
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
 #  include "mozilla/gfx/gfxVars.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
 #endif
@@ -200,7 +200,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
                                       AV_FUNC_57 | AV_FUNC_58 | AV_FUNC_59 |
                                       AV_FUNC_60)
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   AV_FUNC_OPTION_SILENT(avcodec_get_hw_config,
                         AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
   AV_FUNC_OPTION_SILENT(av_codec_iterate, AV_FUNC_58 | AV_FUNC_59 | AV_FUNC_60)
@@ -236,7 +236,7 @@ FFmpegLibWrapper::LinkResult FFmpegLibWrapper::Link() {
 #undef AV_FUNC
 #undef AV_FUNC_OPTION
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
 #  define VA_FUNC_OPTION_SILENT(func)                             \
     if (!(func = (decltype(func))PR_FindSymbol(mVALib, #func))) { \
       func = (decltype(func))nullptr;                             \
@@ -294,7 +294,7 @@ void FFmpegLibWrapper::Unlink() {
     PR_UnloadLibrary(mAVCodecLib);
   }
 #endif
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   if (mVALib) {
     PR_UnloadLibrary(mVALib);
   }
@@ -305,7 +305,7 @@ void FFmpegLibWrapper::Unlink() {
   PodZero(this);
 }
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
 void FFmpegLibWrapper::LinkVAAPILibs() {
   if (!gfx::gfxVars::CanUseHardwareVideoDecoding() || !XRE_IsRDDProcess()) {
     return;
@@ -335,7 +335,7 @@ void FFmpegLibWrapper::LinkVAAPILibs() {
 }
 #endif
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
 bool FFmpegLibWrapper::IsVAAPIAvailable() {
 #  define VA_FUNC_LOADED(func) (func != nullptr)
   return VA_FUNC_LOADED(avcodec_get_hw_config) &&

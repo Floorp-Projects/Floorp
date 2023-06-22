@@ -60,7 +60,7 @@ bool FFmpegRuntimeLinker::Init() {
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   sLibAV.LinkVAAPILibs();
 #endif
 
