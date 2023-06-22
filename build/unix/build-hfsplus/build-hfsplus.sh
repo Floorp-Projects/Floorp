@@ -36,6 +36,7 @@ patch -p1 << 'EOF'
 +	${CC} ${CFLAGS} ${LDFLAGS} -o newfs_hfs ${OFILES} -Wl,-Bstatic -lcrypto -Wl,-Bdynamic,--as-needed,-lz,-ldl
  
 EOF
+grep -rl sysctl.h . | xargs sed -i /sysctl.h/d
 make $make_flags || exit 1
 cd ..
 
