@@ -1,6 +1,9 @@
 FROM $DOCKER_IMAGE_PARENT
 MAINTAINER Geoff Brown <gbrown@mozilla.com>
 
+# This is the image used for most build and test tasks related to
+# android-components, focus, and fenix.
+
 VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/workspace
 VOLUME /builds/worker/tooltool-cache
@@ -10,9 +13,7 @@ ENV CURL='curl --location --retry 5' \
     LANG='en_US.UTF-8' \
     TERM='dumb'
 
-# rsync is required for l10n single locale repacks.  less, screen, and
-# vim, help debugging interactive tasks in Task Cluster.
-# git and openssh-client are used to upload GeckoView javadoc to Github.
+# less, screen, and vim help debugging interactive tasks in taskcluster
 # yaml required by some ui-test tasks
 RUN apt-get update && \
     apt-get install \
