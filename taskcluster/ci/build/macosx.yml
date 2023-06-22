@@ -47,7 +47,6 @@ macosx64/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-sdk
@@ -76,7 +75,6 @@ macosx64-non-unified/plain:
     run-on-projects: ['integration']
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-sdk
@@ -105,7 +103,6 @@ macosx64/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-sdk
@@ -135,7 +132,6 @@ macosx64-asan-fuzzing/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-llvm-symbolizer
@@ -169,7 +165,6 @@ macosx64-fuzzing/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-sdk
@@ -203,7 +198,6 @@ macosx64-aarch64-asan-fuzzing/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-aarch64-llvm-symbolizer
@@ -239,7 +233,6 @@ macosx64-aarch64-fuzzing/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-aarch64-llvm-symbolizer
@@ -487,7 +480,6 @@ macosx64-noopt/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-sdk
@@ -518,7 +510,6 @@ macosx64-aarch64-noopt/debug:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-sdk
@@ -546,7 +537,6 @@ macosx64-x64-add-on-devel/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-sdk
@@ -576,7 +566,6 @@ macosx64-aarch64-add-on-devel/opt:
     use-sccache: true
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-sdk
@@ -915,7 +904,6 @@ macosx64-ccov/opt:
     use-sccache: false
     fetches:
         toolchain:
-            - linux64-cctools-port
             - linux64-clang
             - linux64-sccache
             - macosx64-sdk
