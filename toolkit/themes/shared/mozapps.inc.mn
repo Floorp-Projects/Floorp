@@ -20,9 +20,6 @@
   skin/classic/mozapps/extensions/recommended.svg            (../../shared/extensions/recommended.svg)
   skin/classic/mozapps/extensions/line.svg                   (../../shared/extensions/line.svg)
 #ifndef ANDROID
-  skin/classic/mozapps/extensions/rating-star.svg            (../../shared/extensions/rating-star.svg)
-#endif
-#ifndef ANDROID
   skin/classic/mozapps/aboutProfiles.css                     (../../shared/aboutProfiles.css)
 #endif
   skin/classic/mozapps/aboutServiceWorkers.css               (../../shared/aboutServiceWorkers.css)
