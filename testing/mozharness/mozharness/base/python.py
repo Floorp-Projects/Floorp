@@ -547,20 +547,6 @@ class VirtualenvMixin(object):
 
             self._ensure_python_exe(venv_python_bin.parent)
 
-            # We can work around a bug on some versions of Python 3.6 on
-            # Windows by copying the 'pyvenv.cfg' of the current venv
-            # to the new venv. This will make the new venv reference
-            # the original Python install instead of the current venv,
-            # which resolves the issue. There shouldn't be any harm in
-            # always doing this, but we'll play it safe and restrict it
-            # to Windows Python 3.6 anyway.
-            if self._is_windows() and sys.version_info[:2] == (3, 6):
-                this_venv = Path(sys.executable).parent.parent
-                this_venv_config = this_venv / "pyvenv.cfg"
-                if this_venv_config.exists():
-                    new_venv_config = Path(venv_path) / "pyvenv.cfg"
-                    shutil.copyfile(str(this_venv_config), str(new_venv_config))
-
             self.run_command(
                 [
                     str(venv_python_bin),
