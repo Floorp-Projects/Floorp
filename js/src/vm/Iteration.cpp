@@ -1039,34 +1039,43 @@ static bool CanStoreInIteratorCache(JSObject* obj) {
   return true;
 }
 
+static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInShapeIteratorCache(
+    JSContext* cx, JSObject* obj, uint32_t* cacheableProtoChainLength) {
+  if (!obj->shape()->cache().isIterator() ||
+      !CanCompareIterableObjectToCache(obj)) {
+    return nullptr;
+  }
+  PropertyIteratorObject* iterobj = obj->shape()->cache().toIterator();
+  NativeIterator* ni = iterobj->getNativeIterator();
+  MOZ_ASSERT(*ni->shapesBegin() == obj->shape());
+  if (!ni->isReusable()) {
+    return nullptr;
+  }
+
+  // Verify shapes of proto chain.
+  JSObject* pobj = obj;
+  for (GCPtr<Shape*>* s = ni->shapesBegin() + 1; s != ni->shapesEnd(); s++) {
+    Shape* shape = *s;
+    pobj = pobj->staticPrototype();
+    if (pobj->shape() != shape) {
+      return nullptr;
+    }
+    if (!CanCompareIterableObjectToCache(pobj)) {
+      return nullptr;
+    }
+  }
+  MOZ_ASSERT(CanStoreInIteratorCache(obj));
+  *cacheableProtoChainLength = ni->shapeCount();
+  return iterobj;
+}
+
 static MOZ_ALWAYS_INLINE PropertyIteratorObject* LookupInIteratorCache(
     JSContext* cx, JSObject* obj, uint32_t* cacheableProtoChainLength) {
   MOZ_ASSERT(*cacheableProtoChainLength == 0);
 
-  if (obj->shape()->cache().isIterator() &&
-      CanCompareIterableObjectToCache(obj)) {
-    PropertyIteratorObject* iterobj = obj->shape()->cache().toIterator();
-    NativeIterator* ni = iterobj->getNativeIterator();
-    MOZ_ASSERT(*ni->shapesBegin() == obj->shape());
-    if (!ni->isReusable()) {
-      return nullptr;
-    }
-
-    // Verify shapes of proto chain.
-    JSObject* pobj = obj;
-    for (GCPtr<Shape*>* s = ni->shapesBegin() + 1; s != ni->shapesEnd(); s++) {
-      Shape* shape = *s;
-      pobj = pobj->staticPrototype();
-      if (pobj->shape() != shape) {
-        return nullptr;
-      }
-      if (!CanCompareIterableObjectToCache(pobj)) {
-        return nullptr;
-      }
-    }
-    MOZ_ASSERT(CanStoreInIteratorCache(obj));
-    *cacheableProtoChainLength = ni->shapeCount();
-    return iterobj;
+  if (PropertyIteratorObject* shapeCached =
+          LookupInShapeIteratorCache(cx, obj, cacheableProtoChainLength)) {
+    return shapeCached;
   }
 
   Vector<Shape*, 8> shapes(cx);
@@ -1310,6 +1319,12 @@ PropertyIteratorObject* js::LookupInIteratorCache(JSContext* cx,
                                                   HandleObject obj) {
   uint32_t dummy = 0;
   return LookupInIteratorCache(cx, obj, &dummy);
+}
+
+PropertyIteratorObject* js::LookupInShapeIteratorCache(JSContext* cx,
+                                                       HandleObject obj) {
+  uint32_t dummy = 0;
+  return LookupInShapeIteratorCache(cx, obj, &dummy);
 }
 
 // ES 2017 draft 7.4.7.
