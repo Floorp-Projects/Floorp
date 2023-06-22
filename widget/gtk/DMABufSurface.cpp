@@ -355,11 +355,12 @@ DMABufSurfaceRGBA::DMABufSurfaceRGBA()
       mGmbFormat(nullptr),
       mEGLImage(LOCAL_EGL_NO_IMAGE),
       mTexture(0),
-      mGbmBufferFlags(0),
-      mWlBuffer(nullptr) {}
+      mGbmBufferFlags(0) {}
 
 DMABufSurfaceRGBA::~DMABufSurfaceRGBA() {
+#ifdef MOZ_WAYLAND
   ReleaseWlBuffer();
+#endif
   ReleaseSurface();
 }
 
@@ -729,6 +730,7 @@ void DMABufSurfaceRGBA::ReleaseSurface() {
   ReleaseDMABuf();
 }
 
+#ifdef MOZ_WAYLAND
 bool DMABufSurfaceRGBA::CreateWlBuffer() {
   MutexAutoLock lockFD(mSurfaceLock);
   if (!OpenFileDescriptors(lockFD)) {
@@ -758,6 +760,7 @@ bool DMABufSurfaceRGBA::CreateWlBuffer() {
 void DMABufSurfaceRGBA::ReleaseWlBuffer() {
   MozClearPointer(mWlBuffer, wl_buffer_destroy);
 }
+#endif
 
 // We should synchronize DMA Buffer object access from CPU to avoid potential
 // cache incoherency and data loss.
