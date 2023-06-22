@@ -1,0 +1,22 @@
+# Ensure that we correctly handle clips that are 2d axis-aligned but
+# fiddle with the z-coordinate of the primitive without preserve-3d
+---
+root:
+  items:
+    - type: stacking-context
+      transform: rotate-x(45) rotate-z(45) translate(200, 200)
+      transform-origin: 100 100
+      items:
+        - type: stacking-context
+          transform: rotate-z(-45) rotate-y(45) translate(20, 0)
+          transform-origin: 100 100
+          items:
+            - type: clip
+              id: 3
+              complex:
+                - rect: [0, 0, 200, 100]
+                  radius: 16
+            - bounds: [0, 0, 200, 100]
+              type: rect
+              color: red
+              clip-chain: [3]
