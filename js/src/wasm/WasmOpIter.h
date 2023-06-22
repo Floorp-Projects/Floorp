@@ -3536,7 +3536,7 @@ inline bool OpIter<Policy>::readRefTestV5(RefType* sourceType,
   }
 
   StackType inputType;
-  if (!popWithType(RefType::any(), ref)) {
+  if (!popWithType(RefType::any(), ref, &inputType)) {
     return false;
   }
   *sourceType = inputType.valTypeOr(RefType::any()).refType();
