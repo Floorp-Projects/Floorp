@@ -7,6 +7,7 @@
 #include "mozilla/dom/HTMLMarqueeElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStyleConsts.h"
+#include "nsMappedAttributes.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLMarqueeElementBinding.h"
 #include "mozilla/dom/CustomEvent.h"
@@ -126,11 +127,11 @@ void HTMLMarqueeElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
 }
 
 void HTMLMarqueeElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  nsGenericHTMLElement::MapImageMarginAttributeInto(aBuilder);
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aBuilder);
-  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
-  nsGenericHTMLElement::MapBGColorInto(aBuilder);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapBGColorInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

@@ -22,13 +22,14 @@ class HTMLSharedListElement final : public nsGenericHTMLElement {
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
-  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                      const nsAString& aValue,
-                      nsIPrincipal* aMaybeScriptedPrincipal,
-                      nsAttrValue& aResult) override;
-  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
+  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                              const nsAString& aValue,
+                              nsIPrincipal* aMaybeScriptedPrincipal,
+                              nsAttrValue& aResult) override;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
+      const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
   bool Reversed() const { return GetBoolAttr(nsGkAtoms::reversed); }
   void SetReversed(bool aReversed, mozilla::ErrorResult& rv) {
@@ -54,8 +55,10 @@ class HTMLSharedListElement final : public nsGenericHTMLElement {
                              JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
-  static void MapOLAttributesIntoRule(MappedDeclarationsBuilder&);
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    MappedDeclarations&);
+  static void MapOLAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                      MappedDeclarations&);
 };
 
 }  // namespace mozilla::dom

@@ -7,8 +7,9 @@
 #include "mozilla/dom/HTMLParagraphElement.h"
 #include "mozilla/dom/HTMLParagraphElementBinding.h"
 
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsStyleConsts.h"
+#include "nsMappedAttributes.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Paragraph)
 
@@ -32,9 +33,9 @@ bool HTMLParagraphElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 void HTMLParagraphElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  nsGenericHTMLElement::MapDivAlignAttributeInto(aBuilder);
-  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

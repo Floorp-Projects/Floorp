@@ -18,6 +18,7 @@
 #  include "mozilla/EventDispatcher.h"
 #  include "mozilla/dom/Event.h"
 #endif
+#include "mozilla/dom/HTMLObjectElement.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Embed)
 
@@ -178,22 +179,24 @@ bool HTMLEmbedElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-static void MapAttributesIntoRuleBase(MappedDeclarationsBuilder& aBuilder) {
-  nsGenericHTMLElement::MapImageMarginAttributeInto(aBuilder);
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aBuilder);
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aBuilder);
+static void MapAttributesIntoRuleBase(const nsMappedAttributes* aAttributes,
+                                      MappedDeclarations& aDecls) {
+  nsGenericHTMLElement::MapImageMarginAttributeInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aDecls);
 }
 
 static void MapAttributesIntoRuleExceptHidden(
-    MappedDeclarationsBuilder& aBuilder) {
-  MapAttributesIntoRuleBase(aBuilder);
-  nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(aBuilder);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  MapAttributesIntoRuleBase(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesIntoExceptHidden(aAttributes,
+                                                            aDecls);
 }
 
 void HTMLEmbedElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  MapAttributesIntoRuleBase(aBuilder);
-  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  MapAttributesIntoRuleBase(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

@@ -10,7 +10,7 @@
 #include "mozilla/AttributeStyles.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/HTMLEditor.h"
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/BindContext.h"
 #include "mozilla/dom/Document.h"
@@ -20,6 +20,7 @@
 #include "nsPresContext.h"
 #include "DocumentInlines.h"
 #include "nsDocShell.h"
+#include "nsMappedAttributes.h"
 #include "nsIDocShell.h"
 #include "nsGlobalWindow.h"
 
@@ -65,7 +66,7 @@ bool HTMLBodyElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLBodyElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   // This is the one place where we try to set the same property
   // multiple times in presentation attributes. Servo does not support
   // querying if a property is set (because that is O(n) behavior
@@ -83,143 +84,143 @@ void HTMLBodyElement::MapAttributesIntoRule(
 
   const nsAttrValue* value;
   // if marginwidth/marginheight are set, reflect them as 'margin'
-  value = aBuilder.GetAttr(nsGkAtoms::marginwidth);
+  value = aAttributes->GetAttr(nsGkAtoms::marginwidth);
   if (value && value->Type() == nsAttrValue::eInteger) {
     bodyMarginWidth = value->GetIntegerValue();
     if (bodyMarginWidth < 0) {
       bodyMarginWidth = 0;
     }
-    aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_left,
-                                  (float)bodyMarginWidth);
-    aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_right,
-                                  (float)bodyMarginWidth);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left,
+                                (float)bodyMarginWidth);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right,
+                                (float)bodyMarginWidth);
   }
 
-  value = aBuilder.GetAttr(nsGkAtoms::marginheight);
+  value = aAttributes->GetAttr(nsGkAtoms::marginheight);
   if (value && value->Type() == nsAttrValue::eInteger) {
     bodyMarginHeight = value->GetIntegerValue();
     if (bodyMarginHeight < 0) {
       bodyMarginHeight = 0;
     }
-    aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_top,
-                                  (float)bodyMarginHeight);
-    aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_bottom,
-                                  (float)bodyMarginHeight);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_margin_top,
+                                (float)bodyMarginHeight);
+    aDecls.SetPixelValueIfUnset(eCSSProperty_margin_bottom,
+                                (float)bodyMarginHeight);
   }
 
   // topmargin (IE-attribute)
   if (bodyMarginHeight == -1) {
-    value = aBuilder.GetAttr(nsGkAtoms::topmargin);
+    value = aAttributes->GetAttr(nsGkAtoms::topmargin);
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyTopMargin = value->GetIntegerValue();
       if (bodyTopMargin < 0) {
         bodyTopMargin = 0;
       }
-      aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_top,
-                                    (float)bodyTopMargin);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_top,
+                                  (float)bodyTopMargin);
     }
   }
   // bottommargin (IE-attribute)
 
   if (bodyMarginHeight == -1) {
-    value = aBuilder.GetAttr(nsGkAtoms::bottommargin);
+    value = aAttributes->GetAttr(nsGkAtoms::bottommargin);
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyBottomMargin = value->GetIntegerValue();
       if (bodyBottomMargin < 0) {
         bodyBottomMargin = 0;
       }
-      aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_bottom,
-                                    (float)bodyBottomMargin);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_bottom,
+                                  (float)bodyBottomMargin);
     }
   }
 
   // leftmargin (IE-attribute)
   if (bodyMarginWidth == -1) {
-    value = aBuilder.GetAttr(nsGkAtoms::leftmargin);
+    value = aAttributes->GetAttr(nsGkAtoms::leftmargin);
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyLeftMargin = value->GetIntegerValue();
       if (bodyLeftMargin < 0) {
         bodyLeftMargin = 0;
       }
-      aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_left,
-                                    (float)bodyLeftMargin);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left,
+                                  (float)bodyLeftMargin);
     }
   }
   // rightmargin (IE-attribute)
   if (bodyMarginWidth == -1) {
-    value = aBuilder.GetAttr(nsGkAtoms::rightmargin);
+    value = aAttributes->GetAttr(nsGkAtoms::rightmargin);
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyRightMargin = value->GetIntegerValue();
       if (bodyRightMargin < 0) {
         bodyRightMargin = 0;
       }
-      aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_right,
-                                    (float)bodyRightMargin);
+      aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right,
+                                  (float)bodyRightMargin);
     }
   }
 
   // if marginwidth or marginheight is set in the <frame> and not set in the
   // <body> reflect them as margin in the <body>
   if (bodyMarginWidth == -1 || bodyMarginHeight == -1) {
-    if (nsDocShell* ds = nsDocShell::Cast(aBuilder.Document().GetDocShell())) {
+    if (nsDocShell* ds = nsDocShell::Cast(aDecls.Document()->GetDocShell())) {
       CSSIntSize margins = ds->GetFrameMargins();
       int32_t frameMarginWidth = margins.width;
       int32_t frameMarginHeight = margins.height;
 
       if (bodyMarginWidth == -1 && frameMarginWidth >= 0) {
         if (bodyLeftMargin == -1) {
-          aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_left,
-                                        (float)frameMarginWidth);
+          aDecls.SetPixelValueIfUnset(eCSSProperty_margin_left,
+                                      (float)frameMarginWidth);
         }
         if (bodyRightMargin == -1) {
-          aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_right,
-                                        (float)frameMarginWidth);
+          aDecls.SetPixelValueIfUnset(eCSSProperty_margin_right,
+                                      (float)frameMarginWidth);
         }
       }
 
       if (bodyMarginHeight == -1 && frameMarginHeight >= 0) {
         if (bodyTopMargin == -1) {
-          aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_top,
-                                        (float)frameMarginHeight);
+          aDecls.SetPixelValueIfUnset(eCSSProperty_margin_top,
+                                      (float)frameMarginHeight);
         }
         if (bodyBottomMargin == -1) {
-          aBuilder.SetPixelValueIfUnset(eCSSProperty_margin_bottom,
-                                        (float)frameMarginHeight);
+          aDecls.SetPixelValueIfUnset(eCSSProperty_margin_bottom,
+                                      (float)frameMarginHeight);
         }
       }
     }
   }
 
   // When display if first asked for, go ahead and get our colors set up.
-  if (AttributeStyles* attrStyles = aBuilder.Document().GetAttributeStyles()) {
+  if (AttributeStyles* attrStyles = aDecls.Document()->GetAttributeStyles()) {
     nscolor color;
-    value = aBuilder.GetAttr(nsGkAtoms::link);
+    value = aAttributes->GetAttr(nsGkAtoms::link);
     if (value && value->GetColorValue(color)) {
       attrStyles->SetLinkColor(color);
     }
 
-    value = aBuilder.GetAttr(nsGkAtoms::alink);
+    value = aAttributes->GetAttr(nsGkAtoms::alink);
     if (value && value->GetColorValue(color)) {
       attrStyles->SetActiveLinkColor(color);
     }
 
-    value = aBuilder.GetAttr(nsGkAtoms::vlink);
+    value = aAttributes->GetAttr(nsGkAtoms::vlink);
     if (value && value->GetColorValue(color)) {
       attrStyles->SetVisitedLinkColor(color);
     }
   }
 
-  if (!aBuilder.PropertyIsSet(eCSSProperty_color)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_color)) {
     // color: color
     nscolor color;
-    value = aBuilder.GetAttr(nsGkAtoms::text);
+    value = aAttributes->GetAttr(nsGkAtoms::text);
     if (value && value->GetColorValue(color)) {
-      aBuilder.SetColorValue(eCSSProperty_color, color);
+      aDecls.SetColorValue(eCSSProperty_color, color);
     }
   }
 
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aBuilder);
-  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 nsMapRuleToAttributesFunc HTMLBodyElement::GetAttributeMappingFunction() const {
@@ -280,17 +281,26 @@ bool HTMLBodyElement::IsEventAttributeNameInternal(nsAtom* aName) {
 }
 
 nsresult HTMLBodyElement::BindToTree(BindContext& aContext, nsINode& aParent) {
-  mAttrs.MarkAsPendingPresAttributeEvaluation();
-  return nsGenericHTMLElement::BindToTree(aContext, aParent);
+  nsresult rv = nsGenericHTMLElement::BindToTree(aContext, aParent);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return mAttrs.ForceMapped(this);
 }
 
-void HTMLBodyElement::FrameMarginsChanged() {
-  MOZ_ASSERT(IsInComposedDoc());
-  if (IsPendingMappedAttributeEvaluation()) {
-    return;
-  }
-  if (mAttrs.MarkAsPendingPresAttributeEvaluation()) {
-    OwnerDoc()->ScheduleForPresAttrEvaluation(this);
+void HTMLBodyElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
+                                   const nsAttrValue* aValue,
+                                   const nsAttrValue* aOldValue,
+                                   nsIPrincipal* aSubjectPrincipal,
+                                   bool aNotify) {
+  nsGenericHTMLElement::AfterSetAttr(aNameSpaceID, aName, aValue, aOldValue,
+                                     aSubjectPrincipal, aNotify);
+  // If the last mapped attribute was removed, don't clear the
+  // nsMappedAttributes, our style can still depend on the containing frame
+  // element.
+  //
+  // FIXME(emilio, bug 1839333): Is this true? We don't store containing frame
+  // stuff in nsMappedAttributes / AttributeStyles, maybe we can remove this?
+  if (!aValue && IsAttributeMapped(aName)) {
+    Unused << mAttrs.ForceMapped(this);
   }
 }
 

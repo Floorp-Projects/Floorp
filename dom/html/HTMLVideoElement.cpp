@@ -168,9 +168,10 @@ bool HTMLVideoElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLVideoElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
-  MapImageSizeAttributesInto(aBuilder, MapAspectRatio::Yes);
-  MapCommonAttributesInto(aBuilder);
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls,
+                                                   MapAspectRatio::Yes);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

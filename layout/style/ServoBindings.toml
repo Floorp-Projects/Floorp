@@ -34,6 +34,7 @@ headers = [
     "mozilla/ServoTraversalStatistics.h",
     "mozilla/SizeOfState.h",
     "nsCSSProps.h",
+    "nsMappedAttributes.h",
     "nsNameSpaceManager.h",
 ]
 raw-lines = [

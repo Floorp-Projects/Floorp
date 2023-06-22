@@ -22,6 +22,7 @@
 #include "nsString.h"
 
 struct MiscContainer;
+class nsMappedAttributes;
 namespace mozilla {
 struct StyleLockedDeclarationBlock;
 namespace dom {
@@ -52,6 +53,14 @@ class AttributeStyles final {
     return mServoActiveLinkDecl;
   }
 
+  // Mapped Attribute management methods
+  already_AddRefed<nsMappedAttributes> UniqueMappedAttributes(
+      nsMappedAttributes* aMapped);
+  void DropMappedAttributes(nsMappedAttributes* aMapped);
+  // For each mapped presentation attribute in the cache, resolve the attached
+  // DeclarationBlock by running the mapping to Servo specified values.
+  void CalculateMappedServoDeclarations();
+
   void CacheStyleAttr(const nsAString& aSerialized, MiscContainer* aValue) {
     mCachedStyleAttrs.InsertOrUpdate(aSerialized, aValue);
   }
@@ -78,7 +87,13 @@ class AttributeStyles final {
   RefPtr<StyleLockedDeclarationBlock> mServoUnvisitedLinkDecl;
   RefPtr<StyleLockedDeclarationBlock> mServoVisitedLinkDecl;
   RefPtr<StyleLockedDeclarationBlock> mServoActiveLinkDecl;
+
+  PLDHashTable mMappedAttrTable;
   nsTHashMap<nsStringHashKey, MiscContainer*> mCachedStyleAttrs;
+  // Whether or not the mapped attributes table
+  // has been changed since the last call to
+  // CalculateMappedServoDeclarations()
+  bool mMappedAttrsDirty = false;
 };
 
 }  // namespace mozilla

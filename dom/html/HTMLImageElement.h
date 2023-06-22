@@ -271,7 +271,7 @@ class HTMLImageElement final : public nsGenericHTMLElement,
 
   // This is used when restyling, for retrieving the extra style from the source
   // element.
-  const StyleLockedDeclarationBlock* GetMappedAttributesFromSource() const;
+  const nsMappedAttributes* GetMappedAttributesFromSource() const;
 
  protected:
   virtual ~HTMLImageElement();
@@ -380,7 +380,8 @@ class HTMLImageElement final : public nsGenericHTMLElement,
  private:
   bool SourceElementMatches(Element* aSourceElement);
 
-  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    MappedDeclarations&);
   /**
    * This function is called by AfterSetAttr and OnAttrSetButNotChanged.
    * It will not be called if the value is being unset.

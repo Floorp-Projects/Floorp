@@ -14,6 +14,10 @@
 #include "mozilla/dom/HTMLQuoteElementBinding.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/MappedDeclarations.h"
+#include "nsAttrValueInlines.h"
+#include "nsStyleConsts.h"
+#include "nsMappedAttributes.h"
 #include "nsContentUtils.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIURI.h"
@@ -30,7 +34,7 @@ void HTMLSharedElement::GetHref(nsAString& aValue) {
   MOZ_ASSERT(mNodeInfo->Equals(nsGkAtoms::base),
              "This should only get called for <base> elements");
   nsAutoString href;
-  GetAttr(nsGkAtoms::href, href);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
   nsCOMPtr<nsIURI> uri;
   Document* doc = OwnerDoc();

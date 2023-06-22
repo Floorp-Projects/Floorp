@@ -540,7 +540,8 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   nsString mPreviewValue;
 
  private:
-  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    MappedDeclarations&);
 };
 
 }  // namespace dom

@@ -42,6 +42,7 @@ nsresult NS_NewSVGElement(mozilla::dom::Element** aResult,
 class mozAutoDocUpdate;
 
 namespace mozilla {
+class DeclarationBlock;
 
 class SVGAnimatedBoolean;
 class SVGAnimatedEnumeration;
@@ -125,7 +126,6 @@ class SVGElement : public SVGElementBase  // nsIContent
   void NodeInfoChanged(Document* aOldDoc) override;
 
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
-  void UpdateMappedDeclarationBlock();
 
   NS_IMPL_FROMNODE(SVGElement, kNameSpaceID_SVG)
 
@@ -181,11 +181,12 @@ class SVGElement : public SVGElementBase  // nsIContent
   void SetLength(nsAtom* aName, const SVGAnimatedLength& aLength);
 
   enum class ValToUse { Base, Anim };
-  static bool UpdateDeclarationBlockFromLength(
-      StyleLockedDeclarationBlock& aBlock, nsCSSPropertyID aPropId,
-      const SVGAnimatedLength& aLength, ValToUse aValToUse);
+  static bool UpdateDeclarationBlockFromLength(DeclarationBlock& aBlock,
+                                               nsCSSPropertyID aPropId,
+                                               const SVGAnimatedLength& aLength,
+                                               ValToUse aValToUse);
   static bool UpdateDeclarationBlockFromPath(
-      StyleLockedDeclarationBlock& aBlock, const SVGAnimatedPathSegList& aPath,
+      DeclarationBlock& aBlock, const SVGAnimatedPathSegList& aPath,
       ValToUse aValToUse);
 
   nsAttrValue WillChangeLength(uint8_t aAttrEnum,
@@ -329,6 +330,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   mozilla::dom::SVGSVGElement* GetOwnerSVGElement();
   SVGElement* GetViewportElement();
   already_AddRefed<mozilla::dom::DOMSVGAnimatedString> ClassName();
+
+  void UpdateContentDeclarationBlock();
+  const mozilla::DeclarationBlock* GetContentDeclarationBlock() const {
+    return mContentDeclarationBlock.get();
+  }
 
   bool Autofocus() const { return GetBoolAttr(nsGkAtoms::autofocus); }
   void SetAutofocus(bool aAutofocus, ErrorResult& aRv) {
@@ -509,6 +515,7 @@ class SVGElement : public SVGElementBase  // nsIContent
 
   SVGAnimatedClass mClassAttribute;
   UniquePtr<nsAttrValue> mClassAnimAttr;
+  RefPtr<mozilla::DeclarationBlock> mContentDeclarationBlock;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(SVGElement, MOZILLA_SVGELEMENT_IID)

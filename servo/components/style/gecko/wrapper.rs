@@ -589,18 +589,40 @@ impl<'le> GeckoElement<'le> {
     }
 
     #[inline(always)]
-    fn attrs(&self) -> &[structs::AttrArray_InternalAttr] {
+    fn attrs(&self) -> Option<&structs::AttrArray_Impl> {
+        unsafe { self.0.mAttrs.mImpl.mPtr.as_ref() }
+    }
+
+    #[inline(always)]
+    fn non_mapped_attrs(&self) -> &[structs::AttrArray_InternalAttr] {
+        let attrs = match self.attrs() {
+            Some(attrs) => attrs,
+            None => return &[],
+        };
         unsafe {
-            match self.0.mAttrs.mImpl.mPtr.as_ref() {
-                Some(attrs) => attrs.mBuffer.as_slice(attrs.mAttrCount as usize),
+            attrs.mBuffer.as_slice(attrs.mAttrCount as usize)
+        }
+    }
+
+    #[inline(always)]
+    fn mapped_attrs(&self) -> &[structs::AttrArray_InternalAttr] {
+        let attrs = match self.attrs() {
+            Some(attrs) => attrs,
+            None => return &[],
+        };
+        unsafe {
+            let attrs = match attrs.mMappedAttrs.as_ref() {
+                Some(attrs) => attrs,
                 None => return &[],
-            }
+            };
+
+            attrs.mBuffer.as_slice(attrs.mAttrCount as usize)
         }
     }
 
     #[inline]
     fn iter_attrs(&self) -> impl Iterator<Item = &structs::AttrArray_InternalAttr> {
-        self.attrs().iter()
+        self.non_mapped_attrs().iter().chain(self.mapped_attrs().iter())
     }
 
     #[inline(always)]
@@ -608,7 +630,7 @@ impl<'le> GeckoElement<'le> {
         if !self.has_part_attr() {
             return None;
         }
-        snapshot_helpers::find_attr(self.attrs(), &atom!("part"))
+        snapshot_helpers::find_attr(self.non_mapped_attrs(), &atom!("part"))
     }
 
     #[inline(always)]
@@ -624,7 +646,7 @@ impl<'le> GeckoElement<'le> {
             }
         }
 
-        snapshot_helpers::find_attr(self.attrs(), &atom!("class"))
+        snapshot_helpers::find_attr(self.non_mapped_attrs(), &atom!("class"))
     }
 
     #[inline]
@@ -1032,7 +1054,7 @@ impl<'le> TElement for GeckoElement<'le> {
         let slot: &structs::HTMLSlotElement = unsafe { mem::transmute(self.0) };
 
         if cfg!(debug_assertions) {
-            let base: &RawGeckoElement = &slot._base._base._base;
+            let base: &RawGeckoElement = &slot._base._base._base._base;
             assert_eq!(base as *const _, self.0 as *const _, "Bad cast");
         }
 
@@ -1176,7 +1198,7 @@ impl<'le> TElement for GeckoElement<'le> {
 
     #[inline]
     fn exports_any_part(&self) -> bool {
-        snapshot_helpers::find_attr(self.attrs(), &atom!("exportparts")).is_some()
+        snapshot_helpers::find_attr(self.non_mapped_attrs(), &atom!("exportparts")).is_some()
     }
 
     // FIXME(emilio): we should probably just return a reference to the Atom.
@@ -1185,7 +1207,8 @@ impl<'le> TElement for GeckoElement<'le> {
         if !self.has_id() {
             return None;
         }
-        snapshot_helpers::get_id(self.attrs())
+
+        snapshot_helpers::get_id(self.non_mapped_attrs())
     }
 
     fn each_attr_name<F>(&self, mut callback: F)
@@ -1216,7 +1239,7 @@ impl<'le> TElement for GeckoElement<'le> {
     where
         F: FnMut(&AtomIdent),
     {
-        snapshot_helpers::each_exported_part(self.attrs(), name, callback)
+        snapshot_helpers::each_exported_part(self.non_mapped_attrs(), name, callback)
     }
 
     fn each_part<F>(&self, callback: F)
@@ -1770,7 +1793,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
     fn assigned_slot(&self) -> Option<Self> {
         let slot = self.extended_slots()?._base.mAssignedSlot.mRawPtr;
 
-        unsafe { Some(GeckoElement(&slot.as_ref()?._base._base._base)) }
+        unsafe { Some(GeckoElement(&slot.as_ref()?._base._base._base._base)) }
     }
 
     #[inline]
@@ -1842,6 +1865,9 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         local_name: &LocalName,
         operation: &AttrSelectorOperation<&AttrValue>,
     ) -> bool {
+        if self.attrs().is_none() {
+            return false;
+        }
         snapshot_helpers::attr_matches(self.iter_attrs(), ns, local_name, operation)
     }
 
@@ -2048,7 +2074,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             return false;
         }
 
-        let element_id = match snapshot_helpers::get_id(self.attrs()) {
+        let element_id = match snapshot_helpers::get_id(self.non_mapped_attrs()) {
             Some(id) => id,
             None => return false,
         };
@@ -2068,7 +2094,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
 
     #[inline]
     fn imported_part(&self, name: &AtomIdent) -> Option<AtomIdent> {
-        snapshot_helpers::imported_part(self.attrs(), name)
+        snapshot_helpers::imported_part(self.non_mapped_attrs(), name)
     }
 
     #[inline(always)]

@@ -7,8 +7,9 @@
 #include "HTMLFontElement.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLFontElementBinding.h"
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
 #include "nsAttrValueInlines.h"
+#include "nsMappedAttributes.h"
 #include "nsContentUtils.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Font)
@@ -47,43 +48,41 @@ bool HTMLFontElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLFontElement::MapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   // face: string list
-  if (!aBuilder.PropertyIsSet(eCSSProperty_font_family)) {
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::face);
+  if (!aDecls.PropertyIsSet(eCSSProperty_font_family)) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::face);
     if (value && value->Type() == nsAttrValue::eString &&
         !value->IsEmptyString()) {
-      aBuilder.SetFontFamily(NS_ConvertUTF16toUTF8(value->GetStringValue()));
+      aDecls.SetFontFamily(NS_ConvertUTF16toUTF8(value->GetStringValue()));
     }
   }
   // size: int
-  if (!aBuilder.PropertyIsSet(eCSSProperty_font_size)) {
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::size);
-    if (value && value->Type() == nsAttrValue::eInteger) {
-      aBuilder.SetKeywordValue(eCSSProperty_font_size,
-                               value->GetIntegerValue());
-    }
+  if (!aDecls.PropertyIsSet(eCSSProperty_font_size)) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::size);
+    if (value && value->Type() == nsAttrValue::eInteger)
+      aDecls.SetKeywordValue(eCSSProperty_font_size, value->GetIntegerValue());
   }
-  if (!aBuilder.PropertyIsSet(eCSSProperty_color)) {
+  if (!aDecls.PropertyIsSet(eCSSProperty_color)) {
     // color: color
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::color);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
     nscolor color;
     if (value && value->GetColorValue(color)) {
-      aBuilder.SetColorValue(eCSSProperty_color, color);
+      aDecls.SetColorValue(eCSSProperty_color, color);
     }
   }
-  if (aBuilder.Document().GetCompatibilityMode() == eCompatibility_NavQuirks) {
+  if (aDecls.Document()->GetCompatibilityMode() == eCompatibility_NavQuirks) {
     // Make <a><font color="red">text</font></a> give the text a red underline
     // in quirks mode.  The StyleTextDecorationLine_COLOR_OVERRIDE flag only
     // affects quirks mode rendering.
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::color);
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::color);
     nscolor color;
     if (value && value->GetColorValue(color)) {
-      aBuilder.SetTextDecorationColorOverride();
+      aDecls.SetTextDecorationColorOverride();
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
 NS_IMETHODIMP_(bool)

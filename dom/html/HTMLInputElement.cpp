@@ -53,6 +53,7 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
+#include "nsMappedAttributes.h"
 #include "nsIFormControl.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLDataListElement.h"
@@ -74,7 +75,7 @@
 
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/TextControlState.h"
 #include "mozilla/TextEditor.h"
@@ -4468,32 +4469,30 @@ void HTMLInputElement::HandleTypeChange(FormControlType aNewType,
     RecomputeDirectionality(this, aNotify);
   }
 
-  if (oldType == FormControlType::InputImage ||
-      mType == FormControlType::InputImage) {
-    if (oldType == FormControlType::InputImage) {
-      // We're no longer an image input.  Cancel our image requests, if we have
-      // any.
-      CancelImageRequests(aNotify);
-    } else if (aNotify) {
-      // We just got switched to be an image input; we should see whether we
-      // have an image to load;
+  if (oldType == FormControlType::InputImage) {
+    // We're no longer an image input.  Cancel our image requests, if we have
+    // any.
+    CancelImageRequests(aNotify);
+
+    // And we should update our mapped attribute mapping function.
+    mAttrs.UpdateMappedAttrRuleMapper(*this);
+  } else if (mType == FormControlType::InputImage) {
+    if (aNotify) {
+      // We just got switched to be an image input; we should see
+      // whether we have an image to load;
       nsAutoString src;
-      if (GetAttr(nsGkAtoms::src, src)) {
+      if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
         // Mark channel as urgent-start before load image if the image load is
-        // initiated by a user interaction.
+        // initaiated by a user interaction.
         mUseUrgentStartForChannel = UserActivation::IsHandlingUserInput();
 
         LoadImage(src, false, aNotify, eImageLoadType_Normal,
                   mSrcTriggeringPrincipal);
       }
     }
-    // We should update our mapped attribute mapping function.
-    if (mAttrs.HasAttrs()) {
-      mAttrs.MarkAsPendingPresAttributeEvaluation();
-      if (auto* doc = GetComposedDoc()) {
-        doc->ScheduleForPresAttrEvaluation(this);
-      }
-    }
+
+    // And we should update our mapped attribute mapping function.
+    mAttrs.UpdateMappedAttrRuleMapper(*this);
   }
 
   if (mType == FormControlType::InputPassword && IsInComposedDoc()) {
@@ -5249,17 +5248,19 @@ bool HTMLInputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLInputElement::ImageInputMapAttributesIntoRule(
-    MappedDeclarationsBuilder& aBuilder) {
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   nsGenericHTMLFormControlElementWithState::MapImageBorderAttributeInto(
-      aBuilder);
+      aAttributes, aDecls);
   nsGenericHTMLFormControlElementWithState::MapImageMarginAttributeInto(
-      aBuilder);
+      aAttributes, aDecls);
   nsGenericHTMLFormControlElementWithState::MapImageSizeAttributesInto(
-      aBuilder, MapAspectRatio::Yes);
+      aAttributes, aDecls, MapAspectRatio::Yes);
   // Images treat align as "float"
   nsGenericHTMLFormControlElementWithState::MapImageAlignAttributeInto(
-      aBuilder);
-  nsGenericHTMLFormControlElementWithState::MapCommonAttributesInto(aBuilder);
+      aAttributes, aDecls);
+
+  nsGenericHTMLFormControlElementWithState::MapCommonAttributesInto(aAttributes,
+                                                                    aDecls);
 }
 
 nsChangeHint HTMLInputElement::GetAttributeChangeHint(const nsAtom* aAttribute,

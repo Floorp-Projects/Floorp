@@ -399,7 +399,8 @@ class HTMLTextAreaElement final : public TextControlElement,
                          ErrorResult& aRv);
 
  private:
-  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    MappedDeclarations&);
 };
 
 }  // namespace dom

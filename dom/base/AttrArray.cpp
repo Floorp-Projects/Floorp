@@ -15,47 +15,40 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/ServoBindings.h"
+#include "mozilla/dom/Document.h"
 
+#include "nsMappedAttributeElement.h"
 #include "nsString.h"
+#include "nsMappedAttributes.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"  // nsAutoScriptBlocker
 
 using mozilla::CheckedUint32;
+using mozilla::dom::Document;
 
 AttrArray::Impl::~Impl() {
-  for (InternalAttr& attr : Attrs()) {
+  for (InternalAttr& attr : NonMappedAttrs()) {
     attr.~InternalAttr();
   }
-  if (auto* decl = GetMappedDeclarationBlock()) {
-    Servo_DeclarationBlock_Release(decl);
-    mMappedAttributeBits = 0;
-  }
-}
 
-void AttrArray::SetMappedDeclarationBlock(
-    already_AddRefed<mozilla::StyleLockedDeclarationBlock> aBlock) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mImpl);
-  MOZ_ASSERT(IsPendingMappedAttributeEvaluation());
-  if (auto* decl = GetMappedDeclarationBlock()) {
-    Servo_DeclarationBlock_Release(decl);
-  }
-  mImpl->mMappedAttributeBits = reinterpret_cast<uintptr_t>(aBlock.take());
-  MOZ_ASSERT(!IsPendingMappedAttributeEvaluation());
+  NS_IF_RELEASE(mMappedAttrs);
 }
 
 const nsAttrValue* AttrArray::GetAttr(const nsAtom* aLocalName,
                                       int32_t aNamespaceID) const {
   if (aNamespaceID == kNameSpaceID_None) {
     // This should be the common case so lets make an optimized loop
-    for (const InternalAttr& attr : Attrs()) {
+    for (const InternalAttr& attr : NonMappedAttrs()) {
       if (attr.mName.Equals(aLocalName)) {
         return &attr.mValue;
       }
     }
+
+    if (mImpl && mImpl->mMappedAttrs) {
+      return mImpl->mMappedAttrs->GetAttr(aLocalName);
+    }
   } else {
-    for (const InternalAttr& attr : Attrs()) {
+    for (const InternalAttr& attr : NonMappedAttrs()) {
       if (attr.mName.Equals(aLocalName, aNamespaceID)) {
         return &attr.mValue;
       }
@@ -66,11 +59,16 @@ const nsAttrValue* AttrArray::GetAttr(const nsAtom* aLocalName,
 }
 
 const nsAttrValue* AttrArray::GetAttr(const nsAString& aLocalName) const {
-  for (const InternalAttr& attr : Attrs()) {
+  for (const InternalAttr& attr : NonMappedAttrs()) {
     if (attr.mName.Equals(aLocalName)) {
       return &attr.mValue;
     }
   }
+
+  if (mImpl && mImpl->mMappedAttrs) {
+    return mImpl->mMappedAttrs->GetAttr(aLocalName);
+  }
+
   return nullptr;
 }
 
@@ -87,10 +85,14 @@ const nsAttrValue* AttrArray::GetAttr(const nsAString& aName,
     return GetAttr(lowercase, eCaseMatters);
   }
 
-  for (const InternalAttr& attr : Attrs()) {
+  for (const InternalAttr& attr : NonMappedAttrs()) {
     if (attr.mName.QualifiedNameEquals(aName)) {
       return &attr.mValue;
     }
+  }
+
+  if (mImpl && mImpl->mMappedAttrs) {
+    return mImpl->mMappedAttrs->GetAttr(aName);
   }
 
   return nullptr;
@@ -98,7 +100,13 @@ const nsAttrValue* AttrArray::GetAttr(const nsAString& aName,
 
 const nsAttrValue* AttrArray::AttrAt(uint32_t aPos) const {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds access in AttrArray");
-  return &mImpl->Attrs()[aPos].mValue;
+
+  uint32_t nonmapped = NonMappedAttrCount();
+  if (aPos < nonmapped) {
+    return &mImpl->NonMappedAttrs()[aPos].mValue;
+  }
+
+  return mImpl->mMappedAttrs->AttrAt(aPos - nonmapped);
 }
 
 template <typename Name>
@@ -121,7 +129,7 @@ nsresult AttrArray::SetAndSwapAttr(nsAtom* aLocalName, nsAttrValue& aValue,
                                    bool* aHadValue) {
   *aHadValue = false;
 
-  for (InternalAttr& attr : Attrs()) {
+  for (InternalAttr& attr : NonMappedAttrs()) {
     if (attr.mName.Equals(aLocalName)) {
       attr.mValue.SwapValueWith(aValue);
       *aHadValue = true;
@@ -141,7 +149,7 @@ nsresult AttrArray::SetAndSwapAttr(mozilla::dom::NodeInfo* aName,
   }
 
   *aHadValue = false;
-  for (InternalAttr& attr : Attrs()) {
+  for (InternalAttr& attr : NonMappedAttrs()) {
     if (attr.mName.Equals(localName, namespaceID)) {
       attr.mName.SetTo(aName);
       attr.mValue.SwapValueWith(aValue);
@@ -156,41 +164,82 @@ nsresult AttrArray::SetAndSwapAttr(mozilla::dom::NodeInfo* aName,
 nsresult AttrArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue) {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds");
 
-  mImpl->mBuffer[aPos].mValue.SwapValueWith(aValue);
-  mImpl->mBuffer[aPos].~InternalAttr();
+  uint32_t nonmapped = NonMappedAttrCount();
+  if (aPos < nonmapped) {
+    mImpl->mBuffer[aPos].mValue.SwapValueWith(aValue);
+    mImpl->mBuffer[aPos].~InternalAttr();
 
-  memmove(mImpl->mBuffer + aPos, mImpl->mBuffer + aPos + 1,
-          (mImpl->mAttrCount - aPos - 1) * sizeof(InternalAttr));
+    memmove(mImpl->mBuffer + aPos, mImpl->mBuffer + aPos + 1,
+            (mImpl->mAttrCount - aPos - 1) * sizeof(InternalAttr));
 
-  --mImpl->mAttrCount;
-  return NS_OK;
+    --mImpl->mAttrCount;
+
+    return NS_OK;
+  }
+
+  if (MappedAttrCount() == 1) {
+    // We're removing the last mapped attribute.  Can't swap in this
+    // case; have to copy.
+    aValue.SetTo(*mImpl->mMappedAttrs->AttrAt(0));
+    NS_RELEASE(mImpl->mMappedAttrs);
+
+    return NS_OK;
+  }
+
+  RefPtr<nsMappedAttributes> mapped = ModifiableMapped(nullptr, false);
+  mapped->RemoveAttrAt(aPos - nonmapped, aValue);
+  return MakeMappedUnique(mapped);
 }
 
 mozilla::dom::BorrowedAttrInfo AttrArray::AttrInfoAt(uint32_t aPos) const {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds access in AttrArray");
-  InternalAttr& attr = mImpl->mBuffer[aPos];
-  return BorrowedAttrInfo(&attr.mName, &attr.mValue);
+
+  uint32_t nonmapped = NonMappedAttrCount();
+  if (aPos < nonmapped) {
+    InternalAttr& attr = mImpl->mBuffer[aPos];
+    return BorrowedAttrInfo(&attr.mName, &attr.mValue);
+  }
+
+  return BorrowedAttrInfo(mImpl->mMappedAttrs->NameAt(aPos - nonmapped),
+                          mImpl->mMappedAttrs->AttrAt(aPos - nonmapped));
 }
 
 const nsAttrName* AttrArray::AttrNameAt(uint32_t aPos) const {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds access in AttrArray");
-  return &mImpl->mBuffer[aPos].mName;
+
+  uint32_t nonmapped = NonMappedAttrCount();
+  if (aPos < nonmapped) {
+    return &mImpl->mBuffer[aPos].mName;
+  }
+
+  return mImpl->mMappedAttrs->NameAt(aPos - nonmapped);
 }
 
 const nsAttrName* AttrArray::GetSafeAttrNameAt(uint32_t aPos) const {
+  uint32_t nonmapped = NonMappedAttrCount();
+  if (aPos < nonmapped) {
+    return &mImpl->mBuffer[aPos].mName;
+  }
+
   if (aPos >= AttrCount()) {
     return nullptr;
   }
-  return &mImpl->mBuffer[aPos].mName;
+
+  return mImpl->mMappedAttrs->NameAt(aPos - nonmapped);
 }
 
 const nsAttrName* AttrArray::GetExistingAttrNameFromQName(
     const nsAString& aName) const {
-  for (const InternalAttr& attr : Attrs()) {
+  for (const InternalAttr& attr : NonMappedAttrs()) {
     if (attr.mName.QualifiedNameEquals(aName)) {
       return &attr.mName;
     }
   }
+
+  if (mImpl && mImpl->mMappedAttrs) {
+    return mImpl->mMappedAttrs->GetExistingAttrNameFromQName(aName);
+  }
+
   return nullptr;
 }
 
@@ -198,6 +247,14 @@ int32_t AttrArray::IndexOfAttr(const nsAtom* aLocalName,
                                int32_t aNamespaceID) const {
   if (!mImpl) {
     return -1;
+  }
+
+  int32_t idx;
+  if (mImpl->mMappedAttrs && aNamespaceID == kNameSpaceID_None) {
+    idx = mImpl->mMappedAttrs->IndexOfAttr(aLocalName);
+    if (idx >= 0) {
+      return NonMappedAttrCount() + idx;
+    }
   }
 
   uint32_t i = 0;
@@ -208,14 +265,14 @@ int32_t AttrArray::IndexOfAttr(const nsAtom* aLocalName,
     // against null would fail in the loop body (since Equals() just compares
     // the raw pointer value of aLocalName to what AttrSlotIsTaken() would be
     // checking.
-    for (const InternalAttr& attr : Attrs()) {
+    for (const InternalAttr& attr : NonMappedAttrs()) {
       if (attr.mName.Equals(aLocalName)) {
         return i;
       }
       ++i;
     }
   } else {
-    for (const InternalAttr& attr : Attrs()) {
+    for (const InternalAttr& attr : NonMappedAttrs()) {
       if (attr.mName.Equals(aLocalName, aNamespaceID)) {
         return i;
       }
@@ -226,12 +283,53 @@ int32_t AttrArray::IndexOfAttr(const nsAtom* aLocalName,
   return -1;
 }
 
+nsresult AttrArray::SetAndSwapMappedAttr(nsAtom* aLocalName,
+                                         nsAttrValue& aValue,
+                                         nsMappedAttributeElement* aContent,
+                                         bool* aHadValue) {
+  bool willAdd = true;
+  if (mImpl && mImpl->mMappedAttrs) {
+    willAdd = !mImpl->mMappedAttrs->GetAttr(aLocalName);
+  }
+
+  RefPtr<nsMappedAttributes> mapped = ModifiableMapped(aContent, willAdd);
+
+  mapped->SetAndSwapAttr(aLocalName, aValue, aHadValue);
+
+  return MakeMappedUnique(mapped);
+}
+
+nsresult AttrArray::SetMappedAttributeStyles(
+    mozilla::AttributeStyles* aNewStyles) {
+  MOZ_ASSERT(mImpl && mImpl->mMappedAttrs, "Should have mapped attrs here!");
+  if (aNewStyles == mImpl->mMappedAttrs->GetAttributeStyles()) {
+    return NS_OK;
+  }
+
+  RefPtr<nsMappedAttributes> mapped = ModifiableMapped(nullptr, false);
+  mapped->DropAttributeStylesReference();
+  mapped->SetAttributeStyles(aNewStyles);
+  return MakeMappedUnique(mapped);
+}
+
+nsresult AttrArray::DoUpdateMappedAttrRuleMapper(
+    nsMappedAttributeElement& aElement) {
+  MOZ_ASSERT(mImpl && mImpl->mMappedAttrs, "Should have mapped attrs here!");
+
+  // First two args don't matter if the assert holds.
+  RefPtr<nsMappedAttributes> mapped = ModifiableMapped(nullptr, false);
+
+  mapped->SetRuleMapper(aElement.GetAttributeMappingFunction());
+
+  return MakeMappedUnique(mapped);
+}
+
 void AttrArray::Compact() {
   if (!mImpl) {
     return;
   }
 
-  if (!mImpl->mAttrCount && !mImpl->mMappedAttributeBits) {
+  if (!mImpl->mAttrCount && !mImpl->mMappedAttrs) {
     mImpl.reset();
     return;
   }
@@ -249,12 +347,73 @@ void AttrArray::Compact() {
   mImpl.reset(impl);
 }
 
+uint32_t AttrArray::DoGetMappedAttrCount() const {
+  MOZ_ASSERT(mImpl && mImpl->mMappedAttrs);
+  return static_cast<uint32_t>(mImpl->mMappedAttrs->Count());
+}
+
+nsresult AttrArray::ForceMapped(nsMappedAttributeElement* aContent) {
+  RefPtr<nsMappedAttributes> mapped = ModifiableMapped(aContent, false, 0);
+  return MakeMappedUnique(mapped);
+}
+
+void AttrArray::ClearMappedServoStyle() {
+  if (mImpl && mImpl->mMappedAttrs) {
+    mImpl->mMappedAttrs->ClearServoStyle();
+  }
+}
+
+nsMappedAttributes* AttrArray::ModifiableMapped(
+    nsMappedAttributeElement* aContent, bool aWillAddAttr, int32_t aAttrCount) {
+  if (mImpl && mImpl->mMappedAttrs) {
+    return mImpl->mMappedAttrs->Clone(aWillAddAttr);
+  }
+
+  MOZ_ASSERT(aContent, "Trying to create modifiable without content");
+
+  nsMapRuleToAttributesFunc mapRuleFunc =
+      aContent->GetAttributeMappingFunction();
+  return new (aAttrCount) nsMappedAttributes(
+      aContent->OwnerDoc()->GetAttributeStyles(), mapRuleFunc);
+}
+
+nsresult AttrArray::MakeMappedUnique(nsMappedAttributes* aAttributes) {
+  NS_ASSERTION(aAttributes, "missing attributes");
+
+  if (!mImpl && !GrowBy(1)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  if (!aAttributes->GetAttributeStyles()) {
+    // This doesn't currently happen, but it could if we do loading right
+    RefPtr<nsMappedAttributes> mapped(aAttributes);
+    mapped.swap(mImpl->mMappedAttrs);
+    return NS_OK;
+  }
+
+  RefPtr<nsMappedAttributes> mapped =
+      aAttributes->GetAttributeStyles()->UniqueMappedAttributes(aAttributes);
+  NS_ENSURE_TRUE(mapped, NS_ERROR_OUT_OF_MEMORY);
+
+  if (mapped != aAttributes) {
+    // Reset the stylesheet of aAttributes so that it doesn't spend time
+    // trying to remove itself from the hash. There is no risk that aAttributes
+    // is in the hash since it will always have come from ModifiableMapped,
+    // which never returns maps that are in the hash (such hashes are by
+    // nature not modifiable).
+    aAttributes->DropAttributeStylesReference();
+  }
+  mapped.swap(mImpl->mMappedAttrs);
+
+  return NS_OK;
+}
+
 nsresult AttrArray::EnsureCapacityToClone(const AttrArray& aOther) {
   MOZ_ASSERT(!mImpl,
              "AttrArray::EnsureCapacityToClone requires the array be empty "
              "when called");
 
-  uint32_t attrCount = aOther.AttrCount();
+  uint32_t attrCount = aOther.NonMappedAttrCount();
   if (!attrCount) {
     return NS_OK;
   }
@@ -265,7 +424,7 @@ nsresult AttrArray::EnsureCapacityToClone(const AttrArray& aOther) {
       static_cast<Impl*>(malloc(Impl::AllocationSizeForAttributes(attrCount))));
   NS_ENSURE_TRUE(mImpl, NS_ERROR_OUT_OF_MEMORY);
 
-  mImpl->mMappedAttributeBits = 0;
+  mImpl->mMappedAttrs = nullptr;
   mImpl->mCapacity = attrCount;
   mImpl->mAttrCount = 0;
 
@@ -321,7 +480,7 @@ bool AttrArray::GrowBy(uint32_t aGrowSize) {
 
   // Set initial counts if we didn't have a buffer before
   if (needToInitialize) {
-    mImpl->mMappedAttributeBits = 0;
+    mImpl->mMappedAttrs = nullptr;
     mImpl->mAttrCount = 0;
   }
 
@@ -331,13 +490,17 @@ bool AttrArray::GrowBy(uint32_t aGrowSize) {
 
 size_t AttrArray::SizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
-  if (!mImpl) {
-    return 0;
+  size_t n = 0;
+  if (mImpl) {
+    // Don't add the size taken by *mMappedAttrs because it's shared.
+
+    n += aMallocSizeOf(mImpl.get());
+
+    for (const InternalAttr& attr : NonMappedAttrs()) {
+      n += attr.mValue.SizeOfExcludingThis(aMallocSizeOf);
+    }
   }
-  size_t n = aMallocSizeOf(mImpl.get());
-  for (const InternalAttr& attr : Attrs()) {
-    n += attr.mValue.SizeOfExcludingThis(aMallocSizeOf);
-  }
+
   return n;
 }
 

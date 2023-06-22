@@ -17,6 +17,7 @@
 #include "nsIContentInlines.h"
 #include "nsITableCellLayout.h"  // for MAX_COLSPAN / MAX_ROWSPAN
 #include "nsCSSValue.h"
+#include "nsMappedAttributes.h"
 #include "nsStyleConsts.h"
 #include "mozilla/dom/Document.h"
 #include "nsPresContext.h"
@@ -26,7 +27,7 @@
 #include "nsIURI.h"
 
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/MappedDeclarations.h"
 #include "mozilla/dom/MathMLElementBinding.h"
 
 using namespace mozilla;
@@ -46,10 +47,10 @@ static nsresult ReportLengthParseError(const nsString& aValue,
 }
 
 static nsresult ReportParseErrorNoTag(const nsString& aValue, nsAtom* aAtom,
-                                      Document& aDocument) {
+                                      Document* aDocument) {
   AutoTArray<nsString, 2> argv = {aValue, nsDependentAtomString(aAtom)};
   return nsContentUtils::ReportToConsole(
-      nsIScriptError::errorFlag, "MathML"_ns, &aDocument,
+      nsIScriptError::errorFlag, "MathML"_ns, aDocument,
       nsContentUtils::eMATHML_PROPERTIES, "AttributeParsingErrorNoTag", argv);
 }
 
@@ -146,10 +147,10 @@ bool MathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
 }
 
 nsMapRuleToAttributesFunc MathMLElement::GetAttributeMappingFunction() const {
-  if (mNodeInfo->Equals(nsGkAtoms::mtable_)) {
-    return &MapMTableAttributesInto;
-  }
-  return &MapGlobalMathMLAttributesInto;
+  // It doesn't really matter what our tag is here, because only attributes
+  // that satisfy IsAttributeMapped will be stored in the mapped attributes
+  // list and available to the mapping function
+  return &MapMathMLAttributesInto;
 }
 
 /* static */
@@ -355,39 +356,8 @@ bool MathMLElement::ParseNumericValue(const nsString& aString,
   return true;
 }
 
-void MathMLElement::MapMTableAttributesInto(
-    MappedDeclarationsBuilder& aBuilder) {
-  // width
-  //
-  // "Specifies the desired width of the entire table and is intended for
-  // visual user agents. When the value is a percentage value, the value is
-  // relative to the horizontal space a MathML renderer has available for the
-  // math element. When the value is "auto", the MathML renderer should
-  // calculate the table width from its contents using whatever layout
-  // algorithm it chooses. "
-  //
-  // values: "auto" | length
-  // default: auto
-  //
-  if (!aBuilder.PropertyIsSet(eCSSProperty_width)) {
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::width);
-    nsCSSValue width;
-    // This does not handle auto and unitless values
-    if (value && value->Type() == nsAttrValue::eString) {
-      ParseNumericValue(value->GetStringValue(), width, 0,
-                        &aBuilder.Document());
-      if (width.GetUnit() == eCSSUnit_Percent) {
-        aBuilder.SetPercentValue(eCSSProperty_width, width.GetPercentValue());
-      } else if (width.GetUnit() != eCSSUnit_Null) {
-        aBuilder.SetLengthValue(eCSSProperty_width, width);
-      }
-    }
-  }
-  MapGlobalMathMLAttributesInto(aBuilder);
-}
-
-void MathMLElement::MapGlobalMathMLAttributesInto(
-    MappedDeclarationsBuilder& aBuilder) {
+void MathMLElement::MapMathMLAttributesInto(
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
   // scriptsizemultiplier
   //
   // "Specifies the multiplier to be used to adjust font size due to changes
@@ -396,28 +366,26 @@ void MathMLElement::MapGlobalMathMLAttributesInto(
   // values: number
   // default: 0.71
   //
-  if (!StaticPrefs::mathml_scriptsizemultiplier_attribute_disabled()) {
-    const nsAttrValue* value =
-        aBuilder.GetAttr(nsGkAtoms::scriptsizemultiplier_);
-    if (value && value->Type() == nsAttrValue::eString &&
-        !aBuilder.PropertyIsSet(eCSSProperty__moz_script_size_multiplier)) {
-      aBuilder.Document().WarnOnceAbout(
-          dom::DeprecatedOperations::
-              eMathML_DeprecatedScriptsizemultiplierAttribute);
-      auto str = value->GetStringValue();
-      str.CompressWhitespace();
-      // MathML numbers can't have leading '+'
-      if (str.Length() > 0 && str.CharAt(0) != '+') {
-        nsresult errorCode;
-        float floatValue = str.ToFloat(&errorCode);
-        // Negative scriptsizemultipliers are not parsed
-        if (NS_SUCCEEDED(errorCode) && floatValue >= 0.0f) {
-          aBuilder.SetNumberValue(eCSSProperty__moz_script_size_multiplier,
-                                  floatValue);
-        } else {
-          ReportParseErrorNoTag(str, nsGkAtoms::scriptsizemultiplier_,
-                                aBuilder.Document());
-        }
+  const nsAttrValue* value =
+      aAttributes->GetAttr(nsGkAtoms::scriptsizemultiplier_);
+  if (value && value->Type() == nsAttrValue::eString &&
+      !aDecls.PropertyIsSet(eCSSProperty__moz_script_size_multiplier)) {
+    aDecls.Document()->WarnOnceAbout(
+        dom::DeprecatedOperations::
+            eMathML_DeprecatedScriptsizemultiplierAttribute);
+    auto str = value->GetStringValue();
+    str.CompressWhitespace();
+    // MathML numbers can't have leading '+'
+    if (str.Length() > 0 && str.CharAt(0) != '+') {
+      nsresult errorCode;
+      float floatValue = str.ToFloat(&errorCode);
+      // Negative scriptsizemultipliers are not parsed
+      if (NS_SUCCEEDED(errorCode) && floatValue >= 0.0f) {
+        aDecls.SetNumberValue(eCSSProperty__moz_script_size_multiplier,
+                              floatValue);
+      } else {
+        ReportParseErrorNoTag(str, nsGkAtoms::scriptsizemultiplier_,
+                              aDecls.Document());
       }
     }
   }
@@ -433,24 +401,21 @@ void MathMLElement::MapGlobalMathMLAttributesInto(
   // We don't allow negative values.
   // Unitless and percent values give a multiple of the default value.
   //
-  if (!StaticPrefs::mathml_scriptminsize_attribute_disabled()) {
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::scriptminsize_);
-    if (value && value->Type() == nsAttrValue::eString &&
-        !aBuilder.PropertyIsSet(eCSSProperty__moz_script_min_size)) {
-      aBuilder.Document().WarnOnceAbout(
-          dom::DeprecatedOperations::eMathML_DeprecatedScriptminsizeAttribute);
-      nsCSSValue scriptMinSize;
-      ParseNumericValue(value->GetStringValue(), scriptMinSize, 0,
-                        &aBuilder.Document());
+  value = aAttributes->GetAttr(nsGkAtoms::scriptminsize_);
+  if (value && value->Type() == nsAttrValue::eString &&
+      !aDecls.PropertyIsSet(eCSSProperty__moz_script_min_size)) {
+    aDecls.Document()->WarnOnceAbout(
+        dom::DeprecatedOperations::eMathML_DeprecatedScriptminsizeAttribute);
+    nsCSSValue scriptMinSize;
+    ParseNumericValue(value->GetStringValue(), scriptMinSize, 0,
+                      aDecls.Document());
 
-      if (scriptMinSize.GetUnit() == eCSSUnit_Percent) {
-        scriptMinSize.SetFloatValue(8.0f * scriptMinSize.GetPercentValue(),
-                                    eCSSUnit_Point);
-      }
-      if (scriptMinSize.GetUnit() != eCSSUnit_Null) {
-        aBuilder.SetLengthValue(eCSSProperty__moz_script_min_size,
-                                scriptMinSize);
-      }
+    if (scriptMinSize.GetUnit() == eCSSUnit_Percent) {
+      scriptMinSize.SetFloatValue(8.0 * scriptMinSize.GetPercentValue(),
+                                  eCSSUnit_Point);
+    }
+    if (scriptMinSize.GetUnit() != eCSSUnit_Null) {
+      aDecls.SetLengthValue(eCSSProperty__moz_script_min_size, scriptMinSize);
     }
   }
 
@@ -465,9 +430,9 @@ void MathMLElement::MapGlobalMathMLAttributesInto(
   // values: ( "+" | "-" )? unsigned-integer
   // default: inherited
   //
-  const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::scriptlevel_);
+  value = aAttributes->GetAttr(nsGkAtoms::scriptlevel_);
   if (value && value->Type() == nsAttrValue::eString &&
-      !aBuilder.PropertyIsSet(eCSSProperty_math_depth)) {
+      !aDecls.PropertyIsSet(eCSSProperty_math_depth)) {
     auto str = value->GetStringValue();
     str.CompressWhitespace();
     if (str.Length() > 0) {
@@ -476,27 +441,26 @@ void MathMLElement::MapGlobalMathMLAttributesInto(
       if (NS_SUCCEEDED(errorCode)) {
         char16_t ch = str.CharAt(0);
         bool isRelativeScriptLevel = (ch == '+' || ch == '-');
-        aBuilder.SetMathDepthValue(intValue, isRelativeScriptLevel);
+        aDecls.SetMathDepthValue(intValue, isRelativeScriptLevel);
       } else {
-        ReportParseErrorNoTag(str, nsGkAtoms::scriptlevel_,
-                              aBuilder.Document());
+        ReportParseErrorNoTag(str, nsGkAtoms::scriptlevel_, aDecls.Document());
       }
     }
   }
 
   // mathsize
   // https://w3c.github.io/mathml-core/#dfn-mathsize
-  value = aBuilder.GetAttr(nsGkAtoms::mathsize_);
+  value = aAttributes->GetAttr(nsGkAtoms::mathsize_);
   if (value && value->Type() == nsAttrValue::eString &&
-      !aBuilder.PropertyIsSet(eCSSProperty_font_size)) {
+      !aDecls.PropertyIsSet(eCSSProperty_font_size)) {
     auto str = value->GetStringValue();
     nsCSSValue fontSize;
     ParseNumericValue(str, fontSize, 0, nullptr);
     if (fontSize.GetUnit() == eCSSUnit_Percent) {
-      aBuilder.SetPercentValue(eCSSProperty_font_size,
-                               fontSize.GetPercentValue());
+      aDecls.SetPercentValue(eCSSProperty_font_size,
+                             fontSize.GetPercentValue());
     } else if (fontSize.GetUnit() != eCSSUnit_Null) {
-      aBuilder.SetLengthValue(eCSSProperty_font_size, fontSize);
+      aDecls.SetLengthValue(eCSSProperty_font_size, fontSize);
     }
   }
 
@@ -511,9 +475,9 @@ void MathMLElement::MapGlobalMathMLAttributesInto(
   // "monospace" | "initial" | "tailed" | "looped" | "stretched"
   // default: normal (except on <mi>)
   //
-  value = aBuilder.GetAttr(nsGkAtoms::mathvariant_);
+  value = aAttributes->GetAttr(nsGkAtoms::mathvariant_);
   if (value && value->Type() == nsAttrValue::eString &&
-      !aBuilder.PropertyIsSet(eCSSProperty__moz_math_variant)) {
+      !aDecls.PropertyIsSet(eCSSProperty__moz_math_variant)) {
     auto str = value->GetStringValue();
     str.CompressWhitespace();
     static const char sizes[19][23] = {"normal",
@@ -555,7 +519,7 @@ void MathMLElement::MapGlobalMathMLAttributesInto(
         StyleMathVariant::Stretched};
     for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
       if (str.LowerCaseEqualsASCII(sizes[i])) {
-        aBuilder.SetKeywordValue(eCSSProperty__moz_math_variant, values[i]);
+        aDecls.SetKeywordValue(eCSSProperty__moz_math_variant, values[i]);
         break;
       }
     }
@@ -563,34 +527,60 @@ void MathMLElement::MapGlobalMathMLAttributesInto(
 
   // mathbackground
   // https://w3c.github.io/mathml-core/#dfn-mathbackground
-  value = aBuilder.GetAttr(nsGkAtoms::mathbackground_);
+  value = aAttributes->GetAttr(nsGkAtoms::mathbackground_);
   if (value) {
     nscolor color;
     if (value->GetColorValue(color)) {
-      aBuilder.SetColorValueIfUnset(eCSSProperty_background_color, color);
+      aDecls.SetColorValueIfUnset(eCSSProperty_background_color, color);
     }
   }
 
   // mathcolor
   // https://w3c.github.io/mathml-core/#dfn-mathcolor
-  value = aBuilder.GetAttr(nsGkAtoms::mathcolor_);
+  value = aAttributes->GetAttr(nsGkAtoms::mathcolor_);
   nscolor color;
   if (value && value->GetColorValue(color)) {
-    aBuilder.SetColorValueIfUnset(eCSSProperty_color, color);
+    aDecls.SetColorValueIfUnset(eCSSProperty_color, color);
+  }
+
+  // width
+  //
+  // "Specifies the desired width of the entire table and is intended for
+  // visual user agents. When the value is a percentage value, the value is
+  // relative to the horizontal space a MathML renderer has available for the
+  // math element. When the value is "auto", the MathML renderer should
+  // calculate the table width from its contents using whatever layout
+  // algorithm it chooses. "
+  //
+  // values: "auto" | length
+  // default: auto
+  //
+  if (!aDecls.PropertyIsSet(eCSSProperty_width)) {
+    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
+    nsCSSValue width;
+    // This does not handle auto and unitless values
+    if (value && value->Type() == nsAttrValue::eString) {
+      ParseNumericValue(value->GetStringValue(), width, 0, aDecls.Document());
+      if (width.GetUnit() == eCSSUnit_Percent) {
+        aDecls.SetPercentValue(eCSSProperty_width, width.GetPercentValue());
+      } else if (width.GetUnit() != eCSSUnit_Null) {
+        aDecls.SetLengthValue(eCSSProperty_width, width);
+      }
+    }
   }
 
   // dir
   // https://w3c.github.io/mathml-core/#dfn-dir
-  value = aBuilder.GetAttr(nsGkAtoms::dir);
+  value = aAttributes->GetAttr(nsGkAtoms::dir);
   if (value && value->Type() == nsAttrValue::eString &&
-      !aBuilder.PropertyIsSet(eCSSProperty_direction)) {
+      !aDecls.PropertyIsSet(eCSSProperty_direction)) {
     auto str = value->GetStringValue();
     static const char dirs[][4] = {"ltr", "rtl"};
     static const StyleDirection dirValues[MOZ_ARRAY_LENGTH(dirs)] = {
         StyleDirection::Ltr, StyleDirection::Rtl};
     for (uint32_t i = 0; i < ArrayLength(dirs); ++i) {
       if (str.LowerCaseEqualsASCII(dirs[i])) {
-        aBuilder.SetKeywordValue(eCSSProperty_direction, dirValues[i]);
+        aDecls.SetKeywordValue(eCSSProperty_direction, dirValues[i]);
         break;
       }
     }
@@ -598,16 +588,16 @@ void MathMLElement::MapGlobalMathMLAttributesInto(
 
   // displaystyle
   // https://mathml-refresh.github.io/mathml-core/#dfn-displaystyle
-  value = aBuilder.GetAttr(nsGkAtoms::displaystyle_);
+  value = aAttributes->GetAttr(nsGkAtoms::displaystyle_);
   if (value && value->Type() == nsAttrValue::eString &&
-      !aBuilder.PropertyIsSet(eCSSProperty_math_style)) {
+      !aDecls.PropertyIsSet(eCSSProperty_math_style)) {
     auto str = value->GetStringValue();
     static const char displaystyles[][6] = {"false", "true"};
     static const StyleMathStyle mathStyle[MOZ_ARRAY_LENGTH(displaystyles)] = {
         StyleMathStyle::Compact, StyleMathStyle::Normal};
     for (uint32_t i = 0; i < ArrayLength(displaystyles); ++i) {
       if (str.LowerCaseEqualsASCII(displaystyles[i])) {
-        aBuilder.SetKeywordValue(eCSSProperty_math_style, mathStyle[i]);
+        aDecls.SetKeywordValue(eCSSProperty_math_style, mathStyle[i]);
         break;
       }
     }
