@@ -35,9 +35,13 @@ def generate(output, idlFilename, dataFile):
                 # We already added this as a BindingAlias for the original prop.
                 continue
 
+            propId = p.prop_id
+        else:
+            propId = p.id
         # Unfortunately, even some of the getters here are fallible
         # (e.g. on nsComputedDOMStyle).
         extendedAttrs = [
+            "BindingTemplate=(CSS2Property, eCSSProperty_%s)" % propId,
             "CEReactions",
             "Throws",
             "SetterNeedsSubjectPrincipal=NonSystem",
