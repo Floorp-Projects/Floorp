@@ -32,6 +32,7 @@ const MODULUS_LITTLE_ENDIAN: [u8; 32] = [
 
 /// `GF(2^255 - 19)`, a 255-bit field.
 #[derive(Clone, Copy)]
+#[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
 pub struct Field255(fiat_25519_tight_field_element);
 
 impl Field255 {

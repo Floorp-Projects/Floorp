@@ -27,23 +27,19 @@
 //! [DPRS23]: https://ia.cr/2023/130
 //! [draft-irtf-cfrg-vdaf-05]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/05/
 
-#[cfg(feature = "crypto-dependencies")]
 use super::prg::PrgSha3;
 use crate::codec::{CodecError, Decode, Encode, ParameterizedDecode};
 use crate::field::{decode_fieldvec, FftFriendlyFieldElement, FieldElement};
-#[cfg(feature = "crypto-dependencies")]
 use crate::field::{Field128, Field64};
 #[cfg(feature = "multithreaded")]
 use crate::flp::gadgets::ParallelSumMultithreaded;
-#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg(feature = "experimental")]
 use crate::flp::gadgets::PolyEval;
-#[cfg(feature = "crypto-dependencies")]
 use crate::flp::gadgets::{BlindPolyEval, ParallelSum};
-#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg(feature = "experimental")]
 use crate::flp::types::fixedpoint_l2::{
     compatible_float::CompatibleFloat, FixedPointBoundedL2VecSum,
 };
-#[cfg(feature = "crypto-dependencies")]
 use crate::flp::types::{Average, Count, Histogram, Sum, SumVec};
 use crate::flp::Type;
 use crate::prng::Prng;
@@ -52,7 +48,7 @@ use crate::vdaf::{
     Aggregatable, AggregateShare, Aggregator, Client, Collector, OutputShare, PrepareTransition,
     Share, ShareDecodingParameter, Vdaf, VdafError,
 };
-#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg(feature = "experimental")]
 use fixed::traits::Fixed;
 use std::convert::TryFrom;
 use std::fmt::Debug;
@@ -69,10 +65,8 @@ const DST_JOINT_RAND_SEED: u16 = 6;
 const DST_JOINT_RAND_PART: u16 = 7;
 
 /// The count type. Each measurement is an integer in `[0,2)` and the aggregate result is the sum.
-#[cfg(feature = "crypto-dependencies")]
 pub type Prio3Count = Prio3<Count<Field64>, PrgSha3, 16>;
 
-#[cfg(feature = "crypto-dependencies")]
 impl Prio3Count {
     /// Construct an instance of Prio3Count with the given number of aggregators.
     pub fn new_count(num_aggregators: u8) -> Result<Self, VdafError> {
@@ -82,11 +76,9 @@ impl Prio3Count {
 
 /// The count-vector type. Each measurement is a vector of integers in `[0,2^bits)` and the
 /// aggregate is the element-wise sum.
-#[cfg(feature = "crypto-dependencies")]
 pub type Prio3SumVec =
     Prio3<SumVec<Field128, ParallelSum<Field128, BlindPolyEval<Field128>>>, PrgSha3, 16>;
 
-#[cfg(feature = "crypto-dependencies")]
 impl Prio3SumVec {
     /// Construct an instance of Prio3SumVec with the given number of aggregators. `bits` defines
     /// the bit width of each summand of the measurement; `len` defines the length of the
@@ -100,7 +92,6 @@ impl Prio3SumVec {
 /// time. Note that the improvement is only noticeable for very large input lengths, e.g., 201 and
 /// up. (Your system's mileage may vary.)
 #[cfg(feature = "multithreaded")]
-#[cfg(feature = "crypto-dependencies")]
 #[cfg_attr(docsrs, doc(cfg(feature = "multithreaded")))]
 pub type Prio3SumVecMultithreaded = Prio3<
     SumVec<Field128, ParallelSumMultithreaded<Field128, BlindPolyEval<Field128>>>,
@@ -109,8 +100,6 @@ pub type Prio3SumVecMultithreaded = Prio3<
 >;
 
 #[cfg(feature = "multithreaded")]
-#[cfg(feature = "crypto-dependencies")]
-#[cfg_attr(docsrs, doc(cfg(feature = "multithreaded")))]
 impl Prio3SumVecMultithreaded {
     /// Construct an instance of Prio3SumVecMultithreaded with the given number of
     /// aggregators. `bits` defines the bit width of each summand of the measurement; `len` defines
@@ -126,10 +115,8 @@ impl Prio3SumVecMultithreaded {
 
 /// The sum type. Each measurement is an integer in `[0,2^bits)` for some `0 < bits < 64` and the
 /// aggregate is the sum.
-#[cfg(feature = "crypto-dependencies")]
 pub type Prio3Sum = Prio3<Sum<Field128>, PrgSha3, 16>;
 
-#[cfg(feature = "crypto-dependencies")]
 impl Prio3Sum {
     /// Construct an instance of Prio3Sum with the given number of aggregators and required bit
     /// length. The bit length must not exceed 64.
@@ -156,7 +143,7 @@ impl Prio3Sum {
 /// allows an easy conversion to the integer type used in internal computation, while leaving
 /// conversion to the client. The model itself will have floating point parameters, so the output
 /// sum has that type as well.
-#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg(feature = "experimental")]
 #[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
 pub type Prio3FixedPointBoundedL2VecSum<Fx> = Prio3<
     FixedPointBoundedL2VecSum<
@@ -169,8 +156,7 @@ pub type Prio3FixedPointBoundedL2VecSum<Fx> = Prio3<
     16,
 >;
 
-#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
-#[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
+#[cfg(feature = "experimental")]
 impl<Fx: Fixed + CompatibleFloat<Field128>> Prio3FixedPointBoundedL2VecSum<Fx> {
     /// Construct an instance of this VDAF with the given number of aggregators and number of
     /// vector entries.
@@ -186,13 +172,11 @@ impl<Fx: Fixed + CompatibleFloat<Field128>> Prio3FixedPointBoundedL2VecSum<Fx> {
 /// The fixed point vector sum type. Each measurement is a vector of fixed point numbers
 /// and the aggregate is the sum represented as 64-bit floats. The verification function
 /// ensures the L2 norm of the input vector is < 1.
-#[cfg(all(
-    feature = "crypto-dependencies",
-    feature = "experimental",
-    feature = "multithreaded"
-))]
-#[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
-#[cfg_attr(docsrs, doc(cfg(feature = "multithreaded")))]
+#[cfg(all(feature = "experimental", feature = "multithreaded"))]
+#[cfg_attr(
+    docsrs,
+    doc(cfg(all(feature = "experimental", feature = "multithreaded")))
+)]
 pub type Prio3FixedPointBoundedL2VecSumMultithreaded<Fx> = Prio3<
     FixedPointBoundedL2VecSum<
         Fx,
@@ -204,13 +188,7 @@ pub type Prio3FixedPointBoundedL2VecSumMultithreaded<Fx> = Prio3<
     16,
 >;
 
-#[cfg(all(
-    feature = "crypto-dependencies",
-    feature = "experimental",
-    feature = "multithreaded"
-))]
-#[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
-#[cfg_attr(docsrs, doc(cfg(feature = "multithreaded")))]
+#[cfg(all(feature = "experimental", feature = "multithreaded"))]
 impl<Fx: Fixed + CompatibleFloat<Field128>> Prio3FixedPointBoundedL2VecSumMultithreaded<Fx> {
     /// Construct an instance of this VDAF with the given number of aggregators and number of
     /// vector entries.
@@ -225,10 +203,8 @@ impl<Fx: Fixed + CompatibleFloat<Field128>> Prio3FixedPointBoundedL2VecSumMultit
 
 /// The histogram type. Each measurement is an unsigned integer and the result is a histogram
 /// representation of the distribution. The bucket boundaries are fixed in advance.
-#[cfg(feature = "crypto-dependencies")]
 pub type Prio3Histogram = Prio3<Histogram<Field128>, PrgSha3, 16>;
 
-#[cfg(feature = "crypto-dependencies")]
 impl Prio3Histogram {
     /// Constructs an instance of Prio3Histogram with the given number of aggregators and
     /// desired histogram bucket boundaries.
@@ -241,10 +217,8 @@ impl Prio3Histogram {
 
 /// The average type. Each measurement is an integer in `[0,2^bits)` for some `0 < bits < 64` and
 /// the aggregate is the arithmetic average.
-#[cfg(feature = "crypto-dependencies")]
 pub type Prio3Average = Prio3<Average<Field128>, PrgSha3, 16>;
 
-#[cfg(feature = "crypto-dependencies")]
 impl Prio3Average {
     /// Construct an instance of Prio3Average with the given number of aggregators and required bit
     /// length. The bit length must not exceed 64.
@@ -559,6 +533,7 @@ where
     /// Shard measurement with constant randomness of repeated bytes.
     /// This method is not secure. It is used for running test vectors for Prio3.
     #[cfg(feature = "test-util")]
+    #[doc(hidden)]
     #[allow(clippy::type_complexity)]
     pub fn test_vec_shard<const N: usize>(
         &self,

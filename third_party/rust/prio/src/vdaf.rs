@@ -5,7 +5,7 @@
 //!
 //! [draft-irtf-cfrg-vdaf-05]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/05/
 
-#[cfg(feature = "experimental")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
 use crate::idpf::IdpfError;
 use crate::{
     codec::{CodecError, Decode, Encode, ParameterizedDecode},
@@ -49,7 +49,7 @@ pub enum VdafError {
     GetRandom(#[from] getrandom::Error),
 
     /// IDPF error.
-    #[cfg(feature = "experimental")]
+    #[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
     #[error("idpf error: {0}")]
     Idpf(#[from] IdpfError),
 }
@@ -532,10 +532,14 @@ where
 }
 
 #[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
-#[cfg_attr(docsrs, doc(cfg(feature = "experimental")))]
+#[cfg_attr(
+    docsrs,
+    doc(cfg(all(feature = "crypto-dependencies", feature = "experimental")))
+)]
 pub mod poplar1;
 pub mod prg;
 #[cfg(feature = "prio2")]
+#[cfg_attr(docsrs, doc(cfg(feature = "prio2")))]
 pub mod prio2;
 pub mod prio3;
 #[cfg(test)]

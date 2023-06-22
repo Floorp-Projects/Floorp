@@ -5,7 +5,7 @@
 //! [draft-irtf-cfrg-vdaf-05]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/05/
 
 use crate::vdaf::{CodecError, Decode, Encode};
-#[cfg(feature = "experimental")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
 use aes::{
     cipher::{generic_array::GenericArray, BlockEncrypt, KeyInit},
     Block,
@@ -19,7 +19,6 @@ use aes::{
 use cmac::{Cmac, Mac};
 #[cfg(feature = "crypto-dependencies")]
 use ctr::Ctr64BE;
-#[cfg(feature = "crypto-dependencies")]
 use sha3::{
     digest::{ExtendableOutput, Update, XofReader},
     CShake128, CShake128Core, CShake128Reader,
@@ -133,6 +132,7 @@ pub trait Prg<const SEED_SIZE: usize>: Clone + Debug {
 /// [draft-irtf-cfrg-vdaf-04]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/04/
 #[derive(Clone, Debug)]
 #[cfg(feature = "crypto-dependencies")]
+#[cfg_attr(docsrs, doc(cfg(feature = "crypto-dependencies")))]
 #[deprecated(since = "0.11.0", note = "Superseded by PrgSha3")]
 pub struct PrgAes128(Cmac<Aes128>);
 
@@ -161,6 +161,7 @@ impl Prg<16> for PrgAes128 {
 
 /// The key stream produced by AES128 in CTR-mode.
 #[cfg(feature = "crypto-dependencies")]
+#[cfg_attr(docsrs, doc(cfg(feature = "crypto-dependencies")))]
 pub struct SeedStreamAes128(Ctr64BE<Aes128>);
 
 #[cfg(feature = "crypto-dependencies")]
@@ -194,10 +195,8 @@ impl Debug for SeedStreamAes128 {
 ///
 /// [draft-irtf-cfrg-vdaf-05]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/05/
 #[derive(Clone, Debug)]
-#[cfg(feature = "crypto-dependencies")]
 pub struct PrgSha3(CShake128);
 
-#[cfg(feature = "crypto-dependencies")]
 impl Prg<16> for PrgSha3 {
     type SeedStream = SeedStreamSha3;
 
@@ -217,17 +216,14 @@ impl Prg<16> for PrgSha3 {
 }
 
 /// The key stream produced by the cSHAKE128 XOF.
-#[cfg(feature = "crypto-dependencies")]
 pub struct SeedStreamSha3(CShake128Reader);
 
-#[cfg(feature = "crypto-dependencies")]
 impl SeedStreamSha3 {
     pub(crate) fn new(reader: CShake128Reader) -> Self {
         Self(reader)
     }
 }
 
-#[cfg(feature = "crypto-dependencies")]
 impl SeedStream for SeedStreamSha3 {
     fn fill(&mut self, buf: &mut [u8]) {
         XofReader::read(&mut self.0, buf);
@@ -236,12 +232,16 @@ impl SeedStream for SeedStreamSha3 {
 
 /// Factory to produce multiple [`PrgFixedKeyAes128`] instances with the same fixed key and
 /// different seeds.
-#[cfg(feature = "experimental")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg_attr(
+    docsrs,
+    doc(cfg(all(feature = "crypto-dependencies", feature = "experimental")))
+)]
 pub struct PrgFixedKeyAes128Key {
     cipher: Aes128,
 }
 
-#[cfg(feature = "experimental")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
 impl PrgFixedKeyAes128Key {
     /// Derive a fixed key from the customization string and binder string.
     pub fn new(custom: &[u8], binder: &[u8]) -> Self {
@@ -274,13 +274,17 @@ impl PrgFixedKeyAes128Key {
 ///
 /// [draft-irtf-cfrg-vdaf-05]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/05/
 #[derive(Clone, Debug)]
-#[cfg(feature = "experimental")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg_attr(
+    docsrs,
+    doc(cfg(all(feature = "crypto-dependencies", feature = "experimental")))
+)]
 pub struct PrgFixedKeyAes128 {
     fixed_key_deriver: CShake128,
     base_block: Block,
 }
 
-#[cfg(feature = "experimental")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
 impl Prg<16> for PrgFixedKeyAes128 {
     type SeedStream = SeedStreamFixedKeyAes128;
 
@@ -307,14 +311,18 @@ impl Prg<16> for PrgFixedKeyAes128 {
 }
 
 /// Seed stream for [`PrgFixedKeyAes128`].
-#[cfg(feature = "experimental")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg_attr(
+    docsrs,
+    doc(cfg(all(feature = "crypto-dependencies", feature = "experimental")))
+)]
 pub struct SeedStreamFixedKeyAes128 {
     cipher: Aes128,
     base_block: Block,
     length_consumed: u64,
 }
 
-#[cfg(feature = "experimental")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
 impl SeedStream for SeedStreamFixedKeyAes128 {
     fn fill(&mut self, buf: &mut [u8]) {
         let next_length_consumed = self.length_consumed + u64::try_from(buf.len()).unwrap();
@@ -340,7 +348,7 @@ impl SeedStream for SeedStreamFixedKeyAes128 {
     }
 }
 
-#[cfg(feature = "experimental")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
 impl SeedStreamFixedKeyAes128 {
     fn hash_block(&self, block: &mut Block) {
         let sigma = Block::from([

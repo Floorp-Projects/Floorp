@@ -109,7 +109,7 @@ where
     //
     // If we don't end up making this spec change, then add tests to ensure that changing field
     // types is done correctly.
-    #[cfg(feature = "experimental")]
+    #[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
     pub(crate) fn into_new_field<F1: FieldElement>(self) -> Prng<F1, S> {
         Prng {
             phantom: PhantomData,

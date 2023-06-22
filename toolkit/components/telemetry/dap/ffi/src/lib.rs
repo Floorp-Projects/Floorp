@@ -5,6 +5,8 @@
 use std::error::Error;
 use std::io::Cursor;
 
+use prio::vdaf::prio3::Prio3Sum;
+use prio::vdaf::prio3::Prio3SumVec;
 use thin_vec::ThinVec;
 
 pub mod types;
@@ -14,23 +16,14 @@ use types::ReportID;
 use types::ReportMetadata;
 use types::Time;
 
-pub mod prg;
-use prg::PrgAes128Alt;
-
 use prio::codec::Encode;
 use prio::codec::{decode_u16_items, encode_u32_items};
-use prio::field::Field128;
-use prio::flp::gadgets::{BlindPolyEval, ParallelSum};
 use prio::flp::types::{Sum, SumVec};
 use prio::vdaf::prio3::Prio3;
 use prio::vdaf::Client;
 use prio::vdaf::VdafError;
 
 use crate::types::HpkeCiphertext;
-
-type Prio3Aes128SumAlt = Prio3<Sum<Field128>, PrgAes128Alt, 16>;
-type Prio3Aes128SumVecAlt =
-    Prio3<SumVec<Field128, ParallelSum<Field128, BlindPolyEval<Field128>>>, PrgAes128Alt, 16>;
 
 extern "C" {
     pub fn dapHpkeEncryptOneshot(
@@ -47,7 +40,7 @@ extern "C" {
     ) -> bool;
 }
 
-pub fn new_prio_u8(num_aggregators: u8, bits: u32) -> Result<Prio3Aes128SumAlt, VdafError> {
+pub fn new_prio_u8(num_aggregators: u8, bits: u32) -> Result<Prio3Sum, VdafError> {
     if bits > 64 {
         return Err(VdafError::Uncategorized(format!(
             "bit length ({}) exceeds limit for aggregate type (64)",
@@ -58,7 +51,7 @@ pub fn new_prio_u8(num_aggregators: u8, bits: u32) -> Result<Prio3Aes128SumAlt, 
     Prio3::new(num_aggregators, Sum::new(bits as usize)?)
 }
 
-pub fn new_prio_vecu16(num_aggregators: u8, len: usize) -> Result<Prio3Aes128SumVecAlt, VdafError> {
+pub fn new_prio_vecu16(num_aggregators: u8, len: usize) -> Result<Prio3SumVec, VdafError> {
     Prio3::new(num_aggregators, SumVec::new(1, len)?)
 }
 

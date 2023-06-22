@@ -806,6 +806,7 @@ pub(crate) fn split_vector<F: FieldElement>(
 
 /// Generate a vector of uniformly distributed random field elements.
 #[cfg(feature = "crypto-dependencies")]
+#[cfg_attr(docsrs, doc(cfg(feature = "crypto-dependencies")))]
 pub fn random_vector<F: FieldElement>(len: usize) -> Result<Vec<F>, PrngError> {
     Ok(Prng::new()?.take(len).collect())
 }
