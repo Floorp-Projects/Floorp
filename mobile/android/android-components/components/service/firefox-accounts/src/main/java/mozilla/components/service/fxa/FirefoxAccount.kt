@@ -156,6 +156,10 @@ class FirefoxAccount internal constructor(
         }
     }
 
+    override suspend fun getManageAccountURL(entryPoint: FxAEntryPoint): String {
+        return inner.getManageAccountURL(entryPoint.entryName)
+    }
+
     override fun getPairingAuthorityURL(): String {
         return inner.getPairingAuthorityURL()
     }

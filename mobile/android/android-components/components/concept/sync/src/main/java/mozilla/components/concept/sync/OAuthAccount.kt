@@ -157,6 +157,14 @@ interface OAuthAccount : AutoCloseable {
     suspend fun getTokenServerEndpointURL(): String?
 
     /**
+     * Fetches the URL for the user to manage their account
+     *
+     * @param entryPoint A string which will be included as a query param in the URL for metrics.
+     * @return The URL which should be opened in a browser tab.
+     */
+    suspend fun getManageAccountURL(entryPoint: FxAEntryPoint): String
+
+    /**
      * Get the pairing URL to navigate to on the Authority side (typically a computer).
      *
      * @return The URL to show the pairing user

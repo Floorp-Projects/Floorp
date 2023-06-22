@@ -41,12 +41,14 @@ import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.secure
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showToolbar
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.requirePreference
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -123,6 +125,10 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
 
         accountManager = requireComponents.backgroundServices.accountManager
         accountManager.register(accountStateObserver, this, true)
+
+        // Manage account
+        val preferenceManageAccount = requirePreference<Preference>(R.string.pref_key_sync_manage_account)
+        preferenceManageAccount.onPreferenceClickListener = getClickListenerForManageAccount()
 
         // Sign out
         val preferenceSignOut = requirePreference<Preference>(R.string.pref_key_sign_out)
@@ -360,6 +366,22 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
             }
         }
         return true
+    }
+
+    private fun getClickListenerForManageAccount(): Preference.OnPreferenceClickListener {
+        return Preference.OnPreferenceClickListener {
+            viewLifecycleOwner.lifecycleScope.launch(Main) {
+                context?.let {
+                    var acct = accountManager.authenticatedAccount()
+                    var url = acct?.getManageAccountURL(FenixFxAEntryPoint.SettingsMenu)
+                    if (url != null) {
+                        val intent = SupportUtils.createCustomTabIntent(it, url)
+                        startActivity(intent)
+                    }
+                }
+            }
+            true
+        }
     }
 
     private fun getClickListenerForSignOut(): Preference.OnPreferenceClickListener {

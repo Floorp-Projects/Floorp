@@ -490,6 +490,10 @@ class FxaAccountManagerTest {
             return ""
         }
 
+        override suspend fun getManageAccountURL(entryPoint: FxAEntryPoint): String {
+            return "https://firefox.com/settings"
+        }
+
         override fun getPairingAuthorityURL(): String {
             return "https://firefox.com/pair"
         }

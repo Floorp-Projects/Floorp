@@ -6,6 +6,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <Preference
+        android:key="@string/pref_key_sync_manage_account"
+        android:title="@string/preferences_manage_account" />
+
+    <Preference
         android:key="@string/pref_key_sync_now"
         android:title="@string/preferences_sync_now"
         app:icon="@drawable/mozac_ic_sync" />
