@@ -51,6 +51,7 @@ UNIFIED_SOURCES += [
     "TestSlicedInputStream.cpp",
     "TestSmallArrayLRUCache.cpp",
     "TestSnappyStreams.cpp",
+    "TestStateMirroring.cpp",
     "TestStateWatching.cpp",
     "TestStorageStream.cpp",
     "TestStrings.cpp",
