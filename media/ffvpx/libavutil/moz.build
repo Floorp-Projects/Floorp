@@ -63,7 +63,7 @@ if not CONFIG['MOZ_FFVPX_AUDIOONLY']:
         'timecode.c',
         'video_enc_params.c'
     ]
-    if CONFIG["MOZ_WAYLAND"]:
+    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
         LOCAL_INCLUDES += ['/media/mozva']
         SOURCES += [
             'hwcontext_vaapi.c',
