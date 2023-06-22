@@ -2,9 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import contextlib
 import os
-import sys
 import textwrap
 import traceback
 import unittest
@@ -19,6 +17,28 @@ test_data_path = mozpath.abspath(mozpath.dirname(__file__))
 test_data_path = mozpath.join(test_data_path, "data")
 
 
+class AssertRaisesFromLine:
+    def __init__(self, test_case, expected, path, line):
+        self.test_case = test_case
+        self.expected = expected
+        self.path = path
+        self.line = line
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_type is None:
+            raise Exception(f"{self.expected.__name__} not raised")
+        if not issubclass(exc_type, self.expected):
+            return False
+        self.exception = exc_value
+        self.test_case.assertEqual(
+            traceback.extract_tb(tb)[-1][:2], (self.path, self.line)
+        )
+        return True
+
+
 class TestLint(unittest.TestCase):
     def lint_test(self, options=[], env={}):
         sandbox = LintSandbox(env, ["configure"] + options)
@@ -30,15 +50,9 @@ class TestLint(unittest.TestCase):
             {os.path.join(test_data_path, "moz.configure"): textwrap.dedent(source)}
         )
 
-    @contextlib.contextmanager
     def assertRaisesFromLine(self, exc_type, line):
-        with self.assertRaises(exc_type) as e:
-            yield e
-
-        _, _, tb = sys.exc_info()
-        self.assertEqual(
-            traceback.extract_tb(tb)[-1][:2],
-            (mozpath.join(test_data_path, "moz.configure"), line),
+        return AssertRaisesFromLine(
+            self, exc_type, mozpath.join(test_data_path, "moz.configure"), line
         )
 
     def test_configure_testcase(self):
