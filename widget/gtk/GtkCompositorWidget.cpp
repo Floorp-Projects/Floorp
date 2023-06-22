@@ -132,14 +132,14 @@ EGLNativeWindowType GtkCompositorWidget::GetEGLNativeWindow() {
   return window;
 }
 
-#if defined(MOZ_WAYLAND)
 void GtkCompositorWidget::SetEGLNativeWindowSize(
     const LayoutDeviceIntSize& aEGLWindowSize) {
+#if defined(MOZ_WAYLAND)
   if (mWidget) {
     mWidget->SetEGLNativeWindowSize(aEGLWindowSize);
   }
-}
 #endif
+}
 
 LayoutDeviceIntRegion GtkCompositorWidget::GetTransparentRegion() {
   // We need to clear target buffer alpha values of popup windows as
