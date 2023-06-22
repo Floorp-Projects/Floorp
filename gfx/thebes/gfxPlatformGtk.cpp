@@ -66,6 +66,8 @@
 #ifdef MOZ_WAYLAND
 #  include <gdk/gdkwayland.h>
 #  include "mozilla/widget/nsWaylandDisplay.h"
+#endif
+#ifdef MOZ_WIDGET_GTK
 #  include "mozilla/widget/DMABufLibWrapper.h"
 #  include "mozilla/StaticPrefs_widget.h"
 #endif
@@ -183,7 +185,6 @@ void gfxPlatformGtk::InitX11EGLConfig() {
 
 void gfxPlatformGtk::InitDmabufConfig() {
   FeatureState& feature = gfxConfig::GetFeature(Feature::DMABUF);
-#ifdef MOZ_WAYLAND
   feature.EnableByDefault();
 
   if (StaticPrefs::widget_dmabuf_force_enabled_AtStartup()) {
@@ -217,11 +218,6 @@ void gfxPlatformGtk::InitDmabufConfig() {
                            failureId);
     }
   }
-#else
-  feature.DisableByDefault(FeatureStatus::Unavailable,
-                           "Wayland support missing",
-                           "FEATURE_FAILURE_NO_WAYLAND"_ns);
-#endif
 }
 
 bool gfxPlatformGtk::InitVAAPIConfig(bool aForceEnabledByUser) {
@@ -231,7 +227,6 @@ bool gfxPlatformGtk::InitVAAPIConfig(bool aForceEnabledByUser) {
   if (!XRE_IsParentProcess()) {
     return feature.IsEnabled();
   }
-#ifdef MOZ_WAYLAND
   feature.EnableByDefault();
 
   int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
@@ -291,11 +286,6 @@ bool gfxPlatformGtk::InitVAAPIConfig(bool aForceEnabledByUser) {
       gfxVars::SetHwDecodedVideoZeroCopy(true);
     }
   }
-#else
-  feature.DisableByDefault(FeatureStatus::Unavailable,
-                           "Wayland support missing",
-                           "FEATURE_FAILURE_NO_WAYLAND"_ns);
-#endif
   return feature.IsEnabled();
 }
 

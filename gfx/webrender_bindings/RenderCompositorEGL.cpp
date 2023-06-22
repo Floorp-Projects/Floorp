@@ -17,7 +17,7 @@
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/widget/CompositorWidget.h"
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
 #  include "mozilla/WidgetUtilsGtk.h"
 #  include "mozilla/widget/GtkCompositorWidget.h"
 #endif
@@ -88,7 +88,7 @@ bool RenderCompositorEGL::BeginFrame() {
         << "We don't have EGLSurface to draw into. Called too early?";
     return false;
   }
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   if (mWidget->AsGTK()) {
     mWidget->AsGTK()->SetEGLNativeWindowSize(GetBufferSize());
   }
@@ -127,7 +127,7 @@ RenderedFrameId RenderCompositorEGL::EndFrame(
 #endif
 
   RenderedFrameId frameId = GetNextRenderFrameId();
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   if (mWidget->IsHidden()) {
     return frameId;
   }

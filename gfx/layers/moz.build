@@ -231,22 +231,26 @@ EXPORTS.mozilla.layers += [
     "ZoomConstraints.h",
 ]
 
-if CONFIG["MOZ_WAYLAND"]:
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     EXPORTS.mozilla.layers += [
         "DMABUFSurfaceImage.h",
-        "NativeLayerWayland.h",
         "opengl/DMABUFTextureClientOGL.h",
         "opengl/DMABUFTextureHostOGL.h",
-        "SurfacePoolWayland.h",
-    ]
-    UNIFIED_SOURCES += [
-        "NativeLayerWayland.cpp",
-        "SurfacePoolWayland.cpp",
     ]
     SOURCES += [
         "DMABUFSurfaceImage.cpp",
         "opengl/DMABUFTextureClientOGL.cpp",
         "opengl/DMABUFTextureHostOGL.cpp",
+    ]
+
+if CONFIG["MOZ_WAYLAND"]:
+    EXPORTS.mozilla.layers += [
+        "NativeLayerWayland.h",
+        "SurfacePoolWayland.h",
+    ]
+    UNIFIED_SOURCES += [
+        "NativeLayerWayland.cpp",
+        "SurfacePoolWayland.cpp",
     ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
