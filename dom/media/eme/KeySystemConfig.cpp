@@ -10,6 +10,7 @@
 #include "GMPUtils.h"
 #include "KeySystemNames.h"
 #include "mozilla/StaticPrefs_media.h"
+#include "nsPrintfCString.h"
 
 #ifdef XP_WIN
 #  include "WMFDecoderModule.h"
