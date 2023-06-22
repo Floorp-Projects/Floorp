@@ -783,7 +783,7 @@ urlbar:
       search result.
       The value field records the initial interaction type. One of:
         "typed", "dropped", "pasted", "topsites"
-    bug_numbers: [1559136, 1671404]
+    bug_numbers: [1559136, 1671404, 1466103]
     notification_emails:
       - "fx-search-telemetry@mozilla.com"
     expiry_version: never
@@ -794,11 +794,12 @@ urlbar:
       selIndex: index of the selected result in the urlbar panel, or -1.
       selType: >
         type of the selected result in the urlbar panel. One of:
-          "autofill", "visit", "bookmark", "history", "keyword", "search",
-          "searchsuggestion", "searchsuggestion_rich", "switchtab",
-          "remotetab", "extension", "oneoff", "keywordoffer", "canonized",
-          "tip", "tiphelp", "formhistory", "tabtosearch", "quicksuggest",
-          "weather", "dynamic-wikipedia", "navigational", "none"
+          "autofill", "visit", "bookmark", "bookmark_adaptive", "history",
+          "history_adaptive", "keyword", "search", "searchsuggestion",
+          "searchsuggestion_rich", "switchtab", "remotetab", "extension",
+          "oneoff", "keywordoffer", "canonized", "tip", "tiphelp",
+          "formhistory", "tabtosearch", "quicksuggest", "weather",
+          "dynamic-wikipedia", "navigational", "none"
       provider: The name of the provider that presented the result.
   abandonment:
     objects: ["blur"]

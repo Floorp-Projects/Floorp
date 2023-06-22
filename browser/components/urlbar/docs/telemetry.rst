@@ -353,6 +353,8 @@ urlbar.picked.*
     `adaptive history autofill document`_.
   - ``bookmark``
     A bookmarked URL.
+  - ``bookmark_adaptive``
+    A bookmarked URL retrieved from adaptive history.
   - ``dynamic``
     A specially crafted result, often used in experiments when basic types are
     not flexible enough for a rich layout.
@@ -364,6 +366,8 @@ urlbar.picked.*
     A search suggestion from previous search history.
   - ``history``
     A URL from history.
+  - ``history_adaptive``
+    A URL from history retrieved from adaptive history.
   - ``keyword``
     A bookmark keyword.
   - ``navigational``
@@ -741,10 +745,11 @@ Event Extra
     The type of the selected result at the time of submission.
     This is only present for ``engagement`` events.
     It can be one of: ``none``, ``autofill``, ``visiturl``, ``bookmark``,
-    ``history``, ``keyword``, ``searchengine``, ``searchsuggestion``,
-    ``switchtab``, ``remotetab``, ``extension``, ``oneoff``, ``keywordoffer``,
-    ``canonized``, ``tip``, ``tiphelp``, ``formhistory``, ``tabtosearch``,
-    ``help``, ``block``, ``quicksuggest``, ``unknown``
+     ``bookmark_adaptive`` ``history``, ``history_adaptive``, ``keyword``,
+     ``searchengine``, ``searchsuggestion``, ``switchtab``, ``remotetab``,
+     ``extension``, ``oneoff``, ``keywordoffer``, ``canonized``, ``tip``,
+     ``tiphelp``, ``formhistory``, ``tabtosearch``, ``help``, ``block``,
+     ``quicksuggest``, ``unknown``
     In practice, ``tabtosearch`` should not appear in real event telemetry.
     Opening a tab-to-search result enters search mode and entering search mode
     does not currently mark the end of an engagement. It is noted here for

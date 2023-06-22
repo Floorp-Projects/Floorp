@@ -1223,6 +1223,11 @@ export var UrlbarUtils = {
           }
           return "quicksuggest";
         }
+        if (result.providerName == "InputHistory") {
+          return result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
+            ? "bookmark_adaptive"
+            : "history_adaptive";
+        }
         return result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
           ? "bookmark"
           : "history";
