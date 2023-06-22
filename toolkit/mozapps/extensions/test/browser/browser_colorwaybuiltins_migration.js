@@ -173,11 +173,11 @@ async function test_update_expired_colorways_builtins() {
   const promiseInstallsEnded = Promise.all([
     AddonTestUtils.promiseInstallEvent(
       "onInstallEnded",
-      addon => addon.id === EXPIRED_COLORWAY_THEME_ID1
+      install => install.addon.id === EXPIRED_COLORWAY_THEME_ID1
     ),
     AddonTestUtils.promiseInstallEvent(
       "onInstallEnded",
-      addon => addon.id === EXPIRED_COLORWAY_THEME_ID1
+      install => install.addon.id === EXPIRED_COLORWAY_THEME_ID1
     ),
   ]);
   // Wait for active theme to also execute the update bootstrap method.

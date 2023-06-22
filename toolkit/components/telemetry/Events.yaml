@@ -205,7 +205,7 @@ addonsManager:
       error: The AddonManager error related to an install or update failure.
       source: >
         The source that originally triggered the add-on installation, one of "about:addons",
-        "about:debugging", "about:preferences", "amo", "disco", "distribution",
+        "about:debugging", "about:preferences", "amo", "browser-import", "disco", "distribution",
         "extension", "enterprise-policy", "file-url", "geckoview-app", "gmp-plugin",
         "internal", "plugin", "rtamo", "siteperm-addon-provider" "sync", "system-addon",
         "temporary-addon", "unknown".

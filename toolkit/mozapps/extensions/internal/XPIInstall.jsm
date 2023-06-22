@@ -1990,8 +1990,10 @@ class AddonInstall {
    *
    * @param {function} resumeFn
    *        A function for the add-on to run when resuming.
+   * @param {boolean} requiresRestart
+   *        Whether this add-on requires restart.
    */
-  async postpone(resumeFn) {
+  async postpone(resumeFn, requiresRestart = true) {
     this.state = AddonManager.STATE_POSTPONED;
 
     let stagingDir = this.location.installer.getStagingDir();
@@ -2002,7 +2004,7 @@ class AddonInstall {
 
       let stagedAddon = getFile(`${this.addon.id}.xpi`, stagingDir);
 
-      await this.stageInstall(true, stagedAddon, true);
+      await this.stageInstall(requiresRestart, stagedAddon, true);
     } catch (e) {
       logger.warn(`Failed to postpone install of ${this.addon.id}`, e);
       this.state = AddonManager.STATE_INSTALL_FAILED;
@@ -2814,8 +2816,8 @@ AddonInstallWrapper.prototype = {
     return installFor(this).install();
   },
 
-  postpone(returnFn) {
-    return installFor(this).postpone(returnFn);
+  postpone(returnFn, requiresRestart) {
+    return installFor(this).postpone(returnFn, requiresRestart);
   },
 
   cancel() {
