@@ -688,6 +688,41 @@ void DrawTargetD2D1::StrokeLine(const Point& aStart, const Point& aEnd,
 
   FinalizeDrawing(aOptions.mCompositionOp, aPattern);
 }
+void DrawTargetD2D1::StrokeCircle(const Point& aOrigin, float radius,
+                                  const Pattern& aPattern,
+                                  const StrokeOptions& aStrokeOptions,
+                                  const DrawOptions& aOptions) {
+  if (!PrepareForDrawing(aOptions.mCompositionOp, aPattern)) {
+    return;
+  }
+
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+
+  RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions);
+  RefPtr<ID2D1StrokeStyle> strokeStyle =
+      CreateStrokeStyleForOptions(aStrokeOptions);
+
+  mDC->DrawEllipse(D2D1::Ellipse(D2DPoint(aOrigin), radius, radius), brush,
+                   aStrokeOptions.mLineWidth, strokeStyle);
+
+  FinalizeDrawing(aOptions.mCompositionOp, aPattern);
+}
+
+void DrawTargetD2D1::FillCircle(const Point& aOrigin, float radius,
+                                const Pattern& aPattern,
+                                const DrawOptions& aOptions) {
+  if (!PrepareForDrawing(aOptions.mCompositionOp, aPattern)) {
+    return;
+  }
+
+  mDC->SetAntialiasMode(D2DAAMode(aOptions.mAntialiasMode));
+
+  RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aPattern, aOptions);
+
+  mDC->FillEllipse(D2D1::Ellipse(D2DPoint(aOrigin), radius, radius), brush);
+
+  FinalizeDrawing(aOptions.mCompositionOp, aPattern);
+}
 
 void DrawTargetD2D1::Stroke(const Path* aPath, const Pattern& aPattern,
                             const StrokeOptions& aStrokeOptions,

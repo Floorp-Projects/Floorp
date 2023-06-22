@@ -79,11 +79,18 @@ class DrawTargetD2D1 : public DrawTarget {
                           const Pattern& aPattern,
                           const StrokeOptions& aStrokeOptions = StrokeOptions(),
                           const DrawOptions& aOptions = DrawOptions()) override;
+  virtual void StrokeCircle(
+      const Point& aOrigin, float radius, const Pattern& aPattern,
+      const StrokeOptions& aStrokeOptions = StrokeOptions(),
+      const DrawOptions& aOptions = DrawOptions()) override;
   virtual void Stroke(const Path* aPath, const Pattern& aPattern,
                       const StrokeOptions& aStrokeOptions = StrokeOptions(),
                       const DrawOptions& aOptions = DrawOptions()) override;
   virtual void Fill(const Path* aPath, const Pattern& aPattern,
                     const DrawOptions& aOptions = DrawOptions()) override;
+  virtual void FillCircle(const Point& aOrigin, float radius,
+                          const Pattern& aPattern,
+                          const DrawOptions& aOptions = DrawOptions()) override;
   virtual void FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
                           const Pattern& aPattern,
                           const DrawOptions& aOptions = DrawOptions()) override;
