@@ -19,7 +19,6 @@ use std::fmt::Write;
 use std::iter;
 use std::os::raw::c_void;
 use std::ptr;
-use style::applicable_declarations::ApplicableDeclarationBlock;
 use style::color::mix::ColorInterpolationMethod;
 use style::color::{AbsoluteColor, ColorSpace};
 use style::context::ThreadLocalStyleContext;
@@ -106,7 +105,7 @@ use style::properties::{PropertyDeclarationId, ShorthandId};
 use style::properties::{SourcePropertyDeclaration, StyleBuilder};
 use style::properties_and_values::rule::Inherits as PropertyInherits;
 use style::rule_cache::RuleCacheConditions;
-use style::rule_tree::{CascadeLevel, StrongRuleNode, StyleSource};
+use style::rule_tree::StrongRuleNode;
 use style::selector_parser::PseudoElementCascadeType;
 use style::shared_lock::{
     Locked, SharedRwLock, SharedRwLockReadGuard, StylesheetGuards, ToCssWithGuard,
@@ -116,7 +115,6 @@ use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::container_rule::ContainerSizeQuery;
 use style::stylesheets::import_rule::{ImportLayer, ImportSheet};
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
-use style::stylesheets::layer_rule::LayerOrder;
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylesheets::{
     AllowImportRules, ContainerRule, CounterStyleRule, CssRule, CssRuleType, CssRules,
@@ -3864,49 +3862,30 @@ counter_style_descriptors! {
 pub unsafe extern "C" fn Servo_ComputedValues_GetForPageContent(
     raw_data: &PerDocumentStyleData,
     page_name: *const nsAtom,
-    flags: PagePseudoClassFlags,
+    pseudos: PagePseudoClassFlags,
 ) -> Strong<ComputedValues> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let guards = StylesheetGuards::same(&guard);
     let data = raw_data.borrow_mut();
+    let cascade_data = data.stylist.cascade_data();
 
     let mut extra_declarations = vec![];
     let iter = data.stylist.iter_extra_data_origins_rev();
+    let name = if !page_name.is_null() {
+        Some(Atom::from_raw(page_name as *mut nsAtom))
+    } else {
+        None
+    };
     for (data, origin) in iter {
-        let start = extra_declarations.len();
-        let level = match origin {
-            Origin::UserAgent => CascadeLevel::UANormal,
-            Origin::User => CascadeLevel::UserNormal,
-            Origin::Author => CascadeLevel::same_tree_author_normal(),
-        };
-        let mut add_rule_with_name = |name: &Atom| {
-            if let Some(rules) = data.pages.rules.get(name) {
-                for rule_data in rules.iter() {
-                    let rule = rule_data.rule.read_with(level.guard(&guards));
-                    if let Some(s) = rule.match_specificity(&flags) {
-                        let block = rule.block.clone();
-                        extra_declarations.push(ApplicableDeclarationBlock::new(
-                            StyleSource::from_declarations(block),
-                            0,
-                            level,
-                            s,
-                            LayerOrder::root(),
-                        ));
-                    }
-                }
-            }
-        };
-        // Add any nameless rules that match pseudo classes.
-        let empty_ = atom!("");
-        add_rule_with_name(&empty_);
-        // Add any rules that match the name.
-        if !page_name.is_null() {
-            Atom::with(page_name, add_rule_with_name);
-        }
-        extra_declarations[start..].sort_unstable_by_key(|block| {
-            (block.layer_order(), block.specificity, block.source_order())
-        });
+        data.pages.match_and_append_rules(
+            &mut extra_declarations,
+            origin,
+            &guards,
+            cascade_data,
+            &name,
+            pseudos,
+        );
     }
 
     let rule_node = data.stylist.rule_node_for_precomputed_pseudo(
