@@ -13,6 +13,7 @@
 #include "TouchManager.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/EventForwards.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/PositionedEventTargeting.h"
 #include "mozilla/Preferences.h"
@@ -358,7 +359,7 @@ void APZEventState::ProcessTouchEvent(
   }
 
   bool isTouchPrevented = aContentResponse == nsEventStatus_eConsumeNoDefault;
-  bool sentContentResponse = false;
+  bool mayNeedPointerCancelEvent = false;
   APZES_LOG("Handling event type %d isPrevented=%d\n", aEvent.mMessage,
             isTouchPrevented);
   switch (aEvent.mMessage) {
@@ -392,7 +393,6 @@ void APZEventState::ProcessTouchEvent(
 
       if (isTouchPrevented) {
         mContentReceivedInputBlockCallback(aInputBlockId, isTouchPrevented);
-        sentContentResponse = true;
       } else {
         APZES_LOG("Event not prevented; pending response for %" PRIu64 " %s\n",
                   aInputBlockId, ToString(aGuid).c_str());
@@ -415,8 +415,12 @@ void APZEventState::ProcessTouchEvent(
     case eTouchMove: {
       if (mPendingTouchPreventedResponse) {
         MOZ_ASSERT(aGuid == mPendingTouchPreventedGuid);
+        // In the case where `touchstart` was preventDefaulted, i.e.
+        // `mPendingTouchPreventedResponse` is false, pointercancel event should
+        // NOT be fired.
+        mayNeedPointerCancelEvent = !isTouchPrevented;
       }
-      sentContentResponse = SendPendingTouchPreventedResponse(isTouchPrevented);
+      SendPendingTouchPreventedResponse(isTouchPrevented);
       break;
     }
 
@@ -430,10 +434,22 @@ void APZEventState::ProcessTouchEvent(
     mFirstTouchCancelled = false;
   }
 
-  APZES_LOG("Pointercancel if %d %d %d %d\n", sentContentResponse,
+  APZES_LOG("Pointercancel if %d %d %d %d\n", mayNeedPointerCancelEvent,
             !isTouchPrevented, aApzResponse == nsEventStatus_eConsumeDoDefault,
             MainThreadAgreesEventsAreConsumableByAPZ());
-  if (sentContentResponse && !isTouchPrevented &&
+  // From https://w3c.github.io/pointerevents/#the-pointercancel-event;
+  //  The user agent MUST fire a pointer event named pointercancel when it
+  //  detects a scenario to suppress a pointer event stream.
+  //
+  // And "suppress a pointer event steam" is defined in
+  // https://w3c.github.io/pointerevents/#suppressing-a-pointer-event-stream .
+  //
+  // There are four scenarios when the user agent fires a pointercancel event in
+  // the spec. Below code corresponds to one of the scenarios (the third bullet
+  // point);
+  //  The pointer is subsequently used by the user agent to manipulate the page
+  //  viewport (e.g. panning or zooming).
+  if (mayNeedPointerCancelEvent &&
       aApzResponse == nsEventStatus_eConsumeDoDefault &&
       MainThreadAgreesEventsAreConsumableByAPZ()) {
     WidgetTouchEvent cancelEvent(aEvent);
@@ -572,16 +588,14 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
   }
 }
 
-bool APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault) {
+void APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault) {
   if (mPendingTouchPreventedResponse) {
     APZES_LOG("Sending response %d for pending guid: %s\n", aPreventDefault,
               ToString(mPendingTouchPreventedGuid).c_str());
     mContentReceivedInputBlockCallback(mPendingTouchPreventedBlockId,
                                        aPreventDefault);
     mPendingTouchPreventedResponse = false;
-    return true;
   }
-  return false;
 }
 
 already_AddRefed<nsIWidget> APZEventState::GetWidget() const {
