@@ -8,6 +8,9 @@
 */
 
 add_setup(async function () {
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesUtils.history.clear();
+  await PlacesTestUtils.addVisits(["https://example.com/"]);
   registerCleanupFunction(async function () {
     await PlacesUtils.history.clear();
   });
@@ -64,4 +67,53 @@ add_task(async function move_newtab_with_value() {
 add_task(async function move_loaded_page_with_value() {
   info("Open a new tab and load a URL.");
   await moveTabIntoNewWindowAndBack("https://www.example.com/");
+});
+
+add_task(async function move_tab_into_new_window_and_open_new_tab() {
+  info("Open a new tab.");
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+
+  info("Move the new tab into a new window.");
+  let swapDocShellPromise = BrowserTestUtils.waitForEvent(
+    tab.linkedBrowser,
+    "SwapDocShells"
+  );
+  let newWindow = gBrowser.replaceTabWithWindow(tab);
+  await swapDocShellPromise;
+
+  info("Type in the urlbar to open it and see an autofill suggestion.");
+  await UrlbarTestUtils.promisePopupOpen(newWindow, async () => {
+    newWindow.gURLBar.focus();
+    EventUtils.synthesizeKey("ex", {}, newWindow);
+  });
+
+  let details = await UrlbarTestUtils.getDetailsOfResultAt(newWindow, 0);
+  Assert.equal(details.autofill, true, "Heuristic result should be Autofill.");
+  Assert.equal(
+    details.result.autofill.value,
+    "example.com/",
+    "Autofill value is as expected."
+  );
+
+  info("Open an about:newtab page while address bar is focused.");
+  let tab2 = await BrowserTestUtils.openNewForegroundTab(
+    newWindow.gBrowser,
+    "about:newtab",
+    false
+  );
+
+  // To be certain autoOpen isn't triggered, wait a brief amount of time
+  // following the tab switch event.
+  /* eslint-disable mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  Assert.equal(newWindow.gURLBar.value, "", "Urlbar should be empty.");
+  Assert.equal(
+    newWindow.gURLBar.view.isOpen,
+    false,
+    "Urlbar view should be closed."
+  );
+
+  await BrowserTestUtils.removeTab(tab2);
+  await BrowserTestUtils.closeWindow(newWindow);
 });

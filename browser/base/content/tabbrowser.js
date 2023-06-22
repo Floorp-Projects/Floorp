@@ -1374,6 +1374,14 @@
         if (!gMultiProcessBrowser) {
           this._adjustFocusBeforeTabSwitch(oldTab, newTab);
           this._adjustFocusAfterTabSwitch(newTab);
+        }
+
+        // Bug 1781806 - A forced update can indicate the tab was already
+        // selected. To ensure the internal state of the Urlbar is kept in
+        // sync, notify it as if focus changed. Alternatively, if there is no
+        // force update but the load context is not using remote tabs, there
+        // can be a focus change due to the _adjustFocus above.
+        if (aForceUpdate || !gMultiProcessBrowser) {
           gURLBar.afterTabSwitchFocusChange();
         }
       }
