@@ -3200,28 +3200,6 @@ uint64_t QuotaManager::CollectOriginsForEviction(
   return 0;
 }
 
-template <typename P>
-void QuotaManager::CollectPendingOriginsForListing(P aPredicate) {
-  MutexAutoLock lock(mQuotaMutex);
-
-  for (const auto& entry : mGroupInfoPairs) {
-    const auto& pair = entry.GetData();
-
-    MOZ_ASSERT(!entry.GetKey().IsEmpty());
-    MOZ_ASSERT(pair);
-
-    RefPtr<GroupInfo> groupInfo =
-        pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
-    if (groupInfo) {
-      for (const auto& originInfo : groupInfo->mOriginInfos) {
-        if (!originInfo->mDirectoryExists) {
-          aPredicate(originInfo);
-        }
-      }
-    }
-  }
-}
-
 nsresult QuotaManager::Init() {
   AssertIsOnOwningThread();
 
