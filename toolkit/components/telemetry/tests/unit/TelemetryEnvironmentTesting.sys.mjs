@@ -617,6 +617,8 @@ export var TelemetryEnvironmentTesting = {
     lazy.Assert.ok("D2DEnabled" in gfxData);
     lazy.Assert.ok("DWriteEnabled" in gfxData);
     lazy.Assert.ok("Headless" in gfxData);
+    lazy.Assert.ok("TargetFrameRate" in gfxData);
+    lazy.Assert.equal(typeof gfxData.TargetFrameRate, "number");
     lazy.Assert.ok("EmbeddedInFirefoxReality" in gfxData);
     // DWriteVersion is disabled due to main thread jank and will be enabled
     // again as part of bug 1154500.
