@@ -214,7 +214,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                 runIfFragmentIsAttached {
                     isInstallationInProgress = false
                     adapter?.updateAddon(it)
-                    binding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
                 }
             },
             onError = { _, e ->
@@ -232,7 +231,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                             )
                         }
                     }
-                    binding?.addonProgressOverlay?.overlayCardView?.visibility = View.GONE
                     isInstallationInProgress = false
                 }
             },
