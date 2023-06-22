@@ -41,7 +41,7 @@ class FFmpegDataDecoder<LIBAV_VER>
   RefPtr<ShutdownPromise> Shutdown() override;
 
   static AVCodec* FindAVCodec(FFmpegLibWrapper* aLib, AVCodecID aCodec);
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
   static AVCodec* FindHardwareAVCodec(FFmpegLibWrapper* aLib, AVCodecID aCodec);
 #endif
 

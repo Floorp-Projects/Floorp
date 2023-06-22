@@ -145,7 +145,6 @@ DIRS += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     DIRS += [
-        '/media/mozva',
         '/toolkit/system/gnome',
     ]
 
@@ -187,4 +186,7 @@ if CONFIG['ENABLE_TESTS']:
 
 if CONFIG['FUZZING']:
     DIRS += ['/tools/fuzzing']
+
+if CONFIG['MOZ_WAYLAND']:
+    DIRS += ['/media/mozva']
 

@@ -8,6 +8,7 @@
 #define DMABufSurface_h__
 
 #include <stdint.h>
+#include "mozilla/widget/nsWaylandDisplay.h"
 #include "mozilla/widget/va_drmcommon.h"
 #include "GLTypes.h"
 
@@ -52,11 +53,6 @@ typedef enum {
 
 class DMABufSurfaceRGBA;
 class DMABufSurfaceYUV;
-struct wl_buffer;
-
-namespace mozilla::widget {
-struct GbmFormat;
-}
 
 class DMABufSurface {
  public:
@@ -248,11 +244,9 @@ class DMABufSurfaceRGBA : public DMABufSurface {
   GLuint GetTexture(int aPlane = 0) { return mTexture; };
   EGLImageKHR GetEGLImage(int aPlane = 0) { return mEGLImage; };
 
-#ifdef MOZ_WAYLAND
   bool CreateWlBuffer();
   void ReleaseWlBuffer();
   wl_buffer* GetWlBuffer() { return mWlBuffer; };
-#endif
 
   int GetTextureCount() { return 1; };
 
@@ -289,9 +283,7 @@ class DMABufSurfaceRGBA : public DMABufSurface {
   EGLImageKHR mEGLImage;
   GLuint mTexture;
   uint32_t mGbmBufferFlags;
-#ifdef MOZ_WAYLAND
-  wl_buffer* mWlBuffer = nullptr;
-#endif
+  wl_buffer* mWlBuffer;
 };
 
 class DMABufSurfaceYUV : public DMABufSurface {

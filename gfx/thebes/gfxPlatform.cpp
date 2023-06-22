@@ -3046,7 +3046,7 @@ void gfxPlatform::InitWebGLConfig() {
     }
   }
 
-  if (kIsLinux) {
+  if (kIsWayland || kIsX11) {
     nsCString discardFailureId;
     int32_t status;
     FeatureState& feature =

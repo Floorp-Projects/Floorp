@@ -3543,7 +3543,7 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   virtual GLenum GetPreferredARGB32Format() const { return LOCAL_GL_RGBA; }
 
   virtual GLenum GetPreferredEGLImageTextureTarget() const {
-#ifdef MOZ_WIDGET_GTK
+#ifdef MOZ_WAYLAND
     return LOCAL_GL_TEXTURE_2D;
 #else
     return IsExtensionSupported(OES_EGL_image_external)

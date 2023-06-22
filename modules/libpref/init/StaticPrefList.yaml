@@ -15374,6 +15374,30 @@
   mirror: always
 
 #ifdef MOZ_WAYLAND
+# Whether to override the DMABuf blocklist.
+- name: widget.dmabuf.force-enabled
+  type: bool
+  value: false
+  mirror: once
+
+#ifdef NIGHTLY_BUILD
+# Keep those pref hidden on non-nightly builds to avoid people accidentally
+# turning it on.
+
+# Use DMABuf for content textures.
+# For testing purposes only.
+- name: widget.dmabuf-textures.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+#endif
+
+# Use DMABuf backend for WebGL.
+- name: widget.dmabuf-webgl.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Force fractional scaling using wp_viewporter. Valid values: 0.5 - 8
 - name: widget.wayland.fractional_buffer_scale
   type: float
@@ -15401,29 +15425,6 @@
 #endif
 
 #ifdef MOZ_WIDGET_GTK
-# Whether to override the DMABuf blocklist.
-- name: widget.dmabuf.force-enabled
-  type: bool
-  value: false
-  mirror: once
-
-#ifdef NIGHTLY_BUILD
-# Keep those pref hidden on non-nightly builds to avoid people accidentally
-# turning it on.
-
-# Use DMABuf for content textures.
-# For testing purposes only.
-- name: widget.dmabuf-textures.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-#endif
-
-# Use DMABuf backend for WebGL.
-- name: widget.dmabuf-webgl.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
 
 # Use gdk_window_move_to_rect to move Wayland popups when available.
 - name: widget.wayland.use-move-to-rect
