@@ -30,6 +30,11 @@ add_task(async function test_translations_panel_basics() {
     click(button, "Opening the popup");
   });
 
+  const panel = document.getElementById("translations-panel");
+  const label = document.getElementById(panel.getAttribute("aria-labelledby"));
+  ok(label, "The a11y label for the panel can be found.");
+  ok(isVisible(label), "The a11y label for the panel is visible.");
+
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(
       getByL10nId("translations-panel-translate-button"),
