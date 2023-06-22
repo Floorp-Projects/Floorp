@@ -10,9 +10,11 @@
 
 #include "GestureEventListener.h"
 #include "InputBlockState.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/ToString.h"
 #include "OverscrollHandoffState.h"
 #include "QueuedInput.h"
@@ -118,7 +120,7 @@ APZEventResult InputQueue::ReceiveTouchInput(
       haveBehaviors |= mActiveTouchBlock->IsContentResponseTimerExpired();
     }
 
-    block = StartNewTouchBlock(aTarget, aFlags, false);
+    block = StartNewTouchBlock(aTarget, aFlags);
     INPQ_LOG("started new touch block %p id %" PRIu64 " for target %p\n",
              block.get(), block->GetBlockId(), aTarget.get());
 
@@ -592,9 +594,7 @@ bool InputQueue::MaybeRequestContentResponse(
 
 uint64_t InputQueue::InjectNewTouchBlock(AsyncPanZoomController* aTarget) {
   AutoRunImmediateTimeout timeoutRunner{this};
-  TouchBlockState* block =
-      StartNewTouchBlock(aTarget, TargetConfirmationFlags{true},
-                         /* aCopyPropertiesFromCurrent = */ true);
+  TouchBlockState* block = StartNewTouchBlockForLongTap(aTarget);
   INPQ_LOG("injecting new touch block %p with id %" PRIu64 " and target %p\n",
            block, block->GetBlockId(), aTarget);
   ScheduleMainThreadTimeout(aTarget, block);
@@ -603,17 +603,25 @@ uint64_t InputQueue::InjectNewTouchBlock(AsyncPanZoomController* aTarget) {
 
 TouchBlockState* InputQueue::StartNewTouchBlock(
     const RefPtr<AsyncPanZoomController>& aTarget,
-    TargetConfirmationFlags aFlags, bool aCopyPropertiesFromCurrent) {
+    TargetConfirmationFlags aFlags) {
   TouchBlockState* newBlock =
       new TouchBlockState(aTarget, aFlags, mTouchCounter);
-  if (aCopyPropertiesFromCurrent) {
-    // We should never enter here without a current touch block, because this
-    // codepath is invoked from the OnLongPress handler in
-    // AsyncPanZoomController, which should bail out if there is no current
-    // touch block.
-    MOZ_ASSERT(GetCurrentTouchBlock());
-    newBlock->CopyPropertiesFrom(*GetCurrentTouchBlock());
-  }
+
+  mActiveTouchBlock = newBlock;
+  return newBlock;
+}
+
+TouchBlockState* InputQueue::StartNewTouchBlockForLongTap(
+    const RefPtr<AsyncPanZoomController>& aTarget) {
+  TouchBlockState* newBlock = new TouchBlockState(
+      aTarget, TargetConfirmationFlags{true}, mTouchCounter);
+
+  // We should never enter here without a current touch block, because this
+  // codepath is invoked from the OnLongPress handler in
+  // AsyncPanZoomController, which should bail out if there is no current
+  // touch block.
+  MOZ_ASSERT(GetCurrentTouchBlock());
+  newBlock->CopyPropertiesFrom(*GetCurrentTouchBlock());
 
   mActiveTouchBlock = newBlock;
   return newBlock;

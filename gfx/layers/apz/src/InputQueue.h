@@ -178,7 +178,10 @@ class InputQueue {
 
   TouchBlockState* StartNewTouchBlock(
       const RefPtr<AsyncPanZoomController>& aTarget,
-      TargetConfirmationFlags aFlags, bool aCopyPropertiesFromCurrent);
+      TargetConfirmationFlags aFlags);
+
+  TouchBlockState* StartNewTouchBlockForLongTap(
+      const RefPtr<AsyncPanZoomController>& aTarget);
 
   /**
    * If animations are present for the current pending input block, cancel
