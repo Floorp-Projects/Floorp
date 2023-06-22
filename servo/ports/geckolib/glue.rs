@@ -2423,6 +2423,17 @@ pub extern "C" fn Servo_StyleRule_GetSelectorText(rule: &LockedStyleRule, result
     read_locked_arc(rule, |rule| rule.selectors.to_css(result).unwrap());
 }
 
+fn desugared_selector_list(rules: &ThinVec<&LockedStyleRule>) -> SelectorList {
+    let mut selectors: Option<SelectorList> = None;
+    for rule in rules.iter().rev() {
+        selectors = Some(read_locked_arc(rule, |rule| match selectors {
+            Some(s) => rule.selectors.replace_parent_selector(&s.0),
+            None => rule.selectors.clone(),
+        }));
+    }
+    selectors.expect("Empty rule chain?")
+}
+
 #[no_mangle]
 pub extern "C" fn Servo_StyleRule_GetSelectorDataAtIndex(
     rules: &ThinVec<&LockedStyleRule>,
@@ -2430,17 +2441,7 @@ pub extern "C" fn Servo_StyleRule_GetSelectorDataAtIndex(
     text: Option<&mut nsACString>,
     specificity: Option<&mut u64>,
 ) {
-    let mut selectors: Option<SelectorList> = None;
-    for rule in rules.iter().rev() {
-        selectors = Some(read_locked_arc(rule, |rule| {
-            match selectors {
-                Some(s) => rule.selectors.replace_parent_selector(&s.0),
-                None => rule.selectors.clone(),
-            }
-        }));
-    }
-    debug_assert!(selectors.is_some(), "Empty rule chain?");
-    let Some(selectors) = selectors else { return };
+    let selectors = desugared_selector_list(rules);
     let Some(selector) = selectors.0.get(index as usize) else { return };
     if let Some(text) = text {
         selector.to_css(text).unwrap();
@@ -2457,7 +2458,7 @@ pub extern "C" fn Servo_StyleRule_GetSelectorCount(rule: &LockedStyleRule) -> u3
 
 #[no_mangle]
 pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
-    rule: &LockedStyleRule,
+    rules: &ThinVec<&LockedStyleRule>,
     element: &RawGeckoElement,
     index: u32,
     host: Option<&RawGeckoElement>,
@@ -2467,56 +2468,49 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
     use selectors::matching::{
         matches_selector, MatchingContext, MatchingMode, NeedsSelectorFlags, VisitedHandlingMode,
     };
-    read_locked_arc(rule, |rule: &StyleRule| {
-        let index = index as usize;
-        if index >= rule.selectors.0.len() {
-            return false;
-        }
+    let selectors = desugared_selector_list(rules);
+    let Some(selector) = selectors.0.get(index as usize) else { return false };
+    let mut matching_mode = MatchingMode::Normal;
+    match PseudoElement::from_pseudo_type(pseudo_type) {
+        Some(pseudo) => {
+            // We need to make sure that the requested pseudo element type
+            // matches the selector pseudo element type before proceeding.
+            match selector.pseudo_element() {
+                Some(selector_pseudo) if *selector_pseudo == pseudo => {
+                    matching_mode = MatchingMode::ForStatelessPseudoElement
+                },
+                _ => return false,
+            };
+        },
+        None => {
+            // Do not attempt to match if a pseudo element is requested and
+            // this is not a pseudo element selector, or vice versa.
+            if selector.has_pseudo_element() {
+                return false;
+            }
+        },
+    };
 
-        let selector = &rule.selectors.0[index];
-        let mut matching_mode = MatchingMode::Normal;
-
-        match PseudoElement::from_pseudo_type(pseudo_type) {
-            Some(pseudo) => {
-                // We need to make sure that the requested pseudo element type
-                // matches the selector pseudo element type before proceeding.
-                match selector.pseudo_element() {
-                    Some(selector_pseudo) if *selector_pseudo == pseudo => {
-                        matching_mode = MatchingMode::ForStatelessPseudoElement
-                    },
-                    _ => return false,
-                };
-            },
-            None => {
-                // Do not attempt to match if a pseudo element is requested and
-                // this is not a pseudo element selector, or vice versa.
-                if selector.has_pseudo_element() {
-                    return false;
-                }
-            },
-        };
-
-        let element = GeckoElement(element);
-        let host = host.map(GeckoElement);
-        let quirks_mode = element.as_node().owner_doc().quirks_mode();
-        let mut nth_index_cache = Default::default();
-        let visited_mode = if relevant_link_visited {
-            VisitedHandlingMode::RelevantLinkVisited
-        } else {
-            VisitedHandlingMode::AllLinksUnvisited
-        };
-        let mut ctx = MatchingContext::new_for_visited(
-            matching_mode,
-            /* bloom_filter = */ None,
-            &mut nth_index_cache,
-            visited_mode,
-            quirks_mode,
-            NeedsSelectorFlags::No,
-            IgnoreNthChildForInvalidation::No,
-        );
-        ctx.with_shadow_host(host, |ctx| {
-            matches_selector(selector, 0, None, &element, ctx)
-        })
+    let element = GeckoElement(element);
+    let host = host.map(GeckoElement);
+    let quirks_mode = element.as_node().owner_doc().quirks_mode();
+    let mut nth_index_cache = Default::default();
+    let visited_mode = if relevant_link_visited {
+        VisitedHandlingMode::RelevantLinkVisited
+    } else {
+        VisitedHandlingMode::AllLinksUnvisited
+    };
+    let mut ctx = MatchingContext::new_for_visited(
+        matching_mode,
+        /* bloom_filter = */ None,
+        &mut nth_index_cache,
+        visited_mode,
+        quirks_mode,
+        NeedsSelectorFlags::No,
+        IgnoreNthChildForInvalidation::No,
+    );
+    ctx.with_shadow_host(host, |ctx| {
+        matches_selector(selector, 0, None, &element, ctx)
     })
 }
 
