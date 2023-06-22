@@ -971,21 +971,10 @@ bool nsDocShell::MaybeHandleSubframeHistory(
       // executing an onLoad Handler,this load will not go
       // into session history.
       // XXX Why is this code in a method which deals with iframes!
-      if (aLoadState->IsFormSubmission()) {
-#ifdef DEBUG
-        if (!mEODForCurrentDocument) {
-          const MaybeDiscarded<BrowsingContext>& targetBC =
-              aLoadState->TargetBrowsingContext();
-          MOZ_ASSERT_IF(GetBrowsingContext() == targetBC.get(),
-                        aLoadState->LoadType() == LOAD_NORMAL_REPLACE);
-        }
-#endif
-      } else {
-        bool inOnLoadHandler = false;
-        GetIsExecutingOnLoadHandler(&inOnLoadHandler);
-        if (inOnLoadHandler) {
-          aLoadState->SetLoadType(LOAD_NORMAL_REPLACE);
-        }
+      bool inOnLoadHandler = false;
+      GetIsExecutingOnLoadHandler(&inOnLoadHandler);
+      if (inOnLoadHandler) {
+        aLoadState->SetLoadType(LOAD_NORMAL_REPLACE);
       }
     }
     return false;
@@ -8572,7 +8561,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
       // Explicit principal because we do not want any guesses as to what the
       // principal to inherit is: it should be aTriggeringPrincipal.
       loadState->SetPrincipalIsExplicit(true);
-      loadState->SetLoadType(aLoadState->LoadType());
+      loadState->SetLoadType(LOAD_LINK);
       loadState->SetForceAllowDataURI(aLoadState->HasInternalLoadFlags(
           INTERNAL_LOAD_FLAGS_FORCE_ALLOW_DATA_URI));
 
@@ -8624,11 +8613,6 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
   }
 
   aLoadState->SetTargetBrowsingContext(targetContext);
-  if (aLoadState->IsFormSubmission()) {
-    aLoadState->SetLoadType(
-        GetLoadTypeForFormSubmission(targetContext, aLoadState));
-  }
-
   //
   // Transfer the load to the target BrowsingContext... Clear the window target
   // name to the empty string to prevent recursive retargeting!
@@ -9242,20 +9226,6 @@ static bool NavigationShouldTakeFocus(nsDocShell* aDocShell,
   return !Preferences::GetBool("browser.tabs.loadDivertedInBackground", false);
 }
 
-uint32_t nsDocShell::GetLoadTypeForFormSubmission(
-    BrowsingContext* aTargetBC, nsDocShellLoadState* aLoadState) {
-  MOZ_ASSERT(aLoadState->IsFormSubmission());
-
-  // https://html.spec.whatwg.org/#form-submission-algorithm
-  //  22. Let historyHandling be "push".
-  //  23. If form document equals targetNavigable's active document, and
-  //      form document has not yet completely loaded, then set
-  //      historyHandling to "replace".
-  return GetBrowsingContext() == aTargetBC && !mEODForCurrentDocument
-             ? LOAD_NORMAL_REPLACE
-             : LOAD_LINK;
-}
-
 nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
                                   Maybe<uint32_t> aCacheKey) {
   MOZ_ASSERT(aLoadState, "need a load state!");
@@ -9295,8 +9265,6 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
     return PerformRetargeting(aLoadState);
   }
 
-  // This is the non-retargeting load path, we've already set the right loadtype
-  // for form submissions in nsDocShell::OnLinkClickSync.
   if (aLoadState->TargetBrowsingContext().IsNull()) {
     aLoadState->SetTargetBrowsingContext(GetBrowsingContext());
   }
@@ -13116,24 +13084,11 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
     CopyUTF8toUTF16(type, typeHint);
   }
 
-  uint32_t loadType = LOAD_LINK;
-  if (aLoadState->IsFormSubmission()) {
-    if (aLoadState->Target().IsEmpty()) {
-      // We set the right load type here for form submissions with an empty
-      // target. Form submission with a non-empty target are handled in
-      // nsDocShell::PerformRetargeting after we've selected the correct target
-      // BC.
-      loadType = GetLoadTypeForFormSubmission(GetBrowsingContext(), aLoadState);
-    }
-  } else {
-    // Link click can be triggered inside an onload handler, and we don't want
-    // to add history entry in this case.
-    bool inOnLoadHandler = false;
-    GetIsExecutingOnLoadHandler(&inOnLoadHandler);
-    if (inOnLoadHandler) {
-      loadType = LOAD_NORMAL_REPLACE;
-    }
-  }
+  // Link click (or form submission) can be triggered inside an onload
+  // handler, and we don't want to add history entry in this case.
+  bool inOnLoadHandler = false;
+  GetIsExecutingOnLoadHandler(&inOnLoadHandler);
+  uint32_t loadType = inOnLoadHandler ? LOAD_NORMAL_REPLACE : LOAD_LINK;
 
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       elementCanHaveNoopener ? new ReferrerInfo(*aContent->AsElement())

@@ -2266,20 +2266,7 @@ void nsGenericHTMLElement::Click(CallerType aCallerType) {
 
   RefPtr<nsPresContext> context;
   if (doc) {
-    PresShell* presShell = doc->GetPresShell();
-    if (!presShell) {
-      // We need the nsPresContext for dispatching the click event. In some
-      // rare cases we need to flush notifications to force creation of the
-      // nsPresContext here (for example when a script calls button.click()
-      // from script early during page load). We only flush the notifications
-      // if the PresShell hasn't been created yet, to limit the performance
-      // impact.
-      doc->FlushPendingNotifications(FlushType::EnsurePresShellInitAndFrames);
-      presShell = doc->GetPresShell();
-    }
-    if (presShell) {
-      context = presShell->GetPresContext();
-    }
+    context = doc->GetPresContext();
   }
 
   SetHandlingClick();
