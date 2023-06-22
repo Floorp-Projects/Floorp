@@ -133,6 +133,14 @@ EnterprisePoliciesManager.prototype = {
   },
 
   _reportEnterpriseTelemetry(policies = {}) {
+    let excludedDistributionIDs = [
+      "mozilla-mac-eol-esr115",
+      "mozilla-win-eol-esr115",
+    ];
+    let distroId = Services.prefs
+      .getDefaultBranch(null)
+      .getCharPref("distribution.id", "");
+
     let policiesLength = Object.keys(policies).length;
 
     Services.telemetry.scalarSet("policies.count", policiesLength);
@@ -140,7 +148,7 @@ EnterprisePoliciesManager.prototype = {
     let isEnterprise =
       // As we migrate folks to ESR for other reasons (deprecating an OS),
       // we need to add checks here for distribution IDs.
-      AppConstants.IS_ESR ||
+      (AppConstants.IS_ESR && !excludedDistributionIDs.includes(distroId)) ||
       // If there are multiple policies then its enterprise.
       policiesLength > 1 ||
       // If ImportEnterpriseRoots isn't the only policy then it's enterprise.
