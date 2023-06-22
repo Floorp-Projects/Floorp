@@ -1,0 +1,23 @@
+Patch from https://sourceforge.net/p/nsis/code/7291/
+
+diff -ruN nsis-3.07-src/Contrib/ExDLL/SConscript nsis-3.08-src/Contrib/ExDLL/SConscript
+--- nsis-3.07-src/Contrib/ExDLL/SConscript	2015-06-22 01:13:45.000000000 +0900
++++ nsis-3.08-src/Contrib/ExDLL/SConscript	2021-08-05 05:15:13.000000000 +0900
+@@ -47,7 +47,7 @@
+ 	env.DistributeExamples(api_files, path='Plugin/nsis')
+ 	env.DistributeExamples(example, path='Plugin')
+ 	if env['PLATFORM'] != 'win32':
+-		if env.has_key('PREFIX_PLUGINAPI_INC'):
++		if 'PREFIX_PLUGINAPI_INC' in env:
+ 			env.Distribute(api_files, None, 'pluginapi_inc', '', 'nsis', 'pluginapi', 'pluginapi')
+ 
+ 
+@@ -56,7 +56,7 @@
+ else:
+ 	example += lib_files
+ 
+-	if env.has_key('PREFIX_PLUGINAPI_LIB'):
++	if 'PREFIX_PLUGINAPI_LIB' in env:
+ 		env.Distribute(lib, None, 'pluginapi_lib', '', 'nsis', 'pluginapi', 'pluginapi')
+ 
+ 
