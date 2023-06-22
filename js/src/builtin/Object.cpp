@@ -1493,7 +1493,12 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
   // We have ensured |nobj| contains no extra indexed properties, so the
   // only indexed properties we need to handle here are dense and typed
   // array elements.
-
+  //
+  // Pre-reserve to avoid reallocating the properties vector frequently.
+  if (nobj->getDenseInitializedLength() > 0 &&
+      !properties.reserve(nobj->getDenseInitializedLength())) {
+    return false;
+  }
   for (uint32_t i = 0, len = nobj->getDenseInitializedLength(); i < len; i++) {
     value.set(nobj->getDenseElement(i));
     if (value.isMagic(JS_ELEMENTS_HOLE)) {
@@ -1632,6 +1637,19 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
   // Up to this point no side-effects through accessor properties are
   // possible which could have replaced |obj| with a non-native object.
   MOZ_ASSERT(obj->is<NativeObject>());
+  MOZ_ASSERT(obj.as<NativeObject>() == nobj);
+
+  {
+    // This new scope exists to support the goto end used by
+    // ENABLE_RECORD_TUPLE builds, and can be removed when said goto goes away.
+    size_t approximatePropertyCount =
+        nobj->shape()->propMap()
+            ? nobj->shape()->propMap()->approximateEntryCount()
+            : 0;
+    if (!properties.reserve(properties.length() + approximatePropertyCount)) {
+      return false;
+    }
+  }
 
   if (kind == EnumerableOwnPropertiesKind::Keys ||
       kind == EnumerableOwnPropertiesKind::Names ||
