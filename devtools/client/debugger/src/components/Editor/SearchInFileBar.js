@@ -9,7 +9,6 @@ import actions from "../../actions";
 import {
   getActiveSearch,
   getSelectedSource,
-  getContext,
   getSelectedSourceTextContent,
   getSearchOptions,
 } from "../../selectors";
@@ -55,7 +54,6 @@ class SearchInFileBar extends Component {
   static get propTypes() {
     return {
       closeFileSearch: PropTypes.func.isRequired,
-      cx: PropTypes.object.isRequired,
       editor: PropTypes.object,
       modifiers: PropTypes.object.isRequired,
       searchInFileEnabled: PropTypes.bool.isRequired,
@@ -118,10 +116,10 @@ class SearchInFileBar extends Component {
   };
 
   closeSearch = e => {
-    const { cx, closeFileSearch, editor, searchInFileEnabled } = this.props;
+    const { closeFileSearch, editor, searchInFileEnabled } = this.props;
     this.clearSearch();
     if (editor && searchInFileEnabled) {
-      closeFileSearch(cx, editor);
+      closeFileSearch();
       e.stopPropagation();
       e.preventDefault();
     }
@@ -355,7 +353,6 @@ const mapStateToProps = (state, p) => {
   const selectedSource = getSelectedSource(state);
 
   return {
-    cx: getContext(state),
     searchInFileEnabled: getActiveSearch(state) === "file",
     selectedSource,
     selectedSourceTextContent: getSelectedSourceTextContent(state),
