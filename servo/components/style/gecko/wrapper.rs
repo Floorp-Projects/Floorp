@@ -2022,8 +2022,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::MozSelectListBox => unsafe {
                 bindings::Gecko_IsSelectListBox(self.0)
             },
-            NonTSPseudoClass::MozIsHTML => self.is_html_element_in_html_document(),
-
+            NonTSPseudoClass::MozIsHTML => self.as_node().owner_doc().is_html_document(),
             NonTSPseudoClass::MozLWTheme |
             NonTSPseudoClass::MozLocaleDir(..) |
             NonTSPseudoClass::MozWindowInactive => {
