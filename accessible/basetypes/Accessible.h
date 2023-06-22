@@ -601,6 +601,17 @@ class Accessible {
   }
 
   /**
+   * Returns true if the accessible is non-interactive.
+   */
+  bool IsNonInteractive() const {
+    if (IsGeneric()) {
+      return true;
+    }
+    const role accRole = Role();
+    return accRole == role::LANDMARK || accRole == role::REGION;
+  }
+
+  /**
    * Return true if the link is valid (e. g. points to a valid URL).
    */
   bool IsLinkValid();

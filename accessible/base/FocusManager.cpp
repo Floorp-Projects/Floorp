@@ -402,7 +402,7 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
   MOZ_ASSERT(targetDocument);
   LocalAccessible* anchorJump = targetDocument->AnchorJump();
   if (anchorJump) {
-    if (target == targetDocument) {
+    if (target == targetDocument || target->IsNonInteractive()) {
       // XXX: bug 625699, note in some cases the node could go away before we
       // we receive focus event, for example if the node is removed from DOM.
       nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
