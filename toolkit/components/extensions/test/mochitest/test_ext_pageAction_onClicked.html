@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>pageAction.onClicked test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_pageAction_onClicked_and_inputHandling() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      page_action: { show_matches: ["<all_urls>"] },
+    },
+    async background() {
+      async function checkIsHandlingUserInput() {
+        try {
+          // permissions.request is declared with requireUserInput,
+          // so it would reject if inputHandling is false.
+          let granted = await browser.permissions.request({});
+          // We haven't requested any permissions, so the API call grants the
+          // requested permissions without actually prompting the user.
+          browser.test.assertTrue(granted, "empty permissions granted");
+          return true;
+        } catch (e) {
+          browser.test.assertEq(
+            e?.message,
+            "permissions.request may only be called from a user input handler",
+            "Expected error when permissions.request rejects"
+          );
+          return false;
+        }
+      }
+      browser.pageAction.onClicked.addListener(async () => {
+        browser.test.assertTrue(
+          await checkIsHandlingUserInput(),
+          "pageAction.onClicked is handling user input"
+        );
+        browser.test.notifyPass("action-clicked");
+      });
+
+      // Sanity check: Verify that pageAction is shown (because it needs to be
+      // in order to trigger pageAction.onClicked).
+      let [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      browser.test.assertTrue(
+        await browser.pageAction.isShown({ tabId: tab.id }),
+        "pageAction should be visible (due to page_action.show_matches)"
+      );
+
+      browser.test.assertFalse(
+        await checkIsHandlingUserInput(),
+        "not handling user input by default"
+      );
+      browser.test.sendMessage("background-ready");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  await AppTestDelegate.clickPageAction(window, extension);
+  await extension.awaitFinish("action-clicked");
+  await AppTestDelegate.closePageAction(window, extension);
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

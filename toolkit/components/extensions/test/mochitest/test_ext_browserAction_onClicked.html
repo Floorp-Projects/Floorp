@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>browserAction.onClicked test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(async function test_browserAction_onClicked_and_inputHandling() {
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      browser_action: {},
+    },
+    async background() {
+      async function checkIsHandlingUserInput() {
+        try {
+          // permissions.request is declared with requireUserInput,
+          // so it would reject if inputHandling is false.
+          let granted = await browser.permissions.request({});
+          // We haven't requested any permissions, so the API call grants the
+          // requested permissions without actually prompting the user.
+          browser.test.assertTrue(granted, "empty permissions granted");
+          return true;
+        } catch (e) {
+          browser.test.assertEq(
+            e?.message,
+            "permissions.request may only be called from a user input handler",
+            "Expected error when permissions.request rejects"
+          );
+          return false;
+        }
+      }
+      browser.browserAction.onClicked.addListener(async () => {
+        browser.test.assertTrue(
+          await checkIsHandlingUserInput(),
+          "browserAction.onClicked is handling user input"
+        );
+        browser.test.notifyPass("action-clicked");
+      });
+
+      browser.test.assertFalse(
+        await checkIsHandlingUserInput(),
+        "not handling user input by default"
+      );
+      browser.test.sendMessage("background-ready");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("background-ready");
+
+  await AppTestDelegate.clickBrowserAction(window, extension);
+  await extension.awaitFinish("action-clicked");
+  await AppTestDelegate.closeBrowserAction(window, extension);
+
+  await extension.unload();
+});
+
+</script>
+
+</body>
+</html>

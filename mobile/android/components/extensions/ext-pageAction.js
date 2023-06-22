@@ -139,6 +139,7 @@ this.pageAction = class extends ExtensionAPIPersistent {
           context,
           module: "pageAction",
           event: "onClicked",
+          inputHandling: true,
           extensionApi: this,
         }).api(),
 
