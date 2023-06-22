@@ -101,7 +101,6 @@ nsresult MediaDecoderStateMachineBase::Init(MediaDecoder* aDecoder) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   mMetadataManager.Connect(mReader->TimedMetadataEvent(), OwnerThread());
-  mReader->SetCanonicalDuration(&mDuration);
 
   return NS_OK;
 }
@@ -117,6 +116,7 @@ void MediaDecoderStateMachineBase::InitializationTask(MediaDecoder* aDecoder) {
   mLooping.Connect(aDecoder->CanonicalLooping());
   mSecondaryVideoContainer.Connect(
       aDecoder->CanonicalSecondaryVideoContainer());
+  mReader->SetCanonicalDuration(mDuration);
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered,
