@@ -34,6 +34,7 @@ make -f win32/Makefile.gcc PREFIX=i686-w64-mingw32-
 cd ../nsis-3.07-src
 patch -p1 < $GECKO_PATH/build/win32/nsis-no-insert-timestamp.patch
 patch -p1 < $GECKO_PATH/build/win32/nsis-no-underscore.patch
+patch -p1 < $GECKO_PATH/build/win32/nsis-scons.patch
 # --exclude-libs is not supported by lld, but is not required anyways.
 # /fixed is passed by the build system when building with MSVC but not
 # when building with GCC/binutils. The build system doesn't really support
