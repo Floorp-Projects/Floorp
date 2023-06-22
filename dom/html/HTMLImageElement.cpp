@@ -14,7 +14,6 @@
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-#include "nsMappedAttributes.h"
 #include "nsSize.h"
 #include "mozilla/dom/Document.h"
 #include "nsImageFrame.h"
@@ -43,7 +42,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 
 #include "mozilla/EventDispatcher.h"
-#include "mozilla/MappedDeclarations.h"
+#include "mozilla/MappedDeclarationsBuilder.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RestyleManager.h"
 
@@ -258,12 +257,12 @@ bool HTMLImageElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLImageElement::MapAttributesIntoRule(
-    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  MapImageAlignAttributeInto(aAttributes, aDecls);
-  MapImageBorderAttributeInto(aAttributes, aDecls);
-  MapImageMarginAttributeInto(aAttributes, aDecls);
-  MapImageSizeAttributesInto(aAttributes, aDecls, MapAspectRatio::Yes);
-  MapCommonAttributesInto(aAttributes, aDecls);
+    MappedDeclarationsBuilder& aBuilder) {
+  MapImageAlignAttributeInto(aBuilder);
+  MapImageBorderAttributeInto(aBuilder);
+  MapImageMarginAttributeInto(aBuilder);
+  MapImageSizeAttributesInto(aBuilder, MapAspectRatio::Yes);
+  MapCommonAttributesInto(aBuilder);
 }
 
 nsChangeHint HTMLImageElement::GetAttributeChangeHint(const nsAtom* aAttribute,
@@ -1343,15 +1342,14 @@ void HTMLImageElement::StopLazyLoading(StartLoading aStartLoading) {
   }
 }
 
-const nsMappedAttributes* HTMLImageElement::GetMappedAttributesFromSource()
-    const {
-  if (!IsInPicture() || !mResponsiveSelector ||
-      !mResponsiveSelector->Content()) {
+const StyleLockedDeclarationBlock*
+HTMLImageElement::GetMappedAttributesFromSource() const {
+  if (!IsInPicture() || !mResponsiveSelector) {
     return nullptr;
   }
 
   const auto* source =
-      HTMLSourceElement::FromNode(mResponsiveSelector->Content());
+      HTMLSourceElement::FromNodeOrNull(mResponsiveSelector->Content());
   if (!source) {
     return nullptr;
   }

@@ -6,9 +6,9 @@
 
 #include "mozilla/dom/HTMLTableElement.h"
 #include "mozilla/AttributeStyles.h"
-#include "mozilla/MappedDeclarations.h"
+#include "mozilla/MappedDeclarationsBuilder.h"
+#include "mozilla/DeclarationBlock.h"
 #include "nsAttrValueInlines.h"
-#include "nsMappedAttributes.h"
 #include "nsWrapperCacheInlines.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLCollectionBinding.h"
@@ -501,8 +501,7 @@ void TableRowsCollection::NodeWillBeDestroyed(nsINode* aNode) {
 
 HTMLTableElement::HTMLTableElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
-    : nsGenericHTMLElement(std::move(aNodeInfo)),
-      mTableInheritedAttributes(nullptr) {
+    : nsGenericHTMLElement(std::move(aNodeInfo)) {
   SetHasWeirdParserInsertionMode();
 }
 
@@ -842,7 +841,7 @@ bool HTMLTableElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLTableElement::MapAttributesIntoRule(
-    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+    MappedDeclarationsBuilder& aBuilder) {
   // XXX Bug 211636:  This function is used by a single style rule
   // that's used to match two different type of elements -- tables, and
   // table cells.  (nsHTMLTableCellElement overrides
@@ -854,56 +853,55 @@ void HTMLTableElement::MapAttributesIntoRule(
   // when the display type is changed).
 
   // cellspacing
-  const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::cellspacing);
+  const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::cellspacing);
   if (value && value->Type() == nsAttrValue::eInteger &&
-      !aDecls.PropertyIsSet(eCSSProperty_border_spacing)) {
-    aDecls.SetPixelValue(eCSSProperty_border_spacing,
-                         float(value->GetIntegerValue()));
+      !aBuilder.PropertyIsSet(eCSSProperty_border_spacing)) {
+    aBuilder.SetPixelValue(eCSSProperty_border_spacing,
+                           float(value->GetIntegerValue()));
   }
   // align; Check for enumerated type (it may be another type if
   // illegal)
-  value = aAttributes->GetAttr(nsGkAtoms::align);
+  value = aBuilder.GetAttr(nsGkAtoms::align);
   if (value && value->Type() == nsAttrValue::eEnum) {
     if (value->GetEnumValue() == uint8_t(StyleTextAlign::Center) ||
         value->GetEnumValue() == uint8_t(StyleTextAlign::MozCenter)) {
-      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_left);
-      aDecls.SetAutoValueIfUnset(eCSSProperty_margin_right);
+      aBuilder.SetAutoValueIfUnset(eCSSProperty_margin_left);
+      aBuilder.SetAutoValueIfUnset(eCSSProperty_margin_right);
     }
   }
 
   // bordercolor
-  value = aAttributes->GetAttr(nsGkAtoms::bordercolor);
+  value = aBuilder.GetAttr(nsGkAtoms::bordercolor);
   nscolor color;
   if (value && value->GetColorValue(color)) {
-    aDecls.SetColorValueIfUnset(eCSSProperty_border_top_color, color);
-    aDecls.SetColorValueIfUnset(eCSSProperty_border_left_color, color);
-    aDecls.SetColorValueIfUnset(eCSSProperty_border_bottom_color, color);
-    aDecls.SetColorValueIfUnset(eCSSProperty_border_right_color, color);
+    aBuilder.SetColorValueIfUnset(eCSSProperty_border_top_color, color);
+    aBuilder.SetColorValueIfUnset(eCSSProperty_border_left_color, color);
+    aBuilder.SetColorValueIfUnset(eCSSProperty_border_bottom_color, color);
+    aBuilder.SetColorValueIfUnset(eCSSProperty_border_right_color, color);
   }
 
   // border
-  const nsAttrValue* borderValue = aAttributes->GetAttr(nsGkAtoms::border);
-  if (borderValue) {
+  if (const nsAttrValue* borderValue = aBuilder.GetAttr(nsGkAtoms::border)) {
     // border = 1 pixel default
     int32_t borderThickness = 1;
-
-    if (borderValue->Type() == nsAttrValue::eInteger)
+    if (borderValue->Type() == nsAttrValue::eInteger) {
       borderThickness = borderValue->GetIntegerValue();
+    }
 
     // by default, set all border sides to the specified width
-    aDecls.SetPixelValueIfUnset(eCSSProperty_border_top_width,
-                                (float)borderThickness);
-    aDecls.SetPixelValueIfUnset(eCSSProperty_border_left_width,
-                                (float)borderThickness);
-    aDecls.SetPixelValueIfUnset(eCSSProperty_border_bottom_width,
-                                (float)borderThickness);
-    aDecls.SetPixelValueIfUnset(eCSSProperty_border_right_width,
-                                (float)borderThickness);
+    aBuilder.SetPixelValueIfUnset(eCSSProperty_border_top_width,
+                                  (float)borderThickness);
+    aBuilder.SetPixelValueIfUnset(eCSSProperty_border_left_width,
+                                  (float)borderThickness);
+    aBuilder.SetPixelValueIfUnset(eCSSProperty_border_bottom_width,
+                                  (float)borderThickness);
+    aBuilder.SetPixelValueIfUnset(eCSSProperty_border_right_width,
+                                  (float)borderThickness);
   }
 
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aBuilder);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aBuilder);
+  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
 }
 
 NS_IMETHODIMP_(bool)
@@ -931,66 +929,30 @@ nsMapRuleToAttributesFunc HTMLTableElement::GetAttributeMappingFunction()
   return &MapAttributesIntoRule;
 }
 
-static void MapInheritedTableAttributesIntoRule(
-    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::cellpadding);
-  if (value && value->Type() == nsAttrValue::eInteger) {
-    // We have cellpadding.  This will override our padding values if we
-    // don't have any set.
-    float pad = float(value->GetIntegerValue());
-
-    aDecls.SetPixelValueIfUnset(eCSSProperty_padding_top, pad);
-    aDecls.SetPixelValueIfUnset(eCSSProperty_padding_right, pad);
-    aDecls.SetPixelValueIfUnset(eCSSProperty_padding_bottom, pad);
-    aDecls.SetPixelValueIfUnset(eCSSProperty_padding_left, pad);
-  }
-}
-
-nsMappedAttributes* HTMLTableElement::GetAttributesMappedForCell() {
-  return mTableInheritedAttributes;
-}
-
 void HTMLTableElement::BuildInheritedAttributes() {
-  NS_ASSERTION(!mTableInheritedAttributes,
-               "potential leak, plus waste of work");
+  MOZ_ASSERT(!mTableInheritedAttributes, "potential leak, plus waste of work");
   MOZ_ASSERT(NS_IsMainThread());
   Document* document = GetComposedDoc();
   if (!document) {
     return;
   }
-  AttributeStyles* attrStyles = document->GetAttributeStyles();
-  if (!attrStyles) {
+  const nsAttrValue* value = GetParsedAttr(nsGkAtoms::cellpadding);
+  if (!value) {
     return;
   }
-  RefPtr<nsMappedAttributes> newAttrs;
-  if (const nsAttrValue* value = mAttrs.GetAttr(nsGkAtoms::cellpadding)) {
-    RefPtr<nsMappedAttributes> modifiableMapped =
-        new nsMappedAttributes(attrStyles, MapInheritedTableAttributesIntoRule);
-
-    if (modifiableMapped) {
-      nsAttrValue val(*value);
-      bool oldValueSet;
-      modifiableMapped->SetAndSwapAttr(nsGkAtoms::cellpadding, val,
-                                       &oldValueSet);
-    }
-    newAttrs = attrStyles->UniqueMappedAttributes(modifiableMapped);
-    NS_ASSERTION(newAttrs, "out of memory, but handling gracefully");
-
-    if (newAttrs != modifiableMapped) {
-      // Reset the stylesheet of modifiableMapped so that it doesn't spend time
-      // trying to remove itself from the hash.  There is no risk that
-      // modifiableMapped is in the hash since we created it ourselves and it
-      // didn't come from the attrStyles (in which case it would not have been
-      // modifiable).
-      modifiableMapped->DropAttributeStylesReference();
-    }
-  }
-  mTableInheritedAttributes = newAttrs;
-  NS_IF_ADDREF(mTableInheritedAttributes);
+  // We have cellpadding.  This will override our padding values if we don't
+  // have any set.
+  float pad = float(value->GetIntegerValue());
+  MappedDeclarationsBuilder builder(*this, *document);
+  builder.SetPixelValue(eCSSProperty_padding_top, pad);
+  builder.SetPixelValue(eCSSProperty_padding_right, pad);
+  builder.SetPixelValue(eCSSProperty_padding_bottom, pad);
+  builder.SetPixelValue(eCSSProperty_padding_left, pad);
+  mTableInheritedAttributes = builder.TakeDeclarationBlock();
 }
 
 void HTMLTableElement::ReleaseInheritedAttributes() {
-  NS_IF_RELEASE(mTableInheritedAttributes);
+  mTableInheritedAttributes = nullptr;
 }
 
 nsresult HTMLTableElement::BindToTree(BindContext& aContext, nsINode& aParent) {

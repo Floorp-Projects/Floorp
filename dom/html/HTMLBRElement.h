@@ -65,8 +65,7 @@ class HTMLBRElement final : public nsGenericHTMLElement {
  private:
   virtual ~HTMLBRElement();
 
-  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    MappedDeclarations&);
+  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
 };
 
 }  // namespace mozilla::dom

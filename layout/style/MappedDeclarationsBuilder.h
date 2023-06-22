@@ -6,11 +6,12 @@
 
 /* Representation of a declaration block used for attribute mapping */
 
-#ifndef mozilla_MappedDeclarations_h
-#define mozilla_MappedDeclarations_h
+#ifndef mozilla_MappedDeclarationsBuilder_h
+#define mozilla_MappedDeclarationsBuilder_h
 
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/ServoBindingTypes.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/ServoBindings.h"
 #include "nsCSSPropertyID.h"
 #include "nsCSSValue.h"
@@ -23,26 +24,30 @@ namespace mozilla {
 // This provides a convenient interface for attribute mappers
 // (MapAttributesIntoRule) to modify the presentation attribute declaration
 // block for a given element.
-class MappedDeclarations final {
+class MOZ_STACK_CLASS MappedDeclarationsBuilder final {
  public:
-  explicit MappedDeclarations(
-      dom::Document* aDoc, already_AddRefed<StyleLockedDeclarationBlock> aDecls)
-      : mDocument(aDoc), mDecl(aDecls) {
-    MOZ_ASSERT(mDecl);
+  explicit MappedDeclarationsBuilder(
+      dom::Element& aElement, dom::Document& aDoc,
+      StyleLockedDeclarationBlock* aDecls = nullptr)
+      : mDocument(aDoc), mElement(aElement), mDecls(aDecls) {
+    if (mDecls) {
+      Servo_DeclarationBlock_Clear(mDecls);
+    }
   }
 
-  ~MappedDeclarations() { MOZ_ASSERT(!mDecl, "Forgot to take the block?"); }
+  ~MappedDeclarationsBuilder() {
+    MOZ_ASSERT(!mDecls, "Forgot to take the block?");
+  }
 
-  dom::Document* Document() { return mDocument; }
+  dom::Document& Document() { return mDocument; }
 
   already_AddRefed<StyleLockedDeclarationBlock> TakeDeclarationBlock() {
-    MOZ_ASSERT(mDecl);
-    return mDecl.forget();
+    return mDecls.forget();
   }
 
   // Check if we already contain a certain longhand
   bool PropertyIsSet(nsCSSPropertyID aId) const {
-    return Servo_DeclarationBlock_PropertyIsSet(mDecl, aId);
+    return mDecls && Servo_DeclarationBlock_PropertyIsSet(mDecls, aId);
   }
 
   // Set a property to an identifier (string)
@@ -67,7 +72,7 @@ class MappedDeclarations final {
 
   // Set a property to a keyword (usually NS_STYLE_* or StyleFoo::*)
   void SetKeywordValue(nsCSSPropertyID aId, int32_t aValue) {
-    Servo_DeclarationBlock_SetKeywordValue(mDecl, aId, aValue);
+    Servo_DeclarationBlock_SetKeywordValue(&EnsureDecls(), aId, aValue);
   }
 
   void SetKeywordValueIfUnset(nsCSSPropertyID aId, int32_t aValue) {
@@ -93,28 +98,30 @@ class MappedDeclarations final {
 
   // Set a property to an integer value
   void SetIntValue(nsCSSPropertyID aId, int32_t aValue) {
-    Servo_DeclarationBlock_SetIntValue(mDecl, aId, aValue);
+    Servo_DeclarationBlock_SetIntValue(&EnsureDecls(), aId, aValue);
   }
 
   // Set "math-depth: <integer>" or "math-depth: add(<integer>)"
   void SetMathDepthValue(int32_t aValue, bool aIsRelative) {
-    Servo_DeclarationBlock_SetMathDepthValue(mDecl, aValue, aIsRelative);
+    Servo_DeclarationBlock_SetMathDepthValue(&EnsureDecls(), aValue,
+                                             aIsRelative);
   }
 
   // Set "counter-reset: list-item <integer>".  If aIsReversed is true then
   // "list-item" instead becomes "reversed(list-item)".
   void SetCounterResetListItem(int32_t aValue, bool aIsReversed) {
-    Servo_DeclarationBlock_SetCounterResetListItem(mDecl, aValue, aIsReversed);
+    Servo_DeclarationBlock_SetCounterResetListItem(&EnsureDecls(), aValue,
+                                                   aIsReversed);
   }
 
   // Set "counter-set: list-item <integer>".
   void SetCounterSetListItem(int32_t aValue) {
-    Servo_DeclarationBlock_SetCounterSetListItem(mDecl, aValue);
+    Servo_DeclarationBlock_SetCounterSetListItem(&EnsureDecls(), aValue);
   }
 
   // Set a property to a pixel value
   void SetPixelValue(nsCSSPropertyID aId, float aValue) {
-    Servo_DeclarationBlock_SetPixelValue(mDecl, aId, aValue);
+    Servo_DeclarationBlock_SetPixelValue(&EnsureDecls(), aId, aValue);
   }
 
   void SetPixelValueIfUnset(nsCSSPropertyID aId, float aValue) {
@@ -125,18 +132,18 @@ class MappedDeclarations final {
 
   void SetLengthValue(nsCSSPropertyID aId, const nsCSSValue& aValue) {
     MOZ_ASSERT(aValue.IsLengthUnit());
-    Servo_DeclarationBlock_SetLengthValue(mDecl, aId, aValue.GetFloatValue(),
-                                          aValue.GetUnit());
+    Servo_DeclarationBlock_SetLengthValue(
+        &EnsureDecls(), aId, aValue.GetFloatValue(), aValue.GetUnit());
   }
 
   // Set a property to a number value
   void SetNumberValue(nsCSSPropertyID aId, float aValue) {
-    Servo_DeclarationBlock_SetNumberValue(mDecl, aId, aValue);
+    Servo_DeclarationBlock_SetNumberValue(&EnsureDecls(), aId, aValue);
   }
 
   // Set a property to a percent value
   void SetPercentValue(nsCSSPropertyID aId, float aValue) {
-    Servo_DeclarationBlock_SetPercentValue(mDecl, aId, aValue);
+    Servo_DeclarationBlock_SetPercentValue(&EnsureDecls(), aId, aValue);
   }
 
   void SetPercentValueIfUnset(nsCSSPropertyID aId, float aValue) {
@@ -147,7 +154,7 @@ class MappedDeclarations final {
 
   // Set a property to `auto`
   void SetAutoValue(nsCSSPropertyID aId) {
-    Servo_DeclarationBlock_SetAutoValue(mDecl, aId);
+    Servo_DeclarationBlock_SetAutoValue(&EnsureDecls(), aId);
   }
 
   void SetAutoValueIfUnset(nsCSSPropertyID aId) {
@@ -158,7 +165,7 @@ class MappedDeclarations final {
 
   // Set a property to `currentcolor`
   void SetCurrentColor(nsCSSPropertyID aId) {
-    Servo_DeclarationBlock_SetCurrentColor(mDecl, aId);
+    Servo_DeclarationBlock_SetCurrentColor(&EnsureDecls(), aId);
   }
 
   void SetCurrentColorIfUnset(nsCSSPropertyID aId) {
@@ -169,7 +176,7 @@ class MappedDeclarations final {
 
   // Set a property to an RGBA nscolor value
   void SetColorValue(nsCSSPropertyID aId, nscolor aValue) {
-    Servo_DeclarationBlock_SetColorValue(mDecl, aId, aValue);
+    Servo_DeclarationBlock_SetColorValue(&EnsureDecls(), aId, aValue);
   }
 
   void SetColorValueIfUnset(nsCSSPropertyID aId, nscolor aValue) {
@@ -180,26 +187,39 @@ class MappedDeclarations final {
 
   // Set font-family to a string
   void SetFontFamily(const nsACString& aValue) {
-    Servo_DeclarationBlock_SetFontFamily(mDecl, &aValue);
+    Servo_DeclarationBlock_SetFontFamily(&EnsureDecls(), &aValue);
   }
 
   // Add a quirks-mode override to the decoration color of elements nested in
   // <a>
   void SetTextDecorationColorOverride() {
-    Servo_DeclarationBlock_SetTextDecorationColorOverride(mDecl);
+    Servo_DeclarationBlock_SetTextDecorationColorOverride(&EnsureDecls());
   }
 
   void SetBackgroundImage(const nsAttrValue& value);
 
   void SetAspectRatio(float aWidth, float aHeight) {
-    Servo_DeclarationBlock_SetAspectRatio(mDecl, aWidth, aHeight);
+    Servo_DeclarationBlock_SetAspectRatio(&EnsureDecls(), aWidth, aHeight);
+  }
+
+  const nsAttrValue* GetAttr(nsAtom* aName) {
+    MOZ_ASSERT(mElement.IsAttributeMapped(aName));
+    return mElement.GetParsedAttr(aName);
   }
 
  private:
-  dom::Document* const mDocument;
-  RefPtr<StyleLockedDeclarationBlock> mDecl;
+  StyleLockedDeclarationBlock& EnsureDecls() {
+    if (!mDecls) {
+      mDecls = Servo_DeclarationBlock_CreateEmpty().Consume();
+    }
+    return *mDecls;
+  }
+
+  dom::Document& mDocument;
+  dom::Element& mElement;
+  RefPtr<StyleLockedDeclarationBlock> mDecls;
 };
 
 }  // namespace mozilla
 
-#endif  // mozilla_MappedDeclarations_h
+#endif

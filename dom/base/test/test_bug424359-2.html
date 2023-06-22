@@ -228,7 +228,7 @@ function testHtmlSerializer_1 () {
   encoder.init(document, "text/html", de.OutputLFLineBreak | de.OutputSelectionOnly | de.OutputRaw);
   encoder.setNode(node);
   out = encoder.encodeToString();
-  expected = '<hr id="shortattr6" noshade="noshade">';
+  expected = '<hr noshade="noshade" id="shortattr6">';
   is(out, expected, "test short attr #6");
 
   node = document.getElementById('shortattr7');

@@ -7,11 +7,10 @@
 #include "mozilla/dom/HTMLLIElement.h"
 #include "mozilla/dom/HTMLLIElementBinding.h"
 
-#include "mozilla/MappedDeclarations.h"
+#include "mozilla/MappedDeclarationsBuilder.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsMappedAttributes.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(LI)
 
@@ -53,25 +52,25 @@ bool HTMLLIElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                                               aMaybeScriptedPrincipal, aResult);
 }
 
-void HTMLLIElement::MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                          MappedDeclarations& aDecls) {
-  if (!aDecls.PropertyIsSet(eCSSProperty_list_style_type)) {
+void HTMLLIElement::MapAttributesIntoRule(MappedDeclarationsBuilder& aBuilder) {
+  if (!aBuilder.PropertyIsSet(eCSSProperty_list_style_type)) {
     // type: enum
-    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
-    if (value && value->Type() == nsAttrValue::eEnum)
-      aDecls.SetKeywordValue(eCSSProperty_list_style_type,
-                             value->GetEnumValue());
-  }
-
-  // Map <li value=INTEGER> to 'counter-set: list-item INTEGER'.
-  const nsAttrValue* attrVal = aAttributes->GetAttr(nsGkAtoms::value);
-  if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
-    if (!aDecls.PropertyIsSet(eCSSProperty_counter_set)) {
-      aDecls.SetCounterSetListItem(attrVal->GetIntegerValue());
+    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::type);
+    if (value && value->Type() == nsAttrValue::eEnum) {
+      aBuilder.SetKeywordValue(eCSSProperty_list_style_type,
+                               value->GetEnumValue());
     }
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
+  // Map <li value=INTEGER> to 'counter-set: list-item INTEGER'.
+  const nsAttrValue* attrVal = aBuilder.GetAttr(nsGkAtoms::value);
+  if (attrVal && attrVal->Type() == nsAttrValue::eInteger) {
+    if (!aBuilder.PropertyIsSet(eCSSProperty_counter_set)) {
+      aBuilder.SetCounterSetListItem(attrVal->GetIntegerValue());
+    }
+  }
+
+  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
 }
 
 NS_IMETHODIMP_(bool)
