@@ -300,25 +300,8 @@ toolbarseparator + .panel-subview-body {
   list-style-image: url(chrome://global/skin/icons/arrow-left.svg);
 }
 
-/* menuseparators in bookmark-related menupopups are styled differently
- * to allow for user interaction with them (e.g. drag, right click ...) */
 .toolbar-menupopup menuseparator {
-  position: relative;
-  appearance: none;
-  border: none;
-  min-height: 0;
-  margin: 0 var(--panel-separator-margin-horizontal);
-  padding-inline: 0;
-  padding-top: var(--panel-separator-margin-vertical);
-  padding-bottom: calc(var(--panel-separator-margin-vertical) + 1px);
-}
-
-.toolbar-menupopup menuseparator::before {
-  content: '';
-  position: absolute;
-  width: 100%;
-  border-top: 1px solid var(--panel-separator-color);
-  border-bottom: none;
+  padding: var(--panel-separator-margin);
 }
 
 #BMB_bookmarksPopup {

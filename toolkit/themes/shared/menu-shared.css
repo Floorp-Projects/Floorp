@@ -4,6 +4,22 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+/* Menu separator */
+
+menuseparator {
+  /* Using padding instead of margin to increase the hit area, as some
+     separators (e.g. in bookmarks menus) can be dragged or have a context
+     menu. */
+  padding-block: 4px;
+}
+
+menuseparator::before {
+  border-top: 1px solid var(--panel-separator-color);
+  content: "";
+  display: block;
+  flex: 1;
+}
+
 /* Scroll buttons */
 
 /* Hide arrow buttons when there's nothing to scroll in that direction */
