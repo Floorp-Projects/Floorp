@@ -185,9 +185,7 @@ class LoadBlockingAsyncEventDispatcher final : public AsyncEventDispatcher {
       : AsyncEventDispatcher(aEventNode, aEventType, aBubbles,
                              aDispatchChromeOnly),
         mBlockedDoc(aEventNode->OwnerDoc()) {
-    if (mBlockedDoc) {
-      mBlockedDoc->BlockOnload();
-    }
+    mBlockedDoc->BlockOnload();
   }
 
   // The static version of AsyncEventDispatcher::RunDOMEventWhenSafe should be
@@ -198,12 +196,10 @@ class LoadBlockingAsyncEventDispatcher final : public AsyncEventDispatcher {
   LoadBlockingAsyncEventDispatcher(nsINode* aEventNode, dom::Event* aEvent)
       : AsyncEventDispatcher(aEventNode, aEvent),
         mBlockedDoc(aEventNode->OwnerDoc()) {
-    if (mBlockedDoc) {
-      mBlockedDoc->BlockOnload();
-    }
+    mBlockedDoc->BlockOnload();
   }
 
-  ~LoadBlockingAsyncEventDispatcher();
+  ~LoadBlockingAsyncEventDispatcher() { mBlockedDoc->UnblockOnload(true); }
 
  private:
   RefPtr<dom::Document> mBlockedDoc;
