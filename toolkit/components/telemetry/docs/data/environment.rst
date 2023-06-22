@@ -184,6 +184,7 @@ Structure:
             DWriteEnabled: <bool>, // null on failure
             ContentBackend: <string> // One of "Cairo", "Skia", or "Direct2D 1.1"
             Headless: <bool>, // null on failure
+            TargetFrameRate: <number>, // frame rate in Hz, typically 60 or more
             //DWriteVersion: <string>, // temporarily removed, pending bug 1154500
             adapters: [
               {
