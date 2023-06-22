@@ -819,24 +819,33 @@ projects:
     publish: true
     upstream_dependencies:
     - browser-errorpages
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
     - concept-base
     - concept-engine
     - concept-fetch
+    - concept-menu
     - concept-storage
+    - concept-tabstray
     - concept-toolbar
     - feature-prompts
     - feature-session
+    - feature-tabs
     - lib-publicsuffixlist
     - lib-state
     - support-android-test
     - support-base
+    - support-images
     - support-ktx
     - support-test
     - support-utils
     - tooling-lint
     - ui-colors
     - ui-icons
+    - ui-tabcounter
     - ui-widgets
   feature-media:
     description: Feature component for website media related features.
@@ -885,17 +894,25 @@ projects:
     publish: true
     upstream_dependencies:
     - browser-errorpages
+    - browser-menu2
+    - browser-session-storage
     - browser-state
+    - browser-tabstray
+    - browser-thumbnails
     - concept-base
     - concept-engine
     - concept-fetch
+    - concept-menu
     - concept-storage
+    - concept-tabstray
     - concept-toolbar
     - feature-session
+    - feature-tabs
     - lib-publicsuffixlist
     - lib-state
     - support-android-test
     - support-base
+    - support-images
     - support-ktx
     - support-test
     - support-test-libstate
@@ -903,6 +920,7 @@ projects:
     - tooling-lint
     - ui-colors
     - ui-icons
+    - ui-tabcounter
     - ui-widgets
   feature-push:
     description: Feature that implements push notifications with a supported push

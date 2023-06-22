@@ -88,4 +88,11 @@ internal interface Prompter {
      * @param promptRequestUID id of the [PromptRequest] for which this dialog was shown.
      */
     fun onClear(sessionId: String, promptRequestUID: String)
+
+    /**
+     * Invoked when the user is requesting to open a website from the dialog.
+     *
+     * @param url The url to be opened.
+     */
+    fun onOpenLink(url: String)
 }

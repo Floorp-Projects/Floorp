@@ -73,6 +73,7 @@ import mozilla.components.feature.prompts.facts.emitCreditCardSaveShownFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulAddressAutofillFormDetectedFact
 import mozilla.components.feature.prompts.facts.emitSuccessfulCreditCardAutofillFormDetectedFact
 import mozilla.components.feature.prompts.file.FilePicker
+import mozilla.components.feature.prompts.identitycredential.PrivacyPolicyDialogFragment
 import mozilla.components.feature.prompts.identitycredential.SelectAccountDialogFragment
 import mozilla.components.feature.prompts.identitycredential.SelectProviderDialogFragment
 import mozilla.components.feature.prompts.login.LoginDelegate
@@ -82,6 +83,7 @@ import mozilla.components.feature.prompts.share.DefaultShareDelegate
 import mozilla.components.feature.prompts.share.ShareDelegate
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SessionUseCases.ExitFullScreenUseCase
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -148,6 +150,7 @@ class PromptFeature private constructor(
     private val store: BrowserStore,
     private var customTabId: String?,
     private val fragmentManager: FragmentManager,
+    private val tabsUseCases: TabsUseCases,
     private val shareDelegate: ShareDelegate,
     private val exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
     override val creditCardValidationDelegate: CreditCardValidationDelegate? = null,
@@ -189,6 +192,7 @@ class PromptFeature private constructor(
         store: BrowserStore,
         customTabId: String? = null,
         fragmentManager: FragmentManager,
+        tabsUseCases: TabsUseCases,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
         exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
         creditCardValidationDelegate: CreditCardValidationDelegate? = null,
@@ -206,6 +210,7 @@ class PromptFeature private constructor(
         store = store,
         customTabId = customTabId,
         fragmentManager = fragmentManager,
+        tabsUseCases = tabsUseCases,
         shareDelegate = shareDelegate,
         exitFullscreenUsecase = exitFullscreenUsecase,
         creditCardValidationDelegate = creditCardValidationDelegate,
@@ -225,6 +230,7 @@ class PromptFeature private constructor(
         store: BrowserStore,
         customTabId: String? = null,
         fragmentManager: FragmentManager,
+        tabsUseCases: TabsUseCases,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
         exitFullscreenUsecase: ExitFullScreenUseCase = SessionUseCases(store).exitFullscreen,
         creditCardValidationDelegate: CreditCardValidationDelegate? = null,
@@ -242,6 +248,7 @@ class PromptFeature private constructor(
         store = store,
         customTabId = customTabId,
         fragmentManager = fragmentManager,
+        tabsUseCases = tabsUseCases,
         shareDelegate = shareDelegate,
         exitFullscreenUsecase = exitFullscreenUsecase,
         creditCardValidationDelegate = creditCardValidationDelegate,
@@ -295,6 +302,12 @@ class PromptFeature private constructor(
 
     override val onNeedToRequestPermissions
         get() = filePicker.onNeedToRequestPermissions
+
+    override fun onOpenLink(url: String) {
+        tabsUseCases.addTab(
+            url = url,
+        )
+    }
 
     /**
      * Starts observing the selected session to listen for prompt requests
@@ -584,6 +597,7 @@ class PromptFeature private constructor(
                 is Repost -> it.onConfirm()
                 is PromptRequest.IdentityCredential.SelectProvider -> it.onConfirm(value as Provider)
                 is PromptRequest.IdentityCredential.SelectAccount -> it.onConfirm(value as Account)
+                is PromptRequest.IdentityCredential.PrivacyPolicy -> it.onConfirm(value as Boolean)
                 else -> {
                     // no-op
                 }
@@ -894,6 +908,30 @@ class PromptFeature private constructor(
                 )
             }
 
+            is PromptRequest.IdentityCredential.PrivacyPolicy -> {
+                val title =
+                    container.getString(
+                        R.string.mozac_feature_prompts_identity_credentials_privacy_policy_title,
+                        promptRequest.providerDomain,
+                    )
+                val message =
+                    container.getString(
+                        R.string.mozac_feature_prompts_identity_credentials_privacy_policy_description,
+                        promptRequest.host,
+                        promptRequest.providerDomain,
+                        promptRequest.privacyPolicyUrl,
+                        promptRequest.termsOfServiceUrl,
+                    )
+                PrivacyPolicyDialogFragment.newInstance(
+                    sessionId = session.id,
+                    promptRequestUID = promptRequest.uid,
+                    shouldDismissOnLoad = true,
+                    title = title,
+                    message = message,
+                    icon = promptRequest.icon,
+                )
+            }
+
             else -> throw InvalidParameterException("Not valid prompt request type $promptRequest")
         }
 
@@ -956,6 +994,7 @@ class PromptFeature private constructor(
             is Share,
             is PromptRequest.IdentityCredential.SelectProvider,
             is PromptRequest.IdentityCredential.SelectAccount,
+            is PromptRequest.IdentityCredential.PrivacyPolicy,
             -> true
             is Alert, is TextPrompt, is Confirm, is Repost, is Popup -> promptAbuserDetector.shouldShowMoreDialogs
         }

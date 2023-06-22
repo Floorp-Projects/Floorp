@@ -132,6 +132,7 @@ class PromptFeatureTest {
             PromptFeature(
                 fragment = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
             ) { },
         )
@@ -148,6 +149,7 @@ class PromptFeatureTest {
             PromptFeature(
                 fragment = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 customTabId = "custom-tab",
                 fragmentManager = fragmentManager,
             ) { },
@@ -166,6 +168,7 @@ class PromptFeatureTest {
             PromptFeature(
                 fragment = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 customTabId = tabId,
                 fragmentManager = fragmentManager,
             ) { },
@@ -180,7 +183,12 @@ class PromptFeatureTest {
     @Test
     fun `New promptRequests for selected session will cause fragment transaction`() {
         val feature =
-            PromptFeature(fragment = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                fragment = mock(),
+                store = store,
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+            ) { }
         feature.start()
 
         val singleChoiceRequest = SingleChoice(arrayOf(), {}, {})
@@ -192,7 +200,12 @@ class PromptFeatureTest {
     @Test
     fun `New promptRequests for selected session will not cause fragment transaction if feature is stopped`() {
         val feature =
-            PromptFeature(fragment = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                fragment = mock(),
+                tabsUseCases = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+            ) { }
         feature.start()
         feature.stop()
 
@@ -213,7 +226,12 @@ class PromptFeatureTest {
             .joinBlocking()
 
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                tabsUseCases = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+            ) { }
         feature.start()
         verify(fragment).feature = feature
     }
@@ -229,7 +247,12 @@ class PromptFeatureTest {
         doReturn(transaction).`when`(transaction).remove(any())
 
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+            ) { }
         feature.start()
 
         verify(fragment, never()).feature = feature
@@ -252,7 +275,12 @@ class PromptFeatureTest {
         doReturn(transaction).`when`(transaction).remove(any())
 
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+            ) { }
         feature.start()
 
         verify(fragment, never()).feature = feature
@@ -266,6 +294,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
             ) { },
         )
@@ -283,6 +312,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 loginDelegate = object : LoginDelegate {
                     override val loginPickerView = loginPickerView
@@ -323,6 +353,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
                 isSaveLoginEnabled = { true },
@@ -356,6 +387,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 isSaveLoginEnabled = { false },
             ) {},
@@ -383,6 +415,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 isSaveLoginEnabled = { true },
             ) {},
@@ -413,6 +446,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = mock(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
         ) {}
 
@@ -440,6 +474,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 loginDelegate = object : LoginDelegate {
                     override val loginPickerView = loginPickerView
@@ -468,6 +503,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 loginDelegate = object : LoginDelegate {
                     override val loginPickerView = loginPickerView
@@ -496,6 +532,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 loginDelegate = object : LoginDelegate {
                     override val loginPickerView = loginPickerView
@@ -525,6 +562,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 creditCardDelegate = object : CreditCardDelegate {
                     override val creditCardPickerView = creditCardPickerView
@@ -553,6 +591,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 creditCardDelegate = object : CreditCardDelegate {
                     override val creditCardPickerView = creditCardPickerView
@@ -580,6 +619,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 creditCardDelegate = object : CreditCardDelegate {
                     override val creditCardPickerView = creditCardPickerView
@@ -608,6 +648,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 creditCardDelegate = object : CreditCardDelegate {
                     override val creditCardPickerView = creditCardPickerView
@@ -641,6 +682,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 addressDelegate = addressDelegate,
             ) { },
@@ -674,6 +716,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 addressDelegate = addressDelegate,
             ) { },
@@ -694,7 +737,12 @@ class PromptFeatureTest {
     @Test
     fun `Calling onCancel will consume promptRequest`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+            ) { }
 
         val singleChoiceRequest = SingleChoice(arrayOf(), {}, {})
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, singleChoiceRequest))
@@ -714,6 +762,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -737,6 +786,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -760,6 +810,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -783,6 +834,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -818,6 +870,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -839,6 +892,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -875,6 +929,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -912,6 +967,7 @@ class PromptFeatureTest {
             val feature = PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -951,7 +1007,12 @@ class PromptFeatureTest {
     @Test(expected = InvalidParameterException::class)
     fun `calling handleDialogsRequest with invalid type will throw an exception`() {
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                tabsUseCases = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+            ) { }
         feature.handleDialogsRequest(mock<PromptRequest.File>(), mock())
     }
 
@@ -967,7 +1028,12 @@ class PromptFeatureTest {
             PromptRequest.File(emptyArray(), false, onSingleFileSelection, { _, _ -> }) { }
 
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+            ) { }
         val intent = Intent()
 
         intent.data = mock()
@@ -992,7 +1058,12 @@ class PromptFeatureTest {
             PromptRequest.File(emptyArray(), true, { _, _ -> }, onMultipleFileSelection) {}
 
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                tabsUseCases = mock(),
+                store = store,
+                fragmentManager = fragmentManager,
+            ) { }
         val intent = Intent()
 
         intent.clipData = mock()
@@ -1024,7 +1095,12 @@ class PromptFeatureTest {
             }
 
         val feature =
-            PromptFeature(activity = mock(), store = store, fragmentManager = fragmentManager) { }
+            PromptFeature(
+                activity = mock(),
+                store = store,
+                tabsUseCases = mock(),
+                fragmentManager = fragmentManager,
+            ) { }
         val intent = Intent()
 
         store.dispatch(ContentAction.UpdatePromptRequestAction(tabId, filePickerRequest))
@@ -1043,6 +1119,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 creditCardDelegate = object : CreditCardDelegate {
                     override val creditCardPickerView = creditCardPickerView
@@ -1066,6 +1143,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 creditCardDelegate = object : CreditCardDelegate {
                     override val creditCardPickerView = creditCardPickerView
@@ -1089,6 +1167,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 creditCardDelegate = object : CreditCardDelegate {
                     override val creditCardPickerView = creditCardPickerView
@@ -1111,6 +1190,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 creditCardDelegate = object : CreditCardDelegate {
                     override val creditCardPickerView = creditCardPickerView
@@ -1210,6 +1290,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1266,6 +1347,7 @@ class PromptFeatureTest {
             PromptFeature(
                 fragment = fragment,
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1294,6 +1376,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1330,6 +1413,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1374,6 +1458,7 @@ class PromptFeatureTest {
             PromptFeature(
                 fragment = fragment,
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1406,6 +1491,7 @@ class PromptFeatureTest {
             PromptFeature(
                 fragment = fragment,
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1447,6 +1533,7 @@ class PromptFeatureTest {
             PromptFeature(
                 fragment = fragment,
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1472,6 +1559,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1532,6 +1620,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1572,6 +1661,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1601,6 +1691,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
             ) { }
@@ -1630,6 +1721,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = mock(),
         ) { }
@@ -1661,6 +1753,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
                 loginDelegate = object : LoginDelegate {
@@ -1698,6 +1791,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
                 creditCardDelegate = object : CreditCardDelegate {
@@ -1744,6 +1838,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity,
                 store,
+                tabsUseCases = mock(),
                 customTabId = "custom-tab",
                 shareDelegate = delegate,
                 fragmentManager = fragmentManager,
@@ -1770,6 +1865,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 customTabId = "custom-tab",
                 fragmentManager = fragmentManager,
                 isCreditCardAutofillEnabled = { true },
@@ -1792,6 +1888,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 customTabId = "custom-tab",
                 fragmentManager = fragmentManager,
                 isCreditCardAutofillEnabled = { true },
@@ -1814,6 +1911,7 @@ class PromptFeatureTest {
             PromptFeature(
                 mock<Activity>(),
                 store,
+                tabsUseCases = mock(),
                 customTabId = "custom-tab",
                 fragmentManager = fragmentManager,
                 isCreditCardAutofillEnabled = { false },
@@ -1836,6 +1934,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             fragment = mock(),
             store = store,
+            tabsUseCases = mock(),
             customTabId = "custom-tab",
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = exitFullScreenUseCase,
@@ -1854,6 +1953,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             fragment = mock(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = exitFullScreenUseCase,
         ) { }
@@ -1881,6 +1981,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             fragment = mock(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = exitFullScreenUseCase,
         ) { }
@@ -1913,6 +2014,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 isCreditCardAutofillEnabled = { false },
             ) {},
@@ -1947,6 +2049,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 isCreditCardAutofillEnabled = { true },
             ) {},
@@ -1966,6 +2069,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = mock(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = mock(),
             shareDelegate = delegate,
@@ -1997,6 +2101,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = mock(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = mock(),
             shareDelegate = delegate,
@@ -2028,6 +2133,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
                 shareDelegate = mock(),
@@ -2068,6 +2174,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
                 shareDelegate = mock(),
@@ -2101,6 +2208,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
                 shareDelegate = mock(),
@@ -2129,6 +2237,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = mock(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             shareDelegate = mock(),
             isSaveLoginEnabled = { true },
@@ -2168,6 +2277,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 shareDelegate = mock(),
             ) { },
@@ -2210,6 +2320,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 shareDelegate = mock(),
             ) { },
@@ -2241,6 +2352,7 @@ class PromptFeatureTest {
             // Proper activity here to allow for the feature to properly execute "container.context.getString"
             activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             shareDelegate = mock(),
             isSaveLoginEnabled = { true },
@@ -2269,6 +2381,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = mock(),
         ) { }
@@ -2297,6 +2410,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = Robolectric.buildActivity(Activity::class.java).setup().get(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = mock(),
         ) { }
@@ -2325,6 +2439,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = mock(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = mock(),
             isCreditCardAutofillEnabled = { true },
@@ -2410,6 +2525,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = mock(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             isCreditCardAutofillEnabled = { true },
             creditCardValidationDelegate = mock(),
@@ -2472,6 +2588,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = mock(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             exitFullscreenUsecase = mock(),
             isCreditCardAutofillEnabled = { true },
@@ -2493,6 +2610,7 @@ class PromptFeatureTest {
         val feature = PromptFeature(
             activity = mock(),
             store = store,
+            tabsUseCases = mock(),
             fragmentManager = fragmentManager,
             isCreditCardAutofillEnabled = { true },
             creditCardValidationDelegate = mock(),
@@ -2537,6 +2655,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
                 shareDelegate = mock(),
@@ -2566,6 +2685,7 @@ class PromptFeatureTest {
             PromptFeature(
                 activity = mock(),
                 store = store,
+                tabsUseCases = mock(),
                 fragmentManager = fragmentManager,
                 exitFullscreenUsecase = mock(),
                 shareDelegate = mock(),

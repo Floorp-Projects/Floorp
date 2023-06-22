@@ -46,6 +46,7 @@ abstract class AddonPopupBaseFragment : Fragment(), EngineSession.Observer, User
                     onNeedToRequestPermissions = { permissions ->
                         requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
                     },
+                    tabsUseCases = requireComponents.useCases.tabsUseCases,
                 ),
                 owner = this,
                 view = view,

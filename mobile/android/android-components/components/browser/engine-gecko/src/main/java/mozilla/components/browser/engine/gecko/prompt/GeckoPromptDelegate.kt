@@ -44,6 +44,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.MON
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.TIME
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt.Type.WEEK
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.PrivacyPolicyPrompt
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptResponse
 import java.io.File
@@ -131,6 +132,40 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
             onPromptRequest(
                 PromptRequest.IdentityCredential.SelectAccount(
                     accounts = prompt.accounts.map { it.toAccount() },
+                    onConfirm = onConfirm,
+                    onDismiss = onDismiss,
+                ),
+            )
+        }
+        return geckoResult
+    }
+
+    override fun onShowPrivacyPolicyIdentityCredential(
+        session: GeckoSession,
+        prompt: PrivacyPolicyPrompt,
+    ): GeckoResult<PromptResponse> {
+        val geckoResult = GeckoResult<PromptResponse>()
+
+        val onConfirm: (Boolean) -> Unit = { confirmed ->
+            if (!prompt.isComplete) {
+                geckoResult.complete(
+                    prompt.confirm(confirmed),
+                )
+            }
+        }
+
+        val onDismiss: () -> Unit = {
+            prompt.dismissSafely(geckoResult)
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.IdentityCredential.PrivacyPolicy(
+                    privacyPolicyUrl = prompt.privacyPolicyUrl,
+                    termsOfServiceUrl = prompt.termsOfServiceUrl,
+                    providerDomain = prompt.providerDomain,
+                    host = prompt.host,
+                    icon = prompt.icon,
                     onConfirm = onConfirm,
                     onDismiss = onDismiss,
                 ),

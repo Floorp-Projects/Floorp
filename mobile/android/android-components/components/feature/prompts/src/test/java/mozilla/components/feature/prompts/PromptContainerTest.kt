@@ -62,15 +62,15 @@ class PromptContainerTest {
 
     @Test
     fun `getString must delegate its calls either to an activity or a fragment`() {
-        doReturn("").`when`(activity).getString(anyInt())
-        doReturn("").`when`(fragment).getString(anyInt())
+        doReturn("").`when`(activity).getString(anyInt(), *emptyArray())
+        doReturn("").`when`(fragment).getString(anyInt(), *emptyArray())
 
         var container: PromptContainer = PromptContainer.Activity(activity)
         container.getString(R.string.mozac_feature_prompts_ok)
-        verify(activity).getString(R.string.mozac_feature_prompts_ok)
+        verify(activity).getString(R.string.mozac_feature_prompts_ok, *emptyArray())
 
         container = PromptContainer.Fragment(fragment)
         container.getString(R.string.mozac_feature_prompts_ok)
-        verify(fragment).getString(R.string.mozac_feature_prompts_ok)
+        verify(fragment).getString(R.string.mozac_feature_prompts_ok, *emptyArray())
     }
 }

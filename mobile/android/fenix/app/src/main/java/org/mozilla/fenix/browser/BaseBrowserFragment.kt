@@ -663,6 +663,7 @@ abstract class BaseBrowserFragment :
                 store = store,
                 customTabId = customTabSessionId,
                 fragmentManager = parentFragmentManager,
+                tabsUseCases = requireComponents.useCases.tabsUseCases,
                 creditCardValidationDelegate = DefaultCreditCardValidationDelegate(
                     context.components.core.lazyAutofillStorage,
                 ),

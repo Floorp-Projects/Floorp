@@ -27,7 +27,7 @@ internal sealed class PromptContainer {
     /**
      * Returns a localized string.
      */
-    abstract fun getString(@StringRes res: Int): String
+    abstract fun getString(@StringRes res: Int, vararg objects: Any): String
 
     internal class Activity(
         private val activity: android.app.Activity,
@@ -38,7 +38,7 @@ internal sealed class PromptContainer {
         override fun startActivityForResult(intent: Intent, code: Int) =
             activity.startActivityForResult(intent, code)
 
-        override fun getString(res: Int) = activity.getString(res)
+        override fun getString(res: Int, vararg objects: Any) = activity.getString(res, *objects)
     }
 
     internal class Fragment(
@@ -52,12 +52,12 @@ internal sealed class PromptContainer {
         override fun startActivityForResult(intent: Intent, code: Int) =
             fragment.startActivityForResult(intent, code)
 
-        override fun getString(res: Int) = fragment.getString(res)
+        override fun getString(res: Int, vararg objects: Any) = fragment.getString(res, *objects)
     }
 
     @VisibleForTesting
     internal class TestPromptContainer(override val context: Context) : PromptContainer() {
         override fun startActivityForResult(intent: Intent, code: Int) = Unit
-        override fun getString(res: Int) = context.getString(res)
+        override fun getString(res: Int, vararg objects: Any) = context.getString(res, *objects)
     }
 }

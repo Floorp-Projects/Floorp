@@ -321,6 +321,7 @@ class BrowserFragment :
             PromptFeature(
                 fragment = this,
                 store = components.store,
+                tabsUseCases = components.tabsUseCases,
                 customTabId = tryGetCustomTabId(),
                 fragmentManager = parentFragmentManager,
                 onNeedToRequestPermissions = { permissions ->
