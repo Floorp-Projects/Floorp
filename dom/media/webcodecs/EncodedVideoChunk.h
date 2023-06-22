@@ -10,6 +10,8 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -36,22 +38,21 @@ class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(EncodedVideoChunk)
 
  public:
-  EncodedVideoChunk() = default;
+  EncodedVideoChunk(nsIGlobalObject* aParent, UniquePtr<uint8_t[]>&& aBuffer,
+                    size_t aByteLength, const EncodedVideoChunkType& aType,
+                    int64_t aTimestamp, Maybe<uint64_t>&& aDuration);
 
  protected:
   ~EncodedVideoChunk() = default;
 
  public:
-  // This should return something that eventually allows finding a
-  // path to the global this object is associated with.  Most simply,
-  // returning an actual global works.
   nsIGlobalObject* GetParentObject() const;
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<EncodedVideoChunk> Constructor(
-      const GlobalObject& global, const EncodedVideoChunkInit& init,
+      const GlobalObject& aGlobal, const EncodedVideoChunkInit& aInit,
       ErrorResult& aRv);
 
   EncodedVideoChunkType Type() const;
@@ -63,8 +64,21 @@ class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
   uint32_t ByteLength() const;
 
   void CopyTo(
-      const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& destination,
+      const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDestination,
       ErrorResult& aRv);
+
+ private:
+  // EncodedVideoChunk can run on either main thread or worker thread.
+  void AssertIsOnOwningThread() const {
+    NS_ASSERT_OWNINGTHREAD(EncodedVideoChunk);
+  }
+
+  nsCOMPtr<nsIGlobalObject> mParent;
+  UniquePtr<uint8_t[]> mBuffer;
+  size_t mByteLength;  // guaranteed to be smaller than UINT32_MAX.
+  EncodedVideoChunkType mType;
+  int64_t mTimestamp;
+  Maybe<uint64_t> mDuration;
 };
 
 }  // namespace mozilla::dom
