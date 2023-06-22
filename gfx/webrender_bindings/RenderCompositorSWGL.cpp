@@ -58,7 +58,7 @@ bool RenderCompositorSWGL::MakeCurrent() {
 
 bool RenderCompositorSWGL::BeginFrame() {
   mRenderWidgetSize = Some(mWidget->GetClientSize());
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   if (mLastRenderWidgetSize != mRenderWidgetSize.value()) {
     mLastRenderWidgetSize = mRenderWidgetSize.value();
     mRequestFullRender = true;
@@ -269,7 +269,7 @@ bool RenderCompositorSWGL::RequestFullRender() {
   // XXX Add partial present support.
   return true;
 #endif
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   // We're requested to do full render after Resume() on Wayland.
   if (mRequestFullRender) {
     mRequestFullRender = false;
@@ -282,7 +282,7 @@ bool RenderCompositorSWGL::RequestFullRender() {
 void RenderCompositorSWGL::Pause() {}
 
 bool RenderCompositorSWGL::Resume() {
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   mRequestFullRender = true;
 #endif
   return true;

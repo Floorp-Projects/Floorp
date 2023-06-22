@@ -111,7 +111,7 @@ void ShaderConfigOGL::SetColorMultiplier(uint32_t aMultiplier) {
 void ShaderConfigOGL::SetNV12(bool aEnabled) {
   SetFeature(ENABLE_TEXTURE_NV12, aEnabled);
   MOZ_ASSERT(!(mFeatures & ENABLE_TEXTURE_YCBCR));
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
   SetFeature(ENABLE_TEXTURE_NV12_GA_SWITCH, aEnabled);
 #endif
 }
