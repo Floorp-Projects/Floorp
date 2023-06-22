@@ -131,7 +131,7 @@ static inline unsigned DigitLeadingZeroes(BigInt::Digit x) {
 }
 
 #ifdef DEBUG
-static bool HasLeadingZeroes(BigInt* bi) {
+static bool HasLeadingZeroes(const BigInt* bi) {
   return bi->digitLength() > 0 && bi->digit(bi->digitLength() - 1) == 0;
 }
 #endif
@@ -401,8 +401,8 @@ BigInt::Digit BigInt::digitDiv(Digit high, Digit low, Digit divisor,
 
 // Multiplies `source` with `factor` and adds `summand` to the result.
 // `result` and `source` may be the same BigInt for inplace modification.
-void BigInt::internalMultiplyAdd(BigInt* source, Digit factor, Digit summand,
-                                 unsigned n, BigInt* result) {
+void BigInt::internalMultiplyAdd(const BigInt* source, Digit factor,
+                                 Digit summand, unsigned n, BigInt* result) {
   MOZ_ASSERT(source->digitLength() >= n);
   MOZ_ASSERT(result->digitLength() >= n);
 
@@ -447,7 +447,7 @@ void BigInt::inplaceMultiplyAdd(Digit factor, Digit summand) {
 // `accumulator`, starting at `accumulatorIndex` for the least-significant
 // digit.  Callers must ensure that `accumulator`'s digitLength and
 // corresponding digit storage is long enough to hold the result.
-void BigInt::multiplyAccumulate(BigInt* multiplicand, Digit multiplier,
+void BigInt::multiplyAccumulate(const BigInt* multiplicand, Digit multiplier,
                                 BigInt* accumulator,
                                 unsigned accumulatorIndex) {
   MOZ_ASSERT(accumulator->digitLength() >
@@ -490,7 +490,7 @@ void BigInt::multiplyAccumulate(BigInt* multiplicand, Digit multiplier,
   }
 }
 
-inline int8_t BigInt::absoluteCompare(BigInt* x, BigInt* y) {
+inline int8_t BigInt::absoluteCompare(const BigInt* x, const BigInt* y) {
   MOZ_ASSERT(!HasLeadingZeroes(x));
   MOZ_ASSERT(!HasLeadingZeroes(y));
 
@@ -708,7 +708,8 @@ bool BigInt::absoluteDivWithDigitDivisor(
 
 // Adds `summand` onto `this`, starting with `summand`'s 0th digit
 // at `this`'s `startIndex`'th digit. Returns the "carry" (0 or 1).
-BigInt::Digit BigInt::absoluteInplaceAdd(BigInt* summand, unsigned startIndex) {
+BigInt::Digit BigInt::absoluteInplaceAdd(const BigInt* summand,
+                                         unsigned startIndex) {
   Digit carry = 0;
   unsigned n = summand->digitLength();
   MOZ_ASSERT(digitLength() > startIndex,
@@ -729,7 +730,7 @@ BigInt::Digit BigInt::absoluteInplaceAdd(BigInt* summand, unsigned startIndex) {
 
 // Subtracts `subtrahend` from this, starting with `subtrahend`'s 0th digit
 // at `this`'s `startIndex`-th digit. Returns the "borrow" (0 or 1).
-BigInt::Digit BigInt::absoluteInplaceSub(BigInt* subtrahend,
+BigInt::Digit BigInt::absoluteInplaceSub(const BigInt* subtrahend,
                                          unsigned startIndex) {
   Digit borrow = 0;
   unsigned n = subtrahend->digitLength();
@@ -2560,7 +2561,7 @@ uint64_t BigInt::toUint64(const BigInt* x) {
   return digit;
 }
 
-bool BigInt::isInt64(BigInt* x, int64_t* result) {
+bool BigInt::isInt64(const BigInt* x, int64_t* result) {
   MOZ_MAKE_MEM_UNDEFINED(result, sizeof(*result));
 
   if (!x->absFitsInUint64()) {
@@ -2593,7 +2594,7 @@ bool BigInt::isInt64(BigInt* x, int64_t* result) {
   return false;
 }
 
-bool BigInt::isUint64(BigInt* x, uint64_t* result) {
+bool BigInt::isUint64(const BigInt* x, uint64_t* result) {
   MOZ_MAKE_MEM_UNDEFINED(result, sizeof(*result));
 
   if (!x->absFitsInUint64() || x->isNegative()) {
@@ -2609,7 +2610,7 @@ bool BigInt::isUint64(BigInt* x, uint64_t* result) {
   return true;
 }
 
-bool BigInt::isNumber(BigInt* x, double* result) {
+bool BigInt::isNumber(const BigInt* x, double* result) {
   MOZ_MAKE_MEM_UNDEFINED(result, sizeof(*result));
 
   if (!x->absFitsInUint64()) {
@@ -3114,7 +3115,7 @@ JS::Result<uint64_t> js::ToBigUint64(JSContext* cx, HandleValue v) {
   return BigInt::toUint64(bi);
 }
 
-double BigInt::numberValue(BigInt* x) {
+double BigInt::numberValue(const BigInt* x) {
   if (x->isZero()) {
     return 0.0;
   }
@@ -3337,7 +3338,7 @@ double BigInt::numberValue(BigInt* x) {
   return mozilla::BitwiseCast<double>(signBit | exponentBits | significandBits);
 }
 
-int8_t BigInt::compare(BigInt* x, BigInt* y) {
+int8_t BigInt::compare(const BigInt* x, const BigInt* y) {
   // Sanity checks to catch negative zeroes escaping to the wild.
   MOZ_ASSERT(!x->isNegative() || !x->isZero());
   MOZ_ASSERT(!y->isNegative() || !y->isZero());
@@ -3355,7 +3356,7 @@ int8_t BigInt::compare(BigInt* x, BigInt* y) {
   return absoluteCompare(x, y);
 }
 
-bool BigInt::equal(BigInt* lhs, BigInt* rhs) {
+bool BigInt::equal(const BigInt* lhs, const BigInt* rhs) {
   if (lhs == rhs) {
     return true;
   }
@@ -3373,7 +3374,7 @@ bool BigInt::equal(BigInt* lhs, BigInt* rhs) {
   return true;
 }
 
-int8_t BigInt::compare(BigInt* x, double y) {
+int8_t BigInt::compare(const BigInt* x, double y) {
   MOZ_ASSERT(!std::isnan(y));
 
   constexpr int LessThan = -1, Equal = 0, GreaterThan = 1;
@@ -3504,7 +3505,7 @@ int8_t BigInt::compare(BigInt* x, double y) {
   return Equal;
 }
 
-bool BigInt::equal(BigInt* lhs, double rhs) {
+bool BigInt::equal(const BigInt* lhs, double rhs) {
   if (std::isnan(rhs)) {
     return false;
   }
@@ -3558,16 +3559,18 @@ JS::Result<bool> BigInt::looselyEqual(JSContext* cx, HandleBigInt lhs,
 }
 
 // BigInt proposal section 1.1.12. BigInt::lessThan ( x, y )
-bool BigInt::lessThan(BigInt* x, BigInt* y) { return compare(x, y) < 0; }
+bool BigInt::lessThan(const BigInt* x, const BigInt* y) {
+  return compare(x, y) < 0;
+}
 
-Maybe<bool> BigInt::lessThan(BigInt* lhs, double rhs) {
+Maybe<bool> BigInt::lessThan(const BigInt* lhs, double rhs) {
   if (std::isnan(rhs)) {
     return Maybe<bool>(Nothing());
   }
   return Some(compare(lhs, rhs) < 0);
 }
 
-Maybe<bool> BigInt::lessThan(double lhs, BigInt* rhs) {
+Maybe<bool> BigInt::lessThan(double lhs, const BigInt* rhs) {
   if (std::isnan(lhs)) {
     return Maybe<bool>(Nothing());
   }
