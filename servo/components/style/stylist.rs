@@ -33,10 +33,11 @@ use crate::stylesheets::keyframes_rule::KeyframesAnimation;
 use crate::stylesheets::layer_rule::{LayerName, LayerOrder};
 #[cfg(feature = "gecko")]
 use crate::stylesheets::{
-    CounterStyleRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule, PageRule,
+    CounterStyleRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule,
 };
 use crate::stylesheets::{
     CssRule, EffectiveRulesIterator, Origin, OriginSet, PerOrigin, PerOriginIter,
+    PagePseudoClassFlags, PageRule,
 };
 use crate::stylesheets::{StyleRule, StylesheetContents, StylesheetInDocument};
 use crate::AllocErr;
@@ -1611,6 +1612,68 @@ impl PageRuleMap {
     #[inline]
     fn clear(&mut self) {
         self.rules.clear();
+    }
+
+    /// Uses page-name and pseudo-classes to match all applicable
+    /// page-rules and append them to the matched_rules vec.
+    /// This will ensure correct rule order for cascading.
+    pub fn match_and_append_rules(
+        &self,
+        matched_rules: &mut Vec<ApplicableDeclarationBlock>,
+        origin: Origin,
+        guards: &StylesheetGuards,
+        cascade_data: &DocumentCascadeData,
+        name: &Option<Atom>,
+        pseudos: PagePseudoClassFlags,
+    ) {
+        let level = match origin {
+            Origin::UserAgent => CascadeLevel::UANormal,
+            Origin::User => CascadeLevel::UserNormal,
+            Origin::Author => CascadeLevel::same_tree_author_normal(),
+        };
+        let cascade_data = cascade_data.borrow_for_origin(origin);
+        let start = matched_rules.len();
+
+        self.match_and_add_rules(matched_rules, level, guards, cascade_data, &atom!(""), pseudos);
+        if let Some(name) = name {
+            self.match_and_add_rules(matched_rules, level, guards, cascade_data, name, pseudos);
+        }
+
+        // Because page-rules do not have source location information stored,
+        // use stable sort to ensure source locations are preserved.
+        matched_rules[start..].sort_by_key(|block| {
+            (block.layer_order(), block.specificity, block.source_order())
+        });
+    }
+
+    fn match_and_add_rules(
+        &self,
+        extra_declarations: &mut Vec<ApplicableDeclarationBlock>,
+        level: CascadeLevel,
+        guards: &StylesheetGuards,
+        cascade_data: &CascadeData,
+        name: &Atom,
+        pseudos: PagePseudoClassFlags,
+    ) {
+        let rules = match self.rules.get(name) {
+            Some(rules) => rules,
+            None => return,
+        };
+        for data in rules.iter() {
+            let rule = data.rule.read_with(level.guard(&guards));
+            let specificity = match rule.match_specificity(pseudos) {
+                Some(specificity) => specificity,
+                None => continue,
+            };
+            let block = rule.block.clone();
+            extra_declarations.push(ApplicableDeclarationBlock::new(
+                StyleSource::from_declarations(block),
+                0,
+                level,
+                specificity,
+                cascade_data.layer_order_for(data.layer),
+            ));
+        }
     }
 }
 
