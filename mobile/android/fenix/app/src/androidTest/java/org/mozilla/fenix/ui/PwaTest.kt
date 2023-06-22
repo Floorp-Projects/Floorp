@@ -56,6 +56,7 @@ class PwaTest {
         }
     }
 
+    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1807275")
     @SmokeTest
     @Test
     fun emailLinkPWATest() {
