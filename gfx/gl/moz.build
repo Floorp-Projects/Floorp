@@ -110,13 +110,11 @@ elif gl_provider == "Linux":
     # as it includes X11 headers which cause conflicts.
     SOURCES += [
         "GLContextProviderLinux.cpp",
+        "SharedSurfaceDMABUF.cpp",
     ]
     EXPORTS += ["GLContextGLX.h", "GLXLibrary.h"]
     if CONFIG["MOZ_X11"]:
         SOURCES += ["GLContextProviderGLX.cpp"]
-
-if CONFIG["MOZ_WAYLAND"]:
-    SOURCES += ["SharedSurfaceDMABUF.cpp"]
 
 UNIFIED_SOURCES += [
     "AndroidSurfaceTexture.cpp",
