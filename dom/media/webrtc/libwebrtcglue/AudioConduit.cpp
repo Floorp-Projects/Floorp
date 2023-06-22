@@ -117,7 +117,7 @@ WebrtcAudioConduit::WebrtcAudioConduit(
       mRecvStreamRunning(false),
       mDtmfEnabled(false),
       mLock("WebrtcAudioConduit::mLock"),
-      mCallThread(std::move(mCall->mCallThread)),
+      mCallThread(mCall->mCallThread),
       mStsThread(std::move(aStsThread)),
       mControl(mCall->mCallThread),
       mWatchManager(this, mCall->mCallThread) {
