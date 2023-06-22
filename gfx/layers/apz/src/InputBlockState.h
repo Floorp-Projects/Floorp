@@ -48,7 +48,6 @@ class InputBlockState : public RefCounted<InputBlockState> {
   enum class TargetConfirmationState : uint8_t {
     eUnconfirmed,
     eTimedOut,
-    eTimedOutAndMainThreadResponded,
     eConfirmed
   };
 
@@ -73,7 +72,6 @@ class InputBlockState : public RefCounted<InputBlockState> {
   uint64_t GetBlockId() const;
 
   bool IsTargetConfirmed() const;
-  bool HasReceivedRealConfirmedTarget() const;
 
   virtual bool ShouldDropEvents() const;
 
