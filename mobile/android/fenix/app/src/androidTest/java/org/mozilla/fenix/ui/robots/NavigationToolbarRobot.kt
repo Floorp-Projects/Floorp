@@ -24,6 +24,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.By.textContains
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
@@ -31,6 +32,9 @@ import org.hamcrest.CoreMatchers.not
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -94,12 +98,37 @@ class NavigationToolbarRobot {
         }
     }
 
+    fun longClickEditModeToolbar() =
+        mDevice.findObject(By.res("$packageName:id/mozac_browser_toolbar_edit_url_view")).click(LONG_CLICK_DURATION)
+
+    fun clickContextMenuItem(item: String) {
+        mDevice.waitNotNull(
+            Until.findObject(By.text(item)),
+            waitingTime,
+        )
+        mDevice.findObject(By.text(item)).click()
+    }
+
+    fun clickClearToolbarButton() = clearAddressBarButton().click()
+
+    fun verifyToolbarIsEmpty() =
+        itemWithResIdContainingText(
+            "$packageName:id/mozac_browser_toolbar_edit_url_view",
+            getStringResource(R.string.search_hint),
+        )
+
+    fun verifyTextSelectionOptions(vararg textSelectionOptions: String) {
+        for (textSelectionOption in textSelectionOptions) {
+            mDevice.waitNotNull(Until.findObject(textContains(textSelectionOption)), waitingTime)
+        }
+    }
+
     class Transition {
         private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
 
         fun goBackToWebsite(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             openEditURLView()
-            clearAddressBar().click()
+            clearAddressBarButton().click()
             assertTrue(
                 mDevice.findObject(
                     UiSelector()
@@ -180,8 +209,8 @@ class NavigationToolbarRobot {
         }
 
         fun visitLinkFromClipboard(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            if (clearAddressBar().waitForExists(waitingTimeShort)) {
-                clearAddressBar().click()
+            if (clearAddressBarButton().waitForExists(waitingTimeShort)) {
+                clearAddressBarButton().click()
             }
 
             mDevice.waitNotNull(
@@ -312,10 +341,7 @@ private fun awesomeBar() =
 private fun threeDotButton() = onView(withId(R.id.mozac_browser_toolbar_menu))
 private fun tabTrayButton() = onView(withId(R.id.tab_button))
 private fun fillLinkButton() = onView(withId(R.id.fill_link_from_clipboard))
-private fun clearAddressBar() =
-    mDevice.findObject(
-        UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_clear_view"),
-    )
+private fun clearAddressBarButton() = itemWithResId("$packageName:id/mozac_browser_toolbar_clear_view")
 private fun goBackButton() = mDevice.pressBack()
 private fun readerViewToggle() =
     onView(withParent(withId(R.id.mozac_browser_toolbar_page_actions)))
