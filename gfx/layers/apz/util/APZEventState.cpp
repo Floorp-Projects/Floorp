@@ -289,16 +289,10 @@ void APZEventState::ProcessLongTap(PresShell* aPresShell,
   // to know about it.
   APZCCallbackHelper::DispatchSynthesizedMouseEvent(
       eMouseLongTap, aPoint * aScale, aModifiers, /*clickCount*/ 1, widget);
-
-  // This `preventDefaultResult` variable on Windows will be dropped in bug
-  // 1719855.
-  PreventDefaultResult preventDefaultResult = PreventDefaultResult::No;
 #else
   PreventDefaultResult preventDefaultResult =
       FireContextmenuEvents(aPresShell, aPoint, aScale, aModifiers, widget);
 #endif
-  mContentReceivedInputBlockCallback(
-      aInputBlockId, preventDefaultResult != PreventDefaultResult::No);
 
   const bool contextmenuOpen =
 #ifdef XP_WIN
@@ -318,6 +312,10 @@ void APZEventState::ProcessLongTap(PresShell* aPresShell,
       // menu is open.
       preventDefaultResult == PreventDefaultResult::No;
 #endif
+  // Assuming that contextmenuOpen=true here means a context menu was opened, it
+  // will be treated as "preventDefaulted" in APZ.
+  mContentReceivedInputBlockCallback(aInputBlockId, contextmenuOpen);
+
   if (contextmenuOpen) {
     // Also send a touchcancel to content
     //  a) on Android if browser's contextmenu is open

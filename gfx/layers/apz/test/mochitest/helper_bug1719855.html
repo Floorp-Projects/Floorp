@@ -38,12 +38,7 @@ async function test() {
   }, { passive: false });
 
   window.addEventListener("scroll", () => {
-    if (searchParams.get("prevent") != "contextmenu") {
-      // This todo will be fixed by D179767.
-      todo(false, "The content should never be scrolled");
-    } else {
-      ok(false, "The content should never be scrolled");
-    }
+    ok(false, "The content should never be scrolled");
   });
 
   let contextmenuPromise = promiseOneEvent(window, "contextmenu", e => {
@@ -79,12 +74,10 @@ async function test() {
 
   if (searchParams.get("prevent") == "contextmenu") {
     ok(touchmoveCount > 0, "There should be at least one touch-move event");
-    is(window.scrollY, 0, "The scroll position should stay the original position");
   } else {
     is(touchmoveCount, 0, "There should be no touch-move event when the context menu opened");
-    // This todo will be fixed by D179767.
-    todo_is(window.scrollY, 0, "The scroll position should stay the original position");
   }
+  is(window.scrollY, 0, "The scroll position should stay the original position");
 }
 
 if (getPlatform() == "windows") {

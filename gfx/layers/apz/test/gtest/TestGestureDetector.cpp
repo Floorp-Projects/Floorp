@@ -483,9 +483,7 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
   void DoLongPressPreventDefaultTest(uint32_t aBehavior) {
     MakeApzcUnzoomable();
 
-    // There's a repaint request since touch events below will be processed by
-    // an APZC even if the long-tap event was preventDefaulted.
-    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
+    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(0);
 
     int touchX = 10, touchStartY = 50, touchEndY = 10;
 
@@ -547,8 +545,8 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
     AsyncTransform viewTransformOut;
     apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
 
-    EXPECT_GT(pointOut.y, 0);
-    EXPECT_LT(viewTransformOut.mTranslation.y, 0);
+    EXPECT_EQ(ParentLayerPoint(), pointOut);
+    EXPECT_EQ(AsyncTransform(), viewTransformOut);
 
     apzc->AssertStateIsReset();
   }
