@@ -101,7 +101,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.8.83';
+    const workerVersion = '3.8.107';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -4131,6 +4131,9 @@ class PDFDocument {
         name = `${name}.${partName}`;
       }
     }
+    if (!field.has("Kids") && /\[\d+\]$/.test(name)) {
+      name = name.substring(0, name.lastIndexOf("["));
+    }
     if (!promises.has(name)) {
       promises.set(name, []);
     }
@@ -4808,6 +4811,9 @@ class Annotation {
       ready: true,
       enqueue(chunk, size) {
         for (const item of chunk.items) {
+          if (item.str === undefined) {
+            continue;
+          }
           buffer.push(item.str);
           if (item.hasEOL) {
             text.push(buffer.join(""));
@@ -4828,7 +4834,7 @@ class Annotation {
     if (buffer.length) {
       text.push(buffer.join(""));
     }
-    if (text.length > 0) {
+    if (text.length > 1 || text[0]) {
       this.data.textContent = text;
     }
   }
@@ -4987,6 +4993,7 @@ class MarkupAnnotation extends Annotation {
       const rt = dict.get("RT");
       this.data.replyType = rt instanceof _primitives.Name ? rt.name : _util.AnnotationReplyType.REPLY;
     }
+    let popupRef = null;
     if (this.data.replyType === _util.AnnotationReplyType.GROUP) {
       const parent = dict.get("IRT");
       this.setTitle(parent.get("T"));
@@ -5005,7 +5012,7 @@ class MarkupAnnotation extends Annotation {
         this.setModificationDate(parent.get("M"));
         this.data.modificationDate = this.modificationDate;
       }
-      this.data.hasPopup = parent.has("Popup");
+      popupRef = parent.getRaw("Popup");
       if (!parent.has("C")) {
         this.data.color = null;
       } else {
@@ -5016,11 +5023,12 @@ class MarkupAnnotation extends Annotation {
       this.data.titleObj = this._title;
       this.setCreationDate(dict.get("CreationDate"));
       this.data.creationDate = this.creationDate;
-      this.data.hasPopup = dict.has("Popup");
+      popupRef = dict.getRaw("Popup");
       if (!dict.has("C")) {
         this.data.color = null;
       }
     }
+    this.data.popupRef = popupRef instanceof _primitives.Ref ? popupRef.toString() : null;
     if (dict.has("RC")) {
       this.data.richText = _factory.XFAFactory.getRichTextAsHtml(dict.get("RC"));
     }
@@ -5161,6 +5169,9 @@ class WidgetAnnotation extends Annotation {
     data.annotationType = _util.AnnotationType.WIDGET;
     if (data.fieldName === undefined) {
       data.fieldName = this._constructFieldName(dict);
+    }
+    if (data.fieldName && /\[\d+\]$/.test(data.fieldName) && !dict.has("Kids")) {
+      data.baseFieldName = data.fieldName.substring(0, data.fieldName.lastIndexOf("["));
     }
     if (data.actions === undefined) {
       data.actions = (0, _core_utils.collectActions)(xref, dict, _util.AnnotationActionEventType);
@@ -6448,20 +6459,19 @@ class PopupAnnotation extends Annotation {
       dict
     } = params;
     this.data.annotationType = _util.AnnotationType.POPUP;
+    if (this.data.rect[0] === this.data.rect[2] || this.data.rect[1] === this.data.rect[3]) {
+      this.data.rect = null;
+    }
     let parentItem = dict.get("Parent");
     if (!parentItem) {
       (0, _util.warn)("Popup annotation has a missing or invalid parent annotation.");
       return;
     }
-    const parentSubtype = parentItem.get("Subtype");
-    this.data.parentType = parentSubtype instanceof _primitives.Name ? parentSubtype.name : null;
-    const rawParent = dict.getRaw("Parent");
-    this.data.parentId = rawParent instanceof _primitives.Ref ? rawParent.toString() : null;
     const parentRect = parentItem.getArray("Rect");
     if (Array.isArray(parentRect) && parentRect.length === 4) {
       this.data.parentRect = _util.Util.normalizeRect(parentRect);
     } else {
-      this.data.parentRect = [0, 0, 0, 0];
+      this.data.parentRect = null;
     }
     const rt = parentItem.get("RT");
     if ((0, _primitives.isName)(rt, _util.AnnotationReplyType.GROUP)) {
@@ -6492,6 +6502,7 @@ class PopupAnnotation extends Annotation {
     if (parentItem.has("RC")) {
       this.data.richText = _factory.XFAFactory.getRichTextAsHtml(parentItem.get("RC"));
     }
+    this.data.open = !!dict.get("Open");
   }
 }
 exports.PopupAnnotation = PopupAnnotation;
@@ -7017,7 +7028,7 @@ class HighlightAnnotation extends MarkupAnnotation {
         });
       }
     } else {
-      this.data.hasPopup = false;
+      this.data.popupRef = null;
     }
   }
 }
@@ -7046,7 +7057,7 @@ class UnderlineAnnotation extends MarkupAnnotation {
         });
       }
     } else {
-      this.data.hasPopup = false;
+      this.data.popupRef = null;
     }
   }
 }
@@ -7086,7 +7097,7 @@ class SquigglyAnnotation extends MarkupAnnotation {
         });
       }
     } else {
-      this.data.hasPopup = false;
+      this.data.popupRef = null;
     }
   }
 }
@@ -7115,7 +7126,7 @@ class StrikeOutAnnotation extends MarkupAnnotation {
         });
       }
     } else {
-      this.data.hasPopup = false;
+      this.data.popupRef = null;
     }
   }
 }
@@ -13628,7 +13639,7 @@ class Lexer {
     let ch = this.currentChar;
     let eNotation = false;
     let divideBy = 0;
-    let sign = 0;
+    let sign = 1;
     if (ch === 0x2d) {
       sign = -1;
       ch = this.nextChar();
@@ -13636,7 +13647,6 @@ class Lexer {
         ch = this.nextChar();
       }
     } else if (ch === 0x2b) {
-      sign = 1;
       ch = this.nextChar();
     }
     if (ch === 0x0a || ch === 0x0d) {
@@ -13656,7 +13666,6 @@ class Lexer {
       }
       throw new _util.FormatError(msg);
     }
-    sign ||= 1;
     let baseValue = ch - 0x30;
     let powerValue = 0;
     let powerValueSign = 1;
@@ -57725,8 +57734,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.8.83';
-const pdfjsBuild = '46b8f9e2f';
+const pdfjsVersion = '3.8.107';
+const pdfjsBuild = '03059e1f8';
 })();
 
 /******/ 	return __webpack_exports__;
