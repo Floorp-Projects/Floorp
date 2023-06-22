@@ -975,6 +975,12 @@ this.browserAction = class extends ExtensionAPIPersistent {
           extensionApi: this,
         }).api(),
 
+        getUserSettings: () => {
+          let { area } = CustomizableUI.getPlacementOfWidget(
+            action.buttonDelegate.id
+          );
+          return { isOnToolbar: area !== CustomizableUI.AREA_ADDONS };
+        },
         openPopup: async options => {
           const isHandlingUserInput =
             context.callContextData?.isHandlingUserInput;
