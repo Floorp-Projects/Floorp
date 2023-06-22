@@ -254,6 +254,12 @@ class InputQueue {
   RefPtr<PinchGestureBlockState> mActivePinchGestureBlock;
   RefPtr<KeyboardBlockState> mActiveKeyboardBlock;
 
+  // In the case where a long-tap event triggered by keeping touching happens
+  // we need to keep both the touch block for the long-tap and the original
+  // touch block started with `touch-start`. This value holds the original block
+  // until the long-tap block is processed.
+  RefPtr<TouchBlockState> mPrevActiveTouchBlock;
+
   // The APZC to which the last event was delivered
   RefPtr<AsyncPanZoomController> mLastActiveApzc;
 

@@ -8,12 +8,16 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
 </head>
 <body>
+  <!-- An anchor to open a context menu -->
+  <a href="about:blank" style="position:absolute; top: 100px; left: 100px;">about:blank</a>
   <!-- make the root scroll container scrollable -->
   <div style="height: 200vh;"></div>
 </body>
 <script type="application/javascript">
 
 const searchParams = new URLSearchParams(location.search);
+
+const isAndroid = getPlatform() == "android";
 
 async function test() {
   // Setup a touchmove event listener where we do preventDefault() to prevent
@@ -33,8 +37,13 @@ async function test() {
     info("Got a touchend");
   }, { passive: false });
 
-  document.scrollingElement.addEventListener("scroll", () => {
-    ok(false, "The content should never be scrolled");
+  window.addEventListener("scroll", () => {
+    if (searchParams.get("prevent") != "contextmenu") {
+      // This todo will be fixed by D179767.
+      todo(false, "The content should never be scrolled");
+    } else {
+      ok(false, "The content should never be scrolled");
+    }
   });
 
   let contextmenuPromise = promiseOneEvent(window, "contextmenu", e => {
@@ -47,7 +56,7 @@ async function test() {
   // Ensure that the setup-ed information has reached to APZ.
   await promiseApzFlushedRepaints();
 
-  // Start a touch.
+  // Start a touch on the anchor.
   await synthesizeNativeTouch(window, 100, 100, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT);
 
   // And wait for a contextmenu event (i.e. a long-tap event)
@@ -68,8 +77,14 @@ async function test() {
 
   await waitToClearOutAnyPotentialScrolls();
 
-  ok(touchmoveCount > 0, "There should be at least one touch-move event");
-  is(window.scrollY, 0, "The scroll position should stay the original position");
+  if (searchParams.get("prevent") == "contextmenu") {
+    ok(touchmoveCount > 0, "There should be at least one touch-move event");
+    is(window.scrollY, 0, "The scroll position should stay the original position");
+  } else {
+    is(touchmoveCount, 0, "There should be no touch-move event when the context menu opened");
+    // This todo will be fixed by D179767.
+    todo_is(window.scrollY, 0, "The scroll position should stay the original position");
+  }
 }
 
 if (getPlatform() == "windows") {

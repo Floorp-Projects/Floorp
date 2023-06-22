@@ -6,6 +6,8 @@
 
 #include "InputQueue.h"
 
+#include <inttypes.h>
+
 #include "AsyncPanZoomController.h"
 
 #include "GestureEventListener.h"
@@ -157,7 +159,12 @@ APZEventResult InputQueue::ReceiveTouchInput(
     // us any touch behaviors.
     MOZ_ASSERT(aTouchBehaviors.isNothing());
 
-    block = mActiveTouchBlock.get();
+    // If the active touch block is for a long tap, add new touch events into
+    // the original touch block, to ensure that they're only processed if the
+    // original touch block is not prevented.
+    block = mActiveTouchBlock && mActiveTouchBlock->ForLongTap()
+                ? mPrevActiveTouchBlock.get()
+                : mActiveTouchBlock.get();
     if (!block) {
       NS_WARNING(
           "Received a non-start touch event while no touch blocks active!");
@@ -189,11 +196,35 @@ APZEventResult InputQueue::ReceiveTouchInput(
     result.SetStatusForFastFling(*block, aFlags, consumableFlags, target);
   } else {  // handling depends on ArePointerEventsConsumable()
     bool consumable = consumableFlags.IsConsumable();
+    const bool wasInSlop = block->IsInSlop();
     if (block->UpdateSlopState(aEvent, consumable)) {
       INPQ_LOG("dropping event due to block %p being in %sslop\n", block.get(),
                consumable ? "" : "mini-");
       result.SetStatusAsConsumeNoDefault();
     } else {
+      // If all following conditions are met, we need to wait for a content
+      // response (again);
+      //  1) this is the first event bailing out from in-slop state after a
+      //     long-tap event was processed
+      //  2) there's any APZ-aware event listeners
+      //  3) the event block hasn't yet been prevented
+      //
+      // An example scenario;
+      //  in the content there are two event listeners for `touchstart` and
+      //  `touchmove` respectively, and doing `preventDefault()` in the
+      //  `touchmove` event listener. Then if the user kept touching at a point
+      //  until a long-tap event happens, then if the user started moving their
+      // finger, we have to wait for a content response twice, one is for
+      // `touchstart` and one is for `touchmove`.
+      if (wasInSlop && block->WasLongTapProcessed() &&
+          !block->IsTargetOriginallyConfirmed() && !block->ShouldDropEvents()) {
+        INPQ_LOG(
+            "bailing out from in-stop state in block %p after a long-tap "
+            "happened\n",
+            block.get());
+        block->ResetContentResponseTimerExpired();
+        ScheduleMainThreadTimeout(aTarget, block);
+      }
       result.SetStatusForTouchEvent(*block, aFlags, consumableFlags, target);
     }
   }
@@ -616,13 +647,18 @@ TouchBlockState* InputQueue::StartNewTouchBlockForLongTap(
   TouchBlockState* newBlock = new TouchBlockState(
       aTarget, TargetConfirmationFlags{true}, mTouchCounter);
 
+  TouchBlockState* currentBlock = GetCurrentTouchBlock();
   // We should never enter here without a current touch block, because this
   // codepath is invoked from the OnLongPress handler in
   // AsyncPanZoomController, which should bail out if there is no current
   // touch block.
-  MOZ_ASSERT(GetCurrentTouchBlock());
-  newBlock->CopyPropertiesFrom(*GetCurrentTouchBlock());
+  MOZ_ASSERT(currentBlock);
+  newBlock->CopyPropertiesFrom(*currentBlock);
+  newBlock->SetForLongTap();
 
+  // We need to keep the current block alive, it will be used once after this
+  // new touch block for long-tap was processed.
+  mPrevActiveTouchBlock = currentBlock;
   mActiveTouchBlock = newBlock;
   return newBlock;
 }
@@ -749,6 +785,9 @@ InputBlockState* InputQueue::FindBlockForId(uint64_t aInputBlockId,
   InputBlockState* block = nullptr;
   if (mActiveTouchBlock && mActiveTouchBlock->GetBlockId() == aInputBlockId) {
     block = mActiveTouchBlock.get();
+  } else if (mPrevActiveTouchBlock &&
+             mPrevActiveTouchBlock->GetBlockId() == aInputBlockId) {
+    block = mPrevActiveTouchBlock.get();
   } else if (mActiveWheelBlock &&
              mActiveWheelBlock->GetBlockId() == aInputBlockId) {
     block = mActiveWheelBlock.get();
@@ -841,6 +880,8 @@ void InputQueue::ContentReceivedInputBlock(uint64_t aInputBlockId,
     success = block->SetContentResponse(aPreventDefault);
   } else if (inputBlock) {
     NS_WARNING("input block is not a cancelable block");
+  } else {
+    INPQ_LOG("couldn't find block=%" PRIu64 "\n", aInputBlockId);
   }
   if (success) {
     ProcessQueue();
@@ -1033,7 +1074,20 @@ void InputQueue::ProcessQueue() {
   }
 
   if (CanDiscardBlock(mActiveTouchBlock)) {
+    const bool forLongTap = mActiveTouchBlock->ForLongTap();
+    INPQ_LOG("discarding a touch block %p id %" PRIu64 "\n",
+             mActiveTouchBlock.get(), mActiveTouchBlock->GetBlockId());
     mActiveTouchBlock = nullptr;
+    MOZ_ASSERT_IF(forLongTap, mPrevActiveTouchBlock);
+    if (forLongTap) {
+      INPQ_LOG("switching back to the original touch block %p id %" PRIu64 "\n",
+               mPrevActiveTouchBlock.get(),
+               mPrevActiveTouchBlock->GetBlockId());
+
+      mPrevActiveTouchBlock->SetLongTapProcessed();
+      mActiveTouchBlock = mPrevActiveTouchBlock;
+      mPrevActiveTouchBlock = nullptr;
+    }
   }
   if (CanDiscardBlock(mActiveWheelBlock)) {
     mActiveWheelBlock = nullptr;
@@ -1086,6 +1140,7 @@ void InputQueue::Clear() {
 
   mQueuedInputs.Clear();
   mActiveTouchBlock = nullptr;
+  mPrevActiveTouchBlock = nullptr;
   mActiveWheelBlock = nullptr;
   mActiveDragBlock = nullptr;
   mActivePanGestureBlock = nullptr;
