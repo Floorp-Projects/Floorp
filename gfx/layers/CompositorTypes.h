@@ -94,6 +94,8 @@ enum class TextureFlags : uint32_t {
   DRM_SOURCE = 1 << 21,
   // The texture is dummy texture
   DUMMY_TEXTURE = 1 << 22,
+  // Software decoded video
+  SOFTWARE_DECODED_VIDEO = 1 << 22,
 
   // OR union of all valid bits
   ALL_BITS = (1 << 23) - 1,

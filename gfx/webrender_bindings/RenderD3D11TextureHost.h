@@ -81,6 +81,9 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
 
   uint32_t ArrayIndex() const { return mArrayIndex; }
 
+  void SetIsSoftwareDecodedVideo() override { mIsSoftwareDecodedVideo = true; }
+  bool IsSoftwareDecodedVideo() override { return mIsSoftwareDecodedVideo; }
+
  private:
   virtual ~RenderDXGITextureHost();
 
@@ -108,6 +111,8 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
   // We could use NV12 format for this texture. So, we might have 2 gl texture
   // handles for Y and CbCr data.
   GLuint mTextureHandle[2];
+
+  bool mIsSoftwareDecodedVideo = false;
 
  public:
   const gfx::SurfaceFormat mFormat;

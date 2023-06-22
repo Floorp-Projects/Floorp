@@ -86,6 +86,8 @@ D3D11ShareHandleImage::MaybeCreateNV12ImageAndSetData(
     return nullptr;
   }
 
+  client->AddFlags(TextureFlags::SOFTWARE_DECODED_VIDEO);
+
   // The texture does not have keyed mutex. When keyed mutex exists, the texture
   // could not be used for video overlay. Then it needs manual synchronization
   RefPtr<ID3D11Texture2D> texture = image->GetTexture();

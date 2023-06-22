@@ -6564,13 +6564,13 @@
   mirror: once
 
 #ifdef XP_WIN
-  # Whether to use a video overlay layers with DirectComposition
--   name: gfx.webrender.dcomp-video-overlay-win
+  # Whether to use an overlay of hardware decoded video with DirectComposition
+-   name: gfx.webrender.dcomp-video-hw-overlay-win
     type: bool
     value: true
     mirror: once
-  # Enable video overlay even when it is blocked.
--   name: gfx.webrender.dcomp-video-overlay-win-force-enabled
+  # Enable hardware decoded video overlay even when it is blocked.
+-   name: gfx.webrender.dcomp-video-hw-overlay-win-force-enabled
     type: bool
     value: false
     mirror: once
@@ -6588,10 +6588,15 @@
     type: bool
     value: true
     mirror: once
-  # Whether to use a video overlay layers for sw decoded video with DirectComposition
+  # Whether to use an overlay of software decoded video with DirectComposition
 -   name: gfx.webrender.dcomp-video-sw-overlay-win
     type: bool
     value: true
+    mirror: once
+  # Enable software decoded video overlay even when it is blocked.
+-   name: gfx.webrender.dcomp-video-sw-overlay-win-force-enabled
+    type: bool
+    value: false
     mirror: once
 -   name: gfx.webrender.dcomp-video-check-slow-present
     type: RelaxedAtomicBool

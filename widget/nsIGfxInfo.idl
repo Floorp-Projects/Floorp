@@ -169,7 +169,7 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBRENDER_PARTIAL_PRESENT = 36;
   /* Whether WebGPU is supported, starting in 100. */
   const long FEATURE_WEBGPU = 37;
-  /* Whether video overlay is supported, starting in 100. */
+  /* Whether video overlay of hardware decoded video is supported, starting in 100. */
   const long FEATURE_VIDEO_OVERLAY = 38;
   /* Whether hardware decoded video zero copy is supported, starting in 101. */
   const long FEATURE_HW_DECODED_VIDEO_ZERO_COPY = 39;
@@ -185,8 +185,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_H264_HW_DECODE = 44;
   /* Whether hardware AV1 decoding is supported, starting in 114; not for downloadable blocking. */
   const long FEATURE_AV1_HW_DECODE = 45;
+  /* Whether video overlay of software decoded video is supported, starting in 116. */
+  const long FEATURE_VIDEO_SOFTWARE_OVERLAY = 46;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_ACCELERATED_CANVAS2D;
+  const long FEATURE_MAX_VALUE = FEATURE_VIDEO_SOFTWARE_OVERLAY;
 
   /*
    * A set of return values from GetFeatureStatus

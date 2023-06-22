@@ -2704,49 +2704,92 @@ void gfxPlatform::InitWebRenderConfig() {
   MOZ_ASSERT_IF(overlaySupported,
                 gfxConfig::IsEnabled(Feature::WEBRENDER_DCOMP_PRESENT));
 
-  bool useVideoOverlay = false;
-  if (StaticPrefs::gfx_webrender_dcomp_video_overlay_win_AtStartup()) {
+  bool useVideoHwOverlay = false;
+  if (StaticPrefs::gfx_webrender_dcomp_video_hw_overlay_win_AtStartup()) {
     if (overlaySupported) {
-      useVideoOverlay = true;
+      useVideoHwOverlay = true;
     }
 
-    if (useVideoOverlay &&
+    if (useVideoHwOverlay &&
         !StaticPrefs::
-            gfx_webrender_dcomp_video_overlay_win_force_enabled_AtStartup()) {
+            gfx_webrender_dcomp_video_hw_overlay_win_force_enabled_AtStartup()) {
       nsCString failureId;
       int32_t status;
       const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
       if (NS_FAILED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_VIDEO_OVERLAY,
                                               failureId, &status))) {
-        FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
+        FeatureState& feature =
+            gfxConfig::GetFeature(Feature::VIDEO_HARDWARE_OVERLAY);
         feature.DisableByDefault(FeatureStatus::BlockedNoGfxInfo,
                                  "gfxInfo is broken",
                                  "FEATURE_FAILURE_WR_NO_GFX_INFO"_ns);
-        useVideoOverlay = false;
+        useVideoHwOverlay = false;
       } else {
         if (status != nsIGfxInfo::FEATURE_ALLOW_ALWAYS) {
-          FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
+          FeatureState& feature =
+              gfxConfig::GetFeature(Feature::VIDEO_HARDWARE_OVERLAY);
           feature.DisableByDefault(FeatureStatus::Blocked,
                                    "Blocklisted by gfxInfo", failureId);
-          useVideoOverlay = false;
+          useVideoHwOverlay = false;
         }
       }
     }
   } else if (overlaySupported) {
-    FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
+    FeatureState& feature =
+        gfxConfig::GetFeature(Feature::VIDEO_HARDWARE_OVERLAY);
     feature.DisableByDefault(FeatureStatus::Blocked, "Disabled by pref",
                              "FEATURE_FAILURE_DISABLED_BY_PREF"_ns);
   }
 
-  if (useVideoOverlay) {
-    FeatureState& feature = gfxConfig::GetFeature(Feature::VIDEO_OVERLAY);
+  if (useVideoHwOverlay) {
+    FeatureState& feature =
+        gfxConfig::GetFeature(Feature::VIDEO_HARDWARE_OVERLAY);
     feature.EnableByDefault();
-    gfxVars::SetUseWebRenderDCompVideoOverlayWin(true);
+    gfxVars::SetUseWebRenderDCompVideoHwOverlayWin(true);
   }
 
-  if (useVideoOverlay &&
+  bool useVideoSwOverlay = false;
+  if (overlaySupported &&
       StaticPrefs::gfx_webrender_dcomp_video_sw_overlay_win_AtStartup()) {
-    gfxVars::SetUseWebRenderDCompSwVideoOverlayWin(true);
+    useVideoSwOverlay = true;
+
+    if (useVideoSwOverlay &&
+        !StaticPrefs::
+            gfx_webrender_dcomp_video_sw_overlay_win_force_enabled_AtStartup()) {
+      nsCString failureId;
+      int32_t status;
+      const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+      if (NS_FAILED(gfxInfo->GetFeatureStatus(
+              nsIGfxInfo::FEATURE_VIDEO_SOFTWARE_OVERLAY, failureId,
+              &status))) {
+        FeatureState& feature =
+            gfxConfig::GetFeature(Feature::VIDEO_SOFTWARE_OVERLAY);
+        feature.DisableByDefault(FeatureStatus::BlockedNoGfxInfo,
+                                 "gfxInfo is broken",
+                                 "FEATURE_FAILURE_WR_NO_GFX_INFO"_ns);
+        useVideoSwOverlay = false;
+      } else {
+        if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+          FeatureState& feature =
+              gfxConfig::GetFeature(Feature::VIDEO_SOFTWARE_OVERLAY);
+          feature.DisableByDefault(FeatureStatus::Blocked,
+                                   "Blocklisted by gfxInfo", failureId);
+          useVideoSwOverlay = false;
+        }
+      }
+    }
+  } else if (overlaySupported) {
+    FeatureState& feature =
+        gfxConfig::GetFeature(Feature::VIDEO_SOFTWARE_OVERLAY);
+    feature.DisableByDefault(FeatureStatus::Blocked, "Disabled by pref",
+                             "FEATURE_FAILURE_DISABLED_BY_PREF"_ns);
+  }
+
+  if (useVideoSwOverlay) {
+    FeatureState& feature =
+        gfxConfig::GetFeature(Feature::VIDEO_SOFTWARE_OVERLAY);
+    feature.EnableByDefault();
+    gfxVars::SetUseWebRenderDCompVideoSwOverlayWin(true);
   }
 
   bool useHwVideoZeroCopy = false;

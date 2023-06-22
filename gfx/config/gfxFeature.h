@@ -40,7 +40,8 @@ namespace gfx {
   _(DMABUF, Feature, "DMABUF")                                               \
   _(WINDOW_OCCLUSION, Feature, "WINDOW_OCCLUSION")                           \
   _(HARDWARE_VIDEO_DECODING, Feature, "Hardware video decoding")             \
-  _(VIDEO_OVERLAY, Feature, "video overlay")                                 \
+  _(VIDEO_HARDWARE_OVERLAY, Feature, "hardware decoded video overlay")       \
+  _(VIDEO_SOFTWARE_OVERLAY, Feature, "software decoded video overlay")       \
   _(HW_DECODED_VIDEO_ZERO_COPY, Feature, "Hardware decoded video zero copy") \
   _(VP8_HW_DECODE, Feature, "VP8 hardware decoding")                         \
   _(VP9_HW_DECODE, Feature, "VP9 hardware decoding")                         \
