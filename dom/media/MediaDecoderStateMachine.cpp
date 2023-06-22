@@ -3421,14 +3421,6 @@ void MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder) {
 
   MediaDecoderStateMachineBase::InitializationTask(aDecoder);
 
-  // Connect mirrors.
-  mStreamName.Connect(aDecoder->CanonicalStreamName());
-  mSinkDevice.Connect(aDecoder->CanonicalSinkDevice());
-  mOutputCaptureState.Connect(aDecoder->CanonicalOutputCaptureState());
-  mOutputDummyTrack.Connect(aDecoder->CanonicalOutputDummyTrack());
-  mOutputTracks.Connect(aDecoder->CanonicalOutputTracks());
-  mOutputPrincipal.Connect(aDecoder->CanonicalOutputPrincipal());
-
   // Initialize watchers.
   mWatchManager.Watch(mStreamName,
                       &MediaDecoderStateMachine::StreamNameChanged);
@@ -3595,6 +3587,14 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder) {
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
+
+  // Connect mirrors.
+  aDecoder->CanonicalStreamName().ConnectMirror(&mStreamName);
+  aDecoder->CanonicalSinkDevice().ConnectMirror(&mSinkDevice);
+  aDecoder->CanonicalOutputCaptureState().ConnectMirror(&mOutputCaptureState);
+  aDecoder->CanonicalOutputDummyTrack().ConnectMirror(&mOutputDummyTrack);
+  aDecoder->CanonicalOutputTracks().ConnectMirror(&mOutputTracks);
+  aDecoder->CanonicalOutputPrincipal().ConnectMirror(&mOutputPrincipal);
 
   mAudioQueueListener = AudioQueue().PopFrontEvent().Connect(
       mTaskQueue, this, &MediaDecoderStateMachine::OnAudioPopped);
