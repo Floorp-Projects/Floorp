@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/skin/menu-scrolling.css");
+@import url("chrome://global/skin/menu-shared.css");
 
 /* ===== menu.css =======================================================
   == Styles used by XUL menu-related elements.
@@ -142,15 +142,4 @@ menuitem:is([type="checkbox"], [checked="true"]) .menu-iconic-icon {
 menuitem[type="radio"] .menu-iconic-icon {
   appearance: auto;
   -moz-default-appearance: radio;
-}
-
-menuseparator {
-  margin-block: 2px;
-  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
-}
-
-@media (prefers-contrast) {
-  menuseparator {
-    border-top-color: var(--panel-border-color);
-  }
 }

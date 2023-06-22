@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@import url("chrome://global/skin/menu-scrolling.css");
+@import url("chrome://global/skin/menu-shared.css");
 
 /* ===== menu.css =======================================================
   == Styles used by XUL menu-related elements.
@@ -357,30 +357,9 @@ menuitem:is([type="checkbox"], [checked="true"], [type="radio"]) > .menu-iconic-
 
 /* ::::: menuseparator ::::: */
 
-menuseparator {
-  appearance: auto;
-  -moz-default-appearance: menuseparator;
-  padding: 3px 1px 4px;
-  border-top: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDHighlight;
-}
-
-@media not (-moz-windows-non-native-menus) {
-  menulist > menupopup > menuseparator {
-    padding: 6px 0 5px;
-    border-top: 1px solid #000000;
-    border-bottom: none;
-  }
-}
-
-/* On Windows 10, separators get entirely custom rendering. */
 @media (-moz-windows-non-native-menus) {
   menuseparator {
-    appearance: none;
-
-    border-bottom: none;
-    padding: 0;
-    /* The side margins should align with the start of the menu item text. */
-    margin: 2px 1em;
+    /* The side padding should align with the start of the menu item text. */
+    padding-inline: 1em;
   }
 }

@@ -471,22 +471,15 @@ menupopup[touchmode] :is(menu, menuitem, menucaption) {
   padding-block: calc((3.5em - 32px) / 2);
 }
 
-#context-navigation {
-  background-color: menu;
-}
-
-#context-sep-navigation {
-  margin-inline-start: -28px;
+@media not (-moz-windows-non-native-menus) {
+  #context-navigation {
+    background-color: menu;
+  }
 }
 
 @media (-moz-windows-non-native-menus) {
   /* :not([hidden]) to avoid the display: flex unhiding the item. */
   #context-navigation:not([hidden]) {
-    /* The Windows 10 version of the navigation area needs the scrollbox's
-       background color, not the builtin "menu" color. */
-    background-color: inherit;
-    /* Match the inner top padding of the menupopup to center the icons visually. */
-    padding-bottom: 4px;
     /* Use modern flex box so we can use percentage widths to redistribute
      * spacing manually. */
     display: flex;
@@ -560,11 +553,9 @@ menupopup[touchmode] :is(menu, menuitem, menucaption) {
     width: calc(var(--menuitem-min-width) + calc(100% - 4 * var(--menuitem-min-width)) / 6);
   }
 
-
   /* Other menu separators don't extend all the way to the menu edges, but the
      one below the navigation buttons in the content context menu should. */
   #context-sep-navigation {
-    margin-top: 0;
-    margin-inline: 0;
+    padding-inline: 0;
   }
 }

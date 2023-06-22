@@ -36,7 +36,7 @@
   skin/classic/global/error-pages.css                      (../../shared/error-pages.css)
   skin/classic/global/findbar.css                          (../../shared/findbar.css)
   skin/classic/global/global-shared.css                    (../../shared/global-shared.css)
-  skin/classic/global/menu-scrolling.css                   (../../shared/menu-scrolling.css)
+  skin/classic/global/menu-shared.css                      (../../shared/menu-shared.css)
   skin/classic/global/menulist-shared.css                  (../../shared/menulist-shared.css)
   skin/classic/global/notification.css                     (../../shared/notification.css)
   skin/classic/global/numberinput.css                      (../../shared/numberinput.css)
