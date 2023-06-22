@@ -13,6 +13,7 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AMBrowserExtensionsImport: "resource://gre/modules/AddonManager.sys.mjs",
   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.sys.mjs",
   OriginControls: "resource://gre/modules/ExtensionPermissions.sys.mjs",
@@ -1004,14 +1005,17 @@ var gExtensionsNotifications = {
   },
 
   _createAddonButton(l10nId, addon, callback) {
-    let text = lazy.l10n.formatValueSync(l10nId, { addonName: addon.name });
+    let text = addon
+      ? lazy.l10n.formatValueSync(l10nId, { addonName: addon.name })
+      : lazy.l10n.formatValueSync(l10nId);
     let button = document.createXULElement("toolbarbutton");
+    button.setAttribute("id", l10nId);
     button.setAttribute("wrap", "true");
     button.setAttribute("label", text);
     button.setAttribute("tooltiptext", text);
     const DEFAULT_EXTENSION_ICON =
       "chrome://mozapps/skin/extensions/extensionGeneric.svg";
-    button.setAttribute("image", addon.iconURL || DEFAULT_EXTENSION_ICON);
+    button.setAttribute("image", addon?.iconURL || DEFAULT_EXTENSION_ICON);
     button.className = "addon-banner-item subviewbutton";
 
     button.addEventListener("command", callback);
@@ -1029,6 +1033,13 @@ var gExtensionsNotifications = {
     }
 
     let items = 0;
+    if (lazy.AMBrowserExtensionsImport.canCompleteOrCancelInstalls) {
+      this._createAddonButton("webext-imported-addons", null, evt => {
+        lazy.AMBrowserExtensionsImport.completeInstalls();
+      });
+      items++;
+    }
+
     for (let update of updates) {
       if (++items > 4) {
         break;

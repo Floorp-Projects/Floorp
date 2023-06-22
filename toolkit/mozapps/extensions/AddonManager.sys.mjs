@@ -5235,6 +5235,7 @@ AMBrowserExtensionsImport = {
   // AddonId => AddonInstall
   _pendingInstallsMap: new Map(),
   _importInProgress: false,
+  _canCompleteOrCancelInstalls: false,
   // Prompt handler set on the AddonInstall instances part of the imports
   // (which currently makes sure we are not prompting for permissions when the
   // imported addons are being downloaded, staged and then installed).
@@ -5246,6 +5247,10 @@ AMBrowserExtensionsImport = {
 
   get importedAddonIDs() {
     return Array.from(this._pendingInstallsMap.keys());
+  },
+
+  get canCompleteOrCancelInstalls() {
+    return this._canCompleteOrCancelInstalls && this.hasPendingImportedAddons;
   },
 
   /**
@@ -5275,6 +5280,7 @@ AMBrowserExtensionsImport = {
       );
     }
     this._importInProgress = true;
+    this._canCompleteOrCancelInstalls = false;
 
     let importedAddons = [];
     // We first retrieve a list of `AddonSearchResult`, which are the Firefox
@@ -5349,6 +5355,7 @@ AMBrowserExtensionsImport = {
     // point, unless there was no add-on mapped OR some errors.
     const { importedAddonIDs } = this;
 
+    this._canCompleteOrCancelInstalls = !!importedAddonIDs.length;
     this._importInProgress = !!importedAddonIDs.length;
 
     if (importedAddonIDs.length) {
@@ -5380,10 +5387,7 @@ AMBrowserExtensionsImport = {
     this._reportErrors(results);
     this._clearInternalState();
 
-    Services.obs.notifyObservers(
-      null,
-      "webextension-notify-imported-addons-complete"
-    );
+    Services.obs.notifyObservers(null, "webextension-imported-addons-complete");
   },
 
   /**
@@ -5407,7 +5411,7 @@ AMBrowserExtensionsImport = {
 
     Services.obs.notifyObservers(
       null,
-      "webextension-notify-imported-addons-cancelled"
+      "webextension-imported-addons-cancelled"
     );
   },
 
@@ -5420,6 +5424,7 @@ AMBrowserExtensionsImport = {
   _clearInternalState() {
     this._pendingInstallsMap.clear();
     this._importInProgress = false;
+    this._canCompleteOrCancelInstalls = false;
   },
 };
 
