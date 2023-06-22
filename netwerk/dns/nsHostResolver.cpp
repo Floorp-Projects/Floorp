@@ -38,6 +38,7 @@
 #include "TRRService.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
@@ -1791,23 +1792,21 @@ void nsHostResolver::ThreadFunc() {
 
       if (!mShutdown) {
         TimeDuration elapsed = TimeStamp::Now() - startTime;
-        uint32_t millis = static_cast<uint32_t>(elapsed.ToMilliseconds());
-
         if (NS_SUCCEEDED(status)) {
-          Telemetry::HistogramID histogramID;
           if (!rec->addr_info_gencnt) {
             // Time for initial lookup.
-            histogramID = Telemetry::DNS_LOOKUP_TIME;
+            glean::networking::dns_lookup_time.AccumulateRawDuration(elapsed);
           } else if (!getTtl) {
             // Time for renewal; categorized by expiration strategy.
-            histogramID = Telemetry::DNS_RENEWAL_TIME;
+            glean::networking::dns_renewal_time.AccumulateRawDuration(elapsed);
           } else {
             // Time to get TTL; categorized by expiration strategy.
-            histogramID = Telemetry::DNS_RENEWAL_TIME_FOR_TTL;
+            glean::networking::dns_renewal_time_for_ttl.AccumulateRawDuration(
+                elapsed);
           }
-          Telemetry::Accumulate(histogramID, millis);
         } else {
-          Telemetry::Accumulate(Telemetry::DNS_FAILED_LOOKUP_TIME, millis);
+          glean::networking::dns_failed_lookup_time.AccumulateRawDuration(
+              elapsed);
         }
       }
     }
