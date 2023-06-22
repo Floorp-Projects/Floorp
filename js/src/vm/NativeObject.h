@@ -1495,6 +1495,7 @@ class NativeObject : public JSObject {
                                 uint32_t count);
 
   inline void initDenseElements(const Value* src, uint32_t count);
+  inline void initDenseElements(JSLinearString** src, uint32_t count);
   inline void initDenseElements(NativeObject* src, uint32_t srcStart,
                                 uint32_t count);
 
