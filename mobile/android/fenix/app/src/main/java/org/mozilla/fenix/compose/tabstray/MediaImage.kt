@@ -7,6 +7,7 @@ package org.mozilla.fenix.compose.tabstray
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -28,12 +29,14 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param tab [TabSessionState] which the image should be shown.
  * @param onMediaIconClicked handles the click event when tab has media session like play/pause.
  * @param modifier [Modifier] to be applied to the layout.
+ * @param interactionSource [MutableInteractionSource] used to propagate the ripple effect on click.
  */
 @Composable
 fun MediaImage(
     tab: TabSessionState,
     onMediaIconClicked: ((TabSessionState) -> Unit),
     modifier: Modifier,
+    interactionSource: MutableInteractionSource = MutableInteractionSource(),
 ) {
     val (icon, contentDescription) = when (tab.mediaSessionState?.playbackState) {
         PlaybackState.PAUSED -> {
@@ -49,7 +52,10 @@ fun MediaImage(
     Image(
         painter = rememberDrawablePainter(drawable = drawable),
         contentDescription = stringResource(contentDescription),
-        modifier = modifier.clickable { onMediaIconClicked(tab) },
+        modifier = modifier.clickable(
+            interactionSource = interactionSource,
+            indication = null,
+        ) { onMediaIconClicked(tab) },
     )
 }
 

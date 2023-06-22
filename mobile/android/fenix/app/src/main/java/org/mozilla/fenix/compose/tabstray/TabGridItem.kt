@@ -11,6 +11,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,7 +34,9 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.rememberDismissState
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -54,6 +58,7 @@ import androidx.core.text.BidiFormatter
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.support.ktx.kotlin.MAX_URI_LENGTH
+import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.HorizontalFadingEdgeBox
@@ -113,6 +118,9 @@ fun TabGridItem(
         },
     )
 
+    // Used to propagate the ripple effect to the whole tab
+    val interactionSource = remember { MutableInteractionSource() }
+
     SwipeToDismiss(
         state = dismissState,
         enabled = !multiSelectionEnabled,
@@ -134,6 +142,13 @@ fun TabGridItem(
                     .then(tabBorderModifier)
                     .padding(4.dp)
                     .combinedClickable(
+                        interactionSource = interactionSource,
+                        indication = rememberRipple(
+                            color = when (isSystemInDarkTheme()) {
+                                true -> PhotonColors.White
+                                false -> PhotonColors.Black
+                            },
+                        ),
                         onLongClick = { onLongClick(tab) },
                         onClick = { onClick(tab) },
                     ),
@@ -213,6 +228,7 @@ fun TabGridItem(
                     onMediaIconClicked = { onMediaClick(tab) },
                     modifier = Modifier
                         .align(Alignment.TopStart),
+                    interactionSource = interactionSource,
                 )
             }
         }
