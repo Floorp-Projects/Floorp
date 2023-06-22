@@ -69,7 +69,9 @@ nsresult SVGScriptElement::Clone(dom::NodeInfo* aNodeInfo,
 }
 
 //----------------------------------------------------------------------
-void SVGScriptElement::GetType(nsAString& aType) { GetScriptType(aType); }
+void SVGScriptElement::GetType(nsAString& aType) {
+  GetAttr(nsGkAtoms::type, aType);
+}
 
 void SVGScriptElement::SetType(const nsAString& aType, ErrorResult& rv) {
   rv = SetAttr(kNameSpaceID_None, nsGkAtoms::type, aType, true);
@@ -95,10 +97,6 @@ already_AddRefed<DOMSVGAnimatedString> SVGScriptElement::Href() {
 
 //----------------------------------------------------------------------
 // nsIScriptElement methods
-
-bool SVGScriptElement::GetScriptType(nsAString& type) {
-  return GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
-}
 
 void SVGScriptElement::GetScriptText(nsAString& text) const {
   nsContentUtils::GetNodeTextContent(this, false, text);
