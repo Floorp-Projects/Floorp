@@ -39,6 +39,13 @@ def unpack_sdk(url, sha256, extract_prefix, out_dir="."):
 def extract_payload(fileobj, extract_prefix, out_dir="."):
     hardlinks = {}
     for path, st, content in uncpio(Pbzx(fileobj)):
+        if not path:
+            continue
+        path = path.decode()
+        matches = path.startswith(extract_prefix)
+        if matches:
+            path = os.path.join(out_dir, path[len(extract_prefix) :].lstrip("/"))
+
         # When there are hardlinks, normally a cpio stream is supposed to
         # contain the data for all of them, but, even with compression, that
         # can be a waste of space, so in some cpio streams (*cough* *cough*,
@@ -47,8 +54,6 @@ def extract_payload(fileobj, extract_prefix, out_dir="."):
         # As we may be filtering the first file out (if it doesn't match
         # extract_prefix), we need to keep its data around (we're not going
         # to be able to rewind).
-        # We could do something fancy in the case where the first file is not
-        # filtered out, but in practice, it's not worth the extra complexity.
         if stat.S_ISREG(st.mode) and st.nlink > 1:
             key = (st.dev, st.ino)
             hardlink = hardlinks.get(key)
@@ -56,17 +61,19 @@ def extract_payload(fileobj, extract_prefix, out_dir="."):
                 hardlink[0] -= 1
                 if hardlink[0] == 0:
                     del hardlinks[key]
+                content = hardlink[1]
+                if isinstance(content, BytesIO):
+                    content.seek(0)
+                    if matches:
+                        hardlink[1] = path
+            elif matches:
+                hardlink = hardlinks[key] = [st.nlink - 1, path]
             else:
                 hardlink = hardlinks[key] = [st.nlink - 1, BytesIO(content.read())]
-            content = hardlink[1]
-            content.seek(0)
+                content = hardlink[1]
 
-        if not path:
+        if not matches:
             continue
-        path = path.decode()
-        if not path.startswith(extract_prefix):
-            continue
-        path = os.path.join(out_dir, path[len(extract_prefix) :].lstrip("/"))
         if stat.S_ISDIR(st.mode):
             os.makedirs(path, exist_ok=True)
         else:
@@ -77,8 +84,11 @@ def extract_payload(fileobj, extract_prefix, out_dir="."):
             if stat.S_ISLNK(st.mode):
                 os.symlink(content.read(), path)
             elif stat.S_ISREG(st.mode):
-                with open(path, "wb") as out:
-                    shutil.copyfileobj(content, out)
+                if isinstance(content, str):
+                    os.link(content, path)
+                else:
+                    with open(path, "wb") as out:
+                        shutil.copyfileobj(content, out)
             else:
                 raise Exception(f"File mode {st.mode:o} is not supported")
 
