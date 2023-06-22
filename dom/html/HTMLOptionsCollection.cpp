@@ -5,26 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLOptionsCollection.h"
-
-#include "HTMLOptGroupElement.h"
-#include "mozAutoDocUpdate.h"
-#include "mozilla/dom/BindingUtils.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/MappedDeclarations.h"
-#include "mozilla/dom/HTMLFormSubmission.h"
-#include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLOptionsCollectionBinding.h"
+
+#include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
-#include "nsContentCreatorFunctions.h"
-#include "nsError.h"
-#include "nsGkAtoms.h"
-#include "mozilla/dom/Document.h"
-#include "nsIFormControlFrame.h"
-#include "nsLayoutUtils.h"
-#include "nsMappedAttributes.h"
-#include "nsServiceManagerUtils.h"
-#include "nsStyleConsts.h"
-#include "jsfriendapi.h"
 
 namespace mozilla::dom {
 

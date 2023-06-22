@@ -6,8 +6,7 @@
 
 #include "mozilla/dom/HTMLTableRowElement.h"
 #include "mozilla/dom/HTMLTableElement.h"
-#include "mozilla/MappedDeclarations.h"
-#include "nsMappedAttributes.h"
+#include "mozilla/MappedDeclarationsBuilder.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLTableRowElementBinding.h"
@@ -220,12 +219,12 @@ bool HTMLTableRowElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 void HTMLTableRowElement::MapAttributesIntoRule(
-    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  nsGenericHTMLElement::MapHeightAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapVAlignAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
+    MappedDeclarationsBuilder& aBuilder) {
+  nsGenericHTMLElement::MapHeightAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapVAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aBuilder);
+  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
 }
 
 NS_IMETHODIMP_(bool)

@@ -96,31 +96,28 @@ class HTMLTableCellElement final : public nsGenericHTMLElement {
     SetHTMLAttr(nsGkAtoms::bgcolor, aBgColor, aError);
   }
 
-  virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
-                              const nsAString& aValue,
-                              nsIPrincipal* aMaybeScriptedPrincipal,
-                              nsAttrValue& aResult) override;
-  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
-      const override;
+  bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
+                      const nsAString& aValue,
+                      nsIPrincipal* aMaybeScriptedPrincipal,
+                      nsAttrValue& aResult) override;
+  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   // Get mapped attributes of ancestor table, if any
-  nsMappedAttributes* GetMappedAttributesInheritedFromTable() const;
+  StyleLockedDeclarationBlock* GetMappedAttributesInheritedFromTable() const;
 
-  virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
+  nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
  protected:
   virtual ~HTMLTableCellElement();
 
-  virtual JSObject* WrapNode(JSContext* aCx,
-                             JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
   HTMLTableElement* GetTable() const;
 
   HTMLTableRowElement* GetRow() const;
 
  private:
-  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    MappedDeclarations&);
+  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
 };
 
 }  // namespace mozilla::dom

@@ -173,8 +173,7 @@ class HTMLIFrameElement final : public nsGenericHTMLFrameElement {
                                       bool aNotify) override;
 
  private:
-  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    MappedDeclarations&);
+  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
 
   static const DOMTokenListSupportedToken sSupportedSandboxTokens[];
 

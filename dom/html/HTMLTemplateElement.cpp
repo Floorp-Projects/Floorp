@@ -8,7 +8,6 @@
 #include "mozilla/dom/HTMLTemplateElementBinding.h"
 
 #include "mozilla/dom/Document.h"
-#include "mozilla/MappedDeclarations.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsAtom.h"

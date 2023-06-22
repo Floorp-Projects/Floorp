@@ -175,16 +175,18 @@ nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
 nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
     const nsCSSPropertyID aPropID, const SVGAnimatedLength& aLength) {
   return SetSMILValueHelper([aPropID, &aLength](DeclarationBlock& aDecl) {
+    MOZ_ASSERT(aDecl.IsMutable());
     return SVGElement::UpdateDeclarationBlockFromLength(
-        aDecl, aPropID, aLength, SVGElement::ValToUse::Anim);
+        *aDecl.Raw(), aPropID, aLength, SVGElement::ValToUse::Anim);
   });
 }
 
 nsresult nsDOMCSSAttributeDeclaration::SetSMILValue(
     const nsCSSPropertyID /*aPropID*/, const SVGAnimatedPathSegList& aPath) {
   return SetSMILValueHelper([&aPath](DeclarationBlock& aDecl) {
+    MOZ_ASSERT(aDecl.IsMutable());
     return SVGElement::UpdateDeclarationBlockFromPath(
-        aDecl, aPath, SVGElement::ValToUse::Anim);
+        *aDecl.Raw(), aPath, SVGElement::ValToUse::Anim);
   });
 }
 
