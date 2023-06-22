@@ -12,6 +12,10 @@
 #include "nsRefPtrHashtable.h"
 #include "nsTHashMap.h"
 
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+#  include "mozilla/PSandboxTestingChild.h"
+#endif
+
 namespace mozilla {
 class ChildProfilerController;
 }
