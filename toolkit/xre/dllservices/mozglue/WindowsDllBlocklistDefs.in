@@ -346,7 +346,7 @@ BROWSER_PROCESS += [
     DllBlocklistEntry("audiodevprops2.dll", (2, 6, 14, 0)),
 
     # Kingsoft internet security (bug 1837242)
-    DllBlocklistEntry("kisfdpro64.dll", (2023, 5, 31, 209)),
+    DllBlocklistEntry("kisfdpro64.dll", ALL_VERSIONS),
 
     # Kingsoft internet security (bug 1837246)
     DllBlocklistEntry("dghmpg64.dll", (2023, 5, 31, 1367)),
