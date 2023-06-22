@@ -32,7 +32,7 @@
 #  include "mozilla/webrender/RenderAndroidSurfaceTextureHost.h"
 #endif
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
 #  include "mozilla/layers/DMABUFTextureHostOGL.h"
 #endif
 
@@ -88,7 +88,7 @@ already_AddRefed<TextureHost> CreateTextureHostOGL(
       break;
     }
 
-#ifdef MOZ_WAYLAND
+#ifdef MOZ_WIDGET_GTK
     case SurfaceDescriptor::TSurfaceDescriptorDMABuf: {
       result = new DMABUFTextureHostOGL(aFlags, aDesc);
       break;
