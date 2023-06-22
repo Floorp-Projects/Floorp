@@ -102,22 +102,19 @@ export class MigrationWizardParent extends JSWindowActorParent {
       }
 
       case "Migrate": {
+        let { migrationDetails, extraArgs } = message.data;
         if (
-          message.data.type ==
+          migrationDetails.type ==
           lazy.MigrationWizardConstants.MIGRATOR_TYPES.BROWSER
         ) {
-          await this.#doBrowserMigration(
-            message.data.key,
-            message.data.resourceTypes,
-            message.data.profile,
-            message.data.autoMigration,
-            message.data.safariPasswordFilePath
-          );
+          return this.#doBrowserMigration(migrationDetails, extraArgs);
         } else if (
-          message.data.type == lazy.MigrationWizardConstants.MIGRATOR_TYPES.FILE
+          migrationDetails.type ==
+          lazy.MigrationWizardConstants.MIGRATOR_TYPES.FILE
         ) {
           let window = this.browsingContext.topChromeWindow;
-          await this.#doFileMigration(window, message.data.key);
+          await this.#doFileMigration(window, migrationDetails.key);
+          return extraArgs;
         }
         break;
       }
@@ -302,49 +299,34 @@ export class MigrationWizardParent extends JSWindowActorParent {
    * Calls into MigrationUtils to perform a migration given the parameters
    * sent via the wizard.
    *
-   * @param {string} migratorKey
-   *   The unique identification key for a migrator.
-   * @param {string[]} resourceTypeNames
-   *   An array of strings, where each string represents a resource type
-   *   that can be imported for this migrator and profile. The strings
-   *   should be one of the key values of
-   *   MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.
-   * @param {object|null} profileObj
-   *   A description of the user profile that the migrator can import.
-   * @param {string} profileObj.id
-   *   A unique ID for the user profile.
-   * @param {string} profileObj.name
-   *   The display name for the user profile.
-   * @param {boolean} autoMigration
-   *   True if the migration is occurring automatically, without the user
-   *   having selected any items explicitly from the wizard.
-   * @param {string} [safariPasswordFilePath=null]
-   *   An optional string argument that points to the path of a passwords
-   *   export file from Safari. This file will have password imported from if
-   *   supplied. This argument is ignored if the migratorKey is not for the
-   *   Safari browser.
-   * @returns {Promise<undefined>}
-   *   Resolves once the Migration:Ended observer notification has fired.
+   * @param {MigrationDetails} migrationDetails
+   *   See migration-wizard.mjs for a definition of MigrationDetails.
+   * @param {object} extraArgs
+   *   Extra argument object that will be passed to the Event Telemetry for
+   *   finishing the migration. This was initialized in the child actor, and
+   *   will be sent back down to it to write to Telemetry once migration
+   *   completes.
+   *
+   * @returns {Promise<object>}
+   *   Resolves once the Migration:Ended observer notification has fired,
+   *   passing the extraArgs for Telemetry back with any relevant properties
+   *   updated.
    */
-  async #doBrowserMigration(
-    migratorKey,
-    resourceTypeNames,
-    profileObj,
-    autoMigration,
-    safariPasswordFilePath = null
-  ) {
+  async #doBrowserMigration(migrationDetails, extraArgs) {
     Services.telemetry
       .getHistogramById("FX_MIGRATION_SOURCE_BROWSER")
-      .add(MigrationUtils.getSourceIdForTelemetry(migratorKey));
+      .add(MigrationUtils.getSourceIdForTelemetry(migrationDetails.key));
 
-    let migrator = await MigrationUtils.getMigrator(migratorKey);
-    let availableResourceTypes = await migrator.getMigrateData(profileObj);
+    let migrator = await MigrationUtils.getMigrator(migrationDetails.key);
+    let availableResourceTypes = await migrator.getMigrateData(
+      migrationDetails.profile
+    );
     let resourceTypesToMigrate = 0;
     let progress = {};
     let migrationUsageHist =
       Services.telemetry.getKeyedHistogramById("FX_MIGRATION_USAGE");
 
-    for (let resourceTypeName of resourceTypeNames) {
+    for (let resourceTypeName of migrationDetails.resourceTypes) {
       let resourceType = MigrationUtils.resourceTypes[resourceTypeName];
       if (availableResourceTypes & resourceType) {
         resourceTypesToMigrate |= resourceType;
@@ -353,15 +335,15 @@ export class MigrationWizardParent extends JSWindowActorParent {
           message: "",
         };
 
-        if (!autoMigration) {
-          migrationUsageHist.add(migratorKey, Math.log2(resourceType));
+        if (!migrationDetails.autoMigration) {
+          migrationUsageHist.add(migrationDetails.key, Math.log2(resourceType));
         }
       }
     }
 
     if (
-      migratorKey == lazy.SafariProfileMigrator?.key &&
-      safariPasswordFilePath
+      migrationDetails.key == lazy.SafariProfileMigrator?.key &&
+      migrationDetails.safariPasswordFilePath
     ) {
       // The caller supplied a password export file for Safari. We're going to
       // pretend that there was a PASSWORDS resource for Safari to represent
@@ -373,10 +355,13 @@ export class MigrationWizardParent extends JSWindowActorParent {
         message: "",
       };
 
-      this.sendAsyncMessage("UpdateProgress", { key: migratorKey, progress });
+      this.sendAsyncMessage("UpdateProgress", {
+        key: migrationDetails.key,
+        progress,
+      });
 
       let summary = await lazy.LoginCSVImport.importFromCSV(
-        safariPasswordFilePath
+        migrationDetails.safariPasswordFilePath
       );
       let quantity = summary.filter(entry => entry.result == "added").length;
 
@@ -393,19 +378,25 @@ export class MigrationWizardParent extends JSWindowActorParent {
       };
     }
 
-    this.sendAsyncMessage("UpdateProgress", { key: migratorKey, progress });
+    this.sendAsyncMessage("UpdateProgress", {
+      key: migrationDetails.key,
+      progress,
+    });
 
     // It's possible that only a Safari password file path was sent up, and
     // there's nothing left to migrate, in which case we're done here.
-    if (safariPasswordFilePath && !resourceTypeNames.length) {
-      return;
+    if (
+      migrationDetails.safariPasswordFilePath &&
+      !migrationDetails.resourceTypes.length
+    ) {
+      return extraArgs;
     }
 
     try {
       await migrator.migrate(
         resourceTypesToMigrate,
         false,
-        profileObj,
+        migrationDetails.profile,
         async (resourceTypeNum, success, details) => {
           // Unfortunately, MigratorBase hands us the the numeric value of the
           // MigrationUtils.resourceType for this callback. For now, we'll just
@@ -429,7 +420,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
             if (!success) {
               Services.telemetry
                 .getKeyedHistogramById("FX_MIGRATION_ERRORS")
-                .add(migratorKey, Math.log2(resourceTypeNum));
+                .add(migrationDetails.key, Math.log2(resourceTypeNum));
             }
             if (
               foundResourceTypeName ==
@@ -437,6 +428,8 @@ export class MigrationWizardParent extends JSWindowActorParent {
             ) {
               if (!success) {
                 // did not match any extensions
+                extraArgs.extensions =
+                  lazy.MigrationWizardConstants.EXTENSIONS_IMPORT_RESULT.NONE_MATCHED;
                 progress[foundResourceTypeName] = {
                   value: lazy.MigrationWizardConstants.PROGRESS_VALUE.ERROR,
                   message: await lazy.gFluentStrings.formatValue(
@@ -454,6 +447,8 @@ export class MigrationWizardParent extends JSWindowActorParent {
                 lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS
               ) {
                 // did match all extensions
+                extraArgs.extensions =
+                  lazy.MigrationWizardConstants.EXTENSIONS_IMPORT_RESULT.ALL_MATCHED;
                 progress[foundResourceTypeName] = {
                   value: lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
                   message: await lazy.gFluentStrings.formatValue(
@@ -468,6 +463,8 @@ export class MigrationWizardParent extends JSWindowActorParent {
                 lazy.MigrationWizardConstants.PROGRESS_VALUE.INFO
               ) {
                 // did match some extensions
+                extraArgs.extensions =
+                  lazy.MigrationWizardConstants.EXTENSIONS_IMPORT_RESULT.PARTIAL_MATCH;
                 progress[foundResourceTypeName] = {
                   value: lazy.MigrationWizardConstants.PROGRESS_VALUE.INFO,
                   message: await lazy.gFluentStrings.formatValue(
@@ -492,13 +489,13 @@ export class MigrationWizardParent extends JSWindowActorParent {
                   ? lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS
                   : lazy.MigrationWizardConstants.PROGRESS_VALUE.ERROR,
                 message: await this.#getStringForImportQuantity(
-                  migratorKey,
+                  migrationDetails.key,
                   foundResourceTypeName
                 ),
               };
             }
             this.sendAsyncMessage("UpdateProgress", {
-              key: migratorKey,
+              key: migrationDetails.key,
               progress,
             });
           }
@@ -507,6 +504,8 @@ export class MigrationWizardParent extends JSWindowActorParent {
     } catch (e) {
       console.error(e);
     }
+
+    return extraArgs;
   }
 
   /**
