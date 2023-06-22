@@ -414,4 +414,88 @@ class InputResultDetailTest : BaseSessionTest() {
             (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL),
         )
     }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun testPreventTouchMoveAfterLongTap() {
+        sessionRule.display?.run { setDynamicToolbarMaxHeight(20) }
+
+        setupDocument(ROOT_100VH_HTML_PATH)
+
+        // Setup a touchmove event listener preventing scrolling.
+        val touchmovePromise = mainSession.evaluatePromiseJS(
+            """
+            new Promise(resolve => {
+                window.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    resolve(true);
+                }, { passive: false });
+            });
+            """.trimIndent(),
+        )
+
+        // Setup a contextmenu event.
+        val contextmenuPromise = mainSession.evaluatePromiseJS(
+            """
+            new Promise(resolve => {
+                window.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    resolve(true);
+                }, { once: true });
+            });
+            """.trimIndent(),
+        )
+
+        mainSession.flushApzRepaints()
+
+        val downTime = SystemClock.uptimeMillis()
+        val down = MotionEvent.obtain(
+            downTime,
+            SystemClock.uptimeMillis(),
+            MotionEvent.ACTION_DOWN,
+            50f,
+            50f,
+            0,
+        )
+        val result = mainSession.panZoomController.onTouchEventForDetailResult(down)
+
+        // Wait until a contextmenu event happens.
+        assertThat("contextmenu", contextmenuPromise.value as Boolean, equalTo(true))
+
+        // Start moving.
+        val move = MotionEvent.obtain(
+            downTime,
+            SystemClock.uptimeMillis(),
+            MotionEvent.ACTION_MOVE,
+            50f,
+            70f,
+            0,
+        )
+        mainSession.panZoomController.onTouchEvent(move)
+
+        assertThat("touchmove", touchmovePromise.value as Boolean, equalTo(true))
+
+        val value = sessionRule.waitForResult(result)
+
+        // The input result for the initial touch-start event should have been handled by
+        // the content.
+        assertResultDetail(
+            ROOT_100VH_HTML_PATH,
+            value,
+            PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
+            PanZoomController.SCROLLABLE_FLAG_BOTTOM,
+            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL),
+        )
+
+        val up = MotionEvent.obtain(
+            downTime,
+            SystemClock.uptimeMillis(),
+            MotionEvent.ACTION_UP,
+            50f,
+            70f,
+            0,
+        )
+
+        mainSession.panZoomController.onTouchEvent(up)
+    }
 }

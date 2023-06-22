@@ -500,7 +500,19 @@ class TouchBlockState : public CancelableBlockState {
   void SetLongTapProcessed() {
     MOZ_ASSERT(!mForLongTap);
     mLongTapWasProcessed = true;
+    mIsWaitingLongTapResult = false;
   }
+
+  void SetWaitingLongTapResult() {
+    MOZ_ASSERT(!mForLongTap);
+    mIsWaitingLongTapResult = true;
+  }
+  bool IsWaitingLongTapResult() const { return mIsWaitingLongTapResult; }
+
+  void SetNeedsToWaitTouchMove(bool aNeedsWaitTouchMove) {
+    mNeedsWaitTouchMove = aNeedsWaitTouchMove;
+  }
+  bool IsReadyForCallback() const { return !mNeedsWaitTouchMove; };
 
   /**
    * Based on the slop origin and the given input event, return a best guess
@@ -534,6 +546,17 @@ class TouchBlockState : public CancelableBlockState {
   // on the first touch block after the long tap was processed.
   bool mForLongTap;
   bool mLongTapWasProcessed;
+
+  // A flag representing a state while we are waiting for a content response for
+  // the long tap.
+  // The reason why we have this flag separately from `mLongTapWasProcessed` is
+  // the block is not ready to be processed during the wait, and is ready once
+  // after `mLongTapWasProcessed` became true.
+  bool mIsWaitingLongTapResult;
+  // A flag representing a state that this block still needs to wait for a
+  // content response for a touch move event. It will be set just before
+  // triggering a long-press event.
+  bool mNeedsWaitTouchMove;
   ScreenIntPoint mSlopOrigin;
   // A reference to the InputQueue's touch counter
   TouchCounter& mTouchCounter;

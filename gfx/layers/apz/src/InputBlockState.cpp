@@ -640,6 +640,8 @@ TouchBlockState::TouchBlockState(
       mInSlop(false),
       mForLongTap(false),
       mLongTapWasProcessed(false),
+      mIsWaitingLongTapResult(false),
+      mNeedsWaitTouchMove(false),
       mTouchCounter(aCounter),
       mStartTime(GetTargetApzc()->GetFrameTime().Time()) {
   mOriginalTargetConfirmedState = mTargetConfirmed;
@@ -681,6 +683,10 @@ void TouchBlockState::CopyPropertiesFrom(const TouchBlockState& aOther) {
 
 bool TouchBlockState::IsReadyForHandling() const {
   if (!CancelableBlockState::IsReadyForHandling()) {
+    return false;
+  }
+
+  if (mIsWaitingLongTapResult) {
     return false;
   }
 
