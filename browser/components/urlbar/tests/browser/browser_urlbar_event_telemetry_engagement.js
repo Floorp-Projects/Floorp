@@ -430,7 +430,41 @@ const tests = [
         numChars: "3",
         numWords: "1",
         selIndex: val => parseInt(val) > 0,
-        selType: "bookmark",
+        selType: "bookmark_adaptive",
+        provider: "InputHistory",
+      },
+    };
+  },
+
+  async function (win) {
+    info("Type an input used before, select an input history item, Enter.");
+    let url = "http://example.com/hello_world";
+    let searchString = "hello";
+    await PlacesTestUtils.addVisits(url);
+    await UrlbarUtils.addToInputHistory(url, searchString);
+    win.gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window: win,
+      value: searchString,
+      fireInputEvent: true,
+    });
+    while (win.gURLBar.untrimmedValue != url) {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {}, win);
+    }
+    EventUtils.synthesizeKey("VK_RETURN", {}, win);
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "5",
+        numWords: "1",
+        selIndex: val => parseInt(val) > 0,
+        selType: "history_adaptive",
         provider: "InputHistory",
       },
     };
