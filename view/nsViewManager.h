@@ -342,6 +342,9 @@ class nsViewManager final {
    * Call WillPaint() on all view observers under this vm root.
    */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void CallWillPaintOnObservers();
+  static void CollectVMsForWillPaint(nsView* aView, nsViewManager* aParentVM,
+                                     nsTArray<RefPtr<nsViewManager>>& aVMs);
+
   void ReparentChildWidgets(nsView* aView, nsIWidget* aNewWidget);
   void ReparentWidgets(nsView* aView, nsView* aParent);
   void InvalidateWidgetArea(nsView* aWidgetView,
@@ -422,9 +425,6 @@ class nsViewManager final {
   bool mHasPendingWidgetGeometryChanges;
 
   // from here to public should be static and locked... MMP
-
-  // list of view managers
-  static mozilla::StaticAutoPtr<nsTArray<nsViewManager*>> gViewManagers;
 };
 
 /**
