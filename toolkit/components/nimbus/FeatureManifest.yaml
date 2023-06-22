@@ -1606,3 +1606,31 @@ updatePrompt:
       description: >-
         Template for the URL opened when the user clicks the "Learn More" link
         in the update prompt. If an empty string, the link will not be shown.
+
+powerSaver:
+  description: Prefs to control power saving behaviors
+  owner: florian@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    reduceFrameRates:
+      type: int
+      setPref: "gfx.display.max-frame-rate"
+      description: >-
+        Limit the number of frames displayed per second.
+        If omitted, the refresh rate of the screen will be used.
+    mediaAutoPlay:
+      type: int
+      setPref: "media.autoplay.default"
+      description: >-
+        Control if media is allowed to auto-play, with and without sound.
+    backgroundTimerMinTime:
+      type: int
+      setPref: "dom.min_background_timeout_value"
+      description: >-
+        Limit how frequently timers are allowed to run in background tabs.
+    backgroundTimerRegenerationRate:
+      type: int
+      setPref: "dom.timeout.background_budget_regeneration_rate"
+      description: >-
+        Limit how quickly the background tab timer budget regenerates.
