@@ -63,7 +63,6 @@ mochitest-plain:
         - headless
         - headless+socketprocess_networking
         - http3
-        - http2
         - editor-legacy-direction
     run-on-projects:
         by-variant:
@@ -118,10 +117,6 @@ mochitest-plain:
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
                     default: []
             http3:
-                by-test-platform:
-                    linux1804-64-qr/debug: built-projects
-                    default: []
-            http2:
                 by-test-platform:
                     linux1804-64-qr/debug: built-projects
                     default: []
