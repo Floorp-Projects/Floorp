@@ -255,7 +255,7 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
       gfxCriticalNote << "Failed to create EGLConfig for WebRender ANGLE!";
       return nullptr;
     }
-  } else if (kIsWayland || kIsX11) {
+  } else if (kIsLinux) {
     const int bpp = 32;
     if (!CreateConfig(*egl, &config, bpp, false, aUseGles)) {
       gfxCriticalNote << "Failed to create EGLConfig for WebRender!";
@@ -968,7 +968,7 @@ bool CreateConfig(EglDisplay& aEgl, EGLConfig* aConfig, int32_t aDepth,
     }
   }
 
-  if (kIsX11 && fallbackConfig) {
+  if (kIsLinux && fallbackConfig) {
     *aConfig = fallbackConfig.value();
     return true;
   }

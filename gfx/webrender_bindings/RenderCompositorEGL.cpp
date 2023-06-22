@@ -38,7 +38,7 @@ extern LazyLogModule gRenderThreadLog;
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
-  if ((kIsWayland || kIsX11) && !gfx::gfxVars::UseEGL()) {
+  if (kIsLinux && !gfx::gfxVars::UseEGL()) {
     return nullptr;
   }
   RefPtr<gl::GLContext> gl = RenderThread::Get()->SingletonGL(aError);
@@ -83,7 +83,7 @@ RenderCompositorEGL::~RenderCompositorEGL() {
 }
 
 bool RenderCompositorEGL::BeginFrame() {
-  if ((kIsWayland || kIsX11) && mEGLSurface == EGL_NO_SURFACE) {
+  if (kIsLinux && mEGLSurface == EGL_NO_SURFACE) {
     gfxCriticalNote
         << "We don't have EGLSurface to draw into. Called too early?";
     return false;
@@ -192,7 +192,7 @@ bool RenderCompositorEGL::Resume() {
     mHandlingNewSurfaceError = false;
 
     gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
-  } else if (kIsWayland || kIsX11) {
+  } else if (kIsLinux) {
     // Destroy EGLSurface if it exists and create a new one. We will set the
     // swap interval after MakeCurrent() has been called.
     DestroyEGLSurface();

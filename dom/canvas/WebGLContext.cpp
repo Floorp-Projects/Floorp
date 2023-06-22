@@ -636,7 +636,7 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
     if (kIsAndroid) {
       types[layers::SurfaceDescriptor::TSurfaceTextureDescriptor] = true;
     }
-    if (kIsX11 || kIsWayland) {
+    if (kIsLinux) {
       types[layers::SurfaceDescriptor::TSurfaceDescriptorDMABuf] = true;
     }
     return types;
