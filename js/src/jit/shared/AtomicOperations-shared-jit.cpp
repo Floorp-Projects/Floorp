@@ -6,6 +6,10 @@
 
 #include "jit/AtomicOperations.h"
 
+#if defined(__arm__)
+#  include "jit/arm/Architecture-arm.h"
+#endif
+
 #ifdef JS_HAVE_GENERATED_ATOMIC_OPS
 
 #  include <atomic>
@@ -78,8 +82,8 @@ void AtomicMemcpyDownUnsynchronized(uint8_t* dest, const uint8_t* src,
   // that supports it.
 
   if (nbytes >= WORDSIZE) {
-    void (*copyBlock)(uint8_t * dest, const uint8_t* src);
-    void (*copyWord)(uint8_t * dest, const uint8_t* src);
+    void (*copyBlock)(uint8_t* dest, const uint8_t* src);
+    void (*copyWord)(uint8_t* dest, const uint8_t* src);
 
     if (((uintptr_t(dest) ^ uintptr_t(src)) & WORDMASK) == 0) {
       const uint8_t* cutoff = (const uint8_t*)RoundUp(uintptr_t(src), WORDSIZE);
@@ -131,8 +135,8 @@ void AtomicMemcpyUpUnsynchronized(uint8_t* dest, const uint8_t* src,
   dest += nbytes;
 
   if (nbytes >= WORDSIZE) {
-    void (*copyBlock)(uint8_t * dest, const uint8_t* src);
-    void (*copyWord)(uint8_t * dest, const uint8_t* src);
+    void (*copyBlock)(uint8_t* dest, const uint8_t* src);
+    void (*copyWord)(uint8_t* dest, const uint8_t* src);
 
     if (((uintptr_t(dest) ^ uintptr_t(src)) & WORDMASK) == 0) {
       const uint8_t* cutoff = (const uint8_t*)(uintptr_t(src) & ~WORDMASK);
