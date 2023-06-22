@@ -131,6 +131,7 @@ class BaseTimeDuration {
     return FromMilliseconds(aMicroseconds / 1000.0);
   }
 
+  static constexpr BaseTimeDuration Zero() { return BaseTimeDuration(); }
   static constexpr BaseTimeDuration Forever() { return FromTicks(INT64_MAX); }
 
   BaseTimeDuration operator+(const BaseTimeDuration& aOther) const {
