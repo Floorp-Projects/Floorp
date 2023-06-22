@@ -198,7 +198,7 @@ addMessageListener("getTelemetryEvents", options => {
   sendAsyncMessage("getTelemetryEvents", events);
 });
 
-addMessageListener("proxyLoginManager", msg => {
+addMessageListener("proxyLoginManager", async msg => {
   // Recreate nsILoginInfo objects from vanilla JS objects.
   let recreatedArgs = msg.args.map((arg, index) => {
     if (msg.loginInfoIndices.includes(index)) {
@@ -208,7 +208,7 @@ addMessageListener("proxyLoginManager", msg => {
     return arg;
   });
 
-  let rv = Services.logins[msg.methodName](...recreatedArgs);
+  let rv = await Services.logins[msg.methodName](...recreatedArgs);
   if (rv instanceof Ci.nsILoginInfo) {
     rv = LoginHelper.loginToVanillaObject(rv);
   } else if (

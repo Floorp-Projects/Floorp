@@ -51,7 +51,7 @@ async function prepareLogins(logins = []) {
     SpecialPowers.do_QueryInterface(login, SpecialPowers.Ci.nsILoginMetaInfo);
     // Force all dates to be the same so they don't affect things like deduping.
     login.timeCreated = login.timePasswordChanged = login.timeLastUsed = dates;
-    await LoginManager.addLogin(login);
+    await LoginManager.addLoginAsync(login);
   }
 }
 

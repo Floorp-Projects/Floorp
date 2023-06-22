@@ -155,6 +155,11 @@ add_task(async function test_clickNever() {
 });
 
 add_task(async function test_clickRemember() {
+  const storageChangedPromise = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "addLogin"
+  );
+
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function (fieldValues) {
@@ -187,6 +192,8 @@ add_task(async function test_clickRemember() {
       await promiseNewSavedPassword;
     }
   );
+
+  await storageChangedPromise;
 
   let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
@@ -424,6 +431,7 @@ add_task(async function test_noPasswordField() {
 add_task(async function test_pwOnlyNewLoginMatchesUPForm() {
   info("Check for update popup when new existing pw-only login matches form.");
   await Services.logins.addLoginAsync(login2);
+
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_1.html",
     async function (fieldValues) {
@@ -1075,6 +1083,11 @@ add_task(async function test_recipeCaptureFields_NewLogin() {
     "Check that we capture the proper fields when a field recipe is in use."
   );
 
+  const storageChangedPromise = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "addLogin"
+  );
+
   await testSubmittingLoginFormHTTP(
     "subtst_notifications_2pw_1un_1text.html",
     async function (fieldValues) {
@@ -1101,6 +1114,8 @@ add_task(async function test_recipeCaptureFields_NewLogin() {
     },
     "http://example.org"
   ); // The recipe is for example.org
+
+  await storageChangedPromise;
 
   let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
@@ -1148,7 +1163,7 @@ add_task(async function test_recipeCaptureFields_ExistingLogin() {
 
 add_task(async function test_saveUsingEnter() {
   async function testWithTextboxSelector(fieldSelector) {
-    let storageChangedPromise = TestUtils.topicObserved(
+    const storageChangedPromise = TestUtils.topicObserved(
       "passwordmgr-storage-changed",
       (_, data) => data == "addLogin"
     );
@@ -1182,6 +1197,7 @@ add_task(async function test_saveUsingEnter() {
         await EventUtils.synthesizeKey("KEY_Enter");
       }
     );
+
     await storageChangedPromise;
 
     let logins = Services.logins.getAllLogins();

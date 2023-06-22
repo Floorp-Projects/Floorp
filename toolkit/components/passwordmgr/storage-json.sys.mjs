@@ -201,41 +201,13 @@ export class LoginManagerStorage_json {
     return !!login?.deleted;
   }
 
-  addLogin(
-    login,
-    preEncrypted = false,
-    plaintextUsername = null,
-    plaintextPassword = null
-  ) {
-    if (
-      preEncrypted &&
-      (typeof plaintextUsername != "string" ||
-        typeof plaintextPassword != "string")
-    ) {
-      throw new Error(
-        "plaintextUsername and plaintextPassword are required when preEncrypted is true"
-      );
-    }
-
+  // Synrhronuously stores encrypted login, returns login clone with upserted
+  // uuid and updated timestamps
+  #addLogin(login) {
     this._store.ensureDataReady();
 
     // Throws if there are bogus values.
     lazy.LoginHelper.checkLoginValues(login);
-
-    let [encUsername, encPassword, encType, encUnknownFields] = preEncrypted
-      ? [
-          login.username,
-          login.password,
-          this._crypto.defaultEncType,
-          login.unknownFields,
-        ]
-      : this._encryptLogin(login);
-
-    // Reset the username and password to keep the same guarantees for preEncrypted
-    if (preEncrypted) {
-      login.username = plaintextUsername;
-      login.password = plaintextPassword;
-    }
 
     // Clone the login, so we don't modify the caller's object.
     let loginClone = login.clone();
@@ -292,23 +264,64 @@ export class LoginManagerStorage_json {
       formSubmitURL: loginClone.formActionOrigin,
       usernameField: loginClone.usernameField,
       passwordField: loginClone.passwordField,
-      encryptedUsername: encUsername,
-      encryptedPassword: encPassword,
+      encryptedUsername: loginClone.username,
+      encryptedPassword: loginClone.password,
       guid: loginClone.guid,
-      encType,
+      encType: this._crypto.defaultEncType,
       timeCreated: loginClone.timeCreated,
       timeLastUsed: loginClone.timeLastUsed,
       timePasswordChanged: loginClone.timePasswordChanged,
       timesUsed: loginClone.timesUsed,
       syncCounter: loginClone.syncCounter,
       everSynced: loginClone.everSynced,
-      encryptedUnknownFields: encUnknownFields,
+      encryptedUnknownFields: loginClone.unknownFields,
     });
     this._store.saveSoon();
 
-    // Send a notification that a login was added.
-    lazy.LoginHelper.notifyStorageChanged("addLogin", loginClone);
     return loginClone;
+  }
+
+  async addLoginsAsync(logins, continueOnDuplicates = false) {
+    if (logins.length === 0) {
+      return logins;
+    }
+
+    const encryptedLogins = await this.#encryptLogins(logins);
+
+    const resultLogins = [];
+    for (const [login, encryptedLogin] of encryptedLogins) {
+      // check for duplicates
+      const { origin, formActionOrigin, httpRealm } = login;
+      const existingLogins = this.findLogins(
+        origin,
+        formActionOrigin,
+        httpRealm
+      );
+      const matchingLogin = existingLogins.find(l => login.matches(l, true));
+      if (matchingLogin) {
+        if (continueOnDuplicates) {
+          continue;
+        } else {
+          throw lazy.LoginHelper.createLoginAlreadyExistsError(
+            matchingLogin.guid
+          );
+        }
+      }
+
+      const resultLogin = this.#addLogin(encryptedLogin);
+
+      // restore unencrypted username and password for use in `addLogin` event
+      // and return value
+      resultLogin.username = login.username;
+      resultLogin.password = login.password;
+
+      // Send a notification that a login was added.
+      lazy.LoginHelper.notifyStorageChanged("addLogin", resultLogin);
+
+      resultLogins.push(resultLogin);
+    }
+
+    return resultLogins;
   }
 
   removeLogin(login, fromSync) {
@@ -476,45 +489,8 @@ export class LoginManagerStorage_json {
     if (!logins.length) {
       return [];
     }
-    let ciphertexts = logins
-      .map(l => l.username)
-      .concat(logins.map(l => l.password));
-    let plaintexts = await this._crypto.decryptMany(ciphertexts);
-    let usernames = plaintexts.slice(0, logins.length);
-    let passwords = plaintexts.slice(logins.length);
 
-    let result = [];
-    for (let i = 0; i < logins.length; i++) {
-      if (!usernames[i] || !passwords[i]) {
-        // If the username or password is blank it means that decryption may have
-        // failed during decryptMany but we can't differentiate an empty string
-        // value from a failure so we attempt to decrypt again and check the
-        // result.
-        let login = logins[i];
-        try {
-          this._crypto.decrypt(login.username);
-          this._crypto.decrypt(login.password);
-        } catch (e) {
-          // If decryption failed (corrupt entry?), just skip it.
-          // Rethrow other errors (like canceling entry of a primary pw)
-          if (e.result == Cr.NS_ERROR_FAILURE) {
-            this.log(
-              `Could not decrypt login: ${
-                login.QueryInterface(Ci.nsILoginMetaInfo).guid
-              }.`
-            );
-            continue;
-          }
-          throw e;
-        }
-      }
-
-      logins[i].username = usernames[i];
-      logins[i].password = passwords[i];
-      result.push(logins[i]);
-    }
-
-    return result;
+    return this.#decryptLogins(logins);
   }
 
   async searchLoginsAsync(matchData, includeDeleted) {
@@ -918,6 +894,93 @@ export class LoginManagerStorage_json {
     this._store.ensureDataReady();
 
     return this._store.data.logins.every(l => l.guid != guid);
+  }
+
+  /*
+   * Asynchronously encrypt multiple logins.
+   * Returns a promise resolving to an array of arrays containing two entries:
+   * the original login and a clone with encrypted properties.
+   */
+  async #encryptLogins(logins) {
+    if (logins.length === 0) {
+      return logins;
+    }
+
+    const plaintexts = logins.reduce(
+      (memo, { username, password, unknownFields }) =>
+        memo.concat([username, password, unknownFields]),
+      []
+    );
+    const ciphertexts = await this._crypto.encryptMany(plaintexts);
+
+    return logins.map((login, i) => {
+      const [encryptedUsername, encryptedPassword, encryptedUnknownFields] =
+        ciphertexts.slice(3 * i, 3 * i + 3);
+
+      const encryptedLogin = login.clone();
+      encryptedLogin.username = encryptedUsername;
+      encryptedLogin.password = encryptedPassword;
+      encryptedLogin.unknownFields = encryptedUnknownFields;
+
+      return [login, encryptedLogin];
+    });
+  }
+
+  /*
+   * Asynchronously decrypt multiple logins.
+   * Returns a promise resolving to an array of clones with decrypted properties.
+   */
+  async #decryptLogins(logins) {
+    if (logins.length === 0) {
+      return logins;
+    }
+
+    const ciphertexts = logins.reduce(
+      (memo, { username, password, unknownFields }) =>
+        memo.concat([username, password, unknownFields]),
+      []
+    );
+    const plaintexts = await this._crypto.decryptMany(ciphertexts);
+
+    return logins
+      .map((login, i) => {
+        const decryptedLogin = login.clone();
+
+        const [username, password, unknownFields] = plaintexts.slice(
+          3 * i,
+          3 * i + 3
+        );
+
+        // If the username or password is blank it means that decryption may have
+        // failed during decryptMany but we can't differentiate an empty string
+        // value from a failure so we attempt to decrypt again and check the
+        // result.
+        if (!username || !password) {
+          try {
+            this._crypto.decrypt(login.username);
+            this._crypto.decrypt(login.password);
+          } catch (e) {
+            // If decryption failed (corrupt entry?), just return it as it is.
+            // Rethrow other errors (like canceling entry of a primary pw)
+            if (e.result == Cr.NS_ERROR_FAILURE) {
+              this.log(
+                `Could not decrypt login: ${
+                  login.QueryInterface(Ci.nsILoginMetaInfo).guid
+                }.`
+              );
+              return null;
+            }
+            throw e;
+          }
+        }
+
+        decryptedLogin.username = username;
+        decryptedLogin.password = password;
+        decryptedLogin.unknownFields = unknownFields;
+
+        return decryptedLogin;
+      })
+      .filter(Boolean);
   }
 
   /**
