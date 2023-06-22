@@ -557,6 +557,26 @@ function renderPeerConnectionTools(rndr, report) {
   const id = pcid.match(/id=(\S+)/)[1];
   const url = pcid.match(/url=([^)]+)/)[1];
   const now = new Date(timestamp);
+  const copyHistButton = !Services.prefs.getBoolPref(
+    "media.aboutwebrtc.hist.enabled"
+  )
+    ? []
+    : [
+        rndr.elem_button(
+          {
+            id: `copytextbutton-hist-${id}`,
+            onclick() {
+              WGI.getStatsHistorySince(
+                hist =>
+                  navigator.clipboard.writeText(JSON.stringify(hist, null, 2)),
+                pcid
+              );
+            },
+          },
+          "about-webrtc-copy-report-history-button"
+        ),
+      ];
+
   return renderElements("div", { id: "pc-tools: " + pcid }, [
     isClosed
       ? renderElement("h3", {}, "about-webrtc-connection-closed", {
@@ -578,6 +598,7 @@ function renderPeerConnectionTools(rndr, report) {
       "about-webrtc-copy-report-button",
       () => JSON.stringify({ ...report }, null, 2)
     ),
+    ...copyHistButton,
   ]);
 }
 
