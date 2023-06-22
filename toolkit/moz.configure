@@ -430,11 +430,15 @@ def toolkit_choices(target):
     elif target.os == "Android":
         return ("cairo-android",)
     else:
+        # cairo-gtk3 - X11 backend with optional Wayland backend (auto detected)
+        # cairo-gtk3-wayland - Wayland backend with optional X11 backend (auto detected)
+        # cairo-gtk3-x11-wayland - builds explicitly with X11 & Wayland backends
         return (
             "cairo-gtk3",
             "cairo-gtk3-wayland",
-            "cairo-gtk3-wayland-only",
             "cairo-gtk3-x11-wayland",
+            "cairo-gtk3-wayland-only",
+            "cairo-gtk3-x11-only",
         )
 
 
@@ -485,18 +489,40 @@ def toolkit_gtk(toolkit):
     return toolkit == "gtk"
 
 
+@depends(toolkit_gtk, full_toolkit)
+def toolkit_gtk_x11(toolkit_gtk, full_toolkit):
+    return toolkit_gtk and full_toolkit != "cairo-gtk3-wayland-only"
+
+
+@depends(full_toolkit)
+def toolkit_gtk_x11_optional(full_toolkit):
+    return full_toolkit == "cairo-gtk3-wayland"
+
+
+@depends(toolkit_gtk, full_toolkit)
+def toolkit_gtk_wayland(toolkit_gtk, full_toolkit):
+    return toolkit_gtk and full_toolkit != "cairo-gtk3-x11-only"
+
+
+@depends(full_toolkit)
+def toolkit_gtk_wayland_optional(full_toolkit):
+    return full_toolkit == "cairo-gtk3"
+
+
 # Wayland support
 # ==============================================================
 wayland_headers = pkg_check_modules(
     "MOZ_WAYLAND",
     "gtk+-wayland-3.0 >= 3.14 xkbcommon >= 0.4.1",
-    allow_missing=depends(full_toolkit)(lambda t: t == "cairo-gtk3"),
-    when=toolkit_gtk,
+    allow_missing=toolkit_gtk_wayland_optional,
+    when=toolkit_gtk_wayland,
 )
 
 
-@depends(wayland_headers, toolkit_gtk, artifact_builds)
-def wayland_headers(wayland, toolkit_gtk, artifacts):
+@depends(wayland_headers, toolkit_gtk, artifact_builds, toolkit_gtk_wayland)
+def wayland_headers(wayland, toolkit_gtk, artifacts, toolkit_gtk_wayland):
+    if not toolkit_gtk_wayland:
+        return False
     if toolkit_gtk and artifacts:
         return True
     return wayland
@@ -505,22 +531,20 @@ def wayland_headers(wayland, toolkit_gtk, artifacts):
 set_config("MOZ_WAYLAND", depends_if(wayland_headers)(lambda _: True))
 set_define("MOZ_WAYLAND", depends_if(wayland_headers)(lambda _: True))
 
-# Hardware-accelerated video decode with VAAPI and V4L2
+
+# Hardware-accelerated video decode with VAAPI and V4L2 on Linux
 # ==============================================================
-
-
 @depends(target, wayland_headers)
 def vaapi(target, wayland_headers):
-    # VAAPI is only used in Wayland. It's mostly used on x86(-64) but is
-    # sometimes used on ARM/ARM64 SOCs. Wayland implies GTK and Linux.
+    # VAAPI is mostly used on x86(-64) but is sometimes used on ARM/ARM64 SOCs.
     if target.cpu in ("arm", "aarch64", "x86", "x86_64") and wayland_headers:
         return True
 
 
 @depends(target, wayland_headers)
 def v4l2(target, wayland_headers):
-    # V4L2 decode is only used in Wayland, and generally only appears on
-    # embedded SOCs. Wayland implies GTK and Linux.
+    # V4L2 decode is only used in GTK/Linux and generally only appears on
+    # embedded SOCs.
     if target.cpu in ("arm", "aarch64", "riscv64") and wayland_headers:
         return True
 
@@ -529,6 +553,7 @@ set_config("MOZ_ENABLE_VAAPI", True, when=vaapi)
 set_config("MOZ_ENABLE_V4L2", True, when=v4l2)
 set_define("MOZ_ENABLE_VAAPI", True, when=vaapi)
 set_define("MOZ_ENABLE_V4L2", True, when=v4l2)
+
 
 # GL Provider
 # ==============================================================
@@ -1449,10 +1474,8 @@ def x11_libs(webrtc):
 x11_headers = pkg_check_modules(
     "MOZ_X11",
     x11_libs,
-    allow_missing=depends(full_toolkit)(lambda t: t == "cairo-gtk3-wayland"),
-    when=depends(full_toolkit)(
-        lambda t: t in ("cairo-gtk3", "cairo-gtk3-wayland", "cairo-gtk3-x11-wayland")
-    ),
+    allow_missing=toolkit_gtk_x11_optional,
+    when=toolkit_gtk_x11,
 )
 
 
@@ -1463,10 +1486,8 @@ pkg_check_modules(
     "MOZ_X11_SM",
     ["ice", "sm"],
     cflags_only=True,
-    allow_missing=depends(full_toolkit)(lambda t: t == "cairo-gtk3-wayland"),
-    when=depends(full_toolkit)(
-        lambda t: t in ("cairo-gtk3", "cairo-gtk3-wayland", "cairo-gtk3-x11-wayland")
-    ),
+    allow_missing=toolkit_gtk_x11_optional,
+    when=toolkit_gtk_x11,
 )
 
 
