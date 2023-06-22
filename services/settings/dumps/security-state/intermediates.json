@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1687384083870,
+      "derHash": "gvvoZdoi0fJa35S72AnT9RYSWEnnktt7sYRSMEwuzEM=",
+      "subject": "CN=Telekom Security EV RSA CA 23A,O=Deutsche Telekom Security GmbH,C=DE",
+      "subjectDN": "MF8xCzAJBgNVBAYTAkRFMScwJQYDVQQKDB5EZXV0c2NoZSBUZWxla29tIFNlY3VyaXR5IEdtYkgxJzAlBgNVBAMMHlRlbGVrb20gU2VjdXJpdHkgRVYgUlNBIENBIDIzQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "911f1771233497d7e316f4de00c0b5fdfc5e406d6efff4931b076aa9ca9696d3",
+        "size": 2125,
+        "filename": "76nkSZ_eTsD3NwWyC3ofmPuKCIU6w4MnAswQvOB8VKk=.pem",
+        "location": "security-state-staging/intermediates/4c7ea109-2e2a-44b0-9151-bd8ca790158b.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "76nkSZ/eTsD3NwWyC3ofmPuKCIU6w4MnAswQvOB8VKk=",
+      "crlite_enrolled": false,
+      "id": "ba41b035-e588-4471-8a4b-9889d50b7682",
+      "last_modified": 1687384623199
+    },
+    {
       "schema": 1686865674359,
       "derHash": "V+CzNQTbr28poJXLiil6Sr7BIc4RZA76/BdZQJj2yqk=",
       "subject": "CN=GeoTrust Global G3 TLS EUR ECC P384 SHA384 2023 CA1,O=DigiCert Ireland Limited,C=IE",
@@ -27685,5 +27703,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1686952623664
+  "timestamp": 1687384623199
 }
