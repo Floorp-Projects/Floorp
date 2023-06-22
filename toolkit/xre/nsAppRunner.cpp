@@ -4746,6 +4746,18 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
       gdk_display_manager_open_display(gdk_display_manager_get(), nullptr);
     }
 #  endif
+    // Check that Wayland only and X11 only builds
+    // use appropriate displays.
+#  if defined(MOZ_WAYLAND) && !defined(MOZ_X11)
+    if (!GdkIsWaylandDisplay()) {
+      Output(true, "Wayland only build is missig Wayland display!\n");
+    }
+#  endif
+#  if !defined(MOZ_WAYLAND) && defined(MOZ_X11)
+    if (!GdkIsX11Display()) {
+      Output(true, "X11 only build is missig X11 display!\n");
+    }
+#  endif
   }
 #endif
 #if defined(MOZ_HAS_REMOTE)
