@@ -290,7 +290,7 @@ class SourcesTree extends Component {
   };
 
   renderProjectRootHeader() {
-    const { cx, projectRootName } = this.props;
+    const { projectRootName } = this.props;
 
     if (!projectRootName) {
       return null;
@@ -300,7 +300,7 @@ class SourcesTree extends Component {
       <div key="root" className="sources-clear-root-container">
         <button
           className="sources-clear-root"
-          onClick={() => this.props.clearProjectDirectoryRoot(cx)}
+          onClick={() => this.props.clearProjectDirectoryRoot()}
           title={L10N.getStr("removeDirectoryRoot.label")}
         >
           <AccessibleImage className="home" />

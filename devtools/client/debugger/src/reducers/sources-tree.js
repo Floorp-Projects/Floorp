@@ -178,8 +178,8 @@ export default function update(state = initialSourcesTreeState(), action) {
       return { ...state, focusedItem: action.item };
 
     case "SET_PROJECT_DIRECTORY_ROOT":
-      const { url, name } = action;
-      return updateProjectDirectoryRoot(state, url, name);
+      const { uniquePath, name } = action;
+      return updateProjectDirectoryRoot(state, uniquePath, name);
 
     case "BLACKBOX_WHOLE_SOURCES":
     case "BLACKBOX_SOURCE_RANGES": {
@@ -247,17 +247,17 @@ function updateExpanded(state, action) {
 /**
  * Update the project directory root
  */
-function updateProjectDirectoryRoot(state, root, name) {
+function updateProjectDirectoryRoot(state, uniquePath, name) {
   // Only persists root within the top level target.
   // Otherwise the thread actor ID will change on page reload and we won't match anything
-  if (!root || root.startsWith("top-level")) {
-    prefs.projectDirectoryRoot = root;
+  if (!uniquePath || uniquePath.startsWith("top-level")) {
+    prefs.projectDirectoryRoot = uniquePath;
     prefs.projectDirectoryRootName = name;
   }
 
   return {
     ...state,
-    projectDirectoryRoot: root,
+    projectDirectoryRoot: uniquePath,
     projectDirectoryRootName: name,
   };
 }

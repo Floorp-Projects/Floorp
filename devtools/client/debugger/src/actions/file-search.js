@@ -40,8 +40,8 @@ export function searchContentsForHighlight(query, editor, line, ch) {
   };
 }
 
-export function closeFileSearch(cx, editor) {
-  return ({ getState, dispatch }) => {
+export function closeFileSearch() {
+  return ({ dispatch }) => {
     dispatch(closeActiveSearch());
     dispatch(clearHighlightLineRange());
   };

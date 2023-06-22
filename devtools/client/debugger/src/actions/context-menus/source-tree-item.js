@@ -17,7 +17,10 @@ import {
 import { setOverrideSource, removeOverrideSource } from "../sources";
 import { loadSourceText } from "../sources/loadSourceText";
 import { toggleBlackBox, blackBoxSources } from "../sources/blackbox";
-import { setProjectDirectoryRoot, clearProjectDirectoryRoot } from "../ui";
+import {
+  setProjectDirectoryRoot,
+  clearProjectDirectoryRoot,
+} from "../sources-tree";
 
 import { shouldBlackbox } from "../../utils/source";
 import { copyToTheClipboard } from "../../utils/clipboard";
@@ -107,7 +110,7 @@ export function showSourceTreeItemContextMenu(
           id: "node-remove-directory-root",
           label: removeDirectoryRootLabel,
           disabled: false,
-          click: () => dispatch(clearProjectDirectoryRoot(cx)),
+          click: () => dispatch(clearProjectDirectoryRoot()),
         });
       } else {
         menuOptions.push({
@@ -116,7 +119,7 @@ export function showSourceTreeItemContextMenu(
           accesskey: setDirectoryRootKey,
           disabled: false,
           click: () =>
-            dispatch(setProjectDirectoryRoot(cx, item.uniquePath, itemName)),
+            dispatch(setProjectDirectoryRoot(item.uniquePath, itemName)),
         });
       }
 

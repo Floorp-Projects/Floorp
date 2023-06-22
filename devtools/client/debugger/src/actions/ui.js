@@ -8,7 +8,6 @@ import {
   getQuickOpenEnabled,
   getSource,
   getSourceTextContent,
-  getMainThread,
   getIgnoreListSourceUrls,
   getSourceByURL,
   getBreakpointsForSource,
@@ -195,35 +194,6 @@ export function openConditionalPanel(location, log = false) {
 export function closeConditionalPanel() {
   return {
     type: "CLOSE_CONDITIONAL_PANEL",
-  };
-}
-
-export function clearProjectDirectoryRoot(cx) {
-  return {
-    type: "SET_PROJECT_DIRECTORY_ROOT",
-    cx,
-    url: "",
-    name: "",
-  };
-}
-
-export function setProjectDirectoryRoot(cx, newRoot, newName) {
-  return ({ dispatch, getState }) => {
-    // If the new project root is against the top level thread,
-    // replace its thread ID with "top-level", so that later,
-    // getDirectoryForUniquePath could match the project root,
-    // even after a page reload where the new top level thread actor ID
-    // will be different.
-    const mainThread = getMainThread(getState());
-    if (mainThread && newRoot.startsWith(mainThread.actor)) {
-      newRoot = newRoot.replace(mainThread.actor, "top-level");
-    }
-    dispatch({
-      type: "SET_PROJECT_DIRECTORY_ROOT",
-      cx,
-      url: newRoot,
-      name: newName,
-    });
   };
 }
 
