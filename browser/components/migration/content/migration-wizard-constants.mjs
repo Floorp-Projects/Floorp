@@ -103,4 +103,22 @@ export const MigrationWizardConstants = Object.freeze({
     "edge",
     "ie",
   ]),
+
+  /**
+   * The values that are set on the extension extra key for the
+   * migration_finished telemetry event. The definition of that event
+   * defines it as:
+   *
+   * "3" if all extensions were matched after import. "2" if only some
+   * extensions were matched. "1" if none were matched, and "0" if extensions
+   * weren't selected for import.
+   *
+   * @type {Object<string, string>}
+   */
+  EXTENSIONS_IMPORT_RESULT: Object.freeze({
+    NOT_IMPORTED: "0",
+    NONE_MATCHED: "1",
+    PARTIAL_MATCH: "2",
+    ALL_MATCHED: "3",
+  }),
 });
