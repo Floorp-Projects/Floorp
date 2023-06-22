@@ -496,7 +496,8 @@ void nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent* aTargetNode) {
     // we fire a start scrolling event.
     DocAccessible* document = GetDocAccessible(documentNode);
     const Accessible* focusedAcc = FocusedAccessible();
-    if (focusedAcc && focusedAcc == document) {
+    if (focusedAcc &&
+        (focusedAcc == document || focusedAcc->IsNonInteractive())) {
       LocalAccessible* targetAcc = document->GetAccessible(aTargetNode);
       if (targetAcc) {
         nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
