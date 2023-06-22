@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ContextDescriptorType:
     "chrome://remote/content/shared/messagehandler/MessageHandler.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  Marionette: "chrome://remote/content/components/Marionette.sys.mjs",
   RootMessageHandler:
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
@@ -44,6 +45,19 @@ class SessionModule extends Module {
   /**
    * Commands
    */
+
+  /**
+   * End the current session.
+   *
+   * Session clean up will happen later in WebDriverBiDiConnection class.
+   */
+  async end() {
+    if (lazy.Marionette.running) {
+      throw new lazy.error.UnsupportedOperationError(
+        "Ending session which was started with Webdriver classic is not supported, use Webdriver classic delete command instead."
+      );
+    }
+  }
 
   /**
    * Enable certain events either globally, or for a list of browsing contexts.

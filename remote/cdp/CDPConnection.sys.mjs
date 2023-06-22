@@ -192,14 +192,14 @@ export class CDPConnection extends WebSocketConnection {
   /**
    * Called by the `transport` when the connection is closed.
    */
-  onClosed() {
+  onConnectionClose() {
     // Cleanup all the registered sessions.
     for (const session of this.sessions.values()) {
       session.destructor();
     }
     this.sessions.clear();
 
-    super.onClosed();
+    super.onConnectionClose();
   }
 
   /**

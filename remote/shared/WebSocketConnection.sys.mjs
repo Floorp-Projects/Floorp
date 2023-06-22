@@ -62,11 +62,6 @@ export class WebSocketConnection {
    */
   close() {
     this.transport.close();
-
-    // In addition to the WebSocket transport, we also have to close the
-    // connection used internally within httpd.js. Otherwise the server doesn't
-    // shut down correctly, and keeps these Connection instances alive.
-    this.httpdConnection.close();
   }
 
   /**
@@ -128,8 +123,18 @@ export class WebSocketConnection {
   /**
    * Called by the `transport` when the connection is closed.
    */
-  onClosed(status) {
+  onConnectionClose(status) {
     lazy.logger.debug(`${this.constructor.name} ${this.id} closed`);
+  }
+
+  /**
+   * Called when the socket is closed.
+   */
+  onSocketClose() {
+    // In addition to the WebSocket transport, we also have to close the
+    // connection used internally within httpd.js. Otherwise the server doesn't
+    // shut down correctly, and keeps these Connection instances alive.
+    this.httpdConnection.close();
   }
 
   /**
