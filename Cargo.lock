@@ -1002,21 +1002,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crypto_hash"
-version = "0.1.0"
-dependencies = [
- "base64 0.21.0",
- "digest",
- "libc",
- "md-5",
- "nserror",
- "nsstring",
- "sha1",
- "sha2",
- "xpcom",
-]
-
-[[package]]
 name = "cssparser"
 version = "0.31.0"
 dependencies = [
@@ -2097,7 +2082,6 @@ dependencies = [
  "cert_storage",
  "chardetng_c",
  "cose-c",
- "crypto_hash",
  "cubeb-coreaudio",
  "cubeb-pulse",
  "cubeb-sys",
@@ -3112,15 +3096,6 @@ name = "matches"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2532096657941c2fea9c289d370a250971c689d4f143798ff67113ec042024a5"
-
-[[package]]
-name = "md-5"
-version = "0.10.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6365506850d44bff6e2fbcb5176cf63650e48bd45ef2fe2665ae1570e0f4b9ca"
-dependencies = [
- "digest",
-]
 
 [[package]]
 name = "mdns_service"

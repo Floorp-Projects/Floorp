@@ -1699,11 +1699,6 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.1.9 -> 0.1.10"
 
-[[audits.md-5]]
-who = "Dana Keeler <dkeeler@mozilla.com>"
-criteria = "safe-to-deploy"
-version = "0.10.5"
-
 [[audits.memmap2]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -2562,11 +2557,6 @@ notes = "Developed in-tree, effectively."
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.9.2 -> 0.9.3"
-
-[[audits.sha1]]
-who = "Dana Keeler <dkeeler@mozilla.com>"
-criteria = "safe-to-deploy"
-version = "0.10.5"
 
 [[audits.sha1]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
