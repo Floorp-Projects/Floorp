@@ -43,6 +43,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/MappedDeclarationsBuilder.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/PointerLockManager.h"
@@ -1859,6 +1860,9 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
 
   if (IsInComposedDoc()) {
+    if (IsPendingMappedAttributeEvaluation()) {
+      aContext.OwnerDoc().ScheduleForPresAttrEvaluation(this);
+    }
     // Connected callback must be enqueued whenever a custom element becomes
     // connected.
     if (CustomElementData* data = GetCustomElementData()) {
@@ -2062,8 +2066,7 @@ void Element::UnbindFromTree(bool aNullParent) {
   if (document) {
     // Disconnected must be enqueued whenever a connected custom element becomes
     // disconnected.
-    CustomElementData* data = GetCustomElementData();
-    if (data) {
+    if (CustomElementData* data = GetCustomElementData()) {
       if (data->mState == CustomElementData::State::eCustom) {
         nsContentUtils::EnqueueLifecycleCallback(
             ElementCallbackType::eDisconnected, this, {});
@@ -2072,6 +2075,10 @@ void Element::UnbindFromTree(bool aNullParent) {
         // when a custom element is disconnected.
         nsContentUtils::UnregisterUnresolvedElement(this);
       }
+    }
+
+    if (IsPendingMappedAttributeEvaluation()) {
+      document->UnscheduleForPresAttrEvaluation(this);
     }
 
     if (HasLastRememberedBSize() || HasLastRememberedISize()) {
@@ -2170,9 +2177,22 @@ nsresult Element::SetInlineStyleDeclaration(DeclarationBlock& aDeclaration,
 NS_IMETHODIMP_(bool)
 Element::IsAttributeMapped(const nsAtom* aAttribute) const { return false; }
 
+nsMapRuleToAttributesFunc Element::GetAttributeMappingFunction() const {
+  return &MapNoAttributesInto;
+}
+
+void Element::MapNoAttributesInto(mozilla::MappedDeclarationsBuilder&) {}
+
 nsChangeHint Element::GetAttributeChangeHint(const nsAtom* aAttribute,
                                              int32_t aModType) const {
   return nsChangeHint(0);
+}
+
+void Element::SetMappedDeclarationBlock(
+    already_AddRefed<StyleLockedDeclarationBlock> aDeclarations) {
+  MOZ_ASSERT(IsPendingMappedAttributeEvaluation());
+  mAttrs.SetMappedDeclarationBlock(std::move(aDeclarations));
+  MOZ_ASSERT(!IsPendingMappedAttributeEvaluation());
 }
 
 bool Element::FindAttributeDependence(const nsAtom* aAttribute,
@@ -2550,11 +2570,10 @@ nsresult Element::SetAttrAndNotify(
     nsIPrincipal* aSubjectPrincipal, uint8_t aModType, bool aFireMutation,
     bool aNotify, bool aCallAfterSetAttr, Document* aComposedDocument,
     const mozAutoDocUpdate& aGuard) {
-  nsresult rv;
   nsMutationGuard::DidMutate();
 
   // Copy aParsedValue for later use since it will be lost when we call
-  // SetAndSwapMappedAttr below
+  // SetAndSwapAttr below
   nsAttrValue valueForAfterSetAttr;
   if (aCallAfterSetAttr || GetCustomElementData()) {
     valueForAfterSetAttr.SetTo(aParsedValue);
@@ -2570,20 +2589,19 @@ nsresult Element::SetAttrAndNotify(
       hadDirAuto = HasDirAuto();  // already takes bdi into account
     }
 
-    // XXXbz Perhaps we should push up the attribute mapping function
-    // stuff to Element?
-    if (!IsAttributeMapped(aName) ||
-        !SetAndSwapMappedAttribute(aName, aParsedValue, &oldValueSet, &rv)) {
-      rv = mAttrs.SetAndSwapAttr(aName, aParsedValue, &oldValueSet);
+    MOZ_TRY(mAttrs.SetAndSwapAttr(aName, aParsedValue, &oldValueSet));
+    if (IsAttributeMapped(aName) && !IsPendingMappedAttributeEvaluation()) {
+      mAttrs.InfallibleMarkAsPendingPresAttributeEvaluation();
+      if (Document* doc = GetComposedDoc()) {
+        doc->ScheduleForPresAttrEvaluation(this);
+      }
     }
   } else {
-    RefPtr<mozilla::dom::NodeInfo> ni;
-    ni = mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, aPrefix, aNamespaceID,
-                                                   ATTRIBUTE_NODE);
-
-    rv = mAttrs.SetAndSwapAttr(ni, aParsedValue, &oldValueSet);
+    RefPtr<mozilla::dom::NodeInfo> ni =
+        mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, aPrefix, aNamespaceID,
+                                                  ATTRIBUTE_NODE);
+    MOZ_TRY(mAttrs.SetAndSwapAttr(ni, aParsedValue, &oldValueSet));
   }
-  NS_ENSURE_SUCCESS(rv, rv);
 
   PostIdMaybeChange(aNamespaceID, aName, &valueForAfterSetAttr);
 
@@ -2720,12 +2738,6 @@ bool Element::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
   }
 
-  return false;
-}
-
-bool Element::SetAndSwapMappedAttribute(nsAtom* aName, nsAttrValue& aValue,
-                                        bool* aValueWasSet, nsresult* aRetval) {
-  *aRetval = NS_OK;
   return false;
 }
 
@@ -2887,14 +2899,21 @@ nsresult Element::UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify) {
   bool hadValidDir = false;
   bool hadDirAuto = false;
 
-  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::dir) {
-    hadValidDir = HasValidDir() || IsHTMLElement(nsGkAtoms::bdi);
-    hadDirAuto = HasDirAuto();  // already takes bdi into account
+  if (aNameSpaceID == kNameSpaceID_None) {
+    if (aName == nsGkAtoms::dir) {
+      hadValidDir = HasValidDir() || IsHTMLElement(nsGkAtoms::bdi);
+      hadDirAuto = HasDirAuto();  // already takes bdi into account
+    }
+    if (IsAttributeMapped(aName) && !IsPendingMappedAttributeEvaluation()) {
+      mAttrs.InfallibleMarkAsPendingPresAttributeEvaluation();
+      if (Document* doc = GetComposedDoc()) {
+        doc->ScheduleForPresAttrEvaluation(this);
+      }
+    }
   }
 
   nsAttrValue oldValue;
-  nsresult rv = mAttrs.RemoveAttrAt(index, oldValue);
-  NS_ENSURE_SUCCESS(rv, rv);
+  MOZ_TRY(mAttrs.RemoveAttrAt(index, oldValue));
 
   PostIdMaybeChange(aNameSpaceID, aName, nullptr);
 

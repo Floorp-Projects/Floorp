@@ -9,13 +9,11 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLIFrameElementBinding.h"
 #include "mozilla/dom/FeaturePolicy.h"
-#include "mozilla/MappedDeclarations.h"
+#include "mozilla/MappedDeclarationsBuilder.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
-#include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
 #include "nsError.h"
-#include "nsStyleConsts.h"
 #include "nsContentUtils.h"
 #include "nsSandboxFlags.h"
 #include "nsNetUtil.h"
@@ -108,25 +106,25 @@ bool HTMLIFrameElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLIFrameElement::MapAttributesIntoRule(
-    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+    MappedDeclarationsBuilder& aBuilder) {
   // frameborder: 0 | 1 (| NO | YES in quirks mode)
   // If frameborder is 0 or No, set border to 0
   // else leave it as the value set in html.css
-  const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::frameborder);
+  const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::frameborder);
   if (value && value->Type() == nsAttrValue::eEnum) {
     auto frameborder = static_cast<FrameBorderProperty>(value->GetEnumValue());
     if (FrameBorderProperty::No == frameborder ||
         FrameBorderProperty::Zero == frameborder) {
-      aDecls.SetPixelValueIfUnset(eCSSProperty_border_top_width, 0.0f);
-      aDecls.SetPixelValueIfUnset(eCSSProperty_border_right_width, 0.0f);
-      aDecls.SetPixelValueIfUnset(eCSSProperty_border_bottom_width, 0.0f);
-      aDecls.SetPixelValueIfUnset(eCSSProperty_border_left_width, 0.0f);
+      aBuilder.SetPixelValueIfUnset(eCSSProperty_border_top_width, 0.0f);
+      aBuilder.SetPixelValueIfUnset(eCSSProperty_border_right_width, 0.0f);
+      aBuilder.SetPixelValueIfUnset(eCSSProperty_border_bottom_width, 0.0f);
+      aBuilder.SetPixelValueIfUnset(eCSSProperty_border_left_width, 0.0f);
     }
   }
 
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aBuilder);
+  nsGenericHTMLElement::MapImageAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
 }
 
 NS_IMETHODIMP_(bool)

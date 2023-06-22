@@ -171,7 +171,9 @@ class HTMLTableElement final : public nsGenericHTMLElement {
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLTableElement,
                                            nsGenericHTMLElement)
-  nsMappedAttributes* GetAttributesMappedForCell();
+  StyleLockedDeclarationBlock* GetAttributesMappedForCell() const {
+    return mTableInheritedAttributes;
+  }
 
  protected:
   virtual ~HTMLTableElement();
@@ -190,13 +192,12 @@ class HTMLTableElement final : public nsGenericHTMLElement {
 
   RefPtr<nsContentList> mTBodies;
   RefPtr<TableRowsCollection> mRows;
-  nsMappedAttributes* mTableInheritedAttributes;
+  RefPtr<StyleLockedDeclarationBlock> mTableInheritedAttributes;
   void BuildInheritedAttributes();
   void ReleaseInheritedAttributes();
 
  private:
-  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    MappedDeclarations&);
+  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
 };
 
 }  // namespace mozilla::dom

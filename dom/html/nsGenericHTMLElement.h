@@ -8,11 +8,11 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
-#include "nsMappedAttributeElement.h"
 #include "nsNameSpaceManager.h"  // for kNameSpaceID_None
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsStyledElement.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DOMRect.h"
@@ -26,6 +26,8 @@ class nsIFrame;
 class nsILayoutHistoryState;
 class nsIURI;
 struct nsSize;
+
+enum nsCSSPropertyID : int32_t;
 
 namespace mozilla {
 class EditorBase;
@@ -41,7 +43,7 @@ class HTMLFormElement;
 }  // namespace dom
 }  // namespace mozilla
 
-using nsGenericHTMLElementBase = nsMappedAttributeElement;
+using nsGenericHTMLElementBase = nsStyledElement;
 
 /**
  * A common superclass for HTML elements
@@ -495,17 +497,13 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapCommonAttributesInto(const nsMappedAttributes* aAttributes,
-                                      mozilla::MappedDeclarations&);
+  static void MapCommonAttributesInto(mozilla::MappedDeclarationsBuilder&);
   /**
    * Same as MapCommonAttributesInto except that it does not handle hidden.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
   static void MapCommonAttributesIntoExceptHidden(
-      const nsMappedAttributes* aAttributes, mozilla::MappedDeclarations&);
+      mozilla::MappedDeclarationsBuilder&);
 
   static const MappedAttributeEntry sCommonAttributeMap[];
   static const MappedAttributeEntry sImageMarginSizeAttributeMap[];
@@ -516,46 +514,28 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   static const MappedAttributeEntry sBackgroundColorAttributeMap[];
 
   /**
-   * Helper to map the align attribute into a style struct.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
+   * Helper to map the align attribute.
    * @see GetAttributeMappingFunction
    */
-  static void MapImageAlignAttributeInto(const nsMappedAttributes* aAttributes,
-                                         mozilla::MappedDeclarations&);
+  static void MapImageAlignAttributeInto(mozilla::MappedDeclarationsBuilder&);
 
   /**
-   * Helper to map the align attribute into a style struct for things
-   * like <div>, <h1>, etc.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
+   * Helper to map the align attribute for things like <div>, <h1>, etc.
    * @see GetAttributeMappingFunction
    */
-  static void MapDivAlignAttributeInto(const nsMappedAttributes* aAttributes,
-                                       mozilla::MappedDeclarations&);
+  static void MapDivAlignAttributeInto(mozilla::MappedDeclarationsBuilder&);
 
   /**
-   * Helper to map the valign attribute into a style struct for things
-   * like <col>, <tr>, <section>, etc.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
+   * Helper to map the valign attribute for things like <col>, <tr>, <section>.
    * @see GetAttributeMappingFunction
    */
-  static void MapVAlignAttributeInto(const nsMappedAttributes* aAttributes,
-                                     mozilla::MappedDeclarations&);
+  static void MapVAlignAttributeInto(mozilla::MappedDeclarationsBuilder&);
 
   /**
-   * Helper to map the image border attribute into a style struct.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
+   * Helper to map the image border attribute.
    * @see GetAttributeMappingFunction
    */
-  static void MapImageBorderAttributeInto(const nsMappedAttributes* aAttributes,
-                                          mozilla::MappedDeclarations&);
+  static void MapImageBorderAttributeInto(mozilla::MappedDeclarationsBuilder&);
   /**
    * Helper to map the image margin attribute into a style struct.
    *
@@ -563,8 +543,21 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapImageMarginAttributeInto(const nsMappedAttributes* aAttributes,
-                                          mozilla::MappedDeclarations&);
+  static void MapImageMarginAttributeInto(mozilla::MappedDeclarationsBuilder&);
+
+  /**
+   * Helper to map a given dimension (width/height) into the declaration
+   * block, handling percentages and numbers.
+   */
+  static void MapDimensionAttributeInto(mozilla::MappedDeclarationsBuilder&,
+                                        nsCSSPropertyID, const nsAttrValue&);
+
+  /**
+   * Maps the aspect ratio given width and height attributes.
+   */
+  static void DoMapAspectRatio(const nsAttrValue& aWidth,
+                               const nsAttrValue& aHeight,
+                               mozilla::MappedDeclarationsBuilder&);
 
   // Whether to map the width and height attributes to aspect-ratio.
   enum class MapAspectRatio { No, Yes };
@@ -572,18 +565,8 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   /**
    * Helper to map the image position attribute into a style struct.
    */
-  static void MapImageSizeAttributesInto(const nsMappedAttributes*,
-                                         mozilla::MappedDeclarations&,
+  static void MapImageSizeAttributesInto(mozilla::MappedDeclarationsBuilder&,
                                          MapAspectRatio = MapAspectRatio::No);
-  /**
-   * Helper to map the iamge source attributes into a style stuct.
-   * Note:
-   * This will override the declaration created by the presentation attributes
-   * of HTMLImageElement (i.e. mapped by MapImageSizeAttributeInto).
-   * https://html.spec.whatwg.org/multipage/embedded-content.html#the-source-element
-   */
-  static void MapPictureSourceSizeAttributesInto(const nsMappedAttributes*,
-                                                 mozilla::MappedDeclarations&);
 
   /**
    * Helper to map the width and height attributes into the aspect-ratio
@@ -594,8 +577,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
    * MapImageSizeAttributesInto instead, passing MapAspectRatio::Yes instead, as
    * that'd be faster.
    */
-  static void MapAspectRatioInto(const nsMappedAttributes*,
-                                 mozilla::MappedDeclarations&);
+  static void MapAspectRatioInto(mozilla::MappedDeclarationsBuilder&);
 
   /**
    * Helper to map `width` attribute into a style struct.
@@ -604,57 +586,33 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
    * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapWidthAttributeInto(const nsMappedAttributes* aAttributes,
-                                    mozilla::MappedDeclarations&);
+  static void MapWidthAttributeInto(mozilla::MappedDeclarationsBuilder&);
+
   /**
-   * Helper to map `height` attribute into a style struct.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
+   * Helper to map `height` attribute.
    * @see GetAttributeMappingFunction
    */
-  static void MapHeightAttributeInto(const nsMappedAttributes* aAttributes,
-                                     mozilla::MappedDeclarations&);
+  static void MapHeightAttributeInto(mozilla::MappedDeclarationsBuilder&);
   /**
    * Helper to map the background attribute
-   * into a style struct.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapBackgroundInto(const nsMappedAttributes* aAttributes,
-                                mozilla::MappedDeclarations&);
+  static void MapBackgroundInto(mozilla::MappedDeclarationsBuilder&);
   /**
    * Helper to map the bgcolor attribute
-   * into a style struct.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapBGColorInto(const nsMappedAttributes* aAttributes,
-                             mozilla::MappedDeclarations&);
+  static void MapBGColorInto(mozilla::MappedDeclarationsBuilder&);
   /**
    * Helper to map the background attributes (currently background and bgcolor)
-   * into a style struct.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
    * @see GetAttributeMappingFunction
    */
-  static void MapBackgroundAttributesInto(const nsMappedAttributes* aAttributes,
-                                          mozilla::MappedDeclarations&);
+  static void MapBackgroundAttributesInto(mozilla::MappedDeclarationsBuilder&);
   /**
-   * Helper to map the scrolling attribute on FRAME and IFRAME
-   * into a style struct.
-   *
-   * @param aAttributes the list of attributes to map
-   * @param aData the returned rule data [INOUT]
+   * Helper to map the scrolling attribute on FRAME and IFRAME.
    * @see GetAttributeMappingFunction
    */
-  static void MapScrollingAttributeInto(const nsMappedAttributes* aAttributes,
-                                        mozilla::MappedDeclarations&);
+  static void MapScrollingAttributeInto(mozilla::MappedDeclarationsBuilder&);
 
   // Form Helper Routines
   /**

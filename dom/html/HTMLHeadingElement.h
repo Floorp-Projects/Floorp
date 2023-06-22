@@ -64,8 +64,7 @@ class HTMLHeadingElement final : public nsGenericHTMLElement {
   JSObject* WrapNode(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    MappedDeclarations&);
+  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
 };
 
 }  // namespace mozilla::dom

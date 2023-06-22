@@ -18,7 +18,7 @@
    To change the list of properties, see ServoCSSPropList.h
 
  */
-enum nsCSSPropertyID {
+enum nsCSSPropertyID : int32_t {
   eCSSProperty_UNKNOWN = -1,
 
 $property_ids

@@ -90,7 +90,7 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
   is(
     editor.outerHTML,
-    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p></div></div>",
+    "<div contenteditable=\"\" style=\"background-color: rgb(255, 0, 0);\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p></div></div>",
     "cmd_backgroundColor should set background of the closest block element from the caret in a text node"
   );
 
@@ -102,7 +102,7 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
   is(
     editor.outerHTML,
-    "<div style=\"background-color: rgb(0, 255, 0);\" contenteditable=\"\">abc</div>",
+    "<div contenteditable=\"\" style=\"background-color: rgb(0, 255, 0);\">abc</div>",
     "cmd_backgroundColor should set background of the editing host which is direct block parent from the caret in a text node"
   );
 
@@ -114,7 +114,7 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
   is(
     editor.outerHTML,
-    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div contenteditable=\"false\"><span contenteditable=\"true\">abc</span></div></div>",
+    "<div contenteditable=\"\" style=\"background-color: rgb(255, 0, 0);\"><div contenteditable=\"false\"><span contenteditable=\"true\">abc</span></div></div>",
     "cmd_backgroundColor should not set background color of inline editing host nor its non-editable parent block"
   );
 
@@ -126,7 +126,7 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
   is(
     editor.outerHTML,
-    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>ab<br>c</span></p></div></div>",
+    "<div contenteditable=\"\" style=\"background-color: rgb(255, 0, 0);\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>ab<br>c</span></p></div></div>",
     "cmd_backgroundColor should set background of the closest block element when selection a leaf element"
   );
 
@@ -138,7 +138,7 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
   is(
     editor.outerHTML,
-    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p></div></div>",
+    "<div contenteditable=\"\" style=\"background-color: rgb(255, 0, 0);\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p></div></div>",
     "cmd_backgroundColor should set background of the selected block element"
   );
 
@@ -150,7 +150,7 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
   is(
     editor.outerHTML,
-    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
+    "<div contenteditable=\"\" style=\"background-color: rgb(255, 0, 0);\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
       "<p style=\"background-color: rgb(0, 255, 0);\"><span>def</span></p>" +
       "<p style=\"background-color: rgb(0, 255, 0);\"><span>ghi</span></p></div></div>",
     "cmd_backgroundColor should set background of the paragraph elements in the selection range"
@@ -164,7 +164,7 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
   is(
     editor.outerHTML,
-    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
+    "<div contenteditable=\"\" style=\"background-color: rgb(255, 0, 0);\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
       "<p style=\"background-color: rgb(0, 255, 0);\"><span contenteditable=\"false\">def</span></p>" +
       "<p style=\"background-color: rgb(0, 255, 0);\"><span>ghi</span></p></div></div>",
     "cmd_backgroundColor should set background of the paragraph elements in the selection range even if a paragraph has only non-editable content"
@@ -178,7 +178,7 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
   is(
     editor.outerHTML,
-    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
+    "<div contenteditable=\"\" style=\"background-color: rgb(255, 0, 0);\"><div><p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
       "<p contenteditable=\"false\"><span>def</span></p>" +
       "<p style=\"background-color: rgb(0, 255, 0);\"><span>ghi</span></p></div></div>",
     "cmd_backgroundColor should set background of the paragraph elements in the selection range except the non-editable paragraph"
@@ -192,7 +192,7 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
   is(
     editor.outerHTML,
-    "<div style=\"background-color: rgb(255, 0, 0);\" contenteditable=\"\"><div style=\"background-color: rgb(0, 255, 0);\">" +
+    "<div contenteditable=\"\" style=\"background-color: rgb(255, 0, 0);\"><div style=\"background-color: rgb(0, 255, 0);\">" +
       "<p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
       "<span>def</span>" +
       "<p style=\"background-color: rgb(0, 255, 0);\"><span>ghi</span></p></div></div>",
@@ -207,7 +207,7 @@ SimpleTest.waitForFocus(() => {
   SpecialPowers.doCommand(window, "cmd_backgroundColor", "#00ff00");
   is(
     editor.outerHTML,
-    "<div style=\"background-color: rgb(0, 255, 0);\" contenteditable=\"\">" +
+    "<div contenteditable=\"\" style=\"background-color: rgb(0, 255, 0);\">" +
       "<p style=\"background-color: rgb(0, 255, 0);\"><span>abc</span></p>" +
       "<span>def</span>" +
       "<p style=\"background-color: rgb(0, 255, 0);\"><span>ghi</span></p></div>",

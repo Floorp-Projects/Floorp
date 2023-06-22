@@ -188,8 +188,7 @@ class HTMLObjectElement final : public nsGenericHTMLFormControlElement,
   JSObject* WrapNode(JSContext* aCx,
                      JS::Handle<JSObject*> aGivenProto) override;
 
-  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
-                                    MappedDeclarations&);
+  static void MapAttributesIntoRule(MappedDeclarationsBuilder&);
 
   /**
    * This function is called by AfterSetAttr and OnAttrSetButNotChanged.

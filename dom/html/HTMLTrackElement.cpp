@@ -27,7 +27,6 @@
 #include "nsIScriptError.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsPrimitives.h"
-#include "nsMappedAttributes.h"
 #include "nsNetUtil.h"
 #include "nsStyleConsts.h"
 #include "nsThreadUtils.h"

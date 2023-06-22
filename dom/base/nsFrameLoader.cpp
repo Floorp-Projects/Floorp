@@ -45,7 +45,6 @@
 #include "nsHTMLDocument.h"
 #include "nsPIWindowRoot.h"
 #include "nsLayoutUtils.h"
-#include "nsMappedAttributes.h"
 #include "nsView.h"
 #include "nsBaseWidget.h"
 #include "nsQueryObject.h"
@@ -1067,19 +1066,10 @@ void nsFrameLoader::MarginsChanged() {
   // that needs to be updated
   if (Document* doc = docShell->GetDocument()) {
     for (nsINode* cur = doc; cur; cur = cur->GetNextNode()) {
-      if (cur->IsHTMLElement(nsGkAtoms::body)) {
-        static_cast<HTMLBodyElement*>(cur)->ClearMappedServoStyle();
+      if (auto* body = HTMLBodyElement::FromNode(cur)) {
+        body->FrameMarginsChanged();
       }
     }
-  }
-
-  // Trigger a restyle if there's a prescontext
-  // FIXME: This could do something much less expensive.
-  if (nsPresContext* presContext = docShell->GetPresContext()) {
-    // rebuild, because now the same nsMappedAttributes* will produce
-    // a different style
-    presContext->RebuildAllStyleData(nsChangeHint(0),
-                                     RestyleHint::RestyleSubtree());
   }
 }
 

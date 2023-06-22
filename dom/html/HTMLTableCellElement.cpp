@@ -8,8 +8,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLTableElement.h"
 #include "mozilla/dom/HTMLTableRowElement.h"
-#include "mozilla/MappedDeclarations.h"
-#include "nsMappedAttributes.h"
+#include "mozilla/MappedDeclarationsBuilder.h"
 #include "nsAttrValueInlines.h"
 #include "celldata.h"
 #include "mozilla/dom/HTMLTableCellElementBinding.h"
@@ -84,12 +83,11 @@ int32_t HTMLTableCellElement::CellIndex() const {
   return -1;
 }
 
-nsMappedAttributes*
+StyleLockedDeclarationBlock*
 HTMLTableCellElement::GetMappedAttributesInheritedFromTable() const {
   if (HTMLTableElement* table = GetTable()) {
     return table->GetAttributesMappedForCell();
   }
-
   return nullptr;
 }
 
@@ -162,27 +160,27 @@ bool HTMLTableCellElement::ParseAttribute(int32_t aNamespaceID,
 }
 
 void HTMLTableCellElement::MapAttributesIntoRule(
-    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  MapImageSizeAttributesInto(aAttributes, aDecls);
+    MappedDeclarationsBuilder& aBuilder) {
+  MapImageSizeAttributesInto(aBuilder);
 
-  if (!aDecls.PropertyIsSet(eCSSProperty_white_space)) {
+  if (!aBuilder.PropertyIsSet(eCSSProperty_white_space)) {
     // nowrap: enum
-    if (aAttributes->GetAttr(nsGkAtoms::nowrap)) {
+    if (aBuilder.GetAttr(nsGkAtoms::nowrap)) {
       // See if our width is not a nonzero integer width.
-      const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::width);
-      nsCompatibility mode = aDecls.Document()->GetCompatibilityMode();
+      const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::width);
+      nsCompatibility mode = aBuilder.Document().GetCompatibilityMode();
       if (!value || value->Type() != nsAttrValue::eInteger ||
           value->GetIntegerValue() == 0 || eCompatibility_NavQuirks != mode) {
-        aDecls.SetKeywordValue(eCSSProperty_white_space,
-                               StyleWhiteSpace::Nowrap);
+        aBuilder.SetKeywordValue(eCSSProperty_white_space,
+                                 StyleWhiteSpace::Nowrap);
       }
     }
   }
 
-  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapVAlignAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapVAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aBuilder);
+  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
 }
 
 NS_IMETHODIMP_(bool)
