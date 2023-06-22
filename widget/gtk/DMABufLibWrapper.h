@@ -198,16 +198,19 @@ class DMABufDevice {
   static bool IsDMABufWebGLEnabled();
   static void DisableDMABufWebGL();
 
+#ifdef MOZ_WAYLAND
   void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
                          uint32_t mModifierLo);
+#endif
   GbmFormat* GetGbmFormat(bool aHasAlpha);
 
  private:
   void Configure();
+#ifdef MOZ_WAYLAND
   void LoadFormatModifiers();
-
   void SetModifiersToGfxVars();
   void GetModifiersFromGfxVars();
+#endif
 
  private:
   GbmFormat mXRGBFormat;
