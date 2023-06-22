@@ -14,6 +14,7 @@
 #include "mozilla/dom/HTMLCollectionBinding.h"
 #include "mozilla/dom/HTMLTableElementBinding.h"
 #include "nsContentUtils.h"
+#include "nsLayoutUtils.h"
 #include "jsfriendapi.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Table)
@@ -38,13 +39,12 @@ class TableRowsCollection final : public nsIHTMLCollection,
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
-  virtual uint32_t Length() override;
-  virtual Element* GetElementAt(uint32_t aIndex) override;
-  virtual nsINode* GetParentObject() override { return mParent; }
+  uint32_t Length() override;
+  Element* GetElementAt(uint32_t aIndex) override;
+  nsINode* GetParentObject() override { return mParent; }
 
-  virtual Element* GetFirstNamedElement(const nsAString& aName,
-                                        bool& aFound) override;
-  virtual void GetSupportedNames(nsTArray<nsString>& aNames) override;
+  Element* GetFirstNamedElement(const nsAString& aName, bool& aFound) override;
+  void GetSupportedNames(nsTArray<nsString>& aNames) override;
 
   NS_IMETHOD ParentDestroyed();
 
@@ -54,8 +54,7 @@ class TableRowsCollection final : public nsIHTMLCollection,
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
   using nsWrapperCache::PreserveWrapper;
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
  protected:
   // Unregister ourselves as a mutation observer, and clear our internal state.
@@ -69,11 +68,10 @@ class TableRowsCollection final : public nsIHTMLCollection,
     CleanUp();
   }
 
-  virtual JSObject* GetWrapperPreserveColorInternal() override {
+  JSObject* GetWrapperPreserveColorInternal() override {
     return nsWrapperCache::GetWrapperPreserveColor();
   }
-  virtual void PreserveWrapperInternal(
-      nsISupports* aScriptObjectHolder) override {
+  void PreserveWrapperInternal(nsISupports* aScriptObjectHolder) override {
     nsWrapperCache::PreserveWrapper(aScriptObjectHolder);
   }
 
@@ -984,6 +982,11 @@ void HTMLTableElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                     bool aNotify) {
   if (aName == nsGkAtoms::cellpadding && aNameSpaceID == kNameSpaceID_None) {
     BuildInheritedAttributes();
+    // This affects our cell styles.
+    // TODO(emilio): Maybe GetAttributeChangeHint should also allow you to
+    // specify a restyle hint and this could move there?
+    nsLayoutUtils::PostRestyleEvent(this, RestyleHint::RestyleSubtree(),
+                                    nsChangeHint(0));
   }
   return nsGenericHTMLElement::AfterSetAttr(
       aNameSpaceID, aName, aValue, aOldValue, aSubjectPrincipal, aNotify);
