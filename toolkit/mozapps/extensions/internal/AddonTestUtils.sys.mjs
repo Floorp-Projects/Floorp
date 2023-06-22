@@ -1306,10 +1306,13 @@ export var AddonTestUtils = {
     });
   },
 
-  promiseInstallEvent(event) {
+  promiseInstallEvent(event, checkFn) {
     return new Promise(resolve => {
       let listener = {
         [event](...args) {
+          if (typeof checkFn == "function" && !checkFn(...args)) {
+            return;
+          }
           AddonManager.removeInstallListener(listener);
           resolve(args);
         },

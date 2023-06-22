@@ -437,11 +437,11 @@ add_task(
     const promiseInstallsEnded = Promise.all([
       AddonTestUtils.promiseInstallEvent(
         "onInstallEnded",
-        addon => addon.id === ADDON_ID
+        install => install.addon.id === ADDON_ID
       ),
       AddonTestUtils.promiseInstallEvent(
         "onInstallEnded",
-        addon => addon.id === ADDON_ID_RETAINED
+        install => install.addon.id === ADDON_ID_RETAINED
       ),
     ]);
 

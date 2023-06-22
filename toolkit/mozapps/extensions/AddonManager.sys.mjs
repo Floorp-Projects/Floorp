@@ -489,6 +489,7 @@ var gBrowserUpdated = null;
 
 export var AMTelemetry;
 export var AMRemoteSettings;
+export var AMBrowserExtensionsImport;
 
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
@@ -5221,6 +5222,204 @@ AMTelemetry = {
       // functionality.
       Cu.reportError(err);
     }
+  },
+};
+
+/**
+ * AMBrowserExtensionsImport is used by the migration wizard to import/install
+ * Firefox add-ons based on a set of non-Firefox browser extensions.
+ */
+AMBrowserExtensionsImport = {
+  TELEMETRY_SOURCE: "browser-import",
+
+  // AddonId => AddonInstall
+  _pendingInstallsMap: new Map(),
+  _importInProgress: false,
+  // Prompt handler set on the AddonInstall instances part of the imports
+  // (which currently makes sure we are not prompting for permissions when the
+  // imported addons are being downloaded, staged and then installed).
+  _installPromptHandler: () => {},
+
+  get hasPendingImportedAddons() {
+    return !!this._pendingInstallsMap.size;
+  },
+
+  get importedAddonIDs() {
+    return Array.from(this._pendingInstallsMap.keys());
+  },
+
+  /**
+   * Stage an install for each add-on mapped to a browser extension ID in the
+   * list of IDs passed to this method.
+   *
+   * @param {string} browserId A browser identifier.
+   * @param {Array<string} extensionIDs A list of non-Firefox extension IDs.
+   * @param {AddonRepository} addonRepository Optionally pass the AddonRepository
+   *                                          to use, which is mainly used for
+   *                                          testing purposes.
+   * @returns {Promise<object>} The return value is an object with data for
+   *                            the caller.
+   * @throws {Error} When there are pending imported add-ons.
+   */
+  async stageInstalls(
+    browserId,
+    extensionIDs,
+    addonRepository = lazy.AddonRepository
+  ) {
+    // In case we have an import in progress, we throw so that the caller knows
+    // that there is already an import in progress, which it may want to either
+    // cancel or complete.
+    if (this._importInProgress) {
+      throw new Error(
+        "Cannot stage installs because there are pending imported add-ons"
+      );
+    }
+    this._importInProgress = true;
+
+    let importedAddons = [];
+    // We first retrieve a list of `AddonSearchResult`, which are the Firefox
+    // add-ons mapped to the list of extension IDs passed to this method. We
+    // might not have as many mapped add-ons as extension IDs because not all
+    // browser extensions will be mapped to Firefox add-ons.
+    try {
+      importedAddons = await addonRepository.getMappedAddons(
+        browserId,
+        extensionIDs
+      );
+    } catch (err) {
+      Cu.reportError(err);
+    }
+
+    const alreadyInstalledIDs = (await AddonManager.getAllAddons()).map(
+      addon => addon.id
+    );
+
+    const { _pendingInstallsMap } = this;
+
+    const results = await Promise.allSettled(
+      // For each add-on to import, we create an `AddonInstall` instance and we
+      // start the install process until we reach the "downloaded ended" step.
+      // At this point, we call `postpone()`, and we are done when the add-on
+      // install has been postponed.
+      importedAddons
+        // Do not import add-ons already installed.
+        .filter(({ id }) => !alreadyInstalledIDs.includes(id))
+        .map(async ({ id, sourceURI, name, version, icons }) => {
+          let addonInstall;
+
+          try {
+            addonInstall = await AddonManager.getInstallForURL(sourceURI.spec, {
+              name,
+              version,
+              icons,
+              telemetryInfo: { source: this.TELEMETRY_SOURCE },
+              promptHandler: this._installPromptHandler,
+            });
+          } catch (err) {
+            return Promise.reject(err);
+          }
+
+          return new Promise((resolve, reject) => {
+            const rejectWithMessage = err => () => reject(new Error(err));
+
+            addonInstall.addListener({
+              onDownloadEnded(install) {
+                install
+                  .postpone(null, /* requiresRestart */ false)
+                  .then(_pendingInstallsMap.set(id, install));
+              },
+
+              onInstallPostponed() {
+                resolve();
+              },
+
+              onDownloadCancelled: rejectWithMessage("Download cancelled"),
+              onDownloadFailed: rejectWithMessage("Download failed"),
+              onInstallCancelled: rejectWithMessage("Install cancelled"),
+              onInstallFailed: rejectWithMessage("Install failed"),
+            });
+
+            addonInstall.install();
+          });
+        })
+    );
+    this._reportErrors(results);
+
+    // All the imported add-ons should have been staged for install at this
+    // point, unless there was no add-on mapped OR some errors.
+    const { importedAddonIDs } = this;
+
+    this._importInProgress = !!importedAddonIDs.length;
+
+    if (importedAddonIDs.length) {
+      Services.obs.notifyObservers(
+        null,
+        "webextension-imported-addons-pending"
+      );
+    }
+
+    return { importedAddonIDs };
+  },
+
+  /**
+   * Finalize the installation of the add-ons for which we staged their install.
+   *
+   * @returns {Promise<void>}
+   * @throws {Error} When there is no import in progress.
+   */
+  async completeInstalls() {
+    if (!this._importInProgress) {
+      throw new Error("No import in progress");
+    }
+
+    const results = await Promise.allSettled(
+      Array.from(this._pendingInstallsMap.values()).map(install => {
+        return install.continuePostponedInstall();
+      })
+    );
+    this._reportErrors(results);
+    this._clearInternalState();
+
+    Services.obs.notifyObservers(
+      null,
+      "webextension-notify-imported-addons-complete"
+    );
+  },
+
+  /**
+   * Cancel the installation of the add-ons for which we staged their install.
+   *
+   * @returns {Promise<void>}
+   * @throws {Error} When there is no import in progress.
+   */
+  async cancelInstalls() {
+    if (!this._importInProgress) {
+      throw new Error("No import in progress");
+    }
+
+    const results = await Promise.allSettled(
+      Array.from(this._pendingInstallsMap.values()).map(install => {
+        return install.cancel();
+      })
+    );
+    this._reportErrors(results);
+    this._clearInternalState();
+
+    Services.obs.notifyObservers(
+      null,
+      "webextension-notify-imported-addons-cancelled"
+    );
+  },
+
+  _reportErrors(results) {
+    results
+      .filter(result => result.status === "rejected")
+      .forEach(result => Cu.reportError(result.reason));
+  },
+
+  _clearInternalState() {
+    this._pendingInstallsMap.clear();
+    this._importInProgress = false;
   },
 };
 

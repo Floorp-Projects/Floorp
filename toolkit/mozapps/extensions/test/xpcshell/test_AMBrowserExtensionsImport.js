@@ -1,0 +1,383 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
+
+const { AMBrowserExtensionsImport } = ChromeUtils.importESModule(
+  "resource://gre/modules/AddonManager.sys.mjs"
+);
+
+const mockAddonRepository = ({
+  addons = [],
+  expectedBrowserID = null,
+  expectedExtensionIDs = null,
+}) => {
+  return {
+    async getMappedAddons(browserID, extensionIDs) {
+      if (expectedBrowserID) {
+        Assert.equal(browserID, expectedBrowserID, "expected browser ID");
+      }
+      if (expectedExtensionIDs) {
+        Assert.deepEqual(
+          extensionIDs,
+          expectedExtensionIDs,
+          "expected extension IDs"
+        );
+      }
+
+      return Promise.resolve(addons);
+    },
+  };
+};
+
+const assertStageInstallsResult = (result, importedAddonIDs) => {
+  // Sort the results to always assert the elements in the same order.
+  result.importedAddonIDs.sort();
+  Assert.deepEqual(result, { importedAddonIDs }, "expected results");
+  Assert.ok(
+    AMBrowserExtensionsImport.hasPendingImportedAddons,
+    "expected pending imported add-ons"
+  );
+};
+
+const cancelInstalls = async importedAddonIDs => {
+  const promiseTopic = TestUtils.topicObserved(
+    "webextension-notify-imported-addons-cancelled"
+  );
+  // We want to verify that we received a `onInstallCancelled` event per
+  // (cancelled) install (i.e. per imported add-on).
+  const cancelledPromises = importedAddonIDs.map(id =>
+    AddonTestUtils.promiseInstallEvent(
+      "onInstallCancelled",
+      install => install.addon.id == id
+    )
+  );
+  await AMBrowserExtensionsImport.cancelInstalls();
+  await Promise.all([promiseTopic, ...cancelledPromises]);
+  Assert.ok(
+    !AMBrowserExtensionsImport.hasPendingImportedAddons,
+    "expected no pending imported add-ons"
+  );
+};
+
+const TEST_SERVER = createHttpServer({ hosts: ["example.com"] });
+
+const ADDONS = {
+  ext1: {
+    manifest: {
+      name: "Ext 1",
+      version: "1.0",
+      browser_specific_settings: { gecko: { id: "ff@ext-1" } },
+    },
+  },
+  ext2: {
+    manifest: {
+      name: "Ext 2",
+      version: "1.0",
+      browser_specific_settings: { gecko: { id: "ff@ext-2" } },
+    },
+  },
+};
+// Populated in `setup()`.
+const XPIS = {};
+// Populated in `setup()`.
+const ADDON_SEARCH_RESULTS = {};
+
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo(
+  "xpcshell@tests.mozilla.org",
+  "XPCShell",
+  "42",
+  "42"
+);
+
+add_setup(async function setup() {
+  for (const [name, data] of Object.entries(ADDONS)) {
+    XPIS[name] = AddonTestUtils.createTempWebExtensionFile(data);
+    TEST_SERVER.registerFile(`/addons/${name}.xpi`, XPIS[name]);
+
+    ADDON_SEARCH_RESULTS[name] = {
+      id: data.manifest.browser_specific_settings.gecko.id,
+      name: data.name,
+      version: data.version,
+      sourceURI: Services.io.newURI(`http://example.com/addons/${name}.xpi`),
+      icons: {},
+    };
+  }
+
+  await AddonTestUtils.promiseStartupManager();
+
+  // When we stage installs and then cancel them, `XPIInstall` won't be able to
+  // remove the staging directory (which is expected to be empty) until the
+  // next restart. This causes an `AddonTestUtils` assertion to fail because we
+  // don't expect any staging directory at the end of the tests. That's why we
+  // remove this directory in the cleanup function defined below.
+  //
+  // We only remove the staging directory and that will only works if the
+  // directory is empty, otherwise an unchaught error will be thrown (on
+  // purpose).
+  registerCleanupFunction(() => {
+    const profileDir = do_get_profile();
+    const stagingDir = profileDir.clone();
+    stagingDir.append("extensions");
+    stagingDir.append("staged");
+    stagingDir.exists() && stagingDir.remove(/* recursive */ false);
+  });
+});
+
+add_task(async function test_stage_and_complete_installs() {
+  const browserID = "some-browser-id";
+  const extensionIDs = ["ext-1", "ext-2"];
+  const addonRepository = mockAddonRepository({
+    addons: Object.values(ADDON_SEARCH_RESULTS),
+    expectedBrowserID: browserID,
+    expectedExtensionIDs: extensionIDs,
+  });
+  const importedAddonIDs = ["ff@ext-1", "ff@ext-2"];
+
+  const result = await AMBrowserExtensionsImport.stageInstalls(
+    browserID,
+    extensionIDs,
+    addonRepository
+  );
+  assertStageInstallsResult(result, importedAddonIDs);
+
+  // Make sure the prompt handler is the one from `AMBrowserExtensionsImport`
+  // since we don't want to show a permission prompt during an import.
+  for (const install of AMBrowserExtensionsImport._pendingInstallsMap.values()) {
+    Assert.equal(
+      install.promptHandler,
+      AMBrowserExtensionsImport._installPromptHandler,
+      "expected prompt handler to be the one set by AMBrowserExtensionsImport"
+    );
+  }
+
+  const promiseTopic = TestUtils.topicObserved(
+    "webextension-notify-imported-addons-complete"
+  );
+  const endedPromises = importedAddonIDs.map(id =>
+    AddonTestUtils.promiseInstallEvent(
+      "onInstallEnded",
+      install => install.addon.id == id
+    )
+  );
+  await AMBrowserExtensionsImport.completeInstalls();
+  await Promise.all([promiseTopic, ...endedPromises]);
+
+  Assert.ok(
+    !AMBrowserExtensionsImport.hasPendingImportedAddons,
+    "expected no pending imported add-ons"
+  );
+  Assert.ok(
+    !AMBrowserExtensionsImport._importInProgress,
+    "expected internal state to be consistent"
+  );
+
+  for (const id of importedAddonIDs) {
+    const addon = await AddonManager.getAddonByID(id);
+    Assert.ok(addon.isActive, `expected add-on "${id}" to be enabled`);
+    await addon.uninstall();
+  }
+});
+
+add_task(async function test_stage_and_cancel_installs() {
+  const browserID = "some-browser-id";
+  const extensionIDs = ["ext-1", "ext-2"];
+  const addonRepository = mockAddonRepository({
+    addons: Object.values(ADDON_SEARCH_RESULTS),
+    expectedBrowserID: browserID,
+    expectedExtensionIDs: extensionIDs,
+  });
+  const importedAddonIDs = ["ff@ext-1", "ff@ext-2"];
+
+  const result = await AMBrowserExtensionsImport.stageInstalls(
+    browserID,
+    extensionIDs,
+    addonRepository
+  );
+  assertStageInstallsResult(result, importedAddonIDs);
+
+  await cancelInstalls(importedAddonIDs);
+});
+
+add_task(async function test_call_stageInstalls_twice() {
+  const browserID = "some-browser-id";
+  const extensionIDs = ["ext-1"];
+  const addonRepository = mockAddonRepository({
+    // Only return one extension.
+    addons: Object.values(ADDON_SEARCH_RESULTS).slice(0, 1),
+    expectedBrowserID: browserID,
+    expectedExtensionIDs: extensionIDs,
+  });
+  const importedAddonIDs = ["ff@ext-1"];
+
+  let result = await AMBrowserExtensionsImport.stageInstalls(
+    browserID,
+    extensionIDs,
+    addonRepository
+  );
+  assertStageInstallsResult(result, importedAddonIDs);
+
+  await Assert.rejects(
+    AMBrowserExtensionsImport.stageInstalls(browserID, [], addonRepository),
+    /Cannot stage installs because there are pending imported add-ons/,
+    "expected rejection because there are pending imported add-ons"
+  );
+
+  // Cancel the installs for the previous import.
+  await cancelInstalls(importedAddonIDs);
+
+  // We should now be able to stage installs again.
+  result = await AMBrowserExtensionsImport.stageInstalls(
+    browserID,
+    extensionIDs,
+    addonRepository
+  );
+  assertStageInstallsResult(result, importedAddonIDs);
+
+  await cancelInstalls(importedAddonIDs);
+});
+
+add_task(async function test_call_stageInstalls_no_addons() {
+  const browserID = "some-browser-id";
+  const extensionIDs = ["ext-123456"];
+  const addonRepository = mockAddonRepository({
+    // Returns no mapped add-ons.
+    addons: [],
+    expectedBrowserID: browserID,
+    expectedExtensionIDs: extensionIDs,
+  });
+
+  const result = await AMBrowserExtensionsImport.stageInstalls(
+    browserID,
+    extensionIDs,
+    addonRepository
+  );
+
+  Assert.deepEqual(result, { importedAddonIDs: [] }, "expected result");
+  Assert.ok(
+    !AMBrowserExtensionsImport.hasPendingImportedAddons,
+    "expected no pending imported add-ons"
+  );
+  Assert.ok(
+    !AMBrowserExtensionsImport._importInProgress,
+    "expected internal state to be consistent"
+  );
+});
+
+add_task(async function test_import_twice() {
+  const browserID = "some-browser-id";
+  const extensionIDs = ["ext-1"];
+  const addonRepository = mockAddonRepository({
+    addons: Object.values(ADDON_SEARCH_RESULTS),
+    expectedBrowserID: browserID,
+    expectedExtensionIDs: extensionIDs,
+  });
+  const importedAddonIDs = ["ff@ext-1", "ff@ext-2"];
+
+  let result = await AMBrowserExtensionsImport.stageInstalls(
+    browserID,
+    extensionIDs,
+    addonRepository
+  );
+  assertStageInstallsResult(result, importedAddonIDs);
+
+  // Finalize the installs.
+  const promiseTopic = TestUtils.topicObserved(
+    "webextension-notify-imported-addons-complete"
+  );
+  const endedPromises = importedAddonIDs.map(id =>
+    AddonTestUtils.promiseInstallEvent(
+      "onInstallEnded",
+      install => install.addon.id == id
+    )
+  );
+  await AMBrowserExtensionsImport.completeInstalls();
+  await Promise.all([promiseTopic, ...endedPromises]);
+
+  // Try to import the same add-ons again. Because these add-ons are already
+  // installed, we shouldn't re-import them again.
+  result = await AMBrowserExtensionsImport.stageInstalls(
+    browserID,
+    extensionIDs,
+    addonRepository
+  );
+  Assert.deepEqual(result, { importedAddonIDs: [] }, "expected result");
+  Assert.ok(
+    !AMBrowserExtensionsImport.hasPendingImportedAddons,
+    "expected no pending imported add-ons"
+  );
+  Assert.ok(
+    !AMBrowserExtensionsImport._importInProgress,
+    "expected internal state to be consistent"
+  );
+
+  for (const id of importedAddonIDs) {
+    const addon = await AddonManager.getAddonByID(id);
+    Assert.ok(addon.isActive, `expected add-on "${id}" to be enabled`);
+    await addon.uninstall();
+  }
+});
+
+add_task(async function test_call_cancelInstalls_without_pending_import() {
+  await Assert.rejects(
+    AMBrowserExtensionsImport.cancelInstalls(),
+    /No import in progress/,
+    "expected an error"
+  );
+});
+
+add_task(async function test_call_completeInstalls_without_pending_import() {
+  await Assert.rejects(
+    AMBrowserExtensionsImport.completeInstalls(),
+    /No import in progress/,
+    "expected an error"
+  );
+});
+
+add_task(async function test_stage_installs_with_download_aborted() {
+  const browserID = "some-browser-id";
+  const extensionIDs = ["ext-1", "ext-2"];
+  const addonRepository = mockAddonRepository({
+    addons: Object.values(ADDON_SEARCH_RESULTS),
+    expectedBrowserID: browserID,
+    expectedExtensionIDs: extensionIDs,
+  });
+  const importedAddonIDs = ["ff@ext-2"];
+
+  // This listener will be triggered once (for the first imported add-on). Its
+  // goal is to cancel the download of an imported add-on and make sure it
+  // doesn't break everything. We still expect the second add-on to import to
+  // be staged for install.
+  const onNewInstall = AddonTestUtils.promiseInstallEvent(
+    "onNewInstall",
+    install => {
+      install.addListener({
+        onDownloadStarted: () => false,
+      });
+      return true;
+    }
+  );
+  const promiseTopic = TestUtils.topicObserved(
+    "webextension-imported-addons-pending"
+  );
+  const result = await AMBrowserExtensionsImport.stageInstalls(
+    browserID,
+    extensionIDs,
+    addonRepository
+  );
+  await Promise.all([onNewInstall, promiseTopic]);
+  assertStageInstallsResult(result, importedAddonIDs);
+
+  Assert.ok(
+    AMBrowserExtensionsImport.hasPendingImportedAddons,
+    "expected pending imported add-ons"
+  );
+  Assert.ok(
+    AMBrowserExtensionsImport._importInProgress,
+    "expected internal state to be consistent"
+  );
+
+  // Let's cancel the pending installs.
+  await cancelInstalls(importedAddonIDs);
+});
