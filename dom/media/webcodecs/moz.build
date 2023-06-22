@@ -7,11 +7,13 @@
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
 
 EXPORTS.mozilla.dom += [
+    "EncodedVideoChunk.h",
     "VideoColorSpace.h",
     "VideoFrame.h",
 ]
 
 UNIFIED_SOURCES += [
+    "EncodedVideoChunk.cpp",
     "VideoColorSpace.cpp",
     "VideoFrame.cpp",
 ]
