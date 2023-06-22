@@ -69,6 +69,8 @@ pub enum MathFunction {
     Log,
     /// `exp()`: https://drafts.csswg.org/css-values-4/#funcdef-exp
     Exp,
+    /// `abs()`: https://drafts.csswg.org/css-values-4/#funcdef-abs
+    Abs,
 }
 
 /// A leaf node inside a `Calc` expression's AST.
@@ -652,6 +654,10 @@ impl CalcNode {
                     let number = a.exp();
 
                     Ok(Self::Leaf(Leaf::Number(number)))
+                },
+                MathFunction::Abs => {
+                    let node = Self::parse_argument(context, input, allowed_units)?;
+                    Ok(Self::Abs(Box::new(node)))
                 },
             }
         })

@@ -3563,6 +3563,11 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
       }
       break;
     }
+    case Tag::Abs: {
+      const auto& abs = AsAbs();
+      ScaleNode(*abs);
+      break;
+    }
   }
 }
 
@@ -3716,6 +3721,14 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
       } else {
         return CSSPixel::ToAppUnits(result);
       }
+    }
+    case Tag::Abs: {
+      const auto& abs = AsAbs();
+      auto value = abs->ResolveInternal(aPercentageBasis, aConverter);
+      if (value == 0) {
+        return value;
+      }
+      return std::abs(value);
     }
   }
 

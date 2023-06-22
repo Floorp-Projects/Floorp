@@ -197,6 +197,8 @@ pub enum GenericCalcNode<L> {
     },
     /// A `hypot()` function
     Hypot(crate::OwnedSlice<GenericCalcNode<L>>),
+    /// An `abs()` function.
+    Abs(Box<GenericCalcNode<L>>),
 }
 
 pub use self::GenericCalcNode as CalcNode;
@@ -322,6 +324,9 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                     child.negate();
                 }
             },
+            CalcNode::Abs(ref mut child) => {
+                child.negate();
+            },
         }
     }
 
@@ -398,6 +403,9 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                     for node in &mut **children {
                         map_internal(node, op);
                     }
+                },
+                CalcNode::Abs(child) => {
+                    map_internal(child, op);
                 },
             }
         }
@@ -476,6 +484,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 }
             },
             Self::Hypot(ref c) => CalcNode::Hypot(map_children(c, map)),
+            Self::Abs(ref c) => CalcNode::Abs(Box::new(c.map_leaves_internal(map))),
         }
     }
 
@@ -678,6 +687,14 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 }
                 result.sqrt()
             },
+            Self::Abs(ref c) => {
+                let result = c.resolve_internal(leaf_to_output_fn)?;
+                if result.is_zero() {
+                    result
+                } else {
+                    result.abs()
+                }
+            },
         })
     }
 
@@ -763,6 +780,9 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                     node.mul_by(scalar);
                 }
             },
+            Self::Abs(ref mut child) => {
+                child.mul_by(scalar);
+            },
         }
     }
 
@@ -810,6 +830,9 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 }
             },
             Self::Negate(ref mut value) => {
+                value.visit_depth_first_internal(f);
+            },
+            Self::Abs(ref mut value) => {
                 value.visit_depth_first_internal(f);
             },
             Self::Leaf(..) => {},
@@ -1143,6 +1166,10 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
 
                 replace_self_with!(&mut result);
             },
+            Self::Abs(ref mut child) => match child.as_mut() {
+                CalcNode::Leaf(leaf) => leaf.map(|v| if v.is_zero() { v } else { v.abs() }),
+                _ => return,
+            },
             Self::Negate(ref mut child) => {
                 // Step 6.
                 match &mut **child {
@@ -1208,6 +1235,10 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
             },
             Self::Hypot(_) => {
                 dest.write_str("hypot(")?;
+                true
+            },
+            Self::Abs(_) => {
+                dest.write_str("abs(")?;
                 true
             },
             Self::Negate(_) => {
@@ -1313,6 +1344,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 dest.write_str(", ")?;
                 divisor.to_css_impl(dest, ArgumentLevel::ArgumentRoot)?;
             },
+            Self::Abs(ref v) => v.to_css(dest)?,
             Self::Leaf(ref l) => l.to_css(dest)?,
         }
 
