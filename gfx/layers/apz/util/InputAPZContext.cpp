@@ -14,6 +14,7 @@ uint64_t InputAPZContext::sBlockId = 0;
 nsEventStatus InputAPZContext::sApzResponse = nsEventStatus_eSentinel;
 bool InputAPZContext::sPendingLayerization = false;
 bool InputAPZContext::sRoutedToChildProcess = false;
+bool InputAPZContext::sDropped = false;
 
 /*static*/
 ScrollableLayerGuid InputAPZContext::GetTargetLayerGuid() { return sGuid; }
@@ -32,6 +33,9 @@ bool InputAPZContext::WasRoutedToChildProcess() {
   return sRoutedToChildProcess;
 }
 
+/*static*/
+bool InputAPZContext::WasDropped() { return sDropped; }
+
 InputAPZContext::InputAPZContext(const ScrollableLayerGuid& aGuid,
                                  const uint64_t& aBlockId,
                                  const nsEventStatus& aApzResponse,
@@ -40,12 +44,14 @@ InputAPZContext::InputAPZContext(const ScrollableLayerGuid& aGuid,
       mOldBlockId(sBlockId),
       mOldApzResponse(sApzResponse),
       mOldPendingLayerization(sPendingLayerization),
-      mOldRoutedToChildProcess(sRoutedToChildProcess) {
+      mOldRoutedToChildProcess(sRoutedToChildProcess),
+      mOldDropped(sDropped) {
   sGuid = aGuid;
   sBlockId = aBlockId;
   sApzResponse = aApzResponse;
   sPendingLayerization = aPendingLayerization;
   sRoutedToChildProcess = false;
+  sDropped = false;
 }
 
 InputAPZContext::~InputAPZContext() {
@@ -54,12 +60,16 @@ InputAPZContext::~InputAPZContext() {
   sApzResponse = mOldApzResponse;
   sPendingLayerization = mOldPendingLayerization;
   sRoutedToChildProcess = mOldRoutedToChildProcess;
+  sDropped = mOldDropped;
 }
 
 /*static*/
 void InputAPZContext::SetRoutedToChildProcess() {
   sRoutedToChildProcess = true;
 }
+
+/*static*/
+void InputAPZContext::SetDropped() { sDropped = true; }
 
 }  // namespace layers
 }  // namespace mozilla
