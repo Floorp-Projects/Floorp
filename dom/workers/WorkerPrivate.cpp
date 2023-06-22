@@ -3388,12 +3388,16 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
 
       if (debuggerRunnablesPending) {
         WorkerDebuggerGlobalScope* globalScope = DebuggerGlobalScope();
-        MOZ_ASSERT(globalScope);
-
-        // Now *might* be a good time to GC. Let the JS engine make the
-        // decision.
-        JSAutoRealm ar(aCx, globalScope->GetGlobalJSObject());
-        JS_MaybeGC(aCx);
+        // If the worker was canceled before ever creating its content global
+        // then mCancelBeforeWorkerScopeConstructed could have been flipped and
+        // all of the WorkerDebuggerRunnables canceled, so the debugger global
+        // would never have been created.
+        if (globalScope) {
+          // Now *might* be a good time to GC. Let the JS engine make the
+          // decision.
+          JSAutoRealm ar(aCx, globalScope->GetGlobalJSObject());
+          JS_MaybeGC(aCx);
+        }
       }
     } else if (normalRunnablesPending) {
       // Process a single runnable from the main queue.
