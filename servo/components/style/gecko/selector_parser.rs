@@ -191,22 +191,17 @@ impl NonTSPseudoClass {
         self.state_flag().is_empty() &&
             !matches!(
                 *self,
-                // :dir() depends on state only, but may have an empty
-                // state_flag for invalid arguments.
+                // :dir() depends on state only, but may have an empty state_flag for invalid
+                // arguments.
                 NonTSPseudoClass::Dir(_) |
-                      // :-moz-is-html only depends on the state of the document and
-                      // the namespace of the element; the former is invariant
-                      // across all the elements involved and the latter is already
-                      // checked for by our caching precondtions.
-                      NonTSPseudoClass::MozIsHTML |
                       // We prevent style sharing for NAC.
                       NonTSPseudoClass::MozNativeAnonymous |
                       // :-moz-placeholder is parsed but never matches.
                       NonTSPseudoClass::MozPlaceholder |
-                      // :-moz-lwtheme, :-moz-locale-dir and
-                      // :-moz-window-inactive depend only on the state of the
-                      // document, which is invariant across all the elements
-                      // involved in a given style cache.
+                      // :-moz-is-html, :-moz-lwtheme, :-moz-locale-dir and :-moz-window-inactive
+                      // depend only on the state of the document, which is invariant across all
+                      // elements involved in a given style cache.
+                      NonTSPseudoClass::MozIsHTML |
                       NonTSPseudoClass::MozLWTheme |
                       NonTSPseudoClass::MozLocaleDir(_) |
                       NonTSPseudoClass::MozWindowInactive
