@@ -215,7 +215,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
     let progress = {};
     for (let resourceType of fileMigrator.displayedResourceTypes) {
       progress[resourceType] = {
-        inProgress: true,
+        value: lazy.MigrationWizardConstants.PROGRESS_VALUE.LOADING,
         message: "",
       };
     }
@@ -245,7 +245,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
     let successProgress = {};
     for (let resourceType in migrationResult) {
       successProgress[resourceType] = {
-        inProgress: false,
+        value: lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
         message: migrationResult[resourceType],
       };
     }

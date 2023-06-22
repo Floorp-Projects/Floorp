@@ -167,12 +167,18 @@ add_task(async function test_file_migration() {
     // We expect only the displayed resource types in SUCCESS_STATE are
     // displayed now.
     let progressGroups = shadow.querySelectorAll(
-      "div[name='page-page-file-import-progress'] .resource-progress-group"
+      "div[name='page-file-import-progress'] .resource-progress-group"
     );
     for (let progressGroup of progressGroups) {
       let expectedSuccessText =
         SUCCESS_STATE[progressGroup.dataset.resourceType];
       if (expectedSuccessText) {
+        let progressIcon = progressGroup.querySelector(".progress-icon");
+        Assert.ok(
+          progressIcon.classList.contains("completed"),
+          "Should be showing completed state."
+        );
+
         let successText =
           progressGroup.querySelector(".success-text").textContent;
         Assert.equal(successText, expectedSuccessText);
