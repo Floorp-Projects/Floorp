@@ -369,6 +369,7 @@ class RecordedEvent {
     PUSHCLIPRECT,
     POPCLIP,
     FILL,
+    FILLCIRCLE,
     FILLGLYPHS,
     MASK,
     STROKE,

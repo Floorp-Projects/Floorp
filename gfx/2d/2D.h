@@ -1579,6 +1579,17 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
                     const DrawOptions& aOptions = DrawOptions()) = 0;
 
   /**
+   * Fill a circle on the DrawTarget with a certain source pattern.
+   *
+   * @param aCircle the parameters of the circle
+   * @param aPattern Pattern that forms the source of this stroking operation
+   * @param aOptions Options that are applied to this operation
+   */
+  virtual void FillCircle(const Point& aOrigin, float radius,
+                          const Pattern& aPattern,
+                          const DrawOptions& aOptions = DrawOptions());
+
+  /**
    * Fill a series of glyphs on the draw target with a certain source pattern.
    */
   virtual void FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
