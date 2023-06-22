@@ -64,3 +64,39 @@ add_task(async function test_telemetry_esr() {
     AppConstants.IS_ESR
   );
 });
+
+add_task(async function test_telemetry_esr_mac_eol() {
+  Services.prefs
+    .getDefaultBranch(null)
+    .setCharPref("distribution.id", "mozilla-mac-eol-esr115");
+  await setupPolicyEngineWithJson({});
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("parent"),
+    "policies.is_enterprise",
+    false
+  );
+});
+
+add_task(async function test_telemetry_esr_win_eol() {
+  Services.prefs
+    .getDefaultBranch(null)
+    .setCharPref("distribution.id", "mozilla-win-eol-esr115");
+  await setupPolicyEngineWithJson({});
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("parent"),
+    "policies.is_enterprise",
+    false
+  );
+});
+
+add_task(async function test_telemetry_esr_distro() {
+  Services.prefs
+    .getDefaultBranch(null)
+    .setCharPref("distribution.id", "any-other-distribution-id");
+  await setupPolicyEngineWithJson({});
+  TelemetryTestUtils.assertScalar(
+    TelemetryTestUtils.getProcessScalars("parent"),
+    "policies.is_enterprise",
+    AppConstants.IS_ESR
+  );
+});
