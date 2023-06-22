@@ -68,6 +68,7 @@ extern __attribute__((visibility("hidden"))) void original_init(int argc,
                                                                 char** env);
 
 extern __attribute__((visibility("hidden"))) Elf_Addr relhack[];
+extern __attribute__((visibility("hidden"))) Elf_Addr relhack_end[];
 extern __attribute__((visibility("hidden"))) Elf_Ehdr elf_header;
 
 extern __attribute__((visibility("hidden"))) int (*mprotect_cb)(void* addr,
@@ -79,7 +80,7 @@ extern __attribute__((visibility("hidden"))) char relro_end[];
 
 static inline __attribute__((always_inline)) void do_relocations(void) {
   Elf_Addr* ptr;
-  for (Elf_Addr* entry = relhack; *entry; entry++) {
+  for (Elf_Addr* entry = relhack; entry < relhack_end; entry++) {
     if ((*entry & 1) == 0) {
       ptr = (Elf_Addr*)((intptr_t)&elf_header + *entry);
       *ptr += (intptr_t)&elf_header;
