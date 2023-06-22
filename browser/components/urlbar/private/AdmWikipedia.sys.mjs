@@ -44,6 +44,14 @@ export class AdmWikipedia extends BaseFeature {
     ];
   }
 
+  get merinoProvider() {
+    return "adm";
+  }
+
+  getSuggestionTelemetryType(suggestion) {
+    return suggestion.is_sponsored ? "adm_sponsored" : "adm_nonsponsored";
+  }
+
   enable(enabled) {
     if (enabled) {
       lazy.QuickSuggestRemoteSettings.register(this);
@@ -126,10 +134,6 @@ export class AdmWikipedia extends BaseFeature {
       url: suggestion.url,
       icon: suggestion.icon,
       isSponsored: suggestion.is_sponsored,
-      source: suggestion.source,
-      telemetryType: suggestion.is_sponsored
-        ? "adm_sponsored"
-        : "adm_nonsponsored",
       requestId: suggestion.request_id,
       urlTimestampIndex: suggestion.urlTimestampIndex,
       sponsoredImpressionUrl: suggestion.impression_url,

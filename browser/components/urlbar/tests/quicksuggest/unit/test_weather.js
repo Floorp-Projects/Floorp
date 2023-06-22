@@ -1379,7 +1379,7 @@ function makeExpectedResult({
       },
       requestId: MerinoTestUtils.server.response.body.request_id,
       source: "merino",
-      merinoProvider: "accuweather",
+      provider: "accuweather",
       dynamicType: "weather",
       city: WEATHER_SUGGESTION.city_name,
       temperature:

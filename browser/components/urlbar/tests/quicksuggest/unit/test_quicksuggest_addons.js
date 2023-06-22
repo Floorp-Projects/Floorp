@@ -84,6 +84,14 @@ add_setup(async function init() {
   });
 });
 
+add_task(async function telemetryType() {
+  Assert.equal(
+    QuickSuggest.getFeature("AddonSuggestions").getSuggestionTelemetryType({}),
+    "amo",
+    "Telemetry type should be 'amo'"
+  );
+});
+
 // When non-sponsored suggestions are disabled, addon suggestions should be
 // disabled.
 add_task(async function nonsponsoredDisabled() {
@@ -694,12 +702,15 @@ async function doShowLessFrequentlyTest({ tests, rs = {}, nimbus = {} }) {
 }
 
 function makeExpectedResult({ suggestion, source, isTopPick }) {
+  let provider;
   let rating;
   let number_of_ratings;
   if (source === "remote-settings") {
+    provider = "AddonSuggestions";
     rating = suggestion.rating;
     number_of_ratings = suggestion.number_of_ratings;
   } else {
+    provider = "amo";
     rating = suggestion.custom_details.amo.rating;
     number_of_ratings = suggestion.custom_details.amo.number_of_ratings;
   }
@@ -723,6 +734,7 @@ function makeExpectedResult({ suggestion, source, isTopPick }) {
       shouldNavigate: true,
       helpUrl: QuickSuggest.HELP_URL,
       source,
+      provider,
     },
   };
 }

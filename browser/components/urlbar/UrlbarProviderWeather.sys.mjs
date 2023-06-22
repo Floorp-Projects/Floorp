@@ -256,7 +256,7 @@ class ProviderWeather extends UrlbarProvider {
         },
         requestId: suggestion.request_id,
         source: suggestion.source,
-        merinoProvider: suggestion.provider,
+        provider: suggestion.provider,
         dynamicType: WEATHER_DYNAMIC_TYPE,
         city: suggestion.city_name,
         temperatureUnit: unit,

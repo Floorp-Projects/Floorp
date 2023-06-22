@@ -133,6 +133,10 @@ export class AddonSuggestions extends BaseFeature {
     return ["suggest.addons", "suggest.quicksuggest.nonsponsored"];
   }
 
+  get merinoProvider() {
+    return "amo";
+  }
+
   enable(enabled) {
     if (enabled) {
       lazy.QuickSuggestRemoteSettings.register(this);
@@ -233,7 +237,6 @@ export class AddonSuggestions extends BaseFeature {
     }
 
     const payload = {
-      source: suggestion.source,
       icon: suggestion.icon,
       url: suggestion.url,
       title: suggestion.title,
@@ -243,7 +246,6 @@ export class AddonSuggestions extends BaseFeature {
       helpUrl: lazy.QuickSuggest.HELP_URL,
       shouldNavigate: true,
       dynamicType: "addons",
-      telemetryType: "amo",
     };
 
     return Object.assign(

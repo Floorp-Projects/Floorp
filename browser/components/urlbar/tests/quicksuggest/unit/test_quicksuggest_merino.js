@@ -55,6 +55,7 @@ const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = {
     },
     displayUrl: "http://test.com/q=frabbits",
     source: "remote-settings",
+    provider: "AdmWikipedia",
   },
 };
 
@@ -89,6 +90,7 @@ const EXPECTED_MERINO_URLBAR_RESULT = {
     displayUrl: "url",
     requestId: "request_id",
     source: "merino",
+    provider: "adm",
   },
 };
 
@@ -504,6 +506,7 @@ add_task(async function multipleMerinoSuggestions() {
           displayUrl: "multipleMerinoSuggestions 1 url",
           requestId: "request_id",
           source: "merino",
+          provider: "adm",
         },
       },
     ],

@@ -267,6 +267,7 @@ function makeExpectedResult({
       icon: "icon",
       isSponsored: false,
       source: "merino",
+      provider: telemetryType,
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
         id: "urlbar-result-menu-learn-more-about-firefox-suggest",

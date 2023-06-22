@@ -46,6 +46,10 @@ export class PocketSuggestions extends BaseFeature {
     return ["suggest.pocket", "suggest.quicksuggest.nonsponsored"];
   }
 
+  get merinoProvider() {
+    return "pocket";
+  }
+
   get showLessFrequentlyCount() {
     let count = lazy.UrlbarPrefs.get("pocket.showLessFrequentlyCount") || 0;
     return Math.max(count, 0);
@@ -118,8 +122,6 @@ export class PocketSuggestions extends BaseFeature {
           title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
           icon: "chrome://global/skin/icons/pocket.svg",
           helpUrl: lazy.QuickSuggest.HELP_URL,
-          source: suggestion.source,
-          telemetryType: "pocket",
         })
       ),
       { showFeedbackMenu: true }
