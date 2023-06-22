@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 #if defined(MOZ_ASAN) || defined(FUZZING)
 #  include <signal.h>
@@ -25,7 +26,6 @@
 #  include <stdio.h>
 #endif
 
-#include "mozilla/widget/mozwayland.h"
 #include "prlink.h"
 #include "va/va.h"
 
@@ -33,6 +33,8 @@
 
 // Print VA-API test results to stdout and logging to stderr
 #define OUTPUT_PIPE 1
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 // bits to use decoding vaapitest() return values.
 constexpr int CODEC_HW_H264 = 1 << 4;
