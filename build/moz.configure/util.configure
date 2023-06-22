@@ -56,6 +56,8 @@ def check_cmd_output(*args, **kwargs):
     with log.queue_debug():
         retcode, stdout, stderr = get_cmd_output(*args, **kwargs)
         if retcode == 0:
+            with LineIO(lambda l: log.debug("| %s", l)) as o:
+                o.write(stderr)
             return stdout
 
         log.debug("The command returned non-zero exit status %d.", retcode)
