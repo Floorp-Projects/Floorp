@@ -553,14 +553,6 @@ class ServoStyleSet {
   const SnapshotTable& Snapshots();
 
   /**
-   * Resolve all DeclarationBlocks attached to mapped
-   * presentation attributes cached on the document.
-   *
-   * Call this before jumping into Servo's style system.
-   */
-  void ResolveMappedAttrDeclarationBlocks();
-
-  /**
    * Clear our cached mNonInheritingComputedStyles.
    *
    * We do this when we want to make sure those ComputedStyles won't live too

@@ -93,7 +93,6 @@ class nsIPrincipal;
 class nsIScreen;
 class nsIScrollableFrame;
 class nsIURI;
-class nsMappedAttributes;
 class nsPresContext;
 class nsWindowSizes;
 struct JSContext;
@@ -105,6 +104,7 @@ class nsGetterAddRefs;
 
 namespace mozilla {
 class DeclarationBlock;
+class MappedDeclarationsBuilder;
 class ErrorResult;
 class OOMReporter;
 class SMILAttr;
@@ -143,6 +143,8 @@ typedef nsTHashMap<nsRefPtrHashKey<DOMIntersectionObserver>, int32_t>
     IntersectionObserverList;
 }  // namespace dom
 }  // namespace mozilla
+
+using nsMapRuleToAttributesFunc = void (*)(mozilla::MappedDeclarationsBuilder&);
 
 // Declared here because of include hell.
 extern "C" bool Servo_Element_IsDisplayContents(const mozilla::dom::Element*);
@@ -387,11 +389,15 @@ class Element : public FragmentOrElement {
   /**
    * Get the mapped attributes, if any, for this element.
    */
-  const nsMappedAttributes* GetMappedAttributes() const {
-    return mAttrs.GetMapped();
+  StyleLockedDeclarationBlock* GetMappedAttributeStyle() const {
+    return mAttrs.GetMappedDeclarationBlock();
   }
 
-  void ClearMappedServoStyle() { mAttrs.ClearMappedServoStyle(); }
+  bool IsPendingMappedAttributeEvaluation() const {
+    return mAttrs.IsPendingMappedAttributeEvaluation();
+  }
+
+  void SetMappedDeclarationBlock(already_AddRefed<StyleLockedDeclarationBlock>);
 
   /**
    * InlineStyleDeclarationWillChange is called before SetInlineStyleDeclaration
@@ -457,13 +463,15 @@ class Element : public FragmentOrElement {
   virtual nsIMozBrowserFrame* GetAsMozBrowserFrame() { return nullptr; }
 
   /**
-   * Is the attribute named stored in the mapped attributes?
-   *
-   * // XXXbz we use this method in HasAttributeDependentStyle, so svg
-   *    returns true here even though it stores nothing in the mapped
-   *    attributes.
+   * Is the attribute named aAttribute a mapped attribute?
    */
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const;
+
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent = true) override;
+
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
+  static void MapNoAttributesInto(mozilla::MappedDeclarationsBuilder&);
 
   /**
    * Get a hint that tells the style system what to do when
@@ -805,10 +813,6 @@ class Element : public FragmentOrElement {
   }
 
   void UpdateEditableState(bool aNotify) override;
-
-  nsresult BindToTree(BindContext&, nsINode& aParent) override;
-
-  void UnbindFromTree(bool aNullParent = true) override;
 
   /**
    * Normalizes an attribute name and returns it as a nodeinfo if an attribute
@@ -1892,27 +1896,6 @@ class Element : public FragmentOrElement {
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult);
-
-  /**
-   * Try to set the attribute as a mapped attribute, if applicable.  This will
-   * only be called for attributes that are in the null namespace and only on
-   * attributes that returned true when passed to IsAttributeMapped.  The
-   * caller will not try to set the attr in any other way if this method
-   * returns true (the value of aRetval does not matter for that purpose).
-   *
-   * @param aName the name of the attribute
-   * @param aValue the nsAttrValue to set. Will be swapped with the existing
-   *               value of the attribute if the attribute already exists.
-   * @param [out] aValueWasSet If the attribute was not set previously,
-   *                           aValue will be swapped with an empty attribute
-   *                           and aValueWasSet will be set to false. Otherwise,
-   *                           aValueWasSet will be set to true and aValue will
-   *                           contain the previous value set.
-   * @param [out] aRetval the nsresult status of the operation, if any.
-   * @return true if the setting was attempted, false otherwise.
-   */
-  virtual bool SetAndSwapMappedAttribute(nsAtom* aName, nsAttrValue& aValue,
-                                         bool* aValueWasSet, nsresult* aRetval);
 
   /**
    * Hook that is called by Element::SetAttr to allow subclasses to

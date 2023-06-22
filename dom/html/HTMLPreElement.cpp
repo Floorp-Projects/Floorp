@@ -7,11 +7,10 @@
 #include "mozilla/dom/HTMLPreElement.h"
 #include "mozilla/dom/HTMLPreElementBinding.h"
 
-#include "mozilla/MappedDeclarations.h"
+#include "mozilla/MappedDeclarationsBuilder.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
-#include "nsMappedAttributes.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Pre)
 
@@ -36,15 +35,14 @@ bool HTMLPreElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 }
 
 void HTMLPreElement::MapAttributesIntoRule(
-    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  if (!aDecls.PropertyIsSet(eCSSProperty_white_space)) {
-    // wrap: empty
-    if (aAttributes->GetAttr(nsGkAtoms::wrap))
-      aDecls.SetKeywordValue(eCSSProperty_white_space,
+    MappedDeclarationsBuilder& aBuilder) {
+  // wrap: empty
+  if (aBuilder.GetAttr(nsGkAtoms::wrap)) {
+    aBuilder.SetKeywordValue(eCSSProperty_white_space,
                              StyleWhiteSpace::PreWrap);
   }
 
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
 }
 
 NS_IMETHODIMP_(bool)

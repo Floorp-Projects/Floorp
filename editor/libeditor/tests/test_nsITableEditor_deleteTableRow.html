@@ -458,7 +458,7 @@ SimpleTest.waitForFocus(() => {
   range.selectNode(document.getElementById("select"));
   selection.addRange(range);
   getTableEditor().deleteTableRow(1);
-  is(editor.innerHTML, '<table><tbody><tr><td rowspan="2" valign="top"><br></td><td>cell2-2</td></tr><tr><td>cell3-2</td></tr></tbody></table>',
+  is(editor.innerHTML, '<table><tbody><tr><td valign="top" rowspan="2"><br></td><td>cell2-2</td></tr><tr><td>cell3-2</td></tr></tbody></table>',
      "nsITableEditor.deleteTableRow(1) with a selected cell is rowspan=\"3\" should delete the first row and add empty cell whose rowspan is 2 to the second row");
   is(beforeInputEvents.length, 1,
      'Only one "beforeinput" event should be fired when a cell is selected and its rowspan is 3');

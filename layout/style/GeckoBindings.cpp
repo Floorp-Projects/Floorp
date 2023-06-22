@@ -31,7 +31,6 @@
 #include "nsINode.h"
 #include "nsIURI.h"
 #include "nsFontMetrics.h"
-#include "nsMappedAttributes.h"
 #include "nsNameSpaceManager.h"
 #include "nsNetUtil.h"
 #include "nsProxyRelease.h"
@@ -391,29 +390,16 @@ void Gecko_UnsetDirtyStyleAttr(const Element* aElement) {
 
 const StyleLockedDeclarationBlock*
 Gecko_GetHTMLPresentationAttrDeclarationBlock(const Element* aElement) {
-  if (const nsMappedAttributes* attrs = aElement->GetMappedAttributes()) {
-    MOZ_ASSERT(!aElement->IsSVGElement(), "SVG doesn't use nsMappedAttributes");
-    return attrs->GetServoStyle();
-  }
-  if (const auto* svg = SVGElement::FromNode(aElement)) {
-    if (const auto* decl = svg->GetContentDeclarationBlock()) {
-      return decl->Raw();
-    }
-  }
-  return nullptr;
+  return aElement->GetMappedAttributeStyle();
 }
 
 const StyleLockedDeclarationBlock* Gecko_GetExtraContentStyleDeclarations(
     const Element* aElement) {
   if (const auto* cell = HTMLTableCellElement::FromNode(aElement)) {
-    if (nsMappedAttributes* attrs =
-            cell->GetMappedAttributesInheritedFromTable()) {
-      return attrs->GetServoStyle();
-    }
-  } else if (const auto* img = HTMLImageElement::FromNode(aElement)) {
-    if (const auto* attrs = img->GetMappedAttributesFromSource()) {
-      return attrs->GetServoStyle();
-    }
+    return cell->GetMappedAttributesInheritedFromTable();
+  }
+  if (const auto* img = HTMLImageElement::FromNode(aElement)) {
+    return img->GetMappedAttributesFromSource();
   }
   return nullptr;
 }

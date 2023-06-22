@@ -5,8 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/HTMLTableSectionElement.h"
-#include "mozilla/MappedDeclarations.h"
-#include "nsMappedAttributes.h"
+#include "mozilla/MappedDeclarationsBuilder.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/HTMLTableSectionElementBinding.h"
@@ -141,18 +140,19 @@ bool HTMLTableSectionElement::ParseAttribute(
 }
 
 void HTMLTableSectionElement::MapAttributesIntoRule(
-    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+    MappedDeclarationsBuilder& aBuilder) {
   // height: value
-  if (!aDecls.PropertyIsSet(eCSSProperty_height)) {
-    const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::height);
-    if (value && value->Type() == nsAttrValue::eInteger)
-      aDecls.SetPixelValue(eCSSProperty_height,
-                           (float)value->GetIntegerValue());
+  if (!aBuilder.PropertyIsSet(eCSSProperty_height)) {
+    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::height);
+    if (value && value->Type() == nsAttrValue::eInteger) {
+      aBuilder.SetPixelValue(eCSSProperty_height,
+                             (float)value->GetIntegerValue());
+    }
   }
-  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapVAlignAttributeInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapBackgroundAttributesInto(aAttributes, aDecls);
-  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapVAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapBackgroundAttributesInto(aBuilder);
+  nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
 }
 
 NS_IMETHODIMP_(bool)

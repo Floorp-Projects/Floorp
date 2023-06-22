@@ -20,7 +20,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/DeclarationBlock.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/PresShell.h"
@@ -105,9 +104,7 @@ SVGEnumMapping SVGElement::sSVGUnitTypesMap[] = {
 SVGElement::SVGElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGElementBase(std::move(aNodeInfo)) {}
 
-SVGElement::~SVGElement() {
-  OwnerDoc()->UnscheduleSVGForPresAttrEvaluation(this);
-}
+SVGElement::~SVGElement() = default;
 
 JSObject* SVGElement::WrapNode(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) {
@@ -317,23 +314,6 @@ void SVGElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                               const nsAttrValue* aValue,
                               const nsAttrValue* aOldValue,
                               nsIPrincipal* aSubjectPrincipal, bool aNotify) {
-  // We don't currently use nsMappedAttributes within SVG. If this changes, we
-  // need to be very careful because some nsAttrValues used by SVG point to
-  // member data of SVG elements and if an nsAttrValue outlives the SVG element
-  // whose data it points to (by virtue of being stored in
-  // mAttrs->mMappedAttributes, meaning it's shared between
-  // elements), the pointer will dangle. See bug 724680.
-  MOZ_ASSERT(!mAttrs.HasMappedAttrs(),
-             "Unexpected use of nsMappedAttributes within SVG");
-
-  // If this is an svg presentation attribute we need to map it into
-  // the content declaration block.
-  // XXX For some reason incremental mapping doesn't work, so for now
-  // just delete the style rule and lazily reconstruct it as needed).
-  if (aNamespaceID == kNameSpaceID_None && IsAttributeMapped(aName)) {
-    OwnerDoc()->ScheduleSVGForPresAttrEvaluation(this);
-  }
-
   if (IsEventAttributeName(aName) && aValue) {
     MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,
                "Expected string value for script body");
@@ -925,9 +905,6 @@ nsChangeHint SVGElement::GetAttributeChangeHint(const nsAtom* aAttribute,
 
 void SVGElement::NodeInfoChanged(Document* aOldDoc) {
   SVGElementBase::NodeInfoChanged(aOldDoc);
-  aOldDoc->UnscheduleSVGForPresAttrEvaluation(this);
-  mContentDeclarationBlock = nullptr;
-  OwnerDoc()->ScheduleSVGForPresAttrEvaluation(this);
 }
 
 NS_IMETHODIMP_(bool)
@@ -1042,10 +1019,8 @@ already_AddRefed<DOMSVGAnimatedString> SVGElement::ClassName() {
 
 /* static */
 bool SVGElement::UpdateDeclarationBlockFromLength(
-    DeclarationBlock& aBlock, nsCSSPropertyID aPropId,
+    StyleLockedDeclarationBlock& aBlock, nsCSSPropertyID aPropId,
     const SVGAnimatedLength& aLength, ValToUse aValToUse) {
-  aBlock.AssertMutable();
-
   float value;
   if (aValToUse == ValToUse::Anim) {
     value = aLength.GetAnimValInSpecifiedUnits();
@@ -1054,8 +1029,8 @@ bool SVGElement::UpdateDeclarationBlockFromLength(
     value = aLength.GetBaseValInSpecifiedUnits();
   }
 
-  // SVG parser doesn't check non-negativity of some parsed value,
-  // we should not pass those to CSS side.
+  // SVG parser doesn't check non-negativity of some parsed value, we should not
+  // pass those to CSS side.
   if (value < 0 &&
       SVGGeometryProperty::IsNonNegativeGeometryProperty(aPropId)) {
     return false;
@@ -1065,11 +1040,9 @@ bool SVGElement::UpdateDeclarationBlockFromLength(
       SVGLength::SpecifiedUnitTypeToCSSUnit(aLength.GetSpecifiedUnitType());
 
   if (cssUnit == eCSSUnit_Percent) {
-    Servo_DeclarationBlock_SetPercentValue(aBlock.Raw(), aPropId,
-                                           value / 100.f);
+    Servo_DeclarationBlock_SetPercentValue(&aBlock, aPropId, value / 100.f);
   } else {
-    Servo_DeclarationBlock_SetLengthValue(aBlock.Raw(), aPropId, value,
-                                          cssUnit);
+    Servo_DeclarationBlock_SetLengthValue(&aBlock, aPropId, value, cssUnit);
   }
 
   return true;
@@ -1077,10 +1050,8 @@ bool SVGElement::UpdateDeclarationBlockFromLength(
 
 /* static */
 bool SVGElement::UpdateDeclarationBlockFromPath(
-    DeclarationBlock& aBlock, const SVGAnimatedPathSegList& aPath,
+    StyleLockedDeclarationBlock& aBlock, const SVGAnimatedPathSegList& aPath,
     ValToUse aValToUse) {
-  aBlock.AssertMutable();
-
   const SVGPathData& pathData =
       aValToUse == ValToUse::Anim ? aPath.GetAnimValue() : aPath.GetBaseValue();
 
@@ -1095,7 +1066,7 @@ bool SVGElement::UpdateDeclarationBlockFromPath(
   // The normalization should be fixed in Bug 1489392. Besides, Bug 1714238
   // will use the same data structure, so we may simplify this more.
   const nsTArray<float>& asInFallibleArray = pathData.RawData();
-  Servo_DeclarationBlock_SetPathValue(aBlock.Raw(), eCSSProperty_d,
+  Servo_DeclarationBlock_SetPathValue(&aBlock, eCSSProperty_d,
                                       &asInFallibleArray);
   return true;
 }
@@ -1108,11 +1079,10 @@ namespace {
 class MOZ_STACK_CLASS MappedAttrParser {
  public:
   explicit MappedAttrParser(SVGElement& aElement,
-                            already_AddRefed<DeclarationBlock> aDecl)
+                            StyleLockedDeclarationBlock* aDecl)
       : mElement(aElement), mDecl(aDecl) {
     if (mDecl) {
-      mDecl->AssertMutable();
-      Servo_DeclarationBlock_Clear(mDecl->Raw());
+      Servo_DeclarationBlock_Clear(mDecl);
     }
   }
   ~MappedAttrParser() {
@@ -1130,15 +1100,15 @@ class MOZ_STACK_CLASS MappedAttrParser {
   void TellStyleAlreadyParsedResult(const SVGAnimatedPathSegList& aPath);
 
   // If we've parsed any values for mapped attributes, this method returns the
-  // already_AddRefed css::Declaration that incorporates the parsed
-  // values. Otherwise, this method returns null.
-  already_AddRefed<DeclarationBlock> TakeDeclarationBlock() {
+  // already_AddRefed declaration block that incorporates the parsed values.
+  // Otherwise, this method returns null.
+  already_AddRefed<StyleLockedDeclarationBlock> TakeDeclarationBlock() {
     return mDecl.forget();
   }
 
-  DeclarationBlock& EnsureDeclarationBlock() {
+  StyleLockedDeclarationBlock& EnsureDeclarationBlock() {
     if (!mDecl) {
-      mDecl = new DeclarationBlock();
+      mDecl = Servo_DeclarationBlock_CreateEmpty().Consume();
     }
     return *mDecl;
   }
@@ -1155,7 +1125,7 @@ class MOZ_STACK_CLASS MappedAttrParser {
   SVGElement& mElement;
 
   // Declaration for storing parsed values (lazily initialized).
-  RefPtr<DeclarationBlock> mDecl;
+  RefPtr<StyleLockedDeclarationBlock> mDecl;
 
   // URL data for parsing stuff. Also lazy.
   RefPtr<URLExtraData> mExtraData;
@@ -1172,7 +1142,7 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
 
     auto* doc = mElement.OwnerDoc();
     changed = Servo_DeclarationBlock_SetPropertyById(
-        EnsureDeclarationBlock().Raw(), propertyID, &value, false,
+        &EnsureDeclarationBlock(), propertyID, &value, false,
         &EnsureExtraData(), ParsingMode::AllowUnitlessLength,
         doc->GetCompatibilityMode(), doc->CSSLoader(), StyleCssRuleType::Style,
         {});
@@ -1193,7 +1163,7 @@ void MappedAttrParser::ParseMappedAttrValue(nsAtom* aMappedAttrName,
   if (aMappedAttrName == nsGkAtoms::lang) {
     propertyID = eCSSProperty__x_lang;
     RefPtr<nsAtom> atom = NS_Atomize(aMappedAttrValue);
-    Servo_DeclarationBlock_SetIdentStringValue(EnsureDeclarationBlock().Raw(),
+    Servo_DeclarationBlock_SetIdentStringValue(&EnsureDeclarationBlock(),
                                                propertyID, atom);
   }
 }
@@ -1218,10 +1188,11 @@ void MappedAttrParser::TellStyleAlreadyParsedResult(
 //----------------------------------------------------------------------
 // Implementation Helpers:
 
-void SVGElement::UpdateContentDeclarationBlock() {
-  MappedAttrParser mappedAttrParser(*this, mContentDeclarationBlock.forget());
+void SVGElement::UpdateMappedDeclarationBlock() {
+  MOZ_ASSERT(IsPendingMappedAttributeEvaluation());
+  MappedAttrParser mappedAttrParser(*this, mAttrs.GetMappedDeclarationBlock());
 
-  bool lengthAffectsStyle =
+  const bool lengthAffectsStyle =
       SVGGeometryProperty::ElementMapsLengthsToStyle(this);
 
   uint32_t i = 0;
@@ -1279,7 +1250,7 @@ void SVGElement::UpdateContentDeclarationBlock() {
     info.mValue->ToString(value);
     mappedAttrParser.ParseMappedAttrValue(attrName->Atom(), value);
   }
-  mContentDeclarationBlock = mappedAttrParser.TakeDeclarationBlock();
+  mAttrs.SetMappedDeclarationBlock(mappedAttrParser.TakeDeclarationBlock());
 }
 
 /**
@@ -2371,16 +2342,6 @@ void SVGElement::FlushAnimations() {
 void SVGElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                         size_t* aNodeSize) const {
   Element::AddSizeOfExcludingThis(aSizes, aNodeSize);
-
-  // These are owned by the element and not referenced from the stylesheets.
-  // They're referenced from the rule tree, but the rule nodes don't measure
-  // their style source (since they're non-owning), so unconditionally reporting
-  // them even though it's a refcounted object is ok.
-  if (mContentDeclarationBlock) {
-    aSizes.mLayoutSvgMappedDeclarations +=
-        mContentDeclarationBlock->SizeofIncludingThis(
-            aSizes.mState.mMallocSizeOf);
-  }
 }
 
 }  // namespace mozilla::dom
