@@ -11,6 +11,7 @@
 #include "APZCCallbackHelper.h"
 #include "ActiveElementManager.h"
 #include "TouchManager.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/EventForwards.h"
@@ -270,7 +271,8 @@ void APZEventState::ProcessLongTap(PresShell* aPresShell,
                                    const CSSToLayoutDeviceScale& aScale,
                                    Modifiers aModifiers,
                                    uint64_t aInputBlockId) {
-  APZES_LOG("Handling long tap at %s\n", ToString(aPoint).c_str());
+  APZES_LOG("Handling long tap at %s block id %" PRIu64 "\n",
+            ToString(aPoint).c_str(), aInputBlockId);
 
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -426,8 +428,11 @@ void APZEventState::ProcessTouchEvent(
 
       if (mPendingTouchPreventedResponse) {
         MOZ_ASSERT(aGuid == mPendingTouchPreventedGuid);
+        mPendingTouchPreventedResponse = false;
       }
-      SendPendingTouchPreventedResponse(isTouchPrevented);
+      if (!mTouchStartPrevented) {
+        mContentReceivedInputBlockCallback(aInputBlockId, isTouchPrevented);
+      }
       break;
     }
 
@@ -597,8 +602,10 @@ void APZEventState::ProcessAPZStateChange(ViewID aViewId,
 
 void APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault) {
   if (mPendingTouchPreventedResponse) {
-    APZES_LOG("Sending response %d for pending guid: %s\n", aPreventDefault,
-              ToString(mPendingTouchPreventedGuid).c_str());
+    APZES_LOG("Sending response %d for pending guid: %s block id: %" PRIu64
+              "\n",
+              aPreventDefault, ToString(mPendingTouchPreventedGuid).c_str(),
+              mPendingTouchPreventedBlockId);
     mContentReceivedInputBlockCallback(mPendingTouchPreventedBlockId,
                                        aPreventDefault);
     mPendingTouchPreventedResponse = false;

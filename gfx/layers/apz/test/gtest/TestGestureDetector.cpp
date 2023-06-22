@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
+
 #include "APZCBasicTester.h"
 #include "APZTestCommon.h"
 #include "InputUtils.h"
@@ -480,7 +483,9 @@ class APZCLongPressTester : public APZCGestureDetectorTester {
   void DoLongPressPreventDefaultTest(uint32_t aBehavior) {
     MakeApzcUnzoomable();
 
-    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(0);
+    // There's a repaint request since touch events below will be processed by
+    // an APZC even if the long-tap event was preventDefaulted.
+    EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
 
     int touchX = 10, touchStartY = 10, touchEndY = 50;
 

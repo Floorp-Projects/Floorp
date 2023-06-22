@@ -56,8 +56,7 @@ async function test() {
   // pointercancel event.
   await Promise.all([ pointercancelPromise, scrollendPromise ]);
   is(pointercancelCount, 1, "There should be only one pointercancel event");
-  // This `todo` will be fixed by the next commit.
-  todo_is(scrollendCount, 1, "There should be only one scrollend event");
+  is(scrollendCount, 1, "There should be only one scrollend event");
 }
 
 if (getPlatform() == "windows") {

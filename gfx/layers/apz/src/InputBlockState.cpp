@@ -638,8 +638,11 @@ TouchBlockState::TouchBlockState(
       mDuringFastFling(false),
       mSingleTapOccurred(false),
       mInSlop(false),
+      mForLongTap(false),
+      mLongTapWasProcessed(false),
       mTouchCounter(aCounter),
       mStartTime(GetTargetApzc()->GetFrameTime().Time()) {
+  mOriginalTargetConfirmedState = mTargetConfirmed;
   TBS_LOG("Creating %p\n", this);
 }
 
@@ -698,7 +701,12 @@ void TouchBlockState::SetSingleTapOccurred() {
 
 bool TouchBlockState::SingleTapOccurred() const { return mSingleTapOccurred; }
 
-bool TouchBlockState::MustStayActive() { return true; }
+bool TouchBlockState::MustStayActive() {
+  // If this touch block is for long-tap, it doesn't need to be active after the
+  // block was processed, it will be taken over by the original touch block
+  // which will stay active.
+  return !mForLongTap || !IsReadyForHandling();
+}
 
 const char* TouchBlockState::Type() { return "touch"; }
 
@@ -820,6 +828,10 @@ Maybe<ScrollDirection> TouchBlockState::GetBestGuessPanDirection(
 
 uint32_t TouchBlockState::GetActiveTouchCount() const {
   return mTouchCounter.GetActiveTouchCount();
+}
+
+bool TouchBlockState::IsTargetOriginallyConfirmed() const {
+  return mOriginalTargetConfirmedState != TargetConfirmationState::eUnconfirmed;
 }
 
 KeyboardBlockState::KeyboardBlockState(
