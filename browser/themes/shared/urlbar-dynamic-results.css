@@ -526,16 +526,16 @@
 }
 
 .urlbarView-dynamic-addons-rating[fill="empty"] {
-  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#empty");
+  background-image: url("chrome://global/skin/icons/rating-star.svg#empty");
 }
 .urlbarView-dynamic-addons-rating[fill="half"] {
-  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#half");
+  background-image: url("chrome://global/skin/icons/rating-star.svg#half");
 }
 .urlbarView-dynamic-addons-rating[fill="half"]:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
 .urlbarView-dynamic-addons-rating[fill="full"] {
-  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#full");
+  background-image: url("chrome://global/skin/icons/rating-star.svg#full");
 }
 
 .urlbarView-dynamic-addons-reviews {

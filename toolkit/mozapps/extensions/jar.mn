@@ -15,7 +15,6 @@ toolkit.jar:
   content/mozapps/extensions/abuse-report-panel.css             (content/abuse-report-panel.css)
   content/mozapps/extensions/abuse-report-panel.js              (content/abuse-report-panel.js)
   content/mozapps/extensions/drag-drop-addon-installer.js       (content/drag-drop-addon-installer.js)
-  content/mozapps/extensions/rating-star.css                    (content/rating-star.css)
   content/mozapps/extensions/shortcuts.css                      (content/shortcuts.css)
   content/mozapps/extensions/shortcuts.js                       (content/shortcuts.js)
   content/mozapps/extensions/view-controller.js                 (content/view-controller.js)

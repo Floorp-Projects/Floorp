@@ -528,9 +528,9 @@ add_task(async function testFullDetails() {
   checkLabel(row, "rating");
   let rating = row.lastElementChild;
   ok(rating.classList.contains("addon-detail-rating"), "Found the rating el");
-  let starsElem = rating.querySelector("five-star-rating");
-  is(starsElem.rating, 4.279, "Exact rating used for calculations");
-  let stars = Array.from(starsElem.shadowRoot.querySelectorAll(".rating-star"));
+  let mozFiveStar = rating.querySelector("moz-five-star");
+  is(mozFiveStar.rating, 4.279, "Exact rating used for calculations");
+  let stars = Array.from(mozFiveStar.starEls);
   let fullAttrs = stars.map(star => star.getAttribute("fill")).join(",");
   is(fullAttrs, "full,full,full,full,half", "Four and a half stars are full");
   link = rating.querySelector("a");
@@ -545,16 +545,21 @@ add_task(async function testFullDetails() {
 
   // While we are here, let's test edge cases of star ratings.
   async function testRating(rating, ratingRounded, expectation) {
-    starsElem.rating = rating;
-    await starsElem.ownerDocument.l10n.translateElements([starsElem]);
-    is(
-      starsElem.ratingBuckets.join(","),
-      expectation,
-      `Rendering of rating ${rating}`
-    );
+    mozFiveStar.rating = rating;
+    await mozFiveStar.updateComplete;
+    if (mozFiveStar.ownerDocument.hasPendingL10nMutations) {
+      await BrowserTestUtils.waitForEvent(
+        mozFiveStar.ownerDocument,
+        "L10nMutationsFinished"
+      );
+    }
+    let starsString = Array.from(mozFiveStar.starEls)
+      .map(star => star.getAttribute("fill"))
+      .join(",");
+    is(starsString, expectation, `Rendering of rating ${rating}`);
 
     is(
-      starsElem.title,
+      mozFiveStar.starsWrapperEl.title,
       `Rated ${ratingRounded} out of 5`,
       "Rendered title must contain at most one fractional digit"
     );

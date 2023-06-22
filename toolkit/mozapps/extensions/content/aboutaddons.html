@@ -68,6 +68,10 @@
       type="module"
       src="chrome://global/content/elements/moz-support-link.mjs"
     ></script>
+    <script
+      type="module"
+      src="chrome://global/content/elements/moz-five-star.mjs"
+    ></script>
   </head>
   <body>
     <drag-drop-addon-installer></drag-drop-addon-installer>
@@ -448,7 +452,7 @@
         <span class="disco-description-main"></span>
       </div>
       <div class="disco-description-statistics">
-        <five-star-rating></five-star-rating>
+        <moz-five-star></moz-five-star>
         <span class="disco-user-count"></span>
       </div>
     </template>
@@ -613,7 +617,7 @@
           <div class="addon-detail-row addon-detail-row-rating">
             <label data-l10n-id="addon-detail-rating-label"></label>
             <div class="addon-detail-rating">
-              <five-star-rating></five-star-rating>
+              <moz-five-star></moz-five-star>
               <a target="_blank"></a>
             </div>
           </div>
@@ -622,18 +626,6 @@
         <addon-permissions-list name="permissions"></addon-permissions-list>
         <update-release-notes name="release-notes"></update-release-notes>
       </named-deck>
-    </template>
-
-    <template name="five-star-rating">
-      <link
-        rel="stylesheet"
-        href="chrome://mozapps/content/extensions/rating-star.css"
-      />
-      <span class="rating-star"></span>
-      <span class="rating-star"></span>
-      <span class="rating-star"></span>
-      <span class="rating-star"></span>
-      <span class="rating-star"></span>
     </template>
 
     <template name="taar-notice">

@@ -95,6 +95,8 @@ toolkit.jar:
    content/global/elements/menupopup.js        (widgets/menupopup.js)
    content/global/elements/moz-button-group.css    (widgets/moz-button-group/moz-button-group.css)
    content/global/elements/moz-button-group.mjs    (widgets/moz-button-group/moz-button-group.mjs)
+   content/global/elements/moz-five-star.css    (widgets/moz-five-star/moz-five-star.css)
+   content/global/elements/moz-five-star.mjs    (widgets/moz-five-star/moz-five-star.mjs)
    content/global/elements/moz-input-box.js    (widgets/moz-input-box.js)
    content/global/elements/moz-label.css       (widgets/moz-label/moz-label.css)
    content/global/elements/moz-label.mjs       (widgets/moz-label/moz-label.mjs)
