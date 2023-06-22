@@ -10,6 +10,10 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/ipc/AsyncBlockers.h"
 
+#if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
+#  include "mozilla/PSandboxTestingChild.h"
+#endif
+
 namespace mozilla {
 
 class TimeStamp;
