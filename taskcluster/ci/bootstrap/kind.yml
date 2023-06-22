@@ -37,6 +37,11 @@ jobs:
         pre-commands:
             - apt-get update
             - apt-get install -y --no-install-recommends curl mercurial python3-pip
+    ubuntu2304:
+        image: ubuntu:lunar
+        pre-commands:
+            - apt-get update
+            - apt-get install -y --no-install-recommends curl mercurial python3-pip
     fedora36:
         image: fedora:36
         pre-commands:
@@ -48,6 +53,10 @@ jobs:
             # Work around https://bz.mercurial-scm.org/show_bug.cgi?id=6761
             - mkdir -p /etc/mercurial/hgrc.d
             - (echo "[devel]"; echo discovery.randomize=false) > /etc/mercurial/hgrc.d/workaround.rc
+    fedora38:
+        image: fedora:38
+        pre-commands:
+            - dnf install -y mercurial python3-pip
     rockylinux8:
         image: rockylinux:8
         pre-commands:
