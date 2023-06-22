@@ -3,15 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  display: flex;
-  justify-content: space-between;
-}
-
-:host([hidden]) {
-  display: none;
-}
-
-.stars {
   --rating-star-size: 1em;
   --rating-star-spacing: 0.3ch;
 
@@ -21,15 +12,15 @@
   align-content: center;
 }
 
-.stars:has(span.label-wrapper) {
-  grid-template-columns: 1 fr repeat(5, var(--rating-star-size));
+:host([hidden]) {
+  display: none;
 }
 
 .rating-star {
   display: inline-block;
   width: var(--rating-star-size);
   height: var(--rating-star-size);
-  background-image: url("chrome://global/skin/icons/rating-star.svg#empty");
+  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#empty");
   background-position: center;
   background-repeat: no-repeat;
   background-size: 100%;
@@ -39,10 +30,10 @@
 }
 
 .rating-star[fill="half"] {
-  background-image: url("chrome://global/skin/icons/rating-star.svg#half");
+  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#half");
 }
 .rating-star[fill="full"] {
-  background-image: url("chrome://global/skin/icons/rating-star.svg#full");
+  background-image: url("chrome://mozapps/skin/extensions/rating-star.svg#full");
 }
 
 .rating-star[fill="half"]:dir(rtl) {
