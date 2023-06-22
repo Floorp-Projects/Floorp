@@ -152,7 +152,7 @@ impl StylesheetInvalidationSet {
 
         let quirks_mode = device.quirks_mode();
         for rule in stylesheet.effective_rules(device, guard) {
-            self.collect_invalidations_for_rule(rule, guard, device, quirks_mode);
+            self.collect_invalidations_for_rule(rule, guard, device, quirks_mode, /* is_generic_change = */ false);
             if self.fully_invalid {
                 break;
             }
@@ -529,8 +529,6 @@ impl StylesheetInvalidationSet {
     ) where
         S: StylesheetInDocument,
     {
-        use crate::stylesheets::CssRule::*;
-
         debug!("StylesheetInvalidationSet::rule_changed");
         if self.fully_invalid {
             return;
@@ -541,54 +539,29 @@ impl StylesheetInvalidationSet {
             return; // Nothing to do here.
         }
 
+        // If the change is generic, we don't have the old rule information to know e.g., the old
+        // media condition, or the old selector text, so we might need to invalidate more
+        // aggressively. That only applies to the changed rules, for other rules we can just
+        // collect invalidations as normal.
         let is_generic_change = change_kind == RuleChangeKind::Generic;
+        self.collect_invalidations_for_rule(rule, guard, device, quirks_mode, is_generic_change);
+        if self.fully_invalid {
+            return;
+        }
 
-        match *rule {
-            Namespace(..) => {
-                // It's not clear what handling changes for this correctly would
-                // look like.
-            },
-            LayerStatement(..) => {
-                // Layer statement insertions might alter styling order, so we need to always
-                // invalidate fully.
-                return self.invalidate_fully();
-            },
-            CounterStyle(..) |
-            Page(..) |
-            Property(..) |
-            FontFeatureValues(..) |
-            FontPaletteValues(..) |
-            FontFace(..) |
-            Keyframes(..) |
-            Container(..) |
-            Style(..) => {
-                if is_generic_change {
-                    // TODO(emilio): We need to do this for selector / keyframe
-                    // name / font-face changes, because we don't have the old
-                    // selector / name.  If we distinguish those changes
-                    // specially, then we can at least use this invalidation for
-                    // style declaration changes.
-                    return self.invalidate_fully();
-                }
+        if !is_generic_change &&
+            !EffectiveRules::is_effective(guard, device, quirks_mode, rule)
+        {
+            return;
+        }
 
-                self.collect_invalidations_for_rule(rule, guard, device, quirks_mode)
-            },
-            Document(..) | Import(..) | Media(..) | Supports(..) | LayerBlock(..) => {
-                if !is_generic_change &&
-                    !EffectiveRules::is_effective(guard, device, quirks_mode, rule)
-                {
-                    return;
-                }
-
-                let rules =
-                    EffectiveRulesIterator::effective_children(device, quirks_mode, guard, rule);
-                for rule in rules {
-                    self.collect_invalidations_for_rule(rule, guard, device, quirks_mode);
-                    if self.fully_invalid {
-                        break;
-                    }
-                }
-            },
+        let rules =
+            EffectiveRulesIterator::effective_children(device, quirks_mode, guard, rule);
+        for rule in rules {
+            self.collect_invalidations_for_rule(rule, guard, device, quirks_mode, /* is_generic_change = */ false);
+            if self.fully_invalid {
+                break;
+            }
         }
     }
 
@@ -599,13 +572,23 @@ impl StylesheetInvalidationSet {
         guard: &SharedRwLockReadGuard,
         device: &Device,
         quirks_mode: QuirksMode,
+        is_generic_change: bool,
     ) {
         use crate::stylesheets::CssRule::*;
         debug!("StylesheetInvalidationSet::collect_invalidations_for_rule");
-        debug_assert!(!self.fully_invalid, "Not worth to be here!");
+        debug_assert!(!self.fully_invalid, "Not worth being here!");
 
         match *rule {
             Style(ref lock) => {
+                if is_generic_change {
+                    // TODO(emilio): We need to do this for selector / keyframe
+                    // name / font-face changes, because we don't have the old
+                    // selector / name.  If we distinguish those changes
+                    // specially, then we can at least use this invalidation for
+                    // style declaration changes.
+                    return self.invalidate_fully();
+                }
+
                 let style_rule = lock.read_with(guard);
                 for selector in &style_rule.selectors.0 {
                     self.collect_invalidations(selector, quirks_mode);
@@ -614,41 +597,48 @@ impl StylesheetInvalidationSet {
                     }
                 }
             },
-            Document(..) | Namespace(..) | Import(..) | Media(..) | Supports(..) |
-            Container(..) | LayerStatement(..) | LayerBlock(..) => {
-                // Do nothing, relevant nested rules are visited as part of the
-                // iteration.
+            Namespace(..) => {
+                // It's not clear what handling changes for this correctly would
+                // look like.
+            },
+            LayerStatement(..) => {
+                // Layer statement insertions might alter styling order, so we need to always
+                // invalidate fully.
+                return self.invalidate_fully();
+            },
+            Document(..) | Import(..) | Media(..) | Supports(..) |
+            Container(..)  | LayerBlock(..) => {
+                // Do nothing, relevant nested rules are visited as part of rule iteration.
             },
             FontFace(..) => {
-                // Do nothing, @font-face doesn't affect computed style
-                // information. We'll restyle when the font face loads, if
-                // needed.
+                // Do nothing, @font-face doesn't affect computed style information on it's own.
+                // We'll restyle when the font face loads, if needed.
+            },
+            Page(..) => {
+                // Do nothing, we don't support OM mutations on print documents, and page rules
+                // can't affect anything else.
             },
             Keyframes(ref lock) => {
+                if is_generic_change {
+                    return self.invalidate_fully();
+                }
                 let keyframes_rule = lock.read_with(guard);
                 if device.animation_name_may_be_referenced(&keyframes_rule.name) {
                     debug!(
                         " > Found @keyframes rule potentially referenced \
                          from the page, marking the whole tree invalid."
                     );
-                    self.fully_invalid = true;
+                    self.invalidate_fully();
                 } else {
-                    // Do nothing, this animation can't affect the style of
-                    // existing elements.
+                    // Do nothing, this animation can't affect the style of existing elements.
                 }
             },
             CounterStyle(..) |
-            Page(..) |
             Property(..) |
             FontFeatureValues(..) |
             FontPaletteValues(..) => {
                 debug!(" > Found unsupported rule, marking the whole subtree invalid.");
-
-                // TODO(emilio): Can we do better here?
-                //
-                // At least in `@page`, we could check the relevant media, I
-                // guess.
-                self.fully_invalid = true;
+                self.invalidate_fully();
             },
         }
     }
