@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>action.getUserSettings Test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+  <script type="text/javascript">
+    "use strict";
+    async function background() {
+      let { manifest_version } = await browser.runtime.getManifest();
+      let action = browser.browserAction;
+      if (manifest_version === 3) {
+        action = browser.action;
+      }
+      let userSettings = await action.getUserSettings();
+
+      if (navigator.userAgent.includes("Android")) {
+        browser.test.assertDeepEq({}, userSettings, "userSettings should return an empty object on Android")
+      } else {
+        browser.test.assertFalse(
+          userSettings.isOnToolbar,
+          "isOnToolbar should be false when no default_area is specified in manifest.json"
+        );
+      }
+      await browser.test.notifyPass("getUserSettings");
+    }
+    add_task(async function browserAction_getUserSettings() {
+      let manifest = { manifest: { manifest_version: 2, browser_action: {} }, background }
+      let extension = ExtensionTestUtils.loadExtension(manifest);
+      await extension.startup();
+      await extension.awaitFinish("getUserSettings");
+      await extension.unload();
+    });
+    add_task(async function action_getUserSettings() {
+      let manifest = { manifest: { manifest_version: 3, action: {} }, background }
+      let extension = ExtensionTestUtils.loadExtension(manifest);
+      await extension.startup();
+      await extension.awaitFinish("getUserSettings");
+      await extension.unload();
+    });
+  </script>
+</body>
+
+</html>

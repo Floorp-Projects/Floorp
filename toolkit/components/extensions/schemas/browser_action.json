@@ -191,6 +191,32 @@
         ]
       },
       {
+        "name": "getUserSettings",
+        "type": "function",
+        "description": "Returns the user-specified settings relating to an extension's action.",
+        "async": "callback",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "userSettings",
+                "type": "object",
+                "properties": {
+                  "isOnToolbar": {
+                    "type": "boolean",
+                    "optional": true,
+                    "description": "Whether the extension's action icon is visible on browser windows' top-level toolbar (i.e., whether the extension has been 'pinned' by the user)."
+                  }
+                },
+                "description": "The collection of user-specified settings relating to an extension's action."
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "setIcon",
         "type": "function",
         "description": "Sets the icon for the browser action. The icon can be specified either as the path to an image file or as the pixel data from a canvas element, or as dictionary of either one of those. Either the <b>path</b> or the <b>imageData</b> property must be specified.",

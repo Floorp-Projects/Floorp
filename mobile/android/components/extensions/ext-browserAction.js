@@ -152,6 +152,14 @@ this.browserAction = class extends ExtensionAPIPersistent {
           extensionApi: this,
         }).api(),
 
+        getUserSettings: () => {
+          return {
+            // isOnToolbar is not supported on Android.
+            // We intentionally omit the property, in case
+            // extensions would like to feature-detect support
+            // for this feature.
+          };
+        },
         openPopup: options => {
           const isHandlingUserInput =
             context.callContextData?.isHandlingUserInput;
