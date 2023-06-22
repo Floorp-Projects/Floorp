@@ -90,14 +90,20 @@ if CONFIG["MOZ_ENABLE_D3D10_LAYER"]:
         "RenderDcompSurfaceTextureHost.cpp",
     ]
 
-if CONFIG["MOZ_WAYLAND"]:
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     EXPORTS.mozilla.webrender += [
-        "RenderCompositorNative.h",
         "RenderDMABUFTextureHost.h",
     ]
     SOURCES += [
-        "RenderCompositorNative.cpp",
         "RenderDMABUFTextureHost.cpp",
+    ]
+
+if CONFIG["MOZ_WAYLAND"]:
+    EXPORTS.mozilla.webrender += [
+        "RenderCompositorNative.h",
+    ]
+    SOURCES += [
+        "RenderCompositorNative.cpp",
     ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] in ("android", "gtk"):
