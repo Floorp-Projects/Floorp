@@ -22,7 +22,7 @@ UNIFIED_SOURCES += [
     "FFmpegRuntimeLinker.cpp",
 ]
 
-if CONFIG["MOZ_WAYLAND"]:
+if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
