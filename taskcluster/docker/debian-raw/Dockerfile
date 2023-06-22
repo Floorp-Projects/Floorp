@@ -38,6 +38,7 @@ RUN if [ -n "$DIST" ]; then for s in debian_$DIST debian_$DIST-updates debian_$D
           ;; \
       esac; \
     done > /etc/apt/sources.list ; fi && \
+    rm -f /etc/apt/sources.list.d/* && \
     ( echo 'quiet "true";'; \
       echo 'APT::Get::Assume-Yes "true";'; \
       echo 'APT::Install-Recommends "false";'; \
