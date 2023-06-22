@@ -135,7 +135,7 @@ class APZEventState final {
 
  private:
   ~APZEventState();
-  bool SendPendingTouchPreventedResponse(bool aPreventDefault);
+  void SendPendingTouchPreventedResponse(bool aPreventDefault);
   MOZ_CAN_RUN_SCRIPT
   PreventDefaultResult FireContextmenuEvents(
       PresShell* aPresShell, const CSSPoint& aPoint,
