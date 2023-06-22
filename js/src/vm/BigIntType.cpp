@@ -3905,17 +3905,19 @@ BigInt* JS::ToBigInt(JSContext* cx, HandleValue val) {
   return js::ToBigInt(cx, val);
 }
 
-int64_t JS::ToBigInt64(JS::BigInt* bi) { return BigInt::toInt64(bi); }
+int64_t JS::ToBigInt64(const JS::BigInt* bi) { return BigInt::toInt64(bi); }
 
-uint64_t JS::ToBigUint64(JS::BigInt* bi) { return BigInt::toUint64(bi); }
+uint64_t JS::ToBigUint64(const JS::BigInt* bi) { return BigInt::toUint64(bi); }
 
-double JS::BigIntToNumber(JS::BigInt* bi) { return BigInt::numberValue(bi); }
+double JS::BigIntToNumber(const JS::BigInt* bi) {
+  return BigInt::numberValue(bi);
+}
 
-bool JS::BigIntIsNegative(BigInt* bi) {
+bool JS::BigIntIsNegative(const BigInt* bi) {
   return !bi->isZero() && bi->isNegative();
 }
 
-bool JS::BigIntFitsNumber(BigInt* bi, double* out) {
+bool JS::BigIntFitsNumber(const BigInt* bi, double* out) {
   return bi->isNumber(bi, out);
 }
 
@@ -3941,10 +3943,10 @@ BigInt* JS::detail::BigIntFromBool(JSContext* cx, bool b) {
   return b ? BigInt::one(cx) : BigInt::zero(cx);
 }
 
-bool JS::detail::BigIntIsInt64(BigInt* bi, int64_t* result) {
+bool JS::detail::BigIntIsInt64(const BigInt* bi, int64_t* result) {
   return BigInt::isInt64(bi, result);
 }
 
-bool JS::detail::BigIntIsUint64(BigInt* bi, uint64_t* result) {
+bool JS::detail::BigIntIsUint64(const BigInt* bi, uint64_t* result) {
   return BigInt::isUint64(bi, result);
 }
