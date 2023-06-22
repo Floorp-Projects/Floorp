@@ -20,10 +20,13 @@
 
 pub mod benchmarked;
 #[cfg(feature = "prio2")]
+#[cfg_attr(docsrs, doc(cfg(feature = "prio2")))]
 pub mod client;
 #[cfg(feature = "prio2")]
+#[cfg_attr(docsrs, doc(cfg(feature = "prio2")))]
 pub mod encrypt;
 #[cfg(feature = "prio2")]
+#[cfg_attr(docsrs, doc(cfg(feature = "prio2")))]
 pub mod server;
 
 pub mod codec;
@@ -31,14 +34,20 @@ mod fft;
 pub mod field;
 pub mod flp;
 mod fp;
-#[cfg(feature = "experimental")]
+#[cfg(all(feature = "crypto-dependencies", feature = "experimental"))]
+#[cfg_attr(
+    docsrs,
+    doc(cfg(all(feature = "crypto-dependencies", feature = "experimental")))
+)]
 pub mod idpf;
 mod polynomial;
 mod prng;
 // Module test_vector depends on crate `rand` so we make it an optional feature
 // to spare most clients the extra dependency.
 #[cfg(all(any(feature = "test-util", test), feature = "prio2"))]
+#[doc(hidden)]
 pub mod test_vector;
 #[cfg(feature = "prio2")]
+#[cfg_attr(docsrs, doc(cfg(feature = "prio2")))]
 pub mod util;
 pub mod vdaf;

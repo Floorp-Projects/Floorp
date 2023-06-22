@@ -19,7 +19,9 @@ use std::{
     convert::TryFrom,
     fmt::Debug,
     io::{Cursor, Read},
+    iter,
     marker::PhantomData,
+    num::TryFromIntError,
     ops::{Add, AddAssign, Sub},
 };
 use subtle::{Choice, ConditionallyNegatable, ConditionallySelectable, ConstantTimeEq};
@@ -172,22 +174,130 @@ impl<'a, P, const SEED_SIZE: usize> ParameterizedDecode<(&'a Poplar1<P, SEED_SIZ
 }
 
 /// Poplar1 preparation state.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Poplar1PrepareState(PrepareStateVariant);
 
-#[derive(Clone, Debug)]
+impl Encode for Poplar1PrepareState {
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        self.0.encode(bytes)
+    }
+
+    fn encoded_len(&self) -> Option<usize> {
+        self.0.encoded_len()
+    }
+}
+
+impl<'a, P, const SEED_SIZE: usize> ParameterizedDecode<(&'a Poplar1<P, SEED_SIZE>, usize)>
+    for Poplar1PrepareState
+{
+    fn decode_with_param(
+        decoding_parameter: &(&'a Poplar1<P, SEED_SIZE>, usize),
+        bytes: &mut Cursor<&[u8]>,
+    ) -> Result<Self, CodecError> {
+        Ok(Self(PrepareStateVariant::decode_with_param(
+            decoding_parameter,
+            bytes,
+        )?))
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum PrepareStateVariant {
     Inner(PrepareState<Field64>),
     Leaf(PrepareState<Field255>),
 }
 
-#[derive(Clone, Debug)]
+impl Encode for PrepareStateVariant {
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        match self {
+            PrepareStateVariant::Inner(prep_state) => {
+                0u8.encode(bytes);
+                prep_state.encode(bytes);
+            }
+            PrepareStateVariant::Leaf(prep_state) => {
+                1u8.encode(bytes);
+                prep_state.encode(bytes);
+            }
+        }
+    }
+
+    fn encoded_len(&self) -> Option<usize> {
+        Some(
+            1 + match self {
+                PrepareStateVariant::Inner(prep_state) => prep_state.encoded_len()?,
+                PrepareStateVariant::Leaf(prep_state) => prep_state.encoded_len()?,
+            },
+        )
+    }
+}
+
+impl<'a, P, const SEED_SIZE: usize> ParameterizedDecode<(&'a Poplar1<P, SEED_SIZE>, usize)>
+    for PrepareStateVariant
+{
+    fn decode_with_param(
+        decoding_parameter: &(&'a Poplar1<P, SEED_SIZE>, usize),
+        bytes: &mut Cursor<&[u8]>,
+    ) -> Result<Self, CodecError> {
+        match u8::decode(bytes)? {
+            0 => {
+                let prep_state = PrepareState::decode_with_param(decoding_parameter, bytes)?;
+                Ok(Self::Inner(prep_state))
+            }
+            1 => {
+                let prep_state = PrepareState::decode_with_param(decoding_parameter, bytes)?;
+                Ok(Self::Leaf(prep_state))
+            }
+            _ => Err(CodecError::UnexpectedValue),
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 struct PrepareState<F> {
     sketch: SketchState<F>,
     output_share: Vec<F>,
 }
 
-#[derive(Clone, Debug)]
+impl<F: FieldElement> Encode for PrepareState<F> {
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        self.sketch.encode(bytes);
+        // `expect` safety: output_share's length is the same as the number of prefixes; the number
+        // of prefixes is capped at 2^32-1.
+        u32::try_from(self.output_share.len())
+            .expect("Couldn't convert output_share length to u32")
+            .encode(bytes);
+        for elem in &self.output_share {
+            elem.encode(bytes);
+        }
+    }
+
+    fn encoded_len(&self) -> Option<usize> {
+        Some(self.sketch.encoded_len()? + 4 + self.output_share.len() * F::ENCODED_SIZE)
+    }
+}
+
+impl<'a, P, F: FieldElement, const SEED_SIZE: usize>
+    ParameterizedDecode<(&'a Poplar1<P, SEED_SIZE>, usize)> for PrepareState<F>
+{
+    fn decode_with_param(
+        decoding_parameter: &(&'a Poplar1<P, SEED_SIZE>, usize),
+        bytes: &mut Cursor<&[u8]>,
+    ) -> Result<Self, CodecError> {
+        let sketch = SketchState::<F>::decode_with_param(decoding_parameter, bytes)?;
+        let output_share_len = u32::decode(bytes)?
+            .try_into()
+            .map_err(|err: TryFromIntError| CodecError::Other(err.into()))?;
+        let output_share = iter::repeat_with(|| F::decode(bytes))
+            .take(output_share_len)
+            .collect::<Result<_, _>>()?;
+        Ok(Self {
+            sketch,
+            output_share,
+        })
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 enum SketchState<F> {
     #[allow(non_snake_case)]
     RoundOne {
@@ -196,6 +306,55 @@ enum SketchState<F> {
         is_leader: bool,
     },
     RoundTwo,
+}
+
+impl<F: FieldElement> Encode for SketchState<F> {
+    fn encode(&self, bytes: &mut Vec<u8>) {
+        match self {
+            SketchState::RoundOne {
+                A_share, B_share, ..
+            } => {
+                0u8.encode(bytes);
+                A_share.encode(bytes);
+                B_share.encode(bytes);
+            }
+            SketchState::RoundTwo => 1u8.encode(bytes),
+        }
+    }
+
+    fn encoded_len(&self) -> Option<usize> {
+        Some(
+            1 + match self {
+                SketchState::RoundOne { .. } => 2 * F::ENCODED_SIZE,
+                SketchState::RoundTwo => 0,
+            },
+        )
+    }
+}
+
+impl<'a, P, F: FieldElement, const SEED_SIZE: usize>
+    ParameterizedDecode<(&'a Poplar1<P, SEED_SIZE>, usize)> for SketchState<F>
+{
+    #[allow(non_snake_case)]
+    fn decode_with_param(
+        (_, agg_id): &(&'a Poplar1<P, SEED_SIZE>, usize),
+        bytes: &mut Cursor<&[u8]>,
+    ) -> Result<Self, CodecError> {
+        match u8::decode(bytes)? {
+            0 => {
+                let A_share = F::decode(bytes)?;
+                let B_share = F::decode(bytes)?;
+                let is_leader = agg_id == &0;
+                Ok(Self::RoundOne {
+                    A_share,
+                    B_share,
+                    is_leader,
+                })
+            }
+            1 => Ok(Self::RoundTwo),
+            _ => Err(CodecError::UnexpectedValue),
+        }
+    }
 }
 
 impl<F: FieldElement> SketchState<F> {
@@ -407,8 +566,10 @@ impl Poplar1AggregationParam {
     ///
     /// * The list of prefixes is empty.
     /// * The prefixes have different lengths (they must all be the same).
-    /// * The prefixes are longer than 2^16 bits.
+    /// * The prefixes have length 0, or length longer than 2^16 bits.
     /// * There are more than 2^32 - 1 prefixes.
+    /// * The prefixes are not unique.
+    /// * The prefixes are not in lexicographic order.
     pub fn try_from_prefixes(prefixes: Vec<IdpfInput>) -> Result<Self, VdafError> {
         if prefixes.is_empty() {
             return Err(VdafError::Uncategorized(
@@ -443,7 +604,10 @@ impl Poplar1AggregationParam {
             last_prefix = Some(prefix);
         }
 
-        let level = u16::try_from(len - 1)
+        let level = len
+            .checked_sub(1)
+            .ok_or_else(|| VdafError::Uncategorized("prefixes are too short".into()))?;
+        let level = u16::try_from(level)
             .map_err(|_| VdafError::Uncategorized("prefixes are too long".into()))?;
 
         Ok(Self { level, prefixes })
@@ -1475,6 +1639,116 @@ mod tests {
             agg_param.get_encoded().len(),
             agg_param.encoded_len().unwrap()
         );
+    }
+
+    #[test]
+    fn round_trip_prepare_state() {
+        let vdaf = Poplar1::new_sha3(1);
+        for (agg_id, prep_state) in [
+            (
+                0,
+                Poplar1PrepareState(PrepareStateVariant::Inner(PrepareState {
+                    sketch: SketchState::RoundOne {
+                        A_share: Field64::from(0),
+                        B_share: Field64::from(1),
+                        is_leader: true,
+                    },
+                    output_share: Vec::from([Field64::from(2), Field64::from(3), Field64::from(4)]),
+                })),
+            ),
+            (
+                1,
+                Poplar1PrepareState(PrepareStateVariant::Inner(PrepareState {
+                    sketch: SketchState::RoundOne {
+                        A_share: Field64::from(5),
+                        B_share: Field64::from(6),
+                        is_leader: false,
+                    },
+                    output_share: Vec::from([Field64::from(7), Field64::from(8), Field64::from(9)]),
+                })),
+            ),
+            (
+                0,
+                Poplar1PrepareState(PrepareStateVariant::Inner(PrepareState {
+                    sketch: SketchState::RoundTwo,
+                    output_share: Vec::from([
+                        Field64::from(10),
+                        Field64::from(11),
+                        Field64::from(12),
+                    ]),
+                })),
+            ),
+            (
+                1,
+                Poplar1PrepareState(PrepareStateVariant::Inner(PrepareState {
+                    sketch: SketchState::RoundTwo,
+                    output_share: Vec::from([
+                        Field64::from(13),
+                        Field64::from(14),
+                        Field64::from(15),
+                    ]),
+                })),
+            ),
+            (
+                0,
+                Poplar1PrepareState(PrepareStateVariant::Leaf(PrepareState {
+                    sketch: SketchState::RoundOne {
+                        A_share: Field255::from(16),
+                        B_share: Field255::from(17),
+                        is_leader: true,
+                    },
+                    output_share: Vec::from([
+                        Field255::from(18),
+                        Field255::from(19),
+                        Field255::from(20),
+                    ]),
+                })),
+            ),
+            (
+                1,
+                Poplar1PrepareState(PrepareStateVariant::Leaf(PrepareState {
+                    sketch: SketchState::RoundOne {
+                        A_share: Field255::from(21),
+                        B_share: Field255::from(22),
+                        is_leader: false,
+                    },
+                    output_share: Vec::from([
+                        Field255::from(23),
+                        Field255::from(24),
+                        Field255::from(25),
+                    ]),
+                })),
+            ),
+            (
+                0,
+                Poplar1PrepareState(PrepareStateVariant::Leaf(PrepareState {
+                    sketch: SketchState::RoundTwo,
+                    output_share: Vec::from([
+                        Field255::from(26),
+                        Field255::from(27),
+                        Field255::from(28),
+                    ]),
+                })),
+            ),
+            (
+                1,
+                Poplar1PrepareState(PrepareStateVariant::Leaf(PrepareState {
+                    sketch: SketchState::RoundTwo,
+                    output_share: Vec::from([
+                        Field255::from(29),
+                        Field255::from(30),
+                        Field255::from(31),
+                    ]),
+                })),
+            ),
+        ] {
+            let encoded_prep_state = prep_state.get_encoded();
+            assert_eq!(prep_state.encoded_len(), Some(encoded_prep_state.len()));
+            let decoded_prep_state =
+                Poplar1PrepareState::get_decoded_with_param(&(&vdaf, agg_id), &encoded_prep_state)
+                    .unwrap();
+            assert_eq!(prep_state, decoded_prep_state);
+        }
     }
 
     #[test]

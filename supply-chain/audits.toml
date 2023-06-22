@@ -1720,6 +1720,11 @@ who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.1.24 -> 0.1.25"
 
+[[audits.keccak]]
+who = "Simon Friedberger <simon@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.2 -> 0.1.3"
+
 [[audits.libc]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -2702,6 +2707,11 @@ delta = "0.10.0 -> 0.10.5"
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.10.2 -> 0.10.6"
+
+[[audits.sha3]]
+who = "Simon Friedberger <simon@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.10.6 -> 0.10.7"
 
 [[audits.slab]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
