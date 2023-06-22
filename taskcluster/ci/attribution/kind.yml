@@ -5,6 +5,7 @@
 loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
+    - gecko_taskgraph.transforms.attribution:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
@@ -62,15 +63,8 @@ jobs:
             build_type: opt
         treeherder:
             platform: win32-devedition/opt
-        fetches:
-            repackage-signing:
-                - target.stub-installer.exe
         dependencies:
             repackage-signing: repackage-signing-win32-devedition/opt
-        run:
-            command:
-                - --input
-                - /builds/worker/fetches/target.stub-installer.exe
 
     win32-shippable/opt:
         label: attribution-win32-shippable/opt
@@ -80,15 +74,8 @@ jobs:
             build_type: opt
         treeherder:
             platform: win32-shippable/opt
-        fetches:
-            repackage-signing:
-                - target.stub-installer.exe
         dependencies:
             repackage-signing: repackage-signing-win32-shippable/opt
-        run:
-            command:
-                - --input
-                - /builds/worker/fetches/target.stub-installer.exe
 
     win64-devedition/opt:
         label: attribution-win64-devedition/opt
