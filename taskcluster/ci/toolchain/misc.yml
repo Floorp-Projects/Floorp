@@ -35,7 +35,7 @@ linux64-binutils:
         toolchain-artifact: public/build/binutils.tar.zst
     fetches:
         fetch:
-            - binutils-2.40
+            - binutils-2.36.1
         toolchain:
             - linux64-toolchain-sysroot
 
