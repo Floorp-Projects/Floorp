@@ -106,9 +106,8 @@
         changeUserAgent: () => {
           BROWSER_SIDEBAR_DATA.data[clickedWebpanel.replace("select-", "")].userAgent = ((document.getElementById(clickedWebpanel.replace("select-", "webpanel")).getAttribute("changeuseragent") ?? "false") == "false")
           Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(BROWSER_SIDEBAR_DATA));
-          //reload webpanel
-          let webpanel = document.getElementById(clickedWebpanel.replace("select-", "webpanel"))
-          if (webpanel != null) webpanel.reloadWithFlags(Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE)
+          //unload webpanel
+          bmsController.controllFunctions.unloadWebpanel(clickedWebpanel.replace("select-", ""))
         },
         deleteWebpanel: () => {
           if (document.getElementById("sidebar-splitter2").getAttribute("hidden") != "true") {
