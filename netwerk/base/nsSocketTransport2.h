@@ -9,6 +9,8 @@
 #  define ENABLE_SOCKET_TRACING
 #endif
 
+#include <functional>
+
 #include "mozilla/Mutex.h"
 #include "nsSocketTransportService2.h"
 #include "nsString.h"
@@ -160,7 +162,8 @@ class nsSocketTransport final : public nsASocketHandler,
   void OnKeepaliveEnabledPrefChange(bool aEnabled) final;
 
   // called when a socket event is handled
-  void OnSocketEvent(uint32_t type, nsresult status, nsISupports* param);
+  void OnSocketEvent(uint32_t type, nsresult status, nsISupports* param,
+                     std::function<void()>&& task);
 
   uint64_t ByteCountReceived() override { return mInput.ByteCount(); }
   uint64_t ByteCountSent() override { return mOutput.ByteCount(); }
@@ -187,7 +190,8 @@ class nsSocketTransport final : public nsASocketHandler,
     MSG_OUTPUT_PENDING
   };
   nsresult PostEvent(uint32_t type, nsresult status = NS_OK,
-                     nsISupports* param = nullptr);
+                     nsISupports* param = nullptr,
+                     std::function<void()>&& task = nullptr);
 
   enum {
     STATE_CLOSED,
@@ -328,6 +332,9 @@ class nsSocketTransport final : public nsASocketHandler,
   bool mResolvedByTRR{false};
   nsIRequest::TRRMode mEffectiveTRRMode{nsIRequest::TRR_DEFAULT_MODE};
   nsITRRSkipReason::value mTRRSkipReason{nsITRRSkipReason::TRR_UNSET};
+
+  nsCOMPtr<nsISupports> mInputCopyContext;
+  nsCOMPtr<nsISupports> mOutputCopyContext;
 
   // mNetAddr/mSelfAddr is valid from GetPeerAddr()/GetSelfAddr() once we have
   // reached STATE_TRANSFERRING. It must not change after that.
