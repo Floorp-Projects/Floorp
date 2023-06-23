@@ -71,15 +71,6 @@ const gLoggingPresets = {
     },
     profilerPreset: "media",
   },
-  webrtc: {
-    modules:
-      "timestamp,sync,jsep:5,sdp:5,signaling:5,mtransport:5,RTCRtpReceiver:5,RTCRtpSender:5,GetUserMedia:5,MediaManager:4,MediaPipeline:5,GetUserMedia:4,PeerConnectionImpl:5",
-    l10nIds: {
-      label: "about-logging-preset-webrtc-label",
-      description: "about-logging-preset-webrtc-description",
-    },
-    profilerPreset: "media",
-  },
   custom: {
     modules: "",
     l10nIds: {
