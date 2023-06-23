@@ -230,18 +230,11 @@ void Http3Session::Shutdown() {
 
   bool isEchRetry = mError == mozilla::psm::GetXPCOMFromNSSError(
                                   SSL_ERROR_ECH_RETRY_WITH_ECH);
-  bool allowToRetryWithDifferentIPFamily =
-      mBeforeConnectedError &&
-      gHttpHandler->ConnMgr()->AllowToRetryDifferentIPFamilyForHttp3(mConnInfo,
-                                                                     mError);
-  LOG(("Http3Session::Shutdown %p allowToRetryWithDifferentIPFamily=%d", this,
-       allowToRetryWithDifferentIPFamily));
   if ((mBeforeConnectedError ||
        (mError == NS_ERROR_NET_HTTP3_PROTOCOL_ERROR)) &&
       (mError !=
        mozilla::psm::GetXPCOMFromNSSError(SSL_ERROR_BAD_CERT_DOMAIN)) &&
-      !isEchRetry && !mConnInfo->GetWebTransport() &&
-      !allowToRetryWithDifferentIPFamily && !mDontExclude) {
+      !isEchRetry && !mConnInfo->GetWebTransport()) {
     gHttpHandler->ExcludeHttp3(mConnInfo);
   }
 
@@ -256,28 +249,7 @@ void Http3Session::Shutdown() {
         // transaction will be restarted with a new echConfig.
         stream->Close(mError);
       } else {
-        if (allowToRetryWithDifferentIPFamily && mNetAddr) {
-          NetAddr addr;
-          mNetAddr->GetNetAddr(&addr);
-          gHttpHandler->ConnMgr()->SetRetryDifferentIPFamilyForHttp3(
-              mConnInfo, addr.raw.family);
-          nsHttpTransaction* trans =
-              stream->Transaction()->QueryHttpTransaction();
-          if (trans) {
-            // This is a bit hacky. We redispatch the transaction here to avoid
-            // touching the complicated retry logic in nsHttpTransaction.
-            trans->RemoveConnection();
-            Unused << gHttpHandler->InitiateTransaction(trans,
-                                                        trans->Priority());
-          } else {
-            stream->Close(NS_ERROR_NET_RESET);
-          }
-          // Since Http3Session::Shutdown can be called multiple times, we set
-          // mDontExclude for not putting this domain into the excluded list.
-          mDontExclude = true;
-        } else {
-          stream->Close(NS_ERROR_NET_RESET);
-        }
+        stream->Close(NS_ERROR_NET_RESET);
       }
     } else if (!stream->HasStreamId()) {
       if (NS_SUCCEEDED(mError)) {
