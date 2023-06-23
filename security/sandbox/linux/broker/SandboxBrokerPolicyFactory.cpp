@@ -980,6 +980,7 @@ SandboxBrokerPolicyFactory::GetUtilityProcessPolicy(int aPid) {
   policy->AddDir(access, "/");
 
   AddLdconfigPaths(policy.get());
+  AddLdLibraryEnvPaths(policy.get());
 
   // Utility process sandbox needs to allow shmem in order to support
   // profiling.  See Bug 1626385.
