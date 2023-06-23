@@ -1606,7 +1606,7 @@ Selection* nsFrameSelection::GetSelection(SelectionType aSelectionType) const {
 }
 
 void nsFrameSelection::AddHighlightSelection(
-    const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight) {
+    const nsAtom* aHighlightName, mozilla::dom::Highlight& aHighlight) {
   RefPtr<Selection> selection =
       aHighlight.CreateHighlightSelection(aHighlightName, this);
   if (auto iter =
@@ -1637,7 +1637,7 @@ void nsFrameSelection::RemoveHighlightSelection(const nsAtom* aHighlightName) {
 }
 
 void nsFrameSelection::AddHighlightSelectionRange(
-    const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight,
+    const nsAtom* aHighlightName, mozilla::dom::Highlight& aHighlight,
     mozilla::dom::AbstractRange& aRange) {
   if (auto iter =
           std::find_if(mHighlightSelections.begin(), mHighlightSelections.end(),

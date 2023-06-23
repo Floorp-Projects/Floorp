@@ -14,6 +14,7 @@
 #include "mozilla/SelectionChangeEventDispatcher.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/Highlight.h"
 #include "mozilla/dom/StyledRange.h"
 #include "nsDirection.h"
 #include "nsISelectionController.h"
@@ -466,9 +467,12 @@ class Selection final : public nsSupportsWeakReference,
   SelectionType Type() const { return mSelectionType; }
 
   /**
-   * @brief Set a highlight name, if this is a highlight selection.
+   * @brief Sets highlight selection properties.
+   *
+   * This includes the highlight name as well as its priority and type.
    */
-  void SetHighlightName(const nsAtom* aHighlightName);
+  void SetHighlightSelectionData(
+      HighlightSelectionData aHighlightSelectionData);
 
   /**
    * See documentation of `GetRangesForInterval` in Selection.webidl.
@@ -964,7 +968,7 @@ class Selection final : public nsSupportsWeakReference,
   CachedOffsetForFrame* mCachedOffsetForFrame;
   nsDirection mDirection;
   const SelectionType mSelectionType;
-  RefPtr<const nsAtom> mHighlightName;
+  HighlightSelectionData mHighlightData;
   UniquePtr<SelectionCustomColors> mCustomColors;
 
   // Non-zero if we don't want any changes we make to the selection to be

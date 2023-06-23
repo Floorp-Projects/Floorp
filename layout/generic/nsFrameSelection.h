@@ -14,6 +14,7 @@
 #include "mozilla/CompactPair.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/dom/Highlight.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/Result.h"
 #include "mozilla/TextRange.h"
@@ -45,7 +46,7 @@ struct SelectionDetails {
   int32_t mStart;
   int32_t mEnd;
   mozilla::SelectionType mSelectionType;
-  RefPtr<const nsAtom> mHighlightName;
+  mozilla::dom::HighlightSelectionData mHighlightData;
   mozilla::TextRangeStyle mTextRangeStyle;
   mozilla::UniquePtr<SelectionDetails> mNext;
 };
@@ -434,7 +435,7 @@ class nsFrameSelection final {
    * @brief Adds a highlight selection for `aHighlight`.
    */
   MOZ_CAN_RUN_SCRIPT void AddHighlightSelection(
-      const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight);
+      const nsAtom* aHighlightName, mozilla::dom::Highlight& aHighlight);
   /**
    * @brief Removes the Highlight selection identified by `aHighlightName`.
    */
@@ -448,7 +449,7 @@ class nsFrameSelection final {
    * created using |AddHighlightSelection|.
    */
   MOZ_CAN_RUN_SCRIPT void AddHighlightSelectionRange(
-      const nsAtom* aHighlightName, const mozilla::dom::Highlight& aHighlight,
+      const nsAtom* aHighlightName, mozilla::dom::Highlight& aHighlight,
       mozilla::dom::AbstractRange& aRange);
 
   /**
