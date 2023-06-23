@@ -41,6 +41,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Share
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
+import mozilla.components.concept.identitycredential.Account
 import mozilla.components.concept.identitycredential.Provider
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardValidationDelegate
@@ -582,6 +583,7 @@ class PromptFeature private constructor(
 
                 is Repost -> it.onConfirm()
                 is PromptRequest.IdentityCredential.SelectProvider -> it.onConfirm(value as Provider)
+                is PromptRequest.IdentityCredential.SelectAccount -> it.onConfirm(value as Account)
                 else -> {
                     // no-op
                 }
