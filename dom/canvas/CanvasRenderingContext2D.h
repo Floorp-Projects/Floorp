@@ -24,6 +24,7 @@
 #include "FilterDescription.h"
 #include "gfx2DGlue.h"
 #include "gfxFontConstants.h"
+#include "gfxTextRun.h"
 #include "gfxUtils.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsColor.h"
@@ -279,11 +280,16 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
       CurrentState().lineWidth = ToFloat(aWidth);
     }
   }
-  void GetLineCap(nsAString& aLinecapStyle) override;
-  void SetLineCap(const nsAString& aLinecapStyle) override;
-  void GetLineJoin(nsAString& aLinejoinStyle,
-                   mozilla::ErrorResult& aError) override;
-  void SetLineJoin(const nsAString& aLinejoinStyle) override;
+
+  CanvasLineCap LineCap() override { return CurrentState().lineCap; }
+  void SetLineCap(const CanvasLineCap& aLinecapStyle) override {
+    CurrentState().lineCap = aLinecapStyle;
+  }
+
+  CanvasLineJoin LineJoin() override { return CurrentState().lineJoin; }
+  void SetLineJoin(const CanvasLineJoin& aLinejoinStyle) override {
+    CurrentState().lineJoin = aLinejoinStyle;
+  }
 
   double MiterLimit() override { return CurrentState().miterLimit; }
 
@@ -296,15 +302,29 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   void GetFont(nsACString& aFont) { aFont = GetFont(); }
 
   void SetFont(const nsACString& aFont, mozilla::ErrorResult& aError);
-  void GetTextAlign(nsAString& aTextAlign);
-  void SetTextAlign(const nsAString& aTextAlign);
-  void GetTextBaseline(nsAString& aTextBaseline);
-  void SetTextBaseline(const nsAString& aTextBaseline);
-  void GetDirection(nsAString& aDirection);
-  void SetDirection(const nsAString& aDirection);
 
-  void GetFontKerning(nsAString& aFontKerning);
-  void SetFontKerning(const nsAString& aFontKerning);
+  CanvasTextAlign TextAlign() { return CurrentState().textAlign; }
+  void SetTextAlign(const CanvasTextAlign& aTextAlign) {
+    CurrentState().textAlign = aTextAlign;
+  }
+
+  CanvasTextBaseline TextBaseline() { return CurrentState().textBaseline; }
+  void SetTextBaseline(const CanvasTextBaseline& aTextBaseline) {
+    CurrentState().textBaseline = aTextBaseline;
+  }
+
+  CanvasDirection Direction() { return CurrentState().textDirection; }
+  void SetDirection(const CanvasDirection& aDirection) {
+    CurrentState().textDirection = aDirection;
+  }
+
+  CanvasFontKerning FontKerning() { return CurrentState().fontKerning; }
+  void SetFontKerning(const CanvasFontKerning& aFontKerning) {
+    if (CurrentState().fontKerning != aFontKerning) {
+      CurrentState().fontKerning = aFontKerning;
+      CurrentState().fontGroup = nullptr;
+    }
+  }
 
   CanvasTextRendering TextRendering() { return CurrentState().textRendering; }
   void SetTextRendering(const CanvasTextRendering& aTextRendering) {
@@ -886,30 +906,8 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   // text
 
  protected:
-  enum class TextAlign : uint8_t { START, END, LEFT, RIGHT, CENTER };
-
-  enum class TextBaseline : uint8_t {
-    TOP,
-    HANGING,
-    MIDDLE,
-    ALPHABETIC,
-    IDEOGRAPHIC,
-    BOTTOM
-  };
-
   enum class TextDrawOperation : uint8_t { FILL, STROKE, MEASURE };
 
-  enum class TextDirection : uint8_t { LTR, RTL, INHERIT };
-
-  // Match values from the style system, so we don't have to bother mapping
-  // between them when setting up an nsFont.
-  enum class FontKerning : uint8_t {
-    AUTO = NS_FONT_KERNING_AUTO,
-    NORMAL = NS_FONT_KERNING_NORMAL,
-    NONE = NS_FONT_KERNING_NONE
-  };
-
- protected:
   gfxFontGroup* GetCurrentFontStyle();
 
   /**
@@ -974,10 +972,10 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     EnumeratedArray<Style, Style::MAX, nscolor> colorStyles;
 
     nsCString font;
-    TextAlign textAlign = TextAlign::START;
-    TextBaseline textBaseline = TextBaseline::ALPHABETIC;
-    TextDirection textDirection = TextDirection::INHERIT;
-    FontKerning fontKerning = FontKerning::AUTO;
+    CanvasTextAlign textAlign = CanvasTextAlign::Start;
+    CanvasTextBaseline textBaseline = CanvasTextBaseline::Alphabetic;
+    CanvasDirection textDirection = CanvasDirection::Inherit;
+    CanvasFontKerning fontKerning = CanvasFontKerning::Auto;
     CanvasTextRendering textRendering = CanvasTextRendering::Auto;
 
     gfx::Float letterSpacing = 0.0f;
@@ -999,8 +997,8 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
 
     mozilla::gfx::CompositionOp op = mozilla::gfx::CompositionOp::OP_OVER;
     mozilla::gfx::FillRule fillRule = mozilla::gfx::FillRule::FILL_WINDING;
-    mozilla::gfx::CapStyle lineCap = mozilla::gfx::CapStyle::BUTT;
-    mozilla::gfx::JoinStyle lineJoin = mozilla::gfx::JoinStyle::MITER_OR_BEVEL;
+    CanvasLineCap lineCap = CanvasLineCap::Butt;
+    CanvasLineJoin lineJoin = CanvasLineJoin::Miter;
 
     nsCString filterString{"none"};
     StyleOwnedSlice<StyleFilter> filterChain;

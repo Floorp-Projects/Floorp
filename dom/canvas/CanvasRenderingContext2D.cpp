@@ -1047,6 +1047,46 @@ void CanvasRenderingContext2D::ContextState::SetGradientStyle(
 MOZ_THREAD_LOCAL(uintptr_t) CanvasRenderingContext2D::sNumLivingContexts;
 MOZ_THREAD_LOCAL(DrawTarget*) CanvasRenderingContext2D::sErrorTarget;
 
+// Helpers to map Canvas2D WebIDL enum values to gfx constants for rendering.
+static JoinStyle CanvasToGfx(CanvasLineJoin aJoin) {
+  switch (aJoin) {
+    case CanvasLineJoin::Round:
+      return JoinStyle::ROUND;
+    case CanvasLineJoin::Bevel:
+      return JoinStyle::BEVEL;
+    case CanvasLineJoin::Miter:
+      return JoinStyle::MITER_OR_BEVEL;
+    default:
+      MOZ_CRASH("unknown lineJoin!");
+  }
+}
+
+static CapStyle CanvasToGfx(CanvasLineCap aCap) {
+  switch (aCap) {
+    case CanvasLineCap::Butt:
+      return CapStyle::BUTT;
+    case CanvasLineCap::Round:
+      return CapStyle::ROUND;
+    case CanvasLineCap::Square:
+      return CapStyle::SQUARE;
+    default:
+      MOZ_CRASH("unknown lineCap!");
+  }
+}
+
+static uint8_t CanvasToGfx(CanvasFontKerning aKerning) {
+  switch (aKerning) {
+    case CanvasFontKerning::Auto:
+      return NS_FONT_KERNING_AUTO;
+    case CanvasFontKerning::Normal:
+      return NS_FONT_KERNING_NORMAL;
+    case CanvasFontKerning::None:
+      return NS_FONT_KERNING_NONE;
+    default:
+      MOZ_CRASH("unknown kerning!");
+  }
+}
+
 CanvasRenderingContext2D::CanvasRenderingContext2D(
     layers::LayersBackend aCompositorBackend)
     :  // these are the default values from the Canvas spec
@@ -1760,7 +1800,7 @@ void CanvasRenderingContext2D::ClearTarget(int32_t aWidth, int32_t aHeight) {
   if (canvasStyle) {
     WritingMode wm(canvasStyle);
     if (wm.IsVertical() && !wm.IsSideways()) {
-      CurrentState().textBaseline = TextBaseline::MIDDLE;
+      CurrentState().textBaseline = CanvasTextBaseline::Middle;
     }
   }
 }
@@ -2951,7 +2991,7 @@ void CanvasRenderingContext2D::StrokeRect(double aX, double aY, double aW,
 
   if (!aH) {
     CapStyle cap = CapStyle::BUTT;
-    if (CurrentState().lineJoin == JoinStyle::ROUND) {
+    if (CurrentState().lineJoin == CanvasLineJoin::Round) {
       cap = CapStyle::ROUND;
     }
     AdjustedTarget target(this, bounds.IsEmpty() ? nullptr : &bounds, true);
@@ -2964,16 +3004,16 @@ void CanvasRenderingContext2D::StrokeRect(double aX, double aY, double aW,
     target.StrokeLine(
         Point(aX, aY), Point(aX + aW, aY),
         CanvasGeneralPattern().ForStyle(this, Style::STROKE, mTarget),
-        StrokeOptions(state.lineWidth, state.lineJoin, cap, state.miterLimit,
-                      state.dash.Length(), state.dash.Elements(),
-                      state.dashOffset),
+        StrokeOptions(state.lineWidth, CanvasToGfx(state.lineJoin), cap,
+                      state.miterLimit, state.dash.Length(),
+                      state.dash.Elements(), state.dashOffset),
         DrawOptions(state.globalAlpha, op));
     return;
   }
 
   if (!aW) {
     CapStyle cap = CapStyle::BUTT;
-    if (CurrentState().lineJoin == JoinStyle::ROUND) {
+    if (CurrentState().lineJoin == CanvasLineJoin::Round) {
       cap = CapStyle::ROUND;
     }
     AdjustedTarget target(this, bounds.IsEmpty() ? nullptr : &bounds, true);
@@ -2986,9 +3026,9 @@ void CanvasRenderingContext2D::StrokeRect(double aX, double aY, double aW,
     target.StrokeLine(
         Point(aX, aY), Point(aX, aY + aH),
         CanvasGeneralPattern().ForStyle(this, Style::STROKE, mTarget),
-        StrokeOptions(state.lineWidth, state.lineJoin, cap, state.miterLimit,
-                      state.dash.Length(), state.dash.Elements(),
-                      state.dashOffset),
+        StrokeOptions(state.lineWidth, CanvasToGfx(state.lineJoin), cap,
+                      state.miterLimit, state.dash.Length(),
+                      state.dash.Elements(), state.dashOffset),
         DrawOptions(state.globalAlpha, op));
     return;
   }
@@ -3003,9 +3043,10 @@ void CanvasRenderingContext2D::StrokeRect(double aX, double aY, double aW,
   target.StrokeRect(
       gfx::Rect(aX, aY, aW, aH),
       CanvasGeneralPattern().ForStyle(this, Style::STROKE, mTarget),
-      StrokeOptions(state.lineWidth, state.lineJoin, state.lineCap,
-                    state.miterLimit, state.dash.Length(),
-                    state.dash.Elements(), state.dashOffset),
+      StrokeOptions(state.lineWidth, CanvasToGfx(state.lineJoin),
+                    CanvasToGfx(state.lineCap), state.miterLimit,
+                    state.dash.Length(), state.dash.Elements(),
+                    state.dashOffset),
       DrawOptions(state.globalAlpha, op));
 
   Redraw();
@@ -3096,9 +3137,10 @@ void CanvasRenderingContext2D::Stroke() {
   }
 
   const ContextState* state = &CurrentState();
-  StrokeOptions strokeOptions(state->lineWidth, state->lineJoin, state->lineCap,
-                              state->miterLimit, state->dash.Length(),
-                              state->dash.Elements(), state->dashOffset);
+  StrokeOptions strokeOptions(state->lineWidth, CanvasToGfx(state->lineJoin),
+                              CanvasToGfx(state->lineCap), state->miterLimit,
+                              state->dash.Length(), state->dash.Elements(),
+                              state->dashOffset);
   state = nullptr;
 
   const bool needBounds = NeedToCalculateBounds();
@@ -3139,9 +3181,10 @@ void CanvasRenderingContext2D::Stroke(const CanvasPath& aPath) {
   }
 
   const ContextState* state = &CurrentState();
-  StrokeOptions strokeOptions(state->lineWidth, state->lineJoin, state->lineCap,
-                              state->miterLimit, state->dash.Length(),
-                              state->dash.Elements(), state->dashOffset);
+  StrokeOptions strokeOptions(state->lineWidth, CanvasToGfx(state->lineJoin),
+                              CanvasToGfx(state->lineCap), state->miterLimit,
+                              state->dash.Length(), state->dash.Elements(),
+                              state->dashOffset);
   state = nullptr;
 
   const bool needBounds = NeedToCalculateBounds();
@@ -3186,8 +3229,8 @@ void CanvasRenderingContext2D::DrawFocusIfNeeded(
     state->shadowOffset.y = 0;
     state->op = mozilla::gfx::CompositionOp::OP_OVER;
 
-    state->lineCap = CapStyle::BUTT;
-    state->lineJoin = mozilla::gfx::JoinStyle::MITER_OR_BEVEL;
+    state->lineCap = CanvasLineCap::Butt;
+    state->lineJoin = CanvasLineJoin::Miter;
     state->lineWidth = 1;
     state->dash.Clear();
 
@@ -3706,9 +3749,7 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
   resizedFont.size = StyleCSSPixelLength::FromPixels(
       QuantizeFontSize(resizedFont.size.ToCSSPixels()));
 
-  // Our FontKerning constants (see the enum definition) are the same as the
-  // NS_FONT_KERNING_* values so we can simply assign here.
-  resizedFont.kerning = uint8_t(CurrentState().fontKerning);
+  resizedFont.kerning = CanvasToGfx(CurrentState().fontKerning);
 
   c->Document()->FlushUserFontSet();
 
@@ -3821,11 +3862,11 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
   // Set the kerning feature, if required by the fontKerning attribute.
   gfxFontFeature setting{TRUETYPE_TAG('k', 'e', 'r', 'n'), 0};
   switch (CurrentState().fontKerning) {
-    case FontKerning::NONE:
+    case CanvasFontKerning::None:
       setting.mValue = 0;
       fontStyle.featureSettings.AppendElement(setting);
       break;
-    case FontKerning::NORMAL:
+    case CanvasFontKerning::Normal:
       setting.mValue = 1;
       fontStyle.featureSettings.AppendElement(setting);
       break;
@@ -3877,129 +3918,6 @@ void CanvasRenderingContext2D::UpdateSpacing() {
   }
   if (!state.wordSpacingStr.IsEmpty()) {
     SetWordSpacing(state.wordSpacingStr);
-  }
-}
-
-void CanvasRenderingContext2D::SetTextAlign(const nsAString& aTextAlign) {
-  if (aTextAlign.EqualsLiteral("start"))
-    CurrentState().textAlign = TextAlign::START;
-  else if (aTextAlign.EqualsLiteral("end"))
-    CurrentState().textAlign = TextAlign::END;
-  else if (aTextAlign.EqualsLiteral("left"))
-    CurrentState().textAlign = TextAlign::LEFT;
-  else if (aTextAlign.EqualsLiteral("right"))
-    CurrentState().textAlign = TextAlign::RIGHT;
-  else if (aTextAlign.EqualsLiteral("center"))
-    CurrentState().textAlign = TextAlign::CENTER;
-}
-
-void CanvasRenderingContext2D::GetTextAlign(nsAString& aTextAlign) {
-  switch (CurrentState().textAlign) {
-    case TextAlign::START:
-      aTextAlign.AssignLiteral("start");
-      break;
-    case TextAlign::END:
-      aTextAlign.AssignLiteral("end");
-      break;
-    case TextAlign::LEFT:
-      aTextAlign.AssignLiteral("left");
-      break;
-    case TextAlign::RIGHT:
-      aTextAlign.AssignLiteral("right");
-      break;
-    case TextAlign::CENTER:
-      aTextAlign.AssignLiteral("center");
-      break;
-  }
-}
-
-void CanvasRenderingContext2D::SetTextBaseline(const nsAString& aTextBaseline) {
-  if (aTextBaseline.EqualsLiteral("top"))
-    CurrentState().textBaseline = TextBaseline::TOP;
-  else if (aTextBaseline.EqualsLiteral("hanging"))
-    CurrentState().textBaseline = TextBaseline::HANGING;
-  else if (aTextBaseline.EqualsLiteral("middle"))
-    CurrentState().textBaseline = TextBaseline::MIDDLE;
-  else if (aTextBaseline.EqualsLiteral("alphabetic"))
-    CurrentState().textBaseline = TextBaseline::ALPHABETIC;
-  else if (aTextBaseline.EqualsLiteral("ideographic"))
-    CurrentState().textBaseline = TextBaseline::IDEOGRAPHIC;
-  else if (aTextBaseline.EqualsLiteral("bottom"))
-    CurrentState().textBaseline = TextBaseline::BOTTOM;
-}
-
-void CanvasRenderingContext2D::GetTextBaseline(nsAString& aTextBaseline) {
-  switch (CurrentState().textBaseline) {
-    case TextBaseline::TOP:
-      aTextBaseline.AssignLiteral("top");
-      break;
-    case TextBaseline::HANGING:
-      aTextBaseline.AssignLiteral("hanging");
-      break;
-    case TextBaseline::MIDDLE:
-      aTextBaseline.AssignLiteral("middle");
-      break;
-    case TextBaseline::ALPHABETIC:
-      aTextBaseline.AssignLiteral("alphabetic");
-      break;
-    case TextBaseline::IDEOGRAPHIC:
-      aTextBaseline.AssignLiteral("ideographic");
-      break;
-    case TextBaseline::BOTTOM:
-      aTextBaseline.AssignLiteral("bottom");
-      break;
-  }
-}
-
-void CanvasRenderingContext2D::SetDirection(const nsAString& aDirection) {
-  if (aDirection.EqualsLiteral("ltr")) {
-    CurrentState().textDirection = TextDirection::LTR;
-  } else if (aDirection.EqualsLiteral("rtl")) {
-    CurrentState().textDirection = TextDirection::RTL;
-  } else if (aDirection.EqualsLiteral("inherit")) {
-    CurrentState().textDirection = TextDirection::INHERIT;
-  }
-}
-
-void CanvasRenderingContext2D::GetDirection(nsAString& aDirection) {
-  switch (CurrentState().textDirection) {
-    case TextDirection::LTR:
-      aDirection.AssignLiteral("ltr");
-      break;
-    case TextDirection::RTL:
-      aDirection.AssignLiteral("rtl");
-      break;
-    case TextDirection::INHERIT:
-      aDirection.AssignLiteral("inherit");
-      break;
-  }
-}
-
-void CanvasRenderingContext2D::SetFontKerning(const nsAString& aFontKerning) {
-  auto oldValue = CurrentState().fontKerning;
-  if (aFontKerning.EqualsLiteral("auto")) {
-    CurrentState().fontKerning = FontKerning::AUTO;
-  } else if (aFontKerning.EqualsLiteral("normal")) {
-    CurrentState().fontKerning = FontKerning::NORMAL;
-  } else if (aFontKerning.EqualsLiteral("none")) {
-    CurrentState().fontKerning = FontKerning::NONE;
-  }
-  if (CurrentState().fontKerning != oldValue) {
-    CurrentState().fontGroup = nullptr;
-  }
-}
-
-void CanvasRenderingContext2D::GetFontKerning(nsAString& aFontKerning) {
-  switch (CurrentState().fontKerning) {
-    case FontKerning::AUTO:
-      aFontKerning.AssignLiteral("auto");
-      break;
-    case FontKerning::NORMAL:
-      aFontKerning.AssignLiteral("normal");
-      break;
-    case FontKerning::NONE:
-      aFontKerning.AssignLiteral("none");
-      break;
   }
 }
 
@@ -4334,8 +4252,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor final
 
     if (style == Style::STROKE) {
       strokeOpts.mLineWidth = state.lineWidth;
-      strokeOpts.mLineJoin = state.lineJoin;
-      strokeOpts.mLineCap = state.lineCap;
+      strokeOpts.mLineJoin = CanvasToGfx(state.lineJoin);
+      strokeOpts.mLineCap = CanvasToGfx(state.lineCap);
       strokeOpts.mMiterLimit = state.miterLimit;
       strokeOpts.mDashLength = state.dash.Length();
       strokeOpts.mDashPattern =
@@ -4436,13 +4354,13 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   const ContextState& state = CurrentState();
   bool isRTL;
   switch (state.textDirection) {
-    case TextDirection::LTR:
+    case CanvasDirection::Ltr:
       isRTL = false;
       break;
-    case TextDirection::RTL:
+    case CanvasDirection::Rtl:
       isRTL = true;
       break;
-    case TextDirection::INHERIT:
+    case CanvasDirection::Inherit:
       if (canvasStyle) {
         isRTL =
             canvasStyle->StyleVisibility()->mDirection == StyleDirection::Rtl;
@@ -4453,6 +4371,8 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
         isRTL = false;
       }
       break;
+    default:
+      MOZ_CRASH("unknown direction!");
   }
 
   // This is only needed to know if we can know the drawing bounding box easily.
@@ -4581,11 +4501,11 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   // offset pt.x based on text align
   gfxFloat anchorX;
 
-  if (state.textAlign == TextAlign::CENTER) {
+  if (state.textAlign == CanvasTextAlign::Center) {
     anchorX = .5;
-  } else if (state.textAlign == TextAlign::LEFT ||
-             (!isRTL && state.textAlign == TextAlign::START) ||
-             (isRTL && state.textAlign == TextAlign::END)) {
+  } else if (state.textAlign == CanvasTextAlign::Left ||
+             (!isRTL && state.textAlign == CanvasTextAlign::Start) ||
+             (isRTL && state.textAlign == CanvasTextAlign::End)) {
     anchorX = 0;
   } else {
     anchorX = 1;
@@ -4598,22 +4518,22 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   gfxFloat baselineAnchor;
 
   switch (state.textBaseline) {
-    case TextBaseline::HANGING:
+    case CanvasTextBaseline::Hanging:
       baselineAnchor = fontMetrics.emAscent * kHangingBaselineDefault;
       break;
-    case TextBaseline::TOP:
+    case CanvasTextBaseline::Top:
       baselineAnchor = fontMetrics.emAscent;
       break;
-    case TextBaseline::MIDDLE:
+    case CanvasTextBaseline::Middle:
       baselineAnchor = (fontMetrics.emAscent - fontMetrics.emDescent) * .5f;
       break;
-    case TextBaseline::ALPHABETIC:
+    case CanvasTextBaseline::Alphabetic:
       baselineAnchor = 0;
       break;
-    case TextBaseline::IDEOGRAPHIC:
+    case CanvasTextBaseline::Ideographic:
       baselineAnchor = -fontMetrics.emDescent * kIdeographicBaselineDefault;
       break;
-    case TextBaseline::BOTTOM:
+    case CanvasTextBaseline::Bottom:
       baselineAnchor = -fontMetrics.emDescent;
       break;
     default:
@@ -4782,73 +4702,8 @@ gfxFontGroup* CanvasRenderingContext2D::GetCurrentFontStyle() {
 }
 
 //
-// line caps/joins
+// line dash styles
 //
-
-void CanvasRenderingContext2D::SetLineCap(const nsAString& aLinecapStyle) {
-  CapStyle cap;
-
-  if (aLinecapStyle.EqualsLiteral("butt")) {
-    cap = CapStyle::BUTT;
-  } else if (aLinecapStyle.EqualsLiteral("round")) {
-    cap = CapStyle::ROUND;
-  } else if (aLinecapStyle.EqualsLiteral("square")) {
-    cap = CapStyle::SQUARE;
-  } else {
-    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    return;
-  }
-
-  CurrentState().lineCap = cap;
-}
-
-void CanvasRenderingContext2D::GetLineCap(nsAString& aLinecapStyle) {
-  switch (CurrentState().lineCap) {
-    case CapStyle::BUTT:
-      aLinecapStyle.AssignLiteral("butt");
-      break;
-    case CapStyle::ROUND:
-      aLinecapStyle.AssignLiteral("round");
-      break;
-    case CapStyle::SQUARE:
-      aLinecapStyle.AssignLiteral("square");
-      break;
-  }
-}
-
-void CanvasRenderingContext2D::SetLineJoin(const nsAString& aLinejoinStyle) {
-  JoinStyle j;
-
-  if (aLinejoinStyle.EqualsLiteral("round")) {
-    j = JoinStyle::ROUND;
-  } else if (aLinejoinStyle.EqualsLiteral("bevel")) {
-    j = JoinStyle::BEVEL;
-  } else if (aLinejoinStyle.EqualsLiteral("miter")) {
-    j = JoinStyle::MITER_OR_BEVEL;
-  } else {
-    // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    return;
-  }
-
-  CurrentState().lineJoin = j;
-}
-
-void CanvasRenderingContext2D::GetLineJoin(nsAString& aLinejoinStyle,
-                                           ErrorResult& aError) {
-  switch (CurrentState().lineJoin) {
-    case JoinStyle::ROUND:
-      aLinejoinStyle.AssignLiteral("round");
-      break;
-    case JoinStyle::BEVEL:
-      aLinejoinStyle.AssignLiteral("bevel");
-      break;
-    case JoinStyle::MITER_OR_BEVEL:
-      aLinejoinStyle.AssignLiteral("miter");
-      break;
-    default:
-      aError.Throw(NS_ERROR_FAILURE);
-  }
-}
 
 void CanvasRenderingContext2D::SetLineDash(const Sequence<double>& aSegments,
                                            ErrorResult& aRv) {
@@ -4968,9 +4823,10 @@ bool CanvasRenderingContext2D::IsPointInStroke(
 
   const ContextState& state = CurrentState();
 
-  StrokeOptions strokeOptions(state.lineWidth, state.lineJoin, state.lineCap,
-                              state.miterLimit, state.dash.Length(),
-                              state.dash.Elements(), state.dashOffset);
+  StrokeOptions strokeOptions(state.lineWidth, CanvasToGfx(state.lineJoin),
+                              CanvasToGfx(state.lineCap), state.miterLimit,
+                              state.dash.Length(), state.dash.Elements(),
+                              state.dashOffset);
 
   return mPath->StrokeContainsPoint(strokeOptions, Point(aX, aY),
                                     mTarget->GetTransform());
@@ -4993,9 +4849,10 @@ bool CanvasRenderingContext2D::IsPointInStroke(
 
   const ContextState& state = CurrentState();
 
-  StrokeOptions strokeOptions(state.lineWidth, state.lineJoin, state.lineCap,
-                              state.miterLimit, state.dash.Length(),
-                              state.dash.Elements(), state.dashOffset);
+  StrokeOptions strokeOptions(state.lineWidth, CanvasToGfx(state.lineJoin),
+                              CanvasToGfx(state.lineCap), state.miterLimit,
+                              state.dash.Length(), state.dash.Elements(),
+                              state.dashOffset);
 
   return tempPath->StrokeContainsPoint(strokeOptions, Point(aX, aY),
                                        mTarget->GetTransform());
