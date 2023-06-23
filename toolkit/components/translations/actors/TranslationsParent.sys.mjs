@@ -316,6 +316,17 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * Invokes the provided callback after retrieving whether the translations engine is supported.
+   * @param {function(boolean)} callback - The callback which takes a boolean argument that will
+   *                                       be true if the engine is supported and false otherwise.
+   */
+  static onIsTranslationsEngineSupported(callback) {
+    TranslationsParent.getIsTranslationsEngineSupported().then(isSupported =>
+      callback(isSupported)
+    );
+  }
+
+  /**
    * Only translate pages that match certain protocols, that way internal pages like
    * about:* pages will not be translated.
    * @param {string} scheme - The URI spec
