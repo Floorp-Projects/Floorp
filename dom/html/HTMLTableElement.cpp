@@ -935,7 +935,7 @@ void HTMLTableElement::BuildInheritedAttributes() {
     return;
   }
   const nsAttrValue* value = GetParsedAttr(nsGkAtoms::cellpadding);
-  if (!value) {
+  if (!value || value->Type() != nsAttrValue::eInteger) {
     return;
   }
   // We have cellpadding.  This will override our padding values if we don't
