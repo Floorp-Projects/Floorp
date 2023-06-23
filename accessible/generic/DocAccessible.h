@@ -6,8 +6,6 @@
 #ifndef mozilla_a11y_DocAccessible_h__
 #define mozilla_a11y_DocAccessible_h__
 
-#include "nsIAccessiblePivot.h"
-
 #include "HyperTextAccessibleWrap.h"
 #include "AccEvent.h"
 
@@ -18,8 +16,6 @@
 #include "nsITimer.h"
 #include "nsTHashSet.h"
 #include "nsWeakReference.h"
-
-class nsAccessiblePivot;
 
 const uint32_t kDefaultCacheLength = 128;
 
@@ -48,12 +44,9 @@ class TNotification;
  */
 class DocAccessible : public HyperTextAccessibleWrap,
                       public nsIDocumentObserver,
-                      public nsSupportsWeakReference,
-                      public nsIAccessiblePivotObserver {
+                      public nsSupportsWeakReference {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DocAccessible, LocalAccessible)
-
-  NS_DECL_NSIACCESSIBLEPIVOTOBSERVER
 
  protected:
   typedef mozilla::dom::Document Document;
@@ -134,11 +127,6 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * to its document.
    */
   void QueueCacheUpdateForDependentRelations(LocalAccessible* aAcc);
-
-  /**
-   * Return virtual cursor associated with the document.
-   */
-  nsIAccessiblePivot* VirtualCursor();
 
   /**
    * Returns true if the instance has shutdown.
@@ -705,11 +693,6 @@ class DocAccessible : public HyperTextAccessibleWrap,
   uint64_t mPrevStateBits;
 
   nsTArray<RefPtr<DocAccessible>> mChildDocuments;
-
-  /**
-   * The virtual cursor of the document.
-   */
-  RefPtr<nsAccessiblePivot> mVirtualCursor;
 
   /**
    * A storage class for pairing content with one of its relation attributes.

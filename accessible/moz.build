@@ -40,6 +40,7 @@ BROWSER_CHROME_MANIFESTS += [
     "tests/browser/general/browser.ini",
     "tests/browser/hittest/browser.ini",
     "tests/browser/mac/browser.ini",
+    "tests/browser/pivot/browser.ini",
     "tests/browser/role/browser.ini",
     "tests/browser/scroll/browser.ini",
     "tests/browser/selectable/browser.ini",
