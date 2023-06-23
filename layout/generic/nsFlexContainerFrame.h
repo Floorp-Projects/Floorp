@@ -520,10 +520,6 @@ class nsFlexContainerFrame final : public nsContainerFrame,
    * @param aAnyChildIncomplete true if any child being reflowed is incomplete;
    *                            false otherwise (as returned by
    *                            ReflowChildren()).
-   * @param aFlexContainerAscent the flex container's ascent, if one has been
-   *                             determined from its children. (If there are no
-   *                             children, pass nscoord_MIN to synthesize a
-   *                             value from the flex container itself).
    */
   void PopulateReflowOutput(
       ReflowOutput& aReflowOutput, const ReflowInput& aReflowInput,
@@ -531,8 +527,7 @@ class nsFlexContainerFrame final : public nsContainerFrame,
       const mozilla::LogicalMargin& aBorderPadding,
       const nscoord aConsumedBSize, const bool aMayNeedNextInFlow,
       const nscoord aMaxBlockEndEdgeOfChildren, const bool aAnyChildIncomplete,
-      nscoord aFlexContainerAscent, nsTArray<FlexLine>& aLines,
-      const FlexboxAxisTracker& aAxisTracker);
+      const FlexboxAxisTracker& aAxisTracker, FlexLayoutResult& aFlr);
 
   /**
    * Perform a final Reflow for our child frames.
