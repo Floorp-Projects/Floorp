@@ -1,86 +1,69 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
 Date: Wed, 10 May 2023 07:06:00 +0000
-Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 7e5d9edfdf.
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit ba41b40461.
  r=webrtc-reviewers,mjf
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Upstream commit: https://webrtc.googlesource.com/src/+/7e5d9edfdfe82e06182b790afe848cd0da179a87
-    webrtc_libyuv: Raise warnings for unhandled types at compile time
+Upstream commit: https://webrtc.googlesource.com/src/+/ba41b40461df191624c61f0c98ae76e69fe1d46b
+    webrtc_libyuv: Add support for more video types for consistency
 
     Bug: webrtc:14830
-    Change-Id: Ib5141e585f673098bbedd2872dbd6e6ed9df4864
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291528
+    Change-Id: I0998fb04a03745131f9f5cca878b0cdb46f3b62b
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291529
     Reviewed-by: Erik Språng <sprang@webrtc.org>
-    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
-    Commit-Queue: Erik Språng <sprang@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39408}
+    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39940}
 
-Differential Revision: https://phabricator.services.mozilla.com/D177228
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/2bc179dfe25391e4b621ce407239beaebbe09be8
+Differential Revision: https://phabricator.services.mozilla.com/D177229
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b6eaef560895caa06e11cce40083eb87fd8724a8
 ---
- common_video/libyuv/webrtc_libyuv.cc | 22 +++++++++-------------
- 1 file changed, 9 insertions(+), 13 deletions(-)
+ common_video/libyuv/include/webrtc_libyuv.h | 3 ++-
+ common_video/libyuv/webrtc_libyuv.cc        | 4 ++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
+diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
+index 6d9071bcd5..253a33294d 100644
+--- a/common_video/libyuv/include/webrtc_libyuv.h
++++ b/common_video/libyuv/include/webrtc_libyuv.h
+@@ -32,8 +32,9 @@ enum class VideoType {
+   kI420,
+   kIYUV,
+   kRGB24,
+-  kABGR,
++  kBGR24,
+   kARGB,
++  kABGR,
+   kARGB4444,
+   kRGB565,
+   kARGB1555,
 diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
-index 8998af191d..4c6911b4a3 100644
+index 4c6911b4a3..05a4b184c2 100644
 --- a/common_video/libyuv/webrtc_libyuv.cc
 +++ b/common_video/libyuv/webrtc_libyuv.cc
-@@ -22,7 +22,6 @@ namespace webrtc {
- size_t CalcBufferSize(VideoType type, int width, int height) {
-   RTC_DCHECK_GE(width, 0);
-   RTC_DCHECK_GE(height, 0);
--  size_t buffer_size = 0;
-   switch (type) {
-     case VideoType::kI420:
-     case VideoType::kNV21:
-@@ -31,28 +30,25 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
-     case VideoType::kNV12: {
-       int half_width = (width + 1) >> 1;
-       int half_height = (height + 1) >> 1;
--      buffer_size = width * height + half_width * half_height * 2;
--      break;
-+      return width * height + half_width * half_height * 2;
-     }
-     case VideoType::kARGB4444:
-     case VideoType::kRGB565:
-     case VideoType::kARGB1555:
-     case VideoType::kYUY2:
+@@ -39,9 +39,11 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
      case VideoType::kUYVY:
--      buffer_size = width * height * 2;
--      break;
-+      return width * height * 2;
+       return width * height * 2;
      case VideoType::kRGB24:
--      buffer_size = width * height * 3;
--      break;
-+      return width * height * 3;
++    case VideoType::kBGR24:
+       return width * height * 3;
      case VideoType::kBGRA:
      case VideoType::kARGB:
--      buffer_size = width * height * 4;
--      break;
--    default:
--      RTC_DCHECK_NOTREACHED();
-+      return width * height * 4;
-+    case VideoType::kMJPEG:
-+    case VideoType::kUnknown:
-       break;
-   }
--  return buffer_size;
-+  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << type;
-+  return 0;
- }
- 
- int ExtractBuffer(const rtc::scoped_refptr<I420BufferInterface>& input_frame,
-@@ -120,7 +116,7 @@ int ConvertVideoType(VideoType video_type) {
-     case VideoType::kNV12:
-       return libyuv::FOURCC_NV12;
-   }
--  RTC_DCHECK_NOTREACHED();
-+  RTC_DCHECK_NOTREACHED() << "Unexpected pixel format " << video_type;
-   return libyuv::FOURCC_ANY;
- }
- 
++    case VideoType::kABGR:
+       return width * height * 4;
+     case VideoType::kMJPEG:
+     case VideoType::kUnknown:
+@@ -93,6 +95,8 @@ int ConvertVideoType(VideoType video_type) {
+       return libyuv::FOURCC_YV12;
+     case VideoType::kRGB24:
+       return libyuv::FOURCC_24BG;
++    case VideoType::kBGR24:
++      return libyuv::FOURCC_RAW;
+     case VideoType::kABGR:
+       return libyuv::FOURCC_ABGR;
+     case VideoType::kRGB565:
 -- 
 2.37.1 (Apple Git-137.1)
 
