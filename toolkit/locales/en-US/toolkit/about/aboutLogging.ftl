@@ -36,6 +36,8 @@ about-logging-preset-networking-label = Networking
 about-logging-preset-networking-description = Log modules to diagnose networking issues
 about-logging-preset-media-playback-label = Media playback
 about-logging-preset-media-playback-description = Log modules to diagnose media playback issues (not video-conferencing issues)
+about-logging-preset-webrtc-label = WebRTC
+about-logging-preset-webrtc-description = Log modules to diagnose WebRTC calls
 about-logging-preset-custom-label = Custom
 about-logging-preset-custom-description = Log modules manually selected
 
