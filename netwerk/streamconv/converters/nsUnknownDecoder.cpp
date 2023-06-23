@@ -13,6 +13,7 @@
 
 #include "nsIMIMEService.h"
 
+#include "mozilla/ScopeExit.h"
 #include "nsIViewSourceChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIForcePendingChannel.h"
@@ -760,11 +761,16 @@ nsresult nsUnknownDecoder::ConvertEncodedData(nsIRequest* request,
 
     if (listener) {
       listener->OnStartRequest(request);
+      auto callOnStopRequest =
+          MakeScopeExit([&] { listener->OnStopRequest(request, rv); });
 
       if (length) {
         nsCOMPtr<nsIStringInputStream> rawStream =
             do_CreateInstance(NS_STRINGINPUTSTREAM_CONTRACTID);
-        if (!rawStream) return NS_ERROR_FAILURE;
+        if (!rawStream) {
+          rv = NS_ERROR_FAILURE;
+          return rv;
+        }
 
         rv = rawStream->SetData((const char*)data, length);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -772,8 +778,7 @@ nsresult nsUnknownDecoder::ConvertEncodedData(nsIRequest* request,
         rv = listener->OnDataAvailable(request, rawStream, 0, length);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-
-      listener->OnStopRequest(request, NS_OK);
+      // implicit call to OnStopRequest by exiting the scope
     }
   }
   return rv;
