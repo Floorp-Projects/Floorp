@@ -14,6 +14,7 @@
 #include <utility>
 
 #include "absl/functional/any_invocable.h"
+#include "api/location.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/thread_annotations.h"
@@ -62,7 +63,11 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
   // Note that this guarantee does not apply to delayed tasks.
   //
   // May be called on any thread or task queue, including this task queue.
-  virtual void PostTask(absl::AnyInvocable<void() &&> task) = 0;
+  // TODO(crbug.com/1416199): Remove virtual and pass location of the caller
+  // once subclasses migrated.
+  virtual void PostTask(absl::AnyInvocable<void() &&> task) {
+    PostTaskImpl(std::move(task), PostTaskTraits{}, Location::Current());
+  }
 
   // Prefer PostDelayedTask() over PostDelayedHighPrecisionTask() whenever
   // possible.
@@ -87,8 +92,14 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
   // https://crbug.com/webrtc/13583 for more information.
   //
   // May be called on any thread or task queue, including this task queue.
+  // TODO(crbug.com/1416199): Remove virtual and pass location of the caller
+  // once subclasses migrated.
   virtual void PostDelayedTask(absl::AnyInvocable<void() &&> task,
-                               TimeDelta delay) = 0;
+                               TimeDelta delay) {
+    PostDelayedTaskImpl(std::move(task), delay,
+                        PostDelayedTaskTraits{.high_precision = false},
+                        Location::Current());
+  }
 
   // Prefer PostDelayedTask() over PostDelayedHighPrecisionTask() whenever
   // possible.
@@ -106,8 +117,14 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
   // battery, when the timer precision can be as poor as 15 ms.
   //
   // May be called on any thread or task queue, including this task queue.
+  // TODO(crbug.com/1416199): Remove virtual and pass location of the caller
+  // once subclasses migrated.
   virtual void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
-                                            TimeDelta delay) = 0;
+                                            TimeDelta delay) {
+    PostDelayedTaskImpl(std::move(task), delay,
+                        PostDelayedTaskTraits{.high_precision = true},
+                        Location::Current());
+  }
 
   // As specified by `precision`, calls either PostDelayedTask() or
   // PostDelayedHighPrecisionTask().
@@ -131,6 +148,18 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
   bool IsCurrent() const { return Current() == this; }
 
  protected:
+  // This is currently only present here to simplify introduction of future
+  // planned task queue changes.
+  struct PostTaskTraits {};
+
+  struct PostDelayedTaskTraits {
+    // If `high_precision` is false, tasks may execute within up to a 17 ms
+    // leeway in addition to OS timer precision. Otherwise the task should be
+    // limited to OS timer precision. See PostDelayedTask() and
+    // PostDelayedHighPrecisionTask() for more information.
+    bool high_precision = false;
+  };
+
   class RTC_EXPORT CurrentTaskQueueSetter {
    public:
     explicit CurrentTaskQueueSetter(TaskQueueBase* task_queue);
@@ -141,6 +170,22 @@ class RTC_LOCKABLE RTC_EXPORT TaskQueueBase {
    private:
     TaskQueueBase* const previous_;
   };
+
+  // Subclasses should implement this method to support the behavior defined in
+  // the PostTask and PostTaskTraits docs above.
+  // TODO(crbug.com/1416199): make pure virtual once subclasses migrate.
+  virtual void PostTaskImpl(absl::AnyInvocable<void() &&> task,
+                            const PostTaskTraits& traits,
+                            const Location& location) {}
+
+  // Subclasses should implement this method to support the behavior defined in
+  // the PostDelayedTask/PostHighPrecisionDelayedTask and PostDelayedTaskTraits
+  // docs above.
+  // TODO(crbug.com/1416199): make pure virtual once subclasses migrate.
+  virtual void PostDelayedTaskImpl(absl::AnyInvocable<void() &&> task,
+                                   TimeDelta delay,
+                                   const PostDelayedTaskTraits& traits,
+                                   const Location& location) {}
 
   // Users of the TaskQueue should call Delete instead of directly deleting
   // this object.

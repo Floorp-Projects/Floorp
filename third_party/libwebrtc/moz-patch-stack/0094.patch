@@ -10,10 +10,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4a969f6709183d4f5
  2 files changed, 20 insertions(+), 10 deletions(-)
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 31213c6460..0ddeead669 100644
+index 3eed1f19c0..676e2de427 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
-@@ -175,6 +175,10 @@ rtc_source_set("ice_transport_interface") {
+@@ -186,6 +186,10 @@ rtc_source_set("ice_transport_interface") {
  }
  
  rtc_library("dtls_transport_interface") {
@@ -24,7 +24,7 @@ index 31213c6460..0ddeead669 100644
    visibility = [ "*" ]
  
    sources = [
-@@ -191,6 +195,7 @@ rtc_library("dtls_transport_interface") {
+@@ -202,6 +206,7 @@ rtc_library("dtls_transport_interface") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
@@ -32,7 +32,7 @@ index 31213c6460..0ddeead669 100644
  
  rtc_library("dtmf_sender_interface") {
    visibility = [ "*" ]
-@@ -203,6 +208,10 @@ rtc_library("dtmf_sender_interface") {
+@@ -214,6 +219,10 @@ rtc_library("dtmf_sender_interface") {
  }
  
  rtc_library("rtp_sender_interface") {
@@ -43,7 +43,7 @@ index 31213c6460..0ddeead669 100644
    visibility = [ "*" ]
  
    sources = [
-@@ -224,6 +233,7 @@ rtc_library("rtp_sender_interface") {
+@@ -235,6 +244,7 @@ rtc_library("rtp_sender_interface") {
      "video_codecs:video_codecs_api",
    ]
  }

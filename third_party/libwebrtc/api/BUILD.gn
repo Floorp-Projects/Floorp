@@ -65,6 +65,17 @@ if (!build_with_chromium && !build_with_mozilla) {
   }
 }
 
+rtc_library("location") {
+  visibility = [ "*" ]
+  deps = [ "../rtc_base/system:rtc_export" ]
+  if (build_with_chromium) {
+    sources = [ "../../webrtc_overrides/api/location.h" ]
+    deps += [ "//base" ]
+  } else {
+    sources = [ "location.h" ]
+  }
+}
+
 rtc_library("rtp_headers") {
   visibility = [ "*" ]
   sources = [

@@ -111,7 +111,7 @@ index 5817d22227..8b2648a306 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index d1b2c23491..0ed8a0c3ec 100644
+index c336bee27a..570e38fdf6 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -35,7 +35,7 @@ rtc_source_set("callfactory_api") {
@@ -123,7 +123,7 @@ index d1b2c23491..0ed8a0c3ec 100644
    rtc_library("create_peerconnection_factory") {
      visibility = [ "*" ]
      allow_poison = [ "default_task_queue" ]
-@@ -227,6 +227,7 @@ rtc_library("rtp_sender_interface") {
+@@ -238,6 +238,7 @@ rtc_library("rtp_sender_interface") {
  }
  
  rtc_library("libjingle_peerconnection_api") {
@@ -131,7 +131,7 @@ index d1b2c23491..0ed8a0c3ec 100644
    visibility = [ "*" ]
    cflags = []
    sources = [
-@@ -343,6 +344,7 @@ rtc_library("libjingle_peerconnection_api") {
+@@ -354,6 +355,7 @@ rtc_library("libjingle_peerconnection_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -139,7 +139,7 @@ index d1b2c23491..0ed8a0c3ec 100644
  
  rtc_source_set("frame_transformer_interface") {
    visibility = [ "*" ]
-@@ -550,6 +552,7 @@ rtc_source_set("peer_network_dependencies") {
+@@ -561,6 +563,7 @@ rtc_source_set("peer_network_dependencies") {
  }
  
  rtc_source_set("peer_connection_quality_test_fixture_api") {
@@ -147,7 +147,7 @@ index d1b2c23491..0ed8a0c3ec 100644
    visibility = [ "*" ]
    testonly = true
    sources = [ "test/peerconnection_quality_test_fixture.h" ]
-@@ -600,6 +603,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
+@@ -611,6 +614,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
@@ -155,7 +155,7 @@ index d1b2c23491..0ed8a0c3ec 100644
  
  rtc_source_set("frame_generator_api") {
    visibility = [ "*" ]
-@@ -885,6 +889,7 @@ rtc_source_set("refcountedbase") {
+@@ -896,6 +900,7 @@ rtc_source_set("refcountedbase") {
    ]
  }
  
@@ -163,7 +163,7 @@ index d1b2c23491..0ed8a0c3ec 100644
  rtc_library("ice_transport_factory") {
    visibility = [ "*" ]
    sources = [
-@@ -903,6 +908,7 @@ rtc_library("ice_transport_factory") {
+@@ -914,6 +919,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log:rtc_event_log",
    ]
  }
@@ -172,10 +172,10 @@ index d1b2c23491..0ed8a0c3ec 100644
  rtc_library("neteq_simulator_api") {
    visibility = [ "*" ]
 diff --git a/api/task_queue/BUILD.gn b/api/task_queue/BUILD.gn
-index 69393b80ff..c9b4a5d0ec 100644
+index 65bb1ae21b..116a50762e 100644
 --- a/api/task_queue/BUILD.gn
 +++ b/api/task_queue/BUILD.gn
-@@ -30,6 +30,7 @@ rtc_library("task_queue") {
+@@ -31,6 +31,7 @@ rtc_library("task_queue") {
    ]
  }
  
@@ -183,7 +183,7 @@ index 69393b80ff..c9b4a5d0ec 100644
  rtc_library("task_queue_test") {
    visibility = [ "*" ]
    testonly = true
-@@ -78,6 +79,7 @@ rtc_library("task_queue_test") {
+@@ -79,6 +80,7 @@ rtc_library("task_queue_test") {
      ]
    }
  }
@@ -531,10 +531,10 @@ index b42536db85..aff496cc01 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 0d8bd4f759..7e162cecbb 100644
+index fc92b0183b..a965447c1a 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
-@@ -820,7 +820,9 @@ rtc_library("rtc_json") {
+@@ -821,7 +821,9 @@ rtc_library("rtc_json") {
      "strings/json.h",
    ]
    deps = [ ":stringutils" ]
@@ -544,7 +544,7 @@ index 0d8bd4f759..7e162cecbb 100644
    if (rtc_build_json) {
      deps += [ "//third_party/jsoncpp" ]
    } else {
-@@ -2073,7 +2075,7 @@ if (rtc_include_tests) {
+@@ -2075,7 +2077,7 @@ if (rtc_include_tests) {
    }
  }
  
