@@ -7,7 +7,7 @@ Visual Studio Projects
 The build system automatically generates Visual Studio project files to aid
 with development, as part of a normal ``mach build`` from the command line.
 
-You can find the solution file at ``$OBJDIR/msvs/mozilla.sln``.
+You can find the solution file at ``$OBJDIR/msvc/mozilla.sln``.
 
 If you want to generate the project files before/without doing a full build,
 running ``./mach configure && ./mach build-backend -b VisualStudio`` will do
