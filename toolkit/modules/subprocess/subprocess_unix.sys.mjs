@@ -105,7 +105,7 @@ var SubprocessUnix = {
 
   *getEnvironment() {
     let environ;
-    if (Services.appinfo.OS === "Darwin") {
+    if (Services.appinfo.LIBC === "Darwin") {
       environ = libc._NSGetEnviron().contents;
     } else {
       environ = libc.environ;
