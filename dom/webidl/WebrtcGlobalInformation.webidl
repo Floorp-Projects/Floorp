@@ -9,6 +9,10 @@ dictionary WebrtcGlobalStatisticsReport {
   sequence<RTCSdpHistoryInternal> sdpHistories = [];
 };
 
+dictionary WebrtcGlobalMediaContext {
+  required boolean hasH264Hardware;
+};
+
 callback WebrtcGlobalStatisticsCallback = undefined (WebrtcGlobalStatisticsReport reports);
 callback WebrtcGlobalStatisticsHistoryPcIdsCallback = undefined (sequence<DOMString> pcIds);
 callback WebrtcGlobalStatisticsHistoryCallback = undefined (WebrtcGlobalStatisticsReport reports);
@@ -29,6 +33,8 @@ namespace WebrtcGlobalInformation {
                                  DOMString pcIdFilter,
                                  optional DOMHighResTimeStamp after,
                                  optional DOMHighResTimeStamp sdpAfter);
+
+  WebrtcGlobalMediaContext getMediaContext();
 
   undefined clearAllStats();
 

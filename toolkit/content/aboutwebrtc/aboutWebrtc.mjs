@@ -385,6 +385,9 @@ class ShowTab extends Control {
     ctrls.append(renderElements("div", { className: "controls" }, [ctrl, msg]));
     ctrls.appendChild(autorefresh);
     ctrls.appendChild(autorefreshLabel);
+
+    const mediactx = document.querySelector("#mediactx");
+    mediactx.append(await renderMediaCtx(elemRenderer));
   }
 
   // Render pcs and log
@@ -1551,4 +1554,39 @@ class FoldEffect {
       document.l10n.setAttributes(trigger, showMsg);
     }
   }
+}
+
+async function renderMediaCtx(rndr) {
+  const ctx = WGI.getMediaContext();
+  const boolPref = p => rndr.text_p(`${p}: ${Services.prefs.getBoolPref(p)}`);
+  const intPref = p => rndr.text_p(`${p}: ${Services.prefs.getIntPref(p)}`);
+  const prefs = [
+    boolPref("media.peerconnection.video.vp9_enabled"),
+    boolPref("media.peerconnection.video.vp9_preferred"),
+    intPref("media.navigator.video.h264.level"),
+    intPref("media.navigator.video.h264.max_mbps"),
+    intPref("media.navigator.video.h264.max_mbps"),
+    intPref("media.navigator.video.max_fs"),
+    intPref("media.navigator.video.max_fr"),
+    boolPref("media.navigator.video.use_tmmbr"),
+    boolPref("media.navigator.video.use_remb"),
+    boolPref("media.navigator.video.use_transport_cc"),
+    boolPref("media.navigator.audio.use_fec"),
+    boolPref("media.navigator.video.red_ulpfec_enabled"),
+    boolPref("media.peerconnection.dtmf.enabled"),
+  ];
+
+  const inner = rndr.elems_div({}, [
+    rndr.text_p(`hasH264Hardware: ${ctx.hasH264Hardware}`),
+    ...prefs,
+  ]);
+  const outer = document.createElement("div");
+  outer.append(rndr.elem_h3({}, "about-webrtc-media-context-heading"));
+  const section = renderFoldableSection(outer, {
+    showMsg: "about-webrtc-media-context-show-msg",
+    hideMsg: "about-webrtc-media-context-hide-msg",
+  });
+  outer.append(section);
+  section.append(inner);
+  return outer;
 }
