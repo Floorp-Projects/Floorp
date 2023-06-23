@@ -357,7 +357,7 @@ export class FirefoxProfileMigrator extends MigratorBase {
         try {
           let oldRawPrefs = await readOldPrefs();
           let writePrefs = false;
-          const PREFS = ["bookmarks", "history", "passwords"];
+          const PREFS = ["bookmarks", "csvpasswords", "history", "passwords"];
 
           for (let pref of PREFS) {
             let fullPref = `browser\.migrate\.interactions\.${pref}`;

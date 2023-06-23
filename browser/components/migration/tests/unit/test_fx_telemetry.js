@@ -8,10 +8,20 @@ const { FirefoxProfileMigrator } = ChromeUtils.importESModule(
 const { InternalTestingProfileMigrator } = ChromeUtils.importESModule(
   "resource:///modules/InternalTestingProfileMigrator.sys.mjs"
 );
+const { LoginCSVImport } = ChromeUtils.importESModule(
+  "resource://gre/modules/LoginCSVImport.sys.mjs"
+);
+const { PasswordFileMigrator } = ChromeUtils.importESModule(
+  "resource:///modules/FileMigrators.sys.mjs"
+);
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
 
 // These preferences are set to true anytime MigratorBase.migrate
 // successfully completes a migration of their type.
 const BOOKMARKS_PREF = "browser.migrate.interactions.bookmarks";
+const CSV_PASSWORDS_PREF = "browser.migrate.interactions.csvpasswords";
 const HISTORY_PREF = "browser.migrate.interactions.history";
 const PASSWORDS_PREF = "browser.migrate.interactions.passwords";
 
@@ -367,12 +377,40 @@ add_task(async function test_interaction_telemetry() {
 });
 
 /**
+ * Tests that when importing passwords from a CSV file using the
+ * migration wizard, we set an interaction pref. This preference
+ * is sent using TelemetryEnvironment.sys.mjs.
+ */
+add_task(async function test_csv_password_interaction_telemetry() {
+  let sandbox = sinon.createSandbox();
+  registerCleanupFunction(() => {
+    sandbox.restore();
+  });
+
+  let testingMigrator = new PasswordFileMigrator();
+
+  Services.prefs.clearUserPref(CSV_PASSWORDS_PREF);
+  Assert.ok(!Services.prefs.getBoolPref(CSV_PASSWORDS_PREF));
+
+  sandbox.stub(LoginCSVImport, "importFromCSV").resolves([]);
+  await testingMigrator.migrate("some/fake/path.csv");
+
+  Assert.ok(
+    Services.prefs.getBoolPref(CSV_PASSWORDS_PREF),
+    "CSV import pref should have been set."
+  );
+
+  sandbox.restore();
+});
+
+/**
  * Tests that interaction preferences used for TelemetryEnvironment are
  * persisted across profile resets.
  */
 add_task(async function test_interaction_telemetry_persist_across_reset() {
   const PREFS = `
 user_pref("${BOOKMARKS_PREF}", true);
+user_pref("${CSV_PASSWORDS_PREF}", true);
 user_pref("${HISTORY_PREF}", true);
 user_pref("${PASSWORDS_PREF}", true);
   `;
@@ -386,7 +424,12 @@ user_pref("${PASSWORDS_PREF}", true);
   let prefsPath = PathUtils.join(targetDir.path, "prefs.js");
   Assert.ok(await IOUtils.exists(prefsPath), "Prefs should have been written.");
   let writtenPrefsString = await IOUtils.readUTF8(prefsPath);
-  for (let prefKey of [BOOKMARKS_PREF, HISTORY_PREF, PASSWORDS_PREF]) {
+  for (let prefKey of [
+    BOOKMARKS_PREF,
+    CSV_PASSWORDS_PREF,
+    HISTORY_PREF,
+    PASSWORDS_PREF,
+  ]) {
     const EXPECTED = `user_pref("${prefKey}", true);`;
     Assert.ok(writtenPrefsString.includes(EXPECTED), "Found persisted pref.");
   }

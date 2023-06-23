@@ -387,6 +387,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``browser.migrate.interactions.bookmarks``: True if the user has imported bookmarks from another browser before. This preference gets transferred during profile resets.
 
+- ``browser.migrate.interactions.csvpasswords``: True if the user has imported passwords through the migration wizard from a CSV file. This preference gets transferred during profile resets.
+
 - ``browser.migrate.interactions.history``: True if the user has imported history from another browser before. This preference gets transferred during profile resets.
 
 - ``browser.migrate.interactions.passwords``: True if the user has imported passwords from another browser before. This preference gets transferred during profile resets.

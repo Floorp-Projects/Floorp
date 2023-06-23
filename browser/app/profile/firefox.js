@@ -2168,8 +2168,10 @@ pref("browser.migrate.history.maxAgeInDays", 180);
 // another browser. We also attempt to transfer these preferences
 // across profile resets.
 pref("browser.migrate.interactions.bookmarks", false);
+pref("browser.migrate.interactions.csvpasswords", false);
 pref("browser.migrate.interactions.history", false);
 pref("browser.migrate.interactions.passwords", false);
+
 pref("browser.migrate.preferences-entrypoint.enabled", true);
 
 pref("browser.device-migration.help-menu.hidden", false);

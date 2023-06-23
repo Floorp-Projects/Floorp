@@ -236,6 +236,11 @@ export class PasswordFileMigrator extends FileMigratorBase {
         ]
       );
 
+      Services.prefs.setBoolPref(
+        "browser.migrate.interactions.csvpasswords",
+        true
+      );
+
       return {
         [lazy.MigrationWizardConstants.DISPLAYED_FILE_RESOURCE_TYPES
           .PASSWORDS_NEW]: newMessage,
