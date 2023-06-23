@@ -612,6 +612,42 @@ const MESSAGES = () => [
     trigger: { id: "backgroundTaskMessage" },
     frequency: { lifetime: 3 },
   },
+  {
+    id: "IMPORT_SETTINGS_EMBEDDED",
+    groups: ["panel-test-provider"],
+    template: "spotlight",
+    content: {
+      template: "multistage",
+      backdrop: "transparent",
+      screens: [
+        {
+          id: "IMPORT_SETTINGS_EMBEDDED",
+          content: {
+            logo: {},
+            tiles: { type: "migration-wizard" },
+            progress_bar: true,
+            migrate_start: {
+              action: {},
+            },
+            migrate_close: {
+              action: {
+                navigate: true,
+              },
+            },
+            secondary_button: {
+              label: {
+                string_id: "mr2022-onboarding-secondary-skip-button-label",
+              },
+              action: {
+                navigate: true,
+              },
+              has_arrow_icon: true,
+            },
+          },
+        },
+      ],
+    },
+  },
 ];
 
 export const PanelTestProvider = {

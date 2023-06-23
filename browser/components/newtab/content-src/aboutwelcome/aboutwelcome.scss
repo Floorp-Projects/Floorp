@@ -360,6 +360,24 @@ html {
           }
         }
       }
+
+      migration-wizard {
+        padding: 5px 60px;
+
+        &::part(header){
+          text-align: center;
+        }
+
+        &::part(buttons){
+          margin: 32px auto 0;
+        }
+      }
+
+      .welcome-text {
+        &:empty {
+          margin: 0;
+        }
+      }
     }
 
     &[pos='split'] {

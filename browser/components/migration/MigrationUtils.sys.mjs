@@ -156,6 +156,7 @@ class MigrationUtils {
         "about:welcome?*",
         "about:preferences",
         "chrome://browser/content/migration/migration-dialog-window.html",
+        "chrome://browser/content/spotlight.html",
       ],
     });
   }
