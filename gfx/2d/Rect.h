@@ -29,18 +29,19 @@ struct RectTyped;
 
 template <class Units>
 struct MOZ_EMPTY_BASES IntMarginTyped
-    : public BaseMargin<int32_t, IntMarginTyped<Units> >,
+    : public BaseMargin<int32_t, IntMarginTyped<Units>, IntCoordTyped<Units> >,
       public Units {
   static_assert(IsPixel<Units>::value,
                 "'Units' must be a coordinate system tag");
 
-  typedef BaseMargin<int32_t, IntMarginTyped<Units> > Super;
+  typedef IntCoordTyped<Units> Coord;
+  typedef BaseMargin<int32_t, IntMarginTyped<Units>, Coord> Super;
 
   IntMarginTyped() : Super() {
     static_assert(sizeof(IntMarginTyped) == sizeof(int32_t) * 4,
                   "Would be unfortunate otherwise!");
   }
-  IntMarginTyped(int32_t aTop, int32_t aRight, int32_t aBottom, int32_t aLeft)
+  IntMarginTyped(Coord aTop, Coord aRight, Coord aBottom, Coord aLeft)
       : Super(aTop, aRight, aBottom, aLeft) {}
 
   // XXX When all of the code is ported, the following functions to convert
@@ -60,15 +61,17 @@ struct MOZ_EMPTY_BASES IntMarginTyped
 typedef IntMarginTyped<UnknownUnits> IntMargin;
 
 template <class Units, class F = Float>
-struct MarginTyped : public BaseMargin<F, MarginTyped<Units, F> >,
-                     public Units {
+struct MarginTyped
+    : public BaseMargin<F, MarginTyped<Units, F>, CoordTyped<Units, F> >,
+      public Units {
   static_assert(IsPixel<Units>::value,
                 "'Units' must be a coordinate system tag");
 
-  typedef BaseMargin<F, MarginTyped<Units, F> > Super;
+  typedef CoordTyped<Units, F> Coord;
+  typedef BaseMargin<F, MarginTyped<Units, F>, Coord> Super;
 
   MarginTyped() : Super() {}
-  MarginTyped(F aTop, F aRight, F aBottom, F aLeft)
+  MarginTyped(Coord aTop, Coord aRight, Coord aBottom, Coord aLeft)
       : Super(aTop, aRight, aBottom, aLeft) {}
   explicit MarginTyped(const IntMarginTyped<Units>& aMargin)
       : Super(F(aMargin.top), F(aMargin.right), F(aMargin.bottom),

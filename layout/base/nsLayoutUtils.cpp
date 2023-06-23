@@ -8822,11 +8822,11 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         // compositor.
         if (presContext->GetDynamicToolbarState() ==
             DynamicToolbarState::Collapsed) {
-          metrics.SetFixedLayerMargins(
-              ScreenMargin(0, 0,
-                           presContext->GetDynamicToolbarHeight() -
-                               presContext->GetDynamicToolbarMaxHeight(),
-                           0));
+          metrics.SetFixedLayerMargins(ScreenMargin(
+              0, 0,
+              ScreenCoord(presContext->GetDynamicToolbarHeight() -
+                          presContext->GetDynamicToolbarMaxHeight()),
+              0));
         }
       }
     }

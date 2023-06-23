@@ -56,7 +56,7 @@ namespace gfx {
  * Do not use this class directly. Subclass it, pass that subclass as the
  * Sub parameter, and only use that subclass.
  */
-template <class T, class Sub>
+template <class T, class Sub, class Coord = T>
 struct BaseMargin {
   typedef mozilla::Side SideT;  // because we have a method named Side
 
@@ -66,7 +66,7 @@ struct BaseMargin {
 
   // Constructors
   BaseMargin() : top(0), right(0), bottom(0), left(0) {}
-  BaseMargin(T aTop, T aRight, T aBottom, T aLeft)
+  BaseMargin(Coord aTop, Coord aRight, Coord aBottom, Coord aLeft)
       : top(aTop), right(aRight), bottom(aBottom), left(aLeft) {}
 
   void SizeTo(T aTop, T aRight, T aBottom, T aLeft) {
