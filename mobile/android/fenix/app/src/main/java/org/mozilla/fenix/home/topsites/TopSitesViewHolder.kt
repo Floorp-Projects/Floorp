@@ -9,9 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.LifecycleOwner
 import mozilla.components.lib.state.ext.observeAsComposableState
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ComposeViewHolder
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
+import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
@@ -49,6 +51,9 @@ class TopSitesViewHolder(
                 onRemoveTopSiteClicked = interactor::onRemoveTopSiteClicked,
                 onSettingsClicked = interactor::onSettingsClicked,
                 onSponsorPrivacyClicked = interactor::onSponsorPrivacyClicked,
+                onTopSitesItemBound = {
+                    StartupTimeline.onTopSitesItemBound(activity = composeView.context as HomeActivity)
+                },
             )
         }
     }

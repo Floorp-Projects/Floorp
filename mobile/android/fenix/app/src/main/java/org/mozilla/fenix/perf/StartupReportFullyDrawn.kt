@@ -61,6 +61,24 @@ class StartupReportFullyDrawn {
         }
     }
 
+    /**
+     * Instruments "visually complete" cold startup time to homescreen for use with FNPRMS.
+     *
+     * For FNPRMS, we define "visually complete" to be when top sites is loaded with placeholders;
+     * the animation to display top sites will occur after this point, as will the asynchronous
+     * loading of the actual top sites icons. Our focus for visually complete is usability.
+     * There are no tabs available in our FNPRMS tests so they are ignored for this instrumentation.
+     */
+    fun onTopSitesItemBound(state: StartupState, activity: HomeActivity) {
+        if (!isInstrumented &&
+            state is StartupState.Cold && state.destination == HOMESCREEN
+        ) {
+            isInstrumented = true
+
+            attachReportFullyDrawn(activity)
+        }
+    }
+
     private fun attachReportFullyDrawn(activity: Activity, view: View) {
         // For greater accuracy, we could add an onDrawListener instead of a preDrawListener but:
         // - single use onDrawListeners are not built-in and it's non-trivial to write one
@@ -68,5 +86,9 @@ class StartupReportFullyDrawn {
         // - if we compare against another app using a preDrawListener, as we are with Fennec, it
         // should be comparable
         view.doOnPreDraw { activity.reportFullyDrawnSafe(Performance.logger) }
+    }
+
+    private fun attachReportFullyDrawn(activity: Activity) {
+        activity.reportFullyDrawnSafe(Performance.logger)
     }
 }

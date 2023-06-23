@@ -54,6 +54,13 @@ object StartupTimeline {
         reportFullyDrawn.onTopSitesItemBound(state, holder)
     }
 
+    /**
+     * Instruments "visually complete" cold startup time to homescreen for use with FNPRMS.
+     */
+    fun onTopSitesItemBound(activity: HomeActivity) {
+        reportFullyDrawn.onTopSitesItemBound(state, activity)
+    }
+
     private fun advanceState(startingActivity: StartupActivity) {
         state = StartupTimelineStateMachine.getNextState(state, startingActivity)
     }

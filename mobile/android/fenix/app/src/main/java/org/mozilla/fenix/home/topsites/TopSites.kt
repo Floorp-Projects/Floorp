@@ -104,6 +104,7 @@ fun TopSites(
     onRemoveTopSiteClicked: (topSite: TopSite) -> Unit,
     onSettingsClicked: () -> Unit,
     onSponsorPrivacyClicked: () -> Unit,
+    onTopSitesItemBound: () -> Unit,
 ) {
     val pageCount = ceil((topSites.size.toDouble() / TOP_SITES_PER_PAGE)).toInt()
 
@@ -154,6 +155,7 @@ fun TopSites(
                                     topSiteColors = topSiteColors,
                                     onTopSiteClick = { item -> onTopSiteClick(item) },
                                     onTopSiteLongClick = onTopSiteLongClick,
+                                    onTopSitesItemBound = onTopSitesItemBound,
                                 )
                             }
                         }
@@ -251,6 +253,7 @@ private fun TopSiteItem(
     topSiteColors: TopSiteColors,
     onTopSiteClick: (TopSite) -> Unit,
     onTopSiteLongClick: (TopSite) -> Unit,
+    onTopSitesItemBound: () -> Unit,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
@@ -338,6 +341,10 @@ private fun TopSiteItem(
                 submitTopSitesImpressionPing(topSite = topSite, position = position)
             }
         }
+    }
+
+    LaunchedEffect(Unit) {
+        onTopSitesItemBound()
     }
 }
 
@@ -587,6 +594,7 @@ private fun TopSitesPreview() {
                 onRemoveTopSiteClicked = {},
                 onSettingsClicked = {},
                 onSponsorPrivacyClicked = {},
+                onTopSitesItemBound = {},
             )
         }
     }
