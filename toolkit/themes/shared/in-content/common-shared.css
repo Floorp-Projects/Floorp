@@ -53,6 +53,7 @@
   --in-content-danger-button-background-hover: #c50042;
   --in-content-danger-button-background-active: #810220;
   --in-content-focus-outline-color: var(--in-content-primary-button-background);
+  --in-content-focus-outline: var(--focus-outline);
 
   --in-content-table-background: #f8f8fa;
   --in-content-table-border-color: var(--in-content-box-border-color);
