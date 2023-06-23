@@ -1133,6 +1133,12 @@
   value: 32
   mirror: always
 
+# Min font device pixel size at which to turn on high quality.
+- name: browser.display.auto_quality_min_font_size
+  type: RelaxedAtomicUint32
+  value: 20
+  mirror: always
+
 - name: browser.display.background_color
   type: String
   value: "#FFFFFF"
