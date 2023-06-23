@@ -46,7 +46,6 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla.dom += [
-    "BasicRenderingContext2D.h",
     "CanvasGradient.h",
     "CanvasPath.h",
     "CanvasPattern.h",

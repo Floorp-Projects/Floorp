@@ -6,7 +6,6 @@
 #define CanvasRenderingContext2D_h
 
 #include <vector>
-#include "mozilla/dom/BasicRenderingContext2D.h"
 #include "mozilla/dom/CanvasRenderingContext2DBinding.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/intl/Bidi.h"
@@ -78,8 +77,7 @@ struct DOMMatrix2DInit;
  ** CanvasRenderingContext2D
  **/
 class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
-                                 public nsWrapperCache,
-                                 public BasicRenderingContext2D {
+                                 public nsWrapperCache {
  protected:
   virtual ~CanvasRenderingContext2D();
 
@@ -106,8 +104,8 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   Maybe<layers::SurfaceDescriptor> GetFrontBuffer(
       WebGLFramebufferJS*, const bool webvr = false) override;
 
-  void Save() override;
-  void Restore() override;
+  void Save();
+  void Restore();
 
   void Reset() {
     // reset the rendering context to its default state
@@ -115,28 +113,25 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     SetDimensions(GetWidth(), GetHeight());
   }
 
-  void Scale(double aX, double aY, mozilla::ErrorResult& aError) override;
-  void Rotate(double aAngle, mozilla::ErrorResult& aError) override;
-  void Translate(double aX, double aY, mozilla::ErrorResult& aError) override;
+  void Scale(double aX, double aY, mozilla::ErrorResult& aError);
+  void Rotate(double aAngle, mozilla::ErrorResult& aError);
+  void Translate(double aX, double aY, mozilla::ErrorResult& aError);
   void Transform(double aM11, double aM12, double aM21, double aM22, double aDx,
-                 double aDy, mozilla::ErrorResult& aError) override;
-  already_AddRefed<DOMMatrix> GetTransform(
-      mozilla::ErrorResult& aError) override;
+                 double aDy, mozilla::ErrorResult& aError);
+  already_AddRefed<DOMMatrix> GetTransform(mozilla::ErrorResult& aError);
   void SetTransform(double aM11, double aM12, double aM21, double aM22,
-                    double aDx, double aDy,
-                    mozilla::ErrorResult& aError) override;
-  void SetTransform(const DOMMatrix2DInit& aInit,
-                    mozilla::ErrorResult& aError) override;
-  void ResetTransform(mozilla::ErrorResult& aError) override;
+                    double aDx, double aDy, mozilla::ErrorResult& aError);
+  void SetTransform(const DOMMatrix2DInit& aInit, mozilla::ErrorResult& aError);
+  void ResetTransform(mozilla::ErrorResult& aError);
 
-  double GlobalAlpha() override { return CurrentState().globalAlpha; }
+  double GlobalAlpha() { return CurrentState().globalAlpha; }
 
   // Useful for silencing cast warnings
   static mozilla::gfx::Float ToFloat(double aValue) {
     return mozilla::gfx::Float(aValue);
   }
 
-  void SetGlobalAlpha(double aGlobalAlpha) override {
+  void SetGlobalAlpha(double aGlobalAlpha) {
     if (aGlobalAlpha >= 0.0 && aGlobalAlpha <= 1.0) {
       CurrentState().globalAlpha = ToFloat(aGlobalAlpha);
     }
@@ -147,74 +142,69 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                             ResolveCurrentColor = ResolveCurrentColor::Yes);
 
   void GetGlobalCompositeOperation(nsAString& aOp,
-                                   mozilla::ErrorResult& aError) override;
+                                   mozilla::ErrorResult& aError);
   void SetGlobalCompositeOperation(const nsAString& aOp,
-                                   mozilla::ErrorResult& aError) override;
+                                   mozilla::ErrorResult& aError);
 
-  void GetStrokeStyle(
-      OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue) override {
+  void GetStrokeStyle(OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue) {
     GetStyleAsUnion(aValue, Style::STROKE);
   }
 
-  void SetStrokeStyle(
-      const UTF8StringOrCanvasGradientOrCanvasPattern& aValue) override {
+  void SetStrokeStyle(const UTF8StringOrCanvasGradientOrCanvasPattern& aValue) {
     SetStyleFromUnion(aValue, Style::STROKE);
   }
 
-  void GetFillStyle(
-      OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue) override {
+  void GetFillStyle(OwningUTF8StringOrCanvasGradientOrCanvasPattern& aValue) {
     GetStyleAsUnion(aValue, Style::FILL);
   }
 
-  void SetFillStyle(
-      const UTF8StringOrCanvasGradientOrCanvasPattern& aValue) override {
+  void SetFillStyle(const UTF8StringOrCanvasGradientOrCanvasPattern& aValue) {
     SetStyleFromUnion(aValue, Style::FILL);
   }
 
   already_AddRefed<CanvasGradient> CreateLinearGradient(double aX0, double aY0,
-                                                        double aX1,
-                                                        double aY1) override;
-  already_AddRefed<CanvasGradient> CreateRadialGradient(
-      double aX0, double aY0, double aR0, double aX1, double aY1, double aR1,
-      ErrorResult& aError) override;
+                                                        double aX1, double aY1);
+  already_AddRefed<CanvasGradient> CreateRadialGradient(double aX0, double aY0,
+                                                        double aR0, double aX1,
+                                                        double aY1, double aR1,
+                                                        ErrorResult& aError);
   already_AddRefed<CanvasGradient> CreateConicGradient(double aAngle,
-                                                       double aCx,
-                                                       double aCy) override;
+                                                       double aCx, double aCy);
   already_AddRefed<CanvasPattern> CreatePattern(
       const CanvasImageSource& aElement, const nsAString& aRepeat,
-      ErrorResult& aError) override;
+      ErrorResult& aError);
 
-  double ShadowOffsetX() override { return CurrentState().shadowOffset.x; }
+  double ShadowOffsetX() { return CurrentState().shadowOffset.x; }
 
-  void SetShadowOffsetX(double aShadowOffsetX) override {
+  void SetShadowOffsetX(double aShadowOffsetX) {
     CurrentState().shadowOffset.x = ToFloat(aShadowOffsetX);
   }
 
-  double ShadowOffsetY() override { return CurrentState().shadowOffset.y; }
+  double ShadowOffsetY() { return CurrentState().shadowOffset.y; }
 
-  void SetShadowOffsetY(double aShadowOffsetY) override {
+  void SetShadowOffsetY(double aShadowOffsetY) {
     CurrentState().shadowOffset.y = ToFloat(aShadowOffsetY);
   }
 
-  double ShadowBlur() override { return CurrentState().shadowBlur; }
+  double ShadowBlur() { return CurrentState().shadowBlur; }
 
-  void SetShadowBlur(double aShadowBlur) override {
+  void SetShadowBlur(double aShadowBlur) {
     if (aShadowBlur >= 0.0) {
       CurrentState().shadowBlur = ToFloat(aShadowBlur);
     }
   }
 
-  void GetShadowColor(nsACString& aShadowColor) override {
+  void GetShadowColor(nsACString& aShadowColor) {
     StyleColorToString(CurrentState().shadowColor, aShadowColor);
   }
 
   void GetFilter(nsACString& aFilter) { aFilter = CurrentState().filterString; }
 
-  void SetShadowColor(const nsACString& aShadowColor) override;
+  void SetShadowColor(const nsACString& aShadowColor);
   void SetFilter(const nsACString& aFilter, mozilla::ErrorResult& aError);
-  void ClearRect(double aX, double aY, double aW, double aH) override;
-  void FillRect(double aX, double aY, double aW, double aH) override;
-  void StrokeRect(double aX, double aY, double aW, double aH) override;
+  void ClearRect(double aX, double aY, double aW, double aH);
+  void FillRect(double aX, double aY, double aW, double aH);
+  void StrokeRect(double aX, double aY, double aW, double aH);
   void BeginPath();
   void Fill(const CanvasWindingRule& aWinding);
   void Fill(const CanvasPath& aPath, const CanvasWindingRule& aWinding);
@@ -244,19 +234,18 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                            mozilla::ErrorResult& aError);
 
   void DrawImage(const CanvasImageSource& aImage, double aDx, double aDy,
-                 mozilla::ErrorResult& aError) override {
+                 mozilla::ErrorResult& aError) {
     DrawImage(aImage, 0.0, 0.0, 0.0, 0.0, aDx, aDy, 0.0, 0.0, 0, aError);
   }
 
   void DrawImage(const CanvasImageSource& aImage, double aDx, double aDy,
-                 double aDw, double aDh,
-                 mozilla::ErrorResult& aError) override {
+                 double aDw, double aDh, mozilla::ErrorResult& aError) {
     DrawImage(aImage, 0.0, 0.0, 0.0, 0.0, aDx, aDy, aDw, aDh, 2, aError);
   }
 
   void DrawImage(const CanvasImageSource& aImage, double aSx, double aSy,
                  double aSw, double aSh, double aDx, double aDy, double aDw,
-                 double aDh, mozilla::ErrorResult& aError) override {
+                 double aDh, mozilla::ErrorResult& aError) {
     DrawImage(aImage, aSx, aSy, aSw, aSh, aDx, aDy, aDw, aDh, 6, aError);
   }
 
@@ -273,27 +262,27 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
                     int32_t aDirtyY, int32_t aDirtyWidth, int32_t aDirtyHeight,
                     ErrorResult&);
 
-  double LineWidth() override { return CurrentState().lineWidth; }
+  double LineWidth() { return CurrentState().lineWidth; }
 
-  void SetLineWidth(double aWidth) override {
+  void SetLineWidth(double aWidth) {
     if (aWidth > 0.0) {
       CurrentState().lineWidth = ToFloat(aWidth);
     }
   }
 
-  CanvasLineCap LineCap() override { return CurrentState().lineCap; }
-  void SetLineCap(const CanvasLineCap& aLinecapStyle) override {
+  CanvasLineCap LineCap() { return CurrentState().lineCap; }
+  void SetLineCap(const CanvasLineCap& aLinecapStyle) {
     CurrentState().lineCap = aLinecapStyle;
   }
 
-  CanvasLineJoin LineJoin() override { return CurrentState().lineJoin; }
-  void SetLineJoin(const CanvasLineJoin& aLinejoinStyle) override {
+  CanvasLineJoin LineJoin() { return CurrentState().lineJoin; }
+  void SetLineJoin(const CanvasLineJoin& aLinejoinStyle) {
     CurrentState().lineJoin = aLinejoinStyle;
   }
 
-  double MiterLimit() override { return CurrentState().miterLimit; }
+  double MiterLimit() { return CurrentState().miterLimit; }
 
-  void SetMiterLimit(double aMiter) override {
+  void SetMiterLimit(double aMiter) {
     if (aMiter > 0.0) {
       CurrentState().miterLimit = ToFloat(aMiter);
     }
@@ -343,14 +332,14 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     }
   }
 
-  void ClosePath() override {
+  void ClosePath() {
     EnsureWritablePath();
 
     mPathBuilder->Close();
     mPathPruned = false;
   }
 
-  void MoveTo(double aX, double aY) override {
+  void MoveTo(double aX, double aY) {
     EnsureWritablePath();
 
     mozilla::gfx::Point pos(ToFloat(aX), ToFloat(aY));
@@ -362,14 +351,13 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     mPathBuilder->MoveTo(pos);
   }
 
-  void LineTo(double aX, double aY) override {
+  void LineTo(double aX, double aY) {
     EnsureWritablePath();
 
     LineTo(mozilla::gfx::Point(ToFloat(aX), ToFloat(aY)));
   }
 
-  void QuadraticCurveTo(double aCpx, double aCpy, double aX,
-                        double aY) override {
+  void QuadraticCurveTo(double aCpx, double aCpy, double aX, double aY) {
     EnsureWritablePath();
 
     mozilla::gfx::Point cp1(ToFloat(aCpx), ToFloat(aCpy));
@@ -387,7 +375,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   }
 
   void BezierCurveTo(double aCp1x, double aCp1y, double aCp2x, double aCp2y,
-                     double aX, double aY) override {
+                     double aX, double aY) {
     EnsureWritablePath();
 
     BezierTo(mozilla::gfx::Point(ToFloat(aCp1x), ToFloat(aCp1y)),
@@ -396,35 +384,32 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   }
 
   void ArcTo(double aX1, double aY1, double aX2, double aY2, double aRadius,
-             mozilla::ErrorResult& aError) override;
-  void Rect(double aX, double aY, double aW, double aH) override;
+             mozilla::ErrorResult& aError);
+  void Rect(double aX, double aY, double aW, double aH);
   void RoundRect(
       double aX, double aY, double aW, double aH,
       const UnrestrictedDoubleOrDOMPointInitOrUnrestrictedDoubleOrDOMPointInitSequence&
           aRadii,
       ErrorResult& aError);
   void Arc(double aX, double aY, double aRadius, double aStartAngle,
-           double aEndAngle, bool aAnticlockwise,
-           mozilla::ErrorResult& aError) override;
+           double aEndAngle, bool aAnticlockwise, mozilla::ErrorResult& aError);
   void Ellipse(double aX, double aY, double aRadiusX, double aRadiusY,
                double aRotation, double aStartAngle, double aEndAngle,
-               bool aAnticlockwise, ErrorResult& aError) override;
+               bool aAnticlockwise, ErrorResult& aError);
 
   void GetFillRule(nsAString& aFillRule);
   void SetFillRule(const nsAString& aFillRule);
 
   void SetLineDash(const Sequence<double>& aSegments,
-                   mozilla::ErrorResult& aRv) override;
-  void GetLineDash(nsTArray<double>& aSegments) const override;
+                   mozilla::ErrorResult& aRv);
+  void GetLineDash(nsTArray<double>& aSegments) const;
 
-  void SetLineDashOffset(double aOffset) override;
-  double LineDashOffset() const override;
+  void SetLineDashOffset(double aOffset);
+  double LineDashOffset() const;
 
-  bool ImageSmoothingEnabled() override {
-    return CurrentState().imageSmoothingEnabled;
-  }
+  bool ImageSmoothingEnabled() { return CurrentState().imageSmoothingEnabled; }
 
-  void SetImageSmoothingEnabled(bool aImageSmoothingEnabled) override {
+  void SetImageSmoothingEnabled(bool aImageSmoothingEnabled) {
     if (aImageSmoothingEnabled != CurrentState().imageSmoothingEnabled) {
       CurrentState().imageSmoothingEnabled = aImageSmoothingEnabled;
     }
@@ -442,8 +427,8 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   nsresult Redraw();
 
   gfx::IntSize GetSize() const { return gfx::IntSize(mWidth, mHeight); }
-  virtual int32_t GetWidth() override { return GetSize().width; }
-  virtual int32_t GetHeight() override { return GetSize().height; }
+  int32_t GetWidth() override { return GetSize().width; }
+  int32_t GetHeight() override { return GetSize().height; }
 
   // nsICanvasRenderingContextInternal
   /**
