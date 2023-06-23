@@ -567,10 +567,10 @@ index 77f5139a2f..486b37590c 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 57e602f31e..4cb004165d 100644
+index abc8d4ee9c..d304ca01b8 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
-@@ -173,6 +173,7 @@ rtc_library("audio_test_common") {
+@@ -176,6 +176,7 @@ rtc_library("audio_test_common") {
    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
  }
  
@@ -578,7 +578,7 @@ index 57e602f31e..4cb004165d 100644
  if (!build_with_chromium) {
    if (is_mac || is_ios) {
      rtc_library("video_test_mac") {
-@@ -221,8 +222,12 @@ if (!build_with_chromium) {
+@@ -224,8 +225,12 @@ if (!build_with_chromium) {
      }
    }
  }
@@ -591,7 +591,7 @@ index 57e602f31e..4cb004165d 100644
    testonly = true
    sources = [
      "rtcp_packet_parser.cc",
-@@ -232,6 +237,7 @@ rtc_library("rtp_test_utils") {
+@@ -235,6 +240,7 @@ rtc_library("rtp_test_utils") {
      "rtp_file_writer.cc",
      "rtp_file_writer.h",
    ]
@@ -599,7 +599,7 @@ index 57e602f31e..4cb004165d 100644
  
    deps = [
      "../api:array_view",
-@@ -484,7 +490,9 @@ rtc_library("video_test_support") {
+@@ -487,7 +493,9 @@ rtc_library("video_test_support") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  
    if (!is_ios) {
@@ -609,7 +609,7 @@ index 57e602f31e..4cb004165d 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1055,6 +1063,10 @@ rtc_library("test_common") {
+@@ -1058,6 +1066,10 @@ rtc_library("test_common") {
    if (!is_android && !build_with_chromium) {
      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
    }
@@ -620,7 +620,7 @@ index 57e602f31e..4cb004165d 100644
  }
  
  rtc_library("mock_transport") {
-@@ -1222,6 +1234,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
+@@ -1225,6 +1237,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
    ]
  }
  
@@ -628,7 +628,7 @@ index 57e602f31e..4cb004165d 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1235,6 +1248,7 @@ if (!build_with_chromium && is_android) {
+@@ -1238,6 +1251,7 @@ if (!build_with_chromium && is_android) {
      ]
    }
  }
