@@ -521,8 +521,8 @@ async function GetBookmarksResource(aProfileFolder, aBrowserKey) {
           faviconRows = await MigrationUtils.getRowsFromDBWithoutLocks(
             faviconsPath,
             "Chrome Bookmark Favicons",
-            `select fav.id, fav.url, map.page_url, bit.image_data FROM favicons as fav 
-              INNER JOIN favicon_bitmaps bit ON (fav.id = bit.icon_id) 
+            `select fav.id, fav.url, map.page_url, bit.image_data FROM favicons as fav
+              INNER JOIN favicon_bitmaps bit ON (fav.id = bit.icon_id)
               INNER JOIN icon_mapping map ON (map.icon_id = bit.icon_id)`
           );
         } catch (ex) {
@@ -784,7 +784,7 @@ async function GetExtensionsResource(aProfileId, aBrowserKey = "chrome") {
     async migrate(callback) {
       let ids = extensions.map(extension => extension.id);
       let [progressValue, importedExtensions] =
-        await MigrationUtils.installExtensionsWrapper(ids);
+        await MigrationUtils.installExtensionsWrapper(aBrowserKey, ids);
       let details = {
         progressValue,
         totalExtensions: extensions,

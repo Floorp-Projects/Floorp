@@ -8,6 +8,7 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AMBrowserExtensionsImport: "resource://gre/modules/AddonManager.sys.mjs",
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
   PlacesUIUtils: "resource:///modules/PlacesUIUtils.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
@@ -964,44 +965,45 @@ class MigrationUtils {
   }
 
   /**
-   * Responsible for calling the AddonManager API that
-   * ultimately installs the matched add-ons.
+   * Responsible for calling the AddonManager API that ultimately installs the
+   * matched add-ons.
    *
-   * @param {string[]} extensions a list of extension IDs from another browser
+   * @param {string} migratorKey a migrator key that we pass to
+   *                             `AMBrowserExtensionsImport` as the "browser
+   *                             identifier" used to match add-ons
+   * @param {string[]} extensionIDs a list of extension IDs from another browser
    */
-  async installExtensionsWrapper(extensions) {
-    /*
-    TODO: one potential implementation for calling the Add-ons API to match and install extensions
-    let totalExtensions = extensions.length;
-    let importedExtensions = await AddonsManager.installExtensions(extensions);
-  */
-    let totalExtensions = extensions.length;
-    // importedExtensions hardcoded until we have the AddonsManager API call
-    // Assuming that installExtensions will return an array of sorts.
-    // ! creates the error case
-    // let importedExtensions = [];
-    // ! creates the full match/success case
-    // let importedExtensions = extensions;
-    // ! creates the partial match/info case
-    let importedExtensions = ["extensionID1", "extensionID2"];
+  async installExtensionsWrapper(migratorKey, extensionIDs) {
+    const totalExtensions = extensionIDs.length;
 
-    this._importQuantities.extensions += importedExtensions.length;
+    let importedAddonIDs = [];
+    try {
+      const result = await lazy.AMBrowserExtensionsImport.stageInstalls(
+        migratorKey,
+        extensionIDs
+      );
+      importedAddonIDs = result.importedAddonIDs;
+    } catch (e) {
+      console.error(`Failed to import extensions: ${e}`);
+    }
 
-    if (!importedExtensions.length) {
+    this._importQuantities.extensions += importedAddonIDs.length;
+
+    if (!importedAddonIDs.length) {
       return [
         lazy.MigrationWizardConstants.PROGRESS_VALUE.ERROR,
-        importedExtensions,
+        importedAddonIDs,
       ];
     }
-    if (totalExtensions == importedExtensions.length) {
+    if (totalExtensions == importedAddonIDs.length) {
       return [
         lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
-        importedExtensions,
+        importedAddonIDs,
       ];
     }
     return [
       lazy.MigrationWizardConstants.PROGRESS_VALUE.INFO,
-      importedExtensions,
+      importedAddonIDs,
     ];
   }
 

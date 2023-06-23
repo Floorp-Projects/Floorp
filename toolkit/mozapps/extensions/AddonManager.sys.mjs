@@ -5240,6 +5240,8 @@ AMBrowserExtensionsImport = {
   // (which currently makes sure we are not prompting for permissions when the
   // imported addons are being downloaded, staged and then installed).
   _installPromptHandler: () => {},
+  // Optionally override the `AddonRepository`, mainly for testing purposes.
+  _addonRepository: null,
 
   get hasPendingImportedAddons() {
     return !!this._pendingInstallsMap.size;
@@ -5253,24 +5255,21 @@ AMBrowserExtensionsImport = {
     return this._canCompleteOrCancelInstalls && this.hasPendingImportedAddons;
   },
 
+  get addonRepository() {
+    return this._addonRepository || lazy.AddonRepository;
+  },
+
   /**
    * Stage an install for each add-on mapped to a browser extension ID in the
    * list of IDs passed to this method.
    *
    * @param {string} browserId A browser identifier.
    * @param {Array<string} extensionIDs A list of non-Firefox extension IDs.
-   * @param {AddonRepository} addonRepository Optionally pass the AddonRepository
-   *                                          to use, which is mainly used for
-   *                                          testing purposes.
    * @returns {Promise<object>} The return value is an object with data for
    *                            the caller.
    * @throws {Error} When there are pending imported add-ons.
    */
-  async stageInstalls(
-    browserId,
-    extensionIDs,
-    addonRepository = lazy.AddonRepository
-  ) {
+  async stageInstalls(browserId, extensionIDs) {
     // In case we have an import in progress, we throw so that the caller knows
     // that there is already an import in progress, which it may want to either
     // cancel or complete.
@@ -5288,7 +5287,7 @@ AMBrowserExtensionsImport = {
     // might not have as many mapped add-ons as extension IDs because not all
     // browser extensions will be mapped to Firefox add-ons.
     try {
-      importedAddons = await addonRepository.getMappedAddons(
+      importedAddons = await this.addonRepository.getMappedAddons(
         browserId,
         extensionIDs
       );
