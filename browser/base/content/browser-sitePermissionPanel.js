@@ -408,6 +408,37 @@ var gPermissionPanel = {
       gBrowser.selectedBrowser
     );
 
+    // Don't display origin-keyed 3rdPartyStorage permissions that are covered by
+    // site-keyed 3rdPartyFrameStorage permissions.
+    let thirdPartyStorageSites = new Set(
+      permissions
+        .map(function (permission) {
+          let [id, key] = permission.id.split(
+            SitePermissions.PERM_KEY_DELIMITER
+          );
+          if (id == "3rdPartyFrameStorage") {
+            return key;
+          }
+          return null;
+        })
+        .filter(function (key) {
+          return key != null;
+        })
+    );
+    permissions = permissions.filter(function (permission) {
+      let [id, key] = permission.id.split(SitePermissions.PERM_KEY_DELIMITER);
+      if (id != "3rdPartyStorage") {
+        return true;
+      }
+      try {
+        let origin = Services.io.newURI(key);
+        let site = Services.eTLD.getSite(origin);
+        return !thirdPartyStorageSites.has(site);
+      } catch {
+        return false;
+      }
+    });
+
     this._sharingState = gBrowser.selectedTab._sharingState;
 
     if (this._sharingState?.geo) {
@@ -506,8 +537,17 @@ var gPermissionPanel = {
           permission,
           idNoSuffix: id,
           isContainer: id == "geo" || id == "xr",
-          nowrapLabel: id == "3rdPartyStorage",
+          nowrapLabel: id == "3rdPartyStorage" || id == "3rdPartyFrameStorage",
         });
+
+        // We want permission items for the 3rdPartyFrameStorage to use the same
+        // anchor as 3rdPartyStorage permission items. They will be bundled together
+        // to a single display to the user.
+        if (id == "3rdPartyFrameStorage") {
+          anchor = this._permissionList.querySelector(
+            `[anchorfor="3rdPartyStorage"]`
+          );
+        }
 
         if (!item) {
           continue;
@@ -791,6 +831,41 @@ var gPermissionPanel = {
         }
         origins.clear();
       }
+
+      // For 3rdPartyFrameStorage permissions, we also need to remove
+      // any 3rdPartyStorage permissions for origins covered by
+      // the site of this permission. These permissions have the same
+      // dialog, but slightly different scopes, so we only show one in
+      // the list if they both exist and use it to stand in for both.
+      if (idNoSuffix == "3rdPartyFrameStorage") {
+        let [, matchSite] = permission.id.split(
+          SitePermissions.PERM_KEY_DELIMITER
+        );
+        let permissions = SitePermissions.getAllForBrowser(browser);
+        let removePermissions = permissions.filter(function (removePermission) {
+          let [id, key] = removePermission.id.split(
+            SitePermissions.PERM_KEY_DELIMITER
+          );
+          if (id != "3rdPartyStorage") {
+            return false;
+          }
+          try {
+            let origin = Services.io.newURI(key);
+            let site = Services.eTLD.getSite(origin);
+            return site == matchSite;
+          } catch {
+            return false;
+          }
+        });
+        for (let removePermission of removePermissions) {
+          SitePermissions.removeFromPrincipal(
+            gBrowser.contentPrincipal,
+            removePermission.id,
+            browser
+          );
+        }
+      }
+
       SitePermissions.removeFromPrincipal(
         gBrowser.contentPrincipal,
         permission.id,
