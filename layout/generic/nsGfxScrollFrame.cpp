@@ -2560,14 +2560,6 @@ void nsHTMLScrollFrame::ScrollToWithOrigin(nsPoint aScrollPosition,
       aParams.IsSmooth() && nsLayoutUtils::IsSmoothScrollingEnabled();
   if (!mAsyncScroll) {
     if (isSmoothScroll && canHandoffToApz) {
-      // APZ does not handle ScrollTriggeredByScript::Yes and snapTargetIds for
-      // ScrollMode::Smooth (but this can be added if the assertion firing
-      // indicates it's necessary).
-      MOZ_ASSERT(aParams.mTriggeredByScript == ScrollTriggeredByScript::No);
-      if (snapTargetIds) {
-        MOZ_ASSERT(snapTargetIds->mIdsOnX.IsEmpty());
-        MOZ_ASSERT(snapTargetIds->mIdsOnY.IsEmpty());
-      }
       ApzSmoothScrollTo(mDestination, ScrollMode::Smooth, aParams.mOrigin,
                         aParams.mTriggeredByScript, std::move(snapTargetIds));
       return;
