@@ -97,9 +97,10 @@ rtc::RouteEndpoint CreateRouteEndpointFromCandidate(
 bool UseActiveIceControllerFieldTrialEnabled(
     const webrtc::FieldTrialsView* field_trials) {
   // Feature to refactor ICE controller and enable active ICE controllers.
-  // Field trial key reserved in bugs.webrtc.org/14367
-  return field_trials &&
-         field_trials->IsEnabled("WebRTC-UseActiveIceController");
+  // Default enable for full launch.
+  // TODO(bugs.webrtc.org/14367): Code branching will be cleaned up in a
+  // follow-up CL.
+  return true;
 }
 
 using ::webrtc::RTCError;
