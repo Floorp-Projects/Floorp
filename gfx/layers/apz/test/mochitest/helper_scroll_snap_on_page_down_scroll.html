@@ -74,7 +74,7 @@
       // can be fractional (e.g. if viewport height is an odd number of pixels,
       // then 50vh will be fractional), and ClampAndAlignWithPixels can round
       // the final scroll offset requested by APZ at the end of an animation,
-      // to an integer value. We plan to remove ClampAndAlignWithPixels in 
+      // to an integer value. We plan to remove ClampAndAlignWithPixels in
       // bug 1774315.
       isfuzzy(window.scrollY, expectedPosition, 1,
          "Snaps to the second snap point rather than the third snap point " +
