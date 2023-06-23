@@ -888,10 +888,7 @@ class AccessibleWalkerActor extends Actor {
    * Check is event handling is allowed.
    */
   _isEventAllowed({ view }) {
-    return (
-      this.rootWin instanceof Ci.nsIDOMChromeWindow ||
-      isWindowIncluded(this.rootWin, view)
-    );
+    return this.rootWin.isChromeWindow || isWindowIncluded(this.rootWin, view);
   }
 
   /**

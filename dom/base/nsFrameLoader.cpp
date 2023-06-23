@@ -65,7 +65,6 @@
 
 #include "nsThreadUtils.h"
 
-#include "nsIDOMChromeWindow.h"
 #include "InProcessBrowserChildMessageManager.h"
 
 #include "ContentParent.h"
@@ -2757,13 +2756,11 @@ bool nsFrameLoader::TryRemoteBrowserInternal() {
 
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
   parentDocShell->GetInProcessRootTreeItem(getter_AddRefs(rootItem));
-  nsCOMPtr<nsPIDOMWindowOuter> rootWin = rootItem->GetWindow();
-  nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(rootWin);
+  RefPtr<nsGlobalWindowOuter> rootWin =
+      nsGlobalWindowOuter::Cast(rootItem->GetWindow());
 
-  if (rootChromeWin) {
-    nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
-    rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
-    browserParent->SetBrowserDOMWindow(browserDOMWin);
+  if (rootWin && rootWin->IsChromeWindow()) {
+    browserParent->SetBrowserDOMWindow(rootWin->GetBrowserDOMWindow());
   }
 
   // For xul:browsers, update some settings based on attributes:

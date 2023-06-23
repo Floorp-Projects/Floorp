@@ -129,7 +129,7 @@ class NodePicker {
   _isEventAllowed({ view }) {
     // Allow "non multiprocess" browser toolbox to inspect documents loaded in the parent
     // process (e.g. about:robots)
-    if (this._targetActor.window instanceof Ci.nsIDOMChromeWindow) {
+    if (this._targetActor.window.isChromeWindow) {
       return true;
     }
 

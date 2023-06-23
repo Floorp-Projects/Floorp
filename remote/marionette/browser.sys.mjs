@@ -353,10 +353,10 @@ export const WindowState = {
   Fullscreen: "fullscreen",
 
   /**
-   * Converts {@link nsIDOMChromeWindow.windowState} to WindowState.
+   * Converts {@link Window.windowState} to WindowState.
    *
    * @param {number} windowState
-   *     Attribute from {@link nsIDOMChromeWindow.windowState}.
+   *     Attribute from {@link Window.windowState}.
    *
    * @returns {WindowState}
    *     JSON representation.

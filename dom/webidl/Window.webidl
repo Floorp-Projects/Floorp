@@ -421,7 +421,6 @@ partial interface Window {
    */
   [Throws, ChromeOnly] undefined sizeToContentConstrained(optional SizeToContentConstraints constraints = {});
 
-  // XXX Shouldn't this be in nsIDOMChromeWindow?
   [ChromeOnly, Replaceable, Throws] readonly attribute XULControllers controllers;
 
   [ChromeOnly, Throws] readonly attribute Element? realFrameElement;
@@ -462,7 +461,6 @@ partial interface Window {
 
   [Throws] attribute boolean fullScreen;
 
-  // XXX Should this be in nsIDOMChromeWindow?
   undefined                 updateCommands(DOMString action,
                                            optional Selection? sel = null,
                                            optional short reason = 0);

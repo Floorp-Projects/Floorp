@@ -30,7 +30,6 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsIDragService.h"
-#include "nsIDOMChromeWindow.h"
 #include "nsIPrompt.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScreen.h"
@@ -2299,8 +2298,7 @@ static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
   if (aIsCallerChrome) {
     // Only enable special privileges for chrome when chrome calls
     // open() on a chrome window
-    nsCOMPtr<nsIDOMChromeWindow> chromeWin(do_QueryInterface(aParent));
-    enabled = !aParent || chromeWin;
+    enabled = !aParent || nsGlobalWindowOuter::Cast(aParent)->IsChromeWindow();
   }
 
   const CSSIntCoord extraWidth = sizeChromeWidth ? CSSIntCoord(0) : chromeWidth;
