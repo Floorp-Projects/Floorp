@@ -29,6 +29,7 @@ Please note that some targeting attributes require stricter controls on the tele
 * [hasAccessedFxAPanel](#hasaccessedfxapanel)
 * [hasActiveEnterprisePolicies](#hasactiveenterprisepolicies)
 * [hasMigratedBookmarks](#hasmigratedbookmarks)
+* [hasMigratedCSVPasswords](#hasmigratedcsvpasswords)
 * [hasMigratedHistory](#hasmigratedhistory)
 * [hasMigratedPasswords](#hasmigratedpasswords)
 * [hasPinnedTabs](#haspinnedtabs)
@@ -955,15 +956,19 @@ A string of the name of the container where the Firefox View button is shown, nu
 
 ### `hasMigratedBookmarks`
 
-A boolean. `true` if the user ever used the Migration Wizard to migrate bookmarks.
+A boolean. `true` if the user ever used the Migration Wizard to migrate bookmarks since Firefox 113 released. Available in Firefox 113+; will not be true if the user had only ever migrated bookmarks prior to Firefox 113 being released.
+
+### `hasMigratedCSVPasswords`
+
+A boolean. `true` if CSV passwords have been imported via the migration wizard since Firefox 116 released. Available in Firefox 116+; ; will not be true if the user had only ever migrated CSV passwords prior to Firefox 116 being released.
 
 ### `hasMigratedHistory`
 
-A boolean. `true` if the user ever used the Migration Wizard to migrate history.
+A boolean. `true` if the user ever used the Migration Wizard to migrate history since Firefox 113 released. Available in Firefox 113+; will not be true if the user had only ever migrated history prior to Firefox 113 being released.
 
 ### `hasMigratedPasswords`
 
-A boolean. `true` if the user ever used the Migration Wizard to migrate passwords.
+A boolean. `true` if the user ever used the Migration Wizard to migrate passwords since Firefox 113 released. Available in Firefox 113+; will not be true if the user had only ever migrated passwords prior to Firefox 113 being released.
 
 ### `useEmbeddedMigrationWizard`
 
