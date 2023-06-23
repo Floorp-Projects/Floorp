@@ -28,7 +28,6 @@ async function startTest()
   });
 
   const commands = await createCommandsForTab();
-  const target = commands.targetCommand.targetFront;
   const resourceCommand = commands.resourceCommand;
 
   info("test network GET request");
@@ -47,11 +46,11 @@ async function startTest()
       });
   });
 
-  const webConsoleFront = await target.getFront("console");
+  const { client } = commands;
   const netActor = resource.actor;
 
   info("checking request headers");
-  const requestHeadersPacket = await webConsoleFront.getRequestHeaders(netActor);
+  const requestHeadersPacket = await client.request({ to: netActor, type: "getRequestHeaders" });
   ok(!!requestHeadersPacket.headers.length, `request headers > 0 (${requestHeadersPacket.headers.length})`);
   ok(requestHeadersPacket.headersSize > 0, `request headersSize > 0 (${requestHeadersPacket.headersSize})`);
   ok(!!requestHeadersPacket.rawHeaders, "request rawHeaders available");
@@ -67,7 +66,8 @@ async function startTest()
   });
 
   info("checking request cookies");
-  const requestCookiesPacket = await webConsoleFront.getRequestCookies(netActor);
+
+  const requestCookiesPacket = await client.request({ to: netActor, type: "getRequestCookies" });
   is(requestCookiesPacket.cookies.length, 3, "request cookies length");
 
   checkHeadersOrCookies(requestCookiesPacket.cookies, {
@@ -77,12 +77,12 @@ async function startTest()
   });
 
   info("checking request POST data");
-  const postDataPacket = await webConsoleFront.getRequestPostData(netActor);
+  const postDataPacket = await client.request({ to: netActor, type: "getRequestPostData" });
   ok(!postDataPacket.postData.text, "no request POST data");
   ok(!postDataPacket.postDataDiscarded, "request POST data was not discarded");
 
   info("checking response headers");
-  const responseHeaderPacket = await webConsoleFront.getResponseHeaders(netActor);
+  const responseHeaderPacket = await client.request({ to: netActor, type: "getResponseHeaders" });
 
   ok(!!responseHeaderPacket.headers.length, "response headers > 0");
   ok(responseHeaderPacket.headersSize > 0, "response headersSize > 0");
@@ -99,16 +99,16 @@ async function startTest()
   });
 
   info("checking response cookies");
-  const responseCookiesPacket = await webConsoleFront.getResponseCookies(netActor);
+  const responseCookiesPacket = await client.request({ to: netActor, type: "getResponseCookies" });
   is(responseCookiesPacket.cookies.length, 0, "response cookies length");
 
   info("checking response content");
-  const responseContentPacket = await webConsoleFront.getResponseContent(netActor);
+  const responseContentPacket = await client.request({ to: netActor, type: "getResponseContent" });
   ok(responseContentPacket.content.text, "response content text");
   ok(!responseContentPacket.contentDiscarded, "response content was not discarded");
 
   info("checking event timings");
-  const eventTimingPacket = await webConsoleFront.getEventTimings(netActor);
+  const eventTimingPacket = await client.request({ to: netActor, type: "getEventTimings" });
   checkObject(eventTimingPacket, {
     timings: {
       blocked: /^-1|\d+$/,
