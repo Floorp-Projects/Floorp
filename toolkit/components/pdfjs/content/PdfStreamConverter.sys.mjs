@@ -481,11 +481,8 @@ class ChromeActions {
           break;
       }
     }
-    let result = JSON.stringify(currentPrefs);
-    if (sendResponse) {
-      sendResponse(result);
-    }
-    return result;
+    sendResponse?.(currentPrefs);
+    return currentPrefs;
   }
 
   /**
