@@ -340,7 +340,7 @@ static bool GetNamedTimeZoneEpochNanoseconds(JSContext* cx,
 
   if (formerOffset == latterOffset) {
     auto epochInstant = GetUTCEpochNanoseconds(dateTime) -
-                        Instant::fromMilliseconds(formerOffset);
+                        InstantSpan::fromMilliseconds(formerOffset);
     instants.append(epochInstant);
     return true;
   }
@@ -357,8 +357,8 @@ static bool GetNamedTimeZoneEpochNanoseconds(JSContext* cx,
 
   // Repeated time.
   for (auto offset : {formerOffset, latterOffset}) {
-    auto epochInstant =
-        GetUTCEpochNanoseconds(dateTime) - Instant::fromMilliseconds(offset);
+    auto epochInstant = GetUTCEpochNanoseconds(dateTime) -
+                        InstantSpan::fromMilliseconds(offset);
     instants.append(epochInstant);
   }
 
@@ -1239,7 +1239,8 @@ static bool BuiltinGetPossibleInstantsFor(JSContext* cx,
     auto epochInstant = GetUTCEpochNanoseconds(dateTime);
 
     // Step 4.b.
-    possibleInstants.append(epochInstant - Instant::fromNanoseconds(offsetNs));
+    possibleInstants.append(epochInstant -
+                            InstantSpan::fromNanoseconds(offsetNs));
   } else {
     // Step 5.
     if (!GetNamedTimeZoneEpochNanoseconds(cx, timeZone, dateTime,
@@ -1471,7 +1472,7 @@ Wrapped<InstantObject*> js::temporal::DisambiguatePossibleInstants(
   }
 
   constexpr auto oneDay =
-      Instant::fromNanoseconds(ToNanoseconds(TemporalUnit::Day));
+      InstantSpan::fromNanoseconds(ToNanoseconds(TemporalUnit::Day));
 
   auto* unwrappedDateTime = dateTimeObj.unwrap(cx);
   if (!unwrappedDateTime) {

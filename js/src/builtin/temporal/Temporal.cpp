@@ -766,7 +766,7 @@ bool js::temporal::RoundNumberToIncrement(JSContext* cx, const Instant& x,
                                           int64_t increment,
                                           TemporalRoundingMode roundingMode,
                                           Instant* result) {
-  MOZ_ASSERT(temporal::IsValidInstantDifference(x));
+  MOZ_ASSERT(temporal::IsValidEpochInstant(x));
   MOZ_ASSERT(increment > 0);
   MOZ_ASSERT(increment <= ToNanoseconds(TemporalUnit::Day));
 
@@ -796,7 +796,7 @@ bool js::temporal::RoundNumberToIncrement(JSContext* cx, const Instant& x,
     }
   }
 
-  Rooted<BigInt*> bi(cx, ToEpochDifferenceNanoseconds(cx, x));
+  Rooted<BigInt*> bi(cx, ToEpochNanoseconds(cx, x));
   if (!bi) {
     return false;
   }

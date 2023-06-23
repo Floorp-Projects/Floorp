@@ -16,35 +16,8 @@
 
 namespace js::temporal {
 
-/**
- * Instant represents a time since the epoch value, measured in nanoseconds.
- *
- * Instant supports a range of ±8.64 × 10^21 nanoseconds, covering ±10^8 days
- * in either direction relative to midnight at the beginning of 1 January 1970
- * UTC. The range also exactly matches the supported range of JavaScript Date
- * objects.
- *
- * C++ doesn't provide a built-in type capable of storing an integer in the
- * range ±8.64 × 10^21, therefore we need to create our own abstraction. This
- * struct follows the design of `std::timespec` and splits the instant into a
- * signed seconds part and an unsigned nanoseconds part.
- */
-struct Instant final {
-  // Seconds part in the range [-8'640'000'000'000, +8'640'000'000'000] for
-  // valid epoch instant values.
-  // Seconds part in the range [2 × -8'640'000'000'000, 2 × +8'640'000'000'000]
-  // for valid epoch instant difference values.
-  int64_t seconds = 0;
-
-  // Nanoseconds part in the range [0, 999'999'999].
-  int32_t nanoseconds = 0;
-
-  bool operator==(const Instant& other) const {
-    return seconds == other.seconds && nanoseconds == other.nanoseconds;
-  }
-
-  // Use __builtin_assume when available, otherwise fall back to
-  // __builtin_unreachable.
+// Use __builtin_assume when available, otherwise fall back to
+// __builtin_unreachable.
 #if defined __has_builtin
 #  if __has_builtin(__builtin_assume)
 #    define JS_ASSUME(x) __builtin_assume(x)
@@ -62,6 +35,33 @@ struct Instant final {
     } while (false)
 #endif
 
+struct InstantSpan;
+
+/**
+ * Instant represents a time since the epoch value, measured in nanoseconds.
+ *
+ * Instant supports a range of ±8.64 × 10^21 nanoseconds, covering ±10^8 days
+ * in either direction relative to midnight at the beginning of 1 January 1970
+ * UTC. The range also exactly matches the supported range of JavaScript Date
+ * objects.
+ *
+ * C++ doesn't provide a built-in type capable of storing an integer in the
+ * range ±8.64 × 10^21, therefore we need to create our own abstraction. This
+ * struct follows the design of `std::timespec` and splits the instant into a
+ * signed seconds part and an unsigned nanoseconds part.
+ */
+struct Instant final {
+  // Seconds part in the range [-8'640'000'000'000, +8'640'000'000'000] for
+  // valid epoch instant values.
+  int64_t seconds = 0;
+
+  // Nanoseconds part in the range [0, 999'999'999].
+  int32_t nanoseconds = 0;
+
+  bool operator==(const Instant& other) const {
+    return seconds == other.seconds && nanoseconds == other.nanoseconds;
+  }
+
   bool operator<(const Instant& other) const {
     // The compiler can optimize expressions like |instant < Instant{}| to a
     // single right-shift operation when we propagate the range of nanoseconds.
@@ -71,86 +71,19 @@ struct Instant final {
            (seconds == other.seconds && nanoseconds < other.nanoseconds);
   }
 
-#undef JS_ASSUME
-
   // Other operators are implemented in terms of operator== and operator<.
   bool operator!=(const Instant& other) const { return !(*this == other); }
   bool operator>(const Instant& other) const { return other < *this; }
   bool operator<=(const Instant& other) const { return !(other < *this); }
   bool operator>=(const Instant& other) const { return !(*this < other); }
 
-  Instant& operator+=(const Instant& other) {
-    // The caller needs to make sure integer overflow won't happen. CheckedInt
-    // will assert on overflow and we intentionally don't try to recover from
-    // overflow in this method.
+  inline Instant& operator+=(const InstantSpan& other);
+  inline Instant& operator-=(const InstantSpan& other);
 
-    mozilla::CheckedInt64 secs = seconds;
-    secs += other.seconds;
+  inline Instant operator+(const InstantSpan& other) const;
+  inline Instant operator-(const InstantSpan& other) const;
 
-    mozilla::CheckedInt32 nanos = nanoseconds;
-    nanos += other.nanoseconds;
-
-    if (nanos.value() >= 1'000'000'000) {
-      secs += 1;
-      nanos -= 1'000'000'000;
-    }
-    MOZ_ASSERT(0 <= nanos.value() && nanos.value() < 1'000'000'000);
-
-    seconds = secs.value();
-    nanoseconds = nanos.value();
-    return *this;
-  }
-
-  Instant& operator-=(const Instant& other) {
-    // The caller needs to make sure integer underflow won't happen. CheckedInt
-    // will assert on overflow and we intentionally don't try to recover from
-    // underflow in this method.
-
-    mozilla::CheckedInt64 secs = seconds;
-    secs -= other.seconds;
-
-    mozilla::CheckedInt32 nanos = nanoseconds;
-    nanos -= other.nanoseconds;
-
-    if (nanos.value() < 0) {
-      secs -= 1;
-      nanos += 1'000'000'000;
-    }
-    MOZ_ASSERT(0 <= nanos.value() && nanos.value() < 1'000'000'000);
-
-    seconds = secs.value();
-    nanoseconds = nanos.value();
-    return *this;
-  }
-
-  Instant operator+(const Instant& other) const {
-    auto result = *this;
-    result += other;
-    return result;
-  }
-
-  Instant operator-(const Instant& other) const {
-    auto result = *this;
-    result -= other;
-    return result;
-  }
-
-  /**
-   * Return the absolute value of this instant.
-   */
-  Instant abs() const {
-    int64_t sec = seconds;
-    int32_t nanos = nanoseconds;
-    if (sec < 0) {
-      if (nanos > 0) {
-        sec += 1;
-        nanos -= 1'000'000'000;
-      }
-      sec = -sec;
-      nanos = -nanos;
-    }
-    return {sec, nanos};
-  }
+  inline InstantSpan operator-(const Instant& other) const;
 
   /**
    * Return this instant as seconds from the start of the epoch. (Rounds towards
@@ -197,7 +130,7 @@ struct Instant final {
    * Return this instant as nanoseconds from the start of the epoch.
    *
    * The returned nanoseconds amount can be invalid on overflow. The caller is
-   * responsible to handle the overflow case.
+   * responsible for handling the overflow case.
    */
   mozilla::CheckedInt64 toNanoseconds() const {
     mozilla::CheckedInt64 nanos = seconds;
@@ -274,6 +207,214 @@ struct Instant final {
     return {seconds, nanos};
   }
 };
+
+/**
+ * InstantSpan represents a span of time between two Instants, measured in
+ * nanoseconds.
+ */
+struct InstantSpan final {
+  // Seconds part in the range [2 × -8'640'000'000'000, 2 × +8'640'000'000'000]
+  // for valid epoch instant span values.
+  int64_t seconds = 0;
+
+  // Nanoseconds part in the range [0, 999'999'999].
+  int32_t nanoseconds = 0;
+
+  bool operator==(const InstantSpan& other) const {
+    return seconds == other.seconds && nanoseconds == other.nanoseconds;
+  }
+
+  bool operator<(const InstantSpan& other) const {
+    // The compiler can optimize expressions like |instant < InstantSpan{}| to a
+    // single right-shift operation when we propagate the range of nanoseconds.
+    JS_ASSUME(nanoseconds >= 0);
+    JS_ASSUME(other.nanoseconds >= 0);
+    return (seconds < other.seconds) ||
+           (seconds == other.seconds && nanoseconds < other.nanoseconds);
+  }
+
+  // Other operators are implemented in terms of operator== and operator<.
+  bool operator!=(const InstantSpan& other) const { return !(*this == other); }
+  bool operator>(const InstantSpan& other) const { return other < *this; }
+  bool operator<=(const InstantSpan& other) const { return !(other < *this); }
+  bool operator>=(const InstantSpan& other) const { return !(*this < other); }
+
+  InstantSpan& operator+=(const InstantSpan& other) {
+    // The caller needs to make sure integer overflow won't happen. CheckedInt
+    // will assert on overflow and we intentionally don't try to recover from
+    // overflow in this method.
+
+    mozilla::CheckedInt64 secs = seconds;
+    secs += other.seconds;
+
+    mozilla::CheckedInt32 nanos = nanoseconds;
+    nanos += other.nanoseconds;
+
+    if (nanos.value() >= 1'000'000'000) {
+      secs += 1;
+      nanos -= 1'000'000'000;
+    }
+    MOZ_ASSERT(0 <= nanos.value() && nanos.value() < 1'000'000'000);
+
+    seconds = secs.value();
+    nanoseconds = nanos.value();
+    return *this;
+  }
+
+  InstantSpan& operator-=(const InstantSpan& other) {
+    // The caller needs to make sure integer underflow won't happen. CheckedInt
+    // will assert on underflow and we intentionally don't try to recover from
+    // underflow in this method.
+
+    mozilla::CheckedInt64 secs = seconds;
+    secs -= other.seconds;
+
+    mozilla::CheckedInt32 nanos = nanoseconds;
+    nanos -= other.nanoseconds;
+
+    if (nanos.value() < 0) {
+      secs -= 1;
+      nanos += 1'000'000'000;
+    }
+    MOZ_ASSERT(0 <= nanos.value() && nanos.value() < 1'000'000'000);
+
+    seconds = secs.value();
+    nanoseconds = nanos.value();
+    return *this;
+  }
+
+  InstantSpan operator+(const InstantSpan& other) const {
+    auto result = *this;
+    result += other;
+    return result;
+  }
+
+  InstantSpan operator-(const InstantSpan& other) const {
+    auto result = *this;
+    result -= other;
+    return result;
+  }
+
+  /**
+   * Return the absolute value of this instant span.
+   */
+  InstantSpan abs() const {
+    int64_t sec = seconds;
+    int32_t nanos = nanoseconds;
+    if (sec < 0) {
+      if (nanos > 0) {
+        sec += 1;
+        nanos -= 1'000'000'000;
+      }
+      sec = -sec;
+      nanos = -nanos;
+    }
+    return {sec, nanos};
+  }
+
+  /**
+   * Return this instant span as nanoseconds.
+   *
+   * The returned nanoseconds amount can be invalid on overflow. The caller is
+   * responsible for handling the overflow case.
+   */
+  mozilla::CheckedInt64 toNanoseconds() const {
+    mozilla::CheckedInt64 nanos = seconds;
+    nanos *= ToNanoseconds(TemporalUnit::Second);
+    nanos += nanoseconds;
+    return nanos;
+  }
+
+  /**
+   * Create an instant span from a milliseconds value.
+   */
+  static constexpr InstantSpan fromMilliseconds(int64_t milliseconds) {
+    int64_t seconds = milliseconds / 1'000;
+    int32_t millis = milliseconds % 1'000;
+    if (millis < 0) {
+      seconds -= 1;
+      millis += 1'000;
+    }
+    return {seconds, millis * 1'000'000};
+  }
+
+  /**
+   * Create an instant span from a nanoseconds value.
+   */
+  static constexpr InstantSpan fromNanoseconds(int64_t nanoseconds) {
+    int64_t seconds = nanoseconds / 1'000'000'000;
+    int32_t nanos = nanoseconds % 1'000'000'000;
+    if (nanos < 0) {
+      seconds -= 1;
+      nanos += 1'000'000'000;
+    }
+    return {seconds, nanos};
+  }
+};
+
+Instant& Instant::operator+=(const InstantSpan& other) {
+  // The caller needs to make sure integer overflow won't happen. CheckedInt
+  // will assert on overflow and we intentionally don't try to recover from
+  // overflow in this method.
+
+  mozilla::CheckedInt64 secs = seconds;
+  secs += other.seconds;
+
+  mozilla::CheckedInt32 nanos = nanoseconds;
+  nanos += other.nanoseconds;
+
+  if (nanos.value() >= 1'000'000'000) {
+    secs += 1;
+    nanos -= 1'000'000'000;
+  }
+  MOZ_ASSERT(0 <= nanos.value() && nanos.value() < 1'000'000'000);
+
+  seconds = secs.value();
+  nanoseconds = nanos.value();
+  return *this;
+}
+
+Instant& Instant::operator-=(const InstantSpan& other) {
+  // The caller needs to make sure integer underflow won't happen. CheckedInt
+  // will assert on underflow and we intentionally don't try to recover from
+  // underflow in this method.
+
+  mozilla::CheckedInt64 secs = seconds;
+  secs -= other.seconds;
+
+  mozilla::CheckedInt32 nanos = nanoseconds;
+  nanos -= other.nanoseconds;
+
+  if (nanos.value() < 0) {
+    secs -= 1;
+    nanos += 1'000'000'000;
+  }
+  MOZ_ASSERT(0 <= nanos.value() && nanos.value() < 1'000'000'000);
+
+  seconds = secs.value();
+  nanoseconds = nanos.value();
+  return *this;
+}
+
+Instant Instant::operator+(const InstantSpan& other) const {
+  auto result = *this;
+  result += other;
+  return result;
+}
+
+Instant Instant::operator-(const InstantSpan& other) const {
+  auto result = *this;
+  result -= other;
+  return result;
+}
+
+InstantSpan Instant::operator-(const Instant& other) const {
+  InstantSpan result{seconds, nanoseconds};
+  result -= InstantSpan{other.seconds, other.nanoseconds};
+  return result;
+}
+
+#undef JS_ASSUME
 
 /**
  * Plain date represents a date in the ISO 8601 calendar.

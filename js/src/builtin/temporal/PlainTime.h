@@ -200,7 +200,7 @@ RoundedTime RoundTime(const PlainTime& time, Increment increment,
  */
 RoundedTime RoundTime(const PlainTime& time, Increment increment,
                       TemporalUnit unit, TemporalRoundingMode roundingMode,
-                      const Instant& dayLengthNs);
+                      const InstantSpan& dayLengthNs);
 
 } /* namespace js::temporal */
 
