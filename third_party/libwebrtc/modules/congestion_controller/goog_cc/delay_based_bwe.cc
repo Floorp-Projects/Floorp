@@ -59,7 +59,8 @@ DelayBasedBwe::Result::Result()
     : updated(false),
       probe(false),
       target_bitrate(DataRate::Zero()),
-      recovered_from_overuse(false) {}
+      recovered_from_overuse(false),
+      delay_detector_state(BandwidthUsage::kBwNormal) {}
 
 DelayBasedBwe::DelayBasedBwe(const FieldTrialsView* key_value_config,
                              RtcEventLog* event_log,
