@@ -9,7 +9,6 @@
 
 #include "DocAccessible.h"
 #include "nsAccessibilityService.h"
-#include "nsAccessiblePivot.h"
 #include "NotificationController.h"
 #include "States.h"
 #include "nsIScrollableFrame.h"
@@ -32,14 +31,6 @@ inline LocalAccessible* DocAccessible::AccessibleOrTrueContainer(
     return container->LocalFirstChild();
   }
   return container;
-}
-
-inline nsIAccessiblePivot* DocAccessible::VirtualCursor() {
-  if (!mVirtualCursor) {
-    mVirtualCursor = new nsAccessiblePivot(this);
-    mVirtualCursor->AddObserver(this);
-  }
-  return mVirtualCursor;
 }
 
 inline bool DocAccessible::IsContentLoaded() const {
