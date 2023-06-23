@@ -82,15 +82,17 @@ namespace net {
 class nsSocketEvent : public Runnable {
  public:
   nsSocketEvent(nsSocketTransport* transport, uint32_t type,
-                nsresult status = NS_OK, nsISupports* param = nullptr)
+                nsresult status = NS_OK, nsISupports* param = nullptr,
+                std::function<void()>&& task = nullptr)
       : Runnable("net::nsSocketEvent"),
         mTransport(transport),
         mType(type),
         mStatus(status),
-        mParam(param) {}
+        mParam(param),
+        mTask(std::move(task)) {}
 
   NS_IMETHOD Run() override {
-    mTransport->OnSocketEvent(mType, mStatus, mParam);
+    mTransport->OnSocketEvent(mType, mStatus, mParam, std::move(mTask));
     return NS_OK;
   }
 
@@ -100,6 +102,7 @@ class nsSocketEvent : public Runnable {
   uint32_t mType;
   nsresult mStatus;
   nsCOMPtr<nsISupports> mParam;
+  std::function<void()> mTask;
 };
 
 //-----------------------------------------------------------------------------
@@ -898,12 +901,14 @@ nsresult nsSocketTransport::InitWithConnectedSocket(
 }
 
 nsresult nsSocketTransport::PostEvent(uint32_t type, nsresult status,
-                                      nsISupports* param) {
+                                      nsISupports* param,
+                                      std::function<void()>&& task) {
   SOCKET_LOG(("nsSocketTransport::PostEvent [this=%p type=%u status=%" PRIx32
               " param=%p]\n",
               this, type, static_cast<uint32_t>(status), param));
 
-  nsCOMPtr<nsIRunnable> event = new nsSocketEvent(this, type, status, param);
+  nsCOMPtr<nsIRunnable> event =
+      new nsSocketEvent(this, type, status, param, std::move(task));
   if (!event) return NS_ERROR_OUT_OF_MEMORY;
 
   return mSocketTransportService->Dispatch(event, NS_DISPATCH_NORMAL);
@@ -1944,7 +1949,8 @@ void nsSocketTransport::ReleaseFD_Locked(PRFileDesc* fd) {
 // socket event handler impl
 
 void nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status,
-                                      nsISupports* param) {
+                                      nsISupports* param,
+                                      std::function<void()>&& task) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   SOCKET_LOG(
       ("nsSocketTransport::OnSocketEvent [this=%p type=%u status=%" PRIx32
@@ -1966,6 +1972,9 @@ void nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status,
   switch (type) {
     case MSG_ENSURE_CONNECT:
       SOCKET_LOG(("  MSG_ENSURE_CONNECT\n"));
+      if (task) {
+        task();
+      }
 
       // Apply port remapping here so that we do it on the socket thread and
       // before we process the resolved DNS name or create the socket the first
@@ -2243,6 +2252,12 @@ void nsSocketTransport::OnSocketDetached(PRFileDesc* fd) {
     //
     mInput.OnSocketReady(mCondition);
     mOutput.OnSocketReady(mCondition);
+    if (mInputCopyContext) {
+      NS_CancelAsyncCopy(mInputCopyContext, mCondition);
+    }
+    if (mOutputCopyContext) {
+      NS_CancelAsyncCopy(mOutputCopyContext, mCondition);
+    }
   }
 
   if (mCondition == NS_ERROR_NET_RESET && mDNSRecord &&
@@ -2319,6 +2334,7 @@ nsSocketTransport::OpenInputStream(uint32_t flags, uint32_t segsize,
   nsresult rv;
   nsCOMPtr<nsIAsyncInputStream> pipeIn;
   nsCOMPtr<nsIInputStream> result;
+  nsCOMPtr<nsISupports> inputCopyContext;
 
   if (!(flags & OPEN_UNBUFFERED) || (flags & OPEN_BLOCKING)) {
     // XXX if the caller wants blocking, then the caller also gets buffered!
@@ -2334,7 +2350,8 @@ nsSocketTransport::OpenInputStream(uint32_t flags, uint32_t segsize,
 
     // async copy from socket to pipe
     rv = NS_AsyncCopy(&mInput, pipeOut, mSocketTransportService,
-                      NS_ASYNCCOPY_VIA_WRITESEGMENTS, segsize);
+                      NS_ASYNCCOPY_VIA_WRITESEGMENTS, segsize, nullptr, nullptr,
+                      true, true, getter_AddRefs(inputCopyContext));
     if (NS_FAILED(rv)) return rv;
 
     result = pipeIn;
@@ -2344,8 +2361,12 @@ nsSocketTransport::OpenInputStream(uint32_t flags, uint32_t segsize,
 
   // flag input stream as open
   mInputClosed = false;
-
-  rv = PostEvent(MSG_ENSURE_CONNECT);
+  // mInputCopyContext can be only touched on socket thread
+  auto task = [self = RefPtr{this}, inputCopyContext(inputCopyContext)]() {
+    MOZ_ASSERT(OnSocketThread());
+    self->mInputCopyContext = inputCopyContext;
+  };
+  rv = PostEvent(MSG_ENSURE_CONNECT, NS_OK, nullptr, std::move(task));
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2366,6 +2387,7 @@ nsSocketTransport::OpenOutputStream(uint32_t flags, uint32_t segsize,
   nsresult rv;
   nsCOMPtr<nsIAsyncOutputStream> pipeOut;
   nsCOMPtr<nsIOutputStream> result;
+  nsCOMPtr<nsISupports> outputCopyContext;
   if (!(flags & OPEN_UNBUFFERED) || (flags & OPEN_BLOCKING)) {
     // XXX if the caller wants blocking, then the caller also gets buffered!
     // bool openBuffered = !(flags & OPEN_UNBUFFERED);
@@ -2380,7 +2402,8 @@ nsSocketTransport::OpenOutputStream(uint32_t flags, uint32_t segsize,
 
     // async copy from socket to pipe
     rv = NS_AsyncCopy(pipeIn, &mOutput, mSocketTransportService,
-                      NS_ASYNCCOPY_VIA_READSEGMENTS, segsize);
+                      NS_ASYNCCOPY_VIA_READSEGMENTS, segsize, nullptr, nullptr,
+                      true, true, getter_AddRefs(outputCopyContext));
     if (NS_FAILED(rv)) return rv;
 
     result = pipeOut;
@@ -2391,7 +2414,12 @@ nsSocketTransport::OpenOutputStream(uint32_t flags, uint32_t segsize,
   // flag output stream as open
   mOutputClosed = false;
 
-  rv = PostEvent(MSG_ENSURE_CONNECT);
+  // mOutputCopyContext can be only touched on socket thread
+  auto task = [self = RefPtr{this}, outputCopyContext(outputCopyContext)]() {
+    MOZ_ASSERT(OnSocketThread());
+    self->mOutputCopyContext = outputCopyContext;
+  };
+  rv = PostEvent(MSG_ENSURE_CONNECT, NS_OK, nullptr, std::move(task));
   if (NS_FAILED(rv)) return rv;
 
   result.forget(aResult);
