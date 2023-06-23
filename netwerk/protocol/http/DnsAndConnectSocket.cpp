@@ -417,8 +417,10 @@ DnsAndConnectSocket::GetName(nsACString& aName) {
 NS_IMETHODIMP
 DnsAndConnectSocket::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
                                       nsresult status) {
-  LOG(("DnsAndConnectSocket::OnLookupComplete: this=%p status %" PRIx32 ".",
-       this, static_cast<uint32_t>(status)));
+  LOG((
+      "DnsAndConnectSocket::OnLookupComplete: this=%p mState=%d status %" PRIx32
+      ".",
+      this, mState, static_cast<uint32_t>(status)));
 
   if (nsCOMPtr<nsIDNSAddrRecord> addrRecord = do_QueryInterface((rec))) {
     nsIRequest::TRRMode effectivemode = nsIRequest::TRR_DEFAULT_MODE;
@@ -465,6 +467,13 @@ DnsAndConnectSocket::OnLookupComplete(nsICancelable* request, nsIDNSRecord* rec,
   }
 
   if (NS_FAILED(rv) || mIsHttp3) {
+    // If we are retrying DNS, we should not setup the connection.
+    if (mIsHttp3 && mPrimaryTransport.mState ==
+                        TransportSetup::TransportSetupState::RETRY_RESOLVING) {
+      LOG(("Retry DNS for Http3"));
+      return NS_OK;
+    }
+
     // Before calling SetupConn we need to hold reference to this, i.e. a
     // delete protector, because the corresponding ConnectionEntry may be
     // abandoned and that will abandon this DnsAndConnectSocket.

@@ -1147,6 +1147,11 @@ nsUDPSocket::SendWithAddress(const NetAddr* aAddr,
   NS_ENSURE_ARG(aAddr);
   NS_ENSURE_ARG_POINTER(_retval);
 
+  if (StaticPrefs::network_http_http3_block_loopback_ipv6_addr() &&
+      aAddr->raw.family == AF_INET6 && aAddr->IsLoopbackAddr()) {
+    return NS_ERROR_CONNECTION_REFUSED;
+  }
+
   *_retval = 0;
 
   PRNetAddr prAddr;
