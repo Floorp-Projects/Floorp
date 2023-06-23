@@ -122,6 +122,9 @@
       // repurposed table for tabbed UI
       isLayoutTable("table23");
 
+      // data table that has a nested table but has non-zero border width on a cell
+      isDataTable("table24");
+
       // layout display:block table with 1 column
       isLayoutTable("displayblock_table1");
 
@@ -520,6 +523,16 @@
     </tr>
     <tr>
       <td role="tabpanel" colspan="2">Hello</td>
+    </tr>
+  </table>
+
+  <table id="table24">
+    <tr></tr>
+    <tr>
+      <td style="width: 1px;"></td>
+      <td>
+        <table></table>
+      </td>
     </tr>
   </table>
 
