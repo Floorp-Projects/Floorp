@@ -66,7 +66,11 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {
   [[deprecated("https://crbug.com/1414370")]] virtual std::vector<uint8_t>
   GetAdditionalData() const = 0;
 
+  // The returned const ref may become invalid due to later SetMetadata calls,
+  // or other modifications. Use Metadata() instead.
   virtual const VideoFrameMetadata& GetMetadata() const = 0;
+  virtual VideoFrameMetadata Metadata() const = 0;
+
   // TODO(https://crbug.com/webrtc/14709): Make pure virtual when Chromium MOCK
   // has implemented this.
   virtual void SetMetadata(const VideoFrameMetadata&) {}

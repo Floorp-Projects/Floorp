@@ -56,6 +56,9 @@ class TransformableVideoReceiverFrame
   }
 
   const VideoFrameMetadata& GetMetadata() const override { return metadata_; }
+
+  VideoFrameMetadata Metadata() const override { return metadata_; }
+
   void SetMetadata(const VideoFrameMetadata&) override {
     RTC_DCHECK_NOTREACHED()
         << "TransformableVideoReceiverFrame::SetMetadata is not implemented";
