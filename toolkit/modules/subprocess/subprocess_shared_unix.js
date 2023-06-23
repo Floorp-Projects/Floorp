@@ -5,6 +5,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+if (typeof Components !== "undefined") {
+  /* global OS */
+  Cc["@mozilla.org/net/osfileconstantsservice;1"]
+    .getService(Ci.nsIOSFileConstantsService)
+    .init();
+}
+
 /* exported LIBC, libc */
 
 // ctypes is either already available in the chrome worker scope, or defined
@@ -14,7 +21,7 @@
 // This file is loaded into the same scope as subprocess_shared.js.
 /* import-globals-from subprocess_shared.js */
 
-var LIBC = ChromeUtils.getLibcConstants();
+var LIBC = OS.Constants.libc;
 
 const LIBC_CHOICES = ["libc.so", "libSystem.B.dylib", "a.out"];
 

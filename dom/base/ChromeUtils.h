@@ -226,10 +226,6 @@ class ChromeUtils {
                                     JS::Handle<JSObject*> modules,
                                     ErrorResult& aRv);
 
-#ifdef XP_UNIX
-  static void GetLibcConstants(const GlobalObject&, LibcConstants& aConsts);
-#endif
-
   static void GetCallerLocation(const GlobalObject& global,
                                 nsIPrincipal* principal,
                                 JS::MutableHandle<JSObject*> aRetval);
