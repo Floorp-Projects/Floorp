@@ -658,9 +658,15 @@ class nsFlexContainerFrame final : public nsContainerFrame,
   nscoord mCachedMinISize = NS_INTRINSIC_ISIZE_UNKNOWN;
   nscoord mCachedPrefISize = NS_INTRINSIC_ISIZE_UNKNOWN;
 
-  nscoord mBaselineFromLastReflow = NS_INTRINSIC_ISIZE_UNKNOWN;
-  // Note: the last baseline is a distance from our border-box end edge.
-  nscoord mLastBaselineFromLastReflow = NS_INTRINSIC_ISIZE_UNKNOWN;
+  /**
+   * Cached baselines computed in our last reflow to optimize
+   * GetNaturalBaselineBOffset().
+   */
+  // Note: the first baseline is a distance from our border-box block-start
+  // edge.
+  nscoord mFirstBaseline = NS_INTRINSIC_ISIZE_UNKNOWN;
+  // Note: the last baseline is a distance from our border-box block-end edge.
+  nscoord mLastBaseline = NS_INTRINSIC_ISIZE_UNKNOWN;
 };
 
 #endif /* nsFlexContainerFrame_h___ */

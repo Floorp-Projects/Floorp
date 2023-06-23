@@ -4738,9 +4738,8 @@ Maybe<nscoord> nsFlexContainerFrame::GetNaturalBaselineBOffset(
       HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
     return Nothing{};
   }
-  return Some(aBaselineGroup == BaselineSharingGroup::First
-                  ? mBaselineFromLastReflow
-                  : mLastBaselineFromLastReflow);
+  return Some(aBaselineGroup == BaselineSharingGroup::First ? mFirstBaseline
+                                                            : mLastBaseline);
 }
 
 void nsFlexContainerFrame::UnionInFlowChildOverflow(
@@ -5837,8 +5836,8 @@ void nsFlexContainerFrame::PopulateReflowOutput(
   }
 
   // Cache the container baselines so that our parent can baseline-align us.
-  mBaselineFromLastReflow = aFlr.mAscent;
-  mLastBaselineFromLastReflow = aFlr.mAscentForLast;
+  mFirstBaseline = aFlr.mAscent;
+  mLastBaseline = aFlr.mAscentForLast;
 
   // Convert flex container's final desired size to parent's WM, for outparam.
   aReflowOutput.SetSize(flexWM, desiredSizeInFlexWM);
