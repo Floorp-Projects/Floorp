@@ -4059,6 +4059,11 @@
   value: 5
   mirror: always
 
+- name: dom.storage_access.frame_only
+  type: bool
+  value: false
+  mirror: always
+
 # Whether the Storage API is enabled.
 - name: dom.storageManager.enabled
   type: RelaxedAtomicBool

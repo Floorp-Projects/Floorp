@@ -478,10 +478,11 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
 
     if (XRE_IsParentProcess()) {
       LOG(("Saving the permission: trackingOrigin=%s", trackingOrigin.get()));
+      bool frameOnly = StaticPrefs::dom_storage_access_frame_only() &&
+                       aReason == ContentBlockingNotifier::eStorageAccessAPI;
       return SaveAccessForOriginOnParentProcess(
                  aTopLevelWindowId, aParentContext, trackingPrincipal,
-                 aAllowMode,
-                 aReason == ContentBlockingNotifier::eStorageAccessAPI)
+                 aAllowMode, frameOnly)
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
               [aReason, trackingPrincipal](
@@ -513,11 +514,12 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
 
     // This is not really secure, because here we have the content process
     // sending the request of storing a permission.
+    bool frameOnly = StaticPrefs::dom_storage_access_frame_only() &&
+                     aReason == ContentBlockingNotifier::eStorageAccessAPI;
     return cc
         ->SendStorageAccessPermissionGrantedForOrigin(
             aTopLevelWindowId, aParentContext, trackingPrincipal,
-            trackingOrigin, aAllowMode, reportReason,
-            aReason == ContentBlockingNotifier::eStorageAccessAPI)
+            trackingOrigin, aAllowMode, reportReason, frameOnly)
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [aReason, trackingPrincipal](
