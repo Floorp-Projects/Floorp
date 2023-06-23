@@ -89,11 +89,6 @@ if (AppConstants.MOZ_BACKGROUNDTASKS) {
   gExceptionPaths.push("resource://app/modules/backgroundtasks/");
 }
 
-// Bug 1710546 https://bugzilla.mozilla.org/show_bug.cgi?id=1710546
-if (AppConstants.NIGHTLY_BUILD) {
-  gExceptionPaths.push("resource://builtin-addons/translations/");
-}
-
 // Temporary allowlist for shopping - we'll reference this soon.
 if (AppConstants.NIGHTLY_BUILD) {
   gExceptionPaths.push("chrome://browser/content/shopping/shopping.html");
@@ -211,11 +206,6 @@ var whitelist = [
   // Files from upstream library
   { file: "resource://pdf.js/web/debugger.js" },
   { file: "resource://pdf.js/web/debugger.css" },
-
-  // resource://app/modules/translation/TranslationContentHandler.jsm
-  { file: "resource://app/modules/translation/BingTranslator.jsm" },
-  { file: "resource://app/modules/translation/GoogleTranslator.jsm" },
-  { file: "resource://app/modules/translation/YandexTranslator.jsm" },
 
   // Starting from here, files in the whitelist are bugs that need fixing.
   // Bug 1339424 (wontfix?)

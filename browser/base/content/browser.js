@@ -99,7 +99,6 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   CFRPageActions: "resource://activity-stream/lib/CFRPageActions.jsm",
-  Translation: "resource:///modules/translation/TranslationParent.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "fxAccounts", () => {

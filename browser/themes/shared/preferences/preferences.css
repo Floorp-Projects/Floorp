@@ -312,11 +312,6 @@ checkbox {
   margin: 4px 0;
 }
 
-#translationAttributionImage {
-  width: 70px;
-  cursor: pointer;
-}
-
 #activeLanguages > richlistitem {
   padding: 0.3em;
 }

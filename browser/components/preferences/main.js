@@ -98,7 +98,6 @@ Preferences.addAll([
   { id: "font.language.group", type: "wstring" },
 
   // Languages
-  { id: "browser.translation.detectLanguage", type: "bool" },
   { id: "intl.regional_prefs.use_os_locales", type: "bool" },
 
   // General tab
@@ -439,17 +438,6 @@ var gMainPane = {
       makeDisableControllingExtension(PREF_SETTING_TYPE, CONTAINERS_KEY)
     );
     setEventListener("chooseLanguage", "command", gMainPane.showLanguages);
-    setEventListener(
-      "translationAttributionImage",
-      "click",
-      gMainPane.openTranslationProviderAttribution
-    );
-    // TODO (Bug 1817084) Remove this code when we disable the extension
-    setEventListener(
-      "translateButton",
-      "command",
-      gMainPane.showTranslationExceptions
-    );
     // TODO (Bug 1817084) Remove this code when we disable the extension
     setEventListener(
       "fxtranslateButton",
@@ -512,20 +500,6 @@ var gMainPane = {
     this._rebuildFonts();
 
     this.updateOnScreenKeyboardVisibility();
-
-    // Show translation preferences if we may:
-    const translationsPrefName = "browser.translation.ui.show";
-    if (Services.prefs.getBoolPref(translationsPrefName)) {
-      let row = document.getElementById("translationBox");
-      row.removeAttribute("hidden");
-      // Showing attribution only for Bing Translator.
-      var { Translation } = ChromeUtils.import(
-        "resource:///modules/translation/TranslationParent.jsm"
-      );
-      if (Translation.translationEngine == "Bing") {
-        document.getElementById("bingAttribution").removeAttribute("hidden");
-      }
-    }
 
     // Firefox Translations settings panel
     // TODO (Bug 1817084) Remove this code when we disable the extension
@@ -749,14 +723,6 @@ var gMainPane = {
     Preferences.addSyncFromPrefListener(
       document.getElementById("defaultFont"),
       element => FontBuilder.readFontSelection(element)
-    );
-    Preferences.addSyncFromPrefListener(
-      document.getElementById("translate"),
-      () =>
-        this.updateButtons(
-          "translateButton",
-          "browser.translation.detectLanguage"
-        )
     );
     Preferences.addSyncFromPrefListener(
       document.getElementById("checkSpelling"),
@@ -1930,13 +1896,6 @@ var gMainPane = {
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/translations.xhtml"
     );
-  },
-
-  openTranslationProviderAttribution() {
-    var { Translation } = ChromeUtils.import(
-      "resource:///modules/translation/TranslationParent.jsm"
-    );
-    Translation.openProviderAttribution();
   },
 
   /**
