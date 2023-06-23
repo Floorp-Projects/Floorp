@@ -70,14 +70,14 @@ bool IsValidEpochNanoseconds(const JS::BigInt* epochNanoseconds);
 bool IsValidEpochInstant(const Instant& instant);
 
 /**
- * Return true if the input is within the valid instant difference limits.
+ * Return true if the input is within the valid instant span limits.
  */
-bool IsValidInstantDifference(const Instant& ns);
+bool IsValidInstantSpan(const InstantSpan& span);
 
 /**
- * Return true if the input is within the valid instant difference limits.
+ * Return true if the input is within the valid instant span limits.
  */
-bool IsValidInstantDifference(const JS::BigInt* ns);
+bool IsValidInstantSpan(const JS::BigInt* nanoseconds);
 
 /**
  * Convert a BigInt to an instant. The input must be a valid epoch nanoseconds
@@ -86,10 +86,10 @@ bool IsValidInstantDifference(const JS::BigInt* ns);
 Instant ToInstant(const JS::BigInt* epochNanoseconds);
 
 /**
- * Convert a BigInt to an instant difference. The input must be a valid epoch
- * nanoseconds difference value.
+ * Convert a BigInt to an instant span. The input must be a valid epoch
+ * nanoseconds span value.
  */
-Instant ToInstantDifference(const JS::BigInt* epochNanoseconds);
+InstantSpan ToInstantSpan(const JS::BigInt* nanoseconds);
 
 /**
  * Convert an instant to a BigInt. The input must be a valid epoch instant.
@@ -97,10 +97,9 @@ Instant ToInstantDifference(const JS::BigInt* epochNanoseconds);
 JS::BigInt* ToEpochNanoseconds(JSContext* cx, const Instant& instant);
 
 /**
- * Convert an instant difference to a BigInt. The input must be a valid epoch
- * instant difference.
+ * Convert an instant span to a BigInt. The input must be a valid instant span.
  */
-JS::BigInt* ToEpochDifferenceNanoseconds(JSContext* cx, const Instant& instant);
+JS::BigInt* ToEpochNanoseconds(JSContext* cx, const InstantSpan& instant);
 
 /**
  * ToTemporalInstant ( item )

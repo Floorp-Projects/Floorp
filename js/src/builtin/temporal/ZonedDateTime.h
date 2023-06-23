@@ -94,8 +94,8 @@ bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
 struct NanosecondsAndDays final {
   JS::BigInt* days = nullptr;
   int64_t daysInt = 0;
-  Instant nanoseconds;
-  Instant dayLength;
+  InstantSpan nanoseconds;
+  InstantSpan dayLength;
 
   double daysNumber() const;
 
@@ -105,7 +105,7 @@ struct NanosecondsAndDays final {
 /**
  * NanosecondsToDays ( nanoseconds, relativeTo )
  */
-bool NanosecondsToDays(JSContext* cx, const Instant& nanoseconds,
+bool NanosecondsToDays(JSContext* cx, const InstantSpan& nanoseconds,
                        JS::Handle<Wrapped<ZonedDateTimeObject*>> relativeTo,
                        JS::MutableHandle<NanosecondsAndDays> result);
 
@@ -145,9 +145,9 @@ class WrappedPtrOperations<temporal::NanosecondsAndDays, Wrapper> {
 
   int64_t daysInt() const { return object().daysInt; }
 
-  temporal::Instant nanoseconds() const { return object().nanoseconds; }
+  temporal::InstantSpan nanoseconds() const { return object().nanoseconds; }
 
-  temporal::Instant dayLength() const { return object().dayLength; }
+  temporal::InstantSpan dayLength() const { return object().dayLength; }
 };
 
 template <typename Wrapper>
@@ -156,15 +156,15 @@ class MutableWrappedPtrOperations<temporal::NanosecondsAndDays, Wrapper>
   auto& object() { return static_cast<Wrapper*>(this)->get(); }
 
  public:
-  void initialize(int64_t days, const temporal::Instant& nanoseconds,
-                  const temporal::Instant& dayLength) {
+  void initialize(int64_t days, const temporal::InstantSpan& nanoseconds,
+                  const temporal::InstantSpan& dayLength) {
     object().daysInt = days;
     object().nanoseconds = nanoseconds;
     object().dayLength = dayLength;
   }
 
-  void initialize(JS::BigInt* days, const temporal::Instant& nanoseconds,
-                  const temporal::Instant& dayLength) {
+  void initialize(JS::BigInt* days, const temporal::InstantSpan& nanoseconds,
+                  const temporal::InstantSpan& dayLength) {
     object().days = days;
     object().nanoseconds = nanoseconds;
     object().dayLength = dayLength;

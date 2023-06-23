@@ -173,7 +173,7 @@ bool js::temporal::IsValidEpochInstant(const Instant& instant) {
   return instant.seconds == SecondsMaxInstant && instant.nanoseconds == 0;
 }
 
-static constexpr auto NanosecondsMaxInstantDifference() {
+static constexpr auto NanosecondsMaxInstantSpan() {
   static_assert(BigInt::DigitBits == 64 || BigInt::DigitBits == 32);
 
   // ±8.64 × 10^21 is the nanoseconds from epoch limit.
@@ -199,21 +199,21 @@ static constexpr auto NanosecondsMaxInstantDifference() {
  *
  * Useful when we want to ensure a BigInt doesn't exceed a certain limit.
  */
-bool js::temporal::IsValidInstantDifference(const BigInt* ns) {
-  static constexpr auto differenceLimit = NanosecondsMaxInstantDifference();
-  return AbsoluteValueIsLessOrEqual<differenceLimit>(ns);
+bool js::temporal::IsValidInstantSpan(const BigInt* nanoseconds) {
+  static constexpr auto spanLimit = NanosecondsMaxInstantSpan();
+  return AbsoluteValueIsLessOrEqual<spanLimit>(nanoseconds);
 }
 
-bool js::temporal::IsValidInstantDifference(const Instant& instant) {
-  MOZ_ASSERT(0 <= instant.nanoseconds && instant.nanoseconds <= 999'999'999);
+bool js::temporal::IsValidInstantSpan(const InstantSpan& span) {
+  MOZ_ASSERT(0 <= span.nanoseconds && span.nanoseconds <= 999'999'999);
 
-  constexpr int64_t differenceLimit = SecondsMaxInstant * 2;
+  constexpr int64_t spanLimit = SecondsMaxInstant * 2;
 
   // Steps 1-3.
-  if (instant.seconds < differenceLimit) {
-    return instant.seconds >= -differenceLimit;
+  if (span.seconds < spanLimit) {
+    return span.seconds >= -spanLimit;
   }
-  return instant.seconds == differenceLimit && instant.nanoseconds == 0;
+  return span.seconds == spanLimit && span.nanoseconds == 0;
 }
 
 /**
@@ -289,6 +289,12 @@ static Instant ToInstant(std::array<uint32_t, 3> digits, bool isNegative) {
   return {seconds, int32_t(remainder)};
 }
 
+static InstantSpan ToInstantSpan(std::array<uint32_t, 3> digits,
+                                 bool isNegative) {
+  auto instant = ToInstant(digits, isNegative);
+  return InstantSpan{instant.seconds, instant.nanoseconds};
+}
+
 Instant js::temporal::ToInstant(const BigInt* epochNanoseconds) {
   MOZ_ASSERT(IsValidEpochNanoseconds(epochNanoseconds));
 
@@ -296,11 +302,11 @@ Instant js::temporal::ToInstant(const BigInt* epochNanoseconds) {
   return ::ToInstant(digits, epochNanoseconds->isNegative());
 }
 
-Instant js::temporal::ToInstantDifference(const BigInt* epochNanoseconds) {
-  MOZ_ASSERT(IsValidInstantDifference(epochNanoseconds));
+InstantSpan js::temporal::ToInstantSpan(const BigInt* nanoseconds) {
+  MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
-  auto digits = BigIntDigits(epochNanoseconds);
-  return ::ToInstant(digits, epochNanoseconds->isNegative());
+  auto digits = BigIntDigits(nanoseconds);
+  return ::ToInstantSpan(digits, nanoseconds->isNegative());
 }
 
 static BigInt* CreateBigInt(JSContext* cx,
@@ -337,8 +343,8 @@ static BigInt* CreateBigInt(JSContext* cx,
   }
 }
 
-static BigInt* ToEpochBigInt(JSContext* cx, const Instant& instant) {
-  MOZ_ASSERT(IsValidInstantDifference(instant));
+static BigInt* ToEpochBigInt(JSContext* cx, const InstantSpan& instant) {
+  MOZ_ASSERT(IsValidInstantSpan(instant));
 
   // Multiplies two uint32_t values and returns the lower 32-bits. The higher
   // 32-bits are stored in |high|.
@@ -405,33 +411,33 @@ static BigInt* ToEpochBigInt(JSContext* cx, const Instant& instant) {
 BigInt* js::temporal::ToEpochNanoseconds(JSContext* cx,
                                          const Instant& instant) {
   MOZ_ASSERT(IsValidEpochInstant(instant));
-  return ::ToEpochBigInt(cx, instant);
+  return ::ToEpochBigInt(cx, InstantSpan{instant.seconds, instant.nanoseconds});
 }
 
-BigInt* js::temporal::ToEpochDifferenceNanoseconds(JSContext* cx,
-                                                   const Instant& instant) {
-  MOZ_ASSERT(IsValidInstantDifference(instant));
+BigInt* js::temporal::ToEpochNanoseconds(JSContext* cx,
+                                         const InstantSpan& instant) {
+  MOZ_ASSERT(IsValidInstantSpan(instant));
   return ::ToEpochBigInt(cx, instant);
 }
 
 /**
  * Return an Instant for the input nanoseconds if the input is less-or-equal to
- * the maximum instant difference. Otherwise returns nothing.
+ * the maximum instant span. Otherwise returns nothing.
  */
-static mozilla::Maybe<Instant> NanosecondsToInstantDifference(
+static mozilla::Maybe<InstantSpan> NanosecondsToInstantSpan(
     double nanoseconds) {
   MOZ_ASSERT(IsInteger(nanoseconds));
 
-  constexpr int64_t differenceLimit = SecondsMaxInstant * 2;
+  constexpr int64_t spanLimit = SecondsMaxInstant * 2;
   constexpr int64_t secToNanos = ToNanoseconds(TemporalUnit::Second);
 
   // Fast path for the common case.
   if (nanoseconds == 0) {
-    return mozilla::Some(Instant{});
+    return mozilla::Some(InstantSpan{});
   }
 
-  // Reject if the value is larger than the maximum instant difference.
-  if (std::abs(nanoseconds) > double(differenceLimit) * double(secToNanos)) {
+  // Reject if the value is larger than the maximum instant span.
+  if (std::abs(nanoseconds) > double(spanLimit) * double(secToNanos)) {
     return mozilla::Nothing();
   }
 
@@ -440,12 +446,12 @@ static mozilla::Maybe<Instant> NanosecondsToInstantDifference(
   constexpr size_t DigitBits = 32;
 
   // The number can't have more than three digits when it's below the maximum
-  // instant difference.
+  // instant span.
   std::array<uint32_t, 3> digits = {};
 
   int exponent = mozilla::ExponentComponent(nanoseconds);
   MOZ_ASSERT(0 <= exponent && exponent <= 73,
-             "exponent can't exceed exponent of maximum instant difference");
+             "exponent can't exceed exponent of maximum instant span");
 
   int length = exponent / DigitBits + 1;
   MOZ_ASSERT(1 <= length && length <= 3);
@@ -476,38 +482,37 @@ static mozilla::Maybe<Instant> NanosecondsToInstantDifference(
     }
   }
 
-  auto result = ToInstant(digits, nanoseconds < 0);
-  MOZ_ASSERT(IsValidInstantDifference(result));
+  auto result = ToInstantSpan(digits, nanoseconds < 0);
+  MOZ_ASSERT(IsValidInstantSpan(result));
   return mozilla::Some(result);
 }
 
 /**
  * Return an Instant for the input microseconds if the input is less-or-equal to
- * the maximum instant difference. Otherwise returns nothing.
+ * the maximum instant span. Otherwise returns nothing.
  */
-static mozilla::Maybe<Instant> MicrosecondsToInstantDifference(
+static mozilla::Maybe<InstantSpan> MicrosecondsToInstantSpan(
     double microseconds) {
   MOZ_ASSERT(IsInteger(microseconds));
 
-  constexpr int64_t differenceLimit = SecondsMaxInstant * 2;
+  constexpr int64_t spanLimit = SecondsMaxInstant * 2;
   constexpr int64_t secToMicros = ToNanoseconds(TemporalUnit::Second) /
                                   ToNanoseconds(TemporalUnit::Microsecond);
   constexpr int32_t microToNanos = ToNanoseconds(TemporalUnit::Microsecond);
 
   // Fast path for the common case.
   if (microseconds == 0) {
-    return mozilla::Some(Instant{});
+    return mozilla::Some(InstantSpan{});
   }
 
-  // Reject if the value is larger than the maximum instant difference.
-  if (std::abs(microseconds) > double(differenceLimit) * double(secToMicros)) {
+  // Reject if the value is larger than the maximum instant span.
+  if (std::abs(microseconds) > double(spanLimit) * double(secToMicros)) {
     return mozilla::Nothing();
   }
 
-  // |differenceLimit| in microseconds is below UINT64_MAX, so we can use uint64
-  // in the following computations.
-  static_assert(double(differenceLimit) * double(secToMicros) <=
-                double(UINT64_MAX));
+  // |spanLimit| in microseconds is below UINT64_MAX, so we can use uint64 in
+  // the following computations.
+  static_assert(double(spanLimit) * double(secToMicros) <= double(UINT64_MAX));
 
   // Use the absolute value and convert it then into uint64_t.
   uint64_t absMicros = uint64_t(std::abs(microseconds));
@@ -526,8 +531,8 @@ static mozilla::Maybe<Instant> MicrosecondsToInstantDifference(
     }
   }
 
-  Instant result = {seconds, remainder * microToNanos};
-  MOZ_ASSERT(IsValidInstantDifference(result));
+  InstantSpan result = {seconds, remainder * microToNanos};
+  MOZ_ASSERT(IsValidInstantSpan(result));
   return mozilla::Some(result);
 }
 
@@ -552,7 +557,7 @@ Instant js::temporal::GetUTCEpochNanoseconds(const PlainDateTime& dateTime) {
       std::clamp(time.microsecond * 1'000 + time.nanosecond, 0, 999'999);
 
   // Step 6.
-  return Instant::fromMilliseconds(ms) + Instant{0, nanos};
+  return Instant::fromMilliseconds(ms) + InstantSpan{0, nanos};
 }
 
 /**
@@ -583,7 +588,7 @@ static bool ParseTemporalInstant(JSContext* cx, Handle<JSString*> isoString,
   auto utc = GetUTCEpochNanoseconds(dateTime);
 
   // Step 6.
-  auto offsetNanoseconds = Instant::fromNanoseconds(offset);
+  auto offsetNanoseconds = InstantSpan::fromNanoseconds(offset);
 
   // Step 7.
   auto epochNanoseconds = utc - offsetNanoseconds;
@@ -785,17 +790,17 @@ bool js::temporal::AddInstant(JSContext* cx, const Instant& instant,
   MOZ_ASSERT(duration.days == 0);
 
   do {
-    auto nanoseconds = NanosecondsToInstantDifference(duration.nanoseconds);
+    auto nanoseconds = NanosecondsToInstantSpan(duration.nanoseconds);
     if (!nanoseconds) {
       break;
     }
-    MOZ_ASSERT(IsValidInstantDifference(*nanoseconds));
+    MOZ_ASSERT(IsValidInstantSpan(*nanoseconds));
 
-    auto microseconds = MicrosecondsToInstantDifference(duration.microseconds);
+    auto microseconds = MicrosecondsToInstantSpan(duration.microseconds);
     if (!microseconds) {
       break;
     }
-    MOZ_ASSERT(IsValidInstantDifference(*microseconds));
+    MOZ_ASSERT(IsValidInstantSpan(*microseconds));
 
     // Overflows for millis/seconds/minutes/hours always result in an invalid
     // instant.
@@ -832,18 +837,18 @@ bool js::temporal::AddInstant(JSContext* cx, const Instant& instant,
       break;
     }
 
-    auto milli = Instant::fromMilliseconds(millis.value());
-    if (!IsValidInstantDifference(milli)) {
+    auto milli = InstantSpan::fromMilliseconds(millis.value());
+    if (!IsValidInstantSpan(milli)) {
       break;
     }
 
-    // Compute the overall instant difference.
-    auto diff = milli + *microseconds + *nanoseconds;
-    if (!IsValidInstantDifference(diff)) {
+    // Compute the overall instant span.
+    auto span = milli + *microseconds + *nanoseconds;
+    if (!IsValidInstantSpan(span)) {
       break;
     }
 
-    *result = instant + diff;
+    *result = instant + span;
     if (IsValidEpochInstant(*result)) {
       return true;
     }
@@ -874,7 +879,7 @@ bool js::temporal::DifferenceInstant(JSContext* cx, const Instant& ns1,
 
   // Step 1.
   auto diff = ns2 - ns1;
-  MOZ_ASSERT(IsValidInstantDifference(diff));
+  MOZ_ASSERT(IsValidInstantSpan(diff));
 
   // Negative nanoseconds are represented as the difference to 1'000'000'000.
   auto [seconds, nanoseconds] = diff;

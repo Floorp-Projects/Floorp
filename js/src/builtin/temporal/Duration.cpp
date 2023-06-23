@@ -952,8 +952,8 @@ static bool NanosecondsToDaysSlow(
     return false;
   }
 
-  result.initialize(days, ToInstantDifference(nanos),
-                    Instant::fromNanoseconds(dayLengthNs));
+  result.initialize(days, ToInstantSpan(nanos),
+                    InstantSpan::fromNanoseconds(dayLengthNs));
   return true;
 }
 
@@ -967,8 +967,9 @@ static bool NanosecondsToDays(
     auto nanosAndDays = ::NanosecondsToDays(*total);
 
     result.initialize(
-        nanosAndDays.days, Instant::fromNanoseconds(nanosAndDays.nanoseconds),
-        Instant::fromNanoseconds(ToNanoseconds(TemporalUnit::Day)));
+        nanosAndDays.days,
+        InstantSpan::fromNanoseconds(nanosAndDays.nanoseconds),
+        InstantSpan::fromNanoseconds(ToNanoseconds(TemporalUnit::Day)));
     return true;
   }
 
@@ -1020,8 +1021,8 @@ static bool NanosecondsToDays(
     Handle<ZonedDateTimeObject*> relativeTo,
     MutableHandle<temporal::NanosecondsAndDays> result) {
   if (auto total = TotalDurationNanoseconds(duration.time(), 0)) {
-    auto nanoseconds = Instant::fromNanoseconds(*total);
-    MOZ_ASSERT(IsValidInstantDifference(nanoseconds));
+    auto nanoseconds = InstantSpan::fromNanoseconds(*total);
+    MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
     return NanosecondsToDays(cx, nanoseconds, relativeTo, result);
   }
@@ -1031,11 +1032,10 @@ static bool NanosecondsToDays(
     return false;
   }
 
-  if (!IsValidInstantDifference(nanoseconds)) {
+  if (!IsValidInstantSpan(nanoseconds)) {
     return NanosecondsToDaysError(cx, relativeTo);
   }
-  return NanosecondsToDays(cx, ToInstantDifference(nanoseconds), relativeTo,
-                           result);
+  return NanosecondsToDays(cx, ToInstantSpan(nanoseconds), relativeTo, result);
 }
 
 /**
@@ -1740,7 +1740,7 @@ static bool BalancePossiblyInfiniteDuration(
 
   // Step 2.b.
   auto nanoseconds = endNs - epochInstant;
-  MOZ_ASSERT(IsValidInstantDifference(nanoseconds));
+  MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
   // Step 3. (Not applicable)
 
@@ -1763,7 +1763,7 @@ static bool BalancePossiblyInfiniteDuration(
     auto ns = nanosAndDays.nanoseconds();
 
     // Step 15. (Error handling for mismatched signs.)
-    if ((days < 0 && ns > Instant{}) || (days > 0 && ns < Instant{})) {
+    if ((days < 0 && ns > InstantSpan{}) || (days > 0 && ns < InstantSpan{})) {
       ToCStringBuf cbuf;
       const char* daysStr = NumberToCString(&cbuf, days);
 
@@ -1779,7 +1779,7 @@ static bool BalancePossiblyInfiniteDuration(
       return true;
     }
 
-    Rooted<BigInt*> nanos(cx, ToEpochDifferenceNanoseconds(cx, ns));
+    Rooted<BigInt*> nanos(cx, ToEpochNanoseconds(cx, ns));
     if (!nanos) {
       return false;
     }
@@ -1796,7 +1796,7 @@ static bool BalancePossiblyInfiniteDuration(
     return true;
   }
 
-  Rooted<BigInt*> ns(cx, ToEpochDifferenceNanoseconds(cx, nanoseconds));
+  Rooted<BigInt*> ns(cx, ToEpochNanoseconds(cx, nanoseconds));
   if (!ns) {
     return false;
   }
@@ -1823,10 +1823,11 @@ static bool BalanceDuration(JSContext* cx, const Duration& duration,
  * BalanceDuration ( days, hours, minutes, seconds, milliseconds, microseconds,
  * nanoseconds, largestUnit [ , relativeTo ] )
  */
-bool js::temporal::BalanceDuration(JSContext* cx, const Instant& nanoseconds,
+bool js::temporal::BalanceDuration(JSContext* cx,
+                                   const InstantSpan& nanoseconds,
                                    TemporalUnit largestUnit,
                                    TimeDuration* result) {
-  MOZ_ASSERT(IsValidInstantDifference(nanoseconds));
+  MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
   // Steps 1-3. (Not applicable)
 
@@ -1836,7 +1837,7 @@ bool js::temporal::BalanceDuration(JSContext* cx, const Instant& nanoseconds,
     return true;
   }
 
-  Rooted<BigInt*> nanos(cx, ToEpochDifferenceNanoseconds(cx, nanoseconds));
+  Rooted<BigInt*> nanos(cx, ToEpochNanoseconds(cx, nanoseconds));
   if (!nanos) {
     return false;
   }
@@ -3269,10 +3270,10 @@ static BigInt* RoundTemporalInstant(JSContext* cx, Handle<BigInt*> ns,
 static bool AdjustRoundedDurationDaysSlow(
     JSContext* cx, const Duration& duration, Increment increment,
     TemporalUnit unit, TemporalRoundingMode roundingMode,
-    Handle<Wrapped<ZonedDateTimeObject*>> relativeTo, Instant dayLength,
+    Handle<Wrapped<ZonedDateTimeObject*>> relativeTo, InstantSpan dayLength,
     Duration* result) {
   MOZ_ASSERT(IsValidDuration(duration));
-  MOZ_ASSERT(IsValidInstantDifference(dayLength));
+  MOZ_ASSERT(IsValidInstantSpan(dayLength));
 
   // Step 2.
   Rooted<BigInt*> timeRemainderNs(
@@ -3287,11 +3288,11 @@ static bool AdjustRoundedDurationDaysSlow(
   // Steps 6-7. (Computed in caller)
 
   // Step 8.
-  Rooted<BigInt*> dayLengthNs(cx, ToEpochDifferenceNanoseconds(cx, dayLength));
+  Rooted<BigInt*> dayLengthNs(cx, ToEpochNanoseconds(cx, dayLength));
   if (!dayLengthNs) {
     return false;
   }
-  MOZ_ASSERT(IsValidInstantDifference(dayLengthNs));
+  MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
 
   // Step 9.
   Rooted<BigInt*> diff(cx, BigInt::sub(cx, timeRemainderNs, dayLengthNs));
@@ -3404,7 +3405,7 @@ bool js::temporal::AdjustRoundedDurationDays(
 
   // Step 8.
   auto dayLength = dayEnd - dayStart;
-  MOZ_ASSERT(IsValidInstantDifference(dayLength));
+  MOZ_ASSERT(IsValidInstantSpan(dayLength));
 
   // Step 2. (Reordered)
   auto timeRemainderNs = TotalDurationNanoseconds(duration.time(), 0);
@@ -4683,17 +4684,17 @@ static bool RoundDurationYearSlow(
     Handle<temporal::NanosecondsAndDays> nanosAndDays, int32_t oneYearDays,
     Increment increment, TemporalRoundingMode roundingMode,
     ComputeRemainder computeRemainder, RoundedDuration* result) {
-  MOZ_ASSERT(nanosAndDays.dayLength() > Instant{});
+  MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
   MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
 
   Rooted<BigInt*> nanoseconds(
-      cx, ToEpochDifferenceNanoseconds(cx, nanosAndDays.nanoseconds()));
+      cx, ToEpochNanoseconds(cx, nanosAndDays.nanoseconds()));
   if (!nanoseconds) {
     return false;
   }
 
-  Rooted<BigInt*> dayLength(
-      cx, ToEpochDifferenceNanoseconds(cx, nanosAndDays.dayLength()));
+  Rooted<BigInt*> dayLength(cx,
+                            ToEpochNanoseconds(cx, nanosAndDays.dayLength()));
   if (!dayLength) {
     return false;
   }
@@ -4792,7 +4793,7 @@ static bool RoundDurationYearSlow(
   // Steps 9.u.
   bool daysIsNegative =
       days->isNegative() ||
-      (days->isZero() && nanosAndDays.nanoseconds() < Instant{});
+      (days->isZero() && nanosAndDays.nanoseconds() < InstantSpan{});
   double sign = daysIsNegative ? -1 : 1;
 
   // Step 9.v.
@@ -5152,7 +5153,7 @@ static bool RoundDurationYear(JSContext* cx, const Duration& duration,
 
   // Steps 9.u.
   bool daysIsNegative =
-      days < 0 || (days == 0 && nanosAndDays.nanoseconds() < Instant{});
+      days < 0 || (days == 0 && nanosAndDays.nanoseconds() < InstantSpan{});
   double sign = daysIsNegative ? -1 : 1;
 
   // Step 9.v.
@@ -5276,19 +5277,19 @@ static bool RoundDurationMonthSlow(
     Handle<BigInt*> oneMonthDays, Increment increment,
     TemporalRoundingMode roundingMode, ComputeRemainder computeRemainder,
     RoundedDuration* result) {
-  MOZ_ASSERT(nanosAndDays.dayLength() > Instant{});
+  MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
   MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
   MOZ_ASSERT(!oneMonthDays->isNegative());
   MOZ_ASSERT(!oneMonthDays->isZero());
 
   Rooted<BigInt*> nanoseconds(
-      cx, ToEpochDifferenceNanoseconds(cx, nanosAndDays.nanoseconds()));
+      cx, ToEpochNanoseconds(cx, nanosAndDays.nanoseconds()));
   if (!nanoseconds) {
     return false;
   }
 
-  Rooted<BigInt*> dayLength(
-      cx, ToEpochDifferenceNanoseconds(cx, nanosAndDays.dayLength()));
+  Rooted<BigInt*> dayLength(cx,
+                            ToEpochNanoseconds(cx, nanosAndDays.dayLength()));
   if (!dayLength) {
     return false;
   }
@@ -5387,8 +5388,8 @@ static bool RoundDurationMonthSlow(
 
     // Compare the fractional part of |days|, cf. step 6.e.
     auto nanoseconds = nanosAndDays.nanoseconds();
-    return nanoseconds == Instant{} ||
-           (days->isNegative() == (nanoseconds < Instant{}));
+    return nanoseconds == InstantSpan{} ||
+           (days->isNegative() == (nanoseconds < InstantSpan{}));
   };
 
   // Step 10.n.
@@ -5482,7 +5483,7 @@ static bool RoundDurationMonthSlow(
   // Step 10.i.
   bool daysIsNegative =
       days->isNegative() ||
-      (days->isZero() && nanosAndDays.nanoseconds() < Instant{});
+      (days->isZero() && nanosAndDays.nanoseconds() < InstantSpan{});
   double sign = daysIsNegative ? -1 : 1;
 
   // Step 10.j.
@@ -5629,7 +5630,7 @@ static bool RoundDurationMonth(
 
   // Step 10.i.
   bool daysIsNegative =
-      days < 0 || (days == 0 && nanosAndDays.nanoseconds() < Instant{});
+      days < 0 || (days == 0 && nanosAndDays.nanoseconds() < InstantSpan{});
   double sign = daysIsNegative ? -1 : 1;
 
   // Step 10.j.
@@ -5658,8 +5659,8 @@ static bool RoundDurationMonth(
 
     // Compare the fractional part of |days|, cf. step 6.e.
     auto nanoseconds = nanosAndDays.nanoseconds();
-    return nanoseconds == Instant{} ||
-           ((days < 0) == (nanoseconds < Instant{}));
+    return nanoseconds == InstantSpan{} ||
+           ((days < 0) == (nanoseconds < InstantSpan{}));
   };
 
   // Step 10.n.
@@ -5796,19 +5797,19 @@ static bool RoundDurationWeekSlow(
     Handle<BigInt*> oneWeekDays, Increment increment,
     TemporalRoundingMode roundingMode, ComputeRemainder computeRemainder,
     RoundedDuration* result) {
-  MOZ_ASSERT(nanosAndDays.dayLength() > Instant{});
+  MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
   MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
   MOZ_ASSERT(!oneWeekDays->isNegative());
   MOZ_ASSERT(!oneWeekDays->isZero());
 
   Rooted<BigInt*> nanoseconds(
-      cx, ToEpochDifferenceNanoseconds(cx, nanosAndDays.nanoseconds()));
+      cx, ToEpochNanoseconds(cx, nanosAndDays.nanoseconds()));
   if (!nanoseconds) {
     return false;
   }
 
-  Rooted<BigInt*> dayLength(
-      cx, ToEpochDifferenceNanoseconds(cx, nanosAndDays.dayLength()));
+  Rooted<BigInt*> dayLength(cx,
+                            ToEpochNanoseconds(cx, nanosAndDays.dayLength()));
   if (!dayLength) {
     return false;
   }
@@ -5906,8 +5907,8 @@ static bool RoundDurationWeekSlow(
 
     // Compare the fractional part of |days|, cf. step 6.e.
     auto nanoseconds = nanosAndDays.nanoseconds();
-    return nanoseconds == Instant{} ||
-           (days->isNegative() == (nanoseconds < Instant{}));
+    return nanoseconds == InstantSpan{} ||
+           (days->isNegative() == (nanoseconds < InstantSpan{}));
   };
 
   // Step 11.g.
@@ -5990,7 +5991,7 @@ static bool RoundDurationWeekSlow(
   // Step 11.a.
   bool daysIsNegative =
       days->isNegative() ||
-      (days->isZero() && nanosAndDays.nanoseconds() < Instant{});
+      (days->isZero() && nanosAndDays.nanoseconds() < InstantSpan{});
   double sign = daysIsNegative ? -1 : 1;
 
   // Step 11.b.
@@ -6088,7 +6089,7 @@ static bool RoundDurationWeek(JSContext* cx, const Duration& duration,
 
   // Step 11.a.
   bool daysIsNegative =
-      days < 0 || (days == 0 && nanosAndDays.nanoseconds() < Instant{});
+      days < 0 || (days == 0 && nanosAndDays.nanoseconds() < InstantSpan{});
   double sign = daysIsNegative ? -1 : 1;
 
   // Step 11.b.
@@ -6124,8 +6125,8 @@ static bool RoundDurationWeek(JSContext* cx, const Duration& duration,
 
     // Compare the fractional part of |days|, cf. step 6.e.
     auto nanoseconds = nanosAndDays.nanoseconds();
-    return nanoseconds == Instant{} ||
-           ((days < 0) == (nanoseconds < Instant{}));
+    return nanoseconds == InstantSpan{} ||
+           ((days < 0) == (nanoseconds < InstantSpan{}));
   };
 
   // Step 11.g.
@@ -6286,17 +6287,17 @@ static bool RoundDurationDaySlow(
     Handle<temporal::NanosecondsAndDays> nanosAndDays, Increment increment,
     TemporalRoundingMode roundingMode, ComputeRemainder computeRemainder,
     RoundedDuration* result) {
-  MOZ_ASSERT(nanosAndDays.dayLength() > Instant{});
+  MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
   MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
 
   Rooted<BigInt*> nanoseconds(
-      cx, ToEpochDifferenceNanoseconds(cx, nanosAndDays.nanoseconds()));
+      cx, ToEpochNanoseconds(cx, nanosAndDays.nanoseconds()));
   if (!nanoseconds) {
     return false;
   }
 
-  Rooted<BigInt*> dayLength(
-      cx, ToEpochDifferenceNanoseconds(cx, nanosAndDays.dayLength()));
+  Rooted<BigInt*> dayLength(cx,
+                            ToEpochNanoseconds(cx, nanosAndDays.dayLength()));
   if (!dayLength) {
     return false;
   }
@@ -6362,7 +6363,7 @@ static bool RoundDurationDay(JSContext* cx, const Duration& duration,
                              TemporalRoundingMode roundingMode,
                              ComputeRemainder computeRemainder,
                              RoundedDuration* result) {
-  MOZ_ASSERT(nanosAndDays.dayLength() > Instant{});
+  MOZ_ASSERT(nanosAndDays.dayLength() > InstantSpan{});
   MOZ_ASSERT(nanosAndDays.nanoseconds().abs() < nanosAndDays.dayLength().abs());
 
   do {

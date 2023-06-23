@@ -1283,10 +1283,10 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
 RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
                                     TemporalUnit unit,
                                     TemporalRoundingMode roundingMode,
-                                    const Instant& dayLengthNs) {
+                                    const InstantSpan& dayLengthNs) {
   MOZ_ASSERT(IsValidTime(time));
-  MOZ_ASSERT(IsValidInstantDifference(dayLengthNs));
-  MOZ_ASSERT(dayLengthNs > (Instant{}));
+  MOZ_ASSERT(IsValidInstantSpan(dayLengthNs));
+  MOZ_ASSERT(dayLengthNs > (InstantSpan{}));
 
   if (unit != TemporalUnit::Day) {
     return RoundTime(time, increment, unit, roundingMode);
