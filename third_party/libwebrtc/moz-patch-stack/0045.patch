@@ -1,61 +1,50 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Tue, 15 Jun 2021 12:18:00 -0500
-Subject: Bug 1654112 - suppress android lint warnings for WrongConstant in 2
- libwebrtc java files. r=ng
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Thu, 29 Apr 2021 18:25:00 +0000
+Subject: Bug 1654112 - Work around the old (<1.5) libxrandr headers on our
+ build machines. r=mjf,ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D118050
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e60e2f295fb722f69a3a9fe9af34219880afe772
+Differential Revision: https://phabricator.services.mozilla.com/D113830
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c91f12b557a1d23b468c75c4f2fc00eb0f8d541a
 ---
- .../java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java    | 5 +++++
- sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java  | 5 +++++
- 2 files changed, 10 insertions(+)
+ X11/extensions/Xrandr.h | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
+ create mode 100644 X11/extensions/Xrandr.h
 
-diff --git a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
-index 0472114297..afd3d429af 100644
---- a/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
-+++ b/modules/audio_device/android/java/src/org/webrtc/voiceengine/WebRtcAudioUtils.java
-@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
- import static android.media.AudioManager.MODE_NORMAL;
- import static android.media.AudioManager.MODE_RINGTONE;
- 
-+import android.annotation.SuppressLint;
- import android.content.Context;
- import android.content.pm.PackageManager;
- import android.media.AudioDeviceInfo;
-@@ -247,6 +248,10 @@ public final class WebRtcAudioUtils {
-     }
-   }
- 
-+  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
-+  // listed in the docs here:
-+  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
-+  @SuppressLint("WrongConstant")
-   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
-     if (Build.VERSION.SDK_INT < 23) {
-       return;
-diff --git a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-index 7894659926..7b4b809ab1 100644
---- a/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-+++ b/sdk/android/src/java/org/webrtc/audio/WebRtcAudioUtils.java
-@@ -15,6 +15,7 @@ import static android.media.AudioManager.MODE_IN_COMMUNICATION;
- import static android.media.AudioManager.MODE_NORMAL;
- import static android.media.AudioManager.MODE_RINGTONE;
- 
-+import android.annotation.SuppressLint;
- import android.annotation.TargetApi;
- import android.content.Context;
- import android.content.pm.PackageManager;
-@@ -229,6 +230,10 @@ final class WebRtcAudioUtils {
-     }
-   }
- 
-+  // Moz linting complains even though AudioManager.GET_DEVICES_ALL is
-+  // listed in the docs here:
-+  // https://developer.android.com/reference/android/media/AudioManager#GET_DEVICES_ALL
-+  @SuppressLint("WrongConstant")
-   private static void logAudioDeviceInfo(String tag, AudioManager audioManager) {
-     if (Build.VERSION.SDK_INT < 23) {
-       return;
+diff --git a/X11/extensions/Xrandr.h b/X11/extensions/Xrandr.h
+new file mode 100644
+index 0000000000..876e8b4c7f
+--- /dev/null
++++ b/X11/extensions/Xrandr.h
+@@ -0,0 +1,29 @@
++/* This Source Code Form is subject to the terms of the Mozilla Public
++ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
++ * You can obtain one at http://mozilla.org/MPL/2.0/. */
++
++// Hack to compensate for the old (<1.5) Xrandr development headers on
++// Mozilla's build boxes.
++
++#ifndef _XRANDR_H_WRAPPER_HACK_
++#define _XRANDR_H_WRAPPER_HACK_
++
++#include_next <X11/extensions/Xrandr.h>
++
++#if RANDR_MAJOR == 1 && RANDR_MINOR < 5 // defined in randr.h
++typedef struct _XRRMonitorInfo {
++    Atom name;
++    Bool primary;
++    Bool automatic;
++    int noutput;
++    int x;
++    int y;
++    int width;
++    int height;
++    int mwidth;
++    int mheight;
++    RROutput *outputs;
++} XRRMonitorInfo;
++#endif
++
++#endif // _XRANDR_H_WRAPPER_HACK_
 -- 
-2.34.1
+2.37.1 (Apple Git-137.1)
 

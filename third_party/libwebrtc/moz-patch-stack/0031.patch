@@ -1,66 +1,36 @@
-From: Randell Jesup <rjesup@wgate.com>
-Date: Sat, 11 Jul 2020 12:31:00 +0000
-Subject: Bug 1112392 - Move webrtc Tab Sharing to work in e10s/fission
- r=dminor
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 12 Feb 2020 17:19:00 +0000
+Subject: Bug 1578073 - Suppress MissingPermission lint in Camera2Session;
+ r=snorp
 
-Also we drop support for an independent-of-scroll/viewport capture, which
-the old Tab Sharing supported, for security reasons (and we don't need it).
+Depends on D61861
 
-Differential Revision: https://phabricator.services.mozilla.com/D80974
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d57a030e6e3ae9ff56f14e8cc732b0e1d3869858
+Differential Revision: https://phabricator.services.mozilla.com/D62457
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/722c4a6d1dad867f9ce47fe96d71b5dedb4cbaa8
 ---
- modules/desktop_capture/desktop_capturer.cc | 11 +++++++++++
- modules/desktop_capture/desktop_capturer.h  |  8 ++++++++
- 2 files changed, 19 insertions(+)
+ sdk/android/src/java/org/webrtc/Camera2Session.java | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index 5211f1acec..4baa93cab9 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -101,6 +101,17 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
-   return capturer;
- }
+diff --git a/sdk/android/src/java/org/webrtc/Camera2Session.java b/sdk/android/src/java/org/webrtc/Camera2Session.java
+index dec97a2c25..d5ee80c73e 100644
+--- a/sdk/android/src/java/org/webrtc/Camera2Session.java
++++ b/sdk/android/src/java/org/webrtc/Camera2Session.java
+@@ -10,6 +10,7 @@
  
-+// static
-+std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateTabCapturer(
-+    const DesktopCaptureOptions& options) {
-+  std::unique_ptr<DesktopCapturer> capturer = CreateRawTabCapturer(options);
-+  if (capturer && options.detect_updated_region()) {
-+    capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
-+  }
-+
-+  return capturer;
-+}
-+
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
- bool DesktopCapturer::IsRunningUnderWayland() {
-   const char* xdg_session_type = getenv("XDG_SESSION_TYPE");
-diff --git a/modules/desktop_capture/desktop_capturer.h b/modules/desktop_capture/desktop_capturer.h
-index f39852b58e..9b667739a8 100644
---- a/modules/desktop_capture/desktop_capturer.h
-+++ b/modules/desktop_capture/desktop_capturer.h
-@@ -187,6 +187,10 @@ class RTC_EXPORT DesktopCapturer {
-   static std::unique_ptr<DesktopCapturer> CreateScreenCapturer(
-       const DesktopCaptureOptions& options);
+ package org.webrtc;
  
-+  // Creates a DesktopCapturer instance which targets to capture tab.
-+  static std::unique_ptr<DesktopCapturer> CreateTabCapturer(
-+      const DesktopCaptureOptions& options);
-+
- #if defined(WEBRTC_USE_PIPEWIRE) || defined(WEBRTC_USE_X11)
-   static bool IsRunningUnderWayland();
++import android.annotation.SuppressLint;
+ import android.content.Context;
+ import android.hardware.camera2.CameraAccessException;
+ import android.hardware.camera2.CameraCaptureSession;
+@@ -347,6 +348,7 @@ class Camera2Session implements CameraSession {
+     Logging.d(TAG, "Using capture format: " + captureFormat);
+   }
  
-@@ -212,6 +216,10 @@ class RTC_EXPORT DesktopCapturer {
-   // capture screens.
-   static std::unique_ptr<DesktopCapturer> CreateRawScreenCapturer(
-       const DesktopCaptureOptions& options);
-+
-+  // Creates a DesktopCapturer instance which targets to capture tabs
-+  static std::unique_ptr<DesktopCapturer> CreateRawTabCapturer(
-+      const DesktopCaptureOptions& options);
- };
++  @SuppressLint("MissingPermission")
+   private void openCamera() {
+     checkIsOnCameraThread();
  
- }  // namespace webrtc
 -- 
-2.34.1
+2.37.1 (Apple Git-137.1)
 

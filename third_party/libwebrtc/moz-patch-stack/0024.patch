@@ -1,58 +1,98 @@
-From: Wang Qing <wangqing-hf@loongson.cn>
-Date: Wed, 25 Sep 2019 14:15:00 +0000
-Subject: Bug 1579834 - [WebRTC] Add mips64 support; r=dminor
+From: Alex Chronopoulos <achronop@gmail.com>
+Date: Wed, 18 Sep 2019 13:16:00 +0000
+Subject: Bug 1572281 - Remove audio device change notifications from video
+ capture in Linux. r=dminor
 
-Differential Revision: https://phabricator.services.mozilla.com/D45620
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1387b2c480b55ecca3fbdf62bd7649dafc62438d
+Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the Linux part.
+
+Differential Revision: https://phabricator.services.mozilla.com/D46272
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7bf7263db30b794139332691f4fbc98b4bfcfdd7
 ---
- modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc | 2 +-
- modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ .../video_capture/linux/device_info_v4l2.cc   | 28 ++-----------------
+ 1 file changed, 3 insertions(+), 25 deletions(-)
 
-diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-index 1ac71899ee..3fe86f2f85 100644
---- a/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-+++ b/modules/video_coding/codecs/vp8/libvpx_vp8_decoder.cc
-@@ -47,7 +47,7 @@ const char kVp8PostProcArmFieldTrial[] = "WebRTC-VP8-Postproc-Config-Arm";
- const char kVp8PostProcFieldTrial[] = "WebRTC-VP8-Postproc-Config";
- 
- #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
--    defined(WEBRTC_ANDROID)
-+    defined(WEBRTC_ANDROID)  || defined(WEBRTC_ARCH_MIPS)
- constexpr bool kIsArm = true;
- #else
- constexpr bool kIsArm = false;
-diff --git a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-index 5457402542..bceb321951 100644
---- a/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-+++ b/modules/video_coding/codecs/vp8/libvpx_vp8_encoder.cc
-@@ -693,7 +693,7 @@ int LibvpxVp8Encoder::InitEncode(const VideoCodec* inst,
- 
- int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
- #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
--    defined(WEBRTC_ANDROID)
-+    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
-   // On mobile platform, use a lower speed setting for lower resolutions for
-   // CPUs with 4 or more cores.
-   RTC_DCHECK_GT(number_of_cores_, 0);
-@@ -726,7 +726,7 @@ int LibvpxVp8Encoder::GetCpuSpeed(int width, int height) {
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index d836747b4a..77968b7eaf 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -44,7 +44,7 @@ namespace videocapturemodule {
+ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
+ {
+     if (event->mask & IN_CREATE) {
+-        if (fd == _fd_v4l || fd == _fd_snd) {
++        if (fd == _fd_v4l) {
+             DeviceChange();
+         } else if ((event->mask & IN_ISDIR) && (fd == _fd_dev)) {
+             if (_wd_v4l < 0) {
+@@ -56,25 +56,15 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
+                     DeviceChange();
+                 }
+             }
+-            if (_wd_snd < 0) {
+-                usleep(5*1000);
+-                _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+-                if (_wd_snd >= 0) {
+-                    DeviceChange();
+-                }
+-            }
+         }
+     } else if (event->mask & IN_DELETE) {
+-        if (fd == _fd_v4l || fd == _fd_snd) {
++        if (fd == _fd_v4l) {
+             DeviceChange();
+         }
+     } else if (event->mask & IN_DELETE_SELF) {
+         if (fd == _fd_v4l) {
+             inotify_rm_watch(_fd_v4l, _wd_v4l);
+             _wd_v4l = -1;
+-        } else if (fd == _fd_snd) {
+-            inotify_rm_watch(_fd_snd, _wd_snd);
+-            _wd_snd = -1;
+         } else {
+             assert(false);
+         }
+@@ -141,11 +131,6 @@ int DeviceInfoV4l2::ProcessInotifyEvents()
+                 break;
+             }
+         }
+-        if (EventCheck(_fd_snd) > 0) {
+-            if (HandleEvents(_fd_snd) < 0) {
+-                break;
+-            }
+-        }
+     }
+     return 0;
  }
+@@ -158,11 +143,9 @@ void DeviceInfoV4l2::InotifyEventThread(void* obj)
+ void DeviceInfoV4l2::InotifyProcess()
+ {
+     _fd_v4l = inotify_init();
+-    _fd_snd = inotify_init();
+     _fd_dev = inotify_init();
+-    if (_fd_v4l >= 0 && _fd_snd >= 0 && _fd_dev >= 0) {
++    if (_fd_v4l >= 0 && _fd_dev >= 0) {
+         _wd_v4l = inotify_add_watch(_fd_v4l, "/dev/v4l/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+-        _wd_snd = inotify_add_watch(_fd_snd, "/dev/snd/by-path/", IN_CREATE | IN_DELETE | IN_DELETE_SELF);
+         _wd_dev = inotify_add_watch(_fd_dev, "/dev/", IN_CREATE);
+         ProcessInotifyEvents();
  
- int LibvpxVp8Encoder::NumberOfThreads(int width, int height, int cpus) {
--#if defined(WEBRTC_ANDROID)
-+#if defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
-   if (width * height >= 320 * 180) {
-     if (cpus >= 4) {
-       // 3 threads for CPUs with 4 and more cores since most of times only 4
-@@ -800,7 +800,7 @@ int LibvpxVp8Encoder::InitAndSetControlSettings() {
-   // multi-res encoding feature?
-   denoiserState denoiser_state = kDenoiserOnYOnly;
- #if defined(WEBRTC_ARCH_ARM) || defined(WEBRTC_ARCH_ARM64) || \
--    defined(WEBRTC_ANDROID)
-+    defined(WEBRTC_ANDROID) || defined(WEBRTC_ARCH_MIPS)
-   denoiser_state = kDenoiserOnYOnly;
- #else
-   denoiser_state = kDenoiserOnAdaptive;
+@@ -170,16 +153,11 @@ void DeviceInfoV4l2::InotifyProcess()
+           inotify_rm_watch(_fd_v4l, _wd_v4l);
+         }
+ 
+-        if (_wd_snd >= 0) {
+-          inotify_rm_watch(_fd_snd, _wd_snd);
+-        }
+-
+         if (_wd_dev >= 0) {
+           inotify_rm_watch(_fd_dev, _wd_dev);
+         }
+ 
+         close(_fd_v4l);
+-        close(_fd_snd);
+         close(_fd_dev);
+     }
+ }
 -- 
-2.34.1
+2.37.1 (Apple Git-137.1)
 

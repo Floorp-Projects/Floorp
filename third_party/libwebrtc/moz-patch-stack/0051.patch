@@ -1,38 +1,32 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Mon, 26 Jul 2021 22:51:00 -0700
-Subject: Bug 1654112 - fix timestamp issues with RTP sources; r=mjf
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Fri, 12 Mar 2021 08:53:00 -0600
+Subject: Bug 1654112 - libwebrtc modification: Init some stats that were being
+ passed to us uninitialized. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D120930
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/de8c14e4972f717bf937b6f2fffcd08c35e21ced
+Differential Revision: https://phabricator.services.mozilla.com/D108673
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c385bb870413b925af48df97aa1f2b80a26e78d2
 ---
- modules/rtp_rtcp/source/source_tracker.cc | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ call/video_receive_stream.h | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/modules/rtp_rtcp/source/source_tracker.cc b/modules/rtp_rtcp/source/source_tracker.cc
-index 7a5cbac77d..65f21700d0 100644
---- a/modules/rtp_rtcp/source/source_tracker.cc
-+++ b/modules/rtp_rtcp/source/source_tracker.cc
-@@ -36,7 +36,8 @@ void SourceTracker::OnFrameDelivered(const RtpPacketInfos& packet_infos) {
-       SourceKey key(RtpSourceType::CSRC, csrc);
-       SourceEntry& entry = UpdateEntry(key);
+diff --git a/call/video_receive_stream.h b/call/video_receive_stream.h
+index 5d49efc6ce..87fd54fd1c 100644
+--- a/call/video_receive_stream.h
++++ b/call/video_receive_stream.h
+@@ -147,9 +147,10 @@ class VideoReceiveStreamInterface : public MediaReceiveStreamInterface {
+     RtpReceiveStats rtp_stats;
+     RtcpPacketTypeCounter rtcp_packet_type_counts;
  
--      entry.timestamp_ms = now_ms;
-+      const auto packet_time = packet_info.receive_time().ms();
-+      entry.timestamp_ms = packet_time ? packet_time : now_ms;
-       entry.audio_level = packet_info.audio_level();
-       entry.absolute_capture_time = packet_info.absolute_capture_time();
-       entry.local_capture_clock_offset =
-@@ -77,6 +78,10 @@ std::vector<RtpSource> SourceTracker::GetSources() const {
-             .local_capture_clock_offset = entry.local_capture_clock_offset});
-   }
+-    uint32_t rtcp_sender_packets_sent;
+-    uint32_t rtcp_sender_octets_sent;
+-    int64_t rtcp_sender_ntp_timestamp_ms;
++    // Mozilla modification: Init these three.
++    uint32_t rtcp_sender_packets_sent = 0;
++    uint32_t rtcp_sender_octets_sent = 0;
++    int64_t rtcp_sender_ntp_timestamp_ms = 0;
  
-+  std::sort(sources.begin(), sources.end(), [](const auto &a, const auto &b){
-+    return a.timestamp_ms() > b.timestamp_ms();
-+  });
-+
-   return sources;
- }
- 
+     // Timing frame info: all important timestamps for a full lifetime of a
+     // single 'timing frame'.
 -- 
-2.34.1
+2.37.1 (Apple Git-137.1)
 
