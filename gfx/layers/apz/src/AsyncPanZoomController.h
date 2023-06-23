@@ -1583,7 +1583,8 @@ class AsyncPanZoomController {
 
   // Start a smooth-scrolling animation to the given destination, with physics
   // based on the prefs for the indicated origin.
-  void SmoothScrollTo(const CSSPoint& aDestination,
+  void SmoothScrollTo(CSSSnapTarget&& aDestination,
+                      ScrollTriggeredByScript aTriggeredByScript,
                       const ScrollOrigin& aOrigin);
 
   // Start a smooth-scrolling animation to the given destination, with MSD

@@ -8,6 +8,7 @@
 #define mozilla_layers_SmoothScrollAnimation_h_
 
 #include "GenericScrollAnimation.h"
+#include "ScrollPositionUpdate.h"
 #include "mozilla/ScrollOrigin.h"
 #include "mozilla/layers/KeyboardScrollAction.h"
 
@@ -19,16 +20,26 @@ class AsyncPanZoomController;
 class SmoothScrollAnimation : public GenericScrollAnimation {
  public:
   SmoothScrollAnimation(AsyncPanZoomController& aApzc,
-                        const nsPoint& aInitialPosition,
-                        ScrollOrigin aScrollOrigin);
+                        const nsPoint& aInitialPosition, ScrollOrigin aOrigin);
+
+  void UpdateDestinationAndSnapTargets(
+      TimeStamp aTime, const nsPoint& aDestination,
+      const nsSize& aCurrentVelocity, ScrollSnapTargetIds&& aSnapTargetIds,
+      ScrollTriggeredByScript aTriggeredByScript);
 
   SmoothScrollAnimation* AsSmoothScrollAnimation() override;
+  bool WasTriggeredByScript() const override {
+    return mTriggeredByScript == ScrollTriggeredByScript::Yes;
+  }
+  ScrollSnapTargetIds TakeSnapTargetIds() { return std::move(mSnapTargetIds); }
   ScrollOrigin GetScrollOrigin() const;
   static ScrollOrigin GetScrollOriginForAction(
       KeyboardScrollAction::KeyboardScrollActionType aAction);
 
  private:
   ScrollOrigin mOrigin;
+  ScrollSnapTargetIds mSnapTargetIds;
+  ScrollTriggeredByScript mTriggeredByScript;
 };
 
 }  // namespace layers

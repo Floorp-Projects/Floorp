@@ -6,6 +6,8 @@
 
 #include "SmoothScrollAnimation.h"
 #include "ScrollAnimationBezierPhysics.h"
+#include "ScrollPositionUpdate.h"
+#include "apz/src/GenericScrollAnimation.h"
 #include "mozilla/layers/APZPublicUtils.h"
 
 namespace mozilla {
@@ -17,10 +19,21 @@ SmoothScrollAnimation::SmoothScrollAnimation(AsyncPanZoomController& aApzc,
     : GenericScrollAnimation(
           aApzc, aInitialPosition,
           apz::ComputeBezierAnimationSettingsForOrigin(aOrigin)),
-      mOrigin(aOrigin) {}
+      mOrigin(aOrigin),
+      mTriggeredByScript(ScrollTriggeredByScript::No) {}
 
 SmoothScrollAnimation* SmoothScrollAnimation::AsSmoothScrollAnimation() {
   return this;
+}
+
+void SmoothScrollAnimation::UpdateDestinationAndSnapTargets(
+    TimeStamp aTime, const nsPoint& aDestination,
+    const nsSize& aCurrentVelocity, ScrollSnapTargetIds&& aSnapTargetIds,
+    ScrollTriggeredByScript aTriggeredByScript) {
+  GenericScrollAnimation::UpdateDestination(aTime, aDestination,
+                                            aCurrentVelocity);
+  mSnapTargetIds = std::move(aSnapTargetIds);
+  mTriggeredByScript = aTriggeredByScript;
 }
 
 ScrollOrigin SmoothScrollAnimation::GetScrollOrigin() const { return mOrigin; }
