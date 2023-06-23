@@ -20,7 +20,7 @@ var settings = [
     topPage: TEST_TOP_PAGE,
     thirdPartyPage: TEST_4TH_PARTY_PAGE,
     setup: () => {
-      let type = "3rdPartyStorage^http://not-tracking.example.com";
+      let type = "3rdPartyFrameStorage^http://example.com";
       let permission = Services.perms.ALLOW_ACTION;
       let expireType = Services.perms.EXPIRE_SESSION;
       PermissionTestUtils.add(TEST_DOMAIN, type, permission, expireType, 0);
@@ -42,7 +42,7 @@ var settings = [
     topPage: TEST_TOP_PAGE,
     thirdPartyPage: TEST_3RD_PARTY_PAGE,
     setup: () => {
-      let type = "3rdPartyStorage^https://tracking.example.org";
+      let type = "3rdPartyFrameStorage^https://example.org";
       let permission = Services.perms.ALLOW_ACTION;
       let expireType = Services.perms.EXPIRE_SESSION;
       PermissionTestUtils.add(TEST_DOMAIN, type, permission, expireType, 0);

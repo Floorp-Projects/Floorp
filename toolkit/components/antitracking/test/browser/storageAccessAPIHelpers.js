@@ -146,9 +146,11 @@ async function callRequestStorageAccess(callback, expectFail) {
     // conditions. We don't need to wait the permission to be visible in content
     // processes since the content process doesn't rely on the permission to
     // know the storage access is updated.
+    let originURI = SpecialPowers.Services.io.newURI(window.origin);
+    let site = SpecialPowers.Services.eTLD.getSite(originURI);
     await waitUntilPermission(
       `${protocol}://example.net/browser/toolkit/components/antitracking/test/browser/page.html`,
-      "3rdPartyStorage^" + window.origin
+      "3rdPartyFrameStorage^" + site
     );
   }
 

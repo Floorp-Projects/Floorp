@@ -14,7 +14,10 @@ AntiTracking.runTest(
       let principal = SpecialPowers.wrap(document).nodePrincipal;
       for (let perm of Services.perms.getAllForPrincipal(principal)) {
         // Ignore permissions other than storage access
-        if (!perm.type.startsWith("3rdPartyStorage^")) {
+        if (
+          !perm.type.startsWith("3rdPartyStorage^") &&
+          !perm.type.startsWith("3rdPartyFrameStorage^")
+        ) {
           continue;
         }
         is(

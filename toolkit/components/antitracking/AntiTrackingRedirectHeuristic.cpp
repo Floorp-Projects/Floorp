@@ -426,7 +426,7 @@ void FinishAntiTrackingRedirectHeuristic(nsIChannel* aNewChannel,
   RefPtr<StorageAccessAPIHelper::ParentAccessGrantPromise> promise =
       StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
           newPrincipal, oldPrincipal,
-          StorageAccessAPIHelper::StorageAccessPromptChoices::eAllow,
+          StorageAccessAPIHelper::StorageAccessPromptChoices::eAllow, false,
           StaticPrefs::privacy_restrict3rdpartystorage_expiration_redirect());
   Unused << promise;
 }

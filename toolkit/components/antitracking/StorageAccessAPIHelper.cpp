@@ -40,6 +40,7 @@
 #include "nsScriptSecurityManager.h"
 #include "RejectForeignAllowList.h"
 #include "StorageAccess.h"
+#include "nsStringFwd.h"
 
 namespace mozilla {
 
@@ -477,9 +478,10 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
 
     if (XRE_IsParentProcess()) {
       LOG(("Saving the permission: trackingOrigin=%s", trackingOrigin.get()));
-      return SaveAccessForOriginOnParentProcess(aTopLevelWindowId,
-                                                aParentContext,
-                                                trackingPrincipal, aAllowMode)
+      return SaveAccessForOriginOnParentProcess(
+                 aTopLevelWindowId, aParentContext, trackingPrincipal,
+                 aAllowMode,
+                 aReason == ContentBlockingNotifier::eStorageAccessAPI)
           ->Then(
               GetCurrentSerialEventTarget(), __func__,
               [aReason, trackingPrincipal](
@@ -514,7 +516,8 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
     return cc
         ->SendStorageAccessPermissionGrantedForOrigin(
             aTopLevelWindowId, aParentContext, trackingPrincipal,
-            trackingOrigin, aAllowMode, reportReason)
+            trackingOrigin, aAllowMode, reportReason,
+            aReason == ContentBlockingNotifier::eStorageAccessAPI)
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [aReason, trackingPrincipal](
@@ -615,7 +618,7 @@ StorageAccessAPIHelper::CompleteAllowAccessFor(
 RefPtr<mozilla::StorageAccessAPIHelper::ParentAccessGrantPromise>
 StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
     uint64_t aTopLevelWindowId, BrowsingContext* aParentContext,
-    nsIPrincipal* aTrackingPrincipal, int aAllowMode,
+    nsIPrincipal* aTrackingPrincipal, int aAllowMode, bool aFrameOnly,
     uint64_t aExpirationTime) {
   MOZ_ASSERT(aTopLevelWindowId != 0);
   MOZ_ASSERT(aTrackingPrincipal);
@@ -647,7 +650,7 @@ StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
                                                            trackingOrigin);
 
   return StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
-      wgp->DocumentPrincipal(), aTrackingPrincipal, aAllowMode,
+      wgp->DocumentPrincipal(), aTrackingPrincipal, aAllowMode, aFrameOnly,
       aExpirationTime);
 }
 
@@ -655,7 +658,7 @@ StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
 RefPtr<mozilla::StorageAccessAPIHelper::ParentAccessGrantPromise>
 StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
     nsIPrincipal* aParentPrincipal, nsIPrincipal* aTrackingPrincipal,
-    int aAllowMode, uint64_t aExpirationTime) {
+    int aAllowMode, bool aFrameOnly, uint64_t aExpirationTime) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(aAllowMode == eAllow || aAllowMode == eAllowAutoGrant);
 
@@ -711,7 +714,15 @@ StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
   }
 
   nsAutoCString type;
-  AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
+  if (aFrameOnly) {
+    bool success = AntiTrackingUtils::CreateStorageFramePermissionKey(
+        aTrackingPrincipal, type);
+    if (NS_WARN_IF(!success)) {
+      return ParentAccessGrantPromise::CreateAndReject(false, __func__);
+    }
+  } else {
+    AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
+  }
 
   LOG(
       ("Computed permission key: %s, expiry: %u, proceeding to save in the "
@@ -969,7 +980,7 @@ RefPtr<StorageAccessAPIHelper::StorageAccessPermissionGrantPromise>
 StorageAccessAPIHelper::RequestStorageAccessAsyncHelper(
     dom::Document* aDocument, nsPIDOMWindowInner* aInnerWindow,
     dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
-    bool aHasUserInteraction,
+    bool aHasUserInteraction, bool aFrameOnly,
     ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier,
     bool aRequireGrant) {
   MOZ_ASSERT(aDocument);
@@ -985,7 +996,7 @@ StorageAccessAPIHelper::RequestStorageAccessAsyncHelper(
   // This is a lambda function that has some variables bound to it. It will be
   // called later in CompleteAllowAccessFor inside of AllowAccessFor.
   auto performPermissionGrant = aDocument->CreatePermissionGrantPromise(
-      aInnerWindow, principal, aHasUserInteraction, Nothing());
+      aInnerWindow, principal, aHasUserInteraction, Nothing(), aFrameOnly);
 
   // Try to allow access for the given principal.
   return StorageAccessAPIHelper::AllowAccessFor(

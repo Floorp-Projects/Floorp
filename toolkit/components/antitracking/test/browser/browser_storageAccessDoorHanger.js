@@ -133,7 +133,7 @@ async function testDoorHanger(
           subject &&
           subject
             .QueryInterface(Ci.nsIPermission)
-            .type.startsWith("3rdPartyStorage^") &&
+            .type.startsWith("3rdPartyFrameStorage^") &&
           subject.principal.origin == new URL(topPage).origin &&
           data == "added";
       }
@@ -164,6 +164,7 @@ async function testDoorHanger(
 
     if (choice == BLOCK) {
       if (useEscape) {
+        info("hitting escape");
         EventUtils.synthesizeKey("KEY_Escape", {}, window);
       } else {
         await clickSecondaryAction();
@@ -236,7 +237,7 @@ async function testDoorHanger(
   gPermissionPanel._identityPermissionBox.click();
   await permissionPopupPromise;
   let permissionItem = document.querySelector(
-    ".permission-popup-permission-item-3rdPartyStorage"
+    ".permission-popup-permission-item-3rdPartyFrameStorage"
   );
   ok(permissionItem, "Permission item exists");
   ok(
@@ -265,7 +266,7 @@ async function testDoorHanger(
 
 async function preparePermissionsFromOtherSites(topPage) {
   info("Faking permissions from other sites");
-  let type = "3rdPartyStorage^https://tracking.example.org";
+  let type = "3rdPartyFrameStorage^https://example.org";
   let permission = Services.perms.ALLOW_ACTION;
   let expireType = Services.perms.EXPIRE_SESSION;
   if (topPage == TEST_TOP_PAGE) {
@@ -311,6 +312,7 @@ async function cleanUp() {
 }
 
 async function runRound(topPage, showPrompt, maxConcurrent, disableWebcompat) {
+  info("Starting round");
   if (showPrompt) {
     await preparePermissionsFromOtherSites(topPage);
     await testDoorHanger(
