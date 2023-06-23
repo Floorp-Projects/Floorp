@@ -117,9 +117,9 @@ class SpliceableJSONWriter;
 
 static constexpr PowerOfTwo32 BASE_PROFILER_DEFAULT_ENTRIES =
 #  if !defined(GP_PLAT_arm_android)
-    MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
+    MakePowerOfTwo32<16 * 1024 * 1024>();  // 16M entries = 128MiB
 #  else
-    MakePowerOfTwo32<2 * 1024 * 1024>();           // 2M entries = 16MB
+    MakePowerOfTwo32<4 * 1024 * 1024>();            // 4M entries = 32MiB
 #  endif
 
 // Startup profiling usually need to capture more data, especially on slow
@@ -128,9 +128,9 @@ static constexpr PowerOfTwo32 BASE_PROFILER_DEFAULT_ENTRIES =
 // https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoThread.java
 static constexpr PowerOfTwo32 BASE_PROFILER_DEFAULT_STARTUP_ENTRIES =
 #  if !defined(GP_PLAT_arm_android)
-    mozilla::MakePowerOfTwo32<64 * 1024 * 1024>();  // 64M entries = 512MB
+    mozilla::MakePowerOfTwo32<64 * 1024 * 1024>();  // 64M entries = 512MiB
 #  else
-    mozilla::MakePowerOfTwo32<8 * 1024 * 1024>();  // 8M entries = 64MB
+    mozilla::MakePowerOfTwo32<16 * 1024 * 1024>();  // 16M entries = 128MiB
 #  endif
 
 // Note: Keep in sync with GeckoThread.maybeStartGeckoProfiler:
