@@ -12,6 +12,7 @@
  */
 
 enum CanvasWindingRule { "nonzero", "evenodd" };
+enum CanvasTextRendering { "auto", "optimizeSpeed", "optimizeLegibility", "geometricPrecision" };
 
 [GenerateInit]
 dictionary ContextAttributes2D {
@@ -291,7 +292,7 @@ interface mixin CanvasTextDrawingStyles {
   attribute DOMString fontKerning; // "auto", "normal", "none" (default: "auto")
 // NOT IMPLEMENTED  attribute CanvasFontStretch fontStretch; // (default: "normal")
 // NOT IMPLEMENTED  attribute CanvasFontVariantCaps fontVariantCaps; // (default: "normal")
-// NOT IMPLEMENTED  attribute CanvasTextRendering textRendering; // (default: "auto")
+  attribute CanvasTextRendering textRendering; // (default: "auto")
   attribute UTF8String wordSpacing; // default: "0px"
 };
 

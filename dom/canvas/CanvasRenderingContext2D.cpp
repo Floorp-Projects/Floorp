@@ -100,6 +100,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoBindings.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
@@ -990,6 +991,7 @@ CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
       textBaseline(aOther.textBaseline),
       textDirection(aOther.textDirection),
       fontKerning(aOther.fontKerning),
+      textRendering(aOther.textRendering),
       letterSpacing(aOther.letterSpacing),
       wordSpacing(aOther.wordSpacing),
       letterSpacingStr(aOther.letterSpacingStr),
@@ -4498,6 +4500,26 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
                         canvasStyle, presContext, canvasStyle->StyleFont(),
                         canvasStyle->StyleText(), 0)
                   : gfx::ShapedTextFlags();
+
+  switch (state.textRendering) {
+    case CanvasTextRendering::Auto:
+      if (state.fontFont.size.ToCSSPixels() <
+          StaticPrefs::browser_display_auto_quality_min_font_size()) {
+        processor.mTextRunFlags |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
+      } else {
+        processor.mTextRunFlags &= ~gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
+      }
+      break;
+    case CanvasTextRendering::OptimizeSpeed:
+      processor.mTextRunFlags |= gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
+      break;
+    case CanvasTextRendering::OptimizeLegibility:
+    case CanvasTextRendering::GeometricPrecision:
+      processor.mTextRunFlags &= ~gfx::ShapedTextFlags::TEXT_OPTIMIZE_SPEED;
+      break;
+    default:
+      MOZ_CRASH("unknown textRendering!");
+  }
 
   GetAppUnitsValues(&processor.mAppUnitsPerDevPixel, nullptr);
   processor.mPt = gfx::Point(aX, aY);

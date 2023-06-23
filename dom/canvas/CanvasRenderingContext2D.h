@@ -306,6 +306,11 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
   void GetFontKerning(nsAString& aFontKerning);
   void SetFontKerning(const nsAString& aFontKerning);
 
+  CanvasTextRendering TextRendering() { return CurrentState().textRendering; }
+  void SetTextRendering(const CanvasTextRendering& aTextRendering) {
+    CurrentState().textRendering = aTextRendering;
+  }
+
   void GetLetterSpacing(nsACString& aLetterSpacing);
   void SetLetterSpacing(const nsACString& aLetterSpacing);
   void GetWordSpacing(nsACString& aWordSpacing);
@@ -973,6 +978,7 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     TextBaseline textBaseline = TextBaseline::ALPHABETIC;
     TextDirection textDirection = TextDirection::INHERIT;
     FontKerning fontKerning = FontKerning::AUTO;
+    CanvasTextRendering textRendering = CanvasTextRendering::Auto;
 
     gfx::Float letterSpacing = 0.0f;
     gfx::Float wordSpacing = 0.0f;
