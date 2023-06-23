@@ -107,9 +107,17 @@ class VoiceEngineInterface : public RtpHeaderExtensionQueryInterface {
       const AudioOptions& options,
       const webrtc::CryptoOptions& crypto_options,
       webrtc::AudioCodecPairId codec_pair_id) {
+    // For the case where a subclass overrides the deprecated method
+    // but not the replacement method, call the deprecated method.
     // TODO(bugs.webrtc.org/13931): Remove default implementation
     // when downstream has migrated to new API.
-    RTC_CHECK_NOTREACHED();
+    RTC_CHECK(!recursion_guard_);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    RTC_LOG(LS_ERROR)
+        << "Override of deprecated declaration detected - please update!";
+    return CreateMediaChannel(call, config, options, crypto_options);
+#pragma clang diagnostic pop
   }
 
   // Backwards compatible version
@@ -118,9 +126,12 @@ class VoiceEngineInterface : public RtpHeaderExtensionQueryInterface {
                      const MediaConfig& config,
                      const AudioOptions& options,
                      const webrtc::CryptoOptions& crypto_options) {
-    return CreateMediaChannel(MediaChannel::Role::kBoth, call, config, options,
-                              crypto_options,
-                              webrtc::AudioCodecPairId::Create());
+    recursion_guard_ = true;
+    auto new_channel =
+        CreateMediaChannel(MediaChannel::Role::kBoth, call, config, options,
+                           crypto_options, webrtc::AudioCodecPairId::Create());
+    recursion_guard_ = false;
+    return new_channel;
   }
 
   virtual const std::vector<AudioCodec>& send_codecs() const = 0;
@@ -137,6 +148,11 @@ class VoiceEngineInterface : public RtpHeaderExtensionQueryInterface {
 
   virtual absl::optional<webrtc::AudioDeviceModule::Stats>
   GetAudioDeviceStats() = 0;
+
+ private:
+  // Workaround variable for avoiding recursion between old and new APIs.
+  // TODO(bugs.webrtc.org/13931): Remove when old interface is gone.
+  bool recursion_guard_ = false;
 };
 
 class VideoEngineInterface : public RtpHeaderExtensionQueryInterface {
@@ -156,10 +172,18 @@ class VideoEngineInterface : public RtpHeaderExtensionQueryInterface {
       const VideoOptions& options,
       const webrtc::CryptoOptions& crypto_options,
       webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory) {
+    // For the case where a subclass overrides the deprecated method
+    // but not the replacement method, call the deprecated method.
     // TODO(bugs.webrtc.org/13931): Remove default implementation
-    // when downstream has migrated.
-    RTC_CHECK_NOTREACHED();
-    return nullptr;
+    // when downstream has migrated to new API.
+    RTC_CHECK(!recursion_guard_);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    RTC_LOG(LS_ERROR)
+        << "Override of deprecated declaration detected - please update!";
+    return CreateMediaChannel(call, config, options, crypto_options,
+                              video_bitrate_allocator_factory);
+#pragma clang diagnostic pop
   }
 
   // Creates a video media channel.
@@ -172,8 +196,12 @@ class VideoEngineInterface : public RtpHeaderExtensionQueryInterface {
       const VideoOptions& options,
       const webrtc::CryptoOptions& crypto_options,
       webrtc::VideoBitrateAllocatorFactory* video_bitrate_allocator_factory) {
-    return CreateMediaChannel(MediaChannel::Role::kBoth, call, config, options,
-                              crypto_options, video_bitrate_allocator_factory);
+    recursion_guard_ = true;
+    auto new_channel =
+        CreateMediaChannel(MediaChannel::Role::kBoth, call, config, options,
+                           crypto_options, video_bitrate_allocator_factory);
+    recursion_guard_ = false;
+    return new_channel;
   }
 
   // Retrieve list of supported codecs.
@@ -190,6 +218,11 @@ class VideoEngineInterface : public RtpHeaderExtensionQueryInterface {
     RTC_DCHECK(include_rtx);
     return recv_codecs();
   }
+
+ private:
+  // Workaround variable for avoiding recursion between old and new APIs.
+  // TODO(bugs.webrtc.org/13931): Remove when old interface is gone.
+  bool recursion_guard_ = false;
 };
 
 // MediaEngineInterface is an abstraction of a media engine which can be
