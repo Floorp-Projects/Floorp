@@ -373,6 +373,8 @@
     <string name="preferences_category_select_default_search_engine">Vel ein</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts">Handsam søkjesnarvegar</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">Rediger motorar som er synlege i søkjemenyen</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_category_engines_in_search_menu">Motorar synlege på søkjemenyen</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -1911,8 +1913,12 @@
     <string name="search_add_custom_engine_name_hint">Namn</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Søkjemotornamn</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label">Søkjestreng-URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Søkjestreng å bruke</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2">URL å bruke for søk</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Byt ut spørjinga med «%s». Eksempel:\nhttps://www.google.com/search?q=%s</string>
 

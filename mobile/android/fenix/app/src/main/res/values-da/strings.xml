@@ -261,6 +261,9 @@
     <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Søg denne gang i:</string>
 
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Søgetjenesten %s</string>
+
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Mød din tilpassede startside. Seneste faneblade, bogmærker og søgeresultater vises her.</string>

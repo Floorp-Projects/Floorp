@@ -324,6 +324,8 @@
     <string name="juno_onboarding_default_browser_negative_button">Sī ga\'hue akuan\' nïn</string>
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title">Gachīn āsìj riña si tēlefonôt da’ gātūt riña aga’ sikà’ rà nīkājt</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">Nākāj nej rakïj ñanj asi nej da’nga’ huì dunâjt riña a’ngô nej aga’a da’ gachē nunt hiūj nan.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button">Gāyi\'ì sēsiûn</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -363,6 +365,14 @@
     <string name="preferences_category_general">Da\' huā ngej</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Rayi\'î</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">Nāguī ‘ngòj</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts">Nākāj gīni’hiājt dàj hua rayi’î nej sa nīkāj sa nana’huî’t</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">Nādunā dàj gā riña nej sa nana’hui’i riña menú ‘na’ nej sa nana’hui’t</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu">Nej sa nana’hui’t rugui’ riña menú ‘na’ nej sa nana’hui’t</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Sa nana\'ui\' nīka \'na\'</string>
     <!-- Preference for settings related to Search -->
@@ -392,19 +402,32 @@
     <string name="preferences_open_links_in_a_private_tab">Gāna\'nin riña a\'ngô rakïj ñanj nakàa</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">Ga\'nīn nārij ñadu\'ua pantaya riña gāchē nu huìt</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Sisī gā’nïnt, gūruguì’ nej rakïj ñanj huìi gīni’hiājt ngà hua ni’nïnj a’ngô nej aplikasiûn</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Gāchrūn aksêso direkto riña aché nu huìt</string>
 
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">‘Hiaj sunj màn ngà HTTPS</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Nadugua\' si banêr kôki</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Nādugua’ nej si banêr kôki</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
     <string name="reduce_cookie_banner_option_off">Dūnâ\’àj</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Nāchrūn</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s ruhuâ nārán mān’an riña nej kokî achín nì’hiaj nej si banêr kôki.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Nitāj si huā nî’nïn guendâ sitiô nan</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Dūyichin\'</string>
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Gāchìnj man</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Gā’nïnj si nùguàn’t gān’an</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Nādugua\' si Banêr Kôki</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -423,6 +446,10 @@
     <string name="reduce_cookie_banner_unsupported_site">Huā sa gāchin da’ gā’hue nāyi’nïn sitiô nan</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Nachrūn sa nadugua’ nej si banêr nej kôki guendâ %1$s aj.</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Dūnâ’àjt sa nadugua’ nej si banêr nej kôki guendâ %1$s aj</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Akuan’ nï̄, nitāj si â’nï̀nj sitiô nan da’ nāgà’ si banêr nej kôki. Ruhuât gāchìnj nīhiát da’ nātsij ñûnj sitiô nan nī gā’nïn ñûnj nej sa gàchin nan ne’ rūkù doj aj.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Sī ga\'hue Akuan\' nïn</string>
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
