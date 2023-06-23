@@ -17,7 +17,6 @@ const PDFJS_EVENT_ID = "pdf.js.message";
 const PDF_VIEWER_ORIGIN = "resource://pdf.js";
 const PDF_VIEWER_WEB_PAGE = "resource://pdf.js/web/viewer.html";
 const MAX_NUMBER_OF_PREFS = 50;
-const MAX_STRING_PREF_LENGTH = 128;
 const PDF_CONTENT_TYPE = "application/pdf";
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
@@ -25,7 +24,6 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  AsyncPrefs: "resource://gre/modules/AsyncPrefs.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
   NetworkManager: "resource://pdf.js/PdfJsNetwork.sys.mjs",
   PdfJs: "resource://pdf.js/PdfJs.sys.mjs",
@@ -453,45 +451,6 @@ class ChromeActions {
 
     let actor = getActor(this.domWindow);
     actor?.sendAsyncMessage("PDFJS:Parent:updateMatchesCount", data);
-  }
-
-  setPreferences(prefs, sendResponse) {
-    var defaultBranch = Services.prefs.getDefaultBranch("pdfjs.");
-    var numberOfPrefs = 0;
-    for (var key in prefs) {
-      if (++numberOfPrefs > MAX_NUMBER_OF_PREFS) {
-        log(
-          "setPreferences - Exceeded the maximum number of preferences " +
-            "that is allowed to be set at once."
-        );
-        break;
-      } else if (!defaultBranch.getPrefType(key)) {
-        continue;
-      }
-      const prefName = `pdfjs.${key}`,
-        prefValue = prefs[key];
-      switch (typeof prefValue) {
-        case "boolean":
-          lazy.AsyncPrefs.set(prefName, prefValue);
-          break;
-        case "number":
-          lazy.AsyncPrefs.set(prefName, prefValue);
-          break;
-        case "string":
-          if (prefValue.length > MAX_STRING_PREF_LENGTH) {
-            log(
-              "setPreferences - Exceeded the maximum allowed length " +
-                "for a string preference."
-            );
-          } else {
-            lazy.AsyncPrefs.set(prefName, prefValue);
-          }
-          break;
-      }
-    }
-    if (sendResponse) {
-      sendResponse(true);
-    }
   }
 
   getPreferences(prefs, sendResponse) {
