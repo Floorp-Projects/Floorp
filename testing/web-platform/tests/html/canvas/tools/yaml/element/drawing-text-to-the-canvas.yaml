@@ -958,36 +958,60 @@
 - name: 2d.text.drawing.style.textRendering.settings
   desc: Testing basic functionalities of textRendering in Canvas
   code: |
-    // Setting textRendering with lower cases
+    // Setting textRendering with correct case.
     @assert ctx.textRendering === "auto";
+
+    ctx.textRendering = "optimizeSpeed";
+    @assert ctx.textRendering === "optimizeSpeed";
+
+    ctx.textRendering = "optimizeLegibility";
+    @assert ctx.textRendering === "optimizeLegibility";
+
+    ctx.textRendering = "geometricPrecision";
+    @assert ctx.textRendering === "geometricPrecision";
 
     ctx.textRendering = "auto";
     @assert ctx.textRendering === "auto";
 
-    ctx.textRendering = "optimizespeed";
-    @assert ctx.textRendering === "optimizeSpeed";
-
-    ctx.textRendering = "optimizelegibility";
-    @assert ctx.textRendering === "optimizeLegibility";
-
-    ctx.textRendering = "geometricprecision";
-    @assert ctx.textRendering === "geometricPrecision";
-
-    // Setting textRendering with lower cases and upper cases word.
-    ctx.textRendering = "aUto";
+    // Setting textRendering with incorrect case is ignored.
+    ctx.textRendering = "OPtimizeSpeed";
     @assert ctx.textRendering === "auto";
 
-    ctx.textRendering = "OPtimizeSpeed";
-    @assert ctx.textRendering === "optimizeSpeed";
-
     ctx.textRendering = "OPtimizELEgibility";
-    @assert ctx.textRendering === "optimizeLegibility";
+    @assert ctx.textRendering === "auto";
 
     ctx.textRendering = "GeometricPrecision";
-    @assert ctx.textRendering === "geometricPrecision";
+    @assert ctx.textRendering === "auto";
+
+    ctx.textRendering = "optimizespeed";
+    @assert ctx.textRendering === "auto";
+
+    ctx.textRendering = "optimizelegibility";
+    @assert ctx.textRendering === "auto";
+
+    ctx.textRendering = "geometricprecision";
+    @assert ctx.textRendering === "auto";
+
+    ctx.textRendering = "optimizeLegibility";
+    @assert ctx.textRendering === "optimizeLegibility";
+
+    ctx.textRendering = "AUTO";
+    @assert ctx.textRendering === "optimizeLegibility";
+
+    ctx.textRendering = "Auto";
+    @assert ctx.textRendering === "optimizeLegibility";
 
     // Setting textRendering with non-existing font variant.
     ctx.textRendering = "abcd";
-    @assert ctx.textRendering === "geometricPrecision";
+    @assert ctx.textRendering === "optimizeLegibility";
+
+    ctx.textRendering = "normal";
+    @assert ctx.textRendering === "optimizeLegibility";
+
+    ctx.textRendering = "";
+    @assert ctx.textRendering === "optimizeLegibility";
+
+    ctx.textRendering = "auto";
+    @assert ctx.textRendering === "auto";
 
 # TODO: shadows, alpha, composite, clip
