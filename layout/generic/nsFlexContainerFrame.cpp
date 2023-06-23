@@ -514,6 +514,14 @@ class nsFlexContainerFrame::FlexItem final {
 
   bool HasAnyAutoMargin() const { return mHasAnyAutoMargin; }
 
+  BaselineSharingGroup ItemBaselineSharingGroup() const {
+    MOZ_ASSERT(mAlignSelf._0 == StyleAlignFlags::BASELINE ||
+                   mAlignSelf._0 == StyleAlignFlags::LAST_BASELINE,
+               "mBaselineSharingGroup only gets a meaningful value "
+               "for baseline-aligned items");
+    return mBaselineSharingGroup;
+  }
+
   // Indicates whether this item is a "strut" left behind by an element with
   // visibility:collapse.
   bool IsStrut() const { return mIsStrut; }
@@ -913,6 +921,10 @@ class nsFlexContainerFrame::FlexItem final {
 
   // Does this item have an auto margin in either main or cross axis?
   bool mHasAnyAutoMargin = false;
+
+  // If this item is {first,last}-baseline-aligned using 'align-self', which of
+  // its FlexLine's baseline sharing groups does it participate in?
+  BaselineSharingGroup mBaselineSharingGroup = BaselineSharingGroup::First;
 
   // My "align-self" computed value (with "auto" swapped out for parent"s
   // "align-items" value, in our constructor).
@@ -2167,18 +2179,43 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
   }
 #endif  // DEBUG
 
-  // Map align-self 'baseline' value to 'start' when baseline alignment
-  // is not possible because the FlexItem's block axis is orthogonal to
-  // the cross axis of the container. If that's the case, we just directly
-  // convert our align-self value here, so that we don't have to handle this
-  // with special cases elsewhere.
-  // We are treating this case as one where it is appropriate to use the
-  // fallback values defined at https://www.w3.org/TR/css-align/#baseline-values
-  if (!IsBlockAxisCrossAxis()) {
-    if (mAlignSelf._0 == StyleAlignFlags::BASELINE) {
-      mAlignSelf = {StyleAlignFlags::FLEX_START};
-    } else if (mAlignSelf._0 == StyleAlignFlags::LAST_BASELINE) {
-      mAlignSelf = {StyleAlignFlags::FLEX_END};
+  if (mAlignSelf._0 == StyleAlignFlags::BASELINE ||
+      mAlignSelf._0 == StyleAlignFlags::LAST_BASELINE) {
+    // Check which of the item's baselines we're meant to use (first vs. last)
+    const bool usingItemFirstBaseline =
+        (mAlignSelf._0 == StyleAlignFlags::BASELINE);
+    if (IsBlockAxisCrossAxis()) {
+      // The flex item wants to be aligned in the cross axis using one of its
+      // baselines; and the cross axis is the item's block axis, so
+      // baseline-alignment in that axis makes sense.
+
+      // XXXdholbert For now, we just use the item's 'align-self'
+      // baseline-choice to directly determine its group. The next patch in
+      // this series makes this a bit more subtle.
+      mBaselineSharingGroup = usingItemFirstBaseline
+                                  ? BaselineSharingGroup::First
+                                  : BaselineSharingGroup::Last;
+    } else {
+      // The flex item wants to be aligned in the cross axis using one of its
+      // baselines, but baseline alignment is not possible because the
+      // FlexItem's block axis is *orthogonal* to the container's cross
+      // axis. To handle this, we just directly convert our align-self value to
+      // a fallback value here, so that we don't have to handle this with
+      // special cases elsewhere.  We are treating this case as one where it is
+      // appropriate to use the fallback values defined at
+      // https://www.w3.org/TR/css-align/#baseline-values
+      // (Note that the css-align-3 spec suggests that the fallback value is
+      // 'start'/'end', but interop & webcompat seems to require that we
+      // instead fall back to 'flex-start'/'flex-end' for flex items.)
+      //
+      // XXXdholbert Per a spec change, we're now really supposed to handle
+      // this scenairo by synthesizing a baseline from the item's border box
+      // and using that for baseline alignment.  See bug 1818933
+      if (usingItemFirstBaseline) {
+        mAlignSelf = {StyleAlignFlags::FLEX_START};
+      } else {
+        mAlignSelf = {StyleAlignFlags::FLEX_END};
+      }
     }
   }
 }
@@ -3613,10 +3650,16 @@ SingleLineCrossAxisPositionTracker::SingleLineCrossAxisPositionTracker(
 
 void FlexLine::ComputeCrossSizeAndBaseline(
     const FlexboxAxisTracker& aAxisTracker) {
+  // NOTE: in these "cross{Start,End}ToFurthest{First,Last}Baseline" variables,
+  // the "first/last" term is referring to the flex *line's* baseline-sharing
+  // groups, which may or may not match any flex *item's* exact align-self
+  // value. See the code that sets FlexItem::mBaselineSharingGroup for more
+  // details.
   nscoord crossStartToFurthestFirstBaseline = nscoord_MIN;
   nscoord crossEndToFurthestFirstBaseline = nscoord_MIN;
   nscoord crossStartToFurthestLastBaseline = nscoord_MIN;
   nscoord crossEndToFurthestLastBaseline = nscoord_MIN;
+
   nscoord largestOuterCrossSize = 0;
   for (const FlexItem& item : Items()) {
     nscoord curOuterCrossSize = item.OuterCrossSize();
@@ -3624,9 +3667,8 @@ void FlexLine::ComputeCrossSizeAndBaseline(
     if ((item.AlignSelf()._0 == StyleAlignFlags::BASELINE ||
          item.AlignSelf()._0 == StyleAlignFlags::LAST_BASELINE) &&
         item.NumAutoMarginsInCrossAxis() == 0) {
-      const bool useFirst = (item.AlignSelf()._0 == StyleAlignFlags::BASELINE);
-      // FIXME: Once we support "writing-mode", we'll have to do baseline
-      // alignment in vertical flex containers here (w/ horizontal cross-axes).
+      const bool usingItemFirstBaseline =
+          (item.AlignSelf()._0 == StyleAlignFlags::BASELINE);
 
       // Find distance from our item's cross-start and cross-end margin-box
       // edges to its baseline.
@@ -3655,13 +3697,13 @@ void FlexLine::ComputeCrossSizeAndBaseline(
       //   crossEndToBaseline.
 
       nscoord crossStartToBaseline = item.BaselineOffsetFromOuterCrossEdge(
-          aAxisTracker.CrossAxisPhysicalStartSide(), useFirst);
+          aAxisTracker.CrossAxisPhysicalStartSide(), usingItemFirstBaseline);
       nscoord crossEndToBaseline = curOuterCrossSize - crossStartToBaseline;
 
       // Now, update our "largest" values for these (across all the flex items
       // in this flex line), so we can use them in computing the line's cross
       // size below:
-      if (useFirst) {
+      if (item.ItemBaselineSharingGroup() == BaselineSharingGroup::First) {
         crossStartToFurthestFirstBaseline =
             std::max(crossStartToFurthestFirstBaseline, crossStartToBaseline);
         crossEndToFurthestFirstBaseline =
@@ -3832,37 +3874,48 @@ void SingleLineCrossAxisPositionTracker::EnterAlignPackingSpace(
     mPosition += (aLine.LineCrossSize() - aItem.OuterCrossSize()) / 2;
   } else if (alignSelf == StyleAlignFlags::BASELINE ||
              alignSelf == StyleAlignFlags::LAST_BASELINE) {
-    const bool useFirst = (alignSelf == StyleAlignFlags::BASELINE);
+    const bool usingItemFirstBaseline =
+        (alignSelf == StyleAlignFlags::BASELINE);
 
-    // Baseline-aligned items are collectively aligned with the line's physical
-    // cross-start or cross-end side, depending on whether we're doing
-    // first-baseline or last-baseline alignment.
-    const mozilla::Side baselineAlignStartSide =
-        useFirst ? aAxisTracker.CrossAxisPhysicalStartSide()
-                 : aAxisTracker.CrossAxisPhysicalEndSide();
+    // The first-baseline sharing group gets (collectively) aligned to the
+    // FlexLine's cross-start side, and similarly the last-baseline sharing
+    // group gets snapped to the cross-end side.
+    const bool isFirstBaselineSharingGroup =
+        aItem.ItemBaselineSharingGroup() == BaselineSharingGroup::First;
+    const mozilla::Side alignSide =
+        isFirstBaselineSharingGroup ? aAxisTracker.CrossAxisPhysicalStartSide()
+                                    : aAxisTracker.CrossAxisPhysicalEndSide();
 
+    // To compute the aligned position for our flex item, we determine:
+    // (1) The distance from the item's alignSide edge to the item's relevant
+    //     baseline.
     nscoord itemBaselineOffset = aItem.BaselineOffsetFromOuterCrossEdge(
-        baselineAlignStartSide, useFirst);
+        alignSide, usingItemFirstBaseline);
 
-    nscoord lineBaselineOffset =
-        useFirst ? aLine.FirstBaselineOffset() : aLine.LastBaselineOffset();
+    // (2) The distance between the FlexLine's alignSide edge and the relevant
+    //     baseline-sharing-group's baseline position.
+    nscoord lineBaselineOffset = isFirstBaselineSharingGroup
+                                     ? aLine.FirstBaselineOffset()
+                                     : aLine.LastBaselineOffset();
 
     NS_ASSERTION(lineBaselineOffset >= itemBaselineOffset,
                  "failed at finding largest baseline offset");
 
-    // How much do we need to adjust our position (from the line edge),
-    // to get the item's baseline to hit the line's baseline offset:
-    nscoord baselineDiff = lineBaselineOffset - itemBaselineOffset;
+    // (3) The difference between the above offsets, which tells us how far we
+    //     need to shift the item away from the FlexLine's alignSide edge so
+    //     that its baseline is at the proper position for its group.
+    nscoord itemOffsetFromLineEdge = lineBaselineOffset - itemBaselineOffset;
 
-    if (useFirst) {
-      // mPosition is already at line's flex-start edge.
+    if (isFirstBaselineSharingGroup) {
+      // alignSide is the line's cross-start edge. mPosition is already there.
       // From there, we step *forward* by the baseline adjustment:
-      mPosition += baselineDiff;
+      mPosition += itemOffsetFromLineEdge;
     } else {
-      // Advance to align item w/ line's flex-end edge (as in FLEX_END case):
+      // alignSide is the line's cross-end edge. Advance mPosition to align
+      // item with that edge (as in FLEX_END case)...
       mPosition += aLine.LineCrossSize() - aItem.OuterCrossSize();
       // ...and step *back* by the baseline adjustment:
-      mPosition -= baselineDiff;
+      mPosition -= itemOffsetFromLineEdge;
     }
   } else {
     MOZ_ASSERT_UNREACHABLE("Unexpected align-self value");
