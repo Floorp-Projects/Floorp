@@ -595,13 +595,6 @@ bool HTMLTableAccessible::IsProbablyLayoutTable() {
     }
   }
 
-  // Check for nested tables.
-  nsCOMPtr<nsIHTMLCollection> nestedTables =
-      el->GetElementsByTagName(u"table"_ns);
-  if (nestedTables->Length() > 0) {
-    RETURN_LAYOUT_ANSWER(true, "Has a nested table within it");
-  }
-
   // If only 1 column or only 1 row, it's for layout.
   auto colCount = ColCount();
   if (colCount <= 1) {
@@ -632,8 +625,15 @@ bool HTMLTableAccessible::IsProbablyLayoutTable() {
   }
 
   nsMargin border = cellFrame->StyleBorder()->GetComputedBorder();
-  if (border.top && border.bottom && border.left && border.right) {
+  if (border.top || border.bottom || border.left || border.right) {
     RETURN_LAYOUT_ANSWER(false, "Has nonzero border-width on table cell");
+  }
+
+  // Check for nested tables.
+  nsCOMPtr<nsIHTMLCollection> nestedTables =
+      el->GetElementsByTagName(u"table"_ns);
+  if (nestedTables->Length() > 0) {
+    RETURN_LAYOUT_ANSWER(true, "Has a nested table within it");
   }
 
   // Rules for non-bordered tables with 2-4 columns and 2+ rows from here on
