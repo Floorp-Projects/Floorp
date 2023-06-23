@@ -63,33 +63,46 @@ def format_taskgraph_yaml(taskgraph):
     return yaml.safe_dump(taskgraph.to_json(), default_flow_style=False)
 
 
-def get_filtered_taskgraph(taskgraph, tasksregex):
+def get_filtered_taskgraph(taskgraph, tasksregex, exclude_keys):
     """
     Filter all the tasks on basis of a regular expression
     and returns a new TaskGraph object
     """
     from taskgraph.graph import Graph
+    from taskgraph.task import Task
     from taskgraph.taskgraph import TaskGraph
 
-    # return original taskgraph if no regular expression is passed
-    if not tasksregex:
-        return taskgraph
-    named_links_dict = taskgraph.graph.named_links_dict()
-    filteredtasks = {}
-    filterededges = set()
-    regexprogram = re.compile(tasksregex)
+    if tasksregex:
+        named_links_dict = taskgraph.graph.named_links_dict()
+        filteredtasks = {}
+        filterededges = set()
+        regexprogram = re.compile(tasksregex)
 
-    for key in taskgraph.graph.visit_postorder():
-        task = taskgraph.tasks[key]
-        if regexprogram.match(task.label):
-            filteredtasks[key] = task
-            for depname, dep in named_links_dict[key].items():
-                if regexprogram.match(dep):
-                    filterededges.add((key, dep, depname))
-    filtered_taskgraph = TaskGraph(
-        filteredtasks, Graph(set(filteredtasks), filterededges)
-    )
-    return filtered_taskgraph
+        for key in taskgraph.graph.visit_postorder():
+            task = taskgraph.tasks[key]
+            if regexprogram.match(task.label):
+                filteredtasks[key] = task
+                for depname, dep in named_links_dict[key].items():
+                    if regexprogram.match(dep):
+                        filterededges.add((key, dep, depname))
+
+        taskgraph = TaskGraph(filteredtasks, Graph(set(filteredtasks), filterededges))
+
+    if exclude_keys:
+        for label, task in taskgraph.tasks.items():
+            task_dict = task.to_json()
+            for key in exclude_keys:
+                obj = task_dict
+                attrs = key.split(".")
+                while attrs[0] in obj:
+                    if len(attrs) == 1:
+                        del obj[attrs[0]]
+                        break
+                    obj = obj[attrs[0]]
+                    attrs = attrs[1:]
+            taskgraph.tasks[label] = Task.from_json(task_dict)
+
+    return taskgraph
 
 
 FORMAT_METHODS = {
@@ -131,7 +144,7 @@ def format_taskgraph(options, parameters, logfile=None):
     tgg = get_taskgraph_generator(options.get("root"), parameters)
 
     tg = getattr(tgg, options["graph_attr"])
-    tg = get_filtered_taskgraph(tg, options["tasks_regex"])
+    tg = get_filtered_taskgraph(tg, options["tasks_regex"], options["exclude_keys"])
     format_method = FORMAT_METHODS[options["format"] or "labels"]
     return format_method(tg)
 
@@ -293,6 +306,14 @@ def generate_taskgraph(options, parameters, logdir):
     "--tasks",
     default=None,
     help="only return tasks with labels matching this regular " "expression.",
+)
+@argument(
+    "--exclude-key",
+    default=None,
+    dest="exclude_keys",
+    action="append",
+    help="Exclude the specified key (using dot notation) from the final result. "
+    "This is mainly useful with '--diff' to filter out expected differences.",
 )
 @argument(
     "--target-kind",
