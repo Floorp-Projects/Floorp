@@ -56,3 +56,35 @@ add_task(async function test_specialAction() {
 
   specialActionStub.restore();
 });
+
+add_task(async function test_embedded_import() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.migrate.internal-testing.enabled", true]],
+  });
+  let message = (await PanelTestProvider.getMessages()).find(
+    m => m.id === "IMPORT_SETTINGS_EMBEDDED"
+  );
+  let browser = BrowserWindowTracker.getTopWindow().gBrowser.selectedBrowser;
+  let win = await showDialog({ message, browser });
+  let migrationWizardReady = BrowserTestUtils.waitForEvent(
+    win,
+    "MigrationWizard:Ready"
+  );
+
+  await TestUtils.waitForCondition(() =>
+    win.document.querySelector("migration-wizard")
+  );
+  Assert.ok(
+    win.document.querySelector("migration-wizard"),
+    "Migration Wizard rendered"
+  );
+
+  await migrationWizardReady;
+
+  let [panelList] = win.document.querySelector("migration-wizard").children;
+  Assert.equal(panelList.tagName, "PANEL-LIST");
+  Assert.equal(panelList.firstChild.tagName, "PANEL-ITEM");
+
+  win.close();
+  await SpecialPowers.popPrefEnv();
+});

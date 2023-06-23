@@ -36,7 +36,7 @@ export class MigrationWizard extends HTMLElement {
         <link rel="stylesheet" href="chrome://browser/skin/migration/migration-wizard.css">
         <named-deck id="wizard-deck" selected-view="page-loading" aria-busy="true" part="deck">
           <div name="page-loading">
-            <h1 data-l10n-id="migration-wizard-selection-header"></h1>
+            <h1 data-l10n-id="migration-wizard-selection-header" part="header"></h1>
             <div class="loading-block large"></div>
             <div class="loading-block small"></div>
             <div class="loading-block small"></div>
@@ -49,7 +49,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-selection">
-            <h1 data-l10n-id="migration-wizard-selection-header"></h1>
+            <h1 data-l10n-id="migration-wizard-selection-header" part="header"></h1>
             <button id="browser-profile-selector" aria-haspopup="menu" aria-labelledby="migrator-name profile-name">
               <span class="migrator-icon" role="img"></span>
               <div class="migrator-description" role="presentation">
@@ -107,7 +107,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-progress">
-            <h1 id="progress-header" data-l10n-id="migration-wizard-progress-header"></h1>
+            <h1 id="progress-header" data-l10n-id="migration-wizard-progress-header" part="header"></h1>
             <div class="resource-progress">
               <div data-resource-type="BOOKMARKS" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
@@ -181,7 +181,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-file-import-progress">
-            <h1 id="file-import-progress-header"></h1>
+            <h1 id="file-import-progress-header"part="header"></h1>
             <div class="resource-progress">
               <div data-resource-type="PASSWORDS_FROM_FILE" class="resource-progress-group">
                 <span class="progress-icon-parent"><span class="progress-icon" role="img"></span></span>
@@ -215,7 +215,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-safari-password-permission">
-            <h1 data-l10n-id="migration-safari-password-import-header"></h1>
+            <h1 data-l10n-id="migration-safari-password-import-header" part="header"></h1>
             <span data-l10n-id="migration-safari-password-import-steps-header"></span>
             <ol>
               <li data-l10n-id="migration-safari-password-import-step1"></li>
@@ -233,7 +233,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-safari-permission">
-            <h1 data-l10n-id="migration-wizard-selection-header"></h1>
+            <h1 data-l10n-id="migration-wizard-selection-header" part="header"></h1>
             <div data-l10n-id="migration-wizard-safari-permissions-sub-header"></div>
             <ol>
               <li data-l10n-id="migration-wizard-safari-instructions-continue"></li>
@@ -246,7 +246,7 @@ export class MigrationWizard extends HTMLElement {
           </div>
 
           <div name="page-no-browsers-found">
-            <h1 data-l10n-id="migration-wizard-selection-header"></h1>
+            <h1 data-l10n-id="migration-wizard-selection-header" part="header"></h1>
             <div class="no-browsers-found error-message">
               <span class="error-icon" role="img"></span>
               <div class="no-browsers-found-message" data-l10n-id="migration-wizard-import-browser-no-browsers"></div>
