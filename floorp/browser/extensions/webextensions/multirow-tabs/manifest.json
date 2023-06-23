@@ -1,0 +1,57 @@
+{
+  "manifest_version": 2,
+  "name": "Paxmod",
+  "version": "3.13",
+  "author": "Arminius",
+  "homepage_url": "https://github.com/numirias/paxmod",
+  "description": "Multiple tab rows and site-dependent tab colors for Firefox.",
+  "applications": {
+    "gecko": {
+      "id": "paxmod@numirias",
+      "strict_min_version": "71.0a1"
+    }
+  },
+  "icons": {
+    "128": "img/icon.png"
+  },
+  "permissions": [
+    "idle",
+    "management",
+    "storage",
+    "tabs",
+    "theme"
+  ],
+  "options_ui": {
+    "page": "options/options.html",
+    "browser_style": true
+  },
+  "background": {
+    "page": "background.html"
+  },
+  "experiment_apis": {
+    "aboutConfigPrefs": {
+        "schema": "updateAPIs/aboutConfigPrefs.json",
+        "parent": {
+            "scopes": ["addon_parent"],
+            "script": "updateAPIs/aboutConfigPrefs.js",
+            "paths": [["aboutConfigPrefs"]]
+        }
+    },
+    "stylesheet": {
+      "schema": "stylesheet-api-experiment/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["stylesheet"]],
+        "script": "stylesheet-api-experiment/api.js"
+      }
+    },
+    "paxmod": {
+      "schema": "paxmod-api-experiment/schema.json",
+      "parent": {
+        "scopes": ["addon_parent"],
+        "paths": [["paxmod"]],
+        "script": "paxmod-api-experiment/api.js"
+      }
+    }
+  }
+}

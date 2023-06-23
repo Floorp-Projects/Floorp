@@ -154,6 +154,7 @@ DIRS += [
     "python",
     "testing",
     "third_party/python",
+    "floorp",
 ]
 
 if not CONFIG["JS_STANDALONE"]:

@@ -1,0 +1,43 @@
+name: "\U0001F4A1 Feature request"
+description: Suggest an idea for Floorp!
+labels: [enhancement]
+title: "[Feature Request] "
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        Be sure to follow the template below.
+        We are students and engineers, and we have limited time to develop to the best of our ability.
+        Please keep issues correct and concise.
+        
+        For feature requests, please describe in detail what you would like to see improved and make suggestions to make the Issue better.
+        
+        Please do not create an Issue for anything other than a bug or feature request, and contact [support.ablaze.one](https://support.ablaze.one/) .
+        
+        For Japanese: 日本人の場合、日本語で書いても構いません。
+
+  - type: textarea
+    attributes:
+      label: Is your feature request related to a problem?
+      description: A clear and concise description of what the problem is.
+      placeholder: Ex. I'm always frustrated when ...
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Describe the solution you'd like
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Describe alternatives you've considered
+      description: A clear and concise description of any alternative solutions or features you've considered.
+
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Add any other context or screenshots about the feature request here.

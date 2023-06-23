@@ -912,7 +912,7 @@ nsBrowserContentHandler.prototype = {
       var urlParam = cmdLine.getArgument(urlFlagIdx + 1);
       if (
         cmdLine.length != urlFlagIdx + 2 ||
-        /firefoxurl(-[a-f0-9]+)?:/i.test(urlParam)
+        /floorpurl(-[a-f0-9]+)?:/i.test(urlParam)
       ) {
         throw Components.Exception("", Cr.NS_ERROR_ABORT);
       }
