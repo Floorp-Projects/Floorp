@@ -60,12 +60,17 @@ add_setup(async function setup() {
       icons: {},
     };
   }
+
+  registerCleanupFunction(() => {
+    // Clear the add-on repository override.
+    AMBrowserExtensionsImport._addonRepository = null;
+  });
 });
 
 add_task(async function test_appmenu_notification() {
   const browserID = "some-browser-id";
   const extensionIDs = ["ext-1", "ext-2"];
-  const addonRepository = mockAddonRepository({
+  AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
     addons: Object.values(ADDON_SEARCH_RESULTS),
   });
   const menuButton = document.getElementById("PanelUI-menu-button");
@@ -74,11 +79,7 @@ add_task(async function test_appmenu_notification() {
     "webextension-imported-addons-pending"
   );
   // Start a first import...
-  await AMBrowserExtensionsImport.stageInstalls(
-    browserID,
-    extensionIDs,
-    addonRepository
-  );
+  await AMBrowserExtensionsImport.stageInstalls(browserID, extensionIDs);
   await promiseTopic;
   Assert.equal(
     menuButton.getAttribute("badge-status"),
@@ -103,8 +104,7 @@ add_task(async function test_appmenu_notification() {
   );
   const result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
-    extensionIDs,
-    addonRepository
+    extensionIDs
   );
   await promiseTopic;
   Assert.equal(
@@ -185,18 +185,14 @@ add_task(async function test_appmenu_notification_with_sideloaded_addon() {
   // Now, we start an import...
   const browserID = "some-browser-id";
   const extensionIDs = ["ext-1", "ext-2"];
-  const addonRepository = mockAddonRepository({
+  AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
     addons: Object.values(ADDON_SEARCH_RESULTS),
   });
 
   let promiseTopic = TestUtils.topicObserved(
     "webextension-imported-addons-pending"
   );
-  await AMBrowserExtensionsImport.stageInstalls(
-    browserID,
-    extensionIDs,
-    addonRepository
-  );
+  await AMBrowserExtensionsImport.stageInstalls(browserID, extensionIDs);
   await promiseTopic;
 
   // Badge should still be shown.

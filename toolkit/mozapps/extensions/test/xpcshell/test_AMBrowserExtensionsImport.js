@@ -122,13 +122,16 @@ add_setup(async function setup() {
     stagingDir.append("extensions");
     stagingDir.append("staged");
     stagingDir.exists() && stagingDir.remove(/* recursive */ false);
+
+    // Clear the add-on repository override.
+    AMBrowserExtensionsImport._addonRepository = null;
   });
 });
 
 add_task(async function test_stage_and_complete_installs() {
   const browserID = "some-browser-id";
   const extensionIDs = ["ext-1", "ext-2"];
-  const addonRepository = mockAddonRepository({
+  AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
     addons: Object.values(ADDON_SEARCH_RESULTS),
     expectedBrowserID: browserID,
     expectedExtensionIDs: extensionIDs,
@@ -140,8 +143,7 @@ add_task(async function test_stage_and_complete_installs() {
   );
   const result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
-    extensionIDs,
-    addonRepository
+    extensionIDs
   );
   await promiseTopic;
   assertStageInstallsResult(result, importedAddonIDs);
@@ -188,7 +190,7 @@ add_task(async function test_stage_and_complete_installs() {
 add_task(async function test_stage_and_cancel_installs() {
   const browserID = "some-browser-id";
   const extensionIDs = ["ext-1", "ext-2"];
-  const addonRepository = mockAddonRepository({
+  AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
     addons: Object.values(ADDON_SEARCH_RESULTS),
     expectedBrowserID: browserID,
     expectedExtensionIDs: extensionIDs,
@@ -200,8 +202,7 @@ add_task(async function test_stage_and_cancel_installs() {
   );
   const result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
-    extensionIDs,
-    addonRepository
+    extensionIDs
   );
   await promiseTopic;
   assertStageInstallsResult(result, importedAddonIDs);
@@ -212,7 +213,7 @@ add_task(async function test_stage_and_cancel_installs() {
 add_task(async function test_call_stageInstalls_twice() {
   const browserID = "some-browser-id";
   const extensionIDs = ["ext-1"];
-  const addonRepository = mockAddonRepository({
+  AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
     // Only return one extension.
     addons: Object.values(ADDON_SEARCH_RESULTS).slice(0, 1),
     expectedBrowserID: browserID,
@@ -225,14 +226,13 @@ add_task(async function test_call_stageInstalls_twice() {
   );
   let result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
-    extensionIDs,
-    addonRepository
+    extensionIDs
   );
   await promiseTopic;
   assertStageInstallsResult(result, importedAddonIDs);
 
   await Assert.rejects(
-    AMBrowserExtensionsImport.stageInstalls(browserID, [], addonRepository),
+    AMBrowserExtensionsImport.stageInstalls(browserID, []),
     /Cannot stage installs because there are pending imported add-ons/,
     "expected rejection because there are pending imported add-ons"
   );
@@ -243,8 +243,7 @@ add_task(async function test_call_stageInstalls_twice() {
   // We should now be able to stage installs again.
   result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
-    extensionIDs,
-    addonRepository
+    extensionIDs
   );
   assertStageInstallsResult(result, importedAddonIDs);
 
@@ -254,7 +253,7 @@ add_task(async function test_call_stageInstalls_twice() {
 add_task(async function test_call_stageInstalls_no_addons() {
   const browserID = "some-browser-id";
   const extensionIDs = ["ext-123456"];
-  const addonRepository = mockAddonRepository({
+  AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
     // Returns no mapped add-ons.
     addons: [],
     expectedBrowserID: browserID,
@@ -263,8 +262,7 @@ add_task(async function test_call_stageInstalls_no_addons() {
 
   const result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
-    extensionIDs,
-    addonRepository
+    extensionIDs
   );
 
   Assert.deepEqual(result, { importedAddonIDs: [] }, "expected result");
@@ -282,7 +280,7 @@ add_task(async function test_call_stageInstalls_no_addons() {
 add_task(async function test_import_twice() {
   const browserID = "some-browser-id";
   const extensionIDs = ["ext-1"];
-  const addonRepository = mockAddonRepository({
+  AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
     addons: Object.values(ADDON_SEARCH_RESULTS),
     expectedBrowserID: browserID,
     expectedExtensionIDs: extensionIDs,
@@ -294,8 +292,7 @@ add_task(async function test_import_twice() {
   );
   let result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
-    extensionIDs,
-    addonRepository
+    extensionIDs
   );
   await promiseTopic;
   assertStageInstallsResult(result, importedAddonIDs);
@@ -317,8 +314,7 @@ add_task(async function test_import_twice() {
   // installed, we shouldn't re-import them again.
   result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
-    extensionIDs,
-    addonRepository
+    extensionIDs
   );
   Assert.deepEqual(result, { importedAddonIDs: [] }, "expected result");
   Assert.ok(
@@ -357,7 +353,7 @@ add_task(async function test_call_completeInstalls_without_pending_import() {
 add_task(async function test_stage_installs_with_download_aborted() {
   const browserID = "some-browser-id";
   const extensionIDs = ["ext-1", "ext-2"];
-  const addonRepository = mockAddonRepository({
+  AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
     addons: Object.values(ADDON_SEARCH_RESULTS),
     expectedBrowserID: browserID,
     expectedExtensionIDs: extensionIDs,
@@ -382,8 +378,7 @@ add_task(async function test_stage_installs_with_download_aborted() {
   );
   const result = await AMBrowserExtensionsImport.stageInstalls(
     browserID,
-    extensionIDs,
-    addonRepository
+    extensionIDs
   );
   await Promise.all([onNewInstall, promiseTopic]);
   assertStageInstallsResult(result, importedAddonIDs);
