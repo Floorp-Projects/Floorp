@@ -695,20 +695,21 @@ public class GeckoThread extends Thread {
     // Putting default values for now, but they can be overwritten.
     // Keep these values in sync with profiler defaults.
     int interval = 1;
-    // 8M entries. Keep this in sync with `PROFILER_DEFAULT_STARTUP_ENTRIES`.
-    int capacity = 8 * 1024 * 1024;
-    // We have a default 8M of entries but user can actually put less entries
-    // with environment variables. But even though user can put anything, we
-    // have a hard cap on the minimum value count, because if it's lower than
-    // this value, profiler could not capture anything meaningful.
+
+    // The default capacity value is the same with the min capacity, but users
+    // can still enter a different capacity. We also keep this variable to make
+    // sure that the entered value is not below the min capacity.
     // This value is kept in `scMinimumBufferEntries` variable in the cpp side:
     // https://searchfox.org/mozilla-central/rev/fa7f47027917a186fb2052dee104cd06c21dd76f/tools/profiler/core/platform.cpp#749
-    // This number is not clear in the cpp code at first, so lets calculate:
-    // scMinimumBufferEntries = scMinimumBufferSize / scBytesPerEntry
-    // expands into
-    // scMinimumNumberOfChunks * 2 * scExpectedMaximumStackSize / scBytesPerEntry
-    // and this is: 4 * 2 * 64 * 1024 / 8 = 65536 (~512 kb)
-    final int minCapacity = 65536;
+    // This number represents 128MiB in entry size.
+    // This is calculated as:
+    // 128 * 1024 * 1024 / 8 = 16777216
+    final int minCapacity = 16777216;
+
+    // ~16M entries which is 128MiB in entry size.
+    // Keep this in sync with `PROFILER_DEFAULT_STARTUP_ENTRIES`.
+    // It's computed as 16 * 1024 * 1024 there, which is the same number.
+    int capacity = minCapacity;
 
     // Set the default value of no filters - an empty array - which is safer than using null.
     // If we find a user provided value, this will be overwritten.

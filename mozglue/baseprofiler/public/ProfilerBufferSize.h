@@ -35,10 +35,8 @@ constexpr static uint32_t scMinimumNumberOfChunks = 4;
 //   Firefox processes).
 constexpr static uint32_t scMaximumChunkSize = 1024 * 1024;
 
-// We should be able to store at least the minimum number of the smallest-
-// possible chunks.
-constexpr static uint32_t scMinimumBufferSize =
-    scMinimumNumberOfChunks * scMinimumChunkSize;
+// Limit to 128MiB as a lower buffer size usually isn't enough.
+constexpr static uint32_t scMinimumBufferSize = 128u * 1024u * 1024u;
 // Note: Keep in sync with GeckoThread.maybeStartGeckoProfiler:
 // https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoThread.java
 constexpr static uint32_t scMinimumBufferEntries =
