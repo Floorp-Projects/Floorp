@@ -121,6 +121,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
+  "hasMigratedCSVPasswords",
+  "browser.migrate.interactions.csvpasswords",
+  false
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
   "hasMigratedHistory",
   "browser.migrate.interactions.history",
   false
@@ -923,6 +929,16 @@ const TargetingGetters = {
    */
   get hasMigratedBookmarks() {
     return lazy.hasMigratedBookmarks;
+  },
+
+  /**
+   * Has the user ever used the Migration Wizard to migrate passwords from
+   * a CSV file?
+   * @return {boolean} `true` if CSV passwords have been imported via the
+   *   migration wizard.
+   */
+  get hasMigratedCSVPasswords() {
+    return lazy.hasMigratedCSVPasswords;
   },
 
   /**
