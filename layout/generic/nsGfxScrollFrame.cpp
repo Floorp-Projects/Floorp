@@ -8,6 +8,7 @@
 
 #include "nsGfxScrollFrame.h"
 
+#include "ScrollPositionUpdate.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "nsIXULRuntime.h"
 #include "base/compiler_specific.h"
@@ -2509,6 +2510,11 @@ void nsHTMLScrollFrame::ScrollToWithOrigin(nsPoint aScrollPosition,
 
   nsSize currentVelocity(0, 0);
 
+  const bool canHandoffToApz =
+      nsLayoutUtils::AsyncPanZoomEnabled(this) && WantAsyncScroll() &&
+      CanApzScrollInTheseDirections(
+          DirectionsInDelta(mDestination - GetScrollPosition()));
+
   if (aParams.IsSmoothMsd()) {
     mIgnoreMomentumScroll = true;
     if (!mAsyncSmoothMSDScroll) {
@@ -2522,10 +2528,8 @@ void nsHTMLScrollFrame::ScrollToWithOrigin(nsPoint aScrollPosition,
         mAsyncScroll = nullptr;
       }
 
-      if (nsLayoutUtils::AsyncPanZoomEnabled(this) && WantAsyncScroll() &&
-          CanApzScrollInTheseDirections(
-              DirectionsInDelta(mDestination - GetScrollPosition()))) {
-        ApzSmoothScrollTo(mDestination, aParams.mOrigin,
+      if (canHandoffToApz) {
+        ApzSmoothScrollTo(mDestination, ScrollMode::SmoothMsd, aParams.mOrigin,
                           aParams.mTriggeredByScript, std::move(snapTargetIds));
         return;
       }
@@ -2552,14 +2556,28 @@ void nsHTMLScrollFrame::ScrollToWithOrigin(nsPoint aScrollPosition,
     mAsyncSmoothMSDScroll = nullptr;
   }
 
+  const bool isSmoothScroll =
+      aParams.IsSmooth() && nsLayoutUtils::IsSmoothScrollingEnabled();
   if (!mAsyncScroll) {
+    if (isSmoothScroll && canHandoffToApz) {
+      // APZ does not handle ScrollTriggeredByScript::Yes and snapTargetIds for
+      // ScrollMode::Smooth (but this can be added if the assertion firing
+      // indicates it's necessary).
+      MOZ_ASSERT(aParams.mTriggeredByScript == ScrollTriggeredByScript::No);
+      if (snapTargetIds) {
+        MOZ_ASSERT(snapTargetIds->mIdsOnX.IsEmpty());
+        MOZ_ASSERT(snapTargetIds->mIdsOnY.IsEmpty());
+      }
+      ApzSmoothScrollTo(mDestination, ScrollMode::Smooth, aParams.mOrigin,
+                        aParams.mTriggeredByScript, std::move(snapTargetIds));
+      return;
+    }
+
     mAsyncScroll =
         new AsyncScroll(std::move(snapTargetIds), aParams.mTriggeredByScript);
     mAsyncScroll->SetRefreshObserver(this);
   }
 
-  const bool isSmoothScroll =
-      aParams.IsSmooth() && nsLayoutUtils::IsSmoothScrollingEnabled();
   if (isSmoothScroll) {
     mAsyncScroll->InitSmoothScroll(now, GetScrollPosition(), mDestination,
                                    aParams.mOrigin, range, currentVelocity);
@@ -7800,7 +7818,7 @@ void nsHTMLScrollFrame::AsyncScrollbarDragRejected() {
 }
 
 void nsHTMLScrollFrame::ApzSmoothScrollTo(
-    const nsPoint& aDestination, ScrollOrigin aOrigin,
+    const nsPoint& aDestination, ScrollMode aMode, ScrollOrigin aOrigin,
     ScrollTriggeredByScript aTriggeredByScript,
     UniquePtr<ScrollSnapTargetIds> aSnapTargetIds) {
   if (mApzSmoothScrollDestination == Some(aDestination)) {
@@ -7824,7 +7842,8 @@ void nsHTMLScrollFrame::ApzSmoothScrollTo(
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
   mApzSmoothScrollDestination = Some(aDestination);
   AppendScrollUpdate(ScrollPositionUpdate::NewSmoothScroll(
-      aOrigin, aDestination, aTriggeredByScript, std::move(aSnapTargetIds)));
+      aMode, aOrigin, aDestination, aTriggeredByScript,
+      std::move(aSnapTargetIds)));
 
   nsIContent* content = GetContent();
   if (!DisplayPortUtils::HasNonMinimalNonZeroDisplayPort(content)) {
@@ -7889,7 +7908,7 @@ bool nsHTMLScrollFrame::SmoothScrollVisual(
 
   UniquePtr<ScrollSnapTargetIds> snapTargetIds;
   // Perform the scroll.
-  ApzSmoothScrollTo(mDestination,
+  ApzSmoothScrollTo(mDestination, ScrollMode::SmoothMsd,
                     aUpdateType == FrameMetrics::eRestore
                         ? ScrollOrigin::Restore
                         : ScrollOrigin::Other,

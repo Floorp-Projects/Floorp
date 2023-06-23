@@ -1068,7 +1068,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   // either the layout or the visual scroll range (APZ will happily smooth
   // scroll to either).
   void ApzSmoothScrollTo(
-      const nsPoint& aDestination, ScrollOrigin,
+      const nsPoint& aDestination, ScrollMode, ScrollOrigin,
       mozilla::ScrollTriggeredByScript,
       mozilla::UniquePtr<ScrollSnapTargetIds> aSnapTargetIds);
 

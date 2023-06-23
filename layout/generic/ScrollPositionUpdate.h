@@ -73,7 +73,7 @@ class ScrollPositionUpdate {
   // main-thread as the last snap target ids which will be used for re-snapping
   // to the same snapped element(s).
   static ScrollPositionUpdate NewSmoothScroll(
-      ScrollOrigin aOrigin, nsPoint aDestination,
+      ScrollMode aMode, ScrollOrigin aOrigin, nsPoint aDestination,
       ScrollTriggeredByScript aTriggeredByScript,
       UniquePtr<ScrollSnapTargetIds> aSnapTargetIds);
   // Create a ScrollPositionUpdate for a new pure-relative scroll. The

@@ -70,7 +70,13 @@
         prevScrollPos = scrollPos;
       }
 
-      is(window.scrollY, expectedPosition,
+      // Use a fuzzy comparison with epsilon=1, because expectedPosition
+      // can be fractional (e.g. if viewport height is an odd number of pixels,
+      // then 50vh will be fractional), and ClampAndAlignWithPixels can round
+      // the final scroll offset requested by APZ at the end of an animation,
+      // to an integer value. We plan to remove ClampAndAlignWithPixels in 
+      // bug 1774315.
+      isfuzzy(window.scrollY, expectedPosition, 1,
          "Snaps to the second snap point rather than the third snap point " +
          "which was initially out of the scrollport even if it's closer to " +
          "the top of the next page than the second snap point");

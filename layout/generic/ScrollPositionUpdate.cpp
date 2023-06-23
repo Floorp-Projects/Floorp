@@ -58,16 +58,17 @@ ScrollPositionUpdate ScrollPositionUpdate::NewRelativeScroll(
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewSmoothScroll(
-    ScrollOrigin aOrigin, nsPoint aDestination,
+    ScrollMode aMode, ScrollOrigin aOrigin, nsPoint aDestination,
     ScrollTriggeredByScript aTriggeredByScript,
     UniquePtr<ScrollSnapTargetIds> aSnapTargetIds) {
   MOZ_ASSERT(aOrigin != ScrollOrigin::NotSpecified);
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
+  MOZ_ASSERT(aMode == ScrollMode::Smooth || aMode == ScrollMode::SmoothMsd);
 
   ScrollPositionUpdate ret;
   ret.mScrollGeneration = sGenerationCounter.NewMainThreadGeneration();
   ret.mType = ScrollUpdateType::Absolute;
-  ret.mScrollMode = ScrollMode::SmoothMsd;
+  ret.mScrollMode = aMode;
   ret.mScrollOrigin = aOrigin;
   ret.mDestination = CSSPoint::FromAppUnits(aDestination);
   ret.mTriggeredByScript = aTriggeredByScript;
