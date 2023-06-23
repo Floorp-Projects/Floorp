@@ -71,8 +71,7 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMETHODIMP ChangeAttributeTransaction::DoTransaction() {
   // Need to get the current value of the attribute and save it, and set
   // mAttributeWasSet
-  mAttributeWasSet =
-      mElement->GetAttr(kNameSpaceID_None, mAttribute, mUndoValue);
+  mAttributeWasSet = mElement->GetAttr(mAttribute, mUndoValue);
 
   // XXX: hack until attribute-was-set code is implemented
   if (!mUndoValue.IsEmpty()) {

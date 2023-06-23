@@ -154,14 +154,12 @@ ENameValueFlag LocalAccessible::Name(nsString& aName) const {
 
   // In the end get the name from tooltip.
   if (mContent->IsHTMLElement()) {
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::title,
-                                       aName)) {
+    if (mContent->AsElement()->GetAttr(nsGkAtoms::title, aName)) {
       aName.CompressWhitespace();
       return eNameFromTooltip;
     }
   } else if (mContent->IsXULElement()) {
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::tooltiptext, aName)) {
+    if (mContent->AsElement()->GetAttr(nsGkAtoms::tooltiptext, aName)) {
       aName.CompressWhitespace();
       return eNameFromTooltip;
     }
@@ -199,11 +197,9 @@ void LocalAccessible::Description(nsString& aDescription) const {
     if (aDescription.IsEmpty()) {
       // Keep the Name() method logic.
       if (mContent->IsHTMLElement()) {
-        mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::title,
-                                       aDescription);
+        mContent->AsElement()->GetAttr(nsGkAtoms::title, aDescription);
       } else if (mContent->IsXULElement()) {
-        mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::tooltiptext, aDescription);
+        mContent->AsElement()->GetAttr(nsGkAtoms::tooltiptext, aDescription);
       } else if (mContent->IsSVGElement()) {
         for (nsIContent* childElm = mContent->GetFirstChild(); childElm;
              childElm = childElm->GetNextSibling()) {
@@ -414,7 +410,7 @@ uint64_t LocalAccessible::NativeState() const {
 
   // Check if a XUL element has the popup attribute (an attached popup menu).
   if (HasOwnContent() && mContent->IsXULElement() &&
-      mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::popup)) {
+      mContent->AsElement()->HasAttr(nsGkAtoms::popup)) {
     state |= states::HASPOPUP;
   }
 
@@ -822,7 +818,7 @@ void LocalAccessible::NameFromAssociatedXULLabel(DocAccessible* aDocument,
   XULLabelIterator iter(aDocument, aElm);
   while ((label = iter.Next())) {
     // Check if label's value attribute is used
-    label->Elm()->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
+    label->Elm()->GetAttr(nsGkAtoms::value, aName);
     if (aName.IsEmpty()) {
       // If no value attribute, a non-empty label must contain
       // children that define its text -- possibly using HTML
@@ -854,7 +850,7 @@ void LocalAccessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
   nsCOMPtr<nsIDOMXULSelectControlElement> select =
       aElm->AsElement()->AsXULSelectControl();
   if (!select) {
-    aElm->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
+    aElm->AsElement()->GetAttr(nsGkAtoms::label, aName);
   }
 
   // CASE #2 -- label as <label control="id" ... ></label>
@@ -1127,8 +1123,7 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
 
   // Expose class because it may have useful microformat information.
   nsString _class;
-  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::_class,
-                                     _class)) {
+  if (mContent->AsElement()->GetAttr(nsGkAtoms::_class, _class)) {
     attributes->SetAttribute(nsGkAtoms::_class, std::move(_class));
   }
 
@@ -3017,7 +3012,7 @@ uint32_t LocalAccessible::GetActionRule() const {
 
   // Return "click" action on elements that have an attached popup menu.
   if (mContent->IsXULElement()) {
-    if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::popup)) {
+    if (mContent->AsElement()->HasAttr(nsGkAtoms::popup)) {
       return eClickAction;
     }
   }
@@ -3167,7 +3162,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       // inaccessible images.
       MOZ_ASSERT(mContent, "Image must have mContent");
       nsString src;
-      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
+      mContent->AsElement()->GetAttr(nsGkAtoms::src, src);
       if (!src.IsEmpty()) {
         fields->SetAttribute(nsGkAtoms::src, std::move(src));
       } else if (aUpdateType == CacheUpdateType::Update) {
@@ -3645,8 +3640,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       } else if (aUpdateType == CacheUpdateType::Update) {
         fields->SetAttribute(nsGkAtoms::colspan, DeleteEntry());
       }
-      if (mContent->AsElement()->HasAttr(kNameSpaceID_None,
-                                         nsGkAtoms::headers)) {
+      if (mContent->AsElement()->HasAttr(nsGkAtoms::headers)) {
         nsTArray<uint64_t> headers;
         IDRefsIterator iter(mDoc, mContent, nsGkAtoms::headers);
         while (LocalAccessible* cell = iter.Next()) {
@@ -3689,7 +3683,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       // requested. Computing LINKS_TO also requires we cache `name` on
       // anchor elements.
       nsString name;
-      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+      mContent->AsElement()->GetAttr(nsGkAtoms::name, name);
       if (!name.IsEmpty()) {
         fields->SetAttribute(nsGkAtoms::attributeName, std::move(name));
       } else if (aUpdateType != CacheUpdateType::Initial) {

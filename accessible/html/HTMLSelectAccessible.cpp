@@ -40,7 +40,7 @@ HTMLSelectListAccessible::HTMLSelectListAccessible(nsIContent* aContent,
 
 uint64_t HTMLSelectListAccessible::NativeState() const {
   uint64_t state = AccessibleWrap::NativeState();
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+  if (mContent->AsElement()->HasAttr(nsGkAtoms::multiple)) {
     state |= states::MULTISELECTABLE | states::EXTSELECTABLE;
   }
 
@@ -53,13 +53,13 @@ role HTMLSelectListAccessible::NativeRole() const { return roles::LISTBOX; }
 // HTMLSelectListAccessible: SelectAccessible
 
 bool HTMLSelectListAccessible::SelectAll() {
-  return mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)
+  return mContent->AsElement()->HasAttr(nsGkAtoms::multiple)
              ? AccessibleWrap::SelectAll()
              : false;
 }
 
 bool HTMLSelectListAccessible::UnselectAll() {
-  return mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)
+  return mContent->AsElement()->HasAttr(nsGkAtoms::multiple)
              ? AccessibleWrap::UnselectAll()
              : false;
 }

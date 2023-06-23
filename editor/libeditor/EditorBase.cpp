@@ -2888,7 +2888,7 @@ nsresult EditorBase::CloneAttributeWithTransaction(nsAtom& aAttribute,
                                                    Element& aDestElement,
                                                    Element& aSourceElement) {
   nsAutoString attrValue;
-  if (aSourceElement.GetAttr(kNameSpaceID_None, &aAttribute, attrValue)) {
+  if (aSourceElement.GetAttr(&aAttribute, attrValue)) {
     nsresult rv =
         SetAttributeWithTransaction(aDestElement, aAttribute, attrValue);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -6220,7 +6220,7 @@ NS_IMETHODIMP EditorBase::SetWrapWidth(int32_t aWrapColumn) {
 
   // Get the current style for this root element:
   nsAutoString styleValue;
-  rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::style, styleValue);
+  rootElement->GetAttr(nsGkAtoms::style, styleValue);
 
   // We'll replace styles for these values:
   CutStyle("white-space", styleValue);

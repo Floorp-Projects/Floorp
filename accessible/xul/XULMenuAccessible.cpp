@@ -48,7 +48,7 @@ uint64_t XULMenuitemAccessible::NativeState() const {
   // Has Popup?
   if (mContent->NodeInfo()->Equals(nsGkAtoms::menu, kNameSpaceID_XUL)) {
     state |= states::HASPOPUP;
-    if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::open)) {
+    if (mContent->AsElement()->HasAttr(nsGkAtoms::open)) {
       state |= states::EXPANDED;
     } else {
       state |= states::COLLAPSED;
@@ -128,13 +128,12 @@ uint64_t XULMenuitemAccessible::NativeInteractiveState() const {
 }
 
 ENameValueFlag XULMenuitemAccessible::NativeName(nsString& aName) const {
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
+  mContent->AsElement()->GetAttr(nsGkAtoms::label, aName);
   return eNameOK;
 }
 
 void XULMenuitemAccessible::Description(nsString& aDescription) const {
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::description,
-                                 aDescription);
+  mContent->AsElement()->GetAttr(nsGkAtoms::description, aDescription);
 }
 
 KeyBinding XULMenuitemAccessible::AccessKey() const {
@@ -145,8 +144,7 @@ KeyBinding XULMenuitemAccessible::AccessKey() const {
   // We do not use nsCoreUtils::GetAccesskeyFor() because accesskeys for
   // menu are't registered by EventStateManager.
   nsAutoString accesskey;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey,
-                                 accesskey);
+  mContent->AsElement()->GetAttr(nsGkAtoms::accesskey, accesskey);
   if (accesskey.IsEmpty()) return KeyBinding();
 
   uint32_t modifierKey = 0;
@@ -183,7 +181,7 @@ KeyBinding XULMenuitemAccessible::AccessKey() const {
 
 KeyBinding XULMenuitemAccessible::KeyboardShortcut() const {
   nsAutoString keyElmId;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyElmId);
+  mContent->AsElement()->GetAttr(nsGkAtoms::key, keyElmId);
   if (keyElmId.IsEmpty()) return KeyBinding();
 
   dom::Element* keyElm = mContent->OwnerDoc()->GetElementById(keyElmId);
@@ -192,10 +190,10 @@ KeyBinding XULMenuitemAccessible::KeyboardShortcut() const {
   uint32_t key = 0;
 
   nsAutoString keyStr;
-  keyElm->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyStr);
+  keyElm->GetAttr(nsGkAtoms::key, keyStr);
   if (keyStr.IsEmpty()) {
     nsAutoString keyCodeStr;
-    keyElm->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, keyCodeStr);
+    keyElm->GetAttr(nsGkAtoms::keycode, keyCodeStr);
     nsresult errorCode;
     key = keyStr.ToInteger(&errorCode, /* aRadix = */ 10);
     if (NS_FAILED(errorCode)) {
@@ -206,7 +204,7 @@ KeyBinding XULMenuitemAccessible::KeyboardShortcut() const {
   }
 
   nsAutoString modifiersStr;
-  keyElm->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiersStr);
+  keyElm->GetAttr(nsGkAtoms::modifiers, modifiersStr);
 
   uint32_t modifierMask = 0;
   if (modifiersStr.Find(u"shift") != -1) modifierMask |= KeyBinding::kShift;
@@ -344,15 +342,13 @@ uint64_t XULMenupopupAccessible::NativeState() const {
 
 #ifdef DEBUG
   // We are onscreen if our parent is active
-  bool isActive =
-      mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::menuactive);
+  bool isActive = mContent->AsElement()->HasAttr(nsGkAtoms::menuactive);
   if (!isActive) {
     LocalAccessible* parent = LocalParent();
     if (parent) {
       nsIContent* parentContent = parent->GetContent();
       if (parentContent && parentContent->IsElement())
-        isActive = parentContent->AsElement()->HasAttr(kNameSpaceID_None,
-                                                       nsGkAtoms::open);
+        isActive = parentContent->AsElement()->HasAttr(nsGkAtoms::open);
     }
   }
 
@@ -369,7 +365,7 @@ ENameValueFlag XULMenupopupAccessible::NativeName(nsString& aName) const {
   nsIContent* content = mContent;
   while (content && aName.IsEmpty()) {
     if (content->IsElement()) {
-      content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aName);
+      content->AsElement()->GetAttr(nsGkAtoms::label, aName);
     }
     content = content->GetFlattenedTreeParent();
   }

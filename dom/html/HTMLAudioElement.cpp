@@ -58,7 +58,7 @@ HTMLAudioElement::~HTMLAudioElement() {
 }
 
 bool HTMLAudioElement::IsInteractiveHTMLContent() const {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::controls) ||
+  return HasAttr(nsGkAtoms::controls) ||
          HTMLMediaElement::IsInteractiveHTMLContent();
 }
 

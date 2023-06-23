@@ -83,13 +83,13 @@ void nsStyledElement::InlineStyleDeclarationWillChange(
 
     if (needsOldValue) {
       nsAutoString oldValueStr;
-      modification = GetAttr(kNameSpaceID_None, nsGkAtoms::style, oldValueStr);
+      modification = GetAttr(nsGkAtoms::style, oldValueStr);
       if (modification) {
         aData.mOldValue.emplace();
         aData.mOldValue->SetTo(oldValueStr);
       }
     } else {
-      modification = HasAttr(kNameSpaceID_None, nsGkAtoms::style);
+      modification = HasAttr(nsGkAtoms::style);
     }
   }
 

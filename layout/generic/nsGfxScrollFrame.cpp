@@ -3401,8 +3401,7 @@ static void AppendToTop(nsDisplayListBuilder* aBuilder,
 struct HoveredStateComparator {
   static bool Hovered(const nsIFrame* aFrame) {
     return aFrame->GetContent()->IsElement() &&
-           aFrame->GetContent()->AsElement()->HasAttr(kNameSpaceID_None,
-                                                      nsGkAtoms::hover);
+           aFrame->GetContent()->AsElement()->HasAttr(nsGkAtoms::hover);
   }
 
   bool Equals(nsIFrame* A, nsIFrame* B) const {
@@ -5406,8 +5405,7 @@ void nsHTMLScrollFrame::ReloadChildFrames() {
     } else {
       nsAutoString value;
       if (content->IsElement()) {
-        content->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::orient,
-                                      value);
+        content->AsElement()->GetAttr(nsGkAtoms::orient, value);
       }
       if (!value.IsEmpty()) {
         // probably a scrollbar then
@@ -6963,7 +6961,7 @@ nscoord nsHTMLScrollFrame::GetCoordAttribute(nsIFrame* aBox, nsAtom* aAtom,
 
     nsAutoString value;
     if (content->IsElement()) {
-      content->AsElement()->GetAttr(kNameSpaceID_None, aAtom, value);
+      content->AsElement()->GetAttr(aAtom, value);
     }
     if (!value.IsEmpty()) {
       nsresult error;

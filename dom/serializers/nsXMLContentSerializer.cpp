@@ -1802,7 +1802,7 @@ bool nsXMLContentSerializer::MaybeSerializeIsValue(Element* aElement,
   CustomElementData* ceData = aElement->GetCustomElementData();
   if (ceData) {
     nsAtom* isAttr = ceData->GetIs(aElement);
-    if (isAttr && !aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::is)) {
+    if (isAttr && !aElement->HasAttr(nsGkAtoms::is)) {
       NS_ENSURE_TRUE(aStr.AppendLiteral(" is=\"", mozilla::fallible), false);
       NS_ENSURE_TRUE(
           aStr.Append(nsDependentAtomString(isAttr), mozilla::fallible), false);

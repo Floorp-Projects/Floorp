@@ -29,7 +29,7 @@ HTMLAnchorElement::~HTMLAnchorElement() {
 }
 
 bool HTMLAnchorElement::IsInteractiveHTMLContent() const {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::href) ||
+  return HasAttr(nsGkAtoms::href) ||
          nsGenericHTMLElement::IsInteractiveHTMLContent();
 }
 
@@ -51,7 +51,7 @@ int32_t HTMLAnchorElement::TabIndexDefault() { return 0; }
 bool HTMLAnchorElement::Draggable() const {
   // links can be dragged as long as there is an href and the
   // draggable attribute isn't false
-  if (!HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+  if (!HasAttr(nsGkAtoms::href)) {
     // no href, so just use the same behavior as other elements
     return nsGenericHTMLElement::Draggable();
   }
@@ -148,14 +148,14 @@ nsresult HTMLAnchorElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 }
 
 void HTMLAnchorElement::GetLinkTarget(nsAString& aTarget) {
-  GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
+  GetAttr(nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
     GetBaseTarget(aTarget);
   }
 }
 
 void HTMLAnchorElement::GetTarget(nsAString& aValue) const {
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
+  if (!GetAttr(nsGkAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
 }

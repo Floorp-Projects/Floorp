@@ -214,7 +214,7 @@ nsresult HTMLVideoElement::SetAcceptHeader(nsIHttpChannel* aChannel) {
 }
 
 bool HTMLVideoElement::IsInteractiveHTMLContent() const {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::controls) ||
+  return HasAttr(nsGkAtoms::controls) ||
          HTMLMediaElement::IsInteractiveHTMLContent();
 }
 

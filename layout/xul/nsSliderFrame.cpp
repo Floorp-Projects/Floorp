@@ -163,7 +163,7 @@ int32_t nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsAtom* atom,
                                            int32_t defaultValue) {
   nsAutoString value;
   if (content->IsElement()) {
-    content->AsElement()->GetAttr(kNameSpaceID_None, atom, value);
+    content->AsElement()->GetAttr(atom, value);
   }
   if (!value.IsEmpty()) {
     nsresult error;

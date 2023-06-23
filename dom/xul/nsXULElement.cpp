@@ -486,7 +486,7 @@ Result<bool, nsresult> nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
                                                       bool aIsTrustedEvent) {
   if (IsXULElement(nsGkAtoms::label)) {
     nsAutoString control;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::control, control);
+    GetAttr(nsGkAtoms::control, control);
     if (control.IsEmpty()) {
       return Err(NS_ERROR_UNEXPECTED);
     }
@@ -573,7 +573,7 @@ void nsXULElement::AddListenerForAttributeIfNeeded(nsAtom* aLocalName) {
   }
   if (nsContentUtils::IsEventAttributeName(aLocalName, EventNameType_XUL)) {
     nsAutoString value;
-    GetAttr(kNameSpaceID_None, aLocalName, value);
+    GetAttr(aLocalName, value);
     SetEventHandler(aLocalName, value, true);
   }
 }
@@ -660,7 +660,7 @@ nsresult nsXULElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   // attribute 'csp' on the root element.
   if (doc.GetRootElement() == this) {
     nsAutoString cspPolicyStr;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::csp, cspPolicyStr);
+    GetAttr(nsGkAtoms::csp, cspPolicyStr);
 
 #ifdef DEBUG
     {
@@ -782,9 +782,9 @@ void nsXULElement::BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
       // XXX Why does this not also remove broadcast listeners if the
       // "element" attribute was changed on an <observer>?
       nsAutoString oldValue;
-      GetAttr(kNameSpaceID_None, nsGkAtoms::observes, oldValue);
+      GetAttr(nsGkAtoms::observes, oldValue);
       if (oldValue.IsEmpty()) {
-        GetAttr(kNameSpaceID_None, nsGkAtoms::command, oldValue);
+        GetAttr(nsGkAtoms::command, oldValue);
       }
       Document* doc = GetUncomposedDoc();
       if (!oldValue.IsEmpty() && doc->HasXULBroadcastManager()) {
@@ -987,7 +987,7 @@ void nsXULElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 nsresult nsXULElement::PreHandleEvent(EventChainVisitor& aVisitor) {
   if (aVisitor.mItemFlags & NS_DISPATCH_XUL_COMMAND) {
     nsAutoString command;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
+    GetAttr(nsGkAtoms::command, command);
     MOZ_ASSERT(!command.IsEmpty());
     return DispatchXULCommand(aVisitor, command);
   }

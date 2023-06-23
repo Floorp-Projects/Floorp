@@ -434,9 +434,8 @@ nsresult ElementInternals::SetAttr(nsAtom* aName, const nsAString& aValue) {
   Document* document = mTarget->GetComposedDoc();
   mozAutoDocUpdate updateBatch(document, true);
 
-  uint8_t modType = mAttrs.HasAttr(kNameSpaceID_None, aName)
-                        ? MutationEvent_Binding::MODIFICATION
-                        : MutationEvent_Binding::ADDITION;
+  uint8_t modType = mAttrs.HasAttr(aName) ? MutationEvent_Binding::MODIFICATION
+                                          : MutationEvent_Binding::ADDITION;
 
   MutationObservers::NotifyARIAAttributeDefaultWillChange(mTarget, aName,
                                                           modType);

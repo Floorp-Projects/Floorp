@@ -142,11 +142,11 @@ XULLinkAccessible::~XULLinkAccessible() {}
 void XULLinkAccessible::Value(nsString& aValue) const {
   aValue.Truncate();
 
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::href, aValue);
+  mContent->AsElement()->GetAttr(nsGkAtoms::href, aValue);
 }
 
 ENameValueFlag XULLinkAccessible::NativeName(nsString& aName) const {
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aName);
+  mContent->AsElement()->GetAttr(nsGkAtoms::value, aName);
   if (!aName.IsEmpty()) return eNameOK;
 
   nsTextEquivUtils::GetNameFromSubtree(this, aName);
@@ -193,7 +193,7 @@ already_AddRefed<nsIURI> XULLinkAccessible::AnchorURIAt(
   if (aAnchorIndex != 0) return nullptr;
 
   nsAutoString href;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+  mContent->AsElement()->GetAttr(nsGkAtoms::href, href);
 
   dom::Document* document = mContent->OwnerDoc();
 

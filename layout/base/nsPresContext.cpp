@@ -708,8 +708,7 @@ nsresult nsPresContext::Init(nsDeviceContext* aDeviceContext) {
       if (browsingContext && !browsingContext->IsTop()) {
         Element* containingElement = mDocument->GetEmbedderElement();
         if (!containingElement->IsXULElement() ||
-            !containingElement->HasAttr(kNameSpaceID_None,
-                                        nsGkAtoms::forceOwnRefreshDriver)) {
+            !containingElement->HasAttr(nsGkAtoms::forceOwnRefreshDriver)) {
           mRefreshDriver = parent->GetPresContext()->RefreshDriver();
         }
       }

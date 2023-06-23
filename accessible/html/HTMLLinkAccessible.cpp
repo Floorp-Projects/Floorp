@@ -59,7 +59,7 @@ uint64_t HTMLLinkAccessible::NativeInteractiveState() const {
   // This is how we indicate it is a named anchor. In other words, this anchor
   // can be selected as a location :) There is no other better state to use to
   // indicate this.
-  if (mContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::name)) {
+  if (mContent->AsElement()->HasAttr(nsGkAtoms::name)) {
     state |= states::SELECTABLE;
   }
 

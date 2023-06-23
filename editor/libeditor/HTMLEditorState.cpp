@@ -413,8 +413,7 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
     }
 
     nsAutoString alignAttributeValue;
-    containerElement->GetAttr(kNameSpaceID_None, nsGkAtoms::align,
-                              alignAttributeValue);
+    containerElement->GetAttr(nsGkAtoms::align, alignAttributeValue);
     if (alignAttributeValue.IsEmpty()) {
       continue;
     }

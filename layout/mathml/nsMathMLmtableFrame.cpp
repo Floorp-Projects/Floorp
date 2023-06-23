@@ -325,7 +325,7 @@ static void ParseFrameAttribute(nsIFrame* aFrame, nsAtom* aAttribute,
   nsAutoString attrValue;
 
   Element* frameElement = aFrame->GetContent()->AsElement();
-  frameElement->GetAttr(kNameSpaceID_None, aAttribute, attrValue);
+  frameElement->GetAttr(aAttribute, attrValue);
 
   if (!attrValue.IsEmpty()) {
     nsTArray<int8_t>* valueList =
@@ -465,11 +465,11 @@ static void ParseSpacingAttribute(nsMathMLmtableFrame* aFrame,
 
   nsAutoString attrValue;
   Element* frameElement = aFrame->GetContent()->AsElement();
-  frameElement->GetAttr(kNameSpaceID_None, aAttribute, attrValue);
+  frameElement->GetAttr(aAttribute, attrValue);
 
   if (nsGkAtoms::framespacing_ == aAttribute) {
     nsAutoString frame;
-    frameElement->GetAttr(kNameSpaceID_None, nsGkAtoms::frame, frame);
+    frameElement->GetAttr(nsGkAtoms::frame, frame);
     if (frame.IsEmpty() || frame.EqualsLiteral("none")) {
       aFrame->SetFrameSpacing(0, 0);
       return;
@@ -497,14 +497,14 @@ static void ParseSpacingAttribute(nsMathMLmtableFrame* aFrame,
   ExtractSpacingValues(attrValue, aAttribute, valueList, aFrame, value, value2,
                        fontSizeInflation);
   if (valueList.Length() == 0) {
-    if (frameElement->HasAttr(kNameSpaceID_None, aAttribute)) {
+    if (frameElement->HasAttr(aAttribute)) {
       ReportParseError(aFrame, aAttribute->GetUTF16String(), attrValue.get());
     }
     valueList.AppendElement(value);
   }
   if (aAttribute == nsGkAtoms::framespacing_) {
     if (valueList.Length() == 1) {
-      if (frameElement->HasAttr(kNameSpaceID_None, aAttribute)) {
+      if (frameElement->HasAttr(aAttribute)) {
         ReportParseError(aFrame, aAttribute->GetUTF16String(), attrValue.get());
       }
       valueList.AppendElement(value2);
@@ -780,7 +780,7 @@ void nsMathMLmtableWrapperFrame::Reflow(nsPresContext* aPresContext,
   // see if the user has set the align attribute on the <mtable>
   int32_t rowIndex = 0;
   eAlign tableAlign = eAlign_axis;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::align, value);
+  mContent->AsElement()->GetAttr(nsGkAtoms::align, value);
   if (!value.IsEmpty()) {
     ParseAlignAttribute(value, tableAlign, rowIndex);
   }
@@ -1011,12 +1011,10 @@ nscoord nsMathMLmtableFrame::GetRowSpacing(int32_t aStartRowIndex,
 }
 
 void nsMathMLmtableFrame::SetUseCSSSpacing() {
-  mUseCSSSpacing = !(mContent->AsElement()->HasAttr(kNameSpaceID_None,
-                                                    nsGkAtoms::rowspacing_) ||
+  mUseCSSSpacing = !(mContent->AsElement()->HasAttr(nsGkAtoms::rowspacing_) ||
                      mContent->AsElement()->HasAttr(
                          kNameSpaceID_None, nsGkAtoms::columnspacing_) ||
-                     mContent->AsElement()->HasAttr(kNameSpaceID_None,
-                                                    nsGkAtoms::framespacing_));
+                     mContent->AsElement()->HasAttr(nsGkAtoms::framespacing_));
 }
 
 NS_QUERYFRAME_HEAD(nsMathMLmtableFrame)

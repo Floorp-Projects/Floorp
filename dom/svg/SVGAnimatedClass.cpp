@@ -30,7 +30,7 @@ void SVGAnimatedClass::SetBaseValue(const nsAString& aValue,
 
 void SVGAnimatedClass::GetBaseValue(nsAString& aValue,
                                     const SVGElement* aSVGElement) const {
-  aSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aValue);
+  aSVGElement->GetAttr(nsGkAtoms::_class, aValue);
 }
 
 void SVGAnimatedClass::GetAnimValue(nsAString& aResult,
@@ -40,7 +40,7 @@ void SVGAnimatedClass::GetAnimValue(nsAString& aResult,
     return;
   }
 
-  aSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aResult);
+  aSVGElement->GetAttr(nsGkAtoms::_class, aResult);
 }
 
 void SVGAnimatedClass::SetAnimValue(const nsAString& aValue,
@@ -72,7 +72,7 @@ nsresult SVGAnimatedClass::SMILString::ValueFromString(
 
 SMILValue SVGAnimatedClass::SMILString::GetBaseValue() const {
   SMILValue val(SMILStringType::Singleton());
-  mSVGElement->GetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+  mSVGElement->GetAttr(nsGkAtoms::_class,
                        *static_cast<nsAString*>(val.mU.mPtr));
   return val;
 }

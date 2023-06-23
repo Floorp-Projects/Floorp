@@ -126,8 +126,7 @@ already_AddRefed<AccAttributes> HTMLTableCellAccessible::NativeAttributes() {
     }
   }
   if (abbrText.IsEmpty()) {
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::abbr,
-                                   abbrText);
+    mContent->AsElement()->GetAttr(nsGkAtoms::abbr, abbrText);
   }
 
   if (!abbrText.IsEmpty()) {
@@ -136,7 +135,7 @@ already_AddRefed<AccAttributes> HTMLTableCellAccessible::NativeAttributes() {
 
   // axis attribute
   nsString axisText;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::axis, axisText);
+  mContent->AsElement()->GetAttr(nsGkAtoms::axis, axisText);
   if (!axisText.IsEmpty()) {
     attributes->SetAttribute(nsGkAtoms::axis, std::move(axisText));
   }
@@ -372,7 +371,7 @@ ENameValueFlag HTMLTableAccessible::NativeName(nsString& aName) const {
   }
 
   // If no caption then use summary as a name.
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::summary, aName);
+  mContent->AsElement()->GetAttr(nsGkAtoms::summary, aName);
   return eNameOK;
 }
 
@@ -565,12 +564,9 @@ bool HTMLTableAccessible::IsProbablyLayoutTable() {
                                      "Has th -- legitimate table structures");
               }
 
-              if (cellElm->AsElement()->HasAttr(kNameSpaceID_None,
-                                                nsGkAtoms::headers) ||
-                  cellElm->AsElement()->HasAttr(kNameSpaceID_None,
-                                                nsGkAtoms::scope) ||
-                  cellElm->AsElement()->HasAttr(kNameSpaceID_None,
-                                                nsGkAtoms::abbr)) {
+              if (cellElm->AsElement()->HasAttr(nsGkAtoms::headers) ||
+                  cellElm->AsElement()->HasAttr(nsGkAtoms::scope) ||
+                  cellElm->AsElement()->HasAttr(nsGkAtoms::abbr)) {
                 RETURN_LAYOUT_ANSWER(false,
                                      "Has headers, scope, or abbr attribute -- "
                                      "legitimate table structures");
@@ -729,8 +725,7 @@ void HTMLTableAccessible::Description(nsString& aDescription) const {
                                                    &captionText);
 
       if (!captionText.IsEmpty()) {  // summary isn't used as a name.
-        mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::summary,
-                                       aDescription);
+        mContent->AsElement()->GetAttr(nsGkAtoms::summary, aDescription);
       }
     }
   }

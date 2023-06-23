@@ -903,10 +903,7 @@ class Element : public FragmentOrElement {
    */
   bool GetAttr(int32_t aNameSpaceID, const nsAtom* aName,
                nsAString& aResult) const;
-
-  bool GetAttr(const nsAtom* aName, nsAString& aResult) const {
-    return GetAttr(kNameSpaceID_None, aName, aResult);
-  }
+  bool GetAttr(const nsAtom* aName, nsAString& aResult) const;
 
   /**
    * Determine if an attribute has been set (empty string or otherwise).
@@ -916,11 +913,11 @@ class Element : public FragmentOrElement {
    * @param aAttr the attribute name
    * @return whether an attribute exists
    */
-  inline bool HasAttr(int32_t aNameSpaceID, const nsAtom* aName) const;
-
-  bool HasAttr(const nsAtom* aAttr) const {
-    return HasAttr(kNameSpaceID_None, aAttr);
+  inline bool HasAttr(int32_t aNameSpaceID, const nsAtom* aName) const {
+    return mAttrs.HasAttr(aNameSpaceID, aName);
   }
+
+  bool HasAttr(const nsAtom* aAttr) const { return mAttrs.HasAttr(aAttr); }
 
   /**
    * Determine if an attribute has been set to a non-empty string value. If the
@@ -1150,19 +1147,25 @@ class Element : public FragmentOrElement {
                                       uint32_t aMapCount);
 
  protected:
+  inline bool GetAttr(const nsAtom* aName, DOMString& aResult) const {
+    MOZ_ASSERT(aResult.IsEmpty(), "Should have empty string coming in");
+    const nsAttrValue* val = mAttrs.GetAttr(aName);
+    if (!val) {
+      return false;  // DOMString comes pre-emptied.
+    }
+    val->ToString(aResult);
+    return true;
+  }
+
   inline bool GetAttr(int32_t aNameSpaceID, const nsAtom* aName,
                       DOMString& aResult) const {
-    NS_ASSERTION(nullptr != aName, "must have attribute name");
-    NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
-                 "must have a real namespace ID!");
     MOZ_ASSERT(aResult.IsEmpty(), "Should have empty string coming in");
     const nsAttrValue* val = mAttrs.GetAttr(aName, aNameSpaceID);
-    if (val) {
-      val->ToString(aResult);
-      return true;
+    if (!val) {
+      return false;  // DOMString comes pre-emptied.
     }
-    // else DOMString comes pre-emptied.
-    return false;
+    val->ToString(aResult);
+    return true;
   }
 
  public:
@@ -1180,20 +1183,16 @@ class Element : public FragmentOrElement {
   }
 
   void GetTagName(nsAString& aTagName) const { aTagName = NodeName(); }
-  void GetId(nsAString& aId) const {
-    GetAttr(kNameSpaceID_None, nsGkAtoms::id, aId);
-  }
-  void GetId(DOMString& aId) const {
-    GetAttr(kNameSpaceID_None, nsGkAtoms::id, aId);
-  }
+  void GetId(nsAString& aId) const { GetAttr(nsGkAtoms::id, aId); }
+  void GetId(DOMString& aId) const { GetAttr(nsGkAtoms::id, aId); }
   void SetId(const nsAString& aId) {
     SetAttr(kNameSpaceID_None, nsGkAtoms::id, aId, true);
   }
   void GetClassName(nsAString& aClassName) {
-    GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName);
+    GetAttr(nsGkAtoms::_class, aClassName);
   }
   void GetClassName(DOMString& aClassName) {
-    GetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName);
+    GetAttr(nsGkAtoms::_class, aClassName);
   }
   void SetClassName(const nsAString& aClassName) {
     SetAttr(kNameSpaceID_None, nsGkAtoms::_class, aClassName, true);
@@ -1655,9 +1654,7 @@ class Element : public FragmentOrElement {
    * @param aAttr    name of attribute.
    * @param aValue   Boolean value of attribute.
    */
-  bool GetBoolAttr(nsAtom* aAttr) const {
-    return HasAttr(kNameSpaceID_None, aAttr);
-  }
+  bool GetBoolAttr(nsAtom* aAttr) const { return HasAttr(aAttr); }
 
   /**
    * Sets value of boolean attribute by removing attribute or setting it to
@@ -2149,14 +2146,6 @@ class Element : public FragmentOrElement {
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Element, NS_ELEMENT_IID)
-
-inline bool Element::HasAttr(int32_t aNameSpaceID, const nsAtom* aName) const {
-  NS_ASSERTION(nullptr != aName, "must have attribute name");
-  NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown,
-               "must have a real namespace ID!");
-
-  return mAttrs.IndexOfAttr(aName, aNameSpaceID) >= 0;
-}
 
 inline bool Element::HasNonEmptyAttr(int32_t aNameSpaceID,
                                      const nsAtom* aName) const {

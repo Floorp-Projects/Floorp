@@ -368,7 +368,7 @@ PresShell* nsCoreUtils::GetPresShellFor(nsINode* aNode) {
 
 bool nsCoreUtils::GetID(nsIContent* aContent, nsAString& aID) {
   return aContent->IsElement() &&
-         aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::id, aID);
+         aContent->AsElement()->GetAttr(nsGkAtoms::id, aID);
 }
 
 bool nsCoreUtils::GetUIntAttr(nsIContent* aContent, nsAtom* aAttr,
@@ -405,8 +405,7 @@ void nsCoreUtils::GetLanguageFor(nsIContent* aContent, nsIContent* aRootContent,
   nsIContent* walkUp = aContent;
   while (walkUp && walkUp != aRootContent &&
          (!walkUp->IsElement() ||
-          !walkUp->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::lang,
-                                        aLanguage))) {
+          !walkUp->AsElement()->GetAttr(nsGkAtoms::lang, aLanguage))) {
     walkUp = walkUp->GetParent();
   }
 }
@@ -533,7 +532,7 @@ void nsCoreUtils::ScrollTo(PresShell* aPresShell, nsIContent* aContent,
 bool nsCoreUtils::IsHTMLTableHeader(nsIContent* aContent) {
   return aContent->NodeInfo()->Equals(nsGkAtoms::th) ||
          (aContent->IsElement() &&
-          aContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::scope));
+          aContent->AsElement()->HasAttr(nsGkAtoms::scope));
 }
 
 bool nsCoreUtils::IsWhitespaceString(const nsAString& aString) {

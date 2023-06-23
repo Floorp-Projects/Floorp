@@ -68,7 +68,7 @@ void nsMathMLmpaddedFrame::ProcessAttributes() {
 
   // width
   mWidthSign = NS_MATHML_SIGN_INVALID;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::width, value);
+  mContent->AsElement()->GetAttr(nsGkAtoms::width, value);
   if (!value.IsEmpty()) {
     if (!ParseAttribute(value, mWidthSign, mWidth, mWidthPseudoUnit)) {
       ReportParseError(nsGkAtoms::width->GetUTF16String(), value.get());
@@ -77,7 +77,7 @@ void nsMathMLmpaddedFrame::ProcessAttributes() {
 
   // height
   mHeightSign = NS_MATHML_SIGN_INVALID;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::height, value);
+  mContent->AsElement()->GetAttr(nsGkAtoms::height, value);
   if (!value.IsEmpty()) {
     if (!ParseAttribute(value, mHeightSign, mHeight, mHeightPseudoUnit)) {
       ReportParseError(nsGkAtoms::height->GetUTF16String(), value.get());
@@ -86,7 +86,7 @@ void nsMathMLmpaddedFrame::ProcessAttributes() {
 
   // depth
   mDepthSign = NS_MATHML_SIGN_INVALID;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::depth_, value);
+  mContent->AsElement()->GetAttr(nsGkAtoms::depth_, value);
   if (!value.IsEmpty()) {
     if (!ParseAttribute(value, mDepthSign, mDepth, mDepthPseudoUnit)) {
       ReportParseError(nsGkAtoms::depth_->GetUTF16String(), value.get());
@@ -95,7 +95,7 @@ void nsMathMLmpaddedFrame::ProcessAttributes() {
 
   // lspace
   mLeadingSpaceSign = NS_MATHML_SIGN_INVALID;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::lspace_, value);
+  mContent->AsElement()->GetAttr(nsGkAtoms::lspace_, value);
   if (!value.IsEmpty()) {
     if (!ParseAttribute(value, mLeadingSpaceSign, mLeadingSpace,
                         mLeadingSpacePseudoUnit)) {
@@ -105,7 +105,7 @@ void nsMathMLmpaddedFrame::ProcessAttributes() {
 
   // voffset
   mVerticalOffsetSign = NS_MATHML_SIGN_INVALID;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::voffset_, value);
+  mContent->AsElement()->GetAttr(nsGkAtoms::voffset_, value);
   if (!value.IsEmpty()) {
     if (!ParseAttribute(value, mVerticalOffsetSign, mVerticalOffset,
                         mVerticalOffsetPseudoUnit)) {

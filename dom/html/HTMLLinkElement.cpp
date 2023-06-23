@@ -341,7 +341,7 @@ nsDOMTokenList* HTMLLinkElement::RelList() {
 
 Maybe<LinkStyle::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
   nsAutoString rel;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::rel, rel);
+  GetAttr(nsGkAtoms::rel, rel);
   uint32_t linkTypes = ParseLinkTypes(rel);
   if (!(linkTypes & eSTYLESHEET)) {
     return Nothing();
@@ -419,16 +419,16 @@ void HTMLLinkElement::GetContentPolicyMimeTypeMedia(
     nsAttrValue& aAsAttr, nsContentPolicyType& aPolicyType, nsString& aMimeType,
     nsAString& aMedia) {
   nsAutoString as;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::as, as);
+  GetAttr(nsGkAtoms::as, as);
   net::ParseAsValue(as, aAsAttr);
   aPolicyType = net::AsValueToContentPolicy(aAsAttr);
 
   nsAutoString type;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
+  GetAttr(nsGkAtoms::type, type);
   nsAutoString notUsed;
   nsContentUtils::SplitMimeType(type, aMimeType, notUsed);
 
-  GetAttr(kNameSpaceID_None, nsGkAtoms::media, aMedia);
+  GetAttr(nsGkAtoms::media, aMedia);
 }
 
 void HTMLLinkElement::
@@ -693,7 +693,7 @@ bool HTMLLinkElement::IsCSSMimeTypeAttributeForLinkElement(
   nsAutoString type;
   nsAutoString mimeType;
   nsAutoString notUsed;
-  aSelf.GetAttr(kNameSpaceID_None, nsGkAtoms::type, type);
+  aSelf.GetAttr(nsGkAtoms::type, type);
   nsContentUtils::SplitMimeType(type, mimeType, notUsed);
   return mimeType.IsEmpty() || mimeType.LowerCaseEqualsLiteral("text/css");
 }

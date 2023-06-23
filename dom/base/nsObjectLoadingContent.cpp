@@ -386,9 +386,9 @@ nsresult nsObjectLoadingContent::BuildParametersArray() {
   // attribute and add another entry to the bottom of the array if there isn't
   // already a "src" specified.
   if (element->IsHTMLElement(nsGkAtoms::object) &&
-      !element->HasAttr(kNameSpaceID_None, nsGkAtoms::src)) {
+      !element->HasAttr(nsGkAtoms::src)) {
     MozPluginParameter param;
-    element->GetAttr(kNameSpaceID_None, nsGkAtoms::data, param.mValue);
+    element->GetAttr(nsGkAtoms::data, param.mValue);
     if (!param.mValue.IsEmpty()) {
       param.mName = u"SRC"_ns;
       mCachedAttributes.AppendElement(param);
@@ -929,7 +929,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
 
   if (caps & eFallbackIfClassIDPresent) {
     nsAutoString classIDAttr;
-    thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::classid, classIDAttr);
+    thisElement->GetAttr(nsGkAtoms::classid, classIDAttr);
     // We don't support class ID plugin references, so we should always treat
     // having class Ids as attributes as invalid, and fallback accordingly.
     if (!classIDAttr.IsEmpty()) {
@@ -944,7 +944,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
 
   nsAutoString codebaseStr;
   nsIURI* docBaseURI = thisElement->GetBaseURI();
-  thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::codebase, codebaseStr);
+  thisElement->GetAttr(nsGkAtoms::codebase, codebaseStr);
 
   if (!codebaseStr.IsEmpty()) {
     rv = nsContentUtils::NewURIWithDocumentCharset(
@@ -965,7 +965,7 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   }
 
   nsAutoString rawTypeAttr;
-  thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::type, rawTypeAttr);
+  thisElement->GetAttr(nsGkAtoms::type, rawTypeAttr);
   if (!rawTypeAttr.IsEmpty()) {
     typeAttr = rawTypeAttr;
     nsAutoString params;
@@ -981,9 +981,9 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   nsAutoString uriStr;
   // Different elements keep this in various locations
   if (thisElement->NodeInfo()->Equals(nsGkAtoms::object)) {
-    thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::data, uriStr);
+    thisElement->GetAttr(nsGkAtoms::data, uriStr);
   } else if (thisElement->NodeInfo()->Equals(nsGkAtoms::embed)) {
-    thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::src, uriStr);
+    thisElement->GetAttr(nsGkAtoms::src, uriStr);
   } else {
     MOZ_ASSERT_UNREACHABLE("Unrecognized plugin-loading tag");
   }

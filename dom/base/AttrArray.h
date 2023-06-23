@@ -38,8 +38,10 @@ class AttrArray {
 
   uint32_t AttrCount() const { return mImpl ? mImpl->mAttrCount : 0; }
 
+  const nsAttrValue* GetAttr(const nsAtom* aLocalName) const;
+
   const nsAttrValue* GetAttr(const nsAtom* aLocalName,
-                             int32_t aNamespaceID = kNameSpaceID_None) const;
+                             int32_t aNamespaceID) const;
   // As above but using a string attr name and always using
   // kNameSpaceID_None.  This is always case-sensitive.
   const nsAttrValue* GetAttr(const nsAString& aName) const;
@@ -85,8 +87,8 @@ class AttrArray {
   const nsAttrName* GetSafeAttrNameAt(uint32_t aPos) const;
 
   const nsAttrName* GetExistingAttrNameFromQName(const nsAString& aName) const;
-  int32_t IndexOfAttr(const nsAtom* aLocalName,
-                      int32_t aNamespaceID = kNameSpaceID_None) const;
+  int32_t IndexOfAttr(const nsAtom* aLocalName) const;
+  int32_t IndexOfAttr(const nsAtom* aLocalName, int32_t aNamespaceID) const;
 
   void Compact();
 
@@ -127,17 +129,28 @@ class AttrArray {
   inline bool GetAttr(int32_t aNameSpaceID, const nsAtom* aName,
                       nsAString& aResult) const {
     MOZ_ASSERT(aResult.IsEmpty(), "Should have empty string coming in");
-
     const nsAttrValue* val = GetAttr(aName, aNameSpaceID);
-    if (val) {
-      val->ToString(aResult);
-      return true;
+    if (!val) {
+      return false;
     }
-    return false;
+    val->ToString(aResult);
+    return true;
   }
 
+  inline bool GetAttr(const nsAtom* aName, nsAString& aResult) const {
+    MOZ_ASSERT(aResult.IsEmpty(), "Should have empty string coming in");
+    const nsAttrValue* val = GetAttr(aName);
+    if (!val) {
+      return false;
+    }
+    val->ToString(aResult);
+    return true;
+  }
+
+  inline bool HasAttr(const nsAtom* aName) const { return !!GetAttr(aName); }
+
   inline bool HasAttr(int32_t aNameSpaceID, const nsAtom* aName) const {
-    return GetAttr(aName, aNameSpaceID) != nullptr;
+    return !!GetAttr(aName, aNameSpaceID);
   }
 
   inline bool AttrValueIs(int32_t aNameSpaceID, const nsAtom* aName,
@@ -145,7 +158,6 @@ class AttrArray {
                           nsCaseTreatment aCaseSensitive) const {
     NS_ASSERTION(aName, "Must have attr name");
     NS_ASSERTION(aNameSpaceID != kNameSpaceID_Unknown, "Must have namespace");
-
     const nsAttrValue* val = GetAttr(aName, aNameSpaceID);
     return val && val->Equals(aValue, aCaseSensitive);
   }

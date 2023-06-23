@@ -36,7 +36,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLAreaElement)
 int32_t HTMLAreaElement::TabIndexDefault() { return 0; }
 
 void HTMLAreaElement::GetTarget(DOMString& aValue) {
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::target, aValue)) {
+  if (!GetAttr(nsGkAtoms::target, aValue)) {
     GetBaseTarget(aValue);
   }
 }
@@ -50,7 +50,7 @@ nsresult HTMLAreaElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 }
 
 void HTMLAreaElement::GetLinkTarget(nsAString& aTarget) {
-  GetAttr(kNameSpaceID_None, nsGkAtoms::target, aTarget);
+  GetAttr(nsGkAtoms::target, aTarget);
   if (aTarget.IsEmpty()) {
     GetBaseTarget(aTarget);
   }

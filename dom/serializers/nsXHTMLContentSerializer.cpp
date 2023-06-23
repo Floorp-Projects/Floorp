@@ -170,7 +170,7 @@ bool nsXHTMLContentSerializer::SerializeAttributes(
       // Store its start attribute value in olState->startVal.
       nsAutoString start;
       int32_t startAttrVal = 0;
-      aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::start, start);
+      aElement->GetAttr(nsGkAtoms::start, start);
       if (!start.IsEmpty()) {
         nsresult rv = NS_OK;
         startAttrVal = start.ToInteger(&rv);
@@ -284,7 +284,7 @@ bool nsXHTMLContentSerializer::SerializeAttributes(
         // If we're serializing a <meta http-equiv="content-type">,
         // use the proper value, rather than what's in the document.
         nsAutoString header;
-        aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+        aElement->GetAttr(nsGkAtoms::httpEquiv, header);
         if (header.LowerCaseEqualsLiteral("content-type")) {
           valueStr =
               u"text/html; charset="_ns + NS_ConvertASCIItoUTF16(mCharset);
@@ -326,10 +326,9 @@ bool nsXHTMLContentSerializer::AfterElementStart(nsIContent* aContent,
     for (nsIContent* child = aContent->GetFirstChild(); child;
          child = child->GetNextSibling()) {
       if (child->IsHTMLElement(nsGkAtoms::meta) &&
-          child->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::content)) {
+          child->AsElement()->HasAttr(nsGkAtoms::content)) {
         nsAutoString header;
-        child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv,
-                                    header);
+        child->AsElement()->GetAttr(nsGkAtoms::httpEquiv, header);
 
         if (header.LowerCaseEqualsLiteral("content-type")) {
           hasMeta = true;
@@ -391,7 +390,7 @@ bool nsXHTMLContentSerializer::CheckElementStart(Element* aElement,
   // indicate that this element should be pretty printed
   // even if we're not in pretty printing mode
   aForceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
-                 aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
+                 aElement->HasAttr(nsGkAtoms::mozdirty);
 
   if (aElement->IsHTMLElement(nsGkAtoms::br) &&
       (mFlags & nsIDocumentEncoder::OutputNoFormattingInPre) &&
@@ -415,7 +414,7 @@ bool nsXHTMLContentSerializer::CheckElementEnd(Element* aElement,
                "nsHTMLContentSerializer shouldn't call this method !");
 
   aForceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
-                 aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
+                 aElement->HasAttr(nsGkAtoms::mozdirty);
 
   if (mIsCopying && aElement->IsHTMLElement(nsGkAtoms::ol)) {
     NS_ASSERTION((!mOLStateStack.IsEmpty()), "Cannot have an empty OL Stack");
@@ -668,8 +667,7 @@ bool nsXHTMLContentSerializer::SerializeLIValueAttribute(nsIContent* aElement,
   nsIContent* currNode = aElement;
   while (currNode && !found) {
     if (currNode->IsHTMLElement(nsGkAtoms::li)) {
-      currNode->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
-                                     valueStr);
+      currNode->AsElement()->GetAttr(nsGkAtoms::value, valueStr);
       if (valueStr.IsEmpty()) {
         offset++;
       } else {

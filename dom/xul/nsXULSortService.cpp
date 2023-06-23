@@ -78,7 +78,7 @@ static void SetSortColumnHints(nsIContent* content,
       SetSortColumnHints(child, sortResource, sortDirection);
     } else if (child->IsXULElement(nsGkAtoms::treecol)) {
       nsAutoString value;
-      child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, value);
+      child->AsElement()->GetAttr(nsGkAtoms::sort, value);
       if (value == sortResource) {
         child->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::sortActive,
                                     u"true"_ns, true);
@@ -200,12 +200,10 @@ static int testSortCallback(const void* data1, const void* data2,
     // compare attributes. Ignore namespaces for now.
     nsAutoString leftstr, rightstr;
     if (left->content->IsElement()) {
-      left->content->AsElement()->GetAttr(kNameSpaceID_None,
-                                          sortState->sortKeys[t], leftstr);
+      left->content->AsElement()->GetAttr(sortState->sortKeys[t], leftstr);
     }
     if (right->content->IsElement()) {
-      right->content->AsElement()->GetAttr(kNameSpaceID_None,
-                                           sortState->sortKeys[t], rightstr);
+      right->content->AsElement()->GetAttr(sortState->sortKeys[t], rightstr);
     }
 
     sortOrder = CompareValues(leftstr, rightstr, sortState->sortHints);
@@ -359,10 +357,9 @@ static nsresult InitializeSortState(Element* aRootElement, Element* aContainer,
   aSortState->invertSort = false;
 
   nsAutoString existingsort;
-  aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, existingsort);
+  aRootElement->GetAttr(nsGkAtoms::sort, existingsort);
   nsAutoString existingsortDirection;
-  aRootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::sortDirection,
-                        existingsortDirection);
+  aRootElement->GetAttr(nsGkAtoms::sortDirection, existingsortDirection);
 
   // if just switching direction, set the invertSort flag
   if (sort.Equals(existingsort)) {

@@ -70,7 +70,7 @@ static void SetBaseURIUsingFirstBaseWithHref(Document* aDocument,
   for (nsIContent* child = aDocument->GetFirstChild(); child;
        child = child->GetNextNode()) {
     if (child->IsHTMLElement(nsGkAtoms::base) &&
-        child->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+        child->AsElement()->HasAttr(nsGkAtoms::href)) {
       if (aMustMatch && child != aMustMatch) {
         return;
       }
@@ -78,7 +78,7 @@ static void SetBaseURIUsingFirstBaseWithHref(Document* aDocument,
       // Resolve the <base> element's href relative to our document's
       // fallback base URI.
       nsAutoString href;
-      child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+      child->AsElement()->GetAttr(nsGkAtoms::href, href);
 
       nsCOMPtr<nsIURI> newBaseURI;
       nsContentUtils::NewURIWithDocumentCharset(
@@ -117,13 +117,13 @@ static void SetBaseTargetUsingFirstBaseWithTarget(Document* aDocument,
   for (nsIContent* child = aDocument->GetFirstChild(); child;
        child = child->GetNextNode()) {
     if (child->IsHTMLElement(nsGkAtoms::base) &&
-        child->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::target)) {
+        child->AsElement()->HasAttr(nsGkAtoms::target)) {
       if (aMustMatch && child != aMustMatch) {
         return;
       }
 
       nsString target;
-      child->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::target, target);
+      child->AsElement()->GetAttr(nsGkAtoms::target, target);
       aDocument->SetBaseTarget(target);
       return;
     }
@@ -170,10 +170,10 @@ nsresult HTMLSharedElement::BindToTree(BindContext& aContext,
   // The document stores a pointer to its base URI and base target, which we may
   // need to update here.
   if (mNodeInfo->Equals(nsGkAtoms::base) && IsInUncomposedDoc()) {
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+    if (HasAttr(nsGkAtoms::href)) {
       SetBaseURIUsingFirstBaseWithHref(&aContext.OwnerDoc(), this);
     }
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::target)) {
+    if (HasAttr(nsGkAtoms::target)) {
       SetBaseTargetUsingFirstBaseWithTarget(&aContext.OwnerDoc(), this);
     }
   }
@@ -189,10 +189,10 @@ void HTMLSharedElement::UnbindFromTree(bool aNullParent) {
   // If we're removing a <base> from a document, we may need to update the
   // document's base URI and base target
   if (doc && mNodeInfo->Equals(nsGkAtoms::base)) {
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+    if (HasAttr(nsGkAtoms::href)) {
       SetBaseURIUsingFirstBaseWithHref(doc, nullptr);
     }
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::target)) {
+    if (HasAttr(nsGkAtoms::target)) {
       SetBaseTargetUsingFirstBaseWithTarget(doc, nullptr);
     }
   }

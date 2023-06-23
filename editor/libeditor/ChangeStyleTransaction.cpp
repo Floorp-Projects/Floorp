@@ -144,8 +144,7 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
   nsAutoCString propertyNameString;
   mProperty->ToUTF8String(propertyNameString);
 
-  mUndoAttributeWasSet =
-      mStyledElement->HasAttr(kNameSpaceID_None, nsGkAtoms::style);
+  mUndoAttributeWasSet = mStyledElement->HasAttr(nsGkAtoms::style);
 
   nsAutoCString values;
   nsresult rv = cssDecl->GetPropertyValue(propertyNameString, values);

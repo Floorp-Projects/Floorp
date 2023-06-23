@@ -1655,7 +1655,7 @@ void nsPlainTextSerializer::Write(const nsAString& aStr) {
 nsresult nsPlainTextSerializer::GetAttributeValue(const nsAtom* aName,
                                                   nsString& aValueRet) const {
   if (mElement) {
-    if (mElement->GetAttr(kNameSpaceID_None, aName, aValueRet)) {
+    if (mElement->GetAttr(aName, aValueRet)) {
       return NS_OK;
     }
   }

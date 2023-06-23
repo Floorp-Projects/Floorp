@@ -1774,7 +1774,7 @@ void nsTreeBodyFrame::PrefillPropertyArray(int32_t aRowIndex,
       mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::even);
 
     XULTreeElement* tree = GetBaseElement();
-    if (tree && tree->HasAttr(kNameSpaceID_None, nsGkAtoms::editing)) {
+    if (tree && tree->HasAttr(nsGkAtoms::editing)) {
       mScratchArray.AppendElement((nsStaticAtom*)nsGkAtoms::editing);
     }
 

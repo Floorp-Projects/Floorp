@@ -13042,8 +13042,7 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   if (elementCanHaveNoopener) {
     MOZ_ASSERT(aContent->IsHTMLElement() || aContent->IsSVGElement());
     nsAutoString relString;
-    aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::rel,
-                                   relString);
+    aContent->AsElement()->GetAttr(nsGkAtoms::rel, relString);
     nsWhitespaceTokenizerTemplate<nsContentUtils::IsHTMLWhitespace> tok(
         relString);
 

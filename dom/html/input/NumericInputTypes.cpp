@@ -152,7 +152,7 @@ nsresult NumberInputType::GetBadInputMessage(nsAString& aMessage) {
 
 bool NumberInputType::IsMutable() const {
   return !mInputElement->IsDisabled() &&
-         !mInputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::readonly);
+         !mInputElement->HasAttr(nsGkAtoms::readonly);
 }
 
 /* input type=range */

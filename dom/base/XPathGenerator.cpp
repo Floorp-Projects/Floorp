@@ -55,7 +55,7 @@ void GetPrefix(const nsINode* aNode, nsAString& aResult) {
 void GetNameAttribute(const nsINode* aNode, nsAString& aResult) {
   if (aNode->HasName()) {
     const mozilla::dom::Element* elem = aNode->AsElement();
-    elem->GetAttr(kNameSpaceID_None, nsGkAtoms::name, aResult);
+    elem->GetAttr(nsGkAtoms::name, aResult);
   }
 }
 

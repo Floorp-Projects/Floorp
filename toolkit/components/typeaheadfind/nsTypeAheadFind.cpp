@@ -822,8 +822,7 @@ void nsTypeAheadFind::RangeStartsInsideLink(nsRange* aRange,
       nsCOMPtr<mozilla::dom::Link> link(do_QueryInterface(startContent));
       if (link) {
         // Check to see if inside HTML link
-        *aIsInsideLink = startContent->AsElement()->HasAttr(kNameSpaceID_None,
-                                                            nsGkAtoms::href);
+        *aIsInsideLink = startContent->AsElement()->HasAttr(nsGkAtoms::href);
         return;
       }
     } else {

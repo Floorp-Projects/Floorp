@@ -79,7 +79,7 @@ nsresult SVGMPathElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
   if (IsInComposedDoc()) {
     const nsAttrValue* hrefAttrValue =
-        HasAttr(kNameSpaceID_None, nsGkAtoms::href)
+        HasAttr(nsGkAtoms::href)
             ? mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_None)
             : mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
     if (hrefAttrValue) {
@@ -168,7 +168,7 @@ void SVGMPathElement::AttributeChanged(Element* aElement, int32_t aNameSpaceID,
 
 SVGGeometryElement* SVGMPathElement::GetReferencedPath() {
   if (!HasAttr(kNameSpaceID_XLink, nsGkAtoms::href) &&
-      !HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+      !HasAttr(nsGkAtoms::href)) {
     MOZ_ASSERT(!mPathTracker.get(),
                "We shouldn't have a href target "
                "if we don't have an xlink:href or href attribute");

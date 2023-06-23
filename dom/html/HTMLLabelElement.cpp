@@ -205,7 +205,7 @@ Result<bool, nsresult> HTMLLabelElement::PerformAccesskey(
 nsGenericHTMLElement* HTMLLabelElement::GetLabeledElement() const {
   nsAutoString elementId;
 
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::_for, elementId)) {
+  if (!GetAttr(nsGkAtoms::_for, elementId)) {
     // No @for, so we are a label for our first form control element.
     // Do a depth-first traversal to look for the first form control element.
     return GetFirstLabelableDescendant();

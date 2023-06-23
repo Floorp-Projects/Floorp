@@ -55,7 +55,7 @@ nsresult SVGAnimationElement::Init() {
 
 Element* SVGAnimationElement::GetTargetElementContent() {
   if (HasAttr(kNameSpaceID_XLink, nsGkAtoms::href) ||
-      HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+      HasAttr(nsGkAtoms::href)) {
     return mHrefTarget.get();
   }
   MOZ_ASSERT(!mHrefTarget.get(),
@@ -143,7 +143,7 @@ nsresult SVGAnimationElement::BindToTree(BindContext& aContext,
       controller->RegisterAnimationElement(this);
     }
     const nsAttrValue* href =
-        HasAttr(kNameSpaceID_None, nsGkAtoms::href)
+        HasAttr(nsGkAtoms::href)
             ? mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_None)
             : mAttrs.GetAttr(nsGkAtoms::href, kNameSpaceID_XLink);
     if (href) {
@@ -260,13 +260,13 @@ void SVGAnimationElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
       if (xlinkHref) {
         UpdateHrefTarget(xlinkHref->GetStringValue());
       }
-    } else if (!HasAttr(kNameSpaceID_None, nsGkAtoms::href)) {
+    } else if (!HasAttr(nsGkAtoms::href)) {
       mHrefTarget.Unlink();
       AnimationTargetChanged();
     }  // else: we unset xlink:href, but we still have href attribute, so keep
        // mHrefTarget linking to href.
   } else if (!(aNamespaceID == kNameSpaceID_XLink &&
-               HasAttr(kNameSpaceID_None, nsGkAtoms::href))) {
+               HasAttr(nsGkAtoms::href))) {
     // Note: "href" takes priority over xlink:href. So if "xlink:href" is being
     // set here, we only let that update our target if "href" is *unset*.
     MOZ_ASSERT(aValue->Type() == nsAttrValue::eString,

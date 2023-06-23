@@ -1586,8 +1586,7 @@ MOZ_CAN_RUN_SCRIPT static void GetActionHint(const IMEState& aState,
   }
 
   // XXX This is old compatibility, but we might be able to remove this.
-  aContent.AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::moz_action_hint,
-                                aActionHint);
+  aContent.AsElement()->GetAttr(nsGkAtoms::moz_action_hint, aActionHint);
 
   if (!aActionHint.IsEmpty()) {
     ToLowerCase(aActionHint);
@@ -1655,8 +1654,7 @@ static void GetInputMode(const IMEState& aState, const nsIContent& aContent,
   if (aState.IsEditable() &&
       (StaticPrefs::dom_forms_inputmode() ||
        nsContentUtils::IsChromeDoc(aContent.OwnerDoc()))) {
-    aContent.AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::inputmode,
-                                  aInputMode);
+    aContent.AsElement()->GetAttr(nsGkAtoms::inputmode, aInputMode);
     if (aContent.IsHTMLElement(nsGkAtoms::input) &&
         aInputMode.EqualsLiteral("mozAwesomebar")) {
       if (!nsContentUtils::IsChromeDoc(aContent.OwnerDoc())) {

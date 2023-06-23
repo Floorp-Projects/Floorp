@@ -732,7 +732,7 @@ void nsImageMap::AddArea(HTMLAreaElement* aArea) {
   aArea->SetPrimaryFrame(mImageFrame);
 
   nsAutoString coords;
-  aArea->GetAttr(kNameSpaceID_None, nsGkAtoms::coords, coords);
+  aArea->GetAttr(nsGkAtoms::coords, coords);
   area->ParseCoords(coords);
   mAreas.AppendElement(std::move(area));
 }

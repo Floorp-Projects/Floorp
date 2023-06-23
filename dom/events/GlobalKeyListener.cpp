@@ -62,10 +62,9 @@ static void BuildHandlerChain(nsIContent* aContent, KeyEventHandler** aResult) {
     // definition on the locale. See bug 426501.
     nsAutoString valKey, valCharCode, valKeyCode;
     // Hopefully at least one of the attributes is set:
-    keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::key, valKey) ||
-        keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::charcode,
-                            valCharCode) ||
-        keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, valKeyCode);
+    keyElement->GetAttr(nsGkAtoms::key, valKey) ||
+        keyElement->GetAttr(nsGkAtoms::charcode, valCharCode) ||
+        keyElement->GetAttr(nsGkAtoms::keycode, valKeyCode);
     // If not, ignore this key element.
     if (valKey.IsEmpty() && valCharCode.IsEmpty() && valKeyCode.IsEmpty()) {
       continue;
@@ -564,7 +563,7 @@ bool XULKeySetGlobalKeyListener::GetElementForHandler(
 
   // We are in a XUL doc.  Obtain our command attribute.
   nsAutoString command;
-  keyElement->GetAttr(kNameSpaceID_None, nsGkAtoms::command, command);
+  keyElement->GetAttr(nsGkAtoms::command, command);
   if (command.IsEmpty()) {
     // There is no command element associated with the key element.
     NS_WARNING_ASSERTION(keyElement->IsInUncomposedDoc(), "uncomposed");

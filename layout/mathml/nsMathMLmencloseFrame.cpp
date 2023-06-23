@@ -157,8 +157,7 @@ void nsMathMLmencloseFrame::InitNotations() {
 
   nsAutoString value;
 
-  if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::notation_,
-                                     value)) {
+  if (mContent->AsElement()->GetAttr(nsGkAtoms::notation_, value)) {
     // parse the notation attribute
     nsWhitespaceTokenizer tokenizer(value);
 

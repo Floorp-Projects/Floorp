@@ -491,7 +491,7 @@ bool nsXULPopupManager::ShouldRollupOnMouseWheelEvent() {
     return false;
 
   nsAutoString value;
-  element->GetAttr(kNameSpaceID_None, nsGkAtoms::type, value);
+  element->GetAttr(nsGkAtoms::type, value);
   return StringBeginsWith(value, u"autocomplete"_ns);
 }
 
@@ -1118,7 +1118,7 @@ void nsXULPopupManager::ShowPopupCallback(Element* aPopup,
   // attribute may be used to disable adding these event listeners for popups
   // that want to handle their own keyboard events.
   nsAutoString ignorekeys;
-  aPopup->GetAttr(kNameSpaceID_None, nsGkAtoms::ignorekeys, ignorekeys);
+  aPopup->GetAttr(nsGkAtoms::ignorekeys, ignorekeys);
   if (ignorekeys.EqualsLiteral("true")) {
     item->SetIgnoreKeys(eIgnoreKeys_True);
   } else if (ignorekeys.EqualsLiteral("shortcuts")) {
@@ -2088,16 +2088,14 @@ void nsXULPopupManager::UpdateMenuItems(Element* aPopup) {
       // See if we have a command attribute.
       Element* grandChildElement = grandChild->AsElement();
       nsAutoString command;
-      grandChildElement->GetAttr(kNameSpaceID_None, nsGkAtoms::command,
-                                 command);
+      grandChildElement->GetAttr(nsGkAtoms::command, command);
       if (!command.IsEmpty()) {
         // We do! Look it up in our document
         RefPtr<dom::Element> commandElement = document->GetElementById(command);
         if (commandElement) {
           nsAutoString commandValue;
           // The menu's disabled state needs to be updated to match the command.
-          if (commandElement->GetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
-                                      commandValue))
+          if (commandElement->GetAttr(nsGkAtoms::disabled, commandValue))
             grandChildElement->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
                                        commandValue, true);
           else
@@ -2108,23 +2106,19 @@ void nsXULPopupManager::UpdateMenuItems(Element* aPopup) {
           // updated to match the command. Note that unlike the disabled state
           // if the command has *no* value, we assume the menu is supplying its
           // own.
-          if (commandElement->GetAttr(kNameSpaceID_None, nsGkAtoms::label,
-                                      commandValue))
+          if (commandElement->GetAttr(nsGkAtoms::label, commandValue))
             grandChildElement->SetAttr(kNameSpaceID_None, nsGkAtoms::label,
                                        commandValue, true);
 
-          if (commandElement->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey,
-                                      commandValue))
+          if (commandElement->GetAttr(nsGkAtoms::accesskey, commandValue))
             grandChildElement->SetAttr(kNameSpaceID_None, nsGkAtoms::accesskey,
                                        commandValue, true);
 
-          if (commandElement->GetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                                      commandValue))
+          if (commandElement->GetAttr(nsGkAtoms::checked, commandValue))
             grandChildElement->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
                                        commandValue, true);
 
-          if (commandElement->GetAttr(kNameSpaceID_None, nsGkAtoms::hidden,
-                                      commandValue))
+          if (commandElement->GetAttr(nsGkAtoms::hidden, commandValue))
             grandChildElement->SetAttr(kNameSpaceID_None, nsGkAtoms::hidden,
                                        commandValue, true);
         }

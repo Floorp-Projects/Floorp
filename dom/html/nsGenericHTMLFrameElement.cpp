@@ -281,8 +281,7 @@ void nsGenericHTMLFrameElement::AfterMaybeChangeAttr(
     if (aName == nsGkAtoms::src) {
       mSrcTriggeringPrincipal = nsContentUtils::GetAttrTriggeringPrincipal(
           this, aValue ? aValue->String() : u""_ns, aMaybeScriptedPrincipal);
-      if (!IsHTMLElement(nsGkAtoms::iframe) ||
-          !HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc)) {
+      if (!IsHTMLElement(nsGkAtoms::iframe) || !HasAttr(nsGkAtoms::srcdoc)) {
         // Don't propagate error here. The attribute was successfully
         // set or removed; that's what we should reflect.
         LoadSrc();

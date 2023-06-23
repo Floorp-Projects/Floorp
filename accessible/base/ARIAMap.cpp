@@ -1593,7 +1593,7 @@ nsAtom* AttrIterator::AttrName() const { return mAttrAtom; }
 
 void AttrIterator::AttrValue(nsAString& aAttrValue) const {
   nsAutoString value;
-  if (mAttrs->GetAttr(kNameSpaceID_None, mAttrAtom, value)) {
+  if (mAttrs->GetAttr(mAttrAtom, value)) {
     if (mAttrCharacteristics & ATTR_VALTOKEN) {
       nsAtom* normalizedValue =
           nsAccUtils::NormalizeARIAToken(mAttrs, mAttrAtom);
@@ -1632,7 +1632,7 @@ bool AttrIterator::ExposeAttr(AccAttributes* aTargetAttrs) const {
     return false;  // Invalid value.
   }
   nsAutoString value;
-  if (mAttrs->GetAttr(kNameSpaceID_None, mAttrAtom, value)) {
+  if (mAttrs->GetAttr(mAttrAtom, value)) {
     aTargetAttrs->SetAttribute(mAttrAtom, std::move(value));
     return true;
   }

@@ -166,11 +166,11 @@ void DOMLocalization::GetAttributes(Element& aElement, L10nIdArgs& aResult,
   nsAutoString l10nId;
   nsAutoString l10nArgs;
 
-  if (aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nid, l10nId)) {
+  if (aElement.GetAttr(nsGkAtoms::datal10nid, l10nId)) {
     CopyUTF16toUTF8(l10nId, aResult.mId);
   }
 
-  if (aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nargs, l10nArgs)) {
+  if (aElement.GetAttr(nsGkAtoms::datal10nargs, l10nArgs)) {
     ConvertStringToL10nArgs(l10nArgs, aResult.mArgs.SetValue(), aRv);
   }
 }
@@ -467,7 +467,7 @@ void DOMLocalization::GetTranslatables(
 
     Element* domElement = node->AsElement();
 
-    if (!domElement->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nid)) {
+    if (!domElement->HasAttr(nsGkAtoms::datal10nid)) {
       continue;
     }
 
@@ -531,7 +531,7 @@ bool DOMLocalization::ApplyTranslations(
     // It is possible that someone removed the `data-l10n-id` from the element
     // before the async translation completed. In that case, skip applying
     // the translation.
-    if (!elem->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nid)) {
+    if (!elem->HasAttr(nsGkAtoms::datal10nid)) {
       continue;
     }
     L10nOverlays::TranslateElement(*elem, aTranslations[i].Value(), errors,

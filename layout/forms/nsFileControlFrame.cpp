@@ -214,8 +214,7 @@ nsFileControlFrame::DnDListener::HandleEvent(Event* aEvent) {
 
   RefPtr<HTMLInputElement> inputElement =
       HTMLInputElement::FromNode(mFrame->GetContent());
-  bool supportsMultiple =
-      inputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::multiple);
+  bool supportsMultiple = inputElement->HasAttr(nsGkAtoms::multiple);
   if (!CanDropTheseFiles(dataTransfer, supportsMultiple)) {
     dataTransfer->SetDropEffect(u"none"_ns);
     aEvent->StopPropagation();
@@ -299,9 +298,8 @@ nsresult nsFileControlFrame::DnDListener::GetBlobImplForWebkitDirectory(
 
   HTMLInputElement* inputElement =
       HTMLInputElement::FromNode(mFrame->GetContent());
-  bool webkitDirPicker =
-      StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
-      inputElement->HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory);
+  bool webkitDirPicker = StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
+                         inputElement->HasAttr(nsGkAtoms::webkitdirectory);
   if (!webkitDirPicker) {
     return NS_OK;
   }

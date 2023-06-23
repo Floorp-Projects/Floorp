@@ -210,12 +210,11 @@ nsresult nsXULPopupListener::LaunchPopup(MouseEvent* aEvent) {
 
   nsAutoString identifier;
   nsAtom* type = mIsContext ? nsGkAtoms::context : nsGkAtoms::popup;
-  bool hasPopupAttr = mElement->GetAttr(kNameSpaceID_None, type, identifier);
+  bool hasPopupAttr = mElement->GetAttr(type, identifier);
 
   if (identifier.IsEmpty()) {
     hasPopupAttr =
-        mElement->GetAttr(kNameSpaceID_None,
-                          mIsContext ? nsGkAtoms::contextmenu : nsGkAtoms::menu,
+        mElement->GetAttr(mIsContext ? nsGkAtoms::contextmenu : nsGkAtoms::menu,
                           identifier) ||
         hasPopupAttr;
   }
@@ -270,10 +269,9 @@ nsresult nsXULPopupListener::LaunchPopup(MouseEvent* aEvent) {
   // element, otherwise just open it at the screen position where the mouse
   // was clicked. Context menus always open at the mouse position.
   mPopupContent = popup;
-  if (!mIsContext &&
-      (mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::position) ||
-       (mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupanchor) &&
-        mPopupContent->HasAttr(kNameSpaceID_None, nsGkAtoms::popupalign)))) {
+  if (!mIsContext && (mPopupContent->HasAttr(nsGkAtoms::position) ||
+                      (mPopupContent->HasAttr(nsGkAtoms::popupanchor) &&
+                       mPopupContent->HasAttr(nsGkAtoms::popupalign)))) {
     pm->ShowPopup(mPopupContent, mElement, u""_ns, 0, 0, false, true, false,
                   aEvent);
   } else {
