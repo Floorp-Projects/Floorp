@@ -47,7 +47,7 @@ class StorageAccessPermissionRequest final
   // of aPrincipal's Top browsing context is used.
   static already_AddRefed<StorageAccessPermissionRequest> Create(
       nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal,
-      const Maybe<nsCString>& aTopLevelBaseDomain,
+      const Maybe<nsCString>& aTopLevelBaseDomain, bool aFrameOnly,
       AllowCallback&& aAllowCallback, CancelCallback&& aCancelCallback);
 
   using AutoGrantDelayPromise = MozPromise<bool, bool, true>;
@@ -57,6 +57,7 @@ class StorageAccessPermissionRequest final
   StorageAccessPermissionRequest(nsPIDOMWindowInner* aWindow,
                                  nsIPrincipal* aNodePrincipal,
                                  const Maybe<nsCString>& aTopLevelBaseDomain,
+                                 bool aFrameOnly,
                                  AllowCallback&& aAllowCallback,
                                  CancelCallback&& aCancelCallback);
   ~StorageAccessPermissionRequest() {

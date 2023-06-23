@@ -17178,7 +17178,7 @@ Document::CreatePermissionGrantPromise(
             Private(__func__);
     RefPtr<StorageAccessPermissionRequest> sapr =
         StorageAccessPermissionRequest::Create(
-            inner, principal, aTopLevelBaseDomain,
+            inner, principal, aTopLevelBaseDomain, false,
             // Allow
             [p] {
               Telemetry::AccumulateCategorical(
