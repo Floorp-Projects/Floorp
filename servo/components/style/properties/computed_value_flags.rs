@@ -131,6 +131,9 @@ bitflags! {
         /// container's size and we can't reuse it across cousins (without double-checking the
         /// container at least).
         const USES_CONTAINER_UNITS = 1 << 26;
+
+        /// Whether there are author-specific rules for text `color`.
+        const HAS_AUTHOR_SPECIFIED_TEXT_COLOR = 1 << 27;
     }
 }
 

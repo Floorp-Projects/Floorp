@@ -587,10 +587,11 @@ class nsTextFrame : public nsIFrame {
   struct PaintShadowParams;
   struct PaintDecorationLineParams;
 
-  struct SelectionRange {
-    const SelectionDetails* mDetails;
-    gfxTextRun::Range mRange;
-    uint32_t mPriority;
+  struct PriorityOrderedSelectionsForRange {
+    /// List of Selection Details active for the given range.
+    /// Ordered by priority, i.e. the last element has the highest priority.
+    nsTArray<const SelectionDetails*> mSelectionRanges;
+    Range mRange;
   };
 
   // Primary frame paint method called from nsDisplayText.  Can also be used
@@ -620,11 +621,10 @@ class nsTextFrame : public nsIFrame {
       const mozilla::UniquePtr<SelectionDetails>& aDetails,
       SelectionType aSelectionType);
 
-  SelectionTypeMask ResolveSelections(const PaintTextSelectionParams& aParams,
-                                      const SelectionDetails* aDetails,
-                                      nsTArray<SelectionRange>& aResult,
-                                      SelectionType aSelectionType,
-                                      bool* aAnyBackgrounds = nullptr) const;
+  SelectionTypeMask ResolveSelections(
+      const PaintTextSelectionParams& aParams, const SelectionDetails* aDetails,
+      nsTArray<PriorityOrderedSelectionsForRange>& aResult,
+      SelectionType aSelectionType, bool* aAnyBackgrounds = nullptr) const;
 
   void DrawEmphasisMarks(gfxContext* aContext, mozilla::WritingMode aWM,
                          const mozilla::gfx::Point& aTextBaselinePt,
@@ -996,6 +996,53 @@ class nsTextFrame : public nsIFrame {
   static gfxFloat ComputeSelectionUnderlineHeight(
       nsPresContext* aPresContext, const gfxFont::Metrics& aFontMetrics,
       SelectionType aSelectionType);
+
+  /**
+   * @brief Helper struct which contains selection data such as its details,
+   * range and priority.
+   */
+  struct SelectionRange {
+    const SelectionDetails* mDetails{nullptr};
+    gfxTextRun::Range mRange;
+    /// used to determine the order of overlapping selections of the same type.
+    uint32_t mPriority{0};
+  };
+  /**
+   * @brief Helper: Extracts a list of `SelectionRange` structs from given
+   * `SelectionDetails` and computes a priority for overlapping selection
+   * ranges.
+   */
+  static SelectionTypeMask CreateSelectionRangeList(
+      const SelectionDetails* aDetails, SelectionType aSelectionType,
+      const PaintTextSelectionParams& aParams,
+      nsTArray<SelectionRange>& aSelectionRanges, bool* aAnyBackgrounds);
+
+  /**
+   * @brief Creates an array of `CombinedSelectionRange`s from given list
+   * of `SelectionRange`s.
+   * Each instance of `CombinedSelectionRange` represents a piece of text with
+   * constant Selections.
+   *
+   * Example:
+   *
+   * Consider this text fragment, [] and () marking selection ranges:
+   *   ab[cd(e]f)g
+   * This results in the following array of combined ranges:
+   *  - [0]: range: (2, 4), selections: "[]"
+   *  - [1]: range: (4, 5), selections: "[]", "()"
+   *  - [2]: range: (5, 6), selections: "()"
+   * Depending on the priorities of the ranges, [1] may have a different order
+   * of its ranges. The given example indicates that "()" has a higher priority
+   * than "[]".
+   *
+   * @param aSelectionRanges         Array of `SelectionRange` objects. Must be
+   *                                 sorted by the start offset.
+   * @param aCombinedSelectionRanges Out parameter. Returns the constructed
+   *                                 array of combined selection ranges.
+   */
+  static void CombineSelectionRanges(
+      const nsTArray<SelectionRange>& aSelectionRanges,
+      nsTArray<PriorityOrderedSelectionsForRange>& aCombinedSelectionRanges);
 
   ContentOffsets GetCharacterOffsetAtFramePointInternal(
       const nsPoint& aPoint, bool aForInsertionPoint);

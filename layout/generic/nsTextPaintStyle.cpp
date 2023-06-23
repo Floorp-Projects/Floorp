@@ -216,11 +216,9 @@ void nsTextPaintStyle::GetHighlightColors(nscolor* aForeColor,
   *aBackColor = NS_TRANSPARENT;
 }
 
-bool nsTextPaintStyle::GetCustomHighlightColors(const nsAtom* aHighlightName,
-                                                nscolor* aForeColor,
-                                                nscolor* aBackColor) {
+bool nsTextPaintStyle::GetCustomHighlightTextColor(const nsAtom* aHighlightName,
+                                                   nscolor* aForeColor) {
   NS_ASSERTION(aForeColor, "aForeColor is null");
-  NS_ASSERTION(aBackColor, "aBackColor is null");
 
   // non-existing highlights will be stored as `aHighlightName->nullptr`,
   // so subsequent calls only need a hashtable lookup and don't have
@@ -234,13 +232,32 @@ bool nsTextPaintStyle::GetCustomHighlightColors(const nsAtom* aHighlightName,
     // highlight `aHighlightName` doesn't exist or has no style rules.
     return false;
   }
-  // this is just copied from here:
-  // `InitSelectionColorsAndShadow()`.
-  *aBackColor = highlightStyle->GetVisitedDependentColor(
-      &nsStyleBackground::mBackgroundColor);
+
   *aForeColor = highlightStyle->GetVisitedDependentColor(
       &nsStyleText::mWebkitTextFillColor);
-  return true;
+
+  return highlightStyle->HasAuthorSpecifiedTextColor();
+}
+
+bool nsTextPaintStyle::GetCustomHighlightBackgroundColor(
+    const nsAtom* aHighlightName, nscolor* aBackColor) {
+  NS_ASSERTION(aBackColor, "aBackColor is null");
+  // non-existing highlights will be stored as `aHighlightName->nullptr`,
+  // so subsequent calls only need a hashtable lookup and don't have
+  // to enter the style engine.
+  RefPtr<ComputedStyle> highlightStyle =
+      mCustomHighlightPseudoStyles.LookupOrInsertWith(
+          aHighlightName, [this, &aHighlightName] {
+            return mFrame->ComputeHighlightSelectionStyle(aHighlightName);
+          });
+  if (!highlightStyle) {
+    // highlight `aHighlightName` doesn't exist or has no style rules.
+    return false;
+  }
+
+  *aBackColor = highlightStyle->GetVisitedDependentColor(
+      &nsStyleBackground::mBackgroundColor);
+  return NS_GET_A(*aBackColor) != 0;
 }
 
 void nsTextPaintStyle::GetURLSecondaryColor(nscolor* aForeColor) {
