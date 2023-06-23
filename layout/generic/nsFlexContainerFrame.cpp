@@ -1009,8 +1009,6 @@ class nsFlexContainerFrame::FlexLine final {
    * FlexItems should place their baseline. Opposite the case of the first
    * baseline offset, this represents a distance from the line's cross-end
    * edge (since last baseline-aligned items are flush to the cross-end edge).
-   * If we're internally reversing the axes, this instead represents the
-   * distance from the line's cross-start edge.
    *
    * If there are no last baseline-aligned FlexItems, returns nscoord_MIN.
    */
