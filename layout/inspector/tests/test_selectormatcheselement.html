@@ -13,6 +13,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1037519
     #foo::before {
       color: red;
     }
+
+    #foo {
+      div& {
+        outline: 1px solid gold;
+      }
+    }
+
     #foo::before,
     #bar::before {
       content: 'foo-before';
@@ -44,18 +51,23 @@ function do_test() {
   var element = document.querySelector("#foo");
 
   var elementRules = InspectorUtils.getCSSStyleRules(element);
-  var elementRule = elementRules[elementRules.length - 1];
 
-  is (elementRule.selectorMatchesElement(0, element), true,
+  var multiSelectorRule = elementRules[2];
+  is(multiSelectorRule.selectorText, `#foo, #bar, #foo::before`, "Got expected multi-selector rule");
+  is (multiSelectorRule.selectorMatchesElement(0, element), true,
     "Matches #foo");
-  is (elementRule.selectorMatchesElement(1, element), false,
+  is (multiSelectorRule.selectorMatchesElement(1, element), false,
     "Doesn't match #bar");
-  is (elementRule.selectorMatchesElement(0, element, ":bogus"), false,
+  is (multiSelectorRule.selectorMatchesElement(0, element, ":bogus"), false,
     "Doesn't match #foo with a bogus pseudo");
-  is (elementRule.selectorMatchesElement(2, element, ":bogus"), false,
+  is (multiSelectorRule.selectorMatchesElement(2, element, ":bogus"), false,
     "Doesn't match #foo::before with bogus pseudo");
-  is (elementRule.selectorMatchesElement(0, element, ":after"), false,
+  is (multiSelectorRule.selectorMatchesElement(0, element, ":after"), false,
     "Does match #foo::before with the :after pseudo");
+
+  var nestedRule = elementRules[4];
+  is(nestedRule.selectorText, `div&`, "Got expected nested rule");
+  is (nestedRule.selectorMatchesElement(0, element), true, "Matches div&");
 
   checkPseudo(":before");
   checkPseudo(":after");
