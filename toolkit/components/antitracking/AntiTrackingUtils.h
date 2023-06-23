@@ -49,6 +49,14 @@ class AntiTrackingUtils final {
   static bool CreateStoragePermissionKey(nsIPrincipal* aPrincipal,
                                          nsACString& aKey);
 
+  static void CreateStorageFramePermissionKey(const nsACString& aTrackingSite,
+                                              nsACString& aPermissionKey);
+
+  // Given a principal, returns the per-frame storage permission key that will
+  // be used for the principal.  Returns true on success.
+  static bool CreateStorageFramePermissionKey(nsIPrincipal* aPrincipal,
+                                              nsACString& aKey);
+
   // Given and embedded URI, returns the permission for allowing storage access
   // requests from that URI's site. This permission is site-scoped in two ways:
   // the principal it is stored under and the suffix built from aURI are both

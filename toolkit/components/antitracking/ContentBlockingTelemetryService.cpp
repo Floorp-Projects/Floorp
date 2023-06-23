@@ -71,6 +71,17 @@ void ContentBlockingTelemetryService::ReportStoragePermissionExpire() {
     LOG(("Fail to get all storage access permissions."));
     return;
   }
+  nsTArray<RefPtr<nsIPermission>> framePermissions;
+  rv = permManager->GetAllWithTypePrefix("3rdPartyFrameStorage"_ns,
+                                         framePermissions);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Fail to get all frame storage access permissions."));
+    return;
+  }
+  if (!permissions.AppendElements(framePermissions, fallible)) {
+    LOG(("Fail to combine all storage access permissions."));
+    return;
+  }
 
   nsTArray<uint32_t> records;
 

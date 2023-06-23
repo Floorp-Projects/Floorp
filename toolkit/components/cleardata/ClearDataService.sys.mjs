@@ -1064,7 +1064,11 @@ const PermissionsCleaner = {
         }
       }
 
-      if (!toBeRemoved && perm.type.startsWith("3rdPartyStorage^")) {
+      if (
+        !toBeRemoved &&
+        (perm.type.startsWith("3rdPartyStorage^") ||
+          perm.type.startsWith("3rdPartyFrameStorage^"))
+      ) {
         let parts = perm.type.split("^");
         let uri;
         try {
