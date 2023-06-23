@@ -6804,6 +6804,7 @@ ContentParent::RecvStorageAccessPermissionGrantedForOrigin(
     const int& aAllowMode,
     const Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
         aReason,
+    const bool& aFrameOnly,
     StorageAccessPermissionGrantedForOriginResolver&& aResolver) {
   if (aParentContext.IsNullOrDiscarded()) {
     return IPC_OK();
@@ -6824,7 +6825,7 @@ ContentParent::RecvStorageAccessPermissionGrantedForOrigin(
 
   StorageAccessAPIHelper::SaveAccessForOriginOnParentProcess(
       aTopLevelWindowId, aParentContext.get_canonical(), aTrackingPrincipal,
-      aAllowMode)
+      aAllowMode, aFrameOnly)
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [aResolver = std::move(aResolver)](
                  StorageAccessAPIHelper::ParentAccessGrantPromise::

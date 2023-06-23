@@ -73,13 +73,13 @@ class StorageAccessAPIHelper final {
   typedef MozPromise<nsresult, bool, true> ParentAccessGrantPromise;
   static RefPtr<ParentAccessGrantPromise> SaveAccessForOriginOnParentProcess(
       nsIPrincipal* aParentPrincipal, nsIPrincipal* aTrackingPrincipal,
-      int aAllowMode,
+      int aAllowMode, bool aFrameOnly,
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 
   static RefPtr<ParentAccessGrantPromise> SaveAccessForOriginOnParentProcess(
       uint64_t aTopLevelWindowId, dom::BrowsingContext* aParentContext,
-      nsIPrincipal* aTrackingPrincipal, int aAllowMode,
+      nsIPrincipal* aTrackingPrincipal, int aAllowMode, bool aFrameOnly,
       uint64_t aExpirationTime =
           StaticPrefs::privacy_restrict3rdpartystorage_expiration());
 
@@ -167,7 +167,7 @@ class StorageAccessAPIHelper final {
   RequestStorageAccessAsyncHelper(
       dom::Document* aDocument, nsPIDOMWindowInner* aInnerWindow,
       dom::BrowsingContext* aBrowsingContext, nsIPrincipal* aPrincipal,
-      bool aHasUserInteraction,
+      bool aHasUserInteraction, bool aFrameOnly,
       ContentBlockingNotifier::StorageAccessPermissionGrantedReason aNotifier,
       bool aRequireGrant);
 
