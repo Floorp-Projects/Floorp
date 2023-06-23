@@ -8587,13 +8587,6 @@
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 
-# Is support for (linear|radial|conic)-gradient color interpolation methods enabled?
-- name: layout.css.gradient-color-interpolation-method.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Is support for caching an grid item's block axis measurement enabled?
 - name: layout.css.grid-item-baxis-measurement.enabled
   type: bool
