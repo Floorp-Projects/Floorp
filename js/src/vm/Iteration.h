@@ -448,10 +448,6 @@ struct NativeIterator : public NativeIteratorListNode {
   }
 
   JSObject* iterObj() const { return iterObj_; }
-  GCPtr<JSLinearString*>* currentProperty() const {
-    MOZ_ASSERT(propertyCursor_ < propertiesEnd());
-    return propertyCursor_;
-  }
 
   void incCursor() {
     MOZ_ASSERT(isInitialized());
