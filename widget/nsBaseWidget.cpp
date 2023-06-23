@@ -154,8 +154,7 @@ nsBaseWidget::nsBaseWidget(BorderStyle aBorderStyle)
       mIMEHasQuit(false),
       mIsFullyOccluded(false),
       mNeedFastSnaphot(false),
-      mCurrentPanGestureBelongsToSwipe(false),
-      mIsPIPWindow(false) {
+      mCurrentPanGestureBelongsToSwipe(false) {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
   printf("WIDGETS+ = %d\n", gNumWidgets);
@@ -420,7 +419,6 @@ void nsBaseWidget::BaseCreate(nsIWidget* aParent, widget::InitData* aInitData) {
     mPopupLevel = aInitData->mPopupLevel;
     mPopupType = aInitData->mPopupHint;
     mHasRemoteContent = aInitData->mHasRemoteContent;
-    mIsPIPWindow = aInitData->mPIPWindow;
   }
 
   if (aParent) {
@@ -2315,12 +2313,6 @@ nsBaseWidget::SwipeInfo nsBaseWidget::SendMayStartSwipe(
 WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
     const PanGestureInput& aPanInput, const APZEventResult& aApzResult) {
   WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
-
-  // Ignore swipe-to-navigation in PiP window.
-  if (mIsPIPWindow) {
-    return event;
-  }
-
   if (aPanInput.AllowsSwipe()) {
     SwipeInfo swipeInfo = SendMayStartSwipe(aPanInput);
     event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
@@ -2362,11 +2354,6 @@ WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
 }
 
 bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput) {
-  // Ignore swipe-to-navigation in PiP window.
-  if (mIsPIPWindow) {
-    return false;
-  }
-
   if (aPanInput.mType == PanGestureInput::PANGESTURE_MAYSTART ||
       aPanInput.mType == PanGestureInput::PANGESTURE_START) {
     mCurrentPanGestureBelongsToSwipe = false;
