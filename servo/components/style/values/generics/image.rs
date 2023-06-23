@@ -6,6 +6,7 @@
 //!
 //! [images]: https://drafts.csswg.org/css-images/#image-values
 
+use crate::color::{mix::ColorInterpolationMethod, ColorSpace};
 use crate::custom_properties;
 use crate::values::generics::position::PositionComponent;
 use crate::values::generics::Optional;
@@ -176,6 +177,8 @@ pub enum GenericGradient<
     Linear {
         /// Line direction
         direction: LineDirection,
+        /// Method to use for color interpolation.
+        color_interpolation_method: ColorInterpolationMethod,
         /// The color stops and interpolation hints.
         items: crate::OwnedSlice<GenericGradientItem<Color, LengthPercentage>>,
         /// True if this is a repeating gradient.
@@ -189,6 +192,8 @@ pub enum GenericGradient<
         shape: GenericEndingShape<NonNegativeLength, NonNegativeLengthPercentage>,
         /// Center of gradient
         position: Position,
+        /// Method to use for color interpolation.
+        color_interpolation_method: ColorInterpolationMethod,
         /// The color stops and interpolation hints.
         items: crate::OwnedSlice<GenericGradientItem<Color, LengthPercentage>>,
         /// True if this is a repeating gradient.
@@ -202,6 +207,8 @@ pub enum GenericGradient<
         angle: Angle,
         /// Center of gradient
         position: Position,
+        /// Method to use for color interpolation.
+        color_interpolation_method: ColorInterpolationMethod,
         /// The color stops and interpolation hints.
         items: crate::OwnedSlice<GenericGradientItem<Color, AngleOrPercentage>>,
         /// True if this is a repeating gradient.
@@ -483,17 +490,24 @@ where
         match *self {
             Gradient::Linear {
                 ref direction,
+                ref color_interpolation_method,
                 ref items,
                 compat_mode,
                 ..
             } => {
                 dest.write_str("linear-gradient(")?;
-                let mut skip_comma = if !direction.points_downwards(compat_mode) {
+                let mut skip_comma = true;
+                if !direction.points_downwards(compat_mode) {
                     direction.to_css(dest, compat_mode)?;
-                    false
-                } else {
-                    true
-                };
+                    skip_comma = false;
+                }
+                if !matches!(color_interpolation_method.space, ColorSpace::Srgb) {
+                    if !skip_comma {
+                        dest.write_char(' ')?;
+                    }
+                    color_interpolation_method.to_css(dest)?;
+                    skip_comma = false;
+                }
                 for item in &**items {
                     if !skip_comma {
                         dest.write_str(", ")?;
@@ -505,6 +519,7 @@ where
             Gradient::Radial {
                 ref shape,
                 ref position,
+                ref color_interpolation_method,
                 ref items,
                 compat_mode,
                 ..
@@ -538,7 +553,16 @@ where
                         shape.to_css(dest)?;
                     }
                 }
-                let mut skip_comma = omit_shape && omit_position;
+                let omit_color_interpolation_method =
+                    matches!(color_interpolation_method.space, ColorSpace::Srgb);
+                if !omit_color_interpolation_method {
+                    if !omit_shape || !omit_position {
+                        dest.write_char(' ')?;
+                    }
+                    color_interpolation_method.to_css(dest)?;
+                }
+
+                let mut skip_comma = omit_shape && omit_position && omit_color_interpolation_method;
                 for item in &**items {
                     if !skip_comma {
                         dest.write_str(", ")?;
