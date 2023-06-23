@@ -1519,7 +1519,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindowOuter)
   NS_INTERFACE_MAP_ENTRY(mozilla::dom::EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMWindowOuter)
   NS_INTERFACE_MAP_ENTRY(mozIDOMWindowProxy)
-  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMChromeWindow, IsChromeWindow())
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
 NS_INTERFACE_MAP_END
@@ -5879,8 +5878,7 @@ class nsCloseEvent : public Runnable {
 
 bool nsGlobalWindowOuter::CanClose() {
   if (mIsChrome) {
-    nsCOMPtr<nsIBrowserDOMWindow> bwin;
-    GetBrowserDOMWindow(getter_AddRefs(bwin));
+    nsCOMPtr<nsIBrowserDOMWindow> bwin = GetBrowserDOMWindow();
 
     bool canClose = true;
     if (bwin && NS_SUCCEEDED(bwin->CanClose(&canClose))) {
@@ -6893,9 +6891,8 @@ nsresult nsGlobalWindowOuter::OpenInternal(
   }
 
   if (domReturn && aDoJSFixups) {
-    nsCOMPtr<nsIDOMChromeWindow> chrome_win(
-        do_QueryInterface(domReturn->GetDOMWindow()));
-    if (!chrome_win) {
+    nsPIDOMWindowOuter* outer = domReturn->GetDOMWindow();
+    if (outer && !nsGlobalWindowOuter::Cast(outer)->IsChromeWindow()) {
       // A new non-chrome window was created from a call to
       // window.open() from JavaScript, make sure there's a document in
       // the new window. We do this by simply asking the new window for
@@ -6904,10 +6901,8 @@ nsresult nsGlobalWindowOuter::OpenInternal(
       // XXXbz should this just use EnsureInnerWindow()?
 
       // Force document creation.
-      if (nsPIDOMWindowOuter* win = domReturn->GetDOMWindow()) {
-        nsCOMPtr<Document> doc = win->GetDoc();
-        Unused << doc;
-      }
+      nsCOMPtr<Document> doc = outer->GetDoc();
+      Unused << doc;
     }
   }
 
@@ -7194,14 +7189,8 @@ void nsGlobalWindowOuter::SetCursorOuter(const nsACString& aCursor,
   }
 }
 
-NS_IMETHODIMP
-nsGlobalWindowOuter::GetBrowserDOMWindow(nsIBrowserDOMWindow** aBrowserWindow) {
+nsIBrowserDOMWindow* nsGlobalWindowOuter::GetBrowserDOMWindow() {
   MOZ_RELEASE_ASSERT(IsChromeWindow());
-  FORWARD_TO_INNER(GetBrowserDOMWindow, (aBrowserWindow), NS_ERROR_UNEXPECTED);
-}
-
-nsIBrowserDOMWindow* nsGlobalWindowOuter::GetBrowserDOMWindowOuter() {
-  MOZ_ASSERT(IsChromeWindow());
   return mChromeFields.mBrowserDOMWindow;
 }
 

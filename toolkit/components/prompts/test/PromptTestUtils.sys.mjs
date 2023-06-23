@@ -152,7 +152,7 @@ export let PromptTestUtils = {
         // Parent is browser
         parentBrowser = parent;
         parentWindow = parentBrowser.ownerGlobal;
-      } else if (parent instanceof Ci.nsIDOMChromeWindow) {
+      } else if (parent.isChromeWindow) {
         // Parent is window
         parentWindow = parent;
         parentBrowser = parentWindow.gBrowser?.selectedBrowser;

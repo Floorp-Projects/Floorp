@@ -185,6 +185,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsFrameMessageManager.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsHashPropertyBag.h"
 #include "nsHyphenationManager.h"
 #include "nsIAlertsService.h"
@@ -200,7 +201,6 @@
 #include "nsICookie.h"
 #include "nsICrashService.h"
 #include "nsICycleCollectorListener.h"
-#include "nsIDOMChromeWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDragService.h"
@@ -5630,9 +5630,9 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
       return IPC_OK();
     }
 
-    nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(outerWin);
-    if (rootChromeWin) {
-      rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
+    if (nsGlobalWindowOuter::Cast(outerWin)->IsChromeWindow()) {
+      browserDOMWin =
+          nsGlobalWindowOuter::Cast(outerWin)->GetBrowserDOMWindow();
     }
   }
 

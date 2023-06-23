@@ -446,12 +446,10 @@ CanonicalBrowsingContext::GetParentProcessWidgetContaining() {
 already_AddRefed<nsIBrowserDOMWindow>
 CanonicalBrowsingContext::GetBrowserDOMWindow() {
   RefPtr<CanonicalBrowsingContext> chromeTop = TopCrossChromeBoundary();
-  if (nsCOMPtr<nsIDOMChromeWindow> chromeWin =
-          do_QueryInterface(chromeTop->GetDOMWindow())) {
-    nsCOMPtr<nsIBrowserDOMWindow> bdw;
-    if (NS_SUCCEEDED(chromeWin->GetBrowserDOMWindow(getter_AddRefs(bdw)))) {
-      return bdw.forget();
-    }
+  nsGlobalWindowOuter* topWin;
+  if ((topWin = nsGlobalWindowOuter::Cast(chromeTop->GetDOMWindow())) &&
+      topWin->IsChromeWindow()) {
+    return do_AddRef(topWin->GetBrowserDOMWindow());
   }
   return nullptr;
 }

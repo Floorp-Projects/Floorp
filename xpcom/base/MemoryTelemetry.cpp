@@ -18,8 +18,8 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIBrowserDOMWindow.h"
-#include "nsIDOMChromeWindow.h"
 #include "nsIMemoryReporter.h"
 #include "nsIWindowMediator.h"
 #include "nsImportModule.h"
@@ -479,9 +479,9 @@ nsresult MemoryTelemetry::FinishGatheringTotalMemory(
                                         getter_AddRefs(enumerator)));
 
   uint32_t total = 0;
-  for (auto& window : SimpleEnumerator<nsIDOMChromeWindow>(enumerator)) {
-    nsCOMPtr<nsIBrowserDOMWindow> browserWin;
-    MOZ_TRY(window->GetBrowserDOMWindow(getter_AddRefs(browserWin)));
+  for (const auto& window : SimpleEnumerator<nsPIDOMWindowOuter>(enumerator)) {
+    nsCOMPtr<nsIBrowserDOMWindow> browserWin =
+        nsGlobalWindowOuter::Cast(window)->GetBrowserDOMWindow();
 
     NS_ENSURE_TRUE(browserWin, Err(NS_ERROR_UNEXPECTED));
 

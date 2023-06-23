@@ -15,10 +15,10 @@
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsFocusManager.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
-#include "nsIDOMChromeWindow.h"
 #include "nsIURI.h"
 #include "nsIBrowser.h"
 #include "nsIWebProgress.h"
@@ -222,15 +222,14 @@ void OpenWindow(const ClientOpenWindowArgsParsed& aArgsValidated,
     return;
   }
 
-  nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(browserWindow);
-  if (NS_WARN_IF(!chromeWin)) {
+  if (NS_WARN_IF(!nsGlobalWindowOuter::Cast(browserWindow)->IsChromeWindow())) {
     // XXXbz Can this actually happen?  Seems unlikely.
     aRv.ThrowTypeError("Unable to open window");
     return;
   }
 
-  nsCOMPtr<nsIBrowserDOMWindow> bwin;
-  chromeWin->GetBrowserDOMWindow(getter_AddRefs(bwin));
+  nsCOMPtr<nsIBrowserDOMWindow> bwin =
+      nsGlobalWindowOuter::Cast(browserWindow)->GetBrowserDOMWindow();
 
   if (NS_WARN_IF(!bwin)) {
     aRv.ThrowTypeError("Unable to open window");

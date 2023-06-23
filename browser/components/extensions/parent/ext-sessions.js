@@ -60,7 +60,7 @@ const createSession = async function createSession(
     );
   }
   let sessionObj = { lastModified: Date.now() };
-  if (restored instanceof Ci.nsIDOMChromeWindow) {
+  if (restored.isChromeWindow) {
     await promiseObserved(
       "sessionstore-single-window-restored",
       subject => subject == restored

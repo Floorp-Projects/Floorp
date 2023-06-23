@@ -10,8 +10,8 @@
 #include "AppWindow.h"
 
 // Interfaces needed to be included
+#include "nsGlobalWindowOuter.h"
 #include "nsIDOMWindow.h"
-#include "nsIDOMChromeWindow.h"
 #include "nsIBrowserDOMWindow.h"
 #include "nsIOpenWindowInfo.h"
 #include "nsIPrompt.h"
@@ -547,15 +547,14 @@ nsContentTreeOwner::ProvideWindow(
 
   nsCOMPtr<mozIDOMWindowProxy> domWin;
   mAppWindow->GetWindowDOMWindow(getter_AddRefs(domWin));
-  nsCOMPtr<nsIDOMChromeWindow> chromeWin = do_QueryInterface(domWin);
-  if (!chromeWin) {
+  if (!domWin || !nsGlobalWindowOuter::Cast(domWin)->IsChromeWindow()) {
     // Really odd... but whatever
     NS_WARNING("AppWindow's DOMWindow is not a chrome window");
     return NS_OK;
   }
 
-  nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
-  chromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
+  nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin =
+      nsGlobalWindowOuter::Cast(domWin)->GetBrowserDOMWindow();
   if (!browserDOMWin) {
     return NS_OK;
   }
