@@ -673,7 +673,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   VideoSendParameters send_params_ RTC_GUARDED_BY(thread_checker_);
   VideoOptions default_send_options_ RTC_GUARDED_BY(thread_checker_);
   VideoRecvParameters recv_params_ RTC_GUARDED_BY(thread_checker_);
-  int64_t last_stats_log_ms_ RTC_GUARDED_BY(thread_checker_);
+  int64_t last_send_stats_log_ms_ RTC_GUARDED_BY(thread_checker_);
+  int64_t last_receive_stats_log_ms_ RTC_GUARDED_BY(thread_checker_);
   const bool discard_unknown_ssrc_packets_ RTC_GUARDED_BY(thread_checker_);
   // This is a stream param that comes from the remote description, but wasn't
   // signaled with any a=ssrc lines. It holds information that was signaled
