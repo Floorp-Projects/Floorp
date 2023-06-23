@@ -2067,11 +2067,6 @@ pref("privacy.webrtc.sharedTabWarning", false);
 // before navigating to the actual meeting room page. Doesn't survive tab close.
 pref("privacy.webrtc.deviceGracePeriodTimeoutMs", 3600000);
 
-// Enable Fingerprinting Protection in private windows in Nightly.
-#ifdef NIGHTLY_BUILD
-pref("privacy.fingerprintingProtection.pbmode", true);
-#endif
-
 // Start the browser in e10s mode
 pref("browser.tabs.remote.autostart", true);
 pref("browser.tabs.remote.desktopbehavior", true);
