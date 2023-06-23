@@ -40,6 +40,7 @@ class MockTransformableVideoFrame
               GetDirection,
               (),
               (const, override));
+  MOCK_METHOD(VideoFrameMetadata, Metadata, (), (const, override));
 };
 
 static_assert(!std::is_abstract_v<MockTransformableVideoFrame>, "");
