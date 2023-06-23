@@ -1624,6 +1624,13 @@ class gfxFont {
     return *mVerticalMetrics;
   }
 
+  struct Baselines {
+    gfxFloat mAlphabetic;
+    gfxFloat mHanging;
+    gfxFloat mIdeographic;
+  };
+  Baselines GetBaselines(Orientation aOrientation);
+
   /**
    * We let layout specify spacing on either side of any
    * character. We need to specify both before and after

@@ -134,6 +134,10 @@ class MOZ_STACK_CLASS gfxOTSContext : public ots::OTSContext {
     if (aTag == TRUETYPE_TAG('S', 'V', 'G', ' ')) {
       return mKeepSVG ? ots::TABLE_ACTION_PASSTHRU : ots::TABLE_ACTION_DROP;
     }
+    // Preserve BASE table; harfbuzz will sanitize it before using.
+    if (aTag == TRUETYPE_TAG('B', 'A', 'S', 'E')) {
+      return ots::TABLE_ACTION_PASSTHRU;
+    }
     if (mKeepColorBitmaps && (aTag == TRUETYPE_TAG('C', 'B', 'D', 'T') ||
                               aTag == TRUETYPE_TAG('C', 'B', 'L', 'C'))) {
       return ots::TABLE_ACTION_PASSTHRU;
