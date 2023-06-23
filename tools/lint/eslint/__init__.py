@@ -217,6 +217,8 @@ def run_prettier(cmd_args, config, fix):
         proc.kill()
         return {"results": [], "fixed": 0}
 
+    results = []
+
     if errors:
         errors = errors.decode(encoding, "replace").strip().split("\n")
         errors = [
@@ -227,18 +229,30 @@ def run_prettier(cmd_args, config, fix):
             if not ("Ignored unknown option" in error)
         ]
         if len(errors):
-            print(PRETTIER_ERROR_MESSAGE.format("\n".join(errors)))
+            results.append(
+                result.from_config(
+                    config,
+                    **{
+                        "name": "eslint",
+                        "path": os.path.abspath("."),
+                        "message": PRETTIER_ERROR_MESSAGE.format("\n".join(errors)),
+                        "level": "error",
+                        "rule": "prettier",
+                        "lineno": 0,
+                        "column": 0,
+                    }
+                )
+            )
 
     if not output:
         # If we have errors, but no output, we assume something really bad happened.
         if errors and len(errors):
-            return 1
+            return {"results": results, "fixed": 0}
 
         return {"results": [], "fixed": 0}  # no output means success
 
     output = output.decode(encoding, "replace").splitlines()
 
-    results = []
     fixed = 0
 
     if fix:
