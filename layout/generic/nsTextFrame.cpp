@@ -5489,9 +5489,15 @@ bool nsTextFrame::GetSelectionTextColors(SelectionType aSelectionType,
     case SelectionType::eFind:
       aTextPaintStyle.GetHighlightColors(aForeground, aBackground);
       return true;
-    case SelectionType::eHighlight:
-      return aTextPaintStyle.GetCustomHighlightColors(aHighlightName,
-                                                      aForeground, aBackground);
+    case SelectionType::eHighlight: {
+      // Intentionally not short-cutting here because the called methods have
+      // side-effects that affect outparams.
+      bool hasForeground = aTextPaintStyle.GetCustomHighlightTextColor(
+          aHighlightName, aForeground);
+      bool hasBackground = aTextPaintStyle.GetCustomHighlightBackgroundColor(
+          aHighlightName, aBackground);
+      return hasForeground || hasBackground;
+    }
     case SelectionType::eURLSecondary:
       aTextPaintStyle.GetURLSecondaryColor(aForeground);
       *aBackground = NS_RGBA(0, 0, 0, 0);
@@ -5564,25 +5570,27 @@ void nsTextFrame::GetSelectionTextShadow(
  */
 class MOZ_STACK_CLASS SelectionRangeIterator {
   using PropertyProvider = nsTextFrame::PropertyProvider;
-  using SelectionRange = nsTextFrame::SelectionRange;
+  using CombinedSelectionRange = nsTextFrame::PriorityOrderedSelectionsForRange;
 
  public:
   // aSelectionRanges and aRange are according to the original string.
-  SelectionRangeIterator(const nsTArray<SelectionRange>& aSelectionRanges,
-                         gfxTextRun::Range aRange, PropertyProvider& aProvider,
-                         gfxTextRun* aTextRun, gfxFloat aXOffset);
+  SelectionRangeIterator(
+      const nsTArray<CombinedSelectionRange>& aSelectionRanges,
+      gfxTextRun::Range aRange, PropertyProvider& aProvider,
+      gfxTextRun* aTextRun, gfxFloat aXOffset);
 
   bool GetNextSegment(gfxFloat* aXOffset, gfxTextRun::Range* aRange,
-                      gfxFloat* aHyphenWidth, SelectionType* aSelectionType,
-                      RefPtr<const nsAtom>* aHighlightName,
-                      TextRangeStyle* aStyle);
+                      gfxFloat* aHyphenWidth,
+                      nsTArray<SelectionType>& aSelectionType,
+                      nsTArray<RefPtr<const nsAtom>>& aHighlightName,
+                      nsTArray<TextRangeStyle>& aStyle);
 
   void UpdateWithAdvance(gfxFloat aAdvance) {
     mXOffset += aAdvance * mTextRun->GetDirection();
   }
 
  private:
-  const nsTArray<SelectionRange>& mSelectionRanges;
+  const nsTArray<CombinedSelectionRange>& mSelectionRanges;
   PropertyProvider& mProvider;
   gfxTextRun* mTextRun;
   gfxSkipCharsIterator mIterator;
@@ -5592,7 +5600,8 @@ class MOZ_STACK_CLASS SelectionRangeIterator {
 };
 
 SelectionRangeIterator::SelectionRangeIterator(
-    const nsTArray<nsTextFrame::SelectionRange>& aSelectionRanges,
+    const nsTArray<nsTextFrame::PriorityOrderedSelectionsForRange>&
+        aSelectionRanges,
     gfxTextRun::Range aRange, PropertyProvider& aProvider, gfxTextRun* aTextRun,
     gfxFloat aXOffset)
     : mSelectionRanges(aSelectionRanges),
@@ -5607,8 +5616,9 @@ SelectionRangeIterator::SelectionRangeIterator(
 
 bool SelectionRangeIterator::GetNextSegment(
     gfxFloat* aXOffset, gfxTextRun::Range* aRange, gfxFloat* aHyphenWidth,
-    SelectionType* aSelectionType, RefPtr<const nsAtom>* aHighlightName,
-    TextRangeStyle* aStyle) {
+    nsTArray<SelectionType>& aSelectionType,
+    nsTArray<RefPtr<const nsAtom>>& aHighlightName,
+    nsTArray<TextRangeStyle>& aStyle) {
   if (mIterator.GetOriginalOffset() >= int32_t(mOriginalRange.end)) {
     return false;
   }
@@ -5616,22 +5626,28 @@ bool SelectionRangeIterator::GetNextSegment(
   uint32_t runOffset = mIterator.GetSkippedOffset();
   uint32_t segmentEnd = mOriginalRange.end;
 
+  aSelectionType.Clear();
+  aHighlightName.Clear();
+  aStyle.Clear();
+
   if (mIndex == mSelectionRanges.Length() ||
       mIterator.GetOriginalOffset() <
           int32_t(mSelectionRanges[mIndex].mRange.start)) {
     // There's an unselected segment before the next range (or at the end).
-    *aSelectionType = SelectionType::eNone;
-    *aHighlightName = nullptr;
-    *aStyle = TextRangeStyle();
+    aSelectionType.AppendElement(SelectionType::eNone);
+    aHighlightName.AppendElement();
+    aStyle.AppendElement(TextRangeStyle());
     if (mIndex < mSelectionRanges.Length()) {
       segmentEnd = mSelectionRanges[mIndex].mRange.start;
     }
   } else {
     // Get the selection details for the next segment, and increment index.
-    const SelectionDetails* sdptr = mSelectionRanges[mIndex].mDetails;
-    *aSelectionType = sdptr->mSelectionType;
-    *aHighlightName = sdptr->mHighlightName;
-    *aStyle = sdptr->mTextRangeStyle;
+    for (const SelectionDetails* sdptr :
+         mSelectionRanges[mIndex].mSelectionRanges) {
+      aSelectionType.AppendElement(sdptr->mSelectionType);
+      aHighlightName.AppendElement(sdptr->mHighlightData.mHighlightName);
+      aStyle.AppendElement(sdptr->mTextRangeStyle);
+    }
     segmentEnd = mSelectionRanges[mIndex].mRange.end;
     ++mIndex;
   }
@@ -5769,20 +5785,19 @@ void nsTextFrame::PaintOneShadow(const PaintShadowParams& aParams,
   aParams.context->Restore();
 }
 
-SelectionTypeMask nsTextFrame::ResolveSelections(
-    const PaintTextSelectionParams& aParams, const SelectionDetails* aDetails,
-    nsTArray<SelectionRange>& aResult, SelectionType aSelectionType,
-    bool* aAnyBackgrounds) const {
-  const gfxTextRun::Range& contentRange = aParams.contentRange;
-
+/* static */
+SelectionTypeMask nsTextFrame::CreateSelectionRangeList(
+    const SelectionDetails* aDetails, SelectionType aSelectionType,
+    const PaintTextSelectionParams& aParams,
+    nsTArray<SelectionRange>& aSelectionRanges, bool* aAnyBackgrounds) {
   SelectionTypeMask allTypes = 0;
   bool anyBackgrounds = false;
 
-  uint32_t i = 0;
+  uint32_t priorityOfInsertionOrder = 0;
   for (const SelectionDetails* sd = aDetails; sd; sd = sd->mNext.get()) {
     MOZ_ASSERT(sd->mStart >= 0 && sd->mEnd >= 0);  // XXX make unsigned?
-    uint32_t start = std::max(contentRange.start, uint32_t(sd->mStart));
-    uint32_t end = std::min(contentRange.end, uint32_t(sd->mEnd));
+    uint32_t start = std::max(aParams.contentRange.start, uint32_t(sd->mStart));
+    uint32_t end = std::min(aParams.contentRange.end, uint32_t(sd->mEnd));
     if (start < end) {
       // The PaintTextWithSelectionColors caller passes SelectionType::eNone,
       // so we collect all selections that set colors, and prioritize them
@@ -5790,33 +5805,158 @@ SelectionTypeMask nsTextFrame::ResolveSelections(
       if (aSelectionType == SelectionType::eNone) {
         allTypes |= ToSelectionTypeMask(sd->mSelectionType);
         // Ignore selections that don't set colors.
-        nscolor foreground, background;
-        if (GetSelectionTextColors(sd->mSelectionType, sd->mHighlightName,
+        nscolor foreground(0), background(0);
+        if (GetSelectionTextColors(sd->mSelectionType,
+                                   sd->mHighlightData.mHighlightName,
                                    *aParams.textPaintStyle, sd->mTextRangeStyle,
                                    &foreground, &background)) {
           if (NS_GET_A(background) > 0) {
             anyBackgrounds = true;
           }
-          uint32_t prio = kSelectionTypeCount - uint32_t(sd->mSelectionType);
-          aResult.AppendElement(SelectionRange{sd, {start, end}, prio});
+          aSelectionRanges.AppendElement(
+              SelectionRange{sd, {start, end}, priorityOfInsertionOrder++});
         }
       } else if (sd->mSelectionType == aSelectionType) {
         // The PaintSelectionTextDecorations caller passes a specific type,
         // so we include only ranges of that type, and keep them in order
         // so that later ones take precedence over earlier.
-        aResult.AppendElement(SelectionRange{sd, {start, end}, i++});
+        aSelectionRanges.AppendElement(
+            SelectionRange{sd, {start, end}, priorityOfInsertionOrder++});
       }
     }
   }
   if (aAnyBackgrounds) {
     *aAnyBackgrounds = anyBackgrounds;
   }
+  return allTypes;
+}
 
-  if (aResult.Length() < 1) {
+/* static */
+void nsTextFrame::CombineSelectionRanges(
+    const nsTArray<SelectionRange>& aSelectionRanges,
+    nsTArray<PriorityOrderedSelectionsForRange>& aCombinedSelectionRanges) {
+  struct SelectionRangeEndCmp {
+    bool Equals(const SelectionRange* a, const SelectionRange* b) const {
+      return a->mRange.end == b->mRange.end;
+    }
+    bool LessThan(const SelectionRange* a, const SelectionRange* b) const {
+      return a->mRange.end < b->mRange.end;
+    }
+  };
+
+  struct SelectionRangePriorityCmp {
+    bool Equals(const SelectionRange* a, const SelectionRange* b) const {
+      const SelectionDetails* aDetails = a->mDetails;
+      const SelectionDetails* bDetails = b->mDetails;
+      if (aDetails->mSelectionType != bDetails->mSelectionType) {
+        return false;
+      }
+      if (aDetails->mSelectionType != SelectionType::eHighlight) {
+        return a->mPriority == b->mPriority;
+      }
+      if (aDetails->mHighlightData.mHighlight->Priority() !=
+          bDetails->mHighlightData.mHighlight->Priority()) {
+        return false;
+      }
+      return a->mPriority == b->mPriority;
+    }
+
+    bool LessThan(const SelectionRange* a, const SelectionRange* b) const {
+      if (a->mDetails->mSelectionType != b->mDetails->mSelectionType) {
+        // Even though this looks counter-intuitive,
+        // this is intended, as values in `SelectionType` are inverted:
+        // a lower value indicates a higher priority.
+        return a->mDetails->mSelectionType > b->mDetails->mSelectionType;
+      }
+
+      if (a->mDetails->mSelectionType != SelectionType::eHighlight) {
+        // for non-highlights, the selection which was added later
+        // has a higher priority.
+        return a->mPriority < b->mPriority;
+      }
+
+      if (a->mDetails->mHighlightData.mHighlight->Priority() !=
+          b->mDetails->mHighlightData.mHighlight->Priority()) {
+        // For highlights, first compare the priorities set by the user.
+        return a->mDetails->mHighlightData.mHighlight->Priority() <
+               b->mDetails->mHighlightData.mHighlight->Priority();
+      }
+      // only if the user priorities are equal, let the highlight that was added
+      // later take precedence.
+      return a->mPriority < b->mPriority;
+    }
+  };
+
+  uint32_t currentOffset = 0;
+  AutoTArray<const SelectionRange*, 1> activeSelectionsForCurrentSegment;
+  size_t rangeIndex = 0;
+
+  // Divide the given selection ranges into segments which share the same
+  // set of selections.
+  // The following algorithm iterates `aSelectionRanges`, assuming
+  // that its elements are sorted by their start offset.
+  // Each time a new selection starts, it is pushed into an array of
+  // "currently present" selections, sorted by their *end* offset.
+  // For each iteration the next segment end offset is determined,
+  // which is either the start offset of the next selection or
+  // the next end offset of all "currently present" selections
+  // (which is always the first element of the array because of its order).
+  // Then, a `CombinedSelectionRange` can be constructed, which describes
+  // the text segment until its end offset (as determined above), and contains
+  // all elements of the "currently present" selection list, now sorted
+  // by their priority.
+  // If a range ends at the given offset, it is removed from the array.
+  while (rangeIndex < aSelectionRanges.Length() ||
+         !activeSelectionsForCurrentSegment.IsEmpty()) {
+    uint32_t currentSegmentEndOffset =
+        activeSelectionsForCurrentSegment.IsEmpty()
+            ? -1
+            : activeSelectionsForCurrentSegment[0]->mRange.end;
+    uint32_t nextRangeStartOffset =
+        rangeIndex < aSelectionRanges.Length()
+            ? aSelectionRanges[rangeIndex].mRange.start
+            : -1;
+    uint32_t nextOffset =
+        std::min(currentSegmentEndOffset, nextRangeStartOffset);
+    if (!activeSelectionsForCurrentSegment.IsEmpty() &&
+        currentOffset != nextOffset) {
+      auto activeSelectionRangesSortedByPriority =
+          activeSelectionsForCurrentSegment.Clone();
+      activeSelectionRangesSortedByPriority.Sort(SelectionRangePriorityCmp());
+
+      AutoTArray<const SelectionDetails*, 1> selectionDetails;
+      selectionDetails.SetCapacity(
+          activeSelectionRangesSortedByPriority.Length());
+      for (const auto* selectionRange : activeSelectionRangesSortedByPriority) {
+        selectionDetails.AppendElement(selectionRange->mDetails);
+      }
+      aCombinedSelectionRanges.AppendElement(PriorityOrderedSelectionsForRange{
+          std::move(selectionDetails), {currentOffset, nextOffset}});
+    }
+    currentOffset = nextOffset;
+
+    if (nextRangeStartOffset < currentSegmentEndOffset) {
+      activeSelectionsForCurrentSegment.InsertElementSorted(
+          &aSelectionRanges[rangeIndex++], SelectionRangeEndCmp());
+    } else {
+      activeSelectionsForCurrentSegment.RemoveElementAt(0);
+    }
+  }
+}
+
+SelectionTypeMask nsTextFrame::ResolveSelections(
+    const PaintTextSelectionParams& aParams, const SelectionDetails* aDetails,
+    nsTArray<PriorityOrderedSelectionsForRange>& aResult,
+    SelectionType aSelectionType, bool* aAnyBackgrounds) const {
+  AutoTArray<SelectionRange, 4> selectionRanges;
+
+  SelectionTypeMask allTypes = CreateSelectionRangeList(
+      aDetails, aSelectionType, aParams, selectionRanges, aAnyBackgrounds);
+
+  if (selectionRanges.IsEmpty()) {
     return allTypes;
   }
 
-  // Sort by starting offset.
   struct SelectionRangeStartCmp {
     bool Equals(const SelectionRange& a, const SelectionRange& b) const {
       return a.mRange.start == b.mRange.start;
@@ -5825,55 +5965,9 @@ SelectionTypeMask nsTextFrame::ResolveSelections(
       return a.mRange.start < b.mRange.start;
     }
   };
-  aResult.Sort(SelectionRangeStartCmp());
+  selectionRanges.Sort(SelectionRangeStartCmp());
 
-  // Resolve overlapping selections according to priority.
-  uint32_t currentIndex = 0;
-  while (currentIndex < aResult.Length() - 1) {
-    auto& current = aResult[currentIndex];
-    uint32_t probeIndex = currentIndex + 1;
-    while (probeIndex < aResult.Length()) {
-      auto& probe = aResult[probeIndex];
-      if (probe.mRange.start >= current.mRange.end) {
-        break;
-      }
-      // TODO: ordering of highlight selections
-      if (current.mDetails->mSelectionType <= probe.mDetails->mSelectionType) {
-        // current overwrites (beginning or all of) probe
-        if (current.mRange.end >= probe.mRange.end) {
-          aResult.RemoveElementAt(probeIndex);
-        } else {
-          probe.mRange.start = current.mRange.end;
-          ++probeIndex;
-        }
-      } else {
-        // probe overwrites current (possibly splitting it)
-        if (probe.mRange.start > current.mRange.start) {
-          uint32_t prevEnd = current.mRange.end;
-          current.mRange.end = probe.mRange.start;
-          if (probe.mRange.end < prevEnd) {
-            aResult.InsertElementSorted(
-                SelectionRange{current.mDetails,
-                               {probe.mRange.end, prevEnd},
-                               current.mPriority},
-                SelectionRangeStartCmp());
-          }
-          break;
-        }
-        if (probe.mRange.end < current.mRange.end) {
-          aResult.InsertElementSorted(
-              SelectionRange{current.mDetails,
-                             {probe.mRange.end, current.mRange.end},
-                             current.mPriority},
-              SelectionRangeStartCmp());
-        }
-        aResult.RemoveElementAt(currentIndex);
-        --currentIndex;  // This is OK even when currentIndex is zero, because
-                         // unsigned under/overflow is defined as wrapping.
-      }
-    }
-    ++currentIndex;
-  }
+  CombineSelectionRanges(selectionRanges, aResult);
 
   return allTypes;
 }
@@ -5886,7 +5980,7 @@ bool nsTextFrame::PaintTextWithSelectionColors(
     const UniquePtr<SelectionDetails>& aDetails,
     SelectionTypeMask* aAllSelectionTypeMask, const ClipEdges& aClipEdges) {
   bool anyBackgrounds = false;
-  AutoTArray<SelectionRange, 8> selectionRanges;
+  AutoTArray<PriorityOrderedSelectionsForRange, 8> selectionRanges;
 
   *aAllSelectionTypeMask =
       ResolveSelections(aParams, aDetails.get(), selectionRanges,
@@ -5897,7 +5991,6 @@ bool nsTextFrame::PaintTextWithSelectionColors(
                : aParams.textBaselinePt.x - aParams.framePt.x;
   gfxFloat iOffset, hyphenWidth;
   Range range;  // in transformed string
-  TextRangeStyle rangeStyle;
 
   const gfxTextRun::Range& contentRange = aParams.contentRange;
   auto* textDrawer = aParams.context->GetTextDrawer();
@@ -5907,15 +6000,37 @@ bool nsTextFrame::PaintTextWithSelectionColors(
         aParams.textPaintStyle->PresContext()->AppUnitsPerDevPixel();
     SelectionRangeIterator iterator(selectionRanges, contentRange,
                                     *aParams.provider, mTextRun, startIOffset);
-    SelectionType selectionType;
-    RefPtr<const nsAtom> highlightName;
+    AutoTArray<SelectionType, 1> selectionTypes;
+    AutoTArray<RefPtr<const nsAtom>, 1> highlightNames;
+    AutoTArray<TextRangeStyle, 1> rangeStyles;
     while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
-                                   &selectionType, &highlightName,
-                                   &rangeStyle)) {
-      nscolor foreground, background;
-      GetSelectionTextColors(selectionType, highlightName,
-                             *aParams.textPaintStyle, rangeStyle, &foreground,
-                             &background);
+                                   selectionTypes, highlightNames,
+                                   rangeStyles)) {
+      nscolor foreground(0), background(0), tmpBackground(0);
+      bool backgroundColorHasBeenSet = false;
+      for (size_t index = 0; index < selectionTypes.Length(); ++index) {
+        if (selectionTypes[index] == SelectionType::eHighlight) {
+          // `GetCustomHighlightBackgroundColor()` always sets `tmpBackground`.
+          // However, if it returns false, it means that the background color
+          // has not been specified by the author (or it is transparent).
+          // In that case, the background color of a lower-priority highlight
+          // should take precedence, therefore `background` is not overridden.
+          if (aParams.textPaintStyle->GetCustomHighlightBackgroundColor(
+                  highlightNames[index], &tmpBackground)) {
+            background = tmpBackground;
+            backgroundColorHasBeenSet = true;
+          }
+
+        } else {
+          GetSelectionTextColors(selectionTypes[index], highlightNames[index],
+                                 *aParams.textPaintStyle, rangeStyles[index],
+                                 &foreground, &background);
+          backgroundColorHasBeenSet = true;
+        }
+      }
+      if (!backgroundColorHasBeenSet) {
+        background = tmpBackground;
+      }
       // Draw background color
       gfxFloat advance =
           hyphenWidth + mTextRun->GetAdvanceWidth(range, aParams.provider);
@@ -5967,17 +6082,35 @@ bool nsTextFrame::PaintTextWithSelectionColors(
   const nsStyleText* textStyle = StyleText();
   SelectionRangeIterator iterator(selectionRanges, contentRange,
                                   *aParams.provider, mTextRun, startIOffset);
-  SelectionType selectionType;
-  RefPtr<const nsAtom> highlightName;
-  while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth, &selectionType,
-                                 &highlightName, &rangeStyle)) {
-    nscolor foreground, background;
+  AutoTArray<SelectionType, 1> selectionTypes;
+  AutoTArray<RefPtr<const nsAtom>, 1> highlightNames;
+  AutoTArray<TextRangeStyle, 1> rangeStyles;
+  while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth, selectionTypes,
+                                 highlightNames, rangeStyles)) {
+    nscolor foreground(0), background(0);
     if (aParams.IsGenerateTextMask()) {
       foreground = NS_RGBA(0, 0, 0, 255);
     } else {
-      GetSelectionTextColors(selectionType, highlightName,
-                             *aParams.textPaintStyle, rangeStyle, &foreground,
-                             &background);
+      nscolor tmpForeground(0);
+      bool colorHasBeenSet = false;
+      for (size_t index = 0; index < selectionTypes.Length(); ++index) {
+        if (selectionTypes[index] == SelectionType::eHighlight) {
+          if (aParams.textPaintStyle->GetCustomHighlightTextColor(
+                  highlightNames[index], &tmpForeground)) {
+            foreground = tmpForeground;
+            colorHasBeenSet = true;
+          }
+
+        } else {
+          GetSelectionTextColors(selectionTypes[index], highlightNames[index],
+                                 *aParams.textPaintStyle, rangeStyles[index],
+                                 &foreground, &background);
+          colorHasBeenSet = true;
+        }
+      }
+      if (!colorHasBeenSet) {
+        foreground = tmpForeground;
+      }
     }
 
     gfx::Point textBaselinePt =
@@ -5988,7 +6121,9 @@ bool nsTextFrame::PaintTextWithSelectionColors(
     // Determine what shadow, if any, to draw - either from textStyle
     // or from the ::-moz-selection pseudo-class if specified there
     Span<const StyleSimpleShadow> shadows = textStyle->mTextShadow.AsSpan();
-    GetSelectionTextShadow(selectionType, *aParams.textPaintStyle, &shadows);
+    for (auto selectionType : selectionTypes) {
+      GetSelectionTextShadow(selectionType, *aParams.textPaintStyle, &shadows);
+    }
     if (!shadows.IsEmpty()) {
       nscoord startEdge = iOffset;
       if (mTextRun->IsInlineReversed()) {
@@ -6022,7 +6157,7 @@ void nsTextFrame::PaintTextSelectionDecorations(
     return;
   }
 
-  AutoTArray<SelectionRange, 8> selectionRanges;
+  AutoTArray<PriorityOrderedSelectionsForRange, 8> selectionRanges;
   ResolveSelections(aParams, aDetails.get(), selectionRanges, aSelectionType);
 
   RefPtr<gfxFont> firstFont =
@@ -6054,32 +6189,34 @@ void nsTextFrame::PaintTextSelectionDecorations(
   } else {
     pt.y = (aParams.textBaselinePt.y - mAscent) / app;
   }
-  SelectionType nextSelectionType;
-  RefPtr<const nsAtom> highlightName;
-  TextRangeStyle selectedStyle;
+  AutoTArray<SelectionType, 1> nextSelectionTypes;
+  AutoTArray<RefPtr<const nsAtom>, 1> highlightNames;
+  AutoTArray<TextRangeStyle, 1> selectedStyles;
 
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
-                                 &nextSelectionType, &highlightName,
-                                 &selectedStyle)) {
+                                 nextSelectionTypes, highlightNames,
+                                 selectedStyles)) {
     gfxFloat advance =
         hyphenWidth + mTextRun->GetAdvanceWidth(range, aParams.provider);
-    if (nextSelectionType == aSelectionType) {
-      if (verticalRun) {
-        pt.y = (aParams.framePt.y + iOffset -
-                (mTextRun->IsInlineReversed() ? advance : 0)) /
-               app;
-      } else {
-        pt.x = (aParams.framePt.x + iOffset -
-                (mTextRun->IsInlineReversed() ? advance : 0)) /
-               app;
+    for (size_t index = 0; index < nextSelectionTypes.Length(); ++index) {
+      if (nextSelectionTypes[index] == aSelectionType) {
+        if (verticalRun) {
+          pt.y = (aParams.framePt.y + iOffset -
+                  (mTextRun->IsInlineReversed() ? advance : 0)) /
+                 app;
+        } else {
+          pt.x = (aParams.framePt.x + iOffset -
+                  (mTextRun->IsInlineReversed() ? advance : 0)) /
+                 app;
+        }
+        gfxFloat width = Abs(advance) / app;
+        gfxFloat xInFrame = pt.x - (aParams.framePt.x / app);
+        DrawSelectionDecorations(aParams.context, aParams.dirtyRect,
+                                 aSelectionType, *aParams.textPaintStyle,
+                                 selectedStyles[index], pt, xInFrame, width,
+                                 mAscent / app, decorationMetrics,
+                                 aParams.callbacks, verticalRun, kDecoration);
       }
-      gfxFloat width = Abs(advance) / app;
-      gfxFloat xInFrame = pt.x - (aParams.framePt.x / app);
-      DrawSelectionDecorations(aParams.context, aParams.dirtyRect,
-                               aSelectionType, *aParams.textPaintStyle,
-                               selectedStyle, pt, xInFrame, width,
-                               mAscent / app, decorationMetrics,
-                               aParams.callbacks, verticalRun, kDecoration);
     }
     iterator.UpdateWithAdvance(advance);
   }
@@ -6215,7 +6352,8 @@ nscolor nsTextFrame::GetCaretColorAt(int32_t aOffset) {
         (selectionType == SelectionType::eNone ||
          sdptr->mSelectionType < selectionType)) {
       nscolor foreground, background;
-      if (GetSelectionTextColors(sdptr->mSelectionType, sdptr->mHighlightName,
+      if (GetSelectionTextColors(sdptr->mSelectionType,
+                                 sdptr->mHighlightData.mHighlightName,
                                  textPaintStyle, sdptr->mTextRangeStyle,
                                  &foreground, &background)) {
         if (!isSolidTextColor && NS_IS_SELECTION_SPECIAL_COLOR(foreground)) {
