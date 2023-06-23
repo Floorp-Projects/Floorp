@@ -80,6 +80,7 @@ You'll need to pass along some of the following properties:
         * `primaryL10nArgs` (**Optional**) - The l10n args you can optionally pass for the primary action element
         * `secondaryL10nId` (**Optional**) -  The l10n id to be used for the secondary action button. This fluent string should ONLY define a `.title` attribute to describe the secondary button in each row.
         * `secondaryL10nArgs` (**Optional**) - The l10n args you can optionally pass for the secondary action button
+        * `tabElement` (**Optional**) - The MozTabbrowserTab element for the tab item.
         * `tabid` (**Optional**) - Optional property expected for Recently Closed tab data
         * `time` (**Required**) - The time in milliseconds for expected last interaction with the tab (Ex: `lastUsed` for SyncedTabs tabs, `closedAt` for RecentlyClosed tabs, etc.)
         * `title` (**Required**) - The title for the tab

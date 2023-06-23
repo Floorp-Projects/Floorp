@@ -34,24 +34,43 @@
   }
 
   function getRowsForCard(card) {
-    return card.shadowRoot
-      .querySelector("fxview-tab-list")
-      .shadowRoot.querySelectorAll("fxview-tab-row");
+    return card.shadowRoot.querySelector("fxview-tab-list").rowEls;
   }
 
-  add_setup(async function() {
+  add_setup(async function () {
     openTabs.enter();
     await openTabs.getUpdateComplete();
   });
 
   add_task(async function open_tab_same_window() {
-    await BrowserTestUtils.withNewTab(TEST_URL, async () => {
+    await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
       await openTabs.getUpdateComplete();
       const cards = getCards();
       is(cards.length, 1, "There is one window.");
-      const tabs = getRowsForCard(cards[0]);
+      let tabs = getRowsForCard(cards[0]);
       is(tabs.length, 2, "There are two tabs.");
       is(tabs[1].url, TEST_URL, "The new tab appears last.");
+      const [originalTab, newTab] = browser.ownerGlobal.gBrowser.tabs;
+      tabs[0].mainEl.click();
+      await BrowserTestUtils.waitForCondition(
+        () => originalTab.selected,
+        "The original tab is selected."
+      );
+      tabs[1].mainEl.click();
+      await BrowserTestUtils.waitForCondition(
+        () => newTab.selected,
+        "The new tab is selected."
+      );
+      info("Bring the new tab to the front.");
+      browser.ownerGlobal.gBrowser.moveTabTo(newTab, 0);
+      await BrowserTestUtils.waitForMutationCondition(
+        cards[0].shadowRoot,
+        { childList: true, subtree: true },
+        () => {
+          tabs = getRowsForCard(cards[0]);
+          return tabs[0].url === TEST_URL;
+        }
+      );
     });
 
     await openTabs.getUpdateComplete();
@@ -97,6 +116,16 @@
           row.shadowRoot.getElementById("fxview-tab-row-date").hidden,
           "The date is hidden, since we have two windows."
         );
+
+        info("Select a tab from the original window.");
+        let winFocused = BrowserTestUtils.waitForEvent(window, "focus", true);
+        originalWinRows[0].mainEl.click();
+        await winFocused;
+
+        info("Select a tab from the new window.");
+        winFocused = BrowserTestUtils.waitForEvent(win, "focus", true);
+        newWinRows[0].mainEl.click();
+        await winFocused;
       }
     );
     await BrowserTestUtils.closeWindow(win);
@@ -130,6 +159,38 @@
     );
     await BrowserTestUtils.closeWindow(win);
     await BrowserTestUtils.closeWindow(otherWin);
+  });
+
+  add_task(async function toggle_show_more_link() {
+    const NUMBER_OF_WINDOWS = 4;
+    const NUMBER_OF_TABS = 42;
+    const windows = [];
+    for (let i = 0; i < NUMBER_OF_WINDOWS - 1; i++) {
+      windows.push(await BrowserTestUtils.openNewBrowserWindow());
+    }
+    await openTabs.getUpdateComplete();
+    const cards = getCards();
+    is(cards.length, NUMBER_OF_WINDOWS, "There are four windows.");
+    const lastCard = cards[NUMBER_OF_WINDOWS - 1];
+    const lastWindow = windows[NUMBER_OF_WINDOWS - 2];
+    for (let i = 0; i < NUMBER_OF_TABS - 1; i++) {
+      await BrowserTestUtils.openNewForegroundTab(lastWindow.gBrowser);
+    }
+    await openTabs.getUpdateComplete();
+    ok(
+      getRowsForCard(lastCard).length < NUMBER_OF_TABS,
+      "Not all tabs are shown yet."
+    );
+    info("Toggle the Show More link.");
+    lastCard.shadowRoot.querySelector("div[slot=footer]").click();
+    await BrowserTestUtils.waitForMutationCondition(
+      lastCard.shadowRoot,
+      { childList: true, subtree: true },
+      () => getRowsForCard(lastCard).length === NUMBER_OF_TABS
+    );
+    for (let win of windows) {
+      await BrowserTestUtils.closeWindow(win);
+    }
   });
 </script>
 </pre>
