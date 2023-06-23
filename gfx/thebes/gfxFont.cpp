@@ -4201,6 +4201,71 @@ void gfxFont::SanitizeMetrics(gfxFont::Metrics* aMetrics,
   }
 }
 
+gfxFont::Baselines gfxFont::GetBaselines(Orientation aOrientation) {
+  // Approximated baselines for fonts lacking actual baseline data. These are
+  // fractions of the em ascent/descent from the alphabetic baseline.
+  const double kHangingBaselineDefault = 0.8;       // fraction of ascent
+  const double kIdeographicBaselineDefault = -0.5;  // fraction of descent
+
+  // If no BASE table is present, just return synthetic values immediately.
+  if (!mFontEntry->HasFontTable(TRUETYPE_TAG('B', 'A', 'S', 'E'))) {
+    // No baseline table; just synthesize them immediately.
+    const Metrics& metrics = GetMetrics(aOrientation);
+    return Baselines{
+        0.0,                                             // alphabetic
+        kHangingBaselineDefault * metrics.emAscent,      // hanging
+        kIdeographicBaselineDefault * metrics.emDescent  // ideographic
+    };
+  }
+
+  // Use harfbuzz to try to read the font's baseline metrics.
+  Baselines result{NAN, NAN, NAN};
+  hb_font_t* hbFont = gfxHarfBuzzShaper::CreateHBFont(this);
+  hb_direction_t hbDir = aOrientation == nsFontMetrics::eHorizontal
+                             ? HB_DIRECTION_LTR
+                             : HB_DIRECTION_TTB;
+  hb_position_t position;
+  unsigned count = 0;
+  auto Fix2Float = [](hb_position_t f) -> gfxFloat { return f / 65536.0; };
+  if (hb_ot_layout_get_baseline(hbFont, HB_OT_LAYOUT_BASELINE_TAG_ROMAN, hbDir,
+                                HB_OT_TAG_DEFAULT_SCRIPT,
+                                HB_OT_TAG_DEFAULT_LANGUAGE, &position)) {
+    result.mAlphabetic = Fix2Float(position);
+    count++;
+  }
+  if (hb_ot_layout_get_baseline(hbFont, HB_OT_LAYOUT_BASELINE_TAG_HANGING,
+                                hbDir, HB_OT_TAG_DEFAULT_SCRIPT,
+                                HB_OT_TAG_DEFAULT_LANGUAGE, &position)) {
+    result.mHanging = Fix2Float(position);
+    count++;
+  }
+  if (hb_ot_layout_get_baseline(
+          hbFont, HB_OT_LAYOUT_BASELINE_TAG_IDEO_EMBOX_BOTTOM_OR_LEFT, hbDir,
+          HB_OT_TAG_DEFAULT_SCRIPT, HB_OT_TAG_DEFAULT_LANGUAGE, &position)) {
+    result.mIdeographic = Fix2Float(position);
+    count++;
+  }
+  hb_font_destroy(hbFont);
+  // If we successfully read all three, we can return now.
+  if (count == 3) {
+    return result;
+  }
+
+  // Synthesize the baselines that we didn't find in the font.
+  const Metrics& metrics = GetMetrics(aOrientation);
+  if (isnan(result.mAlphabetic)) {
+    result.mAlphabetic = 0.0;
+  }
+  if (isnan(result.mHanging)) {
+    result.mHanging = kHangingBaselineDefault * metrics.emAscent;
+  }
+  if (isnan(result.mIdeographic)) {
+    result.mIdeographic = kIdeographicBaselineDefault * metrics.emDescent;
+  }
+
+  return result;
+}
+
 // Create a Metrics record to be used for vertical layout. This should never
 // fail, as we've already decided this is a valid font. We do not have the
 // option of marking it invalid (as can happen if we're unable to read

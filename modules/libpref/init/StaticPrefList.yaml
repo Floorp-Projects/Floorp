@@ -4200,7 +4200,7 @@
 
 - name: dom.textMetrics.baselines.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 - name: dom.textMetrics.emHeight.enabled
