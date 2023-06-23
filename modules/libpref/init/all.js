@@ -168,9 +168,6 @@ pref("dom.text-recognition.enabled", true);
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
 
-// min font device pixel size at which to turn on high quality
-pref("browser.display.auto_quality_min_font_size", 20);
-
 // See http://whatwg.org/specs/web-apps/current-work/#ping
 pref("browser.send_pings", false);
 pref("browser.send_pings.max_per_link", 1);           // limit the number of pings that are sent per link click

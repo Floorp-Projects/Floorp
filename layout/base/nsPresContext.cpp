@@ -237,7 +237,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mFullZoom(1.0),
       mLastFontInflationScreenSize(gfxSize(-1.0, -1.0)),
       mCurAppUnitsPerDevPixel(0),
-      mAutoQualityMinFontSizePixelsPref(0),
       mDynamicToolbarMaxHeight(0),
       mDynamicToolbarHeight(0),
       mPageSize(-1, -1),
@@ -423,9 +422,6 @@ void nsPresContext::GetUserPreferences() {
     // get a presshell.
     return;
   }
-
-  mAutoQualityMinFontSizePixelsPref =
-      Preferences::GetInt("browser.display.auto_quality_min_font_size");
 
   PreferenceSheet::EnsureInitialized();
 
