@@ -4566,7 +4566,7 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
   PopulateReflowOutput(aReflowOutput, aReflowInput, aStatus, contentBoxSize,
                        borderPadding, consumedBSize, mayNeedNextInFlow,
                        maxBlockEndEdgeOfChildren, anyChildIncomplete,
-                       flr.mAscent, flr.mLines, axisTracker);
+                       axisTracker, flr);
 
   if (wm.IsVerticalRL()) {
     // If the final border-box block-size is different from the tentative one,
@@ -5504,8 +5504,8 @@ void nsFlexContainerFrame::PopulateReflowOutput(
     nsReflowStatus& aStatus, const LogicalSize& aContentBoxSize,
     const LogicalMargin& aBorderPadding, const nscoord aConsumedBSize,
     const bool aMayNeedNextInFlow, const nscoord aMaxBlockEndEdgeOfChildren,
-    const bool aAnyChildIncomplete, nscoord aFlexContainerAscent,
-    nsTArray<FlexLine>& aLines, const FlexboxAxisTracker& aAxisTracker) {
+    const bool aAnyChildIncomplete, const FlexboxAxisTracker& aAxisTracker,
+    FlexLayoutResult& aFlr) {
   const WritingMode flexWM = aReflowInput.GetWritingMode();
 
   // Compute flex container's desired size (in its own writing-mode).
@@ -5578,13 +5578,13 @@ void nsFlexContainerFrame::PopulateReflowOutput(
     desiredSizeInFlexWM.BSize(flexWM) = effectiveContentBSizeWithBStartBP;
   }
 
-  if (aFlexContainerAscent == nscoord_MIN) {
+  if (aFlr.mAscent == nscoord_MIN) {
     // Still don't have our baseline set -- this happens if we have no
     // children, if our children are huge enough that they have nscoord_MIN
     // as their baseline, or our content is hidden in which case, we'll use the
     // wrong baseline (but no big deal).
     NS_WARNING_ASSERTION(
-        HidesContentForLayout() || aLines[0].IsEmpty(),
+        HidesContentForLayout() || aFlr.mLines[0].IsEmpty(),
         "Have flex items but didn't get an ascent - that's odd (or there are "
         "just gigantic sizes involved)");
     // Per spec, synthesize baseline from the flex container's content box
@@ -5592,7 +5592,7 @@ void nsFlexContainerFrame::PopulateReflowOutput(
     // XXXdholbert This only makes sense if parent's writing mode is
     // horizontal (& even then, really we should be using the BSize in terms
     // of the parent's writing mode, not ours). Clean up in bug 1155322.
-    aFlexContainerAscent = desiredSizeInFlexWM.BSize(flexWM);
+    aFlr.mAscent = desiredSizeInFlexWM.BSize(flexWM);
   }
 
   if (HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
@@ -5600,9 +5600,9 @@ void nsFlexContainerFrame::PopulateReflowOutput(
     // synthesize a margin-box baseline.
     aReflowOutput.SetBlockStartAscent(ReflowOutput::ASK_FOR_BASELINE);
   } else {
-    // XXXdholbert aFlexContainerAscent needs to be in terms of
-    // our parent's writing-mode here. See bug 1155322.
-    aReflowOutput.SetBlockStartAscent(aFlexContainerAscent);
+    // XXXdholbert aFlr.mAscent needs to be in terms of our parent's
+    // writing-mode here. See bug 1155322.
+    aReflowOutput.SetBlockStartAscent(aFlr.mAscent);
   }
 
   // Now, we account for how the block-end border and padding (if any) impacts
@@ -5651,13 +5651,13 @@ void nsFlexContainerFrame::PopulateReflowOutput(
   }
 
   // Calculate the container baselines so that our parent can baseline-align us.
-  mBaselineFromLastReflow = aFlexContainerAscent;
-  mLastBaselineFromLastReflow = aLines.LastElement().LastBaselineOffset();
+  mBaselineFromLastReflow = aFlr.mAscent;
+  mLastBaselineFromLastReflow = aFlr.mLines.LastElement().LastBaselineOffset();
   if (mLastBaselineFromLastReflow == nscoord_MIN) {
     // XXX we fall back to a mirrored first baseline here for now, but this
     // should probably use the last baseline of the last item or something.
     mLastBaselineFromLastReflow =
-        desiredSizeInFlexWM.BSize(flexWM) - aFlexContainerAscent;
+        desiredSizeInFlexWM.BSize(flexWM) - aFlr.mAscent;
   }
 
   // Convert flex container's final desired size to parent's WM, for outparam.
