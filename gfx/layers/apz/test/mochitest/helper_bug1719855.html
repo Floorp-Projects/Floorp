@@ -78,6 +78,11 @@ async function test() {
     is(touchmoveCount, 0, "There should be no touch-move event when the context menu opened");
   }
   is(window.scrollY, 0, "The scroll position should stay the original position");
+
+  if (searchParams.get("prevent") != "contextmenu") {
+    // If we've opened the context menu, close it.
+    await closeContextMenu();
+  }
 }
 
 if (getPlatform() == "windows") {

@@ -1879,3 +1879,34 @@ async function panLeftToRightEnd(aElement, aX, aY, aMultiplier) {
     NativePanHandler.endPhase
   );
 }
+
+// Close the context menu on desktop platforms.
+// NOTE: This function doesn't work if the context menu isn't open.
+async function closeContextMenu() {
+  if (getPlatform() == "android") {
+    return;
+  }
+
+  const contextmenuClosedPromise = SpecialPowers.spawnChrome([], async () => {
+    const menu = this.browsingContext.topChromeWindow.document.getElementById(
+      "contentAreaContextMenu"
+    );
+    ok(
+      menu.state == "open" || menu.state == "showing",
+      "This function is supposed to work only if the context menu is open or showing"
+    );
+
+    return new Promise(resolve => {
+      menu.addEventListener(
+        "popuphidden",
+        () => {
+          resolve();
+        },
+        { once: true }
+      );
+      menu.hidePopup();
+    });
+  });
+
+  await contextmenuClosedPromise;
+}
