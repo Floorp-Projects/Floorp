@@ -1115,8 +1115,7 @@ static bool IsAccessKeyTarget(Element* aElement, nsAString& aKey) {
   // Use GetAttr because we want Unicode case=insensitive matching
   // XXXbz shouldn't this be case-sensitive, per spec?
   nsString contentKey;
-  if (!aElement ||
-      !aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, contentKey) ||
+  if (!aElement || !aElement->GetAttr(nsGkAtoms::accesskey, contentKey) ||
       !contentKey.Equals(aKey, nsCaseInsensitiveStringComparator)) {
     return false;
   }
@@ -5961,7 +5960,7 @@ uint32_t EventStateManager::GetRegisteredAccessKey(Element* aElement) {
   }
 
   nsAutoString accessKey;
-  aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
+  aElement->GetAttr(nsGkAtoms::accesskey, accessKey);
   return accessKey.First();
 }
 

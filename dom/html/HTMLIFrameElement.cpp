@@ -243,7 +243,7 @@ already_AddRefed<nsIPrincipal>
 HTMLIFrameElement::GetFeaturePolicyDefaultOrigin() const {
   nsCOMPtr<nsIPrincipal> principal;
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::srcdoc)) {
+  if (HasAttr(nsGkAtoms::srcdoc)) {
     principal = NodePrincipal();
     return principal.forget();
   }

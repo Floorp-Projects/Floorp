@@ -1009,7 +1009,7 @@ nsresult HTMLEditor::SetShadowPosition(Element& aShadowElement,
   }
 
   nsAutoString imageSource;
-  aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::src, imageSource);
+  aElement.GetAttr(nsGkAtoms::src, imageSource);
   nsresult rv = aShadowElement.SetAttr(kNameSpaceID_None, nsGkAtoms::src,
                                        imageSource, true);
   if (NS_WARN_IF(Destroyed())) {
@@ -1300,8 +1300,7 @@ nsresult HTMLEditor::SetFinalSizeWithTransaction(int32_t aX, int32_t aY) {
     }
   }
   if (IsCSSEnabled() || mResizedObjectIsAbsolutelyPositioned) {
-    if (setWidth &&
-        resizedElement->HasAttr(kNameSpaceID_None, nsGkAtoms::width)) {
+    if (setWidth && resizedElement->HasAttr(nsGkAtoms::width)) {
       nsresult rv =
           RemoveAttributeWithTransaction(*resizedElement, *nsGkAtoms::width);
       if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
@@ -1316,8 +1315,7 @@ nsresult HTMLEditor::SetFinalSizeWithTransaction(int32_t aX, int32_t aY) {
           "failed, but ignored");
     }
 
-    if (setHeight &&
-        resizedElement->HasAttr(kNameSpaceID_None, nsGkAtoms::height)) {
+    if (setHeight && resizedElement->HasAttr(nsGkAtoms::height)) {
       nsresult rv =
           RemoveAttributeWithTransaction(*resizedElement, *nsGkAtoms::height);
       if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {

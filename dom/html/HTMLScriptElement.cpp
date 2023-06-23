@@ -182,7 +182,7 @@ void HTMLScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
   // need to be transfered when modifying.  Note that we don't use GetSrc here
   // because it will return the base URL when the attr value is "".
   nsAutoString src;
-  if (GetAttr(kNameSpaceID_None, nsGkAtoms::src, src)) {
+  if (GetAttr(nsGkAtoms::src, src)) {
     // Empty src should be treated as invalid URL.
     if (!src.IsEmpty()) {
       nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(mUri), src,
@@ -227,7 +227,7 @@ mozilla::dom::ReferrerPolicy HTMLScriptElement::GetReferrerPolicy() {
 }
 
 bool HTMLScriptElement::HasScriptContent() {
-  return (mFrozen ? mExternal : HasAttr(kNameSpaceID_None, nsGkAtoms::src)) ||
+  return (mFrozen ? mExternal : HasAttr(nsGkAtoms::src)) ||
          nsContentUtils::HasNonEmptyTextContent(this);
 }
 

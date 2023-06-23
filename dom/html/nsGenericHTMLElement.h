@@ -653,9 +653,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
    */
   bool GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr, nsIURI** aURI) const;
 
-  bool IsHidden() const {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::hidden);
-  }
+  bool IsHidden() const { return HasAttr(nsGkAtoms::hidden); }
 
   bool IsLabelable() const override;
 
@@ -686,7 +684,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   }
 
   virtual inline void ResultForDialogSubmit(nsAString& aResult) {
-    GetAttr(kNameSpaceID_None, nsGkAtoms::value, aResult);
+    GetAttr(nsGkAtoms::value, aResult);
   }
 
  protected:
@@ -746,7 +744,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     GetAttr(aName, aResult);
   }
   void GetHTMLAttr(nsAtom* aName, mozilla::dom::DOMString& aResult) const {
-    GetAttr(kNameSpaceID_None, aName, aResult);
+    GetAttr(aName, aResult);
   }
   void GetHTMLEnumAttr(nsAtom* aName, nsAString& aResult) const {
     GetEnumAttr(aName, nullptr, aResult);

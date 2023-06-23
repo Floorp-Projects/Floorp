@@ -298,7 +298,7 @@ bool TextTrack::IsLoaded() {
   // MediaElement.
   if (mTrackElement) {
     nsAutoString src;
-    if (!(mTrackElement->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src))) {
+    if (!(mTrackElement->GetAttr(nsGkAtoms::src, src))) {
       return true;
     }
   }

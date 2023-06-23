@@ -519,8 +519,7 @@ nsresult HTMLEditor::GetPositionAndDimensions(Element& aElement, int32_t& aX,
                                               int32_t& aMarginLeft,
                                               int32_t& aMarginTop) {
   // Is the element positioned ? let's check the cheap way first...
-  bool isPositioned =
-      aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::_moz_abspos);
+  bool isPositioned = aElement.HasAttr(nsGkAtoms::_moz_abspos);
   if (!isPositioned) {
     // hmmm... the expensive way now...
     nsAutoString positionValue;

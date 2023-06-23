@@ -205,7 +205,7 @@ void HTMLEditor::HideInlineTableEditingUIInternal() {
 
 nsresult HTMLEditor::DoInlineTableEditingAction(const Element& aElement) {
   nsAutoString anonclass;
-  aElement.GetAttr(kNameSpaceID_None, nsGkAtoms::_moz_anonclass, anonclass);
+  aElement.GetAttr(nsGkAtoms::_moz_anonclass, anonclass);
 
   if (!StringBeginsWith(anonclass, u"mozTable"_ns)) {
     return NS_OK;

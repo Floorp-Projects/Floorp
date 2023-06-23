@@ -133,8 +133,7 @@ static CellISizeInfo GetISizeInfo(gfxContext* aRenderingContext,
     // This is kept up-to-date with dynamic changes to nowrap by code in
     // nsTableCellFrame::AttributeChanged
     if (aIsCell && c > minCoord && isQuirks &&
-        aFrame->GetContent()->AsElement()->HasAttr(kNameSpaceID_None,
-                                                   nsGkAtoms::nowrap)) {
+        aFrame->GetContent()->AsElement()->HasAttr(nsGkAtoms::nowrap)) {
       minCoord = c;
     }
     prefCoord = std::max(c, minCoord);

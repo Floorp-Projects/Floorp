@@ -73,7 +73,7 @@ MARKUPMAP(
         return nullptr;
       }
       // Always create an accessible if the div has an id.
-      if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::id)) {
+      if (aElement->HasAttr(nsGkAtoms::id)) {
         return new HyperTextAccessibleWrap(aElement, aContext->Document());
       }
       // Never create an accessible if the div is not display:block; or
@@ -365,7 +365,7 @@ MARKUPMAP(
       if (!aContext->IsHTMLTableRow()) {
         return nullptr;
       }
-      if (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::scope)) {
+      if (aElement->HasAttr(nsGkAtoms::scope)) {
         return new HTMLTableHeaderCellAccessible(aElement,
                                                  aContext->Document());
       }

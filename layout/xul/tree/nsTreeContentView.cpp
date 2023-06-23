@@ -170,8 +170,7 @@ void nsTreeContentView::GetRowProperties(int32_t aRow, nsAString& aProperties,
     realRow = nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
 
   if (realRow && realRow->IsElement()) {
-    realRow->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::properties,
-                                  aProperties);
+    realRow->AsElement()->GetAttr(nsGkAtoms::properties, aProperties);
   }
 }
 
@@ -196,7 +195,7 @@ void nsTreeContentView::GetCellProperties(int32_t aRow, nsTreeColumn& aColumn,
   if (realRow) {
     Element* cell = GetCell(realRow, aColumn);
     if (cell) {
-      cell->GetAttr(kNameSpaceID_None, nsGkAtoms::properties, aProperties);
+      cell->GetAttr(nsGkAtoms::properties, aProperties);
     }
   }
 }
@@ -424,7 +423,7 @@ void nsTreeContentView::GetImageSrc(int32_t aRow, nsTreeColumn& aColumn,
       nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
     Element* cell = GetCell(realRow, aColumn);
-    if (cell) cell->GetAttr(kNameSpaceID_None, nsGkAtoms::src, aSrc);
+    if (cell) cell->GetAttr(nsGkAtoms::src, aSrc);
   }
 }
 
@@ -451,7 +450,7 @@ void nsTreeContentView::GetCellValue(int32_t aRow, nsTreeColumn& aColumn,
       nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
   if (realRow) {
     Element* cell = GetCell(realRow, aColumn);
-    if (cell) cell->GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue);
+    if (cell) cell->GetAttr(nsGkAtoms::value, aValue);
   }
 }
 
@@ -476,8 +475,7 @@ void nsTreeContentView::GetCellText(int32_t aRow, nsTreeColumn& aColumn,
 
   // Check for a "label" attribute - this is valid on an <treeitem>
   // with a single implied column.
-  if (row->mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aText) &&
-      !aText.IsEmpty()) {
+  if (row->mContent->GetAttr(nsGkAtoms::label, aText) && !aText.IsEmpty()) {
     return;
   }
 
@@ -486,7 +484,7 @@ void nsTreeContentView::GetCellText(int32_t aRow, nsTreeColumn& aColumn,
         nsTreeUtils::GetImmediateChild(row->mContent, nsGkAtoms::treerow);
     if (realRow) {
       Element* cell = GetCell(realRow, aColumn);
-      if (cell) cell->GetAttr(kNameSpaceID_None, nsGkAtoms::label, aText);
+      if (cell) cell->GetAttr(nsGkAtoms::label, aText);
     }
   }
 }
@@ -561,7 +559,7 @@ void nsTreeContentView::CycleHeader(nsTreeColumn& aColumn,
 
   RefPtr<Element> column = aColumn.Element();
   nsAutoString sort;
-  column->GetAttr(kNameSpaceID_None, nsGkAtoms::sort, sort);
+  column->GetAttr(nsGkAtoms::sort, sort);
   if (!sort.IsEmpty()) {
     nsAutoString sortdirection;
     static Element::AttrValuesArray strings[] = {
@@ -580,7 +578,7 @@ void nsTreeContentView::CycleHeader(nsTreeColumn& aColumn,
     }
 
     nsAutoString hints;
-    column->GetAttr(kNameSpaceID_None, nsGkAtoms::sorthints, hints);
+    column->GetAttr(nsGkAtoms::sorthints, hints);
     sortdirection.Append(' ');
     sortdirection += hints;
 

@@ -80,14 +80,13 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
   HTMLFormElement* GetForm();
 
   void GetRenderedLabel(nsAString& aLabel) {
-    if (!GetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel) ||
-        aLabel.IsEmpty()) {
+    if (!GetAttr(nsGkAtoms::label, aLabel) || aLabel.IsEmpty()) {
       GetText(aLabel);
     }
   }
 
   void GetLabel(nsAString& aLabel) {
-    if (!GetAttr(kNameSpaceID_None, nsGkAtoms::label, aLabel)) {
+    if (!GetAttr(nsGkAtoms::label, aLabel)) {
       GetText(aLabel);
     }
   }
@@ -95,15 +94,13 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
     SetHTMLAttr(nsGkAtoms::label, aLabel, aError);
   }
 
-  bool DefaultSelected() const {
-    return HasAttr(kNameSpaceID_None, nsGkAtoms::selected);
-  }
+  bool DefaultSelected() const { return HasAttr(nsGkAtoms::selected); }
   void SetDefaultSelected(bool aValue, ErrorResult& aRv) {
     SetHTMLBoolAttr(nsGkAtoms::selected, aValue, aRv);
   }
 
   void GetValue(nsAString& aValue) {
-    if (!GetAttr(kNameSpaceID_None, nsGkAtoms::value, aValue)) {
+    if (!GetAttr(nsGkAtoms::value, aValue)) {
       GetText(aValue);
     }
   }

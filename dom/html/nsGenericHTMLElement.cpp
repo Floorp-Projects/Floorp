@@ -518,8 +518,7 @@ void nsGenericHTMLElement::UnbindFromTree(bool aNullParent) {
 
 HTMLFormElement* nsGenericHTMLElement::FindAncestorForm(
     HTMLFormElement* aCurrentForm) {
-  NS_ASSERTION(!HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
-                   IsHTMLElement(nsGkAtoms::img),
+  NS_ASSERTION(!HasAttr(nsGkAtoms::form) || IsHTMLElement(nsGkAtoms::img),
                "FindAncestorForm should not be called if @form is set!");
   if (IsInNativeAnonymousSubtree()) {
     return nullptr;
@@ -1632,7 +1631,7 @@ void nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr,
 
   if (!uri) {
     // Just return the attr value
-    GetAttr(kNameSpaceID_None, aAttr, aResult);
+    GetAttr(aAttr, aResult);
     return;
   }
 
@@ -1654,7 +1653,7 @@ bool nsGenericHTMLElement::GetURIAttr(nsAtom* aAttr, nsAtom* aBaseAttr,
 
   if (aBaseAttr) {
     nsAutoString baseAttrValue;
-    if (GetAttr(kNameSpaceID_None, aBaseAttr, baseAttrValue)) {
+    if (GetAttr(aBaseAttr, baseAttrValue)) {
       nsCOMPtr<nsIURI> baseAttrURI;
       nsresult rv = nsContentUtils::NewURIWithDocumentCharset(
           getter_AddRefs(baseAttrURI), baseAttrValue, OwnerDoc(), baseURI);
@@ -1774,8 +1773,7 @@ nsresult nsGenericHTMLFormElement::BindToTree(BindContext& aContext,
     // corresponding id. If @form isn't set, the element *has* to have a parent,
     // otherwise it wouldn't be possible to find a form ancestor. We should not
     // call UpdateFormOwner if none of these conditions are fulfilled.
-    if (HasAttr(kNameSpaceID_None, nsGkAtoms::form) ? IsInComposedDoc()
-                                                    : aParent.IsContent()) {
+    if (HasAttr(nsGkAtoms::form) ? IsInComposedDoc() : aParent.IsContent()) {
       UpdateFormOwner(true, nullptr);
     }
   }
@@ -1795,8 +1793,7 @@ void nsGenericHTMLFormElement::UnbindFromTree(bool aNullParent) {
         ClearForm(true, true);
       } else {
         // Recheck whether we should still have an form.
-        if (HasAttr(kNameSpaceID_None, nsGkAtoms::form) ||
-            !FindAncestorForm(form)) {
+        if (HasAttr(nsGkAtoms::form) || !FindAncestorForm(form)) {
           ClearForm(true, true);
         } else {
           UnsetFlags(MAYBE_ORPHAN_FORM_ELEMENT);
@@ -1834,7 +1831,7 @@ void nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID,
     // remove the control from the hashtable as needed
 
     if (form && (aName == nsGkAtoms::name || aName == nsGkAtoms::id)) {
-      GetAttr(kNameSpaceID_None, aName, tmp);
+      GetAttr(aName, tmp);
 
       if (!tmp.IsEmpty()) {
         form->RemoveElementFromTable(this, tmp);
@@ -1842,13 +1839,13 @@ void nsGenericHTMLFormElement::BeforeSetAttr(int32_t aNameSpaceID,
     }
 
     if (form && aName == nsGkAtoms::type) {
-      GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
+      GetAttr(nsGkAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
         form->RemoveElementFromTable(this, tmp);
       }
 
-      GetAttr(kNameSpaceID_None, nsGkAtoms::id, tmp);
+      GetAttr(nsGkAtoms::id, tmp);
 
       if (!tmp.IsEmpty()) {
         form->RemoveElementFromTable(this, tmp);
@@ -1892,13 +1889,13 @@ void nsGenericHTMLFormElement::AfterSetAttr(
     if (form && aName == nsGkAtoms::type) {
       nsAutoString tmp;
 
-      GetAttr(kNameSpaceID_None, nsGkAtoms::name, tmp);
+      GetAttr(nsGkAtoms::name, tmp);
 
       if (!tmp.IsEmpty()) {
         form->AddElementToTable(this, tmp);
       }
 
-      GetAttr(kNameSpaceID_None, nsGkAtoms::id, tmp);
+      GetAttr(nsGkAtoms::id, tmp);
 
       if (!tmp.IsEmpty()) {
         form->AddElementToTable(this, tmp);
@@ -1940,7 +1937,7 @@ Element* nsGenericHTMLFormElement::AddFormIdObserver() {
 
   nsAutoString formId;
   DocumentOrShadowRoot* docOrShadow = GetUncomposedDocOrConnectedShadowRoot();
-  GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId);
+  GetAttr(nsGkAtoms::form, formId);
   NS_ASSERTION(!formId.IsEmpty(),
                "@form value should not be the empty string!");
   RefPtr<nsAtom> atom = NS_Atomize(formId);
@@ -1957,7 +1954,7 @@ void nsGenericHTMLFormElement::RemoveFormIdObserver() {
   }
 
   nsAutoString formId;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId);
+  GetAttr(nsGkAtoms::form, formId);
   NS_ASSERTION(!formId.IsEmpty(),
                "@form value should not be the empty string!");
   RefPtr<nsAtom> atom = NS_Atomize(formId);
@@ -2068,7 +2065,7 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
   if (!oldForm) {
     // If @form is set, we have to use that to find the form.
     nsAutoString formId;
-    if (GetAttr(kNameSpaceID_None, nsGkAtoms::form, formId)) {
+    if (GetAttr(nsGkAtoms::form, formId)) {
       if (!formId.IsEmpty()) {
         Element* element = nullptr;
 
@@ -2104,8 +2101,8 @@ void nsGenericHTMLFormElement::UpdateFormOwner(bool aBindToTree,
   if (form && !HasFlag(ADDED_TO_FORM)) {
     // Now we need to add ourselves to the form
     nsAutoString nameVal, idVal;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
-    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
+    GetAttr(nsGkAtoms::name, nameVal);
+    GetAttr(nsGkAtoms::id, idVal);
 
     SetFlags(ADDED_TO_FORM);
 
@@ -2473,8 +2470,7 @@ static void MakeContentDescendantsEditable(nsIContent* aContent) {
   for (nsIContent* child = aContent->GetFirstChild(); child;
        child = child->GetNextSibling()) {
     if (!child->IsElement() ||
-        !child->AsElement()->HasAttr(kNameSpaceID_None,
-                                     nsGkAtoms::contenteditable)) {
+        !child->AsElement()->HasAttr(nsGkAtoms::contenteditable)) {
       MakeContentDescendantsEditable(child);
     }
   }
@@ -2793,9 +2789,9 @@ bool nsGenericHTMLFormControlElement::IsAutocapitalizeInheriting() const {
 nsresult nsGenericHTMLFormControlElement::SubmitDirnameDir(
     FormData* aFormData) {
   // Submit dirname=dir if element has non-empty dirname attribute
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::dirname)) {
+  if (HasAttr(nsGkAtoms::dirname)) {
     nsAutoString dirname;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::dirname, dirname);
+    GetAttr(nsGkAtoms::dirname, dirname);
     if (!dirname.IsEmpty()) {
       const Directionality eDir = GetDirectionality();
       MOZ_ASSERT(eDir == eDir_RTL || eDir == eDir_LTR,
@@ -2992,8 +2988,7 @@ void nsGenericHTMLFormControlElementWithState::GetFormAction(nsString& aValue) {
     return;
   }
 
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::formaction, aValue) ||
-      aValue.IsEmpty()) {
+  if (!GetAttr(nsGkAtoms::formaction, aValue) || aValue.IsEmpty()) {
     Document* document = OwnerDoc();
     nsIURI* docURI = document->GetDocumentURI();
     if (docURI) {

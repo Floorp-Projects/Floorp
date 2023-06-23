@@ -268,8 +268,7 @@ nsPrintJob::nsPrintJob(nsIDocumentViewerPrint& aDocViewerPrint,
 
   Element* root = aOriginalDoc.GetRootElement();
   mDisallowSelectionPrint =
-      root &&
-      root->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdisallowselectionprint);
+      root && root->HasAttr(nsGkAtoms::mozdisallowselectionprint);
 }
 
 //-----------------------------------------------------------------

@@ -100,8 +100,7 @@ already_AddRefed<nsIURI> nsMenuItemIconX::GetIconURI(nsIContent* aContent) {
   // First, look at the content node's "image" attribute.
   nsAutoString imageURIString;
   bool hasImageAttr =
-      aContent->IsElement() &&
-      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::image, imageURIString);
+      aContent->IsElement() && aContent->AsElement()->GetAttr(nsGkAtoms::image, imageURIString);
 
   if (hasImageAttr) {
     // Use the URL from the image attribute.

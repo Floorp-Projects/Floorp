@@ -153,8 +153,7 @@ bool ScriptElement::MaybeProcessScript() {
     // HTML script elements.
     if (cont->IsHTMLElement()) {
       nsAutoString language;
-      cont->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::language,
-                                 language);
+      cont->AsElement()->GetAttr(nsGkAtoms::language, language);
       if (!language.IsEmpty() &&
           !nsContentUtils::IsJavaScriptLanguage(language)) {
         return false;

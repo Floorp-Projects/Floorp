@@ -1160,9 +1160,7 @@ void Element::SetSlot(const nsAString& aName, ErrorResult& aError) {
   aError = SetAttr(kNameSpaceID_None, nsGkAtoms::slot, aName, true);
 }
 
-void Element::GetSlot(nsAString& aName) {
-  GetAttr(kNameSpaceID_None, nsGkAtoms::slot, aName);
-}
+void Element::GetSlot(nsAString& aName) { GetAttr(nsGkAtoms::slot, aName); }
 
 // https://dom.spec.whatwg.org/#dom-element-shadowroot
 ShadowRoot* Element::GetShadowRootByMode() const {
@@ -2838,6 +2836,13 @@ EventListenerManager* Element::GetEventListenerManagerForAttr(nsAtom* aAttrName,
                                                               bool* aDefer) {
   *aDefer = true;
   return GetOrCreateListenerManager();
+}
+
+bool Element::GetAttr(const nsAtom* aName, nsAString& aResult) const {
+  DOMString str;
+  bool haveAttr = GetAttr(aName, str);
+  str.ToString(aResult);
+  return haveAttr;
 }
 
 bool Element::GetAttr(int32_t aNameSpaceID, const nsAtom* aName,
@@ -4791,7 +4796,7 @@ nsAtom* Element::GetEventNameForAttr(nsAtom* aAttr) {
 void Element::RegUnRegAccessKey(bool aDoReg) {
   // first check to see if we have an access key
   nsAutoString accessKey;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
+  GetAttr(nsGkAtoms::accesskey, accessKey);
   if (accessKey.IsEmpty()) {
     return;
   }

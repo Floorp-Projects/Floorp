@@ -9573,7 +9573,7 @@ nsresult HTMLEditor::GetInlineStyles(
       }
       if (inclusiveAncestor->IsHTMLElement(nsGkAtoms::font)) {
         if (NeedToAppend(*nsGkAtoms::font, nsGkAtoms::face)) {
-          inclusiveAncestor->GetAttr(kNameSpaceID_None, nsGkAtoms::face, value);
+          inclusiveAncestor->GetAttr(nsGkAtoms::face, value);
           if (!value.IsEmpty()) {
             aPendingStyleCacheArray.AppendElement(
                 PendingStyleCache(*nsGkAtoms::font, nsGkAtoms::face, value));
@@ -9581,7 +9581,7 @@ nsresult HTMLEditor::GetInlineStyles(
           }
         }
         if (NeedToAppend(*nsGkAtoms::font, nsGkAtoms::size)) {
-          inclusiveAncestor->GetAttr(kNameSpaceID_None, nsGkAtoms::size, value);
+          inclusiveAncestor->GetAttr(nsGkAtoms::size, value);
           if (!value.IsEmpty()) {
             aPendingStyleCacheArray.AppendElement(
                 PendingStyleCache(*nsGkAtoms::font, nsGkAtoms::size, value));
@@ -9589,8 +9589,7 @@ nsresult HTMLEditor::GetInlineStyles(
           }
         }
         if (NeedToAppend(*nsGkAtoms::font, nsGkAtoms::color)) {
-          inclusiveAncestor->GetAttr(kNameSpaceID_None, nsGkAtoms::color,
-                                     value);
+          inclusiveAncestor->GetAttr(nsGkAtoms::color, value);
           if (!value.IsEmpty()) {
             aPendingStyleCacheArray.AppendElement(
                 PendingStyleCache(*nsGkAtoms::font, nsGkAtoms::color, value));

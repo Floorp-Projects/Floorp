@@ -66,7 +66,7 @@ void HTMLOptionElement::OptGroupDisabledChanged(bool aNotify) {
 }
 
 void HTMLOptionElement::UpdateDisabledState(bool aNotify) {
-  bool isDisabled = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+  bool isDisabled = HasAttr(nsGkAtoms::disabled);
 
   if (!isDisabled) {
     nsIContent* parent = GetParent();

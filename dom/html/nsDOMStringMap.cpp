@@ -118,7 +118,7 @@ void nsDOMStringMap::NamedDeleter(const nsAString& aProp, bool& found) {
   RefPtr<nsAtom> attrAtom = NS_Atomize(attr);
   MOZ_ASSERT(attrAtom, "Should be infallible");
 
-  found = mElement->HasAttr(kNameSpaceID_None, attrAtom);
+  found = mElement->HasAttr(attrAtom);
 
   if (found) {
     mRemovingProp = true;

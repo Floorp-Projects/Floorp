@@ -344,10 +344,8 @@ static bool IsScriptEventHandler(ScriptKind kind, nsIContent* aScriptElement) {
   }
 
   nsAutoString forAttr, eventAttr;
-  if (!aScriptElement->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::_for,
-                                            forAttr) ||
-      !aScriptElement->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::event,
-                                            eventAttr)) {
+  if (!aScriptElement->AsElement()->GetAttr(nsGkAtoms::_for, forAttr) ||
+      !aScriptElement->AsElement()->GetAttr(nsGkAtoms::event, eventAttr)) {
     return false;
   }
 
@@ -919,8 +917,7 @@ bool ScriptLoader::ProcessScriptElement(nsIScriptElement* aElement,
   // be ignored if it is)."
   if (mDocument->ModuleScriptsEnabled() && scriptKind == ScriptKind::eClassic &&
       scriptContent->IsHTMLElement() &&
-      scriptContent->AsElement()->HasAttr(kNameSpaceID_None,
-                                          nsGkAtoms::nomodule)) {
+      scriptContent->AsElement()->HasAttr(nsGkAtoms::nomodule)) {
     return false;
   }
 
@@ -966,8 +963,7 @@ bool ScriptLoader::ProcessExternalScript(nsIScriptElement* aElement,
   SRIMetadata sriMetadata;
   {
     nsAutoString integrity;
-    aScriptContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                         nsGkAtoms::integrity, integrity);
+    aScriptContent->AsElement()->GetAttr(nsGkAtoms::integrity, integrity);
     GetSRIMetadata(integrity, &sriMetadata);
   }
 

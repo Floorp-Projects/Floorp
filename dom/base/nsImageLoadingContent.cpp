@@ -1810,7 +1810,7 @@ Element* nsImageLoadingContent::FindImageMap() {
   Element* thisElement = thisContent->AsElement();
 
   nsAutoString useMap;
-  thisElement->GetAttr(kNameSpaceID_None, nsGkAtoms::usemap, useMap);
+  thisElement->GetAttr(nsGkAtoms::usemap, useMap);
   if (useMap.IsEmpty()) {
     return nullptr;
   }

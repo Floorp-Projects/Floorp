@@ -4361,7 +4361,7 @@ void Document::LocalizationLinkAdded(Element* aLinkElement) {
   }
 
   nsAutoString href;
-  aLinkElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+  aLinkElement->GetAttr(nsGkAtoms::href, href);
 
   if (!mDocumentL10n) {
     Element* elem = GetDocumentElement();
@@ -4398,7 +4398,7 @@ void Document::LocalizationLinkRemoved(Element* aLinkElement) {
 
   if (mDocumentL10n) {
     nsAutoString href;
-    aLinkElement->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
+    aLinkElement->GetAttr(nsGkAtoms::href, href);
     uint32_t remaining =
         mDocumentL10n->RemoveResourceId(NS_ConvertUTF16toUTF8(href));
     if (remaining == 0) {
@@ -9512,7 +9512,7 @@ nsIHTMLCollection* Document::Embeds() {
 static bool MatchLinks(Element* aElement, int32_t aNamespaceID, nsAtom* aAtom,
                        void* aData) {
   return aElement->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area) &&
-         aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::href);
+         aElement->HasAttr(nsGkAtoms::href);
 }
 
 nsIHTMLCollection* Document::Links() {
@@ -9550,7 +9550,7 @@ nsIHTMLCollection* Document::Applets() {
 static bool MatchAnchors(Element* aElement, int32_t aNamespaceID, nsAtom* aAtom,
                          void* aData) {
   return aElement->IsHTMLElement(nsGkAtoms::a) &&
-         aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::name);
+         aElement->HasAttr(nsGkAtoms::name);
 }
 
 nsIHTMLCollection* Document::Anchors() {
@@ -11094,7 +11094,7 @@ void Document::ProcessMETATag(HTMLMetaElement* aMetaElement) {
   if (aMetaElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                 nsGkAtoms::handheldFriendly, eIgnoreCase)) {
     nsAutoString result;
-    aMetaElement->GetAttr(kNameSpaceID_None, nsGkAtoms::content, result);
+    aMetaElement->GetAttr(nsGkAtoms::content, result);
     if (!result.IsEmpty()) {
       nsContentUtils::ASCIIToLower(result);
       SetHeaderData(nsGkAtoms::handheldFriendly, result);
@@ -11180,7 +11180,7 @@ void Document::Sanitize() {
         HTMLFormElement::FromNodeOrNull(nodes->Item(i));
     if (!form) continue;
 
-    form->GetAttr(kNameSpaceID_None, nsGkAtoms::autocomplete, value);
+    form->GetAttr(nsGkAtoms::autocomplete, value);
     if (value.LowerCaseEqualsLiteral("off")) form->Reset();
   }
 }

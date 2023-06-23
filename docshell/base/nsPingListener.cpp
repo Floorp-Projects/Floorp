@@ -253,7 +253,7 @@ static void ForEachPing(nsIContent* aContent, ForEachPingCallback aCallback,
   }
 
   nsAutoString value;
-  aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::ping, value);
+  aContent->AsElement()->GetAttr(nsGkAtoms::ping, value);
   if (value.IsEmpty()) {
     return;
   }

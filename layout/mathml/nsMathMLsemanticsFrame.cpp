@@ -70,8 +70,7 @@ nsIFrame* nsMathMLsemanticsFrame::GetSelectedFrame() {
       // If the <annotation> element has an src attribute we ignore it.
       // XXXfredw Should annotation images be supported? See the related
       // bug 297465 for mglyph.
-      if (childContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::src))
-        continue;
+      if (childContent->AsElement()->HasAttr(nsGkAtoms::src)) continue;
 
       // Otherwise, we assume it is a text annotation that can always be
       // displayed and stop here.
@@ -81,8 +80,7 @@ nsIFrame* nsMathMLsemanticsFrame::GetSelectedFrame() {
 
     if (childContent->IsMathMLElement(nsGkAtoms::annotation_xml_)) {
       // If the <annotation-xml> element has an src attribute we ignore it.
-      if (childContent->AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::src))
-        continue;
+      if (childContent->AsElement()->HasAttr(nsGkAtoms::src)) continue;
 
       // If the <annotation-xml> element has an encoding attribute
       // describing presentation MathML, SVG or HTML we assume the content
@@ -99,8 +97,7 @@ nsIFrame* nsMathMLsemanticsFrame::GetSelectedFrame() {
       // is ambiguous about whether it is Presentation or Content MathML.
       // Authors must use a more explicit encoding value.
       nsAutoString value;
-      childContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::encoding,
-                                         value);
+      childContent->AsElement()->GetAttr(nsGkAtoms::encoding, value);
       if (value.EqualsLiteral("application/mathml-presentation+xml") ||
           value.EqualsLiteral("MathML-Presentation") ||
           value.EqualsLiteral(IMAGE_SVG_XML) || value.EqualsLiteral("SVG1.1") ||

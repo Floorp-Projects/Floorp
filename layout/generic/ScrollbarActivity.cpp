@@ -394,8 +394,7 @@ void ScrollbarActivity::CancelFadeBeginTimer() {
 static void MaybeInvalidateScrollbarForHover(
     Element* aScrollbarToInvalidate, Element* aScrollbarAboutToGetHover) {
   if (aScrollbarToInvalidate) {
-    bool hasHover =
-        aScrollbarToInvalidate->HasAttr(kNameSpaceID_None, nsGkAtoms::hover);
+    bool hasHover = aScrollbarToInvalidate->HasAttr(nsGkAtoms::hover);
     bool willHaveHover = (aScrollbarAboutToGetHover == aScrollbarToInvalidate);
 
     if (hasHover != willHaveHover) {

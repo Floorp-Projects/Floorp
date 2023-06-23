@@ -170,7 +170,7 @@ nsresult StatusBarEntry::Init() {
   mIconData.hIcon = ::LoadIcon(::GetModuleHandle(NULL), IDI_APPLICATION);
 
   nsAutoString labelAttr;
-  mMenu->GetAttr(kNameSpaceID_None, nsGkAtoms::label, labelAttr);
+  mMenu->GetAttr(nsGkAtoms::label, labelAttr);
   const nsString& label = PromiseFlatString(labelAttr);
 
   size_t destLength = sizeof mIconData.szTip / (sizeof mIconData.szTip[0]);
@@ -243,7 +243,7 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
     }
 
     if (LOWORD(lp) != WM_CONTEXTMENU &&
-        mMenu->HasAttr(kNameSpaceID_None, nsGkAtoms::contextmenu)) {
+        mMenu->HasAttr(nsGkAtoms::contextmenu)) {
       ::SetForegroundWindow(win);
       nsEventStatus status = nsEventStatus_eIgnore;
       WidgetMouseEvent event(true, eXULSystemStatusBarClick, nullptr,

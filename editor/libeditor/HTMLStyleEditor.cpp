@@ -644,7 +644,7 @@ HTMLEditor::AutoInlineStyleSetter::ElementIsGoodContainerForTheStyle(
       nsString attrValue;
       if (aElement.IsHTMLElement(&HTMLPropertyRef()) &&
           !HTMLEditUtils::ElementHasAttributeExcept(aElement, *mAttribute) &&
-          aElement.GetAttr(kNameSpaceID_None, mAttribute, attrValue)) {
+          aElement.GetAttr(mAttribute, attrValue)) {
         if (attrValue.Equals(mAttributeValue,
                              nsCaseInsensitiveStringComparator)) {
           return true;
@@ -674,7 +674,7 @@ HTMLEditor::AutoInlineStyleSetter::ElementIsGoodContainerForTheStyle(
   // attribute that sets only the style we're looking for, if this type of
   // style supports it
   if (!aElement.IsHTMLElement(nsGkAtoms::span) ||
-      !aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::style) ||
+      !aElement.HasAttr(nsGkAtoms::style) ||
       HTMLEditUtils::ElementHasAttributeExcept(aElement, *nsGkAtoms::style)) {
     return false;
   }
@@ -4135,7 +4135,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetFontSizeOfFontElementChildren(
 
   // If this is a font node with size, put big/small inside it.
   if (aContent.IsHTMLElement(nsGkAtoms::font) &&
-      aContent.AsElement()->HasAttr(kNameSpaceID_None, nsGkAtoms::size)) {
+      aContent.AsElement()->HasAttr(nsGkAtoms::size)) {
     EditorDOMPoint pointToPutCaret;
 
     // Cycle through children and adjust relative font size.

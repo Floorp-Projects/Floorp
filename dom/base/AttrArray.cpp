@@ -45,23 +45,29 @@ void AttrArray::SetMappedDeclarationBlock(
   MOZ_ASSERT(!IsPendingMappedAttributeEvaluation());
 }
 
-const nsAttrValue* AttrArray::GetAttr(const nsAtom* aLocalName,
-                                      int32_t aNamespaceID) const {
-  if (aNamespaceID == kNameSpaceID_None) {
-    // This should be the common case so lets make an optimized loop
-    for (const InternalAttr& attr : Attrs()) {
-      if (attr.mName.Equals(aLocalName)) {
-        return &attr.mValue;
-      }
-    }
-  } else {
-    for (const InternalAttr& attr : Attrs()) {
-      if (attr.mName.Equals(aLocalName, aNamespaceID)) {
-        return &attr.mValue;
-      }
+const nsAttrValue* AttrArray::GetAttr(const nsAtom* aLocalName) const {
+  NS_ASSERTION(aLocalName, "Must have attr name");
+  for (const InternalAttr& attr : Attrs()) {
+    if (attr.mName.Equals(aLocalName)) {
+      return &attr.mValue;
     }
   }
+  return nullptr;
+}
 
+const nsAttrValue* AttrArray::GetAttr(const nsAtom* aLocalName,
+                                      int32_t aNamespaceID) const {
+  NS_ASSERTION(aLocalName, "Must have attr name");
+  NS_ASSERTION(aNamespaceID != kNameSpaceID_Unknown, "Must have namespace");
+  if (aNamespaceID == kNameSpaceID_None) {
+    // This should be the common case so lets use the optimized loop
+    return GetAttr(aLocalName);
+  }
+  for (const InternalAttr& attr : Attrs()) {
+    if (attr.mName.Equals(aLocalName, aNamespaceID)) {
+      return &attr.mValue;
+    }
+  }
   return nullptr;
 }
 
@@ -194,35 +200,30 @@ const nsAttrName* AttrArray::GetExistingAttrNameFromQName(
   return nullptr;
 }
 
+int32_t AttrArray::IndexOfAttr(const nsAtom* aLocalName) const {
+  int32_t i = 0;
+  for (const InternalAttr& attr : Attrs()) {
+    if (attr.mName.Equals(aLocalName)) {
+      return i;
+    }
+    ++i;
+  }
+  return -1;
+}
+
 int32_t AttrArray::IndexOfAttr(const nsAtom* aLocalName,
                                int32_t aNamespaceID) const {
-  if (!mImpl) {
-    return -1;
-  }
-
-  uint32_t i = 0;
   if (aNamespaceID == kNameSpaceID_None) {
-    // This should be the common case so lets make an optimized loop
-    // Note that here we don't check for AttrSlotIsTaken() in the loop
-    // condition for the sake of performance because comparing aLocalName
-    // against null would fail in the loop body (since Equals() just compares
-    // the raw pointer value of aLocalName to what AttrSlotIsTaken() would be
-    // checking.
-    for (const InternalAttr& attr : Attrs()) {
-      if (attr.mName.Equals(aLocalName)) {
-        return i;
-      }
-      ++i;
-    }
-  } else {
-    for (const InternalAttr& attr : Attrs()) {
-      if (attr.mName.Equals(aLocalName, aNamespaceID)) {
-        return i;
-      }
-      ++i;
-    }
+    // This should be the common case so lets use the optimized loop
+    return IndexOfAttr(aLocalName);
   }
-
+  int32_t i = 0;
+  for (const InternalAttr& attr : Attrs()) {
+    if (attr.mName.Equals(aLocalName, aNamespaceID)) {
+      return i;
+    }
+    ++i;
+  }
   return -1;
 }
 

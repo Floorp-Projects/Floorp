@@ -142,8 +142,7 @@ void L10nOverlays::OverlayAttributes(
 
   {
     nsAutoString l10nAttrs;
-    if (aToElement->GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nattrs,
-                            l10nAttrs)) {
+    if (aToElement->GetAttr(nsGkAtoms::datal10nattrs, l10nAttrs)) {
       HTMLSplitOnSpacesTokenizer tokenizer(l10nAttrs, ',');
       while (tokenizer.hasMoreTokens()) {
         const nsAString& token = tokenizer.nextToken();
@@ -242,8 +241,7 @@ already_AddRefed<nsINode> L10nOverlays::GetNodeForNamedElement(
     Element* aSourceElement, Element* aTranslatedChild,
     nsTArray<L10nOverlaysError>& aErrors, ErrorResult& aRv) {
   nsAutoString childName;
-  aTranslatedChild->GetAttr(kNameSpaceID_None, nsGkAtoms::datal10nname,
-                            childName);
+  aTranslatedChild->GetAttr(nsGkAtoms::datal10nname, childName);
   RefPtr<Element> sourceChild = nullptr;
 
   nsINodeList* childNodes = aSourceElement->ChildNodes();
@@ -362,7 +360,7 @@ void L10nOverlays::OverlayChildNodes(DocumentFragment* aFromFragment,
 
     RefPtr<Element> childElement = childNode->AsElement();
 
-    if (childElement->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nname)) {
+    if (childElement->HasAttr(nsGkAtoms::datal10nname)) {
       RefPtr<nsINode> sanitized =
           GetNodeForNamedElement(aToElement, childElement, aErrors, aRv);
       if (NS_WARN_IF(aRv.Failed())) {
@@ -409,8 +407,7 @@ void L10nOverlays::OverlayChildNodes(DocumentFragment* aFromFragment,
     nsIContent* child = aToElement->GetLastChild();
 #ifdef DEBUG
     if (child->IsElement()) {
-      if (child->AsElement()->HasAttr(kNameSpaceID_None,
-                                      nsGkAtoms::datal10nid)) {
+      if (child->AsElement()->HasAttr(nsGkAtoms::datal10nid)) {
         L10nOverlaysError error;
         error.mCode.Construct(
             L10nOverlays_Binding::ERROR_TRANSLATED_ELEMENT_DISCONNECTED);

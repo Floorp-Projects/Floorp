@@ -377,7 +377,7 @@ void HTMLButtonElement::SaveState() {
   if (state) {
     // We do not want to save the real disabled state but the disabled
     // attribute.
-    state->disabled() = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+    state->disabled() = HasAttr(nsGkAtoms::disabled);
     state->disabledSet() = true;
   }
 }

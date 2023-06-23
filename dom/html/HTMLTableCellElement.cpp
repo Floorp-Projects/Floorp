@@ -92,7 +92,7 @@ HTMLTableCellElement::GetMappedAttributesInheritedFromTable() const {
 }
 
 void HTMLTableCellElement::GetAlign(DOMString& aValue) {
-  if (!GetAttr(kNameSpaceID_None, nsGkAtoms::align, aValue)) {
+  if (!GetAttr(nsGkAtoms::align, aValue)) {
     // There's no align attribute, ask the row for the alignment.
     HTMLTableRowElement* row = GetRow();
     if (row) {

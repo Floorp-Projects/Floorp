@@ -1660,16 +1660,16 @@ bool nsTreeSanitizer::MustPrune(int32_t aNamespace, nsAtom* aLocal,
       return true;
     }
     if (nsGkAtoms::meta == aLocal &&
-        (aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::charset) ||
-         aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv))) {
+        (aElement->HasAttr(nsGkAtoms::charset) ||
+         aElement->HasAttr(nsGkAtoms::httpEquiv))) {
       // Throw away charset declarations even if they also have microdata
       // which they can't validly have.
       return true;
     }
     if (((!mFullDocument && nsGkAtoms::meta == aLocal) ||
          nsGkAtoms::link == aLocal) &&
-        !(aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::itemprop) ||
-          aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::itemscope))) {
+        !(aElement->HasAttr(nsGkAtoms::itemprop) ||
+          aElement->HasAttr(nsGkAtoms::itemscope))) {
       // emulate old behavior for non-Microdata <meta> and <link> presumably
       // in <head>. <meta> and <link> are whitelisted in order to avoid
       // corrupting Microdata when they appear in <body>. Note that

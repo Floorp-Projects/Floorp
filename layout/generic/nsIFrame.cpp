@@ -8313,7 +8313,7 @@ nsresult nsIFrame::MakeFrameName(const nsAString& aType,
     }
     if (IsSubDocumentFrame()) {
       nsAutoString src;
-      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::src, src);
+      mContent->AsElement()->GetAttr(nsGkAtoms::src, src);
       buf.AppendLiteral(" src=");
       buf.Append(src);
     }

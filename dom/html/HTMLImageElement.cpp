@@ -142,7 +142,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(HTMLImageElement,
 NS_IMPL_ELEMENT_CLONE(HTMLImageElement)
 
 bool HTMLImageElement::IsInteractiveHTMLContent() const {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap) ||
+  return HasAttr(nsGkAtoms::usemap) ||
          nsGenericHTMLElement::IsInteractiveHTMLContent();
 }
 
@@ -616,8 +616,8 @@ void HTMLImageElement::UpdateFormOwner() {
   if (mForm && !HasFlag(ADDED_TO_FORM)) {
     // Now we need to add ourselves to the form
     nsAutoString nameVal, idVal;
-    GetAttr(kNameSpaceID_None, nsGkAtoms::name, nameVal);
-    GetAttr(kNameSpaceID_None, nsGkAtoms::id, idVal);
+    GetAttr(nsGkAtoms::name, nameVal);
+    GetAttr(nsGkAtoms::id, idVal);
 
     SetFlags(ADDED_TO_FORM);
 
@@ -1154,7 +1154,7 @@ bool HTMLImageElement::SourceElementMatches(Element* aSourceElement) {
   }
 
   nsAutoString type;
-  if (src->GetAttr(kNameSpaceID_None, nsGkAtoms::type, type) &&
+  if (src->GetAttr(nsGkAtoms::type, type) &&
       !SupportedPictureSourceType(type)) {
     return false;
   }

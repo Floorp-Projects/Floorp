@@ -1092,7 +1092,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
       attrName = nsGkAtoms::onwebkittransitionend;
     }
 
-    element->GetAttr(kNameSpaceID_None, attrName, handlerBody);
+    element->GetAttr(attrName, handlerBody);
     body = &handlerBody;
     aElement = element;
   }

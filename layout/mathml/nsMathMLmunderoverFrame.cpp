@@ -223,8 +223,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
 
     // if we have an accentunder attribute, it overrides what the underscript
     // said
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None,
-                                       nsGkAtoms::accentunder_, value)) {
+    if (mContent->AsElement()->GetAttr(nsGkAtoms::accentunder_, value)) {
       if (value.EqualsLiteral("true")) {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
       } else if (value.EqualsLiteral("false")) {
@@ -245,8 +244,7 @@ XXX The winner is the outermost setting in conflicting settings like these:
     }
 
     // if we have an accent attribute, it overrides what the overscript said
-    if (mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::accent_,
-                                       value)) {
+    if (mContent->AsElement()->GetAttr(nsGkAtoms::accent_, value)) {
       if (value.EqualsLiteral("true")) {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER;
       } else if (value.EqualsLiteral("false")) {

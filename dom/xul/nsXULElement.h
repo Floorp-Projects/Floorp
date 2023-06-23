@@ -381,7 +381,7 @@ class nsXULElement : public nsStyledElement {
 
   using DOMString = mozilla::dom::DOMString;
   void GetXULAttr(nsAtom* aName, DOMString& aResult) const {
-    GetAttr(kNameSpaceID_None, aName, aResult);
+    GetAttr(aName, aResult);
   }
   void SetXULAttr(nsAtom* aName, const nsAString& aValue,
                   mozilla::ErrorResult& aError) {

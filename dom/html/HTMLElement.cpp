@@ -191,8 +191,7 @@ void HTMLElement::UpdateFormOwner() {
   // corresponding id. If @form isn't set, the element *has* to have a parent,
   // otherwise it wouldn't be possible to find a form ancestor. We should not
   // call UpdateFormOwner if none of these conditions are fulfilled.
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::form) ? IsInComposedDoc()
-                                                  : !!GetParent()) {
+  if (HasAttr(nsGkAtoms::form) ? IsInComposedDoc() : !!GetParent()) {
     UpdateFormOwner(true, nullptr);
   }
   UpdateFieldSet(true);

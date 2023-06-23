@@ -258,7 +258,7 @@ void HTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
       RefPtr<HTMLOptionElement> option = Item(i);
       if (option && option->Selected()) {
         // Clear all other options
-        if (!HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+        if (!HasAttr(nsGkAtoms::multiple)) {
           OptionFlags mask{OptionFlag::IsSelected, OptionFlag::ClearAll,
                            OptionFlag::SetDisabled, OptionFlag::Notify,
                            OptionFlag::InsertingOptions};
@@ -560,7 +560,7 @@ void HTMLSelectElement::Remove(int32_t aIndex) const {
 }
 
 void HTMLSelectElement::GetType(nsAString& aType) {
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
+  if (HasAttr(nsGkAtoms::multiple)) {
     aType.AssignLiteral("select-multiple");
   } else {
     aType.AssignLiteral("select-one");
@@ -1297,7 +1297,7 @@ void HTMLSelectElement::SaveState() {
   if (mDisabledChanged) {
     // We do not want to save the real disabled state but the disabled
     // attribute.
-    presState->disabled() = HasAttr(kNameSpaceID_None, nsGkAtoms::disabled);
+    presState->disabled() = HasAttr(nsGkAtoms::disabled);
     presState->disabledSet() = true;
   }
 }
@@ -1415,7 +1415,7 @@ HTMLSelectElement::SubmitNamesValues(FormData* aFormData) {
   // Get the name (if no name, no submit)
   //
   nsAutoString name;
-  GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
+  GetAttr(nsGkAtoms::name, name);
   if (name.IsEmpty()) {
     return NS_OK;
   }

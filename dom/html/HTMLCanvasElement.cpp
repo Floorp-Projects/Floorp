@@ -1181,7 +1181,7 @@ bool HTMLCanvasElement::GetIsOpaque() {
 }
 
 bool HTMLCanvasElement::GetOpaqueAttr() {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::moz_opaque);
+  return HasAttr(nsGkAtoms::moz_opaque);
 }
 
 CanvasContextType HTMLCanvasElement::GetCurrentContextType() {

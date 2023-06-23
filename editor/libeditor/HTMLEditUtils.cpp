@@ -431,9 +431,7 @@ bool HTMLEditUtils::IsNamedAnchor(const nsINode* aNode) {
   }
 
   nsAutoString text;
-  return aNode->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name,
-                                     text) &&
-         !text.IsEmpty();
+  return aNode->AsElement()->GetAttr(nsGkAtoms::name, text) && !text.IsEmpty();
 }
 
 /**
@@ -2206,7 +2204,7 @@ bool HTMLEditUtils::IsInlineStyleSetByElement(
       return true;
     }
     nsAutoString value;
-    element->GetAttr(kNameSpaceID_None, aStyle.mAttribute, value);
+    element->GetAttr(aStyle.mAttribute, value);
     if (aOutValue) {
       *aOutValue = value;
     }

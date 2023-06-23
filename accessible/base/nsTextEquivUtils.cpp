@@ -275,16 +275,13 @@ nsresult nsTextEquivUtils::AppendFromDOMNode(nsIContent* aContent,
   if (aContent->IsXULElement()) {
     nsAutoString textEquivalent;
     if (aContent->NodeInfo()->Equals(nsGkAtoms::label, kNameSpaceID_XUL)) {
-      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::value,
-                                     textEquivalent);
+      aContent->AsElement()->GetAttr(nsGkAtoms::value, textEquivalent);
     } else {
-      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label,
-                                     textEquivalent);
+      aContent->AsElement()->GetAttr(nsGkAtoms::label, textEquivalent);
     }
 
     if (textEquivalent.IsEmpty()) {
-      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::tooltiptext,
-                                     textEquivalent);
+      aContent->AsElement()->GetAttr(nsGkAtoms::tooltiptext, textEquivalent);
     }
 
     AppendString(aString, textEquivalent);

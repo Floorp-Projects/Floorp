@@ -69,7 +69,7 @@ MsaaXULMenuitemAccessible::get_accName(
 
   nsAutoString accel;
   if (dom::Element* el = acc->Elm()) {
-    el->GetAttr(kNameSpaceID_None, nsGkAtoms::acceltext, accel);
+    el->GetAttr(nsGkAtoms::acceltext, accel);
   }
   if (!accel.IsEmpty()) {
     name += u"\t"_ns + accel;

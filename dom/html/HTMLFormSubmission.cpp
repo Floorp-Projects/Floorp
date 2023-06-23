@@ -810,16 +810,14 @@ nsresult HTMLFormSubmission::GetFromForm(HTMLFormElement* aForm,
   // with a target attribute, then the value of the target attribute of the
   // first such base element; or, if there is no such element, the empty string.
   nsAutoString target;
-  if (!(aSubmitter && aSubmitter->GetAttr(kNameSpaceID_None,
-                                          nsGkAtoms::formtarget, target)) &&
-      !aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::target, target)) {
+  if (!(aSubmitter && aSubmitter->GetAttr(nsGkAtoms::formtarget, target)) &&
+      !aForm->GetAttr(nsGkAtoms::target, target)) {
     aForm->GetBaseTarget(target);
   }
 
   // Get encoding type (default: urlencoded)
   int32_t enctype = NS_FORM_ENCTYPE_URLENCODED;
-  if (aSubmitter &&
-      aSubmitter->HasAttr(kNameSpaceID_None, nsGkAtoms::formenctype)) {
+  if (aSubmitter && aSubmitter->HasAttr(nsGkAtoms::formenctype)) {
     GetEnumAttr(aSubmitter, nsGkAtoms::formenctype, &enctype);
   } else {
     GetEnumAttr(aForm, nsGkAtoms::enctype, &enctype);
@@ -827,8 +825,7 @@ nsresult HTMLFormSubmission::GetFromForm(HTMLFormElement* aForm,
 
   // Get method (default: GET)
   int32_t method = NS_FORM_METHOD_GET;
-  if (aSubmitter &&
-      aSubmitter->HasAttr(kNameSpaceID_None, nsGkAtoms::formmethod)) {
+  if (aSubmitter && aSubmitter->HasAttr(nsGkAtoms::formmethod)) {
     GetEnumAttr(aSubmitter, nsGkAtoms::formmethod, &method);
   } else {
     GetEnumAttr(aForm, nsGkAtoms::method, &method);
@@ -868,12 +865,10 @@ nsresult HTMLFormSubmission::GetFromForm(HTMLFormElement* aForm,
         enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
       AutoTArray<nsString, 1> args;
       nsString& enctypeStr = *args.AppendElement();
-      if (aSubmitter &&
-          aSubmitter->HasAttr(kNameSpaceID_None, nsGkAtoms::formenctype)) {
-        aSubmitter->GetAttr(kNameSpaceID_None, nsGkAtoms::formenctype,
-                            enctypeStr);
+      if (aSubmitter && aSubmitter->HasAttr(nsGkAtoms::formenctype)) {
+        aSubmitter->GetAttr(nsGkAtoms::formenctype, enctypeStr);
       } else {
-        aForm->GetAttr(kNameSpaceID_None, nsGkAtoms::enctype, enctypeStr);
+        aForm->GetAttr(nsGkAtoms::enctype, enctypeStr);
       }
 
       SendJSWarning(doc, "ForgotPostWarning", args);

@@ -44,7 +44,7 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType
   // to the command DOM node
   if (doc) {
     nsAutoString ourCommand;
-    mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::command, ourCommand);
+    mContent->AsElement()->GetAttr(nsGkAtoms::command, ourCommand);
 
     if (!ourCommand.IsEmpty()) {
       dom::Element* commandElement = doc->GetElementById(ourCommand);
@@ -205,7 +205,7 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString& eventName, bool* preventD
 // uncheck them all.
 void nsMenuItemX::UncheckRadioSiblings(nsIContent* aCheckedContent) {
   nsAutoString myGroupName;
-  aCheckedContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::name, myGroupName);
+  aCheckedContent->AsElement()->GetAttr(nsGkAtoms::name, myGroupName);
   if (!myGroupName.Length()) {  // no groupname, nothing to do
     return;
   }
@@ -233,17 +233,17 @@ void nsMenuItemX::SetKeyEquiv() {
 
   // Set key shortcut and modifiers
   nsAutoString keyValue;
-  mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyValue);
+  mContent->AsElement()->GetAttr(nsGkAtoms::key, keyValue);
 
   if (!keyValue.IsEmpty() && mContent->GetUncomposedDoc()) {
     dom::Element* keyContent = mContent->GetUncomposedDoc()->GetElementById(keyValue);
     if (keyContent) {
       nsAutoString keyChar;
-      bool hasKey = keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::key, keyChar);
+      bool hasKey = keyContent->GetAttr(nsGkAtoms::key, keyChar);
 
       if (!hasKey || keyChar.IsEmpty()) {
         nsAutoString keyCodeName;
-        keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::keycode, keyCodeName);
+        keyContent->GetAttr(nsGkAtoms::keycode, keyCodeName);
         uint32_t charCode = nsCocoaUtils::ConvertGeckoNameToMacCharCode(keyCodeName);
         if (charCode) {
           keyChar.Assign(charCode);
@@ -253,7 +253,7 @@ void nsMenuItemX::SetKeyEquiv() {
       }
 
       nsAutoString modifiersStr;
-      keyContent->GetAttr(kNameSpaceID_None, nsGkAtoms::modifiers, modifiersStr);
+      keyContent->GetAttr(nsGkAtoms::modifiers, modifiersStr);
       uint8_t modifiers = nsMenuUtilsX::GeckoModifiersForNodeAttribute(modifiersStr);
 
       unsigned int macModifiers = nsMenuUtilsX::MacModifiersForGeckoModifiers(modifiers);
@@ -319,7 +319,7 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* 
     } else if (aAttribute == nsGkAtoms::label) {
       if (mType != eSeparatorMenuItemType) {
         nsAutoString newLabel;
-        mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::label, newLabel);
+        mContent->AsElement()->GetAttr(nsGkAtoms::label, newLabel);
         mNativeMenuItem.title = nsMenuUtilsX::GetTruncatedCocoaLabel(newLabel);
       }
     } else if (aAttribute == nsGkAtoms::key) {
@@ -337,8 +337,8 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* 
       // first we sync our menu item DOM node with the command DOM node
       nsAutoString commandDisabled;
       nsAutoString menuDisabled;
-      aContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::disabled, commandDisabled);
-      mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::disabled, menuDisabled);
+      aContent->AsElement()->GetAttr(nsGkAtoms::disabled, commandDisabled);
+      mContent->AsElement()->GetAttr(nsGkAtoms::disabled, menuDisabled);
       if (!commandDisabled.Equals(menuDisabled)) {
         // The menu's disabled state needs to be updated to match the command.
         if (commandDisabled.IsEmpty()) {

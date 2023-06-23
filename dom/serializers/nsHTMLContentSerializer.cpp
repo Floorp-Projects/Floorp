@@ -105,7 +105,7 @@ bool nsHTMLContentSerializer::SerializeHTMLAttributes(
       // If we're serializing a <meta http-equiv="content-type">,
       // use the proper value, rather than what's in the document.
       nsAutoString header;
-      aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::httpEquiv, header);
+      aElement->GetAttr(nsGkAtoms::httpEquiv, header);
       if (header.LowerCaseEqualsLiteral("content-type")) {
         valueStr = u"text/html; charset="_ns + NS_ConvertASCIItoUTF16(mCharset);
       }
@@ -199,7 +199,7 @@ nsHTMLContentSerializer::AppendElementStart(Element* aElement,
     nsAutoString start;
     int32_t startAttrVal = 0;
 
-    aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::start, start);
+    aElement->GetAttr(nsGkAtoms::start, start);
     if (!start.IsEmpty()) {
       nsresult rv = NS_OK;
       startAttrVal = start.ToInteger(&rv);
@@ -272,7 +272,7 @@ nsHTMLContentSerializer::AppendElementEnd(Element* aElement,
   }
 
   bool forceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
-                     aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
+                     aElement->HasAttr(nsGkAtoms::mozdirty);
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()) {
     DecrIndentation(name);
