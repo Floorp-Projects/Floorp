@@ -972,8 +972,8 @@ export var SitePermissions = {
       // Permission doesn't support having a label.
       return null;
     }
-    if (id == "3rdPartyStorage") {
-      // The key is the 3rd party origin, which we use for the label.
+    if (id == "3rdPartyStorage" || id == "3rdPartyFrameStorage") {
+      // The key is the 3rd party origin or site, which we use for the label.
       return key;
     }
     let labelID = gPermissions.get(id).labelID || id;
@@ -1290,6 +1290,7 @@ let gPermissions = {
     },
 
     "3rdPartyStorage": {},
+    "3rdPartyFrameStorage": {},
   },
 };
 
