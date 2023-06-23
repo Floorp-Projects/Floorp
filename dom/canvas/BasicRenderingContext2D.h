@@ -122,11 +122,10 @@ class BasicRenderingContext2D {
   //
   virtual double LineWidth() = 0;
   virtual void SetLineWidth(double aWidth) = 0;
-  virtual void GetLineCap(nsAString& aLinecapStyle) = 0;
-  virtual void SetLineCap(const nsAString& aLinecapStyle) = 0;
-  virtual void GetLineJoin(nsAString& aLinejoinStyle,
-                           mozilla::ErrorResult& aError) = 0;
-  virtual void SetLineJoin(const nsAString& aLinejoinStyle) = 0;
+  virtual CanvasLineCap LineCap() = 0;
+  virtual void SetLineCap(const CanvasLineCap& aLinecapStyle) = 0;
+  virtual CanvasLineJoin LineJoin() = 0;
+  virtual void SetLineJoin(const CanvasLineJoin& aLinejoinStyle) = 0;
   virtual double MiterLimit() = 0;
   virtual void SetMiterLimit(double aMiter) = 0;
   virtual void SetLineDash(const Sequence<double>& aSegments,

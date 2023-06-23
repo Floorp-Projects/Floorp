@@ -12,6 +12,15 @@
  */
 
 enum CanvasWindingRule { "nonzero", "evenodd" };
+
+enum CanvasLineCap { "butt", "round", "square" };
+enum CanvasLineJoin { "round", "bevel", "miter" };
+enum CanvasTextAlign { "start", "end", "left", "right", "center" };
+enum CanvasTextBaseline { "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" };
+enum CanvasDirection { "ltr", "rtl", "inherit" };
+enum CanvasFontKerning { "auto", "normal", "none" };
+// enum CanvasFontStretch { "ultra-condensed", "extra-condensed", "condensed", "semi-condensed", "normal", "semi-expanded", "expanded", "extra-expanded", "ultra-expanded" };
+// enum CanvasFontVariantCaps { "normal", "small-caps", "all-small-caps", "petite-caps", "all-petite-caps", "unicase", "titling-caps" };
 enum CanvasTextRendering { "auto", "optimizeSpeed", "optimizeLegibility", "geometricPrecision" };
 
 [GenerateInit]
@@ -269,9 +278,8 @@ interface mixin CanvasPathDrawingStyles {
   // line caps/joins
   [LenientFloat]
   attribute double lineWidth; // (default 1)
-  attribute DOMString lineCap; // "butt", "round", "square" (default "butt")
-  [GetterThrows]
-  attribute DOMString lineJoin; // "round", "bevel", "miter" (default "miter")
+  attribute CanvasLineCap lineCap; // (default "butt")
+  attribute CanvasLineJoin lineJoin; // (default "miter")
   [LenientFloat]
   attribute double miterLimit; // (default 10)
 
@@ -285,11 +293,11 @@ interface mixin CanvasTextDrawingStyles {
   // text
   [SetterThrows]
   attribute UTF8String font; // (default 10px sans-serif)
-  attribute DOMString textAlign; // "start", "end", "left", "right", "center" (default: "start")
-  attribute DOMString textBaseline; // "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" (default: "alphabetic")
-  attribute DOMString direction; // "ltr", "rtl", "inherit" (default: "inherit")
+  attribute CanvasTextAlign textAlign; // (default: "start")
+  attribute CanvasTextBaseline textBaseline; // (default: "alphabetic")
+  attribute CanvasDirection direction; // (default: "inherit")
   attribute UTF8String letterSpacing; // default: "0px"
-  attribute DOMString fontKerning; // "auto", "normal", "none" (default: "auto")
+  attribute CanvasFontKerning fontKerning; // (default: "auto")
 // NOT IMPLEMENTED  attribute CanvasFontStretch fontStretch; // (default: "normal")
 // NOT IMPLEMENTED  attribute CanvasFontVariantCaps fontVariantCaps; // (default: "normal")
   attribute CanvasTextRendering textRendering; // (default: "auto")
