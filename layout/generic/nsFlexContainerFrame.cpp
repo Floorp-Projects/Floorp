@@ -2189,12 +2189,37 @@ FlexItem::FlexItem(ReflowInput& aFlexItemReflowInput, float aFlexGrow,
       // baselines; and the cross axis is the item's block axis, so
       // baseline-alignment in that axis makes sense.
 
-      // XXXdholbert For now, we just use the item's 'align-self'
-      // baseline-choice to directly determine its group. The next patch in
-      // this series makes this a bit more subtle.
-      mBaselineSharingGroup = usingItemFirstBaseline
-                                  ? BaselineSharingGroup::First
-                                  : BaselineSharingGroup::Last;
+      // To determine the item's baseline sharing group, we check whether the
+      // item's block axis has the same vs. opposite flow direction as the
+      // corresponding LogicalAxis on the flex container.  We do this by
+      // getting the physical side that corresponds to these axes' "logical
+      // start" sides, and we compare those physical sides to find out if
+      // they're the same vs. opposite.
+      mozilla::Side itemBlockStartSide = mWM.PhysicalSide(eLogicalSideBStart);
+
+      // (Note: this is *not* the "flex-start" side; rather, it's the *logical*
+      // i.e. WM-relative block-start or inline-start side.)
+      mozilla::Side containerStartSideInCrossAxis = mCBWM.PhysicalSide(
+          MakeLogicalSide(aAxisTracker.CrossAxis(), eLogicalEdgeStart));
+
+      // We already know these two Sides (the item's block-start and the
+      // container's 'logical start' side for its cross axis) are in the same
+      // physical axis, since we're inside of a check for
+      // FlexItem::IsBlockAxisCrossAxis().  So these two Sides must be either
+      // the same physical side or opposite from each other.  If the Sides are
+      // the same, then the flow direction is the same, which means the item's
+      // {first,last} baseline participates in the {first,last}
+      // baseline-sharing group in its FlexLine.  Otherwise, the flow direction
+      // is opposite, and so the item's {first,last} baseline participates in
+      // the opposite i.e. {last,first} baseline-sharing group.  This is
+      // roughly per css-align-3 section 9.2, specifically the definition of
+      // what makes baseline alignment preferences "compatible".
+      bool itemBlockAxisFlowDirMatchesContainer =
+          (itemBlockStartSide == containerStartSideInCrossAxis);
+      mBaselineSharingGroup =
+          (itemBlockAxisFlowDirMatchesContainer == usingItemFirstBaseline)
+              ? BaselineSharingGroup::First
+              : BaselineSharingGroup::Last;
     } else {
       // The flex item wants to be aligned in the cross axis using one of its
       // baselines, but baseline alignment is not possible because the
