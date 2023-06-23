@@ -14,7 +14,7 @@ rtc_library("webrtc_fuzzer_main") {
   sources = [ "webrtc_fuzzer_main.cc" ]
   deps = [
     "../../rtc_base:logging",
-    "//testing/libfuzzer:libfuzzer_main",
+    "//testing/libfuzzer:fuzzing_engine_main",
   ]
 
   # When WebRTC fuzzer tests are built on Chromium bots they need to link
