@@ -620,7 +620,7 @@
         ctx.fillRect(0, 0, 100, 50);
         ctx.fillStyle = '#0f0';
         ctx.textBaseline = 'ideographic';
-        ctx.fillText('CC', 0, 81.25);
+        ctx.fillText('CC', 0, 31.25);
         @assert pixel 5,5 ==~ 0,255,0,255;
         @assert pixel 95,5 ==~ 0,255,0,255;
         @assert pixel 25,25 ==~ 0,255,0,255;
@@ -644,7 +644,7 @@
         ctx.fillRect(0, 0, 100, 50);
         ctx.fillStyle = '#0f0';
         ctx.textBaseline = 'hanging';
-        ctx.fillText('CC', 0, -30);
+        ctx.fillText('CC', 0, 12.5);
         @assert pixel 5,5 ==~ 0,255,0,255; @moz-todo
         @assert pixel 95,5 ==~ 0,255,0,255; @moz-todo
         @assert pixel 25,25 ==~ 0,255,0,255;
@@ -1125,16 +1125,16 @@
     f.load();
     fonts.add(f);
     fonts.ready.then(function() {
-       ctx.font = '50px CanvasTest';
-       ctx.direction = 'ltr';
-       ctx.align = 'left'
-       @assert Math.abs(ctx.measureText('A').getBaselines().alphabetic) === 0;
-       @assert ctx.measureText('A').getBaselines().ideographic === -39;
-       @assert ctx.measureText('A').getBaselines().hanging === 68;
+        ctx.font = '50px CanvasTest';
+        ctx.direction = 'ltr';
+        ctx.align = 'left'
+        @assert Math.abs(ctx.measureText('A').alphabeticBaseline) === 0;
+        @assert ctx.measureText('A').ideographicBaseline === 6.25;
+        @assert ctx.measureText('A').hangingBaseline === 25;
 
-       @assert Math.abs(ctx.measureText('ABCD').getBaselines().alphabetic) === 0;
-       @assert ctx.measureText('ABCD').getBaselines().ideographic === -39;
-       @assert ctx.measureText('ABCD').getBaselines().hanging === 68;
+        @assert Math.abs(ctx.measureText('ABCD').alphabeticBaseline) === 0;
+        @assert ctx.measureText('ABCD').ideographicBaseline === 6.25;
+        @assert ctx.measureText('ABCD').hangingBaseline === 25;
     }).then(t_pass, t_fail);
 
 - name: 2d.text.drawing.style.absolute.spacing
