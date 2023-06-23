@@ -27,10 +27,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59232687efa00e5f7
  create mode 100644 api/rtp_sender_setparameters_callback.h
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 654359ed37..31213c6460 100644
+index 252945a8af..3eed1f19c0 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
-@@ -214,8 +214,8 @@ rtc_library("rtp_sender_interface") {
+@@ -225,8 +225,8 @@ rtc_library("rtp_sender_interface") {
      ":dtmf_sender_interface",
      ":frame_transformer_interface",
      ":media_stream_interface",
@@ -40,7 +40,7 @@ index 654359ed37..31213c6460 100644
      ":scoped_refptr",
      "../rtc_base:checks",
      "../rtc_base:refcount",
-@@ -223,6 +223,18 @@ rtc_library("rtp_sender_interface") {
+@@ -234,6 +234,18 @@ rtc_library("rtp_sender_interface") {
      "crypto:frame_encryptor_interface",
      "video_codecs:video_codecs_api",
    ]

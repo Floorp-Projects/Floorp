@@ -673,6 +673,7 @@ if (is_mac || is_ios) {
     deps = [
       ":checks",
       ":logging",
+      "../api:location",
       "../api/task_queue",
       "../api/units:time_delta",
       "synchronization:mutex",
@@ -984,6 +985,7 @@ rtc_library("threading") {
     ":socket_server",
     ":timeutils",
     "../api:function_view",
+    "../api:location",
     "../api:refcountedbase",
     "../api:scoped_refptr",
     "../api:sequence_checker",
