@@ -534,18 +534,18 @@ set_define("MOZ_WAYLAND", depends_if(wayland_headers)(lambda _: True))
 
 # Hardware-accelerated video decode with VAAPI and V4L2 on Linux
 # ==============================================================
-@depends(target, wayland_headers)
-def vaapi(target, wayland_headers):
+@depends(target, toolkit_gtk)
+def vaapi(target, toolkit_gtk):
     # VAAPI is mostly used on x86(-64) but is sometimes used on ARM/ARM64 SOCs.
-    if target.cpu in ("arm", "aarch64", "x86", "x86_64") and wayland_headers:
+    if target.cpu in ("arm", "aarch64", "x86", "x86_64") and toolkit_gtk:
         return True
 
 
-@depends(target, wayland_headers)
-def v4l2(target, wayland_headers):
+@depends(target, toolkit_gtk)
+def v4l2(target, toolkit_gtk):
     # V4L2 decode is only used in GTK/Linux and generally only appears on
     # embedded SOCs.
-    if target.cpu in ("arm", "aarch64", "riscv64") and wayland_headers:
+    if target.cpu in ("arm", "aarch64", "riscv64") and toolkit_gtk:
         return True
 
 
