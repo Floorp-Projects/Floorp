@@ -131,6 +131,19 @@
       getNode("cb_orange").selected = true;
       await p;
 
+      // Bug 1838983: Make sure we don't fail a C++ assertion when the focused
+      // active item is destroyed.
+      info("Focusing recreate");
+      p = waitForEvent(EVENT_FOCUS, "recreateA");
+      const recreate = getNode("recreate");
+      recreate.focus();
+      await p;
+      info("Changing recreate size");
+      p = waitForEvent(EVENT_FOCUS, recreate);
+      // This will recreate the select and its children.
+      recreate.size = 1;
+      await p;
+
       SimpleTest.finish();
     }
 
@@ -166,6 +179,10 @@
   <select id="combobox">
     <option id="cb_orange">Orange</option>
     <option id="cb_apple">Apple</option>
+  </select>
+
+  <select id="recreate" size="5">
+    <option id="recreateA">a</option>
   </select>
 
   <div id="eventdump"></div>

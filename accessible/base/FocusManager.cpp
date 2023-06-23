@@ -261,6 +261,11 @@ void FocusManager::DispatchFocusEvent(DocAccessible* aDocument,
                      AccEvent::eCoalesceOfSameType);
     aDocument->FireDelayedEvent(event);
     mLastFocus = aTarget;
+    if (mActiveItem != aTarget) {
+      // This new focus overrides the stored active item, so clear the active
+      // item. Among other things, the old active item might die.
+      mActiveItem = nullptr;
+    }
 
 #ifdef A11Y_LOG
     if (logging::IsEnabled(logging::eFocus)) logging::FocusDispatched(aTarget);
