@@ -96,6 +96,8 @@ if (rtc_include_tests) {
         ":libaom_av1_encoder",
         "../..:encoded_video_frame_producer",
         "../..:video_codec_interface",
+        "../../../../api:create_frame_generator",
+        "../../../../api:frame_generator_api",
         "../../../../api:mock_video_encoder",
         "../../../../api/units:data_size",
         "../../../../api/units:time_delta",

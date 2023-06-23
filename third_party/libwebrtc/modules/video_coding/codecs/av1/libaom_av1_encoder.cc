@@ -33,7 +33,6 @@
 #include "modules/video_coding/svc/scalable_video_controller_no_layering.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
-#include "rtc_base/numerics/sequence_number_unwrapper.h"
 #include "third_party/libaom/source/libaom/aom/aom_codec.h"
 #include "third_party/libaom/source/libaom/aom/aom_encoder.h"
 #include "third_party/libaom/source/libaom/aom/aomcx.h"
@@ -120,7 +119,7 @@ class LibaomAv1Encoder final : public VideoEncoder {
   aom_codec_ctx_t ctx_;
   aom_codec_enc_cfg_t cfg_;
   EncodedImageCallback* encoded_image_callback_;
-  SeqNumUnwrapper<uint32_t> rtp_timestamp_unwrapper_;
+  int64_t timestamp_;
 };
 
 int32_t VerifyCodecSettings(const VideoCodec& codec_settings) {
@@ -154,7 +153,8 @@ LibaomAv1Encoder::LibaomAv1Encoder(
       rates_configured_(false),
       aux_config_(aux_config),
       frame_for_encode_(nullptr),
-      encoded_image_callback_(nullptr) {}
+      encoded_image_callback_(nullptr),
+      timestamp_(0) {}
 
 LibaomAv1Encoder::~LibaomAv1Encoder() {
   Release();
@@ -606,6 +606,7 @@ int32_t LibaomAv1Encoder::Encode(
 
   const uint32_t duration =
       kRtpTicksPerSecond / static_cast<float>(encoder_settings_.maxFramerate);
+  timestamp_ += duration;
 
   const size_t num_spatial_layers =
       svc_params_ ? svc_params_->number_spatial_layers : 1;
@@ -639,11 +640,11 @@ int32_t LibaomAv1Encoder::Encode(
                                         layer_frame->TemporalId() > 0 ? 1 : 0);
     }
 
-    // Encode a frame. The presentation timestamp `pts` should never wrap, hence
-    // the unwrapping.
-    aom_codec_err_t ret = aom_codec_encode(
-        &ctx_, frame_for_encode_,
-        rtp_timestamp_unwrapper_.Unwrap(frame.timestamp()), duration, flags);
+    // Encode a frame. The presentation timestamp `pts` should not use real
+    // timestamps from frames or the wall clock, as that can cause the rate
+    // controller to misbehave.
+    aom_codec_err_t ret =
+        aom_codec_encode(&ctx_, frame_for_encode_, timestamp_, duration, flags);
     if (ret != AOM_CODEC_OK) {
       RTC_LOG(LS_WARNING) << "LibaomAv1Encoder::Encode returned " << ret
                           << " on aom_codec_encode.";
