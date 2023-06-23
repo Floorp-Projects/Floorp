@@ -778,6 +778,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Selection)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectionListeners)
   MOZ_KnownLive(tmp)->RemoveAllRangesInternal(IgnoreErrors());
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFrameSelection)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mHighlightData.mHighlight)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_PTR
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
@@ -791,6 +792,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Selection)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorFocusRange)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFrameSelection)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHighlightData.mHighlight)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionChangeEventDispatcher)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSelectionListeners)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -1886,7 +1888,7 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
     newHead->mStart = AssertedCast<int32_t>(*start);
     newHead->mEnd = AssertedCast<int32_t>(*end);
     newHead->mSelectionType = aSelectionType;
-    newHead->mHighlightName = mHighlightName;
+    newHead->mHighlightData = mHighlightData;
     StyledRange* rd = mStyledRanges.FindRangeData(range);
     if (rd) {
       newHead->mTextRangeStyle = rd->mTextRangeStyle;
@@ -4091,9 +4093,10 @@ void Selection::SetColors(const nsAString& aForegroundColor,
 
 void Selection::ResetColors() { mCustomColors = nullptr; }
 
-void Selection::SetHighlightName(const nsAtom* aHighlightName) {
+void Selection::SetHighlightSelectionData(
+    HighlightSelectionData aHighlightSelectionData) {
   MOZ_ASSERT(mSelectionType == SelectionType::eHighlight);
-  mHighlightName = aHighlightName;
+  mHighlightData = std::move(aHighlightSelectionData);
 }
 
 JSObject* Selection::WrapObject(JSContext* aCx,

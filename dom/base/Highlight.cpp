@@ -81,14 +81,13 @@ void Highlight::RemoveFromHighlightRegistry(
 }
 
 already_AddRefed<Selection> Highlight::CreateHighlightSelection(
-    const nsAtom* aHighlightName, nsFrameSelection* aFrameSelection) const {
+    const nsAtom* aHighlightName, nsFrameSelection* aFrameSelection) {
   MOZ_ASSERT(aFrameSelection);
   MOZ_ASSERT(aFrameSelection->GetPresShell());
   RefPtr<Selection> selection =
       MakeRefPtr<Selection>(SelectionType::eHighlight, aFrameSelection);
-  selection->SetHighlightName(aHighlightName);
+  selection->SetHighlightSelectionData({aHighlightName, this});
   AutoFrameSelectionBatcher selectionBatcher(__FUNCTION__);
-  selectionBatcher.AddFrameSelection(aFrameSelection);
   for (const RefPtr<AbstractRange>& range : mRanges) {
     if (range->GetComposedDocOfContainers() ==
         aFrameSelection->GetPresShell()->GetDocument()) {

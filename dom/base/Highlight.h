@@ -30,6 +30,17 @@ class HighlightRegistry;
 class Selection;
 
 /**
+ * @brief Collection of all data of a highlight instance.
+ *
+ * This struct is intended to be allocated on the stack and passed on
+ * to the `nsFrameSelection` and layout code.
+ */
+struct HighlightSelectionData {
+  RefPtr<const nsAtom> mHighlightName;
+  RefPtr<Highlight> mHighlight;
+};
+
+/**
  * @brief Representation of a custom `Highlight`.
  *
  * A `Highlight` is defined in JS as a collection of `AbstractRange`s.
@@ -81,7 +92,7 @@ class Highlight final : public nsISupports, public nsWrapperCache {
    * @brief Creates a Highlight Selection using the given ranges.
    */
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Selection> CreateHighlightSelection(
-      const nsAtom* aHighlightName, nsFrameSelection* aFrameSelection) const;
+      const nsAtom* aHighlightName, nsFrameSelection* aFrameSelection);
 
   // WebIDL interface
   nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
