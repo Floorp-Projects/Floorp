@@ -29,7 +29,7 @@
 #include "frontend/Stencil.h"           // ScopeStencil, RegExpIndex
 #include "frontend/TokenStream.h"       // TokenStreamAnyChars
 #include "irregexp/RegExpAPI.h"         // irregexp::CheckPatternSyntax
-#include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ
+#include "js/CharacterEncoding.h"  // JS::UTF8Chars, UTF8CharsToNewTwoByteCharsZ, JS::ConstUTF8CharsZ
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/GCAPI.h"                 // JS::AutoCheckCannotGC
 #include "js/HeapAPI.h"               // JS::GCCellPtr
@@ -578,7 +578,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
 
   if (result.error.data) {
     ErrorMetadata metadata;
-    metadata.filename = "<unknown>";
+    metadata.filename = JS::ConstUTF8CharsZ("<unknown>");
     metadata.lineNumber = 1;
     metadata.columnNumber = 0;
     metadata.isMuted = false;
