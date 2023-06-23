@@ -159,18 +159,12 @@ DevToolsClient.prototype = {
    *
    * @param packet object
    *        A JSON packet to send to the debugging server.
-   * @param onResponse function
-   *        If specified, will be called with the JSON response packet when
-   *        debugging server responds.
    * @return Request
    *         This object emits a number of events to allow you to respond to
    *         different parts of the request lifecycle.
    *         It is also a Promise object, with a `then` method, that is resolved
    *         whenever a JSON or a Bulk response is received; and is rejected
    *         if the response is an error.
-   *         Note: This return value can be ignored if you are using JSON alone,
-   *         because the callback provided in |onResponse| will be bound to the
-   *         "json-reply" event automatically.
    *
    *         Events emitted:
    *         * json-reply: The server replied with a JSON packet, which is
@@ -201,7 +195,7 @@ DevToolsClient.prototype = {
    *                     This object also emits "progress" events for each chunk
    *                     that is copied.  See stream-utils.js.
    */
-  request(packet, onResponse) {
+  request(packet) {
     if (!this.mainRoot) {
       throw Error("Have not yet received a hello packet from the server.");
     }
@@ -209,15 +203,6 @@ DevToolsClient.prototype = {
     if (!packet.to) {
       throw Error("'" + type + "' request packet has no destination.");
     }
-
-    // The onResponse callback might modify the response, so we need to call
-    // it and resolve the promise with its result if it's truthy.
-    const safeOnResponse = response => {
-      if (!onResponse) {
-        return response;
-      }
-      return onResponse(response) || response;
-    };
 
     if (this._transportClosed) {
       const msg =
@@ -228,8 +213,7 @@ DevToolsClient.prototype = {
         packet.to +
         "' " +
         "can't be sent as the connection is closed.";
-      const resp = { error: "connectionClosed", message: msg };
-      return Promise.reject(safeOnResponse(resp));
+      return Promise.reject({ error: "connectionClosed", message: msg });
     }
 
     const request = new Request(packet);
@@ -241,7 +225,6 @@ DevToolsClient.prototype = {
     const promise = new Promise((resolve, reject) => {
       function listenerJson(resp) {
         removeRequestListeners();
-        resp = safeOnResponse(resp);
         if (resp.error) {
           reject(resp);
         } else {
@@ -250,7 +233,7 @@ DevToolsClient.prototype = {
       }
       function listenerBulk(resp) {
         removeRequestListeners();
-        resolve(safeOnResponse(resp));
+        resolve(resp);
       }
 
       const removeRequestListeners = () => {
