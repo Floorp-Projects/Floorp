@@ -480,12 +480,12 @@ bool NS_ProcessNextEvent(nsIThread* aThread, bool aMayWait) {
 }
 
 void NS_SetCurrentThreadName(const char* aName) {
-#if defined(ANDROID)
-  // Workaround for Bug 1541216 - PR_SetCurrentThreadName() Fails to set the
-  // thread name on Android.
-  prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(aName));
-#else
   PR_SetCurrentThreadName(aName);
+#if defined(ANDROID) && defined(DEBUG)
+  // Check nspr does the right thing on Android.
+  char buffer[16] = {'\0'};
+  prctl(PR_GET_NAME, buffer);
+  MOZ_ASSERT(0 == strncmp(buffer, aName, 15));
 #endif
   if (nsThreadManager::get().IsNSThread()) {
     nsThread* thread = nsThreadManager::get().GetCurrentThread();
