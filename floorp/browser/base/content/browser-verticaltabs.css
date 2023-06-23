@@ -12,7 +12,7 @@
     display: none !important;
   }
 
-   #TabsToolbar-customization-target {
+   #toolbar-items-verticaltabs {
      width: -moz-available !important;
      min-width: -moz-available !important;
      max-width: -moz-available !important;
