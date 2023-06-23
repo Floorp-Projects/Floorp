@@ -771,22 +771,6 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
-  // The older translations feature backed by external services.
-  // This is being replaced by a newer ML-backed translation service. See Bug 971044.
-  Translation: {
-    parent: {
-      moduleURI: "resource:///modules/translation/TranslationParent.jsm",
-    },
-    child: {
-      moduleURI: "resource:///modules/translation/TranslationChild.jsm",
-      events: {
-        pageshow: {},
-        load: { mozSystemGroup: true, capture: true },
-      },
-    },
-    enablePreference: "browser.translation.detectLanguage",
-  },
-
   UITour: {
     parent: {
       esModuleURI: "resource:///modules/UITourParent.sys.mjs",

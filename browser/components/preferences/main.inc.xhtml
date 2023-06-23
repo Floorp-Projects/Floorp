@@ -355,25 +355,7 @@
             data-l10n-args='{"localeName": "und"}'
             preference="intl.regional_prefs.use_os_locales"/>
 
-  <!-- TODO (Bug 1817084) This older implementation will be removed soon -->
-  <hbox id="translationBox" hidden="true">
-    <hbox align="center" flex="1">
-      <checkbox id="translate" preference="browser.translation.detectLanguage"
-                data-l10n-id="translate-web-pages"/>
-      <hbox id="bingAttribution" hidden="true" align="center">
-        <label data-l10n-id="translate-attribution">
-          <html:img id="translationAttributionImage" aria-label="Microsoft Translator"
-            src="chrome://browser/content/microsoft-translator-attribution.png"
-            data-l10n-name="logo"/>
-        </label>
-      </hbox>
-    </hbox>
-    <button id="translateButton"
-            is="highlightable-button"
-            class="accessory-button"
-            data-l10n-id="translate-exceptions"/>
-  </hbox>
-
+  <!-- This Firefox Translations UI manages the prefs for the addon only. -->
   <hbox id="fxtranslationsBox" hidden="true" data-subcategory="fxtranslations">
     <description flex="1" control="fxtranslateButton" data-l10n-id="fx-translate-web-pages"/>
     <button id="fxtranslateButton"

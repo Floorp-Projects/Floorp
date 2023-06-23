@@ -319,15 +319,7 @@ manage-browser-languages-button =
 confirm-browser-language-change-description = Restart { -brand-short-name } to apply these changes
 confirm-browser-language-change-button = Apply and Restart
 
-translate-web-pages =
-    .label = Translate web content
-    .accesskey = T
-
 fx-translate-web-pages = { -translations-brand-name }
-
-# The <img> element is replaced by the logo of the provider
-# used to provide machine translations for web pages.
-translate-attribution = Translations by <img data-l10n-name="logo"/>
 
 translate-exceptions =
     .label = Exceptions…

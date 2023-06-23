@@ -58,7 +58,6 @@ DIRS += [
     "syncedtabs",
     "tabunloader",
     "textrecognition",
-    "translation",
     "translations",
     "uitour",
     "urlbar",
