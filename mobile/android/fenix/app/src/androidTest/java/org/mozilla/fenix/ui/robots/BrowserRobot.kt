@@ -318,6 +318,17 @@ class BrowserRobot {
 
     fun longClickPDFImage() = longClickPageObject(itemWithResId("pdfjs_internal_id_13R"))
 
+    fun verifyPDFReaderToolbarItems() {
+        assertTrue(
+            itemWithResIdAndText("download", "Download")
+                .waitForExists(waitingTime),
+        )
+        assertTrue(
+            itemWithResIdAndText("openInApp", "Open in app")
+                .waitForExists(waitingTime),
+        )
+    }
+
     fun clickSubmitLoginButton() {
         clickPageObject(itemWithResId("submit"))
         itemWithResId("submit").waitUntilGone(waitingTime)

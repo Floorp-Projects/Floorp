@@ -14,7 +14,6 @@ import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_DOCS
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
@@ -216,19 +215,6 @@ class DownloadTest {
         deleteDownloadedFileOnStorage(downloadFile)
     }
 
-    @SmokeTest
-    @Test
-    fun openPDFInBrowserTest() {
-        val genericURL =
-            TestAssetHelper.getGenericAsset(mockWebServer, 3)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemContainingText("PDF form file"))
-            verifyPageContent("Washington Crossing the Delaware")
-        }
-    }
-
     // Save PDF file from the share overlay
     @SmokeTest
     @Test
@@ -245,24 +231,6 @@ class DownloadTest {
         }.clickSaveAsPDF {
             verifyDownloadPrompt(downloadFile)
         }.clickDownload {
-        }.clickOpen("application/pdf") {
-            assertExternalAppOpens(GOOGLE_DOCS)
-        }
-        deleteDownloadedFileOnStorage(downloadFile)
-    }
-
-    // Download PDF file using the download toolbar button
-    @Test
-    fun pdfViewerDownloadButtonTest() {
-        val genericURL =
-            TestAssetHelper.getGenericAsset(mockWebServer, 3)
-        downloadFile = "pdfForm.pdf"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-            clickPageObject(itemWithText("PDF form file"))
-        }.clickDownloadPDFButton {
-            verifyDownloadedFileName(downloadFile)
         }.clickOpen("application/pdf") {
             assertExternalAppOpens(GOOGLE_DOCS)
         }
