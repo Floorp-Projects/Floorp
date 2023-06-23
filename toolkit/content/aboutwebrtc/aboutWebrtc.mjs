@@ -523,6 +523,7 @@ function renderCopyTextToClipboardButton(rndr, id, l10n_id, getTextFn) {
 function renderPeerConnection(report) {
   const rndr = elemRenderer;
   const { pcid, configuration } = report;
+  const pcStats = report.peerConnectionStats[0];
 
   const pcDiv = renderElement("div", { className: "peer-connection" });
   pcDiv.append(renderPeerConnectionTools(rndr, report));
@@ -538,6 +539,24 @@ function renderPeerConnection(report) {
           "about-webrtc-peerconnection-id-label"
         ),
         renderText("span", pcid, { className: "info-body" }),
+        rndr.elems_p({}, [
+          rndr.elem_span(
+            { className: "info-label" },
+            "about-webrtc-data-channels-opened-label"
+          ),
+          rndr.text_span(pcStats.dataChannelsOpened, {
+            className: "info-body",
+          }),
+        ]),
+        rndr.elems_p({}, [
+          rndr.elem_span(
+            { className: "info-label" },
+            "about-webrtc-data-channels-closed-label"
+          ),
+          rndr.text_span(pcStats.dataChannelsClosed, {
+            className: "info-body",
+          }),
+        ]),
         renderConfiguration(rndr, configuration),
       ]),
       renderRTPStats(rndr, report),
