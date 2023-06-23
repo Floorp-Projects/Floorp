@@ -176,7 +176,6 @@ EXTRA_JS_MODULES += [
     "FormLikeFactory.sys.mjs",
     "Geometry.sys.mjs",
     "HiddenFrame.sys.mjs",
-    "Http.sys.mjs",
     "IgnoreLists.sys.mjs",
     "IndexedDB.sys.mjs",
     "InlineSpellChecker.sys.mjs",
