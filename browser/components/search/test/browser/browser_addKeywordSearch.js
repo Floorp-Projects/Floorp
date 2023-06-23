@@ -11,6 +11,12 @@ var testData = [
     action: "http://example.com/search?oe=utf-8",
     param: "q",
   },
+  {
+    desc: "With Unicode Query String",
+    action: "http://example.com/searching",
+    param: "q",
+    testHiddenUnicode: true,
+  },
 ];
 
 add_task(async function () {
@@ -20,7 +26,7 @@ add_task(async function () {
 
   let count = 0;
   for (let method of ["GET", "POST"]) {
-    for (let { desc, action, param } of testData) {
+    for (let { desc, action, param, testHiddenUnicode = false } of testData) {
       info(`Running ${method} keyword test '${desc}'`);
       let id = `keyword-form-${count++}`;
       let contextMenu = document.getElementById("contentAreaContextMenu");
@@ -31,7 +37,7 @@ add_task(async function () {
 
       await SpecialPowers.spawn(
         tab.linkedBrowser,
-        [{ action, param, method, id }],
+        [{ action, param, method, id, testHiddenUnicode }],
         async function (args) {
           let doc = content.document;
           let form = doc.createElement("form");
@@ -42,6 +48,12 @@ add_task(async function () {
           element.setAttribute("type", "text");
           element.setAttribute("name", args.param);
           form.appendChild(element);
+          if (args.testHiddenUnicode) {
+            form.insertAdjacentHTML(
+              "beforeend",
+              `<input name="utf8✓" type="hidden" value="✓">`
+            );
+          }
           doc.body.appendChild(form);
         }
       );
@@ -63,17 +75,31 @@ add_task(async function () {
           data.spec.endsWith(`${param}=%s`),
           `Check expected url for field named ${param} and action ${action}`
         );
+        if (testHiddenUnicode) {
+          ok(
+            data.spec.includes(`utf8%E2%9C%93=%E2%9C%93`),
+            `Check the unicode param is correctly encoded`
+          );
+        }
       } else {
         is(
           data.spec,
           url,
           `Check expected url for field named ${param} and action ${action}`
         );
-        is(
-          data.postData,
-          `${param}%3D%25s`,
-          `Check expected POST data for field named ${param} and action ${action}`
-        );
+        if (testHiddenUnicode) {
+          is(
+            data.postData,
+            `utf8%u2713%3D%u2713&q%3D%25s`,
+            `Check expected POST data for field named ${param} and action ${action}`
+          );
+        } else {
+          is(
+            data.postData,
+            `${param}%3D%25s`,
+            `Check expected POST data for field named ${param} and action ${action}`
+          );
+        }
       }
 
       let popupHiddenPromise = BrowserTestUtils.waitForEvent(

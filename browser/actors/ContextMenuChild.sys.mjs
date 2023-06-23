@@ -205,7 +205,7 @@ export class ContextMenuChild extends JSWindowActorChild {
             return escape(aName + "=" + aValue);
           }
 
-          return escape(aName) + "=" + escape(aValue);
+          return encodeURIComponent(aName) + "=" + encodeURIComponent(aValue);
         }
         let formData = new this.contentWindow.FormData(node.form);
         formData.delete(node.name);
