@@ -20,15 +20,15 @@ this.test = class extends ExtensionAPI {
   onStartup() {
     ChromeUtils.registerWindowActor("TestSupport", {
       child: {
-        moduleURI:
-          "resource://android/assets/web_extensions/test-support/TestSupportChild.jsm",
+        esModuleURI:
+          "resource://android/assets/web_extensions/test-support/TestSupportChild.sys.mjs",
       },
       allFrames: true,
     });
     ChromeUtils.registerProcessActor("TestSupportProcess", {
       child: {
-        moduleURI:
-          "resource://android/assets/web_extensions/test-support/TestSupportProcessChild.jsm",
+        esModuleURI:
+          "resource://android/assets/web_extensions/test-support/TestSupportProcessChild.sys.mjs",
       },
     });
   }
