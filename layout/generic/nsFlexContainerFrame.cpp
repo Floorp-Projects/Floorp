@@ -391,26 +391,21 @@ class nsFlexContainerFrame::FlexItem final {
   nscoord CrossSize() const { return mCrossSize; }
   nscoord CrossPosition() const { return mCrossPosn; }
 
-  // Lazy getter for mAscent.
+  // Lazy getter for mAscent or mAscentForLast.
   nscoord ResolvedAscent(bool aUseFirstBaseline) const {
-    // XXXdholbert Two concerns to follow up on here:
-    // (1) We probably should be checking and reacting to aUseFirstBaseline
-    // for all of the cases here (e.g. this first one). Maybe we need to store
-    // two versions of mAscent and choose the appropriate one based on
-    // aUseFirstBaseline? This is roughly bug 1480850, I think.
-    // (2) We should be using the *container's* writing-mode (mCBWM) here,
+    // XXX We should be using the *container's* writing-mode (mCBWM) here,
     // instead of the item's (mWM). This is essentially bug 1155322.
-    if (mAscent != ReflowOutput::ASK_FOR_BASELINE) {
-      return mAscent;
+    nscoord& ascent = aUseFirstBaseline ? mAscent : mAscentForLast;
+    if (ascent != ReflowOutput::ASK_FOR_BASELINE) {
+      return ascent;
     }
 
     // Use GetFirstLineBaseline() or GetLastLineBaseline() as appropriate:
-    bool found =
-        aUseFirstBaseline
-            ? nsLayoutUtils::GetFirstLineBaseline(mWM, mFrame, &mAscent)
-            : nsLayoutUtils::GetLastLineBaseline(mWM, mFrame, &mAscent);
+    bool found = aUseFirstBaseline
+                     ? nsLayoutUtils::GetFirstLineBaseline(mWM, mFrame, &ascent)
+                     : nsLayoutUtils::GetLastLineBaseline(mWM, mFrame, &ascent);
     if (found) {
-      return mAscent;
+      return ascent;
     }
 
     // If the nsLayoutUtils getter fails, then ask the frame directly:
@@ -420,16 +415,16 @@ class nsFlexContainerFrame::FlexItem final {
             mWM, baselineGroup, BaselineExportContext::Other)) {
       // Offset for last baseline from `GetNaturalBaselineBOffset` originates
       // from the frame's block end, so convert it back.
-      mAscent = baselineGroup == BaselineSharingGroup::First
-                    ? *baseline
-                    : mFrame->BSize(mWM) - *baseline;
-      return mAscent;
+      ascent = baselineGroup == BaselineSharingGroup::First
+                   ? *baseline
+                   : mFrame->BSize(mWM) - *baseline;
+      return ascent;
     }
 
     // We couldn't determine a baseline, so we synthesize one from border box:
-    mAscent = Baseline::SynthesizeBOffsetFromBorderBox(
+    ascent = Baseline::SynthesizeBOffsetFromBorderBox(
         mFrame, mWM, BaselineSharingGroup::First);
-    return mAscent;
+    return ascent;
   }
 
   // Convenience methods to compute the main & cross size of our *margin-box*.
@@ -875,7 +870,11 @@ class nsFlexContainerFrame::FlexItem final {
   // with a real value if we end up reflowing this flex item. (But if we don't
   // reflow this flex item, then this sentinel tells us that we don't know it
   // yet & anyone who cares will need to explicitly request it.)
+  //
+  // Both mAscent and mAscentForLast are distance from the frame's border-box
+  // block-start edge.
   mutable nscoord mAscent = ReflowOutput::ASK_FOR_BASELINE;
+  mutable nscoord mAscentForLast = ReflowOutput::ASK_FOR_BASELINE;
 
   // Temporary state, while we're resolving flexible widths (for our main size)
   // XXXdholbert To save space, we could use a union to make these variables
@@ -944,13 +943,22 @@ class nsFlexContainerFrame::FlexLine final {
 
   // Accessors for our FlexItems & information about them:
   //
-  // Note: Using IsEmpty() to ensure that the FlexLine is non-empty before
-  // calling FirstItem() or LastItem().
+  // Note: Callers must use IsEmpty() to ensure that the FlexLine is non-empty
+  // before calling accessors that return FlexItem.
   FlexItem& FirstItem() { return mItems[0]; }
   const FlexItem& FirstItem() const { return mItems[0]; }
 
   FlexItem& LastItem() { return mItems.LastElement(); }
   const FlexItem& LastItem() const { return mItems.LastElement(); }
+
+  // The "startmost"/"endmost" is from the perspective of the flex container's
+  // writing-mode, not from the perspective of the flex-relative main axis.
+  const FlexItem& StartmostItem(const FlexboxAxisTracker& aAxisTracker) const {
+    return aAxisTracker.IsMainAxisReversed() ? LastItem() : FirstItem();
+  }
+  const FlexItem& EndmostItem(const FlexboxAxisTracker& aAxisTracker) const {
+    return aAxisTracker.IsMainAxisReversed() ? FirstItem() : LastItem();
+  }
 
   bool IsEmpty() const { return mItems.IsEmpty(); }
 
@@ -1069,6 +1077,17 @@ class nsFlexContainerFrame::FlexLine final {
   // Maintain size of each {row,column}-gap in the main axis
   const nscoord mMainGapSize;
 };
+
+// The "startmost"/"endmost" is from the perspective of the flex container's
+// writing-mode, not from the perspective of the flex-relative cross axis.
+const FlexLine& StartmostLine(const nsTArray<FlexLine>& aLines,
+                              const FlexboxAxisTracker& aAxisTracker) {
+  return aAxisTracker.IsCrossAxisReversed() ? aLines.LastElement() : aLines[0];
+}
+const FlexLine& EndmostLine(const nsTArray<FlexLine>& aLines,
+                            const FlexboxAxisTracker& aAxisTracker) {
+  return aAxisTracker.IsCrossAxisReversed() ? aLines[0] : aLines.LastElement();
+}
 
 // Information about a strut left behind by a FlexItem that's been collapsed
 // using "visibility:collapse".
@@ -5109,19 +5128,25 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
     }
   }
 
-  // If the container should derive its baseline from the first FlexLine,
-  // do that here (while crossAxisPosnTracker is conveniently pointing
-  // at the cross-start edge of that line, which the line's baseline offset is
-  // measured from):
-  if (nscoord firstLineBaselineOffset = flr.mLines[0].FirstBaselineOffset();
-      firstLineBaselineOffset == nscoord_MIN) {
-    // No baseline-aligned items in line. Use sentinel value to prompt us to
-    // get baseline from the first FlexItem after we've reflowed it.
-    flr.mAscent = nscoord_MIN;
+  // If the flex container is row-oriented, it should derive its first/last
+  // baseline from the WM-relative startmost/endmost FlexLine if any items in
+  // the line participate in baseline alignment.
+  // https://drafts.csswg.org/css-flexbox-1/#flex-baselines
+  //
+  // Initialize the relevant variables here so that we can establish baselines
+  // while iterating FlexLine later (while crossAxisPosnTracker is conveniently
+  // pointing at the cross-start edge of that line, which the line's baseline
+  // offset is measured from).
+  const FlexLine* lineForFirstBaseline = nullptr;
+  const FlexLine* lineForLastBaseline = nullptr;
+  if (aAxisTracker.IsRowOriented()) {
+    lineForFirstBaseline = &StartmostLine(flr.mLines, aAxisTracker);
+    lineForLastBaseline = &EndmostLine(flr.mLines, aAxisTracker);
   } else {
-    flr.mAscent = ComputePhysicalAscentFromFlexRelativeAscent(
-        crossAxisPosnTracker.Position() + firstLineBaselineOffset,
-        flr.mContentBoxCrossSize, aReflowInput, aAxisTracker);
+    // For column-oriented flex container, use sentinel value to prompt us to
+    // get baselines from the startmost/endmost items.
+    flr.mAscent = nscoord_MIN;
+    flr.mAscentForLast = nscoord_MIN;
   }
 
   const auto justifyContent =
@@ -5148,6 +5173,52 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
     // ===============================================
     line.PositionItemsInCrossAxis(crossAxisPosnTracker.Position(),
                                   aAxisTracker);
+
+    // Flex Container Baselines - Flexbox spec section 8.5
+    // https://drafts.csswg.org/css-flexbox-1/#flex-baselines
+    if (lineForFirstBaseline && lineForFirstBaseline == &line) {
+      const nscoord firstBaselineOffset =
+          lineForFirstBaseline->FirstBaselineOffset();
+      if (firstBaselineOffset == nscoord_MIN) {
+        // No baseline-aligned items in line. Use sentinel value to prompt us
+        // to get baseline from the startmost FlexItem after we've reflowed it.
+        flr.mAscent = nscoord_MIN;
+      } else {
+        // XXX We probably should use logical coordinates when computing the
+        // ascent. Otherwise, the ascent can be wrong when the flex container
+        // has a vertical writing-mode.
+        MOZ_ASSERT(aAxisTracker.IsRowOriented(),
+                   "This makes sense only if we are row-oriented!");
+        flr.mAscent = ComputePhysicalAscentFromFlexRelativeAscent(
+            crossAxisPosnTracker.Position() + firstBaselineOffset,
+            flr.mContentBoxCrossSize, aReflowInput, aAxisTracker);
+      }
+    }
+
+    if (lineForLastBaseline && lineForLastBaseline == &line) {
+      const nscoord lastBaselineOffset =
+          lineForLastBaseline->LastBaselineOffset();
+      if (lastBaselineOffset == nscoord_MIN) {
+        // No "last baseline"-aligned items in line. Use sentinel value to
+        // prompt us to get last baseline from the endmost FlexItem after we've
+        // reflowed it.
+        flr.mAscentForLast = nscoord_MIN;
+      } else {
+        // XXX We probably should use logical coordinates when computing the
+        // ascent. Otherwise, the ascent can be wrong when the flex container
+        // has a vertical writing-mode.
+        MOZ_ASSERT(aAxisTracker.IsRowOriented(),
+                   "This makes sense only if we are row-oriented!");
+        flr.mAscentForLast =
+            PhysicalCoordFromFlexRelativeCoord(
+                crossAxisPosnTracker.Position() + line.LineCrossSize() -
+                    lastBaselineOffset,
+                flr.mContentBoxCrossSize,
+                aAxisTracker.CrossAxisPhysicalEndSide()) +
+            aReflowInput.ComputedPhysicalBorderPadding().bottom;
+      }
+    }
+
     crossAxisPosnTracker.TraverseLine(line);
     crossAxisPosnTracker.TraversePackingSpace();
 
@@ -5234,8 +5305,6 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
   const LogicalPoint containerContentBoxOrigin(
       flexWM, aBorderPadding.IStart(flexWM), aBorderPadding.BStart(flexWM));
 
-  // If the flex container has no baseline-aligned items, it will use the first
-  // item to determine its baseline:
   const FlexItem* firstItem =
       aFlr.mLines[0].IsEmpty() ? nullptr : &aFlr.mLines[0].FirstItem();
 
@@ -5454,14 +5523,6 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
           *propValue = item.PhysicalMargin();
         }
       }
-
-      // If this is our first item and we haven't established a baseline for
-      // the container yet (i.e. if we don't have 'align-self: baseline' on any
-      // children), then use this child's first baseline as the container's
-      // baseline.
-      if (&item == firstItem && aFlr.mAscent == nscoord_MIN) {
-        aFlr.mAscent = framePos.B(flexWM) + item.ResolvedAscent(true);
-      }
     }
 
     // Now we've finished processing all the items in the first line. Determine
@@ -5578,33 +5639,6 @@ void nsFlexContainerFrame::PopulateReflowOutput(
     desiredSizeInFlexWM.BSize(flexWM) = effectiveContentBSizeWithBStartBP;
   }
 
-  if (aFlr.mAscent == nscoord_MIN) {
-    // Still don't have our baseline set -- this happens if we have no
-    // children, if our children are huge enough that they have nscoord_MIN
-    // as their baseline, or our content is hidden in which case, we'll use the
-    // wrong baseline (but no big deal).
-    NS_WARNING_ASSERTION(
-        HidesContentForLayout() || aFlr.mLines[0].IsEmpty(),
-        "Have flex items but didn't get an ascent - that's odd (or there are "
-        "just gigantic sizes involved)");
-    // Per spec, synthesize baseline from the flex container's content box
-    // (i.e. use block-end side of content-box)
-    // XXXdholbert This only makes sense if parent's writing mode is
-    // horizontal (& even then, really we should be using the BSize in terms
-    // of the parent's writing mode, not ours). Clean up in bug 1155322.
-    aFlr.mAscent = desiredSizeInFlexWM.BSize(flexWM);
-  }
-
-  if (HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
-    // This will force our parent to call GetLogicalBaseline, which will
-    // synthesize a margin-box baseline.
-    aReflowOutput.SetBlockStartAscent(ReflowOutput::ASK_FOR_BASELINE);
-  } else {
-    // XXXdholbert aFlr.mAscent needs to be in terms of our parent's
-    // writing-mode here. See bug 1155322.
-    aReflowOutput.SetBlockStartAscent(aFlr.mAscent);
-  }
-
   // Now, we account for how the block-end border and padding (if any) impacts
   // our desired size. If adding it pushes us over the available block-size,
   // then we become incomplete (unless we already weren't asking for any
@@ -5650,15 +5684,83 @@ void nsFlexContainerFrame::PopulateReflowOutput(
     return;
   }
 
-  // Calculate the container baselines so that our parent can baseline-align us.
-  mBaselineFromLastReflow = aFlr.mAscent;
-  mLastBaselineFromLastReflow = aFlr.mLines.LastElement().LastBaselineOffset();
-  if (mLastBaselineFromLastReflow == nscoord_MIN) {
-    // XXX we fall back to a mirrored first baseline here for now, but this
-    // should probably use the last baseline of the last item or something.
-    mLastBaselineFromLastReflow =
-        desiredSizeInFlexWM.BSize(flexWM) - aFlr.mAscent;
+  // If we haven't established a baseline for the container yet, i.e. if we
+  // don't have any flex item in the startmost flex line that participates in
+  // baseline alignment, then use the startmost flex item to derive the
+  // container's baseline.
+  if (const FlexLine& line = StartmostLine(aFlr.mLines, aAxisTracker);
+      aFlr.mAscent == nscoord_MIN && !line.IsEmpty()) {
+    const FlexItem& item = line.StartmostItem(aAxisTracker);
+    aFlr.mAscent = item.Frame()
+                       ->GetLogicalPosition(
+                           flexWM, desiredSizeInFlexWM.GetPhysicalSize(flexWM))
+                       .B(flexWM) +
+                   item.ResolvedAscent(true);
   }
+
+  // Likewise, if we don't have any flex item in the endmost flex line that
+  // participates in last baseline alignment, then use the endmost flex item to
+  // derived the container's last baseline.
+  if (const FlexLine& line = EndmostLine(aFlr.mLines, aAxisTracker);
+      aFlr.mAscentForLast == nscoord_MIN && !line.IsEmpty()) {
+    const FlexItem& item = line.EndmostItem(aAxisTracker);
+    const nscoord lastAscent =
+        item.Frame()
+            ->GetLogicalPosition(flexWM,
+                                 desiredSizeInFlexWM.GetPhysicalSize(flexWM))
+            .B(flexWM) +
+        item.ResolvedAscent(false);
+
+    aFlr.mAscentForLast = desiredSizeInFlexWM.BSize(flexWM) - lastAscent;
+  }
+
+  if (aFlr.mAscent == nscoord_MIN) {
+    // Still don't have our baseline set -- this happens if we have no
+    // children, if our children are huge enough that they have nscoord_MIN
+    // as their baseline, or our content is hidden in which case, we'll use the
+    // wrong baseline (but no big deal).
+    NS_WARNING_ASSERTION(
+        HidesContentForLayout() || aFlr.mLines[0].IsEmpty(),
+        "Have flex items but didn't get an ascent - that's odd (or there are "
+        "just gigantic sizes involved)");
+    // Per spec, synthesize baseline from the flex container's content box
+    // (i.e. use block-end side of content-box)
+    // XXXdholbert This only makes sense if parent's writing mode is
+    // horizontal (& even then, really we should be using the BSize in terms
+    // of the parent's writing mode, not ours). Clean up in bug 1155322.
+    aFlr.mAscent = effectiveContentBSizeWithBStartBP;
+  }
+
+  if (aFlr.mAscentForLast == nscoord_MIN) {
+    // Still don't have our last baseline set -- this happens if we have no
+    // children, if our children are huge enough that they have nscoord_MIN
+    // as their baseline, or our content is hidden in which case, we'll use the
+    // wrong baseline (but no big deal).
+    NS_WARNING_ASSERTION(
+        HidesContentForLayout() || aFlr.mLines[0].IsEmpty(),
+        "Have flex items but didn't get an ascent - that's odd (or there are "
+        "just gigantic sizes involved)");
+    // Per spec, synthesize baseline from the flex container's content box
+    // (i.e. use block-end side of content-box)
+    // XXXdholbert This only makes sense if parent's writing mode is
+    // horizontal (& even then, really we should be using the BSize in terms
+    // of the parent's writing mode, not ours). Clean up in bug 1155322.
+    aFlr.mAscentForLast = blockEndContainerBP;
+  }
+
+  if (HasAnyStateBits(NS_STATE_FLEX_SYNTHESIZE_BASELINE)) {
+    // This will force our parent to call GetLogicalBaseline, which will
+    // synthesize a margin-box baseline.
+    aReflowOutput.SetBlockStartAscent(ReflowOutput::ASK_FOR_BASELINE);
+  } else {
+    // XXXdholbert aFlr.mAscent needs to be in terms of our parent's
+    // writing-mode here. See bug 1155322.
+    aReflowOutput.SetBlockStartAscent(aFlr.mAscent);
+  }
+
+  // Cache the container baselines so that our parent can baseline-align us.
+  mBaselineFromLastReflow = aFlr.mAscent;
+  mLastBaselineFromLastReflow = aFlr.mAscentForLast;
 
   // Convert flex container's final desired size to parent's WM, for outparam.
   aReflowOutput.SetSize(flexWM, desiredSizeInFlexWM);
