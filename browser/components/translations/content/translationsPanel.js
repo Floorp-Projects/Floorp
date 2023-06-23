@@ -1145,7 +1145,9 @@ var TranslationsPanel = new (class {
           // the icon.
           error ||
           // Finally check that this is a supported language that we should translate.
-          (hasSupportedLanguage && !(await shouldNeverTranslate()))
+          (hasSupportedLanguage &&
+            !(await shouldNeverTranslate()) &&
+            (await TranslationsParent.getIsTranslationsEngineSupported()))
         ) {
           if (handleEventId !== this.handleEventId) {
             // A new handleEvent was received, this one is stale.
