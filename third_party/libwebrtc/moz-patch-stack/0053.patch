@@ -1,32 +1,38 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Fri, 20 Aug 2021 13:52:00 +0200
-Subject: Bug 1654112 - Don't check the calling thread in
- webrtc::AudioReceiveStream::GetSources. r=ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Mon, 26 Jul 2021 22:51:00 -0700
+Subject: Bug 1654112 - fix timestamp issues with RTP sources; r=mjf
 
-source_tracker_ is thread safe with its own internal mutex, so this call is safe
-as long as the caller has a guarantee for the lifetime of the
-AudioReceiveStream. This is similar to webrtc::VideoReceiveStream.
-
-Upliftable.
-
-Differential Revision: https://phabricator.services.mozilla.com/D123226
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c186df8a088e46285a15e40149182daa34cc6805
+Differential Revision: https://phabricator.services.mozilla.com/D120930
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/de8c14e4972f717bf937b6f2fffcd08c35e21ced
 ---
- audio/audio_receive_stream.cc | 1 -
- 1 file changed, 1 deletion(-)
+ modules/rtp_rtcp/source/source_tracker.cc | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 85fe185d90..d76c1856d8 100644
---- a/audio/audio_receive_stream.cc
-+++ b/audio/audio_receive_stream.cc
-@@ -369,7 +369,6 @@ int AudioReceiveStreamImpl::GetBaseMinimumPlayoutDelayMs() const {
- }
+diff --git a/modules/rtp_rtcp/source/source_tracker.cc b/modules/rtp_rtcp/source/source_tracker.cc
+index 7a5cbac77d..65f21700d0 100644
+--- a/modules/rtp_rtcp/source/source_tracker.cc
++++ b/modules/rtp_rtcp/source/source_tracker.cc
+@@ -36,7 +36,8 @@ void SourceTracker::OnFrameDelivered(const RtpPacketInfos& packet_infos) {
+       SourceKey key(RtpSourceType::CSRC, csrc);
+       SourceEntry& entry = UpdateEntry(key);
  
- std::vector<RtpSource> AudioReceiveStreamImpl::GetSources() const {
--  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
-   return source_tracker_.GetSources();
+-      entry.timestamp_ms = now_ms;
++      const auto packet_time = packet_info.receive_time().ms();
++      entry.timestamp_ms = packet_time ? packet_time : now_ms;
+       entry.audio_level = packet_info.audio_level();
+       entry.absolute_capture_time = packet_info.absolute_capture_time();
+       entry.local_capture_clock_offset =
+@@ -77,6 +78,10 @@ std::vector<RtpSource> SourceTracker::GetSources() const {
+             .local_capture_clock_offset = entry.local_capture_clock_offset});
+   }
+ 
++  std::sort(sources.begin(), sources.end(), [](const auto &a, const auto &b){
++    return a.timestamp_ms() > b.timestamp_ms();
++  });
++
+   return sources;
  }
  
 -- 
-2.34.1
+2.37.1 (Apple Git-137.1)
 

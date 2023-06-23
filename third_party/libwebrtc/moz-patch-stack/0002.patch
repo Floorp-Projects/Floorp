@@ -1,46 +1,147 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Sat, 13 Feb 2021 04:20:00 -0800
-Subject: Bug 1654112 - Add pid_t to desktop_capture_types.h; r=pehrsons
+From: Philipp Hancke <phancke@microsoft.com>
+Date: Mon, 27 Mar 2023 10:19:52 +0200
+Subject: (cherry-pick-branch-heads/5615) [M112] Revert "Only serialize
+ non-stopped RTP header extensions"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Upstreaming bug 1697385
+This reverts commit be03c0971863c9e6807fcbdb4175754e8242a652.
+Causes regression in web projects that
+1/ add a stopped-by-default extension in SRD
+2/ call createAnswer
+3/ munge the stopped-by-default extension back in SLD
+4/ create a subsequent offer and expect the extension to be present
 
-Also includes:
-Bug 1654112 - Clarifying prev. rev that moved pid_t into the global namespace; r=dminor
+BUG=chromium:1427442,chromium:1051821
 
-Differential Revision: https://phabricator.services.mozilla.com/D107897
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/539b69f0e21118a1898f1ef689577c7193ff7be7
+Change-Id: I2e48831e92384963a254d873398f54eaee96739a
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/299143
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Philipp Hancke <phancke@microsoft.com>
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5615@{#2}
+Cr-Branched-From: cdfeb4f7922f05007d88c8263842998ec79b6dd6-refs/heads/main@{#39376}
 ---
- modules/desktop_capture/desktop_capture_types.h | 4 ++++
- modules/video_capture/video_capture.h           | 1 +
- 2 files changed, 5 insertions(+)
+ pc/media_session.cc                           |  7 +--
+ pc/media_session_unittest.cc                  |  5 +-
+ ...er_connection_header_extension_unittest.cc | 62 -------------------
+ 3 files changed, 5 insertions(+), 69 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
-index 9627076eea..381d1021c4 100644
---- a/modules/desktop_capture/desktop_capture_types.h
-+++ b/modules/desktop_capture/desktop_capture_types.h
-@@ -13,6 +13,10 @@
+diff --git a/pc/media_session.cc b/pc/media_session.cc
+index 92fe80f3d1..e703b44101 100644
+--- a/pc/media_session.cc
++++ b/pc/media_session.cc
+@@ -684,11 +684,8 @@ static bool CreateContentOffer(
+       if (extension_with_id.uri == extension.uri) {
+         // TODO(crbug.com/1051821): Configure the extension direction from
+         // the information in the media_description_options extension
+-        // capability. For now, do not include stopped extensions.
+-        // See also crbug.com/webrtc/7477 about the general lack of direction.
+-        if (extension.direction != RtpTransceiverDirection::kStopped) {
+-          extensions.push_back(extension_with_id);
+-        }
++        // capability.
++        extensions.push_back(extension_with_id);
+       }
+     }
+   }
+diff --git a/pc/media_session_unittest.cc b/pc/media_session_unittest.cc
+index 6dc6d76021..8f38f6a1b4 100644
+--- a/pc/media_session_unittest.cc
++++ b/pc/media_session_unittest.cc
+@@ -2018,7 +2018,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
+ }
  
- #include <stdint.h>
+ TEST_F(MediaSessionDescriptionFactoryTest,
+-       AllowsStoppedExtensionsToBeRemovedFromSubsequentOffer) {
++       AppendsStoppedExtensionIfKnownAndPresentInTheOffer) {
+   MediaSessionOptions opts;
+   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
+                              RtpTransceiverDirection::kSendRecv, kActive,
+@@ -2043,7 +2043,8 @@ TEST_F(MediaSessionDescriptionFactoryTest,
+       ElementsAre(Property(
+           &ContentInfo::media_description,
+           Pointee(Property(&MediaContentDescription::rtp_header_extensions,
+-                           ElementsAre(Field(&RtpExtension::uri, "uri1")))))));
++                           ElementsAre(Field(&RtpExtension::uri, "uri1"),
++                                       Field(&RtpExtension::uri, "uri2")))))));
+ }
  
-+#ifdef XP_WIN      // Moving this into the global namespace
-+typedef int pid_t; // matching what used to be in
-+#endif             // video_capture_defines.h
-+
- namespace webrtc {
+ TEST_F(MediaSessionDescriptionFactoryTest,
+diff --git a/pc/peer_connection_header_extension_unittest.cc b/pc/peer_connection_header_extension_unittest.cc
+index 9bbc32b7e0..1a452b0a1f 100644
+--- a/pc/peer_connection_header_extension_unittest.cc
++++ b/pc/peer_connection_header_extension_unittest.cc
+@@ -229,68 +229,6 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
+                           Field(&RtpHeaderExtensionCapability::uri, "uri3")));
+ }
  
- enum class CaptureType { kWindow, kScreen };
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 187eba76a0..258bc7f810 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -13,6 +13,7 @@
- 
- #include "api/video/video_rotation.h"
- #include "api/video/video_sink_interface.h"
-+#include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/video_capture/raw_video_sink_interface.h"
- #include "modules/video_capture/video_capture_defines.h"
- #include <set>
+-TEST_P(PeerConnectionHeaderExtensionTest, OfferedExtensionsArePerTransceiver) {
+-  cricket::MediaType media_type;
+-  SdpSemantics semantics;
+-  std::tie(media_type, semantics) = GetParam();
+-  if (semantics != SdpSemantics::kUnifiedPlan)
+-    return;
+-  std::unique_ptr<PeerConnectionWrapper> pc1 =
+-      CreatePeerConnection(media_type, semantics);
+-  auto transceiver1 = pc1->AddTransceiver(media_type);
+-  auto modified_extensions = transceiver1->HeaderExtensionsToOffer();
+-  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
+-  transceiver1->SetOfferedRtpHeaderExtensions(modified_extensions);
+-  auto transceiver2 = pc1->AddTransceiver(media_type);
+-
+-  auto session_description = pc1->CreateOffer();
+-  EXPECT_THAT(session_description->description()
+-                  ->contents()[0]
+-                  .media_description()
+-                  ->rtp_header_extensions(),
+-              ElementsAre(Field(&RtpExtension::uri, "uri2"),
+-                          Field(&RtpExtension::uri, "uri3")));
+-  EXPECT_THAT(session_description->description()
+-                  ->contents()[1]
+-                  .media_description()
+-                  ->rtp_header_extensions(),
+-              ElementsAre(Field(&RtpExtension::uri, "uri2"),
+-                          Field(&RtpExtension::uri, "uri3"),
+-                          Field(&RtpExtension::uri, "uri4")));
+-}
+-
+-TEST_P(PeerConnectionHeaderExtensionTest, RemovalAfterRenegotiation) {
+-  cricket::MediaType media_type;
+-  SdpSemantics semantics;
+-  std::tie(media_type, semantics) = GetParam();
+-  if (semantics != SdpSemantics::kUnifiedPlan)
+-    return;
+-  std::unique_ptr<PeerConnectionWrapper> pc1 =
+-      CreatePeerConnection(media_type, semantics);
+-  std::unique_ptr<PeerConnectionWrapper> pc2 =
+-      CreatePeerConnection(media_type, semantics);
+-  auto transceiver1 = pc1->AddTransceiver(media_type);
+-
+-  auto offer = pc1->CreateOfferAndSetAsLocal(
+-      PeerConnectionInterface::RTCOfferAnswerOptions());
+-  pc2->SetRemoteDescription(std::move(offer));
+-  auto answer = pc2->CreateAnswerAndSetAsLocal(
+-      PeerConnectionInterface::RTCOfferAnswerOptions());
+-  pc1->SetRemoteDescription(std::move(answer));
+-
+-  auto modified_extensions = transceiver1->HeaderExtensionsToOffer();
+-  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
+-  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
+-  transceiver1->SetOfferedRtpHeaderExtensions(modified_extensions);
+-  auto session_description = pc1->CreateOffer();
+-  EXPECT_THAT(session_description->description()
+-                  ->contents()[0]
+-                  .media_description()
+-                  ->rtp_header_extensions(),
+-              ElementsAre(Field(&RtpExtension::uri, "uri2"),
+-                          Field(&RtpExtension::uri, "uri3")));
+-}
+-
+ INSTANTIATE_TEST_SUITE_P(
+     ,
+     PeerConnectionHeaderExtensionTest,
 -- 
-2.34.1
+2.37.1 (Apple Git-137.1)
 

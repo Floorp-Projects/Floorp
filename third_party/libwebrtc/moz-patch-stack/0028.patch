@@ -1,43 +1,148 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Tue, 11 Feb 2020 17:07:00 +0000
-Subject: Bug 1578073 - Remove native calls in Histogram.java; r=ng
+From: Gabriele Svelto <gsvelto@mozilla.com>
+Date: Mon, 28 Oct 2019 23:26:00 +0000
+Subject: Bug 1590984 - Use poll() instead of select() in WebRTC code r=drno
 
-Getting the JNI calls here to work requires a good amount of webrtc.org
-machinery. It might be worth setting that up the next time we do an upstream
-merge, but for now, it is a lot simpler to just remove the affected code,
-given that we are not interested in collecting this data anyway.
+The use of select() was leading to crashes when the file descriptor value was
+larger than FD_SETSIZE. Recent versions of glibc have checks in the FD_CLR(),
+FD_SET() and FD_ISSET() macros that will abort() the program instead of doing
+an out-of-bounds access. poll() doesn't have limitations on the file
+descriptor values and provides behavior that is otherwise identical to
+select() thus solving the problem.
 
-Differential Revision: https://phabricator.services.mozilla.com/D61860
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/7a9b07dec9f9d435416b06829fa5063aca3a476e
+Differential Revision: https://phabricator.services.mozilla.com/D50798
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59fb6760bb6785a6f8a51be6fc66bf04cfba3e16
 ---
- sdk/android/src/java/org/webrtc/Histogram.java | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ .../video_capture/linux/device_info_linux.cc  |  1 +
+ .../video_capture/linux/device_info_v4l2.cc   | 16 +++++-----
+ .../linux/video_capture_linux.cc              |  1 +
+ .../video_capture/linux/video_capture_v4l2.cc | 29 +++++++++++--------
+ 4 files changed, 26 insertions(+), 21 deletions(-)
 
-diff --git a/sdk/android/src/java/org/webrtc/Histogram.java b/sdk/android/src/java/org/webrtc/Histogram.java
-index 877986134a..c1d2d61a71 100644
---- a/sdk/android/src/java/org/webrtc/Histogram.java
-+++ b/sdk/android/src/java/org/webrtc/Histogram.java
-@@ -27,18 +27,13 @@ class Histogram {
-   }
+diff --git a/modules/video_capture/linux/device_info_linux.cc b/modules/video_capture/linux/device_info_linux.cc
+index 56da475bf3..cae63c7c2d 100644
+--- a/modules/video_capture/linux/device_info_linux.cc
++++ b/modules/video_capture/linux/device_info_linux.cc
+@@ -10,6 +10,7 @@
  
-   static public Histogram createCounts(String name, int min, int max, int bucketCount) {
--    return new Histogram(nativeCreateCounts(name, min, max, bucketCount));
-+    return new Histogram(0);
-   }
+ #include <errno.h>
+ #include <fcntl.h>
++#include <poll.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index 77968b7eaf..f87fe53abe 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -12,6 +12,7 @@
  
-   static public Histogram createEnumeration(String name, int max) {
--    return new Histogram(nativeCreateEnumeration(name, max));
-+    return new Histogram(0);
-   }
+ #include <errno.h>
+ #include <fcntl.h>
++#include <poll.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -73,16 +74,13 @@ void DeviceInfoV4l2::HandleEvent(inotify_event* event, int fd)
  
-   public void addSample(int sample) {
--    nativeAddSample(handle, sample);
-   }
+ int DeviceInfoV4l2::EventCheck(int fd)
+ {
+-    struct timeval timeout;
+-    fd_set rfds;
++    struct pollfd fds = {
++      .fd = fd,
++      .events = POLLIN,
++      .revents = 0
++    };
+ 
+-    timeout.tv_sec = 0;
+-    timeout.tv_usec = 100000;
 -
--  private static native long nativeCreateCounts(String name, int min, int max, int bucketCount);
--  private static native long nativeCreateEnumeration(String name, int max);
--  private static native void nativeAddSample(long handle, int sample);
+-    FD_ZERO(&rfds);
+-    FD_SET(fd, &rfds);
+-
+-    return select(fd+1, &rfds, NULL, NULL, &timeout);
++    return poll(&fds, 1, 100);
  }
+ 
+ int DeviceInfoV4l2::HandleEvents(int fd)
+diff --git a/modules/video_capture/linux/video_capture_linux.cc b/modules/video_capture/linux/video_capture_linux.cc
+index 23a8f4f3f3..b2c206d775 100644
+--- a/modules/video_capture/linux/video_capture_linux.cc
++++ b/modules/video_capture/linux/video_capture_linux.cc
+@@ -10,6 +10,7 @@
+ 
+ #include <errno.h>
+ #include <fcntl.h>
++#include <poll.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <sys/ioctl.h>
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index 1dc13b01aa..b527a331e4 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -12,7 +12,7 @@
+ 
+ #include <errno.h>
+ #include <fcntl.h>
+-#include <linux/videodev2.h>
++#include <poll.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <sys/ioctl.h>
+@@ -20,6 +20,14 @@
+ #include <sys/select.h>
+ #include <time.h>
+ #include <unistd.h>
++// v4l includes
++#if defined(__NetBSD__) || defined(__OpenBSD__) // WEBRTC_BSD
++#include <sys/videoio.h>
++#elif defined(__sun)
++#include <sys/videodev2.h>
++#else
++#include <linux/videodev2.h>
++#endif
+ 
+ #include <new>
+ #include <string>
+@@ -359,16 +367,13 @@ bool VideoCaptureModuleV4L2::CaptureStarted() {
+ 
+ bool VideoCaptureModuleV4L2::CaptureProcess() {
+   int retVal = 0;
+-  fd_set rSet;
+-  struct timeval timeout;
++  struct pollfd rSet;
+ 
+-  FD_ZERO(&rSet);
+-  FD_SET(_deviceFd, &rSet);
+-  timeout.tv_sec = 1;
+-  timeout.tv_usec = 0;
++  rSet.fd = _deviceFd;
++  rSet.events = POLLIN;
++  rSet.revents = 0;
+ 
+-  // _deviceFd written only in StartCapture, when this thread isn't running.
+-  retVal = select(_deviceFd + 1, &rSet, NULL, NULL, &timeout);
++  retVal = poll(&rSet, 1, 1000);
+ 
+   {
+     MutexLock lock(&capture_lock_);
+@@ -378,12 +383,12 @@ bool VideoCaptureModuleV4L2::CaptureProcess() {
+     }
+ 
+     if (retVal < 0 && errno != EINTR) {  // continue if interrupted
+-      // select failed
++      // poll failed
+       return false;
+     } else if (retVal == 0) {
+-      // select timed out
++      // poll timed out
+       return true;
+-    } else if (!FD_ISSET(_deviceFd, &rSet)) {
++    } else if (!(rSet.revents & POLLIN)) {
+       // not event on camera handle
+       return true;
+     }
 -- 
-2.34.1
+2.37.1 (Apple Git-137.1)
 

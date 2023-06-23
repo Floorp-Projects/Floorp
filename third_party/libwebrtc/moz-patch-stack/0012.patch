@@ -1,37 +1,56 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Mon, 13 Aug 2018 10:24:00 -0400
-Subject: Bug 1376873 - Fix warning in mean_variance_estimator.cc; r=padenot
+From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
+Date: Fri, 12 Feb 2021 14:27:00 +0000
+Subject: Bug 1654112 - Get OS X build working.
+ r=ng,firefox-build-system-reviewers,glandium
 
-Differential Revision: https://phabricator.services.mozilla.com/D7470
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cb6c555654c0bca72999f1e414d8d6d0b59186c9
+* Pull in sdk/objc/base and sdk/objc/helpers
+* Add gclient_args.gni to keep build happy.
+* Add a missing include path for libyuv
+* Support .m files in build.
+
+Differential Revision: https://phabricator.services.mozilla.com/D105015
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/9314046d89ebc0836a50ab7addece71abbf0b5e4
 ---
- .../echo_detector/mean_variance_estimator.cc                | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ modules/desktop_capture/mac/screen_capturer_mac.mm | 3 ++-
+ modules/desktop_capture/mac/window_list_utils.cc   | 4 ++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/modules/audio_processing/echo_detector/mean_variance_estimator.cc b/modules/audio_processing/echo_detector/mean_variance_estimator.cc
-index a85740387b..a9ebb8cd92 100644
---- a/modules/audio_processing/echo_detector/mean_variance_estimator.cc
-+++ b/modules/audio_processing/echo_detector/mean_variance_estimator.cc
-@@ -10,7 +10,7 @@
- 
- #include "modules/audio_processing/echo_detector/mean_variance_estimator.h"
- 
--#include <math.h>
-+#include <cmath>
- 
- #include "rtc_base/checks.h"
- 
-@@ -26,8 +26,8 @@ void MeanVarianceEstimator::Update(float value) {
-   mean_ = (1.f - kAlpha) * mean_ + kAlpha * value;
-   variance_ =
-       (1.f - kAlpha) * variance_ + kAlpha * (value - mean_) * (value - mean_);
--  RTC_DCHECK(isfinite(mean_));
--  RTC_DCHECK(isfinite(variance_));
-+  RTC_DCHECK(std::isfinite(mean_));
-+  RTC_DCHECK(std::isfinite(variance_));
+diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
+index 115f6440b1..cad0c5b65b 100644
+--- a/modules/desktop_capture/mac/screen_capturer_mac.mm
++++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
+@@ -276,7 +276,8 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
+   for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
+        it != desktop_config_.displays.end();
+        ++it) {
+-    screens->push_back({it->id, std::string()});
++    Source value = {it->id, 0, std::string()};
++    screens->push_back(value);
+   }
+   return true;
  }
- 
- float MeanVarianceEstimator::std_deviation() const {
+diff --git a/modules/desktop_capture/mac/window_list_utils.cc b/modules/desktop_capture/mac/window_list_utils.cc
+index 5d881662ea..989ec7ea54 100644
+--- a/modules/desktop_capture/mac/window_list_utils.cc
++++ b/modules/desktop_capture/mac/window_list_utils.cc
+@@ -198,7 +198,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+             // the check in the map. Also skip the window if owner name is
+             // empty too.
+             if (!owner_name.empty() && (itr == pid_itr_map.end())) {
+-              sources.push_back(DesktopCapturer::Source{window_id, owner_name});
++              sources.push_back(DesktopCapturer::Source{window_id, pid, owner_name});
+               RTC_DCHECK(!sources.empty());
+               // Get an iterator on the last valid element in the source list.
+               std::list<DesktopCapturer::Source>::const_iterator last_source =
+@@ -209,7 +209,7 @@ bool GetWindowList(DesktopCapturer::SourceList* windows,
+                       pid, last_source));
+             }
+           } else {
+-            sources.push_back(DesktopCapturer::Source{window_id, title});
++            sources.push_back(DesktopCapturer::Source{window_id, pid, title});
+             // Once the window with empty title has been removed no other empty
+             // windows are allowed for the same pid.
+             if (itr != pid_itr_map.end() && (itr->second != sources.end())) {
 -- 
-2.34.1
+2.37.1 (Apple Git-137.1)
 
