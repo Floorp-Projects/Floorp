@@ -289,13 +289,11 @@ add_task(async function test_customizemode_doesnt_wreck_things() {
   info("Try to open the panel (will not work, in customize mode)");
   let promise = promisePanelOpened();
   DownloadsCommon.getData(window)._notifyDownloadEvent("start");
-  await TestUtils.waitForCondition(
-    () => DownloadsPanel._state == DownloadsPanel.kStateHidden,
-    "Should try to show but stop short and hide the panel"
-  );
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 100));
   is(
-    DownloadsPanel._state,
-    DownloadsPanel.kStateHidden,
+    DownloadsPanel.panel.state,
+    "closed",
     "Should not start opening the panel."
   );
 

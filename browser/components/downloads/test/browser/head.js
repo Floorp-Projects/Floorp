@@ -250,6 +250,12 @@ async function task_openPanel() {
   let promise = promisePanelOpened();
   DownloadsPanel.showPanel();
   await promise;
+
+  await BrowserTestUtils.waitForMutationCondition(
+    DownloadsView.richListBox,
+    { attributeFilter: ["disabled"] },
+    () => !DownloadsView.richListBox.hasAttribute("disabled")
+  );
 }
 
 async function setDownloadDir() {
