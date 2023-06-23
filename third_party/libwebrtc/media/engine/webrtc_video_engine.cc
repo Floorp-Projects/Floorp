@@ -682,7 +682,8 @@ WebRtcVideoChannel::WebRtcVideoChannel(
       decoder_factory_(decoder_factory),
       bitrate_allocator_factory_(bitrate_allocator_factory),
       default_send_options_(options),
-      last_stats_log_ms_(-1),
+      last_send_stats_log_ms_(-1),
+      last_receive_stats_log_ms_(-1),
       discard_unknown_ssrc_packets_(
           IsEnabled(call_->trials(),
                     "WebRTC-Video-DiscardPacketsWithUnknownSsrc")),
@@ -1645,9 +1646,9 @@ bool WebRtcVideoChannel::GetSendStats(VideoMediaSendInfo* info) {
   // Log stats periodically.
   bool log_stats = false;
   int64_t now_ms = rtc::TimeMillis();
-  if (last_stats_log_ms_ == -1 ||
-      now_ms - last_stats_log_ms_ > kStatsLogIntervalMs) {
-    last_stats_log_ms_ = now_ms;
+  if (last_send_stats_log_ms_ == -1 ||
+      now_ms - last_send_stats_log_ms_ > kStatsLogIntervalMs) {
+    last_send_stats_log_ms_ = now_ms;
     log_stats = true;
   }
 
@@ -1683,9 +1684,9 @@ bool WebRtcVideoChannel::GetReceiveStats(VideoMediaReceiveInfo* info) {
   // Log stats periodically.
   bool log_stats = false;
   int64_t now_ms = rtc::TimeMillis();
-  if (last_stats_log_ms_ == -1 ||
-      now_ms - last_stats_log_ms_ > kStatsLogIntervalMs) {
-    last_stats_log_ms_ = now_ms;
+  if (last_receive_stats_log_ms_ == -1 ||
+      now_ms - last_receive_stats_log_ms_ > kStatsLogIntervalMs) {
+    last_receive_stats_log_ms_ = now_ms;
     log_stats = true;
   }
 
