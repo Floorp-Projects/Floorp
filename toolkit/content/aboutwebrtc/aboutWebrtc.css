@@ -35,7 +35,8 @@ table {
   margin-block: 2px;
 }
 
-#content > div {
+#content > div,
+#mediactx > div {
   padding: 1em 2em;
   margin: 1em 0;
   border: 1px solid var(--in-content-box-border-color);
