@@ -259,12 +259,7 @@ target_rust_nonltoable := force-cargo-test-run force-cargo-program-build
 
 ifdef MOZ_PGO_RUST
 ifdef MOZ_PROFILE_GENERATE
-# Our top-level Cargo.toml sets panic to abort, so we technically don't need -C panic=abort,
-# but the autocfg crate takes RUSTFLAGS verbatim and runs its compiler tests without
-# -C panic=abort (because it doesn't know it's what cargo uses), which fail on Windows
-# because -C panic=unwind (the compiler default) is not compatible with -C profile-generate
-# (https://github.com/rust-lang/rust/issues/61002).
-rust_pgo_flags := -C panic=abort -C profile-generate=$(topobjdir)
+rust_pgo_flags := -C profile-generate=$(topobjdir)
 ifeq (1,$(words $(filter 5.% 6.% 7.% 8.% 9.% 10.% 11.%,$(CC_VERSION) $(RUSTC_LLVM_VERSION))))
 # Disable value profiling when:
 # (RUSTC_LLVM_VERSION < 12 and CC_VERSION >= 12) or (RUSTC_LLVM_VERSION >= 12 and CC_VERSION < 12)
