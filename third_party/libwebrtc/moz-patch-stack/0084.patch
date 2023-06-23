@@ -55,10 +55,10 @@ index 26618aee80..fb23b7ef39 100644
  
  rtc_source_set("receive_stream_interface") {
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 4ddc8349a8..daca67e033 100644
+index 48c9c81992..7e98caedb6 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
-@@ -442,7 +442,10 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -434,7 +434,10 @@ rtc_library("rtc_internal_video_codecs") {
      "../test:fake_video_codecs",
    ]
    if (build_with_mozilla) {
@@ -70,7 +70,7 @@ index 4ddc8349a8..daca67e033 100644
    }
  
    if (enable_libaom) {
-@@ -477,6 +480,8 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -469,6 +472,8 @@ rtc_library("rtc_internal_video_codecs") {
      sources -= [
        "engine/fake_video_codec_factory.cc",
        "engine/fake_video_codec_factory.h",

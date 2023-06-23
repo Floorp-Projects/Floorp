@@ -128,16 +128,8 @@ rtc_library("rtc_media_base") {
     "base/adapted_video_track_source.cc",
     "base/adapted_video_track_source.h",
     "base/audio_source.h",
-    "base/codec.h",  # temporary - bugs.webrtc.org/14775
-    "base/delayable.h",  # temporary - bugs.webrtc.org/14775
-    "base/media_channel.h",  # temporary - bugs.webrtc.org/14775
-    "base/media_constants.h",  # temporary - bugs.webrtc.org/14775
     "base/media_engine.cc",
     "base/media_engine.h",
-    "base/rid_description.h",  # temporary - bugs.webrtc.org/14775
-    "base/rtp_utils.h",  # temporary - bugs.webrtc.org/14775
-    "base/stream_params.h",  # temporary - bugs.webrtc.org/14775
-    "base/turn_utils.h",  # temporary - bugs.webrtc.org/14775
     "base/video_adapter.cc",
     "base/video_adapter.h",
     "base/video_broadcaster.cc",

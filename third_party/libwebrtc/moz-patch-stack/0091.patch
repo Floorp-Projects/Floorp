@@ -191,7 +191,7 @@ index 431c267e1e..de18fc7b92 100644
  #include "api/video/video_content_type.h"
  #include "api/video/video_frame.h"
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index daca67e033..80662563b0 100644
+index 7e98caedb6..89f65aed81 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {

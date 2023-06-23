@@ -258,10 +258,10 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 2e5c0bb872..4ddc8349a8 100644
+index 5e75a9ee25..48c9c81992 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
-@@ -147,6 +147,27 @@ rtc_library("rtc_media_base") {
+@@ -139,6 +139,27 @@ rtc_library("rtc_media_base") {
      "base/video_source_base.cc",
      "base/video_source_base.h",
    ]
@@ -289,7 +289,7 @@ index 2e5c0bb872..4ddc8349a8 100644
  }
  
  rtc_library("media_channel_impl") {
-@@ -420,6 +441,9 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -412,6 +433,9 @@ rtc_library("rtc_internal_video_codecs") {
      "../system_wrappers:field_trial",
      "../test:fake_video_codecs",
    ]
@@ -299,7 +299,7 @@ index 2e5c0bb872..4ddc8349a8 100644
  
    if (enable_libaom) {
      defines += [ "RTC_USE_LIBAOM_AV1_ENCODER" ]
-@@ -449,6 +473,12 @@ rtc_library("rtc_internal_video_codecs") {
+@@ -441,6 +465,12 @@ rtc_library("rtc_internal_video_codecs") {
      # targets depend on :rtc_encoder_simulcast_proxy directly.
      "engine/encoder_simulcast_proxy.h",
    ]
