@@ -5519,6 +5519,8 @@ void AsyncPanZoomController::NotifyLayersUpdated(
       } else {
         MOZ_ASSERT(scrollUpdate.GetMode() == ScrollMode::Smooth);
         MOZ_ASSERT(!scrollUpdate.WasTriggeredByScript());
+        MOZ_ASSERT(scrollUpdate.GetSnapTargetIds().mIdsOnX.IsEmpty());
+        MOZ_ASSERT(scrollUpdate.GetSnapTargetIds().mIdsOnY.IsEmpty());
         SmoothScrollTo(destination, scrollUpdate.GetOrigin());
       }
       continue;
