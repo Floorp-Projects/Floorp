@@ -170,16 +170,22 @@ impl NumTraits {
         // retrieve its value, and use it to create an `Ident` to be used
         // to import the `num_traits` crate.
         for attr in &ast.attrs {
-            if let Ok(syn::Meta::NameValue(mnv)) = attr.parse_meta() {
-                if mnv.path.is_ident("num_traits") {
-                    if let syn::Lit::Str(lit_str) = mnv.lit {
-                        return NumTraits {
-                            import: syn::Ident::new(&lit_str.value(), lit_str.span()),
-                            explicit: true,
-                        };
-                    } else {
-                        panic!("#[num_traits] attribute value must be a str");
-                    }
+            if attr.path().is_ident("num_traits") {
+                if let Ok(syn::MetaNameValue {
+                    value:
+                        syn::Expr::Lit(syn::ExprLit {
+                            lit: syn::Lit::Str(ref lit_str),
+                            ..
+                        }),
+                    ..
+                }) = attr.meta.require_name_value()
+                {
+                    return NumTraits {
+                        import: syn::Ident::new(&lit_str.value(), lit_str.span()),
+                        explicit: true,
+                    };
+                } else {
+                    panic!("#[num_traits] attribute value must be a str");
                 }
             }
         }
@@ -954,5 +960,3 @@ pub fn float(input: TokenStream) -> TokenStream {
 
     import.wrap("Float", &name, impl_).into()
 }
-
-mod test;
