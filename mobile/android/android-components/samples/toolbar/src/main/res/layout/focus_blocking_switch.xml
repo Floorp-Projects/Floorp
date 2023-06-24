@@ -50,7 +50,7 @@
                 android:layout_width="22dp"
                 android:layout_height="22dp"
                 android:padding="4dp"
-                app:srcCompat="@drawable/mozac_ic_info"
+                app:srcCompat="@drawable/mozac_ic_information_fill_24"
                 android:background="?android:attr/selectableItemBackgroundBorderless" />
 
         </LinearLayout>
