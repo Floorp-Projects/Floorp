@@ -33,7 +33,7 @@ add_setup(async function () {
     ],
   });
 
-  bookmarkIds = await PlacesUtils.promiseManyItemIds([
+  bookmarkIds = await PlacesTestUtils.promiseManyItemIds([
     bookmarks[0].guid,
     bookmarks[1].guid,
     bookmarks[2].guid,

@@ -80,7 +80,7 @@ async function simulateDrop(
     Assert.equal(dataTransfer.dropEffect, dropEffect);
 
     let ip = new PlacesInsertionPoint({
-      parentId: await PlacesUtils.promiseItemId(targetGuid),
+      parentId: await PlacesTestUtils.promiseItemId(targetGuid),
       parentGuid: targetGuid,
       index: 0,
       orientation: Ci.nsITreeView.DROP_ON,

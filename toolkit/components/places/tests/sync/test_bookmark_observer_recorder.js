@@ -392,7 +392,7 @@ add_task(async function test_apply_then_revert() {
     dateAdded: new Date(localTimeSeconds * 1000),
     lastModified: new Date(localTimeSeconds * 1000),
   });
-  let localIdForD = await PlacesUtils.promiseItemId("bookmarkDDDD");
+  let localIdForD = await PlacesTestUtils.promiseItemId("bookmarkDDDD");
 
   info("Apply remote changes, second time");
   await buf.db.execute(
@@ -419,7 +419,7 @@ add_task(async function test_apply_then_revert() {
     "Should stage identical records to upload, first and second time"
   );
 
-  let localItemIds = await PlacesUtils.promiseManyItemIds([
+  let localItemIds = await PlacesTestUtils.promiseManyItemIds([
     "bookmarkFFFF",
     "bookmarkEEEE",
     "folderAAAAAA",

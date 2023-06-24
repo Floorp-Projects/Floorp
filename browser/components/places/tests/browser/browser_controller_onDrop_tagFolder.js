@@ -38,7 +38,7 @@ add_setup(async function () {
       },
     ],
   });
-  bookmarkId = await PlacesUtils.promiseItemId(bookmarks[0].guid);
+  bookmarkId = await PlacesTestUtils.promiseItemId(bookmarks[0].guid);
 });
 
 async function run_drag_test(startBookmarkIndex, newParentGuid) {

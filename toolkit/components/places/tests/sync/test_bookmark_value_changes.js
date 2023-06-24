@@ -156,7 +156,7 @@ add_task(async function test_value_combo() {
     "Should upload new local bookmarks and parents"
   );
 
-  let localItemIds = await PlacesUtils.promiseManyItemIds([
+  let localItemIds = await PlacesTestUtils.promiseManyItemIds([
     "fxBmk_______",
     "tFolder_____",
     "tbBmk_______",
@@ -1299,7 +1299,7 @@ add_task(async function test_keywords_complex() {
     "Should reupload all local records with corrected keywords"
   );
 
-  let localItemIds = await PlacesUtils.promiseManyItemIds([
+  let localItemIds = await PlacesTestUtils.promiseManyItemIds([
     "bookmarkAAAA",
     "bookmarkAAA1",
     "bookmarkBBB1",
@@ -2210,7 +2210,7 @@ add_task(async function test_date_added() {
     "Should flag A for weak reupload"
   );
 
-  let localItemIds = await PlacesUtils.promiseManyItemIds([
+  let localItemIds = await PlacesTestUtils.promiseManyItemIds([
     "bookmarkAAAA",
     "bookmarkBBBB",
   ]);
@@ -2458,7 +2458,7 @@ add_task(async function test_duplicate_url_rows() {
     "Should update titles for items with duplicate URLs"
   );
 
-  let localItemIds = await PlacesUtils.promiseManyItemIds([
+  let localItemIds = await PlacesTestUtils.promiseManyItemIds([
     "bookmarkAAAA",
     "bookmarkBBBB",
     "bookmarkCCCC",

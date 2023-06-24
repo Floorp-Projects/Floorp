@@ -603,6 +603,26 @@ export var PlacesTestUtils = Object.freeze({
     );
   },
 
+  async promiseItemId(guid) {
+    return this.getDatabaseValue("moz_bookmarks", "id", { guid });
+  },
+
+  async promiseItemGuid(id) {
+    return this.getDatabaseValue("moz_bookmarks", "guid", { id });
+  },
+
+  async promiseManyItemIds(guids) {
+    let conn = await lazy.PlacesUtils.promiseDBConnection();
+    let rows = await conn.executeCached(`
+      SELECT guid, id FROM moz_bookmarks WHERE guid IN (${guids
+        .map(guid => "'" + guid + "'")
+        .join()}
+      )`);
+    return new Map(
+      rows.map(r => [r.getResultByName("guid"), r.getResultByName("id")])
+    );
+  },
+
   _buildWhereClause(table, conditions) {
     let fragments = [];
     let params = {};

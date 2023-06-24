@@ -622,7 +622,7 @@ add_task(async function test_pullChanges_tags() {
     index: 0,
   });
   let tagFolderGuid = tagBm.guid;
-  let tagFolderId = await PlacesUtils.promiseItemId(tagFolderGuid);
+  let tagFolderId = await PlacesTestUtils.promiseItemId(tagFolderGuid);
 
   info("Tagged bookmarks should be in changeset");
   {

@@ -551,11 +551,11 @@ add_task(async function create_in_folder() {
 
   PlacesUtils.observers.removeListener(["bookmark-added"], listener);
 
-  let mozFolderId = await PlacesUtils.promiseItemId(mozFolder.guid);
-  let commFolderId = await PlacesUtils.promiseItemId(bms[1].guid);
+  let mozFolderId = await PlacesTestUtils.promiseItemId(mozFolder.guid);
+  let commFolderId = await PlacesTestUtils.promiseItemId(bms[1].guid);
   deepEqual(notifications, [
     {
-      itemId: await PlacesUtils.promiseItemId(bms[0].guid),
+      itemId: await PlacesTestUtils.promiseItemId(bms[0].guid),
       parentId: mozFolderId,
       index: 0,
       title: "Get Firefox!",
@@ -571,7 +571,7 @@ add_task(async function create_in_folder() {
       parentGuid: mozFolder.guid,
     },
     {
-      itemId: await PlacesUtils.promiseItemId(bms[2].guid),
+      itemId: await PlacesTestUtils.promiseItemId(bms[2].guid),
       parentId: commFolderId,
       index: 0,
       title: "Get Thunderbird!",
@@ -579,7 +579,7 @@ add_task(async function create_in_folder() {
       parentGuid: bms[1].guid,
     },
     {
-      itemId: await PlacesUtils.promiseItemId(bms[3].guid),
+      itemId: await PlacesTestUtils.promiseItemId(bms[3].guid),
       parentId: commFolderId,
       index: 1,
       title: "SeaMonkey",

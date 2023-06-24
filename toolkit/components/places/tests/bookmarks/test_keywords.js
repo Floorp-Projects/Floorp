@@ -96,7 +96,7 @@ add_task(async function test_addBookmarkAndKeyword() {
     title: "test",
   });
   await PlacesUtils.keywords.insert({ url: URI1, keyword: "keyword" });
-  let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
+  let itemId = await PlacesTestUtils.promiseItemId(bookmark.guid);
   observer.check([
     {
       type: "bookmark-keyword-changed",
@@ -158,7 +158,7 @@ add_task(async function test_sameKeywordDifferentURI() {
   observer.check([
     {
       type: "bookmark-keyword-changed",
-      id: await PlacesUtils.promiseItemId(bookmark1.guid),
+      id: await PlacesTestUtils.promiseItemId(bookmark1.guid),
       itemType: bookmark1.type,
       url: bookmark1.url,
       guid: bookmark1.guid,
@@ -170,7 +170,7 @@ add_task(async function test_sameKeywordDifferentURI() {
     },
     {
       type: "bookmark-keyword-changed",
-      id: await PlacesUtils.promiseItemId(bookmark2.guid),
+      id: await PlacesTestUtils.promiseItemId(bookmark2.guid),
       itemType: bookmark2.type,
       url: bookmark2.url,
       guid: bookmark2.guid,
@@ -207,7 +207,7 @@ add_task(async function test_sameURIDifferentKeyword() {
   observer.check([
     {
       type: "bookmark-keyword-changed",
-      id: await PlacesUtils.promiseItemId(bookmarks[0].guid),
+      id: await PlacesTestUtils.promiseItemId(bookmarks[0].guid),
       itemType: bookmarks[0].type,
       url: bookmarks[0].url,
       guid: bookmarks[0].guid,
@@ -219,7 +219,7 @@ add_task(async function test_sameURIDifferentKeyword() {
     },
     {
       type: "bookmark-keyword-changed",
-      id: await PlacesUtils.promiseItemId(bookmarks[1].guid),
+      id: await PlacesTestUtils.promiseItemId(bookmarks[1].guid),
       itemType: bookmarks[1].type,
       url: bookmarks[1].url,
       guid: bookmarks[1].guid,
@@ -272,7 +272,7 @@ add_task(async function test_unsetKeyword() {
   observer.check([
     {
       type: "bookmark-keyword-changed",
-      id: await PlacesUtils.promiseItemId(bookmarks[0].guid),
+      id: await PlacesTestUtils.promiseItemId(bookmarks[0].guid),
       itemType: bookmarks[0].type,
       url: bookmarks[0].url,
       guid: bookmarks[0].guid,
@@ -284,7 +284,7 @@ add_task(async function test_unsetKeyword() {
     },
     {
       type: "bookmark-keyword-changed",
-      id: await PlacesUtils.promiseItemId(bookmarks[1].guid),
+      id: await PlacesTestUtils.promiseItemId(bookmarks[1].guid),
       itemType: bookmarks[1].type,
       url: bookmarks[1].url,
       guid: bookmarks[1].guid,
@@ -296,7 +296,7 @@ add_task(async function test_unsetKeyword() {
     },
     {
       type: "bookmark-keyword-changed",
-      id: await PlacesUtils.promiseItemId(bookmarks[2].guid),
+      id: await PlacesTestUtils.promiseItemId(bookmarks[2].guid),
       itemType: bookmarks[2].type,
       url: bookmarks[2].url,
       guid: bookmarks[2].guid,
@@ -323,7 +323,7 @@ add_task(async function test_addRemoveBookmark() {
     url: URI3,
     title: "test3",
   });
-  let itemId = await PlacesUtils.promiseItemId(bookmark.guid);
+  let itemId = await PlacesTestUtils.promiseItemId(bookmark.guid);
   await PlacesUtils.keywords.insert({ url: URI3, keyword: "keyword" });
   await PlacesUtils.bookmarks.remove(bookmark);
 
@@ -382,7 +382,7 @@ add_task(async function test_reassign() {
     observer.check([
       {
         type: "bookmark-keyword-changed",
-        id: await PlacesUtils.promiseItemId(oldBmk.guid),
+        id: await PlacesTestUtils.promiseItemId(oldBmk.guid),
         itemType: oldBmk.type,
         url: oldBmk.url,
         guid: oldBmk.guid,
@@ -394,7 +394,7 @@ add_task(async function test_reassign() {
       },
       {
         type: "bookmark-keyword-changed",
-        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        id: await PlacesTestUtils.promiseItemId(newBmk.guid),
         itemType: newBmk.type,
         url: newBmk.url,
         guid: newBmk.guid,
@@ -406,7 +406,7 @@ add_task(async function test_reassign() {
       },
       {
         type: "bookmark-keyword-changed",
-        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        id: await PlacesTestUtils.promiseItemId(newBmk.guid),
         itemType: newBmk.type,
         url: newBmk.url,
         guid: newBmk.guid,
@@ -418,7 +418,7 @@ add_task(async function test_reassign() {
       },
       {
         type: "bookmark-keyword-changed",
-        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        id: await PlacesTestUtils.promiseItemId(newBmk.guid),
         itemType: newBmk.type,
         url: newBmk.url,
         guid: newBmk.guid,
@@ -509,7 +509,7 @@ add_task(async function test_reassign() {
     observer.check([
       {
         type: "bookmark-keyword-changed",
-        id: await PlacesUtils.promiseItemId(oldBmk.guid),
+        id: await PlacesTestUtils.promiseItemId(oldBmk.guid),
         itemType: oldBmk.type,
         url: oldBmk.url,
         guid: oldBmk.guid,
@@ -521,7 +521,7 @@ add_task(async function test_reassign() {
       },
       {
         type: "bookmark-keyword-changed",
-        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        id: await PlacesTestUtils.promiseItemId(newBmk.guid),
         itemType: newBmk.type,
         url: newBmk.url,
         guid: newBmk.guid,
@@ -533,7 +533,7 @@ add_task(async function test_reassign() {
       },
       {
         type: "bookmark-keyword-changed",
-        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        id: await PlacesTestUtils.promiseItemId(newBmk.guid),
         itemType: newBmk.type,
         url: newBmk.url,
         guid: newBmk.guid,
@@ -545,7 +545,7 @@ add_task(async function test_reassign() {
       },
       {
         type: "bookmark-keyword-changed",
-        id: await PlacesUtils.promiseItemId(newBmk.guid),
+        id: await PlacesTestUtils.promiseItemId(newBmk.guid),
         itemType: newBmk.type,
         url: newBmk.url,
         guid: newBmk.guid,

@@ -615,7 +615,6 @@ export class SyncedBookmarksMirror {
           // Places relies on observer notifications to update internal caches.
           // If notifying observers failed, these caches may be inconsistent,
           // so we invalidate them just in case.
-          lazy.PlacesUtils.invalidateCachedGuids();
           await lazy.PlacesUtils.keywords.invalidateCachedKeywords();
           lazy.MirrorLog.warn("Error notifying Places observers", ex);
         } finally {
@@ -2338,7 +2337,6 @@ class BookmarkObserverRecorder {
   }
 
   noteGuidChanged(info) {
-    lazy.PlacesUtils.invalidateCachedGuidFor(info.id);
     this.placesEvents.push(
       new PlacesBookmarkGuid({
         id: info.id,

@@ -64,7 +64,7 @@ var gBookmarkSkipObserver = {
 };
 
 add_task(async function setup() {
-  gUnfiledFolderId = await PlacesUtils.promiseItemId(
+  gUnfiledFolderId = await PlacesTestUtils.promiseItemId(
     PlacesUtils.bookmarks.unfiledGuid
   );
   gBookmarksObserver.handlePlacesEvents =

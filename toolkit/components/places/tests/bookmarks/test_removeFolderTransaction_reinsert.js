@@ -52,12 +52,12 @@ add_task(async function test_removeFolderTransaction_reinsert() {
 
   let transaction = PlacesTransactions.Remove({ guid: folder.guid });
 
-  let folderId = await PlacesUtils.promiseItemId(folder.guid);
-  let fxId = await PlacesUtils.promiseItemId(fx.guid);
-  let tbId = await PlacesUtils.promiseItemId(tb.guid);
+  let folderId = await PlacesTestUtils.promiseItemId(folder.guid);
+  let fxId = await PlacesTestUtils.promiseItemId(fx.guid);
+  let tbId = await PlacesTestUtils.promiseItemId(tb.guid);
 
   await transaction.transact();
-  let bookmarksMenuItemId = await PlacesUtils.promiseItemId(
+  let bookmarksMenuItemId = await PlacesTestUtils.promiseItemId(
     PlacesUtils.bookmarks.menuGuid
   );
   checkNotifications(
@@ -77,9 +77,9 @@ add_task(async function test_removeFolderTransaction_reinsert() {
 
   await PlacesTransactions.undo();
 
-  folderId = await PlacesUtils.promiseItemId(folder.guid);
-  fxId = await PlacesUtils.promiseItemId(fx.guid);
-  tbId = await PlacesUtils.promiseItemId(tb.guid);
+  folderId = await PlacesTestUtils.promiseItemId(folder.guid);
+  fxId = await PlacesTestUtils.promiseItemId(fx.guid);
+  tbId = await PlacesTestUtils.promiseItemId(tb.guid);
 
   checkNotifications(
     [

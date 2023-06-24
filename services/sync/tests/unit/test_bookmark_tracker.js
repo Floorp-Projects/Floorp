@@ -358,7 +358,7 @@ add_task(async function test_onItemChanged_itemDates() {
 
     _("Set the bookmark's last modified date");
     totalSyncChanges = PlacesUtils.bookmarks.totalSyncChanges;
-    let fx_id = await PlacesUtils.promiseItemId(fx_bm.guid);
+    let fx_id = await PlacesTestUtils.promiseItemId(fx_bm.guid);
     let dateModified = Date.now() * 1000;
     PlacesUtils.bookmarks.setItemLastModified(fx_id, dateModified);
     await verifyTrackedItems([fx_bm.guid]);

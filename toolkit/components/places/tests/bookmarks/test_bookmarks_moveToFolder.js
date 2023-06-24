@@ -256,7 +256,7 @@ async function testMoveToFolder(details) {
 
       expectedNotifications.push({
         type: "bookmark-moved",
-        id: await PlacesUtils.promiseItemId(origItem.guid),
+        id: await PlacesTestUtils.promiseItemId(origItem.guid),
         itemType: PlacesUtils.bookmarks.TYPE_BOOKMARK,
         url: origItem.url,
         guid: origItem.guid,
