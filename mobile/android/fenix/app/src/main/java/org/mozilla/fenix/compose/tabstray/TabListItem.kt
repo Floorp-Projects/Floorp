@@ -168,7 +168,7 @@ fun TabListItem(
                         .testTag(TabsTrayTestTag.tabItemClose),
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.mozac_ic_close),
+                        painter = painterResource(id = R.drawable.mozac_ic_cross_24),
                         contentDescription = stringResource(
                             id = R.string.close_tab_title,
                             tab.content.title,

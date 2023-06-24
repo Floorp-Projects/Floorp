@@ -430,7 +430,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         binding.toolbar.url = "https://www.mozilla.org/en-US/firefox/mobile/"
 
-        val drawableIcon = ContextCompat.getDrawable(this, iconsR.drawable.mozac_ic_close)
+        val drawableIcon = ContextCompat.getDrawable(this, iconsR.drawable.mozac_ic_cross_24)
 
         drawableIcon?.apply {
             setTint(0xFF20123a.toInt())

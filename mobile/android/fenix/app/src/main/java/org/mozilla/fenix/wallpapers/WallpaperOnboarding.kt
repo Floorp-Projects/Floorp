@@ -61,7 +61,7 @@ fun WallpaperOnboarding(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.mozac_ic_close),
+                painter = painterResource(id = R.drawable.mozac_ic_cross_24),
                 contentDescription = stringResource(id = R.string.close_tab),
                 tint = FirefoxTheme.colors.iconPrimary,
                 modifier = Modifier

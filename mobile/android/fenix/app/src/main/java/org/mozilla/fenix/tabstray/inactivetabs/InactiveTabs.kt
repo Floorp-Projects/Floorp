@@ -114,7 +114,7 @@ fun InactiveTabsList(
                             faviconPainter = faviconPainter,
                             onClick = { onTabClick(tab) },
                             url = tabUrl,
-                            iconPainter = painterResource(R.drawable.mozac_ic_close),
+                            iconPainter = painterResource(R.drawable.mozac_ic_cross_24),
                             iconDescription = stringResource(R.string.content_description_close_button),
                             onIconClick = { onTabCloseClick(tab) },
                         )

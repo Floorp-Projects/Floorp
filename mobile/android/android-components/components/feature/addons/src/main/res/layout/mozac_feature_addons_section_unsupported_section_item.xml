@@ -32,7 +32,7 @@
             android:contentDescription="@string/mozac_feature_addons_remove"
             android:layout_gravity="center_vertical"
             app:tint="@android:color/darker_gray"
-            app:srcCompat="@drawable/mozac_ic_close"/>
+            app:srcCompat="@drawable/mozac_ic_cross_24"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -58,4 +58,3 @@
 
 
 </LinearLayout>
-

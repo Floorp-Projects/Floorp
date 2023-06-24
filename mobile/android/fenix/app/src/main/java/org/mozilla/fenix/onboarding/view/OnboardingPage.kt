@@ -104,7 +104,7 @@ fun OnboardingPage(
                     modifier = Modifier.align(Alignment.End),
                 ) {
                     Icon(
-                        painter = painterResource(id = R.drawable.mozac_ic_close),
+                        painter = painterResource(id = R.drawable.mozac_ic_cross_24),
                         contentDescription = stringResource(R.string.onboarding_home_content_description_close_button),
                         tint = FirefoxTheme.colors.iconPrimary,
                     )

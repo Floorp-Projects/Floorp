@@ -193,7 +193,7 @@ private fun CloseButton(
             .padding(10.dp),
     ) {
         Icon(
-            painter = painterResource(R.drawable.mozac_ic_close),
+            painter = painterResource(R.drawable.mozac_ic_cross_24),
             contentDescription = stringResource(id = R.string.promote_search_widget_dialog_content_description),
             tint = focusColors.closeIcon,
         )

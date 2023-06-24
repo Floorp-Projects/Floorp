@@ -39,7 +39,7 @@
         android:layout_centerVertical="true"
         android:contentDescription="@string/close_tab"
         android:scaleType="center"
-        android:src="@drawable/mozac_ic_close"
+        android:src="@drawable/mozac_ic_cross_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/session_title"

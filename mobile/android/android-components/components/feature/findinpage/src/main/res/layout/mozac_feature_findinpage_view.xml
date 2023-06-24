@@ -75,7 +75,7 @@
             android:id="@+id/find_in_page_close_btn"
             style="@style/Mozac.Feature.FindInPage.Buttons"
             android:contentDescription="@string/mozac_feature_findindpage_dismiss"
-            app:srcCompat="@drawable/mozac_ic_close"
+            app:srcCompat="@drawable/mozac_ic_cross_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/find_in_page_next_btn"

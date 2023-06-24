@@ -87,7 +87,7 @@ fun Tab(
                 onClick = { onClose.invoke(tab.id) },
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.mozac_ic_close),
+                    painter = painterResource(R.drawable.mozac_ic_cross_24),
                     contentDescription = "close",
                     tint = Color.White,
                 )

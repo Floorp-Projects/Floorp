@@ -56,7 +56,7 @@
         android:scaleType="centerInside"
         android:background="@null"
         android:contentDescription="@string/mozac_feature_downloads_button_close"
-        app:srcCompat="@drawable/mozac_ic_close"
+        app:srcCompat="@drawable/mozac_ic_cross_24"
         app:tint="?android:attr/textColorPrimary"
         tools:textColor="#000000" />
 
