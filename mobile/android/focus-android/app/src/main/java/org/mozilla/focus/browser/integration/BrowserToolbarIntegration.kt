@@ -94,7 +94,7 @@ class BrowserToolbarIntegration(
     private val eraseAction = BrowserToolbar.Button(
         imageDrawable = AppCompatResources.getDrawable(
             toolbar.context,
-            R.drawable.mozac_ic_delete,
+            R.drawable.mozac_ic_delete_24,
         )!!,
         contentDescription = toolbar.context.getString(R.string.content_description_erase),
         iconTintColorResource = R.color.primaryText,

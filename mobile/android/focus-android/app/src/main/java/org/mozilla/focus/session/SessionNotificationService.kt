@@ -124,7 +124,7 @@ class SessionNotificationService : Service() {
             )
             .addAction(
                 NotificationCompat.Action(
-                    R.drawable.mozac_ic_delete,
+                    R.drawable.mozac_ic_delete_24,
                     getString(R.string.notification_action_erase_and_open),
                     createOpenAndEraseActionIntent(),
                 ),

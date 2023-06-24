@@ -46,6 +46,6 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/mozac_feature_addons_remove"
             app:tint="?android:attr/textColorPrimary"
-            app:srcCompat="@drawable/mozac_ic_delete" />
+            app:srcCompat="@drawable/mozac_ic_delete_24" />
     </RelativeLayout>
 </LinearLayout>
