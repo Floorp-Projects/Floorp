@@ -54,7 +54,7 @@ open class TabCounterMenu(
             text = context.getString(R.string.mozac_browser_menu_new_tab),
             start = DrawableMenuIcon(
                 context,
-                iconsR.drawable.mozac_ic_new,
+                iconsR.drawable.mozac_ic_plus_24,
                 tint = iconColor ?: getColor(context, R.color.mozac_ui_tabcounter_default_text),
             ),
             textStyle = TextStyle(),

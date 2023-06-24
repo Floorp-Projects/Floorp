@@ -83,7 +83,7 @@ class AccountDeviceViewHolder(
                 )
                 SyncShareOption.AddNewDevice -> Triple(
                     context.getText(R.string.sync_connect_device),
-                    R.drawable.mozac_ic_new,
+                    R.drawable.mozac_ic_plus_24,
                     R.color.default_share_background,
                 )
                 is SyncShareOption.SendAll -> Triple(

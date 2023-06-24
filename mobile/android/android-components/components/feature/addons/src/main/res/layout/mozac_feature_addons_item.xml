@@ -120,6 +120,6 @@
         android:layout_centerVertical="true"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/mozac_feature_addons_install_addon_content_description"
-        app:srcCompat="@drawable/mozac_ic_new"
+        app:srcCompat="@drawable/mozac_ic_plus_24"
         app:tint="?android:attr/textColorPrimary" />
 </RelativeLayout>
