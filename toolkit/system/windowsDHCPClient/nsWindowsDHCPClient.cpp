@@ -38,7 +38,7 @@ nsWindowsDHCPClient::GetOption(uint8_t aOption, nsACString& aRetVal) {
     LOG(
         ("Failed to get network adapter name in nsWindowsDHCPClient::GetOption "
          "due to error %d",
-         rv));
+         uint32_t(rv)));
     return rv;
   }
 
@@ -64,7 +64,7 @@ nsWindowsDHCPClient::GetOption(uint8_t aOption, nsACString& aRetVal) {
     LOG(
         ("Failed to get DHCP Option %d nsWindowsDHCPClient::GetOption due to "
          "error %d",
-         aOption, rv));
+         aOption, uint32_t(rv)));
     return rv;
   }
   aRetVal.Assign(optionValue.data(), sizeOptionValue);

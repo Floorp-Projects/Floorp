@@ -127,7 +127,7 @@ BOOL CALLBACK CollectMonitors(HMONITOR aMon, HDC, LPRECT, LPARAM ioParam) {
           ("New screen [%s (%s) %d %u %f %f %f %d %d %d]",
            ToString(rect).c_str(), ToString(availRect).c_str(), pixelDepth,
            refreshRate, contentsScaleFactor.scale, defaultCssScaleFactor.scale,
-           dpi, isPseudoDisplay, orientation, angle));
+           dpi, isPseudoDisplay, uint32_t(orientation), angle));
   auto screen = MakeRefPtr<Screen>(
       rect, availRect, pixelDepth, pixelDepth, refreshRate, contentsScaleFactor,
       defaultCssScaleFactor, dpi, Screen::IsPseudoDisplay(isPseudoDisplay),

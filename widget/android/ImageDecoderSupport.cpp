@@ -33,7 +33,7 @@ class ImageCallbackHelper : public imgIContainerCallback,
   NS_DECL_ISUPPORTS
 
   void CompleteExceptionally(nsresult aRv) {
-    nsPrintfCString error("Could not process image: 0x%08X", aRv);
+    nsPrintfCString error("Could not process image: 0x%08X", uint32_t(aRv));
     mResult->CompleteExceptionally(
         java::Image::ImageProcessingException::New(error.get())
             .Cast<jni::Throwable>());

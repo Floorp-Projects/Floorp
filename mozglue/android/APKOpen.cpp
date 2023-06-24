@@ -288,7 +288,8 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_loadGeckoLibsNative(
 
   auto msg = errorInfo.match(
       [](const nsresult& aRv) {
-        return Smprintf("Error loading Gecko libraries: nsresult 0x%08X", aRv);
+        return Smprintf("Error loading Gecko libraries: nsresult 0x%08X",
+                        uint32_t(aRv));
       },
       [](const DLErrorType& aErr) {
         return Smprintf("Error loading Gecko libraries: %s", aErr.get());

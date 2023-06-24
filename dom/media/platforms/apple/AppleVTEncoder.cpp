@@ -157,7 +157,7 @@ RefPtr<MediaDataEncoder::InitPromise> AppleVTEncoder::Init() {
       return InitPromise::CreateAndReject(
           MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                       nsPrintfCString("fail to configurate profile level:%d",
-                                      specific.mProfileLevel)),
+                                      int(specific.mProfileLevel))),
           __func__);
     }
   }

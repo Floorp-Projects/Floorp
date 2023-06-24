@@ -291,7 +291,7 @@ class GeckoJavaSampler
         },
         [result](nsresult aRv) {
           char errorString[9];
-          sprintf(errorString, "%08x", aRv);
+          sprintf(errorString, "%08x", uint32_t(aRv));
           result->CompleteExceptionally(
               mozilla::java::sdk::IllegalStateException::New(errorString)
                   .Cast<jni::Throwable>());

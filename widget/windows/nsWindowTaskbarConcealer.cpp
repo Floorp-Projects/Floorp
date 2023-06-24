@@ -348,7 +348,7 @@ void TaskbarConcealerImpl::MarkAsHidingTaskbar(HWND aWnd, bool aMark) {
   if (FAILED(hr)) {
     MOZ_LOG(sTaskbarConcealerLog, LogLevel::Error,
             ("Call to PrepareFullScreen(%p, %s) failed with nsresult %x", aWnd,
-             sMark, hr));
+             sMark, uint32_t(hr)));
   }
 };
 

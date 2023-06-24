@@ -192,7 +192,8 @@ RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
   uint32_t pluginArch = base::PROCESS_ARCH_INVALID;
   rv = GetPluginFileArch(aPluginDir, mName, pluginArch);
   if (NS_FAILED(rv)) {
-    GMP_PARENT_LOG_DEBUG("%s: Plugin arch error: %d", __FUNCTION__, rv);
+    GMP_PARENT_LOG_DEBUG("%s: Plugin arch error: %d", __FUNCTION__,
+                         uint32_t(rv));
   } else {
     GMP_PARENT_LOG_DEBUG("%s: Plugin arch: 0x%x", __FUNCTION__, pluginArch);
   }
@@ -236,7 +237,8 @@ RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
     rv = nsMacUtilsImpl::GetArchitecturesForBundle(&bundleArch);
     if (NS_FAILED(rv)) {
       // If we fail here, continue as if this is not a univeral binary.
-      GMP_PARENT_LOG_DEBUG("%s: Bundle arch error: %d", __FUNCTION__, rv);
+      GMP_PARENT_LOG_DEBUG("%s: Bundle arch error: %d", __FUNCTION__,
+                           uint32_t(rv));
     } else {
       GMP_PARENT_LOG_DEBUG("%s: Bundle arch: 0x%x", __FUNCTION__, bundleArch);
     }

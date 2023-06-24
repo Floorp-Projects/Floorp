@@ -210,7 +210,7 @@ bool GMPProcessParent::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
     GMP_LOG_DEBUG(
         "GMPProcessParent::FillMacSandboxInfo: "
         "NS_NewLocalFile failed for plugin dir, rv=%d",
-        rv);
+        uint32_t(rv));
     return false;
   }
 
@@ -219,7 +219,7 @@ bool GMPProcessParent::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
     GMP_LOG_DEBUG(
         "GMPProcessParent::FillMacSandboxInfo: "
         "failed to normalize plugin dir path, rv=%d",
-        rv);
+        uint32_t(rv));
     return false;
   }
 

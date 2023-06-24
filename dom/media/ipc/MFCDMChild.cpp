@@ -112,7 +112,7 @@ RefPtr<MFCDMChild::CapabilitiesPromise> MFCDMChild::GetCapabilities(
   }
 
   if (mState != NS_OK && mState != NS_ERROR_NOT_INITIALIZED) {
-    LOG("error=%x", nsresult(mState));
+    LOG("error=%x", uint32_t(nsresult(mState)));
     return CapabilitiesPromise::CreateAndReject(mState, __func__);
   }
 
@@ -159,7 +159,7 @@ already_AddRefed<PromiseType> MFCDMChild::InvokeAsync(
     mRemotePromise->Then(
         mManagerThread, __func__, std::move(aCall),
         [self = RefPtr{this}, this, &aPromise, aCallerName](nsresult rv) {
-          LOG("error=%x", rv);
+          LOG("error=%x", uint32_t(rv));
           mState = rv;
           aPromise.RejectIfExists(rv, aCallerName);
         });
@@ -182,7 +182,7 @@ RefPtr<MFCDMChild::InitPromise> MFCDMChild::Init(
   }
 
   if (mState != NS_OK && mState != NS_ERROR_NOT_INITIALIZED) {
-    LOG("error=%x", nsresult(mState));
+    LOG("error=%x", uint32_t(nsresult(mState)));
     return InitPromise::CreateAndReject(mState, __func__);
   }
 
