@@ -4701,18 +4701,6 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
     }
   }
 
-  if (IsInPlaintextMode()) {
-    for (nsIContent* content = droppedAt.ContainerAs<nsIContent>(); content;
-         content = content->GetParent()) {
-      nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(content));
-      if (formControl && !formControl->AllowDrop()) {
-        // Don't allow dropping into a form control that doesn't allow being
-        // dropped into.
-        return NS_OK;
-      }
-    }
-  }
-
   // Combine any deletion and drop insertion into one transaction.
   AutoPlaceholderBatch treatAsOneTransaction(
       *this, ScrollSelectionIntoView::Yes, __FUNCTION__);

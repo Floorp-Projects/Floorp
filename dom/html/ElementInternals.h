@@ -81,7 +81,6 @@ class ElementInternals final : public nsIFormControl,
   void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(mozilla::dom::FormData* aFormData) override;
-  bool AllowDrop() override { return true; }
 
   void SetFieldSet(mozilla::dom::HTMLFieldSetElement* aFieldSet) {
     mFieldSet = aFieldSet;

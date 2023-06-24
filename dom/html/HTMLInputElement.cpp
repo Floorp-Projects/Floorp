@@ -6171,12 +6171,6 @@ bool HTMLInputElement::RestoreState(PresState* aState) {
   return restoredCheckedState;
 }
 
-bool HTMLInputElement::AllowDrop() {
-  // Allow drop on anything other than file inputs.
-
-  return mType != FormControlType::InputFile;
-}
-
 /*
  * Radio group stuff
  */

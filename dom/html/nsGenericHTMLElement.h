@@ -1140,7 +1140,6 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   mozilla::dom::HTMLFormElement* GetForm() const override { return mForm; }
   void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
   void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
-  bool AllowDrop() override { return true; }
 
  protected:
   virtual ~nsGenericHTMLFormControlElement();
