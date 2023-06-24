@@ -105,6 +105,28 @@ void AsyncStatementSpinner::SpinUntilCompleted() {
 #define NS_DECL_ASYNCSTATEMENTSPINNER \
   NS_IMETHOD HandleResult(mozIStorageResultSet* aResultSet) override;
 
+NS_IMPL_ISUPPORTS(AsyncCompletionSpinner, mozIStorageCompletionCallback)
+
+AsyncCompletionSpinner::AsyncCompletionSpinner()
+    : mCompletionReason(NS_OK), mCompleted(false) {}
+
+NS_IMETHODIMP
+AsyncCompletionSpinner::Complete(nsresult reason, nsISupports* value) {
+  mCompleted = true;
+  mCompletionReason = reason;
+  mCompletionValue = value;
+  return NS_OK;
+}
+
+void AsyncCompletionSpinner::SpinUntilCompleted() {
+  nsCOMPtr<nsIThread> thread(::do_GetCurrentThread());
+  nsresult rv = NS_OK;
+  bool processed = true;
+  while (!mCompleted && NS_SUCCEEDED(rv)) {
+    rv = thread->ProcessNextEvent(true, &processed);
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Async Helpers
 
