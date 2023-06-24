@@ -250,7 +250,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             backAction = BrowserToolbar.TwoStateButton(
                 primaryImage = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_back,
+                    R.drawable.mozac_ic_back_24,
                 )!!,
                 primaryContentDescription = context.getString(R.string.browser_menu_back),
                 primaryImageTintResource = enableTint,

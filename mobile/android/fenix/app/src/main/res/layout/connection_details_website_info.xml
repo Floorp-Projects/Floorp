@@ -20,7 +20,7 @@
         android:scaleType="center"
         android:contentDescription="@string/etp_back_button_content_description"
         app:tint="?attr/textPrimary"
-        app:srcCompat="@drawable/mozac_ic_back" />
+        app:srcCompat="@drawable/mozac_ic_back_24" />
 
     <LinearLayout
         android:layout_width="match_parent"

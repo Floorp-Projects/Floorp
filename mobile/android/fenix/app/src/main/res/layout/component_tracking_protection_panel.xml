@@ -27,7 +27,7 @@
             android:contentDescription="@string/etp_back_button_content_description"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/mozac_ic_back"
+            app:srcCompat="@drawable/mozac_ic_back_24"
             app:tint="?attr/textPrimary" />
 
         <TextView
@@ -214,7 +214,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/category_title"
             app:layout_constraintVertical_bias="0.0"
-            app:srcCompat="@drawable/mozac_ic_back" />
+            app:srcCompat="@drawable/mozac_ic_back_24" />
 
         <TextView
             android:id="@+id/category_title"

@@ -119,7 +119,7 @@ private fun TopAppBar(
                 onClick = onNavigateUpClick,
             ) {
                 Icon(
-                    painterResource(id = R.drawable.mozac_ic_back),
+                    painterResource(id = R.drawable.mozac_ic_back_24),
                     stringResource(R.string.go_back),
                     tint = focusColors.toolbarColor,
                 )

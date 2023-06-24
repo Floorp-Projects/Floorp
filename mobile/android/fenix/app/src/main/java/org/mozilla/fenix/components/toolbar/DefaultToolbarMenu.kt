@@ -95,7 +95,7 @@ open class DefaultToolbarMenu(
 
     override val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_back,
+            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_back_24,
             primaryContentDescription = context.getString(R.string.browser_menu_back),
             primaryImageTintResource = primaryTextColor(),
             isInPrimaryState = {

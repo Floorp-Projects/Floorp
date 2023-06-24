@@ -23,11 +23,11 @@ private fun createBackMenuItem(
     context: Context,
     @ColorInt webExtIconTintColor: Int?,
 ) = NestedMenuCandidate(
-    id = iconsR.drawable.mozac_ic_back,
+    id = iconsR.drawable.mozac_ic_back_24,
     text = context.getString(R.string.mozac_feature_addons_addons),
     start = DrawableMenuIcon(
         context,
-        iconsR.drawable.mozac_ic_back,
+        iconsR.drawable.mozac_ic_back_24,
         tint = webExtIconTintColor,
     ),
     subMenuItems = null,

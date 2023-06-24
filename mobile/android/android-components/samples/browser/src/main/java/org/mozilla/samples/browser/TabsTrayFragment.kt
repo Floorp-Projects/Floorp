@@ -36,7 +36,7 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
         super.onViewCreated(view, savedInstanceState)
 
         val binding = FragmentTabstrayBinding.bind(view)
-        binding.toolbar.setNavigationIcon(iconsR.drawable.mozac_ic_back)
+        binding.toolbar.setNavigationIcon(iconsR.drawable.mozac_ic_back_24)
         binding.toolbar.setNavigationOnClickListener {
             closeTabsTray()
         }

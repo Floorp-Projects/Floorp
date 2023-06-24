@@ -40,7 +40,7 @@ class CustomTabMenu(
 
     override val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = R.drawable.mozac_ic_back,
+            primaryImageResource = R.drawable.mozac_ic_back_24,
             primaryContentDescription = context.getString(R.string.content_description_back),
             primaryImageTintResource = context.theme.resolveAttribute(R.attr.primaryText),
             isInPrimaryState = {

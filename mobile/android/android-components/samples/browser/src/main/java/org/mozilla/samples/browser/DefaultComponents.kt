@@ -380,7 +380,7 @@ open class DefaultComponents(private val applicationContext: Context) {
 
     private val menuToolbar by lazy {
         val back = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = iconsR.drawable.mozac_ic_back,
+            primaryImageResource = iconsR.drawable.mozac_ic_back_24,
             primaryImageTintResource = photonColors.photonBlue90,
             primaryContentDescription = "Back",
             isInPrimaryState = {

@@ -22,7 +22,7 @@
         android:textAppearance="@style/HeaderTextStyle"
         android:textColor="@color/fx_mobile_text_color_oncolor_primary"
         android:textSize="20sp"
-        app:drawableStartCompat="@drawable/mozac_ic_back"
+        app:drawableStartCompat="@drawable/mozac_ic_back_24"
         app:drawableTint="@color/fx_mobile_icon_color_oncolor"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"

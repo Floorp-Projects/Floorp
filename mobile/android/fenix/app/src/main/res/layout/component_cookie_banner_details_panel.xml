@@ -18,7 +18,7 @@
         android:scaleType="center"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/mozac_ic_back"
+        app:srcCompat="@drawable/mozac_ic_back_24"
         app:tint="?attr/textPrimary" />
 
     <TextView

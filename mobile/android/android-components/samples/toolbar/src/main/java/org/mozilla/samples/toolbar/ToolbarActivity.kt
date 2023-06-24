@@ -130,7 +130,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val back = BrowserToolbar.Button(
-            resources.getThemedDrawable(iconsR.drawable.mozac_ic_back)!!,
+            resources.getThemedDrawable(iconsR.drawable.mozac_ic_back_24)!!,
             "Back",
         ) {
             simulateReload()

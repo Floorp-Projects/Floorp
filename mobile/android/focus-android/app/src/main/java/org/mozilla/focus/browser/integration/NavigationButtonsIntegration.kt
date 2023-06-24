@@ -45,7 +45,7 @@ class NavigationButtonsIntegration(
         }
 
         val backButton = BrowserToolbar.TwoStateButton(
-            primaryImage = ContextCompat.getDrawable(context, R.drawable.mozac_ic_back)!!,
+            primaryImage = ContextCompat.getDrawable(context, R.drawable.mozac_ic_back_24)!!,
             primaryContentDescription = context.getString(R.string.content_description_back),
             primaryImageTintResource = enabledColorRes,
             isInPrimaryState = {
