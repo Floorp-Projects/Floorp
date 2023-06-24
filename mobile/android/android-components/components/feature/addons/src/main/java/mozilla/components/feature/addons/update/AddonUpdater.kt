@@ -285,7 +285,7 @@ class DefaultAddonUpdater(
 
         logger.info("Created update notification for add-on ${extension.id}")
         return NotificationCompat.Builder(applicationContext, channelId)
-            .setSmallIcon(iconsR.drawable.mozac_ic_extensions)
+            .setSmallIcon(iconsR.drawable.mozac_ic_extension_24)
             .setContentTitle(getNotificationTitle(extension))
             .setContentText(text)
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -360,7 +360,7 @@ class DefaultAddonUpdater(
             applicationContext.getString(R.string.mozac_feature_addons_updater_notification_allow_button)
 
         return NotificationCompat.Action.Builder(
-            iconsR.drawable.mozac_ic_extensions,
+            iconsR.drawable.mozac_ic_extension_24,
             allowText,
             allowPendingIntent,
         ).build()
@@ -380,7 +380,7 @@ class DefaultAddonUpdater(
             applicationContext.getString(R.string.mozac_feature_addons_updater_notification_deny_button)
 
         return NotificationCompat.Action.Builder(
-            iconsR.drawable.mozac_ic_extensions,
+            iconsR.drawable.mozac_ic_extension_24,
             denyText,
             denyPendingIntent,
         ).build()

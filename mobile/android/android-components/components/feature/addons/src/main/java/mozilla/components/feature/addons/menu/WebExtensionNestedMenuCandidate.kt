@@ -41,7 +41,7 @@ private fun createAddonsManagerItem(
     text = context.getString(R.string.mozac_feature_addons_addons_manager),
     start = DrawableMenuIcon(
         context,
-        iconsR.drawable.mozac_ic_extensions,
+        iconsR.drawable.mozac_ic_extension_24,
         tint = webExtIconTintColor,
     ),
     onClick = onAddonsManagerTapped,

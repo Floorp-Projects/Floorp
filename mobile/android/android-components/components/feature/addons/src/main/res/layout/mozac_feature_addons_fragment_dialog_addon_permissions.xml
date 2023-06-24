@@ -20,7 +20,7 @@
         android:importantForAccessibility="no"
         android:scaleType="center"
         app:tint="?android:attr/textColorPrimary"
-        app:srcCompat="@drawable/mozac_ic_extensions" />
+        app:srcCompat="@drawable/mozac_ic_extension_24" />
 
     <TextView
         android:id="@+id/title"

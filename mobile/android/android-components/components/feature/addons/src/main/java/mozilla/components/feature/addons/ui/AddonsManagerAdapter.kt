@@ -276,7 +276,7 @@ class AddonsManagerAdapter(
                     iconView.setImageDrawable(
                         ContextCompat.getDrawable(
                             context,
-                            iconsR.drawable.mozac_ic_extensions,
+                            iconsR.drawable.mozac_ic_extension_24,
                         ),
                     )
                 }

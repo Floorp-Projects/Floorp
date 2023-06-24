@@ -19,7 +19,7 @@
         android:layout_marginTop="16dp"
         android:importantForAccessibility="no"
         android:scaleType="centerInside"
-        app:srcCompat="@drawable/mozac_ic_extensions" />
+        app:srcCompat="@drawable/mozac_ic_extension_24" />
 
     <TextView
         android:id="@+id/title"

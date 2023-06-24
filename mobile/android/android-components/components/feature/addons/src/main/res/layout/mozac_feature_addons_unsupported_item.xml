@@ -17,7 +17,7 @@
         style="@style/Mozac.Widgets.Favicon"
         tools:ignore="RequiredSize"
         android:importantForAccessibility="no"
-        app:srcCompat="@drawable/mozac_ic_extensions"
+        app:srcCompat="@drawable/mozac_ic_extension_24"
         app:tint="?android:attr/textColorPrimary" />
 
     <RelativeLayout
