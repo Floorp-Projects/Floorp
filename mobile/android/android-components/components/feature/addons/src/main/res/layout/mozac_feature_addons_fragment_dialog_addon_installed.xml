@@ -59,7 +59,7 @@
         android:layout_below="@id/title"
         android:layout_marginTop="16dp"
         app:tint="?android:attr/textColorPrimary"
-        app:srcCompat="@drawable/mozac_ic_menu"
+        app:srcCompat="@drawable/mozac_ic_ellipsis_vertical_24"
         />
 
     <androidx.appcompat.widget.AppCompatCheckBox

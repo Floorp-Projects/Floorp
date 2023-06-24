@@ -65,7 +65,7 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:visibility="gone"
         tools:visibility="visible"
-        tools:src="@drawable/mozac_ic_menu"
+        tools:src="@drawable/mozac_ic_ellipsis_vertical_24"
         tools:ignore="ContentDescription"
         tools:tint="#20123A"
         app:tint="?attr/mozac_primary_text_color"
