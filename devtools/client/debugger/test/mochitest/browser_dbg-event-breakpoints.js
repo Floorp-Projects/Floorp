@@ -73,8 +73,6 @@ add_task(async function () {
   await toggleEventBreakpoint(dbg, "Control", "event.control.focusin");
   await toggleEventBreakpoint(dbg, "Control", "event.control.focusout");
 
-  // TODO: Enable this block when you fix bug 1466596 or bug 1690827
-  /*
   await toggleEventBreakpoint(
     dbg,
     "Keyboard",
@@ -131,7 +129,6 @@ add_task(async function () {
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, eventBreakpointsSource.id, 63);
   await resume(dbg);
-  */
 
   info(`Check that breakpoint can be set on "scrollend"`);
   await toggleEventBreakpoint(dbg, "Control", "event.control.scrollend");
@@ -273,8 +270,6 @@ async function invokeOnElement(selector, action) {
   );
 }
 
-// TODO: Enable this function when you fix bug 1466596 or bug 1690827
-/*
 function invokeComposition() {
   const string = "ex";
   EventUtils.synthesizeCompositionChange({
@@ -291,4 +286,3 @@ function invokeComposition() {
     key: { key: string[string.length - 1] },
   });
 }
-*/
