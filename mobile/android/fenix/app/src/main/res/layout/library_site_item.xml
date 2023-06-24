@@ -36,7 +36,7 @@
                 android:padding="10dp"
                 android:background="@drawable/favicon_background"
                 android:backgroundTint="?accent"
-                app:srcCompat="@drawable/mozac_ic_check" />
+                app:srcCompat="@drawable/mozac_ic_checkmark_24" />
     </ImageSwitcher>
 
     <TextView

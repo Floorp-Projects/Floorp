@@ -13,7 +13,7 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/save_address_button"
-        android:icon="@drawable/mozac_ic_check"
+        android:icon="@drawable/mozac_ic_checkmark_24"
         android:title="@string/address_menu_save_address"
         app:iconTint="?attr/textPrimary"
         app:showAsAction="ifRoom" />

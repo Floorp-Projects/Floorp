@@ -21,6 +21,6 @@
         android:backgroundTint="@color/fx_mobile_layer_color_accent"
         android:elevation="1dp"
         android:padding="8dp"
-        app:srcCompat="@drawable/mozac_ic_check"
+        app:srcCompat="@drawable/mozac_ic_checkmark_24"
         app:tint="@color/photonWhite" />
 </FrameLayout>

@@ -218,7 +218,7 @@ private fun Thumbnail(
                 backgroundColor = FirefoxTheme.colors.layerAccent,
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.mozac_ic_check),
+                    painter = painterResource(id = R.drawable.mozac_ic_checkmark_24),
                     modifier = Modifier
                         .matchParentSize()
                         .padding(all = 8.dp),

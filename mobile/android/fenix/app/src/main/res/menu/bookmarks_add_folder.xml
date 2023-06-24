@@ -6,7 +6,7 @@
       xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
             android:id="@+id/confirm_add_folder_button"
-            android:icon="@drawable/mozac_ic_check"
+            android:icon="@drawable/mozac_ic_checkmark_24"
             app:iconTint="?attr/textPrimary"
             android:title="@string/bookmark_menu_save_button"
             app:showAsAction="ifRoom" />

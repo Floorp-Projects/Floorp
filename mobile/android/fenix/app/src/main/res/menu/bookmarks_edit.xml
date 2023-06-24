@@ -13,7 +13,7 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/save_bookmark_button"
-        android:icon= "@drawable/mozac_ic_check"
+        android:icon= "@drawable/mozac_ic_checkmark_24"
         app:iconTint="?attr/textPrimary"
         android:title="@string/bookmark_menu_save_button"
         android:contentDescription="@string/bookmark_menu_save_button"

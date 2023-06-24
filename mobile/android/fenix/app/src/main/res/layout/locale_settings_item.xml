@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/locale_list_margin"
         android:contentDescription="@string/a11y_selected_locale_content_description"
-        app:srcCompat="@drawable/mozac_ic_check"
+        app:srcCompat="@drawable/mozac_ic_checkmark_24"
         app:tint="?attr/textPrimary"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"

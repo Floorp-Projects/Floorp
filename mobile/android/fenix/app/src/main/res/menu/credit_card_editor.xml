@@ -13,7 +13,7 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/save_credit_card_button"
-        android:icon="@drawable/mozac_ic_check"
+        android:icon="@drawable/mozac_ic_checkmark_24"
         android:title="@string/credit_cards_menu_save"
         app:iconTint="?attr/textPrimary"
         app:showAsAction="ifRoom" />
