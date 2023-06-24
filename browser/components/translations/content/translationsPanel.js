@@ -727,7 +727,7 @@ var TranslationsPanel = new (class {
    */
   async #updateSettingsMenuSiteCheckboxStates() {
     const { panel } = this.elements;
-    const neverTranslateSiteMenuItems = panel.querySelectorAll(
+    const neverTranslateSiteMenuItems = panel.ownerDocument.querySelectorAll(
       ".never-translate-site-menuitem"
     );
     const neverTranslateSite =
@@ -747,10 +747,10 @@ var TranslationsPanel = new (class {
 
     const { panel } = this.elements;
 
-    const alwaysTranslateMenuItems = panel.querySelectorAll(
+    const alwaysTranslateMenuItems = panel.ownerDocument.querySelectorAll(
       ".always-translate-language-menuitem"
     );
-    const neverTranslateMenuItems = panel.querySelectorAll(
+    const neverTranslateMenuItems = panel.ownerDocument.querySelectorAll(
       ".never-translate-language-menuitem"
     );
 
@@ -956,8 +956,10 @@ var TranslationsPanel = new (class {
   openSettingsPopup(button) {
     this.#updateSettingsMenuLanguageCheckboxStates();
     this.#updateSettingsMenuSiteCheckboxStates();
-    const popup = button.querySelector("menupopup");
-    popup.openPopup(button);
+    const popup = button.ownerDocument.getElementById(
+      "translations-panel-settings-menupopup"
+    );
+    popup.openPopup(button, "after_end");
   }
 
   /**

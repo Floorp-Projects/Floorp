@@ -636,4 +636,28 @@
               class="unified-extensions-context-menu-report-extension"
               oncommand="gUnifiedExtensions.reportExtension(this.parentElement)" />
   </menupopup>
+
+  <menupopup id="translations-panel-settings-menupopup">
+    <menuitem class="always-translate-language-menuitem"
+              data-l10n-id="translations-panel-settings-always-translate-unknown-language"
+              type="checkbox"
+              checked="false"
+              autocheck="false"
+              oncommand="TranslationsPanel.onAlwaysTranslateLanguage()"/>
+    <menuitem class="never-translate-language-menuitem"
+              data-l10n-id="translations-panel-settings-never-translate-unknown-language"
+              type="checkbox"
+              checked="false"
+              autocheck="false"
+              oncommand="TranslationsPanel.onNeverTranslateLanguage()"/>
+    <menuitem class="never-translate-site-menuitem"
+              data-l10n-id="translations-panel-settings-never-translate-site"
+              type="checkbox"
+              checked="false"
+              autocheck="false"
+              oncommand="TranslationsPanel.onNeverTranslateSite()"/>
+    <menuseparator/>
+    <menuitem data-l10n-id="translations-panel-settings-manage-languages"
+              oncommand="TranslationsPanel.openManageLanguages()"/>
+  </menupopup>
 </popupset>
