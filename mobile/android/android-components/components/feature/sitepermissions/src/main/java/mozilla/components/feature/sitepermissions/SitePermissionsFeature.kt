@@ -758,7 +758,7 @@ class SitePermissionsFeature(
                     host,
                     permissionRequest,
                     R.string.mozac_feature_sitepermissions_location_title,
-                    iconsR.drawable.mozac_ic_location,
+                    iconsR.drawable.mozac_ic_location_24,
                     showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                     shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
                         ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN,
