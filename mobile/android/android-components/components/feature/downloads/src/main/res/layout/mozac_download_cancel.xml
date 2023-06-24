@@ -18,7 +18,7 @@
         android:layout_marginTop="16dp"
         android:importantForAccessibility="no"
         android:scaleType="center"
-        app:srcCompat="@drawable/mozac_ic_information"
+        app:srcCompat="@drawable/mozac_ic_information_24"
         app:tint="?android:attr/textColorPrimary" />
 
     <TextView

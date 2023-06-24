@@ -53,7 +53,7 @@
                 android:text="@string/mozac_feature_addons_details"
                 android:textColor="@drawable/addon_textview_selector"
                 android:textSize="18sp"
-                app:drawableStartCompat="@drawable/mozac_ic_information"
+                app:drawableStartCompat="@drawable/mozac_ic_information_24"
                 app:drawableTint="@android:color/black" />
 
         <TextView
