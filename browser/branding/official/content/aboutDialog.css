@@ -59,3 +59,7 @@
   background-image: url("chrome://branding/content/floorp-background.png");
   background-size: 115%;
 }
+
+#communityDesc {
+  margin-top: 15px;
+}
