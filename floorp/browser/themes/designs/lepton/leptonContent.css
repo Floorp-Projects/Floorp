@@ -186,10 +186,10 @@
 }
 @supports -moz-bool-pref("userContent.player.icon") {
   #controlsContainer .fullscreenButton {
-    background-image: url("chrome://browser/skin/lepton/icons/enter-fullscreen.svg") !important;
+    background-image: url("chrome://browser/skin/lepton/enter-fullscreen.svg") !important;
   }
   #controlsContainer .fullscreenButton[fullscreened] {
-    background-image: url("chrome://browser/skin/lepton/icons/exit-fullscreen.svg") !important;
+    background-image: url("chrome://browser/skin/lepton/exit-fullscreen.svg") !important;
   }
 }
 @supports -moz-bool-pref("userContent.player.noaudio") {
@@ -296,10 +296,10 @@
       --uc-menu-background-position: right;
     }
     .context-menu-item span[data-l10n-id="newtab-menu-pin"] {
-      --menuitem-image: url("chrome://browser/skin/lepton/icons/pin-tab.svg");
+      --menuitem-image: url("chrome://browser/skin/lepton/pin-tab.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-unpin"] {
-      --menuitem-image: url("chrome://browser/skin/lepton/icons/unpin-tab.svg");
+      --menuitem-image: url("chrome://browser/skin/lepton/unpin-tab.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-edit-topsites"] {
       --menuitem-image: url("chrome://global/skin/icons/edit.svg");
@@ -311,17 +311,17 @@
       --menuitem-image: url("chrome://browser/skin/bookmark-hollow.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-save-to-pocket"] {
-      --menuitem-image: url("chrome://browser/skin/lepton/icons/pocket-outline.svg");
+      --menuitem-image: url("chrome://browser/skin/lepton/pocket-outline.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-open-file"] {
-      --menuitem-image: url("chrome://browser/skin/lepton/icons/fluid.svg");
+      --menuitem-image: url("chrome://browser/skin/lepton/fluid.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-show-file"] {
       --menuitem-image: url("chrome://global/skin/icons/folder.svg");
     }
     @supports -moz-bool-pref("userChrome.icon.library") {
       .context-menu-item span[data-l10n-id="newtab-menu-show-file"] {
-        --menuitem-image: url("chrome://browser/skin/lepton/icons/folder.svg");
+        --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
       }
     }
     .context-menu-item span[data-l10n-id="newtab-menu-open-new-window"] {
@@ -334,7 +334,7 @@
       --menuitem-image: url("chrome://global/skin/icons/delete.svg");
     }
     .context-menu-item span[data-l10n-id="newtab-menu-delete-history"] {
-      --menuitem-image: url("chrome://browser/skin/lepton/icons/eraser.svg");
+      --menuitem-image: url("chrome://browser/skin/lepton/eraser.svg");
     }
   }
   /** Activity Stream - Web Site Icon: full size ******************************/
@@ -526,12 +526,12 @@
   @-moz-document url-prefix("about:neterror?e=connectionFailure"), url-prefix("about:neterror?e=netInterrupt"), url-prefix("about:neterror?e=netReset"), url-prefix("about:neterror?e=netTimeout"), url-prefix("about:neterror?e=netOffline"), url-prefix("about:restartrequired"), url("chrome://browser/content/aboutRestartRequired.xhtml")
   {
     :root {
-      --uc-error-llustration: url(chrome://browser/skin/lepton/icons/error-connection-failure.svg);
+      --uc-error-llustration: url(chrome://browser/skin/lepton/error-connection-failure.svg);
     }
   }
   @-moz-document url-prefix("about:neterror?e=dnsNotFound") {
     :root {
-      --uc-error-llustration: url(chrome://browser/skin/lepton/icons/error-server-not-found.svg);
+      --uc-error-llustration: url(chrome://browser/skin/lepton/error-server-not-found.svg);
     }
   }
   @-moz-document url-prefix("about:neterror?e=blockedByPolicy"), url-prefix("about:neterror?e=deniedPortAccess"), url-prefix("about:neterror?e=malformedURI") {
@@ -541,7 +541,7 @@
   }
   @-moz-document url-prefix("about:neterror?e=clockSkewError"), url-prefix("about:neterror?e=nssFailure") {
     :root {
-      --uc-error-llustration: url(chrome://browser/skin/lepton/icons/blue-berror.svg);
+      --uc-error-llustration: url(chrome://browser/skin/lepton/blue-berror.svg);
     }
     #errorPageContainer,
     .neterror > .container {
@@ -551,7 +551,7 @@
   @-moz-document url("about:sessionrestore"), url("chrome://browser/content/aboutSessionRestore.xhtml")
   {
     :root {
-      --uc-error-llustration: url(chrome://browser/skin/lepton/icons/error-session-restore.svg);
+      --uc-error-llustration: url(chrome://browser/skin/lepton/error-session-restore.svg);
     }
   }
   @-moz-document url-prefix("about:neterror?e=fileNotFound") {
@@ -583,13 +583,13 @@
   {
     @media (min-width: 970px) {
       .title {
-        background-image: url("chrome://browser/skin/lepton/icons/welcome-back.svg") !important;
+        background-image: url("chrome://browser/skin/lepton/welcome-back.svg") !important;
       }
     }
   }
   @-moz-document url-prefix("about:preferences") {
     #no-results-message::after {
-      content: url("chrome://browser/skin/lepton/icons/no-search-results.svg");
+      content: url("chrome://browser/skin/lepton/no-search-results.svg");
       width: 380px;
       height: 293px;
       margin-top: 64px;
@@ -1066,7 +1066,7 @@
       .DevHub-Navigation-Logo > .Logo::before {
         -moz-context-properties: fill !important;
         fill: var(--in-content-primary-button-background) !important;
-        background-image: url("chrome://browser/skin/lepton/icons/addons-logo.svg") !important;
+        background-image: url("chrome://browser/skin/lepton/addons-logo.svg") !important;
       }
       .DevHub-Navigation,
       .DevHub-submit-addon,
@@ -2073,14 +2073,14 @@
       #editBMPanel_folderMenuList:not([selectedGuid="toolbar_____"], [selectedGuid="menu________"]),
       #editBMPanel_folderMenuList .folder-icon:not([id]),
       .downloadIconShow > .button-box > .button-icon {
-        list-style-image: url("chrome://browser/skin/lepton/icons/folder.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/folder.svg") !important;
       }
       /* Standard Folder - Open */
       :-moz-any(#PlacesToolbar, #BMB_bookmarksPopup, #bookmarksMenu)
         .bookmark-item[container="true"]:not([query="true"], [tagContainer], [dayContainer])[open="true"],
       :-moz-any(#bookmarks-view, #historyTree, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(title, container, open) {
-        list-style-image: url("chrome://browser/skin/lepton/icons/folder-open.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/folder-open.svg") !important;
       }
       /*= Other Folder - Inbox Icon ================================================*/
       /* on Menus */
@@ -2093,7 +2093,7 @@
         treechildren::-moz-tree-image(container, queryFolder_unfiled_____),
       #editBMPanel_unfiledRootItem,
       #editBMPanel_folderMenuList[selectedGuid="unfiled_____"] {
-        list-style-image: url("chrome://browser/skin/lepton/icons/mail-inbox-all.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/mail-inbox-all.svg") !important;
       }
       /* Other Folder - Open */
       #PlacesToolbar #OtherBookmarks[open="true"],
@@ -2103,7 +2103,7 @@
         treechildren::-moz-tree-image(container, open, OrganizerQuery_UnfiledBookmarks),
       :-moz-any(#bookmarks-view, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(container, open, queryFolder_unfiled_____) {
-        list-style-image: url("chrome://browser/skin/lepton/icons/mail-inbox.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/mail-inbox.svg") !important;
       }
       /*= Default Icon - Override ===================================================*/
       /* https://github.com/mozilla/gecko-dev/blob/master/browser/themes/shared/places/tree-icons.css */
@@ -2155,14 +2155,14 @@
         treechildren::-moz-tree-image(title, query, open, dayContainer),
       :-moz-any(#historyTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(query, open, OrganizerQuery_history____v) {
-        list-style-image: url("chrome://browser/skin/lepton/icons/history-reverse.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/history-reverse.svg") !important;
       }
       /* Tag */
       :-moz-any(#PlacesToolbar, #BMB_bookmarksPopup, #bookmarksMenu)
         .bookmark-item[container="true"][tagContainer="true"][open="true"],
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(title, query, open, tagContainer),
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(query, open, OrganizerQuery_tags_______v) {
-        list-style-image: url("chrome://browser/skin/lepton/icons/tag-open.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/tag-open.svg") !important;
       }
       /* Bookmark */
       :-moz-any(#placesList, #placeContent) treechildren::-moz-tree-image(query, open, OrganizerQuery_allbms_____v) {
@@ -2173,12 +2173,12 @@
       #bookmarksMenuPopup #bookmarksToolbarFolderMenu[open="true"],
       :-moz-any(#bookmarks-view, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(container, open, queryFolder_toolbar_____) {
-        list-style-image: url("chrome://browser/skin/lepton/icons/bookmarksToolbar-open.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/bookmarksToolbar-open.svg") !important;
       }
       /* Bookmark Menu */
       :-moz-any(#bookmarks-view, #editBMPanel_folderTree, #placesList, #placeContent)
         treechildren::-moz-tree-image(container, open, queryFolder_menu________) {
-        list-style-image: url("chrome://browser/skin/lepton/icons/bookmarksMenu-open.svg") !important; /* or bookmarksMenu-open2.svg" */
+        list-style-image: url("chrome://browser/skin/lepton/bookmarksMenu-open.svg") !important; /* or bookmarksMenu-open2.svg" */
       }
       /*= Menubar - Icons ==========================================================*/
       #organizeButton,
@@ -2195,10 +2195,10 @@
         list-style-image: url("chrome://global/skin/icons/settings.svg") !important;
       }
       #viewMenu {
-        list-style-image: url("chrome://browser/skin/lepton/icons/sort.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/sort.svg") !important;
       }
       #maintenanceButton {
-        list-style-image: url("chrome://browser/skin/lepton/icons/import-export.svg") !important;
+        list-style-image: url("chrome://browser/skin/lepton/import-export.svg") !important;
       }
       #clearDownloadsButton {
         list-style-image: url("chrome://global/skin/icons/delete.svg") !important;
@@ -3049,7 +3049,7 @@
         :not(menu, #ContentSelectDropdown)
           > menupopup:not(.in-menulist)
           > menu:not(.menu-iconic, .in-menulist, [checked="true"]) {
-          list-style-image: var(--menuitem-image, url("chrome://browser/skin/lepton/icons/blank.svg")) !important;
+          list-style-image: var(--menuitem-image, url("chrome://browser/skin/lepton/blank.svg")) !important;
         }
       }
       /* Padding */
@@ -3273,52 +3273,52 @@
           --menuitem-image: url("chrome://global/skin/media/play-fill.svg");
         }
         .downloadUnblockMenuItem {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/checkmark-circle.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/checkmark-circle.svg");
         }
         .downloadUseSystemDefaultMenuItem {
           --menuitem-image: url("chrome://browser/skin/open.svg");
         }
         .downloadAlwaysUseSystemDefaultMenuItem {
           /* checkbox */
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/folder-globe.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/folder-globe.svg");
         }
         .downloadAlwaysOpenSimilarFilesMenuItem {
           /* checkbox */
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/fluid.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/fluid.svg");
         }
         .downloadShowMenuItem {
           --menuitem-image: url("chrome://global/skin/icons/folder.svg");
         }
         @supports -moz-bool-pref("userChrome.icon.library") {
           .downloadShowMenuItem {
-            --menuitem-image: url("chrome://browser/skin/lepton/icons/folder.svg");
+            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
           }
         }
         #downloadsContextMenu > menuitem.downloadOpenReferrerMenuItem,
         #downloadsContextMenu > menuitem[command="downloadsCmd_openReferrer"] {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/link-square.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
         }
         #downloadsContextMenu > menuitem.downloadCopyLocationMenuItem,
         #downloadsContextMenu > menuitem[command="downloadsCmd_copyLocation"] {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/link.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/link.svg");
         }
         .downloadDeleteFileMenuItem {
           --menuitem-image: url("chrome://global/skin/icons/delete.svg");
         }
         .downloadRemoveFromHistoryMenuItem {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/eraser.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/eraser.svg");
         }
         #downloadsContextMenu > menuitem[command="downloadsCmd_clearList"],
         #downloadsContextMenu > menuitem[command="downloadsCmd_clearDownloads"] {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/broom.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/broom.svg");
         }
         /*= placeContext =============================================================*/
         #placesContext_open {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/link-square.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/link-square.svg");
         }
         #placesContext_openBookmarkContainer\:tabs,
         #placesContext_openBookmarkLinks\:tabs {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/movetowindow-16.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
         }
         #placesContext_open\:newtab,
         #placesContext_openContainer\:tabs,
@@ -3326,7 +3326,7 @@
           --menuitem-image: url("chrome://browser/skin/new-tab.svg");
         }
         #placesContext_open\:newcontainertab {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/container-openin-16.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/container-openin-16.svg");
         }
         #placesContext_open\:newwindow {
           --menuitem-image: url("chrome://browser/skin/window.svg");
@@ -3346,16 +3346,16 @@
           --menuitem-image: url("chrome://global/skin/icons/delete.svg");
         }
         #placesContext_deleteHost {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/eye-hide.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/eye-hide.svg");
         }
         #placesContext_sortBy\:name {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/text-sort-ascending.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
         }
         #placesContext_cut {
           --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
         }
         #placesContext_copy {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/edit-copy.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
         }
         #placesContext_paste_group {
           --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
@@ -3370,11 +3370,11 @@
         @supports -moz-bool-pref("userChrome.icon.library") {
           #placesContext_showInFolder,
           #placesContext_new\:folder {
-            --menuitem-image: url("chrome://browser/skin/lepton/icons/folder.svg");
+            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
           }
         }
         #placesContext_new\:separator {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/vertical-line.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
         }
         #placesContext_paste {
           --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
@@ -3384,13 +3384,13 @@
         }
         #show-other-bookmarks_PersonalToolbar {
           /* checkbox */
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/star-line-horizontal.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/star-line-horizontal.svg");
         }
         #placesContext_showAllBookmarks {
           --menuitem-image: url("chrome://browser/skin/bookmark-star-on-tray.svg");
         }
         .openintabs-menuitem {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/movetowindow-16.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/movetowindow-16.svg");
         }
       }
       @supports -moz-bool-pref("userChrome.icon.global_menu") {
@@ -3403,20 +3403,20 @@
         }
         @supports -moz-bool-pref("userChrome.icon.library") {
           #newfolder {
-            --menuitem-image: url("chrome://browser/skin/lepton/icons/folder.svg");
+            --menuitem-image: url("chrome://browser/skin/lepton/folder.svg");
           }
         }
         #newseparator {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/vertical-line.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/vertical-line.svg");
         }
         #orgUndo {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/undo.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/undo.svg");
         }
         #orgCut {
           --menuitem-image: url("chrome://browser/skin/edit-cut.svg");
         }
         #orgCopy {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/edit-copy.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/edit-copy.svg");
         }
         #orgPaste {
           --menuitem-image: url("chrome://browser/skin/edit-paste.svg");
@@ -3425,7 +3425,7 @@
           --menuitem-image: url("chrome://global/skin/icons/delete.svg");
         }
         #orgSelectAll {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/select-all-on.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/select-all-on.svg");
         }
         #orgClose {
           --menuitem-image: url("chrome://global/skin/icons/close.svg");
@@ -3435,14 +3435,14 @@
           --menuitem-image: url("chrome://global/skin/icons/columnpicker.svg");
         }
         #viewSort {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/text-sort-ascending.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/text-sort-ascending.svg");
         }
         /*= maintenanceButtonPopup ===================================================*/
         #backupBookmarks {
           --menuitem-image: url("chrome://devtools/skin/images/datastore.svg");
         }
         #fileImport {
-          --menuitem-image: url("chrome://browser/skin/lepton/icons/toolbarButton-download.svg");
+          --menuitem-image: url("chrome://browser/skin/lepton/toolbarButton-download.svg");
         }
         #fileExport {
           --menuitem-image: url("chrome://browser/skin/open.svg");
@@ -3455,10 +3455,10 @@
     @-moz-document url-prefix("about:addons") {
       @supports -moz-bool-pref("userChrome.icon.context_menu") {
         button[role="menuitem"] {
-          background-image: var(--icon, url("chrome://browser/skin/lepton/icons/blank.svg")); /* Don't use !important. because of [checked] */
+          background-image: var(--icon, url("chrome://browser/skin/lepton/blank.svg")); /* Don't use !important. because of [checked] */
         }
         panel-item[action="check-for-updates"] {
-          --icon: url("chrome://browser/skin/lepton/icons/refresh-cw.svg");
+          --icon: url("chrome://browser/skin/lepton/refresh-cw.svg");
         }
         panel-item[action="view-recent-updates"] {
           --icon: url("chrome://global/skin/icons/info.svg");
@@ -3467,7 +3467,7 @@
           --icon: url("chrome://devtools/skin/images/import.svg");
         }
         panel-item[action="debug-addons"] {
-          --icon: url("chrome://browser/skin/lepton/icons/bug.svg");
+          --icon: url("chrome://browser/skin/lepton/bug.svg");
         }
         panel-item[action="set-update-automatically"] {
           --icon: url("chrome://devtools/skin/images/profiler-stopwatch.svg");
