@@ -232,32 +232,3 @@ addAccessibleTask(
     iframeAttrs: { style: "width: 600px; height: 600px; padding: 10px;" },
   }
 );
-
-/**
- * Verify that hit testing is appropriately fuzzy when working with generics.
- * If we match on a generic which contains additional generics and a single text
- * leaf, we should return the text leaf as the deepest match instead of the
- * generic itself.
- */
-addAccessibleTask(
-  `
-  <a href="example.com" id="link">
-    <span style="overflow:hidden;" id="generic"><span aria-hidden="true" id="visible">I am some visible text</span><span id="invisible" style="overflow:hidden; height: 1px; width: 1px; position:absolute; clip: rect(0 0 0 0); display:block;">I am some invisible text</span></span>
-  </a>`,
-  async function (browser, docAcc) {
-    const link = findAccessibleChildByID(docAcc, "link");
-    const generic = findAccessibleChildByID(docAcc, "generic");
-    const invisible = findAccessibleChildByID(docAcc, "invisible");
-    const dpr = await getContentDPR(browser);
-
-    await testChildAtPoint(
-      dpr,
-      1,
-      1,
-      link,
-      generic, // Direct Child
-      invisible.firstChild // Deepest Child
-    );
-  },
-  { chrome: false, iframe: true, remoteIframe: true }
-);
