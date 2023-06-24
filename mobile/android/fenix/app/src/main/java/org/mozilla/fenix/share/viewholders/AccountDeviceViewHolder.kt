@@ -94,7 +94,7 @@ class AccountDeviceViewHolder(
                 is SyncShareOption.SingleDevice -> when (option.device.deviceType) {
                     DeviceType.MOBILE -> Triple(
                         option.device.displayName,
-                        R.drawable.mozac_ic_device_mobile,
+                        R.drawable.mozac_ic_device_mobile_24,
                         R.color.device_type_mobile_background,
                     )
                     else -> Triple(
