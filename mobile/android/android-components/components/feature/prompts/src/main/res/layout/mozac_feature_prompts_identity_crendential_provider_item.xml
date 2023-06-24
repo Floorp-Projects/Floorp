@@ -15,6 +15,6 @@
     android:minHeight="?android:attr/listPreferredItemHeightLarge"
     android:drawablePadding="3dp"
     android:textAppearance="?android:attr/textAppearanceListItem"
-    app:drawableStartCompat="@drawable/mozac_ic_globe"
+    app:drawableStartCompat="@drawable/mozac_ic_globe_24"
     app:drawableTint="?android:textColorPrimary"
     tools:text="rune-stellar-ambert.glitch.me" />

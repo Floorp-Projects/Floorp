@@ -21,7 +21,7 @@
         android:layout_height="24dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/mozac_ic_globe"
+        app:srcCompat="@drawable/mozac_ic_globe_24"
         android:importantForAccessibility="no" />
 
     <androidx.appcompat.widget.AppCompatTextView

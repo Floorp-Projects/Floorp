@@ -97,7 +97,7 @@ class SaveLoginDialogFragmentTest : TestCase() {
                 icon,
             ),
         )
-        val defaultIconResource = iconsR.drawable.mozac_ic_globe
+        val defaultIconResource = iconsR.drawable.mozac_ic_globe_24
         doReturn(appCompatContext).`when`(fragment).requireContext()
         doAnswer {
             FrameLayout(appCompatContext).apply {
