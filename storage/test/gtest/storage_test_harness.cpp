@@ -186,16 +186,18 @@ nsIThread* last_non_watched_thread = nullptr;
  * call the real mutex function.
  */
 extern "C" void wrapped_MutexEnter(sqlite3_mutex* mutex) {
-  if (PR_GetCurrentThread() == watched_thread)
+  if (PR_GetCurrentThread() == watched_thread) {
     mutex_used_on_watched_thread = true;
-  else
+  } else {
     last_non_watched_thread = NS_GetCurrentThread();
+  }
   orig_mutex_methods.xMutexEnter(mutex);
 }
 
 extern "C" int wrapped_MutexTry(sqlite3_mutex* mutex) {
-  if (::PR_GetCurrentThread() == watched_thread)
+  if (::PR_GetCurrentThread() == watched_thread) {
     mutex_used_on_watched_thread = true;
+  }
   return orig_mutex_methods.xMutexTry(mutex);
 }
 
