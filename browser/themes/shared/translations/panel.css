@@ -17,7 +17,7 @@
   padding-bottom: 0;
 }
 
-#translations-panel-settings > image {
+image.translations-panel-gear-icon {
   /* Override the panel-info-button with a gear icon. */
   list-style-image: url(chrome://global/skin/icons/settings.svg);
 }
