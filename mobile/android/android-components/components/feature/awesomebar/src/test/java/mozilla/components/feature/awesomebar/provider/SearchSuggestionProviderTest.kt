@@ -254,7 +254,7 @@ class SearchSuggestionProviderTest {
     }
 
     private fun getDeviceDesktopIcon(): Bitmap {
-        val drawable = iconsR.drawable.mozac_ic_device_desktop
+        val drawable = iconsR.drawable.mozac_ic_device_desktop_24
         return testContext.getDrawable(drawable)!!.toBitmap()
     }
 

@@ -99,7 +99,7 @@ class AccountDeviceViewHolder(
                     )
                     else -> Triple(
                         option.device.displayName,
-                        R.drawable.mozac_ic_device_desktop,
+                        R.drawable.mozac_ic_device_desktop_24,
                         R.color.device_type_desktop_background,
                     )
                 }

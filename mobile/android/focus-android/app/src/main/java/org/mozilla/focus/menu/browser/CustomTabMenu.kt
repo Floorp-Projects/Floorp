@@ -98,7 +98,7 @@ class CustomTabMenu(
         }
 
         val desktopMode = BrowserMenuImageSwitch(
-            imageResource = R.drawable.mozac_ic_device_desktop,
+            imageResource = R.drawable.mozac_ic_device_desktop_24,
             label = context.getString(R.string.preference_performance_request_desktop_site2),
             initialState = {
                 selectedSession?.content?.desktopMode ?: true
