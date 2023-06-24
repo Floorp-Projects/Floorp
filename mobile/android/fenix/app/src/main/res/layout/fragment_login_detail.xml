@@ -142,7 +142,7 @@
         app:layout_constraintBottom_toBottomOf="@id/passwordText"
         app:layout_constraintEnd_toStartOf="@id/copyPassword"
         app:layout_constraintTop_toTopOf="@id/passwordText"
-        app:srcCompat="@drawable/mozac_ic_password_reveal"
+        app:srcCompat="@drawable/mozac_ic_eye_24"
         app:tint="?android:colorAccent" />
 
     <ImageButton

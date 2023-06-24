@@ -214,7 +214,7 @@
         app:layout_constraintBottom_toBottomOf="@id/inputLayoutPassword"
         app:layout_constraintEnd_toStartOf="@id/clearPasswordTextButton"
         app:layout_constraintTop_toTopOf="@id/inputLayoutPassword"
-        app:srcCompat="@drawable/mozac_ic_password_reveal" />
+        app:srcCompat="@drawable/mozac_ic_eye_24" />
 
     <ImageButton
         android:id="@+id/clearPasswordTextButton"

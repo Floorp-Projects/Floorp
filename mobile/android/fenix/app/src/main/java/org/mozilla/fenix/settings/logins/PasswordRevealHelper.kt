@@ -29,7 +29,7 @@ fun togglePasswordReveal(passwordText: TextView, revealPasswordButton: ImageButt
         passwordText.inputType =
             InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
         revealPasswordButton.setImageDrawable(
-            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_password_reveal),
+            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_eye_24),
         )
         revealPasswordButton.contentDescription =
             context.getString(R.string.saved_login_reveal_password)
