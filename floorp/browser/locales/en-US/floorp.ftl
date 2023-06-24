@@ -397,6 +397,9 @@ floorp-lepton-enable-bookmarkbar_label-hide =
 floorp-lepton-enable-disabled_menu-hide =
     .label = Hide disabled context menu
 
+floorp-lepton-disable-userChrome-icon =
+    .label = Disable context menu & panel menu icons
+
 positon-preferences = Position adjustment
 
 floorp-lepton-enable-centered-tab =
