@@ -32,7 +32,7 @@
                 android:text="@string/mozac_feature_prompts_saved_logins"
                 android:textColor="?android:colorEdgeEffect"
                 android:textSize="16sp"
-                app:drawableStartCompat="@drawable/mozac_ic_login"
+                app:drawableStartCompat="@drawable/mozac_ic_login_24"
                 app:drawableTint="?android:colorEdgeEffect"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"

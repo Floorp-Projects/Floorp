@@ -48,7 +48,7 @@
         android:gravity="center_vertical"
         android:textColor="?android:textColorPrimary"
         android:textSize="16sp"
-        app:drawableStartCompat="@drawable/mozac_ic_login"
+        app:drawableStartCompat="@drawable/mozac_ic_login_24"
         app:drawableTint="?android:textColorPrimary"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/host_name"
