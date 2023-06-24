@@ -19,7 +19,7 @@ class HomeMenu(
     fun getMenuBuilder(): BrowserMenuBuilder {
         val help = BrowserMenuImageText(
             label = context.getString(R.string.menu_help),
-            imageResource = R.drawable.mozac_ic_help,
+            imageResource = R.drawable.mozac_ic_help_circle_24,
         ) {
             onItemTapped.invoke(HomeMenuItem.Help)
         }

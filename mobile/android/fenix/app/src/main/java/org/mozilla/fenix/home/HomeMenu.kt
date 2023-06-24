@@ -169,7 +169,7 @@ class HomeMenu(
 
         val helpItem = BrowserMenuImageText(
             context.getString(R.string.browser_menu_help),
-            R.drawable.mozac_ic_help,
+            R.drawable.mozac_ic_help_circle_24,
             primaryTextColor,
         ) {
             onItemTapped.invoke(Item.Help)
