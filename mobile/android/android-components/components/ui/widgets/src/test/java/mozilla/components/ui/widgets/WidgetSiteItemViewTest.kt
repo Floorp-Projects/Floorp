@@ -70,7 +70,7 @@ class WidgetSiteItemViewTest {
         val secondaryButton = view.findViewById<ImageButton>(R.id.secondary_button)
         var clicked = false
         view.setSecondaryButton(
-            icon = iconsR.drawable.mozac_ic_lock,
+            icon = iconsR.drawable.mozac_ic_lock_24,
             contentDescription = iconsR.string.mozac_error_lock,
             onClickListener = { clicked = true },
         )

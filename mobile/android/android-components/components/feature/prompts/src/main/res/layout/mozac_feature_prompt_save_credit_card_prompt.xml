@@ -20,7 +20,7 @@
         android:layout_height="24dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/mozac_ic_lock"
+        app:srcCompat="@drawable/mozac_ic_lock_24"
         app:tint="?android:attr/textColorPrimary"
         android:importantForAccessibility="no" />
 
