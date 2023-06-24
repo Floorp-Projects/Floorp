@@ -181,7 +181,7 @@ open class DefaultToolbarMenu(
 
     private val installToHomescreen = BrowserMenuHighlightableItem(
         label = context.getString(R.string.browser_menu_install_on_homescreen),
-        startImageResource = R.drawable.mozac_ic_add_to_home_screen,
+        startImageResource = R.drawable.mozac_ic_add_to_home_screen_24,
         iconTintColorResource = primaryTextColor(),
         highlight = BrowserMenuHighlight.LowPriority(
             label = context.getString(R.string.browser_menu_install_on_homescreen),
@@ -270,7 +270,7 @@ open class DefaultToolbarMenu(
 
     private val addToHomeScreenItem = BrowserMenuImageText(
         label = context.getString(R.string.browser_menu_add_to_homescreen),
-        imageResource = R.drawable.mozac_ic_add_to_home_screen,
+        imageResource = R.drawable.mozac_ic_add_to_home_screen_24,
         iconTintColorResource = primaryTextColor(),
         isCollapsingMenuLimit = true,
     ) {
