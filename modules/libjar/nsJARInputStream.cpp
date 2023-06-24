@@ -300,19 +300,9 @@ nsresult nsJARInputStream::ContinueInflate(char* aBuffer, uint32_t aCount,
 
   // be aggressive about ending the inflation
   // for some reason we don't always get Z_STREAM_END
-  if (finished || mZs.total_out >= mOutSize) {
+  if (finished || mZs.total_out == mOutSize) {
     if (mMode == MODE_INFLATE) {
-      int zerr = inflateEnd(&mZs);
-      if (zerr != Z_OK) {
-        return NS_ERROR_FILE_CORRUPTED;
-      }
-
-      // Stream is finished but has a different size from what
-      // we expected.
-      if (StaticPrefs::network_jar_require_size_match() &&
-          mZs.total_out != mOutSize) {
-        return NS_ERROR_FILE_CORRUPTED;
-      }
+      inflateEnd(&mZs);
     }
 
     // stop returning valid data as soon as we know we have a bad CRC
