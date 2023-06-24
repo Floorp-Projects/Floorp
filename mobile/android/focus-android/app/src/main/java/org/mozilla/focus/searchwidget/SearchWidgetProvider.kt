@@ -38,7 +38,7 @@ class SearchWidgetProvider : AppSearchWidgetProvider() {
     override val config: SearchWidgetConfig =
         SearchWidgetConfig(
             searchWidgetIconResource = R.drawable.ic_splash_screen,
-            searchWidgetMicrophoneResource = R.drawable.mozac_ic_microphone,
+            searchWidgetMicrophoneResource = R.drawable.mozac_ic_microphone_24,
             appName = R.string.app_name,
         )
 

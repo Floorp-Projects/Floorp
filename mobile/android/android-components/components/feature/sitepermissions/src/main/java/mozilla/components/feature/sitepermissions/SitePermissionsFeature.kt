@@ -734,7 +734,7 @@ class SitePermissionsFeature(
                 host,
                 permissionRequest,
                 R.string.mozac_feature_sitepermissions_camera_and_microphone,
-                iconsR.drawable.mozac_ic_microphone,
+                iconsR.drawable.mozac_ic_microphone_24,
                 showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                 shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
                     ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN,
@@ -782,7 +782,7 @@ class SitePermissionsFeature(
                     host,
                     permissionRequest,
                     R.string.mozac_feature_sitepermissions_microfone_title,
-                    iconsR.drawable.mozac_ic_microphone,
+                    iconsR.drawable.mozac_ic_microphone_24,
                     showDoNotAskAgainCheckBox = shouldShowDoNotAskAgainCheckBox,
                     shouldSelectRememberChoice = dialogConfig?.shouldPreselectDoNotAskAgain
                         ?: DialogConfig.DEFAULT_PRESELECT_DO_NOT_ASK_AGAIN,

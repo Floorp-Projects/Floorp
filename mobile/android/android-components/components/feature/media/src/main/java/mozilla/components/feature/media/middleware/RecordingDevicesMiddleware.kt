@@ -142,7 +142,7 @@ internal sealed class RecordingState {
     }
 
     object Microphone : RecordingState() {
-        override val iconResource = iconsR.drawable.mozac_ic_microphone
+        override val iconResource = iconsR.drawable.mozac_ic_microphone_24
         override val titleResource = R.string.mozac_feature_media_sharing_microphone
     }
 
