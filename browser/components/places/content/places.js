@@ -435,6 +435,11 @@ var PlacesOrganizer = {
     if (!ContentArea.currentViewOptions.showDetailsPane) {
       return;
     }
+    // _fillDetailsPane is only invoked when the activeElement is a tree,
+    // there's no other case where we need to update the details pane. This
+    // means it's not possible that while some input field in the panel is
+    // focused we try to update the panel contents causing potential dataloss
+    // of the user's input.
     let view = PlacesUIUtils.getViewForNode(document.activeElement);
     if (view) {
       let selectedNodes = view.selectedNode
@@ -725,32 +730,19 @@ var PlacesOrganizer = {
 
     let selectedNode = aNodeList.length == 1 ? aNodeList[0] : null;
 
-    // If an input within a panel is focused, force-blur it so its contents
-    // are saved
-    if (gEditItemOverlay.itemId != -1) {
-      var focusedElement = document.commandDispatcher.focusedElement;
-      if (
-        (HTMLInputElement.isInstance(focusedElement) ||
-          HTMLTextAreaElement.isInstance(focusedElement)) &&
-        /^editBMPanel.*/.test(focusedElement.parentNode.parentNode.id)
-      ) {
-        focusedElement.blur();
-      }
-
-      // don't update the panel if we are already editing this node unless we're
-      // in multi-edit mode
-      if (selectedNode) {
-        let concreteGuid = PlacesUtils.getConcreteItemGuid(selectedNode);
-        var nodeIsSame =
-          gEditItemOverlay.itemId == selectedNode.itemId ||
-          gEditItemOverlay._paneInfo.itemGuid == concreteGuid ||
-          (selectedNode.itemId == -1 &&
-            gEditItemOverlay.uri &&
-            gEditItemOverlay.uri == selectedNode.uri);
-        if (nodeIsSame && !infoBox.hidden && !gEditItemOverlay.multiEdit) {
-          return;
-        }
-      }
+    // Don't update the panel if it's already editing this node, unless we're
+    // in multi-edit mode.
+    if (
+      selectedNode &&
+      !gEditItemOverlay.multiEdit &&
+      ((gEditItemOverlay.concreteGuid &&
+        gEditItemOverlay.concreteGuid ==
+          PlacesUtils.getConcreteItemGuid(selectedNode)) ||
+        (!selectedNode.bookmarkGuid &&
+          gEditItemOverlay.uri &&
+          gEditItemOverlay.uri == selectedNode.uri))
+    ) {
+      return;
     }
 
     // Clean up the panel before initing it again.
