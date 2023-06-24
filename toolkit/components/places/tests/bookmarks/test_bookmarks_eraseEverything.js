@@ -140,14 +140,6 @@ add_task(async function test_eraseEverything_reparented() {
 
   // Erase everything.
   await PlacesUtils.bookmarks.eraseEverything();
-
-  // All the above items should no longer be in the GUIDHelper cache.
-  for (let guid of [folder1.guid, bookmark1.guid, folder2.guid]) {
-    await Assert.rejects(
-      PlacesUtils.promiseItemId(guid),
-      /no item found for the given GUID/
-    );
-  }
 });
 
 add_task(async function test_notifications() {

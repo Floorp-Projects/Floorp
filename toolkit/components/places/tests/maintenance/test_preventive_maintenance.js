@@ -36,8 +36,6 @@ async function cleanDatabase() {
       await db.executeCached("DELETE FROM moz_places_metadata_search_queries");
     });
   });
-  // Since we're doing raw deletes, we must invalidate the guids cache.
-  await PlacesUtils.invalidateCachedGuids();
 }
 
 async function addPlace(
@@ -467,7 +465,7 @@ tests.push({
       PlacesUtils.bookmarks.TYPE_FOLDER,
       PlacesUtils.bookmarks.tagsGuid
     );
-    let tagGuid = await PlacesUtils.promiseItemGuid(this._tagId);
+    let tagGuid = await PlacesTestUtils.promiseItemGuid(this._tagId);
     // Insert a bookmark in the tag
     this._bookmarkId = await addBookmark(
       this._placeId,
@@ -530,7 +528,7 @@ tests.push({
       PlacesUtils.bookmarks.TYPE_FOLDER,
       PlacesUtils.bookmarks.tagsGuid
     );
-    let tagGuid = await PlacesUtils.promiseItemGuid(this._tagId);
+    let tagGuid = await PlacesTestUtils.promiseItemGuid(this._tagId);
     // Insert a bookmark in the tag
     this._bookmarkId = await addBookmark(
       this._placeId,
@@ -612,7 +610,9 @@ tests.push({
       PlacesUtils.bookmarks.TYPE_FOLDER,
       8888
     );
-    let folderGuid = await PlacesUtils.promiseItemGuid(this._orphanFolderId);
+    let folderGuid = await PlacesTestUtils.promiseItemGuid(
+      this._orphanFolderId
+    );
     // Create a child of the last created folder
     this._bookmarkId = await addBookmark(
       this._placeId,
@@ -641,11 +641,13 @@ tests.push({
       },
       {
         id: this._bookmarkId,
-        parent: await PlacesUtils.promiseItemGuid(this._orphanFolderId),
+        parent: await PlacesTestUtils.promiseItemGuid(this._orphanFolderId),
         syncChangeCounter: 0,
       },
       {
-        id: await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid),
+        id: await PlacesTestUtils.promiseItemId(
+          PlacesUtils.bookmarks.unfiledGuid
+        ),
         parent: PlacesUtils.bookmarks.rootGuid,
         syncChangeCounter: 3,
       },
@@ -691,13 +693,15 @@ tests.push({
       this._placeId,
       PlacesUtils.bookmarks.TYPE_SEPARATOR
     );
-    this._separatorGuid = await PlacesUtils.promiseItemGuid(this._separatorId);
+    this._separatorGuid = await PlacesTestUtils.promiseItemGuid(
+      this._separatorId
+    );
     // Add a folder with a fk
     this._folderId = await addBookmark(
       this._placeId,
       PlacesUtils.bookmarks.TYPE_FOLDER
     );
-    this._folderGuid = await PlacesUtils.promiseItemGuid(this._folderId);
+    this._folderGuid = await PlacesTestUtils.promiseItemGuid(this._folderId);
     // Add a synced folder with a fk
     this._syncedFolderId = await addBookmark(
       this._placeId,
@@ -708,7 +712,7 @@ tests.push({
       "itemAAAAAAAA",
       PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
     );
-    this._syncedFolderGuid = await PlacesUtils.promiseItemGuid(
+    this._syncedFolderGuid = await PlacesTestUtils.promiseItemGuid(
       this._syncedFolderId
     );
   },
@@ -743,10 +747,6 @@ tests.push({
       Assert.equal(rows.length, 1);
       Assert.notEqual(rows[0].getResultByName("guid"), oldGuid);
       Assert.equal(rows[0].getResultByName("syncChangeCounter"), 1);
-      await Assert.rejects(
-        PlacesUtils.promiseItemId(oldGuid),
-        /no item found for the given GUID/
-      );
     }
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
@@ -779,7 +779,7 @@ tests.push({
       this._placeId,
       PlacesUtils.bookmarks.TYPE_BOOKMARK
     );
-    this._validBookmarkGuid = await PlacesUtils.promiseItemGuid(
+    this._validBookmarkGuid = await PlacesTestUtils.promiseItemGuid(
       this._validBookmarkId
     );
     // Add a bookmark with a null place id
@@ -787,7 +787,7 @@ tests.push({
       null,
       PlacesUtils.bookmarks.TYPE_BOOKMARK
     );
-    this._invalidBookmarkGuid = await PlacesUtils.promiseItemGuid(
+    this._invalidBookmarkGuid = await PlacesTestUtils.promiseItemGuid(
       this._invalidBookmarkId
     );
     // Add a synced bookmark with a null place id
@@ -800,7 +800,7 @@ tests.push({
       "bookmarkAAAA",
       PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
     );
-    this._invalidSyncedBookmarkGuid = await PlacesUtils.promiseItemGuid(
+    this._invalidSyncedBookmarkGuid = await PlacesTestUtils.promiseItemGuid(
       this._invalidSyncedBookmarkId
     );
   },
@@ -820,7 +820,7 @@ tests.push({
     Assert.equal(rows.length, 1);
     Assert.equal(rows[0].getResultByName("syncChangeCounter"), 0);
     Assert.equal(
-      await PlacesUtils.promiseItemId(this._validBookmarkGuid),
+      await PlacesTestUtils.promiseItemId(this._validBookmarkGuid),
       this._validBookmarkId
     );
 
@@ -845,10 +845,6 @@ tests.push({
       Assert.equal(rows.length, 1);
       Assert.notEqual(rows[0].getResultByName("guid"), oldGuid);
       Assert.equal(rows[0].getResultByName("syncChangeCounter"), 1);
-      await Assert.rejects(
-        PlacesUtils.promiseItemId(oldGuid),
-        /no item found for the given GUID/
-      );
     }
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
@@ -881,7 +877,9 @@ tests.push({
     // a tombstone.
     this._placeId = await addPlace();
     this._bookmarkId = await addBookmark(this._placeId);
-    this._bookmarkGuid = await PlacesUtils.promiseItemGuid(this._bookmarkId);
+    this._bookmarkGuid = await PlacesTestUtils.promiseItemGuid(
+      this._bookmarkId
+    );
     this._syncedBookmarkId = await addBookmark(
       this._placeId,
       null,
@@ -891,14 +889,14 @@ tests.push({
       "bookmarkAAAA",
       PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
     );
-    this._syncedBookmarkGuid = await PlacesUtils.promiseItemGuid(
+    this._syncedBookmarkGuid = await PlacesTestUtils.promiseItemGuid(
       this._syncedBookmarkId
     );
 
     // Item without a type and without a place ID; should be converted to a
     // folder.
     this._folderId = await addBookmark();
-    this._folderGuid = await PlacesUtils.promiseItemGuid(this._folderId);
+    this._folderGuid = await PlacesTestUtils.promiseItemGuid(this._folderId);
     this._syncedFolderId = await addBookmark(
       null,
       null,
@@ -908,7 +906,7 @@ tests.push({
       "folderBBBBBB",
       PlacesUtils.bookmarks.SYNC_STATUS.NORMAL
     );
-    this._syncedFolderGuid = await PlacesUtils.promiseItemGuid(
+    this._syncedFolderGuid = await PlacesTestUtils.promiseItemGuid(
       this._syncedFolderId
     );
   },
@@ -955,10 +953,6 @@ tests.push({
         syncChangeCounter
       );
       Assert.notEqual(rows[0].getResultByName("guid"), oldGuid);
-      await Assert.rejects(
-        PlacesUtils.promiseItemId(oldGuid),
-        /no item found for the given GUID/
-      );
     }
 
     let tombstones = await PlacesTestUtils.fetchSyncTombstones();
@@ -995,13 +989,15 @@ tests.push({
       PlacesUtils.bookmarks.TYPE_SEPARATOR
     );
     // Create 3 children of these items
-    let bookmarkGuid = await PlacesUtils.promiseItemGuid(this._bookmarkId);
+    let bookmarkGuid = await PlacesTestUtils.promiseItemGuid(this._bookmarkId);
     this._bookmarkId1 = await addBookmark(
       this._placeId,
       PlacesUtils.bookmarks.TYPE_BOOKMARK,
       bookmarkGuid
     );
-    let separatorGuid = await PlacesUtils.promiseItemGuid(this._separatorId);
+    let separatorGuid = await PlacesTestUtils.promiseItemGuid(
+      this._separatorId
+    );
     this._bookmarkId2 = await addBookmark(
       this._placeId,
       PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -1023,7 +1019,9 @@ tests.push({
         syncChangeCounter: 1,
       },
       {
-        id: await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.unfiledGuid),
+        id: await PlacesTestUtils.promiseItemId(
+          PlacesUtils.bookmarks.unfiledGuid
+        ),
         parent: PlacesUtils.bookmarks.rootGuid,
         syncChangeCounter: 2,
       },
@@ -1202,7 +1200,7 @@ tests.push({
       ""
     );
     // Insert a bookmark in the tag, otherwise it will be removed.
-    let untitledTagGuid = await PlacesUtils.promiseItemGuid(
+    let untitledTagGuid = await PlacesTestUtils.promiseItemGuid(
       this._untitledTagId
     );
     await addBookmark(
@@ -1227,7 +1225,9 @@ tests.push({
       "titledTag"
     );
     // Insert a bookmark in the tag, otherwise it will be removed.
-    let titledTagGuid = await PlacesUtils.promiseItemGuid(this._titledTagId);
+    let titledTagGuid = await PlacesTestUtils.promiseItemGuid(
+      this._titledTagId
+    );
     await addBookmark(
       placeId,
       PlacesUtils.bookmarks.TYPE_BOOKMARK,
@@ -2238,7 +2238,7 @@ tests.push({
 
     this._bookmarkInfos.push(
       {
-        id: await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.menuGuid),
+        id: await PlacesTestUtils.promiseItemId(PlacesUtils.bookmarks.menuGuid),
         syncChangeCounter: 1,
         syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
       },
@@ -2279,7 +2279,7 @@ tests.push({
       let guid = row.getResultByName("guid");
       Assert.ok(PlacesUtils.isValidGuid(guid));
 
-      let cachedGuid = await PlacesUtils.promiseItemGuid(id);
+      let cachedGuid = await PlacesTestUtils.promiseItemGuid(id);
       Assert.equal(cachedGuid, guid);
 
       let expectedInfo = this._bookmarkInfos.find(info => info.id == id);
@@ -2681,7 +2681,7 @@ tests.push({
 
     this._folder = bookmarks[0];
     this._bookmark = bookmarks[1];
-    this._bookmarkId = await PlacesUtils.promiseItemId(bookmarks[1].guid);
+    this._bookmarkId = await PlacesTestUtils.promiseItemId(bookmarks[1].guid);
 
     this._separator = await PlacesUtils.bookmarks.insert({
       parentGuid: PlacesUtils.bookmarks.unfiledGuid,

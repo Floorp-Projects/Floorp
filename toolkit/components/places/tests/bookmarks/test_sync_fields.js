@@ -286,24 +286,24 @@ class TestCases {
 // in C++.
 class SyncTestCases extends TestCases {
   async createFolder(parentGuid, title, index) {
-    let parentId = await PlacesUtils.promiseItemId(parentGuid);
+    let parentId = await PlacesTestUtils.promiseItemId(parentGuid);
     let id = PlacesUtils.bookmarks.createFolder(parentId, title, index);
-    return PlacesUtils.promiseItemGuid(id);
+    return PlacesTestUtils.promiseItemGuid(id);
   }
 
   async insertBookmark(parentGuid, uri, index, title) {
-    let parentId = await PlacesUtils.promiseItemId(parentGuid);
+    let parentId = await PlacesTestUtils.promiseItemId(parentGuid);
     let id = PlacesUtils.bookmarks.insertBookmark(parentId, uri, index, title);
-    return PlacesUtils.promiseItemGuid(id);
+    return PlacesTestUtils.promiseItemGuid(id);
   }
 
   async removeItem(guid) {
-    let id = await PlacesUtils.promiseItemId(guid);
+    let id = await PlacesTestUtils.promiseItemId(guid);
     PlacesUtils.bookmarks.removeItem(id);
   }
 
   async setTitle(guid, title) {
-    let id = await PlacesUtils.promiseItemId(guid);
+    let id = await PlacesTestUtils.promiseItemId(guid);
     PlacesUtils.bookmarks.setItemTitle(id, title);
   }
 

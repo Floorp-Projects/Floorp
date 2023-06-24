@@ -30,7 +30,7 @@ add_bookmark_test(async function test_ignore_specials(engine) {
   record.deleted = true;
   Assert.notEqual(
     null,
-    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
+    await PlacesTestUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
   );
 
   await apply_records(engine, [record]);
@@ -38,14 +38,14 @@ add_bookmark_test(async function test_ignore_specials(engine) {
   // Ensure that the toolbar exists.
   Assert.notEqual(
     null,
-    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
+    await PlacesTestUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
   );
 
   await apply_records(engine, [record]);
 
   Assert.notEqual(
     null,
-    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
+    await PlacesTestUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
   );
   await store.wipe();
 });

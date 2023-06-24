@@ -25,7 +25,7 @@ add_task(async function test_untitled_visited_bookmark() {
 
     await PlacesTestUtils.promiseAsyncUpdates();
 
-    let fxBmkId = await PlacesUtils.promiseItemId(fxBmk.guid);
+    let fxBmkId = await PlacesTestUtils.promiseItemId(fxBmk.guid);
     strictEqual(
       PlacesUtils.bookmarks.getItemTitle(fxBmkId),
       "",
@@ -62,7 +62,7 @@ add_task(async function test_untitled_unvisited_bookmark() {
 
     await PlacesTestUtils.promiseAsyncUpdates();
 
-    let tbBmkId = await PlacesUtils.promiseItemId(tbBmk.guid);
+    let tbBmkId = await PlacesTestUtils.promiseItemId(tbBmk.guid);
     strictEqual(
       PlacesUtils.bookmarks.getItemTitle(tbBmkId),
       "",
@@ -96,7 +96,7 @@ add_task(async function test_untitled_folder() {
 
     await PlacesTestUtils.promiseAsyncUpdates();
 
-    let folderId = await PlacesUtils.promiseItemId(folder.guid);
+    let folderId = await PlacesTestUtils.promiseItemId(folder.guid);
     strictEqual(
       PlacesUtils.bookmarks.getItemTitle(folderId),
       "",

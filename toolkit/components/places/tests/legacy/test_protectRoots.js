@@ -11,7 +11,7 @@ add_task(async () => {
   for (let guid of ROOTS) {
     Assert.ok(PlacesUtils.isRootItem(guid));
 
-    let id = await PlacesUtils.promiseItemId(guid);
+    let id = await PlacesTestUtils.promiseItemId(guid);
 
     try {
       PlacesUtils.bookmarks.removeItem(id);

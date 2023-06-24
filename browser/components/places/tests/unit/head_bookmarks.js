@@ -36,7 +36,7 @@ const DEFAULT_BOOKMARKS_ON_TOOLBAR = 1;
 const DEFAULT_BOOKMARKS_ON_MENU = 1;
 
 function checkItemHasAnnotation(guid, name) {
-  return PlacesUtils.promiseItemId(guid).then(id => {
+  return PlacesTestUtils.promiseItemId(guid).then(id => {
     let hasAnnotation = PlacesUtils.annotations.itemHasAnnotation(id, name);
     Assert.ok(hasAnnotation, `Expected annotation ${name}`);
   });

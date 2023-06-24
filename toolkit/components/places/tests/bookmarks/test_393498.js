@@ -108,7 +108,7 @@ add_task(async function test_bookmark_update_notifications() {
   // Test notifications.
   Assert.equal(
     observer._itemTitleChangedId,
-    await PlacesUtils.promiseItemId(bookmark.guid)
+    await PlacesTestUtils.promiseItemId(bookmark.guid)
   );
   Assert.equal(observer._itemTitleChangedTitle, "Google");
 

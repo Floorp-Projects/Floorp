@@ -140,7 +140,7 @@ add_task(async function test_roots_removed() {
   Assert.equal(rows.length, 1, "Should have found the menu root.");
   Assert.equal(
     rows[0].getResultByName("parent"),
-    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.rootGuid),
+    await PlacesTestUtils.promiseItemId(PlacesUtils.bookmarks.rootGuid),
     "Should have moved the menu back to the Places root."
   );
 });

@@ -141,7 +141,7 @@ add_task(async function test_value_structure_conflict() {
     "Should upload records for merged and new local items"
   );
 
-  let localItemIds = await PlacesUtils.promiseManyItemIds([
+  let localItemIds = await PlacesTestUtils.promiseManyItemIds([
     "folderAAAAAA",
     "bookmarkEEEE",
     "bookmarkBBBB",
@@ -383,7 +383,7 @@ add_task(async function test_move() {
     "Should not upload records for remotely moved items"
   );
 
-  let localItemIds = await PlacesUtils.promiseManyItemIds([
+  let localItemIds = await PlacesTestUtils.promiseManyItemIds([
     "devFolder___",
     "mozFolder___",
     "bzBmk_______",
@@ -696,7 +696,7 @@ add_task(async function test_move_into_parent_sibling() {
     "Should not upload records for remote-only structure changes"
   );
 
-  let localItemIds = await PlacesUtils.promiseManyItemIds([
+  let localItemIds = await PlacesTestUtils.promiseManyItemIds([
     "folderCCCCCC",
     "bookmarkBBBB",
     "folderAAAAAA",
@@ -915,7 +915,7 @@ add_task(async function test_complex_move_with_additions() {
     "Should upload new records for (A D)"
   );
 
-  let localItemIds = await PlacesUtils.promiseManyItemIds([
+  let localItemIds = await PlacesTestUtils.promiseManyItemIds([
     "bookmarkEEEE",
     "folderAAAAAA",
     "bookmarkCCCC",

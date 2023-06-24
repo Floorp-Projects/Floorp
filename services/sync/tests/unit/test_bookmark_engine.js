@@ -327,21 +327,6 @@ add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
       "Bookmarks engine should report all merge steps"
     );
 
-    await Assert.rejects(
-      PlacesUtils.promiseItemId("readinglist"),
-      /no item found for the given GUID/,
-      "Should not apply Reading List root"
-    );
-    await Assert.rejects(
-      PlacesUtils.promiseItemId(listBmk.id),
-      /no item found for the given GUID/,
-      "Should not apply items in Reading List"
-    );
-    ok(
-      (await PlacesUtils.promiseItemId(newBmk.id)) > 0,
-      "Should apply new bookmark"
-    );
-
     deepEqual(
       collection.keys().sort(),
       ["menu", "mobile", "toolbar", "unfiled", newBmk.id].sort(),
@@ -708,18 +693,13 @@ add_task(async function test_mismatched_types() {
     await store.applyIncoming(oldR);
     await engine._apply();
     _("Applied old. It's a folder.");
-    let oldID = await PlacesUtils.promiseItemId(oldR.id);
+    let oldID = await PlacesTestUtils.promiseItemId(oldR.id);
     _("Old ID: " + oldID);
     let oldInfo = await PlacesUtils.bookmarks.fetch(oldR.id);
     Assert.equal(oldInfo.type, PlacesUtils.bookmarks.TYPE_FOLDER);
 
     await store.applyIncoming(newR);
     await engine._apply();
-    await Assert.rejects(
-      PlacesUtils.promiseItemId(newR.id),
-      /no item found for the given GUID/,
-      "Should not apply Livemark"
-    );
   } finally {
     await cleanup(engine, server);
     await engine.finalize();
@@ -741,7 +721,7 @@ add_bookmark_test(async function test_misreconciled_root(engine) {
 
   // Let's find out where the toolbar is right now.
   let toolbarBefore = await store.createRecord("toolbar", "bookmarks");
-  let toolbarIDBefore = await PlacesUtils.promiseItemId(
+  let toolbarIDBefore = await PlacesTestUtils.promiseItemId(
     PlacesUtils.bookmarks.toolbarGuid
   );
   Assert.notEqual(-1, toolbarIDBefore);
@@ -749,7 +729,7 @@ add_bookmark_test(async function test_misreconciled_root(engine) {
   let parentRecordIDBefore = toolbarBefore.parentid;
   let parentGUIDBefore =
     PlacesSyncUtils.bookmarks.recordIdToGuid(parentRecordIDBefore);
-  let parentIDBefore = await PlacesUtils.promiseItemId(parentGUIDBefore);
+  let parentIDBefore = await PlacesTestUtils.promiseItemId(parentGUIDBefore);
   Assert.equal("string", typeof parentGUIDBefore);
 
   _("Current parent: " + parentGUIDBefore + " (" + parentIDBefore + ").");
@@ -777,9 +757,9 @@ add_bookmark_test(async function test_misreconciled_root(engine) {
   let parentRecordIDAfter = toolbarAfter.parentid;
   let parentGUIDAfter =
     PlacesSyncUtils.bookmarks.recordIdToGuid(parentRecordIDAfter);
-  let parentIDAfter = await PlacesUtils.promiseItemId(parentGUIDAfter);
+  let parentIDAfter = await PlacesTestUtils.promiseItemId(parentGUIDAfter);
   Assert.equal(
-    await PlacesUtils.promiseItemGuid(toolbarIDBefore),
+    await PlacesTestUtils.promiseItemGuid(toolbarIDBefore),
     PlacesUtils.bookmarks.toolbarGuid
   );
   Assert.equal(parentGUIDBefore, parentGUIDAfter);

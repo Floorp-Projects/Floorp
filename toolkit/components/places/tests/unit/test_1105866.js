@@ -11,11 +11,11 @@ add_task(async function test_folder_shortcuts() {
   let shortcutNode = unfiledRoot.getChild(unfiledRoot.childCount - 1);
   Assert.strictEqual(
     shortcutNode.itemId,
-    await PlacesUtils.promiseItemId(shortcutInfo.guid)
+    await PlacesTestUtils.promiseItemId(shortcutInfo.guid)
   );
   Assert.strictEqual(
     PlacesUtils.asQuery(shortcutNode).folderItemId,
-    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
+    await PlacesTestUtils.promiseItemId(PlacesUtils.bookmarks.toolbarGuid)
   );
   Assert.strictEqual(shortcutNode.bookmarkGuid, shortcutInfo.guid);
   Assert.strictEqual(
@@ -32,11 +32,11 @@ add_task(async function test_folder_shortcuts() {
   shortcutNode = unfiledRoot.getChild(unfiledRoot.childCount - 1);
   Assert.strictEqual(
     shortcutNode.itemId,
-    await PlacesUtils.promiseItemId(shortcutInfo.guid)
+    await PlacesTestUtils.promiseItemId(shortcutInfo.guid)
   );
   Assert.strictEqual(
     PlacesUtils.asQuery(shortcutNode).folderItemId,
-    await PlacesUtils.promiseItemId(PlacesUtils.bookmarks.menuGuid)
+    await PlacesTestUtils.promiseItemId(PlacesUtils.bookmarks.menuGuid)
   );
   Assert.strictEqual(shortcutNode.bookmarkGuid, shortcutInfo.guid);
   Assert.strictEqual(
