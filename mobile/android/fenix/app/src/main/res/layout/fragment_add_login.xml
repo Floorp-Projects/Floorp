@@ -84,7 +84,7 @@
         app:tint="@color/saved_login_clear_edit_text_tint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/inputLayoutHostname"
-        app:srcCompat="@drawable/mozac_ic_clear" />
+        app:srcCompat="@drawable/mozac_ic_cross_circle_fill_24" />
 
     <TextView
         android:id="@+id/usernameHeader"
@@ -154,7 +154,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/inputLayoutUsername"
         app:layout_constraintBottom_toBottomOf="@+id/inputLayoutUsername"
-        app:srcCompat="@drawable/mozac_ic_clear" />
+        app:srcCompat="@drawable/mozac_ic_cross_circle_fill_24" />
 
     <TextView
         android:id="@+id/passwordHeader"
@@ -223,7 +223,7 @@
         android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/inputLayoutPassword"
-        app:srcCompat="@drawable/mozac_ic_clear"
+        app:srcCompat="@drawable/mozac_ic_cross_circle_fill_24"
         app:tint="@color/saved_login_clear_edit_text_tint" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -82,7 +82,7 @@
         android:height="100dp"
         android:contentDescription="@string/mozac_clear_button_description"
         android:scaleType="center"
-        app:srcCompat="@drawable/mozac_ic_clear"
+        app:srcCompat="@drawable/mozac_ic_cross_circle_fill_24"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/mozac_browser_toolbar_background"

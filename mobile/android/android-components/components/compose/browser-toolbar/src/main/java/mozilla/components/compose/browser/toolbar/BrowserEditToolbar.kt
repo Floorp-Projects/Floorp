@@ -85,7 +85,7 @@ fun ClearButton(onButtonClicked: () -> Unit = {}) {
         onClick = { onButtonClicked() },
     ) {
         Icon(
-            painter = painterResource(iconsR.drawable.mozac_ic_clear),
+            painter = painterResource(iconsR.drawable.mozac_ic_cross_circle_fill_24),
             contentDescription = stringResource(R.string.mozac_clear_button_description),
             tint = Color.Black,
         )

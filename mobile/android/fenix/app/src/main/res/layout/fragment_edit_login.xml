@@ -142,7 +142,7 @@
         app:layout_constraintBottom_toBottomOf="@id/inputLayoutUsername"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/inputLayoutUsername"
-        app:srcCompat="@drawable/mozac_ic_clear" />
+        app:srcCompat="@drawable/mozac_ic_cross_circle_fill_24" />
 
     <TextView
         android:id="@+id/passwordHeader"
@@ -226,5 +226,5 @@
         app:layout_constraintBottom_toBottomOf="@id/revealPasswordButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/revealPasswordButton"
-        app:srcCompat="@drawable/mozac_ic_clear" />
+        app:srcCompat="@drawable/mozac_ic_cross_circle_fill_24" />
 </androidx.constraintlayout.widget.ConstraintLayout>
