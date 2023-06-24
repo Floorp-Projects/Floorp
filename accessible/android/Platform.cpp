@@ -182,8 +182,11 @@ void a11y::ProxyVirtualCursorChangeEvent(RemoteAccessible* aTarget,
     return;
   }
 
-  MOZ_ASSERT(aReason == nsIAccessiblePivot::REASON_POINT);
-  sessionAcc->SendHoverEnterEvent(aNewPosition);
+  if (aReason == nsIAccessiblePivot::REASON_POINT) {
+    sessionAcc->SendHoverEnterEvent(aNewPosition);
+  } else {
+    sessionAcc->SendAccessibilityFocusedEvent(aNewPosition);
+  }
 }
 
 void a11y::ProxyScrollingEvent(RemoteAccessible* aTarget, uint32_t aEventType,

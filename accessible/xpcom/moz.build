@@ -14,7 +14,6 @@ UNIFIED_SOURCES += [
     "xpcAccessibleHyperLink.cpp",
     "xpcAccessibleHyperText.cpp",
     "xpcAccessibleImage.cpp",
-    "xpcAccessiblePivot.cpp",
     "xpcAccessibleSelectable.cpp",
     "xpcAccessibleTable.cpp",
     "xpcAccessibleTableCell.cpp",
