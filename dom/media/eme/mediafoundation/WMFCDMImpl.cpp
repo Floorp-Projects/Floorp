@@ -125,7 +125,7 @@ bool WMFCDMImpl::GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs) {
           ok = true;
         },
         [](nsresult rv) {
-          EME_LOG("Fail to get key system capabilities. rv=%x", rv);
+          EME_LOG("Fail to get key system capabilities. rv=%x", uint32_t(rv));
         });
   }
   return ok;

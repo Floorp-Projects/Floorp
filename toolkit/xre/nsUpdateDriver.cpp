@@ -95,7 +95,7 @@ static void UpdateDriverSetupMacCommandLine(int& argc, char**& argv,
     LOG(
         ("Update driver error dispatching SetupMacCommandLine to main thread: "
          "%d\n",
-         rv));
+         uint32_t(rv)));
     return;
   }
 

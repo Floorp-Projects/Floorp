@@ -51,7 +51,7 @@ using HandleWatcher = mozilla::HandleWatcher;
   // implementation details from the MOZ_CRASH* family of macros
   MOZ_Crash(file, static_cast<int>(line),
             MOZ_CrashPrintf("%s gave nsresult %s(%" PRIX32 ")", expr,
-                            mozilla::GetStaticErrorName(res), res));
+                            mozilla::GetStaticErrorName(res), uint32_t(res)));
 }
 
 // UNWRAP: testing-oriented variant of Result::unwrap.

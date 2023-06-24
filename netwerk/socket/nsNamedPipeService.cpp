@@ -174,7 +174,7 @@ NamedPipeService::AddDataObserver(void* aHandle,
     if (mObservers.Length() == 1) {
       rv = mThread->Dispatch(this, NS_DISPATCH_NORMAL);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        LOG_NPS_ERROR("Dispatch to thread failed (%08x)", rv);
+        LOG_NPS_ERROR("Dispatch to thread failed (%08x)", uint32_t(rv));
         mObservers.Clear();
         return rv;
       }

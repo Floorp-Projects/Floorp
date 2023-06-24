@@ -45,23 +45,23 @@ DEFINE_PROPERTYKEY(EME_CONTENTDECRYPTIONMODULE_ORIGIN_ID, 0x1218a3e2, 0xcfb0,
     }                                                   \
   } while (false)
 
-#define MFCDM_REJECT_IF(pred, rv)                            \
-  do {                                                       \
-    if (MOZ_UNLIKELY(pred)) {                                \
-      MFCDM_PARENT_LOG("reject for [" #pred "], rv=%x", rv); \
-      aResolver(rv);                                         \
-      return IPC_OK();                                       \
-    }                                                        \
+#define MFCDM_REJECT_IF(pred, rv)                                      \
+  do {                                                                 \
+    if (MOZ_UNLIKELY(pred)) {                                          \
+      MFCDM_PARENT_LOG("reject for [" #pred "], rv=%x", uint32_t(rv)); \
+      aResolver(rv);                                                   \
+      return IPC_OK();                                                 \
+    }                                                                  \
   } while (false)
 
-#define MFCDM_REJECT_IF_FAILED(op, rv)                             \
-  do {                                                             \
-    HRESULT hr = op;                                               \
-    if (MOZ_UNLIKELY(FAILED(hr))) {                                \
-      MFCDM_PARENT_LOG("(" #op ") failed(hr=%lx), rv=%x", hr, rv); \
-      aResolver(rv);                                               \
-      return IPC_OK();                                             \
-    }                                                              \
+#define MFCDM_REJECT_IF_FAILED(op, rv)                                       \
+  do {                                                                       \
+    HRESULT hr = op;                                                         \
+    if (MOZ_UNLIKELY(FAILED(hr))) {                                          \
+      MFCDM_PARENT_LOG("(" #op ") failed(hr=%lx), rv=%x", hr, uint32_t(rv)); \
+      aResolver(rv);                                                         \
+      return IPC_OK();                                                       \
+    }                                                                        \
   } while (false)
 
 // RAIIized PROPVARIANT. See
