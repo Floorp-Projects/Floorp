@@ -464,11 +464,7 @@ void Accessible::DebugDescription(nsCString& aDesc) const {
 void Accessible::DebugPrint(const char* aPrefix,
                             const Accessible* aAccessible) {
   nsAutoCString desc;
-  if (aAccessible) {
-    aAccessible->DebugDescription(desc);
-  } else {
-    desc.AssignLiteral("[null]");
-  }
+  aAccessible->DebugDescription(desc);
 #  if defined(ANDROID)
   printf_stderr("%s %s\n", aPrefix, desc.get());
 #  else

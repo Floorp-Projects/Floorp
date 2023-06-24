@@ -20,7 +20,6 @@
 #include "nsAccessibilityService.h"
 #include "nsEventShell.h"
 #include "nsIAccessibleAnnouncementEvent.h"
-#include "nsIAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
 #include "nsWhitespaceTokenizer.h"
@@ -134,8 +133,11 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       RefPtr<AccessibleWrap> newPosition =
           static_cast<AccessibleWrap*>(vcEvent->NewAccessible());
       if (sessionAcc && newPosition) {
-        MOZ_ASSERT(vcEvent->Reason() == nsIAccessiblePivot::REASON_POINT);
-        sessionAcc->SendHoverEnterEvent(newPosition);
+        if (vcEvent->Reason() == nsIAccessiblePivot::REASON_POINT) {
+          sessionAcc->SendHoverEnterEvent(newPosition);
+        } else {
+          sessionAcc->SendAccessibilityFocusedEvent(newPosition);
+        }
       }
       break;
     }

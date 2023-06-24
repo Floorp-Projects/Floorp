@@ -46,6 +46,7 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
   NS_IMETHOD GetChildDocumentCount(uint32_t* aCount) final;
   NS_IMETHOD GetChildDocumentAt(uint32_t aIndex,
                                 nsIAccessibleDocument** aDocument) final;
+  NS_IMETHOD GetVirtualCursor(nsIAccessiblePivot** aVirtualCursor) final;
 
   /**
    * Return XPCOM wrapper for the internal accessible.
