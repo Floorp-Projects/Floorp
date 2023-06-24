@@ -52,6 +52,12 @@ function setBrowserDesign() {
   setTimeout(function () {
     setMultirowTabMaxHeight();
   }, 1000);
+
+  if (floorpinterfacenum == 3) {
+    loadStyleSheetWithNsStyleSheetService("chrome://browser/skin/lepton/leptonContent.css");
+  } else {
+    unloadStyleSheetWithNsStyleSheetService("chrome://browser/skin/lepton/leptonContent.css");
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {

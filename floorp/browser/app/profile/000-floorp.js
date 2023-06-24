@@ -521,7 +521,7 @@ pref("userContent.player.click_to_play",  true);
 pref("userContent.player.animate",        true);
 
 pref("userContent.newTab.field_border",   true);
-pref("userContent.newTab.full_icon",      true);
+pref("userContent.newTab.full_icon",      false);
 pref("userContent.newTab.animate",        true);
 pref("userContent.newTab.pocket_to_last", true);
 pref("userContent.newTab.searchbar",      true);
