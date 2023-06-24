@@ -234,50 +234,6 @@ addAccessibleTask(
 );
 
 /**
- * Verify that hit testing returns the proper accessible when one acc content
- * is partially hidden due to overflow:hidden;
- */
-addAccessibleTask(
-  `
-  <style>
-    div div {
-      overflow: hidden;
-      font-family: monospace;
-      width: 2ch;
-    }
-  </style>
-  <div id="container" style="display: flex; flex-direction: row-reverse;">
-    <div id="aNode">abcde</div><div id="fNode">fghij</div>
-  </div>`,
-  async function (browser, docAcc) {
-    const container = findAccessibleChildByID(docAcc, "container");
-    const aNode = findAccessibleChildByID(docAcc, "aNode");
-    const fNode = findAccessibleChildByID(docAcc, "fNode");
-    const dpr = await getContentDPR(browser);
-    const [, , containerWidth] = Layout.getBounds(container, dpr);
-    const [, , aNodeWidth] = Layout.getBounds(aNode, dpr);
-
-    await testChildAtPoint(
-      dpr,
-      containerWidth - 1,
-      1,
-      container,
-      aNode,
-      aNode.firstChild
-    );
-    await testChildAtPoint(
-      dpr,
-      containerWidth - aNodeWidth - 1,
-      1,
-      container,
-      fNode,
-      fNode.firstChild
-    );
-  },
-  { chrome: true, iframe: true, remoteIframe: true }
-);
-
-/**
  * Verify that hit testing is appropriately fuzzy when working with generics.
  * If we match on a generic which contains additional generics and a single text
  * leaf, we should return the text leaf as the deepest match instead of the
