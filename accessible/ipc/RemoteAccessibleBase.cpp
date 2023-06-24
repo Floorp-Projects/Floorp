@@ -492,22 +492,6 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
           // first match we encounter is guaranteed to be the
           // deepest match.
           lastMatch = acc;
-          if (lastMatch->Role() == roles::TEXT_CONTAINER) {
-            // We've matched on a generic, we probably want its
-            // inner text leaf (if one exists). Drill down through
-            // subsequent generics, regardless of whether the point
-            // we want is actually contained therein."
-            while (lastMatch->ChildCount() == 1) {
-              if (lastMatch->Role() == roles::TEXT_CONTAINER) {
-                lastMatch = lastMatch->RemoteChildAt(0);
-              } else {
-                break;
-              }
-            }
-            // If we failed to find a text leaf, fall back to the
-            // original generic match.
-            lastMatch = lastMatch->IsTextLeaf() ? lastMatch : acc;
-          }
           break;
         }
       }
