@@ -50,7 +50,7 @@
                 android:padding="16dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/mozac_ic_arrowhead_down"
+                app:srcCompat="@drawable/mozac_ic_chevron_down_24"
                 app:tint="?android:colorEdgeEffect" />
 
             <androidx.recyclerview.widget.RecyclerView

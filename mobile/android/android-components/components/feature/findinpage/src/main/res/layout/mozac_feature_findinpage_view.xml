@@ -65,7 +65,7 @@
             android:id="@+id/find_in_page_next_btn"
             style="@style/Mozac.Feature.FindInPage.Buttons"
             android:contentDescription="@string/mozac_feature_findindpage_next_result"
-            app:srcCompat="@drawable/mozac_ic_arrowhead_down"
+            app:srcCompat="@drawable/mozac_ic_chevron_down_24"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/find_in_page_close_btn"
             app:layout_constraintStart_toEndOf="@+id/find_in_page_prev_btn"
