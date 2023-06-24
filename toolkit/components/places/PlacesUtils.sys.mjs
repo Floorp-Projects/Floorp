@@ -641,7 +641,7 @@ export var PlacesUtils = {
   nodeIsBookmark: function PU_nodeIsBookmark(aNode) {
     return (
       aNode.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_URI &&
-      aNode.itemId != -1
+      (aNode.itemId != -1 || aNode.bookmarkGuid)
     );
   },
 
@@ -1536,6 +1536,10 @@ export var PlacesUtils = {
    * @rejects if aItemId is invalid.
    */
   promiseItemGuid(aItemId) {
+    // TODO: Move this to PlacesTestUtils.
+    if (!PlacesUtils.isInAutomation) {
+      throw new Error("This is a test-only utility, don't use in production");
+    }
     return GuidHelper.getItemGuid(aItemId);
   },
 
@@ -1550,6 +1554,10 @@ export var PlacesUtils = {
    * @rejects if there's no item for the given GUID.
    */
   promiseItemId(aGuid) {
+    // TODO: Move this to PlacesTestUtils.
+    if (!PlacesUtils.isInAutomation) {
+      throw new Error("This is a test-only utility, don't use in production");
+    }
     return GuidHelper.getItemId(aGuid);
   },
 
@@ -1673,7 +1681,7 @@ export var PlacesUtils = {
         item.id = itemId;
       }
 
-      // Cache it for promiseItemId consumers regardless.
+      // Cache it regardless.
       GuidHelper.updateCache(itemId, item.guid);
 
       let type = aRow.getResultByName("type");

@@ -37,8 +37,6 @@
  * GUIDs, both for input (e.g. for setting the parent folder for a new bookmark)
  * and for output (when the GUID for such a bookmark is propagated).
  *
- * Should you need to convert GUIDs to item-ids, use PlacesUtils.promiseItemId.
- *
  * Constructing transactions
  * -------------------------
  * At the bottom of this module you will find transactions for all Places UI

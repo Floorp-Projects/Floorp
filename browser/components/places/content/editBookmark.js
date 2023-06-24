@@ -52,9 +52,8 @@ var gEditItemOverlay = {
     // Since there's no true UI for folder shortcuts (they show up just as their target
     // folders), when the pane shows for them it's opened in read-only mode, showing the
     // properties of the target folder.
-    let itemId = node ? node.itemId : -1;
     let itemGuid = node ? PlacesUtils.getConcreteItemGuid(node) : null;
-    let isItem = itemId != -1;
+    let isItem = !!itemGuid;
     let isFolderShortcut =
       isItem &&
       node.type == Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER_SHORTCUT;
@@ -78,16 +77,15 @@ var gEditItemOverlay = {
     let parentGuid = null;
 
     if (node && isItem) {
-      if (
-        !node.parent ||
-        (node.parent.itemId > 0 && !node.parent.bookmarkGuid)
-      ) {
+      if (!node.parent) {
         throw new Error(
           "Cannot use an incomplete node to initialize the edit bookmark panel"
         );
       }
       let parent = node.parent;
       isParentReadOnly = !PlacesUtils.nodeIsFolder(parent);
+      // Note this may be an empty string, that'd the case for the root node
+      // of a search, or a virtual root node, like the Library left pane.
       parentGuid = parent.bookmarkGuid;
     }
 
@@ -95,7 +93,6 @@ var gEditItemOverlay = {
     let onPanelReady = aInitInfo.onPanelReady;
 
     return (this._paneInfo = {
-      itemId,
       itemGuid,
       parentGuid,
       isItem,
@@ -120,16 +117,21 @@ var gEditItemOverlay = {
     return this._paneInfo != null;
   },
 
-  // Backwards-compatibility getters
-  get itemId() {
+  /**
+   * The concrete bookmark GUID is either the bookmark one or, for folder
+   * shortcuts, the target one.
+   *
+   * @returns {string} GUID of the loaded bookmark, or null if not a bookmark.
+   */
+  get concreteGuid() {
     if (
       !this.initialized ||
       this._paneInfo.isTag ||
       this._paneInfo.bulkTagging
     ) {
-      return -1;
+      return null;
     }
-    return this._paneInfo.itemId;
+    return this._paneInfo.itemGuid;
   },
 
   get uri() {
@@ -246,7 +248,7 @@ var gEditItemOverlay = {
    *   Either a result node or a node-like object representing the item to be edited.
    *   A node-like object must have the following properties (with values that
    *   match exactly those a result node would have):
-   *   itemId, bookmarkGuid, uri, title, type.
+   *   bookmarkGuid, uri, title, type, …
    * @param {nsIURI[]} [aInfo.uris]
    *   If aInfo.node is not specified, this must be specified.
    *   An array of uris for bulk tagging.

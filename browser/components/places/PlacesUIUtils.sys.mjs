@@ -1235,17 +1235,11 @@ export var PlacesUIUtils = {
     }
 
     let parent = {
-      itemId: await lazy.PlacesUtils.promiseItemId(aFetchInfo.parentGuid),
       bookmarkGuid: aFetchInfo.parentGuid,
       type: Ci.nsINavHistoryResultNode.RESULT_TYPE_FOLDER,
     };
 
-    let itemId =
-      aFetchInfo.guid === lazy.PlacesUtils.bookmarks.unsavedGuid
-        ? undefined
-        : await lazy.PlacesUtils.promiseItemId(aFetchInfo.guid);
     return Object.freeze({
-      itemId,
       bookmarkGuid: aFetchInfo.guid,
       title: aFetchInfo.title,
       uri: aFetchInfo.url !== undefined ? aFetchInfo.url.href : "",
