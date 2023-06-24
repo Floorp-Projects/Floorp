@@ -26,7 +26,7 @@
         android:paddingEnd="16dp"
         android:text="@string/mozac_feature_addons_learn_more"
         android:textColor="@android:color/black"
-        app:drawableEndCompat="@drawable/mozac_ic_link"
+        app:drawableEndCompat="@drawable/mozac_ic_link_24"
         app:drawableTint="@android:color/black" />
 
 </RelativeLayout>

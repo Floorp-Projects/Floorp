@@ -113,7 +113,7 @@
             android:layout_below="@+id/last_updated_divider"
             android:layout_alignParentEnd="true"
             android:contentDescription="@string/mozac_feature_addons_home_page"
-            app:srcCompat="@drawable/mozac_ic_link"
+            app:srcCompat="@drawable/mozac_ic_link_24"
             app:tint="@android:color/black" />
 
         <View

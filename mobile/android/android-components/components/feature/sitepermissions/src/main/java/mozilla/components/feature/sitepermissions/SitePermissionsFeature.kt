@@ -817,7 +817,7 @@ class SitePermissionsFeature(
                     host,
                     permissionRequest,
                     R.string.mozac_feature_sitepermissions_media_key_system_access_title,
-                    iconsR.drawable.mozac_ic_link,
+                    iconsR.drawable.mozac_ic_link_24,
                     showDoNotAskAgainCheckBox = false,
                     shouldSelectRememberChoice = true,
                 )
