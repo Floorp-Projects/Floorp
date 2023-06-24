@@ -54,7 +54,7 @@
             android:contentDescription="@string/content_description_close_button"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/mozac_ic_close_20"
+            app:srcCompat="@drawable/mozac_ic_cross_20"
             app:tint="@color/fx_mobile_private_text_color_primary" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </LinearLayout>

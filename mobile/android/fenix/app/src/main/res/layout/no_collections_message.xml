@@ -35,7 +35,7 @@
         app:layout_constraintBottom_toBottomOf="@id/no_collections_header"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@id/no_collections_header"
-        app:srcCompat="@drawable/mozac_ic_close_20"
+        app:srcCompat="@drawable/mozac_ic_cross_20"
         app:tint="?attr/textPrimary" />
 
     <TextView
