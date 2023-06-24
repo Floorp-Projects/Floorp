@@ -58,20 +58,14 @@ function asQuery(aNode) {
 async function notifyKeywordChange(url, keyword, source) {
   // Notify bookmarks about the removal.
   let bookmarks = [];
-  await PlacesUtils.bookmarks.fetch({ url }, b => bookmarks.push(b));
-  for (let bookmark of bookmarks) {
-    let ids = await PlacesUtils.promiseManyItemIds([
-      bookmark.guid,
-      bookmark.parentGuid,
-    ]);
-    bookmark.id = ids.get(bookmark.guid);
-    bookmark.parentId = ids.get(bookmark.parentGuid);
-  }
+  await PlacesUtils.bookmarks.fetch({ url }, b => bookmarks.push(b), {
+    includeItemIds: true,
+  });
 
   const notifications = bookmarks.map(
     bookmark =>
       new PlacesBookmarkKeyword({
-        id: bookmark.id,
+        id: bookmark.itemId,
         itemType: bookmark.type,
         url,
         guid: bookmark.guid,
@@ -1571,6 +1565,10 @@ export var PlacesUtils = {
    * @rejects if not all of the GUIDs could be found.
    */
   promiseManyItemIds(aGuids) {
+    // TODO: Move this to PlacesTestUtils.
+    if (!PlacesUtils.isInAutomation) {
+      throw new Error("This is a test-only utility, don't use in production");
+    }
     return GuidHelper.getManyItemIds(aGuids);
   },
 

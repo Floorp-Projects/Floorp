@@ -1453,6 +1453,10 @@ export var Bookmarks = Object.freeze({
    *                        set to true, the path property is set on results
    *                        containing an array of {title, guid} objects
    *                        ordered from root to leaf.
+   *         - includeItemIds:
+   *             include .itemId and .parentId in the results.
+   *             ALWAYS USE THE GUIDs instead of these, unless it's _really_
+   *             necessary to get them, e.g. when sending Places notifications.
    *
    * @return {Promise} resolved when the fetch is complete.
    * @resolves to an object representing the found item, as described above, or
@@ -1504,6 +1508,7 @@ export var Bookmarks = Object.freeze({
     options = {
       concurrent: !!options.concurrent,
       includePath: !!options.includePath,
+      includeItemIds: !!options.includeItemIds,
     };
 
     let behavior = {};
@@ -1556,6 +1561,10 @@ export var Bookmarks = Object.freeze({
         if (r.type == this.TYPE_FOLDER) {
           r.childCount = r._childCount;
         }
+        if (options.includeItemIds) {
+          r.itemId = r._id;
+          r.parentId = r._parentId;
+        }
         return Object.assign({}, r);
       });
 
@@ -1592,8 +1601,10 @@ export var Bookmarks = Object.freeze({
    * Each node in the tree is an object that extends the item representation
    * described above with some additional properties:
    *
-   *  - [deprecated] id (number)
+   *  - [deprecated] itemId (number)
    *      the item's id.  Defined only if aOptions.includeItemIds is set.
+   *  - [deprecated] parentId (number)
+   *      the item's parent id.  Defined only if aOptions.includeItemIds is set.
    *  - annos (array)
    *      the item's annotations.  This is not set if there are no annotations
    *      set for the item.
@@ -2537,8 +2548,8 @@ async function fetchBookmarksByParentGUID(info, options = {}) {
       `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
               b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
               h.url AS url,
-              NULL AS _id,
-              NULL AS _parentId,
+              b.id AS _id,
+              b.parent AS _parentId,
               (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
               NULL AS _grandParentId,
               NULL AS _syncStatus
@@ -2571,9 +2582,9 @@ function fetchRecentBookmarks(numberOfItems) {
       let rows = await db.executeCached(
         `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
                 b.dateAdded, b.lastModified, b.type,
-                IFNULL(b.title, '') AS title, h.url AS url, NULL AS _id,
-                NULL AS _parentId, NULL AS _childCount, NULL AS _grandParentId,
-                NULL AS _syncStatus
+                IFNULL(b.title, '') AS title, h.url AS url, b.id AS _id,
+                b.parent AS _parentId, NULL AS _childCount,
+                NULL AS _grandParentId, NULL AS _syncStatus
         FROM moz_bookmarks b
         JOIN moz_bookmarks p ON p.id = b.parent
         JOIN moz_places h ON h.id = b.fk
