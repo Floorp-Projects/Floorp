@@ -57,7 +57,7 @@ class ContainerToolbarAction(
         @ColorInt val tint = getTint(context, container.color)
 
         return when (container.icon) {
-            Icon.FINGERPRINT -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_fingerprint, tint)
+            Icon.FINGERPRINT -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_fingerprinter_24, tint)
             Icon.BRIEFCASE -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_briefcase, tint)
             Icon.DOLLAR -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_dollar, tint)
             Icon.CART -> loadAndTintDrawable(context, iconsR.drawable.mozac_ic_cart, tint)
