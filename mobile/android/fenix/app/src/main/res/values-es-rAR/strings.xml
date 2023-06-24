@@ -372,13 +372,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Acerca de</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Seleccioná uno</string>
+    <string name="preferences_category_select_default_search_engine">Seleccioná uno</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Administrar atajos de búsqueda</string>
+    <string name="preferences_manage_search_shortcuts">Administrar atajos de búsqueda</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Editar buscadores visibles en el menú de búsqueda</string>
+    <string name="preferences_manage_search_shortcuts_summary">Editar buscadores visibles en el menú de búsqueda</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Buscadores visibles en el menú de búsqueda</string>
+    <string name="preferences_category_engines_in_search_menu">Buscadores visibles en el menú de búsqueda</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Motor de búsqueda predeterminado</string>
     <!-- Preference for settings related to Search -->
@@ -640,6 +640,8 @@
     <string name="addon_already_installed">El complemento ya está instalado</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Administrar cuenta</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronizar ahora</string>
     <!-- Preference category for sync -->
@@ -1901,7 +1903,7 @@
     <string name="search_engine_add_custom_search_engine_title">Agregar buscador</string>
 
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Agregar un nuevo buscador</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Agregar un nuevo buscador</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Agregar buscador</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1916,17 +1918,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Otro</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Nombre</string>
+    <string name="search_add_custom_engine_name_label">Nombre</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Nombre</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Nombre del buscador</string>
+    <string name="search_add_custom_engine_name_hint_2">Nombre del buscador</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">URL de la cadena de búsqueda</string>
+    <string name="search_add_custom_engine_url_label">URL de la cadena de búsqueda</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Cadena de búsqueda para usar</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">URL a usar para la búsqueda</string>
+    <string name="search_add_custom_engine_search_string_hint_2">URL a usar para la búsqueda</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Reemplazar la consulta con &quot;%s&quot;. Ejemplo:\n https://www.google.com/search?q=%s</string>
 
@@ -1934,7 +1936,7 @@
     <string name="search_add_custom_engine_form_description">Detalles del motor de búsqueda personalizado</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Guardar</string>
+    <string name="search_custom_engine_save_button">Guardar</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Ingresar el nombre del buscador</string>

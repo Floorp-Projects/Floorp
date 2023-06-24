@@ -45,6 +45,8 @@
     <string name="mozac_feature_prompts_choose_a_color">Dewis lliw</string>
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Dewiswch ddarparwr mewngofnodi</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">Dewiswch gyfrif</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Caniatáu</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -127,4 +129,8 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">Lleihau awgrymiadau cyfeiriadau</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Rheoli cyfeiriadau</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">Llun cyfrif</string>
 </resources>

@@ -636,6 +636,8 @@
     <string name="addon_already_installed">Дадатак ужо ўсталяваны</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Кіраванне ўліковым запісам</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Сінхранізаваць</string>
     <!-- Preference category for sync -->

@@ -368,13 +368,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Oer</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Selektearje ien</string>
+    <string name="preferences_category_select_default_search_engine">Selektearje ien</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Sykfluchkeppelingen beheare</string>
+    <string name="preferences_manage_search_shortcuts">Sykfluchkeppelingen beheare</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Yn it sykmenu sichtbere sykmasinen bewurkje</string>
+    <string name="preferences_manage_search_shortcuts_summary">Yn it sykmenu sichtbere sykmasinen bewurkje</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Yn it sykmenu sichtbere sykmasinen</string>
+    <string name="preferences_category_engines_in_search_menu">Yn it sykmenu sichtbere sykmasinen</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Standertsykmasine</string>
     <!-- Preference for settings related to Search -->
@@ -636,6 +636,8 @@
     <string name="addon_already_installed">Add-on is al ynstallearre</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Account beheare</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">No syngronisearje</string>
     <!-- Preference category for sync -->
@@ -1873,7 +1875,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Sykmasine tafoegje</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Nije sykmasine tafoegje</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Nije sykmasine tafoegje</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Sykmasine bewurkje</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1888,17 +1890,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Oars</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Namme</string>
+    <string name="search_add_custom_engine_name_label">Namme</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Namme</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Namme fan sykmasine</string>
+    <string name="search_add_custom_engine_name_hint_2">Namme fan sykmasine</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Sykterm-URL</string>
+    <string name="search_add_custom_engine_url_label">Sykterm-URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Te brûken sykterm</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">Foar de sykopdracht te brûken URL</string>
+    <string name="search_add_custom_engine_search_string_hint_2">Foar de sykopdracht te brûken URL</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Sykfraach ferfange troch ‘%s’. Bygelyks: \nhttps://www.google.com/search?q=%s</string>
 
@@ -1906,7 +1908,7 @@
     <string name="search_add_custom_engine_form_description">Details oanpaste sykmasine</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Bewarje</string>
+    <string name="search_custom_engine_save_button">Bewarje</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Fier namme fan sykmasine yn</string>

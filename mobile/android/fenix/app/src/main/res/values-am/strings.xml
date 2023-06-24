@@ -359,13 +359,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">ስለ</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">አንዱን ይምረጡ</string>
+    <string name="preferences_category_select_default_search_engine">አንዱን ይምረጡ</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">የፍለጋ አቋራጮችን ያስተዳድሩ</string>
+    <string name="preferences_manage_search_shortcuts">የፍለጋ አቋራጮችን ያስተዳድሩ</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">በፍለጋ ምናሌው ውስጥ የሚታዩ ፍርግሞችን ያርትዑ</string>
+    <string name="preferences_manage_search_shortcuts_summary">በፍለጋ ምናሌው ውስጥ የሚታዩ ፍርግሞችን ያርትዑ</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">በፍለጋ ምናሌው ውስጥ የሚታዩ ፍርግሞች</string>
+    <string name="preferences_category_engines_in_search_menu">በፍለጋ ምናሌው ውስጥ የሚታዩ ፍርግሞች</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">ነባሪ የፍለጋ ፍርግም</string>
     <!-- Preference for settings related to Search -->
@@ -629,6 +629,8 @@
     <string name="addon_already_installed">ተጨማሪ አስቀድሞ ተጭኗል</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">መለያ ያስተዳድሩ</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">አሁን አመሳስል</string>
     <!-- Preference category for sync -->
@@ -1851,7 +1853,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">የፍለጋ ፍርግም አክል</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">አዲስ የፍለጋ ፍርግም ያክሉ</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">አዲስ የፍለጋ ፍርግም ያክሉ</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">የፍለጋ ፍርግሞችን ያርትዑ</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1866,26 +1868,26 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">ሌላ</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">ስም</string>
+    <string name="search_add_custom_engine_name_label">ስም</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">ስም</string>
 
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">የፍለጋ ፍርግም ስም</string>
+    <string name="search_add_custom_engine_name_hint_2">የፍለጋ ፍርግም ስም</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">የፍለጋ ሕብረ-ቁምፊ URL</string>
+    <string name="search_add_custom_engine_url_label">የፍለጋ ሕብረ-ቁምፊ URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ለፍለጋ የሚጠቀሙት ሕብረቁምፊ</string>
 
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">ለፍለጋ የሚጠቀሙት URL</string>
+    <string name="search_add_custom_engine_search_string_hint_2">ለፍለጋ የሚጠቀሙት URL</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">ጥያቄውን በ &quot;%s&quot; ይተኩ። ምሳሌ፡- \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">ብጁ የፍለጋ ፍርግም ዝርዝር ማብራሪያዎች</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">አስቀምጥ</string>
+    <string name="search_custom_engine_save_button">አስቀምጥ</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">የፍለጋ ፍርግም ስም ያስገቡ</string>

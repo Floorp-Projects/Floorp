@@ -373,13 +373,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Over</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Selecteer er een</string>
+    <string name="preferences_category_select_default_search_engine">Selecteer er een</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Zoeksnelkoppelingen beheren</string>
+    <string name="preferences_manage_search_shortcuts">Zoeksnelkoppelingen beheren</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">In het zoekmenu zichtbare zoekmachines bewerken</string>
+    <string name="preferences_manage_search_shortcuts_summary">In het zoekmenu zichtbare zoekmachines bewerken</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">In het zoekmenu zichtbare zoekmachines</string>
+    <string name="preferences_category_engines_in_search_menu">In het zoekmenu zichtbare zoekmachines</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Standaardzoekmachine</string>
     <!-- Preference for settings related to Search -->
@@ -642,6 +642,8 @@
     <string name="addon_already_installed">Add-on is al geïnstalleerd</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Account beheren</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Nu synchroniseren</string>
     <!-- Preference category for sync -->
@@ -1886,7 +1888,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Zoekmachine toevoegen</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Nieuwe zoekmachine toevoegen</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Nieuwe zoekmachine toevoegen</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Zoekmachine bewerken</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1901,17 +1903,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Overig</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Naam</string>
+    <string name="search_add_custom_engine_name_label">Naam</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Naam</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Naam van zoekmachine</string>
+    <string name="search_add_custom_engine_name_hint_2">Naam van zoekmachine</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Zoekterm-URL</string>
+    <string name="search_add_custom_engine_url_label">Zoekterm-URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Te gebruiken zoekterm</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">Voor de zoekopdracht te gebruiken URL</string>
+    <string name="search_add_custom_engine_search_string_hint_2">Voor de zoekopdracht te gebruiken URL</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Zoekvraag vervangen door ‘%s’. Bijvoorbeeld: \nhttps://www.google.com/search?q=%s</string>
 
@@ -1919,7 +1921,7 @@
     <string name="search_add_custom_engine_form_description">Details aangepaste zoekmachine</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Opslaan</string>
+    <string name="search_custom_engine_save_button">Opslaan</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Voer naam van zoekmachine in</string>
