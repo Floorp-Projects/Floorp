@@ -158,7 +158,6 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(FormData* aFormData) override;
-  bool AllowDrop() override;
 
   void FieldSetDisabledChanged(bool aNotify) override;
 
