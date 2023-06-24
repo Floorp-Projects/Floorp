@@ -139,7 +139,7 @@ class ToolbarActivity : AppCompatActivity() {
         binding.toolbar.addNavigationAction(back)
 
         val forward = BrowserToolbar.Button(
-            resources.getThemedDrawable(iconsR.drawable.mozac_ic_forward)!!,
+            resources.getThemedDrawable(iconsR.drawable.mozac_ic_forward_24)!!,
             "Forward",
         ) {
             simulateReload()
@@ -236,7 +236,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val forward = BrowserMenuItemToolbar.Button(
-            iconsR.drawable.mozac_ic_forward,
+            iconsR.drawable.mozac_ic_forward_24,
             "Forward",
             isEnabled = { canGoForward() },
         ) {

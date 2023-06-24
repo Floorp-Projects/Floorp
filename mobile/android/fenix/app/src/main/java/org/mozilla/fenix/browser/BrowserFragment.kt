@@ -278,7 +278,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             forwardAction = BrowserToolbar.TwoStateButton(
                 primaryImage = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_forward,
+                    R.drawable.mozac_ic_forward_24,
                 )!!,
                 primaryContentDescription = context.getString(R.string.browser_menu_forward),
                 primaryImageTintResource = enableTint,

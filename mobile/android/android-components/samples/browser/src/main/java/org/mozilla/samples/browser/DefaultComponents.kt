@@ -393,7 +393,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         }
 
         val forward = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = iconsR.drawable.mozac_ic_forward,
+            primaryImageResource = iconsR.drawable.mozac_ic_forward_24,
             primaryContentDescription = "Forward",
             primaryImageTintResource = photonColors.photonBlue90,
             isInPrimaryState = {

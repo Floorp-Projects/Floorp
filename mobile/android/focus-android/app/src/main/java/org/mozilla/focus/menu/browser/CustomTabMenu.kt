@@ -54,7 +54,7 @@ class CustomTabMenu(
         }
 
         val forward = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = R.drawable.mozac_ic_forward,
+            primaryImageResource = R.drawable.mozac_ic_forward_24,
             primaryContentDescription = context.getString(R.string.content_description_forward),
             primaryImageTintResource = context.theme.resolveAttribute(R.attr.primaryText),
             isInPrimaryState = {

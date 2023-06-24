@@ -62,7 +62,7 @@ class NavigationButtonsIntegration(
         toolbar.addNavigationAction(backButton)
 
         val forwardButton = BrowserToolbar.TwoStateButton(
-            primaryImage = ContextCompat.getDrawable(context, R.drawable.mozac_ic_forward)!!,
+            primaryImage = ContextCompat.getDrawable(context, R.drawable.mozac_ic_forward_24)!!,
             primaryContentDescription = context.getString(R.string.content_description_forward),
             primaryImageTintResource = enabledColorRes,
             isInPrimaryState = {

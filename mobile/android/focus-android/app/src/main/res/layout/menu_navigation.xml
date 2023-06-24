@@ -16,7 +16,7 @@
         android:layout_weight="1"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/content_description_forward"
-        android:src="@drawable/mozac_ic_forward"/>
+        android:src="@drawable/mozac_ic_forward_24"/>
 
     <ImageButton
         android:id="@+id/refresh"
