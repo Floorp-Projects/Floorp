@@ -44,6 +44,6 @@
         android:visibility="gone"
         android:background="@android:color/transparent"
         android:importantForAccessibility="no"
-        app:srcCompat="@drawable/mozac_ic_arrowhead_right"/>
+        app:srcCompat="@drawable/mozac_ic_chevron_right_24"/>
 
 </LinearLayout>

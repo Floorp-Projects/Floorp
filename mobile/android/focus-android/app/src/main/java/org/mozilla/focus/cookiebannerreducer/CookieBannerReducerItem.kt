@@ -150,7 +150,7 @@ fun CookieBannerReducerItem(
                     .padding(end = 0.dp)
                     .size(24.dp),
                 tint = focusColors.onPrimary,
-                painter = painterResource(id = R.drawable.mozac_ic_arrowhead_right),
+                painter = painterResource(id = R.drawable.mozac_ic_chevron_right_24),
                 contentDescription = null,
             )
         }

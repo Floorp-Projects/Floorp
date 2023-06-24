@@ -47,7 +47,7 @@
 
         <ImageView
             android:id="@+id/icon"
-            android:src="@drawable/mozac_ic_arrowhead_right"
+            android:src="@drawable/mozac_ic_chevron_right_24"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:importantForAccessibility="no" />

@@ -119,7 +119,7 @@ class TrackingProtectionPanel(
             context.getString(R.string.insecure_connection)
         }
 
-        val nextIcon = AppCompatResources.getDrawable(context, R.drawable.mozac_ic_arrowhead_right)
+        val nextIcon = AppCompatResources.getDrawable(context, R.drawable.mozac_ic_chevron_right_24)
 
         val securityIcon = if (isConnectionSecure) {
             AppCompatResources.getDrawable(context, R.drawable.mozac_ic_lock)
