@@ -96,7 +96,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         val homeAction = BrowserToolbar.Button(
             imageDrawable = AppCompatResources.getDrawable(
                 context,
-                R.drawable.mozac_ic_home,
+                R.drawable.mozac_ic_home_24,
             )!!,
             contentDescription = context.getString(R.string.browser_toolbar_home),
             iconTintColorResource = ThemeManager.resolveAttribute(R.attr.textPrimary, context),
