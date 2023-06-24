@@ -32,7 +32,7 @@
         android:title="@string/preference_phone_feature_microphone" />
 
     <androidx.preference.Preference
-        android:icon="@drawable/mozac_ic_notification"
+        android:icon="@drawable/mozac_ic_notification_24"
         android:key="@string/pref_key_phone_feature_notification"
         android:layout="@layout/focus_preference_new_tab"
         android:summary="@string/preference_option_phone_feature_ask_to_allow"

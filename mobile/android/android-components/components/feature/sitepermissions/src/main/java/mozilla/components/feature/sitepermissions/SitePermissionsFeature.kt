@@ -770,7 +770,7 @@ class SitePermissionsFeature(
                     host,
                     permissionRequest,
                     R.string.mozac_feature_sitepermissions_notification_title,
-                    iconsR.drawable.mozac_ic_notification,
+                    iconsR.drawable.mozac_ic_notification_24,
                     showDoNotAskAgainCheckBox = false,
                     shouldSelectRememberChoice = false,
                     isNotificationRequest = true,
