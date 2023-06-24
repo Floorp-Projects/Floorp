@@ -19,6 +19,21 @@ interface nsIVariant;
 interface mozIStorageCompletionCallback;
 
 /**
+ * PRIVACY WARNING
+ * ===============
+ *
+ * Database file names can be exposed through telemetry and in crash reports on
+ * the https://crash-stats.mozilla.org site, to allow recognizing the affected
+ * database.
+ * if your database name may contain privacy sensitive information, e.g. an
+ * URL origin, you should use openDatabaseWithFileURL and pass an explicit
+ * TelemetryFilename to it. That name will be used both for telemetry and for
+ * thread names in crash reports.
+ * If you have different needs (e.g. using the javascript module or an async
+ * connection from the main thread) please coordinate with the mozStorage peers.
+ */
+
+/**
  * The mozIStorageService interface is intended to be implemented by
  * a service that can create storage connections (mozIStorageConnection)
  * to either a well-known profile database or to a specific database file.

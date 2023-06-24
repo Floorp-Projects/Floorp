@@ -467,8 +467,9 @@ Service::OpenSpecialDatabase(const nsACString& aStorageKey,
     flags |= SQLITE_OPEN_URI;
   }
 
-  RefPtr<Connection> msc = new Connection(this, flags, Connection::SYNCHRONOUS,
-                                          ":memory:"_ns, interruptible);
+  RefPtr<Connection> msc =
+      new Connection(this, flags, Connection::SYNCHRONOUS,
+                     kMozStorageMemoryStorageKey, interruptible);
   const nsresult rv = msc->initialize(aStorageKey, aName);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -589,7 +590,7 @@ Service::OpenAsyncDatabase(nsIVariant* aDatabaseStore, uint32_t aOpenFlags,
   // Create connection on this thread, but initialize it on its helper thread.
   nsAutoCString telemetryFilename;
   if (!storageFile) {
-    telemetryFilename.AssignLiteral("memory");
+    telemetryFilename.Assign(kMozStorageMemoryStorageKey);
   } else {
     rv = storageFile->GetNativeLeafName(telemetryFilename);
     NS_ENSURE_SUCCESS(rv, rv);

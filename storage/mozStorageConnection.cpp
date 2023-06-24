@@ -707,8 +707,15 @@ nsIEventTarget* Connection::getAsyncExecutionTarget() {
 
   // Create the async event target if there's none yet.
   if (!mAsyncExecutionThread) {
+    // Names start with "sqldb:" followed by a recognizable name, like the
+    // database file name, or a specially crafted name like "memory".
+    // This name will be surfaced on https://crash-stats.mozilla.org, so any
+    // sensitive part of the file name (e.g. an URL origin) should be replaced
+    // by passing an explicit telemetryName to openDatabaseWithFileURL.
+    nsAutoCString name("sqldb:"_ns);
+    name.Append(mTelemetryFilename);
     static nsThreadPoolNaming naming;
-    nsresult rv = NS_NewNamedThread(naming.GetNextThreadName("mozStorage"),
+    nsresult rv = NS_NewNamedThread(naming.GetNextThreadName(name),
                                     getter_AddRefs(mAsyncExecutionThread));
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to create async thread.");
