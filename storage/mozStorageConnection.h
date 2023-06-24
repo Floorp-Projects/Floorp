@@ -32,8 +32,7 @@ class nsIEventTarget;
 class nsISerialEventTarget;
 class nsIThread;
 
-namespace mozilla {
-namespace storage {
+namespace mozilla::storage {
 
 class Connection final : public mozIStorageConnection,
                          public nsIInterfaceRequestor {
@@ -85,7 +84,8 @@ class Connection final : public mozIStorageConnection,
    */
   Connection(Service* aService, int aFlags,
              ConnectionOperation aSupportedOperations,
-             bool aInterruptible = false, bool aIgnoreLockingMode = false);
+             const nsCString& aTelemetryFilename, bool aInterruptible = false,
+             bool aIgnoreLockingMode = false);
 
   /**
    * Creates the connection to an in-memory database.
@@ -108,8 +108,7 @@ class Connection final : public mozIStorageConnection,
    *        The nsIFileURL of the location of the database to open, or create if
    * it does not exist.
    */
-  nsresult initialize(nsIFileURL* aFileURL,
-                      const nsACString& aTelemetryFilename);
+  nsresult initialize(nsIFileURL* aFileURL);
 
   /**
    * Same as initialize, but to be used on the async thread.
@@ -186,7 +185,7 @@ class Connection final : public mozIStorageConnection,
   /**
    * Closes the SQLite database, and warns about any non-finalized statements.
    */
-  nsresult internalClose(sqlite3* aDBConn);
+  nsresult internalClose(sqlite3* aNativeconnection);
 
   /**
    * Shuts down the passed-in async thread.
@@ -547,8 +546,7 @@ class CallbackComplete final : public Runnable {
   RefPtr<mozIStorageCompletionCallback> mCallback;
 };
 
-}  // namespace storage
-}  // namespace mozilla
+}  // namespace mozilla::storage
 
 /**
  * Casting Connection to nsISupports is ambiguous.
