@@ -108,7 +108,7 @@ class DefaultBrowserMenu(
 
         val shortcuts = TwoStateBrowserMenuImageText(
             primaryLabel = context.getString(R.string.menu_add_to_shortcuts),
-            primaryStateIconResource = R.drawable.mozac_ic_pin,
+            primaryStateIconResource = R.drawable.mozac_ic_pin_24,
             secondaryLabel = context.getString(R.string.menu_remove_from_shortcuts),
             secondaryStateIconResource = R.drawable.mozac_ic_pin_remove,
             isInPrimaryState = {
