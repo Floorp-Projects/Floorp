@@ -449,6 +449,7 @@ toolbar #workspace-button:not([disabled="true"], [checked], [open], :active):hov
   display: inherit;
   font-weight: bold;
   margin-top: auto;
+  background: none !important;
   margin-bottom: auto;
   font-size: larger;
 }
