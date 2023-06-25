@@ -105,9 +105,19 @@ function extractColorsFromBase64Image(base64Image) {
         }
   
         let elem = document.createElement("style");
+        let textColor = result.averageColor - 0x222222 > 0xffffff / 2 ? "#000000" : "#ffffff";
         let CSS = `
-          #navigator-toolbox:-moz-lwtheme {
+          #navigator-toolbox:not(:-moz-lwtheme), #navigator-toolbox:-moz-lwtheme {
             background-color: ${result.averageColor} !important;
+          }
+
+          .tab-label:not([selected="true"]) {
+            color: ${textColor} !important;
+          }
+
+          .tab-icon-stack > * , #TabsToolbar-customization-target > *, #tabs-newtab-button, .titlebar-color > * {
+            color: ${textColor} !important;
+            fill: ${textColor} !important;
           }
         `;
         elem.textContent = CSS;
