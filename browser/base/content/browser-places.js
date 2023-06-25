@@ -32,6 +32,7 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 var StarUI = {
+  userHasTags: undefined,
   _itemGuids: null,
   _isNewBookmark: false,
   _isComposing: false,
@@ -257,10 +258,24 @@ var StarUI = {
         { capture: true, once: true }
       );
     };
+
+    let hiddenRows = ["location", "keyword"];
+
+    if (this.userHasTags === undefined) {
+      // Cache must be initialized
+      const fetchedTags = await PlacesUtils.bookmarks.fetchTags();
+      this.userHasTags = !!fetchedTags.length;
+    }
+
+    if (!this.userHasTags) {
+      // Hide tags ui because user has no tags defined
+      hiddenRows.push("tags");
+    }
+
     await gEditItemOverlay.initPanel({
       node: aNode,
       onPanelReady,
-      hiddenRows: ["location", "keyword"],
+      hiddenRows,
       focusedElement: "preferred",
       isNewBookmark: this._isNewBookmark,
     });
@@ -2027,6 +2042,9 @@ var BookmarkingUI = {
               "browser.engagement.bookmarks_toolbar_bookmark_added",
               1
             );
+          }
+          if (ev.parentGuid == PlacesUtils.bookmarks.tagsGuid) {
+            StarUI.userHasTags = true;
           }
           break;
         case "bookmark-removed":
