@@ -45,6 +45,8 @@
     <string name="mozac_feature_prompts_choose_a_color">Izberite barvo</string>
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Izberite ponudnika prijave</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">Izberite račun</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Dovoli</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -127,4 +129,8 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">Strni predlagane naslove</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Upravljanje naslovov</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">Slika računa</string>
 </resources>

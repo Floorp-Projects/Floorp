@@ -374,13 +374,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">製品情報</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">一つを選んでください</string>
+    <string name="preferences_category_select_default_search_engine">一つを選んでください</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">検索ショートカットの管理</string>
+    <string name="preferences_manage_search_shortcuts">検索ショートカットの管理</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">検索メニューに表示されるエンジンの編集</string>
+    <string name="preferences_manage_search_shortcuts_summary">検索メニューに表示されるエンジンの編集</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">検索メニューに表示されるエンジン</string>
+    <string name="preferences_category_engines_in_search_menu">検索メニューに表示されるエンジン</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">既定の検索エンジン</string>
     <!-- Preference for settings related to Search -->
@@ -645,6 +645,8 @@
     <string name="addon_already_installed">アドオンはすでにインストールされています。</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">アカウント管理</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">今すぐ同期</string>
     <!-- Preference category for sync -->
@@ -1903,7 +1905,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">検索エンジンの追加</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">新しい検索エンジンを追加します</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">新しい検索エンジンを追加します</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">検索エンジンの編集</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1918,17 +1920,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">その他</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">名前</string>
+    <string name="search_add_custom_engine_name_label">名前</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">検索エンジン名</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">検索エンジン名</string>
+    <string name="search_add_custom_engine_name_hint_2">検索エンジン名</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">検索文字列の URL</string>
+    <string name="search_add_custom_engine_url_label">検索文字列の URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">検索クエリー文字列</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">検索に使用する URL</string>
+    <string name="search_add_custom_engine_search_string_hint_2">検索に使用する URL</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">クエリーを “%s” に置き換えます。例:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1936,7 +1938,7 @@
     <string name="search_add_custom_engine_form_description">カスタム検索エンジンの詳細</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">保存</string>
+    <string name="search_custom_engine_save_button">保存</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">検索エンジン名を入力してください</string>

@@ -349,13 +349,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">על אודות</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">יש לבחור אחד</string>
+    <string name="preferences_category_select_default_search_engine">יש לבחור אחד</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">ניהול קיצורי דרך לחיפוש</string>
+    <string name="preferences_manage_search_shortcuts">ניהול קיצורי דרך לחיפוש</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">עריכת מנועים הגלויים בתפריט החיפוש</string>
+    <string name="preferences_manage_search_shortcuts_summary">עריכת מנועים הגלויים בתפריט החיפוש</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">מנועים הגלויים בתפריט החיפוש</string>
+    <string name="preferences_category_engines_in_search_menu">מנועים הגלויים בתפריט החיפוש</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">מנוע חיפוש ברירת מחדל</string>
     <!-- Preference for settings related to Search -->
@@ -560,6 +560,8 @@
     <string name="addon_already_installed">התוספת כבר מותקנת</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">ניהול חשבון</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">סנכרון כעת</string>
     <!-- Preference category for sync -->
@@ -1806,7 +1808,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">הוספת מנוע חיפוש</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">הוספת מנוע חיפוש חדש</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">הוספת מנוע חיפוש חדש</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">עריכת מנוע חיפוש</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1821,17 +1823,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">אחר</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">שם</string>
+    <string name="search_add_custom_engine_name_label">שם</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">שם</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">שם מנוע החיפוש</string>
+    <string name="search_add_custom_engine_name_hint_2">שם מנוע החיפוש</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">כתובת מחרוזת החיפוש</string>
+    <string name="search_add_custom_engine_url_label">כתובת מחרוזת החיפוש</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">מחרוזת חיפוש לשימוש</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">כתובת URL לשימוש לחיפוש</string>
+    <string name="search_add_custom_engine_search_string_hint_2">כתובת URL לשימוש לחיפוש</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">יש להחליף את השאילתה עם ״%s״. לדוגמה:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1839,7 +1841,7 @@
     <string name="search_add_custom_engine_form_description">פרטי מנוע חיפוש מותאם אישית</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">שמירה</string>
+    <string name="search_custom_engine_save_button">שמירה</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">נא להקליד שם למנוע החיפוש</string>

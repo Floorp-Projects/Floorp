@@ -368,13 +368,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Hakkında</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Birini seçin</string>
+    <string name="preferences_category_select_default_search_engine">Birini seçin</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Arama kısayollarını yönet</string>
+    <string name="preferences_manage_search_shortcuts">Arama kısayollarını yönet</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Arama menüsünde görünen motorları düzenle</string>
+    <string name="preferences_manage_search_shortcuts_summary">Arama menüsünde görünen motorları düzenle</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Arama menüsünde görünen motorlar</string>
+    <string name="preferences_category_engines_in_search_menu">Arama menüsünde görünen motorlar</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Varsayılan arama motoru</string>
     <!-- Preference for settings related to Search -->
@@ -636,6 +636,8 @@
     <string name="addon_already_installed">Eklenti zaten yüklenmiş</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Hesabı yönet</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Şimdi eşitle</string>
     <!-- Preference category for sync -->
@@ -1880,7 +1882,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Arama motoru ekle</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Yeni arama motoru ekle</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Yeni arama motoru ekle</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Arama motorunu düzenle</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1895,17 +1897,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Diğer</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Adı</string>
+    <string name="search_add_custom_engine_name_label">Adı</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Adı</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Arama motoru adı</string>
+    <string name="search_add_custom_engine_name_hint_2">Arama motoru adı</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Arama dizgisinin URL’si</string>
+    <string name="search_add_custom_engine_url_label">Arama dizgisinin URL’si</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Kullanılacak arama dizgisi</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">Arama için kullanılacak URL</string>
+    <string name="search_add_custom_engine_search_string_hint_2">Arama için kullanılacak URL</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Sorguyu “%s” ile değiştirin. Örnek:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1913,7 +1915,7 @@
     <string name="search_add_custom_engine_form_description">Özel arama motoru ayrıntıları</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Kaydet</string>
+    <string name="search_custom_engine_save_button">Kaydet</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Arama motoru adını yazın</string>

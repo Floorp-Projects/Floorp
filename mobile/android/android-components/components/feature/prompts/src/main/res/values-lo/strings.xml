@@ -45,6 +45,8 @@
     <string name="mozac_feature_prompts_choose_a_color">ເລືອກສີ</string>
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">ເລືອກຜູ້ໃຫ້ບໍລິການເຂົ້າສູ່ລະບົບ</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">ເລືອກບັນຊີ</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">ອະນຸຍາດ</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -129,4 +131,8 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">ຫຍໍ້ທີ່ຢູ່ທີ່ແນະນຳ</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">ຈັດການທີ່ຢູ່</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">ຮູບບັນຊີ</string>
 </resources>

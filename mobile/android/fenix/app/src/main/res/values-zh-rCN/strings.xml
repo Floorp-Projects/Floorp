@@ -646,6 +646,8 @@
     <string name="addon_already_installed">附加组件已安装</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">管理账户</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">立即同步</string>
     <!-- Preference category for sync -->

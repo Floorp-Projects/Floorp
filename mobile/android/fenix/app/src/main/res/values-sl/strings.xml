@@ -636,6 +636,8 @@
     <string name="addon_already_installed">Dodatek je že nameščen</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Upravljanje računa</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sinhroniziraj zdaj</string>
     <!-- Preference category for sync -->

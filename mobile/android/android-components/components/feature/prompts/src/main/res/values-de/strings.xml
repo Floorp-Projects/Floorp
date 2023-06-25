@@ -56,7 +56,7 @@
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Wählen Sie einen Login-Anbieter</string>
     <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">Wählen Sie ein Konto</string>
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">Konto auswählen</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Erlauben</string>
 

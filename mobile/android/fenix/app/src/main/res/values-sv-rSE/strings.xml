@@ -372,13 +372,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Om</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Välj en</string>
+    <string name="preferences_category_select_default_search_engine">Välj en</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Hantera sökgenvägar</string>
+    <string name="preferences_manage_search_shortcuts">Hantera sökgenvägar</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Redigera motorer som är synliga i sökmenyn</string>
+    <string name="preferences_manage_search_shortcuts_summary">Redigera motorer som är synliga i sökmenyn</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Motorer som syns på sökmenyn</string>
+    <string name="preferences_category_engines_in_search_menu">Motorer som syns på sökmenyn</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Standardsökmotor</string>
     <!-- Preference for settings related to Search -->
@@ -642,6 +642,8 @@
     <string name="addon_already_installed">Tillägget är redan installerat</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Hantera konto</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synkronisera nu</string>
     <!-- Preference category for sync -->
@@ -1892,7 +1894,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Lägg till sökmotor</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Lägg till ny sökmotor</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Lägg till ny sökmotor</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Redigera sökmotor</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1907,17 +1909,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Andra</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Namn</string>
+    <string name="search_add_custom_engine_name_label">Namn</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Namn</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Sökmotorns namn</string>
+    <string name="search_add_custom_engine_name_hint_2">Sökmotorns namn</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Söksträngs-URL</string>
+    <string name="search_add_custom_engine_url_label">Söksträngs-URL</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Söksträng som ska användas</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">URL att använda för sökning</string>
+    <string name="search_add_custom_engine_search_string_hint_2">URL att använda för sökning</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Byt ut frågan med “%s”. Exempel:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1925,7 +1927,7 @@
     <string name="search_add_custom_engine_form_description">Information om anpassad sökmotor</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Spara</string>
+    <string name="search_custom_engine_save_button">Spara</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Ange sökmotorns namn</string>

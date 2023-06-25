@@ -45,6 +45,8 @@
     <string name="mozac_feature_prompts_choose_a_color">Scegli un colore</string>
     <!-- Title of the Identity Credential provider dialog choose. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Scegli un provider di accesso</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">Scegli un account</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Permetti</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -127,4 +129,8 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">Comprimi gli indirizzi suggeriti</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">Gestisci indirizzi</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">Immagine per l’account</string>
 </resources>
