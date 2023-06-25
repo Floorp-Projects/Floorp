@@ -79,6 +79,6 @@ class ReaderViewIntegration(
 }
 
 private fun getReaderDrawable(context: Context): Drawable {
-    val drawable = iconsR.drawable.mozac_ic_reader_mode
+    val drawable = iconsR.drawable.mozac_ic_reader_view_24
     return ContextCompat.getDrawable(context, drawable)!!
 }
