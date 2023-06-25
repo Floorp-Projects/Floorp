@@ -13,11 +13,12 @@ browser.jar:
   skin/classic/browser/notes.png                                          (icons/notes.png)
   skin/classic/browser/notes-bms.svg                                      (icons/notes-bms.svg)
 
-#verticalTab
+# verticalTab
   skin/classic/browser/verticaltab.svg                                    (icons/verticaltab.svg)
 
 # Workspace
   skin/classic/browser/workspace-floorp.png                               (icons/workspace-floorp.png)
+  skin/classic/browser/workspace-menu-check.svg                           (icons/menu-check.svg)
 
 # options
   skin/classic/browser/options/micaforeveryone.css                        (designs/options/micaforeveryone.css)

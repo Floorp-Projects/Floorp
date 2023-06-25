@@ -446,11 +446,11 @@ toolbar #workspace-button:not([disabled="true"], [checked], [open], :active):hov
 }
 
 .workspace-item > .toolbarbutton-text {
-  display: block;
-  text-align: justify;
+  display: inherit;
+  font-weight: bold;
+  margin-top: auto;
+  margin-bottom: auto;
   font-size: larger;
-  font-weight: bold !important;
-  background: none !important;
 }
 
 #workspace-delete {
@@ -459,7 +459,7 @@ toolbar #workspace-button:not([disabled="true"], [checked], [open], :active):hov
 
 .workspace-item {
   border-radius: 5px;
-  list-style-image: url("chrome://global/skin/icons/menu-check.svg");
+  list-style-image: url("chrome://browser/skin/workspace-menu-check.svg");
 }
 
 .workspace-item-box {
