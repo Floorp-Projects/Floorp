@@ -302,7 +302,7 @@ add_task(async function panel_shown_for_new_bookmark_close_with_ESC() {
     },
     shouldAutoClose: true,
     popupHideFn() {
-      EventUtils.synthesizeKey("VK_ESCAPE", { accelKey: true }, win);
+      EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
     },
     isBookmarkRemoved: true,
   });
@@ -316,7 +316,7 @@ add_task(async function panel_shown_for_editing_no_autoclose_close_with_ESC() {
     },
     shouldAutoClose: false,
     popupHideFn() {
-      EventUtils.synthesizeKey("VK_ESCAPE", { accelKey: true }, win);
+      EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
     },
     isBookmarkRemoved: false,
   });
