@@ -354,7 +354,7 @@ open class DefaultToolbarMenu(
 
     private val deleteDataOnQuit = BrowserMenuImageText(
         label = context.getString(R.string.delete_browsing_data_on_quit_action),
-        imageResource = R.drawable.mozac_ic_quit,
+        imageResource = R.drawable.mozac_ic_cross_circle_24,
         iconTintColorResource = primaryTextColor(),
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.Quit)
