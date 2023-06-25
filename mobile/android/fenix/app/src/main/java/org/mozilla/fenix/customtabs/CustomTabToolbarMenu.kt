@@ -89,7 +89,7 @@ class CustomTabToolbarMenu(
         }
 
         val refresh = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
+            primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_arrow_clockwise_24,
             primaryContentDescription = context.getString(R.string.browser_menu_refresh),
             primaryImageTintResource = primaryTextColor(),
             isInPrimaryState = {

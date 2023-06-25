@@ -152,7 +152,7 @@ class ToolbarActivity : AppCompatActivity() {
         // //////////////////////////////////////////////////////////////////////////////////////////
 
         val reload = BrowserToolbar.TwoStateButton(
-            primaryImage = resources.getThemedDrawable(iconsR.drawable.mozac_ic_refresh)!!,
+            primaryImage = resources.getThemedDrawable(iconsR.drawable.mozac_ic_arrow_clockwise_24)!!,
             primaryContentDescription = "Reload",
             secondaryImage = resources.getThemedDrawable(iconsR.drawable.mozac_ic_stop)!!,
             secondaryContentDescription = "Stop",
@@ -244,7 +244,7 @@ class ToolbarActivity : AppCompatActivity() {
         }
 
         val reload = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = iconsR.drawable.mozac_ic_refresh,
+            primaryImageResource = iconsR.drawable.mozac_ic_arrow_clockwise_24,
             primaryContentDescription = "Reload",
             secondaryImageResource = iconsR.drawable.mozac_ic_stop,
             secondaryContentDescription = "Stop",

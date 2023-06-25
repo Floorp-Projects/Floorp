@@ -80,7 +80,7 @@ class NavigationButtonsIntegration(
 
         val reloadOrStopButton = BrowserToolbar.TwoStateButton(
             primaryImage = ContextCompat.getDrawable(context, R.drawable.mozac_ic_stop)!!,
-            secondaryImage = ContextCompat.getDrawable(context, R.drawable.mozac_ic_refresh)!!,
+            secondaryImage = ContextCompat.getDrawable(context, R.drawable.mozac_ic_arrow_clockwise_24)!!,
             primaryContentDescription = context.getString(R.string.content_description_stop),
             secondaryContentDescription = context.getString(R.string.content_description_reload),
             primaryImageTintResource = enabledColorRes,

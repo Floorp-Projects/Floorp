@@ -306,7 +306,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             refreshAction = BrowserToolbar.TwoStateButton(
                 primaryImage = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_refresh,
+                    R.drawable.mozac_ic_arrow_clockwise_24,
                 )!!,
                 primaryContentDescription = context.getString(R.string.browser_menu_refresh),
                 primaryImageTintResource = enableTint,

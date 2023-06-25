@@ -25,7 +25,7 @@
         android:layout_weight="1"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/content_description_reload"
-        android:src="@drawable/mozac_ic_refresh"/>
+        android:src="@drawable/mozac_ic_arrow_clockwise_24"/>
 
     <ImageButton
         android:id="@+id/stop"

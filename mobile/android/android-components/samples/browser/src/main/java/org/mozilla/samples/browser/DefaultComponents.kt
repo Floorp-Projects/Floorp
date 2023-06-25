@@ -406,7 +406,7 @@ open class DefaultComponents(private val applicationContext: Context) {
         }
 
         val refresh = BrowserMenuItemToolbar.TwoStateButton(
-            primaryImageResource = iconsR.drawable.mozac_ic_refresh,
+            primaryImageResource = iconsR.drawable.mozac_ic_arrow_clockwise_24,
             primaryContentDescription = "Refresh",
             primaryImageTintResource = photonColors.photonBlue90,
             isInPrimaryState = {
