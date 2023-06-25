@@ -128,7 +128,7 @@ class DefaultBrowserMenu(
 
         val findInPage = BrowserMenuImageText(
             label = context.getString(R.string.find_in_page),
-            imageResource = R.drawable.mozac_ic_search,
+            imageResource = R.drawable.mozac_ic_search_24,
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
         }

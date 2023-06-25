@@ -6,7 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/history_search"
-        android:icon="@drawable/mozac_ic_search"
+        android:icon="@drawable/mozac_ic_search_24"
         android:title="@string/history_search_1"
         app:iconTint="?attr/textPrimary"
         app:showAsAction="ifRoom" />

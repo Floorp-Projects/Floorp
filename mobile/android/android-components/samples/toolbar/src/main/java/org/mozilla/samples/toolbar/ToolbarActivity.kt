@@ -206,7 +206,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         val search = TextMenuCandidate(
             "Search",
-            start = DrawableMenuIcon(this, iconsR.drawable.mozac_ic_search),
+            start = DrawableMenuIcon(this, iconsR.drawable.mozac_ic_search_24),
         ) { /* Do nothing */ }
 
         binding.toolbar.display.menuController = BrowserMenuController(Side.START).apply {
@@ -382,7 +382,7 @@ class ToolbarActivity : AppCompatActivity() {
             ContextCompat.getDrawable(this, R.drawable.fenix_url_background),
         )
         binding.toolbar.edit.setIcon(
-            ContextCompat.getDrawable(this, iconsR.drawable.mozac_ic_search)!!,
+            ContextCompat.getDrawable(this, iconsR.drawable.mozac_ic_search_24)!!,
             "Search",
         )
 

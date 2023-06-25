@@ -80,7 +80,7 @@ class ClipboardSuggestionProvider(
     }
 
     private fun getSearchIcon(): Bitmap? {
-        val drawable = iconsR.drawable.mozac_ic_search
+        val drawable = iconsR.drawable.mozac_ic_search_24
         return ContextCompat.getDrawable(context, drawable)?.toBitmap()
     }
 }

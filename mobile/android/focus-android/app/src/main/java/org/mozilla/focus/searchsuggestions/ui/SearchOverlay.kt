@@ -82,7 +82,7 @@ private fun SearchSuggestions(
     val context = LocalContext.current
     val components = components
 
-    val icon = AppCompatResources.getDrawable(context, R.drawable.mozac_ic_search)?.toBitmap()
+    val icon = AppCompatResources.getDrawable(context, R.drawable.mozac_ic_search_24)?.toBitmap()
     val provider = remember(context) {
         SearchSuggestionProvider(
             context,

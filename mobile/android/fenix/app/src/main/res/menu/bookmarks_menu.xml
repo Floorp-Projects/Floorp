@@ -6,7 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/bookmark_search"
-        android:icon="@drawable/mozac_ic_search"
+        android:icon="@drawable/mozac_ic_search_24"
         android:title="@string/bookmark_search"
         app:iconTint="?attr/textPrimary"
         app:showAsAction="ifRoom" />

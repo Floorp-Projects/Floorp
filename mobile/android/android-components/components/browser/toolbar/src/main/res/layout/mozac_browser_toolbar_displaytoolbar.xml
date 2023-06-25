@@ -47,7 +47,7 @@
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="@id/mozac_browser_toolbar_background"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/mozac_ic_search"
+        app:srcCompat="@drawable/mozac_ic_search_24"
         tools:ignore="ContentDescription" />
 
     <mozilla.components.browser.toolbar.display.TrackingProtectionIconView

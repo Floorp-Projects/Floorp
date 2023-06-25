@@ -31,7 +31,7 @@
         android:scaleType="center"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="@id/mozac_browser_toolbar_background"
-        app:srcCompat="@drawable/mozac_ic_search"
+        app:srcCompat="@drawable/mozac_ic_search_24"
         android:visibility="gone"
         tools:ignore="ContentDescription"
         android:layout_marginTop="8dp" />
