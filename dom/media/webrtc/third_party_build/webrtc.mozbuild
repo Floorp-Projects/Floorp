@@ -21,6 +21,10 @@ if CONFIG['MOZ_WEBRTC']:
 
     if CONFIG['OS_TARGET'] == 'Linux':
         DEFINES['WEBRTC_LINUX'] = True
+        if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64' or  \
+           CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64' or \
+           (CONFIG['TARGET_ENDIANNESS'] == 'little' and CONFIG['CPU_ARCH'].startsWith('mips')):
+            DEFINES['WEBRTC_USE_PIPEWIRE'] = True
     elif CONFIG['OS_TARGET'] == 'Darwin':
         DEFINES['WEBRTC_MAC'] = True
     elif CONFIG['OS_TARGET'] == 'WINNT':
@@ -36,5 +40,3 @@ if CONFIG['MOZ_WEBRTC']:
     if CONFIG['MOZ_X11']:
         DEFINES['WEBRTC_USE_X11'] = True
 
-    if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
-        DEFINES['WEBRTC_USE_PIPEWIRE'] = True
