@@ -65,7 +65,6 @@ const SUPPORTED_HEADERS = [
   "Origin",
   "Pragma",
   "Proxy-Authenticate",
-  "Proxy-Authorization",
   "Public-Key-Pins",
   "Public-Key-Pins-Report-Only",
   "Range",
