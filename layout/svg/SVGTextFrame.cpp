@@ -4399,11 +4399,15 @@ void SVGTextFrame::AdjustPositionsForClusters() {
   gfxFloat partialAdvance = 0.0;
 
   CharIterator it(this, CharIterator::eUnskipped, /* aSubtree */ nullptr);
+  bool isFirst = true;
   while (!it.AtEnd()) {
-    if (it.IsClusterAndLigatureGroupStart()) {
+    if (it.IsClusterAndLigatureGroupStart() || isFirst) {
       // If we're at the start of a new cluster or ligature group, reset our
-      // accumulated partial advance.
+      // accumulated partial advance. Also treat the beginning of the text as
+      // an anchor, even if it is a combining character and therefore was
+      // marked as being a Unicode cluster continuation.
       partialAdvance = 0.0;
+      isFirst = false;
     } else {
       // Otherwise, we're in the middle of a cluster or ligature group, and
       // we need to use the currently accumulated partial advance to adjust
