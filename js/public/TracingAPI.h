@@ -397,7 +397,7 @@ inline bool IsTracerKind(JSTracer* trc, JS::TracerKind kind) {
 // This method does not check if |*edgep| is non-null before tracing through
 // it, so callers must check any nullable pointer before calling this method.
 extern JS_PUBLIC_API void UnsafeTraceManuallyBarrieredEdge(JSTracer* trc,
-                                                           JSObject** edgep,
+                                                           JSObject** thingp,
                                                            const char* name);
 
 namespace gc {

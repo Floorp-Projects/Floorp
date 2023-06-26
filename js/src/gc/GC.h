@@ -104,7 +104,7 @@ extern void NotifyGCNukeWrapper(JSContext* cx, JSObject* wrapper);
 
 extern unsigned NotifyGCPreSwap(JSObject* a, JSObject* b);
 
-extern void NotifyGCPostSwap(JSObject* a, JSObject* b, unsigned preResult);
+extern void NotifyGCPostSwap(JSObject* a, JSObject* b, unsigned removedFlags);
 
 using IterateChunkCallback = void (*)(JSRuntime*, void*, gc::TenuredChunk*,
                                       const JS::AutoRequireNoGC&);

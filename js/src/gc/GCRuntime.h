@@ -463,7 +463,7 @@ class GCRuntime {
   void callObjectsTenuredCallback();
   [[nodiscard]] bool addFinalizeCallback(JSFinalizeCallback callback,
                                          void* data);
-  void removeFinalizeCallback(JSFinalizeCallback func);
+  void removeFinalizeCallback(JSFinalizeCallback callback);
   void setHostCleanupFinalizationRegistryCallback(
       JSHostCleanupFinalizationRegistryCallback callback, void* data);
   void callHostCleanupFinalizationRegistryCallback(
@@ -489,7 +489,7 @@ class GCRuntime {
 
   void nukeFinalizationRecordWrapper(JSObject* wrapper,
                                      FinalizationRecordObject* record);
-  void nukeWeakRefWrapper(JSObject* wrapper, WeakRefObject* record);
+  void nukeWeakRefWrapper(JSObject* wrapper, WeakRefObject* weakRef);
 
   void setFullCompartmentChecks(bool enable);
 
@@ -857,7 +857,7 @@ class GCRuntime {
                           js::SliceBudget& sliceBudget,
                           SortedArenaList& sweepList);
   IncrementalProgress sweepPropMapTree(JS::GCContext* gcx, SliceBudget& budget);
-  void endSweepPhase(bool lastGC);
+  void endSweepPhase(bool destroyingRuntime);
   void queueZonesAndStartBackgroundSweep(ZoneList&& zones);
   void sweepFromBackgroundThread(AutoLockHelperThreadState& lock);
   void startBackgroundFree();

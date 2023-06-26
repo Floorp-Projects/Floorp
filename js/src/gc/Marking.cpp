@@ -1199,8 +1199,8 @@ void js::GCMarker::markAndTraverseEdge(S source, T* target) {
 }
 
 template <uint32_t opts, typename S, typename T>
-void js::GCMarker::markAndTraverseEdge(S source, const T& thing) {
-  ApplyGCThingTyped(thing, [this, source](auto t) {
+void js::GCMarker::markAndTraverseEdge(S source, const T& target) {
+  ApplyGCThingTyped(target, [this, source](auto t) {
     this->markAndTraverseEdge<opts>(source, t);
   });
 }

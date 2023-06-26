@@ -841,11 +841,11 @@ class MemoryTracker {
   void swapGCMemory(Cell* a, Cell* b, MemoryUse use);
 
   // Track memory by associated non-GC thing pointer.
-  void registerNonGCMemory(void* ptr, MemoryUse use);
-  void unregisterNonGCMemory(void* ptr, MemoryUse use);
+  void registerNonGCMemory(void* mem, MemoryUse use);
+  void unregisterNonGCMemory(void* mem, MemoryUse use);
   void moveNonGCMemory(void* dst, void* src, MemoryUse use);
-  void incNonGCMemory(void* ptr, size_t nbytes, MemoryUse use);
-  void decNonGCMemory(void* ptr, size_t nbytes, MemoryUse use);
+  void incNonGCMemory(void* mem, size_t nbytes, MemoryUse use);
+  void decNonGCMemory(void* mem, size_t nbytes, MemoryUse use);
 
  private:
   template <typename Ptr>

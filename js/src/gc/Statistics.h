@@ -490,7 +490,7 @@ struct Statistics {
   void formatJsonPhaseTimes(const PhaseTimes& phaseTimes, JSONPrinter&) const;
   void formatJsonSlice(size_t sliceNum, JSONPrinter&) const;
 
-  double computeMMU(TimeDuration resolution) const;
+  double computeMMU(TimeDuration window) const;
 
   void printSliceProfile();
   ProfileDurations getProfileTimes(const SliceData& slice) const;
