@@ -143,9 +143,6 @@ nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable, nsIClipboard
     }
   }
 
-  mCachedClipboard = aWhichClipboard;
-  mChangeCount = [cocoaPasteboard changeCount];
-
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -684,25 +681,21 @@ NSString* nsClipboard::WrapHtmlForSystemPasteboard(NSString* aString) {
   return wrapped;
 }
 
-NS_IMETHODIMP
-nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
+nsresult nsClipboard::EmptyNativeClipboardData(int32_t aWhichClipboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if (!mEmptyingForSetData) {
-    if (aWhichClipboard == kSelectionCache) {
-      ClearSelectionCache();
-    } else {
-      if (NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard)) {
-        [cocoaPasteboard clearContents];
-      }
-      if (mCachedClipboard == aWhichClipboard) {
-        mCachedClipboard = -1;
-        mChangeCount = 0;
-      }
-    }
+  MOZ_DIAGNOSTIC_ASSERT(nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+
+  if (kSelectionCache == aWhichClipboard) {
+    ClearSelectionCache();
+    return NS_OK;
   }
 
-  return nsBaseClipboard::EmptyClipboard(aWhichClipboard);
+  if (NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard)) {
+    [cocoaPasteboard clearContents];
+  }
+
+  return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }

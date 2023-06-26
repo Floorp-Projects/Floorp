@@ -175,11 +175,7 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
     return NS_OK;
   }
 
-  mEmptyingForSetData = true;
-  if (NS_FAILED(EmptyClipboard(aWhichClipboard))) {
-    CLIPBOARD_LOG("%s: emptying clipboard failed.", __FUNCTION__);
-  }
-  mEmptyingForSetData = false;
+  clipboardCache->Clear();
 
   nsresult rv = NS_ERROR_FAILURE;
   if (aTransferable) {
@@ -272,11 +268,15 @@ RefPtr<GenericPromise> nsBaseClipboard::AsyncGetData(
 }
 
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
-  CLIPBOARD_LOG("%s: clipboard=%i", __FUNCTION__, aWhichClipboard);
+  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
 
   if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
+    CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
+                  aWhichClipboard);
     return NS_ERROR_FAILURE;
   }
+
+  EmptyNativeClipboardData(aWhichClipboard);
 
   if (mIgnoreEmptyNotification) {
     MOZ_DIAGNOSTIC_ASSERT(false, "How did we get here?");
