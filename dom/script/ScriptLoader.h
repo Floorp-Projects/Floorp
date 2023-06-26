@@ -506,14 +506,12 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * Start a load for aRequest's URI.
    */
   nsresult StartLoad(ScriptLoadRequest* aRequest,
-                     uint64_t aEarlyHintPreloaderId,
                      const Maybe<nsAutoString>& aCharsetForPreload);
   /**
    * Start a load for a classic script URI.
    * Sets up the necessary security flags before calling StartLoadInternal.
    */
   nsresult StartClassicLoad(ScriptLoadRequest* aRequest,
-                            uint64_t aEarlyHintPreloaderId,
                             const Maybe<nsAutoString>& aCharsetForPreload);
 
   /**
@@ -525,7 +523,6 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    */
   nsresult StartLoadInternal(ScriptLoadRequest* aRequest,
                              nsSecurityFlags securityFlags,
-                             uint64_t aEarlyHintPreloaderId,
                              const Maybe<nsAutoString>& aCharsetForPreload);
 
   /**

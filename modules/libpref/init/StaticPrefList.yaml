@@ -11773,8 +11773,7 @@
   mirror: always
 
 # Enables `<link rel="modulepreload">` tag and `Link: rel=modulepreload`
-# response header handling. The latter is not yet implemented, see:
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1773056.
+# response header handling.
 - name: network.modulepreload
   type: RelaxedAtomicBool
   value: true

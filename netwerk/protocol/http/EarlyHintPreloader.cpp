@@ -131,15 +131,18 @@ EarlyHintPreloader::~EarlyHintPreloader() {
 /* static */
 Maybe<PreloadHashKey> EarlyHintPreloader::GenerateHashKey(
     ASDestination aAs, nsIURI* aURI, nsIPrincipal* aPrincipal,
-    CORSMode aCorsMode, const nsAString& aType) {
+    CORSMode aCorsMode, bool aIsModulepreload) {
+  if (aIsModulepreload) {
+    return Some(PreloadHashKey::CreateAsScript(
+        aURI, aCorsMode, JS::loader::ScriptKind::eModule));
+  }
   if (aAs == ASDestination::DESTINATION_FONT && aCorsMode != CORS_NONE) {
     return Some(PreloadHashKey::CreateAsFont(aURI, aCorsMode));
   }
   if (aAs == ASDestination::DESTINATION_IMAGE) {
     return Some(PreloadHashKey::CreateAsImage(aURI, aPrincipal, aCorsMode));
   }
-  if (aAs == ASDestination::DESTINATION_SCRIPT &&
-      !aType.LowerCaseEqualsASCII("module")) {
+  if (aAs == ASDestination::DESTINATION_SCRIPT) {
     return Some(PreloadHashKey::CreateAsScript(
         aURI, aCorsMode, JS::loader::ScriptKind::eClassic));
   }
@@ -156,8 +159,7 @@ Maybe<PreloadHashKey> EarlyHintPreloader::GenerateHashKey(
 
 /* static */
 nsSecurityFlags EarlyHintPreloader::ComputeSecurityFlags(CORSMode aCORSMode,
-                                                         ASDestination aAs,
-                                                         bool aIsModule) {
+                                                         ASDestination aAs) {
   if (aAs == ASDestination::DESTINATION_FONT) {
     return nsContentSecurityManager::ComputeSecurityFlags(
         CORSMode::CORS_NONE,
@@ -170,12 +172,6 @@ nsSecurityFlags EarlyHintPreloader::ComputeSecurityFlags(CORSMode aCORSMode,
            nsILoadInfo::SEC_ALLOW_CHROME;
   }
   if (aAs == ASDestination::DESTINATION_SCRIPT) {
-    if (aIsModule) {
-      return nsContentSecurityManager::ComputeSecurityFlags(
-                 aCORSMode, nsContentSecurityManager::CORSSecurityMapping::
-                                REQUIRE_CORS_CHECKS) |
-             nsILoadInfo::SEC_ALLOW_CHROME;
-    }
     return nsContentSecurityManager::ComputeSecurityFlags(
                aCORSMode, nsContentSecurityManager::CORSSecurityMapping::
                               CORS_NONE_MAPS_TO_DISABLED_CORS_CHECKS) |
@@ -205,7 +201,8 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
     nsIURI* aBaseURI, nsIPrincipal* aPrincipal,
     nsICookieJarSettings* aCookieJarSettings,
     const nsACString& aResponseReferrerPolicy, const nsACString& aCSPHeader,
-    uint64_t aBrowsingContextID, nsIInterfaceRequestor* aCallbacks) {
+    uint64_t aBrowsingContextID, nsIInterfaceRequestor* aCallbacks,
+    bool aIsModulepreload) {
   nsAttrValue as;
   ParseAsValue(aLinkHeader.mAs, as);
 
@@ -217,7 +214,7 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
     return;
   }
 
-  if (as.GetEnumValue() == ASDestination::DESTINATION_INVALID) {
+  if (destination == ASDestination::DESTINATION_INVALID && !aIsModulepreload) {
     // return early when it's definitly not an asset type we preload
     // would be caught later as well, e.g. when creating the PreloadHashKey
     return;
@@ -242,8 +239,7 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
   CORSMode corsMode = dom::Element::StringToCORSMode(aLinkHeader.mCrossOrigin);
 
   Maybe<PreloadHashKey> hashKey =
-      GenerateHashKey(static_cast<ASDestination>(as.GetEnumValue()), uri,
-                      aPrincipal, corsMode, aLinkHeader.mType);
+      GenerateHashKey(destination, uri, aPrincipal, corsMode, aIsModulepreload);
   if (!hashKey) {
     return;
   }
@@ -252,7 +248,12 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
     return;
   }
 
-  nsContentPolicyType contentPolicyType = AsValueToContentPolicy(as);
+  nsContentPolicyType contentPolicyType =
+      aIsModulepreload ? (IsScriptLikeOrInvalid(aLinkHeader.mAs)
+                              ? nsContentPolicyType::TYPE_SCRIPT
+                              : nsContentPolicyType::TYPE_INVALID)
+                       : AsValueToContentPolicy(as);
+
   if (contentPolicyType == nsContentPolicyType::TYPE_INVALID) {
     return;
   }
@@ -284,9 +285,29 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
 
   RefPtr<EarlyHintPreloader> earlyHintPreloader = new EarlyHintPreloader();
 
-  nsSecurityFlags securityFlags = EarlyHintPreloader::ComputeSecurityFlags(
-      corsMode, static_cast<ASDestination>(as.GetEnumValue()),
-      aLinkHeader.mType.LowerCaseEqualsASCII("module"));
+  DebugOnly<bool> result =
+      aOngoingEarlyHints->Add(*hashKey, earlyHintPreloader);
+  MOZ_ASSERT(result);
+
+  // Security flags for modulepreload's request mode are computed here directly
+  // until full support for worker destinations can be added.
+  //
+  // Implements "To fetch a single module script,"
+  // Step 9. If destination is "worker", "sharedworker", or "serviceworker",
+  //         and the top-level module fetch flag is set, then set request's
+  //         mode to "same-origin".
+  nsSecurityFlags securityFlags =
+      aIsModulepreload
+          ? ((aLinkHeader.mAs.LowerCaseEqualsASCII("worker") ||
+              aLinkHeader.mAs.LowerCaseEqualsASCII("sharedworker") ||
+              aLinkHeader.mAs.LowerCaseEqualsASCII("serviceworker"))
+                 ? nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED
+                 : nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT) |
+                (corsMode == CORS_USE_CREDENTIALS
+                     ? nsILoadInfo::SEC_COOKIES_INCLUDE
+                     : nsILoadInfo::SEC_COOKIES_SAME_ORIGIN) |
+                nsILoadInfo::SEC_ALLOW_CHROME
+          : EarlyHintPreloader::ComputeSecurityFlags(corsMode, destination);
 
   // Verify that the resource should be loaded.
   // This isn't the ideal way to test the resource against the CSP.
@@ -360,10 +381,6 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
       aCookieJarSettings, aBrowsingContextID, aCallbacks));
 
   earlyHintPreloader->SetLinkHeader(aLinkHeader);
-
-  DebugOnly<bool> result =
-      aOngoingEarlyHints->Add(*hashKey, earlyHintPreloader);
-  MOZ_ASSERT(result);
 }
 
 nsresult EarlyHintPreloader::OpenChannel(
