@@ -30,6 +30,9 @@ else:
         ]
 
 if CONFIG["ACCESSIBILITY"]:
+    PREPROCESSED_IPDL_SOURCES += [
+        "PDocAccessible.ipdl",
+    ]
     IPDL_SOURCES += [
         "DocAccessibleTypes.ipdlh",
     ]

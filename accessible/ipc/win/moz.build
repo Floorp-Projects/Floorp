@@ -5,8 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG["ACCESSIBILITY"]:
-    IPDL_SOURCES += ["PDocAccessible.ipdl"]
-
     EXPORTS.mozilla.a11y += [
         "DocAccessibleChild.h",
         "RemoteAccessible.h",
