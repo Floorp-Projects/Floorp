@@ -12661,6 +12661,13 @@
   value: 256*1024*1024 # 256 Mb
   mirror: always
 
+# Whether JAR entries that defate to a different size than RealSize/orglen
+# are considered corrupted or not
+- name: network.jar.require_size_match
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # When this pref is true we clear the Content-Encoding header for
 # application/x-gzip Content-Type responses, see bug 1030660.
 #
