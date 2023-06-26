@@ -28,6 +28,8 @@ job-defaults:
         - fetches.repackage-signing-l10n
     attributes:
         build_type: opt
+        release_artifacts:
+            - public/build/target.installer.exe
     treeherder:
         symbol: Attr-L10n({locale})
         kind: other

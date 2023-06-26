@@ -22,6 +22,9 @@ job-defaults:
     fetches:
         repackage-signing:
             - target.installer.exe
+    attributes:
+        release_artifacts:
+            - public/build/target.installer.exe
     treeherder:
         symbol: Attr
         kind: other

@@ -26,4 +26,7 @@ def stub_installer(config, jobs):
                 "--input",
                 "/builds/worker/fetches/target.stub-installer.exe",
             ]
+            job["attributes"]["release_artifacts"].append(
+                "public/build/target.stub-installer.exe"
+            )
         yield job
