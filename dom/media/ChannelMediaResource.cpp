@@ -277,8 +277,7 @@ nsresult ChannelMediaResource::OnStartRequest(nsIRequest* aRequest,
   owner->DownloadProgressed();
 
   nsCOMPtr<nsIThreadRetargetableRequest> retarget;
-  if (Preferences::GetBool("media.omt_data_delivery.enabled", false) &&
-      (retarget = do_QueryInterface(aRequest))) {
+  if ((retarget = do_QueryInterface(aRequest))) {
     // Note this will not always succeed. We need to handle the case where
     // all resources sharing the same cache might run their data callbacks
     // on different threads.
