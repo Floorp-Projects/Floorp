@@ -7907,12 +7907,23 @@ bool nsHTMLScrollFrame::SmoothScrollVisual(
 }
 
 bool nsHTMLScrollFrame::IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
+  if (aBehavior == dom::ScrollBehavior::Instant) {
+    return false;
+  }
+
   // The user smooth scrolling preference should be honored for any requested
   // smooth scrolls. A requested smooth scroll when smooth scrolling is
-  // disabled should be equivalent to an instant scroll.
-  if (aBehavior == dom::ScrollBehavior::Instant ||
-      !nsLayoutUtils::IsSmoothScrollingEnabled()) {
-    return false;
+  // disabled should be equivalent to an instant scroll. This is not enforced
+  // for the <scrollbox> XUL element to allow for the browser chrome to
+  // override this behavior when toolkit.scrollbox.smoothScroll is enabled.
+  if (!GetContent()->IsXULElement(nsGkAtoms::scrollbox)) {
+    if (!nsLayoutUtils::IsSmoothScrollingEnabled()) {
+      return false;
+    }
+  } else {
+    if (!StaticPrefs::toolkit_scrollbox_smoothScroll()) {
+      return false;
+    }
   }
 
   if (aBehavior == dom::ScrollBehavior::Smooth) {

@@ -14452,6 +14452,11 @@
   value: false
   mirror: always
 
+- name: toolkit.scrollbox.smoothScroll
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 - name: toolkit.scrollbox.horizontalScrollDistance
   type: RelaxedAtomicInt32
   value: 5
