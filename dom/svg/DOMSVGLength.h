@@ -177,6 +177,12 @@ class DOMSVGLength final : public nsWrapperCache {
    */
   SVGLength& InternalItem();
 
+  /**
+   * Some values have units that depend on style so we may need to flush
+   * styles to ensure we get or set the right value in pixels.
+   */
+  void FlushStyleIfNeeded();
+
 #ifdef DEBUG
   bool IndexIsValid();
 #endif
