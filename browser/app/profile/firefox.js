@@ -1820,8 +1820,8 @@ pref("media.videocontrols.picture-in-picture.urlbar-button.enabled", true);
 pref("browser.translation.neverForLanguages", "");
 
 // Enable Firefox translations powered by the Bergamot translations
-// engine https://browser.mt/. See Bug 971044.
-#if defined(EARLY_BETA_OR_EARLIER)
+// engine https://browser.mt/.
+#ifdef NIGHTLY_BUILD
 pref("browser.translations.enable", true);
 #endif
 
