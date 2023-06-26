@@ -58,7 +58,7 @@ void js::ZoneAllocator::updateSchedulingStateOnGCStart() {
   gcHeapSize.updateOnGCStart();
   mallocHeapSize.updateOnGCStart();
   jitHeapSize.updateOnGCStart();
-  perZoneGCTime = mozilla::TimeDuration();
+  perZoneGCTime = mozilla::TimeDuration::Zero();
 }
 
 void js::ZoneAllocator::updateGCStartThresholds(GCRuntime& gc) {

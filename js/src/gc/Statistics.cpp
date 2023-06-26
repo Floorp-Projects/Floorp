@@ -243,7 +243,7 @@ inline auto AllPhases() {
 }
 
 void Statistics::gcDuration(TimeDuration* total, TimeDuration* maxPause) const {
-  *total = *maxPause = 0;
+  *total = *maxPause = TimeDuration::Zero();
   for (const auto& slice : slices_) {
     *total += slice.duration();
     if (slice.duration() > *maxPause) {
@@ -257,7 +257,7 @@ void Statistics::gcDuration(TimeDuration* total, TimeDuration* maxPause) const {
 
 void Statistics::sccDurations(TimeDuration* total,
                               TimeDuration* maxPause) const {
-  *total = *maxPause = 0;
+  *total = *maxPause = TimeDuration::Zero();
   for (size_t i = 0; i < sccTimes.length(); i++) {
     *total += sccTimes[i];
     *maxPause = std::max(*maxPause, sccTimes[i]);
@@ -302,7 +302,7 @@ static UniqueChars Join(const FragmentVector& fragments,
 
 static TimeDuration SumChildTimes(Phase phase,
                                   const Statistics::PhaseTimes& phaseTimes) {
-  TimeDuration total = 0;
+  TimeDuration total;
   for (phase = phases[phase].firstChild; phase != Phase::NONE;
        phase = phases[phase].nextSibling) {
     total += phaseTimes[phase];
@@ -771,7 +771,6 @@ Statistics::Statistics(GCRuntime* gc)
       startingMinorGCNumber(0),
       startingMajorGCNumber(0),
       startingSliceNumber(0),
-      maxPauseInInterval(0),
       sliceCallback(nullptr),
       nurseryCollectionCallback(nullptr),
       aborted(false),
@@ -873,7 +872,7 @@ JS::GCNurseryCollectionCallback Statistics::setNurseryCollectionCallback(
 
 TimeDuration Statistics::clearMaxGCPauseAccumulator() {
   TimeDuration prior = maxPauseInInterval;
-  maxPauseInInterval = 0;
+  maxPauseInInterval = TimeDuration::Zero();
   return prior;
 }
 
@@ -992,7 +991,7 @@ void Statistics::beginGC(JS::GCOptions options, const TimeStamp& currentTime) {
     timeSinceLastGC = currentTime - gc->lastGCEndTime();
   }
 
-  totalGCTime_ = TimeDuration();
+  totalGCTime_ = TimeDuration::Zero();
 }
 
 void Statistics::measureInitialHeapSize() {
@@ -1038,7 +1037,7 @@ void Statistics::sendGCTelemetry() {
   TimeDuration markGrayTotal = markGrayNotWeak + markGrayWeak;
   TimeDuration markNotGrayOrWeak = markTotal - markGrayNotWeak - markWeakTotal;
   if (markNotGrayOrWeak < TimeDuration::FromMilliseconds(0)) {
-    markNotGrayOrWeak = TimeDuration();
+    markNotGrayOrWeak = TimeDuration::Zero();
   }
 
   size_t markCount = getCount(COUNT_CELLS_MARKED);
@@ -1351,9 +1350,9 @@ bool Statistics::startTimingMutator() {
 
   MOZ_ASSERT(suspendedPhases.empty());
 
-  timedGCTime = 0;
+  timedGCTime = TimeDuration::Zero();
   phaseStartTimes[Phase::MUTATOR] = TimeStamp();
-  phaseTimes[Phase::MUTATOR] = 0;
+  phaseTimes[Phase::MUTATOR] = TimeDuration::Zero();
   timedGCStart = TimeStamp();
 
   beginPhase(PhaseKind::MUTATOR);
