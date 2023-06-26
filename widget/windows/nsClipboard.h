@@ -82,6 +82,8 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
                                     int32_t aWhichClipboard) override;
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) override;
+  mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
+      int32_t aWhichClipboard) override;
 
   static bool IsInternetShortcut(const nsAString& inFileName);
   static bool FindURLFromLocalFile(IDataObject* inDataObject, UINT inIndex,
