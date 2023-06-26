@@ -772,19 +772,22 @@ void GfxInfo::V4L2ProbeDevice(nsCString& dev) {
   nsTArray<nsCString> capFormats;
   nsTArray<nsCString> outFormats;
   bool supported = false;
+  // Use gfxWarning rather than gfxCriticalNote from here on because the
+  // errors/warnings output by v4l2test are generally just caused by devices
+  // which aren't M2M decoders. Set gfx.logging.level=5 to see these messages.
 
   while ((line = NS_strtok("\n", &bufptr))) {
     if (!strcmp(line, "V4L2_SUPPORTED")) {
       line = NS_strtok("\n", &bufptr);
       if (!line) {
-        gfxCriticalNote << "v4l2test: Failed to get V4L2 support\n";
+        gfxWarning() << "v4l2test: Failed to get V4L2 support\n";
         return;
       }
       supported = !strcmp(line, "TRUE");
     } else if (!strcmp(line, "V4L2_CAPTURE_FMTS")) {
       line = NS_strtok("\n", &bufptr);
       if (!line) {
-        gfxCriticalNote << "v4l2test: Failed to get V4L2 CAPTURE formats\n";
+        gfxWarning() << "v4l2test: Failed to get V4L2 CAPTURE formats\n";
         return;
       }
       char* capture_fmt;
@@ -794,7 +797,7 @@ void GfxInfo::V4L2ProbeDevice(nsCString& dev) {
     } else if (!strcmp(line, "V4L2_OUTPUT_FMTS")) {
       line = NS_strtok("\n", &bufptr);
       if (!line) {
-        gfxCriticalNote << "v4l2test: Failed to get V4L2 OUTPUT formats\n";
+        gfxWarning() << "v4l2test: Failed to get V4L2 OUTPUT formats\n";
         return;
       }
       char* output_fmt;
@@ -804,7 +807,7 @@ void GfxInfo::V4L2ProbeDevice(nsCString& dev) {
     } else if (!strcmp(line, "WARNING") || !strcmp(line, "ERROR")) {
       line = NS_strtok("\n", &bufptr);
       if (line) {
-        gfxCriticalNote << "v4l2test: " << line << "\n";
+        gfxWarning() << "v4l2test: " << line << "\n";
       }
       return;
     }
