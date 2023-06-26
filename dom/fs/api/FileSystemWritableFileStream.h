@@ -48,6 +48,10 @@ class FileSystemWritableFileStream final : public WritableStream {
   using CreatePromise =
       MozPromise<already_AddRefed<FileSystemWritableFileStream>, nsresult,
                  /* IsExclusive */ true>;
+
+  using WriteDataPromise =
+      MozPromise<Maybe<int64_t>, CopyableErrorResult, /* IsExclusive */ true>;
+
   static RefPtr<CreatePromise> Create(
       const nsCOMPtr<nsIGlobalObject>& aGlobal,
       RefPtr<FileSystemManager>& aManager,
@@ -105,6 +109,9 @@ class FileSystemWritableFileStream final : public WritableStream {
                                fs::FileSystemEntryMetadata&& aMetadata);
 
   virtual ~FileSystemWritableFileStream();
+
+  RefPtr<WriteDataPromise> Write(
+      ArrayBufferViewOrArrayBufferOrBlobOrUTF8StringOrWriteParams& aData);
 
   template <typename T>
   RefPtr<Int64Promise> Write(const T& aData, const Maybe<uint64_t> aPosition);
