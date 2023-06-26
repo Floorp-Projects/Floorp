@@ -369,8 +369,21 @@ impl CssRuleTypes {
     }
 
     /// Returns all the rules specified in the set.
+    #[inline]
     pub fn bits(self) -> u32 {
         self.0
+    }
+
+    /// Creates a raw CssRuleTypes bitfield.
+    #[inline]
+    pub fn from_bits(bits: u32) -> Self {
+        Self(bits)
+    }
+
+    /// Returns whether the rule set is empty.
+    #[inline]
+    pub fn is_empty(self) -> bool {
+        self.0 == 0
     }
 
     /// Inserts a rule type into the set.
@@ -421,13 +434,12 @@ impl CssRule {
         insert_rule_context: InsertRuleContext,
         parent_stylesheet_contents: &StylesheetContents,
         shared_lock: &SharedRwLock,
-        state: State,
         loader: Option<&dyn StylesheetLoader>,
         allow_import_rules: AllowImportRules,
     ) -> Result<Self, RulesMutateError> {
         let url_data = parent_stylesheet_contents.url_data.read();
         let namespaces = parent_stylesheet_contents.namespaces.read();
-        let context = ParserContext::new(
+        let mut context = ParserContext::new(
             parent_stylesheet_contents.origin,
             &url_data,
             None,
@@ -437,6 +449,16 @@ impl CssRule {
             None,
             None,
         );
+        context.rule_types = insert_rule_context.containing_rule_types;
+
+        let state = if !insert_rule_context.containing_rule_types.is_empty() {
+            State::Body
+        } else if insert_rule_context.index == 0 {
+            State::Start
+        } else {
+            let index = insert_rule_context.index;
+            insert_rule_context.max_rule_state_at_index(index - 1)
+        };
 
         let mut input = ParserInput::new(css);
         let mut input = Parser::new(&mut input);
