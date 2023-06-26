@@ -37,6 +37,8 @@ class MOZ_RAII FakeRooted : public RootedOperations<T, FakeRooted<T>> {
 
   FakeRooted(JSContext* cx, T initial) : ptr(initial) {}
 
+  FakeRooted(const FakeRooted&) = delete;
+
   DECLARE_POINTER_CONSTREF_OPS(T);
   DECLARE_POINTER_ASSIGN_OPS(FakeRooted, T);
   DECLARE_NONPOINTER_ACCESSOR_METHODS(ptr);
@@ -46,8 +48,6 @@ class MOZ_RAII FakeRooted : public RootedOperations<T, FakeRooted<T>> {
   T ptr;
 
   void set(const T& value) { ptr = value; }
-
-  FakeRooted(const FakeRooted&) = delete;
 };
 
 }  // namespace js

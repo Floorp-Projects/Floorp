@@ -1177,8 +1177,6 @@ class ImmediateSweepWeakCacheTask : public GCParallelTask {
   Zone* zone;
   JS::detail::WeakCacheBase& cache;
 
-  ImmediateSweepWeakCacheTask(const ImmediateSweepWeakCacheTask&) = delete;
-
  public:
   ImmediateSweepWeakCacheTask(GCRuntime* gc, Zone* zone,
                               JS::detail::WeakCacheBase& wc)
@@ -1190,6 +1188,8 @@ class ImmediateSweepWeakCacheTask : public GCParallelTask {
       : GCParallelTask(std::move(other)),
         zone(other.zone),
         cache(other.cache) {}
+
+  ImmediateSweepWeakCacheTask(const ImmediateSweepWeakCacheTask&) = delete;
 
   void run(AutoLockHelperThreadState& lock) override {
     AutoUnlockHelperThreadState unlock(lock);

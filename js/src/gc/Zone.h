@@ -78,11 +78,12 @@ class MOZ_NON_TEMPORARY_CLASS ExternalStringCache {
   static const size_t NumEntries = 4;
   mozilla::Array<JSString*, NumEntries> entries_;
 
+ public:
+  ExternalStringCache() { purge(); }
+
   ExternalStringCache(const ExternalStringCache&) = delete;
   void operator=(const ExternalStringCache&) = delete;
 
- public:
-  ExternalStringCache() { purge(); }
   void purge() { mozilla::PodArrayZero(entries_); }
 
   MOZ_ALWAYS_INLINE JSString* lookup(const char16_t* chars, size_t len) const;
@@ -102,11 +103,12 @@ class MOZ_NON_TEMPORARY_CLASS FunctionToStringCache {
   static const size_t NumEntries = 2;
   mozilla::Array<Entry, NumEntries> entries_;
 
+ public:
+  FunctionToStringCache() { purge(); }
+
   FunctionToStringCache(const FunctionToStringCache&) = delete;
   void operator=(const FunctionToStringCache&) = delete;
 
- public:
-  FunctionToStringCache() { purge(); }
   void purge() { mozilla::PodArrayZero(entries_); }
 
   MOZ_ALWAYS_INLINE JSString* lookup(BaseScript* script) const;

@@ -616,6 +616,16 @@ class GCPtr : public WriteBarriered<T> {
   }
 #endif
 
+  /*
+   * Unlike HeapPtr<T>, GCPtr<T> must be managed with GC lifetimes.
+   * Specifically, the memory used by the pointer itself must be live until
+   * at least the next minor GC. For that reason, move semantics are invalid
+   * and are deleted here. Please note that not all containers support move
+   * semantics, so this does not completely prevent invalid uses.
+   */
+  GCPtr(GCPtr<T>&&) = delete;
+  GCPtr<T>& operator=(GCPtr<T>&&) = delete;
+
   void init(const T& v) {
     AssertTargetIsNotGray(v);
     this->value = v;
@@ -636,16 +646,6 @@ class GCPtr : public WriteBarriered<T> {
     this->value = v;
     this->post(tmp, this->value);
   }
-
-  /*
-   * Unlike HeapPtr<T>, GCPtr<T> must be managed with GC lifetimes.
-   * Specifically, the memory used by the pointer itself must be live until
-   * at least the next minor GC. For that reason, move semantics are invalid
-   * and are deleted here. Please note that not all containers support move
-   * semantics, so this does not completely prevent invalid uses.
-   */
-  GCPtr(GCPtr<T>&&) = delete;
-  GCPtr<T>& operator=(GCPtr<T>&&) = delete;
 };
 
 }  // namespace js
