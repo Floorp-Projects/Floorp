@@ -11,10 +11,6 @@ import {
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 import { ViewPage } from "./viewpage.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/firefoxview/card-container.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/firefoxview/fxview-tab-list.mjs";
 
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"

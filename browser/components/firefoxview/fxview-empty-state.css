@@ -1,0 +1,61 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+[slot="main"] {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  padding: 36px;
+}
+
+[slot="main"].selectedTab {
+  flex-direction: column;
+  text-align: center;
+  gap: 22px;
+}
+
+[slot="main"].selectedTab .header {
+  justify-content: center;
+}
+
+.image {
+  -moz-context-properties: fill, stroke, fill-opacity;
+  fill: var(--fxview-background-color-secondary);
+  stroke: var(--fxview-text-primary-color);
+}
+
+.header {
+  margin-block: 0;
+  font-size: 1.46rem;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon[hidden], .header[hidden] {
+  display: none;
+}
+
+.icon {
+  background-position: center center;
+  background-repeat: no-repeat;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+}
+
+.info {
+  -moz-context-properties: fill;
+  fill: var(--in-content-primary-button-background);
+}
+
+.description {
+  color: var(--text-color-deemphasized);
+  margin-block: 4px 0;
+}
+
+.description.secondary {
+  margin-block-start: 16px;
+}

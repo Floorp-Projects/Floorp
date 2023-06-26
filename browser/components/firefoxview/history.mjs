@@ -4,8 +4,6 @@
 
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { ViewPage } from "./viewpage.mjs";
-// eslint-disable-next-line import/no-unassigned-import
-import "chrome://browser/content/firefoxview/card-container.mjs";
 
 class HistoryInView extends ViewPage {
   constructor() {
