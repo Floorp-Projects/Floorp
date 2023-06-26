@@ -26,7 +26,7 @@ class HomeMenu(
 
         val settings = BrowserMenuImageText(
             label = context.getString(R.string.menu_settings),
-            imageResource = R.drawable.mozac_ic_settings,
+            imageResource = R.drawable.mozac_ic_settings_24,
         ) {
             onItemTapped.invoke(HomeMenuItem.Settings)
         }

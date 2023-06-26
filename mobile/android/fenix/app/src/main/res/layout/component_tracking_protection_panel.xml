@@ -190,7 +190,7 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/tracking_protection_item_height"
             android:text="@string/etp_settings"
-            app:drawableStartCompat="@drawable/mozac_ic_settings"
+            app:drawableStartCompat="@drawable/mozac_ic_settings_24"
             app:drawableTint="?attr/textPrimary"
             app:layout_constraintTop_toBottomOf="@id/line_divider" />
     </androidx.constraintlayout.widget.ConstraintLayout>

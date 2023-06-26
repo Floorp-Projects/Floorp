@@ -33,7 +33,7 @@ class ShortcutsSuggestionProviderTest {
             every { getString(R.string.search_shortcuts_engine_settings) } returns "Search engine settings"
         }
 
-        every { AppCompatResources.getDrawable(context, R.drawable.mozac_ic_settings) } returns null
+        every { AppCompatResources.getDrawable(context, R.drawable.mozac_ic_settings_24) } returns null
     }
 
     @After

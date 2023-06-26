@@ -187,7 +187,7 @@ class HomeMenu(
         val nimbusValidation = FxNimbus.features.nimbusValidation.value()
         val settingsItem = BrowserMenuImageText(
             nimbusValidation.settingsTitle,
-            R.drawable.mozac_ic_settings,
+            R.drawable.mozac_ic_settings_24,
             primaryTextColor,
         ) {
             onItemTapped.invoke(Item.Settings)

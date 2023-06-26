@@ -169,7 +169,7 @@ class DefaultBrowserMenu(
 
         val settings = BrowserMenuImageText(
             label = context.getString(R.string.menu_settings),
-            imageResource = R.drawable.mozac_ic_settings,
+            imageResource = R.drawable.mozac_ic_settings_24,
             textColorResource = context.theme.resolveAttribute(R.attr.primaryText),
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.Settings)

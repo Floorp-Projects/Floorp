@@ -29,7 +29,7 @@ class ShortcutsSuggestionProvider(
     override val id: String = UUID.randomUUID().toString()
 
     private val settingsIcon by lazy {
-        AppCompatResources.getDrawable(context, R.drawable.mozac_ic_settings)?.apply {
+        AppCompatResources.getDrawable(context, R.drawable.mozac_ic_settings_24)?.apply {
             colorFilter = createBlendModeColorFilterCompat(
                 context.getColorFromAttr(R.attr.textPrimary),
                 SRC_IN,

@@ -69,7 +69,7 @@ class SearchSelectorMenu(
             start = DrawableMenuIcon(
                 drawable = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_settings,
+                    R.drawable.mozac_ic_settings_24,
                 ),
                 tint = context.getColorFromAttr(R.attr.textPrimary),
             ),

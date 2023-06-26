@@ -314,7 +314,7 @@ open class DefaultToolbarMenu(
     @VisibleForTesting
     internal val settingsItem = BrowserMenuHighlightableItem(
         label = context.getString(R.string.browser_menu_settings),
-        startImageResource = R.drawable.mozac_ic_settings,
+        startImageResource = R.drawable.mozac_ic_settings_24,
         iconTintColorResource = if (hasAccountProblem) {
             ThemeManager.resolveAttribute(R.attr.syncDisconnected, context)
         } else {
