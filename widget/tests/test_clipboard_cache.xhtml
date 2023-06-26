@@ -82,28 +82,56 @@ clipboardTypes.forEach(function(type) {
     return;
   }
 
-  if (clipboard.kGlobalClipboard != type) {
-    add_task(function test_clipboard_hasDataMatchingFlavors() {
-      info(`Test write data to clipboard type ${type}`);
+  add_task(function test_clipboard_hasDataMatchingFlavors() {
+    const trans = generateNewTransferable("text/plain", generateRandomString());
 
-      // Write text/plain data to main clipboard.
-      writeRandomStringToClipboard("text/plain", clipboard.kGlobalClipboard);
-      ok(clipboard.hasDataMatchingFlavors(["text/plain"], clipboard.kGlobalClipboard),
-         "Should have text/plain flavor");
-      ok(!clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard),
-         "Should not have text/html flavor");
+    info(`Write text/plain data to clipboard ${type}`);
+    clipboard.setData(trans, null, type);
+    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
+       `Check if there is text/plain flavor on clipboard ${type}`);
+    ok(!clipboard.hasDataMatchingFlavors(["text/foo"], type),
+       `Check if there is text/foo flavor on clipboard ${type}`);
 
-      // Write text/html data to other clipboard.
-      writeRandomStringToClipboard("text/html", type);
-      ok(clipboard.hasDataMatchingFlavors(["text/plain"], clipboard.kGlobalClipboard),
-         "Should have text/plain flavor");
-      ok(!clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard),
-         "Should not have text/html flavor");
+    info(`Add text/foo data to transferable`);
+    addStringToTransferable("text/foo", generateRandomString(), trans);
+    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
+       `Check if there is text/plain flavor on clipboard ${type}`);
+    is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
+       isSupportGetFromCachedTransferable,
+       `Check if there is text/foo flavor on clipboard ${type}`);
 
-      // Clean clipboard data.
-      cleanupAllClipboard();
+    // Check other clipboard types.
+    clipboardTypes.forEach(function(otherType) {
+      if (otherType != clipboard.kSelectionCache &&
+          otherType != type &&
+          clipboard.isClipboardTypeSupported(otherType)) {
+        ok(!clipboard.hasDataMatchingFlavors(["text/plain"], otherType),
+           `Check if there is text/plain flavor on clipboard ${otherType}`);
+        ok(!clipboard.hasDataMatchingFlavors(["text/foo"], otherType),
+           `Check if there is text/foo flavor on clipboard ${otherType}`);
+
+        info(`Write text/plain data to clipboard ${otherType}`);
+        writeRandomStringToClipboard("text/plain", otherType);
+      }
     });
-  }
+
+    // Check again.
+    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
+       `Check if there is text/plain flavor on clipboard ${type}`);
+    is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
+       isSupportGetFromCachedTransferable,
+       `Check if there is text/foo flavor on clipboard ${type}`);
+
+    info(`Write text/plain data to clipboard ${type} again`);
+    writeRandomStringToClipboard("text/plain", type);
+    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
+       `Check if there is text/plain flavor on clipboard ${type}`);
+    ok(!clipboard.hasDataMatchingFlavors(["text/foo"], type),
+       `Check if there is text/foo flavor on clipboard ${type}`);
+
+    // Clean clipboard data.
+    cleanupAllClipboard();
+  });
 
   // Test sync set clipboard data.
   testClipboardCache(type, false);
