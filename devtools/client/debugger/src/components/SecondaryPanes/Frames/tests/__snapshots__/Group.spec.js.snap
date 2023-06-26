@@ -328,7 +328,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
       key="frame-indent-0"
     />
     <Frame
-      copyStackTrace={[MockFunction]}
       cx={
         Object {
           "isPaused": false,
@@ -469,12 +468,10 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "type": "call",
         }
       }
-      frameworkGroupingOn={true}
       getFrameTitle={[Function]}
       hideLocation={true}
       key="1"
       panel="webconsole"
-      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -608,14 +605,11 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
         }
       }
       shouldMapDisplayName={false}
-      toggleBlackBox={[MockFunction]}
-      toggleFrameworkGrouping={[MockFunction]}
     />
     <FrameIndent
       key="frame-indent-1"
     />
     <Frame
-      copyStackTrace={[MockFunction]}
       cx={
         Object {
           "isPaused": false,
@@ -756,12 +750,10 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "type": "call",
         }
       }
-      frameworkGroupingOn={true}
       getFrameTitle={[Function]}
       hideLocation={true}
       key="2"
       panel="webconsole"
-      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -895,14 +887,11 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
         }
       }
       shouldMapDisplayName={false}
-      toggleBlackBox={[MockFunction]}
-      toggleFrameworkGrouping={[MockFunction]}
     />
     <FrameIndent
       key="frame-indent-2"
     />
     <Frame
-      copyStackTrace={[MockFunction]}
       cx={
         Object {
           "isPaused": false,
@@ -1043,12 +1032,10 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
           "type": "call",
         }
       }
-      frameworkGroupingOn={true}
       getFrameTitle={[Function]}
       hideLocation={true}
       key="3"
       panel="webconsole"
-      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -1182,8 +1169,6 @@ exports[`Group passes the getFrameTitle prop to the Frame components 1`] = `
         }
       }
       shouldMapDisplayName={false}
-      toggleBlackBox={[MockFunction]}
-      toggleFrameworkGrouping={[MockFunction]}
     />
   </div>
 </div>
@@ -1517,7 +1502,6 @@ exports[`Group renders group with anonymous functions 2`] = `
       key="frame-indent-0"
     />
     <Frame
-      copyStackTrace={[MockFunction]}
       cx={
         Object {
           "isPaused": false,
@@ -1658,11 +1642,9 @@ exports[`Group renders group with anonymous functions 2`] = `
           "type": "call",
         }
       }
-      frameworkGroupingOn={true}
       hideLocation={true}
       key="1"
       panel="webconsole"
-      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -1796,14 +1778,11 @@ exports[`Group renders group with anonymous functions 2`] = `
         }
       }
       shouldMapDisplayName={false}
-      toggleBlackBox={[MockFunction]}
-      toggleFrameworkGrouping={[MockFunction]}
     />
     <FrameIndent
       key="frame-indent-1"
     />
     <Frame
-      copyStackTrace={[MockFunction]}
       cx={
         Object {
           "isPaused": false,
@@ -1944,11 +1923,9 @@ exports[`Group renders group with anonymous functions 2`] = `
           "type": "call",
         }
       }
-      frameworkGroupingOn={true}
       hideLocation={true}
       key="2"
       panel="webconsole"
-      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -2082,14 +2059,11 @@ exports[`Group renders group with anonymous functions 2`] = `
         }
       }
       shouldMapDisplayName={false}
-      toggleBlackBox={[MockFunction]}
-      toggleFrameworkGrouping={[MockFunction]}
     />
     <FrameIndent
       key="frame-indent-2"
     />
     <Frame
-      copyStackTrace={[MockFunction]}
       cx={
         Object {
           "isPaused": false,
@@ -2230,11 +2204,9 @@ exports[`Group renders group with anonymous functions 2`] = `
           "type": "call",
         }
       }
-      frameworkGroupingOn={true}
       hideLocation={true}
       key="3"
       panel="webconsole"
-      restart={[MockFunction]}
       selectFrame={[MockFunction]}
       selectLocation={[MockFunction]}
       selectedFrame={
@@ -2368,8 +2340,6 @@ exports[`Group renders group with anonymous functions 2`] = `
         }
       }
       shouldMapDisplayName={false}
-      toggleBlackBox={[MockFunction]}
-      toggleFrameworkGrouping={[MockFunction]}
     />
   </div>
 </div>

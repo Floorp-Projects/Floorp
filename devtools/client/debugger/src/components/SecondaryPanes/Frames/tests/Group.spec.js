@@ -11,9 +11,6 @@ import {
   mockthreadcx,
 } from "../../../../utils/test-mockup";
 
-import FrameMenu from "../FrameMenu";
-jest.mock("../FrameMenu", () => jest.fn());
-
 function render(overrides = {}) {
   const frame = { ...makeMockFrame(), displayName: "foo", library: "Back" };
   const defaultProps = {
@@ -97,38 +94,5 @@ describe("Group", () => {
     expect(component).toMatchSnapshot();
     component.setState({ expanded: true });
     expect(component).toMatchSnapshot();
-  });
-
-  describe("mouse events", () => {
-    it("does not call FrameMenu when disableContextMenu is true", () => {
-      const { component } = render({
-        disableContextMenu: true,
-      });
-
-      const mockEvent = "mockEvent";
-      component.simulate("contextmenu", mockEvent);
-
-      expect(FrameMenu).toHaveBeenCalledTimes(0);
-    });
-
-    it("calls FrameMenu on right click", () => {
-      const { component, props } = render();
-      const { copyStackTrace, toggleFrameworkGrouping, toggleBlackBox, cx } =
-        props;
-      const mockEvent = "mockEvent";
-      component.simulate("contextmenu", mockEvent);
-
-      expect(FrameMenu).toHaveBeenCalledWith(
-        props.group[0],
-        props.frameworkGroupingOn,
-        {
-          copyStackTrace,
-          toggleFrameworkGrouping,
-          toggleBlackBox,
-        },
-        mockEvent,
-        cx
-      );
-    });
   });
 });
