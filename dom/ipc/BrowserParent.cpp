@@ -2433,8 +2433,20 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetCursor(
 
   nsCOMPtr<imgIContainer> cursorImage;
   if (aHasCustomCursor) {
-    if (aHeight * aStride != aCursorData.Length() ||
-        aStride < aWidth * gfx::BytesPerPixel(aFormat)) {
+    const bool cursorDataValid = [&] {
+      auto expectedSize = CheckedInt<uint32_t>(aHeight) * aStride;
+      if (!expectedSize.isValid() ||
+          expectedSize.value() != aCursorData.Length()) {
+        return false;
+      }
+      auto minStride =
+          CheckedInt<uint32_t>(aWidth) * gfx::BytesPerPixel(aFormat);
+      if (!minStride.isValid() || aStride < minStride.value()) {
+        return false;
+      }
+      return true;
+    }();
+    if (!cursorDataValid) {
       return IPC_FAIL(this, "Invalid custom cursor data");
     }
     const gfx::IntSize size(aWidth, aHeight);
