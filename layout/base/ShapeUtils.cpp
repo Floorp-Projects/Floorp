@@ -9,9 +9,12 @@
 #include <cstdlib>
 
 #include "nsCSSRendering.h"
+#include "nsLayoutUtils.h"
 #include "nsMargin.h"
 #include "nsStyleStruct.h"
 #include "mozilla/SVGContentUtils.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PathHelpers.h"
 
 namespace mozilla {
 
@@ -150,6 +153,87 @@ nsTArray<nsPoint> ShapeUtils::ComputePolygonVertices(
                            aRefBox.TopLeft());
   }
   return vertices;
+}
+
+/* static */
+static inline gfx::Point ConvertToGfxPoint(const nsPoint& aPoint,
+                                           nscoord aAppUnitsPerPixel) {
+  return {static_cast<gfx::Float>(aPoint.x) /
+              static_cast<gfx::Float>(aAppUnitsPerPixel),
+          static_cast<gfx::Float>(aPoint.y) /
+              static_cast<gfx::Float>(aAppUnitsPerPixel)};
+}
+
+/* static */
+already_AddRefed<gfx::Path> ShapeUtils::BuildCirclePath(
+    const StyleBasicShape& aShape, const nsRect& aRefBox,
+    const nsPoint& aCenter, nscoord aAppUnitsPerPixel,
+    gfx::PathBuilder* aPathBuilder) {
+  const nscoord r = ComputeCircleRadius(aShape, aCenter, aRefBox);
+  aPathBuilder->Arc(
+      ConvertToGfxPoint(aCenter, aAppUnitsPerPixel),
+      static_cast<float>(r) / static_cast<float>(aAppUnitsPerPixel), 0.0,
+      gfx::Float(2.0 * M_PI));
+  aPathBuilder->Close();
+  return aPathBuilder->Finish();
+}
+
+static inline gfx::Size ConvertToGfxSize(const nsSize& aSize,
+                                         nscoord aAppUnitsPerPixel) {
+  return {static_cast<gfx::Float>(aSize.width) /
+              static_cast<gfx::Float>(aAppUnitsPerPixel),
+          static_cast<gfx::Float>(aSize.height) /
+              static_cast<gfx::Float>(aAppUnitsPerPixel)};
+}
+
+/* static */
+already_AddRefed<gfx::Path> ShapeUtils::BuildEllipsePath(
+    const StyleBasicShape& aShape, const nsRect& aRefBox,
+    const nsPoint& aCenter, nscoord aAppUnitsPerPixel,
+    gfx::PathBuilder* aPathBuilder) {
+  const nsSize radii = ComputeEllipseRadii(aShape, aCenter, aRefBox);
+  EllipseToBezier(aPathBuilder, ConvertToGfxPoint(aCenter, aAppUnitsPerPixel),
+                  ConvertToGfxSize(radii, aAppUnitsPerPixel));
+  aPathBuilder->Close();
+  return aPathBuilder->Finish();
+}
+
+/* static */
+already_AddRefed<gfx::Path> ShapeUtils::BuildPolygonPath(
+    const StyleBasicShape& aShape, const nsRect& aRefBox,
+    nscoord aAppUnitsPerPixel, gfx::PathBuilder* aPathBuilder) {
+  nsTArray<nsPoint> vertices = ComputePolygonVertices(aShape, aRefBox);
+  if (vertices.IsEmpty()) {
+    MOZ_ASSERT_UNREACHABLE(
+        "ComputePolygonVertices() should've given us some vertices!");
+  } else {
+    aPathBuilder->MoveTo(NSPointToPoint(vertices[0], aAppUnitsPerPixel));
+    for (size_t i = 1; i < vertices.Length(); ++i) {
+      aPathBuilder->LineTo(NSPointToPoint(vertices[i], aAppUnitsPerPixel));
+    }
+  }
+  aPathBuilder->Close();
+  return aPathBuilder->Finish();
+}
+
+/* static */
+already_AddRefed<gfx::Path> ShapeUtils::BuildInsetPath(
+    const StyleBasicShape& aShape, const nsRect& aRefBox,
+    nscoord aAppUnitsPerPixel, gfx::PathBuilder* aPathBuilder) {
+  const nsRect insetRect = ComputeInsetRect(aShape, aRefBox);
+  const gfx::Rect insetRectPixels = NSRectToRect(insetRect, aAppUnitsPerPixel);
+  nscoord appUnitsRadii[8];
+
+  if (ComputeInsetRadii(aShape, aRefBox, insetRect, appUnitsRadii)) {
+    gfx::RectCornerRadii corners;
+    nsCSSRendering::ComputePixelRadii(appUnitsRadii, aAppUnitsPerPixel,
+                                      &corners);
+
+    AppendRoundedRectToPath(aPathBuilder, insetRectPixels, corners, true);
+  } else {
+    AppendRectToPath(aPathBuilder, insetRectPixels, true);
+  }
+  return aPathBuilder->Finish();
 }
 
 }  // namespace mozilla
