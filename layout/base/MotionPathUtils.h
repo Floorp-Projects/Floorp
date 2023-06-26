@@ -59,11 +59,11 @@ struct RayReferenceData {
 struct OffsetPathData {
   enum class Type : uint8_t {
     None,
-    Path,
+    Shape,
     Ray,
   };
 
-  struct PathData {
+  struct ShapeData {
     RefPtr<gfx::Path> mGfxPath;
     bool mIsClosedIntervals;
   };
@@ -75,13 +75,13 @@ struct OffsetPathData {
 
   Type mType;
   union {
-    PathData mPath;
+    ShapeData mShape;
     RayData mRay;
   };
 
   static OffsetPathData None() { return OffsetPathData(); }
-  static OffsetPathData Path(const StyleSVGPathData& aPath,
-                             already_AddRefed<gfx::Path>&& aGfxPath) {
+  static OffsetPathData Shape(const StyleSVGPathData& aPath,
+                              already_AddRefed<gfx::Path>&& aGfxPath) {
     const auto& path = aPath._0.AsSpan();
     return OffsetPathData(std::move(aGfxPath),
                           !path.empty() && path.rbegin()->IsClosePath());
@@ -96,12 +96,12 @@ struct OffsetPathData {
   }
 
   bool IsNone() const { return mType == Type::None; }
-  bool IsPath() const { return mType == Type::Path; }
+  bool IsShape() const { return mType == Type::Shape; }
   bool IsRay() const { return mType == Type::Ray; }
 
-  const PathData& AsPath() const {
-    MOZ_ASSERT(IsPath());
-    return mPath;
+  const ShapeData& AsShape() const {
+    MOZ_ASSERT(IsShape());
+    return mShape;
   }
 
   const RayData& AsRay() const {
@@ -111,8 +111,8 @@ struct OffsetPathData {
 
   ~OffsetPathData() {
     switch (mType) {
-      case Type::Path:
-        mPath.~PathData();
+      case Type::Shape:
+        mShape.~ShapeData();
         break;
       case Type::Ray:
         mRay.~RayData();
@@ -124,8 +124,8 @@ struct OffsetPathData {
 
   OffsetPathData(const OffsetPathData& aOther) : mType(aOther.mType) {
     switch (mType) {
-      case Type::Path:
-        mPath = aOther.mPath;
+      case Type::Shape:
+        mShape = aOther.mShape;
         break;
       case Type::Ray:
         mRay = aOther.mRay;
@@ -137,8 +137,8 @@ struct OffsetPathData {
 
   OffsetPathData(OffsetPathData&& aOther) : mType(aOther.mType) {
     switch (mType) {
-      case Type::Path:
-        mPath = std::move(aOther.mPath);
+      case Type::Shape:
+        mShape = std::move(aOther.mShape);
         break;
       case Type::Ray:
         mRay = std::move(aOther.mRay);
@@ -151,7 +151,7 @@ struct OffsetPathData {
  private:
   OffsetPathData() : mType(Type::None) {}
   OffsetPathData(already_AddRefed<gfx::Path>&& aPath, bool aIsClosed)
-      : mType(Type::Path), mPath{std::move(aPath), aIsClosed} {}
+      : mType(Type::Shape), mShape{std::move(aPath), aIsClosed} {}
   OffsetPathData(const StyleRayFunction* aRay, RayReferenceData&& aRef)
       : mType(Type::Ray), mRay{aRay, std::move(aRef)} {}
   OffsetPathData(const StyleRayFunction* aRay, const RayReferenceData& aRef)
