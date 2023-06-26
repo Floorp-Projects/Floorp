@@ -3937,6 +3937,13 @@ nsresult Document::InitFeaturePolicy(nsIChannel* aChannel) {
   return NS_OK;
 }
 
+void Document::EnsureNotEnteringAndExitFullscreen() {
+  Document::ClearPendingFullscreenRequests(this);
+  if (GetFullscreenElement()) {
+    Document::AsyncExitFullscreen(this);
+  }
+}
+
 nsresult Document::InitReferrerInfo(nsIChannel* aChannel) {
   MOZ_ASSERT(mReferrerInfo);
   MOZ_ASSERT(mPreloadReferrerInfo);

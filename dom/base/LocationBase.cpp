@@ -173,6 +173,12 @@ void LocationBase::SetURI(nsIURI* aURI, nsIPrincipal& aSubjectPrincipal,
       return;
     }
     aRv.Throw(rv);
+    return;
+  }
+
+  Document* doc = bc->GetDocument();
+  if (doc && nsContentUtils::IsExternalProtocol(aURI)) {
+    doc->EnsureNotEnteringAndExitFullscreen();
   }
 }
 

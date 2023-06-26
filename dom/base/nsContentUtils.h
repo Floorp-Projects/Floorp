@@ -3356,6 +3356,8 @@ class nsContentUtils {
   static nsresult AnonymizeId(nsAString& aId, const nsACString& aOriginKey,
                               OriginFormat aFormat = OriginFormat::Base64);
 
+  static bool IsExternalProtocol(nsIURI* aURI);
+
  private:
   static bool InitializeEventTable();
 
