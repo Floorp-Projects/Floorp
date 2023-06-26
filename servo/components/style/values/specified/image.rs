@@ -7,6 +7,7 @@
 //!
 //! [image]: https://drafts.csswg.org/css-images/#image-values
 
+use crate::color::mix::ColorInterpolationMethod;
 use crate::custom_properties::SpecifiedValue;
 use crate::parser::{Parse, ParserContext};
 use crate::stylesheets::CorsMode;
@@ -33,6 +34,11 @@ use std::cmp::Ordering;
 use std::fmt::{self, Write};
 use style_traits::{CssType, CssWriter, KeywordsCollectFn, ParseError};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
+
+#[inline]
+fn gradient_color_interpolation_method_enabled() -> bool {
+    static_prefs::pref!("layout.css.gradient-color-interpolation-method.enabled")
+}
 
 /// Specified values for an image according to CSS-IMAGES.
 /// <https://drafts.csswg.org/css-images/#image-values>
@@ -663,6 +669,7 @@ impl Gradient {
 
                 generic::Gradient::Linear {
                     direction,
+                    color_interpolation_method: ColorInterpolationMethod::srgb(),
                     items,
                     repeating: false,
                     compat_mode: GradientCompatMode::Modern,
@@ -691,6 +698,7 @@ impl Gradient {
                 generic::Gradient::Radial {
                     shape,
                     position,
+                    color_interpolation_method: ColorInterpolationMethod::srgb(),
                     items,
                     repeating: false,
                     compat_mode: GradientCompatMode::Modern,
@@ -802,6 +810,20 @@ impl Gradient {
         Ok(items)
     }
 
+    /// Try to parse a color interpolation method.
+    fn try_parse_color_interpolation_method<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Option<ColorInterpolationMethod> {
+        if gradient_color_interpolation_method_enabled() {
+            input
+                .try_parse(|i| ColorInterpolationMethod::parse(context, i))
+                .ok()
+        } else {
+            None
+        }
+    }
+
     /// Parses a linear gradient.
     /// GradientCompatMode can change during `-moz-` prefixed gradient parsing if it come across a `to` keyword.
     fn parse_linear<'i, 't>(
@@ -810,23 +832,39 @@ impl Gradient {
         repeating: bool,
         mut compat_mode: GradientCompatMode,
     ) -> Result<Self, ParseError<'i>> {
-        let direction = if let Ok(d) =
-            input.try_parse(|i| LineDirection::parse(context, i, &mut compat_mode))
-        {
+        let mut color_interpolation_method =
+            Self::try_parse_color_interpolation_method(context, input);
+
+        let direction = input
+            .try_parse(|p| LineDirection::parse(context, p, &mut compat_mode))
+            .ok();
+
+        if direction.is_some() && color_interpolation_method.is_none() {
+            color_interpolation_method = Self::try_parse_color_interpolation_method(context, input);
+        }
+
+        // If either of the 2 options were specified, we require a comma.
+        if color_interpolation_method.is_some() || direction.is_some() {
             input.expect_comma()?;
-            d
-        } else {
-            match compat_mode {
-                GradientCompatMode::Modern => {
-                    LineDirection::Vertical(VerticalPositionKeyword::Bottom)
-                },
-                _ => LineDirection::Vertical(VerticalPositionKeyword::Top),
-            }
-        };
+        }
+
         let items = Gradient::parse_stops(context, input)?;
+
+        let color_interpolation_method = color_interpolation_method.unwrap_or_else(|| {
+            // TODO(tlouw): Check whether any of the stops are in a non legacy syntax, in which
+            // case we should default to lab() and not srgb().
+            // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1839837
+            ColorInterpolationMethod::srgb()
+        });
+
+        let direction = direction.unwrap_or(match compat_mode {
+            GradientCompatMode::Modern => LineDirection::Vertical(VerticalPositionKeyword::Bottom),
+            _ => LineDirection::Vertical(VerticalPositionKeyword::Top),
+        });
 
         Ok(Gradient::Linear {
             direction,
+            color_interpolation_method,
             items,
             repeating,
             compat_mode,
@@ -840,6 +878,9 @@ impl Gradient {
         repeating: bool,
         compat_mode: GradientCompatMode,
     ) -> Result<Self, ParseError<'i>> {
+        let mut color_interpolation_method =
+            Self::try_parse_color_interpolation_method(context, input);
+
         let (shape, position) = match compat_mode {
             GradientCompatMode::Modern => {
                 let shape = input.try_parse(|i| EndingShape::parse(context, i, compat_mode));
@@ -861,7 +902,12 @@ impl Gradient {
             },
         };
 
-        if shape.is_ok() || position.is_some() {
+        let has_shape_or_position = shape.is_ok() || position.is_some();
+        if has_shape_or_position && color_interpolation_method.is_none() {
+            color_interpolation_method = Self::try_parse_color_interpolation_method(context, input);
+        }
+
+        if has_shape_or_position || color_interpolation_method.is_some() {
             input.expect_comma()?;
         }
 
@@ -873,19 +919,32 @@ impl Gradient {
 
         let items = Gradient::parse_stops(context, input)?;
 
+        let color_interpolation_method = color_interpolation_method.unwrap_or_else(|| {
+            // TODO(tlouw): Check whether any of the stops are in a non legacy syntax, in which
+            // case we should default to lab() and not srgb().
+            // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1839837
+            ColorInterpolationMethod::srgb()
+        });
+
         Ok(Gradient::Radial {
             shape,
             position,
+            color_interpolation_method,
             items,
             repeating,
             compat_mode,
         })
     }
+
+    /// Parse a conic gradient.
     fn parse_conic<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
         repeating: bool,
     ) -> Result<Self, ParseError<'i>> {
+        let mut color_interpolation_method =
+            Self::try_parse_color_interpolation_method(context, input);
+
         let angle = input.try_parse(|i| {
             i.expect_ident_matching("from")?;
             // Spec allows unitless zero start angles
@@ -896,12 +955,20 @@ impl Gradient {
             i.expect_ident_matching("at")?;
             Position::parse(context, i)
         });
-        if angle.is_ok() || position.is_ok() {
+
+        let has_angle_or_position = angle.is_ok() || position.is_ok();
+        if has_angle_or_position && color_interpolation_method.is_none() {
+            color_interpolation_method = Self::try_parse_color_interpolation_method(context, input);
+        }
+
+        if has_angle_or_position || color_interpolation_method.is_some() {
             input.expect_comma()?;
         }
 
         let angle = angle.unwrap_or(Angle::zero());
+
         let position = position.unwrap_or(Position::center());
+
         let items = generic::GradientItem::parse_comma_separated(
             context,
             input,
@@ -912,9 +979,17 @@ impl Gradient {
             return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
         }
 
+        let color_interpolation_method = color_interpolation_method.unwrap_or_else(|| {
+            // TODO(tlouw): Check whether any of the stops are in a non legacy syntax, in which
+            // case we should default to lab() and not srgb().
+            // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1839837
+            ColorInterpolationMethod::srgb()
+        });
+
         Ok(Gradient::Conic {
             angle,
             position,
+            color_interpolation_method,
             items,
             repeating,
         })
