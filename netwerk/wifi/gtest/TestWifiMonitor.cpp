@@ -27,7 +27,10 @@
 // and that wifi-scan polling is operable on mobile networks.
 
 using ::testing::AtLeast;
+using ::testing::Cardinality;
 using ::testing::Exactly;
+using ::testing::MockFunction;
+using ::testing::Sequence;
 
 static mozilla::LazyLogModule gLog("TestWifiMonitor");
 #define LOGI(x) MOZ_LOG(gLog, mozilla::LogLevel::Info, x)
@@ -35,24 +38,15 @@ static mozilla::LazyLogModule gLog("TestWifiMonitor");
 
 namespace mozilla {
 
-// Timeout if no updates are received for 1s.
-static const uint32_t WIFI_SCAN_TEST_RESULT_TIMEOUT_MS = 1000;
+// Timeout if update not received from wifi scanner thread.
+static const uint32_t kWifiScanTestResultTimeoutMs = 100;
+static const uint32_t kTestWifiScanIntervalMs = 10;
 
 // ID counter, used to make sure each call to GetAccessPointsFromWLAN
 // returns "new" access points.
 static int gCurrentId = 0;
 
 static uint32_t gNumScanResults = 0;
-
-template <typename T>
-bool IsNonZero(const T&) {
-  return true;
-}
-
-template <>
-bool IsNonZero<int>(const int& aVal) {
-  return aVal != 0;
-}
 
 struct LinkTypeMobility {
   const char* mLinkType;
@@ -107,7 +101,7 @@ class TestWifiMonitor : public ::testing::Test {
 
     // Reduce wifi-polling interval.  0 turns polling off.
     mOldScanInterval = Preferences::GetInt(WIFI_SCAN_INTERVAL_MS_PREF);
-    Preferences::SetInt(WIFI_SCAN_INTERVAL_MS_PREF, 10);
+    Preferences::SetInt(WIFI_SCAN_INTERVAL_MS_PREF, kTestWifiScanIntervalMs);
   }
 
   ~TestWifiMonitor() {
@@ -154,7 +148,23 @@ class TestWifiMonitor : public ::testing::Test {
                           NS_ConvertUTF8toUTF16(linkStatus).get());
   }
 
-  void SetUp() override {
+ protected:
+  bool WaitForScanResults() {
+    // Wait for kWifiScanTestResultTimeoutMs to allow async calls to complete.
+    bool timedout = false;
+    RefPtr<CancelableRunnable> timer = NS_NewCancelableRunnableFunction(
+        "WaitForScanResults Timeout", [&] { timedout = true; });
+    NS_DelayedDispatchToCurrentThread(do_AddRef(timer),
+                                      kWifiScanTestResultTimeoutMs);
+
+    mozilla::SpinEventLoopUntil("TestWifiMonitor::WaitForScanResults"_ns,
+                                [&]() { return timedout; });
+
+    timer->Cancel();
+    return true;
+  }
+
+  void CreateObjects() {
     mWifiMonitor = MakeRefPtr<nsWifiMonitor>(MakeUnique<MockWifiScanner>());
     EXPECT_TRUE(!mWifiMonitor->IsPolling());
 
@@ -163,14 +173,15 @@ class TestWifiMonitor : public ::testing::Test {
           mWifiMonitor->mWifiScanner.get(), mWifiListener.get()));
   }
 
-  void TearDown() override {
+  void DestroyObjects() {
     ::testing::Mock::VerifyAndClearExpectations(
         mWifiMonitor->mWifiScanner.get());
     ::testing::Mock::VerifyAndClearExpectations(mWifiListener.get());
 
     // Manually disconnect observers so that the monitor can be destroyed.
-    // This would normally be done on xpcom-shutdown but that is sent after
-    // the tests run, which is too late to avoid a gtest memory-leak error.
+    // In the browser, this would be done on xpcom-shutdown but that is sent
+    // after the tests run, which is too late to avoid a gtest memory-leak
+    // error.
     mWifiMonitor->Close();
 
     mWifiMonitor = nullptr;
@@ -178,18 +189,53 @@ class TestWifiMonitor : public ::testing::Test {
     gCurrentId = 0;
   }
 
- protected:
-  // Fn must be the type of a parameterless function that returns a boolean
-  // indicating success.
-  template <typename Card1, typename Card2, typename Card3, typename Fn>
-  void CheckAsync(Card1&& nScans, Card2&& nChanges, Card3&& nErrors, Fn fn) {
+  void StartWatching(bool aRequestPolling) {
+    LOGD(("StartWatching | aRequestPolling: %s | nScanResults: %u",
+          aRequestPolling ? "true" : "false", gNumScanResults));
+    EXPECT_TRUE(NS_SUCCEEDED(
+        mWifiMonitor->StartWatching(mWifiListener, aRequestPolling)));
+    WaitForScanResults();
+  }
+
+  void NotifyOfNetworkEvent(const char* aTopic, const char16_t* aData) {
+    LOGD(("NotifyOfNetworkEvent: (%s, %s) | nScanResults: %u", aTopic,
+          NS_ConvertUTF16toUTF8(aData).get(), gNumScanResults));
+    EXPECT_TRUE(NS_SUCCEEDED(mObs->NotifyObservers(nullptr, aTopic, aData)));
+    WaitForScanResults();
+  }
+
+  void StopWatching() {
+    LOGD(("StopWatching | nScanResults: %u", gNumScanResults));
+    EXPECT_TRUE(NS_SUCCEEDED(mWifiMonitor->StopWatching(mWifiListener)));
+    WaitForScanResults();
+  }
+
+  struct MockCallSequences {
+    Sequence mGetAccessPointsSeq;
+    Sequence mOnChangeSeq;
+    Sequence mOnErrorSeq;
+  };
+
+  void AddMockObjectChecks(const Cardinality& aScanCardinality,
+                           MockCallSequences& aSeqs) {
     // Only add WillRepeatedly handler if scans is more than 0, to avoid a
     // VERY LOUD gtest warning.
-    if (IsNonZero(nScans)) {
+    if (aScanCardinality.IsSaturatedByCallCount(0)) {
       EXPECT_CALL(
           *static_cast<MockWifiScanner*>(mWifiMonitor->mWifiScanner.get()),
           GetAccessPointsFromWLAN)
-          .Times(nScans)
+          .Times(aScanCardinality)
+          .InSequence(aSeqs.mGetAccessPointsSeq);
+
+      EXPECT_CALL(*mWifiListener, OnChange)
+          .Times(aScanCardinality)
+          .InSequence(aSeqs.mOnChangeSeq);
+    } else {
+      EXPECT_CALL(
+          *static_cast<MockWifiScanner*>(mWifiMonitor->mWifiScanner.get()),
+          GetAccessPointsFromWLAN)
+          .Times(aScanCardinality)
+          .InSequence(aSeqs.mGetAccessPointsSeq)
           .WillRepeatedly(
               [](nsTArray<RefPtr<nsIWifiAccessPoint>>& aAccessPoints) {
                 EXPECT_TRUE(!NS_IsMainThread());
@@ -201,16 +247,10 @@ class TestWifiMonitor : public ::testing::Test {
                 aAccessPoints.AppendElement(RefPtr(ap));
                 return NS_OK;
               });
-    } else {
-      EXPECT_CALL(
-          *static_cast<MockWifiScanner*>(mWifiMonitor->mWifiScanner.get()),
-          GetAccessPointsFromWLAN)
-          .Times(nScans);
-    }
 
-    if (IsNonZero(nChanges)) {
       EXPECT_CALL(*mWifiListener, OnChange)
-          .Times(nChanges)
+          .Times(aScanCardinality)
+          .InSequence(aSeqs.mOnChangeSeq)
           .WillRepeatedly(
               [](const nsTArray<RefPtr<nsIWifiAccessPoint>>& aAccessPoints) {
                 EXPECT_TRUE(NS_IsMainThread());
@@ -218,94 +258,107 @@ class TestWifiMonitor : public ::testing::Test {
                 ++gNumScanResults;
                 return NS_OK;
               });
-    } else {
-      EXPECT_CALL(*mWifiListener, OnChange).Times(nChanges);
     }
 
-    if (IsNonZero(nErrors)) {
-      EXPECT_CALL(*mWifiListener, OnError)
-          .Times(nErrors)
-          .WillRepeatedly([](nsresult aError) {
-            EXPECT_TRUE(NS_IsMainThread());
-            return NS_OK;
-          });
-    } else {
-      EXPECT_CALL(*mWifiListener, OnError).Times(nErrors);
+    EXPECT_CALL(*mWifiListener, OnError).Times(0).InSequence(aSeqs.mOnErrorSeq);
+  }
+
+  void AddStartWatchingCheck(bool aShouldPoll, MockCallSequences& aSeqs) {
+    AddMockObjectChecks(aShouldPoll ? AtLeast(1) : Exactly(1), aSeqs);
+  }
+
+  void AddNetworkEventCheck(const Cardinality& aScanCardinality,
+                            MockCallSequences& aSeqs) {
+    AddMockObjectChecks(aScanCardinality, aSeqs);
+  }
+
+  void AddStopWatchingCheck(bool aShouldPoll, MockCallSequences& aSeqs) {
+    // When polling, we may get stray scan + OnChange calls asynchronously
+    // before stopping.  We may also get scan calls after stopping.
+    // We check that the calls actually stopped in ConfirmStoppedCheck.
+    AddMockObjectChecks(aShouldPoll ? AtLeast(0) : Exactly(0), aSeqs);
+  }
+
+  void AddConfirmStoppedCheck(MockCallSequences& aSeqs) {
+    AddMockObjectChecks(Exactly(0), aSeqs);
+  }
+
+  // A Checkpoint is just a mocked function taking an int.  It will serve
+  // as a temporal barrier that requires all expectations before it to be
+  // satisfied and retired (meaning they won't be used in matches anymore).
+  class Checkpoint {
+   public:
+    void Check(uint32_t aId, MockCallSequences& aSeqs) {
+      EXPECT_CALL(mFn, Call(aId))
+          .InSequence(aSeqs.mGetAccessPointsSeq, aSeqs.mOnChangeSeq,
+                      aSeqs.mOnErrorSeq);
     }
 
-    EXPECT_TRUE(fn());
+    void Reach(uint32_t aId) { mFn.Call(aId); }
+
+   private:
+    MockFunction<void(uint32_t)> mFn;
+  };
+
+  // A single test is StartWatching, NotifyOfNetworkEvent, and StopWatching.
+  void RunSingleTest(bool aRequestPolling, bool aShouldPoll,
+                     const Cardinality& aScanCardinality, const char* aTopic,
+                     const char16_t* aData) {
+    LOGI(("RunSingleTest: <%s, %s> | requestPolling: %s | shouldPoll: %s",
+          aTopic, NS_ConvertUTF16toUTF8(aData).get(),
+          aRequestPolling ? "true" : "false", aShouldPoll ? "true" : "false"));
+    MOZ_ASSERT(aShouldPoll || !aRequestPolling);
+
+    CreateObjects();
+
+    Checkpoint checkpoint;
+    {
+      // gmock expectations are asynchronous by default.  Sequence objects
+      // are used here to require that expectations occur in the specified
+      // (partial) order.
+      MockCallSequences seqs;
+
+      AddStartWatchingCheck(aShouldPoll, seqs);
+      checkpoint.Check(1, seqs);
+
+      AddNetworkEventCheck(aScanCardinality, seqs);
+      checkpoint.Check(2, seqs);
+
+      AddStopWatchingCheck(aShouldPoll, seqs);
+      checkpoint.Check(3, seqs);
+
+      AddConfirmStoppedCheck(seqs);
+    }
+
+    // Now run the test on the mock objects.
+    StartWatching(aRequestPolling);
+    checkpoint.Reach(1);
+    EXPECT_EQ(mWifiMonitor->IsPolling(), aRequestPolling);
+
+    NotifyOfNetworkEvent(aTopic, aData);
+    checkpoint.Reach(2);
+    EXPECT_EQ(mWifiMonitor->IsPolling(), aShouldPoll);
+
+    StopWatching();
+    checkpoint.Reach(3);
+    EXPECT_TRUE(!mWifiMonitor->IsPolling());
+
+    // Wait for extraneous calls as a way to confirm it has stopped.
+    WaitForScanResults();
+
+    DestroyObjects();
   }
 
-  void CheckStartWatching(bool aShouldPoll) {
-    LOGI(("CheckStartWatching | aShouldPoll: %s",
-          aShouldPoll ? "true" : "false"));
-    CheckAsync(aShouldPoll ? AtLeast(1) : Exactly(1) /* nScans */,
-               aShouldPoll ? AtLeast(1) : Exactly(1) /* nChanges */,
-               0 /* nErrors */, [&] {
-                 return NS_SUCCEEDED(mWifiMonitor->StartWatching(
-                            mWifiListener, aShouldPoll)) &&
-                        WaitForScanResult(1);
-               });
-  }
-
-  void CheckStopWatching() {
-    LOGI(("CheckStopWatching"));
-    CheckAsync(0 /* nScans */, 0 /* nChanges */, 0 /* nErrors */, [&] {
-      return NS_SUCCEEDED(mWifiMonitor->StopWatching(mWifiListener));
-    });
-  }
-
-  void CheckNotifyAndNoScanResults(const char* aTopic, const char16_t* aData) {
-    LOGI(("CheckNotifyAndNoScanResults: (%s, %s)", aTopic,
-          NS_ConvertUTF16toUTF8(aData).get()));
-    CheckAsync(0 /* nScans */, 0 /* nChanges */, 0 /* nErrors */, [&] {
-      return NS_SUCCEEDED(mObs->NotifyObservers(nullptr, aTopic, aData));
-    });
-  }
-
-  void CheckNotifyAndWaitForScanResult(const char* aTopic,
-                                       const char16_t* aData) {
-    LOGI(("CheckNotifyAndWaitForScanResult: (%s, %s)", aTopic,
-          NS_ConvertUTF16toUTF8(aData).get()));
-    CheckAsync(
-        AtLeast(1) /* nScans */, AtLeast(1) /* nChanges */, 0 /* nErrors */,
-        [&] {
-          return NS_SUCCEEDED(mObs->NotifyObservers(nullptr, aTopic, aData)) &&
-                 WaitForScanResult(1);
-        });
-  }
-
-  void CheckNotifyAndWaitForPollingScans(const char* aTopic,
-                                         const char16_t* aData) {
-    LOGI(("CheckNotifyAndWaitForPollingScans: (%s, %s)", aTopic,
-          NS_ConvertUTF16toUTF8(aData).get()));
-    CheckAsync(
-        AtLeast(2) /* nScans */, AtLeast(2) /* nChanges */, 0 /* nErrors */,
-        [&] {
-          // Wait for more than one scan.
-          return NS_SUCCEEDED(mObs->NotifyObservers(nullptr, aTopic, aData)) &&
-                 WaitForScanResult(2);
-        });
-  }
-
-  void CheckMessages(bool aShouldPoll) {
+  void CheckMessages(bool aRequestPolling) {
     // NS_NETWORK_LINK_TOPIC messages should cause a new scan.
     const char* kLinkTopicDatas[] = {
         NS_NETWORK_LINK_DATA_UP, NS_NETWORK_LINK_DATA_DOWN,
         NS_NETWORK_LINK_DATA_CHANGED, NS_NETWORK_LINK_DATA_UNKNOWN};
 
-    auto checkFn = aShouldPoll
-                       ? &TestWifiMonitor::CheckNotifyAndWaitForPollingScans
-                       : &TestWifiMonitor::CheckNotifyAndWaitForScanResult;
-
     for (const auto& data : kLinkTopicDatas) {
-      CheckStartWatching(aShouldPoll);
-      EXPECT_EQ(mWifiMonitor->IsPolling(), aShouldPoll);
-      (this->*checkFn)(NS_NETWORK_LINK_TOPIC,
-                       NS_ConvertUTF8toUTF16(data).get());
-      EXPECT_EQ(mWifiMonitor->IsPolling(), aShouldPoll);
-      CheckStopWatching();
-      EXPECT_TRUE(!mWifiMonitor->IsPolling());
+      RunSingleTest(aRequestPolling, aRequestPolling,
+                    aRequestPolling ? AtLeast(2) : Exactly(1),
+                    NS_NETWORK_LINK_TOPIC, NS_ConvertUTF8toUTF16(data).get());
     }
 
     // NS_NETWORK_LINK_TYPE_TOPIC should cause wifi scan polling iff the topic
@@ -320,34 +373,12 @@ class TestWifiMonitor : public ::testing::Test {
         {NS_NETWORK_LINK_TYPE_MOBILE, true}};
 
     for (const auto& data : kLinkTypeTopicDatas) {
-      bool shouldPoll = (aShouldPoll || data.mIsMobile);
-      checkFn = shouldPoll ? &TestWifiMonitor::CheckNotifyAndWaitForPollingScans
-                           : &TestWifiMonitor::CheckNotifyAndNoScanResults;
-
-      CheckStartWatching(aShouldPoll);
-      (this->*checkFn)(NS_NETWORK_LINK_TYPE_TOPIC,
-                       NS_ConvertUTF8toUTF16(data.mLinkType).get());
-      EXPECT_EQ(mWifiMonitor->IsPolling(), shouldPoll);
-      CheckStopWatching();
-      EXPECT_TRUE(!mWifiMonitor->IsPolling());
+      bool shouldPoll = (aRequestPolling || data.mIsMobile);
+      RunSingleTest(aRequestPolling, shouldPoll,
+                    shouldPoll ? AtLeast(2) : Exactly(0),
+                    NS_NETWORK_LINK_TYPE_TOPIC,
+                    NS_ConvertUTF8toUTF16(data.mLinkType).get());
     }
-  }
-
-  bool WaitForScanResult(uint32_t nScansToWaitFor) {
-    uint32_t oldScanResults = gNumScanResults;
-    auto startTime = TimeStamp::Now();
-
-    return mozilla::SpinEventLoopUntil(
-        "TestWifiMonitor::WaitForScanResult"_ns, [&]() {
-          LOGD(
-              ("gNumScanResults: %d | oldScanResults: %d | "
-               "nScansToWaitFor: %d | timeMs: %d",
-               (int)gNumScanResults, (int)oldScanResults, (int)nScansToWaitFor,
-               (int)(TimeStamp::Now() - startTime).ToMilliseconds()));
-          return gNumScanResults >= (oldScanResults + nScansToWaitFor) ||
-                 (TimeStamp::Now() - startTime).ToMilliseconds() >
-                     WIFI_SCAN_TEST_RESULT_TIMEOUT_MS * nScansToWaitFor;
-        });
   }
 
   RefPtr<nsWifiMonitor> mWifiMonitor;
