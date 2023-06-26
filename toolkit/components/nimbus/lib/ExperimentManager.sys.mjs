@@ -128,6 +128,12 @@ export class _ExperimentManager {
           .map(rollout => rollout.slug);
       },
     });
+    Object.defineProperty(context, "enrollments", {
+      get: async () => {
+        await this.store.ready();
+        return this.store.getAll().map(enrollment => enrollment.slug);
+      },
+    });
     return context;
   }
 
