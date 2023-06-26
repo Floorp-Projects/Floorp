@@ -202,7 +202,7 @@ ArenaCellSet* StoreBuffer::WholeCellBuffer::allocateCellSet(Arena* arena) {
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
   ArenaCellSet*& head = isString ? stringHead_ : nonStringHead_;
-  auto cells = storage_->new_<ArenaCellSet>(arena, head);
+  auto* cells = storage_->new_<ArenaCellSet>(arena, head);
   if (!cells) {
     oomUnsafe.crash("Failed to allocate ArenaCellSet");
   }

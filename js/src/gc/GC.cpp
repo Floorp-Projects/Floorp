@@ -1324,7 +1324,7 @@ size_t GCRuntime::markingWorkerCount() const {
 
 #ifdef DEBUG
 void GCRuntime::assertNoMarkingWork() const {
-  for (auto& marker : markers) {
+  for (const auto& marker : markers) {
     MOZ_ASSERT(marker->isDrained());
   }
   MOZ_ASSERT(!hasDelayedMarking());
@@ -1447,7 +1447,7 @@ void GCRuntime::removeFinalizeCallback(JSFinalizeCallback callback) {
 
 void GCRuntime::callFinalizeCallbacks(JS::GCContext* gcx,
                                       JSFinalizeStatus status) const {
-  for (auto& p : finalizeCallbacks.ref()) {
+  for (const auto& p : finalizeCallbacks.ref()) {
     p.op(gcx, status, p.data);
   }
 }
@@ -4992,7 +4992,7 @@ JS_PUBLIC_API bool js::gc::detail::CanCheckGrayBits(const TenuredCell* cell) {
 
   MOZ_ASSERT(cell);
 
-  auto runtime = cell->runtimeFromAnyThread();
+  auto* runtime = cell->runtimeFromAnyThread();
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
 
   if (!runtime->gc.areGrayBitsValid()) {
@@ -5031,7 +5031,7 @@ JS_PUBLIC_API void js::gc::detail::AssertCellIsNotGray(const Cell* cell) {
   // of cells that will be marked black by the next GC slice in an incremental
   // GC. For performance reasons we don't do this in CellIsMarkedGrayIfKnown.
 
-  auto tc = &cell->asTenured();
+  const auto* tc = &cell->asTenured();
   if (!tc->isMarkedGray() || !CanCheckGrayBits(tc)) {
     return;
   }

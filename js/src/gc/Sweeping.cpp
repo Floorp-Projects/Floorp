@@ -1503,7 +1503,7 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JS::GCContext* gcx,
   }
 
 #ifdef DEBUG
-  for (auto cell : cellsToAssertNotGray.ref()) {
+  for (const auto* cell : cellsToAssertNotGray.ref()) {
     JS::AssertCellIsNotGray(cell);
   }
   cellsToAssertNotGray.ref().clearAndFree();
