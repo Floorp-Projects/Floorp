@@ -85,6 +85,25 @@ exported_symbols.quotaTest = async function () {
   await Utils.restoreStorageSize();
 };
 
+exported_symbols.bug1825018 = async function () {
+  const root = await navigator.storage.getDirectory();
+  const testFileName = "test1825018.txt";
+  const handle = await root.getFileHandle(testFileName, allowCreate);
+  const writable = await handle.createWritable();
+  try {
+    await writable.write({ type: "truncate" });
+  } catch (e) {
+    // Called write without size throws an error as expected
+  }
+
+  try {
+    await writable.abort();
+    await root.removeEntry(testFileName);
+  } catch (e) {
+    Assert.ok(false, e.message);
+  }
+};
+
 for (const [key, value] of Object.entries(exported_symbols)) {
   Object.defineProperty(value, "name", {
     value: key,
