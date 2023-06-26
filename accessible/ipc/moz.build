@@ -46,7 +46,6 @@ if CONFIG["ACCESSIBILITY"]:
         "DocAccessibleChild.h",
         "DocAccessibleParent.h",
         "RemoteAccessibleBase.h",
-        "RemoteAccessibleShared.h",
     ]
 
     UNIFIED_SOURCES += [

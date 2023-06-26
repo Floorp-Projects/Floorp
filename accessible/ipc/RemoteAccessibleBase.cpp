@@ -1294,6 +1294,28 @@ void RemoteAccessibleBase<Derived>::DOMNodeID(nsString& aID) const {
   }
 }
 
+#if !defined(XP_WIN)
+template <class Derived>
+void RemoteAccessibleBase<Derived>::ScrollToPoint(uint32_t aScrollType,
+                                                  int32_t aX, int32_t aY) {
+  Unused << mDoc->SendScrollToPoint(mID, aScrollType, aX, aY);
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::Announce(const nsString& aAnnouncement,
+                                             uint16_t aPriority) {
+  Unused << mDoc->SendAnnounce(mID, aAnnouncement, aPriority);
+}
+
+template <class Derived>
+void RemoteAccessibleBase<Derived>::ScrollSubstringToPoint(
+    int32_t aStartOffset, int32_t aEndOffset, uint32_t aCoordinateType,
+    int32_t aX, int32_t aY) {
+  Unused << mDoc->SendScrollSubstringToPoint(mID, aStartOffset, aEndOffset,
+                                             aCoordinateType, aX, aY);
+}
+#endif  // !defined(XP_WIN)
+
 template <class Derived>
 RefPtr<const AccAttributes>
 RemoteAccessibleBase<Derived>::GetCachedTextAttributes() {
