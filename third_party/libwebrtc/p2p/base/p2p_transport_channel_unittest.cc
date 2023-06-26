@@ -2555,7 +2555,7 @@ class P2PTransportChannelMultihomedTest : public P2PTransportChannelTest {
   }
 
   Connection* GetBestConnection(P2PTransportChannel* channel) {
-    rtc::ArrayView<Connection*> connections = channel->connections();
+    rtc::ArrayView<Connection* const> connections = channel->connections();
     auto it = absl::c_find(connections, channel->selected_connection());
     if (it == connections.end()) {
       return nullptr;
@@ -2564,7 +2564,7 @@ class P2PTransportChannelMultihomedTest : public P2PTransportChannelTest {
   }
 
   Connection* GetBackupConnection(P2PTransportChannel* channel) {
-    rtc::ArrayView<Connection*> connections = channel->connections();
+    rtc::ArrayView<Connection* const> connections = channel->connections();
     auto it = absl::c_find_if_not(connections, [channel](Connection* conn) {
       return conn == channel->selected_connection();
     });
@@ -2577,7 +2577,7 @@ class P2PTransportChannelMultihomedTest : public P2PTransportChannelTest {
   void DestroyAllButBestConnection(P2PTransportChannel* channel) {
     const Connection* selected_connection = channel->selected_connection();
     // Copy the list of connections since the original will be modified.
-    rtc::ArrayView<Connection*> view = channel->connections();
+    rtc::ArrayView<Connection* const> view = channel->connections();
     std::vector<Connection*> connections(view.begin(), view.end());
     for (Connection* conn : connections) {
       if (conn != selected_connection)
