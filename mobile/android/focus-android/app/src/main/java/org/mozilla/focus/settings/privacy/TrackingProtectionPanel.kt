@@ -143,7 +143,7 @@ class TrackingProtectionPanel(
         }
 
         val icon = if (isTrackingProtectionOn) {
-            R.drawable.mozac_ic_shield
+            R.drawable.mozac_ic_shield_24
         } else {
             R.drawable.mozac_ic_shield_disabled
         }
