@@ -120,9 +120,9 @@ jobs:
         symbol: I(deb11-raw)
         definition: debian-raw
         args:
-            BASE_IMAGE: debian:bullseye-20221205
+            BASE_IMAGE: debian:bullseye-20230612
             DIST: bullseye
-            SNAPSHOT: '20221204T212138Z'
+            SNAPSHOT: '20230611T210420Z'
     debian11-packages:
         symbol: I(deb11-pkg)
         definition: debian-packages
