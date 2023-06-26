@@ -41,7 +41,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.support.ktx.kotlin.MAX_URI_LENGTH
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.SwipeToDismiss
-import org.mozilla.fenix.compose.ThumbnailCard
+import org.mozilla.fenix.compose.TabThumbnail
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
@@ -174,9 +174,8 @@ private fun Thumbnail(
     onMediaIconClicked: ((TabSessionState) -> Unit),
 ) {
     Box {
-        ThumbnailCard(
-            url = tab.content.url,
-            key = tab.id,
+        TabThumbnail(
+            tab = tab,
             modifier = Modifier
                 .size(width = 92.dp, height = 72.dp)
                 .semantics(mergeDescendants = true) {

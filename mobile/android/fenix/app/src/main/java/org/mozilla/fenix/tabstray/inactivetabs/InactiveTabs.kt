@@ -29,6 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -101,10 +103,15 @@ fun InactiveTabsList(
                 Column {
                     inactiveTabs.forEach { tab ->
                         val tabUrl = tab.content.url.toShortUrl()
+                        val faviconPainter = tab.content.icon?.run {
+                            prepareToDraw()
+                            BitmapPainter(asImageBitmap())
+                        }
 
                         FaviconListItem(
                             label = tab.toDisplayTitle(),
                             description = tabUrl,
+                            faviconPainter = faviconPainter,
                             onClick = { onTabClick(tab) },
                             url = tabUrl,
                             iconPainter = painterResource(R.drawable.mozac_ic_close),
