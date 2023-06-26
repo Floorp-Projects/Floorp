@@ -246,10 +246,15 @@ inline bool nsHttpHeaderArray::IsIgnoreMultipleHeader(
 [[nodiscard]] inline nsresult nsHttpHeaderArray::MergeHeader(
     const nsHttpAtom& header, nsEntry* entry, const nsACString& value,
     nsHttpHeaderArray::HeaderVariety variety) {
-  if (value.IsEmpty()) return NS_OK;  // merge of empty header = no-op
+  // merge of empty header = no-op
+  if (value.IsEmpty() && header != nsHttp::X_Frame_Options) {
+    return NS_OK;
+  }
 
+  // x-frame-options having an empty header value still has an effect so we make
+  // sure that we retain encountering it
   nsCString newValue = entry->value;
-  if (!newValue.IsEmpty()) {
+  if (!newValue.IsEmpty() || header == nsHttp::X_Frame_Options) {
     // Append the new value to the existing value
     if (header == nsHttp::Set_Cookie || header == nsHttp::WWW_Authenticate ||
         header == nsHttp::Proxy_Authenticate) {

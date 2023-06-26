@@ -5,26 +5,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FramingChecker.h"
-#include "nsCharSeparatedTokenizer.h"
+
+#include <stdint.h>  // uint32_t
+
+#include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsCSPUtils.h"
-#include "nsDocShell.h"
+#include "nsDebug.h"
+#include "nsError.h"
 #include "nsHttpChannel.h"
 #include "nsContentSecurityUtils.h"
 #include "nsGlobalWindowOuter.h"
-#include "nsIChannel.h"
-#include "nsIConsoleReportCollector.h"
-#include "nsIContentSecurityPolicy.h"
+#include "nsIContentPolicy.h"
 #include "nsIScriptError.h"
-#include "nsNetUtil.h"
-#include "nsQueryObject.h"
+#include "nsLiteralString.h"
 #include "nsTArray.h"
-#include "mozilla/BasePrincipal.h"
-#include "mozilla/dom/nsCSPUtils.h"
-#include "mozilla/dom/LoadURIOptionsBinding.h"
+#include "nsStringFwd.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/dom/WindowGlobalParent.h"
-#include "mozilla/NullPrincipal.h"
 #include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/Services.h"
+#include "mozilla/Unused.h"
 
 #include "nsIObserverService.h"
 
@@ -57,72 +58,13 @@ void FramingChecker::ReportError(const char* aMessageTag,
   httpChannel->AddConsoleReport(nsIScriptError::errorFlag, "X-Frame-Options"_ns,
                                 nsContentUtils::eSECURITY_PROPERTIES, spec, 0,
                                 0, nsDependentCString(aMessageTag), params);
-}
 
-/* static */
-bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
-                                                const nsAString& aPolicy) {
-  nsCOMPtr<nsIURI> uri;
-  aHttpChannel->GetURI(getter_AddRefs(uri));
-
-  // return early if header does not have one of the values with meaning
-  if (!aPolicy.LowerCaseEqualsLiteral("deny") &&
-      !aPolicy.LowerCaseEqualsLiteral("sameorigin")) {
-    ReportError("XFrameOptionsInvalid", aHttpChannel, uri, aPolicy);
-    return true;
-  }
-
-  // If the X-Frame-Options value is SAMEORIGIN, then the top frame in the
-  // parent chain must be from the same origin as this document.
-  bool checkSameOrigin = aPolicy.LowerCaseEqualsLiteral("sameorigin");
-
-  nsCOMPtr<nsILoadInfo> loadInfo = aHttpChannel->LoadInfo();
-  RefPtr<mozilla::dom::BrowsingContext> ctx;
-  loadInfo->GetBrowsingContext(getter_AddRefs(ctx));
-
-  while (ctx) {
-    nsCOMPtr<nsIPrincipal> principal;
-    // Generally CheckOneFrameOptionsPolicy is consulted from within the
-    // DocumentLoadListener in the parent process. For loads of type object
-    // and embed it's called from the Document in the content process.
-    // After Bug 1646899 we should be able to remove that branching code for
-    // querying the principal.
-    if (XRE_IsParentProcess()) {
-      WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
-      if (window) {
-        // Using the URI of the Principal and not the document because e.g.
-        // window.open inherits the principal and hence the URI of the
-        // opening context needed for same origin checks.
-        principal = window->DocumentPrincipal();
-      }
-    } else if (nsPIDOMWindowOuter* windowOuter = ctx->GetDOMWindow()) {
-      principal = nsGlobalWindowOuter::Cast(windowOuter)->GetPrincipal();
-    }
-
-    if (principal && principal->IsSystemPrincipal()) {
-      return true;
-    }
-
-    if (checkSameOrigin) {
-      bool isSameOrigin = principal && principal->IsSameOrigin(uri);
-      // one of the ancestors is not same origin as this document
-      if (!isSameOrigin) {
-        ReportError("XFrameOptionsDeny", aHttpChannel, uri, aPolicy);
-        return false;
-      }
-    }
-    ctx = ctx->GetParent();
-  }
-
-  // If the value of the header is DENY, and the previous condition is
-  // not met (current docshell is not the top docshell), prohibit the
-  // load.
-  if (aPolicy.LowerCaseEqualsLiteral("deny")) {
-    ReportError("XFrameOptionsDeny", aHttpChannel, uri, aPolicy);
-    return false;
-  }
-
-  return true;
+  // we are notifying observers for testing purposes because there is no event
+  // to gather that an iframe load was blocked or not.
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  nsAutoString policy(aPolicy);
+  observerService->NotifyObservers(aURI, "xfo-on-violate-policy", policy.get());
 }
 
 // Ignore x-frame-options if CSP with frame-ancestors exists
@@ -148,33 +90,34 @@ static bool ShouldIgnoreFrameOptions(nsIChannel* aChannel,
 // subdocument. This will iterate through and check any number of
 // X-Frame-Options policies in the request (comma-separated in a header,
 // multiple headers, etc).
+// This is based on:
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#the-x-frame-options-header
 /* static */
 bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
                                        nsIContentSecurityPolicy* aCsp,
                                        bool& outIsFrameCheckingSkipped) {
+  // Step 1. If navigable is not a child navigable return true
   if (!aChannel) {
     return true;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  ExtContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
-
   // xfo check only makes sense for subdocument and object loads, if this is
   // not a load of such type, there is nothing to do here.
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  ExtContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
   if (contentType != ExtContentPolicy::TYPE_SUBDOCUMENT &&
       contentType != ExtContentPolicy::TYPE_OBJECT) {
     return true;
   }
 
+  // xfo can only hang off an httpchannel, if this is not an httpChannel
+  // then there is nothing to do here.
   nsCOMPtr<nsIHttpChannel> httpChannel;
   nsresult rv = nsContentSecurityUtils::GetHttpChannelFromPotentialMultiPart(
       aChannel, getter_AddRefs(httpChannel));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return true;
   }
-
-  // xfo can only hang off an httpchannel, if this is not an httpChannel
-  // then there is nothing to do here.
   if (!httpChannel) {
     return true;
   }
@@ -182,50 +125,113 @@ bool FramingChecker::CheckFrameOptions(nsIChannel* aChannel,
   // ignore XFO checks on channels that will be redirected
   uint32_t responseStatus;
   rv = httpChannel->GetResponseStatus(&responseStatus);
-  // GetResponseStatus returning failure is expected in several situations, so
-  // do not warn if it fails.
   if (NS_FAILED(rv)) {
+    // GetResponseStatus returning failure is expected in several situations, so
+    // do not warn if it fails.
     return true;
   }
   if (mozilla::net::nsHttpChannel::IsRedirectStatus(responseStatus)) {
     return true;
   }
 
-  nsAutoCString xfoHeaderCValue;
+  nsAutoCString xfoHeaderValue;
   Unused << httpChannel->GetResponseHeader("X-Frame-Options"_ns,
-                                           xfoHeaderCValue);
-  NS_ConvertUTF8toUTF16 xfoHeaderValue(xfoHeaderCValue);
+                                           xfoHeaderValue);
 
-  // if no header value, there's nothing to do.
+  // Step 10. (paritally) if the only header we received was empty, then we
+  // process it as if it wasn't sent at all.
   if (xfoHeaderValue.IsEmpty()) {
     return true;
   }
 
-  // xfo checks are ignored in case CSP frame-ancestors is present,
-  // if so, there is nothing to do here.
+  // Step 2. xfo checks are ignored in the case where CSP frame-ancestors is
+  // present, if so, there is nothing to do here.
   if (ShouldIgnoreFrameOptions(aChannel, aCsp)) {
     outIsFrameCheckingSkipped = true;
     return true;
   }
 
-  // iterate through all the header values (usually there's only one, but can
-  // be many.  If any want to deny the load, deny the load.
-  nsCharSeparatedTokenizer tokenizer(xfoHeaderValue, ',');
-  while (tokenizer.hasMoreTokens()) {
-    const nsAString& tok = tokenizer.nextToken();
-    if (!CheckOneFrameOptionsPolicy(httpChannel, tok)) {
-      // if xfo blocks the load we are notifying observers for
-      // testing purposes because there is no event to gather
-      // what an iframe load was blocked or not.
-      nsCOMPtr<nsIURI> uri;
-      httpChannel->GetURI(getter_AddRefs(uri));
-      nsCOMPtr<nsIObserverService> observerService =
-          mozilla::services::GetObserverService();
-      nsAutoString policy(tok);
-      observerService->NotifyObservers(uri, "xfo-on-violate-policy",
-                                       policy.get());
-      return false;
+  // Step 3-4. reduce the header options to a unique set and count how many
+  // unique values (that we track) are encountered. this avoids using a set to
+  // stop attackers from inheriting arbitrary values in memory and reduce the
+  // complexity of the code.
+  XFOHeader xfoOptions;
+  for (const nsACString& next : xfoHeaderValue.Split(',')) {
+    nsAutoCString option(next);
+    option.StripWhitespace();
+
+    if (option.LowerCaseEqualsLiteral("allowall")) {
+      xfoOptions.ALLOWALL = true;
+    } else if (option.LowerCaseEqualsLiteral("sameorigin")) {
+      xfoOptions.SAMEORIGIN = true;
+    } else if (option.LowerCaseEqualsLiteral("deny")) {
+      xfoOptions.DENY = true;
+    } else {
+      xfoOptions.INVALID = true;
     }
   }
+
+  nsCOMPtr<nsIURI> uri;
+  httpChannel->GetURI(getter_AddRefs(uri));
+
+  // Step 6. if header has multiple contradicting directives return early and
+  // prohibit the load. ALLOWALL is considered here for legacy reasons.
+  uint32_t xfoUniqueOptions = xfoOptions.DENY + xfoOptions.ALLOWALL +
+                              xfoOptions.SAMEORIGIN + xfoOptions.INVALID;
+  if (xfoUniqueOptions > 1 &&
+      (xfoOptions.DENY || xfoOptions.ALLOWALL || xfoOptions.SAMEORIGIN)) {
+    ReportError("XFrameOptionsInvalid", httpChannel, uri, u"invalid"_ns);
+    return false;
+  }
+
+  // Step 7 (multiple INVALID values) and partially Step 10 (single INVALID
+  // value). if header has any invalid options, but no valid directives (DENY,
+  // ALLOWALL, SAMEORIGIN) then allow the load.
+  if (xfoOptions.INVALID) {
+    ReportError("XFrameOptionsInvalid", httpChannel, uri, u"invalid"_ns);
+    return true;
+  }
+
+  // Step 8. if the value of the header is DENY prohibit the load.
+  if (xfoOptions.DENY) {
+    ReportError("XFrameOptionsDeny", httpChannel, uri, u"deny"_ns);
+    return false;
+  }
+
+  // Step 9. If the X-Frame-Options value is SAMEORIGIN, then the top frame in
+  // the parent chain must be from the same origin as this document.
+  RefPtr<mozilla::dom::BrowsingContext> ctx;
+  loadInfo->GetBrowsingContext(getter_AddRefs(ctx));
+
+  while (ctx && xfoOptions.SAMEORIGIN) {
+    nsCOMPtr<nsIPrincipal> principal;
+    // Generally CheckFrameOptions is consulted from within the
+    // DocumentLoadListener in the parent process. For loads of type object and
+    // embed it's called from the Document in the content process.
+    if (XRE_IsParentProcess()) {
+      WindowGlobalParent* window = ctx->Canonical()->GetCurrentWindowGlobal();
+      if (window) {
+        // Using the URI of the Principal and not the document because
+        // window.open inherits the principal and hence the URI of the opening
+        // context needed for same origin checks.
+        principal = window->DocumentPrincipal();
+      }
+    } else if (nsPIDOMWindowOuter* windowOuter = ctx->GetDOMWindow()) {
+      principal = nsGlobalWindowOuter::Cast(windowOuter)->GetPrincipal();
+    }
+
+    if (principal && principal->IsSystemPrincipal()) {
+      return true;
+    }
+
+    // one of the ancestors is not same origin as this document
+    if (!principal || !principal->IsSameOrigin(uri)) {
+      ReportError("XFrameOptionsDeny", httpChannel, uri, u"sameorigin"_ns);
+      return false;
+    }
+    ctx = ctx->GetParent();
+  }
+
+  // Step 10.
   return true;
 }
