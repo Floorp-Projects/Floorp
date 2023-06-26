@@ -15,6 +15,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Downloader: "resource://services-settings/Attachments.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs",
   MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.sys.mjs",
@@ -41,7 +42,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
     "resource://activity-stream/lib/ASRouterPreferences.jsm",
   ASRouterTriggerListeners:
     "resource://activity-stream/lib/ASRouterTriggerListeners.jsm",
-  KintoHttpClient: "resource://services-common/kinto-http-client.js",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {

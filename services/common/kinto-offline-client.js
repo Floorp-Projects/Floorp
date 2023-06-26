@@ -2596,10 +2596,10 @@ var EXPORTED_SYMBOLS = ["Kinto"];
   const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
   XPCOMUtils.defineLazyGlobalGetters(global, ["fetch", "indexedDB"]);
   ChromeUtils.defineESModuleGetters(global, {
-      EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs"
+      EventEmitter: "resource://gre/modules/EventEmitter.sys.mjs",
+      // Use standalone kinto-http module landed in FFx.
+      KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs"
   });
-  // Use standalone kinto-http module landed in FFx.
-  ChromeUtils.defineModuleGetter(global, "KintoHttpClient", "resource://services-common/kinto-http-client.js");
   XPCOMUtils.defineLazyGetter(global, "generateUUID", () => {
       const { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
       return generateUUID;

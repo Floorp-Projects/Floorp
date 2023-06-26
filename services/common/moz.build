@@ -19,7 +19,7 @@ EXTRA_COMPONENTS += [
 
 EXTRA_JS_MODULES["services-common"] += [
     "async.sys.mjs",
-    "kinto-http-client.js",
+    "kinto-http-client.sys.mjs",
     "kinto-offline-client.js",
     "kinto-storage-adapter.sys.mjs",
     "logmanager.sys.mjs",

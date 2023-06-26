@@ -14,6 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/components-utils/ClientEnvironment.sys.mjs",
   Database: "resource://services-settings/Database.sys.mjs",
   IDBHelpers: "resource://services-settings/IDBHelpers.sys.mjs",
+  KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs",
   RemoteSettingsWorker:
     "resource://services-settings/RemoteSettingsWorker.sys.mjs",
   SharedUtils: "resource://services-settings/SharedUtils.sys.mjs",
@@ -22,7 +23,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
-  KintoHttpClient: "resource://services-common/kinto-http-client.js",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
 
