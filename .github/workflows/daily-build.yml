@@ -1,9 +1,6 @@
 name: Daily Build
 
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 21 * * *'
+on : workflow_dispatch
 
 jobs:
   windows-x86-64-build-with-enable-profile-generate:
