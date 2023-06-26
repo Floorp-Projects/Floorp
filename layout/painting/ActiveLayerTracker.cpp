@@ -233,7 +233,7 @@ static void IncrementScaleRestyleCountIfNeeded(nsIFrame* aFrame,
   // translate and 2d rotate, so we use Nothing() for it.)
   nsStyleTransformMatrix::TransformReferenceBox refBox(aFrame);
   Matrix4x4 transform = nsStyleTransformMatrix::ReadTransforms(
-      display->mTranslate, display->mRotate, display->mScale, Nothing(),
+      display->mTranslate, display->mRotate, display->mScale, nullptr,
       display->mTransform, refBox, AppUnitsPerCSSPixel());
   Matrix transform2D;
   if (!transform.Is2D(&transform2D)) {
