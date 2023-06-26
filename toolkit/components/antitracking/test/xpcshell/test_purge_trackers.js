@@ -2,8 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const TRACKING_PAGE = "https://tracking.example.org";
+const HTTP_TRACKING_PAGE = "http://tracking.example.org";
 const TRACKING_PAGE2 =
   "https://tracking.example.org^partitionKey=(https,example.com)";
+const HTTP_TRACKING_PAGE2 =
+  "http://tracking.example.org^partitionKey=(https,example.com)";
 const BENIGN_PAGE = "https://example.com";
 const FOREIGN_PAGE = "https://example.net";
 const FOREIGN_PAGE2 = "https://example.net^partitionKey=(https,example.com)";
@@ -500,6 +503,204 @@ async function testExpiredInteractionPermission() {
   UrlClassifierTestUtils.cleanupTestTrackers();
 }
 
+/*
+ * Test that we correctly do or do not purges cookies
+ * from sites given thier cookie permissions.
+ */
+async function testNotPurgingFromAllowedWebsites() {
+  await UrlClassifierTestUtils.addTestTrackers();
+
+  SiteDataTestUtils.addToCookies({ origin: TRACKING_PAGE });
+  SiteDataTestUtils.addToCookies({ origin: TRACKING_PAGE2 });
+
+  PermissionTestUtils.add(
+    TRACKING_PAGE,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_ALLOW
+  );
+
+  PermissionTestUtils.add(
+    TRACKING_PAGE2,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_SESSION
+  );
+
+  ok(
+    SiteDataTestUtils.hasCookies(TRACKING_PAGE),
+    "Cookie is set to the initial state for Tracking Page 1"
+  );
+  ok(
+    SiteDataTestUtils.hasCookies(TRACKING_PAGE2),
+    "Cookie is set to the initial state for Tracking Page 2"
+  );
+
+  await PurgeTrackerService.purgeTrackingCookieJars();
+
+  ok(
+    SiteDataTestUtils.hasCookies(TRACKING_PAGE),
+    "Cookie was not purged for Tracking Page 1"
+  );
+  ok(
+    !SiteDataTestUtils.hasCookies(TRACKING_PAGE2),
+    "Cookie was purged for Tracking Page 2"
+  );
+
+  PermissionTestUtils.remove(TRACKING_PAGE, "cookie");
+
+  PermissionTestUtils.remove(TRACKING_PAGE2, "cookie");
+
+  UrlClassifierTestUtils.cleanupTestTrackers();
+}
+
+/*
+ * Testing that Local Storage is not purged
+ * from sites based thier cookie permissions.
+ */
+async function testNotPurgingLocalStorage() {
+  await UrlClassifierTestUtils.addTestTrackers();
+
+  SiteDataTestUtils.addToLocalStorage(TRACKING_PAGE);
+  SiteDataTestUtils.addToLocalStorage(TRACKING_PAGE2);
+
+  PermissionTestUtils.add(
+    TRACKING_PAGE,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_ALLOW
+  );
+
+  PermissionTestUtils.add(
+    TRACKING_PAGE2,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_SESSION
+  );
+
+  ok(
+    SiteDataTestUtils.hasLocalStorage(TRACKING_PAGE),
+    "Local Storage  is set to the initial state for Tracking Page 1"
+  );
+  ok(
+    SiteDataTestUtils.hasLocalStorage(TRACKING_PAGE2),
+    "Local Storage  is set to the initial state for Tracking Page 2"
+  );
+
+  await PurgeTrackerService.purgeTrackingCookieJars();
+
+  ok(
+    SiteDataTestUtils.hasLocalStorage(TRACKING_PAGE),
+    "Local Storage was not purged for Tracking Page 1"
+  );
+  ok(
+    !SiteDataTestUtils.hasLocalStorage(TRACKING_PAGE2),
+    "Local Storage  was not purged for Tracking Page 2"
+  );
+
+  PermissionTestUtils.remove(TRACKING_PAGE, "cookie");
+
+  PermissionTestUtils.remove(TRACKING_PAGE2, "cookie");
+
+  UrlClassifierTestUtils.cleanupTestTrackers();
+}
+
+/*
+ * Test that we correctly do or do not purges cookies
+ * from http sites given thier cookie permissions.
+ */
+async function testNotPurgingFromHTTP() {
+  await UrlClassifierTestUtils.addTestTrackers();
+
+  SiteDataTestUtils.addToCookies({ origin: HTTP_TRACKING_PAGE });
+  SiteDataTestUtils.addToCookies({
+    origin: HTTP_TRACKING_PAGE2,
+  });
+
+  PermissionTestUtils.add(
+    HTTP_TRACKING_PAGE,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_ALLOW
+  );
+
+  PermissionTestUtils.add(
+    HTTP_TRACKING_PAGE2,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_SESSION
+  );
+
+  ok(
+    SiteDataTestUtils.hasCookies(HTTP_TRACKING_PAGE),
+    "Cookie is set to the initial state for HTTP Tracking Page 1"
+  );
+  ok(
+    SiteDataTestUtils.hasCookies(HTTP_TRACKING_PAGE2),
+    "Cookie is set to the initial state for HTTP Tracking Page 2"
+  );
+
+  await PurgeTrackerService.purgeTrackingCookieJars();
+
+  ok(
+    SiteDataTestUtils.hasCookies(HTTP_TRACKING_PAGE),
+    "Cookie was not purged for HTTP Tracking Page 1"
+  );
+  ok(
+    !SiteDataTestUtils.hasCookies(HTTP_TRACKING_PAGE2),
+    "Cookie was purged for HTTP Tracking Page 2"
+  );
+
+  PermissionTestUtils.remove(HTTP_TRACKING_PAGE, "cookie");
+
+  PermissionTestUtils.remove(HTTP_TRACKING_PAGE2, "cookie");
+
+  UrlClassifierTestUtils.cleanupTestTrackers();
+}
+
+/*
+ * Test that we correctly do or do not purges local storage
+ * from http sites if https site has preserve cookies permission
+ */
+async function testNotPurgingFromDifferentScheme() {
+  await UrlClassifierTestUtils.addTestTrackers();
+
+  SiteDataTestUtils.addToLocalStorage(TRACKING_PAGE);
+  SiteDataTestUtils.addToLocalStorage(HTTP_TRACKING_PAGE);
+
+  PermissionTestUtils.add(
+    TRACKING_PAGE,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_ALLOW
+  );
+
+  PermissionTestUtils.add(
+    HTTP_TRACKING_PAGE,
+    "cookie",
+    Ci.nsICookiePermission.ACCESS_SESSION
+  );
+
+  ok(
+    SiteDataTestUtils.hasLocalStorage(TRACKING_PAGE),
+    "Local Storage is set to the initial state for HTTPS Tracking Page "
+  );
+  ok(
+    SiteDataTestUtils.hasLocalStorage(HTTP_TRACKING_PAGE),
+    "Local Storage is set to the initial state for HTTP Tracking Page"
+  );
+
+  await PurgeTrackerService.purgeTrackingCookieJars();
+
+  ok(
+    SiteDataTestUtils.hasLocalStorage(TRACKING_PAGE),
+    "Local Storage was not purged for HTTPS Tracking Page "
+  );
+  ok(
+    SiteDataTestUtils.hasLocalStorage(HTTP_TRACKING_PAGE),
+    "Local Storage  was not purged for HTTP Tracking Page"
+  );
+
+  PermissionTestUtils.remove(TRACKING_PAGE, "cookie");
+
+  PermissionTestUtils.remove(HTTP_TRACKING_PAGE, "cookie");
+
+  UrlClassifierTestUtils.cleanupTestTrackers();
+}
+
 add_task(async function () {
   const cookieBehaviors = [
     Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
@@ -519,5 +720,9 @@ add_task(async function () {
     );
     await testQuotaStorage();
     await testExpiredInteractionPermission();
+    await testNotPurgingFromAllowedWebsites();
+    await testNotPurgingLocalStorage();
+    await testNotPurgingFromHTTP();
+    await testNotPurgingFromDifferentScheme();
   }
 });
