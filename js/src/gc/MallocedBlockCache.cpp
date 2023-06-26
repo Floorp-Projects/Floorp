@@ -116,10 +116,10 @@ void MallocedBlockCache::clear() {
   MOZ_ASSERT(lists[OVERSIZE_BLOCK_LIST_ID].empty());
   for (size_t i = 1; i < NUM_LISTS; i++) {
     MallocedBlockVector& list = lists[i];
-    for (size_t j = 0; j < list.length(); j++) {
-      MOZ_ASSERT(list[j]);
-      js_free(list[j]);
-      list[j] = nullptr;  // for safety
+    for (void*& block : list) {
+      MOZ_ASSERT(block);
+      js_free(block);
+      block = nullptr;  // for safety
     }
     list.clear();
   }
@@ -129,15 +129,14 @@ size_t MallocedBlockCache::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   MOZ_ASSERT(lists[OVERSIZE_BLOCK_LIST_ID].empty());
   size_t nBytes = 0;
-  for (size_t listID = 0; listID < NUM_LISTS; listID++) {
-    const MallocedBlockVector& list = lists[listID];
+  for (const MallocedBlockVector& list : lists) {
     nBytes += list.sizeOfExcludingThis(mallocSizeOf);
     // The payload size of each block in `list` is the same.  Hence, we could
     // possibly do better here (measure once and multiply by the length) if we
     // believe that the metadata size for each block is also the same.
-    for (size_t i = 0; i < list.length(); i++) {
-      MOZ_ASSERT(list[i]);
-      nBytes += mallocSizeOf(list[i]);
+    for (void* block : list) {
+      MOZ_ASSERT(block);
+      nBytes += mallocSizeOf(block);
     }
   }
   return nBytes;

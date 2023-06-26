@@ -687,8 +687,7 @@ bool GCRuntime::addEdgesForMarkQueue() {
   // follow the sweep group ordering. These objects will wait until their sweep
   // group comes up, or will be skipped if their sweep group is already past.
   JS::Zone* prevZone = nullptr;
-  for (size_t i = 0; i < testMarkQueue.length(); i++) {
-    Value val = testMarkQueue[i].get();
+  for (Value val : testMarkQueue) {
     if (!val.isObject()) {
       continue;
     }
