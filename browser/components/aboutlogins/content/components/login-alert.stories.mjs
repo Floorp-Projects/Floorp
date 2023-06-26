@@ -56,7 +56,13 @@ export const LoginBreachAlert = ({ date, hostname }) =>
     ></login-breach-alert>
   `;
 
-LoginBreachAlert.args = {
-  date: 1684849435571,
-  hostname: "https://www.example.com",
+LoginBreachAlert.argTypes = {
+  date: {
+    control: { type: "date" },
+    defaultValue: 1684849435571,
+  },
+  hostname: {
+    control: { type: "text" },
+    defaultValue: "https://www.example.com",
+  },
 };
