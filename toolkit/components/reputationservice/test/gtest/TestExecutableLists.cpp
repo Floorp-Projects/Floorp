@@ -69,6 +69,7 @@ static const char* const kTestFileExtensions[] = {
     ".dht",            // HTML
     ".dhtm",           // HTML
     ".dhtml",          // HTML
+    ".diagcab",        // Windows archive
     ".diskcopy42",     // Apple DiskCopy Image
     ".dll",            // Windows executable
     ".dmg",            // Mac disk image
