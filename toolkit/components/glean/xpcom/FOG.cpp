@@ -6,6 +6,7 @@
 
 #include "mozilla/FOG.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/FOGIPC.h"
@@ -87,6 +88,12 @@ already_AddRefed<FOG> FOG::GetSingleton() {
 void FOG::Shutdown() {
   MOZ_ASSERT(XRE_IsParentProcess());
   glean::impl::fog_shutdown();
+}
+
+// This allows us to know it's too late to submit a ping in Rust.
+extern "C" bool FOG_TooLateToSend(void) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  return AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownNetTeardown);
 }
 
 NS_IMETHODIMP
