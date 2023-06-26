@@ -2252,13 +2252,11 @@ void nsSocketTransport::OnSocketDetached(PRFileDesc* fd) {
     //
     mInput.OnSocketReady(mCondition);
     mOutput.OnSocketReady(mCondition);
-    // Let's cancel async copy with NS_BASE_STREAM_CLOSED during shutdown,
-    // because some consumers don't expect other errors here.
     if (mInputCopyContext) {
-      NS_CancelAsyncCopy(mInputCopyContext, NS_BASE_STREAM_CLOSED);
+      NS_CancelAsyncCopy(mInputCopyContext, mCondition);
     }
     if (mOutputCopyContext) {
-      NS_CancelAsyncCopy(mOutputCopyContext, NS_BASE_STREAM_CLOSED);
+      NS_CancelAsyncCopy(mOutputCopyContext, mCondition);
     }
   }
 
