@@ -366,7 +366,7 @@ jobs:
        echo '<?xml version="1.0" encoding="UTF-8"?>
          <updates>
           <update type="minor" displayVersion="${{ needs.get-display-version.outputs.display-version }}" appVersion="${{ needs.get-inside-version.outputs.inside-version }}" platformVersion="${{ needs.get-inside-version.outputs.inside-version }}" buildID="${{ needs.get-buildid.outputs.buildids }}" detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">
-          <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/WINNT-x86_64-11.0.0.mar" size="${{ env.WINNT_MAR_SIZE }}" />
+          <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/WINNT-x86_64.mar" size="${{ env.WINNT_MAR_SIZE }}" />
           </update>
         </updates>' > WINNT-Update.xml
 
@@ -523,7 +523,7 @@ jobs:
          echo '<?xml version="1.0" encoding="UTF-8"?>
            <updates>
             <update type="minor" displayVersion="${{ needs.get-display-version.outputs.display-version }}" appVersion="${{ needs.get-inside-version.outputs.inside-version }}" platformVersion="${{ needs.get-inside-version.outputs.inside-version }}" buildID="${{ needs.get-buildid.outputs.buildids }}" detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">
-            <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/LINUX-x86_64-11.0.0.mar" size="${{ env.LINUX_MAR_SIZE }}" />
+            <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/LINUX-x86_64.mar" size="${{ env.LINUX_MAR_SIZE }}" />
            </update>
           </updates>' > LINUX-Update.xml
 
