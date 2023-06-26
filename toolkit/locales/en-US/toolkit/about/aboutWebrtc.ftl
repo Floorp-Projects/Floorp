@@ -27,6 +27,10 @@ about-webrtc-auto-refresh-label = Auto Refresh
 # Determines the default state of the Auto Refresh check boxes
 about-webrtc-auto-refresh-default-label = Auto Refresh By Default
 
+# A button which forces a refresh of displayed statistics
+about-webrtc-force-refresh-button = Refresh
+
+
 # "PeerConnection" is a proper noun associated with the WebRTC module. "ID" is
 # an abbreviation for Identifier. This string should not normally be translated
 # and is used as a data label.
