@@ -258,9 +258,9 @@ void Statistics::gcDuration(TimeDuration* total, TimeDuration* maxPause) const {
 void Statistics::sccDurations(TimeDuration* total,
                               TimeDuration* maxPause) const {
   *total = *maxPause = TimeDuration::Zero();
-  for (size_t i = 0; i < sccTimes.length(); i++) {
-    *total += sccTimes[i];
-    *maxPause = std::max(*maxPause, sccTimes[i]);
+  for (const auto& duration : sccTimes) {
+    *total += duration;
+    *maxPause = std::max(*maxPause, duration);
   }
 }
 
