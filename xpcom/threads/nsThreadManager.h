@@ -12,13 +12,12 @@
 #include "mozilla/ShutdownPhase.h"
 
 class nsIRunnable;
-class nsIEventTarget;
-class nsISerialEventTarget;
 class nsIThread;
 
 namespace mozilla {
 class IdleTaskManager;
 class SynchronizedEventQueue;
+class TaskQueue;
 }  // namespace mozilla
 
 class BackgroundEventTarget;
@@ -73,7 +72,7 @@ class nsThreadManager : public nsIThreadManager {
   nsresult DispatchToBackgroundThread(nsIRunnable* aEvent,
                                       uint32_t aDispatchFlags);
 
-  already_AddRefed<nsISerialEventTarget> CreateBackgroundTaskQueue(
+  already_AddRefed<mozilla::TaskQueue> CreateBackgroundTaskQueue(
       const char* aName);
 
   ~nsThreadManager();
