@@ -989,6 +989,20 @@ const TESTCASES = [
   },
   {
     description:
+      "Fill a cc-exp field using label (MM - RR) as expiry string placeholder",
+    document: `<form>
+                <input autocomplete="cc-number">
+                <input id="cc-exp" autocomplete="cc-exp">
+                <label for="cc-exp">MM/RR</label>
+              </form>
+              `,
+    profileData: [DEFAULT_CREDITCARD_RECORD],
+    expectedResult: [
+      { ...DEFAULT_EXPECTED_CREDITCARD_RECORD, "cc-exp": "01/25" },
+    ],
+  },
+  {
+    description:
       "Fill a cc-exp field using adjacent label (MM/YY) as expiry string placeholder",
     document: `<form>
                 <input autocomplete="cc-number">
