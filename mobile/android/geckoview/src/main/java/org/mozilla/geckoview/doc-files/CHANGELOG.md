@@ -17,9 +17,12 @@ exclude: true
 - Added [`GeckoSession.didPrintPageContent`][116.1] to included extra print status for a standard print and new `GeckoPrintException.ERROR_NO_PRINT_DELEGATE`
 - Added [`PromptInstanceDelegate.onSelectIdentityCredentialProvider`][116.2] to allow the user to choose an Identity Credential provider (FedCM) to be used when authenticating.
   ([bug 1836356]({{bugzilla}}1836356))
+- Added [`PromptInstanceDelegate.onSelectIdentityCredentialAccount`][116.3] to allow the user to choose an account on the Identity Credential Provider (FedCM) they previously chose to be used when authenticating.
+    ([bug 1836363]({{bugzilla}}1836363))
 
 [116.1]: {{javadoc_uri}}/GeckoSession.html#didPrintPageContent
 [116.2]:{{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSelectIdentityCredentialProvider(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt)
+[116.3]:{{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSelectIdentityCredentialAccount(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt)
 
 ## v115
 - Changed [`SessionPdfFileSaver.createResponse`][115.1] to response of saving PDF to accept two additional
