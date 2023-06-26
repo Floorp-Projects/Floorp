@@ -45,6 +45,9 @@ struct OffsetPathData {
 
   struct ShapeData {
     RefPtr<gfx::Path> mGfxPath;
+    // The current position of this transfromed box in the coordinate system of
+    // its containing block.
+    nsPoint mCurrentPosition;
     bool mIsClosedIntervals;
   };
 
@@ -66,11 +69,10 @@ struct OffsetPathData {
   };
 
   static OffsetPathData None() { return OffsetPathData(); }
-  static OffsetPathData Shape(const StyleSVGPathData& aPath,
-                              already_AddRefed<gfx::Path>&& aGfxPath) {
-    const auto& path = aPath._0.AsSpan();
-    return OffsetPathData(std::move(aGfxPath),
-                          !path.empty() && path.rbegin()->IsClosePath());
+  static OffsetPathData Shape(already_AddRefed<gfx::Path>&& aGfxPath,
+                              nsPoint&& aCurrentPosition, bool aIsClosedPath) {
+    return OffsetPathData(std::move(aGfxPath), std::move(aCurrentPosition),
+                          aIsClosedPath);
   }
   static OffsetPathData Ray(const StyleRayFunction& aRay, nsRect&& aCoordBox,
                             nsPoint&& aPosition,
@@ -139,8 +141,10 @@ struct OffsetPathData {
 
  private:
   OffsetPathData() : mType(Type::None) {}
-  OffsetPathData(already_AddRefed<gfx::Path>&& aPath, bool aIsClosed)
-      : mType(Type::Shape), mShape{std::move(aPath), aIsClosed} {}
+  OffsetPathData(already_AddRefed<gfx::Path>&& aPath,
+                 nsPoint&& aCurrentPosition, bool aIsClosed)
+      : mType(Type::Shape),
+        mShape{std::move(aPath), std::move(aCurrentPosition), aIsClosed} {}
   OffsetPathData(const StyleRayFunction* aRay, nsRect&& aCoordBox,
                  nsPoint&& aPosition, CSSCoord&& aContainReferenceLength)
       : mType(Type::Ray),
@@ -217,11 +221,26 @@ class MotionPathUtils final {
       TransformReferenceBox&, gfx::Path* aCachedMotionPath);
 
   /**
-   * Build a gfx::Path from the computed svg path. We should give it a path
-   * builder. If |aPathBuilder| is nullptr, we return null path.
-   * */
-  static already_AddRefed<gfx::Path> BuildPath(const StyleSVGPathData& aPath,
-                                               gfx::PathBuilder* aPathBuilder);
+   * Build a gfx::Path from the svg path data. We should give it a path builder.
+   * If |aPathBuilder| is nullptr, we return null path.
+   * This can be used on the main thread or on the compositor thread.
+   */
+  static already_AddRefed<gfx::Path> BuildSVGPath(
+      const StyleSVGPathData& aPath, gfx::PathBuilder* aPathBuilder);
+
+  /**
+   * Build a gfx::Path from the computed basic shape.
+   */
+  static already_AddRefed<gfx::Path> BuildPath(const StyleBasicShape&,
+                                               const StyleOffsetPosition&,
+                                               const nsRect& aCoordBox,
+                                               const nsPoint& aCurrentPosition,
+                                               gfx::PathBuilder*);
+
+  /**
+   * Get a path builder for motion path on the main thread.
+   */
+  static already_AddRefed<gfx::PathBuilder> GetPathBuilder();
 
   /**
    * Get a path builder for compositor.
