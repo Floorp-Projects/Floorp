@@ -53,8 +53,7 @@ class FrameGeneratorInterface {
   // Returns the frames per second this generator is supposed to provide
   // according to its data source. Not all frame generators know the frames per
   // second of the data source, in such case this method returns absl::nullopt.
-  // TODO(mbonadei): Make this pure virtual.
-  virtual absl::optional<int> fps() const { return absl::nullopt; }
+  virtual absl::optional<int> fps() const = 0;
 };
 
 }  // namespace test
