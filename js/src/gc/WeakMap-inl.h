@@ -24,9 +24,8 @@
 #include "gc/StableCellHasher-inl.h"
 
 namespace js {
-namespace gc {
 
-namespace detail {
+namespace gc::detail {
 
 // Return the effective cell color given the current marking state.
 // This must be kept in sync with ShouldMark in Marking.cpp.
@@ -66,8 +65,7 @@ static inline JSObject* GetDelegate(const T& key) {
 template <>
 inline JSObject* GetDelegate(gc::Cell* const&) = delete;
 
-} /* namespace detail */
-} /* namespace gc */
+}  // namespace gc::detail
 
 // Weakmap entry -> value edges are only visible if the map is traced, which
 // only happens if the map zone is being collected. If the map and the value
@@ -408,6 +406,6 @@ bool WeakMap<K, V>::checkMarking() const {
 }
 #endif
 
-} /* namespace js */
+}  // namespace js
 
 #endif /* gc_WeakMap_inl_h */

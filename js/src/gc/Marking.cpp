@@ -394,8 +394,7 @@ DEFINE_UNSAFE_TRACE_ROOT_FUNCTION(SavedFrame*)
 
 #undef DEFINE_UNSAFE_TRACE_ROOT_FUNCTION
 
-namespace js {
-namespace gc {
+namespace js::gc {
 
 #define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(type)                     \
   template void TraceRangeInternal<type>(JSTracer*, size_t len, type*, \
@@ -411,8 +410,7 @@ INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(TaggedProto)
 #undef INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND
 #undef INSTANTIATE_INTERNAL_TRACE_FUNCTIONS
 
-}  // namespace gc
-}  // namespace js
+}  // namespace js::gc
 
 // In debug builds, makes a note of the current compartment before calling a
 // trace hook or traceChildren() method on a GC thing.
@@ -2489,8 +2487,7 @@ inline void SweepingTracer::onEdge(T** thingp, const char* name) {
   }
 }
 
-namespace js {
-namespace gc {
+namespace js::gc {
 
 template <typename T>
 JS_PUBLIC_API bool TraceWeakEdge(JSTracer* trc, JS::Heap<T>* thingp) {
@@ -2536,8 +2533,7 @@ JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(
 #undef INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND
 #undef INSTANTIATE_IATBF_FUNCTION_FOR_TAGGED_POINTER
 
-} /* namespace gc */
-} /* namespace js */
+}  // namespace js::gc
 
 /*** Cycle Collector Barrier Implementation *********************************/
 
@@ -2724,8 +2720,7 @@ bool js::UnmarkGrayShapeRecursively(Shape* shape) {
 Cell* js::gc::UninlinedForwarded(const Cell* cell) { return Forwarded(cell); }
 #endif
 
-namespace js {
-namespace debug {
+namespace js::debug {
 
 MarkInfo GetMarkInfo(Cell* rawCell) {
   if (!rawCell->isTenured()) {
@@ -2770,5 +2765,4 @@ uintptr_t GetMarkMask(Cell* cell, uint32_t colorBit) {
   return mask;
 }
 
-}  // namespace debug
-}  // namespace js
+}  // namespace js::debug
