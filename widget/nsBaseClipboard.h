@@ -106,7 +106,7 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
   NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* anOwner,
                      int32_t aWhichClipboard) override final;
   NS_IMETHOD GetData(nsITransferable* aTransferable,
-                     int32_t aWhichClipboard) override;
+                     int32_t aWhichClipboard) override final;
   NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
   NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                     int32_t aWhichClipboard,
@@ -114,7 +114,7 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
   NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
                                       bool* aRetval) override final;
   RefPtr<mozilla::GenericPromise> AsyncGetData(
-      nsITransferable* aTransferable, int32_t aWhichClipboard) override;
+      nsITransferable* aTransferable, int32_t aWhichClipboard) override final;
   RefPtr<DataFlavorsPromise> AsyncHasDataMatchingFlavors(
       const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
 
@@ -149,6 +149,7 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
     }
     nsITransferable* GetTransferable() const { return mTransferable; }
     nsIClipboardOwner* GetClipboardOwner() const { return mClipboardOwner; }
+    int32_t GetSequenceNumber() const { return mSequenceNumber; }
 
    private:
     nsCOMPtr<nsITransferable> mTransferable;
@@ -160,6 +161,10 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
   bool mEmptyingForSetData = false;
 
  private:
+  // Return clipboard cache if the cached data is valid, otherwise clear the
+  // cached data and returns null.
+  ClipboardCache* GetClipboardCacheIfValid(int32_t aClipboardType);
+
   const mozilla::dom::ClipboardCapabilities mClipboardCaps;
   bool mIgnoreEmptyNotification = false;
 };
