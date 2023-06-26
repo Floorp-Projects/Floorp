@@ -201,7 +201,7 @@ class ToolbarActivity : AppCompatActivity() {
 
         val share = TextMenuCandidate(
             "Share",
-            start = DrawableMenuIcon(this, iconsR.drawable.mozac_ic_share),
+            start = DrawableMenuIcon(this, iconsR.drawable.mozac_ic_share_android_24),
         ) { /* Do nothing */ }
 
         val search = TextMenuCandidate(
@@ -444,7 +444,7 @@ class ToolbarActivity : AppCompatActivity() {
             binding.toolbar.addNavigationAction(button)
         }
 
-        val drawable = ContextCompat.getDrawable(this, iconsR.drawable.mozac_ic_share)?.apply {
+        val drawable = ContextCompat.getDrawable(this, iconsR.drawable.mozac_ic_share_android_24)?.apply {
             setTint(0xFF20123a.toInt())
         }
 

@@ -72,7 +72,7 @@ prefer height size.
 ```kotlin
     BrowserMenuImageText(
        label = "Share",
-       imageResource = R.drawable.mozac_ic_share,
+       imageResource = R.drawable.mozac_ic_share_android_24,
        iconTintColorResource = R.color.photonBlue90
     ) {
         Toast.makeText(applicationContext, "Share", Toast.LENGTH_SHORT).show()

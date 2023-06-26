@@ -215,7 +215,7 @@ class CustomTabsToolbarFeature(
      */
     @VisibleForTesting
     internal fun addShareButton(tab: CustomTabSessionState) {
-        val drawableIcon = getDrawable(context, iconsR.drawable.mozac_ic_share)!!
+        val drawableIcon = getDrawable(context, iconsR.drawable.mozac_ic_share_android_24)!!
         drawableIcon.setTint(readableColor)
 
         val button = Toolbar.ActionButton(

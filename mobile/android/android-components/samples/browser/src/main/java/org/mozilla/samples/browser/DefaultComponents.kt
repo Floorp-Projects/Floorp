@@ -295,7 +295,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             menuToolbar,
             BrowserMenuHighlightableItem(
                 "No Highlight",
-                iconsR.drawable.mozac_ic_share,
+                iconsR.drawable.mozac_ic_share_android_24,
                 android.R.color.black,
                 highlight = BrowserMenuHighlight.LowPriority(
                     notificationTint = ContextCompat.getColor(applicationContext, android.R.color.holo_green_dark),
@@ -304,7 +304,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             ) {
                 Toast.makeText(applicationContext, "Highlight", Toast.LENGTH_SHORT).show()
             },
-            BrowserMenuImageText("Share", iconsR.drawable.mozac_ic_share, android.R.color.black) {
+            BrowserMenuImageText("Share", iconsR.drawable.mozac_ic_share_android_24, android.R.color.black) {
                 Toast.makeText(applicationContext, "Share", Toast.LENGTH_SHORT).show()
             },
             SimpleBrowserMenuItem("Settings") {
