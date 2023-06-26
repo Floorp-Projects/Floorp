@@ -436,12 +436,25 @@ void Event::PreventDefaultInternal(bool aCalledByDefaultHandler,
     return;
   }
 
-  // If this is called by default handlers, the caller will call
-  // UpdateDefaultPreventedOnContentFor when necessary.
-  if (!aCalledByDefaultHandler) {
-    if (WidgetDragEvent* dragEvent = mEvent->AsDragEvent()) {
-      dragEvent->UpdateDefaultPreventedOnContent(dragEvent->mCurrentTarget);
+  WidgetDragEvent* dragEvent = mEvent->AsDragEvent();
+  if (!dragEvent) {
+    return;
+  }
+
+  nsIPrincipal* principal = nullptr;
+  nsCOMPtr<nsINode> node =
+      nsINode::FromEventTargetOrNull(mEvent->mCurrentTarget);
+  if (node) {
+    principal = node->NodePrincipal();
+  } else {
+    nsCOMPtr<nsIScriptObjectPrincipal> sop =
+        do_QueryInterface(mEvent->mCurrentTarget);
+    if (sop) {
+      principal = sop->GetPrincipal();
     }
+  }
+  if (principal && !principal->IsSystemPrincipal()) {
+    dragEvent->mDefaultPreventedOnContent = true;
   }
 }
 
