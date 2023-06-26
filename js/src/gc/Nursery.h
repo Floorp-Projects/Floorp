@@ -530,8 +530,8 @@ class alignas(TypicalCacheLineSize) Nursery {
   // for buffers whose length is less than pointer width, or when different
   // buffers might overlap each other. For these, an entry in the following
   // table is used.
-  typedef HashMap<void*, void*, PointerHasher<void*>, SystemAllocPolicy>
-      ForwardedBufferMap;
+  using ForwardedBufferMap =
+      HashMap<void*, void*, PointerHasher<void*>, SystemAllocPolicy>;
   ForwardedBufferMap forwardedBuffers;
 
   // When we assign a unique id to cell in the nursery, that almost always

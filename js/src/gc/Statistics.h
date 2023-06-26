@@ -277,7 +277,7 @@ struct Statistics {
     bool wasReset() const { return resetReason != GCAbortReason::None; }
   };
 
-  typedef Vector<SliceData, 8, SystemAllocPolicy> SliceDataVector;
+  using SliceDataVector = Vector<SliceData, 8, SystemAllocPolicy>;
 
   const SliceDataVector& slices() const { return slices_; }
 
