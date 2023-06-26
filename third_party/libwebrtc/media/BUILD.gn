@@ -144,8 +144,6 @@ rtc_library("rtc_media_base") {
       "base/adapted_video_track_source.cc",
       "base/adapted_video_track_source.h",
       "base/audio_source.h",
-      "base/delayable.h",
-      "base/media_channel.h",
       "base/media_engine.cc",
       "base/media_engine.h",
     ]
