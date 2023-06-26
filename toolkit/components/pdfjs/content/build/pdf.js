@@ -942,7 +942,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.7.95',
+    apiVersion: '3.7.96',
     data,
     password,
     disableAutoFetch,
@@ -2614,9 +2614,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.7.95';
+const version = '3.7.96';
 exports.version = version;
-const build = 'cbc4b20b1';
+const build = '23958ffc5';
 exports.build = build;
 
 /***/ }),
@@ -10486,6 +10486,8 @@ class AnnotationElementFactory {
             return new PushButtonWidgetAnnotationElement(parameters);
           case "Ch":
             return new ChoiceWidgetAnnotationElement(parameters);
+          case "Sig":
+            return new SignatureWidgetAnnotationElement(parameters);
         }
         return new WidgetAnnotationElement(parameters);
       case _util.AnnotationType.POPUP:
@@ -11485,6 +11487,13 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
     this._setDefaultPropertiesFromJS(element);
     this.container.append(element);
     return this.container;
+  }
+}
+class SignatureWidgetAnnotationElement extends WidgetAnnotationElement {
+  constructor(parameters) {
+    super(parameters, {
+      isRenderable: !!parameters.data.hasOwnCanvas
+    });
   }
 }
 class CheckboxWidgetAnnotationElement extends WidgetAnnotationElement {
@@ -13069,8 +13078,8 @@ var _annotation_layer = __w_pdfjs_require__(24);
 var _worker_options = __w_pdfjs_require__(14);
 var _svg = __w_pdfjs_require__(27);
 var _xfa_layer = __w_pdfjs_require__(26);
-const pdfjsVersion = '3.7.95';
-const pdfjsBuild = 'cbc4b20b1';
+const pdfjsVersion = '3.7.96';
+const pdfjsBuild = '23958ffc5';
 })();
 
 /******/ 	return __webpack_exports__;
