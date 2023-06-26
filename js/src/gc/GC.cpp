@@ -474,7 +474,7 @@ GCRuntime::GCRuntime(JSRuntime* rt)
 using CharRange = mozilla::Range<const char>;
 using CharRangeVector = Vector<CharRange, 0, SystemAllocPolicy>;
 
-static bool SplitStringBy(CharRange text, char delimiter,
+static bool SplitStringBy(const CharRange& text, char delimiter,
                           CharRangeVector* result) {
   auto start = text.begin();
   for (auto ptr = start; ptr != text.end(); ptr++) {
@@ -489,7 +489,8 @@ static bool SplitStringBy(CharRange text, char delimiter,
   return result->emplaceBack(start, text.end());
 }
 
-static bool ParseTimeDuration(CharRange text, TimeDuration* durationOut) {
+static bool ParseTimeDuration(const CharRange& text,
+                              TimeDuration* durationOut) {
   const char* str = text.begin().get();
   char* end;
   long millis = strtol(str, &end, 10);
@@ -698,7 +699,7 @@ void GCRuntime::unsetZeal(uint8_t zeal) {
 
 void GCRuntime::setNextScheduled(uint32_t count) { nextScheduled = count; }
 
-static bool ParseZealModeName(CharRange text, uint32_t* modeOut) {
+static bool ParseZealModeName(const CharRange& text, uint32_t* modeOut) {
   struct ModeInfo {
     const char* name;
     size_t length;
@@ -722,7 +723,8 @@ static bool ParseZealModeName(CharRange text, uint32_t* modeOut) {
   return false;
 }
 
-static bool ParseZealModeNumericParam(CharRange text, uint32_t* paramOut) {
+static bool ParseZealModeNumericParam(const CharRange& text,
+                                      uint32_t* paramOut) {
   if (text.length() == 0) {
     return false;
   }

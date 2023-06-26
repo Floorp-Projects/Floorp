@@ -347,7 +347,7 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones) {
 
     // We must finalize thing kinds in the order specified by
     // BackgroundFinalizePhases.
-    for (auto phase : BackgroundFinalizePhases) {
+    for (const auto& phase : BackgroundFinalizePhases) {
       for (auto kind : phase.kinds) {
         backgroundFinalize(gcx, zone, kind, &emptyArenas);
       }
