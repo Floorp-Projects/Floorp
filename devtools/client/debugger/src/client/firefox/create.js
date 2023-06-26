@@ -31,11 +31,7 @@ export function setupCreate(dependencies) {
 }
 
 export async function createFrame(thread, frame, index = 0) {
-  if (!frame) {
-    return null;
-  }
-
-  // Because of throttling, the source may be available a bit late.
+  // Because of throttling, the source related to the top frame may be available a bit late.
   const sourceActor = await waitForSourceActorToBeRegisteredInStore(
     frame.where.actor
   );
@@ -320,12 +316,16 @@ export function createSourceActor(sourceResource, sourceObject) {
   };
 }
 
-export async function createPause(thread, packet) {
-  const frame = await createFrame(thread, packet.frame);
+/**
+ * Create a pause info object passed to paused action from
+ * the THREAD_STATE "paused" resource.
+ */
+export async function createPause(threadActorID, pausedThreadState) {
+  const frame = await createFrame(threadActorID, pausedThreadState.frame);
   return {
-    ...packet,
-    thread,
+    thread: threadActorID,
     frame,
+    why: pausedThreadState.why,
   };
 }
 
