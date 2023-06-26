@@ -1117,7 +1117,7 @@ BasePrincipal::IsContentAccessibleAboutURI(bool* aResult) {
     return NS_OK;
   }
 
-  if(!prinURI->SchemeIs("about")) {
+  if (!prinURI->SchemeIs("about")) {
     return NS_OK;
   }
 
