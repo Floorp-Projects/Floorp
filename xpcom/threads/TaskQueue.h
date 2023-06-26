@@ -101,11 +101,6 @@ class TaskQueue final : public AbstractThread,
 
   using CancelPromise = MozPromise<bool, bool, false>;
 
-  // Dispatches a task to cancel any pending DelayedRunnables. Idempotent. Only
-  // dispatches the task on the first call. Creating DelayedRunnables after this
-  // is called will result in assertion failures.
-  RefPtr<CancelPromise> CancelDelayedRunnables();
-
   // Puts the queue in a shutdown state and returns immediately. The queue will
   // remain alive at least until all the events are drained, because the Runners
   // hold a strong reference to the task queue, and one of them is always held

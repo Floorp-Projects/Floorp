@@ -6,7 +6,6 @@
 
 #include "mozilla/TaskQueue.h"
 
-#include "mozilla/DelayedRunnable.h"
 #include "mozilla/ProfilerRunnable.h"
 #include "nsIEventTarget.h"
 #include "nsITargetShutdownTask.h"
