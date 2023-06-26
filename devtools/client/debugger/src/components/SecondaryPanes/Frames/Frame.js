@@ -8,7 +8,6 @@ import PropTypes from "prop-types";
 import AccessibleImage from "../../shared/AccessibleImage";
 import { formatDisplayName } from "../../../utils/pause/frames";
 import { getFilename, getFileURL } from "../../../utils/source";
-import FrameMenu from "./FrameMenu";
 import FrameIndent from "./FrameIndent";
 const classnames = require("devtools/client/shared/classnames.js");
 
@@ -73,21 +72,16 @@ export default class FrameComponent extends Component {
 
   static get propTypes() {
     return {
-      copyStackTrace: PropTypes.func.isRequired,
       cx: PropTypes.object,
       disableContextMenu: PropTypes.bool.isRequired,
       displayFullUrl: PropTypes.bool.isRequired,
       frame: PropTypes.object.isRequired,
-      frameworkGroupingOn: PropTypes.bool.isRequired,
       getFrameTitle: PropTypes.func,
       hideLocation: PropTypes.bool.isRequired,
       panel: PropTypes.oneOf(["debugger", "webconsole"]).isRequired,
-      restart: PropTypes.func,
       selectFrame: PropTypes.func.isRequired,
       selectedFrame: PropTypes.object,
       shouldMapDisplayName: PropTypes.bool.isRequired,
-      toggleBlackBox: PropTypes.func,
-      toggleFrameworkGrouping: PropTypes.func.isRequired,
       shouldDisplayOriginalLocation: PropTypes.bool.isRequired,
     };
   }
@@ -101,22 +95,11 @@ export default class FrameComponent extends Component {
   }
 
   onContextMenu(event) {
-    const {
-      frame,
-      copyStackTrace,
-      toggleFrameworkGrouping,
-      toggleBlackBox,
-      frameworkGroupingOn,
-      cx,
-      restart,
-    } = this.props;
-    FrameMenu(
-      frame,
-      frameworkGroupingOn,
-      { copyStackTrace, toggleFrameworkGrouping, toggleBlackBox, restart },
-      event,
-      cx
-    );
+    event.stopPropagation();
+    event.preventDefault();
+
+    const { frame, cx } = this.props;
+    this.props.showFrameContextMenu(event, frame, cx);
   }
 
   onMouseDown(e, frame, selectedFrame) {

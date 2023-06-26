@@ -7,7 +7,6 @@ import PropTypes from "prop-types";
 
 import { getLibraryFromUrl } from "../../../utils/pause/frames";
 
-import FrameMenu from "./FrameMenu";
 import AccessibleImage from "../../shared/AccessibleImage";
 import FrameComponent from "./Frame";
 
@@ -49,20 +48,15 @@ export default class Group extends Component {
 
   static get propTypes() {
     return {
-      copyStackTrace: PropTypes.func.isRequired,
       cx: PropTypes.object,
       disableContextMenu: PropTypes.bool.isRequired,
       displayFullUrl: PropTypes.bool.isRequired,
-      frameworkGroupingOn: PropTypes.bool.isRequired,
       getFrameTitle: PropTypes.func,
       group: PropTypes.array.isRequired,
       panel: PropTypes.oneOf(["debugger", "webconsole"]).isRequired,
-      restart: PropTypes.func,
       selectFrame: PropTypes.func.isRequired,
       selectLocation: PropTypes.func,
       selectedFrame: PropTypes.object,
-      toggleBlackBox: PropTypes.func,
-      toggleFrameworkGrouping: PropTypes.func.isRequired,
     };
   }
 
@@ -71,22 +65,9 @@ export default class Group extends Component {
   }
 
   onContextMenu(event) {
-    const {
-      group,
-      copyStackTrace,
-      toggleFrameworkGrouping,
-      toggleBlackBox,
-      frameworkGroupingOn,
-      cx,
-    } = this.props;
+    const { group, cx } = this.props;
     const frame = group[0];
-    FrameMenu(
-      frame,
-      frameworkGroupingOn,
-      { copyStackTrace, toggleFrameworkGrouping, toggleBlackBox },
-      event,
-      cx
-    );
+    this.props.showFrameContextMenu(event, frame, cx, true);
   }
 
   toggleFrames = event => {
@@ -101,15 +82,11 @@ export default class Group extends Component {
       selectFrame,
       selectLocation,
       selectedFrame,
-      toggleFrameworkGrouping,
-      frameworkGroupingOn,
-      toggleBlackBox,
-      copyStackTrace,
       displayFullUrl,
       getFrameTitle,
       disableContextMenu,
       panel,
-      restart,
+      showFrameContextMenu,
     } = this.props;
 
     const { expanded } = this.state;
@@ -126,22 +103,18 @@ export default class Group extends Component {
           return acc.concat(
             <FrameComponent
               cx={cx}
-              copyStackTrace={copyStackTrace}
               frame={frame}
-              frameworkGroupingOn={frameworkGroupingOn}
+              showFrameContextMenu={showFrameContextMenu}
               hideLocation={true}
               key={frame.id}
               selectedFrame={selectedFrame}
               selectFrame={selectFrame}
               selectLocation={selectLocation}
               shouldMapDisplayName={false}
-              toggleBlackBox={toggleBlackBox}
-              toggleFrameworkGrouping={toggleFrameworkGrouping}
               displayFullUrl={displayFullUrl}
               getFrameTitle={getFrameTitle}
               disableContextMenu={disableContextMenu}
               panel={panel}
-              restart={restart}
             />
           );
         }, [])}

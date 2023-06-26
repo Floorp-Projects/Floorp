@@ -10,8 +10,7 @@ import FrameComponent from "./Frame";
 import Group from "./Group";
 
 import actions from "../../../actions";
-import { collapseFrames, formatCopyName } from "../../../utils/pause/frames";
-import { copyToTheClipboard } from "../../../utils/clipboard";
+import { collapseFrames } from "../../../utils/pause/frames";
 
 import {
   getFrameworkGroupingState,
@@ -45,12 +44,9 @@ class Frames extends Component {
       frameworkGroupingOn: PropTypes.bool.isRequired,
       getFrameTitle: PropTypes.func,
       panel: PropTypes.oneOf(["debugger", "webconsole"]).isRequired,
-      restart: PropTypes.func,
       selectFrame: PropTypes.func.isRequired,
       selectLocation: PropTypes.func,
       selectedFrame: PropTypes.object,
-      toggleBlackBox: PropTypes.func,
-      toggleFrameworkGrouping: PropTypes.func,
     };
   }
 
@@ -94,34 +90,18 @@ class Frames extends Component {
     return frames.slice(0, numFramesToShow);
   }
 
-  copyStackTrace = () => {
-    const { frames, shouldDisplayOriginalLocation } = this.props;
-    const { l10n } = this.context;
-    const framesToCopy = frames
-      .map(f => formatCopyName(f, l10n, shouldDisplayOriginalLocation))
-      .join("\n");
-    copyToTheClipboard(framesToCopy);
-  };
-
-  toggleFrameworkGrouping = () => {
-    const { toggleFrameworkGrouping, frameworkGroupingOn } = this.props;
-    toggleFrameworkGrouping(!frameworkGroupingOn);
-  };
-
   renderFrames(frames) {
     const {
       cx,
       selectFrame,
       selectLocation,
       selectedFrame,
-      toggleBlackBox,
-      frameworkGroupingOn,
       displayFullUrl,
       getFrameTitle,
       disableContextMenu,
       panel,
-      restart,
       shouldDisplayOriginalLocation,
+      showFrameContextMenu,
     } = this.props;
 
     const framesOrGroups = this.truncateFrames(this.collapseFrames(frames));
@@ -136,38 +116,30 @@ class Frames extends Component {
             <FrameComponent
               cx={cx}
               frame={frameOrGroup}
-              toggleFrameworkGrouping={this.toggleFrameworkGrouping}
-              copyStackTrace={this.copyStackTrace}
-              frameworkGroupingOn={frameworkGroupingOn}
+              showFrameContextMenu={showFrameContextMenu}
               selectFrame={selectFrame}
               selectLocation={selectLocation}
               selectedFrame={selectedFrame}
               shouldDisplayOriginalLocation={shouldDisplayOriginalLocation}
-              toggleBlackBox={toggleBlackBox}
               key={String(frameOrGroup.id)}
               displayFullUrl={displayFullUrl}
               getFrameTitle={getFrameTitle}
               disableContextMenu={disableContextMenu}
               panel={panel}
-              restart={restart}
             />
           ) : (
             <Group
               cx={cx}
               group={frameOrGroup}
-              toggleFrameworkGrouping={this.toggleFrameworkGrouping}
-              copyStackTrace={this.copyStackTrace}
-              frameworkGroupingOn={frameworkGroupingOn}
+              showFrameContextMenu={showFrameContextMenu}
               selectFrame={selectFrame}
               selectLocation={selectLocation}
               selectedFrame={selectedFrame}
-              toggleBlackBox={toggleBlackBox}
               key={frameOrGroup[0].id}
               displayFullUrl={displayFullUrl}
               getFrameTitle={getFrameTitle}
               disableContextMenu={disableContextMenu}
               panel={panel}
-              restart={restart}
             />
           )
         )}
@@ -233,9 +205,7 @@ const mapStateToProps = state => ({
 export default connect(mapStateToProps, {
   selectFrame: actions.selectFrame,
   selectLocation: actions.selectLocation,
-  toggleBlackBox: actions.toggleBlackBox,
-  toggleFrameworkGrouping: actions.toggleFrameworkGrouping,
-  restart: actions.restart,
+  showFrameContextMenu: actions.showFrameContextMenu,
 })(Frames);
 
 // Export the non-connected component in order to use it outside of the debugger
