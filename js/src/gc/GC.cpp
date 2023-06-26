@@ -1609,20 +1609,22 @@ SliceBudget::SliceBudget(WorkBudget work)
 int SliceBudget::describe(char* buffer, size_t maxlen) const {
   if (isUnlimited()) {
     return snprintf(buffer, maxlen, "unlimited");
-  } else if (isWorkBudget()) {
-    return snprintf(buffer, maxlen, "work(%" PRId64 ")", workBudget());
-  } else {
-    const char* interruptStr = "";
-    if (interruptRequested) {
-      interruptStr = interrupted ? "INTERRUPTED " : "interruptible ";
-    }
-    const char* extra = "";
-    if (idle) {
-      extra = extended ? " (started idle but extended)" : " (idle)";
-    }
-    return snprintf(buffer, maxlen, "%s%" PRId64 "ms%s", interruptStr,
-                    timeBudget(), extra);
   }
+
+  if (isWorkBudget()) {
+    return snprintf(buffer, maxlen, "work(%" PRId64 ")", workBudget());
+  }
+
+  const char* interruptStr = "";
+  if (interruptRequested) {
+    interruptStr = interrupted ? "INTERRUPTED " : "interruptible ";
+  }
+  const char* extra = "";
+  if (idle) {
+    extra = extended ? " (started idle but extended)" : " (idle)";
+  }
+  return snprintf(buffer, maxlen, "%s%" PRId64 "ms%s", interruptStr,
+                  timeBudget(), extra);
 }
 
 bool SliceBudget::checkOverBudget() {
@@ -3108,8 +3110,10 @@ GCRuntime::MarkQueueProgress GCRuntime::processTestMarkQueue() {
       JSLinearString* str = &val.toString()->asLinear();
       if (js::StringEqualsLiteral(str, "yield") && isIncrementalGc()) {
         return QueueYielded;
-      } else if (js::StringEqualsLiteral(str, "enter-weak-marking-mode") ||
-                 js::StringEqualsLiteral(str, "abort-weak-marking-mode")) {
+      }
+
+      if (js::StringEqualsLiteral(str, "enter-weak-marking-mode") ||
+          js::StringEqualsLiteral(str, "abort-weak-marking-mode")) {
         if (marker().isRegularMarking()) {
           // We can't enter weak marking mode at just any time, so instead
           // we'll stop processing the queue and continue on with the GC. Once

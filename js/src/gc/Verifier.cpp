@@ -171,10 +171,10 @@ static VerifyNode* MakeNode(VerifyPreTracer* trc, JS::GCCellPtr thing) {
 static VerifyNode* NextNode(VerifyNode* node) {
   if (node->count == 0) {
     return (VerifyNode*)((char*)node + sizeof(VerifyNode) - sizeof(EdgeValue));
-  } else {
-    return (VerifyNode*)((char*)node + sizeof(VerifyNode) +
-                         sizeof(EdgeValue) * (node->count - 1));
   }
+
+  return (VerifyNode*)((char*)node + sizeof(VerifyNode) +
+                       sizeof(EdgeValue) * (node->count - 1));
 }
 
 template <typename ZonesIterT>
