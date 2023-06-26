@@ -154,6 +154,8 @@ security/manager/tools/log_list.json
 security/nss/
 security/sandbox/chromium/
 security/sandbox/chromium-shim/
+services/common/kinto-http-client.sys.mjs
+services/common/kinto-offline-client.js
 testing/gtest/gmock/
 testing/gtest/gtest/
 testing/mochitest/MochiKit/
