@@ -90,18 +90,18 @@ function formatI8Array(bytes, count) {
 function memoryAddressToString(address, code) {
     var defaultAlignFlags;
     switch (code) {
-        case 64768 /* OperatorCode.v128_load */:
-        case 64769 /* OperatorCode.i16x8_load8x8_s */:
-        case 64770 /* OperatorCode.i16x8_load8x8_u */:
-        case 64771 /* OperatorCode.i32x4_load16x4_s */:
-        case 64772 /* OperatorCode.i32x4_load16x4_u */:
-        case 64773 /* OperatorCode.i64x2_load32x2_s */:
-        case 64774 /* OperatorCode.i64x2_load32x2_u */:
-        case 64775 /* OperatorCode.v8x16_load_splat */:
-        case 64776 /* OperatorCode.v16x8_load_splat */:
-        case 64777 /* OperatorCode.v32x4_load_splat */:
-        case 64778 /* OperatorCode.v64x2_load_splat */:
-        case 64779 /* OperatorCode.v128_store */:
+        case 1036288 /* OperatorCode.v128_load */:
+        case 1036289 /* OperatorCode.i16x8_load8x8_s */:
+        case 1036290 /* OperatorCode.i16x8_load8x8_u */:
+        case 1036291 /* OperatorCode.i32x4_load16x4_s */:
+        case 1036292 /* OperatorCode.i32x4_load16x4_u */:
+        case 1036293 /* OperatorCode.i64x2_load32x2_s */:
+        case 1036294 /* OperatorCode.i64x2_load32x2_u */:
+        case 1036295 /* OperatorCode.v8x16_load_splat */:
+        case 1036296 /* OperatorCode.v16x8_load_splat */:
+        case 1036297 /* OperatorCode.v32x4_load_splat */:
+        case 1036298 /* OperatorCode.v64x2_load_splat */:
+        case 1036299 /* OperatorCode.v128_store */:
             defaultAlignFlags = 4;
             break;
         case 41 /* OperatorCode.i64_load */:
@@ -118,7 +118,7 @@ function memoryAddressToString(address, code) {
         case 65083 /* OperatorCode.i64_atomic_rmw_xor */:
         case 65090 /* OperatorCode.i64_atomic_rmw_xchg */:
         case 65097 /* OperatorCode.i64_atomic_rmw_cmpxchg */:
-        case 64861 /* OperatorCode.v128_load64_zero */:
+        case 1036381 /* OperatorCode.v128_load64_zero */:
             defaultAlignFlags = 3;
             break;
         case 40 /* OperatorCode.i32_load */:
@@ -148,7 +148,7 @@ function memoryAddressToString(address, code) {
         case 65095 /* OperatorCode.i64_atomic_rmw32_xchg_u */:
         case 65096 /* OperatorCode.i32_atomic_rmw_cmpxchg */:
         case 65102 /* OperatorCode.i64_atomic_rmw32_cmpxchg_u */:
-        case 64860 /* OperatorCode.v128_load32_zero */:
+        case 1036380 /* OperatorCode.v128_load32_zero */:
             defaultAlignFlags = 2;
             break;
         case 46 /* OperatorCode.i32_load16_s */:
@@ -832,20 +832,20 @@ var WasmDisassembler = /** @class */ (function () {
             case 65100 /* OperatorCode.i64_atomic_rmw8_cmpxchg_u */:
             case 65101 /* OperatorCode.i64_atomic_rmw16_cmpxchg_u */:
             case 65102 /* OperatorCode.i64_atomic_rmw32_cmpxchg_u */:
-            case 64768 /* OperatorCode.v128_load */:
-            case 64769 /* OperatorCode.i16x8_load8x8_s */:
-            case 64770 /* OperatorCode.i16x8_load8x8_u */:
-            case 64771 /* OperatorCode.i32x4_load16x4_s */:
-            case 64772 /* OperatorCode.i32x4_load16x4_u */:
-            case 64773 /* OperatorCode.i64x2_load32x2_s */:
-            case 64774 /* OperatorCode.i64x2_load32x2_u */:
-            case 64775 /* OperatorCode.v8x16_load_splat */:
-            case 64776 /* OperatorCode.v16x8_load_splat */:
-            case 64777 /* OperatorCode.v32x4_load_splat */:
-            case 64778 /* OperatorCode.v64x2_load_splat */:
-            case 64779 /* OperatorCode.v128_store */:
-            case 64860 /* OperatorCode.v128_load32_zero */:
-            case 64861 /* OperatorCode.v128_load64_zero */:
+            case 1036288 /* OperatorCode.v128_load */:
+            case 1036289 /* OperatorCode.i16x8_load8x8_s */:
+            case 1036290 /* OperatorCode.i16x8_load8x8_u */:
+            case 1036291 /* OperatorCode.i32x4_load16x4_s */:
+            case 1036292 /* OperatorCode.i32x4_load16x4_u */:
+            case 1036293 /* OperatorCode.i64x2_load32x2_s */:
+            case 1036294 /* OperatorCode.i64x2_load32x2_u */:
+            case 1036295 /* OperatorCode.v8x16_load_splat */:
+            case 1036296 /* OperatorCode.v16x8_load_splat */:
+            case 1036297 /* OperatorCode.v32x4_load_splat */:
+            case 1036298 /* OperatorCode.v64x2_load_splat */:
+            case 1036299 /* OperatorCode.v128_store */:
+            case 1036380 /* OperatorCode.v128_load32_zero */:
+            case 1036381 /* OperatorCode.v128_load64_zero */:
                 var memoryAddress = memoryAddressToString(operator.memoryAddress, operator.code);
                 if (memoryAddress !== null) {
                     this.appendBuffer(" ");
@@ -867,26 +867,26 @@ var WasmDisassembler = /** @class */ (function () {
             case 68 /* OperatorCode.f64_const */:
                 this.appendBuffer(" ".concat(formatFloat64(operator.literal)));
                 break;
-            case 64780 /* OperatorCode.v128_const */:
+            case 1036300 /* OperatorCode.v128_const */:
                 this.appendBuffer(" i32x4 ".concat(formatI32Array(operator.literal, 4)));
                 break;
-            case 64781 /* OperatorCode.i8x16_shuffle */:
+            case 1036301 /* OperatorCode.i8x16_shuffle */:
                 this.appendBuffer(" ".concat(formatI8Array(operator.lines, 16)));
                 break;
-            case 64789 /* OperatorCode.i8x16_extract_lane_s */:
-            case 64790 /* OperatorCode.i8x16_extract_lane_u */:
-            case 64791 /* OperatorCode.i8x16_replace_lane */:
-            case 64792 /* OperatorCode.i16x8_extract_lane_s */:
-            case 64793 /* OperatorCode.i16x8_extract_lane_u */:
-            case 64794 /* OperatorCode.i16x8_replace_lane */:
-            case 64795 /* OperatorCode.i32x4_extract_lane */:
-            case 64796 /* OperatorCode.i32x4_replace_lane */:
-            case 64799 /* OperatorCode.f32x4_extract_lane */:
-            case 64800 /* OperatorCode.f32x4_replace_lane */:
-            case 64797 /* OperatorCode.i64x2_extract_lane */:
-            case 64798 /* OperatorCode.i64x2_replace_lane */:
-            case 64801 /* OperatorCode.f64x2_extract_lane */:
-            case 64802 /* OperatorCode.f64x2_replace_lane */:
+            case 1036309 /* OperatorCode.i8x16_extract_lane_s */:
+            case 1036310 /* OperatorCode.i8x16_extract_lane_u */:
+            case 1036311 /* OperatorCode.i8x16_replace_lane */:
+            case 1036312 /* OperatorCode.i16x8_extract_lane_s */:
+            case 1036313 /* OperatorCode.i16x8_extract_lane_u */:
+            case 1036314 /* OperatorCode.i16x8_replace_lane */:
+            case 1036315 /* OperatorCode.i32x4_extract_lane */:
+            case 1036316 /* OperatorCode.i32x4_replace_lane */:
+            case 1036319 /* OperatorCode.f32x4_extract_lane */:
+            case 1036320 /* OperatorCode.f32x4_replace_lane */:
+            case 1036317 /* OperatorCode.i64x2_extract_lane */:
+            case 1036318 /* OperatorCode.i64x2_replace_lane */:
+            case 1036321 /* OperatorCode.f64x2_extract_lane */:
+            case 1036322 /* OperatorCode.f64x2_replace_lane */:
                 this.appendBuffer(" ".concat(operator.lineIndex));
                 break;
             case 64520 /* OperatorCode.memory_init */:
