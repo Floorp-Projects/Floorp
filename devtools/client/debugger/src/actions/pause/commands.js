@@ -16,17 +16,16 @@ import { fetchFrames } from "./fetchFrames";
 import { recordEvent } from "../../utils/telemetry";
 import assert from "../../utils/assert";
 
-export function selectThread(cx, thread) {
+export function selectThread(thread) {
   return async ({ dispatch, getState, client }) => {
     if (getCurrentThread(getState()) === thread) {
       return;
     }
-
-    dispatch({ cx, type: "SELECT_THREAD", thread });
+    dispatch({ type: "SELECT_THREAD", thread });
 
     // Get a new context now that the current thread has changed.
     const threadcx = getThreadContext(getState());
-    // Note that this is a rethorical assertion as threadcx.thread is updated by SELECT_THREAD action
+    // The following assertion may fail if thread doesn't exists and SELECT_THREAD did not update the thread.
     assert(threadcx.thread == thread, "Thread mismatch");
 
     const serverRequests = [];

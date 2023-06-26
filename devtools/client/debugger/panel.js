@@ -329,8 +329,7 @@ class DebuggerPanel {
   }
 
   selectThread(threadActorID) {
-    const cx = this._selectors.getContext(this._getState());
-    this._actions.selectThread(cx, threadActorID);
+    this._actions.selectThread(threadActorID);
   }
 
   toggleJavascriptTracing() {
