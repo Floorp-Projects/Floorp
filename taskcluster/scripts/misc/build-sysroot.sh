@@ -42,7 +42,7 @@ jessie)
   repo_url=https://archive.debian.org/debian
   ;;
 *)
-  SNAPSHOT=20210208T213147Z
+  SNAPSHOT=20230611T210420Z
   repo_url=http://snapshot.debian.org/archive/debian/$SNAPSHOT
   ;;
 esac
