@@ -93,7 +93,7 @@ static bool UseStandinsForNativeColors() {
              "enabled, so we check the global preference"
              "not excluding chrome browsers or webpages, so we call the legacy "
              "RFP function to prevent that",
-             RFPTarget::Unknown) ||
+             RFPTarget::UseStandinsForNativeColors) ||
          StaticPrefs::ui_use_standins_for_native_colors();
 }
 
