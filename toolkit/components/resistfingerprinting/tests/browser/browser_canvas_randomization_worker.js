@@ -235,6 +235,10 @@ async function runTest(enabled) {
 
   for (let test of TEST_CASES) {
     info(`Testing ${test.name} in the worker`);
+
+    // Clear telemetry before starting test.
+    Services.fog.testResetFOG();
+
     let data = await await runFunctionInWorker(
       tab.linkedBrowser,
       test.extractCanvasData
@@ -279,6 +283,17 @@ async function runTest(enabled) {
       `The image data between the normal window and the private window are ${
         enabled ? "different" : "the same"
       }.`
+    );
+  }
+
+  // Verify the telemetry is recorded if canvas randomization is enabled.
+  if (enabled) {
+    await Services.fog.testFlushAllChildren();
+
+    ok(
+      Glean.fingerprintingProtection.canvasNoiseCalculateTime.testGetValue()
+        .sum > 0,
+      "The telemetry of canvas randomization is recorded."
     );
   }
 
