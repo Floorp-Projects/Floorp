@@ -509,8 +509,8 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
 
           RefPtr<gfx::PathBuilder> builder =
               MotionPathUtils::GetCompositorPathBuilder();
-          storageData.mCachedMotionPath =
-              MotionPathUtils::BuildPath(offsetPath.AsSVGPathData(), builder);
+          storageData.mCachedMotionPath = MotionPathUtils::BuildSVGPath(
+              offsetPath.AsSVGPathData(), builder);
         }
       }
 

@@ -262,20 +262,18 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
   double directionAngle = 0.0;
   gfx::Point point;
   if (aPath.IsShape()) {
-    const auto& path = aPath.AsShape();
-    if (!path.mGfxPath) {
-      // Empty gfx::Path means it is path('') (i.e. empty path string).
-      return Nothing();
-    }
+    const auto& data = aPath.AsShape();
+    RefPtr<gfx::Path> path = data.mGfxPath;
+    MOZ_ASSERT(path, "The empty path is not allowed");
 
     // Per the spec, we have to convert offset distance to pixels, with 100%
     // being converted to total length. So here |gfxPath| is built with CSS
     // pixel, and we calculate |pathLength| and |computedDistance| with CSS
     // pixel as well.
-    gfx::Float pathLength = path.mGfxPath->ComputeLength();
+    gfx::Float pathLength = path->ComputeLength();
     gfx::Float usedDistance =
         aDistance.ResolveToCSSPixels(CSSCoord(pathLength));
-    if (path.mIsClosedIntervals) {
+    if (data.mIsClosedIntervals) {
       // Per the spec, let used offset distance be equal to offset distance
       // modulus the total length of the path. If the total length of the path
       // is 0, used offset distance is also 0.
@@ -291,8 +289,14 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
       usedDistance = clamped(usedDistance, 0.0f, pathLength);
     }
     gfx::Point tangent;
-    point = path.mGfxPath->ComputePointAtLength(usedDistance, &tangent);
-    directionAngle = (double)atan2(tangent.y, tangent.x);  // In Radian.
+    point = path->ComputePointAtLength(usedDistance, &tangent);
+    // Basically, |point| should be a relative distance between the current
+    // position and the target position. The built |path| is in the coordinate
+    // system of its containing block. Therefore, we have to take the current
+    // position of this box into account to offset the translation so it's final
+    // position is not affected by other boxes in the same containing block.
+    point -= NSPointToPoint(data.mCurrentPosition, AppUnitsPerCSSPixel());
+    directionAngle = atan2((double)tangent.y, (double)tangent.x);  // in Radian.
   } else if (aPath.IsRay()) {
     const auto& ray = aPath.AsRay();
     MOZ_ASSERT(ray.mRay);
@@ -360,6 +364,12 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
                                      angle, shift});
 }
 
+static inline bool IsClosedPath(const StyleSVGPathData& aPathData) {
+  return !aPathData._0.AsSpan().empty() &&
+         aPathData._0.AsSpan().rbegin()->IsClosePath();
+}
+
+// Generate data for motion path on the main thread.
 static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
   const StyleOffsetPath& offsetPath = aFrame->StyleDisplay()->mOffsetPath;
   if (offsetPath.IsNone()) {
@@ -389,13 +399,36 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
         aFrame->GetProperty(nsIFrame::OffsetPathCache());
     MOZ_ASSERT(gfxPath || pathData._0.IsEmpty(),
                "Should have a valid cached gfx::Path or an empty path string");
-    return OffsetPathData::Shape(pathData, gfxPath.forget());
+    // FIXME: Bug 1836847. Once we support "at <position>" for path(), we have
+    // to give it the current box position.
+    return OffsetPathData::Shape(gfxPath.forget(), {}, IsClosedPath(pathData));
   }
 
   // The rest part is to handle "<basic-shape> || <coord-box>".
   MOZ_ASSERT(offsetPath.IsBasicShapeOrCoordBox());
-  // TODO: Implement this in the following patches.
-  return OffsetPathData::None();
+
+  nsRect coordBox;
+  const nsIFrame* containingFrame =
+      MotionPathUtils::GetOffsetPathReferenceBox(aFrame, coordBox);
+  if (!containingFrame || coordBox.IsEmpty()) {
+    return OffsetPathData::None();
+  }
+
+  const nsStyleDisplay* disp = aFrame->StyleDisplay();
+  nsPoint currentPosition = aFrame->GetOffsetTo(containingFrame);
+  RefPtr<gfx::PathBuilder> builder = MotionPathUtils::GetPathBuilder();
+  // TODO: If offset-path is coord-box only, create inset(0 round X), where X is
+  // the value of border-radius on the element that establishes the containing
+  // block for this element.
+  const StyleBasicShape& shape =
+      disp->mOffsetPath.AsOffsetPath().path->AsShape();
+  RefPtr<gfx::Path> path = MotionPathUtils::BuildPath(
+      shape, disp->mOffsetPosition, coordBox, currentPosition, builder);
+  if (!path) {
+    return OffsetPathData::None();
+  }
+
+  return OffsetPathData::Shape(path.forget(), std::move(currentPosition), true);
 }
 
 /* static*/
@@ -417,6 +450,7 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
       transformOrigin, aRefBox, ComputeAnchorPointAdjustment(*aFrame));
 }
 
+// Generate data for motion path on the compositor thread.
 static OffsetPathData GenerateOffsetPathData(
     const StyleOffsetPath& aOffsetPath,
     const layers::MotionPathData& aMotionPathData,
@@ -444,9 +478,11 @@ static OffsetPathData GenerateOffsetPathData(
     if (!path) {
       RefPtr<gfx::PathBuilder> builder =
           MotionPathUtils::GetCompositorPathBuilder();
-      path = MotionPathUtils::BuildPath(pathData, builder);
+      path = MotionPathUtils::BuildSVGPath(pathData, builder);
     }
-    return OffsetPathData::Shape(pathData, path.forget());
+    // FIXME: Bug 1836847. Once we support "at <position>" for path(), we have
+    // to give it the current box position.
+    return OffsetPathData::Shape(path.forget(), {}, IsClosedPath(pathData));
   }
 
   // The rest part is to handle "<basic-shape> || <coord-box>".
@@ -482,7 +518,7 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
 }
 
 /* static */
-already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
+already_AddRefed<gfx::Path> MotionPathUtils::BuildSVGPath(
     const StyleSVGPathData& aPath, gfx::PathBuilder* aPathBuilder) {
   if (!aPathBuilder) {
     return nullptr;
@@ -491,6 +527,60 @@ already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
   const Span<const StylePathCommand>& path = aPath._0.AsSpan();
   return SVGPathData::BuildPath(path, aPathBuilder, StyleStrokeLinecap::Butt,
                                 0.0);
+}
+
+/* static */
+already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
+    const StyleBasicShape& aBasicShape,
+    const StyleOffsetPosition& aOffsetPosition, const nsRect& aCoordBox,
+    const nsPoint& aCurrentPosition, gfx::PathBuilder* aPathBuilder) {
+  if (!aPathBuilder) {
+    return nullptr;
+  }
+
+  switch (aBasicShape.tag) {
+    case StyleBasicShape::Tag::Circle: {
+      const nsPoint center =
+          ComputePosition(aBasicShape.AsCircle().position, aOffsetPosition,
+                          aCoordBox, aCurrentPosition);
+      return ShapeUtils::BuildCirclePath(aBasicShape, aCoordBox, center,
+                                         AppUnitsPerCSSPixel(), aPathBuilder);
+    }
+    case StyleBasicShape::Tag::Ellipse: {
+      const nsPoint center =
+          ComputePosition(aBasicShape.AsEllipse().position, aOffsetPosition,
+                          aCoordBox, aCurrentPosition);
+      return ShapeUtils::BuildEllipsePath(aBasicShape, aCoordBox, center,
+                                          AppUnitsPerCSSPixel(), aPathBuilder);
+    }
+    case StyleBasicShape::Tag::Inset:
+      return ShapeUtils::BuildInsetPath(aBasicShape, aCoordBox,
+                                        AppUnitsPerCSSPixel(), aPathBuilder);
+    case StyleBasicShape::Tag::Polygon:
+      return ShapeUtils::BuildPolygonPath(aBasicShape, aCoordBox,
+                                          AppUnitsPerCSSPixel(), aPathBuilder);
+    case StyleBasicShape::Tag::Path:
+      // FIXME: Bug 1836847. Once we support "at <position>" for path(), we have
+      // to also check its containing block as well. For now, we are still
+      // building its gfx::Path directly by its SVGPathData without other
+      // reference. https://github.com/w3c/fxtf-drafts/issues/504
+      return BuildSVGPath(aBasicShape.AsPath().path, aPathBuilder);
+  }
+
+  return nullptr;
+}
+
+/* static */
+already_AddRefed<gfx::PathBuilder> MotionPathUtils::GetPathBuilder() {
+  // Here we only need to build a valid path for motion path, so
+  // using the default values of stroke-width, stoke-linecap, and fill-rule
+  // is fine for now because what we want is to get the point and its normal
+  // vector along the path, instead of rendering it.
+  RefPtr<gfx::PathBuilder> builder =
+      gfxPlatform::GetPlatform()
+          ->ScreenReferenceDrawTarget()
+          ->CreatePathBuilder(gfx::FillRule::FILL_WINDING);
+  return builder.forget();
 }
 
 /* static */
