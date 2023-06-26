@@ -1361,23 +1361,17 @@ Result<int32_t, nsresult> nsClipboard::GetNativeClipboardSequenceNumber(
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(
-    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
-    bool* _retval) {
-  *_retval = false;
-  if (aWhichClipboard != kGlobalClipboard) {
-    return NS_OK;
-  }
-
-  for (auto& flavor : aFlavorList) {
+Result<bool, nsresult> nsClipboard::HasNativeClipboardDataMatchingFlavors(
+    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+  for (const auto& flavor : aFlavorList) {
     UINT format = GetFormat(flavor.get());
     if (IsClipboardFormatAvailable(format)) {
-      *_retval = true;
-      break;
+      return true;
     }
   }
-
-  return NS_OK;
+  return false;
 }
 
 //-------------------------------------------------------------------------

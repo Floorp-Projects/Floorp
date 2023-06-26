@@ -347,59 +347,16 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
 }
 
 // returns true if we have *any* of the passed in flavors available for pasting
-NS_IMETHODIMP
-nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
-                                    bool* outResult) {
+mozilla::Result<bool, nsresult> nsClipboard::HasNativeClipboardDataMatchingFlavors(
+    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  CLIPBOARD_LOG("%s: clipboard=%i", __FUNCTION__, aWhichClipboard);
-  CLIPBOARD_LOG("    Asking for content:\n");
-  for (auto& flavor : aFlavorList) {
-    CLIPBOARD_LOG("        MIME %s\n", flavor.get());
-  }
-
-  *outResult = false;
-
-  // We only support the set operation on kSelectionCache type, see bug 1835059.
-  if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard)) {
-    return NS_OK;
-  }
+  // XXX we only support the set operation on kSelectionCache type, see bug 1835059.
+  MOZ_DIAGNOSTIC_ASSERT(kSelectionCache != aWhichClipboard);
+  MOZ_DIAGNOSTIC_ASSERT(nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
 
   NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard);
   MOZ_ASSERT(cocoaPasteboard);
-  if (mCachedClipboard == aWhichClipboard) {
-    const auto& clipboardCache = mCaches[mCachedClipboard];
-    MOZ_ASSERT(clipboardCache);
-    if (mChangeCount != [cocoaPasteboard changeCount]) {
-      // Clear the cached transferable as it is no longer valid.
-      clipboardCache->Clear();
-    } else if (nsITransferable* cachedTrans = clipboardCache->GetTransferable()) {
-      // See if we have data for this in our cached transferable.
-      nsTArray<nsCString> flavors;
-      nsresult rv = cachedTrans->FlavorsTransferableCanImport(flavors);
-      if (NS_SUCCEEDED(rv)) {
-        if (CLIPBOARD_LOG_ENABLED()) {
-          CLIPBOARD_LOG("    Cached transferable types (nums %zu)\n", flavors.Length());
-          for (uint32_t j = 0; j < flavors.Length(); j++) {
-            CLIPBOARD_LOG("        MIME %s\n", flavors[j].get());
-          }
-        }
-
-        for (uint32_t j = 0; j < flavors.Length(); j++) {
-          const nsCString& transferableFlavorStr = flavors[j];
-
-          for (uint32_t k = 0; k < aFlavorList.Length(); k++) {
-            if (transferableFlavorStr.Equals(aFlavorList[k])) {
-              CLIPBOARD_LOG("    has %s\n", aFlavorList[k].get());
-              *outResult = true;
-              return NS_OK;
-            }
-          }
-        }
-      }
-    }
-  }
-
   if (CLIPBOARD_LOG_ENABLED()) {
     NSArray* types = [cocoaPasteboard types];
     uint32_t count = [types count];
@@ -421,8 +378,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
           [cocoaPasteboard availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
       if (availableType && [availableType isEqualToString:pboardType]) {
         CLIPBOARD_LOG("    has %s\n", mimeType.get());
-        *outResult = true;
-        break;
+        return true;
       }
     } else if (mimeType.EqualsLiteral(kCustomTypesMime)) {
       NSString* availableType = [cocoaPasteboard
@@ -430,8 +386,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
               [NSArray arrayWithObject:[UTIHelper stringFromPboardType:kMozCustomTypesPboardType]]];
       if (availableType) {
         CLIPBOARD_LOG("    has %s\n", mimeType.get());
-        *outResult = true;
-        break;
+        return true;
       }
     } else if (mimeType.EqualsLiteral(kJPEGImageMime) || mimeType.EqualsLiteral(kJPGImageMime) ||
                mimeType.EqualsLiteral(kPNGImageMime) || mimeType.EqualsLiteral(kGIFImageMime)) {
@@ -441,8 +396,7 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
                                         [UTIHelper stringFromPboardType:NSPasteboardTypePNG], nil]];
       if (availableType) {
         CLIPBOARD_LOG("    has %s\n", mimeType.get());
-        *outResult = true;
-        break;
+        return true;
       }
     } else if (mimeType.EqualsLiteral(kFileMime)) {
       NSArray* items = [cocoaPasteboard pasteboardItems];
@@ -456,21 +410,20 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int3
                                                     stringFromPboardType:(NSString*)kUTTypeFileURL],
                                                 nil]]) {
             CLIPBOARD_LOG("    has %s\n", mimeType.get());
-            *outResult = true;
-            break;
+            return true;
           }
         }
       }
     }
   }
 
-  if (CLIPBOARD_LOG_ENABLED() && !(*outResult)) {
+  if (CLIPBOARD_LOG_ENABLED()) {
     CLIPBOARD_LOG("    no targets at clipboard (bad match)\n");
   }
 
-  return NS_OK;
+  return false;
 
-  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+  NS_OBJC_END_TRY_BLOCK_RETURN(mozilla::Err(NS_ERROR_FAILURE));
 }
 
 // static

@@ -24,8 +24,6 @@ class nsClipboard : public nsBaseClipboard {
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIClipboard
-  NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
-                                    bool* _retval) override;
   NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
 
   // On macOS, cache the transferable of the current selection (chrome/content)
@@ -50,6 +48,8 @@ class nsClipboard : public nsBaseClipboard {
                                     int32_t aWhichClipboard) override;
   mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
       int32_t aWhichClipboard) override;
+  mozilla::Result<bool, nsresult> HasNativeClipboardDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
 
   void ClearSelectionCache();
   void SetSelectionCache(nsITransferable* aTransferable);
