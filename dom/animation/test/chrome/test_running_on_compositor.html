@@ -1153,8 +1153,73 @@ promise_test(async t => {
   await waitForPaints();
 
   assert_animation_is_running_on_compositor(animation,
-    'offset-path animation should be running on the compositor');
-}, 'offset-path animation runs on the compositor');
+    'offset-path:path() animation should be running on the compositor');
+}, 'offset-path:path() animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ offsetPath: ['ray(0deg)',
+                                               'ray(180deg)'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'offset-path:ray() animation should be running on the compositor');
+}, 'offset-path:ray() animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ offsetPath: ['inset(0px)',
+                                               'inset(10px)'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'offset-path:inset() animation should be running on the compositor');
+}, 'offset-path:inset() animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ offsetPath: ['circle(10px)',
+                                               'circle(20px)'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'offset-path:circle() animation should be running on the compositor');
+}, 'offset-path:circle() animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ offsetPath: ['ellipse(10px 20px)',
+                                               'ellipse(20px 40px)'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'offset-path:ellipse() animation should be running on the compositor');
+}, 'offset-path:ellipse() animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ offsetPath: ['polygon(0px 0px)',
+                                               'polygon(50px 50px)'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'offset-path:polygon() animation should be running on the compositor');
+}, 'offset-path:polygon() animation runs on the compositor');
 
 promise_test(async t => {
   const div = addDiv(t);

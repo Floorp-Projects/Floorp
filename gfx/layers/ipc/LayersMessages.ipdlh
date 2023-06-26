@@ -133,6 +133,9 @@ struct AnimationSegment {
   nsPoint currentPosition;
   // The reference length for computing ray(contain) (in css pixels).
   CSSCoord rayContainReferenceLength;
+  // The resolved border-radius of its containing block. If the array size is
+  // zero, we don't have radius.
+  nscoord[] coordBoxInsetRadii;
 };
 
 [Comparable] struct PartialPrerenderData {

@@ -791,13 +791,17 @@ static Maybe<TransformData> CreateAnimationData(
     nsRect coordBox;
     const nsIFrame* containingBlockFrame =
         MotionPathUtils::GetOffsetPathReferenceBox(aFrame, coordBox);
-    CSSCoord rayContainReferenceLength =
-        MotionPathUtils::GetRayContainReferenceSize(aFrame);
-    motionPathData = Some(layers::MotionPathData(
-        motionPathOrigin, anchorAdjustment, coordBox,
+    nsTArray<nscoord> radii;
+    if (containingBlockFrame) {
+      radii = MotionPathUtils::ComputeBorderRadii(
+          containingBlockFrame->StyleBorder()->mBorderRadius, coordBox);
+    }
+    motionPathData.emplace(
+        std::move(motionPathOrigin), std::move(anchorAdjustment),
+        std::move(coordBox),
         containingBlockFrame ? aFrame->GetOffsetTo(containingBlockFrame)
                              : aFrame->GetPosition(),
-        rayContainReferenceLength));
+        MotionPathUtils::GetRayContainReferenceSize(aFrame), std::move(radii));
   }
 
   Maybe<PartialPrerenderData> partialPrerenderData;
