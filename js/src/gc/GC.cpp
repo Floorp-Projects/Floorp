@@ -2282,15 +2282,12 @@ class CompartmentCheckTracer final : public JS::CallbackTracer {
  public:
   explicit CompartmentCheckTracer(JSRuntime* rt)
       : JS::CallbackTracer(rt, JS::TracerKind::CompartmentCheck,
-                           JS::WeakEdgeTraceAction::Skip),
-        src(nullptr),
-        zone(nullptr),
-        compartment(nullptr) {}
+                           JS::WeakEdgeTraceAction::Skip) {}
 
-  Cell* src;
-  JS::TraceKind srcKind;
-  Zone* zone;
-  Compartment* compartment;
+  Cell* src = nullptr;
+  JS::TraceKind srcKind = JS::TraceKind::Null;
+  Zone* zone = nullptr;
+  Compartment* compartment = nullptr;
 };
 
 static bool InCrossCompartmentMap(JSRuntime* rt, JSObject* src,

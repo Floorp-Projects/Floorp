@@ -1188,7 +1188,7 @@ class GCRuntime {
       testMarkQueue;
 
   /* Position within the test mark queue. */
-  size_t queuePos;
+  size_t queuePos = 0;
 
   /* The test marking queue might want to be marking a particular color. */
   mozilla::Maybe<js::gc::MarkColor> queueMarkColor;

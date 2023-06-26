@@ -439,8 +439,9 @@ class alignas(TypicalCacheLineSize) Nursery {
   mozilla::TimeDuration timeInChunkAlloc_;
 
   // Report minor collections taking at least this long, if enabled.
-  bool enableProfiling_;
-  bool profileWorkers_;
+  bool enableProfiling_ = false;
+  bool profileWorkers_ = false;
+
   mozilla::TimeDuration profileThreshold_;
 
   // Whether we will nursery-allocate strings.
