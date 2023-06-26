@@ -2252,11 +2252,13 @@ void nsSocketTransport::OnSocketDetached(PRFileDesc* fd) {
     //
     mInput.OnSocketReady(mCondition);
     mOutput.OnSocketReady(mCondition);
-    if (mInputCopyContext) {
-      NS_CancelAsyncCopy(mInputCopyContext, mCondition);
-    }
-    if (mOutputCopyContext) {
-      NS_CancelAsyncCopy(mOutputCopyContext, mCondition);
+    if (gIOService->IsNetTearingDown()) {
+      if (mInputCopyContext) {
+        NS_CancelAsyncCopy(mInputCopyContext, mCondition);
+      }
+      if (mOutputCopyContext) {
+        NS_CancelAsyncCopy(mOutputCopyContext, mCondition);
+      }
     }
   }
 
