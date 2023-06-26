@@ -1958,9 +1958,6 @@ class AddonInstall {
       // Point the add-on to its extracted files as the xpi may get deleted
       this.addon.sourceBundle = stagedAddon;
 
-      // Cache the AddonInternal as it may have updated compatibility info
-      this.location.stageAddon(this.addon.id, this.addon.toJSON());
-
       logger.debug(
         `Staged install of ${this.addon.id} from ${this.sourceURI.spec} ready; waiting for restart.`
       );
@@ -1968,6 +1965,14 @@ class AddonInstall {
         delete this.existingAddon.pendingUpgrade;
         this.existingAddon.pendingUpgrade = this.addon;
       }
+    }
+
+    if (this.state === AddonManager.STATE_POSTPONED) {
+      // Cache the AddonInternal as it may have updated compatibility info. We
+      // do that unconditionally in case the staged install isn't finalized in
+      // the same session. That way, on the next app startup, the add-on will
+      // be installed.
+      this.location.stageAddon(this.addon.id, this.addon.toJSON());
     }
   }
 

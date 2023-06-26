@@ -279,7 +279,7 @@ add_task(async function test_call_stageInstalls_no_addons() {
 
 add_task(async function test_import_twice() {
   const browserID = "some-browser-id";
-  const extensionIDs = ["ext-1"];
+  const extensionIDs = ["ext-1", "ext-2"];
   AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
     addons: Object.values(ADDON_SEARCH_RESULTS),
     expectedBrowserID: browserID,
@@ -395,4 +395,57 @@ add_task(async function test_stage_installs_with_download_aborted() {
 
   // Let's cancel the pending installs.
   await cancelInstalls(importedAddonIDs);
+});
+
+add_task(async function test_stageInstalls_then_restart_addonManager() {
+  const browserID = "some-browser-id";
+  const extensionIDs = ["ext-1", "ext-2"];
+  const EXPECTED_SOURCE_URI_SPECS = {
+    ["ff@ext-1"]: "http://example.com/addons/ext1.xpi",
+    ["ff@ext-2"]: "http://example.com/addons/ext2.xpi",
+  };
+  AMBrowserExtensionsImport._addonRepository = mockAddonRepository({
+    addons: Object.values(ADDON_SEARCH_RESULTS),
+    expectedBrowserID: browserID,
+    expectedExtensionIDs: extensionIDs,
+  });
+  const importedAddonIDs = ["ff@ext-1", "ff@ext-2"];
+
+  let promiseTopic = TestUtils.topicObserved(
+    "webextension-imported-addons-pending"
+  );
+  let result = await AMBrowserExtensionsImport.stageInstalls(
+    browserID,
+    extensionIDs
+  );
+  await promiseTopic;
+  assertStageInstallsResult(result, importedAddonIDs);
+
+  // We restart the add-ons manager to simulate a browser restart. It isn't
+  // quite the same but that should be enough.
+  await AddonTestUtils.promiseRestartManager();
+
+  for (const id of importedAddonIDs) {
+    const addon = await AddonManager.getAddonByID(id);
+    Assert.ok(addon.isActive, `expected add-on "${id}" to be enabled`);
+    // Verify that the sourceURI and installTelemetryInfo also match
+    // the values expected for the addons installed from the browser
+    // imports install flow.
+    Assert.deepEqual(
+      {
+        id: addon.id,
+        sourceURI: addon.sourceURI?.spec,
+        installTelemetryInfo: addon.installTelemetryInfo,
+      },
+      {
+        id,
+        sourceURI: EXPECTED_SOURCE_URI_SPECS[id],
+        installTelemetryInfo: {
+          source: AMBrowserExtensionsImport.TELEMETRY_SOURCE,
+        },
+      },
+      "Got the expected AddonWrapper properties"
+    );
+    await addon.uninstall();
+  }
 });
