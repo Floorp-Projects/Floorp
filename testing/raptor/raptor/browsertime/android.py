@@ -82,6 +82,10 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             "false",
             "--videoParams.addTimer",
             "false",
+            "--videoParams.androidVideoWaitTime",
+            "20000",
+            "--android.enabled",
+            "true",
         ]
 
         if self.config["app"] == "chrome-m":
@@ -89,7 +93,6 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 [
                     "--browser",
                     "chrome",
-                    "--android",
                 ]
             )
         else:
@@ -105,7 +108,6 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 [
                     "--browser",
                     "firefox",
-                    "--android",
                     "--firefox.android.package",
                     self.config["binary"],
                     "--firefox.android.activity",
