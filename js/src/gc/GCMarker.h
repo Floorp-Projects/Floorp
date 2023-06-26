@@ -150,8 +150,8 @@ class MarkStack {
   explicit MarkStack(const MarkStack& other);
   MarkStack& operator=(const MarkStack& other);
 
-  MarkStack(MarkStack&& other);
-  MarkStack& operator=(MarkStack&& other);
+  MarkStack(MarkStack&& other) noexcept;
+  MarkStack& operator=(MarkStack&& other) noexcept;
 
   // The unit for MarkStack::capacity() is mark stack words.
   size_t capacity() { return stack().length(); }

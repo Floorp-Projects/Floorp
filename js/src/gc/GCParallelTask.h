@@ -134,7 +134,7 @@ class GCParallelTask : private mozilla::LinkedListElement<GCParallelTask>,
         use(use),
         state_(State::Idle),
         cancel_(false) {}
-  GCParallelTask(GCParallelTask&& other)
+  GCParallelTask(GCParallelTask&& other) noexcept
       : gc(other.gc),
         phaseKind(other.phaseKind),
         use(other.use),

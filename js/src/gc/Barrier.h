@@ -512,7 +512,7 @@ class WriteBarriered : public BarrieredBase<T>,
 
 #define DECLARE_POINTER_ASSIGN_AND_MOVE_OPS(Wrapper, T) \
   DECLARE_POINTER_ASSIGN_OPS(Wrapper, T)                \
-  Wrapper<T>& operator=(Wrapper<T>&& other) {           \
+  Wrapper<T>& operator=(Wrapper<T>&& other) noexcept {  \
     setUnchecked(other.release());                      \
     return *this;                                       \
   }
@@ -538,7 +538,8 @@ class PreBarriered : public WriteBarriered<T> {
   explicit PreBarriered(const PreBarriered<T>& other)
       : WriteBarriered<T>(other.value) {}
 
-  PreBarriered(PreBarriered<T>&& other) : WriteBarriered<T>(other.release()) {}
+  PreBarriered(PreBarriered<T>&& other) noexcept
+      : WriteBarriered<T>(other.release()) {}
 
   ~PreBarriered() { this->pre(); }
 
@@ -705,7 +706,7 @@ class HeapPtr : public WriteBarriered<T> {
     this->post(JS::SafelyInitialized<T>::create(), this->value);
   }
 
-  HeapPtr(HeapPtr<T>&& other) : WriteBarriered<T>(other.release()) {
+  HeapPtr(HeapPtr<T>&& other) noexcept : WriteBarriered<T>(other.release()) {
     this->post(JS::SafelyInitialized<T>::create(), this->value);
   }
 
@@ -777,7 +778,8 @@ class GCStructPtr : public BarrieredBase<T> {
 
   GCStructPtr(const GCStructPtr<T>& other) : BarrieredBase<T>(other) {}
 
-  GCStructPtr(GCStructPtr<T>&& other) : BarrieredBase<T>(other.release()) {}
+  GCStructPtr(GCStructPtr<T>&& other) noexcept
+      : BarrieredBase<T>(other.release()) {}
 
   ~GCStructPtr() {
     // No barriers are necessary as this only happens when the GC is sweeping.
@@ -869,7 +871,8 @@ class WeakHeapPtr : public ReadBarriered<T>,
 
   // Move retains the lifetime status of the source edge, so does not fire
   // the read barrier of the defunct edge.
-  WeakHeapPtr(WeakHeapPtr&& other) : ReadBarriered<T>(other.release()) {
+  WeakHeapPtr(WeakHeapPtr&& other) noexcept
+      : ReadBarriered<T>(other.release()) {
     this->post(JS::SafelyInitialized<T>::create(), value);
   }
 
