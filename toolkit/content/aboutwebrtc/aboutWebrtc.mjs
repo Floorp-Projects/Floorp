@@ -378,7 +378,7 @@ class ShowTab extends Control {
     const autorefreshLabel = document.createElement("label");
     document.l10n.setAttributes(
       autorefreshLabel,
-      "about-webrtc-auto-refresh-label"
+      "about-webrtc-auto-refresh-default-label"
     );
 
     const ctrls = document.querySelector("#controls");
@@ -470,10 +470,6 @@ class ShowTab extends Control {
   window.setInterval(
     async hist => {
       const statReports = await getStats();
-      // Only refresh if the autorefresh checkbox is checked
-      if (!document.getElementById("autorefresh").checked) {
-        return;
-      }
       const rndr = elemRenderer;
 
       const translateSection = async (report, id, renderFunc) => {
@@ -485,18 +481,23 @@ class ShowTab extends Control {
 
       const sections = (
         await Promise.all(
-          statReports.flatMap(report => [
-            translateSection(report, "pc-tools", renderPeerConnectionTools),
-            translateSection(report, "ice-stats", renderICEStats),
-            translateSection(
-              report,
-              "ice-raw-stats-fold",
-              renderRawICEStatsFold
-            ),
-            translateSection(report, "rtp-stats", renderRTPStats),
-            translateSection(report, "bandwidth-stats", renderBandwidthStats),
-            translateSection(report, "frame-stats", renderFrameRateStats),
-          ])
+          // Add filter to check the refreshEnabledPcids
+          statReports
+            .filter(
+              ({ pcid }) =>
+                document.getElementById(`autorefresh-${pcid}`)?.checked
+            )
+            .flatMap(report => [
+              translateSection(report, "ice-stats", renderICEStats),
+              translateSection(
+                report,
+                "ice-raw-stats-fold",
+                renderRawICEStatsFold
+              ),
+              translateSection(report, "rtp-stats", renderRTPStats),
+              translateSection(report, "bandwidth-stats", renderBandwidthStats),
+              translateSection(report, "frame-stats", renderFrameRateStats),
+            ])
         )
       ).filter(({ element }) => element);
 
@@ -598,7 +599,15 @@ function renderPeerConnectionTools(rndr, report) {
           "about-webrtc-copy-report-history-button"
         ),
       ];
-
+  const autorefreshButton = rndr.elem_input({
+    id: `autorefresh-${pcid}`,
+    type: "checkbox",
+    checked: Services.prefs.getBoolPref("media.aboutwebrtc.auto_refresh"),
+  });
+  const autorefreshLabel = rndr.elem_label(
+    {},
+    "about-webrtc-auto-refresh-label"
+  );
   return renderElements("div", { id: "pc-tools: " + pcid }, [
     isClosed
       ? renderElement("h3", {}, "about-webrtc-connection-closed", {
@@ -621,6 +630,8 @@ function renderPeerConnectionTools(rndr, report) {
       () => JSON.stringify({ ...report }, null, 2)
     ),
     ...copyHistButton,
+    autorefreshButton,
+    autorefreshLabel,
   ]);
 }
 

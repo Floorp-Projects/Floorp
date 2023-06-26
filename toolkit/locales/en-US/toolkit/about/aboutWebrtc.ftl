@@ -19,10 +19,13 @@ about-webrtc-aec-logging-off-state-label = Start AEC Logging
 about-webrtc-aec-logging-on-state-label = Stop AEC Logging
 about-webrtc-aec-logging-on-state-msg = AEC logging active (speak with the caller for a few minutes and then stop the capture)
 
-# The autorefresh checkbox causes the page to autorefresh its content when checked
+##
+
+# The autorefresh checkbox causes a stats section to autorefresh its content when checked
 about-webrtc-auto-refresh-label = Auto Refresh
 
-##
+# Determines the default state of the Auto Refresh check boxes
+about-webrtc-auto-refresh-default-label = Auto Refresh By Default
 
 # "PeerConnection" is a proper noun associated with the WebRTC module. "ID" is
 # an abbreviation for Identifier. This string should not normally be translated
