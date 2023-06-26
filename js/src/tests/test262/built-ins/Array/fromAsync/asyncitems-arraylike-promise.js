@@ -26,7 +26,7 @@ asyncTest(async function () {
     "get items.length",
     "get items.length.valueOf",
     "call items.length.valueOf",
-    "get items.0",
-    "get items.1",
+    "get items[0]",
+    "get items[1]",
   ]);
 });

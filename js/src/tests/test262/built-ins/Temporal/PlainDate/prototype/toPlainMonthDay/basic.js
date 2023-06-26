@@ -13,6 +13,6 @@ const calendar = new Temporal.Calendar("iso8601");
 const pd = new Temporal.PlainDate(1970, 12, 24, calendar);
 const pmd = pd.toPlainMonthDay();
 TemporalHelpers.assertPlainMonthDay(pmd, "M12", 24);
-assert.sameValue(pmd.calendar, calendar);
+assert.sameValue(pmd.getISOFields().calendar, "iso8601");
 
 reportCompare(0, 0);

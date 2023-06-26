@@ -22,9 +22,7 @@ const expected = [
   "get options.smallestUnit",
   "get options.smallestUnit.toString",
   "call options.smallestUnit.toString",
-  "get this.calendar[Symbol.toPrimitive]",
-  "get this.calendar.toString",
-  "call this.calendar.toString",
+  "get this.calendar.id",
 ];
 const actual = [];
 
@@ -56,9 +54,7 @@ const expectedForFractionalSecondDigits = [
   "get options.roundingMode.toString",
   "call options.roundingMode.toString",
   "get options.smallestUnit",
-  "get this.calendar[Symbol.toPrimitive]",
-  "get this.calendar.toString",
-  "call this.calendar.toString",
+  "get this.calendar.id",
 ];
 
 instance.toString(

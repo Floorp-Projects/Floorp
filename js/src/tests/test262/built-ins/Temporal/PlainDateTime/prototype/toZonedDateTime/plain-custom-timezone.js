@@ -11,7 +11,9 @@ features: [Temporal]
 
 const actual = [];
 const expected = [
-  "has timeZone.timeZone",
+  "has timeZone.getOffsetNanosecondsFor",
+  "has timeZone.getPossibleInstantsFor",
+  "has timeZone.id",
   "get options.disambiguation",
   "get options.disambiguation.toString",
   "call options.disambiguation.toString",
@@ -40,9 +42,10 @@ const timeZone = TemporalHelpers.timeZoneObserver(actual, "timeZone", {
 
 const result = dateTime.toZonedDateTime(timeZone, options);
 assert.sameValue(result.epochNanoseconds, instant.epochNanoseconds);
-assert.sameValue(result.timeZone, timeZone);
-assert.sameValue(result.calendar, dateTime.calendar);
+assert.sameValue(result.getTimeZone(), timeZone);
 
 assert.compareArray(actual, expected);
+
+assert.sameValue(result.getISOFields().calendar, dateTime.getISOFields().calendar);
 
 reportCompare(0, 0);

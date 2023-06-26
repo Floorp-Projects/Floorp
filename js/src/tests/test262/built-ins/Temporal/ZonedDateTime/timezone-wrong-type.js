@@ -21,7 +21,6 @@ const rangeErrorTests = [
 
 for (const [timeZone, description] of rangeErrorTests) {
   assert.throws(RangeError, () => new Temporal.ZonedDateTime(0n, timeZone), `${description} does not convert to a valid ISO string`);
-  assert.throws(RangeError, () => new Temporal.ZonedDateTime(0n, { timeZone }), `${description} does not convert to a valid ISO string (nested property)`);
 }
 
 const typeErrorTests = [
@@ -30,10 +29,6 @@ const typeErrorTests = [
 
 for (const [timeZone, description] of typeErrorTests) {
   assert.throws(TypeError, () => new Temporal.ZonedDateTime(0n, timeZone), `${description} is not a valid object and does not convert to a string`);
-  assert.throws(TypeError, () => new Temporal.ZonedDateTime(0n, { timeZone }), `${description} is not a valid object and does not convert to a string (nested property)`);
 }
-
-const timeZone = undefined;
-assert.throws(RangeError, () => new Temporal.ZonedDateTime(0n, { timeZone }), `undefined is always a RangeError as nested property`);
 
 reportCompare(0, 0);

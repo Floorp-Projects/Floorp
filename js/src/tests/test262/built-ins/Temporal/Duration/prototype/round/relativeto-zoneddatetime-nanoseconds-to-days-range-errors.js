@@ -55,7 +55,8 @@ assert.throws(RangeError, () =>
   oneNsDuration.round({
     relativeTo: zdt,
     smallestUnit: "days",
-  })
+  }),
+  "RangeError when days < 0 and sign = 1"
 );
 
 // NanosecondsToDays.20: days > 0 and sign = -1
@@ -75,7 +76,8 @@ assert.throws(RangeError, () =>
   negOneNsDuration.round({
     relativeTo: zdt,
     smallestUnit: "days",
-  })
+  }),
+  "RangeError when days > 0 and sign = -1"
 );
 
 // NanosecondsToDays.22: nanoseconds > 0 and sign = -1
@@ -94,11 +96,12 @@ zdt = new Temporal.ZonedDateTime(
   )
 );
 assert.throws(RangeError, () =>
-  // Using -1ns duration sets _nanoseocnds_ to -1 and _sign_ to -1
+  // Using -1ns duration sets _nanoseconds_ to -1 and _sign_ to -1
   negOneNsDuration.round({
     relativeTo: zdt,
     smallestUnit: "days",
-  })
+  }),
+  "RangeError when nanoseconds > 0 and sign = -1"
 );
 
 reportCompare(0, 0);

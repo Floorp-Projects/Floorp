@@ -11,6 +11,6 @@ features: [Temporal]
 const arg = "iso8601";
 
 const result = Temporal.Now.plainDate(arg);
-assert.sameValue(result.calendar.id, "iso8601", `Calendar created from string "${arg}"`);
+assert.sameValue(result.getISOFields().calendar, "iso8601", `Calendar created from string "${arg}"`);
 
 reportCompare(0, 0);

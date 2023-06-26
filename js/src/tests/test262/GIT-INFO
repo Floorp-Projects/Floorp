@@ -1,8 +1,5 @@
-commit 6da1d4c82cf8e7d71f43ad78150ab2c8a4e342e6
-Merge: 9964fa962a 4a8135e01e
-Author: Jordan Harband <ljharb@gmail.com>
-Date:   Tue Mar 28 00:34:15 2023 -0700
+commit d52a5bbbe88b82bee0122689c161f1bf15fe8a0d
+Author: Linus Groh <mail@linusgroh.de>
+Date:   Thu Jun 8 14:19:36 2023 +0200
 
-    Merge pull request #3796 from syg/transfertofixedlength-tests
-    
-    Add tests for ArrayBuffer.prototype.transferToFixedLength
+    Replace arrow function with regular function in harness/sta.js

@@ -70,6 +70,7 @@ var date = Temporal.PlainDate.from({
 assert.sameValue(`${ date }`, "2019-01-01[u-ca=japanese]");
 assert.sameValue(date.era, "heisei");
 assert.sameValue(date.eraYear, 31);
+
 date = Temporal.PlainDate.from({
   era: "heisei",
   eraYear: 1,
@@ -90,6 +91,7 @@ date = Temporal.PlainDate.from({
 assert.sameValue(`${ date }`, "1926-01-01[u-ca=japanese]");
 assert.sameValue(date.era, "taisho");
 assert.sameValue(date.eraYear, 15);
+
 date = Temporal.PlainDate.from({
   era: "taisho",
   eraYear: 1,
@@ -100,6 +102,7 @@ date = Temporal.PlainDate.from({
 assert.sameValue(`${ date }`, "1912-01-01[u-ca=japanese]");
 assert.sameValue(date.era, "meiji");
 assert.sameValue(date.eraYear, 45);
+
 date = Temporal.PlainDate.from({
   era: "meiji",
   eraYear: 1,
@@ -110,12 +113,28 @@ date = Temporal.PlainDate.from({
 assert.sameValue(`${ date }`, "1868-01-01[u-ca=japanese]");
 assert.sameValue(date.era, "ce");
 assert.sameValue(date.eraYear, 1868);
-assert.throws(RangeError, () => Temporal.PlainDate.from({
+
+// Verify that CE and BCE eras (before Meiji) are recognized
+date = Temporal.PlainDate.from({
+  era: "ce",
+  eraYear: 1000,
+  month: 1,
+  day: 1,
+  calendar: "japanese"
+});
+assert.sameValue(`${date}`, "1000-01-01[u-ca=japanese]");
+assert.sameValue(date.era, "ce");
+assert.sameValue(date.eraYear, 1000);
+
+date = Temporal.PlainDate.from({
   era: "bce",
   eraYear: 1,
   month: 1,
   day: 1,
   calendar: "japanese"
-}));
+});
+assert.sameValue(`${date}`, "0000-01-01[u-ca=japanese]");
+assert.sameValue(date.era, "bce");
+assert.sameValue(date.eraYear, 1);
 
 reportCompare(0, 0);

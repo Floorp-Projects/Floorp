@@ -18,7 +18,7 @@ features: [Temporal]
 TemporalHelpers.checkToTemporalPlainDateTimeFastPath((date, calendar) => {
   const result = Temporal.PlainDateTime.from(date);
   TemporalHelpers.assertPlainDateTime(result, 2000, 5, "M05", 2, 0, 0, 0, 0, 0, 0, "midnight is assumed");
-  assert.sameValue(result.calendar, calendar, "calendar result");
+  assert.sameValue(result.getCalendar(), calendar, "calendar result");
 });
 
 reportCompare(0, 0);
