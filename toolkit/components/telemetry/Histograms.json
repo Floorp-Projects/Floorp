@@ -663,6 +663,21 @@
     "releaseChannelCollection": "opt-out",
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
+  "FINGERPRINTING_PROTECTION_CANVAS_NOISE_CALCULATE_TIME_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": [
+      "tihuang@mozilla.com",
+      "tom@mozilla.com",
+      "tschuster@mozilla.com"
+    ],
+    "expires_in_version": "never",
+    "bug_numbers": [1838856],
+    "kind": "exponential",
+    "high": 600000,
+    "n_buckets": 100,
+    "description": "Counts how long to generate canvas random noises."
+  },
   "FORCED_DEVICE_RESET_REASON": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec"],

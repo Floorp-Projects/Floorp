@@ -24,6 +24,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Casting.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HelperMacros.h"
 #include "mozilla/Likely.h"
@@ -1296,10 +1297,17 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
     return NS_OK;
   }
 
+  auto timerId =
+      glean::fingerprinting_protection::canvas_noise_calculate_time.Start();
+
   nsTArray<uint8_t> canvasKey;
   nsresult rv = GenerateCanvasKeyFromImageData(aCookieJarSettings, aData, aSize,
                                                canvasKey);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    glean::fingerprinting_protection::canvas_noise_calculate_time.Cancel(
+        std::move(timerId));
+    return rv;
+  }
 
   // Calculate the number of pixels based on the given data size. One pixel uses
   // 4 bytes that contains ARGB information.
@@ -1351,6 +1359,9 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
 
     aData[idx] = aData[idx] ^ (bit & 0x1);
   }
+
+  glean::fingerprinting_protection::canvas_noise_calculate_time
+      .StopAndAccumulate(std::move(timerId));
 
   return NS_OK;
 }

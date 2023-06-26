@@ -1,0 +1,27 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Core :: Privacy: Anti-Tracking'
+
+fingerprinting.protection:
+  canvas_noise_calculate_time:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      Counts how long to generate canvas random noises.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838856
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1838856#c1
+    notification_emails:
+      - tihuang@mozilla.com
+      - tom@mozilla.com
+      - tschuster@mozilla.com
+    expires: never
+    telemetry_mirror: FINGERPRINTING_PROTECTION_CANVAS_NOISE_CALCULATE_TIME_MS
