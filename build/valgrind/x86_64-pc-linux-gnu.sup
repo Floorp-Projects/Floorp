@@ -222,8 +222,7 @@
    fun:_dl_catch_exception
    fun:_dl_catch_error
    fun:_dlerror_run
-   ...
-   fun:dlopen@@GLIBC_*
+   fun:dlopen@@GLIBC_2.2.5
    ...
 }
 {
