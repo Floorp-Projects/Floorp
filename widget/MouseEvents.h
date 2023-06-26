@@ -370,8 +370,6 @@ class WidgetDragEvent : public WidgetMouseEvent {
     mDefaultPreventedOnContent = aEvent.mDefaultPreventedOnContent;
   }
 
-  void UpdateDefaultPreventedOnContent(dom::EventTarget* aTarget);
-
   /**
    * Should be called before dispatching the DOM tree if this event is
    * synthesized for tests because drop effect is initialized before
