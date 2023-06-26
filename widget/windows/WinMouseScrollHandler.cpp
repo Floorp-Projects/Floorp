@@ -803,6 +803,7 @@ bool MouseScrollHandler::LastEventInfo::InitWheelEvent(
     // If the scroll delta mode isn't per line scroll, we shouldn't allow to
     // override the system scroll speed setting.
     aWheelEvent.mAllowToOverrideSystemScrollSpeed = false;
+#ifndef EARLY_BETA_OR_EARLIER
   } else if (!MouseScrollHandler::sInstance->mSystemSettings
                   .IsOverridingSystemScrollSpeedAllowed()) {
     // If the system settings are customized by either the user or
@@ -827,6 +828,7 @@ bool MouseScrollHandler::LastEventInfo::InitWheelEvent(
         aWheelEvent.mAllowToOverrideSystemScrollSpeed = false;
       }
     }
+#endif
   }
 
   MOZ_LOG(
@@ -1002,11 +1004,13 @@ void MouseScrollHandler::SystemSettings::TrustedScrollSettingsDriver() {
   // XXX We're not sure about other touchpad drivers...
 }
 
+#ifndef EARLY_BETA_OR_EARLIER
 bool MouseScrollHandler::SystemSettings::
     IsOverridingSystemScrollSpeedAllowed() {
   return mScrollLines == DefaultScrollLines() &&
          mScrollChars == DefaultScrollChars();
 }
+#endif
 
 /******************************************************************************
  *
