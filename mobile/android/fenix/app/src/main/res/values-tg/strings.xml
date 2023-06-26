@@ -636,6 +636,8 @@
     <string name="addon_already_installed">Ҷузъи иловагӣ аллакай насб карда шуд</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Идоракунии ҳисобҳо</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Ҳозир ҳамоҳанг кунед</string>
     <!-- Preference category for sync -->

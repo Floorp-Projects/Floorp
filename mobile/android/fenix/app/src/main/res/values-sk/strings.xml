@@ -370,13 +370,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">O aplikácii</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Zvoľte nejaký</string>
+    <string name="preferences_category_select_default_search_engine">Zvoľte nejaký</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Spravovať skratky vyhľadávania</string>
+    <string name="preferences_manage_search_shortcuts">Spravovať skratky vyhľadávania</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Upraviť vyhľadávače viditeľné v ponuke vyhľadávania</string>
+    <string name="preferences_manage_search_shortcuts_summary">Upraviť vyhľadávače viditeľné v ponuke vyhľadávania</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Vyhľadávače viditeľné v ponuke vyhľadávania</string>
+    <string name="preferences_category_engines_in_search_menu">Vyhľadávače viditeľné v ponuke vyhľadávania</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Predvolený vyhľadávač</string>
     <!-- Preference for settings related to Search -->
@@ -643,6 +643,8 @@
     <string name="addon_already_installed">Doplnok je už nainštalovaný</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Spravovať účet</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synchronizovať</string>
     <!-- Preference category for sync -->
@@ -1884,7 +1886,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Pridať vyhľadávač</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Pridať nový vyhľadávač</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Pridať nový vyhľadávač</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Upraviť vyhľadávač</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1899,17 +1901,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Iný</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Názov</string>
+    <string name="search_add_custom_engine_name_label">Názov</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Názov</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Názov vyhľadávača</string>
+    <string name="search_add_custom_engine_name_hint_2">Názov vyhľadávača</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Adresa URL vyhľadávacieho reťazca</string>
+    <string name="search_add_custom_engine_url_label">Adresa URL vyhľadávacieho reťazca</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Výraz vyhľadávania</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">Adresa URL, ktorá sa má použiť na vyhľadávanie</string>
+    <string name="search_add_custom_engine_search_string_hint_2">Adresa URL, ktorá sa má použiť na vyhľadávanie</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Nahraďte výraz s „%s“. Príklad:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1917,7 +1919,7 @@
     <string name="search_add_custom_engine_form_description">Podrobnosti vlastného vyhľadávača</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Uložiť</string>
+    <string name="search_custom_engine_save_button">Uložiť</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Zadajte názov vyhľadávača</string>

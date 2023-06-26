@@ -361,13 +361,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Davart</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Tscherner in\'opziun</string>
+    <string name="preferences_category_select_default_search_engine">Tscherner in\'opziun</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Administrar las scursanidas per tschertgas</string>
+    <string name="preferences_manage_search_shortcuts">Administrar las scursanidas per tschertgas</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Modifitgar las maschinas visiblas en il menu da tschertga</string>
+    <string name="preferences_manage_search_shortcuts_summary">Modifitgar las maschinas visiblas en il menu da tschertga</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Maschinas visiblas en il menu da tschertga</string>
+    <string name="preferences_category_engines_in_search_menu">Maschinas visiblas en il menu da tschertga</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Maschina da tschertgar da standard</string>
     <!-- Preference for settings related to Search -->
@@ -627,6 +627,8 @@
     <string name="addon_already_installed">Il supplement è gia installà</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Administrar il conto</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronisar ussa</string>
     <!-- Preference category for sync -->
@@ -1877,7 +1879,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Agiuntar ina maschina da tschertgar</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Agiuntar ina nova maschina da tschertgar</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Agiuntar ina nova maschina da tschertgar</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Modifitgar la maschina da tschertgar</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1892,25 +1894,25 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Auter</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Num</string>
+    <string name="search_add_custom_engine_name_label">Num</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Num</string>
 
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Num da la maschina da tschertgar</string>
+    <string name="search_add_custom_engine_name_hint_2">Num da la maschina da tschertgar</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">URL dal string da tschertga</string>
+    <string name="search_add_custom_engine_url_label">URL dal string da tschertga</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">String da tschertga per utilisar</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">Utilisar quest URL per la tschertga</string>
+    <string name="search_add_custom_engine_search_string_hint_2">Utilisar quest URL per la tschertga</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Remplazzar il term da tschertga cun «%s». Per exempel: \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Detagls da la maschina da tschertgar persunalisada</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Memorisar</string>
+    <string name="search_custom_engine_save_button">Memorisar</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Endatar il num da la maschina da tschertgar</string>
