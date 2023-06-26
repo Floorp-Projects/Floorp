@@ -118,6 +118,34 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
   virtual mozilla::ipc::IPCResult RecvPasteText(
       const uint64_t& aID, const int32_t& aPosition) override;
 
+  virtual mozilla::ipc::IPCResult RecvRestoreFocus() override;
+
+#if defined(XP_WIN)
+  bool SendCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset,
+                          const bool& aIsSelectionCollapsed,
+                          const bool& aIsAtEndOfLine,
+                          const int32_t& aGranularity);
+  bool SendFocusEvent(const uint64_t& aID);
+
+ private:
+  LayoutDeviceIntRect GetCaretRectFor(const uint64_t& aID);
+
+#else   // defined(XP_WIN)
+  virtual mozilla::ipc::IPCResult RecvScrollToPoint(const uint64_t& aID,
+                                                    const uint32_t& aScrollType,
+                                                    const int32_t& aX,
+                                                    const int32_t& aY) override;
+
+  virtual mozilla::ipc::IPCResult RecvAnnounce(
+      const uint64_t& aID, const nsAString& aAnnouncement,
+      const uint16_t& aPriority) override;
+
+  virtual mozilla::ipc::IPCResult RecvScrollSubstringToPoint(
+      const uint64_t& aID, const int32_t& aStartOffset,
+      const int32_t& aEndOffset, const uint32_t& aCoordinateType,
+      const int32_t& aX, const int32_t& aY) override;
+#endif  // defined(XP_WIN)
+
  protected:
   static void FlattenTree(LocalAccessible* aRoot,
                           nsTArray<LocalAccessible*>& aTree);
