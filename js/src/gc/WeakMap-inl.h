@@ -273,11 +273,11 @@ bool WeakMapBase::addImplicitEdges(gc::Cell* key, gc::Cell* delegate,
   gc::EphemeronEdge valueEdge{mapColor, value};
   if (p) {
     return p->value.append(valueEdge);
-  } else {
-    gc::EphemeronEdgeVector edges;
-    MOZ_ALWAYS_TRUE(edges.append(valueEdge));
-    return edgeTable.put(key, std::move(edges));
   }
+
+  gc::EphemeronEdgeVector edges;
+  MOZ_ALWAYS_TRUE(edges.append(valueEdge));
+  return edgeTable.put(key, std::move(edges));
 }
 
 template <class K, class V>

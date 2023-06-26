@@ -287,24 +287,24 @@ static inline bool ShouldMarkCrossCompartment(GCMarker* marker, JSObject* src,
     }
 
     return dstZone->isGCMarking();
-  } else {
-    // Check our sweep groups are correct as above.
-    MOZ_ASSERT_IF(!dst.isMarkedAny(), !dstZone->isGCSweeping());
-
-    if (dstZone->isGCMarkingBlackOnly()) {
-      /*
-       * The destination compartment is being not being marked gray now,
-       * but it will be later, so record the cell so it can be marked gray
-       * at the appropriate time.
-       */
-      if (!dst.isMarkedAny()) {
-        DelayCrossCompartmentGrayMarking(marker, src);
-      }
-      return false;
-    }
-
-    return dstZone->isGCMarkingBlackAndGray();
   }
+
+  // Check our sweep groups are correct as above.
+  MOZ_ASSERT_IF(!dst.isMarkedAny(), !dstZone->isGCSweeping());
+
+  if (dstZone->isGCMarkingBlackOnly()) {
+    /*
+     * The destination compartment is being not being marked gray now,
+     * but it will be later, so record the cell so it can be marked gray
+     * at the appropriate time.
+     */
+    if (!dst.isMarkedAny()) {
+      DelayCrossCompartmentGrayMarking(marker, src);
+    }
+    return false;
+  }
+
+  return dstZone->isGCMarkingBlackAndGray();
 }
 
 static bool ShouldTraceCrossCompartment(JSTracer* trc, JSObject* src,
