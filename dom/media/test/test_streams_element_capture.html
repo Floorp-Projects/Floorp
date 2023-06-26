@@ -98,8 +98,6 @@ async function startTest(test, token) {
   await SpecialPowers.pushPrefEnv(
     { "set": [
       ["privacy.reduceTimerPrecision", false],
-      // This test exhibits bug 1543980 with RDD enabled.
-      ["media.rdd-process.enabled", false],
     ]});
   let tests = gPlayTests;
   // Filter out bug1377278.webm due to bug 1541401.
