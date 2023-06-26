@@ -89,7 +89,7 @@ nsCString MapInternalContentPolicyTypeToDest(nsContentPolicyType aType) {
     case nsIContentPolicy::TYPE_INTERNAL_TRACK:
       return "track"_ns;
     case nsIContentPolicy::TYPE_WEBSOCKET:
-      return "websocket"_ns;
+      return "empty"_ns;
     case nsIContentPolicy::TYPE_CSP_REPORT:
       return "report"_ns;
     case nsIContentPolicy::TYPE_XSLT:

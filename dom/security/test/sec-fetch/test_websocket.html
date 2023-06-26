@@ -30,7 +30,7 @@ var script = SpecialPowers.loadChromeScript(() => {
     // Sec-Fetch-* Headers should be present for Dest, Mode, Site
     try {
       let secFetchDest = channel.getRequestHeader("Sec-Fetch-Dest");
-      is(secFetchDest, "websocket", "testing sec-fetch-dest");
+      is(secFetchDest, "empty", "testing sec-fetch-dest");
 
       let secFetchMode = channel.getRequestHeader("Sec-Fetch-Mode");
       is(secFetchMode, "websocket", "testing sec-fetch-mode");
