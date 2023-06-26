@@ -77,6 +77,8 @@ struct ShapeUtils final {
   // @param aRefBox the reference box of the inset.
   // @return The inset rect in app units.
   static nsRect ComputeInsetRect(const StyleBasicShape&, const nsRect& aRefBox);
+  static nsRect ComputeInsetRect(const StyleRect<LengthPercentage>& aStyleRect,
+                                 const nsRect& aRefBox);
 
   // Compute the radii for an inset.
   // @param aRefBox the reference box of the inset.
@@ -121,10 +123,24 @@ struct ShapeUtils final {
                                                       nscoord aAppUnitsPerPixel,
                                                       gfx::PathBuilder*);
 
-  // Compute a gfx::path from an inset.
+  // Compute a gfx::path from a StyleBasicShape which is an inset.
   // @param aRefBox the reference box of the inset.
   // @return The gfx::Path of this inset.
   static already_AddRefed<gfx::Path> BuildInsetPath(const StyleBasicShape&,
+                                                    const nsRect& aRefBox,
+                                                    nscoord aAppUnitsPerPixel,
+                                                    gfx::PathBuilder*);
+
+  // Compute a gfx::path from an inset rect and the round radii.
+  // @param aRadii the radii of the inset. It should be an array with length 8.
+  //               If it's nullptr, we don't have the valid radii.
+  // @param aRefBox the reference box of the inset.
+  // @return The gfx::Path of this inset.
+  //
+  // Note: we use nsTArray<nscoord> for radii because we use this type in layers
+  // message as well.
+  static already_AddRefed<gfx::Path> BuildInsetPath(const nsRect& aInsetRect,
+                                                    const nscoord aRadii[8],
                                                     const nsRect& aRefBox,
                                                     nscoord aAppUnitsPerPixel,
                                                     gfx::PathBuilder*);
