@@ -8,7 +8,6 @@ import { features } from "../utils/prefs";
 
 import { recordEvent } from "../utils/telemetry";
 import sourceQueue from "../utils/source-queue";
-import { getContext } from "../selectors";
 
 let actions;
 let commands;
@@ -27,7 +26,6 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
   sourceQueue.initialize(actions);
 
   const { descriptorFront } = commands;
-  const { targetFront } = targetCommand;
 
   // For tab, browser and webextension toolboxes, we want to enable watching for
   // worker targets as soon as the debugger is opened.
@@ -60,12 +58,6 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
     observeWasm: true,
   };
   await commands.threadConfigurationCommand.updateConfiguration(options);
-
-  // Select the top level target by default
-  await actions.selectThread(
-    getContext(store.getState()),
-    targetFront.threadFront.actor
-  );
 
   await targetCommand.watchTargets({
     types: targetCommand.ALL_TYPES,

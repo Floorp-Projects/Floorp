@@ -164,7 +164,7 @@ add_task(async function () {
     info(
       "Re-select the iframe thread, which is still paused on the original breakpoint"
     );
-    dbg.actions.selectThread(getContext(dbg), iframeThread);
+    dbg.actions.selectThread(iframeThread);
     await waitForPausedThread(dbg, iframeThread);
     await waitForSelectedSource(dbg, source);
     assertPausedAtSourceAndLine(dbg, source.id, 3);

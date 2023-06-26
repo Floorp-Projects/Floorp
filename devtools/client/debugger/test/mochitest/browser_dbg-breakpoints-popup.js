@@ -219,7 +219,7 @@ add_task(async function testPausedInTwoPopups() {
   );
 
   info("Resume the execution of the first popup");
-  await dbg.actions.selectThread(getContext(dbg), firstThread);
+  await dbg.actions.selectThread(firstThread);
   await resume(dbg);
   is(
     await isPopupPaused(firstPopupBrowsingContext),
