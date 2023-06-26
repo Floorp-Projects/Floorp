@@ -54,6 +54,9 @@ async function startTest(test, token) {
   vout.srcObject = stream;
   is(vout.srcObject, stream,
     `${token} set output element .srcObject correctly`);
+
+  isnot(stream.getTracks().length, 0, `${token} results in some tracks`);
+  const hadVideoTracks = stream.getVideoTracks().length >= 1;
   // Wait for the resource fetch algorithm to have run, so that the media
   // element is hooked up to the MediaStream and ready to go. If we don't do
   // this, we're not guaranteed to render the very first video frame, which
@@ -83,8 +86,7 @@ async function startTest(test, token) {
   is(vout.readyState, vout.HAVE_CURRENT_DATA,
     `${token} checking readyState`);
   ok(vout.ended, `${token} checking playback has ended`);
-  isnot(stream.getTracks().length, 0, `${token} results in some tracks`);
-  if (stream.getVideoTracks().length) {
+  if (hadVideoTracks) {
     ok(test.type.match(/^video/), `${token} is a video resource`);
     checkDrawImage(vout, `${token} checking video frame pixel has been drawn`);
   }
