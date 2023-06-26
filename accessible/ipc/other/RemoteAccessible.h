@@ -35,8 +35,6 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
   MOZ_COUNTED_DTOR(RemoteAccessible)
 
-#include "mozilla/a11y/RemoteAccessibleShared.h"
-
  protected:
   explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)
       : RemoteAccessibleBase(aThisAsDoc) {
