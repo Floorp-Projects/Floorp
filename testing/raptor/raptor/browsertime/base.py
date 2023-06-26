@@ -316,8 +316,6 @@ class Browsertime(Perftest):
             else str(self.post_startup_delay),
             "--iterations",
             str(browser_cycles),
-            "--videoParams.androidVideoWaitTime",
-            "20000",
             # running browsertime test in chimera mode
             "--browsertime.chimera",
             "true" if self.config["chimera"] else "false",
