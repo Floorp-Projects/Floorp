@@ -38,6 +38,12 @@ easier to analyze.
    exact same format as the MOZ_LOG environment variable (see below).
    Generally the default list is OK, unless a Mozilla developer has told
    you to modify it.
+
+   * For cookie issues, use presets ``Cookies``
+   * For WebSocket issues, use presets ``WebSockets``
+   * For HTTP/3 or QUIC issues, use presets ``HTTP/3``
+   * For other networking issues, use presets ``Networking``
+
 #. Click on Start Logging.
 #. Reproduce the bug (i.e. go to the web site that is broken for you and
    make the bug happen in the browser)
@@ -54,6 +60,12 @@ easier to analyze.
    all the logs to be uploaded--ask the developer if you're not sure.
 #. Pat yourself on the back--a job well done!  Thanks for helping us
    debug Firefox.
+
+.. note::
+
+   **Note:** The log may include sensitive data such as URLs and cookies.
+   To protect your privacy, we kindly request you to send the log file or
+   the profiler link directly and confidentially to necko@mozilla.com.
 
 Logging HTTP activity by manually setting environment variables
 ---------------------------------------------------------------

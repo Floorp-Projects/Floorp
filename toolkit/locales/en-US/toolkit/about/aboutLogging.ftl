@@ -34,6 +34,12 @@ about-logging-with-profiler-stacks-checkbox = Enable stack traces for log messag
 
 about-logging-preset-networking-label = Networking
 about-logging-preset-networking-description = Log modules to diagnose networking issues
+about-logging-preset-networking-cookie-label = Cookies
+about-logging-preset-networking-cookie-description = Log modules to diagnose cookie issues
+about-logging-preset-networking-websocket-label = WebSockets
+about-logging-preset-networking-websocket-description = Log modules to diagnose WebSocket issues
+about-logging-preset-networking-http3-label = HTTP/3
+about-logging-preset-networking-http3-description = Log modules to diagnose HTTP/3 and QUIC issues
 about-logging-preset-media-playback-label = Media playback
 about-logging-preset-media-playback-description = Log modules to diagnose media playback issues (not video-conferencing issues)
 about-logging-preset-webrtc-label = WebRTC

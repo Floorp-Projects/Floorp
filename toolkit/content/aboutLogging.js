@@ -62,6 +62,29 @@ const gLoggingPresets = {
     },
     profilerPreset: "networking",
   },
+  cookie: {
+    modules: "timestamp,sync,nsHttp:5,cache2:5,cookie:5",
+    l10nIds: {
+      label: "about-logging-preset-networking-cookie-label",
+      description: "about-logging-preset-networking-cookie-description",
+    },
+  },
+  websocket: {
+    modules:
+      "timestamp,sync,nsHttp:5,nsWebSocket:5,nsSocketTransport:5,nsHostResolver:5",
+    l10nIds: {
+      label: "about-logging-preset-networking-websocket-label",
+      description: "about-logging-preset-networking-websocket-description",
+    },
+  },
+  http3: {
+    modules:
+      "timestamp,sync,nsHttp:5,nsSocketTransport:5,nsHostResolver:5,neqo_http3::*:5,neqo_transport::*:5",
+    l10nIds: {
+      label: "about-logging-preset-networking-http3-label",
+      description: "about-logging-preset-networking-http3-description",
+    },
+  },
   "media-playback": {
     modules:
       "HTMLMediaElement:4,HTMLMediaElementEvents:4,cubeb:5,PlatformDecoderModule:5,AudioSink:5,AudioSinkWrapper:5,MediaDecoderStateMachine:4,MediaDecoder:4,MediaFormatReader:5",
