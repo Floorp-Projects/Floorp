@@ -10,8 +10,6 @@ const CUSTOM_FORMATTED_BODY = "customFormattedBody";
 const VARIABLE_NAME = "xyz";
 
 add_task(async function () {
-  // TODO: This preference can be removed once the custom formatters feature is stable enough
-  await pushPref("devtools.custom-formatters", true);
   await pushPref("devtools.custom-formatters.enabled", true);
 
   const dbg = await initDebugger(TEST_FILENAME);
