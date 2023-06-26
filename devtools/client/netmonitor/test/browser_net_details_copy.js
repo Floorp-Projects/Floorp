@@ -116,6 +116,7 @@ add_task(async function () {
       Version: "HTTP/1.1",
       Transferred: "650 B (465 B size)",
       "Request Priority": "Highest",
+      "DNS Resolution": "System",
     },
     null,
     "\t"
