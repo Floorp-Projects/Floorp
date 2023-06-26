@@ -323,8 +323,10 @@ NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  if ((aWhichClipboard != kGlobalClipboard && aWhichClipboard != kFindClipboard) || !aTransferable)
-    return NS_ERROR_FAILURE;
+  MOZ_DIAGNOSTIC_ASSERT(aTransferable);
+  // XXX we only support the set operation on kSelectionCache type, see bug 1835059.
+  MOZ_DIAGNOSTIC_ASSERT(kSelectionCache != aWhichClipboard);
+  MOZ_DIAGNOSTIC_ASSERT(nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
 
   NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard);
   if (!cocoaPasteboard) {
@@ -335,34 +337,9 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
   // conversion)
   nsTArray<nsCString> flavors;
   nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-  // If we were the last ones to put something on the pasteboard, then just use the cached
-  // transferable. Otherwise clear it because it isn't relevant any more.
-  if (mCachedClipboard == aWhichClipboard) {
-    const auto& clipboardCache = mCaches[aWhichClipboard];
-    MOZ_ASSERT(clipboardCache);
-    if (mChangeCount == [cocoaPasteboard changeCount]) {
-      if (nsITransferable* cachedTrans = clipboardCache->GetTransferable()) {
-        for (uint32_t i = 0; i < flavors.Length(); i++) {
-          nsCString& flavorStr = flavors[i];
-
-          nsCOMPtr<nsISupports> dataSupports;
-          rv = cachedTrans->GetTransferData(flavorStr.get(), getter_AddRefs(dataSupports));
-          if (NS_SUCCEEDED(rv)) {
-            aTransferable->SetTransferData(flavorStr.get(), dataSupports);
-            return NS_OK;  // maybe try to fill in more types? Is there a point?
-          }
-        }
-      }
-    } else {
-      // Remove transferable cache only. Don't clear system clipboard.
-      clipboardCache->Clear();
-    }
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
   }
-
-  // at this point we can't satisfy the request from cache data so let's look
-  // for things other people put on the system clipboard
 
   return nsClipboard::TransferableFromPasteboard(aTransferable, cocoaPasteboard);
 

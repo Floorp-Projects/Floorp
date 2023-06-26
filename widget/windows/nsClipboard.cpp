@@ -1318,16 +1318,14 @@ bool nsClipboard ::IsInternetShortcut(const nsAString& inFileName) {
 NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) {
+  MOZ_DIAGNOSTIC_ASSERT(aTransferable);
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+
   MOZ_LOG(gWin32ClipboardLog, LogLevel::Debug,
           ("%s aWhichClipboard=%i", __FUNCTION__, aWhichClipboard));
 
-  // make sure we have a good transferable
-  if (!aTransferable || aWhichClipboard != kGlobalClipboard) {
-    return NS_ERROR_FAILURE;
-  }
-
   nsresult res;
-
   // This makes sure we can use the OLE functionality for the clipboard
   IDataObject* dataObj;
   if (S_OK == RepeatedlyTryOleGetClipboard(&dataObj)) {
