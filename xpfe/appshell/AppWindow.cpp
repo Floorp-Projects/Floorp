@@ -2700,7 +2700,7 @@ void AppWindow::SizeShell() {
   if (nsContentUtils::ShouldResistFingerprinting(
           "if RFP is enabled we want to round the dimensions of the new"
           "new pop up window regardless of their origin",
-          RFPTarget::Unknown) &&
+          RFPTarget::RoundWindowSize) &&
       windowType.EqualsLiteral("navigator:browser")) {
     // Once we've got primary content, force dimensions.
     if (mPrimaryContentShell || mPrimaryBrowserParent) {
