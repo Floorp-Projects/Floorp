@@ -498,7 +498,7 @@ JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   MOZ_ASSERT(!src->is<PlainObject>());
 
   AllocKind dstKind = src->allocKindForTenure(nursery());
-  auto dst = allocTenured<JSObject>(src->nurseryZone(), dstKind);
+  auto* dst = allocTenured<JSObject>(src->nurseryZone(), dstKind);
 
   size_t srcSize = Arena::thingSize(dstKind);
 
@@ -569,7 +569,7 @@ inline JSObject* js::gc::TenuringTracer::movePlainObjectToTenured(
   MOZ_ASSERT(IsInsideNursery(src));
 
   AllocKind dstKind = src->allocKindForTenure();
-  auto dst = allocTenured<PlainObject>(src->nurseryZone(), dstKind);
+  auto* dst = allocTenured<PlainObject>(src->nurseryZone(), dstKind);
 
   size_t srcSize = Arena::thingSize(dstKind);
   tenuredSize += srcSize;

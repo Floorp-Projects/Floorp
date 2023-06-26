@@ -394,7 +394,7 @@ void* ArenaLists::refillFreeListAndAllocate(
 
 inline void* FreeLists::setArenaAndAllocate(Arena* arena, AllocKind kind) {
 #ifdef DEBUG
-  auto old = freeLists_[kind];
+  auto* old = freeLists_[kind];
   if (!old->isEmpty()) {
     old->getArena()->checkNoMarkedFreeCells();
   }

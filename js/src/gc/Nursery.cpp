@@ -2055,14 +2055,14 @@ bool js::Nursery::isSubChunkMode() const {
 }
 
 void js::Nursery::sweepMapAndSetObjects() {
-  auto gcx = runtime()->gcContext();
+  auto* gcx = runtime()->gcContext();
 
-  for (auto mapobj : mapsWithNurseryMemory_) {
+  for (auto* mapobj : mapsWithNurseryMemory_) {
     MapObject::sweepAfterMinorGC(gcx, mapobj);
   }
   mapsWithNurseryMemory_.clearAndFree();
 
-  for (auto setobj : setsWithNurseryMemory_) {
+  for (auto* setobj : setsWithNurseryMemory_) {
     SetObject::sweepAfterMinorGC(gcx, setobj);
   }
   setsWithNurseryMemory_.clearAndFree();

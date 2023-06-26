@@ -106,7 +106,7 @@ class alignas(TypicalCacheLineSize) Nursery {
   // slower than IsInsideNursery(Cell*), but works on all types of pointers.
   MOZ_ALWAYS_INLINE bool isInside(gc::Cell* cellp) const = delete;
   MOZ_ALWAYS_INLINE bool isInside(const void* p) const {
-    for (auto chunk : chunks_) {
+    for (auto* chunk : chunks_) {
       if (uintptr_t(p) - uintptr_t(chunk) < gc::ChunkSize) {
         return true;
       }

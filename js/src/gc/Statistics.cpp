@@ -244,7 +244,7 @@ inline auto AllPhases() {
 
 void Statistics::gcDuration(TimeDuration* total, TimeDuration* maxPause) const {
   *total = *maxPause = 0;
-  for (auto& slice : slices_) {
+  for (const auto& slice : slices_) {
     *total += slice.duration();
     if (slice.duration() > *maxPause) {
       *maxPause = slice.duration();
@@ -1558,8 +1558,8 @@ double Statistics::computeMMU(TimeDuration window) const {
 
   int startIndex = 0;
   for (size_t endIndex = 1; endIndex < slices_.length(); endIndex++) {
-    auto* startSlice = &slices_[startIndex];
-    auto& endSlice = slices_[endIndex];
+    const auto* startSlice = &slices_[startIndex];
+    const auto& endSlice = slices_[endIndex];
     gc += endSlice.end - endSlice.start;
 
     while (endSlice.end - startSlice->end >= window) {

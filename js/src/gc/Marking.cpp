@@ -584,11 +584,11 @@ void js::TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, Cell** thingp,
     return;
   }
 
-  auto traced = MapGCThingTyped(thing, thing->getTraceKind(),
-                                [trc, name](auto t) -> Cell* {
-                                  TraceManuallyBarrieredEdge(trc, &t, name);
-                                  return t;
-                                });
+  auto* traced = MapGCThingTyped(thing, thing->getTraceKind(),
+                                 [trc, name](auto t) -> Cell* {
+                                   TraceManuallyBarrieredEdge(trc, &t, name);
+                                   return t;
+                                 });
   if (traced != thing) {
     *thingp = traced;
   }
