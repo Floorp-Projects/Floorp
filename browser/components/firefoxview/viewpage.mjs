@@ -4,6 +4,13 @@
 
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/firefoxview/card-container.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/firefoxview/fxview-empty-state.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/firefoxview/fxview-tab-list.mjs";
+
 export class ViewPage extends MozLitElement {
   static get properties() {
     return {

@@ -18,6 +18,8 @@ browser.jar:
     content/browser/firefoxview/fxview-category-button.css
     content/browser/firefoxview/fxview-category-navigation.css
     content/browser/firefoxview/fxview-category-navigation.mjs
+    content/browser/firefoxview/fxview-empty-state.css
+    content/browser/firefoxview/fxview-empty-state.mjs
     content/browser/firefoxview/helpers.mjs
     content/browser/firefoxview/fxview-tab-list.css
     content/browser/firefoxview/fxview-tab-list.mjs
