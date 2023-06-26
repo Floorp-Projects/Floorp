@@ -72,6 +72,19 @@ ITEM_VALUE(UseStandinsForNativeColors,  1llu << 47)
 ITEM_VALUE(AudioContext,                1llu << 48)
 ITEM_VALUE(MediaError,                  1llu << 49)
 ITEM_VALUE(DOMStyleOsxFontSmoothing,    1llu << 50)
+// `device-height`/`device-width` CSS media features
+ITEM_VALUE(CSSDeviceSize,               1llu << 51)
+// `color`/`color-gamut` CSS media features
+ITEM_VALUE(CSSColorInfo,                1llu << 52)
+// `resolution` CSS media feature
+ITEM_VALUE(CSSResolution,               1llu << 53)
+// `prefers-reduced-transparency` CSS media feature
+ITEM_VALUE(CSSPrefersReducedTransparency, 1llu << 54)
+// `inverted-colors` CSS media feature
+ITEM_VALUE(CSSInvertedColors,           1llu << 55)
+// `video-dynamic-range` CSS media feature
+ITEM_VALUE(CSSVideoDynamicRange,        1llu << 56)
+ITEM_VALUE(CSSPointerCapabilities,      1llu << 57)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
