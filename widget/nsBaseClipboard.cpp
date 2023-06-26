@@ -293,8 +293,67 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
 NS_IMETHODIMP
 nsBaseClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                         int32_t aWhichClipboard,
-                                        bool* outResult) {
-  *outResult = true;  // say we always do.
+                                        bool* aOutResult) {
+  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
+  if (CLIPBOARD_LOG_ENABLED()) {
+    CLIPBOARD_LOG("    Asking for content clipboard=%i:\n", aWhichClipboard);
+    for (const auto& flavor : aFlavorList) {
+      CLIPBOARD_LOG("        MIME %s", flavor.get());
+    }
+  }
+
+  *aOutResult = false;
+
+  // XXX as of now, we only support the set operation on kSelectionCache type,
+  // should we also support the get operation? See also bug 1835059.
+  if (kSelectionCache == aWhichClipboard ||
+      !nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
+    CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
+                  aWhichClipboard);
+    // XXX should we return a error instead?
+    return NS_OK;
+  }
+
+  if (mozilla::StaticPrefs::widget_clipboard_use_cached_data_enabled()) {
+    if (auto* clipboardCache = GetClipboardCacheIfValid(aWhichClipboard)) {
+      MOZ_ASSERT(clipboardCache->GetTransferable());
+
+      // first see if we have data for this in our cached transferable
+      nsTArray<nsCString> transferableFlavors;
+      nsresult rv =
+          clipboardCache->GetTransferable()->FlavorsTransferableCanImport(
+              transferableFlavors);
+      if (NS_SUCCEEDED(rv)) {
+        if (CLIPBOARD_LOG_ENABLED()) {
+          CLIPBOARD_LOG("    Cached transferable types (nums %zu)\n",
+                        transferableFlavors.Length());
+          for (const auto& transferableFlavor : transferableFlavors) {
+            CLIPBOARD_LOG("        MIME %s", transferableFlavor.get());
+          }
+        }
+
+        for (const auto& transferableFlavor : transferableFlavors) {
+          for (const auto& flavor : aFlavorList) {
+            if (transferableFlavor.Equals(flavor)) {
+              CLIPBOARD_LOG("    has %s", flavor.get());
+              *aOutResult = true;
+              return NS_OK;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  auto resultOrError =
+      HasNativeClipboardDataMatchingFlavors(aFlavorList, aWhichClipboard);
+  if (resultOrError.isErr()) {
+    CLIPBOARD_LOG("%s: checking native clipboard data matching flavors falied.",
+                  __FUNCTION__);
+    return resultOrError.unwrapErr();
+  }
+
+  *aOutResult = resultOrError.unwrap();
   return NS_OK;
 }
 

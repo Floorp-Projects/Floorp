@@ -34,9 +34,6 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
   NS_DECL_NSIOBSERVER
 
   // nsIClipboard
-  NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
-                                    int32_t aWhichClipboard,
-                                    bool* _retval) override;
   NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
 
   // Internal Native Routines
@@ -84,6 +81,8 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
                                     int32_t aWhichClipboard) override;
   mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
       int32_t aWhichClipboard) override;
+  mozilla::Result<bool, nsresult> HasNativeClipboardDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
 
   static bool IsInternetShortcut(const nsAString& inFileName);
   static bool FindURLFromLocalFile(IDataObject* inDataObject, UINT inIndex,
