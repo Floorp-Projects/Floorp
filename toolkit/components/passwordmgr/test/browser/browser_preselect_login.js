@@ -181,3 +181,35 @@ add_task(
     );
   }
 );
+
+add_task(async function test_new_login_url_has_correct_hash() {
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: "about:logins",
+    },
+    async function (gBrowser) {
+      await SpecialPowers.spawn(gBrowser, [], async () => {
+        const loginItem = content.document.querySelector("login-item");
+        const loginList =
+          content.document.querySelector("login-list").shadowRoot;
+        const createLoginButton = loginList.querySelector(
+          "button.create-login-button"
+        );
+
+        createLoginButton.click();
+
+        await ContentTaskUtils.waitForCondition(
+          () => loginItem.dataset.isNewLogin,
+          "Wait for login item to enter new login mode"
+        );
+
+        Assert.equal(
+          content.location.hash,
+          "",
+          "Location hash should be empty"
+        );
+      });
+    }
+  );
+});
