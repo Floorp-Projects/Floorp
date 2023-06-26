@@ -238,8 +238,7 @@ nsresult TaskQueue::Runner::Run() {
       mon.NotifyAll();
       return NS_OK;
     }
-    event = std::move(mQueue->mTasks.FirstElement());
-    mQueue->mTasks.Pop();
+    event = mQueue->mTasks.Pop();
   }
   MOZ_ASSERT(event.event);
 
