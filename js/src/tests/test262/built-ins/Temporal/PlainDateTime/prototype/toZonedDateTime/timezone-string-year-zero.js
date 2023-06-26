@@ -19,11 +19,6 @@ invalidStrings.forEach((timeZone) => {
     () => instance.toZonedDateTime(timeZone),
     "reject minus zero as extended year"
   );
-  assert.throws(
-    RangeError,
-    () => instance.toZonedDateTime({ timeZone }),
-    "reject minus zero as extended year (nested property)"
-  );
 });
 
 reportCompare(0, 0);

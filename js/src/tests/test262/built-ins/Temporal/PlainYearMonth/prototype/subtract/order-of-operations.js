@@ -50,9 +50,13 @@ const expected = [
   "get this.calendar.year",
   "call this.calendar.year",
   // CalendarDaysInMonth
-  "get this.calendar.daysInMonth",
-  "call this.calendar.daysInMonth",
-  // CalendarDateFromFields
+  "get this.calendar.dateFromFields",
+  "call this.calendar.dateFromFields",
+  "get this.calendar.dateAdd",
+  "call this.calendar.dateAdd",
+  "call this.calendar.dateAdd",
+  "get this.calendar.day",
+  "call this.calendar.day",
   "get this.calendar.dateFromFields",
   "call this.calendar.dateFromFields",
   // CopyDataProperties
@@ -60,7 +64,6 @@ const expected = [
   "getOwnPropertyDescriptor options.overflow",
   "get options.overflow",
   // CalendarDateAdd
-  "get this.calendar.dateAdd",
   "call this.calendar.dateAdd",
   // inside Calendar.p.dateAdd
   "get options.overflow",

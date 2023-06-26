@@ -10,6 +10,6 @@ features: [Temporal]
 
 const dt = Temporal.Now.plainDateTime("gregory");
 assert(dt instanceof Temporal.PlainDateTime);
-assert.sameValue(dt.calendar.id, "gregory");
+assert.sameValue(dt.calendarId, "gregory");
 
 reportCompare(0, 0);

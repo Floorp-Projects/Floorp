@@ -20,6 +20,6 @@ TemporalHelpers.assertPlainDateTime(
   "works"
 );
 
-assert.sameValue(result.calendar, calendar, "underlying calendar is unchanged");
+assert.sameValue(result.getCalendar(), calendar, "underlying calendar is unchanged");
 
 reportCompare(0, 0);

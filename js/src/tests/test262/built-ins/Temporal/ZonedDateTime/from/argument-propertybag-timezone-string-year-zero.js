@@ -18,11 +18,6 @@ invalidStrings.forEach((timeZone) => {
     () => Temporal.ZonedDateTime.from({ year: 2000, month: 5, day: 2, timeZone }),
     "reject minus zero as extended year"
   );
-  assert.throws(
-    RangeError,
-    () => Temporal.ZonedDateTime.from({ year: 2000, month: 5, day: 2, timeZone: { timeZone } }),
-    "reject minus zero as extended year (nested property)"
-  );
 });
 
 reportCompare(0, 0);

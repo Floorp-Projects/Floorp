@@ -13,6 +13,6 @@ const calendar = new Temporal.Calendar("iso8601");
 const pd = new Temporal.PlainDate(1970, 12, 24, calendar);
 const pym = pd.toPlainYearMonth();
 TemporalHelpers.assertPlainYearMonth(pym, 1970, 12, "M12");
-assert.sameValue(pym.calendar, calendar);
+assert.sameValue(pym.getISOFields().calendar, "iso8601");
 
 reportCompare(0, 0);

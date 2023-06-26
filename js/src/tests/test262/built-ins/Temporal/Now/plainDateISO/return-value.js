@@ -10,6 +10,6 @@ features: [Temporal]
 
 const d = Temporal.Now.plainDateISO();
 assert(d instanceof Temporal.PlainDate);
-assert.sameValue(d.calendar.id, "iso8601");
+assert.sameValue(d.getISOFields().calendar, "iso8601", "calendar slot should store a string");
 
 reportCompare(0, 0);

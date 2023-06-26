@@ -11,6 +11,6 @@ features: [Temporal]
 const arg = "iSo8601";
 
 const result = new Temporal.PlainDateTime(2000, 5, 2, 15, 23, 30, 987, 654, 321, arg);
-assert.sameValue(result.calendar.id, "iso8601", "Calendar is case-insensitive");
+assert.sameValue(result.calendarId, "iso8601", "Calendar is case-insensitive");
 
 reportCompare(0, 0);

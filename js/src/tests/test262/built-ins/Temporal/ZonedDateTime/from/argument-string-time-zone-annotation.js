@@ -27,7 +27,7 @@ tests.forEach(([arg, expectedZone, description]) => {
   const result = Temporal.ZonedDateTime.from(arg);
 
   assert.sameValue(
-    result.timeZone.toString(),
+    result.timeZoneId,
     expectedZone,
     `time zone annotation (${description})`
   );

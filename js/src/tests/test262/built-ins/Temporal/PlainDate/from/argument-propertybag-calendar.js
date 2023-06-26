@@ -12,6 +12,6 @@ features: [Temporal]
 const calendar = new Temporal.Calendar("iso8601");
 const plainDate = Temporal.PlainDate.from({ year: 1976, month: 11, day: 18, calendar });
 TemporalHelpers.assertPlainDate(plainDate, 1976, 11, "M11", 18);
-assert.sameValue(plainDate.calendar, calendar);
+assert.sameValue(plainDate.getISOFields().calendar, "iso8601", "calendar slot should store a string");
 
 reportCompare(0, 0);

@@ -9,6 +9,8 @@ features: [Temporal]
 
 var calls = [];
 var timeZone = {
+  id: 'Etc/Test',
+  getPossibleInstantsFor() { return []; },
   getOffsetNanosecondsFor: function() {
     calls.push({
       args: arguments,

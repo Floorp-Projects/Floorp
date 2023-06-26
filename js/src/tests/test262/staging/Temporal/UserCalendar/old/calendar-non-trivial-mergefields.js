@@ -12,6 +12,9 @@ class CenturyCalendar extends Temporal.Calendar {
   constructor() {
     super("iso8601");
   }
+  get id() {
+    return 'century';
+  }
   toString() {
     return "century";
   }
@@ -43,21 +46,23 @@ class CenturyCalendar extends Temporal.Calendar {
     return super.dateFromFields({
       ...fields,
       year: isoYear
-    }, options);
+    }, options).withCalendar(this);
   }
   yearMonthFromFields(fields, options) {
-    var isoYear = this._validateFields(fields);
-    return super.yearMonthFromFields({
+    var year = this._validateFields(fields);
+    const { isoYear, isoMonth, isoDay } = super.yearMonthFromFields({
       ...fields,
-      year: isoYear
-    }, options);
+      year,
+    }, options).getISOFields();
+    return new Temporal.PlainYearMonth(isoYear, isoMonth, this, isoDay);
   }
   monthDayFromFields(fields, options) {
-    var isoYear = this._validateFields(fields);
-    return super.monthDayFromFields({
+    var year = this._validateFields(fields);
+    const { isoYear, isoMonth, isoDay } = super.monthDayFromFields({
       ...fields,
-      year: isoYear
-    }, options);
+      year,
+    }, options).getISOFields();
+    return new Temporal.PlainMonthDay(isoMonth, isoDay, this, isoYear);
   }
   fields(fields) {
     fields = fields.slice();
@@ -93,13 +98,13 @@ var zoned = new Temporal.ZonedDateTime(1568505600000000000n, "UTC", calendar);
 var propDesc = {
   century: {
     get() {
-      return this.calendar.century(this);
+      return this.getCalendar().century(this);
     },
     configurable: true
   },
   centuryYear: {
     get() {
-      return this.calendar.centuryYear(this);
+      return this.getCalendar().centuryYear(this);
     },
     configurable: true
   }

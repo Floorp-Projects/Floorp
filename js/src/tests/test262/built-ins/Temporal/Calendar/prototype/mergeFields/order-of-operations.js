@@ -22,8 +22,8 @@ const expected = [
   "get fields.extra",
   // CopyDataProperties on additionalFields
   "ownKeys additionalFields",
-  "getOwnPropertyDescriptor additionalFields.3",
-  "get additionalFields.3",
+  "getOwnPropertyDescriptor additionalFields[3]",
+  "get additionalFields[3]",
   "getOwnPropertyDescriptor additionalFields.monthCode",
   "get additionalFields.monthCode",
   "getOwnPropertyDescriptor additionalFields[Symbol('extra')]",

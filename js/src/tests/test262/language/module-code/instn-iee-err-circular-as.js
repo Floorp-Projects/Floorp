@@ -21,9 +21,11 @@ info: |
           i. Assert: this is a circular import request.
           ii. Return null.
 negative:
-  phase: runtime
+  phase: resolution
   type: SyntaxError
 flags: [module]
 ---*/
+
+$DONOTEVALUATE();
 
 export { x as y } from './instn-iee-err-circular_FIXTURE.js';
