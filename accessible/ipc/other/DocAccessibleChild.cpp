@@ -35,18 +35,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvAnnounce(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvAddToSelection(
-    const uint64_t& aID, const int32_t& aStartOffset, const int32_t& aEndOffset,
-    bool* aSucceeded) {
-  *aSucceeded = false;
-  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
-  if (acc && acc->IsTextRole()) {
-    *aSucceeded = acc->AddToSelection(aStartOffset, aEndOffset);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollSubstringToPoint(
     const uint64_t& aID, const int32_t& aStartOffset, const int32_t& aEndOffset,
     const uint32_t& aCoordinateType, const int32_t& aX, const int32_t& aY) {

@@ -41,10 +41,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
       const uint64_t& aID, const nsAString& aAnnouncement,
       const uint16_t& aPriority) override;
 
-  virtual mozilla::ipc::IPCResult RecvAddToSelection(
-      const uint64_t& aID, const int32_t& aStartOffset,
-      const int32_t& aEndOffset, bool* aSucceeded) override;
-
   virtual mozilla::ipc::IPCResult RecvScrollSubstringToPoint(
       const uint64_t& aID, const int32_t& aStartOffset,
       const int32_t& aEndOffset, const uint32_t& aCoordinateType,
