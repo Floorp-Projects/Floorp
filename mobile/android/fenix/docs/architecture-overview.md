@@ -2,79 +2,140 @@
 
 ### Unidirectional data flow
 
-Firefox Preview's presentation layer architecture is based on the concept of "unidirectional data flow." This is a popular approach in client side development, especially on the web, and is core to Redux, MVI, Elm Architecture, and Flux.  Our architecture is not identical to any of these (and they are not identical to each other), but the base concepts are the same. For a basic understanding of the motivations and approach, see [the official Redux docs](https://redux.js.org/basics/data-flow).  For an article on when unidirectional data flow is and is not a good approach, see [this](https://medium.com/swlh/the-case-for-flux-379b7d1982c6). These are both written from the perspective of React.js developers, but the concepts are largely the same.
+Firefox for Android's presentation layer architecture is based on the concept of "unidirectional data flow." This is a popular approach in client side development, especially on the web, and is core to Redux, MVI, Elm Architecture, and Flux.  Our architecture is not identical to any of these (and they are not identical to each other), but the base concepts are the same. For a basic understanding of the motivations and approach, see [the official Redux docs](https://redux.js.org/basics/data-flow).  For an article on when unidirectional data flow is and is not a good approach, see [this](https://medium.com/swlh/the-case-for-flux-379b7d1982c6). These are both written from the perspective of React.js developers, but the concepts are largely the same.
 
-Our largest deviation from these architectures is that while they each recommend one large, global store of data, we have a single store per screen. This carries both benefits and drawbacks, both of which will be covered later in this document.
+Our largest deviation from these architectures is that while they each recommend one large, global store of data, we have a single store per screen and several other global stores. This carries both benefits and drawbacks, which will be covered later in this document.
 
-### Important objects
+### Important types
 
-### <a name="store"/>Store
-#### Overview
-A store of state
+### <a name="store">Store</a>
 
-See [mozilla.components.lib.state.Store](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt)
+#### **Overview**
 
-Pushes changes to: [View](#view)
+A store of State.
 
-Receives [Actions](#action) from: [Controller](#controller)
+See [mozilla.components.lib.state.Store](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt)
 
-#### Description
-Maintains a [State](#state) object and a [Reducer](#reducer). Whenever the Store receives a new [Action](#action) via `store.dispatch(action)`, it calls the [Reducer](#reducer) with the previous state and the new action. The result is then stored as the new State, and published to all consumers of the store.
+Holds app State. 
 
-It is recommended that consumers rely as much as possible on `consumeFrom(store)`, rather than querying `store.state`. `consumeBy` is called any time state is updated, ensuring that the most up to date data is always used. This can prevent subtle bugs around call order, as all observers are notified of the same state change before a new change is applied.
+Receives [Actions](#action), which are used to compute new State using [Reducers](#reducer) and can have [Middlewares](#middleware) attached which respond to and manipulate actions.
 
-Note that there is one Store for any given screen, and only one will be active at any given time. Stores are persisted across configuration changes, but created and destroyed during fragment transactions. This means that data that must be shared across Stores must be passed as arguments to the new fragment.
+#### **Description**
+Maintains a [State](#state), a [Reducer](#reducer) to compute new State, and [Middleware](#middleware). Whenever the Store receives a new [Action](#action) via `store.dispatch(action)`, it will first pass the action through its chain of [Middleware](#middleware). These middleware can initiate side-effects in response, or even consume or change the action. Finally, the Store computes new State using previous State and the new action in the [Reducer](#reducer). The result is then stored as the new State, and published to all consumers of the store.
 
-Stores should be created using [StoreProvider#get](https://github.com/mozilla-mobile/fenix/blob/main/app/src/main/java/org/mozilla/fenix/components/StoreProvider.kt).
+It is recommended that consumers rely as much as possible on observing State updates from the store instead of reading State directly. This ensures that the most up to date State is always used. This can prevent subtle bugs around call order, as all observers are notified of the same State change before a new change is applied.
 
--------
+There are several global stores like `AppStore` and `BrowserStore`, as well as Stores scoped to individual screens. Screen-based Stores can be persisted across configuration changes, but are generally created and destroyed during fragment transactions. This means that data that must be shared across Stores should be lifted to a global Store or should be passed as arguments to the new fragment.
 
-### <a name="action"/>Action
-#### Overview
-Simple description of a state change
-
-See [mozilla.components.lib.state.Action](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/state/src/main/java/mozilla/components/lib/state/Action.kt)
-
-Created by: [Controller](#controller)
-
-Is pushed to: [Store](#store)
-
-#### Description
-Simple data object that carries information about a [State](#state) change to a [Store](#store).  An Action describes _something that happened_, and carries any data relevant to that change. For example, `AccountSettingsFragmentAction.SyncFailed(val time: Long)`, which describes a sync that failed at a specific time.
+Screen-based Stores should be created using [StoreProvider.get](https://github.com/mozilla-mobile/firefox-android/blob/main/fenix/app/src/main/java/org/mozilla/fenix/components/StoreProvider.kt).
 
 -------
 
-### <a name="state"/>State
-#### Overview
-Description of the state of a screen
+### <a name="state">State</a>
+#### **Overview**
+Description of the state of a screen or other area of the app.
 
-See [mozilla.components.lib.state.State](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/state/src/main/java/mozilla/components/lib/state/State.kt)
+See [mozilla.components.lib.state.State](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/components/lib/state/src/main/java/mozilla/components/lib/state/State.kt)
 
-Referenced by: [Store](#store)
-
-#### Description
-Simple, immutable data object that contains all of the backing data required to display a screen. This does not include style details like colors and view sizes, which are handled by the [View](#view).
+#### **Description**
+Simple, immutable data object that contains all of the backing data required to display a screen. This should ideally only include Kotlin/Java data types which can be easily tested, avoiding Android platform types. This is especially true of large, expensive types like `Context` or `View` which should never be included in State.
 
 As much as possible, the State object should be an accurate, 1:1 representation of what is actually shown on the screen. That is to say, the screen should look exactly the same any time a State with the same values is emitted, regardless of any previous changes. This is not always possible as Android UI elements are very stateful, but it is a good goal to aim for.
 
 One major benefit of rendering a screen based on a State object is its impact on testing. UI tests are notoriously difficult to build and maintain. If we are able to build a simple, reproducible [View](#view) (i.e., if we can trust that the View will render as expected), that allows us to test our UI by verifying the correctness of our State object.
 
-This also gives us a major advantage when debugging. If the UI looks wrong, check the State object. If it's correct, the problem is in the View binding. If not, check that the correct [Action](#action) was sent. If so, the problem is in the reducer. If not, check the [Controller](#controller) that sent the Action. This helps us quickly narrow down problems.
+This also gives us a major advantage when debugging. If the UI looks wrong, check the State object. If it's correct, the problem is in the View. If not, check that the correct [Action](#action) was sent. If so, the problem is in the reducer. If not, check the component that sent the Action. This helps us quickly narrow down problems.
 
 -------
 
-### <a name="reducer"/>Reducer
-#### Overview
-Pure function used to create new [State](#state) objects
+### <a name="action">Action</a>
+#### **Overview**
+Simple description of a State change or a user interaction. Dispatched to Stores.
 
-See [mozilla.components.lib.state.Reducer](https://github.com/mozilla-mobile/android-components/blob/main/components/lib/state/src/main/java/mozilla/components/lib/state/Store.kt)
+See [mozilla.components.lib.state.Action](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/components/lib/state/src/main/java/mozilla/components/lib/state/Action.kt)
+
+#### **Description**
+Simple data object that carries information about a [State](#state) change to a [Store](#store).  An Action describes _something that happened_, and carries any data relevant to that change. For example, `HistoryFragmentAction.ChangeEmptyState(isEmpty = true)`, captures that the State of the history fragment has become empty.
+
+-------
+
+### <a name="reducer">Reducer</a>
+#### **Overview**
+Pure function used to create new [State](#state) objects.
+
+See [mozilla.components.lib.state.Reducer](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/components/lib/state/src/main/java/mozilla/components/lib/state/Reducer.kt)
 
 Referenced by: [Store](#store)
 
-#### Description
+#### **Description**
 A function that accepts the previous State and an [Action](#action), then combines them in order to return the new State. It is important that all Reducers remain [pure](https://en.wikipedia.org/wiki/Pure_function). This allows us to test Reducers based only on their inputs, without requiring that we take into account the state of the rest of the app.
 
 Note that the Reducer is always called serially, as state could be lost if it were ever executed in parallel.
+
+-------
+
+### <a name="middleware">Middleware</a>
+#### **Overview**
+A Middleware sits between the store and the reducer. It provides an extension point between dispatching an action, and the moment it reaches the reducer.
+
+#### **Description**
+
+A Middleware responds to actions by performing side-effects, and can also be used to rewrite an Action, intercept an Action, or dispatch additional Actions.
+
+The Store will create a chain of Middleware instances and invoke them in order. Every Middleware can decide to continue the chain or disrupt the chain. A Middleware has no knowledge of what comes before or after it in the chain.
+
+-------
+
+### <a name="view">View</a>
+#### **Overview**
+Initializes UI elements, then updates them in response to [State](#state) changes
+
+Observes: [Store](#store)
+
+#### **Description**
+The view defines the mapping of State to UI. This can include XML bindings, Composables, or anything in between.
+
+Views should be as dumb as possible, and should include little or no conditional logic outside of determining which branch of a view tree to display based on State. Ideally, each primitive value in a State object is set on some field of a UI element.
+
+Views set listeners to UI elements, which trigger dispatches of [Actions](#action) to [Stores](#store).
+
+In some cases, it can be appropriate to initiate side-effects from the view when observing State updates from the Store. For example, a menu might be displayed.
+
+-------
+
+## Important notes
+- Unlike other common implementations of unidirectional data flow, which typically have one global Store of data, we maintain smaller Stores for each screen and several global Stores.
+  - There is often no need to maintain UI state for views that are destroyed, and this allows us to to operate within the physical hardware constraints presented by Android development, such as having more limited memory resources.
+- Stores that are local to a feature or screen should usually be persisted across configuration changes in a ViewModel by using [StoreProvider.get](https://github.com/mozilla-mobile/firefox-android/blob/main/fenix/app/src/main/java/org/mozilla/fenix/components/StoreProvider.kt).
+
+-------
+
+## Simplified Example
+When reading through live code trying to understand an architecture, it can be difficult to find canonical examples, and often hard to locate the most important aspects. This is a simplified example using a hypothetical app that should help clarify the above patterns.
+
+![example app wireframe](./architectureexample/example-app-wireframe.png?raw=true)
+
+This app currently has three (wonderful) features.
+- Clicking on one of the colored circles will update the toolbar color
+- Clicking on 'Rename', typing a new name, and selecting return will update the name of the contact
+- Clicking anywhere else on a contact will navigate to a text message fragment
+
+These link to the architectural code that accomplishes those features:
+- [ContactsView](./architectureexample/ContactsView.kt)
+- [ContactsStore](./architectureexample/ContactsStore.kt)
+- [ContactsState](./architectureexample/ContactsStore.kt)
+- [ContactsReducer](./architectureexample/ContactsStore.kt)
+- [ContactsFragment](./architectureexample/ContactsFragment.kt)
+
+-------
+
+## Historical architecture components
+There are some out-of-date architecture components that may still be seen throughout the app. The original documentation for these components is captured below in order to preserve context, but should be removed once these components are refactored out.
+
+For more context on when and why these components were removed, see [the RFC proposing their removal](https://github.com/mozilla-mobile/firefox-android/pull/1466).
+
+### Known Limitations (of historical components, copied from above)
+- Many [Interactors](#interactor) have only one dependency, on a single [Controller](#controller). In these cases, they typically just forward each method call on and serve as a largely unnecessary layer. They do, however, 1) maintain consistency with the rest of the architecture, and 2) make it easier to add new Controllers in the future.
 
 -------
 
@@ -114,56 +175,3 @@ This is where much of the business logic of the app lives. Whenever called by an
 Controllers can become very complex, and should be unit tested thoroughly whenever their methods do more than delegate simple calls to other objects.
 
 -------
-
-### <a name="view"/>View
-#### Overview
-Initializes UI elements, then updates them in response to [State](#state) changes
-
-Observes: [Store](#store)
-
-Calls: [Interactor](#interactor)
-
-#### Description
-The view defines the mapping of State to UI. This includes initial setup of Views, and also typically includes an `update(state)` function that is called whenever State is changed.
-
-Views should be as dumb as possible, and should include little or no conditional logic. Ideally, each primitive value in a State object is set on some field of a UI element, with no other logic included.
-
-Views set listeners on to UI elements, which trigger calls to one or more Interactors.
-
--------
-
-## Important notes
-- Unlike other common implementations of unidirectional data flow, which typically have one global Store of data, we maintain a smaller Store for each screen.
-- Stores and their State are persisted across configuration changes via an Architecture Components ViewModel.
-- Whenever a fragment newly created or finished (by the ViewModel definition), its Store will also be created/destroyed
-- Communication between Stores only happens by loading the appropriate data into arguments for the new fragment, which uses them to construct the initial state of the new Store.
-  - We currently violate this in a few places, but are actively refactoring out those violations
-
-## Simplified Example
-When reading through live code trying to understand an architecture, it can be difficult to find canonical examples, and often hard to locate the most important aspects. This is a simplified example using a hypothetical app that should help clarify the above patterns. These patterns are overkill for the problems being solved, but keep in mind that the example is deliberately simplified.
-
-![example app wireframe](./architectureexample/example-app-wireframe.png?raw=true)
-
-This app currently has three (wonderful) features.
-- Clicking on one of the colored circles will update the toolbar color
-- Clicking on 'Rename', typing a new name, and selecting return will update the name of the contact
-- Clicking anywhere else on a contact will navigate to a text message fragment
-
-These link to the architectural code that accomplishes those features:
-- [ContactsView](./architectureexample/ContactsView.kt)
-- [ContactsInteractor](./architectureexample/ContactsInteractor.kt)
-- [ContactsController](./architectureexample/ContactsController.kt)
-- [ThemeController](./architectureexample/ThemeController.kt)
-- [ContactsStore](./architectureexample/ContactsStore.kt)
-- [ContactsState](./architectureexample/ContactsStore.kt)
-- [ContactsReducer](./architectureexample/ContactsStore.kt)
-- [ContactsFragment](./architectureexample/ContactsFragment.kt)
-
-## Known Limitations
-There are a few known edge cases and potential problems with our architecture, that in certain circumstances can be confusing.
-
-- Since [Stores](#store) live at the fragment level, our architecture does not define any way to set data outside of that scope.
-  - For example, if it is determined during application startup that we need to run in private mode, it must eventually be passed to a fragment, but we don't specify how it will be handled until that point.
-  - We have no defined way to set values shared by all fragments. They must either be passed as an argument to every individual fragment, or use some system outside of our architecture (e.g., by accessing SharedPreferences).
-- There isn't always a clear logical distinction between what should provoke a state change (by dispatching an [Action](#action) to a [Store](#store)), and what should start a new fragment. Passing arguments while creating a new fragment causes changes to the new [State](#state) object, while taking a very different code path than the rest of our app would.
-- Many [Interactors](#interactor) have only one dependency, on a single [Controller](#controller). In these cases, they typically just forward each method call on and serve as a largely unnecessary layer. They do, however, 1) maintain consistency with the rest of the architecture, and 2) make it easier to add new Controllers in the future.
