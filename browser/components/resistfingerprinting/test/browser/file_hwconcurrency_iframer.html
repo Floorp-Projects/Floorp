@@ -15,7 +15,14 @@ async function runTheTest(iframe_domain, cross_origin_domain, mode) {
     iframes[0].src = url + 'iframe';
     child_reference = iframes[0].contentWindow;
   } else if (params.get("mode") == "popup") {
-    const popup = window.open(url + 'popup', "");
+    let options = "";
+    if (params.get("submode") == "noopener") {
+      options = "noopener";
+    }
+    const popup = window.open(url + 'popup', '', options);
+    if (params.get("submode") == "noopener") {
+      return {};
+    }
     child_reference = popup;
   } else {
     throw new Error("Unknown page mode specified");
