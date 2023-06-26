@@ -3342,6 +3342,7 @@ toolbar#nav-bar {
                 "fission": not options.disable_fission,
                 "headless": options.headless,
                 "http3": options.useHttp3Server,
+                "http2": options.useHttp2Server,
                 # Until the test harness can understand default pref values,
                 # (https://bugzilla.mozilla.org/show_bug.cgi?id=1577912) this value
                 # should by synchronized with the default pref value indicated in

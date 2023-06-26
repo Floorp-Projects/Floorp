@@ -288,3 +288,13 @@ http3:
         mozharness:
             extra-options:
                 - "--use-http3-server"
+
+http2:
+    description: "{description} with http2 server"
+    component: "Testing::General"
+    expiration: "2023-12-01"
+    suffix: "http2"
+    merge:
+        mozharness:
+            extra-options:
+                - "--use-http2-server"
