@@ -487,6 +487,7 @@ add_task(async function test_context_paramters() {
   Assert.deepEqual(await targetingCtx.activeRollouts, []);
   Assert.deepEqual(await targetingCtx.previousExperiments, []);
   Assert.deepEqual(await targetingCtx.previousRollouts, []);
+  Assert.deepEqual(await targetingCtx.enrollments, []);
 
   await manager.enroll(experiment, "test");
   await manager.enroll(rollout, "test");
@@ -496,6 +497,10 @@ add_task(async function test_context_paramters() {
   Assert.deepEqual(await targetingCtx.activeRollouts, ["rollout"]);
   Assert.deepEqual(await targetingCtx.previousExperiments, []);
   Assert.deepEqual(await targetingCtx.previousRollouts, []);
+  Assert.deepEqual([...(await targetingCtx.enrollments)].sort(), [
+    "experiment",
+    "rollout",
+  ]);
 
   manager.unenroll(experiment.slug);
   manager.unenroll(rollout.slug);
@@ -505,4 +510,8 @@ add_task(async function test_context_paramters() {
   Assert.deepEqual(await targetingCtx.activeRollouts, []);
   Assert.deepEqual(await targetingCtx.previousExperiments, ["experiment"]);
   Assert.deepEqual(await targetingCtx.previousRollouts, ["rollout"]);
+  Assert.deepEqual([...(await targetingCtx.enrollments)].sort(), [
+    "experiment",
+    "rollout",
+  ]);
 });
