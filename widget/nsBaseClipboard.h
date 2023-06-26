@@ -107,7 +107,7 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
                      int32_t aWhichClipboard) override final;
   NS_IMETHOD GetData(nsITransferable* aTransferable,
                      int32_t aWhichClipboard) override final;
-  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
+  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override final;
   NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                     int32_t aWhichClipboard,
                                     bool* aOutResult) override final;
@@ -125,12 +125,11 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
   // Implement the native clipboard behavior.
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) = 0;
+  virtual nsresult EmptyNativeClipboardData(int32_t aWhichClipboard) = 0;
   virtual mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
       int32_t aWhichClipboard) = 0;
   virtual mozilla::Result<bool, nsresult> HasNativeClipboardDataMatchingFlavors(
       const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) = 0;
-
-  bool mEmptyingForSetData = false;
 
  private:
   class ClipboardCache final {
