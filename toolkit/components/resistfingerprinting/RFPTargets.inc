@@ -71,6 +71,7 @@ ITEM_VALUE(RoundWindowSize,             1llu << 46)
 ITEM_VALUE(UseStandinsForNativeColors,  1llu << 47)
 ITEM_VALUE(AudioContext,                1llu << 48)
 ITEM_VALUE(MediaError,                  1llu << 49)
+ITEM_VALUE(DOMStyleOsxFontSmoothing,    1llu << 50)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
