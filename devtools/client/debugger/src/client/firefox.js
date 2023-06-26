@@ -162,7 +162,7 @@ async function onThreadStateAvailable(resources) {
     }
     const threadFront = await resource.targetFront.getFront("thread");
     if (resource.state == "paused") {
-      const pause = await createPause(threadFront.actor, resource);
+      const pause = await createPause(threadFront.actorID, resource);
       await actions.paused(pause);
       recordEvent("pause", { reason: resource.why.type });
     } else if (resource.state == "resumed") {

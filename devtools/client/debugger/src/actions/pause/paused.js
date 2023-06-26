@@ -21,8 +21,7 @@ import { fetchScopes } from "./fetchScopes";
  * Debugger has just paused
  *
  * @param {object} pauseInfo
- * @memberof actions/pause
- * @static
+ *        See `createPause` method.
  */
 export function paused(pauseInfo) {
   return async function ({ dispatch, getState }) {
