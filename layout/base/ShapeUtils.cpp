@@ -105,10 +105,16 @@ nsSize ShapeUtils::ComputeEllipseRadii(const StyleBasicShape& aBasicShape,
 nsRect ShapeUtils::ComputeInsetRect(const StyleBasicShape& aBasicShape,
                                     const nsRect& aRefBox) {
   MOZ_ASSERT(aBasicShape.IsInset(), "The basic shape must be inset()!");
-  const auto& rect = aBasicShape.AsInset().rect;
-  nsMargin inset(
-      rect._0.Resolve(aRefBox.Height()), rect._1.Resolve(aRefBox.Width()),
-      rect._2.Resolve(aRefBox.Height()), rect._3.Resolve(aRefBox.Width()));
+  return ComputeInsetRect(aBasicShape.AsInset().rect, aRefBox);
+}
+
+/* static */
+nsRect ShapeUtils::ComputeInsetRect(
+    const StyleRect<LengthPercentage>& aStyleRect, const nsRect& aRefBox) {
+  nsMargin inset(aStyleRect._0.Resolve(aRefBox.Height()),
+                 aStyleRect._1.Resolve(aRefBox.Width()),
+                 aStyleRect._2.Resolve(aRefBox.Height()),
+                 aStyleRect._3.Resolve(aRefBox.Width()));
 
   nscoord x = aRefBox.X() + inset.left;
   nscoord width = aRefBox.Width() - inset.LeftRight();
@@ -221,13 +227,21 @@ already_AddRefed<gfx::Path> ShapeUtils::BuildInsetPath(
     const StyleBasicShape& aShape, const nsRect& aRefBox,
     nscoord aAppUnitsPerPixel, gfx::PathBuilder* aPathBuilder) {
   const nsRect insetRect = ComputeInsetRect(aShape, aRefBox);
-  const gfx::Rect insetRectPixels = NSRectToRect(insetRect, aAppUnitsPerPixel);
   nscoord appUnitsRadii[8];
+  const bool hasRadii =
+      ComputeInsetRadii(aShape, aRefBox, insetRect, appUnitsRadii);
+  return BuildInsetPath(insetRect, hasRadii ? appUnitsRadii : nullptr, aRefBox,
+                        aAppUnitsPerPixel, aPathBuilder);
+}
 
-  if (ComputeInsetRadii(aShape, aRefBox, insetRect, appUnitsRadii)) {
+/* static */
+already_AddRefed<gfx::Path> ShapeUtils::BuildInsetPath(
+    const nsRect& aInsetRect, const nscoord aRadii[8], const nsRect& aRefBox,
+    nscoord aAppUnitsPerPixel, gfx::PathBuilder* aPathBuilder) {
+  const gfx::Rect insetRectPixels = NSRectToRect(aInsetRect, aAppUnitsPerPixel);
+  if (aRadii) {
     gfx::RectCornerRadii corners;
-    nsCSSRendering::ComputePixelRadii(appUnitsRadii, aAppUnitsPerPixel,
-                                      &corners);
+    nsCSSRendering::ComputePixelRadii(aRadii, aAppUnitsPerPixel, &corners);
 
     AppendRoundedRectToPath(aPathBuilder, insetRectPixels, corners, true);
   } else {
