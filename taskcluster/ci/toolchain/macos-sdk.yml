@@ -24,8 +24,8 @@ macosx64-sdk-13.3:
         symbol: TM(sdk13.3)
     run:
         arguments:
-            - https://swcdn.apple.com/content/downloads/38/61/032-64167-A_F8LL7XSTW6/k3kg0uip4kxd3qupgy6y8fzp27mnxdpt6y/CLTools_macOSNMOS_SDK.pkg
-            - fd66f6b953aeb62cf9635f4b423ceee985a2d25405c5306306e49102b26bb49b
+            - https://swcdn.apple.com/content/downloads/15/62/032-84673-A_7A1TG1RF8Z/xpc8q44ggn2pkn82iwr0fi1zeb9cxi8ath/CLTools_macOSNMOS_SDK.pkg
+            - c33545d543a38911aee2a65d4bf7ff4932c12de1e6a042ae38e6415f65a10710
             - Library/Developer/CommandLineTools/SDKs/MacOSX13.3.sdk
         toolchain-artifact: project/gecko/mac-sdk/MacOSX13.3.sdk.tar.zst
         toolchain-alias:
