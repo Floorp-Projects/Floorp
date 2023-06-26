@@ -228,7 +228,7 @@ P2PTransportChannel::P2PTransportChannel(
 P2PTransportChannel::~P2PTransportChannel() {
   TRACE_EVENT0("webrtc", "P2PTransportChannel::~P2PTransportChannel");
   RTC_DCHECK_RUN_ON(network_thread_);
-  std::vector<Connection*> copy(connections().begin(), connections().end());
+  std::vector<Connection*> copy(connections_.begin(), connections_.end());
   for (Connection* connection : copy) {
     connection->SignalDestroyed.disconnect(this);
     RemoveConnection(connection);
@@ -399,7 +399,7 @@ IceTransportState P2PTransportChannel::ComputeState() const {
   }
 
   std::vector<Connection*> active_connections;
-  for (Connection* connection : connections()) {
+  for (Connection* connection : connections_) {
     if (connection->active()) {
       active_connections.push_back(connection);
     }
@@ -434,7 +434,7 @@ webrtc::IceTransportState P2PTransportChannel::ComputeIceTransportState()
     const {
   RTC_DCHECK_RUN_ON(network_thread_);
   bool has_connection = false;
-  for (Connection* connection : connections()) {
+  for (Connection* connection : connections_) {
     if (connection->active()) {
       has_connection = true;
       break;
@@ -494,7 +494,7 @@ void P2PTransportChannel::SetRemoteIceParameters(
   }
   // We need to update the credentials and generation for any peer reflexive
   // candidates.
-  for (Connection* conn : connections()) {
+  for (Connection* conn : connections_) {
     conn->MaybeSetRemoteIceParametersAndGeneration(
         ice_params, static_cast<int>(remote_ice_parameters_.size() - 1));
   }
@@ -536,7 +536,7 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
   }
   if (config_.receiving_timeout != config.receiving_timeout) {
     config_.receiving_timeout = config.receiving_timeout;
-    for (Connection* connection : connections()) {
+    for (Connection* connection : connections_) {
       connection->set_receiving_timeout(config_.receiving_timeout);
     }
     RTC_LOG(LS_INFO) << "Set ICE receiving timeout to "
@@ -560,7 +560,7 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
 
   if (config_.presume_writable_when_fully_relayed !=
       config.presume_writable_when_fully_relayed) {
-    if (!connections().empty()) {
+    if (!connections_.empty()) {
       RTC_LOG(LS_ERROR) << "Trying to change 'presume writable' "
                            "while connections already exist!";
     } else {
@@ -627,7 +627,7 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
 
   if (config_.ice_unwritable_timeout != config.ice_unwritable_timeout) {
     config_.ice_unwritable_timeout = config.ice_unwritable_timeout;
-    for (Connection* conn : connections()) {
+    for (Connection* conn : connections_) {
       conn->set_unwritable_timeout(config_.ice_unwritable_timeout);
     }
     RTC_LOG(LS_INFO) << "Set unwritable timeout to "
@@ -636,7 +636,7 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
 
   if (config_.ice_unwritable_min_checks != config.ice_unwritable_min_checks) {
     config_.ice_unwritable_min_checks = config.ice_unwritable_min_checks;
-    for (Connection* conn : connections()) {
+    for (Connection* conn : connections_) {
       conn->set_unwritable_min_checks(config_.ice_unwritable_min_checks);
     }
     RTC_LOG(LS_INFO) << "Set unwritable min checks to "
@@ -645,7 +645,7 @@ void P2PTransportChannel::SetIceConfig(const IceConfig& config) {
 
   if (config_.ice_inactive_timeout != config.ice_inactive_timeout) {
     config_.ice_inactive_timeout = config.ice_inactive_timeout;
-    for (Connection* conn : connections()) {
+    for (Connection* conn : connections_) {
       conn->set_inactive_timeout(config_.ice_inactive_timeout);
     }
     RTC_LOG(LS_INFO) << "Set inactive timeout to "
@@ -1334,7 +1334,7 @@ void P2PTransportChannel::FinishAddingRemoteCandidate(
   RTC_DCHECK_RUN_ON(network_thread_);
   // If this candidate matches what was thought to be a peer reflexive
   // candidate, we need to update the candidate priority/etc.
-  for (Connection* conn : connections()) {
+  for (Connection* conn : connections_) {
     conn->MaybeUpdatePeerReflexiveCandidate(new_remote_candidate);
   }
 
@@ -1450,7 +1450,7 @@ bool P2PTransportChannel::CreateConnection(PortInterface* port,
     AddConnection(connection);
     RTC_LOG(LS_INFO) << ToString()
                      << ": Created connection with origin: " << origin
-                     << ", total: " << connections().size();
+                     << ", total: " << connections_.size();
     return true;
   }
 
@@ -1469,7 +1469,7 @@ bool P2PTransportChannel::CreateConnection(PortInterface* port,
 
 bool P2PTransportChannel::FindConnection(const Connection* connection) const {
   RTC_DCHECK_RUN_ON(network_thread_);
-  return absl::c_linear_search(connections(), connection);
+  return absl::c_linear_search(connections_, connection);
 }
 
 uint32_t P2PTransportChannel::GetRemoteCandidateGeneration(
@@ -1623,7 +1623,7 @@ bool P2PTransportChannel::GetStats(IceTransportStats* ice_transport_stats) {
   }
 
   // TODO(qingsi): Remove naming inconsistency for candidate pair/connection.
-  for (Connection* connection : connections()) {
+  for (Connection* connection : connections_) {
     ConnectionInfo stats = connection->stats();
     stats.local_candidate = SanitizeLocalCandidate(stats.local_candidate);
     stats.remote_candidate = SanitizeRemoteCandidate(stats.remote_candidate);
@@ -1660,10 +1660,10 @@ rtc::DiffServCodePoint P2PTransportChannel::DefaultDscpValue() const {
   return static_cast<rtc::DiffServCodePoint>(it->second);
 }
 
-rtc::ArrayView<Connection*> P2PTransportChannel::connections() const {
+rtc::ArrayView<Connection* const> P2PTransportChannel::connections() const {
   RTC_DCHECK_RUN_ON(network_thread_);
-  return rtc::ArrayView<Connection*>(
-      const_cast<Connection**>(connections_.data()), connections_.size());
+  return rtc::ArrayView<Connection* const>(connections_.data(),
+                                           connections_.size());
 }
 
 void P2PTransportChannel::RemoveConnectionForTest(Connection* connection) {
@@ -1687,7 +1687,7 @@ void P2PTransportChannel::UpdateConnectionStates() {
   // NOTE: We copy the connections() vector in case `UpdateState` triggers the
   // Connection to be destroyed (which will cause a callback that alters
   // the connections() vector).
-  std::vector<Connection*> copy(connections().begin(), connections().end());
+  std::vector<Connection*> copy(connections_.begin(), connections_.end());
   for (Connection* c : copy) {
     c->UpdateState(now);
   }
@@ -1721,9 +1721,11 @@ bool P2PTransportChannel::PresumedWritable(const Connection* conn) const {
 }
 
 void P2PTransportChannel::UpdateState() {
+  RTC_DCHECK_RUN_ON(network_thread_);
+
   // Check if all connections are timedout.
   bool all_connections_timedout = true;
-  for (const Connection* conn : connections()) {
+  for (const Connection* conn : connections_) {
     if (conn->write_state() != Connection::STATE_WRITE_TIMEOUT) {
       all_connections_timedout = false;
       break;
@@ -1884,7 +1886,7 @@ void P2PTransportChannel::UpdateTransportState() {
   SetWritable(writable);
 
   bool receiving = false;
-  for (const Connection* connection : connections()) {
+  for (const Connection* connection : connections_) {
     if (connection->receiving()) {
       receiving = true;
       break;
@@ -1975,7 +1977,7 @@ void P2PTransportChannel::OnSelectedConnectionDestroyed() {
 void P2PTransportChannel::HandleAllTimedOut() {
   RTC_DCHECK_RUN_ON(network_thread_);
   bool update_selected_connection = false;
-  std::vector<Connection*> copy(connections().begin(), connections().end());
+  std::vector<Connection*> copy(connections_.begin(), connections_.end());
   for (Connection* connection : copy) {
     if (selected_connection_ == connection) {
       selected_connection_ = nullptr;
@@ -2109,7 +2111,7 @@ void P2PTransportChannel::OnConnectionDestroyed(Connection* connection) {
   RemoveConnection(connection);
 
   RTC_LOG(LS_INFO) << ToString() << ": Removed connection " << connection
-                   << " (" << connections().size() << " remaining)";
+                   << " (" << connections_.size() << " remaining)";
 
   // If this is currently the selected connection, then we need to pick a new
   // one. The call to SortConnectionsAndUpdateState will pick a new one. It

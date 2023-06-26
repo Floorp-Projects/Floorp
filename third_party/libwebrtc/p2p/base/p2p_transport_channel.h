@@ -226,7 +226,7 @@ class RTC_EXPORT P2PTransportChannel : public IceTransportInternal,
   void MarkConnectionPinged(Connection* conn);
 
   // Public for unit tests.
-  rtc::ArrayView<Connection*> connections() const;
+  rtc::ArrayView<Connection* const> connections() const;
   void RemoveConnectionForTest(Connection* connection);
 
   // Public for unit tests.
