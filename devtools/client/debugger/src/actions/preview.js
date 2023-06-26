@@ -38,7 +38,8 @@ function findExpressionMatch(state, codeMirror, tokenPos) {
 }
 
 export function getPreview(cx, target, tokenPos, codeMirror) {
-  return async ({ dispatch, getState, client }) => {
+  return async thunkArgs => {
+    const { getState, client } = thunkArgs;
     if (
       !isSelectedFrameVisible(getState()) ||
       !isLineInScope(getState(), tokenPos.line)
@@ -68,7 +69,11 @@ export function getPreview(cx, target, tokenPos, codeMirror) {
     }
 
     if (location && source.isOriginal) {
-      const mapResult = await dispatch(getMappedExpression(expression));
+      const mapResult = await getMappedExpression(
+        expression,
+        thread,
+        thunkArgs
+      );
       if (mapResult) {
         expression = mapResult.expression;
       }
