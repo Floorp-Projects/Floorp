@@ -41,13 +41,11 @@ function run_test() {
   DevToolsServer.registerAllActors();
 
   add_test(init);
-  add_test(test_client_request_callback);
   add_test(test_client_request_promise);
   add_test(test_client_request_promise_error);
   add_test(test_client_request_event_emitter);
   add_test(test_close_client_while_sending_requests);
   add_test(test_client_request_after_close);
-  add_test(test_client_request_after_close_callback);
   run_next_test();
 }
 
@@ -74,22 +72,6 @@ function checkStack(expectedName) {
     stack = stack.asyncCaller || stack.caller;
   }
   ok(false, "Incomplete stack");
-}
-
-function test_client_request_callback() {
-  // Test that DevToolsClient.request accepts a `onResponse` callback as 2nd argument
-  gClient.request(
-    {
-      to: gActorId,
-      type: "hello",
-    },
-    response => {
-      Assert.equal(response.from, gActorId);
-      Assert.equal(response.hello, "world");
-      checkStack("test_client_request_callback");
-      run_next_test();
-    }
-  );
 }
 
 function test_client_request_promise() {
@@ -235,27 +217,4 @@ function test_client_request_after_close() {
       run_next_test();
     }
   );
-}
-
-function test_client_request_after_close_callback() {
-  // Test that DevToolsClient.request fails after we called client.close()
-  // (with callback API)
-  gClient
-    .request(
-      {
-        to: gActorId,
-        type: "hello",
-      },
-      response => {
-        ok(true, "Request failed after client.close");
-        Assert.equal(response.error, "connectionClosed");
-        ok(
-          response.message.match(
-            /'hello' request packet to '.*' can't be sent as the connection is closed./
-          )
-        );
-        run_next_test();
-      }
-    )
-    .catch(() => info("Caught rejected promise as expected"));
 }

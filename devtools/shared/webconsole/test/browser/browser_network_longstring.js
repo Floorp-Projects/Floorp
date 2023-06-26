@@ -17,7 +17,6 @@ add_task(async function () {
 
   const commands = await CommandsFactory.forTab(tab);
   await commands.targetCommand.startListening();
-  const target = commands.targetCommand.targetFront;
 
   // Override the default long string settings to lower values.
   // This is done from the parent process's DevToolsServer as the LongString
@@ -50,20 +49,41 @@ add_task(async function () {
   const netActor = networkResource.actor;
   ok(netActor, "We have a netActor:" + netActor);
 
-  const webConsoleFront = await target.getFront("console");
-  const requestHeaders = await webConsoleFront.getRequestHeaders(netActor);
+  const { client } = commands;
+  const requestHeaders = await client.request({
+    to: netActor,
+    type: "getRequestHeaders",
+  });
   assertRequestHeaders(requestHeaders);
-  const requestCookies = await webConsoleFront.getRequestCookies(netActor);
+  const requestCookies = await client.request({
+    to: netActor,
+    type: "getRequestCookies",
+  });
   assertRequestCookies(requestCookies);
-  const requestPostData = await webConsoleFront.getRequestPostData(netActor);
+  const requestPostData = await client.request({
+    to: netActor,
+    type: "getRequestPostData",
+  });
   assertRequestPostData(requestPostData);
-  const responseHeaders = await webConsoleFront.getResponseHeaders(netActor);
+  const responseHeaders = await client.request({
+    to: netActor,
+    type: "getResponseHeaders",
+  });
   assertResponseHeaders(responseHeaders);
-  const responseCookies = await webConsoleFront.getResponseCookies(netActor);
+  const responseCookies = await client.request({
+    to: netActor,
+    type: "getResponseCookies",
+  });
   assertResponseCookies(responseCookies);
-  const responseContent = await webConsoleFront.getResponseContent(netActor);
+  const responseContent = await client.request({
+    to: netActor,
+    type: "getResponseContent",
+  });
   assertResponseContent(responseContent);
-  const eventTimings = await webConsoleFront.getEventTimings(netActor);
+  const eventTimings = await client.request({
+    to: netActor,
+    type: "getEventTimings",
+  });
   assertEventTimings(eventTimings);
 
   await commands.destroy();
