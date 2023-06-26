@@ -896,7 +896,7 @@ export default class LoginList extends HTMLElement {
   }
 
   updateSelectedLocationHash(guid) {
-    window.location.hash = `#${encodeURIComponent(guid)}`;
+    window.location.hash = guid ? `#${encodeURIComponent(guid)}` : "";
   }
 
   findLoginGuidFromDomain(domain) {
