@@ -348,7 +348,10 @@ class NotificationEventWorkerRunnable final
         mEventName(aEventName) {}
 
   void WorkerRunInternal(WorkerPrivate* aWorkerPrivate) override {
-    mNotification->DispatchTrustedEvent(mEventName);
+    if (aWorkerPrivate->GlobalScope() &&
+        !aWorkerPrivate->GlobalScope()->IsDying()) {
+      mNotification->DispatchTrustedEvent(mEventName);
+    }
   }
 };
 
