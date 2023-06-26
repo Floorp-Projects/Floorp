@@ -107,12 +107,11 @@ class FileSystemWritableFileStream final : public WritableStream {
   virtual ~FileSystemWritableFileStream();
 
   template <typename T>
-  void Write(const T& aData, const Maybe<uint64_t> aPosition,
-             const RefPtr<Promise>& aPromise);
+  RefPtr<Int64Promise> Write(const T& aData, const Maybe<uint64_t> aPosition);
 
-  void Seek(uint64_t aPosition, const RefPtr<Promise>& aPromise);
+  RefPtr<BoolPromise> Seek(uint64_t aPosition);
 
-  void Truncate(uint64_t aSize, const RefPtr<Promise>& aPromise);
+  RefPtr<BoolPromise> Truncate(uint64_t aSize);
 
   void NoteFinishedCommand();
 
