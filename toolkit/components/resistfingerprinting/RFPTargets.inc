@@ -69,6 +69,7 @@ ITEM_VALUE(DeviceSensors,               1llu << 44)
 ITEM_VALUE(FrameRate,                   1llu << 45)
 ITEM_VALUE(RoundWindowSize,             1llu << 46)
 ITEM_VALUE(UseStandinsForNativeColors,  1llu << 47)
+ITEM_VALUE(AudioContext,                1llu << 48)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.

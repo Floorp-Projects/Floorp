@@ -164,7 +164,8 @@ AudioContext::AudioContext(nsPIDOMWindowInner* aWindow, bool aIsOffline,
       mNumberOfChannels(aNumberOfChannels),
       mRTPCallerType(aWindow->AsGlobal()->GetRTPCallerType()),
       mShouldResistFingerprinting(
-          aWindow->AsGlobal()->ShouldResistFingerprinting(RFPTarget::Unknown)),
+          aWindow->AsGlobal()->ShouldResistFingerprinting(
+              RFPTarget::AudioContext)),
       mIsOffline(aIsOffline),
       mIsStarted(!aIsOffline),
       mIsShutDown(false),
