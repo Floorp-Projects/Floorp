@@ -36,6 +36,7 @@ import mozilla.components.service.fxa.sync.getLastSynced
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.R
@@ -126,8 +127,9 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         accountManager = requireComponents.backgroundServices.accountManager
         accountManager.register(accountStateObserver, this, true)
 
-        // Manage account
+        // Manage account - only available on Nightly while we work on bug 1840492.
         val preferenceManageAccount = requirePreference<Preference>(R.string.pref_key_sync_manage_account)
+        preferenceManageAccount.isVisible = Config.channel.isNightlyOrDebug
         preferenceManageAccount.onPreferenceClickListener = getClickListenerForManageAccount()
 
         // Sign out
