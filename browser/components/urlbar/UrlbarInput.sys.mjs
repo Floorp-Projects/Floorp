@@ -11,8 +11,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserSearchTelemetry: "resource:///modules/BrowserSearchTelemetry.sys.mjs",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
-  CONTEXTUAL_SERVICES_PING_TYPES:
-    "resource:///modules/PartnerLinkAttribution.sys.mjs",
   ExtensionSearchHandler:
     "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
@@ -1259,16 +1257,6 @@ export class UrlbarInput {
           SCALAR_CATEGORY_TOPSITES,
           `urlbar_${position}`,
           1
-        );
-        lazy.PartnerLinkAttribution.sendContextualServicesPing(
-          {
-            position,
-            source: "urlbar",
-            tile_id: result.payload.sponsoredTileId || -1,
-            reporting_url: result.payload.sponsoredClickUrl,
-            advertiser: result.payload.title.toLocaleLowerCase(),
-          },
-          lazy.CONTEXTUAL_SERVICES_PING_TYPES.TOPSITES_SELECTION
         );
       }
     }

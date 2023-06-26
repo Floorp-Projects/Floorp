@@ -553,3 +553,207 @@ urlbar:
     expires: never
     send_in_pings:
       - events
+
+# Replacement for PingCentre "quicksuggest-block|impression|click" pings.
+quick_suggest:
+  ping_type:
+    type: string
+    description: >
+      The ping's type. In other situations might be designated by an event's
+      name or an interaction field. E.g. "quicksuggest-impression",
+      "quicksuggest-block", "quicksuggest-click".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest
+
+  position:
+    type: quantity
+    unit: QuickSuggest position
+    description: >
+      The position (1-based) of the QuickSuggest item being interatcted with.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest
+
+  source:
+    type: string
+    description: >
+      The source of the interaction. E.g. "urlbar".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest
+
+  match_type:
+    type: string
+    description: >
+      Whether this was a best/top match or not. Either "best-match" or
+      "firefox-suggest".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest
+
+  block_id:
+    type: string
+    description: >
+      A unique identifier for the suggestion (a.k.a. a keywords block).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest
+
+  improve_suggest_experience:
+    type: boolean
+    description: >
+      Whether the "Improve Suggest Experience" checkbox is checked.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest
+
+  advertiser:
+    type: string
+    description: >
+      The name of the advertiser providing the sponsored TopSite.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - interaction
+      - web_activity
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest
+
+  request_id:
+    type: string
+    description: >
+      A request identifier for each API request to
+      [Merino](https://mozilla-services.github.io/merino/).
+      Only present for suggestions provided by Merino.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - interaction
+      - web_activity
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest
+
+  is_clicked:
+    type: boolean
+    description: >
+      Whether this quicksuggest-impression ping was for an item that was
+      clicked.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest
+
+  reporting_url:
+    type: url
+    description: >
+      The url to report this interaction to.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - web_activity
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - top-sites
+
+  context_id:
+    type: uuid
+    description: >
+      An identifier to identify users for Contextual Services user interaction pings.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest
+
+  iab_category:
+    type: string
+    description: >
+      The suggestion's category. Either "22 - Shopping" or "5 - Educational".
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836283
+    data_sensitivity:
+      - interaction
+      - web_activity
+    notification_emails:
+      - najiang@mozilla.com
+    expires: never
+    send_in_pings:
+      - quick-suggest

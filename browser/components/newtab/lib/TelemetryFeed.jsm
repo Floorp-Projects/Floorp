@@ -909,6 +909,16 @@ class TelemetryFeed {
       pingType,
       "1"
     );
+    Glean.topSites.pingType.set(pingType);
+    Glean.topSites.position.set(legacyTelemetryPosition);
+    Glean.topSites.source.set(source);
+    Glean.topSites.tileId.set(tile_id);
+    if (payload.reporting_url) {
+      Glean.topSites.reportingUrl.set(payload.reporting_url);
+    }
+    Glean.topSites.advertiser.set(advertiser_name);
+    Glean.topSites.contextId.set(lazy.contextId);
+    GleanPings.topSites.submit();
   }
 
   handleTopSitesOrganicImpressionStats(action) {

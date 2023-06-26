@@ -336,6 +336,15 @@ async function doImpressionOnlyTest({
   Services.telemetry.clearEvents();
   let { spy, spyCleanup } = QuickSuggestTestUtils.createTelemetryPingSpy();
 
+  let gleanPingSubmitted = false;
+  GleanPings.quickSuggest.testBeforeNextSubmit(() => {
+    gleanPingSubmitted = true;
+    if (!expected.ping || !("type" in expected.ping)) {
+      return;
+    }
+    _assertGleanPing(expected.ping);
+  });
+
   info("Showing suggestion");
   await showSuggestion();
 
@@ -414,6 +423,11 @@ async function doImpressionOnlyTest({
   info("Checking pings. Expected: " + JSON.stringify(expectedPings));
   QuickSuggestTestUtils.assertPings(spy, expectedPings);
 
+  Assert.ok(
+    !expected.ping || gleanPingSubmitted,
+    "No ping checked or Glean ping submitted ok."
+  );
+
   // Clean up.
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
@@ -466,6 +480,26 @@ async function doSelectableTest({
   Services.telemetry.clearEvents();
   let { spy, spyCleanup } = QuickSuggestTestUtils.createTelemetryPingSpy();
 
+  let gleanPingsSubmitted = 0;
+  if (expected.pings) {
+    let checkPing = (ping, next) => {
+      gleanPingsSubmitted++;
+      _assertGleanPing(ping);
+      if (next) {
+        GleanPings.quickSuggest.testBeforeNextSubmit(next);
+      }
+    };
+    // Build the chain of `testBeforeNextSubmit`s backwards.
+    let next = undefined;
+    expected.pings
+      .slice()
+      .reverse()
+      .forEach(ping => {
+        next = checkPing.bind(null, ping, next);
+      });
+    GleanPings.quickSuggest.testBeforeNextSubmit(next);
+  }
+
   info("Showing suggestion");
   await showSuggestion();
 
@@ -510,6 +544,12 @@ async function doSelectableTest({
   let expectedPings = expected.pings ?? [];
   info("Checking pings. Expected: " + JSON.stringify(expectedPings));
   QuickSuggestTestUtils.assertPings(spy, expectedPings);
+
+  Assert.equal(
+    expectedPings.length,
+    gleanPingsSubmitted,
+    "Submitted one Glean ping per PC ping."
+  );
 
   if (className == "urlbarView-button-block") {
     await QuickSuggest.blockedSuggestions.clear();
@@ -566,4 +606,22 @@ async function validateSuggestionRow(index, suggestion, providerName) {
   }
 
   return row;
+}
+
+function _assertGleanPing(ping) {
+  Assert.equal(Glean.quickSuggest.pingType.testGetValue(), ping.type);
+  const keymap = {
+    match_type: Glean.quickSuggest.matchType,
+    position: Glean.quickSuggest.position,
+    improve_suggest_experience_checked:
+      Glean.quickSuggest.improveSuggestExperience,
+    is_clicked: Glean.quickSuggest.isClicked,
+    block_id: Glean.quickSuggest.blockId,
+    advertiser: Glean.quickSuggest.advertiser,
+    iab_category: Glean.quickSuggest.iabCategory,
+  };
+  for (const [key, value] of Object.entries(ping.payload)) {
+    Assert.ok(key in keymap, `A Glean metric exists for field ${key}`);
+    Assert.equal(value ?? "", keymap[key].testGetValue());
+  }
 }
