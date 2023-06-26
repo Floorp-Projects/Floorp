@@ -8,7 +8,6 @@
 #define mozilla_SandboxLaunch_h
 
 #include "base/process_util.h"
-#include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "nsXULAppAPI.h"
 #include <vector>
 
@@ -17,8 +16,8 @@ namespace mozilla {
 // Called in the parent process to set up launch-time aspects of
 // sandboxing.  If aType is GeckoProcessType_Content, this must be
 // called on the main thread in order to access prefs.
-void SandboxLaunchPrepare(GeckoProcessType aType, base::LaunchOptions* aOptions,
-                          ipc::SandboxingKind aKind);
+void SandboxLaunchPrepare(GeckoProcessType aType,
+                          base::LaunchOptions* aOptions);
 #if defined(MOZ_ENABLE_FORKSERVER)
 void SandboxLaunchForkServerPrepare(const std::vector<std::string>& aArgv,
                                     base::LaunchOptions& aOptions);
