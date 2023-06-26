@@ -264,7 +264,7 @@ void Statistics::sccDurations(TimeDuration* total,
   }
 }
 
-typedef Vector<UniqueChars, 8, SystemAllocPolicy> FragmentVector;
+using FragmentVector = Vector<UniqueChars, 8, SystemAllocPolicy>;
 
 static UniqueChars Join(const FragmentVector& fragments,
                         const char* separator = "") {

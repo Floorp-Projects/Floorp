@@ -200,8 +200,8 @@ struct Callback {
 template <typename F>
 using CallbackVector = Vector<Callback<F>, 4, SystemAllocPolicy>;
 
-typedef HashMap<Value*, const char*, DefaultHasher<Value*>, SystemAllocPolicy>
-    RootedValueMap;
+using RootedValueMap =
+    HashMap<Value*, const char*, DefaultHasher<Value*>, SystemAllocPolicy>;
 
 using AllocKinds = mozilla::EnumSet<AllocKind, uint64_t>;
 

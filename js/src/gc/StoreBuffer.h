@@ -59,7 +59,7 @@ class BufferableRef {
   bool maybeInRememberedSet(const Nursery&) const { return true; }
 };
 
-typedef HashSet<void*, PointerHasher<void*>, SystemAllocPolicy> EdgeSet;
+using EdgeSet = HashSet<void*, PointerHasher<void*>, SystemAllocPolicy>;
 
 /* The size of a single block of store buffer storage space. */
 static const size_t LifoAllocBlockSize = 8 * 1024;
@@ -86,7 +86,7 @@ class StoreBuffer {
   template <typename T>
   struct MonoTypeBuffer {
     /* The canonical set of stores. */
-    typedef HashSet<T, typename T::Hasher, SystemAllocPolicy> StoreSet;
+    using StoreSet = HashSet<T, typename T::Hasher, SystemAllocPolicy>;
     StoreSet stores_;
 
     /*
@@ -389,13 +389,13 @@ class StoreBuffer {
 
     explicit operator bool() const { return objectAndKind_ != 0; }
 
-    typedef struct Hasher {
+    struct Hasher {
       using Lookup = SlotsEdge;
       static HashNumber hash(const Lookup& l) {
         return mozilla::HashGeneric(l.objectAndKind_, l.start_, l.count_);
       }
       static bool match(const SlotsEdge& k, const Lookup& l) { return k == l; }
-    } Hasher;
+    };
   };
 
 #ifdef DEBUG

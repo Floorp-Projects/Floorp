@@ -68,8 +68,8 @@ struct VerifyNode {
   EdgeValue edges[1];
 };
 
-typedef HashMap<Cell*, VerifyNode*, DefaultHasher<Cell*>, SystemAllocPolicy>
-    NodeMap;
+using NodeMap =
+    HashMap<Cell*, VerifyNode*, DefaultHasher<Cell*>, SystemAllocPolicy>;
 
 /*
  * The verifier data structures are simple. The entire graph is stored in a
@@ -448,7 +448,7 @@ void js::gc::GCRuntime::finishVerifier() {
 }
 
 struct GCChunkHasher {
-  typedef gc::TenuredChunk* Lookup;
+  using Lookup = gc::TenuredChunk*;
 
   /*
    * Strip zeros for better distribution after multiplying by the golden
