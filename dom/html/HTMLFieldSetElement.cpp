@@ -76,19 +76,6 @@ void HTMLFieldSetElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     // This *has* to be called *before* calling FieldSetDisabledChanged on our
     // controls, as they may depend on our disabled state.
     UpdateDisabledState(aNotify);
-
-    if (nsINode::GetFirstChild()) {
-      if (!mElements) {
-        mElements = new nsContentList(this, MatchListedElements, nullptr,
-                                      nullptr, true);
-      }
-
-      uint32_t length = mElements->Length(true);
-      for (uint32_t i = 0; i < length; ++i) {
-        static_cast<nsGenericHTMLFormElement*>(mElements->Item(i))
-            ->FieldSetDisabledChanged(aNotify);
-      }
-    }
   }
 
   return nsGenericHTMLFormControlElement::AfterSetAttr(
@@ -264,6 +251,14 @@ void HTMLFieldSetElement::RemoveElement(nsGenericHTMLFormElement* aElement) {
   }
   MOZ_ASSERT(debugInvalidElementsCount == mInvalidElementsCount);
 #endif
+}
+
+void HTMLFieldSetElement::UpdateDisabledState(bool aNotify) {
+  nsGenericHTMLFormControlElement::UpdateDisabledState(aNotify);
+
+  for (nsGenericHTMLFormElement* element : mDependentElements) {
+    element->FieldSetDisabledChanged(aNotify);
+  }
 }
 
 void HTMLFieldSetElement::NotifyElementsForFirstLegendChange(bool aNotify) {
