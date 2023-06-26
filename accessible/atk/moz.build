@@ -37,7 +37,6 @@ LOCAL_INCLUDES += [
     "/accessible/generic",
     "/accessible/html",
     "/accessible/ipc",
-    "/accessible/ipc/other",
     "/accessible/xpcom",
     "/accessible/xul",
     "/layout/generic",

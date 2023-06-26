@@ -7,11 +7,11 @@
 #include "ARIAMap.h"
 #include "CachedTableAccessible.h"
 #include "DocAccessible.h"
-#include "RemoteAccessibleBase.h"
+#include "RemoteAccessible.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
 #include "mozilla/a11y/Platform.h"
-#include "mozilla/a11y/RemoteAccessibleBase.h"
+#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/TableAccessible.h"
@@ -48,13 +48,12 @@
 namespace mozilla {
 namespace a11y {
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::Shutdown() {
+void RemoteAccessible::Shutdown() {
   MOZ_DIAGNOSTIC_ASSERT(!IsDoc());
   xpcAccessibleDocument* xpcDoc =
       GetAccService()->GetCachedXPCDocument(Document());
   if (xpcDoc) {
-    xpcDoc->NotifyOfShutdown(static_cast<Derived*>(this));
+    xpcDoc->NotifyOfShutdown(static_cast<RemoteAccessible*>(this));
   }
 
   if (IsTable() || IsTableCell()) {
@@ -81,21 +80,17 @@ void RemoteAccessibleBase<Derived>::Shutdown() {
   }
 
   mChildren.Clear();
-  ProxyDestroyed(static_cast<Derived*>(this));
-  mDoc->RemoveAccessible(static_cast<Derived*>(this));
+  ProxyDestroyed(static_cast<RemoteAccessible*>(this));
+  mDoc->RemoveAccessible(static_cast<RemoteAccessible*>(this));
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::SetChildDoc(
-    DocAccessibleParent* aChildDoc) {
+void RemoteAccessible::SetChildDoc(DocAccessibleParent* aChildDoc) {
   MOZ_ASSERT(aChildDoc);
   MOZ_ASSERT(mChildren.Length() == 0);
   mChildren.AppendElement(aChildDoc);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::ClearChildDoc(
-    DocAccessibleParent* aChildDoc) {
+void RemoteAccessible::ClearChildDoc(DocAccessibleParent* aChildDoc) {
   MOZ_ASSERT(aChildDoc);
   // This is possible if we're replacing one document with another: Doc 1
   // has not had a chance to remove itself, but was already replaced by Doc 2
@@ -105,8 +100,7 @@ void RemoteAccessibleBase<Derived>::ClearChildDoc(
   mChildren.RemoveElement(aChildDoc);
 }
 
-template <class Derived>
-uint32_t RemoteAccessibleBase<Derived>::EmbeddedChildCount() {
+uint32_t RemoteAccessible::EmbeddedChildCount() {
   size_t count = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
     if (mChildren[i]->IsEmbeddedObject()) {
@@ -117,9 +111,7 @@ uint32_t RemoteAccessibleBase<Derived>::EmbeddedChildCount() {
   return count;
 }
 
-template <class Derived>
-int32_t RemoteAccessibleBase<Derived>::IndexOfEmbeddedChild(
-    Accessible* aChild) {
+int32_t RemoteAccessible::IndexOfEmbeddedChild(Accessible* aChild) {
   size_t index = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
     if (mChildren[i]->IsEmbeddedObject()) {
@@ -134,8 +126,7 @@ int32_t RemoteAccessibleBase<Derived>::IndexOfEmbeddedChild(
   return -1;
 }
 
-template <class Derived>
-Accessible* RemoteAccessibleBase<Derived>::EmbeddedChildAt(uint32_t aChildIdx) {
+Accessible* RemoteAccessible::EmbeddedChildAt(uint32_t aChildIdx) {
   size_t index = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
     if (!mChildren[i]->IsEmbeddedObject()) {
@@ -152,9 +143,7 @@ Accessible* RemoteAccessibleBase<Derived>::EmbeddedChildAt(uint32_t aChildIdx) {
   return nullptr;
 }
 
-template <class Derived>
-LocalAccessible* RemoteAccessibleBase<Derived>::OuterDocOfRemoteBrowser()
-    const {
+LocalAccessible* RemoteAccessible::OuterDocOfRemoteBrowser() const {
   auto tab = static_cast<dom::BrowserParent*>(mDoc->Manager());
   dom::Element* frame = tab->GetOwnerElement();
   NS_ASSERTION(frame, "why isn't the tab in a frame!");
@@ -165,8 +154,7 @@ LocalAccessible* RemoteAccessibleBase<Derived>::OuterDocOfRemoteBrowser()
   return chromeDoc ? chromeDoc->GetAccessible(frame) : nullptr;
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::SetParent(Derived* aParent) {
+void RemoteAccessible::SetParent(RemoteAccessible* aParent) {
   if (!aParent) {
     mParent = kNoParent;
   } else {
@@ -175,8 +163,7 @@ void RemoteAccessibleBase<Derived>::SetParent(Derived* aParent) {
   }
 }
 
-template <class Derived>
-Derived* RemoteAccessibleBase<Derived>::RemoteParent() const {
+RemoteAccessible* RemoteAccessible::RemoteParent() const {
   if (mParent == kNoParent) {
     return nullptr;
   }
@@ -201,8 +188,46 @@ Derived* RemoteAccessibleBase<Derived>::RemoteParent() const {
   return parentDoc->GetAccessible(mParent);
 }
 
-template <class Derived>
-ENameValueFlag RemoteAccessibleBase<Derived>::Name(nsString& aName) const {
+void RemoteAccessible::ApplyCache(CacheUpdateType aUpdateType,
+                                  AccAttributes* aFields) {
+  const nsTArray<bool> relUpdatesNeeded = PreProcessRelations(aFields);
+  if (auto maybeViewportCache =
+          aFields->GetAttribute<nsTArray<uint64_t>>(nsGkAtoms::viewport)) {
+    // Updating the viewport cache means the offscreen state of this
+    // document's accessibles has changed. Update the HashSet we use for
+    // checking offscreen state here.
+    MOZ_ASSERT(IsDoc(),
+               "Fetched the viewport cache from a non-doc accessible?");
+    AsDoc()->mOnScreenAccessibles.Clear();
+    for (auto id : *maybeViewportCache) {
+      AsDoc()->mOnScreenAccessibles.Insert(id);
+    }
+  }
+
+  if (aUpdateType == CacheUpdateType::Initial) {
+    mCachedFields = aFields;
+  } else {
+    if (!mCachedFields) {
+      // The fields cache can be uninitialized if there were no cache-worthy
+      // fields in the initial cache push.
+      // We don't do a simple assign because we don't want to store the
+      // DeleteEntry entries.
+      mCachedFields = new AccAttributes();
+    }
+    mCachedFields->Update(aFields);
+  }
+
+  if (IsTextLeaf()) {
+    RemoteAccessible* parent = RemoteParent();
+    if (parent && parent->IsHyperText()) {
+      parent->InvalidateCachedHyperTextOffsets();
+    }
+  }
+
+  PostProcessRelations(relUpdatesNeeded);
+}
+
+ENameValueFlag RemoteAccessible::Name(nsString& aName) const {
   ENameValueFlag nameFlag = eNameOK;
   if (mCachedFields) {
     if (IsText()) {
@@ -225,16 +250,14 @@ ENameValueFlag RemoteAccessibleBase<Derived>::Name(nsString& aName) const {
   return nameFlag;
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::Description(nsString& aDescription) const {
+void RemoteAccessible::Description(nsString& aDescription) const {
   if (mCachedFields) {
     mCachedFields->GetAttribute(nsGkAtoms::description, aDescription);
     VERIFY_CACHE(CacheDomain::NameAndDescription);
   }
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::Value(nsString& aValue) const {
+void RemoteAccessible::Value(nsString& aValue) const {
   if (mCachedFields) {
     if (mCachedFields->HasAttribute(nsGkAtoms::aria_valuetext)) {
       mCachedFields->GetAttribute(nsGkAtoms::aria_valuetext, aValue);
@@ -260,7 +283,7 @@ void RemoteAccessibleBase<Derived>::Value(nsString& aValue) const {
     if (IsCombobox()) {
       // For combo boxes, rely on selection state to determine the value.
       const Accessible* option =
-          const_cast<RemoteAccessibleBase<Derived>*>(this)->GetSelectedItem(0);
+          const_cast<RemoteAccessible*>(this)->GetSelectedItem(0);
       if (option) {
         option->Name(aValue);
       } else {
@@ -282,8 +305,7 @@ void RemoteAccessibleBase<Derived>::Value(nsString& aValue) const {
   }
 }
 
-template <class Derived>
-double RemoteAccessibleBase<Derived>::CurValue() const {
+double RemoteAccessible::CurValue() const {
   if (mCachedFields) {
     if (auto value = mCachedFields->GetAttribute<double>(nsGkAtoms::value)) {
       VERIFY_CACHE(CacheDomain::Value);
@@ -294,8 +316,7 @@ double RemoteAccessibleBase<Derived>::CurValue() const {
   return UnspecifiedNaN<double>();
 }
 
-template <class Derived>
-double RemoteAccessibleBase<Derived>::MinValue() const {
+double RemoteAccessible::MinValue() const {
   if (mCachedFields) {
     if (auto min = mCachedFields->GetAttribute<double>(nsGkAtoms::min)) {
       VERIFY_CACHE(CacheDomain::Value);
@@ -306,8 +327,7 @@ double RemoteAccessibleBase<Derived>::MinValue() const {
   return UnspecifiedNaN<double>();
 }
 
-template <class Derived>
-double RemoteAccessibleBase<Derived>::MaxValue() const {
+double RemoteAccessible::MaxValue() const {
   if (mCachedFields) {
     if (auto max = mCachedFields->GetAttribute<double>(nsGkAtoms::max)) {
       VERIFY_CACHE(CacheDomain::Value);
@@ -318,8 +338,7 @@ double RemoteAccessibleBase<Derived>::MaxValue() const {
   return UnspecifiedNaN<double>();
 }
 
-template <class Derived>
-double RemoteAccessibleBase<Derived>::Step() const {
+double RemoteAccessible::Step() const {
   if (mCachedFields) {
     if (auto step = mCachedFields->GetAttribute<double>(nsGkAtoms::step)) {
       VERIFY_CACHE(CacheDomain::Value);
@@ -330,8 +349,7 @@ double RemoteAccessibleBase<Derived>::Step() const {
   return UnspecifiedNaN<double>();
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::SetCurValue(double aValue) {
+bool RemoteAccessible::SetCurValue(double aValue) {
   if (!HasNumericValue() || IsProgress()) {
     return false;
   }
@@ -355,8 +373,7 @@ bool RemoteAccessibleBase<Derived>::SetCurValue(double aValue) {
   return true;
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::ContainsPoint(int32_t aX, int32_t aY) {
+bool RemoteAccessible::ContainsPoint(int32_t aX, int32_t aY) {
   if (!BoundsWithOffset(Nothing(), true).Contains(aX, aY)) {
     return false;
   }
@@ -414,8 +431,7 @@ bool RemoteAccessibleBase<Derived>::ContainsPoint(int32_t aX, int32_t aY) {
   return false;
 }
 
-template <class Derived>
-RemoteAccessible* RemoteAccessibleBase<Derived>::DoFuzzyHittesting() {
+RemoteAccessible* RemoteAccessible::DoFuzzyHittesting() {
   uint32_t childCount = ChildCount();
   if (!childCount) {
     return nullptr;
@@ -467,8 +483,7 @@ RemoteAccessible* RemoteAccessibleBase<Derived>::DoFuzzyHittesting() {
   return nullptr;
 }
 
-template <class Derived>
-Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
+Accessible* RemoteAccessible::ChildAtPoint(
     int32_t aX, int32_t aY, LocalAccessible::EWhichChildAtPoint aWhichChild) {
   // Elements that are partially on-screen should have their bounds masked by
   // their containing scroll area so hittesting yields results that are
@@ -597,8 +612,7 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
   return lastMatch;
 }
 
-template <class Derived>
-Maybe<nsRect> RemoteAccessibleBase<Derived>::RetrieveCachedBounds() const {
+Maybe<nsRect> RemoteAccessible::RetrieveCachedBounds() const {
   if (!mCachedFields) {
     return Nothing();
   }
@@ -617,8 +631,7 @@ Maybe<nsRect> RemoteAccessibleBase<Derived>::RetrieveCachedBounds() const {
   return Nothing();
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::ApplyCrossDocOffset(nsRect& aBounds) const {
+void RemoteAccessible::ApplyCrossDocOffset(nsRect& aBounds) const {
   if (!IsDoc()) {
     // We should only apply cross-doc offsets to documents. If we're anything
     // else, return early here.
@@ -644,9 +657,7 @@ void RemoteAccessibleBase<Derived>::ApplyCrossDocOffset(nsRect& aBounds) const {
   aBounds.MoveBy(offset[0], offset[1]);
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::ApplyTransform(
-    nsRect& aCumulativeBounds) const {
+bool RemoteAccessible::ApplyTransform(nsRect& aCumulativeBounds) const {
   // First, attempt to retrieve the transform from the cache.
   Maybe<const UniquePtr<gfx::Matrix4x4>&> maybeTransform =
       mCachedFields->GetAttribute<UniquePtr<gfx::Matrix4x4>>(
@@ -667,8 +678,7 @@ bool RemoteAccessibleBase<Derived>::ApplyTransform(
   return true;
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
+bool RemoteAccessible::ApplyScrollOffset(nsRect& aBounds) const {
   Maybe<const nsTArray<int32_t>&> maybeScrollPosition =
       mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::scrollPosition);
 
@@ -692,8 +702,7 @@ bool RemoteAccessibleBase<Derived>::ApplyScrollOffset(nsRect& aBounds) const {
   return true;
 }
 
-template <class Derived>
-nsRect RemoteAccessibleBase<Derived>::BoundsInAppUnits() const {
+nsRect RemoteAccessible::BoundsInAppUnits() const {
   if (dom::CanonicalBrowsingContext* cbc = mDoc->GetBrowsingContext()->Top()) {
     if (dom::BrowserParent* bp = cbc->GetBrowserParent()) {
       DocAccessibleParent* topDoc = bp->GetTopLevelDocAccessible();
@@ -708,8 +717,7 @@ nsRect RemoteAccessibleBase<Derived>::BoundsInAppUnits() const {
   return LayoutDeviceIntRect::ToAppUnits(Bounds(), AppUnitsPerCSSPixel());
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::IsFixedPos() const {
+bool RemoteAccessible::IsFixedPos() const {
   MOZ_ASSERT(mCachedFields);
   if (auto maybePosition =
           mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::position)) {
@@ -719,8 +727,7 @@ bool RemoteAccessibleBase<Derived>::IsFixedPos() const {
   return false;
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::IsOverflowHidden() const {
+bool RemoteAccessible::IsOverflowHidden() const {
   MOZ_ASSERT(mCachedFields);
   if (auto maybeOverflow =
           mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::overflow)) {
@@ -730,8 +737,7 @@ bool RemoteAccessibleBase<Derived>::IsOverflowHidden() const {
   return false;
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::IsClipped() const {
+bool RemoteAccessible::IsClipped() const {
   MOZ_ASSERT(mCachedFields);
   if (mCachedFields->GetAttribute<bool>(nsGkAtoms::clip_rule)) {
     return true;
@@ -740,8 +746,7 @@ bool RemoteAccessibleBase<Derived>::IsClipped() const {
   return false;
 }
 
-template <class Derived>
-LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
+LayoutDeviceIntRect RemoteAccessible::BoundsWithOffset(
     Maybe<nsRect> aOffset, bool aBoundsAreForHittesting) const {
   Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
   if (maybeBounds) {
@@ -894,14 +899,11 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
   return LayoutDeviceIntRect();
 }
 
-template <class Derived>
-LayoutDeviceIntRect RemoteAccessibleBase<Derived>::Bounds() const {
+LayoutDeviceIntRect RemoteAccessible::Bounds() const {
   return BoundsWithOffset(Nothing());
 }
 
-template <class Derived>
-Relation RemoteAccessibleBase<Derived>::RelationByType(
-    RelationType aType) const {
+Relation RemoteAccessible::RelationByType(RelationType aType) const {
   // We are able to handle some relations completely in the
   // parent process, without the help of the cache. Those
   // relations are enumerated here. Other relations, whose
@@ -962,8 +964,7 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
                          roleMapEntry->role == roles::LISTITEM ||
                          roleMapEntry->role == roles::ROW)) {
       if (const AccGroupInfo* groupInfo =
-              const_cast<RemoteAccessibleBase<Derived>*>(this)
-                  ->GetOrCreateGroupInfo()) {
+              const_cast<RemoteAccessible*>(this)->GetOrCreateGroupInfo()) {
         return Relation(groupInfo->ConceptualParent());
       }
     }
@@ -1072,10 +1073,8 @@ Relation RemoteAccessibleBase<Derived>::RelationByType(
   return rel;
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
-                                                 uint32_t aStartOffset,
-                                                 uint32_t aLength) {
+void RemoteAccessible::AppendTextTo(nsAString& aText, uint32_t aStartOffset,
+                                    uint32_t aLength) {
   if (IsText()) {
     if (mCachedFields) {
       if (auto text = mCachedFields->GetAttribute<nsString>(nsGkAtoms::text)) {
@@ -1102,9 +1101,7 @@ void RemoteAccessibleBase<Derived>::AppendTextTo(nsAString& aText,
   }
 }
 
-template <class Derived>
-nsTArray<bool> RemoteAccessibleBase<Derived>::PreProcessRelations(
-    AccAttributes* aFields) {
+nsTArray<bool> RemoteAccessible::PreProcessRelations(AccAttributes* aFields) {
   nsTArray<bool> updateTracker(ArrayLength(kRelationTypeAtoms));
   for (auto const& data : kRelationTypeAtoms) {
     if (data.mValidTag) {
@@ -1175,9 +1172,7 @@ nsTArray<bool> RemoteAccessibleBase<Derived>::PreProcessRelations(
   return updateTracker;
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::PostProcessRelations(
-    const nsTArray<bool>& aToUpdate) {
+void RemoteAccessible::PostProcessRelations(const nsTArray<bool>& aToUpdate) {
   size_t updateCount = aToUpdate.Length();
   MOZ_ASSERT(updateCount == ArrayLength(kRelationTypeAtoms),
              "Did not note update status for every relation type!");
@@ -1200,8 +1195,7 @@ void RemoteAccessibleBase<Derived>::PostProcessRelations(
   }
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::PruneRelationsOnShutdown() {
+void RemoteAccessible::PruneRelationsOnShutdown() {
   auto reverseRels = mDoc->mReverseRelations.Lookup(ID());
   if (!reverseRels) {
     return;
@@ -1237,8 +1231,7 @@ void RemoteAccessibleBase<Derived>::PruneRelationsOnShutdown() {
   reverseRels.Remove();
 }
 
-template <class Derived>
-uint32_t RemoteAccessibleBase<Derived>::GetCachedTextLength() {
+uint32_t RemoteAccessible::GetCachedTextLength() {
   MOZ_ASSERT(!HasChildren());
   if (!mCachedFields) {
     return 0;
@@ -1251,9 +1244,7 @@ uint32_t RemoteAccessibleBase<Derived>::GetCachedTextLength() {
   return text->Length();
 }
 
-template <class Derived>
-Maybe<const nsTArray<int32_t>&>
-RemoteAccessibleBase<Derived>::GetCachedTextLines() {
+Maybe<const nsTArray<int32_t>&> RemoteAccessible::GetCachedTextLines() {
   MOZ_ASSERT(!HasChildren());
   if (!mCachedFields) {
     return Nothing();
@@ -1262,8 +1253,7 @@ RemoteAccessibleBase<Derived>::GetCachedTextLines() {
   return mCachedFields->GetAttribute<nsTArray<int32_t>>(nsGkAtoms::line);
 }
 
-template <class Derived>
-nsRect RemoteAccessibleBase<Derived>::GetCachedCharRect(int32_t aOffset) {
+nsRect RemoteAccessible::GetCachedCharRect(int32_t aOffset) {
   MOZ_ASSERT(IsText());
   if (!mCachedFields) {
     return nsRect();
@@ -1286,8 +1276,7 @@ nsRect RemoteAccessibleBase<Derived>::GetCachedCharRect(int32_t aOffset) {
   return nsRect();
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::DOMNodeID(nsString& aID) const {
+void RemoteAccessible::DOMNodeID(nsString& aID) const {
   if (mCachedFields) {
     mCachedFields->GetAttribute(nsGkAtoms::id, aID);
     VERIFY_CACHE(CacheDomain::DOMNodeIDAndClass);
@@ -1295,30 +1284,26 @@ void RemoteAccessibleBase<Derived>::DOMNodeID(nsString& aID) const {
 }
 
 #if !defined(XP_WIN)
-template <class Derived>
-void RemoteAccessibleBase<Derived>::ScrollToPoint(uint32_t aScrollType,
-                                                  int32_t aX, int32_t aY) {
+void RemoteAccessible::ScrollToPoint(uint32_t aScrollType, int32_t aX,
+                                     int32_t aY) {
   Unused << mDoc->SendScrollToPoint(mID, aScrollType, aX, aY);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::Announce(const nsString& aAnnouncement,
-                                             uint16_t aPriority) {
+void RemoteAccessible::Announce(const nsString& aAnnouncement,
+                                uint16_t aPriority) {
   Unused << mDoc->SendAnnounce(mID, aAnnouncement, aPriority);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::ScrollSubstringToPoint(
-    int32_t aStartOffset, int32_t aEndOffset, uint32_t aCoordinateType,
-    int32_t aX, int32_t aY) {
+void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
+                                              int32_t aEndOffset,
+                                              uint32_t aCoordinateType,
+                                              int32_t aX, int32_t aY) {
   Unused << mDoc->SendScrollSubstringToPoint(mID, aStartOffset, aEndOffset,
                                              aCoordinateType, aX, aY);
 }
 #endif  // !defined(XP_WIN)
 
-template <class Derived>
-RefPtr<const AccAttributes>
-RemoteAccessibleBase<Derived>::GetCachedTextAttributes() {
+RefPtr<const AccAttributes> RemoteAccessible::GetCachedTextAttributes() {
   MOZ_ASSERT(IsText() || IsHyperText());
   if (mCachedFields) {
     auto attrs =
@@ -1329,9 +1314,7 @@ RemoteAccessibleBase<Derived>::GetCachedTextAttributes() {
   return nullptr;
 }
 
-template <class Derived>
-already_AddRefed<AccAttributes>
-RemoteAccessibleBase<Derived>::DefaultTextAttributes() {
+already_AddRefed<AccAttributes> RemoteAccessible::DefaultTextAttributes() {
   RefPtr<const AccAttributes> attrs = GetCachedTextAttributes();
   RefPtr<AccAttributes> result = new AccAttributes();
   if (attrs) {
@@ -1340,9 +1323,7 @@ RemoteAccessibleBase<Derived>::DefaultTextAttributes() {
   return result.forget();
 }
 
-template <class Derived>
-RefPtr<const AccAttributes>
-RemoteAccessibleBase<Derived>::GetCachedARIAAttributes() const {
+RefPtr<const AccAttributes> RemoteAccessible::GetCachedARIAAttributes() const {
   if (mCachedFields) {
     auto attrs =
         mCachedFields->GetAttributeRefPtr<AccAttributes>(nsGkAtoms::aria);
@@ -1352,8 +1333,7 @@ RemoteAccessibleBase<Derived>::GetCachedARIAAttributes() const {
   return nullptr;
 }
 
-template <class Derived>
-nsString RemoteAccessibleBase<Derived>::GetCachedHTMLNameAttribute() const {
+nsString RemoteAccessible::GetCachedHTMLNameAttribute() const {
   if (mCachedFields) {
     if (auto maybeName =
             mCachedFields->GetAttribute<nsString>(nsGkAtoms::attributeName)) {
@@ -1363,8 +1343,7 @@ nsString RemoteAccessibleBase<Derived>::GetCachedHTMLNameAttribute() const {
   return nsString();
 }
 
-template <class Derived>
-uint64_t RemoteAccessibleBase<Derived>::State() {
+uint64_t RemoteAccessible::State() {
   uint64_t state = 0;
   if (mCachedFields) {
     if (auto rawState =
@@ -1433,8 +1412,7 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
   return state;
 }
 
-template <class Derived>
-already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
+already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
   RefPtr<AccAttributes> attributes = new AccAttributes();
   nsAccessibilityService* accService = GetAccService();
   if (!accService) {
@@ -1561,8 +1539,7 @@ already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
   return attributes.forget();
 }
 
-template <class Derived>
-nsAtom* RemoteAccessibleBase<Derived>::TagName() const {
+nsAtom* RemoteAccessible::TagName() const {
   if (mCachedFields) {
     if (auto tag =
             mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::tag)) {
@@ -1573,8 +1550,7 @@ nsAtom* RemoteAccessibleBase<Derived>::TagName() const {
   return nullptr;
 }
 
-template <class Derived>
-already_AddRefed<nsAtom> RemoteAccessibleBase<Derived>::InputType() const {
+already_AddRefed<nsAtom> RemoteAccessible::InputType() const {
   if (mCachedFields) {
     if (auto inputType = mCachedFields->GetAttribute<RefPtr<nsAtom>>(
             nsGkAtoms::textInputType)) {
@@ -1586,8 +1562,7 @@ already_AddRefed<nsAtom> RemoteAccessibleBase<Derived>::InputType() const {
   return nullptr;
 }
 
-template <class Derived>
-already_AddRefed<nsAtom> RemoteAccessibleBase<Derived>::DisplayStyle() const {
+already_AddRefed<nsAtom> RemoteAccessible::DisplayStyle() const {
   if (mCachedFields) {
     if (auto display =
             mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::display)) {
@@ -1598,8 +1573,7 @@ already_AddRefed<nsAtom> RemoteAccessibleBase<Derived>::DisplayStyle() const {
   return nullptr;
 }
 
-template <class Derived>
-float RemoteAccessibleBase<Derived>::Opacity() const {
+float RemoteAccessible::Opacity() const {
   if (mCachedFields) {
     if (auto opacity = mCachedFields->GetAttribute<float>(nsGkAtoms::opacity)) {
       return *opacity;
@@ -1609,10 +1583,10 @@ float RemoteAccessibleBase<Derived>::Opacity() const {
   return 1.0f;
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::LiveRegionAttributes(
-    nsAString* aLive, nsAString* aRelevant, Maybe<bool>* aAtomic,
-    nsAString* aBusy) const {
+void RemoteAccessible::LiveRegionAttributes(nsAString* aLive,
+                                            nsAString* aRelevant,
+                                            Maybe<bool>* aAtomic,
+                                            nsAString* aBusy) const {
   if (!mCachedFields) {
     return;
   }
@@ -1637,16 +1611,14 @@ void RemoteAccessibleBase<Derived>::LiveRegionAttributes(
   }
 }
 
-template <class Derived>
-Maybe<bool> RemoteAccessibleBase<Derived>::ARIASelected() const {
+Maybe<bool> RemoteAccessible::ARIASelected() const {
   if (mCachedFields) {
     return mCachedFields->GetAttribute<bool>(nsGkAtoms::aria_selected);
   }
   return Nothing();
 }
 
-template <class Derived>
-nsAtom* RemoteAccessibleBase<Derived>::GetPrimaryAction() const {
+nsAtom* RemoteAccessible::GetPrimaryAction() const {
   if (mCachedFields) {
     if (auto action =
             mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::action)) {
@@ -1657,8 +1629,7 @@ nsAtom* RemoteAccessibleBase<Derived>::GetPrimaryAction() const {
   return nullptr;
 }
 
-template <class Derived>
-uint8_t RemoteAccessibleBase<Derived>::ActionCount() const {
+uint8_t RemoteAccessible::ActionCount() const {
   uint8_t actionCount = 0;
   if (mCachedFields) {
     if (HasPrimaryAction() || ActionAncestor()) {
@@ -1674,9 +1645,7 @@ uint8_t RemoteAccessibleBase<Derived>::ActionCount() const {
   return actionCount;
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::ActionNameAt(uint8_t aIndex,
-                                                 nsAString& aName) {
+void RemoteAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName) {
   if (mCachedFields) {
     aName.Truncate();
     nsAtom* action = GetPrimaryAction();
@@ -1705,8 +1674,7 @@ void RemoteAccessibleBase<Derived>::ActionNameAt(uint8_t aIndex,
   VERIFY_CACHE(CacheDomain::Actions);
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::DoAction(uint8_t aIndex) const {
+bool RemoteAccessible::DoAction(uint8_t aIndex) const {
   if (ActionCount() < aIndex + 1) {
     return false;
   }
@@ -1715,8 +1683,7 @@ bool RemoteAccessibleBase<Derived>::DoAction(uint8_t aIndex) const {
   return true;
 }
 
-template <class Derived>
-KeyBinding RemoteAccessibleBase<Derived>::AccessKey() const {
+KeyBinding RemoteAccessible::AccessKey() const {
   if (mCachedFields) {
     if (auto value =
             mCachedFields->GetAttribute<uint64_t>(nsGkAtoms::accesskey)) {
@@ -1726,14 +1693,11 @@ KeyBinding RemoteAccessibleBase<Derived>::AccessKey() const {
   return KeyBinding();
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::SelectionRanges(
-    nsTArray<TextRange>* aRanges) const {
+void RemoteAccessible::SelectionRanges(nsTArray<TextRange>* aRanges) const {
   Document()->SelectionRanges(aRanges);
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::RemoveFromSelection(int32_t aSelectionNum) {
+bool RemoteAccessible::RemoveFromSelection(int32_t aSelectionNum) {
   MOZ_ASSERT(IsHyperText());
   if (SelectionCount() <= aSelectionNum) {
     return false;
@@ -1744,9 +1708,8 @@ bool RemoteAccessibleBase<Derived>::RemoveFromSelection(int32_t aSelectionNum) {
   return true;
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::ARIAGroupPosition(
-    int32_t* aLevel, int32_t* aSetSize, int32_t* aPosInSet) const {
+void RemoteAccessible::ARIAGroupPosition(int32_t* aLevel, int32_t* aSetSize,
+                                         int32_t* aPosInSet) const {
   if (!mCachedFields) {
     return;
   }
@@ -1771,8 +1734,7 @@ void RemoteAccessibleBase<Derived>::ARIAGroupPosition(
   }
 }
 
-template <class Derived>
-AccGroupInfo* RemoteAccessibleBase<Derived>::GetGroupInfo() const {
+AccGroupInfo* RemoteAccessible::GetGroupInfo() const {
   if (!mCachedFields) {
     return nullptr;
   }
@@ -1785,8 +1747,7 @@ AccGroupInfo* RemoteAccessibleBase<Derived>::GetGroupInfo() const {
   return nullptr;
 }
 
-template <class Derived>
-AccGroupInfo* RemoteAccessibleBase<Derived>::GetOrCreateGroupInfo() {
+AccGroupInfo* RemoteAccessible::GetOrCreateGroupInfo() {
   AccGroupInfo* groupInfo = GetGroupInfo();
   if (groupInfo) {
     return groupInfo;
@@ -1804,16 +1765,14 @@ AccGroupInfo* RemoteAccessibleBase<Derived>::GetOrCreateGroupInfo() {
   return groupInfo;
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::InvalidateGroupInfo() {
+void RemoteAccessible::InvalidateGroupInfo() {
   if (mCachedFields) {
     mCachedFields->Remove(nsGkAtoms::group);
   }
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::GetPositionAndSetSize(int32_t* aPosInSet,
-                                                          int32_t* aSetSize) {
+void RemoteAccessible::GetPositionAndSetSize(int32_t* aPosInSet,
+                                             int32_t* aSetSize) {
   if (IsHTMLRadioButton()) {
     *aSetSize = 0;
     Relation rel = RelationByType(RelationType::MEMBER_OF);
@@ -1829,27 +1788,20 @@ void RemoteAccessibleBase<Derived>::GetPositionAndSetSize(int32_t* aPosInSet,
   Accessible::GetPositionAndSetSize(aPosInSet, aSetSize);
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::HasPrimaryAction() const {
+bool RemoteAccessible::HasPrimaryAction() const {
   return mCachedFields && mCachedFields->HasAttribute(nsGkAtoms::action);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::TakeFocus() const {
-  Unused << mDoc->SendTakeFocus(mID);
-}
+void RemoteAccessible::TakeFocus() const { Unused << mDoc->SendTakeFocus(mID); }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::ScrollTo(uint32_t aHow) const {
+void RemoteAccessible::ScrollTo(uint32_t aHow) const {
   Unused << mDoc->SendScrollTo(mID, aHow);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // SelectAccessible
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::SelectedItems(
-    nsTArray<Accessible*>* aItems) {
+void RemoteAccessible::SelectedItems(nsTArray<Accessible*>* aItems) {
   Pivot p = Pivot(this);
   PivotStateRule rule(states::SELECTED);
   for (Accessible* selected = p.First(rule); selected;
@@ -1858,8 +1810,7 @@ void RemoteAccessibleBase<Derived>::SelectedItems(
   }
 }
 
-template <class Derived>
-uint32_t RemoteAccessibleBase<Derived>::SelectedItemCount() {
+uint32_t RemoteAccessible::SelectedItemCount() {
   uint32_t count = 0;
   Pivot p = Pivot(this);
   PivotStateRule rule(states::SELECTED);
@@ -1871,8 +1822,7 @@ uint32_t RemoteAccessibleBase<Derived>::SelectedItemCount() {
   return count;
 }
 
-template <class Derived>
-Accessible* RemoteAccessibleBase<Derived>::GetSelectedItem(uint32_t aIndex) {
+Accessible* RemoteAccessible::GetSelectedItem(uint32_t aIndex) {
   uint32_t index = 0;
   Accessible* selected = nullptr;
   Pivot p = Pivot(this);
@@ -1885,8 +1835,7 @@ Accessible* RemoteAccessibleBase<Derived>::GetSelectedItem(uint32_t aIndex) {
   return selected;
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::IsItemSelected(uint32_t aIndex) {
+bool RemoteAccessible::IsItemSelected(uint32_t aIndex) {
   uint32_t index = 0;
   Accessible* selectable = nullptr;
   Pivot p = Pivot(this);
@@ -1899,8 +1848,7 @@ bool RemoteAccessibleBase<Derived>::IsItemSelected(uint32_t aIndex) {
   return selectable && selectable->State() & states::SELECTED;
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::AddItemToSelection(uint32_t aIndex) {
+bool RemoteAccessible::AddItemToSelection(uint32_t aIndex) {
   uint32_t index = 0;
   Accessible* selectable = nullptr;
   Pivot p = Pivot(this);
@@ -1915,8 +1863,7 @@ bool RemoteAccessibleBase<Derived>::AddItemToSelection(uint32_t aIndex) {
   return static_cast<bool>(selectable);
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::RemoveItemFromSelection(uint32_t aIndex) {
+bool RemoteAccessible::RemoveItemFromSelection(uint32_t aIndex) {
   uint32_t index = 0;
   Accessible* selectable = nullptr;
   Pivot p = Pivot(this);
@@ -1931,8 +1878,7 @@ bool RemoteAccessibleBase<Derived>::RemoveItemFromSelection(uint32_t aIndex) {
   return static_cast<bool>(selectable);
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::SelectAll() {
+bool RemoteAccessible::SelectAll() {
   if ((State() & states::MULTISELECTABLE) == 0) {
     return false;
   }
@@ -1949,8 +1895,7 @@ bool RemoteAccessibleBase<Derived>::SelectAll() {
   return success;
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::UnselectAll() {
+bool RemoteAccessible::UnselectAll() {
   if ((State() & states::MULTISELECTABLE) == 0) {
     return false;
   }
@@ -1967,34 +1912,29 @@ bool RemoteAccessibleBase<Derived>::UnselectAll() {
   return success;
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::TakeSelection() {
+void RemoteAccessible::TakeSelection() {
   Unused << mDoc->SendTakeSelection(mID);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::SetSelected(bool aSelect) {
+void RemoteAccessible::SetSelected(bool aSelect) {
   Unused << mDoc->SendSetSelected(mID, aSelect);
 }
 
-template <class Derived>
-TableAccessible* RemoteAccessibleBase<Derived>::AsTable() {
+TableAccessible* RemoteAccessible::AsTable() {
   if (IsTable()) {
     return CachedTableAccessible::GetFrom(this);
   }
   return nullptr;
 }
 
-template <class Derived>
-TableCellAccessible* RemoteAccessibleBase<Derived>::AsTableCell() {
+TableCellAccessible* RemoteAccessible::AsTableCell() {
   if (IsTableCell()) {
     return CachedTableCellAccessible::GetFrom(this);
   }
   return nullptr;
 }
 
-template <class Derived>
-bool RemoteAccessibleBase<Derived>::TableIsProbablyForLayout() {
+bool RemoteAccessible::TableIsProbablyForLayout() {
   if (mCachedFields) {
     if (auto layoutGuess =
             mCachedFields->GetAttribute<bool>(nsGkAtoms::layout_guess)) {
@@ -2004,8 +1944,7 @@ bool RemoteAccessibleBase<Derived>::TableIsProbablyForLayout() {
   return false;
 }
 
-template <class Derived>
-nsTArray<int32_t>& RemoteAccessibleBase<Derived>::GetCachedHyperTextOffsets() {
+nsTArray<int32_t>& RemoteAccessible::GetCachedHyperTextOffsets() {
   if (mCachedFields) {
     if (auto offsets = mCachedFields->GetMutableAttribute<nsTArray<int32_t>>(
             nsGkAtoms::offset)) {
@@ -2021,14 +1960,11 @@ nsTArray<int32_t>& RemoteAccessibleBase<Derived>::GetCachedHyperTextOffsets() {
       nsGkAtoms::offset);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::SetCaretOffset(int32_t aOffset) {
+void RemoteAccessible::SetCaretOffset(int32_t aOffset) {
   Unused << mDoc->SendSetCaretOffset(mID, aOffset);
 }
 
-template <class Derived>
-Maybe<int32_t> RemoteAccessibleBase<Derived>::GetIntARIAAttr(
-    nsAtom* aAttrName) const {
+Maybe<int32_t> RemoteAccessible::GetIntARIAAttr(nsAtom* aAttrName) const {
   if (RefPtr<const AccAttributes> attrs = GetCachedARIAAttributes()) {
     if (auto val = attrs->GetAttribute<int32_t>(aAttrName)) {
       return val;
@@ -2037,8 +1973,7 @@ Maybe<int32_t> RemoteAccessibleBase<Derived>::GetIntARIAAttr(
   return Nothing();
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::Language(nsAString& aLocale) {
+void RemoteAccessible::Language(nsAString& aLocale) {
   if (!IsHyperText()) {
     return;
   }
@@ -2047,49 +1982,35 @@ void RemoteAccessibleBase<Derived>::Language(nsAString& aLocale) {
   }
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::ReplaceText(const nsAString& aText) {
+void RemoteAccessible::ReplaceText(const nsAString& aText) {
   Unused << mDoc->SendReplaceText(mID, aText);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::InsertText(const nsAString& aText,
-                                               int32_t aPosition) {
+void RemoteAccessible::InsertText(const nsAString& aText, int32_t aPosition) {
   Unused << mDoc->SendInsertText(mID, aText, aPosition);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::CopyText(int32_t aStartPos,
-                                             int32_t aEndPos) {
+void RemoteAccessible::CopyText(int32_t aStartPos, int32_t aEndPos) {
   Unused << mDoc->SendCopyText(mID, aStartPos, aEndPos);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::CutText(int32_t aStartPos,
-                                            int32_t aEndPos) {
+void RemoteAccessible::CutText(int32_t aStartPos, int32_t aEndPos) {
   Unused << mDoc->SendCutText(mID, aStartPos, aEndPos);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::DeleteText(int32_t aStartPos,
-                                               int32_t aEndPos) {
+void RemoteAccessible::DeleteText(int32_t aStartPos, int32_t aEndPos) {
   Unused << mDoc->SendDeleteText(mID, aStartPos, aEndPos);
 }
 
-template <class Derived>
-void RemoteAccessibleBase<Derived>::PasteText(int32_t aPosition) {
+void RemoteAccessible::PasteText(int32_t aPosition) {
   Unused << mDoc->SendPasteText(mID, aPosition);
 }
 
-template <class Derived>
-size_t RemoteAccessibleBase<Derived>::SizeOfIncludingThis(
-    MallocSizeOf aMallocSizeOf) {
+size_t RemoteAccessible::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-template <class Derived>
-size_t RemoteAccessibleBase<Derived>::SizeOfExcludingThis(
-    MallocSizeOf aMallocSizeOf) {
+size_t RemoteAccessible::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
   size_t size = 0;
 
   // Count attributes.
@@ -2103,8 +2024,6 @@ size_t RemoteAccessibleBase<Derived>::SizeOfExcludingThis(
 
   return size;
 }
-
-template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y
 }  // namespace mozilla

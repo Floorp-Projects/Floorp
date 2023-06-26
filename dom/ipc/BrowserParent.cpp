@@ -13,7 +13,6 @@
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/DocAccessibleParent.h"
 #  include "mozilla/a11y/Platform.h"
-#  include "mozilla/a11y/RemoteAccessibleBase.h"
 #  include "nsAccessibilityService.h"
 #endif
 #include "mozilla/Components.h"

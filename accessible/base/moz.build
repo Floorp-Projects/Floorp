@@ -71,15 +71,6 @@ LOCAL_INCLUDES += [
     "/dom/xul",
 ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    LOCAL_INCLUDES += [
-        "/accessible/ipc/win",
-    ]
-else:
-    LOCAL_INCLUDES += [
-        "/accessible/ipc/other",
-    ]
-
 LOCAL_INCLUDES += [
     "/accessible/xpcom",
     "/accessible/xul",
