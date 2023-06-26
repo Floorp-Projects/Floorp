@@ -785,9 +785,19 @@ static Maybe<TransformData> CreateAnimationData(
         styleOrigin.horizontal, styleOrigin.vertical, refBox);
     CSSPoint anchorAdjustment =
         MotionPathUtils::ComputeAnchorPointAdjustment(*aFrame);
-
+    // Note: If there is no containing block or coord-box is empty, we still
+    // pass it to the compositor. Just render them as no path on the compositor
+    // thread.
+    nsRect coordBox;
+    const nsIFrame* containingBlockFrame =
+        MotionPathUtils::GetOffsetPathReferenceBox(aFrame, coordBox);
+    CSSCoord rayContainReferenceLength =
+        MotionPathUtils::GetRayContainReferenceSize(aFrame);
     motionPathData = Some(layers::MotionPathData(
-        motionPathOrigin, anchorAdjustment, RayReferenceData(aFrame)));
+        motionPathOrigin, anchorAdjustment, coordBox,
+        containingBlockFrame ? aFrame->GetOffsetTo(containingBlockFrame)
+                             : aFrame->GetPosition(),
+        rayContainReferenceLength));
   }
 
   Maybe<PartialPrerenderData> partialPrerenderData;

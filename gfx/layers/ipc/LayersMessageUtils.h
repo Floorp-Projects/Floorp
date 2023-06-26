@@ -16,7 +16,6 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "ipc/EnumSerializer.h"
 #include "ipc/IPCMessageUtils.h"
-#include "mozilla/MotionPathUtils.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/layers/APZInputBridge.h"
@@ -1070,21 +1069,6 @@ struct ParamTraits<mozilla::layers::CompositionPayload> {
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->mType) &&
            ReadParam(aReader, &aResult->mTimeStamp);
-  }
-};
-
-template <>
-struct ParamTraits<mozilla::RayReferenceData> {
-  typedef mozilla::RayReferenceData paramType;
-
-  static void Write(MessageWriter* aWriter, const paramType& aParam) {
-    WriteParam(aWriter, aParam.mInitialPosition);
-    WriteParam(aWriter, aParam.mContainingBlockRect);
-  }
-
-  static bool Read(MessageReader* aReader, paramType* aResult) {
-    return (ReadParam(aReader, &aResult->mInitialPosition) &&
-            ReadParam(aReader, &aResult->mContainingBlockRect));
   }
 };
 

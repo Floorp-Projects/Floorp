@@ -25,7 +25,7 @@ struct nsRect;
 
 namespace mozilla {
 struct ResolvedMotionPathData;
-}
+}  // namespace mozilla
 
 /**
  * A helper to generate gfxMatrixes from css transform functions.
@@ -161,8 +161,7 @@ mozilla::gfx::Matrix4x4 ReadTransforms(const mozilla::StyleTransform& aList,
 // https://drafts.csswg.org/css-transforms-2/#ctm
 mozilla::gfx::Matrix4x4 ReadTransforms(
     const mozilla::StyleTranslate&, const mozilla::StyleRotate&,
-    const mozilla::StyleScale&,
-    const mozilla::Maybe<mozilla::ResolvedMotionPathData>& aMotion,
+    const mozilla::StyleScale&, const mozilla::ResolvedMotionPathData* aMotion,
     const mozilla::StyleTransform&, TransformReferenceBox& aRefBox,
     float aAppUnitsPerMatrixUnit);
 

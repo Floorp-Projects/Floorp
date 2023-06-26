@@ -24,12 +24,29 @@ namespace mozilla {
 
 using nsStyleTransformMatrix::TransformReferenceBox;
 
-// In CSS context, this returns the the box being referenced from the element
-// that establishes the containing block for this element.
-// In SVG context, we always use view-box.
-// https://drafts.fxtf.org/motion-1/#valdef-offset-path-coord-box
-static const nsIFrame* GetOffsetPathReferenceBox(const nsIFrame* aFrame,
-                                                 nsRect& aOutputRect) {
+/* static */
+CSSPoint MotionPathUtils::ComputeAnchorPointAdjustment(const nsIFrame& aFrame) {
+  if (!aFrame.HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
+    return {};
+  }
+
+  auto transformBox = aFrame.StyleDisplay()->mTransformBox;
+  if (transformBox == StyleGeometryBox::ViewBox ||
+      transformBox == StyleGeometryBox::BorderBox) {
+    return {};
+  }
+
+  if (aFrame.IsFrameOfType(nsIFrame::eSVGContainer)) {
+    nsRect boxRect = nsLayoutUtils::ComputeGeometryBox(
+        const_cast<nsIFrame*>(&aFrame), StyleGeometryBox::FillBox);
+    return CSSPoint::FromAppUnits(boxRect.TopLeft());
+  }
+  return CSSPoint::FromAppUnits(aFrame.GetPosition());
+}
+
+/* static */
+const nsIFrame* MotionPathUtils::GetOffsetPathReferenceBox(
+    const nsIFrame* aFrame, nsRect& aOutputRect) {
   const StyleOffsetPath& offsetPath = aFrame->StyleDisplay()->mOffsetPath;
   if (offsetPath.IsNone()) {
     return nullptr;
@@ -52,22 +69,8 @@ static const nsIFrame* GetOffsetPathReferenceBox(const nsIFrame* aFrame,
   return containingBlock;
 }
 
-RayReferenceData::RayReferenceData(const nsIFrame* aFrame) {
-  nsRect coordBox;
-  const nsIFrame* containingBlock = GetOffsetPathReferenceBox(aFrame, coordBox);
-  if (!containingBlock) {
-    // If there is no parent frame, it's impossible to calculate the path
-    // length, so does the path.
-    return;
-  }
-
-  mContainingBlockRect = CSSRect::FromAppUnits(coordBox);
-
-  // The current position of |aFrame| in the coordinate system of
-  // |containingBlock|.
-  mInitialPosition =
-      CSSPoint::FromAppUnits(aFrame->GetOffsetTo(containingBlock));
-
+/* static */
+CSSCoord MotionPathUtils::GetRayContainReferenceSize(nsIFrame* aFrame) {
   // We use the border-box size to calculate the reduced path length when using
   // "contain" keyword.
   // https://drafts.fxtf.org/motion-1/#valdef-ray-contain
@@ -76,12 +79,13 @@ RayReferenceData::RayReferenceData(const nsIFrame* aFrame) {
   // Also, SVGUtils::GetBBox() may cache the box via the frame property, so we
   // have to do const-casting.
   // https://drafts.csswg.org/css-box-4/#valdef-box-border-box
-  mBorderBoxSize = CSSSize::FromAppUnits(
-      nsLayoutUtils::ComputeGeometryBox(const_cast<nsIFrame*>(aFrame),
+  CSSSize size = CSSSize::FromAppUnits(
+      nsLayoutUtils::ComputeGeometryBox(aFrame,
                                         // StrokeBox and BorderBox are in the
                                         // same switch case for CSS context.
                                         StyleGeometryBox::StrokeBox)
           .Size());
+  return std::max(size.width, size.height);
 }
 
 // The distance is measured between the origin and the intersection of the ray
@@ -149,14 +153,13 @@ static CSSCoord ComputeSides(const CSSPoint& aOrigin,
 // https://drafts.fxtf.org/motion-1/#ray-origin
 static CSSPoint ComputeRayOrigin(const StylePositionOrAuto& aAtPosition,
                                  const StyleOffsetPosition& aOffsetPosition,
-                                 const RayReferenceData& aData) {
-  const nsRect& coordBox = CSSPixel::ToAppUnits(aData.mContainingBlockRect);
-
+                                 const nsRect& aCoordBox,
+                                 const nsPoint& aCurrentPosition) {
   if (aAtPosition.IsPosition()) {
     // Resolve this by using the <position> to position a 0x0 object area within
     // the box’s containing block.
     return CSSPoint::FromAppUnits(
-        ShapeUtils::ComputePosition(aAtPosition.AsPosition(), coordBox));
+        ShapeUtils::ComputePosition(aAtPosition.AsPosition(), aCoordBox));
   }
 
   MOZ_ASSERT(aAtPosition.IsAuto(), "\"at <position>\" should be omitted");
@@ -165,7 +168,7 @@ static CSSPoint ComputeRayOrigin(const StylePositionOrAuto& aAtPosition,
   // https://drafts.fxtf.org/motion-1/#valdef-ray-at-position
   if (aOffsetPosition.IsPosition()) {
     return CSSPoint::FromAppUnits(
-        ShapeUtils::ComputePosition(aOffsetPosition.AsPosition(), coordBox));
+        ShapeUtils::ComputePosition(aOffsetPosition.AsPosition(), aCoordBox));
   }
 
   if (aOffsetPosition.IsNormal()) {
@@ -173,11 +176,11 @@ static CSSPoint ComputeRayOrigin(const StylePositionOrAuto& aAtPosition,
     // behaves as at center.
     static const StylePosition center = StylePosition::FromPercentage(0.5);
     return CSSPoint::FromAppUnits(
-        ShapeUtils::ComputePosition(center, coordBox));
+        ShapeUtils::ComputePosition(center, aCoordBox));
   }
 
   MOZ_ASSERT(aOffsetPosition.IsAuto());
-  return aData.mInitialPosition;
+  return CSSPoint::FromAppUnits(aCurrentPosition);
 }
 
 static CSSCoord ComputeRayPathLength(const StyleRaySize aRaySizeType,
@@ -230,10 +233,9 @@ static CSSCoord ComputeRayPathLength(const StyleRaySize aRaySizeType,
   return 0.0;
 }
 
-static CSSCoord ComputeRayUsedDistance(const StyleRayFunction& aRay,
-                                       const LengthPercentage& aDistance,
-                                       const CSSCoord& aPathLength,
-                                       const CSSSize& aBorderBoxSize) {
+static CSSCoord ComputeRayUsedDistance(
+    const StyleRayFunction& aRay, const LengthPercentage& aDistance,
+    const CSSCoord& aPathLength, const CSSCoord& aRayContainReferenceLength) {
   CSSCoord usedDistance = aDistance.ResolveToCSSPixels(aPathLength);
   if (!aRay.contain) {
     return usedDistance;
@@ -244,30 +246,8 @@ static CSSCoord ComputeRayUsedDistance(const StyleRayFunction& aRay,
   // path’s length is reduced by half the width or half the height of the
   // element’s border box, whichever is larger, and floored at zero.
   // https://drafts.fxtf.org/motion-1/#valdef-ray-contain
-  return std::max(
-      usedDistance -
-          std::max(aBorderBoxSize.width, aBorderBoxSize.height) / 2.0f,
-      0.0f);
-}
-
-/* static */
-CSSPoint MotionPathUtils::ComputeAnchorPointAdjustment(const nsIFrame& aFrame) {
-  if (!aFrame.HasAnyStateBits(NS_FRAME_SVG_LAYOUT)) {
-    return {};
-  }
-
-  auto transformBox = aFrame.StyleDisplay()->mTransformBox;
-  if (transformBox == StyleGeometryBox::ViewBox ||
-      transformBox == StyleGeometryBox::BorderBox) {
-    return {};
-  }
-
-  if (aFrame.IsFrameOfType(nsIFrame::eSVGContainer)) {
-    nsRect boxRect = nsLayoutUtils::ComputeGeometryBox(
-        const_cast<nsIFrame*>(&aFrame), StyleGeometryBox::FillBox);
-    return CSSPoint::FromAppUnits(boxRect.TopLeft());
-  }
-  return CSSPoint::FromAppUnits(aFrame.GetPosition());
+  return std::max((usedDistance - aRayContainReferenceLength / 2.0f).value,
+                  0.0f);
 }
 
 /* static */
@@ -320,13 +300,13 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
     const auto& ray = aPath.AsRay();
     MOZ_ASSERT(ray.mRay);
 
-    const CSSPoint origin =
-        ComputeRayOrigin(ray.mRay->position, aPosition, ray.mData);
+    const CSSPoint origin = ComputeRayOrigin(
+        ray.mRay->position, aPosition, ray.mCoordBox, ray.mCurrentPosition);
     const CSSCoord pathLength =
         ComputeRayPathLength(ray.mRay->size, ray.mRay->angle, origin,
-                             ray.mData.mContainingBlockRect);
+                             CSSRect::FromAppUnits(ray.mCoordBox));
     const CSSCoord usedDistance = ComputeRayUsedDistance(
-        *ray.mRay, aDistance, pathLength, ray.mData.mBorderBoxSize);
+        *ray.mRay, aDistance, pathLength, ray.mContainReferenceLength);
 
     // 0deg pointing up and positive angles representing clockwise rotation.
     directionAngle =
@@ -335,7 +315,8 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
     // The vector from the current position of this box to the origin of this
     // polar coordinate system.
     const gfx::Point vectorToOrigin =
-        (origin - ray.mData.mInitialPosition).ToUnknownPoint();
+        (origin - CSSPoint::FromAppUnits(ray.mCurrentPosition))
+            .ToUnknownPoint();
     // |vectorToOrigin| + The vector from the origin to this polar coordinate,
     // (|usedDistance|, |directionAngle|), i.e. the vector from the current
     // position to this polar coordinate.
@@ -393,7 +374,16 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
 
   const auto& function = offsetPath.AsOffsetPath().path;
   if (function->IsRay()) {
-    return OffsetPathData::Ray(function->AsRay(), RayReferenceData(aFrame));
+    nsRect coordBox;
+    const nsIFrame* containingBlockFrame =
+        MotionPathUtils::GetOffsetPathReferenceBox(aFrame, coordBox);
+    return !containingBlockFrame
+               ? OffsetPathData::None()
+               : OffsetPathData::Ray(
+                     function->AsRay(), std::move(coordBox),
+                     aFrame->GetOffsetTo(containingBlockFrame),
+                     MotionPathUtils::GetRayContainReferenceSize(
+                         const_cast<nsIFrame*>(aFrame)));
   }
 
   MOZ_ASSERT(function->IsShape());
@@ -432,7 +422,8 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
 
 static OffsetPathData GenerateOffsetPathData(
     const StyleOffsetPath& aOffsetPath,
-    const RayReferenceData& aRayReferenceData, gfx::Path* aCachedMotionPath) {
+    const layers::MotionPathData& aMotionPathData,
+    gfx::Path* aCachedMotionPath) {
   if (aOffsetPath.IsNone()) {
     return OffsetPathData::None();
   }
@@ -444,7 +435,12 @@ static OffsetPathData GenerateOffsetPathData(
 
   const auto& function = aOffsetPath.AsOffsetPath().path;
   if (function->IsRay()) {
-    return OffsetPathData::Ray(function->AsRay(), aRayReferenceData);
+    return aMotionPathData.coordBox().IsEmpty()
+               ? OffsetPathData::None()
+               : OffsetPathData::Ray(
+                     function->AsRay(), aMotionPathData.coordBox(),
+                     aMotionPathData.currentPosition(),
+                     aMotionPathData.rayContainReferenceLength());
   }
 
   MOZ_ASSERT(function->IsShape());
@@ -484,8 +480,7 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
   auto autoOffsetAnchor = StylePositionOrAuto::Auto();
   auto autoOffsetPosition = StyleOffsetPosition::Auto();
   return ResolveMotionPath(
-      GenerateOffsetPathData(*aPath, aMotionPathData->rayReferenceData(),
-                             aCachedMotionPath),
+      GenerateOffsetPathData(*aPath, *aMotionPathData, aCachedMotionPath),
       aDistance ? *aDistance : zeroOffsetDistance,
       aRotate ? *aRotate : autoOffsetRotate,
       aAnchor ? *aAnchor : autoOffsetAnchor,

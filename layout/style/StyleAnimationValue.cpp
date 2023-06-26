@@ -140,7 +140,7 @@ MatrixScales AnimationValue::GetScaleValue(const nsIFrame* aFrame) const {
   TransformReferenceBox refBox(aFrame);
   Matrix4x4 t =
       ReadTransforms(StyleTranslate::None(), StyleRotate::None(),
-                     StyleScale::None(), Nothing(), GetTransformProperty(),
+                     StyleScale::None(), nullptr, GetTransformProperty(),
                      refBox, aFrame->PresContext()->AppUnitsPerDevPixel());
   Matrix transform2d;
   bool canDraw2D = t.CanDraw2D(&transform2d);
