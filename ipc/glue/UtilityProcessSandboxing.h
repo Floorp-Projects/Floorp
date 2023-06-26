@@ -35,9 +35,6 @@ enum SandboxingKind : uint64_t {
 
 };
 
-bool IsUtilitySandboxEnabled(const char* envVar, SandboxingKind aKind);
-bool IsUtilitySandboxEnabled(SandboxingKind aKind);
-
 }  // namespace ipc
 
 }  // namespace mozilla

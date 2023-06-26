@@ -91,7 +91,6 @@
 #endif
 
 #include "mozilla/ipc/UtilityProcessHost.h"
-#include "mozilla/ipc/UtilityProcessSandboxing.h"
 
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
@@ -635,7 +634,7 @@ void GeckoChildProcessHost::PrepareLaunch() {
   }
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  SandboxLaunchPrepare(mProcessType, mLaunchOptions.get(), mSandbox);
+  SandboxLaunchPrepare(mProcessType, mLaunchOptions.get());
 #endif
 
 #ifdef XP_WIN
@@ -1525,7 +1524,7 @@ Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
       }
       break;
     case GeckoProcessType_Utility:
-      if (IsUtilitySandboxEnabled(mSandbox)) {
+      if (!PR_GetEnv("MOZ_DISABLE_UTILITY_SANDBOX")) {
         if (!mResults.mSandboxBroker->SetSecurityLevelForUtilityProcess(
                 mSandbox)) {
           return Err(LaunchError("SetSecurityLevelForUtilityProcess"));

@@ -43,7 +43,6 @@
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
-#include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "prenv.h"
 #include "base/posix/eintr_wrapper.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
@@ -734,7 +733,7 @@ void SetSocketProcessSandbox(int aBroker) {
 
 void SetUtilitySandbox(int aBroker, ipc::SandboxingKind aKind) {
   if (!SandboxInfo::Get().Test(SandboxInfo::kHasSeccompBPF) ||
-      !IsUtilitySandboxEnabled(aKind)) {
+      PR_GetEnv("MOZ_DISABLE_UTILITY_SANDBOX")) {
     if (aBroker >= 0) {
       close(aBroker);
     }
