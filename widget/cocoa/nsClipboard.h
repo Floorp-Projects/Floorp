@@ -32,6 +32,7 @@ class nsClipboard : public nsBaseClipboard {
   // in the parent process. This is needed for the services menu which
   // requires synchronous access to the current selection.
   static mozilla::StaticRefPtr<nsITransferable> sSelectionCache;
+  static int32_t sSelectionCacheChangeCount;
 
   // Helper methods, used also by nsDragService
   static NSDictionary* PasteboardDictFromTransferable(nsITransferable* aTransferable);
@@ -47,6 +48,9 @@ class nsClipboard : public nsBaseClipboard {
                                     int32_t aWhichClipboard) override;
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) override;
+  mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
+      int32_t aWhichClipboard) override;
+
   void ClearSelectionCache();
   void SetSelectionCache(nsITransferable* aTransferable);
 

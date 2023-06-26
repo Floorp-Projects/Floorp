@@ -8,7 +8,7 @@
 
 #include "mozilla/dom/PContent.h"
 #include "mozilla/Logging.h"
-#include "mozilla/UniquePtr.h"
+#include "mozilla/Result.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
 #include "nsCOMPtr.h"
@@ -124,6 +124,8 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
   // Implement the native clipboard behavior.
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) = 0;
+  virtual mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
+      int32_t aWhichClipboard) = 0;
 
   class ClipboardCache final {
    public:
@@ -138,11 +140,12 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
      */
     void Clear();
     void Update(nsITransferable* aTransferable,
-                nsIClipboardOwner* aClipboardOwner) {
+                nsIClipboardOwner* aClipboardOwner, int32_t aSequenceNumber) {
       // Clear first to notify the old clipboard owner.
       Clear();
       mTransferable = aTransferable;
       mClipboardOwner = aClipboardOwner;
+      mSequenceNumber = aSequenceNumber;
     }
     nsITransferable* GetTransferable() const { return mTransferable; }
     nsIClipboardOwner* GetClipboardOwner() const { return mClipboardOwner; }
@@ -150,6 +153,7 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
    private:
     nsCOMPtr<nsITransferable> mTransferable;
     nsCOMPtr<nsIClipboardOwner> mClipboardOwner;
+    int32_t mSequenceNumber = -1;
   };
 
   mozilla::UniquePtr<ClipboardCache> mCaches[nsIClipboard::kClipboardTypeCount];
