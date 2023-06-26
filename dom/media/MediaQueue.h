@@ -86,9 +86,16 @@ class MediaQueue : private nsRefPtrDeque<T> {
                                          bool> = true>
   inline void AdjustTimeStampIfNeeded(U* aItem) {}
 
-  inline void PushFront(T* aItem) {
+  enum class TimestampAdjustment {
+    Enable,
+    Disable,
+  };
+  inline void PushFront(
+      T* aItem, TimestampAdjustment aIsEnabled = TimestampAdjustment::Enable) {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
-    AdjustTimeStampIfNeeded(aItem);
+    if (aIsEnabled == TimestampAdjustment::Enable) {
+      AdjustTimeStampIfNeeded(aItem);
+    }
     nsRefPtrDeque<T>::PushFront(aItem);
   }
 
