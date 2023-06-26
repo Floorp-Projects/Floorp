@@ -405,6 +405,12 @@ function fetchRequestHeadersAndCookies(channel) {
   // Copy the request header data.
   channel.visitRequestHeaders({
     visitHeader(name, value) {
+      // The `Proxy-Authorization` header even though it appears on the channel is not
+      // actually sent to the server for non CONNECT requests after the HTTP/HTTPS tunnel
+      // is setup by the proxy.
+      if (name == "Proxy-Authorization") {
+        return;
+      }
       if (name == "Cookie") {
         cookieHeader = value;
       }
