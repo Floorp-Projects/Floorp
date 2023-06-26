@@ -15423,9 +15423,17 @@ void Document::RequestFullscreenInContentProcess(
   PendingFullscreenChangeList::Add(std::move(aRequest));
   // If we are not the top level process, dispatch an event to make
   // our parent process go fullscreen first.
-  nsContentUtils::DispatchEventOnlyToChrome(
-      this, ToSupports(this), u"MozDOMFullscreen:Request"_ns, CanBubble::eYes,
-      Cancelable::eNo, /* DefaultAction */ nullptr);
+  Dispatch(
+      TaskCategory::Other,
+      NS_NewRunnableFunction(
+          "Document::RequestFullscreenInContentProcess", [self = RefPtr{this}] {
+            if (!self->HasPendingFullscreenRequests()) {
+              return;
+            }
+            nsContentUtils::DispatchEventOnlyToChrome(
+                self, ToSupports(self), u"MozDOMFullscreen:Request"_ns,
+                CanBubble::eYes, Cancelable::eNo, /* DefaultAction */ nullptr);
+          }));
 }
 
 void Document::RequestFullscreenInParentProcess(
