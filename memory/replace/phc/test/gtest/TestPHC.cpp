@@ -302,4 +302,10 @@ TEST(PHC, TestPHCDisabling)
 
   ReplaceMalloc::ReenablePHCOnCurrentThread();
   ASSERT_TRUE(ReplaceMalloc::IsPHCEnabledOnCurrentThread());
+
+  // If it really was reenabled we should be able to get PHC allocations
+  // again.
+  uint8_t* s = GetPHCAllocation(32);  // This should succeed.
+  ASSERT_TRUE(!!s);
+  free(s);
 }
