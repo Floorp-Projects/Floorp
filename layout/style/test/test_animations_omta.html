@@ -2724,9 +2724,74 @@ addAsyncAnimTest(async function() {
   done_div();
 });
 
-// FIXME: Add test for ray() after we fix Bug 1590542.
+// Normal offset-path animation with ray().
+addAsyncAnimTest(async function() {
+  new_div("offset-path: ray(90deg); " +
+          "offset-distance: 0%; " +
+          "transition: offset-path 10s linear");
+  await waitForPaintsFlushed();
 
-// Normal offset-distance animation.
+  gDiv.style.offsetPath = "ray(180deg)";
+  await waitForPaintsFlushed();
+
+  // At 0%, it's ray(90deg), so there is no rotation and only movement because
+  // the default offset-anchor is 50%.
+  omta_is("offset-path",
+          { compositorValue: { tx: -50, ty: -50 },
+            computed: 'ray(90deg)' },
+          RunningOn.Compositor,
+          "offset-path transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  // At 50%, ray() is 135deg. so the matrix is kind of rotate -45 deg:
+  // [cos(-1/4 * pi), -sin(-1/4 * pi), sin(-1/4 * pi), cos(-1/4 * pi), -50, -50]
+  // Note: the movement of (-50 -50) is from the default offset-anchor.
+  omta_is("offset-path",
+          {
+            compositorValue: [
+              Math.cos(-Math.PI * 1/4), -Math.sin(-Math.PI * 1/4),
+              Math.sin(-Math.PI * 1/4), Math.cos(-Math.PI * 1/4),
+              -50, -50
+            ],
+            computed: 'ray(135deg)'
+          },
+          RunningOn.Compositor,
+          "offset-path on compositor at 5s");
+
+  done_div();
+});
+
+// Normal offset-path animation with polygon().
+addAsyncAnimTest(async function() {
+  new_div("offset-path: polygon(0px 0px, 100px 0px, 50px 100px); " +
+          "offset-distance: 0%; " +
+          "offset-rotate: 0deg; " +
+          "offset-anchor: left top; " +
+          "transition: offset-path 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.offsetPath = "polygon(50px 0px, 100px 0px, 50px 100px)";
+  await waitForPaintsFlushed();
+
+  omta_is("offset-path",
+          { compositorValue: { tx: 0 },
+            computed: 'polygon(0px 0px, 100px 0px, 50px 100px)' },
+          RunningOn.Compositor,
+          "offset-path transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  omta_is("offset-path",
+          { compositorValue: { tx: 25 },
+            computed: 'polygon(25px 0px, 100px 0px, 50px 100px)' },
+          RunningOn.Compositor,
+          "offset-path on compositor at 5s");
+
+  done_div();
+});
+
+// Normal offset-distance animation with path().
 addAsyncAnimTest(async function() {
   new_div("offset-path: path('M50 50v100'); " +
           "offset-distance: 0%; " +
@@ -2746,6 +2811,33 @@ addAsyncAnimTest(async function() {
 
   omta_is("offset-distance",
           { compositorValue: { ty: 50 }, computed: '50%' },
+          RunningOn.Compositor,
+          "offset-distance on compositor at 5s");
+
+  done_div();
+});
+
+// Normal offset-distance animation with polygon().
+addAsyncAnimTest(async function() {
+  new_div("offset-path: polygon(0px 0px, 100px 0px, 100px 50px, 0px 50px); " +
+          "offset-distance: 0%; " +
+          "offset-rotate: 0deg; " +
+          "offset-anchor: left top; " +
+          "transition: offset-distance 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.offsetDistance = "100%";
+  await waitForPaintsFlushed();
+
+  omta_is("offset-distance",
+          { compositorValue: { tx: 0 }, computed: '0%' },
+          RunningOn.Compositor,
+          "offset-distance transition runs on compositor thread");
+
+  advance_clock(5000);
+
+  omta_is("offset-distance",
+          { compositorValue: { tx: 100, ty: 50 }, computed: '50%' },
           RunningOn.Compositor,
           "offset-distance on compositor at 5s");
 

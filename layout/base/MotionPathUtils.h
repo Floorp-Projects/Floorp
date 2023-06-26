@@ -192,6 +192,15 @@ class MotionPathUtils final {
   static CSSCoord GetRayContainReferenceSize(nsIFrame* aFrame);
 
   /**
+   * Get the resolved radius for inset(0 round X), where X is the parameter of
+   * |aRadius|.
+   * This returns an empty array if we cannot compute the radii; otherwise, it
+   * returns an array with 8 elements.
+   */
+  static nsTArray<nscoord> ComputeBorderRadii(
+      const StyleBorderRadius& aBorderRadius, const nsRect& aCoordBox);
+
+  /**
    * Generate the motion path transform result. This function may be called on
    * the compositor thread.
    */
