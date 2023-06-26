@@ -149,17 +149,16 @@ static CSSCoord ComputeSides(const CSSPoint& aOrigin,
   return b / cost;
 }
 
-// Compute the origin, where the ray’s line begins (the 0% position).
-// https://drafts.fxtf.org/motion-1/#ray-origin
-static CSSPoint ComputeRayOrigin(const StylePositionOrAuto& aAtPosition,
-                                 const StyleOffsetPosition& aOffsetPosition,
-                                 const nsRect& aCoordBox,
-                                 const nsPoint& aCurrentPosition) {
+// Compute the position of "at <position>" together with offset starting
+// position (i.e. offset-position).
+static nsPoint ComputePosition(const StylePositionOrAuto& aAtPosition,
+                               const StyleOffsetPosition& aOffsetPosition,
+                               const nsRect& aCoordBox,
+                               const nsPoint& aCurrentCoord) {
   if (aAtPosition.IsPosition()) {
     // Resolve this by using the <position> to position a 0x0 object area within
     // the box’s containing block.
-    return CSSPoint::FromAppUnits(
-        ShapeUtils::ComputePosition(aAtPosition.AsPosition(), aCoordBox));
+    return ShapeUtils::ComputePosition(aAtPosition.AsPosition(), aCoordBox);
   }
 
   MOZ_ASSERT(aAtPosition.IsAuto(), "\"at <position>\" should be omitted");
@@ -167,20 +166,18 @@ static CSSPoint ComputeRayOrigin(const StylePositionOrAuto& aAtPosition,
   // Use the offset starting position of the element, given by offset-position.
   // https://drafts.fxtf.org/motion-1/#valdef-ray-at-position
   if (aOffsetPosition.IsPosition()) {
-    return CSSPoint::FromAppUnits(
-        ShapeUtils::ComputePosition(aOffsetPosition.AsPosition(), aCoordBox));
+    return ShapeUtils::ComputePosition(aOffsetPosition.AsPosition(), aCoordBox);
   }
 
   if (aOffsetPosition.IsNormal()) {
     // If the element doesn’t have an offset starting position either, it
     // behaves as at center.
-    static const StylePosition center = StylePosition::FromPercentage(0.5);
-    return CSSPoint::FromAppUnits(
-        ShapeUtils::ComputePosition(center, aCoordBox));
+    const StylePosition& center = StylePosition::FromPercentage(0.5);
+    return ShapeUtils::ComputePosition(center, aCoordBox);
   }
 
   MOZ_ASSERT(aOffsetPosition.IsAuto());
-  return CSSPoint::FromAppUnits(aCurrentPosition);
+  return aCurrentCoord;
 }
 
 static CSSCoord ComputeRayPathLength(const StyleRaySize aRaySizeType,
@@ -300,8 +297,10 @@ Maybe<ResolvedMotionPathData> MotionPathUtils::ResolveMotionPath(
     const auto& ray = aPath.AsRay();
     MOZ_ASSERT(ray.mRay);
 
-    const CSSPoint origin = ComputeRayOrigin(
-        ray.mRay->position, aPosition, ray.mCoordBox, ray.mCurrentPosition);
+    // Compute the origin, where the ray’s line begins (the 0% position).
+    // https://drafts.fxtf.org/motion-1/#ray-origin
+    const CSSPoint origin = CSSPoint::FromAppUnits(ComputePosition(
+        ray.mRay->position, aPosition, ray.mCoordBox, ray.mCurrentPosition));
     const CSSCoord pathLength =
         ComputeRayPathLength(ray.mRay->size, ray.mRay->angle, origin,
                              CSSRect::FromAppUnits(ray.mCoordBox));
