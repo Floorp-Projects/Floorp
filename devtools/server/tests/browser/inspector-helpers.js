@@ -106,31 +106,26 @@ async function assertOwnershipTrees(walker) {
 }
 
 // Verify that an actorID is inaccessible both from the client library and the server.
-function checkMissing({ client }, actorID) {
-  return new Promise(resolve => {
-    const front = client.getFrontByID(actorID);
-    ok(
-      !front,
-      "Front shouldn't be accessible from the client for actorID: " + actorID
-    );
+async function checkMissing({ client }, actorID) {
+  const front = client.getFrontByID(actorID);
+  ok(
+    !front,
+    "Front shouldn't be accessible from the client for actorID: " + actorID
+  );
 
-    client
-      .request(
-        {
-          to: actorID,
-          type: "request",
-        },
-        response => {
-          is(
-            response.error,
-            "noSuchActor",
-            "node list actor should no longer be contactable."
-          );
-          resolve(undefined);
-        }
-      )
-      .catch(() => {});
-  });
+  try {
+    await client.request({
+      to: actorID,
+      type: "request",
+    });
+    ok(false, "The actor wasn't missing as the request worked");
+  } catch (e) {
+    is(
+      e.error,
+      "noSuchActor",
+      "node list actor should no longer be contactable."
+    );
+  }
 }
 
 // Load mutations aren't predictable, so keep accumulating mutations until

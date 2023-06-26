@@ -26,28 +26,23 @@ add_task(
 );
 
 function test_thread_lifetime() {
-  gThreadFront.once("paused", function (packet) {
+  gThreadFront.once("paused", async function (packet) {
     const pauseGrip = packet.frame.arguments[0];
 
-    gClient.request(
-      { to: pauseGrip.actor, type: "threadGrip" },
-      function (response) {
-        // Successful promotion won't return an error.
-        Assert.equal(response.error, undefined);
+    const response = await gClient.request({
+      to: pauseGrip.actor,
+      type: "threadGrip",
+    });
+    const threadGrip1 = response.from;
 
-        const threadGrip1 = response.from;
+    const response2 = await gClient.request({
+      to: pauseGrip.actor,
+      type: "threadGrip",
+    });
+    Assert.equal(threadGrip1, response2.from);
+    await gThreadFront.resume();
 
-        gClient.request(
-          { to: pauseGrip.actor, type: "threadGrip" },
-          function (response) {
-            Assert.equal(threadGrip1, response.from);
-            gThreadFront.resume().then(function () {
-              threadFrontTestFinished();
-            });
-          }
-        );
-      }
-    );
+    threadFrontTestFinished();
   });
 
   gDebuggee.eval(
