@@ -159,6 +159,37 @@ add_combo_task(async function basic_keyShortcut({ result, isBestMatch }) {
 
 async function doBasicBlockTest({ result, isBestMatch, block }) {
   spy.resetHistory();
+  let index = 2;
+  let match_type = isBestMatch ? "best-match" : "firefox-suggest";
+
+  let pingsSubmitted = 0;
+  GleanPings.quickSuggest.testBeforeNextSubmit(() => {
+    pingsSubmitted++;
+    // First ping's an impression.
+    Assert.equal(
+      Glean.quickSuggest.pingType.testGetValue(),
+      CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
+    );
+    Assert.equal(Glean.quickSuggest.matchType.testGetValue(), match_type);
+    Assert.equal(Glean.quickSuggest.blockId.testGetValue(), result.id);
+    Assert.equal(Glean.quickSuggest.isClicked.testGetValue(), false);
+    Assert.equal(Glean.quickSuggest.position.testGetValue(), index);
+    GleanPings.quickSuggest.testBeforeNextSubmit(() => {
+      pingsSubmitted++;
+      // Second ping's a block.
+      Assert.equal(
+        Glean.quickSuggest.pingType.testGetValue(),
+        CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK
+      );
+      Assert.equal(Glean.quickSuggest.matchType.testGetValue(), match_type);
+      Assert.equal(Glean.quickSuggest.blockId.testGetValue(), result.id);
+      Assert.equal(
+        Glean.quickSuggest.iabCategory.testGetValue(),
+        result.iab_category
+      );
+      Assert.equal(Glean.quickSuggest.position.testGetValue(), index);
+    });
+  });
 
   // Do a search that triggers the suggestion.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -200,8 +231,10 @@ async function doBasicBlockTest({ result, isBestMatch, block }) {
     "Suggestion is blocked"
   );
 
+  // Check Glean.
+  Assert.equal(pingsSubmitted, 2, "Both Glean pings submitted.");
+
   // Check telemetry scalars.
-  let index = 2;
   let scalars = {};
   if (isSponsored) {
     scalars[TELEMETRY_SCALARS.IMPRESSION_SPONSORED] = index;
@@ -228,7 +261,6 @@ async function doBasicBlockTest({ result, isBestMatch, block }) {
   QuickSuggestTestUtils.assertScalars(scalars);
 
   // Check the engagement event.
-  let match_type = isBestMatch ? "best-match" : "firefox-suggest";
   QuickSuggestTestUtils.assertEvents([
     {
       category: QuickSuggest.TELEMETRY_EVENT_CATEGORY,

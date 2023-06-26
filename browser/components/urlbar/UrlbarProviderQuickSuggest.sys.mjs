@@ -7,6 +7,8 @@ import {
   UrlbarUtils,
 } from "resource:///modules/UrlbarUtils.sys.mjs";
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -19,6 +21,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarResult: "resource:///modules/UrlbarResult.sys.mjs",
+});
+
+// `contextId` is a unique identifier used by Contextual Services
+const CONTEXT_ID_PREF = "browser.contextual-services.contextId";
+XPCOMUtils.defineLazyGetter(lazy, "contextId", () => {
+  let _contextId = Services.prefs.getStringPref(CONTEXT_ID_PREF, null);
+  if (!_contextId) {
+    _contextId = String(Services.uuid.generateUUID());
+    Services.prefs.setStringPref(CONTEXT_ID_PREF, _contextId);
+  }
+  return _contextId;
 });
 
 const TELEMETRY_PREFIX = "contextual.services.quicksuggest";
@@ -720,6 +733,26 @@ class ProviderQuickSuggest extends UrlbarProvider {
       },
       lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
     );
+    Glean.quickSuggest.pingType.set(
+      lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
+    );
+    Glean.quickSuggest.matchType.set(payload.match_type);
+    Glean.quickSuggest.advertiser.set(payload.advertiser);
+    Glean.quickSuggest.blockId.set(payload.block_id);
+    Glean.quickSuggest.improveSuggestExperience.set(
+      payload.improve_suggest_experience_checked
+    );
+    Glean.quickSuggest.position.set(payload.position);
+    Glean.quickSuggest.requestId.set(payload.request_id);
+    Glean.quickSuggest.source.set(payload.source);
+    Glean.quickSuggest.isClicked.set(resultClicked);
+    if (result.payload.sponsoredImpressionUrl) {
+      Glean.quickSuggest.reportingUrl.set(
+        result.payload.sponsoredImpressionUrl
+      );
+    }
+    Glean.quickSuggest.contextId.set(lazy.contextId);
+    GleanPings.quickSuggest.submit();
 
     // click
     if (resultClicked) {
@@ -730,6 +763,23 @@ class ProviderQuickSuggest extends UrlbarProvider {
         },
         lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION
       );
+      Glean.quickSuggest.pingType.set(
+        lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION
+      );
+      Glean.quickSuggest.matchType.set(payload.match_type);
+      Glean.quickSuggest.advertiser.set(payload.advertiser);
+      Glean.quickSuggest.blockId.set(payload.block_id);
+      Glean.quickSuggest.improveSuggestExperience.set(
+        payload.improve_suggest_experience_checked
+      );
+      Glean.quickSuggest.position.set(payload.position);
+      Glean.quickSuggest.requestId.set(payload.request_id);
+      Glean.quickSuggest.source.set(payload.source);
+      if (result.payload.sponsoredClickUrl) {
+        Glean.quickSuggest.reportingUrl.set(result.payload.sponsoredClickUrl);
+      }
+      Glean.quickSuggest.contextId.set(lazy.contextId);
+      GleanPings.quickSuggest.submit();
     }
 
     // dismiss
@@ -741,6 +791,21 @@ class ProviderQuickSuggest extends UrlbarProvider {
         },
         lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK
       );
+      Glean.quickSuggest.pingType.set(
+        lazy.CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK
+      );
+      Glean.quickSuggest.matchType.set(payload.match_type);
+      Glean.quickSuggest.advertiser.set(payload.advertiser);
+      Glean.quickSuggest.blockId.set(payload.block_id);
+      Glean.quickSuggest.improveSuggestExperience.set(
+        payload.improve_suggest_experience_checked
+      );
+      Glean.quickSuggest.position.set(payload.position);
+      Glean.quickSuggest.requestId.set(payload.request_id);
+      Glean.quickSuggest.source.set(payload.source);
+      Glean.quickSuggest.iabCategory.set(result.payload.sponsoredIabCategory);
+      Glean.quickSuggest.contextId.set(lazy.contextId);
+      GleanPings.quickSuggest.submit();
     }
   }
 

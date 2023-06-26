@@ -17,9 +17,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
-  CONTEXTUAL_SERVICES_PING_TYPES:
-    "resource:///modules/PartnerLinkAttribution.sys.mjs",
-  PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   TOP_SITES_DEFAULT_ROWS: "resource://activity-stream/common/Reducers.sys.mjs",
   TOP_SITES_MAX_SITES_PER_ROW:
@@ -333,16 +330,6 @@ class ProviderTopSites extends UrlbarProvider {
           SCALAR_CATEGORY_TOPSITES,
           `urlbar_${site.position}`,
           1
-        );
-        lazy.PartnerLinkAttribution.sendContextualServicesPing(
-          {
-            source: "urlbar",
-            tile_id: site.sponsoredTileId || -1,
-            position: site.position,
-            reporting_url: site.sponsoredImpressionUrl,
-            advertiser: site.title.toLocaleLowerCase(),
-          },
-          lazy.CONTEXTUAL_SERVICES_PING_TYPES.TOPSITES_IMPRESSION
         );
       }
     }

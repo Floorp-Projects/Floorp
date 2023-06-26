@@ -289,13 +289,37 @@ add_task(async function previousResultStillVisible() {
   await BrowserTestUtils.withNewTab("about:blank", async () => {
     // Do a search for the first suggestion.
     let firstSuggestion = REMOTE_SETTINGS_RESULTS[0];
+    let index = 1;
+
+    let pingSubmitted = false;
+    GleanPings.quickSuggest.testBeforeNextSubmit(() => {
+      pingSubmitted = true;
+      Assert.equal(
+        Glean.quickSuggest.pingType.testGetValue(),
+        CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
+      );
+      Assert.equal(
+        Glean.quickSuggest.improveSuggestExperience.testGetValue(),
+        false
+      );
+      Assert.equal(
+        Glean.quickSuggest.blockId.testGetValue(),
+        firstSuggestion.id
+      );
+      Assert.equal(Glean.quickSuggest.isClicked.testGetValue(), false);
+      Assert.equal(
+        Glean.quickSuggest.matchType.testGetValue(),
+        "firefox-suggest"
+      );
+      Assert.equal(Glean.quickSuggest.position.testGetValue(), index + 1);
+    });
+
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
       value: firstSuggestion.keywords[0],
       fireInputEvent: true,
     });
 
-    let index = 1;
     await QuickSuggestTestUtils.assertIsQuickSuggest({
       window,
       index,
@@ -339,6 +363,7 @@ add_task(async function previousResultStillVisible() {
         },
       },
     ]);
+    Assert.ok(pingSubmitted, "Glean ping was submitted");
   });
 });
 
