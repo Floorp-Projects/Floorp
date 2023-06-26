@@ -726,7 +726,7 @@ class Accessible {
   uint32_t mGenericTypes : kGenericTypesBits;
   uint8_t mRoleMapEntryIndex;
 
-  friend class DocAccessibleChildBase;
+  friend class DocAccessibleChild;
   friend class AccGroupInfo;
 };
 

@@ -613,7 +613,7 @@ class DocAccessible : public HyperTextAccessibleWrap,
    */
   void SetIPCDoc(DocAccessibleChild* aIPCDoc);
 
-  friend class DocAccessibleChildBase;
+  friend class DocAccessibleChild;
 
   /**
    * Used to fire scrolling end event after page scroll.

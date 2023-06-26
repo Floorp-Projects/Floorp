@@ -36,15 +36,6 @@ LOCAL_INCLUDES += [
     "/layout/xul",
 ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    LOCAL_INCLUDES += [
-        "/accessible/ipc/win",
-    ]
-else:
-    LOCAL_INCLUDES += [
-        "/accessible/ipc/other",
-    ]
-
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     LOCAL_INCLUDES += [
         "/accessible/atk",
