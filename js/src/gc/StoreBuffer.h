@@ -105,6 +105,9 @@ class StoreBuffer {
     explicit MonoTypeBuffer(StoreBuffer* owner, JS::GCReason reason)
         : last_(T()), owner_(owner), gcReason_(reason) {}
 
+    MonoTypeBuffer(const MonoTypeBuffer& other) = delete;
+    MonoTypeBuffer& operator=(const MonoTypeBuffer& other) = delete;
+
     void clear() {
       last_ = T();
       stores_.clear();
@@ -149,10 +152,6 @@ class StoreBuffer {
     }
 
     bool isEmpty() const { return last_ == T() && stores_.empty(); }
-
-   private:
-    MonoTypeBuffer(const MonoTypeBuffer& other) = delete;
-    MonoTypeBuffer& operator=(const MonoTypeBuffer& other) = delete;
   };
 
   struct WholeCellBuffer {
@@ -163,6 +162,9 @@ class StoreBuffer {
     StoreBuffer* owner_;
 
     explicit WholeCellBuffer(StoreBuffer* owner) : owner_(owner) {}
+
+    WholeCellBuffer(const WholeCellBuffer& other) = delete;
+    WholeCellBuffer& operator=(const WholeCellBuffer& other) = delete;
 
     [[nodiscard]] bool init();
 
@@ -192,9 +194,6 @@ class StoreBuffer {
 
    private:
     ArenaCellSet* allocateCellSet(Arena* arena);
-
-    WholeCellBuffer(const WholeCellBuffer& other) = delete;
-    WholeCellBuffer& operator=(const WholeCellBuffer& other) = delete;
   };
 
   struct GenericBuffer {
@@ -203,6 +202,9 @@ class StoreBuffer {
 
     explicit GenericBuffer(StoreBuffer* owner)
         : storage_(nullptr), owner_(owner) {}
+
+    GenericBuffer(const GenericBuffer& other) = delete;
+    GenericBuffer& operator=(const GenericBuffer& other) = delete;
 
     [[nodiscard]] bool init();
 
@@ -250,10 +252,6 @@ class StoreBuffer {
     }
 
     bool isEmpty() const { return !storage_ || storage_->isEmpty(); }
-
-   private:
-    GenericBuffer(const GenericBuffer& other) = delete;
-    GenericBuffer& operator=(const GenericBuffer& other) = delete;
   };
 
   template <typename Edge>
