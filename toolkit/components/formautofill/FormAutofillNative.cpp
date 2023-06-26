@@ -751,13 +751,11 @@ bool FormAutofillImpl::IdOrNameMatchRegExp(Element& aElement, RegexKey key) {
 
 bool FormAutofillImpl::LabelMatchesRegExp(
     Element& aElement, const nsTArray<nsCString>* labelStrings, RegexKey key) {
-  if (!labelStrings) {
-    return false;
-  }
-
-  for (const auto& str : *labelStrings) {
-    if (StringMatchesRegExp(str, key)) {
-      return true;
+  if (labelStrings) {
+    for (const auto& str : *labelStrings) {
+      if (StringMatchesRegExp(str, key)) {
+        return true;
+      }
     }
   }
 
