@@ -437,8 +437,8 @@ class GAtomic {
   static Atomic<Time, Relaxed> sNow;
 
   // Delay until the next attempt at a page allocation. See the comment in
-  // MaybePageAlloc() for an explanation of why it is a signed integer, and why
-  // it uses ReleaseAcquire semantics.
+  // MaybePageAlloc() for an explanation of why it uses ReleaseAcquire
+  // semantics.
   static Atomic<Delay, ReleaseAcquire> sAllocDelay;
 };
 
@@ -1053,9 +1053,9 @@ static void* MaybePageAlloc(const Maybe<arena_id_t>& aArenaId, size_t aReqSize,
   // guarantees that exactly one thread will see sAllocDelay have the value 0.
   // (Relaxed semantics wouldn't guarantee that.)
   //
-  // It's also nice that sAllocDelay is signed, given that we can decrement to
-  // below zero. (Strictly speaking, an unsigned integer would also work due
-  // to wrapping, but a signed integer is conceptually cleaner.)
+  // Note that sAllocDelay is unsigned and we expect that it will wrap after
+  // being decremented "below" zero. It must be unsigned so that IsPowerOfTwo()
+  // can work on some Delay values.
   //
   // Finally, note that the decrements that occur between (a) and (e) above are
   // effectively ignored, because (e) clobbers them. This shouldn't be a
