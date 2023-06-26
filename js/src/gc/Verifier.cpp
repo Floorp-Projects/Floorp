@@ -64,7 +64,7 @@ struct EdgeValue {
 
 struct VerifyNode {
   JS::GCCellPtr thing;
-  uint32_t count;
+  uint32_t count = 0;
   EdgeValue edges[1];
 };
 

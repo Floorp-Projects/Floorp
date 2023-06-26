@@ -344,7 +344,7 @@ struct Statistics {
 
   ZoneGCStats zoneStats;
 
-  JS::GCOptions gcOptions;
+  JS::GCOptions gcOptions = JS::GCOptions::Normal;
 
   GCAbortReason nonincrementalReason_;
 
@@ -444,8 +444,8 @@ struct Statistics {
   using ProfileDurations =
       EnumeratedArray<ProfileKey, ProfileKey::KeyCount, TimeDuration>;
 
-  bool enableProfiling_;
-  bool profileWorkers_;
+  bool enableProfiling_ = false;
+  bool profileWorkers_ = false;
   TimeDuration profileThreshold_;
   ProfileDurations totalTimes_;
   uint64_t sliceCount_;
