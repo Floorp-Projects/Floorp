@@ -1678,7 +1678,7 @@ MarkStack& MarkStack::operator=(const MarkStack& other) {
   return *this;
 }
 
-MarkStack::MarkStack(MarkStack&& other)
+MarkStack::MarkStack(MarkStack&& other) noexcept
     : stack_(std::move(other.stack_.ref())),
       topIndex_(other.topIndex_.ref())
 #ifdef JS_GC_ZEAL
@@ -1689,7 +1689,7 @@ MarkStack::MarkStack(MarkStack&& other)
   other.topIndex_ = 0;
 }
 
-MarkStack& MarkStack::operator=(MarkStack&& other) {
+MarkStack& MarkStack::operator=(MarkStack&& other) noexcept {
   new (this) MarkStack(std::move(other));
   return *this;
 }

@@ -1186,7 +1186,7 @@ class ImmediateSweepWeakCacheTask : public GCParallelTask {
         zone(zone),
         cache(wc) {}
 
-  ImmediateSweepWeakCacheTask(ImmediateSweepWeakCacheTask&& other)
+  ImmediateSweepWeakCacheTask(ImmediateSweepWeakCacheTask&& other) noexcept
       : GCParallelTask(std::move(other)),
         zone(other.zone),
         cache(other.cache) {}
