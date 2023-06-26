@@ -4253,13 +4253,13 @@ gfxFont::Baselines gfxFont::GetBaselines(Orientation aOrientation) {
 
   // Synthesize the baselines that we didn't find in the font.
   const Metrics& metrics = GetMetrics(aOrientation);
-  if (isnan(result.mAlphabetic)) {
+  if (std::isnan(result.mAlphabetic)) {
     result.mAlphabetic = 0.0;
   }
-  if (isnan(result.mHanging)) {
+  if (std::isnan(result.mHanging)) {
     result.mHanging = kHangingBaselineDefault * metrics.emAscent;
   }
-  if (isnan(result.mIdeographic)) {
+  if (std::isnan(result.mIdeographic)) {
     result.mIdeographic = kIdeographicBaselineDefault * metrics.emDescent;
   }
 
