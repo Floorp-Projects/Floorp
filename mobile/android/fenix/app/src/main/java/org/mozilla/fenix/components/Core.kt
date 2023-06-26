@@ -52,6 +52,7 @@ import mozilla.components.feature.recentlyclosed.RecentlyClosedMiddleware
 import mozilla.components.feature.recentlyclosed.RecentlyClosedTabsStorage
 import mozilla.components.feature.search.ext.createApplicationSearchEngine
 import mozilla.components.feature.search.middleware.AdsTelemetryMiddleware
+import mozilla.components.feature.search.middleware.SearchExtraParams
 import mozilla.components.feature.search.middleware.SearchMiddleware
 import mozilla.components.feature.search.region.RegionMiddleware
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
@@ -95,6 +96,7 @@ import org.mozilla.fenix.historymetadata.DefaultHistoryMetadataService
 import org.mozilla.fenix.historymetadata.HistoryMetadataMiddleware
 import org.mozilla.fenix.historymetadata.HistoryMetadataService
 import org.mozilla.fenix.media.MediaSessionService
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.settings.SupportUtils
@@ -257,9 +259,17 @@ class Core(
                 UndoMiddleware(context.getUndoDelay()),
                 RegionMiddleware(context, locationService),
                 SearchMiddleware(
-                    context,
+                    context = context,
                     additionalBundledSearchEngineIds = listOf("reddit", "youtube"),
                     migration = SearchMigration(context),
+                    searchExtraParams =
+                    FxNimbus.features.searchExtraParams.value().searchNameChannelId
+                        .firstNotNullOfOrNull {
+                            SearchExtraParams(
+                                it.key,
+                                it.value,
+                            )
+                        },
                 ),
                 RecordingDevicesMiddleware(context, context.components.notificationsDelegate),
                 PromptMiddleware(),

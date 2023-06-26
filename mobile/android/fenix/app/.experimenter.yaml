@@ -147,6 +147,17 @@ search-term-groups:
     enabled:
       type: boolean
       description: "If true, the feature shows up on the homescreen and on the new tab screen."
+search_extra_params:
+  description: A feature that provides a search engine name and a channel ID.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "If true, the feature is active."
+    search_name_channel_id:
+      type: json
+      description: The search engine name and the channel ID.
 shopping-experience:
   description: A feature that shows product review quality information.
   hasExposure: true

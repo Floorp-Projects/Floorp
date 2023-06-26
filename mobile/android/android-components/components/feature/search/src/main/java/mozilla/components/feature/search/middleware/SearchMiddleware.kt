@@ -26,6 +26,11 @@ import java.util.Locale
 import kotlin.coroutines.CoroutineContext
 
 /**
+ * Holds data for the search extra params.
+ */
+data class SearchExtraParams(val searchEngineName: String, val channelId: String)
+
+/**
  * [Middleware] implementation for loading and saving [SearchEngine]s whenever the state changes.
  *
  * @param additionalBundledSearchEngineIds List of (bundled) search engine IDs that will be loaded
@@ -36,6 +41,7 @@ import kotlin.coroutines.CoroutineContext
  * @param customStorage A storage for custom search engines of the user.
  * @param bundleStorage A storage for loading bundled search engines.
  * @param metadataStorage A storage for saving additional metadata related to search.
+ * @param searchExtraParams Optional search extra params.
  * @param ioDispatcher The coroutine dispatcher to be used when loading.
  */
 @Suppress("LongParameterList")
@@ -49,6 +55,7 @@ class SearchMiddleware(
         context,
         additionalBundledSearchEngineIds.toSet(),
     ),
+    private val searchExtraParams: SearchExtraParams? = null,
     private val ioDispatcher: CoroutineContext = Dispatchers.IO,
 ) : Middleware<BrowserState, BrowserAction> {
     private val logger = Logger("SearchMiddleware")
@@ -95,14 +102,23 @@ class SearchMiddleware(
         performCustomSearchEnginesMigration(migrationValues)
 
         val regionBundle = async(ioDispatcher) {
-            bundleStorage.load(region, distribution = distribution, coroutineContext = ioDispatcher)
+            bundleStorage.load(
+                region = region,
+                distribution = distribution,
+                searchExtraParams = searchExtraParams,
+                coroutineContext = ioDispatcher,
+            )
         }
         val customSearchEngines = async(ioDispatcher) { customStorage.loadSearchEngineList() }
         val hiddenSearchEngineIds = async(ioDispatcher) { metadataStorage.getHiddenSearchEngines() }
         val disabledSearchEngineIds = async(ioDispatcher) { metadataStorage.getDisabledSearchEngineIds() }
         val additionalSearchEngineIds = async(ioDispatcher) { metadataStorage.getAdditionalSearchEngines() }
         val allAdditionalSearchEngines = async(ioDispatcher) {
-            bundleStorage.load(additionalBundledSearchEngineIds, ioDispatcher)
+            bundleStorage.load(
+                ids = additionalBundledSearchEngineIds,
+                searchExtraParams = searchExtraParams,
+                coroutineContext = ioDispatcher,
+            )
         }
 
         val hiddenSearchEngines = mutableListOf<SearchEngine>()
@@ -272,6 +288,7 @@ class SearchMiddleware(
             region: RegionState,
             locale: Locale = Locale.getDefault(),
             distribution: String? = null,
+            searchExtraParams: SearchExtraParams? = null,
             coroutineContext: CoroutineContext = Dispatchers.IO,
         ): Bundle
 
@@ -280,6 +297,7 @@ class SearchMiddleware(
          */
         suspend fun load(
             ids: List<String>,
+            searchExtraParams: SearchExtraParams? = null,
             coroutineContext: CoroutineContext = Dispatchers.IO,
         ): List<SearchEngine>
 

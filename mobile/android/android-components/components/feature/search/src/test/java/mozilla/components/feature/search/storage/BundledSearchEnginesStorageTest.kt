@@ -38,7 +38,7 @@ class BundledSearchEnginesStorageTest {
         for (locale in locales) {
             val engines = storage.load(RegionState.Default, locale)
             assertTrue(engines.list.isNotEmpty())
-            assertFalse(engines.defaultSearchEngineId.isNullOrEmpty())
+            assertFalse(engines.defaultSearchEngineId.isEmpty())
         }
     }
 
