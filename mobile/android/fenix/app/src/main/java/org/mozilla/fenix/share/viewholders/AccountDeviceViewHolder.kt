@@ -73,12 +73,12 @@ class AccountDeviceViewHolder(
                 )
                 SyncShareOption.Reconnect -> Triple(
                     context.getText(R.string.sync_reconnect),
-                    R.drawable.mozac_ic_warning,
+                    R.drawable.mozac_ic_warning_fill_24,
                     R.color.default_share_background,
                 )
                 SyncShareOption.Offline -> Triple(
                     context.getText(R.string.sync_offline),
-                    R.drawable.mozac_ic_warning,
+                    R.drawable.mozac_ic_warning_fill_24,
                     R.color.default_share_background,
                 )
                 SyncShareOption.AddNewDevice -> Triple(

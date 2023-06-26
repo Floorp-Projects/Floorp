@@ -124,7 +124,7 @@ class TrackingProtectionPanel(
         val securityIcon = if (isConnectionSecure) {
             AppCompatResources.getDrawable(context, R.drawable.mozac_ic_lock_24)
         } else {
-            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_warning)
+            AppCompatResources.getDrawable(context, R.drawable.mozac_ic_warning_fill_24)
         }
 
         binding.securityInfo.putCompoundDrawablesRelativeWithIntrinsicBounds(

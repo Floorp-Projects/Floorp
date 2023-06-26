@@ -4,6 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:drawable="@drawable/mozac_ic_warning"
+        android:drawable="@drawable/mozac_ic_warning_fill_24"
         android:bottom="14dp" />
 </layer-list>
