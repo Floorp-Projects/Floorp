@@ -68,7 +68,7 @@ void MediaError::GetMessage(nsAString& aResult) const {
     }
 
     if (!nsContentUtils::IsCallerChrome() &&
-        ownerDoc->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+        ownerDoc->ShouldResistFingerprinting(RFPTarget::MediaError)) {
       aResult.Truncate();
       return;
     }
