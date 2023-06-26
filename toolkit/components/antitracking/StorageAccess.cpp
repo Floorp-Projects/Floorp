@@ -15,6 +15,7 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
+#include "nsAboutProtocolUtils.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
 #include "nsICookiePermission.h"
@@ -133,8 +134,10 @@ static StorageAccess InternalStorageAllowedCheck(
   // We need to check the aURI or the document URI here instead of only checking
   // the URI from the principal. Because the principal might not have a URI if
   // it is a system principal.
-  if ((aURI && aURI->SchemeIs("about")) ||
-      (documentURI && documentURI->SchemeIs("about")) ||
+  if ((aURI && aURI->SchemeIs("about") &&
+       !NS_IsContentAccessibleAboutURI(aURI)) ||
+      (documentURI && documentURI->SchemeIs("about") &&
+       !NS_IsContentAccessibleAboutURI(documentURI)) ||
       aPrincipal->SchemeIs("about")) {
     return access;
   }
