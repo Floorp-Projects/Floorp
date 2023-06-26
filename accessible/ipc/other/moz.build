@@ -12,7 +12,6 @@ if CONFIG["ACCESSIBILITY"]:
     ]
 
     SOURCES += [
-        "DocAccessibleChild.cpp",
         "RemoteAccessible.cpp",
     ]
 

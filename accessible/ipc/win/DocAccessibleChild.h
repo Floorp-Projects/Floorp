@@ -20,17 +20,6 @@ class DocAccessibleChild : public DocAccessibleChildBase {
  public:
   DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager);
   ~DocAccessibleChild();
-
-  virtual ipc::IPCResult RecvRestoreFocus() override;
-
-  bool SendCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset,
-                          const bool& aIsSelectionCollapsed,
-                          const bool& aIsAtEndOfLine,
-                          const int32_t& aGranularity);
-  bool SendFocusEvent(const uint64_t& aID);
-
- private:
-  LayoutDeviceIntRect GetCaretRectFor(const uint64_t& aID);
 };
 
 }  // namespace a11y

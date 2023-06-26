@@ -6,8 +6,10 @@
 
 #include "mozilla/a11y/DocAccessibleChildBase.h"
 #include "mozilla/a11y/CacheConstants.h"
+#include "mozilla/a11y/FocusManager.h"
 #include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/ipc/ProcessChild.h"
+#include "nsAccessibilityService.h"
 
 #include "LocalAccessible-inl.h"
 #ifdef A11Y_LOG
@@ -322,6 +324,84 @@ mozilla::ipc::IPCResult DocAccessibleChildBase::RecvPasteText(
 
   return IPC_OK();
 }
+
+ipc::IPCResult DocAccessibleChildBase::RecvRestoreFocus() {
+  if (FocusManager* focusMgr = FocusMgr()) {
+    focusMgr->ForceFocusEvent();
+  }
+  return IPC_OK();
+}
+
+#if defined(XP_WIN)
+LayoutDeviceIntRect DocAccessibleChildBase::GetCaretRectFor(
+    const uint64_t& aID) {
+  LocalAccessible* target;
+
+  if (aID) {
+    target = reinterpret_cast<LocalAccessible*>(aID);
+  } else {
+    target = mDoc;
+  }
+
+  MOZ_ASSERT(target);
+
+  HyperTextAccessible* text = target->AsHyperText();
+  if (!text) {
+    return LayoutDeviceIntRect();
+  }
+
+  nsIWidget* widget = nullptr;
+  return text->GetCaretRect(&widget);
+}
+
+bool DocAccessibleChildBase::SendFocusEvent(const uint64_t& aID) {
+  return PDocAccessibleChild::SendFocusEvent(aID, GetCaretRectFor(aID));
+}
+
+bool DocAccessibleChildBase::SendCaretMoveEvent(
+    const uint64_t& aID, const int32_t& aOffset,
+    const bool& aIsSelectionCollapsed, const bool& aIsAtEndOfLine,
+    const int32_t& aGranularity) {
+  return PDocAccessibleChild::SendCaretMoveEvent(aID, GetCaretRectFor(aID),
+                                                 aOffset, aIsSelectionCollapsed,
+                                                 aIsAtEndOfLine, aGranularity);
+}
+
+#else   // defined(XP_WIN)
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvScrollToPoint(
+    const uint64_t& aID, const uint32_t& aScrollType, const int32_t& aX,
+    const int32_t& aY) {
+  LocalAccessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->ScrollToPoint(aScrollType, aX, aY);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvAnnounce(
+    const uint64_t& aID, const nsAString& aAnnouncement,
+    const uint16_t& aPriority) {
+  LocalAccessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->Announce(aAnnouncement, aPriority);
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvScrollSubstringToPoint(
+    const uint64_t& aID, const int32_t& aStartOffset, const int32_t& aEndOffset,
+    const uint32_t& aCoordinateType, const int32_t& aX, const int32_t& aY) {
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    acc->ScrollSubstringToPoint(aStartOffset, aEndOffset, aCoordinateType, aX,
+                                aY);
+  }
+
+  return IPC_OK();
+}
+#endif  // defined(XP_WIN)
 
 LocalAccessible* DocAccessibleChildBase::IdToAccessible(
     const uint64_t& aID) const {
