@@ -330,6 +330,18 @@ features:
         type: Int
         default: 0
 
+  shopping-experience:
+    description: A feature that shows product review quality information.
+    variables:
+      enabled:
+        description: if true, the shopping experience feature is shown to the user.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: developer
+        value:
+          enabled: true
+
 types:
   objects: {}
 

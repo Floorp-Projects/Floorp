@@ -147,6 +147,14 @@ search-term-groups:
     enabled:
       type: boolean
       description: "If true, the feature shows up on the homescreen and on the new tab screen."
+shopping-experience:
+  description: A feature that shows product review quality information.
+  hasExposure: true
+  exposureDescription: ""
+  variables:
+    enabled:
+      type: boolean
+      description: "if true, the shopping experience feature is shown to the user."
 splash-screen:
   description: "A feature that extends splash screen duration, allowing additional data fetching time for the app's initial run."
   hasExposure: true
