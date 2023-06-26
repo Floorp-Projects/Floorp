@@ -547,7 +547,7 @@ static bool GCBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool MallocBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  double bytes = 0;
+  size_t bytes = 0;
   for (ZonesIter zone(cx->runtime(), WithAtoms); !zone.done(); zone.next()) {
     bytes += zone->mallocHeapSize.bytes();
   }

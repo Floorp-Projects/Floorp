@@ -868,7 +868,8 @@ bool HeapCheckTracerBase::traceHeap(AutoTraceSession& session) {
     if (item.processed) {
       stack.popBack();
     } else {
-      parentIndex = stack.length() - 1;
+      MOZ_ASSERT(stack.length() <= INT_MAX);
+      parentIndex = int(stack.length()) - 1;
       stack.back().processed = true;
       TraceChildren(this, item.thing);
     }

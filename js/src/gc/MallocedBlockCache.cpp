@@ -94,7 +94,7 @@ void MallocedBlockCache::free(PointerAndUint7 blockAndListID) {
   }
 }
 
-void MallocedBlockCache::preen(float percentOfBlocksToDiscard) {
+void MallocedBlockCache::preen(double percentOfBlocksToDiscard) {
   MOZ_ASSERT(percentOfBlocksToDiscard >= 0.0 &&
              percentOfBlocksToDiscard <= 100.0);
   MOZ_ASSERT(lists[OVERSIZE_BLOCK_LIST_ID].empty());
