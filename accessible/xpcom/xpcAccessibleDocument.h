@@ -87,7 +87,6 @@ class xpcAccessibleDocument : public xpcAccessibleHyperText,
   friend class DocManager;
   friend class DocAccessible;
   friend class RemoteAccessible;
-  friend class RemoteAccessibleBase<RemoteAccessible>;
   friend class xpcAccessibleGeneric;
 
   xpcAccessibleDocument(const xpcAccessibleDocument&) = delete;

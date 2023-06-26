@@ -1176,7 +1176,7 @@ Relation DocAccessibleParent::RelationByType(RelationType aType) const {
     return Relation(Parent());
   }
 
-  return RemoteAccessibleBase<RemoteAccessible>::RelationByType(aType);
+  return RemoteAccessible::RelationByType(aType);
 }
 
 DocAccessibleParent* DocAccessibleParent::GetFrom(
@@ -1208,7 +1208,7 @@ DocAccessibleParent* DocAccessibleParent::GetFrom(
 size_t DocAccessibleParent::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
   size_t size = 0;
 
-  size += RemoteAccessibleBase::SizeOfExcludingThis(aMallocSizeOf);
+  size += RemoteAccessible::SizeOfExcludingThis(aMallocSizeOf);
 
   size += mReverseRelations.ShallowSizeOfExcludingThis(aMallocSizeOf);
   for (auto i = mReverseRelations.Iter(); !i.Done(); i.Next()) {

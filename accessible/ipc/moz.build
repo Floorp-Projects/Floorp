@@ -5,17 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG["OS_ARCH"] == "WINNT":
-    DIRS += ["win"]
     LOCAL_INCLUDES += [
-        "/accessible/ipc/win",
         "/accessible/windows/ia2",
         "/accessible/windows/msaa",
     ]
 else:
-    DIRS += ["other"]
-    LOCAL_INCLUDES += [
-        "/accessible/ipc/other",
-    ]
     if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
         LOCAL_INCLUDES += [
             "/accessible/atk",
@@ -45,13 +39,13 @@ if CONFIG["ACCESSIBILITY"]:
     EXPORTS.mozilla.a11y += [
         "DocAccessibleChild.h",
         "DocAccessibleParent.h",
-        "RemoteAccessibleBase.h",
+        "RemoteAccessible.h",
     ]
 
     UNIFIED_SOURCES += [
         "DocAccessibleChild.cpp",
         "DocAccessibleParent.cpp",
-        "RemoteAccessibleBase.cpp",
+        "RemoteAccessible.cpp",
     ]
 
     LOCAL_INCLUDES += [
