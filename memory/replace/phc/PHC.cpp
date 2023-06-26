@@ -924,6 +924,7 @@ static GMut* gMut;
 
 // Thread-local state.
 class GTls {
+ public:
   GTls(const GTls&) = delete;
 
   const GTls& operator=(const GTls&) = delete;
@@ -976,9 +977,7 @@ class GTls {
   //   exactly. (Note that (b) isn't necessary for this use -- MozStackWalk()
   //   could be safely called -- but it is necessary for the first use above.)
   //
-  static PHC_THREAD_LOCAL(bool) tlsIsDisabled;
 
- public:
   static void Init() {
     if (!tlsIsDisabled.init()) {
       MOZ_CRASH();
@@ -1004,17 +1003,20 @@ class GTls {
   }
 
   static bool IsDisabledOnCurrentThread() { return tlsIsDisabled.get(); }
+
+ private:
+  static PHC_THREAD_LOCAL(bool) tlsIsDisabled;
 };
 
 PHC_THREAD_LOCAL(bool) GTls::tlsIsDisabled;
 
 class AutoDisableOnCurrentThread {
+ public:
   AutoDisableOnCurrentThread(const AutoDisableOnCurrentThread&) = delete;
 
   const AutoDisableOnCurrentThread& operator=(
       const AutoDisableOnCurrentThread&) = delete;
 
- public:
   explicit AutoDisableOnCurrentThread() { GTls::DisableOnCurrentThread(); }
   ~AutoDisableOnCurrentThread() { GTls::EnableOnCurrentThread(); }
 };
