@@ -43,9 +43,19 @@ namespace mozilla::dom {
 
 namespace {
 
-constexpr bool IsFileNotFoundError(const nsresult aRv) {
-  return NS_ERROR_DOM_FILE_NOT_FOUND_ERR == aRv ||
-         NS_ERROR_FILE_NOT_FOUND == aRv;
+void RejectWithConvertedErrors(nsresult aRv, const RefPtr<Promise>& aPromise) {
+  switch (aRv) {
+    case NS_ERROR_DOM_FILE_NOT_FOUND_ERR:
+      [[fallthrough]];
+    case NS_ERROR_FILE_NOT_FOUND:
+      aPromise->MaybeRejectWithNotFoundError("File not found");
+      break;
+    case NS_ERROR_FILE_NO_DEVICE_SPACE:
+      aPromise->MaybeRejectWithQuotaExceededError("Quota exceeded");
+      break;
+    default:
+      aPromise->MaybeReject(aRv);
+  }
 }
 
 class WritableFileStreamUnderlyingSinkAlgorithms final
@@ -128,25 +138,16 @@ void WriteImpl(RefPtr<FileSystemWritableFileStream> aStream,
 
         return promise;
       })
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [command,
-           aPromise](const Int64Promise::ResolveOrRejectValue& aValue) {
-            if (aValue.IsResolve()) {
-              aPromise->MaybeResolve(aValue.ResolveValue());
-              return;
-            }
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [command,
+              aPromise](const Int64Promise::ResolveOrRejectValue& aValue) {
+               if (aValue.IsResolve()) {
+                 aPromise->MaybeResolve(aValue.ResolveValue());
+                 return;
+               }
 
-            if (IsFileNotFoundError(aValue.RejectValue())) {
-              aPromise->MaybeRejectWithNotFoundError("File not found");
-            } else if (aValue.RejectValue() == NS_ERROR_FILE_NO_DEVICE_SPACE) {
-              aPromise->MaybeRejectWithQuotaExceededError("Quota exceeded");
-            } else {
-              aPromise->MaybeReject(aValue.RejectValue());
-            }
-
-            aPromise->MaybeReject(aValue.RejectValue());
-          });
+               RejectWithConvertedErrors(aValue.RejectValue(), aPromise);
+             });
 }
 
 }  // namespace
@@ -738,11 +739,7 @@ void FileSystemWritableFileStream::Write(const T& aData,
   MOZ_ASSERT(IsOpen());
 
   auto rejectAndReturn = [&aPromise](const nsresult rv) {
-    if (IsFileNotFoundError(rv)) {
-      aPromise->MaybeRejectWithNotFoundError("File not found");
-      return;
-    }
-    aPromise->MaybeReject(rv);
+    RejectWithConvertedErrors(rv, aPromise);
   };
 
   nsCOMPtr<nsIInputStream> inputStream;
@@ -827,17 +824,13 @@ void FileSystemWritableFileStream::Seek(uint64_t aPosition,
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [command, aPromise](const BoolPromise::ResolveOrRejectValue& aValue) {
-            if (aValue.IsReject()) {
-              auto rv = aValue.RejectValue();
-              if (IsFileNotFoundError(rv)) {
-                aPromise->MaybeRejectWithNotFoundError("File not found");
-                return;
-              }
-              aPromise->MaybeReject(rv);
+            if (aValue.IsResolve()) {
+              aPromise->MaybeResolveWithUndefined();
               return;
             }
-            MOZ_ASSERT(aValue.IsResolve());
-            aPromise->MaybeResolveWithUndefined();
+
+            MOZ_ASSERT(aValue.IsReject());
+            RejectWithConvertedErrors(aValue.RejectValue(), aPromise);
           });
 }
 
