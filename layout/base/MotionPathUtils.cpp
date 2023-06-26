@@ -366,29 +366,25 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
     return OffsetPathData::None();
   }
 
-  // FIXME: Bug 1598156. Handle IsCoordBox().
-  if (offsetPath.IsCoordBox()) {
-    return OffsetPathData::None();
-  }
-
-  const auto& function = offsetPath.AsOffsetPath().path;
-  if (function->IsRay()) {
+  // Handle ray().
+  if (offsetPath.IsRay()) {
     nsRect coordBox;
     const nsIFrame* containingBlockFrame =
         MotionPathUtils::GetOffsetPathReferenceBox(aFrame, coordBox);
     return !containingBlockFrame
                ? OffsetPathData::None()
                : OffsetPathData::Ray(
-                     function->AsRay(), std::move(coordBox),
+                     offsetPath.AsRay(), std::move(coordBox),
                      aFrame->GetOffsetTo(containingBlockFrame),
                      MotionPathUtils::GetRayContainReferenceSize(
                          const_cast<nsIFrame*>(aFrame)));
   }
 
-  MOZ_ASSERT(function->IsShape());
-  const StyleBasicShape& shape = function->AsShape();
-  if (shape.IsPath()) {
-    const StyleSVGPathData& pathData = shape.AsPath().path;
+  // Handle path(). We cache it so we handle it separately.
+  // FIXME: Bug 1837042, cache gfx::Path for shapes other than path(). Once we
+  // cache all basic shapes, we can merge this branch into other basic shapes.
+  if (offsetPath.IsPath()) {
+    const StyleSVGPathData& pathData = offsetPath.AsSVGPathData();
     RefPtr<gfx::Path> gfxPath =
         aFrame->GetProperty(nsIFrame::OffsetPathCache());
     MOZ_ASSERT(gfxPath || pathData._0.IsEmpty(),
@@ -396,7 +392,9 @@ static OffsetPathData GenerateOffsetPathData(const nsIFrame* aFrame) {
     return OffsetPathData::Shape(pathData, gfxPath.forget());
   }
 
-  // FIXME: Bug 1598156. Handle other basic shapes.
+  // The rest part is to handle "<basic-shape> || <coord-box>".
+  MOZ_ASSERT(offsetPath.IsBasicShapeOrCoordBox());
+  // TODO: Implement this in the following patches.
   return OffsetPathData::None();
 }
 
@@ -427,25 +425,19 @@ static OffsetPathData GenerateOffsetPathData(
     return OffsetPathData::None();
   }
 
-  // FIXME: Bug 1598156. Handle IsCoordBox().
-  if (aOffsetPath.IsCoordBox()) {
-    return OffsetPathData::None();
-  }
-
-  const auto& function = aOffsetPath.AsOffsetPath().path;
-  if (function->IsRay()) {
+  // Handle ray().
+  if (aOffsetPath.IsRay()) {
     return aMotionPathData.coordBox().IsEmpty()
                ? OffsetPathData::None()
                : OffsetPathData::Ray(
-                     function->AsRay(), aMotionPathData.coordBox(),
+                     aOffsetPath.AsRay(), aMotionPathData.coordBox(),
                      aMotionPathData.currentPosition(),
                      aMotionPathData.rayContainReferenceLength());
   }
 
-  MOZ_ASSERT(function->IsShape());
-  const StyleBasicShape& shape = function->AsShape();
-  if (shape.IsPath()) {
-    const StyleSVGPathData& pathData = shape.AsPath().path;
+  // Handle path().
+  if (aOffsetPath.IsPath()) {
+    const StyleSVGPathData& pathData = aOffsetPath.AsSVGPathData();
     // If aCachedMotionPath is valid, we have a fixed path.
     // This means we have pre-built it already and no need to update.
     RefPtr<gfx::Path> path = aCachedMotionPath;
@@ -457,7 +449,9 @@ static OffsetPathData GenerateOffsetPathData(
     return OffsetPathData::Shape(pathData, path.forget());
   }
 
-  // FIXME: Bug 1598156. Handle other basic shapes.
+  // The rest part is to handle "<basic-shape> || <coord-box>".
+  MOZ_ASSERT(aOffsetPath.IsBasicShapeOrCoordBox());
+  // TODO: This is for OMTA. Implement this in the following patches.
   return OffsetPathData::None();
 }
 

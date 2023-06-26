@@ -975,3 +975,29 @@ renaming_overrides_prefixing = true
     return StyleFontPalette{StyleAtom(nsGkAtoms::normal->ToAddRefed())};
   }
 """
+
+"GenericOffsetPath" = """
+  // Return true if the <offset-path> is ray().
+  bool IsRay() const {
+    return IsOffsetPath() && AsOffsetPath().path->IsRay();
+  }
+
+  const StyleRayFunction& AsRay() const {
+    return AsOffsetPath().path->AsRay();
+  }
+
+  // Return true if the <basic-shape> is path().
+  bool IsPath() const {
+    return IsOffsetPath() && AsOffsetPath().path->IsShape() &&
+           AsOffsetPath().path->AsShape().IsPath();
+  }
+
+  const StyleSVGPathData& AsSVGPathData() const {
+    return AsOffsetPath().path->AsShape().AsPath().path;
+  }
+
+  // Return true if this is "<basic-shape> || <coord-box>".
+  bool IsBasicShapeOrCoordBox() const {
+    return IsCoordBox() || (IsOffsetPath() && AsOffsetPath().path->IsShape());
+  }
+"""

@@ -503,16 +503,14 @@ AnimationStorageData AnimationHelper::ExtractAnimations(
         const StyleOffsetPath& offsetPath =
             animation.baseStyle().get_StyleOffsetPath();
         // FIXME: Bug 1837042. Cache all basic shapes.
-        if (offsetPath.IsOffsetPath() &&
-            offsetPath.AsOffsetPath().path->IsShape() &&
-            offsetPath.AsOffsetPath().path->AsShape().IsPath()) {
+        if (offsetPath.IsPath()) {
           MOZ_ASSERT(!storageData.mCachedMotionPath,
                      "Only one offset-path: path() is set");
 
           RefPtr<gfx::PathBuilder> builder =
               MotionPathUtils::GetCompositorPathBuilder();
-          storageData.mCachedMotionPath = MotionPathUtils::BuildPath(
-              offsetPath.AsOffsetPath().path->AsShape().AsPath().path, builder);
+          storageData.mCachedMotionPath =
+              MotionPathUtils::BuildPath(offsetPath.AsSVGPathData(), builder);
         }
       }
 
