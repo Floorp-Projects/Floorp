@@ -118,7 +118,7 @@ class Browsertime(Perftest):
 
         if test.get("type") == "benchmark":
             # benchmark-type tests require the benchmark test to be served out
-            self.benchmark = Benchmark(self.config, test)
+            self.benchmark = Benchmark(self.config, test, debug_mode=self.debug_mode)
             test["test_url"] = test["test_url"].replace("<host>", self.benchmark.host)
             test["test_url"] = test["test_url"].replace("<port>", self.benchmark.port)
 
@@ -172,10 +172,14 @@ class Browsertime(Perftest):
     def run_test_teardown(self, test):
         super(Browsertime, self).run_test_teardown(test)
 
-        # if we were using a playback tool, stop it
+        # If we were using a playback tool, stop it
         if self.playback is not None:
             self.playback.stop()
             self.playback = None
+
+        # Stop the benchmark server if we're running a benchmark test
+        if self.benchmark:
+            self.benchmark.stop_http_server()
 
     def check_for_crashes(self):
         super(Browsertime, self).check_for_crashes()

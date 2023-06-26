@@ -8,12 +8,12 @@ import shutil
 import socket
 import subprocess
 import tempfile
-from urllib.parse import unquote
+import threading
+import traceback
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 import mozfile
 from logger.logger import RaptorLogger
-from wptserve import handlers, server
-from wptserve.handlers import handler
 
 LOG = RaptorLogger(component="raptor-benchmark")
 here = pathlib.Path(__file__).parent.resolve()
@@ -22,9 +22,12 @@ here = pathlib.Path(__file__).parent.resolve()
 class Benchmark(object):
     """utility class for running benchmarks in raptor"""
 
-    def __init__(self, config, test):
+    def __init__(self, config, test, debug_mode=False):
         self.config = config
         self.test = test
+        self.debug_mode = debug_mode
+        self.httpd = None
+        self.server_thread = None
 
         # Note that we can only change the repository, revision, and branch through here.
         # The path to the test should remain constant. If it needs to be changed, make a
@@ -50,8 +53,6 @@ class Benchmark(object):
         self.start_http_server()
 
     def start_http_server(self):
-        self.write_server_headers()
-
         # pick a free port
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(("", 0))
@@ -61,56 +62,43 @@ class Benchmark(object):
         _webserver = "%s:%d" % (self.host, self.port)
 
         self.httpd = self.setup_webserver(_webserver)
-        self.httpd.start()
-
-    def write_server_headers(self):
-        # to add specific headers for serving files via wptserve, write out a headers dir file
-        # see http://wptserve.readthedocs.io/en/latest/handlers.html#file-handlers
-        LOG.info("writing wptserve headers file")
-        headers_file = pathlib.Path(self.bench_dir, "__dir__.headers")
-        file = headers_file.open("w")
-        file.write("Access-Control-Allow-Origin: *")
-        file.close()
-        LOG.info("wrote wpt headers file: %s" % headers_file)
+        self.server_thread = threading.Thread(target=self.httpd.serve_forever)
+        self.server_thread.start()
 
     def setup_webserver(self, webserver):
         LOG.info("starting webserver on %r" % webserver)
         LOG.info("serving benchmarks from here: %s" % self.bench_dir)
 
-        @handler
-        def directory_index_handler(request, response):
-            """Handler for serving index.html when a directory is requested."""
-            headers = [("Content-Type", "text/html")]
-            path = unquote(request.url_parts.path)
-
-            if path.startswith("/"):
-                path = path[1:]
-
-            if ".." in path:
-                # Not allowing people to do this!
-                raise
-
-            new_path = pathlib.Path(request.doc_root, path, "index.html")
-            if new_path.exists():
-                content = new_path.read_bytes()
-            else:
-                LOG.info("index.html not found for directory request")
-            return headers, content
-
         self.host, self.port = webserver.split(":")
-        return server.WebTestHttpd(
-            host=self.host,
-            port=int(self.port),
-            doc_root=str(self.bench_dir),
-            routes=[
-                ("GET", "*/", directory_index_handler),
-                ("GET", "*", handlers.file_handler),
-            ],
-        )
 
-    def stop_serve(self):
-        LOG.info("TODO: stop serving benchmark source")
-        pass
+        class CustomHandler(SimpleHTTPRequestHandler):
+            doc_root = self.bench_dir
+            verbose = self.debug_mode or self.config.get("verbose", False)
+
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs, directory=CustomHandler.doc_root)
+
+            def log_message(self, *args):
+                if CustomHandler.verbose:
+                    super(CustomHandler, self).log_message(*args)
+
+            def end_headers(self):
+                self.send_header("Access-Control-Allow-Origin", "*")
+                SimpleHTTPRequestHandler.end_headers(self)
+
+        return ThreadingHTTPServer((self.host, int(self.port)), CustomHandler)
+
+    def stop_http_server(self):
+        try:
+            if self.httpd:
+                self.httpd.shutdown()
+        except Exception:
+            LOG.warning(f"Failed to stop benchmark server: {traceback.format_exc()}")
+        try:
+            if self.server_thread:
+                self.server_thread.join(5)
+        except Exception:
+            LOG.warning(f"Failed to stop benchmark server: {traceback.format_exc()}")
 
     def _full_clone(self, benchmark_repository, dest):
         subprocess.check_call(
