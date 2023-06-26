@@ -2604,7 +2604,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
   }
 
   const bool resistFingerprinting =
-      !isChrome && doc->ShouldResistFingerprinting(RFPTarget::Unknown);
+      !isChrome && doc->ShouldResistFingerprinting(RFPTarget::MediaDevices);
   if (resistFingerprinting) {
     ReduceConstraint(c.mVideo);
     ReduceConstraint(c.mAudio);
@@ -3100,7 +3100,7 @@ RefPtr<LocalDevicePromise> MediaManager::SelectAudioOutput(
   uint64_t windowID = aWindow->WindowID();
   const bool resistFingerprinting =
       aWindow->AsGlobal()->ShouldResistFingerprinting(aCallerType,
-                                                      RFPTarget::Unknown);
+                                                      RFPTarget::MediaDevices);
   return EnumerateDevicesImpl(aWindow, MediaSourceEnum::Other,
                               MediaSourceEnum::Other,
                               {EnumerationFlag::EnumerateAudioOutputs,
