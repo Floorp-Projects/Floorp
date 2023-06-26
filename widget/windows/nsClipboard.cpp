@@ -1341,17 +1341,16 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
   return res;
 }
 
-NS_IMETHODIMP
-nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
+nsresult nsClipboard::EmptyNativeClipboardData(int32_t aWhichClipboard) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
   // Some programs such as ZoneAlarm monitor clipboard usage and then open the
   // clipboard to scan it.  If we i) empty and then ii) set data, then the
   // 'set data' can sometimes fail with access denied becacuse another program
   // has the clipboard open.  So to avoid this race condition for OpenClipboard
   // we do not empty the clipboard when we're setting it.
-  if (aWhichClipboard == kGlobalClipboard && !mEmptyingForSetData) {
-    RepeatedlyTryOleSetClipboard(nullptr);
-  }
-  return nsBaseClipboard::EmptyClipboard(aWhichClipboard);
+  RepeatedlyTryOleSetClipboard(nullptr);
+  return NS_OK;
 }
 
 mozilla::Result<int32_t, nsresult>
