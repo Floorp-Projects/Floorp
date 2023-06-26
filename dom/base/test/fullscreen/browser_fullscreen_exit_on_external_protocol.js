@@ -97,7 +97,8 @@ function setupMailHandler() {
 
 add_task(setupMailHandler);
 
-add_task(async function OpenExternalProtocolOnPendingFullscreen() {
+// Fullscreen is canceled during fullscreen transition
+add_task(async function OpenExternalProtocolOnPendingLaterFullscreen() {
   for (const useClick of [true, false]) {
     await BrowserTestUtils.withNewTab(CONTENT, async browser => {
       const leavelFullscreen = waitForFullscreenState(document, false, true);
@@ -108,17 +109,23 @@ add_task(async function OpenExternalProtocolOnPendingFullscreen() {
           const button = content.document.querySelector("button");
 
           const clickDone = new Promise(r => {
-            button.addEventListener("click", function () {
-              content.document.documentElement.requestFullscreen();
-              // When anchor.click() is called, the fullscreen request
-              // is probably still pending.
-              if (shouldClick) {
-                content.document.querySelector("a").click();
-              } else {
-                content.document.location = "mailto:test@example.com";
-              }
-              r();
-            });
+            button.addEventListener(
+              "click",
+              function () {
+                content.document.documentElement.requestFullscreen();
+                // When anchor.click() is called, the fullscreen request
+                // is probably still pending.
+                content.setTimeout(() => {
+                  if (shouldClick) {
+                    content.document.querySelector("a").click();
+                  } else {
+                    content.document.location = "mailto:test@example.com";
+                  }
+                  r();
+                }, 0);
+              },
+              { once: true }
+            );
           });
           button.click();
           await clickDone;
@@ -126,6 +133,50 @@ add_task(async function OpenExternalProtocolOnPendingFullscreen() {
       );
 
       await leavelFullscreen;
+      ok(true, "Fullscreen should be exited");
+    });
+  }
+});
+
+// Fullscreen is canceled immediately.
+add_task(async function OpenExternalProtocolOnPendingFullscreen() {
+  for (const useClick of [true, false]) {
+    await BrowserTestUtils.withNewTab(CONTENT, async browser => {
+      await SpecialPowers.spawn(
+        browser,
+        [useClick],
+        async function (shouldClick) {
+          const button = content.document.querySelector("button");
+
+          const clickDone = new Promise(r => {
+            button.addEventListener(
+              "click",
+              function () {
+                content.document.documentElement
+                  .requestFullscreen()
+                  .then(() => {
+                    ok(false, "Don't enter fullscreen");
+                  })
+                  .catch(() => {
+                    ok(true, "Cancel entering fullscreen");
+                    r();
+                  });
+                // When anchor.click() is called, the fullscreen request
+                // is probably still pending.
+                if (shouldClick) {
+                  content.document.querySelector("a").click();
+                } else {
+                  content.document.location = "mailto:test@example.com";
+                }
+              },
+              { once: true }
+            );
+          });
+          button.click();
+          await clickDone;
+        }
+      );
+
       ok(true, "Fullscreen should be exited");
     });
   }
