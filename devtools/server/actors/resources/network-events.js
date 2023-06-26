@@ -348,7 +348,6 @@ class NetworkEventWatcher {
         // in _httpResponseExaminer.
         resourceUpdates.mimeType = updateResource.mimeType;
         resourceUpdates.waitingTime = updateResource.waitingTime;
-        resourceUpdates.isResolvedByTRR = updateResource.isResolvedByTRR;
 
         resourceUpdates.responseHeadersAvailable = true;
         resourceUpdates.responseCookiesAvailable = true;
