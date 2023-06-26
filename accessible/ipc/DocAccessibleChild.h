@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_a11y_DocAccessibleChildBase_h
-#define mozilla_a11y_DocAccessibleChildBase_h
+#ifndef mozilla_a11y_DocAccessibleChild_h
+#define mozilla_a11y_DocAccessibleChild_h
 
 #include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/a11y/PDocAccessibleChild.h"
@@ -18,13 +18,18 @@ namespace a11y {
 class LocalAccessible;
 class AccShowEvent;
 
-class DocAccessibleChildBase : public PDocAccessibleChild {
+/**
+ * These objects handle content side communication for an accessible document,
+ * and their lifetime is the same as the document they represent.
+ */
+class DocAccessibleChild : public PDocAccessibleChild {
  public:
-  explicit DocAccessibleChildBase(DocAccessible* aDoc) : mDoc(aDoc) {
-    MOZ_COUNT_CTOR(DocAccessibleChildBase);
+  DocAccessibleChild(DocAccessible* aDoc, IProtocol* aManager) : mDoc(aDoc) {
+    MOZ_COUNT_CTOR(DocAccessibleChild);
+    SetManager(aManager);
   }
 
-  ~DocAccessibleChildBase() {
+  ~DocAccessibleChild() {
     // Shutdown() should have been called, but maybe it isn't if the process is
     // killed?
     MOZ_ASSERT(!mDoc);
@@ -32,7 +37,7 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
       mDoc->SetIPCDoc(nullptr);
     }
 
-    MOZ_COUNT_DTOR(DocAccessibleChildBase);
+    MOZ_COUNT_DTOR(DocAccessibleChild);
   }
 
   virtual void Shutdown() {
@@ -175,4 +180,4 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
 }  // namespace a11y
 }  // namespace mozilla
 
-#endif  // mozilla_a11y_DocAccessibleChildBase_h
+#endif  // mozilla_a11y_DocAccessibleChild_h
