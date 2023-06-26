@@ -2833,3 +2833,7 @@ pref("cookiebanners.ui.desktop.cfrVariant", 0);
 #ifdef MOZ_ARTIFACT_BUILDS
   pref("telemetry.fog.artifact_build", true);
 #endif
+
+#ifdef NIGHTLY_BUILD
+  pref("dom.security.credentialmanagement.identity.enabled", true);
+#endif
