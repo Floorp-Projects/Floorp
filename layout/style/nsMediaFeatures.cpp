@@ -62,7 +62,7 @@ static nsSize GetSize(const Document& aDocument) {
 
 // A helper for three features below.
 static nsSize GetDeviceSize(const Document& aDocument) {
-  if (aDocument.ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (aDocument.ShouldResistFingerprinting(RFPTarget::CSSDeviceSize)) {
     return GetSize(aDocument);
   }
 
@@ -154,7 +154,7 @@ int32_t Gecko_MediaFeatures_GetMonochromeBitsPerPixel(
 dom::ScreenColorGamut Gecko_MediaFeatures_ColorGamut(
     const Document* aDocument) {
   auto colorGamut = dom::ScreenColorGamut::Srgb;
-  if (!aDocument->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (!aDocument->ShouldResistFingerprinting(RFPTarget::CSSColorInfo)) {
     if (auto* dx = GetDeviceContextFor(aDocument)) {
       colorGamut = dx->GetColorGamut();
     }
@@ -172,7 +172,7 @@ int32_t Gecko_MediaFeatures_GetColorDepth(const Document* aDocument) {
   // rendered.
   int32_t depth = 24;
 
-  if (!aDocument->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (!aDocument->ShouldResistFingerprinting(RFPTarget::CSSColorInfo)) {
     if (nsDeviceContext* dx = GetDeviceContextFor(aDocument)) {
       depth = dx->GetDepth();
     }
@@ -198,7 +198,7 @@ float Gecko_MediaFeatures_GetResolution(const Document* aDocument) {
     return pc->GetOverrideDPPX();
   }
 
-  if (aDocument->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (aDocument->ShouldResistFingerprinting(RFPTarget::CSSResolution)) {
     return pc->DeviceContext()->GetFullZoom();
   }
   // Get the actual device pixel ratio, which also takes zoom into account.
@@ -285,7 +285,8 @@ bool Gecko_MediaFeatures_PrefersReducedMotion(const Document* aDocument) {
 }
 
 bool Gecko_MediaFeatures_PrefersReducedTransparency(const Document* aDocument) {
-  if (aDocument->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (aDocument->ShouldResistFingerprinting(
+          RFPTarget::CSSPrefersReducedTransparency)) {
     return false;
   }
   return LookAndFeel::GetInt(LookAndFeel::IntID::PrefersReducedTransparency,
@@ -327,7 +328,7 @@ StylePrefersContrast Gecko_MediaFeatures_PrefersContrast(
 }
 
 bool Gecko_MediaFeatures_InvertedColors(const Document* aDocument) {
-  if (aDocument->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (aDocument->ShouldResistFingerprinting(RFPTarget::CSSInvertedColors)) {
     return false;
   }
   return LookAndFeel::GetInt(LookAndFeel::IntID::InvertedColors, 0) == 1;
@@ -352,7 +353,7 @@ StyleDynamicRange Gecko_MediaFeatures_DynamicRange(const Document* aDocument) {
 
 StyleDynamicRange Gecko_MediaFeatures_VideoDynamicRange(
     const Document* aDocument) {
-  if (aDocument->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (aDocument->ShouldResistFingerprinting(RFPTarget::CSSVideoDynamicRange)) {
     return StyleDynamicRange::Standard;
   }
   // video-dynamic-range: high has 3 requirements:
@@ -393,7 +394,8 @@ static PointerCapabilities GetPointerCapabilities(const Document* aDocument,
 #else
       PointerCapabilities::Fine | PointerCapabilities::Hover;
 #endif
-  if (aDocument->ShouldResistFingerprinting(RFPTarget::Unknown)) {
+  if (aDocument->ShouldResistFingerprinting(
+          RFPTarget::CSSPointerCapabilities)) {
     return kDefaultCapabilities;
   }
 
