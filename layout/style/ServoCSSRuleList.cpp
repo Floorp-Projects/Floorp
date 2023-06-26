@@ -190,7 +190,6 @@ nsresult ServoCSSRuleList::InsertRule(const nsACString& aRule,
 
   mStyleSheet->WillDirty();
 
-  bool nested = !!mParentRule;
   css::Loader* loader = nullptr;
   auto allowImportRules = mStyleSheet->SelfOrAncestorIsConstructed()
                               ? StyleAllowImportRules::No
@@ -205,12 +204,14 @@ nsresult ServoCSSRuleList::InsertRule(const nsACString& aRule,
     loader = doc->CSSLoader();
   }
   StyleCssRuleType type;
-  nsresult rv = Servo_CssRules_InsertRule(mRawRules, mStyleSheet->RawContents(),
-                                          &aRule, aIndex, nested, loader,
-                                          allowImportRules, mStyleSheet, &type);
-  if (NS_FAILED(rv)) {
-    return rv;
+  uint32_t containingTypes = 0;
+  for (css::Rule* rule = mParentRule; rule; rule = rule->GetParentRule()) {
+    containingTypes |= (1 << uint32_t(rule->Type()));
   }
+  nsresult rv = Servo_CssRules_InsertRule(
+      mRawRules, mStyleSheet->RawContents(), &aRule, aIndex, containingTypes,
+      loader, allowImportRules, mStyleSheet, &type);
+  NS_ENSURE_SUCCESS(rv, rv);
   mRules.InsertElementAt(aIndex, uintptr_t(type));
   return rv;
 }

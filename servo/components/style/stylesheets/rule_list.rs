@@ -8,9 +8,9 @@ use crate::shared_lock::{DeepCloneParams, DeepCloneWithLock, Locked};
 use crate::shared_lock::{SharedRwLock, SharedRwLockReadGuard, ToCssWithGuard};
 use crate::str::CssStringWriter;
 use crate::stylesheets::loader::StylesheetLoader;
-use crate::stylesheets::rule_parser::{InsertRuleContext, State};
+use crate::stylesheets::rule_parser::InsertRuleContext;
 use crate::stylesheets::stylesheet::StylesheetContents;
-use crate::stylesheets::{AllowImportRules, CssRule, RulesMutateError};
+use crate::stylesheets::{AllowImportRules, CssRule, CssRuleTypes, RulesMutateError};
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOfOps};
 use servo_arc::Arc;
@@ -135,7 +135,7 @@ pub trait CssRulesHelpers {
         rule: &str,
         parent_stylesheet_contents: &StylesheetContents,
         index: usize,
-        nested: bool,
+        nested: CssRuleTypes,
         loader: Option<&dyn StylesheetLoader>,
         allow_import_rules: AllowImportRules,
     ) -> Result<CssRule, RulesMutateError>;
@@ -148,7 +148,7 @@ impl CssRulesHelpers for Locked<CssRules> {
         rule: &str,
         parent_stylesheet_contents: &StylesheetContents,
         index: usize,
-        nested: bool,
+        containing_rule_types: CssRuleTypes,
         loader: Option<&dyn StylesheetLoader>,
         allow_import_rules: AllowImportRules,
     ) -> Result<CssRule, RulesMutateError> {
@@ -161,18 +161,10 @@ impl CssRulesHelpers for Locked<CssRules> {
                 return Err(RulesMutateError::IndexSize);
             }
 
-            // Computes the parser state at the given index
             let insert_rule_context = InsertRuleContext {
                 rule_list: &rules.0,
                 index,
-            };
-
-            let state = if nested {
-                State::Body
-            } else if index == 0 {
-                State::Start
-            } else {
-                insert_rule_context.max_rule_state_at_index(index - 1)
+                containing_rule_types,
             };
 
             // Steps 3, 4, 5, 6
@@ -181,7 +173,6 @@ impl CssRulesHelpers for Locked<CssRules> {
                 insert_rule_context,
                 parent_stylesheet_contents,
                 lock,
-                state,
                 loader,
                 allow_import_rules,
             )?

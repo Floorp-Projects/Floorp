@@ -25,7 +25,7 @@ use crate::stylesheets::keyframes_rule::parse_keyframe_list;
 use crate::stylesheets::layer_rule::{LayerBlockRule, LayerName, LayerStatementRule};
 use crate::stylesheets::supports_rule::SupportsCondition;
 use crate::stylesheets::{
-    AllowImportRules, CorsMode, CssRule, CssRuleType, CssRules, DocumentRule,
+    AllowImportRules, CorsMode, CssRule, CssRuleType, CssRuleTypes, CssRules, DocumentRule,
     FontFeatureValuesRule, FontPaletteValuesRule, KeyframesRule, MediaRule, NamespaceRule,
     PageRule, PageSelectors, RulesMutateError, StyleRule, StylesheetLoader, SupportsRule,
 };
@@ -37,7 +37,7 @@ use cssparser::{
     ParserState, QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, SourceLocation,
     SourcePosition,
 };
-use selectors::parser::{SelectorList, ParseRelative};
+use selectors::parser::{ParseRelative, SelectorList};
 use servo_arc::Arc;
 use style_traits::{ParseError, StyleParseErrorKind};
 
@@ -47,6 +47,8 @@ pub struct InsertRuleContext<'a> {
     pub rule_list: &'a [CssRule],
     /// The index we're about to get inserted at.
     pub index: usize,
+    /// The containing rule types of our ancestors.
+    pub containing_rule_types: CssRuleTypes,
 }
 
 impl<'a> InsertRuleContext<'a> {
@@ -110,6 +112,7 @@ impl<'a, 'i> TopLevelRuleParser<'a, 'i> {
             context: &mut self.context,
             declaration_parser_state: &mut self.declaration_parser_state,
             rules: &mut self.rules,
+            dom_error: &mut self.dom_error,
         }
     }
 
@@ -215,6 +218,51 @@ pub enum AtRulePrelude {
     Namespace(Option<Prefix>, Namespace),
     /// A @layer rule prelude.
     Layer(Vec<LayerName>),
+}
+
+impl AtRulePrelude {
+    fn name(&self) -> &'static str {
+        match *self {
+            Self::FontFace => "font-face",
+            Self::FontFeatureValues(..) => "font-feature-values",
+            Self::FontPaletteValues(..) => "font-palette-values",
+            Self::CounterStyle(..) => "counter-style",
+            Self::Media(..) => "media",
+            Self::Container(..) => "container",
+            Self::Supports(..) => "supports",
+            Self::Keyframes(..) => "keyframes",
+            Self::Page(..) => "page",
+            Self::Property(..) => "property",
+            Self::Document(..) => "-moz-document",
+            Self::Import(..) => "import",
+            Self::Namespace(..) => "namespace",
+            Self::Layer(..) => "layer",
+        }
+    }
+
+    // https://drafts.csswg.org/css-nesting/#conditionals
+    //     In addition to nested style rules, this specification allows nested group rules inside
+    //     of style rules: any at-rule whose body contains style rules can be nested inside of a
+    //     style rule as well.
+    fn allowed_in_style_rule(&self) -> bool {
+        match *self {
+            Self::Media(..) |
+            Self::Supports(..) |
+            Self::Container(..) |
+            Self::Document(..) |
+            Self::Layer(..) => true,
+
+            Self::Namespace(..) |
+            Self::FontFace |
+            Self::FontFeatureValues(..) |
+            Self::FontPaletteValues(..) |
+            Self::CounterStyle(..) |
+            Self::Keyframes(..) |
+            Self::Page(..) |
+            Self::Property(..) |
+            Self::Import(..) => false,
+        }
+    }
 }
 
 impl<'a, 'i> AtRuleParser<'i> for TopLevelRuleParser<'a, 'i> {
@@ -406,6 +454,7 @@ struct NestedRuleParser<'a, 'b: 'a, 'i> {
     context: &'a mut ParserContext<'b>,
     declaration_parser_state: &'a mut DeclarationParserState<'i>,
     rules: &'a mut Vec<CssRule>,
+    dom_error: &'a mut Option<RulesMutateError>,
 }
 
 struct NestedParseResult {
@@ -529,7 +578,7 @@ impl<'a, 'b, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'b, 'i> {
         name: CowRcStr<'i>,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self::Prelude, ParseError<'i>> {
-        if !self.allow_at_and_qualified_rules() {
+        if self.in_style_rule() && !static_prefs::pref!("layout.css.nesting.enabled") {
             return Err(input.new_error(BasicParseErrorKind::AtRuleInvalid(name)));
         }
         Ok(match_ignore_ascii_case! { &*name,
@@ -611,6 +660,10 @@ impl<'a, 'b, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'b, 'i> {
         start: &ParserState,
         input: &mut Parser<'i, 't>,
     ) -> Result<(), ParseError<'i>> {
+        if self.in_style_rule() && !prelude.allowed_in_style_rule() {
+            *self.dom_error = Some(RulesMutateError::HierarchyRequest);
+            return Err(input.new_error(BasicParseErrorKind::AtRuleInvalid(prelude.name().into())));
+        }
         let rule = match prelude {
             AtRulePrelude::FontFace => self.nest_for_rule(CssRuleType::FontFace, |p| {
                 CssRule::FontFace(Arc::new(p.shared_lock.wrap(
@@ -747,6 +800,9 @@ impl<'a, 'b, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'b, 'i> {
         prelude: AtRulePrelude,
         start: &ParserState,
     ) -> Result<(), ()> {
+        if self.in_style_rule() {
+            return Err(());
+        }
         let rule = match prelude {
             AtRulePrelude::Layer(names) => {
                 if names.is_empty() {
