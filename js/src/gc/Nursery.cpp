@@ -219,9 +219,7 @@ js::Nursery::Nursery(GCRuntime* gc)
       currentStartChunk_(0),
       currentStartPosition_(0),
       capacity_(0),
-      timeInChunkAlloc_(0),
       enableProfiling_(false),
-      profileThreshold_(0),
       canAllocateStrings_(true),
       canAllocateBigInts_(true),
       reportDeduplications_(false),
@@ -1034,7 +1032,7 @@ void js::Nursery::printTotalProfileTimes() {
 
 void js::Nursery::maybeClearProfileDurations() {
   for (auto& duration : profileDurations_) {
-    duration = mozilla::TimeDuration();
+    duration = mozilla::TimeDuration::Zero();
   }
 }
 
@@ -1242,7 +1240,7 @@ void js::Nursery::collect(JS::GCOptions options, JS::GCReason reason) {
   stats().endNurseryCollection(reason);  // Calls GCNurseryCollectionCallback.
   gcprobes::MinorGCEnd();
 
-  timeInChunkAlloc_ = mozilla::TimeDuration();
+  timeInChunkAlloc_ = mozilla::TimeDuration::Zero();
 
   js::StringStats prevStats = gc->stringStats;
   js::StringStats& currStats = gc->stringStats;

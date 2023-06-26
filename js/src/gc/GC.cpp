@@ -509,7 +509,7 @@ void js::gc::ReadProfileEnv(const char* envName, const char* helpText,
                             TimeDuration* thresholdOut) {
   *enableOut = false;
   *workersOut = false;
-  *thresholdOut = TimeDuration();
+  *thresholdOut = TimeDuration::Zero();
 
   const char* env = getenv(envName);
   if (!env) {
@@ -3276,7 +3276,7 @@ void GCRuntime::updateAllocationRates() {
   }
 
   lastAllocRateUpdateTime = currentTime;
-  collectorTimeSinceAllocRateUpdate = TimeDuration();
+  collectorTimeSinceAllocRateUpdate = TimeDuration::Zero();
 }
 
 static const char* GCHeapStateToLabel(JS::HeapState heapState) {
