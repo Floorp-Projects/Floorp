@@ -12,7 +12,10 @@ import org.mozilla.fenix.share.listadapters.AppShareOption
  */
 class ShareInteractor(
     private val controller: ShareController,
-) : ShareCloseInteractor, ShareToAccountDevicesInteractor, ShareToAppsInteractor, SaveToPDFInteractor {
+) : ShareCloseInteractor,
+    ShareToAccountDevicesInteractor,
+    ShareToAppsInteractor,
+    SaveToPDFInteractor {
     override fun onReauth() {
         controller.handleReauth()
     }
@@ -43,5 +46,9 @@ class ShareInteractor(
 
     override fun onSaveToPDF(tabId: String?) {
         controller.handleSaveToPDF(tabId)
+    }
+
+    override fun onPrint(tabId: String?) {
+        controller.handlePrint(tabId)
     }
 }

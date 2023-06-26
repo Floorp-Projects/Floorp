@@ -61,6 +61,11 @@ interface ShareController {
     fun handleShareToAllDevices(devices: List<Device>)
     fun handleSignIn()
 
+    /**
+     * Handles when a print action was requested.
+     */
+    fun handlePrint(tabId: String?)
+
     enum class Result {
         DISMISSED, SHARE_ERROR, SUCCESS
     }
@@ -85,6 +90,7 @@ class DefaultShareController(
     private val shareData: List<ShareData>,
     private val sendTabUseCases: SendTabUseCases,
     private val saveToPdfUseCase: SessionUseCases.SaveToPdfUseCase,
+    private val printUseCase: SessionUseCases.PrintContentUseCase,
     private val snackbar: FenixSnackbar,
     private val navController: NavController,
     private val recentAppsStorage: RecentAppsStorage,
@@ -148,6 +154,11 @@ class DefaultShareController(
     override fun handleSaveToPDF(tabId: String?) {
         handleShareClosed()
         saveToPdfUseCase.invoke(tabId)
+    }
+
+    override fun handlePrint(tabId: String?) {
+        handleShareClosed()
+        printUseCase.invoke(tabId)
     }
 
     override fun handleAddNewDevice() {

@@ -20,6 +20,11 @@ interface ToolbarMenu {
         object Stop : Item()
         object OpenInFenix : Item()
         object SaveToCollection : Item()
+
+        /**
+         * Prints the currently displayed page content.
+         */
+        object PrintContent : Item()
         object AddToTopSites : Item()
         object RemoveFromTopSites : Item()
         object InstallPwaToHomeScreen : Item()

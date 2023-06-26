@@ -753,6 +753,21 @@ class DefaultBrowserToolbarMenuControllerTest {
     }
 
     @Test
+    fun `WHEN print menu item is pressed THEN request print`() = runTest {
+        val item = ToolbarMenu.Item.PrintContent
+
+        val controller = createController(scope = this, store = browserStore)
+        assertNull(Events.browserMenuAction.testGetValue())
+
+        controller.handleToolbarItemInteraction(item)
+
+        assertNotNull(Events.browserMenuAction.testGetValue())
+        val snapshot = Events.browserMenuAction.testGetValue()!!
+        assertEquals(1, snapshot.size)
+        assertEquals("print_content", snapshot.single().extra?.getValue("item"))
+    }
+
+    @Test
     fun `WHEN New Tab menu item is pressed THEN navigate to a new tab home`() = runTest {
         val item = ToolbarMenu.Item.NewTab
 

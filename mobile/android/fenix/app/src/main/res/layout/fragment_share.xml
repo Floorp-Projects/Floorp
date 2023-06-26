@@ -66,8 +66,14 @@
             android:id="@+id/save_pdf"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/divider_line_apps_share_and_pdf_section" />
+
+        <androidx.compose.ui.platform.ComposeView
+            android:id="@+id/print"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/save_pdf" />
 
         <androidx.constraintlayout.widget.Group
             android:id="@+id/devicesShareGroup"

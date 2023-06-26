@@ -21,6 +21,10 @@ permalink: /changelog/
   * Add support for `checkForPdfViewer` API for checking whether a PDF viewer is loaded on the current session or not.
 * **concept-engine**:
   * Added new `requestPrintContent` API in `Engine`. This is currently only supported in the Gecko Engine.
+* **share**:
+  * Added 'Print' as an option on the share menu
+* **browser-menu**:
+  * Added 'Print' as an option on the toolbar menu
 
 * **support-ktx**
   * Removes ifChanged Flow extension functions in favour of `distintUntilChanged` and `distintUntilChangedBy`in `kotlin.coroutines.flow`.

@@ -13,4 +13,10 @@ interface SaveToPDFInteractor {
      * @param tabId The ID of the tab to save as PDF.
      */
     fun onSaveToPDF(tabId: String?)
+
+    /**
+     * Prints from the given [tabId].
+     * @param tabId The ID of the tab to print.
+     */
+    fun onPrint(tabId: String?)
 }

@@ -143,13 +143,14 @@ events:
           bookmarks, desktop_view_off, desktop_view_on, downloads,
           find_in_page, forward, history, new_tab, open_in_app, open_in_fenix,
           quit, reader_mode_appearance, reload, remove_from_top_sites,
-          save_to_collection, set_default_browser, settings, share, stop, and
-          sync_account.
+          save_to_collection, set_default_browser, settings, share, stop,
+          sync_account, and print_content.
         type: string
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/1024
       - https://github.com/mozilla-mobile/fenix/issues/19923
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1808689
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1836780
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1214#issue-264756708
       - https://github.com/mozilla-mobile/fenix/pull/5098#issuecomment-529658996
@@ -159,6 +160,7 @@ events:
       - https://github.com/mozilla-mobile/fenix/pull/19924#issuecomment-861423789
       - https://github.com/mozilla-mobile/fenix/pull/21316#issuecomment-944615938
       - https://github.com/mozilla-mobile/fenix/pull/27295
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517#c3
     data_sensitivity:
       - interaction
     notification_emails:

@@ -75,4 +75,10 @@ class ShareInteractorTest {
 
         verify { controller.handleSaveToPDF("tabID") }
     }
+
+    @Test
+    fun `WHEN onPrint is call THEN call handlePrint`() {
+        interactor.onPrint("tabID")
+        verify { controller.handlePrint("tabID") }
+    }
 }

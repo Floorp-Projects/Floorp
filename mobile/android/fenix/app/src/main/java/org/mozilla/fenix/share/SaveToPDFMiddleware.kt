@@ -66,6 +66,20 @@ class SaveToPDFMiddleware(
 
                 postTelemetryFailed(ctx.state.findTab(action.tabId), action.throwable)
             }
+
+            is EngineAction.PrintContentAction -> {
+                next(action)
+                // Reserved for telemetry in bug 1837517
+            }
+            is EngineAction.PrintContentCompletedAction -> {
+                // No-op, reserved for telemetry in bug 1837517
+            }
+            is EngineAction.PrintContentExceptionAction -> {
+                // Bug 1840894 - will update this toast to a snackbar with new snackbar error component
+                ThreadUtils.runOnUiThread {
+                    Toast.makeText(context, R.string.unable_to_print_error, LENGTH_LONG).show()
+                }
+            }
             else -> {
                 next(action)
             }

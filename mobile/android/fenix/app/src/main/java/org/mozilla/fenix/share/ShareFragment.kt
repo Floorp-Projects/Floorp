@@ -22,6 +22,7 @@ import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.feature.accounts.push.SendTabUseCases
 import mozilla.components.feature.share.RecentAppsStorage
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.databinding.FragmentShareBinding
@@ -83,6 +84,7 @@ class ShareFragment : AppCompatDialogFragment() {
                 navController = findNavController(),
                 sendTabUseCases = SendTabUseCases(accountManager),
                 saveToPdfUseCase = requireComponents.useCases.sessionUseCases.saveToPdf,
+                printUseCase = requireComponents.useCases.sessionUseCases.printContent,
                 recentAppsStorage = RecentAppsStorage(requireContext()),
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
             ) { result ->
@@ -122,6 +124,15 @@ class ShareFragment : AppCompatDialogFragment() {
             }
         }
 
+        if (FeatureFlags.print) {
+            binding.print.setContent {
+                FirefoxTheme(theme = Theme.getTheme(allowPrivateTheme = false)) {
+                    PrintItem {
+                        shareInteractor.onPrint(tabId = args.sessionId)
+                    }
+                }
+            }
+        }
         return binding.root
     }
 

@@ -62,4 +62,9 @@ object FeatureFlags {
      * and managing search shortcuts in the quick search menu.
      */
     val unifiedSearchSettings = Config.channel.isNightlyOrDebug
+
+    /**
+     * Enables printing from the share and primary menu.
+     */
+    val print = Config.channel.isNightlyOrDebug
 }
