@@ -66,6 +66,7 @@ ITEM_VALUE(MouseEventScreenPoint,       1llu << 41)
 ITEM_VALUE(FontVisibilityBaseSystem,    1llu << 42)
 ITEM_VALUE(FontVisibilityLangPack,      1llu << 43)
 ITEM_VALUE(DeviceSensors,               1llu << 44)
+ITEM_VALUE(FrameRate,                   1llu << 45)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
