@@ -88,7 +88,8 @@ ScriptLoadRequest::ScriptLoadRequest(ScriptKind aKind, nsIURI* aURI,
       mScriptBytecode(),
       mBytecodeOffset(0),
       mURI(aURI),
-      mLoadContext(aContext) {
+      mLoadContext(aContext),
+      mEarlyHintPreloaderId(0) {
   MOZ_ASSERT(mFetchOptions);
   if (mLoadContext) {
     mLoadContext->SetRequest(this);

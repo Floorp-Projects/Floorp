@@ -369,6 +369,11 @@ class ScriptLoadRequest
   // LoadContext for augmenting the load depending on the loading
   // context (DOM, Worker, etc.)
   RefPtr<LoadContextBase> mLoadContext;
+
+  // EarlyHintRegistrar id to connect the http channel back to the preload, with
+  // a default of value of 0 indicating that this request is not an early hints
+  // preload.
+  uint64_t mEarlyHintPreloaderId;
 };
 
 class ScriptLoadRequestList : private mozilla::LinkedList<ScriptLoadRequest> {

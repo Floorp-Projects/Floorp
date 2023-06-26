@@ -32,6 +32,7 @@
 #include "nsGlobalWindowInner.h"
 #include "nsIPrincipal.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/Maybe.h"
 
 using JS::SourceText;
 using namespace JS::loader;
@@ -112,7 +113,7 @@ nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
   // and `StartLoadInternal` is able to find the charset by using `aRequest`
   // for this case.
   nsresult rv = GetScriptLoader()->StartLoadInternal(
-      aRequest, securityFlags, 0, Nothing() /* aCharsetForPreload */);
+      aRequest, securityFlags, Nothing() /* aCharsetForPreload */);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // https://html.spec.whatwg.org/multipage/webappapis.html#fetch-an-import()-module-script-graph

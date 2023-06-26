@@ -102,7 +102,13 @@ void EarlyHintsService::EarlyHint(const nsACString& aLinkHeader,
       EarlyHintPreloader::MaybeCreateAndInsertPreload(
           mOngoingEarlyHints, linkHeader, aBaseURI, principal,
           cookieJarSettings, aReferrerPolicy, aCSPHeader,
-          loadInfo->GetBrowsingContextID(), aCallbacks);
+          loadInfo->GetBrowsingContextID(), aCallbacks, false);
+    } else if (linkHeader.mRel.LowerCaseEqualsLiteral("modulepreload")) {
+      mLinkType |= dom::LinkStyle::eMODULE_PRELOAD;
+      EarlyHintPreloader::MaybeCreateAndInsertPreload(
+          mOngoingEarlyHints, linkHeader, aBaseURI, principal,
+          cookieJarSettings, aReferrerPolicy, aCSPHeader,
+          loadInfo->GetBrowsingContextID(), aCallbacks, true);
     }
   }
 }
