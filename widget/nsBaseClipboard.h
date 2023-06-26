@@ -110,13 +110,14 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
   NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
   NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                     int32_t aWhichClipboard,
-                                    bool* _retval) override;
+                                    bool* aOutResult) override final;
   NS_IMETHOD IsClipboardTypeSupported(int32_t aWhichClipboard,
                                       bool* aRetval) override final;
   RefPtr<mozilla::GenericPromise> AsyncGetData(
       nsITransferable* aTransferable, int32_t aWhichClipboard) override final;
   RefPtr<DataFlavorsPromise> AsyncHasDataMatchingFlavors(
-      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
+      const nsTArray<nsCString>& aFlavorList,
+      int32_t aWhichClipboard) override final;
 
  protected:
   virtual ~nsBaseClipboard() = default;
@@ -126,7 +127,12 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
                                     int32_t aWhichClipboard) = 0;
   virtual mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
       int32_t aWhichClipboard) = 0;
+  virtual mozilla::Result<bool, nsresult> HasNativeClipboardDataMatchingFlavors(
+      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) = 0;
 
+  bool mEmptyingForSetData = false;
+
+ private:
   class ClipboardCache final {
    public:
     ~ClipboardCache() {
@@ -157,14 +163,11 @@ class nsBaseClipboard : public ClipboardSetDataHelper {
     int32_t mSequenceNumber = -1;
   };
 
-  mozilla::UniquePtr<ClipboardCache> mCaches[nsIClipboard::kClipboardTypeCount];
-  bool mEmptyingForSetData = false;
-
- private:
   // Return clipboard cache if the cached data is valid, otherwise clear the
   // cached data and returns null.
   ClipboardCache* GetClipboardCacheIfValid(int32_t aClipboardType);
 
+  mozilla::UniquePtr<ClipboardCache> mCaches[nsIClipboard::kClipboardTypeCount];
   const mozilla::dom::ClipboardCapabilities mClipboardCaps;
   bool mIgnoreEmptyNotification = false;
 };
