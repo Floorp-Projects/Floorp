@@ -20,125 +20,36 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1812543
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-const isSupportGetFromCachedTransferable =
-  Services.prefs.getBoolPref("widget.clipboard.use-cached-data.enabled");
-
-function testClipboardCache(aClipboardType, aAsync) {
-  add_task(function test_clipboard_get() {
-    const string = generateRandomString();
-    const trans = generateNewTransferable("text/plain", string);
-
-    info(`Write text/plain data to clipboard ${aClipboardType}`);
-    if (aAsync) {
-      let request = clipboard.asyncSetData(aClipboardType);
-      request.setData(trans, null);
-    } else {
-      clipboard.setData(trans, null, aClipboardType);
-    }
-    is(getClipboardData("text/plain", aClipboardType), string,
-       `Check text/plain data on clipboard ${aClipboardType}`);
-
-    info(`Add text/foo data to transerable`);
-    addStringToTransferable("text/foo", string, trans);
-    is(getClipboardData("text/foo", aClipboardType),
-       isSupportGetFromCachedTransferable ? string : null,
-       `Check text/foo data on clipboard ${aClipboardType}`);
-
-    info(`Should not get the data from other clipboard type`);
-    clipboardTypes.forEach(function(otherType) {
-      if (otherType != clipboard.kSelectionCache &&
-          otherType != aClipboardType &&
-          clipboard.isClipboardTypeSupported(otherType)) {
-        is(getClipboardData("text/plain", otherType), null,
-           `Check text/plain data on clipboard ${otherType}`);
-        is(getClipboardData("text/foo", otherType), null,
-           `Check text/foo data on clipboard ${otherType}`);
-
-        info(`Write text/plain data to clipboard ${otherType}`);
-        writeRandomStringToClipboard("text/plain", otherType);
-      }
-    });
-
-    info(`Check data on clipboard ${aClipboardType} again`);
-    is(getClipboardData("text/plain", aClipboardType), string,
-       `Check text/plain data on clipboard ${aClipboardType} again`);
-    is(getClipboardData("text/foo", aClipboardType),
-       isSupportGetFromCachedTransferable ? string : null,
-       `Check text/foo data on clipboard ${aClipboardType} again`);
-
-    info(`Clean all clipboard data`);
-    cleanupAllClipboard();
-  });
-}
-
-add_setup(function init() {
-  cleanupAllClipboard();
-});
-
+let supportOtherClipboardTypes = false;
 clipboardTypes.forEach(function(type) {
-  // Selection cache clipboard, which is available only on Cocoa widget, supports
-  // set operation only, see bug 1835059.
-  if (clipboard.kSelectionCache == type || !clipboard.isClipboardTypeSupported(type)) {
-    return;
-  }
+  if (clipboard.kGlobalClipboard != type && clipboard.isClipboardTypeSupported(type)) {
+    supportOtherClipboardTypes = true;
+    add_task(function test_clipboard_hasDataMatchingFlavors() {
+      info(`Test write data to clipboard type ${type}`);
 
-  add_task(function test_clipboard_hasDataMatchingFlavors() {
-    const trans = generateNewTransferable("text/plain", generateRandomString());
+      // Write text/plain data to main clipboard.
+      writeRandomStringToClipboard("text/plain", clipboard.kGlobalClipboard);
+      ok(clipboard.hasDataMatchingFlavors(["text/plain"], clipboard.kGlobalClipboard),
+         "Should have text/plain flavor");
+      ok(!clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard),
+         "Should not have text/html flavor");
 
-    info(`Write text/plain data to clipboard ${type}`);
-    clipboard.setData(trans, null, type);
-    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
-       `Check if there is text/plain flavor on clipboard ${type}`);
-    ok(!clipboard.hasDataMatchingFlavors(["text/foo"], type),
-       `Check if there is text/foo flavor on clipboard ${type}`);
+      // Write text/html data to other clipboard.
+      writeRandomStringToClipboard("text/html", type);
+      ok(clipboard.hasDataMatchingFlavors(["text/plain"], clipboard.kGlobalClipboard),
+         "Should have text/plain flavor");
+      ok(!clipboard.hasDataMatchingFlavors(["text/html"], clipboard.kGlobalClipboard),
+         "Should not have text/html flavor");
 
-    info(`Add text/foo data to transferable`);
-    addStringToTransferable("text/foo", generateRandomString(), trans);
-    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
-       `Check if there is text/plain flavor on clipboard ${type}`);
-    is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
-       isSupportGetFromCachedTransferable,
-       `Check if there is text/foo flavor on clipboard ${type}`);
-
-    // Check other clipboard types.
-    clipboardTypes.forEach(function(otherType) {
-      if (otherType != clipboard.kSelectionCache &&
-          otherType != type &&
-          clipboard.isClipboardTypeSupported(otherType)) {
-        ok(!clipboard.hasDataMatchingFlavors(["text/plain"], otherType),
-           `Check if there is text/plain flavor on clipboard ${otherType}`);
-        ok(!clipboard.hasDataMatchingFlavors(["text/foo"], otherType),
-           `Check if there is text/foo flavor on clipboard ${otherType}`);
-
-        info(`Write text/plain data to clipboard ${otherType}`);
-        writeRandomStringToClipboard("text/plain", otherType);
-      }
+      // Clean clipboard data.
+      cleanupAllClipboard();
     });
-
-    // Check again.
-    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
-       `Check if there is text/plain flavor on clipboard ${type}`);
-    is(clipboard.hasDataMatchingFlavors(["text/foo"], type),
-       isSupportGetFromCachedTransferable,
-       `Check if there is text/foo flavor on clipboard ${type}`);
-
-    info(`Write text/plain data to clipboard ${type} again`);
-    writeRandomStringToClipboard("text/plain", type);
-    ok(clipboard.hasDataMatchingFlavors(["text/plain"], type),
-       `Check if there is text/plain flavor on clipboard ${type}`);
-    ok(!clipboard.hasDataMatchingFlavors(["text/foo"], type),
-       `Check if there is text/foo flavor on clipboard ${type}`);
-
-    // Clean clipboard data.
-    cleanupAllClipboard();
-  });
-
-  // Test sync set clipboard data.
-  testClipboardCache(type, false);
-
-  // Test async set clipboard data.
-  testClipboardCache(type, true);
+  }
 });
+
+if (!supportOtherClipboardTypes) {
+  ok(true, "Don't support other clipboard types, skip tests");
+}
 
 ]]>
 </script>

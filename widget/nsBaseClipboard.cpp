@@ -5,7 +5,6 @@
 
 #include "nsBaseClipboard.h"
 
-#include "mozilla/StaticPrefs_widget.h"
 #include "nsIClipboardOwner.h"
 #include "nsError.h"
 #include "nsXPCOM.h"
@@ -159,11 +158,9 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
                                        int32_t aWhichClipboard) {
   NS_ASSERTION(aTransferable, "clipboard given a null transferable");
 
-  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
+  CLIPBOARD_LOG("%s", __FUNCTION__);
 
   if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
-    CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
-                  aWhichClipboard);
     return NS_ERROR_FAILURE;
   }
 
@@ -175,7 +172,13 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
     return NS_OK;
   }
 
-  clipboardCache->Clear();
+  mEmptyingForSetData = true;
+  if (NS_FAILED(EmptyClipboard(aWhichClipboard))) {
+    CLIPBOARD_LOG("%s: emptying clipboard failed.", __FUNCTION__);
+  }
+  mEmptyingForSetData = false;
+
+  clipboardCache->Update(aTransferable, anOwner);
 
   nsresult rv = NS_ERROR_FAILURE;
   if (aTransferable) {
@@ -186,75 +189,31 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
   }
   if (NS_FAILED(rv)) {
     CLIPBOARD_LOG("%s: setting native clipboard data failed.", __FUNCTION__);
-    return rv;
   }
 
-  auto result = GetNativeClipboardSequenceNumber(aWhichClipboard);
-  if (result.isErr()) {
-    CLIPBOARD_LOG("%s: getting native clipboard change count failed.",
-                  __FUNCTION__);
-    return result.unwrapErr();
-  }
-
-  clipboardCache->Update(aTransferable, anOwner, result.unwrap());
-  return NS_OK;
+  return rv;
 }
 
 /**
- * Gets the transferable object from system clipboard.
+ * Gets the transferable object
+ *
  */
 NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable* aTransferable,
                                        int32_t aWhichClipboard) {
-  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
+  NS_ASSERTION(aTransferable, "clipboard given a null transferable");
 
-  if (!aTransferable) {
-    NS_ASSERTION(false, "clipboard given a null transferable");
+  CLIPBOARD_LOG("%s", __FUNCTION__);
+
+  if (!nsIClipboard::IsClipboardTypeSupported(kSelectionClipboard) &&
+      !nsIClipboard::IsClipboardTypeSupported(kFindClipboard) &&
+      aWhichClipboard != kGlobalClipboard) {
     return NS_ERROR_FAILURE;
   }
 
-  // XXX as of now, we only support the set operation on kSelectionCache type,
-  // should we also support the get operation? See also bug 1835059.
-  if (kSelectionCache == aWhichClipboard ||
-      !nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
-    CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
-                  aWhichClipboard);
-    return NS_ERROR_FAILURE;
-  }
+  if (aTransferable)
+    return GetNativeClipboardData(aTransferable, aWhichClipboard);
 
-  if (mozilla::StaticPrefs::widget_clipboard_use_cached_data_enabled()) {
-    // If we were the last ones to put something on the navtive clipboard, then
-    // just use the cached transferable. Otherwise clear it because it isn't
-    // relevant any more.
-    if (auto* clipboardCache = GetClipboardCacheIfValid(aWhichClipboard)) {
-      MOZ_ASSERT(clipboardCache->GetTransferable());
-
-      // get flavor list that includes all acceptable flavors (including ones
-      // obtained through conversion)
-      nsTArray<nsCString> flavors;
-      nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
-      if (NS_FAILED(rv)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      for (const auto& flavor : flavors) {
-        nsCOMPtr<nsISupports> dataSupports;
-        rv = clipboardCache->GetTransferable()->GetTransferData(
-            flavor.get(), getter_AddRefs(dataSupports));
-        if (NS_SUCCEEDED(rv)) {
-          CLIPBOARD_LOG("%s: getting %s from cache.", __FUNCTION__,
-                        flavor.get());
-          aTransferable->SetTransferData(flavor.get(), dataSupports);
-          // maybe try to fill in more types? Is there a point?
-          return NS_OK;
-        }
-      }
-    }
-
-    // at this point we can't satisfy the request from cache data so let's look
-    // for things other people put on the system clipboard
-  }
-
-  return GetNativeClipboardData(aTransferable, aWhichClipboard);
+  return NS_ERROR_FAILURE;
 }
 
 RefPtr<GenericPromise> nsBaseClipboard::AsyncGetData(
@@ -268,15 +227,11 @@ RefPtr<GenericPromise> nsBaseClipboard::AsyncGetData(
 }
 
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
-  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
+  CLIPBOARD_LOG("%s: clipboard=%i", __FUNCTION__, aWhichClipboard);
 
   if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
-    CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
-                  aWhichClipboard);
     return NS_ERROR_FAILURE;
   }
-
-  EmptyNativeClipboardData(aWhichClipboard);
 
   if (mIgnoreEmptyNotification) {
     MOZ_DIAGNOSTIC_ASSERT(false, "How did we get here?");
@@ -293,67 +248,8 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
 NS_IMETHODIMP
 nsBaseClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
                                         int32_t aWhichClipboard,
-                                        bool* aOutResult) {
-  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
-  if (CLIPBOARD_LOG_ENABLED()) {
-    CLIPBOARD_LOG("    Asking for content clipboard=%i:\n", aWhichClipboard);
-    for (const auto& flavor : aFlavorList) {
-      CLIPBOARD_LOG("        MIME %s", flavor.get());
-    }
-  }
-
-  *aOutResult = false;
-
-  // XXX as of now, we only support the set operation on kSelectionCache type,
-  // should we also support the get operation? See also bug 1835059.
-  if (kSelectionCache == aWhichClipboard ||
-      !nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
-    CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
-                  aWhichClipboard);
-    // XXX should we return a error instead?
-    return NS_OK;
-  }
-
-  if (mozilla::StaticPrefs::widget_clipboard_use_cached_data_enabled()) {
-    if (auto* clipboardCache = GetClipboardCacheIfValid(aWhichClipboard)) {
-      MOZ_ASSERT(clipboardCache->GetTransferable());
-
-      // first see if we have data for this in our cached transferable
-      nsTArray<nsCString> transferableFlavors;
-      nsresult rv =
-          clipboardCache->GetTransferable()->FlavorsTransferableCanImport(
-              transferableFlavors);
-      if (NS_SUCCEEDED(rv)) {
-        if (CLIPBOARD_LOG_ENABLED()) {
-          CLIPBOARD_LOG("    Cached transferable types (nums %zu)\n",
-                        transferableFlavors.Length());
-          for (const auto& transferableFlavor : transferableFlavors) {
-            CLIPBOARD_LOG("        MIME %s", transferableFlavor.get());
-          }
-        }
-
-        for (const auto& transferableFlavor : transferableFlavors) {
-          for (const auto& flavor : aFlavorList) {
-            if (transferableFlavor.Equals(flavor)) {
-              CLIPBOARD_LOG("    has %s", flavor.get());
-              *aOutResult = true;
-              return NS_OK;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  auto resultOrError =
-      HasNativeClipboardDataMatchingFlavors(aFlavorList, aWhichClipboard);
-  if (resultOrError.isErr()) {
-    CLIPBOARD_LOG("%s: checking native clipboard data matching flavors falied.",
-                  __FUNCTION__);
-    return resultOrError.unwrapErr();
-  }
-
-  *aOutResult = resultOrError.unwrap();
+                                        bool* outResult) {
+  *outResult = true;  // say we always do.
   return NS_OK;
 }
 
@@ -396,37 +292,10 @@ nsBaseClipboard::IsClipboardTypeSupported(int32_t aWhichClipboard,
   }
 }
 
-nsBaseClipboard::ClipboardCache* nsBaseClipboard::GetClipboardCacheIfValid(
-    int32_t aClipboardType) {
-  MOZ_ASSERT(nsIClipboard::IsClipboardTypeSupported(aClipboardType));
-
-  const mozilla::UniquePtr<ClipboardCache>& cache = mCaches[aClipboardType];
-  MOZ_ASSERT(cache);
-
-  if (!cache->GetTransferable()) {
-    MOZ_ASSERT(cache->GetSequenceNumber() == -1);
-    return nullptr;
-  }
-
-  auto changeCountOrError = GetNativeClipboardSequenceNumber(aClipboardType);
-  if (changeCountOrError.isErr()) {
-    return nullptr;
-  }
-
-  if (changeCountOrError.unwrap() != cache->GetSequenceNumber()) {
-    // Clipboard cache is invalid, clear it.
-    cache->Clear();
-    return nullptr;
-  }
-
-  return cache.get();
-}
-
 void nsBaseClipboard::ClipboardCache::Clear() {
   if (mClipboardOwner) {
     mClipboardOwner->LosingOwnership(mTransferable);
     mClipboardOwner = nullptr;
   }
   mTransferable = nullptr;
-  mSequenceNumber = -1;
 }

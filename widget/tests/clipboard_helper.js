@@ -24,32 +24,6 @@ function generateRandomString() {
   return "random number: " + Math.random();
 }
 
-function generateNewTransferable(aFlavor, aStr) {
-  let trans = Cc["@mozilla.org/widget/transferable;1"].createInstance(
-    Ci.nsITransferable
-  );
-  trans.init(null);
-  trans.addDataFlavor(aFlavor);
-
-  let supportsStr = Cc["@mozilla.org/supports-string;1"].createInstance(
-    Ci.nsISupportsString
-  );
-  supportsStr.data = aStr;
-  trans.setTransferData(aFlavor, supportsStr);
-
-  return trans;
-}
-
-function addStringToTransferable(aFlavor, aStr, aTrans) {
-  aTrans.addDataFlavor(aFlavor);
-
-  let supportsStr = Cc["@mozilla.org/supports-string;1"].createInstance(
-    Ci.nsISupportsString
-  );
-  supportsStr.data = aStr;
-  aTrans.setTransferData(aFlavor, supportsStr);
-}
-
 function writeStringToClipboard(
   aStr,
   aFlavor,
@@ -103,12 +77,7 @@ function getClipboardData(aFlavor, aClipboardType) {
   trans.addDataFlavor(aFlavor);
   clipboard.getData(trans, aClipboardType);
 
-  try {
-    var data = {};
-    trans.getTransferData(aFlavor, data);
-    return data.value.QueryInterface(SpecialPowers.Ci.nsISupportsString).data;
-  } catch (ex) {
-    // If the clipboard is empty getTransferData will throw.
-    return null;
-  }
+  var data = {};
+  trans.getTransferData(aFlavor, data);
+  return data.value.QueryInterface(SpecialPowers.Ci.nsISupportsString).data;
 }

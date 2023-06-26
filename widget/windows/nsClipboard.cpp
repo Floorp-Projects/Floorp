@@ -1318,14 +1318,16 @@ bool nsClipboard ::IsInternetShortcut(const nsAString& inFileName) {
 NS_IMETHODIMP
 nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) {
-  MOZ_DIAGNOSTIC_ASSERT(aTransferable);
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
-
   MOZ_LOG(gWin32ClipboardLog, LogLevel::Debug,
           ("%s aWhichClipboard=%i", __FUNCTION__, aWhichClipboard));
 
+  // make sure we have a good transferable
+  if (!aTransferable || aWhichClipboard != kGlobalClipboard) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult res;
+
   // This makes sure we can use the OLE functionality for the clipboard
   IDataObject* dataObj;
   if (S_OK == RepeatedlyTryOleGetClipboard(&dataObj)) {
@@ -1342,36 +1344,36 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
 }
 
 NS_IMETHODIMP
-nsClipboard::EmptyNativeClipboardData(int32_t aWhichClipboard) {
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   // Some programs such as ZoneAlarm monitor clipboard usage and then open the
   // clipboard to scan it.  If we i) empty and then ii) set data, then the
   // 'set data' can sometimes fail with access denied becacuse another program
   // has the clipboard open.  So to avoid this race condition for OpenClipboard
   // we do not empty the clipboard when we're setting it.
-  RepeatedlyTryOleSetClipboard(nullptr);
-  return NS_OK;
-}
-
-Result<int32_t, nsresult> nsClipboard::GetNativeClipboardSequenceNumber(
-    int32_t aWhichClipboard) {
-  MOZ_DIAGNOSTIC_ASSERT(kGlobalClipboard == aWhichClipboard);
-  return (int32_t)::GetClipboardSequenceNumber();
+  if (aWhichClipboard == kGlobalClipboard && !mEmptyingForSetData) {
+    RepeatedlyTryOleSetClipboard(nullptr);
+  }
+  return nsBaseClipboard::EmptyClipboard(aWhichClipboard);
 }
 
 //-------------------------------------------------------------------------
-Result<bool, nsresult> nsClipboard::HasNativeClipboardDataMatchingFlavors(
-    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
-  MOZ_DIAGNOSTIC_ASSERT(
-      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
-  for (const auto& flavor : aFlavorList) {
+NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(
+    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+    bool* _retval) {
+  *_retval = false;
+  if (aWhichClipboard != kGlobalClipboard) {
+    return NS_OK;
+  }
+
+  for (auto& flavor : aFlavorList) {
     UINT format = GetFormat(flavor.get());
     if (IsClipboardFormatAvailable(format)) {
-      return true;
+      *_retval = true;
+      break;
     }
   }
-  return false;
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
