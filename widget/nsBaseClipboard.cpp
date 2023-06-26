@@ -158,9 +158,11 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
                                        int32_t aWhichClipboard) {
   NS_ASSERTION(aTransferable, "clipboard given a null transferable");
 
-  CLIPBOARD_LOG("%s", __FUNCTION__);
+  CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
 
   if (!nsIClipboard::IsClipboardTypeSupported(aWhichClipboard)) {
+    CLIPBOARD_LOG("%s: clipboard %d is not supported.", __FUNCTION__,
+                  aWhichClipboard);
     return NS_ERROR_FAILURE;
   }
 
@@ -178,8 +180,6 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
   }
   mEmptyingForSetData = false;
 
-  clipboardCache->Update(aTransferable, anOwner);
-
   nsresult rv = NS_ERROR_FAILURE;
   if (aTransferable) {
     mIgnoreEmptyNotification = true;
@@ -189,9 +189,18 @@ NS_IMETHODIMP nsBaseClipboard::SetData(nsITransferable* aTransferable,
   }
   if (NS_FAILED(rv)) {
     CLIPBOARD_LOG("%s: setting native clipboard data failed.", __FUNCTION__);
+    return rv;
   }
 
-  return rv;
+  auto result = GetNativeClipboardSequenceNumber(aWhichClipboard);
+  if (result.isErr()) {
+    CLIPBOARD_LOG("%s: getting native clipboard change count failed.",
+                  __FUNCTION__);
+    return result.unwrapErr();
+  }
+
+  clipboardCache->Update(aTransferable, anOwner, result.unwrap());
+  return NS_OK;
 }
 
 /**
@@ -298,4 +307,5 @@ void nsBaseClipboard::ClipboardCache::Clear() {
     mClipboardOwner = nullptr;
   }
   mTransferable = nullptr;
+  mSequenceNumber = -1;
 }

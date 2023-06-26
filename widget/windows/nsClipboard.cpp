@@ -1356,6 +1356,12 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   return nsBaseClipboard::EmptyClipboard(aWhichClipboard);
 }
 
+Result<int32_t, nsresult> nsClipboard::GetNativeClipboardSequenceNumber(
+    int32_t aWhichClipboard) {
+  MOZ_DIAGNOSTIC_ASSERT(kGlobalClipboard == aWhichClipboard);
+  return (int32_t)::GetClipboardSequenceNumber();
+}
+
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsClipboard::HasDataMatchingFlavors(
     const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,

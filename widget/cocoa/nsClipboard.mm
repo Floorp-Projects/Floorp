@@ -29,6 +29,7 @@ using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::SourceSurface;
 
 mozilla::StaticRefPtr<nsITransferable> nsClipboard::sSelectionCache;
+int32_t nsClipboard::sSelectionCacheChangeCount = 0;
 
 nsClipboard::nsClipboard()
     : nsBaseClipboard(mozilla::dom::ClipboardCapabilities(false /* supportsSelectionClipboard */,
@@ -75,10 +76,11 @@ static NSPasteboard* GetPasteboard(int32_t aWhichClipboard) {
 }  // namespace
 
 void nsClipboard::SetSelectionCache(nsITransferable* aTransferable) {
+  sSelectionCacheChangeCount++;
   sSelectionCache = aTransferable;
 }
 
-void nsClipboard::ClearSelectionCache() { sSelectionCache = nullptr; }
+void nsClipboard::ClearSelectionCache() { SetSelectionCache(nullptr); }
 
 NS_IMETHODIMP
 nsClipboard::SetNativeClipboardData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
@@ -773,4 +775,24 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
   return nsBaseClipboard::EmptyClipboard(aWhichClipboard);
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+}
+
+mozilla::Result<int32_t, nsresult> nsClipboard::GetNativeClipboardSequenceNumber(
+    int32_t aWhichClipboard) {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
+  MOZ_DIAGNOSTIC_ASSERT(nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+
+  if (kSelectionCache == aWhichClipboard) {
+    return sSelectionCacheChangeCount;
+  }
+
+  NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard);
+  if (!cocoaPasteboard) {
+    return mozilla::Err(NS_ERROR_FAILURE);
+  }
+
+  return [cocoaPasteboard changeCount];
+
+  NS_OBJC_END_TRY_BLOCK_RETURN(mozilla::Err(NS_ERROR_FAILURE));
 }
