@@ -329,7 +329,7 @@ Arena* ArenaList::relocateArenas(Arena* toRelocate, Arena* relocated,
 
 // Skip compacting zones unless we can free a certain proportion of their GC
 // heap memory.
-static const float MIN_ZONE_RECLAIM_PERCENT = 2.0;
+static const double MIN_ZONE_RECLAIM_PERCENT = 2.0;
 
 static bool ShouldRelocateZone(size_t arenaCount, size_t relocCount,
                                JS::GCReason reason) {
@@ -341,7 +341,8 @@ static bool ShouldRelocateZone(size_t arenaCount, size_t relocCount,
     return true;
   }
 
-  return (relocCount * 100.0f) / arenaCount >= MIN_ZONE_RECLAIM_PERCENT;
+  double relocFraction = double(relocCount) / double(arenaCount);
+  return relocFraction * 100.0 >= MIN_ZONE_RECLAIM_PERCENT;
 }
 
 static AllocKinds CompactingAllocKinds() {

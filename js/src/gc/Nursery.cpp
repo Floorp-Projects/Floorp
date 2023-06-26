@@ -1383,7 +1383,7 @@ void js::Nursery::freeTrailerBlocks(void) {
   // Discard blocks from the cache at 0.05% per megabyte of nursery capacity,
   // that is, 0.8% of blocks for a 16-megabyte nursery.  This allows the cache
   // to gradually discard unneeded blocks in long running applications.
-  mallocedBlockCache_.preen(0.05 * float(capacity() / (1024 * 1024)));
+  mallocedBlockCache_.preen(0.05 * double(capacity()) / (1024.0 * 1024.0));
 }
 
 size_t Nursery::sizeOfTrailerBlockSets(

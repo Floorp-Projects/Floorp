@@ -77,7 +77,7 @@ class MallocedBlockCache {
   // Allows users to gradually hand blocks back to js_free, so as to avoid
   // space leaks in long-running scenarios.  The specified percentage of
   // blocks in each list is discarded.
-  void preen(float percentOfBlocksToDiscard);
+  void preen(double percentOfBlocksToDiscard);
 
   // Return all blocks in the cache to js_free.
   void clear();

@@ -760,7 +760,7 @@ class HeapThreshold {
   size_t startBytes() const { return startBytes_; }
   size_t sliceBytes() const { return sliceBytes_; }
   size_t incrementalLimitBytes() const { return incrementalLimitBytes_; }
-  double eagerAllocTrigger(bool highFrequencyGC) const;
+  size_t eagerAllocTrigger(bool highFrequencyGC) const;
   size_t incrementalBytesRemaining(const HeapSize& heapSize) const;
 
   void setSliceThreshold(ZoneAllocator* zone, const HeapSize& heapSize,

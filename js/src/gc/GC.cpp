@@ -492,7 +492,8 @@ static bool SplitStringBy(CharRange text, char delimiter,
 static bool ParseTimeDuration(CharRange text, TimeDuration* durationOut) {
   const char* str = text.begin().get();
   char* end;
-  *durationOut = TimeDuration::FromMilliseconds(strtol(str, &end, 10));
+  long millis = strtol(str, &end, 10);
+  *durationOut = TimeDuration::FromMilliseconds(double(millis));
   return str != end && end == text.end().get();
 }
 
@@ -1279,9 +1280,10 @@ void GCRuntime::updateHelperThreadCount() {
   }
 
   // Calculate the target thread count for GC parallel tasks.
-  double cpuCount = GetHelperThreadCPUCount();
-  helperThreadCount = std::clamp(size_t(cpuCount * helperThreadRatio.ref()),
-                                 size_t(1), maxHelperThreads.ref());
+  size_t cpuCount = GetHelperThreadCPUCount();
+  helperThreadCount =
+      std::clamp(size_t(double(cpuCount) * helperThreadRatio.ref()), size_t(1),
+                 maxHelperThreads.ref());
 
   // Calculate the overall target thread count taking into account the separate
   // parameter for parallel marking threads. Add spare threads to avoid blocking
@@ -1817,9 +1819,9 @@ JS::GCReason GCRuntime::wantMajorGC(bool eagerOk) {
 
 bool GCRuntime::checkEagerAllocTrigger(const HeapSize& size,
                                        const HeapThreshold& threshold) {
-  double thresholdBytes =
+  size_t thresholdBytes =
       threshold.eagerAllocTrigger(schedulingState.inHighFrequencyGCMode());
-  double usedBytes = size.bytes();
+  size_t usedBytes = size.bytes();
   if (usedBytes <= 1024 * 1024 || usedBytes < thresholdBytes) {
     return false;
   }
@@ -3936,13 +3938,13 @@ bool GCRuntime::maybeIncreaseSliceBudget(SliceBudget& budget) {
 
 // Return true if the budget is actually extended after rounding.
 static bool ExtendBudget(SliceBudget& budget, double newDuration) {
-  long newDurationMS = lround(newDuration);
-  if (newDurationMS <= budget.timeBudget()) {
+  long millis = lround(newDuration);
+  if (millis <= budget.timeBudget()) {
     return false;
   }
 
   bool idleTriggered = budget.idle;
-  budget = SliceBudget(TimeBudget(newDuration), nullptr);  // Uninterruptible.
+  budget = SliceBudget(TimeBudget(millis), nullptr);  // Uninterruptible.
   budget.idle = idleTriggered;
   budget.extended = true;
   return true;

@@ -260,20 +260,20 @@ class Metrics {
   // values so take care not to redefine the value of enum values. In the
   // future, these should become Glean Labeled Counter metrics.
   struct Enumeration {
-    using SourceType = int;
+    using SourceType = unsigned int;
     static uint32_t convert(SourceType sample) {
-      MOZ_ASSERT(sample >= 0 && sample <= 100);
+      MOZ_ASSERT(sample <= 100);
       return static_cast<uint32_t>(sample);
     }
   };
 
-  // Record a percentage distribution which is an integer in the range 0 to 100.
-  // In the future, this will be a Glean Custom Distribution unless they add a
-  // better match.
+  // Record a percentage distribution in the range 0 to 100. This takes a double
+  // and converts it to an integer. In the future, this will be a Glean Custom
+  // Distribution unless they add a better match.
   struct Percentage {
-    using SourceType = int;
+    using SourceType = double;
     static uint32_t convert(SourceType sample) {
-      MOZ_ASSERT(sample >= 0 && sample <= 100);
+      MOZ_ASSERT(sample >= 0.0 && sample <= 100.0);
       return static_cast<uint32_t>(sample);
     }
   };

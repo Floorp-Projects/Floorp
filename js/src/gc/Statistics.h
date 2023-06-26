@@ -75,24 +75,25 @@ enum Stat {
 
 struct ZoneGCStats {
   /* Number of zones collected in this GC. */
-  int collectedZoneCount = 0;
+  size_t collectedZoneCount = 0;
 
   /* Total number of zones in the Runtime at the start of this GC. */
-  int zoneCount = 0;
+  size_t zoneCount = 0;
 
   /* Number of zones swept in this GC. */
-  int sweptZoneCount = 0;
+  size_t sweptZoneCount = 0;
 
   /* Total number of compartments in all zones collected. */
-  int collectedCompartmentCount = 0;
+  size_t collectedCompartmentCount = 0;
 
   /* Total number of compartments in the Runtime at the start of this GC. */
-  int compartmentCount = 0;
+  size_t compartmentCount = 0;
 
   /* Total number of compartments swept by this GC. */
-  int sweptCompartmentCount = 0;
+  size_t sweptCompartmentCount = 0;
 
-  int realmCount = 0;
+  /* Total number of realms in the Runtime at the start of this GC. */
+  size_t realmCount = 0;
 
   ZoneGCStats() = default;
 };

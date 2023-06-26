@@ -465,8 +465,10 @@ void js::gc::TenuringTracer::traceBigInt(JS::BigInt* bi) {
 static inline uintptr_t OffsetFromChunkStart(void* p) {
   return uintptr_t(p) & gc::ChunkMask;
 }
-static inline ptrdiff_t OffsetToChunkEnd(void* p) {
-  return ChunkSize - (uintptr_t(p) & gc::ChunkMask);
+static inline size_t OffsetToChunkEnd(void* p) {
+  uintptr_t offsetFromStart = OffsetFromChunkStart(p);
+  MOZ_ASSERT(offsetFromStart < ChunkSize);
+  return ChunkSize - offsetFromStart;
 }
 #endif
 
@@ -531,7 +533,7 @@ JSObject* js::gc::TenuringTracer::moveToTenuredSlow(JSObject* src) {
 
   // Copy the Cell contents.
   MOZ_ASSERT(OffsetFromChunkStart(src) >= sizeof(ChunkBase));
-  MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
+  MOZ_ASSERT(OffsetToChunkEnd(src) >= srcSize);
   js_memcpy(dst, src, srcSize);
 
   // Move the slots and elements, if we need to.
@@ -575,7 +577,7 @@ inline JSObject* js::gc::TenuringTracer::movePlainObjectToTenured(
 
   // Copy the Cell contents.
   MOZ_ASSERT(OffsetFromChunkStart(src) >= sizeof(ChunkBase));
-  MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(srcSize));
+  MOZ_ASSERT(OffsetToChunkEnd(src) >= srcSize);
   js_memcpy(dst, src, srcSize);
 
   // Move the slots and elements.
@@ -936,7 +938,7 @@ size_t js::gc::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
   MOZ_ASSERT(dst->asTenured().getAllocKind() == src->getAllocKind());
 
   // Copy the Cell contents.
-  MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(size));
+  MOZ_ASSERT(OffsetToChunkEnd(src) >= size);
   js_memcpy(dst, src, size);
 
   if (src->ownsMallocedChars()) {
@@ -958,7 +960,7 @@ size_t js::gc::TenuringTracer::moveBigIntToTenured(JS::BigInt* dst,
   MOZ_ASSERT(dst->asTenured().getAllocKind() == src->getAllocKind());
 
   // Copy the Cell contents.
-  MOZ_ASSERT(OffsetToChunkEnd(src) >= ptrdiff_t(size));
+  MOZ_ASSERT(OffsetToChunkEnd(src) >= size);
   js_memcpy(dst, src, size);
 
   MOZ_ASSERT(dst->zone() == src->nurseryZone());

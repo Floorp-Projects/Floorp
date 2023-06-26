@@ -368,7 +368,7 @@ UniqueChars Statistics::formatCompactSummaryMessage() const {
   }
 
   SprintfLiteral(buffer,
-                 "Zones: %d of %d (-%d); Compartments: %d of %d (-%d); "
+                 "Zones: %zu of %zu (-%zu); Compartments: %zu of %zu (-%zu); "
                  "HeapSize: %.3f MiB; "
                  "HeapChange (abs): %+d (%u); ",
                  zoneStats.collectedZoneCount, zoneStats.zoneCount,
@@ -739,7 +739,8 @@ void Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice,
     json.property("trigger_amount", trigger.amount);
     json.property("trigger_threshold", trigger.threshold);
   }
-  int64_t numFaults = slice.endFaults - slice.startFaults;
+  MOZ_ASSERT(slice.endFaults >= slice.startFaults);
+  size_t numFaults = slice.endFaults - slice.startFaults;
   if (numFaults != 0) {
     json.property("page_faults", numFaults);
   }
@@ -1080,7 +1081,7 @@ void Statistics::sendGCTelemetry() {
   runtime->metrics().GC_MAX_PAUSE_MS_2(longest);
 
   const double mmu50 = computeMMU(TimeDuration::FromMilliseconds(50));
-  runtime->metrics().GC_MMU_50(mmu50 * 100);
+  runtime->metrics().GC_MMU_50(mmu50 * 100.0);
 
   // Record scheduling telemetry for the main runtime but not for workers, which
   // are scheduled differently.
@@ -1102,7 +1103,7 @@ void Statistics::sendGCTelemetry() {
     MOZ_ASSERT(preCollectedHeapBytes >= bytesSurvived);
     double survivalRate =
         100.0 * double(bytesSurvived) / double(preCollectedHeapBytes);
-    runtime->metrics().GC_TENURED_SURVIVAL_RATE(uint32_t(survivalRate));
+    runtime->metrics().GC_TENURED_SURVIVAL_RATE(survivalRate);
 
     // Calculate 'effectiveness' in MB / second, on main thread only for now.
     if (!runtime->parentRuntime) {
@@ -1129,7 +1130,7 @@ void Statistics::sendGCTelemetry() {
       double utilization = parallelRunTime / (wallTime * threadCount);
       runtime->metrics().GC_PARALLEL_MARK_SPEEDUP(uint32_t(speedup * 100.0));
       runtime->metrics().GC_PARALLEL_MARK_UTILIZATION(
-          std::clamp<uint32_t>(utilization * 100.0, 0, 100));
+          std::clamp(utilization * 100.0, 0.0, 100.0));
       runtime->metrics().GC_PARALLEL_MARK_INTERRUPTIONS(
           getCount(COUNT_PARALLEL_MARK_INTERRUPTIONS));
     }
