@@ -62,6 +62,9 @@ ITEM_VALUE(AudioSampleRate,             1llu << 38)
 ITEM_VALUE(NavigatorConnection,         1llu << 39)
 ITEM_VALUE(WindowDevicePixelRatio,      1llu << 40)
 ITEM_VALUE(MouseEventScreenPoint,       1llu << 41)
+// Visibility level of font families available to CSS font-matching
+ITEM_VALUE(FontVisibilityBaseSystem,    1llu << 42)
+ITEM_VALUE(FontVisibilityLangPack,      1llu << 43)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.

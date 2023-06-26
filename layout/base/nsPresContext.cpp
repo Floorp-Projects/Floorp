@@ -764,8 +764,12 @@ bool nsPresContext::UpdateFontVisibility() {
   // Read the relevant pref depending on RFP/trackingProtection state
   // to determine the visibility level to use.
   int32_t level;
-  if (mDocument->ShouldResistFingerprinting(RFPTarget::Unknown)) {
-    level = StaticPrefs::layout_css_font_visibility_resistFingerprinting();
+  if (mDocument->ShouldResistFingerprinting(
+          RFPTarget::FontVisibilityBaseSystem)) {
+    level = int32_t(FontVisibility::Base);
+  } else if (mDocument->ShouldResistFingerprinting(
+                 RFPTarget::FontVisibilityLangPack)) {
+    level = int32_t(FontVisibility::LangPack);
   } else if (StaticPrefs::privacy_trackingprotection_enabled() ||
              (isPrivate &&
               StaticPrefs::privacy_trackingprotection_pbmode_enabled())) {
