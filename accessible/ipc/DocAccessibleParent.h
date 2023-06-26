@@ -120,11 +120,6 @@ class DocAccessibleParent : public RemoteAccessible,
       const bool& aFromUser) override;
 
 #if defined(XP_WIN)
-  virtual mozilla::ipc::IPCResult RecvSyncTextChangeEvent(
-      const uint64_t& aID, const nsAString& aStr, const int32_t& aStart,
-      const uint32_t& aLen, const bool& aIsInsert,
-      const bool& aFromUser) override;
-
   virtual mozilla::ipc::IPCResult RecvFocusEvent(
       const uint64_t& aID, const LayoutDeviceIntRect& aCaretRect) override;
 #endif  // defined(XP_WIN)
