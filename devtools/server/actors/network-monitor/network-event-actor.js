@@ -487,7 +487,6 @@ class NetworkEventActor extends Actor {
       status: channel.responseStatus + "",
       statusText: channel.responseStatusText,
       waitingTime,
-      isResolvedByTRR: channel.isResolvedByTRR,
     });
   }
 
