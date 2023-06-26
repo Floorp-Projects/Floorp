@@ -570,18 +570,12 @@ class PreBarriered : public WriteBarriered<T> {
 
 }  // namespace js
 
-namespace JS {
-
-namespace detail {
-
+namespace JS::detail {
 template <typename T>
 struct DefineComparisonOps<js::PreBarriered<T>> : std::true_type {
   static const T& get(const js::PreBarriered<T>& v) { return v.get(); }
 };
-
-}  // namespace detail
-
-}  // namespace JS
+}  // namespace JS::detail
 
 namespace js {
 
@@ -656,18 +650,12 @@ class GCPtr : public WriteBarriered<T> {
 
 }  // namespace js
 
-namespace JS {
-
-namespace detail {
-
+namespace JS::detail {
 template <typename T>
 struct DefineComparisonOps<js::GCPtr<T>> : std::true_type {
   static const T& get(const js::GCPtr<T>& v) { return v.get(); }
 };
-
-}  // namespace detail
-
-}  // namespace JS
+}  // namespace JS::detail
 
 namespace js {
 
@@ -814,18 +802,12 @@ class GCStructPtr : public BarrieredBase<T> {
 
 }  // namespace js
 
-namespace JS {
-
-namespace detail {
-
+namespace JS::detail {
 template <typename T>
 struct DefineComparisonOps<js::HeapPtr<T>> : std::true_type {
   static const T& get(const js::HeapPtr<T>& v) { return v.get(); }
 };
-
-}  // namespace detail
-
-}  // namespace JS
+}  // namespace JS::detail
 
 namespace js {
 
@@ -943,20 +925,14 @@ class UnsafeBarePtr : public BarrieredBase<T> {
 
 }  // namespace js
 
-namespace JS {
-
-namespace detail {
-
+namespace JS::detail {
 template <typename T>
 struct DefineComparisonOps<js::WeakHeapPtr<T>> : std::true_type {
   static const T& get(const js::WeakHeapPtr<T>& v) {
     return v.unbarrieredGet();
   }
 };
-
-}  // namespace detail
-
-}  // namespace JS
+}  // namespace JS::detail
 
 namespace js {
 
@@ -1013,18 +989,12 @@ class HeapSlot : public WriteBarriered<Value> {
 
 }  // namespace js
 
-namespace JS {
-
-namespace detail {
-
+namespace JS::detail {
 template <>
 struct DefineComparisonOps<js::HeapSlot> : std::true_type {
   static const Value& get(const js::HeapSlot& v) { return v.get(); }
 };
-
-}  // namespace detail
-
-}  // namespace JS
+}  // namespace JS::detail
 
 namespace js {
 

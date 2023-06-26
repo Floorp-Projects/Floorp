@@ -36,8 +36,7 @@
 
 #endif  // !XP_WIN
 
-namespace js {
-namespace gc {
+namespace js::gc {
 
 /*
  * System allocation functions generally require the allocation size
@@ -1046,5 +1045,4 @@ void UnprotectPages(void* region, size_t length) {
   ProtectMemory(region, length, PageAccess::ReadWrite);
 }
 
-}  // namespace gc
-}  // namespace js
+}  // namespace js::gc

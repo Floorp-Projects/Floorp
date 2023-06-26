@@ -15,8 +15,7 @@
 
 #include "gc/GC-inl.h"
 
-namespace js {
-namespace gc {
+namespace js::gc {
 
 class ArenaCellIterUnderGC : public ArenaCellIter {
  public:
@@ -158,7 +157,6 @@ class ArenaFreeCellIter {
   TenuredCell* operator->() const { return get(); }
 };
 
-}  // namespace gc
-}  // namespace js
+}  // namespace js::gc
 
 #endif  // gc_PrivateIterators_inl_h
