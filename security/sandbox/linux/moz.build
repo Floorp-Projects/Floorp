@@ -72,6 +72,7 @@ UNIFIED_SOURCES += [
     "../chromium/sandbox/linux/bpf_dsl/syscall_set.cc",
     "../chromium/sandbox/linux/seccomp-bpf/die.cc",
     "../chromium/sandbox/linux/seccomp-bpf/syscall.cc",
+    "/ipc/glue/UtilityProcessSandboxing.cpp",
     "broker/SandboxBrokerCommon.cpp",
     "Sandbox.cpp",
     "SandboxBrokerClient.cpp",
