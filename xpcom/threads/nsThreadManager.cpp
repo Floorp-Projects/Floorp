@@ -52,8 +52,7 @@ class BackgroundEventTarget final : public nsIEventTarget,
 
   nsresult Init();
 
-  already_AddRefed<nsISerialEventTarget> CreateBackgroundTaskQueue(
-      const char* aName);
+  already_AddRefed<TaskQueue> CreateBackgroundTaskQueue(const char* aName);
 
   void BeginShutdown(nsTArray<RefPtr<ShutdownPromise>>&);
   void FinishShutdown();
@@ -203,8 +202,8 @@ void BackgroundEventTarget::FinishShutdown() {
   mIOPool->Shutdown();
 }
 
-already_AddRefed<nsISerialEventTarget>
-BackgroundEventTarget::CreateBackgroundTaskQueue(const char* aName) {
+already_AddRefed<TaskQueue> BackgroundEventTarget::CreateBackgroundTaskQueue(
+    const char* aName) {
   return TaskQueue::Create(do_AddRef(this), aName).forget();
 }
 
@@ -484,8 +483,8 @@ nsresult nsThreadManager::DispatchToBackgroundThread(nsIRunnable* aEvent,
   return backgroundTarget->Dispatch(aEvent, aDispatchFlags);
 }
 
-already_AddRefed<nsISerialEventTarget>
-nsThreadManager::CreateBackgroundTaskQueue(const char* aName) {
+already_AddRefed<TaskQueue> nsThreadManager::CreateBackgroundTaskQueue(
+    const char* aName) {
   if (!mInitialized) {
     return nullptr;
   }
