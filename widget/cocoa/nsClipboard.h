@@ -23,11 +23,15 @@ class nsClipboard : public nsBaseClipboard {
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  // nsIClipboard
+  NS_IMETHOD HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
+                                    bool* _retval) override;
+  NS_IMETHOD EmptyClipboard(int32_t aWhichClipboard) override;
+
   // On macOS, cache the transferable of the current selection (chrome/content)
   // in the parent process. This is needed for the services menu which
   // requires synchronous access to the current selection.
   static mozilla::StaticRefPtr<nsITransferable> sSelectionCache;
-  static int32_t sSelectionCacheChangeCount;
 
   // Helper methods, used also by nsDragService
   static NSDictionary* PasteboardDictFromTransferable(nsITransferable* aTransferable);
@@ -43,12 +47,6 @@ class nsClipboard : public nsBaseClipboard {
                                     int32_t aWhichClipboard) override;
   NS_IMETHOD GetNativeClipboardData(nsITransferable* aTransferable,
                                     int32_t aWhichClipboard) override;
-  nsresult EmptyNativeClipboardData(int32_t aWhichClipboard) override;
-  mozilla::Result<int32_t, nsresult> GetNativeClipboardSequenceNumber(
-      int32_t aWhichClipboard) override;
-  mozilla::Result<bool, nsresult> HasNativeClipboardDataMatchingFlavors(
-      const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
-
   void ClearSelectionCache();
   void SetSelectionCache(nsITransferable* aTransferable);
 
@@ -56,6 +54,10 @@ class nsClipboard : public nsBaseClipboard {
   virtual ~nsClipboard();
 
   static mozilla::Maybe<uint32_t> FindIndexOfImageFlavor(const nsTArray<nsCString>& aMIMETypes);
+
+  int32_t mCachedClipboard = -1;
+  // Set to the native change count after any modification of the clipboard.
+  int32_t mChangeCount = 0;
 };
 
 #endif  // nsClipboard_h_
