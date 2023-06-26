@@ -20,10 +20,69 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1812543
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-let supportOtherClipboardTypes = false;
+const isSupportGetFromCachedTransferable =
+  Services.prefs.getBoolPref("widget.clipboard.use-cached-data.enabled");
+
+function testClipboardCache(aClipboardType, aAsync) {
+  add_task(function test_clipboard_get() {
+    const string = generateRandomString();
+    const trans = generateNewTransferable("text/plain", string);
+
+    info(`Write text/plain data to clipboard ${aClipboardType}`);
+    if (aAsync) {
+      let request = clipboard.asyncSetData(aClipboardType);
+      request.setData(trans, null);
+    } else {
+      clipboard.setData(trans, null, aClipboardType);
+    }
+    is(getClipboardData("text/plain", aClipboardType), string,
+       `Check text/plain data on clipboard ${aClipboardType}`);
+
+    info(`Add text/foo data to transerable`);
+    addStringToTransferable("text/foo", string, trans);
+    is(getClipboardData("text/foo", aClipboardType),
+       isSupportGetFromCachedTransferable ? string : null,
+       `Check text/foo data on clipboard ${aClipboardType}`);
+
+    info(`Should not get the data from other clipboard type`);
+    clipboardTypes.forEach(function(otherType) {
+      if (otherType != clipboard.kSelectionCache &&
+          otherType != aClipboardType &&
+          clipboard.isClipboardTypeSupported(otherType)) {
+        is(getClipboardData("text/plain", otherType), null,
+           `Check text/plain data on clipboard ${otherType}`);
+        is(getClipboardData("text/foo", otherType), null,
+           `Check text/foo data on clipboard ${otherType}`);
+
+        info(`Write text/plain data to clipboard ${otherType}`);
+        writeRandomStringToClipboard("text/plain", otherType);
+      }
+    });
+
+    info(`Check data on clipboard ${aClipboardType} again`);
+    is(getClipboardData("text/plain", aClipboardType), string,
+       `Check text/plain data on clipboard ${aClipboardType} again`);
+    is(getClipboardData("text/foo", aClipboardType),
+       isSupportGetFromCachedTransferable ? string : null,
+       `Check text/foo data on clipboard ${aClipboardType} again`);
+
+    info(`Clean all clipboard data`);
+    cleanupAllClipboard();
+  });
+}
+
+add_setup(function init() {
+  cleanupAllClipboard();
+});
+
 clipboardTypes.forEach(function(type) {
-  if (clipboard.kGlobalClipboard != type && clipboard.isClipboardTypeSupported(type)) {
-    supportOtherClipboardTypes = true;
+  // Selection cache clipboard, which is available only on Cocoa widget, supports
+  // set operation only, see bug 1835059.
+  if (clipboard.kSelectionCache == type || !clipboard.isClipboardTypeSupported(type)) {
+    return;
+  }
+
+  if (clipboard.kGlobalClipboard != type) {
     add_task(function test_clipboard_hasDataMatchingFlavors() {
       info(`Test write data to clipboard type ${type}`);
 
@@ -45,11 +104,13 @@ clipboardTypes.forEach(function(type) {
       cleanupAllClipboard();
     });
   }
-});
 
-if (!supportOtherClipboardTypes) {
-  ok(true, "Don't support other clipboard types, skip tests");
-}
+  // Test sync set clipboard data.
+  testClipboardCache(type, false);
+
+  // Test async set clipboard data.
+  testClipboardCache(type, true);
+});
 
 ]]>
 </script>
