@@ -370,6 +370,7 @@ class LoginsTest {
         }
     }
 
+    @Ignore("https://bugzilla.mozilla.org/show_bug.cgi?id=1840561")
     @Test
     fun verifyLoginWithoutPasswordCanNotBeSavedTest() {
         val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
