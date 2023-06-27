@@ -85,6 +85,13 @@ def get_state_dir(
     return str(state_dir)
 
 
+def get_virtualenv_base_dir(topsrcdir):
+    return os.path.join(
+        get_state_dir(specific_to_topsrcdir=True, topsrcdir=topsrcdir),
+        "_virtualenvs",
+    )
+
+
 def win_to_msys_path(path: Path):
     """Convert a windows-style path to msys-style."""
     drive, path = os.path.splitdrive(path)
