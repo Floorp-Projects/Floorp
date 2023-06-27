@@ -217,6 +217,7 @@ class LoginDetailFragment : SecureFragment(R.layout.fragment_login_detail), Menu
                 }
                 setPositiveButton(R.string.dialog_delete_positive) { dialog: DialogInterface, _ ->
                     Logins.deleteSavedLogin.record(NoExtras())
+                    Logins.deleted.add()
                     interactor.onDeleteLogin(args.savedLoginId)
                     dialog.dismiss()
                 }

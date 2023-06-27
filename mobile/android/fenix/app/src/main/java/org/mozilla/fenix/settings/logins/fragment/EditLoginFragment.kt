@@ -330,6 +330,7 @@ class EditLoginFragment : Fragment(R.layout.fragment_edit_login), MenuProvider {
                 binding.passwordText.text.toString(),
             )
             Logins.saveEditedLogin.record(NoExtras())
+            Logins.modified.add()
             true
         }
         else -> false
