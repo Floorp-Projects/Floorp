@@ -71,10 +71,10 @@ index cdb99e33ac..2ef370b2b6 100644
    // Get rtt.
    int32_t RTT(uint32_t remote_ssrc,
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index 87ae43276c..b161fd65d4 100644
+index 2ca18b095a..ae52efd864 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -527,11 +527,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
+@@ -512,11 +512,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
  }
  
  // Received RTCP report.
@@ -92,10 +92,10 @@ index 87ae43276c..b161fd65d4 100644
  
  std::vector<ReportBlockData> ModuleRtpRtcpImpl::GetLatestReportBlockData()
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.h b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-index fbf444a629..9bbbd967a8 100644
+index d9891166d6..fb74d2b946 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.h
-@@ -193,7 +193,8 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
+@@ -186,7 +186,8 @@ class ABSL_DEPRECATED("") ModuleRtpRtcpImpl
  
    void RemoteRTCPSenderInfo(uint32_t* packet_count,
                              uint32_t* octet_count,
@@ -106,10 +106,10 @@ index fbf444a629..9bbbd967a8 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index f45b926fab..59a0f500ed 100644
+index f25f3b8c62..30554c9048 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -508,11 +508,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
+@@ -493,11 +493,11 @@ void ModuleRtpRtcpImpl2::GetSendStreamDataCounters(
  }
  
  // Received RTCP report.
@@ -127,10 +127,10 @@ index f45b926fab..59a0f500ed 100644
  
  std::vector<ReportBlockData> ModuleRtpRtcpImpl2::GetLatestReportBlockData()
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-index d487678d5c..1668f29a15 100644
+index 00d01df6ea..8c2c6e5765 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.h
-@@ -206,7 +206,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
+@@ -199,7 +199,8 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
  
    void RemoteRTCPSenderInfo(uint32_t* packet_count,
                              uint32_t* octet_count,
@@ -141,10 +141,10 @@ index d487678d5c..1668f29a15 100644
    // A snapshot of the most recent Report Block with additional data of
    // interest to statistics. Used to implement RTCRemoteInboundRtpStreamStats.
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_interface.h b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-index 1eb767b927..112f1a8215 100644
+index 98bcf968ad..e77c325cae 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_interface.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_interface.h
-@@ -403,10 +403,11 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
+@@ -397,10 +397,11 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
        StreamDataCounters* rtx_counters) const = 0;
  
  
@@ -159,10 +159,10 @@ index 1eb767b927..112f1a8215 100644
    // Within this list, the sender-source SSRC pair is unique and per-pair the
    // ReportBlockData represents the latest Report Block that was received for
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index c6ed22671a..8ac0ff0fb3 100644
+index e28476ed30..5dd234c1bf 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
-@@ -1055,9 +1055,10 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
+@@ -1056,9 +1056,10 @@ absl::optional<int64_t> RtpVideoStreamReceiver2::LastReceivedKeyframePacketMs()
  // seem to be any support for these stats right now. So, we hack this in.
  void RtpVideoStreamReceiver2::RemoteRTCPSenderInfo(
      uint32_t* packet_count, uint32_t* octet_count,

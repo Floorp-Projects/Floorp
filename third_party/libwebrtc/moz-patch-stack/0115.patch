@@ -1,5 +1,5 @@
 From: Jan Grulich <jgrulich@redhat.com>
-Date: Thu, 15 Jun 2023 09:13:00 +0000
+Date: Thu, 15 Jun 2023 12:41:00 +0000
 Subject: Bug 1724900: WebRTC backport: PipeWire video capture: split portal
  and PipeWire implementations r=pehrsons,webrtc-reviewers
 
@@ -8,7 +8,7 @@ This is a simple backport of an WebRTC upstream change.
 Upstream commit: 56d126074e5fb62a65e4e14cce44466ce7297770
 
 Differential Revision: https://phabricator.services.mozilla.com/D178937
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/241d7632685a0c27bff6b905461705cd1c659f3b
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0472c2c907759c916999889e8d7ce3f3ad3e7e42
 ---
  modules/video_capture/BUILD.gn                |   2 +
  modules/video_capture/linux/camera_portal.cc  | 242 ++++++++++++++++++

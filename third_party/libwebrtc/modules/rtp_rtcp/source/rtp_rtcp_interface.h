@@ -161,6 +161,8 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     NtpTime last_arrival_timestamp;
     // Received (a.k.a., remote) NTP timestamp for the last received RTCP SR.
     NtpTime last_remote_timestamp;
+    // Received (a.k.a., remote) RTP timestamp from the last received RTCP SR.
+    uint32_t last_remote_rtp_timestamp;
     // Total number of RTP data packets transmitted by the sender since starting
     // transmission up until the time this SR packet was generated. The count
     // should be reset if the sender changes its SSRC identifier.
@@ -372,14 +374,6 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
   // Sets RTCP CName (i.e unique identifier).
   // Returns -1 on failure else 0.
   virtual int32_t SetCNAME(absl::string_view cname) = 0;
-
-  // Returns remote NTP.
-  // Returns -1 on failure else 0.
-  virtual int32_t RemoteNTP(uint32_t* received_ntp_secs,
-                            uint32_t* received_ntp_frac,
-                            uint32_t* rtcp_arrival_time_secs,
-                            uint32_t* rtcp_arrival_time_frac,
-                            uint32_t* rtcp_timestamp) const = 0;
 
   // Returns current RTT (round-trip time) estimate.
   // Returns -1 on failure else 0.

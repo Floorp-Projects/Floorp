@@ -118,14 +118,6 @@ class MockRtpRtcpInterface : public RtpRtcpInterface {
   MOCK_METHOD(void, SetRTCPStatus, (RtcpMode method), (override));
   MOCK_METHOD(int32_t, SetCNAME, (absl::string_view cname), (override));
   MOCK_METHOD(int32_t,
-              RemoteNTP,
-              (uint32_t * received_ntp_secs,
-               uint32_t* received_ntp_frac,
-               uint32_t* rtcp_arrival_time_secs,
-               uint32_t* rtcp_arrival_time_frac,
-               uint32_t* rtcp_timestamp),
-              (const, override));
-  MOCK_METHOD(int32_t,
               RTT,
               (uint32_t remote_ssrc,
                int64_t* rtt,

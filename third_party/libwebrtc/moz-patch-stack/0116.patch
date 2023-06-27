@@ -1,5 +1,5 @@
 From: Jan Grulich <jgrulich@redhat.com>
-Date: Thu, 15 Jun 2023 09:13:00 +0000
+Date: Thu, 15 Jun 2023 12:41:00 +0000
 Subject: Bug 1724900: WebRTC backport: PipeWire video capture - set device
  unique ID during initialization r=pehrsons,webrtc-reviewers
 
@@ -8,7 +8,7 @@ This is a simple backport of an WebRTC upstream change.
 Upstream commit: 4beafa38d546ab6c0bb423c12762f0c4568aa5ce
 
 Differential Revision: https://phabricator.services.mozilla.com/D176626
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b94558d76bd2943ba1063d7fade51c4d54d0db35
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/583ba187d9e5e6d5174a728936b7bf6afc5ba326
 ---
  modules/video_capture/linux/video_capture_pipewire.cc | 4 ++++
  1 file changed, 4 insertions(+)
