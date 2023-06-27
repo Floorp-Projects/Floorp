@@ -415,7 +415,8 @@ nsresult AudioSinkWrapper::SyncCreateAudioSink(const TimeUnit& aStartTime) {
   MOZ_ASSERT(!mAudioSink);
   MOZ_ASSERT(!mAudioSinkEndedRequest.Exists());
 
-  LOG("%p: AudioSinkWrapper::SyncCreateAudioSink", this);
+  LOG("%p: AudioSinkWrapper::SyncCreateAudioSink(%lf)", this,
+      aStartTime.ToSeconds());
 
   UniquePtr<AudioSink> audioSink = mSinkCreator();
   nsresult rv = audioSink->InitializeAudioStream(

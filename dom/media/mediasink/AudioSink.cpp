@@ -525,6 +525,9 @@ void AudioSink::NotifyAudioNeeded() {
       // we pushed to the audio hardware. We must push silence into the audio
       // hardware so that the next audio packet begins playback at the correct
       // time. But don't push more than the ring buffer can receive.
+      SINK_LOG("Sample time %" PRId64 " > frames parsed %" PRId64,
+               sampleTime.value(), mFramesParsed);
+
       missingFrames = std::min<int64_t>(
           std::min<int64_t>(INT32_MAX, missingFrames.value()),
           SampleToFrame(mProcessedSPSCQueue->AvailableWrite()));
