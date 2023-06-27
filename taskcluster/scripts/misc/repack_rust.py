@@ -423,6 +423,7 @@ def build_src(install_dir, host, targets, patches):
         sanitizers = true
         extended = true
         tools = ["analysis", "cargo", "rustfmt", "clippy", "src", "rust-analyzer"]
+        cargo-native-static = true
 
         [rust]
         {omit_git_hash} = false
