@@ -11,6 +11,7 @@ interface CustomElementRegistry {
   [ChromeOnly, Throws]
   undefined setElementCreationCallback(DOMString name, CustomElementCreationCallback callback);
   (CustomElementConstructor or undefined) get(DOMString name);
+  DOMString? getName(CustomElementConstructor constructor);
   [Throws]
   Promise<CustomElementConstructor> whenDefined(DOMString name);
   [CEReactions] undefined upgrade(Node root);

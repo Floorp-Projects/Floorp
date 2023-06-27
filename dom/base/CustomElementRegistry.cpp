@@ -1195,6 +1195,19 @@ void CustomElementRegistry::Get(
   aRetVal.SetAsCustomElementConstructor() = data->mConstructor;
 }
 
+void CustomElementRegistry::GetName(JSContext* aCx,
+                                    CustomElementConstructor& aConstructor,
+                                    nsAString& aResult) {
+  CustomElementDefinition* aDefinition =
+      LookupCustomElementDefinition(aCx, aConstructor.CallableOrNull());
+
+  if (aDefinition) {
+    aDefinition->mType->ToString(aResult);
+  } else {
+    aResult.SetIsVoid(true);
+  }
+}
+
 already_AddRefed<Promise> CustomElementRegistry::WhenDefined(
     const nsAString& aName, ErrorResult& aRv) {
   // Define a function that lazily creates a Promise and perform some action on
