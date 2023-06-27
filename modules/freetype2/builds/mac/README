@@ -200,14 +200,6 @@ environment by Metrowerks. GCC for MPW and Symantec
   behaviours are not tested at all. Building ftdemos
   for classic MacOS and working test is required.
 
-  4-3. Porting Jam onto MPW
-  -------------------------
-
-  FreeType uses Jam (and FT-Jam) for unified cross-
-  platform building tool. At present, Jam is not ported
-  to MPW. To update classic MacOS support easily,
-  building by Jam is expected on MPW.
-
 
 APPENDIX I
 ----------

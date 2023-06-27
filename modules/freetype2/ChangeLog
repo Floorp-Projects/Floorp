@@ -1,3 +1,1341 @@
+2023-06-24  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.13.1 released.
+	==========================
+
+	Tag sources with `VER-2-13-1'.
+
+	* docs/VERSION.TXT: Add entry for version 2.13.1.
+	* docs/CHANGES: Updated.
+	* docs/release, docs/README, builds/macs/README: Updated.
+
+	* README, src/base/ftver.rc, builds/windows/vc2010/index.html,
+	builds/windows/visualc/index.html, builds/windows/visualce/index.html,
+	builds/wince/vc2005-ce/index.html, builds/wince/vc2008-ce/index.html,
+	docs/freetype-config.1: s/2.13.0/2.13/1/, s/2130/2131/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 1.
+
+	* builds/unix/configure.raw (version_info): Set to 26:0:20.
+	* CMakeLists.txt (VERSION_PATCH): Set to 1.
+
+	* subprojects/libpng.wrap, subprojects/zlib.wrap, subprojects/dlg: Updated.
+
+2023-06-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Comment fixes.
+
+2023-06-09  Werner Lemberg  <wl@gnu.org>
+
+	[sdf] Correct handling of empty glyphs.
+
+	This is a refinement of commit 7b3ebb9.
+
+	* src/sdf/ftsdfrend.c (ft_sdf_render): Goto 'Exit' instead of directly
+	returning.
+	(fd_bsdf_render): Ditto, also taking care of setting `FT_GLYPH_OWN_BITMAP`
+	correctly.
+
+2023-06-05  Ben Wagner  <bungeman@chromium.org>
+
+	Mark FT_Renderer_Class::raster_class as pointer to const
+
+	The `FT_DEFINE_RASTER_FUNCS` macro declares a `const FT_Raster_Funcs`.
+	The address of the definition is taken and assigned to
+	`FT_Renderer_Class::raster_class` which is currently `FT_Raster_Funcs*`.
+	Until recently the `const` was cast away and with the removal of the
+	cast there are now warnings about dropping this `const`. Instead of
+	adding back the casts, make `FT_Renderer_Class::raster_class` a pointer
+	to const, as is done with pointers in other interfaces.
+
+	* include/freetype/ftrender.h (FT_Renderer_Class_): mark `raster_class`
+	as const.
+
+2023-06-03  Ben Wagner  <bungeman@chromium.org>
+
+	Fix some `FT_Fixed` vs. `FT_Long` confusion.
+
+	`FT_Fixed` and `FT_Long` are both typedef'ed to be `signed long`.  However,
+	`FT_Fixed` implies that the lower 16 bits are being used to express
+	fractional values and so these two types should not be confused.
+
+	* include/freetype/internal/services/svmm.h (FT_Set_MM_Blend_Func): Use
+	`FT_Fixed` for `coords`.  Users are passing `FT_Fixed` and implementations
+	are taking `FT_Fixed`.
+	(FT_Get_MM_Blend_Func): Ditto.
+
+	* src/autofit/afcjk.c (af_cjk_metrics_check_digits): Use `FT_Long` for
+	`advance` and `old_advance`.  `advance`'s address is passed as `FT_Long*` to
+	`af_shaper_get_elem`, which writes the advance in em units (not fixed).  The
+	exact value is not important here as it is only compared to check whether it
+	has changed.
+
+	* src/autofit/aflatin.c (af_latin_metrics_check_digits): Ditto.
+
+2023-06-03  Ben Wagner  <bungeman@chromium.org>
+
+	*/*: Remove many function pointer casts.
+
+	In C it is undefined behavior to call a function through a function pointer
+	of a different type.  This is now detected by the Control Flow Integrity
+	Sanitizer.  All known issues have already been fixed.  Prevent any
+	accidental re-introduction by removing function pointer casts when defining
+	services.  The services will call the service functions through the function
+	pointers on the service.  As a result the functions must have the same type
+	so there should be no need to cast.  Removing the casts allows compilers to
+	warn about assignment to an incompatible function pointer type.
+
+2023-06-03  Werner Lemberg  <wl@gnu.org>
+
+	Minor formatting.
+
+2023-05-23  Werner Lemberg  <wl@gnu.org>
+
+	Replace `sprintf` with `snprintf`.
+
+	Fixes #1233.
+
+	* include/freetype/config/ftstdlib.h (ft_sprintf): Replace with...
+	(ft_snprintf): This new macro.
+
+	* src/autofit/afhints.c (af_print_idx): Add argument to pass the buffer
+	size.
+	(af_glyph_hints_dump_points, af_glyph_hints_dump_segments,
+	af_glyph_hints_dump_edges): Updated.
+
+	* src/bdf/bdflib.c (BUFSIZE): New macro.
+	(bdf_parse_properties_, bdf_parse_start_): Use `ft_snprintf`.
+
+	* src/tools/ftrandom/ftrandom.c (do_test): Use `snprintf`.
+
+2023-05-23  Werner Lemberg  <wl@gnu.org>
+
+	docs/DEBUG: Formatting.
+
+2023-05-20  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[doc] Type1 GX (sfnt-wrapped Type1) is not supported.
+
+	* docs/formats.txt: Clarify the reference of Type1 GX,
+	and state that this format is not supported.  This
+	is because the content `TYP1' table is not exactly same
+	with the Type1 font format specification; no eexec
+	encryption is used.  For detail and concrete examples,
+	see the analysis on:
+
+	https://gitlab.freedesktop.org/freetype/freetype/-/issues/1231
+
+2023-05-19  Craig White  <gerzytet@gmail.com>
+
+	Add missing end quote of a string in the example code of FT_Trace_Set_Level
+
+2023-05-19  Seigo Nonaka  <nona@google.com>
+
+	[truetype] Reduce heap allocation of `deltaSet` variation data.
+
+	`deltaSet` is an array of packed integers that can be 32 bits, 16 bits, or
+	8 bits.  Before this change, these values were unpacked to 32-bit integers.
+	However, this can cause big heap allocations, e.g., around 500 KByte for
+	'NotoSansCJK'.  To reduce this amount, store the packed integers and unpack
+	them just before passing to the calculation.  At calculation time, due to
+	the variable length of region indices, temporary heap allocations are
+	necessary.  This heap allocation is not negligible and visible in `ftbench`
+	results.  So, use stack-allocated arrays for short array calculations.
+
+	Fixes #1230.
+
+	* include/freetype/internal/ftmmtypes.h (GX_ItemVarDataRec): New fields
+	`wordDeltaCount` and `longWords`.
+
+	* src/truetype/ttgxvar.c (tt_var_load_item_variation_store): Load packed
+	data.
+	(tt_var_get_item_delta): Unpack data before applying.
+
+2023-05-17  Jouk Jansen  <joukj@hrem.nano.tudelft.nl>
+
+	vms_make.com: Create shared executable for x86 version of OpenVMS.
+
+2023-05-15  Werner Lemberg  <wl@gnu.org>
+
+	Add new load flag `FT_LOAD_NO_SVG`.
+
+	Modern color fonts often contain both an 'SVG' and 'COLR' table.  FreeType
+	always preferred 'SVG' over 'COLR' (this was a design decision), however,
+	this might not be the right choice for the user.  The new flags makes
+	FreeType ignore the 'SVG' table while loading a glyph.
+
+	Fixes #1229.
+
+	* include/freetype/freetype.h (FT_LOAD_NO_SVG): New macro.
+
+	* src/base/ftobjs.c (FT_Load_Glyph), src/cff/cffgload.c (cff_slot_load),
+	src/truetype/ttgload.c (TT_Load_Glyph): Use it.
+
+2023-05-13  Werner Lemberg  <wl@gnu.org>
+
+	.mailmap: Updated.
+
+2023-05-13  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cache] Merge functions.
+
+	* src/cache/ftccache.c (FTC_Cache_Init): Merge into...
+	(ftc_cache_done): ... this function, with unnecessary checks removed.
+
+2023-05-13  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cache] Minor casting and cosmetic updates.
+
+	* src/cache/ftcglyph.c (ftc_gcache_{init,done}): Remove casting.
+	(FTC_GCache_Lookup): Cosmetic variable renaming.
+	* src/cache/ftcsbits.c (ftc_snode_compare): Formatting.
+
+2023-05-12  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/ftcache.h: Typo, punctuation.
+
+2023-05-12  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* include/freetype/ftcache.h: Formatted and updated.
+
+2023-05-12  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	* include/freetype/internal/t1types.h: Fix the indentation.
+
+2023-05-11  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cache] Revise the dynamic hash table accounting.
+
+	Instead of counting entries relative to the middle of the hash table,
+	this switches to the absolute counter with the full index range mask.
+	As a result, some calculations become a bit simpler.  The cache resizing
+	logic stays largely the same.
+
+	* src/cache/ftccache.h (FTC_NODE_TOP_FOR_HASH): Revised with new counter.
+	* src/cache/ftccache.c (ftc_get_top_node_for_hash): Ditto.
+	(ftc_cache_resize): Simplify reallocations and stop their zeroing.
+	(ftc_cache_init): Stop over-allocating but keep zeroing initially.
+	(FTC_Cache_Clear, FTC_Cache_RemoveFaceID): Updated accordingly.
+
+2023-05-11  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[t1cid] Set FT_FACE_FLAG_CID_KEYED.
+
+	* cidobjs.c (cid_face_init): Set FT_FACE_FLAG_CID_KEYED.
+
+	* cidriver.c (cid_get_is_cid): Comment about the case that
+	is_cid cannot guarantee the glyph collection specification.
+
+2023-05-09  Jouk Jansen  <joukj@hrem.nano.tudelft.nl>
+
+	* src/smooth/ftgrays.c (FT_SSE2): Don't define for VMS.
+
+2023-05-08  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffdrivr.c (cff_glyph_load): Fix guard for `size`.
+
+	This was forgotten to change in commit 2b54eba36b (in May 2004).
+
+	Reported as
+
+	  https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=58739
+
+2023-05-08  Werner Lemberg  <wl@gnu.org>
+
+	Minor compiler warning fixes.
+
+	* src/autofit/afcjk.c (af_cjk_get_standard_widths), src/autofit/aflatin.c
+	(af_latin_get_standard_widths): Use `FT_CALLBACK_DEF`.
+
+	* src/cff/cffparse.c (cff_parser_run): Initialize and fix allocation of `q`.
+
+2023-05-08  Werner Lemberg  <wl@gnu.org>
+
+	* src/psaux/t1cmap.c: Signature fixes.
+
+2023-05-08  Werner Lemberg  <wl@gnu.org>
+
+	* src/bzip2/ftbzip2.c: Signature fixes.
+
+2023-05-08  Werner Lemberg  <wl@gnu.org>
+
+	[cache] Signature fixes.
+
+	* src/cache/ftcglyph.c, src/cache/ftcglyph.h (FTC_GNode_Compare): Remove
+	redundant function.  It is equivalent to `ftc_gnode_compare` and becomes
+	completely meaningless with fixed signatures.
+	Update all callers.
+
+	* src/cache/ftcsbits.c, src/cache/ftcsbits.h (FTC_SNode_Compare): Remove
+	redundant function.  It is equivalent to `ftc_snode_compare` and becomes
+	completely meaningless with fixed signatures.
+	Update all callers.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	[sdf] Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/svg/ftsvg.c: Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	[raster] Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	[smooth] Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	[pshinter] Signature fixes.
+
+	* src/pshinter/pshrec.c (t1_hints_close, t1_hints_apply): New wrapper
+	functions.
+	(t1_hints_funcs_init): Use them.
+	(t2_hints_close, t2_hints_apply): New wrapper functions.
+	(t2_hints_funcs_init): Use them.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	[autofit] Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttcmap: Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/pcf/pcfdrivr.c: Signature fix.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/winfonts/winfnt.c: Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/type42/t42parse.c: Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	[pfr] Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/cid/cidload.c: Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffcmap.c: Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/type1/t1load.c: Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	[base] Signature fixes.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/type42/t42drivr.c: Clean up interface.
+
+	Ensure that all driver functions use the signature of the service or driver.
+	This avoids pointer mismatches, which are technically undefined behaviour.
+	Recent compilers are more picky in catching them as part of Control Flow
+	Integrity tests.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/type1/*: Clean up interface.
+
+	Ensure that all driver functions use the signature of the service or driver.
+	This avoids pointer mismatches, which are technically undefined behaviour.
+	Recent compilers are more picky in catching them as part of Control Flow
+	Integrity tests.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/*: Clean up interface.
+
+	Ensure that all driver functions use the signature of the service or driver.
+	This avoids pointer mismatches, which are technically undefined behaviour.
+	Recent compilers are more picky in catching them as part of Control Flow
+	Integrity tests.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/sfdriver.c, src/sfnt/ttbdf.c: Clean up interface.
+
+	Ensure that all driver functions use the signature of the service or driver.
+	This avoids pointer mismatches, which are technically undefined behaviour.
+	Recent compilers are more picky in catching them as part of Control Flow
+	Integrity tests.
+
+	* src/sfnt/sfdriver.c (sfnt_load_table): New wrapper function.
+	(sfnt_service_sfnt_table): Use it.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/psnames/psmodule.c: Use `FT_CALLBACK_DEF`.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/pfr/pfrdrivr.c: face -> pfrface, pfrface -> face.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/pcf/pcfdrivr.c: Clean up interface.
+
+	Ensure that all driver functions use the signature of the service or driver.
+	This avoids pointer mismatches, which are technically undefined behaviour.
+	Recent compilers are more picky in catching them as part of Control Flow
+	Integrity tests.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/cid/cidriver.c: Clean up interface.
+
+	Ensure that all driver functions use the signature of the service or driver.
+	This avoids pointer mismatches, which are technically undefined behaviour.
+	Recent compilers are more picky in catching them as part of Control Flow
+	Integrity tests.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/bdf/bdfdrivr.c: Clean up interface.
+
+	Ensure that all driver functions use the signature of the service or driver.
+	This avoids pointer mismatches, which are technically undefined behaviour.
+	Recent compilers are more picky in catching them as part of Control Flow
+	Integrity tests.
+
+2023-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/*: Clean up interface.
+
+	Ensure that all driver functions use the signature of the service or driver.
+	This avoids pointer mismatches, which are technically undefined behaviour.
+	Recent compilers are more picky in catching them as part of Control Flow
+	Integrity tests.
+
+2023-05-06  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix style name handling for variation fonts.
+
+	* include/freetype/internal/tttypes.h (TT_FaceRec): New field
+	`non_var_style_name`.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Initialize `non_var_style_name`.
+	(sfnt_done_face): Free `non_var_style_name`.
+
+	* src/truetype/ttgxvar.c (TT_Set_Named_Instance): Restore non-VF style name
+	if switching back to non-VF mode.
+
+2023-05-06  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix PostScript name handling for variation fonts.
+
+	A variation font's PostScript name of a named instance is usually different
+	from the PostScript name of an unnamed instance.  However, if a change
+	between a named instance and an unnamed instance with exactly the same
+	design axis values happened, it was possible that the PostScript name wasn't
+	correctly updated.
+
+	This commit reorganizes the code to handle this issue within the top-level
+	API functions, using a new service to trigger recomputation of the
+	PostScript name.
+
+	* include/freetype/internal/services/svmm.h (FT_Construct_PS_Name_Func): New
+	typedef.
+	(FT_Service_MultiMasters): New field `construct_ps_name`.
+	(FT_DEFINE_SERVICE_MULTIMASTERSREC): Updated.
+
+	* src/base/ftmm.c (FT_Set_Var_Design_Coordinates,
+	FT_Set_MM_Blend_Coordinates, FT_Set_Var_Blend_Coordinates): Call
+	`mm->construct_ps_name` to handle `postscript_name`.
+	(FT_Set_Named_Instance): Call `mm->construct_ps_name` to handle
+	`postscript_name`.
+	Use shortcut.
+	* src/cff/cffdrivr.c (cff_construct_ps_name): New function.
+	(cff_service_multi_masters): Updated.
+
+	* src/truetype/ttgxvar.c (tt_set_mm_blend): Don't handle `postscript_name`.
+	(TT_Set_MM_Blend): Simplify.
+	(TT_Set_Named_Instance): Return -1 if axis values haven't changed.
+	Don't set `face_index`.
+	(tt_construct_ps_name): New function.
+
+	* src/truetype/ttgxvar.h: Updated.
+
+	* src/truetype/ttdriver.c (tt_service_gx_multi_masters): Updated.
+
+	* src/type1/t1driver.c (t1_service_multi_masters): Updated.
+
+	* src/type1/t1load.c (T1_Set_MM_Blend): Simplify.
+
+2023-05-06  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/internal/services/svmm.h: Minor changes.
+
+2023-05-06  Werner Lemberg  <wl@gnu.org>
+
+	[truetype] Fix deactivation of variation font handling.
+
+	According to the documentation, the functions `FT_Set_Named_Instance`,
+	`FT_Set_MM_Design_Coordinates`, `FT_Set_Var_Design_Coordinates`, and
+	`FT_Set_Var_Blend_Coordinates` can unset the `FT_FACE_FLAG_VARIATION` flag.
+	(The same is true for `FT_Set_MM_WeightVector` but this information was
+	accidentally omitted from the documentation.)
+
+	However, if a call of these functions didn't change the axis values this
+	could fail because internal shortcuts exited too early.
+
+	This commit reorganizes the code to handle `FT_FACE_FLAG_VARIATION` in the
+	top-level API functions, also taking care of the issue at hand.
+
+	* src/base/ftmm.c (FT_Set_MM_Design_Coordinates, FT_Set_MM_WeightVector,
+	FT_Set_Var_Design_Coordinates, FT_Set_MM_Blend_Coordinates,
+	FT_Set_Var_Blend_Coordinates): Handle `FT_FACE_FLAG_VARIATION`.
+
+	* src/truetype/ttgxvar.c (TT_Set_MM_Blend, TT_Set_Var_Design,
+	TT_Set_Named_Instance) Don't handle `FT_FACE_FLAG_VARIATION`.
+
+	* src/type1/t1load.c (T1_Set_MM_Blend, T1_Set_MM_WeightVector,
+	T1_Set_MM_Design): Ditto.
+
+	* src/cff/cffobjs.c (cff_face_init): Use `FT_Set_Named_Instance` instead of
+	low-level functions.
+
+	* src/truetype/ttobjs.c (tt_face_init): Ditto.
+
+2023-05-06  Werner Lemberg  <wl@gnu.org>
+
+	s/set_instance/set_named_instance/
+
+	* include/freetype/internal/services/svmm.h (FT_Set_Instance_Func): Renamed
+	to...
+	(FT_Set_Named_Instance_Func): ...this.
+	(FT_Service_MultiMasters): Rename `set_instance` to `set_named_instance`.
+	(FT_DEFINE_SERVICE_MULTIMASTERSREC): Updated.
+
+	* src/base/ftmm.c (FT_Set_Named_Instance): Updated.
+
+	* src/cff/cffdrivr.c (cff_set_instance): Renamed to...
+	(cff_set_named_instance): ...this.
+	(cff_service_multi_masters): Updated.
+	* src/cff/cffobjs.c (cff_face_init): Updated.
+
+	* src/truetype/ttdriver.c (tt_service_gx_multi_masters): Updated.
+
+	* src/type1/t1driver.c (t1_service_multi_masters): Updated.
+
+2023-05-06  Werner Lemberg  <wl@gnu.org>
+
+	New Variation Font function `FT_Get_Default_Named_Instance`.
+
+	* include/freetype/ftmm.h, src/base/ftmm.c (FT_Get_Default_Named_Instance):
+	New function.
+
+	* include/freetype/internal/services/svmm.h
+	(FT_Get_Default_Named_Instance_Func): New typedef.
+	(FT_Service_MultiMasters): New field `get_default_named_instance`.
+	(FT_DEFINE_SERVICE_MULTIMASTERSREC): Updated.
+
+	* include/freetype/internal/tttypes.h (TT_Face): New field
+	`var_default_named_instance`.
+
+	* src/sfnt/sfobjc.s (sfnt_init_face): Initialize
+	`var_default_named_instance`.
+
+	* src/cff/cffdrivr.c (cff_get_default_named_instance): New function.
+	(cff_service_multi_masters): Updated.
+
+	* src/truetype/ttgxvar.c (TT_Get_MM_Var): Initialize
+	`var_default_named_instance`.
+	(TT_Get_Default_Named_Instance): New function.
+	* src/truetype/ttgxvar.h: Updated.
+	* src/truetype/ttdriver.c (tt_service_gx_multi_masters): Updated.
+
+	* src/type1/t1driver.c (t1_service_multi_masters): Updated.
+
+	* docs/CHANGES: Updated.
+
+2023-05-06  Werner Lemberg  <wl@gnu.org>
+
+	[cid] Improve tracing messages; formatting.
+
+2023-05-04  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/cache/ftccache.c (ftc_node_hash_unlink): Minor.
+
+2023-05-04  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/cache/ftcmru.c (FTC_MruList_RemoveSelection): Purge backwards.
+
+2023-05-04  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cache] Revise list cleansing.
+
+	* src/cache/ftcmru.c (FTC_MruList_RemoveSelection): Use one loop to
+	do it.
+	* src/cache/ftcmanag.c (FTC_Manager_Compress, FTC_Manager_FlushN):
+	Streamline loops.
+
+2023-05-03  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[t1cid] Improve cid_get_cid_from_glyph_index().
+
+	Update cid_get_cid_from_glyph_index() to
+	return an error and CID=0 in the case that
+	the specified glyph index points to an invalid
+	entry.
+
+	cidgload.h (cid_compute_fd_and_offsets):
+	Declare new helper function to set the
+	fd_select and 2 offsets to access the glyph
+	description data.
+
+	cidgload.c (cid_compute_fd_and_offsets):
+	Move the part loading fd_select and 2 offsets
+	from cid_load_glyph() to here.  If the loaded
+	parameters are broken, return the Invalid_Offset
+	error.  This function does not load the glyph
+	data, only fills these parameters.
+
+	(cid_load_glyph): Use new helper function in above.
+
+	cidriver.c (cid_get_cid_from_glyph_index):
+	Check whether the requested glyph index points
+	to a valid entry, by calling cid_compute_fd_and_offsets().
+	If it is valid, fill the cid by the glyph
+	index (=CID).  If it is invalid, return an
+	error and fill the cid by 0.
+
+2023-04-30  Werner Lemberg  <wl@gnu.org>
+
+	API documentation: Re-organize chapters and sections
+
+	* Split the very long 'Base Interface' section into smaller sections.
+	* Split the 'Core API' chapter into two chapters.
+	* Remove single enumeration values from `@order` fields since they have no
+	  effect.
+
+2023-04-29  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sfnt/pngshim.c (Load_SBit_Png): Remove FALL_THROUGH warning.
+
+2023-04-28  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttload.c (tt_face_load_font_dir): Add another guard.
+
+	Reject 'OTTO' fonts with no valid tables.
+
+2023-04-28  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffdrivr/c (cff_get_ps_name): Avoid unnecessary crash.
+
+	The situation can happen if `FT_New_Face` (or one of its siblings) is called
+	with a negative index to get the number of contained faces, followed
+	immediately by a call to `FT_Get_Postscript_Name`.  While this is not a valid
+	use of the FreeType library there is no need for a crash.
+
+	Fixes #1219.
+
+2023-04-28  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffdrivr.c (cff_ps_get_font_info): Reject 'CFF2' format.
+
+2023-04-28  Werner Lemberg  <wl@gnu.org>
+
+	* src/cid/cidgload.c (cid_load_glyph): Fix compiler warnings.
+
+2023-04-28  Werner Lemberg  <wl@gnu.org>
+
+	Minor documentation updates.
+
+2023-04-27  Werner Lemberg  <wl@gnu.org>
+
+	* src/ttgxvar.c: Minor changes.
+
+	(TT_Get_MM_Var): Improve tracing messages.
+	(tt_set_mm_blend): Minor speed-up.
+
+2023-04-27  Werner Lemberg  <wl@gnu.org>
+
+	s/this is,/that is,/
+
+2023-04-27  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[bdf] Clean up the atom property parsing.
+
+	* src/bdflib.c (bdf_is_atom_): Refactor code with fewer checks.
+	(bdf_list_join_): Return NULL.
+	(bdf_add_comment_): Use const argument.
+	(bdf_get_property): Ditto, ditto, make the function static.
+	* src/bdf.h (bdf_get_property): Remove prototype.
+
+2023-04-25  Werner Lemberg  <wl@gnu.org>
+
+	Improve/add source comments and documentation.
+
+2023-04-25  Werner Lemberg  <wl@gnu.org>
+
+	[sfnt] Fix handling of PS names for Variation Fonts.
+
+	* src/sfnt/sfdriver.c (get_win_string, get_apple_string): Continue
+	construction of string if an invalid character is encountered.
+
+	Fixes #1218.
+
+2023-04-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[t1cid] Change the trace messages of the charstrings retrieval errors.
+
+	The t1cid driver catches 3 types of errors in
+	the charstrings retrieval;
+	A) The invalid FD number, there are 2 subtypes;
+	  A-1) FD number is the maximum number fitting to FDBytes.
+	  A-2) FD number is greater than num_dicts.
+	B) Declared length is overrunning.
+	C) Declared length is invalid (its end is before its head).
+
+	Considering that some widely distributed fonts
+	(e.g., "CJKV" book by O'Reilly) have A-1 errors
+	in the unimplemented glyphs, the trace level for
+	A-1 is calmed to level 1.
+
+	The errors A-2, B, and C would be irregular;
+	their trace levels are kept at level 0, but
+	the updated trace messages include the CID number.
+
+2023-04-24  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	[truetype] Fix `make multi'.
+
+	* src/truetype/ttgxvar.c: Include freetype/internal/services/svmetric.h
+	for the FT_Service_MetricsVariations type definition.
+
+2023-04-19  Ben Wagner  <bungeman@chromium.org>
+
+	[services] FT_Size_Reset_Func to return FT_Error
+
+	The `MetricsVariations` `FT_Size_Reset_Func` is currently defined to
+	return `void`, but the implementations return `FT_Error`. Even though
+	the pointers passed will be the same at runtime, calling a function
+	through a pointer of a different type from the original function pointer
+	type is undefined behavior. This may be caught at runtime by Control
+	Flow Integrity with something like clang's `cfi-icall`.
+
+	Issue: https://crbug.com/1433651
+
+	* include/freetype/internal/services/svmetric.h (FT_Size_Reset_Func):
+	return `FT_Error` instead of `void`.
+
+2023-04-17  Ben Wagner  <bungeman@chromum.org>
+
+	[truetype] tt_size_reset_height to take FT_Size
+
+	The `MetricsVariations` `FT_Size_Reset_Func` is defined to take an
+	`FT_Size`. Because `tt_size_reset_height` is to be used as such a
+	function, it must also take an `FT_Size` instead of a `TT_Size`. Even
+	though the pointers passed will be the same at runtime, calling a
+	function through a pointer of a different type from the original
+	function pointer type is undefined behavior. This may be caught at
+	runtime by Control Flow Integrity with something like clang's
+	`cfi-icall`.
+
+	Issue: https://crbug.com/1433651
+
+	* src/truetype/ttobjs.h (tt_size_reset_height): take `FT_Size`
+
+	* src/truetype/ttobjs.c (tt_size_reset_height): take `FT_Size` and
+	update documentation
+
+2023-04-13  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttinterp.c: Remove outdated comments.
+
+2023-04-11  Ben Wagner  <bungeman@chromium.org>
+
+	[sfnt, truetype] Add `size_reset` to `MetricsVariations`.
+
+	This is a generalization of commit
+
+	```
+	commit e6699596af5c5d6f0ae0ea06e19df87dce088df8
+	Author: Werner Lemberg <wl@gnu.org>
+	Date:   Thu Feb 2 11:38:04 2017 +0100
+
+	    [truetype] Fix MVAR post-action handling.
+	```
+
+	It is also possible for plain `CFF ` style fonts to contain an `fvar` and
+	`MVAR` table and use `cff_metrics_adjust`.  `tt_size_reset` should only be
+	called with `TT_Size` and never with `CFF_Size`.
+
+	Allow the "metrics-variations" service to specify the correct function (if
+	any) to reset `FT_Size`s after adjusting metrics.
+
+	* src/truetype/ttobjs.c (tt_size_reset): Split off some functionality
+	into...
+	(tt_size_reset_height): ... this new function.
+
+	* src/truetype/ttdriver.c (tt_service_metrics_variations): Add
+	`size_reset`.
+	(tt_size_select, tt_size_request): Updated.
+
+	* src/truetype/ttobjs.h: Updated.
+
+	* include/freetype/internal/services/svmetric.h (MetricsVariations): Add
+	`size_reset`.
+	(FT_DEFINE_SERVICE_METRICSVARIATIONSREC): Updated.
+
+	* include/freetype/internal/tttypes.h (TT_FaceRec_): Rename `var` to
+	`tt_var` and add `face_var`.
+
+	* src/cff/cffdrivr.c (cff_service_metrics_variations): Add `size_reset`.
+	(cff_hadvance_adjust, cff_metrics_adjust): Updated.
+
+	* src/cff/cffobjs.c (cff_face_init): Use `face_var`.
+
+	* src/sfnt/sfobjs.c (sfnt_init_face): Initialize `face_var`.
+
+	* src/sfnt/ttmtx.c (tt_face_get_metrics): Use `tt_var`.
+
+	* src/truetype/ttgxvar.c (tt_size_reset_iterator): Renamed to...
+	(ft_size_reset_iterator): ... this new function.
+	Call `size_reset`.
+	(tt_apply_mvar): Pass `size_reset` to `ft_size_reset_iterator`.
+
+	Fixes #1211
+
+2023-04-10  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/cff/cffcmap.c (cff_cmap_encoding_char_next): Abbreviate.
+
+2023-04-10  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Align `char_next` return types.
+
+	This is mostly cosmetic because FT_UInt and FT_UInt32 are likely identical.
+
+	* src/sfnt/ttcmap.c, src/cff/cffcmap.c, src/psaux/t1cmap.c,
+	src/psnames/psmodule.c, include/freetype/internal/service/svpcsmap.h,
+	src/pfr/pfrcmap.c, src/winfonts/winfnt.c (*_char_next): return FT_UInt.
+
+2023-04-09  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[sfnt] Clean up CMAP{4,12,13} handling.
+
+	This moves the charcode overflow checks upstream and turns some
+	while-loops into the do-while ones to avoid the uninitialized warnings.
+	This should slightly reduce the number of checks and jumps.
+
+	* src/sfnt/ttcmap.c (tt_cmap{4,12,13}_next,
+	tt_cmap{4.12.13}_char_map_linear): Remove the charcode overflow check.
+	(tt_cmap{4,12,13}_char_map_binary): Ditto and use do-while.
+	(tt_cmap{12,13}_char_next): Add the overflow check.
+
+2023-04-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sfnt/ttpost.c (load_format_25): Do not abort frame reading.
+
+2023-04-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sfnt/ttpost.c (load_format_*): Streamline frame reading.
+
+2023-04-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sfnt/ttpost.c: Formatting and comments.
+
+2023-04-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[sfnt] Consolidate POST version 2.0 and 2.5 (pt 2).
+
+	* src/sfnt/ttpost.c (load_format_20, load_format_25): Update arguments
+	and move shared calls and checks upstream to...
+	(load_post_names): ... this function.
+	(tt_face_free_ps_names, tt_face_get_ps_name): Updated.
+
+2023-04-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[sfnt] Consolidate POST version 2.0 and 2.5 (pt 1).
+
+	The deprecated POST version 2.5 can be handled using the data
+	structures of version 2.0.  The goal is to reduce the footprint.
+
+	* include/freetype/internal/tttypes.h (TT_Post_Names): Absorb and...
+	(TT_Post_20, TT_Post_25): ... remove these structures.
+	src/sfnt/ttpost.c (load_post_names, tt_face_get_ps_name,
+	tt_face_free_ps_names, load_format_20): Updated accordingly.
+	(load_format_25): ditto and convert offsets to glyph indices.
+
+2023-04-01  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[sfnt] Miscellaneous POST clean-ups.
+
+	* src/sfnt/ttpost.c (load_format_20): Decrease casts.
+	(load_format_25): Check the table length and impose a theoretical
+	glyph number limit usable with 8-bit offset.  Decrease casts.
+	(load_post_names): Pass the mapping data length without 2 bytes.
+
+2023-03-30  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sfnt/ttpost.c (load_format_20): Simplify comutations.
+
+2023-03-29  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[sfnt] Streamline POST format 2.0 handing (cont'd).
+
+	* src/sfnt/ttpost.c (load_format_20): Co-allocate the string data and
+	their pointers, which makes it easier to handle and free them.
+	(tt_face_free_ps_names): Updated.
+	* include/freetype/internal/tttypes.h (TT_Post_20): Update type.
+
+2023-03-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cff] Simplify `t2_strings` management in the old engine.
+
+	* src/cff/cffparse.c (cff_parser_run): Allocate the charstring buffers
+	and the list nodes together so that they can be freed at once.
+	(finalize_t2_strings): Removed as no longer needed.
+	(cff_parser_done): Updated.
+
+2023-03-19  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cff] Rework the stream limit checks.
+
+	The old stream limit checks, before 6986ddac1ece, were good but
+	pointless for the crafted t2_strings.  Checking limits there is
+	not necessary as they are created to hold all data.  By using two
+	conditions, we can detect the actual crossing of the stream boundary
+	as appropriate for the stream pointer only.  The t2_strings parsing
+	will not be triggering these checks.
+
+	* src/cff/cffparse.c (cff_parser_within_limits): Removed.
+	(cff_parse_real, cff_parse_integer): Redesign the stream limit check.
+	(cff_parse_num, do fixed, cff_parse_fixed_dynamic): Update callers.
+
+2023-03-18  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/truetype/ttgload.c (TT_Load_Simple_Glyph): Use for-loop.
+
+	Even though we never call `TT_Load_Simple_Glyph` with zero contours,
+	out of abundance of precaution, let's handle this case properly.
+
+2023-03-18  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Clean up zeroing and local variables.
+
+	* src/truetype/ttgload.c (TT_Process_Simple_Glyph): Avoid zeroing.
+	(load_truetype_glyph): Avoid zeroing and clean local variables.
+
+2023-03-16  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/ftsystem.h (FT_Stream_IoFunc): Improve documentation.
+
+	Fixes #1208.
+
+2023-03-16  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftsynth.c (FT_GlyphSlot_AdjustWeight): New API.
+
+2023-03-16  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Clean up glyph loading.
+
+	* src/truetype/ttgload.c (TT_Load_Simple_Glyph): Clean space checking.
+	(TT_Hint_Glyph): Don't copy the outline structure.
+	(TT_Process_Simple_Glyph): Cosmetic update.
+
+2023-03-15  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/truetype/ttgload.c (TT_Load_Simple_Glyph): Clean up.
+
+2023-03-13  Werner Lemberg  <wl@gnu.org>
+
+	builds/vms/apinames_vms.bash: Fix `unzip` artifact
+
+	The problem occured when unpacking a zip file created on OpenVMS on Linux.
+	While OpenVMS knows many different file formats, Unix only knows stream-LF
+	and binary.  In principle `zip` on Linux should have translated the file to
+	stream-LF but failed to do so.  That caused the file to incorrectly contain
+	only one line with control-characters.
+
+2023-03-11  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Fix recent fallout in memory management.
+
+	* src/truetype/ttgload.c (TT_Process_Composite_Glyph,
+	TT_Load_Simple_Glyph): Clean up old instructions regardless of
+	new ones, postpone setting `control_len` and `control_data` until...
+	(TT_Load_Glyph): ... the exit from this function.
+
+2023-03-10  Jouk Jansen  <joukj@hrem.nano.tudelft.nl>
+
+	Update VMS installation support.
+
+2023-03-10  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/truetype/ttgload.c (TT_Hint_Glyph): Mostly cosmetic update.
+
+	The number of instructions is now taken from the executed context.
+	Technically, this means that `control_len` and `control_data`
+	values are no longer _used_ internally but only expose them.
+
+2023-03-08  Werner Lemberg  <wl@gnu.org>
+
+	apinames.c: Add comment.
+
+2023-03-07  Werner Lemberg  <wl@gnu.org>
+
+	[gzip] File `infback.c` is not needed.
+
+	* src/gzip/infback.c: Remove.
+	* src/gzip/rules.mk (GZIP_DRV_SRCS): Updated.
+
+2023-03-07  Werner Lemberg  <wl@gnu.org>
+
+	[apinames] Fix VMS handling of overly long function names.
+
+	Based on ideas from Jouk Jansen <joukj@hrem.nano.tudelft.nl>.
+
+	* src/tools/vms_shorten_symbol.c: New file, taken from
+
+	  https://sourceforge.net/p/vms-ports/vmsshortsym/ci/default/tree/vms_shorten_symbol.c
+
+	with some minor edits to allow compilation with C++ and being included in
+	another source code file.
+
+	* src/tools/apinames.c: Include `vms_shorten_symbol.c`.
+	(PROGRAM_VERSION): Set to '0.5'.
+	(names_dump) [OUTPUT_VMS_OPT]: Call `vms_shorten_symbol` to get unique function
+	identifiers not longer than 31 characters.
+
+2023-03-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/tools/apinames.c (panic): Accept variable number of arguments.
+
+2023-03-07  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/truetype/ttgload.c (TT_Process_Composite_Glyph): Fix leak too.
+
+2023-03-07  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/truetype/ttgload.c (TT_Load_Simple_Glyph): Triage memory leak.
+
+	This leak has been introduced in the previous commit and immediately
+	detected:
+	  https://chromium-review.googlesource.com/c/chromium/src/+/4313202
+
+2023-03-06  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Simplify memory management.
+
+	Instead of using `Update_Max`, switch to regular FreeType memory
+	allocation macros, stop pre-allocating the glyph instruction arrays.
+
+	* src/truetype/ttgload.c (TT_Load_Simple_Glyph,
+	TT_Process_Composite_Glyph): Switch to regular memory allocation.
+	* src/truetype/ttinterp.c (Update_Max): Removed.
+	(TT_Load_Context): Reallocate stack and free old instructions.
+	(Modify_CVT_Check, Ins_WS): Switch to regular memory allocation.
+	* src/truetype/ttinterp.h (Update_Max): Removed.
+
+2023-03-06  David PROVENT  <dprovent@annecy-elec.local>
+
+	Added information about the zlib version update in the changelog
+
+2023-03-06  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	Fix a couple of MSVC warnings.
+
+	* src/base/ftcalc.c (FT_MulAddFix): Add cast.
+	* src/sfnt/ttcolr.c (tt_face_get_colorline_stops, read_paint): Ditto.
+
+2023-03-05  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* builds/windows/vc2010/freetype.vcxproj: Suppress C4267 on _WIN64.
+
+	This usually comes from `strlen` returning 64-bit `size_t`, which
+	we often assign to 32-bit `FT_ULong` on Windows-64 (LLP64).
+
+2023-03-05  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/cff/cffparse.c (cff_parser_run): Thinko.
+
+2023-03-05  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cff] Clean up CharString number encoding.
+
+	* src/cff/cffparser.c (cff_parser_run): Work with signed numbers.
+
+2023-03-05  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/cff/cffparse.c (cff_parser_run): Fix variable type.
+
+2023-03-04  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cff] Clean up memory management in the old engine.
+
+	* src/cff/cffparse.c (finalize_t2_strings): Fix NULL-dereferencing
+	in the out-of-memory situation, use `FT_FREE`.
+	(cff_parser_run): Use FreeType memory allocation macros and avoid
+	uninitialized pointers.
+
+2023-03-04  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/cff/cffobjs.c (cff_size_init): Synonymous change.
+
+2023-03-04  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Shorten de-referencing.
+
+2023-03-04  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[pfr] Shorten de-referencing.
+
+	* src/pfr/pfrobjs.c (pfr_face_done, pfr_face_init): Use closer `memory`.
+	* src/pfr/pfrgload.c (pfr_glyph_load_compound): Remove `loader`.
+
+2023-03-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/cff/cffobjs.c (cff_size_get_globals_funcs): Shorten de-referencing.
+
+2023-03-03  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[cff,cid,type1] Shorten de-referencing.
+
+	* src/cff/cffobjs.c (cff_clot_init): Use immediate library reference.
+	* src/cid/cidobjs.c (cid_slot_init): Ditto.
+	* src/type1/t1objs.c (T1_GlyphSlot_Init): Ditto.
+
+2023-03-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* configure: Use `sed` instead of `grep`.
+
+	This is more portable and consistent with `autogen.sh`.
+
+2023-03-02  Ben Wagner  <bungeman@chromium.org>
+
+	Avoid strtol on non-null-terminated data.
+
+	Technically, `strtol` can only be used with C strings terminated with
+	`\0`.  CID data is not generally null-terminated and often does not
+	contain a `\0` if it is hex-encoded.  AddressSanitizer with `ASAN_OPTIONS`
+	containing `strict_string_checks=1` verifies this by using an adversarial
+	`strtol` that always reads to the terminating `\0`.
+
+	To avoid undefined behavior from `strtol` in `cid_parser_new`, use the
+	parser to parse the tokens instead of attempting to parse them ad-hoc.
+	This will internally use `PS_Conv_Strtol` to parse the integer, which
+	respects the parser's limits and directly implements the PostScript
+	parsing rules for integers.
+
+	* src/cid/cidparse.c (cid_parser_new): Use the parser to parse the
+	tokens.
+
+	Fixes: https://bugs.chromium.org/p/chromium/issues/detail?id=1420329
+
+2023-03-02  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/cff/cffload.c (cff_subfont_load): Synonymous update.
+
+2023-03-01  ubawurinna  <ubawurinna-6079@yopmail.com>
+
+	* src/gzip/README.freetype: Update version.
+
+2023-03-01  ubawurinna  <you@example.com>
+
+	[gzip] Fix static linking.
+
+	Without this patch, static linking with MS Visual Studio causes linking
+	errors.
+
+	* src/gzip/ftgzip.c: Set `ZEXPORT` to nothing and `ZEXTERN` to static for
+	all compilers.
+
+2023-03-01  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/internal/compiler-macros.h (FALL_THROUGH): Update.
+
+	This follows
+
+	  https://lists.gnu.org/archive/html/bug-gnulib/2023-02/msg00200.html
+
+2023-02-28  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Treat 38 as 40 without Infinality.
+
+	* include/freetype/ftdriver.h (TT_INTERPRETER_VERSION_38): Reinstate.
+	* src/truetype/ttdriver.c (tt_property_set): Fallback from 38 to 40.
+
+2023-02-26  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/internal/compiler-macros.h (FALL_THROUGH): Update.
+
+	This follows
+
+	  https://lists.gnu.org/archive/html/bug-gnulib/2023-02/msg00159.html
+
+2023-02-26  Werner Lemberg  <wl@gnu.org>
+
+	* src/*: Replace leading underscores with trailing ones in dummy variables.
+
+	This is to avoid clang warnings.
+
+2023-02-26  Karl Berry  <karl@freefriends.org>
+
+	* configure: Don't hardcode `grep -E`.
+
+	TeXLive still supports Solaris 5.10, where the system's `grep` doesn't
+	accept the `-E` option.  We thus introduce an `EGREP` variable that is set
+	to either `grep -E` or `-egrep`.
+
+2023-02-26  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/cff/cffload.c (cff_encoding_load): Optimize array zeroing.
+
+	This is unnecessary for predefined standard and expert encodings.
+	Even for custom encodings the arrays might be already zeroed when
+	CFF_FontRec is created but we keep it just in case.
+
+2023-02-25  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/type1/t1load.c (T1_Get_MM_Var): Optimize array zeroing.
+
+2023-02-25  Tamir Duberstein  <tamird@google.com>
+
+	* src/base/ftsystem.c (ft_ansi_stream_io): Avoid undefined behaviour.
+	Also short-circuit on `offset` to avoid checking `count` a second time when
+	`ft_ansi_stream_io` is used for reading.
+
+	Per ISO/IEC 9899:
+
+	  If an argument to a function has an invalid value (such as a value outside
+	  the domain of the function, or a pointer outside the address space of the
+	  program, or a null pointer, or apointer to non-modifiable storage when the
+	  corresponding parameter is not const-qualified) or a type (after
+	  promotion) not expected by a function with variable number of arguments,
+	  the behavior is undefined.  If a function argument is described as being
+	  an array, the pointer actually passed to the function shall have a value
+	  such that all address computations and accesses to objects (that would be
+	  valid if the pointer did point to the first element of such an array) are
+	  in fact valid.
+
+	Per IEEE Std 1003.1:
+
+	  size_t fread(void *restrict ptr, size_t size, size_t nitems,
+	               FILE *restrict stream);
+
+	  The `fread` function shall read into the array pointed to by `ptr` up to
+	  `nitems` elements whose size is specified by `size` in bytes, from the
+	  stream pointed to by `stream`.
+
+	Since the first argument to `fread` is described as being an array, its
+	behavior is undefined when that argument is a null pointer.
+
+	Per the documentation on `ft_ansi_stream_io`:
+
+	  If `count' is zero (this is, the function is used for seeking), a non-zero
+	  return value indicates an error.
+
+	Thus the intent is clear, and the call to `fread` can be skipped, avoiding
+	undefined behaviour.
+
+2023-02-21  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[raster] Clean up contour indexing.
+
+	* src/raster/ftraster.c (Decompose_Curve, Convert_Glyph): Use consistent
+	index types (Int) and compact iterations.
+
+2023-02-21  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[autofit] Clean up contour indexing.
+
+	* src/autofit/aflatin.c (af_latin_metrics_init_blues): Refactor.
+	* src/autofit/afcjk.c (af_cjk_metrics_init_blues): Ditto.
+
+2023-02-21  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftoutln.c (FT_Outline_Check): Fix C4701 warning.
+
+2023-02-21  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/sdf/ftsdf.c (get_min_distance_cubic): Fix C4701, typos.
+
+2023-02-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftstroke.c (FT_Stroker_ParseOutline): Clean up contour indexing.
+
+2023-02-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[base] Clean up contour indexing.
+
+	* src/base/ftoutln.c (FT_Outline_Reverse, FT_Outline_EmboldenXY,
+	FT_Outline_Get_Orientation): Set the first and last indexes together.
+	(FT_Outline_Decompose): Ditto and check them more stringently.
+	* src/smooth/ftgrays.c (FT_Outline_Decompose)[STANDALONE_]: Ditto.
+
+2023-02-20  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	* src/base/ftoutln.c (FT_Outline_Check): Update error code, clean up.
+
+2023-02-17  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[truetype] Hide Infinality.
+
+	Remove Infinality as an option before its complete extraction.
+
+	* include/freetype/ftoption.h: Remove the Infinality option.
+	* devel/ftoption.h: Ditto.
+	* include/freetype/ftdriver.h (TT_INTERPRETER_VERSION_38): Is 40 now.
+
+2023-02-17  Alex Ringlein  <aringlein@figma.com>
+
+	* src/base/ftoutln.c (FT_Outline_Reverse): Anchor first contour points.
+
+	A cubic contour has to always start from an on-point. Therefore, we
+	should not swap the first with the last point, which might be off, and
+	obtain an invalid contour. This does not matter for conic contours.
+	If anything, it also saves one swap there. Fixes #1207.
+
+2023-02-16  Werner Lemberg  <wl@gnu.org>
+
+	Documentation improvement for `FT_Bitmap`.
+
+	Fixes #1205.
+
+2023-02-10  Alexei Podtelezhnikov  <apodtele@gmail.com>
+
+	[type1/MM] Round design coordinates.
+
+	The design coordinates for MM fonts were not rounded. For example,
+	`FT_Get_Var_Design_Coordinates` returned values with fractional part.
+
+	* src/type1/t1load.c (mm_axis_unmap): Refactor with rounding.
+
+	* include/freetype/ftmm.h (FT_Var_Axis, FT_Set_Var_Design_Coordinates,
+	FT_Get_Var_Design_Coordinates): Reword documentation.
+
+2023-02-09  Jan Alexander Steffens (heftig)  <heftig@archlinux.org>
+
+	* builds/meson/parse_modules_cfg.py: Handle `gxvalid` and `otvalid`.
+
+	These need a name mapping similar to what was done for other modules,
+	or linking will fail.
+
+2023-02-09  Werner Lemberg  <wl@gnu.org>
+
+	* build/toplevel.mk (do_dist): Fix typo.
+
 2023-02-09  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.13 released.

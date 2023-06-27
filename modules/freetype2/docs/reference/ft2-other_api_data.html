@@ -6,7 +6,7 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
       
-        <meta name="description" content="API Reference Documentation for FreeType-2.13.0">
+        <meta name="description" content="API Reference Documentation for FreeType-2.13.1">
       
       
       
@@ -14,11 +14,11 @@
       
       
       <link rel="icon" href="images/favico.ico">
-      <meta name="generator" content="mkdocs-1.2.1, mkdocs-material-7.1.9">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-7.1.9">
     
     
       
-        <title>FreeType Version - FreeType-2.13.0 API Reference</title>
+        <title>Other API Data - FreeType-2.13.1 API Reference</title>
       
     
     
@@ -71,7 +71,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#freetype-version" class="md-skip">
+        <a href="#other-api-data" class="md-skip">
           Skip to content
         </a>
       
@@ -82,7 +82,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="index.html" title="FreeType-2.13.0 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.13.0 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.13.1 API Reference" class="md-header__button md-logo" aria-label="FreeType-2.13.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
@@ -94,13 +94,13 @@
       <div class="md-header__ellipsis">
         <div class="md-header__topic">
           <span class="md-ellipsis">
-            FreeType-2.13.0 API Reference
+            FreeType-2.13.1 API Reference
           </span>
         </div>
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              FreeType Version
+              Other API Data
             
           </span>
         </div>
@@ -161,12 +161,12 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="index.html" title="FreeType-2.13.0 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.13.0 API Reference" data-md-component="logo">
+    <a href="index.html" title="FreeType-2.13.1 API Reference" class="md-nav__button md-logo" aria-label="FreeType-2.13.1 API Reference" data-md-component="logo">
       
   <img src="images/favico.ico" alt="logo">
 
     </a>
-    FreeType-2.13.0 API Reference
+    FreeType-2.13.1 API Reference
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
@@ -296,6 +296,102 @@
             
   
   
+  
+    <li class="md-nav__item">
+      <a href="ft2-basic_types.html" class="md-nav__link">
+        Basic Data Types
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-library_setup.html" class="md-nav__link">
+        Library Setup
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-face_creation.html" class="md-nav__link">
+        Face Creation
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-font_testing_macros.html" class="md-nav__link">
+        Font Testing Macros
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-sizing_and_scaling.html" class="md-nav__link">
+        Sizing and Scaling
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-glyph_retrieval.html" class="md-nav__link">
+        Glyph Retrieval
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-character_mapping.html" class="md-nav__link">
+        Character Mapping
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ft2-information_retrieval.html" class="md-nav__link">
+        Information Retrieval
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
     
   
   
@@ -308,12 +404,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          FreeType Version
+          Other API Data
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="ft2-version.html" class="md-nav__link md-nav__link--active">
-        FreeType Version
+      <a href="ft2-other_api_data.html" class="md-nav__link md-nav__link--active">
+        Other API Data
       </a>
       
         
@@ -338,8 +434,36 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ft_library_version" class="md-nav__link">
-    FT_Library_Version
+  <a href="#ft_face_internal" class="md-nav__link">
+    FT_Face_Internal
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_size_internal" class="md-nav__link">
+    FT_Size_Internal
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_slot_internal" class="md-nav__link">
+    FT_Slot_Internal
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_subglyph" class="md-nav__link">
+    FT_SubGlyph
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_has_fast_glyphs" class="md-nav__link">
+    FT_HAS_FAST_GLYPHS
   </a>
   
 </li>
@@ -358,13 +482,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#freetype_xxx" class="md-nav__link">
-    FREETYPE_XXX
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -373,29 +490,35 @@
   
 
           
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="ft2-basic_types.html" class="md-nav__link">
-        Basic Data Types
-      </a>
+        </ul>
+      </nav>
     </li>
   
 
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="ft2-base_interface.html" class="md-nav__link">
-        Base Interface
-      </a>
-    </li>
-  
+    
+      
+      
+      
 
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Extended API
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Extended API" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Extended API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
           
             
   
@@ -498,14 +621,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
       
-      <label class="md-nav__link" for="__nav_5">
+      <label class="md-nav__link" for="__nav_6">
         Format-Specific API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Format-Specific API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_5">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           Format-Specific API
         </label>
@@ -660,14 +783,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
       
-      <label class="md-nav__link" for="__nav_6">
+      <label class="md-nav__link" for="__nav_7">
         Controlling FreeType Modules
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Controlling FreeType Modules" data-md-level="1">
-        <label class="md-nav__title" for="__nav_6">
+        <label class="md-nav__title" for="__nav_7">
           <span class="md-nav__icon md-icon"></span>
           Controlling FreeType Modules
         </label>
@@ -798,14 +921,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
       
-      <label class="md-nav__link" for="__nav_7">
+      <label class="md-nav__link" for="__nav_8">
         Cache Sub-System
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Cache Sub-System" data-md-level="1">
-        <label class="md-nav__title" for="__nav_7">
+        <label class="md-nav__title" for="__nav_8">
           <span class="md-nav__icon md-icon"></span>
           Cache Sub-System
         </label>
@@ -840,14 +963,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
       
-      <label class="md-nav__link" for="__nav_8">
+      <label class="md-nav__link" for="__nav_9">
         Support API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Support API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_8">
+        <label class="md-nav__title" for="__nav_9">
           <span class="md-nav__icon md-icon"></span>
           Support API
         </label>
@@ -1026,14 +1149,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
       
-      <label class="md-nav__link" for="__nav_9">
+      <label class="md-nav__link" for="__nav_10">
         Error Codes
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Error Codes" data-md-level="1">
-        <label class="md-nav__title" for="__nav_9">
+        <label class="md-nav__title" for="__nav_10">
           <span class="md-nav__icon md-icon"></span>
           Error Codes
         </label>
@@ -1080,14 +1203,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_11" type="checkbox" id="__nav_11" >
       
-      <label class="md-nav__link" for="__nav_10">
+      <label class="md-nav__link" for="__nav_11">
         Miscellaneous
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Miscellaneous" data-md-level="1">
-        <label class="md-nav__title" for="__nav_10">
+        <label class="md-nav__title" for="__nav_11">
           <span class="md-nav__icon md-icon"></span>
           Miscellaneous
         </label>
@@ -1180,8 +1303,36 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ft_library_version" class="md-nav__link">
-    FT_Library_Version
+  <a href="#ft_face_internal" class="md-nav__link">
+    FT_Face_Internal
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_size_internal" class="md-nav__link">
+    FT_Size_Internal
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_slot_internal" class="md-nav__link">
+    FT_Slot_Internal
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_subglyph" class="md-nav__link">
+    FT_SubGlyph
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ft_has_fast_glyphs" class="md-nav__link">
+    FT_HAS_FAST_GLYPHS
   </a>
   
 </li>
@@ -1200,13 +1351,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#freetype_xxx" class="md-nav__link">
-    FREETYPE_XXX
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1220,51 +1364,60 @@
               
                 
                 
-                <p><a href="https://www.freetype.org">FreeType</a> &raquo; <a href="../">Docs</a> &raquo; <a href="index.html#core-api">Core API</a> &raquo; FreeType Version</p>
+                <p><a href="https://www.freetype.org">FreeType</a> &raquo; <a href="../">Docs</a> &raquo; <a href="index.html#core-api">Core API</a> &raquo; Other API Data</p>
 <hr />
-<h1 id="freetype-version">FreeType Version<a class="headerlink" href="#freetype-version" title="Permanent link">&para;</a></h1>
+<h1 id="other-api-data">Other API Data<a class="headerlink" href="#other-api-data" title="Permanent link">&para;</a></h1>
 <h2 id="synopsis">Synopsis<a class="headerlink" href="#synopsis" title="Permanent link">&para;</a></h2>
-<p>Note that those functions and macros are of limited use because even a new release of FreeType with only documentation changes increases the version number.</p>
-<h2 id="ft_library_version">FT_Library_Version<a class="headerlink" href="#ft_library_version" title="Permanent link">&para;</a></h2>
+<p>Other structures, enumerations, and macros. Deprecated functions are also listed here.</p>
+<h2 id="ft_face_internal">FT_Face_Internal<a class="headerlink" href="#ft_face_internal" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
-<div class = "codehilite"><pre><code>  FT_EXPORT( <span class="keyword">void</span> )
-  <b>FT_Library_Version</b>( <a href="ft2-base_interface.html#ft_library">FT_Library</a>   library,
-                      <a href="ft2-basic_types.html#ft_int">FT_Int</a>      *amajor,
-                      <a href="ft2-basic_types.html#ft_int">FT_Int</a>      *aminor,
-                      <a href="ft2-basic_types.html#ft_int">FT_Int</a>      *apatch );
+<div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_Face_InternalRec_*  <b>FT_Face_Internal</b>;
 </code></pre></div>
 
-<p>Return the version of the FreeType library being used. This is useful when dynamically linking to the library, since one cannot use the macros <code><a href="ft2-version.html#freetype_xxx">FREETYPE_MAJOR</a></code>, <code><a href="ft2-version.html#freetype_xxx">FREETYPE_MINOR</a></code>, and <code><a href="ft2-version.html#freetype_xxx">FREETYPE_PATCH</a></code>.</p>
-<h4>input</h4>
-<table class="fields">
-<tr><td class="val" id="library">library</td><td class="desc">
-<p>A source library handle.</p>
-</td></tr>
-</table>
+<p>An opaque handle to an <code>FT_Face_InternalRec</code> structure that models the private data of a given <code><a href="ft2-face_creation.html#ft_face">FT_Face</a></code> object.</p>
+<p>This structure might change between releases of FreeType&nbsp;2 and is not generally available to client applications.</p>
+<hr>
 
-<h4>output</h4>
-<table class="fields">
-<tr><td class="val" id="amajor">amajor</td><td class="desc">
-<p>The major version number.</p>
-</td></tr>
-<tr><td class="val" id="aminor">aminor</td><td class="desc">
-<p>The minor version number.</p>
-</td></tr>
-<tr><td class="val" id="apatch">apatch</td><td class="desc">
-<p>The patch version number.</p>
-</td></tr>
-</table>
+<h2 id="ft_size_internal">FT_Size_Internal<a class="headerlink" href="#ft_size_internal" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
+<div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_Size_InternalRec_*  <b>FT_Size_Internal</b>;
+</code></pre></div>
 
+<p>An opaque handle to an <code>FT_Size_InternalRec</code> structure, used to model private data of a given <code><a href="ft2-sizing_and_scaling.html#ft_size">FT_Size</a></code> object.</p>
+<hr>
+
+<h2 id="ft_slot_internal">FT_Slot_Internal<a class="headerlink" href="#ft_slot_internal" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
+<div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_Slot_InternalRec_*  <b>FT_Slot_Internal</b>;
+</code></pre></div>
+
+<p>An opaque handle to an <code>FT_Slot_InternalRec</code> structure, used to model private data of a given <code><a href="ft2-glyph_retrieval.html#ft_glyphslot">FT_GlyphSlot</a></code> object.</p>
+<hr>
+
+<h2 id="ft_subglyph">FT_SubGlyph<a class="headerlink" href="#ft_subglyph" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
+<div class = "codehilite"><pre><code>  <span class="keyword">typedef</span> <span class="keyword">struct</span> FT_SubGlyphRec_*  <b>FT_SubGlyph</b>;
+</code></pre></div>
+
+<p>The subglyph structure is an internal object used to describe subglyphs (for example, in the case of composites).</p>
 <h4>note</h4>
 
-<p>The reason why this function takes a <code>library</code> argument is because certain programs implement library initialization in a custom way that doesn't use <code><a href="ft2-base_interface.html#ft_init_freetype">FT_Init_FreeType</a></code>.</p>
-<p>In such cases, the library version might not be available before the library object has been created.</p>
+<p>The subglyph implementation is not part of the high-level API, hence the forward structure declaration.</p>
+<p>You can however retrieve subglyph information with <code><a href="ft2-information_retrieval.html#ft_get_subglyph_info">FT_Get_SubGlyph_Info</a></code>.</p>
+<hr>
+
+<h2 id="ft_has_fast_glyphs">FT_HAS_FAST_GLYPHS<a class="headerlink" href="#ft_has_fast_glyphs" title="Permanent link">&para;</a></h2>
+<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
+<div class = "codehilite"><pre><code>#<span class="keyword">define</span> <b>FT_HAS_FAST_GLYPHS</b>( face )  0
+</code></pre></div>
+
+<p>Deprecated.</p>
 <hr>
 
 <h2 id="ft_face_checktruetypepatents">FT_Face_CheckTrueTypePatents<a class="headerlink" href="#ft_face_checktruetypepatents" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <div class = "codehilite"><pre><code>  FT_EXPORT( <a href="ft2-basic_types.html#ft_bool">FT_Bool</a> )
-  <b>FT_Face_CheckTrueTypePatents</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>  face );
+  <b>FT_Face_CheckTrueTypePatents</b>( <a href="ft2-face_creation.html#ft_face">FT_Face</a>  face );
 </code></pre></div>
 
 <p>Deprecated, does nothing.</p>
@@ -1289,7 +1442,7 @@
 <h2 id="ft_face_setunpatentedhinting">FT_Face_SetUnpatentedHinting<a class="headerlink" href="#ft_face_setunpatentedhinting" title="Permanent link">&para;</a></h2>
 <p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
 <div class = "codehilite"><pre><code>  FT_EXPORT( <a href="ft2-basic_types.html#ft_bool">FT_Bool</a> )
-  <b>FT_Face_SetUnpatentedHinting</b>( <a href="ft2-base_interface.html#ft_face">FT_Face</a>  face,
+  <b>FT_Face_SetUnpatentedHinting</b>( <a href="ft2-face_creation.html#ft_face">FT_Face</a>  face,
                                 <a href="ft2-basic_types.html#ft_bool">FT_Bool</a>  value );
 </code></pre></div>
 
@@ -1314,32 +1467,6 @@
 
 <p>2.3.5</p>
 <hr>
-
-<h2 id="freetype_xxx">FREETYPE_XXX<a class="headerlink" href="#freetype_xxx" title="Permanent link">&para;</a></h2>
-<p>Defined in FT_FREETYPE_H (freetype/freetype.h).</p>
-<div class = "codehilite"><pre><code>#<span class="keyword">define</span> <a href="ft2-version.html#freetype_major">FREETYPE_MAJOR</a>  2
-#<span class="keyword">define</span> <a href="ft2-version.html#freetype_minor">FREETYPE_MINOR</a>  13
-#<span class="keyword">define</span> <a href="ft2-version.html#freetype_patch">FREETYPE_PATCH</a>  0
-</code></pre></div>
-
-<p>These three macros identify the FreeType source code version. Use <code><a href="ft2-version.html#ft_library_version">FT_Library_Version</a></code> to access them at runtime.</p>
-<h4>values</h4>
-<table class="fields">
-<tr><td class="val" id="freetype_major">FREETYPE_MAJOR</td><td class="desc">
-<p>The major version number.</p>
-</td></tr>
-<tr><td class="val" id="freetype_minor">FREETYPE_MINOR</td><td class="desc">
-<p>The minor version number.</p>
-</td></tr>
-<tr><td class="val" id="freetype_patch">FREETYPE_PATCH</td><td class="desc">
-<p>The patch level.</p>
-</td></tr>
-</table>
-
-<h4>note</h4>
-
-<p>The version number of FreeType if built as a dynamic link library with the &lsquo;libtool&rsquo; package is <em>not</em> controlled by these three macros.</p>
-<hr>
                 
               
               
@@ -1359,7 +1486,7 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="ft2-user_allocation.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: User allocation" rel="prev">
+        <a href="ft2-information_retrieval.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Information Retrieval" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1368,20 +1495,20 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              User allocation
+              Information Retrieval
             </div>
           </div>
         </a>
       
       
         
-        <a href="ft2-basic_types.html" class="md-footer__link md-footer__link--next" aria-label="Next: Basic Data Types" rel="next">
+        <a href="ft2-glyph_variants.html" class="md-footer__link md-footer__link--next" aria-label="Next: Unicode Variation Sequences" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Basic Data Types
+              Unicode Variation Sequences
             </div>
           </div>
           <div class="md-footer__button md-icon">
@@ -1414,7 +1541,7 @@
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.477d984a.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.477d984a.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": null}</script>
     
     
       <script src="assets/javascripts/bundle.82b56eb2.min.js"></script>

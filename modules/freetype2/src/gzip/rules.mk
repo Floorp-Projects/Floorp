@@ -43,7 +43,6 @@ GZIP_DRV_SRCS := $(GZIP_DIR)/adler32.c  \
                  $(GZIP_DIR)/crc32.c    \
                  $(GZIP_DIR)/crc32.h    \
                  $(GZIP_DIR)/ftzconf.h  \
-                 $(GZIP_DIR)/infback.c  \
                  $(GZIP_DIR)/inffast.c  \
                  $(GZIP_DIR)/inffast.h  \
                  $(GZIP_DIR)/inffixed.h \
