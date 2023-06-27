@@ -611,7 +611,7 @@ void NodeController::OnIntroduce(const NodeName& aFromNode,
   }
 
   auto channel = MakeUnique<IPC::Channel>(std::move(aIntroduction.mHandle),
-                                          aIntroduction.mMode, nullptr);
+                                          aIntroduction.mMode);
   auto nodeChannel = MakeRefPtr<NodeChannel>(
       aIntroduction.mName, std::move(channel), this, aIntroduction.mOtherPid);
 

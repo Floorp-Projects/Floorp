@@ -82,13 +82,11 @@ class Channel {
   // |mode| specifies whether this channel is operating in server mode or client
   // mode. One side of the connection should be the client, and the other should
   // be the server.
-  // |listener| receives a callback on the current thread for each newly
-  // received message.
   //
   // The Channel must be created and destroyed on the IO thread, and all
   // methods, unless otherwise noted, are only safe to call on the I/O thread.
   //
-  Channel(ChannelHandle pipe, Mode mode, Listener* listener);
+  Channel(ChannelHandle pipe, Mode mode);
 
   ~Channel();
 
@@ -97,13 +95,13 @@ class Channel {
   // connect to a pre-existing pipe.  Note, calling Connect()
   // will not block the calling thread and may complete
   // asynchronously.
-  bool Connect();
+  //
+  // |listener| will receive a callback on the current thread for each newly
+  // received message.
+  bool Connect(Listener* listener);
 
   // Close this Channel explicitly.  May be called multiple times.
   void Close();
-
-  // Modify the Channel's listener.
-  Listener* set_listener(Listener* listener);
 
   // Send a message over the Channel to the listener on the other end.
   //

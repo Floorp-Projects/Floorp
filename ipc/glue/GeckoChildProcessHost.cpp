@@ -874,8 +874,8 @@ void GeckoChildProcessHost::InitializeChannel(
     IPC::Channel::ChannelHandle&& aServerHandle) {
   // Create the IPC channel which will be used for communication with this
   // process.
-  mozilla::UniquePtr<IPC::Channel> channel(new IPC::Channel(
-      std::move(aServerHandle), IPC::Channel::MODE_SERVER, nullptr));
+  mozilla::UniquePtr<IPC::Channel> channel = MakeUnique<IPC::Channel>(
+      std::move(aServerHandle), IPC::Channel::MODE_SERVER);
 #if defined(XP_WIN)
   channel->StartAcceptingHandles(IPC::Channel::MODE_SERVER);
 #elif defined(XP_DARWIN)

@@ -32,8 +32,8 @@ void ChildThread::Init() {
   // to start the initial IPC connection to the parent process.
   IPC::Channel::ChannelHandle client_handle(
       IPC::Channel::GetClientChannelHandle());
-  auto channel = mozilla::MakeUnique<IPC::Channel>(
-      std::move(client_handle), IPC::Channel::MODE_CLIENT, nullptr);
+  auto channel = mozilla::MakeUnique<IPC::Channel>(std::move(client_handle),
+                                                   IPC::Channel::MODE_CLIENT);
 #if defined(XP_WIN)
   channel->StartAcceptingHandles(IPC::Channel::MODE_CLIENT);
 #elif defined(XP_DARWIN)

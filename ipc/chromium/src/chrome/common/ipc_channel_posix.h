@@ -36,16 +36,10 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
       ChannelImpl, IOThread().GetEventTarget());
 
   // Mirror methods of Channel, see ipc_channel.h for description.
-  ChannelImpl(ChannelHandle pipe, Mode mode, Listener* listener);
-  bool Connect() MOZ_EXCLUDES(SendMutex());
+  ChannelImpl(ChannelHandle pipe, Mode mode);
+  bool Connect(Listener* listener) MOZ_EXCLUDES(SendMutex());
   void Close() MOZ_EXCLUDES(SendMutex());
-  Listener* set_listener(Listener* listener) {
-    IOThread().AssertOnCurrentThread();
-    chan_cap_.NoteOnIOThread();
-    Listener* old = listener_;
-    listener_ = listener;
-    return old;
-  }
+
   // NOTE: `Send` may be called on threads other than the I/O thread.
   bool Send(mozilla::UniquePtr<Message> message) MOZ_EXCLUDES(SendMutex());
 
@@ -72,8 +66,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
  private:
   ~ChannelImpl() { Close(); }
 
-  void Init(Mode mode, Listener* listener)
-      MOZ_REQUIRES(SendMutex(), IOThread());
+  void Init(Mode mode) MOZ_REQUIRES(SendMutex(), IOThread());
   void SetPipe(int fd) MOZ_REQUIRES(SendMutex(), IOThread());
   void SetOtherPid(int other_pid) MOZ_REQUIRES(IOThread())
       MOZ_EXCLUDES(SendMutex()) {
@@ -84,7 +77,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   bool PipeBufHasSpaceAfter(size_t already_written)
       MOZ_REQUIRES_SHARED(chan_cap_);
   bool EnqueueHelloMessage() MOZ_REQUIRES(SendMutex(), IOThread());
-  bool ConnectLocked() MOZ_REQUIRES(SendMutex(), IOThread());
+  bool ContinueConnect() MOZ_REQUIRES(SendMutex(), IOThread());
   void CloseLocked() MOZ_REQUIRES(SendMutex(), IOThread());
 
   bool ProcessIncomingMessages() MOZ_REQUIRES(IOThread());
