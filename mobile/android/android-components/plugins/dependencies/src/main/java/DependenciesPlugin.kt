@@ -37,7 +37,7 @@ object Versions {
     const val detekt = "1.23.0"
     const val ktlint = "0.49.1"
 
-    const val sentry_latest = "6.21.0"
+    const val sentry_latest = "6.24.0"
 
     // zxing 3.4+ requires a minimum API of 24 or higher
     const val zxing = "3.3.3"
