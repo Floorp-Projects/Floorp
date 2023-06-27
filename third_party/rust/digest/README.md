@@ -28,29 +28,29 @@ done with a minor version bump.
 
 ## Usage
 
-Let us demonstrate how to use crates in this repository using Sha256 as an
+Let us demonstrate how to use crates in this repository using BLAKE2b as an
 example.
 
-First add the `sha2` crate to your `Cargo.toml`:
+First add `blake2` crate to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-sha2 = "0.10"
+blake2 = "0.8"
 ```
 
-`sha2` and other crates re-export `digest` crate and `Digest` trait for
+`blake2` and other crates re-export `digest` crate and `Digest` trait for
 convenience, so you don't have to add `digest` crate as an explicit dependency.
 
 Now you can write the following code:
 
 ```rust
-use sha2::{Sha256, Digest};
+use blake2::{Blake2b, Digest};
 
-let mut hasher = Sha256::new();
+let mut hasher = Blake2b::new();
 let data = b"Hello world!";
-hasher.update(data);
+hasher.input(data);
 // `input` can be called repeatedly and is generic over `AsRef<[u8]>`
-hasher.update("String data");
+hasher.input("String data");
 // Note that calling `finalize()` consumes hasher
 let hash = hasher.finalize();
 println!("Result: {:x}", hash);
@@ -63,18 +63,18 @@ Alternatively you can use chained approach, which is equivalent to the previous
 example:
 
 ```rust
-let hash = Sha256::new()
-    .chain_update(b"Hello world!")
-    .chain_update("String data")
+let hash = Blake2b::new()
+    .chain(b"Hello world!")
+    .chain("String data")
     .finalize();
 
 println!("Result: {:x}", hash);
 ```
 
-If the whole message is available you also can use convenience `digest` method:
+If the whole message is available you also can use convinience `digest` method:
 
 ```rust
-let hash = Sha256::digest(b"my message");
+let hash = Blake2b::digest(b"my message");
 println!("Result: {:x}", hash);
 ```
 
@@ -84,11 +84,11 @@ If you want to hash data from [`Read`][3] trait (e.g. from file) you can rely on
 implementation of [`Write`][4] trait (requires enabled-by-default `std` feature):
 
 ```rust
-use sha2::{Sha256, Digest};
+use blake2::{Blake2b, Digest};
 use std::{fs, io};
 
 let mut file = fs::File::open(&path)?;
-let mut hasher = Sha256::new();
+let mut hasher = Blake2b::new();
 let n = io::copy(&mut file, &mut hasher)?;
 let hash = hasher.finalize();
 
@@ -109,17 +109,17 @@ use digest::Digest;
 // Instead use crates from: https://github.com/RustCrypto/password-hashing
 fn hash_password<D: Digest>(password: &str, salt: &str, output: &mut [u8]) {
     let mut hasher = D::new();
-    hasher.update(password.as_bytes());
-    hasher.update(b"$");
-    hasher.update(salt.as_bytes());
+    hasher.input(password.as_bytes());
+    hasher.input(b"$");
+    hasher.input(salt.as_bytes());
     output.copy_from_slice(hasher.finalize().as_slice())
 }
 
-let mut buf1 = [0u8; 32];
-let mut buf2 = [0u8; 64];
+use blake2::Blake2b;
+use sha2::Sha256;
 
-hash_password::<sha2::Sha256>("my_password", "abcd", &mut buf1);
-hash_password::<sha2::Sha512>("my_password", "abcd", &mut buf2);
+hash_password::<Blake2b>("my_password", "abcd", &mut buf);
+hash_password::<Sha256>("my_password", "abcd", &mut buf);
 ```
 
 If you want to use hash functions with trait objects, use `digest::DynDigest`

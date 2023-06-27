@@ -5,8 +5,6 @@ use super::{
 use crate::HashMarker;
 #[cfg(feature = "mac")]
 use crate::MacMarker;
-#[cfg(feature = "oid")]
-use const_oid::{AssociatedOid, ObjectIdentifier};
 use core::{fmt, marker::PhantomData};
 use crypto_common::{
     generic_array::{ArrayLength, GenericArray},
@@ -14,15 +12,10 @@ use crypto_common::{
     Block, BlockSizeUser, OutputSizeUser,
 };
 
-/// Dummy type used with [`CtVariableCoreWrapper`] in cases when
-/// resulting hash does not have a known OID.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-pub struct NoOid;
-
 /// Wrapper around [`VariableOutputCore`] which selects output size
 /// at compile time.
 #[derive(Clone)]
-pub struct CtVariableCoreWrapper<T, OutSize, O = NoOid>
+pub struct CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize>,
@@ -31,10 +24,10 @@ where
     Le<T::BlockSize, U256>: NonZero,
 {
     inner: T,
-    _out: PhantomData<(OutSize, O)>,
+    _out: PhantomData<OutSize>,
 }
 
-impl<T, OutSize, O> HashMarker for CtVariableCoreWrapper<T, OutSize, O>
+impl<T, OutSize> HashMarker for CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore + HashMarker,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize>,
@@ -45,7 +38,7 @@ where
 }
 
 #[cfg(feature = "mac")]
-impl<T, OutSize, O> MacMarker for CtVariableCoreWrapper<T, OutSize, O>
+impl<T, OutSize> MacMarker for CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore + MacMarker,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize>,
@@ -55,7 +48,7 @@ where
 {
 }
 
-impl<T, OutSize, O> BlockSizeUser for CtVariableCoreWrapper<T, OutSize, O>
+impl<T, OutSize> BlockSizeUser for CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize>,
@@ -66,7 +59,7 @@ where
     type BlockSize = T::BlockSize;
 }
 
-impl<T, OutSize, O> UpdateCore for CtVariableCoreWrapper<T, OutSize, O>
+impl<T, OutSize> UpdateCore for CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize>,
@@ -80,7 +73,7 @@ where
     }
 }
 
-impl<T, OutSize, O> OutputSizeUser for CtVariableCoreWrapper<T, OutSize, O>
+impl<T, OutSize> OutputSizeUser for CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize> + 'static,
@@ -91,7 +84,7 @@ where
     type OutputSize = OutSize;
 }
 
-impl<T, OutSize, O> BufferKindUser for CtVariableCoreWrapper<T, OutSize, O>
+impl<T, OutSize> BufferKindUser for CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize>,
@@ -102,7 +95,7 @@ where
     type BufferKind = T::BufferKind;
 }
 
-impl<T, OutSize, O> FixedOutputCore for CtVariableCoreWrapper<T, OutSize, O>
+impl<T, OutSize> FixedOutputCore for CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize> + 'static,
@@ -127,7 +120,7 @@ where
     }
 }
 
-impl<T, OutSize, O> Default for CtVariableCoreWrapper<T, OutSize, O>
+impl<T, OutSize> Default for CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize>,
@@ -144,7 +137,7 @@ where
     }
 }
 
-impl<T, OutSize, O> Reset for CtVariableCoreWrapper<T, OutSize, O>
+impl<T, OutSize> Reset for CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize>,
@@ -158,7 +151,7 @@ where
     }
 }
 
-impl<T, OutSize, O> AlgorithmName for CtVariableCoreWrapper<T, OutSize, O>
+impl<T, OutSize> AlgorithmName for CtVariableCoreWrapper<T, OutSize>
 where
     T: VariableOutputCore + AlgorithmName,
     OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize>,
@@ -171,34 +164,4 @@ where
         f.write_str("_")?;
         write!(f, "{}", OutSize::USIZE)
     }
-}
-
-#[cfg(feature = "oid")]
-#[cfg_attr(docsrs, doc(cfg(feature = "oid")))]
-impl<T, OutSize, O> AssociatedOid for CtVariableCoreWrapper<T, OutSize, O>
-where
-    T: VariableOutputCore,
-    O: AssociatedOid,
-    OutSize: ArrayLength<u8> + IsLessOrEqual<T::OutputSize>,
-    LeEq<OutSize, T::OutputSize>: NonZero,
-    T::BlockSize: IsLess<U256>,
-    Le<T::BlockSize, U256>: NonZero,
-{
-    const OID: ObjectIdentifier = O::OID;
-}
-
-/// Implement dummy type with hidden docs which is used to "carry" hasher
-/// OID for [`CtVariableCoreWrapper`].
-#[macro_export]
-macro_rules! impl_oid_carrier {
-    ($name:ident, $oid:literal) => {
-        #[doc(hidden)]
-        #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-        pub struct $name;
-
-        #[cfg(feature = "oid")]
-        impl AssociatedOid for $name {
-            const OID: ObjectIdentifier = ObjectIdentifier::new_unwrap($oid);
-        }
-    };
 }

@@ -11,7 +11,7 @@ use subtle::{Choice, ConstantTimeEq};
 #[cfg_attr(docsrs, doc(cfg(feature = "mac")))]
 pub trait MacMarker {}
 
-/// Convenience wrapper trait covering functionality of Message Authentication algorithms.
+/// Convinience wrapper trait covering functionality of Message Authentication algorithms.
 ///
 /// This trait wraps [`KeyInit`], [`Update`], [`FixedOutput`], and [`MacMarker`]
 /// traits and provides additional convenience methods.
@@ -59,27 +59,12 @@ pub trait Mac: OutputSizeUser + Sized {
     /// Check if tag/code value is correct for the processed input.
     fn verify(self, tag: &Output<Self>) -> Result<(), MacError>;
 
-    /// Check if tag/code value is correct for the processed input and reset
-    /// [`Mac`] instance.
-    fn verify_reset(&mut self, tag: &Output<Self>) -> Result<(), MacError>
-    where
-        Self: FixedOutputReset;
-
     /// Check truncated tag correctness using all bytes
     /// of calculated tag.
     ///
     /// Returns `Error` if `tag` is not valid or not equal in length
     /// to MAC's output.
     fn verify_slice(self, tag: &[u8]) -> Result<(), MacError>;
-
-    /// Check truncated tag correctness using all bytes
-    /// of calculated tag and reset [`Mac`] instance.
-    ///
-    /// Returns `Error` if `tag` is not valid or not equal in length
-    /// to MAC's output.
-    fn verify_slice_reset(&mut self, tag: &[u8]) -> Result<(), MacError>
-    where
-        Self: FixedOutputReset;
 
     /// Check truncated tag correctness using left side bytes
     /// (i.e. `tag[..n]`) of calculated tag.
@@ -153,42 +138,13 @@ impl<T: Update + FixedOutput + MacMarker> Mac for T {
     }
 
     #[inline]
-    fn verify_reset(&mut self, tag: &Output<Self>) -> Result<(), MacError>
-    where
-        Self: FixedOutputReset,
-    {
-        if self.finalize_reset() == tag.into() {
-            Ok(())
-        } else {
-            Err(MacError)
-        }
-    }
-
-    #[inline]
     fn verify_slice(self, tag: &[u8]) -> Result<(), MacError> {
         let n = tag.len();
         if n != Self::OutputSize::USIZE {
             return Err(MacError);
         }
         let choice = self.finalize_fixed().ct_eq(tag);
-        if choice.into() {
-            Ok(())
-        } else {
-            Err(MacError)
-        }
-    }
-
-    #[inline]
-    fn verify_slice_reset(&mut self, tag: &[u8]) -> Result<(), MacError>
-    where
-        Self: FixedOutputReset,
-    {
-        let n = tag.len();
-        if n != Self::OutputSize::USIZE {
-            return Err(MacError);
-        }
-        let choice = self.finalize_fixed_reset().ct_eq(tag);
-        if choice.into() {
+        if choice.unwrap_u8() == 1 {
             Ok(())
         } else {
             Err(MacError)
@@ -202,7 +158,7 @@ impl<T: Update + FixedOutput + MacMarker> Mac for T {
         }
         let choice = self.finalize_fixed()[..n].ct_eq(tag);
 
-        if choice.into() {
+        if choice.unwrap_u8() == 1 {
             Ok(())
         } else {
             Err(MacError)
@@ -217,7 +173,7 @@ impl<T: Update + FixedOutput + MacMarker> Mac for T {
         let m = Self::OutputSize::USIZE - n;
         let choice = self.finalize_fixed()[m..].ct_eq(tag);
 
-        if choice.into() {
+        if choice.unwrap_u8() == 1 {
             Ok(())
         } else {
             Err(MacError)
@@ -283,7 +239,7 @@ impl<T: OutputSizeUser> ConstantTimeEq for CtOutput<T> {
 impl<T: OutputSizeUser> PartialEq for CtOutput<T> {
     #[inline(always)]
     fn eq(&self, x: &CtOutput<T>) -> bool {
-        self.ct_eq(x).into()
+        self.ct_eq(x).unwrap_u8() == 1
     }
 }
 

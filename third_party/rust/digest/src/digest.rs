@@ -7,7 +7,7 @@ use alloc::boxed::Box;
 /// Marker trait for cryptographic hash functions.
 pub trait HashMarker {}
 
-/// Convenience wrapper trait covering functionality of cryptographic hash
+/// Convinience wrapper trait covering functionality of cryptographic hash
 /// functions with fixed output size.
 ///
 /// This trait wraps [`Update`], [`FixedOutput`], [`Default`], and
