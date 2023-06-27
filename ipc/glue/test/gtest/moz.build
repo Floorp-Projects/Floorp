@@ -9,6 +9,7 @@ Library("ipcgluetest")
 UNIFIED_SOURCES = [
     "TestAsyncBlockers.cpp",
     "TestUtilityProcess.cpp",
+    "TestUtilityProcessSandboxing.cpp",
 ]
 
 LOCAL_INCLUDES += [

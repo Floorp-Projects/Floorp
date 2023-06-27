@@ -201,6 +201,7 @@ UNIFIED_SOURCES += [
     "UtilityProcessImpl.cpp",
     "UtilityProcessManager.cpp",
     "UtilityProcessParent.cpp",
+    "UtilityProcessSandboxing.cpp",
 ]
 
 SOURCES += [

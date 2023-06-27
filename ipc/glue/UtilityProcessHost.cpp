@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/ipc/UtilityProcessManager.h"
+#include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "mozilla/Telemetry.h"
 
 #include "chrome/common/process_watcher.h"
@@ -52,8 +53,7 @@ UtilityProcessHost::UtilityProcessHost(SandboxingKind aSandbox,
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   if (!sLaunchWithMacSandbox) {
-    sLaunchWithMacSandbox =
-        (PR_GetEnv("MOZ_DISABLE_UTILITY_SANDBOX") == nullptr);
+    sLaunchWithMacSandbox = IsUtilitySandboxEnabled(aSandbox);
   }
   mDisableOSActivityMode = sLaunchWithMacSandbox;
 #endif
