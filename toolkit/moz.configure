@@ -1508,6 +1508,25 @@ def enable_asan_reporter(value):
 set_config("MOZ_ASAN_REPORTER", enable_asan_reporter)
 set_define("MOZ_ASAN_REPORTER", enable_asan_reporter)
 
+# Checks for library functions
+# ==============================================================
+with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT")):
+    set_define("HAVE_STAT64", check_symbol("stat64"))
+    set_define("HAVE_LSTAT64", check_symbol("lstat64"))
+    set_define("HAVE_TRUNCATE64", check_symbol("truncate64"))
+    set_define("HAVE_STATVFS64", check_symbol("statvfs64"))
+    set_define("HAVE_STATVFS", check_symbol("statvfs"))
+    set_define("HAVE_STATFS64", check_symbol("statfs64"))
+    set_define("HAVE_STATFS", check_symbol("statfs"))
+    set_define("HAVE_LUTIMES", check_symbol("lutimes"))
+    set_define("HAVE_POSIX_FADVISE", check_symbol("posix_fadvise"))
+    set_define("HAVE_POSIX_FALLOCATE", check_symbol("posix_fallocate"))
+
+    have_arc4random = check_symbol("arc4random")
+    set_define("HAVE_ARC4RANDOM", have_arc4random)
+    set_define("HAVE_ARC4RANDOM_BUF", check_symbol("arc4random_buf"))
+    set_define("HAVE_MALLINFO", check_symbol("mallinfo"))
+
 # Elfhack
 # ==============================================================
 with only_when("--enable-compile-environment"):
@@ -1527,15 +1546,107 @@ with only_when("--enable-compile-environment"):
             return False
         return bool(release)
 
-    with only_when(has_elfhack):
-        option(
-            "--disable-elf-hack",
-            default=default_elfhack,
-            help="{Enable|Disable} elf hacks",
-        )
+    option(
+        "--disable-elf-hack",
+        default=default_elfhack,
+        help="{Enable|Disable} elf hacks",
+        when=has_elfhack,
+    )
 
-        @depends(select_linker, when="--enable-elf-hack")
-        def use_elf_hack(linker):
+    @depends(
+        have_arc4random,
+        android_version,
+        depends("--enable-elf-hack", when=has_elfhack)(lambda x: x),
+        when=target_has_linux_kernel,
+    )
+    def may_use_pack_relative_relocs(have_arc4random, android_version, elfhack):
+        # Packed relative relocations are only supported on Android since
+        # version 11 (API 30), and in glibc since version 2.36.
+        # glibc 2.36 also added the arc4random function, which is our proxy
+        # to detect this (or newer) version being used.
+        # When targetting those newer versions, we allow ourselves to use
+        # packed relative relocations rather than elfhack. We still prefer
+        # elfhack when explicitly enabled.
+        if elfhack and elfhack.origin != "default":
+            return False
+        if android_version:
+            return android_version >= 30
+        return have_arc4random
+
+    @depends(
+        c_compiler,
+        extra_toolchain_flags,
+        linker_ldflags,
+        readelf,
+        configure_cache,
+        when=may_use_pack_relative_relocs,
+    )
+    @checking("for -z pack-relative-relocs option to ld", bool)
+    @imports(_from="__builtin__", _import="FileNotFoundError")
+    @imports("os")
+    @imports(_from="tempfile", _import="mkstemp")
+    @imports("textwrap")
+    def pack_relative_relocs(
+        c_compiler,
+        extra_toolchain_flags,
+        linker_ldflags,
+        readelf,
+        configure_cache,
+    ):
+        try:
+            fd, path = mkstemp(prefix="conftest.")
+            os.close(fd)
+
+            pack_rel_relocs = ["-Wl,-z,pack-relative-relocs"]
+            if (
+                try_invoke_compiler(
+                    configure_cache,
+                    [c_compiler.compiler] + c_compiler.flags,
+                    c_compiler.language,
+                    "int main() { return 0; }",
+                    pack_rel_relocs
+                    + ["-o", path]
+                    + (extra_toolchain_flags or [])
+                    + linker_ldflags,
+                    wrapper=c_compiler.wrapper,
+                    onerror=lambda: None,
+                )
+                is not None
+            ):
+                # BFD ld ignores options it doesn't understand. So check
+                # that we did get packed relative relocations (DT_RELR).
+                env = os.environ.copy()
+                env["LANG"] = "C"
+                dyn = check_cmd_output(readelf, "-d", path, env=env)
+                tags = [
+                    int(l.split()[0], 16)
+                    for l in dyn.splitlines()
+                    if l.strip().startswith("0x")
+                ]
+                # Older versions of readelf don't know about DT_RELR but will
+                # still display the tag number.
+                if 0x23 in tags:
+                    return pack_rel_relocs
+        finally:
+            try:
+                os.remove(path)
+            except FileNotFoundError:
+                pass
+
+    add_old_configure_assignment("PACK_REL_RELOC_FLAGS", pack_relative_relocs)
+
+    @depends(
+        select_linker,
+        pack_relative_relocs,
+        "--enable-elf-hack",
+        when=has_elfhack,
+    )
+    def use_elf_hack(linker, pack_relative_relocs, elfhack):
+        if elfhack:
+            # If elfhack was not manually enabled and packed relative relocations
+            # can be used, then don't enable elfhack even if it would normally have.
+            if elfhack.origin == "default" and pack_relative_relocs:
+                return
             if linker and linker.KIND == "lld":
                 die(
                     "Cannot enable elfhack with lld."
@@ -1543,7 +1654,7 @@ with only_when("--enable-compile-environment"):
                 )
             return True
 
-        set_config("USE_ELF_HACK", use_elf_hack)
+    set_config("USE_ELF_HACK", use_elf_hack)
 
 
 @depends(build_environment)
@@ -3316,24 +3427,6 @@ option(
 )
 
 set_config("MOZ_UNIFFI_FIXTURES", True, when="--enable-uniffi-fixtures")
-
-# Checks for library functions
-# ==============================================================
-with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT")):
-    set_define("HAVE_STAT64", check_symbol("stat64"))
-    set_define("HAVE_LSTAT64", check_symbol("lstat64"))
-    set_define("HAVE_TRUNCATE64", check_symbol("truncate64"))
-    set_define("HAVE_STATVFS64", check_symbol("statvfs64"))
-    set_define("HAVE_STATVFS", check_symbol("statvfs"))
-    set_define("HAVE_STATFS64", check_symbol("statfs64"))
-    set_define("HAVE_STATFS", check_symbol("statfs"))
-    set_define("HAVE_LUTIMES", check_symbol("lutimes"))
-    set_define("HAVE_POSIX_FADVISE", check_symbol("posix_fadvise"))
-    set_define("HAVE_POSIX_FALLOCATE", check_symbol("posix_fallocate"))
-
-    set_define("HAVE_ARC4RANDOM", check_symbol("arc4random"))
-    set_define("HAVE_ARC4RANDOM_BUF", check_symbol("arc4random_buf"))
-    set_define("HAVE_MALLINFO", check_symbol("mallinfo"))
 
 # System policies
 # ==============================================================
