@@ -50,6 +50,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.dialog.CookieBannerReEngagementDialogUtils
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
+import org.mozilla.fenix.shopping.ReviewQualityCheckFeature
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.theme.ThemeManager
 
@@ -61,8 +62,10 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
 
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
+    private val reviewQualityCheckFeature = ViewBoundFeatureWrapper<ReviewQualityCheckFeature>()
 
     private var readerModeAvailable = false
+    private var reviewQualityCheckAvailable = false
     private var pwaOnboardingObserver: PwaOnboardingObserver? = null
 
     private var forwardAction: BrowserToolbar.TwoStateButton? = null
@@ -118,7 +121,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 contentDescription = context.getString(R.string.browser_menu_read),
                 contentDescriptionSelected = context.getString(R.string.browser_menu_read_close),
                 visible = {
-                    readerModeAvailable
+                    readerModeAvailable && !reviewQualityCheckAvailable
                 },
                 selected = getCurrentTab()?.let {
                     activity?.components?.core?.store?.state?.findTab(it.id)?.readerState?.active
@@ -127,6 +130,8 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             )
 
         browserToolbarView.view.addPageAction(readerModeAction)
+
+        initReviewQualityCheck(context, view)
 
         thumbnailsFeature.set(
             feature = BrowserThumbnails(context, binding.engineView, components.core.store),
@@ -183,6 +188,34 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
         if (!context.settings().shouldUseCookieBanner && !context.settings().userOptOutOfReEngageCookieBannerDialog) {
             observeCookieBannerHandlingState(context.components.core.store)
         }
+    }
+
+    private fun initReviewQualityCheck(context: Context, view: View) {
+        val reviewQualityCheck =
+            BrowserToolbar.ToggleButton(
+                image = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.ic_shopping_cart,
+                )!!,
+                imageSelected = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.ic_shopping_cart_selected,
+                )!!,
+                contentDescription = context.getString(R.string.browser_menu_review_quality_check),
+                contentDescriptionSelected = context.getString(R.string.browser_menu_review_quality_check_close),
+                visible = { reviewQualityCheckAvailable },
+                listener = {},
+            )
+
+        browserToolbarView.view.addPageAction(reviewQualityCheck)
+
+        reviewQualityCheckFeature.set(
+            feature = ReviewQualityCheckFeature(
+                onAvailabilityChange = { reviewQualityCheckAvailable = it },
+            ),
+            owner = this,
+            view = view,
+        )
     }
 
     override fun onUpdateToolbarForConfigurationChange(toolbar: BrowserToolbarView) {
