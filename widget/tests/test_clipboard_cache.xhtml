@@ -46,8 +46,7 @@ function testClipboardCache(aClipboardType, aAsync) {
 
     info(`Should not get the data from other clipboard type`);
     clipboardTypes.forEach(function(otherType) {
-      if (otherType != clipboard.kSelectionCache &&
-          otherType != aClipboardType &&
+      if (otherType != aClipboardType &&
           clipboard.isClipboardTypeSupported(otherType)) {
         is(getClipboardData("text/plain", otherType), null,
            `Check text/plain data on clipboard ${otherType}`);
@@ -76,9 +75,7 @@ add_setup(function init() {
 });
 
 clipboardTypes.forEach(function(type) {
-  // Selection cache clipboard, which is available only on Cocoa widget, supports
-  // set operation only, see bug 1835059.
-  if (clipboard.kSelectionCache == type || !clipboard.isClipboardTypeSupported(type)) {
+  if (!clipboard.isClipboardTypeSupported(type)) {
     return;
   }
 
@@ -102,8 +99,7 @@ clipboardTypes.forEach(function(type) {
 
     // Check other clipboard types.
     clipboardTypes.forEach(function(otherType) {
-      if (otherType != clipboard.kSelectionCache &&
-          otherType != type &&
+      if (otherType != type &&
           clipboard.isClipboardTypeSupported(otherType)) {
         ok(!clipboard.hasDataMatchingFlavors(["text/plain"], otherType),
            `Check if there is text/plain flavor on clipboard ${otherType}`);

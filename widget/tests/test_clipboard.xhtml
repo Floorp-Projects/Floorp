@@ -81,27 +81,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
 
         // Test hasDataMatchingFlavors
         try {
-          // We only support the set operation on kSelectionCache type, see
-          // bug 1835059.
-          is(clipboard.hasDataMatchingFlavors(['text/plain'], clipboardType),
-             clipboardType != clipboard.kSelectionCache,
+          ok(clipboard.hasDataMatchingFlavors(['text/plain'], clipboardType),
              `Test hasDataMatchingFlavors for clipboard type ${clipboardType}`);
         } catch(e) {
           ok(false, `hasDataMatchingFlavors should not throw error for clipboard type ${clipboardType}`);
         }
 
         // Test getData
-        let isThrow = false;
         try {
           is(getClipboardData('text/plain', clipboardType), str,
              `Test getData for clipboard type ${clipboardType}`);
         } catch(e) {
-          isThrow = true;
+          ok(false, `getData should not throw error for clipboard type ${clipboardType}`);
         }
-        // We only support the set operation on kSelectionCache type, see
-        // bug 1835059.
-        is(isThrow, clipboardType == clipboard.kSelectionCache,
-           `Test if getData throw an error for clipboard type ${clipboardType}`);
       });
     }
   });
