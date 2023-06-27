@@ -43,7 +43,6 @@ UNIFIED_SOURCES += [
     "FocusManager.cpp",
     "NotificationController.cpp",
     "nsAccessibilityService.cpp",
-    "nsAccessiblePivot.cpp",
     "nsAccUtils.cpp",
     "nsCoreUtils.cpp",
     "nsEventShell.cpp",
