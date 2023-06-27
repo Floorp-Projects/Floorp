@@ -470,6 +470,10 @@ def vcs_checkout(source_repo, dest, store_path,
     res = run_and_prefix_output(b'vcs', args,
                                 extra_env={'PYTHONUNBUFFERED': '1'})
     if res:
+        # Mitigation for bug 1539681: if for some reason the clone failed,
+        # we just remove it, so that its possible incomplete state doesn't
+        # interfere with cloning in subsequent tasks.
+        shutil.rmtree(dest, ignore_errors=True)
         sys.exit(res)
 
     # Update the current revision hash and ensure that it is well formed.
