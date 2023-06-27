@@ -1267,6 +1267,14 @@ networking:
       description: Whether Early Hints preconnect is enabled
       type: boolean
       setPref: "network.early-hints.preconnect.enabled"
+    dnsMaxPriorityThreads:
+      description: The maximum number of high priority DNS threads that can be created.
+      type: int
+      setPref: "network.dns.max_high_priority_threads"
+    dnsMaxAnyPriorityThreads:
+      description: The maximum number of DNS threads that can be created to handle any priority DNS requests.
+      type: int
+      setPref: "network.dns.max_any_priority_threads"
 
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
