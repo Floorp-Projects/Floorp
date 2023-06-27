@@ -8,6 +8,12 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Marionette tests for AccessibleCaret in selection mode</title>
     <style>
+    body {
+      /* Clicking on a point outside of viewport will trigger
+         marionette_driver.errors.MoveTargetOutOfBoundsException. Increase the
+         margin to prevent that. */
+      margin: 30px;
+    }
     .block {
       width: 10em;
       height: 4em;
