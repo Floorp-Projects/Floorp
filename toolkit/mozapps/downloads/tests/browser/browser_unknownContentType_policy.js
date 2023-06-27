@@ -29,8 +29,8 @@ add_task(async function test_download_jnlp_policy() {
   let dialog = win.document.querySelector("dialog");
   let normalBox = win.document.getElementById("normalBox");
   let basicBox = win.document.getElementById("basicBox");
-  is(normalBox.collapsed, true);
-  is(basicBox.collapsed, false);
+  is(normalBox.collapsed, !AppConstants.IS_ESR);
+  is(basicBox.collapsed, AppConstants.IS_ESR);
   dialog.cancelDialog();
   BrowserTestUtils.removeTab(tab);
 
