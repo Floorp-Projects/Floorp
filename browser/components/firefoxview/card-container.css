@@ -23,13 +23,11 @@
   align-items: center;
   cursor: pointer;
   border-radius: 1px;
-  outline-offset: 4px;
-  padding: 6px;
-  padding-inline-end: 0
+  outline-offset: 6px;
 }
 
 .card-container-header[withViewAll] {
-  width: 83%;
+  width: 85%;
 }
 
 .card-container-header[hidden] {
@@ -39,12 +37,10 @@
 .view-all-link {
   color: var(--fxview-primary-action-background);
   float: inline-end;
-  outline-offset: 6px;
+  outline-offset: 8px;
   border-radius: 1px;
   width: 12%;
   text-align: end;
-  padding: 6px;
-  padding-inline-start: 0;
 }
 
 .card-container-header:focus-visible,
@@ -103,11 +99,10 @@
   display: none;
 }
 
-::slotted([slot=header]) {
+::slotted(h2) {
   margin: 0;
   font-size: 1.13em;
   font-weight: 600;
-  user-select: none;
 }
 
 .card-container-footer {
@@ -118,12 +113,11 @@
 
 ::slotted([slot=footer]) {
   text-decoration: underline;
-  padding-block: 0.5rem;
 }
 
 @media (max-width: 39rem) {
   .card-container-header[withViewAll] {
-    width: 76%;
+    width: 77%;
   }
   .view-all-link {
     width: 20%;
