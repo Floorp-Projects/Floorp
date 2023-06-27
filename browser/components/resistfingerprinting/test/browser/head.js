@@ -687,6 +687,9 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
 
       if ("noopener" in extraData) {
         await tabPromise;
+        if (Services.appinfo.OS === "WINNT") {
+          await new Promise(r => setTimeout(r, 1000));
+        }
 
         let second_tabs_browser = gBrowser.tabs[gBrowser.tabs.length - 1];
         result = await SpecialPowers.spawn(

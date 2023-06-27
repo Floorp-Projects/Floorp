@@ -3,32 +3,52 @@
 <script src="shared_test_funcs.js"></script>
 <script type="text/javascript">
 var popup;
-window.addEventListener("load", async function listener(event) {
+async function runTheTest(iframe_domain, cross_origin_domain, mode) {
   let s = `<html><script>
-    window.addEventListener('message', async function listener(event) {
-      if (event.data[0] == 'popup_is_ready') {
-        window.opener.postMessage(["popup_ready"], "*");
-      } else if (event.data[0] == 'popup_request') {
-        let result = {
+    console.log("TKTK: Loaded popup");
+    function give_result() {
+      console.log("TKTK: popup: give_result()");
+      return {
           hardwareConcurrency : navigator.hardwareConcurrency
         };
-        window.opener.postMessage(['popup_response', result], '*');
-      }
+    }
+    window.addEventListener('load', async function listener(event) {
+      console.log("TKTK: popup: loaded");
+        window.opener.postMessage(["popup_ready"], "*");
+    });
+    window.addEventListener('message', async function listener(event) {
+        console.log("TKTK: popup: message");
+        if (event.data[0] == 'popup_request') {
+          console.log("TKTK: popup: popup_request");
+          let result = give_result();
+          window.opener.postMessage(['popup_response', result], '*');
+          window.close();
+        }
     });`;
   // eslint-disable-next-line
   s += `</` + `script></html>`;
 
+  let params = new URLSearchParams(document.location.search);
+  let options = "";
+  if (params.get("submode") == "noopener") {
+    options = "noopener";
+  }
+
   let b = new Blob([s], { type: "text/html" });
   let url = URL.createObjectURL(b);
-  popup = window.open(url, "");
-});
+  popup = window.open(url, "", options);
 
-async function runTheTest(iframe_domain, cross_origin_domain, mode) {
-  popup.postMessage(["popup_is_ready", cross_origin_domain], "*");
+  if (params.get("submode") == "noopener") {
+    return {};
+  }
+
+  console.log("TKTK: popup created");
   await waitForMessage("popup_ready", `*`);
+  console.log("TKTK: got ready message");
 
   const promiseForRFPTest = new Promise(resolve => {
     window.addEventListener("message", event => {
+      console.log("TKTK: got response message");
       resolve(event.data[1]);
     }, { once: true });
   });
@@ -37,6 +57,7 @@ async function runTheTest(iframe_domain, cross_origin_domain, mode) {
   var result = await promiseForRFPTest;
 
   popup.close();
+  console.log("TKTK: closed popup");
 
   return result;
 }
