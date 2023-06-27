@@ -19,6 +19,7 @@ use crate::invalidation::stylesheets::RuleChangeKind;
 use crate::media_queries::Device;
 use crate::properties::{self, CascadeMode, ComputedValues};
 use crate::properties::{AnimationDeclarations, PropertyDeclarationBlock};
+use crate::properties_and_values::registry::{ScriptRegistry as CustomPropertyScriptRegistry, PropertyRegistration};
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_collector::{containing_shadow_ignoring_svg_use, RuleCollector};
 use crate::rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
@@ -523,6 +524,10 @@ pub struct Stylist {
     /// The rule tree, that stores the results of selector matching.
     rule_tree: RuleTree,
 
+    /// The set of registered custom properties from script.
+    /// <https://drafts.css-houdini.org/css-properties-values-api-1/#dom-window-registeredpropertyset-slot>
+    script_custom_properties: CustomPropertyScriptRegistry,
+
     /// The total number of times the stylist has been rebuilt.
     num_rebuilds: usize,
 }
@@ -612,6 +617,7 @@ impl Stylist {
             cascade_data: Default::default(),
             author_styles_enabled: AuthorStylesEnabled::Yes,
             rule_tree: RuleTree::new(),
+            script_custom_properties: Default::default(),
             num_rebuilds: 0,
         }
     }
@@ -1496,6 +1502,18 @@ impl Stylist {
         &self.rule_tree
     }
 
+    /// Returns the script-registered custom property registry.
+    #[inline]
+    pub fn custom_property_script_registry(&self) -> &CustomPropertyScriptRegistry {
+        &self.script_custom_properties
+    }
+
+    /// Returns the script-registered custom property registry, as a mutable ref.
+    #[inline]
+    pub fn custom_property_script_registry_mut(&mut self) -> &mut CustomPropertyScriptRegistry {
+        &mut self.script_custom_properties
+    }
+
     /// Measures heap usage.
     #[cfg(feature = "gecko")]
     pub fn add_size_of(&self, ops: &mut MallocSizeOfOps, sizes: &mut ServoStyleSetSizes) {
@@ -1544,6 +1562,9 @@ impl<T: 'static> LayerOrderedVec<T> {
 }
 
 impl<T: 'static> LayerOrderedMap<T> {
+    fn shrink_if_needed(&mut self) {
+        self.0.shrink_if_needed();
+    }
     fn clear(&mut self) {
         self.0.clear();
     }
@@ -2266,6 +2287,10 @@ pub struct CascadeData {
     /// by name.
     animations: LayerOrderedMap<KeyframesAnimation>,
 
+    /// A map with all the layer-ordered registrations from style at this `CascadeData`'s origin,
+    /// indexed by name.
+    custom_property_registrations: LayerOrderedMap<PropertyRegistration>,
+
     /// A map from cascade layer name to layer order.
     layer_id: FxHashMap<LayerName, LayerId>,
 
@@ -2319,6 +2344,7 @@ impl CascadeData {
             // somewhat gnarly.
             selectors_for_cache_revalidation: SelectorMap::new_without_attribute_bucketing(),
             animations: Default::default(),
+            custom_property_registrations: Default::default(),
             layer_id: Default::default(),
             layers: smallvec::smallvec![CascadeLayer::root()],
             container_conditions: smallvec::smallvec![ContainerConditionReference::none()],
@@ -2508,6 +2534,8 @@ impl CascadeData {
         if let Some(ref mut slotted_rules) = self.slotted_rules {
             slotted_rules.shrink_if_needed();
         }
+        self.animations.shrink_if_needed();
+        self.custom_property_registrations.shrink_if_needed();
         self.invalidation_map.shrink_if_needed();
         self.attribute_dependencies.shrink_if_needed();
         self.nth_of_attribute_dependencies.shrink_if_needed();
@@ -2558,6 +2586,7 @@ impl CascadeData {
         self.extra_data.sort_by_layer(&self.layers);
         self.animations
             .sort_with(&self.layers, compare_keyframes_in_same_layer);
+        self.custom_property_registrations.sort(&self.layers)
     }
 
     /// Collects all the applicable media query results into `results`.
@@ -2779,6 +2808,15 @@ impl CascadeData {
                         containing_rule_state.layer_id,
                         compare_keyframes_in_same_layer,
                     )?;
+                },
+                CssRule::Property(ref rule) => {
+                    if let Ok(registration) = rule.to_valid_registration() {
+                        self.custom_property_registrations.try_insert(
+                            rule.name.0.clone(),
+                            registration,
+                            containing_rule_state.layer_id,
+                        )?;
+                    }
                 },
                 #[cfg(feature = "gecko")]
                 CssRule::FontFace(ref rule) => {
@@ -3129,6 +3167,7 @@ impl CascadeData {
             host_rules.clear();
         }
         self.animations.clear();
+        self.custom_property_registrations.clear();
         self.layer_id.clear();
         self.layers.clear();
         self.layers.push(CascadeLayer::root());

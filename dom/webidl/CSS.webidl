@@ -28,3 +28,16 @@ partial namespace CSS {
   [Pref="dom.customHighlightAPI.enabled", GetterThrows]
   readonly attribute HighlightRegistry highlights;
 };
+
+// https://drafts.css-houdini.org/css-properties-values-api-1/#registering-custom-properties
+// See https://github.com/w3c/css-houdini-drafts/pull/1100 for DOMString vs. UTF8String
+dictionary PropertyDefinition {
+  required UTF8String name;
+           UTF8String syntax       = "*";
+  required boolean    inherits;
+           UTF8String initialValue;
+};
+partial namespace CSS {
+  [Pref="layout.css.properties-and-values.enabled", Throws]
+  undefined registerProperty(PropertyDefinition definition);
+};

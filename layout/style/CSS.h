@@ -10,7 +10,7 @@
 #define mozilla_dom_CSS_h_
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Preferences.h"
+#include "nsStringFwd.h"
 
 namespace mozilla {
 
@@ -20,12 +20,12 @@ namespace dom {
 
 class GlobalObject;
 class HighlightRegistry;
+struct PropertyDefinition;
 
 class CSS {
- private:
+ public:
   CSS() = delete;
 
- public:
   static bool Supports(const GlobalObject&, const nsACString& aProperty,
                        const nsACString& aValue);
 
@@ -36,6 +36,9 @@ class CSS {
 
   static HighlightRegistry* GetHighlights(const GlobalObject& aGlobal,
                                           ErrorResult& aRv);
+
+  static void RegisterProperty(const GlobalObject&, const PropertyDefinition&,
+                               ErrorResult&);
 };
 
 }  // namespace dom

@@ -9,10 +9,11 @@
 use crate::custom_properties::{Name as CustomPropertyName, SpecifiedValue};
 use crate::error_reporting::ContextualParseError;
 use crate::parser::{Parse, ParserContext};
-use crate::properties_and_values::syntax::Descriptor as SyntaxDescriptor;
+use crate::properties_and_values::syntax::{Descriptor, ParsedDescriptor};
 use crate::shared_lock::{SharedRwLockReadGuard, ToCssWithGuard};
 use crate::str::CssStringWriter;
 use crate::values::serialize_atom_name;
+use super::registry::PropertyRegistration;
 use cssparser::{
     AtRuleParser, CowRcStr, DeclarationParser, ParseErrorKind, Parser, QualifiedRuleParser,
     RuleBodyItemParser, RuleBodyParser, SourceLocation,
@@ -165,13 +166,23 @@ macro_rules! property_descriptors {
 #[cfg(feature = "gecko")]
 property_descriptors! {
     /// <https://drafts.css-houdini.org/css-properties-values-api-1/#the-syntax-descriptor>
-    "syntax" syntax: SyntaxDescriptor,
+    "syntax" syntax: ParsedDescriptor,
 
     /// <https://drafts.css-houdini.org/css-properties-values-api-1/#inherits-descriptor>
     "inherits" inherits: Inherits,
 
     /// <https://drafts.css-houdini.org/css-properties-values-api-1/#initial-value-descriptor>
     "initial-value" initial_value: InitialValue,
+}
+
+/// Errors that can happen when turning a property rule into a PropertyRegistration.
+#[allow(missing_docs)]
+pub enum ToRegistrationError {
+    MissingSyntax,
+    MissingInherits,
+    NoInitialValue,
+    InvalidInitialValue,
+    InitialValueNotComputationallyIndependent,
 }
 
 impl PropertyRuleData {
@@ -186,6 +197,65 @@ impl PropertyRuleData {
             } else {
                 0
             }
+    }
+
+    /// Performs syntax validation as per the initial value descriptor.
+    pub fn validate_syntax(syntax: &Descriptor, initial_value: Option<&InitialValue>) -> Result<(), ToRegistrationError> {
+        // https://drafts.css-houdini.org/css-properties-values-api-1/#initial-value-descriptor:
+        //
+        //     If the value of the syntax descriptor is the universal syntax definition, then
+        //     the initial-value descriptor is optional. If omitted, the initial value of the
+        //     property is the guaranteed-invalid value.
+        //
+        //     Otherwise, if the value of the syntax descriptor is not the universal syntax
+        //     definition, the following conditions must be met for the @property rule to be
+        //     valid:
+        //
+        //       * The initial-value descriptor must be present.
+        //       * The initial-value descriptor’s value must parse successfully according to the
+        //         grammar specified by the syntax definition.
+        //       * The initial-value must be computationally independent.
+        //
+        //     If the above conditions are not met, the @property rule is invalid.
+        if !syntax.is_universal() {
+            if initial_value.is_none() {
+                return Err(ToRegistrationError::NoInitialValue);
+            }
+            // TODO(bug 1840477): Parse according to syntax (InvalidInitialValue), and ensure
+            // initial value is computationally independent
+            // (InitialValueNotComputationallyIndependent).
+        }
+        Ok(())
+    }
+
+    /// Performs relevant rule validity checks.
+    ///
+    /// If these don't pass, we shouldn't end up with a property registration.
+    ///
+    /// NOTE(emilio): Currently per spec these should happen at parse-time, but I think that's just
+    /// a spec bug, see https://github.com/w3c/css-houdini-drafts/issues/1098
+    pub fn to_valid_registration(&self) -> Result<PropertyRegistration, ToRegistrationError> {
+        use self::ToRegistrationError::*;
+
+        // https://drafts.css-houdini.org/css-properties-values-api-1/#the-syntax-descriptor:
+        //
+        //     The syntax descriptor is required for the @property rule to be valid; if it’s
+        //     missing, the @property rule is invalid.
+        let Some(ref syntax) = self.syntax else { return Err(MissingSyntax) };
+
+        // https://drafts.css-houdini.org/css-properties-values-api-1/#inherits-descriptor:
+        //
+        //     The inherits descriptor is required for the @property rule to be valid; if it’s
+        //     missing, the @property rule is invalid.
+        let Some(ref inherits) = self.inherits else { return Err(MissingInherits) };
+
+        Self::validate_syntax(syntax.descriptor(), self.initial_value.as_ref())?;
+
+        Ok(PropertyRegistration {
+            syntax: syntax.descriptor().clone(),
+            inherits: *inherits == Inherits::True,
+            initial_value: self.initial_value.clone(),
+        })
     }
 }
 
@@ -210,7 +280,7 @@ impl ToShmem for PropertyRuleData {
 
 /// A custom property name wrapper that includes the `--` prefix in its serialization
 #[derive(Clone, Debug, PartialEq)]
-pub struct PropertyRuleName(pub Arc<CustomPropertyName>);
+pub struct PropertyRuleName(pub CustomPropertyName);
 
 impl ToCss for PropertyRuleName {
     fn to_css<W: Write>(&self, dest: &mut CssWriter<W>) -> fmt::Result {

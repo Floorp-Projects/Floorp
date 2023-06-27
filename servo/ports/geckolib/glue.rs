@@ -7817,3 +7817,83 @@ pub extern "C" fn Servo_ParseAbsoluteLength(len: &nsACString, out: &mut f32) -> 
         Err(..) => false,
     }
 }
+
+#[repr(u8)]
+pub enum RegisterCustomPropertyResult {
+    SuccessfullyRegistered,
+    InvalidName,
+    AlreadyRegistered,
+    InvalidSyntax,
+    NoInitialValue,
+    InvalidInitialValue,
+    InitialValueNotComputationallyIndependent,
+}
+
+/// https://drafts.css-houdini.org/css-properties-values-api-1/#the-registerproperty-function
+#[no_mangle]
+pub extern "C" fn Servo_RegisterCustomProperty(
+    per_doc_data: &PerDocumentStyleData,
+    name: &nsACString,
+    syntax: &nsACString,
+    inherits: bool,
+    initial_value: Option<&nsACString>,
+) -> RegisterCustomPropertyResult {
+    use self::RegisterCustomPropertyResult::*;
+    use style::custom_properties::SpecifiedValue;
+    use style::properties_and_values::registry::PropertyRegistration;
+    use style::properties_and_values::rule::{PropertyRuleData, ToRegistrationError};
+    use style::properties_and_values::syntax::Descriptor;
+
+    let mut per_doc_data = per_doc_data.borrow_mut();
+    let name = unsafe { name.as_str_unchecked() };
+    let syntax = unsafe { syntax.as_str_unchecked() };
+    let initial_value = initial_value.map(|v| unsafe { v.as_str_unchecked() });
+
+    // If name is not a custom property name string, throw a SyntaxError and exit this algorithm.
+    let name = match style::custom_properties::parse_name(name) {
+        Ok(n) => Atom::from(n),
+        Err(()) => return InvalidName,
+    };
+
+    // If property set already contains an entry with name as its property name (compared
+    // codepoint-wise), throw an InvalidModificationError and exit this algorithm.
+    if per_doc_data.stylist.custom_property_script_registry().get(&name).is_some() {
+        return AlreadyRegistered
+    }
+    // Attempt to consume a syntax definition from syntax. If it returns failure, throw a
+    // SyntaxError. Otherwise, let syntax definition be the returned syntax definition.
+    let Ok(syntax) = Descriptor::from_str(syntax) else { return InvalidSyntax };
+
+    let initial_value = match initial_value {
+        Some(v) => {
+            let mut input = ParserInput::new(v);
+            let parsed = Parser::new(&mut input).parse_entirely(|input| {
+                input.skip_whitespace();
+                SpecifiedValue::parse(input)
+            }).ok();
+            if parsed.is_none() {
+                return InvalidInitialValue
+            }
+            parsed
+        }
+        None => None,
+    };
+
+    if let Err(error) = PropertyRuleData::validate_syntax(&syntax, initial_value.as_ref()) {
+        return match error {
+            ToRegistrationError::MissingInherits |
+            ToRegistrationError::MissingSyntax => unreachable!(),
+            ToRegistrationError::InitialValueNotComputationallyIndependent => InitialValueNotComputationallyIndependent,
+            ToRegistrationError::InvalidInitialValue => InvalidInitialValue,
+            ToRegistrationError::NoInitialValue=> NoInitialValue,
+        }
+    }
+
+    per_doc_data.stylist.custom_property_script_registry_mut().register(name, PropertyRegistration {
+        syntax,
+        inherits,
+        initial_value,
+    });
+
+    SuccessfullyRegistered
+}

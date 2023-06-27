@@ -688,7 +688,7 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                 let name = parse_custom_property_name(&name).map_err(|_| {
                     input.new_custom_error(StyleParseErrorKind::UnexpectedIdent(name.clone()))
                 })?;
-                AtRulePrelude::Property(PropertyRuleName(Arc::new(Atom::from(name))))
+                AtRulePrelude::Property(PropertyRuleName(Atom::from(name)))
             },
             "-moz-document" if cfg!(feature = "gecko") => {
                 let cond = DocumentCondition::parse(&self.context, input)?;
