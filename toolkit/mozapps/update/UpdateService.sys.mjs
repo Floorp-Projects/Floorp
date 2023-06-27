@@ -118,8 +118,11 @@ const URI_UPDATES_PROPERTIES =
 const KEY_EXECUTABLE = "XREExeF";
 const KEY_PROFILE_DIR = "ProfD";
 const KEY_UPDROOT = "UpdRootD";
+const KEY_OLD_UPDROOT = "OldUpdRootD";
 
 const DIR_UPDATES = "updates";
+const DIR_UPDATE_READY = "0";
+const DIR_UPDATE_DOWNLOADING = "downloading";
 
 const FILE_ACTIVE_UPDATE_XML = "active-update.xml";
 const FILE_BACKUP_UPDATE_LOG = "backup-update.log";
@@ -1163,7 +1166,7 @@ function getStatusTextFromCode(code, defaultCode) {
  * @return The ready updates directory, as a nsIFile object
  */
 function getReadyUpdateDir() {
-  return getUpdateDirCreate([DIR_UPDATES, "0"]);
+  return getUpdateDirCreate([DIR_UPDATES, DIR_UPDATE_READY]);
 }
 
 /**
@@ -1173,7 +1176,7 @@ function getReadyUpdateDir() {
  * @return The downloading update directory, as a nsIFile object
  */
 function getDownloadingUpdateDir() {
-  return getUpdateDirCreate([DIR_UPDATES, "downloading"]);
+  return getUpdateDirCreate([DIR_UPDATES, DIR_UPDATE_DOWNLOADING]);
 }
 
 /**
@@ -4907,6 +4910,69 @@ UpdateManager.prototype = {
   cleanupReadyUpdate: function UM_cleanupReadyUpdate() {
     LOG("UpdateManager:cleanupReadyUpdate - cleaning up ready update.");
     cleanupReadyUpdate();
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  doInstallCleanup: async function UM_doInstallCleanup(isUninstall) {
+    LOG("UpdateManager:doInstallCleanup - cleaning up");
+    let completionPromises = [];
+
+    const delete_or_log = path =>
+      IOUtils.remove(path).catch(ex =>
+        console.error(`Failed to delete ${path}`, ex)
+      );
+
+    for (const key of [KEY_OLD_UPDROOT, KEY_UPDROOT]) {
+      const root = Services.dirsvc.get(key, Ci.nsIFile);
+
+      const activeUpdateXml = root.clone();
+      activeUpdateXml.append(FILE_ACTIVE_UPDATE_XML);
+      completionPromises.push(delete_or_log(activeUpdateXml.path));
+
+      const downloadingMar = root.clone();
+      downloadingMar.append(DIR_UPDATES);
+      downloadingMar.append(DIR_UPDATE_DOWNLOADING);
+      downloadingMar.append(FILE_UPDATE_MAR);
+      completionPromises.push(delete_or_log(downloadingMar.path));
+
+      const readyDir = root.clone();
+      readyDir.append(DIR_UPDATES);
+      readyDir.append(DIR_UPDATE_READY);
+      const readyMar = readyDir.clone();
+      readyMar.append(FILE_UPDATE_MAR);
+      completionPromises.push(delete_or_log(readyMar.path));
+      const readyStatus = readyDir.clone();
+      readyStatus.append(FILE_UPDATE_STATUS);
+      completionPromises.push(delete_or_log(readyStatus.path));
+      const versionFile = readyDir.clone();
+      versionFile.append(FILE_UPDATE_VERSION);
+      completionPromises.push(delete_or_log(versionFile.path));
+    }
+
+    return Promise.allSettled(completionPromises);
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  doUninstallCleanup: async function UM_doUninstallCleanup(isUninstall) {
+    LOG("UpdateManager:doUninstallCleanup - cleaning up.");
+    let completionPromises = [];
+
+    completionPromises.push(
+      IOUtils.remove(Services.dirsvc.get(KEY_UPDROOT, Ci.nsIFile).path, {
+        recursive: true,
+      }).catch(ex => console.error("Failed to remove update directory", ex))
+    );
+    completionPromises.push(
+      IOUtils.remove(Services.dirsvc.get(KEY_OLD_UPDROOT, Ci.nsIFile).path, {
+        recursive: true,
+      }).catch(ex => console.error("Failed to remove old update directory", ex))
+    );
+
+    return Promise.allSettled(completionPromises);
   },
 
   classID: Components.ID("{093C2356-4843-4C65-8709-D7DBCBBE7DFB}"),
