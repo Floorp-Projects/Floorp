@@ -44,11 +44,6 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
   await toggleNeverTranslateSite();
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, true);
 
-  await assertTranslationsButton(
-    { button: false },
-    "The translations button should be invisible"
-  );
-
   info("The page should still be in its original, untranslated form");
   await runInPage(async TranslationsTest => {
     const { getH1 } = TranslationsTest.getSelectors();
@@ -60,11 +55,6 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
   });
 
   await navigate(SPANISH_PAGE_URL, "Reload the page");
-
-  await assertTranslationsButton(
-    { button: false },
-    "The translations button should be invisible"
-  );
 
   info("The page should still be in its original, untranslated form");
   await runInPage(async TranslationsTest => {
@@ -79,11 +69,6 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
   await navigate(
     SPANISH_PAGE_URL_2,
     "Navigate to a Spanish page with the same content principal"
-  );
-
-  await assertTranslationsButton(
-    { button: false },
-    "The translations button should be invisible, because this content principal is denied"
   );
 
   info("The page should still be in its original, untranslated form");
@@ -197,11 +182,6 @@ add_task(
     await toggleNeverTranslateSite();
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, true);
 
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible"
-    );
-
     info("The page should still be in its original, untranslated form");
     await runInPage(async TranslationsTest => {
       const { getH1 } = TranslationsTest.getSelectors();
@@ -213,11 +193,6 @@ add_task(
     });
 
     await navigate(SPANISH_PAGE_URL, "Reload the page");
-
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible"
-    );
 
     info("The page should still be in its original, untranslated form");
     await runInPage(async TranslationsTest => {
@@ -232,11 +207,6 @@ add_task(
     await navigate(
       SPANISH_PAGE_URL_2,
       "Navigate to a Spanish page with the same content principal"
-    );
-
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible, because this content principal is denied"
     );
 
     info("The page should still be in its original, untranslated form");
@@ -347,11 +317,6 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", true);
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, true);
 
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible"
-    );
-
     info("The page should still be in its original, untranslated form");
     await runInPage(async TranslationsTest => {
       const { getH1 } = TranslationsTest.getSelectors();
@@ -363,11 +328,6 @@ add_task(
     });
 
     await navigate(SPANISH_PAGE_URL, "Reload the page");
-
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible"
-    );
 
     info("The page should still be in its original, untranslated form");
     await runInPage(async TranslationsTest => {
@@ -382,11 +342,6 @@ add_task(
     await navigate(
       SPANISH_PAGE_URL_2,
       "Navigate to a Spanish page with the same content principal"
-    );
-
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible, because this content principal is denied"
     );
 
     info("The page should still be in its original, untranslated form");

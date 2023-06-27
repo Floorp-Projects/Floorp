@@ -43,11 +43,6 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
   await toggleNeverTranslateLanguage();
   await assertIsNeverTranslateLanguage("es", true);
 
-  await assertTranslationsButton(
-    { button: false },
-    "The translations button should be invisible"
-  );
-
   info(
     "The page should still be in its original, untranslated form because " +
       "the document language is in the neverTranslateLanguages pref"
@@ -62,11 +57,6 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
   });
 
   await navigate(SPANISH_PAGE_URL, "Reload the page");
-
-  await assertTranslationsButton(
-    { button: false },
-    "The translations button should be invisible"
-  );
 
   info(
     "The page should still be in its original, untranslated form because " +
@@ -84,11 +74,6 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
   await navigate(
     SPANISH_PAGE_URL_DOT_ORG,
     "Navigate to a different Spanish page"
-  );
-
-  await assertTranslationsButton(
-    { button: false },
-    "The translations button should be invisible"
   );
 
   info(
@@ -183,11 +168,6 @@ add_task(
     await toggleNeverTranslateLanguage();
     await assertIsNeverTranslateLanguage("es", true);
 
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible"
-    );
-
     info(
       "The page should still be in its original, untranslated form because " +
         "the document language is in the neverTranslateLanguages pref"
@@ -202,11 +182,6 @@ add_task(
     });
 
     await navigate(SPANISH_PAGE_URL, "Reload the page");
-
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible"
-    );
 
     info(
       "The page should still be in its original, untranslated form because " +
@@ -300,11 +275,6 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", false);
     await assertIsNeverTranslateLanguage("es", true);
 
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible"
-    );
-
     info(
       "The page should still be in its original, untranslated form because " +
         "the document language is in the neverTranslateLanguages pref"
@@ -319,11 +289,6 @@ add_task(
     });
 
     await navigate(SPANISH_PAGE_URL, "Reload the page");
-
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible"
-    );
 
     info(
       "The page should still be in its original, untranslated form because " +

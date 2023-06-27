@@ -16,8 +16,8 @@ add_task(async function test_uncheck_never_translate_language_shows_button() {
   });
 
   await assertTranslationsButton(
-    { button: false },
-    "The translations button is hidden"
+    { button: true, circleArrows: false, locale: false, icon: true },
+    "The translations button is available"
   );
 
   info(
@@ -42,11 +42,6 @@ add_task(async function test_uncheck_never_translate_language_shows_button() {
   await assertIsNeverTranslateLanguage("es", true);
   await toggleNeverTranslateLanguage();
   await assertIsNeverTranslateLanguage("es", false);
-
-  await assertTranslationsButton(
-    { button: true, circleArrows: false, locale: false, icon: true },
-    "The translations button is now available"
-  );
 
   await cleanup();
 });

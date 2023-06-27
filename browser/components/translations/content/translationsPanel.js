@@ -21,8 +21,6 @@ ChromeUtils.defineESModuleGetters(this, {
  */
 const PageAction = Object.freeze({
   NO_CHANGE: "NO_CHANGE",
-  HIDE_BUTTON: "HIDE_BUTTON",
-  SHOW_BUTTON: "SHOW_BUTTON",
   RESTORE_PAGE: "RESTORE_PAGE",
   TRANSLATE_PAGE: "TRANSLATE_PAGE",
 });
@@ -156,13 +154,6 @@ class CheckboxStateMachine {
       case CheckboxStateMachine.#computeState(1, 0, 0, 0): {
         return PageAction.RESTORE_PAGE;
       }
-      case CheckboxStateMachine.#computeState(0, 1, 0, 0):
-      case CheckboxStateMachine.#computeState(0, 0, 0, 0): {
-        return PageAction.HIDE_BUTTON;
-      }
-      case CheckboxStateMachine.#computeState(0, 0, 1, 0): {
-        return PageAction.SHOW_BUTTON;
-      }
     }
     return PageAction.NO_CHANGE;
   }
@@ -180,15 +171,8 @@ class CheckboxStateMachine {
       case CheckboxStateMachine.#computeState(1, 0, 0, 0): {
         return PageAction.RESTORE_PAGE;
       }
-      case CheckboxStateMachine.#computeState(0, 1, 0, 0):
-      case CheckboxStateMachine.#computeState(0, 0, 0, 0): {
-        return PageAction.HIDE_BUTTON;
-      }
       case CheckboxStateMachine.#computeState(0, 1, 0, 1): {
         return PageAction.TRANSLATE_PAGE;
-      }
-      case CheckboxStateMachine.#computeState(0, 0, 0, 1): {
-        return PageAction.SHOW_BUTTON;
       }
     }
     return PageAction.NO_CHANGE;
@@ -1012,15 +996,6 @@ var TranslationsPanel = new (class {
       case PageAction.NO_CHANGE: {
         break;
       }
-      case PageAction.HIDE_BUTTON: {
-        this.#hideTranslationsButton();
-        break;
-      }
-      case PageAction.SHOW_BUTTON: {
-        const { button } = this.elements;
-        button.hidden = false;
-        break;
-      }
       case PageAction.RESTORE_PAGE: {
         await this.onRestore();
         break;
@@ -1131,19 +1106,6 @@ var TranslationsPanel = new (class {
 
         this.#updateViewFromTranslationStatus();
 
-        /**
-         * Defer this check to the end of the `if` statement since it requires work.
-         */
-        const shouldNeverTranslate = async () => {
-          return Boolean(
-            TranslationsParent.shouldNeverTranslateLanguage(
-              detectedLanguages?.docLangTag
-            ) ||
-              // The site is present in the never-translate list.
-              (await this.#getTranslationsActor().shouldNeverTranslateSite())
-          );
-        };
-
         if (
           // We've already requested to translate this page, so always show the icon.
           requestedTranslationPair ||
@@ -1151,9 +1113,8 @@ var TranslationsPanel = new (class {
           // when a user manually invokes the translation and we wouldn't normally show
           // the icon.
           error ||
-          // Finally check that this is a supported language that we should translate.
+          // Finally check that we can translate this language.
           (hasSupportedLanguage &&
-            !(await shouldNeverTranslate()) &&
             (await TranslationsParent.getIsTranslationsEngineSupported()))
         ) {
           if (handleEventId !== this.handleEventId) {
