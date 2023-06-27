@@ -85,6 +85,9 @@ ITEM_VALUE(CSSInvertedColors,           1llu << 55)
 // `video-dynamic-range` CSS media feature
 ITEM_VALUE(CSSVideoDynamicRange,        1llu << 56)
 ITEM_VALUE(CSSPointerCapabilities,      1llu << 57)
+// WebGL
+ITEM_VALUE(WebGLRenderCapability,       1llu << 58)
+ITEM_VALUE(WebGLRenderInfo,             1llu << 59)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.
