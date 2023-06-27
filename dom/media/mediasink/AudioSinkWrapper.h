@@ -33,11 +33,14 @@ class AudioSinkWrapper : public MediaSink {
                    double aVolume, double aPlaybackRate, bool aPreservesPitch,
                    RefPtr<AudioDeviceInfo> aAudioDevice)
       : mOwnerThread(aOwnerThread),
+        mAsyncInitTaskQueue(CreateAsyncInitTaskQueue()),
         mSinkCreator(std::move(aFunc)),
         mAudioDevice(std::move(aAudioDevice)),
         mParams(aVolume, aPlaybackRate, aPreservesPitch),
         mAudioQueue(aAudioQueue),
-        mRetrySinkTime(TimeStamp::Now()) {}
+        mRetrySinkTime(TimeStamp::Now()) {
+    MOZ_ASSERT(mAsyncInitTaskQueue);
+  }
 
   RefPtr<EndedPromise> OnEnded(TrackType aType) override;
   media::TimeUnit GetEndTime(TrackType aType) const override;
@@ -79,6 +82,7 @@ class AudioSinkWrapper : public MediaSink {
     // The stream is paused, a constant time is reported.
     Paused
   } mLastClockSource = ClockSource::Paused;
+  static already_AddRefed<nsISerialEventTarget> CreateAsyncInitTaskQueue();
   bool IsMuted() const;
   void OnMuted(bool aMuted);
   virtual ~AudioSinkWrapper();
@@ -115,6 +119,7 @@ class AudioSinkWrapper : public MediaSink {
   bool IsAudioSourceEnded(const MediaInfo& aInfo) const;
 
   const RefPtr<AbstractThread> mOwnerThread;
+  const nsCOMPtr<nsISerialEventTarget> mAsyncInitTaskQueue;
   SinkCreator mSinkCreator;
   UniquePtr<AudioSink> mAudioSink;
   // The output device this AudioSink is playing data to. The system's default

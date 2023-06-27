@@ -12,6 +12,7 @@
 #include "mozilla/Result.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "nsPrintfCString.h"
+#include "nsThreadManager.h"
 
 mozilla::LazyLogModule gAudioSinkWrapperLog("AudioSinkWrapper");
 #define LOG(...) \
@@ -29,6 +30,12 @@ void AudioSinkWrapper::Shutdown() {
   AssertOwnerThread();
   MOZ_ASSERT(!mIsStarted, "Must be called after playback stopped.");
   mSinkCreator = nullptr;
+}
+
+/* static */
+already_AddRefed<nsISerialEventTarget>
+AudioSinkWrapper::CreateAsyncInitTaskQueue() {
+  return nsThreadManager::get().CreateBackgroundTaskQueue("AsyncAudioSinkInit");
 }
 
 RefPtr<MediaSink::EndedPromise> AudioSinkWrapper::OnEnded(TrackType aType) {
@@ -349,7 +356,7 @@ void AudioSinkWrapper::MaybeAsyncCreateAudioSink() {
       this);
   ++mAsyncCreateCount;
   UniquePtr<AudioSink> audioSink = mSinkCreator();
-  NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+  mAsyncInitTaskQueue->Dispatch(NS_NewRunnableFunction(
       "MaybeAsyncCreateAudioSink (Async part: initialization)",
       [self = RefPtr<AudioSinkWrapper>(this), audioSink{std::move(audioSink)},
        this]() mutable {
