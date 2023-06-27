@@ -625,11 +625,18 @@ class HomeScreenRobot {
         }
 
         fun togglePrivateBrowsingMode() {
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/privateBrowsingButton"))
-                .waitForExists(
-                    waitingTime,
-                )
-            privateBrowsingButton.click()
+            if (
+                !itemWithResIdAndDescription(
+                    "$packageName:id/privateBrowsingButton",
+                    "Disable private browsing",
+                ).exists()
+            ) {
+                mDevice.findObject(UiSelector().resourceId("$packageName:id/privateBrowsingButton"))
+                    .waitForExists(
+                        waitingTime,
+                    )
+                privateBrowsingButton.click()
+            }
         }
 
         fun triggerPrivateBrowsingShortcutPrompt(interact: AddToHomeScreenRobot.() -> Unit): AddToHomeScreenRobot.Transition {
