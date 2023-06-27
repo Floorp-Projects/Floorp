@@ -1,0 +1,10 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+toolkit.jar:
+  content/global/shopping/ProductConfig.mjs (content/ProductConfig.mjs)
+  content/global/shopping/ProductValidator.sys.mjs (content/ProductValidator.sys.mjs)
+  content/global/shopping/ShoppingProduct.mjs (content/ShoppingProduct.mjs)
+  content/global/shopping/analysis.schema.json (schemas/analysis.schema.json)
+  content/global/shopping/recommendations.schema.json (schemas/recommendations.schema.json)
