@@ -806,8 +806,10 @@
   // and GeckoView windows.
   const loadExtraCustomElements = !(
     document.documentURI == "chrome://extensions/content/dummy.xhtml" ||
-    document.documentURI == "chrome://geckoview/content/geckoview.xhtml"
-  ).catch(console.error);
+    document
+        .documentURI == "chrome://geckoview/content/geckoview.xhtml"
+  )
+        .catch(console.error);
   if (loadExtraCustomElements) {
     for (let script of [
       "chrome://global/content/elements/arrowscrollbox.js",
