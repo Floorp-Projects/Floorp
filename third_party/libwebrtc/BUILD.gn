@@ -283,10 +283,16 @@ config("common_config") {
     defines += [ "WEBRTC_ENABLE_PROTOBUF=0" ]
   }
 
-  if (rtc_strict_field_trials) {
-    defines += [ "WEBRTC_STRICT_FIELD_TRIALS=1" ]
-  } else {
+  if (rtc_strict_field_trials == "") {
     defines += [ "WEBRTC_STRICT_FIELD_TRIALS=0" ]
+  } else if (rtc_strict_field_trials == "dcheck") {
+    defines += [ "WEBRTC_STRICT_FIELD_TRIALS=1" ]
+  } else if (rtc_strict_field_trials == "warn") {
+    defines += [ "WEBRTC_STRICT_FIELD_TRIALS=2" ]
+  } else {
+    assert(false,
+           "Unsupported value for rtc_strict_field_trials: " +
+               "$rtc_strict_field_trials")
   }
 
   if (rtc_include_internal_audio_device) {

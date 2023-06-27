@@ -77,7 +77,7 @@ index c9824916ad..d35ea79ced 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index 5817d22227..2cf857248e 100644
+index 1bdda46097..282016d523 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -100,7 +100,7 @@ index 5817d22227..2cf857248e 100644
    if (!rtc_builtin_ssl_root_certificates) {
      defines += [ "WEBRTC_EXCLUDE_BUILT_IN_SSL_ROOT_CERTS" ]
    }
-@@ -460,9 +464,11 @@ config("common_config") {
+@@ -466,9 +470,11 @@ config("common_config") {
    }
  }
  
@@ -112,7 +112,7 @@ index 5817d22227..2cf857248e 100644
  
  if (!build_with_chromium) {
    # Target to build all the WebRTC production code.
-@@ -502,6 +508,23 @@ if (!build_with_chromium) {
+@@ -508,6 +514,23 @@ if (!build_with_chromium) {
        "sdk",
        "video",
      ]
@@ -136,7 +136,7 @@ index 5817d22227..2cf857248e 100644
  
      if (rtc_include_builtin_audio_codecs) {
        deps += [
-@@ -521,6 +544,16 @@ if (!build_with_chromium) {
+@@ -527,6 +550,16 @@ if (!build_with_chromium) {
        deps += [
          "api/video:video_frame",
          "api/video:video_rtp_headers",
@@ -154,7 +154,7 @@ index 5817d22227..2cf857248e 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index c336bee27a..9737cdaa9d 100644
+index fbb2081e2e..22b73db5c4 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -35,7 +35,7 @@ rtc_source_set("callfactory_api") {
@@ -1097,7 +1097,7 @@ index 0a697f2488..adbe375076 100644
      "../api/adaptation:resource_adaptation_api",
      "../api/task_queue:pending_task_safety_flag",
 diff --git a/webrtc.gni b/webrtc.gni
-index 8dfcc9d244..0ec368d934 100644
+index 9052ba5eea..4950044767 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {
@@ -1187,7 +1187,7 @@ index 8dfcc9d244..0ec368d934 100644
  
    # Includes the dav1d decoder in the internal decoder factory when set to true.
    rtc_include_dav1d_in_internal_decoder_factory = true
-@@ -256,7 +263,7 @@ declare_args() {
+@@ -262,7 +269,7 @@ declare_args() {
    rtc_build_json = !build_with_mozilla
    rtc_build_libsrtp = !build_with_mozilla
    rtc_build_libvpx = !build_with_mozilla
@@ -1196,7 +1196,7 @@ index 8dfcc9d244..0ec368d934 100644
    rtc_build_opus = !build_with_mozilla
    rtc_build_ssl = !build_with_mozilla
  
-@@ -275,7 +282,7 @@ declare_args() {
+@@ -281,7 +288,7 @@ declare_args() {
  
    # Chromium uses its own IO handling, so the internal ADM is only built for
    # standalone WebRTC.
@@ -1205,7 +1205,7 @@ index 8dfcc9d244..0ec368d934 100644
  
    # Set this to true to enable the avx2 support in webrtc.
    # TODO: Make sure that AVX2 works also for non-clang compilers.
-@@ -319,6 +326,9 @@ declare_args() {
+@@ -325,6 +332,9 @@ declare_args() {
    rtc_enable_grpc = rtc_enable_protobuf && (is_linux || is_mac)
  }
  
@@ -1215,7 +1215,7 @@ index 8dfcc9d244..0ec368d934 100644
  # Make it possible to provide custom locations for some libraries (move these
  # up into declare_args should we need to actually use them for the GN build).
  rtc_libvpx_dir = "//third_party/libvpx"
-@@ -1114,7 +1124,7 @@ if (is_mac || is_ios) {
+@@ -1120,7 +1130,7 @@ if (is_mac || is_ios) {
    }
  }
  
