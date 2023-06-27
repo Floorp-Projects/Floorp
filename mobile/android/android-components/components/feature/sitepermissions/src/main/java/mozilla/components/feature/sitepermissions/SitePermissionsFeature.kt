@@ -806,7 +806,7 @@ class SitePermissionsFeature(
                     host,
                     permissionRequest,
                     R.string.mozac_feature_sitepermissions_persistent_storage_title,
-                    iconsR.drawable.mozac_ic_storage,
+                    iconsR.drawable.mozac_ic_storage_24,
                     showDoNotAskAgainCheckBox = false,
                     shouldSelectRememberChoice = true,
                 )
