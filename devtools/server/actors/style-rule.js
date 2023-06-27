@@ -271,6 +271,9 @@ class StyleRuleActor extends Actor {
       },
     };
 
+    // Flag that will be set to true if the rule has a non-at-rule parent rule
+    let computeDesugaredSelector = false;
+
     // Go through all ancestor so we can build an array of all the media queries and
     // layers this rule is in.
     for (const ancestorRule of this.ancestorRules) {
@@ -309,6 +312,7 @@ class StyleRuleActor extends Actor {
           type,
           selectorText: rawRule.selectorText,
         });
+        computeDesugaredSelector = true;
       }
     }
 
@@ -361,6 +365,17 @@ class StyleRuleActor extends Actor {
     switch (this.type) {
       case CSSRule.STYLE_RULE:
         form.selectors = CssLogic.getSelectors(this.rawRule);
+        if (computeDesugaredSelector) {
+          // When a rule is nested in another non-at-rule (aka CSS Nesting), the client
+          // will need its desugared selector, i.e. the full selector, which includes ancestor
+          // selectors, that is computed by the platform when applying the rule.
+          // To compute it, the parent selector (&) is recursively replaced by the parent
+          // rule selector wrapped in `:is()`.
+          // For example, with the following nested rule: `body { & > main {} }`,
+          // the desugared selector will be `:is(body) > main`.
+          // See https://www.w3.org/TR/css-nesting-1/#nest-selector for more information.
+          form.desugaredSelectors = CssLogic.getSelectors(this.rawRule, true);
+        }
         form.cssText = this.rawStyle.cssText || "";
         break;
       case ELEMENT_STYLE:

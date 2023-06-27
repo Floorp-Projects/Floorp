@@ -650,13 +650,14 @@ CssLogic.getShortName = function (element) {
  *
  * @param {DOMRule} domRule
  *        The DOMRule to parse.
+ * @param {Boolean} desugared
+ *        Set to true to get the desugared selector (see https://drafts.csswg.org/css-nesting-1/#nest-selector)
  * @return {Array}
  *         An array of string selectors.
  */
-CssLogic.getSelectors = function (domRule) {
+CssLogic.getSelectors = function (domRule, desugared = false) {
   if (domRule.type !== CSSRule.STYLE_RULE) {
-    // Return empty array since InspectorUtils.getSelectorCount() assumes
-    // only STYLE_RULE type.
+    // Return empty array since CSSRule#selectorCount assumes only STYLE_RULE type.
     return [];
   }
 
@@ -664,7 +665,7 @@ CssLogic.getSelectors = function (domRule) {
 
   const len = domRule.selectorCount;
   for (let i = 0; i < len; i++) {
-    selectors.push(domRule.selectorTextAt(i));
+    selectors.push(domRule.selectorTextAt(i, desugared));
   }
   return selectors;
 };
