@@ -108,13 +108,9 @@ add_task(async function test_successful_migrations() {
   let allResourceTypeStrs = Object.values(
     MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES
   ).filter(resourceStr => {
-    return (
-      !MigrationWizardConstants.PROFILE_RESET_ONLY_RESOURCE_TYPES[
-        resourceStr
-      ] &&
-      resourceStr !=
-        MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS
-    );
+    return !MigrationWizardConstants.PROFILE_RESET_ONLY_RESOURCE_TYPES[
+      resourceStr
+    ];
   });
 
   let allResourceTypes = allResourceTypeStrs.map(resourceTypeStr => {
