@@ -1,0 +1,41 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Toolkit :: Password Manager'
+
+pwmgr:
+  form_autofill_result:
+    type: labeled_counter
+    description:
+      The result of auto-filling a login form.
+    labels:
+      - filled
+      - no_password_field
+      - password_disabled_readonly
+      - no_logins_fit
+      - no_saved_logins
+      - existing_password
+      - existing_username
+      - multiple_logins
+      - no_autofill_forms
+      - autocomplete_off
+      - insecure
+      - password_autocomplete_new_password
+      - type_no_longer_password
+      - form_in_crossorigin_subframe
+      - filled_username_only_form
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1340021
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1833398
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1833398#c3
+    notification_emails:
+      - passwords-dev@mozilla.org
+    expires: never
