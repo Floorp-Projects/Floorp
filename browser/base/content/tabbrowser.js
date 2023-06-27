@@ -4922,7 +4922,6 @@
 
       // Play the tab closing animation to give immediate feedback while
       // waiting for the new window to appear.
-      // content area when the docshells are swapped.
       if (!gReduceMotion) {
         aTab.style.maxWidth = ""; // ensure that fade-out transition happens
         aTab.removeAttribute("fadein");

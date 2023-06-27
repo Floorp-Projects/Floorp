@@ -1250,6 +1250,52 @@ export var UrlbarTestUtils = {
     }
     this.EventUtils.sendString(text.substr(-1, 1), win);
   },
+
+  /**
+   * Checks the urlbar value fomatting for a given URL.
+   *
+   * @param {window} win
+   *   The input in this window will be tested.
+   * @param {string} urlFormatString
+   *   The URL to test. The parts the are expected to be de-emphasized should be
+   *   wrapped in "<" and ">" chars.
+   * @param {object} [options]
+   *   Options object.
+   * @param {string} [options.clobberedURLString]
+   *      Normally the URL is de-emphasized in-place, thus it's enough to pass
+   *      urlString. In some cases however the formatter may decide to replace
+   *      the URL with a fixed one, because it can't properly guess a host. In
+   *      that case clobberedURLString is the expected de-emphasized value. The
+   *      parts the are expected to be de-emphasized should be wrapped in "<"
+   *      and ">" chars.
+   * @param {string} [options.additionalMsg]
+   *   Additional message to use for Assert.equal.
+   */
+  checkFormatting(
+    win,
+    urlFormatString,
+    { clobberedURLString = null, additionalMsg = null } = {}
+  ) {
+    let selectionController = win.gURLBar.editor.selectionController;
+    let selection = selectionController.getSelection(
+      selectionController.SELECTION_URLSECONDARY
+    );
+    let value = win.gURLBar.editor.rootElement.textContent;
+    let result = "";
+    for (let i = 0; i < selection.rangeCount; i++) {
+      let range = selection.getRangeAt(i).toString();
+      let pos = value.indexOf(range);
+      result += value.substring(0, pos) + "<" + range + ">";
+      value = value.substring(pos + range.length);
+    }
+    result += value;
+    this.Assert.equal(
+      result,
+      clobberedURLString || urlFormatString,
+      "Correct part of the URL is de-emphasized" +
+        (additionalMsg ? ` (${additionalMsg})` : "")
+    );
+  },
 };
 
 UrlbarTestUtils.formHistory = {
