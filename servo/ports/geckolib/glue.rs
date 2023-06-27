@@ -7879,7 +7879,7 @@ pub extern "C" fn Servo_RegisterCustomProperty(
         None => None,
     };
 
-    if let Err(error) = PropertyRuleData::validate_syntax(&syntax, initial_value.as_ref()) {
+    if let Err(error) = PropertyRuleData::validate_initial_value(&syntax, initial_value.as_ref()) {
         return match error {
             ToRegistrationError::MissingInherits |
             ToRegistrationError::MissingSyntax => unreachable!(),

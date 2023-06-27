@@ -15,8 +15,8 @@ use crate::str::CssStringWriter;
 use crate::values::serialize_atom_name;
 use super::registry::PropertyRegistration;
 use cssparser::{
-    AtRuleParser, CowRcStr, DeclarationParser, ParseErrorKind, Parser, QualifiedRuleParser,
-    RuleBodyItemParser, RuleBodyParser, SourceLocation,
+    AtRuleParser, CowRcStr, DeclarationParser, ParseErrorKind, Parser, ParserInput,
+    QualifiedRuleParser, RuleBodyItemParser, RuleBodyParser, SourceLocation,
 };
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
 use selectors::parser::SelectorParseErrorKind;
@@ -200,31 +200,39 @@ impl PropertyRuleData {
     }
 
     /// Performs syntax validation as per the initial value descriptor.
-    pub fn validate_syntax(syntax: &Descriptor, initial_value: Option<&InitialValue>) -> Result<(), ToRegistrationError> {
-        // https://drafts.css-houdini.org/css-properties-values-api-1/#initial-value-descriptor:
-        //
-        //     If the value of the syntax descriptor is the universal syntax definition, then
-        //     the initial-value descriptor is optional. If omitted, the initial value of the
-        //     property is the guaranteed-invalid value.
-        //
-        //     Otherwise, if the value of the syntax descriptor is not the universal syntax
-        //     definition, the following conditions must be met for the @property rule to be
-        //     valid:
-        //
-        //       * The initial-value descriptor must be present.
-        //       * The initial-value descriptor’s value must parse successfully according to the
-        //         grammar specified by the syntax definition.
-        //       * The initial-value must be computationally independent.
-        //
-        //     If the above conditions are not met, the @property rule is invalid.
-        if !syntax.is_universal() {
-            if initial_value.is_none() {
-                return Err(ToRegistrationError::NoInitialValue);
-            }
-            // TODO(bug 1840477): Parse according to syntax (InvalidInitialValue), and ensure
-            // initial value is computationally independent
-            // (InitialValueNotComputationallyIndependent).
+    /// https://drafts.css-houdini.org/css-properties-values-api-1/#initial-value-descriptor
+    pub fn validate_initial_value(syntax: &Descriptor, initial_value: Option<&InitialValue>) -> Result<(), ToRegistrationError> {
+        use crate::properties::CSSWideKeyword;
+        // If the value of the syntax descriptor is the universal syntax definition, then the
+        // initial-value descriptor is optional. If omitted, the initial value of the property is
+        // the guaranteed-invalid value.
+        if syntax.is_universal() && initial_value.is_none() {
+            return Ok(())
         }
+
+        // Otherwise, if the value of the syntax descriptor is not the universal syntax definition,
+        // the following conditions must be met for the @property rule to be valid:
+
+        // The initial-value descriptor must be present.
+        let Some(initial) = initial_value else { return Err(ToRegistrationError::NoInitialValue) };
+
+        let mut input = ParserInput::new(initial.css_text());
+        let mut input = Parser::new(&mut input);
+        input.skip_whitespace();
+
+        // The initial-value descriptor’s value must parse successfully according to the grammar
+        // specified by the syntax definition.
+        // TODO(bug 1840477): Parse according to syntax (InvalidInitialValue).
+
+        // The initial-value must be computationally independent.
+        //
+        // TODO(bug 1840477): once we have a parsed initial value, check computational
+        // independence of that. We need to check for CSS-wide keywords even in the universal
+        // syntax case tho.
+        if input.try_parse(CSSWideKeyword::parse).is_ok() {
+            return Err(ToRegistrationError::InitialValueNotComputationallyIndependent);
+        }
+
         Ok(())
     }
 
@@ -249,7 +257,7 @@ impl PropertyRuleData {
         //     missing, the @property rule is invalid.
         let Some(ref inherits) = self.inherits else { return Err(MissingInherits) };
 
-        Self::validate_syntax(syntax.descriptor(), self.initial_value.as_ref())?;
+        Self::validate_initial_value(syntax.descriptor(), self.initial_value.as_ref())?;
 
         Ok(PropertyRegistration {
             syntax: syntax.descriptor().clone(),
