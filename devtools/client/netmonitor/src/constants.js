@@ -226,6 +226,7 @@ const UPDATE_PROPS = [
   "formDataSections",
   "stacktrace",
   "isThirdPartyTrackingResource",
+  "isResolvedByTRR",
   "referrerPolicy",
   "priority",
   "blockedReason",
