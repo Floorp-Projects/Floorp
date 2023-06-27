@@ -414,9 +414,9 @@ CssRuleView.prototype = {
     // Handle click on the icon next to a CSS selector.
     if (target.classList.contains("js-toggle-selector-highlighter")) {
       event.stopPropagation();
-      let selector = target.dataset.selector;
-      // dataset.selector will be empty for inline styles (inherited or not)
-      // Rules associated with a regular selector should have this data-attirbute
+      let selector = target.dataset.computedSelector;
+      // dataset.computedSelector will be initially empty for inline styles (inherited or not)
+      // Rules associated with a regular selector should have this data-attribute
       // set in devtools/client/inspector/rules/views/rule-editor.js
       if (selector === "") {
         try {
@@ -431,9 +431,8 @@ CssRuleView.prototype = {
               await this.inspector.selection.nodeFront.getUniqueSelector();
           }
 
-          // Now that the selector was computed, we can store it in
-          // dataset.selector for subsequent usage.
-          target.dataset.selector = selector;
+          // Now that the selector was computed, we can store it for subsequent usage.
+          target.dataset.computedSelector = selector;
         } finally {
           // Could not resolve a unique selector for the inline style.
         }
@@ -483,7 +482,7 @@ CssRuleView.prototype = {
             return;
           }
 
-          const query = `.js-toggle-selector-highlighter[data-selector='${selector}']`;
+          const query = `.js-toggle-selector-highlighter[data-computed-selector='${selector}']`;
           for (const node of this.styleDocument.querySelectorAll(query)) {
             node.classList.toggle(
               "highlighted",

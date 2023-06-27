@@ -290,9 +290,11 @@ RuleEditor.prototype = {
 
     if (this.rule.domRule.type !== CSSRule.KEYFRAME_RULE) {
       let selector = "";
+      let desugaredSelector = "";
       if (this.rule.domRule.selectors) {
         // This is a "normal" rule with a selector.
         selector = this.rule.domRule.selectors.join(", ");
+        desugaredSelector = this.rule.domRule.desugaredSelectors?.join(", ");
         // Otherwise, the rule is either inherited or inline, and selectors will
         // be computed on demand when the highlighter is requested.
       }
@@ -303,7 +305,8 @@ RuleEditor.prototype = {
         class:
           "ruleview-selectorhighlighter js-toggle-selector-highlighter" +
           (isHighlighted ? " highlighted" : ""),
-        "data-selector": selector,
+        // This is used in rules.js for the selector highlighter
+        "data-computed-selector": desugaredSelector,
         title: l10n("rule.selectorHighlighter.tooltip"),
       });
     }
