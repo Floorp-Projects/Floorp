@@ -4438,8 +4438,8 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::SetSink(
   }
 
   if (mOutputCaptureState != MediaDecoder::OutputCaptureState::None) {
-    // Not supported yet.
-    return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
+    // Nothing to do.
+    return GenericPromise::CreateAndResolve(IsPlaying(), __func__);
   }
 
   if (mSinkDevice.Ref() != aDevice) {
