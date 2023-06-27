@@ -67,6 +67,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.translations.chaos.timeoutMS"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "automaticallyPopupPref",
+  "browser.translations.automaticallyPopup"
+);
+
 /**
  * Returns the always-translate language tags as an array.
  */
@@ -268,6 +274,61 @@ export class TranslationsParent extends JSWindowActorParent {
   // downloading all of the language files.
   static MAX_CONCURRENT_DOWNLOADS = 10;
   static MAX_DOWNLOAD_RETRIES = 3;
+
+  // The set of hosts that have already been offered for translations.
+  static #hostsOffered = new Set();
+
+  // Enable the translations popup offer in tests.
+  static testAutomaticPopup = false;
+
+  /**
+   * Offer translations (for instance by automatically opening the popup panel) whenever
+   * languages are detected, but only do it once per host per session.
+   * @param {LangTags} detectedLanguages
+   */
+  maybeOfferTranslations(detectedLanguages) {
+    if (!lazy.automaticallyPopupPref) {
+      return;
+    }
+    if (Cu.isInAutomation && !TranslationsParent.testAutomaticPopup) {
+      // Do not offer translations in automation, as many tests do not expect this
+      // behavior.
+      return;
+    }
+    const { host } = this.browsingContext.currentWindowGlobal.documentURI;
+    if (TranslationsParent.#hostsOffered.has(host)) {
+      // This host was already offered a translation.
+      return;
+    }
+    const browser = this.browsingContext.top.embedderElement;
+    if (!browser) {
+      return;
+    }
+    TranslationsParent.#hostsOffered.add(host);
+    const { CustomEvent } = browser.ownerGlobal;
+
+    if (
+      TranslationsParent.shouldNeverTranslateLanguage(
+        detectedLanguages.docLangTag
+      ) ||
+      this.shouldNeverTranslateSite()
+    ) {
+      return;
+    }
+
+    browser.dispatchEvent(
+      new CustomEvent("TranslationsParent:OfferTranslation", {
+        bubbles: true,
+      })
+    );
+  }
+
+  /**
+   * This is for testing purposes.
+   */
+  static resetHostsOffered() {
+    TranslationsParent.#hostsOffered = new Set();
+  }
 
   /**
    * Detect if Wasm SIMD is supported, and cache the value. It's better to check
@@ -476,9 +537,6 @@ export class TranslationsParent extends JSWindowActorParent {
       case "Translations:DeleteLanguageFiles": {
         return this.deleteLanguageFiles(data.language);
       }
-      case "Translations:GetPreferredLanguages": {
-        return TranslationsParent.getPreferredLanguages();
-      }
       case "Translations:ReportLangTags": {
         const { documentElementLang, href } = data;
         const detectedLanguages = await this.getDetectedLanguages(
@@ -506,6 +564,8 @@ export class TranslationsParent extends JSWindowActorParent {
             detectedLanguages.userLangTag,
             true // reportAsAutoTranslate
           );
+        } else {
+          this.maybeOfferTranslations(detectedLanguages);
         }
         return undefined;
       }
@@ -513,10 +573,6 @@ export class TranslationsParent extends JSWindowActorParent {
         this.isEngineReady = true;
         this.languageState.isEngineReady = true;
         break;
-      }
-      case "Translations:ReportDetectedLangTags": {
-        this.languageState.detectedLanguages = data.langTags;
-        return undefined;
       }
       case "Translations:IsTranslationsEngineSupported": {
         return TranslationsParent.getIsTranslationsEngineSupported();

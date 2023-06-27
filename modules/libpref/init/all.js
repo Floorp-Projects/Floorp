@@ -3663,6 +3663,8 @@ pref("browser.translations.useHTML", false);
 // so that the page automatically performs a translation if one is detected as being
 // required.
 pref("browser.translations.autoTranslate", false);
+// Automatically popup an offer to translate on sites.
+pref("browser.translations.automaticallyPopup", true);
 // Simulate the behavior of using a device that does not support the translations engine.
 // Requires restart.
 pref("browser.translations.simulateUnsupportedEngine", false);

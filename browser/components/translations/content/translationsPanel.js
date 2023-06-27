@@ -894,9 +894,11 @@ var TranslationsPanel = new (class {
 
     this.#populateSettingsMenuItems();
 
-    const [targetButton, openedFromAppMenu] = button.contains(event.target)
-      ? [button, false]
-      : [this.elements.appMenuButton, true];
+    const [targetButton, openedFromAppMenu] =
+      button.contains(event.target) ||
+      event.type === "TranslationsParent:OfferTranslation"
+        ? [button, false]
+        : [this.elements.appMenuButton, true];
 
     panel.addEventListener(
       "ViewShown",
@@ -1098,11 +1100,14 @@ var TranslationsPanel = new (class {
    * @param {CustomEvent} event
    */
   handleEvent = async event => {
-    // Check this value after every `await` to guard against race conditions.
-    const handleEventId = ++this.handleEventId;
-
     switch (event.type) {
+      case "TranslationsParent:OfferTranslation": {
+        this.open(event);
+        break;
+      }
       case "TranslationsParent:LanguageState":
+        // Check this value after every `await` to guard against race conditions.
+        const handleEventId = ++this.handleEventId;
         const {
           detectedLanguages,
           requestedTranslationPair,

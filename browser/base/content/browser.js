@@ -1650,6 +1650,10 @@ var gBrowserInit = {
       "TranslationsParent:LanguageState",
       TranslationsPanel
     );
+    gBrowser.addEventListener(
+      "TranslationsParent:OfferTranslation",
+      TranslationsPanel
+    );
 
     window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 

@@ -407,6 +407,7 @@ async function loadTestPage({
   detectedLangTag,
   page,
   prefs,
+  autoOffer,
   permissionsUrls = [],
 }) {
   Services.fog.testResetFOG();
@@ -425,6 +426,10 @@ async function loadTestPage({
       context: url,
     }))
   );
+
+  if (autoOffer) {
+    TranslationsParent.testAutomaticPopup = true;
+  }
 
   // Start the tab at a blank page.
   const tab = await BrowserTestUtils.openNewForegroundTab(
@@ -479,6 +484,8 @@ async function loadTestPage({
       await closeTranslationsPanelIfOpen();
       await removeMocks();
       Services.fog.testResetFOG();
+      TranslationsParent.testAutomaticPopup = false;
+      TranslationsParent.resetHostsOffered();
       BrowserTestUtils.removeTab(tab);
       return Promise.all([
         SpecialPowers.popPrefEnv(),
