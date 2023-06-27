@@ -5053,7 +5053,16 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder) {
 
   // Set sink device if we have one. Otherwise the default is used.
   if (mSink.second) {
-    mDecoder->SetSink(mSink.second);
+    mDecoder
+        ->SetSink(mSink.second)
+#ifdef DEBUG
+        ->Then(mAbstractMainThread, __func__,
+               [](const GenericPromise::ResolveOrRejectValue& aValue) {
+                 MOZ_ASSERT(aValue.IsResolve() && !aValue.ResolveValue());
+               });
+#else
+        ;
+#endif
   }
 
   if (mMediaKeys) {

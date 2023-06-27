@@ -33,7 +33,8 @@ void AudioSinkWrapper::Shutdown() {
 }
 
 /* static */
-already_AddRefed<TaskQueue> AudioSinkWrapper::CreateAsyncInitTaskQueue() {
+already_AddRefed<nsISerialEventTarget>
+AudioSinkWrapper::CreateAsyncInitTaskQueue() {
   return nsThreadManager::get().CreateBackgroundTaskQueue("AsyncAudioSinkInit");
 }
 
@@ -127,9 +128,8 @@ TimeUnit AudioSinkWrapper::GetPosition(TimeStamp* aTimeStamp) {
     }
     mLastClockSource = ClockSource::SystemClock;
 
-    if (!mAudioSink && mAsyncCreateCount == 0 && NeedAudioSink() &&
-        t > mRetrySinkTime) {
-      MaybeAsyncCreateAudioSink(mAudioDevice);
+    if (!mAudioSink && mAsyncCreateCount == 0 && t > mRetrySinkTime) {
+      MaybeAsyncCreateAudioSink();
     }
   } else {
     // Return how long we've played if we are not playing.
@@ -195,7 +195,7 @@ void AudioSinkWrapper::OnMuted(bool aMuted) {
   } else {
     LOG("%p: AudioSinkWrapper unmuted, maybe re-creating an AudioStream.",
         this);
-    MaybeAsyncCreateAudioSink(mAudioDevice);
+    MaybeAsyncCreateAudioSink();
   }
 }
 
@@ -283,11 +283,6 @@ void AudioSinkWrapper::SetPlaying(bool aPlaying) {
   }
 }
 
-RefPtr<GenericPromise> AudioSinkWrapper::SetAudioDevice(
-    RefPtr<AudioDeviceInfo> aDevice) {
-  return MaybeAsyncCreateAudioSink(std::move(aDevice));
-}
-
 double AudioSinkWrapper::PlaybackRate() const {
   AssertOwnerThread();
   return mParams.mPlaybackRate;
@@ -347,108 +342,89 @@ void AudioSinkWrapper::ShutDownAudioSink() {
   mAudioSink = nullptr;
 }
 
-RefPtr<GenericPromise> AudioSinkWrapper::MaybeAsyncCreateAudioSink(
-    RefPtr<AudioDeviceInfo> aDevice) {
-  UniquePtr<AudioSink> audioSink;
-  if (NeedAudioSink() && (!mAudioSink || aDevice != mAudioDevice)) {
-    LOG("%p: AudioSinkWrapper::MaybeAsyncCreateAudioSink: AudioSink needed",
+void AudioSinkWrapper::MaybeAsyncCreateAudioSink() {
+  MOZ_ASSERT(!mAudioSink);
+  MOZ_ASSERT(!mAudioSinkEndedRequest.Exists());
+
+  if (!NeedAudioSink()) {
+    LOG("%p: AudioSinkWrapper::MaybeAsyncCreateAudioSink: AudioSink not needed",
         this);
-    if (mAudioSink) {
-      ShutDownAudioSink();
-    }
-    audioSink = mSinkCreator();
-  } else {
-    LOG("%p: AudioSinkWrapper::MaybeAsyncCreateAudioSink: no AudioSink change",
-        this);
-    // Bounce off the background thread to keep promise resolution in order.
+    return;
   }
-  mAudioDevice = std::move(aDevice);
+
+  LOG("%p: AudioSinkWrapper::MaybeAsyncCreateAudioSink: AudioSink needed",
+      this);
   ++mAsyncCreateCount;
+  UniquePtr<AudioSink> audioSink = mSinkCreator();
   using Promise =
       MozPromise<UniquePtr<AudioSink>, nsresult, /* IsExclusive = */ true>;
-  return InvokeAsync(mAsyncInitTaskQueue,
-                     "MaybeAsyncCreateAudioSink (Async part: initialization)",
-                     [self = RefPtr<AudioSinkWrapper>(this),
-                      audioSink{std::move(audioSink)},
-                      audioDevice = mAudioDevice, this]() mutable {
-                       if (!audioSink || !mAsyncInitTaskQueue->IsEmpty()) {
-                         // Either an AudioSink is not required or there's a
-                         // pending task to init an AudioSink with a possibly
-                         // different device.
-                         return Promise::CreateAndResolve(nullptr, __func__);
-                       }
+  InvokeAsync(
+      mAsyncInitTaskQueue,
+      "MaybeAsyncCreateAudioSink (Async part: initialization)",
+      [self = RefPtr<AudioSinkWrapper>(this), audioSink{std::move(audioSink)},
+       this]() mutable {
+        LOG("AudioSink initialization on background thread");
+        // This can take about 200ms, e.g. on Windows, we don't want to do
+        // it on the MDSM thread, because it would make the clock not update
+        // for that amount of time, and the video would therefore not
+        // update. The Start() call is very cheap on the other hand, we can
+        // do it from the MDSM thread.
+        nsresult rv = audioSink->InitializeAudioStream(
+            mParams, mAudioDevice, AudioSink::InitializationType::UNMUTING);
+        if (NS_FAILED(rv)) {
+          LOG("Async AudioSink initialization failed");
+          return Promise::CreateAndReject(rv, __func__);
+        }
+        return Promise::CreateAndResolve(std::move(audioSink), __func__);
+      })
+      ->Then(mOwnerThread,
+             "MaybeAsyncCreateAudioSink (Async part: start from MDSM thread)",
+             [self = RefPtr<AudioSinkWrapper>(this),
+              this](Promise::ResolveOrRejectValue&& aValue) mutable {
+               LOG("AudioSink async init done, back on MDSM thread");
+               ScopeExit decr([&] { --mAsyncCreateCount; });
 
-                       LOG("AudioSink initialization on background thread");
-                       // This can take about 200ms, e.g. on Windows, we don't
-                       // want to do it on the MDSM thread, because it would
-                       // make the clock not update for that amount of time, and
-                       // the video would therefore not update. The Start() call
-                       // is very cheap on the other hand, we can do it from the
-                       // MDSM thread.
-                       nsresult rv = audioSink->InitializeAudioStream(
-                           mParams, audioDevice,
-                           AudioSink::InitializationType::UNMUTING);
-                       if (NS_FAILED(rv)) {
-                         LOG("Async AudioSink initialization failed");
-                         return Promise::CreateAndReject(rv, __func__);
-                       }
-                       return Promise::CreateAndResolve(std::move(audioSink),
-                                                        __func__);
-                     })
-      ->Then(
-          mOwnerThread,
-          "MaybeAsyncCreateAudioSink (Async part: start from MDSM thread)",
-          [self = RefPtr<AudioSinkWrapper>(this), audioDevice = mAudioDevice,
-           this](Promise::ResolveOrRejectValue&& aValue) mutable {
-            LOG("AudioSink async init done, back on MDSM thread");
-            ScopeExit decr([&] { --mAsyncCreateCount; });
+               if (aValue.IsReject()) {
+                 if (mAudioDevice) {
+                   // Device will be started when available again.
+                   ScheduleRetrySink();
+                   return;
+                 }
+                 // Default device not available.  Report error.
+                 mEndedPromiseHolder.RejectIfExists(aValue.RejectValue(),
+                                                    __func__);
+                 return;
+               }
 
-            if (aValue.IsReject()) {
-              if (audioDevice) {
-                // Device will be started when available again.
-                ScheduleRetrySink();
-                return GenericPromise::CreateAndResolve(true, __func__);
-              }
-              // Default device not available.  Report error.
-              mEndedPromiseHolder.RejectIfExists(aValue.RejectValue(),
-                                                 __func__);
-              return GenericPromise::CreateAndResolve(true, __func__);
-            }
+               UniquePtr audioSink = std::move(aValue.ResolveValue());
+               // It's possible that the newly created isn't needed at this
+               // point, in some cases:
+               // 1. An AudioSink was created synchronously while this
+               // AudioSink was initialized asynchronously, bail out here. This
+               // happens when seeking (which does a synchronous
+               // initialization) right after unmuting.
+               // 2. The media element was muted while the async initialization
+               // was happening.
+               // 3. The AudioSinkWrapper was paused or stopped during
+               // asynchronous initialization.
+               // 4. The audio has ended during asynchronous initialization.
+               if (mAudioSink || !NeedAudioSink()) {
+                 LOG("AudioSink initialized async isn't needed, shutting "
+                     "it down.");
+                 audioSink->ShutDown();
+                 return;
+               }
 
-            UniquePtr audioSink = std::move(aValue.ResolveValue());
-            if (!audioSink) {
-              return GenericPromise::CreateAndResolve(true, __func__);
-            }
-            // It's possible that the newly created isn't needed at this
-            // point, in some cases:
-            // 1. An AudioSink was created synchronously while this
-            // AudioSink was initialized asynchronously, bail out here. This
-            // happens when seeking (which does a synchronous
-            // initialization) right after unmuting.
-            // 2. The media element was muted while the async initialization
-            // was happening.
-            // 3. The AudioSinkWrapper was paused or stopped during
-            // asynchronous initialization.
-            // 4. The audio has ended during asynchronous initialization.
-            // 5. A change to a potentially different sink device is pending.
-            if (mAudioSink || !NeedAudioSink() || audioDevice != mAudioDevice) {
-              LOG("AudioSink initialized async isn't needed, shutting "
-                  "it down.");
-              audioSink->ShutDown();
-              return GenericPromise::CreateAndResolve(true, __func__);
-            }
-
-            MOZ_ASSERT(!mAudioSink);
-            TimeUnit switchTime = GetPosition();
-            DropAudioPacketsIfNeeded(switchTime);
-            if (mTreatUnderrunAsSilence) {
-              audioSink->EnableTreatAudioUnderrunAsSilence(
-                  mTreatUnderrunAsSilence);
-            }
-            LOG("AudioSink async, start");
-            StartAudioSink(std::move(audioSink), switchTime);
-            return GenericPromise::CreateAndResolve(true, __func__);
-          });
+               MOZ_ASSERT(!mAudioSink);
+               TimeUnit switchTime = GetPosition();
+               DropAudioPacketsIfNeeded(switchTime);
+               if (mTreatUnderrunAsSilence) {
+                 audioSink->EnableTreatAudioUnderrunAsSilence(
+                     mTreatUnderrunAsSilence);
+               }
+               LOG("AudioSink async, start");
+               StartAudioSink(std::move(audioSink), switchTime);
+             });
 }
 
 nsresult AudioSinkWrapper::SyncCreateAudioSink(const TimeUnit& aStartTime) {
