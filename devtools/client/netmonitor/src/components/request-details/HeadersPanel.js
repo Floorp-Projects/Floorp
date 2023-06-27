@@ -113,7 +113,7 @@ const HEADERS_ETP = L10N.getStr(
   "netmonitor.trackingResource.enhancedTrackingProtection"
 );
 const HEADERS_PRIORITY = L10N.getStr("netmonitor.headers.requestPriority");
-
+const HEADERS_DNS = L10N.getStr("netmonitor.headers.dns");
 /**
  * Headers panel component
  * Lists basic information about the request
@@ -556,6 +556,7 @@ class HeadersPanel extends Component {
         isThirdPartyTrackingResource,
         contentSize,
         transferredSize,
+        isResolvedByTRR,
       },
       openRequestBlockingAndAddUrl,
       openHTTPCustomRequestTab,
@@ -755,12 +756,22 @@ class HeadersPanel extends Component {
       ? this.renderSummary(HEADERS_PRIORITY, getRequestPriorityAsText(priority))
       : null;
 
+    const summaryDNS = this.renderSummary(
+      HEADERS_DNS,
+      L10N.getStr(
+        isResolvedByTRR
+          ? "netmonitor.headers.dns.overHttps"
+          : "netmonitor.headers.dns.basic"
+      )
+    );
+
     const summaryItems = [
       summaryStatus,
       summaryVersion,
       summarySize,
       summaryReferrerPolicy,
       summaryPriority,
+      summaryDNS,
       trackingProtectionStatus,
       trackingProtectionDetails,
     ].filter(summaryItem => summaryItem !== null);
