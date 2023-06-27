@@ -1,164 +1,144 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Tue, 16 May 2023 06:59:00 +0000
-Subject: Bug 1832717 - Cherry-pick upstream libwebrtc commit 0f87b38535.
+Date: Tue, 23 May 2023 06:14:00 +0000
+Subject: Bug 1832751 - cherry-pick upstream libwebrtc commit 3da04a93cd.
  r=webrtc-reviewers,mjf
 
-Upstream Commit: https://webrtc.googlesource.com/src/+/0f87b3853554ee5d4e92e487a5165b57771b6742
-    mac: Work around an inccorect availability annotation in the 13.3 SDK
+Upstream commit: https://webrtc.googlesource.com/src/+/3da04a93cd18dc7b65c6756910cc8a9cbf20fb8c
+    Allow SequenceChecker to be initialized detached.
 
-    Bug: chromium:1431897
-    Change-Id: Ib871dc22d2cf93180d7aa05016e34ffec944d73e
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/301040
-    Reviewed-by: Alexander Cooper <alcooper@chromium.org>
-    Commit-Queue: Alexander Cooper <alcooper@chromium.org>
-    Auto-Submit: Nico Weber <thakis@chromium.org>
-    Cr-Commit-Position: refs/heads/main@{#39830}
+    The motivation for this is to not have to implement this pattern:
 
-Differential Revision: https://phabricator.services.mozilla.com/D178027
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8443a5cec0ac1273f70cee116f08b88d0c19788d
+    foo.h:
+
+    class Foo {
+     public:
+      Foo();
+     private:
+      SequenceChecker checker_;
+    };
+
+    foo.cc:
+
+    Foo::Foo() {
+      checker_.Detach();
+    }
+
+    And instead be able to do this inline in the .h file:
+
+    class Foo {
+     public:
+      Foo();
+     private:
+      SequenceChecker checker_{SequenceChecker::kDetached};
+    };
+
+    Bug: none
+    Change-Id: Idd7ca82d15c2f77f3aaccf26f1943a49f4b40661
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/298445
+    Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+    Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39616}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177874
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/757b62d9ee50da83b1e460dcb356a099efc9e335
 ---
- .../mac/screen_capturer_mac.mm                | 97 +++++++++++++++++--
- 1 file changed, 89 insertions(+), 8 deletions(-)
+ api/sequence_checker.h                        |  5 +++++
+ api/sequence_checker_unittest.cc              | 21 +++++++++++++++++--
+ .../sequence_checker_internal.cc              |  4 ++--
+ .../sequence_checker_internal.h               |  3 ++-
+ 4 files changed, 28 insertions(+), 5 deletions(-)
 
-diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/desktop_capture/mac/screen_capturer_mac.mm
-index cad0c5b65b..76fec13a39 100644
---- a/modules/desktop_capture/mac/screen_capturer_mac.mm
-+++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -20,6 +20,87 @@
- #include "rtc_base/trace_event.h"
- #include "sdk/objc/helpers/scoped_cftyperef.h"
- 
-+// All these symbols have incorrect availability annotations in the 13.3 SDK.
-+// These have the correct annotation. See https://crbug.com/1431897.
-+// TODO(thakis): Remove this once FB12109479 is fixed and we updated to an SDK
-+// with the fix.
+diff --git a/api/sequence_checker.h b/api/sequence_checker.h
+index a79d04f61f..33e0f3c074 100644
+--- a/api/sequence_checker.h
++++ b/api/sequence_checker.h
+@@ -44,6 +44,11 @@ class RTC_LOCKABLE SequenceChecker
+   using Impl = webrtc_sequence_checker_internal::SequenceCheckerDoNothing;
+ #endif
+  public:
++  enum InitialState : bool { kDetached = false, kAttached = true };
 +
-+static CGDisplayStreamRef __nullable
-+    wrapCGDisplayStreamCreate(CGDirectDisplayID display,
-+                              size_t outputWidth,
-+                              size_t outputHeight,
-+                              int32_t pixelFormat,
-+                              CFDictionaryRef __nullable properties,
-+                              CGDisplayStreamFrameAvailableHandler __nullable handler)
-+        CG_AVAILABLE_BUT_DEPRECATED(
-+            10.8,
-+            14.0,
-+            "Please use ScreenCaptureKit API's initWithFilter:configuration:delegate: instead") {
-+#pragma clang diagnostic push
-+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
-+  return CGDisplayStreamCreate(
-+      display, outputWidth, outputHeight, pixelFormat, properties, handler);
-+#pragma clang diagnostic pop
++  explicit SequenceChecker(InitialState initial_state = kAttached)
++      : Impl(initial_state) {}
++
+   // Returns true if sequence checker is attached to the current sequence.
+   bool IsCurrent() const { return Impl::IsCurrent(); }
+   // Detaches checker from sequence to which it is attached. Next attempt
+diff --git a/api/sequence_checker_unittest.cc b/api/sequence_checker_unittest.cc
+index a929c59655..3efb5c78ee 100644
+--- a/api/sequence_checker_unittest.cc
++++ b/api/sequence_checker_unittest.cc
+@@ -122,8 +122,7 @@ TEST(SequenceCheckerTest, DetachFromTaskQueueInDebug) {
+ TEST(SequenceCheckerTest, ExpectationToString) {
+   TaskQueueForTest queue1;
+ 
+-  SequenceChecker sequence_checker;
+-  sequence_checker.Detach();
++  SequenceChecker sequence_checker(SequenceChecker::kDetached);
+ 
+   rtc::Event blocker;
+   queue1.PostTask([&blocker, &sequence_checker]() {
+@@ -149,6 +148,24 @@ TEST(SequenceCheckerTest, ExpectationToString) {
+ #endif
+ }
+ 
++TEST(SequenceCheckerTest, InitiallyDetached) {
++  TaskQueueForTest queue1;
++
++  SequenceChecker sequence_checker(SequenceChecker::kDetached);
++
++  rtc::Event blocker;
++  queue1.PostTask([&blocker, &sequence_checker]() {
++    EXPECT_TRUE(sequence_checker.IsCurrent());
++    blocker.Set();
++  });
++
++  blocker.Wait(rtc::Event::kForever);
++
++#if RTC_DCHECK_IS_ON
++  EXPECT_FALSE(sequence_checker.IsCurrent());
++#endif
 +}
 +
-+static CFRunLoopSourceRef __nullable
-+    wrapCGDisplayStreamGetRunLoopSource(CGDisplayStreamRef cg_nullable displayStream)
-+        CG_AVAILABLE_BUT_DEPRECATED(10.8,
-+                                    14.0,
-+                                    "There is no direct replacement for this function. Please use "
-+                                    "ScreenCaptureKit API's SCStream to replace CGDisplayStream") {
-+#pragma clang diagnostic push
-+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
-+  return CGDisplayStreamGetRunLoopSource(displayStream);
-+#pragma clang diagnostic pop
-+}
-+
-+static CGError wrapCGDisplayStreamStart(CGDisplayStreamRef cg_nullable displayStream)
-+    CG_AVAILABLE_BUT_DEPRECATED(10.8,
-+                                14.0,
-+                                "Please use ScreenCaptureKit API's "
-+                                "startCaptureWithCompletionHandler: to start a stream instead") {
-+#pragma clang diagnostic push
-+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
-+  return CGDisplayStreamStart(displayStream);
-+#pragma clang diagnostic pop
-+}
-+
-+static CGError wrapCGDisplayStreamStop(CGDisplayStreamRef cg_nullable displayStream)
-+    CG_AVAILABLE_BUT_DEPRECATED(10.8,
-+                                14.0,
-+                                "Please use ScreenCaptureKit API's "
-+                                "stopCaptureWithCompletionHandler: to stop a stream instead") {
-+#pragma clang diagnostic push
-+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
-+  return CGDisplayStreamStop(displayStream);
-+#pragma clang diagnostic pop
-+}
-+
-+static CFStringRef wrapkCGDisplayStreamShowCursor() CG_AVAILABLE_BUT_DEPRECATED(
-+    10.8,
-+    14.0,
-+    "Please use ScreenCaptureKit API's SCStreamConfiguration showsCursor property instead") {
-+#pragma clang diagnostic push
-+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
-+  return kCGDisplayStreamShowCursor;
-+#pragma clang diagnostic pop
-+}
-+
-+static const CGRect* __nullable
-+    wrapCGDisplayStreamUpdateGetRects(CGDisplayStreamUpdateRef __nullable updateRef,
-+                                      CGDisplayStreamUpdateRectType rectType,
-+                                      size_t* rectCount)
-+        CG_AVAILABLE_BUT_DEPRECATED(10.8,
-+                                    14.0,
-+                                    "Please use ScreenCaptureKit API's SCStreamFrameInfo with "
-+                                    "SCStreamFrameInfoContentRect instead") {
-+#pragma clang diagnostic push
-+#pragma clang diagnostic ignored "-Wunguarded-availability-new"
-+  return CGDisplayStreamUpdateGetRects(updateRef, rectType, rectCount);
-+#pragma clang diagnostic pop
-+}
-+
- namespace webrtc {
+ class TestAnnotations {
+  public:
+   TestAnnotations() : test_var_(false) {}
+diff --git a/rtc_base/synchronization/sequence_checker_internal.cc b/rtc_base/synchronization/sequence_checker_internal.cc
+index 2612e9ee84..9831f07d7d 100644
+--- a/rtc_base/synchronization/sequence_checker_internal.cc
++++ b/rtc_base/synchronization/sequence_checker_internal.cc
+@@ -33,8 +33,8 @@ const void* GetSystemQueueRef() {
  
- namespace {
-@@ -462,7 +543,7 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
+ }  // namespace
  
-       size_t count = 0;
-       const CGRect* rects =
--          CGDisplayStreamUpdateGetRects(updateRef, kCGDisplayStreamUpdateDirtyRects, &count);
-+          wrapCGDisplayStreamUpdateGetRects(updateRef, kCGDisplayStreamUpdateDirtyRects, &count);
-       if (count != 0) {
-         // According to CGDisplayStream.h, it's safe to call
-         // CGDisplayStreamStop() from within the callback.
-@@ -472,20 +553,20 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
+-SequenceCheckerImpl::SequenceCheckerImpl()
+-    : attached_(true),
++SequenceCheckerImpl::SequenceCheckerImpl(bool attach_to_current_thread)
++    : attached_(attach_to_current_thread),
+       valid_thread_(rtc::CurrentThreadRef()),
+       valid_queue_(TaskQueueBase::Current()),
+       valid_system_queue_(GetSystemQueueRef()) {}
+diff --git a/rtc_base/synchronization/sequence_checker_internal.h b/rtc_base/synchronization/sequence_checker_internal.h
+index a20fbb0a54..a66e9ee8ec 100644
+--- a/rtc_base/synchronization/sequence_checker_internal.h
++++ b/rtc_base/synchronization/sequence_checker_internal.h
+@@ -30,7 +30,7 @@ namespace webrtc_sequence_checker_internal {
+ // right version for your build configuration.
+ class RTC_EXPORT SequenceCheckerImpl {
+  public:
+-  SequenceCheckerImpl();
++  explicit SequenceCheckerImpl(bool attach_to_current_thread);
+   ~SequenceCheckerImpl() = default;
  
-     rtc::ScopedCFTypeRef<CFDictionaryRef> properties_dict(
-         CFDictionaryCreate(kCFAllocatorDefault,
--                           (const void* []){kCGDisplayStreamShowCursor},
--                           (const void* []){kCFBooleanFalse},
-+                           (const void*[]){wrapkCGDisplayStreamShowCursor()},
-+                           (const void*[]){kCFBooleanFalse},
-                            1,
-                            &kCFTypeDictionaryKeyCallBacks,
-                            &kCFTypeDictionaryValueCallBacks));
- 
--    CGDisplayStreamRef display_stream = CGDisplayStreamCreate(
-+    CGDisplayStreamRef display_stream = wrapCGDisplayStreamCreate(
-         display_id, pixel_width, pixel_height, 'BGRA', properties_dict.get(), handler);
- 
-     if (display_stream) {
--      CGError error = CGDisplayStreamStart(display_stream);
-+      CGError error = wrapCGDisplayStreamStart(display_stream);
-       if (error != kCGErrorSuccess) return false;
- 
--      CFRunLoopSourceRef source = CGDisplayStreamGetRunLoopSource(display_stream);
-+      CFRunLoopSourceRef source = wrapCGDisplayStreamGetRunLoopSource(display_stream);
-       CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopCommonModes);
-       display_streams_.push_back(display_stream);
-     }
-@@ -498,9 +579,9 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
-   RTC_DCHECK(thread_checker_.IsCurrent());
- 
-   for (CGDisplayStreamRef stream : display_streams_) {
--    CFRunLoopSourceRef source = CGDisplayStreamGetRunLoopSource(stream);
-+    CFRunLoopSourceRef source = wrapCGDisplayStreamGetRunLoopSource(stream);
-     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopCommonModes);
--    CGDisplayStreamStop(stream);
-+    wrapCGDisplayStreamStop(stream);
-     CFRelease(stream);
-   }
-   display_streams_.clear();
+   bool IsCurrent() const;
+@@ -59,6 +59,7 @@ class RTC_EXPORT SequenceCheckerImpl {
+ // right version for your build configuration.
+ class SequenceCheckerDoNothing {
+  public:
++  explicit SequenceCheckerDoNothing(bool attach_to_current_thread) {}
+   bool IsCurrent() const { return true; }
+   void Detach() {}
+ };
 -- 
 2.37.1 (Apple Git-137.1)
 

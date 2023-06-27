@@ -448,21 +448,6 @@ int32_t ModuleRtpRtcpImpl2::SetCNAME(absl::string_view c_name) {
   return rtcp_sender_.SetCNAME(c_name);
 }
 
-int32_t ModuleRtpRtcpImpl2::RemoteNTP(uint32_t* received_ntpsecs,
-                                      uint32_t* received_ntpfrac,
-                                      uint32_t* rtcp_arrival_time_secs,
-                                      uint32_t* rtcp_arrival_time_frac,
-                                      uint32_t* rtcp_timestamp) const {
-  return rtcp_receiver_.NTP(received_ntpsecs, received_ntpfrac,
-                            rtcp_arrival_time_secs, rtcp_arrival_time_frac,
-                            rtcp_timestamp,
-                            /*remote_sender_packet_count=*/nullptr,
-                            /*remote_sender_octet_count=*/nullptr,
-                            /*remote_sender_reports_count=*/nullptr)
-             ? 0
-             : -1;
-}
-
 // TODO(tommi): Check if `avg_rtt_ms`, `min_rtt_ms`, `max_rtt_ms` params are
 // actually used in practice (some callers ask for it but don't use it). It
 // could be that only `rtt` is needed and if so, then the fast path could be to
@@ -529,7 +514,7 @@ ModuleRtpRtcpImpl2::GetSenderReportStats() const {
   uint32_t arrival_timestamp_frac;
   if (rtcp_receiver_.NTP(&remote_timestamp_secs, &remote_timestamp_frac,
                          &arrival_timestamp_secs, &arrival_timestamp_frac,
-                         /*rtcp_timestamp=*/nullptr, &stats.packets_sent,
+                         &stats.last_remote_rtp_timestamp, &stats.packets_sent,
                          &stats.bytes_sent, &stats.reports_count)) {
     stats.last_remote_timestamp.Set(remote_timestamp_secs,
                                     remote_timestamp_frac);
