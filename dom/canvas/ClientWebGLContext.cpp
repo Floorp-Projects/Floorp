@@ -807,7 +807,8 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
       }
     }
 
-    const bool resistFingerprinting = ShouldResistFingerprinting();
+    const bool resistFingerprinting =
+        ShouldResistFingerprinting(RFPTarget::WebGLRenderCapability);
     const auto principalKey = GetPrincipalHashValue();
     const auto initDesc = webgl::InitContextDesc{
         mIsWebGL2, resistFingerprinting, requestedSize, options, principalKey};
@@ -978,7 +979,8 @@ ClientWebGLContext::SetContextOptions(JSContext* cx,
   newOpts.enableDebugRendererInfo =
       StaticPrefs::webgl_enable_debug_renderer_info();
   MOZ_ASSERT(mCanvasElement || mOffscreenCanvas);
-  newOpts.shouldResistFingerprinting = ShouldResistFingerprinting();
+  newOpts.shouldResistFingerprinting =
+      ShouldResistFingerprinting(RFPTarget::WebGLRenderCapability);
 
   if (attributes.mAlpha.WasPassed()) {
     newOpts.alpha = attributes.mAlpha.Value();
@@ -2283,7 +2285,7 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
 
       case LOCAL_GL_RENDERER: {
         bool allowRenderer = StaticPrefs::webgl_enable_renderer_query();
-        if (ShouldResistFingerprinting()) {
+        if (ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo)) {
           allowRenderer = false;
         }
         if (allowRenderer) {
@@ -5720,11 +5722,11 @@ bool ClientWebGLContext::IsExtensionForbiddenForCaller(
       return true;
 
     case WebGLExtensionID::WEBGL_debug_renderer_info:
-      return ShouldResistFingerprinting() ||
+      return ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo) ||
              !StaticPrefs::webgl_enable_debug_renderer_info();
 
     case WebGLExtensionID::WEBGL_debug_shaders:
-      return ShouldResistFingerprinting();
+      return ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo);
 
     default:
       return false;
