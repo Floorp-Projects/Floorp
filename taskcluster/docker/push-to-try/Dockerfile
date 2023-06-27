@@ -15,7 +15,7 @@ RUN apt-get update && \
 COPY known_hosts /etc/ssh/ssh_known_hosts
 COPY hgrc /etc/mercurial/hgrc.d/push-to-try.rc
 
-RUN hg clone -r 19a77a5d7b2a90ba225cf5015afd1ac44787abec https://hg.mozilla.org/hgcustom/version-control-tools /builds/worker/.mozbuild/version-control-tools
+RUN su worker -c "hg clone -r 19a77a5d7b2a90ba225cf5015afd1ac44787abec https://hg.mozilla.org/hgcustom/version-control-tools /builds/worker/.mozbuild/version-control-tools"
 
 # Create directory for scripts to put an hg config in, for configuring ssh
 RUN mkdir /builds/worker/.config/hg
