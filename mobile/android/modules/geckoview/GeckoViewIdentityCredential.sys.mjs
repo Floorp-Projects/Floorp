@@ -51,6 +51,39 @@ export const GeckoViewIdentityCredential = {
       }
     );
   },
+  async onShowPolicyPrompt(
+    aBrowser,
+    privacyPolicyUrl,
+    termsOfServiceUrl,
+    providerDomain,
+    host,
+    icon,
+    resolve,
+    reject
+  ) {
+    const prompt = new lazy.GeckoViewPrompter(aBrowser.ownerGlobal);
+    debug`onShowPolicyPrompt`;
+
+    prompt.asyncShowPrompt(
+      {
+        type: "IdentityCredential:Show:Policy",
+        privacyPolicyUrl,
+        termsOfServiceUrl,
+        providerDomain,
+        host,
+        icon,
+      },
+      result => {
+        if (result && result.accept != null) {
+          debug`onShowPolicyPrompt resolve with ${result.accept}`;
+          resolve(result.accept);
+        } else {
+          debug`onShowPolicyPrompt rejected`;
+          reject();
+        }
+      }
+    );
+  },
 };
 
 const { debug } = GeckoViewUtils.initLogging("GeckoViewIdentityCredential");

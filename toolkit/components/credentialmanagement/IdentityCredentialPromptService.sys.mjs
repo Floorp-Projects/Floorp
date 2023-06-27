@@ -363,107 +363,131 @@ export class IdentityCredentialPromptService {
       let currentBaseDomain =
         browsingContext.currentWindowContext.documentPrincipal.baseDomain;
 
-      // Localize the description
-      // Bug 1797154 - Convert localization calls to use the async formatValues.
-      let localization = new Localization(
-        ["browser/identityCredentialNotification.ftl"],
-        true
-      );
-      let [accept, cancel] = localization.formatMessagesSync([
-        { id: "identity-credential-accept-button" },
-        { id: "identity-credential-cancel-button" },
-      ]);
+      if (AppConstants.platform === "android") {
+        lazy.GeckoViewIdentityCredential.onShowPolicyPrompt(
+          browsingContext,
+          identityCredentialMetadata.privacy_policy_url,
+          identityCredentialMetadata.terms_of_service_url,
+          providerDisplayDomain,
+          currentBaseDomain,
+          iconResult,
+          resolve,
+          reject
+        );
+      } else {
+        // Localize the description
+        // Bug 1797154 - Convert localization calls to use the async formatValues.
+        let localization = new Localization(
+          ["browser/identityCredentialNotification.ftl"],
+          true
+        );
+        let [accept, cancel] = localization.formatMessagesSync([
+          { id: "identity-credential-accept-button" },
+          { id: "identity-credential-cancel-button" },
+        ]);
 
-      let cancelLabel = cancel.attributes.find(x => x.name == "label").value;
-      let cancelKey = cancel.attributes.find(x => x.name == "accesskey").value;
-      let acceptLabel = accept.attributes.find(x => x.name == "label").value;
-      let acceptKey = accept.attributes.find(x => x.name == "accesskey").value;
+        let cancelLabel = cancel.attributes.find(x => x.name == "label").value;
+        let cancelKey = cancel.attributes.find(
+          x => x.name == "accesskey"
+        ).value;
+        let acceptLabel = accept.attributes.find(x => x.name == "label").value;
+        let acceptKey = accept.attributes.find(
+          x => x.name == "accesskey"
+        ).value;
 
-      let title = localization.formatValueSync(
-        "identity-credential-policy-title",
-        {
-          provider: providerName || providerDisplayDomain,
-        }
-      );
-
-      if (iconResult) {
-        let headerIcon = browser.ownerDocument.getElementsByClassName(
-          "identity-credential-header-icon"
-        )[0];
-        headerIcon.setAttribute("src", iconResult);
-      }
-
-      const headerText = browser.ownerDocument.getElementById(
-        "identity-credential-header-text"
-      );
-      headerText.textContent = title;
-
-      let privacyPolicyAnchor = browser.ownerDocument.getElementById(
-        "identity-credential-privacy-policy"
-      );
-      privacyPolicyAnchor.href = identityCredentialMetadata.privacy_policy_url;
-      let termsOfServiceAnchor = browser.ownerDocument.getElementById(
-        "identity-credential-terms-of-service"
-      );
-      termsOfServiceAnchor.href =
-        identityCredentialMetadata.terms_of_service_url;
-
-      // Populate the content of the policy panel
-      let description = browser.ownerDocument.getElementById(
-        "identity-credential-policy-explanation"
-      );
-      browser.ownerDocument.l10n.setAttributes(
-        description,
-        "identity-credential-policy-description",
-        {
-          host: currentBaseDomain,
-          provider: providerDisplayDomain,
-        }
-      );
-
-      // Construct the necessary arguments for notification behavior
-      let options = {
-        hideClose: true,
-        eventCallback: (topic, nextRemovalReason, isCancel) => {
-          if (topic == "removed" && isCancel) {
-            reject();
+        let title = localization.formatValueSync(
+          "identity-credential-policy-title",
+          {
+            provider: providerName || providerDisplayDomain,
           }
-        },
-      };
-      let mainAction = {
-        label: acceptLabel,
-        accessKey: acceptKey,
-        callback(event) {
-          resolve(true);
-        },
-      };
-      let secondaryActions = [
-        {
-          label: cancelLabel,
-          accessKey: cancelKey,
-          callback(event) {
-            resolve(false);
-          },
-        },
-      ];
+        );
 
-      // Show the popup
-      let ownerDocument = browser.ownerDocument;
-      ownerDocument.getElementById(
-        "identity-credential-provider"
-      ).hidden = true;
-      ownerDocument.getElementById("identity-credential-policy").hidden = false;
-      ownerDocument.getElementById("identity-credential-account").hidden = true;
-      ownerDocument.getElementById("identity-credential-header").hidden = false;
-      browser.ownerGlobal.PopupNotifications.show(
-        browser,
-        "identity-credential",
-        "",
-        "identity-credential-notification-icon",
-        mainAction,
-        secondaryActions,
-        options
-      );
+        if (iconResult) {
+          let headerIcon = browser.ownerDocument.getElementsByClassName(
+            "identity-credential-header-icon"
+          )[0];
+          headerIcon.setAttribute("src", iconResult);
+        }
+
+        const headerText = browser.ownerDocument.getElementById(
+          "identity-credential-header-text"
+        );
+        headerText.textContent = title;
+
+        let privacyPolicyAnchor = browser.ownerDocument.getElementById(
+          "identity-credential-privacy-policy"
+        );
+        privacyPolicyAnchor.href =
+          identityCredentialMetadata.privacy_policy_url;
+        let termsOfServiceAnchor = browser.ownerDocument.getElementById(
+          "identity-credential-terms-of-service"
+        );
+        termsOfServiceAnchor.href =
+          identityCredentialMetadata.terms_of_service_url;
+
+        // Populate the content of the policy panel
+        let description = browser.ownerDocument.getElementById(
+          "identity-credential-policy-explanation"
+        );
+        browser.ownerDocument.l10n.setAttributes(
+          description,
+          "identity-credential-policy-description",
+          {
+            host: currentBaseDomain,
+            provider: providerDisplayDomain,
+          }
+        );
+
+        // Construct the necessary arguments for notification behavior
+        let options = {
+          hideClose: true,
+          eventCallback: (topic, nextRemovalReason, isCancel) => {
+            if (topic == "removed" && isCancel) {
+              reject();
+            }
+          },
+        };
+        let mainAction = {
+          label: acceptLabel,
+          accessKey: acceptKey,
+          callback(event) {
+            resolve(true);
+          },
+        };
+        let secondaryActions = [
+          {
+            label: cancelLabel,
+            accessKey: cancelKey,
+            callback(event) {
+              resolve(false);
+            },
+          },
+        ];
+
+        // Show the popup
+        let ownerDocument = browser.ownerDocument;
+        ownerDocument.getElementById(
+          "identity-credential-provider"
+        ).hidden = true;
+        ownerDocument.getElementById(
+          "identity-credential-policy"
+        ).hidden = false;
+        ownerDocument.getElementById(
+          "identity-credential-account"
+        ).hidden = true;
+        ownerDocument.getElementById(
+          "identity-credential-header"
+        ).hidden = false;
+        browser.ownerGlobal.PopupNotifications.show(
+          browser,
+          "identity-credential",
+          "",
+          "identity-credential-notification-icon",
+          mainAction,
+          secondaryActions,
+          options
+        );
+      }
     });
   }
 

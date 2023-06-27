@@ -1281,6 +1281,7 @@ package org.mozilla.geckoview {
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onSelectIdentityCredentialAccount(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onSelectIdentityCredentialProvider(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onSharePrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.SharePrompt);
+    method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onShowPrivacyPolicyIdentityCredential(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.IdentityCredential.PrivacyPolicyPrompt);
     method @Nullable @UiThread default public GeckoResult<GeckoSession.PromptDelegate.PromptResponse> onTextPrompt(@NonNull GeckoSession, @NonNull GeckoSession.PromptDelegate.TextPrompt);
   }
 
@@ -1479,6 +1480,16 @@ package org.mozilla.geckoview {
     field @NonNull public final GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt.Account[] accounts;
     field public final int id;
     field @Nullable public final String provider;
+  }
+
+  public static class GeckoSession.PromptDelegate.IdentityCredential.PrivacyPolicyPrompt extends GeckoSession.PromptDelegate.BasePrompt {
+    ctor protected PrivacyPolicyPrompt(@NonNull String, @NonNull String, @NonNull String, @NonNull String, @NonNull String, @Nullable String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
+    method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(boolean);
+    field @NonNull public final String host;
+    field @Nullable public final String icon;
+    field @NonNull public final String privacyPolicyUrl;
+    field @NonNull public final String providerDomain;
+    field @NonNull public final String termsOfServiceUrl;
   }
 
   public static class GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt extends GeckoSession.PromptDelegate.BasePrompt {
