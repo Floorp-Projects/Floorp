@@ -13,17 +13,6 @@ XPCOMUtils.defineLazyGetter(lazy, "console", () => {
   });
 });
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  LanguageDetector:
-    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
-});
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "useFastTextPref",
-  "browser.translations.languageDetection.fastText"
-);
-
 /**
  * @typedef {import("./TranslationsChild.sys.mjs").LanguageIdEngine} LanguageIdEngine
  * @typedef {import("./TranslationsChild.sys.mjs").TranslationsEngine} TranslationsEngine
@@ -217,7 +206,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
     }
     return this.#convertToContentPromise(
       this.#getTranslationsChild()
-        .getOrCreateLanguageIdEngine()
+        .createLanguageIdEngine()
         .then(engine => {
           this.languageIdEngine = engine;
         })
@@ -261,29 +250,17 @@ export class AboutTranslationsChild extends JSWindowActorChild {
    * @returns {Promise<{ langTag: string, confidence: number }>}
    */
   AT_identifyLanguage(message) {
-    if (lazy.useFastTextPref) {
-      if (!this.languageIdEngine) {
-        const { Promise, Error } = this.contentWindow;
-        return Promise.reject(
-          new Error("The language identification was not created.")
-        );
-      }
-
-      return this.#convertToContentPromise(
-        this.languageIdEngine
-          .identifyLanguage(message)
-          .then(data => Cu.cloneInto(data, this.contentWindow))
+    if (!this.languageIdEngine) {
+      const { Promise, Error } = this.contentWindow;
+      return Promise.reject(
+        new Error("The language identification was not created.")
       );
     }
+
     return this.#convertToContentPromise(
-      lazy.LanguageDetector.detectLanguage(message).then(data =>
-        Cu.cloneInto(
-          // This language detector reports confidence as a boolean instead of
-          // a percentage, so we need to map the confidence to 0.0 or 1.0.
-          { langTag: data.language, confidence: data.confident ? 1.0 : 0.0 },
-          this.contentWindow
-        )
-      )
+      this.languageIdEngine
+        .identifyLanguage(message)
+        .then(data => Cu.cloneInto(data, this.contentWindow))
     );
   }
 
