@@ -8,6 +8,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://global/content/translations/translations-engine.sys.mjs",
   LanguageIdEngine:
     "chrome://global/content/translations/language-id-engine.sys.mjs",
+  LanguageDetector:
+    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
 });
 
 /**
@@ -80,12 +82,20 @@ export class TranslationsChild extends JSWindowActorChild {
       case "Translations:GetDocumentElementLang":
         return this.document.documentElement.lang;
       case "Translations:IdentifyLanguage": {
+        if (Cu.isInAutomation) {
+          return null;
+        }
         try {
-          const engine = await this.createLanguageIdEngine();
-          if (!engine) {
-            return null;
+          if (data.useFastText) {
+            const engine = await this.createLanguageIdEngine();
+            if (!engine) {
+              return null;
+            }
+            return engine.identifyLanguageFromDocument(this.document);
           }
-          return engine.identifyLanguageFromDocument(this.document);
+          return lazy.LanguageDetector.detectLanguageFromDocument(
+            this.document
+          );
         } catch (error) {
           return null;
         }

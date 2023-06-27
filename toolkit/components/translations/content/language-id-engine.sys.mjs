@@ -44,6 +44,9 @@ const DOC_LANGUAGE_DETECTION_THRESHOLD = 0.65;
  * identification result without being too large or expensive to extract.
  *
  * At this time, this value is not driven by statistical data or analysis.
+ *
+ * For the moment, while we investigate which language identification library
+ * we would like to use, keep this logic in sync with LanguageDetector.sys.mjs
  */
 const DOC_TEXT_TO_IDENTIFY_LENGTH = 1024;
 
@@ -196,6 +199,10 @@ export class LanguageIdEngine {
   }
 
   /**
+   * Attempts to determine the language in which the document's content is written.
+   *
+   * For the moment, while we investigate which language identification library
+   * we would like to use, keep this logic in sync with LanguageDetector.sys.mjs
    * @returns {string | null}
    */
   async identifyLanguageFromDocument(document) {
