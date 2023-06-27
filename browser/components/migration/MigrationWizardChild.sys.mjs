@@ -77,7 +77,7 @@ export class MigrationWizardChild extends JSWindowActorChild {
    * @returns {Promise}
    */
   async handleEvent(event) {
-    this.#wizardEl ??= event.target;
+    this.#wizardEl = event.target;
 
     switch (event.type) {
       case "MigrationWizard:RequestState": {
