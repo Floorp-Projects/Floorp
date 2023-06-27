@@ -55,7 +55,7 @@ class MediaSink {
   // Must be called after playback starts.
   virtual media::TimeUnit GetEndTime(TrackType aType) const = 0;
 
-  // Return playback position of the media.
+  // Return playback position for the media data.
   // Since A/V sync is always maintained by this sink, there is no need to
   // specify whether we want to get audio or video position.
   // aTimeStamp returns the timeStamp corresponding to the returned position
@@ -102,8 +102,10 @@ class MediaSink {
   // Do nothing if this sink has no video track. Can be called in any state.
   virtual void Redraw(const VideoInfo& aInfo){};
 
-  // Begin a playback session with the provided start time and media info.
-  // Must be called when playback is stopped.
+  // Begin a playback session with the provided start time in the media data
+  // and media info.  Must be called when playback is stopped.  aStartTime is
+  // compared with MediaData::mTime and continues to increase when looping,
+  // unless decoding is reset.
   virtual nsresult Start(const media::TimeUnit& aStartTime,
                          const MediaInfo& aInfo) = 0;
 

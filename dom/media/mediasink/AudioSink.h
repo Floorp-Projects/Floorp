@@ -51,7 +51,8 @@ class AudioSink : private AudioStream::DataSource {
                                  const RefPtr<AudioDeviceInfo>& aAudioDevice,
                                  InitializationType aInitializationType);
 
-  // Start audio playback.
+  // Start audio playback.  aStartTime is compared with MediaData::mTime to
+  // identify the first audio frame to be played.
   RefPtr<MediaSink::EndedPromise> Start(const media::TimeUnit& aStartTime);
 
   /*
