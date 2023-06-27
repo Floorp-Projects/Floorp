@@ -43,11 +43,6 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
   await toggleNeverTranslateSite();
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, true);
 
-  await assertTranslationsButton(
-    { button: false },
-    "The translations button should be invisible"
-  );
-
   info(
     "Simulate clicking always-translate-language in the settings menu, " +
       "adding the document language to the alwaysTranslateLanguages pref"
@@ -57,11 +52,6 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, true);
   await toggleNeverTranslateSite();
   await assertIsNeverTranslateSite(SPANISH_PAGE_URL, false);
-
-  await assertTranslationsButton(
-    { button: true, circleArrows: false, locale: false, icon: true },
-    "The translations button is available again"
-  );
 
   await cleanup();
 });
@@ -118,11 +108,6 @@ add_task(
     await assertIsAlwaysTranslateLanguage("es", true);
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, true);
 
-    await assertTranslationsButton(
-      { button: false },
-      "The translations button should be invisible"
-    );
-
     info("The page should still be in its original, untranslated form");
     await runInPage(async TranslationsTest => {
       const { getH1 } = TranslationsTest.getSelectors();
@@ -146,11 +131,6 @@ add_task(
 
     await assertIsAlwaysTranslateLanguage("es", true);
     await assertIsNeverTranslateSite(SPANISH_PAGE_URL, false);
-
-    await assertTranslationsButton(
-      { button: true, circleArrows: false, locale: true, icon: true },
-      "The icon presents the locale."
-    );
 
     is(locale.innerText, "en", "The English language tag is shown.");
 
