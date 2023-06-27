@@ -345,12 +345,30 @@ export default class LoginItem extends HTMLElement {
     this.render();
   }
 
-  async handlePasswordDisplayFocus() {
+  async handlePasswordDisplayFocus(e) {
+    // TODO(Bug 1838494): Remove this if block
+    // This is a temporary fix until Bug 1750072 lands
+    const focusFromCheckbox = e && e.relatedTarget === this._revealCheckbox;
+    const isEditingMode = this.dataset.editing || this.dataset.isNewLogin;
+    if (focusFromCheckbox && isEditingMode) {
+      this._passwordInput.type = this._revealCheckbox.checked
+        ? "text"
+        : "password";
+      return;
+    }
+
     this._revealCheckbox.checked = !!this.dataset.editing;
     this._updatePasswordRevealState();
   }
 
-  async addHTTPSPrefix() {
+  async addHTTPSPrefix(e) {
+    // TODO(Bug 1838494): Remove this if block
+    // This is a temporary fix until Bug 1750072 lands
+    const focusCheckboxNext = e && e.relatedTarget === this._revealCheckbox;
+    if (focusCheckboxNext) {
+      return;
+    }
+
     // Add https:// prefix if one was not provided.
     let originValue = this._originInput.value.trim();
     if (!originValue) {
@@ -362,14 +380,28 @@ export default class LoginItem extends HTMLElement {
     }
   }
 
-  async handlePasswordDisplayBlur() {
+  async handlePasswordDisplayBlur(e) {
+    // TODO(Bug 1838494): Remove this if block
+    // This is a temporary fix until Bug 1750072 lands
+    const focusCheckboxNext = e && e.relatedTarget === this._revealCheckbox;
+    if (focusCheckboxNext) {
+      return;
+    }
+
     this._revealCheckbox.checked = !!this.dataset.editing;
     this._updatePasswordRevealState();
 
     this.addHTTPSPrefix();
   }
 
-  async handleEditPasswordInputBlur() {
+  async handleEditPasswordInputBlur(e) {
+    // TODO(Bug 1838494): Remove this if block
+    // This is a temporary fix until Bug 1750072 lands
+    const focusCheckboxNext = e && e.relatedTarget === this._revealCheckbox;
+    if (focusCheckboxNext) {
+      return;
+    }
+
     this._revealCheckbox.checked = false;
     this._updatePasswordRevealState();
 
@@ -377,6 +409,15 @@ export default class LoginItem extends HTMLElement {
   }
 
   async handleRevealPasswordClick() {
+    // TODO(Bug 1838494): Remove this if block
+    // This is a temporary fix until Bug 1750072 lands
+    if (this.dataset.editing || this.dataset.isNewLogin) {
+      this._passwordDisplayInput.replaceWith(this._passwordInput);
+      this._passwordInput.type = "text";
+      this._passwordInput.focus();
+      return;
+    }
+
     // We prompt for the primary password when entering edit mode already.
     if (this._revealCheckbox.checked && !this.dataset.editing) {
       let primaryPasswordAuth = await promptForPrimaryPassword(
