@@ -2900,12 +2900,6 @@ class Document : public nsINode,
     return mTemplateContentsOwner.get();
   }
 
-  bool IsTemplateContentsOwner() const {
-    // Template contents owner documents are the template contents owner of
-    // themselves.
-    return mTemplateContentsOwner == this;
-  }
-
   /**
    * Returns true if this document is a static clone of a normal document.
    *
