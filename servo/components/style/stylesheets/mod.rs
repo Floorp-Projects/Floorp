@@ -473,6 +473,7 @@ impl CssRule {
             insert_rule_context: Some(insert_rule_context),
             allow_import_rules,
             declaration_parser_state: Default::default(),
+            error_reporting_state: Default::default(),
             rules: Default::default(),
         };
 

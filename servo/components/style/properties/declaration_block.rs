@@ -1310,7 +1310,7 @@ pub fn parse_style_attribute(
     );
 
     let mut input = ParserInput::new(input);
-    parse_property_declaration_list(&context, &mut Parser::new(&mut input), None)
+    parse_property_declaration_list(&context, &mut Parser::new(&mut input), &[])
 }
 
 /// Parse a given property declaration. Can result in multiple
@@ -1358,7 +1358,7 @@ pub fn parse_one_declaration_into(
                 report_one_css_error(
                     &context,
                     None,
-                    None,
+                    &[],
                     err,
                     parser.slice_from(start_position),
                     property_id_for_error_reporting,
@@ -1441,7 +1441,7 @@ impl<'i> DeclarationParserState<'i> {
     pub fn report_errors_if_needed(
         &mut self,
         context: &ParserContext,
-        selectors: Option<&SelectorList<SelectorImpl>>,
+        selectors: &[SelectorList<SelectorImpl>],
     ) {
         if self.errors.is_empty() {
             return;
@@ -1453,7 +1453,7 @@ impl<'i> DeclarationParserState<'i> {
     fn do_report_css_errors(
         &mut self,
         context: &ParserContext,
-        selectors: Option<&SelectorList<SelectorImpl>>,
+        selectors: &[SelectorList<SelectorImpl>],
     ) {
         for (error, slice, property) in self.errors.drain(..) {
             report_one_css_error(
@@ -1536,7 +1536,7 @@ fn alias_of_known_property(name: &str) -> Option<PropertyId> {
 fn report_one_css_error<'i>(
     context: &ParserContext,
     block: Option<&PropertyDeclarationBlock>,
-    selectors: Option<&SelectorList<SelectorImpl>>,
+    selectors: &[SelectorList<SelectorImpl>],
     mut error: ParseError<'i>,
     slice: &str,
     property: Option<PropertyId>,
@@ -1594,7 +1594,7 @@ fn report_one_css_error<'i>(
 pub fn parse_property_declaration_list(
     context: &ParserContext,
     input: &mut Parser,
-    selectors: Option<&SelectorList<SelectorImpl>>,
+    selectors: &[SelectorList<SelectorImpl>],
 ) -> PropertyDeclarationBlock {
     let mut state = DeclarationParserState::default();
     let mut parser = PropertyDeclarationParser {

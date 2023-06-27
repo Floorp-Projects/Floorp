@@ -20,7 +20,7 @@ pub enum ContextualParseError<'a> {
     UnsupportedPropertyDeclaration(
         &'a str,
         ParseError<'a>,
-        Option<&'a SelectorList<SelectorImpl>>,
+        &'a [SelectorList<SelectorImpl>],
     ),
     /// A property descriptor was not recognized.
     UnsupportedPropertyDescriptor(&'a str, ParseError<'a>),

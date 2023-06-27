@@ -101,6 +101,11 @@ pub struct TopLevelRuleParser<'a, 'i> {
     pub allow_import_rules: AllowImportRules,
     /// Parser state for declaration blocks in either nested rules or style rules.
     pub declaration_parser_state: DeclarationParserState<'i>,
+    /// State we keep around only for error reporting purposes. Right now that contains just the
+    /// selectors stack for nesting, if any.
+    ///
+    /// TODO(emilio): This isn't populated properly for `insertRule()` but...
+    pub error_reporting_state: Vec<SelectorList<SelectorImpl>>,
     /// The rules we've parsed so far.
     pub rules: Vec<CssRule>,
 }
@@ -522,7 +527,6 @@ impl<'a, 'i> NestedRuleParser<'a, 'i> {
         &mut self,
         input: &mut Parser<'i, '_>,
         rule_type: CssRuleType,
-        selectors: Option<&SelectorList<SelectorImpl>>,
     ) -> NestedParseResult {
         self.nest_for_rule(rule_type, |parser| {
             let parse_declarations = parser.parse_declarations();
@@ -547,8 +551,7 @@ impl<'a, 'i> NestedRuleParser<'a, 'i> {
             }
             let declarations = if parse_declarations {
                 let top = &mut **parser;
-                top.declaration_parser_state
-                    .report_errors_if_needed(&top.context, selectors);
+                top.declaration_parser_state.report_errors_if_needed(&top.context, &top.error_reporting_state);
                 parser.declaration_parser_state.take_declarations()
             } else {
                 PropertyDeclarationBlock::default()
@@ -567,6 +570,45 @@ impl<'a, 'i> NestedRuleParser<'a, 'i> {
                 declarations,
             }
         })
+    }
+
+    #[inline(never)]
+    fn handle_error_reporting_selectors_pre(
+        &mut self,
+        start: &ParserState,
+        selectors: &SelectorList<SelectorImpl>,
+    ) {
+        use cssparser::ToCss;
+        debug_assert!(self.context.error_reporting_enabled());
+        self.error_reporting_state.push(selectors.clone());
+        'selector_loop: for selector in selectors.0.iter() {
+            let mut current = selector.iter();
+            loop {
+                let mut found_host = false;
+                let mut found_non_host = false;
+                for component in &mut current {
+                    if component.is_host() {
+                        found_host = true;
+                    } else {
+                        found_non_host = true;
+                    }
+                    if found_host && found_non_host {
+                        self.context.log_css_error(
+                            start.source_location(),
+                            ContextualParseError::NeverMatchingHostSelector(selector.to_css_string()),
+                        );
+                        continue 'selector_loop;
+                    }
+                }
+                if current.next_sequence().is_none() {
+                    break;
+                }
+            }
+        }
+    }
+
+    fn handle_error_reporting_selectors_post(&mut self) {
+        self.error_reporting_state.pop();
     }
 }
 
@@ -703,7 +745,7 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                 CssRule::Media(Arc::new(MediaRule {
                     media_queries,
                     rules: self
-                        .parse_nested(input, CssRuleType::Media, None)
+                        .parse_nested(input, CssRuleType::Media)
                         .into_rules(self.shared_lock, source_location),
                     source_location,
                 }))
@@ -715,7 +757,7 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                 CssRule::Supports(Arc::new(SupportsRule {
                     condition,
                     rules: self
-                        .parse_nested(input, CssRuleType::Supports, None)
+                        .parse_nested(input, CssRuleType::Supports)
                         .into_rules(self.shared_lock, source_location),
                     enabled,
                     source_location,
@@ -735,7 +777,7 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
             AtRulePrelude::Page(selectors) => {
                 let declarations = self.nest_for_rule(CssRuleType::Page, |p| {
                     // TODO: Support nesting in @page rules?
-                    parse_property_declaration_list(&p.context, input, None)
+                    parse_property_declaration_list(&p.context, input, &[])
                 });
                 CssRule::Page(Arc::new(self.shared_lock.wrap(PageRule {
                     selectors,
@@ -759,7 +801,7 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                 CssRule::Document(Arc::new(DocumentRule {
                     condition,
                     rules: self
-                        .parse_nested(input, CssRuleType::Document, None)
+                        .parse_nested(input, CssRuleType::Document)
                         .into_rules(self.shared_lock, source_location),
                     source_location,
                 }))
@@ -769,7 +811,7 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                 CssRule::Container(Arc::new(ContainerRule {
                     condition,
                     rules: self
-                        .parse_nested(input, CssRuleType::Container, None)
+                        .parse_nested(input, CssRuleType::Container)
                         .into_rules(self.shared_lock, source_location),
                     source_location,
                 }))
@@ -783,7 +825,7 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                 CssRule::LayerBlock(Arc::new(LayerBlockRule {
                     name,
                     rules: self
-                        .parse_nested(input, CssRuleType::LayerBlock, None)
+                        .parse_nested(input, CssRuleType::LayerBlock)
                         .into_rules(self.shared_lock, source_location),
                     source_location,
                 }))
@@ -823,41 +865,6 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
     }
 }
 
-#[inline(never)]
-fn check_for_useless_selector(
-    input: &mut Parser,
-    context: &ParserContext,
-    selectors: &SelectorList<SelectorImpl>,
-) {
-    use cssparser::ToCss;
-
-    'selector_loop: for selector in selectors.0.iter() {
-        let mut current = selector.iter();
-        loop {
-            let mut found_host = false;
-            let mut found_non_host = false;
-            for component in &mut current {
-                if component.is_host() {
-                    found_host = true;
-                } else {
-                    found_non_host = true;
-                }
-                if found_host && found_non_host {
-                    let location = input.current_source_location();
-                    context.log_css_error(
-                        location,
-                        ContextualParseError::NeverMatchingHostSelector(selector.to_css_string()),
-                    );
-                    continue 'selector_loop;
-                }
-            }
-            if current.next_sequence().is_none() {
-                break;
-            }
-        }
-    }
-}
-
 impl<'a, 'i> QualifiedRuleParser<'i> for NestedRuleParser<'a, 'i> {
     type Prelude = SelectorList<SelectorImpl>;
     type QualifiedRule = ();
@@ -878,11 +885,7 @@ impl<'a, 'i> QualifiedRuleParser<'i> for NestedRuleParser<'a, 'i> {
         } else {
             ParseRelative::No
         };
-        let selectors = SelectorList::parse(&selector_parser, input, parse_relative)?;
-        if self.context.error_reporting_enabled() {
-            check_for_useless_selector(input, &self.context, &selectors);
-        }
-        Ok(selectors)
+        SelectorList::parse(&selector_parser, input, parse_relative)
     }
 
     fn parse_block<'t>(
@@ -891,7 +894,14 @@ impl<'a, 'i> QualifiedRuleParser<'i> for NestedRuleParser<'a, 'i> {
         start: &ParserState,
         input: &mut Parser<'i, 't>,
     ) -> Result<(), ParseError<'i>> {
-        let result = self.parse_nested(input, CssRuleType::Style, Some(&selectors));
+        let reporting_errors = self.context.error_reporting_enabled();
+        if reporting_errors {
+            self.handle_error_reporting_selectors_pre(start, &selectors);
+        }
+        let result = self.parse_nested(input, CssRuleType::Style);
+        if reporting_errors {
+            self.handle_error_reporting_selectors_post();
+        }
         let block = Arc::new(self.shared_lock.wrap(result.declarations));
         let top = &mut **self;
         top.rules
