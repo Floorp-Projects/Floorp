@@ -572,7 +572,62 @@ class PromptDelegateTest : BaseSessionTest() {
         )
     }
 
-    @Test fun colorTest() {
+    @Test
+    fun fedCMProviderPromptTest() {
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "dom.security.credentialmanagement.identity.enabled" to true,
+            ),
+        )
+        mainSession.loadTestPath(FEDCM_RP_HTML_PATH)
+
+        sessionRule.delegateDuringNextWait(object : PromptDelegate {
+            @AssertCalled(count = 1)
+            override fun onSelectIdentityCredentialProvider(
+                session: GeckoSession,
+                prompt: PromptDelegate.IdentityCredential.ProviderSelectorPrompt,
+            ): GeckoResult<PromptResponse> {
+                prompt.providers.mapIndexed { index, item ->
+                    assertThat("ID should match", index, equalTo(item.id))
+                    assertThat(
+                        "Name should be the URL of the current page",
+                        item.name,
+                        containsString("$TEST_HOST:$TEST_PORT"),
+                    )
+                    assertThat("Icon should be null", item.icon, isEmptyOrNullString())
+                }
+                return GeckoResult.fromValue(prompt.confirm(0))
+            }
+        })
+
+        try {
+            mainSession.waitForJS(
+                """  
+            navigator.credentials.get({
+            identity: {
+              providers: [{
+                configURL: "${createTestUrl(FEDCM_IDP_MANIFEST_PATH)}",
+                clientId: "CLIENT_ID",
+                nonce: "nonce",
+              }]
+            }
+          });
+                """.trimIndent(),
+            )
+        } catch (e: GeckoSessionTestRule.RejectedPromiseException) {
+            // As the FedCM flow is not currently completely implemented, it is expected to fail with this exception.
+            // This test will be updated and test the rest of the flow, so after the PolicyPrompt is correctly implemented
+            // and tested we can remove this code. (see bug 1840082)
+            assertThat(
+                "Error should be correct",
+                e.reason as String,
+                containsString("UnknownError: The operation failed for an unknown transient reason"),
+            )
+        }
+    }
+
+    @Test
+    fun colorTest() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to false))
 
         mainSession.loadTestPath(PROMPT_HTML_PATH)
