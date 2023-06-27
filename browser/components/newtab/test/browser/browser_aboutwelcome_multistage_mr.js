@@ -609,6 +609,31 @@ add_task(async function test_aboutwelcome_embedded_migration() {
     "Should have sent telemetry for clicking the 'Continue' button."
   );
 
+  // Ensure that we can go back and get the migration wizard to appear
+  // again.
+  await SpecialPowers.spawn(browser, [], async () => {
+    const { MigrationWizardConstants } = ChromeUtils.importESModule(
+      "chrome://browser/content/migration/migration-wizard-constants.mjs"
+    );
+
+    let migrationWizardReady = ContentTaskUtils.waitForEvent(
+      content,
+      "MigrationWizard:Ready"
+    );
+
+    content.history.back();
+    await migrationWizardReady;
+
+    let wizard = content.document.querySelector("migration-wizard");
+    let shadow = wizard.openOrClosedShadowRoot;
+    let deck = shadow.querySelector("#wizard-deck");
+
+    Assert.equal(
+      deck.getAttribute("selected-view"),
+      `page-${MigrationWizardConstants.PAGES.SELECTION}`
+    );
+  });
+
   // cleanup
   await SpecialPowers.popPrefEnv(); // for the InternalTestingProfileMigrator.
   await SpecialPowers.popPrefEnv(); // for setAboutWelcomeMultiStage
