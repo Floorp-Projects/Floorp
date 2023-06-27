@@ -15,7 +15,9 @@ httpServer.registerPathHandler(`/test_css_messages.html`, (req, res) => {
   res.write(`<meta charset=utf8>
     <style>
       html {
-        color: bloup;
+        body {
+          color: bloup;
+        }
       }
     </style>Test CSS Messages`);
 });
@@ -138,7 +140,7 @@ function setupOnAvailableFunction(
         error: false,
         warning: true,
       },
-      cssSelectors: "html",
+      cssSelectors: ":is(html) body",
       isAlreadyExistingResource,
     },
     {
