@@ -2316,6 +2316,11 @@ WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
     const PanGestureInput& aPanInput, const APZEventResult& aApzResult) {
   WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
 
+  // Ignore swipe-to-navigation in PiP window.
+  if (mIsPIPWindow) {
+    return event;
+  }
+
   if (aPanInput.AllowsSwipe()) {
     SwipeInfo swipeInfo = SendMayStartSwipe(aPanInput);
     event.mCanTriggerSwipe = swipeInfo.wantsSwipe;
@@ -2357,6 +2362,11 @@ WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
 }
 
 bool nsBaseWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput) {
+  // Ignore swipe-to-navigation in PiP window.
+  if (mIsPIPWindow) {
+    return false;
+  }
+
   if (aPanInput.mType == PanGestureInput::PANGESTURE_MAYSTART ||
       aPanInput.mType == PanGestureInput::PANGESTURE_START) {
     mCurrentPanGestureBelongsToSwipe = false;
