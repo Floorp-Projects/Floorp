@@ -88,7 +88,8 @@ void ReportUnblockingToConsole(
         }
 
         nsAutoString origin;
-        nsresult rv = nsContentUtils::GetUTFOrigin(principal, origin);
+        nsresult rv =
+            nsContentUtils::GetWebExposedOriginSerialization(principal, origin);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return;
         }
@@ -285,7 +286,8 @@ void NotifyBlockingDecision(nsIChannel* aTrackingChannel,
 
   nsAutoCString trackingOrigin;
   if (aURI) {
-    Unused << nsContentUtils::GetASCIIOrigin(aURI, trackingOrigin);
+    Unused << nsContentUtils::GetWebExposedOriginSerialization(aURI,
+                                                               trackingOrigin);
   }
 
   if (aDecision == ContentBlockingNotifier::BlockingDecision::eBlock) {
@@ -545,7 +547,8 @@ void ContentBlockingNotifier::OnEvent(nsIChannel* aTrackingChannel,
 
   nsAutoCString trackingOrigin;
   if (uri) {
-    Unused << nsContentUtils::GetASCIIOrigin(uri, trackingOrigin);
+    Unused << nsContentUtils::GetWebExposedOriginSerialization(uri,
+                                                               trackingOrigin);
   }
 
   return ContentBlockingNotifier::OnEvent(aTrackingChannel, aBlocked,

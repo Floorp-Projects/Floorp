@@ -86,14 +86,14 @@ BasePrincipal::GetOrigin(nsACString& aOrigin) {
 }
 
 NS_IMETHODIMP
-BasePrincipal::GetAsciiOrigin(nsACString& aOrigin) {
+BasePrincipal::GetWebExposedOriginSerialization(nsACString& aOrigin) {
   aOrigin.Truncate();
   nsCOMPtr<nsIURI> prinURI;
   nsresult rv = GetURI(getter_AddRefs(prinURI));
   if (NS_FAILED(rv) || !prinURI) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  return nsContentUtils::GetASCIIOrigin(prinURI, aOrigin);
+  return nsContentUtils::GetWebExposedOriginSerialization(prinURI, aOrigin);
 }
 
 NS_IMETHODIMP

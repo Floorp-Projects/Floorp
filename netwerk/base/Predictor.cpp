@@ -95,7 +95,7 @@ static const uint32_t kFlagsMask = ((1 << kRollingLoadOffset) - 1);
 // of nsIURI instead?)
 static nsresult ExtractOrigin(nsIURI* uri, nsIURI** originUri) {
   nsAutoCString s;
-  nsresult rv = nsContentUtils::GetASCIIOrigin(uri, s);
+  nsresult rv = nsContentUtils::GetWebExposedOriginSerialization(uri, s);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_NewURI(originUri, s);

@@ -476,14 +476,16 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
   }
 
   nsAutoCString trackingOrigin;
-  rv = nsContentUtils::GetASCIIOrigin(trackingURI, trackingOrigin);
+  rv = nsContentUtils::GetWebExposedOriginSerialization(trackingURI,
+                                                        trackingOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return nsILoadInfo::NoStoragePermission;
   }
 
   if (IsThirdPartyChannel(aChannel)) {
     nsAutoCString targetOrigin;
-    if (NS_FAILED(targetPrincipal->GetAsciiOrigin(targetOrigin))) {
+    if (NS_FAILED(
+            targetPrincipal->GetWebExposedOriginSerialization(targetOrigin))) {
       return nsILoadInfo::NoStoragePermission;
     }
 

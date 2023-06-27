@@ -1763,7 +1763,7 @@ void nsContentSecurityManager::GetSerializedOrigin(
   // have a redirect-tainted origin, so we return the origin of the request
   // here.
   if (!lastOrigin) {
-    aOrigin->GetAsciiOrigin(aSerializedOrigin);
+    aOrigin->GetWebExposedOriginSerialization(aSerializedOrigin);
     return;
   }
 
@@ -1773,7 +1773,7 @@ void nsContentSecurityManager::GetSerializedOrigin(
     return;
   }
 
-  aOrigin->GetAsciiOrigin(aSerializedOrigin);
+  aOrigin->GetWebExposedOriginSerialization(aSerializedOrigin);
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#compatible-with-cross-origin-isolation

@@ -898,7 +898,7 @@ bool ApproximateAllowAccessForWithoutChannel(
   }
 
   nsAutoCString origin;
-  nsresult rv = nsContentUtils::GetASCIIOrigin(aURI, origin);
+  nsresult rv = nsContentUtils::GetWebExposedOriginSerialization(aURI, origin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG_SPEC(("Failed to compute the origin from %s", _spec), aURI);
     return false;

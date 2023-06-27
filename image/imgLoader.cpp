@@ -1412,7 +1412,8 @@ nsresult imgLoader::RemoveEntriesInternal(nsIPrincipal* aPrincipal,
 
   nsAutoString origin;
   if (aPrincipal) {
-    nsresult rv = nsContentUtils::GetUTFOrigin(aPrincipal, origin);
+    nsresult rv =
+        nsContentUtils::GetWebExposedOriginSerialization(aPrincipal, origin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1433,7 +1434,8 @@ nsresult imgLoader::RemoveEntriesInternal(nsIPrincipal* aPrincipal,
         }
 
         nsAutoString imageOrigin;
-        nsresult rv = nsContentUtils::GetUTFOrigin(key.URI(), imageOrigin);
+        nsresult rv = nsContentUtils::GetWebExposedOriginSerialization(
+            key.URI(), imageOrigin);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return false;
         }

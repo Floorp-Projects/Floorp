@@ -2457,7 +2457,7 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
   if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
                    mozilla::LogLevel::Debug)) {
     nsAutoCString origin;
-    aPrincipal->GetAsciiOrigin(origin);
+    aPrincipal->GetWebExposedOriginSerialization(origin);
     LogDomainAndPrefList(kExemptedDomainsPrefName, origin, isExemptDomain);
   }
 
@@ -6509,7 +6509,8 @@ SameOriginCheckerImpl::GetInterface(const nsIID& aIID, void** aResult) {
 }
 
 /* static */
-nsresult nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin) {
+nsresult nsContentUtils::GetWebExposedOriginSerialization(nsIURI* aURI,
+                                                          nsACString& aOrigin) {
   MOZ_ASSERT(aURI, "missing uri");
 
   // For Blob URI, the path is the URL of the owning page.
@@ -6525,7 +6526,7 @@ nsresult nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin) {
       return NS_OK;
     }
 
-    return GetASCIIOrigin(uri, aOrigin);
+    return GetWebExposedOriginSerialization(uri, aOrigin);
   }
 
   aOrigin.Truncate();
@@ -6558,24 +6559,26 @@ nsresult nsContentUtils::GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin) {
 }
 
 /* static */
-nsresult nsContentUtils::GetUTFOrigin(nsIPrincipal* aPrincipal,
-                                      nsAString& aOrigin) {
+nsresult nsContentUtils::GetWebExposedOriginSerialization(
+    nsIPrincipal* aPrincipal, nsAString& aOrigin) {
   MOZ_ASSERT(aPrincipal, "missing principal");
 
   aOrigin.Truncate();
-  nsAutoCString asciiOrigin;
+  nsAutoCString webExposedOriginSerialization;
 
-  nsresult rv = aPrincipal->GetAsciiOrigin(asciiOrigin);
+  nsresult rv = aPrincipal->GetWebExposedOriginSerialization(
+      webExposedOriginSerialization);
   if (NS_FAILED(rv)) {
-    asciiOrigin.AssignLiteral("null");
+    webExposedOriginSerialization.AssignLiteral("null");
   }
 
-  CopyUTF8toUTF16(asciiOrigin, aOrigin);
+  CopyUTF8toUTF16(webExposedOriginSerialization, aOrigin);
   return NS_OK;
 }
 
 /* static */
-nsresult nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin) {
+nsresult nsContentUtils::GetWebExposedOriginSerialization(nsIURI* aURI,
+                                                          nsAString& aOrigin) {
   MOZ_ASSERT(aURI, "missing uri");
   nsresult rv;
 
@@ -6588,15 +6591,15 @@ nsresult nsContentUtils::GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin) {
     rv = uriWithSpecialOrigin->GetOrigin(getter_AddRefs(origin));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return GetUTFOrigin(origin, aOrigin);
+    return GetWebExposedOriginSerialization(origin, aOrigin);
   }
 #endif
 
-  nsAutoCString asciiOrigin;
-  rv = GetASCIIOrigin(aURI, asciiOrigin);
+  nsAutoCString webExposedOriginSerialization;
+  rv = GetWebExposedOriginSerialization(aURI, webExposedOriginSerialization);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  CopyUTF8toUTF16(asciiOrigin, aOrigin);
+  CopyUTF8toUTF16(webExposedOriginSerialization, aOrigin);
   return NS_OK;
 }
 

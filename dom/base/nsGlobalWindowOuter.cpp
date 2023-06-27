@@ -2616,7 +2616,7 @@ void nsGlobalWindowOuter::DispatchDOMWindowCreated() {
   if (observerService && mDoc) {
     nsAutoString origin;
     nsIPrincipal* principal = mDoc->NodePrincipal();
-    nsContentUtils::GetUTFOrigin(principal, origin);
+    nsContentUtils::GetWebExposedOriginSerialization(principal, origin);
     observerService->NotifyObservers(static_cast<nsIDOMWindow*>(this),
                                      principal->IsSystemPrincipal()
                                          ? "chrome-document-global-created"
@@ -5652,15 +5652,15 @@ bool nsGlobalWindowOuter::GatherPostMessageData(
 
   // if the principal has a URI, use that to generate the origin
   if (!callerPrin->IsSystemPrincipal()) {
-    nsAutoCString asciiOrigin;
-    callerPrin->GetAsciiOrigin(asciiOrigin);
-    CopyUTF8toUTF16(asciiOrigin, aOrigin);
+    nsAutoCString webExposedOriginSerialization;
+    callerPrin->GetWebExposedOriginSerialization(webExposedOriginSerialization);
+    CopyUTF8toUTF16(webExposedOriginSerialization, aOrigin);
   } else if (callerInnerWin) {
     if (!*aCallerURI) {
       return false;
     }
     // otherwise use the URI of the document to generate origin
-    nsContentUtils::GetUTFOrigin(*aCallerURI, aOrigin);
+    nsContentUtils::GetWebExposedOriginSerialization(*aCallerURI, aOrigin);
   } else {
     // in case of a sandbox with a system principal origin can be empty
     if (!callerPrin->IsSystemPrincipal()) {

@@ -134,7 +134,8 @@ nsresult WebTransportSessionProxy::AsyncConnectWithClient(
   // isomorphic encoded, as the `Origin` header of the request.
   // https://www.w3.org/TR/webtransport/#protocol-concepts
   nsAutoCString serializedOrigin;
-  if (NS_FAILED(aPrincipal->GetAsciiOrigin(serializedOrigin))) {
+  if (NS_FAILED(
+          aPrincipal->GetWebExposedOriginSerialization(serializedOrigin))) {
     // origin/URI will be missing for system principals
     // assign null origin
     serializedOrigin = "null"_ns;

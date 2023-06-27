@@ -2254,24 +2254,30 @@ class nsContentUtils {
   static nsIInterfaceRequestor* SameOriginChecker();
 
   /**
-   * Get the Origin of the passed in nsIPrincipal or nsIURI. If the passed in
-   * nsIURI or the URI of the passed in nsIPrincipal does not have a host, the
-   * origin is set to 'null'.
+   * Returns an ASCII compatible serialization of the nsIPrincipal or nsIURI's
+   * origin, as specified by the whatwg HTML specification.  If the principal
+   * does not have a host, the origin will be "null".
    *
-   * The ASCII versions return a ASCII strings that are puny-code encoded,
-   * suitable for, for example, header values. The UTF versions return strings
-   * containing international characters.
+   * https://html.spec.whatwg.org/multipage/browsers.html#ascii-serialisation-of-an-origin
    *
-   * The thread-safe versions return NS_ERROR_UNKNOWN_PROTOCOL if the
-   * operation cannot be completed on the current thread.
+   * Note that this is different from nsIPrincipal::GetOrigin, does not contain
+   * gecko-specific metadata like origin attributes, and should not be used for
+   * permissions or security checks.
    *
-   * @pre aPrincipal/aOrigin must not be null.
+   * See also `nsIPrincipal::GetWebExposedOriginSerialization`.
+   *
+   * These methods are thread-safe.
+   *
+   * @pre aPrincipal/aURI must not be null.
    *
    * @note this should be used for HTML5 origin determination.
    */
-  static nsresult GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin);
-  static nsresult GetUTFOrigin(nsIPrincipal* aPrincipal, nsAString& aOrigin);
-  static nsresult GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin);
+  static nsresult GetWebExposedOriginSerialization(nsIURI* aURI,
+                                                   nsACString& aOrigin);
+  static nsresult GetWebExposedOriginSerialization(nsIPrincipal* aPrincipal,
+                                                   nsAString& aOrigin);
+  static nsresult GetWebExposedOriginSerialization(nsIURI* aURI,
+                                                   nsAString& aOrigin);
 
   /**
    * This method creates and dispatches "command" event, which implements
