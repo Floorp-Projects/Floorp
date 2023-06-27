@@ -600,14 +600,6 @@ interface nsIEditor  : nsISupports
     */
   readonly attribute unsigned long textLength;
 
-  /** Get and set the body wrap width.
-    *
-    * Special values:
-    *    0 = wrap to window width
-    *   -1 = no wrap at all
-    */
-  attribute long wrapWidth;
-
   /** Get and set newline handling.
    *
    *  Values are the constants defined above.

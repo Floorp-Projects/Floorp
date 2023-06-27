@@ -439,14 +439,6 @@ class EditorBase : public nsIEditor,
       WidgetCompositionEvent& aCompositionEndEvent);
 
   /**
-   * Similar to the setter for wrapWidth, but just sets the editor
-   * internal state without actually changing the content being edited
-   * to wrap at that column.  This should only be used by callers who
-   * are sure that their content is already set up correctly.
-   */
-  void SetWrapColumn(int32_t aWrapColumn) { mWrapColumn = aWrapColumn; }
-
-  /**
    * Accessor methods to flags.
    */
   uint32_t Flags() const { return mFlags; }
@@ -515,10 +507,6 @@ class EditorBase : public nsIEditor,
 
   bool IsMailEditor() const {
     return (mFlags & nsIEditor::eEditorMailMask) != 0;
-  }
-
-  bool IsWrapHackEnabled() const {
-    return (mFlags & nsIEditor::eEditorEnableWrapHackMask) != 0;
   }
 
   bool IsInteractionAllowed() const {
@@ -2866,7 +2854,7 @@ class EditorBase : public nsIEditor,
   // Nesting count for batching.
   int32_t mPlaceholderBatch;
 
-  int32_t mWrapColumn;
+  int32_t mWrapColumn = 0;
   int32_t mNewlineHandling;
   int32_t mCaretStyle;
 

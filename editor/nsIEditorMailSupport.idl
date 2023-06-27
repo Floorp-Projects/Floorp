@@ -45,4 +45,13 @@ interface nsIEditorMailSupport : nsISupports
    */
   [can_run_script]
   void insertTextWithQuotations(in AString aStringToInsert);
+
+  /** Get and set the body wrap width.
+    *
+    * Special values:
+    *    0 = wrap to window width
+    *   -1 = no wrap at all
+    */
+  [setter_can_run_script]
+  attribute long wrapWidth;
 };
