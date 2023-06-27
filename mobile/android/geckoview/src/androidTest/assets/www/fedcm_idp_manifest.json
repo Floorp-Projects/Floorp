@@ -1,0 +1,18 @@
+{
+  "accounts_endpoint": "accounts_endpoint",
+  "client_metadata_endpoint": "client_metadata_endpoint",
+  "id_assertion_endpoint": "id_assertion_endpoint",
+  "id_token_endpoint": "id_token_endpoint",
+  "revocation_endpoint": "revocation_endpoint",
+  "branding": {
+    "background_color": "0x6200ee",
+    "color": "0xffffff",
+    "icons": [
+      {
+        "url": "url",
+        "size": 256
+      }
+    ],
+    "name": "Demo IDP"
+  }
+}
