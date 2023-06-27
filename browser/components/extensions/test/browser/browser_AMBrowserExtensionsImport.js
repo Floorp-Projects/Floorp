@@ -10,6 +10,10 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
+// This test verifies the appmenu UI when there are pending imported add-ons.
+// The UI in `about:addons` is covered by tests in
+// `toolkit/mozapps/extensions/test/browser/browser_AMBrowserExtensionsImport.js`.
+
 AddonTestUtils.initMochitest(this);
 
 const TEST_SERVER = AddonTestUtils.createHttpServer();
