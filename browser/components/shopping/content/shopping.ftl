@@ -7,3 +7,15 @@
 ### and strings are likely to change often.
 
 shopping-page-title = { -brand-product-name } Shopping
+
+## Strings for the product review snippets card
+
+shopping-highlights-heading = Snippets from recent reviews
+
+shopping-highlight-price = Price
+shopping-highlight-quality = Quality
+shopping-highlight-shipping = Shipping
+shopping-highlight-competitiveness = Competitiveness
+shopping-highlight-packaging = Packaging
+
+##

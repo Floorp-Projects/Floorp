@@ -6,3 +6,8 @@ browser.jar:
     content/browser/shopping/shopping.html (content/shopping.html)
     content/browser/shopping/shopping.css (content/shopping.css)
     content/browser/shopping/shopping.mjs (content/shopping.mjs)
+    content/browser/shopping/ShoppingUtils.sys.mjs (content/ShoppingUtils.sys.mjs)
+    content/browser/shopping/highlights.css (content/highlights.css)
+    content/browser/shopping/highlights.mjs (content/highlights.mjs)
+    content/browser/shopping/highlight-item.css (content/highlight-item.css)
+    content/browser/shopping/highlight-item.mjs (content/highlight-item.mjs)
