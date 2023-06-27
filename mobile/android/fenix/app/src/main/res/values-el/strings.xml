@@ -372,8 +372,12 @@
     <string name="preferences_category_general">Γενικά</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Πληροφορίες</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">Επιλέξτε μία</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts">Διαχείριση συντομεύσεων αναζήτησης</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">Επεξεργασία μηχανών που είναι ορατές στο μενού αναζήτησης</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_category_engines_in_search_menu">Ορατές μηχανές στο μενού αναζήτησης</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -640,6 +644,8 @@
     <string name="addon_already_installed">Το πρόσθετο είναι ήδη εγκατεστημένο</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Διαχείριση λογαριασμού</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Συγχρονισμός τώρα</string>
     <!-- Preference category for sync -->
@@ -1913,8 +1919,12 @@
 
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">Όνομα μηχανής αναζήτησης</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label">URL όρου αναζήτησης</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Νήμα αναζήτησης προς χρήση</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2">URL για χρήση στην αναζήτηση</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Αντικαταστήστε το ερώτημα με “%s”. Παράδειγμα:\nhttps://www.google.com/search?q=%s</string>
 

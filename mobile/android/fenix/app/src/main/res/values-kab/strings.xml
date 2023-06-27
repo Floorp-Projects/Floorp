@@ -364,6 +364,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_category_about">Ɣef</string>
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">Fren yiwen</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts">Sefrek inegzumen n unadi</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Amsedday n unadi amezwer</string>
     <!-- Preference for settings related to Search -->
@@ -1381,6 +1383,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="delete_history_prompt_title">Azilal ara tekkseḍ</string>
     <!-- Body text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Itekkes azray (ula d azray yemtawan seg yibenkan-nniḍen), inagan n tuqqna akked isefka-nniḍen n tunigin.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Ittekkkes azray (ula d azray yettumtawan seg yibenkan niḍen)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Asrag aneggaru</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->

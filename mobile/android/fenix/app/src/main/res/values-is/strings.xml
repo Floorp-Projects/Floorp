@@ -365,13 +365,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Um</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Veldu eina</string>
+    <string name="preferences_category_select_default_search_engine">Veldu eina</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Sýsla með flýtilykla fyrir leit</string>
+    <string name="preferences_manage_search_shortcuts">Sýsla með flýtilykla fyrir leit</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Breyta leitarvélum sem eru sýnilegar í leitarvalmyndinni</string>
+    <string name="preferences_manage_search_shortcuts_summary">Breyta leitarvélum sem eru sýnilegar í leitarvalmyndinni</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Breyta sýnilegum leitarvélum í leitarvalmyndinni</string>
+    <string name="preferences_category_engines_in_search_menu">Breyta sýnilegum leitarvélum í leitarvalmyndinni</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Sjálfgefin leitarvél</string>
     <!-- Preference for settings related to Search -->
@@ -633,6 +633,8 @@
     <string name="addon_already_installed">Viðbót er þegar uppsett</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Sýsla með reikning</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Samstilla núna</string>
     <!-- Preference category for sync -->
@@ -1869,7 +1871,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Bæta við leitarvél</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Bæta við nýrri leitarvél</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Bæta við nýrri leitarvél</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Breyta leitarvél</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1884,24 +1886,24 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Annað</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Heiti</string>
+    <string name="search_add_custom_engine_name_label">Heiti</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Nafn</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Heiti leitarvélar</string>
+    <string name="search_add_custom_engine_name_hint_2">Heiti leitarvélar</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Slóð leitarstrengs</string>
+    <string name="search_add_custom_engine_url_label">Slóð leitarstrengs</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Leitarstrengur sem á að nota</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">Slóð til að nota fyrir leit</string>
+    <string name="search_add_custom_engine_search_string_hint_2">Slóð til að nota fyrir leit</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Skipta út fyrirspurninni með “%s”. Dæmi:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Upplýsingar um sérsniðnar leitarvélar</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Vista</string>
+    <string name="search_custom_engine_save_button">Vista</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Skráðu heiti leitarvélar</string>

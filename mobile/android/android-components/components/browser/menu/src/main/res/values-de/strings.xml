@@ -8,4 +8,6 @@
     <string name="mozac_browser_menu_addons">Add-ons</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
     <string name="mozac_browser_menu_addons_manager">Add-ons-Verwaltung</string>
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">Nach oben navigieren</string>
 </resources>

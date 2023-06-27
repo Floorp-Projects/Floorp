@@ -634,6 +634,8 @@
     <string name="addon_already_installed">Pe moĩmbaha oñemohendáma</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Mba’ete ñangareko</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Embojuehe ko’ág̃a</string>
     <!-- Preference category for sync -->

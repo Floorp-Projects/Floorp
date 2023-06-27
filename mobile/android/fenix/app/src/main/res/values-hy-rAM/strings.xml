@@ -364,13 +364,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Ծրագրի մասին</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Ընտրեք մեկը</string>
+    <string name="preferences_category_select_default_search_engine">Ընտրեք մեկը</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Կառավարել որոնման դյուրանցումները</string>
+    <string name="preferences_manage_search_shortcuts">Կառավարել որոնման դյուրանցումները</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Խմբագրել շարժիչները, որոնք տեսանելի են որոնման ցանկում</string>
+    <string name="preferences_manage_search_shortcuts_summary">Խմբագրել շարժիչները, որոնք տեսանելի են որոնման ցանկում</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Որոնման ցանկում տեսանելի շարժիչներ</string>
+    <string name="preferences_category_engines_in_search_menu">Որոնման ցանկում տեսանելի շարժիչներ</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Հիմնական որոնիչ</string>
     <!-- Preference for settings related to Search -->
@@ -632,6 +632,8 @@
     <string name="addon_already_installed">Հավելումն արդեն տեղադրված է</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Կառավարել հաշիվը</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Համաժամեցնել</string>
     <!-- Preference category for sync -->
@@ -1872,7 +1874,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ավելացնել որոնիչ</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Ավելացնել որոնիչ</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Ավելացնել որոնիչ</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Խմբագրել որոնիչը</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1887,24 +1889,24 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Այլ</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Անունը</string>
+    <string name="search_add_custom_engine_name_label">Անունը</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Անուն</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Որոնիչի անունը</string>
+    <string name="search_add_custom_engine_name_hint_2">Որոնիչի անունը</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Որոնել տողի URL-ն</string>
+    <string name="search_add_custom_engine_url_label">Որոնել տողի URL-ն</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Օգտագործվող որոնման տողը </string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">Որոնման համար օգտագործվող URL-ն</string>
+    <string name="search_add_custom_engine_search_string_hint_2">Որոնման համար օգտագործվող URL-ն</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Հարցումը փոխարինել “%s”-ով: Օրինակ՝ \nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Հարմարեցված որոնիչի մանրամասներ</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Պահել</string>
+    <string name="search_custom_engine_save_button">Պահել</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Մուտքագրել որոնիչի անունը</string>
