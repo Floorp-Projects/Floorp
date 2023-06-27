@@ -82,7 +82,7 @@ class AudioSinkWrapper : public MediaSink {
     // The stream is paused, a constant time is reported.
     Paused
   } mLastClockSource = ClockSource::Paused;
-  static already_AddRefed<nsISerialEventTarget> CreateAsyncInitTaskQueue();
+  static already_AddRefed<TaskQueue> CreateAsyncInitTaskQueue();
   bool IsMuted() const;
   void OnMuted(bool aMuted);
   virtual ~AudioSinkWrapper();
@@ -124,7 +124,7 @@ class AudioSinkWrapper : public MediaSink {
   bool IsAudioSourceEnded(const MediaInfo& aInfo) const;
 
   const RefPtr<AbstractThread> mOwnerThread;
-  const nsCOMPtr<nsISerialEventTarget> mAsyncInitTaskQueue;
+  const RefPtr<TaskQueue> mAsyncInitTaskQueue;
   SinkCreator mSinkCreator;
   UniquePtr<AudioSink> mAudioSink;
   // The output device this AudioSink is playing data to. The system's default
