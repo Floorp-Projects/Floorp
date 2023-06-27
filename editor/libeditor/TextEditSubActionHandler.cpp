@@ -87,13 +87,11 @@ void TextEditor::OnStartToHandleTopLevelEditSubAction(
     // after inserting text.
     const EditorRawDOMPoint point =
         FindBetterInsertionPoint(EditorRawDOMPoint(SelectionRef().AnchorRef()));
-    NS_WARNING_ASSERTION(
-        point.IsSet(),
-        "EditorBase::FindBetterInsertionPoint() failed, but ignored");
     if (point.IsSet()) {
       SetSpellCheckRestartPoint(point);
       return;
     }
+    NS_WARNING("TextEditor::FindBetterInsertionPoint() failed, but ignored");
   }
   if (SelectionRef().AnchorRef().IsSet()) {
     SetSpellCheckRestartPoint(EditorRawDOMPoint(SelectionRef().AnchorRef()));
@@ -459,7 +457,7 @@ Result<EditActionResult, nsresult> TextEditor::HandleInsertText(
       compositionStartPoint = FindBetterInsertionPoint(atStartOfSelection);
       NS_WARNING_ASSERTION(
           compositionStartPoint.IsSet(),
-          "EditorBase::FindBetterInsertionPoint() failed, but ignored");
+          "TextEditor::FindBetterInsertionPoint() failed, but ignored");
     }
     Result<InsertTextResult, nsresult> insertTextResult =
         InsertTextWithTransaction(*document, insertionString,

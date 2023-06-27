@@ -961,6 +961,36 @@ class EditorDOMPointBase final {
     return mChild->IsHTMLElement(nsGkAtoms::br);
   }
 
+  /**
+   * Return a point in text node if "this" points around a text node.
+   * EditorDOMPointType can always be EditorDOMPoint or EditorRawDOMPoint,
+   * but EditorDOMPointInText or EditorRawDOMPointInText is also available
+   * only when "this type" is one of them.
+   * If the point is in the anonymous <div> of a TextEditor, use
+   * TextEditor::FindBetterInsertionPoint() instead.
+   */
+  template <typename EditorDOMPointType>
+  EditorDOMPointType GetPointInTextNodeIfPointingAroundTextNode() const {
+    if (NS_WARN_IF(!IsSet()) || !mParent->HasChildren()) {
+      return To<EditorDOMPointType>();
+    }
+    if (IsStartOfContainer()) {
+      if (auto* firstTextChild =
+              dom::Text::FromNode(mParent->GetFirstChild())) {
+        return EditorDOMPointType(firstTextChild, 0u);
+      }
+      return To<EditorDOMPointType>();
+    }
+    if (auto* previousSiblingChild = dom::Text::FromNodeOrNull(
+            GetPreviousSiblingOfChildAs<dom::Text>())) {
+      return EditorDOMPointType::AtEndOf(*previousSiblingChild);
+    }
+    if (auto* child = dom::Text::FromNodeOrNull(GetChildAs<dom::Text>())) {
+      return EditorDOMPointType(child, 0u);
+    }
+    return To<EditorDOMPointType>();
+  }
+
   template <typename A, typename B>
   EditorDOMPointBase& operator=(const RangeBoundaryBase<A, B>& aOther) {
     mParent = aOther.mParent;

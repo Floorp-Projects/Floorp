@@ -1,0 +1,92 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test insertText when caret is around a text node</title>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script>
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  function getHTMLEditor() {
+    let editingSession = SpecialPowers.wrap(window).docShell.editingSession;
+    if (!editingSession) {
+      return null;
+    }
+    let editor = editingSession.getEditorForWindow(window);
+    if (!editor) {
+      return null;
+    }
+    return editor.QueryInterface(SpecialPowers.Ci.nsIHTMLEditor);
+  }
+
+  document.designMode = "on";
+  document.body.focus();
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  const editor = getHTMLEditor();
+  editor.flags |= SpecialPowers.Ci.nsIEditor.eEditorPlaintextMask;
+
+  (function test_collapsed_before_first_text_child() {
+    document.body.innerHTML = "bc<br>";
+    getSelection().collapse(document.body, 0);
+    document.execCommand("insertText", false, "a");
+    is(
+      document.body.firstChild.data,
+      "abc",
+      "test_collapsed_before_first_text_child: Text should be inserted into start of the first text child"
+    );
+  })();
+
+  (function test_collapsed_before_first_text_child() {
+    document.body.innerHTML = "bc<br>";
+    getSelection().collapse(document.body, 0);
+    document.execCommand("insertText", false, "a");
+    is(
+      document.body.firstChild.data,
+      "abc",
+      "test_collapsed_before_first_text_child: Text should be inserted into start of the first text child"
+    );
+  })();
+
+  (function test_collapsed_after_last_text_child() {
+    document.body.innerHTML = "ab";
+    getSelection().collapse(document.body, 1);
+    document.execCommand("insertText", false, "c");
+    is(
+      document.body.firstChild.data,
+      "abc",
+      "test_collapsed_after_last_text_child: Text should be inserted into end of the last text child"
+    );
+  })();
+
+  (function test_collapsed_after_text_child() {
+    document.body.innerHTML = "ab<br>";
+    getSelection().collapse(document.body, 1);
+    document.execCommand("insertText", false, "c");
+    is(
+      document.body.firstChild.data,
+      "abc",
+      "test_collapsed_after_text_child: Text should be inserted into end of the previous text child"
+    );
+  })();
+
+  (function test_collapsed_at_text_child() {
+    document.body.innerHTML = "<img>bc";
+    getSelection().collapse(document.body, 1);
+    document.execCommand("insertText", false, "a");
+    is(
+      document.body.firstChild.nextSibling.data,
+      "abc",
+      "test_collapsed_at_text_child: Text should be inserted into start of the text child"
+    );
+  })();
+
+  document.designMode = "off";
+  SimpleTest.finish();
+});
+</script>
+<body></body>
+</html>

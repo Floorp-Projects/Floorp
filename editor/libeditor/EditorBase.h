@@ -1679,8 +1679,10 @@ class EditorBase : public nsIEditor,
   /**
    * Insert aStringToInsert to aPointToInsert or better insertion point around
    * it.  If aPointToInsert isn't in a text node, this method looks for the
-   * nearest point in a text node with FindBetterInsertionPoint().  If there is
-   * no text node, this creates new text node and put aStringToInsert to it.
+   * nearest point in a text node with TextEditor::FindBetterInsertionPoint()
+   * or EditorDOMPoint::GetPointInTextNodeIfPointingAroundTextNode().
+   * If there is no text node, this creates new text node and put
+   * aStringToInsert to it.
    *
    * @param aDocument       The document of this editor.
    * @param aStringToInsert The string to insert.
@@ -1963,18 +1965,6 @@ class EditorBase : public nsIEditor,
    * editor was focused when the DOM window was active.
    */
   virtual bool IsActiveInDOMWindow() const;
-
-  /**
-   * FindBetterInsertionPoint() tries to look for better insertion point which
-   * is typically the nearest text node and offset in it.
-   *
-   * @param aPoint      Insertion point which the callers found.
-   * @return            Better insertion point if there is.  If not returns
-   *                    same point as aPoint.
-   */
-  template <typename EditorDOMPointType>
-  EditorDOMPointType FindBetterInsertionPoint(
-      const EditorDOMPointType& aPoint) const;
 
   /**
    * HideCaret() hides caret with nsCaret::AddForceHide() or may show carent

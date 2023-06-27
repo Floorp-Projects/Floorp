@@ -163,11 +163,6 @@ template EditorRawDOMPoint EditorBase::GetFirstSelectionStartPoint() const;
 template EditorDOMPoint EditorBase::GetFirstSelectionEndPoint() const;
 template EditorRawDOMPoint EditorBase::GetFirstSelectionEndPoint() const;
 
-template EditorDOMPoint EditorBase::FindBetterInsertionPoint(
-    const EditorDOMPoint& aPoint) const;
-template EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
-    const EditorRawDOMPoint& aPoint) const;
-
 template EditorBase::AutoCaretBidiLevelManager::AutoCaretBidiLevelManager(
     const EditorBase& aEditorBase, nsIEditor::EDirection aDirectionAndAmount,
     const EditorDOMPoint& aPointAtCaret);
@@ -2996,85 +2991,6 @@ nsresult EditorBase::ScrollSelectionFocusIntoView() const {
   return NS_WARN_IF(Destroyed()) ? NS_ERROR_EDITOR_DESTROYED : NS_OK;
 }
 
-template <typename EditorDOMPointType>
-EditorDOMPointType EditorBase::FindBetterInsertionPoint(
-    const EditorDOMPointType& aPoint) const {
-  if (MOZ_UNLIKELY(NS_WARN_IF(!aPoint.IsInContentNode()))) {
-    return aPoint;
-  }
-
-  MOZ_ASSERT(aPoint.IsSetAndValid());
-
-  if (aPoint.IsInTextNode()) {
-    // There is no "better" insertion point.
-    return aPoint;
-  }
-
-  if (!IsInPlaintextMode()) {
-    // We cannot find "better" insertion point in HTML editor.
-    // WARNING: When you add some code to find better node in HTML editor,
-    //          you need to call this before calling InsertTextWithTransaction()
-    //          in HTMLEditor.
-    return aPoint;
-  }
-
-  RefPtr<Element> rootElement = GetRoot();
-  if (aPoint.GetContainer() == rootElement) {
-    // In some cases, aNode is the anonymous DIV, and offset is 0.  To avoid
-    // injecting unneeded text nodes, we first look to see if we have one
-    // available.  In that case, we'll just adjust node and offset accordingly.
-    if (aPoint.IsStartOfContainer() && aPoint.GetContainer()->HasChildren() &&
-        aPoint.GetContainer()->GetFirstChild()->IsText()) {
-      return EditorDOMPointType(aPoint.GetContainer()->GetFirstChild(), 0u);
-    }
-
-    // In some other cases, aNode is the anonymous DIV, and offset points to
-    // the terminating padding <br> element for empty last line.  In that case,
-    // we'll adjust aInOutNode and aInOutOffset to the preceding text node,
-    // if any.
-    if (!aPoint.IsStartOfContainer()) {
-      if (IsHTMLEditor()) {
-        // Fall back to a slow path that uses GetChildAt_Deprecated() for
-        // Thunderbird's plaintext editor.
-        nsIContent* child = aPoint.GetPreviousSiblingOfChild();
-        if (child && child->IsText()) {
-          return EditorDOMPointType::AtEndOf(*child);
-        }
-      } else {
-        // If we're in a real plaintext editor, use a fast path that avoids
-        // calling GetChildAt_Deprecated() which may perform a linear search.
-        nsIContent* child = aPoint.GetContainer()->GetLastChild();
-        while (child) {
-          if (child->IsText()) {
-            return EditorDOMPointType::AtEndOf(*child);
-          }
-          child = child->GetPreviousSibling();
-        }
-      }
-    }
-  }
-
-  // Sometimes, aNode is the padding <br> element itself.  In that case, we'll
-  // adjust the insertion point to the previous text node, if one exists, or
-  // to the parent anonymous DIV.
-  if (EditorUtils::IsPaddingBRElementForEmptyLastLine(
-          *aPoint.template ContainerAs<nsIContent>()) &&
-      aPoint.IsStartOfContainer()) {
-    nsIContent* previousSibling = aPoint.GetContainer()->GetPreviousSibling();
-    if (previousSibling && previousSibling->IsText()) {
-      return EditorDOMPointType::AtEndOf(*previousSibling);
-    }
-
-    nsINode* parentOfContainer = aPoint.GetContainerParent();
-    if (parentOfContainer && parentOfContainer == rootElement) {
-      return EditorDOMPointType(parentOfContainer,
-                                aPoint.template ContainerAs<nsIContent>(), 0u);
-    }
-  }
-
-  return aPoint;
-}
-
 Result<InsertTextResult, nsresult> EditorBase::InsertTextWithTransaction(
     Document& aDocument, const nsAString& aStringToInsert,
     const EditorDOMPoint& aPointToInsert) {
@@ -3091,20 +3007,13 @@ Result<InsertTextResult, nsresult> EditorBase::InsertTextWithTransaction(
   // In some cases, the node may be the anonymous div element or a padding
   // <br> element for empty last line.  Let's try to look for better insertion
   // point in the nearest text node if there is.
-  EditorDOMPoint pointToInsert = FindBetterInsertionPoint(aPointToInsert);
-
-  // If a neighboring text node already exists, use that
-  if (!pointToInsert.IsInTextNode()) {
-    nsIContent* child = nullptr;
-    if (!pointToInsert.IsStartOfContainer() &&
-        (child = pointToInsert.GetPreviousSiblingOfChild()) &&
-        child->IsText()) {
-      pointToInsert.Set(child, child->Length());
-    } else if (!pointToInsert.IsEndOfContainer() &&
-               (child = pointToInsert.GetChild()) && child->IsText()) {
-      pointToInsert.Set(child, 0);
+  EditorDOMPoint pointToInsert = [&]() {
+    if (IsTextEditor()) {
+      return AsTextEditor()->FindBetterInsertionPoint(aPointToInsert);
     }
-  }
+    return aPointToInsert
+        .GetPointInTextNodeIfPointingAroundTextNode<EditorDOMPoint>();
+  }();
 
   if (ShouldHandleIMEComposition()) {
     if (!pointToInsert.IsInTextNode()) {
@@ -5533,6 +5442,10 @@ nsresult EditorBase::InitializeSelection(
   // selection because if the editor is reframed, this already forgot IME
   // selection and the transaction.
   if (mComposition && mComposition->IsMovingToNewTextNode()) {
+    MOZ_DIAGNOSTIC_ASSERT(IsTextEditor());
+    if (NS_WARN_IF(!IsTextEditor())) {
+      return NS_ERROR_UNEXPECTED;
+    }
     // We need to look for the new text node from current selection.
     // XXX If selection is changed during reframe, this doesn't work well!
     const nsRange* firstRange = SelectionRef().GetRangeAt(0);
@@ -5541,7 +5454,7 @@ nsresult EditorBase::InitializeSelection(
     }
     EditorRawDOMPoint atStartOfFirstRange(firstRange->StartRef());
     EditorRawDOMPoint betterInsertionPoint =
-        FindBetterInsertionPoint(atStartOfFirstRange);
+        AsTextEditor()->FindBetterInsertionPoint(atStartOfFirstRange);
     RefPtr<Text> textNode = betterInsertionPoint.GetContainerAs<Text>();
     MOZ_ASSERT(textNode,
                "There must be text node if composition string is not empty");
