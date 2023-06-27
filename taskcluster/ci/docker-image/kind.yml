@@ -186,7 +186,7 @@ jobs:
         definition: toolchain-build
     android-build:
         symbol: I(agb)
-        parent: debian11-base
+        parent: debian12-base
     fetch:
         symbol: I(fetch)
         parent: debian11-raw
@@ -194,10 +194,10 @@ jobs:
             - deb11-python-zstandard
     static-analysis-build:
         symbol: I(static-analysis-build)
-        parent: debian11-base
+        parent: debian12-base
     gdb-test:
         symbol: I(gdb)
-        parent: debian11-amd64-build
+        parent: debian12-amd64-build
         definition: gdb-test
     index-task:
         symbol: I(idx)
