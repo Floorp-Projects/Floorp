@@ -43,6 +43,7 @@ EXTRA_JS_MODULES += [
     "LoginManagerChild.sys.mjs",
     "LoginManagerParent.sys.mjs",
     "LoginManagerPrompter.sys.mjs",
+    "LoginManagerTelemetry.sys.mjs",
     "LoginRecipes.sys.mjs",
     "LoginRelatedRealms.sys.mjs",
     "NewPasswordModel.sys.mjs",
