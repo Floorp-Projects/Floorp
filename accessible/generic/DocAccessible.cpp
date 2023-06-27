@@ -13,7 +13,6 @@
 #include "HTMLImageMapAccessible.h"
 #include "mozilla/ProfilerMarkers.h"
 #include "nsAccCache.h"
-#include "nsAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsEventShell.h"
 #include "nsIIOService.h"
@@ -99,7 +98,6 @@ DocAccessible::DocAccessible(dom::Document* aDocument,
       mViewportCacheDirty(false),
       mLoadEventType(0),
       mPrevStateBits(0),
-      mVirtualCursor(nullptr),
       mPresShell(aPresShell),
       mIPCDoc(nullptr) {
   mGenericTypes |= eDocument;
@@ -122,7 +120,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(DocAccessible)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible,
                                                   LocalAccessible)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVirtualCursor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildDocuments)
   for (const auto& hashEntry : tmp->mDependentIDsHashes.Values()) {
     for (const auto& providers : hashEntry->Values()) {
@@ -149,7 +146,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, LocalAccessible)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mNotificationController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mVirtualCursor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildDocuments)
   tmp->mDependentIDsHashes.Clear();
   tmp->mNodeToAccessibleMap.Clear();
@@ -165,7 +161,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DocAccessible)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY(nsIAccessiblePivotObserver)
 NS_INTERFACE_MAP_END_INHERITING(HyperTextAccessible)
 
 NS_IMPL_ADDREF_INHERITED(DocAccessible, HyperTextAccessible)
@@ -501,11 +496,6 @@ void DocAccessible::Shutdown() {
     MOZ_ASSERT(!mIPCDoc);
   }
 
-  if (mVirtualCursor) {
-    mVirtualCursor->RemoveObserver(this);
-    mVirtualCursor = nullptr;
-  }
-
   mDependentIDsHashes.Clear();
   mNodeToAccessibleMap.Clear();
 
@@ -721,23 +711,6 @@ std::pair<nsPoint, nsRect> DocAccessible::ComputeScrollData(
   }
 
   return {scrollPoint, scrollRange};
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// nsIAccessiblePivotObserver
-
-NS_IMETHODIMP
-DocAccessible::OnPivotChanged(nsIAccessiblePivot* aPivot,
-                              nsIAccessible* aOldAccessible,
-                              nsIAccessible* aNewAccessible,
-                              PivotMoveReason aReason, bool aIsFromUserInput) {
-  RefPtr<AccEvent> event = new AccVCChangeEvent(
-      this, (aOldAccessible ? aOldAccessible->ToInternalAccessible() : nullptr),
-      (aNewAccessible ? aNewAccessible->ToInternalAccessible() : nullptr),
-      aReason, aIsFromUserInput ? eFromUserInput : eNoUserInput);
-  nsEventShell::FireEvent(event);
-
-  return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

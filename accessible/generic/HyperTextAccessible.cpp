@@ -7,7 +7,6 @@
 #include "HyperTextAccessible-inl.h"
 
 #include "nsAccessibilityService.h"
-#include "nsAccessiblePivot.h"
 #include "nsIAccessibleTypes.h"
 #include "AccAttributes.h"
 #include "DocAccessible.h"
