@@ -185,7 +185,6 @@ def build(
             keep_going=keep_going,
             mach_context=command_context._mach_context,
             append_env=append_env,
-            virtualenv_topobjdir=orig_topobjdir,
         )
         if status != 0:
             return status
