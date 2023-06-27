@@ -1,177 +1,146 @@
 From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 20 Apr 2023 14:52:00 -0500
-Subject: Bug 1828517 - (fix-a138c6c8a5) handle file moves in BUILD.gn
+Date: Thu, 20 Apr 2023 09:59:00 -0500
+Subject: Bug 1828517 - (fix-794d599741) account for moved files in BUILD.gn
+ that we don't want to build.
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c115a6ffd07fab042bc5f086
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4a969f6709183d4f55215adaffb8a52b790a8492
 ---
- rtc_base/BUILD.gn | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ api/BUILD.gn   | 10 ++++++++++
+ media/BUILD.gn | 20 ++++++++++----------
+ 2 files changed, 20 insertions(+), 10 deletions(-)
 
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 6037ff1671..8d5d0e4338 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -1149,6 +1149,7 @@ if (!build_with_chromium) {
+diff --git a/api/BUILD.gn b/api/BUILD.gn
+index 3eed1f19c0..676e2de427 100644
+--- a/api/BUILD.gn
++++ b/api/BUILD.gn
+@@ -186,6 +186,10 @@ rtc_source_set("ice_transport_interface") {
  }
  
- rtc_library("network") {
+ rtc_library("dtls_transport_interface") {
++# Previously, Mozilla has tried to limit including this dep, but as
++# upstream changes, it requires whack-a-mole.  Making it an empty
++# definition has the same effect, but only requires one change.
 +if (!build_with_mozilla) {
    visibility = [ "*" ]
-   sources = [
-     "network.cc",
-@@ -1187,16 +1188,20 @@ rtc_library("network") {
-     deps += [ ":win32" ]
-   }
- }
-+}
  
- rtc_library("socket_address_pair") {
-+if (!build_with_mozilla) {
    sources = [
-     "socket_address_pair.cc",
-     "socket_address_pair.h",
-   ]
-   deps = [ ":socket_address" ]
- }
-+}
- 
- rtc_library("net_helper") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "net_helper.cc",
-@@ -1205,8 +1210,10 @@ rtc_library("net_helper") {
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
-   deps = [ "system:rtc_export" ]
- }
-+}
- 
- rtc_library("socket_adapters") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "socket_adapters.cc",
-@@ -1226,6 +1233,7 @@ rtc_library("socket_adapters") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("network_route") {
-   sources = [
-@@ -1240,6 +1248,7 @@ rtc_library("network_route") {
- }
- 
- rtc_library("async_tcp_socket") {
-+if (!build_with_mozilla) {
-   sources = [
-     "async_tcp_socket.cc",
-     "async_tcp_socket.h",
-@@ -1258,8 +1267,10 @@ rtc_library("async_tcp_socket") {
-     "third_party/sigslot",
-   ]
- }
-+}
- 
- rtc_library("async_udp_socket") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "async_udp_socket.cc",
-@@ -1281,8 +1292,10 @@ rtc_library("async_udp_socket") {
+@@ -202,6 +206,7 @@ rtc_library("dtls_transport_interface") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
 +}
  
- rtc_library("async_packet_socket") {
+ rtc_library("dtmf_sender_interface") {
+   visibility = [ "*" ]
+@@ -214,6 +219,10 @@ rtc_library("dtmf_sender_interface") {
+ }
+ 
+ rtc_library("rtp_sender_interface") {
++# Previously, Mozilla has tried to limit including this dep, but as
++# upstream changes, it requires whack-a-mole.  Making it an empty
++# definition has the same effect, but only requires one change.
 +if (!build_with_mozilla) {
    visibility = [ "*" ]
+ 
    sources = [
-     "async_packet_socket.cc",
-@@ -1300,6 +1313,7 @@ rtc_library("async_packet_socket") {
-     "third_party/sigslot",
+@@ -235,6 +244,7 @@ rtc_library("rtp_sender_interface") {
+     "video_codecs:video_codecs_api",
    ]
  }
 +}
  
- rtc_library("mdns_responder_interface") {
-   sources = [ "mdns_responder_interface.h" ]
-@@ -1312,6 +1326,7 @@ rtc_library("dscp") {
- }
- 
- rtc_library("proxy_info") {
-+if (!build_with_mozilla) {
+ rtc_library("rtp_sender_setparameters_callback") {
    visibility = [ "*" ]
-   sources = [
-     "proxy_info.cc",
-@@ -1322,6 +1337,7 @@ rtc_library("proxy_info") {
-     ":socket_address",
-   ]
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index 89f65aed81..63b44a15ea 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -146,23 +146,14 @@ rtc_library("rtc_media_base") {
+       "base/audio_source.h",
+       "base/delayable.h",
+       "base/media_channel.h",
+-      "base/media_channel_impl.cc",
+-      "base/media_channel_impl.h",
+       "base/media_engine.cc",
+       "base/media_engine.h",
+-      "base/rid_description.cc",
+-      "base/rid_description.h",
+-      "base/rtp_utils.cc",
+-      "base/rtp_utils.h",
+-      "base/stream_params.cc",
+-      "base/stream_params.h",
+-      "base/turn_utils.cc",
+-      "base/turn_utils.h",
+     ]
+   }
  }
-+}
  
- rtc_library("file_rotating_stream") {
-   sources = [
-@@ -1350,6 +1366,7 @@ rtc_library("data_rate_limiter") {
- }
- 
- rtc_library("unique_id_generator") {
+ rtc_library("media_channel_impl") {
 +if (!build_with_mozilla) {
    sources = [
-     "unique_id_generator.cc",
-     "unique_id_generator.h",
-@@ -1364,6 +1381,7 @@ rtc_library("unique_id_generator") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("crc32") {
-   sources = [
-@@ -1391,6 +1409,7 @@ rtc_library("stream") {
- }
- 
- rtc_library("rtc_certificate_generator") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "rtc_certificate_generator.cc",
-@@ -1408,8 +1427,10 @@ rtc_library("rtc_certificate_generator") {
+     "base/media_channel_impl.cc",
+     "base/media_channel_impl.h",
+@@ -211,6 +202,7 @@ rtc_library("media_channel_impl") {
      "//third_party/abseil-cpp/absl/types:optional",
    ]
  }
 +}
  
- rtc_library("ssl") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "helpers.cc",
-@@ -1508,6 +1529,7 @@ rtc_library("ssl") {
-     deps += [ ":win32" ]
-   }
- }
-+}
- 
- rtc_library("crypt_string") {
-   sources = [
-@@ -1517,6 +1539,7 @@ rtc_library("crypt_string") {
+ rtc_source_set("media_channel") {
+   sources = [ "base/media_channel.h" ]
+@@ -284,6 +276,7 @@ rtc_library("codec") {
  }
  
- rtc_library("http_common") {
+ rtc_library("rtp_utils") {
 +if (!build_with_mozilla) {
    sources = [
-     "http_common.cc",
-     "http_common.h",
-@@ -1533,6 +1556,7 @@ rtc_library("http_common") {
- 
+     "base/rtp_utils.cc",
+     "base/rtp_utils.h",
+@@ -300,8 +293,10 @@ rtc_library("rtp_utils") {
+   ]
    absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
  }
 +}
  
- rtc_source_set("gtest_prod") {
-   sources = [ "gtest_prod_util.h" ]
+ rtc_library("stream_params") {
++if (!build_with_mozilla) {
+   sources = [
+     "base/stream_params.cc",
+     "base/stream_params.h",
+@@ -314,6 +309,7 @@ rtc_library("stream_params") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
+ }
++}
+ 
+ rtc_library("media_constants") {
+   sources = [
+@@ -324,6 +320,7 @@ rtc_library("media_constants") {
+ }
+ 
+ rtc_library("turn_utils") {
++if (!build_with_mozilla) {
+   sources = [
+     "base/turn_utils.cc",
+     "base/turn_utils.h",
+@@ -334,14 +331,17 @@ rtc_library("turn_utils") {
+     "../rtc_base/system:rtc_export",
+   ]
+ }
++}
+ 
+ rtc_library("rid_description") {
++if (!build_with_mozilla) {
+   sources = [
+     "base/rid_description.cc",
+     "base/rid_description.h",
+   ]
+   deps = []
+ }
++}
+ 
+ rtc_library("rtc_simulcast_encoder_adapter") {
+   visibility = [ "*" ]
 -- 
 2.37.1 (Apple Git-137.1)
 
