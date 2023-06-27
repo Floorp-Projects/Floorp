@@ -1841,9 +1841,32 @@ export class TranslationsParent extends JSWindowActorParent {
       langTags.isDocLangTagSupported = determineIsDocLangTagSupported();
     } catch (error) {}
 
-    // If the document's markup had no specified langTag, attempt
-    // to identify the page's language using the LanguageIdEngine.
-    if (!langTags.docLangTag) {
+    if (langTags.docLangTag) {
+      // If it's not supported, try it again with a canonicalized version.
+      if (!langTags.isDocLangTagSupported) {
+        langTags.docLangTag = Intl.getCanonicalLocales(langTags.docLangTag)[0];
+        langTags.isDocLangTagSupported = determineIsDocLangTagSupported();
+      }
+
+      // If it's still not supported, map macro language codes to specific ones.
+      //   https://en.wikipedia.org/wiki/ISO_639_macrolanguage
+      if (!langTags.isDocLangTagSupported) {
+        // If more macro language codes are needed, this logic can be expanded.
+        if (langTags.docLangTag === "no") {
+          // Choose "Norwegian Bokmål" over "Norwegian Nynorsk" as it is more widely used.
+          //
+          // https://en.wikipedia.org/wiki/Norwegian_language#Bokm%C3%A5l_and_Nynorsk
+          //
+          //   > A 2005 poll indicates that 86.3% use primarily Bokmål as their daily
+          //   > written language, 5.5% use both Bokmål and Nynorsk, and 7.5% use
+          //   > primarily Nynorsk.
+          langTags.docLangTag = "nb";
+          langTags.isDocLangTagSupported = determineIsDocLangTagSupported();
+        }
+      }
+    } else {
+      // If the document's markup had no specified langTag, attempt
+      // to identify the page's language using the LanguageIdEngine.
       langTags.docLangTag = await this.queryIdentifyLanguage();
       if (this.#isDestroyed) {
         return null;
