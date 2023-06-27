@@ -30,10 +30,7 @@ async function UCTFirst(){
         }
     },
     onCommand() {
-        let workingWindow = Services.wm.getMostRecentWindow("navigator:browser")
-        if (SessionStore.getClosedTabCount(workingWindow)){
-          SessionStore.undoCloseTab(workingWindow)
-        }
+        undoCloseTab();
       }
   });
   if (ChromeUtils.import("resource:///modules/FloorpStartup.jsm").isFirstRun) {
