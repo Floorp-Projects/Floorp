@@ -1,12 +1,15 @@
-- 6/1/2023: version 1.3.1
+- 6/23/2023: version 1.3.1
   This is a binary compatible release.
-  * security fix for lossless encoder (#603, chromium: #1420107, CVE-2023-1999)
+  * security fixes for lossless encoder (#603, chromium: #1420107, #1455619,
+    CVE-2023-1999)
+  * improve error reporting through WebPPicture error codes
   * fix upsampling for RGB565 and RGBA4444 in NEON builds
   * img2webp: add -sharp_yuv & -near_lossless
   * Windows builds:
     - fix compatibility with clang-cl (#607)
     - improve Arm64 performance with cl.exe
     - add Arm64EC support
+  * fix webp_js with emcc >= 3.1.27 (stack size change, #614)
   * CMake fixes (#592, #610, #612)
   * further updates to the container and lossless bitstream docs (#581, #611)
 
