@@ -670,10 +670,10 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
   void RunScriptWhenSafe(ScriptLoadRequest* aRequest);
 
   /**
-   * Cancel and remove all outstanding load requests, including waiting for any
-   * off thread compilations to finish.
+   *  Wait for any unused off thread compilations to finish and then
+   *  cancel them.
    */
-  void CancelAndClearScriptLoadRequests();
+  void CancelScriptLoadRequests();
 
   Document* mDocument;  // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
