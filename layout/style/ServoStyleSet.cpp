@@ -26,6 +26,7 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/AnonymousContent.h"
+#include "mozilla/dom/CSSBinding.h"
 #include "mozilla/dom/CSSCounterStyleRule.h"
 #include "mozilla/dom/CSSFontFaceRule.h"
 #include "mozilla/dom/CSSFontFeatureValuesRule.h"
@@ -1443,6 +1444,34 @@ void ServoStyleSet::InvalidateForViewportUnits(OnlyDynamic aOnlyDynamic) {
 
   Servo_InvalidateForViewportUnits(mRawData.get(), root,
                                    aOnlyDynamic == OnlyDynamic::Yes);
+}
+
+void ServoStyleSet::RegisterProperty(const PropertyDefinition& aDefinition,
+                                     ErrorResult& aRv) {
+  using Result = StyleRegisterCustomPropertyResult;
+  auto result = Servo_RegisterCustomProperty(
+      RawData(), &aDefinition.mName, &aDefinition.mSyntax,
+      aDefinition.mInherits,
+      aDefinition.mInitialValue.WasPassed() ? &aDefinition.mInitialValue.Value()
+                                            : nullptr);
+  switch (result) {
+    case Result::SuccessfullyRegistered:
+      break;
+    case Result::InvalidName:
+      return aRv.ThrowSyntaxError("Invalid name");
+    case Result::InvalidSyntax:
+      return aRv.ThrowSyntaxError("Invalid syntax descriptor");
+    case Result::InvalidInitialValue:
+      return aRv.ThrowSyntaxError("Invalid initial value syntax");
+    case Result::NoInitialValue:
+      return aRv.ThrowSyntaxError(
+          "Initial value is required when syntax is not universal");
+    case Result::InitialValueNotComputationallyIndependent:
+      return aRv.ThrowSyntaxError(
+          "Initial value is required when syntax is not universal");
+    case Result::AlreadyRegistered:
+      return aRv.ThrowInvalidModificationError("Property already registered");
+  }
 }
 
 NS_IMPL_ISUPPORTS(UACacheReporter, nsIMemoryReporter)

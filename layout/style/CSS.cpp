@@ -16,8 +16,7 @@
 #include "nsStyleUtil.h"
 #include "xpcpublic.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 /* static */
 bool CSS::Supports(const GlobalObject&, const nsACString& aProperty,
@@ -37,27 +36,37 @@ void CSS::Escape(const GlobalObject&, const nsAString& aIdent,
   nsStyleUtil::AppendEscapedCSSIdent(aIdent, aReturn);
 }
 
+static Document* GetDocument(const GlobalObject& aGlobal) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_DIAGNOSTIC_ASSERT(window, "CSS is only exposed to window globals");
+  if (!window) {
+    return nullptr;
+  }
+  return window->GetExtantDoc();
+}
+
 /* static */
 HighlightRegistry* CSS::GetHighlights(const GlobalObject& aGlobal,
                                       ErrorResult& aRv) {
-  nsCOMPtr<nsPIDOMWindowInner> window =
-      do_QueryInterface(aGlobal.GetAsSupports());
-  if (!window) {
-    aRv.ThrowUnknownError(
-        "There is no window associated to "
-        "this highlight registry object!");
-    return nullptr;
-  }
-
-  Document* doc = window->GetExtantDoc();
+  Document* doc = GetDocument(aGlobal);
   if (!doc) {
-    aRv.ThrowUnknownError(
-        "There is no document associated to "
-        "this highlight registry object!");
+    aRv.ThrowUnknownError("No document associated to this global?");
     return nullptr;
   }
   return &doc->HighlightRegistry();
 }
 
-}  // namespace dom
-}  // namespace mozilla
+/* static */
+void CSS::RegisterProperty(const GlobalObject& aGlobal,
+                           const PropertyDefinition& aDefinition,
+                           ErrorResult& aRv) {
+  Document* doc = GetDocument(aGlobal);
+  if (!doc) {
+    return aRv.ThrowUnknownError("No document associated to this global?");
+  }
+  doc->StyleSetForPresShellOrMediaQueryEvaluation()->RegisterProperty(
+      aDefinition, aRv);
+}
+
+}  // namespace mozilla::dom

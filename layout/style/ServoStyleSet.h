@@ -25,13 +25,14 @@
 #include "nsAtom.h"
 #include "nsIMemoryReporter.h"
 #include "nsTArray.h"
-#include "nsIMemoryReporter.h"
 #include "nsSize.h"
 
 namespace mozilla {
 enum class MediaFeatureChangeReason : uint8_t;
 enum class StylePageSizeOrientation : uint8_t;
 enum class StyleRuleChangeKind : uint32_t;
+
+class ErrorResult;
 
 template <typename Integer, typename Number, typename LinearStops>
 struct StyleTimingFunction;
@@ -47,6 +48,7 @@ namespace dom {
 class CSSImportRule;
 class Element;
 class ShadowRoot;
+struct PropertyDefinition;
 }  // namespace dom
 namespace gfx {
 class FontPaletteValueSet;
@@ -659,6 +661,8 @@ class ServoStyleSet {
     aStyles.AppendElements(mCachedAnonymousContentStyles.Elements() + loc.first,
                            loc.second);
   }
+
+  void RegisterProperty(const dom::PropertyDefinition&, ErrorResult&);
 
  private:
   // Map of AnonymousContentKey values to an (index, length) pair pointing into
