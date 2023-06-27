@@ -756,7 +756,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   // Needs sync IPC to ensure that the remote texture exists in the
   // RemoteTextureMap.
   bool mNeedsRemoteTextureSync = true;
-  size_t mLastFlushes = 0;
 
   // -
 

@@ -41,6 +41,8 @@ class WebGLParent : public PWebGLParent, public SupportsWeakPtr {
     return IPC_OK();
   }
 
+  IPCResult RecvSyncPing() { return IPC_OK(); }
+
   IPCResult RecvDispatchCommands(mozilla::ipc::BigBuffer&&, uint64_t);
   IPCResult RecvTexImage(uint32_t level, uint32_t respecFormat,
                          const uvec3& offset, const webgl::PackingInfo&,
