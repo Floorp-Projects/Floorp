@@ -19,7 +19,7 @@
   -->
 
 <menupopup id="popup">
-  <menuitem id="i1" label="One" onDOMAttrModified="attrModified(event)"/>
+  <menuitem id="i1" label="One"/>
   <menuitem id="i2" label="Two"/>
   <menuitem id="i3" label="Three"/>
   <menuitem id="i4" label="Four"/>
@@ -30,9 +30,9 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var gIgnoreKeys = false;
-var gIgnoreAttrChange = false;
-var gKeyPressCount = 0;
+let gIgnoreKeys = false;
+let gKeyPressCount = 0;
+let gLastFirstMenuActiveValue = null;
 
 
 function waitForEvent(target, eventName) {
@@ -45,7 +45,14 @@ function waitForEvent(target, eventName) {
 
 function runTests()
 {
+  function promiseFlushingMutationObserver() {
+    return new Promise(SimpleTest.executeSoon);
+  }
+
   (async function() {
+    const observer = new MutationObserver(checkIfFirstMenuItemActive);
+    observer.observe($("i1"), { attributes: true });
+
     var popup = $("popup");
     is(popup.hasAttribute("ignorekeys"), false, "keys enabled");
 
@@ -54,6 +61,7 @@ function runTests()
     await popupShownPromise;
 
     let popupHiddenPromise = waitForEvent(popup, "popuphidden");
+    info("Synthesizing ArrowDown (no ignorekeys)...");
     synthesizeKey("KEY_ArrowDown");
     await popupHiddenPromise;
 
@@ -62,14 +70,16 @@ function runTests()
     gIgnoreKeys = true;
     popup.setAttribute("ignorekeys", "true");
     // clear this first to avoid confusion
-    gIgnoreAttrChange = true;
+    observer.disconnect();
     $("i1").removeAttribute("_moz-menuactive")
-    gIgnoreAttrChange = false;
+    await promiseFlushingMutationObserver();
+    observer.observe($("i1"), { attributes: true });
 
     popupShownPromise = waitForEvent(popup, "popupshown");
     popup.openPopup(null, "after_start");
     await popupShownPromise;
 
+    info("Synthesizing ArrowDown (ignorekeys=\"true\")...");
     synthesizeKey("KEY_ArrowDown");
 
     await new Promise(resolve => setTimeout(() => resolve(), 1000));
@@ -81,18 +91,21 @@ function runTests()
 
     popup.setAttribute("ignorekeys", "shortcuts");
     // clear this first to avoid confusion
-    gIgnoreAttrChange = true;
+    observer.disconnect();
     $("i1").removeAttribute("_moz-menuactive")
-    gIgnoreAttrChange = false;
+    await promiseFlushingMutationObserver();
+    observer.observe($("i1"), { attributes: true });
 
     popupShownPromise = waitForEvent(popup, "popupshown");
     popup.openPopup(null, "after_start");
     await popupShownPromise;
 
-    // When ignorekeys="shortcuts", T should be handled but accel+T should propagate. 
+    // When ignorekeys="shortcuts", T should be handled but accel+T should propagate.
+    info("Synthesizing \"t\"...");
     sendString("t");
     is(gKeyPressCount, 1, "keypresses after t pressed with ignorekeys='shortcuts'");
 
+    info("Synthesizing Accel-T...");
     synthesizeKey("t", { accelKey: true });
     is(gKeyPressCount, 2, "keypresses after accel+t pressed with ignorekeys='shortcuts'");
 
@@ -100,32 +113,43 @@ function runTests()
     popup.hidePopup();
     await popupHiddenPromise;
 
+    observer.disconnect();
     SimpleTest.finish();
   })();
 }
 
-function attrModified(event)
-{
-  if (gIgnoreAttrChange || event.attrName != "_moz-menuactive")
-    return;
+function checkIfFirstMenuItemActive(aMutationList) {
+  for (const mutation of aMutationList) {
+    if (mutation.type != "attributes" || mutation.attributeName != "_moz-menuactive") {
+      continue;
+    }
 
-  // the attribute should not be changed when ignorekeys is enabled
-  if (gIgnoreKeys) {
-    ok(false, "move key with keys disabled");
-  }
-  else {
-    is($("i1").getAttribute("_moz-menuactive"), "true", "move key with keys enabled");
+    // the attribute should not be changed when ignorekeys is enabled
+    if (gIgnoreKeys) {
+      ok(false, "move key with keys disabled");
+      return;
+    }
+
+    is(
+      $("popup").hasAttribute("ignorekeys")
+        ? gLastFirstMenuActiveValue
+        : $("i1").getAttribute("_moz-menuactive"),
+      "true",
+      "move key with keys enabled"
+    );
     $("popup").hidePopup();
+    gLastFirstMenuActiveValue = null;
+    break;
   }
 }
 
-function keyDown()
-{
+function keyDown() {
   // when keys are enabled, the menu should have stopped propagation of the
   // event, so a bubbling listener for a keydown event should only occur
   // when keys are disabled.
   ok(gIgnoreKeys, "key listener fired with keys " +
                   (gIgnoreKeys ? "disabled" : "enabled"));
+  gLastFirstMenuActiveValue = $("i1").getAttribute("_moz-menuactive");
 }
 
 ]]>

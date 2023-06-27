@@ -24,39 +24,50 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=339494
 <script class="testbody" type="application/javascript">
 
 /** Test for Bug 339494 **/
+SimpleTest.waitForExplicitFinish();
 
-  var d = document.getElementById("d");
+(async function runTests() {
+  function promiseFlushingMutationObserver() {
+    return new Promise(SimpleTest.executeSoon);
+  }
 
-  d.setAttribute("hhh", "testvalue");
+  await (async function() {
+    const d = document.getElementById("d");
 
-  document.addEventListener("DOMAttrModified", removeItAgain, false);
-  d.removeAttribute("hhh");
-  document.removeEventListener("DOMAttrModified", removeItAgain, false);
+    d.setAttribute("hhh", "testvalue");
+    await promiseFlushingMutationObserver();
 
-  function removeItAgain()
-  {
-    ok(!d.hasAttribute("hhh"), "Value check 1. There should be no value");
-    isnot(d.getAttribute("hhh"), "testvalue", "Value check 2");
-    document.removeEventListener("DOMAttrModified", removeItAgain, false);
+    const observer = new MutationObserver((aMutationList, aObserver) => {
+      ok(!d.hasAttribute("hhh"), "Value check 1. There should be no value");
+      isnot(d.getAttribute("hhh"), "testvalue", "Value check 2");
+      aObserver.disconnect();
+      d.removeAttribute("hhh");
+      ok(true, "Reachability. We shouldn't have crashed");
+    });
+    observer.observe(d, { attributes: true });
     d.removeAttribute("hhh");
-    ok(true, "Reachability. We shouldn't have crashed");
-  }
+    await promiseFlushingMutationObserver();
+  })();
 
-  var s = document.getElementById("s");
+  await (async function() {
+    const s = document.getElementById("s");
 
-  s.setAttribute("ggg", "testvalue");
+    s.setAttribute("ggg", "testvalue");
+    await promiseFlushingMutationObserver();
 
-  document.addEventListener("DOMAttrModified", compareVal, false);
-  s.setAttribute("ggg", "othervalue");
-  document.removeEventListener("DOMAttrModified", compareVal, false);
+    const observer = new MutationObserver((aMutationList, aObserver) => {
+      ok(s.hasAttribute("ggg"), "Value check 3. There should be a value");
+      isnot(s.getAttribute("ggg"), "testvalue", "Value check 4");
+      is(s.getAttribute("ggg"), "othervalue", "Value check 5");
+    });
+    observer.observe(s, { attributes: true });
+    s.setAttribute("ggg", "othervalue");
+    await promiseFlushingMutationObserver();
+    observer.disconnect();
+  })();
 
-  function compareVal()
-  {
-    ok(s.hasAttribute("ggg"), "Value check 3. There should be a value");
-    isnot(s.getAttribute("ggg"), "testvalue", "Value check 4");
-    is(s.getAttribute("ggg"), "othervalue", "Value check 5");
-  }
-
+  SimpleTest.finish();
+})();
 </script>
 
 </window>

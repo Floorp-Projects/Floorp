@@ -307,6 +307,20 @@ void EventListenerManager::AddEventListenerInternal(
       case eLegacyNodeInsertedIntoDocument:
       case eLegacyAttrModified:
       case eLegacyCharacterDataModified:
+#ifdef DEBUG
+        MOZ_ASSERT(!aFlags.mInSystemGroup,
+                   "Legacy mutation events shouldn't be handled by ourselves");
+        MOZ_ASSERT(listener->mListenerType != Listener::eNativeListener,
+                   "Legacy mutation events shouldn't be handled in C++ code");
+        if (nsINode* targetNode = nsINode::FromEventTargetOrNull(mTarget)) {
+          MOZ_ASSERT(!nsContentUtils::IsChromeDoc(targetNode->OwnerDoc()),
+                     "Legacy mutation events shouldn't be handled in chrome "
+                     "documents");
+          MOZ_ASSERT(!targetNode->IsInNativeAnonymousSubtree(),
+                     "Legacy mutation events shouldn't listen to mutations in "
+                     "native anonymous subtrees");
+        }
+#endif  // #ifdef DEBUG
         // For mutation listeners, we need to update the global bit on the DOM
         // window. Otherwise we won't actually fire the mutation event.
         mMayHaveMutationListeners = true;

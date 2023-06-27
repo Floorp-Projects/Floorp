@@ -10,7 +10,6 @@ load chrome://reftest/content/crashtests/layout/xul/tree/crashtests/393665-1.xht
 load chrome://reftest/content/crashtests/layout/xul/tree/crashtests/399227-1.xhtml
 load 399692-1.xhtml
 load 399715-1.xhtml
-load chrome://reftest/content/crashtests/layout/xul/tree/crashtests/409807-1.xhtml
 load chrome://reftest/content/crashtests/layout/xul/tree/crashtests/414170-1.xhtml
 load 479931-1.xhtml
 load 585815.html
