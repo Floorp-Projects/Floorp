@@ -662,9 +662,20 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
         );
       }
 
+      // In SpecialPowers.spawn, extraData goes through a structuredClone, which cannot clone
+      // functions. await_uri is sometimes a function.  This filters out keys that are used by
+      // this function (runActualTest) and not by runTheTest or testFunction. It avoids the
+      // cloning issue, and avoids polluting the object in those called functions.
+      let filterExtraData = function (x) {
+        let banned_keys = ["noopener", "await_uri"];
+        return Object.fromEntries(
+          Object.entries(x).filter(([k, v]) => !banned_keys.includes(k))
+        );
+      };
+
       let result = await SpecialPowers.spawn(
         browser,
-        [IFRAME_DOMAIN, CROSS_ORIGIN_DOMAIN, extraData],
+        [IFRAME_DOMAIN, CROSS_ORIGIN_DOMAIN, filterExtraData(extraData)],
         async function (iframe_domain_, cross_origin_domain_, extraData_) {
           return content.wrappedJSObject.runTheTest(
             iframe_domain_,
