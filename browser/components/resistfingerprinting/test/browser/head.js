@@ -650,6 +650,18 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
       url: uri,
     },
     async function (browser) {
+      /*
+       * We expect that `runTheTest` is going to be able to communicate with the iframe
+       * or tab that it opens, but if it cannot (because we are using noopener), we kind
+       * of hack around and get the data directly.
+       */
+      if ("noopener" in extraData) {
+        var tabPromise = BrowserTestUtils.waitForNewTab(
+          gBrowser,
+          extraData.await_uri
+        );
+      }
+
       let result = await SpecialPowers.spawn(
         browser,
         [IFRAME_DOMAIN, CROSS_ORIGIN_DOMAIN, extraData],
@@ -661,6 +673,21 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
           );
         }
       );
+
+      if ("noopener" in extraData) {
+        await tabPromise;
+
+        let second_tabs_browser = gBrowser.tabs[gBrowser.tabs.length - 1];
+        result = await SpecialPowers.spawn(
+          second_tabs_browser.linkedBrowser,
+          [],
+          async function () {
+            let r = content.wrappedJSObject.give_result();
+            return r;
+          }
+        );
+        BrowserTestUtils.removeTab(second_tabs_browser);
+      }
 
       testFunction(result, expectedResults, extraData);
     }
