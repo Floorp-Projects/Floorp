@@ -465,7 +465,8 @@ DecodedStream::DecodedStream(
       mPlaybackRate(aPlaybackRate),
       mPreservesPitch(aPreservesPitch),
       mAudioQueue(aAudioQueue),
-      mVideoQueue(aVideoQueue) {}
+      mVideoQueue(aVideoQueue),
+      mAudioDevice(std::move(aAudioDevice)) {}
 
 DecodedStream::~DecodedStream() {
   MOZ_ASSERT(mStartTime.isNothing(), "playback should've ended.");
@@ -719,12 +720,6 @@ void DecodedStream::SetPreservesPitch(bool aPreservesPitch) {
   if (mData && mData->mAudioTrack) {
     mData->mAudioTrack->SetPreservesPitch(aPreservesPitch);
   }
-}
-
-RefPtr<GenericPromise> DecodedStream::SetAudioDevice(
-    RefPtr<AudioDeviceInfo> aDevice) {
-  // All audio is captured, so nothing is actually played out, so nothing to do.
-  return GenericPromise::CreateAndResolve(true, __func__);
 }
 
 double DecodedStream::PlaybackRate() const {
