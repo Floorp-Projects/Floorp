@@ -322,6 +322,103 @@ set_config("HOST_LIB_PREFIX", host_library_name_info.lib.prefix)
 set_config("HOST_IMPORT_LIB_SUFFIX", host_library_name_info.import_lib.suffix)
 set_config("WASM_OBJ_SUFFIX", "wasm")
 
+
+@template
+def llvm_tool(name):
+    @depends(host_c_compiler, c_compiler, bindgen_config_paths)
+    def llvm_tool(host_c_compiler, c_compiler, bindgen_config_paths):
+        clang = None
+        for compiler in (host_c_compiler, c_compiler):
+            if compiler and compiler.type == "clang":
+                clang = compiler.compiler
+                break
+            elif compiler and compiler.type == "clang-cl":
+                clang = os.path.join(os.path.dirname(compiler.compiler), "clang")
+                break
+
+        if not clang and bindgen_config_paths:
+            clang = bindgen_config_paths.clang_path
+        tool = name
+        if clang:
+            out = check_cmd_output(
+                clang, "--print-prog-name=%s" % tool, onerror=lambda: None
+            )
+            if out:
+                tool = out.rstrip()
+        return (tool,)
+
+    return llvm_tool
+
+
+@template
+def plain_llvm_or_prefixed(name):
+    @depends(llvm_tool(f"llvm-{name}"), toolchain_prefix)
+    def plain_llvm_or_prefixed(llvm_tool, toolchain_prefix):
+        commands = [llvm_tool[0], name]
+        for prefix in toolchain_prefix or ():
+            commands.insert(1, f"{prefix}{name}")
+        return tuple(commands)
+
+    return plain_llvm_or_prefixed
+
+
+llvm_objdump = check_prog(
+    "LLVM_OBJDUMP",
+    llvm_tool("llvm-objdump"),
+    what="llvm-objdump",
+    when="--enable-compile-environment",
+    paths=clang_search_path,
+)
+
+add_old_configure_assignment("LLVM_OBJDUMP", llvm_objdump)
+
+
+def validate_readelf(path):
+    # llvm-readelf from llvm < 8 doesn't support the GNU binutils-compatible `-d`
+    # flag. We could try running `$path -d $some_binary` but we might be cross
+    # compiling and not have a binary at hand to run that against. `$path -d` alone
+    # would fail whether the flag is supported or not. So we resort to look for the
+    # option in the `--help` output, which fortunately, s compatible between
+    # llvm-readelf and readelf.
+    retcode, stdout, stderr = get_cmd_output(path, "--help")
+    return retcode == 0 and any(l.startswith("  -d ") for l in stdout.splitlines())
+
+
+@depends("--enable-compile-environment", target, host)
+def readelf_when(compile_env, target, host):
+    return compile_env and any(
+        x.kernel not in ("Darwin", "WINNT") for x in (target, host)
+    )
+
+
+readelf = check_prog(
+    "READELF",
+    plain_llvm_or_prefixed("readelf"),
+    when=readelf_when,
+    paths=clang_search_path,
+    validate=validate_readelf,
+)
+
+
+def validate_objcopy(path):
+    if "llvm-objcopy" not in path:
+        return True
+    # llvm-objcopy doesn't support --only-keep-debug before llvm 9.0.
+    retcode, stdout, stderr = get_cmd_output(path, "--help")
+    return retcode == 0 and any(
+        l.startswith("  --only-keep-debug ") for l in stdout.splitlines()
+    )
+
+
+check_prog(
+    "OBJCOPY",
+    plain_llvm_or_prefixed("objcopy"),
+    when=readelf_when,
+    paths=clang_search_path,
+    validate=validate_objcopy,
+)
+
+
 # Make `profiling` available to this file even when js/moz.configure
 # doesn't end up included.
 profiling = dependable(False)
@@ -661,51 +758,12 @@ check_prog("7Z", ("7z", "7za"), allow_missing=True, when=target_is_windows)
 check_prog("UPX", ("upx",), allow_missing=True, when=target_is_windows)
 
 
-@template
-def llvm_tool(name):
-    @depends(host_c_compiler, c_compiler, bindgen_config_paths)
-    def llvm_tool(host_c_compiler, c_compiler, bindgen_config_paths):
-        clang = None
-        for compiler in (host_c_compiler, c_compiler):
-            if compiler and compiler.type == "clang":
-                clang = compiler.compiler
-                break
-            elif compiler and compiler.type == "clang-cl":
-                clang = os.path.join(os.path.dirname(compiler.compiler), "clang")
-                break
-
-        if not clang and bindgen_config_paths:
-            clang = bindgen_config_paths.clang_path
-        tool = name
-        if clang:
-            out = check_cmd_output(
-                clang, "--print-prog-name=%s" % tool, onerror=lambda: None
-            )
-            if out:
-                tool = out.rstrip()
-        return (tool,)
-
-    return llvm_tool
-
-
 check_prog(
     "DSYMUTIL",
     llvm_tool("dsymutil"),
     when=compile_environment & target_is_darwin,
     paths=clang_search_path,
 )
-
-
-@template
-def plain_llvm_or_prefixed(name):
-    @depends(llvm_tool(f"llvm-{name}"), toolchain_prefix)
-    def plain_llvm_or_prefixed(llvm_tool, toolchain_prefix):
-        commands = [llvm_tool[0], name]
-        for prefix in toolchain_prefix or ():
-            commands.insert(1, f"{prefix}{name}")
-        return tuple(commands)
-
-    return plain_llvm_or_prefixed
 
 
 check_prog(
@@ -720,63 +778,6 @@ check_prog(
     plain_llvm_or_prefixed("install-name-tool"),
     when=compile_environment & target_is_darwin & js_standalone,
     paths=clang_search_path,
-)
-
-
-llvm_objdump = check_prog(
-    "LLVM_OBJDUMP",
-    llvm_tool("llvm-objdump"),
-    what="llvm-objdump",
-    when="--enable-compile-environment",
-    paths=clang_search_path,
-)
-
-add_old_configure_assignment("LLVM_OBJDUMP", llvm_objdump)
-
-
-def validate_readelf(path):
-    # llvm-readelf from llvm < 8 doesn't support the GNU binutils-compatible `-d`
-    # flag. We could try running `$path -d $some_binary` but we might be cross
-    # compiling and not have a binary at hand to run that against. `$path -d` alone
-    # would fail whether the flag is supported or not. So we resort to look for the
-    # option in the `--help` output, which fortunately, s compatible between
-    # llvm-readelf and readelf.
-    retcode, stdout, stderr = get_cmd_output(path, "--help")
-    return retcode == 0 and any(l.startswith("  -d ") for l in stdout.splitlines())
-
-
-@depends("--enable-compile-environment", target, host)
-def readelf_when(compile_env, target, host):
-    return compile_env and any(
-        x.kernel not in ("Darwin", "WINNT") for x in (target, host)
-    )
-
-
-check_prog(
-    "READELF",
-    plain_llvm_or_prefixed("readelf"),
-    when=readelf_when,
-    paths=clang_search_path,
-    validate=validate_readelf,
-)
-
-
-def validate_objcopy(path):
-    if "llvm-objcopy" not in path:
-        return True
-    # llvm-objcopy doesn't support --only-keep-debug before llvm 9.0.
-    retcode, stdout, stderr = get_cmd_output(path, "--help")
-    return retcode == 0 and any(
-        l.startswith("  --only-keep-debug ") for l in stdout.splitlines()
-    )
-
-
-check_prog(
-    "OBJCOPY",
-    plain_llvm_or_prefixed("objcopy"),
-    when=readelf_when,
-    paths=clang_search_path,
-    validate=validate_objcopy,
 )
 
 option("--enable-dtrace", help="Build with dtrace support")
