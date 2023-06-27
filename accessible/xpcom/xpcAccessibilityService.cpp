@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/Document.h"
 
-#include "nsAccessiblePivot.h"
+#include "xpcAccessiblePivot.h"
 #include "nsAccessibilityService.h"
 #include "Platform.h"
 #include "xpcAccessibleApplication.h"
@@ -236,10 +236,7 @@ xpcAccessibilityService::CreateAccessiblePivot(nsIAccessible* aRoot,
   NS_ENSURE_ARG(aRoot);
   *aPivot = nullptr;
 
-  LocalAccessible* accessibleRoot = aRoot->ToInternalAccessible();
-  NS_ENSURE_TRUE(accessibleRoot, NS_ERROR_INVALID_ARG);
-
-  nsAccessiblePivot* pivot = new nsAccessiblePivot(accessibleRoot);
+  xpcAccessiblePivot* pivot = new xpcAccessiblePivot(aRoot);
   NS_ADDREF(*aPivot = pivot);
 
   return NS_OK;
