@@ -1,4 +1,4 @@
-## Introduction to Mochitest framework with Http/2 and Http/3 support
+# Introduction to Mochitest framework with Http/2 and Http/3 support
 
 The Mochitest framework currently utilizes [httpd.js](https://searchfox.org/mozilla-central/source/netwerk/test/httpserver/httpd.js) as its primary HTTP server, which only provides support for HTTP/1.1. To boost our testing capacity for Http/2 and Http/3 within necko, we improved the Mochitest framework to enable Firefox to connect to the test server using Http/2 or Http/3 while running Mochitest files.
 
