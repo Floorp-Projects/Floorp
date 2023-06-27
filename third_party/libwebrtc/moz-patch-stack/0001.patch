@@ -1,447 +1,129 @@
-From: Jan-Ivar Bruaroey <wingboy@gmail.com>
-Date: Tue, 27 Jun 2023 13:57:54 -0400
-Subject: (tmp-cherry-pick) Revert "operator== for VideoFrameMetadata + used in
- CloneSenderVideoFrame test" (8bf3210629)
+From: Florent Castelli <orphis@webrtc.org>
+Date: Wed, 15 Mar 2023 16:47:43 +0100
+Subject: =?UTF-8?q?(cherry-pick-branch-heads/5615)=20[Merge-112]=C2=A0Pres?=
+ =?UTF-8?q?erve=20mid=20of=20sections=20added=20with=20AddTrack=20after=20?=
+ =?UTF-8?q?a=20rollback?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit 437bf78ed9518b21fc39b94f6ee42d5b157e6084.
+Since AddTrack now has an implicit init_encodings value, it will also
+have a StableState saved when associating a transceiver.
+That state may not have a saved mid and mline_index, and so on a
+rollback, it could blindly reset the mid and mline_index of an
+associated transceiver.
 
-Reason for revert: Breaks upstream project
+This is wrong, the mid and mline_index of associated transceivers
+should only be updated when the StableState objects actually
+have one saved.
 
-Original change's description:
-> operator== for VideoFrameMetadata + used in CloneSenderVideoFrame test
->
-> Added equality and inequality operators for VideoFrameMetadata and used the equality operator to check that the cloned metadata property is equal to the original metadata in RtpSenderVideoFrameTransformerDelegateTest.CloneSenderVideoFrame.
->
-> Also default-initialized VideoFrameMetadata::ssrc_ to 0.
->
-> Bug: webrtc:14708
-> Change-Id: If1f5153069bc986061ff9f0a6abaa2a4a5a98dd1
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/293560
-> Commit-Queue: Tove Petersson <tovep@google.com>
-> Reviewed-by: Tony Herre <herre@google.com>
-> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#39411}
+(cherry picked from commit b3d424cd484dd7a109547ca7be7f1575a29df7e7)
 
-Bug: webrtc:14708
-Change-Id: Icbec1b65ed22b89766606cb9514dde6f4e9124be
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/295500
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-Auto-Submit: Andrey Logvin <landrey@webrtc.org>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#39413}
+Bug: chromium:1424238
+Change-Id: I8e80a04cd072d90200ca7643de892c0ef29b1f1a
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/297920
+Commit-Queue: Florent Castelli <orphis@webrtc.org>
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#39577}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/297983
+Reviewed-by: Per Kjellander <perkj@webrtc.org>
+Commit-Queue: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5615@{#1}
+Cr-Branched-From: cdfeb4f7922f05007d88c8263842998ec79b6dd6-refs/heads/main@{#39376}
 ---
- api/BUILD.gn                                  |   1 -
- api/video/BUILD.gn                            |  13 --
- api/video/video_frame_metadata.cc             |  19 ---
- api/video/video_frame_metadata.h              |   7 +-
- api/video/video_frame_metadata_unittest.cc    | 126 ------------------
- ...deo_frame_transformer_delegate_unittest.cc |   3 +-
- .../codecs/h264/include/h264_globals.h        |  24 ----
- .../codecs/vp8/include/vp8_globals.h          |  15 ---
- .../codecs/vp9/include/vp9_globals.h          |  71 ----------
- 9 files changed, 3 insertions(+), 276 deletions(-)
- delete mode 100644 api/video/video_frame_metadata_unittest.cc
+ pc/sdp_offer_answer.cc          |  6 ++--
+ pc/sdp_offer_answer_unittest.cc | 63 +++++++++++++++++++++++++++++++++
+ 2 files changed, 67 insertions(+), 2 deletions(-)
 
-diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 01b1a48686..c336bee27a 100644
---- a/api/BUILD.gn
-+++ b/api/BUILD.gn
-@@ -1448,7 +1448,6 @@ if (rtc_include_tests) {
-       "units:units_unittests",
-       "video:frame_buffer_unittest",
-       "video:rtp_video_frame_assembler_unittests",
--      "video:video_frame_metadata_unittest",
-     ]
-     absl_deps = [
-       "//third_party/abseil-cpp/absl/strings",
-diff --git a/api/video/BUILD.gn b/api/video/BUILD.gn
-index c8deac37e9..17277562e1 100644
---- a/api/video/BUILD.gn
-+++ b/api/video/BUILD.gn
-@@ -372,16 +372,3 @@ rtc_library("frame_buffer_unittest") {
-     "../../test:test_support",
-   ]
- }
--
--rtc_library("video_frame_metadata_unittest") {
--  testonly = true
--  sources = [ "video_frame_metadata_unittest.cc" ]
--
--  deps = [
--    ":video_frame_metadata",
--    "../../api/video:video_frame",
--    "../../modules/video_coding:codec_globals_headers",
--    "../../test:test_support",
--    "../../video:video",
--  ]
--}
-diff --git a/api/video/video_frame_metadata.cc b/api/video/video_frame_metadata.cc
-index c5f880848c..df33cf5566 100644
---- a/api/video/video_frame_metadata.cc
-+++ b/api/video/video_frame_metadata.cc
-@@ -152,23 +152,4 @@ void VideoFrameMetadata::SetCsrcs(std::vector<uint32_t> csrcs) {
-   csrcs_ = std::move(csrcs);
- }
- 
--bool operator==(const VideoFrameMetadata& lhs, const VideoFrameMetadata& rhs) {
--  return lhs.frame_type_ == rhs.frame_type_ && lhs.width_ == rhs.width_ &&
--         lhs.height_ == rhs.height_ && lhs.rotation_ == rhs.rotation_ &&
--         lhs.content_type_ == rhs.content_type_ &&
--         lhs.frame_id_ == rhs.frame_id_ &&
--         lhs.spatial_index_ == rhs.spatial_index_ &&
--         lhs.temporal_index_ == rhs.temporal_index_ &&
--         lhs.frame_dependencies_ == rhs.frame_dependencies_ &&
--         lhs.decode_target_indications_ == rhs.decode_target_indications_ &&
--         lhs.is_last_frame_in_picture_ == rhs.is_last_frame_in_picture_ &&
--         lhs.simulcast_idx_ == rhs.simulcast_idx_ && lhs.codec_ == rhs.codec_ &&
--         lhs.codec_specifics_ == rhs.codec_specifics_ &&
--         lhs.ssrc_ == rhs.ssrc_ && lhs.csrcs_ == rhs.csrcs_;
--}
--
--bool operator!=(const VideoFrameMetadata& lhs, const VideoFrameMetadata& rhs) {
--  return !(lhs == rhs);
--}
--
- }  // namespace webrtc
-diff --git a/api/video/video_frame_metadata.h b/api/video/video_frame_metadata.h
-index bf46387338..5a1c0edde7 100644
---- a/api/video/video_frame_metadata.h
-+++ b/api/video/video_frame_metadata.h
-@@ -94,11 +94,6 @@ class RTC_EXPORT VideoFrameMetadata {
-   std::vector<uint32_t> GetCsrcs() const;
-   void SetCsrcs(std::vector<uint32_t> csrcs);
- 
--  friend bool operator==(const VideoFrameMetadata& lhs,
--                         const VideoFrameMetadata& rhs);
--  friend bool operator!=(const VideoFrameMetadata& lhs,
--                         const VideoFrameMetadata& rhs);
--
-  private:
-   VideoFrameType frame_type_ = VideoFrameType::kEmptyFrame;
-   int16_t width_ = 0;
-@@ -119,7 +114,7 @@ class RTC_EXPORT VideoFrameMetadata {
-   RTPVideoHeaderCodecSpecifics codec_specifics_;
- 
-   // RTP info.
--  uint32_t ssrc_ = 0u;
-+  uint32_t ssrc_;
-   std::vector<uint32_t> csrcs_;
- };
- }  // namespace webrtc
-diff --git a/api/video/video_frame_metadata_unittest.cc b/api/video/video_frame_metadata_unittest.cc
-deleted file mode 100644
-index 11fe711c87..0000000000
---- a/api/video/video_frame_metadata_unittest.cc
-+++ /dev/null
-@@ -1,126 +0,0 @@
--/*
-- *  Copyright (c) 2023 The WebRTC project authors. All Rights Reserved.
-- *
-- *  Use of this source code is governed by a BSD-style license
-- *  that can be found in the LICENSE file in the root of the source
-- *  tree. An additional intellectual property rights grant can be found
-- *  in the file PATENTS.  All contributing project authors may
-- *  be found in the AUTHORS file in the root of the source tree.
-- */
--
--#include "api/video/video_frame_metadata.h"
--
--#include "api/video/video_frame.h"
--#include "modules/video_coding/codecs/h264/include/h264_globals.h"
--#include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
--#include "test/gtest.h"
--#include "video/video_receive_stream2.h"
--
--namespace webrtc {
--namespace {
--
--RTPVideoHeaderH264 ExampleHeaderH264() {
--  NaluInfo nalu_info;
--  nalu_info.type = 1;
--  nalu_info.sps_id = 2;
--  nalu_info.pps_id = 3;
--
--  RTPVideoHeaderH264 header;
--  header.nalu_type = 4;
--  header.packetization_type = H264PacketizationTypes::kH264StapA;
--  header.nalus[0] = nalu_info;
--  header.nalus_length = 1;
--  header.packetization_mode = H264PacketizationMode::SingleNalUnit;
--  return header;
--}
--
--RTPVideoHeaderVP9 ExampleHeaderVP9() {
--  RTPVideoHeaderVP9 header;
--  header.InitRTPVideoHeaderVP9();
--  header.inter_pic_predicted = true;
--  header.flexible_mode = true;
--  header.beginning_of_frame = true;
--  header.end_of_frame = true;
--  header.ss_data_available = true;
--  header.non_ref_for_inter_layer_pred = true;
--  header.picture_id = 1;
--  header.max_picture_id = 2;
--  header.tl0_pic_idx = 3;
--  header.temporal_idx = 4;
--  header.spatial_idx = 5;
--  header.temporal_up_switch = true;
--  header.inter_layer_predicted = true;
--  header.gof_idx = 6;
--  header.num_ref_pics = 1;
--  header.pid_diff[0] = 8;
--  header.ref_picture_id[0] = 9;
--  header.num_spatial_layers = 1;
--  header.first_active_layer = 0;
--  header.spatial_layer_resolution_present = true;
--  header.width[0] = 12;
--  header.height[0] = 13;
--  header.end_of_picture = true;
--  header.gof.SetGofInfoVP9(TemporalStructureMode::kTemporalStructureMode1);
--  header.gof.num_frames_in_gof = 1;
--  header.gof.temporal_idx[0] = 14;
--  header.gof.temporal_up_switch[0] = true;
--  header.gof.pid_diff[0][0] = 15;
--  return header;
--}
--
--TEST(VideoFrameMetadataTest, H264MetadataEquality) {
--  RTPVideoHeaderH264 header = ExampleHeaderH264();
--
--  VideoFrameMetadata metadata_lhs;
--  metadata_lhs.SetRTPVideoHeaderCodecSpecifics(header);
--
--  VideoFrameMetadata metadata_rhs;
--  metadata_rhs.SetRTPVideoHeaderCodecSpecifics(header);
--
--  EXPECT_TRUE(metadata_lhs == metadata_rhs);
--  EXPECT_FALSE(metadata_lhs != metadata_rhs);
--}
--
--TEST(VideoFrameMetadataTest, H264MetadataInequality) {
--  RTPVideoHeaderH264 header = ExampleHeaderH264();
--
--  VideoFrameMetadata metadata_lhs;
--  metadata_lhs.SetRTPVideoHeaderCodecSpecifics(header);
--
--  VideoFrameMetadata metadata_rhs;
--  header.nalus[0].type = 17;
--  metadata_rhs.SetRTPVideoHeaderCodecSpecifics(header);
--
--  EXPECT_FALSE(metadata_lhs == metadata_rhs);
--  EXPECT_TRUE(metadata_lhs != metadata_rhs);
--}
--
--TEST(VideoFrameMetadataTest, VP9MetadataEquality) {
--  RTPVideoHeaderVP9 header = ExampleHeaderVP9();
--
--  VideoFrameMetadata metadata_lhs;
--  metadata_lhs.SetRTPVideoHeaderCodecSpecifics(header);
--
--  VideoFrameMetadata metadata_rhs;
--  metadata_rhs.SetRTPVideoHeaderCodecSpecifics(header);
--
--  EXPECT_TRUE(metadata_lhs == metadata_rhs);
--  EXPECT_FALSE(metadata_lhs != metadata_rhs);
--}
--
--TEST(VideoFrameMetadataTest, VP9MetadataInequality) {
--  RTPVideoHeaderVP9 header = ExampleHeaderVP9();
--
--  VideoFrameMetadata metadata_lhs;
--  metadata_lhs.SetRTPVideoHeaderCodecSpecifics(header);
--
--  VideoFrameMetadata metadata_rhs;
--  header.gof.pid_diff[0][0] = 42;
--  metadata_rhs.SetRTPVideoHeaderCodecSpecifics(header);
--
--  EXPECT_FALSE(metadata_lhs == metadata_rhs);
--  EXPECT_TRUE(metadata_lhs != metadata_rhs);
--}
--
--}  // namespace
--}  // namespace webrtc
-diff --git a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
-index 8abff95692..1f722bf24b 100644
---- a/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender_video_frame_transformer_delegate_unittest.cc
-@@ -163,7 +163,8 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest, CloneSenderVideoFrame) {
-   EXPECT_EQ(video_frame->GetPayloadType(), clone->GetPayloadType());
-   EXPECT_EQ(video_frame->GetSsrc(), clone->GetSsrc());
-   EXPECT_EQ(video_frame->GetTimestamp(), clone->GetTimestamp());
--  EXPECT_EQ(video_frame->GetMetadata(), clone->GetMetadata());
-+  // TODO(bugs.webrtc.org/14708): Expect equality of GetMetadata() once we have
-+  // an equality operator defined.
- }
- 
- TEST_F(RtpSenderVideoFrameTransformerDelegateTest, MetadataEqualsGetMetadata) {
-diff --git a/modules/video_coding/codecs/h264/include/h264_globals.h b/modules/video_coding/codecs/h264/include/h264_globals.h
-index 6a1de382dc..b61dc8c507 100644
---- a/modules/video_coding/codecs/h264/include/h264_globals.h
-+++ b/modules/video_coding/codecs/h264/include/h264_globals.h
-@@ -14,7 +14,6 @@
- #ifndef MODULES_VIDEO_CODING_CODECS_H264_INCLUDE_H264_GLOBALS_H_
- #define MODULES_VIDEO_CODING_CODECS_H264_INCLUDE_H264_GLOBALS_H_
- 
--#include <algorithm>
- #include <string>
- 
- #include "modules/video_coding/codecs/interface/common_constants.h"
-@@ -61,15 +60,6 @@ struct NaluInfo {
-   uint8_t type;
-   int sps_id;
-   int pps_id;
--
--  friend bool operator==(const NaluInfo& lhs, const NaluInfo& rhs) {
--    return lhs.type == rhs.type && lhs.sps_id == rhs.sps_id &&
--           lhs.pps_id == rhs.pps_id;
--  }
--
--  friend bool operator!=(const NaluInfo& lhs, const NaluInfo& rhs) {
--    return !(lhs == rhs);
--  }
- };
- 
- const size_t kMaxNalusPerPacket = 10;
-@@ -88,20 +78,6 @@ struct RTPVideoHeaderH264 {
-   // The packetization mode of this transport. Packetization mode
-   // determines which packetization types are allowed when packetizing.
-   H264PacketizationMode packetization_mode;
--
--  friend bool operator==(const RTPVideoHeaderH264& lhs,
--                         const RTPVideoHeaderH264& rhs) {
--    return lhs.nalu_type == rhs.nalu_type &&
--           lhs.packetization_type == rhs.packetization_type &&
--           std::equal(lhs.nalus, lhs.nalus + lhs.nalus_length, rhs.nalus,
--                      rhs.nalus + rhs.nalus_length) &&
--           lhs.packetization_mode == rhs.packetization_mode;
--  }
--
--  friend bool operator!=(const RTPVideoHeaderH264& lhs,
--                         const RTPVideoHeaderH264& rhs) {
--    return !(lhs == rhs);
--  }
- };
- 
- }  // namespace webrtc
-diff --git a/modules/video_coding/codecs/vp8/include/vp8_globals.h b/modules/video_coding/codecs/vp8/include/vp8_globals.h
-index 8b772f8666..1fab5f45a6 100644
---- a/modules/video_coding/codecs/vp8/include/vp8_globals.h
-+++ b/modules/video_coding/codecs/vp8/include/vp8_globals.h
-@@ -30,21 +30,6 @@ struct RTPVideoHeaderVP8 {
-     beginningOfPartition = false;
-   }
- 
--  friend bool operator==(const RTPVideoHeaderVP8& lhs,
--                         const RTPVideoHeaderVP8& rhs) {
--    return lhs.nonReference == rhs.nonReference &&
--           lhs.pictureId == rhs.pictureId && lhs.tl0PicIdx == rhs.tl0PicIdx &&
--           lhs.temporalIdx == rhs.temporalIdx &&
--           lhs.layerSync == rhs.layerSync && lhs.keyIdx == rhs.keyIdx &&
--           lhs.partitionId == rhs.partitionId &&
--           lhs.beginningOfPartition == rhs.beginningOfPartition;
--  }
--
--  friend bool operator!=(const RTPVideoHeaderVP8& lhs,
--                         const RTPVideoHeaderVP8& rhs) {
--    return !(lhs == rhs);
--  }
--
-   bool nonReference;          // Frame is discardable.
-   int16_t pictureId;          // Picture ID index, 15 bits;
-                               // kNoPictureId if PictureID does not exist.
-diff --git a/modules/video_coding/codecs/vp9/include/vp9_globals.h b/modules/video_coding/codecs/vp9/include/vp9_globals.h
-index 0614a3c83f..f67215ec77 100644
---- a/modules/video_coding/codecs/vp9/include/vp9_globals.h
-+++ b/modules/video_coding/codecs/vp9/include/vp9_globals.h
-@@ -100,28 +100,6 @@ struct GofInfoVP9 {
+diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
+index ade3be7e98..6332d5136c 100644
+--- a/pc/sdp_offer_answer.cc
++++ b/pc/sdp_offer_answer.cc
+@@ -3079,8 +3079,10 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {
      }
+     transceiver->internal()->sender_internal()->set_transport(nullptr);
+     transceiver->internal()->receiver_internal()->set_transport(nullptr);
+-    transceiver->internal()->set_mid(state.mid());
+-    transceiver->internal()->set_mline_index(state.mline_index());
++    if (state.has_m_section()) {
++      transceiver->internal()->set_mid(state.mid());
++      transceiver->internal()->set_mline_index(state.mline_index());
++    }
    }
+   RTCError e = transport_controller_s()->RollbackTransports();
+   if (!e.ok()) {
+diff --git a/pc/sdp_offer_answer_unittest.cc b/pc/sdp_offer_answer_unittest.cc
+index bdd3301060..e16cd6aafc 100644
+--- a/pc/sdp_offer_answer_unittest.cc
++++ b/pc/sdp_offer_answer_unittest.cc
+@@ -388,4 +388,67 @@ TEST_F(SdpOfferAnswerTest, LargeMidsAreRejected) {
+   EXPECT_EQ(error.type(), RTCErrorType::INVALID_PARAMETER);
+ }
  
--  friend bool operator==(const GofInfoVP9& lhs, const GofInfoVP9& rhs) {
--    if (lhs.num_frames_in_gof != rhs.num_frames_in_gof ||
--        lhs.pid_start != rhs.pid_start)
--      return false;
--    for (size_t i = 0; i < lhs.num_frames_in_gof; ++i) {
--      if (lhs.temporal_idx[i] != rhs.temporal_idx[i] ||
--          lhs.temporal_up_switch[i] != rhs.temporal_up_switch[i] ||
--          lhs.num_ref_pics[i] != rhs.num_ref_pics[i]) {
--        return false;
--      }
--      for (uint8_t r = 0; r < lhs.num_ref_pics[i]; ++r) {
--        if (lhs.pid_diff[i][r] != rhs.pid_diff[i][r])
--          return false;
--      }
--    }
--    return true;
--  }
--
--  friend bool operator!=(const GofInfoVP9& lhs, const GofInfoVP9& rhs) {
--    return !(lhs == rhs);
--  }
--
-   size_t num_frames_in_gof;
-   uint8_t temporal_idx[kMaxVp9FramesInGof];
-   bool temporal_up_switch[kMaxVp9FramesInGof];
-@@ -152,55 +130,6 @@ struct RTPVideoHeaderVP9 {
-     end_of_picture = true;
-   }
- 
--  friend bool operator==(const RTPVideoHeaderVP9& lhs,
--                         const RTPVideoHeaderVP9& rhs) {
--    if (lhs.inter_pic_predicted != rhs.inter_pic_predicted ||
--        lhs.flexible_mode != rhs.flexible_mode ||
--        lhs.beginning_of_frame != rhs.beginning_of_frame ||
--        lhs.end_of_frame != rhs.end_of_frame ||
--        lhs.ss_data_available != rhs.ss_data_available ||
--        lhs.non_ref_for_inter_layer_pred != rhs.non_ref_for_inter_layer_pred ||
--        lhs.picture_id != rhs.picture_id ||
--        lhs.max_picture_id != rhs.max_picture_id ||
--        lhs.tl0_pic_idx != rhs.tl0_pic_idx ||
--        lhs.temporal_idx != rhs.temporal_idx ||
--        lhs.spatial_idx != rhs.spatial_idx || lhs.gof_idx != rhs.gof_idx ||
--        lhs.temporal_up_switch != rhs.temporal_up_switch ||
--        lhs.inter_layer_predicted != rhs.inter_layer_predicted ||
--        lhs.num_ref_pics != rhs.num_ref_pics ||
--        lhs.end_of_picture != rhs.end_of_picture) {
--      return false;
--    }
--    for (uint8_t i = 0; i < lhs.num_ref_pics; ++i) {
--      if (lhs.pid_diff[i] != rhs.pid_diff[i] ||
--          lhs.ref_picture_id[i] != rhs.ref_picture_id[i]) {
--        return false;
--      }
--    }
--    if (lhs.ss_data_available) {
--      if (lhs.spatial_layer_resolution_present !=
--              rhs.spatial_layer_resolution_present ||
--          lhs.num_spatial_layers != rhs.num_spatial_layers ||
--          lhs.first_active_layer != rhs.first_active_layer ||
--          lhs.gof != rhs.gof) {
--        return false;
--      }
--      if (lhs.spatial_layer_resolution_present) {
--        for (size_t i = 0; i < lhs.num_spatial_layers; i++) {
--          if (lhs.width[i] != rhs.width[i] || lhs.height[i] != rhs.height[i]) {
--            return false;
--          }
--        }
--      }
--    }
--    return true;
--  }
--
--  friend bool operator!=(const RTPVideoHeaderVP9& lhs,
--                         const RTPVideoHeaderVP9& rhs) {
--    return !(lhs == rhs);
--  }
--
-   bool inter_pic_predicted;  // This layer frame is dependent on previously
-                              // coded frame(s).
-   bool flexible_mode;        // This frame is in flexible mode.
++TEST_F(SdpOfferAnswerTest, RollbackPreservesAddTrackMid) {
++  std::string sdp =
++      "v=0\r\n"
++      "o=- 4131505339648218884 3 IN IP4 **-----**\r\n"
++      "s=-\r\n"
++      "t=0 0\r\n"
++      "a=ice-lite\r\n"
++      "a=msid-semantic: WMS 100030878598094:4Qs1PjbLM32RK5u3\r\n"
++      "a=ice-ufrag:zGWFZ+fVXDeN6UoI/136\r\n"
++      "a=ice-pwd:9AUNgUqRNI5LSIrC1qFD2iTR\r\n"
++      "a=fingerprint:sha-256 "
++      "AD:52:52:E0:B1:37:34:21:0E:15:8E:B7:56:56:7B:B4:39:0E:6D:1C:F5:84:A7:EE:"
++      "B5:27:3E:30:B1:7D:69:42\r\n"
++      "a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n"
++      "a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:mid\r\n"
++      "a=group:BUNDLE 0 1\r\n"
++      "m=audio 40005 UDP/TLS/RTP/SAVPF 111\r\n"
++      "a=rtpmap:111 opus/48000/2\r\n"
++      "a=fmtp:111 "
++      "maxaveragebitrate=20000;maxplaybackrate=16000;minptime=10;usedtx=1;"
++      "useinbandfec=1;stereo=0\r\n"
++      "a=rtcp-fb:111 nack\r\n"
++      "a=setup:passive\r\n"
++      "a=mid:0\r\n"
++      "a=msid:- 75156ebd-e705-4da1-920e-2dac39794dfd\r\n"
++      "a=ptime:60\r\n"
++      "a=recvonly\r\n"
++      "a=rtcp-mux\r\n"
++      "m=audio 40005 UDP/TLS/RTP/SAVPF 111\r\n"
++      "a=rtpmap:111 opus/48000/2\r\n"
++      "a=fmtp:111 "
++      "maxaveragebitrate=20000;maxplaybackrate=16000;minptime=10;usedtx=1;"
++      "useinbandfec=1;stereo=0\r\n"
++      "a=rtcp-fb:111 nack\r\n"
++      "a=setup:passive\r\n"
++      "a=mid:1\r\n"
++      "a=msid:100030878598094:4Qs1PjbLM32RK5u3 9695447562408476674\r\n"
++      "a=ptime:60\r\n"
++      "a=sendonly\r\n"
++      "a=ssrc:2565730539 cname:100030878598094:4Qs1PjbLM32RK5u3\r\n"
++      "a=rtcp-mux\r\n";
++  auto pc = CreatePeerConnection();
++  auto audio_track = pc->AddAudioTrack("audio_track", {});
++  auto first_transceiver = pc->pc()->GetTransceivers()[0];
++  EXPECT_FALSE(first_transceiver->mid().has_value());
++  auto desc = CreateSessionDescription(SdpType::kOffer, sdp);
++  ASSERT_NE(desc, nullptr);
++  RTCError error;
++  ASSERT_TRUE(pc->SetRemoteDescription(std::move(desc)));
++  pc->CreateAnswerAndSetAsLocal();
++  auto saved_mid = first_transceiver->mid();
++  EXPECT_TRUE(saved_mid.has_value());
++  auto offer_before_rollback = pc->CreateOfferAndSetAsLocal();
++  EXPECT_EQ(saved_mid, first_transceiver->mid());
++  auto rollback = pc->CreateRollback();
++  ASSERT_NE(rollback, nullptr);
++  ASSERT_TRUE(pc->SetLocalDescription(std::move(rollback)));
++  EXPECT_EQ(saved_mid, first_transceiver->mid());
++  auto offer2 = pc->CreateOfferAndSetAsLocal();
++  ASSERT_NE(offer2, nullptr);
++  EXPECT_EQ(saved_mid, first_transceiver->mid());
++}
++
+ }  // namespace webrtc
 -- 
 2.37.1 (Apple Git-137.1)
 
