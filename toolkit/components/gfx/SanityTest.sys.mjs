@@ -217,7 +217,7 @@ var listener = {
   canvas: null,
   ctx: null,
   mm: null,
-  disabledPrefs: [],
+  mediaEnginePrefVal: 0,
 
   messages: ["gfxSanity:ContentLoaded"],
 
@@ -260,9 +260,10 @@ var listener = {
   onWindowLoaded() {
     // Disable media engine pref if it's enabled because it doesn't support
     // capturing image to canvas.
-    if (Services.prefs.getIntPref(MEDIA_ENGINE_PREF, 0)) {
+    const prefVal = Services.prefs.getIntPref(MEDIA_ENGINE_PREF, 0);
+    if (prefVal != 0) {
       Services.prefs.setIntPref(MEDIA_ENGINE_PREF, 0);
-      this.disabledPrefs.push(MEDIA_ENGINE_PREF);
+      this.mediaEnginePrefVal = prefVal;
     }
 
     let browser = this.win.document.createXULElement("browser");
@@ -306,10 +307,10 @@ var listener = {
       this.mm = null;
     }
 
-    for (let pref of this.disabledPrefs) {
-      Services.prefs.setBoolPref(pref, true);
+    if (this.mediaEnginePrefVal != 0) {
+      Services.prefs.setIntPref(MEDIA_ENGINE_PREF, this.mediaEnginePrefVal);
+      this.mediaEnginePrefVal = 0;
     }
-    this.disabledPrefs = null;
 
     // Remove the annotation after we've cleaned everything up, to catch any
     // incidental crashes from having performed the sanity test.
