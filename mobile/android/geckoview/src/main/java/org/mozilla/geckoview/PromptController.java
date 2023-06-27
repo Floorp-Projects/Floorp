@@ -30,6 +30,7 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.ColorPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.DateTimePrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.FilePrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt;
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.PrivacyPolicyPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PopupPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.PromptInstanceDelegate;
@@ -610,6 +611,35 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
     }
   }
 
+  private static final class IdentityCredentialShowPrivacyPolicyHandler
+      implements PromptHandler<PrivacyPolicyPrompt> {
+    @Override
+    public PrivacyPolicyPrompt newPrompt(final GeckoBundle info, final Observer observer) {
+      final String privacyPolicyUrl = info.getString("privacyPolicyUrl");
+      final String termsOfServiceUrl = info.getString("termsOfServiceUrl");
+      final String providerDomain = info.getString("providerDomain");
+      final String host = info.getString("host");
+      final String icon = info.getString("icon");
+
+      return new PrivacyPolicyPrompt(
+          info.getString("id"),
+          privacyPolicyUrl,
+          termsOfServiceUrl,
+          providerDomain,
+          host,
+          icon,
+          observer);
+    }
+
+    @Override
+    public GeckoResult<PromptResponse> callDelegate(
+        final PrivacyPolicyPrompt prompt,
+        final GeckoSession session,
+        final PromptDelegate delegate) {
+      return delegate.onShowPrivacyPolicyIdentityCredential(session, prompt);
+    }
+  }
+
   private static final class CreditCardSelectHandler
       implements PromptHandler<AutocompleteRequest<CreditCardSelectOption>> {
     @Override
@@ -703,6 +733,8 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.TextPrompt;
     sPromptHandlers.register(new LoginSelectHandler(), "Autocomplete:Select:Login");
     sPromptHandlers.register(
         new IdentityCredentialSelectProviderHandler(), "IdentityCredential:Select:Provider");
+    sPromptHandlers.register(
+        new IdentityCredentialShowPrivacyPolicyHandler(), "IdentityCredential:Show:Policy");
     sPromptHandlers.register(
         new IdentityCredentialSelectAccountHandler(), "IdentityCredential:Select:Account");
     sPromptHandlers.register(new CreditCardSelectHandler(), "Autocomplete:Select:CreditCard");

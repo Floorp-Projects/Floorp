@@ -83,6 +83,7 @@ import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoDisplay.SurfaceInfo;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt;
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.PrivacyPolicyPrompt;
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt;
 
 public class GeckoSession {
@@ -4727,6 +4728,71 @@ public class GeckoSession {
           }
         }
       }
+
+      /**
+       * PrivacyPolicyPrompt contains the information necessary to represent a prompt that allows
+       * the user to indicate if agrees or not with the privacy policy of the identity credential
+       * provider.
+       */
+      public static class PrivacyPolicyPrompt extends BasePrompt {
+        /** The URL where the policy for using this provider is hosted. */
+        public final @NonNull String privacyPolicyUrl;
+
+        /** The URL where the terms of service for using this provider are hosted. */
+        public final @NonNull String termsOfServiceUrl;
+
+        /** The domain of the provider. */
+        public final @NonNull String providerDomain;
+
+        /** The host of the provider. */
+        public final @NonNull String host;
+
+        /** A base64 string for given icon for the provider; may be null. */
+        public final @Nullable String icon;
+
+        /**
+         * Creates a new {@link IdentityCredential.ProviderSelectorPrompt} with the given
+         * parameters.
+         *
+         * @param id The identification for this prompt.
+         * @param privacyPolicyUrl The URL where the policy for using this provider is hosted.
+         * @param termsOfServiceUrl The URL where the terms of service for using this provider are
+         *     hosted.
+         * @param providerDomain The domain of the provider.
+         * @param host The host of the provider.
+         * @param icon A base64 string for given icon for the provider; may be null.
+         * @param observer A callback to notify when the prompt has been completed.
+         */
+        protected PrivacyPolicyPrompt(
+            @NonNull final String id,
+            @NonNull final String privacyPolicyUrl,
+            @NonNull final String termsOfServiceUrl,
+            @NonNull final String providerDomain,
+            @NonNull final String host,
+            @Nullable final String icon,
+            @NonNull final Observer observer) {
+          super(id, null, observer);
+          this.privacyPolicyUrl = privacyPolicyUrl;
+          this.termsOfServiceUrl = termsOfServiceUrl;
+          this.providerDomain = providerDomain;
+          this.host = host;
+          this.icon = icon;
+        }
+
+        /**
+         * Confirms the prompt and passes the provider accept value back to content.
+         *
+         * @param accept A boolean indicating if the user accepts or not the Privacy Policy of the
+         *     provider.
+         * @return A {@link PromptResponse} which can be used to complete the {@link GeckoResult}
+         *     associated with this prompt.
+         */
+        @UiThread
+        public @NonNull PromptResponse confirm(final boolean accept) {
+          ensureResult().putBoolean("accept", accept);
+          return super.confirm();
+        }
+      }
     }
 
     /**
@@ -5801,6 +5867,20 @@ public class GeckoSession {
     @UiThread
     default @Nullable GeckoResult<PromptResponse> onSelectIdentityCredentialAccount(
         @NonNull final GeckoSession session, @NonNull final AccountSelectorPrompt prompt) {
+      return null;
+    }
+
+    /**
+     * Handle an Identity Credential privacy policy prompt request.
+     *
+     * @param session The {@link GeckoSession} that triggered the request.
+     * @param prompt The {@link PrivacyPolicyPrompt} containing the request details.
+     * @return A {@link GeckoResult} resolving to a {@link PromptResponse} which includes all
+     *     necessary information to resolve the prompt.
+     */
+    @UiThread
+    default @Nullable GeckoResult<PromptResponse> onShowPrivacyPolicyIdentityCredential(
+        @NonNull final GeckoSession session, @NonNull final PrivacyPolicyPrompt prompt) {
       return null;
     }
 
