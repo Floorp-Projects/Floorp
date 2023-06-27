@@ -17,12 +17,14 @@ import org.mozilla.experiments.nimbus.NimbusInterface
  */
 class NimbusBuilder(context: Context) : AbstractNimbusBuilder<NimbusApi>(context) {
     var onApplyCallback: (NimbusApi) -> Unit = {}
+    var onFetchedCallback: (NimbusApi) -> Unit = {}
 
     override fun newNimbus(
         appInfo: NimbusAppInfo,
         serverSettings: NimbusServerSettings?,
     ) = Nimbus(context, appInfo, serverSettings, errorReporter).apply {
         register(ExperimentsAppliedObserver(this, onApplyCallback))
+        register(ExperimentsFetchedObserver(this, onFetchedCallback))
     }
 
     override fun newNimbusDisabled() = NimbusDisabled(context)
@@ -31,6 +33,13 @@ class NimbusBuilder(context: Context) : AbstractNimbusBuilder<NimbusApi>(context
 private class ExperimentsAppliedObserver(val nimbus: NimbusApi, val callback: (NimbusApi) -> Unit) :
     NimbusInterface.Observer {
     override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
+        callback(nimbus)
+    }
+}
+
+private class ExperimentsFetchedObserver(val nimbus: NimbusApi, val callback: (NimbusApi) -> Unit) :
+    NimbusInterface.Observer {
+    override fun onExperimentsFetched() {
         callback(nimbus)
     }
 }

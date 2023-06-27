@@ -428,12 +428,16 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
 
         if (FxNimbus.features.splashScreen.value().enabled) {
             val splashScreen = installSplashScreen()
-            var keepSplashOnScreen = true
+            var maxDurationReached = false
             val delay = FxNimbus.features.splashScreen.value().maximumDurationMs.toLong()
-            splashScreen.setKeepOnScreenCondition { keepSplashOnScreen }
+            splashScreen.setKeepOnScreenCondition {
+                val dataFetched = components.settings.utmParamsKnown &&
+                    components.settings.nimbusExperimentsFetched
+                !maxDurationReached && !dataFetched
+            }
             MainScope().launch {
                 delay(timeMillis = delay)
-                keepSplashOnScreen = false
+                maxDurationReached = true
             }
         }
     }

@@ -217,6 +217,7 @@
     <string name="pref_key_adjust_adgroup" translatable="false">pref_key_adjust_adgroup</string>
     <string name="pref_key_adjust_creative" translatable="false">pref_key_adjust_creative</string>
 
+    <string name="pref_key_nimbus_experiments_fetched" translatable="false">pref_key_nimbus_experiments_fetched</string>
     <string name="pref_key_utm_params_known" translatable="false">pref_key_utm_params_known</string>
     <string name="pref_key_utm_source" translatable="false">pref_key_utm_source</string>
     <string name="pref_key_utm_medium" translatable="false">pref_key_utm_medium</string>

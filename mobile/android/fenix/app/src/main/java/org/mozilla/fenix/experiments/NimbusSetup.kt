@@ -82,6 +82,9 @@ fun createNimbus(context: Context, urlString: String?): NimbusApi {
         onApplyCallback = {
             FxNimbus.invalidateCachedValues()
         }
+        onFetchedCallback = {
+            context.settings().nimbusExperimentsFetched = true
+        }
     }.build(appInfo)
 }
 
