@@ -448,6 +448,7 @@ impl Stylesheet {
             insert_rule_context: None,
             allow_import_rules,
             declaration_parser_state: Default::default(),
+            error_reporting_state: Default::default(),
             rules: Vec::new(),
         };
 

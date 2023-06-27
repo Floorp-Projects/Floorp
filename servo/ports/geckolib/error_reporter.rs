@@ -86,7 +86,7 @@ enum Action {
 trait ErrorHelpers<'a> {
     fn error_data(self) -> (CowRcStr<'a>, ErrorKind<'a>);
     fn error_params(self) -> ErrorParams<'a>;
-    fn selector_list(&self) -> Option<&'a SelectorList<SelectorImpl>>;
+    fn selectors(&self) -> &'a [SelectorList<SelectorImpl>];
     fn to_gecko_message(&self) -> (Option<&'static CStr>, &'static CStr, Action);
 }
 
@@ -226,10 +226,10 @@ impl<'a> ErrorHelpers<'a> for ContextualParseError<'a> {
         })
     }
 
-    fn selector_list(&self) -> Option<&'a SelectorList<SelectorImpl>> {
+    fn selectors(&self) -> &'a [SelectorList<SelectorImpl>] {
         match *self {
             ContextualParseError::UnsupportedPropertyDeclaration(_, _, selectors) => selectors,
-            _ => None,
+            _ => &[],
         }
     }
 
@@ -454,9 +454,20 @@ impl ErrorReporter {
             Action::Skip => cstr!("PEDeclSkipped").as_ptr(),
             Action::Drop => cstr!("PEDeclDropped").as_ptr(),
         };
-        let selector_list = error.selector_list().map(|l| l.to_css_string());
+        let selectors = error.selectors();
+        let desugared_selector_list = match selectors.len() {
+            0 => None,
+            1 => Some(selectors[0].to_css_string()),
+            _ => {
+                let mut desugared = selectors.last().unwrap().clone();
+                for parent in selectors.iter().rev().skip(1) {
+                    desugared = desugared.replace_parent_selector(&parent.0);
+                }
+                Some(desugared.to_css_string())
+            },
+        };
         let selector_list_ptr =
-            selector_list.as_ref().map_or(ptr::null(), |s| s.as_ptr()) as *const _;
+            desugared_selector_list.as_ref().map_or(ptr::null(), |s| s.as_ptr()) as *const _;
         let params = error.error_params();
         let param = params.main_param;
         let pre_param = params.prefix_param;
@@ -480,7 +491,7 @@ impl ErrorReporter {
                 source.as_ptr() as *const _,
                 source.len() as u32,
                 selector_list_ptr,
-                selector_list.as_ref().map_or(0, |string| string.len()) as u32,
+                desugared_selector_list.as_ref().map_or(0, |string| string.len()) as u32,
                 location.line,
                 location.column,
             );
