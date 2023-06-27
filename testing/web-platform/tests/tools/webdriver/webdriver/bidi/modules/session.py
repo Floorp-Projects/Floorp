@@ -10,8 +10,8 @@ class Session(BidiModule):
 
     @end.result
     async def _end(self, result: Mapping[str, Any]) -> Any:
-        if self.session.transport.connection.closed is False:
-            await self.session.transport.connection.wait_closed()
+        if self.session.transport:
+            await self.session.transport.wait_closed()
 
         return result
 
