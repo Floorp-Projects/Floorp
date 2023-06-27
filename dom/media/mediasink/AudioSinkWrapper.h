@@ -54,6 +54,8 @@ class AudioSinkWrapper : public MediaSink {
   void SetPlaybackRate(double aPlaybackRate) override;
   void SetPreservesPitch(bool aPreservesPitch) override;
   void SetPlaying(bool aPlaying) override;
+  RefPtr<GenericPromise> SetAudioDevice(
+      RefPtr<AudioDeviceInfo> aDevice) override;
 
   double PlaybackRate() const override;
 
@@ -62,8 +64,6 @@ class AudioSinkWrapper : public MediaSink {
   void Stop() override;
   bool IsStarted() const override;
   bool IsPlaying() const override;
-
-  const AudioDeviceInfo* AudioDevice() const override { return mAudioDevice; }
 
   void Shutdown() override;
 
@@ -103,9 +103,14 @@ class AudioSinkWrapper : public MediaSink {
   // and when seeking.
   // In asynchronous mode, the clock will keep going forward (using the system
   // clock) until the AudioSink is started, at which point the clock will use
-  // the AudioSink clock. This is used when unmuting a media element.
+  // the AudioSink clock. This is used when unmuting a media element or
+  // switching audio output devices. The promise is resolved when the
+  // previous device is no longer in use and an attempt to open the new device
+  // completes (successfully or not) or is deemed unnecessary because the
+  // device is not required for output at this time.
   nsresult SyncCreateAudioSink(const media::TimeUnit& aStartTime);
-  void MaybeAsyncCreateAudioSink();
+  RefPtr<GenericPromise> MaybeAsyncCreateAudioSink(
+      RefPtr<AudioDeviceInfo> aDevice);
   void ScheduleRetrySink();
 
   // Get the current media position using the system clock. This is used when
@@ -124,7 +129,7 @@ class AudioSinkWrapper : public MediaSink {
   UniquePtr<AudioSink> mAudioSink;
   // The output device this AudioSink is playing data to. The system's default
   // device is used if this is null.
-  const RefPtr<AudioDeviceInfo> mAudioDevice;
+  RefPtr<AudioDeviceInfo> mAudioDevice;
   // Will only exist when media has an audio track.
   RefPtr<EndedPromise> mEndedPromise;
   MozPromiseHolder<EndedPromise> mEndedPromiseHolder;

@@ -93,6 +93,15 @@ class MediaDecoderStateMachineBase {
   // Sets the video decode mode. Used by the suspend-video-decoder feature.
   virtual void SetVideoDecodeMode(VideoDecodeMode aMode) = 0;
 
+  // Set new sink device.  ExternalEngineStateMachine will reject the returned
+  // promise with NS_ERROR_ABORT to indicate that the action is not supported.
+  // MediaDecoderStateMachine will resolve the promise when the previous
+  // device is no longer in use and an attempt to open the new device
+  // completes (successfully or not) or is deemed unnecessary because the
+  // device is not required for output at this time.  MediaDecoderStateMachine
+  // will always consider the switch in underlying output device successful
+  // and continue attempting to open the new device even if opening initially
+  // fails.
   virtual RefPtr<GenericPromise> InvokeSetSink(
       const RefPtr<AudioDeviceInfo>& aSink) = 0;
   virtual void InvokeSuspendMediaSink() = 0;

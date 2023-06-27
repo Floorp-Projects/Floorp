@@ -93,6 +93,17 @@ class MediaSink {
   // Pause/resume the playback. Only work after playback starts.
   virtual void SetPlaying(bool aPlaying) = 0;
 
+  // Set the audio output device.  aDevice == nullptr indicates the default
+  // device.  The returned promise is resolved when the previous device is no
+  // longer in use and an attempt to open the new device completes
+  // (successfully or not) or is deemed unnecessary because the device is not
+  // required for output at this time.  The promise will be resolved whether
+  // or not opening the cubeb_stream succeeds because the aDevice is
+  // considered the new underlying device and will be used when it becomes
+  // available.
+  virtual RefPtr<GenericPromise> SetAudioDevice(
+      RefPtr<AudioDeviceInfo> aDevice) = 0;
+
   // Get the playback rate.
   // Can be called in any state.
   virtual double PlaybackRate() const = 0;
@@ -120,10 +131,6 @@ class MediaSink {
   // Return true if playback is started and not paused otherwise false.
   // Can be called in any state.
   virtual bool IsPlaying() const = 0;
-
-  // The audio output device this MediaSink is playing audio data to. The
-  // default device is used if this returns null.
-  virtual const AudioDeviceInfo* AudioDevice() const = 0;
 
   // Called on the state machine thread to shut down the sink. All resources
   // allocated by this sink should be released.
