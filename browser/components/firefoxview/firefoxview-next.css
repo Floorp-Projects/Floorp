@@ -43,18 +43,34 @@
   }
 }
 
+@media (max-width: 52rem) {
+  :root {
+    --fxview-sidebar-width: 82px;
+  }
+}
+
 body {
   display: grid;
   grid-template-columns: var(--fxview-sidebar-width) 1fr;
   background-color: var(--fxview-background-color);
   color: var(--fxview-text-primary-color);
-  margin-block-start: var(--fxview-margin-top);
 }
 
 #pages {
   width: 90%;
   margin: 0 auto;
   max-width: 1136px;
+}
+
+@media (min-width: 120rem) {
+  #pages {
+    margin-inline-start: 148px;
+  }
+}
+
+.page-header {
+  margin: 0;
+  font-weight: 400;
 }
 
 fxview-category-button[name="overview"]::part(icon) {
@@ -73,14 +89,42 @@ fxview-category-button[name="history"]::part(icon) {
   background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
 }
 
-@media (max-width: 52rem) {
-  :root {
-    --fxview-sidebar-width: 82px;
-  }
+fxview-tab-list.history::part(secondary-button) {
+  background-image: url("chrome://global/skin/icons/more.svg");
 }
 
-@media (min-width: 120rem) {
-  #pages {
-    margin-inline-start: 148px;
-  }
+.sticky-container {
+  position: sticky;
+  top: 0;
+  padding-block: var(--fxview-margin-top) 42px;
+  z-index: 1;
+}
+
+.sticky-container.bottom-fade {
+  background:
+  linear-gradient(
+    to bottom,
+    var(--fxview-background-color) 0%,
+    var(--fxview-background-color) 95%,
+    transparent 100%
+  );
+}
+
+.cards-container {
+  padding-inline: 4px;
+}
+
+/* This should be supported within panel-{item,list} rather than modifying it */
+panel-item::part(button) {
+  padding-inline-start: 12px;
+  cursor: pointer;
+}
+
+panel-item::part(button):hover {
+  background-color: var(--fxview-element-background-hover);
+  color: var(--fxview-text-color-hover);
+}
+
+panel-item::part(button):hover:active {
+  background-color: var(--fxview-element-background-active);
 }
