@@ -6,14 +6,14 @@ from collections import OrderedDict
 
 from mozbuild.util import EnumString
 
-CompilerType = EnumString.subclass(
+CompilerType = EnumString.subclass("CompilerType")(
     "clang",
     "clang-cl",
     "gcc",
     "msvc",
 )
 
-OS = EnumString.subclass(
+OS = EnumString.subclass("OS")(
     "Android",
     "DragonFly",
     "FreeBSD",
@@ -26,7 +26,7 @@ OS = EnumString.subclass(
     "WASI",
 )
 
-Kernel = EnumString.subclass(
+Kernel = EnumString.subclass("Kernel")(
     "Darwin",
     "DragonFly",
     "FreeBSD",
@@ -62,19 +62,19 @@ CPU_bitness = {
     "wasm32": 32,
 }
 
-CPU = EnumString.subclass(*CPU_bitness.keys())
+CPU = EnumString.subclass("CPU")(*CPU_bitness.keys())
 
-Endianness = EnumString.subclass(
+Endianness = EnumString.subclass("Endianness")(
     "big",
     "little",
 )
 
-WindowsBinaryType = EnumString.subclass(
+WindowsBinaryType = EnumString.subclass("WindowsBinaryType")(
     "win32",
     "win64",
 )
 
-Abi = EnumString.subclass(
+Abi = EnumString.subclass("Abi")(
     "msvc",
     "mingw",
 )

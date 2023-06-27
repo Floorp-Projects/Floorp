@@ -1326,12 +1326,19 @@ class EnumString(six.text_type):
     def __hash__(self):
         return super(EnumString, self).__hash__()
 
-    @staticmethod
-    def subclass(*possible_values):
-        class EnumStringSubclass(EnumString):
-            POSSIBLE_VALUES = possible_values
+    def __repr__(self):
+        return f"{self.__class__.__name__}({str(self)!r})"
 
-        return EnumStringSubclass
+    @staticmethod
+    def subclass(name):
+        def create_subclass(*possible_values):
+            class EnumStringSubclass(EnumString):
+                POSSIBLE_VALUES = possible_values
+
+            EnumStringSubclass.__name__ = name
+            return EnumStringSubclass
+
+        return create_subclass
 
 
 def _escape_char(c):
