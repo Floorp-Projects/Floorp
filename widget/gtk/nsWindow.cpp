@@ -408,7 +408,6 @@ nsWindow::nsWindow()
       mPanInProgress(false),
       mDrawToContainer(false),
       mTitlebarBackdropState(false),
-      mIsPIPWindow(false),
       mIsWaylandPanelWindow(false),
       mIsChildWindow(false),
       mAlwaysOnTop(false),
@@ -5908,7 +5907,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   }
 
   mAlwaysOnTop = aInitData && aInitData->mAlwaysOnTop;
-  mIsPIPWindow = aInitData && aInitData->mPIPWindow;
   // mNoAutoHide seems to be always false here.
   // The mNoAutoHide state is set later on nsMenuPopupFrame level
   // and can be changed so we use WaylandPopupIsPermanent() to get

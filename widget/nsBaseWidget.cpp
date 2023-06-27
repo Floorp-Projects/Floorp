@@ -154,7 +154,8 @@ nsBaseWidget::nsBaseWidget(BorderStyle aBorderStyle)
       mIMEHasQuit(false),
       mIsFullyOccluded(false),
       mNeedFastSnaphot(false),
-      mCurrentPanGestureBelongsToSwipe(false) {
+      mCurrentPanGestureBelongsToSwipe(false),
+      mIsPIPWindow(false) {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
   printf("WIDGETS+ = %d\n", gNumWidgets);
@@ -419,6 +420,7 @@ void nsBaseWidget::BaseCreate(nsIWidget* aParent, widget::InitData* aInitData) {
     mPopupLevel = aInitData->mPopupLevel;
     mPopupType = aInitData->mPopupHint;
     mHasRemoteContent = aInitData->mHasRemoteContent;
+    mIsPIPWindow = aInitData->mPIPWindow;
   }
 
   if (aParent) {
@@ -2313,6 +2315,7 @@ nsBaseWidget::SwipeInfo nsBaseWidget::SendMayStartSwipe(
 WidgetWheelEvent nsBaseWidget::MayStartSwipeForAPZ(
     const PanGestureInput& aPanInput, const APZEventResult& aApzResult) {
   WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
+
   if (aPanInput.AllowsSwipe()) {
     SwipeInfo swipeInfo = SendMayStartSwipe(aPanInput);
     event.mCanTriggerSwipe = swipeInfo.wantsSwipe;

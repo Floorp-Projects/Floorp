@@ -658,8 +658,6 @@ class nsWindow final : public nsBaseWidget {
   bool mDrawToContainer : 1;
   // Draw titlebar with :backdrop css state (inactive/unfocused).
   bool mTitlebarBackdropState : 1;
-  // It's PictureInPicture window.
-  bool mIsPIPWindow : 1;
   // It's undecorated popup utility window, without resizers/titlebar,
   // movable by mouse. Used on Wayland for popups without
   // parent (for instance WebRTC sharing indicator, notifications).
