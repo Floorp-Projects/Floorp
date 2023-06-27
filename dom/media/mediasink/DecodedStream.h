@@ -60,6 +60,8 @@ class DecodedStream : public MediaSink {
   void SetPlaybackRate(double aPlaybackRate) override;
   void SetPreservesPitch(bool aPreservesPitch) override;
   void SetPlaying(bool aPlaying) override;
+  RefPtr<GenericPromise> SetAudioDevice(
+      RefPtr<AudioDeviceInfo> aDevice) override;
 
   double PlaybackRate() const override;
 
@@ -70,7 +72,6 @@ class DecodedStream : public MediaSink {
   bool IsPlaying() const override;
   void Shutdown() override;
   void GetDebugInfo(dom::MediaSinkDebugInfo& aInfo) override;
-  const AudioDeviceInfo* AudioDevice() const override { return mAudioDevice; }
 
   MediaEventSource<bool>& AudibleEvent() { return mAudibleEvent; }
 
@@ -135,12 +136,6 @@ class DecodedStream : public MediaSink {
 
   MediaQueue<AudioData>& mAudioQueue;
   MediaQueue<VideoData>& mVideoQueue;
-
-  // This is the audio device we were told to play out to.
-  // All audio is captured, so nothing is actually played out -- but we report
-  // this upwards as it could save us from being recreated when the sink
-  // changes.
-  const RefPtr<AudioDeviceInfo> mAudioDevice;
 
   MediaEventListener mAudioPushListener;
   MediaEventListener mVideoPushListener;

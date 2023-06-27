@@ -4430,43 +4430,14 @@ RefPtr<GenericPromise> MediaDecoderStateMachine::InvokeSetSink(
 }
 
 RefPtr<GenericPromise> MediaDecoderStateMachine::SetSink(
-    const RefPtr<AudioDeviceInfo>& aDevice) {
+    RefPtr<AudioDeviceInfo> aDevice) {
   MOZ_ASSERT(OnTaskQueue());
   if (mIsMediaSinkSuspended) {
     // Don't create a new media sink when suspended.
-    return GenericPromise::CreateAndResolve(false, __func__);
+    return GenericPromise::CreateAndResolve(true, __func__);
   }
 
-  if (mOutputCaptureState != MediaDecoder::OutputCaptureState::None) {
-    // Nothing to do.
-    return GenericPromise::CreateAndResolve(IsPlaying(), __func__);
-  }
-
-  if (mSinkDevice.Ref() != aDevice) {
-    // A new sink was set before this ran.
-    return GenericPromise::CreateAndResolve(IsPlaying(), __func__);
-  }
-
-  if (mMediaSink->AudioDevice() == aDevice) {
-    // The sink has not changed.
-    return GenericPromise::CreateAndResolve(IsPlaying(), __func__);
-  }
-
-  const bool wasPlaying = IsPlaying();
-
-  // Stop and shutdown the existing sink.
-  StopMediaSink();
-  mMediaSink->Shutdown();
-  // Create a new sink according to whether audio is captured.
-  mMediaSink = CreateMediaSink();
-  // Start the new sink
-  if (wasPlaying) {
-    nsresult rv = StartMediaSink();
-    if (NS_FAILED(rv)) {
-      return GenericPromise::CreateAndReject(NS_ERROR_ABORT, __func__);
-    }
-  }
-  return GenericPromise::CreateAndResolve(wasPlaying, __func__);
+  return mMediaSink->SetAudioDevice(std::move(aDevice));
 }
 
 void MediaDecoderStateMachine::InvokeSuspendMediaSink() {
