@@ -382,6 +382,11 @@ impl VariableValue {
             references_environment: false,
         }
     }
+
+    /// Returns the raw CSS text from this VariableValue
+    pub fn css_text(&self) -> &str {
+        &self.css
+    }
 }
 
 /// Parse the value of a non-custom property that contains `var()` references.

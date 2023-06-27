@@ -18,8 +18,7 @@ use std::{ops, ptr};
 use std::fmt::{self, Write};
 use std::mem;
 
-use cssparser::{Parser, TokenSerializationType};
-use cssparser::ParserInput;
+use cssparser::{Parser, ParserInput, TokenSerializationType};
 #[cfg(feature = "servo")] use euclid::SideOffsets2D;
 use crate::context::QuirksMode;
 #[cfg(feature = "gecko")] use crate::gecko_bindings::structs::{self, nsCSSPropertyID};
@@ -1156,7 +1155,8 @@ impl CSSWideKeyword {
         })
     }
 
-    fn parse(input: &mut Parser) -> Result<Self, ()> {
+    /// Parses a CSS wide keyword completely.
+    pub fn parse(input: &mut Parser) -> Result<Self, ()> {
         let keyword = {
             let ident = input.expect_ident().map_err(|_| ())?;
             Self::from_ident(ident)?
