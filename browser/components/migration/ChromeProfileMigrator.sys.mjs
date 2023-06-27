@@ -126,7 +126,7 @@ export class ChromeProfileMigrator extends MigratorBase {
           GetBookmarksResource(profileFolder, this.constructor.key),
           GetHistoryResource(profileFolder),
           GetFormdataResource(profileFolder),
-          GetExtensionsResource(aProfile.id),
+          GetExtensionsResource(aProfile.id, this.constructor.key),
         ];
         if (lazy.ChromeMigrationUtils.supportsLoginsForPlatform) {
           possibleResourcePromises.push(
