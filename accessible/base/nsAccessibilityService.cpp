@@ -491,26 +491,30 @@ nsAccessibilityService::Observe(nsISupports* aSubject, const char* aTopic,
 
 void nsAccessibilityService::NotifyOfAnchorJumpTo(nsIContent* aTargetNode) {
   Document* documentNode = aTargetNode->GetUncomposedDoc();
-  if (documentNode) {
-    // If the document has focus when we get this notification, ensure that
-    // we fire a start scrolling event.
-    DocAccessible* document = GetDocAccessible(documentNode);
-    const Accessible* focusedAcc = FocusedAccessible();
-    if (focusedAcc &&
-        (focusedAcc == document || focusedAcc->IsNonInteractive())) {
-      LocalAccessible* targetAcc = document->GetAccessible(aTargetNode);
-      if (targetAcc) {
-        nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
-                                targetAcc);
-        document->SetAnchorJump(nullptr);
-      } else {
-        // We can't find the target accessible in the document yet. Set the
-        // anchor jump so that we can fire the scrolling start event later.
-        document->SetAnchorJump(aTargetNode);
-      }
-    } else if (document) {
+  if (!documentNode) {
+    return;
+  }
+  DocAccessible* document = GetDocAccessible(documentNode);
+  if (!document) {
+    return;
+  }
+  // If the document has focus when we get this notification, ensure that
+  // we fire a start scrolling event.
+  const Accessible* focusedAcc = FocusedAccessible();
+  if (focusedAcc &&
+      (focusedAcc == document || focusedAcc->IsNonInteractive())) {
+    LocalAccessible* targetAcc = document->GetAccessible(aTargetNode);
+    if (targetAcc) {
+      nsEventShell::FireEvent(nsIAccessibleEvent::EVENT_SCROLLING_START,
+                              targetAcc);
+      document->SetAnchorJump(nullptr);
+    } else {
+      // We can't find the target accessible in the document yet. Set the
+      // anchor jump so that we can fire the scrolling start event later.
       document->SetAnchorJump(aTargetNode);
     }
+  } else {
+    document->SetAnchorJump(aTargetNode);
   }
 }
 
