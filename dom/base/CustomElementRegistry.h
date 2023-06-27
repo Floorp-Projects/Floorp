@@ -557,6 +557,9 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
   void Get(const nsAString& name,
            OwningCustomElementConstructorOrUndefined& aRetVal);
 
+  void GetName(JSContext* aCx, CustomElementConstructor& aConstructor,
+               nsAString& aResult);
+
   already_AddRefed<Promise> WhenDefined(const nsAString& aName,
                                         ErrorResult& aRv);
 
