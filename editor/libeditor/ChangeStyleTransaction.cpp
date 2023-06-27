@@ -147,11 +147,7 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
   mUndoAttributeWasSet = mStyledElement->HasAttr(nsGkAtoms::style);
 
   nsAutoCString values;
-  nsresult rv = cssDecl->GetPropertyValue(propertyNameString, values);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("nsICSSDeclaration::GetPropertyPriorityValue() failed");
-    return rv;
-  }
+  cssDecl->GetPropertyValue(propertyNameString, values);
   mUndoValue.Assign(values);
 
   if (mRemoveProperty) {
@@ -212,10 +208,8 @@ NS_IMETHODIMP ChangeStyleTransaction::DoTransaction() {
     mRedoAttributeWasSet = true;
   }
 
-  rv = cssDecl->GetPropertyValue(propertyNameString, mRedoValue);
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "nsICSSDeclaration::GetPropertyValue() failed");
-  return rv;
+  cssDecl->GetPropertyValue(propertyNameString, mRedoValue);
+  return NS_OK;
 }
 
 nsresult ChangeStyleTransaction::SetStyle(bool aAttributeWasSet,

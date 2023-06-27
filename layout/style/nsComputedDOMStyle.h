@@ -70,8 +70,9 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
       nsComputedDOMStyle, nsICSSDeclaration)
 
   NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
-  nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
-                            nsACString& aValue) override;
+
+  void GetPropertyValue(const nsCSSPropertyID aPropID,
+                        nsACString& aValue) override;
   void SetPropertyValue(const nsCSSPropertyID aPropID, const nsACString& aValue,
                         nsIPrincipal* aSubjectPrincipal,
                         mozilla::ErrorResult& aRv) override;
@@ -142,9 +143,10 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   NS_DECL_NSIMUTATIONOBSERVER_PARENTCHAINCHANGED
 
  private:
-  nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
-                            const nsACString& aMaybeCustomPropertyNme,
-                            nsACString& aValue);
+  void GetPropertyValue(const nsCSSPropertyID aPropID,
+                        const nsACString& aMaybeCustomPropertyNme,
+                        nsACString& aValue);
+  using nsDOMCSSDeclaration::GetPropertyValue;
 
   virtual ~nsComputedDOMStyle();
 
@@ -274,8 +276,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   /* Helper functions */
   void SetValueToPosition(const mozilla::Position& aPosition,
                           nsDOMCSSValueList* aValueList);
-  void SetValueToURLValue(const mozilla::StyleComputedUrl* aURL,
-                          nsROCSSPrimitiveValue* aValue);
 
   void SetValueFromFitContentFunction(nsROCSSPrimitiveValue* aValue,
                                       const mozilla::LengthPercentage&);

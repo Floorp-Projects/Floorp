@@ -33,8 +33,8 @@ JSObject* nsDOMCSSDeclaration::WrapObject(JSContext* aCx,
 
 NS_IMPL_QUERY_INTERFACE(nsDOMCSSDeclaration, nsICSSDeclaration)
 
-nsresult nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
-                                               nsACString& aValue) {
+void nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
+                                           nsACString& aValue) {
   MOZ_ASSERT(aPropID != eCSSProperty_UNKNOWN,
              "Should never pass eCSSProperty_UNKNOWN around");
   MOZ_ASSERT(aValue.IsEmpty());
@@ -43,7 +43,6 @@ nsresult nsDOMCSSDeclaration::GetPropertyValue(const nsCSSPropertyID aPropID,
           GetOrCreateCSSDeclaration(Operation::Read, nullptr)) {
     decl->GetPropertyValueByID(aPropID, aValue);
   }
-  return NS_OK;
 }
 
 void nsDOMCSSDeclaration::SetPropertyValue(const nsCSSPropertyID aPropID,
@@ -134,14 +133,12 @@ void nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound,
   aFound = decl && decl->GetNthProperty(aIndex, aPropName);
 }
 
-NS_IMETHODIMP
-nsDOMCSSDeclaration::GetPropertyValue(const nsACString& aPropertyName,
-                                      nsACString& aReturn) {
+void nsDOMCSSDeclaration::GetPropertyValue(const nsACString& aPropertyName,
+                                           nsACString& aReturn) {
   MOZ_ASSERT(aReturn.IsEmpty());
   if (auto* decl = GetOrCreateCSSDeclaration(Operation::Read, nullptr)) {
     decl->GetPropertyValue(aPropertyName, aReturn);
   }
-  return NS_OK;
 }
 
 void nsDOMCSSDeclaration::GetPropertyPriority(const nsACString& aPropertyName,
@@ -199,12 +196,7 @@ void nsDOMCSSDeclaration::RemoveProperty(const nsACString& aPropertyName,
   if (IsReadOnly()) {
     return;
   }
-
-  nsresult rv = GetPropertyValue(aPropertyName, aReturn);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return;
-  }
+  GetPropertyValue(aPropertyName, aReturn);
   RemovePropertyInternal(aPropertyName, aRv);
 }
 

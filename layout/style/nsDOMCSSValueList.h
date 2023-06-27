@@ -12,10 +12,8 @@
 #include "CSSValue.h"
 #include "nsTArray.h"
 
-class nsDOMCSSValueList final
-  : public mozilla::dom::CSSValue
-{
-public:
+class nsDOMCSSValueList final : public mozilla::dom::CSSValue {
+ public:
   // nsDOMCSSValueList
   explicit nsDOMCSSValueList(bool aCommaDelimited);
 
@@ -24,24 +22,16 @@ public:
    */
   void AppendCSSValue(already_AddRefed<CSSValue> aValue);
 
-  void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) final;
-  uint16_t CssValueType() const final
-  {
-    return CSSValue::CSS_VALUE_LIST;
-  }
+  uint16_t CssValueType() const final { return CSS_VALUE_LIST; }
 
-  uint32_t Length() const
-  {
-    return mCSSValues.Length();
-  }
+  uint32_t Length() const { return mCSSValues.Length(); }
+  void GetCssText(nsAString&) final;
 
-  void GetCssText(nsAString& aText);
-
-protected:
+ protected:
   virtual ~nsDOMCSSValueList();
 
-  bool mCommaDelimited; // some value lists use a comma as the delimiter, some
-                        // just use spaces.
+  bool mCommaDelimited;  // some value lists use a comma as the delimiter, some
+                         // just use spaces.
 
   nsTArray<RefPtr<CSSValue>> mCSSValues;
 };

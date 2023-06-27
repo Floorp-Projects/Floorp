@@ -56,10 +56,10 @@ class nsICSSDeclaration : public nsISupports, public nsWrapperCache {
 
   mozilla::dom::DocGroup* GetDocGroup();
 
-  NS_IMETHOD GetPropertyValue(const nsACString& aPropName,
-                              nsACString& aValue) = 0;
+  virtual void GetPropertyValue(const nsACString& aPropName,
+                                nsACString& aValue) = 0;
   virtual void RemoveProperty(const nsACString& aPropertyName,
-                              nsACString& aReturn,
+                              nsACString& aValue,
                               mozilla::ErrorResult& aRv) = 0;
   virtual void SetProperty(const nsACString& aPropertyName,
                            const nsACString& aValue,
@@ -97,10 +97,6 @@ class nsICSSDeclaration : public nsISupports, public nsWrapperCache {
   virtual void IndexedGetter(uint32_t aIndex, bool& aFound,
                              nsACString& aPropName) = 0;
 
-  void GetPropertyValue(const nsACString& aPropName, nsACString& aValue,
-                        mozilla::ErrorResult& rv) {
-    rv = GetPropertyValue(aPropName, aValue);
-  }
   virtual void GetPropertyPriority(const nsACString& aPropName,
                                    nsACString& aPriority) = 0;
   virtual mozilla::css::Rule* GetParentRule() = 0;
@@ -115,14 +111,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
   void GetCssText(nsACString& aCssText) override;                              \
   void SetCssText(const nsACString& aCssText, nsIPrincipal* aSubjectPrincipal, \
                   mozilla::ErrorResult& aRv) override;                         \
-  NS_IMETHOD GetPropertyValue(const nsACString& propertyName,                  \
-                              nsACString& _retval) override;                   \
-  void RemoveProperty(const nsACString& propertyName, nsACString& _retval,     \
+  void GetPropertyValue(const nsACString& aPropertyName, nsACString& aValue)   \
+      override;                                                                \
+  void RemoveProperty(const nsACString& aPropertyName, nsACString& aValue,     \
                       mozilla::ErrorResult& aRv) override;                     \
-  void GetPropertyPriority(const nsACString& propertyName,                     \
+  void GetPropertyPriority(const nsACString& aPropertyName,                    \
                            nsACString& aPriority) override;                    \
-  void SetProperty(const nsACString& propertyName, const nsACString& value,    \
-                   const nsACString& priority,                                 \
+  void SetProperty(const nsACString& aPropertyName, const nsACString& aValue,  \
+                   const nsACString& aPriority,                                \
                    nsIPrincipal* aSubjectPrincipal, mozilla::ErrorResult& aRv) \
       override;                                                                \
   uint32_t Length() override;                                                  \

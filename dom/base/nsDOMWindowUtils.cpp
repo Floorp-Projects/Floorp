@@ -2575,12 +2575,11 @@ nsDOMWindowUtils::GetVisitedDependentComputedStyle(
   nsAutoCString result;
 
   static_cast<nsComputedDOMStyle*>(decl.get())->SetExposeVisitedStyle(true);
-  nsresult rv =
-      decl->GetPropertyValue(NS_ConvertUTF16toUTF8(aPropertyName), result);
+  decl->GetPropertyValue(NS_ConvertUTF16toUTF8(aPropertyName), result);
   static_cast<nsComputedDOMStyle*>(decl.get())->SetExposeVisitedStyle(false);
 
   CopyUTF8toUTF16(result, aResult);
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3993,11 +3992,8 @@ nsDOMWindowUtils::GetOMTAStyle(Element* aElement, const nsAString& aProperty,
   }
 
   if (cssValue) {
-    nsString text;
-    ErrorResult rv;
-    cssValue->GetCssText(text, rv);
-    aResult.Assign(text);
-    return rv.StealNSResult();
+    cssValue->GetCssText(aResult);
+    return NS_OK;
   }
   aResult.Truncate();
   return NS_OK;

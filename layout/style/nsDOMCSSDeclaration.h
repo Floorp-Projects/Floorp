@@ -63,12 +63,8 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
    * Method analogous to CSSStyleDeclaration::GetPropertyValue,
    * which obeys all the same restrictions.
    */
-  virtual nsresult GetPropertyValue(const nsCSSPropertyID aPropID,
-                                    nsACString& aValue);
-  void GetPropertyValue(const nsCSSPropertyID aPropID, nsACString& aValue,
-                        mozilla::ErrorResult& aRv) {
-    aRv = GetPropertyValue(aPropID, aValue);
-  }
+  virtual void GetPropertyValue(const nsCSSPropertyID aPropID,
+                                nsACString& aValue);
 
   /**
    * Method analogous to CSSStyleDeclaration::SetProperty.  This
@@ -85,8 +81,8 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
   void GetCssText(nsACString& aCssText) override;
   void SetCssText(const nsACString& aCssText, nsIPrincipal* aSubjectPrincipal,
                   mozilla::ErrorResult& aRv) override;
-  NS_IMETHOD GetPropertyValue(const nsACString& propertyName,
-                              nsACString& _retval) override;
+  void GetPropertyValue(const nsACString& propertyName,
+                        nsACString& _retval) override;
   void RemoveProperty(const nsACString& propertyName, nsACString& _retval,
                       mozilla::ErrorResult& aRv) override;
   void GetPropertyPriority(const nsACString& propertyName,

@@ -43,18 +43,14 @@ void nsDOMCSSValueList::GetCssText(nsAString& aCssText) {
     CSSValue* cssValue = mCSSValues[i];
     NS_ASSERTION(cssValue,
                  "Eek!  Someone filled the value list with null CSSValues!");
-    ErrorResult dummy;
     if (cssValue) {
-      cssValue->GetCssText(tmpStr, dummy);
-
+      cssValue->GetCssText(tmpStr);
       if (tmpStr.IsEmpty()) {
 #ifdef DEBUG_caillon
         NS_ERROR("Eek!  An empty CSSValue!  Bad!");
 #endif
-
         continue;
       }
-
       // If this isn't the first item in the list, then
       // it's ok to append a separator.
       if (!aCssText.IsEmpty()) {
@@ -63,8 +59,4 @@ void nsDOMCSSValueList::GetCssText(nsAString& aCssText) {
       aCssText.Append(tmpStr);
     }
   }
-}
-
-void nsDOMCSSValueList::GetCssText(nsString& aCssText, ErrorResult& aRv) {
-  GetCssText(aCssText);
 }

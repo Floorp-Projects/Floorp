@@ -405,8 +405,8 @@ NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_ADDREF(nsComputedDOMStyle)
 NS_IMPL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_RELEASE_WITH_LAST_RELEASE(
     nsComputedDOMStyle, ClearComputedStyle())
 
-nsresult nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
-                                              nsACString& aValue) {
+void nsComputedDOMStyle::GetPropertyValue(const nsCSSPropertyID aPropID,
+                                          nsACString& aValue) {
   return GetPropertyValue(aPropID, EmptyCString(), aValue);
 }
 
@@ -447,14 +447,13 @@ uint32_t nsComputedDOMStyle::Length() {
 
 css::Rule* nsComputedDOMStyle::GetParentRule() { return nullptr; }
 
-NS_IMETHODIMP
-nsComputedDOMStyle::GetPropertyValue(const nsACString& aPropertyName,
-                                     nsACString& aReturn) {
+void nsComputedDOMStyle::GetPropertyValue(const nsACString& aPropertyName,
+                                          nsACString& aReturn) {
   nsCSSPropertyID prop = nsCSSProps::LookupProperty(aPropertyName);
-  return GetPropertyValue(prop, aPropertyName, aReturn);
+  GetPropertyValue(prop, aPropertyName, aReturn);
 }
 
-nsresult nsComputedDOMStyle::GetPropertyValue(
+void nsComputedDOMStyle::GetPropertyValue(
     nsCSSPropertyID aPropID, const nsACString& aMaybeCustomPropertyName,
     nsACString& aReturn) {
   MOZ_ASSERT(aReturn.IsEmpty());
@@ -463,13 +462,13 @@ nsresult nsComputedDOMStyle::GetPropertyValue(
   if (aPropID != eCSSPropertyExtra_variable) {
     entry = GetComputedStyleMap()->FindEntryForProperty(aPropID);
     if (!entry) {
-      return NS_OK;
+      return;
     }
   }
 
   UpdateCurrentStyleSources(aPropID);
   if (!mComputedStyle) {
-    return NS_OK;
+    return;
   }
 
   auto cleanup = mozilla::MakeScopeExit([&] { ClearCurrentStyleSources(); });
@@ -479,7 +478,7 @@ nsresult nsComputedDOMStyle::GetPropertyValue(
     const nsACString& name =
         Substring(aMaybeCustomPropertyName, CSS_CUSTOM_NAME_PREFIX_LENGTH);
     Servo_GetCustomPropertyValue(mComputedStyle, &name, &aReturn);
-    return NS_OK;
+    return;
   }
 
   if (nsCSSProps::PropHasFlags(aPropID, CSSPropFlags::IsLogical)) {
@@ -498,19 +497,16 @@ nsresult nsComputedDOMStyle::GetPropertyValue(
 
   if (!nsCSSProps::PropHasFlags(aPropID, CSSPropFlags::SerializedByServo)) {
     if (RefPtr<CSSValue> value = (this->*entry->mGetter)()) {
-      ErrorResult rv;
       nsAutoString text;
-      value->GetCssText(text, rv);
+      value->GetCssText(text);
       CopyUTF16toUTF8(text, aReturn);
-      return rv.StealNSResult();
     }
-    return NS_OK;
+    return;
   }
 
   MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
   Servo_GetResolvedValue(mComputedStyle, aPropID,
                          mPresShell->StyleSet()->RawData(), mElement, &aReturn);
-  return NS_OK;
 }
 
 /* static */
@@ -1400,31 +1396,6 @@ void nsComputedDOMStyle::SetValueToPosition(const Position& aPosition,
   aValueList->AppendCSSValue(valY.forget());
 }
 
-void nsComputedDOMStyle::SetValueToURLValue(const StyleComputedUrl* aURL,
-                                            nsROCSSPrimitiveValue* aValue) {
-  if (!aURL) {
-    aValue->SetString("none");
-    return;
-  }
-
-  // If we have a usable nsIURI in the URLValue, and the url() wasn't
-  // a fragment-only URL, serialize the nsIURI.
-  if (!aURL->IsLocalRef()) {
-    if (nsIURI* uri = aURL->GetURI()) {
-      aValue->SetURI(uri);
-      return;
-    }
-  }
-
-  // Otherwise, serialize the specified URL value.
-  NS_ConvertUTF8toUTF16 source(aURL->SpecifiedSerialization());
-  nsAutoString url;
-  url.AppendLiteral(u"url(");
-  nsStyleUtil::AppendEscapedCSSString(source, url, '"');
-  url.Append(')');
-  aValue->SetString(url);
-}
-
 enum class Brackets { No, Yes };
 
 static void AppendGridLineNames(nsACString& aResult,
@@ -1540,8 +1511,8 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
   }
 
   MOZ_ASSERT(aTrackSize.IsMinmax());
-  auto& min = aTrackSize.AsMinmax()._0;
-  auto& max = aTrackSize.AsMinmax()._1;
+  const auto& min = aTrackSize.AsMinmax()._0;
+  const auto& max = aTrackSize.AsMinmax()._1;
   if (min == max) {
     return GetGridTrackBreadth(min);
   }
@@ -1557,7 +1528,7 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
 
   {
     RefPtr<nsROCSSPrimitiveValue> argValue = GetGridTrackBreadth(min);
-    argValue->GetCssText(argumentStr, IgnoreErrors());
+    argValue->GetCssText(argumentStr);
     minmaxStr.Append(argumentStr);
     argumentStr.Truncate();
   }
@@ -1566,7 +1537,7 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::GetGridTrackSize(
 
   {
     RefPtr<nsROCSSPrimitiveValue> argValue = GetGridTrackBreadth(max);
-    argValue->GetCssText(argumentStr, IgnoreErrors());
+    argValue->GetCssText(argumentStr);
     minmaxStr.Append(argumentStr);
   }
 
@@ -2183,7 +2154,7 @@ void nsComputedDOMStyle::SetValueFromFitContentFunction(
     nsROCSSPrimitiveValue* aValue, const LengthPercentage& aLength) {
   nsAutoString argumentStr;
   SetValueToLengthPercentage(aValue, aLength, true);
-  aValue->GetCssText(argumentStr, IgnoreErrors());
+  aValue->GetCssText(argumentStr);
 
   nsAutoString fitContentStr;
   fitContentStr.AppendLiteral("fit-content(");
