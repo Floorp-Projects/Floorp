@@ -624,7 +624,7 @@ async function clickSelectorIcon(view, selectorText, index = 0) {
   // a generated unique selector, for example: "div:nth-child(1)".
   // The selector highlighter is invoked with this unique selector.
   // Continuing to use selectorText ("element") would fail some of the checks below.
-  const selector = icon.dataset.selector;
+  const selector = icon.dataset.computedSelector;
 
   const { waitForHighlighterTypeShown, waitForHighlighterTypeHidden } =
     getHighlighterTestHelpers(inspector);
@@ -646,6 +646,7 @@ async function clickSelectorIcon(view, selectorText, index = 0) {
   const waitedForShown = options?.selector !== selector;
 
   info(`Click the icon for selector: ${selectorText}`);
+  icon.scrollIntoView();
   EventUtils.synthesizeMouseAtCenter(icon, {}, view.styleWindow);
 
   // Promise resolves with event data from either highlighter shown or hidden event.

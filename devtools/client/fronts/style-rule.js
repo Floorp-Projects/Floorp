@@ -89,6 +89,27 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     return this._form.selectors;
   }
 
+  /**
+   * When a rule is nested in another non-at-rule (aka CSS Nesting), this will return
+   * the "full" selectors, which includes ancestor rules selectors.
+   * To compute it, the parent selector (&) is recursively replaced by the parent
+   * rule selector wrapped in `:is()`.
+   * For example, with the following nested rule: `body { & > main {} }`,
+   * the desugared selectors will be [`:is(body) > main`],
+   * while the "regular" selectors will only be [`main`].
+   *
+   * See https://www.w3.org/TR/css-nesting-1/#nest-selector for more information.
+   *
+   * @returns {Array<String>} An array of the desugared selectors for this rule.
+   *                          This falls back to the regular list of selectors
+   *                          when desugared selectors are not sent by the server.
+   */
+  get desugaredSelectors() {
+    // We don't send the desugaredSelectors for top-level selectors, so fall back to
+    // the regular selectors in that case.
+    return this._form.desugaredSelectors || this._form.selectors;
+  }
+
   get parentStyleSheet() {
     const resourceCommand = this.targetFront.commands.resourceCommand;
     return resourceCommand.getResourceById(
