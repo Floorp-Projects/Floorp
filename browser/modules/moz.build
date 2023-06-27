@@ -160,5 +160,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     ]
 
     EXTRA_JS_MODULES.backgroundtasks += [
+        "BackgroundTask_install.sys.mjs",
         "BackgroundTask_uninstall.sys.mjs",
     ]
