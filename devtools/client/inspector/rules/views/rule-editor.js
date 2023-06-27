@@ -505,6 +505,7 @@ RuleEditor.prototype = {
     } else if (this.rule.domRule.type === CSSRule.KEYFRAME_RULE) {
       this.selectorText.textContent = this.rule.domRule.keyText;
     } else {
+      const desugaredSelectors = this.rule.domRule.desugaredSelectors;
       this.rule.domRule.selectors.forEach((selector, i) => {
         if (i !== 0) {
           createChild(this.selectorText, "span", {
@@ -513,10 +514,12 @@ RuleEditor.prototype = {
           });
         }
 
-        const containerClass =
-          this.rule.matchedSelectors.indexOf(selector) > -1
-            ? "ruleview-selector-matched"
-            : "ruleview-selector-unmatched";
+        const desugaredSelector = desugaredSelectors[i];
+        const containerClass = this.rule.matchedDesugaredSelectors.includes(
+          desugaredSelector
+        )
+          ? "ruleview-selector-matched"
+          : "ruleview-selector-unmatched";
         const selectorContainer = createChild(this.selectorText, "span", {
           class: containerClass,
         });

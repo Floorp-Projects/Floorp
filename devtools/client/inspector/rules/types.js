@@ -115,7 +115,7 @@ const selector = (exports.selector = {
   // Function that returns a Promise containing an unique CSS selector.
   getUniqueSelector: PropTypes.func,
   // Array of the selectors that match the selected element.
-  matchedSelectors: PropTypes.arrayOf(PropTypes.string),
+  matchedDesugaredSelectors: PropTypes.arrayOf(PropTypes.string),
   // The CSS rule's selector text content.
   selectorText: PropTypes.string,
   // Array of the CSS rule's selectors.

@@ -15,9 +15,23 @@ const TEST_URI = `
     .testclass, .unmatched {
       background-color: green;
     }
+
+    main {
+      container-type: inline-size;
+
+      & > .foo, .unmatched {
+        color: tomato;
+
+        @container (0px < width) {
+          background: gold;
+        }
+      }
+    }
   </style>
   <div id="testid" class="testclass">Styled Node</div>
-  <div id="testid2">Styled Node</div>
+  <main>
+    <div class="foo">Styled Node in Nested rule</div>
+  </main>
 `;
 
 add_task(async function () {
@@ -58,15 +72,79 @@ add_task(async function () {
     "There is no media text element for rule at index 2"
   );
 
-  const selector = getRuleViewRuleEditor(view, 2).selectorText;
-  is(
-    selector.querySelector(".ruleview-selector-matched").textContent,
-    ".testclass",
-    ".textclass should be matched."
-  );
-  is(
-    selector.querySelector(".ruleview-selector-unmatched").textContent,
-    ".unmatched",
-    ".unmatched should not be matched."
-  );
+  assertSelectors(view, 2, [
+    {
+      selector: ".testclass",
+      matches: true,
+    },
+    {
+      selector: ".unmatched",
+      matches: false,
+    },
+  ]);
+
+  info("Check nested rules");
+  await selectNode(".foo", inspector);
+
+  assertSelectors(view, 1, [
+    // That's the rule that was created as a result of a
+    // nested container rule (`@container (0px < width) { background: gold}`)
+    // In such case, the rule's selector is only `&`, and it should be displayed as
+    // matching the selected node (`<div class="foo">`).
+    {
+      selector: "&",
+      matches: true,
+    },
+  ]);
+
+  assertSelectors(view, 2, [
+    {
+      selector: "& > .foo",
+      matches: true,
+    },
+    {
+      selector: ".unmatched",
+      matches: false,
+    },
+  ]);
 });
+
+/**
+ * Returns the selector elements for a given rule index
+ *
+ * @param {Inspector} view
+ * @param {Integer} ruleIndex
+ * @param {Array<Object>} expectedSelectors:
+ *        An array of objects representing each selector. Objects have the following shape:
+ *        - selector: The expected selector text
+ *        - matches: True if the selector should have the "matching" class
+ */
+function assertSelectors(view, ruleIndex, expectedSelectors) {
+  const ruleSelectors = getRuleViewRuleEditor(
+    view,
+    ruleIndex
+  ).selectorText.querySelectorAll(
+    ".ruleview-selector-matched, .ruleview-selector-unmatched"
+  );
+
+  is(
+    ruleSelectors.length,
+    expectedSelectors.length,
+    `There are the expected number of selectors on rule #${ruleIndex}`
+  );
+
+  for (let i = 0; i < expectedSelectors.length; i++) {
+    is(
+      ruleSelectors[i].textContent,
+      expectedSelectors[i].selector,
+      `Got expected text for the selector element #${i} on rule #${ruleIndex}`
+    );
+    is(
+      [...ruleSelectors[i].classList].join(),
+      expectedSelectors[i].matches
+        ? "ruleview-selector-matched"
+        : "ruleview-selector-unmatched",
+      `Got expected css class on the selector element #${i} ("${ruleSelectors[i].textContent}") on rule #${ruleIndex}`
+    );
+  }
+}

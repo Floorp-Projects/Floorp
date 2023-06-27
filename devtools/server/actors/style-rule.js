@@ -1072,7 +1072,7 @@ class StyleRuleActor extends Actor {
         }
 
         isMatching = ruleProps.entries.some(
-          ruleProp => !!ruleProp.matchedSelectors.length
+          ruleProp => !!ruleProp.matchedDesugaredSelectors.length
         );
       }
 
