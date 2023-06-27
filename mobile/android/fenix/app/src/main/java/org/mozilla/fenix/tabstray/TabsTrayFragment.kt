@@ -534,12 +534,9 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
 
-        if (!requireContext().settings().enableTabsTrayToCompose) {
-            trayBehaviorManager.updateDependingOnOrientation(newConfig.orientation)
-
-            if (requireContext().settings().gridTabView) {
-                tabsTrayBinding.tabsTray.adapter?.notifyDataSetChanged()
-            }
+        trayBehaviorManager.updateDependingOnOrientation(newConfig.orientation)
+        if (!requireContext().settings().enableTabsTrayToCompose && requireContext().settings().gridTabView) {
+            tabsTrayBinding.tabsTray.adapter?.notifyDataSetChanged()
         }
     }
 
