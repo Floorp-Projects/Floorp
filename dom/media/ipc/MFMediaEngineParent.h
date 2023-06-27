@@ -70,7 +70,6 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
 
   void CreateMediaEngine();
 
-  void InitializeVirtualVideoWindow();
   void InitializeDXGIDeviceManager();
 
   void AssertOnManagerThread() const;
@@ -114,9 +113,6 @@ class MFMediaEngineParent final : public PMFMediaEngineParent {
   MediaEventListener mMediaEngineEventListener;
   MediaEventListener mRequestSampleListener;
   bool mIsCreatedMediaEngine = false;
-
-  // A fake window handle passed to MF-based rendering pipeline for OPM.
-  HWND mVirtualVideoWindow = nullptr;
 
   Microsoft::WRL::ComPtr<IMFDXGIDeviceManager> mDXGIDeviceManager;
 
