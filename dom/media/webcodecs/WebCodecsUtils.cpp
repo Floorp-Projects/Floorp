@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
+#include "nsDebug.h"
 
 namespace mozilla::dom {
 
@@ -21,7 +22,7 @@ Result<Span<uint8_t>, nsresult> GetArrayBufferData(const T& aBuffer) {
 
   CheckedInt<size_t> byteLength(sizeof(typename T::element_type));
   byteLength *= aBuffer.Length();
-  if (!byteLength.isValid()) {
+  if (NS_WARN_IF(!byteLength.isValid())) {
     return Err(NS_ERROR_INVALID_ARG);
   }
 
