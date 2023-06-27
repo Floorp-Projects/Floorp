@@ -80,6 +80,7 @@ class ProviderQuickActions extends UrlbarProvider {
    */
   isActive(queryContext) {
     return (
+      queryContext.trimmedSearchString.length < 50 &&
       lazy.UrlbarPrefs.get(ENABLED_PREF) &&
       ((lazy.UrlbarPrefs.get(SUGGEST_PREF) && !queryContext.searchMode) ||
         queryContext.searchMode?.source == UrlbarUtils.RESULT_SOURCE.ACTIONS)

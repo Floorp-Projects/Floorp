@@ -3625,11 +3625,16 @@ export class UrlbarInput {
 
     let pasteData;
     if (keywordAsSent) {
-      // For only keywords, replace any white spaces including line break with
-      // white space.
-      pasteData = originalPasteData.replace(/\s/g, " ");
+      // For performance reasons, we don't want to beautify a long string.
+      if (originalPasteData.length < 500) {
+        // For only keywords, replace any white spaces including line break
+        // with white space.
+        pasteData = originalPasteData.replace(/\s/g, " ");
+      } else {
+        pasteData = originalPasteData;
+      }
     } else if (
-      fixedURI?.scheme === "data" &&
+      fixedURI?.scheme == "data" &&
       !fixedURI.spec.match(/^data:.+;base64,/)
     ) {
       // For data url without base64, replace line break with white space.
