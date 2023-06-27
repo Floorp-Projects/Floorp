@@ -52,6 +52,7 @@ import java.lang.Class;
 import java.lang.Double;
 import java.lang.Exception;
 import java.lang.Float;
+import java.lang.FunctionalInterface;
 import java.lang.Integer;
 import java.lang.Long;
 import java.lang.Object;
@@ -59,6 +60,7 @@ import java.lang.Runnable;
 import java.lang.RuntimeException;
 import java.lang.SafeVarargs;
 import java.lang.String;
+import java.lang.Thread;
 import java.lang.Throwable;
 import java.lang.Void;
 import java.lang.annotation.Documented;
@@ -80,6 +82,7 @@ import org.mozilla.geckoview.Autofill;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
 import org.mozilla.geckoview.ContentBlockingController;
+import org.mozilla.geckoview.CrashHandler;
 import org.mozilla.geckoview.GeckoDisplay;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
@@ -612,6 +615,26 @@ package org.mozilla.geckoview {
   }
 
   @Retention(value=RetentionPolicy.SOURCE) public static interface ContentBlockingController.LogEntry.BlockingData.LogEvent {
+  }
+
+  @FunctionalInterface public class CrashHandler implements Thread.UncaughtExceptionHandler {
+    ctor public CrashHandler(@Nullable Class<? extends android.app.Service>);
+    ctor public CrashHandler(@Nullable Context, @Nullable Class<? extends android.app.Service>);
+    ctor public CrashHandler(Thread, Class<? extends android.app.Service>);
+    ctor public CrashHandler(@Nullable Thread, Context, Class<? extends android.app.Service>);
+    method @AnyThread @NonNull public static CrashHandler createDefaultCrashHandler(@NonNull Context);
+    method @AnyThread @Nullable public Context getAppContext();
+    method @AnyThread @Nullable public String getAppPackageName();
+    method @AnyThread @NonNull public byte[] getCrashDump(@Nullable Thread, @Nullable Throwable);
+    method @AnyThread @NonNull public Bundle getCrashExtras(@NonNull Thread, @NonNull Throwable);
+    method @AnyThread @NonNull public static String getExceptionStackTrace(@NonNull Throwable);
+    method @AnyThread @NonNull public static Throwable getRootException(@NonNull Throwable);
+    method @AnyThread @NonNull public String getServerUrl(@NonNull Bundle);
+    method @AnyThread public boolean launchCrashReporter(@NonNull String, @NonNull String);
+    method @AnyThread public static void logException(@NonNull Thread, @NonNull Throwable);
+    method @AnyThread public boolean reportException(@NonNull Thread, @NonNull Throwable);
+    method @AnyThread public static void terminateProcess();
+    method @AnyThread public void unregister();
   }
 
   public class CrashReporter {

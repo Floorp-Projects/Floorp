@@ -17,15 +17,17 @@ exclude: true
 - Added [`GeckoSession.didPrintPageContent`][116.1] to included extra print status for a standard print and new `GeckoPrintException.ERROR_NO_PRINT_DELEGATE`
 - Added [`PromptInstanceDelegate.onSelectIdentityCredentialProvider`][116.2] to allow the user to choose an Identity Credential provider (FedCM) to be used when authenticating.
   ([bug 1836356]({{bugzilla}}1836356))
-- Added [`PromptInstanceDelegate.onSelectIdentityCredentialAccount`][116.3] to allow the user to choose an account on the Identity Credential Provider (FedCM) they previously chose to be used when authenticating.
+- Changed [`Gecko.CrashHandler`] location to [`GeckoView.CrashHandler`][116.3] ([bug 1550206]({{bugzilla}}1550206))
+- Added [`PromptInstanceDelegate.onSelectIdentityCredentialAccount`][116.4] to allow the user to choose an account on the Identity Credential Provider (FedCM) they previously chose to be used when authenticating.
     ([bug 1836363]({{bugzilla}}1836363))
-- Added [`PromptInstanceDelegate.onShowPrivacyPolicyIdentityCredential`][116.4] to allow the user to indicate if agrees or not with the privacy policy of the Identity Credential provider.
+- Added [`PromptInstanceDelegate.onShowPrivacyPolicyIdentityCredential`][116.5] to allow the user to indicate if agrees or not with the privacy policy of the Identity Credential provider.
   ([bug 1836358]({{bugzilla}}1836358))
--
+
 [116.1]: {{javadoc_uri}}/GeckoSession.html#didPrintPageContent
 [116.2]:{{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSelectIdentityCredentialProvider(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.ProviderSelectorPrompt)
-[116.3]:{{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSelectIdentityCredentialAccount(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt)
-[116.4]:{{javadoc_uri}}/GeckoSession.PromptDelegate.html#onShowPrivacyPolicyIdentityCredential(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.PrivacyPolicyPrompt)
+[116.3]:{{javadoc_uri}}/CrashHandler.html
+[116.4]:{{javadoc_uri}}/GeckoSession.PromptDelegate.html#onSelectIdentityCredentialAccount(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.AccountSelectorPrompt)
+[116.5]:{{javadoc_uri}}/GeckoSession.PromptDelegate.html#onShowPrivacyPolicyIdentityCredential(org.mozilla.geckoview.GeckoSession,org.mozilla.geckoview.GeckoSession.PromptDelegate.IdentityCredential.PrivacyPolicyPrompt)
 
 ## v115
 - Changed [`SessionPdfFileSaver.createResponse`][115.1] to response of saving PDF to accept two additional
@@ -1390,4 +1392,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 7f26c6109e435702d0623f02592ae21d8c721f95
+[api-version]: 2053e425712e404bdc73d605cf7d7162a24329b9
