@@ -8765,7 +8765,7 @@
 # Whether Properties and Values is enabled
 - name: layout.css.properties-and-values.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
   rust: true
 
