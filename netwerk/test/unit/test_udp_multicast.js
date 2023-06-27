@@ -79,7 +79,9 @@ add_test(() => {
   );
 });
 
-add_test(() => {
+// Disabled on Windows11 for frequent intermittent failures.
+// See bug 1760123.
+add_test({ skip_if: () => mozinfo.win11_2009 }, () => {
   info("Disabling multicast loopback");
   let socket = createSocketAndJoin(ADDRESS_TEST2);
   socket.multicastLoopback = false;
@@ -89,7 +91,8 @@ add_test(() => {
   );
 });
 
-add_test(() => {
+// This fails locally on windows 11.
+add_test({ skip_if: () => mozinfo.win11_2009 }, () => {
   info("Changing multicast interface");
   let socket = createSocketAndJoin(ADDRESS_TEST3);
   socket.multicastInterface = "127.0.0.1";
