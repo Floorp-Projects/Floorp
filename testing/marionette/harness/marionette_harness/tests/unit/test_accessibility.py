@@ -118,36 +118,6 @@ class TestAccessibility(MarionetteTestCase):
             test_accessibility = self.marionette.absolute_url("test_accessibility.html")
             self.marionette.navigate(test_accessibility)
 
-    def test_valid_single_tap(self):
-        self.setup_accessibility()
-        # No exception should be raised
-        self.run_element_test(self.valid_elementIDs, lambda button: button.tap())
-
-    def test_single_tap_raises_element_not_accessible(self):
-        self.setup_accessibility()
-        self.run_element_test(
-            self.invalid_elementIDs,
-            lambda button: self.assertRaises(ElementNotAccessibleException, button.tap),
-        )
-        self.run_element_test(
-            self.falsy_elements,
-            lambda button: self.assertRaises(
-                ElementNotInteractableException, button.tap
-            ),
-        )
-
-    def test_single_tap_raises_no_exceptions(self):
-        self.setup_accessibility(False, True)
-        # No exception should be raised
-        self.run_element_test(self.invalid_elementIDs, lambda button: button.tap())
-        # Elements are invisible
-        self.run_element_test(
-            self.falsy_elements,
-            lambda button: self.assertRaises(
-                ElementNotInteractableException, button.tap
-            ),
-        )
-
     def test_valid_click(self):
         self.setup_accessibility()
         # No exception should be raised
