@@ -1734,7 +1734,7 @@ var gBrowserInit = {
       };
       if (tabToAdopt.linkedBrowser.isRemoteBrowser) {
         // For remote browsers, wait for the paint event, otherwise the tabs
-        //  are not yet ready and focus gets confused because the browser swaps
+        // are not yet ready and focus gets confused because the browser swaps
         // out while tabs are switching.
         addEventListener("MozAfterPaint", swapBrowsers, { once: true });
       } else {
