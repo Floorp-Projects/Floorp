@@ -51,7 +51,13 @@ class Rule {
     this.elementStyle = elementStyle;
     this.domRule = options.rule;
     this.compatibilityIssues = null;
-    this.matchedSelectors = options.matchedSelectors || [];
+    this.matchedDesugaredSelectors =
+      options.matchedDesugaredSelectors ||
+      // @backward-compat { version 116 } matchedDesugaredSelectors is only sent by the
+      // server since 116, so we need to fall back to matchedSelectors, which was the
+      // previous name of the property.
+      options.matchedSelectors ||
+      [];
     this.pseudoElement = options.pseudoElement || "";
     this.isSystem = options.isSystem;
     this.isUnmatched = options.isUnmatched || false;
@@ -101,7 +107,7 @@ class Rule {
   get selector() {
     return {
       getUniqueSelector: this.getUniqueSelector,
-      matchedSelectors: this.matchedSelectors,
+      matchedDesugaredSelectors: this.matchedDesugaredSelectors,
       selectors: this.domRule.selectors,
       selectorText: this.keyframes ? this.domRule.keyText : this.selectorText,
     };
@@ -628,7 +634,13 @@ class Rule {
    * properties as needed.
    */
   refresh(options) {
-    this.matchedSelectors = options.matchedSelectors || [];
+    this.matchedDesugaredSelectors =
+      options.matchedDesugaredSelectors ||
+      // @backward-compat { version 116 } matchedDesugaredSelectors is only sent by the
+      // server since 116, so we need to fall back to matchedSelectors, which was the
+      // previous name of the property.
+      options.matchedSelectors ||
+      [];
     const newTextProps = this._getTextProperties();
 
     // The element style rule behaves differently on refresh. We basically need to update

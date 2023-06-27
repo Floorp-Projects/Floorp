@@ -123,7 +123,7 @@ async function userAgentStylesVisible(inspector, view) {
   }
 
   ok(
-    userRules.some(rule => rule.matchedSelectors.length === 1),
+    userRules.some(rule => rule.matchedDesugaredSelectors.length === 1),
     "There is an inline style for element in user styles"
   );
 
@@ -131,19 +131,19 @@ async function userAgentStylesVisible(inspector, view) {
   // TEST_DATA.
   ok(
     uaRules.some(rule => {
-      return rule.matchedSelectors.includes(":any-link");
+      return rule.matchedDesugaredSelectors.includes(":any-link");
     }),
     "There is a rule for :any-link"
   );
   ok(
     uaRules.some(rule => {
-      return rule.matchedSelectors.includes(":link");
+      return rule.matchedDesugaredSelectors.includes(":link");
     }),
     "There is a rule for :link"
   );
   ok(
     uaRules.some(rule => {
-      return rule.matchedSelectors.length === 1;
+      return rule.matchedDesugaredSelectors.length === 1;
     }),
     "Inline styles for ua styles"
   );

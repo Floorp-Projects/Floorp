@@ -811,7 +811,7 @@ class PageStyleActor extends Actor {
    *     'ua': Include properties from user and user-agent sheets.
    *     Default value is 'ua'
    *   `inherited`: Include styles inherited from parent nodes.
-   *   `matchedSelectors`: Include an array of specific selectors that
+   *   `matchedSelectors`: Include an array of specific (desugared) selectors that
    *     caused this rule to match its node.
    *   `skipPseudo`: Exclude styles applied to pseudo elements of the provided node.
    * @param array entries
@@ -841,7 +841,7 @@ class PageStyleActor extends Actor {
         }
 
         const domRule = entry.rule.rawRule;
-        const selectors = CssLogic.getSelectors(domRule);
+        const desugaredSelectors = CssLogic.getSelectors(domRule, true);
         const element = entry.inherited
           ? entry.inherited.rawNode
           : node.rawNode;
@@ -849,9 +849,9 @@ class PageStyleActor extends Actor {
         const { bindingElement, pseudo } =
           CssLogic.getBindingElementAndPseudo(element);
         const relevantLinkVisited = CssLogic.hasVisitedState(bindingElement);
-        entry.matchedSelectors = [];
+        entry.matchedDesugaredSelectors = [];
 
-        for (let i = 0; i < selectors.length; i++) {
+        for (let i = 0; i < desugaredSelectors.length; i++) {
           if (
             domRule.selectorMatchesElement(
               i,
@@ -860,7 +860,7 @@ class PageStyleActor extends Actor {
               relevantLinkVisited
             )
           ) {
-            entry.matchedSelectors.push(selectors[i]);
+            entry.matchedDesugaredSelectors.push(desugaredSelectors[i]);
           }
         }
       }

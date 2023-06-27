@@ -64,15 +64,15 @@ addTest(async function inheritedUserStyles() {
   is(applied[3].rule.type, 1, "Entry 3 should be a rule style");
   is(applied[3].rule.cssText, "font-size: 15px;",
       "Entry 3 should have the expected cssText");
-  ok(!applied[3].matchedSelectors,
-      "Shouldn't get matchedSelectors with this request.");
+  ok(!applied[3].matchedDesugaredSelectors,
+      "Shouldn't get matchedDesugaredSelectors with this request.");
 
   is(applied[4].inherited.id, "inheritable-rule-uninheritable-style",
       "Entry 4 should be inherited from the parent's parent");
   is(applied[4].rule.type, 1, "Entry 4 should be an rule style");
   is(applied[4].rule.cssText, "font-size: 15px;",
       "Entry 4 should have the expected cssText");
-  ok(!applied[4].matchedSelectors, "Shouldn't get matchedSelectors with this request.");
+  ok(!applied[4].matchedDesugaredSelectors, "Shouldn't get matchedDesugaredSelectors with this request.");
 
   is(applied.length, 5, "Should have 5 rules.");
 
@@ -110,9 +110,9 @@ addTest(async function matchedSelectors() {
   const applied = await gStyles.getApplied(node, {
     inherited: true, filter: "user", matchedSelectors: true,
   });
-  is(applied[3].matchedSelectors[0], ".inheritable-rule",
+  is(applied[3].matchedDesugaredSelectors[0], ".inheritable-rule",
       "Entry 3 should have a matched selector");
-  is(applied[4].matchedSelectors[0], ".inheritable-rule",
+  is(applied[4].matchedDesugaredSelectors[0], ".inheritable-rule",
       "Entry 4 should have a matched selector");
 
   runNextTest();
