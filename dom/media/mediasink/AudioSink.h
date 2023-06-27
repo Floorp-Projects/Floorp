@@ -117,9 +117,9 @@ class AudioSink : private AudioStream::DataSource {
   // The audio stream resource. Used on the task queue of MDSM only.
   RefPtr<AudioStream> mAudioStream;
 
-  // The presentation time of the first audio frame that was played.
+  // The media data time of the first audio frame that was played.
   // We can add this to the audio stream position to determine
-  // the current audio time.
+  // the current audio data time.
   media::TimeUnit mStartTime;
 
   // Keep the last good position returned from the audio stream. Used to ensure

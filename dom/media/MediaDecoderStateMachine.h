@@ -368,11 +368,9 @@ class MediaDecoderStateMachine
 
   void WaitForData(MediaData::Type aType);
 
-  // Returns the "media time". This is the absolute time which the media
-  // playback has reached. i.e. this returns values in the range
-  // [mStartTime, mEndTime], and mStartTime will not be 0 if the media does
-  // not start at 0. Note this is different than the "current playback
-  // position", which is in the range [0,duration].
+  // Returns the "current playback position" in HTML5, which is in the range
+  // [0,duration].  The first frame of the media resource corresponds to 0
+  // regardless of any codec-specific internal time code.
   media::TimeUnit GetMediaTime() const {
     MOZ_ASSERT(OnTaskQueue());
     return mCurrentPosition;
