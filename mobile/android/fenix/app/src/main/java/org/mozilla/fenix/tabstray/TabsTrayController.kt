@@ -532,7 +532,9 @@ class DefaultTabsTrayController(
                 handleNavigateToBrowser()
             }
             tab.id in selected.map { it.id } -> handleTabUnselected(tab)
-            else -> tabsTrayStore.dispatch(TabsTrayAction.AddSelectTab(tab))
+            source != TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME -> {
+                tabsTrayStore.dispatch(TabsTrayAction.AddSelectTab(tab))
+            }
         }
     }
 

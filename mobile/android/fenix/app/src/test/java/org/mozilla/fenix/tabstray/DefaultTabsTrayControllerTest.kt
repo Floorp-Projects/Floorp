@@ -651,6 +651,37 @@ class DefaultTabsTrayControllerTest {
     }
 
     @Test
+    fun `GIVEN at least a tab is selected and the user is in multi select mode WHEN the user taps an inactive tab THEN that tab will not be selected`() {
+        val middleware = CaptureActionsMiddleware<TabsTrayState, TabsTrayAction>()
+        trayStore = TabsTrayStore(middlewares = listOf(middleware))
+        trayStore.dispatch(TabsTrayAction.EnterSelectMode)
+        trayStore.waitUntilIdle()
+        val controller = spyk(createController())
+        val normalTab = TabSessionState(
+            id = "1",
+            content = ContentState(
+                url = "www.mozilla.com",
+            ),
+        )
+        val inactiveTab = TabSessionState(
+            id = "2",
+            content = ContentState(
+                url = "www.google.com",
+            ),
+        )
+
+        trayStore.dispatch(TabsTrayAction.EnterSelectMode)
+        trayStore.dispatch(TabsTrayAction.AddSelectTab(normalTab))
+        trayStore.waitUntilIdle()
+
+        controller.handleTabSelected(inactiveTab, TrayPagerAdapter.INACTIVE_TABS_FEATURE_NAME)
+
+        middleware.assertLastAction(TabsTrayAction.AddSelectTab::class) {
+            assertEquals(normalTab, it.tab)
+        }
+    }
+
+    @Test
     fun `GIVEN the user selects only the current tab WHEN the user forces tab to be inactive THEN tab does not become inactive`() {
         val currentTab = TabSessionState(content = mockk(), id = "currentTab", createdAt = 11)
         val secondTab = TabSessionState(content = mockk(), id = "secondTab", createdAt = 22)
