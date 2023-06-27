@@ -266,7 +266,7 @@
   flex-shrink: 1;
 }
 
-.urlbarView-row[rich-suggestion=with-icon]:not(:hover) .urlbarView-action {
+.urlbarView-row[rich-suggestion=with-icon]:not(:hover, [selected]) .urlbarView-action {
   visibility: collapse;
 }
 
