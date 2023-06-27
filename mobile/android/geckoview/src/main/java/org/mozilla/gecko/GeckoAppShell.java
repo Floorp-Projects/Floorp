@@ -70,6 +70,7 @@ import org.mozilla.gecko.util.InputDeviceUtils;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
+import org.mozilla.geckoview.CrashHandler;
 import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.R;
 
@@ -101,7 +102,7 @@ public class GeckoAppShell {
     }
 
     @Override
-    protected String getAppPackageName() {
+    public String getAppPackageName() {
       final Context appContext = getAppContext();
       if (appContext == null) {
         return "<unknown>";
@@ -110,7 +111,7 @@ public class GeckoAppShell {
     }
 
     @Override
-    protected Context getAppContext() {
+    public Context getAppContext() {
       return getApplicationContext();
     }
 
@@ -167,7 +168,7 @@ public class GeckoAppShell {
   }
 
   @WrapForJNI(exceptionMode = "ignore")
-  /* package */ static synchronized String getAppNotes() {
+  public static synchronized String getAppNotes() {
     return sAppNotes;
   }
 
