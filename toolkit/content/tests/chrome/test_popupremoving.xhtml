@@ -4,7 +4,6 @@
 
 <window title="Popup Removing Tests"
         onload="setTimeout(nextTest, 0)"
-        onDOMAttrModified="modified(event)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <!--
@@ -34,7 +33,7 @@
         <menupopup id="nestedpopup2" onpopupshown="if (event.target == this) this.firstChild.open = true">
           <menu id="nestedmenu3" label="3">
             <menupopup id="nestedpopup3" onpopupshown="if (event.target == this) this.firstChild.open = true">
-              <menu id="nestedmenu4" label="4" onpopupshown="removePopups()">
+              <menu id="nestedmenu4" label="4">
                 <menupopup id="nestedpopup4">
                   <menuitem label="Nested 1"/>
                   <menuitem label="Nested 2"/>
@@ -73,8 +72,7 @@
     </menupopup>
 </menu>
 
-<menu id="separatemenu4" label="4" onpopupshown="removePopups()"
-                                   onpopuphidden="$('separatemenu2').open = false">
+<menu id="separatemenu4" label="4" onpopuphidden="$('separatemenu2').open = false">
     <menupopup id="separatepopup3">
         <menuitem label="L4 One"/>
         <menuitem label="L4 Two"/>
@@ -89,65 +87,82 @@
 
 SimpleTest.waitForExplicitFinish();
 
-var gKey = "";
+let gKey = "";
 let gTriggerMutation = null;
 let gChangeMutation = null;
+let gResolveRemovePopups = null;
+let gResolvePopup2Hidden = null;
 
 function nextTest()
 {
+  let promiseRemovePopups, promisePopup2Hidden;
   if (gKey == "") {
     gKey = "separate";
+    $("separatemenu4").addEventListener("popupshown", removePopups);
+    promiseRemovePopups = new Promise(resolve => gResolveRemovePopups = resolve);
+    promisePopup2Hidden = new Promise(resolve => gResolvePopup2Hidden = resolve);
   }
   else if (gKey == "separate") {
     gKey = "nested";
+    $("nestedmenu4").addEventListener("popupshown", removePopups);
+    promiseRemovePopups = new Promise(resolve => gResolveRemovePopups = resolve);
+    gResolvePopup2Hidden = null;
   }
   else {
     SimpleTest.finish();
     return;
   }
 
-  $(gKey + "menu1").open = true;
+  SimpleTest.executeSoon(async () => {
+    $(gKey + "menu1").open = true;
+    await Promise.all([promiseRemovePopups, promisePopup2Hidden]);
+    nextTest();
+  });
 }
 
-function modified(event)
-{
+function modified(aMutationList, aObserver) {
   // use this mutation listener to hide the third popup, destroying its frame.
   // It gets triggered when the open attribute is cleared on the fourth menu.
-
-  if (event.target == gTriggerMutation &&
-      event.attrName == "open") {
+  for (const mutation of aMutationList) {
+    if (mutation.attributeName != "open") {
+      continue;
+    }
     gChangeMutation.hidden = true;
     // force a layout flush
     document.documentElement.clientWidth;
-    gTriggerMutation = null;
     gChangeMutation = null;
+    aObserver.disconnect();
+    break;
   }
 }
 
-function removePopups()
+async function removePopups()
 {
   var menu2 = $(gKey + "menu2");
   var menu3 = $(gKey + "menu3");
   is(menu2.getAttribute("open"), "true", gKey + " menu 2 open before");
   is(menu3.getAttribute("open"), "true", gKey + " menu 3 open before");
 
-  gTriggerMutation = menu3;
+  const observer = new MutationObserver(modified);
+  observer.observe(menu3, { attributes: true });
   gChangeMutation = $(gKey + "menu4");
   var menu = $(gKey + "menu1");
   menu.remove();
-
-  if (gKey == "nested") {
+  const key = gKey;
+  await new Promise (SimpleTest.executeSoon);
+  if (key == "nested") {
     // the 'separate' test checks this during the popup2 hidden event handler
     is(menu2.hasAttribute("open"), false, gKey + " menu 2 open after");
     is(menu3.hasAttribute("open"), false, gKey + " menu 3 open after");
-    nextTest();
   }
+  gResolveRemovePopups();
 }
 
-function popup2Hidden()
-{
+function popup2Hidden() {
   is($(gKey + "menu2").hasAttribute("open"), false, gKey + " menu 2 open after");
-  nextTest();
+  if (gResolvePopup2Hidden) {
+    gResolvePopup2Hidden();
+  }
 }
 
 ]]>

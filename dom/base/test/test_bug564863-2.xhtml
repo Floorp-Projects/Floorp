@@ -28,130 +28,141 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=564863
 <pre id="test">
 <script type="application/javascript">
 <![CDATA[
+SimpleTest.waitForExplicitFinish();
 
-root = $('root');
-xul = root.children[0];
+(async function runTests() {
+  root = $('root');
+  xul = root.children[0];
 
-var xul_cs = getComputedStyle(xul, "");
+  var xul_cs = getComputedStyle(xul, "");
 
-function checkHasId(test) {
-  // Check computed style first to avoid flushes from hiding problems
-  checkHasIdNoGEBI(test);
+  function checkHasId(test) {
+    // Check computed style first to avoid flushes from hiding problems
+    checkHasIdNoGEBI(test);
 
-  is($("xul_id"), xul, "xul getElementById " + test);
-}
+    is($("xul_id"), xul, "xul getElementById " + test);
+  }
 
-function checkHasIdNoGEBI(test) {
-  const connected = test != "removed node";
-  is(xul_cs.color, connected ? "rgb(30, 30, 30)" : "", "xul color " + test);
+  function checkHasIdNoGEBI(test) {
+    const connected = test != "removed node";
+    is(xul_cs.color, connected ? "rgb(30, 30, 30)" : "", "xul color " + test);
 
-  is(xul.id, "xul_id", "xul id " + test);
-}
+    is(xul.id, "xul_id", "xul id " + test);
+  }
 
-function checkHasNoId(removed, test) {
-  // XXX This fails for some reason when this is run as a Mochitest chrome, but
-  // not when run as a Mochitest plain.
-  //is(xul_cs.color, "rgb(0, 0, 0)", "xul color " + test);
+  function checkHasNoId(removed, test) {
+    // XXX This fails for some reason when this is run as a Mochitest chrome, but
+    // not when run as a Mochitest plain.
+    //is(xul_cs.color, "rgb(0, 0, 0)", "xul color " + test);
 
-  attrValue = removed ? null : "";
+    attrValue = removed ? null : "";
 
-  is(xul.id, "", "xul id " + test);
+    is(xul.id, "", "xul id " + test);
 
-  is(xul.getAttribute("id"), "",        "xul getAttribute " + test);
+    is(xul.getAttribute("id"), "",        "xul getAttribute " + test);
 
-  is($("xul_id"), null, "xul getElementById " + test);
-}
+    is($("xul_id"), null, "xul getElementById " + test);
+  }
 
-// Check that dynamic modifications of attribute work
+  // Check that dynamic modifications of attribute work
 
-checkHasId("in markup");
+  checkHasId("in markup");
 
-xul.id = "";
+  xul.id = "";
 
-checkHasNoId(false, "set to empty");
+  checkHasNoId(false, "set to empty");
 
-xul.id = "xul_id";
+  xul.id = "xul_id";
 
-checkHasId("set using .id");
+  checkHasId("set using .id");
 
-xul.setAttribute("id", "");
+  xul.setAttribute("id", "");
 
-checkHasNoId(false, "setAttribute to empty");
+  checkHasNoId(false, "setAttribute to empty");
 
-xul.id = "xul_id";
+  xul.id = "xul_id";
 
-checkHasId("set again using .id");
+  checkHasId("set again using .id");
 
-xul.removeAttribute("id");
+  xul.removeAttribute("id");
 
-checkHasNoId(true, "removed attribute");
+  checkHasNoId(true, "removed attribute");
 
-xul.setAttribute("id", "xul_id");
+  xul.setAttribute("id", "xul_id");
 
-checkHasId("set using setAttribute");
+  checkHasId("set using setAttribute");
 
-t3 = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "button");
-t3.id = "xul_id";
+  t3 = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "button");
+  t3.id = "xul_id";
 
-// Check that inserting elements before/after existing work
+  // Check that inserting elements before/after existing work
 
-function insertAfter(newChild, existing) {
-  existing.parentNode.insertBefore(newChild, existing.nextSibling);
-}
-function insertBefore(newChild, existing) {
-  existing.parentNode.insertBefore(newChild, existing);
-}
-function removeNode(child) {
-  child.remove();
-}
+  function insertAfter(newChild, existing) {
+    existing.parentNode.insertBefore(newChild, existing.nextSibling);
+  }
+  function insertBefore(newChild, existing) {
+    existing.parentNode.insertBefore(newChild, existing);
+  }
+  function removeNode(child) {
+    child.remove();
+  }
 
-insertAfter(t3, xul);
+  insertAfter(t3, xul);
 
-checkHasId("inserted after");
+  checkHasId("inserted after");
 
-insertBefore(t3, xul);
+  insertBefore(t3, xul);
 
-checkHasIdNoGEBI("inserted before");
-is($("xul_id"), t3, "xul getElementById inserted before");
+  checkHasIdNoGEBI("inserted before");
+  is($("xul_id"), t3, "xul getElementById inserted before");
 
-t3.removeAttribute("id");
+  t3.removeAttribute("id");
 
-checkHasId("removed tx attribute");
+  checkHasId("removed tx attribute");
 
-t3.setAttribute("id", "xul_id");
+  t3.setAttribute("id", "xul_id");
 
-checkHasIdNoGEBI("setAttribute before");
-is($("xul_id"), t3, "xul getElementById setAttribute before");
+  checkHasIdNoGEBI("setAttribute before");
+  is($("xul_id"), t3, "xul getElementById setAttribute before");
 
-removeNode(t3);
+  removeNode(t3);
 
-checkHasId("removed temporaries");
+  checkHasId("removed temporaries");
 
-removeNode(xul);
+  removeNode(xul);
 
-checkHasIdNoGEBI("removed node");
+  checkHasIdNoGEBI("removed node");
 
-// Re-add the id inside a mutation event on a XUL element
-is($("xul_id"), null, "no xul");
-xul = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "button");
-xul.id = "xul_id";
-root.appendChild(xul);
-is($("xul_id"), xul, "new xul is set up");
-mutateFired = false;
-xul.addEventListener("DOMAttrModified", function(e) {
-  is(e.target, xul, "target is xul");
-  is(xul.getAttribute("id"), "", "xul no longer has id attr");
-  is(xul.id, "", "xul no longer has id");
-  xul.id = "other_xul_id";
-  mutateFired = true;
-}, {once: true});
-xul.removeAttribute("id");
-ok(mutateFired, "mutation event fired");
-is($("xul_id"), null, "xul_id was removed from table");
-is($("other_xul_id"), xul, "other_xul_id was added");
-removeNode(xul);
-is($("other_xul_id"), null, "other_xul_id was removed");
+  // Re-add the id inside a mutation event on a XUL element
+  is($("xul_id"), null, "no xul");
+  xul = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "button");
+  xul.id = "xul_id";
+  root.appendChild(xul);
+  is($("xul_id"), xul, "new xul is set up");
+  let mutation;
+  const observer = new MutationObserver((aMutationList, aObserver) => {
+    mutation = aMutationList[0];
+    aObserver.disconnect();
+  });
+  observer.observe(xul, { attributes: true });
+  xul.removeAttribute("id");
+  await new Promise(SimpleTest.executeSoon);
+  if (mutation) {
+    is(mutation.target, xul, "target is xul");
+    is(xul.getAttribute("id"), "", "xul no longer has id attr");
+    is(xul.id, "", "xul no longer has id");
+    xul.id = "other_xul_id";
+  } else {
+    observer.disconnect();
+    ok(false, "mutation should've occurred");
+  }
+  is($("xul_id"), null, "xul_id was removed from table");
+  is($("other_xul_id"), xul, "other_xul_id was added");
+  removeNode(xul);
+  is($("other_xul_id"), null, "other_xul_id was removed");
 
+  SimpleTest.finish();
+})();
 ]]>
 </script>
 </pre>

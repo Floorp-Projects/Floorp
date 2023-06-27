@@ -353,41 +353,47 @@ gTests.push({
       );
     });
 
-    folderTree.addEventListener(
-      "DOMAttrModified",
-      function onDOMAttrModified(event) {
-        if (event.attrName != "place") {
-          return;
+    const observer = new this.window.MutationObserver(
+      (aMutationList, aObserver) => {
+        for (const mutation of aMutationList) {
+          if (
+            mutation.type != "attributes" ||
+            mutation.attributeName != "place"
+          ) {
+            continue;
+          }
+          aObserver.disconnect();
+          executeSoon(async function () {
+            // Create a new folder.
+            var newFolderButton = self.window.document.getElementById(
+              "editBMPanel_newFolderButton"
+            );
+            newFolderButton.doCommand();
+
+            // Wait for the folder to be created and for editing to start.
+            await TestUtils.waitForCondition(
+              () => folderTree.hasAttribute("editing"),
+              "We are editing new folder name in folder tree"
+            );
+
+            // Press Escape to discard editing new folder name.
+            EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
+            Assert.ok(
+              !folderTree.hasAttribute("editing"),
+              "We have finished editing folder name in folder tree"
+            );
+
+            self._cleanShutdown = true;
+
+            self.window.document
+              .getElementById("bookmarkpropertiesdialog")
+              .cancelDialog();
+          });
+          break;
         }
-        folderTree.removeEventListener("DOMAttrModified", onDOMAttrModified);
-        executeSoon(async function () {
-          // Create a new folder.
-          var newFolderButton = self.window.document.getElementById(
-            "editBMPanel_newFolderButton"
-          );
-          newFolderButton.doCommand();
-
-          // Wait for the folder to be created and for editing to start.
-          await TestUtils.waitForCondition(
-            () => folderTree.hasAttribute("editing"),
-            "We are editing new folder name in folder tree"
-          );
-
-          // Press Escape to discard editing new folder name.
-          EventUtils.synthesizeKey("VK_ESCAPE", {}, self.window);
-          Assert.ok(
-            !folderTree.hasAttribute("editing"),
-            "We have finished editing folder name in folder tree"
-          );
-
-          self._cleanShutdown = true;
-
-          self.window.document
-            .getElementById("bookmarkpropertiesdialog")
-            .cancelDialog();
-        });
       }
     );
+    observer.observe(folderTree, { attributes: true });
     foldersExpander.doCommand();
     await unloadPromise;
   },

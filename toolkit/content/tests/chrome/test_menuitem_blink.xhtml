@@ -25,62 +25,32 @@ function startTest() {
     SimpleTest.finish();
     return;
   }
-  // Destroy frame while removing the _moz-menuactive attribute.
-  test_crash("REMOVAL", test2);
+  test_crash();
 }
 
-function test2() {
-  // Destroy frame while adding the _moz-menuactive attribute.
-  test_crash("ADDITION", test3);
-}
-
-function test3() {
-  // Don't mess with the frame, just test whether we've blinked.
-  test_crash("", SimpleTest.finish);
-}
-
-function test_crash(when, andThen) {
+function test_crash() {
   var menupopup = document.getElementById("menupopup");
   var menuitem = document.getElementById("menuitem");
-  var attrChanges = { "REMOVAL": 0, "ADDITION": 0 };
-  var storedEvent = null;
   menupopup.addEventListener("popupshown", function () {
     menuitem.addEventListener("mouseup", function (e) {
-      menuitem.addEventListener("DOMAttrModified", function onDOMAttrModified(e) {
-        if (e.target != e.currentTarget) {
-          return;
-        }
-        if (e.attrName == "_moz-menuactive") {
-          if (!attrChanges[e.attrChange])
-            attrChanges[e.attrChange] = 1;
-          else
-            attrChanges[e.attrChange]++;
-          storedEvent = e;
-          if (e.attrChange == e[when]) {
-            menuitem.hidden = true;
-            menuitem.getBoundingClientRect();
-            ok(true, "Didn't crash on _moz-menuactive " + when.toLowerCase() + " during blinking")
-            menuitem.hidden = false;
-            menuitem.removeEventListener("DOMAttrModified", onDOMAttrModified);
-            SimpleTest.executeSoon(function () {
-              menupopup.hidePopup();
-            });
+      const observer = new MutationObserver((aMutationList, aObserver) => {
+        for (const mutation of aMutationList) {
+          if (mutation.attributeName != "_moz-menuactive") {
+            continue;
           }
+          menuitem.hidden = true;
+          menuitem.getBoundingClientRect();
+          ok(true, "Didn't crash on _moz-menuactive mutation")
+          menuitem.hidden = false;
+          aObserver.disconnect();
+          SimpleTest.executeSoon(function () {
+            menupopup.hidePopup();
+          });
         }
       });
+      observer.observe(menuitem, { attributes: true });
     }, {once: true});
-    menupopup.addEventListener("popuphidden", function() {
-      if (!when) {
-        // Test whether we've blinked at all.
-        var shouldBlink = navigator.platform.match(/Mac/);
-        var expectedNumRemoval = shouldBlink ? 2 : 1;
-        var expectedNumAddition = shouldBlink ? 1 : 0;
-        ok(storedEvent, "got DOMAttrModified events after clicking menuitem")
-        is(attrChanges[storedEvent.REMOVAL], expectedNumRemoval, "blinking unset attributes correctly");
-        is(attrChanges[storedEvent.ADDITION], expectedNumAddition, "blinking set attributes correctly");
-      }
-      SimpleTest.executeSoon(andThen);
-    }, {once: true});
+    menupopup.addEventListener("popuphidden", SimpleTest.finish, {once: true});
     synthesizeMouse(menuitem, 10, 5, { type : "mousemove" });
     synthesizeMouse(menuitem, 10, 5, { type : "mousemove" });
     synthesizeMouse(menuitem, 10, 5, { type : "mousedown" });

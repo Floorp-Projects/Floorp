@@ -637,6 +637,7 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
         // call, so we don't need to do anything.
     }
 
+    let attrModifiedObserver;
     function AttrModifiedListener() {
         LogInfo("AttrModifiedListener fired");
         // Wait for the next return-to-event-loop before continuing --- for
@@ -651,8 +652,9 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
         removeEventListener("MozAfterPaint", AfterPaintListener, false);
         removeEventListener("Reftest:MozAfterPaintFromChild", FromChildAfterPaintListener, false);
         CheckForLivenessOfContentRootElement();
-        if (contentRootElement) {
-            contentRootElement.removeEventListener("DOMAttrModified", AttrModifiedListener);
+        if (attrModifiedObserver) {
+            attrModifiedObserver.disconnect();
+            attrModifiedObserver = null;
         }
         gTimeoutHook = null;
         // Make sure we're in the COMPLETED state just in case
@@ -899,8 +901,10 @@ function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements, f
     // If contentRootElement is null then shouldWaitForReftestWaitRemoval will
     // always return false so we don't need a listener anyway
     CheckForLivenessOfContentRootElement();
-    if (contentRootElement) {
-      contentRootElement.addEventListener("DOMAttrModified", AttrModifiedListener);
+    if (contentRootElement?.hasAttribute("class")) {
+      attrModifiedObserver =
+        new contentRootElement.ownerDocument.defaultView.MutationObserver(AttrModifiedListener);
+      attrModifiedObserver.observe(contentRootElement, {attributes: true});
     }
     gTimeoutHook = RemoveListeners;
 
