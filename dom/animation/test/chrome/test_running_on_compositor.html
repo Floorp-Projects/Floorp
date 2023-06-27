@@ -1223,6 +1223,32 @@ promise_test(async t => {
 
 promise_test(async t => {
   const div = addDiv(t);
+  const animation = div.animate({ offsetPath: ['padding-box',
+                                               'padding-box'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'offset-path:padding-box animation should be running on the compositor');
+}, 'offset-path:padding-box animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ offsetPath: ['content-box',
+                                               'content-box'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'offset-path:content-box animation should be running on the compositor');
+}, 'offset-path:content-box animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
   const animation = div.animate({ offsetDistance: ['0%', '100%'] },
                                 100 * MS_PER_SEC);
 
@@ -1289,6 +1315,29 @@ promise_test(async t => {
   assert_animation_is_running_on_compositor(newAnim,
     'new added offset-path animation should be running on the compositor');
 }, 'offset-anchor animation runs on the compositor');
+
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ offsetPosition: ['0% 0%', '100% 100%'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_not_running_on_compositor(animation,
+    'offset-position animation is not running on the compositor because ' +
+    'offset-path is none');
+
+  const newAnim = div.animate({ offsetPath: ['None', 'None'] },
+                              100 * MS_PER_SEC);
+  await waitForAnimationReadyToRestyle(newAnim);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'offset-position animation should be running on the compositor');
+  assert_animation_is_running_on_compositor(newAnim,
+    'new added offset-path animation should be running on the compositor');
+}, 'offset-position animation runs on the compositor');
 
 promise_test(async t => {
   const div = addDiv(t);
