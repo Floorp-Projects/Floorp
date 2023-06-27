@@ -49,16 +49,6 @@ deb11-cmake:
             url: http://snapshot.debian.org/archive/debian/20221201T090253Z/pool/main/c/cmake/cmake_3.25.1-1.dsc
             sha256: 508b262eee8f18c8924bb4e1b89596fb208efa2fe6bde270d16552d1dc3a0d65
 
-deb11-valgrind:
-    description: "Valgrind for Debian bullseye"
-    treeherder:
-        symbol: Deb11(valgrind)
-    run:
-        dist: bullseye
-        dsc:
-            url: http://snapshot.debian.org/archive/debian/20230111T213757Z/pool/main/v/valgrind/valgrind_3.20.0-1.dsc
-            sha256: e32d373bf2d4f0bd0e9673c711d0e4a8eed43c22ca81714ae3e2d85b2f315493
-
 deb12-valgrind:
     description: "Valgrind for Debian bookworm"
     treeherder:
