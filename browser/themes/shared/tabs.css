@@ -773,7 +773,6 @@ toolbar:not(#TabsToolbar) #firefox-view-button:-moz-locale-dir(rtl) {
 }
 
 .all-tabs-secondary-button {
-  opacity: .8;
   -moz-context-properties: fill;
   fill: currentColor;
 }
