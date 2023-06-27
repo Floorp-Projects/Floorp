@@ -226,15 +226,7 @@ class MediaDecoderStateMachine
 
   void SetVideoDecodeModeInternal(VideoDecodeMode aMode);
 
-  // Set new sink device and restart MediaSink if playback is started.
-  // Returned promise will be resolved with true if the playback is
-  // started and false if playback is stopped after setting the new sink.
-  // Returned promise will be rejected with value NS_ERROR_ABORT
-  // if the action fails or it is not supported.
-  // If there are multiple pending requests only the last one will be
-  // executed, for all previous requests the promise will be resolved
-  // with true or false similar to above.
-  RefPtr<GenericPromise> SetSink(const RefPtr<AudioDeviceInfo>& aDevice);
+  RefPtr<GenericPromise> SetSink(RefPtr<AudioDeviceInfo> aDevice);
 
   // Shutdown MediaSink on suspend to clean up resources.
   void SuspendMediaSink();

@@ -12,6 +12,7 @@
 
 #include "VideoSink.h"
 
+#include "AudioDeviceInfo.h"
 #include "MediaQueue.h"
 #include "VideoUtils.h"
 
@@ -160,6 +161,11 @@ void VideoSink::SetPreservesPitch(bool aPreservesPitch) {
   mAudioSink->SetPreservesPitch(aPreservesPitch);
 }
 
+RefPtr<GenericPromise> VideoSink::SetAudioDevice(
+    RefPtr<AudioDeviceInfo> aDevice) {
+  return mAudioSink->SetAudioDevice(std::move(aDevice));
+}
+
 double VideoSink::PlaybackRate() const {
   AssertOwnerThread();
 
@@ -295,10 +301,6 @@ bool VideoSink::IsPlaying() const {
   AssertOwnerThread();
 
   return mAudioSink->IsPlaying();
-}
-
-const AudioDeviceInfo* VideoSink::AudioDevice() const {
-  return mAudioSink->AudioDevice();
 }
 
 void VideoSink::Shutdown() {
