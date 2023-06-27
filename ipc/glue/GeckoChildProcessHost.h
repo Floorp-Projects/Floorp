@@ -10,7 +10,6 @@
 #include "base/file_path.h"
 #include "base/process_util.h"
 #include "base/waitable_event.h"
-#include "chrome/common/child_process_host.h"
 #include "chrome/common/ipc_message.h"
 #include "mojo/core/ports/port_ref.h"
 
@@ -60,7 +59,7 @@ namespace ipc {
 typedef mozilla::MozPromise<base::ProcessHandle, LaunchError, false>
     ProcessHandlePromise;
 
-class GeckoChildProcessHost : public ChildProcessHost,
+class GeckoChildProcessHost : public IPC::Channel::Listener,
                               public LinkedListElement<GeckoChildProcessHost> {
  protected:
   typedef mozilla::Monitor Monitor;
@@ -127,13 +126,9 @@ class GeckoChildProcessHost : public ChildProcessHost,
   // LaunchAndWaitForProcessHandle); use with AsyncLaunch.
   RefPtr<ProcessHandlePromise> WhenProcessHandleReady();
 
-  void InitializeChannel(
-      const std::function<void(IPC::Channel*)>& aChannelReady);
+  void InitializeChannel(IPC::Channel::ChannelHandle&& aServerHandle);
 
-  virtual bool CanShutdown() override { return true; }
-
-  IPC::Channel* GetChannel() { return channelp(); }
-  ChannelId GetChannelId() { return channel_id(); }
+  virtual bool CanShutdown() { return true; }
 
   UntypedEndpoint TakeInitialEndpoint() {
     return UntypedEndpoint{PrivateIPDLInterface{}, std::move(mInitialPort),

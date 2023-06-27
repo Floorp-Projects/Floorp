@@ -42,22 +42,6 @@ Channel::ChannelImpl::State::~State() {
 
 //------------------------------------------------------------------------------
 
-Channel::ChannelImpl::ChannelImpl(const ChannelId& channel_id, Mode mode,
-                                  Listener* listener)
-    : chan_cap_("ChannelImpl::SendMutex",
-                MessageLoopForIO::current()->SerialEventTarget()),
-      ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
-      ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)) {
-  Init(mode, listener);
-
-  if (!CreatePipe(channel_id, mode)) {
-    // The pipe may have been closed already.
-    CHROMIUM_LOG(WARNING) << "Unable to create pipe named \"" << channel_id
-                          << "\" in " << (mode == 0 ? "server" : "client")
-                          << " mode.";
-  }
-}
-
 Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
                                   Listener* listener)
     : chan_cap_("ChannelImpl::SendMutex",
@@ -186,60 +170,6 @@ bool Channel::ChannelImpl::Send(mozilla::UniquePtr<Message> message) {
   }
 
   return true;
-}
-
-const Channel::ChannelId Channel::ChannelImpl::PipeName(
-    const ChannelId& channel_id, int32_t* secret) const {
-  MOZ_ASSERT(secret);
-
-  std::wostringstream ss;
-  ss << L"\\\\.\\pipe\\chrome.";
-
-  // Prevent the shared secret from ending up in the pipe name.
-  size_t index = channel_id.find_first_of(L'\\');
-  if (index != std::string::npos) {
-    StringToInt(channel_id.substr(index + 1), secret);
-    ss << channel_id.substr(0, index - 1);
-  } else {
-    // This case is here to support predictable named pipes in tests.
-    *secret = 0;
-    ss << channel_id;
-  }
-  return ss.str();
-}
-
-bool Channel::ChannelImpl::CreatePipe(const ChannelId& channel_id, Mode mode) {
-  chan_cap_.NoteExclusiveAccess();
-
-  DCHECK(pipe_ == INVALID_HANDLE_VALUE);
-  const ChannelId pipe_name = PipeName(channel_id, &shared_secret_);
-  if (mode == MODE_SERVER) {
-    waiting_for_shared_secret_ = !!shared_secret_;
-    pipe_ = CreateNamedPipeW(pipe_name.c_str(),
-                             PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED |
-                                 FILE_FLAG_FIRST_PIPE_INSTANCE,
-                             PIPE_TYPE_BYTE | PIPE_READMODE_BYTE,
-                             1,  // number of pipe instances
-                             // output buffer size (XXX tune)
-                             Channel::kReadBufferSize,
-                             // input buffer size (XXX tune)
-                             Channel::kReadBufferSize,
-                             5000,  // timeout in milliseconds (XXX tune)
-                             NULL);
-  } else {
-    pipe_ = CreateFileW(
-        pipe_name.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
-        SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION | FILE_FLAG_OVERLAPPED,
-        NULL);
-  }
-  if (pipe_ == INVALID_HANDLE_VALUE) {
-    // If this process is being closed, the pipe may be gone already.
-    CHROMIUM_LOG(WARNING) << "failed to create pipe: " << GetLastError();
-    return false;
-  }
-
-  // Create the Hello message to be sent when Connect is called
-  return EnqueueHelloMessage();
 }
 
 bool Channel::ChannelImpl::EnqueueHelloMessage() {
@@ -811,11 +741,6 @@ bool Channel::ChannelImpl::TransferHandles(Message& msg) {
 
 //------------------------------------------------------------------------------
 // Channel's methods simply call through to ChannelImpl.
-Channel::Channel(const ChannelId& channel_id, Mode mode, Listener* listener)
-    : channel_impl_(new ChannelImpl(channel_id, mode, listener)) {
-  MOZ_COUNT_CTOR(IPC::Channel);
-}
-
 Channel::Channel(ChannelHandle pipe, Mode mode, Listener* listener)
     : channel_impl_(new ChannelImpl(std::move(pipe), mode, listener)) {
   MOZ_COUNT_CTOR(IPC::Channel);
@@ -843,32 +768,14 @@ int32_t Channel::OtherPid() const { return channel_impl_->OtherPid(); }
 
 bool Channel::IsClosed() const { return channel_impl_->IsClosed(); }
 
-namespace {
-
-// Global atomic used to guarantee channel IDs are unique.
-mozilla::Atomic<int> g_last_id;
-
-}  // namespace
-
-// static
-Channel::ChannelId Channel::GenerateVerifiedChannelID() {
-  // Windows pipes can be enumerated by low-privileged processes. So, we
-  // append a strong random value after the \ character. This value is not
-  // included in the pipe name, but sent as part of the client hello, to
-  // prevent hijacking the pipe name to spoof the client.
-  int secret;
-  do {  // Guarantee we get a non-zero value.
-    secret = base::RandInt(0, std::numeric_limits<int>::max());
-  } while (secret == 0);
-  return StringPrintf(L"%d.%u.%d\\%d", base::GetCurrentProcId(), g_last_id++,
-                      base::RandInt(0, std::numeric_limits<int32_t>::max()),
-                      secret);
-}
-
-// static
-Channel::ChannelId Channel::ChannelIDForCurrentProcess() {
-  return CommandLine::ForCurrentProcess()->GetSwitchValue(
+HANDLE Channel::GetClientChannelHandle() {
+  // Read the switch from the command line which passed the initial handle for
+  // this process, and convert it back into a HANDLE.
+  std::wstring switchValue = CommandLine::ForCurrentProcess()->GetSwitchValue(
       switches::kProcessChannelID);
+
+  uint32_t handleInt = std::stoul(switchValue);
+  return Uint32ToHandle(handleInt);
 }
 
 // static

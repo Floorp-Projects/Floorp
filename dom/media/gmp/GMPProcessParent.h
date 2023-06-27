@@ -11,7 +11,6 @@
 #include "base/basictypes.h"
 #include "base/file_path.h"
 #include "base/thread.h"
-#include "chrome/common/child_process_host.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "nsIFile.h"
 
@@ -54,7 +53,6 @@ class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   static MacSandboxType GetMacSandboxType() { return MacSandboxType_GMP; };
 #endif
 
-  using mozilla::ipc::GeckoChildProcessHost::GetChannel;
   using mozilla::ipc::GeckoChildProcessHost::GetChildProcessHandle;
 
  private:

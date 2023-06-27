@@ -138,21 +138,7 @@ static inline ssize_t corrected_sendmsg(int socket,
 void Channel::SetClientChannelFd(int fd) { gClientChannelFd = fd; }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
-Channel::ChannelImpl::ChannelImpl(const ChannelId& channel_id, Mode mode,
-                                  Listener* listener)
-    : chan_cap_("ChannelImpl::SendMutex",
-                MessageLoopForIO::current()->SerialEventTarget()) {
-  Init(mode, listener);
-
-  if (!CreatePipe(mode)) {
-    CHROMIUM_LOG(WARNING) << "Unable to create pipe in "
-                          << (mode == MODE_SERVER ? "server" : "client")
-                          << " mode error(" << strerror(errno) << ").";
-    return;
-  }
-
-  EnqueueHelloMessage();
-}
+int Channel::GetClientChannelHandle() { return gClientChannelFd; }
 
 Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
                                   Listener* listener)
@@ -207,36 +193,12 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   input_buf_ = mozilla::MakeUnique<char[]>(Channel::kReadBufferSize);
   input_cmsg_buf_ = mozilla::MakeUnique<char[]>(kControlBufferSize);
   SetPipe(-1);
-  client_pipe_ = -1;
   listener_ = listener;
   waiting_connect_ = true;
 #if defined(XP_DARWIN)
   last_pending_fd_id_ = 0;
   other_task_ = nullptr;
 #endif
-}
-
-bool Channel::ChannelImpl::CreatePipe(Mode mode) {
-  chan_cap_.NoteExclusiveAccess();
-
-  DCHECK(pipe_ == -1);
-
-  if (mode == MODE_SERVER) {
-    ChannelHandle server, client;
-    if (!Channel::CreateRawPipe(&server, &client)) {
-      return false;
-    }
-
-    SetPipe(server.release());
-    client_pipe_ = client.release();
-  } else {
-    static mozilla::Atomic<bool> consumed(false);
-    CHECK(!consumed.exchange(true))
-    << "child process main channel can be created only once";
-    SetPipe(gClientChannelFd);
-  }
-
-  return true;
 }
 
 bool Channel::ChannelImpl::EnqueueHelloMessage() {
@@ -825,22 +787,6 @@ bool Channel::ChannelImpl::Send(mozilla::UniquePtr<Message> message) {
   return true;
 }
 
-void Channel::ChannelImpl::GetClientFileDescriptorMapping(int* src_fd,
-                                                          int* dest_fd) const {
-  IOThread().AssertOnCurrentThread();
-  DCHECK(mode_ == MODE_SERVER);
-  *src_fd = client_pipe_;
-  *dest_fd = gClientChannelFd;
-}
-
-void Channel::ChannelImpl::CloseClientFileDescriptor() {
-  IOThread().AssertOnCurrentThread();
-  if (client_pipe_ != -1) {
-    IGNORE_EINTR(close(client_pipe_));
-    client_pipe_ = -1;
-  }
-}
-
 // Called by libevent when we can read from th pipe without blocking.
 void Channel::ChannelImpl::OnFileCanReadWithoutBlocking(int fd) {
   IOThread().AssertOnCurrentThread();
@@ -921,10 +867,6 @@ void Channel::ChannelImpl::CloseLocked() {
   if (pipe_ != -1) {
     IGNORE_EINTR(close(pipe_));
     SetPipe(-1);
-  }
-  if (client_pipe_ != -1) {
-    IGNORE_EINTR(close(client_pipe_));
-    client_pipe_ = -1;
   }
 
   while (!output_queue_.IsEmpty()) {
@@ -1218,11 +1160,6 @@ bool Channel::ChannelImpl::TransferMachPorts(Message& msg) {
 
 //------------------------------------------------------------------------------
 // Channel's methods simply call through to ChannelImpl.
-Channel::Channel(const ChannelId& channel_id, Mode mode, Listener* listener)
-    : channel_impl_(new ChannelImpl(channel_id, mode, listener)) {
-  MOZ_COUNT_CTOR(IPC::Channel);
-}
-
 Channel::Channel(ChannelHandle pipe, Mode mode, Listener* listener)
     : channel_impl_(new ChannelImpl(std::move(pipe), mode, listener)) {
   MOZ_COUNT_CTOR(IPC::Channel);
@@ -1242,14 +1179,6 @@ bool Channel::Send(mozilla::UniquePtr<Message> message) {
   return channel_impl_->Send(std::move(message));
 }
 
-void Channel::GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const {
-  return channel_impl_->GetClientFileDescriptorMapping(src_fd, dest_fd);
-}
-
-void Channel::CloseClientFileDescriptor() {
-  channel_impl_->CloseClientFileDescriptor();
-}
-
 int32_t Channel::OtherPid() const { return channel_impl_->OtherPid(); }
 
 bool Channel::IsClosed() const { return channel_impl_->IsClosed(); }
@@ -1263,12 +1192,6 @@ void Channel::StartAcceptingMachPorts(Mode mode) {
   channel_impl_->StartAcceptingMachPorts(mode);
 }
 #endif
-
-// static
-Channel::ChannelId Channel::GenerateVerifiedChannelID() { return {}; }
-
-// static
-Channel::ChannelId Channel::ChannelIDForCurrentProcess() { return {}; }
 
 // static
 bool Channel::CreateRawPipe(ChannelHandle* server, ChannelHandle* client) {

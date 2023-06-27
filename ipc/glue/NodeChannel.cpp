@@ -79,7 +79,7 @@ void NodeChannel::FinalDestroy() {
   delete this;
 }
 
-void NodeChannel::Start(bool aCallConnect) {
+void NodeChannel::Start() {
   AssertIOThread();
 
   mExistingListener = mChannel->set_listener(this);
@@ -89,24 +89,9 @@ void NodeChannel::Start(bool aCallConnect) {
     mExistingListener->GetQueuedMessages(pending);
   }
 
-  if (aCallConnect) {
-    MOZ_ASSERT(pending.empty(), "unopened channel with pending messages?");
-    if (!mChannel->Connect()) {
-      OnChannelError();
-    }
-  } else {
-    // Check if our channel has already been connected, and knows the other PID.
-    base::ProcessId otherPid = mChannel->OtherPid();
-    if (otherPid != base::kInvalidProcessId) {
-      SetOtherPid(otherPid);
-    }
-
-    // Handle any events the previous listener had queued up. Make sure to stop
-    // if an error causes our channel to become closed.
-    while (!pending.empty() && mState != State::Closed) {
-      OnMessageReceived(std::move(pending.front()));
-      pending.pop();
-    }
+  MOZ_ASSERT(pending.empty(), "unopened channel with pending messages?");
+  if (!mChannel->Connect()) {
+    OnChannelError();
   }
 }
 

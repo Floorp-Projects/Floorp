@@ -97,7 +97,7 @@ class NodeChannel final : public IPC::Channel::Listener {
 
   // Start communicating with the remote process using this NodeChannel. MUST BE
   // CALLED FROM THE IO THREAD.
-  void Start(bool aCallConnect = true);
+  void Start();
 
   // Stop communicating with the remote process using this NodeChannel, MUST BE
   // CALLED FROM THE IO THREAD.

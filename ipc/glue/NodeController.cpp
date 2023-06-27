@@ -773,7 +773,7 @@ std::tuple<ScopedPort, RefPtr<NodeChannel>> NodeController::InviteChildProcess(
                                    Invite{nodeChannel, ports.second.Release()});
   }
 
-  nodeChannel->Start(/* aCallConnect */ false);
+  nodeChannel->Start();
   return std::tuple{std::move(ports.first), std::move(nodeChannel)};
 }
 
@@ -805,7 +805,7 @@ ScopedPort NodeController::InitChildProcess(UniquePtr<IPC::Channel> aChannel,
         .AppendElement(toMerge);
   }
 
-  nodeChannel->Start(/* aCallConnect */ true);
+  nodeChannel->Start();
   nodeChannel->AcceptInvite(nodeName, toMerge.name());
   return std::move(ports.first);
 }
