@@ -387,6 +387,12 @@ impl VariableValue {
     pub fn css_text(&self) -> &str {
         &self.css
     }
+
+    /// Returns whether this variable value has any reference to the environment or other
+    /// variables.
+    pub fn has_references(&self) -> bool {
+        self.references_environment || !self.references.is_empty()
+    }
 }
 
 /// Parse the value of a non-custom property that contains `var()` references.
