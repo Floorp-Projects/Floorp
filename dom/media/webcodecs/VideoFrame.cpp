@@ -13,6 +13,7 @@
 
 #include "ImageContainer.h"
 #include "VideoColorSpace.h"
+#include "WebCodecsUtils.h"
 #include "js/StructuredClone.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
@@ -49,33 +50,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VideoFrame)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
-
-/*
- * The below are helpers to operate ArrayBuffer or ArrayBufferView.
- */
-template <class T>
-static Result<Span<uint8_t>, nsresult> GetArrayBufferData(const T& aBuffer) {
-  // Get buffer's data and length before using it.
-  aBuffer.ComputeState();
-
-  CheckedInt<size_t> byteLength(sizeof(typename T::element_type));
-  byteLength *= aBuffer.Length();
-  if (!byteLength.isValid()) {
-    return Err(NS_ERROR_INVALID_ARG);
-  }
-
-  return Span<uint8_t>(aBuffer.Data(), byteLength.value());
-}
-
-static Result<Span<uint8_t>, nsresult> GetSharedArrayBufferData(
-    const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
-  if (aBuffer.IsArrayBufferView()) {
-    return GetArrayBufferData(aBuffer.GetAsArrayBufferView());
-  }
-
-  MOZ_ASSERT(aBuffer.IsArrayBuffer());
-  return GetArrayBufferData(aBuffer.GetAsArrayBuffer());
-}
 
 /*
  * The following are utilities to convert between VideoColorSpace values to
