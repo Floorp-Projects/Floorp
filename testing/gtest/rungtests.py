@@ -6,12 +6,14 @@
 
 import argparse
 import os
+import subprocess
 import sys
+import threading
+import time
 
 import mozcrash
 import mozinfo
 import mozlog
-import mozprocess
 from mozrunner.utils import get_stack_fixer_function
 
 log = mozlog.unstructured.getLogger("gtest")
@@ -54,57 +56,76 @@ class GTests(object):
         if cwd and not os.path.isdir(cwd):
             os.makedirs(cwd)
 
-        stream_output = mozprocess.StreamOutput(sys.stdout)
-        process_output = stream_output
+        stack_fixer = None
         if utility_path:
             stack_fixer = get_stack_fixer_function(utility_path, symbols_path)
-            if stack_fixer:
-
-                def f(line):
-                    return stream_output(stack_fixer(line))
-
-                process_output = f
 
         proc = None
+        timed_out = False
 
-        def timeout_handler():
+        def proc_timeout_handler():
+            output_timer.cancel()
+            log.testFail("gtest | timed out after %d seconds", GTests.TEST_PROC_TIMEOUT)
             mozcrash.kill_and_get_minidump(proc.pid, cwd, utility_path)
 
-        proc = mozprocess.ProcessHandler(
-            [prog, "-unittest", "--gtest_death_test_style=threadsafe"],
-            cwd=cwd,
-            env=env,
-            kill_on_timeout=False,
-            onTimeout=(timeout_handler,),
-            processOutputLine=process_output,
-        )
-
-        proc.run(
-            timeout=GTests.TEST_PROC_TIMEOUT,
-            outputTimeout=GTests.TEST_PROC_NO_OUTPUT_TIMEOUT,
-        )
-        proc.wait()
-        log.info("gtest | process wait complete, returncode=%s" % proc.proc.returncode)
-        if proc.timedOut:
-            if proc.outputTimedOut:
+        def output_timeout_handler():
+            nonlocal output_timer
+            seconds_since_last_output = time.time() - output_time
+            next_possible_output_timeout = (
+                GTests.TEST_PROC_NO_OUTPUT_TIMEOUT - seconds_since_last_output
+            )
+            if next_possible_output_timeout <= 0:
+                proc_timer.cancel()
                 log.testFail(
                     "gtest | timed out after %d seconds without output",
                     GTests.TEST_PROC_NO_OUTPUT_TIMEOUT,
                 )
+                mozcrash.kill_and_get_minidump(proc.pid, cwd, utility_path)
             else:
-                log.testFail(
-                    "gtest | timed out after %d seconds", GTests.TEST_PROC_TIMEOUT
+                output_timer = threading.Timer(
+                    next_possible_output_timeout, output_timeout_handler
                 )
-            mozcrash.check_for_crashes(cwd, symbols_path, test_name="gtest")
-            return False
-        if mozcrash.check_for_crashes(cwd, symbols_path, test_name="gtest"):
-            # mozcrash will output the log failure line for us.
-            return False
-        result = proc.proc.returncode == 0
-        if not result:
-            log.testFail(
-                "gtest | test failed with return code %d", proc.proc.returncode
+                output_timer.start()
+
+        with subprocess.Popen(
+            [prog, "-unittest", "--gtest_death_test_style=threadsafe"],
+            cwd=cwd,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        ) as proc:
+
+            proc_timer = None
+            proc_timer = threading.Timer(GTests.TEST_PROC_TIMEOUT, proc_timeout_handler)
+            proc_timer.start()
+
+            output_time = time.time()
+            output_timer = None
+            output_timer = threading.Timer(
+                GTests.TEST_PROC_NO_OUTPUT_TIMEOUT, output_timeout_handler
             )
+            output_timer.start()
+
+            for line in proc.stdout:
+                output_time = time.time()
+                if stack_fixer:
+                    print(stack_fixer(line))
+                else:
+                    print(line)
+            proc.wait()
+            proc_timer.cancel()
+            output_timer.cancel()
+
+            log.info("gtest | process wait complete, returncode=%s" % proc.returncode)
+            if mozcrash.check_for_crashes(cwd, symbols_path, test_name="gtest"):
+                # mozcrash will output the log failure line for us.
+                return False
+            if timed_out:
+                return False
+            result = proc.returncode == 0
+            if not result:
+                log.testFail("gtest | test failed with return code %d", proc.returncode)
         return result
 
     def build_core_environment(self, env={}):
