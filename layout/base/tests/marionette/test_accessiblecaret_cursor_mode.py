@@ -78,15 +78,15 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         target_content = target_content[:1] + content_to_add + target_content[1:]
 
         # Get first caret (x, y) at position 1 and 2.
-        el.tap()
+        self.actions.click(element=el).perform()
         sel.move_cursor_to_front()
         cursor0_x, cursor0_y = sel.cursor_location()
         first_caret0_x, first_caret0_y = sel.first_caret_location()
         sel.move_cursor_by_offset(1)
         first_caret1_x, first_caret1_y = sel.first_caret_location()
 
-        # Tap the front of the input to make first caret appear.
-        el.tap(cursor0_x, cursor0_y)
+        # Click the front of the input to make first caret appear.
+        self.actions.move(el, cursor0_x, cursor0_y).click().perform()
 
         # Move first caret.
         self.actions.flick(
@@ -106,10 +106,10 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         content_to_add = "!"
         target_content = sel.content + content_to_add
 
-        # Tap the front of the input to make first caret appear.
-        el.tap()
+        # Click the front of the input to make first caret appear.
+        self.actions.click(element=el).perform()
         sel.move_cursor_to_front()
-        el.tap(*sel.cursor_location())
+        self.actions.move(el, *sel.cursor_location()).click().perform()
 
         # Move first caret to the bottom-right corner of the element.
         src_x, src_y = sel.first_caret_location()
@@ -130,17 +130,17 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         target_content = content_to_add + sel.content
 
         # Get first caret location at the front.
-        el.tap()
+        self.actions.click(element=el).perform()
         sel.move_cursor_to_front()
         dest_x, dest_y = sel.first_caret_location()
 
-        # Tap to make first caret appear. Note: it's strange that when the caret
+        # Click to make first caret appear. Note: it's strange that when the caret
         # is at the end, the rect of the caret in <textarea> cannot be obtained.
         # A bug perhaps.
-        el.tap()
+        self.actions.click(element=el).perform()
         sel.move_cursor_to_end()
         sel.move_cursor_by_offset(1, backward=True)
-        el.tap(*sel.cursor_location())
+        self.actions.move(el, *sel.cursor_location()).click().perform()
         src_x, src_y = sel.first_caret_location()
 
         # Move first caret to the front of the input box.
@@ -156,7 +156,7 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         content_to_add = "!"
         non_target_content = content_to_add + sel.content + string.ascii_letters
 
-        el.tap()
+        self.actions.click(element=el).perform()
         sel.move_cursor_to_end()
 
         # Insert a long string to the end of the <input>, which triggers
@@ -188,9 +188,9 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
 
         # Goal: the cursor position is not changed after dragging the caret down
         # on the Y-axis.
-        el.tap()
+        self.actions.click(element=el).perform()
         sel.move_cursor_to_front()
-        el.tap(*sel.cursor_location())
+        self.actions.move(el, *sel.cursor_location()).click().perform()
         x, y = sel.first_caret_location()
 
         # Drag the caret down by 50px, and insert '!'.
@@ -213,10 +213,10 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
 
         # Goal: the cursor position is not changed after dragging the caret down
         # on the Y-axis.
-        el.tap()
+        self.actions.click(element=el).perform()
         sel.move_cursor_to_end()
         sel.move_cursor_by_offset(1, backward=True)
-        el.tap(*sel.cursor_location())
+        self.actions.move(el, *sel.cursor_location()).click().perform()
         x, y = sel.first_caret_location()
 
         # Drag the caret up by 40px, and insert '!'.
@@ -234,13 +234,13 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         # Goal: the cursor position can be changed by dragging the caret from
         # the front to the end of the content.
 
-        # Tap to make the cursor appear.
+        # Click to make the cursor appear.
         before_image_1 = self.marionette.find_element(By.ID, "before-image-1")
-        before_image_1.tap()
+        self.actions.click(element=before_image_1).perform()
 
-        # Tap the front of the content to make first caret appear.
+        # Click the front of the content to make first caret appear.
         sel.move_cursor_to_front()
-        el.tap(*sel.cursor_location())
+        self.actions.move(el, *sel.cursor_location()).click().perform()
         src_x, src_y = sel.first_caret_location()
         dest_x, dest_y = el.rect["width"], el.rect["height"]
 
@@ -264,18 +264,18 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         # location then adding the new lines.
 
         # Get first caret location at the front.
-        el.tap()
+        self.actions.click(element=el).perform()
         sel.move_cursor_to_front()
         dest_x, dest_y = sel.first_caret_location()
 
         # Append new line to the front of the content.
         el.send_keys(content_to_add_2)
 
-        # Tap to make first caret appear.
-        el.tap()
+        # Click to make first caret appear.
+        self.actions.click(element=el).perform()
         sel.move_cursor_to_end()
         sel.move_cursor_by_offset(1, backward=True)
-        el.tap(*sel.cursor_location())
+        self.actions.move(el, *sel.cursor_location()).click().perform()
         src_x, src_y = sel.first_caret_location()
 
         # Move first caret to the front of the input box.

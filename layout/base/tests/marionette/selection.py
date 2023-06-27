@@ -12,35 +12,63 @@ class CaretActions(Actions):
         self._reset_action_chain()
 
     def _reset_action_chain(self):
+        # Release the action so that two consecutive clicks won't become a
+        # double-click.
+        self.release()
+
         self.mouse_chain = self.sequence(
             "pointer", "pointer_id", {"pointerType": "mouse"}
         )
         self.key_chain = self.sequence("key", "keyboard_id")
 
-    def flick(self, element, x1, y1, x2, y2, duration=200):
-        """Perform a flick gesture on the target element.
+    def move(self, element, x, y, duration=None):
+        """Queue a pointer_move action.
 
-        :param element: The element to perform the flick gesture on.
-        :param x1: Starting x-coordinate of flick, relative to the top left
-                   corner of the element.
-        :param y1: Starting y-coordinate of flick, relative to the top left
-                   corner of the element.
-        :param x2: Ending x-coordinate of flick, relative to the top left
-                   corner of the element.
-        :param y2: Ending y-coordinate of flick, relative to the top left
-                   corner of the element.
+        :param element: an element where its top-left corner is the origin of
+                        the coordinates.
+        :param x: Destination x-axis coordinate in CSS pixels.
+        :param y: Destination y-axis coordinate in CSS pixels.
+        :param duration: Number of milliseconds over which to distribute the
+                         move. If None, remote end defaults to 0.
 
         """
         rect = element.rect
         el_x, el_y = rect["x"], rect["y"]
 
-        # Add element's (x, y) to make the coordinate relative to the viewport.
-        from_x, from_y = int(el_x + x1), int(el_y + y1)
-        to_x, to_y = int(el_x + x2), int(el_y + y2)
+        # Add the element's top-left corner (el_x, el_y) to make the coordinate
+        # relative to the viewport.
+        dest_x, dest_y = int(el_x + x), int(el_y + y)
 
-        self.mouse_chain.pointer_move(from_x, from_y).pointer_down().pointer_move(
-            to_x, to_y, duration=duration
-        ).pointer_up()
+        self.mouse_chain.pointer_move(dest_x, dest_y, duration=duration)
+        return self
+
+    def click(self, element=None):
+        """Queue a click action.
+
+        If an element is given, move the pointer to that element first,
+        otherwise click current pointer coordinates.
+
+        :param element: Optional element to click.
+
+        """
+        self.mouse_chain.click(element=element)
+        return self
+
+    def flick(self, element, x1, y1, x2, y2, duration=200):
+        """Queue a flick gesture on the target element.
+
+        :param element: The element to perform the flick gesture on. Its
+                        top-left corner is the origin of the coordinates.
+        :param x1: Starting x-axis coordinate of the flick in CSS Pixels.
+        :param y1: Starting y-axis coordinate of the flick in CSS Pixels.
+        :param x2: Ending x-axis coordinate of the flick in CSS Pixels.
+        :param y2: Ending y-axis coordinate of the flick in CSS Pixels.
+
+        """
+        self.move(element, x1, y1, duration=0)
+        self.mouse_chain.pointer_down()
+        self.move(element, x2, y2, duration=duration)
+        self.mouse_chain.pointer_up()
         return self
 
     def send_keys(self, keys):
