@@ -58,6 +58,7 @@ parent:
 
   async DispatchCommands(BigBuffer commands, uint64_t size);
   async Ping() returns (void_t ok);
+  sync SyncPing();
   async TexImage(uint32_t level, uint32_t respecFormat, uvec3 offset,
                  PackingInfo pi, TexUnpackBlobDesc src);
 
