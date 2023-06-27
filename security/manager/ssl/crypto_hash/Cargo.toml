@@ -11,13 +11,5 @@ md-5 = "0.10.2"
 nserror = { path = "../../../../xpcom/rust/nserror" }
 nsstring = { path = "../../../../xpcom/rust/nsstring" }
 sha1 = "0.10.2"
-xpcom = { path = "../../../../xpcom/rust/xpcom" }
-
-# bug 1838108: on Windows 7 pre-SP1, AVX instructions are disabled, even though
-# they might be supported by the processor. cpufeatures doesn't take this into
-# account, so the assembly implementation causes illegal instruction crashes.
-# As a workaround for now, use the non-assembly implementation.
-[target.'cfg(windows)'.dependencies]
-sha2 = { version = "0.10.2", features = ["force-soft"]}
-[target.'cfg(not(windows))'.dependencies]
 sha2 = "0.10.2"
+xpcom = { path = "../../../../xpcom/rust/xpcom" }
