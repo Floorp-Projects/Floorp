@@ -18,7 +18,13 @@ runTest(async () => {
   await pushPrefs(["media.audio_loopback_dev", ""], ["media.navigator.streams.fake", false]);
 
   try {
-    let devices = await navigator.mediaDevices.enumerateDevices();
+    // Allow exposing microphone by calling gUM first
+    const defaultStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    for (const track of defaultStream.getTracks()) {
+      track.stop();
+    }
+
+    const devices = await navigator.mediaDevices.enumerateDevices();
     // Create constraints
     let constraints = [];
     devices.forEach((device) => {
@@ -29,28 +35,17 @@ runTest(async () => {
       }
     });
     if (constraints.length >= 2) {
-      // Create constraints
-      let constraints = [];
-      devices.forEach((device) => {
-        if (device.kind === "audioinput") {
-          constraints.push({
-            audio: { deviceId: { exact: device.deviceId } },
-          });
-        }
-      });
       // Open microphones by the constraints
       let mediaStreams = [];
-      for (let c of constraints) {
+      for (const c of constraints) {
         let stream = await navigator.mediaDevices.getUserMedia(c);
-        dump("MediaStream: " + stream.id + " for device: " + c.audio.deviceId.exact + " is created\n");
         mediaStreams.push(stream);
       }
       // Close microphones
-      for (let stream of mediaStreams) {
-        for (let track of stream.getTracks()) {
+      for (const stream of mediaStreams) {
+        for (const track of stream.getTracks()) {
           track.stop();
         }
-        dump("Stop all tracks in MediaStream: " + stream.id + "\n");
       }
       mediaStreams = [];
     } else {
