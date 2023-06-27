@@ -13,8 +13,6 @@
 #include "nsCoord.h"
 #include "nsString.h"
 
-class nsIURI;
-
 /**
  * Read-only CSS primitive value - a DOM object representing values in DOM
  * computed style.
@@ -25,29 +23,17 @@ class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
     CSS_UNKNOWN,
     CSS_NUMBER,
     CSS_PERCENTAGE,
-    CSS_EMS,
-    CSS_EXS,
     CSS_PX,
-    CSS_CM,
-    CSS_MM,
-    CSS_IN,
-    CSS_PT,
-    CSS_PC,
     CSS_DEG,
-    CSS_MS,
     CSS_S,
-    CSS_HZ,
-    CSS_KHZ,
-    CSS_DIMENSION,
     CSS_STRING,
-    CSS_URI,
     CSS_RGBCOLOR,
     CSS_NUMBER_INT32,
     CSS_NUMBER_UINT32,
   };
 
   // CSSValue
-  void GetCssText(nsString& aText, mozilla::ErrorResult& aRv) final;
+  void GetCssText(nsAString&) final;
   uint16_t CssValueType() const final;
 
   // CSSPrimitiveValue
@@ -72,7 +58,6 @@ class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
     SetString(nsLiteralCString(aString));
   }
 
-  void SetURI(nsIURI* aURI);
   void SetTime(float aValue);
   void Reset();
 
@@ -86,7 +71,6 @@ class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue {
     int32_t mInt32;
     uint32_t mUint32;
     char16_t* mString;
-    nsIURI* MOZ_OWNING_REF mURI;
   } mValue;
 };
 

@@ -192,7 +192,7 @@ void AnonymousContent::GetComputedStylePropertyValue(
   RefPtr<nsComputedDOMStyle> cs = new nsComputedDOMStyle(
       element, PseudoStyleType::NotPseudo, element->OwnerDoc(),
       nsComputedDOMStyle::StyleType::All);
-  aRv = cs->GetPropertyValue(aPropertyName, aResult);
+  cs->GetPropertyValue(aPropertyName, aResult);
 }
 
 void AnonymousContent::GetTargetIdForEvent(Event& aEvent, DOMString& aResult) {

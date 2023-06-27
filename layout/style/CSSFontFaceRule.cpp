@@ -62,15 +62,13 @@ void CSSFontFaceRuleDecl::SetCssText(const nsACString& aCssText,
       "Can't set cssText on CSSFontFaceRule declarations");
 }
 
-NS_IMETHODIMP
-CSSFontFaceRuleDecl::GetPropertyValue(const nsACString& aPropName,
-                                      nsACString& aResult) {
+void CSSFontFaceRuleDecl::GetPropertyValue(const nsACString& aPropName,
+                                           nsACString& aResult) {
   aResult.Truncate();
   nsCSSFontDesc descID = nsCSSProps::LookupFontDesc(aPropName);
   if (descID != eCSSFontDesc_UNKNOWN) {
     GetPropertyValue(descID, aResult);
   }
-  return NS_OK;
 }
 
 void CSSFontFaceRuleDecl::RemoveProperty(const nsACString& aPropName,

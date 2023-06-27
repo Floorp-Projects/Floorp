@@ -33,7 +33,7 @@ class CSSValue : public RefCounted<CSSValue> {
   };
 
   // CSSValue
-  virtual void GetCssText(nsString& aText, ErrorResult& aRv) = 0;
+  virtual void GetCssText(nsAString&) = 0;
   virtual uint16_t CssValueType() const = 0;
 
   virtual ~CSSValue() = default;

@@ -11,7 +11,6 @@
 #include "mozilla/ErrorResult.h"
 #include "nsPresContext.h"
 #include "nsStyleUtil.h"
-#include "nsIURI.h"
 #include "nsError.h"
 
 using namespace mozilla;
@@ -23,7 +22,7 @@ nsROCSSPrimitiveValue::nsROCSSPrimitiveValue() : CSSValue(), mType(CSS_PX) {
 
 nsROCSSPrimitiveValue::~nsROCSSPrimitiveValue() { Reset(); }
 
-void nsROCSSPrimitiveValue::GetCssText(nsString& aCssText, ErrorResult& aRv) {
+void nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText) {
   nsAutoString tmpStr;
   aCssText.Truncate();
 
@@ -35,28 +34,6 @@ void nsROCSSPrimitiveValue::GetCssText(nsString& aCssText, ErrorResult& aRv) {
     }
     case CSS_STRING: {
       tmpStr.Append(mValue.mString);
-      break;
-    }
-    case CSS_URI: {
-      if (mValue.mURI) {
-        nsAutoCString specUTF8;
-        nsresult rv = mValue.mURI->GetSpec(specUTF8);
-        if (NS_FAILED(rv)) {
-          aRv.ThrowInvalidStateError("Can't get URL string for url()");
-          return;
-        }
-
-        tmpStr.AssignLiteral("url(");
-        nsStyleUtil::AppendEscapedCSSString(NS_ConvertUTF8toUTF16(specUTF8),
-                                            tmpStr);
-        tmpStr.Append(')');
-      } else {
-        // http://dev.w3.org/csswg/css3-values/#attr defines
-        // 'about:invalid' as the default value for url attributes,
-        // so let's also use it here as the default computed value
-        // for invalid URLs.
-        tmpStr.AssignLiteral(u"url(about:invalid)");
-      }
       break;
     }
     case CSS_PERCENTAGE: {
@@ -86,21 +63,6 @@ void nsROCSSPrimitiveValue::GetCssText(nsString& aCssText, ErrorResult& aRv) {
       tmpStr.Append('s');
       break;
     }
-    case CSS_CM:
-    case CSS_MM:
-    case CSS_IN:
-    case CSS_PT:
-    case CSS_PC:
-    case CSS_UNKNOWN:
-    case CSS_EMS:
-    case CSS_EXS:
-    case CSS_MS:
-    case CSS_HZ:
-    case CSS_KHZ:
-    case CSS_DIMENSION:
-      NS_ERROR("We have a bogus value set.  This should not happen");
-      aRv.ThrowInvalidAccessError("Unexpected value in computed style");
-      return;
   }
 
   aCssText.Assign(tmpStr);
@@ -176,13 +138,6 @@ void nsROCSSPrimitiveValue::SetString(const nsAString& aString) {
   }
 }
 
-void nsROCSSPrimitiveValue::SetURI(nsIURI* aURI) {
-  Reset();
-  mValue.mURI = aURI;
-  NS_IF_ADDREF(mValue.mURI);
-  mType = CSS_URI;
-}
-
 void nsROCSSPrimitiveValue::SetTime(float aValue) {
   Reset();
   mValue.mFloat = aValue;
@@ -195,9 +150,6 @@ void nsROCSSPrimitiveValue::Reset() {
       NS_ASSERTION(mValue.mString, "Null string should never happen");
       free(mValue.mString);
       mValue.mString = nullptr;
-      break;
-    case CSS_URI:
-      NS_IF_RELEASE(mValue.mURI);
       break;
   }
 

@@ -60,14 +60,10 @@ static int32_t GetCSSFloatValue(nsComputedDOMStyle* aComputedStyle,
 
   // get the computed CSSValue of the property
   nsAutoCString value;
-  nsresult rv = aComputedStyle->GetPropertyValue(aProperty, value);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("nsComputedDOMStyle::GetPropertyValue() failed");
-    return 0;
-  }
-
+  aComputedStyle->GetPropertyValue(aProperty, value);
   // We only care about resolved values, not a big deal if the element is
   // undisplayed, for example, and the value is "auto" or what not.
+  nsresult rv = NS_OK;
   int32_t val = value.ToInteger(&rv);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "nsAString::ToInteger() failed");
   return NS_SUCCEEDED(rv) ? val : 0;
