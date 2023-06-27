@@ -6382,10 +6382,6 @@
 # The first enables WR+additional features, and the second just enables WR.
 # For developer convenience, building with --enable-webrender=true or just
 # --enable-webrender will set gfx.webrender.enabled to true by default.
-#
-# We also have a pref gfx.webrender.all.qualified which is not exposed via
-# about:config. That pref enables WR but only on qualified hardware. This is
-# the pref we'll eventually flip to deploy WebRender to the target population.
 - name: gfx.webrender.all
   type: bool
   value: false
