@@ -63,7 +63,7 @@ $schema: moz://mozilla.org/schemas/glean/tags/1-0-0
   description: The Bugzilla component which applies to this object.
 'Core :: DOM: Performance':
   description: The Bugzilla component which applies to this object.
-'Core :: DOM: Push Notifications':
+'Core :: DOM: Notifications':
   description: The Bugzilla component which applies to this object.
 'Core :: DOM: Security':
   description: The Bugzilla component which applies to this object.
