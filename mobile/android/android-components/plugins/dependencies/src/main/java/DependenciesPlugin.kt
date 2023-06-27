@@ -20,7 +20,7 @@ object Versions {
     const val python_envs_plugin = "0.0.31"
 
     const val junit = "4.13.2"
-    const val robolectric = "4.10.1"
+    const val robolectric = "4.10.3"
     const val mockito = "5.3.1"
     const val maven_ant_tasks = "2.1.3"
     const val jacoco = "0.8.10"
