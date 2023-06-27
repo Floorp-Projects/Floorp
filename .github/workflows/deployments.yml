@@ -763,6 +763,8 @@ jobs:
   Deployments:
     needs: [build-linux-x86_64-with-PGO, build-linux-aarch64, cleanup, build-with-profdata-and-jarlog, get-display-version]
     runs-on: ubuntu-latest
+    environment: 
+      name: Deploy-to-stable-release
     steps:
     - uses: actions/checkout@v3
 
