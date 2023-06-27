@@ -9,6 +9,7 @@
 #include "EditorForwards.h"   // for CollectChildrenOptions
 #include "HTMLEditUtils.h"    // for HTMLEditUtils
 #include "HTMLEditHelpers.h"  // for SplitNodeResult
+#include "TextEditor.h"       // for TextEditor
 #include "WSRunObject.h"      // for WSRunScanner
 
 #include "mozilla/IntegerRange.h"       // for IntegerRange
@@ -313,7 +314,11 @@ AutoRangeArray::ExtendAnchorFocusRangeFor(
 
       // node might be anonymous DIV, so we find better text node
       const EditorDOMPoint insertionPoint =
-          aEditorBase.FindBetterInsertionPoint(atStartOfSelection);
+          aEditorBase.IsTextEditor()
+              ? aEditorBase.AsTextEditor()->FindBetterInsertionPoint(
+                    atStartOfSelection)
+              : atStartOfSelection.GetPointInTextNodeIfPointingAroundTextNode<
+                    EditorDOMPoint>();
       if (MOZ_UNLIKELY(!insertionPoint.IsSet())) {
         NS_WARNING(
             "EditorBase::FindBetterInsertionPoint() failed, but ignored");
