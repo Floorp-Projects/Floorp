@@ -179,14 +179,8 @@ pub struct VariableValue {
     first_token_type: TokenSerializationType,
     last_token_type: TokenSerializationType,
 
-    /// Whether a variable value has a reference to an environment variable.
-    ///
-    /// If this is the case, we need to perform variable substitution on the
-    /// value.
-    references_environment: bool,
-
-    /// Custom property names in var() functions.
-    references: Box<[Name]>,
+    /// var() or env() references.
+    references: VarOrEnvReferences,
 }
 
 impl ToCss for SpecifiedValue {
@@ -220,10 +214,16 @@ pub type ComputedValue = VariableValue;
 
 /// A struct holding information about the external references to that a custom
 /// property value may have.
-#[derive(Default)]
+#[derive(Clone, Debug, Default, MallocSizeOf, PartialEq, ToShmem)]
 struct VarOrEnvReferences {
-    custom_property_references: PrecomputedHashSet<Name>,
-    references_environment: bool,
+    custom_properties: PrecomputedHashSet<Name>,
+    environment: bool,
+}
+
+impl VarOrEnvReferences {
+    fn has_references(&self) -> bool {
+        self.environment || !self.custom_properties.is_empty()
+    }
 }
 
 impl VariableValue {
@@ -233,7 +233,6 @@ impl VariableValue {
             last_token_type: TokenSerializationType::nothing(),
             first_token_type: TokenSerializationType::nothing(),
             references: Default::default(),
-            references_environment: false,
         }
     }
 
@@ -298,7 +297,7 @@ impl VariableValue {
         input: &Parser<'i, '_>,
         variable: &ComputedValue,
     ) -> Result<(), ParseError<'i>> {
-        debug_assert!(variable.references.is_empty());
+        debug_assert!(!variable.has_references());
         self.push(
             input,
             &variable.css,
@@ -314,21 +313,16 @@ impl VariableValue {
         let (first_token_type, css, last_token_type) =
             parse_self_contained_declaration_value(input, Some(&mut references))?;
 
-        let custom_property_references = references
-            .custom_property_references
-            .into_iter()
-            .collect::<Vec<_>>()
-            .into_boxed_slice();
-
         let mut css = css.into_owned();
         css.shrink_to_fit();
+
+        references.custom_properties.shrink_to_fit();
 
         Ok(Arc::new(VariableValue {
             css,
             first_token_type,
             last_token_type,
-            references: custom_property_references,
-            references_environment: references.references_environment,
+            references,
         }))
     }
 
@@ -379,7 +373,6 @@ impl VariableValue {
             first_token_type: token_type,
             last_token_type: token_type,
             references: Default::default(),
-            references_environment: false,
         }
     }
 
@@ -391,7 +384,7 @@ impl VariableValue {
     /// Returns whether this variable value has any reference to the environment or other
     /// variables.
     pub fn has_references(&self) -> bool {
-        self.references_environment || !self.references.is_empty()
+        self.references.has_references()
     }
 }
 
@@ -603,7 +596,7 @@ fn parse_var_function<'i, 't>(
         parse_fallback(input)?;
     }
     if let Some(refs) = references {
-        refs.custom_property_references.insert(Atom::from(name));
+        refs.custom_properties.insert(Atom::from(name));
     }
     Ok(())
 }
@@ -619,7 +612,7 @@ fn parse_env_function<'i, 't>(
         parse_fallback(input)?;
     }
     if let Some(references) = references {
-        references.references_environment = true;
+        references.environment = true;
     }
     Ok(())
 }
@@ -680,13 +673,16 @@ impl<'a> CustomPropertiesBuilder<'a> {
         let map = self.custom_properties.as_mut().unwrap();
         match *value {
             CustomDeclarationValue::Value(ref unparsed_value) => {
-                let has_references = !unparsed_value.references.is_empty();
-                self.may_have_cycles |= has_references;
+                let has_custom_property_references =
+                    !unparsed_value.references.custom_properties.is_empty();
+                self.may_have_cycles |= has_custom_property_references;
 
-                // If the variable value has no references and it has an
-                // environment variable here, perform substitution here instead
-                // of forcing a full traversal in `substitute_all` afterwards.
-                let value = if !has_references && unparsed_value.references_environment {
+                // If the variable value has no references and it has an environment variable here,
+                // perform substitution here instead of forcing a full traversal in
+                // `substitute_all` afterwards.
+                let value = if !has_custom_property_references &&
+                    unparsed_value.references.environment
+                {
                     let result = substitute_references_in_value(unparsed_value, &map, &self.device);
                     match result {
                         Ok(new_value) => new_value,
@@ -869,9 +865,9 @@ fn substitute_all(
             let value = context.map.get(name)?;
 
             // Nothing to resolve.
-            if value.references.is_empty() {
+            if value.references.custom_properties.is_empty() {
                 debug_assert!(
-                    !value.references_environment,
+                    !value.references.environment,
                     "Should've been handled earlier"
                 );
                 return None;
@@ -906,7 +902,7 @@ fn substitute_all(
 
         let mut self_ref = false;
         let mut lowlink = index;
-        for next in value.references.iter() {
+        for next in value.references.custom_properties.iter() {
             let next_index = match traverse(next, context) {
                 Some(index) => index,
                 // There is nothing to do if the next variable has been
@@ -1014,7 +1010,7 @@ fn substitute_references_in_value<'i>(
     custom_properties: &CustomPropertiesMap,
     device: &Device,
 ) -> Result<Arc<ComputedValue>, ParseError<'i>> {
-    debug_assert!(!value.references.is_empty() || value.references_environment);
+    debug_assert!(value.has_references());
 
     let mut input = ParserInput::new(&value.css);
     let mut input = Parser::new(&mut input);
