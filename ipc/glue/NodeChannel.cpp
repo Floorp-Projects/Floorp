@@ -85,9 +85,7 @@ void NodeChannel::FinalDestroy() {
 void NodeChannel::Start() {
   AssertIOThread();
 
-  MOZ_ALWAYS_TRUE(nullptr == mChannel->set_listener(this));
-
-  if (!mChannel->Connect()) {
+  if (!mChannel->Connect(this)) {
     OnChannelError();
   }
 }
@@ -97,7 +95,6 @@ void NodeChannel::Close() {
 
   if (mState.exchange(State::Closed) != State::Closed) {
     mChannel->Close();
-    mChannel->set_listener(nullptr);
   }
 }
 
@@ -296,9 +293,8 @@ void NodeChannel::OnChannelError() {
     return;
   }
 
-  // Clean up the channel and make sure we're no longer the active listener.
+  // Clean up the channel.
   mChannel->Close();
-  MOZ_ALWAYS_TRUE(this == mChannel->set_listener(nullptr));
 
   // Tell our listener about the error.
   mListener->OnChannelError(mName);

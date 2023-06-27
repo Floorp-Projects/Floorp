@@ -140,11 +140,10 @@ void Channel::SetClientChannelFd(int fd) { gClientChannelFd = fd; }
 
 int Channel::GetClientChannelHandle() { return gClientChannelFd; }
 
-Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
-                                  Listener* listener)
+Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode)
     : chan_cap_("ChannelImpl::SendMutex",
                 MessageLoopForIO::current()->SerialEventTarget()) {
-  Init(mode, listener);
+  Init(mode);
   SetPipe(pipe.release());
 
   EnqueueHelloMessage();
@@ -176,7 +175,7 @@ bool Channel::ChannelImpl::PipeBufHasSpaceAfter(size_t already_written) {
          static_cast<size_t>(pipe_buf_len_) > already_written;
 }
 
-void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
+void Channel::ChannelImpl::Init(Mode mode) {
   // Verify that we fit in a "quantum-spaced" jemalloc bucket.
   static_assert(sizeof(*this) <= 512, "Exceeded expected size class");
 
@@ -193,7 +192,6 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   input_buf_ = mozilla::MakeUnique<char[]>(Channel::kReadBufferSize);
   input_cmsg_buf_ = mozilla::MakeUnique<char[]>(kControlBufferSize);
   SetPipe(-1);
-  listener_ = listener;
   waiting_connect_ = true;
 #if defined(XP_DARWIN)
   last_pending_fd_id_ = 0;
@@ -213,18 +211,23 @@ bool Channel::ChannelImpl::EnqueueHelloMessage() {
   return true;
 }
 
-bool Channel::ChannelImpl::Connect() {
+bool Channel::ChannelImpl::Connect(Listener* listener) {
   IOThread().AssertOnCurrentThread();
   mozilla::MutexAutoLock lock(SendMutex());
-  return ConnectLocked();
-}
-
-bool Channel::ChannelImpl::ConnectLocked() {
   chan_cap_.NoteExclusiveAccess();
 
   if (pipe_ == -1) {
     return false;
   }
+
+  listener_ = listener;
+
+  return ContinueConnect();
+}
+
+bool Channel::ChannelImpl::ContinueConnect() {
+  chan_cap_.NoteExclusiveAccess();
+  MOZ_ASSERT(pipe_ != -1);
 
 #if defined(XP_DARWIN)
   // If we're still waiting for our peer task to be provided, don't start
@@ -900,7 +903,7 @@ void Channel::ChannelImpl::SetOtherMachTask(task_t task) {
   MOZ_ASSERT(accept_mach_ports_ && privileged_ && waiting_connect_);
   other_task_ = mozilla::RetainMachSendRight(task);
   // Now that `other_task_` is provided, we can continue connecting.
-  ConnectLocked();
+  ContinueConnect();
 }
 
 void Channel::ChannelImpl::StartAcceptingMachPorts(Mode mode) {
@@ -1160,20 +1163,18 @@ bool Channel::ChannelImpl::TransferMachPorts(Message& msg) {
 
 //------------------------------------------------------------------------------
 // Channel's methods simply call through to ChannelImpl.
-Channel::Channel(ChannelHandle pipe, Mode mode, Listener* listener)
-    : channel_impl_(new ChannelImpl(std::move(pipe), mode, listener)) {
+Channel::Channel(ChannelHandle pipe, Mode mode)
+    : channel_impl_(new ChannelImpl(std::move(pipe), mode)) {
   MOZ_COUNT_CTOR(IPC::Channel);
 }
 
 Channel::~Channel() { MOZ_COUNT_DTOR(IPC::Channel); }
 
-bool Channel::Connect() { return channel_impl_->Connect(); }
+bool Channel::Connect(Listener* listener) {
+  return channel_impl_->Connect(listener);
+}
 
 void Channel::Close() { channel_impl_->Close(); }
-
-Channel::Listener* Channel::set_listener(Listener* listener) {
-  return channel_impl_->set_listener(listener);
-}
 
 bool Channel::Send(mozilla::UniquePtr<Message> message) {
   return channel_impl_->Send(std::move(message));

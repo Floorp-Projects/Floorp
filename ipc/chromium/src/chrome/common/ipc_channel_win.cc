@@ -42,13 +42,12 @@ Channel::ChannelImpl::State::~State() {
 
 //------------------------------------------------------------------------------
 
-Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
-                                  Listener* listener)
+Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode)
     : chan_cap_("ChannelImpl::SendMutex",
                 MessageLoopForIO::current()->SerialEventTarget()),
       ALLOW_THIS_IN_INITIALIZER_LIST(input_state_(this)),
       ALLOW_THIS_IN_INITIALIZER_LIST(output_state_(this)) {
-  Init(mode, listener);
+  Init(mode);
 
   if (!pipe) {
     return;
@@ -58,7 +57,7 @@ Channel::ChannelImpl::ChannelImpl(ChannelHandle pipe, Mode mode,
   EnqueueHelloMessage();
 }
 
-void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
+void Channel::ChannelImpl::Init(Mode mode) {
   // Verify that we fit in a "quantum-spaced" jemalloc bucket.
   static_assert(sizeof(*this) <= 512, "Exceeded expected size class");
 
@@ -66,7 +65,6 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
 
   mode_ = mode;
   pipe_ = INVALID_HANDLE_VALUE;
-  listener_ = listener;
   waiting_connect_ = true;
   processing_incoming_ = false;
   input_buf_offset_ = 0;
@@ -181,12 +179,14 @@ bool Channel::ChannelImpl::EnqueueHelloMessage() {
   return true;
 }
 
-bool Channel::ChannelImpl::Connect() {
+bool Channel::ChannelImpl::Connect(Listener* listener) {
   IOThread().AssertOnCurrentThread();
   mozilla::MutexAutoLock lock(SendMutex());
   chan_cap_.NoteExclusiveAccess();
 
   if (pipe_ == INVALID_HANDLE_VALUE) return false;
+
+  listener_ = listener;
 
   MessageLoopForIO::current()->RegisterIOHandler(pipe_, this);
   waiting_connect_ = false;
@@ -639,23 +639,21 @@ bool Channel::ChannelImpl::TransferHandles(Message& msg) {
 
 //------------------------------------------------------------------------------
 // Channel's methods simply call through to ChannelImpl.
-Channel::Channel(ChannelHandle pipe, Mode mode, Listener* listener)
-    : channel_impl_(new ChannelImpl(std::move(pipe), mode, listener)) {
+Channel::Channel(ChannelHandle pipe, Mode mode)
+    : channel_impl_(new ChannelImpl(std::move(pipe), mode)) {
   MOZ_COUNT_CTOR(IPC::Channel);
 }
 
 Channel::~Channel() { MOZ_COUNT_DTOR(IPC::Channel); }
 
-bool Channel::Connect() { return channel_impl_->Connect(); }
+bool Channel::Connect(Listener* listener) {
+  return channel_impl_->Connect(listener);
+}
 
 void Channel::Close() { channel_impl_->Close(); }
 
 void Channel::StartAcceptingHandles(Mode mode) {
   channel_impl_->StartAcceptingHandles(mode);
-}
-
-Channel::Listener* Channel::set_listener(Listener* listener) {
-  return channel_impl_->set_listener(listener);
 }
 
 bool Channel::Send(mozilla::UniquePtr<Message> message) {
