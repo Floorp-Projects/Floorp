@@ -33,8 +33,7 @@ void AudioSinkWrapper::Shutdown() {
 }
 
 /* static */
-already_AddRefed<nsISerialEventTarget>
-AudioSinkWrapper::CreateAsyncInitTaskQueue() {
+already_AddRefed<TaskQueue> AudioSinkWrapper::CreateAsyncInitTaskQueue() {
   return nsThreadManager::get().CreateBackgroundTaskQueue("AsyncAudioSinkInit");
 }
 
@@ -372,7 +371,10 @@ RefPtr<GenericPromise> AudioSinkWrapper::MaybeAsyncCreateAudioSink(
                      [self = RefPtr<AudioSinkWrapper>(this),
                       audioSink{std::move(audioSink)},
                       audioDevice = mAudioDevice, this]() mutable {
-                       if (!audioSink) {
+                       if (!audioSink || !mAsyncInitTaskQueue->IsEmpty()) {
+                         // Either an AudioSink is not required or there's a
+                         // pending task to init an AudioSink with a possibly
+                         // different device.
                          return Promise::CreateAndResolve(nullptr, __func__);
                        }
 
