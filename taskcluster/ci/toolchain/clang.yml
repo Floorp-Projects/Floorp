@@ -511,7 +511,7 @@ linux64-clang-trunk-mingw-x86:
     fetches:
         fetch:
             - clang-trunk
-            - mingw-w64
+            - mingw-w64-trunk
             - llvm-mingw
             - gcc-9.5.0
         toolchain:
@@ -539,7 +539,7 @@ linux64-clang-trunk-mingw-x64:
     fetches:
         fetch:
             - clang-trunk
-            - mingw-w64
+            - mingw-w64-trunk
             - llvm-mingw
             - gcc-9.5.0
         toolchain:

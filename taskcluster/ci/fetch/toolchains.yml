@@ -317,6 +317,15 @@ mingw-w64:
         repo: https://git.code.sf.net/p/mingw-w64/mingw-w64
         revision: f9500e2d85b9400c0982518663660a127e1dc61a
 
+mingw-w64-trunk:
+    description: mingw-w64 master branch source code
+    attributes:
+        cached_task: false
+    fetch:
+        type: git
+        repo: https://git.code.sf.net/p/mingw-w64/mingw-w64
+        branch: master
+
 llvm-mingw:
     description: llvm-mingw source code
     fetch:
