@@ -23,9 +23,15 @@
       type="module"
       src="chrome://browser/content/shopping/shopping.mjs"
     ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/shopping/highlights.mjs"
+    ></script>
     <title data-l10n-id="shopping-page-title"></title>
   </head>
   <body>
-    <div id="content"></div>
+    <div id="content">
+      <review-highlights hidden />
+    </div>
   </body>
 </html>

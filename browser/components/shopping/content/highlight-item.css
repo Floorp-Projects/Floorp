@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Separate logo, label and details into rows and columns */
+.highlight-item-wrapper {
+  align-items: center;
+  display: grid;
+  column-gap: 1em;
+  grid-template-columns: 1rem auto;
+  grid-template-rows: 1rem auto;
+}
+
+.highlight-icon {
+  content: url("chrome://global/skin/icons/defaultFavicon.svg");
+  fill: currentColor;
+  -moz-context-properties: fill;
+  grid-row-start: 1;
+  grid-column-start: 1;
+}
+.highlight-label {
+  font-weight: 590;
+  grid-column-start: 2;
+  grid-row-start: 1;
+}
+
+.highlight-details {
+  grid-column-start: 2;
+  grid-row-start: 2;
+  margin: 0;
+  padding: 0;
+}
+
+.highlight-details-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.highlight-details-list > li {
+  margin: 1em 0;
+}
