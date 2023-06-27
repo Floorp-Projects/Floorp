@@ -717,7 +717,7 @@ nsresult BlobURLProtocolHandler::GenerateURIString(nsIPrincipal* aPrincipal,
 
   if (aPrincipal) {
     nsAutoCString origin;
-    rv = aPrincipal->GetAsciiOrigin(origin);
+    rv = aPrincipal->GetWebExposedOriginSerialization(origin);
     if (NS_FAILED(rv)) {
       origin.AssignLiteral("null");
     }

@@ -120,9 +120,11 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP PostMessageEvent::Run() {
           "Target and source should have the same userContextId attribute.");
 
       nsAutoString providedOrigin, targetOrigin;
-      nsresult rv = nsContentUtils::GetUTFOrigin(targetPrin, targetOrigin);
+      nsresult rv = nsContentUtils::GetWebExposedOriginSerialization(
+          targetPrin, targetOrigin);
       NS_ENSURE_SUCCESS(rv, rv);
-      rv = nsContentUtils::GetUTFOrigin(mProvidedPrincipal, providedOrigin);
+      rv = nsContentUtils::GetWebExposedOriginSerialization(mProvidedPrincipal,
+                                                            providedOrigin);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsAutoString errorText;

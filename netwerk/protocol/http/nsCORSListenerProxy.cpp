@@ -642,7 +642,7 @@ nsresult nsCORSListenerProxy::CheckRequestApproved(nsIRequest* aRequest) {
   if (mWithCredentials || !allowedOriginHeader.EqualsLiteral("*")) {
     MOZ_ASSERT(!mOriginHeaderPrincipal->GetIsExpandedPrincipal());
     nsAutoCString origin;
-    mOriginHeaderPrincipal->GetAsciiOrigin(origin);
+    mOriginHeaderPrincipal->GetWebExposedOriginSerialization(origin);
 
     if (!allowedOriginHeader.Equals(origin)) {
       LogBlockedRequest(
@@ -1029,7 +1029,7 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
 
   // Add the Origin header
   nsAutoCString origin;
-  rv = mOriginHeaderPrincipal->GetAsciiOrigin(origin);
+  rv = mOriginHeaderPrincipal->GetWebExposedOriginSerialization(origin);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aChannel);

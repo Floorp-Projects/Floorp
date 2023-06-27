@@ -2220,7 +2220,8 @@ void WorkerPrivate::SetBaseURI(nsIURI* aBaseURI) {
     mLocationInfo.mHost.Assign(mLocationInfo.mHostname);
   }
 
-  nsContentUtils::GetUTFOrigin(aBaseURI, mLocationInfo.mOrigin);
+  nsContentUtils::GetWebExposedOriginSerialization(aBaseURI,
+                                                   mLocationInfo.mOrigin);
 }
 
 nsresult WorkerPrivate::SetPrincipalsAndCSPOnMainThread(

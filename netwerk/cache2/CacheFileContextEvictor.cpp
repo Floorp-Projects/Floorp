@@ -686,7 +686,7 @@ void CacheFileContextEvictor::EvictEntries() {
       }
 
       nsAutoString urlOrigin;
-      rv = nsContentUtils::GetUTFOrigin(uri, urlOrigin);
+      rv = nsContentUtils::GetWebExposedOriginSerialization(uri, urlOrigin);
       if (NS_FAILED(rv)) {
         LOG(
             ("CacheFileContextEvictor::EvictEntries() - Skipping entry since "

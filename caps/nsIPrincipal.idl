@@ -271,12 +271,19 @@ interface nsIPrincipal : nsISupports
     readonly attribute ACString origin;
 
     /**
-     * Returns an ASCII compatible representation
-     * of the principals Origin
+     * Returns an ASCII compatible serialization of the principal's origin, as
+     * specified by the whatwg HTML specification. If the principal does not
+     * have a host, the origin will be "null".
+     *
+     * https://html.spec.whatwg.org/multipage/browsers.html#ascii-serialisation-of-an-origin
+     *
+     * Note that this is different from `origin`, does not contain
+     * gecko-specific metadata like origin attributes, and should not be used
+     * for permissions or security checks.
      *
      * May be called from any thread.
      */
-    [noscript] readonly attribute ACString asciiOrigin;
+    [noscript] readonly attribute ACString webExposedOriginSerialization;
 
     /**
      * Returns the "host:port" portion of the

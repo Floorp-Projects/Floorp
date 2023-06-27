@@ -102,7 +102,7 @@ nsresult nsDOMDataChannel::Init(nsPIDOMWindowInner* aDOMWindow) {
   rv = CheckCurrentGlobalCorrectness();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = nsContentUtils::GetUTFOrigin(principal, mOrigin);
+  rv = nsContentUtils::GetWebExposedOriginSerialization(principal, mOrigin);
   DC_DEBUG(("%s: origin = %s\n", __FUNCTION__,
             NS_LossyConvertUTF16toASCII(mOrigin).get()));
   return rv;

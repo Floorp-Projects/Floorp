@@ -307,7 +307,7 @@ void DynamicFpiRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
   }
 
   nsAutoCString newOrigin;
-  rv = nsContentUtils::GetASCIIOrigin(aNewURI, newOrigin);
+  rv = nsContentUtils::GetWebExposedOriginSerialization(aNewURI, newOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Can't get the origin from the URI"));
     return;

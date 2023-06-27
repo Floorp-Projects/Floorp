@@ -295,7 +295,7 @@ void Location::GetOrigin(nsAString& aOrigin, nsIPrincipal& aSubjectPrincipal,
   }
 
   nsAutoString origin;
-  aRv = nsContentUtils::GetUTFOrigin(uri, origin);
+  aRv = nsContentUtils::GetWebExposedOriginSerialization(uri, origin);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

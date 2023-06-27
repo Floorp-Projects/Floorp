@@ -93,7 +93,8 @@ nsresult GetOrigin(nsPIDOMWindowInner* aParent,
   MOZ_ASSERT(doc);
 
   nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
-  nsresult rv = nsContentUtils::GetUTFOrigin(principal, aOrigin);
+  nsresult rv =
+      nsContentUtils::GetWebExposedOriginSerialization(principal, aOrigin);
   if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(aOrigin.IsEmpty())) {
     return NS_ERROR_FAILURE;
   }

@@ -1771,10 +1771,11 @@ nsresult WebSocketImpl::AsyncOpen(
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
   MOZ_ASSERT_IF(!aTransportProvider, aNegotiatedExtensions.IsEmpty());
 
-  nsCString asciiOrigin;
-  nsresult rv = aPrincipal->GetAsciiOrigin(asciiOrigin);
+  nsCString webExposedOriginSerialization;
+  nsresult rv = aPrincipal->GetWebExposedOriginSerialization(
+      webExposedOriginSerialization);
   if (NS_FAILED(rv)) {
-    asciiOrigin.AssignLiteral("null");
+    webExposedOriginSerialization.AssignLiteral("null");
   }
 
   if (aTransportProvider) {
@@ -1783,7 +1784,7 @@ nsresult WebSocketImpl::AsyncOpen(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  ToLowerCase(asciiOrigin);
+  ToLowerCase(webExposedOriginSerialization);
 
   nsCOMPtr<nsIURI> uri;
   if (!aTransportProvider) {
@@ -1791,7 +1792,7 @@ nsresult WebSocketImpl::AsyncOpen(
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  rv = mChannel->AsyncOpenNative(uri, asciiOrigin,
+  rv = mChannel->AsyncOpenNative(uri, webExposedOriginSerialization,
                                  aPrincipal->OriginAttributesRef(),
                                  aInnerWindowID, this, nullptr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2120,7 +2121,8 @@ nsresult WebSocketImpl::ParseURL(const nsAString& aURL) {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
-  rv = nsContentUtils::GetUTFOrigin(parsedURL, mUTF16Origin);
+  rv =
+      nsContentUtils::GetWebExposedOriginSerialization(parsedURL, mUTF16Origin);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
   mAsciiHost = host;

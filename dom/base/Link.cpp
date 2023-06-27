@@ -313,7 +313,7 @@ void Link::GetOrigin(nsAString& aOrigin) {
   }
 
   nsString origin;
-  nsContentUtils::GetUTFOrigin(uri, origin);
+  nsContentUtils::GetWebExposedOriginSerialization(uri, origin);
   aOrigin.Assign(origin);
 }
 
