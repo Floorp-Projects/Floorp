@@ -1,0 +1,26 @@
+From: Jan-Ivar Bruaroey <jib@mozilla.com>
+Date: Mon, 26 Jun 2023 12:01:00 -0400
+Subject: Bug 1839451 - (fix-186ebdc1b0) remove BUILD.gn refs to gone files
+ delayable.h, media_channel.h
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0f4d1733cb1a2d8189097af4b5537118ebc95a6
+---
+ media/BUILD.gn | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/media/BUILD.gn b/media/BUILD.gn
+index 63b44a15ea..d41ab0a6e0 100644
+--- a/media/BUILD.gn
++++ b/media/BUILD.gn
+@@ -144,8 +144,6 @@ rtc_library("rtc_media_base") {
+       "base/adapted_video_track_source.cc",
+       "base/adapted_video_track_source.h",
+       "base/audio_source.h",
+-      "base/delayable.h",
+-      "base/media_channel.h",
+       "base/media_engine.cc",
+       "base/media_engine.h",
+     ]
+-- 
+2.37.1 (Apple Git-137.1)
+
