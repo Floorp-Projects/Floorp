@@ -1998,7 +1998,7 @@ export class UrlbarQueryContext {
    * @returns {{ href: string; isSearch: boolean; }?}
    */
   get fixupInfo() {
-    if (this.trimmedSearchString && !this._fixupInfo) {
+    if (!this._fixupError && !this._fixupInfo && this.trimmedSearchString) {
       let flags =
         Ci.nsIURIFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS |
         Ci.nsIURIFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
