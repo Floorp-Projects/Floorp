@@ -8,7 +8,7 @@ requestLongerTimeout(2);
 
 // Import helpers
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/dom/base/test/fullscreen/fullscreen_helpers.js",
+  "chrome://mochitests/content/browser/dom/html/test/fullscreen_helpers.js",
   this
 );
 
@@ -20,8 +20,8 @@ add_setup(async function() {
   );
 });
 
-const { HandlerServiceTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/HandlerServiceTestUtils.sys.mjs"
+const { HandlerServiceTestUtils } = ChromeUtils.import(
+  "resource://testing-common/HandlerServiceTestUtils.jsm"
 );
 
 const gHandlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
