@@ -1162,8 +1162,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
 }
 
 // TODO(https://crbug.com/webrtc/14884): Support VP9 simulcast and update this
-// test to EXPECT three encodings of L1T3, not the VP9 SVC legacy fallback path
-// that happens today which is wrong.
+// test to EXPECT three RTP streams of L1T3, not the single RTP we get today.
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
        SendingThreeEncodings_VP9_Simulcast) {
   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
@@ -1194,24 +1193,22 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   remote_pc_wrapper->WaitForConnection();
 
   // We want to EXPECT to get 3 "outbound-rtps", but because VP9 simulcast is
-  // not supported yet (webrtc:14884), we expect a single RTP stream with SVC.
-  // Due to bugs, the fallback to SVC is not reported in either getStats() or
-  // getParameters(). This test expects what we see, not what we want to see.
-
-  // Legacy SVC fallback only has a single RTP stream.
+  // not supported yet (webrtc:14884), we expect a single RTP stream. We get
+  // "L1T3" so we do avoid SVC fallback, but the other two layers are dropped
+  // and some parts of the code still assume SVC which could lead to other bugs
+  // such as invalid bitrate configurations.
   EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
                    kLongTimeoutForRampingUp.ms());
-  // Legacy SVC fallback uses "L3T3_KEY" but the `scalability_mode` returned by
-  // the API seems to reflect what we asked for, not what we got.
   rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
   std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
       report->GetStatsOfType<RTCOutboundRTPStreamStats>();
-  // The fact that we only have a single RTP is a sign SVC is used.
   ASSERT_THAT(outbound_rtps, SizeIs(1u));
   EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
               StrCaseEq("video/VP9"));
-  // In SVC we should see "L3T3_KEY" but we see the "L1T3" that we asked for.
+  // `scalability_mode` in stats does reflect LibvpxVp9Encoder settings!
   EXPECT_EQ(*outbound_rtps[0]->scalability_mode, "L1T3");
+  // What GetParameters() is returning though is most likely just reflecting
+  // what was set, not what was configured.
   parameters = sender->GetParameters();
   ASSERT_EQ(parameters.encodings.size(), 3u);
   EXPECT_THAT(parameters.encodings[0].scalability_mode,
