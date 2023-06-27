@@ -150,20 +150,6 @@ void UtilityProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
       }));
 }
 
-void UtilityProcessHost::OnChannelError() {
-  MOZ_ASSERT(!NS_IsMainThread());
-  LOGD("[%p] UtilityProcessHost::OnChannelError", this);
-
-  GeckoChildProcessHost::OnChannelError();
-
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "UtilityProcessHost::OnChannelError", [this, liveToken = mLiveToken]() {
-        if (*liveToken && mLaunchPhase == LaunchPhase::Waiting) {
-          InitAfterConnect(false);
-        }
-      }));
-}
-
 void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(NS_IsMainThread());
 

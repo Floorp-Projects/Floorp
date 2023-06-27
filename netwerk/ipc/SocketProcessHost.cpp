@@ -117,38 +117,11 @@ void SocketProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
   NS_DispatchToMainThread(runnable);
 }
 
-void SocketProcessHost::OnChannelError() {
-  MOZ_ASSERT(!NS_IsMainThread());
-  GeckoChildProcessHost::OnChannelError();
-
-  // Post a task to the main thread. Take the lock because mTaskFactory is not
-  // thread-safe.
-  RefPtr<Runnable> runnable;
-  {
-    MonitorAutoLock lock(mMonitor);
-    if (!mTaskFactory) {
-      HandleErrorAfterDestroy(std::move(mListener));
-      return;
-    }
-    runnable = (*mTaskFactory)
-                   .NewRunnableMethod(&SocketProcessHost::OnChannelErrorTask);
-  }
-  NS_DispatchToMainThread(runnable);
-}
-
 void SocketProcessHost::OnChannelConnectedTask() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mLaunchPhase == LaunchPhase::Waiting) {
     InitAfterConnect(true);
-  }
-}
-
-void SocketProcessHost::OnChannelErrorTask() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (mLaunchPhase == LaunchPhase::Waiting) {
-    InitAfterConnect(false);
   }
 }
 

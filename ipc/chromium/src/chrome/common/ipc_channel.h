@@ -41,7 +41,7 @@ class Channel {
   //
   // All listeners will only be called on the IO thread, and must be destroyed
   // on the IO thread.
-  class Listener : public mozilla::SupportsWeakPtr {
+  class Listener {
    public:
     virtual ~Listener() = default;
 
@@ -55,11 +55,6 @@ class Channel {
     // Called when an error is detected that causes the channel to close.
     // This method is not called when a channel is closed normally.
     virtual void OnChannelError() {}
-
-    // If the listener has queued messages, swap them for |queue| like so
-    //   swap(impl->my_queued_messages, queue);
-    virtual void GetQueuedMessages(
-        std::queue<mozilla::UniquePtr<Message>>& queue) {}
   };
 
   enum Mode { MODE_SERVER, MODE_CLIENT };

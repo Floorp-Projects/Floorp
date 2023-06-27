@@ -9,6 +9,7 @@
 #include "chrome/common/ipc_message_utils.h"
 #include "mojo/core/ports/name.h"
 #include "mozilla/ipc/BrowserProcessSubThread.h"
+#include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/ProtocolMessageUtils.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsThreadUtils.h"
@@ -41,11 +42,13 @@ namespace mozilla::ipc {
 
 NodeChannel::NodeChannel(const NodeName& aName,
                          UniquePtr<IPC::Channel> aChannel, Listener* aListener,
-                         base::ProcessId aPid)
+                         base::ProcessId aPid,
+                         GeckoChildProcessHost* aChildProcessHost)
     : mListener(aListener),
       mName(aName),
       mOtherPid(aPid),
-      mChannel(std::move(aChannel)) {}
+      mChannel(std::move(aChannel)),
+      mChildProcessHost(aChildProcessHost) {}
 
 NodeChannel::~NodeChannel() { Close(); }
 
@@ -82,14 +85,8 @@ void NodeChannel::FinalDestroy() {
 void NodeChannel::Start() {
   AssertIOThread();
 
-  mExistingListener = mChannel->set_listener(this);
+  MOZ_ALWAYS_TRUE(nullptr == mChannel->set_listener(this));
 
-  std::queue<UniquePtr<IPC::Message>> pending;
-  if (mExistingListener) {
-    mExistingListener->GetQueuedMessages(pending);
-  }
-
-  MOZ_ASSERT(pending.empty(), "unopened channel with pending messages?");
   if (!mChannel->Connect()) {
     OnChannelError();
   }
@@ -100,7 +97,7 @@ void NodeChannel::Close() {
 
   if (mState.exchange(State::Closed) != State::Closed) {
     mChannel->Close();
-    mChannel->set_listener(mExistingListener);
+    mChannel->set_listener(nullptr);
   }
 }
 
@@ -284,13 +281,10 @@ void NodeChannel::OnChannelConnected(base::ProcessId aPeerPid) {
 
   SetOtherPid(aPeerPid);
 
-  // We may need to tell our original listener (which will be the process launch
-  // code) that the the channel has been connected to unblock completing the
-  // process launch.
-  // FIXME: This is super sketchy, but it's also what we were already doing. We
-  // should swap this out for something less sketchy.
-  if (mExistingListener) {
-    mExistingListener->OnChannelConnected(aPeerPid);
+  // We may need to tell the GeckoChildProcessHost which we were created by that
+  // the channel has been connected to unblock completing the process launch.
+  if (mChildProcessHost) {
+    mChildProcessHost->OnChannelConnected(aPeerPid);
   }
 }
 
@@ -304,7 +298,7 @@ void NodeChannel::OnChannelError() {
 
   // Clean up the channel and make sure we're no longer the active listener.
   mChannel->Close();
-  MOZ_ALWAYS_TRUE(this == mChannel->set_listener(mExistingListener));
+  MOZ_ALWAYS_TRUE(this == mChannel->set_listener(nullptr));
 
   // Tell our listener about the error.
   mListener->OnChannelError(mName);
