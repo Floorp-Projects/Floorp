@@ -7,6 +7,7 @@
 
 #include "DocAccessible-inl.h"
 #include "DocAccessibleChild.h"
+#include "LocalAccessible-inl.h"
 #include "nsEventShell.h"
 #include "TextLeafAccessible.h"
 #include "TextUpdater.h"

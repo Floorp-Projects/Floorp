@@ -14,6 +14,7 @@
 #include "mozilla/a11y/TableAccessible.h"
 #include "mozilla/a11y/TableCellAccessible.h"
 #include "nsAccessibilityService.h"
+#include "nsIAccessiblePivot.h"
 #include "XULTreeAccessible.h"
 #include "Pivot.h"
 #include "nsAccUtils.h"
