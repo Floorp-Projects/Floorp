@@ -158,7 +158,7 @@ class BrowserToolbarIntegration(
                 )!!,
                 trackingProtectionException = AppCompatResources.getDrawable(
                     context,
-                    R.drawable.mozac_ic_shield_disabled,
+                    R.drawable.mozac_ic_shield_slash_24,
                 )!!,
             )
         }
