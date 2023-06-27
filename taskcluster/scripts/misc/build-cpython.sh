@@ -73,6 +73,8 @@ ${work_dir}/python/bin/python3 -m pip install -r ${GECKO_PATH}/build/psutil_requ
 case `uname -s` in
     Linux)
         cp /usr/lib/x86_64-linux-gnu/libffi.so.* ${work_dir}/python/lib/
+        cp /usr/lib/x86_64-linux-gnu/libssl.so.* ${work_dir}/python/lib/
+        cp /usr/lib/x86_64-linux-gnu/libcrypto.so.* ${work_dir}/python/lib/
         cp /lib/x86_64-linux-gnu/libncursesw.so.* ${work_dir}/python/lib/
         cp /lib/x86_64-linux-gnu/libtinfo.so.* ${work_dir}/python/lib/
         ;;
