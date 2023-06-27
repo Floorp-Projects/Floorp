@@ -114,7 +114,7 @@ VIAddVersionKey "OriginalFilename" "helper.exe"
 !insertmacro un.ChangeMUIHeaderImage
 !insertmacro un.ChangeMUISidebarImage
 !insertmacro un.CheckForFilesInUse
-!insertmacro un.CleanUpdateDirectories
+!insertmacro un.CleanMaintenanceServiceLogs
 !insertmacro un.CleanVirtualStore
 !insertmacro un.DeleteShortcuts
 !insertmacro un.GetCommonDirectory
@@ -460,8 +460,8 @@ Section "Uninstall"
     ${EndIf}
   ${EndIf}
 
-  ; Remove the updates directory
-  ${un.CleanUpdateDirectories} "Mozilla\Firefox" "Mozilla\updates"
+  ; Clean up old maintenance service logs
+  ${un.CleanMaintenanceServiceLogs} "Mozilla\Firefox"
 
   ; Remove any app model id's stored in the registry for this install path
   DeleteRegValue HKCU "Software\Mozilla\${AppName}\TaskBarIDs" "$INSTDIR"

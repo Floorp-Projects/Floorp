@@ -3541,31 +3541,19 @@
 !macroend
 
 /**
- * If present removes the updates directory located in the profile's local
- * directory for this installation.
+ * Cleans up some old logs in the Maintenance Service directory.
  *
  * @param   _OLD_REL_PATH
  *          The relative path to the profile directory from Local AppData.
  *          Calculated for the old update directory not based on a hash.
- * @param   _NEW_REL_PATH
- *          The relative path to the profile directory from Local AppData.
- *          Calculated for the new update directory based on a hash.
  *
- * $R9 = Local AppData
- * $R8 = _NEW_REL_PATH
  * $R7 = _OLD_REL_PATH
  * $R1 = taskBar ID hash located in registry at SOFTWARE\_OLD_REL_PATH\TaskBarIDs
- * $R2 = various path values.
- * $R3 = length of the long path to $PROGRAMFILES
- * $R4 = length of the long path to $INSTDIR
- * $R5 = long path to $PROGRAMFILES
  * $R6 = long path to $INSTDIR
- * $R0 = path to the new update directory built from _NEW_REL_PATH and
- *       the taskbar ID.
  */
-!macro CleanUpdateDirectories
+!macro CleanMaintenanceServiceLogs
 
-  !ifndef ${_MOZFUNC_UN}CleanUpdateDirectories
+  !ifndef ${_MOZFUNC_UN}CleanMaintenanceServiceLogs
     !define _MOZFUNC_UN_TMP ${_MOZFUNC_UN}
     !insertmacro ${_MOZFUNC_UN_TMP}GetLongPath
     !insertmacro ${_MOZFUNC_UN_TMP}GetCommonDirectory
@@ -3575,154 +3563,25 @@
 
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
-    !define ${_MOZFUNC_UN}CleanUpdateDirectories "!insertmacro ${_MOZFUNC_UN}CleanUpdateDirectoriesCall"
+    !define ${_MOZFUNC_UN}CleanMaintenanceServiceLogs "!insertmacro ${_MOZFUNC_UN}CleanMaintenanceServiceLogsCall"
 
-    Function ${_MOZFUNC_UN}CleanUpdateDirectories
-      Exch $R8
-      Exch 1
+    Function ${_MOZFUNC_UN}CleanMaintenanceServiceLogs
       Exch $R7
       Push $R6
-      Push $R5
-      Push $R4
-      Push $R3
-      Push $R2
       Push $R1
-      Push $R0
-      Push $R9
 
       ${${_MOZFUNC_UN}GetLongPath} "$INSTDIR" $R6
-      StrLen $R4 "$R6"
-
-!ifdef HAVE_64BIT_BUILD
-      ${${_MOZFUNC_UN}GetLongPath} "$PROGRAMFILES64" $R5
-!else
-      ${${_MOZFUNC_UN}GetLongPath} "$PROGRAMFILES" $R5
-!endif
-      StrLen $R3 "$R5"
-      ${GetLocalAppDataFolder} $R9
 
       ${If} $R7 != "" ; _OLD_REL_PATH was passed
       ${AndIf} $R6 != "" ; We have the install dir path
-      ${AndIf} $R5 != "" ; We the program files path
-      ${AndIf} $R4 > $R3 ; The length of $INSTDIR > the length of $PROGRAMFILES
-
-        ; Copy from the start of $INSTDIR the length of $PROGRAMFILES
-        StrCpy $R2 "$R6" $R3
-
-        ; Check if $INSTDIR is under $PROGRAMFILES
-        ${If} $R2 == $R5
-
-          ; Copy the relative path to $INSTDIR from $PROGRAMFILES
-          StrCpy $R2 "$R6" "" $R3
-
-          ; Concatenate the local AppData path ($R9) to the relative profile path and
-          ; the relative path to $INSTDIR from $PROGRAMFILES
-          StrCpy $R2 "$R9\$R7$R2"
-          ${${_MOZFUNC_UN}GetLongPath} "$R2" $R2
-
-          ${If} $R2 != ""
-            ; Backup the old update directory logs and delete the directory
-            ${If} ${FileExists} "$R2\updates\last-update.log"
-              Rename "$R2\updates\last-update.log" "$TEMP\moz-update-old-1-last-update.log"
-            ${EndIf}
-
-            ${If} ${FileExists} "$R2\updates\backup-update.log"
-              Rename "$R2\updates\backup-update.log" "$TEMP\moz-update-old-1-backup-update.log"
-            ${EndIf}
-
-            ${If} ${FileExists} "$R2\updates"
-                RmDir /r "$R2"
-            ${EndIf}
-          ${EndIf}
-        ${EndIf}
-
         ; Get the taskbar ID hash for this installation path
         ReadRegStr $R1 HKLM "SOFTWARE\$R7\TaskBarIDs" $R6
         ${If} $R1 == ""
           ReadRegStr $R1 HKCU "SOFTWARE\$R7\TaskBarIDs" $R6
         ${EndIf}
 
-        ; If the taskbar ID hash exists then delete the new update directory
-        ; Backup its logs before deleting it.
         ${If} $R1 != ""
-          StrCpy $R0 "$R9\$R8\$R1"
-
-          ${If} ${FileExists} "$R0\updates\last-update.log"
-            Rename "$R0\updates\last-update.log" "$TEMP\moz-update-old-2-last-update.log"
-          ${EndIf}
-
-          ${If} ${FileExists} "$R0\updates\backup-update.log"
-            Rename "$R0\updates\backup-update.log" "$TEMP\moz-update-old-2-backup-update.log"
-          ${EndIf}
-
-          ; Remove the old updates directory, located in the user's Windows profile directory
-          ${If} ${FileExists} "$R0\updates"
-            RmDir /r "$R0"
-          ${EndIf}
-
-          ${GetCommonAppDataFolder} $R0
-          StrCpy $R0 "$R0\$R8\$R1"
-
-          ${If} ${FileExists} "$R0\updates\last-update.log"
-            Rename "$R0\updates\last-update.log" "$TEMP\moz-update-old-3-last-update.log"
-          ${EndIf}
-
-          ${If} ${FileExists} "$R0\updates\backup-update.log"
-            Rename "$R0\updates\backup-update.log" "$TEMP\moz-update-old-3-backup-update.log"
-          ${EndIf}
-
-          ; Even though this is an old update directory, completely clear it out
-          ; on uninstall only, not on installation. If this is an installation,
-          ; it may be a paveover install and there may be un-migrated settings
-          ; in the update directory that we don't want to lose.
-          ; On install though, we should still remove pending updates and update
-          ; metadata since migrating that data could potentially confuse Firefox
-          ; into thinking that it failed to apply an update.
-          !if "${_MOZFUNC_UN}" == "un."
-            ${If} ${FileExists} "$R0"
-              RmDir /r "$R0"
-            ${EndIf}
-          !else
-            ${If} ${FileExists} "$R0\updates"
-              RmDir /r "$R0\updates"
-            ${EndIf}
-            Delete "$R0\active-update.xml"
-          !endif
-
-          ${${_MOZFUNC_UN}GetCommonDirectory} $R0
-          StrCpy $R0 "$R0\updates\$R1"
-
-          ${If} ${FileExists} "$R0\updates\last-update.log"
-            Rename "$R0\updates\last-update.log" "$TEMP\moz-update-newest-last-update.log"
-          ${EndIf}
-
-          ${If} ${FileExists} "$R0\updates\backup-update.log"
-            Rename "$R0\updates\backup-update.log" "$TEMP\moz-update-newest-backup-update.log"
-          ${EndIf}
-
-          ; The update directory is shared across all users of this
-          ; installation, and it contains a number of things. Which files we
-          ; want to keep and which we want to delete depends on if we are
-          ; installing or uninstalling.
-          ; If we are installing, we want to clear out any in-progress updates.
-          ; Otherwise we could potentially install an old, pending update when
-          ; Firefox first launches. The updates themselves live in the "updates"
-          ; subdirectory, and the update metadata lives in active-update.xml.
-          ; If we are uninstalling, we want to clear out the updates, the
-          ; update history, and the per-installation update configuration data.
-          ; In this case, we can just delete the whole update directory.
-          !if "${_MOZFUNC_UN}" == "un."
-            ${If} ${FileExists} "$R0"
-              RmDir /r "$R0"
-            ${EndIf}
-          !else
-            ${If} ${FileExists} "$R0\updates"
-              RmDir /r "$R0\updates"
-            ${EndIf}
-            Delete "$R0\active-update.xml"
-          !endif
-
-          ; Also remove the secure log files that our updater may have created
+          ; Remove the secure log files that our updater may have created
           ; inside the maintenance service path. There are several files named
           ; with the install hash and an extension indicating the kind of file.
           ; so use a wildcard to delete them all.
@@ -3738,49 +3597,39 @@
 
       ClearErrors
 
-      Pop $R9
-      Pop $R0
       Pop $R1
-      Pop $R2
-      Pop $R3
-      Pop $R4
-      Pop $R5
       Pop $R6
       Exch $R7
-      Exch 1
-      Exch $R8
     FunctionEnd
 
     !verbose pop
   !endif
 !macroend
 
-!macro CleanUpdateDirectoriesCall _OLD_REL_PATH _NEW_REL_PATH
+!macro CleanMaintenanceServiceLogsCall _OLD_REL_PATH
   !verbose push
   !verbose ${_MOZFUNC_VERBOSE}
   Push "${_OLD_REL_PATH}"
-  Push "${_NEW_REL_PATH}"
-  Call CleanUpdateDirectories
+  Call CleanMaintenanceServiceLogs
   !verbose pop
 !macroend
 
-!macro un.CleanUpdateDirectoriesCall _OLD_REL_PATH _NEW_REL_PATH
+!macro un.CleanMaintenanceServiceLogsCall _OLD_REL_PATH
   !verbose push
   !verbose ${_MOZFUNC_VERBOSE}
   Push "${_OLD_REL_PATH}"
-  Push "${_NEW_REL_PATH}"
-  Call un.CleanUpdateDirectories
+  Call un.CleanMaintenanceServiceLogs
   !verbose pop
 !macroend
 
-!macro un.CleanUpdateDirectories
-  !ifndef un.CleanUpdateDirectories
+!macro un.CleanMaintenanceServiceLogs
+  !ifndef un.CleanMaintenanceServiceLogs
     !verbose push
     !verbose ${_MOZFUNC_VERBOSE}
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN "un."
 
-    !insertmacro CleanUpdateDirectories
+    !insertmacro CleanMaintenanceServiceLogs
 
     !undef _MOZFUNC_UN
     !define _MOZFUNC_UN
