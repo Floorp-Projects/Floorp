@@ -156,6 +156,12 @@ class TextEditor final : public EditorBase,
   void SetMaxTextLength(int32_t aLength) { mMaxTextLength = aLength; }
 
   /**
+   * This updates the wrap width used for initializing a document encoder within
+   * a call of EditorBase::GetAndInitDocEncoder().
+   */
+  void SetWrapColumn(int32_t aWrapColumn) { mWrapColumn = aWrapColumn; }
+
+  /**
    * Replace existed string with a string.
    * This is fast path to replace all string when using single line control.
    *

@@ -737,6 +737,10 @@ class HTMLEditor final : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT nsresult RefreshResizers();
 
+  bool IsWrapHackEnabled() const {
+    return (mFlags & nsIEditor::eEditorEnableWrapHackMask) != 0;
+  }
+
  protected:  // May be called by friends.
   /****************************************************************************
    * Some friend classes are allowed to call the following protected methods.
