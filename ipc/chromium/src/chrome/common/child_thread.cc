@@ -14,7 +14,6 @@ ChildThread::ChildThread(Thread::Options options)
       owner_loop_(MessageLoop::current()),
       options_(options) {
   DCHECK(owner_loop_);
-  channel_name_ = IPC::Channel::ChannelIDForCurrentProcess();
 }
 
 ChildThread::~ChildThread() = default;
@@ -29,8 +28,12 @@ ChildThread* ChildThread::current() {
 }
 
 void ChildThread::Init() {
+  // Take ownership of the client channel handle which we inherited, and use it
+  // to start the initial IPC connection to the parent process.
+  IPC::Channel::ChannelHandle client_handle(
+      IPC::Channel::GetClientChannelHandle());
   auto channel = mozilla::MakeUnique<IPC::Channel>(
-      channel_name_, IPC::Channel::MODE_CLIENT, nullptr);
+      std::move(client_handle), IPC::Channel::MODE_CLIENT, nullptr);
 #if defined(XP_WIN)
   channel->StartAcceptingHandles(IPC::Channel::MODE_CLIENT);
 #elif defined(XP_DARWIN)

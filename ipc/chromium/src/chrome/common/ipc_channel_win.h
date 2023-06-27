@@ -31,11 +31,9 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(
       ChannelImpl, IOThread().GetEventTarget());
 
-  using ChannelId = Channel::ChannelId;
   using ChannelHandle = Channel::ChannelHandle;
 
   // Mirror methods of Channel, see ipc_channel.h for description.
-  ChannelImpl(const ChannelId& channel_id, Mode mode, Listener* listener);
   ChannelImpl(ChannelHandle pipe, Mode mode, Listener* listener);
   bool Connect() MOZ_EXCLUDES(SendMutex());
   void Close() MOZ_EXCLUDES(SendMutex());
@@ -80,9 +78,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
       MOZ_REQUIRES(SendMutex());
   void OutputQueuePop() MOZ_REQUIRES(SendMutex());
 
-  const ChannelId PipeName(const ChannelId& channel_id, int32_t* secret) const;
-  bool CreatePipe(const ChannelId& channel_id, Mode mode)
-      MOZ_REQUIRES(SendMutex(), IOThread());
   void SetOtherPid(int other_pid) MOZ_REQUIRES(IOThread())
       MOZ_EXCLUDES(SendMutex());
   bool EnqueueHelloMessage() MOZ_REQUIRES(SendMutex(), IOThread());

@@ -35,10 +35,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DELETE_ON_EVENT_TARGET(
       ChannelImpl, IOThread().GetEventTarget());
 
-  using ChannelId = Channel::ChannelId;
-
   // Mirror methods of Channel, see ipc_channel.h for description.
-  ChannelImpl(const ChannelId& channel_id, Mode mode, Listener* listener);
   ChannelImpl(ChannelHandle pipe, Mode mode, Listener* listener);
   bool Connect() MOZ_EXCLUDES(SendMutex());
   void Close() MOZ_EXCLUDES(SendMutex());
@@ -51,9 +48,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   }
   // NOTE: `Send` may be called on threads other than the I/O thread.
   bool Send(mozilla::UniquePtr<Message> message) MOZ_EXCLUDES(SendMutex());
-  void GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const;
-
-  void CloseClientFileDescriptor();
 
   int32_t OtherPid() {
     IOThread().AssertOnCurrentThread();
@@ -80,7 +74,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 
   void Init(Mode mode, Listener* listener)
       MOZ_REQUIRES(SendMutex(), IOThread());
-  bool CreatePipe(Mode mode) MOZ_REQUIRES(SendMutex(), IOThread());
   void SetPipe(int fd) MOZ_REQUIRES(SendMutex(), IOThread());
   void SetOtherPid(int other_pid) MOZ_REQUIRES(IOThread())
       MOZ_EXCLUDES(SendMutex()) {
@@ -150,8 +143,6 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   mozilla::Maybe<PartialWrite> partial_write_ MOZ_GUARDED_BY(SendMutex());
 
   int pipe_ MOZ_GUARDED_BY(chan_cap_);
-  // The client end of our socketpair().
-  int client_pipe_ MOZ_GUARDED_BY(IOThread());
   // The SO_SNDBUF value of pipe_, or 0 if unknown.
   unsigned pipe_buf_len_ MOZ_GUARDED_BY(chan_cap_);
 

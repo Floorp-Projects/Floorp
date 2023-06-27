@@ -44,8 +44,6 @@ class ChildThread : public base::Thread {
   // The message loop used to run tasks on the thread that started this thread.
   MessageLoop* owner_loop_;
 
-  IPC::Channel::ChannelId channel_name_;
-
   mozilla::ipc::ScopedPort initial_port_;
 
   Thread::Options options_;

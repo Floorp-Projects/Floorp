@@ -33,16 +33,6 @@ class Channel {
   friend class ChannelTest;
 
  public:
-  // Windows channels use named objects and connect to them by name,
-  // but on Unix we use unnamed socketpairs and pass capabilities
-  // directly using SCM_RIGHTS messages.  This type abstracts away
-  // that difference.
-#ifdef XP_WIN
-  typedef std::wstring ChannelId;
-#else
-  struct ChannelId {};
-#endif
-
   // For channels which are created after initialization, handles to the pipe
   // endpoints may be passed around directly using IPC messages.
   using ChannelHandle = mozilla::UniqueFileHandle;
@@ -92,20 +82,17 @@ class Channel {
 
   // Initialize a Channel.
   //
-  // |channel_id| identifies the communication Channel.
-  // |mode| specifies whether this Channel is to operate in server mode or
-  // client mode.  In server mode, the Channel is responsible for setting up the
-  // IPC object, whereas in client mode, the Channel merely connects to the
-  // already established IPC object.
+  // |pipe| identifies the pipe which will be used. It should have been created
+  // using CreateRawPipe().
+  // |mode| specifies whether this channel is operating in server mode or client
+  // mode. One side of the connection should be the client, and the other should
+  // be the server.
   // |listener| receives a callback on the current thread for each newly
   // received message.
   //
   // The Channel must be created and destroyed on the IO thread, and all
   // methods, unless otherwise noted, are only safe to call on the I/O thread.
   //
-  Channel(const ChannelId& channel_id, Mode mode, Listener* listener);
-
-  // Initialize a pre-created channel |pipe| as |mode|.
   Channel(ChannelHandle pipe, Mode mode, Listener* listener);
 
   ~Channel();
@@ -140,17 +127,7 @@ class Channel {
   // be out of date.
   bool IsClosed() const;
 
-#if defined(XP_UNIX)
-  // On POSIX an IPC::Channel wraps a socketpair(), this method returns the
-  // FD # for the client end of the socket and the equivalent FD# to use for
-  // mapping it into the Child process.
-  // This method may only be called on the server side of a channel.
-  void GetClientFileDescriptorMapping(int* src_fd, int* dest_fd) const;
-
-  // Close the client side of the socketpair.
-  void CloseClientFileDescriptor();
-
-#  if defined(XP_DARWIN)
+#if defined(XP_DARWIN)
   // Configure the mach task_t for the peer task.
   void SetOtherMachTask(task_t task);
 
@@ -158,31 +135,23 @@ class Channel {
   // must be set as `MODE_SERVER` and that side will be responsible for
   // transferring the rights between processes.
   void StartAcceptingMachPorts(Mode mode);
-#  endif
-
-#else
+#elif defined(XP_WIN)
   // Tell this pipe to accept handles. Exactly one side of the IPC connection
   // must be set as `MODE_SERVER`, and that side will be responsible for calling
   // `DuplicateHandle` to transfer the handle between processes.
   void StartAcceptingHandles(Mode mode);
 #endif
 
-  // On Windows: Generates a channel ID that, if passed to the client
-  // as a shared secret, will validate the client's authenticity.
-  // Other platforms don't use channel IDs, so this returns the dummy
-  // ChannelId value.
-  static ChannelId GenerateVerifiedChannelID();
-
-  // On Windows: Retrieves the initial channel ID passed to the
-  // current process by its parent.  Other platforms don't do this;
-  // the dummy ChannelId value is returned instead.
-  static ChannelId ChannelIDForCurrentProcess();
-
 #if defined(MOZ_WIDGET_ANDROID)
   // Used to set the first IPC file descriptor in the child process on Android.
   // See ipc_channel_posix.cc for further details on how this is used.
   static void SetClientChannelFd(int fd);
 #endif  // defined(MOZ_WIDGET_ANDROID)
+
+  // Get the first IPC channel handle in the child process. This will have been
+  // set by SetClientChannelFd on Android, will be a constant on other unix
+  // platforms, or will have been passed on the command line on Windows.
+  static ChannelHandle::ElementType GetClientChannelHandle();
 
   // Create a new pair of pipe endpoints which can be used to establish a
   // native IPC::Channel connection.
