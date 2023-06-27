@@ -3184,8 +3184,13 @@ macro_rules! impl_mul {
             type Output = $output;
 
             fn mul(self, rhs: $rhs) -> Self::Output {
-                static_assertions::const_assert!(<$output>::MAX <= <$inner>::MAX as u64);
-                static_assertions::const_assert!(<$lhs>::MAX * <$rhs>::MAX <= <$output>::MAX);
+                static_assertions::const_assert!(
+                    <$output as UpperBounded>::MAX <= <$inner>::MAX as u64
+                );
+                static_assertions::const_assert!(
+                    <$lhs as UpperBounded>::MAX * <$rhs as UpperBounded>::MAX
+                        <= <$output as UpperBounded>::MAX
+                );
 
                 let lhs: $inner = self.get().into();
                 let rhs: $inner = rhs.get().into();
