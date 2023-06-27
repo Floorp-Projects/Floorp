@@ -481,8 +481,6 @@ function getHandleForObject(realm, ownershipType, object) {
 function getSharedIdForNode(node, extraOptions) {
   const { nodeCache, seenNodeIds } = extraOptions;
 
-  node = Cu.unwaiveXrays(node);
-
   if (!Node.isInstance(node)) {
     return null;
   }
@@ -746,7 +744,7 @@ function serializeNode(
       return map;
     }, {});
 
-    const shadowRoot = Cu.unwaiveXrays(node).openOrClosedShadowRoot;
+    const shadowRoot = node.openOrClosedShadowRoot;
     serialized.shadowRoot = null;
     if (shadowRoot !== null) {
       serialized.shadowRoot = serialize(
@@ -899,6 +897,8 @@ export function serialize(
     return buildSerialized("typedarray", handleId);
   } else if (Node.isInstance(value)) {
     const serialized = buildSerialized("node", handleId);
+
+    value = Cu.unwaiveXrays(value);
 
     // Get or create the shared id for WebDriver classic compat from the node.
     const sharedId = getSharedIdForNode(value, extraOptions);
