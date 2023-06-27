@@ -304,10 +304,12 @@ nsresult nsClipboard::TransferableFromPasteboard(nsITransferable* aTransferable,
       if (dest) CFRelease(dest);
       if (source) CFRelease(source);
 
-      if (successfullyConverted)
+      if (successfullyConverted) {
+        // XXX Maybe try to fill in more types? Is there a point?
         break;
-      else
+      } else {
         continue;
+      }
     }
   }
 
@@ -321,24 +323,40 @@ nsClipboard::GetNativeClipboardData(nsITransferable* aTransferable, int32_t aWhi
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   MOZ_DIAGNOSTIC_ASSERT(aTransferable);
-  // XXX we only support the set operation on kSelectionCache type, see bug 1835059.
-  MOZ_DIAGNOSTIC_ASSERT(kSelectionCache != aWhichClipboard);
   MOZ_DIAGNOSTIC_ASSERT(nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+
+  if (kSelectionCache == aWhichClipboard) {
+    if (!sSelectionCache) {
+      return NS_OK;
+    }
+
+    // get flavor list that includes all acceptable flavors (including ones obtained through
+    // conversion)
+    nsTArray<nsCString> flavors;
+    nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
+    if (NS_FAILED(rv)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    for (const auto& flavor : flavors) {
+      nsCOMPtr<nsISupports> dataSupports;
+      rv = sSelectionCache->GetTransferData(flavor.get(), getter_AddRefs(dataSupports));
+      if (NS_SUCCEEDED(rv)) {
+        CLIPBOARD_LOG("%s: getting %s from cache.", __FUNCTION__, flavor.get());
+        aTransferable->SetTransferData(flavor.get(), dataSupports);
+        // XXX Maybe try to fill in more types? Is there a point?
+        break;
+      }
+    }
+    return NS_OK;
+  }
 
   NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard);
   if (!cocoaPasteboard) {
     return NS_ERROR_FAILURE;
   }
 
-  // get flavor list that includes all acceptable flavors (including ones obtained through
-  // conversion)
-  nsTArray<nsCString> flavors;
-  nsresult rv = aTransferable->FlavorsTransferableCanImport(flavors);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return nsClipboard::TransferableFromPasteboard(aTransferable, cocoaPasteboard);
+  return TransferableFromPasteboard(aTransferable, cocoaPasteboard);
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
@@ -348,9 +366,35 @@ mozilla::Result<bool, nsresult> nsClipboard::HasNativeClipboardDataMatchingFlavo
     const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  // XXX we only support the set operation on kSelectionCache type, see bug 1835059.
-  MOZ_DIAGNOSTIC_ASSERT(kSelectionCache != aWhichClipboard);
   MOZ_DIAGNOSTIC_ASSERT(nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+
+  if (kSelectionCache == aWhichClipboard) {
+    nsTArray<nsCString> transferableFlavors;
+    if (sSelectionCache &&
+        NS_SUCCEEDED(sSelectionCache->FlavorsTransferableCanImport(transferableFlavors))) {
+      if (CLIPBOARD_LOG_ENABLED()) {
+        CLIPBOARD_LOG("    SelectionCache types (nums %zu)\n", transferableFlavors.Length());
+        for (const auto& transferableFlavor : transferableFlavors) {
+          CLIPBOARD_LOG("        MIME %s", transferableFlavor.get());
+        }
+      }
+
+      for (const auto& transferableFlavor : transferableFlavors) {
+        for (const auto& flavor : aFlavorList) {
+          if (transferableFlavor.Equals(flavor)) {
+            CLIPBOARD_LOG("    has %s", flavor.get());
+            return true;
+          }
+        }
+      }
+    }
+
+    if (CLIPBOARD_LOG_ENABLED()) {
+      CLIPBOARD_LOG("    no targets at clipboard (bad match)\n");
+    }
+
+    return false;
+  }
 
   NSPasteboard* cocoaPasteboard = GetPasteboard(aWhichClipboard);
   MOZ_ASSERT(cocoaPasteboard);
