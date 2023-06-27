@@ -192,10 +192,6 @@ void VRProcessParent::KillHard(const char* aReason) {
   SetAlreadyDead();
 }
 
-void VRProcessParent::OnChannelError() {
-  MOZ_ASSERT(false, "VR process channel error.");
-}
-
 void VRProcessParent::OnChannelConnected(base::ProcessId peer_pid) {
   MOZ_ASSERT(!NS_IsMainThread());
 

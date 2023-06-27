@@ -752,7 +752,8 @@ static mojo::core::ports::NodeName RandomNodeName() {
 }
 
 std::tuple<ScopedPort, RefPtr<NodeChannel>> NodeController::InviteChildProcess(
-    UniquePtr<IPC::Channel> aChannel) {
+    UniquePtr<IPC::Channel> aChannel,
+    GeckoChildProcessHost* aChildProcessHost) {
   MOZ_ASSERT(IsBroker());
   AssertIOThread();
 
@@ -762,7 +763,8 @@ std::tuple<ScopedPort, RefPtr<NodeChannel>> NodeController::InviteChildProcess(
   auto ports = CreatePortPair();
   auto inviteName = RandomNodeName();
   auto nodeChannel =
-      MakeRefPtr<NodeChannel>(inviteName, std::move(aChannel), this);
+      MakeRefPtr<NodeChannel>(inviteName, std::move(aChannel), this,
+                              base::kInvalidProcessId, aChildProcessHost);
   {
     auto state = mState.Lock();
     MOZ_DIAGNOSTIC_ASSERT(!state->mPeers.Contains(inviteName),

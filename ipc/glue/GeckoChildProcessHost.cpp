@@ -875,7 +875,7 @@ void GeckoChildProcessHost::InitializeChannel(
   // Create the IPC channel which will be used for communication with this
   // process.
   mozilla::UniquePtr<IPC::Channel> channel(new IPC::Channel(
-      std::move(aServerHandle), IPC::Channel::MODE_SERVER, this));
+      std::move(aServerHandle), IPC::Channel::MODE_SERVER, nullptr));
 #if defined(XP_WIN)
   channel->StartAcceptingHandles(IPC::Channel::MODE_SERVER);
 #elif defined(XP_DARWIN)
@@ -884,7 +884,7 @@ void GeckoChildProcessHost::InitializeChannel(
 
   mNodeController = NodeController::GetSingleton();
   std::tie(mInitialPort, mNodeChannel) =
-      mNodeController->InviteChildProcess(std::move(channel));
+      mNodeController->InviteChildProcess(std::move(channel), this);
 
   MonitorAutoLock lock(mMonitor);
   mProcessState = CHANNEL_INITIALIZED;
@@ -1674,36 +1674,9 @@ void GeckoChildProcessHost::OnChannelConnected(base::ProcessId peer_pid) {
   lock.Notify();
 }
 
-void GeckoChildProcessHost::OnMessageReceived(UniquePtr<IPC::Message> aMsg) {
-  // We never process messages ourself, just save them up for the next
-  // listener.
-  mQueue.push(std::move(aMsg));
-}
-
-void GeckoChildProcessHost::OnChannelError() {
-  // Update the process state to an error state if we have a channel
-  // error before we're connected. This fixes certain failures,
-  // but does not address the full range of possible issues described
-  // in the FIXME comment below.
-  MonitorAutoLock lock(mMonitor);
-  if (mProcessState < PROCESS_CONNECTED) {
-    mProcessState = PROCESS_ERROR;
-    lock.Notify();
-  }
-  // FIXME/bug 773925: save up this error for the next listener.
-}
-
 RefPtr<ProcessHandlePromise> GeckoChildProcessHost::WhenProcessHandleReady() {
   MOZ_ASSERT(mHandlePromise != nullptr);
   return mHandlePromise;
-}
-
-void GeckoChildProcessHost::GetQueuedMessages(
-    std::queue<UniquePtr<IPC::Message>>& queue) {
-  // If this is called off the IO thread, bad things will happen.
-  DCHECK(MessageLoopForIO::current());
-  swap(queue, mQueue);
-  // We expect the next listener to take over processing of our queue.
 }
 
 #ifdef MOZ_WIDGET_ANDROID

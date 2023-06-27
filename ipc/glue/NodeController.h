@@ -21,6 +21,8 @@
 
 namespace mozilla::ipc {
 
+class GeckoChildProcessHost;
+
 class NodeController final : public mojo::core::ports::NodeDelegate,
                              public NodeChannel::Listener {
   using NodeName = mojo::core::ports::NodeName;
@@ -90,7 +92,8 @@ class NodeController final : public mojo::core::ports::NodeDelegate,
   // reference to the `NodeChannel` created for the new process. The port can
   // immediately have messages sent to it.
   std::tuple<ScopedPort, RefPtr<NodeChannel>> InviteChildProcess(
-      UniquePtr<IPC::Channel> aChannel);
+      UniquePtr<IPC::Channel> aChannel,
+      GeckoChildProcessHost* aChildProcessHost);
 
   // Called as the IO thread is started in the parent process.
   static void InitBrokerProcess();

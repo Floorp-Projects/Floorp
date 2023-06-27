@@ -48,7 +48,6 @@ class VRProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   void DestroyProcess();
   bool CanShutdown() override { return true; }
 
-  void OnChannelError() override;
   void OnChannelConnected(base::ProcessId peer_pid) override;
   void OnChannelConnectedTask();
   void OnChannelErrorTask();
