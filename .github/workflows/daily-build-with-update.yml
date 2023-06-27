@@ -369,7 +369,7 @@ jobs:
        echo '<?xml version="1.0" encoding="UTF-8"?>
          <updates>
           <update type="minor" displayVersion="${{ needs.get-display-version.outputs.display-version }}" appVersion="${{ needs.get-inside-version.outputs.inside-version }}" platformVersion="${{ needs.get-inside-version.outputs.inside-version }}" buildID="${{ needs.get-buildid.outputs.buildids }}" detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">
-          <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/WINNT-x86_64-11.0.0.mar" size="${{ env.WINNT_MAR_SIZE }}" />
+          <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/WINNT-x86_64.mar" size="${{ env.WINNT_MAR_SIZE }}" />
           </update>
         </updates>' > WINNT-Update.xml
 
@@ -526,7 +526,7 @@ jobs:
          echo '<?xml version="1.0" encoding="UTF-8"?>
            <updates>
             <update type="minor" displayVersion="${{ needs.get-display-version.outputs.display-version }}" appVersion="${{ needs.get-inside-version.outputs.inside-version }}" platformVersion="${{ needs.get-inside-version.outputs.inside-version }}" buildID="${{ needs.get-buildid.outputs.buildids }}" detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">
-            <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/LINUX-x86_64-11.0.0.mar" size="${{ env.LINUX_MAR_SIZE }}" />
+            <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/LINUX-x86_64.mar" size="${{ env.LINUX_MAR_SIZE }}" />
            </update>
           </updates>' > LINUX-Update.xml
 
@@ -541,13 +541,16 @@ jobs:
 ################################################################ ↑ Linux x86_64 Build ####################################################################################
 
   Deployments:
-   needs: [get-display-version, build-linux-x86_64-with-PGO, Windows-x86_64-build-with-profdata-and-jarlog]
+   needs: [get-display-version, get-buildid, get-inside-version, build-linux-x86_64-with-PGO, Windows-x86_64-build-with-profdata-and-jarlog]
    runs-on: ubuntu-latest
+   environment: 
+    name: Deploy-to-stable-release
    steps:
 
-   - name: Release version 📦
+   - name: Release version & date📦
      run: |
        echo "Release version: ${{ needs.get-display-version.outputs.display-version }}"
+       echo "Release date: ${{ needs.get-buildid.outputs.buildids }}"
 
    - name: make directory 📁
      run: |
@@ -589,7 +592,11 @@ jobs:
         /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.xml
 
       tag_name: "beta"
-      name: "Floorp Beta Developments build: v${{ needs.get-display-version.outputs.display-version }}"
+      name: "Floorp beta build: v${{ needs.get-display-version.outputs.display-version }} | ${{ needs.get-buildid.outputs.buildids }}"
+      body: |
+        "Floorp Daylight": v${{ needs.get-display-version.outputs.display-version }} (Firefox v${{ needs.get-inside-version.outputs.inside-version }})
+         
+        **This is NOT the release (stable) channel version of Floorp. This is a beta build of Floorp. It is intended for testing purposes only. It is not recommended that you use this version of Floorp for daily browsing. If you would like to download the release version of Floorp, please visit [floorp.app](https://floorp.app).**
       draft: false
       prerelease: true
       token: ${{ secrets.GITHUB_TOKEN }}
