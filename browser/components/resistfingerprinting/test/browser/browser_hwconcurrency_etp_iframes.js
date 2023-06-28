@@ -4,6 +4,8 @@
  * Covers the following cases:
  *  - RFP is disabled entirely
  *  - RFP is enabled entirely
+ *  - FPP is enabled entirely
+
  *
  */
 
@@ -56,4 +58,9 @@ add_task(
 expectedResults = structuredClone(allSpoofed);
 add_task(
   simpleRFPTest.bind(null, uri, testHWConcurrency, expectedResults, extraData)
+);
+
+expectedResults = structuredClone(allNotSpoofed);
+add_task(
+  simpleFPPTest.bind(null, uri, testHWConcurrency, expectedResults, extraData)
 );
