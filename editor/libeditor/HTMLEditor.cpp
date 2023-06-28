@@ -436,7 +436,7 @@ nsresult HTMLEditor::Init(Document& aDocument,
   if (NS_WARN_IF(!document)) {
     return NS_ERROR_FAILURE;
   }
-  if (!IsInPlaintextMode() && !IsInteractionAllowed()) {
+  if (!IsPlaintextMailComposer() && !IsInteractionAllowed()) {
     mDisabledLinkHandling = true;
     mOldLinkHandlingEnabled = document->LinkHandlingEnabled();
     document->SetLinkHandlingEnabled(false);
@@ -1343,7 +1343,7 @@ nsresult HTMLEditor::HandleKeyPressEvent(WidgetKeyboardEvent* aKeyboardEvent) {
 
       // If we're in the plaintext mode, and not tabbable editor, let's
       // insert a horizontal tabulation.
-      if (IsInPlaintextMode()) {
+      if (IsPlaintextMailComposer()) {
         if (aKeyboardEvent->IsShift() || aKeyboardEvent->IsControl() ||
             aKeyboardEvent->IsAlt() || aKeyboardEvent->IsMeta() ||
             aKeyboardEvent->IsOS()) {
@@ -6140,7 +6140,7 @@ nsresult HTMLEditor::SetBlockBackgroundColorWithCSSAsSubAction(
   CommitComposition();
 
   // XXX Shouldn't we do this before calling `CommitComposition()`?
-  if (IsInPlaintextMode()) {
+  if (IsPlaintextMailComposer()) {
     return NS_OK;
   }
 
@@ -6734,7 +6734,7 @@ NS_IMETHODIMP HTMLEditor::SetWrapWidth(int32_t aWrapColumn) {
 
   // Make sure we're a plaintext editor, otherwise we shouldn't
   // do the rest of this.
-  if (!IsInPlaintextMode()) {
+  if (!IsPlaintextMailComposer()) {
     return NS_OK;
   }
 

@@ -558,7 +558,9 @@ bool EditorBase::GetDesiredSpellCheckState() {
     return false;
   }
 
-  if (!IsInPlaintextMode()) {
+  // XXX I'm not sure whether we don't use this path when we're a plaintext mail
+  // composer.
+  if (IsHTMLEditor() && !AsHTMLEditor()->IsPlaintextMailComposer()) {
     // Some of the page content might be editable and some not, if spellcheck=
     // is explicitly set anywhere, so if there's anything editable on the page,
     // return true and let the spellchecker figure it out.
@@ -642,9 +644,10 @@ NS_IMETHODIMP EditorBase::SetFlags(uint32_t aFlags) {
     return NS_OK;
   }
 
-  // If we're a `TextEditor` instance, the plaintext mode should always be set.
-  // If we're an `HTMLEditor` instance, either is fine.
-  MOZ_ASSERT_IF(IsTextEditor(), !!(aFlags & nsIEditor::eEditorPlaintextMask));
+  // If we're a `TextEditor` instance, it's always a plaintext editor.
+  // Therefore, `eEditorPlaintextMask` is not necessary and should not be set
+  // for the performance reason.
+  MOZ_ASSERT_IF(IsTextEditor(), !(aFlags & nsIEditor::eEditorPlaintextMask));
   // If we're an `HTMLEditor` instance, we cannot treat it as a single line
   // editor.  So, eEditorSingleLineMask is available only when we're a
   // `TextEditor` instance.
@@ -3551,7 +3554,7 @@ nsresult EditorBase::GetEndChildNode(const Selection& aSelection,
 
 nsresult EditorBase::EnsurePaddingBRElementInMultilineEditor() {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(IsInPlaintextMode());
+  MOZ_ASSERT(IsTextEditor() || AsHTMLEditor()->IsPlaintextMailComposer());
   MOZ_ASSERT(!IsSingleLineEditor());
 
   Element* anonymousDivOrBodyElement = GetRoot();
