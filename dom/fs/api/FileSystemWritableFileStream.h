@@ -74,9 +74,15 @@ class FileSystemWritableFileStream final : public WritableStream {
 
   bool IsOpen() const;
 
-  bool IsClosed() const;
+  bool IsFinishing() const;
 
-  [[nodiscard]] RefPtr<BoolPromise> BeginClose(bool aAbort = true);
+  bool IsDone() const;
+
+  [[nodiscard]] RefPtr<BoolPromise> BeginAbort();
+
+  [[nodiscard]] RefPtr<BoolPromise> BeginClose();
+
+  [[nodiscard]] RefPtr<BoolPromise> OnDone();
 
   void SetWorkerRef(RefPtr<StrongWorkerRef>&& aWorkerRef);
 
@@ -109,6 +115,8 @@ class FileSystemWritableFileStream final : public WritableStream {
                                fs::FileSystemEntryMetadata&& aMetadata);
 
   virtual ~FileSystemWritableFileStream();
+
+  [[nodiscard]] RefPtr<BoolPromise> BeginFinishing(bool aShouldAbort);
 
   RefPtr<WriteDataPromise> Write(
       ArrayBufferViewOrArrayBufferOrBlobOrUTF8StringOrWriteParams& aData);

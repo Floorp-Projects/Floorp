@@ -56,7 +56,7 @@ bool FileSystemManagerChild::AllWritableFileStreamsClosed() const {
       continue;
     }
 
-    if (!handle->IsClosed()) {
+    if (!handle->IsDone()) {
       return false;
     }
   }
@@ -122,8 +122,12 @@ void FileSystemManagerChild::CloseAllWritablesImpl(T& aPromises) {
     auto* const child = static_cast<FileSystemWritableFileStreamChild*>(item);
     auto* const handle = child->MutableWritableFileStreamPtr();
 
-    if (handle && !handle->IsClosed()) {
-      aPromises.AppendElement(handle->BeginClose());
+    if (handle) {
+      if (handle->IsOpen()) {
+        aPromises.AppendElement(handle->BeginAbort());
+      } else if (handle->IsFinishing()) {
+        aPromises.AppendElement(handle->OnDone());
+      }
     }
   }
 }

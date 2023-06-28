@@ -288,7 +288,7 @@ void ResolveCallback(FileSystemGetWritableFileStreamResponse&& aResponse,
                          if (stream->IsOpen()) {
                            // We don't need the promise, we just begin the
                            // closing process.
-                           Unused << stream->BeginClose();
+                           Unused << stream->BeginAbort();
                          }
                        });
 
