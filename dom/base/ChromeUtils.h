@@ -300,6 +300,9 @@ class ChromeUtils {
   static void GetAllPossibleUtilityActorNames(GlobalObject& aGlobal,
                                               nsTArray<nsCString>& aNames);
 
+  static bool ShouldResistFingerprinting(GlobalObject& aGlobal,
+                                         JSRFPTarget aTarget);
+
  private:
   // Number of DevTools session debugging the current process
   static std::atomic<uint32_t> sDevToolsOpenedCount;
