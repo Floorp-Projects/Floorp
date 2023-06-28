@@ -7,6 +7,7 @@
 #include "FileSystemManagerParent.h"
 
 #include "FileSystemDatabaseManager.h"
+#include "FileSystemParentTypes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/FileBlobImpl.h"
 #include "mozilla/dom/FileSystemAccessHandle.h"
@@ -190,14 +191,18 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
   AssertIsOnIOTarget();
   MOZ_ASSERT(mDataManager);
 
-  auto reportError = [aResolver](nsresult rv) { aResolver(rv); };
+  auto reportError = [aResolver](const auto& aRv) {
+    aResolver(ToNSResult(aRv));
+  };
+
   const EntryId& entryId = aRequest.entryId();
   // TODO: Change to LockShared after temporary files
-  QM_TRY(MOZ_TO_RESULT(mDataManager->LockExclusive(entryId)), IPC_OK(),
-         reportError);
+  QM_TRY_UNWRAP(fs::FileId fileId, mDataManager->LockExclusive(entryId),
+                IPC_OK(), reportError);
 
-  auto autoUnlock = MakeScopeExit([self = RefPtr{this}, &entryId] {
+  auto autoUnlock = MakeScopeExit([self = RefPtr{this}, &entryId, &fileId] {
     // TODO: Change to UnlockShared after temporary files
+    (void)fileId;
     self->mDataManager->UnlockExclusive(entryId);
   });
 

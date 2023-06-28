@@ -457,32 +457,44 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::GetEntryId(
   QM_TRY_RETURN(stmt.GetEntryIdByColumn(/* Column */ 0u));
 }
 
-nsresult FileSystemDatabaseManagerVersion002::EnsureFileId(
+Result<FileId, QMResult> FileSystemDatabaseManagerVersion002::EnsureFileId(
     const EntryId& aEntryId) {
-  QM_TRY_UNWRAP(bool exists,
-                DoesFileExist(mConnection, aEntryId).mapErr(toNSResult));
+  QM_TRY_UNWRAP(bool exists, DoesFileExist(mConnection, aEntryId));
   if (!exists) {
-    return NS_ERROR_DOM_NOT_FOUND_ERR;
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
   }
 
-  const nsLiteralCString doesEntryAlreadyHaveFile =
-      "SELECT EXISTS ( SELECT 1 FROM FileIds WHERE handle = :entryId );"_ns;
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(mConnection, doesEntryAlreadyHaveFile));
-  QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEntryId)));
-  QM_TRY_UNWRAP(const bool isEnsured, stmt.YesOrNoQuery());
-
-  if (isEnsured) {
-    return NS_OK;
+  auto mainFileRes = GetFileId(aEntryId);
+  if (mainFileRes.isOk()) {
+    return mainFileRes.unwrap();
   }
 
-  // The query fails if and only if no path exists: already ruled out
+  QM_TRY(
+      OkIf(ToNSResult(mainFileRes.inspectErr()) == NS_ERROR_DOM_NOT_FOUND_ERR),
+      Err(mainFileRes.unwrapErr()));
+
+  mozStorageTransaction transaction(
+      mConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
   QM_TRY_INSPECT(const FileId& fileId,
                  AddNewFileId(mConnection, *mFileManager, aEntryId));
-  (void)fileId;
 
-  return NS_OK;
+  QM_TRY(QM_TO_RESULT(MergeFileId(aEntryId, fileId, /* aAbort */ false)));
+
+  QM_TRY(QM_TO_RESULT(transaction.Commit()));
+
+  return fileId;
+}
+
+Result<FileId, QMResult>
+FileSystemDatabaseManagerVersion002::EnsureTemporaryFileId(
+    const EntryId& aEntryId) {
+  QM_TRY_UNWRAP(bool exists, DoesFileExist(mConnection, aEntryId));
+  if (!exists) {
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+  }
+
+  QM_TRY_RETURN(AddNewFileId(mConnection, *mFileManager, aEntryId));
 }
 
 Result<FileId, QMResult> FileSystemDatabaseManagerVersion002::GetFileId(

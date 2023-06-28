@@ -936,9 +936,9 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetEntryId(
   return aFileId.Value();
 }
 
-nsresult FileSystemDatabaseManagerVersion001::EnsureFileId(
+Result<FileId, QMResult> FileSystemDatabaseManagerVersion001::EnsureFileId(
     const EntryId& aEntryId) {
-  return NS_OK;
+  return FileId(aEntryId);
 }
 
 nsresult FileSystemDatabaseManagerVersion001::GetFile(
