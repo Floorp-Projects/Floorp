@@ -649,80 +649,85 @@ const IFRAME_DOMAIN = "example.org";
 const CROSS_ORIGIN_DOMAIN = "example.net";
 
 async function runActualTest(uri, testFunction, expectedResults, extraData) {
-  await BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      url: uri,
-    },
-    async function (browser) {
-      if ("etp_reload" in extraData) {
-        let tab = gBrowser.tabs[gBrowser.tabs.length - 1];
-        ContentBlockingAllowList.add(tab.linkedBrowser);
-        BrowserReload();
-        await BrowserTestUtils.browserLoaded(browser, false, uri);
-      }
+  let browserWin = gBrowser;
+  let openedWin = null;
 
-      /*
-       * We expect that `runTheTest` is going to be able to communicate with the iframe
-       * or tab that it opens, but if it cannot (because we are using noopener), we kind
-       * of hack around and get the data directly.
-       */
-      if ("noopener" in extraData) {
-        var tabPromise = BrowserTestUtils.waitForNewTab(
-          gBrowser,
-          extraData.await_uri
-        );
-      }
+  if ("private_window" in extraData) {
+    openedWin = await BrowserTestUtils.openNewBrowserWindow({
+      private: true,
+    });
+    browserWin = openedWin.gBrowser;
+  }
 
-      // In SpecialPowers.spawn, extraData goes through a structuredClone, which cannot clone
-      // functions. await_uri is sometimes a function.  This filters out keys that are used by
-      // this function (runActualTest) and not by runTheTest or testFunction. It avoids the
-      // cloning issue, and avoids polluting the object in those called functions.
-      let filterExtraData = function (x) {
-        let banned_keys = ["etp_reload", "noopener", "await_uri"];
-        return Object.fromEntries(
-          Object.entries(x).filter(([k, v]) => !banned_keys.includes(k))
-        );
-      };
+  let tab = await BrowserTestUtils.openNewForegroundTab(browserWin, uri);
 
-      let result = await SpecialPowers.spawn(
-        browser,
-        [IFRAME_DOMAIN, CROSS_ORIGIN_DOMAIN, filterExtraData(extraData)],
-        async function (iframe_domain_, cross_origin_domain_, extraData_) {
-          return content.wrappedJSObject.runTheTest(
-            iframe_domain_,
-            cross_origin_domain_,
-            extraData_
-          );
-        }
+  if ("etp_reload" in extraData) {
+    ContentBlockingAllowList.add(tab.linkedBrowser);
+    await BrowserTestUtils.reloadTab(tab);
+  }
+
+  /*
+   * We expect that `runTheTest` is going to be able to communicate with the iframe
+   * or tab that it opens, but if it cannot (because we are using noopener), we kind
+   * of hack around and get the data directly.
+   */
+  if ("noopener" in extraData) {
+    var popupTabPromise = BrowserTestUtils.waitForNewTab(
+      browserWin,
+      extraData.await_uri
+    );
+  }
+
+  // In SpecialPowers.spawn, extraData goes through a structuredClone, which cannot clone
+  // functions. await_uri is sometimes a function.  This filters out keys that are used by
+  // this function (runActualTest) and not by runTheTest or testFunction. It avoids the
+  // cloning issue, and avoids polluting the object in those called functions.
+  let filterExtraData = function (x) {
+    let banned_keys = ["private_window", "etp_reload", "noopener", "await_uri"];
+    return Object.fromEntries(
+      Object.entries(x).filter(([k, v]) => !banned_keys.includes(k))
+    );
+  };
+
+  let result = await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [IFRAME_DOMAIN, CROSS_ORIGIN_DOMAIN, filterExtraData(extraData)],
+    async function (iframe_domain_, cross_origin_domain_, extraData_) {
+      return content.wrappedJSObject.runTheTest(
+        iframe_domain_,
+        cross_origin_domain_,
+        extraData_
       );
-
-      if ("noopener" in extraData) {
-        await tabPromise;
-        if (Services.appinfo.OS === "WINNT") {
-          await new Promise(r => setTimeout(r, 1000));
-        }
-
-        let second_tabs_browser = gBrowser.tabs[gBrowser.tabs.length - 1];
-        result = await SpecialPowers.spawn(
-          second_tabs_browser.linkedBrowser,
-          [],
-          async function () {
-            let r = content.wrappedJSObject.give_result();
-            return r;
-          }
-        );
-        BrowserTestUtils.removeTab(second_tabs_browser);
-      }
-
-      testFunction(result, expectedResults, extraData);
-
-      if ("etp_reload" in extraData) {
-        let tab = gBrowser.tabs[gBrowser.tabs.length - 1];
-        ContentBlockingAllowList.remove(tab.linkedBrowser);
-      }
     }
   );
+
+  if ("noopener" in extraData) {
+    await popupTabPromise;
+    if (Services.appinfo.OS === "WINNT") {
+      await new Promise(r => setTimeout(r, 1000));
+    }
+
+    let popup_tab = browserWin.tabs[browserWin.tabs.length - 1];
+    result = await SpecialPowers.spawn(
+      popup_tab.linkedBrowser,
+      [],
+      async function () {
+        let r = content.wrappedJSObject.give_result();
+        return r;
+      }
+    );
+    BrowserTestUtils.removeTab(popup_tab);
+  }
+
+  testFunction(result, expectedResults, extraData);
+
+  if ("etp_reload" in extraData) {
+    ContentBlockingAllowList.remove(tab.linkedBrowser);
+  }
+  BrowserTestUtils.removeTab(tab);
+  if ("private_window" in extraData) {
+    await BrowserTestUtils.closeWindow(openedWin);
+  }
 }
 
 async function defaultsTest(
@@ -769,6 +774,30 @@ async function simpleRFPTest(
   await SpecialPowers.popPrefEnv();
 }
 
+async function simplePBMRFPTest(
+  uri,
+  testFunction,
+  expectedResults,
+  extraData,
+  extraPrefs
+) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.private_window = true;
+  extraData.testDesc = "simple RFP in PBM enabled";
+  expectedResults.shouldRFPApply = true;
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.resistFingerprinting.pbmode", true]].concat(
+      extraPrefs || []
+    ),
+  });
+
+  await runActualTest(uri, testFunction, expectedResults, extraData);
+
+  await SpecialPowers.popPrefEnv();
+}
+
 async function simpleFPPTest(
   uri,
   testFunction,
@@ -785,6 +814,32 @@ async function simpleFPPTest(
     set: [
       ["privacy.fingerprintingProtection", true],
       ["privacy.fingerprintingProtection.overrides", "+NavigatorHWConcurrency"],
+    ].concat(extraPrefs || []),
+  });
+
+  await runActualTest(uri, testFunction, expectedResults, extraData);
+
+  await SpecialPowers.popPrefEnv();
+}
+
+async function simplePBMFPPTest(
+  uri,
+  testFunction,
+  expectedResults,
+  extraData,
+  extraPrefs
+) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.private_window = true;
+  extraData.private_window = true;
+  extraData.testDesc = "simple FPP in PBM enabled";
+  expectedResults.shouldRFPApply = true;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.fingerprintingProtection.pbmode", true],
+      ["privacy.fingerprintingProtection.overrides", "+HardwareConcurrency"],
     ].concat(extraPrefs || []),
   });
 
