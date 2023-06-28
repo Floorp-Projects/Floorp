@@ -135,6 +135,16 @@ class FileSystemFileManager {
   Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFile(const FileId& aFileId);
 
   /**
+   * @brief Create a disk-backed file object as a copy.
+   *
+   * @param aDestinationFileId Specified id of file to be created
+   * @param aSourceFileId Specified id of the file from which we make a copy
+   * @return Result<nsCOMPtr<nsIFile>, QMResult> File abstraction or IO error
+   */
+  Result<nsCOMPtr<nsIFile>, QMResult> CreateFileFrom(
+      const FileId& aDestinationFileId, const FileId& aSourceFileId);
+
+  /**
    * @brief Remove the disk-backed file object for a specified entry id.
    * Note: The returned value is 0 in release builds.
    *
