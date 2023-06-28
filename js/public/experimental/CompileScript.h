@@ -11,6 +11,7 @@
 #define js_experimental_CompileScript_h
 
 #include "jspubtd.h"
+#include "js/ErrorReport.h"  // JSErrorReport
 #include "js/experimental/JSStencil.h"
 #include "js/GCAnnotations.h"
 #include "js/Modules.h"
@@ -39,9 +40,41 @@ JS_PUBLIC_API void SetNativeStackQuota(JS::FrontendContext* fc,
 // Returns true if there was any error reported to given FrontendContext.
 JS_PUBLIC_API bool HadFrontendErrors(JS::FrontendContext* fc);
 
-// Clear errors reported to given FrontendContext.
+// Returns an error report if given JS::FrontendContext had error and it has
+// an error report associated.
+//
+// This can be nullptr even if JS::HadFrontendErrors returned true, if
+// the error is one of:
+//   * over recursed
+//   * out of memory
+//   * allocation overflow
+//
+// The returned pointer is valid only while the given JS::FrontendContext is
+// alive.
+JS_PUBLIC_API const JSErrorReport* GetFrontendErrorReport(
+    JS::FrontendContext* fc);
+
+// Returns true if the JS::FrontendContext had over recuresed error.
+JS_PUBLIC_API bool HadFrontendOverRecursed(JS::FrontendContext* fc);
+
+// Returns true if the JS::FrontendContext had out of memory error.
+JS_PUBLIC_API bool HadFrontendOutOfMemory(JS::FrontendContext* fc);
+
+// Returns true if the JS::FrontendContext had allocation overflow error.
+JS_PUBLIC_API bool HadFrontendAllocationOverflow(JS::FrontendContext* fc);
+
+// Clear errors reported to the JS::FrontendContext.
 // No-op when there's no errors.
 JS_PUBLIC_API void ClearFrontendErrors(JS::FrontendContext* fc);
+
+// Returns the number of warnings reported to the JS::FrontendContext.
+JS_PUBLIC_API size_t GetFrontendWarningCount(JS::FrontendContext* fc);
+
+// Returns an error report represents the index-th warning.
+//
+// The returned pointer is valid only while the JS::FrontendContext is alive.
+JS_PUBLIC_API const JSErrorReport* GetFrontendWarningAt(JS::FrontendContext* fc,
+                                                        size_t index);
 
 /*
  * Set supported import assertions on a FrontendContext to be used with

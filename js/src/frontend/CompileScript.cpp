@@ -36,8 +36,37 @@ JS_PUBLIC_API bool JS::HadFrontendErrors(JS::FrontendContext* fc) {
   return fc->hadErrors();
 }
 
+JS_PUBLIC_API const JSErrorReport* JS::GetFrontendErrorReport(
+    JS::FrontendContext* fc) {
+  if (!fc->maybeError().isSome()) {
+    return nullptr;
+  }
+  return fc->maybeError().ptr();
+}
+
+JS_PUBLIC_API bool JS::HadFrontendOverRecursed(JS::FrontendContext* fc) {
+  return fc->hadOverRecursed();
+}
+
+JS_PUBLIC_API bool JS::HadFrontendOutOfMemory(JS::FrontendContext* fc) {
+  return fc->hadOutOfMemory();
+}
+
+JS_PUBLIC_API bool JS::HadFrontendAllocationOverflow(JS::FrontendContext* fc) {
+  return fc->hadAllocationOverflow();
+}
+
 JS_PUBLIC_API void JS::ClearFrontendErrors(JS::FrontendContext* fc) {
   fc->clearErrors();
+}
+
+JS_PUBLIC_API size_t JS::GetFrontendWarningCount(JS::FrontendContext* fc) {
+  return fc->warnings().length();
+}
+
+JS_PUBLIC_API const JSErrorReport* JS::GetFrontendWarningAt(
+    JS::FrontendContext* fc, size_t index) {
+  return &fc->warnings()[index];
 }
 
 JS_PUBLIC_API bool JS::SetSupportedImportAssertions(
