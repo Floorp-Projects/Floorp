@@ -81,10 +81,32 @@ class ElementInternals final : public nsIFormControl,
   void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
   NS_IMETHOD Reset() override;
   NS_IMETHOD SubmitNamesValues(mozilla::dom::FormData* aFormData) override;
+  int32_t GetParserInsertedControlNumberForStateKey() const override {
+    return mControlNumber;
+  }
 
   void SetFieldSet(mozilla::dom::HTMLFieldSetElement* aFieldSet) {
     mFieldSet = aFieldSet;
   }
+
+  const Nullable<OwningFileOrUSVStringOrFormData>& GetFormSubmissionValue()
+      const {
+    return mSubmissionValue;
+  }
+
+  const Nullable<OwningFileOrUSVStringOrFormData>& GetFormState() const {
+    return mState;
+  }
+
+  void RestoreFormValue(Nullable<OwningFileOrUSVStringOrFormData>&& aValue,
+                        Nullable<OwningFileOrUSVStringOrFormData>&& aState);
+
+  const nsCString& GetStateKey() const { return mStateKey; }
+  void SetStateKey(nsCString&& key) {
+    MOZ_ASSERT(mStateKey.IsEmpty(), "FACE state key should only be set once!");
+    mStateKey = key;
+  }
+  void InitializeControlNumber();
 
   void UpdateFormOwner();
   void UpdateBarredFromConstraintValidation();
@@ -165,8 +187,8 @@ class ElementInternals final : public nsIFormControl,
   Nullable<OwningFileOrUSVStringOrFormData> mSubmissionValue;
 
   // https://html.spec.whatwg.org/#face-state
-  // TODO: Bug 1734841 - Figure out how to support form restoration or
-  //       autocomplete for form-associated custom element
+  // TODO: Bug 1734841 - Figure out how to support autocomplete for
+  //       form-associated custom element.
   Nullable<OwningFileOrUSVStringOrFormData> mState;
 
   // https://html.spec.whatwg.org/#face-validation-message
@@ -176,6 +198,15 @@ class ElementInternals final : public nsIFormControl,
   RefPtr<nsGenericHTMLElement> mValidationAnchor;
 
   AttrArray mAttrs;
+
+  // Used to store the key to a form-associated custom element in the current
+  // session. Is empty until element has been upgraded.
+  nsCString mStateKey;
+
+  // A number for a form-associated custom element that is unique within its
+  // owner document. This is only set to a number for elements inserted into the
+  // document by the parser from the network. Otherwise, it is -1.
+  int32_t mControlNumber;
 };
 
 }  // namespace mozilla::dom
