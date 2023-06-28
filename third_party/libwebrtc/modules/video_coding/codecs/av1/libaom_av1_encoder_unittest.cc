@@ -21,6 +21,7 @@
 #include "api/video_codecs/video_encoder.h"
 #include "modules/video_coding/codecs/test/encoded_video_frame_producer.h"
 #include "modules/video_coding/include/video_error_codes.h"
+#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -184,6 +185,28 @@ TEST(LibaomAv1EncoderTest, CheckOddDimensionsWithSpatialLayers) {
   std::vector<EncodedVideoFrameProducer::EncodedFrame> encoded_frames =
       evfp.SetNumInputFrames(2).Encode();
   ASSERT_THAT(encoded_frames, SizeIs(6));
+}
+
+TEST(LibaomAv1EncoderTest, EncoderInfoWithoutResolutionBitrateLimits) {
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+  EXPECT_TRUE(encoder->GetEncoderInfo().resolution_bitrate_limits.empty());
+}
+
+TEST(LibaomAv1EncoderTest, EncoderInfoWithBitrateLimitsFromFieldTrial) {
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-Av1-GetEncoderInfoOverride/"
+      "frame_size_pixels:123|456|789,"
+      "min_start_bitrate_bps:11000|22000|33000,"
+      "min_bitrate_bps:44000|55000|66000,"
+      "max_bitrate_bps:77000|88000|99000/");
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+
+  EXPECT_THAT(
+      encoder->GetEncoderInfo().resolution_bitrate_limits,
+      ::testing::ElementsAre(
+          VideoEncoder::ResolutionBitrateLimits{123, 11000, 44000, 77000},
+          VideoEncoder::ResolutionBitrateLimits{456, 22000, 55000, 88000},
+          VideoEncoder::ResolutionBitrateLimits{789, 33000, 66000, 99000}));
 }
 
 TEST(LibaomAv1EncoderTest, EncoderInfoProvidesFpsAllocation) {

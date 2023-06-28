@@ -211,4 +211,7 @@ LibvpxVp8EncoderInfoSettings::LibvpxVp8EncoderInfoSettings()
 LibvpxVp9EncoderInfoSettings::LibvpxVp9EncoderInfoSettings()
     : EncoderInfoSettings("WebRTC-VP9-GetEncoderInfoOverride") {}
 
+LibaomAv1EncoderInfoSettings::LibaomAv1EncoderInfoSettings()
+    : EncoderInfoSettings("WebRTC-Av1-GetEncoderInfoOverride") {}
+
 }  // namespace webrtc

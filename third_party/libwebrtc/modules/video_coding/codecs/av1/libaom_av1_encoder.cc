@@ -32,6 +32,7 @@
 #include "modules/video_coding/svc/scalable_video_controller.h"
 #include "modules/video_coding/svc/scalable_video_controller_no_layering.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/experiments/encoder_info_settings.h"
 #include "rtc_base/logging.h"
 #include "third_party/libaom/source/libaom/aom/aom_codec.h"
 #include "third_party/libaom/source/libaom/aom/aom_encoder.h"
@@ -120,6 +121,7 @@ class LibaomAv1Encoder final : public VideoEncoder {
   aom_codec_enc_cfg_t cfg_;
   EncodedImageCallback* encoded_image_callback_;
   int64_t timestamp_;
+  const LibaomAv1EncoderInfoSettings encoder_info_override_;
 };
 
 int32_t VerifyCodecSettings(const VideoCodec& codec_settings) {
@@ -809,6 +811,10 @@ VideoEncoder::EncoderInfo LibaomAv1Encoder::GetEncoderInfo() const {
                                         svc_params_->framerate_factor[tid];
       }
     }
+  }
+  if (!encoder_info_override_.resolution_bitrate_limits().empty()) {
+    info.resolution_bitrate_limits =
+        encoder_info_override_.resolution_bitrate_limits();
   }
   return info;
 }
