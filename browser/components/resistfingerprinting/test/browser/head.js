@@ -769,6 +769,30 @@ async function simpleRFPTest(
   await SpecialPowers.popPrefEnv();
 }
 
+async function simpleFPPTest(
+  uri,
+  testFunction,
+  expectedResults,
+  extraData,
+  extraPrefs
+) {
+  if (extraData == undefined) {
+    extraData = {};
+  }
+  extraData.testDesc = "simple FPP enabled";
+  expectedResults.shouldRFPApply = true;
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.fingerprintingProtection", true],
+      ["privacy.fingerprintingProtection.overrides", "+NavigatorHWConcurrency"],
+    ].concat(extraPrefs || []),
+  });
+
+  await runActualTest(uri, testFunction, expectedResults, extraData);
+
+  await SpecialPowers.popPrefEnv();
+}
+
 // (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
 async function testA(
   uri,
