@@ -140,9 +140,6 @@ fn can_use_clip_chain_for_quad_path(
         }
 
         match clip_node.item.kind {
-            ClipItemKind::RoundedRectangle { mode: ClipMode::ClipOut, .. } => {
-                return false;
-            }
             ClipItemKind::RoundedRectangle { .. } => {
             }
             ClipItemKind::Rectangle { mode: ClipMode::ClipOut, .. } => {
@@ -192,9 +189,6 @@ fn get_prim_render_strategy(
             let clip_node = &data_stores.clip[clip_instance.handle];
 
             match clip_node.item.kind {
-                ClipItemKind::RoundedRectangle { mode: ClipMode::ClipOut, .. } => {
-                    panic!("bug: box-shadow clips not expected on non-legacy rect/quads");
-                }
                 ClipItemKind::RoundedRectangle { ref radius, mode, rect, .. } => {
                     match render_mode {
                         QuadRenderMode::Direct => {
