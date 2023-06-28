@@ -17,7 +17,9 @@
       "bare": "./good/module_0.js",
       "./bad/module_1.js": "./good/module_1.js",
       "./bad/module_2.js": "./good/module_2.js",
-      "./bad/module_3.js": "./good/module_3.js"
+      "./bad/module_3.js": "./good/module_3.js",
+      "./bad/module_4.js": "./good/module_4.js",
+      "./bad/module_7.js": "./good/module_7.js"
     }
   }
 </script>
@@ -44,11 +46,23 @@ Test mapping from one existing resource to another with circular dependency.
 -->
 <script type="module" src="module_importMap_with_external_script_3.js"></script>
 
+<!--
+Test with redirect, script_6.js -> script_5.js -> script_4.js.
+We redirect twice here, as sometimes one redirect can't reproduce the crash
+from bug 1835468.
+-->
+<script type="module" src="module_importMap_with_external_script_6.js"></script>
+
+<!--
+Test with async attribute
+-->
+<script type="module" async src="module_importMap_with_external_script_7.js"></script>
+
 <script>
   SimpleTest.waitForExplicitFinish();
 
   let passCount = 0;
-  const expectedCount = 4;
+  const expectedCount = 6;
 
   function success(name) {
     ok(true, "Test passed, loaded " + name);
