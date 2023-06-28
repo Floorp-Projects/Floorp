@@ -9,6 +9,7 @@ import {
   ParentAutocompleteOption,
 } from "resource://gre/modules/LoginHelper.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
 const lazy = {};
@@ -20,9 +21,8 @@ const gConfig = (function () {
     undefined
   );
   return {
-    scope: ["profile", "https://identity.mozilla.com/apps/relay"],
+    scope: ["https://identity.mozilla.com/apps/relay"],
     addressesUrl: baseUrl + `relayaddresses/`,
-    acceptTermsUrl: baseUrl + `terms-accepted-user/`,
     profilesUrl: baseUrl + `profiles/`,
     learnMoreURL: Services.urlFormatter.formatURLPref(
       "signon.firefoxRelay.learn_more_url"
@@ -39,10 +39,6 @@ const gConfig = (function () {
     ),
   };
 })();
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-});
 
 XPCOMUtils.defineLazyGetter(lazy, "log", () =>
   LoginHelper.createLogger("FirefoxRelay")
@@ -110,6 +106,30 @@ async function fetchWithReauth(
     return fetchWithReauth(browser, createRequest, false);
   }
   return response;
+}
+
+async function isRelayUserAsync() {
+  if (!(await hasFirefoxAccountAsync())) {
+    return false;
+  }
+
+  const response = await fetchWithReauth(
+    null,
+    headers => new Request(gConfig.profilesUrl, { headers })
+  );
+  if (!response) {
+    return false;
+  }
+
+  if (!response.ok) {
+    lazy.log.error(
+      `failed to check if user is a Relay user: ${response.status}:${
+        response.statusText
+      }:${await response.text()}`
+    );
+  }
+
+  return response.ok;
 }
 
 async function getReusableMasksAsync(browser, _origin) {
@@ -395,13 +415,15 @@ function isSignup(scenarioName) {
 }
 
 class RelayOffered {
+  #isRelayUser;
+
   async *autocompleteItemsAsync(_origin, scenarioName, hasInput) {
     if (!hasInput && isSignup(scenarioName)) {
-      const isUserEligible = lazy.NimbusFeatures[
-        "password-autocomplete"
-      ].getVariable("firefoxRelayIntegration");
+      if (this.#isRelayUser === undefined) {
+        this.#isRelayUser = await isRelayUserAsync();
+      }
 
-      if (isUserEligible) {
+      if (this.#isRelayUser) {
         const [title, subtitle] = await formatMessages(
           "firefox-relay-opt-in-title-1",
           "firefox-relay-opt-in-subtitle-1"
@@ -414,6 +436,7 @@ class RelayOffered {
           {
             telemetry: {
               flowId: FirefoxRelay.flowId,
+              isRelayUser: this.#isRelayUser,
               scenarioName,
             },
           }
@@ -422,38 +445,10 @@ class RelayOffered {
           "shown",
           FirefoxRelay.flowId,
           scenarioName,
-          true
+          this.#isRelayUser
         );
       }
     }
-  }
-
-  async notifyServerTermsAcceptedAsync(browser) {
-    const response = await fetchWithReauth(
-      browser,
-      headers =>
-        new Request(gConfig.acceptTermsUrl, {
-          method: "POST",
-          headers,
-        })
-    );
-
-    if (!response?.ok) {
-      lazy.log.error(
-        `failed to notify server that terms are accepted : ${response?.status}:${response?.statusText}`
-      );
-
-      let error;
-      try {
-        error = await response?.json();
-      } catch {}
-      await showErrorAsync(browser, "firefox-relay-mask-generation-failed", {
-        status: error?.detail || response.status,
-      });
-      return false;
-    }
-
-    return true;
   }
 
   async offerRelayIntegration(feature, browser, origin) {
@@ -477,16 +472,14 @@ class RelayOffered {
       label: enableStrings.label,
       accessKey: enableStrings.accesskey,
       dismiss: true,
-      callback: async () => {
+      async callback() {
         lazy.log.info("user opted in to Firefox Relay integration");
-        if (await this.notifyServerTermsAcceptedAsync(browser)) {
-          feature.markAsEnabled();
-          FirefoxRelayTelemetry.recordRelayOptInPanelEvent(
-            "enabled",
-            FirefoxRelay.flowId
-          );
-          fillUsername(await generateUsernameAsync(browser, origin));
-        }
+        feature.markAsEnabled();
+        FirefoxRelayTelemetry.recordRelayOptInPanelEvent(
+          "enabled",
+          FirefoxRelay.flowId
+        );
+        fillUsername(await generateUsernameAsync(browser, origin));
       },
     };
     const postpone = {
