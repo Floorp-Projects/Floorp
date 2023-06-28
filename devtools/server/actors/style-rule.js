@@ -882,7 +882,12 @@ class StyleRuleActor extends Actor {
         { kind: UPDATE_PRESERVING_RULES }
       );
     } else {
-      const cssRules = parentStyleSheet.cssRules;
+      // We retrieve the parent of the rule, which can be a regular stylesheet, but also
+      // another rule, in case the underlying rule is nested.
+      // If the rule is nested in another rule, we need to use its parent rule to "edit" it.
+      // If the rule has no parent rules, we can simply use the stylesheet.
+      const parent = this.rawRule.parentRule || parentStyleSheet;
+      const cssRules = parent.cssRules;
       const cssText = rule.cssText;
       const selectorText = rule.selectorText;
 
@@ -892,8 +897,8 @@ class StyleRuleActor extends Actor {
             // Inserts the new style rule into the current style sheet and
             // delete the current rule
             const ruleText = cssText.slice(selectorText.length).trim();
-            parentStyleSheet.insertRule(value + " " + ruleText, i);
-            parentStyleSheet.deleteRule(i + 1);
+            parent.insertRule(value + " " + ruleText, i);
+            parent.deleteRule(i + 1);
             break;
           } catch (e) {
             // The selector could be invalid, or the rule could fail to insert.

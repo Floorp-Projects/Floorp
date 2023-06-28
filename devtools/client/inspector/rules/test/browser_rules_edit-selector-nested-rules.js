@@ -19,9 +19,23 @@ const TEST_URI_INLINE_SHEET = `
   <style>${STYLE}</style>
   ${HTML}`;
 
+const TEST_URI_CONSTRUCTED_SHEET = `
+  ${HTML}
+  <script>
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(\`${STYLE}\`);
+    document.adoptedStyleSheets.push(sheet);
+  </script>
+`;
+
 add_task(async function test_inline_sheet() {
   info("Run test with inline stylesheet");
   await runTest(TEST_URI_INLINE_SHEET);
+});
+
+add_task(async function test_constructed_sheet() {
+  info("Run test with constructed stylesheet");
+  await runTest(TEST_URI_CONSTRUCTED_SHEET);
 });
 
 async function runTest(uri) {
