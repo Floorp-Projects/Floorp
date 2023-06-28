@@ -86,46 +86,6 @@ Result<bool, QMResult> DoesDirectoryExist(
   QM_TRY_RETURN(ApplyEntryExistsQuery(mConnection, existsQuery, aEntry));
 }
 
-Result<Path, QMResult> ResolveReversedPath(
-    const FileSystemConnection& aConnection,
-    const FileSystemEntryPair& aEndpoints) {
-  const nsLiteralCString pathQuery =
-      "WITH RECURSIVE followPath(handle, parent) AS ( "
-      "SELECT handle, parent "
-      "FROM Entries "
-      "WHERE handle=:entryId "
-      "UNION "
-      "SELECT Entries.handle, Entries.parent FROM followPath, Entries "
-      "WHERE followPath.parent=Entries.handle ) "
-      "SELECT COALESCE(Directories.name, Files.name), handle "
-      "FROM followPath "
-      "LEFT JOIN Directories USING(handle) "
-      "LEFT JOIN Files USING(handle);"_ns;
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConnection, pathQuery));
-  QM_TRY(
-      QM_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEndpoints.childId())));
-  QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
-
-  Path pathResult;
-  while (moreResults) {
-    QM_TRY_UNWRAP(Name entryName, stmt.GetNameByColumn(/* Column */ 0u));
-    QM_TRY_UNWRAP(EntryId entryId, stmt.GetEntryIdByColumn(/* Column */ 1u));
-
-    if (aEndpoints.parentId() == entryId) {
-      return pathResult;
-    }
-    pathResult.AppendElement(entryName);
-
-    QM_TRY_UNWRAP(moreResults, stmt.ExecuteStep());
-  }
-
-  // Spec wants us to return 'null' for not-an-ancestor case
-  pathResult.Clear();
-  return pathResult;
-}
-
 Result<bool, QMResult> IsAncestor(const FileSystemConnection& aConnection,
                                   const FileSystemEntryPair& aEndpoints) {
   const nsCString pathQuery =
@@ -162,28 +122,6 @@ Result<bool, QMResult> DoesFileExist(const FileSystemConnection& aConnection,
       ";"_ns;
 
   QM_TRY_RETURN(ApplyEntryExistsQuery(aConnection, existsQuery, aHandle));
-}
-
-nsresult GetFileAttributes(const FileSystemConnection& aConnection,
-                           const EntryId& aEntryId, ContentType& aType) {
-  const nsLiteralCString getFileLocation =
-      "SELECT type FROM Files INNER JOIN Entries USING(handle) "
-      "WHERE handle = :entryId "
-      ";"_ns;
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConnection, getFileLocation));
-  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEntryId)));
-  QM_TRY_UNWRAP(bool hasEntries, stmt.ExecuteStep());
-
-  // Type is an optional attribute
-  if (!hasEntries || stmt.IsNullByColumn(/* Column */ 0u)) {
-    return NS_OK;
-  }
-
-  QM_TRY_UNWRAP(aType, stmt.GetContentTypeByColumn(/* Column */ 0u));
-
-  return NS_OK;
 }
 
 nsresult GetEntries(const FileSystemConnection& aConnection,
@@ -529,12 +467,6 @@ Result<bool, QMResult> IsAnyDescendantLocked(
 
 }  // namespace
 
-// TODO: Implement idle maintenance
-void TryRemoveDuringIdleMaintenance(
-    const nsTArray<FileId>& /* aItemToRemove */) {
-  // Not implemented
-}
-
 FileSystemDatabaseManagerVersion001::FileSystemDatabaseManagerVersion001(
     FileSystemDataManager* aDataManager, FileSystemConnection&& aConnection,
     UniquePtr<FileSystemFileManager>&& aFileManager, const EntryId& aRootEntry)
@@ -770,35 +702,22 @@ nsresult FileSystemDatabaseManagerVersion001::GetFile(
     ContentType& aType, TimeStamp& lastModifiedMilliSeconds,
     nsTArray<Name>& aPath, nsCOMPtr<nsIFile>& aFile) const {
   MOZ_ASSERT(!aFileId.IsEmpty());
+  MOZ_ASSERT(aMode == FileMode::EXCLUSIVE);
 
   const FileSystemEntryPair endPoints(mRootEntry, aEntryId);
   QM_TRY_UNWRAP(aPath, ResolveReversedPath(mConnection, endPoints));
   if (aPath.IsEmpty()) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
-  aPath.Reverse();
 
   QM_TRY(MOZ_TO_RESULT(GetFileAttributes(mConnection, aEntryId, aType)));
-
-  if (aMode == FileMode::SHARED_FROM_COPY) {
-    QM_WARNONLY_TRY_UNWRAP(Maybe<FileId> mainFileId, GetFileId(aEntryId));
-    if (mainFileId) {
-      QM_TRY_UNWRAP(aFile,
-                    mFileManager->CreateFileFrom(aFileId, mainFileId.value()));
-    } else {
-      // LockShared/EnsureTemporaryFileId has provided a brand new fileId.
-      QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(aFileId));
-    }
-  } else {
-    MOZ_ASSERT(aMode == FileMode::EXCLUSIVE ||
-               aMode == FileMode::SHARED_FROM_EMPTY);
-
-    QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(aFileId));
-  }
+  QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(aFileId));
 
   PRTime lastModTime = 0;
   QM_TRY(MOZ_TO_RESULT(aFile->GetLastModifiedTime(&lastModTime)));
   lastModifiedMilliSeconds = static_cast<TimeStamp>(lastModTime);
+
+  aPath.Reverse();
 
   return NS_OK;
 }
@@ -1548,6 +1467,74 @@ Result<bool, QMResult> IsSame(const FileSystemConnection& aConnection,
       IsSpecificError<NS_ERROR_DOM_NOT_FOUND_ERR>,
       // Fallback.
       ErrToOkFromQMResult<false>));
+}
+
+Result<Path, QMResult> ResolveReversedPath(
+    const FileSystemConnection& aConnection,
+    const FileSystemEntryPair& aEndpoints) {
+  const nsLiteralCString pathQuery =
+      "WITH RECURSIVE followPath(handle, parent) AS ( "
+      "SELECT handle, parent "
+      "FROM Entries "
+      "WHERE handle=:entryId "
+      "UNION "
+      "SELECT Entries.handle, Entries.parent FROM followPath, Entries "
+      "WHERE followPath.parent=Entries.handle ) "
+      "SELECT COALESCE(Directories.name, Files.name), handle "
+      "FROM followPath "
+      "LEFT JOIN Directories USING(handle) "
+      "LEFT JOIN Files USING(handle);"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(aConnection, pathQuery));
+  QM_TRY(
+      QM_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEndpoints.childId())));
+  QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
+
+  Path pathResult;
+  while (moreResults) {
+    QM_TRY_UNWRAP(Name entryName, stmt.GetNameByColumn(/* Column */ 0u));
+    QM_TRY_UNWRAP(EntryId entryId, stmt.GetEntryIdByColumn(/* Column */ 1u));
+
+    if (aEndpoints.parentId() == entryId) {
+      return pathResult;
+    }
+    pathResult.AppendElement(entryName);
+
+    QM_TRY_UNWRAP(moreResults, stmt.ExecuteStep());
+  }
+
+  // Spec wants us to return 'null' for not-an-ancestor case
+  pathResult.Clear();
+  return pathResult;
+}
+
+nsresult GetFileAttributes(const FileSystemConnection& aConnection,
+                           const EntryId& aEntryId, ContentType& aType) {
+  const nsLiteralCString getFileLocation =
+      "SELECT type FROM Files INNER JOIN Entries USING(handle) "
+      "WHERE handle = :entryId "
+      ";"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(aConnection, getFileLocation));
+  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEntryId)));
+  QM_TRY_UNWRAP(bool hasEntries, stmt.ExecuteStep());
+
+  // Type is an optional attribute
+  if (!hasEntries || stmt.IsNullByColumn(/* Column */ 0u)) {
+    return NS_OK;
+  }
+
+  QM_TRY_UNWRAP(aType, stmt.GetContentTypeByColumn(/* Column */ 0u));
+
+  return NS_OK;
+}
+
+// TODO: Implement idle maintenance
+void TryRemoveDuringIdleMaintenance(
+    const nsTArray<FileId>& /* aItemToRemove */) {
+  // Not implemented
 }
 
 }  // namespace fs::data

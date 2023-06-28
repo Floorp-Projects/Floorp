@@ -434,6 +434,45 @@ Result<Usage, QMResult> FileSystemDatabaseManagerVersion002::GetFileUsage(
   return FileSystemDatabaseManagerVersion001::GetFileUsage(aConnection);
 }
 
+nsresult FileSystemDatabaseManagerVersion002::GetFile(
+    const EntryId& aEntryId, const FileId& aFileId, const FileMode& aMode,
+    ContentType& aType, TimeStamp& lastModifiedMilliSeconds,
+    nsTArray<Name>& aPath, nsCOMPtr<nsIFile>& aFile) const {
+  MOZ_ASSERT(!aFileId.IsEmpty());
+
+  const FileSystemEntryPair endPoints(mRootEntry, aEntryId);
+  QM_TRY_UNWRAP(aPath, ResolveReversedPath(mConnection, endPoints));
+  if (aPath.IsEmpty()) {
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
+  QM_TRY(MOZ_TO_RESULT(GetFileAttributes(mConnection, aEntryId, aType)));
+
+  if (aMode == FileMode::SHARED_FROM_COPY) {
+    QM_WARNONLY_TRY_UNWRAP(Maybe<FileId> mainFileId, GetFileId(aEntryId));
+    if (mainFileId) {
+      QM_TRY_UNWRAP(aFile,
+                    mFileManager->CreateFileFrom(aFileId, mainFileId.value()));
+    } else {
+      // LockShared/EnsureTemporaryFileId has provided a brand new fileId.
+      QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(aFileId));
+    }
+  } else {
+    MOZ_ASSERT(aMode == FileMode::EXCLUSIVE ||
+               aMode == FileMode::SHARED_FROM_EMPTY);
+
+    QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(aFileId));
+  }
+
+  PRTime lastModTime = 0;
+  QM_TRY(MOZ_TO_RESULT(aFile->GetLastModifiedTime(&lastModTime)));
+  lastModifiedMilliSeconds = static_cast<TimeStamp>(lastModTime);
+
+  aPath.Reverse();
+
+  return NS_OK;
+}
+
 Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::RenameEntry(
     const FileSystemEntryMetadata& aHandle, const Name& aNewName) {
   MOZ_ASSERT(!aNewName.IsEmpty());
