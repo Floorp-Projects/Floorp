@@ -604,6 +604,11 @@ rsa_get_prime_from_exponents(mp_int *e, mp_int *d, mp_int *p, mp_int *q,
      */
     order_k = (unsigned)mpl_significant_bits(&kphi) - keySizeInBits;
 
+    if (order_k <= 1) {
+        err = MP_RANGE;
+        goto cleanup;
+    }
+
     /* for (k=kinit; order(k) >= order_k; k--) { */
     /* k=kinit: k can't be bigger than  kphi/2^(keySizeInBits -1) */
     CHECK_MPI_OK(mp_2expt(&k, keySizeInBits - 1));

@@ -1,6 +1,7 @@
 /* MIT License
  *
- * Copyright (c) 2016-2020 INRIA, CMU and Microsoft Corporation
+ * Copyright (c) 2016-2022 INRIA, CMU and Microsoft Corporation
+ * Copyright (c) 2022-2023 HACL* Contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -35,7 +36,28 @@ extern "C" {
 
 #include "../Hacl_Krmllib.h"
 
-uint32_t LowStar_Vector_new_capacity(uint32_t cap);
+static inline uint32_t FStar_UInt32_eq_mask(uint32_t a, uint32_t b);
+
+static inline uint32_t FStar_UInt32_gte_mask(uint32_t a, uint32_t b);
+
+static inline uint8_t FStar_UInt8_eq_mask(uint8_t a, uint8_t b);
+
+static inline uint16_t FStar_UInt16_eq_mask(uint16_t a, uint16_t b);
+
+static inline FStar_UInt128_uint128
+FStar_UInt128_add(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b);
+
+static inline FStar_UInt128_uint128
+FStar_UInt128_logor(FStar_UInt128_uint128 a, FStar_UInt128_uint128 b);
+
+static inline FStar_UInt128_uint128
+FStar_UInt128_shift_left(FStar_UInt128_uint128 a, uint32_t s);
+
+static inline FStar_UInt128_uint128 FStar_UInt128_mul_wide(uint64_t x, uint64_t y);
+
+static inline void store128_be(uint8_t *x0, FStar_UInt128_uint128 x1);
+
+static inline FStar_UInt128_uint128 load128_be(uint8_t *x0);
 
 #if defined(__cplusplus)
 }

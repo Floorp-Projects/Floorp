@@ -120,6 +120,8 @@ CSRCS = \
 	md2.c \
 	md5.c \
 	sha512.c \
+	sha3.c \
+	shake.c \
 	cmac.c \
 	alghmac.c \
 	rawhash.c \

@@ -57,3 +57,7 @@
 	0	sha256_-H	SHA256_Hash
 	0	sha384_-H	SHA384_Hash
 	0	sha512_-H	SHA512_Hash
+	0	sha3_224_-H	SHA3_224_Hash
+	0	sha3_256_-H	SHA3_256_Hash
+	0	sha3_384_-H	SHA3_384_Hash
+	0	sha3_512_-H	SHA3_512_Hash	

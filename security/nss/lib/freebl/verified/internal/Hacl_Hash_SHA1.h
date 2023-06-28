@@ -1,6 +1,7 @@
 /* MIT License
  *
- * Copyright (c) 2016-2020 INRIA, CMU and Microsoft Corporation
+ * Copyright (c) 2016-2022 INRIA, CMU and Microsoft Corporation
+ * Copyright (c) 2022-2023 HACL* Contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,9 +38,18 @@ extern "C" {
 
 void Hacl_Hash_Core_SHA1_legacy_init(uint32_t *s);
 
-void Hacl_Hash_Core_SHA1_legacy_update(uint32_t *h, uint8_t *l);
-
 void Hacl_Hash_Core_SHA1_legacy_finish(uint32_t *s, uint8_t *dst);
+
+void Hacl_Hash_SHA1_legacy_update_multi(uint32_t *s, uint8_t *blocks, uint32_t n_blocks);
+
+void
+Hacl_Hash_SHA1_legacy_update_last(
+    uint32_t *s,
+    uint64_t prev_len,
+    uint8_t *input,
+    uint32_t input_len);
+
+void Hacl_Hash_SHA1_legacy_hash(uint8_t *input, uint32_t input_len, uint8_t *dst);
 
 #if defined(__cplusplus)
 }

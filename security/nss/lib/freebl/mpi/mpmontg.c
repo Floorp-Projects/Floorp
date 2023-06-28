@@ -1038,6 +1038,8 @@ mp_exptmod(const mp_int *inBase, const mp_int *exponent,
     if (!mp_isodd(modulus))
         return s_mp_exptmod(inBase, exponent, modulus, result);
 
+    if (mp_cmp_z(inBase) == MP_LT)
+        return MP_RANGE;
     MP_DIGITS(&montBase) = 0;
     MP_DIGITS(&goodBase) = 0;
 

@@ -636,7 +636,7 @@ async function scheduleLinux(name, overrides, args = "") {
       command: [
         "/bin/bash",
         "-c",
-        checkout_and_gyp + "--enable-legacy-db"
+        checkout_and_gyp + "--enable-legacy-db " + args
       ],
       symbol: "B",
       group: "DBM",

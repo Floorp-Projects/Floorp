@@ -33,6 +33,7 @@ static PRBool clmul_support_ = PR_FALSE;
 static PRBool sha_support_ = PR_FALSE;
 static PRBool avx_support_ = PR_FALSE;
 static PRBool avx2_support_ = PR_FALSE;
+static PRBool adx_support_ = PR_FALSE;
 static PRBool ssse3_support_ = PR_FALSE;
 static PRBool sse4_1_support_ = PR_FALSE;
 static PRBool sse4_2_support_ = PR_FALSE;
@@ -82,6 +83,7 @@ check_xcr0_ymm()
 #define ECX_OSXSAVE (1 << 27)
 #define ECX_AVX (1 << 28)
 #define EBX_AVX2 (1 << 5)
+#define EBX_ADX (1 << 19)
 #define EBX_BMI1 (1 << 3)
 #define EBX_BMI2 (1 << 8)
 #define EBX_SHA (1 << 29)
@@ -104,6 +106,7 @@ CheckX86CPUSupport()
     char *disable_hw_sha = PR_GetEnvSecure("NSS_DISABLE_HW_SHA");
     char *disable_avx = PR_GetEnvSecure("NSS_DISABLE_AVX");
     char *disable_avx2 = PR_GetEnvSecure("NSS_DISABLE_AVX2");
+    char *disable_adx = PR_GetEnvSecure("NSS_DISABLE_ADX");
     char *disable_ssse3 = PR_GetEnvSecure("NSS_DISABLE_SSSE3");
     char *disable_sse4_1 = PR_GetEnvSecure("NSS_DISABLE_SSE4_1");
     char *disable_sse4_2 = PR_GetEnvSecure("NSS_DISABLE_SSE4_2");
@@ -121,6 +124,9 @@ CheckX86CPUSupport()
     avx2_support_ = (PRBool)((ebx7 & AVX2_EBX_BITS) == AVX2_EBX_BITS &&
                              (ecx & AVX2_ECX_BITS) == AVX2_ECX_BITS &&
                              disable_avx2 == NULL);
+    /* CPUID.(EAX=07H, ECX=0H):EBX.ADX[bit 19]=1 indicates 
+    the processor supports ADCX and ADOX instructions.*/
+    adx_support_ = (PRBool)((ebx7 & EBX_ADX) != 0 && disable_adx == NULL);
     ssse3_support_ = (PRBool)((ecx & ECX_SSSE3) != 0 &&
                               disable_ssse3 == NULL);
     sse4_1_support_ = (PRBool)((ecx & ECX_SSE4_1) != 0 &&
@@ -445,6 +451,11 @@ PRBool
 avx2_support()
 {
     return avx2_support_;
+}
+PRBool
+adx_support()
+{
+    return adx_support_;
 }
 PRBool
 ssse3_support()

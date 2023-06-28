@@ -61,6 +61,9 @@
     'sysrand.c',
     'tlsprfalg.c',
     'secmpi.c',
+    'verified/Hacl_Hash_SHA3.c',
+    'sha3.c',
+    'shake.c',
   ],
   'conditions': [
     [ 'OS=="linux" or OS=="android"', {
@@ -149,11 +152,6 @@
       'sources': [
         # All other architectures get the generic 32 bit implementation.
         'ecl/curve25519_32.c',
-      ],
-    }],
-    ['supports_vale_curve25519==1', {
-      'sources': [
-        'verified/Hacl_Curve25519_64.c',
       ],
     }],
     ['(target_arch!="ppc64" and target_arch!="ppc64le") or disable_altivec==1', {

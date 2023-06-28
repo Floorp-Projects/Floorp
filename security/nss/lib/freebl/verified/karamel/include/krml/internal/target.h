@@ -5,12 +5,19 @@
 #define __KRML_TARGET_H
 
 #include <stdlib.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <inttypes.h>
 #include <limits.h>
+#include <assert.h>
 
-#include "krml/internal/callconv.h"
+/* Since KaRaMeL emits the inline keyword unconditionally, we follow the
+ * guidelines at https://gcc.gnu.org/onlinedocs/gcc/Inline.html and make this
+ * __inline__ to ensure the code compiles with -std=c90 and earlier. */
+#ifdef __GNUC__
+#define inline __inline__
+#endif
 
 /******************************************************************************/
 /* Macros that KaRaMeL will generate.                                         */
@@ -46,6 +53,10 @@
 #define KRML_HOST_FREE free
 #endif
 
+#ifndef KRML_HOST_IGNORE
+#define KRML_HOST_IGNORE(x) (void)(x)
+#endif
+
 #ifndef KRML_PRE_ALIGN
 #ifdef _MSC_VER
 #define KRML_PRE_ALIGN(X) __declspec(align(X))
@@ -62,16 +73,29 @@
 #endif
 #endif
 
+/* MinGW-W64 does not support C11 aligned_alloc, but it supports
+ * MSVC's _aligned_malloc.
+ */
 #ifndef KRML_ALIGNED_MALLOC
-#ifdef _MSC_VER
+#ifdef __MINGW32__
+#include <_mingw.h>
+#endif
+#if (defined(_MSC_VER) || (defined(__MINGW32__) && defined(__MINGW64_VERSION_MAJOR)))
 #define KRML_ALIGNED_MALLOC(X, Y) _aligned_malloc(Y, X)
 #else
 #define KRML_ALIGNED_MALLOC(X, Y) aligned_alloc(X, Y)
 #endif
 #endif
 
+/* Since aligned allocations with MinGW-W64 are done with
+ * _aligned_malloc (see above), such pointers must be freed with
+ * _aligned_free.
+ */
 #ifndef KRML_ALIGNED_FREE
-#ifdef _MSC_VER
+#ifdef __MINGW32__
+#include <_mingw.h>
+#endif
+#if (defined(_MSC_VER) || (defined(__MINGW32__) && defined(__MINGW64_VERSION_MAJOR)))
 #define KRML_ALIGNED_FREE(X) _aligned_free(X)
 #else
 #define KRML_ALIGNED_FREE(X) free(X)
@@ -84,7 +108,7 @@
 
 /* Prims_nat not yet in scope */
 inline static int32_t
-krml_time()
+krml_time(void)
 {
     return (int32_t)time(NULL);
 }
@@ -109,7 +133,6 @@ krml_time()
 /* In FStar.Buffer.fst, the size of arrays is uint32_t, but it's a number of
  * *elements*. Do an ugly, run-time check (some of which KaRaMeL can eliminate).
  */
-
 #if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 4))
 #define _KRML_CHECK_SIZE_PRAGMA \
     _Pragma("GCC diagnostic ignored \"-Wtype-limits\"")

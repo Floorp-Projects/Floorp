@@ -17,6 +17,10 @@
 #include "testvectors/hmac-sha256-vectors.h"
 #include "testvectors/hmac-sha384-vectors.h"
 #include "testvectors/hmac-sha512-vectors.h"
+#include "testvectors/hmac-sha3-224-vectors.h"
+#include "testvectors/hmac-sha3-256-vectors.h"
+#include "testvectors/hmac-sha3-384-vectors.h"
+#include "testvectors/hmac-sha3-512-vectors.h"
 #include "util.h"
 
 namespace nss_test {
@@ -71,4 +75,20 @@ INSTANTIATE_TEST_SUITE_P(
     HmacSha512, Pkcs11HmacTest,
     ::testing::Combine(::testing::ValuesIn(kHmacSha512WycheproofVectors),
                        ::testing::Values(CKM_SHA512_HMAC)));
+INSTANTIATE_TEST_SUITE_P(
+    HmacSha3224, Pkcs11HmacTest,
+    ::testing::Combine(::testing::ValuesIn(kHmacSha3224WycheproofVectors),
+                       ::testing::Values(CKM_SHA3_224_HMAC)));
+INSTANTIATE_TEST_SUITE_P(
+    HmacSha3256, Pkcs11HmacTest,
+    ::testing::Combine(::testing::ValuesIn(kHmacSha3256WycheproofVectors),
+                       ::testing::Values(CKM_SHA3_256_HMAC)));
+INSTANTIATE_TEST_SUITE_P(
+    HmacSha3384, Pkcs11HmacTest,
+    ::testing::Combine(::testing::ValuesIn(kHmacSha3384WycheproofVectors),
+                       ::testing::Values(CKM_SHA3_384_HMAC)));
+INSTANTIATE_TEST_SUITE_P(
+    HmacSha3512, Pkcs11HmacTest,
+    ::testing::Combine(::testing::ValuesIn(kHmacSha3512WycheproofVectors),
+                       ::testing::Values(CKM_SHA3_512_HMAC)));
 }  // namespace nss_test

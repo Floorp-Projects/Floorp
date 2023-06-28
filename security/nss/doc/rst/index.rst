@@ -12,7 +12,6 @@ Network Security Services (NSS)
    build_artifacts.rst
    releases/index.rst
    community.rst
-   legacy/index.rst
 
 .. warning::
    This NSS documentation was just imported from our legacy MDN repository. It

@@ -88,6 +88,7 @@ PRBool clmul_support();
 PRBool sha_support();
 PRBool avx_support();
 PRBool avx2_support();
+PRBool adx_support();
 PRBool ssse3_support();
 PRBool sse4_1_support();
 PRBool sse4_2_support();

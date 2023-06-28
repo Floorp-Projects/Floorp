@@ -1257,7 +1257,17 @@
       "label": "Security_Communication_ECC_RootCA1",
       "binNumber": 250,
       "sha256Fingerprint": "50+9pVvVZMRzo2tEGqeZyKaOB3RA6CiLn6HlDku6yhE="
+    },
+    {
+      "label": "BJCA_Global_Root_CA2",
+      "binNumber": 251,
+      "sha256Fingerprint": "V032kx4ngDlme3IK/cFgD8J+tm3TCSl5+3OFZIchKII="
+    },
+    {
+      "label": "BJCA_Global_Root_CA1",
+      "binNumber": 252,
+      "sha256Fingerprint": "84lviP58CognZqf6atJ0n7V6fz6Y+3acH6ewnCxE1a4="
     }
   ],
-  "maxBin": 250
+  "maxBin": 252
 }

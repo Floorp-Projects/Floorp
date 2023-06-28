@@ -1,6 +1,7 @@
 /* MIT License
  *
- * Copyright (c) 2016-2020 INRIA, CMU and Microsoft Corporation
+ * Copyright (c) 2016-2022 INRIA, CMU and Microsoft Corporation
+ * Copyright (c) 2022-2023 HACL* Contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,12 +35,33 @@ extern "C" {
 #include "krml/internal/target.h"
 
 #include "Hacl_Krmllib.h"
-#include "Hacl_Bignum25519_51.h"
 
+/**
+Compute the scalar multiple of a point.
+
+@param out Pointer to 32 bytes of memory, allocated by the caller, where the resulting point is written to.
+@param priv Pointer to 32 bytes of memory where the secret/private key is read from.
+@param pub Pointer to 32 bytes of memory where the public point is read from.
+*/
 void Hacl_Curve25519_51_scalarmult(uint8_t *out, uint8_t *priv, uint8_t *pub);
 
+/**
+Calculate a public point from a secret/private key.
+
+This computes a scalar multiplication of the secret/private key with the curve's basepoint.
+
+@param pub Pointer to 32 bytes of memory, allocated by the caller, where the resulting point is written to.
+@param priv Pointer to 32 bytes of memory where the secret/private key is read from.
+*/
 void Hacl_Curve25519_51_secret_to_public(uint8_t *pub, uint8_t *priv);
 
+/**
+Execute the diffie-hellmann key exchange.
+
+@param out Pointer to 32 bytes of memory, allocated by the caller, where the resulting point is written to.
+@param priv Pointer to 32 bytes of memory where **our** secret/private key is read from.
+@param pub Pointer to 32 bytes of memory where **their** public point is read from.
+*/
 bool Hacl_Curve25519_51_ecdh(uint8_t *out, uint8_t *priv, uint8_t *pub);
 
 #if defined(__cplusplus)

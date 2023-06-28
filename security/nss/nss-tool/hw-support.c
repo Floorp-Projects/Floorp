@@ -25,6 +25,7 @@ int main(int argc, char const *argv[]) {
   printf("\tSHA \t%s supported\n", sha_support() ? "" : "not");
   printf("\tAVX \t%s supported\n", avx_support() ? "" : "not");
   printf("\tAVX2 \t%s supported\n", avx2_support() ? "" : "not");
+  printf("\tADX \t%s supported\n", adx_support() ? "" : "not");
   printf("\tSSSE3 \t%s supported\n", ssse3_support() ? "" : "not");
   printf("\tSSE4.1 \t%s supported\n", sse4_1_support() ? "" : "not");
   printf("\tSSE4.2 \t%s supported\n", sse4_2_support() ? "" : "not");
