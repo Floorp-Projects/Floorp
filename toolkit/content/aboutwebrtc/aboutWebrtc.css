@@ -57,6 +57,10 @@ table {
   padding: 4px;
 }
 
+h3 > span {
+  margin-inline-end: 0.5em;
+}
+
 .peer-connection > button {
   margin-inline-start: 0;
 }

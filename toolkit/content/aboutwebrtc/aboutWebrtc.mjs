@@ -499,6 +499,11 @@ class ShowTab extends Control {
                 forceRefreshList.includes(pcid)
             )
             .flatMap(report => [
+              translateSection(
+                report,
+                "pc-heading",
+                renderPeerConnectionHeading
+              ),
               translateSection(report, "ice-stats", renderICEStats),
               translateSection(
                 report,
@@ -589,11 +594,121 @@ function renderPeerConnection(report, forceRefreshFn) {
   return pcDiv;
 }
 
-function renderPeerConnectionTools(rndr, report, forceRefreshFn) {
+function renderPeerConnectionMediaSummary(rndr, report) {
+  // Takes a codecId value and returns a corresponding codec stats object
+  const getCodecById = aId => report.codecStats.find(({ id }) => id == aId);
+
+  // Find all the codecs used by send streams
+  const sendCodecs = new Set(
+    [...report.outboundRtpStreamStats]
+      .filter(({ codecId }) => codecId)
+      .map(({ codecId }) => getCodecById(codecId).mimeType)
+      .sort()
+  );
+
+  // Find all the codecs used by receive streams
+  const recvCodecs = new Set(
+    [...report.inboundRtpStreamStats]
+      .filter(({ codecId }) => codecId)
+      .map(({ codecId }) => getCodecById(codecId).mimeType)
+      .sort()
+  );
+
+  // Take all the codecs that appear in both the send and receive codec lists
+  const sendRecvCodecs = new Set(
+    [...sendCodecs, ...recvCodecs].filter(
+      c => sendCodecs.has(c) && recvCodecs.has(c)
+    )
+  );
+
+  // Remove the common codecs from the send and receive codec lists.
+  // sendCodecs will now contain send only codecs
+  // receiveCodecs will now contain receive only codecs
+  sendRecvCodecs.forEach(c => {
+    sendCodecs.delete(c);
+    recvCodecs.delete(c);
+  });
+
+  const formatter = new Intl.ListFormat("en", {
+    style: "short",
+    type: "conjunction",
+  });
+
+  // Create a label with the codecs common to send and receive streams
+  const sendRecvSpan = sendRecvCodecs.size
+    ? [
+        rndr.elem_span({}, "about-webrtc-short-send-receive-direction", {
+          codecs: formatter.format(sendRecvCodecs),
+        }),
+      ]
+    : [];
+
+  // Do the same for send only codecs
+  const sendSpan = sendCodecs.size
+    ? [
+        rndr.elem_span({}, "about-webrtc-short-send-direction", {
+          codecs: formatter.format(sendCodecs),
+        }),
+      ]
+    : [];
+
+  // Do the same for receive only codecs
+  const recvSpan = recvCodecs.size
+    ? [
+        rndr.elem_span({}, "about-webrtc-short-receive-direction", {
+          codecs: formatter.format(recvCodecs),
+        }),
+      ]
+    : [];
+
+  return [...sendRecvSpan, ...sendSpan, ...recvSpan];
+}
+
+function renderPeerConnectionHeading(rndr, report) {
   const { pcid, timestamp, closed: isClosed, browserId } = report;
   const id = pcid.match(/id=(\S+)/)[1];
   const url = pcid.match(/url=([^)]+)/)[1];
   const now = new Date(timestamp);
+  return isClosed
+    ? rndr.elems_div(
+        {
+          id: `pc-heading: ${pcid}`,
+          class: "pc-heading",
+        },
+        [
+          rndr.elems_h3({}, [
+            rndr.elem_span({}, "about-webrtc-connection-closed", {
+              "browser-id": browserId,
+              id,
+              url,
+              now,
+            }),
+            ...renderPeerConnectionMediaSummary(rndr, report),
+          ]),
+        ]
+      )
+    : rndr.elems_div(
+        {
+          id: `pc-heading: ${pcid}`,
+          class: "pc-heading",
+        },
+        [
+          rndr.elems_h3({}, [
+            rndr.elem_span({}, "about-webrtc-connection-open", {
+              "browser-id": browserId,
+              id,
+              url,
+              now,
+            }),
+            ...renderPeerConnectionMediaSummary(rndr, report),
+          ]),
+        ]
+      );
+}
+
+function renderPeerConnectionTools(rndr, report, forceRefreshFn) {
+  const { pcid, browserId } = report;
+  const id = pcid.match(/id=(\S+)/)[1];
   const copyHistButton = !Services.prefs.getBoolPref(
     "media.aboutwebrtc.hist.enabled"
   )
@@ -632,19 +747,7 @@ function renderPeerConnectionTools(rndr, report, forceRefreshFn) {
     "about-webrtc-auto-refresh-label"
   );
   return renderElements("div", { id: "pc-tools: " + pcid }, [
-    isClosed
-      ? renderElement("h3", {}, "about-webrtc-connection-closed", {
-          "browser-id": browserId,
-          id,
-          url,
-          now,
-        })
-      : renderElement("h3", {}, "about-webrtc-connection-open", {
-          "browser-id": browserId,
-          id,
-          url,
-          now,
-        }),
+    renderPeerConnectionHeading(rndr, report),
     new ShowTab(browserId).render()[0],
     renderCopyTextToClipboardButton(
       rndr,

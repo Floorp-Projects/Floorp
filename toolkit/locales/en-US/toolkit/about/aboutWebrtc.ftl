@@ -117,6 +117,14 @@ about-webrtc-copy-report-history-button = Copy Report History
 about-webrtc-connection-open = [ { $browser-id } | { $id } ] { $url } { $now }
 about-webrtc-connection-closed = [ { $browser-id } | { $id } ] { $url } (closed) { $now }
 
+## These are used to indicate what direction media is flowing.
+## Variables:
+##  $codecs - a list of media codecs
+
+about-webrtc-short-send-receive-direction = Send / Receive: { $codecs }
+about-webrtc-short-send-direction = Send: { $codecs }
+about-webrtc-short-receive-direction = Receive: { $codecs }
+
 ##
 
 about-webrtc-local-candidate = Local Candidate
