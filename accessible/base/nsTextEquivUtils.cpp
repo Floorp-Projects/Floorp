@@ -11,6 +11,7 @@
 #include "LocalAccessible-inl.h"
 #include "AccIterator.h"
 #include "nsCoreUtils.h"
+#include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Text.h"
 #include "nsIContentInlines.h"
 
@@ -123,8 +124,9 @@ nsresult nsTextEquivUtils::AppendTextEquivFromTextContent(nsIContent* aContent,
 
 nsresult nsTextEquivUtils::AppendFromDOMChildren(nsIContent* aContent,
                                                  nsAString* aString) {
-  for (nsIContent* childContent = aContent->GetFirstChild(); childContent;
-       childContent = childContent->GetNextSibling()) {
+  auto iter =
+      dom::AllChildrenIterator(aContent, nsIContent::eAllChildren, true);
+  while (nsIContent* childContent = iter.GetNextChild()) {
     nsresult rv = AppendFromDOMNode(childContent, aString);
     NS_ENSURE_SUCCESS(rv, rv);
   }

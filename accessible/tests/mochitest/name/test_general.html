@@ -264,6 +264,8 @@
       const shadowRoot = getNode("shadowHost").shadowRoot;
       const shadowButtonVisibleText = shadowRoot.getElementById("shadowButtonVisibleText");
       testName(shadowButtonVisibleText, "shadowButtonVisibleText");
+      const shadowButtonHiddenText = shadowRoot.getElementById("shadowButtonHiddenText");
+      testName(shadowButtonHiddenText, "shadowButtonHiddenText");
 
       SimpleTest.finish();
     }
@@ -736,10 +738,13 @@
   <!-- aria-labelledby referring to a slot -->
   <div id="shadowHost">
     shadowButtonVisibleText
+    <span slot="hiddenSlot">shadowButtonHiddenText</span>
   </div>
   <template id="shadowTemplate">
     <input type="button" id="shadowButtonVisibleText" aria-labelledby="visibleSlot">
     <slot id="visibleSlot"></slot>
+    <input type="button" id="shadowButtonHiddenText" aria-labelledby="hiddenSlot">
+    <slot id="hiddenSlot" name="hiddenSlot" hidden></slot>
   </template>
   <script>
     const shadowHost = document.getElementById("shadowHost");
