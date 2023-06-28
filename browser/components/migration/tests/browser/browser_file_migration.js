@@ -174,8 +174,9 @@ add_task(async function test_file_migration() {
         SUCCESS_STATE[progressGroup.dataset.resourceType];
       if (expectedSuccessText) {
         let progressIcon = progressGroup.querySelector(".progress-icon");
-        Assert.ok(
-          progressIcon.classList.contains("completed"),
+        Assert.stringMatches(
+          progressIcon.getAttribute("state"),
+          "success",
           "Should be showing completed state."
         );
 

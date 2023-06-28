@@ -431,7 +431,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
                 extraArgs.extensions =
                   lazy.MigrationWizardConstants.EXTENSIONS_IMPORT_RESULT.NONE_MATCHED;
                 progress[foundResourceTypeName] = {
-                  value: lazy.MigrationWizardConstants.PROGRESS_VALUE.ERROR,
+                  value: lazy.MigrationWizardConstants.PROGRESS_VALUE.WARNING,
                   message: await lazy.gFluentStrings.formatValue(
                     "migration-wizard-progress-no-matched-extensions"
                   ),
@@ -487,7 +487,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
               progress[foundResourceTypeName] = {
                 value: success
                   ? lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS
-                  : lazy.MigrationWizardConstants.PROGRESS_VALUE.ERROR,
+                  : lazy.MigrationWizardConstants.PROGRESS_VALUE.WARNING,
                 message: await this.#getStringForImportQuantity(
                   migrationDetails.key,
                   foundResourceTypeName

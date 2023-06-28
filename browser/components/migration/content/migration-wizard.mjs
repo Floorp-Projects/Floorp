@@ -704,7 +704,6 @@ export class MigrationWizard extends HTMLElement {
           );
         }
       }
-      progressIcon.classList.remove("completed", "error");
       successText.textContent = "";
       if (extensionsSuccessLink) {
         extensionsSuccessLink.textContent = "";
@@ -721,7 +720,7 @@ export class MigrationWizard extends HTMLElement {
             progressIcon,
             "migration-wizard-progress-icon-in-progress"
           );
-          progressIcon.classList.remove("completed");
+          progressIcon.setAttribute("state", "loading");
           successText.textContent = "";
           if (extensionsSuccessLink) {
             extensionsSuccessLink.textContent = "";
@@ -739,7 +738,7 @@ export class MigrationWizard extends HTMLElement {
             progressIcon,
             "migration-wizard-progress-icon-completed"
           );
-          progressIcon.classList.add("completed");
+          progressIcon.setAttribute("state", "success");
           successText.textContent = state.progress[resourceType].message;
           if (
             resourceType ==
@@ -753,13 +752,12 @@ export class MigrationWizard extends HTMLElement {
           remainingProgressGroups--;
           break;
         }
-        case MigrationWizardConstants.PROGRESS_VALUE.ERROR: {
+        case MigrationWizardConstants.PROGRESS_VALUE.WARNING: {
           document.l10n.setAttributes(
             progressIcon,
             "migration-wizard-progress-icon-completed"
           );
-          progressIcon.classList.add("completed");
-          progressIcon.classList.add("error-icon");
+          progressIcon.setAttribute("state", "warning");
           successText.textContent = state.progress[resourceType].message;
           supportLink.textContent = state.progress[resourceType].linkText;
           supportLink.href = state.progress[resourceType].linkURL;
@@ -771,7 +769,7 @@ export class MigrationWizard extends HTMLElement {
             progressIcon,
             "migration-wizard-progress-icon-completed"
           );
-          progressIcon.classList.add("completed");
+          progressIcon.setAttribute("state", "info");
           successText.textContent = state.progress[resourceType].message;
           supportLink.textContent = state.progress[resourceType].linkText;
           supportLink.href = state.progress[resourceType].linkURL;
@@ -863,7 +861,7 @@ export class MigrationWizard extends HTMLElement {
             progressIcon,
             "migration-wizard-progress-icon-in-progress"
           );
-          progressIcon.classList.remove("completed");
+          progressIcon.setAttribute("state", "loading");
           successText.textContent = "";
           // With no status text, we re-insert the &nbsp; so that the status
           // text area does not fully collapse.
@@ -875,21 +873,26 @@ export class MigrationWizard extends HTMLElement {
             progressIcon,
             "migration-wizard-progress-icon-completed"
           );
-          progressIcon.classList.add("completed");
+          progressIcon.setAttribute("state", "success");
           successText.textContent = state.progress[resourceType].message;
           remainingProgressGroups--;
           break;
         }
-        case MigrationWizardConstants.PROGRESS_VALUE.ERROR: {
+        case MigrationWizardConstants.PROGRESS_VALUE.WARNING: {
           document.l10n.setAttributes(
             progressIcon,
             "migration-wizard-progress-icon-completed"
           );
-          progressIcon.classList.add("completed");
-          progressIcon.classList.add("error-icon");
+          progressIcon.setAttribute("state", "warning");
           successText.textContent = state.progress[resourceType].message;
           remainingProgressGroups--;
           break;
+        }
+        default: {
+          console.error(
+            "Unrecognized state for file migration: ",
+            progressValue
+          );
         }
       }
     }
@@ -938,10 +941,10 @@ export class MigrationWizard extends HTMLElement {
     // progress elements as custom parts that the MigrationWizard story
     // can style on its own.
     this.#shadowRoot.querySelectorAll(".progress-icon").forEach(progressEl => {
-      if (progressEl.classList.contains("completed")) {
-        progressEl.removeAttribute("part");
-      } else {
+      if (progressEl.getAttribute("state") == "loading") {
         progressEl.setAttribute("part", "progress-spinner");
+      } else {
+        progressEl.removeAttribute("part");
       }
     });
   }

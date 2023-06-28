@@ -34,7 +34,7 @@ export const MigrationWizardConstants = Object.freeze({
   PROGRESS_VALUE: Object.freeze({
     LOADING: 1,
     SUCCESS: 2,
-    ERROR: 3,
+    WARNING: 3,
     INFO: 4,
   }),
 
