@@ -474,6 +474,7 @@ def _generate_browser_desktop_entry(build_variables, localizations):
         "x-scheme-handler/chrome",
         "x-scheme-handler/http",
         "x-scheme-handler/https",
+        "x-scheme-handler/mailto",
     ]
 
     categories = [
