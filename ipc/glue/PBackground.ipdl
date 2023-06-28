@@ -313,7 +313,7 @@ parent:
 
   async PWebSocketConnection(uint32_t aListenerId);
 
-  async PLockManager(ContentPrincipalInfo aPrincipalInfo, nsID aClientId);
+  async PLockManager(nsIPrincipal aPrincipalInfo, nsID aClientId);
 
   async PIPCClientCerts();
 
