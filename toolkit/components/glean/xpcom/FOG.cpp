@@ -106,7 +106,7 @@ FOG::InitializeFOG(const nsACString& aDataPathOverride,
           glean::impl::fog_internal_glean_handle_client_inactive();
         }
       },
-      ShutdownPhase::XPCOMWillShutdown);
+      ShutdownPhase::AppShutdownConfirmed);
 
   return glean::impl::fog_init(&aDataPathOverride, &aAppIdOverride);
 }
