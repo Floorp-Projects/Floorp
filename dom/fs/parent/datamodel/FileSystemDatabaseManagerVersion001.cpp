@@ -956,6 +956,11 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetEntryId(
   return GetUniqueEntryId(mConnection, aHandle);
 }
 
+Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetEntryId(
+    const FileId& aFileId) const {
+  return aFileId.Value();
+}
+
 nsresult FileSystemDatabaseManagerVersion001::EnsureFileId(
     const EntryId& aEntryId) {
   return NS_OK;

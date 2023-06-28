@@ -163,6 +163,15 @@ class FileSystemDatabaseManager {
       const FileSystemChildMetadata& aHandle) const = 0;
 
   /**
+   * @brief To check if a file under a directory is locked, we need to map
+   * fileId's to entries.
+   *
+   * @param aFileId a FileId
+   * @return Result<EntryId, QMResult> Entry id of a temporary or main file
+   */
+  virtual Result<EntryId, QMResult> GetEntryId(const FileId& aFileId) const = 0;
+
+  /**
    * @brief Make sure EntryId maps to a FileId. This method should be called
    * before locking is attempted.
    */

@@ -426,6 +426,23 @@ Result<FileId, QMResult> FileSystemDatabaseManagerVersion002::GetFileId(
   return data::GetFileId002(mConnection, aEntryId);
 }
 
+Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::GetEntryId(
+    const FileId& aFileId) const {
+  const nsLiteralCString getEntryIdQuery =
+      "SELECT handle FROM FileIds WHERE fileId = :fileId ;"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(mConnection, getEntryIdQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindFileIdByName("fileId"_ns, aFileId)));
+  QM_TRY_UNWRAP(bool hasEntries, stmt.ExecuteStep());
+
+  if (!hasEntries || stmt.IsNullByColumn(/* Column */ 0u)) {
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+  }
+
+  QM_TRY_RETURN(stmt.GetEntryIdByColumn(/* Column */ 0u));
+}
+
 Result<nsTArray<FileId>, QMResult>
 FileSystemDatabaseManagerVersion002::FindFilesUnderEntry(
     const EntryId& aEntryId) const {
