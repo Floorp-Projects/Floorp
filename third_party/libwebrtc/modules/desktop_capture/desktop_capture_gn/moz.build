@@ -302,6 +302,35 @@ if CONFIG["CPU_ARCH"] == "ppc64":
         "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
     ]
 
+if CONFIG["CPU_ARCH"] == "riscv64":
+
+    DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_USE_X11"] = True
+
+    OS_LIBS += [
+        "X11",
+        "Xcomposite",
+        "Xdamage",
+        "Xext",
+        "Xfixes",
+        "Xrandr",
+        "Xrender",
+        "Xtst"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/mouse_cursor_monitor_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/screen_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/shared_x_display.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_capturer_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_finder_x11.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/window_list_utils.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_atom_cache.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_error_trap.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_server_pixel_buffer.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/linux/x11/x_window_property.cc"
+    ]
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["_DEBUG"] = True
