@@ -32,7 +32,11 @@ struct FileId {
 };
 
 inline bool operator==(const FileId& aLhs, const FileId& aRhs) {
-  return aLhs.mValue.Equals(aRhs.mValue);
+  return aLhs.mValue == aRhs.mValue;
+}
+
+inline bool operator!=(const FileId& aLhs, const FileId& aRhs) {
+  return aLhs.mValue != aRhs.mValue;
 }
 
 }  // namespace mozilla::dom::fs
