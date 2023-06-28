@@ -62,6 +62,7 @@ nsresult nsTextEquivUtils::GetTextEquivFromIDRefs(
   while ((refContent = iter.NextElem())) {
     if (!aTextEquiv.IsEmpty()) aTextEquiv += ' ';
 
+    if (refContent->IsHTMLElement(nsGkAtoms::slot)) printf("jtd idref slot\n");
     nsresult rv =
         AppendTextEquivFromContent(aAccessible, refContent, &aTextEquiv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -78,25 +79,15 @@ nsresult nsTextEquivUtils::AppendTextEquivFromContent(
 
   sInitiatorAcc = aInitiatorAcc;
 
-  // If the given content is not visible or isn't accessible then go down
-  // through the DOM subtree otherwise go down through accessible subtree and
-  // calculate the flat string.
-  nsIFrame* frame = aContent->GetPrimaryFrame();
-  bool isVisible = frame && frame->StyleVisibility()->IsVisible();
-
   nsresult rv = NS_ERROR_FAILURE;
-  bool goThroughDOMSubtree = true;
-
-  if (isVisible) {
-    LocalAccessible* accessible =
-        aInitiatorAcc->Document()->GetAccessible(aContent);
-    if (accessible) {
-      rv = AppendFromAccessible(accessible, aString);
-      goThroughDOMSubtree = false;
-    }
+  if (LocalAccessible* accessible =
+          aInitiatorAcc->Document()->GetAccessible(aContent)) {
+    rv = AppendFromAccessible(accessible, aString);
+  } else {
+    // The given content is invisible or otherwise inaccessible, so use the DOM
+    // subtree.
+    rv = AppendFromDOMNode(aContent, aString);
   }
-
-  if (goThroughDOMSubtree) rv = AppendFromDOMNode(aContent, aString);
 
   sInitiatorAcc = nullptr;
   return rv;
