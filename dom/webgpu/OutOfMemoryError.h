@@ -6,32 +6,27 @@
 #ifndef GPU_OutOfMemoryError_H_
 #define GPU_OutOfMemoryError_H_
 
-#include "Error.h"
+#include "nsWrapperCache.h"
+#include "ObjectModel.h"
 
 namespace mozilla {
-class ErrorResult;
 namespace dom {
 class GlobalObject;
 }  // namespace dom
 namespace webgpu {
+class Device;
 
-class OutOfMemoryError final : public Error {
+class OutOfMemoryError final : public nsWrapperCache, public ChildOf<Device> {
  public:
+  GPU_DECL_CYCLE_COLLECTION(OutOfMemoryError)
   GPU_DECL_JS_WRAP(OutOfMemoryError)
 
-  OutOfMemoryError(nsIGlobalObject* const aGlobal, const nsAString& aMessage)
-      : Error(aGlobal, aMessage) {}
-
-  OutOfMemoryError(nsIGlobalObject* const aGlobal, const nsACString& aMessage)
-      : Error(aGlobal, aMessage) {}
+  explicit OutOfMemoryError(const RefPtr<Device>& aParent)
+      : ChildOf<Device>(aParent) {}
 
  private:
-  ~OutOfMemoryError() override = default;
-
- public:
-  static already_AddRefed<OutOfMemoryError> Constructor(
-      const dom::GlobalObject& aGlobal, const nsAString& aString,
-      ErrorResult& aRv);
+  virtual ~OutOfMemoryError();
+  void Cleanup() {}
 };
 
 }  // namespace webgpu

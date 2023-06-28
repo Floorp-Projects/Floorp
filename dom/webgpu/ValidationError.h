@@ -6,32 +6,39 @@
 #ifndef GPU_ValidationError_H_
 #define GPU_ValidationError_H_
 
-#include "Error.h"
+#include "nsCOMPtr.h"
+#include "nsString.h"
+#include "nsWrapperCache.h"
+#include "ObjectModel.h"
 
 namespace mozilla {
 class ErrorResult;
+
 namespace dom {
 class GlobalObject;
 }  // namespace dom
 namespace webgpu {
 
-class ValidationError final : public Error {
+class ValidationError final : public nsWrapperCache {
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  nsString mMessage;
+
  public:
+  GPU_DECL_CYCLE_COLLECTION(ValidationError)
   GPU_DECL_JS_WRAP(ValidationError)
-
-  ValidationError(nsIGlobalObject* const aGlobal, const nsAString& aMessage)
-      : Error(aGlobal, aMessage) {}
-
-  ValidationError(nsIGlobalObject* const aGlobal, const nsACString& aMessage)
-      : Error(aGlobal, aMessage) {}
+  ValidationError(nsIGlobalObject* aGlobal, const nsACString& aMessage);
+  ValidationError(nsIGlobalObject* aGlobal, const nsAString& aMessage);
 
  private:
-  ~ValidationError() override = default;
+  virtual ~ValidationError();
+  void Cleanup() {}
 
  public:
   static already_AddRefed<ValidationError> Constructor(
       const dom::GlobalObject& aGlobal, const nsAString& aString,
       ErrorResult& aRv);
+  void GetMessage(nsAString& aMessage) const { aMessage = mMessage; }
+  nsIGlobalObject* GetParentObject() const { return mGlobal; }
 };
 
 }  // namespace webgpu
