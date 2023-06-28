@@ -261,6 +261,10 @@
       // not a double space.
       testName("container_text_emptyblock", "a b");
 
+      const shadowRoot = getNode("shadowHost").shadowRoot;
+      const shadowButtonVisibleText = shadowRoot.getElementById("shadowButtonVisibleText");
+      testName(shadowButtonVisibleText, "shadowButtonVisibleText");
+
       SimpleTest.finish();
     }
 
@@ -728,5 +732,19 @@
   <div id="container_text_block" role="option">a<p>b</p>c</div>
   <!-- Text nodes and empty block elements. -->
   <div id="container_text_emptyblock" role="option">a<p></p><p></p>b</div>
+
+  <!-- aria-labelledby referring to a slot -->
+  <div id="shadowHost">
+    shadowButtonVisibleText
+  </div>
+  <template id="shadowTemplate">
+    <input type="button" id="shadowButtonVisibleText" aria-labelledby="visibleSlot">
+    <slot id="visibleSlot"></slot>
+  </template>
+  <script>
+    const shadowHost = document.getElementById("shadowHost");
+    const shadowRoot = shadowHost.attachShadow({ mode: "open" });
+    shadowRoot.append(document.getElementById("shadowTemplate").content.cloneNode(true));
+  </script>
 </body>
 </html>
