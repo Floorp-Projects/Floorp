@@ -182,11 +182,6 @@ bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
     if (aTarget == RFPTarget::IsAlwaysEnabledForPrecompute) {
       return true;
     }
-    // All not yet explicitly defined targets are disabled by default (no
-    // fingerprinting protection).
-    if (aTarget == RFPTarget::Unknown) {
-      return false;
-    }
     return sEnabledFingerintingProtections & uint32_t(aTarget);
   }
 
@@ -209,8 +204,7 @@ void nsRFPService::UpdateFPPOverrideList() {
         nsRFPService::TextToRFPTarget(Substring(each, 1, each.Length() - 1));
     if (mappedValue.isSome()) {
       RFPTarget target = mappedValue.value();
-      if (target == RFPTarget::IsAlwaysEnabledForPrecompute ||
-          target == RFPTarget::Unknown) {
+      if (target == RFPTarget::IsAlwaysEnabledForPrecompute) {
         MOZ_LOG(gResistFingerprintingLog, LogLevel::Warning,
                 ("RFPTarget::%s is not a valid value",
                  NS_ConvertUTF16toUTF8(each).get()));
