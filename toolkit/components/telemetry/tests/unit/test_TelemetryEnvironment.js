@@ -573,6 +573,10 @@ add_task(async function test_addons() {
     isSystem: false,
     isWebExtension: true,
     multiprocessCompatible: true,
+    quarantineIgnoredByUser: false,
+    // quarantineIgnoredByApp expected to be true because
+    // the test addon is signed as privileged (see signedState).
+    quarantineIgnoredByApp: true,
   };
   const SYSTEM_ADDON_ID = "tel-system-xpi@tests.mozilla.org";
   const EXPECTED_SYSTEM_ADDON_DATA = {
@@ -592,6 +596,10 @@ add_task(async function test_addons() {
     isSystem: true,
     isWebExtension: true,
     multiprocessCompatible: true,
+    quarantineIgnoredByUser: false,
+    // quarantineIgnoredByApp expected to be true because
+    // the test addon is a system addon (see isSystem).
+    quarantineIgnoredByApp: true,
   };
 
   const WEBEXTENSION_ADDON_ID = "tel-webextension-xpi@tests.mozilla.org";
@@ -613,6 +621,10 @@ add_task(async function test_addons() {
     isSystem: false,
     isWebExtension: true,
     multiprocessCompatible: true,
+    quarantineIgnoredByUser: false,
+    // quarantineIgnoredByApp expected to be true because
+    // the test addon is signed as privileged (see signedState).
+    quarantineIgnoredByApp: true,
   };
 
   let deferred = PromiseUtils.defer();
@@ -721,6 +733,11 @@ add_task(async function test_signedAddon() {
     installDay: ADDON_INSTALL_DATE,
     updateDay: ADDON_INSTALL_DATE,
     signedState: AddonManager.SIGNEDSTATE_SIGNED,
+    quarantineIgnoredByUser: false,
+    // quarantineIgnoredByApp expected to be false because
+    // the test addon is signed as a non-privileged (see signedState),
+    // and it doesn't include any recommendations.
+    quarantineIgnoredByApp: false,
   };
 
   let deferred = PromiseUtils.defer();
@@ -752,6 +769,28 @@ add_task(async function test_signedAddon() {
       f + " must have the correct value."
     );
   }
+
+  // Make sure quarantineIgnoredByUser property is updated also in the
+  // telemetry environment in response to the user changing it.
+  deferred = PromiseUtils.defer();
+  TelemetryEnvironment.registerChangeListener(
+    "test_quarantineIgnoreByUser_changed",
+    deferred.resolve
+  );
+
+  addon.quarantineIgnoredByUser = true;
+  await deferred.promise;
+  // Unregister the listener.
+  TelemetryEnvironment.unregisterChangeListener(
+    "test_quarantineIgnoreByUser_changed"
+  );
+
+  Assert.equal(
+    TelemetryEnvironment.currentEnvironment.addons.activeAddons[ADDON_ID]
+      .quarantineIgnoredByUser,
+    true,
+    "Expect quarantineIgnoredByUser to be set to true"
+  );
 
   AddonTestUtils.useRealCertChecks = false;
   await addon.startupPromise;
