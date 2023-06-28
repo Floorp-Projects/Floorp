@@ -49,7 +49,7 @@ var HarBuilder = function (options) {
   this._pageId = options.supportsMultiplePages ? 0 : options.id;
   this._pageMap = [];
   this._supportsMultiplePages = options.supportsMultiplePages;
-  this._title = this._connector.currentTarget.title;
+  this._url = this._connector.currentTarget.url;
 };
 
 HarBuilder.prototype = {
@@ -94,7 +94,7 @@ HarBuilder.prototype = {
       this.buildPagesFromTargetTitles(log);
     } else if (this._items.length) {
       const firstRequest = this._items[0];
-      const page = this.buildPage(this._title, firstRequest);
+      const page = this.buildPage(this._url, firstRequest);
       log.pages.push(page);
       this._pageMap[this._id] = page;
     }
@@ -102,8 +102,7 @@ HarBuilder.prototype = {
 
   buildPagesFromTargetTitles(log) {
     // Retrieve the additional HAR data collected by the connector.
-    const { initialTargetTitle, navigationRequests, targetTitlesPerURL } =
-      this._connector.getHarData();
+    const { initialURL, navigationRequests } = this._connector.getHarData();
     const firstNavigationRequest = navigationRequests[0];
     const firstRequest = this._items[0];
 
@@ -113,30 +112,26 @@ HarBuilder.prototype = {
     ) {
       // If the first request is not a navigation request, it must be related
       // to the initial page. Create a first page entry for such early requests.
-      const initialPage = this.buildPage(initialTargetTitle, firstRequest);
+      const initialPage = this.buildPage(initialURL, firstRequest);
       log.pages.push(initialPage);
     }
 
     for (const request of navigationRequests) {
-      if (targetTitlesPerURL.has(request.url)) {
-        const title = targetTitlesPerURL.get(request.url);
-        const page = this.buildPage(title, request);
-        log.pages.push(page);
-      } else {
-        console.warn(
-          `Could not find any page corresponding to a navigation to ${request.url}`
-        );
-      }
+      const page = this.buildPage(request.url, request);
+      log.pages.push(page);
     }
   },
 
-  buildPage(title, networkEvent) {
+  buildPage(url, networkEvent) {
     const page = {};
 
     page.id = "page_" + this._pageId;
     page.pageTimings = this.buildPageTimings(page, networkEvent);
     page.startedDateTime = dateToHarString(new Date(networkEvent.startedMs));
-    page.title = title;
+
+    // To align with other existing implementations of HAR exporters, the title
+    // should contain the page URL and not the page title.
+    page.title = url;
 
     // Increase the pageId, for upcoming calls to buildPage.
     // If supportsMultiplePages is disabled this method is only called once.

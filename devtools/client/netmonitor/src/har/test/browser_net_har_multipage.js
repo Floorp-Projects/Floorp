@@ -106,17 +106,29 @@ async function testHARWithNavigation({ enableMultipage, filter }) {
   if (enableMultipage) {
     // With multipage enabled, check that the page entries are valid and that
     // requests are referencing the expected page id.
-    assertPageDetails(har.log.pages[0], "page_0", "HAR Multipage test page");
+    assertPageDetails(
+      har.log.pages[0],
+      "page_0",
+      `${MULTIPAGE_PAGE_URL}?page1`
+    );
     assertPageRequests(har.log.entries, 0, 2, har.log.pages[0].id);
 
-    assertPageDetails(har.log.pages[1], "page_1", "HAR Multipage test page");
+    assertPageDetails(
+      har.log.pages[1],
+      "page_1",
+      `${MULTIPAGE_PAGE_URL}?page2`
+    );
     if (filter) {
       // When filtering, we don't expect any request to match page_1
     } else {
       assertPageRequests(har.log.entries, 3, 3, har.log.pages[1].id);
     }
 
-    assertPageDetails(har.log.pages[2], "page_2", "HAR Multipage test page");
+    assertPageDetails(
+      har.log.pages[2],
+      "page_2",
+      `${MULTIPAGE_PAGE_URL}?page3`
+    );
     if (filter) {
       assertPageRequests(har.log.entries, 3, 5, har.log.pages[2].id);
     } else {

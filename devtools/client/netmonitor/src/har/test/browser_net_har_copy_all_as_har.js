@@ -45,7 +45,7 @@ async function testSimpleReload({ tab, monitor, toolbox }) {
 
   const page = har.log.pages[0];
 
-  is(page.title, "Network Monitor test page", "There must be some page title");
+  is(page.title, SIMPLE_URL, "There must be some page title");
   ok("onContentLoad" in page.pageTimings, "There must be onContentLoad time");
   ok("onLoad" in page.pageTimings, "There must be onLoad time");
 
