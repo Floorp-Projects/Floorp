@@ -39,6 +39,8 @@ inline bool operator!=(const FileId& aLhs, const FileId& aRhs) {
   return aLhs.mValue != aRhs.mValue;
 }
 
+enum class FileMode { EXCLUSIVE, SHARED_FROM_EMPTY, SHARED_FROM_COPY };
+
 }  // namespace mozilla::dom::fs
 
 #endif  // DOM_FS_PARENT_FILESYSTEMPARENTTYPES_H_

@@ -186,7 +186,7 @@ FileSystemAccessHandle::BeginInit() {
   fs::Path path;
   nsCOMPtr<nsIFile> file;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             mEntryId, fileId, /* asCopy */ false, type,
+             mEntryId, fileId, fs::FileMode::EXCLUSIVE, type,
              lastModifiedMilliSeconds, path, file)),
          CreateAndRejectInitPromise);
 

@@ -138,7 +138,7 @@ class TestFileSystemQuotaClient
     Path path;
     nsCOMPtr<nsIFile> fileObj;
     ASSERT_NSEQ(NS_OK,
-                aDatabaseManager->GetFile(aEntryId, fileId, /* asCopy */ false,
+                aDatabaseManager->GetFile(aEntryId, fileId, FileMode::EXCLUSIVE,
                                           type, lastModMilliS, path, fileObj));
 
     uint32_t written = 0;

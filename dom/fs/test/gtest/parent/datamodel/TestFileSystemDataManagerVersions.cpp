@@ -339,7 +339,7 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateRemoveFiles) {
     TimeStamp lastModifiedMilliSeconds;
     Path path;
     nsCOMPtr<nsIFile> file;
-    rv = dm->GetFile(firstItemRef.entryId(), fileId, /* asCopy */ false, type,
+    rv = dm->GetFile(firstItemRef.entryId(), fileId, FileMode::EXCLUSIVE, type,
                      lastModifiedMilliSeconds, path, file);
     ASSERT_NSEQ(NS_OK, rv);
 

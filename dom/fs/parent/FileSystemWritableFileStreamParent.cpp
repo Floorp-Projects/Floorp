@@ -26,10 +26,11 @@ class FileSystemWritableFileStreamParent::FileSystemWritableFileStreamCallbacks
 
 FileSystemWritableFileStreamParent::FileSystemWritableFileStreamParent(
     RefPtr<FileSystemManagerParent> aManager, const fs::EntryId& aEntryId,
-    const fs::FileId& aTemporaryFileId)
+    const fs::FileId& aTemporaryFileId, bool aIsExclusive)
     : mManager(std::move(aManager)),
       mEntryId(aEntryId),
-      mTemporaryFileId(aTemporaryFileId) {}
+      mTemporaryFileId(aTemporaryFileId),
+      mIsExclusive(aIsExclusive) {}
 
 FileSystemWritableFileStreamParent::~FileSystemWritableFileStreamParent() {
   MOZ_ASSERT(mClosed);
@@ -73,8 +74,12 @@ void FileSystemWritableFileStreamParent::Close(bool aAbort) {
 
   mClosed.Flip();
 
-  mManager->DataManagerStrongRef()->UnlockShared(mEntryId, mTemporaryFileId,
-                                                 aAbort);
+  if (mIsExclusive) {
+    mManager->DataManagerStrongRef()->UnlockExclusive(mEntryId);
+  } else {
+    mManager->DataManagerStrongRef()->UnlockShared(mEntryId, mTemporaryFileId,
+                                                   aAbort);
+  }
 }
 
 }  // namespace mozilla::dom
