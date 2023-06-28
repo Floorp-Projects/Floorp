@@ -1060,6 +1060,7 @@ if (rtc_include_tests) {
       "../../api:video_codec_tester_api",
       "../../api:videocodec_test_fixture_api",
       "../../api:videocodec_test_stats_api",
+      "../../api/test/metrics:global_metrics_logger_and_exporter",
       "../../api/test/video:function_video_factory",
       "../../api/units:data_rate",
       "../../api/units:frequency",

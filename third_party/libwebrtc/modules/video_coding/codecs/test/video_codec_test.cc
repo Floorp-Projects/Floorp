@@ -17,6 +17,7 @@
 
 #include "absl/functional/any_invocable.h"
 #include "api/test/create_video_codec_tester.h"
+#include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "api/test/videocodec_test_stats.h"
 #include "api/units/data_rate.h"
 #include "api/units/frequency.h"
@@ -84,6 +85,14 @@ struct EncodingSettings {
   Frequency framerate;
   // Bitrate of spatial and temporal layers.
   std::map<LayerId, DataRate> bitrate;
+
+  std::string ToString() const {
+    return std::string(ScalabilityModeToString(scalability_mode)) + "_" +
+           std::to_string(resolution.begin()->second.width) + "x" +
+           std::to_string(resolution.begin()->second.height) + "_" +
+           std::to_string(framerate.hertz()) + "fps" + "_" +
+           std::to_string(bitrate.begin()->second.kbps()) + "kbps";
+  }
 };
 
 struct EncodingTestSettings {
@@ -116,7 +125,7 @@ const EncodingSettings kQvga64Kbps30Fps = {
         {{.spatial_idx = 0, .temporal_idx = 0}, DataRate::KilobitsPerSec(64)}}};
 
 const EncodingTestSettings kConstantRateQvga64Kbps30Fps = {
-    .name = "ConstantRateQvga64Kbps30Fps",
+    .name = "ConstantRate",
     .num_frames = 300,
     .frame_settings = {{/*frame_num=*/0, kQvga64Kbps30Fps}}};
 
@@ -409,6 +418,18 @@ std::unique_ptr<VideoCodecTester::Decoder> CreateDecoder(
   return std::make_unique<TestDecoder>(std::move(decoder), codec_info);
 }
 
+void SetTargetRates(const std::map<int, EncodingSettings>& frame_settings,
+                    std::vector<VideoCodecStats::Frame>& frames) {
+  for (VideoCodecStats::Frame& f : frames) {
+    const EncodingSettings& settings =
+        std::prev(frame_settings.upper_bound(f.frame_num))->second;
+    LayerId layer_id = {.spatial_idx = f.spatial_idx,
+                        .temporal_idx = f.temporal_idx};
+    f.target_bitrate = settings.bitrate.at(layer_id);
+    f.target_framerate = settings.framerate / (1 << f.temporal_idx);
+  }
+}
+
 }  // namespace
 
 class EncodeDecodeTest
@@ -435,7 +456,7 @@ class EncodeDecodeTest
       const ::testing::TestParamInfo<EncodeDecodeTest::ParamType>& info) {
     return std::string(info.param.encoding_settings.name +
                        info.param.codec.type + info.param.codec.encoder +
-                       info.param.codec.decoder + info.param.video.name);
+                       info.param.codec.decoder);
   }
 
  protected:
@@ -460,9 +481,16 @@ TEST_P(EncodeDecodeTest, DISABLED_TestEncodeDecode) {
     VideoCodecStats::Filter slicer = {.first_frame = first_frame,
                                       .last_frame = last_frame};
     std::vector<VideoCodecStats::Frame> frames = stats->Slice(slicer);
+    SetTargetRates(frame_settings, frames);
     VideoCodecStats::Stream stream = stats->Aggregate(frames);
     EXPECT_GE(stream.psnr.y.GetAverage(),
               test_params_.test_expectations.min_apsnr_y);
+
+    stats->LogMetrics(
+        GetGlobalMetricsLogger(), stream,
+        std::string(
+            ::testing::UnitTest::GetInstance()->current_test_info()->name()) +
+            "_" + fs->second.ToString());
   }
 }
 
