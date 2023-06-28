@@ -434,6 +434,96 @@ Result<Usage, QMResult> FileSystemDatabaseManagerVersion002::GetFileUsage(
   return FileSystemDatabaseManagerVersion001::GetFileUsage(aConnection);
 }
 
+Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::RenameEntry(
+    const FileSystemEntryMetadata& aHandle, const Name& aNewName) {
+  MOZ_ASSERT(!aNewName.IsEmpty());
+
+  const auto& entryId = aHandle.entryId();
+  MOZ_ASSERT(!entryId.IsEmpty());
+
+  // Can't rename root
+  if (mRootEntry == entryId) {
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+  }
+
+  // Verify the source exists
+  QM_TRY_UNWRAP(bool isFile, IsFile(mConnection, entryId),
+                Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR)));
+
+  // Are we actually renaming?
+  if (aHandle.entryName() == aNewName) {
+    return entryId;
+  }
+
+  QM_TRY(QM_TO_RESULT(PrepareRenameEntry(mConnection, mDataManager, aHandle,
+                                         aNewName, isFile)));
+
+  QM_TRY_UNWRAP(EntryId parentId, FindParent(mConnection, entryId));
+  FileSystemChildMetadata newDesignation(parentId, aNewName);
+
+  if (isFile) {
+    const ContentType type = FileSystemContentTypeGuess::FromPath(aNewName);
+    QM_TRY(
+        QM_TO_RESULT(RehashFile(mConnection, entryId, newDesignation, type)));
+  } else {
+    QM_TRY(QM_TO_RESULT(RehashDirectory(mConnection, entryId, newDesignation)));
+  }
+
+  QM_TRY_UNWRAP(DebugOnly<EntryId> dbId,
+                FindEntryId(mConnection, newDesignation, isFile));
+  QM_TRY_UNWRAP(EntryId generated,
+                FileSystemHashSource::GenerateHash(parentId, aNewName));
+  MOZ_ASSERT(static_cast<EntryId&>(dbId).Equals(generated));
+
+  return generated;
+}
+
+Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::MoveEntry(
+    const FileSystemEntryMetadata& aHandle,
+    const FileSystemChildMetadata& aNewDesignation) {
+  MOZ_ASSERT(!aHandle.entryId().IsEmpty());
+
+  const auto& entryId = aHandle.entryId();
+
+  if (mRootEntry == entryId) {
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+  }
+
+  // Verify the source exists
+  QM_TRY_UNWRAP(bool isFile, IsFile(mConnection, entryId),
+                Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR)));
+
+  // If the rename doesn't change the name or directory, just return success.
+  // XXX Needs to be added to the spec
+  QM_WARNONLY_TRY_UNWRAP(Maybe<bool> maybeSame,
+                         IsSame(mConnection, aHandle, aNewDesignation, isFile));
+  if (maybeSame && maybeSame.value()) {
+    return entryId;
+  }
+
+  QM_TRY(QM_TO_RESULT(PrepareMoveEntry(mConnection, mDataManager, aHandle,
+                                       aNewDesignation, isFile)));
+
+  if (isFile) {
+    const ContentType type =
+        FileSystemContentTypeGuess::FromPath(aNewDesignation.childName());
+    QM_TRY(
+        QM_TO_RESULT(RehashFile(mConnection, entryId, aNewDesignation, type)));
+  } else {
+    QM_TRY(
+        QM_TO_RESULT(RehashDirectory(mConnection, entryId, aNewDesignation)));
+  }
+
+  QM_TRY_UNWRAP(DebugOnly<EntryId> dbId,
+                FindEntryId(mConnection, aNewDesignation, isFile));
+  QM_TRY_UNWRAP(EntryId generated,
+                FileSystemHashSource::GenerateHash(
+                    aNewDesignation.parentId(), aNewDesignation.childName()));
+  MOZ_ASSERT(static_cast<EntryId&>(dbId).Equals(generated));
+
+  return generated;
+}
+
 Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::GetEntryId(
     const FileSystemChildMetadata& aHandle) const {
   return fs::data::GetEntryHandle(aHandle);
@@ -606,6 +696,53 @@ nsresult FileSystemDatabaseManagerVersion002::MergeFileId(
   return NS_OK;
 }
 
+Result<bool, QMResult> FileSystemDatabaseManagerVersion002::DoesFileIdExist(
+    const FileId& aFileId) const {
+  QM_TRY_RETURN(data::DoesFileIdExist(mConnection, aFileId));
+}
+
+nsresult FileSystemDatabaseManagerVersion002::RemoveFileId(
+    const FileId& aFileId) {
+  const nsLiteralCString removeFileIdQuery =
+      "DELETE FROM FileIds "
+      "WHERE fileId = :fileId "
+      ";"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(mConnection, removeFileIdQuery)
+                    .mapErr(toNSResult));
+
+  QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("fileId"_ns, aFileId.Value())));
+
+  return stmt.Execute();
+}
+
+Result<Usage, QMResult>
+FileSystemDatabaseManagerVersion002::GetUsagesOfDescendants(
+    const EntryId& aEntryId) const {
+  const nsLiteralCString descendantUsagesQuery =
+      "WITH RECURSIVE traceChildren(handle, parent) AS ( "
+      "SELECT handle, parent FROM Entries WHERE handle = :handle "
+      "UNION "
+      "SELECT Entries.handle, Entries.parent FROM traceChildren, Entries "
+      "WHERE traceChildren.handle=Entries.parent ) "
+      "SELECT sum(Usages.usage) "
+      "FROM traceChildren "
+      "INNER JOIN FileIds ON traceChildren.handle = FileIds.handle "
+      "INNER JOIN Usages ON Usages.handle = FileIds.fileId "
+      ";"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(mConnection, descendantUsagesQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntryId)));
+  QM_TRY_UNWRAP(const bool moreResults, stmt.ExecuteStep());
+  if (!moreResults) {
+    return 0;
+  }
+
+  QM_TRY_RETURN(stmt.GetUsageByColumn(/* Column */ 0u));
+}
+
 Result<nsTArray<FileId>, QMResult>
 FileSystemDatabaseManagerVersion002::FindFilesUnderEntry(
     const EntryId& aEntryId) const {
@@ -638,143 +775,6 @@ FileSystemDatabaseManagerVersion002::FindFilesUnderEntry(
   }
 
   return descendants;
-}
-
-Result<bool, QMResult> FileSystemDatabaseManagerVersion002::DoesFileIdExist(
-    const FileId& aFileId) const {
-  QM_TRY_RETURN(data::DoesFileIdExist(mConnection, aFileId));
-}
-
-Result<Usage, QMResult>
-FileSystemDatabaseManagerVersion002::GetUsagesOfDescendants(
-    const EntryId& aEntryId) const {
-  const nsLiteralCString descendantUsagesQuery =
-      "WITH RECURSIVE traceChildren(handle, parent) AS ( "
-      "SELECT handle, parent FROM Entries WHERE handle = :handle "
-      "UNION "
-      "SELECT Entries.handle, Entries.parent FROM traceChildren, Entries "
-      "WHERE traceChildren.handle=Entries.parent ) "
-      "SELECT sum(Usages.usage) "
-      "FROM traceChildren "
-      "INNER JOIN FileIds ON traceChildren.handle = FileIds.handle "
-      "INNER JOIN Usages ON Usages.handle = FileIds.fileId "
-      ";"_ns;
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(mConnection, descendantUsagesQuery));
-  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntryId)));
-  QM_TRY_UNWRAP(const bool moreResults, stmt.ExecuteStep());
-  if (!moreResults) {
-    return 0;
-  }
-
-  QM_TRY_RETURN(stmt.GetUsageByColumn(/* Column */ 0u));
-}
-
-nsresult FileSystemDatabaseManagerVersion002::RemoveFileId(
-    const FileId& aFileId) {
-  const nsLiteralCString removeFileIdQuery =
-      "DELETE FROM FileIds "
-      "WHERE fileId = :fileId "
-      ";"_ns;
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(mConnection, removeFileIdQuery)
-                    .mapErr(toNSResult));
-
-  QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("fileId"_ns, aFileId.Value())));
-
-  return stmt.Execute();
-}
-
-Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::RenameEntry(
-    const FileSystemEntryMetadata& aHandle, const Name& aNewName) {
-  MOZ_ASSERT(!aNewName.IsEmpty());
-
-  const auto& entryId = aHandle.entryId();
-  MOZ_ASSERT(!entryId.IsEmpty());
-
-  // Can't rename root
-  if (mRootEntry == entryId) {
-    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
-  }
-
-  // Verify the source exists
-  QM_TRY_UNWRAP(bool isFile, IsFile(mConnection, entryId),
-                Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR)));
-
-  // Are we actually renaming?
-  if (aHandle.entryName() == aNewName) {
-    return entryId;
-  }
-
-  QM_TRY(QM_TO_RESULT(PrepareRenameEntry(mConnection, mDataManager, aHandle,
-                                         aNewName, isFile)));
-
-  QM_TRY_UNWRAP(EntryId parentId, FindParent(mConnection, entryId));
-  FileSystemChildMetadata newDesignation(parentId, aNewName);
-
-  if (isFile) {
-    const ContentType type = FileSystemContentTypeGuess::FromPath(aNewName);
-    QM_TRY(
-        QM_TO_RESULT(RehashFile(mConnection, entryId, newDesignation, type)));
-  } else {
-    QM_TRY(QM_TO_RESULT(RehashDirectory(mConnection, entryId, newDesignation)));
-  }
-
-  QM_TRY_UNWRAP(DebugOnly<EntryId> dbId,
-                FindEntryId(mConnection, newDesignation, isFile));
-  QM_TRY_UNWRAP(EntryId generated,
-                FileSystemHashSource::GenerateHash(parentId, aNewName));
-  MOZ_ASSERT(static_cast<EntryId&>(dbId).Equals(generated));
-
-  return generated;
-}
-
-Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::MoveEntry(
-    const FileSystemEntryMetadata& aHandle,
-    const FileSystemChildMetadata& aNewDesignation) {
-  MOZ_ASSERT(!aHandle.entryId().IsEmpty());
-
-  const auto& entryId = aHandle.entryId();
-
-  if (mRootEntry == entryId) {
-    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
-  }
-
-  // Verify the source exists
-  QM_TRY_UNWRAP(bool isFile, IsFile(mConnection, entryId),
-                Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR)));
-
-  // If the rename doesn't change the name or directory, just return success.
-  // XXX Needs to be added to the spec
-  QM_WARNONLY_TRY_UNWRAP(Maybe<bool> maybeSame,
-                         IsSame(mConnection, aHandle, aNewDesignation, isFile));
-  if (maybeSame && maybeSame.value()) {
-    return entryId;
-  }
-
-  QM_TRY(QM_TO_RESULT(PrepareMoveEntry(mConnection, mDataManager, aHandle,
-                                       aNewDesignation, isFile)));
-
-  if (isFile) {
-    const ContentType type =
-        FileSystemContentTypeGuess::FromPath(aNewDesignation.childName());
-    QM_TRY(
-        QM_TO_RESULT(RehashFile(mConnection, entryId, aNewDesignation, type)));
-  } else {
-    QM_TRY(
-        QM_TO_RESULT(RehashDirectory(mConnection, entryId, aNewDesignation)));
-  }
-
-  QM_TRY_UNWRAP(DebugOnly<EntryId> dbId,
-                FindEntryId(mConnection, aNewDesignation, isFile));
-  QM_TRY_UNWRAP(EntryId generated,
-                FileSystemHashSource::GenerateHash(
-                    aNewDesignation.parentId(), aNewDesignation.childName()));
-  MOZ_ASSERT(static_cast<EntryId&>(dbId).Equals(generated));
-
-  return generated;
 }
 
 }  // namespace mozilla::dom::fs::data
