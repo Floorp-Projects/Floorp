@@ -68,13 +68,13 @@ FileSystemWritableFileStreamParent::GetOrCreateStreamCallbacks() {
   return mStreamCallbacks.get();
 }
 
-void FileSystemWritableFileStreamParent::Close(bool /* aAbort */) {
+void FileSystemWritableFileStreamParent::Close(bool aAbort) {
   LOG(("Closing WritableFileStream"));
 
   mClosed.Flip();
 
-  // TODO: Change to UnlockShared after temporary files
-  mManager->DataManagerStrongRef()->UnlockExclusive(mEntryId);
+  mManager->DataManagerStrongRef()->UnlockShared(mEntryId, mTemporaryFileId,
+                                                 aAbort);
 }
 
 }  // namespace mozilla::dom
