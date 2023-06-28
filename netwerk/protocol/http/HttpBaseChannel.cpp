@@ -5962,9 +5962,15 @@ HttpBaseChannel::CancelByURLClassifier(nsresult aErrorCode) {
   return Cancel(aErrorCode);
 }
 
-void HttpBaseChannel::SetIPv4Disabled() { mCaps |= NS_HTTP_DISABLE_IPV4; }
+NS_IMETHODIMP HttpBaseChannel::SetIPv4Disabled() {
+  mCaps |= NS_HTTP_DISABLE_IPV4;
+  return NS_OK;
+}
 
-void HttpBaseChannel::SetIPv6Disabled() { mCaps |= NS_HTTP_DISABLE_IPV6; }
+NS_IMETHODIMP HttpBaseChannel::SetIPv6Disabled() {
+  mCaps |= NS_HTTP_DISABLE_IPV6;
+  return NS_OK;
+}
 
 NS_IMETHODIMP HttpBaseChannel::GetResponseEmbedderPolicy(
     bool aIsOriginTrialCoepCredentiallessEnabled,

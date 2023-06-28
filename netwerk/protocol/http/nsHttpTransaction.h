@@ -88,7 +88,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void MakeNonSticky() override { mCaps &= ~NS_HTTP_STICKY_CONNECTION; }
   void MakeRestartable() override { mCaps |= NS_HTTP_CONNECTION_RESTARTABLE; }
   void MakeNonRestartable() { mCaps &= ~NS_HTTP_CONNECTION_RESTARTABLE; }
-
+  void RemoveConnection();
   void SetIsHttp2Websocket(bool h2ws) override { mIsHttp2Websocket = h2ws; }
   bool IsHttp2Websocket() override { return mIsHttp2Websocket; }
 

@@ -55,7 +55,6 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
   LOG1(("HttpConnectionUDP::Init this=%p", this));
   NS_ENSURE_ARG_POINTER(info);
   NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
-  MOZ_ASSERT(dnsRecord || NS_FAILED(status));
 
   mConnInfo = info;
   MOZ_ASSERT(mConnInfo);
@@ -72,7 +71,6 @@ nsresult HttpConnectionUDP::Init(nsHttpConnectionInfo* info,
   }
 
   nsCOMPtr<nsIDNSAddrRecord> dnsAddrRecord = do_QueryInterface(dnsRecord);
-  MOZ_ASSERT(dnsAddrRecord);
   if (!dnsAddrRecord) {
     return NS_ERROR_FAILURE;
   }
