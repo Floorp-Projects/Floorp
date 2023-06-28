@@ -1034,4 +1034,5 @@ enum PopupBlockerState {
 // New values need to be handled in ChromeUtils::ShouldResistFingerprinting.
 enum JSRFPTarget {
   "RoundWindowSize",
+  "SiteSpecificZoom",
 };

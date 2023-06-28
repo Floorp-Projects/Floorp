@@ -696,8 +696,10 @@ var FullZoom = {
     if (!this.siteSpecific) {
       return false;
     }
-    return !aBrowser?.browsingContext?.topWindowContext
-      .shouldResistFingerprinting;
+    return (
+      !aBrowser?.browsingContext?.topWindowContext.shouldResistFingerprinting ||
+      !ChromeUtils.shouldResistFingerprinting("SiteSpecificZoom")
+    );
   },
 
   /**

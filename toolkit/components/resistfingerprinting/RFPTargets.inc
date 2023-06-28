@@ -88,6 +88,7 @@ ITEM_VALUE(CSSPointerCapabilities,      1llu << 57)
 // WebGL
 ITEM_VALUE(WebGLRenderCapability,       1llu << 58)
 ITEM_VALUE(WebGLRenderInfo,             1llu << 59)
+ITEM_VALUE(SiteSpecificZoom,            1llu << 60)
 
 // !!! Don't forget to update kDefaultFingerintingProtections in nsRFPService.cpp
 // if necessary.

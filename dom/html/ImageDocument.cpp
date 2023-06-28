@@ -718,8 +718,7 @@ void ImageDocument::UpdateTitleAndCharset() {
 }
 
 bool ImageDocument::IsSiteSpecific() {
-  // TODO(Bug 1837976) Need an RFPTarget for FullZoom._isSiteSpecific
-  return !ShouldResistFingerprinting(RFPTarget::IsAlwaysEnabledForPrecompute) &&
+  return !ShouldResistFingerprinting(RFPTarget::SiteSpecificZoom) &&
          mozilla::Preferences::GetBool("browser.zoom.siteSpecific", false);
 }
 

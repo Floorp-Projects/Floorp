@@ -1847,6 +1847,9 @@ bool ChromeUtils::ShouldResistFingerprinting(GlobalObject& aGlobal,
     case JSRFPTarget::RoundWindowSize:
       target = RFPTarget::RoundWindowSize;
       break;
+    case JSRFPTarget::SiteSpecificZoom:
+      target = RFPTarget::SiteSpecificZoom;
+      break;
     default:
       MOZ_CRASH("Unhandled JSRFPTarget enum value");
   }
