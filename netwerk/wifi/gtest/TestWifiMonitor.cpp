@@ -168,6 +168,11 @@ class TestWifiMonitor : public ::testing::Test {
     mWifiMonitor = MakeRefPtr<nsWifiMonitor>(MakeUnique<MockWifiScanner>());
     EXPECT_TRUE(!mWifiMonitor->IsPolling());
 
+    // Start with ETHERNET network type to avoid always polling at test start.
+    mObs->NotifyObservers(
+        nullptr, NS_NETWORK_LINK_TYPE_TOPIC,
+        NS_ConvertUTF8toUTF16(NS_NETWORK_LINK_TYPE_ETHERNET).get());
+
     mWifiListener = new MockWifiListener();
     LOGI(("monitor: %p | scanner: %p | listener: %p", mWifiMonitor.get(),
           mWifiMonitor->mWifiScanner.get(), mWifiListener.get()));
@@ -365,7 +370,7 @@ class TestWifiMonitor : public ::testing::Test {
     // says we have switched to a mobile network (LINK_TYPE_MOBILE or
     // LINK_TYPE_WIMAX) or we are polling the wifi-scanner (aShouldPoll).
     const LinkTypeMobility kLinkTypeTopicDatas[] = {
-        {NS_NETWORK_LINK_TYPE_UNKNOWN, false /* mIsMobile */},
+        {NS_NETWORK_LINK_TYPE_UNKNOWN, true /* mIsMobile */},
         {NS_NETWORK_LINK_TYPE_ETHERNET, false},
         {NS_NETWORK_LINK_TYPE_USB, false},
         {NS_NETWORK_LINK_TYPE_WIFI, false},

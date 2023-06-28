@@ -71,14 +71,17 @@ static uint64_t NextPollingIndex() {
 // We poll when we are on a network where the wifi environment
 // could reasonably be expected to change much -- so, on mobile.
 static bool ShouldPollForNetworkType(const char16_t* aLinkType) {
-  return NS_ConvertUTF16toUTF8(aLinkType) == NS_NETWORK_LINK_TYPE_WIMAX ||
-         NS_ConvertUTF16toUTF8(aLinkType) == NS_NETWORK_LINK_TYPE_MOBILE;
+  auto linkTypeU8 = NS_ConvertUTF16toUTF8(aLinkType);
+  return linkTypeU8 == NS_NETWORK_LINK_TYPE_WIMAX ||
+         linkTypeU8 == NS_NETWORK_LINK_TYPE_MOBILE ||
+         linkTypeU8 == NS_NETWORK_LINK_TYPE_UNKNOWN;
 }
 
 // Enum value version.
 static bool ShouldPollForNetworkType(uint32_t aLinkType) {
   return aLinkType == nsINetworkLinkService::LINK_TYPE_WIMAX ||
-         aLinkType == nsINetworkLinkService::LINK_TYPE_MOBILE;
+         aLinkType == nsINetworkLinkService::LINK_TYPE_MOBILE ||
+         aLinkType == nsINetworkLinkService::LINK_TYPE_UNKNOWN;
 }
 
 nsWifiMonitor::nsWifiMonitor(UniquePtr<mozilla::WifiScanner>&& aScanner)
