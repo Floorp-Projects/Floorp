@@ -1093,7 +1093,7 @@ nsresult FileSystemDatabaseManagerVersion001::SetUsageTracking(
 }
 
 Result<nsTArray<FileId>, QMResult>
-FileSystemDatabaseManagerVersion001::FindDescendants(
+FileSystemDatabaseManagerVersion001::FindFilesUnderEntry(
     const EntryId& aEntryId) const {
   nsTArray<FileId> descendants;
   {
@@ -1216,7 +1216,8 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
 
   QM_TRY_UNWRAP(Usage usage, GetUsagesOfDescendants(entryId));
 
-  QM_TRY_INSPECT(const nsTArray<FileId>& descendants, FindDescendants(entryId));
+  QM_TRY_INSPECT(const nsTArray<FileId>& descendants,
+                 FindFilesUnderEntry(entryId));
 
   nsTArray<FileId> removeFails;
   QM_TRY_UNWRAP(DebugOnly<Usage> removedUsage,
