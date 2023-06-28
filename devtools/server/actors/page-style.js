@@ -689,6 +689,9 @@ class PageStyleActor extends Actor {
       case "::first-line":
       case "::selection":
         return true;
+      // We don't want the method to throw, but we don't handle those yet (See Bug 1840872)
+      case "::highlight":
+        return false;
       case "::marker":
         return this._nodeIsListItem(node);
       case "::backdrop":
