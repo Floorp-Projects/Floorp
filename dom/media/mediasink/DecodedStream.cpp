@@ -821,16 +821,14 @@ void DecodedStreamData::WriteVideoToSegment(
     VideoSegment* aOutput, const PrincipalHandle& aPrincipalHandle,
     double aPlaybackRate) {
   RefPtr<layers::Image> image = aImage;
-  auto end =
-      mVideoTrack->MicrosecondsToTrackTimeRoundDown(aEnd.ToMicroseconds());
-  auto start =
-      mVideoTrack->MicrosecondsToTrackTimeRoundDown(aStart.ToMicroseconds());
   aOutput->AppendFrame(image.forget(), aIntrinsicSize, aPrincipalHandle, false,
                        aTimeStamp);
   // Extend this so we get accurate durations for all frames.
   // Because this track is pushed, we need durations so the graph can track
   // when playout of the track has finished.
   MOZ_ASSERT(aPlaybackRate > 0);
+  TrackTime start = aStart.ToTicksAtRate(mVideoTrack->mSampleRate);
+  TrackTime end = aEnd.ToTicksAtRate(mVideoTrack->mSampleRate);
   aOutput->ExtendLastFrameBy(
       static_cast<TrackTime>((float)(end - start) / aPlaybackRate));
 
