@@ -33,16 +33,19 @@ message-bar-button = Click me, please!
   },
 };
 
-const Template = ({ dismissable, type }) =>
+const Template = ({ button, dismissable, type }) =>
   html`
     <message-bar type=${type} ?dismissable=${dismissable}>
       <span data-l10n-id="message-bar-text"></span>
-      <button data-l10n-id="message-bar-button"></button>
+      ${button ? html`<button data-l10n-id="message-bar-button"></button>` : ""}
     </message-bar>
   `;
 
 export const Basic = Template.bind({});
-Basic.args = { type: "", dismissable: false };
+Basic.args = { type: "", dismissable: false, button: true };
 
 export const Dismissable = Template.bind({});
-Dismissable.args = { type: "", dismissable: true };
+Dismissable.args = { type: "", dismissable: true, button: true };
+
+export const TextOnly = Template.bind({});
+TextOnly.args = { type: "", dismissable: false, button: false };
