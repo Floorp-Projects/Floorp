@@ -20,7 +20,6 @@
 #include "nsAccessibilityService.h"
 #include "nsEventShell.h"
 #include "nsIAccessibleAnnouncementEvent.h"
-#include "nsIAccessiblePivot.h"
 #include "nsAccUtils.h"
 #include "nsTextEquivUtils.h"
 #include "nsWhitespaceTokenizer.h"
