@@ -7,6 +7,7 @@
 #ifndef DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATAMANAGER_H_
 #define DOM_FS_PARENT_DATAMODEL_FILESYSTEMDATAMANAGER_H_
 
+#include "FileSystemParentTypes.h"
 #include "ResultConnection.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/TaskQueue.h"
@@ -133,6 +134,8 @@ class FileSystemDataManager
   void UnlockShared(const EntryId& aEntryId, const FileId& aFileId,
                     bool aAbort);
 
+  FileMode GetMode(bool aKeepData) const;
+
  protected:
   virtual ~FileSystemDataManager();
 
@@ -169,6 +172,7 @@ class FileSystemDataManager
   MozPromiseHolder<BoolPromise> mClosePromiseHolder;
   uint32_t mRegCount;
   State mState;
+  DatabaseVersion mVersion;
 };
 
 }  // namespace fs::data
