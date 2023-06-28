@@ -240,12 +240,17 @@ export const MultiStageAboutWelcome = props => {
 };
 
 export const SecondaryCTA = props => {
-  let targetElement = props.position
+  const targetElement = props.position
     ? `secondary_button_${props.position}`
     : `secondary_button`;
-  const buttonStyling = props.content.secondary_button?.has_arrow_icon
-    ? `secondary text-link arrow-icon`
-    : `secondary text-link`;
+  let buttonStyling = props.content.secondary_button?.has_arrow_icon
+    ? `secondary arrow-icon`
+    : `secondary`;
+  const isTextLink = props.content.position !== "split";
+
+  if (isTextLink) {
+    buttonStyling += " text-link";
+  }
 
   return (
     <div

@@ -201,32 +201,32 @@ html {
   }
 
   @mixin secondary-cta-styles {
-    background-color: var(--in-content-button-background) !important; // stylelint-disable-line declaration-no-important
+    background-color: var(--in-content-button-background);
     border: 1px solid var(--in-content-button-border-color);
     line-height: 12px;
     font-size: 0.72em;
     font-weight: 600;
     padding: 8px 16px;
     text-decoration: none;
+    cursor: default;
 
     &:hover {
-      background-color: var(--in-content-button-background-hover) !important; // stylelint-disable-line declaration-no-important
+      background-color: var(--in-content-button-background-hover);
       color: var(--in-content-button-text-color-hover);
     }
   }
 
   @mixin text-link-styles {
+    background: none;
     text-decoration: underline;
     cursor: pointer;
     color: var(--in-content-link-color);
 
     &:hover {
-      text-decoration: none;
       color: var(--in-content-link-color-hover);
     }
 
     &:active {
-      text-decoration: none;
       color: var(--in-content-link-color-active);
     }
   }
@@ -343,8 +343,8 @@ html {
     &:not([pos='split']) {
       .secondary-cta {
         .secondary {
-          background: none;
-          color: var(--in-content-link-color);
+          @include text-link-styles;
+
           font-size: 14px;
           font-weight: normal;
           line-height: 20px;
@@ -407,7 +407,7 @@ html {
         padding-inline-end: 0;
 
         button {
-          color: var(--in-content-page-color);
+          padding: 7px 15px;
         }
       }
 
@@ -483,11 +483,10 @@ html {
               margin: 8px 0;
 
               &.cta-link {
-                background: none;
+                @include text-link-styles;
+
                 padding: 0;
                 font-weight: normal;
-
-                @include text-link-styles;
               }
 
               &.secondary {
@@ -821,7 +820,7 @@ html {
 
         // Reposition the "Sign in" button on the welcome screen to move inside
         // the screen when it would otherwise overlap the screen.
-        @media (max-width: 590px) {
+        @media (max-width: 620px) {
           .section-main .secondary-cta.top {
             position: absolute;
             padding: 0;
@@ -1201,11 +1200,10 @@ html {
     }
 
     .email-link {
+      @include text-link-styles;
+
       font-size: 16px;
       font-weight: 400;
-      background: none;
-
-      @include text-link-styles;
 
       &:hover {
         background: none;
