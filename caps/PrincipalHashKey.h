@@ -25,7 +25,7 @@ class PrincipalHashKey : public PLDHashEntryHdr {
     MOZ_ASSERT(aKey);
     MOZ_COUNT_CTOR(PrincipalHashKey);
   }
-  PrincipalHashKey(PrincipalHashKey&& aKey)
+  PrincipalHashKey(PrincipalHashKey&& aKey) noexcept
       : mPrincipal(std::move(aKey.mPrincipal)) {
     MOZ_COUNT_CTOR(PrincipalHashKey);
   }
@@ -43,7 +43,7 @@ class PrincipalHashKey : public PLDHashEntryHdr {
     return aKey;
   }
   static PLDHashNumber HashKey(const nsIPrincipal* aKey) {
-    auto* bp = BasePrincipal::Cast(aKey);
+    const auto* bp = BasePrincipal::Cast(aKey);
     return HashGeneric(bp->GetOriginNoSuffixHash(), bp->GetOriginSuffixHash());
   }
 

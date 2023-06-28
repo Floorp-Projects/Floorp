@@ -34,9 +34,10 @@ ClientInfo& ClientInfo::operator=(const ClientInfo& aRight) {
   return *this;
 }
 
-ClientInfo::ClientInfo(ClientInfo&& aRight) : mData(std::move(aRight.mData)) {}
+ClientInfo::ClientInfo(ClientInfo&& aRight) noexcept
+    : mData(std::move(aRight.mData)) {}
 
-ClientInfo& ClientInfo::operator=(ClientInfo&& aRight) {
+ClientInfo& ClientInfo::operator=(ClientInfo&& aRight) noexcept {
   mData.reset();
   mData = std::move(aRight.mData);
   return *this;
@@ -89,14 +90,14 @@ const IPCClientInfo& ClientInfo::ToIPC() const { return *mData; }
 bool ClientInfo::IsPrivateBrowsing() const {
   switch (PrincipalInfo().type()) {
     case PrincipalInfo::TContentPrincipalInfo: {
-      auto& p = PrincipalInfo().get_ContentPrincipalInfo();
+      const auto& p = PrincipalInfo().get_ContentPrincipalInfo();
       return p.attrs().mPrivateBrowsingId != 0;
     }
     case PrincipalInfo::TSystemPrincipalInfo: {
       return false;
     }
     case PrincipalInfo::TNullPrincipalInfo: {
-      auto& p = PrincipalInfo().get_NullPrincipalInfo();
+      const auto& p = PrincipalInfo().get_NullPrincipalInfo();
       return p.attrs().mPrivateBrowsingId != 0;
     }
     default: {
@@ -107,7 +108,6 @@ bool ClientInfo::IsPrivateBrowsing() const {
 }
 
 Result<nsCOMPtr<nsIPrincipal>, nsresult> ClientInfo::GetPrincipal() const {
-  MOZ_ASSERT(NS_IsMainThread());
   return PrincipalInfoToPrincipal(PrincipalInfo());
 }
 
