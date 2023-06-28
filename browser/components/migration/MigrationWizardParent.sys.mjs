@@ -474,10 +474,9 @@ export class MigrationWizardParent extends JSWindowActorParent {
                       quantity: details.totalExtensions.length,
                     }
                   ),
-                  // TODO: replace base SUMO URL with specific SUMO slug on how Firefox matches extensions
-                  linkURL: Services.urlFormatter.formatURLPref(
-                    "app.support.baseURL"
-                  ),
+                  linkURL:
+                    Services.urlFormatter.formatURLPref("app.support.baseURL") +
+                    "import-data-another-browser",
                   linkText: await lazy.gFluentStrings.formatValue(
                     "migration-wizard-progress-extensions-support-link"
                   ),

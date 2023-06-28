@@ -319,7 +319,8 @@ ExtensionsPartialSuccess.args = {
         value: MigrationWizardConstants.PROGRESS_VALUE.INFO,
         message: "5 of 10 extensions",
         linkText: "Learn how Firefox matches extensions",
-        linkURL: "https://support.mozilla.org/",
+        linkURL:
+          "https://support.mozilla.org/kb/import-data-another-browser#w_import-extensions-from-chrome/",
       },
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
         value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
