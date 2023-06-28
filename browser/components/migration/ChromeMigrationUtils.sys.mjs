@@ -136,9 +136,13 @@ export var ChromeMigrationUtils = {
    * @param {string} locale - The specific language of locale string.
    * @param {string} extensionId - The extension ID.
    * @param {string} profileId - The user profile's ID.
-   * @returns {string} The locale string.
+   * @returns {string|null} The locale string.
    */
   async _getLocaleString(key, locale, extensionId, profileId) {
+    if (typeof key !== "string") {
+      console.debug("invalid manifest key");
+      return null;
+    }
     // Return the key string if it is not a locale key.
     // The key string starts with "__MSG_" and ends with "__".
     // For example, "__MSG_name__".
