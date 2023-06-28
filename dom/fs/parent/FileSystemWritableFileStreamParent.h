@@ -26,7 +26,7 @@ class FileSystemWritableFileStreamParent
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemWritableFileStreamParent,
                                         override)
 
-  mozilla::ipc::IPCResult RecvClose(CloseResolver&& aResolver);
+  mozilla::ipc::IPCResult RecvClose(bool aAbort, CloseResolver&& aResolver);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -39,7 +39,7 @@ class FileSystemWritableFileStreamParent
 
   bool IsClosed() const { return mClosed; }
 
-  void Close();
+  void Close(bool aAbort);
 
   const RefPtr<FileSystemManagerParent> mManager;
 
