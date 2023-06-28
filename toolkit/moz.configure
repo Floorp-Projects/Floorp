@@ -1360,6 +1360,7 @@ def webrtc_default(target):
             "ia64",
             "mips32",
             "mips64",
+            "riscv64",
         )
         or target.cpu.startswith("ppc")
     ):

@@ -618,7 +618,12 @@ def write_mozbuild(
             for v in all_mozbuild_results
         }
 
-        for attrs in ((), ("OS_TARGET",), ("OS_TARGET", "CPU_ARCH")):
+        for attrs in (
+            (),
+            ("OS_TARGET",),
+            ("OS_TARGET", "CPU_ARCH"),
+            ("OS_TARGET", "CPU_ARCH", "MOZ_X11"),
+        ):
 
             conditions = set()
             for args in dirs_by_config.keys():
@@ -737,7 +742,7 @@ def main():
             if target_os in ("android", "linux", "win"):
                 target_cpus.append("x86")
             if target_os == "linux":
-                target_cpus.append("ppc64")
+                target_cpus.extend(["ppc64", "riscv64"])
             for target_cpu in target_cpus:
                 vars = {
                     "host_cpu": "x64",
