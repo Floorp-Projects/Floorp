@@ -66,10 +66,6 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
     return frame_type_ == VideoFrameType::kVideoFrameKey;
   }
 
-  std::vector<uint8_t> GetAdditionalData() const override {
-    return RtpDescriptorAuthentication(header_);
-  }
-
   const VideoFrameMetadata& GetMetadata() const override { return metadata_; }
 
   VideoFrameMetadata Metadata() const override {
