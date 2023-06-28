@@ -740,7 +740,7 @@ async function defaultsTest(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "default";
+  extraData.testDesc = extraData.testDesc || "default";
   expectedResults.shouldRFPApply = false;
   if (extraPrefs != undefined) {
     await SpecialPowers.pushPrefEnv({
@@ -763,7 +763,7 @@ async function simpleRFPTest(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "simple RFP enabled";
+  extraData.testDesc = extraData.testDesc || "simple RFP enabled";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting", true]].concat(extraPrefs || []),
@@ -785,7 +785,7 @@ async function simplePBMRFPTest(
     extraData = {};
   }
   extraData.private_window = true;
-  extraData.testDesc = "simple RFP in PBM enabled";
+  extraData.testDesc = extraData.testDesc || "simple RFP in PBM enabled";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.resistFingerprinting.pbmode", true]].concat(
@@ -808,7 +808,7 @@ async function simpleFPPTest(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "simple FPP enabled";
+  extraData.testDesc = extraData.testDesc || "simple FPP enabled";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -833,8 +833,7 @@ async function simplePBMFPPTest(
     extraData = {};
   }
   extraData.private_window = true;
-  extraData.private_window = true;
-  extraData.testDesc = "simple FPP in PBM enabled";
+  extraData.testDesc = extraData.testDesc || "simple FPP in PBM enabled";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -859,7 +858,7 @@ async function testA(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (A)";
+  extraData.testDesc = extraData.testDesc || "test (A)";
   expectedResults.shouldRFPApply = false;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -887,7 +886,7 @@ async function testB(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (B)";
+  extraData.testDesc = extraData.testDesc || "test (B)";
   expectedResults.shouldRFPApply = false;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -915,7 +914,7 @@ async function testC(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (C)";
+  extraData.testDesc = extraData.testDesc || "test (C)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -943,7 +942,7 @@ async function testD(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (D)";
+  extraData.testDesc = extraData.testDesc || "test (D)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -968,7 +967,7 @@ async function testE(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (E)";
+  extraData.testDesc = extraData.testDesc || "test (E)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -996,7 +995,7 @@ async function testF(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (F)";
+  extraData.testDesc = extraData.testDesc || "test (F)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -1021,7 +1020,7 @@ async function testG(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (G)";
+  extraData.testDesc = extraData.testDesc || "test (G)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -1049,7 +1048,7 @@ async function testH(
   if (extraData == undefined) {
     extraData = {};
   }
-  extraData.testDesc = "test (H)";
+  extraData.testDesc = extraData.testDesc || "test (H)";
   expectedResults.shouldRFPApply = true;
   await SpecialPowers.pushPrefEnv({
     set: [

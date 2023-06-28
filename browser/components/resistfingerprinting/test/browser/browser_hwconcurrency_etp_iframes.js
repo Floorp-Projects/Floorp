@@ -85,3 +85,42 @@ add_task(
     extraData
   )
 );
+
+// These test cases exercise the unusual configuration of RFP enabled in PBM and FPP enabled
+// in normal browsing mode.
+let extraPrefs = [
+  ["privacy.resistFingerprinting.pbmode", true],
+  ["privacy.fingerprintingProtection", true],
+  ["privacy.fingerprintingProtection.overrides", "+HardwareConcurrency"],
+];
+
+let this_extraData = structuredClone(extraData);
+this_extraData.testDesc =
+  "RFP enabled in PBM, FPP enabled globally, testing in normal browsing mode";
+expectedResults = allNotSpoofed;
+add_task(
+  defaultsTest.bind(
+    null,
+    uri,
+    testHWConcurrency,
+    structuredClone(expectedResults),
+    this_extraData,
+    structuredClone(extraPrefs)
+  )
+);
+
+this_extraData = structuredClone(extraData);
+this_extraData.testDesc =
+  "RFP enabled in PBM, FPP enabled globally, testing in PBM";
+this_extraData.private_window = true;
+expectedResults = allSpoofed;
+add_task(
+  defaultsTest.bind(
+    null,
+    uri,
+    testHWConcurrency,
+    structuredClone(expectedResults),
+    this_extraData,
+    structuredClone(extraPrefs)
+  )
+);
