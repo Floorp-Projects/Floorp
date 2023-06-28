@@ -1,0 +1,20 @@
+<!doctype html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<title>Selection.addRange() should always reset interline position</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  div[contenteditable] {
+    padding: 1em;
+  }
+</style>
+<script>
+SimpleTest.waitForFocus(async () => {
+  const editingHost = document.querySelector("div[contenteditable]");
+  editingHost.focus();
+  getSelection().collapse(editingHost, 2);
+  SpecialPowers.wrap(getSelection()).interlinePosition = true;
+  document.documentElement.removeAttribute("class");
+});
+</script>
+<div contenteditable="true" spellcheck="false">abc<br><br></div>
