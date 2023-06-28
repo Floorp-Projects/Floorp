@@ -153,8 +153,12 @@ The entries part of the ``"addons-manager-settings"`` collection are validated u
 
   * JSON Schema for each group of settings is defined in an entry of the ``"definitions"`` property.
 
-  * Each group of settings is contained it its own entry in ``"properties"``, named as the entry added to the ``"definitions"``)
-    and referencing (using ``"$ref"``) the related definition
+  * The definition for each of the groups defined in the schema should be defined as a ``"oneOf"`` array including an entry
+    of ``"type": "null"`` and ``"default"` set to ``null`` to omit the group of settings by default in new records.
+
+  * In addition to the ``"type": "null"`` schema, each group of settings is expected to include in the ``"oneOf"`` array
+    a second entry of ``"type": "object"`` and the controlled about:config preferences part of the group listed in
+    the ``"properties"``.
 
 .. literalinclude :: ./AMRemoteSettings-JSONSchema.json
    :language: json

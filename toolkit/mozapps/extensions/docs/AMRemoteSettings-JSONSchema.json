@@ -7,50 +7,77 @@
       "default": "AddonManagerSettings",
       "description": "The default id should NOT be changed, unless there is a specific need to create separate collection entries which target or exclude specific Firefox versions."
     },
-    "installTriggerDeprecation": {
-      "$ref": "#/definitions/installTriggerDeprecation",
-      "optional": true
+    "filter_expression": {
+      "type": "string",
+      "optional": true,
+      "description": "This is NOT directly used by AMRemoteSettings, but has special functionality in Remote Settings.\nSee https://remote-settings.readthedocs.io/en/latest/target-filters.html#how"
     },
     "quarantinedDomains": {
       "$ref": "#/definitions/quarantinedDomains",
       "optional": true
     },
-    "filter_expression": {
-      "type": "string",
-      "description": "This is NOT directly used by AMRemoteSettings, but has special functionality in Remote Settings.\nSee https://remote-settings.readthedocs.io/en/latest/target-filters.html#how",
+    "installTriggerDeprecation": {
+      "$ref": "#/definitions/installTriggerDeprecation",
       "optional": true
     }
   },
   "definitions": {
-    "installTriggerDeprecation": {
-      "type": "object",
-      "properties": {
-        "extensions.InstallTrigger.enabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show/Hide the InstallTrigger global completely (both the global and its methods will not be accessible anymore). IMPORTANT: The webcompat team should be consulted before turning this to false, because it may also potentially impact UA detection for some websites."
-        },
-        "extensions.InstallTriggerImpl.enabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "Show/Hide the InstallTrigger methods. The InstallTrigger global will remain visible but set to null."
-        }
-      },
-      "description": "These settings control the visibility of the InstallTrigger global and its methods.",
-      "additionalProperties": false
-    },
     "quarantinedDomains": {
-      "type": "object",
-      "properties": {
-        "extensions.quarantinedDomains.list": {
-          "type": "string",
-          "default": "",
-          "maxLength": 1048576,
-          "description": "Set of domains to be quarantined separated by a comma (e.g. 'domain1.org,domain2.com'). NOTE: this pref value should be set to a ASCII encoded string and its size smaller than 1MB"
+      "oneOf": [
+        {
+          "type": "null",
+          "title": "Omit quarantinedDomains settings"
+        },
+        {
+          "type": "object",
+          "title": "Include quarantinedDomains settings",
+          "required": ["extensions.quarantinedDomains.list"],
+          "properties": {
+            "extensions.quarantinedDomains.list": {
+              "type": "string",
+              "default": "",
+              "maxLength": 1048576,
+              "description": "Set of domains to be quarantined separated by a comma (e.g. 'domain1.org,domain2.com'). NOTE: this pref value should be set to a ASCII encoded string and its size smaller than 1MB"
+            }
+          },
+          "additionalProperties": false
         }
-      },
-      "description": "These settings provide a set of domain names to be quarantined (restricted by default to unverified extensions, which only the app or the user may grant back). IMPORTANT: The add-ons team should be consulted before introducing any new entry of this type.",
-      "additionalProperties": false
+      ],
+      "default": null,
+      "description": "These settings provide a set of domain names to be quarantined (restricted by default to unverified extensions, which only the app or the user may grant back). IMPORTANT: The add-ons team should be consulted before introducing any new entry of this type."
+    },
+    "installTriggerDeprecation": {
+      "oneOf": [
+        {
+          "type": "null",
+          "title": "Omit installTriggerDeprecation settings"
+        },
+        {
+          "type": "object",
+          "title": "Include installTriggerDeprecation settings",
+          "required": [
+            "extensions.InstallTrigger.enabled",
+            "extensions.InstallTriggerImpl.enabled"
+          ],
+          "properties": {
+            "extensions.InstallTrigger.enabled": {
+              "type": "boolean",
+              "default": true,
+              "optional": true,
+              "description": "Show/Hide the InstallTrigger global completely (both the global and its methods will not be accessible anymore). IMPORTANT: The webcompat team should be consulted before turning this to false, because it may also potentially impact UA detection for some websites."
+            },
+            "extensions.InstallTriggerImpl.enabled": {
+              "type": "boolean",
+              "default": false,
+              "optional": true,
+              "description": "Show/Hide the InstallTrigger methods. The InstallTrigger global will remain visible but set to null."
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "default": null,
+      "description": "These settings control the visibility of the InstallTrigger global and its methods."
     }
   }
 }
