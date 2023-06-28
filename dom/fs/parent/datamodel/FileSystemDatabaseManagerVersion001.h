@@ -97,6 +97,9 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   virtual Result<FileId, QMResult> GetFileId(
       const EntryId& aEntryId) const override;
 
+  virtual nsresult MergeFileId(const EntryId& aEntryId, const FileId& aFileId,
+                               bool aAbort) override;
+
   virtual void Close() override;
 
   virtual nsresult BeginUsageTracking(const FileId& aFileId) override;

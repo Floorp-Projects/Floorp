@@ -88,6 +88,9 @@ nsresult RehashFile(const FileSystemConnection& aConnection,
   const nsLiteralCString updateFileMappingsQuery =
       "UPDATE FileIds SET handle = :newId WHERE handle = :handle ;"_ns;
 
+  const nsLiteralCString updateMainFilesQuery =
+      "UPDATE MainFiles SET handle = :newId WHERE handle = :handle ;"_ns;
+
   const nsLiteralCString cleanupOldEntryQuery =
       "DELETE FROM Entries WHERE handle = :handle ;"_ns;
 
@@ -119,6 +122,14 @@ nsresult RehashFile(const FileSystemConnection& aConnection,
     QM_TRY_UNWRAP(
         ResultStatement stmt,
         ResultStatement::Create(aConnection, updateFileMappingsQuery));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("newId"_ns, newId)));
+    QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntryId)));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(aConnection, updateMainFilesQuery));
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("newId"_ns, newId)));
     QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("handle"_ns, aEntryId)));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
@@ -183,6 +194,12 @@ nsresult RehashDirectory(const FileSystemConnection& aConnection,
       "UPDATE FileIds SET handle = hash "
       "FROM ( SELECT handle, hash FROM ParentChildHash ) AS replacement "
       "WHERE FileIds.handle = replacement.handle "
+      ";"_ns;
+
+  const nsLiteralCString updateMainFilesQuery =
+      "UPDATE MainFiles SET handle = hash "
+      "FROM ( SELECT handle, hash FROM ParentChildHash ) AS replacement "
+      "WHERE MainFiles.handle = replacement.handle "
       ";"_ns;
 
   // Now fix the parents
@@ -263,6 +280,12 @@ nsresult RehashDirectory(const FileSystemConnection& aConnection,
     QM_TRY_UNWRAP(
         ResultStatement stmt,
         ResultStatement::Create(aConnection, updateFileMappingsQuery));
+    QM_TRY(QM_TO_RESULT(stmt.Execute()));
+  }
+
+  {
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(aConnection, updateMainFilesQuery));
     QM_TRY(QM_TO_RESULT(stmt.Execute()));
   }
 
@@ -381,8 +404,8 @@ nsresult AddNewFileId(const FileSystemConnection& aConnection,
  * be equal to the latest recorded value. In all cases, the latest recorded
  * value (or nothing) is the correct amount of quota to be released.
  */
-[[maybe_unused]] Result<Usage, QMResult> GetKnownUsage(
-    const FileSystemConnection& aConnection, const FileId& aFileId) {
+Result<Usage, QMResult> GetKnownUsage(const FileSystemConnection& aConnection,
+                                      const FileId& aFileId) {
   const nsLiteralCString trackedUsageQuery =
       "SELECT usage FROM Usages WHERE handle = :handle ;"_ns;
 
@@ -419,6 +442,23 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::GetEntryId(
   return fs::data::GetEntryHandle(aHandle);
 }
 
+Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::GetEntryId(
+    const FileId& aFileId) const {
+  const nsLiteralCString getEntryIdQuery =
+      "SELECT handle FROM FileIds WHERE fileId = :fileId ;"_ns;
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(mConnection, getEntryIdQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindFileIdByName("fileId"_ns, aFileId)));
+  QM_TRY_UNWRAP(bool hasEntries, stmt.ExecuteStep());
+
+  if (!hasEntries || stmt.IsNullByColumn(/* Column */ 0u)) {
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+  }
+
+  QM_TRY_RETURN(stmt.GetEntryIdByColumn(/* Column */ 0u));
+}
+
 nsresult FileSystemDatabaseManagerVersion002::EnsureFileId(
     const EntryId& aEntryId) {
   QM_TRY_UNWRAP(bool exists,
@@ -451,21 +491,108 @@ Result<FileId, QMResult> FileSystemDatabaseManagerVersion002::GetFileId(
   return data::GetFileId002(mConnection, aEntryId);
 }
 
-Result<EntryId, QMResult> FileSystemDatabaseManagerVersion002::GetEntryId(
-    const FileId& aFileId) const {
-  const nsLiteralCString getEntryIdQuery =
-      "SELECT handle FROM FileIds WHERE fileId = :fileId ;"_ns;
+nsresult FileSystemDatabaseManagerVersion002::MergeFileId(
+    const EntryId& aEntryId, const FileId& aFileId, bool aAbort) {
+  MOZ_ASSERT(mConnection);
 
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(mConnection, getEntryIdQuery));
-  QM_TRY(QM_TO_RESULT(stmt.BindFileIdByName("fileId"_ns, aFileId)));
-  QM_TRY_UNWRAP(bool hasEntries, stmt.ExecuteStep());
+  auto doCleanUp = [this](const FileId& aCleanable) -> nsresult {
+    // We need to clean up the old main file.
+    QM_TRY_UNWRAP(Usage usage,
+                  GetKnownUsage(mConnection, aCleanable).mapErr(toNSResult));
 
-  if (!hasEntries || stmt.IsNullByColumn(/* Column */ 0u)) {
-    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
+    QM_WARNONLY_TRY_UNWRAP(Maybe<Usage> removedUsage,
+                           mFileManager->RemoveFile(aCleanable));
+
+    if (removedUsage) {
+      // Removal of file data was ok, update the related fileId and usage
+      QM_WARNONLY_TRY(QM_TO_RESULT(RemoveFileId(aCleanable)));
+
+      if (usage > 0) {  // Performance!
+        DecreaseCachedQuotaUsage(usage);
+      }
+
+      // We only check the most common case. This can fail spuriously if an
+      // external application writes to the file, or OS reports zero size due to
+      // corruption.
+      MOZ_ASSERT_IF(0 == mFilesOfUnknownUsage, usage == removedUsage.value());
+
+      return NS_OK;
+    }
+
+    // Removal failed
+    const nsLiteralCString forgetCleanable =
+        "UPDATE FileIds SET handle = NULL WHERE fileId = :fileId ; "_ns;
+
+    QM_TRY_UNWRAP(ResultStatement stmt,
+                  ResultStatement::Create(mConnection, forgetCleanable)
+                      .mapErr(toNSResult));
+    QM_TRY(MOZ_TO_RESULT(stmt.BindFileIdByName("fileId"_ns, aCleanable)));
+    QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
+
+    TryRemoveDuringIdleMaintenance({aCleanable});
+
+    return NS_OK;
+  };
+
+  if (aAbort) {
+    QM_TRY(MOZ_TO_RESULT(doCleanUp(aFileId)));
+
+    return NS_OK;
   }
 
-  QM_TRY_RETURN(stmt.GetEntryIdByColumn(/* Column */ 0u));
+  QM_TRY_UNWRAP(
+      Maybe<FileId> maybeOldFileId,
+      QM_OR_ELSE_LOG_VERBOSE_IF(
+          // Expression.
+          GetFileId(aEntryId)
+              .map([](auto oldFileId) { return Some(std::move(oldFileId)); })
+              .mapErr(toNSResult),
+          // Predicate.
+          IsSpecificError<NS_ERROR_DOM_NOT_FOUND_ERR>,
+          // Fallback.
+          ErrToDefaultOk<Maybe<FileId>>));
+
+  if (maybeOldFileId && *maybeOldFileId == aFileId) {
+    return NS_OK;  // Nothing to do
+  }
+
+  // Main file changed
+  const nsLiteralCString flagAsMainFileQuery =
+      "INSERT INTO MainFiles ( handle, fileId ) "
+      "VALUES ( :entryId, :fileId ) "
+      "ON CONFLICT (handle) "
+      "DO UPDATE SET fileId = excluded.fileId "
+      "; "_ns;
+
+  mozStorageTransaction transaction(
+      mConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+  QM_TRY(MOZ_TO_RESULT(transaction.Start()));
+
+  QM_TRY_UNWRAP(ResultStatement stmt,
+                ResultStatement::Create(mConnection, flagAsMainFileQuery)
+                    .mapErr(toNSResult));
+  QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEntryId)));
+  QM_TRY(MOZ_TO_RESULT(stmt.BindFileIdByName("fileId"_ns, aFileId)));
+
+  QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
+
+  if (!maybeOldFileId) {
+    // We successfully added a new main file and there is nothing to clean up.
+    QM_TRY(MOZ_TO_RESULT(transaction.Commit()));
+
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(maybeOldFileId);
+  MOZ_ASSERT(*maybeOldFileId != aFileId);
+
+  QM_TRY(MOZ_TO_RESULT(doCleanUp(*maybeOldFileId)));
+
+  // If the old fileId and usage were not deleted, main file update fails.
+  QM_TRY(MOZ_TO_RESULT(transaction.Commit()));
+
+  return NS_OK;
 }
 
 Result<nsTArray<FileId>, QMResult>
