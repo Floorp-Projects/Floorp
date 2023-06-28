@@ -63,7 +63,12 @@
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
 #include "js/TypeDecls.h"          // JS::MutableHandle (fwd)
 
+namespace js {
+class FrontendContext;
+}  // namespace js
+
 namespace JS {
+using FrontendContext = js::FrontendContext;
 
 enum class AsmJSOption : uint8_t {
   Enabled,
@@ -414,10 +419,21 @@ class JS_PUBLIC_API OwningCompileOptions final : public ReadOnlyCompileOptions {
  public:
   // A minimal constructor, for use with OwningCompileOptions::copy.
   explicit OwningCompileOptions(JSContext* cx);
+
+  struct ForFrontendContext {};
+  explicit OwningCompileOptions(const ForFrontendContext&)
+      : ReadOnlyCompileOptions() {}
+
   ~OwningCompileOptions();
 
+ private:
+  template <typename ContextT>
+  bool copyImpl(ContextT* cx, const ReadOnlyCompileOptions& rhs);
+
+ public:
   /** Set this to a copy of |rhs|.  Return false on OOM. */
   bool copy(JSContext* cx, const ReadOnlyCompileOptions& rhs);
+  bool copy(JS::FrontendContext* fc, const ReadOnlyCompileOptions& rhs);
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 

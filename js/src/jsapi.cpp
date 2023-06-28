@@ -2362,8 +2362,9 @@ size_t JS::OwningCompileOptions::sizeOfExcludingThis(
          mallocSizeOf(introducerFilename_.c_str());
 }
 
-bool JS::OwningCompileOptions::copy(JSContext* cx,
-                                    const ReadOnlyCompileOptions& rhs) {
+template <typename ContextT>
+bool JS::OwningCompileOptions::copyImpl(ContextT* cx,
+                                        const ReadOnlyCompileOptions& rhs) {
   // Release existing string allocations.
   release();
 
@@ -2395,6 +2396,16 @@ bool JS::OwningCompileOptions::copy(JSContext* cx,
   }
 
   return true;
+}
+
+bool JS::OwningCompileOptions::copy(JSContext* cx,
+                                    const ReadOnlyCompileOptions& rhs) {
+  return copyImpl(cx, rhs);
+}
+
+bool JS::OwningCompileOptions::copy(JS::FrontendContext* fc,
+                                    const ReadOnlyCompileOptions& rhs) {
+  return copyImpl(fc, rhs);
 }
 
 JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
