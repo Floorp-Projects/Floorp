@@ -187,8 +187,11 @@
     padding-right: calc(var(--urlbarView-item-inline-padding) + var(--identity-box-margin-inline) + var(--urlbarView-favicon-width));
   }
   /* When rich suggestions are enabled the space for the icon increases to allow for larger icons */
-  .urlbarView-results[wrap]>.urlbarView-row[rich-suggestion=no-icon][has-url]>.urlbarView-row-inner>.urlbarView-url {
-    margin-inline-start: var(--urlbarView-icon-margin-end);
+  .urlbarView-results[wrap] > .urlbarView-row[rich-suggestion=no-icon][has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(ltr) {
+    margin-left: var(--urlbarView-icon-margin-end);
+  }
+  .urlbarView-results[wrap] > .urlbarView-row[rich-suggestion=no-icon][has-url] > .urlbarView-row-inner > .urlbarView-url:-moz-locale-dir(rtl) {
+    margin-right: var(--urlbarView-icon-margin-end);
   }
   /* Note: switchtab entries show the url only in override mode,
      remotetab and sponsored ones only when selected or :hover. */
