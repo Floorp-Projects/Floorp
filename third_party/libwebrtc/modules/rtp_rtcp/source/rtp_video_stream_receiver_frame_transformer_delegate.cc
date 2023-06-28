@@ -51,10 +51,6 @@ class TransformableVideoReceiverFrame
     return frame_->FrameType() == VideoFrameType::kVideoFrameKey;
   }
 
-  std::vector<uint8_t> GetAdditionalData() const override {
-    return RtpDescriptorAuthentication(frame_->GetRtpVideoHeader());
-  }
-
   const VideoFrameMetadata& GetMetadata() const override { return metadata_; }
 
   VideoFrameMetadata Metadata() const override { return metadata_; }
