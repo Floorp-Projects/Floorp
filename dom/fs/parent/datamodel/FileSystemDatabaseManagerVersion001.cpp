@@ -417,31 +417,6 @@ nsresult UpdateUsageUnsetTracked(const FileSystemConnection& aConnection,
 }
 
 /**
- * @brief Get recorded usage or zero if nothing was ever written to the file.
- * Removing files is only allowed when there is no lock on the file, and their
- * usage is either correctly recorded in the database during unlock, or nothing,
- * or they remain in tracked state and the quota manager assumes their usage to
- * be equal to the latest recorded value. In all cases, the latest recorded
- * value (or nothing) is the correct amount of quota to be released.
- */
-[[maybe_unused]] Result<Usage, QMResult> GetKnownUsage(
-    const FileSystemConnection& aConnection, const FileId& aFileId) {
-  const nsLiteralCString trackedUsageQuery =
-      "SELECT usage FROM Usages WHERE handle = :handle ;"_ns;
-
-  QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConnection, trackedUsageQuery));
-  QM_TRY(QM_TO_RESULT(stmt.BindFileIdByName("handle"_ns, aFileId)));
-
-  QM_TRY_UNWRAP(const bool moreResults, stmt.ExecuteStep());
-  if (!moreResults) {
-    return 0;
-  }
-
-  QM_TRY_RETURN(stmt.GetUsageByColumn(/* Column */ 0u));
-}
-
-/**
  * @brief Get the recorded usage only if the file is in tracked state.
  * During origin initialization, if the usage on disk is unreadable, the latest
  * recorded usage is reported to the quota manager for the tracked files.
