@@ -215,13 +215,8 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   void DoSecurityCheck(nsIPrincipal* aPrincipal, bool forceWriteOnly,
                        bool CORSUsed);
 
-  // Checking if fingerprinting protection is enable for the given target. Note
-  // that we need to use unknown target as the default value for the WebGL
-  // callsites that haven't cut over to use RFPTarget.
-  //
-  // The default unknown target should be removed in Bug 1829635.
-  bool ShouldResistFingerprinting(
-      mozilla::RFPTarget aTarget = mozilla::RFPTarget::Unknown) const;
+  // Checking if fingerprinting protection is enable for the given target.
+  bool ShouldResistFingerprinting(mozilla::RFPTarget aTarget) const;
 
  protected:
   RefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;

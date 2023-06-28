@@ -103,10 +103,3 @@ ITEM_VALUE(SiteSpecificZoom,            1llu << 60)
  * this value in the overrides pref is undefined behavior and may do anything.)
  */
 ITEM_VALUE(IsAlwaysEnabledForPrecompute, 0)
-
-/*
- * This value is the default argument value, to allow all callsites to ShouldRFP
- * continue working. We will eventually remove the default argument, and then also
- * remove this enum value.
- */
-ITEM_VALUE(Unknown, 0xffffffff'ffffffff)
