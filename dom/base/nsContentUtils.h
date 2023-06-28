@@ -3057,11 +3057,12 @@ class nsContentUtils {
       mozilla::dom::CustomElementDefinition* aDefinition = nullptr);
 
   static mozilla::dom::CustomElementFormValue ConvertToCustomElementFormValue(
-      const mozilla::dom::OwningFileOrUSVStringOrFormData& aState);
+      const mozilla::dom::Nullable<
+          mozilla::dom::OwningFileOrUSVStringOrFormData>& aState);
 
   static mozilla::dom::Nullable<mozilla::dom::OwningFileOrUSVStringOrFormData>
   ExtractFormAssociatedCustomElementValue(
-      mozilla::dom::HTMLElement* aElement,
+      nsIGlobalObject* aGlobal,
       const mozilla::dom::CustomElementFormValue& aCEValue);
 
   /**

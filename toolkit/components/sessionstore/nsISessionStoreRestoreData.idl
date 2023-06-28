@@ -27,6 +27,8 @@ interface nsISessionStoreRestoreData : nsISupports {
                        in unsigned long aSelectedIndex, in AString aValue);
   void addMultipleSelect(in boolean aIsXPath, in AString aIdOrXPath,
                          in Array<AString> aValues);
+  void addCustomElement(in boolean aIsXPath, in AString aIdOrXPath,
+                        in jsval aValue, in jsval aState);
 
   // Add a child data object to our children list.
   void addChild(in nsISessionStoreRestoreData aChild, in unsigned long aIndex);

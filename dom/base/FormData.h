@@ -21,6 +21,7 @@ class ErrorResult;
 
 namespace dom {
 
+class CustomElementFormValue;
 class HTMLFormElement;
 class GlobalObject;
 
@@ -152,6 +153,8 @@ class FormData final : public nsISupports,
   nsresult CopySubmissionDataTo(HTMLFormSubmission* aFormSubmission) const;
 
   Element* GetSubmitterElement() const { return mSubmitter.get(); }
+
+  CustomElementFormValue ConvertToCustomElementFormValue();
 
  private:
   nsCOMPtr<nsISupports> mOwner;

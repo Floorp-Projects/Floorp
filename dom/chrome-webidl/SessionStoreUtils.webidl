@@ -144,7 +144,15 @@ dictionary CollectedNonMultipleSelectValue
   required DOMString value;
 };
 
+[GenerateConversionToJS, GenerateInit]
+dictionary CollectedCustomElementValue
+{
+  (File or USVString or FormData)? value = null;
+  (File or USVString or FormData)? state = null;
+};
+
 // object contains either a CollectedFileListValue or a CollectedNonMultipleSelectValue or Sequence<DOMString>
+// or a CollectedCustomElementValue
 typedef (DOMString or boolean or object) CollectedFormDataValue;
 
 dictionary CollectedData
