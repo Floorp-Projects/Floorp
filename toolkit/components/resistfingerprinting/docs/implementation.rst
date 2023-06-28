@@ -30,14 +30,11 @@ As you can see in the callgraph below, directly calling a *dangerous* function w
 	  SRFP_docshell["ShouldResistFingerprinting(nsIDocShell*)"]
 	  click SRFP_docshell href "https://searchfox.org/mozilla-central/search?q=symbol:_ZN14nsContentUtils26ShouldResistFingerprintingEP11nsIDocShellN7mozilla9RFPTargetE&redirect=false"
 
-	  SRFP_channel["ShouldResistFingerprinting(nsIChannel*)"]
+	  SRFP_channel["ShouldResistFingerprinting(nsIChannel*)<br />ETPSaysShouldNotResistFingerprinting Check<br />CookieJarSettingsSaysShouldResistFingerprinting Check"]
 	  click SRFP_channel href "https://searchfox.org/mozilla-central/search?q=symbol:_ZN14nsContentUtils26ShouldResistFingerprintingEP10nsIChannelN7mozilla9RFPTargetE&redirect=false"
 
 	  SRFP_uri["ShouldResistFingerprinting_dangerous(nsIURI*, OriginAttributes)<br />PBM Check<br />Scheme (inc WebExtension) Check<br />About Page Check<br />URI Exempt Check"]
 	  click SRFP_uri href "https://searchfox.org/mozilla-central/search?q=symbol:_ZN14nsContentUtils36ShouldResistFingerprinting_dangerousEP6nsIURIRKN7mozilla16OriginAttributesEPKcNS2_9RFPTargetE&redirect=false"
-
-	  SRFP_loadinfo["ShouldResistFingerprinting(nsILoadInfo)<br />CookieJarSettingsSaysShouldResistFingerprinting Check<br />System Principal Check"]
-	  click SRFP_loadinfo href "https://searchfox.org/mozilla-central/search?q=symbol:_ZN14nsContentUtils26ShouldResistFingerprintingEP11nsILoadInfoN7mozilla9RFPTargetE&redirect=false"
 
 	  SRFP_principal["ShouldResistFingerprinting_dangerous(nsIPrincipal*)<br />System Principal Check<br />PBM Check<br />Scheme Check<br />About Page Check<br />Web Extension Principal Check<br />URI Exempt Check"]
 	  click SRFP_principal href "https://searchfox.org/mozilla-central/search?q=symbol:_ZN14nsContentUtils36ShouldResistFingerprinting_dangerousEP12nsIPrincipalPKcN7mozilla9RFPTargetE&redirect=false"
@@ -47,14 +44,11 @@ As you can see in the callgraph below, directly calling a *dangerous* function w
 
 	  SRFP_principal --> |null| SRFP_char
 
-	  SRFP_loadinfo --> SRFP_principal
-	  SRFP_loadinfo --> |null| SRFP_char
-
 	  SRFP_uri --> |null| SRFP_char
 
 	  SRFP_channel -->|null| SRFP_char
-	  SRFP_channel --> |Document Load<br />CookieJarSettingsSaysShouldResistFingerprinting| SRFP_uri
-	  SRFP_channel --> |Subresource Load| SRFP_loadinfo
+	  SRFP_channel --> |Document Load| SRFP_uri
+	  SRFP_channel --> |Subresource Load| SRFP_principal
 
 	  SRFP_docshell -->|null| SRFP_char
 	  SRFP_docshell --> Doc_SRFP
