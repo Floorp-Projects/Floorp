@@ -1012,10 +1012,10 @@ index 214eb0e463..ce747e0141 100644
  
  void ScreenCapturerWinMagnifier::Start(Callback* callback) {
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index 7983371097..983851a55b 100644
+index 1f58a24c04..7f31d10459 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtcp_sender.cc
-@@ -201,7 +201,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
+@@ -199,7 +199,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
      next_time_to_send_rtcp_ = absl::nullopt;
    } else if (method_ == RtcpMode::kOff) {
      // When switching on, reschedule the next packet
