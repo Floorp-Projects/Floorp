@@ -5,7 +5,7 @@
 import { ifDefined, html } from "../vendor/lit.all.mjs";
 import { MozLitElement } from "../lit-utils.mjs";
 
-MozXULElement.insertFTLIfNeeded("browser/components/mozFiveStar.ftl");
+MozXULElement.insertFTLIfNeeded("toolkit/global/mozFiveStar.ftl");
 
 /**
  * The visual representation is five stars, each of them either empty,
