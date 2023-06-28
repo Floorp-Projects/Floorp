@@ -551,8 +551,12 @@ var PlacesCommandHook = {
     }
   },
 
-  searchBookmarks() {
-    gURLBar.search(UrlbarTokenizer.RESTRICT.BOOKMARK, {
+  async searchBookmarks() {
+    let win = BrowserWindowTracker.getTopWindow();
+    if (!win) {
+      win = await BrowserUIUtils.openNewBrowserWindow();
+    }
+    win.gURLBar.search(UrlbarTokenizer.RESTRICT.BOOKMARK, {
       searchModeEntry: "bookmarkmenu",
     });
   },

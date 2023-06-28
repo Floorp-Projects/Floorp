@@ -55,6 +55,8 @@
     <!-- work-around bug 392512 -->
     <command id="Browser:AddBookmarkAs"
              oncommand="PlacesCommandHook.bookmarkPage();"/>
+    <command id="Browser:SearchBookmarks"
+            oncommand="PlacesCommandHook.searchBookmarks();"/>
     <command id="Browser:BookmarkAllTabs"
              oncommand="PlacesUIUtils.showBookmarkPagesDialog(PlacesCommandHook.uniqueCurrentPages);"/>
     <command id="Browser:Back"    oncommand="BrowserBack();" disabled="true"/>
