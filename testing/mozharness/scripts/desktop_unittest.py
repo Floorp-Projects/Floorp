@@ -331,6 +331,15 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                     "help": "Whether to use the Http3 server",
                 },
             ],
+            [
+                ["--use-http2-server"],
+                {
+                    "action": "store_true",
+                    "default": False,
+                    "dest": "useHttp2Server",
+                    "help": "Whether to use the Http2 server",
+                },
+            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -632,6 +641,8 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
 
             if c["useHttp3Server"]:
                 base_cmd.append("--use-http3-server")
+            elif c["useHttp2Server"]:
+                base_cmd.append("--use-http2-server")
 
             # Ignore chunking if we have user specified test paths
             if not (self.verify_enabled or self.per_test_coverage):
