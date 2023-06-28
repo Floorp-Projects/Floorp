@@ -50,7 +50,7 @@ class FileSystemDatabaseManagerVersion002
   virtual Result<Usage, QMResult> GetUsagesOfDescendants(
       const EntryId& aEntryId) const override;
 
-  virtual Result<nsTArray<FileId>, QMResult> FindDescendants(
+  virtual Result<nsTArray<FileId>, QMResult> FindFilesUnderEntry(
       const EntryId& aEntryId) const override;
 
   virtual Result<bool, QMResult> DoesFileIdExist(

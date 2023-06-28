@@ -427,7 +427,7 @@ Result<FileId, QMResult> FileSystemDatabaseManagerVersion002::GetFileId(
 }
 
 Result<nsTArray<FileId>, QMResult>
-FileSystemDatabaseManagerVersion002::FindDescendants(
+FileSystemDatabaseManagerVersion002::FindFilesUnderEntry(
     const EntryId& aEntryId) const {
   const nsLiteralCString descendantsQuery =
       "WITH RECURSIVE traceChildren(handle, parent) AS ( "
