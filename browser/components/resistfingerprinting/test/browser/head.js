@@ -4,6 +4,11 @@
 
 "use strict";
 
+ChromeUtils.defineESModuleGetters(this, {
+  ContentBlockingAllowList:
+    "resource://gre/modules/ContentBlockingAllowList.sys.mjs",
+});
+
 const TEST_PATH =
   "http://example.net/browser/browser/" +
   "components/resistfingerprinting/test/browser/";
@@ -650,6 +655,13 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
       url: uri,
     },
     async function (browser) {
+      if ("etp_reload" in extraData) {
+        let tab = gBrowser.tabs[gBrowser.tabs.length - 1];
+        ContentBlockingAllowList.add(tab.linkedBrowser);
+        BrowserReload();
+        await BrowserTestUtils.browserLoaded(browser, false, uri);
+      }
+
       /*
        * We expect that `runTheTest` is going to be able to communicate with the iframe
        * or tab that it opens, but if it cannot (because we are using noopener), we kind
@@ -667,7 +679,7 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
       // this function (runActualTest) and not by runTheTest or testFunction. It avoids the
       // cloning issue, and avoids polluting the object in those called functions.
       let filterExtraData = function (x) {
-        let banned_keys = ["noopener", "await_uri"];
+        let banned_keys = ["etp_reload", "noopener", "await_uri"];
         return Object.fromEntries(
           Object.entries(x).filter(([k, v]) => !banned_keys.includes(k))
         );
@@ -704,6 +716,11 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
       }
 
       testFunction(result, expectedResults, extraData);
+
+      if ("etp_reload" in extraData) {
+        let tab = gBrowser.tabs[gBrowser.tabs.length - 1];
+        ContentBlockingAllowList.remove(tab.linkedBrowser);
+      }
     }
   );
 }
