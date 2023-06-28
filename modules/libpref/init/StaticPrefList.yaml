@@ -13509,6 +13509,18 @@
   value: true
   mirror: always
 
+# Limit the number of CSP reports that are send in a specific timespan.
+- name: security.csp.reporting.limit.count
+  type: uint32_t
+  value: 100
+  mirror: always
+
+# Time span in seconds for reporting limit.
+- name: security.csp.reporting.limit.timespan
+  type: uint32_t
+  value: 2
+  mirror: always
+
 # If true, all toplevel data: URI navigations will be blocked.
 # Please note that manually entering a data: URI in the
 # URL-Bar will not be blocked when flipping this pref.
