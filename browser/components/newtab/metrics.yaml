@@ -167,6 +167,7 @@ newtab:
       newtab_visit_id: *newtab_visit_id
     send_in_pings:
       - newtab
+
   blocked_sponsors:
     type: string_list
     description: >
@@ -177,6 +178,28 @@ newtab:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1828234#c1
     data_sensitivity:
       - interaction
+    notification_emails:
+      - anicholson@mozilla.com
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - najiang@mozilla.com
+      - lina@mozilla.com
+      - ttran@mozilla.com
+    expires: never
+    send_in_pings:
+      - newtab
+    lifetime: application
+
+  sov_allocation:
+    type: string_list
+    description: >
+      The partner group assignment for sov
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840311
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840311#c3
+    data_sensitivity:
+      - technical
     notification_emails:
       - anicholson@mozilla.com
       - chutten@mozilla.com

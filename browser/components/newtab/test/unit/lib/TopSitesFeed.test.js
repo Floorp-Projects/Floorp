@@ -2805,6 +2805,58 @@ describe("Top Sites Feed", () => {
       assert.equal(sponsored[1].pos, 1);
     });
 
+    it("should have glean set sov partners", async () => {
+      sandbox.stub(feed._contile, "sov").get(() => sov);
+      fakeNimbusFeatures.pocketNewtab.getVariable.reset();
+      fakeNimbusFeatures.pocketNewtab.getVariable.onCall(0).returns(true);
+      fakeNimbusFeatures.pocketNewtab.getVariable.onCall(1).returns(undefined);
+      global.Sampling.ratioSample.onCall(0).resolves(0);
+      global.Sampling.ratioSample.onCall(1).resolves(1);
+      sandbox.spy(Glean.newtab.sovAllocation, "set");
+
+      await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.calledOnce(Glean.newtab.sovAllocation.set);
+      assert.calledWith(Glean.newtab.sovAllocation.set, [
+        '{"pos":1,"assigned":"amp","chosen":"amp"}',
+        '{"pos":2,"assigned":"moz-sales","chosen":"moz-sales"}',
+      ]);
+    });
+
+    it("should have glean set sov partners even with one assignment", async () => {
+      const oneSov = {
+        name: "SOV-20230518215316",
+        allocations: [
+          {
+            position: 1,
+            allocation: [
+              {
+                partner: "amp",
+                percentage: 100,
+              },
+              {
+                partner: "moz-sales",
+                percentage: 0,
+              },
+            ],
+          },
+        ],
+      };
+      sandbox.stub(feed._contile, "sov").get(() => oneSov);
+      fakeNimbusFeatures.pocketNewtab.getVariable.reset();
+      fakeNimbusFeatures.pocketNewtab.getVariable.onCall(0).returns(true);
+      fakeNimbusFeatures.pocketNewtab.getVariable.onCall(1).returns(undefined);
+      global.Sampling.ratioSample.onCall(0).resolves(0);
+      sandbox.spy(Glean.newtab.sovAllocation, "set");
+
+      await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.calledOnce(Glean.newtab.sovAllocation.set);
+      assert.calledWith(Glean.newtab.sovAllocation.set, [
+        '{"pos":1,"assigned":"amp","chosen":"amp"}',
+      ]);
+    });
+
     it("should add remaining contile tiles when nimbus var contile max num sponsored is present", async () => {
       sandbox.stub(feed._contile, "sov").get(() => sov);
       fakeNimbusFeatures.pocketNewtab.getVariable.reset();
