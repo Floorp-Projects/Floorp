@@ -1112,6 +1112,56 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StartsWith("L1T"));
 }
 
+#if defined(WEBRTC_USE_H264)
+
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingThreeEncodings_H264_Simulcast) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "H264");
+  transceiver->SetCodecPreferences(codecs);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing on all three layers.
+  // Ramp up time is needed before all three layers are sending.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+                   kLongTimeoutForRampingUp.ms());
+  // No significant additional ramp up time should be needed so we use
+  // `kDefaultTimeout` and `log_during_ramp_up`.
+  EXPECT_TRUE_WAIT(HasOutboundRtpExpectedResolutions(
+                       local_pc_wrapper,
+                       {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}},
+                       /*log_during_ramp_up=*/true),
+                   kDefaultTimeout.ms());
+  // Verify codec and scalability mode.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(3u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/H264"));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[1]),
+              StrCaseEq("video/H264"));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[2]),
+              StrCaseEq("video/H264"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StartsWith("L1T"));
+  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StartsWith("L1T"));
+  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StartsWith("L1T"));
+}
+
+#endif  // defined(WEBRTC_USE_H264)
+
 // The legacy SVC path is triggered when VP9 us used, but `scalability_mode` has
 // not been specified.
 // TODO(https://crbug.com/webrtc/14889): When legacy VP9 SVC path has been
