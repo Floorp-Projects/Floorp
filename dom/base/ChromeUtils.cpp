@@ -1839,6 +1839,21 @@ void ChromeUtils::GetAllPossibleUtilityActorNames(GlobalObject& aGlobal,
   }
 }
 
+/* static */
+bool ChromeUtils::ShouldResistFingerprinting(GlobalObject& aGlobal,
+                                             JSRFPTarget aTarget) {
+  RFPTarget target;
+  switch (aTarget) {
+    case JSRFPTarget::RoundWindowSize:
+      target = RFPTarget::RoundWindowSize;
+      break;
+    default:
+      MOZ_CRASH("Unhandled JSRFPTarget enum value");
+  }
+
+  return nsRFPService::IsRFPEnabledFor(target);
+}
+
 std::atomic<uint32_t> ChromeUtils::sDevToolsOpenedCount = 0;
 
 /* static */

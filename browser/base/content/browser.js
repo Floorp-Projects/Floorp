@@ -1508,7 +1508,7 @@ var gBrowserInit = {
     );
 
     // Set a sane starting width/height for all resolutions on new profiles.
-    if (Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
+    if (ChromeUtils.shouldResistFingerprinting("RoundWindowSize")) {
       // When the fingerprinting resistance is enabled, making sure that we don't
       // have a maximum window to interfere with generating rounded window dimensions.
       document.documentElement.setAttribute("sizemode", "normal");

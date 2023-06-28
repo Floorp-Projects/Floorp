@@ -708,6 +708,8 @@ partial namespace ChromeUtils {
    */
   [ChromeOnly]
   sequence<UTF8String> getAllPossibleUtilityActorNames();
+
+  boolean shouldResistFingerprinting(JSRFPTarget target);
 };
 
 /*
@@ -1026,4 +1028,10 @@ enum PopupBlockerState {
   "openBlocked",
   "openAbused",
   "openOverridden",
+};
+
+// Subset of RFPTargets.inc with JS callers.
+// New values need to be handled in ChromeUtils::ShouldResistFingerprinting.
+enum JSRFPTarget {
+  "RoundWindowSize",
 };
