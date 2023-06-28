@@ -333,12 +333,14 @@ TEST_P(TestFileSystemDatabaseManagerVersions, smokeTestCreateRemoveFiles) {
     << firstItemRef.entryName();
     ASSERT_EQ(firstChild, firstItemRef.entryId());
 
+    FileId fileId = FileId(firstItemRef.entryId());  // Default
+
     ContentType type;
     TimeStamp lastModifiedMilliSeconds;
     Path path;
     nsCOMPtr<nsIFile> file;
-    rv = dm->GetFile(firstItemRef.entryId(), type, lastModifiedMilliSeconds,
-                     path, file);
+    rv = dm->GetFile(firstItemRef.entryId(), fileId, /* asCopy */ false, type,
+                     lastModifiedMilliSeconds, path, file);
     ASSERT_NSEQ(NS_OK, rv);
 
     const int64_t nowMilliSeconds = PR_Now() / 1000;
