@@ -11,13 +11,16 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Bitmap
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
+import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.BADGE_ICON_NONE
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -32,6 +35,7 @@ import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.pwa.R
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.android.NotificationsDelegate
+import mozilla.components.support.utils.ext.registerReceiverCompat
 
 /**
  * Displays site controls notification for fullscreen web apps.
@@ -90,7 +94,7 @@ class WebAppSiteControlsFeature(
      */
     override fun onResume(owner: LifecycleOwner) {
         val filter = controlsBuilder.getFilter()
-        applicationContext.registerReceiver(this, filter)
+        registerReceiver(filter)
 
         val iconAsync = notificationIcon
         if (iconAsync != null) {
@@ -101,6 +105,15 @@ class WebAppSiteControlsFeature(
         } else {
             notificationsDelegate.notify(NOTIFICATION_TAG, NOTIFICATION_ID, buildNotification(null))
         }
+    }
+
+    @VisibleForTesting
+    internal fun registerReceiver(filter: IntentFilter) {
+        applicationContext.registerReceiverCompat(
+            this,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
     }
 
     /**

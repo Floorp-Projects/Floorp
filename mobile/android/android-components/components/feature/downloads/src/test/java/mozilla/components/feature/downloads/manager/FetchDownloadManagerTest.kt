@@ -66,7 +66,6 @@ class FetchDownloadManagerTest {
             testContext,
             store,
             MockDownloadService::class,
-            broadcastManager,
             notificationsDelegate = notificationsDelegate,
         )
     }
@@ -97,12 +96,11 @@ class FetchDownloadManagerTest {
 
     @Test
     fun `calling tryAgain starts the download again`() {
-        val context: Context = mock()
+        val context = spy(testContext)
         downloadManager = FetchDownloadManager(
             context,
             store,
             MockDownloadService::class,
-            broadcastManager,
             notificationsDelegate = notificationsDelegate,
         )
         var downloadStopped = false
@@ -155,7 +153,6 @@ class FetchDownloadManagerTest {
             context,
             store,
             MockDownloadService::class,
-            broadcastManager,
             notificationsDelegate = notificationsDelegate,
         )
         grantPermissions()
@@ -276,7 +273,8 @@ class FetchDownloadManagerTest {
         val intent = Intent(ACTION_DOWNLOAD_COMPLETE)
         intent.putExtra(EXTRA_DOWNLOAD_ID, id)
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadState.Status.FAILED)
-        broadcastManager.sendBroadcast(intent)
+
+        testContext.sendBroadcast(intent)
     }
 
     private fun notifyDownloadCompleted(id: String) {
@@ -284,7 +282,7 @@ class FetchDownloadManagerTest {
         intent.putExtra(EXTRA_DOWNLOAD_ID, id)
         intent.putExtra(EXTRA_DOWNLOAD_STATUS, DownloadState.Status.COMPLETED)
 
-        broadcastManager.sendBroadcast(intent)
+        testContext.sendBroadcast(intent)
     }
 
     private fun grantPermissions() {

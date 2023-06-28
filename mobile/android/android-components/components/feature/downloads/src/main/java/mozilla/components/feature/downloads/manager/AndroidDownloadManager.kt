@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.util.LongSparseArray
 import androidx.annotation.VisibleForTesting
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.core.util.set
@@ -31,6 +32,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.ext.isScheme
 import mozilla.components.support.utils.DownloadUtils
 import mozilla.components.support.utils.ext.getSerializableExtraCompat
+import mozilla.components.support.utils.ext.registerReceiverCompat
 
 typealias SystemDownloadManager = android.app.DownloadManager
 typealias SystemRequest = android.app.DownloadManager.Request
@@ -105,7 +107,13 @@ class AndroidDownloadManager(
     private fun registerBroadcastReceiver() {
         if (!isSubscribedReceiver) {
             val filter = IntentFilter(ACTION_DOWNLOAD_COMPLETE)
-            applicationContext.registerReceiver(this, filter)
+
+            applicationContext.registerReceiverCompat(
+                this,
+                filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED,
+            )
+
             isSubscribedReceiver = true
         }
     }

@@ -431,13 +431,12 @@ class MediaSessionServiceDelegateTest {
 
     @Test
     fun `GIVEN a audio noisy receiver is not already registered WHEN trying to register a new one THEN register it`() {
-        val context = spy(testContext)
-        val delegate = MediaSessionServiceDelegate(context, mock(), mock(), mock(), mock())
+        val delegate = spy(MediaSessionServiceDelegate(testContext, mock(), mock(), mock(), mock()))
         val receiverCaptor = argumentCaptor<BroadcastReceiver>()
 
         delegate.registerBecomingNoisyListenerIfNeeded(mock())
 
-        verify(context).registerReceiver(receiverCaptor.capture(), eq(delegate.intentFilter))
+        verify(delegate).registerBecomingNoisyListener(receiverCaptor.capture())
         assertEquals(BecomingNoisyReceiver::class.java, receiverCaptor.value.javaClass)
     }
 

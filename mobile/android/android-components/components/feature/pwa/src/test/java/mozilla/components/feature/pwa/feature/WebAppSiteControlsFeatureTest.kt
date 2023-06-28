@@ -5,6 +5,7 @@
 package mozilla.components.feature.pwa.feature
 
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.icons.BrowserIcons
@@ -16,9 +17,9 @@ import mozilla.components.concept.engine.manifest.Size
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.test.any
-import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.test.whenever
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.doNothing
@@ -30,12 +31,23 @@ class WebAppSiteControlsFeatureTest {
 
     @Test
     fun `register receiver on resume`() {
-        val context = spy(testContext)
+        val controlsBuilder: SiteControlsBuilder = mock()
+        val filter: IntentFilter = mock()
+        whenever(controlsBuilder.getFilter()).thenReturn(filter)
 
-        val feature = WebAppSiteControlsFeature(context, mock(), "session-id", mock(), notificationsDelegate = mock())
+        val feature = spy(
+            WebAppSiteControlsFeature(
+                testContext,
+                mock(),
+                "session-id",
+                controlsBuilder = controlsBuilder,
+                notificationsDelegate = mock(),
+            ),
+        )
+
         feature.onResume(mock())
 
-        verify(context).registerReceiver(eq(feature), any())
+        verify(feature).registerReceiver(filter)
     }
 
     @Test

@@ -8,6 +8,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import androidx.core.content.ContextCompat
+import mozilla.components.support.utils.ext.registerReceiverCompat
 import org.mozilla.geckoview.GeckoRuntime
 import androidx.core.os.LocaleListCompat as LocaleList
 
@@ -34,7 +36,11 @@ class LocaleSettingUpdater(
     }
 
     override fun registerForUpdates() {
-        context.registerReceiver(localeChangedReceiver, IntentFilter(Intent.ACTION_LOCALE_CHANGED))
+        context.registerReceiverCompat(
+            localeChangedReceiver,
+            IntentFilter(Intent.ACTION_LOCALE_CHANGED),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
     }
 
     override fun unregisterForUpdates() {

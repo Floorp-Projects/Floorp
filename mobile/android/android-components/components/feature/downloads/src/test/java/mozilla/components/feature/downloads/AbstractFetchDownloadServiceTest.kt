@@ -19,7 +19,6 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
@@ -123,7 +122,6 @@ class AbstractFetchDownloadServiceTest {
 
     private lateinit var notificationsDelegate: NotificationsDelegate
 
-    @Mock private lateinit var broadcastManager: LocalBroadcastManager
     private lateinit var service: AbstractFetchDownloadService
 
     private lateinit var shadowNotificationService: ShadowNotificationManager
@@ -143,7 +141,6 @@ class AbstractFetchDownloadServiceTest {
             },
         )
 
-        doReturn(broadcastManager).`when`(service).broadcastManager
         doReturn(testContext).`when`(service).context
         doNothing().`when`(service).useFileStream(any(), anyBoolean(), any())
         doReturn(true).`when`(notificationManagerCompat).areNotificationsEnabled()
