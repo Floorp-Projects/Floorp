@@ -523,25 +523,34 @@ html {
   background-image: url("chrome://browser/skin/back.svg");
 }
 .onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary {
-  background-color: var(--in-content-button-background) !important;
+  background-color: var(--in-content-button-background);
   border: 1px solid var(--in-content-button-border-color);
   line-height: 12px;
   font-size: 0.72em;
   font-weight: 600;
   padding: 8px 16px;
   text-decoration: none;
+  cursor: default;
   color: var(--in-content-button-text-color);
 }
 .onboardingContainer .screen[pos=center].with-video .main-content .secondary-cta .secondary:hover {
-  background-color: var(--in-content-button-background-hover) !important;
+  background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
 }
 .onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary {
   background: none;
+  text-decoration: underline;
+  cursor: pointer;
   color: var(--in-content-link-color);
   font-size: 14px;
   font-weight: normal;
   line-height: 20px;
+}
+.onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary:hover {
+  color: var(--in-content-link-color-hover);
+}
+.onboardingContainer .screen:not([pos=split]) .secondary-cta .secondary:active {
+  color: var(--in-content-link-color-active);
 }
 .onboardingContainer .screen:not([pos=split]) .secondary-cta.top button {
   color: #FFF;
@@ -586,7 +595,7 @@ html {
   padding-inline-end: 0;
 }
 .onboardingContainer .screen[pos=split] .secondary-cta.top button {
-  color: var(--in-content-page-color);
+  padding: 7px 15px;
 }
 .onboardingContainer .screen[pos=split] .section-main {
   flex-direction: row;
@@ -648,18 +657,16 @@ html {
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link {
   background: none;
-  padding: 0;
-  font-weight: normal;
   text-decoration: underline;
   cursor: pointer;
   color: var(--in-content-link-color);
+  padding: 0;
+  font-weight: normal;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:hover {
-  text-decoration: none;
   color: var(--in-content-link-color-hover);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.cta-link:active {
-  text-decoration: none;
   color: var(--in-content-link-color-active);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .additional-cta.secondary:hover {
@@ -675,16 +682,17 @@ html {
   inset-inline-end: 0;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary {
-  background-color: var(--in-content-button-background) !important;
+  background-color: var(--in-content-button-background);
   border: 1px solid var(--in-content-button-border-color);
   line-height: 12px;
   font-size: 0.72em;
   font-weight: 600;
   padding: 8px 16px;
   text-decoration: none;
+  cursor: default;
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .secondary:hover {
-  background-color: var(--in-content-button-background-hover) !important;
+  background-color: var(--in-content-button-background-hover);
   color: var(--in-content-button-text-color-hover);
 }
 .onboardingContainer .screen[pos=split] .section-main .main-content .action-buttons .secondary-cta .arrow-icon {
@@ -943,7 +951,7 @@ html {
     display: none;
   }
 }
-@media only screen and (max-height: 650px) and (max-width: 590px) {
+@media only screen and (max-height: 650px) and (max-width: 620px) {
   .onboardingContainer .screen[pos=split] .section-main .secondary-cta.top {
     position: absolute;
     padding: 0;
@@ -979,16 +987,15 @@ html {
   }
 }
 .onboardingContainer .text-link {
+  background: none;
   text-decoration: underline;
   cursor: pointer;
   color: var(--in-content-link-color);
 }
 .onboardingContainer .text-link:hover {
-  text-decoration: none;
   color: var(--in-content-link-color-hover);
 }
 .onboardingContainer .text-link:active {
-  text-decoration: none;
   color: var(--in-content-link-color-active);
 }
 .onboardingContainer .welcome-text {
@@ -1256,19 +1263,17 @@ html {
   height: 113px;
 }
 .onboardingContainer .mobile-downloads .email-link {
-  font-size: 16px;
-  font-weight: 400;
   background: none;
   text-decoration: underline;
   cursor: pointer;
   color: var(--in-content-link-color);
+  font-size: 16px;
+  font-weight: 400;
 }
 .onboardingContainer .mobile-downloads .email-link:hover {
-  text-decoration: none;
   color: var(--in-content-link-color-hover);
 }
 .onboardingContainer .mobile-downloads .email-link:active {
-  text-decoration: none;
   color: var(--in-content-link-color-active);
 }
 .onboardingContainer .mobile-downloads .email-link:hover {

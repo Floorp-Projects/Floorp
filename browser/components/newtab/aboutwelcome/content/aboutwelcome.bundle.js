@@ -393,8 +393,14 @@ const MultiStageAboutWelcome = props => {
 const SecondaryCTA = props => {
   var _props$content$second;
 
-  let targetElement = props.position ? `secondary_button_${props.position}` : `secondary_button`;
-  const buttonStyling = (_props$content$second = props.content.secondary_button) !== null && _props$content$second !== void 0 && _props$content$second.has_arrow_icon ? `secondary text-link arrow-icon` : `secondary text-link`;
+  const targetElement = props.position ? `secondary_button_${props.position}` : `secondary_button`;
+  let buttonStyling = (_props$content$second = props.content.secondary_button) !== null && _props$content$second !== void 0 && _props$content$second.has_arrow_icon ? `secondary arrow-icon` : `secondary`;
+  const isTextLink = props.content.position !== "split";
+
+  if (isTextLink) {
+    buttonStyling += " text-link";
+  }
+
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
     className: props.position ? `secondary-cta ${props.position}` : "secondary-cta"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_MSLocalized__WEBPACK_IMPORTED_MODULE_1__.Localized, {
