@@ -1082,7 +1082,7 @@ glean:
     gleanMetricConfiguration:
       type: json
       description: >-
-        "A map of metric base-identifiers to booleans representing the state of the 'disabled' flag for that metric"
+        A map of metric base-identifiers to booleans representing the state of the 'enabled' flag for that metric.
 
 majorRelease2022:
   description: Major Release 2022
