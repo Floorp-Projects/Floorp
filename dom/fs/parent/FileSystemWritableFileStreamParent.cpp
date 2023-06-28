@@ -33,8 +33,8 @@ FileSystemWritableFileStreamParent::~FileSystemWritableFileStreamParent() {
 }
 
 mozilla::ipc::IPCResult FileSystemWritableFileStreamParent::RecvClose(
-    CloseResolver&& aResolver) {
-  Close();
+    bool aAbort, CloseResolver&& aResolver) {
+  Close(aAbort);
 
   aResolver(void_t());
 
@@ -48,7 +48,7 @@ void FileSystemWritableFileStreamParent::ActorDestroy(ActorDestroyReason aWhy) {
   }
 
   if (!IsClosed()) {
-    Close();
+    Close(/* aAbort */ true);
   }
 }
 
@@ -65,7 +65,7 @@ FileSystemWritableFileStreamParent::GetOrCreateStreamCallbacks() {
   return mStreamCallbacks.get();
 }
 
-void FileSystemWritableFileStreamParent::Close() {
+void FileSystemWritableFileStreamParent::Close(bool /* aAbort */) {
   LOG(("Closing WritableFileStream"));
 
   mClosed.Flip();
