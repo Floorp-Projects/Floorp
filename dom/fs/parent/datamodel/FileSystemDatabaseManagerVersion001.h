@@ -55,61 +55,58 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   static Result<Usage, QMResult> GetFileUsage(
       const FileSystemConnection& aConnection);
 
-  virtual nsresult UpdateUsage(const FileId& aFileId) override;
+  nsresult UpdateUsage(const FileId& aFileId) override;
 
-  virtual Result<EntryId, QMResult> GetOrCreateDirectory(
+  Result<EntryId, QMResult> GetOrCreateDirectory(
       const FileSystemChildMetadata& aHandle, bool aCreate) override;
 
-  virtual Result<EntryId, QMResult> GetOrCreateFile(
+  Result<EntryId, QMResult> GetOrCreateFile(
       const FileSystemChildMetadata& aHandle, bool aCreate) override;
 
-  virtual nsresult GetFile(const EntryId& aEntryId, const FileId& aFileId,
-                           const FileMode& aMode, ContentType& aType,
-                           TimeStamp& lastModifiedMilliSeconds, Path& aPath,
-                           nsCOMPtr<nsIFile>& aFile) const override;
+  nsresult GetFile(const EntryId& aEntryId, const FileId& aFileId,
+                   const FileMode& aMode, ContentType& aType,
+                   TimeStamp& lastModifiedMilliSeconds, Path& aPath,
+                   nsCOMPtr<nsIFile>& aFile) const override;
 
-  virtual Result<FileSystemDirectoryListing, QMResult> GetDirectoryEntries(
+  Result<FileSystemDirectoryListing, QMResult> GetDirectoryEntries(
       const EntryId& aParent, PageNumber aPage) const override;
 
-  virtual Result<EntryId, QMResult> RenameEntry(
-      const FileSystemEntryMetadata& aHandle, const Name& aNewName) override;
+  Result<EntryId, QMResult> RenameEntry(const FileSystemEntryMetadata& aHandle,
+                                        const Name& aNewName) override;
 
-  virtual Result<EntryId, QMResult> MoveEntry(
+  Result<EntryId, QMResult> MoveEntry(
       const FileSystemEntryMetadata& aHandle,
       const FileSystemChildMetadata& aNewDesignation) override;
 
-  virtual Result<bool, QMResult> RemoveDirectory(
-      const FileSystemChildMetadata& aHandle, bool aRecursive) override;
+  Result<bool, QMResult> RemoveDirectory(const FileSystemChildMetadata& aHandle,
+                                         bool aRecursive) override;
 
-  virtual Result<bool, QMResult> RemoveFile(
+  Result<bool, QMResult> RemoveFile(
       const FileSystemChildMetadata& aHandle) override;
 
-  virtual Result<Path, QMResult> Resolve(
+  Result<Path, QMResult> Resolve(
       const FileSystemEntryPair& aEndpoints) const override;
 
-  virtual Result<EntryId, QMResult> GetEntryId(
+  Result<EntryId, QMResult> GetEntryId(
       const FileSystemChildMetadata& aHandle) const override;
 
-  virtual Result<EntryId, QMResult> GetEntryId(
-      const FileId& aFileId) const override;
+  Result<EntryId, QMResult> GetEntryId(const FileId& aFileId) const override;
 
-  virtual Result<FileId, QMResult> EnsureFileId(
+  Result<FileId, QMResult> EnsureFileId(const EntryId& aEntryId) override;
+
+  Result<FileId, QMResult> EnsureTemporaryFileId(
       const EntryId& aEntryId) override;
 
-  virtual Result<FileId, QMResult> EnsureTemporaryFileId(
-      const EntryId& aEntryId) override;
+  Result<FileId, QMResult> GetFileId(const EntryId& aEntryId) const override;
 
-  virtual Result<FileId, QMResult> GetFileId(
-      const EntryId& aEntryId) const override;
+  nsresult MergeFileId(const EntryId& aEntryId, const FileId& aFileId,
+                       bool aAbort) override;
 
-  virtual nsresult MergeFileId(const EntryId& aEntryId, const FileId& aFileId,
-                               bool aAbort) override;
+  void Close() override;
 
-  virtual void Close() override;
+  nsresult BeginUsageTracking(const FileId& aFileId) override;
 
-  virtual nsresult BeginUsageTracking(const FileId& aFileId) override;
-
-  virtual nsresult EndUsageTracking(const FileId& aFileId) override;
+  nsresult EndUsageTracking(const FileId& aFileId) override;
 
   virtual ~FileSystemDatabaseManagerVersion001() = default;
 
