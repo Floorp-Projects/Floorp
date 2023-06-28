@@ -1,69 +1,177 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 07:06:00 +0000
-Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit ba41b40461.
- r=webrtc-reviewers,mjf
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 20 Apr 2023 14:52:00 -0500
+Subject: Bug 1828517 - (fix-a138c6c8a5) handle file moves in BUILD.gn
 
-Upstream commit: https://webrtc.googlesource.com/src/+/ba41b40461df191624c61f0c98ae76e69fe1d46b
-    webrtc_libyuv: Add support for more video types for consistency
-
-    Bug: webrtc:14830
-    Change-Id: I0998fb04a03745131f9f5cca878b0cdb46f3b62b
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291529
-    Reviewed-by: Erik Språng <sprang@webrtc.org>
-    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39940}
-
-Differential Revision: https://phabricator.services.mozilla.com/D177229
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b6eaef560895caa06e11cce40083eb87fd8724a8
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c115a6ffd07fab042bc5f086
 ---
- common_video/libyuv/include/webrtc_libyuv.h | 3 ++-
- common_video/libyuv/webrtc_libyuv.cc        | 4 ++++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ rtc_base/BUILD.gn | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
-index 6d9071bcd5..253a33294d 100644
---- a/common_video/libyuv/include/webrtc_libyuv.h
-+++ b/common_video/libyuv/include/webrtc_libyuv.h
-@@ -32,8 +32,9 @@ enum class VideoType {
-   kI420,
-   kIYUV,
-   kRGB24,
--  kABGR,
-+  kBGR24,
-   kARGB,
-+  kABGR,
-   kARGB4444,
-   kRGB565,
-   kARGB1555,
-diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
-index 4c6911b4a3..05a4b184c2 100644
---- a/common_video/libyuv/webrtc_libyuv.cc
-+++ b/common_video/libyuv/webrtc_libyuv.cc
-@@ -39,9 +39,11 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
-     case VideoType::kUYVY:
-       return width * height * 2;
-     case VideoType::kRGB24:
-+    case VideoType::kBGR24:
-       return width * height * 3;
-     case VideoType::kBGRA:
-     case VideoType::kARGB:
-+    case VideoType::kABGR:
-       return width * height * 4;
-     case VideoType::kMJPEG:
-     case VideoType::kUnknown:
-@@ -93,6 +95,8 @@ int ConvertVideoType(VideoType video_type) {
-       return libyuv::FOURCC_YV12;
-     case VideoType::kRGB24:
-       return libyuv::FOURCC_24BG;
-+    case VideoType::kBGR24:
-+      return libyuv::FOURCC_RAW;
-     case VideoType::kABGR:
-       return libyuv::FOURCC_ABGR;
-     case VideoType::kRGB565:
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index 6037ff1671..8d5d0e4338 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -1149,6 +1149,7 @@ if (!build_with_chromium) {
+ }
+ 
+ rtc_library("network") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "network.cc",
+@@ -1187,16 +1188,20 @@ rtc_library("network") {
+     deps += [ ":win32" ]
+   }
+ }
++}
+ 
+ rtc_library("socket_address_pair") {
++if (!build_with_mozilla) {
+   sources = [
+     "socket_address_pair.cc",
+     "socket_address_pair.h",
+   ]
+   deps = [ ":socket_address" ]
+ }
++}
+ 
+ rtc_library("net_helper") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "net_helper.cc",
+@@ -1205,8 +1210,10 @@ rtc_library("net_helper") {
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+   deps = [ "system:rtc_export" ]
+ }
++}
+ 
+ rtc_library("socket_adapters") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "socket_adapters.cc",
+@@ -1226,6 +1233,7 @@ rtc_library("socket_adapters") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ rtc_library("network_route") {
+   sources = [
+@@ -1240,6 +1248,7 @@ rtc_library("network_route") {
+ }
+ 
+ rtc_library("async_tcp_socket") {
++if (!build_with_mozilla) {
+   sources = [
+     "async_tcp_socket.cc",
+     "async_tcp_socket.h",
+@@ -1258,8 +1267,10 @@ rtc_library("async_tcp_socket") {
+     "third_party/sigslot",
+   ]
+ }
++}
+ 
+ rtc_library("async_udp_socket") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "async_udp_socket.cc",
+@@ -1281,8 +1292,10 @@ rtc_library("async_udp_socket") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+ }
++}
+ 
+ rtc_library("async_packet_socket") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "async_packet_socket.cc",
+@@ -1300,6 +1313,7 @@ rtc_library("async_packet_socket") {
+     "third_party/sigslot",
+   ]
+ }
++}
+ 
+ rtc_library("mdns_responder_interface") {
+   sources = [ "mdns_responder_interface.h" ]
+@@ -1312,6 +1326,7 @@ rtc_library("dscp") {
+ }
+ 
+ rtc_library("proxy_info") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "proxy_info.cc",
+@@ -1322,6 +1337,7 @@ rtc_library("proxy_info") {
+     ":socket_address",
+   ]
+ }
++}
+ 
+ rtc_library("file_rotating_stream") {
+   sources = [
+@@ -1350,6 +1366,7 @@ rtc_library("data_rate_limiter") {
+ }
+ 
+ rtc_library("unique_id_generator") {
++if (!build_with_mozilla) {
+   sources = [
+     "unique_id_generator.cc",
+     "unique_id_generator.h",
+@@ -1364,6 +1381,7 @@ rtc_library("unique_id_generator") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ rtc_library("crc32") {
+   sources = [
+@@ -1391,6 +1409,7 @@ rtc_library("stream") {
+ }
+ 
+ rtc_library("rtc_certificate_generator") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "rtc_certificate_generator.cc",
+@@ -1408,8 +1427,10 @@ rtc_library("rtc_certificate_generator") {
+     "//third_party/abseil-cpp/absl/types:optional",
+   ]
+ }
++}
+ 
+ rtc_library("ssl") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "helpers.cc",
+@@ -1508,6 +1529,7 @@ rtc_library("ssl") {
+     deps += [ ":win32" ]
+   }
+ }
++}
+ 
+ rtc_library("crypt_string") {
+   sources = [
+@@ -1517,6 +1539,7 @@ rtc_library("crypt_string") {
+ }
+ 
+ rtc_library("http_common") {
++if (!build_with_mozilla) {
+   sources = [
+     "http_common.cc",
+     "http_common.h",
+@@ -1533,6 +1556,7 @@ rtc_library("http_common") {
+ 
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ rtc_source_set("gtest_prod") {
+   sources = [ "gtest_prod_util.h" ]
 -- 
 2.37.1 (Apple Git-137.1)
 
