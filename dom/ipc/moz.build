@@ -167,6 +167,7 @@ PREPROCESSED_IPDL_SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    "CustomElementTypes.ipdlh",
     "DOMTypes.ipdlh",
     "IPCTransferable.ipdlh",
     "MemoryReportTypes.ipdlh",

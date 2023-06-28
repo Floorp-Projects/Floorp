@@ -49,7 +49,8 @@ ElementInternals::ElementInternals(HTMLElement* aTarget)
     : nsIFormControl(FormControlType::FormAssociatedCustomElement),
       mTarget(aTarget),
       mForm(nullptr),
-      mFieldSet(nullptr) {}
+      mFieldSet(nullptr),
+      mControlNumber(-1) {}
 
 nsISupports* ElementInternals::GetParentObject() { return ToSupports(mTarget); }
 
@@ -454,6 +455,27 @@ nsresult ElementInternals::SetAttr(nsAtom* aName, const nsAString& aValue) {
 
 DocGroup* ElementInternals::GetDocGroup() {
   return mTarget->OwnerDoc()->GetDocGroup();
+}
+
+void ElementInternals::RestoreFormValue(
+    Nullable<OwningFileOrUSVStringOrFormData>&& aValue,
+    Nullable<OwningFileOrUSVStringOrFormData>&& aState) {
+  mSubmissionValue = aValue;
+  mState = aState;
+
+  if (!mState.IsNull()) {
+    LifecycleCallbackArgs args;
+    args.mState = mState;
+    args.mReason = RestoreReason::Restore;
+    nsContentUtils::EnqueueLifecycleCallback(
+        ElementCallbackType::eFormStateRestore, mTarget, args);
+  }
+}
+
+void ElementInternals::InitializeControlNumber() {
+  MOZ_ASSERT(mControlNumber == -1,
+             "FACE control number should only be initialized once!");
+  mControlNumber = mTarget->OwnerDoc()->GetNextControlNumber();
 }
 
 }  // namespace mozilla::dom

@@ -1785,6 +1785,9 @@ nsresult nsGenericHTMLFormElement::BindToTree(BindContext& aContext,
 }
 
 void nsGenericHTMLFormElement::UnbindFromTree(bool aNullParent) {
+  // Save state before doing anything else.
+  SaveState();
+
   if (IsFormAssociatedElement()) {
     if (HTMLFormElement* form = GetFormInternal()) {
       // Might need to unset form
@@ -2191,6 +2194,12 @@ void nsGenericHTMLFormElement::FieldSetDisabledChanged(bool aNotify) {
   UpdateDisabledState(aNotify);
 }
 
+void nsGenericHTMLFormElement::SaveSubtreeState() {
+  SaveState();
+
+  nsGenericHTMLElement::SaveSubtreeState();
+}
+
 //----------------------------------------------------------------------
 
 void nsGenericHTMLElement::Click(CallerType aCallerType) {
@@ -2536,12 +2545,6 @@ nsINode* nsGenericHTMLFormControlElement::GetScopeChainParent() const {
   return mForm ? mForm : nsGenericHTMLElement::GetScopeChainParent();
 }
 
-void nsGenericHTMLFormControlElement::SaveSubtreeState() {
-  SaveState();
-
-  nsGenericHTMLFormElement::SaveSubtreeState();
-}
-
 nsIContent::IMEState nsGenericHTMLFormControlElement::GetDesiredIMEState() {
   TextEditor* textEditor = GetTextEditorInternal();
   if (!textEditor) {
@@ -2553,12 +2556,6 @@ nsIContent::IMEState nsGenericHTMLFormControlElement::GetDesiredIMEState() {
     return nsGenericHTMLFormElement::GetDesiredIMEState();
   }
   return state;
-}
-
-void nsGenericHTMLFormControlElement::UnbindFromTree(bool aNullParent) {
-  // Save state before doing anything
-  SaveState();
-  nsGenericHTMLFormElement::UnbindFromTree(aNullParent);
 }
 
 void nsGenericHTMLFormControlElement::GetAutocapitalize(
@@ -2925,7 +2922,7 @@ PresState* nsGenericHTMLFormControlElementWithState::GetPrimaryPresState() {
 }
 
 already_AddRefed<nsILayoutHistoryState>
-nsGenericHTMLFormControlElementWithState::GetLayoutHistory(bool aRead) {
+nsGenericHTMLFormElement::GetLayoutHistory(bool aRead) {
   nsCOMPtr<Document> doc = GetUncomposedDoc();
   if (!doc) {
     return nullptr;

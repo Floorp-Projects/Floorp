@@ -13,7 +13,8 @@ namespace mozilla::dom {
 
 class HTMLElement final : public nsGenericHTMLFormElement {
  public:
-  explicit HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+  explicit HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+                       FromParser aFromParser = NOT_FROM_PARSER);
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -30,6 +31,7 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   // nsIContent
   nsresult BindToTree(BindContext&, nsINode& aParent) override;
   void UnbindFromTree(bool aNullParent = true) override;
+  void DoneCreatingElement() override;
 
   // Element
   void SetCustomElementDefinition(
@@ -46,8 +48,13 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   bool IsFormAssociatedElement() const override;
   void AfterClearForm(bool aUnbindOrDelete) override;
   void FieldSetDisabledChanged(bool aNotify) override;
+  void SaveState() override;
 
   void UpdateFormOwner();
+
+  void MaybeRestoreFormAssociatedCustomElementState();
+
+  void InhibitRestoration(bool aShouldInhibit);
 
  protected:
   virtual ~HTMLElement() = default;
@@ -75,6 +82,9 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   void UpdateBarredFromConstraintValidation();
 
   ElementInternals* GetElementInternals() const;
+
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  void RestoreFormAssociatedCustomElementState();
 };
 
 }  // namespace mozilla::dom

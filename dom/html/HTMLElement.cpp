@@ -6,18 +6,27 @@
 
 #include "mozilla/dom/HTMLElement.h"
 
-#include "mozilla/dom/CustomElementRegistry.h"
-#include "mozilla/dom/HTMLElementBinding.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/PresState.h"
+#include "mozilla/dom/CustomElementRegistry.h"
+#include "mozilla/dom/ElementInternalsBinding.h"
+#include "mozilla/dom/FormData.h"
+#include "mozilla/dom/FromParser.h"
+#include "mozilla/dom/HTMLElementBinding.h"
 #include "nsContentUtils.h"
+#include "nsGenericHTMLElement.h"
+#include "nsILayoutHistoryState.h"
 
 namespace mozilla::dom {
 
-HTMLElement::HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
+HTMLElement::HTMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
+                         FromParser aFromParser)
     : nsGenericHTMLFormElement(std::move(aNodeInfo)) {
   if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
     AddStatesSilently(ElementState::HAS_DIR_ATTR_LIKE_AUTO);
   }
+
+  InhibitRestoration(!(aFromParser & FROM_PARSER_NETWORK));
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLElement, nsGenericHTMLFormElement)
@@ -73,6 +82,103 @@ void HTMLElement::UnbindFromTree(bool aNullParent) {
   UpdateBarredFromConstraintValidation();
 }
 
+void HTMLElement::DoneCreatingElement() {
+  if (MOZ_UNLIKELY(IsFormAssociatedElement())) {
+    MaybeRestoreFormAssociatedCustomElementState();
+  }
+}
+
+void HTMLElement::SaveState() {
+  if (MOZ_LIKELY(!IsFormAssociatedElement())) {
+    return;
+  }
+
+  auto* internals = GetElementInternals();
+
+  nsCString stateKey = internals->GetStateKey();
+  if (stateKey.IsEmpty()) {
+    return;
+  }
+
+  nsCOMPtr<nsILayoutHistoryState> history = GetLayoutHistory(false);
+  if (!history) {
+    return;
+  }
+
+  // Get the pres state for this key, if it doesn't exist, create one.
+  PresState* result = history->GetState(stateKey);
+  if (!result) {
+    UniquePtr<PresState> newState = NewPresState();
+    result = newState.get();
+    history->AddState(stateKey, std::move(newState));
+  }
+
+  const auto& state = internals->GetFormState();
+  const auto& value = internals->GetFormSubmissionValue();
+  result->contentData() = CustomElementTuple(
+      value.IsNull()
+          ? CustomElementFormValue(void_t{})
+          : nsContentUtils::ConvertToCustomElementFormValue(value.Value()),
+      state.IsNull()
+          ? CustomElementFormValue(void_t{})
+          : nsContentUtils::ConvertToCustomElementFormValue(state.Value()));
+}
+
+void HTMLElement::MaybeRestoreFormAssociatedCustomElementState() {
+  MOZ_ASSERT(IsFormAssociatedElement());
+
+  if (HasFlag(HTML_ELEMENT_INHIBIT_RESTORATION)) {
+    return;
+  }
+
+  auto* internals = GetElementInternals();
+  if (internals->GetStateKey().IsEmpty()) {
+    Document* doc = GetUncomposedDoc();
+    nsCString stateKey;
+    nsContentUtils::GenerateStateKey(this, doc, stateKey);
+    internals->SetStateKey(std::move(stateKey));
+
+    RestoreFormAssociatedCustomElementState();
+  }
+}
+
+void HTMLElement::RestoreFormAssociatedCustomElementState() {
+  MOZ_ASSERT(IsFormAssociatedElement());
+
+  auto* internals = GetElementInternals();
+
+  const nsCString& stateKey = internals->GetStateKey();
+  if (stateKey.IsEmpty()) {
+    return;
+  }
+  nsCOMPtr<nsILayoutHistoryState> history = GetLayoutHistory(true);
+  if (!history) {
+    return;
+  }
+  PresState* result = history->GetState(stateKey);
+  if (!result) {
+    return;
+  }
+  auto& content = result->contentData();
+  if (content.type() != PresContentData::TCustomElementTuple) {
+    return;
+  }
+
+  auto& ce = content.get_CustomElementTuple();
+  internals->RestoreFormValue(
+      nsContentUtils::ExtractFormAssociatedCustomElementValue(this, ce.value()),
+      nsContentUtils::ExtractFormAssociatedCustomElementValue(this,
+                                                              ce.state()));
+}
+
+void HTMLElement::InhibitRestoration(bool aShouldInhibit) {
+  if (aShouldInhibit) {
+    SetFlags(HTML_ELEMENT_INHIBIT_RESTORATION);
+  } else {
+    UnsetFlags(HTML_ELEMENT_INHIBIT_RESTORATION);
+  }
+}
+
 void HTMLElement::SetCustomElementDefinition(
     CustomElementDefinition* aDefinition) {
   nsGenericHTMLFormElement::SetCustomElementDefinition(aDefinition);
@@ -84,13 +190,15 @@ void HTMLElement::SetCustomElementDefinition(
       aDefinition->mFormAssociated) {
     CustomElementData* data = GetCustomElementData();
     MOZ_ASSERT(data);
-    data->GetOrCreateElementInternals(this);
+    auto* internals = data->GetOrCreateElementInternals(this);
 
     // This is for the case that script constructs a custom element directly,
     // e.g. via new MyCustomElement(), where the upgrade steps won't be ran to
     // update the disabled state in UpdateFormOwner().
     if (data->mState == CustomElementData::State::eCustom) {
       UpdateDisabledState(true);
+    } else if (!HasFlag(HTML_ELEMENT_INHIBIT_RESTORATION)) {
+      internals->InitializeControlNumber();
     }
   }
 }
@@ -197,6 +305,8 @@ void HTMLElement::UpdateFormOwner() {
   UpdateFieldSet(true);
   UpdateDisabledState(true);
   UpdateBarredFromConstraintValidation();
+
+  MaybeRestoreFormAssociatedCustomElementState();
 }
 
 bool HTMLElement::IsDisabledForEvents(WidgetEvent* aEvent) {
@@ -337,7 +447,7 @@ nsGenericHTMLElement* NS_NewHTMLElement(
     mozilla::dom::FromParser aFromParser) {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
   auto* nim = nodeInfo->NodeInfoManager();
-  return new (nim) mozilla::dom::HTMLElement(nodeInfo.forget());
+  return new (nim) mozilla::dom::HTMLElement(nodeInfo.forget(), aFromParser);
 }
 
 // Distinct from the above in order to have function pointer that compared
@@ -347,5 +457,5 @@ nsGenericHTMLElement* NS_NewCustomElement(
     mozilla::dom::FromParser aFromParser) {
   RefPtr<mozilla::dom::NodeInfo> nodeInfo(aNodeInfo);
   auto* nim = nodeInfo->NodeInfoManager();
-  return new (nim) mozilla::dom::HTMLElement(nodeInfo.forget());
+  return new (nim) mozilla::dom::HTMLElement(nodeInfo.forget(), aFromParser);
 }

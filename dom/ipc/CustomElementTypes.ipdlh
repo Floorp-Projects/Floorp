@@ -1,0 +1,39 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "mozilla/dom/IPCBlobUtils.h";
+
+[RefCounted] using class mozilla::dom::BlobImpl from "mozilla/dom/BlobImpl.h";
+using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
+
+namespace mozilla {
+namespace dom {
+
+// Types used to store form-associated custom element state.
+union FormDataValue {
+  BlobImpl;
+  nsString;
+};
+
+struct FormDataTuple {
+  nsString name;
+  FormDataValue value;
+};
+
+union CustomElementFormValue {
+  void_t;
+  nullable BlobImpl;
+  nsString;
+  FormDataTuple[];
+};
+
+struct CustomElementTuple {
+  CustomElementFormValue value;
+  CustomElementFormValue state;
+};
+
+} // namespace dom
+} // namespace mozilla
