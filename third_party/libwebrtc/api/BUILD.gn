@@ -1051,6 +1051,7 @@ if (rtc_include_tests) {
     deps = [
       "../api/numerics:numerics",
       "../api/units:data_rate",
+      "../api/units:data_size",
       "../api/units:frequency",
       "test/metrics:metric",
       "test/metrics:metrics_logger",
