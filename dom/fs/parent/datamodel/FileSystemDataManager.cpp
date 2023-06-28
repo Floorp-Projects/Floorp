@@ -167,7 +167,8 @@ FileSystemDataManager::FileSystemDataManager(
       mIOTarget(std::move(aIOTarget)),
       mIOTaskQueue(std::move(aIOTaskQueue)),
       mRegCount(0),
-      mState(State::Initial) {}
+      mState(State::Initial),
+      mVersion(0) {}
 
 FileSystemDataManager::~FileSystemDataManager() {
   NS_ASSERT_OWNINGTHREAD(FileSystemDataManager);
@@ -491,6 +492,14 @@ void FileSystemDataManager::UnlockShared(const EntryId& aEntryId,
       QM_VOID);
 }
 
+FileMode FileSystemDataManager::GetMode(bool aKeepData) const {
+  if (1 == mVersion) {
+    return FileMode::EXCLUSIVE;
+  }
+
+  return aKeepData ? FileMode::SHARED_FROM_COPY : FileMode::SHARED_FROM_EMPTY;
+}
+
 bool FileSystemDataManager::IsInactive() const {
   auto data = mBackgroundThreadAccessible.Access();
   return !mRegCount && !data->mActors.Count() && !data->mAccessHandles.Count();
@@ -558,7 +567,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
                 CreateAndRejectBoolPromiseFromQMResult);
 
             QM_TRY_UNWRAP(
-                DatabaseVersion version,
+                self->mVersion,
                 QM_OR_ELSE_WARN_IF(
                     // Expression.
                     SchemaVersion002::InitializeConnection(
@@ -582,7 +591,7 @@ RefPtr<BoolPromise> FileSystemDataManager::BeginOpen() {
                 fs::data::GetRootHandle(self->mOriginMetadata.mOrigin),
                 CreateAndRejectBoolPromiseFromQMResult);
 
-            switch (version) {
+            switch (self->mVersion) {
               case 1: {
                 self->mDatabaseManager =
                     MakeUnique<FileSystemDatabaseManagerVersion001>(

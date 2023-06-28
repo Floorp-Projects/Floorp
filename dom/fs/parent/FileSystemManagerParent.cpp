@@ -191,8 +191,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
   AssertIsOnIOTarget();
   MOZ_ASSERT(mDataManager);
 
-  fs::FileMode mode = aRequest.keepData() ? fs::FileMode::SHARED_FROM_COPY
-                                          : fs::FileMode::SHARED_FROM_EMPTY;
+  const fs::FileMode mode = mDataManager->GetMode(aRequest.keepData());
 
   auto reportError = [aResolver](const auto& aRv) {
     aResolver(ToNSResult(aRv));
