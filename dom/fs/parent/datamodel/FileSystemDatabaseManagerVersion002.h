@@ -41,7 +41,7 @@ class FileSystemDatabaseManagerVersion002
       const EntryId& aEntryId) override;
 
   virtual Result<FileId, QMResult> EnsureTemporaryFileId(
-      const EntryId& aEntryId);
+      const EntryId& aEntryId) override;
 
   virtual Result<FileId, QMResult> GetFileId(
       const EntryId& aEntryId) const override;

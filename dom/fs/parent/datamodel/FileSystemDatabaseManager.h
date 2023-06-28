@@ -174,16 +174,24 @@ class FileSystemDatabaseManager {
 
   /**
    * @brief Make sure EntryId maps to a FileId. This method should be called
-   * before locking is attempted.
+   * before exclusive locking is attempted.
    */
   virtual Result<FileId, QMResult> EnsureFileId(const EntryId& aEntryId) = 0;
 
   /**
+   * @brief Make sure EntryId maps to a temporary FileId. This method should be
+   * called before shared locking is attempted.
+   */
+  virtual Result<FileId, QMResult> EnsureTemporaryFileId(
+      const EntryId& aEntryId) = 0;
+
+  /**
    * @brief To support moves in metadata, the actual files on disk are tagged
    * with file id's which are mapped to entry id's which represent paths.
+   * This function returns the main file corresponding to an entry.
    *
-   * @param aEntryId Metadata reference to a path
-   * @return Result<EntryId, QMResult> Persistent reference to a file or error
+   * @param aEntryId An id of an entry
+   * @return Result<EntryId, QMResult> Main file id, used by exclusive locks
    */
   virtual Result<FileId, QMResult> GetFileId(const EntryId& aEntryId) const = 0;
 
