@@ -125,8 +125,10 @@ oddly_ordered_inclnames = set(
         "gc/StatsPhasesGenerated.inc",  # Included in the body of gc/Statistics.cpp
         "psapi.h",  # Must be included after "util/WindowsWrapper.h" on Windows
         "machine/endian.h",  # Must be included after <sys/types.h> on BSD
+        "process.h",  # Windows-specific
         "winbase.h",  # Must precede other system headers(?)
         "windef.h",  # Must precede other system headers(?)
+        "windows.h",  # Must precede other system headers(?)
     ]
 )
 

@@ -34,6 +34,11 @@ JS_PUBLIC_API JS::FrontendContext* NewFrontendContext();
 // Destroy a front-end context allocated with NewFrontendContext.
 JS_PUBLIC_API void DestroyFrontendContext(JS::FrontendContext* fc);
 
+// Set the size of the native stack that should not be exceed. To disable
+// stack size checking pass 0.
+//
+// WARNING: When the stack size checking is enabled, the JS::FrontendContext
+// can be used only in the thread where JS::SetNativeStackQuota is called.
 JS_PUBLIC_API void SetNativeStackQuota(JS::FrontendContext* fc,
                                        JS::NativeStackSize stackSize);
 
