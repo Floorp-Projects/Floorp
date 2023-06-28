@@ -137,6 +137,10 @@ if CONFIG["CPU_ARCH"] == "ppc64":
 
     DEFINES["USE_X11"] = "1"
 
+if CONFIG["CPU_ARCH"] == "riscv64":
+
+    DEFINES["USE_X11"] = "1"
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["_DEBUG"] = True

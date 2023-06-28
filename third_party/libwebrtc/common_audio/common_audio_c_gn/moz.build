@@ -214,6 +214,13 @@ if CONFIG["CPU_ARCH"] == "ppc64":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
+if CONFIG["CPU_ARCH"] == "riscv64":
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
+    ]
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_DEBUG"] = True
