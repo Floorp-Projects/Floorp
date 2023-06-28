@@ -7,6 +7,7 @@
 #ifndef DOM_FS_PARENT_FILESYSTEMWRITABLEFILESTREAM_H_
 #define DOM_FS_PARENT_FILESYSTEMWRITABLEFILESTREAM_H_
 
+#include "mozilla/dom/FileSystemParentTypes.h"
 #include "mozilla/dom/FileSystemTypes.h"
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/PFileSystemWritableFileStreamParent.h"
@@ -21,7 +22,8 @@ class FileSystemWritableFileStreamParent
     : public PFileSystemWritableFileStreamParent {
  public:
   FileSystemWritableFileStreamParent(RefPtr<FileSystemManagerParent> aManager,
-                                     const fs::EntryId& aEntryId);
+                                     const fs::EntryId& aEntryId,
+                                     const fs::FileId& aTemporaryFileId);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemWritableFileStreamParent,
                                         override)
@@ -46,6 +48,8 @@ class FileSystemWritableFileStreamParent
   RefPtr<FileSystemWritableFileStreamCallbacks> mStreamCallbacks;
 
   const fs::EntryId mEntryId;
+
+  const fs::FileId mTemporaryFileId;
 
   FlippedOnce<false> mClosed;
 };

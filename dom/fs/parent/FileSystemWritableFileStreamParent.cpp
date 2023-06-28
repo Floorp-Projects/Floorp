@@ -25,8 +25,11 @@ class FileSystemWritableFileStreamParent::FileSystemWritableFileStreamCallbacks
 };
 
 FileSystemWritableFileStreamParent::FileSystemWritableFileStreamParent(
-    RefPtr<FileSystemManagerParent> aManager, const fs::EntryId& aEntryId)
-    : mManager(std::move(aManager)), mEntryId(aEntryId) {}
+    RefPtr<FileSystemManagerParent> aManager, const fs::EntryId& aEntryId,
+    const fs::FileId& aTemporaryFileId)
+    : mManager(std::move(aManager)),
+      mEntryId(aEntryId),
+      mTemporaryFileId(aTemporaryFileId) {}
 
 FileSystemWritableFileStreamParent::~FileSystemWritableFileStreamParent() {
   MOZ_ASSERT(mClosed);
