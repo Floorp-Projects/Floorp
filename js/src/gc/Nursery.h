@@ -145,7 +145,7 @@ class alignas(TypicalCacheLineSize) Nursery {
     // Update the allocation site. This code is also inlined in
     // MacroAssembler::updateAllocSite.
     uint32_t allocCount = site->incAllocCount();
-    if (allocCount == 1) {
+    if (MOZ_UNLIKELY(allocCount == 1)) {
       pretenuringNursery.insertIntoAllocatedList(site);
     }
     MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());

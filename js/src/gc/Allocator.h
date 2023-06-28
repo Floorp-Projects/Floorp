@@ -133,7 +133,7 @@ class CellAllocator {
     gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
     void* ptr = AllocNurseryOrTenuredCell<JS::TraceKind::String, allowGC>(
         rcx, kind, heap, nullptr);
-    if (!ptr) {
+    if (MOZ_UNLIKELY(!ptr)) {
       return nullptr;
     }
     return new (mozilla::KnownNotNull, ptr) T(std::forward<Args>(args)...);
@@ -143,10 +143,10 @@ class CellAllocator {
   static T* NewBigInt(JS::RootingContext* rcx, Heap heap) {
     void* ptr = AllocNurseryOrTenuredCell<JS::TraceKind::BigInt, allowGC>(
         rcx, gc::AllocKind::BIGINT, heap, nullptr);
-    if (ptr) {
-      return new (mozilla::KnownNotNull, ptr) T();
+    if (MOZ_UNLIKELY(!ptr)) {
+      return nullptr;
     }
-    return nullptr;
+    return new (mozilla::KnownNotNull, ptr) T();
   }
 
   template <typename T, AllowGC allowGC = CanGC>
@@ -159,7 +159,7 @@ class CellAllocator {
                   CanNurseryAllocateFinalizedClass(clasp));
     void* cell = AllocNurseryOrTenuredCell<JS::TraceKind::Object, allowGC>(
         rcx, kind, heap, site);
-    if (!cell) {
+    if (MOZ_UNLIKELY(!cell)) {
       return nullptr;
     }
     return new (mozilla::KnownNotNull, cell) T();
@@ -170,7 +170,7 @@ class CellAllocator {
   static T* NewTenuredCell(JS::RootingContext* rcx, Args&&... args) {
     gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
     void* cell = AllocTenuredCell<allowGC>(rcx, kind, sizeof(T));
-    if (!cell) {
+    if (MOZ_UNLIKELY(!cell)) {
       return nullptr;
     }
     return new (mozilla::KnownNotNull, cell) T(std::forward<Args>(args)...);
