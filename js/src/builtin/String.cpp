@@ -1571,26 +1571,26 @@ static bool str_normalize(JSContext* cx, unsigned argc, Value* vp) {
  * https://tc39.es/ecma262/#sec-isstringwellformedunicode
  */
 static bool IsStringWellFormedUnicode(JSContext* cx, HandleString str,
-                                      bool* isWellFormedOut) {
-  MOZ_ASSERT(isWellFormedOut);
-  *isWellFormedOut = false;
+                                      size_t* isWellFormedUpTo) {
+  MOZ_ASSERT(isWellFormedUpTo);
+  *isWellFormedUpTo = 0;
+
+  size_t len = str->length();
+
+  // Latin1 chars are well-formed.
+  if (str->hasLatin1Chars()) {
+    *isWellFormedUpTo = len;
+    return true;
+  }
 
   JSLinearString* linear = str->ensureLinear(cx);
   if (!linear) {
     return false;
   }
 
-  // Latin1 chars are well-formed.
-  if (linear->hasLatin1Chars()) {
-    *isWellFormedOut = true;
-    return true;
-  }
-
   {
     AutoCheckCannotGC nogc;
-    size_t len = linear->length();
-    *isWellFormedOut =
-        Utf16ValidUpTo(Span{linear->twoByteChars(nogc), len}) == len;
+    *isWellFormedUpTo = Utf16ValidUpTo(Span{linear->twoByteChars(nogc), len});
   }
   return true;
 }
@@ -1614,12 +1614,13 @@ static bool str_isWellFormed(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 3. Return IsStringWellFormedUnicode(S).
-  bool isWellFormed;
-  if (!IsStringWellFormedUnicode(cx, str, &isWellFormed)) {
+  size_t isWellFormedUpTo;
+  if (!IsStringWellFormedUnicode(cx, str, &isWellFormedUpTo)) {
     return false;
   }
+  MOZ_ASSERT(isWellFormedUpTo <= str->length());
 
-  args.rval().setBoolean(isWellFormed);
+  args.rval().setBoolean(isWellFormedUpTo == str->length());
   return true;
 }
 
@@ -1641,33 +1642,47 @@ static bool str_toWellFormed(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // If the string itself is well-formed, return it.
-  bool isWellFormed;
-  if (!IsStringWellFormedUnicode(cx, str, &isWellFormed)) {
-    return false;
-  }
-  if (isWellFormed) {
-    args.rval().setString(str);
-    return true;
-  }
-
   // Step 3. Let strLen be the length of S.
   size_t len = str->length();
 
+  // If the string itself is well-formed, return it.
+  size_t isWellFormedUpTo;
+  if (!IsStringWellFormedUnicode(cx, str, &isWellFormedUpTo)) {
+    return false;
+  }
+  if (isWellFormedUpTo == len) {
+    args.rval().setString(str);
+    return true;
+  }
+  MOZ_ASSERT(isWellFormedUpTo < len);
+
   // Step 4-6
-  auto buffer = cx->make_pod_arena_array<char16_t>(js::StringBufferArena, len);
-  if (!buffer) {
+  InlineCharBuffer<char16_t> buffer;
+  if (!buffer.maybeAlloc(cx, len)) {
     return false;
   }
 
   {
     AutoCheckCannotGC nogc;
+
     JSLinearString* linear = str->ensureLinear(cx);
+    MOZ_ASSERT(linear, "IsStringWellFormedUnicode linearized the string");
+
     PodCopy(buffer.get(), linear->twoByteChars(nogc), len);
-    EnsureUtf16ValiditySpan(Span{buffer.get(), len});
+
+    auto span = mozilla::Span{buffer.get(), len};
+
+    // Replace the character.
+    span[isWellFormedUpTo] = unicode::REPLACEMENT_CHARACTER;
+
+    // Check any remaining characters.
+    auto remaining = span.From(isWellFormedUpTo + 1);
+    if (!remaining.IsEmpty()) {
+      EnsureUtf16ValiditySpan(remaining);
+    }
   }
 
-  JSString* result = NewString<CanGC>(cx, std::move(buffer), len);
+  JSString* result = buffer.toStringDontDeflate(cx, len);
   if (!result) {
     return false;
   }
