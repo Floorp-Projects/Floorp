@@ -92,6 +92,7 @@ if (AppConstants.MOZ_BACKGROUNDTASKS) {
 // Temporary allowlist for shopping - we'll reference this soon.
 if (AppConstants.NIGHTLY_BUILD) {
   gExceptionPaths.push("chrome://browser/content/shopping/shopping.html");
+  gExceptionPaths.push("chrome://global/content/shopping/ShoppingProduct.mjs");
 }
 
 if (AppConstants.NIGHTLY_BUILD) {
