@@ -1155,6 +1155,13 @@ nsresult FileSystemDatabaseManagerVersion001::EndUsageTracking(
   return NS_OK;
 }
 
+nsresult FileSystemDatabaseManagerVersion001::MergeFileId(
+    const EntryId& /* aEntryId */, const FileId& /* aFileId */,
+    bool /* aAbort */) {
+  // Version 001 should always use exclusive mode and not get here.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult FileSystemDatabaseManagerVersion001::RemoveFileId(
     const FileId& /* aFileId */) {
   return NS_OK;

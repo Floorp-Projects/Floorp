@@ -42,6 +42,9 @@ class FileSystemDatabaseManagerVersion002
   virtual Result<FileId, QMResult> GetFileId(
       const EntryId& aEntryId) const override;
 
+  virtual nsresult MergeFileId(const EntryId& aEntryId, const FileId& aFileId,
+                               bool aAbort) override;
+
   virtual Result<EntryId, QMResult> MoveEntry(
       const FileSystemEntryMetadata& aHandle,
       const FileSystemChildMetadata& aNewDesignation) override;

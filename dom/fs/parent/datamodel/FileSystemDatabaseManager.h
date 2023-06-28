@@ -187,6 +187,13 @@ class FileSystemDatabaseManager {
   virtual Result<FileId, QMResult> GetFileId(const EntryId& aEntryId) const = 0;
 
   /**
+   * @brief Flag aFileId as the main file for aEntryId or abort. Removes the
+   * file which did not get flagged as the main file.
+   */
+  virtual nsresult MergeFileId(const EntryId& aEntryId, const FileId& aFileId,
+                               bool aAbort) = 0;
+
+  /**
    * @brief Close database connection.
    */
   virtual void Close() = 0;
