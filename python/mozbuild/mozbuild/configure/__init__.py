@@ -490,11 +490,15 @@ class ConfigureSandbox(dict):
         with open(path, "rb") as fh:
             source = fh.read()
 
-        code = compile(source, path, "exec")
-
+        code = self.get_compiled_source(source, path)
         exec_(code, self)
 
         self._paths.pop(-1)
+
+    @staticmethod
+    @memoize
+    def get_compiled_source(source, path):
+        return compile(source, path, "exec")
 
     def run(self, path=None):
         """Executes the given file within the sandbox, as well as everything
