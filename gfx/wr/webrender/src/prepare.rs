@@ -33,7 +33,7 @@ use crate::render_task_cache::{RenderTaskCacheKey, to_cache_size, RenderTaskPare
 use crate::render_task::{RenderTaskKind, RenderTask};
 use crate::renderer::{GpuBufferBuilder, GpuBufferAddress};
 use crate::segment::{EdgeAaSegmentMask, SegmentBuilder};
-use crate::util::{clamp_to_scale_factor, pack_as_float};
+use crate::util::{clamp_to_scale_factor, pack_as_float, MaxRect};
 use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState};
 
 
@@ -108,8 +108,8 @@ fn can_use_clip_chain_for_quad_path(
     clip_chain: &ClipChainInstance,
     prim_spatial_node_index: SpatialNodeIndex,
     raster_spatial_node_index: SpatialNodeIndex,
-    clip_store: &ClipStore,
-    data_stores: &DataStores,
+    _clip_store: &ClipStore,
+    _data_stores: &DataStores,
     spatial_tree: &SpatialTree,
 ) -> bool {
     let map_prim_to_surface = spatial_tree.get_relative_transform(
@@ -123,9 +123,12 @@ fn can_use_clip_chain_for_quad_path(
         return false;
     }
 
+    !clip_chain.needs_mask
+
     // TODO(gw): Temporarily disable the new clip-mask rendering path for now, while
     //           investigating a driver-specific shader optimization regression.
 
+    /*
     if !clip_chain.needs_mask {
         return true;
     }
@@ -158,6 +161,7 @@ fn can_use_clip_chain_for_quad_path(
     }
 
     true
+    */
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -2002,7 +2006,7 @@ fn add_composite_prim(
     let composite_prim_address = write_prim_blocks(
         frame_state.frame_gpu_data,
         rect,
-        rect,
+        LayoutRect::max_rect(),
         color,
         segments,
     );
