@@ -941,6 +941,12 @@ Result<FileId, QMResult> FileSystemDatabaseManagerVersion001::EnsureFileId(
   return FileId(aEntryId);
 }
 
+Result<FileId, QMResult>
+FileSystemDatabaseManagerVersion001::EnsureTemporaryFileId(
+    const EntryId& aEntryId) {
+  return FileId(aEntryId);
+}
+
 nsresult FileSystemDatabaseManagerVersion001::GetFile(
     const EntryId& aEntryId, const FileId& aFileId, bool aAsCopy,
     ContentType& aType, TimeStamp& lastModifiedMilliSeconds,
