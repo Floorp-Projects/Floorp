@@ -1004,5 +1004,55 @@ nsresult ConnectionEntry::CreateDnsAndConnectSocket(
   return NS_OK;
 }
 
+bool ConnectionEntry::AllowToRetryDifferentIPFamilyForHttp3(nsresult aError) {
+  LOG(
+      ("ConnectionEntry::AllowToRetryDifferentIPFamilyForHttp3 %p "
+       "error=%" PRIx32,
+       this, static_cast<uint32_t>(aError)));
+  if (!IsHttp3()) {
+    MOZ_ASSERT(false, "Should not be called for non Http/3 connection");
+    return false;
+  }
+
+  if (!StaticPrefs::network_http_http3_retry_different_ip_family()) {
+    return false;
+  }
+
+  // Only allow to retry with these two errors.
+  if (aError != NS_ERROR_CONNECTION_REFUSED &&
+      aError != NS_ERROR_PROXY_CONNECTION_REFUSED) {
+    return false;
+  }
+
+  // Already retried once.
+  if (mRetriedDifferentIPFamilyForHttp3) {
+    return false;
+  }
+
+  return true;
+}
+
+void ConnectionEntry::SetRetryDifferentIPFamilyForHttp3(uint16_t aIPFamily) {
+  LOG(("ConnectionEntry::SetRetryDifferentIPFamilyForHttp3 %p, af=%u", this,
+       aIPFamily));
+
+  mPreferIPv4 = false;
+  mPreferIPv6 = false;
+
+  if (aIPFamily == AF_INET) {
+    mPreferIPv6 = true;
+  }
+
+  if (aIPFamily == AF_INET6) {
+    mPreferIPv4 = true;
+  }
+
+  mRetriedDifferentIPFamilyForHttp3 = true;
+
+  LOG(("  %p prefer ipv4=%d, ipv6=%d", this, (bool)mPreferIPv4,
+       (bool)mPreferIPv6));
+  MOZ_DIAGNOSTIC_ASSERT(mPreferIPv4 ^ mPreferIPv6);
+}
+
 }  // namespace net
 }  // namespace mozilla

@@ -405,18 +405,6 @@ void ObliviousHttpChannel::DoDiagnosticAssertWhenOnStopNotCalledOnDestroy() {
   }
 }
 
-void ObliviousHttpChannel::SetIPv6Disabled() {
-  if (mInnerChannelInternal) {
-    mInnerChannelInternal->SetIPv6Disabled();
-  }
-}
-
-void ObliviousHttpChannel::SetIPv4Disabled() {
-  if (mInnerChannelInternal) {
-    mInnerChannelInternal->SetIPv4Disabled();
-  }
-}
-
 void ObliviousHttpChannel::DisableAltDataCache() {
   if (mInnerChannelInternal) {
     mInnerChannelInternal->DisableAltDataCache();

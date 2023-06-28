@@ -434,13 +434,11 @@ interface nsIHttpChannelInternal : nsISupports
     /**
      * The channel will be loaded over IPv6, disabling IPv4.
      */
-    [noscript, notxpcom, nostdcall]
     void setIPv4Disabled();
 
     /**
      * The channel will be loaded over IPv4, disabling IPv6.
      */
-    [noscript, notxpcom, nostdcall]
     void setIPv6Disabled();
 
     /**
