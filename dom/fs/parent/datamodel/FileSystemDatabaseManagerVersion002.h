@@ -31,42 +31,38 @@ class FileSystemDatabaseManagerVersion002
   static Result<Usage, QMResult> GetFileUsage(
       const FileSystemConnection& aConnection);
 
-  virtual Result<EntryId, QMResult> GetEntryId(
+  Result<EntryId, QMResult> GetEntryId(
       const FileSystemChildMetadata& aHandle) const override;
 
-  virtual Result<EntryId, QMResult> GetEntryId(
-      const FileId& aFileId) const override;
+  Result<EntryId, QMResult> GetEntryId(const FileId& aFileId) const override;
 
-  virtual Result<FileId, QMResult> EnsureFileId(
+  Result<FileId, QMResult> EnsureFileId(const EntryId& aEntryId) override;
+
+  Result<FileId, QMResult> EnsureTemporaryFileId(
       const EntryId& aEntryId) override;
 
-  virtual Result<FileId, QMResult> EnsureTemporaryFileId(
-      const EntryId& aEntryId) override;
+  Result<FileId, QMResult> GetFileId(const EntryId& aEntryId) const override;
 
-  virtual Result<FileId, QMResult> GetFileId(
-      const EntryId& aEntryId) const override;
+  nsresult MergeFileId(const EntryId& aEntryId, const FileId& aFileId,
+                       bool aAbort) override;
 
-  virtual nsresult MergeFileId(const EntryId& aEntryId, const FileId& aFileId,
-                               bool aAbort) override;
-
-  virtual Result<EntryId, QMResult> MoveEntry(
+  Result<EntryId, QMResult> MoveEntry(
       const FileSystemEntryMetadata& aHandle,
       const FileSystemChildMetadata& aNewDesignation) override;
 
-  virtual Result<EntryId, QMResult> RenameEntry(
-      const FileSystemEntryMetadata& aHandle, const Name& aNewName) override;
+  Result<EntryId, QMResult> RenameEntry(const FileSystemEntryMetadata& aHandle,
+                                        const Name& aNewName) override;
 
  protected:
-  virtual Result<Usage, QMResult> GetUsagesOfDescendants(
+  Result<Usage, QMResult> GetUsagesOfDescendants(
       const EntryId& aEntryId) const override;
 
-  virtual Result<nsTArray<FileId>, QMResult> FindFilesUnderEntry(
+  Result<nsTArray<FileId>, QMResult> FindFilesUnderEntry(
       const EntryId& aEntryId) const override;
 
-  virtual Result<bool, QMResult> DoesFileIdExist(
-      const FileId& aFileId) const override;
+  Result<bool, QMResult> DoesFileIdExist(const FileId& aFileId) const override;
 
-  virtual nsresult RemoveFileId(const FileId& aFileId) override;
+  nsresult RemoveFileId(const FileId& aFileId) override;
 };
 
 }  // namespace mozilla::dom::fs::data
