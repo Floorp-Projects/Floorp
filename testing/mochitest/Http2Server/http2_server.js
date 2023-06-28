@@ -10,11 +10,23 @@ const fs = require("fs");
 const options = {
   key: fs.readFileSync(__dirname + "/mochitest-cert.key.pem"),
   cert: fs.readFileSync(__dirname + "/mochitest-cert.pem"),
+  settings: {
+    enableConnectProtocol: true,
+  },
 };
 const http2 = require("http2");
 const http = require("http");
 const url = require("url");
 const path = require("path");
+
+// This is the path of node-ws when running mochitest locally.
+let node_ws_root = path.join(__dirname, "../../xpcshell/node-ws");
+if (!fs.existsSync(node_ws_root)) {
+  // This path is for running mochitest on try.
+  node_ws_root = path.join(__dirname, "./node_ws");
+}
+
+const WebSocket = require(`${node_ws_root}/lib/websocket`);
 
 let listeningPort = parseInt(process.argv[3].split("=")[1]);
 let log = function () {};
@@ -134,7 +146,19 @@ server.on("session", session => {
 });
 
 server.on("stream", (stream, headers) => {
-  handle_h2_non_connect(stream, headers);
+  if (headers[":method"] === "CONNECT") {
+    stream.respond();
+
+    const ws = new WebSocket(null);
+    stream.setNoDelay = () => {};
+    ws.setSocket(stream, Buffer.from(""), 100 * 1024 * 1024);
+
+    ws.on("message", data => {
+      ws.send(data);
+    });
+  } else {
+    handle_h2_non_connect(stream, headers);
+  }
 });
 
 server.listen(listeningPort);

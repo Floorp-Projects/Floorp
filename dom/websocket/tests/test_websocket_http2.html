@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Basic HTTP/2 WebSocket test</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body onload="testWebSocket()">
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const kUrl = "wss://example.com";
+const data = "123456789ABCDEF";
+let ws;
+
+function testWebSocket() {
+  ws = new WebSocket(kUrl, "test");
+
+  ws.onopen = function(e) {
+    ok(true, "onopen is called");
+    ws.send(data);
+  };
+
+  ws.onmessage = function(e) {
+    if (e.data instanceof Blob) {
+        let reader = new FileReader();
+        reader.onload = function(event) {
+            is(data, event.target.result, "data should be the same");
+            ws.close();
+        };
+        reader.readAsText(e.data);
+    } else {
+      is(data, e.data, "data should be the same");
+      ws.close();
+    }
+  };
+
+  ws.onerror = function(e) {
+    ok(false, "onerror() should not have been called!");
+    SimpleTest.executeSoon(SimpleTest.finish);
+  };
+
+  ws.onclose = function(e) {
+    ok(e.wasClean, "ws closed cleanly");
+    SimpleTest.executeSoon(SimpleTest.finish);
+  };
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
