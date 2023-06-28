@@ -244,7 +244,7 @@ nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
   }
 
   // XXX Shouldn't we return before calling `CommitComposition()`?
-  if (IsInPlaintextMode()) {
+  if (IsPlaintextMailComposer()) {
     return NS_OK;
   }
 
@@ -3313,7 +3313,7 @@ nsresult HTMLEditor::RemoveInlinePropertiesAsSubAction(
   }
 
   // XXX Shouldn't we quit before calling `CommitComposition()`?
-  if (IsInPlaintextMode()) {
+  if (IsPlaintextMailComposer()) {
     return NS_OK;
   }
 

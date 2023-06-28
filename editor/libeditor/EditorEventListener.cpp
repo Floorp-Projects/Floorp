@@ -552,7 +552,9 @@ nsresult EditorEventListener::KeyUp(const WidgetKeyboardEvent* aKeyboardEvent) {
   RefPtr<EditorBase> editorBase(mEditorBase);
   if ((aKeyboardEvent->mKeyCode == NS_VK_SHIFT ||
        aKeyboardEvent->mKeyCode == NS_VK_CONTROL) &&
-      mShouldSwitchTextDirection && editorBase->IsInPlaintextMode()) {
+      mShouldSwitchTextDirection &&
+      (editorBase->IsTextEditor() ||
+       editorBase->AsHTMLEditor()->IsPlaintextMailComposer())) {
     editorBase->SwitchTextDirectionTo(mSwitchToRTL
                                           ? EditorBase::TextDirection::eRTL
                                           : EditorBase::TextDirection::eLTR);
@@ -962,7 +964,8 @@ bool EditorEventListener::DragEventHasSupportingData(
   return dataTransfer->HasType(NS_LITERAL_STRING_FROM_CSTRING(kTextMime)) ||
          dataTransfer->HasType(
              NS_LITERAL_STRING_FROM_CSTRING(kMozTextInternal)) ||
-         (!mEditorBase->IsInPlaintextMode() &&
+         (mEditorBase->IsHTMLEditor() &&
+          !mEditorBase->AsHTMLEditor()->IsPlaintextMailComposer() &&
           (dataTransfer->HasType(NS_LITERAL_STRING_FROM_CSTRING(kHTMLMime)) ||
            dataTransfer->HasType(NS_LITERAL_STRING_FROM_CSTRING(kFileMime))));
 }

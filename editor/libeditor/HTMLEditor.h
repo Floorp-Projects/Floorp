@@ -741,6 +741,18 @@ class HTMLEditor final : public EditorBase,
     return (mFlags & nsIEditor::eEditorEnableWrapHackMask) != 0;
   }
 
+  /**
+   * Return true if this is in the plaintext mail composer mode of
+   * Thunderbird or something.
+   * NOTE: This is different from contenteditable="plaintext-only"
+   */
+  bool IsPlaintextMailComposer() const {
+    const bool isPlaintextMode =
+        (mFlags & nsIEditor::eEditorPlaintextMask) != 0;
+    MOZ_ASSERT_IF(IsTextEditor(), isPlaintextMode);
+    return isPlaintextMode;
+  }
+
  protected:  // May be called by friends.
   /****************************************************************************
    * Some friend classes are allowed to call the following protected methods.
@@ -3119,7 +3131,7 @@ class HTMLEditor final : public EditorBase,
   /**
    * InsertAsCitedQuotationInternal() inserts a <blockquote> element whose
    * cite attribute is aCitation and whose content is aQuotedText.
-   * Note that this shouldn't be called when IsInPlaintextMode() is true.
+   * Note that this shouldn't be called when IsPlaintextMailComposer() is true.
    *
    * @param aQuotedText     HTML source if aInsertHTML is true.  Otherwise,
    *                        plain text.  This is inserted into new <blockquote>
