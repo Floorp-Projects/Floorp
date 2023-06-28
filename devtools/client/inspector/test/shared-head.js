@@ -528,6 +528,7 @@ var focusEditableField = async function (
   yOffset = 1,
   options = {}
 ) {
+  editable.scrollIntoView();
   const onFocus = once(editable.parentNode, "focus", true);
   info("Clicking on editable field to turn to edit mode");
   if (options.type === undefined) {

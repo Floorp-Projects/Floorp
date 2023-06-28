@@ -170,25 +170,42 @@ class StyleRuleActor extends Actor {
   get metadata() {
     const data = {};
     data.id = this.actorID;
-    // Collect information about the rule's ancestors (@media, @supports, @keyframes).
+    // Collect information about the rule's ancestors (@media, @supports, @keyframes, parent rules).
     // Used to show context for this change in the UI and to match the rule for undo/redo.
     data.ancestors = this.ancestorRules.map(rule => {
-      return {
+      const ancestorData = {
         id: rule.actorID,
-        // Rule type as number defined by CSSRule.type (ex: 4, 7, 12)
-        // @see https://developer.mozilla.org/en-US/docs/Web/API/CSSRule
-        type: rule.rawRule.type,
-        // Rule type as human-readable string (ex: "@media", "@supports", "@keyframes")
-        typeName: SharedCssLogic.getCSSAtRuleTypeName(rule.rawRule),
-        // Conditions of @container, @media and @supports rules (ex: "min-width: 1em")
-        conditionText: rule.rawRule.conditionText,
-        // Name of @keyframes rule; refrenced by the animation-name CSS property.
-        name: rule.rawRule.name,
-        // Selector of individual @keyframe rule within a @keyframes rule (ex: 0%, 100%).
-        keyText: rule.rawRule.keyText,
         // Array with the indexes of this rule and its ancestors within the CSS rule tree.
         ruleIndex: rule._ruleIndex,
       };
+
+      // Rule type as human-readable string (ex: "@media", "@supports", "@keyframes")
+      const typeName = SharedCssLogic.getCSSAtRuleTypeName(rule.rawRule);
+      if (typeName) {
+        ancestorData.typeName = typeName;
+      }
+
+      // Conditions of @container, @media and @supports rules (ex: "min-width: 1em")
+      if (rule.rawRule.conditionText !== undefined) {
+        ancestorData.conditionText = rule.rawRule.conditionText;
+      }
+
+      // Name of @keyframes rule; referenced by the animation-name CSS property.
+      if (rule.rawRule.name !== undefined) {
+        ancestorData.name = rule.rawRule.name;
+      }
+
+      // Selector of individual @keyframe rule within a @keyframes rule (ex: 0%, 100%).
+      if (rule.rawRule.keyText !== undefined) {
+        ancestorData.keyText = rule.rawRule.keyText;
+      }
+
+      // Selector of the rule; might be useful in case for nested rules
+      if (rule.rawRule.selectorText !== undefined) {
+        ancestorData.selectorText = rule.rawRule.selectorText;
+      }
+
+      return ancestorData;
     });
 
     // For changes in element style attributes, generate a unique selector.
