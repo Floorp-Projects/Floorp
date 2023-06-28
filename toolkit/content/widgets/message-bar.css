@@ -50,7 +50,6 @@
 ::slotted(button) {
   /* Enforce micro-button width. */
   min-width: -moz-fit-content !important;
-  margin: 0 !important;
 }
 
 /* MessageBar Grid Layout */
@@ -59,7 +58,7 @@
   background: var(--message-bar-background-color);
   color: var(--message-bar-text-color);
 
-  padding: 7px;
+  padding: 3px 7px;
   position: relative;
 
   border-radius: 4px;
@@ -75,16 +74,11 @@
 
 .content {
   margin: 0 4px;
-  display: flex;
-  flex-wrap: wrap;
+  display: inline-block;
   /* Ensure that the message bar content is vertically aligned. */
   align-items: center;
   /* Ensure that the message bar content is wrapped. */
   word-break: break-word;
-}
-
-:not(.infobar) > .content {
-  gap: 16px;
 }
 
 /* MessageBar icon style */
