@@ -12,6 +12,9 @@ const { AddonTestUtils } = ChromeUtils.importESModule(
 const { ChromeMigrationUtils } = ChromeUtils.importESModule(
   "resource:///modules/ChromeMigrationUtils.sys.mjs"
 );
+const { ChromeProfileMigrator } = ChromeUtils.importESModule(
+  "resource:///modules/ChromeProfileMigrator.sys.mjs"
+);
 
 AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
@@ -128,5 +131,31 @@ add_task(
       IMPORTED_ADDON_1.browser_specific_settings.gecko.id
     );
     await addon.uninstall();
+  }
+);
+
+/**
+ * Test that, for now at least, the extension resource type is only made
+ * available for Chrome and none of the derivitive browsers.
+ */
+add_task(
+  { pref_set: [["browser.migrate.chrome.extensions.enabled", true]] },
+  async function test_only_chrome_migrates_extensions() {
+    for (const key of MigrationUtils.availableMigratorKeys) {
+      let migrator = await MigrationUtils.getMigrator(key);
+
+      if (migrator instanceof ChromeProfileMigrator && key != "chrome") {
+        info("Testing migrator with key " + key);
+        Assert.ok(
+          await migrator.isSourceAvailable(),
+          "First check the source exists"
+        );
+        let resourceTypes = await migrator.getMigrateData(PROFILE);
+        Assert.ok(
+          !(resourceTypes & MigrationUtils.resourceTypes.EXTENSIONS),
+          "Should not offer the extension resource type"
+        );
+      }
+    }
   }
 );
