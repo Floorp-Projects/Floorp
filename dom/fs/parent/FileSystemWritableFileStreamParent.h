@@ -23,7 +23,8 @@ class FileSystemWritableFileStreamParent
  public:
   FileSystemWritableFileStreamParent(RefPtr<FileSystemManagerParent> aManager,
                                      const fs::EntryId& aEntryId,
-                                     const fs::FileId& aTemporaryFileId);
+                                     const fs::FileId& aTemporaryFileId,
+                                     bool aIsExclusive);
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemWritableFileStreamParent,
                                         override)
@@ -50,6 +51,8 @@ class FileSystemWritableFileStreamParent
   const fs::EntryId mEntryId;
 
   const fs::FileId mTemporaryFileId;
+
+  const bool mIsExclusive;
 
   FlippedOnce<false> mClosed;
 };

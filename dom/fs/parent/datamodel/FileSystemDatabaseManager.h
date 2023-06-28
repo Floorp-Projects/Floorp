@@ -34,6 +34,7 @@ struct OriginMetadata;
 namespace fs {
 
 struct FileId;
+enum class FileMode;
 class FileSystemChildMetadata;
 class FileSystemEntryMetadata;
 class FileSystemDirectoryListing;
@@ -99,7 +100,7 @@ class FileSystemDatabaseManager {
    * @brief Returns the properties of a file corresponding to a file handle
    */
   virtual nsresult GetFile(const EntryId& aEntryId, const FileId& aFileId,
-                           bool aAsCopy, ContentType& aType,
+                           const FileMode& aMode, ContentType& aType,
                            TimeStamp& lastModifiedMilliSeconds, Path& aPath,
                            nsCOMPtr<nsIFile>& aFile) const = 0;
 

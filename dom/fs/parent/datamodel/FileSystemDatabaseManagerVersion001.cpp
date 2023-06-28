@@ -948,7 +948,7 @@ FileSystemDatabaseManagerVersion001::EnsureTemporaryFileId(
 }
 
 nsresult FileSystemDatabaseManagerVersion001::GetFile(
-    const EntryId& aEntryId, const FileId& aFileId, bool aAsCopy,
+    const EntryId& aEntryId, const FileId& aFileId, const FileMode& aMode,
     ContentType& aType, TimeStamp& lastModifiedMilliSeconds,
     nsTArray<Name>& aPath, nsCOMPtr<nsIFile>& aFile) const {
   MOZ_ASSERT(!aFileId.IsEmpty());
@@ -962,17 +962,19 @@ nsresult FileSystemDatabaseManagerVersion001::GetFile(
 
   QM_TRY(MOZ_TO_RESULT(GetFileAttributes(mConnection, aEntryId, aType)));
 
-  if (aAsCopy) {
+  if (aMode == FileMode::SHARED_FROM_COPY) {
     QM_WARNONLY_TRY_UNWRAP(Maybe<FileId> mainFileId, GetFileId(aEntryId));
     if (mainFileId) {
       QM_TRY_UNWRAP(aFile,
                     mFileManager->CreateFileFrom(aFileId, mainFileId.value()));
     } else {
-      aAsCopy = false;
+      // LockShared/EnsureTemporaryFileId has provided a brand new fileId.
+      QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(aFileId));
     }
-  }
+  } else {
+    MOZ_ASSERT(aMode == FileMode::EXCLUSIVE ||
+               aMode == FileMode::SHARED_FROM_EMPTY);
 
-  if (!aAsCopy) {
     QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(aFileId));
   }
 

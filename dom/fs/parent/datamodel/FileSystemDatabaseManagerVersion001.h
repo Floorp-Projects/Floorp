@@ -64,7 +64,7 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
       const FileSystemChildMetadata& aHandle, bool aCreate) override;
 
   virtual nsresult GetFile(const EntryId& aEntryId, const FileId& aFileId,
-                           bool aAsCopy, ContentType& aType,
+                           const FileMode& aMode, ContentType& aType,
                            TimeStamp& lastModifiedMilliSeconds, Path& aPath,
                            nsCOMPtr<nsIFile>& aFile) const override;
 

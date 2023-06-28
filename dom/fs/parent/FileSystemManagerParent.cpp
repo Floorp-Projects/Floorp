@@ -191,28 +191,40 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
   AssertIsOnIOTarget();
   MOZ_ASSERT(mDataManager);
 
+  fs::FileMode mode = aRequest.keepData() ? fs::FileMode::SHARED_FROM_COPY
+                                          : fs::FileMode::SHARED_FROM_EMPTY;
+
   auto reportError = [aResolver](const auto& aRv) {
     aResolver(ToNSResult(aRv));
   };
 
+  // TODO: Get rid of mode and switching based on it, have the right unlocking
+  // automatically
   const fs::EntryId& entryId = aRequest.entryId();
-  QM_TRY_UNWRAP(fs::FileId fileId, mDataManager->LockShared(entryId), IPC_OK(),
-                reportError);
+  QM_TRY_UNWRAP(
+      fs::FileId fileId,
+      (mode == fs::FileMode::EXCLUSIVE ? mDataManager->LockExclusive(entryId)
+                                       : mDataManager->LockShared(entryId)),
+      IPC_OK(), reportError);
   MOZ_ASSERT(!fileId.IsEmpty());
 
   auto autoUnlock = MakeScopeExit(
-      [self = RefPtr<FileSystemManagerParent>(this), &entryId, &fileId] {
-        self->mDataManager->UnlockShared(entryId, fileId, /* aAbort */ true);
+      [self = RefPtr<FileSystemManagerParent>(this), &entryId, &fileId, mode] {
+        if (mode == fs::FileMode::EXCLUSIVE) {
+          self->mDataManager->UnlockExclusive(entryId);
+        } else {
+          self->mDataManager->UnlockShared(entryId, fileId, /* aAbort */ true);
+        }
       });
 
   fs::ContentType type;
   fs::TimeStamp lastModifiedMilliSeconds;
   fs::Path path;
   nsCOMPtr<nsIFile> file;
-  QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             entryId, fileId, /* aAsCopy */ true, type,
-             lastModifiedMilliSeconds, path, file)),
-         IPC_OK(), reportError);
+  QM_TRY(
+      MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
+          entryId, fileId, mode, type, lastModifiedMilliSeconds, path, file)),
+      IPC_OK(), reportError);
 
   if (LOG_ENABLED()) {
     nsAutoString path;
@@ -223,7 +235,7 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
 
   auto writableFileStreamParent =
       MakeNotNull<RefPtr<FileSystemWritableFileStreamParent>>(
-          this, aRequest.entryId(), fileId);
+          this, aRequest.entryId(), fileId, mode == fs::FileMode::EXCLUSIVE);
 
   QM_TRY_UNWRAP(
       nsCOMPtr<nsIRandomAccessStream> stream,
@@ -281,7 +293,7 @@ IPCResult FileSystemManagerParent::RecvGetFile(
   fs::Path path;
   nsCOMPtr<nsIFile> fileObject;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             entryId, fileId, /* asCopy */ false, type,
+             entryId, fileId, fs::FileMode::EXCLUSIVE, type,
              lastModifiedMilliSeconds, path, fileObject)),
          IPC_OK(), reportError);
 
