@@ -1912,6 +1912,10 @@ NSC_DigestInit(CK_SESSION_HANDLE hSession,
         INIT_MECH(SHA256)
         INIT_MECH(SHA384)
         INIT_MECH(SHA512)
+        INIT_MECH(SHA3_224)
+        INIT_MECH(SHA3_256)
+        INIT_MECH(SHA3_384)
+        INIT_MECH(SHA3_512)
 
         default:
             crv = CKR_MECHANISM_INVALID;
@@ -2947,6 +2951,10 @@ NSC_SignInit(CK_SESSION_HANDLE hSession,
             INIT_HMAC_MECH(SHA256)
             INIT_HMAC_MECH(SHA384)
             INIT_HMAC_MECH(SHA512)
+            INIT_HMAC_MECH(SHA3_224)
+            INIT_HMAC_MECH(SHA3_256)
+            INIT_HMAC_MECH(SHA3_384)
+            INIT_HMAC_MECH(SHA3_512)
 
         case CKM_AES_CMAC_GENERAL:
             PORT_Assert(pMechanism->pParameter);
@@ -3692,6 +3700,10 @@ NSC_VerifyInit(CK_SESSION_HANDLE hSession,
             INIT_HMAC_MECH(SHA256)
             INIT_HMAC_MECH(SHA384)
             INIT_HMAC_MECH(SHA512)
+            INIT_HMAC_MECH(SHA3_224)
+            INIT_HMAC_MECH(SHA3_256)
+            INIT_HMAC_MECH(SHA3_384)
+            INIT_HMAC_MECH(SHA3_512)
 
         case CKM_SSL3_MD5_MAC:
             PORT_Assert(pMechanism->pParameter);
@@ -8313,6 +8325,10 @@ NSC_DeriveKey(CK_SESSION_HANDLE hSession,
             DERIVE_KEY_HASH(SHA256)
             DERIVE_KEY_HASH(SHA384)
             DERIVE_KEY_HASH(SHA512)
+            DERIVE_KEY_HASH(SHA3_224)
+            DERIVE_KEY_HASH(SHA3_256)
+            DERIVE_KEY_HASH(SHA3_384)
+            DERIVE_KEY_HASH(SHA3_512)
 
         case CKM_DH_PKCS_DERIVE: {
             SECItem derived, dhPublic;
@@ -8755,6 +8771,11 @@ NSC_GetOperationState(CK_SESSION_HANDLE hSession,
     if (crv != CKR_OK)
         return crv;
 
+    /* a zero cipherInfoLen signals that this context cannot be serialized */
+    if (context->cipherInfoLen == 0) {
+        return CKR_STATE_UNSAVEABLE;
+    }
+
     *pulOperationStateLen = context->cipherInfoLen + sizeof(CK_MECHANISM_TYPE) + sizeof(SFTKContextType);
     if (pOperationState == NULL) {
         sftk_FreeSession(session);
@@ -8825,6 +8846,10 @@ NSC_SetOperationState(CK_SESSION_HANDLE hSession,
                                       NULL);
                 if (crv != CKR_OK)
                     break;
+                if (context->cipherInfoLen == 0) {
+                    crv = CKR_SAVED_STATE_INVALID;
+                    break;
+                }
                 PORT_Memcpy(context->cipherInfo, pOperationState,
                             context->cipherInfoLen);
                 pOperationState += context->cipherInfoLen;

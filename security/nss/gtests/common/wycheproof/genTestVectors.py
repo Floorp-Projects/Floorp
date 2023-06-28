@@ -150,6 +150,19 @@ class RSA_OAEP():
 
         return result
 
+class HMAC():
+    """Class that provides the generator function for a single HMAC test case."""
+
+    def format_testcase(self, vector):
+        """Format a HMAC testcase object. Return a string in C-header format."""
+        result = '{{ {},\n'.format(vector['tcId'])
+        for key in ['comment', 'key', 'msg', "tag"]:
+            result += ' \"{}\",\n'.format(vector[key])
+        result += ' {}}},\n\n'.format(str(vector['result'] == 'invalid').lower())
+
+        return result
+
+
 def getSha(sha):
     s = sha.split("-")
     return "SEC_OID_SHA" + s[1]
@@ -433,7 +446,82 @@ rsa_oaep_2048_sha512_mgf1sha512_params = {
     'comment' : ''
 }
 
+hmac_sha256_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'hmac_sha256_test.json',
+    'target': '../testvectors/hmac-sha256-vectors.h',
+    'array_init': 'const HmacTestVector kHmacSha256WycheproofVectors[] = {\n',
+    'formatter' : HMAC(),
+    'crop_size_end': -3,
+    'section': 'hmac_sha256_vectors_h__',
+    'comment' : ''
+}
 
+hmac_sha384_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'hmac_sha384_test.json',
+    'target': '../testvectors/hmac-sha384-vectors.h',
+    'array_init': 'const HmacTestVector kHmacSha384WycheproofVectors[] = {\n',
+    'formatter' : HMAC(),
+    'crop_size_end': -3,
+    'section': 'hmac_sha384_vectors_h__',
+    'comment' : ''
+}
+
+hmac_sha512_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'hmac_sha512_test.json',
+    'target': '../testvectors/hmac-sha512-vectors.h',
+    'array_init': 'const HmacTestVector kHmacSha512WycheproofVectors[] = {\n',
+    'formatter' : HMAC(),
+    'crop_size_end': -3,
+    'section': 'hmac_sha512_vectors_h__',
+    'comment' : ''
+}
+
+hmac_sha3_224_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'hmac_sha3_224_test.json',
+    'target': '../testvectors/hmac-sha3-224-vectors.h',
+    'array_init': 'const HmacTestVector kHmacSha3224WycheproofVectors[] = {\n',
+    'formatter' : HMAC(),
+    'crop_size_end': -3,
+    'section': 'hmac_sha3_224_vectors_h__',
+    'comment' : ''
+}
+
+hmac_sha3_256_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'hmac_sha3_256_test.json',
+    'target': '../testvectors/hmac-sha3-256-vectors.h',
+    'array_init': 'const HmacTestVector kHmacSha3256WycheproofVectors[] = {\n',
+    'formatter' : HMAC(),
+    'crop_size_end': -3,
+    'section': 'hmac_sha3_256_vectors_h__',
+    'comment' : ''
+}
+
+hmac_sha3_384_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'hmac_sha3_384_test.json',
+    'target': '../testvectors/hmac-sha3-384-vectors.h',
+    'array_init': 'const HmacTestVector kHmacSha3384WycheproofVectors[] = {\n',
+    'formatter' : HMAC(),
+    'crop_size_end': -3,
+    'section': 'hmac_sha3_384_vectors_h__',
+    'comment' : ''
+}
+
+hmac_sha3_512_params = {
+    'source_dir': 'source_vectors/',
+    'source_file': 'hmac_sha3_512_test.json',
+    'target': '../testvectors/hmac-sha3-512-vectors.h',
+    'array_init': 'const HmacTestVector kHmacSha3512WycheproofVectors[] = {\n',
+    'formatter' : HMAC(),
+    'crop_size_end': -3,
+    'section': 'hmac_sha3_512_vectors_h__',
+    'comment' : ''
+}
 
 def update_tests(tests):
 
@@ -459,7 +547,14 @@ def generate_test_vectors():
                  rsa_oaep_2048_sha384_mgf1sha1_params,
                  rsa_oaep_2048_sha384_mgf1sha384_params,
                  rsa_oaep_2048_sha512_mgf1sha1_params,
-                 rsa_oaep_2048_sha512_mgf1sha512_params]
+                 rsa_oaep_2048_sha512_mgf1sha512_params,
+                 hmac_sha256_params,
+                 hmac_sha384_params,
+                 hmac_sha512_params,
+                 hmac_sha3_224_params,
+                 hmac_sha3_256_params,
+                 hmac_sha3_384_params,
+                 hmac_sha3_512_params]
     update_tests(all_tests)
     for test in all_tests:
         generate_vectors_file(test)

@@ -24,6 +24,10 @@ typedef enum {
     HASH_AlgSHA384 = 5,
     HASH_AlgSHA512 = 6,
     HASH_AlgSHA224 = 7,
+    HASH_AlgSHA3_224 = 8,
+    HASH_AlgSHA3_256 = 9,
+    HASH_AlgSHA3_384 = 10,
+    HASH_AlgSHA3_512 = 11,
     HASH_AlgTOTAL
 } HASH_HashType;
 
@@ -37,6 +41,10 @@ typedef enum {
 #define SHA256_LENGTH 32
 #define SHA384_LENGTH 48
 #define SHA512_LENGTH 64
+#define SHA3_224_LENGTH 28
+#define SHA3_256_LENGTH 32
+#define SHA3_384_LENGTH 48
+#define SHA3_512_LENGTH 64
 #define HASH_LENGTH_MAX SHA512_LENGTH
 
 /*

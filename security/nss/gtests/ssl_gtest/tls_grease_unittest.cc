@@ -851,11 +851,11 @@ TEST_P(GreaseTestStreamTls13, GreasedClientCertificateExtensions) {
 
 TEST_F(TlsConnectStreamTls13, GreaseClientHelloExtensionPermutation) {
   EnsureTlsSetup();
-  PR_ASSERT(SSL_OptionSet(client_->ssl_fd(),
-                          SSL_ENABLE_CH_EXTENSION_PERMUTATION,
-                          PR_TRUE) == SECSuccess);
-  PR_ASSERT(SSL_OptionSet(client_->ssl_fd(), SSL_ENABLE_GREASE, PR_TRUE) ==
-            SECSuccess);
+  ASSERT_TRUE(SSL_OptionSet(client_->ssl_fd(),
+                            SSL_ENABLE_CH_EXTENSION_PERMUTATION,
+                            PR_TRUE) == SECSuccess);
+  ASSERT_TRUE(SSL_OptionSet(client_->ssl_fd(), SSL_ENABLE_GREASE, PR_TRUE) ==
+              SECSuccess);
   Connect();
 }
 

@@ -68,6 +68,16 @@ cipher_ecdsa()
   fi
 }    
 
+cipher_sha3()
+{
+  echo "bltest -T -m $PARAM -d $CIPHERTESTDIR"
+  ${PROFTOOL} ${BINDIR}/bltest${PROG_SUFFIX} -T -m $PARAM -d $CIPHERTESTDIR
+  if [ $? -ne 0 ]; then
+      html_msg 1 $EXP_RET "$TESTNAME"
+      echo "$failedStr"
+  fi
+}  
+
 ############################## cipher_main #############################
 # local shell function to test NSS ciphers
 ########################################################################
@@ -83,7 +93,9 @@ cipher_main()
           res=0
           if [[ "$TESTNAME" == "ECDSA Sign"  || "$TESTNAME" == "ECDSA Verify" ]] ; then
               cipher_ecdsa
-          else
+	  elif [[ "$TESTNAME" == "SHA3 224 Hash" || "$TESTNAME" == "SHA3 256 Hash" || "$TESTNAME" == "SHA3 384 Hash" || "$TESTNAME" == "SHA3 512 Hash" ]] ; then
+              cipher_sha3
+	  else
               inOff=0
               while [ $inOff -lt 8 ]
               do
@@ -141,6 +153,7 @@ cipher_rsa_populate()
   ${PROFTOOL} ${BINDIR}/rsapoptst -t e_n_p,d_n_q,d_p_q,e_d_n -r 10
   html_msg $? 0 "$TESTNAME"
 }
+
 
 ############################## cipher_cleanup ############################
 # local shell function to finish this script (no exit since it might be

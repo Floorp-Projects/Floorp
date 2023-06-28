@@ -642,6 +642,10 @@ typedef enum {
     bltestSHA256,       /* .             */
     bltestSHA384,       /* .             */
     bltestSHA512,       /* .             */
+    bltestSHA3_224,     /* .             */
+    bltestSHA3_256,     /* .             */
+    bltestSHA3_384,     /* .             */
+    bltestSHA3_512,     /* .             */
     NUMMODES
 } bltestCipherMode;
 
@@ -685,6 +689,10 @@ static char *mode_strings[] = {
     "sha256",
     "sha384",
     "sha512",
+    "sha3_224",
+    "sha3_256",
+    "sha3_384",
+    "sha3_512",
 };
 
 typedef struct
@@ -860,7 +868,7 @@ PRBool
 is_hashCipher(bltestCipherMode mode)
 {
     /* change as needed! */
-    if (mode >= bltestMD2 && mode <= bltestSHA512)
+    if (mode >= bltestMD2 && mode <= bltestSHA3_512)
         return PR_TRUE;
     return PR_FALSE;
 }
@@ -2436,6 +2444,34 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
                                                       : SHA512_HashBuf;
             return SECSuccess;
             break;
+        case bltestSHA3_224:
+            restart = cipherInfo->params.hash.restart;
+            SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+                              SHA3_224_LENGTH);
+            cipherInfo->cipher.hashCipher = SHA3_224_HashBuf;
+            return SECSuccess;
+            break;
+        case bltestSHA3_256:
+            restart = cipherInfo->params.hash.restart;
+            SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+                              SHA3_256_LENGTH);
+            cipherInfo->cipher.hashCipher = SHA3_256_HashBuf;
+            return SECSuccess;
+            break;
+        case bltestSHA3_384:
+            restart = cipherInfo->params.hash.restart;
+            SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+                              SHA3_384_LENGTH);
+            cipherInfo->cipher.hashCipher = SHA3_384_HashBuf;
+            return SECSuccess;
+            break;
+        case bltestSHA3_512:
+            restart = cipherInfo->params.hash.restart;
+            SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf,
+                              SHA3_512_LENGTH);
+            cipherInfo->cipher.hashCipher = SHA3_512_HashBuf;
+            return SECSuccess;
+            break;
         default:
             return SECFailure;
     }
@@ -2692,6 +2728,10 @@ cipherFinish(bltestCipherInfo *cipherInfo)
         case bltestSHA256:
         case bltestSHA384:
         case bltestSHA512:
+        case bltestSHA3_224:
+        case bltestSHA3_256:
+        case bltestSHA3_384:
+        case bltestSHA3_512:
             return SECSuccess;
             break;
         default:

@@ -34,6 +34,30 @@ HashTypeToOID(HASH_HashType hashtype)
         case HASH_AlgSHA1:
             hashtag = SEC_OID_SHA1;
             break;
+        case HASH_AlgSHA256:
+            hashtag = SEC_OID_SHA256;
+            break;
+        case HASH_AlgSHA384:
+            hashtag = SEC_OID_SHA384;
+            break;
+        case HASH_AlgSHA512:
+            hashtag = SEC_OID_SHA512;
+            break;
+        case HASH_AlgSHA224:
+            hashtag = SEC_OID_SHA224;
+            break;
+        case HASH_AlgSHA3_224:
+            hashtag = SEC_OID_SHA3_224;
+            break;
+        case HASH_AlgSHA3_256:
+            hashtag = SEC_OID_SHA3_256;
+            break;
+        case HASH_AlgSHA3_384:
+            hashtag = SEC_OID_SHA3_384;
+            break;
+        case HASH_AlgSHA3_512:
+            hashtag = SEC_OID_SHA3_512;
+            break;
         default:
             fprintf(stderr, "A new hash type has been added to HASH_HashType.\n");
             fprintf(stderr, "This program needs to be updated!\n");
@@ -91,7 +115,7 @@ static int
 DigestFile(FILE *outFile, FILE *inFile, SECOidData *hashOID)
 {
     int nb;
-    unsigned char ibuf[4096], digest[32];
+    unsigned char ibuf[4096], digest[HASH_LENGTH_MAX];
     PK11Context *hashcx;
     unsigned int len;
     SECStatus rv;
@@ -124,7 +148,7 @@ DigestFile(FILE *outFile, FILE *inFile, SECOidData *hashOID)
         }
     }
 
-    rv = PK11_DigestFinal(hashcx, digest, &len, 32);
+    rv = PK11_DigestFinal(hashcx, digest, &len, HASH_LENGTH_MAX);
     PK11_DestroyContext(hashcx, PR_TRUE);
 
     if (rv != SECSuccess)
@@ -209,6 +233,7 @@ main(int argc, char **argv)
         outFile = stdout;
 
     hashOID = HashNameToOID(hashName);
+    free(hashName);
     if (hashOID == NULL) {
         fprintf(stderr, "%s: invalid digest type\n", progName);
         Usage(progName);

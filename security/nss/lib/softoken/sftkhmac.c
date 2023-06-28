@@ -31,6 +31,14 @@ sftk_HMACMechanismToHash(CK_MECHANISM_TYPE mech)
             return HASH_AlgSHA384;
         case CKM_SHA512_HMAC:
             return HASH_AlgSHA512;
+        case CKM_SHA3_224_HMAC:
+            return HASH_AlgSHA3_224;
+        case CKM_SHA3_256_HMAC:
+            return HASH_AlgSHA3_256;
+        case CKM_SHA3_384_HMAC:
+            return HASH_AlgSHA3_384;
+        case CKM_SHA3_512_HMAC:
+            return HASH_AlgSHA3_512;
     }
     return HASH_AlgNULL;
 }
@@ -265,6 +273,10 @@ sftk_MAC_InitRaw(sftk_MACCtx *ctx, CK_MECHANISM_TYPE mech, const unsigned char *
         case CKM_SHA256_HMAC:
         case CKM_SHA384_HMAC:
         case CKM_SHA512_HMAC:
+        case CKM_SHA3_224_HMAC:
+        case CKM_SHA3_256_HMAC:
+        case CKM_SHA3_384_HMAC:
+        case CKM_SHA3_512_HMAC:
             hashObj = HASH_GetRawHashObject(sftk_HMACMechanismToHash(mech));
 
             /* Because we condition above only on hashes we know to be valid,
@@ -341,6 +353,10 @@ sftk_MAC_Reset(sftk_MACCtx *ctx)
         case CKM_SHA256_HMAC:
         case CKM_SHA384_HMAC:
         case CKM_SHA512_HMAC:
+        case CKM_SHA3_224_HMAC:
+        case CKM_SHA3_256_HMAC:
+        case CKM_SHA3_384_HMAC:
+        case CKM_SHA3_512_HMAC:
             HMAC_Begin(ctx->mac.hmac);
             break;
         case CKM_AES_CMAC:
@@ -369,6 +385,10 @@ sftk_MAC_Update(sftk_MACCtx *ctx, const CK_BYTE *data, unsigned int data_len)
         case CKM_SHA256_HMAC:
         case CKM_SHA384_HMAC:
         case CKM_SHA512_HMAC:
+        case CKM_SHA3_224_HMAC:
+        case CKM_SHA3_256_HMAC:
+        case CKM_SHA3_384_HMAC:
+        case CKM_SHA3_512_HMAC:
             /* HMAC doesn't indicate failure in the return code. */
             HMAC_Update(ctx->mac.hmac, data, data_len);
             break;
@@ -401,6 +421,10 @@ sftk_MAC_Finish(sftk_MACCtx *ctx, CK_BYTE_PTR result, unsigned int *result_len, 
         case CKM_SHA256_HMAC:
         case CKM_SHA384_HMAC:
         case CKM_SHA512_HMAC:
+        case CKM_SHA3_224_HMAC:
+        case CKM_SHA3_256_HMAC:
+        case CKM_SHA3_384_HMAC:
+        case CKM_SHA3_512_HMAC:
             /* HMAC doesn't indicate failure in the return code. Additionally,
              * unlike CMAC, it doesn't support partial results. This means that we
              * need to allocate a buffer if max_result_len < ctx->mac_size. */

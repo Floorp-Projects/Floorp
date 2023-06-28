@@ -1,6 +1,7 @@
 /* MIT License
  *
- * Copyright (c) 2016-2020 INRIA, CMU and Microsoft Corporation
+ * Copyright (c) 2016-2022 INRIA, CMU and Microsoft Corporation
+ * Copyright (c) 2022-2023 HACL* Contributors
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,29 +42,29 @@ extern uint64_t sha256_update(uint32_t *x0, uint8_t *x1, uint64_t x2, uint32_t *
 
 extern uint64_t x64_poly1305(uint8_t *x0, uint8_t *x1, uint64_t x2, uint64_t x3);
 
-extern uint64_t check_aesni();
+extern uint64_t check_aesni(void);
 
-extern uint64_t check_sha();
+extern uint64_t check_sha(void);
 
-extern uint64_t check_adx_bmi2();
+extern uint64_t check_adx_bmi2(void);
 
-extern uint64_t check_avx();
+extern uint64_t check_avx(void);
 
-extern uint64_t check_avx2();
+extern uint64_t check_avx2(void);
 
-extern uint64_t check_movbe();
+extern uint64_t check_movbe(void);
 
-extern uint64_t check_sse();
+extern uint64_t check_sse(void);
 
-extern uint64_t check_rdrand();
+extern uint64_t check_rdrand(void);
 
-extern uint64_t check_avx512();
+extern uint64_t check_avx512(void);
 
-extern uint64_t check_osxsave();
+extern uint64_t check_osxsave(void);
 
-extern uint64_t check_avx_xcr0();
+extern uint64_t check_avx_xcr0(void);
 
-extern uint64_t check_avx512_xcr0();
+extern uint64_t check_avx512_xcr0(void);
 
 extern uint64_t
 gcm128_decrypt_opt(

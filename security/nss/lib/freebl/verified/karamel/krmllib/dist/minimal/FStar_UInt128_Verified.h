@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include "krml/internal/types.h"
 #include "krml/internal/target.h"
+
 static inline uint64_t
 FStar_UInt128_constant_time_carry(uint64_t a, uint64_t b)
 {

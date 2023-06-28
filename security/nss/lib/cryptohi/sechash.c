@@ -85,6 +85,30 @@ sha512_NewContext(void)
     return (void *)PK11_CreateDigestContext(SEC_OID_SHA512);
 }
 
+static void *
+sha3_224_NewContext(void)
+{
+    return (void *)PK11_CreateDigestContext(SEC_OID_SHA3_224);
+}
+
+static void *
+sha3_256_NewContext(void)
+{
+    return (void *)PK11_CreateDigestContext(SEC_OID_SHA3_256);
+}
+
+static void *
+sha3_384_NewContext(void)
+{
+    return (void *)PK11_CreateDigestContext(SEC_OID_SHA3_384);
+}
+
+static void *
+sha3_512_NewContext(void)
+{
+    return (void *)PK11_CreateDigestContext(SEC_OID_SHA3_512);
+}
+
 const SECHashObject SECHashObjects[] = {
     { 0,
       (void *(*)(void))null_hash_new_context,
@@ -166,6 +190,46 @@ const SECHashObject SECHashObjects[] = {
           PK11_DigestFinal,
       SHA224_BLOCK_LENGTH,
       HASH_AlgSHA224 },
+    { SHA3_224_LENGTH,
+      (void *(*)(void))sha3_224_NewContext,
+      (void *(*)(void *))PK11_CloneContext,
+      (void (*)(void *, PRBool))PK11_DestroyContext,
+      (void (*)(void *))PK11_DigestBegin,
+      (void (*)(void *, const unsigned char *, unsigned int))PK11_DigestOp,
+      (void (*)(void *, unsigned char *, unsigned int *, unsigned int))
+          PK11_DigestFinal,
+      SHA3_224_BLOCK_LENGTH,
+      HASH_AlgSHA3_224 },
+    { SHA3_256_LENGTH,
+      (void *(*)(void))sha3_256_NewContext,
+      (void *(*)(void *))PK11_CloneContext,
+      (void (*)(void *, PRBool))PK11_DestroyContext,
+      (void (*)(void *))PK11_DigestBegin,
+      (void (*)(void *, const unsigned char *, unsigned int))PK11_DigestOp,
+      (void (*)(void *, unsigned char *, unsigned int *, unsigned int))
+          PK11_DigestFinal,
+      SHA3_256_BLOCK_LENGTH,
+      HASH_AlgSHA3_256 },
+    { SHA3_384_LENGTH,
+      (void *(*)(void))sha3_384_NewContext,
+      (void *(*)(void *))PK11_CloneContext,
+      (void (*)(void *, PRBool))PK11_DestroyContext,
+      (void (*)(void *))PK11_DigestBegin,
+      (void (*)(void *, const unsigned char *, unsigned int))PK11_DigestOp,
+      (void (*)(void *, unsigned char *, unsigned int *, unsigned int))
+          PK11_DigestFinal,
+      SHA3_384_BLOCK_LENGTH,
+      HASH_AlgSHA3_384 },
+    { SHA3_512_LENGTH,
+      (void *(*)(void))sha3_512_NewContext,
+      (void *(*)(void *))PK11_CloneContext,
+      (void (*)(void *, PRBool))PK11_DestroyContext,
+      (void (*)(void *))PK11_DigestBegin,
+      (void (*)(void *, const unsigned char *, unsigned int))PK11_DigestOp,
+      (void (*)(void *, unsigned char *, unsigned int *, unsigned int))
+          PK11_DigestFinal,
+      SHA3_512_BLOCK_LENGTH,
+      HASH_AlgSHA3_512 },
 };
 
 const SECHashObject *
@@ -201,6 +265,18 @@ HASH_GetHashTypeByOidTag(SECOidTag hashOid)
         case SEC_OID_SHA512:
             ht = HASH_AlgSHA512;
             break;
+        case SEC_OID_SHA3_224:
+            ht = HASH_AlgSHA3_224;
+            break;
+        case SEC_OID_SHA3_256:
+            ht = HASH_AlgSHA3_256;
+            break;
+        case SEC_OID_SHA3_384:
+            ht = HASH_AlgSHA3_384;
+            break;
+        case SEC_OID_SHA3_512:
+            ht = HASH_AlgSHA3_512;
+            break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
             break;
@@ -235,6 +311,18 @@ HASH_GetHashOidTagByHashType(HASH_HashType type)
         case HASH_AlgSHA512:
             oid = SEC_OID_SHA512;
             break;
+        case HASH_AlgSHA3_224:
+            oid = SEC_OID_SHA3_224;
+            break;
+        case HASH_AlgSHA3_256:
+            oid = SEC_OID_SHA3_256;
+            break;
+        case HASH_AlgSHA3_384:
+            oid = SEC_OID_SHA3_384;
+            break;
+        case HASH_AlgSHA3_512:
+            oid = SEC_OID_SHA3_512;
+            break;
         default:
             PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
             break;
@@ -264,6 +352,18 @@ HASH_GetHashOidTagByHMACOidTag(SECOidTag hmacOid)
             break;
         case SEC_OID_HMAC_SHA512:
             hashOid = SEC_OID_SHA512;
+            break;
+        case SEC_OID_HMAC_SHA3_224:
+            hashOid = SEC_OID_SHA3_224;
+            break;
+        case SEC_OID_HMAC_SHA3_256:
+            hashOid = SEC_OID_SHA3_256;
+            break;
+        case SEC_OID_HMAC_SHA3_384:
+            hashOid = SEC_OID_SHA3_384;
+            break;
+        case SEC_OID_HMAC_SHA3_512:
+            hashOid = SEC_OID_SHA3_512;
             break;
         default:
             hashOid = SEC_OID_UNKNOWN;
@@ -295,6 +395,18 @@ HASH_GetHMACOidTagByHashOidTag(SECOidTag hashOid)
             break;
         case SEC_OID_SHA512:
             hmacOid = SEC_OID_HMAC_SHA512;
+            break;
+        case SEC_OID_SHA3_224:
+            hmacOid = SEC_OID_HMAC_SHA3_224;
+            break;
+        case SEC_OID_SHA3_256:
+            hmacOid = SEC_OID_HMAC_SHA3_256;
+            break;
+        case SEC_OID_SHA3_384:
+            hmacOid = SEC_OID_HMAC_SHA3_384;
+            break;
+        case SEC_OID_SHA3_512:
+            hmacOid = SEC_OID_HMAC_SHA3_512;
             break;
         default:
             hmacOid = SEC_OID_UNKNOWN;
