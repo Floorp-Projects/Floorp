@@ -9985,50 +9985,32 @@ void nsContentUtils::EnqueueLifecycleCallback(
 
 /* static */
 CustomElementFormValue nsContentUtils::ConvertToCustomElementFormValue(
-    const OwningFileOrUSVStringOrFormData& aState) {
-  if (aState.IsFile()) {
-    RefPtr<BlobImpl> impl = aState.GetAsFile()->Impl();
+    const Nullable<OwningFileOrUSVStringOrFormData>& aState) {
+  if (aState.IsNull()) {
+    return void_t{};
+  }
+  const auto& state = aState.Value();
+  if (state.IsFile()) {
+    RefPtr<BlobImpl> impl = state.GetAsFile()->Impl();
     return {std::move(impl)};
   }
-  if (aState.IsUSVString()) {
-    return aState.GetAsUSVString();
+  if (state.IsUSVString()) {
+    return state.GetAsUSVString();
   }
-  nsTArray<FormDataTuple> array;
-  aState.GetAsFormData()->ForEach(
-      [&array](const nsString& aName,
-               const OwningBlobOrDirectoryOrUSVString& aValue) {
-        FormDataTuple data;
-        data.name() = aName;
-
-        if (aValue.IsBlob()) {
-          FormDataValue value(WrapNotNull(aValue.GetAsBlob()->Impl()));
-          data.value() = std::move(value);
-        } else if (aValue.IsUSVString()) {
-          data.value() = aValue.GetAsUSVString();
-        } else {
-          MOZ_ASSERT_UNREACHABLE("Can't save FormData entry Directory value!");
-        }
-
-        array.AppendElement(data);
-        return true;
-      });
-  return std::move(array);
+  return state.GetAsFormData()->ConvertToCustomElementFormValue();
 }
 
 /* static */
 Nullable<OwningFileOrUSVStringOrFormData>
 nsContentUtils::ExtractFormAssociatedCustomElementValue(
-    mozilla::dom::HTMLElement* aElement,
+    nsIGlobalObject* aGlobal,
     const mozilla::dom::CustomElementFormValue& aCEValue) {
+  MOZ_ASSERT(aGlobal);
+
   OwningFileOrUSVStringOrFormData value;
   switch (aCEValue.type()) {
     case CustomElementFormValue::TBlobImpl: {
-      nsPIDOMWindowInner* window = aElement->OwnerDoc()->GetInnerWindow();
-      if (!window) {
-        return {};
-      }
-      RefPtr<File> file =
-          File::Create(window->AsGlobal(), aCEValue.get_BlobImpl());
+      RefPtr<File> file = File::Create(aGlobal, aCEValue.get_BlobImpl());
       if (NS_WARN_IF(!file)) {
         return {};
       }
@@ -10053,8 +10035,7 @@ nsContentUtils::ExtractFormAssociatedCustomElementValue(
 
           case FormDataValue::TBlobImpl: {
             auto blobImpl = item.value().get_BlobImpl();
-            auto* blob = Blob::Create(
-                aElement->GetComposedDoc()->GetOwnerGlobal(), blobImpl);
+            auto* blob = Blob::Create(aGlobal, blobImpl);
             formData->AddNameBlobPair(item.name(), blob);
           } break;
 

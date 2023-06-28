@@ -116,12 +116,8 @@ void HTMLElement::SaveState() {
   const auto& state = internals->GetFormState();
   const auto& value = internals->GetFormSubmissionValue();
   result->contentData() = CustomElementTuple(
-      value.IsNull()
-          ? CustomElementFormValue(void_t{})
-          : nsContentUtils::ConvertToCustomElementFormValue(value.Value()),
-      state.IsNull()
-          ? CustomElementFormValue(void_t{})
-          : nsContentUtils::ConvertToCustomElementFormValue(state.Value()));
+      nsContentUtils::ConvertToCustomElementFormValue(value),
+      nsContentUtils::ConvertToCustomElementFormValue(state));
 }
 
 void HTMLElement::MaybeRestoreFormAssociatedCustomElementState() {
@@ -165,9 +161,11 @@ void HTMLElement::RestoreFormAssociatedCustomElementState() {
   }
 
   auto& ce = content.get_CustomElementTuple();
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerDocument()->GetOwnerGlobal();
   internals->RestoreFormValue(
-      nsContentUtils::ExtractFormAssociatedCustomElementValue(this, ce.value()),
-      nsContentUtils::ExtractFormAssociatedCustomElementValue(this,
+      nsContentUtils::ExtractFormAssociatedCustomElementValue(global,
+                                                              ce.value()),
+      nsContentUtils::ExtractFormAssociatedCustomElementValue(global,
                                                               ce.state()));
 }
 
