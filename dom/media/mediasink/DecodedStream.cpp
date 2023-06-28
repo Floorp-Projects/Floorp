@@ -1009,6 +1009,7 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
       forceBlack = true;
       // Override the frame's size (will be 0x0 otherwise)
       mData->mLastVideoImageDisplaySize = mInfo.mVideo.mDisplay;
+      LOG_DS(LogLevel::Debug, "No mLastVideoImage");
     }
     if (compensateEOS) {
       VideoSegment endSegment;
@@ -1023,6 +1024,12 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
           mData->mLastVideoImageDisplaySize,
           currentTime + (start + deviation - currentPosition).ToTimeDuration(),
           &endSegment, aPrincipalHandle, mPlaybackRate);
+      LOG_DS(LogLevel::Debug,
+             "compensateEOS: deviation %s, start %s, duration %" PRId64
+             ", mPlaybackRate %lf, sample rate %" PRId32,
+             deviation.ToString().get(), start.ToString().get(),
+             endSegment.GetDuration(), mPlaybackRate,
+             mData->mVideoTrack->mSampleRate);
       MOZ_ASSERT(endSegment.GetDuration() > 0);
       if (forceBlack) {
         endSegment.ReplaceWithDisabled();
