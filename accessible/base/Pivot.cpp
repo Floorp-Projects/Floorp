@@ -10,7 +10,6 @@
 #include "RemoteAccessible.h"
 #include "DocAccessible.h"
 #include "nsAccUtils.h"
-#include "nsIAccessiblePivot.h"
 
 #include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/HyperTextAccessibleBase.h"
