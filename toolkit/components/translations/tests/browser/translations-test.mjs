@@ -45,6 +45,25 @@ export function getSelectors() {
 }
 
 /**
+ * Provide longer defaults for the waitForCondition.
+ *
+ * @param {Function} callback
+ * @param {string} messages
+ */
+function waitForCondition(callback, message) {
+  const interval = 100;
+  // Use 4 times the defaults to guard against intermittents. Many of the tests rely on
+  // communication between the parent and child process, which is inherently async.
+  const maxTries = 50 * 4;
+  return ContentTaskUtils.waitForCondition(
+    callback,
+    message,
+    interval,
+    maxTries
+  );
+}
+
+/**
  * Asserts that a page was translated with a specific result.
  *
  * @param {string} message The assertion message.
@@ -53,7 +72,7 @@ export function getSelectors() {
  */
 export async function assertTranslationResult(message, getNode, translation) {
   try {
-    await ContentTaskUtils.waitForCondition(
+    await waitForCondition(
       () => translation === getNode()?.innerText,
       `Waiting for: "${translation}"`
     );

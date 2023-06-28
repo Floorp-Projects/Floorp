@@ -64,7 +64,7 @@ async function createDoc(html, options) {
   async function htmlMatches(message, html) {
     const expected = naivelyPrettify(html);
     try {
-      await BrowserTestUtils.waitForCondition(
+      await waitForCondition(
         () => naivelyPrettify(document.body.innerHTML) === expected,
         "Waiting for HTML to match."
       );
@@ -190,9 +190,7 @@ add_task(async function test_translated_title() {
 
   const translatedTitle = "THIS IS AN ACTUAL FULL PAGE.";
   try {
-    await BrowserTestUtils.waitForCondition(
-      () => document.title === translatedTitle
-    );
+    await waitForCondition(() => document.title === translatedTitle);
   } catch (error) {}
   is(document.title, translatedTitle, "The title was changed.");
 

@@ -12,16 +12,22 @@ add_task(async function test_about_translations_enabled() {
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
 
-      await ContentTaskUtils.waitForCondition(() => {
-        const trElement = document.querySelector(selectors.translationResult);
-        const trBlankElement = document.querySelector(
-          selectors.translationResultBlank
-        );
-        const { visibility: trVisibility } = window.getComputedStyle(trElement);
-        const { visibility: trBlankVisibility } =
-          window.getComputedStyle(trBlankElement);
-        return trVisibility === "hidden" && trBlankVisibility === "visible";
-      }, `Waiting for placeholder text to be visible."`);
+      await ContentTaskUtils.waitForCondition(
+        () => {
+          const trElement = document.querySelector(selectors.translationResult);
+          const trBlankElement = document.querySelector(
+            selectors.translationResultBlank
+          );
+          const { visibility: trVisibility } =
+            window.getComputedStyle(trElement);
+          const { visibility: trBlankVisibility } =
+            window.getComputedStyle(trBlankElement);
+          return trVisibility === "hidden" && trBlankVisibility === "visible";
+        },
+        `Waiting for placeholder text to be visible."`,
+        100,
+        200
+      );
 
       function checkElementIsVisible(expectVisible, name) {
         const expected = expectVisible ? "visible" : "hidden";
@@ -55,11 +61,16 @@ add_task(async function test_about_translations_disabled() {
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
 
-      await ContentTaskUtils.waitForCondition(() => {
-        const element = document.querySelector(selectors.translationResult);
-        const { visibility } = window.getComputedStyle(element);
-        return visibility === "hidden";
-      }, `Waiting for translated text to be hidden."`);
+      await ContentTaskUtils.waitForCondition(
+        () => {
+          const element = document.querySelector(selectors.translationResult);
+          const { visibility } = window.getComputedStyle(element);
+          return visibility === "hidden";
+        },
+        `Waiting for translated text to be hidden."`,
+        100,
+        200
+      );
 
       function checkElementIsInvisible(name) {
         const element = document.querySelector(selectors[name]);
@@ -90,7 +101,9 @@ add_task(async function test_about_translations_disabling() {
       info('Checking for the "no support" message.');
       await ContentTaskUtils.waitForCondition(
         () => document.querySelector(selectors.noSupportMessage),
-        'Waiting for the "no support" message.'
+        'Waiting for the "no support" message.',
+        100,
+        200
       );
 
       /** @type {HTMLSelectElement} */

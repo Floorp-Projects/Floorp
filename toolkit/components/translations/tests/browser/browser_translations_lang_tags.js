@@ -36,7 +36,7 @@ async function runLangTagsTest(
   });
   const actor = getTranslationsParent();
 
-  await TestUtils.waitForCondition(
+  await waitForCondition(
     async () => actor.languageState.detectedLanguages?.docLangTag,
     "Waiting for a document language tag to be found."
   );
