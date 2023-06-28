@@ -251,7 +251,7 @@ class SavePage extends Control {
         node.style.removeProperty("display");
       }
     }
-    this.message = "about-webrtc-save-page-msg";
+    this.message = "about-webrtc-save-page-complete-msg";
     this.messageArgs = { path: FilePicker.file.path };
     this.update();
   }
@@ -276,8 +276,8 @@ class DebugMode extends Control {
     try {
       const file = Services.prefs.getCharPref("media.webrtc.debug.log_file");
       this.message = state
-        ? "about-webrtc-debug-mode-on-state-msg"
-        : "about-webrtc-debug-mode-off-state-msg";
+        ? "about-webrtc-debug-mode-toggled-on-state-msg"
+        : "about-webrtc-debug-mode-toggled-off-state-msg";
       this.messageArgs = { path: file };
     } catch (e) {
       this.message = null;
@@ -311,10 +311,10 @@ class AecLogging extends Control {
     try {
       if (!state) {
         const file = WGI.aecDebugLogDir;
-        this.message = "about-webrtc-aec-logging-off-state-msg";
+        this.message = "about-webrtc-aec-logging-toggled-off-state-msg";
         this.messageArgs = { path: file };
       } else {
-        this.message = "about-webrtc-aec-logging-on-state-msg";
+        this.message = "about-webrtc-aec-logging-toggled-on-state-msg";
       }
     } catch (e) {
       this.message = null;
@@ -473,8 +473,8 @@ class ShowTab extends Control {
     ]);
     if (log.length) {
       const div = renderFoldableSection(logDiv, {
-        showMsg: "about-webrtc-log-show-msg",
-        hideMsg: "about-webrtc-log-hide-msg",
+        showMsg: "about-webrtc-log-section-show-msg",
+        hideMsg: "about-webrtc-log-section-hide-msg",
       });
       div.append(...log.map(line => renderText("p", line)));
       logDiv.append(div);
@@ -1539,8 +1539,8 @@ function renderRawICEStats(rndr, report) {
       renderElement("h4", {}, "about-webrtc-raw-candidates-heading"),
     ]);
     const foldSection = renderFoldableSection(section, {
-      showMsg: "about-webrtc-raw-cand-show-msg",
-      hideMsg: "about-webrtc-raw-cand-hide-msg",
+      showMsg: "about-webrtc-raw-cand-section-show-msg",
+      hideMsg: "about-webrtc-raw-cand-section-hide-msg",
     });
 
     // render raw candidates
@@ -1662,8 +1662,8 @@ class FoldEffect {
   constructor(
     target,
     {
-      showMsg = "about-webrtc-fold-show-msg",
-      hideMsg = "about-webrtc-fold-hide-msg",
+      showMsg = "about-webrtc-fold-default-show-msg",
+      hideMsg = "about-webrtc-fold-default-hide-msg",
       startsCollapsed = true,
     } = {}
   ) {
