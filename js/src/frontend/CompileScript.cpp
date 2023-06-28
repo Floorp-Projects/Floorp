@@ -154,12 +154,18 @@ already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     JS::CompilationStorage& compileStorage) {
+#ifdef DEBUG
+  fc->assertNativeStackLimitThread();
+#endif
   return CompileGlobalScriptToStencilImpl(fc, options, srcBuf, compileStorage);
 }
 
 already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf, JS::CompilationStorage& compileStorage) {
+#ifdef DEBUG
+  fc->assertNativeStackLimitThread();
+#endif
   return CompileGlobalScriptToStencilImpl(fc, options, srcBuf, compileStorage);
 }
 
@@ -167,6 +173,9 @@ already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     JS::CompilationStorage& compileStorage) {
+#ifdef DEBUG
+  fc->assertNativeStackLimitThread();
+#endif
   return CompileModuleScriptToStencilImpl(fc, optionsInput, srcBuf,
                                           compileStorage);
 }
@@ -174,6 +183,9 @@ already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
 already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
     JS::FrontendContext* fc, const JS::ReadOnlyCompileOptions& optionsInput,
     JS::SourceText<char16_t>& srcBuf, JS::CompilationStorage& compileStorage) {
+#ifdef DEBUG
+  fc->assertNativeStackLimitThread();
+#endif
   return CompileModuleScriptToStencilImpl(fc, optionsInput, srcBuf,
                                           compileStorage);
 }

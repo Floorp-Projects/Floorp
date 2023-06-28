@@ -6,6 +6,13 @@
 
 #include "frontend/FrontendContext.h"
 
+#ifdef _WIN32
+#  include <windows.h>
+#  include <process.h>  // GetCurrentThreadId
+#else
+#  include <pthread.h>  // pthread_self
+#endif
+
 #include "gc/GC.h"
 #include "js/AllocPolicy.h"         // js::ReportOutOfMemory
 #include "js/friend/StackLimits.h"  // js::ReportOverRecursed
@@ -61,6 +68,10 @@ void FrontendContext::setStackQuota(JS::NativeStackSize stackSize) {
     stackLimit_ = JS::GetNativeStackLimit(GetNativeStackBase(), stackSize - 1);
   }
 #endif  // !__wasi__
+
+#ifdef DEBUG
+  setNativeStackLimitThread();
+#endif
 }
 
 bool FrontendContext::allocateOwnedPool() {
@@ -164,6 +175,10 @@ void FrontendContext::setCurrentJSContext(JSContext* cx) {
   nameCollectionPool_ = &cx->frontendCollectionPool();
   scriptDataTableHolder_ = &cx->runtime()->scriptDataTableHolder();
   stackLimit_ = cx->stackLimitForCurrentPrincipal();
+
+#ifdef DEBUG
+  setNativeStackLimitThread();
+#endif
 }
 
 void FrontendContext::convertToRuntimeError(
@@ -195,6 +210,28 @@ void FrontendContext::linkWithJSContext(JSContext* cx) {
     cx->setFrontendErrors(&errors_);
   }
 }
+
+#ifdef DEBUG
+static size_t GetTid() {
+#  if defined(_WIN32)
+  return size_t(GetCurrentThreadId());
+#  else
+  return size_t(pthread_self());
+#  endif
+}
+
+void FrontendContext::setNativeStackLimitThread() {
+  stackLimitThreadId_.emplace(GetTid());
+}
+
+void FrontendContext::assertNativeStackLimitThread() {
+  if (!stackLimitThreadId_.isSome()) {
+    return;
+  }
+
+  MOZ_ASSERT(*stackLimitThreadId_ == GetTid());
+}
+#endif
 
 #ifdef __wasi__
 void FrontendContext::incWasiRecursionDepth() {
