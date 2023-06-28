@@ -40,10 +40,15 @@ class RecentlyClosedTabsStorageTest {
     private lateinit var database: RecentlyClosedTabsDatabase
     private lateinit var crashReporting: CrashReporting
 
-    private class TestEngineSessionStateStorage : EngineSessionStateStorage {
+    private class TestEngineSessionStateStorage() : EngineSessionStateStorage {
         val data: MutableMap<String, EngineSessionState?> = mutableMapOf()
+        var throwsOutOfMemoryOnWrite: Boolean = false
 
         override suspend fun write(uuid: String, state: EngineSessionState): Boolean {
+            if (throwsOutOfMemoryOnWrite) {
+                throw OutOfMemoryError()
+            }
+
             if (uuid.contains("fail")) {
                 return false
             }
@@ -285,6 +290,33 @@ class RecentlyClosedTabsStorageTest {
                 title = "Pocket",
                 url = "https://pocket.com",
                 lastAccess = System.currentTimeMillis(),
+            ),
+        )
+
+        storage.addTabState(closedTab)
+        val tabs = storage.getTabs().first()
+        // if it's empty, we know state write failed
+        assertEquals(0, engineStateStorage.data.size)
+        // but the tab was still written into the database.
+        assertEquals(1, tabs.size)
+    }
+
+    @Test
+    fun testAddingTabWithEngineStateStorageCausingOOM() = runTestOnMain {
+        // OutOfMemoryError on EngineSessionStateStorage::write will cause test engine session
+        //  storage to fail on writing engineSessionState.
+        engineStateStorage.throwsOutOfMemoryOnWrite = true
+
+        // Test tab
+        val engineState1: EngineSessionState = mock()
+        val t1 = System.currentTimeMillis()
+        val closedTab = RecoverableTab(
+            engineSessionState = engineState1,
+            state = TabState(
+                id = "first-tab",
+                title = "Mozilla",
+                url = "https://mozilla.org",
+                lastAccess = t1,
             ),
         )
 

@@ -122,8 +122,13 @@ class RecentlyClosedTabsStorage(
         // itself in the db - that will allow user to restore it with a "fresh" engine state.
         // That's a form of data loss, but not much we can do here other than log.
         tab.engineSessionState?.let {
-            if (!engineStateStorage.write(entity.uuid, it)) {
-                logger.warn("Failed to write engine session state for tab UUID = ${entity.uuid}")
+            try {
+                if (!engineStateStorage.write(entity.uuid, it)) {
+                    logger.warn("Failed to write engine session state for tab UUID = ${entity.uuid}")
+                }
+            } catch (e: OutOfMemoryError) {
+                crashReporting.submitCaughtException(e)
+                logger.error("Failed to save state to disk due to OutOfMemoryError", e)
             }
         }
         database.value.recentlyClosedTabDao().insertTab(entity)
