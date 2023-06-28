@@ -71,18 +71,18 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
   Result<FileSystemDirectoryListing, QMResult> GetDirectoryEntries(
       const EntryId& aParent, PageNumber aPage) const override;
 
+  Result<bool, QMResult> RemoveDirectory(const FileSystemChildMetadata& aHandle,
+                                         bool aRecursive) override;
+
+  Result<bool, QMResult> RemoveFile(
+      const FileSystemChildMetadata& aHandle) override;
+
   Result<EntryId, QMResult> RenameEntry(const FileSystemEntryMetadata& aHandle,
                                         const Name& aNewName) override;
 
   Result<EntryId, QMResult> MoveEntry(
       const FileSystemEntryMetadata& aHandle,
       const FileSystemChildMetadata& aNewDesignation) override;
-
-  Result<bool, QMResult> RemoveDirectory(const FileSystemChildMetadata& aHandle,
-                                         bool aRecursive) override;
-
-  Result<bool, QMResult> RemoveFile(
-      const FileSystemChildMetadata& aHandle) override;
 
   Result<Path, QMResult> Resolve(
       const FileSystemEntryPair& aEndpoints) const override;
@@ -113,13 +113,13 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
  protected:
   virtual Result<bool, QMResult> DoesFileIdExist(const FileId& aFileId) const;
 
+  virtual nsresult RemoveFileId(const FileId& aFileId);
+
   virtual Result<Usage, QMResult> GetUsagesOfDescendants(
       const EntryId& aEntryId) const;
 
   virtual Result<nsTArray<FileId>, QMResult> FindFilesUnderEntry(
       const EntryId& aEntryId) const;
-
-  virtual nsresult RemoveFileId(const FileId& aFileId);
 
   nsresult SetUsageTracking(const FileId& aFileId, bool aTracked);
 
@@ -138,16 +138,16 @@ class FileSystemDatabaseManagerVersion001 : public FileSystemDatabaseManager {
       const FileSystemEntryMetadata& aHandle,
       const FileSystemChildMetadata& aNewDesignation);
 
+  nsresult PrepareRenameEntry(const FileSystemConnection& aConnection,
+                              const FileSystemDataManager* const aDataManager,
+                              const FileSystemEntryMetadata& aHandle,
+                              const Name& aNewName, bool aIsFile);
+
   nsresult PrepareMoveEntry(const FileSystemConnection& aConnection,
                             const FileSystemDataManager* const aDataManager,
                             const FileSystemEntryMetadata& aHandle,
                             const FileSystemChildMetadata& aNewDesignation,
                             bool aIsFile);
-
-  nsresult PrepareRenameEntry(const FileSystemConnection& aConnection,
-                              const FileSystemDataManager* const aDataManager,
-                              const FileSystemEntryMetadata& aHandle,
-                              const Name& aNewName, bool aIsFile);
 
   // This is a raw pointer since we're owned by the FileSystemDataManager.
   FileSystemDataManager* MOZ_NON_OWNING_REF mDataManager;

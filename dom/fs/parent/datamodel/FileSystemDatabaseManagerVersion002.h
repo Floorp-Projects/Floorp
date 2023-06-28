@@ -31,6 +31,13 @@ class FileSystemDatabaseManagerVersion002
   static Result<Usage, QMResult> GetFileUsage(
       const FileSystemConnection& aConnection);
 
+  Result<EntryId, QMResult> RenameEntry(const FileSystemEntryMetadata& aHandle,
+                                        const Name& aNewName) override;
+
+  Result<EntryId, QMResult> MoveEntry(
+      const FileSystemEntryMetadata& aHandle,
+      const FileSystemChildMetadata& aNewDesignation) override;
+
   Result<EntryId, QMResult> GetEntryId(
       const FileSystemChildMetadata& aHandle) const override;
 
@@ -46,23 +53,16 @@ class FileSystemDatabaseManagerVersion002
   nsresult MergeFileId(const EntryId& aEntryId, const FileId& aFileId,
                        bool aAbort) override;
 
-  Result<EntryId, QMResult> MoveEntry(
-      const FileSystemEntryMetadata& aHandle,
-      const FileSystemChildMetadata& aNewDesignation) override;
-
-  Result<EntryId, QMResult> RenameEntry(const FileSystemEntryMetadata& aHandle,
-                                        const Name& aNewName) override;
-
  protected:
+  Result<bool, QMResult> DoesFileIdExist(const FileId& aFileId) const override;
+
+  nsresult RemoveFileId(const FileId& aFileId) override;
+
   Result<Usage, QMResult> GetUsagesOfDescendants(
       const EntryId& aEntryId) const override;
 
   Result<nsTArray<FileId>, QMResult> FindFilesUnderEntry(
       const EntryId& aEntryId) const override;
-
-  Result<bool, QMResult> DoesFileIdExist(const FileId& aFileId) const override;
-
-  nsresult RemoveFileId(const FileId& aFileId) override;
 };
 
 }  // namespace mozilla::dom::fs::data
