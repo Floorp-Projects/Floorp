@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { css, html } from "chrome://global/content/vendor/lit.all.mjs";
+import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { ViewPage } from "./viewpage.mjs";
 
 class OverviewInView extends ViewPage {
@@ -17,19 +17,19 @@ class OverviewInView extends ViewPage {
 
   disconnectedCallback() {}
 
-  static get styles() {
-    return css`
-      div {
-        border: 1px solid black;
-        border-radius: 10px;
-        width: 100%;
-      }
-  }
-  `;
-  }
-
   render() {
-    return html` <slot></slot> `;
+    return html`
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/firefoxview-next.css"
+      />
+      <div class="sticky-container bottom-fade">
+        <h2 class="page-header" data-l10n-id="firefoxview-overview-header"></h2>
+      </div>
+      <div class="cards-container">
+        <slot></slot>
+      </div>
+    `;
   }
 }
 customElements.define("view-overview", OverviewInView);
