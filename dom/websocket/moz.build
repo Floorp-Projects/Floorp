@@ -25,6 +25,7 @@ MOCHITEST_CHROME_MANIFESTS += [
 
 MOCHITEST_MANIFESTS += [
     "tests/mochitest.ini",
+    "tests/mochitest_http2.ini",
     "tests/websocket_hybi/mochitest.ini",
 ]
 

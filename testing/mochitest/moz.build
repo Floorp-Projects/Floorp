@@ -230,6 +230,29 @@ TEST_HARNESS_FILES.testing.mochitest.DoHServer.dns_packet += [
     "../xpcshell/dns-packet/types.js",
 ]
 
+TEST_HARNESS_FILES.testing.mochitest.Http2Server.node_ws += [
+    "../xpcshell/node-ws/browser.js",
+    "../xpcshell/node-ws/index.js",
+    "../xpcshell/node-ws/package.json",
+    "../xpcshell/node-ws/wrapper.mjs",
+]
+
+TEST_HARNESS_FILES.testing.mochitest.Http2Server.node_ws.lib += [
+    "../xpcshell/node-ws/lib/buffer-util.js",
+    "../xpcshell/node-ws/lib/constants.js",
+    "../xpcshell/node-ws/lib/event-target.js",
+    "../xpcshell/node-ws/lib/extension.js",
+    "../xpcshell/node-ws/lib/limiter.js",
+    "../xpcshell/node-ws/lib/permessage-deflate.js",
+    "../xpcshell/node-ws/lib/receiver.js",
+    "../xpcshell/node-ws/lib/sender.js",
+    "../xpcshell/node-ws/lib/stream.js",
+    "../xpcshell/node-ws/lib/subprotocol.js",
+    "../xpcshell/node-ws/lib/validation.js",
+    "../xpcshell/node-ws/lib/websocket-server.js",
+    "../xpcshell/node-ws/lib/websocket.js",
+]
+
 TEST_HARNESS_FILES.testing.mochitest.DoHServer.node_ip += [
     "../xpcshell/node_ip/package.json",
 ]
