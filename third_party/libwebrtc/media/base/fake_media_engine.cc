@@ -463,36 +463,14 @@ VoiceMediaChannel* FakeVoiceEngine::CreateMediaChannel(
 
   FakeVoiceMediaChannel* ch =
       new FakeVoiceMediaChannel(role, this, options, call->network_thread());
-  switch (role) {
-    case MediaChannel::Role::kSend:
-      send_channels_.push_back(ch);
-      break;
-    case MediaChannel::Role::kReceive:
-      receive_channels_.push_back(ch);
-      break;
-    default:
-      // kBoth isn't supported any more.
-      RTC_CHECK_NOTREACHED();
-  }
+  channels_.push_back(ch);
   return ch;
 }
-FakeVoiceMediaChannel* FakeVoiceEngine::GetSendChannel(size_t index) {
-  return (send_channels_.size() > index) ? send_channels_[index] : NULL;
-}
-FakeVoiceMediaChannel* FakeVoiceEngine::GetReceiveChannel(size_t index) {
-  return (receive_channels_.size() > index) ? receive_channels_[index] : NULL;
+FakeVoiceMediaChannel* FakeVoiceEngine::GetChannel(size_t index) {
+  return (channels_.size() > index) ? channels_[index] : NULL;
 }
 void FakeVoiceEngine::UnregisterChannel(VoiceMediaChannel* channel) {
-  switch (channel->role()) {
-    case MediaChannel::Role::kSend:
-      send_channels_.erase(absl::c_find(send_channels_, channel));
-      break;
-    case MediaChannel::Role::kReceive:
-      receive_channels_.erase(absl::c_find(receive_channels_, channel));
-      break;
-    default:
-      RTC_CHECK_NOTREACHED();
-  }
+  channels_.erase(absl::c_find(channels_, channel));
 }
 const std::vector<AudioCodec>& FakeVoiceEngine::send_codecs() const {
   return send_codecs_;
@@ -557,41 +535,16 @@ VideoMediaChannel* FakeVideoEngine::CreateMediaChannel(
 
   FakeVideoMediaChannel* ch =
       new FakeVideoMediaChannel(role, this, options, call->network_thread());
-  switch (role) {
-    case MediaChannel::Role::kSend:
-      send_channels_.emplace_back(ch);
-      break;
-    case MediaChannel::Role::kReceive:
-      receive_channels_.emplace_back(ch);
-      break;
-    default:
-      // kBoth isn't supported
-      RTC_CHECK_NOTREACHED();
-  }
+  channels_.emplace_back(ch);
   return ch;
 }
-FakeVideoMediaChannel* FakeVideoEngine::GetSendChannel(size_t index) {
-  return (send_channels_.size() > index) ? send_channels_[index] : nullptr;
-}
-FakeVideoMediaChannel* FakeVideoEngine::GetReceiveChannel(size_t index) {
-  return (receive_channels_.size() > index) ? receive_channels_[index]
-                                            : nullptr;
+FakeVideoMediaChannel* FakeVideoEngine::GetChannel(size_t index) {
+  return (channels_.size() > index) ? channels_[index] : nullptr;
 }
 void FakeVideoEngine::UnregisterChannel(VideoMediaChannel* channel) {
-  switch (channel->role()) {
-    case MediaChannel::Role::kSend: {
-      auto it = absl::c_find(send_channels_, channel);
-      RTC_DCHECK(it != send_channels_.end());
-      send_channels_.erase(it);
-    } break;
-    case MediaChannel::Role::kReceive: {
-      auto it = absl::c_find(receive_channels_, channel);
-      RTC_DCHECK(it != receive_channels_.end());
-      receive_channels_.erase(it);
-    } break;
-    default:
-      RTC_CHECK_NOTREACHED();
-  }
+  auto it = absl::c_find(channels_, channel);
+  RTC_DCHECK(it != channels_.end());
+  channels_.erase(it);
 }
 std::vector<VideoCodec> FakeVideoEngine::send_codecs(bool use_rtx) const {
   return send_codecs_;
@@ -644,17 +597,11 @@ void FakeMediaEngine::SetVideoCodecs(const std::vector<VideoCodec>& codecs) {
   video_->SetRecvCodecs(codecs);
 }
 
-FakeVoiceMediaChannel* FakeMediaEngine::GetVoiceSendChannel(size_t index) {
-  return voice_->GetSendChannel(index);
+FakeVoiceMediaChannel* FakeMediaEngine::GetVoiceChannel(size_t index) {
+  return voice_->GetChannel(index);
 }
-FakeVideoMediaChannel* FakeMediaEngine::GetVideoSendChannel(size_t index) {
-  return video_->GetSendChannel(index);
-}
-FakeVoiceMediaChannel* FakeMediaEngine::GetVoiceReceiveChannel(size_t index) {
-  return voice_->GetReceiveChannel(index);
-}
-FakeVideoMediaChannel* FakeMediaEngine::GetVideoReceiveChannel(size_t index) {
-  return video_->GetReceiveChannel(index);
+FakeVideoMediaChannel* FakeMediaEngine::GetVideoChannel(size_t index) {
+  return video_->GetChannel(index);
 }
 
 void FakeMediaEngine::set_fail_create_channel(bool fail) {
