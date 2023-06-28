@@ -191,6 +191,13 @@ Result<bool, QMResult> IsSame(const FileSystemConnection& aConnection,
                               const FileSystemChildMetadata& aNewHandle,
                               bool aIsFile);
 
+Result<Path, QMResult> ResolveReversedPath(
+    const FileSystemConnection& aConnection,
+    const FileSystemEntryPair& aEndpoints);
+
+nsresult GetFileAttributes(const FileSystemConnection& aConnection,
+                           const EntryId& aEntryId, ContentType& aType);
+
 void TryRemoveDuringIdleMaintenance(const nsTArray<FileId>& aItemToRemove);
 
 }  // namespace data
