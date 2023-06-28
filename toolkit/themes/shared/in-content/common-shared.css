@@ -27,6 +27,7 @@
   --in-content-border-invalid: var(--red-50);
   --in-content-border-color: #d7d7db;
   --in-content-error-text-color: #c50042;
+  --in-content-warning-icon-color: #ffa436;
   --in-content-success-icon-color: #2ac3a2;
   --in-content-link-color: var(--in-content-primary-button-background);
   --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
@@ -144,6 +145,7 @@
     --in-content-border-invalid: rgb(255,132,139);
 
     --in-content-error-text-color: #FF9AA2;
+    --in-content-warning-icon-color: #ffbd4f;
     --in-content-success-icon-color: #54FFBD;
 
     --in-content-icon-color: rgb(251,251,254);

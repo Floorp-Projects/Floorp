@@ -992,7 +992,7 @@ class MigrationUtils {
 
     if (!importedAddonIDs.length) {
       return [
-        lazy.MigrationWizardConstants.PROGRESS_VALUE.ERROR,
+        lazy.MigrationWizardConstants.PROGRESS_VALUE.WARNING,
         importedAddonIDs,
       ];
     }

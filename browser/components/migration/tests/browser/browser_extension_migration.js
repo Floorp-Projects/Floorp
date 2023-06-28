@@ -20,8 +20,6 @@ let gFluentStrings = new Localization([
  * @param {object} description
  *   An object to express more details of how the resource group should be
  *   displayed.
- * @param {string[]} description.progressIconClasses
- *   The CSS classes that are expected to be applied to the progress icon.
  * @param {string} description.message
  *   The message that should be displayed for the resource group. This message
  *   maybe be contained in different elements depending on the state.
@@ -47,18 +45,12 @@ function assertExtensionsProgressState(wizard, state, description) {
   );
 
   let progressIcon = progressGroup.querySelector(".progress-icon");
-  for (let iconClass of description.progressIconClasses) {
-    Assert.ok(
-      progressIcon.classList.contains(iconClass),
-      `Progress icon should have class ${iconClass}`
-    );
-  }
-
   let successText = progressGroup.querySelector("span.success-text");
   let supportLink = progressGroup.querySelector(".support-text");
   let extensionsSuccessLink = progressGroup.querySelector("a.success-text");
 
   if (state == MigrationWizardConstants.PROGRESS_VALUE.SUCCESS) {
+    Assert.stringMatches(progressIcon.getAttribute("state"), "success");
     Assert.stringMatches(successText.textContent, "");
 
     Assert.stringMatches(extensionsSuccessLink.href, "about:addons");
@@ -67,11 +59,13 @@ function assertExtensionsProgressState(wizard, state, description) {
       description.message
     );
     Assert.stringMatches(supportLink.textContent, "");
-  } else if (state == MigrationWizardConstants.PROGRESS_VALUE.ERROR) {
+  } else if (state == MigrationWizardConstants.PROGRESS_VALUE.WARNING) {
+    Assert.stringMatches(progressIcon.getAttribute("state"), "warning");
     Assert.stringMatches(successText.textContent, description.message);
     Assert.stringMatches(supportLink.textContent, description.linkText);
     Assert.stringMatches(supportLink.href, description.linkURL);
   } else if (state == MigrationWizardConstants.PROGRESS_VALUE.INFO) {
+    Assert.stringMatches(progressIcon.getAttribute("state"), "info");
     Assert.stringMatches(extensionsSuccessLink.href, description.linkURL);
     Assert.stringMatches(
       extensionsSuccessLink.textContent,
@@ -109,9 +103,8 @@ add_task(async function test_extension_migration_no_matched_extensions() {
     await wizardDone;
     assertExtensionsProgressState(
       wizard,
-      MigrationWizardConstants.PROGRESS_VALUE.ERROR,
+      MigrationWizardConstants.PROGRESS_VALUE.WARNING,
       {
-        progressIconClasses: ["completed", "error-icon"],
         message: await gFluentStrings.formatValue(
           "migration-wizard-progress-no-matched-extensions"
         ),
@@ -160,7 +153,6 @@ add_task(
         wizard,
         MigrationWizardConstants.PROGRESS_VALUE.INFO,
         {
-          progressIconClasses: ["completed"],
           message: await gFluentStrings.formatValue(
             "migration-wizard-progress-partial-success-extensions",
             {
@@ -211,7 +203,6 @@ add_task(async function test_extension_migration_fully_matched_extensions() {
       wizard,
       MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
       {
-        progressIconClasses: ["completed"],
         message: await gFluentStrings.formatValue(
           "migration-wizard-progress-success-extensions",
           {

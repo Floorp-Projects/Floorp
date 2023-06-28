@@ -390,9 +390,10 @@ function assertQuantitiesShown(wizard, expectedResourceTypes) {
       let successText =
         progressGroup.querySelector(".success-text").textContent;
 
-      Assert.ok(
-        progressIcon.classList.contains("completed"),
-        "Should be showing completed state."
+      Assert.notEqual(
+        progressIcon.getAttribute("state"),
+        "loading",
+        "Should no longer be in the loading state."
       );
 
       if (

@@ -485,8 +485,9 @@
         );
         ok(!isHidden(bookmarksGroup), "Bookmarks group should be visible");
         let progressIcon = bookmarksGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "success",
           "Progress should be completed"
         );
         is(
@@ -506,8 +507,9 @@
         );
         ok(!isHidden(historyGroup), "History group should be visible");
         progressIcon = historyGroup.querySelector(".progress-icon");
-        ok(
-          !progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "loading",
           "Progress should be still be underway"
         );
         is(historyGroup.querySelector(".success-text").textContent.trim(), "");
@@ -516,9 +518,10 @@
         let extensionsGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS);
         ok(!isHidden(extensionsGroup), "Extensions group should be visible");
         progressIcon = extensionsGroup.querySelector(".progress-icon");
-        ok(
-          !progressIcon.classList.contains("completed"),
-          "Progress should still be underway"
+        is(
+          progressIcon.getAttribute("state"),
+          "loading",
+          "Progress should be still be underway"
         );
         is(extensionsGroup.querySelector("a.success-text").textContent.trim(), "");
         is(extensionsGroup.querySelector("span.success-text").textContent.trim(), "");
@@ -529,8 +532,9 @@
         );
         ok(!isHidden(formDataGroup), "Form data group should be visible");
         progressIcon = formDataGroup.querySelector(".progress-icon");
-        ok(
-          !progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "loading",
           "Progress should be still be underway"
         );
         is(formDataGroup.querySelector(".success-text").textContent.trim(), "");
@@ -596,8 +600,9 @@
         );
         ok(!isHidden(bookmarksGroup), "Bookmarks group should be visible");
         let progressIcon = bookmarksGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "success",
           "Progress should be completed"
         );
         is(
@@ -611,8 +616,9 @@
         );
         ok(!isHidden(passwordsGroup), "Passwords group should be visible");
         progressIcon = passwordsGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "success",
           "Progress should be completed"
         );
         is(
@@ -630,8 +636,9 @@
         let extensionsDataGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS);
         ok(!isHidden(extensionsDataGroup), "Extensions data group should be visible");
         progressIcon = extensionsDataGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "success",
           "Progress should be completed"
         );
         is(
@@ -648,8 +655,9 @@
         );
         ok(!isHidden(formDataGroup), "Form data group should be visible");
         progressIcon = formDataGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "success",
           "Progress should be completed"
         );
         is(
@@ -700,9 +708,10 @@
         let extensionsGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS);
         ok(!isHidden(extensionsGroup), "Extensions group should be visible");
         let progressIcon = extensionsGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
-          "Progress should be completed"
+        is(
+          progressIcon.getAttribute("state"),
+          "info",
+          "Progress should be completed, in info state"
         );
         is(
           extensionsGroup.querySelector("a.success-text").textContent,
@@ -747,7 +756,7 @@
           key: "chrome",
           progress: {
             [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS]: {
-              value: MigrationWizardConstants.PROGRESS_VALUE.ERROR,
+              value: MigrationWizardConstants.PROGRESS_VALUE.WARNING,
               message: EXTENSIONS_ERROR_STRING,
               linkText: EXTENSIONS_SUPPORT_STRING,
               linkURL: EXTENSIONS_SUPPORT_HREF,
@@ -763,14 +772,7 @@
         let extensionsGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS);
         ok(!isHidden(extensionsGroup), "Extensions group should be visible");
         let progressIcon = extensionsGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
-          "Progress should be completed"
-        );
-        ok(
-          progressIcon.classList.contains("error-icon"),
-          "Error icon should be showing"
-        )
+        is(progressIcon.getAttribute("state"), "warning");
         is(
           extensionsGroup.querySelector("a.success-text").textContent,
           ""
@@ -839,8 +841,9 @@
         );
         ok(!isHidden(passwordsFromFileGroup), "Passwords from file group should be visible");
         let progressIcon = passwordsFromFileGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "success",
           "Progress should be completed"
         );
         is(
@@ -858,8 +861,9 @@
         );
         ok(!isHidden(passwordsNewGroup), "Passwords new group should be visible");
         progressIcon = passwordsNewGroup.querySelector(".progress-icon");
-        ok(
-          !progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "loading",
           "Progress should be still be underway"
         );
         is(passwordsNewGroup.querySelector(".success-text").textContent.trim(), "");
@@ -908,8 +912,9 @@
         );
         ok(!isHidden(passwordsNewGroup), "Passwords new group should be visible");
         let progressIcon = passwordsNewGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "success",
           "Progress should be completed"
         );
         is(
@@ -922,8 +927,9 @@
         );
         ok(!isHidden(passwordsUpdatedGroup), "Passwords updated group should be visible");
         progressIcon = passwordsUpdatedGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "success",
           "Progress should be completed"
         );
         is(
@@ -1217,8 +1223,9 @@
         );
         ok(!isHidden(bookmarksGroup), "Bookmarks group should be visible");
         let progressIcon = bookmarksGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "success",
           "Progress should be completed"
         );
         is(
@@ -1238,9 +1245,10 @@
         });
 
         ok(!isHidden(bookmarksGroup), "Bookmarks group should be visible");
-        ok(
-          !progressIcon.classList.contains("completed"),
-          "Progress should still be underway"
+        is(
+          progressIcon.getAttribute("state"),
+          "loading",
+          "Progress should be still be underway"
         );
         is(
           bookmarksGroup.querySelector(".success-text").textContent.trim(),
@@ -1274,8 +1282,9 @@
         );
         ok(!isHidden(passwordsGroup), "Passwords group should be visible");
         let progressIcon = passwordsGroup.querySelector(".progress-icon");
-        ok(
-          progressIcon.classList.contains("completed"),
+        is(
+          progressIcon.getAttribute("state"),
+          "success",
           "Progress should be completed"
         );
         is(
@@ -1295,9 +1304,10 @@
         });
 
         ok(!isHidden(passwordsGroup), "Passwords group should be visible");
-        ok(
-          !progressIcon.classList.contains("completed"),
-          "Progress should still be underway"
+        is(
+          progressIcon.getAttribute("state"),
+          "loading",
+          "Progress should be still be underway"
         );
         is(
           passwordsGroup.querySelector(".success-text").textContent.trim(),

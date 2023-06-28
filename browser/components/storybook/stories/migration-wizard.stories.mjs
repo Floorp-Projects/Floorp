@@ -353,7 +353,7 @@ ExtensionsImportFailure.args = {
         message: "From the last 180 days",
       },
       [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS]: {
-        value: MigrationWizardConstants.PROGRESS_VALUE.ERROR,
+        value: MigrationWizardConstants.PROGRESS_VALUE.WARNING,
         message: "No matching extensions",
         linkText: "Browse extensions for Firefox",
         linkURL: "https://addons.mozilla.org/",
