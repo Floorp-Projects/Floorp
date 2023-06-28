@@ -124,13 +124,14 @@ class FileSystemDataManager
 
   Result<bool, QMResult> IsLocked(const EntryId& aEntryId) const;
 
-  nsresult LockExclusive(const EntryId& aEntryId);
+  Result<FileId, QMResult> LockExclusive(const EntryId& aEntryId);
 
   void UnlockExclusive(const EntryId& aEntryId);
 
-  nsresult LockShared(const EntryId& aEntryId);
+  Result<FileId, QMResult> LockShared(const EntryId& aEntryId);
 
-  void UnlockShared(const EntryId& aEntryId);
+  void UnlockShared(const EntryId& aEntryId, const FileId& aFileId,
+                    bool aAbort);
 
  protected:
   virtual ~FileSystemDataManager();

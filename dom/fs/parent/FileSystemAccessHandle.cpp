@@ -7,6 +7,7 @@
 #include "FileSystemAccessHandle.h"
 
 #include "FileSystemDatabaseManager.h"
+#include "FileSystemParentTypes.h"
 #include "mozilla/Result.h"
 #include "mozilla/dom/FileSystemDataManager.h"
 #include "mozilla/dom/FileSystemHelpers.h"
@@ -168,10 +169,11 @@ bool FileSystemAccessHandle::IsInactive() const {
 
 RefPtr<FileSystemAccessHandle::InitPromise>
 FileSystemAccessHandle::BeginInit() {
-  QM_TRY(MOZ_TO_RESULT(mDataManager->LockExclusive(mEntryId)),
-         [](const nsresult aRv) {
-           return InitPromise::CreateAndReject(aRv, __func__);
-         });
+  QM_TRY_UNWRAP(fs::FileId fileId, mDataManager->LockExclusive(mEntryId),
+                [](const auto& aRv) {
+                  return InitPromise::CreateAndReject(ToNSResult(aRv),
+                                                      __func__);
+                });
 
   mLocked = true;
 

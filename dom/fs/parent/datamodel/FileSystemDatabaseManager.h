@@ -175,7 +175,7 @@ class FileSystemDatabaseManager {
    * @brief Make sure EntryId maps to a FileId. This method should be called
    * before locking is attempted.
    */
-  virtual nsresult EnsureFileId(const EntryId& aEntryId) = 0;
+  virtual Result<FileId, QMResult> EnsureFileId(const EntryId& aEntryId) = 0;
 
   /**
    * @brief To support moves in metadata, the actual files on disk are tagged
