@@ -829,7 +829,7 @@ Result<EntryId, QMResult> FileSystemDatabaseManagerVersion001::GetOrCreateFile(
   QM_TRY_UNWRAP(exists, DoesFileExist(mConnection, aHandle));
 
   if (exists) {
-    return FindEntryId(mConnection, aHandle, true);
+    QM_TRY_RETURN(FindEntryId(mConnection, aHandle, true));
   }
 
   if (!aCreate) {
@@ -1288,14 +1288,14 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveFile(
     return Err(QMResult(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR));
   }
 
-  QM_TRY_INSPECT(const FileId& fileId, GetFileId(entryId));
-  const nsTArray<FileId>& diskItems = {fileId};
+  QM_TRY_INSPECT(const nsTArray<FileId>& diskItems,
+                 FindFilesUnderEntry(entryId));
 
   QM_TRY_UNWRAP(Usage usage, GetUsagesOfDescendants(entryId));
 
   nsTArray<FileId> failedRemovals;
   QM_TRY_UNWRAP(DebugOnly<Usage> removedUsage,
-                mFileManager->RemoveFiles({fileId}, failedRemovals));
+                mFileManager->RemoveFiles(diskItems, failedRemovals));
 
   // We only check the most common case. This can fail spuriously if an external
   // application writes to the file, or OS reports zero size due to corruption.
@@ -1378,6 +1378,8 @@ nsresult FileSystemDatabaseManagerVersion001::PrepareMoveEntry(
 
   QM_TRY(QM_TO_RESULT(ClearDestinationIfNotLocked(aConnection, aDataManager,
                                                   aHandle, aNewDesignation)));
+
+  // XXX: This should be before clearing the target
 
   // To prevent cyclic paths, we check that there is no path from
   // the item to be moved to the destination folder.

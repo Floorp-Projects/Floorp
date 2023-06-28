@@ -449,9 +449,8 @@ Result<FileId, QMResult> FileSystemDataManager::LockShared(
     return Err(QMResult(NS_ERROR_UNEXPECTED));
   }
 
-  // TODO: Change to EnsureTemporaryFileId when temporary files are implemented.
   QM_TRY_INSPECT(const FileId& fileId,
-                 mDatabaseManager->EnsureFileId(aEntryId));
+                 mDatabaseManager->EnsureTemporaryFileId(aEntryId));
 
   // If the file has been removed, we should get a file not found error.
   // Otherwise, if usage tracking cannot be started because file size is not

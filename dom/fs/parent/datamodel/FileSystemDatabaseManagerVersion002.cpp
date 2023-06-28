@@ -35,7 +35,7 @@ namespace {
 Result<FileId, QMResult> GetFileId002(const FileSystemConnection& aConnection,
                                       const EntryId& aEntryId) {
   const nsLiteralCString fileIdQuery =
-      "SELECT fileId FROM FileIds WHERE handle = :entryId ;"_ns;
+      "SELECT fileId FROM MainFiles WHERE handle = :entryId ;"_ns;
 
   QM_TRY_UNWRAP(ResultStatement stmt,
                 ResultStatement::Create(aConnection, fileIdQuery));
@@ -43,13 +43,12 @@ Result<FileId, QMResult> GetFileId002(const FileSystemConnection& aConnection,
   QM_TRY_UNWRAP(bool moreResults, stmt.ExecuteStep());
 
   if (!moreResults) {
-    return FileId(aEntryId);
+    return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
   }
 
-  // XXX: Introduce GetFileIdByColumn
-  QM_TRY_UNWRAP(EntryId fileId, stmt.GetEntryIdByColumn(/* Column */ 0u));
+  QM_TRY_INSPECT(const FileId& fileId, stmt.GetFileIdByColumn(/* Column */ 0u));
 
-  return FileId(fileId);
+  return fileId;
 }
 
 Result<bool, QMResult> DoesFileIdExist(const FileSystemConnection& aConnection,
