@@ -211,7 +211,8 @@ mozilla::ipc::IPCResult FileSystemManagerParent::RecvGetWritable(
   fs::Path path;
   nsCOMPtr<nsIFile> file;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             entryId, type, lastModifiedMilliSeconds, path, file)),
+             entryId, fileId, /* aAsCopy */ false, type,
+             lastModifiedMilliSeconds, path, file)),
          IPC_OK(), reportError);
 
   if (LOG_ENABLED()) {
@@ -264,18 +265,25 @@ IPCResult FileSystemManagerParent::RecvGetFile(
 
   // You can create a File with getFile() even if the file is locked
   // XXX factor out this part of the code for accesshandle/ and getfile
-  auto reportError = [aResolver](nsresult rv) {
+  auto reportError = [aResolver](const auto& rv) {
     LOG(("getFile() Failed!"));
-    aResolver(rv);
+    aResolver(ToNSResult(rv));
   };
+
+  const auto& entryId = aRequest.entryId();
+
+  QM_TRY_INSPECT(
+      const fs::FileId& fileId,
+      mDataManager->MutableDatabaseManagerPtr()->EnsureFileId(entryId),
+      IPC_OK(), reportError);
 
   fs::ContentType type;
   fs::TimeStamp lastModifiedMilliSeconds;
   fs::Path path;
   nsCOMPtr<nsIFile> fileObject;
   QM_TRY(MOZ_TO_RESULT(mDataManager->MutableDatabaseManagerPtr()->GetFile(
-             aRequest.entryId(), type, lastModifiedMilliSeconds, path,
-             fileObject)),
+             entryId, fileId, /* asCopy */ false, type,
+             lastModifiedMilliSeconds, path, fileObject)),
          IPC_OK(), reportError);
 
   if (LOG_ENABLED()) {

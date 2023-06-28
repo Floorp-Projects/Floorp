@@ -137,8 +137,9 @@ class TestFileSystemQuotaClient
     TimeStamp lastModMilliS = 0;
     Path path;
     nsCOMPtr<nsIFile> fileObj;
-    ASSERT_NSEQ(NS_OK, aDatabaseManager->GetFile(aEntryId, type, lastModMilliS,
-                                                 path, fileObj));
+    ASSERT_NSEQ(NS_OK,
+                aDatabaseManager->GetFile(aEntryId, fileId, /* asCopy */ false,
+                                          type, lastModMilliS, path, fileObj));
 
     uint32_t written = 0;
     ASSERT_NE(written, aData.Length());

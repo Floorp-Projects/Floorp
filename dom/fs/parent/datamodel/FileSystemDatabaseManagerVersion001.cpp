@@ -942,27 +942,37 @@ Result<FileId, QMResult> FileSystemDatabaseManagerVersion001::EnsureFileId(
 }
 
 nsresult FileSystemDatabaseManagerVersion001::GetFile(
-    const EntryId& aEntryId, ContentType& aType,
-    TimeStamp& lastModifiedMilliSeconds, nsTArray<Name>& aPath,
-    nsCOMPtr<nsIFile>& aFile) const {
-  MOZ_ASSERT(!aEntryId.IsEmpty());
+    const EntryId& aEntryId, const FileId& aFileId, bool aAsCopy,
+    ContentType& aType, TimeStamp& lastModifiedMilliSeconds,
+    nsTArray<Name>& aPath, nsCOMPtr<nsIFile>& aFile) const {
+  MOZ_ASSERT(!aFileId.IsEmpty());
 
   const FileSystemEntryPair endPoints(mRootEntry, aEntryId);
   QM_TRY_UNWRAP(aPath, ResolveReversedPath(mConnection, endPoints));
   if (aPath.IsEmpty()) {
     return NS_ERROR_DOM_NOT_FOUND_ERR;
   }
-
-  QM_TRY_INSPECT(const FileId& fileId, GetFileId(aEntryId));
-  QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(fileId));
+  aPath.Reverse();
 
   QM_TRY(MOZ_TO_RESULT(GetFileAttributes(mConnection, aEntryId, aType)));
+
+  if (aAsCopy) {
+    QM_WARNONLY_TRY_UNWRAP(Maybe<FileId> mainFileId, GetFileId(aEntryId));
+    if (mainFileId) {
+      QM_TRY_UNWRAP(aFile,
+                    mFileManager->CreateFileFrom(aFileId, mainFileId.value()));
+    } else {
+      aAsCopy = false;
+    }
+  }
+
+  if (!aAsCopy) {
+    QM_TRY_UNWRAP(aFile, mFileManager->GetOrCreateFile(aFileId));
+  }
 
   PRTime lastModTime = 0;
   QM_TRY(MOZ_TO_RESULT(aFile->GetLastModifiedTime(&lastModTime)));
   lastModifiedMilliSeconds = static_cast<TimeStamp>(lastModTime);
-
-  aPath.Reverse();
 
   return NS_OK;
 }
