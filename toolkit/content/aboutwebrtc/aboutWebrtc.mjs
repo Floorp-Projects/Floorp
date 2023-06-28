@@ -352,6 +352,8 @@ class ShowTab extends Control {
   // Setup. Retrieve reports & log while page loads.
   const haveReports = getStats();
   const haveLog = getLog();
+  const rndr = elemRenderer;
+
   await new Promise(r => (window.onload = r));
   {
     const ctrl = renderElement("div", { className: "control" });
@@ -408,6 +410,25 @@ class ShowTab extends Control {
   // "Refresh" button. The list is cleared at the end of each refresh interval.
   const forceRefreshList = [];
 
+  const openPeerConnectionReports = reports.filter(r => !r.closed);
+  const closedPeerConnectionReports = reports.filter(r => r.closed);
+  const closedPCSection = rndr.elem_div({});
+  if (closedPeerConnectionReports.length) {
+    const closedPeerConnectionDisclosure = renderFoldableSection(
+      closedPCSection,
+      {
+        showMsg: "about-webrtc-closed-peerconnection-disclosure-show-msg",
+        hideMsg: "about-webrtc-closed-peerconnection-disclosure-hide-msg",
+        startsCollapsed: [...openPeerConnectionReports].size,
+      }
+    );
+    closedPCSection.append(closedPeerConnectionDisclosure);
+    closedPeerConnectionDisclosure.append(
+      ...closedPeerConnectionReports.map(r =>
+        renderPeerConnection(r, () => forceRefreshList.push(r.pcid))
+      )
+    );
+  }
   // This does not handle the auto-refresh, only the manual refreshes needed
   // for certain user actions, and the initial population of the data
   function refresh() {
@@ -428,9 +449,10 @@ class ShowTab extends Control {
           "about-webrtc-stats-clear"
         ),
       ]),
-      ...reports.map(r =>
+      ...openPeerConnectionReports.map(r =>
         renderPeerConnection(r, () => forceRefreshList.push(r.pcid))
       ),
+      closedPCSection,
     ]);
     const logDiv = renderElements("div", { className: "log" }, [
       renderElements("span", { className: "section-heading" }, [
@@ -480,7 +502,6 @@ class ShowTab extends Control {
   window.setInterval(
     async () => {
       const statReports = await getStats();
-      const rndr = elemRenderer;
 
       const translateSection = async (report, id, renderFunc) => {
         const element = document.getElementById(`${id}: ${report.pcid}`);
@@ -1643,16 +1664,19 @@ class FoldEffect {
     {
       showMsg = "about-webrtc-fold-show-msg",
       hideMsg = "about-webrtc-fold-hide-msg",
+      startsCollapsed = true,
     } = {}
   ) {
-    Object.assign(this, { target, showMsg, hideMsg });
+    Object.assign(this, { target, showMsg, hideMsg, startsCollapsed });
   }
 
   render() {
     this.target.classList.add("fold-target");
     this.trigger = renderElement("div", { className: "fold-trigger" });
     this.trigger.classList.add(this.showMsg, this.hideMsg);
-    this.collapse();
+    if (this.startsCollapsed) {
+      this.collapse();
+    }
     this.trigger.onclick = () => {
       if (this.target.classList.contains("fold-closed")) {
         this.expand();
