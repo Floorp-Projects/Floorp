@@ -33,7 +33,7 @@ exported_symbols.test2 = async function () {
   let root = await navigator.storage.getDirectory();
   Assert.ok(root, "Can we access the root directory?");
 
-  const testFile = await root.getFileHandle("test.txt");
+  const testFile = await root.getFileHandle("test.txt", allowCreate);
   Assert.ok(!!testFile, "Can't open file");
   let handle = await testFile.createSyncAccessHandle();
   Assert.ok(!!handle, "Can't create SyncAccessHandle");
@@ -124,7 +124,7 @@ exported_symbols.test5 = async function () {
   let root = await navigator.storage.getDirectory();
   Assert.ok(!!root, "Can we access the root directory?");
 
-  const testFile = await root.getFileHandle("test.txt");
+  const testFile = await root.getFileHandle("test.txt", allowCreate);
   Assert.ok(!!testFile, "Can't create file");
   let handle = await testFile.createSyncAccessHandle();
   Assert.ok(!!handle, "Can't create SyncAccessHandle");
@@ -147,7 +147,7 @@ exported_symbols.test6 = async function () {
   let root = await navigator.storage.getDirectory();
   Assert.ok(root, "Can we access the root directory?");
 
-  const testFile = await root.getFileHandle("test.txt");
+  const testFile = await root.getFileHandle("test.txt", allowCreate);
   Assert.ok(!!testFile, "Can't get file");
   let handle = await testFile.createSyncAccessHandle();
   Assert.ok(!!handle, "Can't create SyncAccessHandle");
@@ -196,7 +196,7 @@ exported_symbols.quotaTest = async function () {
   Assert.ok(root, "Can we access the root directory?");
 
   // Fill entire storage.
-  const fileHandle = await root.getFileHandle("test.txt");
+  const fileHandle = await root.getFileHandle("test.txt", allowCreate);
   Assert.ok(!!fileHandle, "Can we get file handle?");
 
   const accessHandle = await fileHandle.createSyncAccessHandle();
@@ -211,7 +211,7 @@ exported_symbols.quotaTest = async function () {
   Assert.equal(written, buffer.byteLength, "Can we write entire buffer?");
 
   // Try to write one more byte.
-  const fileHandle2 = await root.getFileHandle("test2.txt");
+  const fileHandle2 = await root.getFileHandle("test2.txt", allowCreate);
   Assert.ok(!!fileHandle2, "Can we get file handle?");
 
   const accessHandle2 = await fileHandle2.createSyncAccessHandle();
