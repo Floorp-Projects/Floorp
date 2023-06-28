@@ -10,11 +10,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,6 +37,7 @@ import mozilla.components.lib.state.ext.consumeFlow
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.ktx.android.view.toScope
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.R
@@ -51,6 +54,7 @@ import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.dialog.CookieBannerReEngagementDialogUtils
 import org.mozilla.fenix.settings.quicksettings.protections.cookiebanners.getCookieBannerUIMode
 import org.mozilla.fenix.shopping.ReviewQualityCheckFeature
+import org.mozilla.fenix.shopping.ReviewQualityCheckViewModel
 import org.mozilla.fenix.shortcut.PwaOnboardingObserver
 import org.mozilla.fenix.theme.ThemeManager
 
@@ -63,6 +67,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val openInAppOnboardingObserver = ViewBoundFeatureWrapper<OpenInAppOnboardingObserver>()
     private val reviewQualityCheckFeature = ViewBoundFeatureWrapper<ReviewQualityCheckFeature>()
+    private val reviewQualityCheckViewModel: ReviewQualityCheckViewModel by activityViewModels()
 
     private var readerModeAvailable = false
     private var reviewQualityCheckAvailable = false
@@ -204,7 +209,13 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 contentDescription = context.getString(R.string.browser_menu_review_quality_check),
                 contentDescriptionSelected = context.getString(R.string.browser_menu_review_quality_check_close),
                 visible = { reviewQualityCheckAvailable },
-                listener = {},
+                listener = { isSelected ->
+                    if (isSelected) {
+                        findNavController().navigate(
+                            BrowserFragmentDirections.actionBrowserFragmentToReviewQualityCheckDialogFragment(),
+                        )
+                    }
+                },
             )
 
         browserToolbarView.view.addPageAction(reviewQualityCheck)
@@ -216,6 +227,12 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             owner = this,
             view = view,
         )
+
+        view.toScope().launch {
+            reviewQualityCheckViewModel.isBottomSheetVisible.collectLatest {
+                reviewQualityCheck.setSelected(selected = it, notifyListener = false)
+            }
+        }
     }
 
     override fun onUpdateToolbarForConfigurationChange(toolbar: BrowserToolbarView) {

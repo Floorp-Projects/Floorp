@@ -325,6 +325,9 @@
         <action
             android:id="@+id/action_browserFragment_to_cookieBannerDialogFragment"
             app:destination="@id/cookieBannerDialogFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_reviewQualityCheckDialogFragment"
+            app:destination="@id/reviewQualityCheckFragment" />
     </fragment>
 
     <fragment
@@ -457,6 +460,10 @@
             android:id="@+id/action_bookmarkAddFolderFragment_to_bookmarkSelectFolderFragment"
             app:destination="@id/bookmarkSelectFolderFragment" />
     </fragment>
+
+    <dialog
+        android:id="@+id/reviewQualityCheckFragment"
+        android:name="org.mozilla.fenix.shopping.ReviewQualityCheckFragment"/>
 
     <fragment
         android:id="@+id/savedLoginsAuthFragment"

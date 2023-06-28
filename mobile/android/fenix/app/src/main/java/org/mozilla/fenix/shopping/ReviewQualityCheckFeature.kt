@@ -10,6 +10,9 @@ import org.mozilla.fenix.nimbus.FxNimbus
 /**
  * Feature implementation that provides review quality check information for supported product
  * pages.
+ *
+ * @param onAvailabilityChange Invoked when availability of this feature changes based on feature
+ * flag and when the loaded page is a supported product page.
  */
 class ReviewQualityCheckFeature(
     private val onAvailabilityChange: (isAvailable: Boolean) -> Unit,

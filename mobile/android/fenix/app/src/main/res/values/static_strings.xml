@@ -114,4 +114,5 @@
     <string name="browser_menu_review_quality_check" translatable="false">Review quality check</string>
     <!-- Browser menu button content description to close review quality check-->
     <string name="browser_menu_review_quality_check_close" translatable="false">Close review quality check</string>
+    <string name="review_quality_check" translatable="false">Review quality check</string>
 </resources>
