@@ -153,6 +153,12 @@ if CONFIG["CPU_ARCH"] == "ppc64":
         "/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.c"
     ]
 
+if CONFIG["CPU_ARCH"] == "riscv64":
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.c"
+    ]
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_DEBUG"] = True
