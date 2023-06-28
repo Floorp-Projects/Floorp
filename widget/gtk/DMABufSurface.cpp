@@ -23,7 +23,9 @@
 #include <sys/time.h>
 #include <dlfcn.h>
 #include <sys/mman.h>
-#include <sys/eventfd.h>
+#ifdef HAVE_EVENTFD
+#  include <sys/eventfd.h>
+#endif
 #include <poll.h>
 #include <sys/ioctl.h>
 
@@ -120,6 +122,7 @@ bool DMABufSurface::IsGlobalRefSet() const {
 }
 
 void DMABufSurface::GlobalRefRelease() {
+#ifdef HAVE_EVENTFD
   if (!mGlobalRefCountFd) {
     return;
   }
@@ -138,9 +141,11 @@ void DMABufSurface::GlobalRefRelease() {
                      .get());
     }
   }
+#endif
 }
 
 void DMABufSurface::GlobalRefAdd() {
+#ifdef HAVE_EVENTFD
   LOGDMABUFREF(("DMABufSurface::GlobalRefAdd UID %d", mUID));
   MOZ_DIAGNOSTIC_ASSERT(mGlobalRefCountFd);
   uint64_t counter = 1;
@@ -149,9 +154,11 @@ void DMABufSurface::GlobalRefAdd() {
                                strerror(errno))
                    .get());
   }
+#endif
 }
 
 void DMABufSurface::GlobalRefCountCreate() {
+#ifdef HAVE_EVENTFD
   LOGDMABUFREF(("DMABufSurface::GlobalRefCountCreate UID %d", mUID));
   MOZ_DIAGNOSTIC_ASSERT(!mGlobalRefCountFd);
   // Create global ref count initialized to 0,
@@ -164,14 +171,17 @@ void DMABufSurface::GlobalRefCountCreate() {
     mGlobalRefCountFd = 0;
     return;
   }
+#endif
 }
 
 void DMABufSurface::GlobalRefCountImport(int aFd) {
+#ifdef HAVE_EVENTFD
   mGlobalRefCountFd = aFd;
   if (mGlobalRefCountFd) {
     LOGDMABUFREF(("DMABufSurface::GlobalRefCountImport UID %d", mUID));
     GlobalRefAdd();
   }
+#endif
 }
 
 int DMABufSurface::GlobalRefCountExport() {

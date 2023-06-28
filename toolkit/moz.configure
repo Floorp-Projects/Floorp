@@ -1522,6 +1522,7 @@ with only_when(compile_environment & depends(target.os)(lambda os: os != "WINNT"
     set_define("HAVE_LUTIMES", check_symbol("lutimes"))
     set_define("HAVE_POSIX_FADVISE", check_symbol("posix_fadvise"))
     set_define("HAVE_POSIX_FALLOCATE", check_symbol("posix_fallocate"))
+    set_define("HAVE_EVENTFD", check_symbol("eventfd"))
 
     have_arc4random = check_symbol("arc4random")
     set_define("HAVE_ARC4RANDOM", have_arc4random)
