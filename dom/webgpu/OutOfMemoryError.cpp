@@ -4,14 +4,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OutOfMemoryError.h"
-#include "Device.h"
 #include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla::webgpu {
 
-GPU_IMPL_CYCLE_COLLECTION(OutOfMemoryError, mParent)
 GPU_IMPL_JS_WRAP(OutOfMemoryError)
 
-OutOfMemoryError::~OutOfMemoryError() = default;
+already_AddRefed<OutOfMemoryError> OutOfMemoryError::Constructor(
+    const dom::GlobalObject& aGlobal, const nsAString& aString,
+    ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  MOZ_RELEASE_ASSERT(global);
+  return MakeAndAddRef<OutOfMemoryError>(global, aString);
+}
 
 }  // namespace mozilla::webgpu

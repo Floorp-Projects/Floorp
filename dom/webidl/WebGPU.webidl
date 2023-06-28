@@ -1182,23 +1182,38 @@ partial interface GPUDevice {
 
 [Pref="dom.webgpu.enabled",
  Exposed=(Window /* ,DedicatedWorker */), SecureContext]
-interface GPUOutOfMemoryError {
-    //constructor();
+interface GPUError {
+    readonly attribute DOMString message;
 };
 
 [Pref="dom.webgpu.enabled",
  Exposed=(Window /* ,DedicatedWorker */), SecureContext]
-interface GPUValidationError {
+interface GPUValidationError
+        : GPUError {
     [Throws]
     constructor(DOMString message);
-    readonly attribute DOMString message;
 };
 
-typedef (GPUOutOfMemoryError or GPUValidationError) GPUError;
+[Pref="dom.webgpu.enabled",
+ Exposed=(Window /* ,DedicatedWorker */), SecureContext]
+interface GPUOutOfMemoryError
+        : GPUError {
+    [Throws]
+    constructor(DOMString message);
+};
+
+[Pref="dom.webgpu.enabled",
+ Exposed=(Window /* ,DedicatedWorker */), SecureContext]
+interface GPUInternalError
+        : GPUError {
+    [Throws]
+    constructor(DOMString message);
+};
 
 enum GPUErrorFilter {
+    "validation",
     "out-of-memory",
-    "validation"
+    "internal",
 };
 
 typedef [EnforceRange] unsigned long GPUBufferDynamicOffset;

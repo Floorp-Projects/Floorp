@@ -8,6 +8,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Logging.h"
+#include "mozilla/RefPtr.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebGPUBinding.h"
 #include "Device.h"
@@ -18,6 +19,7 @@
 #include "Buffer.h"
 #include "ComputePipeline.h"
 #include "DeviceLostInfo.h"
+#include "InternalError.h"
 #include "OutOfMemoryError.h"
 #include "PipelineLayout.h"
 #include "Queue.h"
@@ -358,7 +360,7 @@ already_AddRefed<dom::Promise> Device::PopErrorScope(ErrorResult& aRv) {
   errorPromise->Then(
       GetCurrentSerialEventTarget(), __func__,
       [self = RefPtr{this}, promise](const PopErrorScopeResult& aResult) {
-        dom::OwningGPUOutOfMemoryErrorOrGPUValidationError error;
+        RefPtr<Error> error;
 
         switch (aResult.resultType) {
           case PopErrorScopeResultType::NoError:
@@ -377,21 +379,18 @@ already_AddRefed<dom::Promise> Device::PopErrorScope(ErrorResult& aRv) {
             return;
 
           case PopErrorScopeResultType::OutOfMemory:
-            error.SetAsGPUOutOfMemoryError() = new OutOfMemoryError(self);
+            error =
+                new OutOfMemoryError(self->GetParentObject(), aResult.message);
             break;
 
           case PopErrorScopeResultType::ValidationError:
-            error.SetAsGPUValidationError() =
+            error =
                 new ValidationError(self->GetParentObject(), aResult.message);
             break;
 
           case PopErrorScopeResultType::InternalError:
-            MOZ_CRASH("TODO");
-            /*
-            error.SetAsGPUInternalError() = new InternalError(
-                self->GetParentObject(), aResult.message);
+            error = new InternalError(self->GetParentObject(), aResult.message);
             break;
-            */
         }
         promise->MaybeResolve(std::move(error));
       },
