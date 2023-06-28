@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GPU_OutOfMemoryError_H_
-#define GPU_OutOfMemoryError_H_
+#ifndef GPU_InternalError_H_
+#define GPU_InternalError_H_
 
 #include "Error.h"
 
@@ -15,21 +15,21 @@ class GlobalObject;
 }  // namespace dom
 namespace webgpu {
 
-class OutOfMemoryError final : public Error {
+class InternalError final : public Error {
  public:
-  GPU_DECL_JS_WRAP(OutOfMemoryError)
+  GPU_DECL_JS_WRAP(InternalError)
 
-  OutOfMemoryError(nsIGlobalObject* const aGlobal, const nsAString& aMessage)
+  InternalError(nsIGlobalObject* const aGlobal, const nsAString& aMessage)
       : Error(aGlobal, aMessage) {}
 
-  OutOfMemoryError(nsIGlobalObject* const aGlobal, const nsACString& aMessage)
+  InternalError(nsIGlobalObject* const aGlobal, const nsACString& aMessage)
       : Error(aGlobal, aMessage) {}
 
  private:
-  ~OutOfMemoryError() override = default;
+  ~InternalError() override = default;
 
  public:
-  static already_AddRefed<OutOfMemoryError> Constructor(
+  static already_AddRefed<InternalError> Constructor(
       const dom::GlobalObject& aGlobal, const nsAString& aString,
       ErrorResult& aRv);
 };
@@ -37,4 +37,4 @@ class OutOfMemoryError final : public Error {
 }  // namespace webgpu
 }  // namespace mozilla
 
-#endif  // GPU_OutOfMemoryError_H_
+#endif  // GPU_InternalError_H_
