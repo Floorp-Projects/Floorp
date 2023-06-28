@@ -88,6 +88,13 @@ class LibvpxVp9EncoderInfoSettings : public EncoderInfoSettings {
   ~LibvpxVp9EncoderInfoSettings() override {}
 };
 
+// EncoderInfo settings for LibaomAv1Encoder.
+class LibaomAv1EncoderInfoSettings : public EncoderInfoSettings {
+ public:
+  LibaomAv1EncoderInfoSettings();
+  ~LibaomAv1EncoderInfoSettings() override {}
+};
+
 }  // namespace webrtc
 
 #endif  // RTC_BASE_EXPERIMENTS_ENCODER_INFO_SETTINGS_H_
