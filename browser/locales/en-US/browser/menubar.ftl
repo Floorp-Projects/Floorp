@@ -231,6 +231,9 @@ menu-bookmark-tab =
     .label = Bookmark Current Tab…
 menu-edit-bookmark =
     .label = Edit This Bookmark…
+# "Search" is a verb, as in "Search in bookmarks"
+menu-bookmarks-search =
+    .label = Search Bookmarks
 menu-bookmarks-all-tabs =
     .label = Bookmark All Tabs…
 menu-bookmarks-toolbar =
