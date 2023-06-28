@@ -21,6 +21,7 @@
 #include "nsIFile.h"
 #include "nsIFileProtocolHandler.h"
 #include "nsIFileURL.h"
+#include "nsILocalFileWin.h"
 #include "nsIURIMutator.h"
 #include "nsTHashMap.h"
 #include "nsXPCOM.h"
@@ -58,10 +59,8 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFileImpl(
     const nsAString& aFilePath) {
   MOZ_ASSERT(!aFilePath.IsEmpty());
 
-  nsCOMPtr<nsIFile> result;
-  QM_TRY(QM_TO_RESULT(NS_NewLocalFile(aFilePath,
-                                      /* aFollowLinks */ false,
-                                      getter_AddRefs(result))));
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> result,
+                QM_TO_RESULT_TRANSFORM(quota::QM_NewLocalFile(aFilePath)));
 
   bool exists = true;
   QM_TRY(QM_TO_RESULT(result->Exists(&exists)));
@@ -89,12 +88,7 @@ Result<nsCOMPtr<nsIFile>, QMResult> GetFile(
   nsString desiredPath;
   QM_TRY(QM_TO_RESULT(pathObject->GetPath(desiredPath)));
 
-  nsCOMPtr<nsIFile> result;
-  QM_TRY(QM_TO_RESULT(NS_NewLocalFile(desiredPath,
-                                      /* aFollowLinks */ false,
-                                      getter_AddRefs(result))));
-
-  return result;
+  QM_TRY_RETURN(QM_TO_RESULT_TRANSFORM(quota::QM_NewLocalFile(desiredPath)));
 }
 
 Result<nsCOMPtr<nsIFile>, QMResult> GetOrCreateFile(
@@ -285,6 +279,40 @@ Result<nsCOMPtr<nsIFile>, QMResult> FileSystemFileManager::GetFile(
 Result<nsCOMPtr<nsIFile>, QMResult> FileSystemFileManager::GetOrCreateFile(
     const FileId& aFileId) {
   return data::GetOrCreateFile(mTopDirectory, aFileId);
+}
+
+Result<nsCOMPtr<nsIFile>, QMResult> FileSystemFileManager::CreateFileFrom(
+    const FileId& aDestinationFileId, const FileId& aSourceFileId) {
+  MOZ_ASSERT(!aDestinationFileId.IsEmpty());
+  MOZ_ASSERT(!aSourceFileId.IsEmpty());
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> original, GetFile(aSourceFileId));
+
+  QM_TRY_UNWRAP(nsCOMPtr<nsIFile> destination,
+                GetFileDestination(mTopDirectory, aDestinationFileId));
+
+  nsAutoString leafName;
+  QM_TRY(QM_TO_RESULT(destination->GetLeafName(leafName)));
+
+  nsCOMPtr<nsIFile> destParent;
+  QM_TRY(QM_TO_RESULT(destination->GetParent(getter_AddRefs(destParent))));
+
+  QM_TRY(QM_TO_RESULT(original->CopyTo(destParent, leafName)));
+
+#ifdef DEBUG
+  bool exists = false;
+  QM_TRY(QM_TO_RESULT(destination->Exists(&exists)));
+  MOZ_ASSERT(exists);
+
+  int64_t destSize = 0;
+  QM_TRY(QM_TO_RESULT(destination->GetFileSize(&destSize)));
+
+  int64_t origSize = 0;
+  QM_TRY(QM_TO_RESULT(original->GetFileSize(&origSize)));
+
+  MOZ_ASSERT(destSize == origSize);
+#endif
+
+  return destination;
 }
 
 Result<Usage, QMResult> FileSystemFileManager::RemoveFile(
