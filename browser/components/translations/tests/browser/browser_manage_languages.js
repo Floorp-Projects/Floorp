@@ -179,7 +179,7 @@ add_task(async function test_about_preferences_download_reject() {
     );
   }
 
-  await TestUtils.waitForCondition(
+  await waitForCondition(
     () => maybeGetByL10nId("translations-manage-error-download", document),
     "The error message is now visible."
   );

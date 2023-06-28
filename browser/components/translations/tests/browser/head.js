@@ -31,7 +31,7 @@ async function assertTranslationsButton(visibleAssertions, message) {
 
   try {
     // Test that the visibilities match.
-    await TestUtils.waitForCondition(() => {
+    await waitForCondition(() => {
       for (const [name, visible] of Object.entries(visibleAssertions)) {
         if (elements[name].hidden === visible) {
           return false;
@@ -198,7 +198,7 @@ async function assertIsNeverTranslateSite(url, expectChecked) {
 async function assertCheckboxState(dataL10nId, expectChecked) {
   const menuItems = getAllByL10nId(dataL10nId);
   for (const menuItem of menuItems) {
-    await TestUtils.waitForCondition(
+    await waitForCondition(
       () =>
         menuItem.getAttribute("checked") === (expectChecked ? "true" : "false"),
       "Waiting for checkbox state"
