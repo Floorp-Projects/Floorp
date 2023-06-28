@@ -299,6 +299,11 @@ extern JS_PUBLIC_API JSObject* GetModuleEnvironment(
  */
 extern JS_PUBLIC_API void ClearModuleEnvironment(JSObject* moduleObj);
 
+/*
+ * Diagnostic assert that the module is has status |Unlinked|.
+ */
+extern JS_PUBLIC_API void AssertModuleUnlinked(JSObject* moduleObj);
+
 }  // namespace JS
 
 #endif  // js_Modules_h

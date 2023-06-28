@@ -289,6 +289,14 @@ JS_PUBLIC_API void JS::ClearModuleEnvironment(JSObject* moduleObj) {
   }
 }
 
+JS_PUBLIC_API void JS::AssertModuleUnlinked(JSObject* moduleObj) {
+  MOZ_ASSERT(moduleObj);
+  AssertHeapIsIdle();
+
+  MOZ_DIAGNOSTIC_ASSERT(moduleObj->as<ModuleObject>().status() ==
+                        ModuleStatus::Unlinked);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Internal implementation
 
