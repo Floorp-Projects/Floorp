@@ -188,6 +188,11 @@ class FileSystemWritableFileStream::CloseHandler {
   bool IsOpen() const { return State::Open == mState; }
 
   /**
+   * @brief Are we not open and not closed?
+   */
+  bool IsClosing() const { return State::Closing == mState; }
+
+  /**
    * @brief Are we already fully closed?
    */
   bool IsClosed() const { return State::Closed == mState; }
@@ -198,7 +203,7 @@ class FileSystemWritableFileStream::CloseHandler {
    * @return true if the state was open and became closing after the call
    * @return false in all the other cases the previous state is preserved
    */
-  bool TestAndSetClosing() {
+  bool SetClosing() {
     const bool isOpen = State::Open == mState;
 
     if (isOpen) {
@@ -210,7 +215,7 @@ class FileSystemWritableFileStream::CloseHandler {
 
   RefPtr<BoolPromise> GetClosePromise() const {
     MOZ_ASSERT(State::Open != mState,
-               "Please call TestAndSetClosing before GetClosePromise");
+               "Please call SetClosing before GetClosePromise");
 
     if (State::Closing == mState) {
       return mClosePromiseHolder.Ensure(__func__);
@@ -283,7 +288,7 @@ FileSystemWritableFileStream::FileSystemWritableFileStream(
 
 FileSystemWritableFileStream::~FileSystemWritableFileStream() {
   MOZ_ASSERT(!mCommandActive);
-  MOZ_ASSERT(IsClosed());
+  MOZ_ASSERT(IsDone());
 
   mozilla::DropJSObjects(this);
 }
@@ -413,7 +418,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileSystemWritableFileStream,
                                                 WritableStream)
   // Per the comment for the FileSystemManager class, don't unlink mManager!
   if (tmp->IsOpen()) {
-    Unused << tmp->BeginClose();
+    Unused << tmp->BeginAbort();
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileSystemWritableFileStream,
@@ -459,13 +464,20 @@ bool FileSystemWritableFileStream::IsOpen() const {
   return mCloseHandler->IsOpen();
 }
 
-bool FileSystemWritableFileStream::IsClosed() const {
+bool FileSystemWritableFileStream::IsFinishing() const {
+  return mCloseHandler->IsClosing();
+}
+
+bool FileSystemWritableFileStream::IsDone() const {
   return mCloseHandler->IsClosed();
 }
 
-RefPtr<BoolPromise> FileSystemWritableFileStream::BeginClose(bool aAbort) {
+RefPtr<BoolPromise> FileSystemWritableFileStream::BeginFinishing(
+    bool aShouldAbort) {
   using ClosePromise = PFileSystemWritableFileStreamChild::ClosePromise;
-  if (mCloseHandler->TestAndSetClosing()) {
+  MOZ_ASSERT(IsOpen());
+
+  if (mCloseHandler->SetClosing()) {
     Finish()
         ->Then(mTaskQueue, __func__,
                [streamOwner = mStreamOwner]() mutable {
@@ -478,13 +490,13 @@ RefPtr<BoolPromise> FileSystemWritableFileStream::BeginClose(bool aAbort) {
                  return self->mTaskQueue->BeginShutdown();
                })
         ->Then(GetCurrentSerialEventTarget(), __func__,
-               [aAbort, self = RefPtr(this)](
+               [aShouldAbort, self = RefPtr(this)](
                    const ShutdownPromise::ResolveOrRejectValue& /* aValue */) {
                  if (!self->mActor) {
                    return ClosePromise::CreateAndResolve(void_t(), __func__);
                  }
 
-                 return self->mActor->SendClose(aAbort);
+                 return self->mActor->SendClose(aShouldAbort);
                })
         ->Then(GetCurrentSerialEventTarget(), __func__,
                [self = RefPtr(this)](
@@ -495,6 +507,22 @@ RefPtr<BoolPromise> FileSystemWritableFileStream::BeginClose(bool aAbort) {
                  QM_TRY(OkIf(aValue.IsResolve()), QM_VOID);
                });
   }
+
+  return mCloseHandler->GetClosePromise();
+}
+
+RefPtr<BoolPromise> FileSystemWritableFileStream::BeginClose() {
+  MOZ_ASSERT(IsOpen());
+  return BeginFinishing(/* aShouldAbort */ false);
+}
+
+RefPtr<BoolPromise> FileSystemWritableFileStream::BeginAbort() {
+  MOZ_ASSERT(IsOpen());
+  return BeginFinishing(/* aShouldAbort */ true);
+}
+
+RefPtr<BoolPromise> FileSystemWritableFileStream::OnDone() {
+  MOZ_ASSERT(!IsOpen());
 
   return mCloseHandler->GetClosePromise();
 }
@@ -553,7 +581,7 @@ already_AddRefed<Promise> FileSystemWritableFileStream::Write(
           return;
         }
 
-        self->BeginClose()->Then(GetCurrentSerialEventTarget(), __func__,
+        self->BeginAbort()->Then(GetCurrentSerialEventTarget(), __func__,
                                  [promise, rejectValue = aValue.RejectValue()](
                                      const BoolPromise::ResolveOrRejectValue&) {
                                    // Do not capture command to this context:
@@ -939,17 +967,17 @@ WritableFileStreamUnderlyingSinkAlgorithms::CloseCallbackImpl(
     return promise.forget();
   }
 
-  mStream->BeginClose(/* aAbort */ false)
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [promise](const BoolPromise::ResolveOrRejectValue& aValue) {
-               // Step 2.3. Return a promise resolved with undefined.
-               if (aValue.IsResolve()) {
-                 promise->MaybeResolveWithUndefined();
-                 return;
-               }
-               promise->MaybeRejectWithAbortError(
-                   "Internal error closing file stream");
-             });
+  mStream->BeginClose()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise](const BoolPromise::ResolveOrRejectValue& aValue) {
+        // Step 2.3. Return a promise resolved with undefined.
+        if (aValue.IsResolve()) {
+          promise->MaybeResolveWithUndefined();
+          return;
+        }
+        promise->MaybeRejectWithAbortError(
+            "Internal error closing file stream");
+      });
 
   return promise.forget();
 }
@@ -974,17 +1002,17 @@ WritableFileStreamUnderlyingSinkAlgorithms::AbortCallbackImpl(
     return promise.forget();
   }
 
-  mStream->BeginClose(/* aAbort */ true)
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [promise](const BoolPromise::ResolveOrRejectValue& aValue) {
-               // Step 2.3. Return a promise resolved with undefined.
-               if (aValue.IsResolve()) {
-                 promise->MaybeResolveWithUndefined();
-                 return;
-               }
-               promise->MaybeRejectWithAbortError(
-                   "Internal error closing file stream");
-             });
+  mStream->BeginAbort()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise](const BoolPromise::ResolveOrRejectValue& aValue) {
+        // Step 2.3. Return a promise resolved with undefined.
+        if (aValue.IsResolve()) {
+          promise->MaybeResolveWithUndefined();
+          return;
+        }
+        promise->MaybeRejectWithAbortError(
+            "Internal error closing file stream");
+      });
 
   return promise.forget();
 }
