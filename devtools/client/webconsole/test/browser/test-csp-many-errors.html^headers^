@@ -1,1 +1,0 @@
-Content-Security-Policy: style-src 'none'; report-uri https://example.com/ignored/;

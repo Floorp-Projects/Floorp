@@ -151,10 +151,6 @@ class nsCSPContext : public nsIContentSecurityPolicy {
  private:
   void EnsureIPCPoliciesRead();
 
-  bool ShouldThrottleReport(
-      const mozilla::dom::SecurityPolicyViolationEventInit&
-          aViolationEventInit);
-
   bool permitsInternal(CSPDirective aDir,
                        mozilla::dom::Element* aTriggeringElement,
                        nsICSPEventListener* aCSPEventListener,
@@ -196,10 +192,6 @@ class nsCSPContext : public nsIContentSecurityPolicy {
   nsTArray<ConsoleMsgQueueElem> mConsoleMsgQueue;
   bool mQueueUpMessages;
   nsCOMPtr<nsIEventTarget> mEventTarget;
-
-  mozilla::TimeStamp mSendReportLimitSpanStart;
-  uint32_t mSendReportLimitCount = 1;
-  bool mWarnedAboutTooManyReports = false;
 };
 
 // Class that listens to violation report transmission and logs errors.
