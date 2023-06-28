@@ -20,9 +20,8 @@ const {
  */
 class HarMetadataCollector {
   #commands;
-  #initialTargetTitle;
+  #initialURL;
   #navigationRequests;
-  #targetTitlesPerURL;
 
   constructor(commands) {
     this.#commands = commands;
@@ -34,21 +33,19 @@ class HarMetadataCollector {
   destroy() {
     this.clear();
 
-    this.#commands.resourceCommand.unwatchResources(
-      [TYPES.DOCUMENT_EVENT, TYPES.NETWORK_EVENT],
-      {
-        onAvailable: this.#onResourceAvailable,
-      }
-    );
+    this.#commands.resourceCommand.unwatchResources([TYPES.NETWORK_EVENT], {
+      onAvailable: this.#onResourceAvailable,
+    });
   }
 
   /**
    * Reset the current state.
    */
   clear() {
+    // Keep the initial URL for requests captured before the first recorded
+    // navigation.
+    this.#initialURL = this.#commands.targetCommand.targetFront.url;
     this.#navigationRequests = [];
-    this.#targetTitlesPerURL = new Map();
-    this.#initialTargetTitle = this.#commands.targetCommand.targetFront.title;
   }
 
   /**
@@ -57,38 +54,25 @@ class HarMetadataCollector {
   async connect() {
     this.clear();
 
-    await this.#commands.resourceCommand.watchResources(
-      [TYPES.DOCUMENT_EVENT, TYPES.NETWORK_EVENT],
-      {
-        onAvailable: this.#onResourceAvailable,
-      }
-    );
+    await this.#commands.resourceCommand.watchResources([TYPES.NETWORK_EVENT], {
+      onAvailable: this.#onResourceAvailable,
+    });
   }
 
   getHarData() {
     return {
-      initialTargetTitle: this.#initialTargetTitle,
+      initialURL: this.#initialURL,
       navigationRequests: this.#navigationRequests,
-      targetTitlesPerURL: this.#targetTitlesPerURL,
     };
   }
 
   #onResourceAvailable = resources => {
     for (const resource of resources) {
-      if (resource.resourceType === TYPES.DOCUMENT_EVENT) {
-        if (
-          resource.name === "dom-complete" &&
-          resource.targetFront.isTopLevel
-        ) {
-          this.#targetTitlesPerURL.set(
-            resource.targetFront.url,
-            resource.targetFront.title
-          );
-        }
-      } else if (resource.resourceType === TYPES.NETWORK_EVENT) {
-        if (resource.isNavigationRequest) {
-          this.#navigationRequests.push(resource);
-        }
+      if (
+        resource.resourceType === TYPES.NETWORK_EVENT &&
+        resource.isNavigationRequest
+      ) {
+        this.#navigationRequests.push(resource);
       }
     }
   };
