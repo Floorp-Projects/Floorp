@@ -126,10 +126,6 @@ class Addresses extends AddressesBase {
   async findDuplicateGUID(remoteRecord) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
-
-  async mergeToStorage(targetRecord, strict = false) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
 }
 
 class CreditCards extends CreditCardsBase {
@@ -233,10 +229,6 @@ class CreditCards extends CreditCardsBase {
   }
 
   async findDuplicateGUID(remoteRecord) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  async mergeToStorage(targetRecord, strict = false) {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 }
