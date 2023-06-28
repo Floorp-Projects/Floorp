@@ -424,8 +424,8 @@ nsresult UpdateUsageUnsetTracked(const FileSystemConnection& aConnection,
  * be equal to the latest recorded value. In all cases, the latest recorded
  * value (or nothing) is the correct amount of quota to be released.
  */
-Result<Usage, QMResult> GetKnownUsage(const FileSystemConnection& aConnection,
-                                      const FileId& aFileId) {
+[[maybe_unused]] Result<Usage, QMResult> GetKnownUsage(
+    const FileSystemConnection& aConnection, const FileId& aFileId) {
   const nsLiteralCString trackedUsageQuery =
       "SELECT usage FROM Usages WHERE handle = :handle ;"_ns;
 
@@ -1224,31 +1224,29 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveDirectory(
   QM_TRY_INSPECT(const nsTArray<FileId>& descendants,
                  FindFilesUnderEntry(entryId));
 
-  nsTArray<FileId> removeFails;
+  nsTArray<FileId> failedRemovals;
   QM_TRY_UNWRAP(DebugOnly<Usage> removedUsage,
-                mFileManager->RemoveFiles(descendants, removeFails));
+                mFileManager->RemoveFiles(descendants, failedRemovals));
 
   // We only check the most common case. This can fail spuriously if an external
   // application writes to the file, or OS reports zero size due to corruption.
-  MOZ_ASSERT_IF(removeFails.IsEmpty() && (0 == mFilesOfUnknownUsage),
+  MOZ_ASSERT_IF(failedRemovals.IsEmpty() && (0 == mFilesOfUnknownUsage),
                 usage == removedUsage);
 
-  TryRemoveDuringIdleMaintenance(removeFails);
+  TryRemoveDuringIdleMaintenance(failedRemovals);
 
-  auto isInRemoveFails = [&removeFails](const auto& aFileId) {
-    for (const auto& removeFail : removeFails) {
-      if (aFileId == removeFail) {
-        return true;
-      }
-    }
-    return false;
+  auto isInFailedRemovals = [&failedRemovals](const auto& aFileId) {
+    return failedRemovals.cend() !=
+           std::find_if(failedRemovals.cbegin(), failedRemovals.cend(),
+                        [&aFileId](const auto& aFailedRemoval) {
+                          return aFileId == aFailedRemoval;
+                        });
   };
 
   for (const auto& fileId : descendants) {
-    if (isInRemoveFails(fileId)) {
-      continue;
+    if (!isInFailedRemovals(fileId)) {
+      QM_WARNONLY_TRY(QM_TO_RESULT(RemoveFileId(fileId)));
     }
-    QM_WARNONLY_TRY(QM_TO_RESULT(RemoveFileId(fileId)));
   }
 
   if (usage > 0) {  // Performance!
@@ -1293,20 +1291,33 @@ Result<bool, QMResult> FileSystemDatabaseManagerVersion001::RemoveFile(
   }
 
   QM_TRY_INSPECT(const FileId& fileId, GetFileId(entryId));
+  const nsTArray<FileId>& diskItems = {fileId};
 
-  QM_TRY_UNWRAP(Usage usage, GetKnownUsage(mConnection, fileId));
+  QM_TRY_UNWRAP(Usage usage, GetUsagesOfDescendants(entryId));
 
-  QM_WARNONLY_TRY_UNWRAP(Maybe<Usage> removedUsage,
-                         mFileManager->RemoveFile(fileId));
+  nsTArray<FileId> failedRemovals;
+  QM_TRY_UNWRAP(DebugOnly<Usage> removedUsage,
+                mFileManager->RemoveFiles({fileId}, failedRemovals));
 
   // We only check the most common case. This can fail spuriously if an external
   // application writes to the file, or OS reports zero size due to corruption.
-  MOZ_ASSERT_IF(removedUsage && (0 == mFilesOfUnknownUsage),
-                usage == removedUsage.value());
-  if (!removedUsage) {
-    TryRemoveDuringIdleMaintenance({fileId});
-  } else {
-    QM_WARNONLY_TRY(QM_TO_RESULT(RemoveFileId(fileId)));
+  MOZ_ASSERT_IF(failedRemovals.IsEmpty() && (0 == mFilesOfUnknownUsage),
+                usage == removedUsage);
+
+  TryRemoveDuringIdleMaintenance(failedRemovals);
+
+  auto isInFailedRemovals = [&failedRemovals](const auto& aFileId) {
+    return failedRemovals.cend() !=
+           std::find_if(failedRemovals.cbegin(), failedRemovals.cend(),
+                        [&aFileId](const auto& aFailedRemoval) {
+                          return aFileId == aFailedRemoval;
+                        });
+  };
+
+  for (const auto& fileId : diskItems) {
+    if (!isInFailedRemovals(fileId)) {
+      QM_WARNONLY_TRY(QM_TO_RESULT(RemoveFileId(fileId)));
+    }
   }
 
   if (usage > 0) {  // Performance!

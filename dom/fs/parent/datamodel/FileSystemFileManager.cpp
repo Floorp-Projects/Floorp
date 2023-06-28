@@ -348,7 +348,7 @@ Result<Usage, QMResult> FileSystemFileManager::RemoveFile(
 }
 
 Result<DebugOnly<Usage>, QMResult> FileSystemFileManager::RemoveFiles(
-    const nsTArray<FileId>& aFileIds, nsTArray<FileId>& aRemoveFails) {
+    const nsTArray<FileId>& aFileIds, nsTArray<FileId>& aFailedRemovals) {
   if (aFileIds.IsEmpty()) {
     return DebugOnly<Usage>(0);
   }
@@ -358,7 +358,7 @@ Result<DebugOnly<Usage>, QMResult> FileSystemFileManager::RemoveFiles(
     QM_WARNONLY_TRY_UNWRAP(Maybe<nsCOMPtr<nsIFile>> maybeFile,
                            GetFileDestination(mTopDirectory, someId));
     if (!maybeFile) {
-      aRemoveFails.AppendElement(someId);
+      aFailedRemovals.AppendElement(someId);
       continue;
     }
     nsCOMPtr<nsIFile> fileObject = maybeFile.value();
@@ -367,7 +367,7 @@ Result<DebugOnly<Usage>, QMResult> FileSystemFileManager::RemoveFiles(
 #ifdef DEBUG
     QM_WARNONLY_TRY_UNWRAP(Maybe<Usage> fileSize, GetFileSize(fileObject));
     if (!fileSize) {
-      aRemoveFails.AppendElement(someId);
+      aFailedRemovals.AppendElement(someId);
       continue;
     }
     totalUsage += fileSize.value();
@@ -376,7 +376,7 @@ Result<DebugOnly<Usage>, QMResult> FileSystemFileManager::RemoveFiles(
     QM_WARNONLY_TRY_UNWRAP(Maybe<Ok> ok,
                            MOZ_TO_RESULT(RemoveFileObject(fileObject)));
     if (!ok) {
-      aRemoveFails.AppendElement(someId);
+      aFailedRemovals.AppendElement(someId);
     }
   }
 

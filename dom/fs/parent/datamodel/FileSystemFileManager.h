@@ -160,7 +160,7 @@ class FileSystemFileManager {
    * The method attempts to remove all the files requested.
    */
   Result<DebugOnly<Usage>, QMResult> RemoveFiles(
-      const nsTArray<FileId>& aFileIds, nsTArray<FileId>& aRemoveFails);
+      const nsTArray<FileId>& aFileIds, nsTArray<FileId>& aFailedRemovals);
 
  private:
   explicit FileSystemFileManager(nsCOMPtr<nsIFile>&& aTopDirectory);
