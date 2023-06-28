@@ -432,6 +432,17 @@ addon-detail-private-browsing-help = When allowed, the extension will have acces
 addon-detail-private-browsing-allow = Allow
 addon-detail-private-browsing-disallow = Don’t Allow
 
+## Protected domains (internally called "quarantined") are special domains
+## where add-ons are normally blocked for security reasons.
+
+# Used as a description for the option to allow or block an add-on on quarantined domains.
+addon-detail-quarantined-domains-label = Run on protected websites
+# Used as help text part of the quarantined domains UI controls row.
+addon-detail-quarantined-domains-help = When allowed, the extension will have access to websites protected by { -vendor-short-name }. Allow only if you trust this extension.
+# Used as label and tooltip text on the radio inputs associated to the quarantined domains UI controls.
+addon-detail-quarantined-domains-allow = Allow
+addon-detail-quarantined-domains-disallow = Don’t Allow
+
 ## This is the tooltip text for the recommended badges for an extension in about:addons. The
 ## badge is a small icon displayed next to an extension when it is recommended on AMO.
 
