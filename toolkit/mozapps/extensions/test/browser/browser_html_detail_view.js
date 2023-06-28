@@ -32,7 +32,7 @@ function getDetailRows(card) {
   );
 }
 
-function checkLabel(row, name) {
+async function checkLabel(row, name) {
   let id;
   if (name == "private-browsing") {
     // This id is carried over from the old about:addons.
@@ -40,20 +40,70 @@ function checkLabel(row, name) {
   } else {
     id = `addon-detail-${name}-label`;
   }
+  const doc = row.ownerDocument;
+  await doc.l10n.translateElements([row]);
+  const rowHeaderEl = row.firstElementChild;
+  is(doc.l10n.getAttributes(rowHeaderEl).id, id, `The ${name} label is set`);
+  if (row.role === "group") {
+    // For the rows on which the role="group" attribute is set,
+    // let's make sure that the element itself includes an aria-label
+    // which provides to the screen reader a label similar to the one
+    // rendered as the visual section header.
+    //
+    // NOTE: more screen reader accessibility assertions are being
+    // covered by the checkRowScreenReaderAccessibility test helper.
+    is(
+      row.getAttribute("aria-label"),
+      rowHeaderEl.textContent,
+      "expect an aria-label from role=group row to match row header el text"
+    );
+    // For these rows we expect rowHeaderEl to be a span.
+    is(rowHeaderEl.tagName, "SPAN", "row header element should be a span");
+  } else {
+    // For the other rows which we have not set a role="group" attribute
+    // on, we expect the rowHeaderEl to still be a label.
+    is(
+      rowHeaderEl.tagName,
+      "LABEL",
+      "row header element expected to be a label"
+    );
+  }
+}
+
+async function checkRowScreenReaderAccessibility(
+  row,
+  { groupName, expectedFluentId }
+) {
+  const doc = row.ownerDocument;
+  // Make sure the row isn't missing any strings expected to be associated
+  // to the fluent ids (which would make translateElements to reject
+  // and the test to fail explicitly).
+  await doc.l10n.translateElements([row]);
+  is(row.role, "group", `Expect ${groupName} row to have role group`);
   is(
-    row.ownerDocument.l10n.getAttributes(row.querySelector("label")).id,
-    id,
-    `The ${name} label is set`
+    doc.l10n.getAttributes(row).id,
+    expectedFluentId,
+    `Got expected fluent id associated to the ${groupName} row`
+  );
+  // Make sure that screen readers will be able to announce to the
+  // user what is the group of controls being entered.
+  ok(
+    !!row.getAttribute("aria-label")?.length,
+    `Expect non empty aria-label on the ${groupName} row`
   );
 }
 
-function checkQuarantinedDomainsUserAllowedRows(card, rows) {
+async function checkQuarantinedDomainsUserAllowedRows(card, rows) {
   // Account for the rows related to per-addon quarantineIgnoredByUser UI,
   // underling functionality of the UI is checked in its own test task.
   const doc = card.ownerDocument;
   if (card.addon.canChangeQuarantineIgnored) {
     let row = rows.shift();
-    checkLabel(row, "quarantined-domains");
+    await checkLabel(row, "quarantined-domains");
+    await checkRowScreenReaderAccessibility(row, {
+      groupName: "quarantined domains exempt controls",
+      expectedFluentId: "addon-detail-group-label-quarantined-domains",
+    });
 
     // quarantineIgnoredByUser UI help text.
     row = rows.shift();
@@ -496,7 +546,13 @@ add_task(async function testFullDetails() {
 
   // Auto updates.
   let row = rows.shift();
-  checkLabel(row, "updates");
+
+  await checkLabel(row, "updates");
+  await checkRowScreenReaderAccessibility(row, {
+    groupName: "updates controls",
+    expectedFluentId: "addon-detail-group-label-updates",
+  });
+
   let expectedOptions = [
     { value: "1", label: "addon-detail-updates-radio-default", checked: false },
     { value: "2", label: "addon-detail-updates-radio-on", checked: true },
@@ -507,7 +563,11 @@ add_task(async function testFullDetails() {
 
   // Private browsing, functionality checked in another test.
   row = rows.shift();
-  checkLabel(row, "private-browsing");
+  await checkLabel(row, "private-browsing");
+  await checkRowScreenReaderAccessibility(row, {
+    groupName: "private browsing controls",
+    expectedFluentId: "addon-detail-group-label-private-browsing",
+  });
 
   // Private browsing help text.
   row = rows.shift();
@@ -519,11 +579,11 @@ add_task(async function testFullDetails() {
     "The help row is for private browsing"
   );
 
-  checkQuarantinedDomainsUserAllowedRows(card, rows);
+  await checkQuarantinedDomainsUserAllowedRows(card, rows);
 
   // Author.
   row = rows.shift();
-  checkLabel(row, "author");
+  await checkLabel(row, "author");
   let link = row.querySelector("a");
   let authorLink = formatUrl(
     "addons-manager-user-profile-link",
@@ -533,25 +593,25 @@ add_task(async function testFullDetails() {
 
   // Version.
   row = rows.shift();
-  checkLabel(row, "version");
+  await checkLabel(row, "version");
   let text = row.lastChild;
   is(text.textContent, "3.1", "The version is set");
 
   // Last updated.
   row = rows.shift();
-  checkLabel(row, "last-updated");
+  await checkLabel(row, "last-updated");
   text = row.lastChild;
   is(text.textContent, "March 7, 2019", "The last updated date is set");
 
   // Homepage.
   row = rows.shift();
-  checkLabel(row, "homepage");
+  await checkLabel(row, "homepage");
   link = row.querySelector("a");
   checkLink(link, "http://example.com/addon1");
 
   // Reviews.
   row = rows.shift();
-  checkLabel(row, "rating");
+  await checkLabel(row, "rating");
   let rating = row.lastElementChild;
   ok(rating.classList.contains("addon-detail-rating"), "Found the rating el");
   let mozFiveStar = rating.querySelector("moz-five-star");
@@ -669,11 +729,11 @@ add_task(async function testMinimalExtension() {
 
   // Automatic updates.
   let row = rows.shift();
-  checkLabel(row, "updates");
+  await checkLabel(row, "updates");
 
   // Private browsing settings.
   row = rows.shift();
-  checkLabel(row, "private-browsing");
+  await checkLabel(row, "private-browsing");
 
   // Private browsing help text.
   row = rows.shift();
@@ -685,11 +745,11 @@ add_task(async function testMinimalExtension() {
     "The help row is for private browsing"
   );
 
-  checkQuarantinedDomainsUserAllowedRows(card, rows);
+  await checkQuarantinedDomainsUserAllowedRows(card, rows);
 
   // Author.
   row = rows.shift();
-  checkLabel(row, "author");
+  await checkLabel(row, "author");
   let text = row.lastChild;
   is(text.textContent, "I made it", "The author is set");
   ok(Text.isInstance(text), "The author is a text node");
@@ -727,18 +787,18 @@ add_task(async function testDefaultTheme() {
 
   // Author.
   let author = rows.shift();
-  checkLabel(author, "author");
+  await checkLabel(author, "author");
   let text = author.lastChild;
   is(text.textContent, "Mozilla", "The author is set");
 
   // Version.
   let version = rows.shift();
-  checkLabel(version, "version");
+  await checkLabel(version, "version");
   is(version.lastChild.textContent, "1.3", "It's always version 1.3");
 
   // Last updated.
   let lastUpdated = rows.shift();
-  checkLabel(lastUpdated, "last-updated");
+  await checkLabel(lastUpdated, "last-updated");
   let dateText = lastUpdated.lastChild.textContent;
   ok(dateText, "There is a date set");
   ok(!dateText.includes("Invalid Date"), `"${dateText}" should be a date`);
@@ -785,11 +845,11 @@ add_task(async function testStaticTheme() {
 
   // Automatic updates.
   let row = rows.shift();
-  checkLabel(row, "updates");
+  await checkLabel(row, "updates");
 
   // Author.
   let author = rows.shift();
-  checkLabel(author, "author");
+  await checkLabel(author, "author");
   let text = author.lastElementChild;
   is(text.textContent, "Artist", "The author is set");
 
@@ -823,7 +883,7 @@ add_task(async function testSitePermission() {
   );
 
   let [versionRow, ...restRows] = getDetailRows(card);
-  checkLabel(versionRow, "version");
+  await checkLabel(versionRow, "version");
 
   Assert.deepEqual(
     restRows.map(row => row.getAttribute("class")),
@@ -1318,6 +1378,11 @@ add_task(async function testQuarantinedDomainsUserAllowedUI() {
       return;
     }
 
+    await checkRowScreenReaderAccessibility(quarantinedUserAllowedControlsRow, {
+      groupName: "quarantineUserAllowed controls",
+      expectedFluentId: "addon-detail-group-label-quarantined-domains",
+    });
+
     is(
       doc.l10n.getAttributes(helpRow.firstElementChild).id,
       "addon-detail-quarantined-domains-help",
@@ -1330,6 +1395,7 @@ add_task(async function testQuarantinedDomainsUserAllowedUI() {
       "quarantined-domains",
       "Expect support link to point to SUMO quarantined-domains page"
     );
+
     // Make sure none of the elements in the help row are missing
     // the expected strings associated to the fluent ids being set
     // (if any is missing, l10n.translateElements will reject and
