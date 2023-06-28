@@ -1411,34 +1411,6 @@ class AutofillRecords {
   }
 
   /**
-   * Merge the record if storage has multiple mergeable records.
-   *
-   * @param {object} targetRecord
-   *        The record for merge.
-   * @param {boolean} [strict = false]
-   *        In strict merge mode, we'll treat the subset record with empty field
-   *        as unable to be merged, but mergeable if in non-strict mode.
-   * @returns {Array.<string>}
-   *          Return an array of the merged GUID string.
-   */
-  async mergeToStorage(targetRecord, strict = false) {
-    let mergedGUIDs = [];
-    for (let record of this._data) {
-      if (
-        !record.deleted &&
-        (await this.mergeIfPossible(record.guid, targetRecord, strict))
-      ) {
-        mergedGUIDs.push(record.guid);
-      }
-    }
-    this.log.debug(
-      "Existing records matching and merging count is",
-      mergedGUIDs.length
-    );
-    return mergedGUIDs;
-  }
-
-  /**
    * Unconditionally remove all data and tombstones for this collection.
    */
   removeAll({ sourceSync = false } = {}) {
@@ -1511,9 +1483,6 @@ class AutofillRecords {
    * @throws
    */
   _validateFields(record) {}
-
-  // An interface to be inherited.
-  async mergeIfPossible(guid, record, strict) {}
 }
 
 export class AddressesBase extends AutofillRecords {
@@ -1731,109 +1700,6 @@ export class AddressesBase extends AutofillRecords {
       }
     }
     TEL_COMPONENTS.forEach(c => delete address[c]);
-  }
-
-  /**
-   * Merge new address into the specified address if mergeable.
-   *
-   * @param  {string} guid
-   *         Indicates which address to merge.
-   * @param  {object} address
-   *         The new address used to merge into the old one.
-   * @param  {boolean} strict
-   *         In strict merge mode, we'll treat the subset record with empty field
-   *         as unable to be merged, but mergeable if in non-strict mode.
-   * @returns {Promise<boolean>}
-   *          Return true if address is merged into target with specific guid or false if not.
-   */
-  async mergeIfPossible(guid, address, strict) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
-  }
-
-  compareAddressField(field, a, b, collator) {
-    switch (field) {
-      case "street-address":
-        let ret = lazy.FormAutofillUtils.compareStreetAddress(a, b, collator);
-        return ret;
-      // TODO: support other cases
-      default:
-        return a == b;
-    }
-  }
-
-  /**
-   * Normalize the given record and return records that are either the same
-   * or is superset of the normalized given record.
-   *
-   * See the comments in `getDuplicateRecords` to see the difference between
-   * `getDuplicateRecords` and `getMatchRecords`
-   *
-   * @param {object} record
-   *        The address entry for match checking. please make sure the
-   *        record is normalized.
-   * @returns {object}
-   *          Return the first matched record found in storage, null otherwise.
-   */
-  async *getMatchRecords(record) {
-    const collators = lazy.FormAutofillUtils.getSearchCollators(
-      FormAutofill.DEFAULT_REGION
-    );
-
-    for (const recordInStorage of this._data) {
-      if (
-        this.VALID_FIELDS.every(
-          field =>
-            !record[field] ||
-            this.compareAddressField(
-              field,
-              record[field],
-              recordInStorage[field],
-              collators
-            )
-        )
-      ) {
-        yield recordInStorage;
-      }
-    }
-    return null;
-  }
-
-  /**
-   * Normalize the given record and return a duplicate address record in
-   * the storage.
-   *
-   * This is different from `getMatchRecords`, which ensures all the fields with
-   * value in the the record is equal to the returned record.
-   *
-   * @param {object} record
-   *        The address entry for duplication checking. please make sure the
-   *        record is normalized.
-   * @returns {object}
-   *          Return the first duplicated record found in storage, null otherwise.
-   */
-  async *getDuplicateRecords(record) {
-    const collators = lazy.FormAutofillUtils.getSearchCollators(
-      FormAutofill.DEFAULT_REGION
-    );
-
-    for (const recordInStorage of this._data) {
-      if (
-        this.VALID_FIELDS.every(
-          field =>
-            !record[field] ||
-            !recordInStorage[field] ||
-            this.compareAddressField(
-              field,
-              record[field],
-              recordInStorage[field],
-              collators
-            )
-        )
-      ) {
-        yield recordInStorage;
-      }
-    }
-    return null;
   }
 }
 
@@ -2139,21 +2005,6 @@ export class CreditCardsBase extends AutofillRecords {
       }
     }
     return null;
-  }
-
-  /**
-   * Merge new credit card into the specified record if cc-number is identical.
-   * (Note that credit card records always do non-strict merge.)
-   *
-   * @param  {string} guid
-   *         Indicates which credit card to merge.
-   * @param  {object} creditCard
-   *         The new credit card used to merge into the old one.
-   * @returns {boolean}
-   *          Return true if credit card is merged into target with specific guid or false if not.
-   */
-  async mergeIfPossible(guid, creditCard) {
-    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 }
 
