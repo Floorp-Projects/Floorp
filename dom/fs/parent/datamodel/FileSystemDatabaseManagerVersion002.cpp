@@ -373,12 +373,11 @@ Result<FileId, QMResult> GetNextFreeFileId(
   }
 }
 
-nsresult AddNewFileId(const FileSystemConnection& aConnection,
-                      const FileSystemFileManager& aFileManager,
-                      const EntryId& aEntryId) {
+Result<FileId, QMResult> AddNewFileId(const FileSystemConnection& aConnection,
+                                      const FileSystemFileManager& aFileManager,
+                                      const EntryId& aEntryId) {
   QM_TRY_INSPECT(const FileId& nextFreeId,
-                 GetNextFreeFileId(aConnection, aFileManager, aEntryId)
-                     .mapErr(toNSResult));
+                 GetNextFreeFileId(aConnection, aFileManager, aEntryId));
 
   const nsLiteralCString insertNewFileIdQuery =
       "INSERT INTO FileIds ( fileId, handle ) "
@@ -386,14 +385,13 @@ nsresult AddNewFileId(const FileSystemConnection& aConnection,
       "; "_ns;
 
   QM_TRY_UNWRAP(ResultStatement stmt,
-                ResultStatement::Create(aConnection, insertNewFileIdQuery)
-                    .mapErr(toNSResult));
-  QM_TRY(MOZ_TO_RESULT(stmt.BindFileIdByName("fileId"_ns, nextFreeId)));
-  QM_TRY(MOZ_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEntryId)));
+                ResultStatement::Create(aConnection, insertNewFileIdQuery));
+  QM_TRY(QM_TO_RESULT(stmt.BindFileIdByName("fileId"_ns, nextFreeId)));
+  QM_TRY(QM_TO_RESULT(stmt.BindEntryIdByName("entryId"_ns, aEntryId)));
 
-  QM_TRY(MOZ_TO_RESULT(stmt.Execute()));
+  QM_TRY(QM_TO_RESULT(stmt.Execute()));
 
-  return NS_OK;
+  return nextFreeId;
 }
 
 /**
@@ -480,7 +478,9 @@ nsresult FileSystemDatabaseManagerVersion002::EnsureFileId(
   }
 
   // The query fails if and only if no path exists: already ruled out
-  QM_TRY(MOZ_TO_RESULT(AddNewFileId(mConnection, *mFileManager, aEntryId)));
+  QM_TRY_INSPECT(const FileId& fileId,
+                 AddNewFileId(mConnection, *mFileManager, aEntryId));
+  (void)fileId;
 
   return NS_OK;
 }
