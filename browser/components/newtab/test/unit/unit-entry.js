@@ -620,6 +620,9 @@ const TEST_GLOBAL = {
       blockedSponsors: {
         set() {},
       },
+      sovAllocation: {
+        set() {},
+      },
     },
     newtabSearch: {
       enabled: {
