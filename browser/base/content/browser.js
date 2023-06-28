@@ -689,7 +689,6 @@ var gInitialPages = [
   "about:blank",
   "about:home",
   "about:firefoxview",
-  "about:firefoxview-next",
   "about:newtab",
   "about:privatebrowsing",
   "about:sessionrestore",
@@ -9857,7 +9856,6 @@ var FirefoxViewHandler = {
     this._updateEnabledState = this._updateEnabledState.bind(this);
     this._updateEnabledState();
     NimbusFeatures.majorRelease2022.onUpdate(this._updateEnabledState);
-    NimbusFeatures.firefoxViewNext.onUpdate(this._updateEnabledState);
 
     if (this._enabled) {
       this._toggleNotificationDot(
@@ -9875,9 +9873,7 @@ var FirefoxViewHandler = {
     NimbusFeatures.majorRelease2022.offUpdate(this._updateEnabledState);
   },
   _updateEnabledState() {
-    this._enabled =
-      NimbusFeatures.majorRelease2022.getVariable("firefoxView") ||
-      NimbusFeatures.firefoxViewNext.getVariable("enabled");
+    this._enabled = NimbusFeatures.majorRelease2022.getVariable("firefoxView");
     // We use a root attribute because there's no guarantee the button is in the
     // DOM, and visibility changes need to take effect even if it isn't in the DOM
     // right now.
@@ -9908,15 +9904,8 @@ var FirefoxViewHandler = {
         CustomizableUI.getPlacementOfWidget("tabbrowser-tabs").position
       );
     }
-    const viewURL = NimbusFeatures.firefoxViewNext.getVariable("enabled")
-      ? "about:firefoxview-next"
-      : "about:firefoxview";
-    if (this.tab && this.tab.linkedBrowser.currentURI.spec != viewURL) {
-      gBrowser.removeTab(this.tab);
-      this.tab = null;
-    }
     if (!this.tab) {
-      this.tab = gBrowser.addTrustedTab(viewURL);
+      this.tab = gBrowser.addTrustedTab("about:firefoxview");
       this.tab.addEventListener("TabClose", this, { once: true });
       gBrowser.tabContainer.addEventListener("TabSelect", this);
       window.addEventListener("activate", this);
