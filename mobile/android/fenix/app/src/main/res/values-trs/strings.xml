@@ -615,7 +615,15 @@
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Gīni’hiāj doj dàj hua nej fondo huā da’ gīnu riña si pāntayât</string>
 
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error">Na’hue gāchīn sa ruhuât nūtà’t</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed">Ngà nanun sa nutâ’t riña aga’ nan</string>
+
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Si Kuendâ administrador</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Nāgi\'iaj nūguàn\'àn hìaj</string>
     <!-- Preference category for sync -->
@@ -650,6 +658,12 @@
         The first parameter is the application name, the second is the device manufacturer name
         and the third is the device model. -->
     <string name="default_device_name_2">%1$s riña %2$s %3$s</string>
+
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">Tarjetâ san\'ānj an</string>
+
+    <!-- Preference for syncing addresses -->
+    <string name="preferences_sync_address">Nej direksiûn</string>
 
     <!-- Send Tab -->
     <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
@@ -1178,6 +1192,11 @@
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Dūyingô’</string>
 
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey">Nātsij ēnkuêsta</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey">Sī ga’hue, guruhuât</string>
+
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Ganare\' sa ganachra chrē\'t</string>
@@ -1187,6 +1206,10 @@
     <string name="snackbar_tab_closed">Ganarán riña rakïj ñanj</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Ganarán riña nej rakïj ñanj</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">Ngà nañûn man riña nej sa arâj sun nīchrà\'t doj!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">Ngà nanunj riña nej aksêso dirêkto!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Ngà narán riña rakïj ñanj huìi</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
@@ -1202,6 +1225,8 @@
     <string name="qr_scanner_dialog_positive">GA\'NĪN</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">SĪ GA\'NÏNJT</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Nitāj si huā hue\'ê si direksiûn Web gachrûnt</string>
     <!-- QR code scanner prompt dialog positive option when there is an error -->
     <string name="qr_scanner_dialog_invalid_ok">GĀ’HUE</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
@@ -1281,11 +1306,23 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Hīaj nadure\'ej nej si datô riña sā nana\'uî\'t…</string>
 
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">Nādure’ daran’ nej sîtio riña “%s”</string>
     <!-- Text for the cancel button for the history group deletion dialog -->
     <string name="delete_history_group_prompt_cancel">Dūyichin\'</string>
     <!-- Text for the allow button for the history group dialog -->
     <string name="delete_history_group_prompt_allow">Nādūre\'</string>
 
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">Ngà nare’ grûpo</string>
+
+    <!-- Onboarding -->
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Guruhuât gunumânt riña internêt ‘hiaj sun hue’ê doj nan</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Guendâ guìi gurugui’ sa nana’hui’ nan, sê guendâ gīrij san’ānj an huin man.</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Nakāj danè’ gudunâjt</string>
     <!-- Text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in">Gāyi\'ì sēsiûn</string>
     <!-- text to display in the snackbar once account is signed-in -->

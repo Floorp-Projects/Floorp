@@ -53,7 +53,7 @@
     <string name="menu_remove_from_shortcuts">Aus Verknüpfungen entfernen</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">Was ist neu</string>
+    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">Was ist neu</string>
     <string name="menu_settings">Einstellungen</string>
     <string name="menu_about">Über</string>
     <string name="menu_help">Hilfe</string>
@@ -656,10 +656,10 @@
     <string name="preference_autocomplete_duplicate_url_error">Adresse existiert bereits</string>
 
     <!-- Label for the Find in page button -->
-    <string name="find_in_page">In Seite suchen</string>
+    <string name="find_in_page">Seite durchsuchen</string>
 
     <!-- Watermark/Hint for the find in page input field -->
-    <string name="find_in_page_input">In Seite suchen</string>
+    <string name="find_in_page_input">Seite durchsuchen</string>
 
     <!-- String to show the number of results found in the page and the
         position the user is at. The first argument is the position, the second argument is the total -->
@@ -673,7 +673,7 @@
     <!-- String to be read by the accessibility service when focusing the previous result button -->
     <string name="accessibility_previous_result">Vorheriges Ergebnis suchen</string>
     <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
-    <string name="accessibility_dismiss_find_in_page">„In Seite suchen“ deaktivieren</string>
+    <string name="accessibility_dismiss_find_in_page">&quot;Seite durchsuchen&quot; deaktivieren</string>
 
 
 

@@ -635,6 +635,8 @@
     <string name="addon_already_installed">Tillegget er allerede installert</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Behandle konto</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synkroniser nå</string>
     <!-- Preference category for sync -->

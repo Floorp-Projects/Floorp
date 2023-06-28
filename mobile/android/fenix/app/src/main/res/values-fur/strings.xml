@@ -362,13 +362,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Informazions</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Selezione un</string>
+    <string name="preferences_category_select_default_search_engine">Selezione un</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Gjestìs lis scurtis di ricercje</string>
+    <string name="preferences_manage_search_shortcuts">Gjestìs lis scurtis di ricercje</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Modifiche i motôrs visibii tal menù di ricercje</string>
+    <string name="preferences_manage_search_shortcuts_summary">Modifiche i motôrs visibii tal menù di ricercje</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Motôrs visibii tal menù di ricercje</string>
+    <string name="preferences_category_engines_in_search_menu">Motôrs visibii tal menù di ricercje</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Motôr di ricercje predefinît</string>
     <!-- Preference for settings related to Search -->
@@ -637,6 +637,8 @@
     <string name="addon_already_installed">Il component adizionâ al è za instalât</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Gjestìs account</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sincronize cumò</string>
     <!-- Preference category for sync -->
@@ -1874,7 +1876,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Zonte motôr di ricercje</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Zonte gnûf motôr di ricercje</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Zonte gnûf motôr di ricercje</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Modifiche motôr di ricercje</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1889,24 +1891,24 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Altri</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Non</string>
+    <string name="search_add_custom_engine_name_label">Non</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Non</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Non dal motôr di ricercje</string>
+    <string name="search_add_custom_engine_name_hint_2">Non dal motôr di ricercje</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">URL de stringhe di ricercje</string>
+    <string name="search_add_custom_engine_url_label">URL de stringhe di ricercje</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Stringhe di ricercje di doprâ</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">URL di doprâ pe ricercje</string>
+    <string name="search_add_custom_engine_search_string_hint_2">URL di doprâ pe ricercje</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Sostituìs il test de ricercje cun “%s”. Esempli:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Detais dal motôr di ricercje personalizât</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Salve</string>
+    <string name="search_custom_engine_save_button">Salve</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Inserìs il non dal motôr di ricercje</string>

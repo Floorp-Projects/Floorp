@@ -369,13 +369,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">A proposito</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Selige uno</string>
+    <string name="preferences_category_select_default_search_engine">Selige uno</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Gerer vias breve de recerca</string>
+    <string name="preferences_manage_search_shortcuts">Gerer vias breve de recerca</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Modificar motores visibile in le menu de recerca</string>
+    <string name="preferences_manage_search_shortcuts_summary">Modificar motores visibile in le menu de recerca</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Motores visibile in le menu de recerca</string>
+    <string name="preferences_category_engines_in_search_menu">Motores visibile in le menu de recerca</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Motor de recerca predefinite</string>
     <!-- Preference for settings related to Search -->
@@ -644,6 +644,8 @@
     <string name="addon_already_installed">Additivo jam installate</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Gerer le conto</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synchronisar ora</string>
     <!-- Preference category for sync -->
@@ -1932,7 +1934,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Adder motor de recerca</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Adder un altere motor de recerca</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Adder un altere motor de recerca</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Rediger motor de recerca</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1948,17 +1950,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Altere</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Nomine</string>
+    <string name="search_add_custom_engine_name_label">Nomine</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Nomine</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Nomine del motor de recerca</string>
+    <string name="search_add_custom_engine_name_hint_2">Nomine del motor de recerca</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">URL del stringa de recerca</string>
+    <string name="search_add_custom_engine_url_label">URL del stringa de recerca</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Catena de recerca a usar</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">URL a usar pro le recerca</string>
+    <string name="search_add_custom_engine_search_string_hint_2">URL a usar pro le recerca</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Replaciar le recerca con “%s”. Exemplo:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1966,7 +1968,7 @@
     <string name="search_add_custom_engine_form_description">Detalios del motor de recerca personalisate</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Salvar</string>
+    <string name="search_custom_engine_save_button">Salvar</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Insere nomine del motor de recerca</string>

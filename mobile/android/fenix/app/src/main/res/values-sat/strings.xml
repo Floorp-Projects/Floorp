@@ -364,13 +364,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">ᱵᱟᱵᱚᱛ</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">ᱢᱤᱫᱴᱟᱹᱝ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
+    <string name="preferences_category_select_default_search_engine">ᱢᱤᱫᱴᱟᱹᱝ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">ᱥᱮᱸᱫᱽᱨᱟ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
+    <string name="preferences_manage_search_shortcuts">ᱥᱮᱸᱫᱽᱨᱟ ᱠᱷᱟᱴᱚᱢᱟᱪᱷᱟ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">ᱥᱮᱸᱫᱽᱨᱟ ᱢᱮᱱᱩ ᱨᱮ ᱧᱮᱞᱚᱜ ᱠᱟᱱ ᱤᱧᱡᱤᱱ ᱠᱚ ᱥᱟᱯᱲᱟᱣ ᱢᱮ</string>
+    <string name="preferences_manage_search_shortcuts_summary">ᱥᱮᱸᱫᱽᱨᱟ ᱢᱮᱱᱩ ᱨᱮ ᱧᱮᱞᱚᱜ ᱠᱟᱱ ᱤᱧᱡᱤᱱ ᱠᱚ ᱥᱟᱯᱲᱟᱣ ᱢᱮ</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">ᱥᱮᱸᱫᱽᱨᱟ ᱢᱮᱱᱩ ᱨᱮ ᱧᱮᱞᱚᱜ ᱠᱟᱱ ᱤᱧᱡᱤᱱ ᱠᱚ</string>
+    <string name="preferences_category_engines_in_search_menu">ᱥᱮᱸᱫᱽᱨᱟ ᱢᱮᱱᱩ ᱨᱮ ᱧᱮᱞᱚᱜ ᱠᱟᱱ ᱤᱧᱡᱤᱱ ᱠᱚ</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">ᱢᱩᱞ ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ</string>
     <!-- Preference for settings related to Search -->
@@ -636,6 +636,8 @@
     <string name="addon_already_installed">ᱮᱰᱼᱚᱱ ᱢᱟᱲᱟᱝ ᱠᱷᱚᱱ ᱵᱚᱦᱟᱞ ᱟᱠᱟᱱᱟ</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">ᱠᱷᱟᱛᱟ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ᱱᱤᱛᱚᱜ ᱥᱭᱝᱠ ᱢᱮ</string>
     <!-- Preference category for sync -->
@@ -1885,7 +1887,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">ᱢᱤᱫᱴᱟᱹᱝ ᱱᱟᱶᱟ ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">ᱢᱤᱫᱴᱟᱹᱝ ᱱᱟᱶᱟ ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱥᱟᱯᱲᱟᱣ ᱢᱮ</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1900,25 +1902,25 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">ᱮᱴᱟᱜ-ᱟᱜ</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">ᱧᱩᱛᱩᱢ</string>
+    <string name="search_add_custom_engine_name_label">ᱧᱩᱛᱩᱢ</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">ᱧᱩᱛᱩᱢ</string>
 
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱧᱩᱛᱩᱢ</string>
+    <string name="search_add_custom_engine_name_hint_2">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱧᱩᱛᱩᱢ</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">ᱥᱴᱨᱤᱝ URL ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
+    <string name="search_add_custom_engine_url_label">ᱥᱴᱨᱤᱝ URL ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ᱵᱮᱵᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱥᱴᱨᱭᱸᱜ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">ᱥᱮᱸᱫᱽᱨᱟ ᱞᱟᱹᱜᱤᱫ URL ᱵᱮᱵᱷᱟᱨ</string>
+    <string name="search_add_custom_engine_search_string_hint_2">ᱥᱮᱸᱫᱽᱨᱟ ᱞᱟᱹᱜᱤᱫ URL ᱵᱮᱵᱷᱟᱨ</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">“%s” ᱥᱟᱞᱟᱜ ᱠᱣᱮᱨᱭ ᱵᱚᱫᱚᱞ ᱢᱮ ᱾ ᱡᱮᱢᱚᱱ:\nhttps://www.google.com/search?q=%s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">ᱠᱩᱥᱤᱭᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱨᱮᱭᱟᱜ ᱵᱤᱵᱨᱚᱬ</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
+    <string name="search_custom_engine_save_button">ᱥᱟᱺᱪᱟᱣ ᱢᱮ</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">ᱥᱮᱸᱫᱽᱨᱟ ᱤᱧᱡᱤᱱ ᱨᱮᱭᱟᱜ ᱧᱩᱛᱩᱢ ᱟᱫᱮᱨ ᱢᱮ</string>
