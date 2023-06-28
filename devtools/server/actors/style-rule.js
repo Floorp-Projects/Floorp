@@ -744,7 +744,8 @@ class StyleRuleActor extends Actor {
     }
 
     this.authoredText = newText;
-    this.pageStyle.refreshObservedRules();
+    await this.updateAncestorRulesAuthoredText();
+    this.pageStyle.refreshObservedRules(this.ancestorRules);
 
     // Add processed modifications to the _pendingDeclarationChanges array,
     // they will be emitted as CSS_CHANGE resources once `declarations` have
@@ -754,6 +755,18 @@ class StyleRuleActor extends Actor {
     // Returning this updated actor over the protocol will update its corresponding front
     // and any references to it.
     return this;
+  }
+
+  /**
+   * Update the authored text of the ancestor rules. This should be called when setting
+   * the authored text of a (nested) rule, so all the references are properly updated.
+   */
+  async updateAncestorRulesAuthoredText() {
+    const promises = [];
+    for (const ancestorRule of this.ancestorRules) {
+      promises.push(ancestorRule.getAuthoredCssText(true));
+    }
+    await Promise.all(promises);
   }
 
   /**
@@ -778,7 +791,6 @@ class StyleRuleActor extends Actor {
     // Use a fresh element for each call to this function to prevent side
     // effects that pop up based on property values that were already set on the
     // element.
-
     let document;
     if (this.rawNode) {
       document = this.rawNode.ownerDocument;
@@ -806,7 +818,7 @@ class StyleRuleActor extends Actor {
       }
     }
 
-    this.pageStyle.refreshObservedRules();
+    this.pageStyle.refreshObservedRules(this.ancestorRules);
 
     // Add processed modifications to the _pendingDeclarationChanges array,
     // they will be emitted as CSS_CHANGE resources once `declarations` have
@@ -890,6 +902,8 @@ class StyleRuleActor extends Actor {
         }
       }
     }
+
+    await this.updateAncestorRulesAuthoredText();
 
     return this._getRuleFromIndex(parentStyleSheet);
   }
@@ -1127,9 +1141,13 @@ class StyleRuleActor extends Actor {
    *
    * If any have changed their used/unused state, potentially as a result of changes in
    * another rule, fire a "rule-updated" event with this rule actor in its latest state.
+   *
+   * @param {Boolean} forceRefresh: Set to true to emit "rule-updated", even if the state
+   *        of the declarations didn't change.
    */
-  refresh() {
+  maybeRefresh(forceRefresh) {
     let hasChanged = false;
+
     const el = this.pageStyle.selectedElement;
     const style = CssLogic.getComputedStyle(el);
 
@@ -1143,7 +1161,7 @@ class StyleRuleActor extends Actor {
       }
     }
 
-    if (hasChanged) {
+    if (hasChanged || forceRefresh) {
       // ⚠️ IMPORTANT ⚠️
       // When an event is emitted via the protocol with the StyleRuleActor as payload, the
       // corresponding StyleRuleFront will be automatically updated under the hood.
