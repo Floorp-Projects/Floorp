@@ -1268,8 +1268,8 @@ class ConfigureSandbox(dict):
         glob = SandboxedGlobal(
             (k, v)
             for k, v in six.iteritems(func.__globals__)
-            if (inspect.isfunction(v) and v not in self._templates)
-            or (inspect.isclass(v) and issubclass(v, Exception))
+            if (isinstance(v, types.FunctionType) and v not in self._templates)
+            or (isinstance(v, type) and issubclass(v, Exception))
         )
         glob.update(
             __builtins__=self.BUILTINS,
