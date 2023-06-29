@@ -3268,10 +3268,6 @@ impl TileCacheInstance {
 
                     // If this is a sub-graph, register the bounds on any affected tiles
                     // so we know how much to expand the content tile by.
-
-                    // Implicitly, we know that any slice with a sub-graph disables compositor
-                    // surface promotion, so sub_slice_index will always be 0.
-                    debug_assert_eq!(sub_slice_index, 0);
                     let sub_slice = &mut self.sub_slices[sub_slice_index];
 
                     let mut surface_info = Vec::new();
