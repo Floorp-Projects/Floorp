@@ -302,6 +302,7 @@ class AppLinksUseCases(
             "https", "moz-extension", "moz-safe-about", "resource", "view-source", "ws", "wss", "blob",
         )
 
+        internal val ALWAYS_ALLOW_SCHEMES: Set<String> = setOf("tel", "mailto")
         internal val ALWAYS_DENY_SCHEMES: Set<String> = setOf("jar", "file", "javascript", "data", "about")
     }
 }
