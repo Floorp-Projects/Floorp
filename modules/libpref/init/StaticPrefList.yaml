@@ -10887,14 +10887,13 @@
   value: true
   mirror: always
 
-# setSinkId will be enabled in bug 1498512. Till then the
-# implementation will remain hidden behind this pref (Bug 1152401, Bug 934425).
+# Is the Audio Output Devices API enabled?
 - name: media.setsinkid.enabled
   type: bool
 #if defined(MOZ_WIDGET_ANDROID)
   value: false # bug 1473346
 #else
-  value: @IS_NIGHTLY_BUILD@
+  value: true
 #endif
   mirror: always
 
