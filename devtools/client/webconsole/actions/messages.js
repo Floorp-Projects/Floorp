@@ -118,6 +118,7 @@ function messageGetMatchingElements(message) {
         {
           selectedTargetFront,
           innerWindowID: message.innerWindowID,
+          disableBreaks: true,
         }
       );
       dispatch({

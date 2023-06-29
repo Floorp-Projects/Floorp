@@ -39,19 +39,27 @@ function logEvent({ threadActor, frame, level, expression, bindings }) {
       bindings: { displayName, ...bindings },
       url: sourceActor.url,
       lineNumber: line,
+      disableBreaks: true,
     });
 
     return undefined;
   }
 
-  const completion = frame.evalWithBindings(
-    expression,
-    {
-      displayName,
-      ...bindings,
-    },
-    { hideFromDebugger: true }
-  );
+  let completion;
+  // Ensure disabling all types of breakpoints for all sources while evaluating the log points
+  threadActor.insideClientEvaluation = { disableBreaks: true };
+  try {
+    completion = frame.evalWithBindings(
+      expression,
+      {
+        displayName,
+        ...bindings,
+      },
+      { hideFromDebugger: true }
+    );
+  } finally {
+    threadActor.insideClientEvaluation = null;
+  }
 
   let value;
   if (!completion) {

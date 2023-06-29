@@ -144,14 +144,14 @@ class BreakpointActor {
    */
   // eslint-disable-next-line complexity
   hit(frame) {
+    if (this.threadActor.shouldSkipAnyBreakpoint) {
+      return undefined;
+    }
+
     // Don't pause if we are currently stepping (in or over) or the frame is
     // black-boxed.
     const location = this.threadActor.sourcesManager.getFrameLocation(frame);
-
-    if (
-      this.threadActor.sourcesManager.isFrameBlackBoxed(frame) ||
-      this.threadActor.skipBreakpointsOption
-    ) {
+    if (this.threadActor.sourcesManager.isFrameBlackBoxed(frame)) {
       return undefined;
     }
 

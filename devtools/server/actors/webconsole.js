@@ -929,17 +929,27 @@ class WebConsoleActor extends Actor {
       eager: request.eager,
       bindings: request.bindings,
       lineNumber: request.lineNumber,
+      // This flag is set to true in most cases as we consider most evaluations as internal and:
+      // * prevent any breakpoint from being triggerred when evaluating the JS input
+      // * prevent spawning Debugger.Source for the evaluated JS and showing it in Debugger UI
+      // This is only set to false when evaluating the console input.
+      disableBreaks: !!request.disableBreaks,
     };
 
     const { mapped } = request;
 
     // Set a flag on the thread actor which indicates an evaluation is being
-    // done for the client. This can affect how debugger handlers behave.
+    // done for the client. This is used to disable all types of breakpoints for all sources
+    // via `disabledBreaks`. When this flag is used, `reportExceptionsWhenBreaksAreDisabled`
+    // allows to still pause on exceptions.
     this.parentActor.threadActor.insideClientEvaluation = evalOptions;
 
-    const evalInfo = evalWithDebugger(input, evalOptions, this);
-
-    this.parentActor.threadActor.insideClientEvaluation = null;
+    let evalInfo;
+    try {
+      evalInfo = evalWithDebugger(input, evalOptions, this);
+    } finally {
+      this.parentActor.threadActor.insideClientEvaluation = null;
+    }
 
     return new Promise((resolve, reject) => {
       // Queue up a task to run in the next tick so any microtask created by the evaluated

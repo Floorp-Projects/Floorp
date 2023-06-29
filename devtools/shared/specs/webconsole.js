@@ -156,6 +156,7 @@ const webconsoleSpecPrototype = {
         innerWindowID: Option(0, "number"),
         mapped: Option(0, "nullable:json"),
         eager: Option(0, "nullable:boolean"),
+        disableBreaks: Option(0, "nullable:boolean"),
       },
       response: RetVal("console.evaluatejsasync"),
     },

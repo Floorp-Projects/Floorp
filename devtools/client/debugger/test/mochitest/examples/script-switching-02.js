@@ -8,6 +8,7 @@ function secondCall() {
   if (x) {
     foo();
   }
+  return 44;
 }
 
 var x = true;

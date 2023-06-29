@@ -6,4 +6,5 @@ function a() {}
 function firstCall() {
   a();
   secondCall();
+  return 43;
 }

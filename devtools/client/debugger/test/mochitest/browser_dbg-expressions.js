@@ -60,6 +60,15 @@ add_task(async function () {
 
   await deleteExpression(dbg, "location");
   is(findAllElements(dbg, "expressionNodes").length, 0);
+
+  info(
+    "Test an expression calling a function with a breakpoint and a debugger statement, which shouldn't pause"
+  );
+  await addBreakpoint(dbg, "script-switching-01.js", 7);
+  // firstCall will call secondCall from script-switching-02.js which has a debugger statement
+  await addExpression(dbg, "firstCall()");
+  is(getWatchExpressionLabel(dbg, 1), "firstCall()");
+  is(getWatchExpressionValue(dbg, 1), "43", "has a value");
 });
 
 function assertEmptyValue(dbg, index) {
