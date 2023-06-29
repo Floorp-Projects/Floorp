@@ -30,7 +30,6 @@ namespace {
 
 using testing::NiceMock;
 using testing::Return;
-using testing::ReturnRef;
 
 TEST(FrameTransformerFactory, CloneVideoFrame) {
   NiceMock<MockTransformableVideoFrame> original_frame;
@@ -43,13 +42,12 @@ TEST(FrameTransformerFactory, CloneVideoFrame) {
   // Copy csrcs rather than moving so we can compare in an EXPECT_EQ later.
   metadata.SetCsrcs(csrcs);
 
-  EXPECT_CALL(original_frame, GetMetadata())
-      .WillRepeatedly(ReturnRef(metadata));
+  EXPECT_CALL(original_frame, Metadata()).WillRepeatedly(Return(metadata));
   auto cloned_frame = CloneVideoFrame(&original_frame);
 
   EXPECT_EQ(cloned_frame->GetData().size(), 10u);
   EXPECT_THAT(cloned_frame->GetData(), testing::Each(5u));
-  EXPECT_EQ(cloned_frame->GetMetadata().GetCsrcs(), csrcs);
+  EXPECT_EQ(cloned_frame->Metadata().GetCsrcs(), csrcs);
 }
 
 }  // namespace
