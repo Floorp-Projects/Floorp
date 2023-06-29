@@ -467,7 +467,7 @@ export class UrlbarInput {
 
     this.value = value;
     this.valueIsTyped = !valid;
-    this.toggleAttribute("usertyping", !valid);
+    this.removeAttribute("usertyping");
 
     if (this.focused && value != previousUntrimmedValue) {
       if (
@@ -3475,7 +3475,11 @@ export class UrlbarInput {
       this._compositionClosedPopup = false;
     }
 
-    this.toggleAttribute("usertyping", !!value);
+    if (value) {
+      this.setAttribute("usertyping", "true");
+    } else {
+      this.removeAttribute("usertyping");
+    }
     this.removeAttribute("actiontype");
 
     if (
@@ -3653,7 +3657,11 @@ export class UrlbarInput {
       this._setValue(value);
       this.window.gBrowser.userTypedValue = value;
 
-      this.toggleAttribute("usertyping", !!this._untrimmedValue);
+      if (this._untrimmedValue) {
+        this.setAttribute("usertyping", "true");
+      } else {
+        this.removeAttribute("usertyping");
+      }
 
       // Fix up cursor/selection:
       let newCursorPos = oldStart.length + pasteData.length;
