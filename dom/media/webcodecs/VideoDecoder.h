@@ -154,7 +154,8 @@ class VideoDecoder final : public DOMEventTargetHelper {
       UniquePtr<ControlMessage>& aMessage);
 
   // Returns true when mAgent can be created.
-  bool CreateDecoderAgent(UniquePtr<VideoDecoderConfig>&& aConfig,
+  bool CreateDecoderAgent(DecoderAgent::Id aId,
+                          UniquePtr<VideoDecoderConfig>&& aConfig,
                           UniquePtr<TrackInfo>&& aInfo);
   void DestroyDecoderAgentIfAny();
 
@@ -177,6 +178,9 @@ class VideoDecoder final : public DOMEventTargetHelper {
   uint32_t mDecodeQueueSize;
   bool mDequeueEventScheduled;
 
+  // A unique id tracking the ConfigureMessage and will be used as the
+  // DecoderAgent's Id.
+  uint32_t mLatestConfigureId;
   // Tracking how many decode data has been enqueued and this number will be
   // used as the DecodeMessage's Id.
   size_t mDecodeCounter;
