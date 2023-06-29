@@ -113,10 +113,10 @@ class DataChannelController : public SctpDataChannelControllerInterface,
           config) /* RTC_RUN_ON(signaling_thread()) */;
 
   // Parses and handles open messages.  Returns true if the message is an open
-  // message, false otherwise.
-  bool HandleOpenMessage_s(const cricket::ReceiveDataParams& params,
+  // message and should be considered to be handled, false otherwise.
+  bool HandleOpenMessage_n(const cricket::ReceiveDataParams& params,
                            const rtc::CopyOnWriteBuffer& buffer)
-      RTC_RUN_ON(signaling_thread());
+      RTC_RUN_ON(network_thread());
   // Called when a valid data channel OPEN message is received.
   void OnDataChannelOpenMessage(const std::string& label,
                                 const InternalDataChannelInit& config)
