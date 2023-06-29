@@ -74,7 +74,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1830813-page.onstove.com-hide-unsupported.css",
     "injections/css/bug1836103-autostar-novoross.ru-make-map-taller.css",
     "injections/css/bug1836105-cnn.com-fix-blank-pages-when-printing.css",
-    "injections/css/bug1836177-clalit.co.il-hide-number-input-spinners.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
@@ -100,7 +99,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1818818-fastclick-legacy-shim.js",
     "injections/js/bug1819450-cmbchina.com-ua-change.js",
     "injections/js/bug1819476-axisbank.com-webkitSpeechRecognition-shim.js",
-    "injections/js/bug1819678-cnki.net-undisable-search-field.js",
     "injections/js/bug1819678-free4talk.com-window-chrome-shim.js",
     "injections/js/bug1830776-blueshieldca.com-unsupported.js",
     "injections/js/bug1831007-nintendo-window-OnetrustActiveGroups.js",
