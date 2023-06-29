@@ -55,13 +55,13 @@ struct VideoFrameCopyToOptions;
 namespace mozilla::dom {
 
 struct VideoFrameData {
-  VideoFrameData(layers::Image* aImage, const VideoPixelFormat& aFormat,
+  VideoFrameData(layers::Image* aImage, const Maybe<VideoPixelFormat>& aFormat,
                  gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
                  Maybe<uint64_t> aDuration, int64_t aTimestamp,
                  const VideoColorSpaceInit& aColorSpace);
 
   const RefPtr<layers::Image> mImage;
-  const VideoPixelFormat mFormat;
+  const Maybe<VideoPixelFormat> mFormat;
   const gfx::IntRect mVisibleRect;
   const gfx::IntSize mDisplaySize;
   const Maybe<uint64_t> mDuration;
@@ -71,7 +71,7 @@ struct VideoFrameData {
 
 struct VideoFrameSerializedData : VideoFrameData {
   VideoFrameSerializedData(layers::Image* aImage,
-                           const VideoPixelFormat& aFormat,
+                           const Maybe<VideoPixelFormat>& aFormat,
                            gfx::IntSize aCodedSize, gfx::IntRect aVisibleRect,
                            gfx::IntSize aDisplaySize, Maybe<uint64_t> aDuration,
                            int64_t aTimestamp,
@@ -89,7 +89,7 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
 
  public:
   VideoFrame(nsIGlobalObject* aParent, const RefPtr<layers::Image>& aImage,
-             const VideoPixelFormat& aFormat, gfx::IntSize aCodedSize,
+             const Maybe<VideoPixelFormat>& aFormat, gfx::IntSize aCodedSize,
              gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
              const Maybe<uint64_t>& aDuration, int64_t aTimestamp,
              const VideoColorSpaceInit& aColorSpace);
@@ -216,15 +216,17 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   // A class representing the VideoFrame's data.
   class Resource final {
    public:
-    Resource(const RefPtr<layers::Image>& aImage, const Format& aFormat);
+    Resource(const RefPtr<layers::Image>& aImage, Maybe<Format>&& aFormat);
     Resource(const Resource& aOther);
     ~Resource() = default;
+    Maybe<VideoPixelFormat> TryPixelFormat() const;
     uint32_t Stride(const Format::Plane& aPlane) const;
     bool CopyTo(const Format::Plane& aPlane, const gfx::IntRect& aRect,
                 Span<uint8_t>&& aPlaneDest, size_t aDestinationStride) const;
 
     const RefPtr<layers::Image> mImage;
-    const Format mFormat;
+    // Nothing() if mImage is not in VideoPixelFormat
+    const Maybe<Format> mFormat;
   };
 
   nsCOMPtr<nsIGlobalObject> mParent;
