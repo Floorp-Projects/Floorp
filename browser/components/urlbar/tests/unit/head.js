@@ -386,7 +386,6 @@ function testEngine_setup() {
 
 async function cleanupPlaces() {
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
-  Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
 
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesUtils.history.clear();
@@ -570,41 +569,6 @@ function makeKeywordSearchResult(
       input: [queryContext.searchString, UrlbarUtils.HIGHLIGHT.TYPED],
       postData: postData || null,
       icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
-    })
-  );
-
-  if (heuristic) {
-    result.heuristic = heuristic;
-  }
-  return result;
-}
-
-/**
- * Creates a UrlbarResult for a priority search result.
- *
- * @param {UrlbarQueryContext} queryContext
- *   The context that this result will be displayed in.
- * @param {object} options
- *   Options for the result.
- * @param {string} [options.engineName]
- *   The name of the engine providing the suggestion. Leave blank if there
- *   is no suggestion.
- * @param {string} [options.engineIconUri]
- *   A URI for the engine's icon.
- * @param {boolean} [options.heuristic]
- *   True if this is a heuristic result. Defaults to false.
- * @returns {UrlbarResult}
- */
-function makePrioritySearchResult(
-  queryContext,
-  { engineName, engineIconUri, heuristic }
-) {
-  let result = new UrlbarResult(
-    UrlbarUtils.RESULT_TYPE.SEARCH,
-    UrlbarUtils.RESULT_SOURCE.SEARCH,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-      engine: [engineName, UrlbarUtils.HIGHLIGHT.TYPED],
-      icon: engineIconUri,
     })
   );
 

@@ -59,10 +59,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // 30 days since user input it as the default.
   ["autoFill.adaptiveHistory.useCountThreshold", [0.47, "float"]],
 
-  // If true, the domains of the user's installed search engines will be
-  // autofilled even if the user hasn't actually visited them.
-  ["autoFill.searchEngines", false],
-
   // Affects the frecency threshold of the autofill algorithm.  The threshold is
   // the mean of all origin frecencies plus one standard deviation multiplied by
   // this value.  See UrlbarProviderPlaces.

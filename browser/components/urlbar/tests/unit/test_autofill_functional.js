@@ -113,3 +113,35 @@ add_task(async function test_complete_fragment() {
   });
   await cleanupPlaces();
 });
+
+add_task(async function test_prefix_autofill() {
+  await PlacesTestUtils.addVisits({
+    uri: Services.io.newURI("http://mozilla.org/test/"),
+  });
+  await PlacesTestUtils.addVisits({
+    uri: Services.io.newURI("http://moz.org/test/"),
+  });
+
+  info("Should still autofill after a search is cancelled immediately");
+  let context = createContext("mozi", { isPrivate: false });
+  await check_results({
+    context,
+    incompleteSearch: "moz",
+    autofilled: "mozilla.org/",
+    completed: "http://mozilla.org/",
+    matches: [
+      makeVisitResult(context, {
+        uri: "http://mozilla.org/",
+        fallbackTitle: "mozilla.org",
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        uri: "http://mozilla.org/test/",
+        title: "test visit for http://mozilla.org/test/",
+        providerName: "Places",
+      }),
+    ],
+  });
+
+  await cleanupPlaces();
+});
