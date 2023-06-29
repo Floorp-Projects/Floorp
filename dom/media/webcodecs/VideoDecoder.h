@@ -27,7 +27,9 @@ class nsIGlobalObject;
 
 namespace mozilla {
 
+class MediaData;
 class TrackInfo;
+class VideoInfo;
 
 namespace dom {
 
@@ -57,6 +59,19 @@ struct ConfigureMessage final {
   const nsCString mTitle;  // Used to identify the message in the logs.
   MozPromiseRequestHolder<DecoderAgent::ConfigurePromise> mRequest;
   UniquePtr<VideoDecoderConfig> mConfig;
+};
+
+struct DecodeMessage final {
+  using Id = size_t;
+
+  // ChunkData extracts necessary data in EncodedVideoChunk and hand it over
+  // to DecoderAgent.
+  struct ChunkData;
+  DecodeMessage(Id aId, UniquePtr<ChunkData>&& aData);
+  const nsCString mTitle;  // Used to identify the message in the logs.
+  MozPromiseRequestHolder<DecoderAgent::DecodePromise> mRequest;
+  const Id mId;  // A unique id shown in log.
+  UniquePtr<ChunkData> mData;
 };
 
 class VideoDecoder final : public DOMEventTargetHelper {
@@ -91,7 +106,7 @@ class VideoDecoder final : public DOMEventTargetHelper {
   MOZ_CAN_RUN_SCRIPT void Configure(const VideoDecoderConfig& aConfig,
                                     ErrorResult& aRv);
 
-  void Decode(EncodedVideoChunk& chunk, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv);
 
   already_AddRefed<Promise> Flush(ErrorResult& aRv);
 
@@ -111,13 +126,25 @@ class VideoDecoder final : public DOMEventTargetHelper {
   MOZ_CAN_RUN_SCRIPT Result<Ok, nsresult> Close(const nsresult& aResult);
 
   MOZ_CAN_RUN_SCRIPT void ReportError(const nsresult& aResult);
+  MOZ_CAN_RUN_SCRIPT void OutputVideoFrames(
+      nsTArray<RefPtr<MediaData>>&& aData);
+
+  class OutputRunnable;
+  void ScheduleOutputVideoFrames(nsTArray<RefPtr<MediaData>>&& aData,
+                                 const nsACString& aLabel);
+
+  void ScheduleClose(const nsresult& aResult);
 
   MOZ_CAN_RUN_SCRIPT void ProcessControlMessageQueue();
   void CancelPendingControlMessages();
 
+  using ControlMessage = Variant<ConfigureMessage, DecodeMessage>;
   enum class MessageProcessedResult { NotProcessed, Processed };
+
   MOZ_CAN_RUN_SCRIPT MessageProcessedResult
-  ProcessConfigureMessage(ConfigureMessage& aMessage);
+  ProcessConfigureMessage(ControlMessage& aMessage);
+
+  MessageProcessedResult ProcessDecodeMessage(ControlMessage& aMessage);
 
   // Returns true when mAgent can be created.
   bool CreateDecoderAgent(UniquePtr<VideoDecoderConfig>&& aConfig,
@@ -129,16 +156,19 @@ class VideoDecoder final : public DOMEventTargetHelper {
   RefPtr<VideoFrameOutputCallback> mOutputCallback;
 
   CodecState mState;
+  bool mKeyChunkRequired;
 
   bool mMessageQueueBlocked;
-  std::queue<ConfigureMessage> mControlMessageQueue;
-  Maybe<ConfigureMessage> mProcessingMessage;
+  std::queue<ControlMessage> mControlMessageQueue;
+  Maybe<ControlMessage> mProcessingMessage;
 
   // DecoderAgent will be created every time "configure" is being processed, and
   // will be destroyed when "reset" or another "configure" is called (spec
   // allows calling two "configure" without a "reset" in between).
   RefPtr<DecoderAgent> mAgent;
   UniquePtr<VideoDecoderConfig> mActiveConfig;
+  uint32_t mDecodeQueueSize;
+  DecodeMessage::Id mDecodeMessageCounter;
 
   // Used to add a nsIAsyncShutdownBlocker on main thread to block
   // xpcom-shutdown before the underlying MediaDataDecoder is created. The
