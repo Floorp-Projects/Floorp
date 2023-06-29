@@ -15,7 +15,7 @@ class DependenciesPlugin : Plugin<Settings> {
 // Synchronized version numbers for dependencies used by (some) modules
 object Versions {
     const val kotlin = "1.8.22"
-    const val coroutines = "1.7.1"
+    const val coroutines = "1.7.2"
     const val serialization = "1.5.1"
     const val python_envs_plugin = "0.0.31"
 

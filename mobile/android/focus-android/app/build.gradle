@@ -296,7 +296,7 @@ dependencies {
 
     implementation project(':service-telemetry')
 
-    implementation FocusDependencies.kotlin_coroutines
+    implementation ComponentsDependencies.kotlin_coroutines
     debugImplementation ComponentsDependencies.leakcanary
 
     focusImplementation FocusDependencies.adjust

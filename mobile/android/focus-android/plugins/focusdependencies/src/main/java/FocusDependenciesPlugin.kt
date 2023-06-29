@@ -30,10 +30,6 @@ object FocusVersions {
         const val play = "1.10.3"
     }
 
-    object Kotlin {
-        const val coroutines = "1.7.1"
-    }
-
     object Testing {
         const val androidx_espresso = "3.5.1"
         const val androidx_orchestrator = "1.4.2"
@@ -58,8 +54,6 @@ object FocusDependencies {
     const val androidx_transition = "androidx.transition:transition:${FocusVersions.AndroidX.transition}"
 
     const val google_play = "com.google.android.play:core:${FocusVersions.Google.play}"
-
-    const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${FocusVersions.Kotlin.coroutines}"
 
     const val adjust = "com.adjust.sdk:adjust-android:${FocusVersions.Adjust.adjust}"
     const val install_referrer = "com.android.installreferrer:installreferrer:${FocusVersions.Adjust.install_referrer}"
