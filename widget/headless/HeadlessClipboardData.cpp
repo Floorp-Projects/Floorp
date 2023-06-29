@@ -4,16 +4,22 @@
 
 #include "HeadlessClipboardData.h"
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
-void HeadlessClipboardData::SetText(const nsAString& aText) { mPlain = aText; }
+void HeadlessClipboardData::SetText(const nsAString& aText) {
+  mPlain = aText;
+  mChangeCount++;
+}
 
 bool HeadlessClipboardData::HasText() const { return !mPlain.IsEmpty(); }
 
 const nsAString& HeadlessClipboardData::GetText() const { return mPlain; }
 
-void HeadlessClipboardData::Clear() { mPlain.Truncate(0); }
+int32_t HeadlessClipboardData::GetChangeCount() const { return mChangeCount; }
 
-}  // namespace widget
-}  // namespace mozilla
+void HeadlessClipboardData::Clear() {
+  mPlain.Truncate(0);
+  mChangeCount++;
+}
+
+}  // namespace mozilla::widget
