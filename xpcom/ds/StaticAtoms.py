@@ -2429,8 +2429,6 @@ STATIC_ATOMS = [
     Atom("onupdateend", "onupdateend"),
     Atom("onaddsourcebuffer", "onaddsourcebuffer"),
     Atom("onremovesourcebuffer", "onremovesourcebuffer"),
-    # WebCodecs
-    Atom("ondequeue", "ondequeue"),
     # RDF (not used by mozilla-central, but still used by comm-central)
     Atom("about", "about"),
     Atom("ID", "ID"),
