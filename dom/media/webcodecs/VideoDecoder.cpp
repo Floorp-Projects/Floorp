@@ -38,6 +38,13 @@
 #include "nsString.h"
 #include "nsThreadUtils.h"
 
+#ifdef XP_MACOSX
+#  include "MacIOSurfaceImage.h"
+#elif MOZ_WAYLAND
+#  include "mozilla/layers/DMABUFSurfaceImage.h"
+#  include "mozilla/widget/DMABufSurface.h"
+#endif
+
 mozilla::LazyLogModule gWebCodecsLog("WebCodecs");
 using mozilla::media::TimeUnit;
 
@@ -395,8 +402,89 @@ static Maybe<VideoPixelFormat> GuessPixelFormat(layers::Image* aImage) {
   return Nothing();
 }
 
+static VideoColorSpaceInit GuessColorSpace(
+    const layers::PlanarYCbCrData* aData) {
+  if (!aData) {
+    return {};
+  }
+
+  VideoColorSpaceInit colorSpace;
+  colorSpace.mFullRange.SetValue(ToFullRange(aData->mColorRange));
+  if (Maybe<VideoMatrixCoefficients> m =
+          ToMatrixCoefficients(aData->mYUVColorSpace)) {
+    colorSpace.mMatrix.SetValue(*m);
+  }
+  if (Maybe<VideoColorPrimaries> p = ToPrimaries(aData->mColorPrimaries)) {
+    colorSpace.mPrimaries.SetValue(*p);
+  }
+  if (Maybe<VideoTransferCharacteristics> c =
+          ToTransferCharacteristics(aData->mTransferFunction)) {
+    colorSpace.mTransfer.SetValue(*c);
+  }
+  return colorSpace;
+}
+
+#ifdef XP_MACOSX
+static VideoColorSpaceInit GuessColorSpace(const MacIOSurface* aSurface) {
+  if (!aSurface) {
+    return {};
+  }
+  VideoColorSpaceInit colorSpace;
+  // TODO: Could ToFullRange(aSurface->GetColorRange()) conflict with the below?
+  colorSpace.mFullRange.SetValue(aSurface->IsFullRange());
+  if (Maybe<dom::VideoMatrixCoefficients> m =
+          ToMatrixCoefficients(aSurface->GetYUVColorSpace())) {
+    colorSpace.mMatrix.SetValue(*m);
+  }
+  if (Maybe<VideoColorPrimaries> p = ToPrimaries(aSurface->mColorPrimaries)) {
+    colorSpace.mPrimaries.SetValue(*p);
+  }
+  // TODO: Track gfx::TransferFunction setting in
+  // MacIOSurface::CreateNV12OrP010Surface to get colorSpace.mTransfer
+  return colorSpace;
+}
+#endif
+#ifdef MOZ_WAYLAND
+// TODO: Set DMABufSurface::IsFullRange() to const so aSurface can be const.
+static VideoColorSpaceInit GuessColorSpace(DMABufSurface* aSurface) {
+  if (!aSurface) {
+    return {};
+  }
+  VideoColorSpaceInit colorSpace;
+  colorSpace.mFullRange.SetValue(aSurface->IsFullRange());
+  if (Maybe<dom::VideoMatrixCoefficients> m =
+          ToMatrixCoefficients(aSurface->GetYUVColorSpace())) {
+    colorSpace.mMatrix.SetValue(*m);
+  }
+  // No other color space information.
+  return colorSpace;
+}
+#endif
+
 static VideoColorSpaceInit GuessColorSpace(layers::Image* aImage) {
-  // TODO: Implement this.
+  if (aImage) {
+    if (layers::PlanarYCbCrImage* image = aImage->AsPlanarYCbCrImage()) {
+      return GuessColorSpace(image->GetData());
+    }
+    if (layers::NVImage* image = aImage->AsNVImage()) {
+      return GuessColorSpace(image->GetData());
+    }
+#ifdef XP_MACOSX
+    // TODO: Make sure VideoFrame can interpret its internal data in different
+    // formats.
+    if (layers::MacIOSurfaceImage* image = aImage->AsMacIOSurfaceImage()) {
+      return GuessColorSpace(image->GetSurface());
+    }
+#endif
+#ifdef MOZ_WAYLAND
+    // TODO: Make sure VideoFrame can interpret its internal data in different
+    // formats.
+    if (layers::DMABUFSurfaceImage* image = aImage->AsDMABUFSurfaceImage()) {
+      return GuessColorSpace(image->GetSurface());
+    }
+#endif
+  }
+  LOGW("Failed to get color space from layers::Image");
   return {};
 }
 
