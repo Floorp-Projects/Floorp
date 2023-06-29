@@ -43,7 +43,6 @@
 #include "pc/rtp_sender_proxy.h"
 #include "pc/rtp_transport_internal.h"
 #include "pc/session_description.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace cricket {
@@ -82,8 +81,7 @@ class PeerConnectionSdpMethods;
 // MediaType specified in the constructor. Audio RtpTransceivers will have
 // AudioRtpSenders, AudioRtpReceivers, and a VoiceChannel. Video RtpTransceivers
 // will have VideoRtpSenders, VideoRtpReceivers, and a VideoChannel.
-class RtpTransceiver : public RtpTransceiverInterface,
-                       public sigslot::has_slots<> {
+class RtpTransceiver : public RtpTransceiverInterface {
  public:
   // Construct a Plan B-style RtpTransceiver with no senders, receivers, or
   // channel set.
@@ -256,10 +254,6 @@ class RtpTransceiver : public RtpTransceiverInterface,
   // Executes the "stop the RTCRtpTransceiver" procedure from
   // the webrtc-pc specification, described under the stop() method.
   void StopTransceiverProcedure();
-
-  // Fired when the RtpTransceiver state changes such that negotiation is now
-  // needed (e.g., in response to a direction change).
-  //  sigslot::signal0<> SignalNegotiationNeeded;
 
   // RtpTransceiverInterface implementation.
   cricket::MediaType media_type() const override;
