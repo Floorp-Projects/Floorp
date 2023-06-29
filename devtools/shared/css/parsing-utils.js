@@ -23,7 +23,7 @@ loader.lazyRequireGetter(
 const SELECTOR_ATTRIBUTE = (exports.SELECTOR_ATTRIBUTE = 1);
 const SELECTOR_ELEMENT = (exports.SELECTOR_ELEMENT = 2);
 const SELECTOR_PSEUDO_CLASS = (exports.SELECTOR_PSEUDO_CLASS = 3);
-const CSS_BLOCKS = { "(": ")", "[": "]", "{": "}" };
+const CSS_BLOCKS = { "(": ")", "[": "]" };
 
 // When commenting out a declaration, we put this character into the
 // comment opener so that future parses of the commented text know to
@@ -316,7 +316,22 @@ function parseDeclarationsInternal(
   // This is true if we saw whitespace or comments between the "!" and
   // the "important".
   let importantWS = false;
+
+  // This tracks the nesting parsing state
+  let isInNested = false;
+  let nestingLevel = 0;
+
   let current = "";
+
+  const resetStateForNextDeclaration = () => {
+    current = "";
+    currentBlocks = [];
+    importantState = 0;
+    importantWS = false;
+    declarations.push(getEmptyDeclaration());
+    lastProp = declarations.at(-1);
+  };
+
   while (true) {
     const token = lexer.nextToken();
     if (!token) {
@@ -344,19 +359,52 @@ function parseDeclarationsInternal(
     }
 
     if (
+      // If we're not already in a nested rule
+      !isInNested &&
       token.tokenType === "symbol" &&
-      currentBlocks[currentBlocks.length - 1] === token.text
+      // and there's an opening curly bracket
+      token.text == "{" &&
+      // and we're not inside a function or an attribute
+      !currentBlocks.length
+    ) {
+      // Assume we're encountering a nested rule.
+      isInNested = true;
+      nestingLevel = 1;
+
+      continue;
+    } else if (isInNested) {
+      if (token.tokenType === "symbol") {
+        if (token.text == "{") {
+          nestingLevel++;
+        }
+        if (token.text == "}") {
+          nestingLevel--;
+        }
+      }
+
+      // If we were in a nested rule, and we saw the last closing curly bracket,
+      // reset the state to parse possible declarations declared after the nested rule.
+      if (nestingLevel === 0) {
+        isInNested = false;
+        // We need to remove the previous pending declaration and reset the state
+        declarations.pop();
+        resetStateForNextDeclaration();
+      }
+      continue;
+    } else if (
+      token.tokenType === "symbol" &&
+      CSS_BLOCKS[currentBlocks.at(-1)] === token.text
     ) {
       // Closing the last block that was opened.
       currentBlocks.pop();
       current += token.text;
     } else if (token.tokenType === "symbol" && CSS_BLOCKS[token.text]) {
       // Opening a new block.
-      currentBlocks.push(CSS_BLOCKS[token.text]);
+      currentBlocks.push(token.text);
       current += token.text;
     } else if (token.tokenType === "function") {
       // Opening a function is like opening a new block, so push one to the stack.
-      currentBlocks.push(CSS_BLOCKS["("]);
+      currentBlocks.push("(");
       current += token.text + "(";
     } else if (token.tokenType === "symbol" && token.text === ":") {
       // Either way, a "!important" we've seen is no longer valid now.
@@ -407,12 +455,7 @@ function parseDeclarationsInternal(
         }
       }
       lastProp.value = cssTrim(current);
-      current = "";
-      currentBlocks = [];
-      importantState = 0;
-      importantWS = false;
-      declarations.push(getEmptyDeclaration());
-      lastProp = declarations[declarations.length - 1];
+      resetStateForNextDeclaration();
     } else if (token.tokenType === "ident") {
       if (token.text === "important" && importantState === 1) {
         importantState = 2;
@@ -436,7 +479,7 @@ function parseDeclarationsInternal(
       importantState = 1;
     } else if (token.tokenType === "whitespace") {
       if (current !== "") {
-        current = current.trimRight() + " ";
+        current = current.trimEnd() + " ";
       }
     } else if (token.tokenType === "comment") {
       if (parseComments && !lastProp.name && !lastProp.value) {
@@ -455,7 +498,7 @@ function parseDeclarationsInternal(
         const lastDecl = declarations.pop();
         declarations = [...declarations, ...newDecls, lastDecl];
       } else {
-        current = current.trimRight() + " ";
+        current = current.trimEnd() + " ";
       }
     } else {
       if (importantState > 0) {
