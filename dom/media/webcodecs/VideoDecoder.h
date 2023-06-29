@@ -74,6 +74,16 @@ struct DecodeMessage final {
   UniquePtr<ChunkData> mData;
 };
 
+struct FlushMessage final {
+  using Id = size_t;
+
+  FlushMessage(Id aId, Promise* aPromise);
+  const nsCString mTitle;  // Used to identify the message in the logs.
+  MozPromiseRequestHolder<DecoderAgent::DecodePromise> mRequest;
+  const Id mId;  // A unique id shown in log.
+  RefPtr<Promise> mPromise;
+};
+
 class VideoDecoder final : public DOMEventTargetHelper {
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -106,7 +116,7 @@ class VideoDecoder final : public DOMEventTargetHelper {
 
   MOZ_CAN_RUN_SCRIPT void Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv);
 
-  already_AddRefed<Promise> Flush(ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Flush(ErrorResult& aRv);
 
   void Reset(ErrorResult& aRv);
 
@@ -135,16 +145,21 @@ class VideoDecoder final : public DOMEventTargetHelper {
 
   void ScheduleDequeueEvent();
 
-  MOZ_CAN_RUN_SCRIPT void ProcessControlMessageQueue();
-  void CancelPendingControlMessages();
+  void SchedulePromiseResolveOrReject(Promise* aPromise,
+                                      const nsresult& aResult);
 
-  using ControlMessage = Variant<ConfigureMessage, DecodeMessage>;
+  MOZ_CAN_RUN_SCRIPT void ProcessControlMessageQueue();
+  void CancelPendingControlMessages(const nsresult& aResult);
+
+  using ControlMessage = Variant<ConfigureMessage, DecodeMessage, FlushMessage>;
   enum class MessageProcessedResult { NotProcessed, Processed };
 
   MOZ_CAN_RUN_SCRIPT MessageProcessedResult
   ProcessConfigureMessage(ControlMessage& aMessage);
 
   MessageProcessedResult ProcessDecodeMessage(ControlMessage& aMessage);
+
+  MessageProcessedResult ProcessFlushMessage(ControlMessage& aMessage);
 
   // Returns true when mAgent can be created.
   bool CreateDecoderAgent(UniquePtr<VideoDecoderConfig>&& aConfig,
@@ -171,6 +186,7 @@ class VideoDecoder final : public DOMEventTargetHelper {
   bool mDequeueEventScheduled;
 
   DecodeMessage::Id mDecodeMessageCounter;
+  FlushMessage::Id mFlushMessageCounter;
 
   // Used to add a nsIAsyncShutdownBlocker on main thread to block
   // xpcom-shutdown before the underlying MediaDataDecoder is created. The
