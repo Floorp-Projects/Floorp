@@ -6,35 +6,18 @@
 
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
 
-# For mozilla/layers/ImageBridgeChild.h
-LOCAL_INCLUDES += [
-    "!/ipc/ipdl/_ipdlheaders",
-    "/ipc/chromium/src/",
-]
-
-EXPORTS.mozilla += [
-    "DecoderAgent.h",
-]
-
 EXPORTS.mozilla.dom += [
     "EncodedVideoChunk.h",
     "VideoColorSpace.h",
-    "VideoDecoder.h",
     "VideoFrame.h",
     "WebCodecsUtils.h",
 ]
 
 UNIFIED_SOURCES += [
-    "DecoderAgent.cpp",
     "EncodedVideoChunk.cpp",
     "VideoColorSpace.cpp",
-    "VideoDecoder.cpp",
     "VideoFrame.cpp",
     "WebCodecsUtils.cpp",
 ]
-
-if CONFIG["MOZ_WAYLAND"]:
-    CXXFLAGS += CONFIG["MOZ_WAYLAND_CFLAGS"]
-    CFLAGS += CONFIG["MOZ_WAYLAND_CFLAGS"]
 
 FINAL_LIBRARY = "xul"

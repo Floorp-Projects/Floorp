@@ -67,9 +67,6 @@ class EncodedVideoChunk final : public nsISupports, public nsWrapperCache {
       const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDestination,
       ErrorResult& aRv);
 
-  // Non-webidl method.
-  uint8_t* Data() { return mBuffer.get(); }
-
  private:
   // EncodedVideoChunk can run on either main thread or worker thread.
   void AssertIsOnOwningThread() const {

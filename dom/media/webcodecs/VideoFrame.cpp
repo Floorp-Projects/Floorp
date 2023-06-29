@@ -40,20 +40,7 @@
 #include "nsIPrincipal.h"
 #include "nsIURI.h"
 
-extern mozilla::LazyLogModule gWebCodecsLog;
-
 namespace mozilla::dom {
-
-#ifdef LOG_INTERNAL
-#  undef LOG_INTERNAL
-#endif  // LOG_INTERNAL
-#define LOG_INTERNAL(level, msg, ...) \
-  MOZ_LOG(gWebCodecsLog, LogLevel::level, (msg, ##__VA_ARGS__))
-
-#ifdef LOGW
-#  undef LOGW
-#endif  // LOGW
-#define LOGW(msg, ...) LOG_INTERNAL(Warning, msg, ##__VA_ARGS__)
 
 // Only needed for refcounted objects.
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(VideoFrame, mParent)
@@ -63,6 +50,106 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VideoFrame)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
+
+/*
+ * The following are utilities to convert between VideoColorSpace values to
+ * gfx's values.
+ */
+
+static gfx::YUVColorSpace ToColorSpace(VideoMatrixCoefficients aMatrix) {
+  switch (aMatrix) {
+    case VideoMatrixCoefficients::Rgb:
+      return gfx::YUVColorSpace::Identity;
+    case VideoMatrixCoefficients::Bt709:
+    case VideoMatrixCoefficients::Bt470bg:
+      return gfx::YUVColorSpace::BT709;
+    case VideoMatrixCoefficients::Smpte170m:
+      return gfx::YUVColorSpace::BT601;
+    case VideoMatrixCoefficients::Bt2020_ncl:
+      return gfx::YUVColorSpace::BT2020;
+    case VideoMatrixCoefficients::EndGuard_:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("unsupported VideoMatrixCoefficients");
+  return gfx::YUVColorSpace::Default;
+}
+
+static gfx::TransferFunction ToTransferFunction(
+    VideoTransferCharacteristics aTransfer) {
+  switch (aTransfer) {
+    case VideoTransferCharacteristics::Bt709:
+    case VideoTransferCharacteristics::Smpte170m:
+      return gfx::TransferFunction::BT709;
+    case VideoTransferCharacteristics::Iec61966_2_1:
+      return gfx::TransferFunction::SRGB;
+    case VideoTransferCharacteristics::Pq:
+      return gfx::TransferFunction::PQ;
+    case VideoTransferCharacteristics::Hlg:
+      return gfx::TransferFunction::HLG;
+    case VideoTransferCharacteristics::Linear:
+    case VideoTransferCharacteristics::EndGuard_:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("unsupported VideoTransferCharacteristics");
+  return gfx::TransferFunction::Default;
+}
+
+static gfx::ColorSpace2 ToPrimaries(VideoColorPrimaries aPrimaries) {
+  switch (aPrimaries) {
+    case VideoColorPrimaries::Bt709:
+      return gfx::ColorSpace2::BT709;
+    case VideoColorPrimaries::Bt470bg:
+      return gfx::ColorSpace2::BT601_625;
+    case VideoColorPrimaries::Smpte170m:
+      return gfx::ColorSpace2::BT601_525;
+    case VideoColorPrimaries::Bt2020:
+      return gfx::ColorSpace2::BT2020;
+    case VideoColorPrimaries::Smpte432:
+      return gfx::ColorSpace2::DISPLAY_P3;
+    case VideoColorPrimaries::EndGuard_:
+      break;
+  }
+  MOZ_ASSERT_UNREACHABLE("unsupported VideoTransferCharacteristics");
+  return gfx::ColorSpace2::UNKNOWN;
+}
+
+static Maybe<VideoPixelFormat> ToVideoPixelFormat(gfx::SurfaceFormat aFormat) {
+  switch (aFormat) {
+    case gfx::SurfaceFormat::B8G8R8A8:
+      return Some(VideoPixelFormat::BGRA);
+    case gfx::SurfaceFormat::B8G8R8X8:
+      return Some(VideoPixelFormat::BGRX);
+    case gfx::SurfaceFormat::R8G8B8A8:
+      return Some(VideoPixelFormat::RGBA);
+    case gfx::SurfaceFormat::R8G8B8X8:
+      return Some(VideoPixelFormat::RGBX);
+    case gfx::SurfaceFormat::NV12:
+      return Some(VideoPixelFormat::NV12);
+    default:
+      break;
+  }
+  return Nothing();
+}
+
+static Maybe<VideoPixelFormat> ToVideoPixelFormat(ImageBitmapFormat aFormat) {
+  switch (aFormat) {
+    case ImageBitmapFormat::RGBA32:
+      return Some(VideoPixelFormat::RGBA);
+    case ImageBitmapFormat::BGRA32:
+      return Some(VideoPixelFormat::BGRA);
+    case ImageBitmapFormat::YUV444P:
+      return Some(VideoPixelFormat::I444);
+    case ImageBitmapFormat::YUV422P:
+      return Some(VideoPixelFormat::I422);
+    case ImageBitmapFormat::YUV420P:
+      return Some(VideoPixelFormat::I420);
+    case ImageBitmapFormat::YUV420SP_NV12:
+      return Some(VideoPixelFormat::NV12);
+    default:
+      break;
+  }
+  return Nothing();
+}
 
 /*
  * The following are helpers to read the image data from the given buffer and
@@ -367,12 +454,9 @@ ValidateVideoFrameBufferInit(const VideoFrameBufferInit& aInit) {
 
 // https://w3c.github.io/webcodecs/#videoframe-verify-rect-offset-alignment
 static Result<Ok, nsCString> VerifyRectOffsetAlignment(
-    const Maybe<VideoFrame::Format>& aFormat, const gfx::IntRect& aRect) {
-  if (!aFormat) {
-    return Ok();
-  }
-  for (const VideoFrame::Format::Plane& p : aFormat->Planes()) {
-    const gfx::IntSize sample = aFormat->SampleSize(p);
+    const VideoFrame::Format& aFormat, const gfx::IntRect& aRect) {
+  for (const VideoFrame::Format::Plane& p : aFormat.Planes()) {
+    const gfx::IntSize sample = aFormat.SampleSize(p);
     if (aRect.X() % sample.Width() != 0) {
       return Err(nsCString("Mismatch between format and given left offset"));
     }
@@ -399,7 +483,7 @@ static Result<gfx::IntRect, nsCString> ParseVisibleRect(
     rect = *aOverrideRect;
   }
 
-  MOZ_TRY(VerifyRectOffsetAlignment(Some(aFormat), rect));
+  MOZ_TRY(VerifyRectOffsetAlignment(aFormat, rect));
 
   return rect;
 }
@@ -645,7 +729,7 @@ static VideoColorSpaceInit PickColorSpace(
 // https://w3c.github.io/webcodecs/#validate-videoframeinit
 static Result<std::pair<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>>, nsCString>
 ValidateVideoFrameInit(const VideoFrameInit& aInit,
-                       const Maybe<VideoFrame::Format>& aFormat,
+                       const VideoFrame::Format& aFormat,
                        const gfx::IntSize& aCodedSize) {
   if (aCodedSize.Width() <= 0 || aCodedSize.Height() <= 0) {
     return Err(nsCString("codedWidth and codedHeight must be positive"));
@@ -790,8 +874,8 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
     data.mCbCrStride = reader->mStrideU;
     data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
     // Color settings.
-    if (!aColorSpace.mFullRange.IsNull()) {
-      data.mColorRange = ToColorRange(aColorSpace.mFullRange.Value());
+    if (!aColorSpace.mFullRange.IsNull() && aColorSpace.mFullRange.Value()) {
+      data.mColorRange = gfx::ColorRange::FULL;
     }
     MOZ_RELEASE_ASSERT(!aColorSpace.mMatrix.IsNull());
     data.mYUVColorSpace = ToColorSpace(aColorSpace.mMatrix.Value());
@@ -834,8 +918,8 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
     data.mCbCrStride = reader.mStrideUV;
     data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
     // Color settings.
-    if (!aColorSpace.mFullRange.IsNull()) {
-      data.mColorRange = ToColorRange(aColorSpace.mFullRange.Value());
+    if (!aColorSpace.mFullRange.IsNull() && aColorSpace.mFullRange.Value()) {
+      data.mColorRange = gfx::ColorRange::FULL;
     }
     MOZ_RELEASE_ASSERT(!aColorSpace.mMatrix.IsNull());
     data.mYUVColorSpace = ToColorSpace(aColorSpace.mMatrix.Value());
@@ -958,7 +1042,7 @@ static Result<RefPtr<VideoFrame>, nsCString> CreateVideoFrameFromBuffer(
   // TODO: Spec should assign aInit.mFormat to inner format value:
   // https://github.com/w3c/webcodecs/issues/509.
   // This comment should be removed once the issue is resolved.
-  return MakeRefPtr<VideoFrame>(aGlobal, data, Some(aInit.mFormat), codedSize,
+  return MakeRefPtr<VideoFrame>(aGlobal, data, aInit.mFormat, codedSize,
                                 parsedRect,
                                 displaySize ? *displaySize : parsedRect.Size(),
                                 duration, aInit.mTimestamp, colorSpace);
@@ -1013,22 +1097,24 @@ InitializeFrameWithResourceAndSize(
 
   RefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
   Maybe<VideoFrame::Format> format =
-      SurfaceFormatToVideoPixelFormat(surface->GetFormat())
+      ToVideoPixelFormat(surface->GetFormat())
           .map([](const VideoPixelFormat& aFormat) {
             return VideoFrame::Format(aFormat);
           });
+  // TODO: Handle `ToVideoPixelFormat` failure.
+  if (NS_WARN_IF(!format)) {
+    return Err(nsCString("This image has unsupport format"));
+  }
 
   std::pair<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
-  MOZ_TRY_VAR(init, ValidateVideoFrameInit(aInit, format, image->GetSize()));
+  MOZ_TRY_VAR(init,
+              ValidateVideoFrameInit(aInit, format.ref(), image->GetSize()));
   Maybe<gfx::IntRect> visibleRect = init.first;
   Maybe<gfx::IntSize> displaySize = init.second;
 
-  if (format && aInit.mAlpha == AlphaOption::Discard) {
+  if (aInit.mAlpha == AlphaOption::Discard) {
     format->MakeOpaque();
     // Keep the alpha data in image for now until it's being rendered.
-    // TODO: The alpha will still be rendered if the format is unrecognized
-    // since no additional flag keeping this request. Should spec address what
-    // to do in this case?
   }
 
   InitializeVisibleRectAndDisplaySize(visibleRect, displaySize,
@@ -1040,10 +1126,10 @@ InitializeFrameWithResourceAndSize(
 
   // TODO: WPT will fail if we guess a VideoColorSpace here.
   const VideoColorSpaceInit colorSpace{};
-  return MakeAndAddRef<VideoFrame>(
-      aGlobal, image, format ? Some(format->PixelFormat()) : Nothing(),
-      image->GetSize(), visibleRect.value(), displaySize.value(), duration,
-      aInit.mTimestamp.Value(), colorSpace);
+  return MakeAndAddRef<VideoFrame>(aGlobal, image, format->PixelFormat(),
+                                   image->GetSize(), visibleRect.value(),
+                                   displaySize.value(), duration,
+                                   aInit.mTimestamp.Value(), colorSpace);
 }
 
 // https://w3c.github.io/webcodecs/#videoframe-initialize-frame-from-other-frame
@@ -1053,14 +1139,10 @@ InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal, VideoFrameData&& aData,
   MOZ_ASSERT(aGlobal);
   MOZ_ASSERT(aData.mImage);
 
-  Maybe<VideoFrame::Format> format =
-      aData.mFormat ? Some(VideoFrame::Format(*aData.mFormat)) : Nothing();
-  if (format && aInit.mAlpha == AlphaOption::Discard) {
-    format->MakeOpaque();
+  VideoFrame::Format format(aData.mFormat);
+  if (aInit.mAlpha == AlphaOption::Discard) {
+    format.MakeOpaque();
     // Keep the alpha data in image for now until it's being rendered.
-    // TODO: The alpha will still be rendered if the format is unrecognized
-    // since no additional flag keeping this request. Should spec address what
-    // to do in this case?
   }
 
   std::pair<Maybe<gfx::IntRect>, Maybe<gfx::IntSize>> init;
@@ -1079,9 +1161,8 @@ InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal, VideoFrameData&& aData,
                                                    : aData.mTimestamp;
 
   return MakeAndAddRef<VideoFrame>(
-      aGlobal, aData.mImage, format ? Some(format->PixelFormat()) : Nothing(),
-      aData.mImage->GetSize(), *visibleRect, *displaySize, duration, timestamp,
-      aData.mColorSpace);
+      aGlobal, aData.mImage, format.PixelFormat(), aData.mImage->GetSize(),
+      *visibleRect, *displaySize, duration, timestamp, aData.mColorSpace);
 }
 
 /*
@@ -1089,7 +1170,7 @@ InitializeFrameFromOtherFrame(nsIGlobalObject* aGlobal, VideoFrameData&& aData,
  */
 
 VideoFrameData::VideoFrameData(layers::Image* aImage,
-                               const Maybe<VideoPixelFormat>& aFormat,
+                               const VideoPixelFormat& aFormat,
                                gfx::IntRect aVisibleRect,
                                gfx::IntSize aDisplaySize,
                                Maybe<uint64_t> aDuration, int64_t aTimestamp,
@@ -1103,7 +1184,7 @@ VideoFrameData::VideoFrameData(layers::Image* aImage,
       mColorSpace(aColorSpace) {}
 
 VideoFrameSerializedData::VideoFrameSerializedData(
-    layers::Image* aImage, const Maybe<VideoPixelFormat>& aFormat,
+    layers::Image* aImage, const VideoPixelFormat& aFormat,
     gfx::IntSize aCodedSize, gfx::IntRect aVisibleRect,
     gfx::IntSize aDisplaySize, Maybe<uint64_t> aDuration, int64_t aTimestamp,
     const VideoColorSpaceInit& aColorSpace,
@@ -1116,14 +1197,15 @@ VideoFrameSerializedData::VideoFrameSerializedData(
 /*
  * W3C Webcodecs VideoFrame implementation
  */
+
 VideoFrame::VideoFrame(nsIGlobalObject* aParent,
                        const RefPtr<layers::Image>& aImage,
-                       const Maybe<VideoPixelFormat>& aFormat,
-                       gfx::IntSize aCodedSize, gfx::IntRect aVisibleRect,
-                       gfx::IntSize aDisplaySize,
+                       const VideoPixelFormat& aFormat, gfx::IntSize aCodedSize,
+                       gfx::IntRect aVisibleRect, gfx::IntSize aDisplaySize,
                        const Maybe<uint64_t>& aDuration, int64_t aTimestamp,
                        const VideoColorSpaceInit& aColorSpace)
     : mParent(aParent),
+      mResource(Some(Resource(aImage, VideoFrame::Format(aFormat)))),
       mCodedSize(aCodedSize),
       mVisibleRect(aVisibleRect),
       mDisplaySize(aDisplaySize),
@@ -1131,13 +1213,6 @@ VideoFrame::VideoFrame(nsIGlobalObject* aParent,
       mTimestamp(aTimestamp),
       mColorSpace(aColorSpace) {
   MOZ_ASSERT(mParent);
-  mResource.emplace(
-      Resource(aImage, aFormat.map([](const VideoPixelFormat& aPixelFormat) {
-        return VideoFrame::Format(aPixelFormat);
-      })));
-  if (!mResource->mFormat) {
-    LOGW("Create a VideoFrame with an unrecognized image format");
-  }
 }
 
 VideoFrame::VideoFrame(const VideoFrame& aOther)
@@ -1368,13 +1443,16 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
   }
 
   const ImageUtils imageUtils(image);
-  Maybe<VideoPixelFormat> format =
-      ImageBitmapFormatToVideoPixelFormat(imageUtils.GetFormat());
+  Maybe<VideoPixelFormat> format = ToVideoPixelFormat(imageUtils.GetFormat());
+  if (!format) {
+    aRv.ThrowTypeError("The video's image is in unsupported format");
+    return nullptr;
+  }
 
   // TODO: Retrive/infer the duration, and colorspace.
   auto r = InitializeFrameFromOtherFrame(
       global.get(),
-      VideoFrameData(image.get(), format, image->GetPictureRect(),
+      VideoFrameData(image.get(), format.ref(), image->GetPictureRect(),
                      image->GetSize(), Nothing(),
                      static_cast<int64_t>(aVideoElement.CurrentTime()), {}),
       aInit);
@@ -1511,7 +1589,7 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
   auto r = InitializeFrameFromOtherFrame(
       global.get(),
       VideoFrameData(aVideoFrame.mResource->mImage.get(),
-                     aVideoFrame.mResource->TryPixelFormat(),
+                     aVideoFrame.mResource->mFormat.PixelFormat(),
                      aVideoFrame.mVisibleRect, aVideoFrame.mDisplaySize,
                      aVideoFrame.mDuration, aVideoFrame.mTimestamp,
                      aVideoFrame.mColorSpace),
@@ -1544,8 +1622,8 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
 Nullable<VideoPixelFormat> VideoFrame::GetFormat() const {
   AssertIsOnOwningThread();
 
-  return mResource && mResource->mFormat
-             ? Nullable<VideoPixelFormat>(mResource->mFormat->PixelFormat())
+  return mResource
+             ? Nullable<VideoPixelFormat>(mResource->mFormat.PixelFormat())
              : Nullable<VideoPixelFormat>();
 }
 
@@ -1631,13 +1709,8 @@ uint32_t VideoFrame::AllocationSize(const VideoFrameCopyToOptions& aOptions,
     return 0;
   }
 
-  if (!mResource->mFormat) {
-    aRv.ThrowAbortError("The VideoFrame image format is not VideoPixelFormat");
-    return 0;
-  }
-
   auto r = ParseVideoFrameCopyToOptions(aOptions, mVisibleRect, mCodedSize,
-                                        mResource->mFormat.ref());
+                                        mResource->mFormat);
   if (r.isErr()) {
     // TODO: Should throw layout.
     aRv.ThrowTypeError(r.unwrapErr());
@@ -1659,11 +1732,6 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
     return nullptr;
   }
 
-  if (!mResource->mFormat) {
-    aRv.ThrowNotSupportedError("VideoFrame's image format is unrecognized");
-    return nullptr;
-  }
-
   RefPtr<Promise> p = Promise::Create(mParent.get(), aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return p.forget();
@@ -1671,7 +1739,7 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
 
   CombinedBufferLayout layout;
   auto r1 = ParseVideoFrameCopyToOptions(aOptions, mVisibleRect, mCodedSize,
-                                         mResource->mFormat.ref());
+                                         mResource->mFormat);
   if (r1.isErr()) {
     // TODO: Should reject with layout.
     p->MaybeRejectWithTypeError(r1.unwrapErr());
@@ -1693,7 +1761,7 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
 
   Sequence<PlaneLayout> planeLayouts;
 
-  nsTArray<Format::Plane> planes = mResource->mFormat->Planes();
+  nsTArray<Format::Plane> planes = mResource->mFormat.Planes();
   MOZ_ASSERT(layout.mComputedLayouts.Length() == planes.Length());
 
   // TODO: These jobs can be run in a thread pool (bug 1780656) to unblock the
@@ -1713,17 +1781,17 @@ already_AddRefed<Promise> VideoFrame::CopyTo(
     // Copy pixels of `size` starting from `origin` on planes[i] to
     // `aDestination`.
     gfx::IntPoint origin(
-        l.mSourceLeftBytes / mResource->mFormat->SampleBytes(planes[i]),
+        l.mSourceLeftBytes / mResource->mFormat.SampleBytes(planes[i]),
         l.mSourceTop);
     gfx::IntSize size(
-        l.mSourceWidthBytes / mResource->mFormat->SampleBytes(planes[i]),
+        l.mSourceWidthBytes / mResource->mFormat.SampleBytes(planes[i]),
         l.mSourceHeight);
     if (!mResource->CopyTo(planes[i], {origin, size},
                            buffer.From(destinationOffset),
                            static_cast<size_t>(l.mDestinationStride))) {
       p->MaybeRejectWithTypeError(
           nsPrintfCString("Failed to copy image data in %s plane",
-                          mResource->mFormat->PlaneName(planes[i])));
+                          mResource->mFormat.PlaneName(planes[i])));
       return p.forget();
     }
   }
@@ -1802,7 +1870,7 @@ bool VideoFrame::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   // The serialization is limited to the same process scope so it's ok to
   // serialize a reference instead of a copy.
   aHolder->VideoFrames().AppendElement(VideoFrameSerializedData(
-      image.get(), mResource->TryPixelFormat(), mCodedSize, mVisibleRect,
+      image.get(), mResource->mFormat.PixelFormat(), mCodedSize, mVisibleRect,
       mDisplaySize, mDuration, mTimestamp, mColorSpace, GetPrincipalURI()));
 
   return !NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_VIDEOFRAME, index));
@@ -1818,7 +1886,7 @@ UniquePtr<VideoFrame::TransferredData> VideoFrame::Transfer() {
 
   Resource r = mResource.extract();
   auto frame = MakeUnique<TransferredData>(
-      r.mImage.get(), r.TryPixelFormat(), mCodedSize, mVisibleRect,
+      r.mImage.get(), r.mFormat.PixelFormat(), mCodedSize, mVisibleRect,
       mDisplaySize, mDuration, mTimestamp, mColorSpace, GetPrincipalURI());
   Close();
   return frame;
@@ -2142,7 +2210,7 @@ bool VideoFrame::Format::IsYUV() const { return IsYUVFormat(mFormat); }
  */
 
 VideoFrame::Resource::Resource(const RefPtr<layers::Image>& aImage,
-                               Maybe<class Format>&& aFormat)
+                               const class Format& aFormat)
     : mImage(aImage), mFormat(aFormat) {
   MOZ_ASSERT(mImage);
 }
@@ -2152,18 +2220,12 @@ VideoFrame::Resource::Resource(const Resource& aOther)
   MOZ_ASSERT(mImage);
 }
 
-Maybe<VideoPixelFormat> VideoFrame::Resource::TryPixelFormat() const {
-  return mFormat ? Some(mFormat->PixelFormat()) : Nothing();
-}
-
 uint32_t VideoFrame::Resource::Stride(const Format::Plane& aPlane) const {
-  MOZ_RELEASE_ASSERT(mFormat);
-
   CheckedInt<uint32_t> width(mImage->GetSize().Width());
   switch (aPlane) {
     case Format::Plane::Y:  // and RGBA
     case Format::Plane::A:
-      switch (mFormat->PixelFormat()) {
+      switch (mFormat.PixelFormat()) {
         case VideoPixelFormat::I420:
         case VideoPixelFormat::I420A:
         case VideoPixelFormat::I422:
@@ -2173,20 +2235,20 @@ uint32_t VideoFrame::Resource::Stride(const Format::Plane& aPlane) const {
         case VideoPixelFormat::RGBX:
         case VideoPixelFormat::BGRA:
         case VideoPixelFormat::BGRX:
-          return (width * mFormat->SampleBytes(aPlane)).value();
+          return (width * mFormat.SampleBytes(aPlane)).value();
         case VideoPixelFormat::EndGuard_:
           MOZ_ASSERT_UNREACHABLE("invalid format");
       }
       return 0;
     case Format::Plane::U:  // and UV
     case Format::Plane::V:
-      switch (mFormat->PixelFormat()) {
+      switch (mFormat.PixelFormat()) {
         case VideoPixelFormat::I420:
         case VideoPixelFormat::I420A:
         case VideoPixelFormat::I422:
         case VideoPixelFormat::I444:
         case VideoPixelFormat::NV12:
-          return (((width + 1) / 2) * mFormat->SampleBytes(aPlane)).value();
+          return (((width + 1) / 2) * mFormat.SampleBytes(aPlane)).value();
         case VideoPixelFormat::RGBA:
         case VideoPixelFormat::RGBX:
         case VideoPixelFormat::BGRA:
@@ -2204,22 +2266,18 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
                                   const gfx::IntRect& aRect,
                                   Span<uint8_t>&& aPlaneDest,
                                   size_t aDestinationStride) const {
-  if (!mFormat) {
-    return false;
-  }
-
   auto copyPlane = [&](const uint8_t* aPlaneData) {
     MOZ_ASSERT(aPlaneData);
 
     CheckedInt<size_t> offset(aRect.Y());
     offset *= Stride(aPlane);
-    offset += aRect.X() * mFormat->SampleBytes(aPlane);
+    offset += aRect.X() * mFormat.SampleBytes(aPlane);
     if (!offset.isValid()) {
       return false;
     }
 
     CheckedInt<size_t> elementsBytes(aRect.Width());
-    elementsBytes *= mFormat->SampleBytes(aPlane);
+    elementsBytes *= mFormat.SampleBytes(aPlane);
     if (!elementsBytes.isValid()) {
       return false;
     }
@@ -2264,7 +2322,7 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
       // BGRA). To get the data in the matched format, we create a temp buffer
       // holding the image data in that format and then copy them to
       // `aDestination`.
-      const gfx::SurfaceFormat f = mFormat->ToSurfaceFormat();
+      const gfx::SurfaceFormat f = mFormat.ToSurfaceFormat();
       MOZ_ASSERT(f == gfx::SurfaceFormat::R8G8B8A8 ||
                  f == gfx::SurfaceFormat::R8G8B8X8 ||
                  f == gfx::SurfaceFormat::B8G8R8A8 ||
@@ -2307,7 +2365,7 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
       case Format::Plane::V:
         return copyPlane(mImage->AsPlanarYCbCrImage()->GetData()->mCrChannel);
       case Format::Plane::A:
-        MOZ_ASSERT(mFormat->PixelFormat() == VideoPixelFormat::I420A);
+        MOZ_ASSERT(mFormat.PixelFormat() == VideoPixelFormat::I420A);
         MOZ_ASSERT(mImage->AsPlanarYCbCrImage()->GetData()->mAlpha);
         return copyPlane(
             mImage->AsPlanarYCbCrImage()->GetData()->mAlpha->mChannel);
@@ -2327,13 +2385,7 @@ bool VideoFrame::Resource::CopyTo(const Format::Plane& aPlane,
     }
   }
 
-  // TODO: ImageFormat::MAC_IOSURFACE or ImageFormat::DMABUF
-  LOGW("Cannot copy image data of an unrecognized format");
-
   return false;
 }
-
-#undef LOGW
-#undef LOG_INTERNAL
 
 }  // namespace mozilla::dom
