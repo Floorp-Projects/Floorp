@@ -122,26 +122,6 @@ static StyleContentDistribution ConvertLegacyStyleToJustifyContent(
   return {StyleAlignFlags::FLEX_START};
 }
 
-/**
- * Converts a "flex-relative" coordinate in a single axis (a main- or cross-axis
- * coordinate) into a coordinate in the corresponding physical (x or y) axis. If
- * the flex-relative axis in question already maps *directly* to a physical
- * axis (i.e. if it's LTR or TTB), then the physical coordinate has the same
- * numeric value as the provided flex-relative coordinate. Otherwise, we have to
- * subtract the flex-relative coordinate from the flex container's size in that
- * axis, to flip the polarity. (So e.g. a main-axis position of 2px in a RTL
- * 20px-wide container would correspond to a physical coordinate (x-value) of
- * 18px.)
- */
-static nscoord PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
-                                                  nscoord aContainerSize,
-                                                  mozilla::Side aStartSide) {
-  if (aStartSide == eSideLeft || aStartSide == eSideTop) {
-    return aFlexRelativeCoord;
-  }
-  return aContainerSize - aFlexRelativeCoord;
-}
-
 // Check if the size is auto or it is a keyword in the block axis.
 // |aIsInline| should represent whether aSize is in the inline axis, from the
 // perspective of the writing mode of the flex item that the size comes from.
@@ -272,6 +252,18 @@ class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
                                                nscoord aCrossSize) const {
     return IsRowOriented() ? LogicalSize(mWM, aMainSize, aCrossSize)
                            : LogicalSize(mWM, aCrossSize, aMainSize);
+  }
+
+  /**
+   * Converts a "flex-relative" ascent (the distance from the flex container's
+   * content-box cross-start edge to its baseline) into a logical ascent (the
+   * distance from the flex container's content-box block-start edge to its
+   * baseline).
+   */
+  nscoord LogicalAscentFromFlexRelativeAscent(
+      nscoord aFlexRelativeAscent, nscoord aContentBoxCrossSize) const {
+    return (IsCrossAxisReversed() ? aContentBoxCrossSize - aFlexRelativeAscent
+                                  : aFlexRelativeAscent);
   }
 
   bool IsMainAxisHorizontal() const {
@@ -4403,21 +4395,6 @@ void FlexLine::PositionItemsInMainAxis(
   }
 }
 
-/**
- * Given the flex container's "flex-relative ascent" (i.e. distance from the
- * flex container's content-box cross-start edge to its baseline), returns
- * its actual physical ascent value (the distance from the *border-box* top
- * edge to its baseline).
- */
-static nscoord ComputePhysicalAscentFromFlexRelativeAscent(
-    nscoord aFlexRelativeAscent, nscoord aContentBoxCrossSize,
-    const ReflowInput& aReflowInput, const FlexboxAxisTracker& aAxisTracker) {
-  return aReflowInput.ComputedPhysicalBorderPadding().top +
-         PhysicalCoordFromFlexRelativeCoord(
-             aFlexRelativeAscent, aContentBoxCrossSize,
-             aAxisTracker.CrossAxisPhysicalStartSide());
-}
-
 void nsFlexContainerFrame::SizeItemInCrossAxis(ReflowInput& aChildReflowInput,
                                                FlexItem& aItem) {
   // If cross axis is the item's inline axis, just use ISize from reflow input,
@@ -5254,45 +5231,71 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
     // Flex Container Baselines - Flexbox spec section 8.5
     // https://drafts.csswg.org/css-flexbox-1/#flex-baselines
     if (lineForFirstBaseline && lineForFirstBaseline == &line) {
-      const nscoord firstBaselineOffset =
-          lineForFirstBaseline->FirstBaselineOffset();
-      if (firstBaselineOffset == nscoord_MIN) {
-        // No baseline-aligned items in line. Use sentinel value to prompt us
-        // to get baseline from the startmost FlexItem after we've reflowed it.
-        flr.mAscent = nscoord_MIN;
+      // baselineOffsetInLine is a distance from the line's cross-start edge.
+      nscoord baselineOffsetInLine;
+      if (const nscoord firstBaselineOffsetInLine =
+              lineForFirstBaseline->FirstBaselineOffset();
+          firstBaselineOffsetInLine != nscoord_MIN) {
+        baselineOffsetInLine = firstBaselineOffsetInLine;
+      } else if (const nscoord lastBaselineOffsetInLine =
+                     lineForFirstBaseline->LastBaselineOffset();
+                 lastBaselineOffsetInLine != nscoord_MIN) {
+        // Convert the distance to be relative from the line's cross-start edge.
+        baselineOffsetInLine =
+            lineForFirstBaseline->LineCrossSize() - lastBaselineOffsetInLine;
       } else {
-        // XXX We probably should use logical coordinates when computing the
-        // ascent. Otherwise, the ascent can be wrong when the flex container
-        // has a vertical writing-mode.
+        baselineOffsetInLine = nscoord_MIN;
+
+        // No "first baseline"-aligned or "last baseline"-aligned items in line.
+        // Use sentinel value to prompt us to get baseline from the startmost
+        // FlexItem after we've reflowed it.
+        flr.mAscent = nscoord_MIN;
+      }
+
+      if (baselineOffsetInLine != nscoord_MIN) {
         MOZ_ASSERT(aAxisTracker.IsRowOriented(),
                    "This makes sense only if we are row-oriented!");
-        flr.mAscent = ComputePhysicalAscentFromFlexRelativeAscent(
-            crossAxisPosnTracker.Position() + firstBaselineOffset,
-            flr.mContentBoxCrossSize, aReflowInput, aAxisTracker);
+        const auto wm = aAxisTracker.GetWritingMode();
+        flr.mAscent =
+            aAxisTracker.LogicalAscentFromFlexRelativeAscent(
+                crossAxisPosnTracker.Position() + baselineOffsetInLine,
+                flr.mContentBoxCrossSize) +
+            aReflowInput.ComputedLogicalBorderPadding(wm).BStart(wm);
       }
     }
 
     if (lineForLastBaseline && lineForLastBaseline == &line) {
-      const nscoord lastBaselineOffset =
-          lineForLastBaseline->LastBaselineOffset();
-      if (lastBaselineOffset == nscoord_MIN) {
-        // No "last baseline"-aligned items in line. Use sentinel value to
-        // prompt us to get last baseline from the endmost FlexItem after we've
-        // reflowed it.
-        flr.mAscentForLast = nscoord_MIN;
+      // baselineOffsetInLine is a distance from the line's cross-start edge.
+      nscoord baselineOffsetInLine;
+      if (const nscoord lastBaselineOffsetInLine =
+              lineForLastBaseline->LastBaselineOffset();
+          lastBaselineOffsetInLine != nscoord_MIN) {
+        // Convert the distance to be relative from the line's cross-start edge.
+        baselineOffsetInLine =
+            lineForLastBaseline->LineCrossSize() - lastBaselineOffsetInLine;
+      } else if (const nscoord firstBaselineOffsetInLine =
+                     lineForLastBaseline->FirstBaselineOffset();
+                 firstBaselineOffsetInLine != nscoord_MIN) {
+        baselineOffsetInLine = firstBaselineOffsetInLine;
       } else {
-        // XXX We probably should use logical coordinates when computing the
-        // ascent. Otherwise, the ascent can be wrong when the flex container
-        // has a vertical writing-mode.
+        baselineOffsetInLine = nscoord_MIN;
+
+        // No "first baseline"-aligned or "last baseline"-aligned items in line.
+        // Use sentinel value to prompt us to get baseline from the endmost
+        // FlexItem after we've reflowed it.
+        flr.mAscentForLast = nscoord_MIN;
+      }
+
+      if (baselineOffsetInLine != nscoord_MIN) {
         MOZ_ASSERT(aAxisTracker.IsRowOriented(),
                    "This makes sense only if we are row-oriented!");
+        const auto wm = aAxisTracker.GetWritingMode();
         flr.mAscentForLast =
-            PhysicalCoordFromFlexRelativeCoord(
-                crossAxisPosnTracker.Position() + line.LineCrossSize() -
-                    lastBaselineOffset,
-                flr.mContentBoxCrossSize,
-                aAxisTracker.CrossAxisPhysicalEndSide()) +
-            aReflowInput.ComputedPhysicalBorderPadding().bottom;
+            flr.mContentBoxCrossSize -
+            aAxisTracker.LogicalAscentFromFlexRelativeAscent(
+                crossAxisPosnTracker.Position() + baselineOffsetInLine,
+                flr.mContentBoxCrossSize) +
+            aReflowInput.ComputedLogicalBorderPadding(wm).BEnd(wm);
       }
     }
 
