@@ -222,7 +222,6 @@
   "resource:///modules/UrlbarProviderOmnibox.jsm": "browser/components/urlbar/UrlbarProviderOmnibox.jsm",
   "resource:///modules/UrlbarProviderOpenTabs.jsm": "browser/components/urlbar/UrlbarProviderOpenTabs.jsm",
   "resource:///modules/UrlbarProviderPlaces.jsm": "browser/components/urlbar/UrlbarProviderPlaces.jsm",
-  "resource:///modules/UrlbarProviderPreloadedSites.jsm": "browser/components/urlbar/UrlbarProviderPreloadedSites.jsm",
   "resource:///modules/UrlbarProviderPrivateSearch.jsm": "browser/components/urlbar/UrlbarProviderPrivateSearch.jsm",
   "resource:///modules/UrlbarProviderQuickSuggest.jsm": "browser/components/urlbar/UrlbarProviderQuickSuggest.jsm",
   "resource:///modules/UrlbarProviderRemoteTabs.jsm": "browser/components/urlbar/UrlbarProviderRemoteTabs.jsm",

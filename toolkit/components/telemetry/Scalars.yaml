@@ -7186,21 +7186,6 @@ urlbar.impression:
       - 'firefox'
     record_in_processes:
       - main
-  autofill_preloaded:
-    bug_numbers:
-      - 1774305
-      - 1780188
-    description: >
-      Counts how many times preloaded site type was autofilled per engagement.
-    expires: never
-    kind: uint
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - main
   autofill_url:
     bug_numbers:
       - 1774305
@@ -7312,23 +7297,6 @@ urlbar.picked:
         autofill type, and it should not normally be used. If it appears in the
         data, it means we need to investigate and fix the code that is not
         properly setting a specific autofill type.
-      expires: never
-      kind: uint
-      keyed: true
-      notification_emails:
-        - fx-search-telemetry@mozilla.com
-      release_channel_collection: opt-out
-      products:
-        - 'firefox'
-      record_in_processes:
-        - main
-
-    autofill_preloaded:
-      bug_numbers:
-        - 1770483
-      description: >
-        Counts how many times a preloaded site autofill result was picked at a
-        given index.
       expires: never
       kind: uint
       keyed: true
