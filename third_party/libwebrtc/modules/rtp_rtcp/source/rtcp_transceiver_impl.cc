@@ -64,8 +64,9 @@ struct RtcpTransceiverImpl::LocalSenderState {
 
 // Helper to put several RTCP packets into lower layer datagram composing
 // Compound or Reduced-Size RTCP packet, as defined by RFC 5506 section 2.
-// TODO(danilchap): When in compound mode and packets are so many that several
-// compound RTCP packets need to be generated, ensure each packet is compound.
+// TODO(bugs.webrtc.org/8239): When in compound mode and packets are so many
+// that several compound RTCP packets need to be generated, ensure each packet
+// is compound.
 class RtcpTransceiverImpl::PacketSender {
  public:
   PacketSender(rtcp::RtcpPacket::PacketReadyCallback callback,

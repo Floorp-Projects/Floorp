@@ -1012,7 +1012,7 @@ index 214eb0e463..ce747e0141 100644
  
  void ScreenCapturerWinMagnifier::Start(Callback* callback) {
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index 1f58a24c04..7f31d10459 100644
+index 75f403d6fa..c62c65506a 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtcp_sender.cc
 @@ -199,7 +199,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
