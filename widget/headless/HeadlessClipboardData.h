@@ -13,7 +13,7 @@ namespace widget {
 
 class HeadlessClipboardData final {
  public:
-  explicit HeadlessClipboardData() = default;
+  HeadlessClipboardData() : mPlain(VoidString()) {}
   ~HeadlessClipboardData() = default;
 
   // For text/plain
