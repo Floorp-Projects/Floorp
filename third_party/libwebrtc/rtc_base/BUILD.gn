@@ -138,8 +138,14 @@ rtc_library("bit_buffer") {
     "bit_buffer.cc",
     "bit_buffer.h",
   ]
-  deps = [ ":checks" ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/numeric:bits" ]
+  deps = [
+    ":checks",
+    "../api/units:data_size",
+  ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/numeric:bits",
+    "//third_party/abseil-cpp/absl/strings:strings",
+  ]
 }
 
 rtc_library("byte_buffer") {
