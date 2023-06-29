@@ -138,14 +138,15 @@ bool SctpSidAllocator::IsSidAvailable(int sid) const {
   return used_sids_.find(sid) == used_sids_.end();
 }
 
+// static
 rtc::scoped_refptr<SctpDataChannel> SctpDataChannel::Create(
-    SctpDataChannelControllerInterface* controller,
+    rtc::WeakPtr<SctpDataChannelControllerInterface> controller,
     const std::string& label,
     const InternalDataChannelInit& config,
     rtc::Thread* signaling_thread,
     rtc::Thread* network_thread) {
   auto channel = rtc::make_ref_counted<SctpDataChannel>(
-      config, controller, label, signaling_thread, network_thread);
+      config, std::move(controller), label, signaling_thread, network_thread);
   if (!channel->Init()) {
     return nullptr;
   }
@@ -160,25 +161,21 @@ rtc::scoped_refptr<DataChannelInterface> SctpDataChannel::CreateProxy(
   return DataChannelProxy::Create(signaling_thread, std::move(channel));
 }
 
-SctpDataChannel::SctpDataChannel(const InternalDataChannelInit& config,
-                                 SctpDataChannelControllerInterface* controller,
-                                 const std::string& label,
-                                 rtc::Thread* signaling_thread,
-                                 rtc::Thread* network_thread)
+SctpDataChannel::SctpDataChannel(
+    const InternalDataChannelInit& config,
+    rtc::WeakPtr<SctpDataChannelControllerInterface> controller,
+    const std::string& label,
+    rtc::Thread* signaling_thread,
+    rtc::Thread* network_thread)
     : signaling_thread_(signaling_thread),
       network_thread_(network_thread),
       internal_id_(GenerateUniqueId()),
       label_(label),
       config_(config),
       observer_(nullptr),
-      controller_(controller) {
+      controller_(std::move(controller)) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_UNUSED(network_thread_);
-}
-
-void SctpDataChannel::DetachFromController() {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  controller_detached_ = true;
 }
 
 bool SctpDataChannel::Init() {
@@ -217,7 +214,7 @@ bool SctpDataChannel::Init() {
   // This has to be done async because the upper layer objects (e.g.
   // Chrome glue and WebKit) are not wired up properly until after this
   // function returns.
-  RTC_DCHECK(!controller_detached_);
+  RTC_DCHECK(controller_);
   if (controller_->ReadyToSendData()) {
     AddRef();
     absl::Cleanup release = [this] { Release(); };
@@ -333,7 +330,6 @@ void SctpDataChannel::SetSctpSid(int sid) {
   }
 
   const_cast<InternalDataChannelInit&>(config_).id = sid;
-  RTC_DCHECK(!controller_detached_);
   controller_->AddSctpDataStream(sid);
 }
 
@@ -367,7 +363,7 @@ void SctpDataChannel::OnClosingProcedureComplete(int sid) {
 
 void SctpDataChannel::OnTransportChannelCreated() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (controller_detached_) {
+  if (!controller_) {
     return;
   }
   if (!connected_to_transport_) {
@@ -542,7 +538,7 @@ void SctpDataChannel::UpdateState() {
         // OnClosingProcedureComplete will end up called asynchronously
         // afterwards.
         if (connected_to_transport_ && !started_closing_procedure_ &&
-            !controller_detached_ && config_.id >= 0) {
+            controller_ && config_.id >= 0) {
           started_closing_procedure_ = true;
           controller_->RemoveSctpDataStream(config_.id);
         }
@@ -565,13 +561,13 @@ void SctpDataChannel::SetState(DataState state) {
     observer_->OnStateChange();
   }
 
-  if (!controller_detached_)
+  if (controller_)
     controller_->OnChannelStateChanged(this, state_);
 }
 
 void SctpDataChannel::DisconnectFromTransport() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (!connected_to_transport_ || controller_detached_)
+  if (!connected_to_transport_ || !controller_)
     return;
 
   controller_->DisconnectDataChannel(this);
@@ -614,7 +610,7 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
                                       bool queue_if_blocked) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   SendDataParams send_params;
-  if (controller_detached_) {
+  if (!controller_) {
     return false;
   }
 
@@ -696,7 +692,7 @@ bool SctpDataChannel::SendControlMessage(const rtc::CopyOnWriteBuffer& buffer) {
   RTC_DCHECK(writable_);
   RTC_DCHECK_GE(config_.id, 0);
 
-  if (controller_detached_) {
+  if (!controller_) {
     return false;
   }
   bool is_open_message = handshake_state_ == kHandshakeShouldSendOpen;

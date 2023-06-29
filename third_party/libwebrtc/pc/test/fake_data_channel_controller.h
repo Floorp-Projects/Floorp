@@ -15,6 +15,7 @@
 
 #include "pc/sctp_data_channel.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/weak_ptr.h"
 
 class FakeDataChannelController
     : public webrtc::SctpDataChannelControllerInterface {
@@ -25,6 +26,10 @@ class FakeDataChannelController
         ready_to_send_(false),
         transport_error_(false) {}
   virtual ~FakeDataChannelController() {}
+
+  rtc::WeakPtr<FakeDataChannelController> weak_ptr() {
+    return weak_factory_.GetWeakPtr();
+  }
 
   bool SendData(int sid,
                 const webrtc::SendDataParams& params,
@@ -171,5 +176,6 @@ class FakeDataChannelController
   std::set<webrtc::SctpDataChannel*> connected_channels_;
   std::set<uint32_t> send_ssrcs_;
   std::set<uint32_t> recv_ssrcs_;
+  rtc::WeakPtrFactory<FakeDataChannelController> weak_factory_{this};
 };
 #endif  // PC_TEST_FAKE_DATA_CHANNEL_CONTROLLER_H_

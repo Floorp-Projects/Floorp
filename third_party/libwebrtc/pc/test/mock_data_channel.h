@@ -42,7 +42,7 @@ class MockSctpDataChannel : public SctpDataChannel {
       rtc::Thread* signaling_thread = rtc::Thread::Current(),
       rtc::Thread* network_thread = rtc::Thread::Current())
       : SctpDataChannel(config,
-                        nullptr,
+                        rtc::WeakPtr<SctpDataChannelControllerInterface>(),
                         label,
                         signaling_thread,
                         network_thread) {

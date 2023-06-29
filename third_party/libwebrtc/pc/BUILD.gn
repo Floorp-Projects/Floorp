@@ -883,6 +883,7 @@ rtc_library("sctp_data_channel") {
     "../rtc_base:ssl",
     "../rtc_base:threading",
     "../rtc_base:threading",
+    "../rtc_base:weak_ptr",
     "../rtc_base/system:unused",
     "../rtc_base/third_party/sigslot:sigslot",
   ]
@@ -2783,6 +2784,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:task_queue_for_test",
       "../rtc_base:threading",
       "../rtc_base:timeutils",
+      "../rtc_base:weak_ptr",
       "../rtc_base/synchronization:mutex",
       "../rtc_base/task_utils:repeating_task",
       "../rtc_base/third_party/sigslot",

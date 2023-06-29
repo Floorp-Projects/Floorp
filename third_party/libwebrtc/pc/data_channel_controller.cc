@@ -20,14 +20,7 @@
 
 namespace webrtc {
 
-DataChannelController::~DataChannelController() {
-  // Since channels may have multiple owners, we cannot guarantee that
-  // they will be deallocated before destroying the controller.
-  // Therefore, detach them from the controller.
-  for (auto channel : sctp_data_channels_) {
-    channel->DetachFromController();
-  }
-}
+DataChannelController::~DataChannelController() {}
 
 bool DataChannelController::HasDataChannels() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
@@ -301,8 +294,9 @@ DataChannelController::InternalCreateSctpDataChannel(
                          "because the id is already in use or out of range.";
     return nullptr;
   }
-  rtc::scoped_refptr<SctpDataChannel> channel(SctpDataChannel::Create(
-      this, label, new_config, signaling_thread(), network_thread()));
+  rtc::scoped_refptr<SctpDataChannel> channel(
+      SctpDataChannel::Create(weak_factory_.GetWeakPtr(), label, new_config,
+                              signaling_thread(), network_thread()));
   if (!channel) {
     sid_allocator_.ReleaseSid(new_config.id);
     return nullptr;
