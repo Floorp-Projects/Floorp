@@ -195,10 +195,7 @@ export default class FxviewTabList extends MozLitElement {
     : "chrome://browser/content/firefoxview/fxview-tab-list.css";
 
   render() {
-    if (this.maxTabsLength > 0) {
-      // Can set maxTabsLength to -1 to have no max
-      this.tabItems = this.tabItems.slice(0, this.maxTabsLength);
-    }
+    this.tabItems = this.tabItems.slice(0, this.maxTabsLength);
     const {
       activeIndex,
       currentActiveElementId,
