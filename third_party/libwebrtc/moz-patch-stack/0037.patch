@@ -154,7 +154,7 @@ index 1bdda46097..282016d523 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 0a5127e0bb..e77b4ec9f0 100644
+index a9b816d298..df274dfcfa 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -35,7 +35,7 @@ rtc_source_set("callfactory_api") {
