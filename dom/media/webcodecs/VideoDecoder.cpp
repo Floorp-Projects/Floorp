@@ -600,6 +600,156 @@ static nsTArray<RefPtr<VideoFrame>> DecodedDataToVideoFrames(
   return frames;
 }
 
+template <typename T>
+class MessageRequestHolder {
+ public:
+  MessageRequestHolder() = default;
+  ~MessageRequestHolder() = default;
+
+  MozPromiseRequestHolder<T>& Request() { return mRequest; }
+  void Disconnect() { mRequest.Disconnect(); }
+  void Complete() { mRequest.Complete(); }
+  bool Exists() const { return mRequest.Exists(); }
+
+ protected:
+  MozPromiseRequestHolder<T> mRequest;
+};
+
+ControlMessage::ControlMessage(const nsACString& aTitle) : mTitle(aTitle) {}
+
+class ConfigureMessage final
+    : public ControlMessage,
+      public MessageRequestHolder<DecoderAgent::ConfigurePromise> {
+ public:
+  explicit ConfigureMessage(UniquePtr<VideoDecoderConfig>&& aConfig)
+      : ControlMessage(nsPrintfCString(
+            "%s-configuration", NS_ConvertUTF16toUTF8(aConfig->mCodec).get())),
+        mConfig(std::move(aConfig)) {}
+  ~ConfigureMessage() = default;
+  virtual void Cancel() override { Disconnect(); }
+  virtual bool IsProcessing() override { return Exists(); };
+  virtual ConfigureMessage* AsConfigureMessage() override { return this; }
+  const VideoDecoderConfig& Config() { return *mConfig; }
+  UniquePtr<VideoDecoderConfig> TakeConfig() { return std::move(mConfig); }
+
+ private:
+  UniquePtr<VideoDecoderConfig> mConfig;
+};
+
+class DecodeMessage final
+    : public ControlMessage,
+      public MessageRequestHolder<DecoderAgent::DecodePromise> {
+ public:
+  using Id = size_t;
+  struct ChunkData {
+    explicit ChunkData(EncodedVideoChunk& aChunk)
+        : mBuffer(aChunk.Data(), static_cast<size_t>(aChunk.ByteLength())),
+          mIsKey(aChunk.Type() == EncodedVideoChunkType::Key),
+          mTimestamp(aChunk.Timestamp()),
+          mDuration(aChunk.GetDuration().IsNull()
+                        ? Nothing()
+                        : Some(aChunk.GetDuration().Value())) {
+      LOGV("Create %zu-byte ChunkData from %u-byte EncodedVideoChunk",
+           mBuffer ? mBuffer.Size() : 0, aChunk.ByteLength());
+    }
+
+    RefPtr<MediaRawData> IntoMediaRawData(
+        const RefPtr<MediaByteBuffer>& aExtraData,
+        const VideoDecoderConfig& aConfig);
+
+    AlignedByteBuffer mBuffer;
+    bool mIsKey;
+    int64_t mTimestamp;
+    Maybe<uint64_t> mDuration;
+  };
+
+  DecodeMessage(Id aId, UniquePtr<ChunkData>&& aData)
+      : ControlMessage(nsPrintfCString("decode #%zu", aId)),
+        mId(aId),
+        mData(std::move(aData)) {}
+  ~DecodeMessage() = default;
+  virtual void Cancel() override { Disconnect(); }
+  virtual bool IsProcessing() override { return Exists(); };
+  virtual DecodeMessage* AsDecodeMessage() override { return this; }
+  RefPtr<MediaRawData> TakeData(const RefPtr<MediaByteBuffer>& aExtraData,
+                                const VideoDecoderConfig& aConfig) {
+    if (!mData) {
+      LOGE("No data in DecodeMessage");  // Data has been taken.
+      return nullptr;
+    }
+    return mData->IntoMediaRawData(aExtraData, aConfig);
+  }
+  const Id mId;  // A unique id shown in log.
+
+ private:
+  UniquePtr<ChunkData> mData;
+};
+
+class FlushMessage final
+    : public ControlMessage,
+      public MessageRequestHolder<DecoderAgent::DecodePromise> {
+ public:
+  using Id = size_t;
+  FlushMessage(Id aId, Promise* aPromise)
+      : ControlMessage(nsPrintfCString("flush #%zu", aId)),
+        mId(aId),
+        mPromise(aPromise) {}
+  ~FlushMessage() = default;
+  virtual void Cancel() override { Disconnect(); }
+  virtual bool IsProcessing() override { return Exists(); };
+  virtual FlushMessage* AsFlushMessage() override { return this; }
+  already_AddRefed<Promise> TakePromise() { return mPromise.forget(); }
+  void RejectPromiseIfAny(const nsresult& aReason) {
+    if (mPromise) {
+      mPromise->MaybeReject(aReason);
+    }
+  }
+
+  const Id mId;  // A unique id shown in log.
+
+ private:
+  RefPtr<Promise> mPromise;
+};
+
+RefPtr<MediaRawData> DecodeMessage::ChunkData::IntoMediaRawData(
+    const RefPtr<MediaByteBuffer>& aExtraData,
+    const VideoDecoderConfig& aConfig) {
+  if (!mBuffer) {
+    LOGE("Chunk is empty!");
+    return nullptr;
+  }
+
+  RefPtr<MediaRawData> sample(new MediaRawData(std::move(mBuffer)));
+  sample->mKeyframe = mIsKey;
+  sample->mTime = TimeUnit::FromMicroseconds(mTimestamp);
+  sample->mTimecode = TimeUnit::FromMicroseconds(mTimestamp);
+
+  if (mDuration) {
+    CheckedInt64 duration(*mDuration);
+    if (!duration.isValid()) {
+      LOGE("Chunk's duration exceeds TimeUnit's limit");
+      return nullptr;
+    }
+    sample->mDuration = TimeUnit::FromMicroseconds(duration.value());
+  }
+
+  // aExtraData is either provided by Configure() or a default one created for
+  // the decoder creation. If it's created for decoder creation only, we don't
+  // set it to sample.
+  if (aConfig.mDescription.WasPassed() && aExtraData) {
+    sample->mExtraData = aExtraData;
+  }
+
+  LOGV("Input chunk converted to %zu-byte MediaRawData - time: %" PRIi64
+       "us, timecode: %" PRIi64 "us, duration: %" PRIi64
+       "us, key-frame: %s, has extra data: %s",
+       sample->Size(), sample->mTime.ToMicroseconds(),
+       sample->mTimecode.ToMicroseconds(), sample->mDuration.ToMicroseconds(),
+       sample->mKeyframe ? "yes" : "no", sample->mExtraData ? "yes" : "no");
+
+  return sample.forget();
+}
+
 VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
                            RefPtr<WebCodecsErrorCallback>&& aErrorCallback,
                            RefPtr<VideoFrameOutputCallback>&& aOutputCallback)
@@ -613,8 +763,8 @@ VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
       mActiveConfig(nullptr),
       mDecodeQueueSize(0),
       mDequeueEventScheduled(false),
-      mDecodeMessageCounter(0),
-      mFlushMessageCounter(0) {
+      mDecodeCounter(0),
+      mFlushCounter(0) {
   MOZ_ASSERT(mErrorCallback);
   MOZ_ASSERT(mOutputCallback);
   LOG("VideoDecoder %p ctor", this);
@@ -687,12 +837,13 @@ void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
 
   mState = CodecState::Configured;
   mKeyChunkRequired = true;
-  mDecodeMessageCounter = 0;
-  mFlushMessageCounter = 0;
+  mDecodeCounter = 0;
+  mFlushCounter = 0;
 
-  mControlMessageQueue.emplace(AsVariant(ConfigureMessage(std::move(config))));
+  mControlMessageQueue.emplace(
+      UniquePtr<ControlMessage>(new ConfigureMessage(std::move(config))));
   LOG("VideoDecoder %p enqueues %s", this,
-      mControlMessageQueue.back().as<ConfigureMessage>().mTitle.get());
+      mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
 }
 
@@ -717,10 +868,10 @@ void VideoDecoder::Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv) {
   }
 
   mDecodeQueueSize += 1;
-  mControlMessageQueue.emplace(AsVariant(DecodeMessage(
-      ++mDecodeMessageCounter, MakeUnique<DecodeMessage::ChunkData>(aChunk))));
+  mControlMessageQueue.emplace(UniquePtr<ControlMessage>(new DecodeMessage(
+      ++mDecodeCounter, MakeUnique<DecodeMessage::ChunkData>(aChunk))));
   LOGV("VideoDecoder %p enqueues %s", this,
-       mControlMessageQueue.back().as<DecodeMessage>().mTitle.get());
+       mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
 }
 
@@ -743,9 +894,9 @@ already_AddRefed<Promise> VideoDecoder::Flush(ErrorResult& aRv) {
   mKeyChunkRequired = true;
 
   mControlMessageQueue.emplace(
-      AsVariant(FlushMessage(++mFlushMessageCounter, p)));
+      UniquePtr<ControlMessage>(new FlushMessage(++mFlushCounter, p)));
   LOG("VideoDecoder %p enqueues %s", this,
-      mControlMessageQueue.back().as<FlushMessage>().mTitle.get());
+      mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
   return p.forget();
 }
@@ -825,8 +976,8 @@ Result<Ok, nsresult> VideoDecoder::Reset(const nsresult& aResult) {
   }
 
   mState = CodecState::Unconfigured;
-  mDecodeMessageCounter = 0;
-  mFlushMessageCounter = 0;
+  mDecodeCounter = 0;
+  mFlushCounter = 0;
 
   CancelPendingControlMessages(aResult);
   DestroyDecoderAgentIfAny();
@@ -1016,11 +1167,12 @@ void VideoDecoder::ScheduleDequeueEvent() {
       "ScheduleDequeueEvent Runnable (worker)", dispatcher)));
 }
 
-void VideoDecoder::SchedulePromiseResolveOrReject(Promise* aPromise,
-                                                  const nsresult& aResult) {
+void VideoDecoder::SchedulePromiseResolveOrReject(
+    already_AddRefed<Promise> aPromise, const nsresult& aResult) {
   AssertIsOnOwningThread();
 
-  auto resolver = [p = RefPtr{aPromise}, result = aResult] {
+  RefPtr<Promise> p = aPromise;
+  auto resolver = [p, result = aResult] {
     if (NS_FAILED(result)) {
       p->MaybeReject(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
       return;
@@ -1044,18 +1196,18 @@ void VideoDecoder::ProcessControlMessageQueue() {
   MOZ_ASSERT(mState == CodecState::Configured);
 
   while (!mMessageQueueBlocked && !mControlMessageQueue.empty()) {
-    auto& msg = mControlMessageQueue.front();
-    if (msg.is<ConfigureMessage>()) {
+    UniquePtr<ControlMessage>& msg = mControlMessageQueue.front();
+    if (msg->AsConfigureMessage()) {
       if (ProcessConfigureMessage(msg) ==
           MessageProcessedResult::NotProcessed) {
         break;
       }
-    } else if (msg.is<DecodeMessage>()) {
+    } else if (msg->AsDecodeMessage()) {
       if (ProcessDecodeMessage(msg) == MessageProcessedResult::NotProcessed) {
         break;
       }
     } else {
-      MOZ_ASSERT(msg.is<FlushMessage>());
+      MOZ_ASSERT(msg->AsFlushMessage());
       if (ProcessFlushMessage(msg) == MessageProcessedResult::NotProcessed) {
         break;
       }
@@ -1068,23 +1220,12 @@ void VideoDecoder::CancelPendingControlMessages(const nsresult& aResult) {
 
   // Cancel the message that is being processed.
   if (mProcessingMessage) {
-    if (mProcessingMessage->is<ConfigureMessage>()) {
-      auto& msg = mProcessingMessage->as<ConfigureMessage>();
-      LOG("VideoDecoder %p cancels current %s", this, msg.mTitle.get());
-      MOZ_ASSERT(msg.mRequest.Exists());
-      msg.mRequest.Disconnect();
-    } else if (mProcessingMessage->is<DecodeMessage>()) {
-      auto& msg = mProcessingMessage->as<DecodeMessage>();
-      LOG("VideoDecoder %p cancels current %s", this, msg.mTitle.get());
-      MOZ_ASSERT(msg.mRequest.Exists());
-      msg.mRequest.Disconnect();
-    } else {
-      MOZ_ASSERT(mProcessingMessage->is<FlushMessage>());
-      auto& msg = mProcessingMessage->as<FlushMessage>();
-      LOG("VideoDecoder %p cancels current %s", this, msg.mTitle.get());
-      MOZ_ASSERT(msg.mRequest.Exists());
-      msg.mRequest.Disconnect();
-      msg.mPromise->MaybeReject(aResult);
+    LOG("VideoDecoder %p cancels current %s", this,
+        mProcessingMessage->ToString().get());
+    mProcessingMessage->Cancel();
+
+    if (FlushMessage* flush = mProcessingMessage->AsFlushMessage()) {
+      flush->RejectPromiseIfAny(aResult);
     }
 
     mProcessingMessage.reset();
@@ -1092,61 +1233,41 @@ void VideoDecoder::CancelPendingControlMessages(const nsresult& aResult) {
 
   // Clear the message queue.
   while (!mControlMessageQueue.empty()) {
-    if (mControlMessageQueue.front().is<ConfigureMessage>()) {
-      auto& msg = mControlMessageQueue.front().as<ConfigureMessage>();
-      LOG("VideoDecoder %p cancels pending %s", this, msg.mTitle.get());
-      MOZ_ASSERT(!msg.mRequest.Exists());
-    } else if (mControlMessageQueue.front().is<DecodeMessage>()) {
-      auto& msg = mControlMessageQueue.front().as<DecodeMessage>();
-      LOG("VideoDecoder %p cancels pending %s", this, msg.mTitle.get());
-      MOZ_ASSERT(!msg.mRequest.Exists());
-    } else {
-      MOZ_ASSERT(mControlMessageQueue.front().is<FlushMessage>());
-      auto& msg = mControlMessageQueue.front().as<FlushMessage>();
-      LOG("VideoDecoder %p cancels pending %s", this, msg.mTitle.get());
-      MOZ_ASSERT(!msg.mRequest.Exists());
-      msg.mPromise->MaybeReject(aResult);
+    LOG("VideoDecoder %p cancels pending %s", this,
+        mControlMessageQueue.front()->ToString().get());
+
+    MOZ_ASSERT(!mControlMessageQueue.front()->IsProcessing());
+    if (FlushMessage* flush = mControlMessageQueue.front()->AsFlushMessage()) {
+      flush->RejectPromiseIfAny(aResult);
     }
 
     mControlMessageQueue.pop();
   }
 }
 
-ConfigureMessage::ConfigureMessage(UniquePtr<VideoDecoderConfig>&& aConfig)
-    : mTitle(nsPrintfCString("%s-configuration",
-                             NS_ConvertUTF16toUTF8(aConfig->mCodec).get())),
-      mConfig(std::move(aConfig)) {}
-
 VideoDecoder::MessageProcessedResult VideoDecoder::ProcessConfigureMessage(
-    ControlMessage& aMessage) {
+    UniquePtr<ControlMessage>& aMessage) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
-  MOZ_ASSERT(aMessage.is<ConfigureMessage>());
+  MOZ_ASSERT(aMessage->AsConfigureMessage());
 
   if (mProcessingMessage) {
-    const char* current =
-        mProcessingMessage->is<ConfigureMessage>()
-            ? mProcessingMessage->as<ConfigureMessage>().mTitle.get()
-        : mProcessingMessage->is<DecodeMessage>()
-            ? mProcessingMessage->as<DecodeMessage>().mTitle.get()
-            : mProcessingMessage->as<FlushMessage>().mTitle.get();
-    const char* incoming = aMessage.as<ConfigureMessage>().mTitle.get();
-
-    LOG("VideoDecoder %p is processing %s. Defer %s", this, current, incoming);
+    LOG("VideoDecoder %p is processing %s. Defer %s", this,
+        mProcessingMessage->ToString().get(), aMessage->ToString().get());
     return MessageProcessedResult::NotProcessed;
   }
 
-  mProcessingMessage.emplace(std::move(aMessage));
+  mProcessingMessage.reset(aMessage.release());
   mControlMessageQueue.pop();
 
-  auto& msg = mProcessingMessage->as<ConfigureMessage>();
-  LOG("VideoDecoder %p starts processing %s", this, msg.mTitle.get());
+  ConfigureMessage* msg = mProcessingMessage->AsConfigureMessage();
+  LOG("VideoDecoder %p starts processing %s", this, msg->ToString().get());
 
   DestroyDecoderAgentIfAny();
 
-  auto i = CreateVideoInfo(*(msg.mConfig));
-  if (!CanDecode(*(msg.mConfig)) || i.isErr() ||
-      !CreateDecoderAgent(std::move(msg.mConfig), i.unwrap())) {
+  auto i = CreateVideoInfo(msg->Config());
+  if (!CanDecode(msg->Config()) || i.isErr() ||
+      !CreateDecoderAgent(msg->TakeConfig(), i.unwrap())) {
     mProcessingMessage.reset();
     DebugOnly<Result<Ok, nsresult>> r =
         Close(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
@@ -1171,19 +1292,20 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessConfigureMessage(
                  const DecoderAgent::ConfigurePromise::ResolveOrRejectValue&
                      aResult) {
                MOZ_ASSERT(self->mProcessingMessage);
-               MOZ_ASSERT(self->mProcessingMessage->is<ConfigureMessage>());
+               MOZ_ASSERT(self->mProcessingMessage->AsConfigureMessage());
                MOZ_ASSERT(self->mState == CodecState::Configured);
                MOZ_ASSERT(self->mAgent);
                MOZ_ASSERT(id == self->mAgent->mId);
                MOZ_ASSERT(self->mActiveConfig);
 
-               auto& msg = self->mProcessingMessage->as<ConfigureMessage>();
+               ConfigureMessage* msg =
+                   self->mProcessingMessage->AsConfigureMessage();
                LOG("VideoDecoder %p, DecodeAgent #%d %s has been %s. now "
                    "unblocks message-queue-processing",
-                   self.get(), id, msg.mTitle.get(),
+                   self.get(), id, msg->ToString().get(),
                    aResult.IsResolve() ? "resolved" : "rejected");
 
-               msg.mRequest.Complete();
+               msg->Complete();
                self->mProcessingMessage.reset();
 
                if (aResult.IsReject()) {
@@ -1202,97 +1324,28 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessConfigureMessage(
                self->mMessageQueueBlocked = false;
                self->ProcessControlMessageQueue();
              })
-      ->Track(msg.mRequest);
+      ->Track(msg->Request());
 
   return MessageProcessedResult::Processed;
 }
 
-struct DecodeMessage::ChunkData {
-  explicit ChunkData(EncodedVideoChunk& aChunk)
-      : mBuffer(aChunk.Data(), static_cast<size_t>(aChunk.ByteLength())),
-        mIsKey(aChunk.Type() == EncodedVideoChunkType::Key),
-        mTimestamp(aChunk.Timestamp()),
-        mDuration(aChunk.GetDuration().IsNull()
-                      ? Nothing()
-                      : Some(aChunk.GetDuration().Value())) {
-    LOGV("Create %zu-byte ChunkData from %u-byte EncodedVideoChunk",
-         mBuffer ? mBuffer.Size() : 0, aChunk.ByteLength());
-  }
-
-  RefPtr<MediaRawData> IntoMediaRawData(
-      const RefPtr<MediaByteBuffer>& aExtraData,
-      const VideoDecoderConfig& aConfig) {
-    if (!mBuffer) {
-      LOGE("Chunk is empty!");
-      return nullptr;
-    }
-
-    RefPtr<MediaRawData> sample(new MediaRawData(std::move(mBuffer)));
-    sample->mKeyframe = mIsKey;
-    sample->mTime = TimeUnit::FromMicroseconds(mTimestamp);
-    sample->mTimecode = TimeUnit::FromMicroseconds(mTimestamp);
-
-    if (mDuration) {
-      CheckedInt64 duration(*mDuration);
-      if (!duration.isValid()) {
-        LOGE("Chunk's duration exceeds TimeUnit's limit");
-        return nullptr;
-      }
-      sample->mDuration = TimeUnit::FromMicroseconds(duration.value());
-    }
-
-    // aExtraData is either provided by Configure() or a default one created for
-    // the decoder creation. If it's created for decoder creation only, we don't
-    // set it to sample.
-    if (aConfig.mDescription.WasPassed() && aExtraData) {
-      sample->mExtraData = aExtraData;
-    }
-
-    LOGV("Input chunk converted to %zu-byte MediaRawData - time: %" PRIi64
-         "us, timecode: %" PRIi64 "us, duration: %" PRIi64
-         "us, key-frame: %s, has extra data: %s",
-         sample->Size(), sample->mTime.ToMicroseconds(),
-         sample->mTimecode.ToMicroseconds(), sample->mDuration.ToMicroseconds(),
-         sample->mKeyframe ? "yes" : "no", sample->mExtraData ? "yes" : "no");
-
-    return sample.forget();
-  }
-
-  AlignedByteBuffer mBuffer;
-  bool mIsKey;
-  int64_t mTimestamp;
-  Maybe<uint64_t> mDuration;
-};
-
-DecodeMessage::DecodeMessage(Id aId, UniquePtr<ChunkData>&& aData)
-    : mTitle(nsPrintfCString("decode #%zu", aId)),
-      mId(aId),
-      mData(std::move(aData)) {}
-
 VideoDecoder::MessageProcessedResult VideoDecoder::ProcessDecodeMessage(
-    ControlMessage& aMessage) {
+    UniquePtr<ControlMessage>& aMessage) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
-  MOZ_ASSERT(aMessage.is<DecodeMessage>());
+  MOZ_ASSERT(aMessage->AsDecodeMessage());
 
   if (mProcessingMessage) {
-    const char* current =
-        mProcessingMessage->is<ConfigureMessage>()
-            ? mProcessingMessage->as<ConfigureMessage>().mTitle.get()
-        : mProcessingMessage->is<DecodeMessage>()
-            ? mProcessingMessage->as<DecodeMessage>().mTitle.get()
-            : mProcessingMessage->as<FlushMessage>().mTitle.get();
-    const char* incoming = aMessage.as<DecodeMessage>().mTitle.get();
-
-    LOGV("VideoDecoder %p is processing %s. Defer %s", this, current, incoming);
+    LOGV("VideoDecoder %p is processing %s. Defer %s", this,
+         mProcessingMessage->ToString().get(), aMessage->ToString().get());
     return MessageProcessedResult::NotProcessed;
   }
 
-  mProcessingMessage.emplace(std::move(aMessage));
+  mProcessingMessage.reset(aMessage.release());
   mControlMessageQueue.pop();
 
-  auto& msg = mProcessingMessage->as<DecodeMessage>();
-  LOGV("VideoDecoder %p starts processing %s", this, msg.mTitle.get());
+  DecodeMessage* msg = mProcessingMessage->AsDecodeMessage();
+  LOGV("VideoDecoder %p starts processing %s", this, msg->ToString().get());
 
   mDecodeQueueSize -= 1;
   ScheduleDequeueEvent();
@@ -1310,16 +1363,12 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessDecodeMessage(
     return closeOnError();
   }
 
-  if (!msg.mData) {
-    LOGE("VideoDecoder %p, no data for %s", this, msg.mTitle.get());
-    return closeOnError();
-  }
-
   MOZ_ASSERT(mActiveConfig);
-  RefPtr<MediaRawData> data = msg.mData->IntoMediaRawData(
+  RefPtr<MediaRawData> data = msg->TakeData(
       mAgent->mInfo->GetAsVideoInfo()->mExtraData, *mActiveConfig);
   if (!data) {
-    LOGE("VideoDecoder %p, data for %s is invalid", this, msg.mTitle.get());
+    LOGE("VideoDecoder %p, data for %s is empty or invalid", this,
+         msg->ToString().get());
     return closeOnError();
   }
 
@@ -1328,20 +1377,20 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessDecodeMessage(
              [self = RefPtr{this}, id = mAgent->mId](
                  DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult) {
                MOZ_ASSERT(self->mProcessingMessage);
-               MOZ_ASSERT(self->mProcessingMessage->is<DecodeMessage>());
+               MOZ_ASSERT(self->mProcessingMessage->AsDecodeMessage());
                MOZ_ASSERT(self->mState == CodecState::Configured);
                MOZ_ASSERT(self->mAgent);
                MOZ_ASSERT(id == self->mAgent->mId);
                MOZ_ASSERT(self->mActiveConfig);
 
-               auto& msg = self->mProcessingMessage->as<DecodeMessage>();
+               DecodeMessage* msg = self->mProcessingMessage->AsDecodeMessage();
                LOGV("VideoDecoder %p, DecodeAgent #%d %s has been %s",
-                    self.get(), id, msg.mTitle.get(),
+                    self.get(), id, msg->ToString().get(),
                     aResult.IsResolve() ? "resolved" : "rejected");
 
-               nsCString title = msg.mTitle;
+               nsCString msgStr = msg->ToString();
 
-               msg.mRequest.Complete();
+               msg->Complete();
                self->mProcessingMessage.reset();
 
                if (aResult.IsReject()) {
@@ -1349,7 +1398,7 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessDecodeMessage(
                  // with an EncodingError so we log the exact error here.
                  const MediaResult& error = aResult.RejectValue();
                  LOGE("VideoDecoder %p, DecodeAgent #%d %s failed: %s",
-                      self.get(), id, title.get(), error.Description().get());
+                      self.get(), id, msgStr.get(), error.Description().get());
                  self->ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
                  return;  // No further process
                }
@@ -1359,57 +1408,45 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessDecodeMessage(
                    std::move(aResult.ResolveValue());
                if (data.IsEmpty()) {
                  LOGV("VideoDecoder %p got no data for %s", self.get(),
-                      title.get());
+                      msgStr.get());
                } else {
                  LOGV(
                      "VideoDecoder %p, schedule %zu decoded data output for "
                      "%s",
-                     self.get(), data.Length(), title.get());
-                 self->ScheduleOutputVideoFrames(std::move(data), title);
+                     self.get(), data.Length(), msgStr.get());
+                 self->ScheduleOutputVideoFrames(std::move(data), msgStr);
                }
 
                self->ProcessControlMessageQueue();
              })
-      ->Track(msg.mRequest);
+      ->Track(msg->Request());
 
   return MessageProcessedResult::Processed;
 }
 
-FlushMessage::FlushMessage(Id aId, Promise* aPromise)
-    : mTitle(nsPrintfCString("flush #%zu", aId)),
-      mId(aId),
-      mPromise(aPromise) {}
-
 VideoDecoder::MessageProcessedResult VideoDecoder::ProcessFlushMessage(
-    ControlMessage& aMessage) {
+    UniquePtr<ControlMessage>& aMessage) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
-  MOZ_ASSERT(aMessage.is<FlushMessage>());
+  MOZ_ASSERT(aMessage->AsFlushMessage());
 
   if (mProcessingMessage) {
-    const char* current =
-        mProcessingMessage->is<ConfigureMessage>()
-            ? mProcessingMessage->as<ConfigureMessage>().mTitle.get()
-        : mProcessingMessage->is<DecodeMessage>()
-            ? mProcessingMessage->as<DecodeMessage>().mTitle.get()
-            : mProcessingMessage->as<FlushMessage>().mTitle.get();
-    const char* incoming = aMessage.as<FlushMessage>().mTitle.get();
-
-    LOG("VideoDecoder %p is processing %s. Defer %s", this, current, incoming);
+    LOG("VideoDecoder %p is processing %s. Defer %s", this,
+        mProcessingMessage->ToString().get(), aMessage->ToString().get());
     return MessageProcessedResult::NotProcessed;
   }
 
-  mProcessingMessage.emplace(std::move(aMessage));
+  mProcessingMessage.reset(aMessage.release());
   mControlMessageQueue.pop();
 
-  auto& msg = mProcessingMessage->as<FlushMessage>();
-  LOG("VideoDecoder %p starts processing %s", this, msg.mTitle.get());
+  FlushMessage* msg = mProcessingMessage->AsFlushMessage();
+  LOG("VideoDecoder %p starts processing %s", this, msg->ToString().get());
 
   // Treat it like decode error if no DecoderAgent is available.
   if (!mAgent) {
     LOGE("VideoDecoder %p is not configured", this);
 
-    SchedulePromiseResolveOrReject(msg.mPromise.get(),
+    SchedulePromiseResolveOrReject(msg->TakePromise(),
                                    NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
     mProcessingMessage.reset();
 
@@ -1423,20 +1460,20 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessFlushMessage(
              [self = RefPtr{this}, id = mAgent->mId](
                  DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult) {
                MOZ_ASSERT(self->mProcessingMessage);
-               MOZ_ASSERT(self->mProcessingMessage->is<FlushMessage>());
+               MOZ_ASSERT(self->mProcessingMessage->AsFlushMessage());
                MOZ_ASSERT(self->mState == CodecState::Configured);
                MOZ_ASSERT(self->mAgent);
                MOZ_ASSERT(id == self->mAgent->mId);
                MOZ_ASSERT(self->mActiveConfig);
 
-               auto& msg = self->mProcessingMessage->as<FlushMessage>();
+               FlushMessage* msg = self->mProcessingMessage->AsFlushMessage();
                LOG("VideoDecoder %p, DecodeAgent #%d %s has been %s",
-                   self.get(), id, msg.mTitle.get(),
+                   self.get(), id, msg->ToString().get(),
                    aResult.IsResolve() ? "resolved" : "rejected");
 
-               nsCString title = msg.mTitle;
+               nsCString msgStr = msg->ToString();
 
-               msg.mRequest.Complete();
+               msg->Complete();
 
                // If flush failed, it means decoder fails to decode the data
                // sent before, so we treat it like decode error. We reject the
@@ -1450,7 +1487,7 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessFlushMessage(
                  // Reject with an EncodingError instead of the error we got
                  // above.
                  self->SchedulePromiseResolveOrReject(
-                     msg.mPromise.get(),
+                     msg->TakePromise(),
                      NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
 
                  self->mProcessingMessage.reset();
@@ -1468,19 +1505,19 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessFlushMessage(
 
                if (data.IsEmpty()) {
                  LOG("VideoDecoder %p gets no data for %s", self.get(),
-                     title.get());
+                     msgStr.get());
                } else {
                  LOG("VideoDecoder %p, schedule %zu decoded data output for "
                      "%s",
-                     self.get(), data.Length(), title.get());
-                 self->ScheduleOutputVideoFrames(std::move(data), title);
+                     self.get(), data.Length(), msgStr.get());
+                 self->ScheduleOutputVideoFrames(std::move(data), msgStr);
                }
 
-               self->SchedulePromiseResolveOrReject(msg.mPromise.get(), NS_OK);
+               self->SchedulePromiseResolveOrReject(msg->TakePromise(), NS_OK);
                self->mProcessingMessage.reset();
                self->ProcessControlMessageQueue();
              })
-      ->Track(msg.mRequest);
+      ->Track(msg->Request());
 
   return MessageProcessedResult::Processed;
 }

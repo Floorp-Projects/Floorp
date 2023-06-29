@@ -54,34 +54,23 @@ class ShutdownBlockingTicket;
 
 namespace mozilla::dom {
 
-struct ConfigureMessage final {
-  explicit ConfigureMessage(UniquePtr<VideoDecoderConfig>&& aConfig);
+class ConfigureMessage;
+class DecodeMessage;
+class FlushMessage;
+
+class ControlMessage {
+ public:
+  explicit ControlMessage(const nsACString& aTitle);
+  virtual ~ControlMessage() = default;
+  virtual void Cancel() = 0;
+  virtual bool IsProcessing() = 0;
+
+  virtual const nsCString& ToString() const { return mTitle; }
+  virtual ConfigureMessage* AsConfigureMessage() { return nullptr; }
+  virtual DecodeMessage* AsDecodeMessage() { return nullptr; }
+  virtual FlushMessage* AsFlushMessage() { return nullptr; }
+
   const nsCString mTitle;  // Used to identify the message in the logs.
-  MozPromiseRequestHolder<DecoderAgent::ConfigurePromise> mRequest;
-  UniquePtr<VideoDecoderConfig> mConfig;
-};
-
-struct DecodeMessage final {
-  using Id = size_t;
-
-  // ChunkData extracts necessary data in EncodedVideoChunk and hand it over
-  // to DecoderAgent.
-  struct ChunkData;
-  DecodeMessage(Id aId, UniquePtr<ChunkData>&& aData);
-  const nsCString mTitle;  // Used to identify the message in the logs.
-  MozPromiseRequestHolder<DecoderAgent::DecodePromise> mRequest;
-  const Id mId;  // A unique id shown in log.
-  UniquePtr<ChunkData> mData;
-};
-
-struct FlushMessage final {
-  using Id = size_t;
-
-  FlushMessage(Id aId, Promise* aPromise);
-  const nsCString mTitle;  // Used to identify the message in the logs.
-  MozPromiseRequestHolder<DecoderAgent::DecodePromise> mRequest;
-  const Id mId;  // A unique id shown in log.
-  RefPtr<Promise> mPromise;
 };
 
 class VideoDecoder final : public DOMEventTargetHelper {
@@ -147,20 +136,22 @@ class VideoDecoder final : public DOMEventTargetHelper {
 
   void ScheduleDequeueEvent();
 
-  void SchedulePromiseResolveOrReject(Promise* aPromise,
+  void SchedulePromiseResolveOrReject(already_AddRefed<Promise> aPromise,
                                       const nsresult& aResult);
 
   void ProcessControlMessageQueue();
   void CancelPendingControlMessages(const nsresult& aResult);
 
-  using ControlMessage = Variant<ConfigureMessage, DecodeMessage, FlushMessage>;
   enum class MessageProcessedResult { NotProcessed, Processed };
 
-  MessageProcessedResult ProcessConfigureMessage(ControlMessage& aMessage);
+  MessageProcessedResult ProcessConfigureMessage(
+      UniquePtr<ControlMessage>& aMessage);
 
-  MessageProcessedResult ProcessDecodeMessage(ControlMessage& aMessage);
+  MessageProcessedResult ProcessDecodeMessage(
+      UniquePtr<ControlMessage>& aMessage);
 
-  MessageProcessedResult ProcessFlushMessage(ControlMessage& aMessage);
+  MessageProcessedResult ProcessFlushMessage(
+      UniquePtr<ControlMessage>& aMessage);
 
   // Returns true when mAgent can be created.
   bool CreateDecoderAgent(UniquePtr<VideoDecoderConfig>&& aConfig,
@@ -175,8 +166,8 @@ class VideoDecoder final : public DOMEventTargetHelper {
   bool mKeyChunkRequired;
 
   bool mMessageQueueBlocked;
-  std::queue<ControlMessage> mControlMessageQueue;
-  Maybe<ControlMessage> mProcessingMessage;
+  std::queue<UniquePtr<ControlMessage>> mControlMessageQueue;
+  UniquePtr<ControlMessage> mProcessingMessage;
 
   // DecoderAgent will be created every time "configure" is being processed, and
   // will be destroyed when "reset" or another "configure" is called (spec
@@ -186,8 +177,12 @@ class VideoDecoder final : public DOMEventTargetHelper {
   uint32_t mDecodeQueueSize;
   bool mDequeueEventScheduled;
 
-  DecodeMessage::Id mDecodeMessageCounter;
-  FlushMessage::Id mFlushMessageCounter;
+  // Tracking how many decode data has been enqueued and this number will be
+  // used as the DecodeMessage's Id.
+  size_t mDecodeCounter;
+  // Tracking how many flush request has been enqueued and this number will be
+  // used as the FlushMessage's Id.
+  size_t mFlushCounter;
 
   // Used to add a nsIAsyncShutdownBlocker on main thread to block
   // xpcom-shutdown before the underlying MediaDataDecoder is created. The
