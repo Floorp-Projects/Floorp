@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/session_info.h"
+#include "modules/video_coding/deprecated/session_info.h"
 
 #include <string.h>
 

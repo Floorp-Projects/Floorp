@@ -8,11 +8,17 @@
 
 import("../../../webrtc.gni")
 
+visibility = [
+  ":*",
+  "../:video_coding_legacy",
+  "../:video_coding_unittests",
+]
+
+rtc_library("deprecated_jitter_buffer_common") {
+  sources = [ "jitter_buffer_common.h" ]
+}
+
 rtc_library("deprecated_packet") {
-  visibility = [
-    "../:video_coding_legacy",
-    "../:video_coding_unittests",
-  ]
   sources = [
     "packet.cc",
     "packet.h",
@@ -26,4 +32,31 @@ rtc_library("deprecated_packet") {
     "../../../modules/rtp_rtcp:rtp_video_header",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
+rtc_library("deprecated_session_info") {
+  deps = [
+    ":deprecated_jitter_buffer_common",
+    ":deprecated_packet",
+    "../../../modules:module_api",
+    "../../../modules:module_api_public",
+    "../../../modules/video_coding:codec_globals_headers",
+    "../../../rtc_base:logging",
+  ]
+  sources = [
+    "session_info.cc",
+    "session_info.h",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:variant" ]
+}
+
+rtc_library("deprecated_unittests") {
+  testonly = true
+  sources = [ "session_info_unittest.cc" ]
+  visibility += [ "../../../modules/*" ]
+  deps = [
+    ":deprecated_packet",
+    ":deprecated_session_info",
+    "../../../test:test_support",
+  ]
 }

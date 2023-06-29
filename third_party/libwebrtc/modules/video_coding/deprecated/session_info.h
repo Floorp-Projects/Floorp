@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_SESSION_INFO_H_
-#define MODULES_VIDEO_CODING_SESSION_INFO_H_
+#ifndef MODULES_VIDEO_CODING_DEPRECATED_SESSION_INFO_H_
+#define MODULES_VIDEO_CODING_DEPRECATED_SESSION_INFO_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -20,7 +20,6 @@
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
 #include "modules/video_coding/deprecated/packet.h"
-#include "modules/video_coding/include/video_coding.h"
 
 namespace webrtc {
 // Used to pass data from jitter buffer to session info.
@@ -119,4 +118,4 @@ class VCMSessionInfo {
 
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_SESSION_INFO_H_
+#endif  // MODULES_VIDEO_CODING_DEPRECATED_SESSION_INFO_H_
