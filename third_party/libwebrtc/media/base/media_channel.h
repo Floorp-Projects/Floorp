@@ -955,11 +955,6 @@ class VideoMediaSendChannelInterface : public MediaSendChannelInterface {
   virtual void SetVideoCodecSwitchingEnabled(bool enabled) = 0;
   virtual bool GetStats(VideoMediaSendInfo* stats) = 0;
   virtual void FillBitrateInfo(BandwidthEstimationInfo* bwe_info) = 0;
-  // Information queries to support SetReceiverFeedbackParameters
-  virtual webrtc::RtcpMode SendCodecRtcpMode() const = 0;
-  virtual bool SendCodecHasLntf() const = 0;
-  virtual bool SendCodecHasNack() const = 0;
-  virtual absl::optional<int> SendCodecRtxTime() const = 0;
 };
 
 class VideoMediaReceiveChannelInterface : public MediaReceiveChannelInterface {
@@ -989,10 +984,6 @@ class VideoMediaReceiveChannelInterface : public MediaReceiveChannelInterface {
   // Clear recordable encoded frame callback for `ssrc`
   virtual void ClearRecordableEncodedFrameCallback(uint32_t ssrc) = 0;
   virtual bool GetStats(VideoMediaReceiveInfo* stats) = 0;
-  virtual void SetReceiverFeedbackParameters(bool lntf_enabled,
-                                             bool nack_enabled,
-                                             webrtc::RtcpMode rtcp_mode,
-                                             absl::optional<int> rtx_time) = 0;
 };
 
 // Info about data received in DataMediaChannel.  For use in
