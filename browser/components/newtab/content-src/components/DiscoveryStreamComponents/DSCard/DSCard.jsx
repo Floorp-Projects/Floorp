@@ -323,7 +323,7 @@ export class _DSCard extends React.PureComponent {
     }
 
     const { isRecentSave, DiscoveryStream, saveToPocketCard } = this.props;
-    let { source } = this.props;
+    let source = this.props.source || this.props.publisher;
     if (!source) {
       try {
         source = new URL(this.props.url).hostname;
