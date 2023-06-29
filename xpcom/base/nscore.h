@@ -7,14 +7,6 @@
 #ifndef nscore_h___
 #define nscore_h___
 
-/**
- * Make sure that we have the proper platform specific
- * c++ definitions needed by nscore.h
- */
-#ifndef _XPCOM_CONFIG_H_
-#  include "xpcom-config.h"  // IWYU pragma: export
-#endif
-
 /* Definitions of functions and operators that allocate memory. */
 #if !defined(NS_NO_XPCOM) && !defined(MOZ_NO_MOZALLOC)
 #  include "mozilla/mozalloc.h"
