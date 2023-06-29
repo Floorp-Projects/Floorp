@@ -79,7 +79,7 @@ class SctpDataChannelTest : public ::testing::Test {
  protected:
   SctpDataChannelTest()
       : controller_(new FakeDataChannelController()),
-        webrtc_data_channel_(SctpDataChannel::Create(controller_.get(),
+        webrtc_data_channel_(SctpDataChannel::Create(controller_->weak_ptr(),
                                                      "test",
                                                      init_,
                                                      rtc::Thread::Current(),
@@ -110,7 +110,7 @@ class SctpDataChannelTest : public ::testing::Test {
 TEST_F(SctpDataChannelTest, ConnectedToTransportOnCreated) {
   controller_->set_transport_available(true);
   rtc::scoped_refptr<SctpDataChannel> dc =
-      SctpDataChannel::Create(controller_.get(), "test1", init_,
+      SctpDataChannel::Create(controller_->weak_ptr(), "test1", init_,
                               rtc::Thread::Current(), rtc::Thread::Current());
 
   EXPECT_TRUE(controller_->IsConnected(dc.get()));
@@ -301,7 +301,7 @@ TEST_F(SctpDataChannelTest, LateCreatedChannelTransitionToOpen) {
   webrtc::InternalDataChannelInit init;
   init.id = 1;
   rtc::scoped_refptr<SctpDataChannel> dc =
-      SctpDataChannel::Create(controller_.get(), "test1", init,
+      SctpDataChannel::Create(controller_->weak_ptr(), "test1", init,
                               rtc::Thread::Current(), rtc::Thread::Current());
   EXPECT_EQ(webrtc::DataChannelInterface::kConnecting, dc->state());
   EXPECT_TRUE_WAIT(webrtc::DataChannelInterface::kOpen == dc->state(), 1000);
@@ -315,7 +315,7 @@ TEST_F(SctpDataChannelTest, SendUnorderedAfterReceivesOpenAck) {
   init.id = 1;
   init.ordered = false;
   rtc::scoped_refptr<SctpDataChannel> dc =
-      SctpDataChannel::Create(controller_.get(), "test1", init,
+      SctpDataChannel::Create(controller_->weak_ptr(), "test1", init,
                               rtc::Thread::Current(), rtc::Thread::Current());
 
   EXPECT_EQ_WAIT(webrtc::DataChannelInterface::kOpen, dc->state(), 1000);
@@ -346,7 +346,7 @@ TEST_F(SctpDataChannelTest, SendUnorderedAfterReceiveData) {
   init.id = 1;
   init.ordered = false;
   rtc::scoped_refptr<SctpDataChannel> dc =
-      SctpDataChannel::Create(controller_.get(), "test1", init,
+      SctpDataChannel::Create(controller_->weak_ptr(), "test1", init,
                               rtc::Thread::Current(), rtc::Thread::Current());
 
   EXPECT_EQ_WAIT(webrtc::DataChannelInterface::kOpen, dc->state(), 1000);
@@ -450,7 +450,7 @@ TEST_F(SctpDataChannelTest, NoMsgSentIfNegotiatedAndNotFromOpenMsg) {
 
   SetChannelReady();
   rtc::scoped_refptr<SctpDataChannel> dc =
-      SctpDataChannel::Create(controller_.get(), "test1", config,
+      SctpDataChannel::Create(controller_->weak_ptr(), "test1", config,
                               rtc::Thread::Current(), rtc::Thread::Current());
 
   EXPECT_EQ_WAIT(webrtc::DataChannelInterface::kOpen, dc->state(), 1000);
@@ -514,7 +514,7 @@ TEST_F(SctpDataChannelTest, OpenAckSentIfCreatedFromOpenMessage) {
 
   SetChannelReady();
   rtc::scoped_refptr<SctpDataChannel> dc =
-      SctpDataChannel::Create(controller_.get(), "test1", config,
+      SctpDataChannel::Create(controller_->weak_ptr(), "test1", config,
                               rtc::Thread::Current(), rtc::Thread::Current());
 
   EXPECT_EQ_WAIT(webrtc::DataChannelInterface::kOpen, dc->state(), 1000);

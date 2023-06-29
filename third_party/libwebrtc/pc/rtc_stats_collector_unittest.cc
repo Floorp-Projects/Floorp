@@ -2109,10 +2109,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCPeerConnectionStats) {
   // TODO(bugs.webrtc.org/11547): Supply a separate network thread.
   FakeDataChannelController controller;
   rtc::scoped_refptr<SctpDataChannel> dummy_channel_a = SctpDataChannel::Create(
-      &controller, "DummyChannelA", InternalDataChannelInit(),
+      controller.weak_ptr(), "DummyChannelA", InternalDataChannelInit(),
       rtc::Thread::Current(), rtc::Thread::Current());
   rtc::scoped_refptr<SctpDataChannel> dummy_channel_b = SctpDataChannel::Create(
-      &controller, "DummyChannelB", InternalDataChannelInit(),
+      controller.weak_ptr(), "DummyChannelB", InternalDataChannelInit(),
       rtc::Thread::Current(), rtc::Thread::Current());
 
   stats_->stats_collector()->OnSctpDataChannelStateChanged(

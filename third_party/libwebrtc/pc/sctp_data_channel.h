@@ -30,6 +30,7 @@
 #include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
+#include "rtc_base/weak_ptr.h"
 
 namespace webrtc {
 
@@ -123,7 +124,7 @@ class SctpDataChannel : public DataChannelInterface,
                         public sigslot::has_slots<> {
  public:
   static rtc::scoped_refptr<SctpDataChannel> Create(
-      SctpDataChannelControllerInterface* controller,
+      rtc::WeakPtr<SctpDataChannelControllerInterface> controller,
       const std::string& label,
       const InternalDataChannelInit& config,
       rtc::Thread* signaling_thread,
@@ -133,9 +134,6 @@ class SctpDataChannel : public DataChannelInterface,
   // handed out to external callers.
   static rtc::scoped_refptr<DataChannelInterface> CreateProxy(
       rtc::scoped_refptr<SctpDataChannel> channel);
-
-  // Invalidate the link to the controller (DataChannelController);
-  void DetachFromController();
 
   void RegisterObserver(DataChannelObserver* observer) override;
   void UnregisterObserver() override;
@@ -223,7 +221,7 @@ class SctpDataChannel : public DataChannelInterface,
 
  protected:
   SctpDataChannel(const InternalDataChannelInit& config,
-                  SctpDataChannelControllerInterface* client,
+                  rtc::WeakPtr<SctpDataChannelControllerInterface> controller,
                   const std::string& label,
                   rtc::Thread* signaling_thread,
                   rtc::Thread* network_thread);
@@ -266,9 +264,8 @@ class SctpDataChannel : public DataChannelInterface,
   uint64_t bytes_sent_ RTC_GUARDED_BY(signaling_thread_) = 0;
   uint32_t messages_received_ RTC_GUARDED_BY(signaling_thread_) = 0;
   uint64_t bytes_received_ RTC_GUARDED_BY(signaling_thread_) = 0;
-  SctpDataChannelControllerInterface* const controller_
+  rtc::WeakPtr<SctpDataChannelControllerInterface> controller_
       RTC_GUARDED_BY(signaling_thread_);
-  bool controller_detached_ RTC_GUARDED_BY(signaling_thread_) = false;
   HandshakeState handshake_state_ RTC_GUARDED_BY(signaling_thread_) =
       kHandshakeInit;
   bool connected_to_transport_ RTC_GUARDED_BY(signaling_thread_) = false;
