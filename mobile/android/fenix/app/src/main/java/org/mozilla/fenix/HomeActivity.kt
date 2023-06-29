@@ -84,6 +84,7 @@ import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.experiments.nimbus.initializeTooling
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.SplashScreen
 import org.mozilla.fenix.GleanMetrics.StartOnHome
 import org.mozilla.fenix.addons.AddonDetailsFragmentDirections
 import org.mozilla.fenix.addons.AddonPermissionsDetailsFragmentDirections
@@ -433,7 +434,13 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             splashScreen.setKeepOnScreenCondition {
                 val dataFetched = components.settings.utmParamsKnown &&
                     components.settings.nimbusExperimentsFetched
-                !maxDurationReached && !dataFetched
+                val keepOnScreen = !maxDurationReached && !dataFetched
+                if (!keepOnScreen) {
+                    SplashScreen.firstLaunchExtended.record(
+                        SplashScreen.FirstLaunchExtendedExtra(dataFetched = dataFetched),
+                    )
+                }
+                keepOnScreen
             }
             MainScope().launch {
                 delay(timeMillis = delay)

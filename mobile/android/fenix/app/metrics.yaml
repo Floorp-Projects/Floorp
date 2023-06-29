@@ -637,6 +637,27 @@ events:
       tags:
         - Search
 
+splash_screen:
+  first_launch_extended:
+    type: event
+    description: |
+      The splash screen was shown for an extended period of time, providing more time
+      to download marketing and experiment data.
+    extra_keys:
+      data_fetched:
+        type: boolean
+        description: |
+          If the splash screen was closed due to data being fetched or due to the time running out.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840315
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/2616
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 126
+
 onboarding:
   syn_cfr_shown:
     type: event
