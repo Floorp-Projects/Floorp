@@ -12,7 +12,8 @@ const TEST_URI = `
   body {
     user-select: none;
     hyphenate-limit-chars: auto;
-    overflow-clip-box: padding-box;
+    // TODO: Re-enable it when we have another property with no MDN url nor spec url Bug 1840910
+    /*overflow-clip-box: padding-box;*/
   }
 </style>
 <body>
@@ -38,12 +39,13 @@ const TEST_DATA_INITIAL = [
           expectedLearnMoreUrl:
             "https://drafts.csswg.org/css-text-4/#propdef-hyphenate-limit-chars",
         },
-        "overflow-clip-box": {
+        // TODO: Re-enable it when we have another property with no MDN url nor spec url Bug 1840910
+        /*"overflow-clip-box": {
           expected: COMPATIBILITY_TOOLTIP_MESSAGE.default,
           value: "padding-box",
           // No MDN nor spec url
           expectedLearnMoreUrl: null,
-        },
+        },*/
       },
     ],
   },
