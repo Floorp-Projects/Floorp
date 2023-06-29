@@ -24,6 +24,7 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/EncodedVideoChunk.h"
 #include "mozilla/dom/EncodedVideoChunkBinding.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/VideoFrame.h"
 #include "mozilla/dom/VideoFrameBinding.h"
@@ -31,9 +32,11 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/media/MediaUtils.h"
+#include "nsGkAtoms.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
+#include "nsThreadUtils.h"
 
 mozilla::LazyLogModule gWebCodecsLog("WebCodecs");
 using mozilla::media::TimeUnit;
@@ -368,6 +371,25 @@ static Result<VideoDecoderConfig, nsresult> CloneConfiguration(
   return c;
 }
 
+static nsresult FireEvent(DOMEventTargetHelper* aEventTarget,
+                          nsAtom* aTypeWithOn, const nsAString& aEventType) {
+  MOZ_ASSERT(aEventTarget);
+
+  if (aTypeWithOn && !aEventTarget->HasListenersFor(aTypeWithOn)) {
+    LOGV("EventTarget %p has no %s event listener", aEventTarget,
+         NS_ConvertUTF16toUTF8(aEventType).get());
+    return NS_ERROR_ABORT;
+  }
+
+  LOGV("Dispatch %s event to EventTarget %p",
+       NS_ConvertUTF16toUTF8(aEventType).get(), aEventTarget);
+  RefPtr<Event> event = new Event(aEventTarget, nullptr, nullptr);
+  event->InitEvent(aEventType, true, true);
+  event->SetTrusted(true);
+  aEventTarget->DispatchEvent(*event);
+  return NS_OK;
+}
+
 static Maybe<VideoPixelFormat> GuessPixelFormat(layers::Image* aImage) {
   // TODO: Implement this.
   return Nothing();
@@ -437,6 +459,7 @@ VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
       mAgent(nullptr),
       mActiveConfig(nullptr),
       mDecodeQueueSize(0),
+      mDequeueEventScheduled(false),
       mDecodeMessageCounter(0) {
   MOZ_ASSERT(mErrorCallback);
   MOZ_ASSERT(mOutputCallback);
@@ -475,12 +498,6 @@ already_AddRefed<VideoDecoder> VideoDecoder::Constructor(
 CodecState VideoDecoder::State() const { return mState; }
 
 uint32_t VideoDecoder::DecodeQueueSize() const { return mDecodeQueueSize; }
-
-already_AddRefed<EventHandlerNonNull> VideoDecoder::GetOndequeue() const {
-  return nullptr;
-}
-
-void VideoDecoder::SetOndequeue(EventHandlerNonNull* arg) {}
 
 // https://w3c.github.io/webcodecs/#dom-videodecoder-configure
 void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
@@ -639,6 +656,7 @@ Result<Ok, nsresult> VideoDecoder::Reset(const nsresult& aResult) {
 
   if (mDecodeQueueSize > 0) {
     mDecodeQueueSize = 0;
+    ScheduleDequeueEvent();
   }
 
   LOG("VideoDecoder %p now has its message queue unblocked", this);
@@ -764,6 +782,30 @@ void VideoDecoder::ScheduleClose(const nsresult& aResult) {
 
   MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewCancelableRunnableFunction(
       "ScheduleClose Runnable (worker)", task)));
+}
+
+void VideoDecoder::ScheduleDequeueEvent() {
+  AssertIsOnOwningThread();
+
+  if (mDequeueEventScheduled) {
+    return;
+  }
+  mDequeueEventScheduled = true;
+
+  auto dispatcher = [self = RefPtr{this}] {
+    FireEvent(self.get(), nsGkAtoms::ondequeue, u"dequeue"_ns);
+    self->mDequeueEventScheduled = false;
+  };
+  nsISerialEventTarget* target = GetCurrentSerialEventTarget();
+
+  if (NS_IsMainThread()) {
+    MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewRunnableFunction(
+        "ScheduleDequeueEvent Runnable (main)", dispatcher)));
+    return;
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewCancelableRunnableFunction(
+      "ScheduleDequeueEvent Runnable (worker)", dispatcher)));
 }
 
 void VideoDecoder::ProcessControlMessageQueue() {
@@ -1006,6 +1048,7 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessDecodeMessage(
   LOGV("VideoDecoder %p starts processing %s", this, msg.mTitle.get());
 
   mDecodeQueueSize -= 1;
+  ScheduleDequeueEvent();
 
   // Treat it like decode error if no DecoderAgent is available or the encoded
   // data is invalid.

@@ -79,6 +79,8 @@ class VideoDecoder final : public DOMEventTargetHelper {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(VideoDecoder, DOMEventTargetHelper)
 
+  IMPL_EVENT_HANDLER(dequeue)
+
  public:
   VideoDecoder(nsIGlobalObject* aParent,
                RefPtr<WebCodecsErrorCallback>&& aErrorCallback,
@@ -98,10 +100,6 @@ class VideoDecoder final : public DOMEventTargetHelper {
   CodecState State() const;
 
   uint32_t DecodeQueueSize() const;
-
-  already_AddRefed<EventHandlerNonNull> GetOndequeue() const;
-
-  void SetOndequeue(EventHandlerNonNull* arg);
 
   MOZ_CAN_RUN_SCRIPT void Configure(const VideoDecoderConfig& aConfig,
                                     ErrorResult& aRv);
@@ -134,6 +132,8 @@ class VideoDecoder final : public DOMEventTargetHelper {
                                  const nsACString& aLabel);
 
   void ScheduleClose(const nsresult& aResult);
+
+  void ScheduleDequeueEvent();
 
   MOZ_CAN_RUN_SCRIPT void ProcessControlMessageQueue();
   void CancelPendingControlMessages();
@@ -168,6 +168,8 @@ class VideoDecoder final : public DOMEventTargetHelper {
   RefPtr<DecoderAgent> mAgent;
   UniquePtr<VideoDecoderConfig> mActiveConfig;
   uint32_t mDecodeQueueSize;
+  bool mDequeueEventScheduled;
+
   DecodeMessage::Id mDecodeMessageCounter;
 
   // Used to add a nsIAsyncShutdownBlocker on main thread to block
