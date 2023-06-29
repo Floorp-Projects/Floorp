@@ -44,7 +44,6 @@ object FocusVersions {
     }
 
     object ThirdParty {
-        const val leakcanary = "2.11"
         const val osslicenses_plugin = "0.10.4"
     }
 }
@@ -59,7 +58,6 @@ object FocusDependencies {
     const val androidx_transition = "androidx.transition:transition:${FocusVersions.AndroidX.transition}"
 
     const val google_play = "com.google.android.play:core:${FocusVersions.Google.play}"
-    const val leakcanary = "com.squareup.leakcanary:leakcanary-android-core:${FocusVersions.ThirdParty.leakcanary}"
 
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${FocusVersions.Kotlin.coroutines}"
 
