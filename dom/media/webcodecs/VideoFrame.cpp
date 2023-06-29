@@ -52,69 +52,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VideoFrame)
 NS_INTERFACE_MAP_END
 
 /*
- * The following are utilities to convert between VideoColorSpace values to
- * gfx's values.
+ * The following are utilities to convert from gfx's formats to
+ * VideoPixelFormats.
  */
-static gfx::ColorRange ToColorRange(bool aIsFullRange) {
-  return aIsFullRange ? gfx::ColorRange::FULL : gfx::ColorRange::LIMITED;
-}
-
-static gfx::YUVColorSpace ToColorSpace(VideoMatrixCoefficients aMatrix) {
-  switch (aMatrix) {
-    case VideoMatrixCoefficients::Rgb:
-      return gfx::YUVColorSpace::Identity;
-    case VideoMatrixCoefficients::Bt709:
-    case VideoMatrixCoefficients::Bt470bg:
-      return gfx::YUVColorSpace::BT709;
-    case VideoMatrixCoefficients::Smpte170m:
-      return gfx::YUVColorSpace::BT601;
-    case VideoMatrixCoefficients::Bt2020_ncl:
-      return gfx::YUVColorSpace::BT2020;
-    case VideoMatrixCoefficients::EndGuard_:
-      break;
-  }
-  MOZ_ASSERT_UNREACHABLE("unsupported VideoMatrixCoefficients");
-  return gfx::YUVColorSpace::Default;
-}
-
-static gfx::TransferFunction ToTransferFunction(
-    VideoTransferCharacteristics aTransfer) {
-  switch (aTransfer) {
-    case VideoTransferCharacteristics::Bt709:
-    case VideoTransferCharacteristics::Smpte170m:
-      return gfx::TransferFunction::BT709;
-    case VideoTransferCharacteristics::Iec61966_2_1:
-      return gfx::TransferFunction::SRGB;
-    case VideoTransferCharacteristics::Pq:
-      return gfx::TransferFunction::PQ;
-    case VideoTransferCharacteristics::Hlg:
-      return gfx::TransferFunction::HLG;
-    case VideoTransferCharacteristics::Linear:
-    case VideoTransferCharacteristics::EndGuard_:
-      break;
-  }
-  MOZ_ASSERT_UNREACHABLE("unsupported VideoTransferCharacteristics");
-  return gfx::TransferFunction::Default;
-}
-
-static gfx::ColorSpace2 ToPrimaries(VideoColorPrimaries aPrimaries) {
-  switch (aPrimaries) {
-    case VideoColorPrimaries::Bt709:
-      return gfx::ColorSpace2::BT709;
-    case VideoColorPrimaries::Bt470bg:
-      return gfx::ColorSpace2::BT601_625;
-    case VideoColorPrimaries::Smpte170m:
-      return gfx::ColorSpace2::BT601_525;
-    case VideoColorPrimaries::Bt2020:
-      return gfx::ColorSpace2::BT2020;
-    case VideoColorPrimaries::Smpte432:
-      return gfx::ColorSpace2::DISPLAY_P3;
-    case VideoColorPrimaries::EndGuard_:
-      break;
-  }
-  MOZ_ASSERT_UNREACHABLE("unsupported VideoTransferCharacteristics");
-  return gfx::ColorSpace2::UNKNOWN;
-}
 
 static Maybe<VideoPixelFormat> ToVideoPixelFormat(gfx::SurfaceFormat aFormat) {
   switch (aFormat) {
