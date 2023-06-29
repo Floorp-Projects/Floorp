@@ -354,12 +354,12 @@ class RTC_EXPORT RTCPeerConnectionStats final : public RTCStats {
 };
 
 // https://w3c.github.io/webrtc-stats/#streamstats-dict*
-class RTC_EXPORT RTCRTPStreamStats : public RTCStats {
+class RTC_EXPORT RTCRtpStreamStats : public RTCStats {
  public:
   WEBRTC_RTCSTATS_DECL();
 
-  RTCRTPStreamStats(const RTCRTPStreamStats& other);
-  ~RTCRTPStreamStats() override;
+  RTCRtpStreamStats(const RTCRtpStreamStats& other);
+  ~RTCRtpStreamStats() override;
 
   RTCStatsMember<uint32_t> ssrc;
   RTCStatsMember<std::string> kind;
@@ -372,11 +372,11 @@ class RTC_EXPORT RTCRTPStreamStats : public RTCStats {
   RTCStatsMember<std::string> media_type;  // renamed to kind.
 
  protected:
-  RTCRTPStreamStats(std::string id, Timestamp timestamp);
+  RTCRtpStreamStats(std::string id, Timestamp timestamp);
 };
 
 // https://www.w3.org/TR/webrtc-stats/#receivedrtpstats-dict*
-class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRTPStreamStats {
+class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
 
@@ -391,7 +391,7 @@ class RTC_EXPORT RTCReceivedRtpStreamStats : public RTCRTPStreamStats {
 };
 
 // https://www.w3.org/TR/webrtc-stats/#sentrtpstats-dict*
-class RTC_EXPORT RTCSentRtpStreamStats : public RTCRTPStreamStats {
+class RTC_EXPORT RTCSentRtpStreamStats : public RTCRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
 
@@ -495,7 +495,8 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
 };
 
 // https://w3c.github.io/webrtc-stats/#outboundrtpstats-dict*
-class RTC_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
+class RTC_EXPORT RTCOutboundRTPStreamStats final
+    : public RTCSentRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
 
@@ -507,9 +508,7 @@ class RTC_EXPORT RTCOutboundRTPStreamStats final : public RTCRTPStreamStats {
   RTCStatsMember<std::string> remote_id;
   RTCStatsMember<std::string> mid;
   RTCStatsMember<std::string> rid;
-  RTCStatsMember<uint32_t> packets_sent;
   RTCStatsMember<uint64_t> retransmitted_packets_sent;
-  RTCStatsMember<uint64_t> bytes_sent;
   RTCStatsMember<uint64_t> header_bytes_sent;
   RTCStatsMember<uint64_t> retransmitted_bytes_sent;
   RTCStatsMember<double> target_bitrate;
