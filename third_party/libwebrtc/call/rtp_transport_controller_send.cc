@@ -181,12 +181,19 @@ void RtpTransportControllerSend::UpdateControlState() {
 }
 
 void RtpTransportControllerSend::UpdateCongestedState() {
+  if (auto update = GetCongestedStateUpdate()) {
+    is_congested_ = update.value();
+    pacer_.SetCongested(update.value());
+  }
+}
+
+absl::optional<bool> RtpTransportControllerSend::GetCongestedStateUpdate()
+    const {
   bool congested = transport_feedback_adapter_.GetOutstandingData() >=
                    congestion_window_size_;
-  if (congested != is_congested_) {
-    is_congested_ = congested;
-    pacer_.SetCongested(congested);
-  }
+  if (congested != is_congested_)
+    return congested;
+  return absl::nullopt;
 }
 
 MaybeWorkerThread* RtpTransportControllerSend::GetWorkerQueue() {
@@ -392,27 +399,73 @@ void RtpTransportControllerSend::EnablePeriodicAlrProbing(bool enable) {
 void RtpTransportControllerSend::OnSentPacket(
     const rtc::SentPacket& sent_packet) {
   // Normally called on the network thread !
+  // TODO(bugs.webrtc.org/137439): Clarify other thread contexts calling in, and
+  // simplify task posting logic when the combined network/worker project
+  // launches.
+  if (TaskQueueBase::Current() != task_queue_.TaskQueueForPost()) {
+    // We can't use SafeTask here if we are using an owned task queue, because
+    // the safety flag will be destroyed when RtpTransportControllerSend is
+    // destroyed on the worker thread. But we must use SafeTask if we are using
+    // the worker thread, since the worker thread outlives
+    // RtpTransportControllerSend.
+    task_queue_.TaskQueueForPost()->PostTask(
+        task_queue_.MaybeSafeTask(safety_.flag(), [this, sent_packet]() {
+          RTC_DCHECK_RUN_ON(&task_queue_);
+          ProcessSentPacket(sent_packet, /*posted_to_worker=*/true);
+        }));
+    return;
+  }
 
-  // We can not use SafeTask here if we are using an owned task queue, because
-  // the safety flag will be destroyed when RtpTransportControllerSend is
-  // destroyed on the worker thread. But we must use SafeTask if we are using
-  // the worker thread, since the worker thread outlive
-  // RtpTransportControllerSend.
-  task_queue_.TaskQueueForPost()->PostTask(
-      task_queue_.MaybeSafeTask(safety_.flag(), [this, sent_packet]() {
-        RTC_DCHECK_RUN_ON(&task_queue_);
-        absl::optional<SentPacket> packet_msg =
-            transport_feedback_adapter_.ProcessSentPacket(sent_packet);
-        if (packet_msg) {
-          // Only update outstanding data if:
-          // 1. Packet feedback is used.
-          // 2. The packet has not yet received an acknowledgement.
-          // 3. It is not a retransmission of an earlier packet.
-          UpdateCongestedState();
-          if (controller_)
-            PostUpdates(controller_->OnSentPacket(*packet_msg));
-        }
-      }));
+  RTC_DCHECK_RUN_ON(&task_queue_);
+  ProcessSentPacket(sent_packet, /*posted_to_worker=*/false);
+}
+
+// RTC_RUN_ON(task_queue_)
+void RtpTransportControllerSend::ProcessSentPacket(
+    const rtc::SentPacket& sent_packet,
+    bool posted_to_worker) {
+  absl::optional<SentPacket> packet_msg =
+      transport_feedback_adapter_.ProcessSentPacket(sent_packet);
+  if (!packet_msg)
+    return;
+
+  auto congestion_update = GetCongestedStateUpdate();
+  NetworkControlUpdate control_update;
+  if (controller_)
+    control_update = controller_->OnSentPacket(*packet_msg);
+  if (!congestion_update && !control_update.has_updates())
+    return;
+  if (posted_to_worker) {
+    ProcessSentPacketUpdates(std::move(control_update));
+  } else {
+    // TODO(bugs.webrtc.org/137439): Aim to remove downstream locks to permit
+    // removing this PostTask.
+    // At least in test situations (and possibly in production environments), we
+    // may get here synchronously with locks taken in PacketRouter::SendPacket.
+    // Because the pacer may at times synchronously re-enter
+    // PacketRouter::SendPacket, we need to break the chain here and PostTask to
+    // get out of the lock. In testing, having updates to process happens pretty
+    // rarely so we do not usually get here.
+    task_queue_.TaskQueueForPost()->PostTask(task_queue_.MaybeSafeTask(
+        safety_.flag(),
+        [this, control_update = std::move(control_update)]() mutable {
+          RTC_DCHECK_RUN_ON(&task_queue_);
+          ProcessSentPacketUpdates(std::move(control_update));
+        }));
+  }
+}
+
+// RTC_RUN_ON(task_queue_)
+void RtpTransportControllerSend::ProcessSentPacketUpdates(
+    NetworkControlUpdate updates) {
+  // Only update outstanding data if:
+  // 1. Packet feedback is used.
+  // 2. The packet has not yet received an acknowledgement.
+  // 3. It is not a retransmission of an earlier packet.
+  UpdateCongestedState();
+  if (controller_) {
+    PostUpdates(std::move(updates));
+  }
 }
 
 void RtpTransportControllerSend::OnReceivedPacket(
