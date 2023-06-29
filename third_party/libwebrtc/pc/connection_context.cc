@@ -173,8 +173,15 @@ ConnectionContext::ConnectionContext(
 
 ConnectionContext::~ConnectionContext() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  // `media_engine_` requires destruction to happen on the worker thread.
-  worker_thread_->PostTask([media_engine = std::move(media_engine_)] {});
+  worker_thread_->BlockingCall([&] {
+    RTC_DCHECK_RUN_ON(worker_thread());
+    // While `media_engine_` is const throughout the ConnectionContext's
+    // lifetime, it requires destruction to happen on the worker thread. Instead
+    // of marking the pointer as non-const, we live with this const_cast<> in
+    // the destructor.
+    const_cast<std::unique_ptr<cricket::MediaEngineInterface>&>(media_engine_)
+        .reset();
+  });
 
   // Make sure `worker_thread()` and `signaling_thread()` outlive
   // `default_socket_factory_` and `default_network_manager_`.
