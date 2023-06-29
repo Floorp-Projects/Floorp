@@ -510,12 +510,8 @@
           <div class="addon-detail-sitepermissions">
             <addon-sitepermissions-list></addon-sitepermissions-list>
           </div>
-          <div
-            class="addon-detail-row addon-detail-row-updates"
-            role="group"
-            data-l10n-id="addon-detail-group-label-updates"
-          >
-            <span data-l10n-id="addon-detail-updates-label"></span>
+          <div class="addon-detail-row addon-detail-row-updates">
+            <label data-l10n-id="addon-detail-updates-label"></label>
             <div class="addon-detail-actions">
               <button
                 class="button-link"
@@ -539,11 +535,9 @@
           </div>
           <div
             class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing"
-            role="group"
-            data-l10n-id="addon-detail-group-label-private-browsing"
             hidden
           >
-            <span data-l10n-id="detail-private-browsing-label"></span>
+            <label data-l10n-id="detail-private-browsing-label"></label>
             <div class="addon-detail-actions">
               <label class="radio-container-with-text">
                 <input type="radio" name="private-browsing" value="1" />
@@ -604,40 +598,6 @@
               data-l10n-name="learn-more"
               support-page="extensions-pb"
             ></a>
-          </div>
-          <div
-            class="addon-detail-row addon-detail-row-has-help addon-detail-row-quarantined-domains"
-            role="group"
-            data-l10n-id="addon-detail-group-label-quarantined-domains"
-            hidden
-          >
-            <span data-l10n-id="addon-detail-quarantined-domains-label"></span>
-            <div class="addon-detail-actions">
-              <label class="radio-container-with-text">
-                <input
-                  type="radio"
-                  name="quarantined-domains-user-allowed"
-                  value="1"
-                />
-                <span
-                  data-l10n-id="addon-detail-quarantined-domains-allow"
-                ></span>
-              </label>
-              <label class="radio-container-with-text">
-                <input
-                  type="radio"
-                  name="quarantined-domains-user-allowed"
-                  value="0"
-                />
-                <span
-                  data-l10n-id="addon-detail-quarantined-domains-disallow"
-                ></span>
-              </label>
-            </div>
-          </div>
-          <div class="addon-detail-row addon-detail-help-row" hidden>
-            <span data-l10n-id="addon-detail-quarantined-domains-help"></span>
-            <a is="moz-support-link" support-page="quarantined-domains"></a>
           </div>
           <div class="addon-detail-row addon-detail-row-author">
             <label data-l10n-id="addon-detail-author-label"></label>
