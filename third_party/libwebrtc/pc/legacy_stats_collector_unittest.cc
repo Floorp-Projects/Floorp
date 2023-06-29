@@ -952,9 +952,8 @@ TEST_P(StatsCollectorTrackTest, AudioBandwidthEstimationInfoIsReported) {
   VoiceMediaInfo voice_info;
   voice_info.senders.push_back(voice_sender_info);
 
-  auto voice_media_channels = pc->AddVoiceChannel("audio", "transport");
-  voice_media_channels.first->SetStats(voice_info);
-  voice_media_channels.second->SetStats(voice_info);
+  auto* voice_media_channel = pc->AddVoiceChannel("audio", "transport");
+  voice_media_channel->SetStats(voice_info);
 
   AddOutgoingAudioTrack(pc.get(), stats.get());
 
@@ -1527,9 +1526,8 @@ TEST_P(StatsCollectorTrackTest, FilterOutNegativeInitialValues) {
   voice_info.senders.push_back(voice_sender_info);
   voice_info.receivers.push_back(voice_receiver_info);
 
-  auto voice_media_channels = pc->AddVoiceChannel("voice", "transport");
-  voice_media_channels.first->SetStats(voice_info);
-  voice_media_channels.second->SetStats(voice_info);
+  auto* voice_media_channel = pc->AddVoiceChannel("voice", "transport");
+  voice_media_channel->SetStats(voice_info);
 
   stats->UpdateStats(PeerConnectionInterface::kStatsOutputLevelStandard);
 
@@ -1580,9 +1578,8 @@ TEST_P(StatsCollectorTrackTest, GetStatsFromLocalAudioTrack) {
   VoiceMediaInfo voice_info;
   voice_info.senders.push_back(voice_sender_info);
 
-  auto voice_media_channels = pc->AddVoiceChannel("audio", "transport");
-  voice_media_channels.first->SetStats(voice_info);
-  voice_media_channels.second->SetStats(voice_info);
+  auto* voice_media_channel = pc->AddVoiceChannel("audio", "transport");
+  voice_media_channel->SetStats(voice_info);
 
   StatsReports reports;  // returned values.
   VerifyAudioTrackStats(audio_track_.get(), stats.get(), voice_info, &reports);
@@ -1608,9 +1605,8 @@ TEST_P(StatsCollectorTrackTest, GetStatsFromRemoteStream) {
   VoiceMediaInfo voice_info;
   voice_info.receivers.push_back(voice_receiver_info);
 
-  auto voice_media_channels = pc->AddVoiceChannel("audio", "transport");
-  voice_media_channels.first->SetStats(voice_info);
-  voice_media_channels.second->SetStats(voice_info);
+  auto* voice_media_channel = pc->AddVoiceChannel("audio", "transport");
+  voice_media_channel->SetStats(voice_info);
 
   StatsReports reports;  // returned values.
   VerifyAudioTrackStats(audio_track_.get(), stats.get(), voice_info, &reports);
@@ -1630,9 +1626,8 @@ TEST_P(StatsCollectorTrackTest, GetStatsAfterRemoveAudioStream) {
   VoiceMediaInfo voice_info;
   voice_info.senders.push_back(voice_sender_info);
 
-  auto voice_media_channels = pc->AddVoiceChannel("audio", "transport");
-  voice_media_channels.first->SetStats(voice_info);
-  voice_media_channels.second->SetStats(voice_info);
+  auto* voice_media_channel = pc->AddVoiceChannel("audio", "transport");
+  voice_media_channel->SetStats(voice_info);
 
   stats->RemoveLocalAudioTrack(audio_track_.get(), kSsrcOfTrack);
 
@@ -1693,9 +1688,8 @@ TEST_P(StatsCollectorTrackTest, LocalAndRemoteTracksWithSameSsrc) {
   voice_info.receivers.push_back(voice_receiver_info);
 
   // Instruct the session to return stats containing the transport channel.
-  auto voice_media_channels = pc->AddVoiceChannel("audio", "transport");
-  voice_media_channels.first->SetStats(voice_info);
-  voice_media_channels.second->SetStats(voice_info);
+  auto* voice_media_channel = pc->AddVoiceChannel("audio", "transport");
+  voice_media_channel->SetStats(voice_info);
 
   stats->UpdateStats(PeerConnectionInterface::kStatsOutputLevelStandard);
 
@@ -1750,9 +1744,8 @@ TEST_P(StatsCollectorTrackTest, TwoLocalTracksWithSameSsrc) {
   VoiceMediaInfo voice_info;
   voice_info.senders.push_back(voice_sender_info);
 
-  auto voice_media_channels = pc->AddVoiceChannel("voice", "transport");
-  voice_media_channels.first->SetStats(voice_info);
-  voice_media_channels.second->SetStats(voice_info);
+  auto* voice_media_channel = pc->AddVoiceChannel("voice", "transport");
+  voice_media_channel->SetStats(voice_info);
 
   StatsReports reports;  // returned values.
   VerifyAudioTrackStats(audio_track_.get(), stats.get(), voice_info, &reports);
@@ -1778,8 +1771,7 @@ TEST_P(StatsCollectorTrackTest, TwoLocalTracksWithSameSsrc) {
                                       &new_voice_sender_info, false);
   VoiceMediaInfo new_voice_info;
   new_voice_info.senders.push_back(new_voice_sender_info);
-  voice_media_channels.first->SetStats(new_voice_info);
-  voice_media_channels.second->SetStats(new_voice_info);
+  voice_media_channel->SetStats(new_voice_info);
 
   reports.clear();
   VerifyAudioTrackStats(new_audio_track.get(), stats.get(), new_voice_info,
@@ -1817,9 +1809,8 @@ TEST_P(StatsCollectorTrackTest, TwoLocalSendersWithSameTrack) {
   voice_info.senders.push_back(first_sender_info);
   voice_info.senders.push_back(second_sender_info);
 
-  auto voice_media_channels = pc->AddVoiceChannel("voice", "transport");
-  voice_media_channels.first->SetStats(voice_info);
-  voice_media_channels.second->SetStats(voice_info);
+  auto* voice_media_channel = pc->AddVoiceChannel("voice", "transport");
+  voice_media_channel->SetStats(voice_info);
 
   stats->UpdateStats(PeerConnectionInterface::kStatsOutputLevelStandard);
 
