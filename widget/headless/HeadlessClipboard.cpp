@@ -8,24 +8,27 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
-NS_IMPL_ISUPPORTS_INHERITED0(HeadlessClipboard, ClipboardSetDataHelper)
+NS_IMPL_ISUPPORTS_INHERITED0(HeadlessClipboard, nsBaseClipboard)
 
 HeadlessClipboard::HeadlessClipboard()
-    : mClipboard(MakeUnique<HeadlessClipboardData>()) {}
+    : nsBaseClipboard(mozilla::dom::ClipboardCapabilities(
+          false /* supportsSelectionClipboard */,
+          false /* supportsFindClipboard */,
+          false /* supportsSelectionCache */)),
+      mClipboard(MakeUnique<HeadlessClipboardData>()) {}
 
 NS_IMETHODIMP
 HeadlessClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
                                           nsIClipboardOwner* aOwner,
                                           int32_t aWhichClipboard) {
-  if (aWhichClipboard != kGlobalClipboard) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+  MOZ_DIAGNOSTIC_ASSERT(aTransferable);
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
 
   // Clear out the clipboard in order to set the new data.
-  EmptyClipboard(aWhichClipboard);
+  EmptyNativeClipboardData(aWhichClipboard);
 
   // Only support plain text for now.
   nsCOMPtr<nsISupports> clip;
@@ -45,11 +48,11 @@ HeadlessClipboard::SetNativeClipboardData(nsITransferable* aTransferable,
 }
 
 NS_IMETHODIMP
-HeadlessClipboard::GetData(nsITransferable* aTransferable,
-                           int32_t aWhichClipboard) {
-  if (aWhichClipboard != kGlobalClipboard) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+HeadlessClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
+                                          int32_t aWhichClipboard) {
+  MOZ_DIAGNOSTIC_ASSERT(aTransferable);
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
 
   nsresult rv;
   nsCOMPtr<nsISupportsString> dataWrapper =
@@ -66,65 +69,34 @@ HeadlessClipboard::GetData(nsITransferable* aTransferable,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HeadlessClipboard::EmptyClipboard(int32_t aWhichClipboard) {
-  if (aWhichClipboard != kGlobalClipboard) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+nsresult HeadlessClipboard::EmptyNativeClipboardData(int32_t aWhichClipboard) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
   mClipboard->Clear();
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HeadlessClipboard::HasDataMatchingFlavors(
-    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard,
-    bool* aHasType) {
-  *aHasType = false;
-  if (aWhichClipboard != kGlobalClipboard) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+mozilla::Result<int32_t, nsresult>
+HeadlessClipboard::GetNativeClipboardSequenceNumber(int32_t aWhichClipboard) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+  return mClipboard->GetChangeCount();
+  ;
+}
+
+mozilla::Result<bool, nsresult>
+HeadlessClipboard::HasNativeClipboardDataMatchingFlavors(
+    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
+  MOZ_DIAGNOSTIC_ASSERT(
+      nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
+
   // Retrieve the union of all aHasType in aFlavorList
   for (auto& flavor : aFlavorList) {
     if (flavor.EqualsLiteral(kTextMime) && mClipboard->HasText()) {
-      *aHasType = true;
-      break;
+      return true;
     }
   }
-  return NS_OK;
+  return false;
 }
 
-NS_IMETHODIMP
-HeadlessClipboard::IsClipboardTypeSupported(int32_t aWhichClipboard,
-                                            bool* _retval) {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = kGlobalClipboard == aWhichClipboard;
-  return NS_OK;
-}
-
-RefPtr<GenericPromise> HeadlessClipboard::AsyncGetData(
-    nsITransferable* aTransferable, int32_t aWhichClipboard) {
-  nsresult rv = GetData(aTransferable, aWhichClipboard);
-  if (NS_FAILED(rv)) {
-    return GenericPromise::CreateAndReject(rv, __func__);
-  }
-
-  return GenericPromise::CreateAndResolve(true, __func__);
-}
-
-RefPtr<DataFlavorsPromise> HeadlessClipboard::AsyncHasDataMatchingFlavors(
-    const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) {
-  nsTArray<nsCString> results;
-  for (const auto& flavor : aFlavorList) {
-    bool hasMatchingFlavor = false;
-    nsresult rv = HasDataMatchingFlavors(AutoTArray<nsCString, 1>{flavor},
-                                         aWhichClipboard, &hasMatchingFlavor);
-    if (NS_SUCCEEDED(rv) && hasMatchingFlavor) {
-      results.AppendElement(flavor);
-    }
-  }
-
-  return DataFlavorsPromise::CreateAndResolve(std::move(results), __func__);
-}
-
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget
