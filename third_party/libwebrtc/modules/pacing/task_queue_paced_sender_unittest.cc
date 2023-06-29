@@ -119,19 +119,23 @@ class TaskQueueWithFakePrecisionFactory : public TaskQueueFactory {
       // TaskQueueDeleter.
       delete this;
     }
-    void PostTask(absl::AnyInvocable<void() &&> task) override {
+    void PostTaskImpl(absl::AnyInvocable<void() &&> task,
+                      const PostTaskTraits& /*traits*/,
+                      const Location& /*location*/) override {
       task_queue_->PostTask(WrapTask(std::move(task)));
     }
-    void PostDelayedTask(absl::AnyInvocable<void() &&> task,
-                         TimeDelta delay) override {
-      ++parent_factory_->delayed_low_precision_count_;
-      task_queue_->PostDelayedTask(WrapTask(std::move(task)), delay);
-    }
-    void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
-                                      TimeDelta delay) override {
-      ++parent_factory_->delayed_high_precision_count_;
-      task_queue_->PostDelayedHighPrecisionTask(WrapTask(std::move(task)),
-                                                delay);
+    void PostDelayedTaskImpl(absl::AnyInvocable<void() &&> task,
+                             TimeDelta delay,
+                             const PostDelayedTaskTraits& traits,
+                             const Location& location) override {
+      if (traits.high_precision) {
+        ++parent_factory_->delayed_high_precision_count_;
+        task_queue_->PostDelayedHighPrecisionTask(WrapTask(std::move(task)),
+                                                  delay);
+      } else {
+        ++parent_factory_->delayed_low_precision_count_;
+        task_queue_->PostDelayedTask(WrapTask(std::move(task)), delay);
+      }
     }
 
    private:
