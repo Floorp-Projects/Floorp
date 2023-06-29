@@ -7984,9 +7984,7 @@ class _DSCard extends (external_React_default()).PureComponent {
       DiscoveryStream,
       saveToPocketCard
     } = this.props;
-    let {
-      source
-    } = this.props;
+    let source = this.props.source || this.props.publisher;
 
     if (!source) {
       try {
@@ -8732,6 +8730,7 @@ class _CardGrid extends (external_React_default()).PureComponent {
         sponsored_by_override: rec.sponsored_by_override,
         dispatch: this.props.dispatch,
         source: rec.domain,
+        publisher: rec.publisher,
         pocket_id: rec.pocket_id,
         context_type: rec.context_type,
         bookmarkGuid: rec.bookmarkGuid,
