@@ -55,6 +55,9 @@ NS_INTERFACE_MAP_END
  * The following are utilities to convert between VideoColorSpace values to
  * gfx's values.
  */
+static gfx::ColorRange ToColorRange(bool aIsFullRange) {
+  return aIsFullRange ? gfx::ColorRange::FULL : gfx::ColorRange::LIMITED;
+}
 
 static gfx::YUVColorSpace ToColorSpace(VideoMatrixCoefficients aMatrix) {
   switch (aMatrix) {
@@ -874,8 +877,8 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
     data.mCbCrStride = reader->mStrideU;
     data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
     // Color settings.
-    if (!aColorSpace.mFullRange.IsNull() && aColorSpace.mFullRange.Value()) {
-      data.mColorRange = gfx::ColorRange::FULL;
+    if (!aColorSpace.mFullRange.IsNull()) {
+      data.mColorRange = ToColorRange(aColorSpace.mFullRange.Value());
     }
     MOZ_RELEASE_ASSERT(!aColorSpace.mMatrix.IsNull());
     data.mYUVColorSpace = ToColorSpace(aColorSpace.mMatrix.Value());
@@ -918,8 +921,8 @@ static Result<RefPtr<layers::Image>, nsCString> CreateYUVImageFromBuffer(
     data.mCbCrStride = reader.mStrideUV;
     data.mChromaSubsampling = gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT;
     // Color settings.
-    if (!aColorSpace.mFullRange.IsNull() && aColorSpace.mFullRange.Value()) {
-      data.mColorRange = gfx::ColorRange::FULL;
+    if (!aColorSpace.mFullRange.IsNull()) {
+      data.mColorRange = ToColorRange(aColorSpace.mFullRange.Value());
     }
     MOZ_RELEASE_ASSERT(!aColorSpace.mMatrix.IsNull());
     data.mYUVColorSpace = ToColorSpace(aColorSpace.mMatrix.Value());
