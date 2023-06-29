@@ -134,12 +134,9 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         sel.move_cursor_to_front()
         dest_x, dest_y = sel.first_caret_location()
 
-        # Click to make first caret appear. Note: it's strange that when the caret
-        # is at the end, the rect of the caret in <textarea> cannot be obtained.
-        # A bug perhaps.
+        # Click to make first caret appear.
         self.actions.click(element=el).perform()
         sel.move_cursor_to_end()
-        sel.move_cursor_by_offset(1, backward=True)
         self.actions.move(el, *sel.cursor_location()).click().perform()
         src_x, src_y = sel.first_caret_location()
 
@@ -215,7 +212,6 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         # on the Y-axis.
         self.actions.click(element=el).perform()
         sel.move_cursor_to_end()
-        sel.move_cursor_by_offset(1, backward=True)
         self.actions.move(el, *sel.cursor_location()).click().perform()
         x, y = sel.first_caret_location()
 
@@ -274,7 +270,6 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         # Click to make first caret appear.
         self.actions.click(element=el).perform()
         sel.move_cursor_to_end()
-        sel.move_cursor_by_offset(1, backward=True)
         self.actions.move(el, *sel.cursor_location()).click().perform()
         src_x, src_y = sel.first_caret_location()
 
