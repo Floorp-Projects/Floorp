@@ -956,6 +956,7 @@ rtc_source_set("data_channel_controller") {
     "../api:rtc_error",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api/task_queue:pending_task_safety_flag",
     "../api/transport:datagram_transport_interface",
     "../media:media_channel",
     "../media:rtc_media_base",
