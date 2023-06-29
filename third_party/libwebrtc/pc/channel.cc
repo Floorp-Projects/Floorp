@@ -1064,12 +1064,6 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
           mid().c_str());
       return false;
     }
-    // adjust receive streams based on send codec
-    media_receive_channel()->SetReceiverFeedbackParameters(
-        media_send_channel()->SendCodecHasLntf(),
-        media_send_channel()->SendCodecHasNack(),
-        media_send_channel()->SendCodecRtcpMode(),
-        media_send_channel()->SendCodecRtxTime());
     last_send_params_ = send_params;
   }
 
@@ -1137,12 +1131,6 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
         mid().c_str());
     return false;
   }
-  // adjust receive streams based on send codec
-  media_receive_channel()->SetReceiverFeedbackParameters(
-      media_send_channel()->SendCodecHasLntf(),
-      media_send_channel()->SendCodecHasNack(),
-      media_send_channel()->SendCodecRtcpMode(),
-      media_send_channel()->SendCodecRtxTime());
   last_send_params_ = send_params;
 
   if (needs_recv_params_update) {
