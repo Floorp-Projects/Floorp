@@ -1,6 +1,57 @@
 {
   "data": [
     {
+      "name": "lex.50.50.huen.s2t.bin",
+      "schema": 1686867839943,
+      "toLang": "en",
+      "version": 1,
+      "fileType": "lex",
+      "fromLang": "hu",
+      "attachment": {
+        "hash": "fff56b2501258ec4c46a8fc715caee7aeb15d853f859cdfacd3ef9903ed2fff1",
+        "size": 5162428,
+        "filename": "lex.50.50.huen.s2t.bin",
+        "location": "main-workspace/translations-models/e1503e67-e002-4659-9e48-c553c0dc09ea.bin",
+        "mimetype": "application/macbinary"
+      },
+      "id": "1b84e5e3-981a-4d71-b3c5-44bfe4122f99",
+      "last_modified": 1687895445317
+    },
+    {
+      "name": "vocab.huen.spm",
+      "schema": 1686868076311,
+      "toLang": "en",
+      "version": 1,
+      "fileType": "vocab",
+      "fromLang": "hu",
+      "attachment": {
+        "hash": "0db772702235b02d1f29abafb7a49ed77e54c60245b3a46e90716e74263aedd6",
+        "size": 820746,
+        "filename": "vocab.huen.spm",
+        "location": "main-workspace/translations-models/ab6a0420-252d-4a16-b7aa-159bbbb1ee41.spm",
+        "mimetype": "application/octet-stream"
+      },
+      "id": "395b58da-9a99-489c-b650-2174ad740313",
+      "last_modified": 1687895445314
+    },
+    {
+      "name": "model.huen.intgemm.alphas.bin",
+      "schema": 1686869162399,
+      "toLang": "en",
+      "version": 1,
+      "fileType": "model",
+      "fromLang": "hu",
+      "attachment": {
+        "hash": "518356dbb0c071739318601963a87580fb41732652f52bd3635246330c186d9e",
+        "size": 17140899,
+        "filename": "model.huen.intgemm.alphas.bin",
+        "location": "main-workspace/translations-models/3c81fd29-ebdc-4e1e-985a-7d045976ae19.bin",
+        "mimetype": "application/macbinary"
+      },
+      "id": "132ea4da-c064-47bc-aaf4-75db83524117",
+      "last_modified": 1687895445311
+    },
+    {
       "name": "lex.50.50.caen.s2t.bin",
       "schema": 1683056318248,
       "toLang": "en",
@@ -1708,5 +1759,5 @@
       "last_modified": 1681500416031
     }
   ],
-  "timestamp": 1683140186109
+  "timestamp": 1687895445317
 }
