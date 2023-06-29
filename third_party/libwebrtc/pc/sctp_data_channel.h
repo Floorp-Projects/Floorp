@@ -71,6 +71,11 @@ struct InternalDataChannelInit : public DataChannelInit {
   // The default role is kOpener because the default `negotiated` is false.
   InternalDataChannelInit() : open_handshake_role(kOpener) {}
   explicit InternalDataChannelInit(const DataChannelInit& base);
+
+  // Does basic validation to determine if a data channel instance can be
+  // constructed using the configuration.
+  bool IsValid() const;
+
   OpenHandshakeRole open_handshake_role;
 };
 
@@ -237,7 +242,7 @@ class SctpDataChannel : public DataChannelInterface,
     kHandshakeReady
   };
 
-  bool Init();
+  void Init();
   void UpdateState();
   void SetState(DataState state);
   void DisconnectFromTransport();
