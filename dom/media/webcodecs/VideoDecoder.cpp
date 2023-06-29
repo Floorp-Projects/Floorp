@@ -11,6 +11,7 @@
 #include "MediaContainerType.h"
 #include "VideoUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/WebCodecsUtils.h"
@@ -151,17 +152,40 @@ static Result<VideoDecoderConfig, nsresult> CloneConfiguration(
   return c;
 }
 
+VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
+                           RefPtr<WebCodecsErrorCallback>&& aErrorCallback,
+                           RefPtr<VideoFrameOutputCallback>&& aOutputCallback)
+    : DOMEventTargetHelper(aParent),
+      mErrorCallback(std::move(aErrorCallback)),
+      mOutputCallback(std::move(aOutputCallback)) {
+  MOZ_ASSERT(mErrorCallback);
+  MOZ_ASSERT(mOutputCallback);
+  LOG("VideoDecoder %p ctor", this);
+}
+
+VideoDecoder::~VideoDecoder() { LOG("VideoDecoder %p dtor", this); }
+
 JSObject* VideoDecoder::WrapObject(JSContext* aCx,
                                    JS::Handle<JSObject*> aGivenProto) {
+  AssertIsOnOwningThread();
+
   return VideoDecoder_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+// https://w3c.github.io/webcodecs/#dom-videodecoder-videodecoder
 /* static */
 already_AddRefed<VideoDecoder> VideoDecoder::Constructor(
-    const GlobalObject& global, const VideoDecoderInit& init,
+    const GlobalObject& aGlobal, const VideoDecoderInit& aInit,
     ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  return MakeAndAddRef<VideoDecoder>(
+      global.get(), RefPtr<WebCodecsErrorCallback>(aInit.mError),
+      RefPtr<VideoFrameOutputCallback>(aInit.mOutput));
 }
 
 CodecState VideoDecoder::State() const { return CodecState::EndGuard_; }
