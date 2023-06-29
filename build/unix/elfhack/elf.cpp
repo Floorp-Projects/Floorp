@@ -349,7 +349,7 @@ ElfSection* Elf::getSection(int index) {
   return sections[index];
 }
 
-ElfSection* Elf::getSectionAt(unsigned int offset) {
+ElfSection* Elf::getSectionAt(Elf64_Off offset) {
   for (int i = 1; i < ehdr->e_shnum; i++) {
     ElfSection* section = getSection(i);
     if ((section != nullptr) && (section->getFlags() & SHF_ALLOC) &&
@@ -534,7 +534,7 @@ ElfSection::ElfSection(Elf_Shdr& s, std::ifstream* file, Elf* parent)
     info.index = shdr.sh_info;
 }
 
-unsigned int ElfSection::getAddr() {
+Elf64_Addr ElfSection::getAddr() {
   if (shdr.sh_addr != (Elf64_Addr)-1) return shdr.sh_addr;
 
   // It should be safe to adjust sh_addr for all allocated sections that
@@ -550,12 +550,12 @@ unsigned int ElfSection::getAddr() {
   return shdr.sh_addr;
 }
 
-unsigned int ElfSection::getOffset() {
+Elf64_Off ElfSection::getOffset() {
   if (shdr.sh_offset != (Elf64_Off)-1) return shdr.sh_offset;
 
   if (previous == nullptr) return (shdr.sh_offset = 0);
 
-  unsigned int offset = previous->getOffset();
+  Elf64_Off offset = previous->getOffset();
 
   ElfSegment* ptload = getSegmentByType(PT_LOAD);
   ElfSegment* prev_ptload = previous->getSegmentByType(PT_LOAD);
