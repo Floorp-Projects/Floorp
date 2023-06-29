@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (kab)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, tasanayt tilellit"
+  },
+  "searchUrl": {
+    "message": "https://kab.wikipedia.org/wiki/Uslig:Search"
+  },
+  "searchForm": {
+    "message": "https://kab.wikipedia.org/wiki/Uslig:Search?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://kab.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

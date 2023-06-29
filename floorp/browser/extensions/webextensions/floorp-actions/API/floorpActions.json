@@ -1,0 +1,83 @@
+[
+  {
+    "namespace": "floorpActions",
+    "description": "Floorp Actions API",
+    "functions": [
+      {
+        "name": "getExtensionWidgetId",
+        "type": "function",
+        "description": "Get extension widget id",
+        "parameters": [
+          {
+            "name": "extensionId",
+            "type": "string",
+            "description": "Extension ID"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "openInSidebar",
+        "type": "function",
+        "description": "Open in Sidebar",
+        "parameters": [
+          {
+            "name": "sidebarId",
+            "type": "string",
+            "description": "Sidebar ID"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "closeSidebar",
+        "type": "function",
+        "description": "Close Sidebar",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "openBrowserManagerSidebar",
+        "type": "function",
+        "description": "Open Browser Manager Sidebar",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "closeBrowserManagerSidebar",
+        "type": "function",
+        "description": "Close Browser Manager Sidebar",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "changeBrowserManagerSidebarVisibility",
+        "type": "function",
+        "description": "Change Browser Manager Sidebar Visibility",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "showStatusbar",
+        "type": "function",
+        "description": "Show status bar",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "hideStatusbar",
+        "type": "function",
+        "description": "Hide status bar",
+        "parameters": [],
+        "async": true
+      },
+      {
+        "name": "toggleStatusbar",
+        "type": "function",
+        "description": "Toggle status bar",
+        "parameters": [],
+        "async": true
+      }
+    ]
+  }
+]

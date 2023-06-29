@@ -1,0 +1,21 @@
+[
+  {
+    "namespace": "browserL10n",
+    "description": "Get memory info",
+    "functions": [
+      {
+        "name": "getFloorpL10nValues",
+        "type": "function",
+        "description": "Get a l10n value",
+        "parameters": [
+          {
+            "name": "name",
+            "type": "any",
+            "description": "L10n id"
+          }
+        ],
+        "async": true
+      }
+    ]
+  }
+]

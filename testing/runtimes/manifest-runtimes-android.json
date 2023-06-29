@@ -1564,6 +1564,7 @@
     "toolkit/components/extensions/test/xpcshell/xpcshell.ini": 19.12,
     "toolkit/components/featuregates/test/unit/xpcshell.ini": 1.71,
     "toolkit/components/mozintl/test/xpcshell.ini": 1.82,
+    "toolkit/components/osfile/tests/xpcshell/xpcshell.ini": 27.1,
     "toolkit/components/telemetry/tests/unit/xpcshell.ini": 42.36,
     "toolkit/components/timermanager/tests/unit/xpcshell.ini": 9.07,
     "toolkit/components/utils/test/unit/xpcshell.ini": 2.22,

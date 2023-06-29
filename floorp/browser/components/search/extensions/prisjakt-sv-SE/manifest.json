@@ -1,0 +1,28 @@
+{
+  "name": "Prisjakt",
+  "description": "Prisjakt - jämför priser och produkter",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "prisjakt-sv-SE@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Prisjakt",
+      "search_url": "https://www.prisjakt.nu/search",
+      "search_url_get_params": "search={searchTerms}",
+      "search_form": "https://www.prisjakt.nu/search?search={searchTerms}",
+      "suggest_url": "https://www.prisjakt.nu/plugins/opensearch/suggestions.php",
+      "suggest_url_get_params": "search={searchTerms}"
+    }
+  }
+}

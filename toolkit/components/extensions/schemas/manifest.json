@@ -678,7 +678,7 @@
         "choices": [
           {
             "type": "string",
-            "pattern": "^resource://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$|^about:"
+            "pattern": "^resource://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$|^about:|^moz-extension://(\\*|\\*\\.[^*/]+|[^*/]+)/.*$"
           }
         ]
       },

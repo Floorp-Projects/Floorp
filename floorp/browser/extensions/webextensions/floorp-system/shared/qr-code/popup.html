@@ -1,0 +1,45 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+    <style>
+div.container{
+    text-align: center;
+}
+
+body{
+    min-height: 3.5em;
+    min-width: 245px;
+    background-color: rgb(77, 77, 77);
+    padding: 1em;
+}
+
+#qr-code{
+    min-width: 1.5em;
+    min-height: 1.5em;
+}
+
+img{
+    background-color: white;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 20px;
+}
+
+#title{
+    font-size: 1.2em;
+    color: white;
+    margin-bottom: 1em;
+    font-family: Meiryo !important;
+}
+    </style>
+    </head>
+    <body>
+        <div id="title">QR コードをスキャンしてください
+        </div>
+        <div class="container">
+            <div id="qr-code"></div>
+        </div>
+        <script src="qrcode.js"></script>
+        <script src="popup.js"></script>
+    </body>
+</html>

@@ -58,6 +58,7 @@ The plugin implements the following rules:
    eslint-plugin-mozilla/reject-lazy-imports-into-globals
    eslint-plugin-mozilla/reject-mixing-eager-and-lazy
    eslint-plugin-mozilla/reject-multiple-getters-calls
+   eslint-plugin-mozilla/reject-osfile
    eslint-plugin-mozilla/reject-relative-requires
    eslint-plugin-mozilla/reject-requires-await
    eslint-plugin-mozilla/reject-scriptableunicodeconverter

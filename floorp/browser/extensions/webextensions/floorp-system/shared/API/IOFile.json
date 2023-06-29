@@ -1,0 +1,127 @@
+[
+  {
+    "namespace": "IOFile",
+    "description": "Operate files or directories",
+    "functions": [
+      {
+        "name": "createEmptyFile",
+        "type": "function",
+        "description": "Create empty file",
+        "parameters": [
+          {
+            "name": "path",
+            "type": "string",
+            "description": "File path"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "createDir",
+        "type": "function",
+        "description": "Create directory",
+        "parameters": [
+          {
+            "name": "path",
+            "type": "string",
+            "description": "Directory path"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "exists",
+        "type": "function",
+        "description": "Exists file or directory",
+        "parameters": [
+          {
+            "name": "path",
+            "type": "string",
+            "description": "File or Directory path"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "copyFile",
+        "type": "function",
+        "description": "Copy file",
+        "parameters": [
+          {
+            "name": "srcPath",
+            "type": "string",
+            "description": "Src file path"
+          },
+          {
+            "name": "destPath",
+            "type": "string",
+            "description": "Dest file path"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "copyDir",
+        "type": "function",
+        "description": "Copy directory",
+        "parameters": [
+          {
+            "name": "srcPath",
+            "type": "string",
+            "description": "Src directory path"
+          },
+          {
+            "name": "destPath",
+            "type": "string",
+            "description": "Dest directory path"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "move",
+        "type": "function",
+        "description": "Move file or directory",
+        "parameters": [
+          {
+            "name": "srcPath",
+            "type": "string",
+            "description": "Src file or directory path"
+          },
+          {
+            "name": "destPath",
+            "type": "string",
+            "description": "Dest file or directory path"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "removeFile",
+        "type": "function",
+        "description": "Remove file",
+        "parameters": [
+          {
+            "name": "path",
+            "type": "string",
+            "description": "File path"
+          }
+        ],
+        "async": true
+      },
+      {
+        "name": "removeDir",
+        "type": "function",
+        "description": "Remove directory",
+        "parameters": [
+          {
+            "name": "path",
+            "type": "string",
+            "description": "Directory path"
+          }
+        ],
+        "async": true
+      }
+    ]
+  }
+]

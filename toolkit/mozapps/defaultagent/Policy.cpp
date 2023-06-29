@@ -30,7 +30,7 @@
 // The Firefox policy engine hardcodes the string "Mozilla" in its registry
 // key accesses rather than using the configured vendor name, so we should do
 // the same here to be sure we're compatible with it.
-#define POLICY_REGKEY_NAME L"SOFTWARE\\Policies\\Mozilla\\" MOZ_APP_BASENAME
+#define POLICY_REGKEY_NAME L"SOFTWARE\\Policies\\Ablaze\\" MOZ_APP_BASENAME
 
 // This enum is the return type for the functions that check policy values.
 enum class PolicyState {
