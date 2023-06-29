@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/timing/inter_frame_delay.h"
+#include "modules/video_coding/timing/inter_frame_delay_variation_calculator.h"
 
 #include <limits>
 
@@ -36,76 +36,75 @@ constexpr Timestamp kStartTime = Timestamp::Millis(1337);
 using ::testing::Eq;
 using ::testing::Optional;
 
-TEST(InterFrameDelayTest, OldRtpTimestamp) {
-  InterFrameDelay inter_frame_delay;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(180000, kStartTime),
+TEST(InterFrameDelayVariationCalculatorTest, OldRtpTimestamp) {
+  InterFrameDelayVariationCalculator ifdv_calculator;
+  EXPECT_THAT(ifdv_calculator.Calculate(180000, kStartTime),
               Optional(TimeDelta::Zero()));
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(90000, kStartTime),
-              Eq(absl::nullopt));
+  EXPECT_THAT(ifdv_calculator.Calculate(90000, kStartTime), Eq(absl::nullopt));
 }
 
-TEST(InterFrameDelayTest, NegativeWrapAroundIsSameAsOldRtpTimestamp) {
-  InterFrameDelay inter_frame_delay;
+TEST(InterFrameDelayVariationCalculatorTest,
+     NegativeWrapAroundIsSameAsOldRtpTimestamp) {
+  InterFrameDelayVariationCalculator ifdv_calculator;
   uint32_t rtp = 1500;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, kStartTime),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, kStartTime),
               Optional(TimeDelta::Zero()));
   // RTP has wrapped around backwards.
   rtp -= 3000;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, kStartTime),
-              Eq(absl::nullopt));
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, kStartTime), Eq(absl::nullopt));
 }
 
-TEST(InterFrameDelayTest, CorrectDelayForFrames) {
-  InterFrameDelay inter_frame_delay;
+TEST(InterFrameDelayVariationCalculatorTest, CorrectDelayForFrames) {
+  InterFrameDelayVariationCalculator ifdv_calculator;
   // Use a fake clock to simplify time keeping.
   SimulatedClock clock(kStartTime);
 
-  // First frame is always delay 0.
+  // First frame is always delay variation 0.
   uint32_t rtp = 90000;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Zero()));
 
-  // Perfectly timed frame has 0 delay.
+  // Perfectly timed frame has 0 delay variation.
   clock.AdvanceTime(kFrameDelay);
   rtp += kRtpTicksPerFrame;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Zero()));
 
-  // Slightly early frame will have a negative delay.
+  // Slightly early frame will have a negative delay variation.
   clock.AdvanceTime(kFrameDelay - TimeDelta::Millis(3));
   rtp += kRtpTicksPerFrame;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(-TimeDelta::Millis(3)));
 
-  // Slightly late frame will have positive delay.
+  // Slightly late frame will have positive delay variation.
   clock.AdvanceTime(kFrameDelay + TimeDelta::Micros(5125));
   rtp += kRtpTicksPerFrame;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Micros(5125)));
 
   // Simulate faster frame RTP at the same clock delay. The frame arrives late,
   // since the RTP timestamp is faster than the delay, and thus is positive.
   clock.AdvanceTime(kFrameDelay);
   rtp += kRtpTicksPerFrame / 2;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(kFrameDelay / 2.0));
 
   // Simulate slower frame RTP at the same clock delay. The frame is early,
   // since the RTP timestamp advanced more than the delay, and thus is negative.
   clock.AdvanceTime(kFrameDelay);
   rtp += 1.5 * kRtpTicksPerFrame;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(-kFrameDelay / 2.0));
 }
 
-TEST(InterFrameDelayTest, PositiveWrapAround) {
-  InterFrameDelay inter_frame_delay;
+TEST(InterFrameDelayVariationCalculatorTest, PositiveWrapAround) {
+  InterFrameDelayVariationCalculator ifdv_calculator;
   // Use a fake clock to simplify time keeping.
   SimulatedClock clock(kStartTime);
 
   // First frame is behind the max RTP by 1500.
   uint32_t rtp = std::numeric_limits<uint32_t>::max() - 1500;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Zero()));
 
   // Rtp wraps around, now 1499.
@@ -113,77 +112,78 @@ TEST(InterFrameDelayTest, PositiveWrapAround) {
 
   // Frame delay should be as normal, in this case simulated as 1ms late.
   clock.AdvanceTime(kFrameDelay + TimeDelta::Millis(1));
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Millis(1)));
 }
 
-TEST(InterFrameDelayTest, MultipleWrapArounds) {
+TEST(InterFrameDelayVariationCalculatorTest, MultipleWrapArounds) {
   // Simulate a long pauses which cause wrap arounds multiple times.
   constexpr Frequency k90Khz = Frequency::KiloHertz(90);
   constexpr uint32_t kHalfRtp = std::numeric_limits<uint32_t>::max() / 2;
   constexpr TimeDelta kWrapAroundDelay = kHalfRtp / k90Khz;
 
-  InterFrameDelay inter_frame_delay;
+  InterFrameDelayVariationCalculator ifdv_calculator;
   // Use a fake clock to simplify time keeping.
   SimulatedClock clock(kStartTime);
   uint32_t rtp = 0;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Zero()));
 
   rtp += kHalfRtp;
   clock.AdvanceTime(kWrapAroundDelay);
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Zero()));
   // 1st wrap around.
   rtp += kHalfRtp + 1;
   clock.AdvanceTime(kWrapAroundDelay + TimeDelta::Millis(1));
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Millis(1) - (1 / k90Khz)));
 
   rtp += kHalfRtp;
   clock.AdvanceTime(kWrapAroundDelay);
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Zero()));
   // 2nd wrap arounds.
   rtp += kHalfRtp + 1;
   clock.AdvanceTime(kWrapAroundDelay - TimeDelta::Millis(1));
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(-TimeDelta::Millis(1) - (1 / k90Khz)));
 
   // Ensure short delay (large RTP delay) between wrap-arounds has correct
   // jitter.
   rtp += kHalfRtp;
   clock.AdvanceTime(TimeDelta::Millis(10));
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(-(kWrapAroundDelay - TimeDelta::Millis(10))));
   // 3nd wrap arounds, this time with large RTP delay.
   rtp += kHalfRtp + 1;
   clock.AdvanceTime(TimeDelta::Millis(10));
   EXPECT_THAT(
-      inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+      ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
       Optional(-(kWrapAroundDelay - TimeDelta::Millis(10) + (1 / k90Khz))));
 }
 
-TEST(InterFrameDelayTest, NegativeWrapAroundAfterPositiveWrapAround) {
-  InterFrameDelay inter_frame_delay;
+TEST(InterFrameDelayVariationCalculatorTest,
+     NegativeWrapAroundAfterPositiveWrapAround) {
+  InterFrameDelayVariationCalculator ifdv_calculator;
   // Use a fake clock to simplify time keeping.
   SimulatedClock clock(kStartTime);
   uint32_t rtp = std::numeric_limits<uint32_t>::max() - 1500;
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Zero()));
 
   // Rtp wraps around, now 1499.
   rtp += kRtpTicksPerFrame;
   // Frame delay should be as normal, in this case simulated as 1ms late.
   clock.AdvanceTime(kFrameDelay);
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Optional(TimeDelta::Zero()));
 
   // Wrap back.
   rtp -= kRtpTicksPerFrame;
   // Frame delay should be as normal, in this case simulated as 1ms late.
   clock.AdvanceTime(kFrameDelay);
-  EXPECT_THAT(inter_frame_delay.CalculateDelay(rtp, clock.CurrentTime()),
+  EXPECT_THAT(ifdv_calculator.Calculate(rtp, clock.CurrentTime()),
               Eq(absl::nullopt));
 }
 

@@ -265,7 +265,7 @@ rtc_library("video_coding") {
     "../rtp_rtcp:rtp_video_header",
     "codecs/av1:av1_svc_config",
     "svc:scalability_mode_util",
-    "timing:inter_frame_delay",
+    "timing:inter_frame_delay_variation_calculator",
     "timing:jitter_estimator",
     "timing:rtt_filter",
     "timing:timing_module",
@@ -358,7 +358,7 @@ rtc_library("video_coding_legacy") {
     "../rtp_rtcp:rtp_rtcp_format",
     "../rtp_rtcp:rtp_video_header",
     "deprecated:deprecated_packet",
-    "timing:inter_frame_delay",
+    "timing:inter_frame_delay_variation_calculator",
     "timing:jitter_estimator",
     "timing:timing_module",
   ]

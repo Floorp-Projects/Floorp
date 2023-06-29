@@ -16,14 +16,16 @@
 
 #include "absl/base/attributes.h"
 #include "absl/functional/bind_front.h"
+#include "absl/types/optional.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/data_size.h"
+#include "api/units/time_delta.h"
 #include "api/video/encoded_frame.h"
 #include "api/video/frame_buffer.h"
 #include "api/video/video_content_type.h"
 #include "modules/video_coding/frame_helpers.h"
-#include "modules/video_coding/timing/inter_frame_delay.h"
+#include "modules/video_coding/timing/inter_frame_delay_variation_calculator.h"
 #include "modules/video_coding/timing/jitter_estimator.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -232,10 +234,11 @@ void VideoStreamBufferController::OnFrameReady(
   }
 
   if (!superframe_delayed_by_retransmission) {
-    auto frame_delay = inter_frame_delay_.CalculateDelay(
-        first_frame.Timestamp(), receive_time);
-    if (frame_delay) {
-      jitter_estimator_.UpdateEstimate(*frame_delay, superframe_size);
+    absl::optional<TimeDelta> inter_frame_delay_variation =
+        ifdv_calculator_.Calculate(first_frame.Timestamp(), receive_time);
+    if (inter_frame_delay_variation) {
+      jitter_estimator_.UpdateEstimate(*inter_frame_delay_variation,
+                                       superframe_size);
     }
 
     float rtt_mult = protection_mode_ == kProtectionNackFEC ? 0.0 : 1.0;

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/timing/inter_frame_delay.h"
+#include "modules/video_coding/timing/inter_frame_delay_variation_calculator.h"
 
 #include "absl/types/optional.h"
 #include "api/units/frequency.h"
@@ -21,51 +21,51 @@ namespace {
 constexpr Frequency k90kHz = Frequency::KiloHertz(90);
 }
 
-InterFrameDelay::InterFrameDelay() {
+InterFrameDelayVariationCalculator::InterFrameDelayVariationCalculator() {
   Reset();
 }
 
-// Resets the delay estimate.
-void InterFrameDelay::Reset() {
+void InterFrameDelayVariationCalculator::Reset() {
   prev_wall_clock_ = absl::nullopt;
   prev_rtp_timestamp_unwrapped_ = 0;
 }
 
-// Calculates the delay of a frame with the given timestamp.
-// This method is called when the frame is complete.
-absl::optional<TimeDelta> InterFrameDelay::CalculateDelay(
+absl::optional<TimeDelta> InterFrameDelayVariationCalculator::Calculate(
     uint32_t rtp_timestamp,
     Timestamp now) {
   int64_t rtp_timestamp_unwrapped = unwrapper_.Unwrap(rtp_timestamp);
+
   if (!prev_wall_clock_) {
-    // First set of data, initialization, wait for next frame.
     prev_wall_clock_ = now;
     prev_rtp_timestamp_unwrapped_ = rtp_timestamp_unwrapped;
+    // Inter-frame delay variation is undefined for a single frame.
+    // TODO(brandtr): Should this return absl::nullopt instead?
     return TimeDelta::Zero();
   }
 
   // Account for reordering in jitter variance estimate in the future?
   // Note that this also captures incomplete frames which are grabbed for
   // decoding after a later frame has been complete, i.e. real packet losses.
-  uint32_t cropped_last = static_cast<uint32_t>(prev_rtp_timestamp_unwrapped_);
+  uint32_t cropped_prev = static_cast<uint32_t>(prev_rtp_timestamp_unwrapped_);
   if (rtp_timestamp_unwrapped < prev_rtp_timestamp_unwrapped_ ||
-      !IsNewerTimestamp(rtp_timestamp, cropped_last)) {
+      !IsNewerTimestamp(rtp_timestamp, cropped_prev)) {
     return absl::nullopt;
   }
 
   // Compute the compensated timestamp difference.
+  TimeDelta delta_wall = now - *prev_wall_clock_;
   int64_t d_rtp_ticks = rtp_timestamp_unwrapped - prev_rtp_timestamp_unwrapped_;
-  TimeDelta dts = d_rtp_ticks / k90kHz;
-  TimeDelta dt = now - *prev_wall_clock_;
+  TimeDelta delta_rtp = d_rtp_ticks / k90kHz;
 
-  // frameDelay is the difference of dT and dTS -- i.e. the difference of the
-  // wall clock time difference and the timestamp difference between two
-  // following frames.
-  TimeDelta delay = dt - dts;
+  // The inter-frame delay variation is the second order difference between the
+  // RTP and wall clocks of the two frames, or in other words, the first order
+  // difference between `delta_rtp` and `delta_wall`.
+  TimeDelta inter_frame_delay_variation = delta_wall - delta_rtp;
 
-  prev_rtp_timestamp_unwrapped_ = rtp_timestamp_unwrapped;
   prev_wall_clock_ = now;
-  return delay;
+  prev_rtp_timestamp_unwrapped_ = rtp_timestamp_unwrapped;
+
+  return inter_frame_delay_variation;
 }
 
 }  // namespace webrtc
