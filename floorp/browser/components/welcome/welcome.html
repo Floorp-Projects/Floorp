@@ -1,0 +1,115 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common-shared.css">
+    <link rel="stylesheet" href="chrome://browser/content/welcome/welcome.css">
+    <link rel="localization" href="browser/floorp.ftl" />
+    <script src="chrome://browser/content/welcome/welcome.js"></script>
+    <meta charset="UTF-8">
+    <title data-l10n-id="welcome-to-floorp">Welcome to Floorp</title>
+  </head>
+  <body>
+    <div id="main">
+      <div id="content">
+        <a id="login-to-fx-account-link" href="https://accounts.firefox.com/signin?context=fx_desktop_v3&entrypoint=preferences&action=email&service=sync">
+          Firefox アカウントにログイン
+        </a>
+        <div id="welcome-main">
+          <div id="welcome-content">
+            <div id="welcome-text">
+              <div id="welcome-text-content" class="welcome-setups">
+                <img id="floorp-welcome-logo" src="chrome://branding/content/about-logo.svg">
+                <h1 id="floorp-welcome-big-text"> Floorp ブラウザーへようこそ </h1>
+                <div id="discribe-text">
+                  最も高機能な Firefox 派生ブラウザーへようこそ。少しのカスタマイズであなただけのウェブブラウザーを作成できます。後から設定を変更することも可能です。 
+                </div>
+                <button id="floorp-welcome-button" class="welcome-button primary">
+                  始めましょう！
+                </button> 
+                <a href="about:home" style="text-align: center;margin-top: 30px;">
+                  スキップしてウェブの閲覧を開始する
+                </a>
+              </div>
+              <div id="welcome-first-setup" class="welcome-setups">
+                <!-- select template from 3 options -->
+                <h1 class="floorp-welcome-big-text"> テンプレートを選択 </h1>
+                <div id="template-options">
+                  <div class="template-option">
+                    <img class="option-icons" src="chrome://branding/content/about-logo.svg">
+                    <div class="template-option-text">
+                      <h2 class="template-option-title">梅</h2>
+                      <p class="template-option-description">基本的な機能のみを有効にして Floorp を開始します。</p>
+                    </div>
+                    <button class="template-option-button primary">選択</button>
+                  </div>
+                  <div class="template-option">
+                    <img class="option-icons" src="chrome://branding/content/about-logo.svg">
+                    <div class="template-option-text">
+                      <h2 class="template-option-title">竹</h2>
+                      <p class="template-option-description">いくつかのカスタマイズを有効にして Floorp を開始します。</p>
+                    </div>
+                    <button class="template-option-button primary">選択</button>
+                  </div>
+                  <div class="template-option">
+                    <img class="option-icons" src="chrome://branding/content/about-logo.svg">
+                    <div class="template-option-text">
+                      <h2 class="template-option-title">松</h2>
+                      <p class="template-option-description">すべてのカスタマイズ機能を有効にして Floorp を開始します。</p>
+                    </div>
+                    <button class="template-option-button primary">選択</button>
+                  </div>
+                </div>
+              </div>
+              <div id="welcome-design-setup" class="welcome-setups">
+                <!-- select design from 3 cards -->
+                <h1 class="floorp-welcome-big-text"> ブラウザーのデザインを選択 </h1>
+                <!-- grid theme cards-->
+                <div id="design-cars-options">
+                  <div class="design-card">
+                    <button class="design-card-button primary" id="lepton">
+                      <img class="design-card-image" src="chrome://branding/content/about-logo.svg">
+                      <h2 class="design-card-title">レプトン</h2>
+                      <p class="design-card-description">シンプルでモダンなデザイン</p>
+                    </button>
+                    <button class="design-card-button primary" id="lepton">
+                      <img class="design-card-image" src="chrome://branding/content/about-logo.svg">
+                      <h2 class="design-card-title">レプトン</h2>
+                      <p class="design-card-description">シンプルでモダンなデザイン</p>
+                    </button>
+                    <button class="design-card-button primary" id="lepton">
+                      <img class="design-card-image" src="chrome://branding/content/about-logo.svg">
+                      <h2 class="design-card-title">レプトン</h2>
+                      <p class="design-card-description">シンプルでモダンなデザイン</p>
+                    </button>
+                    <button class="design-card-button primary" id="lepton">
+                      <img class="design-card-image" src="chrome://branding/content/about-logo.svg">
+                      <h2 class="design-card-title">レプトン</h2>
+                      <p class="design-card-description">シンプルでモダンなデザイン</p>
+                    </button>
+
+                    <button class="design-card-button primary" id="lepton">
+                      <img class="design-card-image" src="chrome://branding/content/about-logo.svg">
+                      <h2 class="design-card-title">レプトン</h2>
+                      <p class="design-card-description">シンプルでモダンなデザイン</p>
+                    </button>
+
+                    <button class="design-card-button primary" id="lepton">
+                      <img class="design-card-image" src="chrome://branding/content/about-logo.svg">
+                      <h2 class="design-card-title">レプトン</h2>
+                      <p class="design-card-description">シンプルでモダンなデザイン</p>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+

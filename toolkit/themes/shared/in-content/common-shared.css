@@ -132,6 +132,7 @@
     --in-content-page-background:#333333;
     --in-content-page-color: rgb(251,251,254);
     --in-content-deemphasized-text: rgb(191,191,201);
+    --in-content-primary-button-text-color-active: rgb(59, 59, 59);
 
     --in-content-box-background: rgb(53, 53, 53);
     --in-content-box-background-odd: rgba(249,249,250,0.05);

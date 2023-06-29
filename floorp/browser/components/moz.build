@@ -11,6 +11,7 @@ DIRS += [
     "search",
     "preferences",
     "notes",
+    "welcome",
 ]
 
 EXTRA_JS_MODULES += [
