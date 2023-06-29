@@ -73,7 +73,7 @@ class VideoDecoder final : public DOMEventTargetHelper {
 
   void Reset(ErrorResult& aRv);
 
-  void Close(ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void Close(ErrorResult& aRv);
 
   static already_AddRefed<Promise> IsConfigSupported(
       const GlobalObject& aGlobal, const VideoDecoderConfig& aConfig,
@@ -84,6 +84,9 @@ class VideoDecoder final : public DOMEventTargetHelper {
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(VideoDecoder); }
 
   Result<Ok, nsresult> Reset(const nsresult& aResult);
+  MOZ_CAN_RUN_SCRIPT Result<Ok, nsresult> Close(const nsresult& aResult);
+
+  MOZ_CAN_RUN_SCRIPT void ReportError(const nsresult& aResult);
 
   // Constant in practice, only set in ::Constructor.
   RefPtr<WebCodecsErrorCallback> mErrorCallback;
