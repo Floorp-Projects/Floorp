@@ -153,10 +153,11 @@ already_AddRefed<Promise> UnderlyingSourceAlgorithmsWrapper::CancelCallback(
 
 NS_IMPL_ISUPPORTS(InputStreamHolder, nsIInputStreamCallback)
 
-InputStreamHolder::InputStreamHolder(JSContext* aCx,
-                                     InputToReadableStreamAlgorithms* aCallback,
+InputStreamHolder::InputStreamHolder(InputToReadableStreamAlgorithms* aCallback,
                                      nsIAsyncInputStream* aInput)
-    : mCallback(aCallback), mInput(aInput) {
+    : mCallback(aCallback), mInput(aInput) {}
+
+void InputStreamHolder::Init(JSContext* aCx) {
   if (!NS_IsMainThread()) {
     // We're in a worker
     WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
