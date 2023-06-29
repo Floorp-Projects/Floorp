@@ -7,13 +7,15 @@
   margin-inline-start: 42px;
   border-inline-end: 1px solid transparent;
   position: sticky;
+  top: 0;
+  height: 100vh;
 }
 
 nav {
-  height: 100%;
   display: grid;
   grid-template-rows: min-content 1fr auto;
   gap: 25px;
+  margin-block-start: var(--fxview-margin-top);
 }
 
 .category-nav-header {
