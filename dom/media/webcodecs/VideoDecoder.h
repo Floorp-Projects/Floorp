@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -82,9 +83,13 @@ class VideoDecoder final : public DOMEventTargetHelper {
   // VideoDecoder can run on either main thread or worker thread.
   void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(VideoDecoder); }
 
+  Result<Ok, nsresult> Reset(const nsresult& aResult);
+
   // Constant in practice, only set in ::Constructor.
   RefPtr<WebCodecsErrorCallback> mErrorCallback;
   RefPtr<VideoFrameOutputCallback> mOutputCallback;
+
+  CodecState mState;
 };
 
 }  // namespace mozilla::dom
