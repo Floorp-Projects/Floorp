@@ -101,25 +101,24 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
         });
   }
 
-  void PostTask(absl::AnyInvocable<void() &&> aTask) override {
+  void PostTaskImpl(absl::AnyInvocable<void() &&> aTask,
+                    const PostTaskTraits& aTraits,
+                    const webrtc::Location& aLocation) override {
     MOZ_ALWAYS_SUCCEEDS(
         mTaskQueue->Dispatch(CreateTaskRunner(std::move(aTask))));
   }
 
-  void PostDelayedTask(absl::AnyInvocable<void() &&> aTask,
-                       webrtc::TimeDelta aDelay) override {
+  void PostDelayedTaskImpl(absl::AnyInvocable<void() &&> aTask,
+                           webrtc::TimeDelta aDelay,
+                           const PostDelayedTaskTraits& aTraits,
+                           const webrtc::Location& aLocation) override {
     if (aDelay.ms() == 0) {
       // AbstractThread::DelayedDispatch doesn't support delay 0
-      PostTask(std::move(aTask));
+      PostTaskImpl(std::move(aTask), PostTaskTraits{}, aLocation);
       return;
     }
     MOZ_ALWAYS_SUCCEEDS(mTaskQueue->DelayedDispatch(
         CreateTaskRunner(std::move(aTask)), aDelay.ms()));
-  }
-
-  void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> aTask,
-                                    webrtc::TimeDelta aDelay) override {
-    PostDelayedTask(std::move(aTask), aDelay);
   }
 
   const RefPtr<TaskQueue> mTaskQueue;
