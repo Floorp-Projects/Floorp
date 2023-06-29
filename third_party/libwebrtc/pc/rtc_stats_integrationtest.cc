@@ -1165,7 +1165,17 @@ TEST_F(RTCStatsIntegrationTest, GetStatsFromCaller) {
 TEST_F(RTCStatsIntegrationTest, GetStatsFromCallee) {
   StartCall();
 
-  rtc::scoped_refptr<const RTCStatsReport> report = GetStatsFromCallee();
+  rtc::scoped_refptr<const RTCStatsReport> report;
+  // Wait for round trip time measurements to be defined.
+  constexpr int kMaxWaitMs = 10000;
+  auto GetStatsReportAndReturnTrueIfRttIsDefined = [&report, this] {
+    report = GetStatsFromCallee();
+    auto inbound_stats =
+        report->GetStatsOfType<RTCRemoteInboundRtpStreamStats>();
+    return !inbound_stats.empty() &&
+           inbound_stats.front()->round_trip_time_measurements.is_defined();
+  };
+  EXPECT_TRUE_WAIT(GetStatsReportAndReturnTrueIfRttIsDefined(), kMaxWaitMs);
   RTCStatsReportVerifier(report.get()).VerifyReport({});
 
 #if RTC_TRACE_EVENTS_ENABLED
