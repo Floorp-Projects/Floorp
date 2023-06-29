@@ -163,31 +163,7 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest, CloneSenderVideoFrame) {
   EXPECT_EQ(video_frame->GetPayloadType(), clone->GetPayloadType());
   EXPECT_EQ(video_frame->GetSsrc(), clone->GetSsrc());
   EXPECT_EQ(video_frame->GetTimestamp(), clone->GetTimestamp());
-  EXPECT_EQ(video_frame->GetMetadata(), clone->GetMetadata());
-}
-
-TEST_F(RtpSenderVideoFrameTransformerDelegateTest, MetadataEqualsGetMetadata) {
-  auto delegate = rtc::make_ref_counted<RTPSenderVideoFrameTransformerDelegate>(
-      &test_sender_, frame_transformer_,
-      /*ssrc=*/1111, /*csrcs=*/std::vector<uint32_t>({1, 2, 3}),
-      time_controller_.CreateTaskQueueFactory().get());
-
-  std::unique_ptr<TransformableFrameInterface> frame =
-      GetTransformableFrame(delegate);
-  ASSERT_TRUE(frame);
-  TransformableVideoFrameInterface* video_frame =
-      static_cast<TransformableVideoFrameInterface*>(frame.get());
-
-  const VideoFrameMetadata& metadata_ref = video_frame->GetMetadata();
-  VideoFrameMetadata metadata_copy = video_frame->Metadata();
-
-  // TODO(bugs.webrtc.org/14708): Just EXPECT_EQ the whole Metadata once the
-  // equality operator lands.
-  EXPECT_EQ(metadata_ref.GetFrameType(), metadata_copy.GetFrameType());
-  EXPECT_EQ(metadata_ref.GetFrameId(), metadata_copy.GetFrameId());
-  EXPECT_EQ(metadata_ref.GetCodec(), metadata_copy.GetCodec());
-  EXPECT_EQ(metadata_ref.GetSsrc(), metadata_copy.GetSsrc());
-  EXPECT_EQ(metadata_ref.GetCsrcs(), metadata_copy.GetCsrcs());
+  EXPECT_EQ(video_frame->Metadata(), clone->Metadata());
 }
 
 TEST_F(RtpSenderVideoFrameTransformerDelegateTest, MetadataAfterSetMetadata) {
