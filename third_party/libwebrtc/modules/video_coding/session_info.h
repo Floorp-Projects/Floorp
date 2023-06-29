@@ -19,8 +19,8 @@
 
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
+#include "modules/video_coding/deprecated/packet.h"
 #include "modules/video_coding/include/video_coding.h"
-#include "modules/video_coding/packet.h"
 
 namespace webrtc {
 // Used to pass data from jitter buffer to session info.

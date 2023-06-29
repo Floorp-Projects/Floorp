@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/packet.h"
+#include "modules/video_coding/deprecated/packet.h"
 
 #include "api/rtp_headers.h"
 

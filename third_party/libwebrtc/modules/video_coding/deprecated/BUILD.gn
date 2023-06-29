@@ -1,0 +1,29 @@
+# Copyright (c) 2023 The WebRTC project authors. All Rights Reserved.
+#
+# Use of this source code is governed by a BSD-style license
+# that can be found in the LICENSE file in the root of the source
+# tree. An additional intellectual property rights grant can be found
+# in the file PATENTS.  All contributing project authors may
+# be found in the AUTHORS file in the root of the source tree.
+
+import("../../../webrtc.gni")
+
+rtc_library("deprecated_packet") {
+  visibility = [
+    "../:video_coding_legacy",
+    "../:video_coding_unittests",
+  ]
+  sources = [
+    "packet.cc",
+    "packet.h",
+  ]
+  deps = [
+    "../../../api:rtp_headers",
+    "../../../api:rtp_packet_info",
+    "../../../api/units:timestamp",
+    "../../../api/video:video_frame_type",
+    "../../../modules/rtp_rtcp:rtp_rtcp_format",
+    "../../../modules/rtp_rtcp:rtp_video_header",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
