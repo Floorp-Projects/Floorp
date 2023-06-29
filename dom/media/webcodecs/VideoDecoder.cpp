@@ -535,12 +535,10 @@ static RefPtr<VideoFrame> CreateVideoFrame(
     // TODO: Calculate displaySize
   }
 
-  // TODO: Allow constructing VideoFrame without pixel format
-  return MakeRefPtr<VideoFrame>(
-      aGlobalObject, aData->mImage,
-      format ? format.ref() : VideoPixelFormat::EndGuard_,
-      aData->mImage->GetSize(), aData->mImage->GetPictureRect(), displaySize,
-      Some(aDuration), aTimestamp, aColorSpace);
+  return MakeRefPtr<VideoFrame>(aGlobalObject, aData->mImage, format,
+                                aData->mImage->GetSize(),
+                                aData->mImage->GetPictureRect(), displaySize,
+                                Some(aDuration), aTimestamp, aColorSpace);
 }
 
 static nsTArray<RefPtr<VideoFrame>> DecodedDataToVideoFrames(
