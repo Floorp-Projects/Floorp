@@ -30,6 +30,39 @@ add_task(async function () {
   assertNotPaused(dbg);
 
   await removeBreakpoint(dbg, findSource(dbg, "simple2.js").id, 5);
+
+  info("Set condition `foo(` (syntax error), and pause on the exception");
+  await setConditionalBreakpoint(dbg, 5, "foo(");
+
+  invokeInTab("main");
+  await waitForPaused(dbg);
+  let whyPaused = dbg.win.document.querySelector(".why-paused").innerText;
+  is(
+    whyPaused,
+    "Error with conditional breakpoint\nexpected expression, got end of script"
+  );
+  await resume(dbg);
+  assertNotPaused(dbg);
+
+  info(
+    "Retrigger the same breakpoint with pause on exception enabled and ensure it still reports the exception and only once"
+  );
+  await togglePauseOnExceptions(dbg, true, false);
+
+  invokeInTab("main");
+  await waitForPaused(dbg);
+  whyPaused = dbg.win.document.querySelector(".why-paused").innerText;
+  is(
+    whyPaused,
+    "Error with conditional breakpoint\nexpected expression, got end of script"
+  );
+  await resume(dbg);
+
+  // Let some time for a duplicated breakpoint to be hit
+  await wait(500);
+  assertNotPaused(dbg);
+
+  await removeBreakpoint(dbg, findSource(dbg, "simple2.js").id, 5);
 });
 
 async function setConditionalBreakpoint(dbg, index, condition) {

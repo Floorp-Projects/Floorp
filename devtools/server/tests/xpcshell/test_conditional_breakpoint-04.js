@@ -4,13 +4,12 @@
 "use strict";
 
 /**
- * Confirm that we ignore breakpoint condition exceptions
- * unless pause-on-exceptions is set to true.
- *
+ * Confirm that conditional breakpoint are triggered in case of exceptions,
+ * even when pause-on-exceptions is disabled.
  */
 
 add_task(
-  threadFrontTest(async ({ threadFront, debuggee }) => {
+  threadFrontTest(async ({ threadFront, debuggee, commands }) => {
     await threadFront.setBreakpoint(
       { sourceUrl: "conditional_breakpoint-04.js", line: 3 },
       { condition: "throw new Error()" }
@@ -25,8 +24,12 @@ add_task(
     Assert.equal(packet.why.type, "debuggerStatement");
 
     const pausedPacket = await resumeAndWaitForPause(threadFront);
-    Assert.equal(pausedPacket.frame.where.line, 4);
-    Assert.equal(pausedPacket.why.type, "debuggerStatement");
+    Assert.equal(pausedPacket.frame.where.line, 3);
+    Assert.equal(pausedPacket.why.type, "breakpointConditionThrown");
+
+    const secondPausedPacket = await resumeAndWaitForPause(threadFront);
+    Assert.equal(secondPausedPacket.frame.where.line, 4);
+    Assert.equal(secondPausedPacket.why.type, "debuggerStatement");
 
     // Remove the breakpoint.
     await threadFront.removeBreakpoint({
