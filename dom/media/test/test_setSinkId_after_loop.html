@@ -34,7 +34,6 @@ add_task(async () => {
   });
 
   await SpecialPowers.pushPrefEnv({set: [
-    ["media.setsinkid.enabled", true],
     // skip gUM permission prompt
     ["media.navigator.permission.disabled", true],
     // enumerateDevices() without focus
