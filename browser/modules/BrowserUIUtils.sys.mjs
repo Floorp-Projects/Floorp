@@ -176,6 +176,7 @@ export var BrowserUIUtils = {
 
   /**
    * Open a new browser window without being dependent on other windows.
+   * @returns {ChromeWindow} A new browser window.
    */
   async openNewBrowserWindow() {
     var telemetryObj = {};

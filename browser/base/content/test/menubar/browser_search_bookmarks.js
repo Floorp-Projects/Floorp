@@ -13,7 +13,7 @@ add_task(async function test_menu_search_bookmarks_with_window_open() {
 
 add_task(async function test_menu_search_bookmarks_in_new_window() {
   info("Opening bookmarks menu");
-  await BrowserUIUtils.openNewBrowserWindow();
+  let newWindow = await BrowserUIUtils.openNewBrowserWindow();
 
   let searchBookmarksMenuEntry = document.getElementById(
     "menu_searchBookmarks"
@@ -22,11 +22,13 @@ add_task(async function test_menu_search_bookmarks_in_new_window() {
   info(`Executing command.`);
   searchBookmarksMenuEntry.doCommand();
 
-  let topWindow = BrowserWindowTracker.getTopWindow();
-
-  isnot(topWindow, window, "Top Window is not old window");
-  await isUrlbarInBookmarksSearchMode(topWindow);
-  await BrowserTestUtils.closeWindow(topWindow);
+  is(
+    newWindow,
+    BrowserWindowTracker.getTopWindow(),
+    "New window is top window."
+  );
+  await isUrlbarInBookmarksSearchMode(newWindow);
+  await BrowserTestUtils.closeWindow(newWindow);
 });
 
 async function isUrlbarInBookmarksSearchMode(targetWin) {
