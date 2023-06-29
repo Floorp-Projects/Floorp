@@ -287,7 +287,9 @@ export class ShoppingProduct {
     if (responseOk && SchemaURL) {
       valid = await lazy.ProductValidator.validate(result, SchemaURL);
       if (!valid) {
-        return null;
+        // TODO (bug 1840929) The ProductValidator calls console.error if
+        // validation fails, but we'll eventually want to do something more.
+        console.error(`Invalid API response from ${ApiURL}`);
       }
     }
 
