@@ -255,7 +255,7 @@ void DrawTargetRecording::Fill(const Path* aPath, const Pattern& aPattern,
   if (aPath->GetBackendType() == BackendType::RECORDING) {
     const PathRecording* path = static_cast<const PathRecording*>(aPath);
     auto circle = path->AsCircle();
-    if (circle && true) {
+    if (circle) {
       EnsurePatternDependenciesStored(aPattern);
       mRecorder->RecordEvent(
           RecordedFillCircle(this, circle.value(), aPattern, aOptions));
@@ -369,7 +369,7 @@ void DrawTargetRecording::Stroke(const Path* aPath, const Pattern& aPattern,
   if (aPath->GetBackendType() == BackendType::RECORDING) {
     const PathRecording* path = static_cast<const PathRecording*>(aPath);
     auto circle = path->AsCircle();
-    if (circle) {
+    if (circle && circle->closed) {
       EnsurePatternDependenciesStored(aPattern);
       mRecorder->RecordEvent(RecordedStrokeCircle(
           this, circle.value(), aPattern, aStrokeOptions, aOptions));
