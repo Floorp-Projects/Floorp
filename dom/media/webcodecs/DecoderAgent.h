@@ -42,7 +42,8 @@ class DecoderAgent final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecoderAgent);
 
-  static already_AddRefed<DecoderAgent> Create(UniquePtr<TrackInfo>&& aInfo);
+  using Id = uint32_t;
+  DecoderAgent(Id aId, UniquePtr<TrackInfo>&& aInfo);
 
   // The following APIs are owner thread only.
 
@@ -57,13 +58,10 @@ class DecoderAgent final {
   // the term from MediaDataDecoder's one, we call it DrainAndFlush() here.
   RefPtr<DecodePromise> DrainAndFlush();
 
-  using Id = uint32_t;
-  static constexpr Id None = 0;
   const Id mId;  // A unique id.
   const UniquePtr<TrackInfo> mInfo;
 
  private:
-  DecoderAgent(Id aId, UniquePtr<TrackInfo>&& aInfo);
   ~DecoderAgent();
 
   // Push out all the data in the MediaDataDecoder's pipeline.
