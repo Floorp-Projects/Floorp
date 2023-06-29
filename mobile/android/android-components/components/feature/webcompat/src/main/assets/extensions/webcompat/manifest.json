@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "115.0.0",
+  "version": "116.0.0",
   "browser_specific_settings": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -144,6 +144,7 @@
     "shims/rich-relevance.js",
     "shims/spotify-embed.js",
     "shims/tracking-pixel.png",
+    "shims/tsn-ca.js",
     "shims/vast2.xml",
     "shims/vast3.xml",
     "shims/vidible.js",
