@@ -372,7 +372,7 @@ promise_test(async t => {
   decoder.decode(new EncodedVideoChunk(
       {type: 'key', timestamp: 1, data: new ArrayBuffer(0)}));
 
-  await promise_rejects_dom(t, 'AbortError', decoder.flush());
+  await promise_rejects_dom(t, 'EncodingError', decoder.flush());
 
   assert_equals(errors, 1, 'errors');
   assert_equals(decoder.state, 'closed', 'state');
@@ -397,7 +397,7 @@ promise_test(async t => {
   decoder.decode(CHUNKS[0]);  // Decode keyframe first.
   decoder.decode(createCorruptChunk(2));
 
-  await promise_rejects_dom(t, 'AbortError', decoder.flush());
+  await promise_rejects_dom(t, 'EncodingError', decoder.flush());
 
   assert_less_than_equal(outputs, 1);
   assert_equals(errors, 1, 'errors');
