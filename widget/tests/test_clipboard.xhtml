@@ -95,6 +95,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=948065
           ok(false, `getData should not throw error for clipboard type ${clipboardType}`);
         }
       });
+
+      add_task(function test_clipboard_set_empty_string() {
+        info(`Test setting empty string to type ${clipboardType}`);
+
+        // Clear clipboard type.
+        clipboard.emptyClipboard(clipboardType);
+        is(getClipboardData("text/plain", clipboardType), null,
+           `Should get null data on clipboard type ${clipboardType}`);
+        ok(!clipboard.hasDataMatchingFlavors(["text/plain"], clipboardType),
+           `Should not have text/plain flavor on clipboard ${clipboardType}`);
+
+        // Set text/plain to empty string.
+        writeStringToClipboard("", "text/plain", clipboardType);
+        // XXX gtk doesn't support get empty text data from clipboard.
+        if (navigator.platform.includes("Linux")) {
+          todo_is(getClipboardData("text/plain", clipboardType), "",
+             `Should get empty string on clipboard type ${clipboardType}`);
+        } else {
+          is(getClipboardData("text/plain", clipboardType), "",
+             `Should get empty string on clipboard type ${clipboardType}`);
+        }
+        ok(clipboard.hasDataMatchingFlavors(["text/plain"], clipboardType),
+           `Should have text/plain flavor on clipboard ${clipboardType}`);
+
+        // Clear all clipboard data.
+        cleanupAllClipboard();
+      });
     }
   });
 
