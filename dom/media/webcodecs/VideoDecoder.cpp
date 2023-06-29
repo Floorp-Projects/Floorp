@@ -519,6 +519,38 @@ static VideoColorSpaceInit GuessColorSpace(layers::Image* aImage) {
   return {};
 }
 
+static Result<gfx::IntSize, nsresult> AdjustDisplaySize(
+    const uint32_t aDisplayAspectWidth, const uint32_t aDisplayAspectHeight,
+    const gfx::IntSize& aDisplaySize) {
+  if (aDisplayAspectHeight == 0) {
+    return Err(NS_ERROR_ILLEGAL_VALUE);
+  }
+
+  const double aspectRatio =
+      static_cast<double>(aDisplayAspectWidth) / aDisplayAspectHeight;
+
+  double w = aDisplaySize.width;
+  double h = aDisplaySize.height;
+
+  if (aspectRatio >= w / h) {
+    // Adjust w to match the aspect ratio
+    w = aspectRatio * h;
+  } else {
+    // Adjust h to match the aspect ratio
+    h = w / aspectRatio;
+  }
+
+  w = std::round(w);
+  h = std::round(h);
+  constexpr double MAX = static_cast<double>(
+      std::numeric_limits<decltype(gfx::IntSize::width)>::max());
+  if (w > MAX || h > MAX || w < 1.0 || h < 1.0) {
+    return Err(NS_ERROR_ILLEGAL_VALUE);
+  }
+  return gfx::IntSize(static_cast<decltype(gfx::IntSize::width)>(w),
+                      static_cast<decltype(gfx::IntSize::height)>(h));
+}
+
 // https://w3c.github.io/webcodecs/#create-a-videoframe
 static RefPtr<VideoFrame> CreateVideoFrame(
     nsIGlobalObject* aGlobalObject, const VideoData* aData, int64_t aTimestamp,
@@ -532,7 +564,11 @@ static RefPtr<VideoFrame> CreateVideoFrame(
   Maybe<VideoPixelFormat> format = GuessPixelFormat(aData->mImage.get());
   gfx::IntSize displaySize = aData->mDisplay;
   if (mDisplayAspectWidth && mDisplayAspectHeight) {
-    // TODO: Calculate displaySize
+    auto r = AdjustDisplaySize(*mDisplayAspectWidth, *mDisplayAspectHeight,
+                               displaySize);
+    if (r.isOk()) {
+      displaySize = r.unwrap();
+    }
   }
 
   return MakeRefPtr<VideoFrame>(aGlobalObject, aData->mImage, format,
