@@ -44,7 +44,6 @@
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/synchronization/mutex.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/time_utils.h"
 
@@ -57,8 +56,7 @@ class RtpReceiverInternal;
 // Stats are gathered on the signaling, worker and network threads
 // asynchronously. The callback is invoked on the signaling thread. Resulting
 // reports are cached for `cache_lifetime_` ms.
-class RTCStatsCollector : public rtc::RefCountInterface,
-                          public sigslot::has_slots<> {
+class RTCStatsCollector : public rtc::RefCountInterface {
  public:
   static rtc::scoped_refptr<RTCStatsCollector> Create(
       PeerConnectionInternal* pc,
@@ -91,6 +89,10 @@ class RTCStatsCollector : public rtc::RefCountInterface,
   // If there is a `GetStatsReport` requests in-flight, waits until it has been
   // completed. Must be called on the signaling thread.
   void WaitForPendingRequest();
+
+  // Called by the PeerConnection instance when data channel states change.
+  void OnSctpDataChannelStateChanged(DataChannelInterface* channel,
+                                     DataChannelInterface::DataState state);
 
  protected:
   RTCStatsCollector(PeerConnectionInternal* pc, int64_t cache_lifetime_us);
@@ -254,12 +256,6 @@ class RTCStatsCollector : public rtc::RefCountInterface,
       rtc::scoped_refptr<const RTCStatsReport> report,
       rtc::scoped_refptr<RtpSenderInternal> sender_selector,
       rtc::scoped_refptr<RtpReceiverInternal> receiver_selector);
-
-  // Slots for signals (sigslot) that are wired up to `pc_`.
-  void OnSctpDataChannelCreated(SctpDataChannel* channel);
-  // Slots for signals (sigslot) that are wired up to `channel`.
-  void OnDataChannelOpened(DataChannelInterface* channel);
-  void OnDataChannelClosed(DataChannelInterface* channel);
 
   PeerConnectionInternal* const pc_;
   rtc::Thread* const signaling_thread_;

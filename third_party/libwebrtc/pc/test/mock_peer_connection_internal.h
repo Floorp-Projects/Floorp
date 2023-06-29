@@ -282,10 +282,6 @@ class MockPeerConnectionInternal : public PeerConnectionInternal {
       GetTransceiversInternal,
       (),
       (const, override));
-  MOCK_METHOD(sigslot::signal1<SctpDataChannel*>&,
-              SignalSctpDataChannelCreated,
-              (),
-              (override));
   MOCK_METHOD(std::vector<DataChannelStats>,
               GetDataChannelStats,
               (),
@@ -322,8 +318,8 @@ class MockPeerConnectionInternal : public PeerConnectionInternal {
               (override));
   MOCK_METHOD(void, NoteDataAddedEvent, (), (override));
   MOCK_METHOD(void,
-              OnSctpDataChannelClosed,
-              (DataChannelInterface*),
+              OnSctpDataChannelStateChanged,
+              (DataChannelInterface * channel, DataChannelInterface::DataState),
               (override));
 };
 

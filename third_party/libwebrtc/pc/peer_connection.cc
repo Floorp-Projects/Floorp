@@ -2113,11 +2113,12 @@ void PeerConnection::ResetSctpDataMid() {
   SetSctpTransportName("");
 }
 
-void PeerConnection::OnSctpDataChannelClosed(DataChannelInterface* channel) {
-  // Since data_channel_controller doesn't do signals, this
-  // signal is relayed here.
-  data_channel_controller_.OnSctpDataChannelClosed(
-      static_cast<SctpDataChannel*>(channel));
+void PeerConnection::OnSctpDataChannelStateChanged(
+    DataChannelInterface* channel,
+    DataChannelInterface::DataState state) {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  if (stats_collector_)
+    stats_collector_->OnSctpDataChannelStateChanged(channel, state);
 }
 
 PeerConnection::InitializePortAllocatorResult
