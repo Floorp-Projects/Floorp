@@ -78,83 +78,6 @@ std::vector<std::unique_ptr<RtpPacketToSend>> GeneratePadding(
   return padding_packets;
 }
 
-class TaskQueueWithFakePrecisionFactory : public TaskQueueFactory {
- public:
-  explicit TaskQueueWithFakePrecisionFactory(
-      TaskQueueFactory* task_queue_factory)
-      : task_queue_factory_(task_queue_factory) {}
-
-  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> CreateTaskQueue(
-      absl::string_view name,
-      Priority priority) const override {
-    return std::unique_ptr<TaskQueueBase, TaskQueueDeleter>(
-        new TaskQueueWithFakePrecision(
-            const_cast<TaskQueueWithFakePrecisionFactory*>(this),
-            task_queue_factory_));
-  }
-
-  int delayed_low_precision_count() const {
-    return delayed_low_precision_count_;
-  }
-  int delayed_high_precision_count() const {
-    return delayed_high_precision_count_;
-  }
-
- private:
-  friend class TaskQueueWithFakePrecision;
-
-  class TaskQueueWithFakePrecision : public TaskQueueBase {
-   public:
-    TaskQueueWithFakePrecision(
-        TaskQueueWithFakePrecisionFactory* parent_factory,
-        TaskQueueFactory* task_queue_factory)
-        : parent_factory_(parent_factory),
-          task_queue_(task_queue_factory->CreateTaskQueue(
-              "TaskQueueWithFakePrecision",
-              TaskQueueFactory::Priority::NORMAL)) {}
-    ~TaskQueueWithFakePrecision() override {}
-
-    void Delete() override {
-      // `task_queue_->Delete()` is implicitly called in the destructor due to
-      // TaskQueueDeleter.
-      delete this;
-    }
-    void PostTaskImpl(absl::AnyInvocable<void() &&> task,
-                      const PostTaskTraits& /*traits*/,
-                      const Location& /*location*/) override {
-      task_queue_->PostTask(WrapTask(std::move(task)));
-    }
-    void PostDelayedTaskImpl(absl::AnyInvocable<void() &&> task,
-                             TimeDelta delay,
-                             const PostDelayedTaskTraits& traits,
-                             const Location& location) override {
-      if (traits.high_precision) {
-        ++parent_factory_->delayed_high_precision_count_;
-        task_queue_->PostDelayedHighPrecisionTask(WrapTask(std::move(task)),
-                                                  delay);
-      } else {
-        ++parent_factory_->delayed_low_precision_count_;
-        task_queue_->PostDelayedTask(WrapTask(std::move(task)), delay);
-      }
-    }
-
-   private:
-    absl::AnyInvocable<void() &&> WrapTask(absl::AnyInvocable<void() &&> task) {
-      return [this, task = std::move(task)]() mutable {
-        CurrentTaskQueueSetter set_current(this);
-        std::move(task)();
-      };
-    }
-
-    TaskQueueWithFakePrecisionFactory* parent_factory_;
-    std::unique_ptr<TaskQueueBase, TaskQueueDeleter> task_queue_;
-  };
-
-  TaskQueueFactory* task_queue_factory_;
-  std::atomic<int> delayed_low_precision_count_ = 0u;
-  std::atomic<int> delayed_high_precision_count_ = 0u;
-};
-
 }  // namespace
 
 namespace test {
@@ -192,15 +115,15 @@ std::vector<std::unique_ptr<RtpPacketToSend>> GeneratePackets(
   return packets;
 }
 
-constexpr char kSendPacketOnWorkerThreadFieldTrial[] =
-    "WebRTC-SendPacketsOnWorkerThread/Enabled/";
+constexpr char kSendPacketOnWorkerThreadFieldTrialDisabled[] =
+    "WebRTC-SendPacketsOnWorkerThread/Disabled/";
 
 std::vector<std::string> ParameterizedFieldTrials() {
-  return {{""}, {kSendPacketOnWorkerThreadFieldTrial}};
+  return {{""}, {kSendPacketOnWorkerThreadFieldTrialDisabled}};
 }
 
 bool UsingWorkerThread(absl::string_view field_trials) {
-  return field_trials.find(kSendPacketOnWorkerThreadFieldTrial) !=
+  return field_trials.find(kSendPacketOnWorkerThreadFieldTrialDisabled) ==
          std::string::npos;
 }
 

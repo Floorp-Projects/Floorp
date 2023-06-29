@@ -23,11 +23,13 @@ namespace webrtc {
 
 namespace {
 
-constexpr char kFieldTrialString[] =
+constexpr char kFieldTrialEnabledString[] =
     "WebRTC-SendPacketsOnWorkerThread/Enabled/";
+constexpr char kFieldTrialDisabledString[] =
+    "WebRTC-SendPacketsOnWorkerThread/Disabled/";
 
 TEST(MaybeWorkerThreadTest, RunOrPostRunOnWorkerThreadInExperiment) {
-  test::ExplicitKeyValueConfig field_trial(kFieldTrialString);
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialEnabledString);
   RealTimeController controller;
   MaybeWorkerThread m(field_trial, "test_tq", controller.GetTaskQueueFactory());
 
@@ -41,7 +43,7 @@ TEST(MaybeWorkerThreadTest, RunOrPostRunOnWorkerThreadInExperiment) {
 }
 
 TEST(MaybeWorkerThreadTest, RunOrPostPostsOnTqPerDefault) {
-  test::ExplicitKeyValueConfig field_trial("");
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialDisabledString);
   RealTimeController controller;
   MaybeWorkerThread m(field_trial, "test_tq", controller.GetTaskQueueFactory());
 
@@ -55,7 +57,7 @@ TEST(MaybeWorkerThreadTest, RunOrPostPostsOnTqPerDefault) {
 }
 
 TEST(MaybeWorkerThreadTest, RunSynchronousRunOnWorkerThreadInExperiment) {
-  test::ExplicitKeyValueConfig field_trial(kFieldTrialString);
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialEnabledString);
   RealTimeController controller;
   MaybeWorkerThread m(field_trial, "test_tq", controller.GetTaskQueueFactory());
 
@@ -69,7 +71,7 @@ TEST(MaybeWorkerThreadTest, RunSynchronousRunOnWorkerThreadInExperiment) {
 }
 
 TEST(MaybeWorkerThreadTest, RunSynchronousRunOnTqPerDefault) {
-  test::ExplicitKeyValueConfig field_trial("");
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialDisabledString);
   RealTimeController controller;
   MaybeWorkerThread m(field_trial, "test_tq", controller.GetTaskQueueFactory());
 
@@ -86,7 +88,7 @@ TEST(MaybeWorkerThreadTest, MaybeSafeTaskDoesNotReturnSafeTaskPerDefault) {
   // We cant really test that the return value from MaybeSafeTask is a SafeTask.
   // But we can test that the safety flag does not have more references after a
   // call.
-  test::ExplicitKeyValueConfig field_trial("");
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialDisabledString);
   RealTimeController controller;
   MaybeWorkerThread m(field_trial, "test_tq", controller.GetTaskQueueFactory());
 
@@ -101,7 +103,7 @@ TEST(MaybeWorkerThreadTest, MaybeSafeTaskDoesNotReturnSafeTaskInExperiment) {
   // We cant really test that the return value from MaybeSafeTask is a SafeTask.
   // But we can test that the safety flag does have one more references after a
   // call.
-  test::ExplicitKeyValueConfig field_trial(kFieldTrialString);
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialEnabledString);
   RealTimeController controller;
   MaybeWorkerThread m(field_trial, "test_tq", controller.GetTaskQueueFactory());
 
@@ -113,7 +115,7 @@ TEST(MaybeWorkerThreadTest, MaybeSafeTaskDoesNotReturnSafeTaskInExperiment) {
 }
 
 TEST(MaybeWorkerThreadTest, IsCurrentBehavesCorrectPerDefault) {
-  test::ExplicitKeyValueConfig field_trial("");
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialDisabledString);
   RealTimeController controller;
   MaybeWorkerThread m(field_trial, "test_tq", controller.GetTaskQueueFactory());
 
@@ -122,7 +124,7 @@ TEST(MaybeWorkerThreadTest, IsCurrentBehavesCorrectPerDefault) {
 }
 
 TEST(MaybeWorkerThreadTest, IsCurrentBehavesCorrectInExperiment) {
-  test::ExplicitKeyValueConfig field_trial(kFieldTrialString);
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialEnabledString);
   RealTimeController controller;
   MaybeWorkerThread m(field_trial, "test_tq", controller.GetTaskQueueFactory());
 
@@ -138,7 +140,7 @@ TEST(MaybeWorkerThreadTest, IsCurrentBehavesCorrectInExperiment) {
 }
 
 TEST(MaybeWorkerThreadTest, IsCurrentCanBeCalledInDestructorPerDefault) {
-  test::ExplicitKeyValueConfig field_trial("");
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialDisabledString);
   RealTimeController controller;
   {
     MaybeWorkerThread m(field_trial, "test_tq",
@@ -148,7 +150,7 @@ TEST(MaybeWorkerThreadTest, IsCurrentCanBeCalledInDestructorPerDefault) {
 }
 
 TEST(MaybeWorkerThreadTest, IsCurrentCanBeCalledInDestructorInExperiment) {
-  test::ExplicitKeyValueConfig field_trial(kFieldTrialString);
+  test::ExplicitKeyValueConfig field_trial(kFieldTrialEnabledString);
   RealTimeController controller;
   {
     MaybeWorkerThread m(field_trial, "test_tq",

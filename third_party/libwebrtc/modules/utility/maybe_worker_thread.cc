@@ -24,7 +24,7 @@ MaybeWorkerThread::MaybeWorkerThread(const FieldTrialsView& field_trials,
                                      absl::string_view task_queue_name,
                                      TaskQueueFactory* factory)
     : owned_task_queue_(
-          field_trials.IsEnabled("WebRTC-SendPacketsOnWorkerThread")
+          !field_trials.IsDisabled("WebRTC-SendPacketsOnWorkerThread")
               ? nullptr
               : factory->CreateTaskQueue(task_queue_name,
                                          rtc::TaskQueue::Priority::NORMAL)),
