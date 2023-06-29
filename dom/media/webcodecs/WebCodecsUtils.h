@@ -11,6 +11,7 @@
 
 #include "ErrorList.h"
 #include "js/TypeDecls.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -67,6 +68,16 @@ gfx::TransferFunction ToTransferFunction(
     VideoTransferCharacteristics aTransfer);
 
 gfx::ColorSpace2 ToPrimaries(VideoColorPrimaries aPrimaries);
+
+bool ToFullRange(const gfx::ColorRange& aColorRange);
+
+Maybe<VideoMatrixCoefficients> ToMatrixCoefficients(
+    const gfx::YUVColorSpace& aColorSpace);
+
+Maybe<VideoTransferCharacteristics> ToTransferCharacteristics(
+    const gfx::TransferFunction& aTransferFunction);
+
+Maybe<VideoColorPrimaries> ToPrimaries(const gfx::ColorSpace2& aColorSpace);
 
 }  // namespace dom
 }  // namespace mozilla
