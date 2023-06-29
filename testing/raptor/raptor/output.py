@@ -156,22 +156,22 @@ class PerftestOutput(object):
             for measurement_name, value_info in data_set["values"].items():
                 # Subtests are expected to be specified in a dictionary, this
                 # provides backwards compatibility with the old method
+                value = value_info
                 if not isinstance(value_info, dict):
-                    value_info = {"values": value_info}
-
+                    value = {"values": value_info}
                 new_subtest = {}
-                if value_info.get("subtest-prefix-type", True):
+                if value.get("subtest-prefix-type", True):
                     new_subtest["name"] = data_type + "-" + measurement_name
                 else:
                     new_subtest["name"] = measurement_name
 
-                new_subtest["value"] = value_info["values"]
-                new_subtest["lowerIsBetter"] = value_info.get("lowerIsBetter", True)
-                new_subtest["alertThreshold"] = value_info.get("alertThreshold", 2.0)
-                new_subtest["unit"] = value_info.get("unit", data_set["unit"])
+                new_subtest["value"] = value["values"]
+                new_subtest["lowerIsBetter"] = value.get("lowerIsBetter", True)
+                new_subtest["alertThreshold"] = value.get("alertThreshold", 2.0)
+                new_subtest["unit"] = value.get("unit", data_set["unit"])
 
-                if "shouldAlert" in value_info:
-                    new_subtest["shouldAlert"] = value_info.get("shouldAlert")
+                if "shouldAlert" in value:
+                    new_subtest["shouldAlert"] = value.get("shouldAlert")
 
                 subtests.append(new_subtest)
                 vals.append([new_subtest["value"], new_subtest["name"]])
@@ -515,10 +515,13 @@ class PerftestOutput(object):
                         "name": metric,
                         "replicates": [],
                     }
+                updated_metric = value
                 if not isinstance(value, Iterable):
-                    value = [value]
+                    updated_metric = [value]
                 # pylint: disable=W1633
-                _subtests[metric]["replicates"].extend([round(x, 3) for x in value])
+                _subtests[metric]["replicates"].extend(
+                    [round(x, 3) for x in updated_metric]
+                )
 
         vals = []
         subtests = []
@@ -1192,19 +1195,23 @@ class PerftestOutput(object):
     def parseTwitchAnimationOutput(self, test):
         _subtests = {}
 
-        for metric, data in test["measurements"].items():
-            if "perfstat-" not in metric and metric != "twitch-animation":
+        for metric_name, data in test["measurements"].items():
+            if "perfstat-" not in metric_name and metric_name != "twitch-animation":
                 # Only keep perfstats or the run metric
                 continue
-            if metric == "twitch-animation":
+            if metric_name == "twitch-animation":
                 metric = "run"
+            else:
+                metric = metric_name
 
             # data is just an array with a single number
-            for page_cycle in data:
+            for polymorphic_page_cycle in data:
                 # Each benchmark cycle is formatted like `[val]`, perfstats
                 # are not
-                if not isinstance(page_cycle, list):
-                    page_cycle = [page_cycle]
+                if not isinstance(polymorphic_page_cycle, list):
+                    page_cycle = [polymorphic_page_cycle]
+                else:
+                    page_cycle = polymorphic_page_cycle
                 for val in page_cycle:
                     _subtests.setdefault(
                         metric,

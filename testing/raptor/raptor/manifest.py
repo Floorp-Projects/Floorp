@@ -468,13 +468,12 @@ def get_raptor_test_list(args, oskey):
             LOG.info(
                 "setting page-cycles to %d as specified on cmd line" % args.page_cycles
             )
-        else:
-            if int(next_test.get("page_cycles", 1)) > max_page_cycles:
-                next_test["page_cycles"] = max_page_cycles
-                LOG.info(
-                    "setting page-cycles to %d because gecko-profling is enabled"
-                    % next_test["page_cycles"]
-                )
+        elif int(next_test.get("page_cycles", 1)) > max_page_cycles:
+            next_test["page_cycles"] = max_page_cycles
+            LOG.info(
+                "setting page-cycles to %d because gecko-profling is enabled"
+                % next_test["page_cycles"]
+            )
 
         # if --browser-cycles was provided on the command line, use that instead of INI
         # if just provided in the INI use that but cap at 3 if gecko-profiling is enabled
@@ -484,13 +483,12 @@ def get_raptor_test_list(args, oskey):
                 "setting browser-cycles to %d as specified on cmd line"
                 % args.browser_cycles
             )
-        else:
-            if int(next_test.get("browser_cycles", 1)) > max_browser_cycles:
-                next_test["browser_cycles"] = max_browser_cycles
-                LOG.info(
-                    "setting browser-cycles to %d because gecko-profilng is enabled"
-                    % next_test["browser_cycles"]
-                )
+        elif int(next_test.get("browser_cycles", 1)) > max_browser_cycles:
+            next_test["browser_cycles"] = max_browser_cycles
+            LOG.info(
+                "setting browser-cycles to %d because gecko-profilng is enabled"
+                % next_test["browser_cycles"]
+            )
 
         # if --page-timeout was provided on the command line, use that instead of INI
         if args.page_timeout is not None:
