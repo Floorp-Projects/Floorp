@@ -52,15 +52,13 @@ const TEST_DATA_SELECTED = [
     deprecated: false,
     experimental: false,
   },
-  // TODO: Re-enable it when we have another property with no MDN url nor spec url
-  // See Bug 1840910
-  /*{
+  {
     // No MDN url nor spec url
     type: COMPATIBILITY_ISSUE_TYPE.CSS_PROPERTY,
     property: "overflow-clip-box",
     deprecated: false,
     experimental: false,
-  },*/
+  },
 ];
 
 const TEST_DATA_ALL = [
