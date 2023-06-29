@@ -1266,8 +1266,10 @@ void MediaFormatReader::OnDemuxerInitDone(const MediaResult& aResult) {
   auto videoDuration = HasVideo() ? mInfo.mVideo.mDuration : TimeUnit::Zero();
   auto audioDuration = HasAudio() ? mInfo.mAudio.mDuration : TimeUnit::Zero();
 
-  auto duration = std::max(videoDuration, audioDuration);
-  if (duration.IsPositive()) {
+  // If the duration is 0 on both audio and video, it mMetadataDuration is to be
+  // Nothing(). Duration will use buffered ranges.
+  if (videoDuration.IsPositive() || audioDuration.IsPositive()) {
+    auto duration = std::max(videoDuration, audioDuration);
     mInfo.mMetadataDuration = Some(duration);
   }
 
