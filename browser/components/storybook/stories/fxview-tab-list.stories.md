@@ -72,7 +72,7 @@ You'll need to pass along some of the following properties:
         * `time` (Ex: "4:00 PM", "16:00", etc - Will be formatted based on locale)
         * `dateTime` (Ex: "4/1/23 4:00PM", "01/04/23 16:00", etc. - Will be formatted based on locale)
 * `hasPopup` (**Optional**): The optional aria-haspopup attribute for the secondary action, if required
-* `maxTabsLength` (**Optional**): The max number of tabs you want to display in the tabs list. The default value will be `25` if no max value is given. You may use any negative number such as `-1` to indicate no max.
+* `maxTabsLength` (**Optional**): The max number of tabs you want to display in the tabs list. The default value will be `25` if no max value is given.
 * `tabItems` (**Required**): An array of tab data such as History nodes, Bookmark nodes, Synced Tabs, etc.
     * The component is expecting to receive the following properties within each `tabItems` object (you may need to do some normalizing for this):
         * `icon` (**Required**) - The location string for the favicon. Will fallback to default favicon if none is found.
