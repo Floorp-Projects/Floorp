@@ -105,20 +105,21 @@ static std::tuple<JS::ArrayBufferOrView, size_t, size_t> GetArrayBufferInfo(
       JS_GetTypedArrayByteOffset(obj), JS_GetTypedArrayByteLength(obj));
 }
 
-Result<OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer, nsresult>
-CloneBuffer(
+Result<Ok, nsresult> CloneBuffer(
     JSContext* aCx,
-    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
+    OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDest,
+    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aSrc) {
   std::tuple<JS::ArrayBufferOrView, size_t, size_t> info =
-      GetArrayBufferInfo(aCx, aBuffer);
-  const JS::ArrayBufferOrView& bufOrView = std::get<0>(info);
+      GetArrayBufferInfo(aCx, aSrc);
+  JS::Rooted<JS::ArrayBufferOrView> abov(aCx);
+  abov.set(std::get<0>(info));
   size_t offset = std::get<1>(info);
   size_t len = std::get<2>(info);
-  if (NS_WARN_IF(!bufOrView)) {
+  if (NS_WARN_IF(!abov)) {
     return Err(NS_ERROR_UNEXPECTED);
   }
 
-  JS::Rooted<JSObject*> obj(aCx, bufOrView.asObject());
+  JS::Rooted<JSObject*> obj(aCx, abov.asObject());
   JS::Rooted<JSObject*> cloned(aCx,
                                JS::ArrayBufferClone(aCx, obj, offset, len));
   if (NS_WARN_IF(!cloned)) {
@@ -126,11 +127,10 @@ CloneBuffer(
   }
 
   JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*cloned));
-  OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer clonedBufOrView;
-  if (NS_WARN_IF(!clonedBufOrView.Init(aCx, value))) {
+  if (NS_WARN_IF(!aDest.Init(aCx, value))) {
     return Err(NS_ERROR_UNEXPECTED);
   }
-  return clonedBufOrView;
+  return Ok();
 }
 
 /*
