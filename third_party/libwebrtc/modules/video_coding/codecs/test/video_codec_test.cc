@@ -98,7 +98,9 @@ class TestRawVideoSource : public VideoCodecTester::RawVideoSource {
         frame_settings_(frame_settings),
         num_frames_(num_frames),
         frame_num_(0),
-        timestamp_rtp_(0) {
+        // Start with non-zero timestamp to force using frame RTP timestamps in
+        // IvfFrameWriter.
+        timestamp_rtp_(90000) {
     // Ensure settings for the first frame are provided.
     RTC_CHECK_GT(frame_settings_.size(), 0u);
     RTC_CHECK_EQ(frame_settings_.begin()->first, 0);
@@ -439,6 +441,16 @@ void SetTargetRates(const std::map<int, EncodingSettings>& frame_settings,
     f.target_framerate = layer_settings.framerate;
   }
 }
+
+std::string TestOutputPath() {
+  std::string output_path =
+      OutputPath() +
+      ::testing::UnitTest::GetInstance()->current_test_info()->name();
+  std::string output_dir = DirName(output_path);
+  bool result = CreateDir(output_dir);
+  RTC_CHECK(result) << "Cannot create " << output_dir;
+  return output_path;
+}
 }  // namespace
 
 std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
@@ -446,7 +458,8 @@ std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
     std::string codec_impl,
     const VideoInfo& video_info,
     const std::map<int, EncodingSettings>& frame_settings,
-    int num_frames) {
+    int num_frames,
+    bool save_codec_output) {
   std::unique_ptr<TestRawVideoSource> video_source =
       CreateVideoSource(video_info, frame_settings, num_frames);
 
@@ -468,6 +481,12 @@ std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
           ? PacingMode::kRealTime
           : PacingMode::kNoPacing;
 
+  if (save_codec_output) {
+    std::string output_path = TestOutputPath();
+    encoder_settings.encoded_ivf_base_path = output_path;
+    decoder_settings.decoded_y4m_base_path = output_path;
+  }
+
   std::unique_ptr<VideoCodecTester> tester = CreateVideoCodecTester();
   return tester->RunEncodeDecodeTest(video_source.get(), encoder.get(),
                                      decoder.get(), encoder_settings,
@@ -479,7 +498,8 @@ std::unique_ptr<VideoCodecStats> RunEncodeTest(
     std::string codec_impl,
     const VideoInfo& video_info,
     const std::map<int, EncodingSettings>& frame_settings,
-    int num_frames) {
+    int num_frames,
+    bool save_codec_output) {
   std::unique_ptr<TestRawVideoSource> video_source =
       CreateVideoSource(video_info, frame_settings, num_frames);
 
@@ -491,6 +511,10 @@ std::unique_ptr<VideoCodecStats> RunEncodeTest(
       encoder->encoder()->GetEncoderInfo().is_hardware_accelerated
           ? PacingMode::kRealTime
           : PacingMode::kNoPacing;
+
+  if (save_codec_output) {
+    encoder_settings.encoded_ivf_base_path = TestOutputPath();
+  }
 
   std::unique_ptr<VideoCodecTester> tester = CreateVideoCodecTester();
   return tester->RunEncodeTest(video_source.get(), encoder.get(),
@@ -535,8 +559,9 @@ TEST_P(SpatialQualityTest, DISABLED_SpatialQuality) {
   int duration_s = 10;
   int num_frames = duration_s * framerate_fps;
 
-  std::unique_ptr<VideoCodecStats> stats = RunEncodeDecodeTest(
-      codec_type, codec_impl, video_info, frame_settings, num_frames);
+  std::unique_ptr<VideoCodecStats> stats =
+      RunEncodeDecodeTest(codec_type, codec_impl, video_info, frame_settings,
+                          num_frames, /*save_codec_output=*/false);
 
   std::vector<VideoCodecStats::Frame> frames = stats->Slice();
   SetTargetRates(frame_settings, frames);
@@ -613,8 +638,9 @@ TEST_P(BitrateAdaptationTest, DISABLED_BitrateAdaptation) {
               .framerate = video_info.framerate,
               .bitrate = DataRate::KilobitsPerSec(bitrate_kbps.second)}}}}}};
 
-  std::unique_ptr<VideoCodecStats> stats = RunEncodeTest(
-      codec_type, codec_impl, video_info, frame_settings, num_frames);
+  std::unique_ptr<VideoCodecStats> stats =
+      RunEncodeTest(codec_type, codec_impl, video_info, frame_settings,
+                    num_frames, /*save_codec_output=*/false);
 
   std::vector<VideoCodecStats::Frame> frames =
       stats->Slice(VideoCodecStats::Filter{.first_frame = first_frame});
@@ -686,8 +712,9 @@ TEST_P(FramerateAdaptationTest, DISABLED_FramerateAdaptation) {
               .framerate = Frequency::MilliHertz(1000 * framerate_fps.second),
               .bitrate = DataRate::KilobitsPerSec(512)}}}}}};
 
-  std::unique_ptr<VideoCodecStats> stats = RunEncodeTest(
-      codec_type, codec_impl, video_info, frame_settings, num_frames);
+  std::unique_ptr<VideoCodecStats> stats =
+      RunEncodeTest(codec_type, codec_impl, video_info, frame_settings,
+                    num_frames, /*save_codec_output=*/false);
 
   std::vector<VideoCodecStats::Frame> frames =
       stats->Slice(VideoCodecStats::Filter{.first_frame = first_frame});
