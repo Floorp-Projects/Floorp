@@ -50,6 +50,8 @@ class DecoderAgent final {
   RefPtr<ConfigurePromise> Configure(bool aPreferSoftwareDecoder,
                                      bool aLowLatency);
   RefPtr<ShutdownPromise> Shutdown();
+  using DecodePromise = MediaDataDecoder::DecodePromise;
+  RefPtr<DecodePromise> Decode(MediaRawData* aSample);
 
   using Id = uint32_t;
   static constexpr Id None = 0;
@@ -64,6 +66,7 @@ class DecoderAgent final {
     Unconfigured,
     Configuring,
     Configured,
+    Decoding,
     ShuttingDown,
     Error,
   };
@@ -84,6 +87,10 @@ class DecoderAgent final {
 
   // Shutdown
   MozPromiseHolder<ShutdownPromise> mShutdownWhileCreationPromise;
+
+  // Decode
+  MozPromiseHolder<DecodePromise> mDecodePromise;
+  MozPromiseRequestHolder<DecodePromise> mDecodeRequest;
 };
 
 }  // namespace mozilla

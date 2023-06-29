@@ -42,6 +42,11 @@ namespace mozilla {
 #endif  // LOGE
 #define LOGE(msg, ...) LOG_INTERNAL(Error, msg, ##__VA_ARGS__)
 
+#ifdef LOGV
+#  undef LOGV
+#endif  // LOGV
+#define LOGV(msg, ...) LOG_INTERNAL(Verbose, msg, ##__VA_ARGS__)
+
 /* static */
 already_AddRefed<DecoderAgent> DecoderAgent::Create(
     UniquePtr<TrackInfo>&& aInfo) {
@@ -249,10 +254,58 @@ RefPtr<ShutdownPromise> DecoderAgent::Shutdown() {
   mInitRequest.DisconnectIfExists();
   mConfigurePromise.RejectIfExists(r, __func__);
 
+  // Cancel decode in flight if any.
+  mDecodeRequest.DisconnectIfExists();
+  mDecodePromise.RejectIfExists(r, __func__);
+
   SetState(State::Unconfigured);
 
   RefPtr<MediaDataDecoder> decoder = std::move(mDecoder);
   return decoder->Shutdown();
+}
+
+RefPtr<DecoderAgent::DecodePromise> DecoderAgent::Decode(
+    MediaRawData* aSample) {
+  MOZ_ASSERT(mOwnerThread->IsOnCurrentThread());
+  MOZ_ASSERT(aSample);
+  MOZ_ASSERT(mState == State::Configured || mState == State::Error);
+  MOZ_ASSERT(mDecodePromise.IsEmpty());
+  MOZ_ASSERT(!mDecodeRequest.Exists());
+
+  if (mState == State::Error) {
+    LOGE("DecoderAgent #%d (%p) tried to decode in error state", mId, this);
+    return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    "Cannot decode in error state"),
+        __func__);
+  }
+
+  MOZ_ASSERT(mState == State::Configured);
+  MOZ_ASSERT(mDecoder);
+  SetState(State::Decoding);
+
+  RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
+
+  mDecoder->Decode(aSample)
+      ->Then(
+          mOwnerThread, __func__,
+          [self = RefPtr{this}](MediaDataDecoder::DecodedData&& aData) {
+            self->mDecodeRequest.Complete();
+            LOGV("DecoderAgent #%d (%p) decode successfully", self->mId,
+                 self.get());
+            self->SetState(State::Configured);
+            self->mDecodePromise.Resolve(std::move(aData), __func__);
+          },
+          [self = RefPtr{this}](const MediaResult& aError) {
+            self->mDecodeRequest.Complete();
+            LOGV("DecoderAgent #%d (%p) failed to decode", self->mId,
+                 self.get());
+            self->SetState(State::Error);
+            self->mDecodePromise.Reject(aError, __func__);
+          })
+      ->Track(mDecodeRequest);
+
+  return p;
 }
 
 void DecoderAgent::SetState(State aState) {
@@ -267,7 +320,10 @@ void DecoderAgent::SetState(State aState) {
                aNewState == State::Unconfigured ||
                aNewState == State::ShuttingDown;
       case State::Configured:
-        return aNewState == State::Unconfigured;
+        return aNewState == State::Unconfigured || aNewState == State::Decoding;
+      case State::Decoding:
+        return aNewState == State::Configured || aNewState == State::Error ||
+               aNewState == State::Unconfigured;
       case State::ShuttingDown:
         return aNewState == State::Unconfigured;
       case State::Error:
@@ -287,6 +343,8 @@ void DecoderAgent::SetState(State aState) {
         return "Configuring";
       case State::Configured:
         return "Configured";
+      case State::Decoding:
+        return "Decoding";
       case State::ShuttingDown:
         return "ShuttingDown";
       case State::Error:
@@ -308,6 +366,7 @@ void DecoderAgent::SetState(State aState) {
 #undef LOG
 #undef LOGW
 #undef LOGE
+#undef LOGV
 #undef LOG_INTERNAL
 
 }  // namespace mozilla
