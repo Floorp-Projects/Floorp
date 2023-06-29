@@ -101,6 +101,23 @@ InternalDataChannelInit::InternalDataChannelInit(const DataChannelInit& base)
   }
 }
 
+bool InternalDataChannelInit::IsValid() const {
+  if (id < -1)
+    return false;
+
+  if (maxRetransmits.has_value() && maxRetransmits.value() < 0)
+    return false;
+
+  if (maxRetransmitTime.has_value() && maxRetransmitTime.value() < 0)
+    return false;
+
+  // Only one of these can be set.
+  if (maxRetransmits.has_value() && maxRetransmitTime.has_value())
+    return false;
+
+  return true;
+}
+
 bool SctpSidAllocator::AllocateSid(rtc::SSLRole role, int* sid) {
   int potential_sid = (role == rtc::SSL_CLIENT) ? 0 : 1;
   while (!IsSidAvailable(potential_sid)) {
@@ -145,11 +162,17 @@ rtc::scoped_refptr<SctpDataChannel> SctpDataChannel::Create(
     const InternalDataChannelInit& config,
     rtc::Thread* signaling_thread,
     rtc::Thread* network_thread) {
-  auto channel = rtc::make_ref_counted<SctpDataChannel>(
-      config, std::move(controller), label, signaling_thread, network_thread);
-  if (!channel->Init()) {
+  RTC_DCHECK(controller);
+
+  if (!config.IsValid()) {
+    RTC_LOG(LS_ERROR) << "Failed to initialize the SCTP data channel due to "
+                         "invalid DataChannelInit.";
     return nullptr;
   }
+
+  auto channel = rtc::make_ref_counted<SctpDataChannel>(
+      config, std::move(controller), label, signaling_thread, network_thread);
+  channel->Init();
   return channel;
 }
 
@@ -176,22 +199,7 @@ SctpDataChannel::SctpDataChannel(
       controller_(std::move(controller)) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_UNUSED(network_thread_);
-}
-
-bool SctpDataChannel::Init() {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (config_.id < -1 ||
-      (config_.maxRetransmits && *config_.maxRetransmits < 0) ||
-      (config_.maxRetransmitTime && *config_.maxRetransmitTime < 0)) {
-    RTC_LOG(LS_ERROR) << "Failed to initialize the SCTP data channel due to "
-                         "invalid DataChannelInit.";
-    return false;
-  }
-  if (config_.maxRetransmits && config_.maxRetransmitTime) {
-    RTC_LOG(LS_ERROR)
-        << "maxRetransmits and maxRetransmitTime should not be both set.";
-    return false;
-  }
+  RTC_DCHECK(config_.IsValid());
 
   switch (config_.open_handshake_role) {
     case webrtc::InternalDataChannelInit::kNone:  // pre-negotiated
@@ -204,6 +212,10 @@ bool SctpDataChannel::Init() {
       handshake_state_ = kHandshakeShouldSendAck;
       break;
   }
+}
+
+void SctpDataChannel::Init() {
+  RTC_DCHECK_RUN_ON(signaling_thread_);
 
   // Try to connect to the transport in case the transport channel already
   // exists.
@@ -214,7 +226,6 @@ bool SctpDataChannel::Init() {
   // This has to be done async because the upper layer objects (e.g.
   // Chrome glue and WebKit) are not wired up properly until after this
   // function returns.
-  RTC_DCHECK(controller_);
   if (controller_->ReadyToSendData()) {
     AddRef();
     absl::Cleanup release = [this] { Release(); };
@@ -224,8 +235,6 @@ bool SctpDataChannel::Init() {
         OnTransportReady(true);
     });
   }
-
-  return true;
 }
 
 SctpDataChannel::~SctpDataChannel() {
