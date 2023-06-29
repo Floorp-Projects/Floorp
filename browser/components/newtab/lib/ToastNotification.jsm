@@ -11,6 +11,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   RemoteL10n: "resource://activity-stream/lib/RemoteL10n.sys.mjs",
 });
 
@@ -109,7 +110,16 @@ const ToastNotification = {
       alert.launchURL = Services.urlFormatter.formatURL(content.launch_url);
     }
 
-    this.AlertsService.showAlert(alert);
+    let shownPromise = lazy.PromiseUtils.defer();
+    let obs = (subject, topic, data) => {
+      if (topic === "alertshown") {
+        shownPromise.resolve();
+      }
+    };
+
+    this.AlertsService.showAlert(alert, obs);
+
+    await shownPromise;
 
     return true;
   },
