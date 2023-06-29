@@ -399,10 +399,10 @@ void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
                                         int64_t* ntp_timestamp_ms,
                                         int64_t* remote_ntp_timestamp_ms) const {
   MutexLock lock(&rtcp_receiver_lock_);
-  *packet_count = remote_sender_packet_count_;
-  *octet_count = remote_sender_octet_count_;
-  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
-  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
+  *packet_count = remote_sender_.packets_sent;
+  *octet_count = remote_sender_.bytes_sent;
+  *ntp_timestamp_ms = remote_sender_.last_arrival_timestamp.ToMs();
+  *remote_ntp_timestamp_ms = remote_sender_.last_remote_timestamp.ToMs();
 }
 
 std::vector<ReportBlockData> RTCPReceiver::GetLatestReportBlockData() const {
