@@ -1958,9 +1958,6 @@
         margin .15s var(--ease-in),
         opacity .15s var(--ease-basic),
         visibility 0s 4s !important;
-      opacity: 0 !important;
-      visibility: hidden !important;
-      margin-inline-start: -32px !important;
     }
   
   #identity-box[pageproxystate="valid"].verifiedDomain #identity-icon,
