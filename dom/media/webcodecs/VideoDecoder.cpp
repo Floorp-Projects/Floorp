@@ -851,8 +851,7 @@ Result<Ok, nsresult> VideoDecoder::Close(const nsresult& aResult) {
   if (aResult != NS_ERROR_DOM_ABORT_ERR) {
     LOGE("VideoDecoder %p Close on error: 0x%08" PRIx32, this,
          static_cast<uint32_t>(aResult));
-    // TODO: Schedule the error callback instead of calling it directly.
-    ReportError(aResult);
+    ScheduleReportError(aResult);
   }
   return Ok();
 }
@@ -877,6 +876,38 @@ void VideoDecoder::OutputVideoFrames(nsTArray<RefPtr<MediaData>>&& aData) {
     RefPtr<VideoFrame> f = frame;
     cb->Call((VideoFrame&)(*f));
   }
+}
+
+class VideoDecoder::ErrorRunnable final : public DiscardableRunnable {
+ public:
+  ErrorRunnable(VideoDecoder* aVideoDecoder, const nsresult& aError)
+      : DiscardableRunnable("VideoDecoder ErrorRunnable"),
+        mVideoDecoder(aVideoDecoder),
+        mError(aError) {
+    MOZ_ASSERT(mVideoDecoder);
+  }
+  ~ErrorRunnable() = default;
+
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
+  // See bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+    LOGE("VideoDecoder %p report error: 0x%08" PRIx32, mVideoDecoder.get(),
+         static_cast<uint32_t>(mError));
+    RefPtr<VideoDecoder> d = std::move(mVideoDecoder);
+    d->ReportError(mError);
+    return NS_OK;
+  }
+
+ private:
+  RefPtr<VideoDecoder> mVideoDecoder;
+  const nsresult mError;
+};
+
+void VideoDecoder::ScheduleReportError(const nsresult& aResult) {
+  LOGE("VideoDecoder %p, schedule to report error: 0x%08" PRIx32, this,
+       static_cast<uint32_t>(aResult));
+  MOZ_ALWAYS_SUCCEEDS(
+      NS_DispatchToCurrentThread(MakeAndAddRef<ErrorRunnable>(this, aResult)));
 }
 
 class VideoDecoder::OutputRunnable final : public DiscardableRunnable {
@@ -940,7 +971,7 @@ void VideoDecoder::ScheduleClose(const nsresult& aResult) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
 
-  auto task = [self = RefPtr{this}, result = aResult] MOZ_CAN_RUN_SCRIPT {
+  auto task = [self = RefPtr{this}, result = aResult] {
     if (self->mState == CodecState::Closed) {
       LOGW("VideoDecoder %p has been closed. Ignore close with 0x%08" PRIx32,
            self.get(), static_cast<uint32_t>(result));
@@ -1138,7 +1169,7 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessConfigureMessage(
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr{this}, id = mAgent->mId](
                  const DecoderAgent::ConfigurePromise::ResolveOrRejectValue&
-                     aResult) MOZ_CAN_RUN_SCRIPT {
+                     aResult) {
                MOZ_ASSERT(self->mProcessingMessage);
                MOZ_ASSERT(self->mProcessingMessage->is<ConfigureMessage>());
                MOZ_ASSERT(self->mState == CodecState::Configured);
@@ -1293,54 +1324,52 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessDecodeMessage(
   }
 
   mAgent->Decode(data.get())
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}, id = mAgent->mId](
-              DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult)
-              MOZ_CAN_RUN_SCRIPT {
-                MOZ_ASSERT(self->mProcessingMessage);
-                MOZ_ASSERT(self->mProcessingMessage->is<DecodeMessage>());
-                MOZ_ASSERT(self->mState == CodecState::Configured);
-                MOZ_ASSERT(self->mAgent);
-                MOZ_ASSERT(id == self->mAgent->mId);
-                MOZ_ASSERT(self->mActiveConfig);
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr{this}, id = mAgent->mId](
+                 DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult) {
+               MOZ_ASSERT(self->mProcessingMessage);
+               MOZ_ASSERT(self->mProcessingMessage->is<DecodeMessage>());
+               MOZ_ASSERT(self->mState == CodecState::Configured);
+               MOZ_ASSERT(self->mAgent);
+               MOZ_ASSERT(id == self->mAgent->mId);
+               MOZ_ASSERT(self->mActiveConfig);
 
-                auto& msg = self->mProcessingMessage->as<DecodeMessage>();
-                LOGV("VideoDecoder %p, DecodeAgent #%d %s has been %s",
-                     self.get(), id, msg.mTitle.get(),
-                     aResult.IsResolve() ? "resolved" : "rejected");
+               auto& msg = self->mProcessingMessage->as<DecodeMessage>();
+               LOGV("VideoDecoder %p, DecodeAgent #%d %s has been %s",
+                    self.get(), id, msg.mTitle.get(),
+                    aResult.IsResolve() ? "resolved" : "rejected");
 
-                nsCString title = msg.mTitle;
+               nsCString title = msg.mTitle;
 
-                msg.mRequest.Complete();
-                self->mProcessingMessage.reset();
+               msg.mRequest.Complete();
+               self->mProcessingMessage.reset();
 
-                if (aResult.IsReject()) {
-                  // The spec asks to queue a task to run close-VideoDecoder
-                  // with an EncodingError so we log the exact error here.
-                  const MediaResult& error = aResult.RejectValue();
-                  LOGE("VideoDecoder %p, DecodeAgent #%d %s failed: %s",
-                       self.get(), id, title.get(), error.Description().get());
-                  self->ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
-                  return;  // No further process
-                }
+               if (aResult.IsReject()) {
+                 // The spec asks to queue a task to run close-VideoDecoder
+                 // with an EncodingError so we log the exact error here.
+                 const MediaResult& error = aResult.RejectValue();
+                 LOGE("VideoDecoder %p, DecodeAgent #%d %s failed: %s",
+                      self.get(), id, title.get(), error.Description().get());
+                 self->ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+                 return;  // No further process
+               }
 
-                MOZ_ASSERT(aResult.IsResolve());
-                nsTArray<RefPtr<MediaData>> data =
-                    std::move(aResult.ResolveValue());
-                if (data.IsEmpty()) {
-                  LOGV("VideoDecoder %p got no data for %s", self.get(),
-                       title.get());
-                } else {
-                  LOGV(
-                      "VideoDecoder %p, schedule %zu decoded data output for "
-                      "%s",
-                      self.get(), data.Length(), title.get());
-                  self->ScheduleOutputVideoFrames(std::move(data), title);
-                }
+               MOZ_ASSERT(aResult.IsResolve());
+               nsTArray<RefPtr<MediaData>> data =
+                   std::move(aResult.ResolveValue());
+               if (data.IsEmpty()) {
+                 LOGV("VideoDecoder %p got no data for %s", self.get(),
+                      title.get());
+               } else {
+                 LOGV(
+                     "VideoDecoder %p, schedule %zu decoded data output for "
+                     "%s",
+                     self.get(), data.Length(), title.get());
+                 self->ScheduleOutputVideoFrames(std::move(data), title);
+               }
 
-                self->ProcessControlMessageQueue();
-              })
+               self->ProcessControlMessageQueue();
+             })
       ->Track(msg.mRequest);
 
   return MessageProcessedResult::Processed;
@@ -1390,69 +1419,67 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessFlushMessage(
   }
 
   mAgent->DrainAndFlush()
-      ->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [self = RefPtr{this}, id = mAgent->mId](
-              DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult)
-              MOZ_CAN_RUN_SCRIPT {
-                MOZ_ASSERT(self->mProcessingMessage);
-                MOZ_ASSERT(self->mProcessingMessage->is<FlushMessage>());
-                MOZ_ASSERT(self->mState == CodecState::Configured);
-                MOZ_ASSERT(self->mAgent);
-                MOZ_ASSERT(id == self->mAgent->mId);
-                MOZ_ASSERT(self->mActiveConfig);
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr{this}, id = mAgent->mId](
+                 DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult) {
+               MOZ_ASSERT(self->mProcessingMessage);
+               MOZ_ASSERT(self->mProcessingMessage->is<FlushMessage>());
+               MOZ_ASSERT(self->mState == CodecState::Configured);
+               MOZ_ASSERT(self->mAgent);
+               MOZ_ASSERT(id == self->mAgent->mId);
+               MOZ_ASSERT(self->mActiveConfig);
 
-                auto& msg = self->mProcessingMessage->as<FlushMessage>();
-                LOG("VideoDecoder %p, DecodeAgent #%d %s has been %s",
-                    self.get(), id, msg.mTitle.get(),
-                    aResult.IsResolve() ? "resolved" : "rejected");
+               auto& msg = self->mProcessingMessage->as<FlushMessage>();
+               LOG("VideoDecoder %p, DecodeAgent #%d %s has been %s",
+                   self.get(), id, msg.mTitle.get(),
+                   aResult.IsResolve() ? "resolved" : "rejected");
 
-                nsCString title = msg.mTitle;
+               nsCString title = msg.mTitle;
 
-                msg.mRequest.Complete();
+               msg.mRequest.Complete();
 
-                // If flush failed, it means decoder fails to decode the data
-                // sent before, so we treat it like decode error. We reject the
-                // promise first and then queue a task to close VideoDecoder
-                // with an EncodingError.
-                if (aResult.IsReject()) {
-                  const MediaResult& error = aResult.RejectValue();
-                  LOGE("VideoDecoder %p, DecodeAgent #%d failed to flush: %s",
-                       self.get(), id, error.Description().get());
+               // If flush failed, it means decoder fails to decode the data
+               // sent before, so we treat it like decode error. We reject the
+               // promise first and then queue a task to close VideoDecoder with
+               // an EncodingError.
+               if (aResult.IsReject()) {
+                 const MediaResult& error = aResult.RejectValue();
+                 LOGE("VideoDecoder %p, DecodeAgent #%d failed to flush: %s",
+                      self.get(), id, error.Description().get());
 
-                  // Reject with an EncodingError instead of the error we got
-                  // above.
-                  self->SchedulePromiseResolveOrReject(
-                      msg.mPromise.get(),
-                      NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+                 // Reject with an EncodingError instead of the error we got
+                 // above.
+                 self->SchedulePromiseResolveOrReject(
+                     msg.mPromise.get(),
+                     NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
 
-                  self->mProcessingMessage.reset();
+                 self->mProcessingMessage.reset();
 
-                  self->ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
-                  return;  // No further process
-                }
+                 self->ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+                 return;  // No further process
+               }
 
-                // If flush succeeded, schedule to output decoded data first
-                // and then resolve the promise, then keep processing the
-                // control messages.
-                MOZ_ASSERT(aResult.IsResolve());
-                nsTArray<RefPtr<MediaData>> data =
-                    std::move(aResult.ResolveValue());
+               // If flush succeeded, schedule to output decoded data first
+               // and then resolve the promise, then keep processing the
+               // control messages.
+               MOZ_ASSERT(aResult.IsResolve());
+               nsTArray<RefPtr<MediaData>> data =
+                   std::move(aResult.ResolveValue());
 
-                if (data.IsEmpty()) {
-                  LOG("VideoDecoder %p gets no data for %s", self.get(),
-                      title.get());
-                } else {
-                  LOG("VideoDecoder %p, schedule %zu decoded data output for "
-                      "%s",
-                      self.get(), data.Length(), title.get());
-                  self->ScheduleOutputVideoFrames(std::move(data), title);
-                }
+               if (data.IsEmpty()) {
+                 LOG("VideoDecoder %p gets no data for %s", self.get(),
+                     title.get());
+               } else {
+                 LOG("VideoDecoder %p, schedule %zu decoded data output for "
+                     "%s",
+                     self.get(), data.Length(), title.get());
+                 self->ScheduleOutputVideoFrames(std::move(data), title);
+               }
 
-                self->SchedulePromiseResolveOrReject(msg.mPromise.get(), NS_OK);
-                self->mProcessingMessage.reset();
-                self->ProcessControlMessageQueue();
-              })
+               self->SchedulePromiseResolveOrReject(msg.mPromise.get(), NS_OK);
+               self->mProcessingMessage.reset();
+               self->ProcessControlMessageQueue();
+             })
       ->Track(msg.mRequest);
 
   return MessageProcessedResult::Processed;
