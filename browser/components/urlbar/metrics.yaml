@@ -265,10 +265,10 @@ urlbar:
           `BookmarkKeywords`, `calculator`, `UrlbarProviderContextualSearch`,
           `HeuristicFallback`, `HistoryUrlHeuristic`, `InputHistory`,
           `UrlbarProviderInterventions`, `Omnibox`, `OpenTabs`, `Places`,
-          `PreloadedSites`, `PrivateSearch`, `quickactions`,
-          `UrlbarProviderQuickSuggest`, `RemoteTabs`, `SearchSuggestions`,
-          `UrlbarProviderSearchTips`, `TabToSearch`, `TokenAliasEngines`,
-          `UrlbarProviderTopSites`, `UnitConversion` and `UnifiedComplete`.
+          `PrivateSearch`, `quickactions`, `UrlbarProviderQuickSuggest`,
+          `RemoteTabs`, `SearchSuggestions`, `UrlbarProviderSearchTips`,
+          `TabToSearch`, `TokenAliasEngines`, `UrlbarProviderTopSites`,
+          `UnitConversion` and `UnifiedComplete`.
           If engagement_type is `drop_go` or `paste_go`, this will be null
           because no results are shown. And also, if selected_result is
           `experimental_addon`, it means that the user selected a result

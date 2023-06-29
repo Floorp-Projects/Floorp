@@ -117,8 +117,6 @@ urlbar.impression.*
     not properly setting a specific autofill type, and it should not normally be
     used. If it appears in the data, it means we need to investigate and fix the
     code that is not properly setting a specific autofill type.
-  - ``autofill_preloaded``
-    For preloaded site type autofill.
   - ``autofill_url``
     For url type autofill.
 
@@ -302,7 +300,8 @@ urlbar.picked.*
   .. note::
     Firefox 102 deprecated ``autofill`` and added ``autofill_about``,
     ``autofill_adaptive``, ``autofill_origin``, ``autofill_other``,
-    ``autofill_preloaded``, and ``autofill_url``.
+    ``autofill_preloaded``, and ``autofill_url``. In Firefox 116,
+    ``autofill_preloaded`` was removed.
 
   Valid result types are:
 
@@ -337,11 +336,6 @@ urlbar.picked.*
     it should not normally be used. If it appears in the data, it means we need
     to investigate and fix the code that is not properly setting a specific
     autofill type.
-  - ``autofill_preloaded``
-    An autofilled `preloaded site`_. The preloaded-sites feature (as it relates
-    to this telemetry scalar) has never been enabled in Firefox, so this scalar
-    should never be recorded. It can be enabled by flipping a hidden preference,
-    however. It's included here for consistency and correctness.
   - ``autofill_url``
     An autofilled URL or partial URL from the user's history. Firefox autofills
     URLs "up to the next slash", so to trigger URL autofill, the user must first
@@ -402,7 +396,6 @@ urlbar.picked.*
 
   .. _adaptive history autofill document: https://docs.google.com/document/d/e/2PACX-1vRBLr_2dxus-aYhZRUkW9Q3B1K0uC-a0qQyE3kQDTU3pcNpDHb36-Pfo9fbETk89e7Jz4nkrqwRhi4j/pub
   .. _origin: https://html.spec.whatwg.org/multipage/origin.html#origin
-  .. _preloaded site: https://searchfox.org/mozilla-central/source/browser/components/urlbar/UrlbarProviderPreloadedSites.jsm
 
 urlbar.picked.searchmode.*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~

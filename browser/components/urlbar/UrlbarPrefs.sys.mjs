@@ -533,7 +533,6 @@ function makeResultGroups({ showSearchSuggestionsFirst }) {
           { group: lazy.UrlbarUtils.RESULT_GROUP.HEURISTIC_ENGINE_ALIAS },
           { group: lazy.UrlbarUtils.RESULT_GROUP.HEURISTIC_BOOKMARK_KEYWORD },
           { group: lazy.UrlbarUtils.RESULT_GROUP.HEURISTIC_AUTOFILL },
-          { group: lazy.UrlbarUtils.RESULT_GROUP.HEURISTIC_PRELOADED },
           { group: lazy.UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE },
           { group: lazy.UrlbarUtils.RESULT_GROUP.HEURISTIC_HISTORY_URL },
           { group: lazy.UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK },
@@ -597,10 +596,6 @@ function makeResultGroups({ showSearchSuggestionsFirst }) {
                 // only added for queries starting with "about:".
                 flex: 2,
                 group: lazy.UrlbarUtils.RESULT_GROUP.ABOUT_PAGES,
-              },
-              {
-                flex: 1,
-                group: lazy.UrlbarUtils.RESULT_GROUP.PRELOADED,
               },
             ],
           },
