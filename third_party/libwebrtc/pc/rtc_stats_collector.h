@@ -16,7 +16,6 @@
 #include <cstdint>
 #include <map>
 #include <memory>
-#include <set>
 #include <string>
 #include <vector>
 
@@ -39,6 +38,7 @@
 #include "pc/track_media_info_map.h"
 #include "pc/transport_stats.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/containers/flat_set.h"
 #include "rtc_base/event.h"
 #include "rtc_base/ref_count.h"
 #include "rtc_base/ssl_certificate.h"
@@ -323,7 +323,10 @@ class RTCStatsCollector : public rtc::RefCountInterface {
     uint32_t data_channels_closed;
     // Identifies by address channels that have been opened, which remain in the
     // set until they have been fully closed.
-    std::set<uintptr_t> opened_data_channels;
+    // NOTE: There is no reference held here or any other type of guarantee that
+    // these pointers remain valid. So they MUST NOT be followed; hence, void*
+    // is used and not the explicit type.
+    webrtc::flat_set<void*> opened_data_channels;
   };
   InternalRecord internal_record_;
 };

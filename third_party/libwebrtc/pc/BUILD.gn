@@ -1063,6 +1063,7 @@ rtc_source_set("rtc_stats_collector") {
     "../rtc_base:stringutils",
     "../rtc_base:threading",
     "../rtc_base:timeutils",
+    "../rtc_base/containers:flat_set",
     "../rtc_base/synchronization:mutex",
   ]
   absl_deps = [
