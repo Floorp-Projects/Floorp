@@ -1642,3 +1642,14 @@ powerSaver:
       setPref: "dom.timeout.background_budget_regeneration_rate"
       description: >-
         Limit how quickly the background tab timer budget regenerates.
+
+firefoxViewNext:
+  description: Next Iteration of Firefox View
+  owner: firefoxview@mozilla.com
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    enabled:
+      type: boolean
+      fallbackPref: "browser.tabs.firefox-view-next"
+      description: "Whether or not to enable the new Firefox View"

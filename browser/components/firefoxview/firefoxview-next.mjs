@@ -59,4 +59,12 @@ document
     }
   });
 
-window.addEventListener("unload", () => {});
+window.addEventListener(
+  "unload",
+  () => {
+    // Clear out the document so the disconnectedCallback will trigger
+    // properly and all of the custom elements can cleanup.
+    document.body.textContent = "";
+  },
+  { once: true }
+);
