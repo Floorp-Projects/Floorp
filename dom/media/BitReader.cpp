@@ -27,7 +27,7 @@ BitReader::~BitReader() = default;
 uint32_t BitReader::ReadBits(size_t aNum) {
   MOZ_ASSERT(aNum <= 32);
   if (mTotalBitsLeft < aNum) {
-    NS_ASSERTION(false, "Reading past end of buffer");
+    NS_WARNING("Reading past end of buffer");
     return 0;
   }
   uint32_t result = 0;
