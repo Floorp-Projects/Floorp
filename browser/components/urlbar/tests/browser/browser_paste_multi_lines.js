@@ -220,7 +220,7 @@ async function assertResult(expected) {
   Assert.equal(result.type, expected.type, "Type of autocomplete is correct");
 
   if (gURLBar.value) {
-    Assert.equal(gURLBar.getAttribute("usertyping"), "true");
+    Assert.ok(gURLBar.hasAttribute("usertyping"));
     Assert.ok(BrowserTestUtils.is_visible(gURLBar.goButton));
   } else {
     Assert.ok(!gURLBar.hasAttribute("usertyping"));
