@@ -57,6 +57,8 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   void AddSctpDataStream(int sid) override;
   void RemoveSctpDataStream(int sid) override;
   bool ReadyToSendData() const override;
+  void OnChannelStateChanged(SctpDataChannel* channel,
+                             DataChannelInterface::DataState state) override;
 
   // Implements DataChannelSink.
   void OnDataReceived(int channel_id,
@@ -99,10 +101,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   DataChannelTransportInterface* data_channel_transport() const;
   void set_data_channel_transport(DataChannelTransportInterface* transport);
 
-  sigslot::signal1<SctpDataChannel*>& SignalSctpDataChannelCreated() {
-    RTC_DCHECK_RUN_ON(signaling_thread());
-    return SignalSctpDataChannelCreated_;
-  }
   // Called when the transport for the data channels is closed or destroyed.
   void OnTransportChannelClosed(RTCError error);
 
@@ -167,9 +165,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   sigslot::signal1<int> SignalDataChannelTransportChannelClosing_s
       RTC_GUARDED_BY(signaling_thread());
   sigslot::signal1<int> SignalDataChannelTransportChannelClosed_s
-      RTC_GUARDED_BY(signaling_thread());
-
-  sigslot::signal1<SctpDataChannel*> SignalSctpDataChannelCreated_
       RTC_GUARDED_BY(signaling_thread());
 
   // Owning PeerConnection.

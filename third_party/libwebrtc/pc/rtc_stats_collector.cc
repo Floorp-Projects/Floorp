@@ -1390,8 +1390,6 @@ RTCStatsCollector::RTCStatsCollector(PeerConnectionInternal* pc,
   RTC_DCHECK(worker_thread_);
   RTC_DCHECK(network_thread_);
   RTC_DCHECK_GE(cache_lifetime_us_, 0);
-  pc_->SignalSctpDataChannelCreated().connect(
-      this, &RTCStatsCollector::OnSctpDataChannelCreated);
 }
 
 RTCStatsCollector::~RTCStatsCollector() {
@@ -2493,27 +2491,23 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
   }
 }
 
-void RTCStatsCollector::OnSctpDataChannelCreated(SctpDataChannel* channel) {
-  channel->SignalOpened.connect(this, &RTCStatsCollector::OnDataChannelOpened);
-  channel->SignalClosed.connect(this, &RTCStatsCollector::OnDataChannelClosed);
-}
-
-void RTCStatsCollector::OnDataChannelOpened(DataChannelInterface* channel) {
+void RTCStatsCollector::OnSctpDataChannelStateChanged(
+    DataChannelInterface* channel,
+    DataChannelInterface::DataState state) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  bool result = internal_record_.opened_data_channels
-                    .insert(reinterpret_cast<uintptr_t>(channel))
-                    .second;
-  ++internal_record_.data_channels_opened;
-  RTC_DCHECK(result);
-}
-
-void RTCStatsCollector::OnDataChannelClosed(DataChannelInterface* channel) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
-  // Only channels that have been fully opened (and have increased the
-  // `data_channels_opened_` counter) increase the closed counter.
-  if (internal_record_.opened_data_channels.erase(
-          reinterpret_cast<uintptr_t>(channel))) {
-    ++internal_record_.data_channels_closed;
+  if (state == DataChannelInterface::DataState::kOpen) {
+    bool result = internal_record_.opened_data_channels
+                      .insert(reinterpret_cast<uintptr_t>(channel))
+                      .second;
+    RTC_DCHECK(result);
+    ++internal_record_.data_channels_opened;
+  } else if (state == DataChannelInterface::DataState::kClosed) {
+    // Only channels that have been fully opened (and have increased the
+    // `data_channels_opened_` counter) increase the closed counter.
+    if (internal_record_.opened_data_channels.erase(
+            reinterpret_cast<uintptr_t>(channel))) {
+      ++internal_record_.data_channels_closed;
+    }
   }
 }
 

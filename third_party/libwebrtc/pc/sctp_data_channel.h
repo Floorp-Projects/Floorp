@@ -55,6 +55,9 @@ class SctpDataChannelControllerInterface {
   virtual void RemoveSctpDataStream(int sid) = 0;
   // Returns true if the transport channel is ready to send data.
   virtual bool ReadyToSendData() const = 0;
+  // Notifies the controller of state changes.
+  virtual void OnChannelStateChanged(SctpDataChannel* data_channel,
+                                     DataChannelInterface::DataState state) = 0;
 
  protected:
   virtual ~SctpDataChannelControllerInterface() {}
@@ -213,12 +216,6 @@ class SctpDataChannel : public DataChannelInterface,
   void OnTransportChannelClosed(RTCError error);
 
   DataChannelStats GetStats() const;
-
-  // Emitted when state transitions to kOpen.
-  sigslot::signal1<DataChannelInterface*> SignalOpened;
-  // Emitted when state transitions to kClosed.
-  // This signal can be used to tell when the channel's sid is free.
-  sigslot::signal1<DataChannelInterface*> SignalClosed;
 
   // Reset the allocator for internal ID values for testing, so that
   // the internal IDs generated are predictable. Test only.

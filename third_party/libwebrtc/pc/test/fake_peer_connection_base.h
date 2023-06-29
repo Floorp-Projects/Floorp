@@ -255,10 +255,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
     return {};
   }
 
-  sigslot::signal1<SctpDataChannel*>& SignalSctpDataChannelCreated() override {
-    return SignalSctpDataChannelCreated_;
-  }
-
   absl::optional<std::string> sctp_transport_name() const override {
     return absl::nullopt;
   }
@@ -371,7 +367,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
 
  protected:
   webrtc::test::ScopedKeyValueConfig field_trials_;
-  sigslot::signal1<SctpDataChannel*> SignalSctpDataChannelCreated_;
 };
 
 }  // namespace webrtc
