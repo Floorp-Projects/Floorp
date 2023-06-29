@@ -292,6 +292,8 @@ rtc_library("rtc_event_log_impl_encoder") {
     "rtc_event_log/encoder/blob_encoding.h",
     "rtc_event_log/encoder/delta_encoding.cc",
     "rtc_event_log/encoder/delta_encoding.h",
+    "rtc_event_log/encoder/optional_blob_encoding.cc",
+    "rtc_event_log/encoder/optional_blob_encoding.h",
   ]
 
   defines = []
@@ -482,6 +484,7 @@ if (rtc_enable_protobuf) {
       sources = [
         "rtc_event_log/encoder/blob_encoding_unittest.cc",
         "rtc_event_log/encoder/delta_encoding_unittest.cc",
+        "rtc_event_log/encoder/optional_blob_encoding_unittest.cc",
         "rtc_event_log/encoder/rtc_event_log_encoder_common_unittest.cc",
         "rtc_event_log/encoder/rtc_event_log_encoder_unittest.cc",
         "rtc_event_log/events/rtc_event_field_encoding_unittest.cc",
