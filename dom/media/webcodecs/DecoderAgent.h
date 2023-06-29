@@ -52,6 +52,10 @@ class DecoderAgent final {
   RefPtr<ShutdownPromise> Shutdown();
   using DecodePromise = MediaDataDecoder::DecodePromise;
   RefPtr<DecodePromise> Decode(MediaRawData* aSample);
+  // WebCodecs's flush() flushes out all the pending decoded data in the
+  // MediaDataDecoder so it is a combination of Drain and Flush. To distinguish
+  // the term from MediaDataDecoder's one, we call it DrainAndFlush() here.
+  RefPtr<DecodePromise> DrainAndFlush();
 
   using Id = uint32_t;
   static constexpr Id None = 0;
@@ -62,11 +66,18 @@ class DecoderAgent final {
   DecoderAgent(Id aId, UniquePtr<TrackInfo>&& aInfo);
   ~DecoderAgent();
 
+  // Push out all the data in the MediaDataDecoder's pipeline.
+  // TODO: MediaDataDecoder should implement this, instead of asking call site
+  // to run `Drain` multiple times.
+  RefPtr<DecodePromise> Dry();
+  void DrainUntilDry();
+
   enum class State {
     Unconfigured,
     Configuring,
     Configured,
     Decoding,
+    Flushing,
     ShuttingDown,
     Error,
   };
@@ -91,6 +102,16 @@ class DecoderAgent final {
   // Decode
   MozPromiseHolder<DecodePromise> mDecodePromise;
   MozPromiseRequestHolder<DecodePromise> mDecodeRequest;
+
+  // DrainAndFlush
+  MozPromiseHolder<DecodePromise> mDrainAndFlushPromise;
+  MediaDataDecoder::DecodedData mDrainAndFlushData;
+  MozPromiseRequestHolder<DecodePromise> mDryRequest;
+  MozPromiseHolder<DecodePromise> mDryPromise;
+  MediaDataDecoder::DecodedData mDryData;
+  MozPromiseRequestHolder<DecodePromise> mDrainRequest;
+  using FlushPromise = MediaDataDecoder::FlushPromise;
+  MozPromiseRequestHolder<FlushPromise> mFlushRequest;
 };
 
 }  // namespace mozilla
