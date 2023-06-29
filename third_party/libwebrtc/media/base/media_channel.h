@@ -884,8 +884,6 @@ class VoiceMediaSendChannelInterface : public MediaSendChannelInterface {
   // DTMF event 0-9, *, #, A-D.
   virtual bool InsertDtmf(uint32_t ssrc, int event, int duration) = 0;
   virtual bool GetStats(VoiceMediaSendInfo* stats) = 0;
-  virtual bool SenderNackEnabled() const = 0;
-  virtual bool SenderNonSenderRttEnabled() const = 0;
 };
 
 class VoiceMediaReceiveChannelInterface : public MediaReceiveChannelInterface {
@@ -910,8 +908,6 @@ class VoiceMediaReceiveChannelInterface : public MediaReceiveChannelInterface {
   virtual void SetDefaultRawAudioSink(
       std::unique_ptr<webrtc::AudioSinkInterface> sink) = 0;
   virtual bool GetStats(VoiceMediaReceiveInfo* stats, bool reset_legacy) = 0;
-  virtual void SetReceiveNackEnabled(bool enabled) = 0;
-  virtual void SetReceiveNonSenderRttEnabled(bool enabled) = 0;
 };
 
 // TODO(deadbeef): Rename to VideoSenderParameters, since they're intended to
