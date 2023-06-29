@@ -18,6 +18,7 @@
 #include "api/rtc_error.h"
 #include "api/scoped_refptr.h"
 #include "api/sequence_checker.h"
+#include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "media/base/media_channel.h"
 #include "pc/data_channel_utils.h"
@@ -172,6 +173,7 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   // The weak pointers must be dereferenced and invalidated on the signalling
   // thread only.
   rtc::WeakPtrFactory<DataChannelController> weak_factory_{this};
+  ScopedTaskSafety signaling_safety_;
 };
 
 }  // namespace webrtc
