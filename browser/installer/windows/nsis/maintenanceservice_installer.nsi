@@ -43,7 +43,7 @@ Var BrandFullName
 !define FallbackKey \
   "SOFTWARE\Ablaze\MaintenanceService\3932ecacee736d366d6436db0f55bce4"
 
-!define CompanyName "Mozilla Corporation"
+!define CompanyName "Ablaze MIRAI"
 !define BrandFullNameInternal ""
 
 ; The following includes are custom.
