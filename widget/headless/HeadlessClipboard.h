@@ -36,7 +36,8 @@ class HeadlessClipboard final : public nsBaseClipboard {
       const nsTArray<nsCString>& aFlavorList, int32_t aWhichClipboard) override;
 
  private:
-  UniquePtr<HeadlessClipboardData> mClipboard;
+  UniquePtr<HeadlessClipboardData>
+      mClipboards[nsIClipboard::kClipboardTypeCount];
 };
 
 }  // namespace widget
