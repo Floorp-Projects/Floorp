@@ -34,8 +34,8 @@ class WatchpointMap {
       const frame = this.threadActor.dbg.getNewestFrame();
 
       if (
+        this.threadActor.shouldSkipAnyBreakpoint ||
         !this.threadActor.hasMoved(frame, type) ||
-        this.threadActor.skipBreakpointsOption ||
         this.threadActor.sourcesManager.isFrameBlackBoxed(frame)
       ) {
         return;

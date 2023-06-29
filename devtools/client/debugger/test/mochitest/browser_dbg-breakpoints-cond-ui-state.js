@@ -4,6 +4,8 @@
 
 "use strict";
 
+// This test focuses on the UI interaction and doesn't assert that the breakpoints actually works
+
 add_task(async function () {
   const dbg = await initDebugger("doc-scripts.html", "simple2.js");
 

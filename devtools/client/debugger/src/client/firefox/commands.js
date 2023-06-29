@@ -315,6 +315,7 @@ async function evaluate(script, { frameId, threadId } = {}) {
   return commands.scriptCommand.execute(script, {
     frameActor: frameId,
     selectedTargetFront,
+    disableBreaks: true,
   });
 }
 

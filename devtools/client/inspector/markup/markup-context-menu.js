@@ -371,6 +371,7 @@ class MarkupContextMenu {
 
     const res = await this.toolbox.commands.scriptCommand.execute(evalString, {
       selectedNodeActor: this.selection.nodeFront.actorID,
+      disableBreaks: true,
     });
     hud.setInputValue(res.result);
     this.inspector.emit("console-var-ready");
