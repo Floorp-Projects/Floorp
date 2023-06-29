@@ -20,6 +20,7 @@ namespace gfx {
 struct Circle {
   Point origin;
   float radius;
+  bool closed = false;
 };
 
 class PathOps {
