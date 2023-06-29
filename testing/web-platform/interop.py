@@ -200,10 +200,10 @@ def score_runs(
             print("No logs to process", file=sys.stderr)
 
         include_total = category_filters is None
-        if category_filters is None:
-            category_filters = [f"-{year}-"]
 
-        category_filter = get_category_filter(category_filters)
+        category_filter = (
+            get_category_filter(category_filters) if category_filters else None
+        )
 
         scores = score.score_wptreports(
             run_logs, year=year, category_filter=category_filter
