@@ -150,7 +150,8 @@ jobs:
         sudo apt install -y msitools python3-pip
         ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
         chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
-
+        echo 'export WIN32_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/VC/Redist/MSVC/14.34.31931/x64/Microsoft.VC143.CRT"' >> mozconfig
+        
         ./mach --no-interactive bootstrap --application-choice browser
         echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
         $RUNNER_USERDIR/.cargo/bin/rustup target add x86_64-pc-windows-msvc
@@ -318,6 +319,7 @@ jobs:
         sudo apt install -y msitools python3-pip
         ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
         chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
+        echo 'export WIN32_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/VC/Redist/MSVC/14.34.31931/x64/Microsoft.VC143.CRT"' >> mozconfig
 
         ./mach --no-interactive bootstrap --application-choice browser
         echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
