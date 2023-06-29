@@ -306,7 +306,7 @@ class VideoDumpOptions {
 struct VideoConfig {
   explicit VideoConfig(const VideoResolution& resolution);
   VideoConfig(size_t width, size_t height, int32_t fps);
-  VideoConfig(std::string stream_label,
+  VideoConfig(absl::string_view stream_label,
               size_t width,
               size_t height,
               int32_t fps);
@@ -381,7 +381,7 @@ struct AudioConfig {
   };
 
   AudioConfig() = default;
-  explicit AudioConfig(std::string stream_label);
+  explicit AudioConfig(absl::string_view stream_label);
 
   // Have to be unique among all specified configs for all peers in the call.
   // Will be auto generated if omitted.
@@ -405,8 +405,8 @@ struct AudioConfig {
 };
 
 struct VideoCodecConfig {
-  explicit VideoCodecConfig(std::string name);
-  VideoCodecConfig(std::string name,
+  explicit VideoCodecConfig(absl::string_view name);
+  VideoCodecConfig(absl::string_view name,
                    std::map<std::string, std::string> required_params);
   // Next two fields are used to specify concrete video codec, that should be
   // used in the test. Video code will be negotiated in SDP during offer/

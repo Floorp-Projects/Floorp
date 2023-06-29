@@ -181,12 +181,12 @@ PeerConfigurer* PeerConfigurer::SetUseNetworkThreadAsWorkerThread() {
   return this;
 }
 
-PeerConfigurer* PeerConfigurer::SetRtcEventLogPath(std::string path) {
-  params_->rtc_event_log_path = std::move(path);
+PeerConfigurer* PeerConfigurer::SetRtcEventLogPath(absl::string_view path) {
+  params_->rtc_event_log_path = std::string(path);
   return this;
 }
-PeerConfigurer* PeerConfigurer::SetAecDumpPath(std::string path) {
-  params_->aec_dump_path = std::move(path);
+PeerConfigurer* PeerConfigurer::SetAecDumpPath(absl::string_view path) {
+  params_->aec_dump_path = std::string(path);
   return this;
 }
 PeerConfigurer* PeerConfigurer::SetRTCConfiguration(

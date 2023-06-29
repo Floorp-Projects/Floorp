@@ -128,7 +128,7 @@ class SvcTest : public testing::TestWithParam<
           {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile0)}});
     }
 
-    return VideoCodecConfig(std::string(codec));
+    return VideoCodecConfig(codec);
   }
 
   const SvcTestParameters& SvcTestParameters() const {
