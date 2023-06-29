@@ -1173,6 +1173,7 @@ TEST_F(RTCStatsIntegrationTest, GetStatsFromCallee) {
     auto inbound_stats =
         report->GetStatsOfType<RTCRemoteInboundRtpStreamStats>();
     return !inbound_stats.empty() &&
+           inbound_stats.front()->round_trip_time.is_defined() &&
            inbound_stats.front()->round_trip_time_measurements.is_defined();
   };
   EXPECT_TRUE_WAIT(GetStatsReportAndReturnTrueIfRttIsDefined(), kMaxWaitMs);
