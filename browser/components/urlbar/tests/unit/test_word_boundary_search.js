@@ -17,7 +17,6 @@ var katakana = ["\u30a8", "\u30c9"]; // E, Do
 var ideograph = ["\u4efb", "\u5929", "\u5802"]; // Nin Ten Do
 
 add_task(async function test_escape() {
-  Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.quickactions", false);
@@ -25,7 +24,6 @@ add_task(async function test_escape() {
     Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
     Services.prefs.clearUserPref("browser.urlbar.suggest.quickactions");
     Services.prefs.clearUserPref("browser.urlbar.autoFill");
-    Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
   });
 
   await PlacesTestUtils.addVisits([

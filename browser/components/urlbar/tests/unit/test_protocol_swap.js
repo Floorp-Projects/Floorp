@@ -35,7 +35,6 @@ add_task(async function test_swap_protocol() {
 
   // Disable autoFill to avoid handling the first result.
   Services.prefs.setBoolPref("browser.urlbar.autoFill", false);
-  Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", false);
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
   registerCleanupFunction(() => {
     Services.prefs.clearUserPref("browser.urlbar.suggest.searches");

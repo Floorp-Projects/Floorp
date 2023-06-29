@@ -267,11 +267,3 @@ browser.urlbar.restyleSearches (boolean, default: false)
 browser.urlbar.update2.emptySearchBehavior (integer, default: 0)
   Controls the empty search behavior in Search Mode: 0. Show nothing, 1. Show
   search history, 2. Show search and browsing history
-
-Deprecated
-----------
-These preferences should not be used and may be removed at any time.
-
-browser.urlbar.autoFill.searchEngines (boolean, default: false)
-  If true, the domains of the user's installed search engines will be
-  autofilled even if the user hasn't actually visited them.

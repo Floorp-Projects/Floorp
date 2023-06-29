@@ -49,7 +49,6 @@ function setSuggestionsFn(fn) {
 
 async function cleanup() {
   Services.prefs.clearUserPref("browser.urlbar.autoFill");
-  Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
   Services.prefs.clearUserPref(SUGGEST_PREF);
   Services.prefs.clearUserPref(SUGGEST_ENABLED_PREF);
   await PlacesUtils.bookmarks.eraseEverything();
