@@ -215,6 +215,12 @@ bool WgcCaptureSession::GetFrame(std::unique_ptr<DesktopFrame>* output_frame) {
   // causing us to wait two frames when we mostly seem to only need to wait for
   // one. This approach should ensure that GetFrame() always delivers a valid
   // frame with a max latency of 200ms and often after sleeping only once.
+  // We also build up an `empty_frame_credit_count_` for each sleep call. As
+  // long as this credit is above zero, error logs for "empty frame" are
+  // avoided. The counter is reduced by one for each successful call to
+  // ProcessFrame() until the number of credits is zero. This counter is only
+  // expected to be above zero during a short startup phase. The scheme is
+  // heuristic and based on manual testing.
   // (*) On a modern system, the FPS / monitor refresh rate is usually larger
   //     than or equal to 60.
   const int max_sleep_count = 10;
@@ -223,6 +229,7 @@ bool WgcCaptureSession::GetFrame(std::unique_ptr<DesktopFrame>* output_frame) {
   int sleep_count = 0;
   while (!queue_.current_frame() && sleep_count < max_sleep_count) {
     sleep_count++;
+    empty_frame_credit_count_ = sleep_count + 1;
     webrtc::SleepMs(sleep_time_ms);
     ProcessFrame();
   }
@@ -299,8 +306,12 @@ HRESULT WgcCaptureSession::ProcessFrame() {
   }
 
   if (!capture_frame) {
-    RTC_DLOG(LS_WARNING) << "Frame pool was empty.";
-    RecordGetFrameResult(GetFrameResult::kFrameDropped);
+    // Avoid logging errors while we still have credits (or allowance) to
+    // consider this condition as expected and not as an error.
+    if (empty_frame_credit_count_ == 0) {
+      RTC_DLOG(LS_WARNING) << "Frame pool was empty => kFrameDropped.";
+      RecordGetFrameResult(GetFrameResult::kFrameDropped);
+    }
     return E_FAIL;
   }
 
@@ -422,6 +433,8 @@ HRESULT WgcCaptureSession::ProcessFrame() {
 
   d3d_context->Unmap(mapped_texture_.Get(), 0);
 
+  if (empty_frame_credit_count_ > 0)
+    --empty_frame_credit_count_;
   size_ = new_size;
   RecordGetFrameResult(GetFrameResult::kSuccess);
   return hr;

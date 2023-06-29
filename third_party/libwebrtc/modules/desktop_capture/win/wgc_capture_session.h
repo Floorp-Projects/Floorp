@@ -130,6 +130,16 @@ class WgcCaptureSession final {
   bool item_closed_ = false;
   bool is_capture_started_ = false;
 
+  // Counts number of "empty frame credits" which have built up in GetFrame()
+  // when a sequence of calls to ProcessFrame() was called with 20ms sleep calls
+  // between each. The counter is reduced by one (to a minimum of zero) when
+  // ProcessFrame() succeeds. As long as the counter is larger than zero, calls
+  // to RecordGetFrameResult(kTryGetNextFrameFailed) are disabled.
+  // The reason for adding this scheme is to prevent logs of
+  // kTryGetNextFrameFailed in the startup phase when some empty frames is
+  // expected and should not be seen as an error.
+  int empty_frame_credit_count_ = 0;
+
   SequenceChecker sequence_checker_;
 };
 
