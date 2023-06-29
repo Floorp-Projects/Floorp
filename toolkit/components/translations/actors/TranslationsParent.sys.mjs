@@ -105,6 +105,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.translations.simulateUnsupportedEngine"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "useFastTextPref",
+  "browser.translations.languageIdentification.useFastText"
+);
+
 // At this time the signatures of the files are not being checked when they are being
 // loaded from disk. This signature check involves hitting the network, and translations
 // are explicitly an offline-capable feature. See Bug 1827265 for re-enabling this
@@ -1752,7 +1758,9 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   async queryIdentifyLanguage() {
-    return this.sendQuery("Translations:IdentifyLanguage").catch(error => {
+    return this.sendQuery("Translations:IdentifyLanguage", {
+      useFastText: lazy.useFastTextPref,
+    }).catch(error => {
       if (this.#isDestroyed) {
         // The actor was destroyed while this message was still being resolved.
         return null;

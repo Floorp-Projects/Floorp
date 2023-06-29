@@ -6,8 +6,12 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   TranslationsEngine:
     "chrome://global/content/translations/translations-engine.sys.mjs",
+  // The fastText languageIdEngine
   LanguageIdEngine:
     "chrome://global/content/translations/language-id-engine.sys.mjs",
+  // The CLD2 language detector
+  LanguageDetector:
+    "resource://gre/modules/translation/LanguageDetector.sys.mjs",
 });
 
 /**
@@ -81,11 +85,25 @@ export class TranslationsChild extends JSWindowActorChild {
         return this.document.documentElement.lang;
       case "Translations:IdentifyLanguage": {
         try {
-          const engine = await this.getOrCreateLanguageIdEngine();
-          if (!engine) {
+          // Only the fastText engine is set up with mocks for testing, so if we are
+          // in automation but not explicitly directed to use fastText, just return null.
+          if (Cu.isInAutomation && !data.useFastText) {
             return null;
           }
-          return engine.identifyLanguageFromDocument(this.document);
+
+          // Try to use the fastText engine if directed to do so.
+          if (data.useFastText) {
+            const engine = await this.getOrCreateLanguageIdEngine();
+            if (!engine) {
+              return null;
+            }
+            return engine.identifyLanguageFromDocument(this.document);
+          }
+
+          // Use the CLD2 language detector otherwise.
+          return lazy.LanguageDetector.detectLanguageFromDocument(
+            this.document
+          );
         } catch (error) {
           return null;
         }
