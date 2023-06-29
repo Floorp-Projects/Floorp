@@ -210,11 +210,6 @@ class HardwareVideoEncoder implements VideoEncoder {
     this.callback = callback;
     automaticResizeOn = settings.automaticResizeOn;
 
-    if (settings.width % REQUIRED_RESOLUTION_ALIGNMENT != 0
-        || settings.height % REQUIRED_RESOLUTION_ALIGNMENT != 0) {
-      Logging.e(TAG, "MediaCodec is only tested with resolutions that are 16x16 aligned.");
-      return VideoCodecStatus.ERR_SIZE;
-    }
     this.width = settings.width;
     this.height = settings.height;
     useSurfaceMode = canUseSurface();
