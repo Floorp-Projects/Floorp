@@ -340,15 +340,10 @@ const TEST_DATA = [
       },
     ],
   },
-  // Test that rules aren't parsed, just declarations. So { and } found after a
-  // property name should be part of the property name, same for values.
+  // Test that rules aren't parsed, just declarations.
   {
     input: "body {color:red;} p {color: blue;}",
-    expected: [
-      { name: "body {color", value: "red", priority: "", offsets: [0, 16] },
-      { name: "} p {color", value: "blue", priority: "", offsets: [16, 33] },
-      { name: "}", value: "", priority: "", offsets: [33, 34] },
-    ],
+    expected: [],
   },
   // Test unbalanced : and ;
   {
@@ -860,6 +855,625 @@ const TEST_DATA = [
           "scale(1) rotate(-270deg); } } )",
         priority: "",
         offsets: [0, 1036],
+      },
+    ],
+  },
+
+  /***** Testing nested rules *****/
+
+  // Testing basic nesting with tagname selector
+  {
+    input: `
+      color: red;
+      div {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with tagname + pseudo selector
+  {
+    input: `
+      color: red;
+      div:hover {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with id selector
+  {
+    input: `
+      color: red;
+      #myEl {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with class selector
+  {
+    input: `
+      color: red;
+      .myEl {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with & + ident selector
+  {
+    input: `
+      color: red;
+      & div {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with direct child selector
+  {
+    input: `
+      color: red;
+      > div {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with & and :hover pseudo-class selector
+  {
+    input: `
+      color: red;
+      &:hover {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with :not pseudo-class selector and non-leading &
+  {
+    input: `
+      color: red;
+      :not(&) {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with attribute selector
+  {
+    input: `
+      color: red;
+      [class] {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with & compound selector
+  {
+    input: `
+      color: red;
+      &div {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with relative + selector
+  {
+    input: `
+      color: red;
+      + div {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with relative ~ selector
+  {
+    input: `
+      color: red;
+      ~ div {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting with relative * selector
+  {
+    input: `
+      color: red;
+      * div {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing basic nesting after a property with !important
+  {
+    input: `
+      color: red !important;
+      & div {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "important",
+        offsets: [7, 29],
+        declarationText: "color: red !important;",
+      },
+    ],
+  },
+
+  // Testing basic nesting after a comment
+  {
+    input: `
+      color: red;
+      /* nested rules */
+      & div {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing at-rules (with condition) nesting
+  {
+    input: `
+      color: red;
+      @media (orientation: landscape) {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing at-rules (without condition) nesting
+  {
+    input: `
+      color: red;
+      @media screen {
+        background: blue;
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing multi-level nesting
+  {
+    input: `
+      color: red;
+      &div {
+        &.active {
+          border: 1px;
+        }
+        padding: 10px;
+      }
+      background: gold;
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+      {
+        name: "background",
+        value: "gold",
+        priority: "",
+        offsets: [121, 138],
+        declarationText: "background: gold;",
+      },
+    ],
+  },
+
+  // Testing multi-level nesting with at-rules
+  {
+    input: `
+      color: red;
+      @layer {
+        background: yellow;
+        @media screen {
+          & {
+            border-color: blue;
+          }
+        }
+      }
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+    ],
+  },
+
+  // Testing sibling nested rules
+  {
+    input: `
+      color: red;
+      .active {
+        border: 1px;
+      }
+      &div {
+        padding: 10px;
+      }
+      border-color: cyan
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+      {
+        name: "border-color",
+        value: "cyan",
+        priority: "",
+        offsets: [114, 132],
+        declarationText: "border-color: cyan",
+      },
+    ],
+  },
+
+  // Testing nesting interwined between property declarations
+  {
+    input: `
+      color: red;
+      .active {
+        border: 1px;
+      }
+      background: gold;
+      &div {
+        padding: 10px;
+      }
+      border-color: cyan
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+      {
+        name: "background",
+        value: "gold",
+        priority: "",
+        offsets: [70, 87],
+        declarationText: "background: gold;",
+      },
+      {
+        name: "border-color",
+        value: "cyan",
+        priority: "",
+        offsets: [138, 156],
+        declarationText: "border-color: cyan",
+      },
+    ],
+  },
+
+  // Testing that "}" in content property does not impact the nested state
+  {
+    input: `
+      color: red;
+      &div {
+        content: "}"
+        color: blue;
+      }
+      background: gold;
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+      {
+        name: "background",
+        value: "gold",
+        priority: "",
+        offsets: [88, 105],
+        declarationText: "background: gold;",
+      },
+    ],
+  },
+
+  // Testing that "}" in attribute selector does not impact the nested state
+  {
+    input: `
+      color: red;
+      + .foo {
+        [class="}"] {
+          padding: 10px;
+        }
+      }
+      background: gold;
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+      {
+        name: "background",
+        value: "gold",
+        priority: "",
+        offsets: [105, 122],
+        declarationText: "background: gold;",
+      },
+    ],
+  },
+
+  // Testing that in function does not impact the nested state
+  {
+    input: `
+      color: red;
+      + .foo {
+        background: url("img.png?x=}")
+      }
+      background: gold;
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+      {
+        name: "background",
+        value: "gold",
+        priority: "",
+        offsets: [87, 104],
+        declarationText: "background: gold;",
+      },
+    ],
+  },
+
+  // Testing that "}" in comment does not impact the nested state
+  {
+    input: `
+      color: red;
+      + .foo {
+        /* Check } */
+        padding: 10px;
+      }
+      background: gold;
+    `,
+    expected: [
+      {
+        name: "color",
+        value: "red",
+        priority: "",
+        offsets: [7, 18],
+        declarationText: "color: red;",
+      },
+      {
+        name: "background",
+        value: "gold",
+        priority: "",
+        offsets: [93, 110],
+        declarationText: "background: gold;",
+      },
+    ],
+  },
+
+  // Testing that nested rules in comments aren't reported
+  {
+    parseComments: true,
+    input: "width: 5; /* div { color: cyan; } */ background: red;",
+    expected: [
+      {
+        name: "width",
+        value: "5",
+        priority: "",
+        offsets: [0, 9],
+        declarationText: "width: 5;",
+      },
+      {
+        name: "background",
+        value: "red",
+        priority: "",
+        offsets: [37, 53],
+        declarationText: "background: red;",
+      },
+    ],
+  },
+
+  // Testing that declarations in comments are still handled while nested rule in same comment is ignored
+  {
+    parseComments: true,
+    input:
+      "width: 5; /* padding: 12px; div { color: cyan; } margin: 1em; */ background: red;",
+    expected: [
+      {
+        name: "width",
+        value: "5",
+        priority: "",
+        offsets: [0, 9],
+        declarationText: "width: 5;",
+      },
+      {
+        name: "padding",
+        value: "12px",
+        priority: "",
+        offsets: [13, 27],
+        declarationText: "padding: 12px;",
+      },
+      {
+        name: "margin",
+        value: "1em",
+        priority: "",
+        offsets: [49, 61],
+        declarationText: "margin: 1em;",
+      },
+      {
+        name: "background",
+        value: "red",
+        priority: "",
+        offsets: [65, 81],
+        declarationText: "background: red;",
       },
     ],
   },

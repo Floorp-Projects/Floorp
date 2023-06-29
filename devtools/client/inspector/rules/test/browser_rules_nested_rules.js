@@ -56,48 +56,56 @@ add_task(async function () {
   const { inspector, view } = await openRuleView();
 
   await selectNode("body", inspector);
-  checkRuleSelectorAndAncestorData(view, [
-    { selector: "element", ancestorRulesData: null },
+  checkRuleViewContent(view, [
+    { selector: "element", ancestorRulesData: null, declarations: [] },
     {
       selector: `&`,
       ancestorRulesData: [`body`, `@media screen`],
+      declarations: [{ name: "container-name", value: "main" }],
     },
     {
       selector: `body`,
       ancestorRulesData: null,
+      declarations: [
+        { name: "background", value: "tomato" },
+        { name: "container-type", value: "inline-size" },
+      ],
     },
   ]);
 
   await selectNode("h1", inspector);
-  checkRuleSelectorAndAncestorData(view, [
-    { selector: "element", ancestorRulesData: null },
+  checkRuleViewContent(view, [
+    { selector: "element", ancestorRulesData: null, declarations: [] },
     {
       selector: `& h1`,
       ancestorRulesData: [`body`, `@media screen`],
+      declarations: [{ name: "border-color", value: "gold" }],
     },
   ]);
 
   await selectNode("h1 > .foo", inspector);
-  checkRuleSelectorAndAncestorData(view, [
-    { selector: "element", ancestorRulesData: null },
+  checkRuleViewContent(view, [
+    { selector: "element", ancestorRulesData: null, declarations: [] },
     {
       selector: `.foo`,
       ancestorRulesData: [`body`, `@media screen`, `& h1`],
+      declarations: [{ name: "color", value: "white" }],
     },
   ]);
 
   await selectNode("h1 > #bar", inspector);
-  checkRuleSelectorAndAncestorData(view, [
-    { selector: "element", ancestorRulesData: null },
+  checkRuleViewContent(view, [
+    { selector: "element", ancestorRulesData: null, declarations: [] },
     {
       selector: `#bar`,
       ancestorRulesData: [`body`, `@media screen`, `& h1`],
+      declarations: [{ name: "text-decoration", value: "underline" }],
     },
   ]);
 
   await selectNode("nav", inspector);
-  checkRuleSelectorAndAncestorData(view, [
-    { selector: "element", ancestorRulesData: null },
+  checkRuleViewContent(view, [
+    { selector: "element", ancestorRulesData: null, declarations: [] },
     {
       selector: `& + nav`,
       ancestorRulesData: [
@@ -106,12 +114,13 @@ add_task(async function () {
         `& h1`,
         `@container main (width > 10px)`,
       ],
+      declarations: [{ name: "border", value: "1px solid" }],
     },
   ]);
 
   await selectNode("nav a", inspector);
-  checkRuleSelectorAndAncestorData(view, [
-    { selector: "element", ancestorRulesData: null },
+  checkRuleViewContent(view, [
+    { selector: "element", ancestorRulesData: null, declarations: [] },
     {
       selector: `[href]`,
       ancestorRulesData: [
@@ -121,11 +130,12 @@ add_task(async function () {
         `@container main (width > 10px)`,
         `& + nav`,
       ],
+      declarations: [{ name: "background-color", value: "lightgreen" }],
     },
   ]);
 });
 
-function checkRuleSelectorAndAncestorData(view, expectedRules) {
+function checkRuleViewContent(view, expectedRules) {
   const rulesInView = Array.from(view.element.children);
   is(
     rulesInView.length,
@@ -137,7 +147,8 @@ function checkRuleSelectorAndAncestorData(view, expectedRules) {
     const expectedRule = expectedRules[i];
     info(`Checking rule #${i}: ${expectedRule.selector}`);
 
-    const selector = rulesInView[i].querySelector(
+    const ruleInView = rulesInView[i];
+    const selector = ruleInView.querySelector(
       ".ruleview-selectorcontainer"
     ).innerText;
     is(selector, expectedRule.selector, `Expected selector for ${selector}`);
@@ -153,6 +164,31 @@ function checkRuleSelectorAndAncestorData(view, expectedRules) {
         getRuleViewAncestorRulesDataTextByIndex(view, i),
         expectedRule.ancestorRulesData.join("\n"),
         `Expected ancestor rules data displayed for ${selector}`
+      );
+    }
+
+    const declarations = ruleInView.querySelectorAll(".ruleview-property");
+    is(
+      declarations.length,
+      expectedRule.declarations.length,
+      "Got the expected number of declarations"
+    );
+    for (let j = 0; j < declarations.length; j++) {
+      const expectedDeclaration = expectedRule.declarations[j];
+      const [propName, propValue] = Array.from(
+        declarations[j].querySelectorAll(
+          ".ruleview-propertyname, .ruleview-propertyvalue"
+        )
+      );
+      is(
+        propName.innerText,
+        expectedDeclaration?.name,
+        "Got expected property name"
+      );
+      is(
+        propValue.innerText,
+        expectedDeclaration?.value,
+        "Got expected property value"
       );
     }
   }
