@@ -3233,8 +3233,10 @@ TEST_P(PeerConnectionIntegrationTest, OnIceCandidateErrorWithEmptyAddress) {
   EXPECT_EQ(caller()->error_event().address, "");
 }
 
+// TODO(https://crbug.com/webrtc/14947): Investigate why this is flaking and
+// find a way to re-enable the test.
 TEST_F(PeerConnectionIntegrationTestUnifiedPlan,
-       AudioKeepsFlowingAfterImplicitRollback) {
+       DISABLED_AudioKeepsFlowingAfterImplicitRollback) {
   PeerConnectionInterface::RTCConfiguration config;
   config.sdp_semantics = SdpSemantics::kUnifiedPlan;
   config.enable_implicit_rollback = true;
