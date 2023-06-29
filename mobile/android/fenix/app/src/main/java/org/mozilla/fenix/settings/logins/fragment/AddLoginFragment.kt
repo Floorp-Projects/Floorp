@@ -306,8 +306,8 @@ class AddLoginFragment : Fragment(R.layout.fragment_add_login), MenuProvider {
                 layout.errorIconDrawable = null
             }
         }
-        clearButton.isVisible = validUsername
-        clearButton.isEnabled = validUsername
+        clearButton.isVisible = currentValue.isNotEmpty()
+        clearButton.isEnabled = currentValue.isNotEmpty()
         setSaveButtonState()
     }
 
