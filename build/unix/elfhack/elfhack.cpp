@@ -1260,8 +1260,8 @@ int do_relocation_section(Elf* elf, unsigned int rel_type,
     // eh_frame_hdr contains relative offsets to eh_frame. Well, they could be
     // relocated too, but it's not worth the effort for the few number of bytes
     // this would save.
-    unsigned int distance = second->getAddr() - first->getAddr();
-    unsigned int origAddr = eh_frame->getAddr();
+    Elf64_Off distance = second->getAddr() - first->getAddr();
+    Elf64_Addr origAddr = eh_frame->getAddr();
     ElfSection* previous = first->getPrevious();
     first->getShdr().sh_addr = (previous->getAddr() + previous->getSize() +
                                 first->getAddrAlign() - 1) &
