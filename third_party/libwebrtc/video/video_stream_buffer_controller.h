@@ -18,7 +18,7 @@
 #include "api/video/encoded_frame.h"
 #include "api/video/frame_buffer.h"
 #include "modules/video_coding/include/video_coding_defines.h"
-#include "modules/video_coding/timing/inter_frame_delay.h"
+#include "modules/video_coding/timing/inter_frame_delay_variation_calculator.h"
 #include "modules/video_coding/timing/jitter_estimator.h"
 #include "modules/video_coding/timing/timing.h"
 #include "rtc_base/experiments/rtt_mult_experiment.h"
@@ -86,7 +86,8 @@ class VideoStreamBufferController {
       RTC_GUARDED_BY(&worker_sequence_checker_);
 
   JitterEstimator jitter_estimator_ RTC_GUARDED_BY(&worker_sequence_checker_);
-  InterFrameDelay inter_frame_delay_ RTC_GUARDED_BY(&worker_sequence_checker_);
+  InterFrameDelayVariationCalculator ifdv_calculator_
+      RTC_GUARDED_BY(&worker_sequence_checker_);
   bool keyframe_required_ RTC_GUARDED_BY(&worker_sequence_checker_) = false;
   std::unique_ptr<FrameBuffer> buffer_
       RTC_GUARDED_BY(&worker_sequence_checker_);
