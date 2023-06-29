@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
-#define MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
+#ifndef MODULES_VIDEO_CODING_DEPRECATED_JITTER_BUFFER_COMMON_H_
+#define MODULES_VIDEO_CODING_DEPRECATED_JITTER_BUFFER_COMMON_H_
 
 namespace webrtc {
 
@@ -56,4 +56,4 @@ enum VCMFrameBufferStateEnum {
 enum { kH264StartCodeLengthBytes = 4 };
 }  // namespace webrtc
 
-#endif  // MODULES_VIDEO_CODING_JITTER_BUFFER_COMMON_H_
+#endif  // MODULES_VIDEO_CODING_DEPRECATED_JITTER_BUFFER_COMMON_H_

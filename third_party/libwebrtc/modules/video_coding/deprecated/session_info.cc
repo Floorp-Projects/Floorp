@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/session_info.h"
+#include "modules/video_coding/deprecated/session_info.h"
 
 #include <string.h>
 
@@ -19,8 +19,8 @@
 #include "modules/include/module_common_types_public.h"
 #include "modules/video_coding/codecs/interface/common_constants.h"
 #include "modules/video_coding/codecs/vp8/include/vp8_globals.h"
+#include "modules/video_coding/deprecated/jitter_buffer_common.h"
 #include "modules/video_coding/deprecated/packet.h"
-#include "modules/video_coding/jitter_buffer_common.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {
