@@ -437,26 +437,27 @@ RemoteAccessible* RemoteAccessibleBase<Derived>::DoFuzzyHittesting() {
   // If we found a clipped container, descend it in search of
   // meaningful text leaves. Ignore non-text-leaf/text-container
   // siblings.
-  RemoteAccessible* maybeTextLeaf = clippedContainer;
-  while (maybeTextLeaf) {
+  RemoteAccessible* container = clippedContainer;
+  while (container) {
+    RemoteAccessible* textLeaf = nullptr;
     bool continueSearch = false;
-    childCount = maybeTextLeaf->ChildCount();
+    childCount = container->ChildCount();
     for (uint32_t i = 0; i < childCount; i++) {
-      RemoteAccessible* child = maybeTextLeaf->RemoteChildAt(i);
+      RemoteAccessible* child = container->RemoteChildAt(i);
       if (child->Role() == roles::TEXT_CONTAINER) {
-        maybeTextLeaf = child;
+        container = child;
         continueSearch = true;
         break;
       }
       if (child->IsTextLeaf()) {
-        maybeTextLeaf = child;
+        textLeaf = child;
         // Don't break here -- it's possible a text container
         // exists as another sibling, and we should descend as
         // deep as possible.
       }
     }
-    if (maybeTextLeaf && maybeTextLeaf->IsTextLeaf()) {
-      return maybeTextLeaf;
+    if (textLeaf) {
+      return textLeaf;
     }
     if (!continueSearch) {
       // We didn't find anything useful in this set of siblings.
