@@ -24,6 +24,8 @@ class EncodedVideoChunk;
 class EventHandlerNonNull;
 class GlobalObject;
 class Promise;
+class VideoFrameOutputCallback;
+class WebCodecsErrorCallback;
 enum class CodecState : uint8_t;
 struct VideoDecoderConfig;
 struct VideoDecoderInit;
@@ -39,17 +41,19 @@ class VideoDecoder final : public DOMEventTargetHelper {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(VideoDecoder, DOMEventTargetHelper)
 
  public:
-  VideoDecoder() = default;
+  VideoDecoder(nsIGlobalObject* aParent,
+               RefPtr<WebCodecsErrorCallback>&& aErrorCallback,
+               RefPtr<VideoFrameOutputCallback>&& aOutputCallback);
 
  protected:
-  ~VideoDecoder() = default;
+  ~VideoDecoder();
 
  public:
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<VideoDecoder> Constructor(
-      const GlobalObject& global, const VideoDecoderInit& init,
+      const GlobalObject& aGlobal, const VideoDecoderInit& aInit,
       ErrorResult& aRv);
 
   CodecState State() const;
@@ -73,6 +77,14 @@ class VideoDecoder final : public DOMEventTargetHelper {
   static already_AddRefed<Promise> IsConfigSupported(
       const GlobalObject& aGlobal, const VideoDecoderConfig& aConfig,
       ErrorResult& aRv);
+
+ private:
+  // VideoDecoder can run on either main thread or worker thread.
+  void AssertIsOnOwningThread() const { NS_ASSERT_OWNINGTHREAD(VideoDecoder); }
+
+  // Constant in practice, only set in ::Constructor.
+  RefPtr<WebCodecsErrorCallback> mErrorCallback;
+  RefPtr<VideoFrameOutputCallback> mOutputCallback;
 };
 
 }  // namespace mozilla::dom
