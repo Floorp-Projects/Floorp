@@ -54,6 +54,10 @@ HeadlessClipboard::GetNativeClipboardData(nsITransferable* aTransferable,
   MOZ_DIAGNOSTIC_ASSERT(
       nsIClipboard::IsClipboardTypeSupported(aWhichClipboard));
 
+  if (!mClipboard->HasText()) {
+    return NS_OK;
+  }
+
   nsresult rv;
   nsCOMPtr<nsISupportsString> dataWrapper =
       do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);

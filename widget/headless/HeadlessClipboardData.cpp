@@ -11,14 +11,14 @@ void HeadlessClipboardData::SetText(const nsAString& aText) {
   mChangeCount++;
 }
 
-bool HeadlessClipboardData::HasText() const { return !mPlain.IsEmpty(); }
+bool HeadlessClipboardData::HasText() const { return !mPlain.IsVoid(); }
 
 const nsAString& HeadlessClipboardData::GetText() const { return mPlain; }
 
 int32_t HeadlessClipboardData::GetChangeCount() const { return mChangeCount; }
 
 void HeadlessClipboardData::Clear() {
-  mPlain.Truncate(0);
+  mPlain.SetIsVoid(true);
   mChangeCount++;
 }
 
