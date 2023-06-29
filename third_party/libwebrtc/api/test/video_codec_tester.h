@@ -12,6 +12,7 @@
 #define API_TEST_VIDEO_CODEC_TESTER_H_
 
 #include <memory>
+#include <string>
 
 #include "absl/functional/any_invocable.h"
 #include "absl/types/optional.h"
@@ -46,10 +47,12 @@ class VideoCodecTester {
 
   struct DecoderSettings {
     PacingSettings pacing;
+    absl::optional<std::string> decoded_y4m_base_path;
   };
 
   struct EncoderSettings {
     PacingSettings pacing;
+    absl::optional<std::string> encoded_ivf_base_path;
   };
 
   virtual ~VideoCodecTester() = default;

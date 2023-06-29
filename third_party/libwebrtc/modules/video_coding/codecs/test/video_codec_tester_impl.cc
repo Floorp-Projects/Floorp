@@ -12,6 +12,7 @@
 
 #include <map>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "api/task_queue/default_task_queue_factory.h"
@@ -20,11 +21,14 @@
 #include "api/units/timestamp.h"
 #include "api/video/encoded_image.h"
 #include "api/video/i420_buffer.h"
+#include "api/video/video_codec_type.h"
 #include "api/video/video_frame.h"
 #include "modules/video_coding/codecs/test/video_codec_analyzer.h"
+#include "modules/video_coding/utility/ivf_file_writer.h"
 #include "rtc_base/event.h"
 #include "rtc_base/time_utils.h"
 #include "system_wrappers/include/sleep.h"
+#include "test/testsupport/video_frame_writer.h"
 
 namespace webrtc {
 namespace test {
@@ -150,6 +154,39 @@ class LimitedTaskQueue {
   rtc::Event task_executed_;
 };
 
+class TesterY4mWriter {
+ public:
+  explicit TesterY4mWriter(absl::string_view base_path)
+      : base_path_(base_path) {}
+
+  ~TesterY4mWriter() {
+    task_queue_.SendTask([] {});
+  }
+
+  void Write(const VideoFrame& frame, int spatial_idx) {
+    task_queue_.PostTask([this, frame, spatial_idx] {
+      if (y4m_writers_.find(spatial_idx) == y4m_writers_.end()) {
+        std::string file_path =
+            base_path_ + "_s" + std::to_string(spatial_idx) + ".y4m";
+
+        Y4mVideoFrameWriterImpl* y4m_writer = new Y4mVideoFrameWriterImpl(
+            file_path, frame.width(), frame.height(), /*fps=*/30);
+        RTC_CHECK(y4m_writer);
+
+        y4m_writers_[spatial_idx] =
+            std::unique_ptr<VideoFrameWriter>(y4m_writer);
+      }
+
+      y4m_writers_.at(spatial_idx)->WriteFrame(frame);
+    });
+  }
+
+ protected:
+  std::string base_path_;
+  std::map<int, std::unique_ptr<VideoFrameWriter>> y4m_writers_;
+  TaskQueueForTest task_queue_;
+};
+
 class TesterDecoder {
  public:
   TesterDecoder(Decoder* decoder,
@@ -160,6 +197,11 @@ class TesterDecoder {
         settings_(settings),
         pacer_(settings.pacing) {
     RTC_CHECK(analyzer_) << "Analyzer must be provided";
+
+    if (settings.decoded_y4m_base_path) {
+      y4m_writer_ =
+          std::make_unique<TesterY4mWriter>(*settings.decoded_y4m_base_path);
+    }
   }
 
   void Decode(const EncodedImage& frame) {
@@ -168,10 +210,15 @@ class TesterDecoder {
     task_queue_.PostScheduledTask(
         [this, frame] {
           analyzer_->StartDecode(frame);
+
           decoder_->Decode(
               frame, [this, spatial_idx = frame.SpatialIndex().value_or(0)](
                          const VideoFrame& decoded_frame) {
                 analyzer_->FinishDecode(decoded_frame, spatial_idx);
+
+                if (y4m_writer_) {
+                  y4m_writer_->Write(decoded_frame, spatial_idx);
+                }
               });
         },
         pacer_.Schedule(timestamp));
@@ -189,6 +236,45 @@ class TesterDecoder {
   const DecoderSettings& settings_;
   Pacer pacer_;
   LimitedTaskQueue task_queue_;
+  std::unique_ptr<TesterY4mWriter> y4m_writer_;
+};
+
+class TesterIvfWriter {
+ public:
+  explicit TesterIvfWriter(absl::string_view base_path)
+      : base_path_(base_path) {}
+
+  ~TesterIvfWriter() {
+    task_queue_.SendTask([] {});
+  }
+
+  void Write(const EncodedImage& encoded_frame) {
+    task_queue_.PostTask([this, encoded_frame] {
+      int spatial_idx = encoded_frame.SpatialIndex().value_or(0);
+      if (ivf_file_writers_.find(spatial_idx) == ivf_file_writers_.end()) {
+        std::string ivf_path =
+            base_path_ + "_s" + std::to_string(spatial_idx) + ".ivf";
+
+        FileWrapper ivf_file = FileWrapper::OpenWriteOnly(ivf_path);
+        RTC_CHECK(ivf_file.is_open());
+
+        std::unique_ptr<IvfFileWriter> ivf_writer =
+            IvfFileWriter::Wrap(std::move(ivf_file), /*byte_limit=*/0);
+        RTC_CHECK(ivf_writer);
+
+        ivf_file_writers_[spatial_idx] = std::move(ivf_writer);
+      }
+
+      // To play: ffplay -vcodec vp8|vp9|av1|hevc|h264 filename
+      ivf_file_writers_.at(spatial_idx)
+          ->WriteFrame(encoded_frame, VideoCodecType::kVideoCodecGeneric);
+    });
+  }
+
+ protected:
+  std::string base_path_;
+  std::map<int, std::unique_ptr<IvfFileWriter>> ivf_file_writers_;
+  TaskQueueForTest task_queue_;
 };
 
 class TesterEncoder {
@@ -203,6 +289,10 @@ class TesterEncoder {
         settings_(settings),
         pacer_(settings.pacing) {
     RTC_CHECK(analyzer_) << "Analyzer must be provided";
+    if (settings.encoded_ivf_base_path) {
+      ivf_writer_ =
+          std::make_unique<TesterIvfWriter>(*settings.encoded_ivf_base_path);
+    }
   }
 
   void Encode(const VideoFrame& frame) {
@@ -213,8 +303,13 @@ class TesterEncoder {
           analyzer_->StartEncode(frame);
           encoder_->Encode(frame, [this](const EncodedImage& encoded_frame) {
             analyzer_->FinishEncode(encoded_frame);
+
             if (decoder_ != nullptr) {
               decoder_->Decode(encoded_frame);
+            }
+
+            if (ivf_writer_ != nullptr) {
+              ivf_writer_->Write(encoded_frame);
             }
           });
         },
@@ -232,6 +327,7 @@ class TesterEncoder {
   TesterDecoder* const decoder_;
   VideoCodecAnalyzer* const analyzer_;
   const EncoderSettings& settings_;
+  std::unique_ptr<TesterIvfWriter> ivf_writer_;
   Pacer pacer_;
   LimitedTaskQueue task_queue_;
 };
