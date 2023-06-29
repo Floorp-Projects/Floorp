@@ -1142,23 +1142,8 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://*.heapsowins.com/*", // 120027
         "*://*.planet7casino.com/*", // 120609
         "*://*.yebocasino.co.za/*", // 88409
+        "*://*.yabbycasino.com/*", // 108025
       ],
-      uaTransformer: originalUA => {
-        return UAHelpers.getDeviceAppropriateChromeUA();
-      },
-    },
-  },
-  {
-    /*
-     * Bug 1830821 - UA override for m.tworld.co.kr
-     * Webcompat issue #118998 - https://webcompat.com/issues/118998
-     */
-    id: "bug1830821-webc118998",
-    platform: "android",
-    domain: "m.tworld.co.kr",
-    bug: "1830821",
-    config: {
-      matches: ["*://m.tworld.co.kr/*"],
       uaTransformer: originalUA => {
         return UAHelpers.getDeviceAppropriateChromeUA();
       },
@@ -1353,16 +1338,16 @@ const AVAILABLE_UA_OVERRIDES = [
     /*
      * Bug 1836182 - UA override for www.flatsatshadowglen.com
      *
-     * The site's content is not loaded without a Chrome UA spoof.
+     * The site's content is not loaded unless a Chrome UA is used.
      */
     id: "bug1836182",
     platform: "all",
     domain: "www.flatsatshadowglen.com",
     bug: "1836182",
     config: {
-      matches: ["*://www.flatsatshadowglen.com/*"],
+      matches: ["*://*.flatsatshadowglen.com/*"],
       uaTransformer: originalUA => {
-        return originalUA + " Chrome/113.0.0.0";
+        return UAHelpers.getDeviceAppropriateChromeUA();
       },
     },
   },

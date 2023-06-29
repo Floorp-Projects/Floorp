@@ -287,8 +287,11 @@ const AVAILABLE_INJECTIONS = [
       matches: [
         "*://*.live.com/*",
         "*://*.office.com/*",
-        "*://*.sharepoint.com/*",
         "*://*.office365.com/*",
+        "*://*.office365.us/*",
+        "*://*.outlook.cn/*",
+        "*://*.outlook.com/*",
+        "*://*.sharepoint.com/*",
       ],
       js: [
         {
@@ -640,7 +643,7 @@ const AVAILABLE_INJECTIONS = [
     domain: "www.samsung.com",
     bug: "1799968",
     contentScripts: {
-      matches: ["*://www.samsung.com/*/watches/*/*"],
+      matches: ["*://www.samsung.com/*"],
       js: [
         {
           file: "injections/js/bug1799968-www.samsung.com-appVersion-linux-fix.js",
@@ -763,20 +766,6 @@ const AVAILABLE_INJECTIONS = [
       js: [
         {
           file: "injections/js/bug1819450-cmbchina.com-ua-change.js",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1819678",
-    platform: "android",
-    domain: "cnki.net",
-    bug: "1819678",
-    contentScripts: {
-      matches: ["*://*.cnki.net/*"],
-      js: [
-        {
-          file: "injections/js/bug1819678-cnki.net-undisable-search-field.js",
         },
       ],
     },
@@ -987,7 +976,7 @@ const AVAILABLE_INJECTIONS = [
     domain: "thai-masszazs.net",
     bug: "1836157",
     contentScripts: {
-      matches: ["*://www.thai-masszazs.net/en/*"],
+      matches: ["*://*.thai-masszazs.net/*"],
       js: [
         {
           file: "injections/js/bug1836157-thai-masszazs-niceScroll-disable.js",
@@ -1021,23 +1010,6 @@ const AVAILABLE_INJECTIONS = [
           file: "injections/css/bug1836105-cnn.com-fix-blank-pages-when-printing.css",
         },
       ],
-    },
-  },
-  {
-    id: "bug1836177",
-    platform: "desktop",
-    domain: "clalit.co.il",
-    bug: "1836177",
-    contentScripts: {
-      matches: [
-        "*://e-services.clalit.co.il/OnlineWeb/General/InfoFullLogin.aspx*",
-      ],
-      css: [
-        {
-          file: "injections/css/bug1836177-clalit.co.il-hide-number-input-spinners.css",
-        },
-      ],
-      allFrames: true,
     },
   },
 ];
