@@ -1,0 +1,70 @@
+.. _mozilla_projects_nss_nss_3_91_release_notes:
+
+NSS 3.91 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.91 was released on *9 March 2023**.
+
+
+.. _distribution_information:
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_91_RTM. NSS 3.91 requires NSPR 4.35 or newer.
+
+   NSS 3.91 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_91_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.91:
+
+`Changes in NSS 3.91 <#changes_in_nss_3.91>`__
+----------------------------------------------------
+
+.. container::
+
+ - Bug 1837431 - Implementation of the HW support check for ADX instruction
+ - Bug 1836925 - Removing the support of Curve25519
+ - Bug 1839795 - Fix comment about the addition of ticketSupportsEarlyData.
+ - Bug 1839327 - Adding args to enable-legacy-db build
+ - Bug 1835357 dbtests.sh failure in "certutil dump keys with explicit default trust flags"
+ - Bug 1837617: Initialize flags in slot structures
+ - Bug 1835425: Improve the length check of RSA input to avoid heap overflow
+ - Bug 1829112 - Followup Fixes
+ - Bug 1784253: avoid processing unexpected inputs by checking for m_exptmod base sign
+ - Bug 1826652: add a limit check on order_k to avoid infinite loop
+ - Bug 1834851 - Update HACL* to commit 5f6051d2.
+ - Bug 1753026 - add SHA3 to cryptohi and softoken.
+ - Bug 1753026: HACL SHA3
+ - Bug 1836781 - Disabling ASM C25519 for A but X86_64
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.91 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
