@@ -818,7 +818,7 @@ class ThreadActor extends Actor {
       this.setActiveEventBreakpoints(options.eventBreakpoints);
     }
 
-    this.maybePauseOnExceptions();
+    this.setPauseOnExceptions(this._options.pauseOnExceptions);
   }
 
   _eventBreakpointListener(notification) {
@@ -1065,7 +1065,12 @@ class ThreadActor extends Actor {
     // or a step to a debugger statement.
     const { type } = this._priorPause.why;
 
-    if (type == newType) {
+    // Conditional breakpoint are doing something weird as they are using "breakpoint" type
+    // unless they throw in which case they will be "breakpointConditionThrown".
+    if (
+      type == newType ||
+      (type == "breakpointConditionThrown" && newType == "breakpoint")
+    ) {
       return true;
     }
 
@@ -1338,13 +1343,23 @@ class ThreadActor extends Actor {
 
   /**
    * Set the debugging hook to pause on exceptions if configured to do so.
+   *
+   * Note that this is also called when evaluating conditional breakpoints.
+   *
+   * @param {Boolean} doPause
+   *        Should watch for pause or not. `_onExceptionUnwind` function will
+   *        then be notified about new caught or uncaught exception being fired.
    */
-  maybePauseOnExceptions() {
-    if (this._options.pauseOnExceptions) {
+  setPauseOnExceptions(doPause) {
+    if (doPause) {
       this.dbg.onExceptionUnwind = this._onExceptionUnwind;
     } else {
       this.dbg.onExceptionUnwind = undefined;
     }
+  }
+
+  isPauseOnExceptionsEnabled() {
+    return this.dbg.onExceptionUnwind == this._onExceptionUnwind;
   }
 
   /**

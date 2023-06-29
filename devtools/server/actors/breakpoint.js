@@ -118,7 +118,28 @@ class BreakpointActor {
    *            If the condition throws, this is the thrown message.
    */
   checkCondition(frame, condition) {
-    const completion = frame.eval(condition, { hideFromDebugger: true });
+    // Ensure disabling breakpoint while evaluating the condition.
+    // All but exception breakpoint to report any exception when running the condition.
+    this.threadActor.insideClientEvaluation = {
+      disableBreaks: true,
+      reportExceptionsWhenBreaksAreDisabled: true,
+    };
+    let completion;
+
+    // Temporarily enable pause on exception when evaluating the condition.
+    const hadToEnablePauseOnException =
+      !this.threadActor.isPauseOnExceptionsEnabled();
+    try {
+      if (hadToEnablePauseOnException) {
+        this.threadActor.setPauseOnExceptions(true);
+      }
+      completion = frame.eval(condition, { hideFromDebugger: true });
+    } finally {
+      this.threadActor.insideClientEvaluation = null;
+      if (hadToEnablePauseOnException) {
+        this.threadActor.setPauseOnExceptions(false);
+      }
+    }
     if (completion) {
       if (completion.throw) {
         // The evaluation failed and threw
@@ -182,11 +203,6 @@ class BreakpointActor {
       }
 
       if (message) {
-        // Don't pause if there is an exception message and POE is false
-        if (!this.threadActor._options.pauseOnExceptions) {
-          return undefined;
-        }
-
         reason.type = "breakpointConditionThrown";
         reason.message = message;
       }
