@@ -21,6 +21,7 @@ namespace mozilla {
 namespace gfx {
 enum class ColorRange : uint8_t;
 enum class ColorSpace2 : uint8_t;
+enum class SurfaceFormat : int8_t;
 enum class TransferFunction : uint8_t;
 enum class YUVColorSpace : uint8_t;
 }  // namespace gfx
@@ -78,6 +79,20 @@ Maybe<VideoTransferCharacteristics> ToTransferCharacteristics(
     const gfx::TransferFunction& aTransferFunction);
 
 Maybe<VideoColorPrimaries> ToPrimaries(const gfx::ColorSpace2& aColorSpace);
+
+/*
+ * The following are utilities to convert from gfx's formats to
+ * VideoPixelFormats.
+ */
+
+enum class ImageBitmapFormat : uint8_t;
+enum class VideoPixelFormat : uint8_t;
+
+Maybe<VideoPixelFormat> SurfaceFormatToVideoPixelFormat(
+    gfx::SurfaceFormat aFormat);
+
+Maybe<VideoPixelFormat> ImageBitmapFormatToVideoPixelFormat(
+    ImageBitmapFormat aFormat);
 
 }  // namespace dom
 }  // namespace mozilla

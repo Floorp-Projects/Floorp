@@ -25,6 +25,7 @@
 #include "mozilla/dom/EncodedVideoChunk.h"
 #include "mozilla/dom/EncodedVideoChunkBinding.h"
 #include "mozilla/dom/Event.h"
+#include "mozilla/dom/ImageUtils.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/VideoFrame.h"
 #include "mozilla/dom/VideoFrameBinding.h"
@@ -398,7 +399,37 @@ static nsresult FireEvent(DOMEventTargetHelper* aEventTarget,
 }
 
 static Maybe<VideoPixelFormat> GuessPixelFormat(layers::Image* aImage) {
-  // TODO: Implement this.
+  if (aImage) {
+    // TODO: Implement ImageUtils::Impl for MacIOSurfaceImage and
+    // DMABUFSurfaceImage?
+    if (aImage->AsPlanarYCbCrImage() || aImage->AsNVImage()) {
+      const ImageUtils imageUtils(aImage);
+      Maybe<VideoPixelFormat> f =
+          ImageBitmapFormatToVideoPixelFormat(imageUtils.GetFormat());
+
+      // ImageBitmapFormat cannot distinguish YUV420 or YUV420A.
+      bool hasAlpha = aImage->AsPlanarYCbCrImage() &&
+                      aImage->AsPlanarYCbCrImage()->GetData() &&
+                      aImage->AsPlanarYCbCrImage()->GetData()->mAlpha;
+      if (f && *f == VideoPixelFormat::I420 && hasAlpha) {
+        return Some(VideoPixelFormat::I420A);
+      }
+      return f;
+    }
+#ifdef XP_MACOSX
+    if (layers::MacIOSurfaceImage* image = aImage->AsMacIOSurfaceImage()) {
+      MOZ_ASSERT(image->GetSurface());
+      return SurfaceFormatToVideoPixelFormat(image->GetSurface()->GetFormat());
+    }
+#endif
+#ifdef MOZ_WAYLAND
+    if (layers::DMABUFSurfaceImage* image = aImage->AsDMABUFSurfaceImage()) {
+      MOZ_ASSERT(image->GetSurface());
+      return SurfaceFormatToVideoPixelFormat(image->GetSurface()->GetFormat());
+    }
+#endif
+  }
+  LOGW("Failed to get pixel format from layers::Image");
   return Nothing();
 }
 
