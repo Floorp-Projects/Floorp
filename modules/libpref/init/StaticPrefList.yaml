@@ -11325,6 +11325,15 @@
   value: true
   mirror: always
 
+# Whether to allow truncated brotli with empty output. This also fixes
+# throwing an erroring when receiving highly compressed brotli files when
+# no content type is specified (Bug 1715401). This pref can be removed after
+# some time (Bug 1841061)
+- name: network.compress.allow_truncated_empty_brotli
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # See the full list of values in nsICookieService.idl.
 - name: network.cookie.cookieBehavior
   type: RelaxedAtomicInt32
