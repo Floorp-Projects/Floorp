@@ -460,7 +460,8 @@ VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
       mActiveConfig(nullptr),
       mDecodeQueueSize(0),
       mDequeueEventScheduled(false),
-      mDecodeMessageCounter(0) {
+      mDecodeMessageCounter(0),
+      mFlushMessageCounter(0) {
   MOZ_ASSERT(mErrorCallback);
   MOZ_ASSERT(mOutputCallback);
   LOG("VideoDecoder %p ctor", this);
@@ -534,6 +535,7 @@ void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
   mState = CodecState::Configured;
   mKeyChunkRequired = true;
   mDecodeMessageCounter = 0;
+  mFlushMessageCounter = 0;
 
   mControlMessageQueue.emplace(AsVariant(ConfigureMessage(std::move(config))));
   LOG("VideoDecoder %p enqueues %s", this,
@@ -569,9 +571,30 @@ void VideoDecoder::Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv) {
   ProcessControlMessageQueue();
 }
 
+// https://w3c.github.io/webcodecs/#dom-videodecoder-flush
 already_AddRefed<Promise> VideoDecoder::Flush(ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+  AssertIsOnOwningThread();
+
+  LOG("VideoDecoder %p, Flush", this);
+
+  if (mState != CodecState::Configured) {
+    aRv.ThrowInvalidStateError("Decoder must be configured first");
+    return nullptr;
+  }
+
+  RefPtr<Promise> p = Promise::Create(GetParentObject(), aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return p.forget();
+  }
+
+  mKeyChunkRequired = true;
+
+  mControlMessageQueue.emplace(
+      AsVariant(FlushMessage(++mFlushMessageCounter, p)));
+  LOG("VideoDecoder %p enqueues %s", this,
+      mControlMessageQueue.back().as<FlushMessage>().mTitle.get());
+  ProcessControlMessageQueue();
+  return p.forget();
 }
 
 // https://w3c.github.io/webcodecs/#dom-videodecoder-reset
@@ -650,8 +673,9 @@ Result<Ok, nsresult> VideoDecoder::Reset(const nsresult& aResult) {
 
   mState = CodecState::Unconfigured;
   mDecodeMessageCounter = 0;
+  mFlushMessageCounter = 0;
 
-  CancelPendingControlMessages();
+  CancelPendingControlMessages(aResult);
   DestroyDecoderAgentIfAny();
 
   if (mDecodeQueueSize > 0) {
@@ -808,6 +832,29 @@ void VideoDecoder::ScheduleDequeueEvent() {
       "ScheduleDequeueEvent Runnable (worker)", dispatcher)));
 }
 
+void VideoDecoder::SchedulePromiseResolveOrReject(Promise* aPromise,
+                                                  const nsresult& aResult) {
+  AssertIsOnOwningThread();
+
+  auto resolver = [p = RefPtr{aPromise}, result = aResult] {
+    if (NS_FAILED(result)) {
+      p->MaybeReject(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+      return;
+    }
+    p->MaybeResolveWithUndefined();
+  };
+  nsISerialEventTarget* target = GetCurrentSerialEventTarget();
+
+  if (NS_IsMainThread()) {
+    MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewRunnableFunction(
+        "SchedulePromiseResolveOrReject Runnable (main)", resolver)));
+    return;
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewCancelableRunnableFunction(
+      "SchedulePromiseResolveOrReject Runnable (worker)", resolver)));
+}
+
 void VideoDecoder::ProcessControlMessageQueue() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
@@ -824,12 +871,15 @@ void VideoDecoder::ProcessControlMessageQueue() {
         break;
       }
     } else {
-      MOZ_ASSERT_UNREACHABLE("Unknown message type!");
+      MOZ_ASSERT(msg.is<FlushMessage>());
+      if (ProcessFlushMessage(msg) == MessageProcessedResult::NotProcessed) {
+        break;
+      }
     }
   }
 }
 
-void VideoDecoder::CancelPendingControlMessages() {
+void VideoDecoder::CancelPendingControlMessages(const nsresult& aResult) {
   AssertIsOnOwningThread();
 
   // Cancel the message that is being processed.
@@ -845,7 +895,12 @@ void VideoDecoder::CancelPendingControlMessages() {
       MOZ_ASSERT(msg.mRequest.Exists());
       msg.mRequest.Disconnect();
     } else {
-      MOZ_ASSERT_UNREACHABLE("Unknown message type!");
+      MOZ_ASSERT(mProcessingMessage->is<FlushMessage>());
+      auto& msg = mProcessingMessage->as<FlushMessage>();
+      LOG("VideoDecoder %p cancels current %s", this, msg.mTitle.get());
+      MOZ_ASSERT(msg.mRequest.Exists());
+      msg.mRequest.Disconnect();
+      msg.mPromise->MaybeReject(aResult);
     }
 
     mProcessingMessage.reset();
@@ -862,7 +917,11 @@ void VideoDecoder::CancelPendingControlMessages() {
       LOG("VideoDecoder %p cancels pending %s", this, msg.mTitle.get());
       MOZ_ASSERT(!msg.mRequest.Exists());
     } else {
-      MOZ_ASSERT_UNREACHABLE("Unknown message type!");
+      MOZ_ASSERT(mControlMessageQueue.front().is<FlushMessage>());
+      auto& msg = mControlMessageQueue.front().as<FlushMessage>();
+      LOG("VideoDecoder %p cancels pending %s", this, msg.mTitle.get());
+      MOZ_ASSERT(!msg.mRequest.Exists());
+      msg.mPromise->MaybeReject(aResult);
     }
 
     mControlMessageQueue.pop();
@@ -884,7 +943,9 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessConfigureMessage(
     const char* current =
         mProcessingMessage->is<ConfigureMessage>()
             ? mProcessingMessage->as<ConfigureMessage>().mTitle.get()
-            : mProcessingMessage->as<DecodeMessage>().mTitle.get();
+        : mProcessingMessage->is<DecodeMessage>()
+            ? mProcessingMessage->as<DecodeMessage>().mTitle.get()
+            : mProcessingMessage->as<FlushMessage>().mTitle.get();
     const char* incoming = aMessage.as<ConfigureMessage>().mTitle.get();
 
     LOG("VideoDecoder %p is processing %s. Defer %s", this, current, incoming);
@@ -1034,7 +1095,9 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessDecodeMessage(
     const char* current =
         mProcessingMessage->is<ConfigureMessage>()
             ? mProcessingMessage->as<ConfigureMessage>().mTitle.get()
-            : mProcessingMessage->as<DecodeMessage>().mTitle.get();
+        : mProcessingMessage->is<DecodeMessage>()
+            ? mProcessingMessage->as<DecodeMessage>().mTitle.get()
+            : mProcessingMessage->as<FlushMessage>().mTitle.get();
     const char* incoming = aMessage.as<DecodeMessage>().mTitle.get();
 
     LOGV("VideoDecoder %p is processing %s. Defer %s", this, current, incoming);
@@ -1123,6 +1186,118 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessDecodeMessage(
                   self->ScheduleOutputVideoFrames(std::move(data), title);
                 }
 
+                self->ProcessControlMessageQueue();
+              })
+      ->Track(msg.mRequest);
+
+  return MessageProcessedResult::Processed;
+}
+
+FlushMessage::FlushMessage(Id aId, Promise* aPromise)
+    : mTitle(nsPrintfCString("flush #%zu", aId)),
+      mId(aId),
+      mPromise(aPromise) {}
+
+VideoDecoder::MessageProcessedResult VideoDecoder::ProcessFlushMessage(
+    ControlMessage& aMessage) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == CodecState::Configured);
+  MOZ_ASSERT(aMessage.is<FlushMessage>());
+
+  if (mProcessingMessage) {
+    const char* current =
+        mProcessingMessage->is<ConfigureMessage>()
+            ? mProcessingMessage->as<ConfigureMessage>().mTitle.get()
+        : mProcessingMessage->is<DecodeMessage>()
+            ? mProcessingMessage->as<DecodeMessage>().mTitle.get()
+            : mProcessingMessage->as<FlushMessage>().mTitle.get();
+    const char* incoming = aMessage.as<FlushMessage>().mTitle.get();
+
+    LOG("VideoDecoder %p is processing %s. Defer %s", this, current, incoming);
+    return MessageProcessedResult::NotProcessed;
+  }
+
+  mProcessingMessage.emplace(std::move(aMessage));
+  mControlMessageQueue.pop();
+
+  auto& msg = mProcessingMessage->as<FlushMessage>();
+  LOG("VideoDecoder %p starts processing %s", this, msg.mTitle.get());
+
+  // Treat it like decode error if no DecoderAgent is available.
+  if (!mAgent) {
+    LOGE("VideoDecoder %p is not configured", this);
+
+    SchedulePromiseResolveOrReject(msg.mPromise.get(),
+                                   NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+    mProcessingMessage.reset();
+
+    ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+
+    return MessageProcessedResult::Processed;
+  }
+
+  mAgent->DrainAndFlush()
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr{this}, id = mAgent->mId](
+              DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult)
+              MOZ_CAN_RUN_SCRIPT {
+                MOZ_ASSERT(self->mProcessingMessage);
+                MOZ_ASSERT(self->mProcessingMessage->is<FlushMessage>());
+                MOZ_ASSERT(self->mState == CodecState::Configured);
+                MOZ_ASSERT(self->mAgent);
+                MOZ_ASSERT(id == self->mAgent->mId);
+                MOZ_ASSERT(self->mActiveConfig);
+
+                auto& msg = self->mProcessingMessage->as<FlushMessage>();
+                LOG("VideoDecoder %p, DecodeAgent #%d %s has been %s",
+                    self.get(), id, msg.mTitle.get(),
+                    aResult.IsResolve() ? "resolved" : "rejected");
+
+                nsCString title = msg.mTitle;
+
+                msg.mRequest.Complete();
+
+                // If flush failed, it means decoder fails to decode the data
+                // sent before, so we treat it like decode error. We reject the
+                // promise first and then queue a task to close VideoDecoder
+                // with an EncodingError.
+                if (aResult.IsReject()) {
+                  const MediaResult& error = aResult.RejectValue();
+                  LOGE("VideoDecoder %p, DecodeAgent #%d failed to flush: %s",
+                       self.get(), id, error.Description().get());
+
+                  // Reject with an EncodingError instead of the error we got
+                  // above.
+                  self->SchedulePromiseResolveOrReject(
+                      msg.mPromise.get(),
+                      NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+
+                  self->mProcessingMessage.reset();
+
+                  self->ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+                  return;  // No further process
+                }
+
+                // If flush succeeded, schedule to output decoded data first
+                // and then resolve the promise, then keep processing the
+                // control messages.
+                MOZ_ASSERT(aResult.IsResolve());
+                nsTArray<RefPtr<MediaData>> data =
+                    std::move(aResult.ResolveValue());
+
+                if (data.IsEmpty()) {
+                  LOG("VideoDecoder %p gets no data for %s", self.get(),
+                      title.get());
+                } else {
+                  LOG("VideoDecoder %p, schedule %zu decoded data output for "
+                      "%s",
+                      self.get(), data.Length(), title.get());
+                  self->ScheduleOutputVideoFrames(std::move(data), title);
+                }
+
+                self->SchedulePromiseResolveOrReject(msg.mPromise.get(), NS_OK);
+                self->mProcessingMessage.reset();
                 self->ProcessControlMessageQueue();
               })
       ->Track(msg.mRequest);
