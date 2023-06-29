@@ -201,12 +201,12 @@ class Perftest(object):
         # conditioned profiles.
         if self.config.get("conditioned_profile"):
             self.post_startup_delay = min(post_startup_delay, POST_DELAY_CONDPROF)
+        elif (
+            self.debug_mode
+        ):  # if running debug-mode reduce the pause after browser startup
+            self.post_startup_delay = min(post_startup_delay, POST_DELAY_DEBUG)
         else:
-            # if running debug-mode reduce the pause after browser startup
-            if self.debug_mode:
-                self.post_startup_delay = min(post_startup_delay, POST_DELAY_DEBUG)
-            else:
-                self.post_startup_delay = post_startup_delay
+            self.post_startup_delay = post_startup_delay
 
         LOG.info("Post startup delay set to %d ms" % self.post_startup_delay)
         LOG.info("main raptor init, config is: %s" % str(self.config))
@@ -813,8 +813,8 @@ class PerftestDesktop(Perftest):
                         try:
                             binary_path = pathlib.Path(self.config["binary"])
                             plist_path = binary_path.parent.parent.joinpath(plist_file)
-                            with plist_path.open("rb") as plist:
-                                plist = plistlib.load(plist)
+                            with plist_path.open("rb") as plist_file_content:
+                                plist = plistlib.load(plist_file_content)
                         except FileNotFoundError:
                             pass
                     browser_name = self.config["app"]

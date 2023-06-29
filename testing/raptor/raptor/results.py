@@ -529,11 +529,8 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 )
         elif load_existing:
             pass  # Use whatever is there.
-        else:
-            if len(raw_btresults) != int(page_cycles):
-                raise MissingResultsError(
-                    "Missing results for at least 1 warm page-cycle."
-                )
+        elif len(raw_btresults) != int(page_cycles):
+            raise MissingResultsError("Missing results for at least 1 warm page-cycle.")
 
         # now parse out the values
         page_counter = 0
@@ -594,13 +591,18 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                                 continue
 
                             # Clean up the name if requested
+                            filtered_k = k
                             for name_filter in subtest_name_filters.split(","):
-                                k = k.replace(name_filter, "")
+                                filtered_k = filtered_k.replace(name_filter, "")
 
                             if isinstance(v, Iterable):
-                                bt_result["measurements"].setdefault(k, []).extend(v)
+                                bt_result["measurements"].setdefault(
+                                    filtered_k, []
+                                ).extend(v)
                             else:
-                                bt_result["measurements"].setdefault(k, []).append(v)
+                                bt_result["measurements"].setdefault(
+                                    filtered_k, []
+                                ).append(v)
                         bt_result["custom_data"] = True
                     else:
                         for k, v in data.items():
