@@ -196,6 +196,10 @@ class AudioDeviceBuffer {
 
   // Capture timestamp.
   absl::optional<int64_t> capture_timestamp_ns_;
+  // The last time the Timestamp Aligner was used to estimate clock offset
+  // between system clock and capture time from audio.
+  // This is used to prevent estimating the clock offset too often.
+  absl::optional<int64_t> align_offsync_estimation_time_;
 
   // Counts number of times LogStats() has been called.
   size_t num_stat_reports_ RTC_GUARDED_BY(task_queue_);
