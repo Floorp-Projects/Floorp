@@ -10,9 +10,10 @@
 #include "test/scenario/network_node.h"
 
 #include <algorithm>
+#include <memory>
 #include <vector>
 
-#include <memory>
+#include "absl/cleanup/cleanup.h"
 #include "rtc_base/net_helper.h"
 #include "rtc_base/numerics/safe_minmax.h"
 
@@ -127,13 +128,25 @@ void NetworkNodeTransport::Connect(EmulatedEndpoint* endpoint,
     current_network_route_ = route;
   }
 
-  sender_call_->GetTransportControllerSend()->OnNetworkRouteChanged(
-      kDummyTransportName, route);
+  // Must be called from the worker thread.
+  rtc::Event event;
+  auto cleanup = absl::MakeCleanup([&event] { event.Set(); });
+  auto&& task = [this, &route, cleanup = std::move(cleanup)] {
+    sender_call_->GetTransportControllerSend()->OnNetworkRouteChanged(
+        kDummyTransportName, route);
+  };
+  if (!sender_call_->worker_thread()->IsCurrent()) {
+    sender_call_->worker_thread()->PostTask(std::move(task));
+  } else {
+    std::move(task)();
+  }
+  event.Wait(TimeDelta::Seconds(1));
 }
 
 void NetworkNodeTransport::Disconnect() {
   MutexLock lock(&mutex_);
   current_network_route_.connected = false;
+
   sender_call_->GetTransportControllerSend()->OnNetworkRouteChanged(
       kDummyTransportName, current_network_route_);
   current_network_route_ = {};
