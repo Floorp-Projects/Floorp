@@ -1741,34 +1741,23 @@ void WebRtcVideoChannel::FillReceiveCodecStats(
 
 void WebRtcVideoChannel::OnPacketReceived(
     const webrtc::RtpPacketReceived& packet) {
+  // Note: the network_thread_checker may refer to the worker thread if the two
+  // threads are combined, but this is either always true or always false
+  // depending on configuration set at object initialization.
   RTC_DCHECK_RUN_ON(&network_thread_checker_);
 
-  // TODO(bugs.webrtc.org/11993): This code is very similar to what
-  // WebRtcVoiceMediaChannel::OnPacketReceived does. For maintainability and
-  // consistency it would be good to move the interaction with call_->Receiver()
-  // to a common implementation and provide a callback on the worker thread
-  // for the exception case (DELIVERY_UNKNOWN_SSRC) and how retry is attempted.
-  worker_thread_->PostTask(
-      SafeTask(task_safety_.flag(), [this, packet = packet]() mutable {
-        RTC_DCHECK_RUN_ON(&thread_checker_);
-
-        // TODO(bugs.webrtc.org/7135): extensions in `packet` is currently set
-        // in RtpTransport and does not neccessarily include extensions specific
-        // to this channel/MID. Also see comment in
-        // BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w.
-        // It would likely be good if extensions where merged per BUNDLE and
-        // applied directly in RtpTransport::DemuxPacket;
-        packet.IdentifyExtensions(recv_rtp_extension_map_);
-        packet.set_payload_type_frequency(webrtc::kVideoPayloadTypeFrequency);
-        if (!packet.arrival_time().IsFinite()) {
-          packet.set_arrival_time(webrtc::Timestamp::Micros(rtc::TimeMicros()));
-        }
-
-        call_->Receiver()->DeliverRtpPacket(
-            webrtc::MediaType::VIDEO, std::move(packet),
-            absl::bind_front(
-                &WebRtcVideoChannel::MaybeCreateDefaultReceiveStream, this));
-      }));
+  // TODO(bugs.webrtc.org/137439): Stop posting to the worker thread when the
+  // combined network/worker project launches.
+  if (webrtc::TaskQueueBase::Current() != worker_thread_) {
+    worker_thread_->PostTask(
+        SafeTask(task_safety_.flag(), [this, packet = packet]() mutable {
+          RTC_DCHECK_RUN_ON(&thread_checker_);
+          ProcessReceivedPacket(std::move(packet));
+        }));
+  } else {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    ProcessReceivedPacket(packet);
+  }
 }
 
 bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
@@ -3553,6 +3542,32 @@ WebRtcVideoChannel::FindReceiveStream(uint32_t ssrc) {
     return it->second;
   }
   return nullptr;
+}
+
+// RTC_RUN_ON(worker_thread_)
+void WebRtcVideoChannel::ProcessReceivedPacket(
+    webrtc::RtpPacketReceived packet) {
+  // TODO(bugs.webrtc.org/11993): This code is very similar to what
+  // WebRtcVoiceMediaChannel::OnPacketReceived does. For maintainability and
+  // consistency it would be good to move the interaction with call_->Receiver()
+  // to a common implementation and provide a callback on the worker thread
+  // for the exception case (DELIVERY_UNKNOWN_SSRC) and how retry is attempted.
+  // TODO(bugs.webrtc.org/7135): extensions in `packet` is currently set
+  // in RtpTransport and does not neccessarily include extensions specific
+  // to this channel/MID. Also see comment in
+  // BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w.
+  // It would likely be good if extensions where merged per BUNDLE and
+  // applied directly in RtpTransport::DemuxPacket;
+  packet.IdentifyExtensions(recv_rtp_extension_map_);
+  packet.set_payload_type_frequency(webrtc::kVideoPayloadTypeFrequency);
+  if (!packet.arrival_time().IsFinite()) {
+    packet.set_arrival_time(webrtc::Timestamp::Micros(rtc::TimeMicros()));
+  }
+
+  call_->Receiver()->DeliverRtpPacket(
+      webrtc::MediaType::VIDEO, std::move(packet),
+      absl::bind_front(&WebRtcVideoChannel::MaybeCreateDefaultReceiveStream,
+                       this));
 }
 
 void WebRtcVideoChannel::SetRecordableEncodedFrameCallback(
