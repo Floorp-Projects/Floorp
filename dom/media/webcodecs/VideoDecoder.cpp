@@ -157,7 +157,8 @@ VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
                            RefPtr<VideoFrameOutputCallback>&& aOutputCallback)
     : DOMEventTargetHelper(aParent),
       mErrorCallback(std::move(aErrorCallback)),
-      mOutputCallback(std::move(aOutputCallback)) {
+      mOutputCallback(std::move(aOutputCallback)),
+      mState(CodecState::Unconfigured) {
   MOZ_ASSERT(mErrorCallback);
   MOZ_ASSERT(mOutputCallback);
   LOG("VideoDecoder %p ctor", this);
@@ -188,7 +189,8 @@ already_AddRefed<VideoDecoder> VideoDecoder::Constructor(
       RefPtr<VideoFrameOutputCallback>(aInit.mOutput));
 }
 
-CodecState VideoDecoder::State() const { return CodecState::EndGuard_; }
+// https://w3c.github.io/webcodecs/#dom-videodecoder-state
+CodecState VideoDecoder::State() const { return mState; }
 
 uint32_t VideoDecoder::DecodeQueueSize() const { return 0; }
 
@@ -212,8 +214,15 @@ already_AddRefed<Promise> VideoDecoder::Flush(ErrorResult& aRv) {
   return nullptr;
 }
 
+// https://w3c.github.io/webcodecs/#dom-videodecoder-reset
 void VideoDecoder::Reset(ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  AssertIsOnOwningThread();
+
+  LOG("VideoDecoder %p, Reset", this);
+
+  if (auto r = Reset(NS_ERROR_DOM_ABORT_ERR); r.isErr()) {
+    aRv.Throw(r.unwrapErr());
+  }
 }
 
 void VideoDecoder::Close(ErrorResult& aRv) {
@@ -262,6 +271,19 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
 
   p->MaybeResolve(s);
   return p.forget();
+}
+
+// https://w3c.github.io/webcodecs/#reset-videodecoder
+Result<Ok, nsresult> VideoDecoder::Reset(const nsresult& aResult) {
+  AssertIsOnOwningThread();
+
+  if (mState == CodecState::Closed) {
+    return Err(NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
+
+  mState = CodecState::Unconfigured;
+
+  return Ok();
 }
 
 #undef LOG
