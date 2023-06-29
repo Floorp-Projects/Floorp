@@ -81,7 +81,7 @@ export class TranslationsChild extends JSWindowActorChild {
         return this.document.documentElement.lang;
       case "Translations:IdentifyLanguage": {
         try {
-          const engine = await this.createLanguageIdEngine();
+          const engine = await this.getOrCreateLanguageIdEngine();
           if (!engine) {
             return null;
           }
@@ -144,7 +144,7 @@ export class TranslationsChild extends JSWindowActorChild {
     });
   }
 
-  createLanguageIdEngine() {
+  getOrCreateLanguageIdEngine() {
     return lazy.LanguageIdEngine.getOrCreate(() => {
       if (this.#isPageHidden) {
         throw new Error("The page was already hidden.");
