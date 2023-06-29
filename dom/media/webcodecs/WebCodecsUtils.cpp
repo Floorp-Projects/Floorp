@@ -196,4 +196,58 @@ gfx::ColorSpace2 ToPrimaries(VideoColorPrimaries aPrimaries) {
   return gfx::ColorSpace2::UNKNOWN;
 }
 
+bool ToFullRange(const gfx::ColorRange& aColorRange) {
+  return aColorRange == gfx::ColorRange::FULL;
+}
+
+Maybe<VideoMatrixCoefficients> ToMatrixCoefficients(
+    const gfx::YUVColorSpace& aColorSpace) {
+  switch (aColorSpace) {
+    case gfx::YUVColorSpace::BT601:
+      return Some(VideoMatrixCoefficients::Smpte170m);
+    case gfx::YUVColorSpace::BT709:
+      return Some(VideoMatrixCoefficients::Bt709);
+    case gfx::YUVColorSpace::BT2020:
+      return Some(VideoMatrixCoefficients::Bt2020_ncl);
+    case gfx::YUVColorSpace::Identity:
+      return Some(VideoMatrixCoefficients::Rgb);
+  }
+  MOZ_ASSERT_UNREACHABLE("unsupported gfx::YUVColorSpace");
+  return Nothing();
+}
+
+Maybe<VideoTransferCharacteristics> ToTransferCharacteristics(
+    const gfx::TransferFunction& aTransferFunction) {
+  switch (aTransferFunction) {
+    case gfx::TransferFunction::BT709:
+      return Some(VideoTransferCharacteristics::Bt709);
+    case gfx::TransferFunction::SRGB:
+      return Some(VideoTransferCharacteristics::Iec61966_2_1);
+    case gfx::TransferFunction::PQ:
+      return Some(VideoTransferCharacteristics::Pq);
+    case gfx::TransferFunction::HLG:
+      return Some(VideoTransferCharacteristics::Hlg);
+  }
+  MOZ_ASSERT_UNREACHABLE("unsupported gfx::TransferFunction");
+  return Nothing();
+}
+
+Maybe<VideoColorPrimaries> ToPrimaries(const gfx::ColorSpace2& aColorSpace) {
+  switch (aColorSpace) {
+    case gfx::ColorSpace2::UNKNOWN:
+    case gfx::ColorSpace2::SRGB:
+      return Nothing();
+    case gfx::ColorSpace2::DISPLAY_P3:
+      return Some(VideoColorPrimaries::Smpte432);
+    case gfx::ColorSpace2::BT601_525:
+      return Some(VideoColorPrimaries::Smpte170m);
+    case gfx::ColorSpace2::BT709:
+      return Some(VideoColorPrimaries::Bt709);
+    case gfx::ColorSpace2::BT2020:
+      return Some(VideoColorPrimaries::Bt2020);
+  }
+  MOZ_ASSERT_UNREACHABLE("unsupported gfx::ColorSpace2");
+  return Nothing();
+}
+
 }  // namespace mozilla::dom
