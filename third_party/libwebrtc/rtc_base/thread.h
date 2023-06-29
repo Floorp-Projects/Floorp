@@ -309,18 +309,20 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   // See ScopedDisallowBlockingCalls for details.
   // NOTE: Blocking calls are DISCOURAGED, consider if what you're doing can
   // be achieved with PostTask() and callbacks instead.
-  // TODO(crbug.com/1416199): Remove virtual and pass location of the caller
-  // once subclasses migrated.
-  virtual void BlockingCall(FunctionView<void()> functor) {
-    BlockingCallImpl(std::move(functor), webrtc::Location::Current());
+  void BlockingCall(
+      FunctionView<void()> functor,
+      const webrtc::Location& location = webrtc::Location::Current()) {
+    BlockingCallImpl(std::move(functor), location);
   }
 
   template <typename Functor,
             typename ReturnT = std::invoke_result_t<Functor>,
             typename = typename std::enable_if_t<!std::is_void_v<ReturnT>>>
-  ReturnT BlockingCall(Functor&& functor) {
+  ReturnT BlockingCall(
+      Functor&& functor,
+      const webrtc::Location& location = webrtc::Location::Current()) {
     ReturnT result;
-    BlockingCall([&] { result = std::forward<Functor>(functor)(); });
+    BlockingCall([&] { result = std::forward<Functor>(functor)(); }, location);
     return result;
   }
 

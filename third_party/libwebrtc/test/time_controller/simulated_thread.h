@@ -36,7 +36,8 @@ class SimulatedThread : public rtc::Thread,
   TaskQueueBase* GetAsTaskQueue() override { return this; }
 
   // Thread interface
-  void BlockingCall(rtc::FunctionView<void()> functor) override;
+  void BlockingCallImpl(rtc::FunctionView<void()> functor,
+                        const Location& location) override;
   void PostTaskImpl(absl::AnyInvocable<void() &&> task,
                     const PostTaskTraits& traits,
                     const Location& location) override;

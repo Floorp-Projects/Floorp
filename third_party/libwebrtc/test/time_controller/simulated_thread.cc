@@ -61,7 +61,8 @@ void SimulatedThread::RunReady(Timestamp at_time) {
   }
 }
 
-void SimulatedThread::BlockingCall(rtc::FunctionView<void()> functor) {
+void SimulatedThread::BlockingCallImpl(rtc::FunctionView<void()> functor,
+                                       const Location& /*location*/) {
   if (IsQuitting())
     return;
 
