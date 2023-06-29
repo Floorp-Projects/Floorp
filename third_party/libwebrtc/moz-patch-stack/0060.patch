@@ -147,27 +147,27 @@ index 3f345cd6d2..bd67de1f83 100644
  FlexfecReceiver::FlexfecReceiver(
      Clock* clock,
 diff --git a/rtc_base/task_utils/repeating_task.h b/rtc_base/task_utils/repeating_task.h
-index e5ea3d8174..c06bac2247 100644
+index c45de95ecc..28c691c3de 100644
 --- a/rtc_base/task_utils/repeating_task.h
 +++ b/rtc_base/task_utils/repeating_task.h
-@@ -56,7 +56,7 @@ class RepeatingTaskHandle {
-                                    absl::AnyInvocable<TimeDelta()> closure,
-                                    TaskQueueBase::DelayPrecision precision =
-                                        TaskQueueBase::DelayPrecision::kLow,
--                                   Clock* clock = Clock::GetRealTimeClock());
-+                                   Clock* clock = Clock::GetRealTimeClockRaw());
- 
-   // DelayedStart is equivalent to Start except that the first invocation of the
-   // closure will be delayed by the given amount.
-@@ -66,7 +66,7 @@ class RepeatingTaskHandle {
+@@ -57,7 +57,7 @@ class RepeatingTaskHandle {
        absl::AnyInvocable<TimeDelta()> closure,
        TaskQueueBase::DelayPrecision precision =
            TaskQueueBase::DelayPrecision::kLow,
--      Clock* clock = Clock::GetRealTimeClock());
-+      Clock* clock = Clock::GetRealTimeClockRaw());
+-      Clock* clock = Clock::GetRealTimeClock(),
++      Clock* clock = Clock::GetRealTimeClockRaw(),
+       const Location& location = Location::Current());
+ 
+   // DelayedStart is equivalent to Start except that the first invocation of the
+@@ -68,7 +68,7 @@ class RepeatingTaskHandle {
+       absl::AnyInvocable<TimeDelta()> closure,
+       TaskQueueBase::DelayPrecision precision =
+           TaskQueueBase::DelayPrecision::kLow,
+-      Clock* clock = Clock::GetRealTimeClock(),
++      Clock* clock = Clock::GetRealTimeClockRaw(),
+       const Location& location = Location::Current());
  
    // Stops future invocations of the repeating task closure. Can only be called
-   // from the TaskQueue where the task is running. The closure is guaranteed to
 diff --git a/system_wrappers/include/clock.h b/system_wrappers/include/clock.h
 index 60296070cc..214b34c970 100644
 --- a/system_wrappers/include/clock.h
