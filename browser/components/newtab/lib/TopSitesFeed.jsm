@@ -1115,6 +1115,10 @@ class TopSitesFeed {
       return Object.values(sponsoredLinks).flat();
     }
 
+    // AMP links might have empty slots, remove them as SOV doesn't need those.
+    sponsoredLinks[SPONSORED_TILE_PARTNER_AMP] =
+      sponsoredLinks[SPONSORED_TILE_PARTNER_AMP].filter(Boolean);
+
     const sampleInput = `${lazy.contextId}-${this._contile.sov.name}`;
     let sponsored = [];
     let chosenPartners = [];

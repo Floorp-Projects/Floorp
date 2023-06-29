@@ -2896,6 +2896,27 @@ describe("Top Sites Feed", () => {
 
       assert.equal(sponsored.length, 0);
     });
+
+    it("should ignore empty slots from AMP links if present", async () => {
+      sandbox.stub(feed._contile, "sov").get(() => sov);
+      fakeNimbusFeatures.pocketNewtab.getVariable.reset();
+      fakeNimbusFeatures.pocketNewtab.getVariable.onCall(0).returns(true);
+      fakeNimbusFeatures.pocketNewtab.getVariable.onCall(1).returns(undefined);
+      global.Sampling.ratioSample.onCall(0).resolves(0);
+      global.Sampling.ratioSample.onCall(1).resolves(1);
+
+      // Add a few empty slots to AMP links.
+      fakeSponsoredLinks.amp.unshift(undefined);
+      fakeSponsoredLinks.amp.unshift(undefined);
+      const sponsored = await feed._mergeSponsoredLinks(fakeSponsoredLinks);
+
+      assert.equal(sponsored.length, 2);
+      assert.equal(sponsored[0].partner, "amp");
+      assert.equal(sponsored[0].sponsored_position, 1);
+      assert.equal(sponsored[1].partner, "moz-sales");
+      assert.equal(sponsored[1].sponsored_position, 2);
+      assert.equal(sponsored[1].pos, 1);
+    });
   });
 
   describe("#_readDefaults", () => {
