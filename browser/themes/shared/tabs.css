@@ -768,6 +768,18 @@ toolbar:not(#TabsToolbar) #firefox-view-button:-moz-locale-dir(rtl) {
   background-color: var(--panel-item-active-bgcolor);
 }
 
+.all-tabs-item > toolbarbutton.all-tabs-container-indicator {
+  position: relative;
+}
+
+.all-tabs-item > toolbarbutton.all-tabs-container-indicator::before {
+  content: "";
+  position: absolute;
+  inset: 2px -3px;
+  background: var(--identity-tab-color);
+  width: 2px;
+}
+
 .all-tabs-button {
   list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
 }
