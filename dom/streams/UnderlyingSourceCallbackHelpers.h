@@ -174,8 +174,10 @@ class InputStreamHolder final : public nsIInputStreamCallback {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAMCALLBACK
 
-  InputStreamHolder(JSContext* aCx, InputToReadableStreamAlgorithms* aCallback,
+  InputStreamHolder(InputToReadableStreamAlgorithms* aCallback,
                     nsIAsyncInputStream* aInput);
+
+  void Init(JSContext* aCx);
 
   // Used by Worker shutdown
   void Shutdown();
@@ -214,8 +216,10 @@ class InputToReadableStreamAlgorithms final
   InputToReadableStreamAlgorithms(JSContext* aCx, nsIAsyncInputStream* aInput,
                                   ReadableStream* aStream)
       : mOwningEventTarget(GetCurrentSerialEventTarget()),
-        mInput(new InputStreamHolder(aCx, this, aInput)),
-        mStream(aStream) {}
+        mInput(new InputStreamHolder(this, aInput)),
+        mStream(aStream) {
+    mInput->Init(aCx);
+  }
 
   // Streams algorithms
 
