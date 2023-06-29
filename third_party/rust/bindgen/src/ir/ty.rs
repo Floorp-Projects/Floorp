@@ -737,7 +737,12 @@ impl Type {
 
         let layout = ty.fallible_layout(ctx).ok();
         let cursor = ty.declaration();
-        let mut name = cursor.spelling();
+        let is_anonymous = cursor.is_anonymous();
+        let mut name = if is_anonymous {
+            None
+        } else {
+            Some(cursor.spelling()).filter(|n| !n.is_empty())
+        };
 
         debug!(
             "from_clang_ty: {:?}, ty: {:?}, loc: {:?}",
@@ -771,7 +776,7 @@ impl Type {
             if is_canonical_objcpointer && is_template_type_param {
                 // Objective-C generics are just ids with fancy name.
                 // To keep it simple, just name them ids
-                name = "id".to_owned();
+                name = Some("id".to_owned());
             }
         }
 
@@ -900,7 +905,7 @@ impl Type {
                                         return Err(ParseError::Recurse);
                                     }
                                 } else {
-                                    name = location.spelling();
+                                    name = Some(location.spelling());
                                 }
 
                                 let complex = CompInfo::from_ty(
@@ -942,7 +947,7 @@ impl Type {
                                                 CXType_Typedef
                                             );
 
-                                            name = current.spelling();
+                                            name = Some(location.spelling());
 
                                             let inner_ty = cur
                                                 .typedef_type()
@@ -1126,10 +1131,10 @@ impl Type {
                 CXType_Enum => {
                     let enum_ = Enum::from_ty(ty, ctx).expect("Not an enum?");
 
-                    if name.is_empty() {
+                    if !is_anonymous {
                         let pretty_name = ty.spelling();
                         if clang::is_valid_identifier(&pretty_name) {
-                            name = pretty_name;
+                            name = Some(pretty_name);
                         }
                     }
 
@@ -1144,12 +1149,12 @@ impl Type {
                     )
                     .expect("Not a complex type?");
 
-                    if name.is_empty() {
+                    if !is_anonymous {
                         // The pretty-printed name may contain typedefed name,
                         // but may also be "struct (anonymous at .h:1)"
                         let pretty_name = ty.spelling();
                         if clang::is_valid_identifier(&pretty_name) {
-                            name = pretty_name;
+                            name = Some(pretty_name);
                         }
                     }
 
@@ -1161,8 +1166,7 @@ impl Type {
                         location,
                         None,
                         ctx,
-                    )
-                    .expect("Not able to resolve vector element?");
+                    )?;
                     TypeKind::Vector(inner, ty.num_elements().unwrap())
                 }
                 CXType_ConstantArray => {
@@ -1189,7 +1193,9 @@ impl Type {
                 CXType_ObjCClass | CXType_ObjCInterface => {
                     let interface = ObjCInterface::from_ty(&location, ctx)
                         .expect("Not a valid objc interface?");
-                    name = interface.rust_name();
+                    if !is_anonymous {
+                        name = Some(interface.rust_name());
+                    }
                     TypeKind::ObjCInterface(interface)
                 }
                 CXType_Dependent => {
@@ -1207,7 +1213,7 @@ impl Type {
             }
         };
 
-        let name = if name.is_empty() { None } else { Some(name) };
+        name = name.filter(|n| !n.is_empty());
 
         let is_const = ty.is_const() ||
             (ty.kind() == CXType_ConstantArray &&

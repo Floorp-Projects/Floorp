@@ -1528,6 +1528,8 @@ class Document : public nsINode,
   void InitFeaturePolicy();
   nsresult InitFeaturePolicy(nsIChannel* aChannel);
 
+  void EnsureNotEnteringAndExitFullscreen();
+
  protected:
   friend class nsUnblockOnloadEvent;
 
@@ -2896,6 +2898,12 @@ class Document : public nsINode,
 
   Document* GetTemplateContentsOwnerIfExists() const {
     return mTemplateContentsOwner.get();
+  }
+
+  bool IsTemplateContentsOwner() const {
+    // Template contents owner documents are the template contents owner of
+    // themselves.
+    return mTemplateContentsOwner == this;
   }
 
   /**

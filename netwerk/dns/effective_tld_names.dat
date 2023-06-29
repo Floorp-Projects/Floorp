@@ -6274,6 +6274,7 @@ net.vi
 org.vi
 
 // vn : https://www.vnnic.vn/en/domain/cctld-vn
+// https://vnnic.vn/sites/default/files/tailieu/vn.cctld.domains.txt
 vn
 ac.vn
 ai.vn
@@ -6290,6 +6291,71 @@ name.vn
 net.vn
 org.vn
 pro.vn
+
+// vn geographical names
+angiang.vn
+bacgiang.vn
+backan.vn
+baclieu.vn
+bacninh.vn
+baria-vungtau.vn
+bentre.vn
+binhdinh.vn
+binhduong.vn
+binhphuoc.vn
+binhthuan.vn
+camau.vn
+cantho.vn
+caobang.vn
+daklak.vn
+daknong.vn
+danang.vn
+dienbien.vn
+dongnai.vn
+dongthap.vn
+gialai.vn
+hagiang.vn
+haiduong.vn
+haiphong.vn
+hanam.vn
+hanoi.vn
+hatinh.vn
+haugiang.vn
+hoabinh.vn
+hungyen.vn
+khanhhoa.vn
+kiengiang.vn
+kontum.vn
+laichau.vn
+lamdong.vn
+langson.vn
+laocai.vn
+longan.vn
+namdinh.vn
+nghean.vn
+ninhbinh.vn
+ninhthuan.vn
+phutho.vn
+phuyen.vn
+quangbinh.vn
+quangnam.vn
+quangngai.vn
+quangninh.vn
+quangtri.vn
+soctrang.vn
+sonla.vn
+tayninh.vn
+thaibinh.vn
+thainguyen.vn
+thanhhoa.vn
+thanhphohochiminh.vn
+thuathienhue.vn
+tiengiang.vn
+travinh.vn
+tuyenquang.vn
+vinhlong.vn
+vinhphuc.vn
+yenbai.vn
 
 // vu : https://en.wikipedia.org/wiki/.vu
 // http://www.vunic.vu/
@@ -6653,7 +6719,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-06-14T15:13:06Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-06-16T15:12:40Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7324,9 +7390,6 @@ contractors
 // cooking : 2013-11-21 Registry Services, LLC
 cooking
 
-// cookingchannel : 2015-07-02 Lifestyle Domain Holdings, Inc.
-cookingchannel
-
 // cool : 2013-11-14 Binky Moon, LLC
 cool
 
@@ -7714,9 +7777,6 @@ foo
 // food : 2016-04-21 Lifestyle Domain Holdings, Inc.
 food
 
-// foodnetwork : 2015-07-02 Lifestyle Domain Holdings, Inc.
-foodnetwork
-
 // football : 2014-12-18 Binky Moon, LLC
 football
 
@@ -7951,7 +8011,7 @@ hdfc
 // hdfcbank : 2015-02-12 HDFC Bank Limited
 hdfcbank
 
-// health : 2015-02-11 DotHealth, LLC
+// health : 2015-02-11 Registry Services, LLC
 health
 
 // healthcare : 2014-06-12 Binky Moon, LLC
@@ -7968,9 +8028,6 @@ here
 
 // hermes : 2014-07-10 HERMES INTERNATIONAL
 hermes
-
-// hgtv : 2015-07-02 Lifestyle Domain Holdings, Inc.
-hgtv
 
 // hiphop : 2014-03-06 Dot Hip Hop, LLC
 hiphop
@@ -9507,9 +9564,6 @@ training
 
 // travel : 2015-10-09 Dog Beach, LLC
 travel
-
-// travelchannel : 2015-07-02 Lifestyle Domain Holdings, Inc.
-travelchannel
 
 // travelers : 2015-03-26 Travelers TLD, LLC
 travelers

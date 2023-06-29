@@ -31,7 +31,7 @@ pub unsafe extern "C" fn Rust_ObserveFromRust() -> *const interfaces::nsIObserve
             &self,
             _subject: *const interfaces::nsISupports,
             topic: *const c_char,
-            _data: *const i16,
+            _data: *const u16,
         ) -> nsresult {
             *self.run = true;
             assert!(CStr::from_ptr(topic).to_str() == Ok("test-rust-observe"));
@@ -118,7 +118,7 @@ pub unsafe extern "C" fn Rust_GetMultipleInterfaces(
             &self,
             _subject: *const interfaces::nsISupports,
             _topic: *const c_char,
-            _data: *const i16,
+            _data: *const u16,
         ) -> nsresult {
             NS_OK
         }

@@ -105,13 +105,13 @@ fn ensure_observing_shutdown() {
 struct InitShutdownObserver {}
 
 impl ShutdownObserver {
-    xpcom_method!(observe => Observe(_subject: *const nsISupports, topic: *const c_char, _data: *const i16));
+    xpcom_method!(observe => Observe(_subject: *const nsISupports, topic: *const c_char, _data: *const u16));
     /// Remove our shutdown observer and clear the map.
     fn observe(
         &self,
         _subject: &nsISupports,
         topic: *const c_char,
-        _data: *const i16,
+        _data: *const u16,
     ) -> Result<(), nsresult> {
         LOGGERS_BY_TARGET.write().unwrap().clear();
         if let Some(service) = xpcom::services::get_ObserverService() {

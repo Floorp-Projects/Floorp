@@ -58,7 +58,7 @@ impl MyObserver {
         &self,
         _subject: *const nsISupports,
         _topic: *const c_char,
-        _data: *const i16,
+        _data: *const u16,
     ) -> nsresult {
         self.ran.store(true, Ordering::SeqCst);
         nserror::NS_OK
