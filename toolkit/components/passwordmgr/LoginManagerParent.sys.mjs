@@ -372,8 +372,7 @@ export class LoginManagerParent extends JSWindowActorParent {
         FirefoxRelayTelemetry.recordRelayOfferedEvent(
           "clicked",
           data.telemetry.flowId,
-          data.telemetry.scenarioName,
-          data.telemetry.isRelayUser
+          data.telemetry.scenarioName
         );
         return this.#offerRelayIntegration(context.origin);
       }
