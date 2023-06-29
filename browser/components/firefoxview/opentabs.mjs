@@ -113,13 +113,20 @@ class OpenTabsInView extends ViewPage {
         rel="stylesheet"
         href="chrome://browser/content/firefoxview/view-opentabs.css"
       />
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/firefoxview/firefoxview-next.css"
+      />
+      <div class="sticky-container bottom-fade">
+        <h2 class="page-header" data-l10n-id="firefoxview-opentabs-header"></h2>
+      </div>
       <div
-        class=${classMap({
+        class="${classMap({
           "view-opentabs-card-container": true,
           "one-column": this.windows.size <= 1,
           "two-columns": this.windows.size === 2,
           "three-columns": this.windows.size >= 3,
-        })}
+        })} cards-container"
       >
         ${when(
           currentWindowIndex && currentWindowTabs,
