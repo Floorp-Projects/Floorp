@@ -10,11 +10,18 @@
 #include <tuple>
 
 #include "ErrorList.h"
+#include "js/TypeDecls.h"
 #include "mozilla/Result.h"
 #include "mozilla/Span.h"
 #include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla::dom {
+
+/*
+ * The followings are helpers for VideoDecoder methods
+ */
+
+nsTArray<nsCString> GuessContainers(const nsString& aCodec);
 
 /*
  * Below are helpers to operate ArrayBuffer or ArrayBufferView.
@@ -27,6 +34,11 @@ Result<Span<uint8_t>, nsresult> GetSharedArrayBufferData(
     const MaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
 
 Result<Span<uint8_t>, nsresult> GetSharedArrayBufferData(
+    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
+
+Result<OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer, nsresult>
+CloneBuffer(
+    JSContext* aCx,
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
 
 }  // namespace mozilla::dom

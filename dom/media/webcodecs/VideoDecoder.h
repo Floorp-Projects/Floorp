@@ -71,7 +71,7 @@ class VideoDecoder final : public DOMEventTargetHelper {
   void Close(ErrorResult& aRv);
 
   static already_AddRefed<Promise> IsConfigSupported(
-      const GlobalObject& global, const VideoDecoderConfig& config,
+      const GlobalObject& aGlobal, const VideoDecoderConfig& aConfig,
       ErrorResult& aRv);
 };
 
