@@ -47,10 +47,10 @@ Result<Span<uint8_t>, nsresult> GetSharedArrayBufferData(
 Result<Span<uint8_t>, nsresult> GetSharedArrayBufferData(
     const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
 
-Result<OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer, nsresult>
-CloneBuffer(
+Result<Ok, nsresult> CloneBuffer(
     JSContext* aCx,
-    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer);
+    OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aDest,
+    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aSrc);
 
 /*
  * The following are utilities to convert between VideoColorSpace values to
