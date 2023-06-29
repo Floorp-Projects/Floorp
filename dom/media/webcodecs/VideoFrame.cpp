@@ -52,49 +52,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VideoFrame)
 NS_INTERFACE_MAP_END
 
 /*
- * The following are utilities to convert from gfx's formats to
- * VideoPixelFormats.
- */
-
-static Maybe<VideoPixelFormat> ToVideoPixelFormat(gfx::SurfaceFormat aFormat) {
-  switch (aFormat) {
-    case gfx::SurfaceFormat::B8G8R8A8:
-      return Some(VideoPixelFormat::BGRA);
-    case gfx::SurfaceFormat::B8G8R8X8:
-      return Some(VideoPixelFormat::BGRX);
-    case gfx::SurfaceFormat::R8G8B8A8:
-      return Some(VideoPixelFormat::RGBA);
-    case gfx::SurfaceFormat::R8G8B8X8:
-      return Some(VideoPixelFormat::RGBX);
-    case gfx::SurfaceFormat::NV12:
-      return Some(VideoPixelFormat::NV12);
-    default:
-      break;
-  }
-  return Nothing();
-}
-
-static Maybe<VideoPixelFormat> ToVideoPixelFormat(ImageBitmapFormat aFormat) {
-  switch (aFormat) {
-    case ImageBitmapFormat::RGBA32:
-      return Some(VideoPixelFormat::RGBA);
-    case ImageBitmapFormat::BGRA32:
-      return Some(VideoPixelFormat::BGRA);
-    case ImageBitmapFormat::YUV444P:
-      return Some(VideoPixelFormat::I444);
-    case ImageBitmapFormat::YUV422P:
-      return Some(VideoPixelFormat::I422);
-    case ImageBitmapFormat::YUV420P:
-      return Some(VideoPixelFormat::I420);
-    case ImageBitmapFormat::YUV420SP_NV12:
-      return Some(VideoPixelFormat::NV12);
-    default:
-      break;
-  }
-  return Nothing();
-}
-
-/*
  * The following are helpers to read the image data from the given buffer and
  * the format. The data layout is illustrated in the comments for
  * `VideoFrame::Format` below.
@@ -1040,11 +997,11 @@ InitializeFrameWithResourceAndSize(
 
   RefPtr<gfx::SourceSurface> surface = image->GetAsSourceSurface();
   Maybe<VideoFrame::Format> format =
-      ToVideoPixelFormat(surface->GetFormat())
+      SurfaceFormatToVideoPixelFormat(surface->GetFormat())
           .map([](const VideoPixelFormat& aFormat) {
             return VideoFrame::Format(aFormat);
           });
-  // TODO: Handle `ToVideoPixelFormat` failure.
+  // TODO: Handle `SurfaceFormatToVideoPixelFormat` failure.
   if (NS_WARN_IF(!format)) {
     return Err(nsCString("This image has unsupport format"));
   }
@@ -1386,7 +1343,8 @@ already_AddRefed<VideoFrame> VideoFrame::Constructor(
   }
 
   const ImageUtils imageUtils(image);
-  Maybe<VideoPixelFormat> format = ToVideoPixelFormat(imageUtils.GetFormat());
+  Maybe<VideoPixelFormat> format =
+      ImageBitmapFormatToVideoPixelFormat(imageUtils.GetFormat());
   if (!format) {
     aRv.ThrowTypeError("The video's image is in unsupported format");
     return nullptr;
