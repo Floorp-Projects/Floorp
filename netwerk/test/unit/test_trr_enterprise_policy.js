@@ -30,6 +30,36 @@ let policies = Cc["@mozilla.org/enterprisepolicies;1"].getService(
 );
 policies.observe(null, "policies-startup", null);
 
+add_task(async function test_enterprise_policy_unlocked() {
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
+    policies: {
+      DNSOverHTTPS: {
+        Enabled: false,
+        ProviderURL: "https://example.org/provider",
+        ExcludedDomains: ["example.com", "example.org"],
+      },
+    },
+  });
+
+  equal(Services.prefs.getIntPref("network.trr.mode"), 5);
+  equal(Services.prefs.prefIsLocked("network.trr.mode"), false);
+  equal(
+    Services.prefs.getStringPref("network.trr.uri"),
+    "https://example.org/provider"
+  );
+  equal(Services.prefs.prefIsLocked("network.trr.uri"), false);
+  equal(
+    Services.prefs.getStringPref("network.trr.excluded-domains"),
+    "example.com,example.org"
+  );
+  equal(Services.prefs.prefIsLocked("network.trr.excluded-domains"), false);
+  equal(Services.dns.currentTrrMode, 5);
+  equal(Services.dns.currentTrrURI, "https://example.org/provider");
+  Services.dns.setDetectedTrrURI("https://autodetect.example.com/provider");
+  equal(Services.dns.currentTrrMode, 5);
+  equal(Services.dns.currentTrrURI, "https://example.org/provider");
+});
+
 add_task(async function test_enterprise_policy_locked() {
   // Read dns.currentTrrMode to make DNS service initialized earlier.
   info("Services.dns.currentTrrMode:" + Services.dns.currentTrrMode);
@@ -60,34 +90,4 @@ add_task(async function test_enterprise_policy_locked() {
   equal(Services.dns.currentTrrURI, "https://example.com/provider");
   Services.dns.setDetectedTrrURI("https://autodetect.example.com/provider");
   equal(Services.dns.currentTrrURI, "https://example.com/provider");
-});
-
-add_task(async function test_enterprise_policy_unlocked() {
-  await EnterprisePolicyTesting.setupPolicyEngineWithJson({
-    policies: {
-      DNSOverHTTPS: {
-        Enabled: false,
-        ProviderURL: "https://example.org/provider",
-        ExcludedDomains: ["example.com", "example.org"],
-      },
-    },
-  });
-
-  equal(Services.prefs.getIntPref("network.trr.mode"), 5);
-  equal(Services.prefs.prefIsLocked("network.trr.mode"), false);
-  equal(
-    Services.prefs.getStringPref("network.trr.uri"),
-    "https://example.org/provider"
-  );
-  equal(Services.prefs.prefIsLocked("network.trr.uri"), false);
-  equal(
-    Services.prefs.getStringPref("network.trr.excluded-domains"),
-    "example.com,example.org"
-  );
-  equal(Services.prefs.prefIsLocked("network.trr.excluded-domains"), false);
-  equal(Services.dns.currentTrrMode, 5);
-  equal(Services.dns.currentTrrURI, "https://example.org/provider");
-  Services.dns.setDetectedTrrURI("https://autodetect.example.com/provider");
-  equal(Services.dns.currentTrrMode, 5);
-  equal(Services.dns.currentTrrURI, "https://example.org/provider");
 });

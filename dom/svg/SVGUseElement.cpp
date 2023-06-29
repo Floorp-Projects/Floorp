@@ -266,8 +266,7 @@ static bool IsTooMuchRecursion(uint32_t aCount) {
       }
       break;
   }
-  return NS_WARN_IF(aCount >=
-                    StaticPrefs::svg_use_element_recursive_clone_limit());
+  return aCount >= StaticPrefs::svg_use_element_recursive_clone_limit();
 }
 
 // Circular loop detection, plus detection of whether this shadow tree is

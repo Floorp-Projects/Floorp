@@ -1046,12 +1046,13 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
   } else if (!mLoadingEntries.IsEmpty()) {
     const LoadingSessionHistoryEntry& loadingEntry =
         mLoadingEntries.LastElement();
+    uint64_t loadId = loadingEntry.mLoadId;
     aLoadState.emplace(
         WrapMovingNotNull(RefPtr{CreateLoadInfo(loadingEntry.mEntry)}));
     aReloadActiveEntry.emplace(false);
     if (aForceReload) {
       SessionHistoryEntry::LoadingEntry* entry =
-          SessionHistoryEntry::GetByLoadId(loadingEntry.mLoadId);
+          SessionHistoryEntry::GetByLoadId(loadId);
       if (entry) {
         shistory->RemoveFrameEntries(entry->mEntry);
       }

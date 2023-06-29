@@ -492,22 +492,6 @@ Accessible* RemoteAccessibleBase<Derived>::ChildAtPoint(
           // first match we encounter is guaranteed to be the
           // deepest match.
           lastMatch = acc;
-          if (lastMatch->Role() == roles::TEXT_CONTAINER) {
-            // We've matched on a generic, we probably want its
-            // inner text leaf (if one exists). Drill down through
-            // subsequent generics, regardless of whether the point
-            // we want is actually contained therein."
-            while (lastMatch->ChildCount() == 1) {
-              if (lastMatch->Role() == roles::TEXT_CONTAINER) {
-                lastMatch = lastMatch->RemoteChildAt(0);
-              } else {
-                break;
-              }
-            }
-            // If we failed to find a text leaf, fall back to the
-            // original generic match.
-            lastMatch = lastMatch->IsTextLeaf() ? lastMatch : acc;
-          }
           break;
         }
       }
@@ -669,17 +653,6 @@ bool RemoteAccessibleBase<Derived>::IsFixedPos() const {
 }
 
 template <class Derived>
-bool RemoteAccessibleBase<Derived>::IsOverflowHidden() const {
-  MOZ_ASSERT(mCachedFields);
-  if (auto maybeOverflow =
-          mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::overflow)) {
-    return *maybeOverflow == nsGkAtoms::hidden;
-  }
-
-  return false;
-}
-
-template <class Derived>
 LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
     Maybe<nsRect> aOffset, bool aBoundsAreForHittesting) const {
   Maybe<nsRect> maybeBounds = RetrieveCachedBounds();
@@ -755,12 +728,11 @@ LayoutDeviceIntRect RemoteAccessibleBase<Derived>::BoundsWithOffset(
           // that the bounds we've calculated so far are constrained to the
           // bounds of the scroll area. Without this, we'll "hit" the off-screen
           // portions of accs that are are partially (but not fully) within the
-          // scroll area. This is also a problem for accs with overflow:hidden;
-          if (aBoundsAreForHittesting &&
-              (hasScrollArea || remoteAcc->IsOverflowHidden())) {
-            nsRect selfRelativeVisibleBounds(0, 0, remoteBounds.width,
-                                             remoteBounds.height);
-            bounds = bounds.SafeIntersect(selfRelativeVisibleBounds);
+          // scroll area.
+          if (aBoundsAreForHittesting && hasScrollArea) {
+            nsRect selfRelativeScrollBounds(0, 0, remoteBounds.width,
+                                            remoteBounds.height);
+            bounds = bounds.SafeIntersect(selfRelativeScrollBounds);
           }
         }
         if (remoteAcc->IsDoc()) {

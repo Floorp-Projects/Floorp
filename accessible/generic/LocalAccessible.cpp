@@ -3488,18 +3488,10 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
-  if (aCacheDomain & CacheDomain::ScrollPosition && frame) {
-    const auto [scrollPosition, scrollRange] = mDoc->ComputeScrollData(this);
-    if (scrollRange.width || scrollRange.height) {
-      // If the scroll range is 0 by 0, this acc is not scrollable. We
-      // can't simply check scrollPosition != 0, since it's valid for scrollable
-      // frames to have a (0, 0) position. We also can't check IsEmpty or
-      // ZeroArea because frames with only one scrollable dimension will return
-      // a height/width of zero for the non-scrollable dimension, yielding zero
-      // area even if the width/height for the scrollable dimension is nonzero.
-      // We also cache (0, 0) for accs with overflow:auto or overflow:scroll,
-      // even if the content is not currently large enough to be scrollable
-      // right now -- these accs have a non-zero scroll range.
+  if (aCacheDomain & CacheDomain::ScrollPosition) {
+    nsPoint scrollPosition;
+    std::tie(scrollPosition, std::ignore) = mDoc->ComputeScrollData(this);
+    if (scrollPosition.x || scrollPosition.y) {
       nsTArray<int32_t> positionArr(2);
       positionArr.AppendElement(scrollPosition.x);
       positionArr.AppendElement(scrollPosition.y);
@@ -3607,17 +3599,6 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       fields->SetAttribute(nsGkAtoms::position, nsGkAtoms::fixed);
     } else if (aUpdateType != CacheUpdateType::Initial) {
       fields->SetAttribute(nsGkAtoms::position, DeleteEntry());
-    }
-
-    if (frame) {
-      nsAutoCString overflow;
-      frame->Style()->GetComputedPropertyValue(eCSSProperty_overflow, overflow);
-      RefPtr<nsAtom> overflowAtom = NS_Atomize(overflow);
-      if (overflowAtom == nsGkAtoms::hidden) {
-        fields->SetAttribute(nsGkAtoms::overflow, nsGkAtoms::hidden);
-      } else if (aUpdateType != CacheUpdateType::Initial) {
-        fields->SetAttribute(nsGkAtoms::overflow, DeleteEntry());
-      }
     }
   }
 
@@ -3824,24 +3805,6 @@ void LocalAccessible::MaybeQueueCacheUpdateForStyleChanges() {
 
   if (nsIFrame* frame = GetFrame()) {
     const ComputedStyle* newStyle = frame->Style();
-
-    nsAutoCString oldOverflow, newOverflow;
-    mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_overflow,
-                                                oldOverflow);
-    newStyle->GetComputedPropertyValue(eCSSProperty_overflow, newOverflow);
-
-    if (oldOverflow != newOverflow) {
-      if (oldOverflow.Equals("hidden"_ns) || newOverflow.Equals("hidden"_ns)) {
-        mDoc->QueueCacheUpdate(this, CacheDomain::Style);
-      }
-      if (oldOverflow.Equals("auto"_ns) || newOverflow.Equals("auto"_ns) ||
-          oldOverflow.Equals("scroll"_ns) || newOverflow.Equals("scroll"_ns)) {
-        // We cache a (0,0) scroll position for frames that have overflow
-        // styling which means they _could_ become scrollable, even if the
-        // content within them doesn't currently scroll.
-        mDoc->QueueCacheUpdate(this, CacheDomain::ScrollPosition);
-      }
-    }
 
     nsAutoCString oldDisplay, newDisplay;
     mOldComputedStyle->GetComputedPropertyValue(eCSSProperty_display,

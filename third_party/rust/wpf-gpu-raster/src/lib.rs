@@ -177,11 +177,18 @@ impl PathBuilder {
         self.curve_to(c1x, c1y, c2x, c2y, x, y);
     }
     pub fn close(&mut self) {
-        if let Some(last) = self.types.last_mut() {
-            *last |= PathPointTypeCloseSubpath;
+        if self.in_shape {
+          // Only close the path if we are inside a shape. Otherwise, the point
+          // should be safe to elide.
+          if let Some(last) = self.types.last_mut() {
+              *last |= PathPointTypeCloseSubpath;
+          }
+          self.in_shape = false;
         }
-        self.in_shape = false;
-        self.initial_point = None;
+        // Close must install a new initial point that is the same as the
+        // initial point of the just-closed sub-path. Thus, just leave the
+        // initial point unchanged.
+        self.current_point = self.initial_point;
     }
     pub fn set_fill_mode(&mut self, fill_mode: FillMode) {
         self.fill_mode = fill_mode;
@@ -665,5 +672,20 @@ mod tests {
         let result = p.rasterize_to_tri_list(0, 0, 70, 40);
         assert_eq!(result.len(), 279);
         assert_eq!(calculate_hash(&rasterize_to_mask(&result, 70, 40)), 0xbd2eec3cfe9bd30b);
+    }
+
+    #[test]
+    fn close_after_move_to() {
+        let mut p = PathBuilder::new();
+        p.move_to(10., 0.);
+        p.close();
+        p.move_to(0., 0.);
+        p.line_to(0., 10.);
+        p.line_to(10., 10.);
+        p.move_to(10., 0.);
+        p.close();
+        let result = p.rasterize_to_tri_list(0, 0, 20, 20);
+        assert_eq!(result.len(), 27);
+        assert_eq!(dbg!(calculate_hash(&result)), 0xecfdf5bdfa25a1dd);
     }
 }

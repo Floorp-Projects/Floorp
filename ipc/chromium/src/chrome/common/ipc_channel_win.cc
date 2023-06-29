@@ -319,7 +319,13 @@ bool Channel::ChannelImpl::ProcessConnection() {
   }
 
   switch (err) {
-    case ERROR_IO_PENDING:
+    case ERROR_IO_PENDING: {
+      static bool kExtendedTimeout =
+#ifdef DEBUG
+          true;
+#else
+          !!PR_GetEnv("MOZ_RUN_GTEST");
+#endif
       input_state_.is_pending = this;
       NS_NewTimerWithCallback(
           getter_AddRefs(connect_timeout_),
@@ -329,9 +335,9 @@ bool Channel::ChannelImpl::ProcessConnection() {
             self->Close();
             self->listener_->OnChannelError();
           },
-          10000, nsITimer::TYPE_ONE_SHOT, "ChannelImpl::ProcessConnection",
-          IOThread().GetEventTarget());
-      break;
+          kExtendedTimeout ? 60000 : 10000, nsITimer::TYPE_ONE_SHOT,
+          "ChannelImpl::ProcessConnection", IOThread().GetEventTarget());
+    } break;
     case ERROR_PIPE_CONNECTED:
       waiting_connect_ = false;
       if (connect_timeout_) {

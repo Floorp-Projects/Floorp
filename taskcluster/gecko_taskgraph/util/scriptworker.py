@@ -62,6 +62,7 @@ SIGNING_SCOPE_ALIAS_TO_PROJECT = [
             "mozilla-esr115",
             "comm-beta",
             "comm-esr102",
+            "comm-esr115",
         },
     ],
 ]
@@ -108,6 +109,7 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [
             "mozilla-esr115",
             "comm-beta",
             "comm-esr102",
+            "comm-esr115",
         },
     ],
 ]
@@ -178,6 +180,7 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [
         {
             "mozilla-release",
             "comm-esr102",
+            "comm-esr115",
         },
     ],
     [
