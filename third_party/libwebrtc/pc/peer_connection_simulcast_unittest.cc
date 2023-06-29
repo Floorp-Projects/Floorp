@@ -850,6 +850,8 @@ INSTANTIATE_TEST_SUITE_P(NumberOfSendEncodings,
 // Inherits some helper methods from PeerConnectionSimulcastTests but
 // uses real threads and PeerConnectionTestWrapper to create fake media streams
 // with flowing media and establish connections.
+// TODO(https://crbug.com/webrtc/14884): Move these integration tests into a
+// separate file and rename them to PeerConnectionEncodingIntegrationTests.
 class PeerConnectionSimulcastWithMediaFlowTests
     : public PeerConnectionSimulcastTests {
  public:
@@ -1361,6 +1363,59 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_FALSE(encodings[0].scalability_mode.has_value());
   EXPECT_FALSE(encodings[1].scalability_mode.has_value());
   EXPECT_FALSE(encodings[2].scalability_mode.has_value());
+}
+
+// The spec-compliant way to configure SVC. The expected outcome is the same as
+// for the legacy SVC case except that we only have one encoding.
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingOneEncoding_VP9_StandardSVC) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers = CreateLayers({"f"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP9");
+  transceiver->SetCodecPreferences(codecs);
+  // Configure SVC, a.k.a. "L3T3_KEY".
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  parameters.encodings[0].scalability_mode = "L3T3_KEY";
+  EXPECT_TRUE(sender->SetParameters(parameters).ok());
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing. We only expect a single RTP stream.
+  // We expect to see bytes flowing almost immediately on the lowest layer.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+                   kDefaultTimeout.ms());
+  // Significant ramp up time is needed until maximum resolution is achieved so
+  // we disable `log_during_ramp_up` to avoid log spam.
+  // Because only a single encoding is used, the RID is not used.
+  EXPECT_TRUE_WAIT(
+      HasOutboundRtpExpectedResolutions(local_pc_wrapper, {{"", 1280, 720}},
+                                        /*log_during_ramp_up=*/false),
+      kLongTimeoutForRampingUp.ms());
+  // Verify codec and scalability mode.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(1u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/VP9"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L3T3_KEY"));
+
+  // GetParameters() is consistent with what we asked for and got.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode,
+              Optional(std::string("L3T3_KEY")));
 }
 
 // TODO(https://crbug.com/webrtc/14884): Support VP9 simulcast and update this
