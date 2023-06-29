@@ -48,6 +48,28 @@ var gBSBPane = {
     Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(this.BSBs))
   },
 
+  upWebpanel(id){
+    let index = this.BSBs.index.indexOf(id)
+    if(index >= 1){
+      let tempValue = this.BSBs.index[index]
+      this.BSBs.index[index] = this.BSBs.index[index - 1]
+      this.BSBs.index[index -1] = tempValue
+      Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(this.BSBs))
+      Services.obs.notifyObservers({ eventType: "mouseOut", id: `BSB-${id}` }, "obs-panel-re")
+    }
+  },
+
+  downWebpanel(id){
+    let index = this.BSBs.index.indexOf(id)
+    if(index != this.BSBs.index.length - 1 && index != -1){
+      let tempValue = this.BSBs.index[index]
+      this.BSBs.index[index] = this.BSBs.index[index + 1]
+      this.BSBs.index[index +1] = tempValue
+      Services.prefs.setStringPref(`floorp.browser.sidebar2.data`, JSON.stringify(this.BSBs))
+      Services.obs.notifyObservers({ eventType: "mouseOut", id: `BSB-${id}` }, "obs-panel-re")
+    }
+  },
+
   // called when the document is first parsed
   init() {
     Services.obs.addObserver(this.obsPanel, "obs-panel")
@@ -100,62 +122,75 @@ var gBSBPane = {
 
   panelSet() {
     this.BSBs = JSON.parse(Services.prefs.getStringPref(`floorp.browser.sidebar2.data`, undefined))
+    let isFirst = true
+    let lastElem = null
     for (let container of this.BSBs.index) {
+      let listItem = null
       if (document.getElementById(`BSB-${container}`) == null) {
-        let item = document.createXULElement("richlistitem");
-        item.id = `BSB-${container}`
-        item.classList.add("BSB-list")
-        item.onmouseover = function () { this.mouseOver(`BSB-${container}`) }.bind(this)
-        item.onmouseout = function () { this.mouseOut(`BSB-${container}`) }.bind(this)
-
-        let outer = document.createXULElement("hbox");
-        outer.setAttribute("flex", 1);
-        outer.setAttribute("align", "center");
-
-        item.appendChild(outer);
-
-        let userContextIcon = document.createXULElement("hbox");
-        userContextIcon.className = "userContext-icon";
-        userContextIcon.setAttribute("width", 24);
-        userContextIcon.setAttribute("height", 24);
-        userContextIcon.classList.add("userContext-icon-inprefs");
-        outer.appendChild(userContextIcon);
-
-        let label = document.createXULElement("label");
-        label.setAttribute("flex", 1);
-        label.classList.add("bsb_label")
-        let BSBName = ""
-        this.setURL(this.BSBs.data[container].url, label)
-        outer.appendChild(label);
-
-        let containerButtons = document.createXULElement("hbox");
-        containerButtons.className = "container-buttons";
-        item.appendChild(containerButtons);
-
-        let prefsButton = document.createXULElement("button");
-        prefsButton.addEventListener("command", function (event) {
-          gSubDialog.open(
-            "chrome://browser/content/preferences/dialogs/customURLs.xhtml",
-            undefined,
-            { id: event.target.getAttribute("value"), new: false }
-          );
-        });
-        prefsButton.setAttribute("value", container);
-        document.l10n.setAttributes(prefsButton, "sidebar2-pref-setting");
-        containerButtons.appendChild(prefsButton);
-
-        let removeButton = document.createXULElement("button");
-        removeButton.addEventListener("command", function (event) {
-          this.deleteWebpanel(event.target.getAttribute("value"))
-        }.bind(this));
-        removeButton.setAttribute("value", container);
-        document.l10n.setAttributes(removeButton, "sidebar2-pref-delete");
-        containerButtons.appendChild(removeButton);
-        this._list.insertBefore(item, document.getElementById("BSBSpace"));
+        listItem = window.MozXULElement.parseXULToFragment(`
+        <richlistitem id="BSB-${container}" class="BSB-list">
+          <hbox flex="1" align="center">
+            <hbox class="userContext-icon userContext-icon-inprefs" width="24" height="24"></hbox>
+            <label flex="1" class="bsb_label"></label>
+          </hbox>
+          <hbox class="container-buttons">
+            <button class="BMS-Up">↑</button>
+            <button class="BMS-Down">↓</button>
+            <button class="BMS-Edit"></button>
+            <button class="BMS-Remove"></button>
+          </hbox>
+        </richlistitem>
+        `).querySelector("*")
+        {
+          listItem.onmouseover = function () { this.mouseOver(`BSB-${container}`) }.bind(this)
+          listItem.onmouseout = function () { this.mouseOut(`BSB-${container}`) }.bind(this)
+        }{
+          let elem = listItem.querySelector(".bsb_label")
+          this.setURL(this.BSBs.data[container].url, elem)
+        }{
+          let elem = listItem.querySelector(".BMS-Edit")
+          elem.addEventListener("command", function (event) {
+            gSubDialog.open(
+              "chrome://browser/content/preferences/dialogs/customURLs.xhtml",
+              undefined,
+              { id: event.target.getAttribute("value"), new: false }
+            );
+          });
+          elem.setAttribute("value", container);
+          document.l10n.setAttributes(elem, "sidebar2-pref-setting");
+        }{
+          let elem = listItem.querySelector(".BMS-Remove")
+          elem.addEventListener("command", function (event) {
+            this.deleteWebpanel(event.target.getAttribute("value"))
+          }.bind(this));
+          elem.setAttribute("value", container);
+          document.l10n.setAttributes(elem, "sidebar2-pref-delete");
+        }{
+          let elem = listItem.querySelector(".BMS-Up")
+          elem.addEventListener("command", function (event) {
+            this.upWebpanel(event.target.getAttribute("value"))
+          }.bind(this));
+          elem.setAttribute("value", container);
+        }
+        {
+          let elem = listItem.querySelector(".BMS-Down")
+          elem.addEventListener("command", function (event) {
+            this.downWebpanel(event.target.getAttribute("value"))
+          }.bind(this));
+          elem.setAttribute("value", container);
+        }
+        this._list.insertBefore(listItem, document.getElementById("BSBSpace"));
       } else { 
-        this._list.insertBefore(document.getElementById(`BSB-${container}`), document.getElementById("BSBSpace")); 
-        this.setURL(this.BSBs.data[container].url, document.getElementById(`BSB-${container}`).querySelector(".bsb_label")) }
+        listItem = document.getElementById(`BSB-${container}`)
+        this._list.insertBefore(listItem, document.getElementById("BSBSpace")); 
+        this.setURL(this.BSBs.data[container].url, listItem.querySelector(".bsb_label")) 
+      }
+      listItem?.querySelector(".BMS-Up")?.setAttribute?.("disabled",isFirst ? "true" : "false")
+      listItem?.querySelector(".BMS-Down")?.setAttribute?.("disabled","false")
+      isFirst = false
+      lastElem = listItem
     }
+    lastElem?.querySelector(".BMS-Down")?.setAttribute?.("disabled","true")
     let BSBAll = document.querySelectorAll(".BSB-list")
     let sicon = BSBAll.length
     let side = this.BSBs.index.length
