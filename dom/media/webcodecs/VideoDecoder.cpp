@@ -147,8 +147,21 @@ static nsTArray<nsCString> GuessMIMETypes(const VideoDecoderConfig& aConfig) {
   return types;
 }
 
+static bool IsOnLinux() {
+#if defined(XP_LINUX) && !defined(ANDROID)
+  return true;
+#else
+  return false;
+#endif
+}
+
 // https://w3c.github.io/webcodecs/#check-configuration-support
 static bool CanDecode(const VideoDecoderConfig& aConfig) {
+  // Bug 1840508: H264-annexb doesn't work on non-linux platform. We only enable
+  // Linux for now.
+  if (!IsOnLinux()) {
+    return false;
+  }
   // TODO: Instead of calling CanHandleContainerType with the guessed the
   // containers, DecoderTraits should provide an API to tell if a codec is
   // decodable or not.
