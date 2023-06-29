@@ -621,10 +621,15 @@ class ConfigureMessage final
     : public ControlMessage,
       public MessageRequestHolder<DecoderAgent::ConfigurePromise> {
  public:
-  explicit ConfigureMessage(UniquePtr<VideoDecoderConfig>&& aConfig)
-      : ControlMessage(nsPrintfCString(
-            "%s-configuration", NS_ConvertUTF16toUTF8(aConfig->mCodec).get())),
-        mConfig(std::move(aConfig)) {}
+  using Id = DecoderAgent::Id;
+  static constexpr Id NoId = 0;
+  static ConfigureMessage* Create(UniquePtr<VideoDecoderConfig>&& aConfig) {
+    // This needs to be atomic since this can run on the main thread or worker
+    // thread.
+    static std::atomic<Id> sNextId = NoId;
+    return new ConfigureMessage(++sNextId, std::move(aConfig));
+  }
+
   ~ConfigureMessage() = default;
   virtual void Cancel() override { Disconnect(); }
   virtual bool IsProcessing() override { return Exists(); };
@@ -632,7 +637,16 @@ class ConfigureMessage final
   const VideoDecoderConfig& Config() { return *mConfig; }
   UniquePtr<VideoDecoderConfig> TakeConfig() { return std::move(mConfig); }
 
+  const Id mId;  // A unique id shown in log.
+
  private:
+  ConfigureMessage(Id aId, UniquePtr<VideoDecoderConfig>&& aConfig)
+      : ControlMessage(
+            nsPrintfCString("configure #%d (%s)", aId,
+                            NS_ConvertUTF16toUTF8(aConfig->mCodec).get())),
+        mId(aId),
+        mConfig(std::move(aConfig)) {}
+
   UniquePtr<VideoDecoderConfig> mConfig;
 };
 
@@ -663,8 +677,10 @@ class DecodeMessage final
     Maybe<uint64_t> mDuration;
   };
 
-  DecodeMessage(Id aId, UniquePtr<ChunkData>&& aData)
-      : ControlMessage(nsPrintfCString("decode #%zu", aId)),
+  DecodeMessage(Id aId, ConfigureMessage::Id aConfigId,
+                UniquePtr<ChunkData>&& aData)
+      : ControlMessage(
+            nsPrintfCString("decode #%zu (config #%d)", aId, aConfigId)),
         mId(aId),
         mData(std::move(aData)) {}
   ~DecodeMessage() = default;
@@ -690,8 +706,9 @@ class FlushMessage final
       public MessageRequestHolder<DecoderAgent::DecodePromise> {
  public:
   using Id = size_t;
-  FlushMessage(Id aId, Promise* aPromise)
-      : ControlMessage(nsPrintfCString("flush #%zu", aId)),
+  FlushMessage(Id aId, ConfigureMessage::Id aConfigId, Promise* aPromise)
+      : ControlMessage(
+            nsPrintfCString("flush #%zu (config #%d)", aId, aConfigId)),
         mId(aId),
         mPromise(aPromise) {}
   ~FlushMessage() = default;
@@ -763,6 +780,7 @@ VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
       mActiveConfig(nullptr),
       mDecodeQueueSize(0),
       mDequeueEventScheduled(false),
+      mLatestConfigureId(ConfigureMessage::NoId),
       mDecodeCounter(0),
       mFlushCounter(0) {
   MOZ_ASSERT(mErrorCallback);
@@ -841,7 +859,8 @@ void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
   mFlushCounter = 0;
 
   mControlMessageQueue.emplace(
-      UniquePtr<ControlMessage>(new ConfigureMessage(std::move(config))));
+      UniquePtr<ControlMessage>(ConfigureMessage::Create(std::move(config))));
+  mLatestConfigureId = mControlMessageQueue.back()->AsConfigureMessage()->mId;
   LOG("VideoDecoder %p enqueues %s", this,
       mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
@@ -868,8 +887,9 @@ void VideoDecoder::Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv) {
   }
 
   mDecodeQueueSize += 1;
-  mControlMessageQueue.emplace(UniquePtr<ControlMessage>(new DecodeMessage(
-      ++mDecodeCounter, MakeUnique<DecodeMessage::ChunkData>(aChunk))));
+  mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
+      new DecodeMessage(++mDecodeCounter, mLatestConfigureId,
+                        MakeUnique<DecodeMessage::ChunkData>(aChunk))));
   LOGV("VideoDecoder %p enqueues %s", this,
        mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
@@ -893,8 +913,8 @@ already_AddRefed<Promise> VideoDecoder::Flush(ErrorResult& aRv) {
 
   mKeyChunkRequired = true;
 
-  mControlMessageQueue.emplace(
-      UniquePtr<ControlMessage>(new FlushMessage(++mFlushCounter, p)));
+  mControlMessageQueue.emplace(UniquePtr<ControlMessage>(
+      new FlushMessage(++mFlushCounter, mLatestConfigureId, p)));
   LOG("VideoDecoder %p enqueues %s", this,
       mControlMessageQueue.back()->ToString().get());
   ProcessControlMessageQueue();
@@ -1267,7 +1287,7 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessConfigureMessage(
 
   auto i = CreateVideoInfo(msg->Config());
   if (!CanDecode(msg->Config()) || i.isErr() ||
-      !CreateDecoderAgent(msg->TakeConfig(), i.unwrap())) {
+      !CreateDecoderAgent(msg->mId, msg->TakeConfig(), i.unwrap())) {
     mProcessingMessage.reset();
     DebugOnly<Result<Ok, nsresult>> r =
         Close(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
@@ -1535,7 +1555,8 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessFlushMessage(
 // ShutdownpPomise-resolver. In case 2, the entry point is in mWorkerRef's
 // shutting down callback. In case 3, the entry point is in mWorkerRef's
 // shutting down callback.
-bool VideoDecoder::CreateDecoderAgent(UniquePtr<VideoDecoderConfig>&& aConfig,
+bool VideoDecoder::CreateDecoderAgent(DecoderAgent::Id aId,
+                                      UniquePtr<VideoDecoderConfig>&& aConfig,
                                       UniquePtr<TrackInfo>&& aInfo) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
@@ -1571,7 +1592,7 @@ bool VideoDecoder::CreateDecoderAgent(UniquePtr<VideoDecoderConfig>&& aConfig,
     mWorkerRef = new ThreadSafeWorkerRef(workerRef);
   }
 
-  mAgent = DecoderAgent::Create(std::move(aInfo));
+  mAgent = MakeRefPtr<DecoderAgent>(aId, std::move(aInfo));
   mActiveConfig = std::move(aConfig);
 
   // ShutdownBlockingTicket requires an unique name to register its own
