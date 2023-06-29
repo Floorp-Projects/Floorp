@@ -18,10 +18,10 @@
 
 #include "modules/video_coding/codecs/h264/include/h264_globals.h"
 #include "modules/video_coding/codecs/vp9/include/vp9_globals.h"
+#include "modules/video_coding/deprecated/packet.h"
 #include "modules/video_coding/encoded_frame.h"
 #include "modules/video_coding/include/video_coding.h"
 #include "modules/video_coding/jitter_buffer_common.h"
-#include "modules/video_coding/packet.h"
 #include "modules/video_coding/session_info.h"
 
 namespace webrtc {

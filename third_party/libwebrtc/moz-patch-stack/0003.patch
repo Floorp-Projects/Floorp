@@ -1853,7 +1853,7 @@ index b660e02b72..54467d1477 100644
  }
  
 diff --git a/modules/video_coding/session_info.cc b/modules/video_coding/session_info.cc
-index 854230ae0a..e31b8b1d25 100644
+index 37e546d6ec..a2bc8fafd1 100644
 --- a/modules/video_coding/session_info.cc
 +++ b/modules/video_coding/session_info.cc
 @@ -210,16 +210,26 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,

@@ -12,7 +12,7 @@
 
 #include <string.h>
 
-#include "modules/video_coding/packet.h"
+#include "modules/video_coding/deprecated/packet.h"
 #include "test/gtest.h"
 
 namespace webrtc {

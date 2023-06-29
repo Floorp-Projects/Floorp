@@ -12,9 +12,9 @@
 
 #include "common_video/h264/h264_common.h"
 #include "modules/include/module_common_types_public.h"
+#include "modules/video_coding/deprecated/packet.h"
 #include "modules/video_coding/frame_buffer.h"
 #include "modules/video_coding/jitter_buffer_common.h"
-#include "modules/video_coding/packet.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {

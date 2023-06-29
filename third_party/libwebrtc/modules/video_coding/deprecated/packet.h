@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_VIDEO_CODING_PACKET_H_
-#define MODULES_VIDEO_CODING_PACKET_H_
+#ifndef MODULES_VIDEO_CODING_DEPRECATED_PACKET_H_
+#define MODULES_VIDEO_CODING_DEPRECATED_PACKET_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -77,4 +77,4 @@ class VCMPacket {
 };
 
 }  // namespace webrtc
-#endif  // MODULES_VIDEO_CODING_PACKET_H_
+#endif  // MODULES_VIDEO_CODING_DEPRECATED_PACKET_H_

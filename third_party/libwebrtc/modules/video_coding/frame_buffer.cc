@@ -14,8 +14,8 @@
 
 #include "api/video/encoded_image.h"
 #include "api/video/video_timing.h"
+#include "modules/video_coding/deprecated/packet.h"
 #include "modules/video_coding/include/video_codec_interface.h"
-#include "modules/video_coding/packet.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/trace_event.h"
