@@ -255,17 +255,6 @@ class HTMLElement(object):
         """Simulates a click on the element."""
         self.marionette._send_message("WebDriver:ElementClick", {"id": self.id})
 
-    def tap(self, x=None, y=None):
-        """Simulates a set of tap events on the element.
-
-        :param x: X coordinate of tap event.  If not given, default to
-            the centre of the element.
-        :param y: Y coordinate of tap event. If not given, default to
-            the centre of the element.
-        """
-        body = {"id": self.id, "x": x, "y": y}
-        self.marionette._send_message("Marionette:SingleTap", body)
-
     @property
     def text(self):
         """Returns the visible text of the element, and its child elements."""

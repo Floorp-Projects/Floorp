@@ -249,15 +249,6 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
     return this.sendQuery("MarionetteCommandsParent:releaseActions");
   }
 
-  async singleTap(webEl, x, y, capabilities) {
-    return this.sendQuery("MarionetteCommandsParent:singleTap", {
-      capabilities: capabilities.toJSON(),
-      elem: webEl,
-      x,
-      y,
-    });
-  }
-
   async switchToFrame(id) {
     const { browsingContextId } = await this.sendQuery(
       "MarionetteCommandsParent:switchToFrame",
@@ -339,7 +330,6 @@ export function getMarionetteCommandsActorProxy(browsingContextFn) {
     "performActions",
     "releaseActions",
     "sendKeysToElement",
-    "singleTap",
   ];
 
   return new Proxy(

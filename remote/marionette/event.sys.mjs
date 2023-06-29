@@ -96,11 +96,6 @@ event.DoubleClickTracker = {
   },
 };
 
-// Only used by legacyactions.js
-event.parseModifiers_ = function (modifiers, win) {
-  return _getEventUtils(win)._parseModifiers(modifiers);
-};
-
 /**
  * Synthesise a mouse event at a point.
  *
