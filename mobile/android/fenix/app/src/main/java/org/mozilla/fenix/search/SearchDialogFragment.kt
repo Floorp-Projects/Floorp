@@ -364,6 +364,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                     false
                 }
             }
+            R.id.onboardingFragment -> {
+                binding.searchWrapper.setOnTouchListener { _, _ ->
+                    dismissAllowingStateLoss()
+                    true
+                }
+            }
             R.id.historyFragment, R.id.bookmarkFragment -> {
                 binding.searchWrapper.setOnTouchListener { _, _ ->
                     dismissAllowingStateLoss()
