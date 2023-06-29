@@ -78,6 +78,7 @@ using ::testing::Property;
 using ::testing::SizeIs;
 using ::testing::StartsWith;
 using ::testing::StrCaseEq;
+using ::testing::StrEq;
 
 using cricket::MediaContentDescription;
 using cricket::RidDescription;
@@ -1107,9 +1108,9 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
               StrCaseEq("video/VP8"));
   EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[2]),
               StrCaseEq("video/VP8"));
-  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StartsWith("L1T"));
-  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StartsWith("L1T"));
-  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StartsWith("L1T"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
 }
 
 #if defined(WEBRTC_USE_H264)
@@ -1155,9 +1156,9 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
               StrCaseEq("video/H264"));
   EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[2]),
               StrCaseEq("video/H264"));
-  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StartsWith("L1T"));
-  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StartsWith("L1T"));
-  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StartsWith("L1T"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
 }
 
 #endif  // defined(WEBRTC_USE_H264)
@@ -1203,7 +1204,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   ASSERT_THAT(outbound_rtps, SizeIs(1u));
   EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
               StrCaseEq("video/VP9"));
-  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StartsWith("L3T3_KEY"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L3T3_KEY"));
 
   // Despite SVC being used on a single RTP stream, GetParameters() returns the
   // three encodings that we configured earlier (this is not spec-compliant but
