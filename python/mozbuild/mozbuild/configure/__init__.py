@@ -1083,8 +1083,7 @@ class ConfigureSandbox(dict):
     def _get_one_import(self, _from, _import, _as, glob):
         """Perform the given import, placing the result into the dict glob."""
         if not _from and _import == "__builtin__":
-            glob[_as or "__builtin__"] = __builtin__
-            return
+            raise Exception("Importing __builtin__ is forbidden")
         if _from == "__builtin__":
             _from = "six.moves.builtins"
         # The special `__sandbox__` module gives access to the sandbox
