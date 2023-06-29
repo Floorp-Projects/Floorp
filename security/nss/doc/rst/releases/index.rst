@@ -8,6 +8,8 @@ Releases
    :glob:
    :hidden:
 
+   nss_3_91_0.rst
+   nss_3_90_0.rst
    nss_3_89_1.rst
    nss_3_89.rst
    nss_3_88_1.rst
@@ -53,18 +55,27 @@ Releases
 
 .. note::
 
-   **NSS 3.89.1** is the latest version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_89_1_release_notes`
+   **NSS 3.91.0** is the latest version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_91_0_release_notes`
 
-   **NSS 3.79.4** is the latest ESR version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_79_4_release_notes`
-
+   **NSS 3.90.0 (ESR)** is the latest version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_90_0_release_notes`
 
 .. container::
 
-   Changes in 3.89.1 included in this release:
+   Changes in 3.91 included in this release:
 
-   - Bug 1804505 - Update the technical constraints for KamuSM.
-   - Bug 1822921 - Add BJCA Global Root CA1 and CA2 root certificates.
-
-
+ - Bug 1837431 - Implementation of the HW support check for ADX instruction
+ - Bug 1836925 - Removing the support of Curve25519
+ - Bug 1839795 - Fix comment about the addition of ticketSupportsEarlyData.
+ - Bug 1839327 - Adding args to enable-legacy-db build
+ - Bug 1835357 dbtests.sh failure in "certutil dump keys with explicit default trust flags"
+ - Bug 1837617: Initialize flags in slot structures
+ - Bug 1835425: Improve the length check of RSA input to avoid heap overflow
+ - Bug 1829112 - Followup Fixes
+ - Bug 1784253: avoid processing unexpected inputs by checking for m_exptmod base sign
+ - Bug 1826652: add a limit check on order_k to avoid infinite loop
+ - Bug 1834851 - Update HACL* to commit 5f6051d2.
+ - Bug 1753026 - add SHA3 to cryptohi and softoken.
+ - Bug 1753026: HACL SHA3
+ - Bug 1836781 - Disabling ASM C25519 for A but X86_64
