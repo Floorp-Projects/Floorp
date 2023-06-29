@@ -520,9 +520,6 @@ TEST(AudioProcessingImplTest,
   apm->ProcessStream(frame.data(), stream_config, stream_config, frame.data());
 }
 
-// Tests that a stream is successfully processed when AGC2 adaptive digital is
-// used and when the field trial
-// `WebRTC-Audio-TransientSuppressorVadMode/Enabled-Default/` is set.
 TEST(AudioProcessingImplTest,
      ProcessWithAgc2AndTransientSuppressorVadModeDefault) {
   webrtc::test::ScopedFieldTrials field_trials(
@@ -553,9 +550,6 @@ TEST(AudioProcessingImplTest,
   }
 }
 
-// Tests that a stream is successfully processed when AGC2 adaptive digital is
-// used and when the field trial
-// `WebRTC-Audio-TransientSuppressorVadMode/Enabled-RnnVad/` is set.
 TEST(AudioProcessingImplTest,
      ProcessWithAgc2AndTransientSuppressorVadModeRnnVad) {
   webrtc::test::ScopedFieldTrials field_trials(
