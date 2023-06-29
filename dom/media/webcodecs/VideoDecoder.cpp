@@ -9,16 +9,24 @@
 
 #include "DecoderTraits.h"
 #include "H264.h"
+#include "ImageContainer.h"
 #include "MediaContainerType.h"
+#include "MediaData.h"
+#include "TimeUnits.h"
 #include "VideoUtils.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/EncodedVideoChunk.h"
+#include "mozilla/dom/EncodedVideoChunkBinding.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/VideoFrame.h"
+#include "mozilla/dom/VideoFrameBinding.h"
 #include "mozilla/dom/WebCodecsUtils.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerRef.h"
@@ -28,6 +36,7 @@
 #include "nsString.h"
 
 mozilla::LazyLogModule gWebCodecsLog("WebCodecs");
+using mozilla::media::TimeUnit;
 
 namespace mozilla::dom {
 
@@ -51,6 +60,11 @@ namespace mozilla::dom {
 #  undef LOGE
 #endif  // LOGE
 #define LOGE(msg, ...) LOG_INTERNAL(Error, msg, ##__VA_ARGS__)
+
+#ifdef LOGV
+#  undef LOGV
+#endif  // LOGV
+#define LOGV(msg, ...) LOG_INTERNAL(Verbose, msg, ##__VA_ARGS__)
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(VideoDecoder, DOMEventTargetHelper,
                                    mErrorCallback, mOutputCallback)
@@ -354,6 +368,63 @@ static Result<VideoDecoderConfig, nsresult> CloneConfiguration(
   return c;
 }
 
+static Maybe<VideoPixelFormat> GuessPixelFormat(layers::Image* aImage) {
+  // TODO: Implement this.
+  return Nothing();
+}
+
+static VideoColorSpaceInit GuessColorSpace(layers::Image* aImage) {
+  // TODO: Implement this.
+  return {};
+}
+
+// https://w3c.github.io/webcodecs/#create-a-videoframe
+static RefPtr<VideoFrame> CreateVideoFrame(
+    nsIGlobalObject* aGlobalObject, const VideoData* aData, int64_t aTimestamp,
+    uint64_t aDuration, const uint32_t* mDisplayAspectWidth,
+    const uint32_t* mDisplayAspectHeight,
+    const VideoColorSpaceInit& aColorSpace) {
+  MOZ_ASSERT(aGlobalObject);
+  MOZ_ASSERT(aData);
+  MOZ_ASSERT((!!mDisplayAspectWidth) == (!!mDisplayAspectHeight));
+
+  Maybe<VideoPixelFormat> format = GuessPixelFormat(aData->mImage.get());
+  gfx::IntSize displaySize = aData->mDisplay;
+  if (mDisplayAspectWidth && mDisplayAspectHeight) {
+    // TODO: Calculate displaySize
+  }
+
+  // TODO: Allow constructing VideoFrame without pixel format
+  return MakeRefPtr<VideoFrame>(
+      aGlobalObject, aData->mImage,
+      format ? format.ref() : VideoPixelFormat::EndGuard_,
+      aData->mImage->GetSize(), aData->mImage->GetPictureRect(), displaySize,
+      Some(aDuration), aTimestamp, aColorSpace);
+}
+
+static nsTArray<RefPtr<VideoFrame>> DecodedDataToVideoFrames(
+    nsIGlobalObject* aGlobalObject, nsTArray<RefPtr<MediaData>>&& aData,
+    VideoDecoderConfig& aConfig) {
+  nsTArray<RefPtr<VideoFrame>> frames;
+  for (RefPtr<MediaData>& data : aData) {
+    MOZ_RELEASE_ASSERT(data->mType == MediaData::Type::VIDEO_DATA);
+    RefPtr<const VideoData> d(data->As<const VideoData>());
+    VideoColorSpaceInit colorSpace = GuessColorSpace(d->mImage.get());
+    frames.AppendElement(CreateVideoFrame(
+        aGlobalObject, d.get(), d->mTime.ToMicroseconds(),
+        static_cast<uint64_t>(d->mDuration.ToMicroseconds()),
+        aConfig.mDisplayAspectWidth.WasPassed()
+            ? &aConfig.mDisplayAspectWidth.Value()
+            : nullptr,
+        aConfig.mDisplayAspectHeight.WasPassed()
+            ? &aConfig.mDisplayAspectHeight.Value()
+            : nullptr,
+        aConfig.mColorSpace.WasPassed() ? aConfig.mColorSpace.Value()
+                                        : colorSpace));
+  }
+  return frames;
+}
+
 VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
                            RefPtr<WebCodecsErrorCallback>&& aErrorCallback,
                            RefPtr<VideoFrameOutputCallback>&& aOutputCallback)
@@ -361,9 +432,12 @@ VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
       mErrorCallback(std::move(aErrorCallback)),
       mOutputCallback(std::move(aOutputCallback)),
       mState(CodecState::Unconfigured),
+      mKeyChunkRequired(true),
       mMessageQueueBlocked(false),
       mAgent(nullptr),
-      mActiveConfig(nullptr) {
+      mActiveConfig(nullptr),
+      mDecodeQueueSize(0),
+      mDecodeMessageCounter(0) {
   MOZ_ASSERT(mErrorCallback);
   MOZ_ASSERT(mOutputCallback);
   LOG("VideoDecoder %p ctor", this);
@@ -400,7 +474,7 @@ already_AddRefed<VideoDecoder> VideoDecoder::Constructor(
 // https://w3c.github.io/webcodecs/#dom-videodecoder-state
 CodecState VideoDecoder::State() const { return mState; }
 
-uint32_t VideoDecoder::DecodeQueueSize() const { return 0; }
+uint32_t VideoDecoder::DecodeQueueSize() const { return mDecodeQueueSize; }
 
 already_AddRefed<EventHandlerNonNull> VideoDecoder::GetOndequeue() const {
   return nullptr;
@@ -441,15 +515,41 @@ void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
   MOZ_ASSERT(IsValid(*config));
 
   mState = CodecState::Configured;
+  mKeyChunkRequired = true;
+  mDecodeMessageCounter = 0;
 
-  mControlMessageQueue.emplace(ConfigureMessage(std::move(config)));
+  mControlMessageQueue.emplace(AsVariant(ConfigureMessage(std::move(config))));
   LOG("VideoDecoder %p enqueues %s", this,
-      mControlMessageQueue.back().mTitle.get());
+      mControlMessageQueue.back().as<ConfigureMessage>().mTitle.get());
   ProcessControlMessageQueue();
 }
 
-void VideoDecoder::Decode(EncodedVideoChunk& chunk, ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+// https://w3c.github.io/webcodecs/#dom-videodecoder-decode
+void VideoDecoder::Decode(EncodedVideoChunk& aChunk, ErrorResult& aRv) {
+  AssertIsOnOwningThread();
+
+  LOG("VideoDecoder %p, Decode", this);
+
+  if (mState != CodecState::Configured) {
+    aRv.ThrowInvalidStateError("Decoder must be configured first");
+    return;
+  }
+
+  if (mKeyChunkRequired) {
+    // TODO: Verify aChunk's data is truly a key chunk
+    if (aChunk.Type() != EncodedVideoChunkType::Key) {
+      aRv.ThrowDataError("VideoDecoder needs a key chunk");
+      return;
+    }
+    mKeyChunkRequired = false;
+  }
+
+  mDecodeQueueSize += 1;
+  mControlMessageQueue.emplace(AsVariant(DecodeMessage(
+      ++mDecodeMessageCounter, MakeUnique<DecodeMessage::ChunkData>(aChunk))));
+  LOGV("VideoDecoder %p enqueues %s", this,
+       mControlMessageQueue.back().as<DecodeMessage>().mTitle.get());
+  ProcessControlMessageQueue();
 }
 
 already_AddRefed<Promise> VideoDecoder::Flush(ErrorResult& aRv) {
@@ -532,9 +632,14 @@ Result<Ok, nsresult> VideoDecoder::Reset(const nsresult& aResult) {
   }
 
   mState = CodecState::Unconfigured;
+  mDecodeMessageCounter = 0;
 
   CancelPendingControlMessages();
   DestroyDecoderAgentIfAny();
+
+  if (mDecodeQueueSize > 0) {
+    mDecodeQueueSize = 0;
+  }
 
   LOG("VideoDecoder %p now has its message queue unblocked", this);
   mMessageQueueBlocked = false;
@@ -565,14 +670,119 @@ void VideoDecoder::ReportError(const nsresult& aResult) {
   cb->Call(*e);
 }
 
+void VideoDecoder::OutputVideoFrames(nsTArray<RefPtr<MediaData>>&& aData) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == CodecState::Configured);
+  MOZ_ASSERT(mActiveConfig);
+
+  nsTArray<RefPtr<VideoFrame>> frames = DecodedDataToVideoFrames(
+      GetParentObject(), std::move(aData), *mActiveConfig);
+  RefPtr<VideoFrameOutputCallback> cb(mOutputCallback);
+  for (RefPtr<VideoFrame>& frame : frames) {
+    RefPtr<VideoFrame> f = frame;
+    cb->Call((VideoFrame&)(*f));
+  }
+}
+
+class VideoDecoder::OutputRunnable final : public DiscardableRunnable {
+ public:
+  OutputRunnable(VideoDecoder* aVideoDecoder, DecoderAgent::Id aAgentId,
+                 const nsACString& aLabel, nsTArray<RefPtr<MediaData>>&& aData)
+      : DiscardableRunnable("VideoDecoder OutputRunnable"),
+        mVideoDecoder(aVideoDecoder),
+        mAgentId(aAgentId),
+        mLabel(aLabel),
+        mData(std::move(aData)) {
+    MOZ_ASSERT(mVideoDecoder);
+  }
+  ~OutputRunnable() = default;
+
+  // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
+  // See bug 1535398.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+    if (mVideoDecoder->State() != CodecState::Configured) {
+      LOGV(
+          "VideoDecoder %p has been %s. Discard %s-result for DecoderAgent #%d",
+          mVideoDecoder.get(),
+          mVideoDecoder->State() == CodecState::Closed ? "closed" : "reset",
+          mLabel.get(), mAgentId);
+      return NS_OK;
+    }
+
+    MOZ_ASSERT(mVideoDecoder->mAgent);
+    if (mAgentId != mVideoDecoder->mAgent->mId) {
+      LOGW(
+          "VideoDecoder %p has been re-configured. Still yield %s-result for "
+          "DecoderAgent #%d",
+          mVideoDecoder.get(), mLabel.get(), mAgentId);
+    }
+
+    LOGV("VideoDecoder %p, yields %s-result for DecoderAgent #%d",
+         mVideoDecoder.get(), mLabel.get(), mAgentId);
+    RefPtr<VideoDecoder> d = std::move(mVideoDecoder);
+    d->OutputVideoFrames(std::move(mData));
+
+    return NS_OK;
+  }
+
+ private:
+  RefPtr<VideoDecoder> mVideoDecoder;
+  const DecoderAgent::Id mAgentId;
+  const nsCString mLabel;
+  nsTArray<RefPtr<MediaData>> mData;
+};
+
+void VideoDecoder::ScheduleOutputVideoFrames(
+    nsTArray<RefPtr<MediaData>>&& aData, const nsACString& aLabel) {
+  MOZ_ASSERT(mState == CodecState::Configured);
+  MOZ_ASSERT(mAgent);
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(MakeAndAddRef<OutputRunnable>(
+      this, mAgent->mId, aLabel, std::move(aData))));
+}
+
+void VideoDecoder::ScheduleClose(const nsresult& aResult) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == CodecState::Configured);
+
+  auto task = [self = RefPtr{this}, result = aResult] MOZ_CAN_RUN_SCRIPT {
+    if (self->mState == CodecState::Closed) {
+      LOGW("VideoDecoder %p has been closed. Ignore close with 0x%08" PRIx32,
+           self.get(), static_cast<uint32_t>(result));
+      return;
+    }
+    DebugOnly<Result<Ok, nsresult>> r = self->Close(result);
+    MOZ_ASSERT(r.value.isOk());
+  };
+  nsISerialEventTarget* target = GetCurrentSerialEventTarget();
+
+  if (NS_IsMainThread()) {
+    MOZ_ALWAYS_SUCCEEDS(target->Dispatch(
+        NS_NewRunnableFunction("ScheduleClose Runnable (main)", task)));
+    return;
+  }
+
+  MOZ_ALWAYS_SUCCEEDS(target->Dispatch(NS_NewCancelableRunnableFunction(
+      "ScheduleClose Runnable (worker)", task)));
+}
+
 void VideoDecoder::ProcessControlMessageQueue() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
 
   while (!mMessageQueueBlocked && !mControlMessageQueue.empty()) {
-    if (ProcessConfigureMessage(mControlMessageQueue.front()) ==
-        MessageProcessedResult::NotProcessed) {
-      break;
+    auto& msg = mControlMessageQueue.front();
+    if (msg.is<ConfigureMessage>()) {
+      if (ProcessConfigureMessage(msg) ==
+          MessageProcessedResult::NotProcessed) {
+        break;
+      }
+    } else if (msg.is<DecodeMessage>()) {
+      if (ProcessDecodeMessage(msg) == MessageProcessedResult::NotProcessed) {
+        break;
+      }
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unknown message type!");
     }
   }
 }
@@ -582,17 +792,37 @@ void VideoDecoder::CancelPendingControlMessages() {
 
   // Cancel the message that is being processed.
   if (mProcessingMessage) {
-    LOG("VideoDecoder %p cancels current %s", this,
-        mProcessingMessage->mTitle.get());
-    MOZ_ASSERT(mProcessingMessage->mRequest.Exists());
-    mProcessingMessage->mRequest.Disconnect();
+    if (mProcessingMessage->is<ConfigureMessage>()) {
+      auto& msg = mProcessingMessage->as<ConfigureMessage>();
+      LOG("VideoDecoder %p cancels current %s", this, msg.mTitle.get());
+      MOZ_ASSERT(msg.mRequest.Exists());
+      msg.mRequest.Disconnect();
+    } else if (mProcessingMessage->is<DecodeMessage>()) {
+      auto& msg = mProcessingMessage->as<DecodeMessage>();
+      LOG("VideoDecoder %p cancels current %s", this, msg.mTitle.get());
+      MOZ_ASSERT(msg.mRequest.Exists());
+      msg.mRequest.Disconnect();
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unknown message type!");
+    }
+
     mProcessingMessage.reset();
   }
 
   // Clear the message queue.
   while (!mControlMessageQueue.empty()) {
-    LOG("VideoDecoder %p cancels pending %s", this,
-        mControlMessageQueue.front().mTitle.get());
+    if (mControlMessageQueue.front().is<ConfigureMessage>()) {
+      auto& msg = mControlMessageQueue.front().as<ConfigureMessage>();
+      LOG("VideoDecoder %p cancels pending %s", this, msg.mTitle.get());
+      MOZ_ASSERT(!msg.mRequest.Exists());
+    } else if (mControlMessageQueue.front().is<DecodeMessage>()) {
+      auto& msg = mControlMessageQueue.front().as<DecodeMessage>();
+      LOG("VideoDecoder %p cancels pending %s", this, msg.mTitle.get());
+      MOZ_ASSERT(!msg.mRequest.Exists());
+    } else {
+      MOZ_ASSERT_UNREACHABLE("Unknown message type!");
+    }
+
     mControlMessageQueue.pop();
   }
 }
@@ -603,27 +833,33 @@ ConfigureMessage::ConfigureMessage(UniquePtr<VideoDecoderConfig>&& aConfig)
       mConfig(std::move(aConfig)) {}
 
 VideoDecoder::MessageProcessedResult VideoDecoder::ProcessConfigureMessage(
-    ConfigureMessage& aMessage) {
+    ControlMessage& aMessage) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == CodecState::Configured);
+  MOZ_ASSERT(aMessage.is<ConfigureMessage>());
 
   if (mProcessingMessage) {
-    LOG("VideoDecoder %p is processing %s. Defer %s", this,
-        mProcessingMessage->mTitle.get(), aMessage.mTitle.get());
+    const char* current =
+        mProcessingMessage->is<ConfigureMessage>()
+            ? mProcessingMessage->as<ConfigureMessage>().mTitle.get()
+            : mProcessingMessage->as<DecodeMessage>().mTitle.get();
+    const char* incoming = aMessage.as<ConfigureMessage>().mTitle.get();
+
+    LOG("VideoDecoder %p is processing %s. Defer %s", this, current, incoming);
     return MessageProcessedResult::NotProcessed;
   }
 
   mProcessingMessage.emplace(std::move(aMessage));
   mControlMessageQueue.pop();
 
-  LOG("VideoDecoder %p starts processing %s", this,
-      mProcessingMessage->mTitle.get());
+  auto& msg = mProcessingMessage->as<ConfigureMessage>();
+  LOG("VideoDecoder %p starts processing %s", this, msg.mTitle.get());
 
   DestroyDecoderAgentIfAny();
 
-  auto i = CreateVideoInfo(*(mProcessingMessage->mConfig));
-  if (!CanDecode(*(mProcessingMessage->mConfig)) || i.isErr() ||
-      !CreateDecoderAgent(std::move(mProcessingMessage->mConfig), i.unwrap())) {
+  auto i = CreateVideoInfo(*(msg.mConfig));
+  if (!CanDecode(*(msg.mConfig)) || i.isErr() ||
+      !CreateDecoderAgent(std::move(msg.mConfig), i.unwrap())) {
     mProcessingMessage.reset();
     DebugOnly<Result<Ok, nsresult>> r =
         Close(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
@@ -643,41 +879,210 @@ VideoDecoder::MessageProcessedResult VideoDecoder::ProcessConfigureMessage(
   bool lowLatency = mActiveConfig->mOptimizeForLatency.WasPassed() &&
                     mActiveConfig->mOptimizeForLatency.Value();
   mAgent->Configure(preferSW, lowLatency)
+      ->Then(GetCurrentSerialEventTarget(), __func__,
+             [self = RefPtr{this}, id = mAgent->mId](
+                 const DecoderAgent::ConfigurePromise::ResolveOrRejectValue&
+                     aResult) MOZ_CAN_RUN_SCRIPT {
+               MOZ_ASSERT(self->mProcessingMessage);
+               MOZ_ASSERT(self->mProcessingMessage->is<ConfigureMessage>());
+               MOZ_ASSERT(self->mState == CodecState::Configured);
+               MOZ_ASSERT(self->mAgent);
+               MOZ_ASSERT(id == self->mAgent->mId);
+               MOZ_ASSERT(self->mActiveConfig);
+
+               auto& msg = self->mProcessingMessage->as<ConfigureMessage>();
+               LOG("VideoDecoder %p, DecodeAgent #%d %s has been %s. now "
+                   "unblocks message-queue-processing",
+                   self.get(), id, msg.mTitle.get(),
+                   aResult.IsResolve() ? "resolved" : "rejected");
+
+               msg.mRequest.Complete();
+               self->mProcessingMessage.reset();
+
+               if (aResult.IsReject()) {
+                 // The spec asks to close VideoDecoder with an
+                 // NotSupportedError so we log the exact error here.
+                 const MediaResult& error = aResult.RejectValue();
+                 LOGE(
+                     "VideoDecoder %p, DecodeAgent #%d failed to configure: %s",
+                     self.get(), id, error.Description().get());
+                 DebugOnly<Result<Ok, nsresult>> r =
+                     self->Close(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
+                 MOZ_ASSERT(r.value.isOk());
+                 return;  // No further process
+               }
+
+               self->mMessageQueueBlocked = false;
+               self->ProcessControlMessageQueue();
+             })
+      ->Track(msg.mRequest);
+
+  return MessageProcessedResult::Processed;
+}
+
+struct DecodeMessage::ChunkData {
+  explicit ChunkData(EncodedVideoChunk& aChunk)
+      : mBuffer(aChunk.Data(), static_cast<size_t>(aChunk.ByteLength())),
+        mIsKey(aChunk.Type() == EncodedVideoChunkType::Key),
+        mTimestamp(aChunk.Timestamp()),
+        mDuration(aChunk.GetDuration().IsNull()
+                      ? Nothing()
+                      : Some(aChunk.GetDuration().Value())) {
+    LOGV("Create %zu-byte ChunkData from %u-byte EncodedVideoChunk",
+         mBuffer ? mBuffer.Size() : 0, aChunk.ByteLength());
+  }
+
+  RefPtr<MediaRawData> IntoMediaRawData(
+      const RefPtr<MediaByteBuffer>& aExtraData,
+      const VideoDecoderConfig& aConfig) {
+    if (!mBuffer) {
+      LOGE("Chunk is empty!");
+      return nullptr;
+    }
+
+    RefPtr<MediaRawData> sample(new MediaRawData(std::move(mBuffer)));
+    sample->mKeyframe = mIsKey;
+    sample->mTime = TimeUnit::FromMicroseconds(mTimestamp);
+    sample->mTimecode = TimeUnit::FromMicroseconds(mTimestamp);
+
+    if (mDuration) {
+      CheckedInt64 duration(*mDuration);
+      if (!duration.isValid()) {
+        LOGE("Chunk's duration exceeds TimeUnit's limit");
+        return nullptr;
+      }
+      sample->mDuration = TimeUnit::FromMicroseconds(duration.value());
+    }
+
+    // aExtraData is either provided by Configure() or a default one created for
+    // the decoder creation. If it's created for decoder creation only, we don't
+    // set it to sample.
+    if (aConfig.mDescription.WasPassed() && aExtraData) {
+      sample->mExtraData = aExtraData;
+    }
+
+    LOGV("Input chunk converted to %zu-byte MediaRawData - time: %" PRIi64
+         "us, timecode: %" PRIi64 "us, duration: %" PRIi64
+         "us, key-frame: %s, has extra data: %s",
+         sample->Size(), sample->mTime.ToMicroseconds(),
+         sample->mTimecode.ToMicroseconds(), sample->mDuration.ToMicroseconds(),
+         sample->mKeyframe ? "yes" : "no", sample->mExtraData ? "yes" : "no");
+
+    return sample.forget();
+  }
+
+  AlignedByteBuffer mBuffer;
+  bool mIsKey;
+  int64_t mTimestamp;
+  Maybe<uint64_t> mDuration;
+};
+
+DecodeMessage::DecodeMessage(Id aId, UniquePtr<ChunkData>&& aData)
+    : mTitle(nsPrintfCString("decode #%zu", aId)),
+      mId(aId),
+      mData(std::move(aData)) {}
+
+VideoDecoder::MessageProcessedResult VideoDecoder::ProcessDecodeMessage(
+    ControlMessage& aMessage) {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == CodecState::Configured);
+  MOZ_ASSERT(aMessage.is<DecodeMessage>());
+
+  if (mProcessingMessage) {
+    const char* current =
+        mProcessingMessage->is<ConfigureMessage>()
+            ? mProcessingMessage->as<ConfigureMessage>().mTitle.get()
+            : mProcessingMessage->as<DecodeMessage>().mTitle.get();
+    const char* incoming = aMessage.as<DecodeMessage>().mTitle.get();
+
+    LOGV("VideoDecoder %p is processing %s. Defer %s", this, current, incoming);
+    return MessageProcessedResult::NotProcessed;
+  }
+
+  mProcessingMessage.emplace(std::move(aMessage));
+  mControlMessageQueue.pop();
+
+  auto& msg = mProcessingMessage->as<DecodeMessage>();
+  LOGV("VideoDecoder %p starts processing %s", this, msg.mTitle.get());
+
+  mDecodeQueueSize -= 1;
+
+  // Treat it like decode error if no DecoderAgent is available or the encoded
+  // data is invalid.
+  auto closeOnError = [&]() {
+    mProcessingMessage.reset();
+    ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+    return MessageProcessedResult::Processed;
+  };
+
+  if (!mAgent) {
+    LOGE("VideoDecoder %p is not configured", this);
+    return closeOnError();
+  }
+
+  if (!msg.mData) {
+    LOGE("VideoDecoder %p, no data for %s", this, msg.mTitle.get());
+    return closeOnError();
+  }
+
+  MOZ_ASSERT(mActiveConfig);
+  RefPtr<MediaRawData> data = msg.mData->IntoMediaRawData(
+      mAgent->mInfo->GetAsVideoInfo()->mExtraData, *mActiveConfig);
+  if (!data) {
+    LOGE("VideoDecoder %p, data for %s is invalid", this, msg.mTitle.get());
+    return closeOnError();
+  }
+
+  mAgent->Decode(data.get())
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
           [self = RefPtr{this}, id = mAgent->mId](
-              const DecoderAgent::ConfigurePromise::ResolveOrRejectValue&
-                  aResult) MOZ_CAN_RUN_SCRIPT {
-            MOZ_ASSERT(self->mProcessingMessage);
-            MOZ_ASSERT(self->mState == CodecState::Configured);
-            MOZ_ASSERT(self->mAgent);
-            MOZ_ASSERT(id == self->mAgent->mId);
-            MOZ_ASSERT(self->mActiveConfig);
+              DecoderAgent::DecodePromise::ResolveOrRejectValue&& aResult)
+              MOZ_CAN_RUN_SCRIPT {
+                MOZ_ASSERT(self->mProcessingMessage);
+                MOZ_ASSERT(self->mProcessingMessage->is<DecodeMessage>());
+                MOZ_ASSERT(self->mState == CodecState::Configured);
+                MOZ_ASSERT(self->mAgent);
+                MOZ_ASSERT(id == self->mAgent->mId);
+                MOZ_ASSERT(self->mActiveConfig);
 
-            LOG("VideoDecoder %p, DecodeAgent #%d %s has been %s. now unblocks "
-                "message-queue-processing",
-                self.get(), id, self->mProcessingMessage->mTitle.get(),
-                aResult.IsResolve() ? "resolved" : "rejected");
+                auto& msg = self->mProcessingMessage->as<DecodeMessage>();
+                LOGV("VideoDecoder %p, DecodeAgent #%d %s has been %s",
+                     self.get(), id, msg.mTitle.get(),
+                     aResult.IsResolve() ? "resolved" : "rejected");
 
-            self->mProcessingMessage->mRequest.Complete();
-            self->mProcessingMessage.reset();
+                nsCString title = msg.mTitle;
 
-            if (aResult.IsReject()) {
-              // The spec asks to close VideoDecoder with an NotSupportedError
-              // so we log the exact error here.
-              const MediaResult& error = aResult.RejectValue();
-              LOGE("VideoDecoder %p, DecodeAgent #%d failed to configure: %s",
-                   self.get(), id, error.Description().get());
-              DebugOnly<Result<Ok, nsresult>> r =
-                  self->Close(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
-              MOZ_ASSERT(r.value.isOk());
-              return;  // No further process
-            }
+                msg.mRequest.Complete();
+                self->mProcessingMessage.reset();
 
-            self->mMessageQueueBlocked = false;
-            self->ProcessControlMessageQueue();
-          })
-      ->Track(mProcessingMessage->mRequest);
+                if (aResult.IsReject()) {
+                  // The spec asks to queue a task to run close-VideoDecoder
+                  // with an EncodingError so we log the exact error here.
+                  const MediaResult& error = aResult.RejectValue();
+                  LOGE("VideoDecoder %p, DecodeAgent #%d %s failed: %s",
+                       self.get(), id, title.get(), error.Description().get());
+                  self->ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+                  return;  // No further process
+                }
+
+                MOZ_ASSERT(aResult.IsResolve());
+                nsTArray<RefPtr<MediaData>> data =
+                    std::move(aResult.ResolveValue());
+                if (data.IsEmpty()) {
+                  LOGV("VideoDecoder %p got no data for %s", self.get(),
+                       title.get());
+                } else {
+                  LOGV(
+                      "VideoDecoder %p, schedule %zu decoded data output for "
+                      "%s",
+                      self.get(), data.Length(), title.get());
+                  self->ScheduleOutputVideoFrames(std::move(data), title);
+                }
+
+                self->ProcessControlMessageQueue();
+              })
+      ->Track(msg.mRequest);
 
   return MessageProcessedResult::Processed;
 }
@@ -808,6 +1213,7 @@ void VideoDecoder::DestroyDecoderAgentIfAny() {
 #undef LOG
 #undef LOGW
 #undef LOGE
+#undef LOGV
 #undef LOG_INTERNAL
 
 }  // namespace mozilla::dom
