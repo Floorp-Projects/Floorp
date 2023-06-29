@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_refresh">යළි උත්සාහය</string>
+    <string name="mozac_browser_errorpages_page_refresh">නැවත</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">ඉල්ලීම නිම කළ නොහැකිය</string>

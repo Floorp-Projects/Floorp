@@ -598,7 +598,7 @@
     <!-- Snackbar message for when wallpaper couldn't be downloaded -->
     <string name="wallpaper_download_error_snackbar_message">බිතුපත බාගැනීමට නොහැකි විය</string>
     <!-- Snackbar label for action to retry downloading the wallpaper -->
-    <string name="wallpaper_download_error_snackbar_action">යළි උත්සාහය</string>
+    <string name="wallpaper_download_error_snackbar_action">නැවත</string>
     <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
     <string name="wallpaper_select_error_snackbar_message">බිතුපත වෙනස් කළ නොහැකි විය</string>
     <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
@@ -1460,7 +1460,7 @@
     <!-- Text shown in snackbar when sharing tabs failed  -->
     <string name="sync_sent_tab_error_snackbar">යැවීමට නොහැකිය</string>
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
-    <string name="sync_sent_tab_error_snackbar_action">යළි උත්සාහය</string>
+    <string name="sync_sent_tab_error_snackbar_action">නැවත</string>
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">කේතය සුපිරික්සන්න</string>
     <!-- Instructions on how to access pairing -->

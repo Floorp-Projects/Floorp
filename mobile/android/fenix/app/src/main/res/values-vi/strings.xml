@@ -365,13 +365,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Giới thiệu</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">Chọn một</string>
+    <string name="preferences_category_select_default_search_engine">Chọn một</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">Quản lý lối tắt tìm kiếm</string>
+    <string name="preferences_manage_search_shortcuts">Quản lý lối tắt tìm kiếm</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">Chỉnh sửa công cụ tìm kiếm hiển thị trong menu tìm kiếm</string>
+    <string name="preferences_manage_search_shortcuts_summary">Chỉnh sửa công cụ tìm kiếm hiển thị trong menu tìm kiếm</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">Công cụ tìm kiếm hiển thị trong menu tìm kiếm</string>
+    <string name="preferences_category_engines_in_search_menu">Công cụ tìm kiếm hiển thị trong menu tìm kiếm</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Công cụ tìm kiếm mặc định</string>
     <!-- Preference for settings related to Search -->
@@ -632,6 +632,8 @@
     <string name="addon_already_installed">Tiện ích mở rộng đã được cài đặt trước đó</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Quản lý tài khoản</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Đồng bộ ngay</string>
     <!-- Preference category for sync -->
@@ -1865,7 +1867,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Thêm công cụ tìm kiếm</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">Thêm công cụ tìm kiếm mới</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">Thêm công cụ tìm kiếm mới</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Chỉnh sửa công cụ tìm kiếm</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1880,17 +1882,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Khác</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">Tên</string>
+    <string name="search_add_custom_engine_name_label">Tên</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Tên</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">Tên công cụ tìm kiếm</string>
+    <string name="search_add_custom_engine_name_hint_2">Tên công cụ tìm kiếm</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">Chuỗi URL tìm kiếm</string>
+    <string name="search_add_custom_engine_url_label">Chuỗi URL tìm kiếm</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Chuỗi tìm kiếm để sử dụng</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">URL để sử dụng cho tìm kiếm</string>
+    <string name="search_add_custom_engine_search_string_hint_2">URL để sử dụng cho tìm kiếm</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Thay thế chuỗi truy vấn thành “%s”. Ví dụ:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1898,7 +1900,7 @@
     <string name="search_add_custom_engine_form_description">Chi tiết công cụ tìm kiếm tùy chỉnh</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">Lưu</string>
+    <string name="search_custom_engine_save_button">Lưu</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Nhập tên công cụ tìm kiếm</string>

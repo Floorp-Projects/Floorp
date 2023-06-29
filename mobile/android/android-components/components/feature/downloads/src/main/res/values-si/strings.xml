@@ -4,7 +4,7 @@
     <string name="mozac_feature_downloads_notification_channel">බාගැනීම්</string>
 
     <!-- Text shown on the second row of a paused download notification. -->
-    <string name="mozac_feature_downloads_paused_notification_text">බාගැනීම විරාමයි</string>
+    <string name="mozac_feature_downloads_paused_notification_text">බාගැනීමේ විරාමයකි</string>
     <!-- Text shown on the second row of an completed download notification. The filename is shown on the first row. -->
     <string name="mozac_feature_downloads_completed_notification_text2">බාගැනීම සම්පූර්ණයි</string>
     <!-- Text shown on the second row of an failed download notification. The filename is shown on the first row. -->
@@ -27,7 +27,7 @@
     <string name="mozac_feature_downloads_open_not_supported1">%1$s ගොනු විවෘත කිරීමට යෙදුමක් හමු නොවිණි</string>
 
     <!-- Button that pauses the download when pressed -->
-    <string name="mozac_feature_downloads_button_pause">විරාමය</string>
+    <string name="mozac_feature_downloads_button_pause">විරාමයක්</string>
     <!-- Button that resumes the download when pressed -->
     <string name="mozac_feature_downloads_button_resume">නැවතත්</string>
     <!-- Button that cancels the download when pressed -->
@@ -35,7 +35,7 @@
     <!-- Button that opens the downloaded file when pressed -->
     <string name="mozac_feature_downloads_button_open">අරින්න</string>
     <!-- Button that restarts the download after a failed attempt -->
-    <string name="mozac_feature_downloads_button_try_again">යළි උත්සාහය</string>
+    <string name="mozac_feature_downloads_button_try_again">නැවත</string>
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">වසන්න</string>

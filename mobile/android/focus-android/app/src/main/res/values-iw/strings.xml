@@ -53,7 +53,7 @@
     <string name="menu_remove_from_shortcuts">הסרה מקיצורי הדרך</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
-    <string name="menu_whats_new">מה חדש</string>
+    <string name="menu_whats_new" moz:RemovedIn="116" tools:ignore="UnusedResources">מה חדש</string>
     <string name="menu_settings">הגדרות</string>
     <string name="menu_about">על אודות</string>
     <string name="menu_help">עזרה</string>
@@ -78,7 +78,7 @@
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
       %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="menu_custom_tab_branding">מופעל ע״י %1$s</string>
+    <string name="menu_custom_tab_branding">מופעל על־ידי %1$s</string>
 
     <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
          sharing an URL. -->
