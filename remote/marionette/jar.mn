@@ -22,7 +22,6 @@ remote.jar:
   content/marionette/interaction.sys.mjs (interaction.sys.mjs)
   content/marionette/json.sys.mjs (json.sys.mjs)
   content/marionette/l10n.sys.mjs (l10n.sys.mjs)
-  content/marionette/legacyaction.sys.mjs (legacyaction.sys.mjs)
   content/marionette/message.sys.mjs (message.sys.mjs)
   content/marionette/modal.sys.mjs (modal.sys.mjs)
   content/marionette/navigate.sys.mjs (navigate.sys.mjs)

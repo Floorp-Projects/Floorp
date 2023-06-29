@@ -1410,21 +1410,6 @@ GeckoDriver.prototype.setTimeouts = function (cmd) {
   this.currentSession.timeouts = lazy.Timeouts.fromJSON(merged);
 };
 
-/** Single tap. */
-GeckoDriver.prototype.singleTap = async function (cmd) {
-  lazy.assert.open(this.getBrowsingContext());
-
-  let { id, x, y } = cmd.parameters;
-  let webEl = lazy.WebElement.fromUUID(id).toJSON();
-
-  await this.getActor().singleTap(
-    webEl,
-    x,
-    y,
-    this.currentSession.capabilities
-  );
-};
-
 /**
  * Perform a series of grouped actions at the specified points in time.
  *
@@ -3299,7 +3284,6 @@ GeckoDriver.prototype.commands = {
   "Marionette:Quit": GeckoDriver.prototype.quit,
   "Marionette:SetContext": GeckoDriver.prototype.setContext,
   "Marionette:SetScreenOrientation": GeckoDriver.prototype.setScreenOrientation,
-  "Marionette:SingleTap": GeckoDriver.prototype.singleTap,
 
   // Addon service
   "Addon:Install": GeckoDriver.prototype.installAddon,

@@ -17,7 +17,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   evaluate: "chrome://remote/content/marionette/evaluate.sys.mjs",
   interaction: "chrome://remote/content/marionette/interaction.sys.mjs",
   json: "chrome://remote/content/marionette/json.sys.mjs",
-  legacyaction: "chrome://remote/content/marionette/legacyaction.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   sandbox: "chrome://remote/content/marionette/evaluate.sys.mjs",
   Sandboxes: "chrome://remote/content/marionette/evaluate.sys.mjs",
@@ -45,17 +44,6 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
 
   get innerWindowId() {
     return this.manager.innerWindowId;
-  }
-
-  /**
-   * Lazy getter to create a legacyaction Chain instance for touch events.
-   */
-  get legacyactions() {
-    if (!this._legacyactions) {
-      this._legacyactions = new lazy.legacyaction.Chain();
-    }
-
-    return this._legacyactions;
   }
 
   actorCreated() {
@@ -162,10 +150,6 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
           break;
         case "MarionetteCommandsParent:sendKeysToElement":
           result = await this.sendKeysToElement(data);
-          waitForNextTick = true;
-          break;
-        case "MarionetteCommandsParent:singleTap":
-          result = await this.singleTap(data);
           waitForNextTick = true;
           break;
         case "MarionetteCommandsParent:switchToFrame":
@@ -549,14 +533,6 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     };
 
     return lazy.interaction.sendKeysToElement(elem, text, opts);
-  }
-
-  /**
-   * Perform a single tap.
-   */
-  async singleTap(options = {}) {
-    const { capabilities, elem, x, y } = options;
-    return this.legacyactions.singleTap(elem, x, y, capabilities);
   }
 
   /**
