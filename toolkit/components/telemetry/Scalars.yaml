@@ -8348,6 +8348,36 @@ migration:
       - 'firefox'
     record_in_processes:
       - main
+  time_to_produce_legacy_migrator_list:
+    bug_numbers:
+      - 1840917
+    description: >
+      The amount of time it took in milliseconds to produce the list of migrators in the
+      legacy migration wizard.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+  time_to_produce_migrator_list:
+    bug_numbers:
+      - 1840917
+    description: >
+      The amount of time it took in milliseconds to produce the list of migrators and profiles
+      for the first time the migration wizard opened during the process lifetime.
+    expires: never
+    kind: uint
+    notification_emails:
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
 
 contextual.services.topsites:
   impression:

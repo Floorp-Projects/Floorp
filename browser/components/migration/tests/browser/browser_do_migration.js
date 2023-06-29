@@ -54,6 +54,15 @@ add_task(async function test_successful_migrations() {
     ]);
   });
 
+  // We should make sure that the migration.time_to_produce_migrator_list
+  // scalar was set, since we know that at least one migration wizard has
+  // been opened.
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", false, false);
+  Assert.ok(
+    scalars["migration.time_to_produce_migrator_list"] > 0,
+    "Non-zero scalar value recorded for migration.time_to_produce_migrator_list"
+  );
+
   // Scenario 2: Several resource types are available, but only 1
   // is checked / expected.
   migration = waitForTestMigration(

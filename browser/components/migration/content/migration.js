@@ -42,6 +42,7 @@ var MigrationWizard = {
   _autoMigrate: null,
   _receivedPermissions: new Set(),
   _succeededMigrationEventArgs: null,
+  _openedTime: null,
 
   init() {
     Services.telemetry.setEventRecordingEnabled("browser.migration", true);
@@ -70,6 +71,14 @@ var MigrationWizard = {
     Services.telemetry
       .getHistogramById("FX_MIGRATION_ENTRY_POINT")
       .add(entryPointId);
+
+    // If the caller passed openedTime, that means this is the first time that
+    // the migration wizard is opening, and we want to measure its performance.
+    // Stash the time that opening was invoked so that we can measure the
+    // total elapsed time when the source list is shown.
+    if (args.openedTime) {
+      this._openedTime = args.openedTime;
+    }
 
     this.isInitialMigration =
       entrypoint == MigrationUtils.MIGRATION_ENTRYPOINTS.FIRSTRUN;
@@ -287,6 +296,17 @@ var MigrationWizard = {
       this._wiz.canAdvance = false;
 
       document.getElementById("importAll").hidden = true;
+    }
+
+    // This must be the first time we're opening the migration wizard,
+    // and we want to know how long it took to get to this point, where
+    // we're showing the source list.
+    if (this._openedTime !== null) {
+      let elapsed = Cu.now() - this._openedTime;
+      Services.telemetry.scalarSet(
+        "migration.time_to_produce_legacy_migrator_list",
+        elapsed
+      );
     }
 
     // Advance to the next page if the caller told us to.
