@@ -984,8 +984,12 @@ class PeerConnectionSimulcastWithMediaFlowTests
     std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
         report->GetStatsOfType<RTCOutboundRTPStreamStats>();
     for (const RidAndResolution& resolution : resolutions) {
-      const auto* outbound_rtp =
-          FindOutboundRtpByRid(outbound_rtps, resolution.rid);
+      const RTCOutboundRTPStreamStats* outbound_rtp = nullptr;
+      if (!resolution.rid.empty()) {
+        outbound_rtp = FindOutboundRtpByRid(outbound_rtps, resolution.rid);
+      } else if (outbound_rtps.size() == 1u) {
+        outbound_rtp = outbound_rtps[0];
+      }
       if (!outbound_rtp || !outbound_rtp->frame_width.is_defined() ||
           !outbound_rtp->frame_height.is_defined()) {
         // RTP not found by rid or has not encoded a frame yet.
@@ -1066,6 +1070,43 @@ class PeerConnectionSimulcastWithMediaFlowTests
   rtc::PhysicalSocketServer pss_;
   std::unique_ptr<rtc::Thread> background_thread_;
 };
+
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingOneEncodings_VP8_DefaultsToL1T1) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers = CreateLayers({"f"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP8");
+  transceiver->SetCodecPreferences(codecs);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+                   kDefaultTimeout.ms());
+  // Significant ramp up time is needed until maximum resolution is achieved so
+  // we disable `log_during_ramp_up` to avoid log spam.
+  EXPECT_TRUE_WAIT(
+      HasOutboundRtpExpectedResolutions(local_pc_wrapper, {{"", 1280, 720}},
+                                        /*log_during_ramp_up=*/false),
+      kLongTimeoutForRampingUp.ms());
+  // Verify codec and scalability mode.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(1u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/VP8"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T1"));
+}
 
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
        SendingThreeEncodings_VP8_Simulcast) {
