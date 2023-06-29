@@ -27,14 +27,13 @@ export const FirefoxRelayTelemetry = {
     );
   },
 
-  recordRelayOfferedEvent(eventMethod, eventFlowId, scenarioName, isRelayUser) {
+  recordRelayOfferedEvent(eventMethod, eventFlowId, scenarioName) {
     return this.recordRelayIntegrationTelemetryEvent(
       "offer_relay",
       eventMethod,
       eventFlowId,
       {
         scenario: scenarioName,
-        is_relay_user: (isRelayUser ?? "") + "",
       }
     );
   },

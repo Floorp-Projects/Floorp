@@ -8,6 +8,12 @@ const { getFxAccountsSingleton } = ChromeUtils.importESModule(
 const { FirefoxRelayTelemetry } = ChromeUtils.importESModule(
   "resource://gre/modules/FirefoxRelayTelemetry.mjs"
 );
+const { ExperimentAPI } = ChromeUtils.importESModule(
+  "resource://nimbus/ExperimentAPI.sys.mjs"
+);
+const { ExperimentFakes } = ChromeUtils.importESModule(
+  "resource://testing-common/NimbusTestUtils.sys.mjs"
+);
 
 const gFxAccounts = getFxAccountsSingleton();
 let gRelayACOptionsTitles;
@@ -141,6 +147,15 @@ async function openRelayAC(browser) {
 }
 
 add_setup(async function () {
+  await ExperimentAPI.ready();
+  const cleanupExperiment = await ExperimentFakes.enrollWithFeatureConfig(
+    {
+      featureId: "password-autocomplete",
+      value: { firefoxRelayIntegration: true },
+    },
+    { isRollout: true }
+  );
+
   gHttpServer = new HttpServer();
   setupServerScenario();
 
@@ -177,6 +192,7 @@ add_setup(async function () {
   ]);
 
   registerCleanupFunction(async () => {
+    await cleanupExperiment();
     await new Promise(resolve => {
       gHttpServer.stop(function () {
         resolve();
@@ -246,12 +262,12 @@ add_task(async function test_popup_option_optin_enabled() {
         {
           object: "offer_relay",
           method: "shown",
-          extra: { is_relay_user: "true", scenario: "SignUpFormScenario" },
+          extra: { scenario: "SignUpFormScenario" },
         },
         {
           object: "offer_relay",
           method: "clicked",
-          extra: { is_relay_user: "true", scenario: "SignUpFormScenario" },
+          extra: { scenario: "SignUpFormScenario" },
         },
         { object: "opt_in_panel", method: "shown" },
         { object: "opt_in_panel", method: "enabled" },
