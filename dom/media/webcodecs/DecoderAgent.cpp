@@ -258,6 +258,15 @@ RefPtr<ShutdownPromise> DecoderAgent::Shutdown() {
   mDecodeRequest.DisconnectIfExists();
   mDecodePromise.RejectIfExists(r, __func__);
 
+  // Cancel flush-out in flight if any.
+  mDrainRequest.DisconnectIfExists();
+  mFlushRequest.DisconnectIfExists();
+  mDryRequest.DisconnectIfExists();
+  mDryPromise.RejectIfExists(r, __func__);
+  mDrainAndFlushPromise.RejectIfExists(r, __func__);
+  mDryData.Clear();
+  mDrainAndFlushData.Clear();
+
   SetState(State::Unconfigured);
 
   RefPtr<MediaDataDecoder> decoder = std::move(mDecoder);
@@ -308,6 +317,124 @@ RefPtr<DecoderAgent::DecodePromise> DecoderAgent::Decode(
   return p;
 }
 
+RefPtr<DecoderAgent::DecodePromise> DecoderAgent::DrainAndFlush() {
+  MOZ_ASSERT(mOwnerThread->IsOnCurrentThread());
+  MOZ_ASSERT(mState == State::Configured || mState == State::Error);
+  MOZ_ASSERT(mDrainAndFlushPromise.IsEmpty());
+  MOZ_ASSERT(mDrainAndFlushData.IsEmpty());
+  MOZ_ASSERT(!mDryRequest.Exists());
+  MOZ_ASSERT(mDryPromise.IsEmpty());
+  MOZ_ASSERT(mDryData.IsEmpty());
+  MOZ_ASSERT(!mDrainRequest.Exists());
+  MOZ_ASSERT(!mFlushRequest.Exists());
+
+  if (mState == State::Error) {
+    LOGE("DecoderAgent #%d (%p) tried to flush-out in error state", mId, this);
+    return DecodePromise::CreateAndReject(
+        MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                    "Cannot flush in error state"),
+        __func__);
+  }
+
+  MOZ_ASSERT(mState == State::Configured);
+  MOZ_ASSERT(mDecoder);
+  SetState(State::Flushing);
+
+  RefPtr<DecoderAgent::DecodePromise> p =
+      mDrainAndFlushPromise.Ensure(__func__);
+
+  Dry()
+      ->Then(
+          mOwnerThread, __func__,
+          [self = RefPtr{this}](MediaDataDecoder::DecodedData&& aData) {
+            self->mDryRequest.Complete();
+            LOG("DecoderAgent #%d (%p) has dried the decoder. Now flushing the "
+                "decoder",
+                self->mId, self.get());
+            MOZ_ASSERT(self->mDrainAndFlushData.IsEmpty());
+            self->mDrainAndFlushData.AppendElements(std::move(aData));
+            self->mDecoder->Flush()
+                ->Then(
+                    self->mOwnerThread, __func__,
+                    [self](const bool /* aUnUsed */) {
+                      self->mFlushRequest.Complete();
+                      LOG("DecoderAgent #%d (%p) has flushed the decoder",
+                          self->mId, self.get());
+                      self->SetState(State::Configured);
+                      self->mDrainAndFlushPromise.Resolve(
+                          std::move(self->mDrainAndFlushData), __func__);
+                    },
+                    [self](const MediaResult& aError) {
+                      self->mFlushRequest.Complete();
+                      LOGE("DecoderAgent #%d (%p) failed to flush the decoder",
+                           self->mId, self.get());
+                      self->SetState(State::Error);
+                      self->mDrainAndFlushData.Clear();
+                      self->mDrainAndFlushPromise.Reject(aError, __func__);
+                    })
+                ->Track(self->mFlushRequest);
+          },
+          [self = RefPtr{this}](const MediaResult& aError) {
+            self->mDryRequest.Complete();
+            LOGE("DecoderAgent #%d (%p) failed to dry the decoder", self->mId,
+                 self.get());
+            self->SetState(State::Error);
+            self->mDrainAndFlushPromise.Reject(aError, __func__);
+          })
+      ->Track(mDryRequest);
+
+  return p;
+}
+
+RefPtr<DecoderAgent::DecodePromise> DecoderAgent::Dry() {
+  MOZ_ASSERT(mOwnerThread->IsOnCurrentThread());
+  MOZ_ASSERT(mState == State::Flushing);
+  MOZ_ASSERT(mDryPromise.IsEmpty());
+  MOZ_ASSERT(!mDryRequest.Exists());
+  MOZ_ASSERT(mDryData.IsEmpty());
+  MOZ_ASSERT(mDecoder);
+
+  RefPtr<DecodePromise> p = mDryPromise.Ensure(__func__);
+  DrainUntilDry();
+  return p;
+}
+
+void DecoderAgent::DrainUntilDry() {
+  MOZ_ASSERT(mOwnerThread->IsOnCurrentThread());
+  MOZ_ASSERT(mState == State::Flushing);
+  MOZ_ASSERT(!mDryPromise.IsEmpty());
+  MOZ_ASSERT(!mDrainRequest.Exists());
+  MOZ_ASSERT(mDecoder);
+
+  LOG("DecoderAgent #%d (%p) is drainng the decoder", mId, this);
+  mDecoder->Drain()
+      ->Then(
+          mOwnerThread, __func__,
+          [self = RefPtr{this}](MediaDataDecoder::DecodedData&& aData) {
+            self->mDrainRequest.Complete();
+
+            if (aData.IsEmpty()) {
+              LOG("DecoderAgent #%d (%p) is dry now", self->mId, self.get());
+              self->mDryPromise.Resolve(std::move(self->mDryData), __func__);
+              return;
+            }
+
+            LOG("DecoderAgent #%d (%p) drained %zu decoded data. Keep draining "
+                "until dry",
+                self->mId, self.get(), aData.Length());
+            self->mDryData.AppendElements(std::move(aData));
+            self->DrainUntilDry();
+          },
+          [self = RefPtr{this}](const MediaResult& aError) {
+            self->mDrainRequest.Complete();
+
+            LOGE("DecoderAgent %p failed to drain decoder", self.get());
+            self->mDryData.Clear();
+            self->mDryPromise.Reject(aError, __func__);
+          })
+      ->Track(mDrainRequest);
+}
+
 void DecoderAgent::SetState(State aState) {
   MOZ_ASSERT(mOwnerThread->IsOnCurrentThread());
 
@@ -320,8 +447,10 @@ void DecoderAgent::SetState(State aState) {
                aNewState == State::Unconfigured ||
                aNewState == State::ShuttingDown;
       case State::Configured:
-        return aNewState == State::Unconfigured || aNewState == State::Decoding;
+        return aNewState == State::Unconfigured ||
+               aNewState == State::Decoding || aNewState == State::Flushing;
       case State::Decoding:
+      case State::Flushing:
         return aNewState == State::Configured || aNewState == State::Error ||
                aNewState == State::Unconfigured;
       case State::ShuttingDown:
@@ -345,6 +474,8 @@ void DecoderAgent::SetState(State aState) {
         return "Configured";
       case State::Decoding:
         return "Decoding";
+      case State::Flushing:
+        return "Flushing";
       case State::ShuttingDown:
         return "ShuttingDown";
       case State::Error:
