@@ -5,7 +5,6 @@
 package org.mozilla.fenix.compose
 
 import android.graphics.Bitmap
-import android.os.Parcelable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -13,8 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +25,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import kotlinx.parcelize.Parcelize
 import mozilla.components.concept.base.images.ImageLoadRequest
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -56,7 +54,7 @@ fun ThumbnailImage(
         val thumbnailSize = LocalDensity.current.run { size.toPx().toInt() }
         val request = ImageLoadRequest(key, thumbnailSize)
         val storage = components.core.thumbnailStorage
-        var state by rememberSaveable { mutableStateOf(ThumbnailImageState(null, false)) }
+        var state by remember { mutableStateOf(ThumbnailImageState(null, false)) }
         val scope = rememberCoroutineScope()
 
         DisposableEffect(Unit) {
@@ -102,11 +100,10 @@ fun ThumbnailImage(
 /**
  * State wrapper for [ThumbnailImage].
  */
-@Parcelize
 private data class ThumbnailImageState(
     val bitmap: Bitmap?,
     val hasLoaded: Boolean,
-) : Parcelable
+)
 
 /**
  * This preview does not demo anything. This is to ensure that [ThumbnailImage] does not break other previews.
