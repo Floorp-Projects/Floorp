@@ -134,6 +134,9 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   // (calls OnTransportChannelCreated on the signaling thread).
   void NotifyDataChannelsOfTransportCreated();
 
+  std::vector<rtc::scoped_refptr<SctpDataChannel>>::iterator FindChannel(
+      StreamId stream_id);
+
   rtc::Thread* network_thread() const;
   rtc::Thread* signaling_thread() const;
 
