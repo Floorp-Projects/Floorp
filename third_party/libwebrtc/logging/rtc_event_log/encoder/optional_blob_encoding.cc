@@ -35,6 +35,10 @@ std::string EncodeOptionalBlobs(
     }
   }
 
+  if (num_blobs_present == 0) {
+    return {};
+  }
+
   const bool all_blobs_present = num_blobs_present == blobs.size();
   if (!all_blobs_present) {
     reserve_size_bits += blobs.size();
@@ -74,11 +78,11 @@ std::string EncodeOptionalBlobs(
 std::vector<absl::optional<std::string>> DecodeOptionalBlobs(
     absl::string_view encoded_blobs,
     size_t num_of_blobs) {
+  std::vector<absl::optional<std::string>> res(num_of_blobs);
   if (encoded_blobs.empty() || num_of_blobs == 0) {
-    return {};
+    return res;
   }
 
-  std::vector<absl::optional<std::string>> res(num_of_blobs);
   BitstreamReader reader(encoded_blobs);
   const bool all_blobs_present = reader.ReadBit();
 
