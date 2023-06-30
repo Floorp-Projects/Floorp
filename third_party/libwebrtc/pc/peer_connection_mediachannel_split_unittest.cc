@@ -48,7 +48,7 @@ class PeerConnectionMediaChannelSplitTest
 
 int NacksReceivedCount(PeerConnectionIntegrationWrapper& pc) {
   rtc::scoped_refptr<const webrtc::RTCStatsReport> report = pc.NewGetStats();
-  auto sender_stats = report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  auto sender_stats = report->GetStatsOfType<RTCOutboundRtpStreamStats>();
   if (sender_stats.size() != 1) {
     ADD_FAILURE();
     return 0;
@@ -61,7 +61,7 @@ int NacksReceivedCount(PeerConnectionIntegrationWrapper& pc) {
 
 int NacksSentCount(PeerConnectionIntegrationWrapper& pc) {
   rtc::scoped_refptr<const webrtc::RTCStatsReport> report = pc.NewGetStats();
-  auto receiver_stats = report->GetStatsOfType<RTCInboundRTPStreamStats>();
+  auto receiver_stats = report->GetStatsOfType<RTCInboundRtpStreamStats>();
   if (receiver_stats.size() != 1) {
     ADD_FAILURE();
     return 0;
