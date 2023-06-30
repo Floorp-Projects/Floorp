@@ -28,6 +28,11 @@ bool DataChannelController::HasDataChannels() const {
   return !sctp_data_channels_.empty();
 }
 
+bool DataChannelController::HasUsedDataChannels() const {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  return has_used_data_channels_;
+}
+
 bool DataChannelController::SendData(int sid,
                                      const SendDataParams& params,
                                      const rtc::CopyOnWriteBuffer& payload,
@@ -296,6 +301,7 @@ DataChannelController::InternalCreateSctpDataChannel(
     return nullptr;
   }
   sctp_data_channels_.push_back(channel);
+  has_used_data_channels_ = true;
   return channel;
 }
 

@@ -36,7 +36,7 @@ Cr-Branched-From: cdfeb4f7922f05007d88c8263842998ec79b6dd6-refs/heads/main@{#393
  2 files changed, 67 insertions(+), 2 deletions(-)
 
 diff --git a/pc/sdp_offer_answer.cc b/pc/sdp_offer_answer.cc
-index 33e6e7a3a0..f34c9f7bac 100644
+index 0b4183f86c..0cfa147e3d 100644
 --- a/pc/sdp_offer_answer.cc
 +++ b/pc/sdp_offer_answer.cc
 @@ -3079,8 +3079,10 @@ RTCError SdpOfferAnswerHandler::Rollback(SdpType desc_type) {

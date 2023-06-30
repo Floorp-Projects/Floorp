@@ -1393,7 +1393,7 @@ PeerConnection::CreateDataChannelOrError(const std::string& label,
   RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "PeerConnection::CreateDataChannel");
 
-  bool first_datachannel = !data_channel_controller_.HasDataChannels();
+  bool first_datachannel = !data_channel_controller_.HasUsedDataChannels();
 
   std::unique_ptr<InternalDataChannelInit> internal_config;
   if (config) {
