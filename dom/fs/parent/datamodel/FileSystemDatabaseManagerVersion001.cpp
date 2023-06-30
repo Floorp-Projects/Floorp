@@ -67,7 +67,7 @@ Result<bool, QMResult> DoesDirectoryExist(
 
   const nsCString existsQuery =
       "SELECT EXISTS "
-      "(SELECT 1 FROM Directories JOIN Entries USING (handle) "
+      "(SELECT 1 FROM Directories INNER JOIN Entries USING (handle) "
       "WHERE Directories.name = :name AND Entries.parent = :parent ) "
       ";"_ns;
 
@@ -117,7 +117,7 @@ Result<bool, QMResult> DoesFileExist(const FileSystemConnection& aConnection,
 
   const nsCString existsQuery =
       "SELECT EXISTS "
-      "(SELECT 1 FROM Files JOIN Entries USING (handle) "
+      "(SELECT 1 FROM Files INNER JOIN Entries USING (handle) "
       "WHERE Files.name = :name AND Entries.parent = :parent ) "
       ";"_ns;
 
@@ -1403,12 +1403,13 @@ Result<EntryId, QMResult> FindEntryId(const FileSystemConnection& aConnection,
                                       const FileSystemChildMetadata& aHandle,
                                       bool aIsFile) {
   const nsCString aDirectoryQuery =
-      "SELECT Entries.handle FROM Directories JOIN Entries USING (handle) "
+      "SELECT Entries.handle FROM Directories "
+      "INNER JOIN Entries USING (handle) "
       "WHERE Directories.name = :name AND Entries.parent = :parent "
       ";"_ns;
 
   const nsCString aFileQuery =
-      "SELECT Entries.handle FROM Files JOIN Entries USING (handle) "
+      "SELECT Entries.handle FROM Files INNER JOIN Entries USING (handle) "
       "WHERE Files.name = :name AND Entries.parent = :parent "
       ";"_ns;
 
