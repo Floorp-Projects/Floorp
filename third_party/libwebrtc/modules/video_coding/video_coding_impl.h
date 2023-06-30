@@ -19,7 +19,7 @@
 #include "absl/types/optional.h"
 #include "api/field_trials_view.h"
 #include "api/sequence_checker.h"
-#include "modules/video_coding/frame_buffer.h"
+#include "modules/video_coding/deprecated/frame_buffer.h"
 #include "modules/video_coding/generic_decoder.h"
 #include "modules/video_coding/include/video_coding.h"
 #include "modules/video_coding/jitter_buffer.h"

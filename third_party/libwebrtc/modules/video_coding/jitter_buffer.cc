@@ -14,9 +14,9 @@
 #include <utility>
 
 #include "api/units/timestamp.h"
+#include "modules/video_coding/deprecated/frame_buffer.h"
 #include "modules/video_coding/deprecated/jitter_buffer_common.h"
 #include "modules/video_coding/deprecated/packet.h"
-#include "modules/video_coding/frame_buffer.h"
 #include "modules/video_coding/include/video_coding.h"
 #include "modules/video_coding/internal_defines.h"
 #include "modules/video_coding/timing/inter_frame_delay_variation_calculator.h"
