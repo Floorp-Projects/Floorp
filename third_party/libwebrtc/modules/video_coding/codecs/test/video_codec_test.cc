@@ -23,13 +23,13 @@
 #include "api/units/frequency.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/resolution.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "api/video_codecs/scalability_mode.h"
 #include "api/video_codecs/video_decoder.h"
 #include "api/video_codecs/video_encoder.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
 #include "media/base/media_constants.h"
+#include "media/engine/internal_decoder_factory.h"
+#include "media/engine/internal_encoder_factory.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/video_coding/include/video_error_codes.h"
 #include "modules/video_coding/svc/scalability_mode_util.h"
@@ -389,7 +389,7 @@ std::unique_ptr<TestEncoder> CreateEncoder(
     const std::map<int, EncodingSettings>& frame_settings) {
   std::unique_ptr<VideoEncoderFactory> factory;
   if (impl == "builtin") {
-    factory = CreateBuiltinVideoEncoderFactory();
+    factory = std::make_unique<InternalEncoderFactory>();
   } else if (impl == "mediacodec") {
 #if defined(WEBRTC_ANDROID)
     InitializeAndroidObjects();
@@ -408,7 +408,7 @@ std::unique_ptr<TestEncoder> CreateEncoder(
 std::unique_ptr<TestDecoder> CreateDecoder(std::string type, std::string impl) {
   std::unique_ptr<VideoDecoderFactory> factory;
   if (impl == "builtin") {
-    factory = CreateBuiltinVideoDecoderFactory();
+    factory = std::make_unique<InternalDecoderFactory>();
   } else if (impl == "mediacodec") {
 #if defined(WEBRTC_ANDROID)
     InitializeAndroidObjects();
