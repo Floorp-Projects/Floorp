@@ -36,7 +36,21 @@ void EncoderSimulcastProxy::SetFecControllerOverride(
 // TODO(eladalon): s/inst/codec_settings/g.
 int EncoderSimulcastProxy::InitEncode(const VideoCodec* inst,
                                       const VideoEncoder::Settings& settings) {
-  int ret = encoder_->InitEncode(inst, settings);
+  int ret;
+  if (inst->numberOfSimulcastStreams <= 1 ||
+      encoder_->GetEncoderInfo().supports_simulcast) {
+    // A simulcast capable encoder may still return
+    // WEBRTC_VIDEO_CODEC_ERR_SIMULCAST_PARAMETERS_NOT_SUPPORTED if the current
+    // configuration is not supported.
+    ret = encoder_->InitEncode(inst, settings);
+  } else {
+    // If the encoder does not support simulcast, fallback to
+    // SimulcastEncoderAdapter without trying to InitEncode().
+    // TODO(https://crbug.com/webrtc/14884): Delete EncoderSimulcastProxy and
+    // always use the simulcast adapter instead; it has a passthrough mode so
+    // this proxy is an unnecessary layer.
+    ret = WEBRTC_VIDEO_CODEC_ERR_SIMULCAST_PARAMETERS_NOT_SUPPORTED;
+  }
   if (ret == WEBRTC_VIDEO_CODEC_ERR_SIMULCAST_PARAMETERS_NOT_SUPPORTED) {
     encoder_.reset(new SimulcastEncoderAdapter(factory_, video_format_));
     if (callback_) {
