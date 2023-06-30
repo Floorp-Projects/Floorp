@@ -33,14 +33,14 @@ bool DataChannelController::HasUsedDataChannels() const {
   return has_used_data_channels_;
 }
 
-bool DataChannelController::SendData(StreamId sid,
-                                     const SendDataParams& params,
-                                     const rtc::CopyOnWriteBuffer& payload,
-                                     cricket::SendDataResult* result) {
+RTCError DataChannelController::SendData(
+    StreamId sid,
+    const SendDataParams& params,
+    const rtc::CopyOnWriteBuffer& payload) {
   if (data_channel_transport())
-    return DataChannelSendData(sid, params, payload, result);
+    return DataChannelSendData(sid, params, payload);
   RTC_LOG(LS_ERROR) << "SendData called before transport is ready";
-  return false;
+  return RTCError(RTCErrorType::INVALID_STATE);
 }
 
 void DataChannelController::AddSctpDataStream(StreamId sid) {
@@ -374,33 +374,20 @@ void DataChannelController::set_data_channel_transport(
   data_channel_transport_ = transport;
 }
 
-bool DataChannelController::DataChannelSendData(
+RTCError DataChannelController::DataChannelSendData(
     StreamId sid,
     const SendDataParams& params,
-    const rtc::CopyOnWriteBuffer& payload,
-    cricket::SendDataResult* result) {
+    const rtc::CopyOnWriteBuffer& payload) {
   // TODO(bugs.webrtc.org/11547): Expect method to be called on the network
   // thread instead. Remove the BlockingCall() below and move associated state
   // to the network thread.
   RTC_DCHECK_RUN_ON(signaling_thread());
   RTC_DCHECK(data_channel_transport());
 
-  RTCError error = network_thread()->BlockingCall([this, sid, params, payload] {
+  return network_thread()->BlockingCall([this, sid, params, payload] {
     return data_channel_transport()->SendData(sid.stream_id_int(), params,
                                               payload);
   });
-
-  if (error.ok()) {
-    *result = cricket::SendDataResult::SDR_SUCCESS;
-    return true;
-  } else if (error.type() == RTCErrorType::RESOURCE_EXHAUSTED) {
-    // SCTP transport uses RESOURCE_EXHAUSTED when it's blocked.
-    // TODO(mellem):  Stop using RTCError here and get rid of the mapping.
-    *result = cricket::SendDataResult::SDR_BLOCK;
-    return false;
-  }
-  *result = cricket::SendDataResult::SDR_ERROR;
-  return false;
 }
 
 void DataChannelController::NotifyDataChannelsOfTransportCreated() {

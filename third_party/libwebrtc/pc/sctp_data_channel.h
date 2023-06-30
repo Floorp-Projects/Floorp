@@ -39,10 +39,9 @@ class SctpDataChannel;
 class SctpDataChannelControllerInterface {
  public:
   // Sends the data to the transport.
-  virtual bool SendData(StreamId sid,
-                        const SendDataParams& params,
-                        const rtc::CopyOnWriteBuffer& payload,
-                        cricket::SendDataResult* result) = 0;
+  virtual RTCError SendData(StreamId sid,
+                            const SendDataParams& params,
+                            const rtc::CopyOnWriteBuffer& payload) = 0;
   // Adds the data channel SID to the transport for SCTP.
   virtual void AddSctpDataStream(StreamId sid) = 0;
   // Begins the closing procedure by sending an outgoing stream reset. Still

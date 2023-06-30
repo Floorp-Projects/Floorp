@@ -44,25 +44,22 @@ class FakeDataChannelController
     return channel;
   }
 
-  bool SendData(webrtc::StreamId sid,
-                const webrtc::SendDataParams& params,
-                const rtc::CopyOnWriteBuffer& payload,
-                cricket::SendDataResult* result) override {
+  webrtc::RTCError SendData(webrtc::StreamId sid,
+                            const webrtc::SendDataParams& params,
+                            const rtc::CopyOnWriteBuffer& payload) override {
     RTC_CHECK(ready_to_send_);
     RTC_CHECK(transport_available_);
     if (send_blocked_) {
-      *result = cricket::SDR_BLOCK;
-      return false;
+      return webrtc::RTCError(webrtc::RTCErrorType::RESOURCE_EXHAUSTED);
     }
 
     if (transport_error_) {
-      *result = cricket::SDR_ERROR;
-      return false;
+      return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR);
     }
 
     last_sid_ = sid.stream_id_int();
     last_send_data_params_ = params;
-    return true;
+    return webrtc::RTCError::OK();
   }
 
   void AddSctpDataStream(webrtc::StreamId sid) override {

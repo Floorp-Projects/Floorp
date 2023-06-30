@@ -47,10 +47,9 @@ class DataChannelController : public SctpDataChannelControllerInterface,
 
   // Implements
   // SctpDataChannelProviderInterface.
-  bool SendData(StreamId sid,
-                const SendDataParams& params,
-                const rtc::CopyOnWriteBuffer& payload,
-                cricket::SendDataResult* result) override;
+  RTCError SendData(StreamId sid,
+                    const SendDataParams& params,
+                    const rtc::CopyOnWriteBuffer& payload) override;
   void AddSctpDataStream(StreamId sid) override;
   void RemoveSctpDataStream(StreamId sid) override;
   bool ReadyToSendData() const override;
@@ -124,10 +123,9 @@ class DataChannelController : public SctpDataChannelControllerInterface,
       RTC_RUN_ON(signaling_thread());
 
   // Called from SendData when data_channel_transport() is true.
-  bool DataChannelSendData(StreamId sid,
-                           const SendDataParams& params,
-                           const rtc::CopyOnWriteBuffer& payload,
-                           cricket::SendDataResult* result);
+  RTCError DataChannelSendData(StreamId sid,
+                               const SendDataParams& params,
+                               const rtc::CopyOnWriteBuffer& payload);
 
   // Called when all data channels need to be notified of a transport channel
   // (calls OnTransportChannelCreated on the signaling thread).
