@@ -539,18 +539,25 @@ void SctpDataChannel::UpdateState() {
       break;
     }
     case kClosing: {
-      // Wait for all queued data to be sent before beginning the closing
-      // procedure.
-      if (queued_send_data_.Empty() && queued_control_data_.Empty()) {
-        // For SCTP data channels, we need to wait for the closing procedure
-        // to complete; after calling RemoveSctpDataStream,
-        // OnClosingProcedureComplete will end up called asynchronously
-        // afterwards.
-        if (connected_to_transport_ && !started_closing_procedure_ &&
-            controller_ && config_.id >= 0) {
-          started_closing_procedure_ = true;
-          controller_->RemoveSctpDataStream(config_.id);
+      if (connected_to_transport_) {
+        // Wait for all queued data to be sent before beginning the closing
+        // procedure.
+        if (queued_send_data_.Empty() && queued_control_data_.Empty()) {
+          // For SCTP data channels, we need to wait for the closing procedure
+          // to complete; after calling RemoveSctpDataStream,
+          // OnClosingProcedureComplete will end up called asynchronously
+          // afterwards.
+          if (!started_closing_procedure_ && controller_ && config_.id >= 0) {
+            started_closing_procedure_ = true;
+            controller_->RemoveSctpDataStream(config_.id);
+          }
         }
+      } else {
+        // When we're not connected to a transport, we'll transition
+        // directly to the `kClosed` state from here.
+        queued_send_data_.Clear();
+        queued_control_data_.Clear();
+        SetState(kClosed);
       }
       break;
     }

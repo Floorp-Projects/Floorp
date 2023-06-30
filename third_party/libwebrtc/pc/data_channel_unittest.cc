@@ -618,6 +618,15 @@ TEST_F(SctpDataChannelTest, NeverOpened) {
   webrtc_data_channel_->Close();
 }
 
+// Tests that a data channel that's not connected to a transport can transition
+// directly to the `kClosed` state when closed.
+// See also chromium:1421534.
+TEST_F(SctpDataChannelTest, UnusedTransitionsDirectlyToClosed) {
+  webrtc_data_channel_->Close();
+  EXPECT_EQ(webrtc::DataChannelInterface::kClosed,
+            webrtc_data_channel_->state());
+}
+
 // Test that the data channel goes to the "closed" state (and doesn't crash)
 // when its transport goes away, even while data is buffered.
 TEST_F(SctpDataChannelTest, TransportDestroyedWhileDataBuffered) {
