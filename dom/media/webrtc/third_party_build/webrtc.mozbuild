@@ -23,7 +23,7 @@ if CONFIG['MOZ_WEBRTC']:
         DEFINES['WEBRTC_LINUX'] = True
         if CONFIG['CPU_ARCH'] == 'x86' or CONFIG['CPU_ARCH'] == 'x86_64' or  \
            CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64' or \
-           (CONFIG['TARGET_ENDIANNESS'] == 'little' and CONFIG['CPU_ARCH'].startsWith('mips')):
+           (CONFIG['TARGET_ENDIANNESS'] == 'little' and CONFIG['CPU_ARCH'].startswith('mips')):
             DEFINES['WEBRTC_USE_PIPEWIRE'] = True
     elif CONFIG['OS_TARGET'] == 'Darwin':
         DEFINES['WEBRTC_MAC'] = True
