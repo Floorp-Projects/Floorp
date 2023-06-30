@@ -1,27 +1,177 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Fri, 7 Apr 2023 20:28:00 +0000
-Subject: Bug 1819048: Remove this bad assertion. r=webrtc-reviewers,jib
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 20 Apr 2023 14:52:00 -0500
+Subject: Bug 1828517 - (fix-a138c6c8a5) handle file moves in BUILD.gn
 
-Differential Revision: https://phabricator.services.mozilla.com/D174978
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda82f0abea668699eb68098dc
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c115a6ffd07fab042bc5f086
 ---
- video/task_queue_frame_decode_scheduler.cc | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ rtc_base/BUILD.gn | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
-index cd109c2932..6dd7b47f17 100644
---- a/video/task_queue_frame_decode_scheduler.cc
-+++ b/video/task_queue_frame_decode_scheduler.cc
-@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
-     uint32_t rtp,
-     FrameDecodeTiming::FrameSchedule schedule,
-     FrameReleaseCallback cb) {
--  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
-+  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
-+  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
-   RTC_DCHECK(!scheduled_rtp_.has_value())
-       << "Can not schedule two frames for release at the same time.";
-   RTC_DCHECK(cb);
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index e474ba8202..8f1be481ef 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -1154,6 +1154,7 @@ if (!build_with_chromium) {
+ }
+ 
+ rtc_library("network") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "network.cc",
+@@ -1192,16 +1193,20 @@ rtc_library("network") {
+     deps += [ ":win32" ]
+   }
+ }
++}
+ 
+ rtc_library("socket_address_pair") {
++if (!build_with_mozilla) {
+   sources = [
+     "socket_address_pair.cc",
+     "socket_address_pair.h",
+   ]
+   deps = [ ":socket_address" ]
+ }
++}
+ 
+ rtc_library("net_helper") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "net_helper.cc",
+@@ -1210,8 +1215,10 @@ rtc_library("net_helper") {
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+   deps = [ "system:rtc_export" ]
+ }
++}
+ 
+ rtc_library("socket_adapters") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "socket_adapters.cc",
+@@ -1231,6 +1238,7 @@ rtc_library("socket_adapters") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ rtc_library("network_route") {
+   sources = [
+@@ -1245,6 +1253,7 @@ rtc_library("network_route") {
+ }
+ 
+ rtc_library("async_tcp_socket") {
++if (!build_with_mozilla) {
+   sources = [
+     "async_tcp_socket.cc",
+     "async_tcp_socket.h",
+@@ -1263,8 +1272,10 @@ rtc_library("async_tcp_socket") {
+     "third_party/sigslot",
+   ]
+ }
++}
+ 
+ rtc_library("async_udp_socket") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "async_udp_socket.cc",
+@@ -1286,8 +1297,10 @@ rtc_library("async_udp_socket") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+ }
++}
+ 
+ rtc_library("async_packet_socket") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "async_packet_socket.cc",
+@@ -1305,6 +1318,7 @@ rtc_library("async_packet_socket") {
+     "third_party/sigslot",
+   ]
+ }
++}
+ 
+ rtc_library("mdns_responder_interface") {
+   sources = [ "mdns_responder_interface.h" ]
+@@ -1317,6 +1331,7 @@ rtc_library("dscp") {
+ }
+ 
+ rtc_library("proxy_info") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "proxy_info.cc",
+@@ -1327,6 +1342,7 @@ rtc_library("proxy_info") {
+     ":socket_address",
+   ]
+ }
++}
+ 
+ rtc_library("file_rotating_stream") {
+   sources = [
+@@ -1355,6 +1371,7 @@ rtc_library("data_rate_limiter") {
+ }
+ 
+ rtc_library("unique_id_generator") {
++if (!build_with_mozilla) {
+   sources = [
+     "unique_id_generator.cc",
+     "unique_id_generator.h",
+@@ -1369,6 +1386,7 @@ rtc_library("unique_id_generator") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ rtc_library("crc32") {
+   sources = [
+@@ -1396,6 +1414,7 @@ rtc_library("stream") {
+ }
+ 
+ rtc_library("rtc_certificate_generator") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "rtc_certificate_generator.cc",
+@@ -1413,8 +1432,10 @@ rtc_library("rtc_certificate_generator") {
+     "//third_party/abseil-cpp/absl/types:optional",
+   ]
+ }
++}
+ 
+ rtc_library("ssl") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "helpers.cc",
+@@ -1513,6 +1534,7 @@ rtc_library("ssl") {
+     deps += [ ":win32" ]
+   }
+ }
++}
+ 
+ rtc_library("crypt_string") {
+   sources = [
+@@ -1522,6 +1544,7 @@ rtc_library("crypt_string") {
+ }
+ 
+ rtc_library("http_common") {
++if (!build_with_mozilla) {
+   sources = [
+     "http_common.cc",
+     "http_common.h",
+@@ -1538,6 +1561,7 @@ rtc_library("http_common") {
+ 
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ rtc_source_set("gtest_prod") {
+   sources = [ "gtest_prod_util.h" ]
 -- 
 2.34.1
 
