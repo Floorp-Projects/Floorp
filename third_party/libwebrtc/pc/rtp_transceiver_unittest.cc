@@ -292,17 +292,47 @@ TEST_F(RtpTransceiverTestForHeaderExtensions, AcceptsStoppedExtension) {
             modified_extensions);
 }
 
-TEST_F(RtpTransceiverTestForHeaderExtensions, RejectsUnsupportedExtension) {
+TEST_F(RtpTransceiverTestForHeaderExtensions, RejectsDifferentSize) {
   EXPECT_CALL(*receiver_.get(), Stop());
   EXPECT_CALL(*receiver_.get(), SetMediaChannel(_));
   EXPECT_CALL(*sender_.get(), SetTransceiverAsStopped());
   EXPECT_CALL(*sender_.get(), Stop());
 
-  std::vector<RtpHeaderExtensionCapability> modified_extensions(
-      {RtpHeaderExtensionCapability("uri3", 1,
-                                    RtpTransceiverDirection::kSendRecv)});
+  auto modified_extensions = extensions_;
+  modified_extensions.pop_back();
+
   EXPECT_THAT(transceiver_->SetHeaderExtensionsToNegotiate(modified_extensions),
-              Property(&RTCError::type, RTCErrorType::UNSUPPORTED_PARAMETER));
+              Property(&RTCError::type, RTCErrorType::INVALID_MODIFICATION));
+  EXPECT_EQ(transceiver_->GetHeaderExtensionsToNegotiate(), extensions_);
+}
+
+TEST_F(RtpTransceiverTestForHeaderExtensions, RejectsChangedUri) {
+  EXPECT_CALL(*receiver_.get(), Stop());
+  EXPECT_CALL(*receiver_.get(), SetMediaChannel(_));
+  EXPECT_CALL(*sender_.get(), SetTransceiverAsStopped());
+  EXPECT_CALL(*sender_.get(), Stop());
+
+  auto modified_extensions = extensions_;
+  ASSERT_TRUE(!modified_extensions.empty());
+  modified_extensions[0].uri = "http://webrtc.org";
+
+  EXPECT_THAT(transceiver_->SetHeaderExtensionsToNegotiate(modified_extensions),
+              Property(&RTCError::type, RTCErrorType::INVALID_MODIFICATION));
+  EXPECT_EQ(transceiver_->GetHeaderExtensionsToNegotiate(), extensions_);
+}
+
+TEST_F(RtpTransceiverTestForHeaderExtensions, RejectsReorder) {
+  EXPECT_CALL(*receiver_.get(), Stop());
+  EXPECT_CALL(*receiver_.get(), SetMediaChannel(_));
+  EXPECT_CALL(*sender_.get(), SetTransceiverAsStopped());
+  EXPECT_CALL(*sender_.get(), Stop());
+
+  auto modified_extensions = extensions_;
+  ASSERT_GE(modified_extensions.size(), 2u);
+  std::swap(modified_extensions[0], modified_extensions[1]);
+
+  EXPECT_THAT(transceiver_->SetHeaderExtensionsToNegotiate(modified_extensions),
+              Property(&RTCError::type, RTCErrorType::INVALID_MODIFICATION));
   EXPECT_EQ(transceiver_->GetHeaderExtensionsToNegotiate(), extensions_);
 }
 
