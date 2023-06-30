@@ -17,10 +17,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a3447f709befd84a2
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/rtc_base/physical_socket_server.cc b/rtc_base/physical_socket_server.cc
-index 60d024c769..3b112e6188 100644
+index c79b2d4c72..131d409868 100644
 --- a/rtc_base/physical_socket_server.cc
 +++ b/rtc_base/physical_socket_server.cc
-@@ -460,7 +460,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
+@@ -462,7 +462,7 @@ int PhysicalSocket::DoReadFromSocket(void* buffer,
    int received = 0;
    if (read_scm_timestamp_experiment_) {
      iovec iov = {.iov_base = buffer, .iov_len = length};
