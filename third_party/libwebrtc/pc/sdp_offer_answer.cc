@@ -3265,7 +3265,7 @@ bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {
 
   // 4. If connection has created any RTCDataChannels, and no m= section in
   // description has been negotiated yet for data, return true.
-  if (data_channel_controller()->HasSctpDataChannels()) {
+  if (data_channel_controller()->HasDataChannels()) {
     if (!cricket::GetFirstDataContent(description->description()->contents()))
       return true;
   }

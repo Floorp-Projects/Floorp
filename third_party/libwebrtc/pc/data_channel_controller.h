@@ -91,10 +91,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   bool HasDataChannels() const;
   // At some point in time, a data channel has existed.
   bool HasUsedDataChannels() const;
-  bool HasSctpDataChannels() const {
-    RTC_DCHECK_RUN_ON(signaling_thread());
-    return !sctp_data_channels_.empty();
-  }
 
   // Accessors
   DataChannelTransportInterface* data_channel_transport() const;
