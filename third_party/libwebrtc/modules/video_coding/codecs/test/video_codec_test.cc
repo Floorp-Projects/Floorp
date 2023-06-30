@@ -129,8 +129,8 @@ class TestRawVideoSource : public VideoCodecTester::RawVideoSource {
     int pulled_frame;
     auto buffer = frame_reader_->PullFrame(
         &pulled_frame, resolution,
-        {.num = static_cast<int>(video_info_.framerate.millihertz()),
-         .den = static_cast<int>(framerate.millihertz())});
+        {.num = static_cast<int>(framerate.millihertz()),
+         .den = static_cast<int>(video_info_.framerate.millihertz())});
     RTC_CHECK(buffer) << "Cannot pull frame " << frame_num_;
 
     auto frame = VideoFrame::Builder()
