@@ -378,51 +378,33 @@ NetEq::Operation DecisionLogic::FuturePacketAvailable(
   // Check if we should continue with an ongoing expand because the new packet
   // is too far into the future.
   if (IsExpand(status.last_mode) && ShouldContinueExpand(status)) {
-    if (status.play_dtmf) {
-      // Still have DTMF to play, so do not do expand.
-      return NetEq::Operation::kDtmf;
-    } else {
-      // Nothing to play.
-      return NetEq::Operation::kExpand;
-    }
+    return NoPacket(status);
   }
 
-  if (status.last_mode == NetEq::Mode::kCodecPlc) {
-    return NetEq::Operation::kNormal;
-  }
-
-  // If previous was comfort noise, then no merge is needed.
   if (IsCng(status.last_mode)) {
-    uint32_t timestamp_leap =
-        status.next_packet->timestamp - status.target_timestamp;
-    const bool generated_enough_noise =
-        status.generated_noise_samples >= timestamp_leap;
-
     int playout_delay_ms = GetNextPacketDelayMs(status);
     const bool above_target_delay = playout_delay_ms > HighThresholdCng();
     const bool below_target_delay = playout_delay_ms < LowThresholdCng();
-    // Keep the delay same as before CNG, but make sure that it is within the
-    // target window.
-    if ((generated_enough_noise && !below_target_delay) || above_target_delay) {
-      time_stretched_cn_samples_ =
-          timestamp_leap - status.generated_noise_samples;
-      return NetEq::Operation::kNormal;
+    if ((PacketTooEarly(status) && !above_target_delay) || below_target_delay) {
+      return NoPacket(status);
     }
-
-    if (status.last_mode == NetEq::Mode::kRfc3389Cng) {
-      return NetEq::Operation::kRfc3389CngNoPacket;
-    }
-    return NetEq::Operation::kCodecInternalCng;
+    uint32_t timestamp_leap =
+        status.next_packet->timestamp - status.target_timestamp;
+    time_stretched_cn_samples_ =
+        timestamp_leap - status.generated_noise_samples;
   }
 
-  // Do not merge unless we have done an expand before.
-  if (status.last_mode == NetEq::Mode::kExpand) {
-    return NetEq::Operation::kMerge;
-  } else if (status.play_dtmf) {
-    // Play DTMF instead of expand.
-    return NetEq::Operation::kDtmf;
-  } else {
-    return NetEq::Operation::kExpand;
+  // Time to play the next packet.
+  switch (status.last_mode) {
+    case NetEq::Mode::kExpand:
+      return NetEq::Operation::kMerge;
+    case NetEq::Mode::kCodecPlc:
+    case NetEq::Mode::kRfc3389Cng:
+    case NetEq::Mode::kCodecInternalCng:
+      return NetEq::Operation::kNormal;
+    default:
+      return status.play_dtmf ? NetEq::Operation::kDtmf
+                              : NetEq::Operation::kExpand;
   }
 }
 
