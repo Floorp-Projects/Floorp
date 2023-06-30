@@ -22,12 +22,14 @@
 #include "api/priority.h"
 #include "api/rtc_error.h"
 #include "api/scoped_refptr.h"
+#include "api/sequence_checker.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "pc/data_channel_utils.h"
 #include "pc/sctp_utils.h"
 #include "rtc_base/containers/flat_set.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/ssl_stream_adapter.h"  // For SSLRole
+#include "rtc_base/system/no_unique_address.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/weak_ptr.h"
@@ -73,20 +75,22 @@ struct InternalDataChannelInit : public DataChannelInit {
 // Helper class to allocate unique IDs for SCTP DataChannels.
 class SctpSidAllocator {
  public:
+  SctpSidAllocator();
   // Gets the first unused odd/even id based on the DTLS role. If `role` is
   // SSL_CLIENT, the allocated id starts from 0 and takes even numbers;
   // otherwise, the id starts from 1 and takes odd numbers.
-  // Returns false if no ID can be allocated.
-  bool AllocateSid(rtc::SSLRole role, StreamId* sid);
+  // If a `StreamId` cannot be allocated, `StreamId::HasValue()` will be false.
+  StreamId AllocateSid(rtc::SSLRole role);
 
   // Attempts to reserve a specific sid. Returns false if it's unavailable.
-  bool ReserveSid(const StreamId& sid);
+  bool ReserveSid(StreamId sid);
 
   // Indicates that `sid` isn't in use any more, and is thus available again.
-  void ReleaseSid(const StreamId& sid);
+  void ReleaseSid(StreamId sid);
 
  private:
-  flat_set<StreamId> used_sids_;
+  flat_set<StreamId> used_sids_ RTC_GUARDED_BY(&sequence_checker_);
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker sequence_checker_;
 };
 
 // SctpDataChannel is an implementation of the DataChannelInterface based on

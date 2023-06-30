@@ -875,6 +875,7 @@ rtc_library("sctp_data_channel") {
     "../api:priority",
     "../api:rtc_error",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/transport:datagram_transport_interface",
     "../media:media_channel",
     "../media:rtc_data_sctp_transport_internal",
@@ -887,6 +888,7 @@ rtc_library("sctp_data_channel") {
     "../rtc_base:threading",
     "../rtc_base:weak_ptr",
     "../rtc_base/containers:flat_set",
+    "../rtc_base/system:no_unique_address",
     "../rtc_base/system:unused",
   ]
   absl_deps = [

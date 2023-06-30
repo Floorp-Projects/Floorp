@@ -117,25 +117,32 @@ bool InternalDataChannelInit::IsValid() const {
   return true;
 }
 
-bool SctpSidAllocator::AllocateSid(rtc::SSLRole role, StreamId* sid) {
-  int potential_sid = (role == rtc::SSL_CLIENT) ? 0 : 1;
-  while (potential_sid <= static_cast<int>(cricket::kMaxSctpSid)) {
-    *sid = StreamId(potential_sid);
-    if (used_sids_.insert(*sid).second)
-      return true;
-    potential_sid += 2;
-  }
-  sid->reset();
-  return false;
+SctpSidAllocator::SctpSidAllocator() {
+  sequence_checker_.Detach();
 }
 
-bool SctpSidAllocator::ReserveSid(const StreamId& sid) {
+StreamId SctpSidAllocator::AllocateSid(rtc::SSLRole role) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
+  int potential_sid = (role == rtc::SSL_CLIENT) ? 0 : 1;
+  while (potential_sid <= static_cast<int>(cricket::kMaxSctpSid)) {
+    StreamId sid(potential_sid);
+    if (used_sids_.insert(sid).second)
+      return sid;
+    potential_sid += 2;
+  }
+  RTC_LOG(LS_ERROR) << "SCTP sid allocation pool exhausted.";
+  return StreamId();
+}
+
+bool SctpSidAllocator::ReserveSid(StreamId sid) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
   if (!sid.HasValue() || sid.stream_id_int() > cricket::kMaxSctpSid)
     return false;
   return used_sids_.insert(sid).second;
 }
 
-void SctpSidAllocator::ReleaseSid(const StreamId& sid) {
+void SctpSidAllocator::ReleaseSid(StreamId sid) {
+  RTC_DCHECK_RUN_ON(&sequence_checker_);
   used_sids_.erase(sid);
 }
 

@@ -653,18 +653,10 @@ class SctpSidAllocatorTest : public ::testing::Test {
 // Verifies that an even SCTP id is allocated for SSL_CLIENT and an odd id for
 // SSL_SERVER.
 TEST_F(SctpSidAllocatorTest, SctpIdAllocationBasedOnRole) {
-  StreamId id;
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_SERVER, &id));
-  EXPECT_EQ(1, id.stream_id_int());
-  id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_CLIENT, &id));
-  EXPECT_EQ(0, id.stream_id_int());
-  id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_SERVER, &id));
-  EXPECT_EQ(3, id.stream_id_int());
-  id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_CLIENT, &id));
-  EXPECT_EQ(2, id.stream_id_int());
+  EXPECT_EQ(allocator_.AllocateSid(rtc::SSL_SERVER), StreamId(1));
+  EXPECT_EQ(allocator_.AllocateSid(rtc::SSL_CLIENT), StreamId(0));
+  EXPECT_EQ(allocator_.AllocateSid(rtc::SSL_SERVER), StreamId(3));
+  EXPECT_EQ(allocator_.AllocateSid(rtc::SSL_CLIENT), StreamId(2));
 }
 
 // Verifies that SCTP ids of existing DataChannels are not reused.
@@ -672,14 +664,14 @@ TEST_F(SctpSidAllocatorTest, SctpIdAllocationNoReuse) {
   StreamId old_id(1);
   EXPECT_TRUE(allocator_.ReserveSid(old_id));
 
-  StreamId new_id;
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_SERVER, &new_id));
+  StreamId new_id = allocator_.AllocateSid(rtc::SSL_SERVER);
+  EXPECT_TRUE(new_id.HasValue());
   EXPECT_NE(old_id, new_id);
 
   old_id = StreamId(0);
   EXPECT_TRUE(allocator_.ReserveSid(old_id));
-  new_id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_CLIENT, &new_id));
+  new_id = allocator_.AllocateSid(rtc::SSL_CLIENT);
+  EXPECT_TRUE(new_id.HasValue());
   EXPECT_NE(old_id, new_id);
 }
 
@@ -690,41 +682,33 @@ TEST_F(SctpSidAllocatorTest, SctpIdReusedForRemovedDataChannel) {
   EXPECT_TRUE(allocator_.ReserveSid(odd_id));
   EXPECT_TRUE(allocator_.ReserveSid(even_id));
 
-  StreamId allocated_id;
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_SERVER, &allocated_id));
+  StreamId allocated_id = allocator_.AllocateSid(rtc::SSL_SERVER);
   EXPECT_EQ(odd_id.stream_id_int() + 2, allocated_id.stream_id_int());
 
-  allocated_id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_CLIENT, &allocated_id));
+  allocated_id = allocator_.AllocateSid(rtc::SSL_CLIENT);
   EXPECT_EQ(even_id.stream_id_int() + 2, allocated_id.stream_id_int());
 
-  allocated_id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_SERVER, &allocated_id));
+  allocated_id = allocator_.AllocateSid(rtc::SSL_SERVER);
   EXPECT_EQ(odd_id.stream_id_int() + 4, allocated_id.stream_id_int());
 
-  allocated_id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_CLIENT, &allocated_id));
+  allocated_id = allocator_.AllocateSid(rtc::SSL_CLIENT);
   EXPECT_EQ(even_id.stream_id_int() + 4, allocated_id.stream_id_int());
 
   allocator_.ReleaseSid(odd_id);
   allocator_.ReleaseSid(even_id);
 
   // Verifies that removed ids are reused.
-  allocated_id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_SERVER, &allocated_id));
+  allocated_id = allocator_.AllocateSid(rtc::SSL_SERVER);
   EXPECT_EQ(odd_id, allocated_id);
 
-  allocated_id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_CLIENT, &allocated_id));
+  allocated_id = allocator_.AllocateSid(rtc::SSL_CLIENT);
   EXPECT_EQ(even_id, allocated_id);
 
   // Verifies that used higher ids are not reused.
-  allocated_id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_SERVER, &allocated_id));
+  allocated_id = allocator_.AllocateSid(rtc::SSL_SERVER);
   EXPECT_EQ(odd_id.stream_id_int() + 6, allocated_id.stream_id_int());
 
-  allocated_id.reset();
-  EXPECT_TRUE(allocator_.AllocateSid(rtc::SSL_CLIENT, &allocated_id));
+  allocated_id = allocator_.AllocateSid(rtc::SSL_CLIENT);
   EXPECT_EQ(even_id.stream_id_int() + 6, allocated_id.stream_id_int());
 }
 
