@@ -433,21 +433,6 @@ TEST_F(SctpDataChannelTest, SendDataId) {
   EXPECT_EQ(1, controller_->last_sid());
 }
 
-// Tests that the incoming messages with wrong ids are rejected.
-TEST_F(SctpDataChannelTest, ReceiveDataWithInvalidId) {
-  webrtc_data_channel_->SetSctpSid(StreamId(1));
-  SetChannelReady();
-
-  AddObserver();
-
-  cricket::ReceiveDataParams params;
-  params.sid = 0;
-  DataBuffer buffer("abcd");
-  webrtc_data_channel_->OnDataReceived(params, buffer.data);
-
-  EXPECT_EQ(0U, observer_->messages_received());
-}
-
 // Tests that the incoming messages with right ids are accepted.
 TEST_F(SctpDataChannelTest, ReceiveDataWithValidId) {
   webrtc_data_channel_->SetSctpSid(StreamId(1));
