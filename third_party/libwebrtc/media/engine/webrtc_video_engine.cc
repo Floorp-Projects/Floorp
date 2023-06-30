@@ -2507,12 +2507,13 @@ WebRtcVideoChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
   // `legacy_scalability_mode` and codec used.
   encoder_config.number_of_streams = parameters_.config.rtp.ssrcs.size();
   bool legacy_scalability_mode = true;
-  // TODO(https://crbug.com/webrtc/14884): When simulcast VP9 is ready to ship,
-  // don't require a field trial to set `legacy_scalability_mode` to false here.
-  if (call_->trials().IsEnabled("WebRTC-AllowDisablingLegacyScalability")) {
+  // TODO(https://crbug.com/webrtc/14884): This is only used as a kill-switch
+  // in case of serious bugs - when this reaches Stable, delete the field trial.
+  if (!call_->trials().IsDisabled("WebRTC-AllowDisablingLegacyScalability")) {
     for (const webrtc::RtpEncodingParameters& encoding :
          rtp_parameters_.encodings) {
-      if (encoding.scalability_mode.has_value()) {
+      if (encoding.scalability_mode.has_value() &&
+          encoding.scale_resolution_down_by.has_value()) {
         legacy_scalability_mode = false;
         break;
       }
