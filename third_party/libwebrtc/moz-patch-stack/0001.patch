@@ -1,147 +1,156 @@
-From: Philipp Hancke <phancke@microsoft.com>
-Date: Mon, 27 Mar 2023 10:19:52 +0200
-Subject: (cherry-pick-branch-heads/5615) [M112] Revert "Only serialize
- non-stopped RTP header extensions"
+From: Jan-Ivar Bruaroey <wingboy@gmail.com>
+Date: Fri, 30 Jun 2023 13:55:34 -0400
+Subject: (tmp-cherry-pick) Revert "Ship ability to opt-in to VP9/AV1
+ simulcast." (75ea06f0fa)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This reverts commit be03c0971863c9e6807fcbdb4175754e8242a652.
-Causes regression in web projects that
-1/ add a stopped-by-default extension in SRD
-2/ call createAnswer
-3/ munge the stopped-by-default extension back in SLD
-4/ create a subsequent offer and expect the extension to be present
+This reverts commit 75990b9a8f98ea2d597a31472fb778ec4d55f698.
 
-BUG=chromium:1427442,chromium:1051821
+Reason for revert: Breaks downstream, a use case of having three VP9
+encodings, scalability mode only specified on the first layer
+(L2T2_KEY) and the other two layers not having a scalability mode but
+also being active=false appears to trigger a DCHECK in
+call/rtp_video_sender.cc:501. More investigation needed
 
-Change-Id: I2e48831e92384963a254d873398f54eaee96739a
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/299143
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Philipp Hancke <phancke@microsoft.com>
-Reviewed-by: Henrik Boström <hbos@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5615@{#2}
-Cr-Branched-From: cdfeb4f7922f05007d88c8263842998ec79b6dd6-refs/heads/main@{#39376}
+Original change's description:
+> Ship ability to opt-in to VP9/AV1 simulcast.
+>
+> With this unflagging, an app can opt-in to simulcast when using multiple
+> encodings by specifying RTCRtpEncodingParameters.scalabilityMode. This
+> ensures backwards-compat with apps relying on 3 encodings to mean SVC
+> who traditionally have not specified scalabilityMode.
+>
+> It fixes the spec/API bug of asking for simulcast and not getting
+> simulcast. The field trial exists only as a kill-switch with a TODO to
+> remove it.
+>
+> This ships initial support, however note that the VP9/AV1 simulcast uses
+> SimulcastRateAllocator (just like VP8/H264 simulcast). This rate
+> allocator uses more kbps than SvcRateAllocator. This should be revisited
+> to avoid significant higher bitrates, for example when comparing VP9
+> simulcast to VP9 SVC.
+>
+> Shipping the ability for apps to opt-in makes it easier to exercise
+> these new code paths and allows initial feedback from developers, but
+> due to the high bitrate (= same bitrate as VP8/H264 simulcast today)
+> many apps may find that VP9 SVC is still more beneficial for BW reasons.
+>
+> Bug: webrtc:14884, webrtc:15005
+> Change-Id: I748aae1adb47acc8a6b79b5852cff6aa47a46f5d
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/298046
+> Commit-Queue: Henrik Boström <hbos@webrtc.org>
+> Reviewed-by: Erik Språng <sprang@webrtc.org>
+> Reviewed-by: Evan Shrubsole <eshr@google.com>
+> Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#39601}
+
+Bug: webrtc:14884, webrtc:15005
+Change-Id: Ic8f77e6a2971f493d6cd8c23faecd435058a8847
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/298440
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Commit-Queue: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#39605}
 ---
- pc/media_session.cc                           |  7 +--
- pc/media_session_unittest.cc                  |  5 +-
- ...er_connection_header_extension_unittest.cc | 62 -------------------
- 3 files changed, 5 insertions(+), 69 deletions(-)
+ media/engine/webrtc_video_engine.cc          |  6 +++---
+ media/engine/webrtc_video_engine_unittest.cc | 10 ++--------
+ pc/peer_connection_simulcast_unittest.cc     | 14 ++++++++++++++
+ 3 files changed, 19 insertions(+), 11 deletions(-)
 
-diff --git a/pc/media_session.cc b/pc/media_session.cc
-index 92fe80f3d1..e703b44101 100644
---- a/pc/media_session.cc
-+++ b/pc/media_session.cc
-@@ -684,11 +684,8 @@ static bool CreateContentOffer(
-       if (extension_with_id.uri == extension.uri) {
-         // TODO(crbug.com/1051821): Configure the extension direction from
-         // the information in the media_description_options extension
--        // capability. For now, do not include stopped extensions.
--        // See also crbug.com/webrtc/7477 about the general lack of direction.
--        if (extension.direction != RtpTransceiverDirection::kStopped) {
--          extensions.push_back(extension_with_id);
--        }
-+        // capability.
-+        extensions.push_back(extension_with_id);
-       }
-     }
-   }
-diff --git a/pc/media_session_unittest.cc b/pc/media_session_unittest.cc
-index 6dc6d76021..8f38f6a1b4 100644
---- a/pc/media_session_unittest.cc
-+++ b/pc/media_session_unittest.cc
-@@ -2018,7 +2018,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
+diff --git a/media/engine/webrtc_video_engine.cc b/media/engine/webrtc_video_engine.cc
+index dd91eb2782..b3afbf9fd8 100644
+--- a/media/engine/webrtc_video_engine.cc
++++ b/media/engine/webrtc_video_engine.cc
+@@ -2502,9 +2502,9 @@ WebRtcVideoChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
+   // `legacy_scalability_mode` and codec used.
+   encoder_config.number_of_streams = parameters_.config.rtp.ssrcs.size();
+   bool legacy_scalability_mode = true;
+-  // TODO(https://crbug.com/webrtc/14884): This is only used as a kill-switch
+-  // in case of serious bugs - when this reaches Stable, delete the field trial.
+-  if (!call_->trials().IsDisabled("WebRTC-AllowDisablingLegacyScalability")) {
++  // TODO(https://crbug.com/webrtc/14884): When simulcast VP9 is ready to ship,
++  // don't require a field trial to set `legacy_scalability_mode` to false here.
++  if (call_->trials().IsEnabled("WebRTC-AllowDisablingLegacyScalability")) {
+     for (const webrtc::RtpEncodingParameters& encoding :
+          rtp_parameters_.encodings) {
+       if (encoding.scalability_mode.has_value()) {
+diff --git a/media/engine/webrtc_video_engine_unittest.cc b/media/engine/webrtc_video_engine_unittest.cc
+index e47f365491..c86ceb6176 100644
+--- a/media/engine/webrtc_video_engine_unittest.cc
++++ b/media/engine/webrtc_video_engine_unittest.cc
+@@ -8463,9 +8463,7 @@ TEST_F(WebRtcVideoChannelTest,
+       webrtc::ScalabilityModeFromString(kDefaultScalabilityModeStr);
+   EXPECT_EQ(2, stream->num_encoder_reconfigurations());
+   webrtc::VideoEncoderConfig encoder_config = stream->GetEncoderConfig().Copy();
+-  // When `scalability_mode` has been specified on any encoding, we do not
+-  // reduce the number of simulcast streams.
+-  EXPECT_EQ(3u, encoder_config.number_of_streams);
++  EXPECT_EQ(1u, encoder_config.number_of_streams);
+   EXPECT_THAT(encoder_config.simulcast_layers,
+               ElementsAre(Field(&webrtc::VideoStream::scalability_mode,
+                                 ScalabilityMode::kL3T3),
+@@ -8478,11 +8476,7 @@ TEST_F(WebRtcVideoChannelTest,
+   // VideoStreams are created appropriately for the simulcast case.
+   EXPECT_THAT(stream->GetVideoStreams(),
+               ElementsAre(Field(&webrtc::VideoStream::scalability_mode,
+-                                ScalabilityMode::kL3T3),
+-                          Field(&webrtc::VideoStream::scalability_mode,
+-                                kDefaultScalabilityMode),
+-                          Field(&webrtc::VideoStream::scalability_mode,
+-                                kDefaultScalabilityMode)));
++                                ScalabilityMode::kL3T3)));
+ 
+   // GetParameters.
+   parameters = send_channel_->GetRtpSendParameters(last_ssrc_);
+diff --git a/pc/peer_connection_simulcast_unittest.cc b/pc/peer_connection_simulcast_unittest.cc
+index c0513b2a6a..1f5f17a517 100644
+--- a/pc/peer_connection_simulcast_unittest.cc
++++ b/pc/peer_connection_simulcast_unittest.cc
+@@ -60,6 +60,7 @@
+ #include "rtc_base/thread.h"
+ #include "rtc_base/unique_id_generator.h"
+ #include "system_wrappers/include/metrics.h"
++#include "test/field_trial.h"
+ #include "test/gmock.h"
+ #include "test/gtest.h"
+ 
+@@ -1431,8 +1432,13 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+               Optional(std::string("L3T3_KEY")));
  }
  
- TEST_F(MediaSessionDescriptionFactoryTest,
--       AllowsStoppedExtensionsToBeRemovedFromSubsequentOffer) {
-+       AppendsStoppedExtensionIfKnownAndPresentInTheOffer) {
-   MediaSessionOptions opts;
-   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
-                              RtpTransceiverDirection::kSendRecv, kActive,
-@@ -2043,7 +2043,8 @@ TEST_F(MediaSessionDescriptionFactoryTest,
-       ElementsAre(Property(
-           &ContentInfo::media_description,
-           Pointee(Property(&MediaContentDescription::rtp_header_extensions,
--                           ElementsAre(Field(&RtpExtension::uri, "uri1")))))));
-+                           ElementsAre(Field(&RtpExtension::uri, "uri1"),
-+                                       Field(&RtpExtension::uri, "uri2")))))));
++// TODO(https://crbug.com/webrtc/14884): A field trial shouldn't be needed to
++// get spec-compliant behavior!
+ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+        SendingThreeEncodings_VP9_Simulcast) {
++  test::ScopedFieldTrials field_trials(
++      "WebRTC-AllowDisablingLegacyScalability/Enabled/");
++
+   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+   rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+   ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+@@ -1497,9 +1503,17 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+   EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
  }
  
- TEST_F(MediaSessionDescriptionFactoryTest,
-diff --git a/pc/peer_connection_header_extension_unittest.cc b/pc/peer_connection_header_extension_unittest.cc
-index 9db547fb57..fb8833a01b 100644
---- a/pc/peer_connection_header_extension_unittest.cc
-+++ b/pc/peer_connection_header_extension_unittest.cc
-@@ -229,68 +229,6 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
-                           Field(&RtpHeaderExtensionCapability::uri, "uri3")));
- }
- 
--TEST_P(PeerConnectionHeaderExtensionTest, OfferedExtensionsArePerTransceiver) {
--  cricket::MediaType media_type;
--  SdpSemantics semantics;
--  std::tie(media_type, semantics) = GetParam();
--  if (semantics != SdpSemantics::kUnifiedPlan)
--    return;
--  std::unique_ptr<PeerConnectionWrapper> pc1 =
--      CreatePeerConnection(media_type, semantics);
--  auto transceiver1 = pc1->AddTransceiver(media_type);
--  auto modified_extensions = transceiver1->GetHeaderExtensionsToNegotiate();
--  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  transceiver1->SetHeaderExtensionsToNegotiate(modified_extensions);
--  auto transceiver2 = pc1->AddTransceiver(media_type);
--
--  auto session_description = pc1->CreateOffer();
--  EXPECT_THAT(session_description->description()
--                  ->contents()[0]
--                  .media_description()
--                  ->rtp_header_extensions(),
--              ElementsAre(Field(&RtpExtension::uri, "uri2"),
--                          Field(&RtpExtension::uri, "uri3")));
--  EXPECT_THAT(session_description->description()
--                  ->contents()[1]
--                  .media_description()
--                  ->rtp_header_extensions(),
--              ElementsAre(Field(&RtpExtension::uri, "uri2"),
--                          Field(&RtpExtension::uri, "uri3"),
--                          Field(&RtpExtension::uri, "uri4")));
--}
--
--TEST_P(PeerConnectionHeaderExtensionTest, RemovalAfterRenegotiation) {
--  cricket::MediaType media_type;
--  SdpSemantics semantics;
--  std::tie(media_type, semantics) = GetParam();
--  if (semantics != SdpSemantics::kUnifiedPlan)
--    return;
--  std::unique_ptr<PeerConnectionWrapper> pc1 =
--      CreatePeerConnection(media_type, semantics);
--  std::unique_ptr<PeerConnectionWrapper> pc2 =
--      CreatePeerConnection(media_type, semantics);
--  auto transceiver1 = pc1->AddTransceiver(media_type);
--
--  auto offer = pc1->CreateOfferAndSetAsLocal(
--      PeerConnectionInterface::RTCOfferAnswerOptions());
--  pc2->SetRemoteDescription(std::move(offer));
--  auto answer = pc2->CreateAnswerAndSetAsLocal(
--      PeerConnectionInterface::RTCOfferAnswerOptions());
--  pc1->SetRemoteDescription(std::move(answer));
--
--  auto modified_extensions = transceiver1->GetHeaderExtensionsToNegotiate();
--  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  transceiver1->SetHeaderExtensionsToNegotiate(modified_extensions);
--  auto session_description = pc1->CreateOffer();
--  EXPECT_THAT(session_description->description()
--                  ->contents()[0]
--                  .media_description()
--                  ->rtp_header_extensions(),
--              ElementsAre(Field(&RtpExtension::uri, "uri2"),
--                          Field(&RtpExtension::uri, "uri3")));
--}
--
- INSTANTIATE_TEST_SUITE_P(
-     ,
-     PeerConnectionHeaderExtensionTest,
++// TODO(https://crbug.com/webrtc/15005): A field trial shouldn't be needed to
++// get spec-compliant behavior! The same field trial is also used for VP9
++// simulcast (https://crbug.com/webrtc/14884).
+ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+        SendingThreeEncodings_AV1_Simulcast) {
++  test::ScopedFieldTrials field_trials(
++      "WebRTC-AllowDisablingLegacyScalability/Enabled/");
++
+   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
++  // TODO(https://crbug.com/webrtc/15011): Expand testing support for AV1 or
++  // allow compile time checks so that gates like this isn't needed at runtime.
+   if (!HasSenderVideoCodecCapability(local_pc_wrapper, "AV1")) {
+     RTC_LOG(LS_WARNING) << "\n***\nAV1 is not available, skipping test.\n***";
+     return;
 -- 
 2.37.1 (Apple Git-137.1)
 
