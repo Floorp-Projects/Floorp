@@ -17,6 +17,11 @@
 #include "absl/strings/string_view.h"
 #include "rtc_base/checks.h"
 
+#define RTC_PARSE_RETURN_ERROR(X)                                 \
+  do {                                                            \
+    return RtcEventLogParseStatus::Error(#X, __FILE__, __LINE__); \
+  } while (0)
+
 #define RTC_PARSE_CHECK_OR_RETURN(X)                                \
   do {                                                              \
     if (!(X))                                                       \
