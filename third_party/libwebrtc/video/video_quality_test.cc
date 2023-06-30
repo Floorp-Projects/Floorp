@@ -33,9 +33,9 @@
 #include "call/simulated_network.h"
 #include "media/base/media_constants.h"
 #include "media/engine/adm_helpers.h"
-#include "media/engine/encoder_simulcast_proxy.h"
 #include "media/engine/fake_video_codec_factory.h"
 #include "media/engine/internal_encoder_factory.h"
+#include "media/engine/simulcast_encoder_adapter.h"
 #include "media/engine/webrtc_video_engine.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
@@ -320,8 +320,8 @@ std::unique_ptr<VideoEncoder> VideoQualityTest::CreateVideoEncoder(
     VideoAnalyzer* analyzer) {
   std::unique_ptr<VideoEncoder> encoder;
   if (format.name == "VP8") {
-    encoder =
-        std::make_unique<EncoderSimulcastProxy>(encoder_factory_.get(), format);
+    encoder = std::make_unique<SimulcastEncoderAdapter>(encoder_factory_.get(),
+                                                        format);
   } else if (format.name == "multiplex") {
     encoder = std::make_unique<MultiplexEncoderAdapter>(
         encoder_factory_.get(), SdpVideoFormat(cricket::kVp9CodecName));
