@@ -30,5 +30,5 @@ index abc92cf4a8..86552cdab5 100644
  rtc_source_set("libjingle_logging_api") {
    visibility = [ "*" ]
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

@@ -67,5 +67,5 @@ index b767726107..47fecfe4a1 100644
    for (int i = 0; i < size; i++) {
      if (maxFPS > maxFps[i])
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

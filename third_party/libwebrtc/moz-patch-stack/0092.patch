@@ -65,5 +65,5 @@ index 4c6911b4a3..05a4b184c2 100644
        return libyuv::FOURCC_ABGR;
      case VideoType::kRGB565:
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

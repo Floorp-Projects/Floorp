@@ -27,5 +27,5 @@ index ad1b341b62..7e181c538e 100644
    ~VideoCaptureModule() override {}
  };
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

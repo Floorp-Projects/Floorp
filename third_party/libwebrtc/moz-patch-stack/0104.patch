@@ -34,5 +34,5 @@ index 8695f76245..b13ac074f8 100644
    if (FAILED(hr)) {
      RTC_LOG(LS_INFO) << "Failed to stop the capture graph. " << hr;
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

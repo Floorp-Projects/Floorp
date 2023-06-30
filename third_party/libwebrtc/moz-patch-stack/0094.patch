@@ -96,5 +96,5 @@ index c7dcb722bc..baf1916331 100644
    // set format and frame size now
    if (ioctl(_deviceFd, VIDIOC_S_FMT, &video_fmt) < 0) {
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

@@ -112,7 +112,7 @@ index cad0c5b65b..76fec13a39 100644
  namespace webrtc {
  
  namespace {
-@@ -462,7 +543,7 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
+@@ -462,7 +543,7 @@ bool ScreenCapturerMac::RegisterRefreshAndMoveHandlers() {
  
        size_t count = 0;
        const CGRect* rects =
@@ -121,7 +121,7 @@ index cad0c5b65b..76fec13a39 100644
        if (count != 0) {
          // According to CGDisplayStream.h, it's safe to call
          // CGDisplayStreamStop() from within the callback.
-@@ -472,20 +553,20 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
+@@ -472,20 +553,20 @@ bool ScreenCapturerMac::RegisterRefreshAndMoveHandlers() {
  
      rtc::ScopedCFTypeRef<CFDictionaryRef> properties_dict(
          CFDictionaryCreate(kCFAllocatorDefault,
@@ -147,7 +147,7 @@ index cad0c5b65b..76fec13a39 100644
        CFRunLoopAddSource(CFRunLoopGetCurrent(), source, kCFRunLoopCommonModes);
        display_streams_.push_back(display_stream);
      }
-@@ -498,9 +579,9 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
+@@ -498,9 +579,9 @@ void ScreenCapturerMac::UnregisterRefreshAndMoveHandlers() {
    RTC_DCHECK(thread_checker_.IsCurrent());
  
    for (CGDisplayStreamRef stream : display_streams_) {
@@ -160,5 +160,5 @@ index cad0c5b65b..76fec13a39 100644
    }
    display_streams_.clear();
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 
