@@ -395,7 +395,7 @@ def lib_path_for(host_or_target):
     return lib_path
 
 
-@depends_if(lib_path_for(target))
+@depends_if(lib_path_for(target), when=target_is_windows)
 @imports("os")
 def lib_path(libs):
     # Set in the environment for old-configure
@@ -410,13 +410,13 @@ set_config("LIB", lib_path)
 lib_path_for_host = lib_path_for(host)
 
 
-@depends_if(lib_path_for_host)
+@depends_if(lib_path_for_host, when=host_is_windows)
 @imports(_from="mozbuild.shellutil", _import="quote")
 def host_linker_libpaths(libs):
     return ["-LIBPATH:%s" % quote(l) for l in libs]
 
 
-@depends_if(lib_path_for_host)
+@depends_if(lib_path_for_host, when=host_is_windows)
 @imports(_from="mozbuild.shellutil", _import="quote")
 def host_linker_libpaths_bat(libs):
     # .bat files need a different style of quoting. Batch quoting is actually
