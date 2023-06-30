@@ -36,7 +36,7 @@ class BuiltinVideoBitrateAllocatorFactory
       case kVideoCodecVP9:
         // TODO(https://crbug.com/webrtc/14884): Update SvcRateAllocator to
         // support simulcast and use it for VP9/AV1 simulcast as well.
-        if (codec.numberOfSimulcastStreams <= 1) {
+        if (codec.IsSinglecastOrAllNonFirstLayersInactive()) {
           return std::make_unique<SvcRateAllocator>(codec);
         }
         ABSL_FALLTHROUGH_INTENDED;

@@ -1543,6 +1543,66 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_FALSE(parameters.encodings[2].scalability_mode.has_value());
 }
 
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingThreeEncodings_VP9_AllLayersInactive) {
+  // TODO(https://crbug.com/webrtc/14884): A field trial shouldn't be needed to
+  // get spec-compliant behavior!
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-AllowDisablingLegacyScalability/Enabled/");
+
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP9");
+  transceiver->SetCodecPreferences(codecs);
+
+  // Legacy SVC mode and all layers inactive.
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  parameters.encodings[0].active = false;
+  parameters.encodings[1].active = false;
+  parameters.encodings[2].active = false;
+  sender->SetParameters(parameters);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Ensure no media is flowing (1 second should be enough).
+  rtc::Thread::Current()->SleepMs(1000);
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(1u));
+  EXPECT_EQ(*outbound_rtps[0]->bytes_sent, 0u);
+
+  // Standard mode and all layers inactive.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  parameters.encodings[0].scalability_mode = "L1T3";
+  parameters.encodings[0].active = false;
+  parameters.encodings[1].active = false;
+  parameters.encodings[2].active = false;
+  sender->SetParameters(parameters);
+
+  // Ensure no media is flowing (1 second should be enough).
+  rtc::Thread::Current()->SleepMs(1000);
+  report = GetStats(local_pc_wrapper);
+  outbound_rtps = report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(3u));
+  EXPECT_EQ(*outbound_rtps[0]->bytes_sent, 0u);
+  EXPECT_EQ(*outbound_rtps[1]->bytes_sent, 0u);
+  EXPECT_EQ(*outbound_rtps[2]->bytes_sent, 0u);
+}
+
 // TODO(https://crbug.com/webrtc/15005): A field trial shouldn't be needed to
 // get spec-compliant behavior! The same field trial is also used for VP9
 // simulcast (https://crbug.com/webrtc/14884).
