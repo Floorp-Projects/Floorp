@@ -144,6 +144,23 @@ void DesktopFrame::MoveFrameInfoFrom(DesktopFrame* other) {
   set_icc_profile(other->icc_profile());
 }
 
+bool DesktopFrame::FrameDataIsBlack() const {
+  if (size().is_empty())
+    return false;
+
+  uint32_t* pixel = reinterpret_cast<uint32_t*>(data());
+  for (int i = 0; i < size().width() * size().height(); ++i) {
+    if (*pixel++)
+      return false;
+  }
+  return true;
+}
+
+void DesktopFrame::SetFrameDataToBlack() {
+  const uint8_t kBlackPixelValue = 0x00;
+  memset(data(), kBlackPixelValue, stride() * size().height());
+}
+
 BasicDesktopFrame::BasicDesktopFrame(DesktopSize size)
     : DesktopFrame(size,
                    kBytesPerPixel * size.width(),
