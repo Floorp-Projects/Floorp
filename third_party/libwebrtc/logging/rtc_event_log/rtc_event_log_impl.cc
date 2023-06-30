@@ -112,9 +112,9 @@ bool RtcEventLogImpl::StartLogging(std::unique_ptr<RtcEventLogOutput> output,
 
 void RtcEventLogImpl::StopLogging() {
   RTC_DLOG(LS_INFO) << "Stopping WebRTC event log.";
-  // TODO(danilchap): Do not block current thread waiting on the task queue.
-  // It might work for now, for current callers, but disallows caller to share
-  // threads with the `task_queue_`.
+  // TODO(bugs.webrtc.org/14449): Do not block current thread waiting on the
+  // task queue. It might work for now, for current callers, but disallows
+  // caller to share threads with the `task_queue_`.
   rtc::Event output_stopped;
   StopLogging([&output_stopped]() { output_stopped.Set(); });
   output_stopped.Wait(rtc::Event::kForever);
