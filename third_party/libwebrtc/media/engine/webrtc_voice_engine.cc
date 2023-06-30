@@ -417,7 +417,7 @@ VoiceMediaChannel* WebRtcVoiceEngine::CreateMediaChannel(
     webrtc::AudioCodecPairId codec_pair_id) {
   RTC_DCHECK_RUN_ON(call->worker_thread());
   return new WebRtcVoiceMediaChannel(role, this, config, options,
-                                     crypto_options, call);
+                                     crypto_options, call, codec_pair_id);
 }
 
 void WebRtcVoiceEngine::ApplyOptions(const AudioOptions& options_in) {
@@ -1256,12 +1256,14 @@ WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel(
     const MediaConfig& config,
     const AudioOptions& options,
     const webrtc::CryptoOptions& crypto_options,
-    webrtc::Call* call)
+    webrtc::Call* call,
+    webrtc::AudioCodecPairId codec_pair_id)
     : VoiceMediaChannel(role, call->network_thread(), config.enable_dscp),
       worker_thread_(call->worker_thread()),
       engine_(engine),
       call_(call),
       audio_config_(config.audio),
+      codec_pair_id_(codec_pair_id),
       crypto_options_(crypto_options) {
   network_thread_checker_.Detach();
   RTC_LOG(LS_VERBOSE) << "WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel";
@@ -1735,28 +1737,40 @@ bool WebRtcVoiceMediaChannel::SetSendCodecs(
   }
   call_->GetTransportControllerSend()->SetSdpBitrateParameters(bitrate_config);
 
-  // Check if the NACK status has changed on the
-  // preferred send codec, and in that case reconfigure all receive streams.
-  if (recv_nack_enabled_ != send_codec_spec_->nack_enabled) {
-    RTC_LOG(LS_INFO) << "Changing NACK status on receive streams.";
-    recv_nack_enabled_ = send_codec_spec_->nack_enabled;
-    for (auto& kv : recv_streams_) {
-      kv.second->SetUseNack(recv_nack_enabled_);
-    }
-  }
+  // In legacy kBoth mode, the MediaChannel sets the NACK status.
+  // In other modes, this is done externally.
 
-  // Check if the receive-side RTT status has changed on the preferred send
-  // codec, in that case reconfigure all receive streams.
-  if (enable_non_sender_rtt_ != send_codec_spec_->enable_non_sender_rtt) {
-    RTC_LOG(LS_INFO) << "Changing receive-side RTT status on receive streams.";
-    enable_non_sender_rtt_ = send_codec_spec_->enable_non_sender_rtt;
-    for (auto& kv : recv_streams_) {
-      kv.second->SetNonSenderRttMeasurement(enable_non_sender_rtt_);
-    }
+  if (role() == MediaChannel::Role::kBoth) {
+    SetReceiveNackEnabled(send_codec_spec_->nack_enabled);
+    SetReceiveNonSenderRttEnabled(send_codec_spec_->enable_non_sender_rtt);
   }
 
   send_codecs_ = codecs;
   return true;
+}
+
+void WebRtcVoiceMediaChannel::SetReceiveNackEnabled(bool enabled) {
+  // Check if the NACK status has changed on the
+  // preferred send codec, and in that case reconfigure all receive streams.
+  if (recv_nack_enabled_ != enabled) {
+    RTC_LOG(LS_INFO) << "Changing NACK status on receive streams.";
+    recv_nack_enabled_ = enabled;
+    for (auto& kv : recv_streams_) {
+      kv.second->SetUseNack(recv_nack_enabled_);
+    }
+  }
+}
+
+void WebRtcVoiceMediaChannel::SetReceiveNonSenderRttEnabled(bool enabled) {
+  // Check if the receive-side RTT status has changed on the preferred send
+  // codec, in that case reconfigure all receive streams.
+  if (enable_non_sender_rtt_ != enabled) {
+    RTC_LOG(LS_INFO) << "Changing receive-side RTT status on receive streams.";
+    enable_non_sender_rtt_ = enabled;
+    for (auto& kv : recv_streams_) {
+      kv.second->SetNonSenderRttMeasurement(enable_non_sender_rtt_);
+    }
+  }
 }
 
 void WebRtcVoiceMediaChannel::SetPlayout(bool playout) {
