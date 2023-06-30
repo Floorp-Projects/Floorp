@@ -136,6 +136,7 @@ class TestRawVideoSource : public VideoCodecTester::RawVideoSource {
     auto frame = VideoFrame::Builder()
                      .set_video_frame_buffer(buffer)
                      .set_timestamp_rtp(timestamp_rtp_)
+                     .set_timestamp_us((timestamp_rtp_ / k90kHz).us())
                      .build();
 
     pulled_frames_[timestamp_rtp_] = pulled_frame;
