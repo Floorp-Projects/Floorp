@@ -490,6 +490,31 @@ def depends_all(*args, **kwargs):
     return depends_tmpl(all, *args, **kwargs)
 
 
+# A template providing a shorthand for setting a variable. The created
+# option will only be settable with imply_option.
+# It is expected that a project-specific moz.configure will call imply_option
+# to set a value other than the default.
+# If required, the set_as_define argument will additionally cause the variable
+# to be set using set_define.
+@template
+def project_flag(env=None, set_as_define=False, **kwargs):
+    if not env:
+        configure_error("A project_flag must be passed a variable name to set.")
+
+    opt = option(env=env, possible_origins=("implied",), **kwargs)
+
+    @depends(opt.option)
+    def option_implementation(value):
+        if value:
+            if len(value):
+                return value
+            return bool(value)
+
+    set_config(env, option_implementation)
+    if set_as_define:
+        set_define(env, option_implementation)
+
+
 # Hacks related to old-configure
 # ==============================
 
