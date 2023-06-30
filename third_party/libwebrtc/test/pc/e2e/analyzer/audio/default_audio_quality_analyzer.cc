@@ -39,7 +39,7 @@ void DefaultAudioQualityAnalyzer::Start(std::string test_case_name,
 void DefaultAudioQualityAnalyzer::OnStatsReports(
     absl::string_view pc_label,
     const rtc::scoped_refptr<const RTCStatsReport>& report) {
-  auto stats = report->GetStatsOfType<RTCInboundRTPStreamStats>();
+  auto stats = report->GetStatsOfType<RTCInboundRtpStreamStats>();
 
   for (auto& stat : stats) {
     if (!stat->kind.is_defined() ||

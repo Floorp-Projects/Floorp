@@ -1350,7 +1350,7 @@ TEST_P(PeerConnectionIntegrationTest, NewGetStatsManyAudioAndManyVideoStreams) {
       caller()->NewGetStats();
   ASSERT_TRUE(caller_report);
   auto outbound_stream_stats =
-      caller_report->GetStatsOfType<webrtc::RTCOutboundRTPStreamStats>();
+      caller_report->GetStatsOfType<webrtc::RTCOutboundRtpStreamStats>();
   ASSERT_EQ(outbound_stream_stats.size(), 4u);
   std::vector<std::string> outbound_track_ids;
   for (const auto& stat : outbound_stream_stats) {
@@ -1375,7 +1375,7 @@ TEST_P(PeerConnectionIntegrationTest, NewGetStatsManyAudioAndManyVideoStreams) {
       callee()->NewGetStats();
   ASSERT_TRUE(callee_report);
   auto inbound_stream_stats =
-      callee_report->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>();
+      callee_report->GetStatsOfType<webrtc::RTCInboundRtpStreamStats>();
   ASSERT_EQ(4u, inbound_stream_stats.size());
   std::vector<std::string> inbound_track_ids;
   for (const auto& stat : inbound_stream_stats) {
@@ -1414,7 +1414,7 @@ TEST_P(PeerConnectionIntegrationTest,
       callee()->NewGetStats();
   ASSERT_NE(nullptr, report);
   auto inbound_stream_stats =
-      report->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>();
+      report->GetStatsOfType<webrtc::RTCInboundRtpStreamStats>();
   ASSERT_EQ(1U, inbound_stream_stats.size());
   ASSERT_TRUE(inbound_stream_stats[0]->bytes_received.is_defined());
   ASSERT_GT(*inbound_stream_stats[0]->bytes_received, 0U);
@@ -1463,7 +1463,7 @@ TEST_P(PeerConnectionIntegrationTest,
   ASSERT_NE(nullptr, report);
 
   auto inbound_rtps =
-      report->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>();
+      report->GetStatsOfType<webrtc::RTCInboundRtpStreamStats>();
   auto index = FindFirstMediaStatsIndexByKind("audio", inbound_rtps);
   ASSERT_GE(index, 0);
   EXPECT_TRUE(inbound_rtps[index]->audio_level.is_defined());
@@ -1483,7 +1483,7 @@ void ModifySsrcs(cricket::SessionDescription* desc) {
 
 // Test that the "DEPRECATED_RTCMediaStreamTrackStats"  object is updated
 // correctly when SSRCs are unsignaled, and the SSRC of the received (audio)
-// stream changes. This should result in two "RTCInboundRTPStreamStats", but
+// stream changes. This should result in two "RTCInboundRtpStreamStats", but
 // only one "DEPRECATED_RTCMediaStreamTrackStats", whose counters go up
 // continuously rather than being reset to 0 once the SSRC change occurs.
 //
@@ -1558,13 +1558,13 @@ TEST_P(PeerConnectionIntegrationTest,
             *track_stats[0]->total_samples_received *
                 kAcceptableConcealedSamplesPercentage);
 
-  // Also ensure that we have two "RTCInboundRTPStreamStats" as expected, as a
+  // Also ensure that we have two "RTCInboundRtpStreamStats" as expected, as a
   // sanity check that the SSRC really changed.
   // TODO(deadbeef): This isn't working right now, because we're not returning
   // *any* stats for the inactive stream. Uncomment when the bug is completely
   // fixed.
   // auto inbound_stream_stats =
-  //     report->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>();
+  //     report->GetStatsOfType<webrtc::RTCInboundRtpStreamStats>();
   // ASSERT_EQ(2U, inbound_stream_stats.size());
 }
 
@@ -2989,7 +2989,7 @@ TEST_P(PeerConnectionIntegrationTest, DisableAndEnableAudioPlayout) {
 double GetAudioEnergyStat(PeerConnectionIntegrationWrapper* pc) {
   auto report = pc->NewGetStats();
   auto inbound_rtps =
-      report->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>();
+      report->GetStatsOfType<webrtc::RTCInboundRtpStreamStats>();
   RTC_CHECK(!inbound_rtps.empty());
   auto* inbound_rtp = inbound_rtps[0];
   if (!inbound_rtp->total_audio_energy.is_defined()) {
@@ -3811,7 +3811,7 @@ TEST_P(PeerConnectionIntegrationTest, EndToEndRtpSenderVideoEncoderSelector) {
 
 int NacksReceivedCount(PeerConnectionIntegrationWrapper& pc) {
   rtc::scoped_refptr<const webrtc::RTCStatsReport> report = pc.NewGetStats();
-  auto sender_stats = report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  auto sender_stats = report->GetStatsOfType<RTCOutboundRtpStreamStats>();
   if (sender_stats.size() != 1) {
     ADD_FAILURE();
     return 0;
@@ -3824,7 +3824,7 @@ int NacksReceivedCount(PeerConnectionIntegrationWrapper& pc) {
 
 int NacksSentCount(PeerConnectionIntegrationWrapper& pc) {
   rtc::scoped_refptr<const webrtc::RTCStatsReport> report = pc.NewGetStats();
-  auto receiver_stats = report->GetStatsOfType<RTCInboundRTPStreamStats>();
+  auto receiver_stats = report->GetStatsOfType<RTCInboundRtpStreamStats>();
   if (receiver_stats.size() != 1) {
     ADD_FAILURE();
     return 0;

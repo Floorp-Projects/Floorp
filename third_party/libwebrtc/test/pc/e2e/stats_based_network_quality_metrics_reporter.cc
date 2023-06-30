@@ -296,14 +296,14 @@ void StatsBasedNetworkQualityMetricsReporter::OnStatsReports(
     const rtc::scoped_refptr<const RTCStatsReport>& report) {
   PCStats cur_stats;
 
-  auto inbound_stats = report->GetStatsOfType<RTCInboundRTPStreamStats>();
+  auto inbound_stats = report->GetStatsOfType<RTCInboundRtpStreamStats>();
   for (const auto& stat : inbound_stats) {
     cur_stats.payload_received +=
         DataSize::Bytes(stat->bytes_received.ValueOrDefault(0ul) +
                         stat->header_bytes_received.ValueOrDefault(0ul));
   }
 
-  auto outbound_stats = report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  auto outbound_stats = report->GetStatsOfType<RTCOutboundRtpStreamStats>();
   for (const auto& stat : outbound_stats) {
     cur_stats.payload_sent +=
         DataSize::Bytes(stat->bytes_sent.ValueOrDefault(0ul) +

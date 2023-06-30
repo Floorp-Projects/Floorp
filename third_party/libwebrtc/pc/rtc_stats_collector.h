@@ -211,7 +211,7 @@ class RTCStatsCollector : public rtc::RefCountInterface {
   // Produces `RTCAudioPlayoutStats`.
   void ProduceAudioPlayoutStats_s(Timestamp timestamp,
                                   RTCStatsReport* report) const;
-  // Produces `RTCInboundRTPStreamStats`, `RTCOutboundRTPStreamStats`,
+  // Produces `RTCInboundRtpStreamStats`, `RTCOutboundRtpStreamStats`,
   // `RTCRemoteInboundRtpStreamStats`, `RTCRemoteOutboundRtpStreamStats` and any
   // referenced `RTCCodecStats`. This has to be invoked after transport stats
   // have been created because some metrics are calculated through lookup of
