@@ -454,8 +454,8 @@ void SctpDataChannel::OnDataReceived(DataMessageType type,
   RTC_DCHECK(type == DataMessageType::kBinary ||
              type == DataMessageType::kText);
 
-  RTC_LOG(LS_VERBOSE) << "DataChannel received DATA message, sid = "
-                      << id_.stream_id_int();
+  RTC_DLOG(LS_VERBOSE) << "DataChannel received DATA message, sid = "
+                       << id_.stream_id_int();
   // We can send unordered as soon as we receive any DATA message since the
   // remote side must have received the OPEN (and old clients do not send
   // OPEN_ACK).
@@ -655,7 +655,7 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
   // Send as ordered if it is still going through OPEN/ACK signaling.
   if (handshake_state_ != kHandshakeReady && !ordered_) {
     send_params.ordered = true;
-    RTC_LOG(LS_VERBOSE)
+    RTC_DLOG(LS_VERBOSE)
         << "Sending data as ordered for unordered DataChannel "
            "because the OPEN_ACK message has not been received.";
   }
@@ -746,8 +746,8 @@ bool SctpDataChannel::SendControlMessage(const rtc::CopyOnWriteBuffer& buffer) {
   bool retval = controller_->SendData(id_.stream_id_int(), send_params, buffer,
                                       &send_result);
   if (retval) {
-    RTC_LOG(LS_VERBOSE) << "Sent CONTROL message on channel "
-                        << id_.stream_id_int();
+    RTC_DLOG(LS_VERBOSE) << "Sent CONTROL message on channel "
+                         << id_.stream_id_int();
 
     if (handshake_state_ == kHandshakeShouldSendAck) {
       handshake_state_ = kHandshakeReady;
