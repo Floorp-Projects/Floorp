@@ -35,8 +35,8 @@ bugs found in native code.
 * [iOS][webrtc-ios-development]
 * [Experimental RTP header extensions][rtp-hdrext]
 
-[webrtc-prerequitite-sw]: https://webrtc.googlesource.com/src/+/main/docs/native-code/development/prerequisite-sw/index.md
-[webrtc-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/development/index.md
-[webtc-android-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/android/index.md
-[webrtc-ios-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/ios/index.md
-[rtp-hdrext]: https://webrtc.googlesource.com/src/+/main/docs/native-code/rtp-hdrext/index.md
+[webrtc-prerequitite-sw]: https://webrtc.googlesource.com/src/+/main/docs/native-code/development/prerequisite-sw/
+[webrtc-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/development/
+[webtc-android-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/android/
+[webrtc-ios-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/ios/
+[rtp-hdrext]: https://webrtc.googlesource.com/src/+/main/docs/native-code/rtp-hdrext/

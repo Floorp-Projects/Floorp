@@ -9,7 +9,7 @@ pages for build instructions and example applications specific to these mobile p
 
 First, be sure to install the [prerequisite software][webrtc-prerequisite-sw].
 
-[webrtc-prerequisite-sw]: https://webrtc.googlesource.com/src/+/main/docs/native-code/development/prerequisite-sw/index.md
+[webrtc-prerequisite-sw]: https://webrtc.googlesource.com/src/+/main/docs/native-code/development/prerequisite-sw/
 
 
 ## Getting the Code
@@ -181,7 +181,7 @@ To browse it: [https://webrtc.googlesource.com/src/+/branch-heads/3987][m80]
 For more details, read Chromium's [Working with Branches][chromium-work-branches] and
 [Working with Release Branches][chromium-work-release-branches] pages.
 To find the branch corresponding to a Chrome release check the
-[Chromium Dashboard][https://chromiumdash.appspot.com/branches].
+[Chromium Dashboard][chromium-dashboard].
 
 
 ## Contributing Patches
@@ -278,8 +278,9 @@ Target name `turnserver`. Used for unit tests.
 [ninja-build-rules]: https://gn.googlesource.com/gn/+/main/docs/reference.md#the-all-and-default-rules
 [gn]: https://gn.googlesource.com/gn/+/main/README.md
 [gn-doc]: https://gn.googlesource.com/gn/+/main/docs/reference.md#IDE-options
-[webrtc-android-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/android/index.md
-[webrtc-ios-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/ios/index.md
+[webrtc-android-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/android/
+[webrtc-ios-development]: https://webrtc.googlesource.com/src/+/main/docs/native-code/ios/
+[chromium-dashboard]: https://chromiumdash.appspot.com/branches
 [chromium-work-branches]: https://www.chromium.org/developers/how-tos/get-the-code/working-with-branches
 [chromium-work-release-branches]: https://www.chromium.org/developers/how-tos/get-the-code/working-with-release-branches
 [depot-tools]: http://commondatastorage.googleapis.com/chrome-infra-docs/flat/depot_tools/docs/html/depot_tools_tutorial.html#_setting_up
