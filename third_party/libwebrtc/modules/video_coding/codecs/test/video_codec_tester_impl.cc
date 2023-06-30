@@ -187,58 +187,6 @@ class TesterY4mWriter {
   TaskQueueForTest task_queue_;
 };
 
-class TesterDecoder {
- public:
-  TesterDecoder(Decoder* decoder,
-                VideoCodecAnalyzer* analyzer,
-                const DecoderSettings& settings)
-      : decoder_(decoder),
-        analyzer_(analyzer),
-        settings_(settings),
-        pacer_(settings.pacing) {
-    RTC_CHECK(analyzer_) << "Analyzer must be provided";
-
-    if (settings.decoded_y4m_base_path) {
-      y4m_writer_ =
-          std::make_unique<TesterY4mWriter>(*settings.decoded_y4m_base_path);
-    }
-  }
-
-  void Decode(const EncodedImage& frame) {
-    Timestamp timestamp = Timestamp::Micros((frame.Timestamp() / k90kHz).us());
-
-    task_queue_.PostScheduledTask(
-        [this, frame] {
-          analyzer_->StartDecode(frame);
-
-          decoder_->Decode(
-              frame, [this, spatial_idx = frame.SpatialIndex().value_or(0)](
-                         const VideoFrame& decoded_frame) {
-                analyzer_->FinishDecode(decoded_frame, spatial_idx);
-
-                if (y4m_writer_) {
-                  y4m_writer_->Write(decoded_frame, spatial_idx);
-                }
-              });
-        },
-        pacer_.Schedule(timestamp));
-  }
-
-  void Flush() {
-    Timestamp now = Timestamp::Micros(rtc::TimeMicros());
-    task_queue_.PostScheduledTask([this] { decoder_->Flush(); }, now);
-    task_queue_.WaitForPreviouslyPostedTasks();
-  }
-
- protected:
-  Decoder* const decoder_;
-  VideoCodecAnalyzer* const analyzer_;
-  const DecoderSettings& settings_;
-  Pacer pacer_;
-  LimitedTaskQueue task_queue_;
-  std::unique_ptr<TesterY4mWriter> y4m_writer_;
-};
-
 class TesterIvfWriter {
  public:
   explicit TesterIvfWriter(absl::string_view base_path)
@@ -277,6 +225,64 @@ class TesterIvfWriter {
   TaskQueueForTest task_queue_;
 };
 
+class TesterDecoder {
+ public:
+  TesterDecoder(Decoder* decoder,
+                VideoCodecAnalyzer* analyzer,
+                const DecoderSettings& settings)
+      : decoder_(decoder),
+        analyzer_(analyzer),
+        settings_(settings),
+        pacer_(settings.pacing) {
+    RTC_CHECK(analyzer_) << "Analyzer must be provided";
+
+    if (settings.decoded_y4m_base_path) {
+      y4m_writer_ =
+          std::make_unique<TesterY4mWriter>(*settings.decoded_y4m_base_path);
+    }
+  }
+
+  void Initialize() {
+    task_queue_.PostScheduledTask([this] { decoder_->Initialize(); },
+                                  Timestamp::Zero());
+    task_queue_.WaitForPreviouslyPostedTasks();
+  }
+
+  void Decode(const EncodedImage& frame) {
+    Timestamp timestamp = Timestamp::Micros((frame.Timestamp() / k90kHz).us());
+
+    task_queue_.PostScheduledTask(
+        [this, frame] {
+          analyzer_->StartDecode(frame);
+
+          decoder_->Decode(
+              frame, [this, spatial_idx = frame.SpatialIndex().value_or(0)](
+                         const VideoFrame& decoded_frame) {
+                analyzer_->FinishDecode(decoded_frame, spatial_idx);
+
+                if (y4m_writer_) {
+                  y4m_writer_->Write(decoded_frame, spatial_idx);
+                }
+              });
+        },
+        pacer_.Schedule(timestamp));
+  }
+
+  void Flush() {
+    task_queue_.PostScheduledTask([this] { decoder_->Flush(); },
+                                  Timestamp::Zero());
+    task_queue_.WaitForPreviouslyPostedTasks();
+  }
+
+ protected:
+  Decoder* const decoder_;
+  VideoCodecAnalyzer* const analyzer_;
+  const DecoderSettings& settings_;
+  Pacer pacer_;
+  LimitedTaskQueue task_queue_;
+  std::unique_ptr<TesterY4mWriter> y4m_writer_;
+};
+
 class TesterEncoder {
  public:
   TesterEncoder(Encoder* encoder,
@@ -293,6 +299,12 @@ class TesterEncoder {
       ivf_writer_ =
           std::make_unique<TesterIvfWriter>(*settings.encoded_ivf_base_path);
     }
+  }
+
+  void Initialize() {
+    task_queue_.PostScheduledTask([this] { encoder_->Initialize(); },
+                                  Timestamp::Zero());
+    task_queue_.WaitForPreviouslyPostedTasks();
   }
 
   void Encode(const VideoFrame& frame) {
@@ -317,8 +329,8 @@ class TesterEncoder {
   }
 
   void Flush() {
-    Timestamp now = Timestamp::Micros(rtc::TimeMicros());
-    task_queue_.PostScheduledTask([this] { encoder_->Flush(); }, now);
+    task_queue_.PostScheduledTask([this] { encoder_->Flush(); },
+                                  Timestamp::Zero());
     task_queue_.WaitForPreviouslyPostedTasks();
   }
 
@@ -341,6 +353,8 @@ std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunDecodeTest(
   VideoCodecAnalyzer perf_analyzer;
   TesterDecoder tester_decoder(decoder, &perf_analyzer, decoder_settings);
 
+  tester_decoder.Initialize();
+
   while (auto frame = video_source->PullFrame()) {
     tester_decoder.Decode(*frame);
   }
@@ -358,6 +372,8 @@ std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunEncodeTest(
   VideoCodecAnalyzer perf_analyzer;
   TesterEncoder tester_encoder(encoder, /*decoder=*/nullptr, &perf_analyzer,
                                encoder_settings);
+
+  tester_encoder.Initialize();
 
   while (auto frame = sync_source.PullFrame()) {
     tester_encoder.Encode(*frame);
@@ -379,6 +395,9 @@ std::unique_ptr<VideoCodecStats> VideoCodecTesterImpl::RunEncodeDecodeTest(
   TesterDecoder tester_decoder(decoder, &perf_analyzer, decoder_settings);
   TesterEncoder tester_encoder(encoder, &tester_decoder, &perf_analyzer,
                                encoder_settings);
+
+  tester_encoder.Initialize();
+  tester_decoder.Initialize();
 
   while (auto frame = sync_source.PullFrame()) {
     tester_encoder.Encode(*frame);
