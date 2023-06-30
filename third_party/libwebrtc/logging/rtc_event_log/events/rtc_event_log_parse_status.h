@@ -15,24 +15,24 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
+#include "rtc_base/checks.h"
 
-#define RTC_PARSE_CHECK_OR_RETURN(X)                                        \
-  do {                                                                      \
-    if (!(X))                                                               \
-      return ParsedRtcEventLog::ParseStatus::Error(#X, __FILE__, __LINE__); \
+#define RTC_PARSE_CHECK_OR_RETURN(X)                                \
+  do {                                                              \
+    if (!(X))                                                       \
+      return RtcEventLogParseStatus::Error(#X, __FILE__, __LINE__); \
   } while (0)
 
-#define RTC_PARSE_CHECK_OR_RETURN_MESSAGE(X, M)                              \
-  do {                                                                       \
-    if (!(X))                                                                \
-      return ParsedRtcEventLog::ParseStatus::Error((M), __FILE__, __LINE__); \
+#define RTC_PARSE_CHECK_OR_RETURN_MESSAGE(X, M)                      \
+  do {                                                               \
+    if (!(X))                                                        \
+      return RtcEventLogParseStatus::Error((M), __FILE__, __LINE__); \
   } while (0)
 
-#define RTC_PARSE_CHECK_OR_RETURN_OP(OP, X, Y)                          \
-  do {                                                                  \
-    if (!((X)OP(Y)))                                                    \
-      return ParsedRtcEventLog::ParseStatus::Error(#X #OP #Y, __FILE__, \
-                                                   __LINE__);           \
+#define RTC_PARSE_CHECK_OR_RETURN_OP(OP, X, Y)                             \
+  do {                                                                     \
+    if (!((X)OP(Y)))                                                       \
+      return RtcEventLogParseStatus::Error(#X #OP #Y, __FILE__, __LINE__); \
   } while (0)
 
 #define RTC_PARSE_CHECK_OR_RETURN_EQ(X, Y) \
@@ -51,20 +51,20 @@
 #define RTC_PARSE_CHECK_OR_RETURN_GE(X, Y) \
   RTC_PARSE_CHECK_OR_RETURN_OP(>=, X, Y)
 
-#define RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(X, M)      \
-  do {                                                  \
-    if (X) {                                            \
-      RTC_LOG(LS_WARNING) << (M);                       \
-      return ParsedRtcEventLog::ParseStatus::Success(); \
-    }                                                   \
+#define RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(X, M) \
+  do {                                             \
+    if (X) {                                       \
+      RTC_LOG(LS_WARNING) << (M);                  \
+      return RtcEventLogParseStatus::Success();    \
+    }                                              \
   } while (0)
 
-#define RTC_RETURN_IF_ERROR(X)                                 \
-  do {                                                         \
-    const ParsedRtcEventLog::ParseStatus _rtc_parse_status(X); \
-    if (!_rtc_parse_status.ok()) {                             \
-      return _rtc_parse_status;                                \
-    }                                                          \
+#define RTC_RETURN_IF_ERROR(X)                         \
+  do {                                                 \
+    const RtcEventLogParseStatus _rtc_parse_status(X); \
+    if (!_rtc_parse_status.ok()) {                     \
+      return _rtc_parse_status;                        \
+    }                                                  \
   } while (0)
 
 // TODO(terelius): Compared to a generic 'Status' class, this
