@@ -95,33 +95,5 @@ TEST(StreamStateTest, RemovePeerForLastExpectedReceiverUpdatesAliveFrames) {
   EXPECT_EQ(state.GetAliveFramesCount(), 1lu);
 }
 
-TEST(StreamStateTest, MarkNextAliveFrameAsDeadDecreseAliveFramesCount) {
-  StreamState state(/*sender=*/0,
-                    /*receivers=*/std::set<size_t>{1, 2}, Timestamp::Seconds(1),
-                    Clock::GetRealTimeClock());
-  state.PushBack(/*frame_id=*/1);
-  state.PushBack(/*frame_id=*/2);
-
-  EXPECT_EQ(state.GetAliveFramesCount(), 2lu);
-
-  state.MarkNextAliveFrameAsDead();
-
-  EXPECT_EQ(state.GetAliveFramesCount(), 1lu);
-}
-
-TEST(StreamStateTest, MarkNextAliveFrameAsDeadDoesntAffectFrontFrameForPeer) {
-  StreamState state(/*sender=*/0,
-                    /*receivers=*/std::set<size_t>{1, 2}, Timestamp::Seconds(1),
-                    Clock::GetRealTimeClock());
-  state.PushBack(/*frame_id=*/1);
-  state.PushBack(/*frame_id=*/2);
-
-  EXPECT_EQ(state.Front(/*peer=*/1), 1);
-
-  state.MarkNextAliveFrameAsDead();
-
-  EXPECT_EQ(state.Front(/*peer=*/1), 1);
-}
-
 }  // namespace
 }  // namespace webrtc

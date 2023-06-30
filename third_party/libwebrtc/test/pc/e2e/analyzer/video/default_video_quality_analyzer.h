@@ -36,6 +36,7 @@
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_internal_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_stream_state.h"
+#include "test/pc/e2e/analyzer/video/dvqa/frames_storage.h"
 #include "test/pc/e2e/analyzer/video/names_collection.h"
 
 namespace webrtc {
@@ -165,6 +166,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // Mapping from stream label to unique size_t value to use in stats and avoid
   // extra string copying.
   NamesCollection streams_ RTC_GUARDED_BY(mutex_);
+  FramesStorage frames_storage_ RTC_GUARDED_BY(mutex_);
   // Frames that were captured by all streams and still aren't rendered on
   // receivers or deemed dropped. Frame with id X can be removed from this map
   // if:

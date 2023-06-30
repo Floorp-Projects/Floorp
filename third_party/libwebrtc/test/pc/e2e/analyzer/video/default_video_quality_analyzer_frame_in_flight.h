@@ -66,21 +66,15 @@ struct ReceiverFrameStats {
 class FrameInFlight {
  public:
   FrameInFlight(size_t stream,
-                VideoFrame frame,
+                uint16_t frame_id,
                 Timestamp captured_time,
                 std::set<size_t> expected_receivers);
 
   size_t stream() const { return stream_; }
-  // Returns internal copy of source `VideoFrame` or `absl::nullopt` if it was
-  // removed before.
-  const absl::optional<VideoFrame>& frame() const { return frame_; }
+
+  uint16_t id() const { return frame_id_; }
 
   Timestamp captured_time() const { return captured_time_; }
-
-  // Removes internal copy of the source `VideoFrame` to free up extra memory.
-  // Returns was frame removed or not.
-  bool RemoveFrame();
-  void SetFrameId(uint16_t id);
 
   void AddExpectedReceiver(size_t peer) { expected_receivers_.insert(peer); }
 
@@ -162,7 +156,6 @@ class FrameInFlight {
   // any peer or can be safely deleted. It is responsibility of the user of this
   // object to decide when it should be deleted.
   std::set<size_t> expected_receivers_;
-  absl::optional<VideoFrame> frame_;
   // Store frame id separately because `frame_` can be removed when we have too
   // much memory consuption.
   uint16_t frame_id_ = VideoFrame::kNotSetId;

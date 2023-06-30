@@ -37,28 +37,13 @@ absl::optional<T> MaybeGetValue(const std::unordered_map<size_t, T>& map,
 }  // namespace
 
 FrameInFlight::FrameInFlight(size_t stream,
-                             VideoFrame frame,
+                             uint16_t frame_id,
                              Timestamp captured_time,
                              std::set<size_t> expected_receivers)
     : stream_(stream),
       expected_receivers_(std::move(expected_receivers)),
-      frame_(std::move(frame)),
+      frame_id_(frame_id),
       captured_time_(captured_time) {}
-
-bool FrameInFlight::RemoveFrame() {
-  if (!frame_) {
-    return false;
-  }
-  frame_ = absl::nullopt;
-  return true;
-}
-
-void FrameInFlight::SetFrameId(uint16_t id) {
-  if (frame_) {
-    frame_->set_id(id);
-  }
-  frame_id_ = id;
-}
 
 std::vector<size_t> FrameInFlight::GetPeersWhichDidntReceive() const {
   std::vector<size_t> out;

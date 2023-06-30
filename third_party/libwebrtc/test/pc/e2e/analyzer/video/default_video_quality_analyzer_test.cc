@@ -47,7 +47,7 @@ using ::testing::ValuesIn;
 using StatsSample = ::webrtc::SamplesStatsCounter::StatsSample;
 
 constexpr int kAnalyzerMaxThreadsCount = 1;
-constexpr int kMaxFramesInFlightPerStream = 10;
+constexpr TimeDelta kMaxFramesInFlightStorageDuration = TimeDelta::Seconds(3);
 constexpr int kFrameWidth = 320;
 constexpr int kFrameHeight = 240;
 constexpr double kMaxSsim = 1;
@@ -60,7 +60,7 @@ DefaultVideoQualityAnalyzerOptions AnalyzerOptionsForTest() {
   options.compute_psnr = false;
   options.compute_ssim = false;
   options.adjust_cropping_before_comparing_frames = false;
-  options.max_frames_in_flight_per_stream_count = kMaxFramesInFlightPerStream;
+  options.max_frames_storage_duration = kMaxFramesInFlightStorageDuration;
   return options;
 }
 
@@ -204,196 +204,6 @@ void PassFramesThroughAnalyzer(DefaultVideoQualityAnalyzer& analyzer,
   }
 }
 
-TEST(DefaultVideoQualityAnalyzerTest,
-     MemoryOverloadedAndThenAllFramesReceived) {
-  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
-      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
-                                       /*type=*/absl::nullopt,
-                                       /*num_squares=*/absl::nullopt);
-
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
-                                       test::GetGlobalMetricsLogger(),
-                                       AnalyzerOptionsForTest());
-  analyzer.Start("test_case",
-                 std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
-                 kAnalyzerMaxThreadsCount);
-
-  std::map<uint16_t, VideoFrame> captured_frames;
-  std::vector<uint16_t> frames_order;
-  for (int i = 0; i < kMaxFramesInFlightPerStream * 2; ++i) {
-    VideoFrame frame = NextFrame(frame_generator.get(), i);
-    frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
-    frames_order.push_back(frame.id());
-    captured_frames.insert({frame.id(), frame});
-    analyzer.OnFramePreEncode(kSenderPeerName, frame);
-    analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
-                            VideoQualityAnalyzerInterface::EncoderStats(),
-                            false);
-  }
-
-  for (const uint16_t& frame_id : frames_order) {
-    VideoFrame received_frame = DeepCopy(captured_frames.at(frame_id));
-    analyzer.OnFramePreDecode(kReceiverPeerName, received_frame.id(),
-                              FakeEncode(received_frame));
-    analyzer.OnFrameDecoded(kReceiverPeerName, received_frame,
-                            VideoQualityAnalyzerInterface::DecoderStats());
-    analyzer.OnFrameRendered(kReceiverPeerName, received_frame);
-  }
-
-  // Give analyzer some time to process frames on async thread. The computations
-  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
-  // means we have an issue!
-  SleepMs(100);
-  analyzer.Stop();
-
-  AnalyzerStats stats = analyzer.GetAnalyzerStats();
-  EXPECT_EQ(stats.memory_overloaded_comparisons_done,
-            kMaxFramesInFlightPerStream);
-  EXPECT_EQ(stats.comparisons_done, kMaxFramesInFlightPerStream * 2);
-  FrameCounters frame_counters = analyzer.GetGlobalCounters();
-  EXPECT_EQ(frame_counters.captured, kMaxFramesInFlightPerStream * 2);
-  EXPECT_EQ(frame_counters.rendered, kMaxFramesInFlightPerStream * 2);
-  EXPECT_EQ(frame_counters.dropped, 0);
-}
-
-TEST(DefaultVideoQualityAnalyzerTest,
-     FillMaxMemoryReceiveAllMemoryOverloadedAndThenAllFramesReceived) {
-  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
-      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
-                                       /*type=*/absl::nullopt,
-                                       /*num_squares=*/absl::nullopt);
-
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
-                                       test::GetGlobalMetricsLogger(),
-                                       AnalyzerOptionsForTest());
-  analyzer.Start("test_case",
-                 std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
-                 kAnalyzerMaxThreadsCount);
-
-  std::map<uint16_t, VideoFrame> captured_frames;
-  std::vector<uint16_t> frames_order;
-  // Feel analyzer's memory up to limit
-  for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
-    VideoFrame frame = NextFrame(frame_generator.get(), i);
-    frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
-    frames_order.push_back(frame.id());
-    captured_frames.insert({frame.id(), frame});
-    analyzer.OnFramePreEncode(kSenderPeerName, frame);
-    analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
-                            VideoQualityAnalyzerInterface::EncoderStats(),
-                            false);
-  }
-
-  // Receive all frames.
-  for (const uint16_t& frame_id : frames_order) {
-    VideoFrame received_frame = DeepCopy(captured_frames.at(frame_id));
-    analyzer.OnFramePreDecode(kReceiverPeerName, received_frame.id(),
-                              FakeEncode(received_frame));
-    analyzer.OnFrameDecoded(kReceiverPeerName, received_frame,
-                            VideoQualityAnalyzerInterface::DecoderStats());
-    analyzer.OnFrameRendered(kReceiverPeerName, received_frame);
-  }
-  frames_order.clear();
-
-  // Give analyzer some time to process frames on async thread. The computations
-  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
-  // means we have an issue!
-  SleepMs(100);
-
-  // Overload analyzer's memory up to limit
-  for (int i = 0; i < 2 * kMaxFramesInFlightPerStream; ++i) {
-    VideoFrame frame = NextFrame(frame_generator.get(), i);
-    frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
-    frames_order.push_back(frame.id());
-    captured_frames.insert({frame.id(), frame});
-    analyzer.OnFramePreEncode(kSenderPeerName, frame);
-    analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
-                            VideoQualityAnalyzerInterface::EncoderStats(),
-                            false);
-  }
-
-  // Receive all frames.
-  for (const uint16_t& frame_id : frames_order) {
-    VideoFrame received_frame = DeepCopy(captured_frames.at(frame_id));
-    analyzer.OnFramePreDecode(kReceiverPeerName, received_frame.id(),
-                              FakeEncode(received_frame));
-    analyzer.OnFrameDecoded(kReceiverPeerName, received_frame,
-                            VideoQualityAnalyzerInterface::DecoderStats());
-    analyzer.OnFrameRendered(kReceiverPeerName, received_frame);
-  }
-
-  // Give analyzer some time to process frames on async thread. The computations
-  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
-  // means we have an issue!
-  SleepMs(100);
-  analyzer.Stop();
-
-  AnalyzerStats stats = analyzer.GetAnalyzerStats();
-  EXPECT_EQ(stats.memory_overloaded_comparisons_done,
-            kMaxFramesInFlightPerStream);
-  EXPECT_EQ(stats.comparisons_done, kMaxFramesInFlightPerStream * 3);
-  FrameCounters frame_counters = analyzer.GetGlobalCounters();
-  EXPECT_EQ(frame_counters.captured, kMaxFramesInFlightPerStream * 3);
-  EXPECT_EQ(frame_counters.rendered, kMaxFramesInFlightPerStream * 3);
-  EXPECT_EQ(frame_counters.dropped, 0);
-}
-
-TEST(DefaultVideoQualityAnalyzerTest,
-     MemoryOverloadedHalfDroppedAndThenHalfFramesReceived) {
-  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
-      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
-                                       /*type=*/absl::nullopt,
-                                       /*num_squares=*/absl::nullopt);
-
-  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
-                                       test::GetGlobalMetricsLogger(),
-                                       AnalyzerOptionsForTest());
-  analyzer.Start("test_case",
-                 std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
-                 kAnalyzerMaxThreadsCount);
-
-  std::map<uint16_t, VideoFrame> captured_frames;
-  std::vector<uint16_t> frames_order;
-  for (int i = 0; i < kMaxFramesInFlightPerStream * 2; ++i) {
-    VideoFrame frame = NextFrame(frame_generator.get(), i);
-    frame.set_id(
-        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
-    frames_order.push_back(frame.id());
-    captured_frames.insert({frame.id(), frame});
-    analyzer.OnFramePreEncode(kSenderPeerName, frame);
-    analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
-                            VideoQualityAnalyzerInterface::EncoderStats(),
-                            false);
-  }
-
-  for (size_t i = kMaxFramesInFlightPerStream; i < frames_order.size(); ++i) {
-    uint16_t frame_id = frames_order.at(i);
-    VideoFrame received_frame = DeepCopy(captured_frames.at(frame_id));
-    analyzer.OnFramePreDecode(kReceiverPeerName, received_frame.id(),
-                              FakeEncode(received_frame));
-    analyzer.OnFrameDecoded(kReceiverPeerName, received_frame,
-                            VideoQualityAnalyzerInterface::DecoderStats());
-    analyzer.OnFrameRendered(kReceiverPeerName, received_frame);
-  }
-
-  // Give analyzer some time to process frames on async thread. The computations
-  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
-  // means we have an issue!
-  SleepMs(100);
-  analyzer.Stop();
-
-  AnalyzerStats stats = analyzer.GetAnalyzerStats();
-  EXPECT_EQ(stats.memory_overloaded_comparisons_done, 0);
-  EXPECT_EQ(stats.comparisons_done, kMaxFramesInFlightPerStream * 2);
-  FrameCounters frame_counters = analyzer.GetGlobalCounters();
-  EXPECT_EQ(frame_counters.captured, kMaxFramesInFlightPerStream * 2);
-  EXPECT_EQ(frame_counters.rendered, kMaxFramesInFlightPerStream);
-  EXPECT_EQ(frame_counters.dropped, kMaxFramesInFlightPerStream);
-}
-
 TEST(DefaultVideoQualityAnalyzerTest, NormalScenario) {
   std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
       test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
@@ -409,7 +219,7 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario) {
 
   std::map<uint16_t, VideoFrame> captured_frames;
   std::vector<uint16_t> frames_order;
-  for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
+  for (int i = 0; i < 10; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
         analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
@@ -439,7 +249,7 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario) {
 
   AnalyzerStats stats = analyzer.GetAnalyzerStats();
   EXPECT_EQ(stats.memory_overloaded_comparisons_done, 0);
-  EXPECT_EQ(stats.comparisons_done, kMaxFramesInFlightPerStream);
+  EXPECT_EQ(stats.comparisons_done, 10);
 
   std::vector<StatsSample> frames_in_flight_sizes =
       GetSortedSamples(stats.frames_in_flight_left_count);
@@ -447,11 +257,11 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario) {
       << ToString(frames_in_flight_sizes);
 
   FrameCounters frame_counters = analyzer.GetGlobalCounters();
-  EXPECT_EQ(frame_counters.captured, kMaxFramesInFlightPerStream);
-  EXPECT_EQ(frame_counters.received, kMaxFramesInFlightPerStream / 2);
-  EXPECT_EQ(frame_counters.decoded, kMaxFramesInFlightPerStream / 2);
-  EXPECT_EQ(frame_counters.rendered, kMaxFramesInFlightPerStream / 2);
-  EXPECT_EQ(frame_counters.dropped, kMaxFramesInFlightPerStream / 2);
+  EXPECT_EQ(frame_counters.captured, 10);
+  EXPECT_EQ(frame_counters.received, 5);
+  EXPECT_EQ(frame_counters.decoded, 5);
+  EXPECT_EQ(frame_counters.rendered, 5);
+  EXPECT_EQ(frame_counters.dropped, 5);
 }
 
 TEST(DefaultVideoQualityAnalyzerTest, OneFrameReceivedTwice) {
@@ -525,7 +335,7 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario2Receivers) {
 
   std::map<uint16_t, VideoFrame> captured_frames;
   std::vector<uint16_t> frames_order;
-  for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
+  for (int i = 0; i < 10; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(analyzer.OnFrameCaptured(kAlice, kStreamLabel, frame));
     frames_order.push_back(frame.id());
@@ -571,14 +381,14 @@ TEST(DefaultVideoQualityAnalyzerTest, NormalScenario2Receivers) {
 
   AnalyzerStats analyzer_stats = analyzer.GetAnalyzerStats();
   EXPECT_EQ(analyzer_stats.memory_overloaded_comparisons_done, 0);
-  EXPECT_EQ(analyzer_stats.comparisons_done, kMaxFramesInFlightPerStream * 2);
+  EXPECT_EQ(analyzer_stats.comparisons_done, 20);
 
   FrameCounters frame_counters = analyzer.GetGlobalCounters();
-  EXPECT_EQ(frame_counters.captured, kMaxFramesInFlightPerStream);
-  EXPECT_EQ(frame_counters.received, kMaxFramesInFlightPerStream);
-  EXPECT_EQ(frame_counters.decoded, kMaxFramesInFlightPerStream);
-  EXPECT_EQ(frame_counters.rendered, kMaxFramesInFlightPerStream);
-  EXPECT_EQ(frame_counters.dropped, kMaxFramesInFlightPerStream);
+  EXPECT_EQ(frame_counters.captured, 10);
+  EXPECT_EQ(frame_counters.received, 10);
+  EXPECT_EQ(frame_counters.decoded, 10);
+  EXPECT_EQ(frame_counters.rendered, 10);
+  EXPECT_EQ(frame_counters.dropped, 10);
 
   VideoStreamsInfo streams_info = analyzer.GetKnownStreams();
   EXPECT_EQ(streams_info.GetStreams(), std::set<std::string>{kStreamLabel});
@@ -707,8 +517,6 @@ TEST(DefaultVideoQualityAnalyzerTest, HeavyQualityMetricsFromEqualFrames) {
   analyzer_options.compute_psnr = true;
   analyzer_options.compute_ssim = true;
   analyzer_options.adjust_cropping_before_comparing_frames = false;
-  analyzer_options.max_frames_in_flight_per_stream_count =
-      kMaxFramesInFlightPerStream;
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
                                        test::GetGlobalMetricsLogger(),
                                        analyzer_options);
@@ -716,7 +524,7 @@ TEST(DefaultVideoQualityAnalyzerTest, HeavyQualityMetricsFromEqualFrames) {
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
                  kAnalyzerMaxThreadsCount);
 
-  for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
+  for (int i = 0; i < 10; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
         analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
@@ -741,7 +549,7 @@ TEST(DefaultVideoQualityAnalyzerTest, HeavyQualityMetricsFromEqualFrames) {
 
   AnalyzerStats stats = analyzer.GetAnalyzerStats();
   EXPECT_EQ(stats.memory_overloaded_comparisons_done, 0);
-  EXPECT_EQ(stats.comparisons_done, kMaxFramesInFlightPerStream);
+  EXPECT_EQ(stats.comparisons_done, 10);
 
   std::vector<StatsSample> frames_in_flight_sizes =
       GetSortedSamples(stats.frames_in_flight_left_count);
@@ -768,8 +576,6 @@ TEST(DefaultVideoQualityAnalyzerTest,
   analyzer_options.compute_psnr = true;
   analyzer_options.compute_ssim = true;
   analyzer_options.adjust_cropping_before_comparing_frames = true;
-  analyzer_options.max_frames_in_flight_per_stream_count =
-      kMaxFramesInFlightPerStream;
   DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
                                        test::GetGlobalMetricsLogger(),
                                        analyzer_options);
@@ -777,7 +583,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
                  std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
                  kAnalyzerMaxThreadsCount);
 
-  for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
+  for (int i = 0; i < 10; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
         analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
@@ -808,7 +614,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
 
   AnalyzerStats stats = analyzer.GetAnalyzerStats();
   EXPECT_EQ(stats.memory_overloaded_comparisons_done, 0);
-  EXPECT_EQ(stats.comparisons_done, kMaxFramesInFlightPerStream);
+  EXPECT_EQ(stats.comparisons_done, 10);
 
   std::vector<StatsSample> frames_in_flight_sizes =
       GetSortedSamples(stats.frames_in_flight_left_count);
@@ -839,7 +645,7 @@ TEST(DefaultVideoQualityAnalyzerTest, CpuUsage) {
 
   std::map<uint16_t, VideoFrame> captured_frames;
   std::vector<uint16_t> frames_order;
-  for (int i = 0; i < kMaxFramesInFlightPerStream; ++i) {
+  for (int i = 0; i < 10; ++i) {
     VideoFrame frame = NextFrame(frame_generator.get(), i);
     frame.set_id(
         analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
@@ -2424,6 +2230,65 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
   EXPECT_THAT(GetTimeSortedValues(charlie_stream_stats.time_between_freezes_ms),
               ElementsAre(950.0, 950.0));
   // TODO(bugs.webrtc.org/14995): Assert on harmonic fps
+}
+
+TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
+       MemoryOverloadedAndThenAllFramesReceived) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzer analyzer(
+      GetClock(), test::GetGlobalMetricsLogger(), AnalyzerOptionsForTest());
+  analyzer.Start("test_case",
+                 std::vector<std::string>{kSenderPeerName, kReceiverPeerName},
+                 kAnalyzerMaxThreadsCount);
+
+  std::map<uint16_t, VideoFrame> captured_frames;
+  std::vector<uint16_t> frames_order;
+  for (int i = 0; i < 5; ++i) {
+    VideoFrame frame = NextFrame(frame_generator.get(), i);
+    frame.set_id(
+        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
+    frames_order.push_back(frame.id());
+    captured_frames.insert({frame.id(), frame});
+    analyzer.OnFramePreEncode(kSenderPeerName, frame);
+    analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
+                            VideoQualityAnalyzerInterface::EncoderStats(),
+                            false);
+  }
+  AdvanceTime(kMaxFramesInFlightStorageDuration + TimeDelta::Millis(1));
+  for (int i = 0; i < 5; ++i) {
+    VideoFrame frame = NextFrame(frame_generator.get(), i);
+    frame.set_id(
+        analyzer.OnFrameCaptured(kSenderPeerName, kStreamLabel, frame));
+    frames_order.push_back(frame.id());
+    captured_frames.insert({frame.id(), frame});
+    analyzer.OnFramePreEncode(kSenderPeerName, frame);
+    analyzer.OnFrameEncoded(kSenderPeerName, frame.id(), FakeEncode(frame),
+                            VideoQualityAnalyzerInterface::EncoderStats(),
+                            false);
+  }
+
+  for (const uint16_t& frame_id : frames_order) {
+    VideoFrame received_frame = DeepCopy(captured_frames.at(frame_id));
+    analyzer.OnFramePreDecode(kReceiverPeerName, received_frame.id(),
+                              FakeEncode(received_frame));
+    analyzer.OnFrameDecoded(kReceiverPeerName, received_frame,
+                            VideoQualityAnalyzerInterface::DecoderStats());
+    analyzer.OnFrameRendered(kReceiverPeerName, received_frame);
+  }
+
+  analyzer.Stop();
+
+  AnalyzerStats stats = analyzer.GetAnalyzerStats();
+  EXPECT_EQ(stats.memory_overloaded_comparisons_done, 5);
+  EXPECT_EQ(stats.comparisons_done, 10);
+  FrameCounters frame_counters = analyzer.GetGlobalCounters();
+  EXPECT_EQ(frame_counters.captured, 10);
+  EXPECT_EQ(frame_counters.rendered, 10);
+  EXPECT_EQ(frame_counters.dropped, 0);
 }
 
 }  // namespace
