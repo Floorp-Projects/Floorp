@@ -429,7 +429,6 @@ TEST_F(AcmReceiverTestOldApi, MAYBE_NetEqCalls) {
   rtp_header.markerBit = false;
   rtp_header.ssrc = 0x1234;
   rtp_header.numCSRCs = 0;
-  rtp_header.payload_type_frequency = kSampleRateHz;
 
   for (int num_calls = 0; num_calls < kNumNormalCalls; ++num_calls) {
     const uint8_t kPayload[kPayloadSizeBytes] = {0};
