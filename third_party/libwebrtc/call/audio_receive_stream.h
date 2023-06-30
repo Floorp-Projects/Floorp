@@ -100,7 +100,7 @@ class AudioReceiveStreamInterface : public MediaReceiveStreamInterface {
     uint64_t sender_reports_reports_count = 0;
     absl::optional<TimeDelta> round_trip_time;
     TimeDelta total_round_trip_time = TimeDelta::Zero();
-    int round_trip_time_measurements;
+    int round_trip_time_measurements = 0;
   };
 
   struct Config {

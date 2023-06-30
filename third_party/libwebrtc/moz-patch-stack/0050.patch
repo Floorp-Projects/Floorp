@@ -107,7 +107,7 @@ index b47a4b5b97..dd3ca1af83 100644
  }  // namespace voe
  }  // namespace webrtc
 diff --git a/call/audio_receive_stream.h b/call/audio_receive_stream.h
-index 1228861c42..6fc93b2d9a 100644
+index 1d33bf2e0b..49e9019a50 100644
 --- a/call/audio_receive_stream.h
 +++ b/call/audio_receive_stream.h
 @@ -19,6 +19,7 @@
