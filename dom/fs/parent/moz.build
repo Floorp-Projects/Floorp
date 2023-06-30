@@ -32,6 +32,7 @@ UNIFIED_SOURCES += [
     "FileSystemStreamCallbacks.cpp",
     "FileSystemWritableFileStreamParent.cpp",
     "ResultStatement.cpp",
+    "StartedTransaction.cpp",
 ]
 
 LOCAL_INCLUDES += [
