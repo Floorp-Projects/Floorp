@@ -30,6 +30,7 @@
 
 using ::testing::_;
 using ::testing::ElementsAre;
+using ::testing::Field;
 using ::testing::Optional;
 using ::testing::Property;
 using ::testing::Return;
@@ -357,7 +358,15 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
   EXPECT_CALL(*receiver_.get(), SetMediaChannel(_));
   EXPECT_CALL(*sender_.get(), SetTransceiverAsStopped());
   EXPECT_CALL(*sender_.get(), Stop());
-  EXPECT_THAT(transceiver_->GetNegotiatedHeaderExtensions(), ElementsAre());
+  EXPECT_THAT(transceiver_->GetNegotiatedHeaderExtensions(),
+              ElementsAre(Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped)));
 }
 
 TEST_F(RtpTransceiverTestForHeaderExtensions,
@@ -379,7 +388,15 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
   EXPECT_CALL(*mock_channel, SetRtpTransport(_)).WillRepeatedly(Return(true));
   transceiver_->SetChannel(std::move(mock_channel),
                            [](const std::string&) { return nullptr; });
-  EXPECT_THAT(transceiver_->GetNegotiatedHeaderExtensions(), ElementsAre());
+  EXPECT_THAT(transceiver_->GetNegotiatedHeaderExtensions(),
+              ElementsAre(Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped)));
 
   EXPECT_CALL(*mock_channel_ptr, SetFirstPacketReceivedCallback(_));
   ClearChannel();
@@ -411,12 +428,16 @@ TEST_F(RtpTransceiverTestForHeaderExtensions, ReturnsNegotiatedHdrExts) {
 
   transceiver_->SetChannel(std::move(mock_channel),
                            [](const std::string&) { return nullptr; });
-  EXPECT_THAT(transceiver_->GetNegotiatedHeaderExtensions(),
-              ElementsAre(RtpHeaderExtensionCapability(
-                              "uri1", 1, RtpTransceiverDirection::kSendRecv),
-                          RtpHeaderExtensionCapability(
-                              "uri2", 2, RtpTransceiverDirection::kSendRecv)));
 
+  EXPECT_THAT(transceiver_->GetNegotiatedHeaderExtensions(),
+              ElementsAre(Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kSendRecv),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kSendRecv),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped)));
   EXPECT_CALL(*mock_channel_ptr, SetFirstPacketReceivedCallback(_));
   ClearChannel();
 }
@@ -435,21 +456,28 @@ TEST_F(RtpTransceiverTestForHeaderExtensions,
   transceiver_->OnNegotiationUpdate(SdpType::kAnswer, &description);
 
   EXPECT_THAT(transceiver_->GetNegotiatedHeaderExtensions(),
-              ElementsAre(RtpHeaderExtensionCapability(
-                              "uri1", 1, RtpTransceiverDirection::kSendRecv),
-                          RtpHeaderExtensionCapability(
-                              "uri2", 2, RtpTransceiverDirection::kSendRecv)));
-
+              ElementsAre(Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kSendRecv),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kSendRecv),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped)));
   extensions = {webrtc::RtpExtension("uri3", 4),
                 webrtc::RtpExtension("uri5", 6)};
   description.set_rtp_header_extensions(extensions);
   transceiver_->OnNegotiationUpdate(SdpType::kAnswer, &description);
 
   EXPECT_THAT(transceiver_->GetNegotiatedHeaderExtensions(),
-              ElementsAre(RtpHeaderExtensionCapability(
-                              "uri3", 4, RtpTransceiverDirection::kSendRecv),
-                          RtpHeaderExtensionCapability(
-                              "uri5", 6, RtpTransceiverDirection::kSendRecv)));
+              ElementsAre(Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped)));
 }
 
 }  // namespace

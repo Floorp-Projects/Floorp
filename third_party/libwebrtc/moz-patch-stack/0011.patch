@@ -19,7 +19,7 @@ diff --git a/modules/desktop_capture/mac/screen_capturer_mac.mm b/modules/deskto
 index 115f6440b1..cad0c5b65b 100644
 --- a/modules/desktop_capture/mac/screen_capturer_mac.mm
 +++ b/modules/desktop_capture/mac/screen_capturer_mac.mm
-@@ -276,7 +276,8 @@ DesktopRect GetExcludedWindowPixelBounds(CGWindowID window, float dip_to_pixel_s
+@@ -276,7 +276,8 @@ bool ScreenCapturerMac::GetSourceList(SourceList* screens) {
    for (MacDisplayConfigurations::iterator it = desktop_config_.displays.begin();
         it != desktop_config_.displays.end();
         ++it) {
@@ -52,5 +52,5 @@ index 5d881662ea..989ec7ea54 100644
              // windows are allowed for the same pid.
              if (itr != pid_itr_map.end() && (itr->second != sources.end())) {
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

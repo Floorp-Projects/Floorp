@@ -23,5 +23,5 @@ index 34f58c7e66..bdc7df2365 100644
    # WebRTC doesn't depend on //base from production code but only for testing
    # purposes. In any case, it doesn't depend on //third_party/perfetto which
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

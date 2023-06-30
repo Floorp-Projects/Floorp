@@ -38,5 +38,5 @@ index 5409417a88..c0144b0ef3 100644
    // If everything fails, then return the default DPI for Windows.
    return {96, 96};
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

@@ -70,11 +70,11 @@ index 6dc6d76021..8f38f6a1b4 100644
  
  TEST_F(MediaSessionDescriptionFactoryTest,
 diff --git a/pc/peer_connection_header_extension_unittest.cc b/pc/peer_connection_header_extension_unittest.cc
-index 9db547fb57..fb8833a01b 100644
+index 73a439d8bd..94d4401ca4 100644
 --- a/pc/peer_connection_header_extension_unittest.cc
 +++ b/pc/peer_connection_header_extension_unittest.cc
-@@ -229,68 +229,6 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
-                           Field(&RtpHeaderExtensionCapability::uri, "uri3")));
+@@ -235,68 +235,6 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
+                                 RtpTransceiverDirection::kStopped)));
  }
  
 -TEST_P(PeerConnectionHeaderExtensionTest, OfferedExtensionsArePerTransceiver) {
@@ -139,9 +139,9 @@ index 9db547fb57..fb8833a01b 100644
 -                          Field(&RtpExtension::uri, "uri3")));
 -}
 -
- INSTANTIATE_TEST_SUITE_P(
-     ,
-     PeerConnectionHeaderExtensionTest,
+ TEST_P(PeerConnectionHeaderExtensionTest,
+        StoppedByDefaultExtensionCanBeActivatedByRemoteSdp) {
+   cricket::MediaType media_type;
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

@@ -728,8 +728,19 @@ std::vector<RtpHeaderExtensionCapability>
 RtpTransceiver::GetNegotiatedHeaderExtensions() const {
   RTC_DCHECK_RUN_ON(thread_);
   std::vector<RtpHeaderExtensionCapability> result;
-  for (const auto& ext : negotiated_header_extensions_) {
-    result.emplace_back(ext.uri, ext.id, RtpTransceiverDirection::kSendRecv);
+  result.reserve(header_extensions_to_negotiate_.size());
+  for (const auto& ext : header_extensions_to_negotiate_) {
+    auto negotiated = absl::c_find_if(negotiated_header_extensions_,
+                                      [&ext](const RtpExtension& negotiated) {
+                                        return negotiated.uri == ext.uri;
+                                      });
+    RtpHeaderExtensionCapability capability(ext.uri);
+    // TODO(bugs.webrtc.org/7477): extend when header extensions support
+    // direction.
+    capability.direction = negotiated != negotiated_header_extensions_.end()
+                               ? RtpTransceiverDirection::kSendRecv
+                               : RtpTransceiverDirection::kStopped;
+    result.push_back(capability);
   }
   return result;
 }

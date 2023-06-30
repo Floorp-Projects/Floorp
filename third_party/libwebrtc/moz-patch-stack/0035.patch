@@ -1095,5 +1095,5 @@ index e9a5c4c6f2..b34df0c93f 100644
 +// same macros, modified to talk to the Gecko Profiler.
 +#include "GeckoTraceEvent.h"
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

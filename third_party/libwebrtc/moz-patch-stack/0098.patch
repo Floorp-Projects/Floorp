@@ -48,5 +48,5 @@ index 2c192fe4f6..2b01fc6930 100644
            capability.supportFrameRateControl = true;
          } else  // use existing method
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

@@ -52,5 +52,5 @@ index 96db60c968..3ab95837c0 100644
      _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
                                               DEVICE_NOTIFY_WINDOW_HANDLE);
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

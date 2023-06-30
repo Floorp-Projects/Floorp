@@ -36,5 +36,5 @@ index acc2e87aa3..55edd768a8 100644
    // Only change the timestamp of padding packets sent over RTX.
    // Padding only packets over RTP has to be sent as part of a media
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 

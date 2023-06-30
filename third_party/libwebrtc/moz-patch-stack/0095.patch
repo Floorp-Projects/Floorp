@@ -234,5 +234,5 @@ index baf1916331..2935cd027d 100644
 +#undef V4L2_PIX_FMT_RGBA32
 +#endif
 -- 
-2.37.1 (Apple Git-137.1)
+2.34.1
 
