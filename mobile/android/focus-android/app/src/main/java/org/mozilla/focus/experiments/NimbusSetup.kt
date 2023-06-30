@@ -70,12 +70,7 @@ fun createNimbus(context: Context, urlString: String?): NimbusApi {
         timeoutLoadingExperiment = TIME_OUT_LOADING_EXPERIMENT_FROM_DISK_MS
         usePreviewCollection = context.settings.shouldUseNimbusPreview
         isFirstRun = isAppFirstRun
-        onCreateCallback = { nimbus ->
-            FocusNimbus.initialize { nimbus }
-        }
-        onApplyCallback = {
-            FocusNimbus.invalidateCachedValues()
-        }
+        featureManifest = FocusNimbus
     }.build(appInfo)
 }
 

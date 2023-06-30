@@ -5,25 +5,15 @@
 package mozilla.components.service.nimbus
 
 import android.content.Context
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
-import mozilla.components.support.base.utils.NamedThreadFactory
-import mozilla.components.support.locale.getLocaleTag
 import org.mozilla.experiments.nimbus.EnrolledExperiment
-import org.mozilla.experiments.nimbus.ErrorReporter
 import org.mozilla.experiments.nimbus.NimbusAppInfo
 import org.mozilla.experiments.nimbus.NimbusDelegate
 import org.mozilla.experiments.nimbus.NimbusDeviceInfo
 import org.mozilla.experiments.nimbus.NimbusInterface
 import org.mozilla.experiments.nimbus.NimbusServerSettings
-import java.util.Locale
-import java.util.concurrent.Executors
 import org.mozilla.experiments.nimbus.Nimbus as ApplicationServicesNimbus
-
-private val logger = Logger("service/Nimbus")
 
 /**
  * Union of NimbusInterface which comes from another repo, and Observable.
@@ -37,9 +27,6 @@ interface NimbusApi : NimbusInterface, Observable<NimbusInterface.Observer>
 typealias NimbusAppInfo = NimbusAppInfo
 typealias NimbusServerSettings = NimbusServerSettings
 
-// Default error reporter.
-val loggingErrorReporter: ErrorReporter = { message, e -> logger.error(message, e) }
-
 /**
  * This is the main entry point to the Nimbus experiment subsystem.
  *
@@ -49,31 +36,19 @@ val loggingErrorReporter: ErrorReporter = { message, e -> logger.error(message, 
 class Nimbus(
     context: Context,
     appInfo: NimbusAppInfo,
+    coenrollingFeatureIds: List<String> = listOf(),
     server: NimbusServerSettings?,
-    errorReporter: ErrorReporter = loggingErrorReporter,
+    deviceInfo: NimbusDeviceInfo = NimbusDeviceInfo.default(),
+    delegate: NimbusDelegate = NimbusDelegate.default(),
     private val observable: Observable<NimbusInterface.Observer> = ObserverRegistry(),
 ) : ApplicationServicesNimbus(
     context = context,
     appInfo = appInfo,
+    coenrollingFeatureIds = coenrollingFeatureIds,
     server = server,
-    deviceInfo = NimbusDeviceInfo(
-        localeTag = Locale.getDefault().getLocaleTag(),
-    ),
+    deviceInfo = deviceInfo,
+    delegate = delegate,
     observer = Observer(observable),
-    delegate = NimbusDelegate(
-        dbScope = CoroutineScope(
-            Executors.newSingleThreadExecutor(
-                NamedThreadFactory("NimbusDbScope"),
-            ).asCoroutineDispatcher(),
-        ),
-        fetchScope = CoroutineScope(
-            Executors.newSingleThreadExecutor(
-                NamedThreadFactory("NimbusFetchScope"),
-            ).asCoroutineDispatcher(),
-        ),
-        errorReporter = errorReporter,
-        logger = { logger.info(it) },
-    ),
 ),
     NimbusApi,
     Observable<NimbusInterface.Observer> by observable {
@@ -99,5 +74,5 @@ class Nimbus(
  */
 class NimbusDisabled(
     override val context: Context,
-    private val delegate: Observable<NimbusInterface.Observer> = ObserverRegistry(),
-) : NimbusApi, Observable<NimbusInterface.Observer> by delegate
+    private val observable: Observable<NimbusInterface.Observer> = ObserverRegistry(),
+) : NimbusApi, Observable<NimbusInterface.Observer> by observable

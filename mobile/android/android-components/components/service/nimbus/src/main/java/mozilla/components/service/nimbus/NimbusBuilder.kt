@@ -5,9 +5,15 @@
 package mozilla.components.service.nimbus
 
 import android.content.Context
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asCoroutineDispatcher
+import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.base.utils.NamedThreadFactory
 import org.mozilla.experiments.nimbus.AbstractNimbusBuilder
-import org.mozilla.experiments.nimbus.EnrolledExperiment
-import org.mozilla.experiments.nimbus.NimbusInterface
+import org.mozilla.experiments.nimbus.NimbusDelegate
+import java.util.concurrent.Executors
+
+private val logger = Logger("service/Nimbus")
 
 /**
  * Class to build instances of Nimbus.
@@ -16,30 +22,33 @@ import org.mozilla.experiments.nimbus.NimbusInterface
  * used before the engine is warmed up.
  */
 class NimbusBuilder(context: Context) : AbstractNimbusBuilder<NimbusApi>(context) {
-    var onApplyCallback: (NimbusApi) -> Unit = {}
-    var onFetchedCallback: (NimbusApi) -> Unit = {}
+    override fun createDelegate(): NimbusDelegate =
+        NimbusDelegate(
+            dbScope = createNamedCoroutineScope("NimbusDbScope"),
+            fetchScope = createNamedCoroutineScope("NimbusFetchScope"),
+            errorReporter = errorReporter,
+            logger = { logger.info(it) },
+        )
 
     override fun newNimbus(
         appInfo: NimbusAppInfo,
         serverSettings: NimbusServerSettings?,
-    ) = Nimbus(context, appInfo, serverSettings, errorReporter).apply {
-        register(ExperimentsAppliedObserver(this, onApplyCallback))
-        register(ExperimentsFetchedObserver(this, onFetchedCallback))
+    ) = Nimbus(
+        context,
+        appInfo = appInfo,
+        coenrollingFeatureIds = getCoenrollingFeatureIds(),
+        server = serverSettings,
+        deviceInfo = createDeviceInfo(),
+        delegate = createDelegate(),
+    ).apply {
+        this.register(createObserver())
     }
 
     override fun newNimbusDisabled() = NimbusDisabled(context)
 }
 
-private class ExperimentsAppliedObserver(val nimbus: NimbusApi, val callback: (NimbusApi) -> Unit) :
-    NimbusInterface.Observer {
-    override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
-        callback(nimbus)
-    }
-}
-
-private class ExperimentsFetchedObserver(val nimbus: NimbusApi, val callback: (NimbusApi) -> Unit) :
-    NimbusInterface.Observer {
-    override fun onExperimentsFetched() {
-        callback(nimbus)
-    }
-}
+private fun createNamedCoroutineScope(name: String) = CoroutineScope(
+    Executors.newSingleThreadExecutor(
+        NamedThreadFactory(name),
+    ).asCoroutineDispatcher(),
+)

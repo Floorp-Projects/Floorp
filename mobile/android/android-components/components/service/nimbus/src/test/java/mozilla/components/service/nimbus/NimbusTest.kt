@@ -12,6 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.experiments.nimbus.NimbusAppInfo
+import org.mozilla.experiments.nimbus.NimbusDelegate
 import org.mozilla.experiments.nimbus.NimbusInterface
 
 @RunWith(AndroidJUnit4::class)
@@ -26,7 +27,7 @@ class NimbusTest {
 
     @Test
     fun `Nimbus disabled and enabled can have observers registered on it`() {
-        val enabled: NimbusApi = Nimbus(context, appInfo, null)
+        val enabled: NimbusApi = Nimbus(context, appInfo, listOf(), null, delegate = NimbusDelegate.default())
         val disabled: NimbusApi = NimbusDisabled(context)
 
         val observer = object : NimbusInterface.Observer {}
