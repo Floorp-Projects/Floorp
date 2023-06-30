@@ -640,7 +640,6 @@ if (!build_with_mozilla) {
 
 rtc_source_set("frame_generator_api") {
   visibility = [ "*" ]
-  testonly = true
   sources = [
     "test/frame_generator_interface.cc",
     "test/frame_generator_interface.h",
