@@ -605,8 +605,7 @@ RTCError PeerConnection::Initialize(
   }
 
   // Restrict number of TURN servers.
-  if (!trials().IsDisabled("WebRTC-LimitTurnServers") &&
-      turn_servers.size() > cricket::kMaxTurnServers) {
+  if (turn_servers.size() > cricket::kMaxTurnServers) {
     RTC_LOG(LS_WARNING) << "Number of configured TURN servers is "
                         << turn_servers.size()
                         << " which exceeds the maximum allowed number of "
@@ -1565,8 +1564,7 @@ RTCError PeerConnection::SetConfiguration(
   }
 
   // Restrict number of TURN servers.
-  if (!trials().IsDisabled("WebRTC-LimitTurnServers") &&
-      turn_servers.size() > cricket::kMaxTurnServers) {
+  if (turn_servers.size() > cricket::kMaxTurnServers) {
     RTC_LOG(LS_WARNING) << "Number of configured TURN servers is "
                         << turn_servers.size()
                         << " which exceeds the maximum allowed number of "
