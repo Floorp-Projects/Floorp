@@ -144,21 +144,23 @@ void FakeCPULoad() {
 void PassFramesThroughAnalyzerSenderOnly(
     DefaultVideoQualityAnalyzer& analyzer,
     absl::string_view sender,
-    absl::string_view stream_label,
+    std::vector<absl::string_view> stream_labels,
     std::vector<absl::string_view> receivers,
     int frames_count,
     test::FrameGeneratorInterface& frame_generator,
     int interframe_delay_ms = 0,
     TimeController* time_controller = nullptr) {
   for (int i = 0; i < frames_count; ++i) {
-    VideoFrame frame = NextFrame(&frame_generator, /*timestamp_us=*/1);
-    uint16_t frame_id =
-        analyzer.OnFrameCaptured(sender, std::string(stream_label), frame);
-    frame.set_id(frame_id);
-    analyzer.OnFramePreEncode(sender, frame);
-    analyzer.OnFrameEncoded(sender, frame.id(), FakeEncode(frame),
-                            VideoQualityAnalyzerInterface::EncoderStats(),
-                            false);
+    for (absl::string_view stream_label : stream_labels) {
+      VideoFrame frame = NextFrame(&frame_generator, /*timestamp_us=*/1);
+      uint16_t frame_id =
+          analyzer.OnFrameCaptured(sender, std::string(stream_label), frame);
+      frame.set_id(frame_id);
+      analyzer.OnFramePreEncode(sender, frame);
+      analyzer.OnFrameEncoded(sender, frame.id(), FakeEncode(frame),
+                              VideoQualityAnalyzerInterface::EncoderStats(),
+                              false);
+    }
     if (i < frames_count - 1 && interframe_delay_ms > 0) {
       if (time_controller == nullptr) {
         SleepMs(interframe_delay_ms);
@@ -171,28 +173,30 @@ void PassFramesThroughAnalyzerSenderOnly(
 
 void PassFramesThroughAnalyzer(DefaultVideoQualityAnalyzer& analyzer,
                                absl::string_view sender,
-                               absl::string_view stream_label,
+                               std::vector<absl::string_view> stream_labels,
                                std::vector<absl::string_view> receivers,
                                int frames_count,
                                test::FrameGeneratorInterface& frame_generator,
                                int interframe_delay_ms = 0,
                                TimeController* time_controller = nullptr) {
   for (int i = 0; i < frames_count; ++i) {
-    VideoFrame frame = NextFrame(&frame_generator, /*timestamp_us=*/1);
-    uint16_t frame_id =
-        analyzer.OnFrameCaptured(sender, std::string(stream_label), frame);
-    frame.set_id(frame_id);
-    analyzer.OnFramePreEncode(sender, frame);
-    analyzer.OnFrameEncoded(sender, frame.id(), FakeEncode(frame),
-                            VideoQualityAnalyzerInterface::EncoderStats(),
-                            false);
-    for (absl::string_view receiver : receivers) {
-      VideoFrame received_frame = DeepCopy(frame);
-      analyzer.OnFramePreDecode(receiver, received_frame.id(),
-                                FakeEncode(received_frame));
-      analyzer.OnFrameDecoded(receiver, received_frame,
-                              VideoQualityAnalyzerInterface::DecoderStats());
-      analyzer.OnFrameRendered(receiver, received_frame);
+    for (absl::string_view stream_label : stream_labels) {
+      VideoFrame frame = NextFrame(&frame_generator, /*timestamp_us=*/1);
+      uint16_t frame_id =
+          analyzer.OnFrameCaptured(sender, std::string(stream_label), frame);
+      frame.set_id(frame_id);
+      analyzer.OnFramePreEncode(sender, frame);
+      analyzer.OnFrameEncoded(sender, frame.id(), FakeEncode(frame),
+                              VideoQualityAnalyzerInterface::EncoderStats(),
+                              false);
+      for (absl::string_view receiver : receivers) {
+        VideoFrame received_frame = DeepCopy(frame);
+        analyzer.OnFramePreDecode(receiver, received_frame.id(),
+                                  FakeEncode(received_frame));
+        analyzer.OnFrameDecoded(receiver, received_frame,
+                                VideoQualityAnalyzerInterface::DecoderStats());
+        analyzer.OnFrameRendered(receiver, received_frame);
+      }
     }
     if (i < frames_count - 1 && interframe_delay_ms > 0) {
       if (time_controller == nullptr) {
@@ -1612,10 +1616,10 @@ TEST(DefaultVideoQualityAnalyzerTest, ReceiverRemovedBeforeCapturing2ndFrame) {
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"bob"},
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"}, {"bob"},
                             /*frames_count=*/1, *frame_generator);
   analyzer.UnregisterParticipantInCall("bob");
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {},
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"}, {},
                             /*frames_count=*/1, *frame_generator);
 
   // Give analyzer some time to process frames on async thread. The computations
@@ -1788,12 +1792,12 @@ TEST(DefaultVideoQualityAnalyzerTest, UnregisterOneAndRegisterAnother) {
                  std::vector<std::string>{"alice", "bob", "charlie"},
                  kAnalyzerMaxThreadsCount);
 
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"},
                             {"bob", "charlie"},
                             /*frames_count=*/2, *frame_generator);
   analyzer.UnregisterParticipantInCall("bob");
   analyzer.RegisterParticipantInCall("david");
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"},
                             {"charlie", "david"},
                             /*frames_count=*/4, *frame_generator);
 
@@ -1850,14 +1854,14 @@ TEST(DefaultVideoQualityAnalyzerTest,
                  std::vector<std::string>{"alice", "bob", "charlie"},
                  kAnalyzerMaxThreadsCount);
 
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"},
                             {"bob", "charlie"},
                             /*frames_count=*/2, *frame_generator);
   analyzer.UnregisterParticipantInCall("bob");
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"charlie"},
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"}, {"charlie"},
                             /*frames_count=*/4, *frame_generator);
   analyzer.RegisterParticipantInCall("bob");
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"},
                             {"bob", "charlie"},
                             /*frames_count=*/6, *frame_generator);
 
@@ -1940,7 +1944,7 @@ TEST(DefaultVideoQualityAnalyzerTest, InfraMetricsAreReportedWhenRequested) {
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"bob"},
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"}, {"bob"},
                             /*frames_count=*/1, *frame_generator);
 
   // Give analyzer some time to process frames on async thread. The computations
@@ -1972,7 +1976,7 @@ TEST(DefaultVideoQualityAnalyzerTest, InfraMetricsNotCollectedByDefault) {
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"bob"},
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"}, {"bob"},
                             /*frames_count=*/1, *frame_generator);
 
   // Give analyzer some time to process frames on async thread. The computations
@@ -2017,7 +2021,7 @@ TEST(DefaultVideoQualityAnalyzerTest,
   VideoFrame received_to_be_dropped_frame = DeepCopy(to_be_dropped_frame);
   analyzer.OnFramePreDecode("bob", received_to_be_dropped_frame.id(),
                             FakeEncode(received_to_be_dropped_frame));
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"bob"},
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"}, {"bob"},
                             /*frames_count=*/1, *frame_generator);
 
   // Give analyzer some time to process frames on async thread. The computations
@@ -2046,7 +2050,7 @@ TEST_P(DefaultVideoQualityAnalyzerTimeBetweenFreezesTest,
   analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
                  kAnalyzerMaxThreadsCount);
 
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"bob"},
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"}, {"bob"},
                             /*frames_count=*/5, *frame_generator,
                             /*interframe_delay_ms=*/50);
   if (GetParam()) {
@@ -2102,25 +2106,25 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
                  kAnalyzerMaxThreadsCount);
 
   // Pass 20 frames as 20 fps.
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"},
                             {"bob", "charlie"},
                             /*frames_count=*/20, *frame_generator,
                             /*interframe_delay_ms=*/50, time_controller());
   AdvanceTime(TimeDelta::Millis(50));
 
   // Mark stream paused for Bob, but not for Charlie.
-  analyzer.OnPeerStoppedReceiveVideoStream("bob", "alice_video");
+  analyzer.OnPauseAllStreamsFrom("alice", "bob");
   // Freeze for 1 second.
   PassFramesThroughAnalyzerSenderOnly(
-      analyzer, "alice", "alice_video", {"bob", "charlie"},
+      analyzer, "alice", {"alice_video"}, {"bob", "charlie"},
       /*frames_count=*/20, *frame_generator,
       /*interframe_delay_ms=*/50, time_controller());
   AdvanceTime(TimeDelta::Millis(50));
   // Unpause stream for Bob.
-  analyzer.OnPeerStartedReceiveVideoStream("bob", "alice_video");
+  analyzer.OnResumeAllStreamsFrom("alice", "bob");
 
   // Pass 20 frames as 20 fps.
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"},
                             {"bob", "charlie"},
                             /*frames_count=*/20, *frame_generator,
                             /*interframe_delay_ms=*/50, time_controller());
@@ -2163,6 +2167,84 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
 }
 
 TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
+       PausedAndResumedTwoStreamsAreAccountedInStatsCorrectly) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzer analyzer(
+      GetClock(), test::GetGlobalMetricsLogger(), AnalyzerOptionsForTest());
+  analyzer.Start("test_case", std::vector<std::string>{"alice", "bob"},
+                 kAnalyzerMaxThreadsCount);
+
+  // Pass 20 frames as 20 fps on 2 streams.
+  PassFramesThroughAnalyzer(analyzer, "alice",
+                            {"alice_video_1", "alice_video_2"}, {"bob"},
+                            /*frames_count=*/20, *frame_generator,
+                            /*interframe_delay_ms=*/50, time_controller());
+  AdvanceTime(TimeDelta::Millis(50));
+
+  // Mark streams paused.
+  analyzer.OnPauseAllStreamsFrom("alice", "bob");
+  // Freeze for 1 second.
+  PassFramesThroughAnalyzerSenderOnly(
+      analyzer, "alice", {"alice_video_1", "alice_video_2"}, {"bob"},
+      /*frames_count=*/20, *frame_generator,
+      /*interframe_delay_ms=*/50, time_controller());
+  AdvanceTime(TimeDelta::Millis(50));
+  // Unpause streams.
+  analyzer.OnResumeAllStreamsFrom("alice", "bob");
+
+  // Pass 20 frames as 20 fps on the 2 streams.
+  PassFramesThroughAnalyzer(analyzer, "alice",
+                            {"alice_video_1", "alice_video_2"}, {"bob"},
+                            /*frames_count=*/20, *frame_generator,
+                            /*interframe_delay_ms=*/50, time_controller());
+
+  analyzer.Stop();
+
+  // Bob should have 20 fps without freeze on both streams.
+  std::map<StatsKey, StreamStats> streams_stats = analyzer.GetStats();
+  std::map<StatsKey, FrameCounters> frame_counters =
+      analyzer.GetPerStreamCounters();
+  StreamStats bob_stream_stats1 =
+      streams_stats.at(StatsKey("alice_video_1", "bob"));
+  FrameCounters bob_frame_counters1 =
+      frame_counters.at(StatsKey("alice_video_1", "bob"));
+  EXPECT_THAT(bob_frame_counters1.dropped, Eq(0));
+  EXPECT_THAT(bob_frame_counters1.rendered, Eq(40));
+  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats1.freeze_time_ms),
+              ElementsAre(0.0));
+  // TODO(bugs.webrtc.org/14995): value should exclude pause
+  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats1.time_between_freezes_ms),
+              ElementsAre(2950.0));
+  // TODO(bugs.webrtc.org/14995): Fix capture_frame_rate (has to be ~20.0)
+  ExpectRateIs(bob_stream_stats1.capture_frame_rate, 13.559322);
+  // TODO(bugs.webrtc.org/14995): Fix encode_frame_rate (has to be ~20.0)
+  ExpectRateIs(bob_stream_stats1.encode_frame_rate, 13.559322);
+  EXPECT_DOUBLE_EQ(bob_stream_stats1.harmonic_framerate_fps, 20.0);
+
+  // Bob should have 20 fps without freeze on both streams.
+  StreamStats bob_stream_stats_2 =
+      streams_stats.at(StatsKey("alice_video_2", "bob"));
+  FrameCounters bob_frame_counters_2 =
+      frame_counters.at(StatsKey("alice_video_2", "bob"));
+  EXPECT_THAT(bob_frame_counters_2.dropped, Eq(0));
+  EXPECT_THAT(bob_frame_counters_2.rendered, Eq(40));
+  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats_2.freeze_time_ms),
+              ElementsAre(0.0));
+  // TODO(bugs.webrtc.org/14995): value should exclude pause
+  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats_2.time_between_freezes_ms),
+              ElementsAre(2950.0));
+  // TODO(bugs.webrtc.org/14995): Fix capture_frame_rate (has to be ~20.0)
+  ExpectRateIs(bob_stream_stats_2.capture_frame_rate, 13.559322);
+  // TODO(bugs.webrtc.org/14995): Fix encode_frame_rate (has to be ~20.0)
+  ExpectRateIs(bob_stream_stats_2.encode_frame_rate, 13.559322);
+  EXPECT_DOUBLE_EQ(bob_stream_stats_2.harmonic_framerate_fps, 20.0);
+}
+
+TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
        PausedStreamIsAccountedInStatsCorrectly) {
   std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
       test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
@@ -2178,23 +2260,23 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
                  kAnalyzerMaxThreadsCount);
 
   // Pass 20 frames as 20 fps.
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"},
                             {"bob", "charlie"},
                             /*frames_count=*/20, *frame_generator,
                             /*interframe_delay_ms=*/50, time_controller());
   AdvanceTime(TimeDelta::Millis(50));
 
   // Mark stream paused for Bob, but not for Charlie.
-  analyzer.OnPeerStoppedReceiveVideoStream("bob", "alice_video");
+  analyzer.OnPauseAllStreamsFrom("alice", "bob");
   // Freeze for 1 second.
   PassFramesThroughAnalyzerSenderOnly(
-      analyzer, "alice", "alice_video", {"bob", "charlie"},
+      analyzer, "alice", {"alice_video"}, {"bob", "charlie"},
       /*frames_count=*/20, *frame_generator,
       /*interframe_delay_ms=*/50, time_controller());
   AdvanceTime(TimeDelta::Millis(50));
 
   // Pass 20 frames as 20 fps.
-  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"charlie"},
+  PassFramesThroughAnalyzer(analyzer, "alice", {"alice_video"}, {"charlie"},
                             /*frames_count=*/20, *frame_generator,
                             /*interframe_delay_ms=*/50, time_controller());
 

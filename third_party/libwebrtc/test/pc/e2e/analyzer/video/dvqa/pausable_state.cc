@@ -19,13 +19,15 @@
 namespace webrtc {
 
 void PausableState::Pause() {
-  RTC_CHECK(!IsPaused());
-  events_.push_back(Event{.time = clock_->CurrentTime(), .is_paused = true});
+  if (!IsPaused()) {
+    events_.push_back(Event{.time = clock_->CurrentTime(), .is_paused = true});
+  }
 }
 
 void PausableState::Resume() {
-  RTC_CHECK(IsPaused());
-  events_.push_back(Event{.time = clock_->CurrentTime(), .is_paused = false});
+  if (IsPaused()) {
+    events_.push_back(Event{.time = clock_->CurrentTime(), .is_paused = false});
+  }
 }
 
 bool PausableState::IsPaused() const {
