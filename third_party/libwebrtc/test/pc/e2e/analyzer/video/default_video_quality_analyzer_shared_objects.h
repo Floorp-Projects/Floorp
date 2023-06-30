@@ -29,7 +29,8 @@
 namespace webrtc {
 
 // WebRTC will request a key frame after 3 seconds if no frames were received.
-constexpr TimeDelta kDefaultMaxFramesStorageDuration = TimeDelta::Seconds(3);
+// Uses 3x time to account for possible freezes which we still want to account.
+constexpr TimeDelta kDefaultMaxFramesStorageDuration = TimeDelta::Seconds(9);
 
 class SamplesRateCounter {
  public:
