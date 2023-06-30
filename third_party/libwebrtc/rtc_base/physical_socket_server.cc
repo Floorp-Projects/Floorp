@@ -125,10 +125,10 @@ class ScopedSetTrue {
   bool* value_;
 };
 
-// Returns true if the the client is in the experiment to get timestamps
-// from the socket implementation.
-bool IsScmTimeStampExperimentEnabled() {
-  return webrtc::field_trial::IsEnabled("WebRTC-SCM-Timestamp");
+// Returns true if the experiement "WebRTC-SCM-Timestamp" is explicitly
+// disabled.
+bool IsScmTimeStampExperimentDisabled() {
+  return webrtc::field_trial::IsDisabled("WebRTC-SCM-Timestamp");
 }
 }  // namespace
 
@@ -140,7 +140,7 @@ PhysicalSocket::PhysicalSocket(PhysicalSocketServer* ss, SOCKET s)
       error_(0),
       state_((s == INVALID_SOCKET) ? CS_CLOSED : CS_CONNECTED),
       resolver_(nullptr),
-      read_scm_timestamp_experiment_(IsScmTimeStampExperimentEnabled()) {
+      read_scm_timestamp_experiment_(!IsScmTimeStampExperimentDisabled()) {
   if (s_ != INVALID_SOCKET) {
     SetEnabledEvents(DE_READ | DE_WRITE);
 
@@ -723,7 +723,7 @@ bool SocketDispatcher::Initialize() {
   ioctlsocket(s_, FIONBIO, &argp);
 #elif defined(WEBRTC_POSIX)
   fcntl(s_, F_SETFL, fcntl(s_, F_GETFL, 0) | O_NONBLOCK);
-  if (IsScmTimeStampExperimentEnabled()) {
+  if (!IsScmTimeStampExperimentDisabled()) {
     int value = 1;
     // Attempt to get receive packet timestamp from the socket.
     if (::setsockopt(s_, SOL_SOCKET, SO_TIMESTAMP, &value, sizeof(value)) !=

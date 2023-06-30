@@ -23,10 +23,10 @@
 
 namespace rtc {
 
-// Returns true if the the client is in the experiment to get timestamps
-// from the socket implementation.
-static bool IsScmTimeStampExperimentEnabled() {
-  return webrtc::field_trial::IsEnabled("WebRTC-SCM-Timestamp");
+// Returns true if the experiement "WebRTC-SCM-Timestamp" is explicitly
+// disabled.
+static bool IsScmTimeStampExperimentDisabled() {
+  return webrtc::field_trial::IsDisabled("WebRTC-SCM-Timestamp");
 }
 
 AsyncUDPSocket* AsyncUDPSocket::Create(Socket* socket,
@@ -133,7 +133,7 @@ void AsyncUDPSocket::OnReadEvent(Socket* socket) {
   } else {
     if (!socket_time_offset_) {
       socket_time_offset_ =
-          IsScmTimeStampExperimentEnabled() ? TimeMicros() - timestamp : 0;
+          !IsScmTimeStampExperimentDisabled() ? TimeMicros() - timestamp : 0;
     }
     timestamp += *socket_time_offset_;
   }
