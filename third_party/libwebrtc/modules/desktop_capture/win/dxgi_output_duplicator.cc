@@ -25,6 +25,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/string_utils.h"
 #include "rtc_base/win32.h"
+#include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
 
@@ -146,6 +147,30 @@ bool DxgiOutputDuplicator::ReleaseFrame() {
   return true;
 }
 
+void DxgiOutputDuplicator::LogMouseCursor(
+    const DXGI_OUTDUPL_FRAME_INFO& frame_info) {
+  // Ignore cases when the mouse shape has changed and not the position.
+  const bool new_pointer_shape = (frame_info.PointerShapeBufferSize != 0);
+  if (new_pointer_shape)
+    return;
+
+  // The mouse cursor has moved and we can now query if the mouse pointer is
+  // drawn onto the desktop image or not to decide if we must draw the mouse
+  // pointer shape onto the desktop image (always done by default currently).
+  // Either the mouse pointer is already drawn onto the desktop image that
+  // IDXGIOutputDuplication::AcquireNextFrame provides or the mouse pointer is
+  // separate from the desktop image. If the mouse pointer is drawn onto the
+  // desktop image, the pointer position data that is reported by
+  // AcquireNextFrame indicates that a separate pointer isn’t visible, hence
+  // `frame_info.PointerPosition.Visible` is false.
+  // TODO(http://crbug.com/1421656): evaluate this UMA and possibly call
+  // set_may_contain_cursor(cursor_embedded_in_frame) on the captured frame to
+  // avoid rendering the cursor twice.
+  const bool cursor_embedded_in_frame = !frame_info.PointerPosition.Visible;
+  RTC_HISTOGRAM_BOOLEAN("WebRTC.DesktopCapture.Win.DirectXCursorEmbedded",
+                        cursor_embedded_in_frame);
+}
+
 bool DxgiOutputDuplicator::Duplicate(Context* context,
                                      DesktopVector offset,
                                      SharedDesktopFrame* target) {
@@ -167,6 +192,13 @@ bool DxgiOutputDuplicator::Duplicate(Context* context,
     RTC_LOG(LS_ERROR) << "Failed to capture frame: "
                       << desktop_capture::utils::ComErrorToString(error);
     return false;
+  }
+
+  // The DXGI_OUTDUPL_POINTER_POSITION structure that describes the most recent
+  // mouse position is only valid if the LastMouseUpdateTime member is a non-
+  // zero value.
+  if (frame_info.LastMouseUpdateTime.QuadPart != 0) {
+    LogMouseCursor(frame_info);
   }
 
   // We need to merge updated region with the one from context, but only spread
