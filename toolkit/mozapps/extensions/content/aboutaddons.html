@@ -510,8 +510,12 @@
           <div class="addon-detail-sitepermissions">
             <addon-sitepermissions-list></addon-sitepermissions-list>
           </div>
-          <div class="addon-detail-row addon-detail-row-updates">
-            <label data-l10n-id="addon-detail-updates-label"></label>
+          <div
+            class="addon-detail-row addon-detail-row-updates"
+            role="group"
+            data-l10n-id="addon-detail-group-label-updates"
+          >
+            <span data-l10n-id="addon-detail-updates-label"></span>
             <div class="addon-detail-actions">
               <button
                 class="button-link"
@@ -535,9 +539,11 @@
           </div>
           <div
             class="addon-detail-row addon-detail-row-has-help addon-detail-row-private-browsing"
+            role="group"
+            data-l10n-id="addon-detail-group-label-private-browsing"
             hidden
           >
-            <label data-l10n-id="detail-private-browsing-label"></label>
+            <span data-l10n-id="detail-private-browsing-label"></span>
             <div class="addon-detail-actions">
               <label class="radio-container-with-text">
                 <input type="radio" name="private-browsing" value="1" />
