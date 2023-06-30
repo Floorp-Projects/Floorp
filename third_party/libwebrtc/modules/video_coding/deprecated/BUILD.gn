@@ -29,6 +29,14 @@ rtc_library("deprecated_decoding_state") {
   ]
 }
 
+rtc_library("deprecated_event_wrapper") {
+  sources = [
+    "event_wrapper.cc",
+    "event_wrapper.h",
+  ]
+  deps = [ "../../../rtc_base:rtc_event" ]
+}
+
 rtc_library("deprecated_jitter_buffer_common") {
   sources = [ "jitter_buffer_common.h" ]
 }

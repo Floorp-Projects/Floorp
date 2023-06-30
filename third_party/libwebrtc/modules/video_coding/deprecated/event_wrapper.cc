@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/event_wrapper.h"
+#include "modules/video_coding/deprecated/event_wrapper.h"
 
 #include "rtc_base/event.h"
 
