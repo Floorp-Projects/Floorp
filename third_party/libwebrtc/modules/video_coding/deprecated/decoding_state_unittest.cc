@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/decoding_state.h"
+#include "modules/video_coding/deprecated/decoding_state.h"
 
 #include "modules/rtp_rtcp/source/rtp_video_header.h"
 #include "modules/video_coding/codecs/interface/common_constants.h"
@@ -17,7 +17,6 @@
 #include "modules/video_coding/deprecated/frame_buffer.h"
 #include "modules/video_coding/deprecated/packet.h"
 #include "modules/video_coding/deprecated/session_info.h"
-#include "modules/video_coding/include/video_coding.h"
 #include "test/gtest.h"
 
 namespace webrtc {

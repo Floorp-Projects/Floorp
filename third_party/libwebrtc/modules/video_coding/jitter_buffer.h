@@ -20,7 +20,7 @@
 #include "api/field_trials_view.h"
 #include "modules/include/module_common_types.h"
 #include "modules/include/module_common_types_public.h"
-#include "modules/video_coding/decoding_state.h"
+#include "modules/video_coding/deprecated/decoding_state.h"
 #include "modules/video_coding/deprecated/jitter_buffer_common.h"
 #include "modules/video_coding/event_wrapper.h"
 #include "modules/video_coding/include/video_coding.h"
