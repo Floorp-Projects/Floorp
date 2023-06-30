@@ -14,6 +14,21 @@ visibility = [
   "../:video_coding_unittests",
 ]
 
+rtc_library("deprecated_decoding_state") {
+  sources = [
+    "decoding_state.cc",
+    "decoding_state.h",
+  ]
+  deps = [
+    ":deprecated_frame_buffer",
+    ":deprecated_jitter_buffer_common",
+    ":deprecated_packet",
+    "../../../common_video",
+    "../../../modules:module_api_public",
+    "../../../rtc_base:logging",
+  ]
+}
+
 rtc_library("deprecated_jitter_buffer_common") {
   sources = [ "jitter_buffer_common.h" ]
 }
@@ -71,11 +86,18 @@ rtc_library("deprecated_session_info") {
 
 rtc_library("deprecated_unittests") {
   testonly = true
-  sources = [ "session_info_unittest.cc" ]
+  sources = [
+    "decoding_state_unittest.cc",
+    "session_info_unittest.cc",
+  ]
   visibility += [ "../../../modules/*" ]
   deps = [
+    ":deprecated_decoding_state",
+    ":deprecated_frame_buffer",
     ":deprecated_packet",
     ":deprecated_session_info",
+    "../../../modules/rtp_rtcp:rtp_video_header",
+    "../../../modules/video_coding:codec_globals_headers",
     "../../../test:test_support",
   ]
 }

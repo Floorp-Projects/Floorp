@@ -307,8 +307,6 @@ rtc_library("video_codec_interface") {
 rtc_library("video_coding_legacy") {
   visibility = [ ":video_coding_unittests" ]
   sources = [
-    "decoding_state.cc",
-    "decoding_state.h",
     "event_wrapper.cc",
     "event_wrapper.h",
     "include/video_coding.h",
@@ -352,6 +350,7 @@ rtc_library("video_coding_legacy") {
     "../../system_wrappers",
     "../rtp_rtcp:rtp_rtcp_format",
     "../rtp_rtcp:rtp_video_header",
+    "deprecated:deprecated_decoding_state",
     "deprecated:deprecated_frame_buffer",
     "deprecated:deprecated_jitter_buffer_common",
     "deprecated:deprecated_packet",
@@ -1139,7 +1138,6 @@ if (rtc_include_tests) {
       "codecs/vp8/screenshare_layers_unittest.cc",
       "codecs/vp9/svc_config_unittest.cc",
       "decoder_database_unittest.cc",
-      "decoding_state_unittest.cc",
       "fec_controller_unittest.cc",
       "frame_dependencies_calculator_unittest.cc",
       "frame_helpers_unittest.cc",
