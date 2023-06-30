@@ -656,17 +656,17 @@ android_builder, android_try_job = normal_builder_factory(
     dimensions = {"os": "Linux"},
 )
 
-win_builder = normal_builder_factory(
+win_builder, win_try_job = normal_builder_factory(
     dimensions = {"os": "Windows"},
-)[0]
-
-win_try_job = normal_builder_factory(
-    dimensions = {"os": "Windows"},
-)[1]
+)
 
 mac_builder, mac_try_job = normal_builder_factory(
     dimensions = {"os": "Mac"},
 )
+
+mac_chromium_try_job = normal_builder_factory(
+    dimensions = {"os": "Mac", "cores": "12"},
+)[1]
 
 ios_builder, ios_try_job = normal_builder_factory(
     dimensions = {"os": "Mac"},
@@ -774,7 +774,7 @@ perf_builder("Perf Mac M1 Arm64 12", "Mac|arm64|Tester|12", triggered_by = ["Mac
 
 mac_builder("Mac Asan", "Mac|x64|asan")
 mac_try_job("mac_asan")
-mac_try_job("mac_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
+mac_chromium_try_job("mac_chromium_compile", recipe = "chromium_trybot", branch_cq = False)
 mac_builder("MacARM64 M1 Release", "Mac|arm64M1|rel", cpu = "arm64-64-Apple_M1")
 mac_try_job("mac_rel_m1")
 mac_try_job("mac_dbg_m1")
