@@ -98,6 +98,7 @@ class RtcEventLogImplTest : public ::testing::Test {
   static constexpr Timestamp kStartTime = Timestamp::Seconds(1);
 
   GlobalSimulatedTimeController time_controller_{kStartTime};
+  std::string written_data_;  // This must be destroyed after the event_log_.
   std::unique_ptr<MockEventEncoder> encoder_ =
       std::make_unique<MockEventEncoder>();
   MockEventEncoder* encoder_ptr_ = encoder_.get();
@@ -107,7 +108,6 @@ class RtcEventLogImplTest : public ::testing::Test {
   RtcEventLogImpl event_log_{std::move(encoder_),
                              time_controller_.GetTaskQueueFactory(),
                              kMaxEventsInHistory, kMaxEventsInConfigHistory};
-  std::string written_data_;
 };
 
 TEST_F(RtcEventLogImplTest, WritesHeaderAndEventsAndTrailer) {
