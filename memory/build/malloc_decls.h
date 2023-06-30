@@ -72,6 +72,10 @@ MALLOC_DECL(jemalloc_stats_internal, void, jemalloc_stats_t*,
 // Return the size of the jemalloc_bin_stats_t array.
 MALLOC_DECL(jemalloc_stats_num_bins, size_t)
 
+// Tell jemalloc this is the main thread. jemalloc will use this to validate
+// that main thread only arenas are only used on the main thread.
+MALLOC_DECL(jemalloc_set_main_thread, void)
+
 // On some operating systems (Mac), we use madvise(MADV_FREE) to hand pages
 // back to the operating system.  On Mac, the operating system doesn't take
 // this memory back immediately; instead, the OS takes it back only when the

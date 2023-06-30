@@ -1276,7 +1276,6 @@ struct ArenaTreeTrait {
 class ArenaCollection {
  public:
   bool Init() {
-    mMainThreadId = GetThreadId();
     mArenas.Init();
     mPrivateArenas.Init();
     arena_params_t params;
@@ -1335,10 +1334,29 @@ class ArenaCollection {
 
   Mutex mLock MOZ_UNANNOTATED;
 
-  bool IsOnMainThread() const { return mMainThreadId == GetThreadId(); }
+  // We're running on the main thread which is set by a call to SetMainThread().
+  bool IsOnMainThread() const {
+    return mMainThreadId.isSome() && mMainThreadId.value() == GetThreadId();
+  }
+
+  // We're running on the main thread or SetMainThread() has never been called.
+  bool IsOnMainThreadWeak() const {
+    return mMainThreadId.isNothing() || IsOnMainThread();
+  }
 
   // After a fork set the new thread ID in the child.
-  void SetMainThread() { mMainThreadId = GetThreadId(); }
+  void PostForkFixMainThread() {
+    if (mMainThreadId.isSome()) {
+      // Only if the main thread has been defined.
+      mMainThreadId = Some(GetThreadId());
+    }
+  }
+
+  void SetMainThread() {
+    MutexAutoLock lock(mLock);
+    MOZ_ASSERT(mMainThreadId.isNothing());
+    mMainThreadId = Some(GetThreadId());
+  }
 
  private:
   inline arena_t* GetByIdInternal(arena_id_t aArenaId, bool aIsPrivate);
@@ -1348,7 +1366,7 @@ class ArenaCollection {
   Tree mArenas;
   Tree mPrivateArenas;
   Atomic<int32_t> mDefaultMaxDirtyPageModifier;
-  ThreadId mMainThreadId;
+  Maybe<ThreadId> mMainThreadId;
 };
 
 static ArenaCollection gArenas;
@@ -4711,7 +4729,7 @@ inline void MozJemalloc::jemalloc_stats_internal(
   gArenas.mLock.Lock();
 
   // Stats can only read complete information if its run on the main thread.
-  MOZ_ASSERT(gArenas.IsOnMainThread());
+  MOZ_ASSERT(gArenas.IsOnMainThreadWeak());
 
   // Iterate over arenas.
   for (auto arena : gArenas.iter()) {
@@ -4806,6 +4824,12 @@ inline size_t MozJemalloc::jemalloc_stats_num_bins() {
   return NUM_SMALL_CLASSES;
 }
 
+template <>
+inline void MozJemalloc::jemalloc_set_main_thread() {
+  MOZ_ASSERT(malloc_initialized);
+  gArenas.SetMainThread();
+}
+
 #ifdef MALLOC_DOUBLE_PURGE
 
 // Explicitly remove all of this chunk's MADV_FREE'd pages from memory.
@@ -4850,7 +4874,7 @@ template <>
 inline void MozJemalloc::jemalloc_purge_freed_pages() {
   if (malloc_initialized) {
     MutexAutoLock lock(gArenas.mLock);
-    MOZ_ASSERT(gArenas.IsOnMainThread());
+    MOZ_ASSERT(gArenas.IsOnMainThreadWeak());
     for (auto arena : gArenas.iter()) {
       arena->HardPurge();
     }
@@ -4870,7 +4894,7 @@ template <>
 inline void MozJemalloc::jemalloc_free_dirty_pages(void) {
   if (malloc_initialized) {
     MutexAutoLock lock(gArenas.mLock);
-    MOZ_ASSERT(gArenas.IsOnMainThread());
+    MOZ_ASSERT(gArenas.IsOnMainThreadWeak());
     for (auto arena : gArenas.iter()) {
       MaybeMutexAutoLock arena_lock(arena->mLock);
       arena->Purge(1);
@@ -4989,7 +5013,7 @@ void _malloc_postfork_child(void) {
     arena->mLock.Reinit(gForkingThread);
   }
 
-  gArenas.SetMainThread();
+  gArenas.PostForkFixMainThread();
   gArenas.mLock.Init();
 }
 #endif  // XP_WIN

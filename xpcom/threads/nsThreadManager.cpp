@@ -312,6 +312,9 @@ nsresult nsThreadManager::Init() {
     mMainThread = nullptr;
     return rv;
   }
+#ifdef MOZ_MEMORY
+  jemalloc_set_main_thread();
+#endif
 
   // We need to keep a pointer to the current thread, so we can satisfy
   // GetIsMainThread calls that occur post-Shutdown.
