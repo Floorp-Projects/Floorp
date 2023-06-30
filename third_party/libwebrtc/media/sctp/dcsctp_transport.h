@@ -131,7 +131,7 @@ class DcSctpTransport : public cricket::SctpTransportInternal,
   // Map of all currently open or closing data channels
   flat_map<dcsctp::StreamID, StreamState> stream_states_
       RTC_GUARDED_BY(network_thread_);
-  bool ready_to_send_data_ = false;
+  bool ready_to_send_data_ RTC_GUARDED_BY(network_thread_) = false;
   std::function<void()> on_connected_callback_ RTC_GUARDED_BY(network_thread_);
   DataChannelSink* data_channel_sink_ RTC_GUARDED_BY(network_thread_) = nullptr;
 };
