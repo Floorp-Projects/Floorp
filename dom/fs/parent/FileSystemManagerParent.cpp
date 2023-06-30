@@ -404,7 +404,7 @@ IPCResult FileSystemManagerParent::RecvRemoveEntry(
       IPC_OK(), reportError);
 
   if (isDeleted) {
-    FileSystemRemoveEntryResponse response(NS_OK);
+    FileSystemRemoveEntryResponse response(void_t{});
     aResolver(response);
 
     return IPC_OK();
@@ -422,7 +422,7 @@ IPCResult FileSystemManagerParent::RecvRemoveEntry(
     return IPC_OK();
   }
 
-  FileSystemRemoveEntryResponse response(NS_OK);
+  FileSystemRemoveEntryResponse response(void_t{});
   aResolver(response);
 
   return IPC_OK();
