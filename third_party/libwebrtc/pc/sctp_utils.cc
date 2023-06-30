@@ -16,7 +16,6 @@
 
 #include "absl/types/optional.h"
 #include "api/priority.h"
-#include "media/sctp/sctp_transport_internal.h"
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/logging.h"
@@ -46,53 +45,6 @@ enum DataChannelPriority {
   DCO_PRIORITY_MEDIUM = 512,
   DCO_PRIORITY_HIGH = 1024,
 };
-
-StreamId::StreamId() : id_(absl::nullopt) {
-  thread_checker_.Detach();
-}
-
-StreamId::StreamId(int id)
-    : id_(id >= cricket::kMinSctpSid && id <= cricket::kSpecMaxSctpSid
-              ? absl::optional<uint16_t>(static_cast<uint16_t>(id))
-              : absl::nullopt) {
-  thread_checker_.Detach();
-}
-
-StreamId::StreamId(const StreamId& sid) : id_(sid.id_) {}
-
-bool StreamId::HasValue() const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  return id_.has_value();
-}
-
-int StreamId::stream_id_int() const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  return id_.has_value() ? static_cast<int>(id_.value().value()) : -1;
-}
-
-void StreamId::reset() {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  id_ = absl::nullopt;
-}
-
-StreamId& StreamId::operator=(const StreamId& sid) {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  RTC_DCHECK_RUN_ON(&sid.thread_checker_);
-  id_ = sid.id_;
-  return *this;
-}
-
-bool StreamId::operator==(const StreamId& sid) const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  RTC_DCHECK_RUN_ON(&sid.thread_checker_);
-  return id_ == sid.id_;
-}
-
-bool StreamId::operator<(const StreamId& sid) const {
-  RTC_DCHECK_RUN_ON(&thread_checker_);
-  RTC_DCHECK_RUN_ON(&sid.thread_checker_);
-  return id_ < sid.id_;
-}
 
 bool IsOpenMessage(const rtc::CopyOnWriteBuffer& payload) {
   // Format defined at
