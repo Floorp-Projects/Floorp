@@ -670,11 +670,9 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
   send_params.type =
       buffer.binary ? DataMessageType::kBinary : DataMessageType::kText;
 
-  cricket::SendDataResult send_result = cricket::SDR_SUCCESS;
-  bool success =
-      controller_->SendData(id_, send_params, buffer.data, &send_result);
+  RTCError error = controller_->SendData(id_, send_params, buffer.data);
 
-  if (success) {
+  if (error.ok()) {
     ++messages_sent_;
     bytes_sent_ += buffer.size();
 
@@ -684,7 +682,7 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
     return true;
   }
 
-  if (send_result == cricket::SDR_BLOCK) {
+  if (error.type() == RTCErrorType::RESOURCE_EXHAUSTED) {
     if (!queue_if_blocked || QueueSendDataMessage(buffer)) {
       return false;
     }
@@ -693,7 +691,7 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
   // message failed.
   RTC_LOG(LS_ERROR) << "Closing the DataChannel due to a failure to send data, "
                        "send_result = "
-                    << send_result;
+                    << ToString(error.type()) << ":" << error.message();
   CloseAbruptlyWithError(
       RTCError(RTCErrorType::NETWORK_ERROR, "Failure to send data"));
 
@@ -748,9 +746,8 @@ bool SctpDataChannel::SendControlMessage(const rtc::CopyOnWriteBuffer& buffer) {
   send_params.ordered = ordered_ || is_open_message;
   send_params.type = DataMessageType::kControl;
 
-  cricket::SendDataResult send_result = cricket::SDR_SUCCESS;
-  bool retval = controller_->SendData(id_, send_params, buffer, &send_result);
-  if (retval) {
+  RTCError err = controller_->SendData(id_, send_params, buffer);
+  if (err.ok()) {
     RTC_DLOG(LS_VERBOSE) << "Sent CONTROL message on channel "
                          << id_.stream_id_int();
 
@@ -759,16 +756,16 @@ bool SctpDataChannel::SendControlMessage(const rtc::CopyOnWriteBuffer& buffer) {
     } else if (handshake_state_ == kHandshakeShouldSendOpen) {
       handshake_state_ = kHandshakeWaitingForAck;
     }
-  } else if (send_result == cricket::SDR_BLOCK) {
+  } else if (err.type() == RTCErrorType::RESOURCE_EXHAUSTED) {
     QueueControlMessage(buffer);
   } else {
     RTC_LOG(LS_ERROR) << "Closing the DataChannel due to a failure to send"
                          " the CONTROL message, send_result = "
-                      << send_result;
-    CloseAbruptlyWithError(RTCError(RTCErrorType::NETWORK_ERROR,
-                                    "Failed to send a CONTROL message"));
+                      << ToString(err.type());
+    err.set_message("Failed to send a CONTROL message");
+    CloseAbruptlyWithError(err);
   }
-  return retval;
+  return err.ok();
 }
 
 // static

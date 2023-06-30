@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 
+#include "api/rtc_error.h"
 #include "api/transport/data_channel_transport_interface.h"
 #include "media/base/media_channel.h"
 #include "p2p/base/packet_transport_internal.h"
@@ -119,11 +120,11 @@ class SctpTransportInternal {
   // SignalClosingProcedureComplete on the other side.
   virtual bool ResetStream(int sid) = 0;
   // Send data down this channel.
-  // Returns true iff successful data somewhere on the send-queue/network.
-  virtual bool SendData(int sid,
-                        const webrtc::SendDataParams& params,
-                        const rtc::CopyOnWriteBuffer& payload,
-                        SendDataResult* result = nullptr) = 0;
+  // Returns RTCError::OK() if successful an error otherwise. Notably
+  // RTCErrorType::RESOURCE_EXHAUSTED for blocked operations.
+  virtual webrtc::RTCError SendData(int sid,
+                                    const webrtc::SendDataParams& params,
+                                    const rtc::CopyOnWriteBuffer& payload) = 0;
 
   // Indicates when the SCTP socket is created and not blocked by congestion
   // control. This changes to false when SDR_BLOCK is returned from SendData,

@@ -506,7 +506,7 @@ index 0000000000..f6ff7f218f
 +  #endif
 +#endif
 diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 347fbdcb0b..fcdb4dff2d 100644
+index 8f85067624..3c4f757155 100644
 --- a/media/BUILD.gn
 +++ b/media/BUILD.gn
 @@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {
@@ -628,7 +628,7 @@ index 347fbdcb0b..fcdb4dff2d 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 76dc9465cd..1d6066c1fb 100644
+index cf52244ba0..ab4eb79508 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -64,10 +64,6 @@ class Timing;

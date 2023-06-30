@@ -32,11 +32,10 @@ class FakeSctpTransport : public cricket::SctpTransportInternal {
   }
   bool OpenStream(int sid) override { return true; }
   bool ResetStream(int sid) override { return true; }
-  bool SendData(int sid,
-                const webrtc::SendDataParams& params,
-                const rtc::CopyOnWriteBuffer& payload,
-                cricket::SendDataResult* result = nullptr) override {
-    return true;
+  webrtc::RTCError SendData(int sid,
+                            const webrtc::SendDataParams& params,
+                            const rtc::CopyOnWriteBuffer& payload) override {
+    return webrtc::RTCError::OK();
   }
   bool ReadyToSendData() override { return true; }
   void set_debug_name_for_testing(const char* debug_name) override {}
