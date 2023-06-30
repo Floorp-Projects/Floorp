@@ -1,147 +1,143 @@
-From: Philipp Hancke <phancke@microsoft.com>
-Date: Mon, 27 Mar 2023 10:19:52 +0200
-Subject: (cherry-pick-branch-heads/5615) [M112] Revert "Only serialize
- non-stopped RTP header extensions"
+From: Jan-Ivar Bruaroey <wingboy@gmail.com>
+Date: Fri, 30 Jun 2023 13:19:22 -0400
+Subject: (tmp-cherry-pick) Revert "Exercise AV1 simulcast paths in tests."
+ (6a1ded02d9)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This reverts commit be03c0971863c9e6807fcbdb4175754e8242a652.
-Causes regression in web projects that
-1/ add a stopped-by-default extension in SRD
-2/ call createAnswer
-3/ munge the stopped-by-default extension back in SLD
-4/ create a subsequent offer and expect the extension to be present
+This reverts commit c8ab6c449c84f17fabf8da58456d396bdb5da762.
 
-BUG=chromium:1427442,chromium:1051821
+Reason for revert: new test fails to run upstream
 
-Change-Id: I2e48831e92384963a254d873398f54eaee96739a
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/299143
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Philipp Hancke <phancke@microsoft.com>
-Reviewed-by: Henrik Boström <hbos@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5615@{#2}
-Cr-Branched-From: cdfeb4f7922f05007d88c8263842998ec79b6dd6-refs/heads/main@{#39376}
+Original change's description:
+> Exercise AV1 simulcast paths in tests.
+>
+> This is something we get "for free" with the
+> "WebRTC-AllowDisablingLegacyScalability" field trial that has been
+> wired up to support VP9 simulcast.
+>
+> This test works and passes, however the ramp-up time is pretty bad.
+> - VP9 simulcast takes approximately 4 seconds to ramp up.
+> - VP9 SVC takes approximately 16 seconds to ramp up.
+> - AV1 simulcast takes approximately 22 seconds to ramp up.
+>
+> A TODO is added (webrtc:15006) and the test is given extra timeout,
+> a full minute to get bytes flowing on all layers.
+>
+> Despite ramp-up being bad, it's important to test that AV1 simulcast
+> is in fact working to avoid regressions due to obsolete assumptions
+> about which codec do or do not support simulcast. AV1 simulcast is an
+> opt-in feature so there is no harm in the API not being perfect yet.
+>
+> Bug: webrtc:15005, webrtc:15006
+> Change-Id: If0158d172647f0462bd6db802406249d93e01871
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/297982
+> Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+> Commit-Queue: Henrik Boström <hbos@webrtc.org>
+> Reviewed-by: Erik Språng <sprang@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#39586}
+
+Bug: webrtc:15005, webrtc:15006
+Change-Id: I7da6df8bb51219e7d0acfd3b62b4ec08e25bfdc7
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/298049
+Owners-Override: Jeremy Leconte <jleconte@webrtc.org>
+Commit-Queue: Jeremy Leconte <jleconte@google.com>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Cr-Commit-Position: refs/heads/main@{#39595}
 ---
- pc/media_session.cc                           |  7 +--
- pc/media_session_unittest.cc                  |  5 +-
- ...er_connection_header_extension_unittest.cc | 62 -------------------
- 3 files changed, 5 insertions(+), 69 deletions(-)
+ pc/peer_connection_simulcast_unittest.cc | 77 ------------------------
+ 1 file changed, 77 deletions(-)
 
-diff --git a/pc/media_session.cc b/pc/media_session.cc
-index 92fe80f3d1..e703b44101 100644
---- a/pc/media_session.cc
-+++ b/pc/media_session.cc
-@@ -684,11 +684,8 @@ static bool CreateContentOffer(
-       if (extension_with_id.uri == extension.uri) {
-         // TODO(crbug.com/1051821): Configure the extension direction from
-         // the information in the media_description_options extension
--        // capability. For now, do not include stopped extensions.
--        // See also crbug.com/webrtc/7477 about the general lack of direction.
--        if (extension.direction != RtpTransceiverDirection::kStopped) {
--          extensions.push_back(extension_with_id);
--        }
-+        // capability.
-+        extensions.push_back(extension_with_id);
-       }
-     }
-   }
-diff --git a/pc/media_session_unittest.cc b/pc/media_session_unittest.cc
-index 6dc6d76021..8f38f6a1b4 100644
---- a/pc/media_session_unittest.cc
-+++ b/pc/media_session_unittest.cc
-@@ -2018,7 +2018,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
+diff --git a/pc/peer_connection_simulcast_unittest.cc b/pc/peer_connection_simulcast_unittest.cc
+index 238c0ae804..1e8955be03 100644
+--- a/pc/peer_connection_simulcast_unittest.cc
++++ b/pc/peer_connection_simulcast_unittest.cc
+@@ -1490,81 +1490,4 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+   EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
  }
  
- TEST_F(MediaSessionDescriptionFactoryTest,
--       AllowsStoppedExtensionsToBeRemovedFromSubsequentOffer) {
-+       AppendsStoppedExtensionIfKnownAndPresentInTheOffer) {
-   MediaSessionOptions opts;
-   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
-                              RtpTransceiverDirection::kSendRecv, kActive,
-@@ -2043,7 +2043,8 @@ TEST_F(MediaSessionDescriptionFactoryTest,
-       ElementsAre(Property(
-           &ContentInfo::media_description,
-           Pointee(Property(&MediaContentDescription::rtp_header_extensions,
--                           ElementsAre(Field(&RtpExtension::uri, "uri1")))))));
-+                           ElementsAre(Field(&RtpExtension::uri, "uri1"),
-+                                       Field(&RtpExtension::uri, "uri2")))))));
- }
- 
- TEST_F(MediaSessionDescriptionFactoryTest,
-diff --git a/pc/peer_connection_header_extension_unittest.cc b/pc/peer_connection_header_extension_unittest.cc
-index 9db547fb57..fb8833a01b 100644
---- a/pc/peer_connection_header_extension_unittest.cc
-+++ b/pc/peer_connection_header_extension_unittest.cc
-@@ -229,68 +229,6 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
-                           Field(&RtpHeaderExtensionCapability::uri, "uri3")));
- }
- 
--TEST_P(PeerConnectionHeaderExtensionTest, OfferedExtensionsArePerTransceiver) {
--  cricket::MediaType media_type;
--  SdpSemantics semantics;
--  std::tie(media_type, semantics) = GetParam();
--  if (semantics != SdpSemantics::kUnifiedPlan)
--    return;
--  std::unique_ptr<PeerConnectionWrapper> pc1 =
--      CreatePeerConnection(media_type, semantics);
--  auto transceiver1 = pc1->AddTransceiver(media_type);
--  auto modified_extensions = transceiver1->GetHeaderExtensionsToNegotiate();
--  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  transceiver1->SetHeaderExtensionsToNegotiate(modified_extensions);
--  auto transceiver2 = pc1->AddTransceiver(media_type);
+-// TODO(https://crbug.com/webrtc/15005): A field trial shouldn't be needed to
+-// get spec-compliant behavior! The same field trial is also used for VP9
+-// simulcast (https://crbug.com/webrtc/14884).
+-TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+-       SendingThreeEncodings_AV1_Simulcast) {
+-  test::ScopedFieldTrials field_trials(
+-      "WebRTC-AllowDisablingLegacyScalability/Enabled/");
 -
--  auto session_description = pc1->CreateOffer();
--  EXPECT_THAT(session_description->description()
--                  ->contents()[0]
--                  .media_description()
--                  ->rtp_header_extensions(),
--              ElementsAre(Field(&RtpExtension::uri, "uri2"),
--                          Field(&RtpExtension::uri, "uri3")));
--  EXPECT_THAT(session_description->description()
--                  ->contents()[1]
--                  .media_description()
--                  ->rtp_header_extensions(),
--              ElementsAre(Field(&RtpExtension::uri, "uri2"),
--                          Field(&RtpExtension::uri, "uri3"),
--                          Field(&RtpExtension::uri, "uri4")));
+-  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+-  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+-  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+-
+-  std::vector<SimulcastLayer> layers =
+-      CreateLayers({"f", "h", "q"}, /*active=*/true);
+-  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+-      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+-                                        layers);
+-  std::vector<RtpCodecCapability> codecs =
+-      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "AV1");
+-  transceiver->SetCodecPreferences(codecs);
+-
+-  // Opt-in to spec-compliant simulcast by explicitly setting the
+-  // `scalability_mode`.
+-  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+-  RtpParameters parameters = sender->GetParameters();
+-  ASSERT_EQ(parameters.encodings.size(), 3u);
+-  parameters.encodings[0].scalability_mode = "L1T3";
+-  parameters.encodings[1].scalability_mode = "L1T3";
+-  parameters.encodings[2].scalability_mode = "L1T3";
+-  sender->SetParameters(parameters);
+-
+-  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+-  local_pc_wrapper->WaitForConnection();
+-  remote_pc_wrapper->WaitForConnection();
+-
+-  // GetParameters() does not report any fallback.
+-  parameters = sender->GetParameters();
+-  ASSERT_EQ(parameters.encodings.size(), 3u);
+-  EXPECT_THAT(parameters.encodings[0].scalability_mode,
+-              Optional(std::string("L1T3")));
+-  EXPECT_THAT(parameters.encodings[1].scalability_mode,
+-              Optional(std::string("L1T3")));
+-  EXPECT_THAT(parameters.encodings[2].scalability_mode,
+-              Optional(std::string("L1T3")));
+-
+-  // Wait until media is flowing on all three layers.
+-  // Ramp up time is needed before all three layers are sending.
+-  //
+-  // This test is given 2X timeout because AV1 simulcast ramp-up time is
+-  // terrible compared to other codecs.
+-  // TODO(https://crbug.com/webrtc/15006): Improve the ramp-up time and stop
+-  // giving this test extra long timeout.
+-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+-                   (2 * kLongTimeoutForRampingUp).ms());
+-  // Sometimes additional ramp up is needed to get the expected resolutions. If
+-  // that has not happened yet we log (`log_during_ramp_up=true`).
+-  EXPECT_TRUE_WAIT(HasOutboundRtpExpectedResolutions(
+-                       local_pc_wrapper,
+-                       {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}},
+-                       /*log_during_ramp_up=*/true),
+-                   kLongTimeoutForRampingUp.ms());
+-  // Verify codec and scalability mode.
+-  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+-  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+-      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+-  ASSERT_THAT(outbound_rtps, SizeIs(3u));
+-  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+-              StrCaseEq("video/AV1"));
+-  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[1]),
+-              StrCaseEq("video/AV1"));
+-  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[2]),
+-              StrCaseEq("video/AV1"));
+-  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
+-  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
+-  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
 -}
 -
--TEST_P(PeerConnectionHeaderExtensionTest, RemovalAfterRenegotiation) {
--  cricket::MediaType media_type;
--  SdpSemantics semantics;
--  std::tie(media_type, semantics) = GetParam();
--  if (semantics != SdpSemantics::kUnifiedPlan)
--    return;
--  std::unique_ptr<PeerConnectionWrapper> pc1 =
--      CreatePeerConnection(media_type, semantics);
--  std::unique_ptr<PeerConnectionWrapper> pc2 =
--      CreatePeerConnection(media_type, semantics);
--  auto transceiver1 = pc1->AddTransceiver(media_type);
--
--  auto offer = pc1->CreateOfferAndSetAsLocal(
--      PeerConnectionInterface::RTCOfferAnswerOptions());
--  pc2->SetRemoteDescription(std::move(offer));
--  auto answer = pc2->CreateAnswerAndSetAsLocal(
--      PeerConnectionInterface::RTCOfferAnswerOptions());
--  pc1->SetRemoteDescription(std::move(answer));
--
--  auto modified_extensions = transceiver1->GetHeaderExtensionsToNegotiate();
--  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  transceiver1->SetHeaderExtensionsToNegotiate(modified_extensions);
--  auto session_description = pc1->CreateOffer();
--  EXPECT_THAT(session_description->description()
--                  ->contents()[0]
--                  .media_description()
--                  ->rtp_header_extensions(),
--              ElementsAre(Field(&RtpExtension::uri, "uri2"),
--                          Field(&RtpExtension::uri, "uri3")));
--}
--
- INSTANTIATE_TEST_SUITE_P(
-     ,
-     PeerConnectionHeaderExtensionTest,
+ }  // namespace webrtc
 -- 
 2.37.1 (Apple Git-137.1)
 
