@@ -1739,10 +1739,7 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
 
   // If setting the description decided our SSL role, allocate any necessary
   // SCTP sids.
-  rtc::SSLRole role;
-  if (pc_->GetSctpSslRole(&role)) {
-    data_channel_controller()->AllocateSctpSids(role);
-  }
+  AllocateSctpSids();
 
   if (IsUnifiedPlan()) {
     if (ConfiguredForMedia()) {
@@ -1990,10 +1987,7 @@ void SdpOfferAnswerHandler::ApplyRemoteDescription(
 
   // If setting the description decided our SSL role, allocate any necessary
   // SCTP sids.
-  rtc::SSLRole role;
-  if (pc_->GetSctpSslRole(&role)) {
-    data_channel_controller()->AllocateSctpSids(role);
-  }
+  AllocateSctpSids();
 
   if (operation->unified_plan()) {
     ApplyRemoteDescriptionUpdateTransceiverState(operation->type());
@@ -3229,6 +3223,28 @@ void SdpOfferAnswerHandler::UpdateNegotiationNeeded() {
   // is used in the task queued by the observer, this event will only fire
   // when the chain is empty.
   GenerateNegotiationNeededEvent();
+}
+
+void SdpOfferAnswerHandler::AllocateSctpSids() {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  if (!local_description() || !remote_description()) {
+    RTC_DLOG(LS_VERBOSE)
+        << "Local and Remote descriptions must be applied to get the "
+           "SSL Role of the SCTP transport.";
+    return;
+  }
+
+  absl::optional<rtc::SSLRole> role =
+      network_thread()->BlockingCall([this, is_caller = is_caller()] {
+        RTC_DCHECK_RUN_ON(network_thread());
+        return pc_->GetSctpSslRole_n(is_caller);
+      });
+
+  if (role) {
+    // TODO(webrtc:11547): Make this call on the network thread too once
+    // `AllocateSctpSids` has been updated.
+    data_channel_controller()->AllocateSctpSids(*role);
+  }
 }
 
 bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {

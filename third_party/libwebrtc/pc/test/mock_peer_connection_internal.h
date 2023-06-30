@@ -232,6 +232,10 @@ class MockPeerConnectionInternal : public PeerConnectionInternal {
   MOCK_METHOD(LegacyStatsCollector*, legacy_stats, (), (override));
   MOCK_METHOD(PeerConnectionObserver*, Observer, (), (const, override));
   MOCK_METHOD(bool, GetSctpSslRole, (rtc::SSLRole*), (override));
+  MOCK_METHOD(absl::optional<rtc::SSLRole>,
+              GetSctpSslRole_n,
+              (absl::optional<bool>),
+              (override));
   MOCK_METHOD(PeerConnectionInterface::IceConnectionState,
               ice_connection_state_internal,
               (),
