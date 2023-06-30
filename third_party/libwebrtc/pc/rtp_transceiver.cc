@@ -745,47 +745,34 @@ bool IsMandatoryHeaderExtension(const std::string& uri) {
 
 RTCError RtpTransceiver::SetHeaderExtensionsToNegotiate(
     rtc::ArrayView<const RtpHeaderExtensionCapability> header_extensions) {
-  for (const auto& entry : header_extensions) {
-    // Handle unsupported requests for mandatory extensions as per
-    // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface.
-    // Note:
-    // - We do not handle setOfferedRtpHeaderExtensions algorithm step 2.1,
-    //   this has to be checked on a higher level. We naturally error out
-    //   in the handling of Step 2.2 if an unset URI is encountered.
-
-    // Step 2.2.
-    // Handle unknown extensions.
-    auto it = std::find_if(
-        header_extensions_to_negotiate_.begin(),
-        header_extensions_to_negotiate_.end(),
-        [&entry](const auto& offered) { return entry.uri == offered.uri; });
-    if (it == header_extensions_to_negotiate_.end()) {
-      return RTCError(RTCErrorType::UNSUPPORTED_PARAMETER,
-                      "Attempted to modify an unoffered extension.");
+  // https://w3c.github.io/webrtc-extensions/#methods
+  if (header_extensions.size() != header_extensions_to_negotiate_.size()) {
+    return RTCError(RTCErrorType::INVALID_MODIFICATION,
+                    "Size of extensions to negotiate does not match.");
+  }
+  // For each index i of extensions, run the following steps: ...
+  for (size_t i = 0; i < header_extensions.size(); i++) {
+    const auto& extension = header_extensions[i];
+    if (extension.uri != header_extensions_to_negotiate_[i].uri) {
+      return RTCError(RTCErrorType::INVALID_MODIFICATION,
+                      "Reordering extensions is not allowed.");
     }
-
-    // Step 2.4-2.5.
-    if (IsMandatoryHeaderExtension(entry.uri) &&
-        entry.direction != RtpTransceiverDirection::kSendRecv) {
+    if (IsMandatoryHeaderExtension(extension.uri) &&
+        extension.direction != RtpTransceiverDirection::kSendRecv) {
       return RTCError(RTCErrorType::INVALID_MODIFICATION,
                       "Attempted to stop a mandatory extension.");
     }
+
+    // TODO(bugs.webrtc.org/7477): Currently there are no recvonly extensions so
+    // this can not be checked: "When there exists header extension capabilities
+    // that have directions other than kSendRecv, restrict extension.direction
+    // as to not exceed that capability."
   }
 
-  // Set all current extensions but the mandatory ones to stopped.
-  // This means that anything filtered from the input will not show up.
-  for (auto& entry : header_extensions_to_negotiate_) {
-    if (!IsMandatoryHeaderExtension(entry.uri)) {
-      entry.direction = RtpTransceiverDirection::kStopped;
-    }
-  }
   // Apply mutation after error checking.
-  for (const auto& entry : header_extensions) {
-    auto it = std::find_if(
-        header_extensions_to_negotiate_.begin(),
-        header_extensions_to_negotiate_.end(),
-        [&entry](const auto& offered) { return entry.uri == offered.uri; });
-    it->direction = entry.direction;
+  for (size_t i = 0; i < header_extensions.size(); i++) {
+    header_extensions_to_negotiate_[i].direction =
+        header_extensions[i].direction;
   }
 
   return RTCError::OK();
