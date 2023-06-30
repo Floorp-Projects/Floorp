@@ -352,12 +352,9 @@ TEST_F(SctpDataChannelTest, SendUnorderedAfterReceivesOpenAck) {
   EXPECT_TRUE(controller_->last_send_data_params().ordered);
 
   // Emulates receiving an OPEN_ACK message.
-  cricket::ReceiveDataParams params;
-  params.sid = init.id;
-  params.type = DataMessageType::kControl;
   rtc::CopyOnWriteBuffer payload;
   WriteDataChannelOpenAckMessage(&payload);
-  dc->OnDataReceived(params, payload);
+  dc->OnDataReceived(DataMessageType::kControl, payload);
 
   // Sends another message and verifies it's unordered.
   ASSERT_TRUE(dc->Send(buffer));
@@ -378,11 +375,8 @@ TEST_F(SctpDataChannelTest, SendUnorderedAfterReceiveData) {
   EXPECT_EQ_WAIT(DataChannelInterface::kOpen, dc->state(), 1000);
 
   // Emulates receiving a DATA message.
-  cricket::ReceiveDataParams params;
-  params.sid = init.id;
-  params.type = DataMessageType::kText;
   DataBuffer buffer("data");
-  dc->OnDataReceived(params, buffer.data);
+  dc->OnDataReceived(DataMessageType::kText, buffer.data);
 
   // Sends a message and verifies it's unordered.
   ASSERT_TRUE(dc->Send(buffer));
@@ -440,11 +434,8 @@ TEST_F(SctpDataChannelTest, ReceiveDataWithValidId) {
 
   AddObserver();
 
-  cricket::ReceiveDataParams params;
-  params.sid = 1;
   DataBuffer buffer("abcd");
-
-  webrtc_data_channel_->OnDataReceived(params, buffer.data);
+  webrtc_data_channel_->OnDataReceived(DataMessageType::kText, buffer.data);
   EXPECT_EQ(1U, observer_->messages_received());
 }
 
@@ -479,17 +470,15 @@ TEST_F(SctpDataChannelTest, VerifyMessagesAndBytesReceived) {
   });
 
   webrtc_data_channel_->SetSctpSid(StreamId(1));
-  cricket::ReceiveDataParams params;
-  params.sid = 1;
 
   // Default values.
   EXPECT_EQ(0U, webrtc_data_channel_->messages_received());
   EXPECT_EQ(0U, webrtc_data_channel_->bytes_received());
 
   // Receive three buffers while data channel isn't open.
-  webrtc_data_channel_->OnDataReceived(params, buffers[0].data);
-  webrtc_data_channel_->OnDataReceived(params, buffers[1].data);
-  webrtc_data_channel_->OnDataReceived(params, buffers[2].data);
+  webrtc_data_channel_->OnDataReceived(DataMessageType::kText, buffers[0].data);
+  webrtc_data_channel_->OnDataReceived(DataMessageType::kText, buffers[1].data);
+  webrtc_data_channel_->OnDataReceived(DataMessageType::kText, buffers[2].data);
   EXPECT_EQ(0U, observer_->messages_received());
   EXPECT_EQ(0U, webrtc_data_channel_->messages_received());
   EXPECT_EQ(0U, webrtc_data_channel_->bytes_received());
@@ -503,9 +492,9 @@ TEST_F(SctpDataChannelTest, VerifyMessagesAndBytesReceived) {
   EXPECT_EQ(bytes_received, webrtc_data_channel_->bytes_received());
 
   // Receive three buffers while open.
-  webrtc_data_channel_->OnDataReceived(params, buffers[3].data);
-  webrtc_data_channel_->OnDataReceived(params, buffers[4].data);
-  webrtc_data_channel_->OnDataReceived(params, buffers[5].data);
+  webrtc_data_channel_->OnDataReceived(DataMessageType::kText, buffers[3].data);
+  webrtc_data_channel_->OnDataReceived(DataMessageType::kText, buffers[4].data);
+  webrtc_data_channel_->OnDataReceived(DataMessageType::kText, buffers[5].data);
   bytes_received += buffers[3].size() + buffers[4].size() + buffers[5].size();
   EXPECT_EQ(6U, observer_->messages_received());
   EXPECT_EQ(6U, webrtc_data_channel_->messages_received());
@@ -589,12 +578,9 @@ TEST_F(SctpDataChannelTest, ClosedWhenReceivedBufferFull) {
   rtc::CopyOnWriteBuffer buffer(1024);
   memset(buffer.MutableData(), 0, buffer.size());
 
-  cricket::ReceiveDataParams params;
-  params.sid = 0;
-
   // Receiving data without having an observer will overflow the buffer.
   for (size_t i = 0; i < 16 * 1024 + 1; ++i) {
-    webrtc_data_channel_->OnDataReceived(params, buffer);
+    webrtc_data_channel_->OnDataReceived(DataMessageType::kText, buffer);
   }
   EXPECT_EQ(DataChannelInterface::kClosed, webrtc_data_channel_->state());
   EXPECT_FALSE(webrtc_data_channel_->error().ok());

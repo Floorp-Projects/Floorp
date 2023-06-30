@@ -20,7 +20,6 @@
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/transport/data_channel_transport_interface.h"
-#include "media/base/media_channel.h"
 #include "pc/data_channel_utils.h"
 #include "pc/sctp_data_channel.h"
 #include "rtc_base/checks.h"
@@ -114,7 +113,8 @@ class DataChannelController : public SctpDataChannelControllerInterface,
 
   // Parses and handles open messages.  Returns true if the message is an open
   // message and should be considered to be handled, false otherwise.
-  bool HandleOpenMessage_n(const cricket::ReceiveDataParams& params,
+  bool HandleOpenMessage_n(int channel_id,
+                           DataMessageType type,
                            const rtc::CopyOnWriteBuffer& buffer)
       RTC_RUN_ON(network_thread());
   // Called when a valid data channel OPEN message is received.

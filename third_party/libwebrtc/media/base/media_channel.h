@@ -995,17 +995,6 @@ class VideoMediaReceiveChannelInterface : public MediaReceiveChannelInterface {
                                              absl::optional<int> rtx_time) = 0;
 };
 
-// Info about data received in DataMediaChannel.  For use in
-// DataMediaChannel::SignalDataReceived and in all of the signals that
-// signal fires, on up the chain.
-struct ReceiveDataParams {
-  // The in-packet stream identifier.
-  // SCTP data channels use SIDs.
-  int sid = 0;
-  // The type of message (binary, text, or control).
-  webrtc::DataMessageType type = webrtc::DataMessageType::kText;
-};
-
 enum SendDataResult { SDR_SUCCESS, SDR_ERROR, SDR_BLOCK };
 
 }  // namespace cricket

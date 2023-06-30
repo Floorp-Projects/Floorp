@@ -453,8 +453,6 @@ void DcSctpTransport::OnMessageReceived(dcsctp::DcSctpMessage message) {
                        << message.stream_id().value()
                        << ", ppid=" << message.ppid().value()
                        << ", length=" << message.payload().size() << ").";
-  cricket::ReceiveDataParams receive_data_params;
-  receive_data_params.sid = message.stream_id().value();
   auto type = ToDataMessageType(message.ppid());
   if (!type.has_value()) {
     RTC_LOG(LS_VERBOSE) << debug_name_
@@ -463,15 +461,14 @@ void DcSctpTransport::OnMessageReceived(dcsctp::DcSctpMessage message) {
                         << " on an SCTP packet. Dropping.";
     return;
   }
-  receive_data_params.type = *type;
   receive_buffer_.Clear();
   if (!IsEmptyPPID(message.ppid()))
     receive_buffer_.AppendData(message.payload().data(),
                                message.payload().size());
 
   if (data_channel_sink_) {
-    data_channel_sink_->OnDataReceived(
-        receive_data_params.sid, receive_data_params.type, receive_buffer_);
+    data_channel_sink_->OnDataReceived(message.stream_id().value(), *type,
+                                       receive_buffer_);
   }
 }
 
