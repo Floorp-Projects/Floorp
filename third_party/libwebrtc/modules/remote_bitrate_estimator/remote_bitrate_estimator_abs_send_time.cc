@@ -362,9 +362,8 @@ void RemoteBitrateEstimatorAbsSendTime::TimeoutStreams(Timestamp now) {
   if (ssrcs_.empty()) {
     // We can't update the estimate if we don't have any active streams.
     inter_arrival_ = std::make_unique<InterArrival>(
-        (kTimestampGroupLengthMs << kInterArrivalShift) / 1000, kTimestampToMs,
-        true);
-    estimator_ = std::make_unique<OveruseEstimator>(OverUseDetectorOptions());
+        (kTimestampGroupLengthMs << kInterArrivalShift) / 1000, kTimestampToMs);
+    estimator_ = std::make_unique<OveruseEstimator>();
     // We deliberately don't reset the first_packet_time_ms_ here for now since
     // we only probe for bandwidth in the beginning of a call right now.
   }

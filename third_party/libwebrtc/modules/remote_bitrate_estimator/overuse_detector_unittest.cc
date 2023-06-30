@@ -35,8 +35,7 @@ class OveruseDetectorTest : public ::testing::Test {
         receive_time_ms_(0),
         rtp_timestamp_(10 * 90),
         overuse_detector_(),
-        overuse_estimator_(new OveruseEstimator(options_)),
-        inter_arrival_(new InterArrival(5 * 90, kRtpTimestampToMs, true)),
+        inter_arrival_(5 * 90, kRtpTimestampToMs),
         random_(123456789) {}
 
  protected:
@@ -99,15 +98,15 @@ class OveruseDetectorTest : public ::testing::Test {
     uint32_t timestamp_delta;
     int64_t time_delta;
     int size_delta;
-    if (inter_arrival_->ComputeDeltas(
+    if (inter_arrival_.ComputeDeltas(
             rtp_timestamp, receive_time_ms, receive_time_ms, packet_size,
             &timestamp_delta, &time_delta, &size_delta)) {
       double timestamp_delta_ms = timestamp_delta / 90.0;
-      overuse_estimator_->Update(time_delta, timestamp_delta_ms, size_delta,
-                                 overuse_detector_->State(), receive_time_ms);
-      overuse_detector_->Detect(
-          overuse_estimator_->offset(), timestamp_delta_ms,
-          overuse_estimator_->num_of_deltas(), receive_time_ms);
+      overuse_estimator_.Update(time_delta, timestamp_delta_ms, size_delta,
+                                overuse_detector_->State(), receive_time_ms);
+      overuse_detector_->Detect(overuse_estimator_.offset(), timestamp_delta_ms,
+                                overuse_estimator_.num_of_deltas(),
+                                receive_time_ms);
     }
   }
 
@@ -115,10 +114,9 @@ class OveruseDetectorTest : public ::testing::Test {
   int64_t now_ms_;
   int64_t receive_time_ms_;
   uint32_t rtp_timestamp_;
-  OverUseDetectorOptions options_;
   std::unique_ptr<OveruseDetector> overuse_detector_;
-  std::unique_ptr<OveruseEstimator> overuse_estimator_;
-  std::unique_ptr<InterArrival> inter_arrival_;
+  OveruseEstimator overuse_estimator_;
+  InterArrival inter_arrival_;
   Random random_;
 };
 
