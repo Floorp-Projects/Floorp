@@ -87,7 +87,7 @@ class SearchTest {
         homeScreen {
         }.openSearch {
             verifySearchView()
-            verifyBrowserToolbar()
+            verifySearchToolbar(true)
             verifyScanButton()
             verifySearchEngineButton()
         }

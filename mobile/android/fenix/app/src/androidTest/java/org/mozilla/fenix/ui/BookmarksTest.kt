@@ -4,8 +4,9 @@
 
 package org.mozilla.fenix.ui
 
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
-import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.UiDevice
 import kotlinx.coroutines.runBlocking
@@ -33,7 +34,6 @@ import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import org.mozilla.fenix.ui.robots.searchScreen
 
 /**
  *  Tests for verifying basic functionality of bookmarks
@@ -47,16 +47,19 @@ class BookmarksTest {
         var url: String = "https://www.example.com"
     }
 
-    @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
+    @get:Rule(order = 0)
+    val activityTestRule =
+        AndroidComposeTestRule(
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(isUnifiedSearchEnabled = true),
+        ) { it.activity }
 
-    @Rule
+    @Rule(order = 1)
     @JvmField
     val retryTestRule = RetryTestRule(3)
 
     @Before
     fun setUp() {
-        mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        mDevice = UiDevice.getInstance(getInstrumentation())
         mockWebServer = MockWebServer().apply {
             dispatcher = AndroidAssetDispatcher()
             start()
@@ -233,7 +236,7 @@ class BookmarksTest {
             registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 2),
             ) {}
-        }.openThreeDotMenu(defaultWebPage.url) {
+        }.openThreeDotMenu(defaultWebPage.title) {
         }.clickCopy {
             verifyCopySnackBarText()
             navigateUp()
@@ -259,7 +262,7 @@ class BookmarksTest {
             registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 2),
             ) {}
-        }.openThreeDotMenu(defaultWebPage.url) {
+        }.openThreeDotMenu(defaultWebPage.title) {
         }.clickShare {
             verifyShareOverlay()
             verifyShareBookmarkFavicon()
@@ -279,7 +282,7 @@ class BookmarksTest {
             registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 2),
             ) {}
-        }.openThreeDotMenu(defaultWebPage.url) {
+        }.openThreeDotMenu(defaultWebPage.title) {
         }.clickOpenInNewTab {
             verifyTabTrayIsOpened()
             verifyNormalModeSelected()
@@ -374,7 +377,7 @@ class BookmarksTest {
             registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 2),
             ) {}
-        }.openThreeDotMenu(defaultWebPage.url) {
+        }.openThreeDotMenu(defaultWebPage.title) {
         }.clickOpenInPrivateTab {
             verifyTabTrayIsOpened()
             verifyPrivateModeSelected()
@@ -393,7 +396,7 @@ class BookmarksTest {
             registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 2),
             ) {}
-        }.openThreeDotMenu(defaultWebPage.url) {
+        }.openThreeDotMenu(defaultWebPage.title) {
         }.clickDelete {
             verifyDeleteSnackBarText()
             verifyUndoDeleteSnackBarButton()
@@ -412,7 +415,7 @@ class BookmarksTest {
             registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 2),
             ) {}
-        }.openThreeDotMenu(defaultWebPage.url) {
+        }.openThreeDotMenu(defaultWebPage.title) {
         }.clickDelete {
             verifyUndoDeleteSnackBarButton()
             clickUndoDeleteButton()
@@ -706,7 +709,7 @@ class BookmarksTest {
             registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 2),
             ) {}
-        }.openThreeDotMenu(defaultWebPage.url) {
+        }.openThreeDotMenu(defaultWebPage.title) {
         }.clickEdit {
             clickDeleteInEditModeButton()
             cancelDeletion()
@@ -750,11 +753,17 @@ class BookmarksTest {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
         }.openBookmarks {
-            clickSearchButton()
-            verifyBookmarksSearchBar(true)
-            verifyBookmarksSearchBarPosition(true)
-            clickOutsideTheSearchBar()
-            verifyBookmarksSearchBar(false)
+        }.clickSearchButton {
+            verifySearchView()
+            verifySearchToolbar(true)
+            verifySearchSelectorButton()
+            verifySearchEngineIcon("Bookmarks")
+            verifySearchBarPlaceholder("Search bookmarks")
+            verifySearchBarPosition(true)
+            tapOutsideToDismissSearchBar()
+            verifySearchToolbar(false)
+        }
+        bookmarksMenu {
         }.goBackToBrowserScreen {
         }.openThreeDotMenu {
         }.openSettings {
@@ -767,11 +776,12 @@ class BookmarksTest {
         browserScreen {
         }.openThreeDotMenu {
         }.openBookmarks {
-            clickSearchButton()
-            verifyBookmarksSearchBar(true)
-            verifyBookmarksSearchBarPosition(false)
-            dismissBookmarksSearchBarUsingBackButton()
-            verifyBookmarksSearchBar(false)
+        }.clickSearchButton {
+            verifySearchToolbar(true)
+            verifySearchEngineIcon("Bookmarks")
+            verifySearchBarPosition(false)
+            pressBack()
+            verifySearchToolbar(false)
         }
     }
 
@@ -793,15 +803,15 @@ class BookmarksTest {
             createBookmark(secondWebPage.url)
         }.openThreeDotMenu {
         }.openBookmarks {
-            clickSearchButton()
+        }.clickSearchButton {
             // Search for a valid term
-            searchBookmarkedItem(firstWebPage.title)
-            verifySearchedBookmarkExists(firstWebPage.url.toString(), true)
-            verifySearchedBookmarkExists(secondWebPage.url.toString(), false)
+            typeSearch(firstWebPage.title)
+            verifySearchEngineSuggestionResults(activityTestRule, firstWebPage.url.toString())
+            verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
             // Search for invalid term
-            searchBookmarkedItem("Android")
-            verifySearchedBookmarkExists(firstWebPage.url.toString(), false)
-            verifySearchedBookmarkExists(secondWebPage.url.toString(), false)
+            typeSearch("Android")
+            verifyNoSuggestionsAreDisplayed(activityTestRule, firstWebPage.url.toString())
+            verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
         }
     }
 
@@ -813,10 +823,9 @@ class BookmarksTest {
             createBookmark(defaultWebPage.url)
         }.openThreeDotMenu {
         }.openBookmarks {
-            clickSearchButton()
-            verifyBookmarksSearchBar(true)
-        }
-        searchScreen {
+        }.clickSearchButton {
+            verifySearchToolbar(true)
+            verifySearchEngineIcon("Bookmarks")
             startVoiceSearch()
         }
     }
@@ -833,24 +842,28 @@ class BookmarksTest {
             createBookmark(thirdWebPage.url)
         }.openThreeDotMenu {
         }.openBookmarks {
-        }.openThreeDotMenu(firstWebPage.url) {
+        }.openThreeDotMenu(firstWebPage.title) {
         }.clickDelete {
             verifyBookmarkIsDeleted(firstWebPage.title)
-        }.openThreeDotMenu(secondWebPage.url) {
+        }.openThreeDotMenu(secondWebPage.title) {
         }.clickDelete {
             verifyBookmarkIsDeleted(secondWebPage.title)
-            clickSearchButton()
-            searchBookmarkedItem("generic")
-            verifySearchedBookmarkExists(firstWebPage.url.toString(), false)
-            verifySearchedBookmarkExists(secondWebPage.url.toString(), false)
-            verifySearchedBookmarkExists(thirdWebPage.url.toString(), true)
-            dismissBookmarksSearchBar()
-        }.openThreeDotMenu(thirdWebPage.url) {
+        }.clickSearchButton {
+            // Search for a valid term
+            typeSearch("generic")
+            verifyNoSuggestionsAreDisplayed(activityTestRule, firstWebPage.url.toString())
+            verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
+            verifySearchEngineSuggestionResults(activityTestRule, thirdWebPage.url.toString())
+            pressBack()
+        }
+        bookmarksMenu {
+        }.openThreeDotMenu(thirdWebPage.title) {
         }.clickDelete {
             verifyBookmarkIsDeleted(thirdWebPage.title)
-            clickSearchButton()
-            searchBookmarkedItem("generic")
-            verifySearchedBookmarkExists(thirdWebPage.url.toString(), false)
+        }.clickSearchButton {
+            // Search for a valid term
+            typeSearch("generic")
+            verifyNoSuggestionsAreDisplayed(activityTestRule, thirdWebPage.url.toString())
         }
     }
 }

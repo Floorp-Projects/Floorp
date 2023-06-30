@@ -19,6 +19,7 @@ import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.closeSoftKeyboard
+import androidx.test.espresso.assertion.PositionAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
@@ -38,6 +39,8 @@ import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.SPEECH_RECOGNITION
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
@@ -55,8 +58,19 @@ import org.mozilla.fenix.helpers.click
  * Implementation of Robot Pattern for the search fragment.
  */
 class SearchRobot {
-    fun verifySearchView() = assertSearchView()
-    fun verifyBrowserToolbar() = assertBrowserToolbarEditView()
+    fun verifySearchView() =
+        assertTrue(
+            mDevice.findObject(
+                UiSelector().resourceId("$packageName:id/search_wrapper"),
+            ).waitForExists(waitingTime),
+        )
+
+    fun verifySearchToolbar(isDisplayed: Boolean) =
+        assertItemWithResIdExists(
+            itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view"),
+            exists = isDisplayed,
+        )
+
     fun verifyScanButton() = assertScanButton()
 
     fun verifyVoiceSearchButtonVisibility(enabled: Boolean) {
@@ -127,9 +141,9 @@ class SearchRobot {
     fun verifyNoSuggestionsAreDisplayed(rule: ComposeTestRule, vararg searchSuggestions: String) {
         rule.waitForIdle()
         for (searchSuggestion in searchSuggestions) {
-            assertFalse(
+            assertTrue(
                 mDevice.findObject(UiSelector().textContains(searchSuggestion))
-                    .waitForExists(waitingTimeShort),
+                    .waitUntilGone(waitingTimeShort),
             )
         }
     }
@@ -180,9 +194,21 @@ class SearchRobot {
 
     fun verifyKeyboardVisibility() = assertKeyboardVisibility(isExpectedToBeVisible = true)
     fun verifySearchEngineList(rule: ComposeTestRule) = rule.assertSearchEngineList()
-    fun verifySearchEngineIcon(expectedText: String) {
-        onView(withContentDescription(expectedText))
+
+    fun verifySearchSelectorButton() {
+        assertTrue(itemWithResId("$packageName:id/search_selector").waitForExists(waitingTime))
     }
+
+    fun verifySearchEngineIcon(name: String) =
+        assertTrue(itemWithDescription(name).waitForExists(waitingTime))
+
+    fun verifySearchBarPlaceholder(text: String) {
+        assertTrue(
+            itemWithResIdAndText("$packageName:id/mozac_browser_toolbar_edit_url_view", text)
+                .waitForExists(waitingTime),
+        )
+    }
+
     fun verifyDefaultSearchEngine(expectedText: String) = assertDefaultSearchEngine(expectedText)
 
     fun verifyEnginesListShortcutContains(rule: ComposeTestRule, searchEngineName: String) = assertEngineListShortcutContains(rule, searchEngineName)
@@ -249,6 +275,12 @@ class SearchRobot {
         clearButton().click()
     }
 
+    fun tapOutsideToDismissSearchBar() {
+        itemWithResId("$packageName:id/search_wrapper").click()
+        itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view")
+            .waitUntilGone(waitingTime)
+    }
+
     fun longClickToolbar() {
         mDevice.waitForWindowUpdate(packageName, waitingTime)
         mDevice.findObject(UiSelector().resourceId("$packageName:id/awesomeBar"))
@@ -307,6 +339,17 @@ class SearchRobot {
                 withId(R.id.mozac_browser_toolbar_edit_url_view),
             ),
         ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
+
+    fun verifySearchBarPosition(bottomPosition: Boolean) {
+        onView(withId(R.id.toolbar))
+            .check(
+                if (bottomPosition) {
+                    PositionAssertions.isCompletelyBelow(withId(R.id.pill_wrapper_divider))
+                } else {
+                    PositionAssertions.isCompletelyAbove(withId(R.id.pill_wrapper_divider))
+                },
+            )
     }
 
     class Transition {
@@ -403,20 +446,6 @@ private fun assertSearchEnginePrompt(rule: ComposeTestRule, searchEngineName: St
         getStringResource(R.string.search_engine_suggestions_description),
     ).assertIsDisplayed()
 }
-
-private fun assertSearchView() =
-    assertTrue(
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/search_wrapper"),
-        ).waitForExists(waitingTime),
-    )
-
-private fun assertBrowserToolbarEditView() =
-    assertTrue(
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_edit_url_view"),
-        ).waitForExists(waitingTime),
-    )
 
 private fun assertScanButton() =
     assertTrue(

@@ -5,7 +5,9 @@
 package org.mozilla.fenix.ui
 
 import android.content.Context
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import kotlinx.coroutines.runBlocking
@@ -31,7 +33,6 @@ import org.mozilla.fenix.ui.robots.historyMenu
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
 import org.mozilla.fenix.ui.robots.navigationToolbar
-import org.mozilla.fenix.ui.robots.searchScreen
 
 /**
  *  Tests for verifying basic functionality of history
@@ -42,7 +43,10 @@ class HistoryTest {
     private lateinit var mDevice: UiDevice
 
     @get:Rule
-    val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
+    val activityTestRule =
+        AndroidComposeTestRule(
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(isUnifiedSearchEnabled = true),
+        ) { it.activity }
 
     @Before
     fun setUp() {
@@ -341,12 +345,18 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
         }.openHistory {
-            clickSearchButton()
-            verifyHistorySearchBar(true)
-            verifyHistorySearchBarPosition(true)
+        }.clickSearchButton {
+            verifySearchView()
+            verifySearchToolbar(true)
+            verifySearchSelectorButton()
+            verifySearchEngineIcon("history")
+            verifySearchBarPlaceholder("Search history")
+            verifySearchBarPosition(true)
             tapOutsideToDismissSearchBar()
-            verifyHistorySearchBar(false)
-        }.goBack {
+            verifySearchToolbar(false)
+            exitMenu()
+        }
+        homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
         }.openCustomizeSubMenu {
@@ -358,11 +368,14 @@ class HistoryTest {
         browserScreen {
         }.openThreeDotMenu {
         }.openHistory {
-            clickSearchButton()
-            verifyHistorySearchBar(true)
-            verifyHistorySearchBarPosition(false)
-            dismissHistorySearchBarUsingBackButton()
-            verifyHistorySearchBar(false)
+        }.clickSearchButton {
+            verifySearchView()
+            verifySearchToolbar(true)
+            verifySearchBarPosition(false)
+            pressBack()
+        }
+        historyMenu {
+            verifyHistoryMenuView()
         }
     }
 
@@ -371,10 +384,9 @@ class HistoryTest {
         homeScreen {
         }.openThreeDotMenu {
         }.openHistory {
-            clickSearchButton()
-            verifyHistorySearchBar(true)
-        }
-        searchScreen {
+        }.clickSearchButton {
+            verifySearchToolbar(true)
+            verifySearchEngineIcon("history")
             startVoiceSearch()
         }
     }
@@ -391,15 +403,16 @@ class HistoryTest {
         }.enterURLAndEnterToBrowser(secondWebPage.url) {
         }.openThreeDotMenu {
         }.openHistory {
-            clickSearchButton()
+        }.clickSearchButton {
             // Search for a valid term
-            searchForHistoryItem(firstWebPage.title)
-            verifySearchedHistoryItemExists(firstWebPage.url.toString(), true)
-            verifySearchedHistoryItemExists(secondWebPage.url.toString(), false)
+            typeSearch(firstWebPage.title)
+            verifySearchEngineSuggestionResults(activityTestRule, firstWebPage.url.toString())
+            verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
+            clickClearButton()
             // Search for invalid term
-            searchForHistoryItem("Android")
-            verifySearchedHistoryItemExists(firstWebPage.url.toString(), false)
-            verifySearchedHistoryItemExists(secondWebPage.url.toString(), false)
+            typeSearch("Android")
+            verifyNoSuggestionsAreDisplayed(activityTestRule, firstWebPage.url.toString())
+            verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
         }
     }
 
@@ -411,12 +424,15 @@ class HistoryTest {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            verifyPageContent(firstWebPage.content)
         }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(secondWebPage.url) {
+            verifyPageContent(secondWebPage.content)
         }
         navigationToolbar {
         }.enterURLAndEnterToBrowser(thirdWebPage.url) {
+            verifyPageContent(thirdWebPage.content)
         }.openThreeDotMenu {
         }.openHistory {
             verifyHistoryListExists()
@@ -424,17 +440,21 @@ class HistoryTest {
             verifyHistoryItemExists(false, firstWebPage.title)
             clickDeleteHistoryButton(secondWebPage.title)
             verifyHistoryItemExists(false, secondWebPage.title)
-            clickSearchButton()
-            searchForHistoryItem("generic")
-            verifySearchedHistoryItemExists(firstWebPage.url.toString(), false)
-            verifySearchedHistoryItemExists(secondWebPage.url.toString(), false)
-            verifySearchedHistoryItemExists(thirdWebPage.url.toString(), true)
-            dismissHistorySearchBarUsingBackButton()
+        }.clickSearchButton {
+            // Search for a valid term
+            typeSearch("generic")
+            verifyNoSuggestionsAreDisplayed(activityTestRule, firstWebPage.url.toString())
+            verifyNoSuggestionsAreDisplayed(activityTestRule, secondWebPage.url.toString())
+            verifySearchEngineSuggestionResults(activityTestRule, thirdWebPage.url.toString())
+            pressBack()
+        }
+        historyMenu {
             clickDeleteHistoryButton(thirdWebPage.title)
             verifyHistoryItemExists(false, firstWebPage.title)
-            clickSearchButton()
-            searchForHistoryItem("generic")
-            verifySearchedHistoryItemExists(thirdWebPage.url.toString(), false)
+        }.clickSearchButton {
+            // Search for a valid term
+            typeSearch("generic")
+            verifyNoSuggestionsAreDisplayed(activityTestRule, thirdWebPage.url.toString())
         }
     }
 }

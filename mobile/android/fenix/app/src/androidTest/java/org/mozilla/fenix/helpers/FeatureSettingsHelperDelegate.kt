@@ -17,7 +17,7 @@ import org.mozilla.fenix.utils.Settings
 /**
  * Helper for querying the status and modifying various features and settings in the application.
  */
-class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
+class FeatureSettingsHelperDelegate() : FeatureSettingsHelper {
     /**
      * The current feature flags used inside the app before the tests start.
      * These will be restored when the tests end.
@@ -56,6 +56,8 @@ class FeatureSettingsHelperDelegate : FeatureSettingsHelper {
                 false -> 0
             }
         }
+
+    override var isUnifiedSearchEnabled: Boolean by updatedFeatureFlags::isUnifiedSearchEnabled
     override var isPocketEnabled: Boolean by updatedFeatureFlags::isPocketEnabled
     override var isJumpBackInCFREnabled: Boolean by updatedFeatureFlags::isJumpBackInCFREnabled
     override var isWallpaperOnboardingEnabled: Boolean by updatedFeatureFlags::isWallpaperOnboardingEnabled
@@ -107,7 +109,7 @@ private data class FeatureFlags(
     var isRecentlyVisitedFeatureEnabled: Boolean,
     var isPWAsPromptEnabled: Boolean,
     var isTCPCFREnabled: Boolean,
-    val isUnifiedSearchEnabled: Boolean,
+    var isUnifiedSearchEnabled: Boolean,
     var isWallpaperOnboardingEnabled: Boolean,
     var isDeleteSitePermissionsEnabled: Boolean,
     var isCookieBannerReductionDialogEnabled: Boolean,

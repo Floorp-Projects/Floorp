@@ -6,7 +6,6 @@ package org.mozilla.fenix.ui.robots
 
 import android.net.Uri
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.assertion.PositionAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers
@@ -27,11 +26,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
-import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -127,42 +122,6 @@ class HistoryRobot {
         }
     }
 
-    fun clickSearchButton() = itemWithResId("$packageName:id/history_search").click()
-
-    fun verifyHistorySearchBar(exists: Boolean) {
-        assertItemWithResIdExists(
-            itemWithResId("$packageName:id/toolbar"),
-            itemWithResId("$packageName:id/mozac_browser_toolbar_edit_icon"),
-            exists = exists,
-        )
-        assertItemWithResIdAndTextExists(
-            itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view"),
-            itemContainingText(getStringResource(R.string.history_search_1)),
-            exists = exists,
-        )
-        assertItemWithDescriptionExists(
-            itemWithDescription(getStringResource(R.string.voice_search_content_description)),
-            exists = exists,
-        )
-    }
-
-    fun verifyHistorySearchBarPosition(defaultPosition: Boolean) {
-        onView(withId(R.id.toolbar))
-            .check(
-                if (defaultPosition) {
-                    PositionAssertions.isCompletelyBelow(withId(R.id.pill_wrapper_divider))
-                } else {
-                    PositionAssertions.isCompletelyAbove(withId(R.id.pill_wrapper_divider))
-                },
-            )
-    }
-
-    fun tapOutsideToDismissSearchBar() {
-        itemWithResId("$packageName:id/search_wrapper").click()
-        itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view")
-            .waitUntilGone(waitingTime)
-    }
-
     fun dismissHistorySearchBarUsingBackButton() {
         for (i in 1..Constants.RETRY_COUNT) {
             try {
@@ -215,6 +174,13 @@ class HistoryRobot {
 
             RecentlyClosedTabsRobot().interact()
             return RecentlyClosedTabsRobot.Transition()
+        }
+
+        fun clickSearchButton(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
+            itemWithResId("$packageName:id/history_search").click()
+
+            SearchRobot().interact()
+            return SearchRobot.Transition()
         }
     }
 }
