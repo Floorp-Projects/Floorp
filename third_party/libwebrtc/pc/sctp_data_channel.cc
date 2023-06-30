@@ -192,13 +192,13 @@ SctpDataChannel::SctpDataChannel(
   RTC_DCHECK(config.IsValid());
 
   switch (config.open_handshake_role) {
-    case webrtc::InternalDataChannelInit::kNone:  // pre-negotiated
+    case InternalDataChannelInit::kNone:  // pre-negotiated
       handshake_state_ = kHandshakeReady;
       break;
-    case webrtc::InternalDataChannelInit::kOpener:
+    case InternalDataChannelInit::kOpener:
       handshake_state_ = kHandshakeShouldSendOpen;
       break;
-    case webrtc::InternalDataChannelInit::kAcker:
+    case InternalDataChannelInit::kAcker:
       handshake_state_ = kHandshakeShouldSendAck;
       break;
   }
@@ -426,37 +426,36 @@ DataChannelStats SctpDataChannel::GetStats() const {
   return stats;
 }
 
-void SctpDataChannel::OnDataReceived(const cricket::ReceiveDataParams& params,
+void SctpDataChannel::OnDataReceived(DataMessageType type,
                                      const rtc::CopyOnWriteBuffer& payload) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK_EQ(id_.stream_id_int(), params.sid);
 
-  if (params.type == DataMessageType::kControl) {
+  if (type == DataMessageType::kControl) {
     if (handshake_state_ != kHandshakeWaitingForAck) {
       // Ignore it if we are not expecting an ACK message.
       RTC_LOG(LS_WARNING)
           << "DataChannel received unexpected CONTROL message, sid = "
-          << params.sid;
+          << id_.stream_id_int();
       return;
     }
     if (ParseDataChannelOpenAckMessage(payload)) {
       // We can send unordered as soon as we receive the ACK message.
       handshake_state_ = kHandshakeReady;
       RTC_LOG(LS_INFO) << "DataChannel received OPEN_ACK message, sid = "
-                       << params.sid;
+                       << id_.stream_id_int();
     } else {
       RTC_LOG(LS_WARNING)
           << "DataChannel failed to parse OPEN_ACK message, sid = "
-          << params.sid;
+          << id_.stream_id_int();
     }
     return;
   }
 
-  RTC_DCHECK(params.type == DataMessageType::kBinary ||
-             params.type == DataMessageType::kText);
+  RTC_DCHECK(type == DataMessageType::kBinary ||
+             type == DataMessageType::kText);
 
   RTC_LOG(LS_VERBOSE) << "DataChannel received DATA message, sid = "
-                      << params.sid;
+                      << id_.stream_id_int();
   // We can send unordered as soon as we receive any DATA message since the
   // remote side must have received the OPEN (and old clients do not send
   // OPEN_ACK).
@@ -464,7 +463,7 @@ void SctpDataChannel::OnDataReceived(const cricket::ReceiveDataParams& params,
     handshake_state_ = kHandshakeReady;
   }
 
-  bool binary = (params.type == webrtc::DataMessageType::kBinary);
+  bool binary = (type == DataMessageType::kBinary);
   auto buffer = std::make_unique<DataBuffer>(payload, binary);
   if (state_ == kOpen && observer_) {
     ++messages_received_;
