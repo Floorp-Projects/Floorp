@@ -2494,6 +2494,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base/third_party/base64",
       "../rtc_base/third_party/sigslot",
       "../system_wrappers:metrics",
+      "../test:field_trial",
       "../test:run_loop",
       "../test:scoped_key_value_config",
       "../test/pc/sctp:fake_sctp_transport",
