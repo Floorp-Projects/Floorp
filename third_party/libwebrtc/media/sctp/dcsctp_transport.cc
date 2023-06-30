@@ -463,8 +463,6 @@ void DcSctpTransport::OnMessageReceived(dcsctp::DcSctpMessage message) {
                         << " on an SCTP packet. Dropping.";
   }
   receive_data_params.type = *type;
-  // No seq_num available from dcSCTP
-  receive_data_params.seq_num = 0;
   receive_buffer_.Clear();
   if (!IsEmptyPPID(message.ppid()))
     receive_buffer_.AppendData(message.payload().data(),
