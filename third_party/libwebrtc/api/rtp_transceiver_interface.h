@@ -153,45 +153,20 @@ class RTC_EXPORT RtpTransceiverInterface : public rtc::RefCountInterface {
   // with SetHeaderExtensionsToNegotiate, or a default set if it has not been
   // called.
   // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
-  // TODO(crbug.com/1051821): remove old name after Chromium roll, make pure
-  // virtual again.
   virtual std::vector<RtpHeaderExtensionCapability>
-  GetHeaderExtensionsToNegotiate() const {
-    return {};
-  }
-  virtual std::vector<RtpHeaderExtensionCapability> HeaderExtensionsToOffer()
-      const {
-    return GetHeaderExtensionsToNegotiate();
-  }
+  GetHeaderExtensionsToNegotiate() const = 0;
 
   // Returns either the empty set if negotation has not yet
   // happened, or a vector of the negotiated header extensions.
   // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
-  // TODO(crbug.com/1051821): remove old name after Chromium roll, make pure
-  // virtual again.
   virtual std::vector<RtpHeaderExtensionCapability>
-  GetNegotiatedHeaderExtensions() const {
-    return {};
-  }
-  virtual std::vector<RtpHeaderExtensionCapability> HeaderExtensionsNegotiated()
-      const {
-    return GetNegotiatedHeaderExtensions();
-  }
+  GetNegotiatedHeaderExtensions() const = 0;
 
   // The SetHeaderExtensionsToNegotiate method modifies the next SDP negotiation
   // so that it negotiates use of header extensions which are not kStopped.
   // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
-  // TODO(crbug.com/1051821): remove old name after Chromium roll, make pure
-  // virtual again.
   virtual webrtc::RTCError SetHeaderExtensionsToNegotiate(
-      rtc::ArrayView<const RtpHeaderExtensionCapability> header_extensions) {
-    return RTCError::OK();
-  }
-  virtual webrtc::RTCError SetOfferedRtpHeaderExtensions(
-      rtc::ArrayView<const RtpHeaderExtensionCapability>
-          header_extensions_to_offer) {
-    return SetHeaderExtensionsToNegotiate(header_extensions_to_offer);
-  }
+      rtc::ArrayView<const RtpHeaderExtensionCapability> header_extensions) = 0;
 
  protected:
   ~RtpTransceiverInterface() override = default;

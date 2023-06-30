@@ -745,7 +745,7 @@ bool IsMandatoryHeaderExtension(const std::string& uri) {
 
 RTCError RtpTransceiver::SetHeaderExtensionsToNegotiate(
     rtc::ArrayView<const RtpHeaderExtensionCapability> header_extensions) {
-  // https://w3c.github.io/webrtc-extensions/#methods
+  // https://w3c.github.io/webrtc-extensions/#dom-rtcrtptransceiver-setheaderextensionstonegotiate
   if (header_extensions.size() != header_extensions_to_negotiate_.size()) {
     return RTCError(RTCErrorType::INVALID_MODIFICATION,
                     "Size of extensions to negotiate does not match.");
