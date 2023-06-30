@@ -146,6 +146,9 @@ int32_t VerifyCodecSettings(const VideoCodec& codec_settings) {
   if (codec_settings.maxFramerate < 1) {
     return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
   }
+  if (codec_settings.qpMax < kQpMin || codec_settings.qpMax > 63) {
+    return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+  }
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -440,6 +443,9 @@ bool LibaomAv1Encoder::SetSvcParams(
     svc_params.scaling_factor_num[sid] = svc_config.scaling_factor_num[sid];
     svc_params.scaling_factor_den[sid] = svc_config.scaling_factor_den[sid];
   }
+
+  // svc_params.layer_target_bitrate is set in SetRates() before svc_params is
+  // passed to SetEncoderControlParameters((AV1E_SET_SVC_PARAMS).
 
   return true;
 }
@@ -779,7 +785,7 @@ void LibaomAv1Encoder::SetRates(const RateControlParameters& parameters) {
       for (int tid = 0; tid < svc_params_->number_temporal_layers; ++tid) {
         int layer_index = sid * svc_params_->number_temporal_layers + tid;
         accumulated_bitrate_bps += parameters.bitrate.GetBitrate(sid, tid);
-        // `svc_params.layer_target_bitrate` expects bitrate in kbps.
+        // `svc_params_->layer_target_bitrate` expects bitrate in kbps.
         svc_params_->layer_target_bitrate[layer_index] =
             accumulated_bitrate_bps / 1000;
       }
