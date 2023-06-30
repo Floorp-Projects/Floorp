@@ -350,8 +350,7 @@ PeerConnectionTestWrapper::GetUserMedia(
 
     std::string videotrack_label = stream_id + kVideoTrackLabelBase;
     rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
-        peer_connection_factory_->CreateVideoTrack(videotrack_label,
-                                                   source.get()));
+        peer_connection_factory_->CreateVideoTrack(source, videotrack_label));
 
     stream->AddTrack(video_track);
   }

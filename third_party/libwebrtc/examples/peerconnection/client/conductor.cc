@@ -468,8 +468,7 @@ void Conductor::AddTracks() {
       CapturerTrackSource::Create();
   if (video_device) {
     rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track_(
-        peer_connection_factory_->CreateVideoTrack(kVideoLabel,
-                                                   video_device.get()));
+        peer_connection_factory_->CreateVideoTrack(video_device, kVideoLabel));
     main_wnd_->StartLocalRenderer(video_track_.get());
 
     result_or_error = peer_connection_->AddTrack(video_track_, {kStreamId});
