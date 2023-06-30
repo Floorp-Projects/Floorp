@@ -15,6 +15,7 @@
 #include "absl/memory/memory.h"
 #include "api/rtc_event_log/rtc_event.h"
 #include "api/rtc_event_log/rtc_event_log.h"
+#include "api/units/data_size.h"
 #include "logging/rtc_event_log/events/rtc_event_probe_cluster_created.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -92,15 +93,30 @@ void BitrateProber::CreateProbeCluster(
   cluster.pace_info.probe_cluster_id = cluster_config.id;
   clusters_.push(cluster);
 
-  RTC_LOG(LS_INFO) << "Probe cluster (bitrate:min bytes:min packets): ("
+  if (config_.min_packet_size.Get() > DataSize::Zero()) {
+    // If we are already probing, continue to do so. Otherwise set it to
+    // kInactive and wait for OnIncomingPacket with a large enough packet
+    // to start the probing.
+    if (probing_state_ != ProbingState::kActive) {
+      probing_state_ = ProbingState::kInactive;
+    }
+  } else {
+    // Probing is allowed to start without first sending a "large enough"
+    // packet.
+    if (probing_state_ == ProbingState::kInactive) {
+      // Send next probe right away.
+      next_probe_time_ = Timestamp::MinusInfinity();
+      probing_state_ = ProbingState::kActive;
+    }
+  }
+
+  RTC_LOG(LS_INFO) << "Probe cluster (bitrate_bps:min bytes:min packets): ("
                    << cluster.pace_info.send_bitrate_bps << ":"
                    << cluster.pace_info.probe_cluster_min_bytes << ":"
-                   << cluster.pace_info.probe_cluster_min_probes << ")";
-
-  // If we are already probing, continue to do so. Otherwise set it to
-  // kInactive and wait for OnIncomingPacket to start the probing.
-  if (probing_state_ != ProbingState::kActive)
-    probing_state_ = ProbingState::kInactive;
+                   << cluster.pace_info.probe_cluster_min_probes << ", "
+                   << (probing_state_ == ProbingState::kInactive ? "Inactive"
+                                                                 : "Active")
+                   << ")";
 }
 
 Timestamp BitrateProber::NextProbeTime(Timestamp now) const {
