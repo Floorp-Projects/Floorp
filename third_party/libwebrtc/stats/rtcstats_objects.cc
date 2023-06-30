@@ -456,7 +456,7 @@ RTCSentRtpStreamStats::~RTCSentRtpStreamStats() {}
 
 // clang-format off
 WEBRTC_RTCSTATS_IMPL(
-    RTCInboundRTPStreamStats, RTCReceivedRtpStreamStats, "inbound-rtp",
+    RTCInboundRtpStreamStats, RTCReceivedRtpStreamStats, "inbound-rtp",
     &track_identifier,
     &mid,
     &remote_id,
@@ -515,7 +515,7 @@ WEBRTC_RTCSTATS_IMPL(
     &min_playout_delay)
 // clang-format on
 
-RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string id,
+RTCInboundRtpStreamStats::RTCInboundRtpStreamStats(std::string id,
                                                    Timestamp timestamp)
     : RTCReceivedRtpStreamStats(std::move(id), timestamp),
       playout_id("playoutId"),
@@ -583,13 +583,13 @@ RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(std::string id,
       total_interruption_duration("totalInterruptionDuration"),
       min_playout_delay("minPlayoutDelay") {}
 
-RTCInboundRTPStreamStats::RTCInboundRTPStreamStats(
-    const RTCInboundRTPStreamStats& other) = default;
-RTCInboundRTPStreamStats::~RTCInboundRTPStreamStats() {}
+RTCInboundRtpStreamStats::RTCInboundRtpStreamStats(
+    const RTCInboundRtpStreamStats& other) = default;
+RTCInboundRtpStreamStats::~RTCInboundRtpStreamStats() {}
 
 // clang-format off
 WEBRTC_RTCSTATS_IMPL(
-    RTCOutboundRTPStreamStats, RTCSentRtpStreamStats, "outbound-rtp",
+    RTCOutboundRtpStreamStats, RTCSentRtpStreamStats, "outbound-rtp",
     &media_source_id,
     &remote_id,
     &mid,
@@ -622,7 +622,7 @@ WEBRTC_RTCSTATS_IMPL(
     &scalability_mode)
 // clang-format on
 
-RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(std::string id,
+RTCOutboundRtpStreamStats::RTCOutboundRtpStreamStats(std::string id,
                                                      Timestamp timestamp)
     : RTCSentRtpStreamStats(std::move(id), timestamp),
       media_source_id("mediaSourceId"),
@@ -657,10 +657,10 @@ RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(std::string id,
       power_efficient_encoder("powerEfficientEncoder"),
       scalability_mode("scalabilityMode") {}
 
-RTCOutboundRTPStreamStats::RTCOutboundRTPStreamStats(
-    const RTCOutboundRTPStreamStats& other) = default;
+RTCOutboundRtpStreamStats::RTCOutboundRtpStreamStats(
+    const RTCOutboundRtpStreamStats& other) = default;
 
-RTCOutboundRTPStreamStats::~RTCOutboundRTPStreamStats() {}
+RTCOutboundRtpStreamStats::~RTCOutboundRtpStreamStats() {}
 
 // clang-format off
 WEBRTC_RTCSTATS_IMPL(

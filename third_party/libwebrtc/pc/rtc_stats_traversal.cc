@@ -101,17 +101,17 @@ std::vector<const std::string*> GetStatsReferencedIds(const RTCStats& stats) {
     AddIdIfDefined(track.media_source_id, &neighbor_ids);
   } else if (type == RTCPeerConnectionStats::kType) {
     // RTCPeerConnectionStats does not have any neighbor references.
-  } else if (type == RTCInboundRTPStreamStats::kType) {
+  } else if (type == RTCInboundRtpStreamStats::kType) {
     const auto& inbound_rtp =
-        static_cast<const RTCInboundRTPStreamStats&>(stats);
+        static_cast<const RTCInboundRtpStreamStats&>(stats);
     AddIdIfDefined(inbound_rtp.remote_id, &neighbor_ids);
     AddIdIfDefined(inbound_rtp.track_id, &neighbor_ids);
     AddIdIfDefined(inbound_rtp.transport_id, &neighbor_ids);
     AddIdIfDefined(inbound_rtp.codec_id, &neighbor_ids);
     AddIdIfDefined(inbound_rtp.playout_id, &neighbor_ids);
-  } else if (type == RTCOutboundRTPStreamStats::kType) {
+  } else if (type == RTCOutboundRtpStreamStats::kType) {
     const auto& outbound_rtp =
-        static_cast<const RTCOutboundRTPStreamStats&>(stats);
+        static_cast<const RTCOutboundRtpStreamStats&>(stats);
     AddIdIfDefined(outbound_rtp.remote_id, &neighbor_ids);
     AddIdIfDefined(outbound_rtp.track_id, &neighbor_ids);
     AddIdIfDefined(outbound_rtp.transport_id, &neighbor_ids);

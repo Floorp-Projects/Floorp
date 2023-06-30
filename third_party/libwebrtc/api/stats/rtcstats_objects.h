@@ -406,14 +406,14 @@ class RTC_EXPORT RTCSentRtpStreamStats : public RTCRtpStreamStats {
 };
 
 // https://w3c.github.io/webrtc-stats/#inboundrtpstats-dict*
-class RTC_EXPORT RTCInboundRTPStreamStats final
+class RTC_EXPORT RTCInboundRtpStreamStats final
     : public RTCReceivedRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
 
-  RTCInboundRTPStreamStats(std::string id, Timestamp timestamp);
-  RTCInboundRTPStreamStats(const RTCInboundRTPStreamStats& other);
-  ~RTCInboundRTPStreamStats() override;
+  RTCInboundRtpStreamStats(std::string id, Timestamp timestamp);
+  RTCInboundRtpStreamStats(const RTCInboundRtpStreamStats& other);
+  ~RTCInboundRtpStreamStats() override;
 
   // TODO(https://crbug.com/webrtc/14174): Implement trackIdentifier and kind.
 
@@ -493,16 +493,18 @@ class RTC_EXPORT RTCInboundRTPStreamStats final
   // The former googMinPlayoutDelayMs (in seconds).
   RTCNonStandardStatsMember<double> min_playout_delay;
 };
+// TODO(bugs.webrtc.org/14973): remove name alias.
+using RTCInboundRTPStreamStats = RTCInboundRtpStreamStats;
 
 // https://w3c.github.io/webrtc-stats/#outboundrtpstats-dict*
-class RTC_EXPORT RTCOutboundRTPStreamStats final
+class RTC_EXPORT RTCOutboundRtpStreamStats final
     : public RTCSentRtpStreamStats {
  public:
   WEBRTC_RTCSTATS_DECL();
 
-  RTCOutboundRTPStreamStats(std::string id, Timestamp timestamp);
-  RTCOutboundRTPStreamStats(const RTCOutboundRTPStreamStats& other);
-  ~RTCOutboundRTPStreamStats() override;
+  RTCOutboundRtpStreamStats(std::string id, Timestamp timestamp);
+  RTCOutboundRtpStreamStats(const RTCOutboundRtpStreamStats& other);
+  ~RTCOutboundRtpStreamStats() override;
 
   RTCStatsMember<std::string> media_source_id;
   RTCStatsMember<std::string> remote_id;
@@ -544,6 +546,8 @@ class RTC_EXPORT RTCOutboundRTPStreamStats final
       power_efficient_encoder;
   RTCStatsMember<std::string> scalability_mode;
 };
+// TODO(bugs.webrtc.org/14973): remove name alias.
+using RTCOutboundRTPStreamStats = RTCOutboundRtpStreamStats;
 
 // https://w3c.github.io/webrtc-stats/#remoteinboundrtpstats-dict*
 class RTC_EXPORT RTCRemoteInboundRtpStreamStats final
