@@ -190,6 +190,7 @@ SctpDataChannel::SctpDataChannel(
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_UNUSED(network_thread_);
   RTC_DCHECK(config.IsValid());
+  RTC_DCHECK(controller_);
 
   switch (config.open_handshake_role) {
     case InternalDataChannelInit::kNone:  // pre-negotiated
