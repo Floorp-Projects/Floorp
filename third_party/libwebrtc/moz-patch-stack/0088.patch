@@ -1,48 +1,25 @@
-From: Jan Grulich <jgrulich@redhat.com>
-Date: Tue, 28 Mar 2023 14:41:00 +0000
-Subject: Bug 1823404 - PipeWire capturer: import DMABufs directly into desktop
- frame r=webrtc-reviewers,stransky,bwc
+From: Byron Campen <docfaraday@gmail.com>
+Date: Tue, 4 Apr 2023 16:34:00 -0500
+Subject: Bug 1822194 - (fix-3b51cd328e) - Add missing designated initializer
+ that gcc is sad about.
 
-Originally DMABufs were imported into a temporary buffer followed by a
-copy operation into the desktop frame itself. This is not needed as we
-can import them directly into desktop frames and avoid this overhead.
-
-Also drop support for MemPtr buffers as both Mutter and KWin don't seem
-to support them and they are going to be too slow anyway.
-
-Testing with latest Chromium, I could see two processes with usage
-around 20% and 40% without this change going down to 10% and 20% with
-this change applied.
-
-Also drop old DmaBuf support.
-
-Differential Revision: https://phabricator.services.mozilla.com/D173021
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/581fe5ce66f9f3c725f5345b3e57407d1ec1e312
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf19320c0804e9aee1a3eb4bf
 ---
- .../desktop_capture/linux/wayland/shared_screencast_stream.cc  | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ modules/audio_processing/audio_processing_impl.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-index 37de3a54ca..bcad5ab803 100644
---- a/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-+++ b/modules/desktop_capture/linux/wayland/shared_screencast_stream.cc
-@@ -39,7 +39,6 @@ constexpr int CursorMetaSize(int w, int h) {
-           w * h * kCursorBpp);
- }
- 
--constexpr PipeWireVersion kDmaBufMinVersion = {0, 3, 24};
- constexpr PipeWireVersion kDmaBufModifierMinVersion = {0, 3, 33};
- constexpr PipeWireVersion kDropSingleModifierMinVersion = {0, 3, 40};
- 
-@@ -296,7 +295,7 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
-       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
-   std::vector<const spa_pod*> params;
-   const int buffer_types =
--      has_modifier || (that->pw_server_version_ >= kDmaBufMinVersion)
-+      has_modifier
-           ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
-           : (1 << SPA_DATA_MemFd);
- 
+diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
+index c80cc76a3d..c304453388 100644
+--- a/modules/audio_processing/audio_processing_impl.cc
++++ b/modules/audio_processing/audio_processing_impl.cc
+@@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
+                   },
+               .adaptive_digital_controller =
+                   {
++                      .enabled = false,
+                       .headroom_db = static_cast<float>(headroom_db.Get()),
+                       .max_gain_db = static_cast<float>(max_gain_db.Get()),
+                       .initial_gain_db =
 -- 
 2.34.1
 
