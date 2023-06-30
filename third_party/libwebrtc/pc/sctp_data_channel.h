@@ -47,8 +47,6 @@ class SctpDataChannelControllerInterface {
                         cricket::SendDataResult* result) = 0;
   // Connects to the transport signals.
   virtual bool ConnectDataChannel(SctpDataChannel* data_channel) = 0;
-  // Disconnects from the transport signals.
-  virtual void DisconnectDataChannel(SctpDataChannel* data_channel) = 0;
   // Adds the data channel SID to the transport for SCTP.
   virtual void AddSctpDataStream(int sid) = 0;
   // Begins the closing procedure by sending an outgoing stream reset. Still

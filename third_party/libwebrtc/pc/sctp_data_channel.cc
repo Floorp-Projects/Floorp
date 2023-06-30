@@ -391,7 +391,6 @@ void SctpDataChannel::OnClosingProcedureComplete() {
   // all pending data and transitioned to kClosing already.
   RTC_DCHECK_EQ(state_, kClosing);
   RTC_DCHECK(queued_send_data_.Empty());
-
   SetState(kClosed);
 }
 
@@ -608,7 +607,6 @@ void SctpDataChannel::DisconnectFromTransport() {
   if (!connected_to_transport_ || !controller_)
     return;
 
-  controller_->DisconnectDataChannel(this);
   connected_to_transport_ = false;
 }
 
