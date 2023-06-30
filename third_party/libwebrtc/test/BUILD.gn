@@ -503,7 +503,7 @@ rtc_library("video_test_support") {
 }
 
 if (rtc_include_tests) {
-  if (enable_google_benchmarks && rtc_enable_google_benchmarks) {
+  if (rtc_enable_google_benchmarks) {
     rtc_library("benchmark_main") {
       testonly = true
       sources = [ "benchmark_main.cc" ]

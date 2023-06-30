@@ -73,8 +73,7 @@ rtc_library("yield_policy") {
   ]
 }
 
-if (rtc_include_tests && enable_google_benchmarks &&
-    rtc_enable_google_benchmarks) {
+if (rtc_include_tests && rtc_enable_google_benchmarks) {
   rtc_library("synchronization_unittests") {
     testonly = true
     sources = [
