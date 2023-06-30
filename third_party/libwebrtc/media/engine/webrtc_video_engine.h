@@ -16,6 +16,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/types/optional.h"
@@ -184,6 +185,11 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   absl::optional<int> GetBaseMinimumPlayoutDelayMs(
       uint32_t ssrc) const override;
 
+  void SetSendCodecChangedCallback(
+      absl::AnyInvocable<void()> callback) override {
+    send_codec_changed_callback_ = std::move(callback);
+  }
+
   // Implemented for VideoMediaChannelTest.
   bool sending() const {
     RTC_DCHECK_RUN_ON(&thread_checker_);
@@ -230,6 +236,39 @@ class WebRtcVideoChannel : public VideoMediaChannel,
       uint32_t ssrc,
       rtc::scoped_refptr<webrtc::FrameTransformerInterface> frame_transformer)
       override;
+
+  // Information queries to support SetReceiverFeedbackParameters
+  webrtc::RtcpMode SendCodecRtcpMode() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    return send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
+                                          : webrtc::RtcpMode::kCompound;
+  }
+
+  bool SendCodecHasLntf() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    if (!send_codec_) {
+      return false;
+    }
+    return HasLntf(send_codec_->codec);
+  }
+  bool SendCodecHasNack() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    if (!send_codec_) {
+      return false;
+    }
+    return HasNack(send_codec_->codec);
+  }
+  absl::optional<int> SendCodecRtxTime() const override {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    if (!send_codec_) {
+      return absl::nullopt;
+    }
+    return send_codec_->rtx_time;
+  }
+  void SetReceiverFeedbackParameters(bool lntf_enabled,
+                                     bool nack_enabled,
+                                     webrtc::RtcpMode rtcp_mode,
+                                     absl::optional<int> rtx_time) override;
 
  private:
   class WebRtcVideoReceiveStream;
@@ -663,6 +702,10 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   // of multiple negotiated codecs allows generic encoder fallback on failures.
   // Presence of EncoderSelector allows switching to specific encoders.
   bool allow_codec_switching_ = false;
+
+  // Callback invoked whenever the send codec changes.
+  // TODO(bugs.webrtc.org/13931): Remove again when coupling isn't needed.
+  absl::AnyInvocable<void()> send_codec_changed_callback_;
 };
 
 }  // namespace cricket
