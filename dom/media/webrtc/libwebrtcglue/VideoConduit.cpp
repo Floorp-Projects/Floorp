@@ -34,7 +34,7 @@
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_codec.h"
 #include "media/base/media_constants.h"
-#include "media/engine/encoder_simulcast_proxy.h"
+#include "media/engine/simulcast_encoder_adapter.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
