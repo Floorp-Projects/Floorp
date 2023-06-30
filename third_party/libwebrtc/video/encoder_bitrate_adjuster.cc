@@ -52,7 +52,7 @@ EncoderBitrateAdjuster::EncoderBitrateAdjuster(const VideoCodec& codec_settings)
   // SVC streams, EncoderBitrateAdjuster needs to be updated to care about both
   // `simulcastStream` and `spatialLayers` at the same time.
   if (codec_settings.codecType == VideoCodecType::kVideoCodecVP9 &&
-      codec_settings.numberOfSimulcastStreams <= 1) {
+      codec_settings.IsSinglecastOrAllNonFirstLayersInactive()) {
     for (size_t si = 0; si < codec_settings.VP9().numberOfSpatialLayers; ++si) {
       if (codec_settings.spatialLayers[si].active) {
         min_bitrates_bps_[si] =

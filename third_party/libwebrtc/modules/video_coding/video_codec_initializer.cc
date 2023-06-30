@@ -211,8 +211,11 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
       break;
     }
     case kVideoCodecVP9: {
-      // Force the first stream to always be active.
-      video_codec.simulcastStream[0].active = codec_active;
+      // When the SvcRateAllocator is used, "active" is controlled by
+      // `SpatialLayer::active` instead.
+      if (video_codec.IsSinglecastOrAllNonFirstLayersInactive()) {
+        video_codec.simulcastStream[0].active = codec_active;
+      }
 
       if (!config.encoder_specific_settings) {
         *video_codec.VP9() = VideoEncoder::GetDefaultVp9Settings();
