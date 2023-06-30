@@ -285,23 +285,6 @@ else:
         "nsURLHelperUnix.cpp",
     ]
 
-# nsINetworkInfoService support.
-if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
-    SOURCES += [
-        "NetworkInfoServiceWindows.cpp",
-        "nsNetworkInfoService.cpp",
-    ]
-elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    SOURCES += [
-        "NetworkInfoServiceCocoa.cpp",
-        "nsNetworkInfoService.cpp",
-    ]
-elif CONFIG["OS_ARCH"] == "Linux":
-    SOURCES += [
-        "NetworkInfoServiceLinux.cpp",
-        "nsNetworkInfoService.cpp",
-    ]
-
 EXTRA_JS_MODULES += [
     "NetUtil.sys.mjs",
 ]
