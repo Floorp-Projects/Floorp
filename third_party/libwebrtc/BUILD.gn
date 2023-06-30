@@ -560,7 +560,7 @@ if (!build_with_chromium) {
       deps += [
         "api/video_codecs:video_codecs_api",
         "api/video_codecs:rtc_software_fallback_wrappers",
-        "media:rtc_encoder_simulcast_proxy",
+        "media:rtc_simulcast_encoder_adapter",
         "modules/video_coding:webrtc_vp8",
         "modules/video_coding:webrtc_vp9",
       ]
