@@ -59,6 +59,32 @@ TEST_F(PausableStateTest, IsActiveAfterResume) {
   EXPECT_FALSE(state.IsPaused());
 }
 
+TEST_F(PausableStateTest, PauseAlreadyPausedIsNoOp) {
+  PausableState state(GetClock());
+
+  AdvanceTime(TimeDelta::Seconds(1));
+  Timestamp test_time = Now();
+  state.Pause();
+  AdvanceTime(TimeDelta::Seconds(1));
+  state.Pause();
+
+  EXPECT_EQ(state.GetLastEventTime(), test_time);
+}
+
+TEST_F(PausableStateTest, ResumeAlreadyResumedIsNoOp) {
+  PausableState state(GetClock());
+
+  AdvanceTime(TimeDelta::Seconds(1));
+  state.Pause();
+  AdvanceTime(TimeDelta::Seconds(1));
+  Timestamp test_time = Now();
+  state.Resume();
+  AdvanceTime(TimeDelta::Seconds(1));
+  state.Resume();
+
+  EXPECT_EQ(state.GetLastEventTime(), test_time);
+}
+
 TEST_F(PausableStateTest, WasPausedAtFalseWhenMultiplePauseResumeAtSameTime) {
   PausableState state(GetClock());
 
