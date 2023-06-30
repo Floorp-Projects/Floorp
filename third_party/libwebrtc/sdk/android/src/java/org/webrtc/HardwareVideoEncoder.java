@@ -518,12 +518,6 @@ class HardwareVideoEncoder implements VideoEncoder {
     if (status != VideoCodecStatus.OK) {
       return status;
     }
-
-    if (newWidth % REQUIRED_RESOLUTION_ALIGNMENT != 0
-        || newHeight % REQUIRED_RESOLUTION_ALIGNMENT != 0) {
-      Logging.e(TAG, "MediaCodec is only tested with resolutions that are 16x16 aligned.");
-      return VideoCodecStatus.ERR_SIZE;
-    }
     width = newWidth;
     height = newHeight;
     useSurfaceMode = newUseSurfaceMode;
