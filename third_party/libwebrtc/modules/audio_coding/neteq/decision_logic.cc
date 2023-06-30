@@ -129,15 +129,6 @@ void DecisionLogic::SetSampleRate(int fs_hz, size_t output_size_samples) {
 
 NetEq::Operation DecisionLogic::GetDecision(const NetEqStatus& status,
                                             bool* reset_decoder) {
-  // If last mode was CNG (or Expand, since this could be covering up for
-  // a lost CNG packet), remember that CNG is on. This is needed if comfort
-  // noise is interrupted by DTMF.
-  if (status.last_mode == NetEq::Mode::kRfc3389Cng) {
-    cng_state_ = kCngRfc3389On;
-  } else if (status.last_mode == NetEq::Mode::kCodecInternalCng) {
-    cng_state_ = kCngInternalOn;
-  }
-
   if (!IsExpand(status.last_mode) && !IsCng(status.last_mode)) {
     last_playout_delay_ms_ = GetPlayoutDelayMs(status);
   }
@@ -311,22 +302,21 @@ NetEq::Operation DecisionLogic::CngOperation(
 }
 
 NetEq::Operation DecisionLogic::NoPacket(NetEqController::NetEqStatus status) {
-  if (cng_state_ == kCngRfc3389On) {
-    // Keep on playing comfort noise.
-    return NetEq::Operation::kRfc3389CngNoPacket;
-  } else if (cng_state_ == kCngInternalOn) {
-    // Stop CNG after a timeout.
-    if (config_.cng_timeout_ms &&
-        status.generated_noise_samples >
-            static_cast<size_t>(*config_.cng_timeout_ms * sample_rate_khz_)) {
-      return NetEq::Operation::kExpand;
+  switch (status.last_mode) {
+    case NetEq::Mode::kRfc3389Cng:
+      return NetEq::Operation::kRfc3389CngNoPacket;
+    case NetEq::Mode::kCodecInternalCng: {
+      // Stop CNG after a timeout.
+      if (config_.cng_timeout_ms &&
+          status.generated_noise_samples >
+              static_cast<size_t>(*config_.cng_timeout_ms * sample_rate_khz_)) {
+        return NetEq::Operation::kExpand;
+      }
+      return NetEq::Operation::kCodecInternalCng;
     }
-    return NetEq::Operation::kCodecInternalCng;
-  } else if (status.play_dtmf) {
-    return NetEq::Operation::kDtmf;
-  } else {
-    // Nothing to play, do expand.
-    return NetEq::Operation::kExpand;
+    default:
+      return status.play_dtmf ? NetEq::Operation::kDtmf
+                              : NetEq::Operation::kExpand;
   }
 }
 

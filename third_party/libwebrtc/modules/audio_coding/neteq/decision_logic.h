@@ -58,13 +58,6 @@ class DecisionLogic : public NetEqController {
   NetEq::Operation GetDecision(const NetEqController::NetEqStatus& status,
                                bool* reset_decoder) override;
 
-  // These methods test the `cng_state_` for different conditions.
-  bool CngRfc3389On() const override { return cng_state_ == kCngRfc3389On; }
-  bool CngOff() const override { return cng_state_ == kCngOff; }
-
-  // Resets the `cng_state_` to kCngOff.
-  void SetCngOff() override { cng_state_ = kCngOff; }
-
   void ExpandDecision(NetEq::Operation operation) override {}
 
   // Adds `value` to `sample_memory_`.
@@ -110,8 +103,6 @@ class DecisionLogic : public NetEqController {
  private:
   // The value 5 sets maximum time-stretch rate to about 100 ms/s.
   static const int kMinTimescaleInterval = 5;
-
-  enum CngState { kCngOff, kCngRfc3389On, kCngInternalOn };
 
   // Updates the `buffer_level_filter_` with the current buffer level
   // `buffer_size_samples`.
@@ -178,8 +169,6 @@ class DecisionLogic : public NetEqController {
   const TickTimer* tick_timer_;
   int sample_rate_khz_;
   size_t output_size_samples_;
-  CngState cng_state_ = kCngOff;  // Remember if comfort noise is interrupted by
-                                  // other event (e.g., DTMF).
   size_t noise_fast_forward_ = 0;
   size_t packet_length_samples_ = 0;
   int sample_memory_ = 0;
