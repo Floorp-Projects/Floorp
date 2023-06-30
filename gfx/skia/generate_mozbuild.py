@@ -189,6 +189,7 @@ def generate_separated_sources(platform_sources):
     'SkXPS',
     'SkCreateCGImageRef',
     'skia/src/ports/SkGlobalInitialization',
+    'SkICC',
   ]
 
   def isignorelisted(value):

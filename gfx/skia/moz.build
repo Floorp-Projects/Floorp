@@ -216,7 +216,6 @@ UNIFIED_SOURCES += [
     'skia/src/effects/imagefilters/SkComposeImageFilter.cpp',
     'skia/src/effects/SkDashPathEffect.cpp',
     'skia/src/encode/SkEncoder.cpp',
-    'skia/src/encode/SkICC.cpp',
     'skia/src/encode/SkImageEncoder.cpp',
     'skia/src/image/SkImage.cpp',
     'skia/src/image/SkImage_Base.cpp',
