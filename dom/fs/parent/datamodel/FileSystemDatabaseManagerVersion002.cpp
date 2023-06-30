@@ -14,6 +14,7 @@
 #include "FileSystemHashStorageFunction.h"
 #include "FileSystemParentTypes.h"
 #include "ResultStatement.h"
+#include "StartedTransaction.h"
 #include "mozStorageHelper.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/dom/FileSystemDataManager.h"
@@ -93,10 +94,7 @@ nsresult RehashFile(const FileSystemConnection& aConnection,
   const nsLiteralCString cleanupOldEntryQuery =
       "DELETE FROM Entries WHERE handle = :handle ;"_ns;
 
-  mozStorageTransaction transaction(
-      aConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-  QM_TRY(QM_TO_RESULT(transaction.Start()));
+  QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(aConnection));
 
   {
     QM_TRY_UNWRAP(ResultStatement stmt,
@@ -229,10 +227,7 @@ nsresult RehashDirectory(const FileSystemConnection& aConnection,
     QM_WARNONLY_TRY(MOZ_TO_RESULT(aConnection->RemoveFunction("hashEntry"_ns)));
   });
 
-  mozStorageTransaction transaction(
-      aConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-  QM_TRY(QM_TO_RESULT(transaction.Start()));
+  QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(aConnection));
 
   {
     QM_TRY_UNWRAP(ResultStatement stmt,
@@ -601,8 +596,7 @@ Result<FileId, QMResult> FileSystemDatabaseManagerVersion002::EnsureFileId(
       OkIf(ToNSResult(mainFileRes.inspectErr()) == NS_ERROR_DOM_NOT_FOUND_ERR),
       Err(mainFileRes.unwrapErr()));
 
-  mozStorageTransaction transaction(
-      mConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+  QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(mConnection));
 
   QM_TRY_INSPECT(const FileId& fileId,
                  AddNewFileId(mConnection, *mFileManager, aEntryId));
@@ -704,10 +698,7 @@ nsresult FileSystemDatabaseManagerVersion002::MergeFileId(
       "DO UPDATE SET fileId = excluded.fileId "
       "; "_ns;
 
-  mozStorageTransaction transaction(
-      mConnection.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-  QM_TRY(MOZ_TO_RESULT(transaction.Start()));
+  QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(mConnection));
 
   QM_TRY_UNWRAP(ResultStatement stmt,
                 ResultStatement::Create(mConnection, flagAsMainFileQuery)
