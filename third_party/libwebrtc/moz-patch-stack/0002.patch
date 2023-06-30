@@ -70,7 +70,7 @@ index 6dc6d76021..8f38f6a1b4 100644
  
  TEST_F(MediaSessionDescriptionFactoryTest,
 diff --git a/pc/peer_connection_header_extension_unittest.cc b/pc/peer_connection_header_extension_unittest.cc
-index 9bbc32b7e0..1a452b0a1f 100644
+index 9db547fb57..fb8833a01b 100644
 --- a/pc/peer_connection_header_extension_unittest.cc
 +++ b/pc/peer_connection_header_extension_unittest.cc
 @@ -229,68 +229,6 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
@@ -86,9 +86,9 @@ index 9bbc32b7e0..1a452b0a1f 100644
 -  std::unique_ptr<PeerConnectionWrapper> pc1 =
 -      CreatePeerConnection(media_type, semantics);
 -  auto transceiver1 = pc1->AddTransceiver(media_type);
--  auto modified_extensions = transceiver1->HeaderExtensionsToOffer();
+-  auto modified_extensions = transceiver1->GetHeaderExtensionsToNegotiate();
 -  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  transceiver1->SetOfferedRtpHeaderExtensions(modified_extensions);
+-  transceiver1->SetHeaderExtensionsToNegotiate(modified_extensions);
 -  auto transceiver2 = pc1->AddTransceiver(media_type);
 -
 -  auto session_description = pc1->CreateOffer();
@@ -126,10 +126,10 @@ index 9bbc32b7e0..1a452b0a1f 100644
 -      PeerConnectionInterface::RTCOfferAnswerOptions());
 -  pc1->SetRemoteDescription(std::move(answer));
 -
--  auto modified_extensions = transceiver1->HeaderExtensionsToOffer();
+-  auto modified_extensions = transceiver1->GetHeaderExtensionsToNegotiate();
 -  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
 -  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
--  transceiver1->SetOfferedRtpHeaderExtensions(modified_extensions);
+-  transceiver1->SetHeaderExtensionsToNegotiate(modified_extensions);
 -  auto session_description = pc1->CreateOffer();
 -  EXPECT_THAT(session_description->description()
 -                  ->contents()[0]

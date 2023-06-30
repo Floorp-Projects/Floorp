@@ -694,7 +694,7 @@ cricket::MediaDescriptionOptions GetMediaDescriptionOptionsForTransceiver(
   media_description_options.codec_preferences =
       transceiver->codec_preferences();
   media_description_options.header_extensions =
-      transceiver->HeaderExtensionsToOffer();
+      transceiver->GetHeaderExtensionsToNegotiate();
   // This behavior is specified in JSEP. The gist is that:
   // 1. The MSID is included if the RtpTransceiver's direction is sendonly or
   //    sendrecv.
