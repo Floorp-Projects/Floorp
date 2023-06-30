@@ -115,6 +115,8 @@ exported_symbols.testGetFileHandleIsCallable = async function () {
 
   const item = await root.getFileHandle("fileName", allowCreate);
   Assert.ok(!!item, "Should return an item");
+
+  await root.removeEntry("fileName");
 };
 
 exported_symbols.testGetDirectoryHandleIsCallable = async function () {
@@ -123,12 +125,18 @@ exported_symbols.testGetDirectoryHandleIsCallable = async function () {
 
   const item = await root.getDirectoryHandle("dirName", allowCreate);
   Assert.ok(!!item, "Should return an item");
+
+  await root.removeEntry("dirName");
 };
 
 exported_symbols.testRemoveEntryIsCallable = async function () {
   const root = await navigator.storage.getDirectory();
   const removeOptions = { recursive: true };
+  const allowCreate = { create: true };
 
+  // Ensure file and directory items exists
+  await root.getFileHandle("fileName", allowCreate);
+  await root.getDirectoryHandle("dirName", allowCreate);
   await root.removeEntry("fileName", removeOptions);
   await root.removeEntry("dirName", removeOptions);
   try {
@@ -152,6 +160,8 @@ exported_symbols.testResolveIsCallable = async function () {
   let path = await root.resolve(item);
   Assert.equal(path.length, 1);
   Assert.equal(path[0], "fileName", "Resolve got the right path");
+
+  await root.removeEntry("fileName");
 };
 
 exported_symbols.testFileType = async function () {
@@ -183,7 +193,7 @@ exported_symbols.testFileType = async function () {
     " EXE",
     "EX\uff65",
     "\udbff\udbff\udbff",
-    "\udc00\udc00\udc00",
+    // XXX: Invalid surrogate combos like "\udc00\udc00\udc00" may map to the same names impacting cleanup.
     "js\udbff",
     "\udc00js",
     "???",
@@ -227,7 +237,6 @@ exported_symbols.testFileType = async function () {
     empty,
     empty,
     empty,
-    empty,
     "application/olescript",
     "application/x-msdownload",
     "application/octet-stream",
@@ -247,6 +256,7 @@ exported_symbols.testFileType = async function () {
       const fileObject = await fileHandle.getFile();
       Assert.equal(fileObject.name, fileHandle.name);
       Assert.equal(fileObject.type, expectedTypes[i]);
+      await root.removeEntry(fileName);
     })
   );
 };
