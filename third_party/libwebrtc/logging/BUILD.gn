@@ -432,7 +432,6 @@ if (rtc_enable_protobuf) {
   rtc_library("rtc_event_log_parser") {
     visibility = [ "*" ]
     sources = [
-      "rtc_event_log/logged_events.h",
       "rtc_event_log/rtc_event_log_parser.cc",
       "rtc_event_log/rtc_event_log_parser.h",
       "rtc_event_log/rtc_event_processor.cc",
