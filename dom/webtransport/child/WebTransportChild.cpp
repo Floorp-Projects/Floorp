@@ -58,13 +58,17 @@ void WebTransportChild::CloseAll() {
 
 ::mozilla::ipc::IPCResult WebTransportChild::RecvIncomingDatagram(
     nsTArray<uint8_t>&& aData, const TimeStamp& aRecvTimeStamp) {
-  mTransport->NewDatagramReceived(std::move(aData), aRecvTimeStamp);
+  if (mTransport) {
+    mTransport->NewDatagramReceived(std::move(aData), aRecvTimeStamp);
+  }
   return IPC_OK();
 }
 
 ::mozilla::ipc::IPCResult WebTransportChild::RecvOnStreamResetOrStopSending(
     const uint64_t& aStreamId, const StreamResetOrStopSendingError& aError) {
-  mTransport->OnStreamResetOrStopSending(aStreamId, aError);
+  if (mTransport) {
+    mTransport->OnStreamResetOrStopSending(aStreamId, aError);
+  }
   return IPC_OK();
 }
 
