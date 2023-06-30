@@ -8,7 +8,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c
  1 file changed, 24 insertions(+)
 
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 4c451f962f..e3a85731d1 100644
+index ebceb2cf66..1103ec6474 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -1155,6 +1155,7 @@ if (!build_with_chromium) {

@@ -668,7 +668,7 @@ if (rtc_include_tests && !build_with_chromium) {
     }
   }
 
-  if (enable_google_benchmarks) {
+  if (enable_google_benchmarks && rtc_enable_google_benchmarks) {
     rtc_test("benchmarks") {
       testonly = true
       deps = [
