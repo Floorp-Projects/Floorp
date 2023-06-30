@@ -19,6 +19,9 @@
 #include "api/rtp_packet_infos.h"
 #include "api/test/create_frame_generator.h"
 #include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/time_controller.h"
+#include "api/units/time_delta.h"
+#include "api/units/timestamp.h"
 #include "api/video/encoded_image.h"
 #include "api/video/i420_buffer.h"
 #include "api/video/video_frame.h"
@@ -26,12 +29,18 @@
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_tools/frame_analyzer/video_geometry_aligner.h"
 #include "system_wrappers/include/sleep.h"
+#include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_shared_objects.h"
+#include "test/time_controller/simulated_time_controller.h"
 
 namespace webrtc {
 namespace {
 
+using ::testing::ElementsAre;
+using ::testing::Eq;
+using ::testing::IsEmpty;
+using ::testing::Test;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
@@ -95,6 +104,26 @@ std::vector<StatsSample> GetSortedSamples(const SamplesStatsCounter& counter) {
   return out;
 }
 
+std::vector<double> GetTimeSortedValues(const SamplesStatsCounter& counter) {
+  rtc::ArrayView<const StatsSample> view = counter.GetTimedSamples();
+  std::vector<StatsSample> sorted(view.begin(), view.end());
+  std::sort(sorted.begin(), sorted.end(),
+            [](const StatsSample& a, const StatsSample& b) {
+              return a.time < b.time;
+            });
+  std::vector<double> out;
+  out.reserve(sorted.size());
+  for (const StatsSample& sample : sorted) {
+    out.push_back(sample.value);
+  }
+  return out;
+}
+
+void ExpectRateIs(const SamplesRateCounter& rate_couter, double expected_rate) {
+  ASSERT_FALSE(rate_couter.IsEmpty());
+  EXPECT_NEAR(rate_couter.GetEventsPerSecond(), expected_rate, 1e-5);
+}
+
 std::string ToString(const std::vector<StatsSample>& values) {
   rtc::StringBuilder out;
   for (const auto& v : values) {
@@ -112,13 +141,42 @@ void FakeCPULoad() {
   ASSERT_TRUE(std::is_sorted(temp.begin(), temp.end()));
 }
 
+void PassFramesThroughAnalyzerSenderOnly(
+    DefaultVideoQualityAnalyzer& analyzer,
+    absl::string_view sender,
+    absl::string_view stream_label,
+    std::vector<absl::string_view> receivers,
+    int frames_count,
+    test::FrameGeneratorInterface& frame_generator,
+    int interframe_delay_ms = 0,
+    TimeController* time_controller = nullptr) {
+  for (int i = 0; i < frames_count; ++i) {
+    VideoFrame frame = NextFrame(&frame_generator, /*timestamp_us=*/1);
+    uint16_t frame_id =
+        analyzer.OnFrameCaptured(sender, std::string(stream_label), frame);
+    frame.set_id(frame_id);
+    analyzer.OnFramePreEncode(sender, frame);
+    analyzer.OnFrameEncoded(sender, frame.id(), FakeEncode(frame),
+                            VideoQualityAnalyzerInterface::EncoderStats(),
+                            false);
+    if (i < frames_count - 1 && interframe_delay_ms > 0) {
+      if (time_controller == nullptr) {
+        SleepMs(interframe_delay_ms);
+      } else {
+        time_controller->AdvanceTime(TimeDelta::Millis(interframe_delay_ms));
+      }
+    }
+  }
+}
+
 void PassFramesThroughAnalyzer(DefaultVideoQualityAnalyzer& analyzer,
                                absl::string_view sender,
                                absl::string_view stream_label,
                                std::vector<absl::string_view> receivers,
                                int frames_count,
                                test::FrameGeneratorInterface& frame_generator,
-                               int interframe_delay_ms = 0) {
+                               int interframe_delay_ms = 0,
+                               TimeController* time_controller = nullptr) {
   for (int i = 0; i < frames_count; ++i) {
     VideoFrame frame = NextFrame(&frame_generator, /*timestamp_us=*/1);
     uint16_t frame_id =
@@ -137,7 +195,11 @@ void PassFramesThroughAnalyzer(DefaultVideoQualityAnalyzer& analyzer,
       analyzer.OnFrameRendered(receiver, received_frame);
     }
     if (i < frames_count - 1 && interframe_delay_ms > 0) {
-      SleepMs(interframe_delay_ms);
+      if (time_controller == nullptr) {
+        SleepMs(interframe_delay_ms);
+      } else {
+        time_controller->AdvanceTime(TimeDelta::Millis(interframe_delay_ms));
+      }
     }
   }
 }
@@ -790,7 +852,7 @@ TEST(DefaultVideoQualityAnalyzerTest, CpuUsage) {
   }
 
   // Windows CPU clock has low accuracy. We need to fake some additional load to
-  // be sure that the clock ticks (https://crbug.com/webrtc/12249).
+  // be sure that the clock ticks (https://bugs.webrtc.org/12249).
   FakeCPULoad();
 
   for (size_t i = 1; i < frames_order.size(); i += 2) {
@@ -2199,6 +2261,170 @@ TEST_P(DefaultVideoQualityAnalyzerTimeBetweenFreezesTest,
 INSTANTIATE_TEST_SUITE_P(WithRegisteredAndUnregisteredPeerAtTheEndOfTheCall,
                          DefaultVideoQualityAnalyzerTimeBetweenFreezesTest,
                          ValuesIn({true, false}));
+
+class DefaultVideoQualityAnalyzerSimulatedTimeTest : public Test {
+ protected:
+  DefaultVideoQualityAnalyzerSimulatedTimeTest()
+      : time_controller_(std::make_unique<GlobalSimulatedTimeController>(
+            Timestamp::Seconds(1000))) {}
+
+  void AdvanceTime(TimeDelta time) { time_controller_->AdvanceTime(time); }
+
+  Clock* GetClock() { return time_controller_->GetClock(); }
+
+  TimeController* time_controller() { return time_controller_.get(); }
+
+  Timestamp Now() const { return time_controller_->GetClock()->CurrentTime(); }
+
+ private:
+  std::unique_ptr<TimeController> time_controller_;
+};
+
+TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
+       PausedAndResumedStreamIsAccountedInStatsCorrectly) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  options.report_infra_metrics = false;
+  DefaultVideoQualityAnalyzer analyzer(GetClock(),
+                                       test::GetGlobalMetricsLogger(), options);
+  analyzer.Start("test_case",
+                 std::vector<std::string>{"alice", "bob", "charlie"},
+                 kAnalyzerMaxThreadsCount);
+
+  // Pass 20 frames as 20 fps.
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+                            {"bob", "charlie"},
+                            /*frames_count=*/20, *frame_generator,
+                            /*interframe_delay_ms=*/50, time_controller());
+  AdvanceTime(TimeDelta::Millis(50));
+
+  // Mark stream paused for Bob, but not for Charlie.
+  analyzer.OnPeerStoppedReceiveVideoStream("bob", "alice_video");
+  // Freeze for 1 second.
+  PassFramesThroughAnalyzerSenderOnly(
+      analyzer, "alice", "alice_video", {"bob", "charlie"},
+      /*frames_count=*/20, *frame_generator,
+      /*interframe_delay_ms=*/50, time_controller());
+  AdvanceTime(TimeDelta::Millis(50));
+  // Unpause stream for Bob.
+  analyzer.OnPeerStartedReceiveVideoStream("bob", "alice_video");
+
+  // Pass 20 frames as 20 fps.
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+                            {"bob", "charlie"},
+                            /*frames_count=*/20, *frame_generator,
+                            /*interframe_delay_ms=*/50, time_controller());
+
+  analyzer.Stop();
+
+  // Bob should have 20 fps without freeze and Charlie should have freeze of 1s
+  // and decreased fps.
+  std::map<StatsKey, StreamStats> streams_stats = analyzer.GetStats();
+  std::map<StatsKey, FrameCounters> frame_counters =
+      analyzer.GetPerStreamCounters();
+  StreamStats bob_stream_stats =
+      streams_stats.at(StatsKey("alice_video", "bob"));
+  FrameCounters bob_frame_counters =
+      frame_counters.at(StatsKey("alice_video", "bob"));
+  EXPECT_THAT(bob_frame_counters.dropped, Eq(0));
+  EXPECT_THAT(bob_frame_counters.rendered, Eq(40));
+  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats.freeze_time_ms),
+              ElementsAre(0.0));
+  // TODO(bugs.webrtc.org/14995): value should exclude pause
+  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats.time_between_freezes_ms),
+              ElementsAre(2950.0));
+  // TODO(bugs.webrtc.org/14995): Fix capture_frame_rate (has to be ~20.0)
+  ExpectRateIs(bob_stream_stats.capture_frame_rate, 13.559322);
+  // TODO(bugs.webrtc.org/14995): Fix encode_frame_rate (has to be ~20.0)
+  ExpectRateIs(bob_stream_stats.encode_frame_rate, 13.559322);
+  // TODO(bugs.webrtc.org/14995): Assert on harmonic fps
+
+  StreamStats charlie_stream_stats =
+      streams_stats.at(StatsKey("alice_video", "charlie"));
+  FrameCounters charlie_frame_counters =
+      frame_counters.at(StatsKey("alice_video", "charlie"));
+  EXPECT_THAT(charlie_frame_counters.dropped, Eq(20));
+  EXPECT_THAT(charlie_frame_counters.rendered, Eq(40));
+  EXPECT_THAT(GetTimeSortedValues(charlie_stream_stats.freeze_time_ms),
+              ElementsAre(1050.0));
+  EXPECT_THAT(GetTimeSortedValues(charlie_stream_stats.time_between_freezes_ms),
+              ElementsAre(950.0, 950.0));
+  // TODO(bugs.webrtc.org/14995): Assert on harmonic fps
+}
+
+TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
+       PausedStreamIsAccountedInStatsCorrectly) {
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+
+  DefaultVideoQualityAnalyzerOptions options = AnalyzerOptionsForTest();
+  options.report_infra_metrics = false;
+  DefaultVideoQualityAnalyzer analyzer(GetClock(),
+                                       test::GetGlobalMetricsLogger(), options);
+  analyzer.Start("test_case",
+                 std::vector<std::string>{"alice", "bob", "charlie"},
+                 kAnalyzerMaxThreadsCount);
+
+  // Pass 20 frames as 20 fps.
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video",
+                            {"bob", "charlie"},
+                            /*frames_count=*/20, *frame_generator,
+                            /*interframe_delay_ms=*/50, time_controller());
+  AdvanceTime(TimeDelta::Millis(50));
+
+  // Mark stream paused for Bob, but not for Charlie.
+  analyzer.OnPeerStoppedReceiveVideoStream("bob", "alice_video");
+  // Freeze for 1 second.
+  PassFramesThroughAnalyzerSenderOnly(
+      analyzer, "alice", "alice_video", {"bob", "charlie"},
+      /*frames_count=*/20, *frame_generator,
+      /*interframe_delay_ms=*/50, time_controller());
+  AdvanceTime(TimeDelta::Millis(50));
+
+  // Pass 20 frames as 20 fps.
+  PassFramesThroughAnalyzer(analyzer, "alice", "alice_video", {"charlie"},
+                            /*frames_count=*/20, *frame_generator,
+                            /*interframe_delay_ms=*/50, time_controller());
+
+  analyzer.Stop();
+
+  // Bob should have 20 fps without freeze and Charlie should have freeze of 1s
+  // and decreased fps.
+  std::map<StatsKey, StreamStats> streams_stats = analyzer.GetStats();
+  std::map<StatsKey, FrameCounters> frame_counters =
+      analyzer.GetPerStreamCounters();
+  StreamStats bob_stream_stats =
+      streams_stats.at(StatsKey("alice_video", "bob"));
+  FrameCounters bob_frame_counters =
+      frame_counters.at(StatsKey("alice_video", "bob"));
+  EXPECT_THAT(bob_frame_counters.dropped, Eq(0));
+  EXPECT_THAT(bob_frame_counters.rendered, Eq(20));
+  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats.freeze_time_ms),
+              ElementsAre(0.0));
+  EXPECT_THAT(GetTimeSortedValues(bob_stream_stats.time_between_freezes_ms),
+              ElementsAre(950.0));
+  ExpectRateIs(bob_stream_stats.capture_frame_rate, 21.052631);
+  ExpectRateIs(bob_stream_stats.encode_frame_rate, 21.052631);
+  // TODO(bugs.webrtc.org/14995): Assert on harmonic fps
+
+  StreamStats charlie_stream_stats =
+      streams_stats.at(StatsKey("alice_video", "charlie"));
+  FrameCounters charlie_frame_counters =
+      frame_counters.at(StatsKey("alice_video", "charlie"));
+  EXPECT_THAT(charlie_frame_counters.dropped, Eq(20));
+  EXPECT_THAT(charlie_frame_counters.rendered, Eq(40));
+  EXPECT_THAT(GetTimeSortedValues(charlie_stream_stats.freeze_time_ms),
+              ElementsAre(1050.0));
+  EXPECT_THAT(GetTimeSortedValues(charlie_stream_stats.time_between_freezes_ms),
+              ElementsAre(950.0, 950.0));
+  // TODO(bugs.webrtc.org/14995): Assert on harmonic fps
+}
 
 }  // namespace
 }  // namespace webrtc

@@ -523,20 +523,21 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
 
     if (frame_stats.prev_frame_rendered_time.IsFinite() &&
         frame_stats.rendered_time.IsFinite()) {
-      TimeDelta time_between_rendered_frames =
-          frame_stats.rendered_time - frame_stats.prev_frame_rendered_time;
-      stats->time_between_rendered_frames_ms.AddSample(StatsSample(
-          time_between_rendered_frames, frame_stats.rendered_time, metadata));
+      stats->time_between_rendered_frames_ms.AddSample(
+          StatsSample(frame_stats.time_between_rendered_frames,
+                      frame_stats.rendered_time, metadata));
       TimeDelta average_time_between_rendered_frames = TimeDelta::Millis(
           stats->time_between_rendered_frames_ms.GetAverage());
-      if (time_between_rendered_frames >
+      if (frame_stats.time_between_rendered_frames >
           std::max(kFreezeThreshold + average_time_between_rendered_frames,
                    3 * average_time_between_rendered_frames)) {
-        stats->freeze_time_ms.AddSample(StatsSample(
-            time_between_rendered_frames, frame_stats.rendered_time, metadata));
+        stats->freeze_time_ms.AddSample(
+            StatsSample(frame_stats.time_between_rendered_frames,
+                        frame_stats.rendered_time, metadata));
         auto freeze_end_it =
             stream_last_freeze_end_time_.find(comparison.stats_key);
         RTC_DCHECK(freeze_end_it != stream_last_freeze_end_time_.end());
+        // TODO(bugs.webrtc.org/14995): rethink this metric for paused stream.
         stats->time_between_freezes_ms.AddSample(StatsSample(
             frame_stats.prev_frame_rendered_time - freeze_end_it->second,
             frame_stats.rendered_time, metadata));

@@ -80,6 +80,10 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
   void RegisterParticipantInCall(absl::string_view peer_name) override;
   void UnregisterParticipantInCall(absl::string_view peer_name) override;
+  void OnPeerStartedReceiveVideoStream(absl::string_view peer_name,
+                                       absl::string_view stream_label) override;
+  void OnPeerStoppedReceiveVideoStream(absl::string_view peer_name,
+                                       absl::string_view stream_label) override;
 
   void Stop() override;
   std::string GetStreamLabel(uint16_t frame_id) override;
@@ -116,6 +120,17 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   void AddExistingFramesInFlightForStreamToComparator(size_t stream_index,
                                                       StreamState& stream_state,
                                                       size_t peer_index)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  // Processes frames for the peer identified by `peer_index` up to
+  // `rendered_frame_id` (excluded). Sends each dropped frame for comparison and
+  // discards superfluous frames (they were not expected to be received by
+  // `peer_index` and not accounted in the stats).
+  // Returns number of dropped frames.
+  int ProcessNotSeenFramesBeforeRendered(size_t peer_index,
+                                         uint16_t rendered_frame_id,
+                                         const InternalStatsKey& stats_key,
+                                         StreamState& state)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Report results for all metrics for all streams.
