@@ -349,6 +349,7 @@ RTCError DcSctpTransport::SendData(int sid,
 }
 
 bool DcSctpTransport::ReadyToSendData() {
+  RTC_DCHECK_RUN_ON(network_thread_);
   return ready_to_send_data_;
 }
 
@@ -511,6 +512,7 @@ void DcSctpTransport::OnConnected() {
 }
 
 void DcSctpTransport::OnClosed() {
+  RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DLOG(LS_INFO) << debug_name_ << "->OnClosed().";
   ready_to_send_data_ = false;
 }
