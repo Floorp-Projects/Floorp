@@ -99,13 +99,4 @@ add_task(async function test_legacy_wizard() {
       TelemetryTestUtils.assertHistogram(legacyHistogram, entrypointId, 1);
     }
   }
-
-  // We should make sure that the migration.time_to_produce_legacy_migrator_list
-  // scalar was set, since we know that at least one legacy migration wizard has
-  // been opened.
-  let scalars = TelemetryTestUtils.getProcessScalars("parent", false, false);
-  Assert.ok(
-    scalars["migration.time_to_produce_legacy_migrator_list"] > 0,
-    "Non-zero scalar value recorded for migration.time_to_produce_migrator_list"
-  );
 });

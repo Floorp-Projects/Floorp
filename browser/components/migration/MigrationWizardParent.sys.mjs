@@ -36,12 +36,6 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
 });
 
 /**
- * Set to true once the first instance of MigrationWizardParent has received
- * a "GetAvailableMigrators" message.
- */
-let gHasOpenedBefore = false;
-
-/**
  * This class is responsible for communicating with MigrationUtils to do the
  * actual heavy-lifting of any kinds of migration work, based on messages from
  * the associated MigrationWizardChild.
@@ -81,8 +75,6 @@ export class MigrationWizardParent extends JSWindowActorParent {
 
     switch (message.name) {
       case "GetAvailableMigrators": {
-        let start = Cu.now();
-
         let availableMigrators = [];
         for (const key of MigrationUtils.availableMigratorKeys) {
           availableMigrators.push(this.#getMigratorAndProfiles(key));
@@ -105,15 +97,6 @@ export class MigrationWizardParent extends JSWindowActorParent {
           .sort((a, b) => {
             return b.lastModifiedDate - a.lastModifiedDate;
           });
-
-        let elapsed = Cu.now() - start;
-        if (!gHasOpenedBefore) {
-          gHasOpenedBefore = true;
-          Services.telemetry.scalarSet(
-            "migration.time_to_produce_migrator_list",
-            elapsed
-          );
-        }
 
         return filteredResults;
       }
