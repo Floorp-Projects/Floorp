@@ -45,8 +45,17 @@ class ParseSearchPluginsTest(private val searchEngineIdentifier: String) {
     fun parserWithSearchExtraParams() {
         val stream = FileInputStream(File(basePath, searchEngineIdentifier))
         val searchEngineName = "test"
-        val channelId = "12345"
-        val searchExtraParams = SearchExtraParams(searchEngineName, channelId)
+        val featureEnablerName = "t"
+        val featureEnablerParam = "enabled"
+        val channelIdName = "p"
+        val channelIdParam = "12345"
+        val searchExtraParams = SearchExtraParams(
+            searchEngineName = searchEngineName,
+            featureEnablerName = featureEnablerName,
+            featureEnablerParam = featureEnablerParam,
+            channelIdName = channelIdName,
+            channelIdParam = channelIdParam,
+        )
         val searchEngine =
             SearchEngineReader(
                 type = SearchEngine.Type.BUNDLED,
@@ -68,11 +77,13 @@ class ParseSearchPluginsTest(private val searchEngineIdentifier: String) {
 
         if (searchEngine.name.startsWith(searchEngineName)) {
             for (url in searchUrl) {
-                assertTrue(url.endsWith("/$channelId"))
+                assertTrue(url.contains("=$featureEnablerParam"))
+                assertTrue(url.endsWith("=$channelIdParam"))
             }
         } else {
             for (url in searchUrl) {
-                assertFalse(url.endsWith("/$channelId"))
+                assertFalse(url.endsWith("=$channelIdParam"))
+                assertFalse(url.contains("=$featureEnablerParam"))
             }
         }
 

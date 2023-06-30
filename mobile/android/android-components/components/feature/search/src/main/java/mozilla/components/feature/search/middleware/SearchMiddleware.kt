@@ -28,7 +28,13 @@ import kotlin.coroutines.CoroutineContext
 /**
  * Holds data for the search extra params.
  */
-data class SearchExtraParams(val searchEngineName: String, val channelId: String)
+data class SearchExtraParams(
+    val searchEngineName: String,
+    val featureEnablerName: String?,
+    val featureEnablerParam: String?,
+    val channelIdName: String,
+    val channelIdParam: String,
+)
 
 /**
  * [Middleware] implementation for loading and saving [SearchEngine]s whenever the state changes.

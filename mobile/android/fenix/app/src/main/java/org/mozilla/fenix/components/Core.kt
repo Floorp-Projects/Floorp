@@ -248,6 +248,16 @@ class Core(
      * The [BrowserStore] holds the global [BrowserState].
      */
     val store by lazyMonitored {
+        val searchExtraParamsNimbus = FxNimbus.features.searchExtraParams.value()
+        val searchExtraParams = searchExtraParamsNimbus.takeIf { it.enabled }?.run {
+            SearchExtraParams(
+                searchEngine,
+                featureEnabler.keys.firstOrNull(),
+                featureEnabler.values.firstOrNull(),
+                channelId.keys.first(),
+                channelId.values.first(),
+            )
+        }
         val middlewareList =
             mutableListOf(
                 LastAccessMiddleware(),
@@ -262,14 +272,7 @@ class Core(
                     context = context,
                     additionalBundledSearchEngineIds = listOf("reddit", "youtube"),
                     migration = SearchMigration(context),
-                    searchExtraParams =
-                    FxNimbus.features.searchExtraParams.value().searchNameChannelId
-                        .firstNotNullOfOrNull {
-                            SearchExtraParams(
-                                it.key,
-                                it.value,
-                            )
-                        },
+                    searchExtraParams = searchExtraParams,
                 ),
                 RecordingDevicesMiddleware(context, context.components.notificationsDelegate),
                 PromptMiddleware(),
