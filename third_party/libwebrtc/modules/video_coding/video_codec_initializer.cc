@@ -283,8 +283,15 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
       // This difference must be propagated to the stream configuration.
       video_codec.width = spatial_layers.back().width;
       video_codec.height = spatial_layers.back().height;
-      video_codec.simulcastStream[0].width = spatial_layers.back().width;
-      video_codec.simulcastStream[0].height = spatial_layers.back().height;
+      // Only propagate if we're not doing simulcast. Simulcast is assumed not
+      // to have multiple spatial layers, if we wanted to support simulcast+SVC
+      // combos we would need to calculate unique spatial layers per simulcast
+      // layer, but VideoCodec is not capable of expressing per-simulcastStream
+      // spatialLayers.
+      if (video_codec.numberOfSimulcastStreams == 1) {
+        video_codec.simulcastStream[0].width = spatial_layers.back().width;
+        video_codec.simulcastStream[0].height = spatial_layers.back().height;
+      }
 
       // Update layering settings.
       video_codec.VP9()->numberOfSpatialLayers =
