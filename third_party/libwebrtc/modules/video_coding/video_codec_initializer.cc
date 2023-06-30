@@ -139,8 +139,9 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
 
     // TODO(bugs.webrtc.org/11607): Since scalability mode is a top-level
     // setting on VideoCodec, setting it makes sense only if it is the same for
-    // all simulcast streams.
-    if (streams[0].scalability_mode != streams[i].scalability_mode) {
+    // all active simulcast streams.
+    if (streams[i].active &&
+        streams[0].scalability_mode != streams[i].scalability_mode) {
       scalability_mode.reset();
       // For VP8, top-level scalability mode doesn't matter, since configuration
       // is based on the per-simulcast stream configuration of temporal layers.

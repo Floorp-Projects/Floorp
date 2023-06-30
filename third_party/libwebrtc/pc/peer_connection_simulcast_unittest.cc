@@ -977,19 +977,27 @@ class PeerConnectionSimulcastWithMediaFlowTests
   bool HasOutboundRtpBytesSent(
       rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
       size_t num_layers) {
+    return HasOutboundRtpBytesSent(pc_wrapper, num_layers, num_layers);
+  }
+
+  bool HasOutboundRtpBytesSent(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+      size_t num_layers,
+      size_t num_active_layers) {
     rtc::scoped_refptr<const RTCStatsReport> report = GetStats(pc_wrapper);
     std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
         report->GetStatsOfType<RTCOutboundRtpStreamStats>();
     if (outbound_rtps.size() != num_layers) {
       return false;
     }
+    size_t num_sending_layers = 0;
     for (const auto* outbound_rtp : outbound_rtps) {
-      if (!outbound_rtp->bytes_sent.is_defined() ||
-          *outbound_rtp->bytes_sent == 0u) {
-        return false;
+      if (outbound_rtp->bytes_sent.is_defined() &&
+          *outbound_rtp->bytes_sent > 0u) {
+        ++num_sending_layers;
       }
     }
-    return true;
+    return num_sending_layers == num_active_layers;
   }
 
   bool OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
@@ -1468,6 +1476,71 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
+}
+
+// Exercise common path where `scalability_mode` is not specified until after
+// negotiation, requring us to recreate the stream when the number of streams
+// changes from 1 (legacy SVC) to 3 (standard simulcast).
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingThreeEncodings_VP9_FromLegacyToSingleActiveWithScalability) {
+  // TODO(https://crbug.com/webrtc/14884): A field trial shouldn't be needed to
+  // get spec-compliant behavior!
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-AllowDisablingLegacyScalability/Enabled/");
+
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP9");
+  transceiver->SetCodecPreferences(codecs);
+
+  // The original negotiation triggers legacy SVC because we didn't specify
+  // any scalability mode.
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Switch to the standard mode. Despite only having a single active stream in
+  // both cases, this internally reconfigures from 1 stream to 3 streams.
+  // Test coverage for https://crbug.com/webrtc/15016.
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  parameters.encodings[0].active = true;
+  parameters.encodings[0].scalability_mode = "L2T2_KEY";
+  parameters.encodings[1].active = false;
+  parameters.encodings[1].scalability_mode = absl::nullopt;
+  parameters.encodings[2].active = false;
+  parameters.encodings[2].scalability_mode = absl::nullopt;
+  sender->SetParameters(parameters);
+
+  // Since the standard API is configuring simulcast we get three outbound-rtps,
+  // but only one is active.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u, 1u),
+                   kLongTimeoutForRampingUp.ms());
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(3u));
+  auto* f_outbound_rtp = FindOutboundRtpByRid(outbound_rtps, "f");
+  ASSERT_TRUE(f_outbound_rtp);
+  ASSERT_TRUE(f_outbound_rtp->scalability_mode.is_defined());
+  EXPECT_THAT(*f_outbound_rtp->scalability_mode, StrEq("L2T2_KEY"));
+
+  // GetParameters() does not report any fallback.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode,
+              Optional(std::string("L2T2_KEY")));
+  EXPECT_FALSE(parameters.encodings[1].scalability_mode.has_value());
+  EXPECT_FALSE(parameters.encodings[2].scalability_mode.has_value());
 }
 
 // TODO(https://crbug.com/webrtc/15005): A field trial shouldn't be needed to

@@ -474,6 +474,11 @@ void FallbackToDefaultScalabilityModeIfNotSupported(
   for (auto& encoding : encodings) {
     RTC_LOG(LS_INFO) << "Encoding scalability_mode: "
                      << encoding.scalability_mode.value_or("-");
+    if (!encoding.active && !encoding.scalability_mode.has_value()) {
+      // Inactive encodings should not fallback since apps may only specify the
+      // scalability mode of the first encoding when the others are inactive.
+      continue;
+    }
     if (!encoding.scalability_mode.has_value() ||
         !IsScalabilityModeSupportedByCodec(codec, *encoding.scalability_mode,
                                            config)) {
@@ -2632,17 +2637,37 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::ReconfigureEncoder(
   FallbackToDefaultScalabilityModeIfNotSupported(
       codec_settings.codec, parameters_.config, rtp_parameters_.encodings);
 
+  // Latest config, with and without encoder specfic settings.
   webrtc::VideoEncoderConfig encoder_config =
       CreateVideoEncoderConfig(codec_settings.codec);
-
   encoder_config.encoder_specific_settings =
       ConfigureVideoEncoderSettings(codec_settings.codec);
+  webrtc::VideoEncoderConfig encoder_config_with_specifics =
+      encoder_config.Copy();
+  encoder_config.encoder_specific_settings = nullptr;
 
-  stream_->ReconfigureVideoEncoder(encoder_config.Copy(), std::move(callback));
-
-  encoder_config.encoder_specific_settings = NULL;
+  // When switching between legacy SVC (3 encodings interpreted as 1 stream with
+  // 3 spatial layers) and the standard API (3 encodings = 3 streams and spatial
+  // layers specified by `scalability_mode`), the number of streams can change.
+  bool num_streams_changed = parameters_.encoder_config.number_of_streams !=
+                             encoder_config.number_of_streams;
+  bool scalability_mode_used = !codec_settings.codec.scalability_modes.empty();
+  bool scalability_modes = absl::c_any_of(
+      rtp_parameters_.encodings,
+      [](const auto& e) { return e.scalability_mode.has_value(); });
 
   parameters_.encoder_config = std::move(encoder_config);
+
+  if (num_streams_changed && (scalability_mode_used != scalability_modes)) {
+    // The app is switching between legacy and standard modes, recreate instead
+    // of reconfiguring to avoid number of streams not matching in lower layers.
+    RecreateWebRtcStream();
+    webrtc::InvokeSetParametersCallback(callback, webrtc::RTCError::OK());
+    return;
+  }
+
+  stream_->ReconfigureVideoEncoder(std::move(encoder_config_with_specifics),
+                                   std::move(callback));
 }
 
 void WebRtcVideoChannel::WebRtcVideoSendStream::SetSend(bool send) {
