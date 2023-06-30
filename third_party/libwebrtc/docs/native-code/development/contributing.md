@@ -34,7 +34,7 @@ You must do some preparation in order to upload your first CL:
 
 You will not have to repeat the above. After all that, you’re ready to upload:
 
-[Check out and build the code]: https://webrtc.googlesource.com/src/+/refs/heads/main/docs/native-code/development/index.md
+[Check out and build the code]: https://webrtc.googlesource.com/src/+/refs/heads/main/docs/native-code/development/
 [AUTHORS]: https://webrtc.googlesource.com/src/+/refs/heads/main/AUTHORS
 [new-password]: https://webrtc.googlesource.com/new-password
 [discuss-webrtc]: https://groups.google.com/forum/#!forum/discuss-webrtc
