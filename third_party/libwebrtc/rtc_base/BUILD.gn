@@ -2073,7 +2073,7 @@ if (rtc_include_tests) {
         "synchronization:mutex",
         "third_party/sigslot",
       ]
-      if (enable_google_benchmarks) {
+      if (enable_google_benchmarks && rtc_enable_google_benchmarks) {
         deps += [ "synchronization:synchronization_unittests" ]
       }
       if (is_win) {

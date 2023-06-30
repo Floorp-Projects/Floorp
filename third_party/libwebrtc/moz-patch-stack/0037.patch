@@ -77,7 +77,7 @@ index 445772fada..c280fae405 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index 59c3af169b..7041997f41 100644
+index 24fe451725..a28992151e 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -953,7 +953,7 @@ index b42536db85..aff496cc01 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index a657a4442b..b13d16fdad 100644
+index 4c860cd933..bbf63b8b31 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -289,6 +289,7 @@ rtc_library("sample_counter") {
@@ -1005,7 +1005,7 @@ index 77f5139a2f..486b37590c 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index abc8d4ee9c..d304ca01b8 100644
+index 79595ebdfd..1c1d381666 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -176,6 +176,7 @@ rtc_library("audio_test_common") {
@@ -1047,7 +1047,7 @@ index abc8d4ee9c..d304ca01b8 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1058,6 +1066,10 @@ rtc_library("test_common") {
+@@ -1060,6 +1068,10 @@ rtc_library("test_common") {
    if (!is_android && !build_with_chromium) {
      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
    }
@@ -1058,7 +1058,7 @@ index abc8d4ee9c..d304ca01b8 100644
  }
  
  rtc_library("mock_transport") {
-@@ -1225,6 +1237,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
+@@ -1227,6 +1239,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
    ]
  }
  
@@ -1066,7 +1066,7 @@ index abc8d4ee9c..d304ca01b8 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1238,6 +1251,7 @@ if (!build_with_chromium && is_android) {
+@@ -1240,6 +1253,7 @@ if (!build_with_chromium && is_android) {
      ]
    }
  }
@@ -1097,7 +1097,7 @@ index 96b3cd9c20..ff60d70100 100644
      "../api/adaptation:resource_adaptation_api",
      "../api/task_queue:pending_task_safety_flag",
 diff --git a/webrtc.gni b/webrtc.gni
-index 9052ba5eea..4950044767 100644
+index 823dfa7418..d1f9de6968 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {
@@ -1124,7 +1124,7 @@ index 9052ba5eea..4950044767 100644
  declare_args() {
    # Setting this to true will make RTC_EXPORT (see rtc_base/system/rtc_export.h)
    # expand to code that will manage symbols visibility.
-@@ -84,7 +94,7 @@ declare_args() {
+@@ -88,7 +98,7 @@ declare_args() {
    # will tell the pre-processor to remove the default definition of the
    # SystemTimeNanos() which is defined in rtc_base/system_time.cc. In
    # that case a new implementation needs to be provided.
@@ -1133,7 +1133,7 @@ index 9052ba5eea..4950044767 100644
  
    # Setting this to false will require the API user to pass in their own
    # SSLCertificateVerifier to verify the certificates presented from a
-@@ -110,7 +120,7 @@ declare_args() {
+@@ -114,7 +124,7 @@ declare_args() {
  
    # Used to specify an external OpenSSL include path when not compiling the
    # library that comes with WebRTC (i.e. rtc_build_ssl == 0).
@@ -1142,7 +1142,7 @@ index 9052ba5eea..4950044767 100644
  
    # Enable when an external authentication mechanism is used for performing
    # packet authentication for RTP packets instead of libsrtp.
-@@ -127,13 +137,13 @@ declare_args() {
+@@ -131,13 +141,13 @@ declare_args() {
    rtc_enable_bwe_test_logging = false
  
    # Set this to false to skip building examples.
@@ -1159,7 +1159,7 @@ index 9052ba5eea..4950044767 100644
  
    # Set this to use PipeWire on the Wayland display server.
    # By default it's only enabled on desktop Linux (excludes ChromeOS) and
-@@ -144,9 +154,6 @@ declare_args() {
+@@ -148,9 +158,6 @@ declare_args() {
    # Set this to link PipeWire and required libraries directly instead of using the dlopen.
    rtc_link_pipewire = false
  
@@ -1169,7 +1169,7 @@ index 9052ba5eea..4950044767 100644
    # Experimental: enable use of Android AAudio which requires Android SDK 26 or above
    # and NDK r16 or above.
    rtc_enable_android_aaudio = false
-@@ -214,7 +221,7 @@ declare_args() {
+@@ -218,7 +225,7 @@ declare_args() {
    # video codecs they depends on will not be included in libwebrtc.{a|lib}
    # (they will still be included in libjingle_peerconnection_so.so and
    # WebRTC.framework)
@@ -1178,7 +1178,7 @@ index 9052ba5eea..4950044767 100644
  
    # When set to true and in a standalone build, it will undefine UNICODE and
    # _UNICODE (which are always defined globally by the Chromium Windows
-@@ -227,7 +234,7 @@ declare_args() {
+@@ -231,7 +238,7 @@ declare_args() {
    # When set to true, a capturer implementation that uses the
    # Windows.Graphics.Capture APIs will be available for use. This introduces a
    # dependency on the Win 10 SDK v10.0.17763.0.
@@ -1187,7 +1187,7 @@ index 9052ba5eea..4950044767 100644
  
    # Includes the dav1d decoder in the internal decoder factory when set to true.
    rtc_include_dav1d_in_internal_decoder_factory = true
-@@ -262,7 +269,7 @@ declare_args() {
+@@ -266,7 +273,7 @@ declare_args() {
    rtc_build_json = !build_with_mozilla
    rtc_build_libsrtp = !build_with_mozilla
    rtc_build_libvpx = !build_with_mozilla
@@ -1196,7 +1196,7 @@ index 9052ba5eea..4950044767 100644
    rtc_build_opus = !build_with_mozilla
    rtc_build_ssl = !build_with_mozilla
  
-@@ -281,7 +288,7 @@ declare_args() {
+@@ -285,7 +292,7 @@ declare_args() {
  
    # Chromium uses its own IO handling, so the internal ADM is only built for
    # standalone WebRTC.
@@ -1205,7 +1205,7 @@ index 9052ba5eea..4950044767 100644
  
    # Set this to true to enable the avx2 support in webrtc.
    # TODO: Make sure that AVX2 works also for non-clang compilers.
-@@ -325,6 +332,9 @@ declare_args() {
+@@ -329,6 +336,9 @@ declare_args() {
    rtc_enable_grpc = rtc_enable_protobuf && (is_linux || is_mac)
  }
  
@@ -1215,7 +1215,7 @@ index 9052ba5eea..4950044767 100644
  # Make it possible to provide custom locations for some libraries (move these
  # up into declare_args should we need to actually use them for the GN build).
  rtc_libvpx_dir = "//third_party/libvpx"
-@@ -1120,7 +1130,7 @@ if (is_mac || is_ios) {
+@@ -1124,7 +1134,7 @@ if (is_mac || is_ios) {
    }
  }
  
