@@ -184,6 +184,8 @@ Result<DatabaseVersion, QMResult> SchemaVersion001::InitializeConnection(
     QM_TRY(QM_TO_RESULT(transaction.Commit()));
   }
 
+  QM_TRY(QM_TO_RESULT(aConn->ExecuteSimpleSQL("PRAGMA foreign_keys = ON;"_ns)));
+
   QM_TRY(QM_TO_RESULT(aConn->GetSchemaVersion(&currentVersion)));
 
   return currentVersion;

@@ -113,38 +113,41 @@ Result<DatabaseVersion, QMResult> SchemaVersion002::InitializeConnection(
     QM_TRY(QM_TO_RESULT(aConn->GetSchemaVersion(&currentVersion)));
   }
 
-  if (sVersion == currentVersion) {
-    return sVersion;
+  if (currentVersion < sVersion) {
+    MOZ_ASSERT_IF(0 != currentVersion, 1 == currentVersion);
+
+    mozStorageTransaction transaction(
+        aConn.get(),
+        /* commit on complete */ false,
+        mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+    if (0 == currentVersion) {
+      QM_TRY(QM_TO_RESULT(SchemaVersion001::CreateTables(aConn, aOrigin)));
+    }
+
+    QM_TRY(QM_TO_RESULT(CreateFileIds(aConn)));
+
+    if (!wasEmpty) {
+      QM_TRY(QM_TO_RESULT(PopulateFileIds(aConn)));
+      QM_TRY(QM_TO_RESULT(ConnectUsagesToFileIds(aConn)));
+    }
+
+    QM_TRY(QM_TO_RESULT(CreateMainFiles(aConn)));
+    QM_TRY(QM_TO_RESULT(CreateEntryNamesView(aConn)));
+    QM_TRY(QM_TO_RESULT(aConn->SetSchemaVersion(sVersion)));
+
+    QM_TRY(QM_TO_RESULT(transaction.Commit()));
+
+    if (!wasEmpty) {
+      QM_TRY(QM_TO_RESULT(aConn->ExecuteSimpleSQL("VACUUM;"_ns)));
+    }
   }
 
-  MOZ_ASSERT_IF(0 != currentVersion, 1 == currentVersion);
+  QM_TRY(QM_TO_RESULT(aConn->ExecuteSimpleSQL("PRAGMA foreign_keys = ON;"_ns)));
 
-  mozStorageTransaction transaction(
-      aConn.get(),
-      /* commit on complete */ false,
-      mozIStorageConnection::TRANSACTION_IMMEDIATE);
+  QM_TRY(QM_TO_RESULT(aConn->GetSchemaVersion(&currentVersion)));
 
-  if (0 == currentVersion) {
-    QM_TRY(QM_TO_RESULT(SchemaVersion001::CreateTables(aConn, aOrigin)));
-  }
-
-  QM_TRY(QM_TO_RESULT(CreateFileIds(aConn)));
-  if (!wasEmpty) {
-    QM_TRY(QM_TO_RESULT(PopulateFileIds(aConn)));
-    QM_TRY(QM_TO_RESULT(ConnectUsagesToFileIds(aConn)));
-  }
-
-  QM_TRY(QM_TO_RESULT(CreateMainFiles(aConn)));
-  QM_TRY(QM_TO_RESULT(CreateEntryNamesView(aConn)));
-  QM_TRY(QM_TO_RESULT(aConn->SetSchemaVersion(sVersion)));
-
-  QM_TRY(QM_TO_RESULT(transaction.Commit()));
-
-  if (!wasEmpty) {
-    QM_TRY(QM_TO_RESULT(aConn->ExecuteSimpleSQL("VACUUM;"_ns)));
-  }
-
-  return sVersion;
+  return currentVersion;
 }
 
 }  // namespace mozilla::dom::fs
