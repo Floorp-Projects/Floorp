@@ -32,7 +32,6 @@
 static const char kOpenCaptivePortalLoginEvent[] = "captive-portal-login";
 static const char kClearPrivateData[] = "clear-private-data";
 static const char kPurge[] = "browser:purge-session-history";
-static const char kDisableIpv6Pref[] = "network.dns.disableIPv6";
 
 #define TRR_PREF_PREFIX "network.trr."
 #define TRR_PREF(x) TRR_PREF_PREFIX x
@@ -184,7 +183,6 @@ nsresult TRRService::Init() {
   GetPrefBranch(getter_AddRefs(prefBranch));
   if (prefBranch) {
     prefBranch->AddObserver(TRR_PREF_PREFIX, this, true);
-    prefBranch->AddObserver(kDisableIpv6Pref, this, true);
     prefBranch->AddObserver(kRolloutURIPref, this, true);
     prefBranch->AddObserver(kRolloutModePref, this, true);
   }
@@ -407,12 +405,6 @@ nsresult TRRService::ReadPrefs(const char* name) {
     MutexSingleWriterAutoLock lock(mLock);
     Preferences::GetCString(TRR_PREF("bootstrapAddr"), mBootstrapAddr);
     clearEntireCache = true;
-  }
-  if (!name || !strcmp(name, kDisableIpv6Pref)) {
-    bool tmp;
-    if (NS_SUCCEEDED(Preferences::GetBool(kDisableIpv6Pref, &tmp))) {
-      mDisableIPv6 = tmp;
-    }
   }
   if (!name || !strcmp(name, TRR_PREF("excluded-domains")) ||
       !strcmp(name, TRR_PREF("builtin-excluded-domains"))) {

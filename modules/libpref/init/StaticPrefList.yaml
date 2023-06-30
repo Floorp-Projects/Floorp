@@ -12619,6 +12619,18 @@
   value: false
   mirror: always
 
+# This preference can be used to turn off IPv6 name lookups. See bug 68796.
+- name: network.dns.disableIPv6
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# Whether to add additional record IPs to the cache
+- name: network.trr.add_additional_records
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # When this pref is true, AddStorageEntry will return an error if the
 # OPEN_READONLY & OPEN_SECRETLY flags are passed and no entry exists.
 # If no regressions occur this pref should be removed.

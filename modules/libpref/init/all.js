@@ -1387,9 +1387,6 @@ pref("network.IDN.extra_blocked_chars", "");
 // and/or allows the user to disable IPv6 on a per-domain basis. See bug 68796.
 pref("network.dns.ipv4OnlyDomains", "");
 
-// This preference can be used to turn off IPv6 name lookups. See bug 68796.
-pref("network.dns.disableIPv6", false);
-
 // This is the number of dns cache entries allowed
 pref("network.dnsCacheEntries", 400);
 
