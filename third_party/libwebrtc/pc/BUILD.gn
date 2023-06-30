@@ -2544,6 +2544,27 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
   }
 
+  rtc_test("peer_connection_mediachannel_split_unittests") {
+    testonly = true
+    sources = [ "peer_connection_mediachannel_split_unittest.cc" ]
+    deps = [
+      ":integration_test_helpers",
+      ":session_description",
+      "../api:libjingle_peerconnection_api",
+      "../api:media_stream_interface",
+      "../api:rtc_error",
+      "../api:rtc_stats_api",
+      "../api:scoped_refptr",
+      "../media:codec",
+      "../media:media_constants",
+      "../rtc_base:gunit_helpers",
+      "../rtc_base:rtc_base_tests_utils",
+      "../test:test_main",
+      "../test:test_support",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
+
   rtc_library("data_channel_controller_unittest") {
     testonly = true
     sources = [ "data_channel_controller_unittest.cc" ]
