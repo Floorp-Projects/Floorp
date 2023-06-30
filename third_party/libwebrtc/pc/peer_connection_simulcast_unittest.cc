@@ -1133,13 +1133,13 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   // Ramp up time is needed before all three layers are sending.
   EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
                    kLongTimeoutForRampingUp.ms());
-  // No significant additional ramp up time should be needed so we use
-  // `kDefaultTimeout` and `log_during_ramp_up`.
+  // Sometimes additional ramp up is needed to get the expected resolutions. If
+  // that has not happened yet we log (`log_during_ramp_up=true`).
   EXPECT_TRUE_WAIT(HasOutboundRtpExpectedResolutions(
                        local_pc_wrapper,
                        {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}},
                        /*log_during_ramp_up=*/true),
-                   kDefaultTimeout.ms());
+                   kLongTimeoutForRampingUp.ms());
   // Verify codec and scalability mode.
   rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
   std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
@@ -1284,13 +1284,13 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   // Ramp up time is needed before all three layers are sending.
   EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
                    kLongTimeoutForRampingUp.ms());
-  // No significant additional ramp up time should be needed so we use
-  // `kDefaultTimeout` and `log_during_ramp_up`.
+  // Sometimes additional ramp up is needed to get the expected resolutions. If
+  // that has not happened yet we log (`log_during_ramp_up=true`).
   EXPECT_TRUE_WAIT(HasOutboundRtpExpectedResolutions(
                        local_pc_wrapper,
                        {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}},
                        /*log_during_ramp_up=*/true),
-                   kDefaultTimeout.ms());
+                   kLongTimeoutForRampingUp.ms());
   // Verify codec and scalability mode.
   rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
   std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
