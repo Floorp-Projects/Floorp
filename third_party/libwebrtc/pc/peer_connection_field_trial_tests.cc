@@ -237,8 +237,7 @@ TEST_F(PeerConnectionFieldTrialTest, ApplyFakeNetworkConfig) {
   auto video_track_source =
       rtc::make_ref_counted<FrameGeneratorCapturerVideoTrackSource>(
           config, clock_, /*is_screencast=*/false);
-  caller->AddTrack(
-      pc_factory_->CreateVideoTrack("v", video_track_source.get()));
+  caller->AddTrack(pc_factory_->CreateVideoTrack(video_track_source, "v"));
   WrapperPtr callee = CreatePeerConnection();
 
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));

@@ -814,8 +814,7 @@ class PeerConnectionInterfaceBaseTest : public ::testing::Test {
 
   rtc::scoped_refptr<VideoTrackInterface> CreateVideoTrack(
       const std::string& label) {
-    return pc_factory_->CreateVideoTrack(label,
-                                         FakeVideoTrackSource::Create().get());
+    return pc_factory_->CreateVideoTrack(FakeVideoTrackSource::Create(), label);
   }
 
   void AddVideoTrack(const std::string& track_label,
