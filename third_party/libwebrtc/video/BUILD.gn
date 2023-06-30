@@ -403,6 +403,7 @@ rtc_library("video_stream_encoder_impl") {
     "../modules/video_coding:video_codec_interface",
     "../modules/video_coding:video_coding_utility",
     "../modules/video_coding:webrtc_vp9_helpers",
+    "../modules/video_coding/svc:scalability_mode_util",
     "../modules/video_coding/svc:scalability_structures",
     "../modules/video_coding/svc:svc_rate_allocator",
     "../rtc_base:checks",

@@ -44,6 +44,7 @@ rtc_library("resource_adaptation") {
     "../../api/video:video_stream_encoder",
     "../../api/video_codecs:video_codecs_api",
     "../../modules/video_coding:video_coding_utility",
+    "../../modules/video_coding/svc:scalability_mode_util",
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:macromagic",
