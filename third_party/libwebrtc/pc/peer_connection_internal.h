@@ -76,7 +76,13 @@ class PeerConnectionSdpMethods {
   virtual LegacyStatsCollector* legacy_stats() = 0;
   // Returns the observer. Will crash on CHECK if the observer is removed.
   virtual PeerConnectionObserver* Observer() const = 0;
+  // TODO(webrtc:11547): Remove `GetSctpSslRole` and require `GetSctpSslRole_n`
+  // instead. Currently `GetSctpSslRole` relied upon by `DataChannelController`.
+  // Once that path has been updated to use `GetSctpSslRole_n`, this method
+  // can be removed.
   virtual bool GetSctpSslRole(rtc::SSLRole* role) = 0;
+  virtual absl::optional<rtc::SSLRole> GetSctpSslRole_n(
+      absl::optional<bool> is_caller) = 0;
   virtual PeerConnectionInterface::IceConnectionState
   ice_connection_state_internal() = 0;
   virtual void SetIceConnectionState(

@@ -275,6 +275,7 @@ DataChannelController::InternalCreateSctpDataChannel(
     // the network thread. (unless there's no transport). Change this so that
     // the role is checked on the network thread and any network thread related
     // initialization is done at the same time (to avoid additional hops).
+    // Use `GetSctpSslRole_n` on the network thread.
     if (pc_->GetSctpSslRole(&role)) {
       sid = sid_allocator_.AllocateSid(role);
       if (!sid.HasValue())
