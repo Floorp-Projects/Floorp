@@ -26,12 +26,30 @@ namespace {
 using ::testing::NiceMock;
 using ::testing::Return;
 
+class MockDataChannelTransport : public webrtc::DataChannelTransportInterface {
+ public:
+  ~MockDataChannelTransport() override {}
+
+  MOCK_METHOD(RTCError, OpenChannel, (int channel_id), (override));
+  MOCK_METHOD(RTCError,
+              SendData,
+              (int channel_id,
+               const SendDataParams& params,
+               const rtc::CopyOnWriteBuffer& buffer),
+              (override));
+  MOCK_METHOD(RTCError, CloseChannel, (int channel_id), (override));
+  MOCK_METHOD(void, SetDataSink, (DataChannelSink * sink), (override));
+  MOCK_METHOD(bool, IsReadyToSend, (), (const, override));
+};
+
 class DataChannelControllerTest : public ::testing::Test {
  protected:
   DataChannelControllerTest() {
     pc_ = rtc::make_ref_counted<NiceMock<MockPeerConnectionInternal>>();
     ON_CALL(*pc_, signaling_thread)
         .WillByDefault(Return(rtc::Thread::Current()));
+    // TODO(tommi): Return a dedicated thread.
+    ON_CALL(*pc_, network_thread).WillByDefault(Return(rtc::Thread::Current()));
   }
 
   ~DataChannelControllerTest() override { run_loop_.Flush(); }
@@ -114,6 +132,39 @@ TEST_F(DataChannelControllerTest, AsyncChannelCloseTeardown) {
   // Check that this is the last reference.
   EXPECT_EQ(inner_channel->Release(),
             rtc::RefCountReleaseStatus::kDroppedLastRef);
+}
+
+// Allocate the maximum number of data channels and then one more.
+// The last allocation should fail.
+TEST_F(DataChannelControllerTest, MaxChannels) {
+  NiceMock<MockDataChannelTransport> transport;
+  int channel_id = 0;
+
+  ON_CALL(*pc_, GetSctpSslRole).WillByDefault([&](rtc::SSLRole* role) {
+    *role = (channel_id & 1) ? rtc::SSL_SERVER : rtc::SSL_CLIENT;
+    return true;
+  });
+
+  DataChannelController dcc(pc_.get());
+  pc_->network_thread()->BlockingCall(
+      [&] { dcc.set_data_channel_transport(&transport); });
+
+  // Allocate the maximum number of channels + 1. Inside the loop, the creation
+  // process will allocate a stream id for each channel.
+  for (channel_id = 0; channel_id <= cricket::kMaxSctpStreams; ++channel_id) {
+    rtc::scoped_refptr<DataChannelInterface> channel =
+        dcc.InternalCreateDataChannelWithProxy(
+            "label",
+            std::make_unique<InternalDataChannelInit>(DataChannelInit()).get());
+
+    if (channel_id == cricket::kMaxSctpStreams) {
+      // We've reached the maximum and the previous call should have failed.
+      EXPECT_FALSE(channel.get());
+    } else {
+      // We're still working on saturating the pool. Things should be working.
+      EXPECT_TRUE(channel.get());
+    }
+  }
 }
 
 }  // namespace

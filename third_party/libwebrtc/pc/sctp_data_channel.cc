@@ -18,7 +18,6 @@
 #include "absl/cleanup/cleanup.h"
 #include "media/sctp/sctp_transport_internal.h"
 #include "pc/proxy.h"
-#include "pc/sctp_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/system/unused.h"
@@ -118,41 +117,26 @@ bool InternalDataChannelInit::IsValid() const {
   return true;
 }
 
-bool SctpSidAllocator::AllocateSid(rtc::SSLRole role, int* sid) {
+bool SctpSidAllocator::AllocateSid(rtc::SSLRole role, StreamId* sid) {
   int potential_sid = (role == rtc::SSL_CLIENT) ? 0 : 1;
-  while (!IsSidAvailable(potential_sid)) {
+  while (potential_sid <= static_cast<int>(cricket::kMaxSctpSid)) {
+    *sid = StreamId(potential_sid);
+    if (used_sids_.insert(*sid).second)
+      return true;
     potential_sid += 2;
-    if (potential_sid > static_cast<int>(cricket::kMaxSctpSid)) {
-      return false;
-    }
   }
-
-  *sid = potential_sid;
-  used_sids_.insert(potential_sid);
-  return true;
+  sid->reset();
+  return false;
 }
 
-bool SctpSidAllocator::ReserveSid(int sid) {
-  if (!IsSidAvailable(sid)) {
+bool SctpSidAllocator::ReserveSid(const StreamId& sid) {
+  if (!sid.HasValue() || sid.stream_id_int() > cricket::kMaxSctpSid)
     return false;
-  }
-  used_sids_.insert(sid);
-  return true;
+  return used_sids_.insert(sid).second;
 }
 
-void SctpSidAllocator::ReleaseSid(int sid) {
-  auto it = used_sids_.find(sid);
-  if (it != used_sids_.end()) {
-    used_sids_.erase(it);
-  }
-}
-
-bool SctpSidAllocator::IsSidAvailable(int sid) const {
-  if (sid < static_cast<int>(cricket::kMinSctpSid) ||
-      sid > static_cast<int>(cricket::kMaxSctpSid)) {
-    return false;
-  }
-  return used_sids_.find(sid) == used_sids_.end();
+void SctpSidAllocator::ReleaseSid(const StreamId& sid) {
+  used_sids_.erase(sid);
 }
 
 // static
@@ -192,16 +176,22 @@ SctpDataChannel::SctpDataChannel(
     rtc::Thread* network_thread)
     : signaling_thread_(signaling_thread),
       network_thread_(network_thread),
+      id_(config.id),
       internal_id_(GenerateUniqueId()),
       label_(label),
-      config_(config),
+      protocol_(config.protocol),
+      max_retransmit_time_(config.maxRetransmitTime),
+      max_retransmits_(config.maxRetransmits),
+      priority_(config.priority),
+      negotiated_(config.negotiated),
+      ordered_(config.ordered),
       observer_(nullptr),
       controller_(std::move(controller)) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_UNUSED(network_thread_);
-  RTC_DCHECK(config_.IsValid());
+  RTC_DCHECK(config.IsValid());
 
-  switch (config_.open_handshake_role) {
+  switch (config.open_handshake_role) {
     case webrtc::InternalDataChannelInit::kNone:  // pre-negotiated
       handshake_state_ = kHandshakeReady;
       break;
@@ -252,9 +242,50 @@ void SctpDataChannel::UnregisterObserver() {
   observer_ = nullptr;
 }
 
+std::string SctpDataChannel::label() const {
+  return label_;
+}
+
 bool SctpDataChannel::reliable() const {
   // May be called on any thread.
-  return !config_.maxRetransmits && !config_.maxRetransmitTime;
+  return !max_retransmits_ && !max_retransmit_time_;
+}
+
+bool SctpDataChannel::ordered() const {
+  return ordered_;
+}
+
+uint16_t SctpDataChannel::maxRetransmitTime() const {
+  return max_retransmit_time_ ? *max_retransmit_time_
+                              : static_cast<uint16_t>(-1);
+}
+
+uint16_t SctpDataChannel::maxRetransmits() const {
+  return max_retransmits_ ? *max_retransmits_ : static_cast<uint16_t>(-1);
+}
+
+absl::optional<int> SctpDataChannel::maxPacketLifeTime() const {
+  return max_retransmit_time_;
+}
+
+absl::optional<int> SctpDataChannel::maxRetransmitsOpt() const {
+  return max_retransmits_;
+}
+
+std::string SctpDataChannel::protocol() const {
+  return protocol_;
+}
+
+bool SctpDataChannel::negotiated() const {
+  return negotiated_;
+}
+
+int SctpDataChannel::id() const {
+  return id_.stream_id_int();
+}
+
+Priority SctpDataChannel::priority() const {
+  return priority_ ? *priority_ : Priority::kLow;
 }
 
 uint64_t SctpDataChannel::buffered_amount() const {
@@ -327,24 +358,24 @@ bool SctpDataChannel::Send(const DataBuffer& buffer) {
   return true;
 }
 
-void SctpDataChannel::SetSctpSid(int sid) {
+void SctpDataChannel::SetSctpSid(const StreamId& sid) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK_LT(config_.id, 0);
-  RTC_DCHECK_GE(sid, 0);
+  RTC_DCHECK(!id_.HasValue());
+  RTC_DCHECK(sid.HasValue());
   RTC_DCHECK_NE(handshake_state_, kHandshakeWaitingForAck);
   RTC_DCHECK_EQ(state_, kConnecting);
 
-  if (config_.id == sid) {
+  if (id_ == sid) {
     return;
   }
 
-  const_cast<InternalDataChannelInit&>(config_).id = sid;
-  controller_->AddSctpDataStream(sid);
+  id_ = sid;
+  controller_->AddSctpDataStream(sid.stream_id_int());
 }
 
 void SctpDataChannel::OnClosingProcedureStartedRemotely(int sid) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (sid == config_.id && state_ != kClosing && state_ != kClosed) {
+  if (id_.stream_id_int() == sid && state_ != kClosing && state_ != kClosed) {
     // Don't bother sending queued data since the side that initiated the
     // closure wouldn't receive it anyway. See crbug.com/559394 for a lengthy
     // discussion about this.
@@ -360,7 +391,7 @@ void SctpDataChannel::OnClosingProcedureStartedRemotely(int sid) {
 
 void SctpDataChannel::OnClosingProcedureComplete(int sid) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (sid == config_.id) {
+  if (id_.stream_id_int() == sid) {
     // If the closing procedure is complete, we should have finished sending
     // all pending data and transitioned to kClosing already.
     RTC_DCHECK_EQ(state_, kClosing);
@@ -380,13 +411,13 @@ void SctpDataChannel::OnTransportChannelCreated() {
   }
   // The sid may have been unassigned when controller_->ConnectDataChannel was
   // done. So always add the streams even if connected_to_transport_ is true.
-  if (config_.id >= 0) {
-    controller_->AddSctpDataStream(config_.id);
+  if (id_.HasValue()) {
+    controller_->AddSctpDataStream(id_.stream_id_int());
   }
 }
 
 void SctpDataChannel::OnTransportChannelClosed(RTCError error) {
-  // The SctpTransport is unusable, which could come from multiplie reasons:
+  // The SctpTransport is unusable, which could come from multiple reasons:
   // - the SCTP m= section was rejected
   // - the DTLS transport is closed
   // - the SCTP transport is closed
@@ -404,7 +435,7 @@ DataChannelStats SctpDataChannel::GetStats() const {
 void SctpDataChannel::OnDataReceived(const cricket::ReceiveDataParams& params,
                                      const rtc::CopyOnWriteBuffer& payload) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  if (params.sid != config_.id) {
+  if (id_.stream_id_int() != params.sid) {
     return;
   }
 
@@ -518,7 +549,9 @@ void SctpDataChannel::UpdateState() {
       if (connected_to_transport_) {
         if (handshake_state_ == kHandshakeShouldSendOpen) {
           rtc::CopyOnWriteBuffer payload;
-          WriteDataChannelOpenMessage(label_, config_, &payload);
+          WriteDataChannelOpenMessage(label_, protocol_, priority_, ordered_,
+                                      max_retransmits_, max_retransmit_time_,
+                                      &payload);
           SendControlMessage(payload);
         } else if (handshake_state_ == kHandshakeShouldSendAck) {
           rtc::CopyOnWriteBuffer payload;
@@ -547,9 +580,9 @@ void SctpDataChannel::UpdateState() {
           // to complete; after calling RemoveSctpDataStream,
           // OnClosingProcedureComplete will end up called asynchronously
           // afterwards.
-          if (!started_closing_procedure_ && controller_ && config_.id >= 0) {
+          if (!started_closing_procedure_ && controller_ && id_.HasValue()) {
             started_closing_procedure_ = true;
-            controller_->RemoveSctpDataStream(config_.id);
+            controller_->RemoveSctpDataStream(id_.stream_id_int());
           }
         }
       } else {
@@ -630,23 +663,23 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
     return false;
   }
 
-  send_params.ordered = config_.ordered;
+  send_params.ordered = ordered_;
   // Send as ordered if it is still going through OPEN/ACK signaling.
-  if (handshake_state_ != kHandshakeReady && !config_.ordered) {
+  if (handshake_state_ != kHandshakeReady && !ordered_) {
     send_params.ordered = true;
     RTC_LOG(LS_VERBOSE)
         << "Sending data as ordered for unordered DataChannel "
            "because the OPEN_ACK message has not been received.";
   }
 
-  send_params.max_rtx_count = config_.maxRetransmits;
-  send_params.max_rtx_ms = config_.maxRetransmitTime;
+  send_params.max_rtx_count = max_retransmits_;
+  send_params.max_rtx_ms = max_retransmit_time_;
   send_params.type =
       buffer.binary ? DataMessageType::kBinary : DataMessageType::kText;
 
   cricket::SendDataResult send_result = cricket::SDR_SUCCESS;
-  bool success =
-      controller_->SendData(config_.id, send_params, buffer.data, &send_result);
+  bool success = controller_->SendData(id_.stream_id_int(), send_params,
+                                       buffer.data, &send_result);
 
   if (success) {
     ++messages_sent_;
@@ -706,26 +739,27 @@ void SctpDataChannel::QueueControlMessage(
 bool SctpDataChannel::SendControlMessage(const rtc::CopyOnWriteBuffer& buffer) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DCHECK(writable_);
-  RTC_DCHECK_GE(config_.id, 0);
+  RTC_DCHECK(id_.HasValue());
 
   if (!controller_) {
     return false;
   }
   bool is_open_message = handshake_state_ == kHandshakeShouldSendOpen;
-  RTC_DCHECK(!is_open_message || !config_.negotiated);
+  RTC_DCHECK(!is_open_message || !negotiated_);
 
   SendDataParams send_params;
   // Send data as ordered before we receive any message from the remote peer to
   // make sure the remote peer will not receive any data before it receives the
   // OPEN message.
-  send_params.ordered = config_.ordered || is_open_message;
+  send_params.ordered = ordered_ || is_open_message;
   send_params.type = DataMessageType::kControl;
 
   cricket::SendDataResult send_result = cricket::SDR_SUCCESS;
-  bool retval =
-      controller_->SendData(config_.id, send_params, buffer, &send_result);
+  bool retval = controller_->SendData(id_.stream_id_int(), send_params, buffer,
+                                      &send_result);
   if (retval) {
-    RTC_LOG(LS_VERBOSE) << "Sent CONTROL message on channel " << config_.id;
+    RTC_LOG(LS_VERBOSE) << "Sent CONTROL message on channel "
+                        << id_.stream_id_int();
 
     if (handshake_state_ == kHandshakeShouldSendAck) {
       handshake_state_ = kHandshakeReady;

@@ -46,6 +46,8 @@ constexpr int kSctpSendBufferSize = 256 * 1024;
 constexpr uint16_t kMaxSctpStreams = 1024;
 constexpr uint16_t kMaxSctpSid = kMaxSctpStreams - 1;
 constexpr uint16_t kMinSctpSid = 0;
+// The maximum number of streams that can be negotiated according to spec.
+constexpr uint16_t kSpecMaxSctpSid = 65535;
 
 // This is the default SCTP port to use. It is passed along the wire and the
 // connectee and connector must be using the same port. It is not related to the
