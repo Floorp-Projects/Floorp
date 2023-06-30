@@ -200,12 +200,8 @@ void PeerParamsPreprocessor::ValidateParams(const PeerConfigurer& peer) {
              "video and one audio). Duplicate audio_config.sync_group="
           << p.audio_config->sync_group.value();
     }
-    // Check that if mode input file name specified only if mode is kFile.
-    if (p.audio_config.value().mode == AudioConfig::Mode::kGenerated) {
-      RTC_CHECK(!p.audio_config.value().input_file_name);
-    }
-    if (p.audio_config.value().mode == AudioConfig::Mode::kFile) {
-      RTC_CHECK(p.audio_config.value().input_file_name);
+    // Check that if input file name specified, the file actually exists.
+    if (p.audio_config.value().input_file_name) {
       RTC_CHECK(
           test::FileExists(p.audio_config.value().input_file_name.value()))
           << p.audio_config.value().input_file_name.value() << " doesn't exist";
