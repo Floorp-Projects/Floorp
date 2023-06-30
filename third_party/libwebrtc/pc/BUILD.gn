@@ -981,26 +981,12 @@ rtc_source_set("data_channel_controller") {
   ]
 }
 
-rtc_source_set("peer_connection_sdp_methods") {
-  visibility = [ ":*" ]
-  sources = [ "peer_connection_sdp_methods.h" ]
-  deps = [
-    ":jsep_transport_controller",
-    ":peer_connection_message_handler",
-    ":sctp_data_channel",
-    ":usage_pattern",
-    "../api:libjingle_peerconnection_api",
-    "../call:call_interfaces",
-  ]
-}
-
 rtc_source_set("peer_connection_internal") {
   visibility = [ ":*" ]
   sources = [ "peer_connection_internal.h" ]
   deps = [
     ":jsep_transport_controller",
     ":peer_connection_message_handler",
-    ":peer_connection_sdp_methods",
     ":rtp_transceiver",
     ":rtp_transmission_manager",
     ":sctp_data_channel",
@@ -1601,7 +1587,6 @@ rtc_library("rtp_transceiver") {
     ":channel",
     ":channel_interface",
     ":connection_context",
-    ":peer_connection_sdp_methods",
     ":proxy",
     ":rtp_media_utils",
     ":rtp_parameters_conversion",
