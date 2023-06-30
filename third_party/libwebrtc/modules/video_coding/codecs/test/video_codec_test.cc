@@ -581,7 +581,7 @@ TEST_P(SpatialQualityTest, DISABLED_SpatialQuality) {
 INSTANTIATE_TEST_SUITE_P(
     All,
     SpatialQualityTest,
-    Combine(Values("AV1", "VP9", "VP8", "H264"),
+    Combine(Values("AV1", "VP9", "VP8", "H264", "H265"),
 #if defined(WEBRTC_ANDROID)
             Values("builtin", "mediacodec"),
 #else
@@ -663,7 +663,7 @@ TEST_P(BitrateAdaptationTest, DISABLED_BitrateAdaptation) {
 
 INSTANTIATE_TEST_SUITE_P(All,
                          BitrateAdaptationTest,
-                         Combine(Values("AV1", "VP9", "VP8", "H264"),
+                         Combine(Values("AV1", "VP9", "VP8", "H264", "H265"),
 #if defined(WEBRTC_ANDROID)
                                  Values("builtin", "mediacodec"),
 #else
@@ -737,7 +737,7 @@ TEST_P(FramerateAdaptationTest, DISABLED_FramerateAdaptation) {
 
 INSTANTIATE_TEST_SUITE_P(All,
                          FramerateAdaptationTest,
-                         Combine(Values("AV1", "VP9", "VP8", "H264"),
+                         Combine(Values("AV1", "VP9", "VP8", "H264", "H265"),
 #if defined(WEBRTC_ANDROID)
                                  Values("builtin", "mediacodec"),
 #else
