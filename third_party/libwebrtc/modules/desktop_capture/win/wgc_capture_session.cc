@@ -192,6 +192,8 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
     }
   }
 
+  allow_zero_hertz_ = options.allow_wgc_zero_hertz();
+
   hr = session_->StartCapture();
   if (FAILED(hr)) {
     RTC_LOG(LS_ERROR) << "Failed to start CaptureSession: " << hr;
@@ -234,12 +236,21 @@ bool WgcCaptureSession::GetFrame(std::unique_ptr<DesktopFrame>* output_frame) {
     ProcessFrame();
   }
 
-  // Return false if we still don't have a valid frame leading to a
-  // DesktopCapturer::Result::ERROR_PERMANENT posted by the WGC capturer.
-  if (!queue_.current_frame()) {
+  // Return a NULL frame and false as `result` if we still don't have a valid
+  // frame. This will lead to a DesktopCapturer::Result::ERROR_PERMANENT being
+  // posted by the WGC capturer.
+  DesktopFrame* current_frame = queue_.current_frame();
+  if (!current_frame) {
     RTC_LOG(LS_ERROR) << "GetFrame failed.";
     return false;
   }
+
+  // Swap in the DesktopRegion in `damage_region_` which is updated in
+  // ProcessFrame(). The updated region is either empty or the full rect being
+  // captured where an empty damage region corresponds to "no change in content
+  // since last frame".
+  current_frame->mutable_updated_region()->Swap(&damage_region_);
+  damage_region_.Clear();
 
   // Emit the current frame.
   std::unique_ptr<DesktopFrame> new_frame = queue_.current_frame()->Share();
@@ -294,7 +305,7 @@ HRESULT WgcCaptureSession::ProcessFrame() {
 
   queue_.MoveToNextFrame();
   if (queue_.current_frame() && queue_.current_frame()->IsShared()) {
-    RTC_DLOG(LS_WARNING) << "Overwriting frame that is still shared.";
+    RTC_DLOG(LS_VERBOSE) << "Overwriting frame that is still shared.";
   }
 
   ComPtr<WGC::IDirect3D11CaptureFrame> capture_frame;
@@ -410,7 +421,7 @@ HRESULT WgcCaptureSession::ProcessFrame() {
   // Allocate the current frame buffer only if it is not already allocated or
   // if the size has changed. Note that we can't reallocate other buffers at
   // this point, since the caller may still be reading from them. The queue can
-  // hold up tp two frames.
+  // hold up to two frames.
   DesktopSize image_size(image_width, image_height);
   if (!queue_.current_frame() ||
       !queue_.current_frame()->size().equals(image_size)) {
@@ -432,6 +443,32 @@ HRESULT WgcCaptureSession::ProcessFrame() {
   }
 
   d3d_context->Unmap(mapped_texture_.Get(), 0);
+
+  if (allow_zero_hertz()) {
+    DesktopFrame* previous_frame = queue_.previous_frame();
+    if (previous_frame) {
+      const int previous_frame_size =
+          previous_frame->stride() * previous_frame->size().height();
+      const int current_frame_size =
+          current_frame->stride() * current_frame->size().height();
+
+      // Compare the latest frame with the previous and check if the frames are
+      // equal (both contain the exact same pixel values).
+      if (current_frame_size == previous_frame_size) {
+        const bool frames_are_equal = !memcmp(
+            current_frame->data(), previous_frame->data(), current_frame_size);
+        if (!frames_are_equal) {
+          // TODO(https://crbug.com/1421242): If we had an API to report proper
+          // damage regions we should be doing AddRect() with a SetRect() call
+          // on a resize.
+          damage_region_.SetRect(DesktopRect::MakeSize(current_frame->size()));
+        }
+      } else {
+        // Mark resized frames as damaged.
+        damage_region_.SetRect(DesktopRect::MakeSize(current_frame->size()));
+      }
+    }
+  }
 
   if (empty_frame_credit_count_ > 0)
     --empty_frame_credit_count_;

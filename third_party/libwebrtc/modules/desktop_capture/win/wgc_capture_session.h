@@ -82,6 +82,8 @@ class WgcCaptureSession final {
 
   void RemoveEventHandlers();
 
+  bool allow_zero_hertz() const { return allow_zero_hertz_; }
+
   std::unique_ptr<EventRegistrationToken> frame_arrived_token_;
   std::unique_ptr<EventRegistrationToken> item_closed_token_;
 
@@ -139,6 +141,17 @@ class WgcCaptureSession final {
   // kTryGetNextFrameFailed in the startup phase when some empty frames is
   // expected and should not be seen as an error.
   int empty_frame_credit_count_ = 0;
+
+  // Caches the value of DesktopCaptureOptions.allow_wgc_zero_hertz() in
+  // StartCapture(). Adds 0Hz detection in ProcessFrame() when enabled which
+  // adds complexity since memcmp() is performed on two successive frames.
+  bool allow_zero_hertz_ = false;
+
+  // Tracks damage region updates that were reported since the last time a frame
+  // was captured. Currently only supports either the complete rect being
+  // captured or an empty region. Will always be empty if `allow_zero_hertz_` is
+  // false.
+  DesktopRegion damage_region_;
 
   SequenceChecker sequence_checker_;
 };
