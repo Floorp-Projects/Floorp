@@ -2479,6 +2479,7 @@ TEST(GeckoProfiler, Markers)
       schema.AddKeyFormat("key with integer", MS::Format::Integer);
       schema.AddKeyFormat("key with decimal", MS::Format::Decimal);
       schema.AddStaticLabelValue("static label", "static value");
+      schema.AddKeyFormat("key with unique string", MS::Format::UniqueString);
       return schema;
     }
   };
@@ -3403,7 +3404,7 @@ TEST(GeckoProfiler, Markers)
             EXPECT_EQ_JSON(schema["tooltipLabel"], String, "tooltip label");
             EXPECT_EQ_JSON(schema["tableLabel"], String, "table label");
 
-            ASSERT_EQ(data.size(), 14u);
+            ASSERT_EQ(data.size(), 15u);
 
             ASSERT_TRUE(data[0u].isObject());
             EXPECT_EQ_JSON(data[0u]["key"], String, "key with url");
@@ -3488,6 +3489,12 @@ TEST(GeckoProfiler, Markers)
             ASSERT_TRUE(data[13u].isObject());
             EXPECT_EQ_JSON(data[13u]["label"], String, "static label");
             EXPECT_EQ_JSON(data[13u]["value"], String, "static value");
+
+            ASSERT_TRUE(data[14u].isObject());
+            EXPECT_EQ_JSON(data[14u]["key"], String, "key with unique string");
+            EXPECT_TRUE(data[14u]["label"].isNull());
+            EXPECT_EQ_JSON(data[14u]["format"], String, "unique-string");
+            EXPECT_TRUE(data[14u]["searchable"].isNull());
 
           } else if (nameString == "markers-gtest-special") {
             EXPECT_EQ(display.size(), 0u);

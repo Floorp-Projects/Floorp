@@ -720,6 +720,10 @@ class MarkerSchema {
     // e.g. "Label: Some String"
     String,
 
+    // Show a string from a UniqueStringArray given an index in the profile.
+    // e.g. 1, given string table ["hello", "world"] will show "world"
+    UniqueString,
+
     // ----------------------------------------------------
     // Numeric types
 
