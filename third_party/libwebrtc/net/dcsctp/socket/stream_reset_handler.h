@@ -72,7 +72,7 @@ class StreamResetHandler {
                      ReassemblyQueue* reassembly_queue,
                      RetransmissionQueue* retransmission_queue,
                      const DcSctpSocketHandoverState* handover_state = nullptr)
-      : log_prefix_(std::string(log_prefix) + "reset: "),
+      : log_prefix_(log_prefix),
         ctx_(context),
         data_tracker_(data_tracker),
         reassembly_queue_(reassembly_queue),
@@ -210,7 +210,7 @@ class StreamResetHandler {
   // Expiration handler for the Reconfig timer.
   absl::optional<DurationMs> OnReconfigTimerExpiry();
 
-  const std::string log_prefix_;
+  const absl::string_view log_prefix_;
   Context* ctx_;
   DataTracker* data_tracker_;
   ReassemblyQueue* reassembly_queue_;
