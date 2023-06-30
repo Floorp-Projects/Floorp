@@ -856,7 +856,7 @@ class SdpOfferAnswerHandler::RemoteDescriptionOperation {
       std::string error_message =
           GetSetDescriptionErrorMessage(cricket::CS_REMOTE, type_, error_);
       RTC_LOG(LS_ERROR) << error_message;
-      error_.set_message(std::move(error_message));
+      error_.set_message(error_message);
     }
 
     observer_->OnSetRemoteDescriptionComplete(error_);

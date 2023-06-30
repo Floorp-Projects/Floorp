@@ -10,10 +10,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fbbc1bf963fda30bc
  1 file changed, 2 insertions(+)
 
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 7d15a903e3..cc6e8ab8ce 100644
+index abc92cf4a8..86552cdab5 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
-@@ -734,6 +734,7 @@ rtc_library("create_frame_generator") {
+@@ -737,6 +737,7 @@ rtc_library("create_frame_generator") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
  
@@ -21,7 +21,7 @@ index 7d15a903e3..cc6e8ab8ce 100644
  rtc_library("create_peer_connection_quality_test_frame_generator") {
    visibility = [ "*" ]
    testonly = true
-@@ -750,6 +751,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
+@@ -753,6 +754,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
    ]
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  }
