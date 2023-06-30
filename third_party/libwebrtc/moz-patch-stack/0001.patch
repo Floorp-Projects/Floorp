@@ -70,7 +70,7 @@ index 0eae82a80a..ea1909bc4f 100644
        "../media:rtc_audio_video",
        "../media:rtc_media_base",
 diff --git a/pc/peer_connection_simulcast_unittest.cc b/pc/peer_connection_simulcast_unittest.cc
-index c21c11d922..238c0ae804 100644
+index 8e110aa9cc..1e8955be03 100644
 --- a/pc/peer_connection_simulcast_unittest.cc
 +++ b/pc/peer_connection_simulcast_unittest.cc
 @@ -38,16 +38,8 @@
