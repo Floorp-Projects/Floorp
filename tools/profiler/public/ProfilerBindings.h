@@ -134,6 +134,9 @@ void gecko_profiler_json_writer_bool_property(
 void gecko_profiler_json_writer_string_property(
     mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
     size_t aNameLength, const char* aValue, size_t aValueLength);
+void gecko_profiler_json_writer_unique_string_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, const char* aValue, size_t aValueLength);
 void gecko_profiler_json_writer_null_property(
     mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
     size_t aNameLength);

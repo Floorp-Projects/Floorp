@@ -303,6 +303,8 @@ Span<const char> MarkerSchema::FormatToStringSpan(
       return mozilla::MakeStringSpan("file-path");
     case Format::String:
       return mozilla::MakeStringSpan("string");
+    case Format::UniqueString:
+      return mozilla::MakeStringSpan("unique-string");
     case Format::Duration:
       return mozilla::MakeStringSpan("duration");
     case Format::Time:

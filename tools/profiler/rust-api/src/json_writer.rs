@@ -72,6 +72,20 @@ impl<'a> JSONWriter<'a> {
         }
     }
 
+    /// Adds a unique string property to the JSON.
+    /// Prints: "<name>": <string_table_index>
+    pub fn unique_string_property(&mut self, name: &str, value: &str) {
+        unsafe {
+            bindings::gecko_profiler_json_writer_unique_string_property(
+                self.0,
+                name.as_ptr() as *const c_char,
+                name.len(),
+                value.as_ptr() as *const c_char,
+                value.len(),
+            );
+        }
+    }
+
     /// Adds a null property to the JSON.
     /// Prints: "<name>": null
     pub fn null_property(&mut self, name: &str) {

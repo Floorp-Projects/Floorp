@@ -281,6 +281,15 @@ void gecko_profiler_json_writer_string_property(
 #endif
 }
 
+void gecko_profiler_json_writer_unique_string_property(
+    mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
+    size_t aNameLength, const char* aValue, size_t aValueLength) {
+#ifdef MOZ_GECKO_PROFILER
+  aWriter->UniqueStringProperty(mozilla::Span(aName, aNameLength),
+                                mozilla::Span(aValue, aValueLength));
+#endif
+}
+
 void gecko_profiler_json_writer_null_property(
     mozilla::baseprofiler::SpliceableJSONWriter* aWriter, const char* aName,
     size_t aNameLength) {

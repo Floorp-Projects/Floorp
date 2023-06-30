@@ -138,14 +138,15 @@ struct FrameMessageMarker {
   static void StreamJSONMarkerData(baseprofiler::SpliceableJSONWriter& aWriter,
                                    const ProfilerString16View& aMessageName,
                                    bool aIsSync) {
-    aWriter.StringProperty("name", NS_ConvertUTF16toUTF8(aMessageName));
+    aWriter.UniqueStringProperty("name", NS_ConvertUTF16toUTF8(aMessageName));
     aWriter.BoolProperty("sync", aIsSync);
   }
   static MarkerSchema MarkerTypeDisplay() {
     using MS = MarkerSchema;
     MS schema{MS::Location::MarkerChart, MS::Location::MarkerTable};
-    schema.AddKeyLabelFormatSearchable(
-        "name", "Message Name", MS::Format::String, MS::Searchable::Searchable);
+    schema.AddKeyLabelFormatSearchable("name", "Message Name",
+                                       MS::Format::UniqueString,
+                                       MS::Searchable::Searchable);
     schema.AddKeyLabelFormat("sync", "Sync", MS::Format::String);
     schema.SetTooltipLabel("FrameMessage - {marker.name}");
     schema.SetTableLabel("{marker.name} - {marker.data.name}");
