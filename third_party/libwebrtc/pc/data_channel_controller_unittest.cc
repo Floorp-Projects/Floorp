@@ -70,6 +70,20 @@ TEST_F(DataChannelControllerTest, CreateDataChannelEarlyRelease) {
   channel = nullptr;  // dcc holds a reference to channel, so not destroyed yet
 }
 
+TEST_F(DataChannelControllerTest, CreateDataChannelEarlyClose) {
+  DataChannelController dcc(pc_.get());
+  EXPECT_FALSE(dcc.HasDataChannels());
+  EXPECT_FALSE(dcc.HasUsedDataChannels());
+  auto channel = dcc.InternalCreateDataChannelWithProxy(
+      "label",
+      std::make_unique<InternalDataChannelInit>(DataChannelInit()).get());
+  EXPECT_TRUE(dcc.HasDataChannels());
+  EXPECT_TRUE(dcc.HasUsedDataChannels());
+  channel->Close();
+  EXPECT_FALSE(dcc.HasDataChannels());
+  EXPECT_TRUE(dcc.HasUsedDataChannels());
+}
+
 TEST_F(DataChannelControllerTest, CreateDataChannelLateRelease) {
   auto dcc = std::make_unique<DataChannelController>(pc_.get());
   auto channel = dcc->InternalCreateDataChannelWithProxy(
