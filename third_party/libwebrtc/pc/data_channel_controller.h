@@ -51,7 +51,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
                 const SendDataParams& params,
                 const rtc::CopyOnWriteBuffer& payload,
                 cricket::SendDataResult* result) override;
-  bool ConnectDataChannel(SctpDataChannel* webrtc_data_channel) override;
   void AddSctpDataStream(int sid) override;
   void RemoveSctpDataStream(int sid) override;
   bool ReadyToSendData() const override;

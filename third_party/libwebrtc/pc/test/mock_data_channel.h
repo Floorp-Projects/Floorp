@@ -50,6 +50,7 @@ class MockSctpDataChannel : public SctpDataChannel {
       : SctpDataChannel(config,
                         std::move(controller),
                         label,
+                        false,
                         signaling_thread,
                         network_thread) {
     EXPECT_CALL(*this, id()).WillRepeatedly(::testing::Return(id));

@@ -887,11 +887,9 @@ rtc_library("sctp_data_channel") {
     "../rtc_base:macromagic",
     "../rtc_base:ssl",
     "../rtc_base:threading",
-    "../rtc_base:threading",
     "../rtc_base:weak_ptr",
     "../rtc_base/containers:flat_set",
     "../rtc_base/system:unused",
-    "../rtc_base/third_party/sigslot:sigslot",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/cleanup",
@@ -973,7 +971,6 @@ rtc_source_set("data_channel_controller") {
     "../rtc_base:ssl",
     "../rtc_base:threading",
     "../rtc_base:weak_ptr",
-    "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",

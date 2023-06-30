@@ -43,14 +43,6 @@ bool DataChannelController::SendData(int sid,
   return false;
 }
 
-bool DataChannelController::ConnectDataChannel(
-    SctpDataChannel* webrtc_data_channel) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  // TODO(bugs.webrtc.org/11547): This method can be removed once not
-  // needed by `SctpDataChannel`.
-  return data_channel_transport() ? true : false;
-}
-
 void DataChannelController::AddSctpDataStream(int sid) {
   if (data_channel_transport()) {
     network_thread()->BlockingCall([this, sid] {
@@ -144,7 +136,7 @@ void DataChannelController::OnReadyToSend() {
     data_channel_transport_ready_to_send_ = true;
     auto copy = sctp_data_channels_;
     for (const auto& channel : copy)
-      channel->OnTransportReady(true);
+      channel->OnTransportReady();
   }));
 }
 
@@ -289,9 +281,19 @@ DataChannelController::InternalCreateSctpDataChannel(
   }
   // In case `sid` has changed. Update `new_config` accordingly.
   new_config.id = sid.stream_id_int();
-  rtc::scoped_refptr<SctpDataChannel> channel(
-      SctpDataChannel::Create(weak_factory_.GetWeakPtr(), label, new_config,
-                              signaling_thread(), network_thread()));
+  // TODO(bugs.webrtc.org/11547): The `data_channel_transport_` pointer belongs
+  // to the network thread but there are a few places where we check this
+  // pointer from the signaling thread. Instead of this approach, we should have
+  // a separate channel initialization step that runs on the network thread
+  // where we inform the channel of information about whether there's a
+  // transport or not, what the role is, and supply an id if any. Subsequently
+  // all that state in the channel code, is needed for callbacks from the
+  // transport which is already initiated from the network thread. Then we can
+  // Remove the trampoline code (see e.g. PostTask() calls in this file) that
+  // travels between the signaling and network threads.
+  rtc::scoped_refptr<SctpDataChannel> channel(SctpDataChannel::Create(
+      weak_factory_.GetWeakPtr(), label, data_channel_transport() != nullptr,
+      new_config, signaling_thread(), network_thread()));
   if (!channel) {
     sid_allocator_.ReleaseSid(sid);
     return nullptr;
@@ -402,6 +404,7 @@ bool DataChannelController::DataChannelSendData(
 
 void DataChannelController::NotifyDataChannelsOfTransportCreated() {
   RTC_DCHECK_RUN_ON(network_thread());
+  RTC_DCHECK(data_channel_transport());
   signaling_thread()->PostTask(SafeTask(signaling_safety_.flag(), [this] {
     RTC_DCHECK_RUN_ON(signaling_thread());
     auto copy = sctp_data_channels_;
