@@ -46,12 +46,6 @@ task-defaults:
                 nightly: false
                 default: true
     description: Execute Gradle tasks for component "{component}"
-    expose-artifacts:
-        by-build-type:
-            release: true
-            beta: true
-            nightly: true
-            default: false
     fetches:
         toolchain:
             - android-sdk-linux
@@ -99,11 +93,19 @@ task-defaults:
                             - ':{component}:test'
                             - ':{component}:lintRelease'
                             - 'githubBuildDetails'
+                        # No publish on these tasks
+                        tooling-fetch-tests|samples-.*:
+                            - ':{component}:assemble'
+                            - ':{component}:assembleAndroidTest'
+                            - ':{component}:testRelease'
+                            - ':{component}:lintRelease'
+                            - 'githubBuildDetails'
                         default:
                             - ':{component}:assemble'
                             - ':{component}:assembleAndroidTest'
                             - ':{component}:testRelease'
                             - ':{component}:lintRelease'
+                            - ':{component}:publish'
                             - 'githubBuildDetails'
         pre-gradlew:
             - ["cd", "android-components"]

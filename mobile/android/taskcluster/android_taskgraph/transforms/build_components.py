@@ -19,7 +19,6 @@ def resolve_keys(config, tasks):
     for task in tasks:
         for field in (
             "attributes.code-review",
-            "expose-artifacts",
             "include-coverage",
             "shipping-phase",
             "run-on-tasks-for",
@@ -159,7 +158,7 @@ def add_artifacts(config, tasks):
                     }
                 )
 
-        if task.pop("expose-artifacts", False):
+        if artifact_template:
             all_extensions = get_extensions(component)
             artifact_file_names_per_extension = {
                 extension: "{component}-{version}{timestamp}{extension}".format(
