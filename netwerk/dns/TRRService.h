@@ -48,7 +48,6 @@ class TRRService : public TRRServiceBase,
   bool IsConfirmed() { return mConfirmation.State() == CONFIRM_OK; }
   uint32_t ConfirmationState() { return mConfirmation.State(); }
 
-  bool DisableIPv6() { return mDisableIPv6; }
   void GetURI(nsACString& result) override;
   nsresult GetCredentials(nsCString& result);
   uint32_t GetRequestTimeout();
@@ -147,7 +146,6 @@ class TRRService : public TRRServiceBase,
 
   Atomic<bool, Relaxed> mCaptiveIsPassed{
       false};  // set when captive portal check is passed
-  Atomic<bool, Relaxed> mDisableIPv6;  // don't even try
   Atomic<bool, Relaxed> mShutdown{false};
   Atomic<bool, Relaxed> mDontUseTRRThread{false};
 

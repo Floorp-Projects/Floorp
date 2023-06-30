@@ -55,7 +55,6 @@ static const char kPrefDnsCacheExpiration[] = "network.dnsCacheExpiration";
 static const char kPrefDnsCacheGrace[] =
     "network.dnsCacheExpirationGracePeriod";
 static const char kPrefIPv4OnlyDomains[] = "network.dns.ipv4OnlyDomains";
-static const char kPrefDisableIPv6[] = "network.dns.disableIPv6";
 static const char kPrefBlockDotOnion[] = "network.dns.blockDotOnion";
 static const char kPrefDnsLocalDomains[] = "network.dns.localDomains";
 static const char kPrefDnsForceResolve[] = "network.dns.forceResolve";
@@ -788,11 +787,6 @@ void nsDNSService::ReadPrefs(const char* name) {
   }
 
   // DNSservice prefs
-  if (!name || !strcmp(name, kPrefDisableIPv6)) {
-    if (NS_SUCCEEDED(Preferences::GetBool(kPrefDisableIPv6, &tmpbool))) {
-      mDisableIPv6 = tmpbool;
-    }
-  }
   if (!name || !strcmp(name, kPrefDnsOfflineLocalhost)) {
     if (NS_SUCCEEDED(
             Preferences::GetBool(kPrefDnsOfflineLocalhost, &tmpbool))) {
@@ -865,7 +859,6 @@ nsDNSService::Init() {
     prefs->AddObserver(kPrefIPv4OnlyDomains, this, false);
     prefs->AddObserver(kPrefDnsLocalDomains, this, false);
     prefs->AddObserver(kPrefDnsForceResolve, this, false);
-    prefs->AddObserver(kPrefDisableIPv6, this, false);
     prefs->AddObserver(kPrefDnsOfflineLocalhost, this, false);
     prefs->AddObserver(kPrefBlockDotOnion, this, false);
     prefs->AddObserver(kPrefDnsNotifyResolution, this, false);
@@ -1334,7 +1327,8 @@ nsDNSService::Observe(nsISupports* subject, const char* topic,
 
 uint16_t nsDNSService::GetAFForLookup(const nsACString& host,
                                       nsIDNSService::DNSFlags flags) {
-  if (mDisableIPv6 || (flags & RESOLVE_DISABLE_IPV6)) {
+  if (StaticPrefs::network_dns_disableIPv6() ||
+      (flags & RESOLVE_DISABLE_IPV6)) {
     return PR_AF_INET;
   }
 
