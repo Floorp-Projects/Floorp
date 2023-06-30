@@ -103,6 +103,27 @@ message GenericAckReceived {
   optional bytes receive_acked_packet_time_ms_deltas = 20;
 }
 
+message DependencyDescriptorsWireInfo {
+  // required
+  // Base and delta encoded B and E bits represented as two bit numbers.
+  optional uint32 start_end_bit = 1;
+  optional bytes start_end_bit_deltas = 2;
+
+  // required
+  // Base and delta encoded template IDs, represented as six bit numbers.
+  optional uint32 template_id = 3;
+  optional bytes template_id_deltas = 4;
+
+  // required
+  // Base and delta compressed frame IDs.
+  optional uint32 frame_id = 5;
+  optional bytes frame_id_deltas = 6;
+
+  // optional - set if any DD contains extended information.
+  // The extended info encoded as optional blobs.
+  optional bytes extended_infos = 7;
+}
+
 message IncomingRtpPackets {
   // required
   optional int64 timestamp_ms = 1;
@@ -148,6 +169,8 @@ message IncomingRtpPackets {
   // `audio_level` and `voice_activity` are always used in conjunction.
   optional uint32 audio_level = 19;
   optional bool voice_activity = 20;
+  // Encodes all DD information in the batch, not just the base event.
+  optional DependencyDescriptorsWireInfo dependency_descriptor = 21;
   // TODO(terelius): Add other header extensions like playout delay?
 
   // Delta encodings.
@@ -217,6 +240,8 @@ message OutgoingRtpPackets {
   optional uint32 audio_level = 19;
   optional bool voice_activity = 20;
   // TODO(terelius): Add other header extensions like playout delay?
+  // Encodes all DD information in the batch, not just the base event.
+  optional DependencyDescriptorsWireInfo dependency_descriptor = 21;
 
   // Delta encodings.
   optional bytes timestamp_ms_deltas = 101;
