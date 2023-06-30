@@ -34,7 +34,14 @@ for v in ("OS_CPPFLAGS", "OS_CFLAGS", "DEBUG", "CLANG_PLUGIN", "OPTIMIZE", "FRAM
         idx += 1
     COMPILE_FLAGS[v] = flags
 
-COMPILE_FLAGS["OS_CFLAGS"] += ["-O2", "-fno-stack-protector", "-fno-lto"]
+COMPILE_FLAGS["OS_CFLAGS"] += [
+    "-O2",
+    "-fno-stack-protector",
+    "-fno-lto",
+    # The injected code runs early enough that it supporting unwinding is useless.
+    # Moreover, elfhack doesn't inject the eh_frame section anyways.
+    "-fno-asynchronous-unwind-tables",
+]
 
 AllowCompilerWarnings()
 NoVisibilityFlags()
