@@ -445,7 +445,7 @@ bool LibaomAv1Encoder::SetSvcParams(
   }
 
   // svc_params.layer_target_bitrate is set in SetRates() before svc_params is
-  // passed to SetEncoderControlParameters((AV1E_SET_SVC_PARAMS).
+  // passed to SetEncoderControlParameters(AV1E_SET_SVC_PARAMS).
 
   return true;
 }
