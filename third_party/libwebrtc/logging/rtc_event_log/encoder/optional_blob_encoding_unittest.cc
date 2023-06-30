@@ -86,7 +86,19 @@ TEST(OptionalBlobEncoding, SomeBlobsPresent) {
 TEST(OptionalBlobEncoding, NoBlobsPresent) {
   std::string encoded =
       EncodeOptionalBlobs({absl::nullopt, absl::nullopt, absl::nullopt});
-  std::string expected = BitBuilder().Bit(0).Bit(0).Bit(0).Bit(0).AsString();
+  EXPECT_THAT(encoded, IsEmpty());
+}
+
+TEST(OptionalBlobEncoding, EmptyBlobsPresent) {
+  std::string encoded = EncodeOptionalBlobs({absl::nullopt, "", absl::nullopt});
+  std::string expected = BitBuilder()
+                             .Bit(0)
+                             .Bit(0)
+                             .Bit(1)
+                             .Bit(0)
+                             .ByteAlign()
+                             .Bytes({0x0})
+                             .AsString();
   EXPECT_EQ(encoded, expected);
 }
 
@@ -138,11 +150,22 @@ TEST(OptionalBlobDecoding, SomeBlobsPresent) {
 }
 
 TEST(OptionalBlobDecoding, NoBlobsPresent) {
-  std::string encoded =
-      BitBuilder().Bit(0).Bit(0).Bit(0).Bit(0).ByteAlign().AsString();
-  auto decoded = DecodeOptionalBlobs(encoded, 3);
+  auto decoded = DecodeOptionalBlobs("", 3);
   EXPECT_THAT(decoded,
               ElementsAre(absl::nullopt, absl::nullopt, absl::nullopt));
+}
+
+TEST(OptionalBlobDecoding, EmptyBlobsPresent) {
+  std::string encoded = BitBuilder()
+                            .Bit(0)
+                            .Bit(0)
+                            .Bit(1)
+                            .Bit(0)
+                            .ByteAlign()
+                            .Bytes({0x0})
+                            .AsString();
+  auto decoded = DecodeOptionalBlobs(encoded, 3);
+  EXPECT_THAT(decoded, ElementsAre(absl::nullopt, "", absl::nullopt));
 }
 
 TEST(OptionalBlobDecoding, ZeroBlobs) {
