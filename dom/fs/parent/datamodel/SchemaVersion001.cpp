@@ -8,6 +8,7 @@
 
 #include "FileSystemHashSource.h"
 #include "ResultStatement.h"
+#include "StartedTransaction.h"
 #include "fs/FileSystemConstants.h"
 #include "mozStorageHelper.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
@@ -110,8 +111,7 @@ nsresult CreateRootEntry(ResultConnection& aConn, const Origin& aOrigin) {
   QM_TRY_UNWRAP(EntryId rootId,
                 data::FileSystemHashSource::GenerateHash(aOrigin, kRootString));
 
-  mozStorageTransaction transaction(
-      aConn.get(), false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+  QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(aConn));
 
   {
     QM_TRY_UNWRAP(ResultStatement stmt,
@@ -173,10 +173,7 @@ Result<DatabaseVersion, QMResult> SchemaVersion001::InitializeConnection(
   }
 
   if (currentVersion < sVersion) {
-    mozStorageTransaction transaction(
-        aConn.get(),
-        /* commit on complete */ false,
-        mozIStorageConnection::TRANSACTION_IMMEDIATE);
+    QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(aConn));
 
     QM_TRY(QM_TO_RESULT(SchemaVersion001::CreateTables(aConn, aOrigin)));
     QM_TRY(QM_TO_RESULT(aConn->SetSchemaVersion(sVersion)));
