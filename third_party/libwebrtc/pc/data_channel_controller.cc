@@ -33,7 +33,7 @@ bool DataChannelController::HasUsedDataChannels() const {
   return has_used_data_channels_;
 }
 
-bool DataChannelController::SendData(int sid,
+bool DataChannelController::SendData(StreamId sid,
                                      const SendDataParams& params,
                                      const rtc::CopyOnWriteBuffer& payload,
                                      cricket::SendDataResult* result) {
@@ -43,21 +43,21 @@ bool DataChannelController::SendData(int sid,
   return false;
 }
 
-void DataChannelController::AddSctpDataStream(int sid) {
+void DataChannelController::AddSctpDataStream(StreamId sid) {
   if (data_channel_transport()) {
     network_thread()->BlockingCall([this, sid] {
       if (data_channel_transport()) {
-        data_channel_transport()->OpenChannel(sid);
+        data_channel_transport()->OpenChannel(sid.stream_id_int());
       }
     });
   }
 }
 
-void DataChannelController::RemoveSctpDataStream(int sid) {
+void DataChannelController::RemoveSctpDataStream(StreamId sid) {
   if (data_channel_transport()) {
     network_thread()->BlockingCall([this, sid] {
       if (data_channel_transport()) {
-        data_channel_transport()->CloseChannel(sid);
+        data_channel_transport()->CloseChannel(sid.stream_id_int());
       }
     });
   }
@@ -375,7 +375,7 @@ void DataChannelController::set_data_channel_transport(
 }
 
 bool DataChannelController::DataChannelSendData(
-    int sid,
+    StreamId sid,
     const SendDataParams& params,
     const rtc::CopyOnWriteBuffer& payload,
     cricket::SendDataResult* result) {
@@ -386,7 +386,8 @@ bool DataChannelController::DataChannelSendData(
   RTC_DCHECK(data_channel_transport());
 
   RTCError error = network_thread()->BlockingCall([this, sid, params, payload] {
-    return data_channel_transport()->SendData(sid, params, payload);
+    return data_channel_transport()->SendData(sid.stream_id_int(), params,
+                                              payload);
   });
 
   if (error.ok()) {
