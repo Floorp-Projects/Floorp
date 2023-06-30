@@ -384,9 +384,9 @@ class ShowTab extends Control {
     );
 
     const ctrls = document.querySelector("#controls");
-    ctrls.append(renderElements("div", { className: "controls" }, [ctrl, msg]));
     ctrls.appendChild(autorefresh);
     ctrls.appendChild(autorefreshLabel);
+    ctrls.append(renderElements("div", { className: "controls" }, [ctrl, msg]));
 
     const mediactx = document.querySelector("#mediactx");
     mediactx.append(await renderMediaCtx(elemRenderer));
