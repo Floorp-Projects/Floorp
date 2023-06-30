@@ -29,7 +29,6 @@
 #include "rtc_base/containers/flat_set.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/ssl_stream_adapter.h"  // For SSLRole
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/weak_ptr.h"
@@ -100,7 +99,7 @@ class SctpSidAllocator {
 
 // SctpDataChannel is an implementation of the DataChannelInterface based on
 // SctpTransport. It provides an implementation of unreliable or
-// reliabledata channels.
+// reliable data channels.
 
 // DataChannel states:
 // kConnecting: The channel has been created the transport might not yet be
@@ -122,8 +121,7 @@ class SctpSidAllocator {
 // 5. Bob sends outgoing stream reset.
 // 6. Alice receives incoming reset, Bob receives acknowledgement. Both receive
 //    OnClosingProcedureComplete callback and transition to kClosed.
-class SctpDataChannel : public DataChannelInterface,
-                        public sigslot::has_slots<> {
+class SctpDataChannel : public DataChannelInterface {
  public:
   static rtc::scoped_refptr<SctpDataChannel> Create(
       rtc::WeakPtr<SctpDataChannelControllerInterface> controller,
@@ -188,9 +186,10 @@ class SctpDataChannel : public DataChannelInterface,
   // Sets the SCTP sid and adds to transport layer if not set yet. Should only
   // be called once.
   void SetSctpSid(const StreamId& sid);
+
   // The remote side started the closing procedure by resetting its outgoing
   // stream (our incoming stream). Sets state to kClosing.
-  void OnClosingProcedureStartedRemotely(int sid);
+  void OnClosingProcedureStartedRemotely();
   // The closing procedure is complete; both incoming and outgoing stream
   // resets are done and the channel can transition to kClosed. Called
   // asynchronously after RemoveSctpDataStream.
