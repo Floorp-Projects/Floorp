@@ -191,9 +191,8 @@ TEST(RtcpReceiverTest, InvalidFeedbackPacketIsIgnored) {
   // Too short feedback packet.
   const uint8_t bad_packet[] = {0x81, rtcp::Rtpfb::kPacketType, 0, 0};
 
-  // TODO(danilchap): Add expectation RtcpPacketTypesCounterUpdated
-  // is not called once parser would be adjusted to avoid that callback on
-  // semi-valid packets.
+  EXPECT_CALL(mocks.packet_type_counter_observer, RtcpPacketTypesCounterUpdated)
+      .Times(0);
   receiver.IncomingPacket(bad_packet);
 }
 

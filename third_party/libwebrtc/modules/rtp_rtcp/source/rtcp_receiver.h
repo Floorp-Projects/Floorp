@@ -283,11 +283,11 @@ class RTCPReceiver final {
   TmmbrInformation* GetTmmbrInformation(uint32_t remote_ssrc)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleSenderReport(const rtcp::CommonHeader& rtcp_block,
+  bool HandleSenderReport(const rtcp::CommonHeader& rtcp_block,
                           PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleReceiverReport(const rtcp::CommonHeader& rtcp_block,
+  bool HandleReceiverReport(const rtcp::CommonHeader& rtcp_block,
                             PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
@@ -296,11 +296,11 @@ class RTCPReceiver final {
                          uint32_t remote_ssrc)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleSdes(const rtcp::CommonHeader& rtcp_block,
+  bool HandleSdes(const rtcp::CommonHeader& rtcp_block,
                   PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleXr(const rtcp::CommonHeader& rtcp_block,
+  bool HandleXr(const rtcp::CommonHeader& rtcp_block,
                 PacketInformation* packet_information,
                 bool& contains_dlrr,
                 uint32_t& ssrc)
@@ -318,18 +318,18 @@ class RTCPReceiver final {
                              PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleNack(const rtcp::CommonHeader& rtcp_block,
+  bool HandleNack(const rtcp::CommonHeader& rtcp_block,
                   PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleApp(const rtcp::CommonHeader& rtcp_block,
+  bool HandleApp(const rtcp::CommonHeader& rtcp_block,
                  PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleBye(const rtcp::CommonHeader& rtcp_block)
+  bool HandleBye(const rtcp::CommonHeader& rtcp_block)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandlePli(const rtcp::CommonHeader& rtcp_block,
+  bool HandlePli(const rtcp::CommonHeader& rtcp_block,
                  PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
@@ -337,19 +337,19 @@ class RTCPReceiver final {
                      PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleTmmbr(const rtcp::CommonHeader& rtcp_block,
+  bool HandleTmmbr(const rtcp::CommonHeader& rtcp_block,
                    PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleTmmbn(const rtcp::CommonHeader& rtcp_block,
+  bool HandleTmmbn(const rtcp::CommonHeader& rtcp_block,
                    PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleSrReq(const rtcp::CommonHeader& rtcp_block,
+  bool HandleSrReq(const rtcp::CommonHeader& rtcp_block,
                    PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
-  void HandleFir(const rtcp::CommonHeader& rtcp_block,
+  bool HandleFir(const rtcp::CommonHeader& rtcp_block,
                  PacketInformation* packet_information)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(rtcp_receiver_lock_);
 
