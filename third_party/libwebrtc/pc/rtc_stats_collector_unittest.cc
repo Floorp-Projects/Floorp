@@ -669,7 +669,8 @@ class RTCStatsCollectorTest : public ::testing::Test {
  public:
   RTCStatsCollectorTest()
       : pc_(rtc::make_ref_counted<FakePeerConnectionForStats>()),
-        stats_(new RTCStatsCollectorWrapper(pc_)) {}
+        stats_(new RTCStatsCollectorWrapper(pc_)),
+        data_channel_controller_(new FakeDataChannelController()) {}
 
   void ExpectReportContainsCertificateInfo(
       const rtc::scoped_refptr<const RTCStatsReport>& report,
@@ -955,6 +956,7 @@ class RTCStatsCollectorTest : public ::testing::Test {
   rtc::AutoThread main_thread_;
   rtc::scoped_refptr<FakePeerConnectionForStats> pc_;
   std::unique_ptr<RTCStatsCollectorWrapper> stats_;
+  std::unique_ptr<FakeDataChannelController> data_channel_controller_;
 };
 
 TEST_F(RTCStatsCollectorTest, SingleCallback) {
@@ -1592,9 +1594,11 @@ TEST_F(RTCStatsCollectorTest, CertificateStatsCache) {
 
 TEST_F(RTCStatsCollectorTest, CollectTwoRTCDataChannelStatsWithPendingId) {
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
-      /*id=*/-1, DataChannelInterface::kConnecting));
+      data_channel_controller_->weak_ptr(), /*id=*/-1,
+      DataChannelInterface::kConnecting));
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
-      /*id=*/-1, DataChannelInterface::kConnecting));
+      data_channel_controller_->weak_ptr(), /*id=*/-1,
+      DataChannelInterface::kConnecting));
 
   rtc::scoped_refptr<const RTCStatsReport> report = stats_->GetStatsReport();
 }
@@ -1605,8 +1609,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
   // the test, we reset the ID allocator at test start.
   SctpDataChannel::ResetInternalIdAllocatorForTesting(-1);
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
-      0, "MockSctpDataChannel0", DataChannelInterface::kConnecting, "udp", 1, 2,
-      3, 4));
+      data_channel_controller_->weak_ptr(), 0, "MockSctpDataChannel0",
+      DataChannelInterface::kConnecting, "udp", 1, 2, 3, 4));
   RTCDataChannelStats expected_data_channel0("D0", Timestamp::Zero());
   expected_data_channel0.label = "MockSctpDataChannel0";
   expected_data_channel0.protocol = "udp";
@@ -1618,8 +1622,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
   expected_data_channel0.bytes_received = 4;
 
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
-      1, "MockSctpDataChannel1", DataChannelInterface::kOpen, "tcp", 5, 6, 7,
-      8));
+      data_channel_controller_->weak_ptr(), 1, "MockSctpDataChannel1",
+      DataChannelInterface::kOpen, "tcp", 5, 6, 7, 8));
   RTCDataChannelStats expected_data_channel1("D1", Timestamp::Zero());
   expected_data_channel1.label = "MockSctpDataChannel1";
   expected_data_channel1.protocol = "tcp";
@@ -1631,8 +1635,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
   expected_data_channel1.bytes_received = 8;
 
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
-      2, "MockSctpDataChannel2", DataChannelInterface::kClosing, "udp", 9, 10,
-      11, 12));
+      data_channel_controller_->weak_ptr(), 2, "MockSctpDataChannel2",
+      DataChannelInterface::kClosing, "udp", 9, 10, 11, 12));
   RTCDataChannelStats expected_data_channel2("D2", Timestamp::Zero());
   expected_data_channel2.label = "MockSctpDataChannel2";
   expected_data_channel2.protocol = "udp";
@@ -1644,8 +1648,8 @@ TEST_F(RTCStatsCollectorTest, CollectRTCDataChannelStats) {
   expected_data_channel2.bytes_received = 12;
 
   pc_->AddSctpDataChannel(rtc::make_ref_counted<MockSctpDataChannel>(
-      3, "MockSctpDataChannel3", DataChannelInterface::kClosed, "tcp", 13, 14,
-      15, 16));
+      data_channel_controller_->weak_ptr(), 3, "MockSctpDataChannel3",
+      DataChannelInterface::kClosed, "tcp", 13, 14, 15, 16));
   RTCDataChannelStats expected_data_channel3("D3", Timestamp::Zero());
   expected_data_channel3.label = "MockSctpDataChannel3";
   expected_data_channel3.protocol = "tcp";
