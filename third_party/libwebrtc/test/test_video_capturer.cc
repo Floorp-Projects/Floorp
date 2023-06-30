@@ -40,6 +40,15 @@ void TestVideoCapturer::OnFrame(const VideoFrame& original_frame) {
 
   VideoFrame frame = MaybePreprocess(original_frame);
 
+  bool disable_adaptation;
+  {
+    MutexLock lock(&lock_);
+    disable_adaptation = disable_adaptation_;
+  }
+  if (disable_adaptation) {
+    broadcaster_.OnFrame(frame);
+  }
+
   if (!video_adapter_.AdaptFrameResolution(
           frame.width(), frame.height(), frame.timestamp_us() * 1000,
           &cropped_width, &cropped_height, &out_width, &out_height)) {
