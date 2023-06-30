@@ -738,8 +738,8 @@ class RTCStatsReportVerifier {
   void VerifyRTCSentRtpStreamStats(const RTCSentRtpStreamStats& sent_stream,
                                    RTCStatsVerifier& verifier) {
     VerifyRTCRtpStreamStats(sent_stream, verifier);
-    verifier.TestMemberIsDefined(sent_stream.packets_sent);
-    verifier.TestMemberIsDefined(sent_stream.bytes_sent);
+    verifier.TestMemberIsNonNegative<uint64_t>(sent_stream.packets_sent);
+    verifier.TestMemberIsNonNegative<uint64_t>(sent_stream.bytes_sent);
   }
 
   bool VerifyRTCInboundRtpStreamStats(
@@ -923,7 +923,8 @@ class RTCStatsReportVerifier {
   bool VerifyRTCOutboundRtpStreamStats(
       const RTCOutboundRtpStreamStats& outbound_stream) {
     RTCStatsVerifier verifier(report_.get(), &outbound_stream);
-    VerifyRTCRtpStreamStats(outbound_stream, verifier);
+    VerifyRTCSentRtpStreamStats(outbound_stream, verifier);
+
     verifier.TestMemberIsDefined(outbound_stream.mid);
     verifier.TestMemberIsDefined(outbound_stream.active);
     if (outbound_stream.kind.is_defined() && *outbound_stream.kind == "video") {
@@ -946,12 +947,10 @@ class RTCStatsReportVerifier {
     verifier.TestMemberIsNonNegative<uint32_t>(outbound_stream.nack_count);
     verifier.TestMemberIsOptionalIDReference(
         outbound_stream.remote_id, RTCRemoteInboundRtpStreamStats::kType);
-    verifier.TestMemberIsNonNegative<uint32_t>(outbound_stream.packets_sent);
     verifier.TestMemberIsNonNegative<double>(
         outbound_stream.total_packet_send_delay);
     verifier.TestMemberIsNonNegative<uint64_t>(
         outbound_stream.retransmitted_packets_sent);
-    verifier.TestMemberIsNonNegative<uint64_t>(outbound_stream.bytes_sent);
     verifier.TestMemberIsNonNegative<uint64_t>(
         outbound_stream.header_bytes_sent);
     verifier.TestMemberIsNonNegative<uint64_t>(

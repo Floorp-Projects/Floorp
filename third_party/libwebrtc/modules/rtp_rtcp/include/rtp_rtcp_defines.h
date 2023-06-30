@@ -350,7 +350,7 @@ struct RtpPacketCounter {
   size_t header_bytes;   // Number of bytes used by RTP headers.
   size_t payload_bytes;  // Payload bytes, excluding RTP headers and padding.
   size_t padding_bytes;  // Number of padding bytes.
-  uint32_t packets;      // Number of packets.
+  size_t packets;        // Number of packets.
   // The total delay of all `packets`. For RtpPacketToSend packets, this is
   // `time_in_send_queue()`. For receive packets, this is zero.
   webrtc::TimeDelta total_packet_delay = webrtc::TimeDelta::Zero();
