@@ -80,6 +80,33 @@ struct EncodingSettings {
     DataRate bitrate;
   };
   std::map<LayerId, LayerSettings> layer_settings;
+
+  bool IsSameSettings(const EncodingSettings& other) const {
+    if (scalability_mode != other.scalability_mode) {
+      return true;
+    }
+
+    for (auto [layer_id, layer] : layer_settings) {
+      const auto& other_layer = other.layer_settings.at(layer_id);
+      if (layer.resolution != other_layer.resolution) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  bool IsSameRate(const EncodingSettings& other) const {
+    for (auto [layer_id, layer] : layer_settings) {
+      const auto& other_layer = other.layer_settings.at(layer_id);
+      if (layer.bitrate != other_layer.bitrate ||
+          layer.framerate != other_layer.framerate) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 };
 
 const VideoInfo kFourPeople_1280x720_30 = {
@@ -188,17 +215,20 @@ class TestEncoder : public VideoCodecTester::Encoder,
     encoder_->RegisterEncodeCompleteCallback(this);
   }
 
+  void Initialize() override {
+    const EncodingSettings& first_frame_settings = frame_settings_.at(0);
+    Configure(first_frame_settings);
+    SetRates(first_frame_settings);
+  }
+
   void Encode(const VideoFrame& frame, EncodeCallback callback) override {
     callbacks_[frame.timestamp()] = std::move(callback);
 
     if (auto fs = frame_settings_.find(frame_num_);
-        fs != frame_settings_.end()) {
-      if (fs == frame_settings_.begin() ||
-          ConfigChanged(fs->second, std::prev(fs)->second)) {
+        fs != frame_settings_.begin() && fs != frame_settings_.end()) {
+      if (!fs->second.IsSameSettings(std::prev(fs)->second)) {
         Configure(fs->second);
-      }
-      if (fs == frame_settings_.begin() ||
-          RateChanged(fs->second, std::prev(fs)->second)) {
+      } else if (!fs->second.IsSameRate(std::prev(fs)->second)) {
         SetRates(fs->second);
       }
     }
@@ -261,6 +291,8 @@ class TestEncoder : public VideoCodecTester::Encoder,
 
     int result = encoder_->InitEncode(&vc, ves);
     ASSERT_EQ(result, WEBRTC_VIDEO_CODEC_OK);
+
+    SetRates(es);
   }
 
   void SetRates(const EncodingSettings& es) {
@@ -284,34 +316,6 @@ class TestEncoder : public VideoCodecTester::Encoder,
     encoder_->SetRates(rc);
   }
 
-  bool ConfigChanged(const EncodingSettings& es,
-                     const EncodingSettings& prev_es) const {
-    if (es.scalability_mode != prev_es.scalability_mode) {
-      return true;
-    }
-
-    for (auto [layer_id, layer_settings] : es.layer_settings) {
-      const auto& prev_layer_settings = prev_es.layer_settings.at(layer_id);
-      if (layer_settings.resolution != prev_layer_settings.resolution) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  bool RateChanged(const EncodingSettings& es,
-                   const EncodingSettings& prev_es) const {
-    for (auto [layer_id, layer_settings] : es.layer_settings) {
-      const auto& prev_layer_settings = prev_es.layer_settings.at(layer_id);
-      if (layer_settings.bitrate != prev_layer_settings.bitrate ||
-          layer_settings.framerate != prev_layer_settings.framerate) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   std::unique_ptr<VideoEncoder> encoder_;
   const std::string codec_type_;
   const std::map<int, EncodingSettings>& frame_settings_;
@@ -324,20 +328,24 @@ class TestDecoder : public VideoCodecTester::Decoder,
  public:
   TestDecoder(std::unique_ptr<VideoDecoder> decoder,
               const std::string codec_type)
-      : decoder_(std::move(decoder)), codec_type_(codec_type), frame_num_(0) {
+      : decoder_(std::move(decoder)), codec_type_(codec_type) {
     decoder_->RegisterDecodeCompleteCallback(this);
+  }
+
+  void Initialize() override {
+    VideoDecoder::Settings ds;
+    ds.set_codec_type(PayloadStringToCodecType(codec_type_));
+    ds.set_number_of_cores(1);
+    ds.set_max_render_resolution({1280, 720});
+
+    bool result = decoder_->Configure(ds);
+    ASSERT_TRUE(result);
   }
 
   void Decode(const EncodedImage& frame, DecodeCallback callback) override {
     callbacks_[frame.Timestamp()] = std::move(callback);
-
-    if (frame_num_ == 0) {
-      Configure();
-    }
-
     decoder_->Decode(frame, /*missing_frames=*/false,
                      /*render_time_ms=*/0);
-    ++frame_num_;
   }
 
   void Flush() override {
@@ -350,16 +358,6 @@ class TestDecoder : public VideoCodecTester::Decoder,
   VideoDecoder* decoder() { return decoder_.get(); }
 
  protected:
-  void Configure() {
-    VideoDecoder::Settings ds;
-    ds.set_codec_type(PayloadStringToCodecType(codec_type_));
-    ds.set_number_of_cores(1);
-    ds.set_max_render_resolution({1280, 720});
-
-    bool result = decoder_->Configure(ds);
-    ASSERT_TRUE(result);
-  }
-
   int Decoded(VideoFrame& decoded_frame) override {
     auto cb = callbacks_.find(decoded_frame.timestamp());
     RTC_CHECK(cb != callbacks_.end());
@@ -371,7 +369,6 @@ class TestDecoder : public VideoCodecTester::Decoder,
 
   std::unique_ptr<VideoDecoder> decoder_;
   const std::string codec_type_;
-  int frame_num_;
   std::map<uint32_t, DecodeCallback> callbacks_;
 };
 

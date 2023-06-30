@@ -91,6 +91,8 @@ class VideoCodecTester {
 
     virtual ~Encoder() = default;
 
+    virtual void Initialize() = 0;
+
     virtual void Encode(const VideoFrame& frame, EncodeCallback callback) = 0;
 
     virtual void Flush() = 0;
@@ -103,6 +105,8 @@ class VideoCodecTester {
         absl::AnyInvocable<void(const VideoFrame& decoded_frame)>;
 
     virtual ~Decoder() = default;
+
+    virtual void Initialize() = 0;
 
     virtual void Decode(const EncodedImage& frame, DecodeCallback callback) = 0;
 
