@@ -47,12 +47,14 @@ class VideoCodecTester {
 
   struct DecoderSettings {
     PacingSettings pacing;
-    absl::optional<std::string> decoded_y4m_base_path;
+    absl::optional<std::string> decoder_input_base_path;
+    absl::optional<std::string> decoder_output_base_path;
   };
 
   struct EncoderSettings {
     PacingSettings pacing;
-    absl::optional<std::string> encoded_ivf_base_path;
+    absl::optional<std::string> encoder_input_base_path;
+    absl::optional<std::string> encoder_output_base_path;
   };
 
   virtual ~VideoCodecTester() = default;
