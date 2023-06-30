@@ -101,13 +101,6 @@ PausableState* StreamState::GetPausableState(size_t peer) {
   return &it->second;
 }
 
-uint16_t StreamState::MarkNextAliveFrameAsDead() {
-  absl::optional<uint16_t> frame_id =
-      frame_ids_.PopFront(kAliveFramesQueueIndex);
-  RTC_DCHECK(frame_id.has_value());
-  return frame_id.value();
-}
-
 void StreamState::SetLastRenderedFrameTime(size_t peer, Timestamp time) {
   auto it = last_rendered_frame_time_.find(peer);
   if (it == last_rendered_frame_time_.end()) {

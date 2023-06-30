@@ -36,14 +36,11 @@ using ::testing::SizeIs;
 
 using StatsSample = ::webrtc::SamplesStatsCounter::StatsSample;
 
-constexpr int kMaxFramesInFlightPerStream = 10;
-
 DefaultVideoQualityAnalyzerOptions AnalyzerOptionsForTest() {
   DefaultVideoQualityAnalyzerOptions options;
   options.compute_psnr = false;
   options.compute_ssim = false;
   options.adjust_cropping_before_comparing_frames = false;
-  options.max_frames_in_flight_per_stream_count = kMaxFramesInFlightPerStream;
   return options;
 }
 

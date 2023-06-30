@@ -69,8 +69,6 @@ class StreamState {
   size_t GetAliveFramesCount() const {
     return frame_ids_.size(kAliveFramesQueueIndex);
   }
-  // Returns frame id of the frame which was marked as dead.
-  uint16_t MarkNextAliveFrameAsDead();
 
   void SetLastRenderedFrameTime(size_t peer, Timestamp time);
   absl::optional<Timestamp> last_rendered_frame_time(size_t peer) const;

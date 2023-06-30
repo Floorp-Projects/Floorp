@@ -133,6 +133,7 @@ DefaultVideoQualityAnalyzer::DefaultVideoQualityAnalyzer(
     : options_(options),
       clock_(clock),
       metrics_logger_(metrics_logger),
+      frames_storage_(options.max_frames_storage_duration, clock_),
       frames_comparator_(clock, cpu_measurer_, options) {
   RTC_CHECK(metrics_logger_);
 }
@@ -241,13 +242,16 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
             it->second.GetStatsForPeer(i));
       }
 
+      frames_storage_.Remove(it->second.id());
       captured_frames_in_flight_.erase(it);
     }
     captured_frames_in_flight_.emplace(
-        frame_id, FrameInFlight(stream_index, frame, captured_time,
+        frame_id, FrameInFlight(stream_index, frame_id, captured_time,
                                 std::move(frame_receivers_indexes)));
-    // Set frame id on local copy of the frame
-    captured_frames_in_flight_.at(frame_id).SetFrameId(frame_id);
+    // Store local copy of the frame with frame_id set.
+    VideoFrame local_frame(frame);
+    local_frame.set_id(frame_id);
+    frames_storage_.Add(std::move(local_frame), captured_time);
 
     // Update history stream<->frame mapping
     for (auto it = stream_to_frame_id_history_.begin();
@@ -257,20 +261,6 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     stream_to_frame_id_history_[stream_index].insert(frame_id);
     stream_to_frame_id_full_history_[stream_index].push_back(frame_id);
 
-    // If state has too many frames that are in flight => remove the oldest
-    // queued frame in order to avoid to use too much memory.
-    if (state->GetAliveFramesCount() >
-        options_.max_frames_in_flight_per_stream_count) {
-      uint16_t frame_id_to_remove = state->MarkNextAliveFrameAsDead();
-      auto it = captured_frames_in_flight_.find(frame_id_to_remove);
-      RTC_CHECK(it != captured_frames_in_flight_.end())
-          << "Frame with ID " << frame_id_to_remove
-          << " is expected to be in flight, but hasn't been found in "
-          << "|captured_frames_in_flight_|";
-      bool is_removed = it->second.RemoveFrame();
-      RTC_DCHECK(is_removed)
-          << "Invalid stream state: alive frame is removed already";
-    }
     if (options_.report_infra_metrics) {
       analyzer_stats_.on_frame_captured_processing_time_ms.AddSample(
           (Now() - captured_time).ms<double>());
@@ -518,7 +508,7 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
 
   // Find corresponding captured frame.
   FrameInFlight* frame_in_flight = &frame_it->second;
-  absl::optional<VideoFrame> captured_frame = frame_in_flight->frame();
+  absl::optional<VideoFrame> captured_frame = frames_storage_.Get(frame.id());
 
   const size_t stream_index = frame_in_flight->stream();
   StreamState* state = &stream_states_.at(stream_index);
@@ -566,6 +556,7 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
       frame_in_flight->GetStatsForPeer(peer_index));
 
   if (frame_it->second.HaveAllPeersReceived()) {
+    frames_storage_.Remove(frame_it->second.id());
     captured_frames_in_flight_.erase(frame_it);
   }
 
@@ -720,6 +711,7 @@ void DefaultVideoQualityAnalyzer::UnregisterParticipantInCall(
     // is no FrameInFlight for the received encoded image.
     if (frame_in_flight.HasEncodedTime() &&
         frame_in_flight.HaveAllPeersReceived()) {
+      frames_storage_.Remove(frame_in_flight.id());
       it = captured_frames_in_flight_.erase(it);
     } else {
       it++;
@@ -1049,6 +1041,7 @@ int DefaultVideoQualityAnalyzer::ProcessNotSeenFramesBeforeRendered(
     }
 
     if (next_frame_it->second.HaveAllPeersReceived()) {
+      frames_storage_.Remove(next_frame_it->second.id());
       captured_frames_in_flight_.erase(next_frame_it);
     }
   }

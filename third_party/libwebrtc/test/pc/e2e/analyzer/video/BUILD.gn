@@ -313,6 +313,7 @@ rtc_library("default_video_quality_analyzer") {
     "../../../../../rtc_base:stringutils",
     "../../../../../rtc_base/synchronization:mutex",
     "../../../../../system_wrappers",
+    "dvqa:frames_storage",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -326,6 +327,7 @@ rtc_library("default_video_quality_analyzer_shared") {
 
   deps = [
     "../../../../../api/numerics",
+    "../../../../../api/units:time_delta",
     "../../../../../api/units:timestamp",
     "../../../../../rtc_base:checks",
     "../../../../../rtc_base:stringutils",
