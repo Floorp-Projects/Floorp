@@ -136,24 +136,6 @@ rtcrtpsender.setparameters:
       - webrtc-telemetry-alerts@mozilla.com
     expires: 120
 
-  warn_rid_changed:
-    type: rate
-    description: >
-      The proportion of RTCRtpSenders configured with the setParameters compat
-      mode that have warned at least once about a setParameters call that
-      attempted to change the rid on an encoding (note that we only check this
-      if the encoding count did not change, see warn_length_changed).
-    denominator_metric: rtcrtpsender.count_setparameters_compat
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1401592
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - webrtc-telemetry-alerts@mozilla.com
-    expires: 116
-
   warn_no_transactionid:
     type: rate
     description: >
