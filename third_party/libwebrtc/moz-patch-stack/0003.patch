@@ -239,7 +239,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9
  45 files changed, 652 insertions(+), 134 deletions(-)
 
 diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
-index e0ad9eb26e..8e1efc7262 100644
+index 0573e54684..40d4690397 100644
 --- a/api/rtp_headers.cc
 +++ b/api/rtp_headers.cc
 @@ -26,7 +26,8 @@ RTPHeaderExtension::RTPHeaderExtension()
@@ -253,7 +253,7 @@ index e0ad9eb26e..8e1efc7262 100644
  RTPHeaderExtension::RTPHeaderExtension(const RTPHeaderExtension& other) =
      default;
 diff --git a/api/rtp_headers.h b/api/rtp_headers.h
-index 743fd6d1b6..261c984d05 100644
+index 5d4d4190d5..9868365f24 100644
 --- a/api/rtp_headers.h
 +++ b/api/rtp_headers.h
 @@ -89,6 +89,19 @@ inline bool operator!=(const AbsoluteCaptureTime& lhs,
