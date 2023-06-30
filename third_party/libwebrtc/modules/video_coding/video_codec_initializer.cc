@@ -18,7 +18,6 @@
 #include "absl/types/optional.h"
 #include "api/scoped_refptr.h"
 #include "api/units/data_rate.h"
-#include "api/video/video_bitrate_allocation.h"
 #include "api/video_codecs/video_encoder.h"
 #include "modules/video_coding/codecs/av1/av1_svc_config.h"
 #include "modules/video_coding/codecs/vp8/vp8_scalability.h"
