@@ -100,7 +100,8 @@ void DataChannelController::OnDataReceived(
         RTC_DCHECK_RUN_ON(signaling_thread());
         // TODO(bugs.webrtc.org/11547): The data being received should be
         // delivered on the network thread.
-        for (const auto& channel : sctp_data_channels_) {
+        auto copy = sctp_data_channels_;
+        for (const auto& channel : copy) {
           if (channel->id() == channel_id)
             channel->OnDataReceived(type, buffer);
         }
@@ -113,7 +114,8 @@ void DataChannelController::OnChannelClosing(int channel_id) {
       SafeTask(signaling_safety_.flag(), [this, channel_id] {
         RTC_DCHECK_RUN_ON(signaling_thread());
         // TODO(bugs.webrtc.org/11547): Should run on the network thread.
-        for (const auto& channel : sctp_data_channels_) {
+        auto copy = sctp_data_channels_;
+        for (const auto& channel : copy) {
           if (channel->id() == channel_id)
             channel->OnClosingProcedureStartedRemotely();
         }
@@ -147,7 +149,8 @@ void DataChannelController::OnReadyToSend() {
   signaling_thread()->PostTask(SafeTask(signaling_safety_.flag(), [this] {
     RTC_DCHECK_RUN_ON(signaling_thread());
     data_channel_transport_ready_to_send_ = true;
-    for (const auto& channel : sctp_data_channels_)
+    auto copy = sctp_data_channels_;
+    for (const auto& channel : copy)
       channel->OnTransportReady(true);
   }));
 }
@@ -408,7 +411,8 @@ void DataChannelController::NotifyDataChannelsOfTransportCreated() {
   RTC_DCHECK_RUN_ON(network_thread());
   signaling_thread()->PostTask(SafeTask(signaling_safety_.flag(), [this] {
     RTC_DCHECK_RUN_ON(signaling_thread());
-    for (const auto& channel : sctp_data_channels_) {
+    auto copy = sctp_data_channels_;
+    for (const auto& channel : copy) {
       channel->OnTransportChannelCreated();
     }
   }));
