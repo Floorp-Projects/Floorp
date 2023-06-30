@@ -1,177 +1,27 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 20 Apr 2023 14:52:00 -0500
-Subject: Bug 1828517 - (fix-a138c6c8a5) handle file moves in BUILD.gn
+From: Byron Campen <docfaraday@gmail.com>
+Date: Fri, 7 Apr 2023 20:28:00 +0000
+Subject: Bug 1819048: Remove this bad assertion. r=webrtc-reviewers,jib
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c115a6ffd07fab042bc5f086
+Differential Revision: https://phabricator.services.mozilla.com/D174978
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/5a52e1b0c808edfda82f0abea668699eb68098dc
 ---
- rtc_base/BUILD.gn | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ video/task_queue_frame_decode_scheduler.cc | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 4c451f962f..e3a85731d1 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -1155,6 +1155,7 @@ if (!build_with_chromium) {
- }
- 
- rtc_library("network") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "network.cc",
-@@ -1193,16 +1194,20 @@ rtc_library("network") {
-     deps += [ ":win32" ]
-   }
- }
-+}
- 
- rtc_library("socket_address_pair") {
-+if (!build_with_mozilla) {
-   sources = [
-     "socket_address_pair.cc",
-     "socket_address_pair.h",
-   ]
-   deps = [ ":socket_address" ]
- }
-+}
- 
- rtc_library("net_helper") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "net_helper.cc",
-@@ -1211,8 +1216,10 @@ rtc_library("net_helper") {
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
-   deps = [ "system:rtc_export" ]
- }
-+}
- 
- rtc_library("socket_adapters") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "socket_adapters.cc",
-@@ -1232,6 +1239,7 @@ rtc_library("socket_adapters") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("network_route") {
-   sources = [
-@@ -1246,6 +1254,7 @@ rtc_library("network_route") {
- }
- 
- rtc_library("async_tcp_socket") {
-+if (!build_with_mozilla) {
-   sources = [
-     "async_tcp_socket.cc",
-     "async_tcp_socket.h",
-@@ -1264,8 +1273,10 @@ rtc_library("async_tcp_socket") {
-     "third_party/sigslot",
-   ]
- }
-+}
- 
- rtc_library("async_udp_socket") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "async_udp_socket.cc",
-@@ -1287,8 +1298,10 @@ rtc_library("async_udp_socket") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
- }
-+}
- 
- rtc_library("async_packet_socket") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "async_packet_socket.cc",
-@@ -1306,6 +1319,7 @@ rtc_library("async_packet_socket") {
-     "third_party/sigslot",
-   ]
- }
-+}
- 
- rtc_library("mdns_responder_interface") {
-   sources = [ "mdns_responder_interface.h" ]
-@@ -1318,6 +1332,7 @@ rtc_library("dscp") {
- }
- 
- rtc_library("proxy_info") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "proxy_info.cc",
-@@ -1328,6 +1343,7 @@ rtc_library("proxy_info") {
-     ":socket_address",
-   ]
- }
-+}
- 
- rtc_library("file_rotating_stream") {
-   sources = [
-@@ -1356,6 +1372,7 @@ rtc_library("data_rate_limiter") {
- }
- 
- rtc_library("unique_id_generator") {
-+if (!build_with_mozilla) {
-   sources = [
-     "unique_id_generator.cc",
-     "unique_id_generator.h",
-@@ -1370,6 +1387,7 @@ rtc_library("unique_id_generator") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("crc32") {
-   sources = [
-@@ -1397,6 +1415,7 @@ rtc_library("stream") {
- }
- 
- rtc_library("rtc_certificate_generator") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "rtc_certificate_generator.cc",
-@@ -1414,8 +1433,10 @@ rtc_library("rtc_certificate_generator") {
-     "//third_party/abseil-cpp/absl/types:optional",
-   ]
- }
-+}
- 
- rtc_library("ssl") {
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
-   sources = [
-     "helpers.cc",
-@@ -1514,6 +1535,7 @@ rtc_library("ssl") {
-     deps += [ ":win32" ]
-   }
- }
-+}
- 
- rtc_library("crypt_string") {
-   sources = [
-@@ -1523,6 +1545,7 @@ rtc_library("crypt_string") {
- }
- 
- rtc_library("http_common") {
-+if (!build_with_mozilla) {
-   sources = [
-     "http_common.cc",
-     "http_common.h",
-@@ -1539,6 +1562,7 @@ rtc_library("http_common") {
- 
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_source_set("gtest_prod") {
-   sources = [ "gtest_prod_util.h" ]
+diff --git a/video/task_queue_frame_decode_scheduler.cc b/video/task_queue_frame_decode_scheduler.cc
+index cd109c2932..6dd7b47f17 100644
+--- a/video/task_queue_frame_decode_scheduler.cc
++++ b/video/task_queue_frame_decode_scheduler.cc
+@@ -37,7 +37,8 @@ void TaskQueueFrameDecodeScheduler::ScheduleFrame(
+     uint32_t rtp,
+     FrameDecodeTiming::FrameSchedule schedule,
+     FrameReleaseCallback cb) {
+-  RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
++  // Mozilla modification, until https://bugs.webrtc.org/14944 is fixed
++  //RTC_DCHECK(!stopped_) << "Can not schedule frames after stopped.";
+   RTC_DCHECK(!scheduled_rtp_.has_value())
+       << "Can not schedule two frames for release at the same time.";
+   RTC_DCHECK(cb);
 -- 
 2.37.1 (Apple Git-137.1)
 
