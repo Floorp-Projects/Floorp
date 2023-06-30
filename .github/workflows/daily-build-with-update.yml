@@ -153,7 +153,8 @@ jobs:
         sudo apt install -y msitools python3-pip
         ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
         chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
-        echo 'export WIN32_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/VC/Redist/MSVC/14.34.31931/x64/Microsoft.VC143.CRT"' >> mozconfig
+        echo 'WIN_UCRT_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"' >> mozconfig
+        echo 'WIN32_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT"' >> mozconfig
 
         ./mach --no-interactive bootstrap --application-choice browser
         echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
@@ -323,6 +324,8 @@ jobs:
         ./mach python --virtualenv build taskcluster/scripts/misc/get_vs.py build/vs/vs2019.yaml $RUNNER_USERDIR/win-cross/vs2019
         chmod -R +x "$RUNNER_USERDIR/win-cross/vs2019"
         echo 'export WIN32_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/VC/Redist/MSVC/14.34.31931/x64/Microsoft.VC143.CRT"' >> mozconfig
+        echo 'WIN_UCRT_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"' >> mozconfig
+        echo 'WIN32_REDIST_DIR="$RUNNER_USERDIR/win-cross/vs2019/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT"' >> mozconfig
 
         ./mach --no-interactive bootstrap --application-choice browser
         echo "export LIB=\"$(cd $RUNNER_USERDIR/.mozbuild/clang/lib/clang/* && cd lib/windows && pwd)\"" >> mozconfig
