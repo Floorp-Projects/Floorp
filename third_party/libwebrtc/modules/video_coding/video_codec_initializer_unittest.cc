@@ -332,6 +332,22 @@ TEST_F(VideoCodecInitializerTest,
 }
 
 TEST_F(VideoCodecInitializerTest,
+       Vp9SingleSpatialLayerMaxBitrateIsEqualToCodecMaxBitrateWithL1T1) {
+  SetUpFor(VideoCodecType::kVideoCodecVP9, 1, 1, 1, false);
+  VideoStream stream = DefaultStream();
+  stream.num_temporal_layers = 1;
+  stream.scalability_mode = ScalabilityMode::kL1T1;
+  streams_.push_back(stream);
+
+  EXPECT_TRUE(InitializeCodec());
+  EXPECT_EQ(1u, codec_out_.VP9()->numberOfSpatialLayers);
+  EXPECT_EQ(codec_out_.spatialLayers[0].minBitrate,
+            kDefaultMinBitrateBps / 1000);
+  EXPECT_EQ(codec_out_.spatialLayers[0].maxBitrate,
+            kDefaultMaxBitrateBps / 1000);
+}
+
+TEST_F(VideoCodecInitializerTest,
        Vp9SingleSpatialLayerTargetBitrateIsEqualToCodecMaxBitrate) {
   SetUpFor(VideoCodecType::kVideoCodecVP9, absl::nullopt, 1, 1, true);
   VideoStream stream = DefaultStream();
@@ -356,6 +372,27 @@ TEST_F(VideoCodecInitializerTest,
   streams_.push_back(stream);
 
   EXPECT_TRUE(InitializeCodec());
+  EXPECT_LT(codec_out_.spatialLayers[0].maxBitrate,
+            kDefaultMaxBitrateBps / 1000);
+}
+
+TEST_F(VideoCodecInitializerTest,
+       Vp9KeepBitrateLimitsIfNumberOfSpatialLayersIsReducedToOneWithL3T1) {
+  // Request 3 spatial layers for 320x180 input. Actual number of layers will be
+  // reduced to 1 due to low input resolution but SVC bitrate limits should be
+  // applied.
+  SetUpFor(VideoCodecType::kVideoCodecVP9, 1, 3, 1, false);
+  VideoStream stream = DefaultStream();
+  stream.width = 320;
+  stream.height = 180;
+  stream.num_temporal_layers = 1;
+  stream.scalability_mode = ScalabilityMode::kL3T1;
+  streams_.push_back(stream);
+
+  EXPECT_TRUE(InitializeCodec());
+  EXPECT_EQ(1u, codec_out_.VP9()->numberOfSpatialLayers);
+  EXPECT_LT(codec_out_.spatialLayers[0].minBitrate,
+            kDefaultMinBitrateBps / 1000);
   EXPECT_LT(codec_out_.spatialLayers[0].maxBitrate,
             kDefaultMaxBitrateBps / 1000);
 }
@@ -535,6 +572,57 @@ TEST_F(VideoCodecInitializerTest, Av1TwoSpatialLayersOneDeactivated) {
 
   EXPECT_TRUE(codec.spatialLayers[0].active);
   EXPECT_FALSE(codec.spatialLayers[1].active);
+}
+
+TEST_F(VideoCodecInitializerTest, Vp9SingleSpatialLayerBitratesAreConsistent) {
+  VideoEncoderConfig config;
+  config.simulcast_layers.resize(3);
+  config.simulcast_layers[0].active = true;
+  config.simulcast_layers[1].active = false;
+  config.simulcast_layers[2].active = false;
+
+  config.codec_type = VideoCodecType::kVideoCodecVP9;
+  std::vector<VideoStream> streams = {DefaultStream()};
+  streams[0].scalability_mode = ScalabilityMode::kL1T2;
+
+  VideoCodec codec;
+  EXPECT_TRUE(VideoCodecInitializer::SetupCodec(config, streams, &codec));
+
+  EXPECT_EQ(1u, codec.VP9()->numberOfSpatialLayers);
+  EXPECT_GE(codec.spatialLayers[0].targetBitrate,
+            codec.spatialLayers[0].minBitrate);
+  EXPECT_LE(codec.spatialLayers[0].targetBitrate,
+            codec.spatialLayers[0].maxBitrate);
+  EXPECT_LT(codec.spatialLayers[0].minBitrate, kDefaultMinBitrateBps / 1000);
+}
+
+TEST_F(VideoCodecInitializerTest, Vp9TwoSpatialLayersBitratesAreConsistent) {
+  VideoEncoderConfig config;
+  config.simulcast_layers.resize(3);
+  config.simulcast_layers[0].active = true;
+  config.simulcast_layers[1].active = false;
+  config.simulcast_layers[2].active = false;
+
+  config.codec_type = VideoCodecType::kVideoCodecVP9;
+  std::vector<VideoStream> streams = {DefaultStream()};
+  streams[0].scalability_mode = ScalabilityMode::kL2T2;
+
+  VideoCodec codec;
+  EXPECT_TRUE(VideoCodecInitializer::SetupCodec(config, streams, &codec));
+
+  EXPECT_EQ(2u, codec.VP9()->numberOfSpatialLayers);
+  EXPECT_GE(codec.spatialLayers[0].targetBitrate,
+            codec.spatialLayers[0].minBitrate);
+  EXPECT_LE(codec.spatialLayers[0].targetBitrate,
+            codec.spatialLayers[0].maxBitrate);
+  EXPECT_LT(codec.spatialLayers[0].minBitrate, kDefaultMinBitrateBps / 1000);
+
+  EXPECT_GE(codec.spatialLayers[1].targetBitrate,
+            codec.spatialLayers[1].minBitrate);
+  EXPECT_LE(codec.spatialLayers[1].targetBitrate,
+            codec.spatialLayers[1].maxBitrate);
+  EXPECT_GT(codec.spatialLayers[1].minBitrate,
+            codec.spatialLayers[0].maxBitrate);
 }
 
 }  // namespace webrtc
