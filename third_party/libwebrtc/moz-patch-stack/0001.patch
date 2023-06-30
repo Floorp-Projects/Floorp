@@ -1,134 +1,147 @@
-From: Jan-Ivar Bruaroey <wingboy@gmail.com>
-Date: Fri, 30 Jun 2023 13:27:21 -0400
-Subject: (tmp-cherry-pick) Revert "Ensure AV1 is always available in
- PeerConnectionSimulcastTests." (0892215dc0)
+From: Philipp Hancke <phancke@microsoft.com>
+Date: Mon, 27 Mar 2023 10:19:52 +0200
+Subject: (cherry-pick-branch-heads/5615) [M112] Revert "Only serialize
+ non-stopped RTP header extensions"
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-This reverts commit 2d3b294e49027607c80766c50f1c3c8d7d4b38b9.
+This reverts commit be03c0971863c9e6807fcbdb4175754e8242a652.
+Causes regression in web projects that
+1/ add a stopped-by-default extension in SRD
+2/ call createAnswer
+3/ munge the stopped-by-default extension back in SLD
+4/ create a subsequent offer and expect the extension to be present
 
-Reason for revert: The CL was believed to make AV1 always available
-but it turned out that the import bots still failed due to not
-having AV1, so it is better to use the built in factories than
-to make custom test-only ones.
+BUG=chromium:1427442,chromium:1051821
 
-Original change's description:
-> Ensure AV1 is always available in PeerConnectionSimulcastTests.
->
-> Unblocks a WebRTC import where a bot without AV1 support would
-> otherwise have been running and failing during setting codec
-> preferences.
->
-> # Non-chromium bots passed, no need to wait for chromium to land.
-> # Want to unblock importer.
-> NOTRY=True
->
-> Bug: webrtc:15005
-> Change-Id: I93c6a0ce5591a057c3a0ee49f6dbaef3676c0e1d
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/298021
-> Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
-> Commit-Queue: Henrik Boström <hbos@webrtc.org>
-> Reviewed-by: Jeremy Leconte <jleconte@google.com>
-> Cr-Commit-Position: refs/heads/main@{#39592}
-
-Bug: webrtc:15005
-Change-Id: I8f0850852edb0d0234000b2d956e2648a9adf904
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/298120
-Reviewed-by: Jeremy Leconte <jleconte@google.com>
-Auto-Submit: Henrik Boström <hbos@webrtc.org>
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Jeremy Leconte <jleconte@google.com>
-Cr-Commit-Position: refs/heads/main@{#39596}
+Change-Id: I2e48831e92384963a254d873398f54eaee96739a
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/299143
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Philipp Hancke <phancke@microsoft.com>
+Reviewed-by: Henrik Boström <hbos@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5615@{#2}
+Cr-Branched-From: cdfeb4f7922f05007d88c8263842998ec79b6dd6-refs/heads/main@{#39376}
 ---
- pc/BUILD.gn                              | 10 ------
- pc/peer_connection_simulcast_unittest.cc | 42 ++++++++----------------
- 2 files changed, 13 insertions(+), 39 deletions(-)
+ pc/media_session.cc                           |  7 +--
+ pc/media_session_unittest.cc                  |  5 +-
+ ...er_connection_header_extension_unittest.cc | 62 -------------------
+ 3 files changed, 5 insertions(+), 69 deletions(-)
 
-diff --git a/pc/BUILD.gn b/pc/BUILD.gn
-index 0eae82a80a..ea1909bc4f 100644
---- a/pc/BUILD.gn
-+++ b/pc/BUILD.gn
-@@ -2535,16 +2535,6 @@ if (rtc_include_tests && !build_with_chromium) {
-       "../api/video_codecs:builtin_video_decoder_factory",
-       "../api/video_codecs:builtin_video_encoder_factory",
-       "../api/video_codecs:video_codecs_api",
--      "../api/video_codecs:video_decoder_factory_template",
--      "../api/video_codecs:video_decoder_factory_template_dav1d_adapter",
--      "../api/video_codecs:video_decoder_factory_template_libvpx_vp8_adapter",
--      "../api/video_codecs:video_decoder_factory_template_libvpx_vp9_adapter",
--      "../api/video_codecs:video_decoder_factory_template_open_h264_adapter",
--      "../api/video_codecs:video_encoder_factory_template",
--      "../api/video_codecs:video_encoder_factory_template_libaom_av1_adapter",
--      "../api/video_codecs:video_encoder_factory_template_libvpx_vp8_adapter",
--      "../api/video_codecs:video_encoder_factory_template_libvpx_vp9_adapter",
--      "../api/video_codecs:video_encoder_factory_template_open_h264_adapter",
-       "../call:call_interfaces",
-       "../media:rtc_audio_video",
-       "../media:rtc_media_base",
-diff --git a/pc/peer_connection_simulcast_unittest.cc b/pc/peer_connection_simulcast_unittest.cc
-index 8e110aa9cc..1e8955be03 100644
---- a/pc/peer_connection_simulcast_unittest.cc
-+++ b/pc/peer_connection_simulcast_unittest.cc
-@@ -38,16 +38,8 @@
- #include "api/stats/rtcstats_objects.h"
- #include "api/uma_metrics.h"
- #include "api/video/video_codec_constants.h"
--#include "api/video_codecs/video_decoder_factory_template.h"
--#include "api/video_codecs/video_decoder_factory_template_dav1d_adapter.h"
--#include "api/video_codecs/video_decoder_factory_template_libvpx_vp8_adapter.h"
--#include "api/video_codecs/video_decoder_factory_template_libvpx_vp9_adapter.h"
--#include "api/video_codecs/video_decoder_factory_template_open_h264_adapter.h"
--#include "api/video_codecs/video_encoder_factory_template.h"
--#include "api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h"
--#include "api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h"
--#include "api/video_codecs/video_encoder_factory_template_libvpx_vp9_adapter.h"
--#include "api/video_codecs/video_encoder_factory_template_open_h264_adapter.h"
-+#include "api/video_codecs/builtin_video_decoder_factory.h"
-+#include "api/video_codecs/builtin_video_encoder_factory.h"
- #include "media/base/media_constants.h"
- #include "media/base/rid_description.h"
- #include "media/base/stream_params.h"
-@@ -181,25 +173,17 @@ constexpr TimeDelta kLongTimeoutForRampingUp = TimeDelta::Seconds(30);
- class PeerConnectionSimulcastTests : public ::testing::Test {
-  public:
-   PeerConnectionSimulcastTests()
--      : pc_factory_(CreatePeerConnectionFactory(
--            rtc::Thread::Current(),
--            rtc::Thread::Current(),
--            rtc::Thread::Current(),
--            FakeAudioCaptureModule::Create(),
--            CreateBuiltinAudioEncoderFactory(),
--            CreateBuiltinAudioDecoderFactory(),
--            std::make_unique<
--                VideoEncoderFactoryTemplate<LibvpxVp8EncoderTemplateAdapter,
--                                            LibvpxVp9EncoderTemplateAdapter,
--                                            OpenH264EncoderTemplateAdapter,
--                                            LibaomAv1EncoderTemplateAdapter>>(),
--            std::make_unique<
--                VideoDecoderFactoryTemplate<LibvpxVp8DecoderTemplateAdapter,
--                                            LibvpxVp9DecoderTemplateAdapter,
--                                            OpenH264DecoderTemplateAdapter,
--                                            Dav1dDecoderTemplateAdapter>>(),
--            nullptr,
--            nullptr)) {}
-+      : pc_factory_(
-+            CreatePeerConnectionFactory(rtc::Thread::Current(),
-+                                        rtc::Thread::Current(),
-+                                        rtc::Thread::Current(),
-+                                        FakeAudioCaptureModule::Create(),
-+                                        CreateBuiltinAudioEncoderFactory(),
-+                                        CreateBuiltinAudioDecoderFactory(),
-+                                        CreateBuiltinVideoEncoderFactory(),
-+                                        CreateBuiltinVideoDecoderFactory(),
-+                                        nullptr,
-+                                        nullptr)) {}
+diff --git a/pc/media_session.cc b/pc/media_session.cc
+index 92fe80f3d1..e703b44101 100644
+--- a/pc/media_session.cc
++++ b/pc/media_session.cc
+@@ -684,11 +684,8 @@ static bool CreateContentOffer(
+       if (extension_with_id.uri == extension.uri) {
+         // TODO(crbug.com/1051821): Configure the extension direction from
+         // the information in the media_description_options extension
+-        // capability. For now, do not include stopped extensions.
+-        // See also crbug.com/webrtc/7477 about the general lack of direction.
+-        if (extension.direction != RtpTransceiverDirection::kStopped) {
+-          extensions.push_back(extension_with_id);
+-        }
++        // capability.
++        extensions.push_back(extension_with_id);
+       }
+     }
+   }
+diff --git a/pc/media_session_unittest.cc b/pc/media_session_unittest.cc
+index 6dc6d76021..8f38f6a1b4 100644
+--- a/pc/media_session_unittest.cc
++++ b/pc/media_session_unittest.cc
+@@ -2018,7 +2018,7 @@ TEST_F(MediaSessionDescriptionFactoryTest,
+ }
  
-   rtc::scoped_refptr<PeerConnectionInterface> CreatePeerConnection(
-       MockPeerConnectionObserver* observer) {
+ TEST_F(MediaSessionDescriptionFactoryTest,
+-       AllowsStoppedExtensionsToBeRemovedFromSubsequentOffer) {
++       AppendsStoppedExtensionIfKnownAndPresentInTheOffer) {
+   MediaSessionOptions opts;
+   AddMediaDescriptionOptions(MEDIA_TYPE_VIDEO, "video",
+                              RtpTransceiverDirection::kSendRecv, kActive,
+@@ -2043,7 +2043,8 @@ TEST_F(MediaSessionDescriptionFactoryTest,
+       ElementsAre(Property(
+           &ContentInfo::media_description,
+           Pointee(Property(&MediaContentDescription::rtp_header_extensions,
+-                           ElementsAre(Field(&RtpExtension::uri, "uri1")))))));
++                           ElementsAre(Field(&RtpExtension::uri, "uri1"),
++                                       Field(&RtpExtension::uri, "uri2")))))));
+ }
+ 
+ TEST_F(MediaSessionDescriptionFactoryTest,
+diff --git a/pc/peer_connection_header_extension_unittest.cc b/pc/peer_connection_header_extension_unittest.cc
+index 9db547fb57..fb8833a01b 100644
+--- a/pc/peer_connection_header_extension_unittest.cc
++++ b/pc/peer_connection_header_extension_unittest.cc
+@@ -229,68 +229,6 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
+                           Field(&RtpHeaderExtensionCapability::uri, "uri3")));
+ }
+ 
+-TEST_P(PeerConnectionHeaderExtensionTest, OfferedExtensionsArePerTransceiver) {
+-  cricket::MediaType media_type;
+-  SdpSemantics semantics;
+-  std::tie(media_type, semantics) = GetParam();
+-  if (semantics != SdpSemantics::kUnifiedPlan)
+-    return;
+-  std::unique_ptr<PeerConnectionWrapper> pc1 =
+-      CreatePeerConnection(media_type, semantics);
+-  auto transceiver1 = pc1->AddTransceiver(media_type);
+-  auto modified_extensions = transceiver1->GetHeaderExtensionsToNegotiate();
+-  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
+-  transceiver1->SetHeaderExtensionsToNegotiate(modified_extensions);
+-  auto transceiver2 = pc1->AddTransceiver(media_type);
+-
+-  auto session_description = pc1->CreateOffer();
+-  EXPECT_THAT(session_description->description()
+-                  ->contents()[0]
+-                  .media_description()
+-                  ->rtp_header_extensions(),
+-              ElementsAre(Field(&RtpExtension::uri, "uri2"),
+-                          Field(&RtpExtension::uri, "uri3")));
+-  EXPECT_THAT(session_description->description()
+-                  ->contents()[1]
+-                  .media_description()
+-                  ->rtp_header_extensions(),
+-              ElementsAre(Field(&RtpExtension::uri, "uri2"),
+-                          Field(&RtpExtension::uri, "uri3"),
+-                          Field(&RtpExtension::uri, "uri4")));
+-}
+-
+-TEST_P(PeerConnectionHeaderExtensionTest, RemovalAfterRenegotiation) {
+-  cricket::MediaType media_type;
+-  SdpSemantics semantics;
+-  std::tie(media_type, semantics) = GetParam();
+-  if (semantics != SdpSemantics::kUnifiedPlan)
+-    return;
+-  std::unique_ptr<PeerConnectionWrapper> pc1 =
+-      CreatePeerConnection(media_type, semantics);
+-  std::unique_ptr<PeerConnectionWrapper> pc2 =
+-      CreatePeerConnection(media_type, semantics);
+-  auto transceiver1 = pc1->AddTransceiver(media_type);
+-
+-  auto offer = pc1->CreateOfferAndSetAsLocal(
+-      PeerConnectionInterface::RTCOfferAnswerOptions());
+-  pc2->SetRemoteDescription(std::move(offer));
+-  auto answer = pc2->CreateAnswerAndSetAsLocal(
+-      PeerConnectionInterface::RTCOfferAnswerOptions());
+-  pc1->SetRemoteDescription(std::move(answer));
+-
+-  auto modified_extensions = transceiver1->GetHeaderExtensionsToNegotiate();
+-  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
+-  modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
+-  transceiver1->SetHeaderExtensionsToNegotiate(modified_extensions);
+-  auto session_description = pc1->CreateOffer();
+-  EXPECT_THAT(session_description->description()
+-                  ->contents()[0]
+-                  .media_description()
+-                  ->rtp_header_extensions(),
+-              ElementsAre(Field(&RtpExtension::uri, "uri2"),
+-                          Field(&RtpExtension::uri, "uri3")));
+-}
+-
+ INSTANTIATE_TEST_SUITE_P(
+     ,
+     PeerConnectionHeaderExtensionTest,
 -- 
 2.37.1 (Apple Git-137.1)
 
