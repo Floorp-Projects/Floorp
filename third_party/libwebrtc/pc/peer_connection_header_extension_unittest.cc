@@ -132,7 +132,7 @@ TEST_P(PeerConnectionHeaderExtensionTest, TransceiverOffersHeaderExtensions) {
   std::unique_ptr<PeerConnectionWrapper> wrapper =
       CreatePeerConnection(media_type, semantics);
   auto transceiver = wrapper->AddTransceiver(media_type);
-  EXPECT_EQ(transceiver->HeaderExtensionsToOffer(), extensions_);
+  EXPECT_EQ(transceiver->GetHeaderExtensionsToNegotiate(), extensions_);
 }
 
 TEST_P(PeerConnectionHeaderExtensionTest,
@@ -184,11 +184,11 @@ TEST_P(PeerConnectionHeaderExtensionTest, OffersUnstoppedModifiedExtensions) {
   std::unique_ptr<PeerConnectionWrapper> wrapper =
       CreatePeerConnection(media_type, semantics);
   auto transceiver = wrapper->AddTransceiver(media_type);
-  auto modified_extensions = transceiver->HeaderExtensionsToOffer();
+  auto modified_extensions = transceiver->GetHeaderExtensionsToNegotiate();
   modified_extensions[0].direction = RtpTransceiverDirection::kSendRecv;
   modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
   EXPECT_TRUE(
-      transceiver->SetOfferedRtpHeaderExtensions(modified_extensions).ok());
+      transceiver->SetHeaderExtensionsToNegotiate(modified_extensions).ok());
   auto session_description = wrapper->CreateOffer();
   EXPECT_THAT(session_description->description()
                   ->contents()[0]
@@ -208,9 +208,9 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
   std::unique_ptr<PeerConnectionWrapper> pc1 =
       CreatePeerConnection(media_type, semantics);
   auto transceiver1 = pc1->AddTransceiver(media_type);
-  auto modified_extensions = transceiver1->HeaderExtensionsToOffer();
+  auto modified_extensions = transceiver1->GetHeaderExtensionsToNegotiate();
   modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
-  transceiver1->SetOfferedRtpHeaderExtensions(modified_extensions);
+  transceiver1->SetHeaderExtensionsToNegotiate(modified_extensions);
   auto offer = pc1->CreateOfferAndSetAsLocal(
       PeerConnectionInterface::RTCOfferAnswerOptions());
 
@@ -224,7 +224,7 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
 
   // PC1 has exts 2-4 unstopped and PC2 has exts 1-3 unstopped -> ext 2, 3
   // survives.
-  EXPECT_THAT(transceiver1->HeaderExtensionsNegotiated(),
+  EXPECT_THAT(transceiver1->GetNegotiatedHeaderExtensions(),
               ElementsAre(Field(&RtpHeaderExtensionCapability::uri, "uri2"),
                           Field(&RtpHeaderExtensionCapability::uri, "uri3")));
 }

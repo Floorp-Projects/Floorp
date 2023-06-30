@@ -150,13 +150,14 @@ RtpTransceiver::RtpTransceiver(
     rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>
         receiver,
     ConnectionContext* context,
-    std::vector<RtpHeaderExtensionCapability> header_extensions_offered,
+    std::vector<RtpHeaderExtensionCapability> header_extensions_to_negotiate,
     std::function<void()> on_negotiation_needed)
     : thread_(GetCurrentTaskQueueOrThread()),
       unified_plan_(true),
       media_type_(sender->media_type()),
       context_(context),
-      header_extensions_to_offer_(std::move(header_extensions_offered)),
+      header_extensions_to_negotiate_(
+          std::move(header_extensions_to_negotiate)),
       on_negotiation_needed_(std::move(on_negotiation_needed)) {
   RTC_DCHECK(media_type_ == cricket::MEDIA_TYPE_AUDIO ||
              media_type_ == cricket::MEDIA_TYPE_VIDEO);
@@ -664,12 +665,12 @@ RTCError RtpTransceiver::SetCodecPreferences(
 }
 
 std::vector<RtpHeaderExtensionCapability>
-RtpTransceiver::HeaderExtensionsToOffer() const {
-  return header_extensions_to_offer_;
+RtpTransceiver::GetHeaderExtensionsToNegotiate() const {
+  return header_extensions_to_negotiate_;
 }
 
 std::vector<RtpHeaderExtensionCapability>
-RtpTransceiver::HeaderExtensionsNegotiated() const {
+RtpTransceiver::GetNegotiatedHeaderExtensions() const {
   RTC_DCHECK_RUN_ON(thread_);
   std::vector<RtpHeaderExtensionCapability> result;
   for (const auto& ext : negotiated_header_extensions_) {
@@ -687,10 +688,9 @@ bool IsMandatoryHeaderExtension(const std::string& uri) {
   return uri == RtpExtension::kMidUri;
 }
 
-RTCError RtpTransceiver::SetOfferedRtpHeaderExtensions(
-    rtc::ArrayView<const RtpHeaderExtensionCapability>
-        header_extensions_to_offer) {
-  for (const auto& entry : header_extensions_to_offer) {
+RTCError RtpTransceiver::SetHeaderExtensionsToNegotiate(
+    rtc::ArrayView<const RtpHeaderExtensionCapability> header_extensions) {
+  for (const auto& entry : header_extensions) {
     // Handle unsupported requests for mandatory extensions as per
     // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface.
     // Note:
@@ -701,9 +701,10 @@ RTCError RtpTransceiver::SetOfferedRtpHeaderExtensions(
     // Step 2.2.
     // Handle unknown extensions.
     auto it = std::find_if(
-        header_extensions_to_offer_.begin(), header_extensions_to_offer_.end(),
+        header_extensions_to_negotiate_.begin(),
+        header_extensions_to_negotiate_.end(),
         [&entry](const auto& offered) { return entry.uri == offered.uri; });
-    if (it == header_extensions_to_offer_.end()) {
+    if (it == header_extensions_to_negotiate_.end()) {
       return RTCError(RTCErrorType::UNSUPPORTED_PARAMETER,
                       "Attempted to modify an unoffered extension.");
     }
@@ -718,15 +719,16 @@ RTCError RtpTransceiver::SetOfferedRtpHeaderExtensions(
 
   // Set all current extensions but the mandatory ones to stopped.
   // This means that anything filtered from the input will not show up.
-  for (auto& entry : header_extensions_to_offer_) {
+  for (auto& entry : header_extensions_to_negotiate_) {
     if (!IsMandatoryHeaderExtension(entry.uri)) {
       entry.direction = RtpTransceiverDirection::kStopped;
     }
   }
   // Apply mutation after error checking.
-  for (const auto& entry : header_extensions_to_offer) {
+  for (const auto& entry : header_extensions) {
     auto it = std::find_if(
-        header_extensions_to_offer_.begin(), header_extensions_to_offer_.end(),
+        header_extensions_to_negotiate_.begin(),
+        header_extensions_to_negotiate_.end(),
         [&entry](const auto& offered) { return entry.uri == offered.uri; });
     it->direction = entry.direction;
   }

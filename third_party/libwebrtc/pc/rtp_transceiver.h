@@ -91,14 +91,14 @@ class RtpTransceiver : public RtpTransceiverInterface {
   // Construct a Unified Plan-style RtpTransceiver with the given sender and
   // receiver. The media type will be derived from the media types of the sender
   // and receiver. The sender and receiver should have the same media type.
-  // `HeaderExtensionsToOffer` is used for initializing the return value of
-  // HeaderExtensionsToOffer().
+  // `HeaderExtensionsToNegotiate` is used for initializing the return value of
+  // HeaderExtensionsToNegotiate().
   RtpTransceiver(
       rtc::scoped_refptr<RtpSenderProxyWithInternal<RtpSenderInternal>> sender,
       rtc::scoped_refptr<RtpReceiverProxyWithInternal<RtpReceiverInternal>>
           receiver,
       ConnectionContext* context,
-      std::vector<RtpHeaderExtensionCapability> HeaderExtensionsToOffer,
+      std::vector<RtpHeaderExtensionCapability> HeaderExtensionsToNegotiate,
       std::function<void()> on_negotiation_needed);
   ~RtpTransceiver() override;
 
@@ -274,13 +274,13 @@ class RtpTransceiver : public RtpTransceiverInterface {
   std::vector<RtpCodecCapability> codec_preferences() const override {
     return codec_preferences_;
   }
-  std::vector<RtpHeaderExtensionCapability> HeaderExtensionsToOffer()
+  std::vector<RtpHeaderExtensionCapability> GetHeaderExtensionsToNegotiate()
       const override;
-  std::vector<RtpHeaderExtensionCapability> HeaderExtensionsNegotiated()
+  std::vector<RtpHeaderExtensionCapability> GetNegotiatedHeaderExtensions()
       const override;
-  RTCError SetOfferedRtpHeaderExtensions(
-      rtc::ArrayView<const RtpHeaderExtensionCapability>
-          header_extensions_to_offer) override;
+  RTCError SetHeaderExtensionsToNegotiate(
+      rtc::ArrayView<const RtpHeaderExtensionCapability> header_extensions)
+      override;
 
   // Called on the signaling thread when the local or remote content description
   // is updated. Used to update the negotiated header extensions.
@@ -333,7 +333,7 @@ class RtpTransceiver : public RtpTransceiverInterface {
   std::unique_ptr<cricket::ChannelInterface> channel_ = nullptr;
   ConnectionContext* const context_;
   std::vector<RtpCodecCapability> codec_preferences_;
-  std::vector<RtpHeaderExtensionCapability> header_extensions_to_offer_;
+  std::vector<RtpHeaderExtensionCapability> header_extensions_to_negotiate_;
 
   // `negotiated_header_extensions_` is read and written to on the signaling
   // thread from the SdpOfferAnswerHandler class (e.g.
@@ -364,11 +364,11 @@ PROXY_METHOD1(webrtc::RTCError,
               rtc::ArrayView<RtpCodecCapability>)
 PROXY_CONSTMETHOD0(std::vector<RtpCodecCapability>, codec_preferences)
 PROXY_CONSTMETHOD0(std::vector<RtpHeaderExtensionCapability>,
-                   HeaderExtensionsToOffer)
+                   GetHeaderExtensionsToNegotiate)
 PROXY_CONSTMETHOD0(std::vector<RtpHeaderExtensionCapability>,
-                   HeaderExtensionsNegotiated)
+                   GetNegotiatedHeaderExtensions)
 PROXY_METHOD1(webrtc::RTCError,
-              SetOfferedRtpHeaderExtensions,
+              SetHeaderExtensionsToNegotiate,
               rtc::ArrayView<const RtpHeaderExtensionCapability>)
 END_PROXY_MAP(RtpTransceiver)
 

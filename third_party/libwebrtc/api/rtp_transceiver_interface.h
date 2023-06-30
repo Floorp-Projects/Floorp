@@ -149,25 +149,49 @@ class RTC_EXPORT RtpTransceiverInterface : public rtc::RefCountInterface {
       rtc::ArrayView<RtpCodecCapability> codecs) = 0;
   virtual std::vector<RtpCodecCapability> codec_preferences() const = 0;
 
-  // Readonly attribute which contains the set of header extensions that was set
-  // with SetOfferedRtpHeaderExtensions, or a default set if it has not been
+  // Returns the set of header extensions that was set
+  // with SetHeaderExtensionsToNegotiate, or a default set if it has not been
   // called.
   // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
+  // TODO(crbug.com/1051821): remove old name after Chromium roll, make pure
+  // virtual again.
+  virtual std::vector<RtpHeaderExtensionCapability>
+  GetHeaderExtensionsToNegotiate() const {
+    return {};
+  }
   virtual std::vector<RtpHeaderExtensionCapability> HeaderExtensionsToOffer()
-      const = 0;
+      const {
+    return GetHeaderExtensionsToNegotiate();
+  }
 
-  // Readonly attribute which is either empty if negotation has not yet
+  // Returns either the empty set if negotation has not yet
   // happened, or a vector of the negotiated header extensions.
   // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
+  // TODO(crbug.com/1051821): remove old name after Chromium roll, make pure
+  // virtual again.
+  virtual std::vector<RtpHeaderExtensionCapability>
+  GetNegotiatedHeaderExtensions() const {
+    return {};
+  }
   virtual std::vector<RtpHeaderExtensionCapability> HeaderExtensionsNegotiated()
-      const = 0;
+      const {
+    return GetNegotiatedHeaderExtensions();
+  }
 
-  // The SetOfferedRtpHeaderExtensions method modifies the next SDP negotiation
+  // The SetHeaderExtensionsToNegotiate method modifies the next SDP negotiation
   // so that it negotiates use of header extensions which are not kStopped.
   // https://w3c.github.io/webrtc-extensions/#rtcrtptransceiver-interface
+  // TODO(crbug.com/1051821): remove old name after Chromium roll, make pure
+  // virtual again.
+  virtual webrtc::RTCError SetHeaderExtensionsToNegotiate(
+      rtc::ArrayView<const RtpHeaderExtensionCapability> header_extensions) {
+    return RTCError::OK();
+  }
   virtual webrtc::RTCError SetOfferedRtpHeaderExtensions(
       rtc::ArrayView<const RtpHeaderExtensionCapability>
-          header_extensions_to_offer) = 0;
+          header_extensions_to_offer) {
+    return SetHeaderExtensionsToNegotiate(header_extensions_to_offer);
+  }
 
  protected:
   ~RtpTransceiverInterface() override = default;
