@@ -1,42 +1,58 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Fri, 9 Jun 2023 19:59:00 +0000
-Subject: Bug 1837647 - limit GetDpiForMonitor to return default value to fix
- Win7 tests. r=dbaker,webrtc-reviewers
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Tue, 6 Jun 2023 16:37:00 -0700
+Subject: Bug 1833237 - (fix-f0be3bee1f) remove reference to
+ portal:pipewire_base;r?pehrsons
 
-Upstream commit 60795e8c7a added a call to ::GetDpiForMonitor which is only
-supported in Win8 and newer.  This is causing perma-orange on try, so we'll
-disable it for now and fix properly in Bug 1837667.
-
-Differential Revision: https://phabricator.services.mozilla.com/D180460
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/501ade4b55d97797e4cf4416ddf1aa5aca207b9e
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8ff886a4d366b4be35b329d1ef733a6df542067c
 ---
- modules/desktop_capture/win/screen_capture_utils.cc | 6 ++++++
- 1 file changed, 6 insertions(+)
+ modules/video_capture/BUILD.gn                      | 4 ++++
+ modules/video_capture/linux/device_info_pipewire.cc | 3 ++-
+ modules/video_capture/linux/device_info_pipewire.h  | 3 ++-
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
-index 5409417a88..c0144b0ef3 100644
---- a/modules/desktop_capture/win/screen_capture_utils.cc
-+++ b/modules/desktop_capture/win/screen_capture_utils.cc
-@@ -147,6 +147,11 @@ DesktopRect GetFullscreenRect() {
- }
+diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
+index f675143451..65468cecd7 100644
+--- a/modules/video_capture/BUILD.gn
++++ b/modules/video_capture/BUILD.gn
+@@ -100,6 +100,10 @@ if (!build_with_chromium || is_linux || is_chromeos) {
+           "../../media:rtc_media_base",
+           "../portal",
+         ]
++        if (build_with_mozilla) {
++          configs -= [ "../portal:pipewire_base" ]
++          public_deps = [ "//third_party/pipewire" ]
++        }
+       }
+     }
+     if (is_win) {
+diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
+index 1dee78f5ee..2cb6161514 100644
+--- a/modules/video_capture/linux/device_info_pipewire.cc
++++ b/modules/video_capture/linux/device_info_pipewire.cc
+@@ -47,7 +47,8 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
+                                           char* deviceUniqueIdUTF8,
+                                           uint32_t deviceUniqueIdUTF8Length,
+                                           char* productUniqueIdUTF8,
+-                                          uint32_t productUniqueIdUTF8Length) {
++                                          uint32_t productUniqueIdUTF8Length,
++                                          pid_t* pid) {
+   if (deviceNumber >= NumberOfDevices())
+     return -1;
  
- DesktopVector GetDpiForMonitor(HMONITOR monitor) {
-+// See Bug 1837647 - upstream commit 60795e8c7a added this method using
-+// ::GetDpiForMonitor which is not available on Win7 machines.  For now,
-+// we'll return the default case of {96, 96} until we can properly
-+// restore the functionality for newer machines (See Bug 1837667).
-+#if 0
-   UINT dpi_x, dpi_y;
-   // MDT_EFFECTIVE_DPI includes the scale factor as well as the system DPI.
-   HRESULT hr = ::GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
-@@ -163,6 +168,7 @@ DesktopVector GetDpiForMonitor(HMONITOR monitor) {
-     ReleaseDC(nullptr, hdc);
-     return dpi;
-   }
-+#endif
- 
-   // If everything fails, then return the default DPI for Windows.
-   return {96, 96};
+diff --git a/modules/video_capture/linux/device_info_pipewire.h b/modules/video_capture/linux/device_info_pipewire.h
+index a006c85d1b..724717be5e 100644
+--- a/modules/video_capture/linux/device_info_pipewire.h
++++ b/modules/video_capture/linux/device_info_pipewire.h
+@@ -29,7 +29,8 @@ class DeviceInfoPipeWire : public DeviceInfoImpl {
+                         char* deviceUniqueIdUTF8,
+                         uint32_t deviceUniqueIdUTF8Length,
+                         char* productUniqueIdUTF8 = nullptr,
+-                        uint32_t productUniqueIdUTF8Length = 0) override;
++                        uint32_t productUniqueIdUTF8Length = 0,
++                        pid_t* pid = 0) override;
+   /*
+    * Fills the membervariable _captureCapabilities with capabilites for the
+    * given device name.
 -- 
 2.37.1 (Apple Git-137.1)
 
