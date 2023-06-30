@@ -229,6 +229,33 @@ TEST_P(ResolutionBitrateLimitsTest, LimitsApplied) {
 }
 
 TEST_F(ResolutionBitrateLimitsWithScalabilityModeTest,
+       OneStreamDefaultMaxBitrateAppliedForOneSpatialLayer) {
+  InitEncodeTest test("VP9",
+                      {{.active = true,
+                        .bitrate = {DataRate::KilobitsPerSec(30),
+                                    DataRate::KilobitsPerSec(3000)},
+                        .scalability_mode = ScalabilityMode::kL1T1}},
+                      // Expectations:
+                      {{.pixels = 1280 * 720,
+                        .eq_bitrate = {DataRate::KilobitsPerSec(30),
+                                       DataRate::KilobitsPerSec(3000)}}});
+  RunBaseTest(&test);
+}
+
+TEST_F(ResolutionBitrateLimitsWithScalabilityModeTest,
+       OneStreamSvcMaxBitrateAppliedForTwoSpatialLayers) {
+  InitEncodeTest test(
+      "VP9",
+      {{.active = true,
+        .bitrate = {DataRate::KilobitsPerSec(30),
+                    DataRate::KilobitsPerSec(3000)},
+        .scalability_mode = ScalabilityMode::kL2T1}},
+      // Expectations:
+      {{.pixels = 1280 * 720,
+        .ne_bitrate = {absl::nullopt, DataRate::KilobitsPerSec(3000)}}});
+  RunBaseTest(&test);
+}
+TEST_F(ResolutionBitrateLimitsWithScalabilityModeTest,
        OneStreamLimitsAppliedForOneSpatialLayer) {
   webrtc::test::ScopedFieldTrials field_trials(
       "WebRTC-GetEncoderInfoOverride/"
