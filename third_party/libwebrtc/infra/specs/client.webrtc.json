@@ -2499,6 +2499,34 @@
           ]
         },
         "test_id_prefix": "ninja://:voip_unittests/"
+      },
+      {
+        "args": [
+          "--test-launcher-summary-output=${ISOLATED_OUTDIR}/gtest_output.json",
+          "--test-arg=--gtest_output=json:/custom_artifacts/gtest_output.json",
+          "--test-arg=--undefok=test_launcher_summary_output",
+          "--gtest_output=json:${ISOLATED_OUTDIR}/gtest_output.json"
+        ],
+        "isolate_name": "webrtc_nonparallel_tests",
+        "merge": {
+          "args": [],
+          "script": "//testing/merge_scripts/standard_isolated_script_merge.py"
+        },
+        "name": "webrtc_nonparallel_tests",
+        "resultdb": {
+          "result_file": "${ISOLATED_OUTDIR}/gtest_output.json",
+          "result_format": "gtest_json"
+        },
+        "swarming": {
+          "can_use_on_swarming_builders": true,
+          "dimension_sets": [
+            {
+              "cpu": "x86-64",
+              "os": "Ubuntu-18.04"
+            }
+          ]
+        },
+        "test_id_prefix": "ninja://:webrtc_nonparallel_tests/"
       }
     ]
   },
