@@ -150,6 +150,17 @@ class VideoQualityAnalyzerInterface
   // call.
   virtual void UnregisterParticipantInCall(absl::string_view peer_name) {}
 
+  // Informs analyzer that peer `peer_name` is expected to receive stream
+  // `stream_label`.
+  virtual void OnPeerStartedReceiveVideoStream(absl::string_view peer_name,
+                                               absl::string_view stream_label) {
+  }
+  // Informs analyzer that peer `peer_name` shouldn't receive stream
+  // `stream_label`.
+  virtual void OnPeerStoppedReceiveVideoStream(absl::string_view peer_name,
+                                               absl::string_view stream_label) {
+  }
+
   // Tells analyzer that analysis complete and it should calculate final
   // statistics.
   virtual void Stop() {}
