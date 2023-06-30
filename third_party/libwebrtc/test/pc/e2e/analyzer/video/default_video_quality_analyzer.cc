@@ -1158,26 +1158,6 @@ void DefaultVideoQualityAnalyzer::ReportResults(
       {MetricMetadataKey::kReceiverMetadataKey, peers_->name(key.receiver)},
       {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_label_}};
 
-  double sum_squared_interframe_delays_secs = 0;
-  double video_duration_ms = 0;
-  for (const SamplesStatsCounter::StatsSample& sample :
-       stats.time_between_rendered_frames_ms.GetTimedSamples()) {
-    double interframe_delay_ms = sample.value;
-    const double interframe_delays_secs = interframe_delay_ms / 1000.0;
-    // Sum of squared inter frame intervals is used to calculate the harmonic
-    // frame rate metric. The metric aims to reflect overall experience related
-    // to smoothness of video playback and includes both freezes and pauses.
-    sum_squared_interframe_delays_secs +=
-        interframe_delays_secs * interframe_delays_secs;
-
-    video_duration_ms += sample.value;
-  }
-  double harmonic_framerate_fps = 0;
-  if (sum_squared_interframe_delays_secs > 0.0) {
-    harmonic_framerate_fps =
-        video_duration_ms / 1000.0 / sum_squared_interframe_delays_secs;
-  }
-
   metrics_logger_->LogMetric(
       "psnr_dB", test_case_name, stats.psnr, Unit::kUnitless,
       ImprovementDirection::kBiggerIsBetter, metric_metadata);
@@ -1197,7 +1177,7 @@ void DefaultVideoQualityAnalyzer::ReportResults(
       stats.time_between_rendered_frames_ms, Unit::kMilliseconds,
       ImprovementDirection::kSmallerIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
-      "harmonic_framerate", test_case_name, harmonic_framerate_fps,
+      "harmonic_framerate", test_case_name, stats.harmonic_framerate_fps,
       Unit::kHertz, ImprovementDirection::kBiggerIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "encode_frame_rate", test_case_name,

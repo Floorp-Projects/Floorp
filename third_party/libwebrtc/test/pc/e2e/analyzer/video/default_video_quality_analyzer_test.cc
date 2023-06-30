@@ -2147,7 +2147,7 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
   ExpectRateIs(bob_stream_stats.capture_frame_rate, 13.559322);
   // TODO(bugs.webrtc.org/14995): Fix encode_frame_rate (has to be ~20.0)
   ExpectRateIs(bob_stream_stats.encode_frame_rate, 13.559322);
-  // TODO(bugs.webrtc.org/14995): Assert on harmonic fps
+  EXPECT_DOUBLE_EQ(bob_stream_stats.harmonic_framerate_fps, 20);
 
   StreamStats charlie_stream_stats =
       streams_stats.at(StatsKey("alice_video", "charlie"));
@@ -2159,7 +2159,7 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
               ElementsAre(1050.0));
   EXPECT_THAT(GetTimeSortedValues(charlie_stream_stats.time_between_freezes_ms),
               ElementsAre(950.0, 950.0));
-  // TODO(bugs.webrtc.org/14995): Assert on harmonic fps
+  EXPECT_NEAR(charlie_stream_stats.harmonic_framerate_fps, 2.463465, 1e-6);
 }
 
 TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
@@ -2217,7 +2217,7 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
               ElementsAre(950.0));
   ExpectRateIs(bob_stream_stats.capture_frame_rate, 21.052631);
   ExpectRateIs(bob_stream_stats.encode_frame_rate, 21.052631);
-  // TODO(bugs.webrtc.org/14995): Assert on harmonic fps
+  EXPECT_DOUBLE_EQ(bob_stream_stats.harmonic_framerate_fps, 20);
 
   StreamStats charlie_stream_stats =
       streams_stats.at(StatsKey("alice_video", "charlie"));
@@ -2229,7 +2229,7 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
               ElementsAre(1050.0));
   EXPECT_THAT(GetTimeSortedValues(charlie_stream_stats.time_between_freezes_ms),
               ElementsAre(950.0, 950.0));
-  // TODO(bugs.webrtc.org/14995): Assert on harmonic fps
+  EXPECT_NEAR(charlie_stream_stats.harmonic_framerate_fps, 2.463465, 1e-6);
 }
 
 TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,

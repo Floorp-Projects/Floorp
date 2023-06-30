@@ -164,6 +164,8 @@ struct StreamStats {
   std::vector<StreamCodecInfo> encoders;
   // Vectors of decoders used for this stream by receiving client.
   std::vector<StreamCodecInfo> decoders;
+
+  double harmonic_framerate_fps = 0;
 };
 
 struct AnalyzerStats {
