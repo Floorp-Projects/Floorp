@@ -163,8 +163,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
           RTC_GUARDED_BY(signaling_thread());
   sigslot::signal1<int> SignalDataChannelTransportChannelClosing_s
       RTC_GUARDED_BY(signaling_thread());
-  sigslot::signal1<int> SignalDataChannelTransportChannelClosed_s
-      RTC_GUARDED_BY(signaling_thread());
 
   // Owning PeerConnection.
   PeerConnectionInternal* const pc_;
