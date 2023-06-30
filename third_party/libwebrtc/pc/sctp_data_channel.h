@@ -25,6 +25,8 @@
 #include "api/transport/data_channel_transport_interface.h"
 #include "media/base/media_channel.h"
 #include "pc/data_channel_utils.h"
+#include "pc/sctp_utils.h"
+#include "rtc_base/containers/flat_set.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/ssl_stream_adapter.h"  // For SSLRole
 #include "rtc_base/third_party/sigslot/sigslot.h"
@@ -64,8 +66,6 @@ class SctpDataChannelControllerInterface {
   virtual ~SctpDataChannelControllerInterface() {}
 };
 
-// TODO(tommi): Change to not inherit from DataChannelInit but to have it as
-// a const member. Block access to the 'id' member since it cannot be const.
 struct InternalDataChannelInit : public DataChannelInit {
   enum OpenHandshakeRole { kOpener, kAcker, kNone };
   // The default role is kOpener because the default `negotiated` is false.
@@ -86,19 +86,16 @@ class SctpSidAllocator {
   // SSL_CLIENT, the allocated id starts from 0 and takes even numbers;
   // otherwise, the id starts from 1 and takes odd numbers.
   // Returns false if no ID can be allocated.
-  bool AllocateSid(rtc::SSLRole role, int* sid);
+  bool AllocateSid(rtc::SSLRole role, StreamId* sid);
 
   // Attempts to reserve a specific sid. Returns false if it's unavailable.
-  bool ReserveSid(int sid);
+  bool ReserveSid(const StreamId& sid);
 
   // Indicates that `sid` isn't in use any more, and is thus available again.
-  void ReleaseSid(int sid);
+  void ReleaseSid(const StreamId& sid);
 
  private:
-  // Checks if `sid` is available to be assigned to a new SCTP data channel.
-  bool IsSidAvailable(int sid) const;
-
-  std::set<int> used_sids_;
+  webrtc::flat_set<StreamId> used_sids_;
 };
 
 // SctpDataChannel is an implementation of the DataChannelInterface based on
@@ -143,32 +140,20 @@ class SctpDataChannel : public DataChannelInterface,
   void RegisterObserver(DataChannelObserver* observer) override;
   void UnregisterObserver() override;
 
-  std::string label() const override { return label_; }
+  std::string label() const override;
   bool reliable() const override;
-  bool ordered() const override { return config_.ordered; }
-  // Backwards compatible accessors
-  uint16_t maxRetransmitTime() const override {
-    return config_.maxRetransmitTime ? *config_.maxRetransmitTime
-                                     : static_cast<uint16_t>(-1);
-  }
-  uint16_t maxRetransmits() const override {
-    return config_.maxRetransmits ? *config_.maxRetransmits
-                                  : static_cast<uint16_t>(-1);
-  }
-  absl::optional<int> maxPacketLifeTime() const override {
-    return config_.maxRetransmitTime;
-  }
-  absl::optional<int> maxRetransmitsOpt() const override {
-    return config_.maxRetransmits;
-  }
-  std::string protocol() const override { return config_.protocol; }
-  bool negotiated() const override { return config_.negotiated; }
-  int id() const override { return config_.id; }
-  Priority priority() const override {
-    return config_.priority ? *config_.priority : Priority::kLow;
-  }
+  bool ordered() const override;
 
-  virtual int internal_id() const { return internal_id_; }
+  // Backwards compatible accessors
+  uint16_t maxRetransmitTime() const override;
+  uint16_t maxRetransmits() const override;
+
+  absl::optional<int> maxPacketLifeTime() const override;
+  absl::optional<int> maxRetransmitsOpt() const override;
+  std::string protocol() const override;
+  bool negotiated() const override;
+  int id() const override;
+  Priority priority() const override;
 
   uint64_t buffered_amount() const override;
   void Close() override;
@@ -202,7 +187,7 @@ class SctpDataChannel : public DataChannelInterface,
 
   // Sets the SCTP sid and adds to transport layer if not set yet. Should only
   // be called once.
-  void SetSctpSid(int sid);
+  void SetSctpSid(const StreamId& sid);
   // The remote side started the closing procedure by resetting its outgoing
   // stream (our incoming stream). Sets state to kClosing.
   void OnClosingProcedureStartedRemotely(int sid);
@@ -219,6 +204,8 @@ class SctpDataChannel : public DataChannelInterface,
   void OnTransportChannelClosed(RTCError error);
 
   DataChannelStats GetStats() const;
+
+  const StreamId& sid() const { return id_; }
 
   // Reset the allocator for internal ID values for testing, so that
   // the internal IDs generated are predictable. Test only.
@@ -259,9 +246,16 @@ class SctpDataChannel : public DataChannelInterface,
 
   rtc::Thread* const signaling_thread_;
   rtc::Thread* const network_thread_;
+  StreamId id_;
   const int internal_id_;
   const std::string label_;
-  const InternalDataChannelInit config_;
+  const std::string protocol_;
+  const absl::optional<int> max_retransmit_time_;
+  const absl::optional<int> max_retransmits_;
+  const absl::optional<Priority> priority_;
+  const bool negotiated_;
+  const bool ordered_;
+
   DataChannelObserver* observer_ RTC_GUARDED_BY(signaling_thread_) = nullptr;
   DataState state_ RTC_GUARDED_BY(signaling_thread_) = kConnecting;
   RTCError error_ RTC_GUARDED_BY(signaling_thread_);

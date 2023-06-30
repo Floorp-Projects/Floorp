@@ -16,6 +16,7 @@
 
 #include "absl/types/optional.h"
 #include "api/priority.h"
+#include "media/sctp/sctp_transport_internal.h"
 #include "rtc_base/byte_buffer.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/logging.h"
@@ -45,6 +46,53 @@ enum DataChannelPriority {
   DCO_PRIORITY_MEDIUM = 512,
   DCO_PRIORITY_HIGH = 1024,
 };
+
+StreamId::StreamId() : id_(absl::nullopt) {
+  thread_checker_.Detach();
+}
+
+StreamId::StreamId(int id)
+    : id_(id >= cricket::kMinSctpSid && id <= cricket::kSpecMaxSctpSid
+              ? absl::optional<uint16_t>(static_cast<uint16_t>(id))
+              : absl::nullopt) {
+  thread_checker_.Detach();
+}
+
+StreamId::StreamId(const StreamId& sid) : id_(sid.id_) {}
+
+bool StreamId::HasValue() const {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  return id_.has_value();
+}
+
+int StreamId::stream_id_int() const {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  return id_.has_value() ? static_cast<int>(id_.value().value()) : -1;
+}
+
+void StreamId::reset() {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  id_ = absl::nullopt;
+}
+
+StreamId& StreamId::operator=(const StreamId& sid) {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(&sid.thread_checker_);
+  id_ = sid.id_;
+  return *this;
+}
+
+bool StreamId::operator==(const StreamId& sid) const {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(&sid.thread_checker_);
+  return id_ == sid.id_;
+}
+
+bool StreamId::operator<(const StreamId& sid) const {
+  RTC_DCHECK_RUN_ON(&thread_checker_);
+  RTC_DCHECK_RUN_ON(&sid.thread_checker_);
+  return id_ < sid.id_;
+}
 
 bool IsOpenMessage(const rtc::CopyOnWriteBuffer& payload) {
   // Format defined at
@@ -165,6 +213,18 @@ bool ParseDataChannelOpenAckMessage(const rtc::CopyOnWriteBuffer& payload) {
 bool WriteDataChannelOpenMessage(const std::string& label,
                                  const DataChannelInit& config,
                                  rtc::CopyOnWriteBuffer* payload) {
+  return WriteDataChannelOpenMessage(label, config.protocol, config.priority,
+                                     config.ordered, config.maxRetransmits,
+                                     config.maxRetransmitTime, payload);
+}
+
+bool WriteDataChannelOpenMessage(const std::string& label,
+                                 const std::string& protocol,
+                                 absl::optional<Priority> opt_priority,
+                                 bool ordered,
+                                 absl::optional<int> max_retransmits,
+                                 absl::optional<int> max_retransmit_time,
+                                 rtc::CopyOnWriteBuffer* payload) {
   // Format defined at
   // http://tools.ietf.org/html/draft-ietf-rtcweb-data-protocol-09#section-5.1
   uint8_t channel_type = 0;
@@ -172,8 +232,8 @@ bool WriteDataChannelOpenMessage(const std::string& label,
   uint16_t priority = 0;
   // Set priority according to
   // https://tools.ietf.org/html/draft-ietf-rtcweb-data-channel-12#section-6.4
-  if (config.priority) {
-    switch (*config.priority) {
+  if (opt_priority) {
+    switch (*opt_priority) {
       case Priority::kVeryLow:
         priority = DCO_PRIORITY_VERY_LOW;
         break;
@@ -188,39 +248,38 @@ bool WriteDataChannelOpenMessage(const std::string& label,
         break;
     }
   }
-  if (config.ordered) {
-    if (config.maxRetransmits) {
+  if (ordered) {
+    if (max_retransmits) {
       channel_type = DCOMCT_ORDERED_PARTIAL_RTXS;
-      reliability_param = *config.maxRetransmits;
-    } else if (config.maxRetransmitTime) {
+      reliability_param = *max_retransmits;
+    } else if (max_retransmit_time) {
       channel_type = DCOMCT_ORDERED_PARTIAL_TIME;
-      reliability_param = *config.maxRetransmitTime;
+      reliability_param = *max_retransmit_time;
     } else {
       channel_type = DCOMCT_ORDERED_RELIABLE;
     }
   } else {
-    if (config.maxRetransmits) {
+    if (max_retransmits) {
       channel_type = DCOMCT_UNORDERED_PARTIAL_RTXS;
-      reliability_param = *config.maxRetransmits;
-    } else if (config.maxRetransmitTime) {
+      reliability_param = *max_retransmits;
+    } else if (max_retransmit_time) {
       channel_type = DCOMCT_UNORDERED_PARTIAL_TIME;
-      reliability_param = *config.maxRetransmitTime;
+      reliability_param = *max_retransmit_time;
     } else {
       channel_type = DCOMCT_UNORDERED_RELIABLE;
     }
   }
 
-  rtc::ByteBufferWriter buffer(NULL,
-                               20 + label.length() + config.protocol.length());
+  rtc::ByteBufferWriter buffer(NULL, 20 + label.length() + protocol.length());
   // TODO(tommi): Add error handling and check resulting length.
   buffer.WriteUInt8(DATA_CHANNEL_OPEN_MESSAGE_TYPE);
   buffer.WriteUInt8(channel_type);
   buffer.WriteUInt16(priority);
   buffer.WriteUInt32(reliability_param);
   buffer.WriteUInt16(static_cast<uint16_t>(label.length()));
-  buffer.WriteUInt16(static_cast<uint16_t>(config.protocol.length()));
+  buffer.WriteUInt16(static_cast<uint16_t>(protocol.length()));
   buffer.WriteString(label);
-  buffer.WriteString(config.protocol);
+  buffer.WriteString(protocol);
   payload->SetData(buffer.Data(), buffer.Length());
   return true;
 }

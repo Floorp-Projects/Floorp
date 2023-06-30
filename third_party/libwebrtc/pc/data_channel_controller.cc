@@ -277,23 +277,30 @@ DataChannelController::InternalCreateSctpDataChannel(
   RTC_DCHECK_RUN_ON(signaling_thread());
   InternalDataChannelInit new_config =
       config ? (*config) : InternalDataChannelInit();
-  if (new_config.id < 0) {
+  StreamId sid(new_config.id);
+  if (!sid.HasValue()) {
     rtc::SSLRole role;
-    if ((pc_->GetSctpSslRole(&role)) &&
-        !sid_allocator_.AllocateSid(role, &new_config.id)) {
+    // TODO(bugs.webrtc.org/11547): `GetSctpSslRole` likely involves a hop to
+    // the network thread. (unless there's no transport). Change this so that
+    // the role is checked on the network thread and any network thread related
+    // initialization is done at the same time (to avoid additional hops).
+    if (pc_->GetSctpSslRole(&role) && !sid_allocator_.AllocateSid(role, &sid)) {
       RTC_LOG(LS_ERROR) << "No id can be allocated for the SCTP data channel.";
       return nullptr;
     }
-  } else if (!sid_allocator_.ReserveSid(new_config.id)) {
+    // Note that when we get here, the ID may still be invalid.
+  } else if (!sid_allocator_.ReserveSid(sid)) {
     RTC_LOG(LS_ERROR) << "Failed to create a SCTP data channel "
                          "because the id is already in use or out of range.";
     return nullptr;
   }
+  // In case `sid` has changed. Update `new_config` accordingly.
+  new_config.id = sid.stream_id_int();
   rtc::scoped_refptr<SctpDataChannel> channel(
       SctpDataChannel::Create(weak_factory_.GetWeakPtr(), label, new_config,
                               signaling_thread(), network_thread()));
   if (!channel) {
-    sid_allocator_.ReleaseSid(new_config.id);
+    sid_allocator_.ReleaseSid(sid);
     return nullptr;
   }
   sctp_data_channels_.push_back(channel);
@@ -304,13 +311,16 @@ void DataChannelController::AllocateSctpSids(rtc::SSLRole role) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   std::vector<rtc::scoped_refptr<SctpDataChannel>> channels_to_close;
   for (const auto& channel : sctp_data_channels_) {
-    if (channel->id() < 0) {
-      int sid;
+    if (!channel->sid().HasValue()) {
+      StreamId sid;
       if (!sid_allocator_.AllocateSid(role, &sid)) {
         RTC_LOG(LS_ERROR) << "Failed to allocate SCTP sid, closing channel.";
         channels_to_close.push_back(channel);
         continue;
       }
+      // TODO(bugs.webrtc.org/11547): This hides a blocking call to the network
+      // thread via AddSctpDataStream. Maybe it's better to move the whole loop
+      // to the network thread? Maybe even `sctp_data_channels_`?
       channel->SetSctpSid(sid);
     }
   }
@@ -326,10 +336,10 @@ void DataChannelController::OnSctpDataChannelClosed(SctpDataChannel* channel) {
   for (auto it = sctp_data_channels_.begin(); it != sctp_data_channels_.end();
        ++it) {
     if (it->get() == channel) {
-      if (channel->id() >= 0) {
+      if (channel->sid().HasValue()) {
         // After the closing procedure is done, it's safe to use this ID for
         // another data channel.
-        sid_allocator_.ReleaseSid(channel->id());
+        sid_allocator_.ReleaseSid(channel->sid());
       }
 
       // Since this method is triggered by a signal from the DataChannel,
