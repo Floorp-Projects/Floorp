@@ -29,7 +29,7 @@ const verifyMessageBar = message => {
   );
   Assert.equal(
     supportLink.getAttribute("aria-describedby"),
-    "unified-extensions-mb-quarantined-domain-message",
+    "unified-extensions-mb-quarantined-domain-message-2",
     "expected the correct aria-describedby value"
   );
 };

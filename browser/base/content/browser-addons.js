@@ -1373,7 +1373,7 @@ var gUnifiedExtensions = {
       if (!this._messageBarQuarantinedDomain) {
         this._messageBarQuarantinedDomain = this._makeMessageBar({
           titleFluentId: "unified-extensions-mb-quarantined-domain-title",
-          messageFluentId: "unified-extensions-mb-quarantined-domain-message",
+          messageFluentId: "unified-extensions-mb-quarantined-domain-message-2",
           supportPage: "quarantined-domains",
           dismissable: false,
         });
