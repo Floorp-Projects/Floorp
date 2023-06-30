@@ -10,6 +10,10 @@ const { ExtensionPermissions } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );
 
+const { QuarantinedDomains } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissions.sys.mjs"
+);
+
 const SUPPORT_URL = Services.urlFormatter.formatURL(
   Services.prefs.getStringPref("app.support.baseURL")
 );
@@ -87,6 +91,30 @@ async function checkRowScreenReaderAccessibility(
     !!row.getAttribute("aria-label")?.length,
     `Expect non empty aria-label on the ${groupName} row`
   );
+}
+
+async function checkQuarantinedDomainsUserAllowedRows(card, rows) {
+  // Account for the rows related to per-addon quarantineIgnoredByUser UI,
+  // underling functionality of the UI is checked in its own test task.
+  const doc = card.ownerDocument;
+  if (card.addon.canChangeQuarantineIgnored) {
+    let row = rows.shift();
+    await checkLabel(row, "quarantined-domains");
+    await checkRowScreenReaderAccessibility(row, {
+      groupName: "quarantined domains exempt controls",
+      expectedFluentId: "addon-detail-group-label-quarantined-domains",
+    });
+
+    // quarantineIgnoredByUser UI help text.
+    row = rows.shift();
+    ok(row.classList.contains("addon-detail-help-row"), "There's a help row");
+    ok(!row.hidden, "The help row is shown");
+    is(
+      doc.l10n.getAttributes(row.firstElementChild).id,
+      "addon-detail-quarantined-domains-help",
+      "The help row is for quarantined domains"
+    );
+  }
 }
 
 function formatUrl(contentAttribute, url) {
@@ -551,6 +579,8 @@ add_task(async function testFullDetails() {
     "The help row is for private browsing"
   );
 
+  await checkQuarantinedDomainsUserAllowedRows(card, rows);
+
   // Author.
   row = rows.shift();
   await checkLabel(row, "author");
@@ -714,6 +744,8 @@ add_task(async function testMinimalExtension() {
     "addon-detail-private-browsing-help",
     "The help row is for private browsing"
   );
+
+  await checkQuarantinedDomainsUserAllowedRows(card, rows);
 
   // Author.
   row = rows.shift();
@@ -1256,4 +1288,309 @@ add_task(async function testGoBackButtonIsDisabledAfterBrowserBackButton() {
 
   BrowserTestUtils.removeTab(tab);
   await extension.unload();
+});
+
+add_task(async function testQuarantinedDomainsUserAllowedUI() {
+  let regularExtId = "regular@mochi.test";
+  let privilegedExtId = "privileged@mochi.test";
+  let recommendedExtId = "recommended@mochi.test";
+  let themeId = "theme@mochi.test";
+  let provider = new MockProvider();
+  provider.createAddons([
+    {
+      id: privilegedExtId,
+      isPrivileged: true,
+      name: "A privileged extension",
+      type: "extension",
+      quarantineIgnoredByApp: true,
+      quarantineIgnoredByUser: false,
+      canChangeQuarantineIgnored: false,
+    },
+    {
+      id: recommendedExtId,
+      isRecommended: true,
+      recommendationStates: ["recommended"],
+      name: "A Recommended extension",
+      type: "extension",
+      quarantineIgnoredByApp: true,
+      quarantineIgnoredByUser: false,
+      canChangeQuarantineIgnored: false,
+    },
+    {
+      id: themeId,
+      name: "A fake regular theme",
+      type: "theme",
+      canChangeQuarantineIgnored: false,
+    },
+  ]);
+
+  let regularExtension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "Some regular extension",
+      browser_specific_settings: { gecko: { id: regularExtId } },
+    },
+    useAddonManager: "permanent",
+  });
+
+  async function testQuarantinedUserAllowedUIRows(id, { expectVisible }) {
+    const perAddonPref = QuarantinedDomains.getUserAllowedAddonIdPrefName(id);
+    Services.prefs.clearUserPref(perAddonPref);
+
+    let card = getAddonCard(win, id);
+
+    const cardDetails = card.querySelector("addon-details");
+    ok(cardDetails, "Card details found");
+    const quarantinedUserAllowedControlsRow = cardDetails.querySelector(
+      ".addon-detail-row-quarantined-domains"
+    );
+
+    ok(
+      quarantinedUserAllowedControlsRow,
+      "Found quarantine domains controls row element"
+    );
+
+    is(
+      BrowserTestUtils.is_visible(quarantinedUserAllowedControlsRow),
+      expectVisible,
+      `Expect quarantineIgnoreByUser UI to ${
+        expectVisible ? "be" : "NOT be"
+      } visible`
+    );
+    const helpRow = quarantinedUserAllowedControlsRow.nextElementSibling;
+    is(
+      helpRow.classList.contains("addon-detail-help-row"),
+      true,
+      "Expect next sibling to be an addon-detail-help-row"
+    );
+    is(
+      BrowserTestUtils.is_visible(helpRow),
+      expectVisible,
+      `Expect quarantineIgnoredByUser UI help to ${
+        expectVisible ? "be" : "NOT be"
+      } visible`
+    );
+
+    if (!expectVisible) {
+      // The assertion that follows are going to be executed when the
+      // test helper function is called for an addon card detail view
+      // for which the quarantined domains rows are expected to be
+      // visible.
+      return;
+    }
+
+    is(
+      doc.l10n.getAttributes(helpRow.firstElementChild).id,
+      "addon-detail-quarantined-domains-help",
+      "Expect addon-detail-help-row to be localized"
+    );
+    const helpSupportLink = helpRow.querySelector("[is=moz-support-link]");
+    ok(helpSupportLink, "Expect a moz-support-link");
+    is(
+      helpSupportLink?.getAttribute("support-page"),
+      "quarantined-domains",
+      "Expect support link to point to SUMO quarantined-domains page"
+    );
+    // Make sure none of the elements in the help row are missing
+    // the expected strings associated to the fluent ids being set
+    // (if any is missing, l10n.translateElements will reject and
+    // trigger an explicit test failure);
+    await doc.l10n.translateElements([helpRow]);
+
+    const radioInputs = Array.from(
+      quarantinedUserAllowedControlsRow.querySelectorAll(
+        "input[name=quarantined-domains-user-allowed]"
+      )
+    );
+
+    Assert.deepEqual(
+      radioInputs.map(el => el.value),
+      ["1", "0"],
+      "Got the expected radio inputs values"
+    );
+
+    Assert.deepEqual(
+      radioInputs.map(el => doc.l10n.getAttributes(el.nextElementSibling).id),
+      ["allow", "disallow"].map(
+        txt => `addon-detail-quarantined-domains-${txt}`
+      ),
+      "Got the expected fluent ids on the radio input text"
+    );
+
+    const checkRadioInputsState = ({ expectUserAllowed }) => {
+      is(
+        card.addon.quarantineIgnoredByUser,
+        expectUserAllowed,
+        `Expect the test extension to ${
+          expectUserAllowed ? "be" : "NOT be"
+        } quarantineIgnoredByUser`
+      );
+      is(
+        radioInputs[0].checked,
+        expectUserAllowed,
+        `Expect 'allow' radio button to ${
+          expectUserAllowed ? "be" : "NOT be"
+        } checked`
+      );
+      is(
+        radioInputs[1].checked,
+        !expectUserAllowed,
+        `Expect 'disallow' radio button ${
+          expectUserAllowed ? "NOT be" : "be"
+        } checked`
+      );
+    };
+
+    info("Verify initially NOT allowed to access quarantine domains");
+    checkRadioInputsState({ expectUserAllowed: false });
+
+    info("Click 'allow' radio input");
+    radioInputs[0].click();
+    checkRadioInputsState({ expectUserAllowed: true });
+
+    info("Click 'disallow' radio input");
+    radioInputs[1].click();
+    checkRadioInputsState({ expectUserAllowed: false });
+
+    info("Verify quarantineIgnoredByUser changes reflected in about:addons UI");
+
+    info("Allow test extension on quarantined domains");
+    let promisePropertyChanged =
+      AddonTestUtils.promiseAddonEvent("onPropertyChanged");
+    card.addon.quarantineIgnoredByUser = true;
+    await promisePropertyChanged;
+    checkRadioInputsState({ expectUserAllowed: true });
+
+    info("Disallow test extension on quarantined domains");
+    promisePropertyChanged =
+      AddonTestUtils.promiseAddonEvent("onPropertyChanged");
+    card.addon.quarantineIgnoredByUser = false;
+    await promisePropertyChanged;
+    checkRadioInputsState({ expectUserAllowed: false });
+  }
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Make sure the quarantined domains feature is initially enabled
+      // otherwise the "quarantineIgnoredByUser UI" rows are
+      // going to be hidden.
+      ["extensions.quarantinedDomains.enabled", true],
+      // Make sure this test is always running with the
+      // "per-addon quarantineIgnoredByUser UI" feature enabled.
+      ["extensions.quarantinedDomains.uiDisabled", false],
+    ],
+  });
+
+  // Clear any per-addon pref once this test file is exiting.
+  registerCleanupFunction(() => {
+    const prefBranch = Services.prefs.getBranch(
+      QuarantinedDomains.PREF_ADDONS_BRANCH_NAME
+    );
+    for (const leafName of prefBranch.getChildList("")) {
+      const prefName = QuarantinedDomains.PREF_ADDONS_BRANCH_NAME + leafName;
+      info(`Clearing user pref ${prefName}`);
+      Services.prefs.clearUserPref(prefName);
+    }
+  });
+
+  await regularExtension.startup();
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  info("Test quarantineIgnoredByUser UI on a regular extension");
+  let loaded = waitForViewLoad(win);
+  getAddonCard(win, regularExtId).querySelector('[action="expand"]').click();
+  await loaded;
+
+  await testQuarantinedUserAllowedUIRows(regularExtId, { expectVisible: true });
+
+  info("Go back to extensions list view");
+  loaded = waitForViewLoad(win);
+  win.history.back();
+  await loaded;
+
+  info("Test quarantineIgnoredByUser UI on a privileged extension");
+  loaded = waitForViewLoad(win);
+  getAddonCard(win, privilegedExtId).querySelector('[action="expand"]').click();
+  await loaded;
+
+  await testQuarantinedUserAllowedUIRows(privilegedExtId, {
+    expectVisible: false,
+  });
+
+  info("Go back to extensions list view");
+  loaded = waitForViewLoad(win);
+  win.history.back();
+  await loaded;
+
+  info("Test quarantineIgnoredByUser UI on a recommended extension");
+  loaded = waitForViewLoad(win);
+  getAddonCard(win, recommendedExtId)
+    .querySelector('[action="expand"]')
+    .click();
+  await loaded;
+
+  await testQuarantinedUserAllowedUIRows(recommendedExtId, {
+    expectVisible: false,
+  });
+
+  info("Switch to theme list view");
+  loaded = waitForViewLoad(win);
+  doc.querySelector("#categories > [name=theme]").click();
+  await loaded;
+
+  info("Test quarantineIgnoredByUser UI on a non extension addon type (theme)");
+  loaded = waitForViewLoad(win);
+  getAddonCard(win, themeId).querySelector('[action="expand"]').click();
+  await loaded;
+
+  await testQuarantinedUserAllowedUIRows(themeId, { expectVisible: false });
+
+  info("Verify regular extension card on quarantined domains feature disabled");
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.quarantinedDomains.enabled", false]],
+  });
+
+  info("Switch to extension list view");
+  loaded = waitForViewLoad(win);
+  doc.querySelector("#categories > [name=extension]").click();
+  await loaded;
+
+  loaded = waitForViewLoad(win);
+  getAddonCard(win, regularExtId).querySelector('[action="expand"]').click();
+  await loaded;
+
+  await testQuarantinedUserAllowedUIRows(regularExtId, {
+    expectVisible: false,
+  });
+
+  await SpecialPowers.popPrefEnv();
+
+  info("Verify regular extenson card uiDisabled pref set to true");
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      // Make sure the quarantineIgnoredByUser UI is also hidden
+      // when the quarantine domains feature is enabled but the
+      // "per-addon quarantineIgnoredByUser UI" feature is disabled.
+      ["extensions.quarantinedDomains.uiDisabled", true],
+    ],
+  });
+
+  info("Switch to extension list view");
+  loaded = waitForViewLoad(win);
+  doc.querySelector("#categories > [name=extension]").click();
+  await loaded;
+
+  loaded = waitForViewLoad(win);
+  getAddonCard(win, regularExtId).querySelector('[action="expand"]').click();
+  await loaded;
+
+  await testQuarantinedUserAllowedUIRows(regularExtId, {
+    expectVisible: false,
+  });
+
+  await closeView(win);
+  await regularExtension.unload();
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.popPrefEnv();
 });
