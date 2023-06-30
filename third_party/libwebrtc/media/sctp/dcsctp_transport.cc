@@ -461,6 +461,7 @@ void DcSctpTransport::OnMessageReceived(dcsctp::DcSctpMessage message) {
                         << "->OnMessageReceived(): Received an unknown PPID "
                         << message.ppid().value()
                         << " on an SCTP packet. Dropping.";
+    return;
   }
   receive_data_params.type = *type;
   receive_buffer_.Clear();
