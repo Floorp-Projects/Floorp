@@ -12,6 +12,7 @@
 
 #include <utility>
 
+#include "absl/algorithm/container.h"
 #include "api/peer_connection_interface.h"
 #include "api/rtc_error.h"
 #include "pc/peer_connection_internal.h"
@@ -52,8 +53,6 @@ bool DataChannelController::ConnectDataChannel(
       webrtc_data_channel, &SctpDataChannel::OnDataReceived);
   SignalDataChannelTransportChannelClosing_s.connect(
       webrtc_data_channel, &SctpDataChannel::OnClosingProcedureStartedRemotely);
-  SignalDataChannelTransportChannelClosed_s.connect(
-      webrtc_data_channel, &SctpDataChannel::OnClosingProcedureComplete);
   return true;
 }
 
@@ -68,7 +67,6 @@ void DataChannelController::DisconnectDataChannel(
   SignalDataChannelTransportWritable_s.disconnect(webrtc_data_channel);
   SignalDataChannelTransportReceivedData_s.disconnect(webrtc_data_channel);
   SignalDataChannelTransportChannelClosing_s.disconnect(webrtc_data_channel);
-  SignalDataChannelTransportChannelClosed_s.disconnect(webrtc_data_channel);
 }
 
 void DataChannelController::AddSctpDataStream(int sid) {
@@ -143,7 +141,22 @@ void DataChannelController::OnChannelClosed(int channel_id) {
   signaling_thread()->PostTask(
       SafeTask(signaling_safety_.flag(), [this, channel_id] {
         RTC_DCHECK_RUN_ON(signaling_thread());
-        SignalDataChannelTransportChannelClosed_s(channel_id);
+        auto it = absl::c_find_if(sctp_data_channels_, [&](const auto& c) {
+          return c->id() == channel_id;
+        });
+
+        // Remove the channel from our list, close it and free up resources.
+        if (it != sctp_data_channels_.end()) {
+          rtc::scoped_refptr<SctpDataChannel> channel = std::move(*it);
+          // Note: this causes OnSctpDataChannelClosed() to not do anything
+          // when called from within `OnClosingProcedureComplete`.
+          sctp_data_channels_.erase(it);
+
+          DisconnectDataChannel(channel.get());
+          sid_allocator_.ReleaseSid(channel->sid());
+
+          channel->OnClosingProcedureComplete();
+        }
       }));
 }
 

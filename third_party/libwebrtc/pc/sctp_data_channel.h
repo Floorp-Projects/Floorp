@@ -194,7 +194,7 @@ class SctpDataChannel : public DataChannelInterface,
   // The closing procedure is complete; both incoming and outgoing stream
   // resets are done and the channel can transition to kClosed. Called
   // asynchronously after RemoveSctpDataStream.
-  void OnClosingProcedureComplete(int sid);
+  void OnClosingProcedureComplete();
   // Called when the transport channel is created.
   // Only needs to be called for SCTP data channels.
   void OnTransportChannelCreated();

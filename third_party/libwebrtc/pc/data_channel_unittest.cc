@@ -162,20 +162,21 @@ TEST_F(SctpDataChannelTest, ConnectedAfterTransportBecomesAvailable) {
 
 // Tests the state of the data channel.
 TEST_F(SctpDataChannelTest, StateTransition) {
+  AddObserver();
+
   EXPECT_EQ(DataChannelInterface::kConnecting, webrtc_data_channel_->state());
-  EXPECT_EQ(controller_->channels_opened(), 0);
-  EXPECT_EQ(controller_->channels_closed(), 0);
+  EXPECT_EQ(observer_->on_state_change_count(), 0u);
   SetChannelReady();
 
   EXPECT_EQ(DataChannelInterface::kOpen, webrtc_data_channel_->state());
-  EXPECT_EQ(controller_->channels_opened(), 1);
-  EXPECT_EQ(controller_->channels_closed(), 0);
+  EXPECT_EQ(observer_->on_state_change_count(), 1u);
 
+  // `Close()` should trigger two state changes, first `kClosing`, then
+  // `kClose`.
   webrtc_data_channel_->Close();
   EXPECT_EQ(DataChannelInterface::kClosed, webrtc_data_channel_->state());
+  EXPECT_EQ(observer_->on_state_change_count(), 3u);
   EXPECT_TRUE(webrtc_data_channel_->error().ok());
-  EXPECT_EQ(controller_->channels_opened(), 1);
-  EXPECT_EQ(controller_->channels_closed(), 1);
   // Verifies that it's disconnected from the transport.
   EXPECT_FALSE(controller_->IsConnected(webrtc_data_channel_.get()));
 }
