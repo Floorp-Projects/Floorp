@@ -31,7 +31,7 @@
     <string name="no_open_tabs_description">Dei opne fanene dine vert viste her.</string>
 
     <!-- No Private Tabs Message Description -->
-    <string name="no_private_tabs_description">Dine private faner vil visast her.</string>
+    <string name="no_private_tabs_description">Dei private fanene dine vil visast her.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d valde</string>
@@ -638,6 +638,8 @@
     <string name="addon_already_installed">Tillegget er allereie installert</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Handsam kontoen</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synkroniser no</string>
     <!-- Preference category for sync -->

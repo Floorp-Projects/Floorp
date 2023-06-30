@@ -43,10 +43,6 @@
     <string name="mozac_feature_prompts_content_description_input_label">Etikett för att ange ett textinmatningsfält</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Välj en färg</string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Välj en inloggningsleverantör</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">Välj ett konto</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Tillåt</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -133,4 +129,12 @@
     <!-- Federated Credential Management prompts -->
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">Kontobild</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Välj en inloggningsleverantör</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">Välj ett konto</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Använd %1$s som inloggningsleverantör</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ Att logga in på %1$s med ett %2$s-konto omfattas av deras <a href="%3$s">sekretesspolicy</a> och <a href="%4$s">användarvillkor </a>]]></string>
 </resources>

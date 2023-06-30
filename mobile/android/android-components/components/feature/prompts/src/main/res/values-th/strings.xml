@@ -118,8 +118,6 @@
 
     <!-- Address Autofill -->
     <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
-    <string moz:removedIn="104" name="mozac_feature_prompts_select_address" tools:ignore="UnusedResources">เลือกที่อยู่</string>
-    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
     <string name="mozac_feature_prompts_select_address_2">เลือกที่อยู่</string>
     <!-- Content description for expanding the select addresses options in the select address prompt. -->
     <string name="mozac_feature_prompts_expand_address_content_description">ขยายที่อยู่ที่เสนอแนะ</string>
@@ -127,4 +125,12 @@
     <string name="mozac_feature_prompts_collapse_address_content_description">ยุบที่อยู่ที่เสนอแนะ</string>
     <!-- Text for the manage addresses button. -->
     <string name="mozac_feature_prompts_manage_address">จัดการที่อยู่</string>
-</resources>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">รูปภาพบัญชี</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">เลือกผู้ให้บริการเข้าสู่ระบบ</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">เลือกบัญชี</string>
+    </resources>

@@ -694,6 +694,14 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Sa huā rayi\'î Marketin</string>
 
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">Nej ēstûdio</string>
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Gā’nï̄n guendâ gā’nïnj Mozilla nej ēstûdio</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">Nāgi\’hiaj nūguà\'àn nī na’nïnj sà\’t nej si datôt</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Gāyi\'ì sēsiûn da\' ga\'ue gānātū nûnt</string>
     <!-- Preference for removing FxA account -->
@@ -719,6 +727,17 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Gānikò\' si tema aga\' dan</string>
 
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">Dūsiki’ da’ nāhuin nàkaj</string>
+
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">Dūsiki’ da’ nāhuin huì dukuán sa màn rasūun</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Dūguaché ānèj ané dukuán màn rasūun da’ gā’hue nādunā rakïj ñanj</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Dūguaché nāhuī dukuán màn rasūun da’ gā’hue nā’nï̄nt rakïj ñanj</string>
+
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Sa nadunïnjt</string>
@@ -742,6 +761,9 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Nārán</string>
 
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">Nā’nï̄n %d nej rakïj ñanj anj</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Na\'nïn nej rakïj ñanj </string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -1191,6 +1213,15 @@
 
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Dūyingô’</string>
+
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Hìo nī huì hua Firefox</string>
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Nā’nïnj Firefox da’ gāhuin man riña aché nana’hui’ yītïnjt</string>
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Ni’hiāj dàj ‘hiaj sun riña sa aché nu yītï̀njt</string>
 
     <!-- Preference for taking the short survey. -->
     <string name="preferences_take_survey">Nātsij ēnkuêsta</string>

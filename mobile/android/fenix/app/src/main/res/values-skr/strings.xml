@@ -625,6 +625,9 @@
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">ایڈ ــ آن پہلے ہی انسٹال تھیا ہویا ہے</string>
 
+    <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">کھاتہ منیج کرو</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ہݨ ہم وقت کرو</string>
     <!-- Preference category for sync -->
@@ -1875,6 +1878,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">ڳولݨ انجݨ شامل کرو</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description">نواں ڳولݨ انجݨ شامل کرو</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">ڳولݨ انجݨ وچ تبدیلی کرو</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->

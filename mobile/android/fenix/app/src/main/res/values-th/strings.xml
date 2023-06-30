@@ -364,13 +364,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">เกี่ยวกับ</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">เลือกหนึ่งตัว</string>
+    <string name="preferences_category_select_default_search_engine">เลือกหนึ่งตัว</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">จัดการทางลัดการค้นหา</string>
+    <string name="preferences_manage_search_shortcuts">จัดการทางลัดการค้นหา</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">แก้ไขเครื่องมือที่แสดงในเมนูค้นหา</string>
+    <string name="preferences_manage_search_shortcuts_summary">แก้ไขเครื่องมือที่แสดงในเมนูค้นหา</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">เครื่องมือที่แสดงบนเมนูค้นหา</string>
+    <string name="preferences_category_engines_in_search_menu">เครื่องมือที่แสดงบนเมนูค้นหา</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">เครื่องมือค้นหาเริ่มต้น</string>
     <!-- Preference for settings related to Search -->
@@ -637,6 +637,8 @@
     <string name="addon_already_installed">ส่วนเสริมถูกติดตั้งแล้ว</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">จัดการบัญชี</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">ซิงค์ตอนนี้</string>
     <!-- Preference category for sync -->
@@ -1206,6 +1208,10 @@
     <string name="share_save_to_pdf">บันทึกเป็น PDF</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">ไม่สามารถสร้าง PDF</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">ไม่สามารถพิมพ์</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">พิมพ์</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">ส่งไปยังอุปกรณ์</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1877,7 +1883,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">เพิ่มเครื่องมือค้นหา</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">เพิ่มเครื่องมือค้นหาใหม่</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">เพิ่มเครื่องมือค้นหาใหม่</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">แก้ไขเครื่องมือค้นหา</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1892,17 +1898,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">อื่น ๆ</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">ชื่อ</string>
+    <string name="search_add_custom_engine_name_label">ชื่อ</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">ชื่อ</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">ชื่อเครื่องมือค้นหา</string>
+    <string name="search_add_custom_engine_name_hint_2">ชื่อเครื่องมือค้นหา</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">URL สตริงการค้นหา</string>
+    <string name="search_add_custom_engine_url_label">URL สตริงการค้นหา</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">สตริงการค้นหาที่จะใช้</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">URL ที่จะใช้ในการค้นหา</string>
+    <string name="search_add_custom_engine_search_string_hint_2">URL ที่จะใช้ในการค้นหา</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">แทนที่คำค้นด้วย “%s” ตัวอย่าง:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1910,7 +1916,7 @@
     <string name="search_add_custom_engine_form_description">รายละเอียดเครื่องมือค้นหาที่กำหนดเอง</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">บันทึก</string>
+    <string name="search_custom_engine_save_button">บันทึก</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">ป้อนชื่อเครื่องมือค้นหา</string>

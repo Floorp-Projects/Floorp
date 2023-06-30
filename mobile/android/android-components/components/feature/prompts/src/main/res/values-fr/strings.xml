@@ -50,10 +50,6 @@
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Choisir une couleur</string>
 
-    <!-- Title of the Identity Credential provider dialog choose. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Choisir un fournisseur de connexion</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">Choisir un compte</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Autoriser</string>
 
@@ -142,4 +138,12 @@
     <!-- Federated Credential Management prompts -->
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">Photo du profil</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Choisir un fournisseur de connexion</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">Choisir un compte</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Utiliser %1$s comme fournisseur de connexion</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[Se connecter à %1$s avec un compte %2$s est soumis à la <a href="%3$s">politique de confidentialité</a> et aux <a href="%4$s">conditions d’utilisation</a> de ce dernier.]]></string>
 </resources>

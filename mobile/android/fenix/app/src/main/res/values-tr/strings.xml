@@ -1436,7 +1436,7 @@
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Sıkı</string>
     <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3">Sayfaların daha hızlı yüklenmesi için daha fazla takipçiyi engeller ancak bazı sayfa işlevleri bozulabilir.</string>
+    <string name="onboarding_tracking_protection_strict_button_description_3">Sayfaların daha hızlı yüklenmesi için daha fazla takip kodunu engeller ancak bazı sayfa işlevleri bozulabilir.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Araç çubuğu konumunu seçin</string>
     <!-- Text for the toolbar position card description -->
@@ -1507,9 +1507,9 @@
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Siteler arası takip kodlarına karşı en güçlü korumamız olan Komple Çerez Koruması da içinde.</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Verileriniz sizde kalsın. %s, internette ne yaptığınızı öğrenmeye çalışan takipçilerin çoğundan sizi korur.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Verileriniz sizde kalsın. %s, internette ne yaptığınızı öğrenmeye çalışan takip kodlarının çoğundan sizi korur.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2">%s, internette ne yaptığınızı öğrenmeye çalışan takipçilerin çoğundan sizi korur.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s, internette ne yaptığınızı öğrenmeye çalışan takip kodlarının çoğundan sizi korur.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Daha fazla bilgi al</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1517,13 +1517,13 @@
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Dengeli gizlilik ve performans. Sayfalar normal şekilde yüklenir.</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5">Sayfalar normal şekilde yüklenecek ama daha az takipçi engellenecek.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Sayfalar normal şekilde yüklenecek ama daha az takip kodu engellenecek.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Standart izlenme korumasında neler engellenir?</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Sıkı</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Sayfaların daha hızlı yüklenmesi için daha fazla takipçiyi engeller ancak bazı sayfa işlevleri bozulabilir.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Sayfaların daha hızlı yüklenmesi için daha fazla takip kodunu engeller ancak bazı sayfa işlevleri bozulabilir.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Daha güçlü izlenme koruması ve daha hızlı performans, ancak bazı siteler düzgün çalışmayabilir.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
@@ -1531,14 +1531,14 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Özel</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description_2">Hangi takipçilerin ve betiklerin engelleneceğini seçin.</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Hangi takip kodlarının ve betiklerin engelleneceğini seçin.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Özel izlenme korumasında neler engellenir?</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
     <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies">Çerezler</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Siteler arası takipçiler ve sosyal medya takipçileri</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">Siteler arası takip kodlrı ve sosyal medya takip kodları</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_2">Ziyaret etmediğim sitelerden gelen çerezler</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
@@ -1564,7 +1564,7 @@
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">İzin verilenler</string>
     <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_social_media_trackers_title">Sosyal medya takipçileri</string>
+    <string name="etp_social_media_trackers_title">Sosyal medya takip kodları</string>
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">Sosyal ağların web’deki gezinme etkinliğinizi izleyebilme özelliğini sınırlar.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
@@ -1603,13 +1603,13 @@
     <string name="open_source_licenses_title">%s | OSS Kitaplıkları</string>
 
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_redirect_trackers_title">Yönlendirme takipçileri</string>
+    <string name="etp_redirect_trackers_title">Yönlendirme takip kodları</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Bilinen takip sitelerine yapılan yönlendirmelere ait çerezleri temizler.</string>
 
     <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
          as we use it on the UI to indicate which trackers have been partially unblocked.  -->
-    <string name="preference_etp_smartblock_description">Aşağıda işaretlenen bazı takipçilerle etkileşimde bulunduğunuz için bu sayfadaki engellemeleri kısmen kaldırıldı. *</string>
+    <string name="preference_etp_smartblock_description">Aşağıda işaretlenen bazı takip kodlarıyla etkileşimde bulunduğunuz için bu sayfadaki engellemeler kısmen kaldırıldı.*</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Daha fazla bilgi al</string>
 

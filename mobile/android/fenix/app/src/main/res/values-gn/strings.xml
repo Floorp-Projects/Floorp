@@ -313,6 +313,9 @@
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
     <string name="juno_onboarding_default_browser_description">%1$s omotenonde avápe viru rovake ha omomba’e nde rekoñemi ojokóvo tapykuehoha tenda pa’ũme.\n\nEñemomaranduve %2$s rupive.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox omotenonde avápe viru rovake ha omomba’e nde rekoñemi ojokóvo tapykuehoha tenda pa’ũme.\n\nEñemomaranduve ore ñemurã rupive.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text">marandu’i ñemiguáva</string>
@@ -338,6 +341,9 @@
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="juno_onboarding_enable_notifications_description">Emondo tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre ha ehecháta ñemoñe’ẽ eipuru porã hag̃ua %s.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Emondo tendayke mba’e’oka pa’ũme, eñangareko ñemboguejýre ha ehecháta ñemoñe’ẽ eipuru porã hag̃ua Firefox.</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button">Emyandy marandu’i</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -445,6 +451,8 @@
 
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Ko tenda ndojokupytýi ko’ág̃a kookie marandu ñemomichĩre. ¿Ejeruresépa ore atýpe tohecha ñanduti renda ha embojuaju ñepytyvõ tenonderã gotyo?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s nomboykekuaái ijehegui kookie marandu ñemurã ko tendápe. Emba’ejerurekuaa omoneĩ hag̃ua ko tenda tenonderãve.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s omboguéta kookie ko tendagua ha omyanyhẽjeýta kuatiarogue. Emboguepaitérõ kookie ombotykuaa ne rembiapo térã omonandi ne mba’ejoguakue.</string>
 
@@ -1393,6 +1401,8 @@
     <string name="delete_history_prompt_title">Pa’ũ embogue hag̃ua</string>
     <!-- Body text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Embogue tembiasakue (oĩhápe tembiasakue mbojuehepyre ambue mba’e’okagua), kookie ha ambue kundahára mba’ekuaarã.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Embogue tembiasakue (oĩhápe tembiasakue ojuehepyre ambue mba’e’okagua)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Aravo pahápe</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
