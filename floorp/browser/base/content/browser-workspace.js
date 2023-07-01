@@ -67,6 +67,13 @@ const workspaceFunctions = {
           let elems = document.querySelectorAll(`tab:not([hidden])`);
           elems[elems.length - 1].setAttribute("floorp-lastVisibleTab", "true");
           workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
+
+          let currentWorkspace = Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF);
+          let count = workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceTabLength(currentWorkspace);
+          if(count == 0) {
+            workspaceFunctions.manageWorkspaceFunctions.deleteworkspace(currentWorkspace);
+            workspaceFunctions.manageWorkspaceFunctions.changeWorkspaceToBeforeNext();
+          }
         }, 400);
       },
 
@@ -591,6 +598,21 @@ const workspaceFunctions = {
       workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
       workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
     },
+    
+    checkWorkspaceTabLength(name) { 
+      const data = JSON.parse(Services.prefs.getStringPref(WORKSPACE_TABS_PREF));
+      let count = 0;
+      for (let i = 0; i < data.length; i++) {
+        const obj = data[i];
+        const keys = Object.keys(obj);
+        const workspaceValue = obj[keys[0]].workspace;
+        
+        if (workspaceValue == name) {
+          count ++;
+        }
+      }
+      return count;
+    }
   },
 
   tabFunctions: {
