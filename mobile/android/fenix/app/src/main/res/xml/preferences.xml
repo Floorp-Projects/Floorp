@@ -177,6 +177,12 @@
             android:title="@string/preferences_remote_debugging"
             app:iconSpaceReserved="false"
             android:defaultValue="false" />
+
+        <androidx.preference.SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_enable_gecko_logs"
+            app:iconSpaceReserved="false"
+            android:title="@string/preferences_enable_gecko_logs" />
     </PreferenceCategory>
 
     <androidx.preference.PreferenceCategory

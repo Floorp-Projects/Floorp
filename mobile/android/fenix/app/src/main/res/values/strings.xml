@@ -529,6 +529,11 @@
     <string name="preferences_open_links_in_apps_never">Never</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">External download manager</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Enable Gecko logs</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Quitting the application to apply changes…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Add-ons</string>
     <!-- Preference for notifications -->

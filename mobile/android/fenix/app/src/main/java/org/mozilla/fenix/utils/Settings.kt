@@ -1315,6 +1315,11 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         default = "",
     )
 
+    var enableGeckoLogs by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_enable_gecko_logs),
+        default = Config.channel.isDebug,
+    )
+
     fun amoCollectionOverrideConfigured(): Boolean {
         return overrideAmoUser.isNotEmpty() || overrideAmoCollection.isNotEmpty()
     }

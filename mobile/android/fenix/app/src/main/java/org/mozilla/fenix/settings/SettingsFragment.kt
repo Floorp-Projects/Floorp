@@ -491,6 +491,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         setupCookieBannerPreference()
         setupAmoCollectionOverridePreference(requireContext().settings())
+        setupGeckoLogsPreference(requireContext().settings())
         setupAllowDomesticChinaFxaServerPreference()
         setupHttpsOnlyPreferences()
         setupNotificationPreference()
@@ -561,6 +562,32 @@ class SettingsFragment : PreferenceFragmentCompat() {
             isVisible = show
             summary = settings.overrideAmoCollection.ifEmpty { null }
         }
+    }
+
+    @VisibleForTesting
+    internal fun setupGeckoLogsPreference(settings: Settings) {
+        val preferenceEnabledGeckoLogs =
+            findPreference<Preference>(getPreferenceKey(R.string.pref_key_enable_gecko_logs))
+
+        val show = settings.showSecretDebugMenuThisSession
+        preferenceEnabledGeckoLogs?.isVisible = show
+
+        preferenceEnabledGeckoLogs?.onPreferenceChangeListener =
+            Preference.OnPreferenceChangeListener { _, newValue ->
+                context?.settings()?.enableGeckoLogs = newValue as Boolean
+                Toast.makeText(
+                    context,
+                    getString(R.string.quit_application),
+                    Toast.LENGTH_LONG,
+                ).show()
+                Handler(Looper.getMainLooper()).postDelayed(
+                    {
+                        exitProcess(0)
+                    },
+                    FXA_SYNC_OVERRIDE_EXIT_DELAY,
+                )
+                true
+            }
     }
 
     private fun setupAllowDomesticChinaFxaServerPreference() {
