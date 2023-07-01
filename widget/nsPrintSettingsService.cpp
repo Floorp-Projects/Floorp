@@ -360,23 +360,25 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
   if (aFlags & nsIPrintSettings::kInitSaveUnwriteableMargins) {
     nsIntMargin margin;
     bool allPrefsRead =
-        GETINTPREF(kUnwriteableMarginTopTwips, &margin.top) &&
-        GETINTPREF(kUnwriteableMarginRightTwips, &margin.right) &&
-        GETINTPREF(kUnwriteableMarginBottomTwips, &margin.bottom) &&
-        GETINTPREF(kUnwriteableMarginLeftTwips, &margin.left);
+        GETINTPREF(kUnwriteableMarginTopTwips, &margin.top.value) &&
+        GETINTPREF(kUnwriteableMarginRightTwips, &margin.right.value) &&
+        GETINTPREF(kUnwriteableMarginBottomTwips, &margin.bottom.value) &&
+        GETINTPREF(kUnwriteableMarginLeftTwips, &margin.left.value);
     if (!allPrefsRead) {
       // We failed to read the new unwritable margin twips prefs. Try to read
       // the old ones in case they exist.
-      allPrefsRead =
-          ReadInchesIntToTwipsPref(
-              GetPrefName(kUnwriteableMarginTop, aPrinterName), margin.top) &&
-          ReadInchesIntToTwipsPref(
-              GetPrefName(kUnwriteableMarginLeft, aPrinterName), margin.left) &&
-          ReadInchesIntToTwipsPref(
-              GetPrefName(kUnwriteableMarginBottom, aPrinterName),
-              margin.bottom) &&
-          ReadInchesIntToTwipsPref(
-              GetPrefName(kUnwriteableMarginRight, aPrinterName), margin.right);
+      allPrefsRead = ReadInchesIntToTwipsPref(
+                         GetPrefName(kUnwriteableMarginTop, aPrinterName),
+                         margin.top.value) &&
+                     ReadInchesIntToTwipsPref(
+                         GetPrefName(kUnwriteableMarginLeft, aPrinterName),
+                         margin.left.value) &&
+                     ReadInchesIntToTwipsPref(
+                         GetPrefName(kUnwriteableMarginBottom, aPrinterName),
+                         margin.bottom.value) &&
+                     ReadInchesIntToTwipsPref(
+                         GetPrefName(kUnwriteableMarginRight, aPrinterName),
+                         margin.right.value);
     }
     // SetUnwriteableMarginInTwips does its own validation and drops negative
     // values individually.  We still want to block overly large values though,
@@ -392,16 +394,16 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
     int32_t halfInch = NS_INCHES_TO_INT_TWIPS(0.5);
     nsIntMargin margin(halfInch, halfInch, halfInch, halfInch);
     bool prefRead = ReadInchesToTwipsPref(GetPrefName(kMarginTop, aPrinterName),
-                                          margin.top);
+                                          margin.top.value);
     prefRead = ReadInchesToTwipsPref(GetPrefName(kMarginLeft, aPrinterName),
-                                     margin.left) ||
+                                     margin.left.value) ||
                prefRead;
     prefRead = ReadInchesToTwipsPref(GetPrefName(kMarginBottom, aPrinterName),
-                                     margin.bottom) ||
+                                     margin.bottom.value) ||
                prefRead;
 
     prefRead = ReadInchesToTwipsPref(GetPrefName(kMarginRight, aPrinterName),
-                                     margin.right) ||
+                                     margin.right.value) ||
                prefRead;
     if (prefRead && MarginIsOK(margin)) {
       aPS->SetMarginInTwips(margin);
@@ -417,17 +419,17 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
   if (aFlags & nsIPrintSettings::kInitSaveEdges) {
     nsIntMargin margin(0, 0, 0, 0);
     bool prefRead = ReadInchesIntToTwipsPref(
-        GetPrefName(kEdgeTop, aPrinterName), margin.top);
+        GetPrefName(kEdgeTop, aPrinterName), margin.top.value);
     prefRead = ReadInchesIntToTwipsPref(GetPrefName(kEdgeLeft, aPrinterName),
-                                        margin.left) ||
+                                        margin.left.value) ||
                prefRead;
 
     prefRead = ReadInchesIntToTwipsPref(GetPrefName(kEdgeBottom, aPrinterName),
-                                        margin.bottom) ||
+                                        margin.bottom.value) ||
                prefRead;
 
     prefRead = ReadInchesIntToTwipsPref(GetPrefName(kEdgeRight, aPrinterName),
-                                        margin.right) ||
+                                        margin.right.value) ||
                prefRead;
     ;
     if (prefRead && MarginIsOK(margin)) {

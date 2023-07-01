@@ -740,8 +740,9 @@ CSSIntMargin nsNativeThemeGTK::GetExtraSizeForWidget(
       if (IsDefaultButton(aFrame)) {
         // Some themes draw a default indicator outside the widget,
         // include that in overflow
-        moz_gtk_button_get_default_overflow(&extra.top, &extra.left,
-                                            &extra.bottom, &extra.right);
+        moz_gtk_button_get_default_overflow(&extra.top.value, &extra.left.value,
+                                            &extra.bottom.value,
+                                            &extra.right.value);
         break;
       }
       return {};
@@ -948,8 +949,9 @@ CSSIntMargin nsNativeThemeGTK::GetCachedWidgetBorder(
     if (mBorderCacheValid[cacheIndex] & cacheBit) {
       result = mBorderCache[gtkWidgetType];
     } else {
-      moz_gtk_get_widget_border(gtkWidgetType, &result.left, &result.top,
-                                &result.right, &result.bottom, aDirection);
+      moz_gtk_get_widget_border(gtkWidgetType, &result.left.value,
+                                &result.top.value, &result.right.value,
+                                &result.bottom.value, aDirection);
       if (gtkWidgetType != MOZ_GTK_DROPDOWN) {  // depends on aDirection
         mBorderCacheValid[cacheIndex] |= cacheBit;
         mBorderCache[gtkWidgetType] = result;
@@ -986,9 +988,9 @@ LayoutDeviceIntMargin nsNativeThemeGTK::GetWidgetBorder(
                                 &flags)) {
         return {};
       }
-      moz_gtk_get_tab_border(&result.left, &result.top, &result.right,
-                             &result.bottom, direction, (GtkTabFlags)flags,
-                             gtkWidgetType);
+      moz_gtk_get_tab_border(&result.left.value, &result.top.value,
+                             &result.right.value, &result.bottom.value,
+                             direction, (GtkTabFlags)flags, gtkWidgetType);
     } break;
     default: {
       result = GetCachedWidgetBorder(aFrame, aAppearance, direction);

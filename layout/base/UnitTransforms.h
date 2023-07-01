@@ -124,8 +124,9 @@ gfx::IntRectTyped<TargetUnits> ViewAs(
 template <class TargetUnits, class SourceUnits>
 gfx::MarginTyped<TargetUnits> ViewAs(
     const gfx::MarginTyped<SourceUnits>& aMargin, PixelCastJustification) {
-  return gfx::MarginTyped<TargetUnits>(aMargin.top, aMargin.right,
-                                       aMargin.bottom, aMargin.left);
+  return gfx::MarginTyped<TargetUnits>(aMargin.top.value, aMargin.right.value,
+                                       aMargin.bottom.value,
+                                       aMargin.left.value);
 }
 template <class TargetUnits, class SourceUnits>
 gfx::IntMarginTyped<TargetUnits> ViewAs(
