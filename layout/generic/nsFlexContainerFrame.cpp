@@ -1026,6 +1026,17 @@ class nsFlexContainerFrame::FlexLine final {
    */
   nscoord LastBaselineOffset() const { return mLastBaselineOffset; }
 
+  // Extract a baseline from this line, which would be suitable for use as the
+  // flex container's 'aBaselineGroup' (i.e. first/last) baseline.
+  // https://drafts.csswg.org/css-flexbox-1/#flex-baselines
+  //
+  // The return value always represents a distance from the line's cross-start
+  // edge, even if we are querying last baseline. If this line has no flex items
+  // in its aBaselineGroup group, this method falls back to trying the opposite
+  // group. If this line has no baseline-aligned items at all, this returns
+  // nscoord_MIN.
+  nscoord ExtractBaselineOffset(BaselineSharingGroup aBaselineGroup) const;
+
   /**
    * Returns the gap size in the main axis for this line. Used for gap
    * calculations.
@@ -3758,6 +3769,32 @@ void FlexLine::ComputeCrossSizeAndBaseline(
       largestOuterCrossSize);
 }
 
+nscoord FlexLine::ExtractBaselineOffset(
+    BaselineSharingGroup aBaselineGroup) const {
+  auto LastBaselineOffsetFromStartEdge = [this]() {
+    // Convert the distance to be relative from the line's cross-start edge.
+    const nscoord offset = LastBaselineOffset();
+    return offset != nscoord_MIN ? LineCrossSize() - offset : offset;
+  };
+
+  auto PrimaryBaseline = [=]() {
+    return aBaselineGroup == BaselineSharingGroup::First
+               ? FirstBaselineOffset()
+               : LastBaselineOffsetFromStartEdge();
+  };
+  auto SecondaryBaseline = [=]() {
+    return aBaselineGroup == BaselineSharingGroup::First
+               ? LastBaselineOffsetFromStartEdge()
+               : FirstBaselineOffset();
+  };
+
+  const nscoord primaryBaseline = PrimaryBaseline();
+  if (primaryBaseline != nscoord_MIN) {
+    return primaryBaseline;
+  }
+  return SecondaryBaseline();
+}
+
 void FlexItem::ResolveStretchedCrossSize(nscoord aLineCrossSize) {
   // We stretch IFF we are align-self:stretch, have no auto margins in
   // cross axis, and have cross-axis size property == "auto". If any of those
@@ -5230,73 +5267,45 @@ nsFlexContainerFrame::FlexLayoutResult nsFlexContainerFrame::DoFlexLayout(
 
     // Flex Container Baselines - Flexbox spec section 8.5
     // https://drafts.csswg.org/css-flexbox-1/#flex-baselines
+    auto ComputeAscentFromLine = [&](const FlexLine& aLine,
+                                     BaselineSharingGroup aBaselineGroup) {
+      MOZ_ASSERT(aAxisTracker.IsRowOriented(),
+                 "This makes sense only if we are row-oriented!");
+
+      // baselineOffsetInLine is a distance from the line's cross-start edge.
+      const nscoord baselineOffsetInLine =
+          aLine.ExtractBaselineOffset(aBaselineGroup);
+
+      if (baselineOffsetInLine == nscoord_MIN) {
+        // No "first baseline"-aligned or "last baseline"-aligned items in
+        // aLine. Return a sentinel value to prompt us to get baseline from the
+        // startmost or endmost FlexItem after we've reflowed it.
+        return nscoord_MIN;
+      }
+
+      // This "ascent" variable is a distance from the flex container's
+      // content-box block-start edge.
+      const nscoord ascent = aAxisTracker.LogicalAscentFromFlexRelativeAscent(
+          crossAxisPosnTracker.Position() + baselineOffsetInLine,
+          flr.mContentBoxCrossSize);
+
+      // Convert "ascent" variable to a distance from border-box start or end
+      // edge, per documentation for FlexLayoutResult ascent members.
+      const auto wm = aAxisTracker.GetWritingMode();
+      if (aBaselineGroup == BaselineSharingGroup::First) {
+        return ascent +
+               aReflowInput.ComputedLogicalBorderPadding(wm).BStart(wm);
+      }
+      return flr.mContentBoxCrossSize - ascent +
+             aReflowInput.ComputedLogicalBorderPadding(wm).BEnd(wm);
+    };
+
     if (lineForFirstBaseline && lineForFirstBaseline == &line) {
-      // baselineOffsetInLine is a distance from the line's cross-start edge.
-      nscoord baselineOffsetInLine;
-      if (const nscoord firstBaselineOffsetInLine =
-              lineForFirstBaseline->FirstBaselineOffset();
-          firstBaselineOffsetInLine != nscoord_MIN) {
-        baselineOffsetInLine = firstBaselineOffsetInLine;
-      } else if (const nscoord lastBaselineOffsetInLine =
-                     lineForFirstBaseline->LastBaselineOffset();
-                 lastBaselineOffsetInLine != nscoord_MIN) {
-        // Convert the distance to be relative from the line's cross-start edge.
-        baselineOffsetInLine =
-            lineForFirstBaseline->LineCrossSize() - lastBaselineOffsetInLine;
-      } else {
-        baselineOffsetInLine = nscoord_MIN;
-
-        // No "first baseline"-aligned or "last baseline"-aligned items in line.
-        // Use sentinel value to prompt us to get baseline from the startmost
-        // FlexItem after we've reflowed it.
-        flr.mAscent = nscoord_MIN;
-      }
-
-      if (baselineOffsetInLine != nscoord_MIN) {
-        MOZ_ASSERT(aAxisTracker.IsRowOriented(),
-                   "This makes sense only if we are row-oriented!");
-        const auto wm = aAxisTracker.GetWritingMode();
-        flr.mAscent =
-            aAxisTracker.LogicalAscentFromFlexRelativeAscent(
-                crossAxisPosnTracker.Position() + baselineOffsetInLine,
-                flr.mContentBoxCrossSize) +
-            aReflowInput.ComputedLogicalBorderPadding(wm).BStart(wm);
-      }
+      flr.mAscent = ComputeAscentFromLine(line, BaselineSharingGroup::First);
     }
-
     if (lineForLastBaseline && lineForLastBaseline == &line) {
-      // baselineOffsetInLine is a distance from the line's cross-start edge.
-      nscoord baselineOffsetInLine;
-      if (const nscoord lastBaselineOffsetInLine =
-              lineForLastBaseline->LastBaselineOffset();
-          lastBaselineOffsetInLine != nscoord_MIN) {
-        // Convert the distance to be relative from the line's cross-start edge.
-        baselineOffsetInLine =
-            lineForLastBaseline->LineCrossSize() - lastBaselineOffsetInLine;
-      } else if (const nscoord firstBaselineOffsetInLine =
-                     lineForLastBaseline->FirstBaselineOffset();
-                 firstBaselineOffsetInLine != nscoord_MIN) {
-        baselineOffsetInLine = firstBaselineOffsetInLine;
-      } else {
-        baselineOffsetInLine = nscoord_MIN;
-
-        // No "first baseline"-aligned or "last baseline"-aligned items in line.
-        // Use sentinel value to prompt us to get baseline from the endmost
-        // FlexItem after we've reflowed it.
-        flr.mAscentForLast = nscoord_MIN;
-      }
-
-      if (baselineOffsetInLine != nscoord_MIN) {
-        MOZ_ASSERT(aAxisTracker.IsRowOriented(),
-                   "This makes sense only if we are row-oriented!");
-        const auto wm = aAxisTracker.GetWritingMode();
-        flr.mAscentForLast =
-            flr.mContentBoxCrossSize -
-            aAxisTracker.LogicalAscentFromFlexRelativeAscent(
-                crossAxisPosnTracker.Position() + baselineOffsetInLine,
-                flr.mContentBoxCrossSize) +
-            aReflowInput.ComputedLogicalBorderPadding(wm).BEnd(wm);
-      }
+      flr.mAscentForLast =
+          ComputeAscentFromLine(line, BaselineSharingGroup::Last);
     }
 
     crossAxisPosnTracker.TraverseLine(line);
