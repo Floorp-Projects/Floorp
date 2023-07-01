@@ -843,7 +843,7 @@ jobs:
            -d '{
              "ref": "main",
              "inputs": {
-               "mar-url": ${{ fromJSON(steps.create_release.outputs.assets)[0].browser_download_url }},
+               "mar-url": "${{ fromJSON(steps.create_release.outputs.assets)[0].browser_download_url }}",
                "os": "Linux",
                "arch": "x86_64"
              }
@@ -858,8 +858,28 @@ jobs:
            -d '{
              "ref": "main",
              "inputs": {
-               "mar-url": ${{ fromJSON(steps.create_release.outputs.assets)[1].browser_download_url }},
+               "mar-url": "${{ fromJSON(steps.create_release.outputs.assets)[1].browser_download_url }}",
                "os": "Linux",
                "arch": "aarch64"
              }
+           }'
+
+    - name: Run GitHub Actions for Release x86_64 Debian PPA Build 🚀
+      run: |
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/linux-build-x64-deb.yml/dispatches" \
+           -d '{
+             "ref": "ESR102"
+           }'
+
+    - name: Run GitHub Actions for Release x86_64 Debian no PPA Build 🚀
+      run: |
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/linux-build-x64-deb-noppa.yml/dispatches" \
+           -d '{
+             "ref": "ESR102"
            }'
