@@ -394,8 +394,10 @@ struct CSSPixel {
   }
 
   static nsMargin ToAppUnits(const CSSIntMargin& aMargin) {
-    return nsMargin(ToAppUnits(aMargin.top), ToAppUnits(aMargin.right),
-                    ToAppUnits(aMargin.bottom), ToAppUnits(aMargin.left));
+    return nsMargin(ToAppUnits(CSSCoord(aMargin.top)),
+                    ToAppUnits(CSSCoord(aMargin.right)),
+                    ToAppUnits(CSSCoord(aMargin.bottom)),
+                    ToAppUnits(CSSCoord(aMargin.left)));
   }
 
   // Conversion from a given CSS point value.
@@ -877,8 +879,8 @@ template <class Src, class Dst>
 gfx::MarginTyped<Dst> operator*(const gfx::MarginTyped<Src>& aMargin,
                                 const gfx::ScaleFactor<Src, Dst>& aScale) {
   return gfx::MarginTyped<Dst>(
-      aMargin.top * aScale.scale, aMargin.right * aScale.scale,
-      aMargin.bottom * aScale.scale, aMargin.left * aScale.scale);
+      aMargin.top.value * aScale.scale, aMargin.right.value * aScale.scale,
+      aMargin.bottom.value * aScale.scale, aMargin.left.value * aScale.scale);
 }
 
 template <class Src, class Dst>
@@ -894,8 +896,8 @@ gfx::MarginTyped<Dst, F> operator*(
     const gfx::MarginTyped<Src, F>& aMargin,
     const gfx::BaseScaleFactors2D<Src, Dst, F>& aScale) {
   return gfx::MarginTyped<Dst, F>(
-      aMargin.top * aScale.yScale, aMargin.right * aScale.xScale,
-      aMargin.bottom * aScale.yScale, aMargin.left * aScale.xScale);
+      aMargin.top.value * aScale.yScale, aMargin.right.value * aScale.xScale,
+      aMargin.bottom.value * aScale.yScale, aMargin.left.value * aScale.xScale);
 }
 
 template <class Src, class Dst, class F>
@@ -903,8 +905,8 @@ gfx::MarginTyped<Dst, F> operator/(
     const gfx::MarginTyped<Src, F>& aMargin,
     const gfx::BaseScaleFactors2D<Dst, Src, F>& aScale) {
   return gfx::MarginTyped<Dst, F>(
-      aMargin.top / aScale.yScale, aMargin.right / aScale.xScale,
-      aMargin.bottom / aScale.yScale, aMargin.left / aScale.xScale);
+      aMargin.top.value / aScale.yScale, aMargin.right.value / aScale.xScale,
+      aMargin.bottom.value / aScale.yScale, aMargin.left.value / aScale.xScale);
 }
 
 // Calculate the max or min or the ratios of the widths and heights of two

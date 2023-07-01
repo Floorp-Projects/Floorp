@@ -49,8 +49,8 @@ struct MOZ_EMPTY_BASES IntMarginTyped
 
   static IntMarginTyped<Units> FromUnknownMargin(
       const IntMarginTyped<UnknownUnits>& aMargin) {
-    return IntMarginTyped<Units>(aMargin.top, aMargin.right, aMargin.bottom,
-                                 aMargin.left);
+    return IntMarginTyped<Units>(aMargin.top.value, aMargin.right.value,
+                                 aMargin.bottom.value, aMargin.left.value);
   }
 
   IntMarginTyped<UnknownUnits> ToUnknownMargin() const {

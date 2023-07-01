@@ -1799,10 +1799,10 @@ LayoutDeviceIntMargin nsNativeThemeWin::GetWidgetBorder(
     if (content && content->IsHTMLElement()) {
       // We need to pad textfields by 1 pixel, since the caret will draw
       // flush against the edge by default if we don't.
-      result.top++;
-      result.left++;
-      result.bottom++;
-      result.right++;
+      result.top.value++;
+      result.left.value++;
+      result.bottom.value++;
+      result.right.value++;
     }
   }
 
