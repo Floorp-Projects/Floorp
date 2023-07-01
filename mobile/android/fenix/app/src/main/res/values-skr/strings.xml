@@ -363,6 +363,8 @@
     <string name="preferences_category_about">تعارف</string>
     <!-- Preference category for settings related to changing the default search engine -->
     <string name="preferences_category_select_default_search_engine">ہک چݨو</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts">ڳولݨ شارٹ کٹ منیج کرو</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">طےشدہ  ڳولݨ انجݨ</string>
     <!-- Preference for settings related to Search -->
@@ -1203,6 +1205,10 @@
     <string name="share_save_to_pdf">پی ڈی ایف محفوظ کرو</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">پی ڈی ایف بݨاوݨ توں قاصر</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">پرنٹ کرݨ دے قابل کائنی</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">چھاپو</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">ڈیوائس تے بھیڄو</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1900,6 +1906,8 @@
 
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
     <string name="search_add_custom_engine_name_hint_2">ڳولݨ انجݨ ناں</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label">تند یوآرایل ڳولو</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ورتݨ کیتے تند ڳولو</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->

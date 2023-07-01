@@ -1233,6 +1233,10 @@
     <string name="share_save_to_pdf">Сохранить как PDF</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">Не удалось сгенерировать PDF</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Невозможно распечатать</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Печать</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Отправить на устройство</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
