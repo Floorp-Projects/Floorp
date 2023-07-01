@@ -1375,7 +1375,7 @@ static void SetNvidiaVideoSuperRes(ID3D11VideoContext* videoContext,
     UINT method;
     UINT enable;
   } streamExtensionInfo = {nvExtensionVersion, nvExtensionMethodSuperResolution,
-                           enabled ? 0 : 1u};
+                           enabled ? 1u : 0};
 
   HRESULT hr;
   hr = videoContext->VideoProcessorSetStreamExtension(
