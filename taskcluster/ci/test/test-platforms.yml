@@ -127,18 +127,6 @@ linux2204-64-wayland-shippable/opt:
 # Windows platforms (matching /windows.*/)
 
 # win32
-windows7-32-qr/opt:
-    build-platform: win32/opt
-    build-signing-label: build-signing-win32/opt
-    test-sets:
-        - windows-7-tests
-
-windows7-32-shippable-qr/opt:
-    build-platform: win32-shippable/opt
-    build-signing-label: build-signing-win32-shippable/opt
-    test-sets:
-        - windows-7-tests
-
 windows10-32-shippable-qr/opt:
     build-platform: win32-shippable/opt
     build-signing-label: build-signing-win32-shippable/opt
@@ -156,15 +144,16 @@ windows10-32-qr/opt:
 # win11-32
 windows11-32-2009-shippable-qr/opt:
     build-platform: win32-shippable/opt
+    build-signing-label: build-signing-win32-shippable/opt
     test-sets:
         - awsy
         - desktop-screenshot-capture
         - web-platform-tests
         - windows32-2009-tests
 
-
 windows11-32-2009-qr/opt:
     build-platform: win32/opt
+    build-signing-label: build-signing-win32/opt
     test-sets:
         - awsy
         - desktop-screenshot-capture
@@ -176,7 +165,6 @@ windows11-32-2009-qr/debug:
     build-signing-label: build-signing-win32/debug
     test-sets:
         - web-platform-tests
-        - windows-7-tests
         - windows32-2009-tests
 
 windows11-32-2009-mingwclang-qr/debug:
