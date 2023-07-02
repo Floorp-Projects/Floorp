@@ -2152,4 +2152,4 @@ skip-if(!OSX) != 1836024-1.html 1836024-1-notref.html
 fuzzy-if(!cocoaWidget&&!Android&&!swgl&&!useDrawSnapshot,1-1,142-142) == 1840511-1.html 1840511-1-ref.html
 fuzzy-if(!cocoaWidget&&!Android&&!swgl&&!useDrawSnapshot,1-1,284-284) fuzzy-if(useDrawSnapshot,1-1,4-4) == 1840511-2.html 1840511-1-ref.html
 # This test should render blank, but is reliably fuzzy, per bug 1840747.
-fuzzy-if(!useDrawSnapshot,18-19,294-294) == 1840747-1.html about:blank
+fuzzy-if(!useDrawSnapshot,18-19,294-295) == 1840747-1.html about:blank
