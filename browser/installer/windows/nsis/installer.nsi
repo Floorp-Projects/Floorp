@@ -1840,8 +1840,8 @@ Function .onInit
   ; SSE2 instruction set is available. Result returned in $R7.
   System::Call "kernel32::IsProcessorFeaturePresent(i 10)i .R7"
 
-  ; Windows NT 6.0 (Vista/Server 2008) and lower are not supported.
-  ${Unless} ${AtLeastWin7}
+  ; Windows 8.1/Server 2012 R2 and lower are not supported.
+  ${Unless} ${AtLeastWin10}
     ${If} "$R7" == "0"
       strCpy $R7 "$(WARN_MIN_SUPPORTED_OSVER_CPU_MSG)"
     ${Else}
@@ -1862,7 +1862,6 @@ Function .onInit
 !ifdef HAVE_64BIT_BUILD
   ${If} "${ARCH}" == "AArch64"
     ${IfNot} ${IsNativeARM64}
-    ${OrIfNot} ${AtLeastWin10}
       MessageBox MB_OKCANCEL|MB_ICONSTOP "$(WARN_MIN_SUPPORTED_OSVER_MSG)" IDCANCEL +2
       ExecShell "open" "${URLSystemRequirements}"
       Quit
