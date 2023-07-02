@@ -99,6 +99,59 @@
                 app:layout_constraintTop_toBottomOf="@id/exceptions_empty_message" />
         </LinearLayout>
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="@string/search_add_custom_engine_suggest_url_label"
+            android:textColor="?attr/textSecondary"
+            android:textFontWeight="@integer/font_weight_light"
+            android:textSize="12sp"
+            tools:targetApi="p" />
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/custom_search_engine_suggest_string_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:hintTextColor="?attr/textSecondary"
+            android:textColorHint="?attr/textSecondary"
+            app:hintTextAppearance="@style/EngineTextField"
+            app:hintEnabled="false"
+            app:errorEnabled="true">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/edit_suggest_string"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="@dimen/accessibility_min_height"
+                android:hint="@string/search_add_custom_engine_suggest_string_hint"
+                android:inputType="text"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <LinearLayout
+            android:id="@+id/custom_search_suggestions_learn_more_wrapper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:minHeight="@dimen/accessibility_min_height"
+            android:paddingBottom="16dp">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/search_add_custom_engine_suggest_string_example"
+                app:lineHeight="18sp"
+                android:labelFor="@id/edit_search_string"
+                android:textColor="@android:color/tertiary_text_dark"/>
+
+            <org.mozilla.fenix.utils.LinkTextView
+                android:id="@+id/custom_search_suggestions_learn_more"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/exceptions_empty_message_learn_more_link"
+                android:textColor="?accent"
+                android:visibility="visible"
+                app:layout_constraintTop_toBottomOf="@id/exceptions_empty_message"
+                android:paddingBottom="16dp"/>
+        </LinearLayout>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/save_button"
             style="@style/PositiveButton"
