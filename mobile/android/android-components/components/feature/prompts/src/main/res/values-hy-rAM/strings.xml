@@ -43,10 +43,6 @@
     <string name="mozac_feature_prompts_content_description_input_label">Պիտակ`գրվածքի մուտքի դաշտ մուտքագրելու համար</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">Ընտրեք գույնը</string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Ընտրեք մուտքի մատակարար</string>
-    <!-- Title of an account picker dialog for identity credentials. -->
-    <string name="mozac_feature_prompts_identity_credentials_choose_account">Ընտրեք հաշիվը</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">Թույլատրել</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
@@ -133,4 +129,12 @@
     <!-- Federated Credential Management prompts -->
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">Հաշվի նկար</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">Ընտրեք մուտքի մատակարար</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account">Ընտրեք հաշիվը</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Օգտագործեք %1$s որպես մուտքի մատակարար</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[%1$s մուտք գործելը %2$s հաշվով ենթակա է իրենց <a href="%3$s">Գաղտնիության դրույթներին</a> և <a href="%4$s">Ծառայության պայմաններին</a>%1$s մուտք գործելը %2$s հաշվով ենթակա է իրենց <a href="%3$s">Գաղտնիության դրույթներին</a> և <a href="%4$s">Ծառայության պայմաններին</a>]]></string>
 </resources>
