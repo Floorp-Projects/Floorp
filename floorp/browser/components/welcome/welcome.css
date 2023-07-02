@@ -133,3 +133,52 @@ body {
 .template-option-text {
     margin-bottom: 5vh;
 }
+
+#welcome-text-content {
+  display: none;
+}
+
+#design-cards {
+  padding: 0;
+  display: grid;
+  margin-top: 25px;
+  grid-gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+#floorp-desgin-text {
+  text-align: center;
+}
+
+#welcome-first-setup {
+  display: none;
+}
+
+
+.go-next-page-button {
+  margin-left: auto;
+  margin-bottom: auto;
+  margin-right: -30px;
+}
+
+
+#welcome-design-setup {
+  padding: 100px;
+  display: flex;
+  flex-direction: column;
+}
+
+.design-card-item {
+    list-style-type: none !important;
+}
+
+
+.c01765.c01766.c0157 {
+  box-shadow: 0px 1.6px 3.6px rgba(0, 0, 0, 0.13), 0px 0px 2.9px rgba(0, 0, 0, 0.11);
+}
+
+#floorp-desgin-description {
+    position: inherit;
+    text-align: center;
+    max-width: 455px;
+}
