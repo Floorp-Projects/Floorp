@@ -44,7 +44,7 @@ async function checkLabel(row, name) {
   await doc.l10n.translateElements([row]);
   const rowHeaderEl = row.firstElementChild;
   is(doc.l10n.getAttributes(rowHeaderEl).id, id, `The ${name} label is set`);
-  if (row.role === "group") {
+  if (row.getAttribute("role") === "group") {
     // For the rows on which the role="group" attribute is set,
     // let's make sure that the element itself includes an aria-label
     // which provides to the screen reader a label similar to the one
@@ -79,7 +79,11 @@ async function checkRowScreenReaderAccessibility(
   // to the fluent ids (which would make translateElements to reject
   // and the test to fail explicitly).
   await doc.l10n.translateElements([row]);
-  is(row.role, "group", `Expect ${groupName} row to have role group`);
+  is(
+    row.getAttribute("role"),
+    "group",
+    `Expect ${groupName} row to have role group`
+  );
   is(
     doc.l10n.getAttributes(row).id,
     expectedFluentId,
