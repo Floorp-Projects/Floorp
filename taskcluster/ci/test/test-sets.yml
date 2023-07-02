@@ -209,14 +209,6 @@ linux2204-wayland-tests:
     - xpcshell
 
 # Windows
-
-windows-7-tests:
-    - cppunit
-    - mochitest-browser-a11y
-    - mochitest-browser-chrome
-    - mochitest-browser-media
-    - xpcshell
-
 windows32-2009-tests:
     - cppunit
     - crashtest
@@ -225,6 +217,9 @@ windows32-2009-tests:
     - jsreftest
     - marionette
     - mochitest-a11y
+    - mochitest-browser-a11y
+    - mochitest-browser-chrome
+    - mochitest-browser-media
     - mochitest-chrome
     - mochitest-chrome-gpu
     - mochitest-media
@@ -237,6 +232,7 @@ windows32-2009-tests:
     - test-verify
     - test-verify-gpu
     - test-verify-wpt
+    - xpcshell
 
 windows10-2009-tests:
     - cppunit
