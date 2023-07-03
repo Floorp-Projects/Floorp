@@ -614,3 +614,7 @@ if CONFIG['CPU_ARCH'] in ('mips32', 'mips64'):
     # The skia code uses `mips` as a variable, but it's a builtin preprocessor
     # macro on mips that expands to `1`.
     DEFINES['mips'] = False
+
+# Work around bug 1841199.
+if CONFIG['CPU_ARCH'] in ('mips32', 'mips64', 'ppc64'):
+    DEFINES['musttail'] = 'nomusttail'
