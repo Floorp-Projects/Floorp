@@ -935,6 +935,9 @@ export var Bookmarks = Object.freeze({
             item.parentGuid != updatedItem.parentGuid ||
             item.index != updatedItem.index
           ) {
+            let details = (await getBookmarkDetailMap([updatedItem.guid])).get(
+              updatedItem.guid
+            );
             notifications.push(
               new PlacesBookmarkMoved({
                 id: updatedItem._id,
@@ -949,6 +952,12 @@ export var Bookmarks = Object.freeze({
                 isTagging:
                   updatedItem.parentGuid === Bookmarks.tagsGuid ||
                   parent.parentGuid === Bookmarks.tagsGuid,
+                title: updatedItem.title,
+                tags: details.tags,
+                frecency: details.frecency,
+                hidden: details.hidden,
+                visitCount: details.visitCount,
+                lastVisitDate: details.lastVisitDate,
               })
             );
           }
@@ -1160,7 +1169,9 @@ export var Bookmarks = Object.freeze({
       );
 
       const notifications = [];
-
+      let detailsMap = await getBookmarkDetailMap(
+        updateInfos.map(({ updatedItem }) => updatedItem.guid)
+      );
       // Updates complete, time to notify everyone.
       for (let { updatedItem, existingItem, newParent } of updateInfos) {
         // If the item was moved, notify bookmark-moved.
@@ -1171,6 +1182,7 @@ export var Bookmarks = Object.freeze({
           existingItem.parentGuid != updatedItem.parentGuid ||
           existingItem.index != updatedItem.index
         ) {
+          let details = detailsMap.get(updatedItem.guid);
           notifications.push(
             new PlacesBookmarkMoved({
               id: updatedItem._id,
@@ -1185,6 +1197,12 @@ export var Bookmarks = Object.freeze({
               isTagging:
                 updatedItem.parentGuid === Bookmarks.tagsGuid ||
                 newParent.parentGuid === Bookmarks.tagsGuid,
+              title: updatedItem.title,
+              tags: details.tags,
+              frecency: details.frecency,
+              hidden: details.hidden,
+              visitCount: details.visitCount,
+              lastVisitDate: details.lastVisitDate,
             })
           );
         }
@@ -1758,7 +1776,11 @@ export var Bookmarks = Object.freeze({
       );
 
       const notifications = [];
+      let detailsMap = await getBookmarkDetailMap(
+        sortedChildren.map(c => c.guid)
+      );
       for (let child of sortedChildren) {
+        let details = detailsMap.get(child.guid);
         notifications.push(
           new PlacesBookmarkMoved({
             id: child._id,
@@ -1773,6 +1795,12 @@ export var Bookmarks = Object.freeze({
             isTagging:
               child.parentGuid === Bookmarks.tagsGuid ||
               parent.parentGuid === Bookmarks.tagsGuid,
+            title: child.title,
+            tags: details.tags,
+            frecency: details.frecency,
+            hidden: details.hidden,
+            visitCount: details.visitCount,
+            lastVisitDate: details.lastVisitDate,
           })
         );
       }

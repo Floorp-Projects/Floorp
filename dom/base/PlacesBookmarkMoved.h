@@ -29,6 +29,16 @@ class PlacesBookmarkMoved final : public PlacesBookmark {
     event->mOldIndex = aInitDict.mOldIndex;
     event->mSource = aInitDict.mSource;
     event->mIsTagging = aInitDict.mIsTagging;
+    event->mTitle = aInitDict.mTitle;
+    event->mTags = aInitDict.mTags;
+    event->mFrecency = aInitDict.mFrecency;
+    event->mHidden = aInitDict.mHidden;
+    event->mVisitCount = aInitDict.mVisitCount;
+    if (!aInitDict.mLastVisitDate.IsNull()) {
+      event->mLastVisitDate.SetValue(aInitDict.mLastVisitDate.Value());
+    } else {
+      event->mLastVisitDate.SetNull();
+    }
     return event.forget();
   }
 
@@ -46,10 +56,22 @@ class PlacesBookmarkMoved final : public PlacesBookmark {
   void GetOldParentGuid(nsCString& aOldParentGuid) {
     aOldParentGuid = mOldParentGuid;
   }
+  void GetTitle(nsString& aTitle) { aTitle = mTitle; }
+  void GetTags(nsString& aTags) { aTags = mTags; }
+  uint64_t Frecency() { return mFrecency; }
+  bool Hidden() { return mHidden; }
+  uint32_t VisitCount() { return mVisitCount; }
+  Nullable<uint64_t> GetLastVisitDate() { return mLastVisitDate; }
 
   int32_t mIndex;
   int32_t mOldIndex;
   nsCString mOldParentGuid;
+  nsString mTitle;
+  nsString mTags;
+  int64_t mFrecency;
+  bool mHidden;
+  uint32_t mVisitCount;
+  Nullable<uint64_t> mLastVisitDate;
 
  private:
   ~PlacesBookmarkMoved() = default;

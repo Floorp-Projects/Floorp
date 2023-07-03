@@ -297,6 +297,12 @@ dictionary PlacesBookmarkMovedInit {
   required long oldIndex;
   required unsigned short source;
   required boolean isTagging;
+  required DOMString title;
+  required DOMString? tags;
+  required long long frecency;
+  required boolean hidden;
+  required unsigned long visitCount;
+  required unsigned long long? lastVisitDate;
 };
 
 [ChromeOnly, Exposed=Window]
@@ -320,6 +326,36 @@ interface PlacesBookmarkMoved : PlacesBookmark {
    * The item's old index in the folder.
    */
   readonly attribute long oldIndex;
+
+  /**
+   * The title of the added item.
+   */
+  readonly attribute DOMString title;
+
+  /**
+   * The tags of the added item.
+   */
+  readonly attribute DOMString tags;
+
+  /**
+   * The frecency of the page of this bookmark.
+   */
+  readonly attribute long long frecency;
+
+  /**
+   * Whether the visited page is marked as hidden.
+   */
+  readonly attribute boolean hidden;
+
+  /**
+   * Number of visits (including this one) for this URL.
+   */
+  readonly attribute unsigned long visitCount;
+
+  /**
+   * Date of the last visit, in milliseconds since epoch.
+   */
+  readonly attribute unsigned long long? lastVisitDate;
 };
 
 [ChromeOnly, Exposed=Window]

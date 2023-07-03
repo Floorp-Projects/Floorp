@@ -266,6 +266,12 @@ async function testMoveToFolder(details) {
         oldParentGuid: origItem.parentGuid,
         oldIndex: notification.originalIndex,
         isTagging: false,
+        title: origItem.title,
+        tags: "",
+        frecency: 1,
+        hidden: false,
+        visitCount: 0,
+        lastVisitDate: null,
       });
     }
     observer.check(expectedNotifications);

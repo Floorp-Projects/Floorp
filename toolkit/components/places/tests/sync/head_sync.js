@@ -310,9 +310,14 @@ BookmarkObserver.prototype = {
             guid: event.guid,
             parentGuid: event.parentGuid,
             source: event.source,
+            tags: event.tags,
+            frecency: event.frecency,
+            hidden: event.hidden,
+            visitCount: event.visitCount,
           };
           if (!this.ignoreDates) {
             params.dateAdded = event.dateAdded;
+            params.lastVisitDate = event.lastVisitDate;
           }
           this.notifications.push({ name: "bookmark-added", params });
           break;
@@ -356,6 +361,12 @@ BookmarkObserver.prototype = {
             oldIndex: event.oldIndex,
             oldParentGuid: event.oldParentGuid,
             isTagging: event.isTagging,
+            title: event.title,
+            tags: event.tags,
+            frecency: event.frecency,
+            hidden: event.hidden,
+            visitCount: event.visitCount,
+            lastVisitDate: event.lastVisitDate,
           };
           this.notifications.push({ name: "bookmark-moved", params });
           break;
