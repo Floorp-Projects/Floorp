@@ -707,14 +707,14 @@ html|a,
   color: var(--in-content-link-color);
 }
 
+html|a:visited {
+  color: var(--in-content-link-color-visited);
+}
+
 html|a:hover,
 .text-link:hover,
 button.text-link:is(:not([disabled="true"]), :enabled):hover {
   color: var(--in-content-link-color-hover);
-}
-
-html|a:visited {
-  color: var(--in-content-link-color-visited);
 }
 
 html|a:hover:active,
