@@ -811,8 +811,8 @@ def target_variables(target):
         os_arch = target.kernel
 
     return namespace(
-        OS_TARGET=os_target,
-        OS_ARCH=os_arch,
+        OS_TARGET=str(os_target),
+        OS_ARCH=str(os_arch),
         INTEL_ARCHITECTURE=target.cpu in ("x86", "x86_64") or None,
     )
 

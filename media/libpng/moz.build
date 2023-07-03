@@ -50,7 +50,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
         'intel/intel_init.c'
     ]
 
-if CONFIG['CPU_ARCH'] == 'mips':
+if CONFIG['CPU_ARCH'] in ('mips32', 'mips64'):
     DEFINES['MOZ_PNG_USE_MIPS_MSA'] = True
     UNIFIED_SOURCES += [
         'mips/filter_msa_intrinsics.c',

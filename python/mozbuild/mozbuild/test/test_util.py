@@ -824,7 +824,8 @@ class TestMisc(unittest.TestCase):
 
 class TestEnumString(unittest.TestCase):
     def test_string(self):
-        CompilerType = EnumString.subclass("gcc", "clang", "clang-cl")
+        class CompilerType(EnumString):
+            POSSIBLE_VALUES = ("gcc", "clang", "clang-cl")
 
         type = CompilerType("gcc")
         self.assertEqual(type, "gcc")
