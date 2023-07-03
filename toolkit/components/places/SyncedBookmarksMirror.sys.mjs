@@ -2228,11 +2228,25 @@ class BookmarkObserverRecorder {
       `SELECT b.id, b.guid, b.type, p.guid AS newParentGuid, c.oldParentGuid,
               b.position AS newPosition, c.oldPosition,
               gp.guid AS grandParentGuid,
-              (SELECT h.url FROM moz_places h WHERE h.id = b.fk) AS url
+              h.url AS url, IFNULL(b.title, '') AS title,
+              IFNULL(h.frecency, 0) AS frecency, IFNULL(h.hidden, 0) AS hidden,
+              IFNULL(h.visit_count, 0) AS visit_count,
+              h.last_visit_date,
+              (
+                SELECT GROUP_CONCAT(t.title, ',')
+                FROM moz_bookmarks t
+                LEFT JOIN moz_bookmarks ref ON ref.fk = h.id
+                WHERE t.id = +ref.parent
+                  AND t.parent = (
+                    SELECT id FROM moz_bookmarks
+                    WHERE guid = '${lazy.PlacesUtils.bookmarks.tagsGuid}'
+                  )
+              ) AS tags
        FROM itemsMoved c
        JOIN moz_bookmarks b ON b.id = c.itemId
        JOIN moz_bookmarks p ON p.id = b.parent
        LEFT JOIN moz_bookmarks gp ON gp.id = p.parent
+       LEFT JOIN moz_places h ON h.id = b.fk
        ${this.orderBy("c.level", "b.parent", "b.position")}`,
       null,
       (row, cancel) => {
@@ -2240,6 +2254,7 @@ class BookmarkObserverRecorder {
           cancel();
           return;
         }
+        let lastVisitDate = row.getResultByName("last_visit_date");
         let info = {
           id: row.getResultByName("id"),
           guid: row.getResultByName("guid"),
@@ -2250,6 +2265,14 @@ class BookmarkObserverRecorder {
           oldPosition: row.getResultByName("oldPosition"),
           urlHref: row.getResultByName("url"),
           grandParentGuid: row.getResultByName("grandParentGuid"),
+          title: row.getResultByName("title"),
+          frecency: row.getResultByName("frecency"),
+          hidden: row.getResultByName("hidden"),
+          visitCount: row.getResultByName("visit_count"),
+          lastVisitDate: lastVisitDate
+            ? lazy.PlacesUtils.toDate(lastVisitDate).getTime()
+            : null,
+          tags: row.getResultByName("tags"),
         };
         this.noteItemMoved(info);
       }
@@ -2359,6 +2382,7 @@ class BookmarkObserverRecorder {
         id: info.id,
         itemType: info.type,
         url: info.urlHref,
+        title: info.title,
         guid: info.guid,
         parentGuid: info.newParentGuid,
         source: lazy.PlacesUtils.bookmarks.SOURCES.SYNC,
@@ -2368,6 +2392,11 @@ class BookmarkObserverRecorder {
         isTagging:
           info.newParentGuid === lazy.PlacesUtils.bookmarks.tagsGuid ||
           info.grandParentGuid === lazy.PlacesUtils.bookmarks.tagsGuid,
+        tags: info.tags,
+        frecency: info.frecency,
+        hidden: info.hidden,
+        visitCount: info.visitCount,
+        lastVisitDate: info.lastVisitDate,
       })
     );
   }

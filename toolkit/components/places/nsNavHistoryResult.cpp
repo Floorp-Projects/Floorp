@@ -3443,8 +3443,9 @@ nsresult nsNavHistoryFolderResultNode::OnItemVisited(nsIURI* aURI,
 nsresult nsNavHistoryFolderResultNode::OnItemMoved(
     int64_t aItemId, int32_t aOldIndex, int32_t aNewIndex, uint16_t aItemType,
     const nsACString& aGUID, const nsACString& aOldParentGUID,
-    const nsACString& aNewParentGUID, uint16_t aSource,
-    const nsACString& aURI) {
+    const nsACString& aNewParentGUID, uint16_t aSource, const nsACString& aURI,
+    const nsACString& aTitle, const nsAString& aTags, int64_t aFrecency,
+    bool aHidden, uint32_t aVisitCount, PRTime aLastVisitDate) {
   MOZ_ASSERT(aOldParentGUID.Equals(mTargetFolderGuid) ||
                  aNewParentGUID.Equals(mTargetFolderGuid),
              "Got a bookmark message that doesn't belong to us");
@@ -3506,26 +3507,11 @@ nsresult nsNavHistoryFolderResultNode::OnItemMoved(
                   aGUID, aOldParentGUID, aSource);
   }
   if (aNewParentGUID.Equals(mTargetFolderGuid)) {
-    nsAutoCString title;
-    nsAutoString tags;
-    int64_t frecency = 0;
-    bool hidden = false;
-    uint32_t visitCount = 0;
-    PRTime lastVisitDate = 0;
-    if (node) {
-      title.Assign(node->mTitle);
-      tags.Assign(node->mTags);
-      frecency = node->mFrecency;
-      hidden = node->mHidden;
-      visitCount = node->mAccessCount;
-      lastVisitDate = node->mTime;
-    }
-
     OnItemAdded(
         aItemId, mTargetFolderItemId, aNewIndex, aItemType, itemURI,
         RoundedPRNow(),  // This is a dummy dateAdded, not the real value.
-        aGUID, aNewParentGUID, aSource, title, tags, frecency, hidden,
-        visitCount, lastVisitDate);
+        aGUID, aNewParentGUID, aSource, aTitle, aTags, aFrecency, aHidden,
+        aVisitCount, aLastVisitDate);
   }
 
   return NS_OK;
@@ -4299,13 +4285,23 @@ void nsNavHistoryResult::HandlePlacesEvent(const PlacesEventSequence& aEvents) {
             item->mOldParentGuid,
             OnItemMoved(item->mId, item->mOldIndex, item->mIndex,
                         item->mItemType, item->mGuid, item->mOldParentGuid,
-                        item->mParentGuid, item->mSource, url));
+                        item->mParentGuid, item->mSource, url,
+                        NS_ConvertUTF16toUTF8(item->mTitle), item->mTags,
+                        item->mFrecency, item->mHidden, item->mVisitCount,
+                        item->mLastVisitDate.IsNull()
+                            ? 0
+                            : item->mLastVisitDate.Value() * 1000));
         if (!item->mParentGuid.Equals(item->mOldParentGuid)) {
           ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(
               item->mParentGuid,
               OnItemMoved(item->mId, item->mOldIndex, item->mIndex,
                           item->mItemType, item->mGuid, item->mOldParentGuid,
-                          item->mParentGuid, item->mSource, url));
+                          item->mParentGuid, item->mSource, url,
+                          NS_ConvertUTF16toUTF8(item->mTitle), item->mTags,
+                          item->mFrecency, item->mHidden, item->mVisitCount,
+                          item->mLastVisitDate.IsNull()
+                              ? 0
+                              : item->mLastVisitDate.Value() * 1000));
         }
         ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
             OnItemMoved(item->mId, item->mOldIndex, item->mIndex,

@@ -539,6 +539,30 @@ add_task(async function bookmarkItemMoved_bookmark() {
               Object.values(PlacesUtils.bookmarks.SOURCES).includes(v),
           },
           { name: "url", check: v => typeof v == "string" },
+          {
+            name: "title",
+            check: v => v == bm.title,
+          },
+          {
+            name: "tags",
+            check: v => v === "",
+          },
+          {
+            name: "frecency",
+            check: v => v === 1,
+          },
+          {
+            name: "hidden",
+            check: v => v === false,
+          },
+          {
+            name: "visitCount",
+            check: v => v === 0,
+          },
+          {
+            name: "lastVisitDate",
+            check: v => v === null,
+          },
         ],
       },
       {
@@ -569,6 +593,30 @@ add_task(async function bookmarkItemMoved_bookmark() {
               Object.values(PlacesUtils.bookmarks.SOURCES).includes(v),
           },
           { name: "url", check: v => typeof v == "string" },
+          {
+            name: "title",
+            check: v => v == bm.title,
+          },
+          {
+            name: "tags",
+            check: v => v === "",
+          },
+          {
+            name: "frecency",
+            check: v => v === 1,
+          },
+          {
+            name: "hidden",
+            check: v => v === false,
+          },
+          {
+            name: "visitCount",
+            check: v => v === 0,
+          },
+          {
+            name: "lastVisitDate",
+            check: v => v === null,
+          },
         ],
       },
     ]),

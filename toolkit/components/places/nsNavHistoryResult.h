@@ -803,7 +803,9 @@ class nsNavHistoryFolderResultNode final
                        uint16_t aItemType, const nsACString& aGUID,
                        const nsACString& aOldParentGUID,
                        const nsACString& aNewParentGUID, uint16_t aSource,
-                       const nsACString& aURI);
+                       const nsACString& aURI, const nsACString& aTitle,
+                       const nsAString& aTags, int64_t aFrecency, bool aHidden,
+                       uint32_t aVisitCount, PRTime aLastVisitDate);
   nsresult OnItemVisited(nsIURI* aURI, int64_t aVisitId, PRTime aTime);
 
   virtual void OnRemoving() override;

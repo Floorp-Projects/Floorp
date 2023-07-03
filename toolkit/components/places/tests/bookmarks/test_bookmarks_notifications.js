@@ -327,6 +327,12 @@ add_task(async function update_move_same_folder() {
       oldParentGuid: bm.parentGuid,
       oldIndex: bmOldIndex,
       isTagging: false,
+      title: bm.title,
+      tags: "",
+      frecency: 1,
+      hidden: false,
+      visitCount: 0,
+      lastVisitDate: null,
     },
   ]);
 
@@ -352,6 +358,12 @@ add_task(async function update_move_same_folder() {
       oldParentGuid: bm.parentGuid,
       oldIndex: bmOldIndex,
       isTagging: false,
+      title: bm.title,
+      tags: "",
+      frecency: 1,
+      hidden: false,
+      visitCount: 0,
+      lastVisitDate: null,
     },
   ]);
 });
@@ -389,6 +401,12 @@ add_task(async function update_move_different_folder() {
       oldParentGuid: PlacesUtils.bookmarks.unfiledGuid,
       oldIndex: bmOldIndex,
       isTagging: false,
+      title: bm.title,
+      tags: "",
+      frecency: 1,
+      hidden: false,
+      visitCount: 0,
+      lastVisitDate: null,
     },
   ]);
 });
@@ -427,6 +445,12 @@ add_task(async function update_move_tag_folder() {
       oldParentGuid: PlacesUtils.bookmarks.unfiledGuid,
       oldIndex: bmOldIndex,
       isTagging: true,
+      title: bm.title,
+      tags: "tag",
+      frecency: 1,
+      hidden: false,
+      visitCount: 0,
+      lastVisitDate: null,
     },
   ]);
 });
@@ -1059,6 +1083,12 @@ add_task(async function reorder_notification() {
       oldParentGuid: child.parentGuid,
       oldIndex: child.index,
       isTagging: false,
+      title: child.title,
+      tags: "",
+      frecency: child.url ? 1 : 0,
+      hidden: false,
+      visitCount: 0,
+      lastVisitDate: null,
     });
   }
 

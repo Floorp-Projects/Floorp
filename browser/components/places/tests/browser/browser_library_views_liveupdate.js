@@ -10,7 +10,6 @@ let gLibrary = null;
 
 add_setup(async function () {
   gLibrary = await promiseLibrary();
-
   await PlacesUtils.bookmarks.eraseEverything();
 
   registerCleanupFunction(async () => {
@@ -22,13 +21,16 @@ add_setup(async function () {
 async function testInFolder(folderGuid, prefix) {
   let addedBookmarks = [];
 
-  let item = await insertAndCheckItem({
-    parentGuid: folderGuid,
-    title: `${prefix}1`,
-    url: `http://${prefix}1.mozilla.org/`,
-  });
+  let item = await insertAndCheckItem(
+    {
+      parentGuid: folderGuid,
+      title: `${prefix}1`,
+      url: `http://${prefix}1.mozilla.org/`,
+    },
+    0
+  );
   item.title = `${prefix}1_edited`;
-  await updateAndCheckItem(item);
+  await updateAndCheckItem(item, 0);
   addedBookmarks.push(item);
 
   item = await insertAndCheckItem(
@@ -44,10 +46,13 @@ async function testInFolder(folderGuid, prefix) {
   await updateAndCheckItem(item, 0);
   addedBookmarks.push(item);
 
-  item = await insertAndCheckItem({
-    parentGuid: folderGuid,
-    type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-  });
+  item = await insertAndCheckItem(
+    {
+      parentGuid: folderGuid,
+      type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+    },
+    2
+  );
   addedBookmarks.push(item);
 
   item = await insertAndCheckItem(
@@ -68,22 +73,30 @@ async function testInFolder(folderGuid, prefix) {
 
   let folderGuid1 = item.guid;
 
-  item = await insertAndCheckItem({
-    parentGuid: folderGuid1,
-    title: `${prefix}f1`,
-    url: `http://${prefix}f1.mozilla.org/`,
-  });
+  item = await insertAndCheckItem(
+    {
+      parentGuid: folderGuid1,
+      title: `${prefix}f1`,
+      url: `http://${prefix}f1.mozilla.org/`,
+    },
+    0
+  );
   addedBookmarks.push(item);
 
-  item = await insertAndCheckItem({
-    parentGuid: folderGuid1,
-    title: `${prefix}f12`,
-    url: `http://${prefix}f12.mozilla.org/`,
-  });
+  item = await insertAndCheckItem(
+    {
+      parentGuid: folderGuid,
+      title: `${prefix}f12`,
+      url: `http://${prefix}f12.mozilla.org/`,
+    },
+    4
+  );
   addedBookmarks.push(item);
 
+  // Move to a different folder and index.
+  item.parentGuid = folderGuid1;
   item.index = 0;
-  await updateAndCheckItem(item);
+  await updateAndCheckItem(item, 0);
 
   return addedBookmarks;
 }
@@ -112,144 +125,93 @@ add_task(async function test() {
   }
 });
 
-async function insertAndCheckItem(itemData, expectedIndex) {
-  let item = await PlacesUtils.bookmarks.insert(itemData);
+function selectItem(item, parentTreeIndex) {
+  let useLeftPane =
+    item.type == PlacesUtils.bookmarks.TYPE_FOLDER || // is Folder
+    (item.type == PlacesUtils.bookmarks.TYPE_BOOKMARK &&
+      item.url.protocol == "place:"); // is Query
+  let tree = useLeftPane
+    ? gLibrary.PlacesOrganizer._places
+    : gLibrary.ContentTree.view;
+  tree.selectItems([item.guid]);
+  let treeIndex = tree.view.treeIndexForNode(tree.selectedNode);
+  let title = tree.view.getCellText(treeIndex, tree.columns.getColumnAt(0));
+  if (useLeftPane) {
+    // Make the treeIndex relative to the parent, otherwise getting the right
+    // index value is tricky due to separators and URIs being hidden in the left
+    // pane.
+    treeIndex -= parentTreeIndex + 1;
+  }
+  return {
+    node: tree.selectedNode,
+    title,
+    parentRelativeTreeIndex: treeIndex,
+  };
+}
 
-  let [node, index, title] = getNodeForTreeItem(
-    item.guid,
-    gLibrary.PlacesOrganizer._places
+function itemExists(item) {
+  let useLeftPane =
+    item.type == PlacesUtils.bookmarks.TYPE_FOLDER || // is Folder
+    (item.type == PlacesUtils.bookmarks.TYPE_BOOKMARK &&
+      item.url.protocol == "place:"); // is Query
+  let tree = useLeftPane
+    ? gLibrary.PlacesOrganizer._places
+    : gLibrary.ContentTree.view;
+  tree.selectItems([item.guid], true);
+  return tree.selectedNode?.bookmarkGuid == item.guid;
+}
+
+async function insertAndCheckItem(insertItem, expectedParentRelativeIndex) {
+  // Ensure the parent is selected before the change, this covers live updating
+  // better than selecting the parent later, that would just refresh all its
+  // children.
+  Assert.ok(insertItem.parentGuid, "Must have a parentGuid");
+  gLibrary.PlacesOrganizer._places.selectItems([insertItem.parentGuid], true);
+  let tree = gLibrary.PlacesOrganizer._places;
+  let parentTreeIndex = tree.view.treeIndexForNode(tree.selectedNode);
+
+  let item = await PlacesUtils.bookmarks.insert(insertItem);
+
+  let { node, title, parentRelativeTreeIndex } = selectItem(
+    item,
+    parentTreeIndex
   );
-  // Left pane should not be updated for normal bookmarks or separators.
-  switch (itemData.type || PlacesUtils.bookmarks.TYPE_BOOKMARK) {
-    case PlacesUtils.bookmarks.TYPE_BOOKMARK:
-      let uriString = itemData.url;
-      let isQuery = uriString.substr(0, 6) == "place:";
-      if (isQuery) {
-        Assert.ok(node, "Should have a new query in the left pane.");
-        break;
-      }
-    // Fallthrough if this isn't a query
-    case PlacesUtils.bookmarks.TYPE_SEPARATOR:
-      Assert.ok(
-        !node,
-        "Should not have added a bookmark or separator to the left pane."
-      );
-      break;
-    default:
-      Assert.ok(
-        node,
-        "Should have added a new node in the left pane for a folder."
-      );
-  }
-
-  if (node) {
-    Assert.equal(title, itemData.title, "Should have the correct title");
-    Assert.equal(index, expectedIndex, "Should have the expected index");
-  }
-
+  Assert.equal(item.guid, node.bookmarkGuid, "Should find the updated node");
+  Assert.equal(title, item.title, "Should have the correct title");
+  Assert.equal(
+    parentRelativeTreeIndex,
+    expectedParentRelativeIndex,
+    "Should have the expected index"
+  );
   return item;
 }
 
-async function updateAndCheckItem(newItemData, expectedIndex) {
-  await PlacesUtils.bookmarks.update(newItemData);
+async function updateAndCheckItem(updateItem, expectedParentRelativeTreeIndex) {
+  // Ensure the parent is selected before the change, this covers live updating
+  // better than selecting the parent later, that would just refresh all its
+  // children.
+  Assert.ok(updateItem.parentGuid, "Must have a parentGuid");
+  gLibrary.PlacesOrganizer._places.selectItems([updateItem.parentGuid], true);
+  let tree = gLibrary.PlacesOrganizer._places;
+  let parentTreeIndex = tree.view.treeIndexForNode(tree.selectedNode);
 
-  let [node, index, title] = getNodeForTreeItem(
-    newItemData.guid,
-    gLibrary.PlacesOrganizer._places
+  let item = await PlacesUtils.bookmarks.update(updateItem);
+
+  let { node, title, parentRelativeTreeIndex } = selectItem(
+    item,
+    parentTreeIndex
   );
-
-  // Left pane should not be updated for normal bookmarks or separators.
-  switch (newItemData.type || PlacesUtils.bookmarks.TYPE_BOOKMARK) {
-    case PlacesUtils.bookmarks.TYPE_BOOKMARK:
-      let isQuery = newItemData.url.protocol == "place:";
-      if (isQuery) {
-        Assert.ok(node, "Should be able to find the updated node");
-        break;
-      }
-    // Fallthrough if this isn't a query
-    case PlacesUtils.bookmarks.TYPE_SEPARATOR:
-      Assert.ok(!node, "Should not be able to find the updated node");
-      break;
-    default:
-      Assert.ok(node, "Should be able to find the updated node");
-  }
-
-  if (node) {
-    Assert.equal(title, newItemData.title, "Should have the correct title");
-    Assert.equal(index, expectedIndex, "Should have the expected index");
-  }
+  Assert.equal(item.guid, node.bookmarkGuid, "Should find the updated node");
+  Assert.equal(title, item.title, "Should have the correct title");
+  Assert.equal(
+    parentRelativeTreeIndex,
+    expectedParentRelativeTreeIndex,
+    "Should have the expected index"
+  );
+  return item;
 }
 
 async function removeAndCheckItem(itemData) {
   await PlacesUtils.bookmarks.remove(itemData);
-  let [node] = getNodeForTreeItem(
-    itemData.guid,
-    gLibrary.PlacesOrganizer._places
-  );
-  Assert.ok(!node, "Should not be able to find the removed node");
-}
-
-/**
- * Get places node, index and cell text for a guid in a tree view.
- *
- * @param {string} aItemGuid
- *        item guid of the item to search.
- * @param {object} aTree
- *        Tree to search in.
- * @returns {Array}
- *          [node, index, cellText] or [null, null, ""] if not found.
- */
-function getNodeForTreeItem(aItemGuid, aTree) {
-  function findNode(aContainerIndex) {
-    if (aTree.view.isContainerEmpty(aContainerIndex)) {
-      return [null, null, ""];
-    }
-
-    // The rowCount limit is just for sanity, but we will end looping when
-    // we have checked the last child of this container or we have found node.
-    for (let i = aContainerIndex + 1; i < aTree.view.rowCount; i++) {
-      let node = aTree.view.nodeForTreeIndex(i);
-
-      if (node.bookmarkGuid == aItemGuid) {
-        // Minus one because we want relative index inside the container.
-        let tree = gLibrary.PlacesOrganizer._places;
-        let cellText = tree.view.getCellText(i, tree.columns.getColumnAt(0));
-        return [node, i - aContainerIndex - 1, cellText];
-      }
-
-      if (PlacesUtils.nodeIsFolder(node)) {
-        // Open container.
-        aTree.view.toggleOpenState(i);
-        // Search inside it.
-        let foundNode = findNode(i);
-        // Close container.
-        aTree.view.toggleOpenState(i);
-        // Return node if found.
-        if (foundNode[0] != null) {
-          return foundNode;
-        }
-      }
-
-      // We have finished walking this container.
-      if (!aTree.view.hasNextSibling(aContainerIndex + 1, i)) {
-        break;
-      }
-    }
-    return [null, null, ""];
-  }
-
-  // Root node is hidden, so we need to manually walk the first level.
-  for (let i = 0; i < aTree.view.rowCount; i++) {
-    // Open container.
-    aTree.view.toggleOpenState(i);
-    // Search inside it.
-    let foundNode = findNode(i);
-    // Close container.
-    aTree.view.toggleOpenState(i);
-    // Return node if found.
-    if (foundNode[0] != null) {
-      return foundNode;
-    }
-  }
-  return [null, null, ""];
+  Assert.ok(!itemExists(itemData), "Should not find the updated node");
 }
