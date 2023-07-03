@@ -1018,22 +1018,20 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
     }
     if (compensateEOS) {
       VideoSegment endSegment;
-      // Calculate the deviation clock time from DecodedStream.
-      // We round the nr of microseconds up, because WriteVideoToSegment
-      // will round the conversion from microseconds to TrackTime down.
-      auto deviation = TimeUnit::FromMicroseconds(
-          mData->mVideoTrack->TrackTimeToMicroseconds(1) + 1);
       auto start = mData->mLastVideoEndTime.valueOr(mStartTime.ref());
       mData->WriteVideoToSegment(
-          mData->mLastVideoImage, start, start + deviation,
+          mData->mLastVideoImage, start, start,
           mData->mLastVideoImageDisplaySize,
-          currentTime + (start + deviation - currentPosition).ToTimeDuration(),
-          &endSegment, aPrincipalHandle, mPlaybackRate);
+          currentTime + (start - currentPosition).ToTimeDuration(), &endSegment,
+          aPrincipalHandle, mPlaybackRate);
+      // ForwardedInputTrack drops zero duration frames, even at the end of
+      // the track.  Give the frame a minimum duration so that it is not
+      // dropped.
+      endSegment.ExtendLastFrameBy(1);
       LOG_DS(LogLevel::Debug,
-             "compensateEOS: deviation %s, start %s, duration %" PRId64
+             "compensateEOS: start %s, duration %" PRId64
              ", mPlaybackRate %lf, sample rate %" PRId32,
-             deviation.ToString().get(), start.ToString().get(),
-             endSegment.GetDuration(), mPlaybackRate,
+             start.ToString().get(), endSegment.GetDuration(), mPlaybackRate,
              mData->mVideoTrack->mSampleRate);
       MOZ_ASSERT(endSegment.GetDuration() > 0);
       if (forceBlack) {
