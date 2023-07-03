@@ -26803,24 +26803,6 @@
       "last_modified": 1562025293606
     },
     {
-      "schema": 1562025283917,
-      "derHash": "+jl96NtvEQp/o00QG6yKkUdQ9TsCI6i9L7gS51cVXCA=",
-      "subject": "CN=SwissSign Personal Silver CA 2008 - G2,O=SwissSign AG,C=CH",
-      "subjectDN": "MFUxCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxLzAtBgNVBAMTJlN3aXNzU2lnbiBQZXJzb25hbCBTaWx2ZXIgQ0EgMjAwOCAtIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c1c9d52213575e65ceed56f35a6ed33a249d8d1c3a280659df44920339ef7ffe",
-        "size": 2280,
-        "filename": "jyhVT5llCBR7-xwGoq2SlKQcMasWHqmouxTYUO1Fhiw=.pem",
-        "location": "security-state-staging/intermediates/ea4ea5bd-3a75-4cd2-a235-c3e8ef18c8c6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "jyhVT5llCBR7+xwGoq2SlKQcMasWHqmouxTYUO1Fhiw=",
-      "crlite_enrolled": false,
-      "id": "4f348dc6-e98b-4a77-a839-d0327398fe7f",
-      "last_modified": 1562025284661
-    },
-    {
       "schema": 1562025276325,
       "derHash": "2eRFsixvyzeylvzRMxSGVpZRqNuYBxdT/vxz0sl79zI=",
       "subject": "CN=Qualified KET e-Szigno CA 2018,O=Microsec Ltd.,L=Budapest,C=HU",
@@ -27649,5 +27631,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1687877823463
+  "timestamp": 1688050623254
 }
