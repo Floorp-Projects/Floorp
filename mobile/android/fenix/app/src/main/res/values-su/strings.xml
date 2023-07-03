@@ -13,9 +13,11 @@
     <string name="content_description_private_browsing_button">Hurungkeun langlangan pribadi</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Pareuman langlangan pribadi</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Paluruh atawa asupkeun alamat</string>
 
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Paluruh raramat</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Paluruh jujutan</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -63,14 +65,8 @@
     <string name="private_browsing_common_myths">Mitos umum ngeunaan langlangan nyamuni</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message" moz:removedIn="109" tools:ignore="UnusedResources">Tambah takulan ka tab pribadi nu muka ti layar Tepas.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Buka tab nyamuni saterusna dina sakali toél.</string>
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Buka tab nyamuni anjeun saterusna dina sakali toél.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text" moz:removedIn="109" tools:ignore="UnusedResources">Tambah takulan</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Tambahkeun ka layar Tepas</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
@@ -83,9 +79,6 @@
     <string name="open_in_app_cfr_positive_button_text">Buka setélan</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Tutup</string>
-
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description" moz:removedIn="110" tools:ignore="UnusedResources">Tutup</string>
 
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
@@ -255,7 +248,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s bakal ngabagi sagala anu diketikkeun dina palang alamat kana mesin pamaluruh baku anjeun.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Paluruh %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Paluruh langsung tina bilah alamat</string>
@@ -264,10 +257,10 @@
     <string name="search_settings_menu_item">Setélan pamaluruhan</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Ayeuna paluruh:</string>
-
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Saayeunaeun paluruh di:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Mesin pamaluruh %s</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -298,6 +291,26 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">Moal waka</string>
 
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">wawar pripasi</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">Jadikeun panyungsi baku</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button">Moal waka</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title">Luncat tina telepon ka laptop jeung sabalikna</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">Cokot tab jeung kecap sandi ti parabot anjeun lianna anu panungtung dipaké.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button">Asup</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button">Moal waka</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button">Hurungkeun iber</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button">Moal waka</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">Buka dina tab %1$s anyar</string>
@@ -316,6 +329,10 @@
     <string name="preferences_category_general">Umum</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Ngeunaan</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">Pilih salasahiji</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts">Kokolakeun takulan pamaluruhan</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Mesin pamaluruh baku</string>
     <!-- Preference for settings related to Search -->
@@ -356,23 +373,19 @@
     <string name="reduce_cookie_banner_option_off">Pareum</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
     <string name="reduce_cookie_banner_option_on">Hurung</string>
-    <!-- Summary for the preference for rejecting all cookies whenever possible. -->
-    <string name="reduce_cookie_banner_summary" moz:RemovedIn="110" tools:ignore="UnusedResources">Firefox otomatis nyoba nampik pamundut réréméh dina spanduk réréméh. Upama teu aya pilihan nampik, Firefox bisa nampa sadaya réréméh pikeun ngaleungitkeun spandukna.</string>
 
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Pareum jang ieu loka</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Bolay</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Hurungkeun jang ieu loka</string>
 
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Moal Waka</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button">Idinan</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Otomatis nyoba nyambung ka loka maké protokol énkripsi HTTPS pikeun ngaronjatkeun kaamanan.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">Hurung</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Pareum</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -538,7 +551,6 @@
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Émboh geus dipasang</string>
 
-    <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Singkronkeun ayeuna</string>
     <!-- Preference category for sync -->
@@ -687,15 +699,9 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Bolay</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d loka</string>
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">%d kaca</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d loka</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1024,8 +1030,6 @@
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Iwal</string>
 
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">Hurung</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Pareum</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1161,12 +1165,6 @@
     <string name="notification_pbm_delete_text_2">Tutup tab nyamuni</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Pamasaran</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s gancang jeung rikip</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">Jadikeun %1$s panyungsi baku</string>
 
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Cobaan nyungsi nyamuni</string>
@@ -1269,7 +1267,7 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Rentang waktu pikeun mupus</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Mupus jujutan (kaasup jujutan anu disingkronkeun ti séjén parabot), réréméh, jeung data nyungsi lianna.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Mupus jujutan (kaasup jujutan anu disingkronkeun ti séjén parabot), réréméh, jeung data nyungsi lianna.</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Jam panungtung</string>
 
@@ -1393,21 +1391,21 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protéksi Palacakan Tingkat Lanjut</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Nyungsi bari teu dituturkeun</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Nyungsi bari teu dituturkeun</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Jaga data anjeun keur sorangan. %s ngajaga anjeun ti kalolobaan palacak anu nunutur lalampahan anjeun jering.</string>
+    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Jaga data anjeun keur sorangan. %s ngajaga anjeun ti kalolobaan palacak anu nunutur lalampahan anjeun jering.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Lenyepan</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Baku (bawaan)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Siger tengah pikeun pripasi jeung kinerja. Kaca dimuat sacara normal.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Siger tengah pikeun pripasi jeung kinerja. Kaca dimuat sacara normal.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Naon anu dipeungpeuk ku perlindungan pelacakan baku</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Pereketkeun</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Meungpeuk palacak leuwih loba sangkan kaca dimuat leuwih gancang, tapi sababaraha fungsionalitas dina kaca bisa gagal.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Meungpeuk palacak leuwih loba sangkan kaca dimuat leuwih gancang, tapi sababaraha fungsionalitas dina kaca bisa gagal.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Naon anu dipeungpeuk ku perlindungan palacak rékép</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -2005,4 +2003,4 @@
     <string name="a11y_action_label_wallpaper_collection_learn_more">buka tutumbu pikeun leuwih teleb ngeunaan ieu koléksi</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
     <string name="a11y_action_label_read_article">baca artikel</string>
-</resources>
+    </resources>
