@@ -1127,6 +1127,7 @@ void Statistics::sendGCTelemetry() {
       uint32_t threadCount = gc->markers.length();
       double speedup = parallelMarkTime / wallTime;
       double utilization = parallelRunTime / (wallTime * threadCount);
+      MOZ_ASSERT(utilization <= 1.0);
       runtime->metrics().GC_PARALLEL_MARK_SPEEDUP(uint32_t(speedup * 100.0));
       runtime->metrics().GC_PARALLEL_MARK_UTILIZATION(
           std::clamp(utilization * 100.0, 0.0, 100.0));
@@ -1576,7 +1577,9 @@ double Statistics::computeMMU(TimeDuration window) const {
     }
   }
 
-  return double((window - gcMax) / window);
+  MOZ_ASSERT(gcMax > TimeDuration::Zero());
+  MOZ_ASSERT(gcMax <= window);
+  return (window - gcMax) / window;
 }
 
 void Statistics::maybePrintProfileHeaders() {
