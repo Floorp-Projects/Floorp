@@ -931,7 +931,7 @@ impl CalcNode {
         input: &mut Parser<'i, 't>,
         function: MathFunction,
     ) -> Result<CSSInteger, ParseError<'i>> {
-        Self::parse_number(context, input, function).map(|n| n.round() as CSSInteger)
+        Self::parse_number(context, input, function).map(|n| (n + 0.5).floor() as CSSInteger)
     }
 
     /// Convenience parsing function for `<length> | <percentage>`.
