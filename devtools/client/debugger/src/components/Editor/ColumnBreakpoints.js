@@ -13,16 +13,15 @@ import {
   getContext,
   isSourceBlackBoxed,
 } from "../../selectors";
+import actions from "../../actions";
 import { connect } from "../../utils/connect";
 import { makeBreakpointId } from "../../utils/breakpoint";
-import { breakpointItemActions } from "./menus/breakpoints";
 
 // eslint-disable-next-line max-len
 
 class ColumnBreakpoints extends Component {
   static get propTypes() {
     return {
-      breakpointActions: PropTypes.object.isRequired,
       columnBreakpoints: PropTypes.array.isRequired,
       cx: PropTypes.object.isRequired,
       editor: PropTypes.object.isRequired,
@@ -31,8 +30,17 @@ class ColumnBreakpoints extends Component {
   }
 
   render() {
-    const { cx, editor, columnBreakpoints, selectedSource, breakpointActions } =
-      this.props;
+    const {
+      cx,
+      editor,
+      columnBreakpoints,
+      selectedSource,
+      showEditorCreateBreakpointContextMenu,
+      showEditorEditBreakpointContextMenu,
+      toggleDisabledBreakpoint,
+      removeBreakpoint,
+      addBreakpoint,
+    } = this.props;
 
     if (!selectedSource || columnBreakpoints.length === 0) {
       return null;
@@ -47,7 +55,15 @@ class ColumnBreakpoints extends Component {
           columnBreakpoint={breakpoint}
           editor={editor}
           source={selectedSource}
-          breakpointActions={breakpointActions}
+          showEditorCreateBreakpointContextMenu={
+            showEditorCreateBreakpointContextMenu
+          }
+          showEditorEditBreakpointContextMenu={
+            showEditorEditBreakpointContextMenu
+          }
+          toggleDisabledBreakpoint={toggleDisabledBreakpoint}
+          removeBreakpoint={removeBreakpoint}
+          addBreakpoint={addBreakpoint}
         />
       ));
     });
@@ -70,6 +86,12 @@ const mapStateToProps = state => {
   };
 };
 
-export default connect(mapStateToProps, dispatch => ({
-  breakpointActions: breakpointItemActions(dispatch),
-}))(ColumnBreakpoints);
+export default connect(mapStateToProps, {
+  showEditorCreateBreakpointContextMenu:
+    actions.showEditorCreateBreakpointContextMenu,
+  showEditorEditBreakpointContextMenu:
+    actions.showEditorEditBreakpointContextMenu,
+  toggleDisabledBreakpoint: actions.toggleDisabledBreakpoint,
+  removeBreakpoint: actions.removeBreakpoint,
+  addBreakpoint: actions.addBreakpoint,
+})(ColumnBreakpoints);
