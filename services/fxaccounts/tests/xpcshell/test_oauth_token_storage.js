@@ -124,8 +124,13 @@ async function createMockFxA() {
     email: "foo@example.com",
     uid: "1234@lcip.org",
     sessionToken: "dead",
-    kSync: "beef",
-    kXCS: "cafe",
+    scopedKeys: {
+      [SCOPE_OLD_SYNC]: {
+        kid: "key id for sync key",
+        k: "key material for sync key",
+        kty: "oct",
+      },
+    },
     verified: true,
   };
   await fxa._internal.setSignedInUser(credentials);

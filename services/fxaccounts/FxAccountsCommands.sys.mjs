@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { CommonUtils } from "resource://services-common/utils.sys.mjs";
+
 const { COMMAND_SENDTAB, COMMAND_SENDTAB_TAIL, SCOPE_OLD_SYNC, log } =
   ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const lazy = {};
@@ -417,8 +419,8 @@ export class SendTab {
     const keyBundle = lazy.BulkKeyBundle.fromJWK(oldsyncKey);
     await wrapper.encrypt(keyBundle);
     const encryptedSendTabKeys = JSON.stringify({
-      // Older clients expect this to be hex, due to pre-JWK sync key ids :-(
-      kid: this._fxai.keys.kidAsHex(oldsyncKey),
+      // This is expected in hex, due to pre-JWK sync key ids :-(
+      kid: this.kidAsHex(oldsyncKey),
       IV: wrapper.IV,
       hmac: wrapper.hmac,
       ciphertext: wrapper.ciphertext,
@@ -451,6 +453,27 @@ export class SendTab {
         await this._generateAndPersistEncryptedSendTabKey();
     }
     return encryptedSendTabKeys;
+  }
+
+  /**
+   * Format a JWK kid as hex rather than base64.
+   * Needed because clients expect the send tab key to be hex, due to pre-JWK sync key ids
+   *
+   * This is a backwards-compatibility helper for code that needs a raw key fingerprint
+   * for use as a key identifier, rather than the timestamp+fingerprint format used by
+   * FxA scoped keys.
+   *
+   * @param {Object} jwk The JWK from which to extract the `kid` field as hex.
+   */
+  kidAsHex(jwk) {
+    // The kid format is "{timestamp}-{b64url(fingerprint)}", but we have to be careful
+    // because the fingerprint component may contain "-" as well, and we want to ensure
+    // the timestamp component was non-empty.
+    const idx = jwk.kid.indexOf("-") + 1;
+    if (idx <= 1) {
+      throw new Error(`Invalid kid: ${jwk.kid}`);
+    }
+    return CommonUtils.base64urlToHex(jwk.kid.slice(idx));
   }
 }
 
