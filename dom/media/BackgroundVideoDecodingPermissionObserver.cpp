@@ -26,7 +26,7 @@ NS_IMETHODIMP
 BackgroundVideoDecodingPermissionObserver::Observe(nsISupports* aSubject,
                                                    const char* aTopic,
                                                    const char16_t* aData) {
-  if (!StaticPrefs::media_resume_bkgnd_video_on_tabhover()) {
+  if (!StaticPrefs::media_resume_background_video_on_tabhover()) {
     return NS_OK;
   }
 

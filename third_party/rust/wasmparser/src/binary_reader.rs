@@ -21,7 +21,7 @@ use std::marker;
 use std::ops::Range;
 use std::str;
 
-const WASM_MAGIC_NUMBER: &[u8; 4] = b"\0asm";
+pub(crate) const WASM_MAGIC_NUMBER: &[u8; 4] = b"\0asm";
 
 /// A binary reader for WebAssembly modules.
 #[derive(Debug, Clone)]
@@ -91,6 +91,11 @@ impl BinaryReaderError {
     /// Get the offset within the Wasm binary where the error occurred.
     pub fn offset(&self) -> usize {
         self.inner.offset
+    }
+
+    pub(crate) fn add_context(&mut self, mut context: String) {
+        context.push_str("\n");
+        self.inner.message.insert_str(0, &context);
     }
 }
 
@@ -977,11 +982,30 @@ impl<'a> BinaryReader<'a> {
             0xd4 => visitor.visit_br_on_null(self.read_var_u32()?),
             0xd6 => visitor.visit_br_on_non_null(self.read_var_u32()?),
 
+            0xfb => self.visit_0xfb_operator(pos, visitor)?,
             0xfc => self.visit_0xfc_operator(pos, visitor)?,
             0xfd => self.visit_0xfd_operator(pos, visitor)?,
             0xfe => self.visit_0xfe_operator(pos, visitor)?,
 
             _ => bail!(pos, "illegal opcode: 0x{code:x}"),
+        })
+    }
+
+    fn visit_0xfb_operator<T>(
+        &mut self,
+        pos: usize,
+        visitor: &mut T,
+    ) -> Result<<T as VisitOperator<'a>>::Output>
+    where
+        T: VisitOperator<'a>,
+    {
+        let code = self.read_var_u32()?;
+        Ok(match code {
+            0x20 => visitor.visit_i31_new(),
+            0x21 => visitor.visit_i31_get_s(),
+            0x22 => visitor.visit_i31_get_u(),
+
+            _ => bail!(pos, "unknown 0xfb subopcode: 0x{code:x}"),
         })
     }
 

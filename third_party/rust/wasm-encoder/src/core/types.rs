@@ -1,5 +1,16 @@
 use crate::{encode_section, Encode, Section, SectionId};
 
+/// Array or struct field type.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
+pub enum StorageType {
+    /// The `i8` type.
+    I8,
+    /// The `i16` type.
+    I16,
+    /// A value type.
+    Val(ValType),
+}
+
 /// The type of a core WebAssembly value.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub enum ValType {
@@ -28,6 +39,16 @@ impl ValType {
     pub const FUNCREF: ValType = ValType::Ref(RefType::FUNCREF);
     /// Alias for the `externref` type in WebAssembly
     pub const EXTERNREF: ValType = ValType::Ref(RefType::EXTERNREF);
+}
+
+impl Encode for StorageType {
+    fn encode(&self, sink: &mut Vec<u8>) {
+        match self {
+            StorageType::I8 => sink.push(0x7A),
+            StorageType::I16 => sink.push(0x79),
+            StorageType::Val(vt) => vt.encode(sink),
+        }
+    }
 }
 
 impl Encode for ValType {
@@ -99,12 +120,29 @@ impl From<RefType> for ValType {
 /// Part of the function references proposal.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub enum HeapType {
-    /// A function reference. When nullable, equivalent to `funcref`
+    /// Untyped (any) function.
     Func,
-    /// An extern reference. When nullable, equivalent to `externref`
+    /// External heap type.
     Extern,
-    /// A reference to a particular index in a table.
-    TypedFunc(u32),
+    /// The `any` heap type. The common supertype (a.k.a. top) of all internal types.
+    Any,
+    /// The `none` heap type. The common subtype (a.k.a. bottom) of all internal types.
+    None,
+    /// The `noextern` heap type. The common subtype (a.k.a. bottom) of all external types.
+    NoExtern,
+    /// The `nofunc` heap type. The common subtype (a.k.a. bottom) of all function types.
+    NoFunc,
+    /// The `eq` heap type. The common supertype of all referenceable types on which comparison
+    /// (ref.eq) is allowed.
+    Eq,
+    /// The `struct` heap type. The common supertype of all struct types.
+    Struct,
+    /// The `array` heap type. The common supertype of all array types.
+    Array,
+    /// The i31 heap type.
+    I31,
+    /// User defined type at the given index.
+    Indexed(u32),
 }
 
 impl Encode for HeapType {
@@ -112,9 +150,17 @@ impl Encode for HeapType {
         match self {
             HeapType::Func => sink.push(0x70),
             HeapType::Extern => sink.push(0x6F),
+            HeapType::Any => sink.push(0x6E),
+            HeapType::None => sink.push(0x65),
+            HeapType::NoExtern => sink.push(0x69),
+            HeapType::NoFunc => sink.push(0x68),
+            HeapType::Eq => sink.push(0x6D),
+            HeapType::Struct => sink.push(0x67),
+            HeapType::Array => sink.push(0x66),
+            HeapType::I31 => sink.push(0x6A),
             // Note that this is encoded as a signed type rather than unsigned
             // as it's decoded as an s33
-            HeapType::TypedFunc(i) => i64::from(*i).encode(sink),
+            HeapType::Indexed(i) => i64::from(*i).encode(sink),
         }
     }
 }
@@ -173,6 +219,15 @@ impl TypeSection {
         params.for_each(|p| p.encode(&mut self.bytes));
         results.len().encode(&mut self.bytes);
         results.for_each(|p| p.encode(&mut self.bytes));
+        self.num_added += 1;
+        self
+    }
+
+    /// Define an array type in this type section.
+    pub fn array(&mut self, ty: StorageType, mutable: bool) -> &mut Self {
+        self.bytes.push(0x5e);
+        ty.encode(&mut self.bytes);
+        self.bytes.push(mutable as u8);
         self.num_added += 1;
         self
     }

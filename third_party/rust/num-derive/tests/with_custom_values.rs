@@ -8,8 +8,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-#![cfg(feature = "full-syntax")]
-
 extern crate num as num_renamed;
 #[macro_use]
 extern crate num_derive;

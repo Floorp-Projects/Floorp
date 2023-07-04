@@ -982,6 +982,14 @@ Status ColorEncoding::SetFieldsFromICC() {
   Profile profile;
   JXL_RETURN_IF_ERROR(DecodeProfile(context, icc_, &profile));
 
+  const cmsUInt32Number rendering_intent32 =
+      cmsGetHeaderRenderingIntent(profile.get());
+  if (rendering_intent32 > 3) {
+    return JXL_FAILURE("Invalid rendering intent %u\n", rendering_intent32);
+  }
+  // ICC and RenderingIntent have the same values (0..3).
+  rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
+
   static constexpr size_t kCICPSize = 12;
   static constexpr auto kCICPSignature =
       static_cast<cmsTagSignature>(0x63696370);
@@ -992,14 +1000,6 @@ Status ColorEncoding::SetFieldsFromICC() {
                 cicp_buffer[11], this)) {
     return true;
   }
-
-  const cmsUInt32Number rendering_intent32 =
-      cmsGetHeaderRenderingIntent(profile.get());
-  if (rendering_intent32 > 3) {
-    return JXL_FAILURE("Invalid rendering intent %u\n", rendering_intent32);
-  }
-  // ICC and RenderingIntent have the same values (0..3).
-  rendering_intent = static_cast<RenderingIntent>(rendering_intent32);
 
   SetColorSpace(ColorSpaceFromProfile(profile));
   if (cmsGetColorSpace(profile.get()) == cmsSigCmykData) {
@@ -1056,16 +1056,13 @@ void* JxlCmsInit(void* init_data, size_t num_threads, size_t xsize,
   PaddedBytes icc_src, icc_dst;
   icc_src.assign(input->icc.data, input->icc.data + input->icc.size);
   ColorEncoding c_src;
-  if (!(ConvertExternalToInternalColorEncoding(input->color_encoding, &c_src) ||
-        c_src.SetICC(std::move(icc_src)))) {
+  if (!c_src.SetICC(std::move(icc_src))) {
     JXL_NOTIFY_ERROR("JxlCmsInit: failed to parse input ICC");
     return nullptr;
   }
   icc_dst.assign(output->icc.data, output->icc.data + output->icc.size);
   ColorEncoding c_dst;
-  if (!(ConvertExternalToInternalColorEncoding(output->color_encoding,
-                                               &c_dst) ||
-        c_dst.SetICC(std::move(icc_dst)))) {
+  if (!c_dst.SetICC(std::move(icc_dst))) {
     JXL_NOTIFY_ERROR("JxlCmsInit: failed to parse output ICC");
     return nullptr;
   }

@@ -68,6 +68,57 @@ function GetIteratorSync(obj) {
 
   // Step 6. Let iteratorRecord be the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
   var iteratorRecord = {
+    __proto__: null,
+    iterator,
+    nextMethod,
+    done: false
+  };
+
+  // Step 7. Return iteratorRecord.
+  return iteratorRecord;
+}
+
+// https://tc39.es/ecma262/#sec-getiterator
+function GetIterator(obj, isAsync, method) {
+  // Step 1. If hint is not present, set hint to sync.
+  // Step 2. If method is not present, then
+  if (!method) {
+    // Step 2.a. If hint is async, then
+    if (isAsync) {
+      // Step 2.a.i. Set method to ? GetMethod(obj, @@asyncIterator).
+      method = GetMethod(obj, GetBuiltinSymbol("asyncIterator"));
+
+      // Step 2.a.ii. If method is undefined, then
+      if (!method) {
+        // Step 2.a.ii.1. Let syncMethod be ? GetMethod(obj, @@iterator).
+        var syncMethod = GetMethod(obj, GetBuiltinSymbol("iterator"));
+
+        // Step 2.a.ii.2. Let syncIteratorRecord be ? GetIterator(obj, sync, syncMethod).
+        var syncIteratorRecord = GetIterator(obj, false, syncMethod);
+
+        // Step 2.a.ii.2. Return CreateAsyncFromSyncIterator(syncIteratorRecord).
+        return CreateAsyncFromSyncIterator(syncIteratorRecord.iterator, syncIteratorRecord.nextMethod);
+      }
+    } else {
+      // Step 2.b. Otherwise, set method to ? GetMethod(obj, @@iterator).
+      method = GetMethod(obj, GetBuiltinSymbol("iterator"));
+    }
+  }
+
+  // Step 3. Let iterator be ? Call(method, obj).
+  var iterator = callContentFunction(method, obj);
+
+  // Step 4. If Type(iterator) is not Object, throw a TypeError exception.
+  if (!IsObject(iterator)) {
+    ThrowTypeError(JSMSG_NOT_ITERABLE, obj === null ? "null" : typeof obj);
+  }
+
+  // Step 5. Let nextMethod be ? GetV(iterator, "next").
+  var nextMethod = iterator.next;
+
+  // Step 6. Let iteratorRecord be the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
+  var iteratorRecord = {
+    __proto__: null,
     iterator,
     nextMethod,
     done: false,

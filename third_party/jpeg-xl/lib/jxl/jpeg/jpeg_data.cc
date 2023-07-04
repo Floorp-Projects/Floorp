@@ -302,16 +302,9 @@ Status JPEGData::VisitFields(Visitor* visitor) {
                                        BitsOffset(5, 9), BitsOffset(28, 41), 0,
                                        &block_idx));
       block_idx += last_block_idx + 1;
-      if (static_cast<int>(block_idx) < last_block_idx + 1) {
-        return JXL_FAILURE("Invalid block ID: %u, last block was %d", block_idx,
-                           last_block_idx);
-      }
-      // TODO(eustas): better upper boundary could be given at this point; also
-      //               it could be applied during reset_points reading.
-      if (block_idx > (1u << 30)) {
-        // At most 8K x 8K x num_channels blocks are expected. That is,
-        // typically, 1.5 * 2^27. 2^30 should be sufficient for any sane
-        // image.
+      if (block_idx >= (3u << 26)) {
+        // At most 8K x 8K x num_channels blocks are possible in a JPEG.
+        // So valid block indices are below 3 * 2^26.
         return JXL_FAILURE("Invalid block ID: %u", block_idx);
       }
       last_block_idx = block_idx;
@@ -335,14 +328,7 @@ Status JPEGData::VisitFields(Visitor* visitor) {
                                        BitsOffset(5, 9), BitsOffset(28, 41), 0,
                                        &block_idx));
       block_idx += last_block_idx + 1;
-      if (static_cast<int>(block_idx) < last_block_idx + 1) {
-        return JXL_FAILURE("Invalid block ID: %u, last block was %d", block_idx,
-                           last_block_idx);
-      }
-      if (block_idx > (1u << 30)) {
-        // At most 8K x 8K x num_channels blocks are expected. That is,
-        // typically, 1.5 * 2^27. 2^30 should be sufficient for any sane
-        // image.
+      if (block_idx > (3u << 26)) {
         return JXL_FAILURE("Invalid block ID: %u", block_idx);
       }
       last_block_idx = block_idx;

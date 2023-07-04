@@ -651,25 +651,41 @@ Status ModularFrameEncoder::ComputeEncodingData(
     cparams_.lossy_palette = false;
   }
 
-  // if few colors, do all-channel palette before trying channel palette
-  // Logic is as follows:
-  // - if you can make a palette with few colors (threshold: 256, e.g. png8),
-  //   then you can also make channel palettes, but they will just be extra
-  //   signaling cost for almost no benefit
-  // - if the palette needs more colors, then channel palette might help to
-  //   reduce palette signaling cost
-  if (cparams_.palette_colors != 0) {
+  // Global palette
+  if (cparams_.palette_colors != 0 || cparams_.lossy_palette) {
     // all-channel palette (e.g. RGBA)
-    if (gi.channel.size() > 1) {
+    if (gi.channel.size() - gi.nb_meta_channels > 1) {
       Transform maybe_palette(TransformId::kPalette);
       maybe_palette.begin_c = gi.nb_meta_channels;
       maybe_palette.num_c = gi.channel.size() - gi.nb_meta_channels;
       maybe_palette.nb_colors =
-          std::min(std::min(256, (int)(xsize * ysize / 2)),
-                   std::abs(cparams_.palette_colors) / 4);
+          std::min((int)(xsize * ysize / 2), std::abs(cparams_.palette_colors));
       maybe_palette.ordered_palette = cparams_.palette_colors >= 0;
-      maybe_palette.lossy_palette = false;
-      do_transform(gi, maybe_palette, weighted::Header(), pool);
+      maybe_palette.lossy_palette =
+          (cparams_.lossy_palette && maybe_palette.num_c == 3);
+      if (maybe_palette.lossy_palette) {
+        maybe_palette.predictor = delta_pred_;
+      }
+      // TODO(veluca): use a custom weighted header if using the weighted
+      // predictor.
+      do_transform(gi, maybe_palette, weighted::Header(), pool,
+                   cparams_.options.zero_tokens);
+    }
+    // all-minus-one-channel palette (RGB with separate alpha, or CMY with
+    // separate K)
+    if (gi.channel.size() - gi.nb_meta_channels > 3) {
+      Transform maybe_palette_3(TransformId::kPalette);
+      maybe_palette_3.begin_c = gi.nb_meta_channels;
+      maybe_palette_3.num_c = gi.channel.size() - gi.nb_meta_channels - 1;
+      maybe_palette_3.nb_colors =
+          std::min((int)(xsize * ysize / 3), std::abs(cparams_.palette_colors));
+      maybe_palette_3.ordered_palette = cparams_.palette_colors >= 0;
+      maybe_palette_3.lossy_palette = cparams_.lossy_palette;
+      if (maybe_palette_3.lossy_palette) {
+        maybe_palette_3.predictor = delta_pred_;
+      }
+      do_transform(gi, maybe_palette_3, weighted::Header(), pool,
+                   cparams_.options.zero_tokens);
     }
   }
 
@@ -706,45 +722,6 @@ Status ModularFrameEncoder::ComputeEncodingData(
         if (ch_bitdepth > max_bitdepth) max_bitdepth = ch_bitdepth;
       } else
         max_bitdepth = orig_bitdepth;
-    }
-  }
-
-  // Global palette
-  if ((cparams_.palette_colors != 0 || cparams_.lossy_palette) &&
-      cparams_.speed_tier < SpeedTier::kFalcon) {
-    // all-channel palette (e.g. RGBA)
-    if (gi.channel.size() - gi.nb_meta_channels > 1) {
-      Transform maybe_palette(TransformId::kPalette);
-      maybe_palette.begin_c = gi.nb_meta_channels;
-      maybe_palette.num_c = gi.channel.size() - gi.nb_meta_channels;
-      maybe_palette.nb_colors =
-          std::min((int)(xsize * ysize / 8), std::abs(cparams_.palette_colors));
-      maybe_palette.ordered_palette = cparams_.palette_colors >= 0;
-      maybe_palette.lossy_palette =
-          (cparams_.lossy_palette && maybe_palette.num_c == 3);
-      if (maybe_palette.lossy_palette) {
-        maybe_palette.predictor = delta_pred_;
-      }
-      // TODO(veluca): use a custom weighted header if using the weighted
-      // predictor.
-      do_transform(gi, maybe_palette, weighted::Header(), pool,
-                   cparams_.options.zero_tokens);
-    }
-    // all-minus-one-channel palette (RGB with separate alpha, or CMY with
-    // separate K)
-    if (gi.channel.size() - gi.nb_meta_channels > 3) {
-      Transform maybe_palette_3(TransformId::kPalette);
-      maybe_palette_3.begin_c = gi.nb_meta_channels;
-      maybe_palette_3.num_c = gi.channel.size() - gi.nb_meta_channels - 1;
-      maybe_palette_3.nb_colors =
-          std::min((int)(xsize * ysize / 8), std::abs(cparams_.palette_colors));
-      maybe_palette_3.ordered_palette = cparams_.palette_colors >= 0;
-      maybe_palette_3.lossy_palette = cparams_.lossy_palette;
-      if (maybe_palette_3.lossy_palette) {
-        maybe_palette_3.predictor = delta_pred_;
-      }
-      do_transform(gi, maybe_palette_3, weighted::Header(), pool,
-                   cparams_.options.zero_tokens);
     }
   }
 

@@ -153,7 +153,7 @@ class UnderlyingSourceAlgorithmsWrapper
     return nullptr;
   }
 
-  virtual already_AddRefed<Promise> CancelCallbackImpl(
+  MOZ_CAN_RUN_SCRIPT virtual already_AddRefed<Promise> CancelCallbackImpl(
       JSContext* aCx, const Optional<JS::Handle<JS::Value>>& aReason,
       ErrorResult& aRv) {
     // cancelAlgorithm is optional, return null by default

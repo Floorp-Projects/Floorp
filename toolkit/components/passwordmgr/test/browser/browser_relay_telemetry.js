@@ -149,6 +149,9 @@ async function openRelayAC(browser) {
   await promiseHidden;
 }
 
+// Bug 1832782: On OSX opt verify mode, the test exceeds the default timeout.
+requestLongerTimeout(2);
+
 add_setup(async function () {
   await ExperimentAPI.ready();
   const cleanupExperiment = await ExperimentFakes.enrollWithFeatureConfig(

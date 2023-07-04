@@ -33,8 +33,8 @@ startTest({
   desc: "Test Background Video Doesn't Suspend When If The Video Is Not In Tree.",
   prefs: [
     [ 'media.test.video-suspend', true ],
-    [ 'media.suspend-bkgnd-video.enabled', true ],
-    [ 'media.suspend-bkgnd-video.delay-ms', MIN_DELAY ]
+    [ 'media.suspend-background-video.enabled', true ],
+    [ 'media.suspend-background-video.delay-ms', MIN_DELAY ]
   ],
   tests: gDecodeSuspendTests,
   runTest: (test, token) => {

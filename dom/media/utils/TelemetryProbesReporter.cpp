@@ -583,7 +583,7 @@ void TelemetryProbesReporter::ReportResultForVideoFrameStatistics(
     // keyframe. Report '0' if we have played for longer than the video-
     // decode-suspend delay (showing recovery would be difficult).
     const uint32_t suspendDelay_ms =
-        StaticPrefs::media_suspend_bkgnd_video_delay_ms();
+        StaticPrefs::media_suspend_background_video_delay_ms();
     if (uint32_t(aTotalPlayTimeS * 1000.0) > suspendDelay_ms) {
       Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS, key, 0);
       Telemetry::Accumulate(Telemetry::VIDEO_INTER_KEYFRAME_MAX_MS, "All"_ns,

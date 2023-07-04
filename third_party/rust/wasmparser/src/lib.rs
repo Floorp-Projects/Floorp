@@ -49,6 +49,7 @@
 /// - `@threads`: [Wasm `threads` proposal]
 /// - `@simd`: [Wasm `simd` proposal]
 /// - `@relaxed_simd`: [Wasm `relaxed-simd` proposal]
+/// - `@gc`: [Wasm `gc` proposal]
 ///
 /// [Wasm `expection-handling` proposal]:
 /// https://github.com/WebAssembly/exception-handling
@@ -76,6 +77,9 @@
 ///
 /// [Wasm `relaxed-simd` proposal]:
 /// https://github.com/WebAssembly/relaxed-simd
+///
+/// [Wasm `gc` proposal]:
+/// https://github.com/WebAssembly/gc
 ///
 /// ```
 /// macro_rules! define_visit_operator {
@@ -305,6 +309,13 @@ macro_rules! for_each_operator {
             @sign_extension I64Extend8S => visit_i64_extend8_s
             @sign_extension I64Extend16S => visit_i64_extend16_s
             @sign_extension I64Extend32S => visit_i64_extend32_s
+
+            // 0xFB prefixed operators
+            // Garbage Collection
+            // http://github.com/WebAssembly/gc
+            @gc I31New => visit_i31_new
+            @gc I31GetS => visit_i31_get_s
+            @gc I31GetU => visit_i31_get_u
 
             // 0xFC operators
             // Non-trapping Float-to-int Conversions
@@ -679,8 +690,8 @@ macro_rules! for_each_operator {
             @relaxed_simd I32x4RelaxedDotI8x16I7x16AddS => visit_i32x4_relaxed_dot_i8x16_i7x16_add_s
 
             // Typed Function references
-            @function_references CallRef { hty: $crate::HeapType } => visit_call_ref
-            @function_references ReturnCallRef { hty: $crate::HeapType } => visit_return_call_ref
+            @function_references CallRef { type_index: u32 } => visit_call_ref
+            @function_references ReturnCallRef { type_index: u32 } => visit_return_call_ref
             @function_references RefAsNonNull => visit_ref_as_non_null
             @function_references BrOnNull { relative_depth: u32 } => visit_br_on_null
             @function_references BrOnNonNull { relative_depth: u32 } => visit_br_on_non_null

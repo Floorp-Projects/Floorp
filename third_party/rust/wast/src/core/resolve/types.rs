@@ -218,6 +218,7 @@ impl<'a> Expander<'a> {
             name: None,
             def: key.to_def(span),
             parent: None,
+            final_type: None,
         }));
         let idx = Index::Id(id);
         key.insert(self, idx);

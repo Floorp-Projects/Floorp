@@ -195,6 +195,10 @@ export class AddressParser {
    * @returns {StructuredStreetAddress}
    */
   static parseStreetAddress(address) {
+    if (!address) {
+      return null;
+    }
+
     const separator = "(\\s|,|$)";
 
     const regexpes = [

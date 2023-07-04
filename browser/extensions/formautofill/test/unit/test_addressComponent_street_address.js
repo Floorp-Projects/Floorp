@@ -39,7 +39,7 @@ const COMPARE_TESTS = [
   ["123 Main St. Apt 4, Floor 2", "123 Main St. Floor 2, Apt 4", DIFFERENT], //
 ];
 
-const TEST_FIELD_NAME = "StreetAddress";
+const TEST_FIELD_NAME = "street-address";
 
 add_setup(async () => {});
 

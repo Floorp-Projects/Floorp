@@ -30,6 +30,27 @@ namespace {
 // Any valid encoding is larger (ensures codecs can read the first few bytes)
 constexpr size_t kMinBytes = 9;
 
+void BasenameAndExtension(std::string path, std::string* basename,
+                          std::string* extension) {
+  // Pattern: file.jxl
+  size_t pos = path.find_last_of('.');
+  if (pos < path.size()) {
+    *basename = path.substr(0, pos);
+    *extension = path.substr(pos);
+    return;
+  }
+  // Pattern: jxl:-
+  pos = path.find_first_of(':');
+  if (pos < path.size()) {
+    *basename = path.substr(pos + 1);
+    *extension = "." + path.substr(0, pos);
+    return;
+  }
+  // Extension not found
+  *basename = path;
+  *extension = "";
+}
+
 }  // namespace
 
 std::vector<Codec> AvailableCodecs() {
@@ -51,30 +72,36 @@ std::vector<Codec> AvailableCodecs() {
   return out;
 }
 
-Codec CodecFromExtension(std::string extension,
-                         size_t* JXL_RESTRICT bits_per_sample) {
-  std::transform(
-      extension.begin(), extension.end(), extension.begin(),
-      [](char c) { return std::tolower(c, std::locale::classic()); });
-  if (extension == ".png") return Codec::kPNG;
+Codec CodecFromPath(std::string path, size_t* JXL_RESTRICT bits_per_sample,
+                    std::string* basename, std::string* extension) {
+  std::string base;
+  std::string ext;
+  BasenameAndExtension(path, &base, &ext);
+  if (basename) *basename = base;
+  if (extension) *extension = ext;
 
-  if (extension == ".jpg") return Codec::kJPG;
-  if (extension == ".jpeg") return Codec::kJPG;
+  std::transform(ext.begin(), ext.end(), ext.begin(), [](char c) {
+    return std::tolower(c, std::locale::classic());
+  });
+  if (ext == ".png") return Codec::kPNG;
 
-  if (extension == ".pgx") return Codec::kPGX;
+  if (ext == ".jpg") return Codec::kJPG;
+  if (ext == ".jpeg") return Codec::kJPG;
 
-  if (extension == ".pam") return Codec::kPNM;
-  if (extension == ".pnm") return Codec::kPNM;
-  if (extension == ".pgm") return Codec::kPNM;
-  if (extension == ".ppm") return Codec::kPNM;
-  if (extension == ".pfm") {
+  if (ext == ".pgx") return Codec::kPGX;
+
+  if (ext == ".pam") return Codec::kPNM;
+  if (ext == ".pnm") return Codec::kPNM;
+  if (ext == ".pgm") return Codec::kPNM;
+  if (ext == ".ppm") return Codec::kPNM;
+  if (ext == ".pfm") {
     if (bits_per_sample != nullptr) *bits_per_sample = 32;
     return Codec::kPNM;
   }
 
-  if (extension == ".gif") return Codec::kGIF;
+  if (ext == ".gif") return Codec::kGIF;
 
-  if (extension == ".exr") return Codec::kEXR;
+  if (ext == ".exr") return Codec::kEXR;
 
   return Codec::kUnknown;
 }

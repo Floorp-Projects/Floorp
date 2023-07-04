@@ -36,6 +36,10 @@ SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtUnmapViewOfSection64(HANDLE process,
 // -----------------------------------------------------------------------
 // Interceptors without IPC.
 
+// Interception of NtImpersonateAnonymousToken on the child process.
+SANDBOX_INTERCEPT NTSTATUS WINAPI
+TargetNtImpersonateAnonymousToken64(HANDLE thread);
+
 // Interception of NtSetInformationThread on the child process.
 SANDBOX_INTERCEPT NTSTATUS WINAPI
 TargetNtSetInformationThread64(HANDLE thread,

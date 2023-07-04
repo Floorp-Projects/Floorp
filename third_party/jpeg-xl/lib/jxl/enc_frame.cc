@@ -85,141 +85,6 @@ PassDefinition progressive_passes_dc_quant_ac_full_ac[] = {
      /*suitable_for_downsampling_of_at_least=*/0},
 };
 
-void ClusterGroups(PassesEncoderState* enc_state) {
-  if (enc_state->shared.frame_header.passes.num_passes > 1) {
-    // TODO(veluca): implement this for progressive modes.
-    return;
-  }
-  // This only considers pass 0 for now.
-  std::vector<uint8_t> context_map;
-  EntropyEncodingData codes;
-  auto& ac = enc_state->passes[0].ac_tokens;
-  size_t limit = std::ceil(std::sqrt(ac.size()));
-  if (limit == 1) return;
-  size_t num_contexts = enc_state->shared.block_ctx_map.NumACContexts();
-  std::vector<float> costs(ac.size());
-  HistogramParams params;
-  params.uint_method = HistogramParams::HybridUintMethod::kNone;
-  params.lz77_method = HistogramParams::LZ77Method::kNone;
-  params.ans_histogram_strategy =
-      HistogramParams::ANSHistogramStrategy::kApproximate;
-  size_t max = 0;
-  auto token_cost = [&](std::vector<std::vector<Token>>& tokens, size_t num_ctx,
-                        bool estimate = true) {
-    // TODO(veluca): not estimating is very expensive.
-    BitWriter writer;
-    size_t c = BuildAndEncodeHistograms(
-        params, num_ctx, tokens, &codes, &context_map,
-        estimate ? nullptr : &writer, 0, /*aux_out=*/0);
-    if (estimate) return c;
-    for (size_t i = 0; i < tokens.size(); i++) {
-      WriteTokens(tokens[i], codes, context_map, &writer, 0, nullptr);
-    }
-    return writer.BitsWritten();
-  };
-  for (size_t i = 0; i < ac.size(); i++) {
-    std::vector<std::vector<Token>> tokens{ac[i]};
-    costs[i] =
-        token_cost(tokens, enc_state->shared.block_ctx_map.NumACContexts());
-    if (costs[i] > costs[max]) {
-      max = i;
-    }
-  }
-  auto dist = [&](int i, int j) {
-    std::vector<std::vector<Token>> tokens{ac[i], ac[j]};
-    return token_cost(tokens, num_contexts) - costs[i] - costs[j];
-  };
-  std::vector<size_t> out{max};
-  std::vector<float> dists(ac.size());
-  size_t farthest = 0;
-  for (size_t i = 0; i < ac.size(); i++) {
-    if (i == max) continue;
-    dists[i] = dist(max, i);
-    if (dists[i] > dists[farthest]) {
-      farthest = i;
-    }
-  }
-
-  while (dists[farthest] > 0 && out.size() < limit) {
-    out.push_back(farthest);
-    dists[farthest] = 0;
-    enc_state->histogram_idx[farthest] = out.size() - 1;
-    for (size_t i = 0; i < ac.size(); i++) {
-      float d = dist(out.back(), i);
-      if (d < dists[i]) {
-        dists[i] = d;
-        enc_state->histogram_idx[i] = out.size() - 1;
-      }
-      if (dists[i] > dists[farthest]) {
-        farthest = i;
-      }
-    }
-  }
-
-  std::vector<size_t> remap(out.size());
-  std::iota(remap.begin(), remap.end(), 0);
-  for (size_t i = 0; i < enc_state->histogram_idx.size(); i++) {
-    enc_state->histogram_idx[i] = remap[enc_state->histogram_idx[i]];
-  }
-  auto remap_cost = [&](std::vector<size_t> remap) {
-    std::vector<size_t> re_remap(remap.size(), remap.size());
-    size_t r = 0;
-    for (size_t i = 0; i < remap.size(); i++) {
-      if (re_remap[remap[i]] == remap.size()) {
-        re_remap[remap[i]] = r++;
-      }
-      remap[i] = re_remap[remap[i]];
-    }
-    auto tokens = ac;
-    size_t max_hist = 0;
-    for (size_t i = 0; i < tokens.size(); i++) {
-      for (size_t j = 0; j < tokens[i].size(); j++) {
-        size_t hist = remap[enc_state->histogram_idx[i]];
-        tokens[i][j].context += hist * num_contexts;
-        max_hist = std::max(hist + 1, max_hist);
-      }
-    }
-    return token_cost(tokens, max_hist * num_contexts, /*estimate=*/false);
-  };
-
-  for (size_t src = 0; src < out.size(); src++) {
-    float cost = remap_cost(remap);
-    size_t best = src;
-    for (size_t j = src + 1; j < out.size(); j++) {
-      if (remap[src] == remap[j]) continue;
-      auto remap_c = remap;
-      std::replace(remap_c.begin(), remap_c.end(), remap[src], remap[j]);
-      float c = remap_cost(remap_c);
-      if (c < cost) {
-        best = j;
-        cost = c;
-      }
-    }
-    if (src != best) {
-      std::replace(remap.begin(), remap.end(), remap[src], remap[best]);
-    }
-  }
-  std::vector<size_t> re_remap(remap.size(), remap.size());
-  size_t r = 0;
-  for (size_t i = 0; i < remap.size(); i++) {
-    if (re_remap[remap[i]] == remap.size()) {
-      re_remap[remap[i]] = r++;
-    }
-    remap[i] = re_remap[remap[i]];
-  }
-
-  enc_state->shared.num_histograms =
-      *std::max_element(remap.begin(), remap.end()) + 1;
-  for (size_t i = 0; i < enc_state->histogram_idx.size(); i++) {
-    enc_state->histogram_idx[i] = remap[enc_state->histogram_idx[i]];
-  }
-  for (size_t i = 0; i < ac.size(); i++) {
-    for (size_t j = 0; j < ac[i].size(); j++) {
-      ac[i][j].context += enc_state->histogram_idx[i] * num_contexts;
-    }
-  }
-}
-
 uint64_t FrameFlagsFromParams(const CompressParams& cparams) {
   uint64_t flags = 0;
 
@@ -297,7 +162,17 @@ Status MakeFrameHeader(const CompressParams& cparams,
 
   if (cparams.modular_mode) {
     frame_header->encoding = FrameEncoding::kModular;
-    frame_header->group_size_shift = cparams.modular_group_size_shift;
+    if (cparams.modular_group_size_shift == -1) {
+      frame_header->group_size_shift = 1;
+      // no point using groups when only one group is full and the others are
+      // less than half full: multithreading will not really help much, while
+      // compression does suffer
+      if (ib.xsize() <= 400 && ib.ysize() <= 400) {
+        frame_header->group_size_shift = 2;
+      }
+    } else {
+      frame_header->group_size_shift = cparams.modular_group_size_shift;
+    }
   }
 
   frame_header->chroma_subsampling = ib.chroma_subsampling;
@@ -1059,9 +934,6 @@ class LossyFrameEncoder {
     JXL_RETURN_IF_ERROR(DequantMatricesEncode(&enc_state_->shared.matrices,
                                               writer, kLayerQuant, aux_out_,
                                               modular_frame_encoder));
-    if (enc_state_->cparams.speed_tier <= SpeedTier::kTortoise) {
-      if (!doing_jpeg_recompression) ClusterGroups(enc_state_);
-    }
     size_t num_histo_bits =
         CeilLog2Nonzero(enc_state_->shared.frame_dim.num_groups);
     if (num_histo_bits != 0) {
@@ -1229,7 +1101,7 @@ Status EncodeFrame(const CompressParams& cparams_orig,
             }
             for (Predictor pred : {Predictor::Zero, Predictor::Variable}) {
               cparams_attempt.options.predictor = pred;
-              for (int g : {0, 1, 3}) {
+              for (int g : {0, -1, 3}) {
                 cparams_attempt.modular_group_size_shift = g;
                 for (Override patches : {Override::kDefault, Override::kOff}) {
                   cparams_attempt.patches = patches;
@@ -1503,9 +1375,11 @@ Status EncodeFrame(const CompressParams& cparams_orig,
   }
   if (cparams.ec_resampling != 1 && !cparams.already_downsampled) {
     extra_channels = &extra_channels_storage;
-    for (size_t i = 0; i < ib.extra_channels().size(); i++) {
-      extra_channels_storage.emplace_back(CopyImage(ib.extra_channels()[i]));
-      DownsampleImage(&extra_channels_storage.back(), cparams.ec_resampling);
+    for (const ImageF& ec : ib.extra_channels()) {
+      ImageF d_ec(ec.xsize(), ec.ysize());
+      CopyImageTo(ec, &d_ec);
+      DownsampleImage(&d_ec, cparams.ec_resampling);
+      extra_channels_storage.emplace_back(std::move(d_ec));
     }
   }
   // needs to happen *AFTER* VarDCT-ComputeEncodingData.

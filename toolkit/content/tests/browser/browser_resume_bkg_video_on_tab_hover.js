@@ -94,9 +94,9 @@ add_task(async function setup_test_preference() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.block-autoplay-until-in-foreground", false],
-      ["media.suspend-bkgnd-video.enabled", true],
-      ["media.suspend-bkgnd-video.delay-ms", 0],
-      ["media.resume-bkgnd-video-on-tabhover", true],
+      ["media.suspend-background-video.enabled", true],
+      ["media.suspend-background-video.delay-ms", 0],
+      ["media.resume-background-video-on-tabhover", true],
     ],
   });
 });

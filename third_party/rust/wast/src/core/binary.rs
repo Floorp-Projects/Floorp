@@ -108,8 +108,8 @@ impl Encoder<'_> {
 
     fn custom_sections(&mut self, place: CustomPlace) {
         for entry in self.customs.iter() {
-            if entry.place == place {
-                self.section(0, &(entry.name, entry));
+            if entry.place() == place {
+                self.section(0, &(entry.name(), entry));
             }
         }
     }
@@ -173,10 +173,25 @@ impl Encode for RecOrType<'_> {
 
 impl Encode for Type<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
-        if let Some(parent) = &self.parent {
-            e.push(0x50);
-            (1 as usize).encode(e);
-            parent.encode(e);
+        match (&self.parent, self.final_type) {
+            (Some(parent), Some(true)) => {
+                // Type is final with a supertype
+                e.push(0x4e);
+                e.push(0x01);
+                parent.encode(e);
+            }
+            (Some(parent), Some(false) | None) => {
+                // Type is not final and has a declared supertype
+                e.push(0x50);
+                e.push(0x01);
+                parent.encode(e);
+            }
+            (None, Some(false)) => {
+                // Sub was used without any declared supertype
+                e.push(0x50);
+                e.push(0x00);
+            }
+            (None, _) => {} // No supertype, sub wasn't used
         }
         match &self.def {
             TypeDef::Func(func) => {
@@ -1044,9 +1059,24 @@ impl<'a> Encode for SelectTypes<'a> {
 
 impl Encode for Custom<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
+        match self {
+            Custom::Raw(r) => r.encode(e),
+            Custom::Producers(p) => p.encode(e),
+        }
+    }
+}
+
+impl Encode for RawCustomSection<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
         for list in self.data.iter() {
             e.extend_from_slice(list);
         }
+    }
+}
+
+impl Encode for Producers<'_> {
+    fn encode(&self, e: &mut Vec<u8>) {
+        self.fields.encode(e);
     }
 }
 
@@ -1161,7 +1191,11 @@ impl Encode for BrOnCast<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         e.push(0xfb);
         e.push(0x4f);
-        e.push(br_on_cast_flags(false, self.from_type.nullable, self.to_type.nullable));
+        e.push(br_on_cast_flags(
+            false,
+            self.from_type.nullable,
+            self.to_type.nullable,
+        ));
         self.label.encode(e);
         self.from_type.heap.encode(e);
         self.to_type.heap.encode(e);
@@ -1172,7 +1206,11 @@ impl Encode for BrOnCastFail<'_> {
     fn encode(&self, e: &mut Vec<u8>) {
         e.push(0xfb);
         e.push(0x4f);
-        e.push(br_on_cast_flags(true, self.from_type.nullable, self.to_type.nullable));
+        e.push(br_on_cast_flags(
+            true,
+            self.from_type.nullable,
+            self.to_type.nullable,
+        ));
         self.label.encode(e);
         self.from_type.heap.encode(e);
         self.to_type.heap.encode(e);

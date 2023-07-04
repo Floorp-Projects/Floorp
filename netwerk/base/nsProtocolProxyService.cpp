@@ -1749,8 +1749,9 @@ nsresult nsProtocolProxyService::InsertFilterLink(RefPtr<FilterLink>&& link) {
     return NS_ERROR_FAILURE;
   }
 
-  mFilters.AppendElement(link);
-  mFilters.Sort(ProxyFilterPositionComparator());
+  // If we add a new element with the same position as an existing one, we want
+  // to preserve the insertion order to avoid surprises.
+  mFilters.InsertElementSorted(link, ProxyFilterPositionComparator());
 
   NotifyProxyConfigChangedInternal();
 

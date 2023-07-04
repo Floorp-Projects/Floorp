@@ -5,7 +5,6 @@ ifdef_out_FromStringInternal.patch
 add_option_to_not_use_restricting_sids.patch
 ifdef_out_SequenceChecker_code.patch
 allow_read_only_all_paths_rule.patch
-revert_TargetNtSetInformationThread_change.patch
 mingw_copy_s.patch
 mingw_operator_new.patch
 mingw_cast_getprocaddress.patch
@@ -31,3 +30,4 @@ broker_complex_line_breaks.patch
 allow_reparse_points.patch
 derive_sid_from_name.patch
 add_loongarch_defines.patch
+block_NtImpersonateAnonymousToken_before_LowerToken.patch

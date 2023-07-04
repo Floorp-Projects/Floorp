@@ -16,14 +16,11 @@ import {
 } from "../../../utils/source";
 import { createLocation } from "../../../utils/location";
 import {
-  getBreakpointsForSource,
   getContext,
   getFirstSourceActorForGeneratedSource,
 } from "../../../selectors";
 
 import SourceIcon from "../../shared/SourceIcon";
-
-import showContextMenu from "./BreakpointHeadingsContextMenu";
 
 class BreakpointHeading extends PureComponent {
   static get propTypes() {
@@ -35,8 +32,10 @@ class BreakpointHeading extends PureComponent {
       selectSource: PropTypes.func.isRequired,
     };
   }
-  onContextMenu = e => {
-    showContextMenu({ ...this.props, contextMenuEvent: e });
+  onContextMenu = event => {
+    event.preventDefault();
+
+    this.props.showBreakpointHeadingContextMenu(event, this.props.source);
   };
 
   render() {
@@ -76,13 +75,10 @@ class BreakpointHeading extends PureComponent {
 
 const mapStateToProps = (state, { source }) => ({
   cx: getContext(state),
-  breakpointsForSource: getBreakpointsForSource(state, source.id),
   firstSourceActor: getFirstSourceActorForGeneratedSource(state, source.id),
 });
 
 export default connect(mapStateToProps, {
   selectSource: actions.selectSource,
-  enableBreakpointsInSource: actions.enableBreakpointsInSource,
-  disableBreakpointsInSource: actions.disableBreakpointsInSource,
-  removeBreakpointsInSource: actions.removeBreakpointsInSource,
+  showBreakpointHeadingContextMenu: actions.showBreakpointHeadingContextMenu,
 })(BreakpointHeading);

@@ -17,11 +17,7 @@ import { createHeadlessEditor } from "../../../utils/editor/create-editor";
 
 import { makeBreakpointId } from "../../../utils/breakpoint";
 
-import {
-  getSelectedSource,
-  getBreakpointSources,
-  getBlackBoxRanges,
-} from "../../../selectors";
+import { getSelectedSource, getBreakpointSources } from "../../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
@@ -35,7 +31,6 @@ class Breakpoints extends Component {
       selectedSource: PropTypes.object,
       shouldPauseOnCaughtExceptions: PropTypes.bool.isRequired,
       shouldPauseOnExceptions: PropTypes.bool.isRequired,
-      blackboxedRanges: PropTypes.array.isRequired,
     };
   }
 
@@ -58,12 +53,22 @@ class Breakpoints extends Component {
     this.headlessEditor = null;
   }
 
+  togglePauseOnException = () => {
+    this.props.pauseOnExceptions(!this.props.shouldPauseOnExceptions, false);
+  };
+
+  togglePauseOnCaughtException = () => {
+    this.props.pauseOnExceptions(
+      true,
+      !this.props.shouldPauseOnCaughtExceptions
+    );
+  };
+
   renderExceptionsOptions() {
     const {
       breakpointSources,
       shouldPauseOnExceptions,
       shouldPauseOnCaughtExceptions,
-      pauseOnExceptions,
     } = this.props;
 
     const isEmpty = !breakpointSources.length;
@@ -78,7 +83,7 @@ class Breakpoints extends Component {
           className="breakpoints-exceptions"
           label={L10N.getStr("pauseOnExceptionsItem2")}
           isChecked={shouldPauseOnExceptions}
-          onChange={() => pauseOnExceptions(!shouldPauseOnExceptions, false)}
+          onChange={this.togglePauseOnException}
         />
 
         {shouldPauseOnExceptions && (
@@ -86,9 +91,7 @@ class Breakpoints extends Component {
             className="breakpoints-exceptions-caught"
             label={L10N.getStr("pauseOnCaughtExceptionsItem")}
             isChecked={shouldPauseOnCaughtExceptions}
-            onChange={() =>
-              pauseOnExceptions(true, !shouldPauseOnCaughtExceptions)
-            }
+            onChange={this.togglePauseOnCaughtException}
           />
         )}
       </div>
@@ -96,7 +99,7 @@ class Breakpoints extends Component {
   }
 
   renderBreakpoints() {
-    const { breakpointSources, selectedSource, blackboxedRanges } = this.props;
+    const { breakpointSources, selectedSource } = this.props;
     if (!breakpointSources.length) {
       return null;
     }
@@ -117,8 +120,6 @@ class Breakpoints extends Component {
               <Breakpoint
                 breakpoint={breakpoint}
                 source={source}
-                blackboxedRangesForSource={blackboxedRanges[source.url]}
-                selectedSource={selectedSource}
                 editor={editor}
                 key={makeBreakpointId(
                   getSelectedLocation(breakpoint, selectedSource)
@@ -144,7 +145,6 @@ class Breakpoints extends Component {
 const mapStateToProps = state => ({
   breakpointSources: getBreakpointSources(state),
   selectedSource: getSelectedSource(state),
-  blackboxedRanges: getBlackBoxRanges(state),
 });
 
 export default connect(mapStateToProps, {

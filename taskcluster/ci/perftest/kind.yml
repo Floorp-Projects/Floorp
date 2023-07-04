@@ -24,6 +24,7 @@ job-defaults:
     attributes:
         retrigger: true
     run-on-projects: []
+    use-system-python: false
     treeherder:
         kind: other
         tier: 3

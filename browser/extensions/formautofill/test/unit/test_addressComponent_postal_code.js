@@ -40,7 +40,7 @@ const COMPARE_TESTS = [
   ["12345-1234", "1234", A_CONTAINS_B], // B is invalid
 ];
 
-const TEST_FIELD_NAME = "PostalCode";
+const TEST_FIELD_NAME = "postal-code";
 
 add_setup(async () => {});
 

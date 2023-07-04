@@ -5,14 +5,15 @@
 
 #include "lib/jxl/test_utils.h"
 
+#include <fstream>
 #include <memory>
 #include <string>
+#include <vector>
 
+#include "lib/extras/metrics.h"
 #include "lib/extras/packed_image_convert.h"
-#include "lib/jxl/base/file_io.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
-#include "lib/jxl/enc_butteraugli_pnorm.h"
 #include "lib/jxl/enc_cache.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_external_image.h"
@@ -40,12 +41,18 @@ std::string GetTestDataPath(const std::string& filename) {
 
 PaddedBytes ReadTestData(const std::string& filename) {
   std::string full_path = GetTestDataPath(filename);
-  PaddedBytes data;
   fprintf(stderr, "ReadTestData %s\n", full_path.c_str());
-  JXL_CHECK(jxl::ReadFile(full_path, &data));
+  std::ifstream file(full_path, std::ios::binary);
+  std::vector<char> str((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+  JXL_CHECK(file.good());
+  const uint8_t* raw = reinterpret_cast<const uint8_t*>(str.data());
+  std::vector<uint8_t> data(raw, raw + str.size());
   printf("Test data %s is %d bytes long.\n", filename.c_str(),
          static_cast<int>(data.size()));
-  return data;
+  PaddedBytes result;
+  result.append(data);
+  return result;
 }
 
 Status DecodeFile(extras::JXLDecompressParams dparams,

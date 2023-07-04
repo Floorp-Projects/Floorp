@@ -11,7 +11,6 @@
 #endif
 
 #include <cmath>
-
 #include <hwy/aligned_allocator.h>
 #include <hwy/highway.h>
 

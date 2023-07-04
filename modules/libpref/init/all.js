@@ -906,7 +906,6 @@ pref("javascript.options.wasm_trustedprincipals", true);
 pref("javascript.options.wasm_verbose",           false);
 pref("javascript.options.wasm_baselinejit",       true);
 
-pref("javascript.options.parallel_parsing", true);
 pref("javascript.options.source_pragmas",    true);
 
 pref("javascript.options.asyncstack", true);

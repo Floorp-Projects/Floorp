@@ -918,15 +918,7 @@ void nsHttpHandler::InitUserAgentComponents() {
     mOscpu = buf.get();
   }
 #elif defined(XP_MACOSX)
-  SInt32 majorVersion = nsCocoaFeatures::macOSVersionMajor();
-  SInt32 minorVersion = nsCocoaFeatures::macOSVersionMinor();
-
-  // Cap the reported macOS version at 10.15 (like Safari) to avoid breaking
-  // sites that assume the UA's macOS version always begins with "10.".
-  int uaVersion = (majorVersion >= 11 || minorVersion > 15) ? 15 : minorVersion;
-
-  // Always return an "Intel" UA string, even on ARM64 macOS like Safari does.
-  mOscpu = nsPrintfCString("Intel Mac OS X 10.%d", uaVersion);
+  mOscpu.AssignLiteral("Intel Mac OS X 10.15");
 #elif defined(XP_UNIX)
   struct utsname name {};
   int ret = uname(&name);

@@ -14,6 +14,7 @@
 #include "lib/jpegli/bitstream.h"
 #include "lib/jpegli/color_transform.h"
 #include "lib/jpegli/downsample.h"
+#include "lib/jpegli/encode_finish.h"
 #include "lib/jpegli/encode_internal.h"
 #include "lib/jpegli/encode_streaming.h"
 #include "lib/jpegli/entropy_coding.h"
@@ -72,6 +73,10 @@ void InitializeCompressParams(j_compress_ptr cinfo) {
   cinfo->min_DCT_h_scaled_size = DCTSIZE;
   cinfo->min_DCT_v_scaled_size = DCTSIZE;
 #endif
+  cinfo->master->psnr_target = 0.0f;
+  cinfo->master->psnr_tolerance = 0.01f;
+  cinfo->master->min_distance = 0.1f;
+  cinfo->master->max_distance = 25.0f;
 }
 
 float LinearQualityToDistance(int scale_factor) {
@@ -381,6 +386,9 @@ bool IsStreamingSupported(j_compress_ptr cinfo) {
   if (cinfo->num_scans > 1) {
     return false;
   }
+  if (cinfo->master->psnr_target > 0) {
+    return false;
+  }
   return true;
 }
 
@@ -454,13 +462,21 @@ void AllocateBuffers(j_compress_ptr cinfo) {
         Allocate<float>(cinfo, xsize_blocks * DCTSIZE + 8, JPOOL_IMAGE_ALIGNED);
     m->fuzzy_erosion_tmp.Allocate(cinfo, 2, xsize_padded);
     m->pre_erosion.Allocate(cinfo, 6 * cinfo->max_v_samp_factor, xsize_padded);
-    m->quant_field.Allocate(cinfo, cinfo->max_v_samp_factor, xsize_blocks);
-    for (int c = 0; c < cinfo->num_components; ++c) {
-      m->zero_bias_offset[c] =
-          Allocate<float>(cinfo, DCTSIZE2, JPOOL_IMAGE_ALIGNED);
-      m->zero_bias_mul[c] =
-          Allocate<float>(cinfo, DCTSIZE2, JPOOL_IMAGE_ALIGNED);
+    size_t qf_height = cinfo->max_v_samp_factor;
+    if (m->psnr_target > 0) {
+      qf_height *= cinfo->total_iMCU_rows;
     }
+    m->quant_field.Allocate(cinfo, qf_height, xsize_blocks);
+  } else {
+    m->quant_field.Allocate(cinfo, 1, m->xsize_blocks);
+    m->quant_field.FillRow(0, 0, m->xsize_blocks);
+  }
+  for (int c = 0; c < cinfo->num_components; ++c) {
+    m->zero_bias_offset[c] =
+        Allocate<float>(cinfo, DCTSIZE2, JPOOL_IMAGE_ALIGNED);
+    m->zero_bias_mul[c] = Allocate<float>(cinfo, DCTSIZE2, JPOOL_IMAGE_ALIGNED);
+    memset(m->zero_bias_mul[c], 0, DCTSIZE2 * sizeof(float));
+    memset(m->zero_bias_offset[c], 0, DCTSIZE2 * sizeof(float));
   }
 }
 
@@ -481,6 +497,7 @@ void InitProgressMonitor(j_compress_ptr cinfo) {
 // Common setup code between streaming and transcoding code paths. Called in
 // both jpegli_start_compress() and jpegli_write_coefficients().
 void InitCompress(j_compress_ptr cinfo, boolean write_all_tables) {
+  jpeg_comp_master* m = cinfo->master;
   (*cinfo->err->reset_error_mgr)(reinterpret_cast<j_common_ptr>(cinfo));
   ProcessCompressionParams(cinfo);
   InitProgressMonitor(cinfo);
@@ -491,7 +508,9 @@ void InitCompress(j_compress_ptr cinfo, boolean write_all_tables) {
       ChooseColorTransform(cinfo);
       ChooseDownsampleMethods(cinfo);
     }
-    InitQuantizer(cinfo);
+    QuantPass pass = m->psnr_target > 0 ? QuantPass::SEARCH_FIRST_PASS
+                                        : QuantPass::NO_SEARCH;
+    InitQuantizer(cinfo, pass);
   }
   if (write_all_tables) {
     jpegli_suppress_tables(cinfo, FALSE);
@@ -503,7 +522,6 @@ void InitCompress(j_compress_ptr cinfo, boolean write_all_tables) {
   (*cinfo->dest->init_destination)(cinfo);
   WriteFileHeader(cinfo);
   JpegBitWriterInit(cinfo);
-  jpeg_comp_master* m = cinfo->master;
   m->next_iMCU_row = 0;
   m->last_restart_interval = 0;
   m->next_dht_index = 0;
@@ -604,14 +622,11 @@ void ProcessiMCURows(j_compress_ptr cinfo) {
 //
 
 void ZigZagShuffleBlocks(j_compress_ptr cinfo) {
-  jpeg_comp_master* m = cinfo->master;
   JCOEF tmp[DCTSIZE2];
   for (int c = 0; c < cinfo->num_components; ++c) {
     jpeg_component_info* comp = &cinfo->comp_info[c];
     for (JDIMENSION by = 0; by < comp->height_in_blocks; ++by) {
-      JBLOCKARRAY ba = (*cinfo->mem->access_virt_barray)(
-          reinterpret_cast<j_common_ptr>(cinfo), m->coeff_buffers[c], by, 1,
-          true);
+      JBLOCKARRAY ba = GetBlockRow(cinfo, c, by);
       for (JDIMENSION bx = 0; bx < comp->width_in_blocks; ++bx) {
         JCOEF* block = &ba[0][bx][0];
         for (int k = 0; k < DCTSIZE2; ++k) {
@@ -659,8 +674,8 @@ void jpegli_CreateCompress(j_compress_ptr cinfo, int version,
   memset(cinfo->arith_dc_U, 0, sizeof(cinfo->arith_dc_U));
   memset(cinfo->arith_ac_K, 0, sizeof(cinfo->arith_ac_K));
   cinfo->write_Adobe_marker = false;
-  jpegli::InitializeCompressParams(cinfo);
   cinfo->master = jpegli::Allocate<jpeg_comp_master>(cinfo, 1);
+  jpegli::InitializeCompressParams(cinfo);
   cinfo->master->force_baseline = true;
   cinfo->master->xyb_mode = false;
   cinfo->master->cicp_transfer_function = 2;  // unknown transfer function code
@@ -805,6 +820,15 @@ float jpegli_quality_to_distance(int quality) {
           : quality >= 30 ? 0.1f + (100 - quality) * 0.09f
                           : 53.0f / 3000.0f * quality * quality -
                                 23.0f / 20.0f * quality + 25.0f);
+}
+
+void jpegli_set_psnr(j_compress_ptr cinfo, float psnr, float tolerance,
+                     float min_distance, float max_distance) {
+  CheckState(cinfo, jpegli::kEncStart);
+  cinfo->master->psnr_target = psnr;
+  cinfo->master->psnr_tolerance = tolerance;
+  cinfo->master->min_distance = min_distance;
+  cinfo->master->max_distance = max_distance;
 }
 
 void jpegli_set_quality(j_compress_ptr cinfo, int quality,
@@ -1182,6 +1206,10 @@ void jpegli_finish_compress(j_compress_ptr cinfo) {
     // Zig-zag shuffle all the blocks. For non-transcoding case it was already
     // done in EncodeiMCURow().
     jpegli::ZigZagShuffleBlocks(cinfo);
+  }
+
+  if (m->psnr_target > 0) {
+    jpegli::QuantizetoPSNR(cinfo);
   }
 
   const bool tokens_done = jpegli::IsStreamingSupported(cinfo);
