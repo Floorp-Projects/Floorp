@@ -189,11 +189,31 @@ void JitScript::trace(JSTracer* trc) {
   }
 }
 
+void JitScript::traceWeak(JSTracer* trc) {
+  icScript_.traceWeak(trc);
+
+  if (hasInliningRoot()) {
+    inliningRoot()->traceWeak(trc);
+  }
+
+  if (hasIonScript()) {
+    ionScript()->traceWeak(trc);
+  }
+}
+
 void ICScript::trace(JSTracer* trc) {
   // Mark all IC stub codes hanging off the IC stub entries.
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& ent = icEntry(i);
     ent.trace(trc);
+  }
+}
+
+void ICScript::traceWeak(JSTracer* trc) {
+  // Mark all IC stub codes hanging off the IC stub entries.
+  for (size_t i = 0; i < numICEntries(); i++) {
+    ICEntry& ent = icEntry(i);
+    ent.traceWeak(trc);
   }
 }
 

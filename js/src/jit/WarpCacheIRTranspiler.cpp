@@ -422,6 +422,9 @@ bool WarpCacheIRTranspiler::emitGuardAnyClass(ObjOperandId objId,
 bool WarpCacheIRTranspiler::emitGuardShape(ObjOperandId objId,
                                            uint32_t shapeOffset) {
   MDefinition* def = getOperand(objId);
+
+  // No read barrier is required because snapshot data is not weak and is traced
+  // as part of IonCompileTask.
   Shape* shape = shapeStubField(shapeOffset);
 
   auto* ins = MGuardShape::New(alloc(), def, shape);

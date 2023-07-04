@@ -171,6 +171,7 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   void purgeOptimizedStubs(Zone* zone);
 
   void trace(JSTracer* trc);
+  void traceWeak(JSTracer* trc);
 
 #ifdef DEBUG
   mozilla::HashNumber hash();
@@ -409,6 +410,7 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   }
 
   void trace(JSTracer* trc);
+  void traceWeak(JSTracer* trc);
   void purgeOptimizedStubs(JSScript* script);
 
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset) {
