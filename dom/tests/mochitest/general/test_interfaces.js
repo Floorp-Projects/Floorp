@@ -1625,6 +1625,8 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "onblur", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "oncancel", insecureContext: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "oncanplay", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "oncanplaythrough", insecureContext: true },

@@ -443,6 +443,7 @@ NS_EVENT_MESSAGE(eToggle)
 
 // Dialog element events.
 NS_EVENT_MESSAGE(eClose)
+NS_EVENT_MESSAGE(eCancel)
 
 // Marquee element events.
 NS_EVENT_MESSAGE(eMarqueeBounce)

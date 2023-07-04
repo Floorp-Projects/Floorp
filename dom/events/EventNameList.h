@@ -151,6 +151,7 @@
 EVENT(abort, eImageAbort, EventNameType_All, eBasicEventClass)
 EVENT(beforetoggle, eBeforeToggle, EventNameType_HTMLXUL, eBasicEventClass)
 EVENT(bounce, eMarqueeBounce, EventNameType_HTMLMarqueeOnly, eBasicEventClass)
+EVENT(cancel, eCancel, EventNameType_HTMLXUL, eBasicEventClass)
 EVENT(canplay, eCanPlay, EventNameType_HTML, eBasicEventClass)
 EVENT(canplaythrough, eCanPlayThrough, EventNameType_HTML, eBasicEventClass)
 EVENT(change, eFormChange, EventNameType_HTMLXUL, eBasicEventClass)
