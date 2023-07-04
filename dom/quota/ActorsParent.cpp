@@ -89,6 +89,7 @@
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/Constants.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
+#include "mozilla/dom/quota/FileUtils.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/PQuota.h"
 #include "mozilla/dom/quota/PQuotaParent.h"
@@ -1638,25 +1639,6 @@ class RecordQuotaInfoLoadTimeHelper final : public Runnable {
  * Helper Functions
  ******************************************************************************/
 
-inline bool IsDotFile(const nsAString& aFileName) {
-  return QuotaManager::IsDotFile(aFileName);
-}
-
-inline bool IsOSMetadata(const nsAString& aFileName) {
-  return QuotaManager::IsOSMetadata(aFileName);
-}
-
-bool IsOriginMetadata(const nsAString& aFileName) {
-  return aFileName.EqualsLiteral(METADATA_FILE_NAME) ||
-         aFileName.EqualsLiteral(METADATA_V2_FILE_NAME) ||
-         IsOSMetadata(aFileName);
-}
-
-bool IsTempMetadata(const nsAString& aFileName) {
-  return aFileName.EqualsLiteral(METADATA_TMP_FILE_NAME) ||
-         aFileName.EqualsLiteral(METADATA_V2_TMP_FILE_NAME);
-}
-
 // Return whether the group was actually updated.
 Result<bool, nsresult> MaybeUpdateGroupForOrigin(
     OriginMetadata& aOriginMetadata) {
@@ -2715,15 +2697,12 @@ void QuotaManager::Reset() {
 
 // static
 bool QuotaManager::IsOSMetadata(const nsAString& aFileName) {
-  return aFileName.EqualsLiteral(DSSTORE_FILE_NAME) ||
-         aFileName.EqualsLiteral(DESKTOP_FILE_NAME) ||
-         aFileName.LowerCaseEqualsLiteral(DESKTOP_INI_FILE_NAME) ||
-         aFileName.LowerCaseEqualsLiteral(THUMBS_DB_FILE_NAME);
+  return mozilla::dom::quota::IsOSMetadata(aFileName);
 }
 
 // static
 bool QuotaManager::IsDotFile(const nsAString& aFileName) {
-  return aFileName.First() == char16_t('.');
+  return mozilla::dom::quota::IsDotFile(aFileName);
 }
 
 void QuotaManager::RegisterNormalOriginOp(
