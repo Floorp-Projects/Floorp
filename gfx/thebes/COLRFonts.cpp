@@ -653,7 +653,7 @@ struct ColorLineT {
       *aFirstStop = *aLastStop = aStops[0].offset;
       return;
     }
-    aStops.StableSort(nsDefaultComparator<GradientStop, GradientStop>());
+    aStops.StableSort();
     if (aReverse) {
       float a = aStops[0].offset;
       float b = aStops.LastElement().offset;
