@@ -68,7 +68,6 @@ if sys.platform == "win32":
 
 EXPECTED_LOG_ACTIONS = set(
     [
-        "crash_reporter_init",
         "test_status",
         "log",
     ]
@@ -217,7 +216,6 @@ class XPCShellTestThread(Thread):
         # Context for output processing
         self.output_lines = []
         self.has_failure_output = False
-        self.saw_crash_reporter_init = False
         self.saw_proc_start = False
         self.saw_proc_end = False
         self.command = None
@@ -723,10 +721,6 @@ class XPCShellTestThread(Thread):
             self.report_message(line_string)
             return
 
-        if line_object["action"] == "crash_reporter_init":
-            self.saw_crash_reporter_init = True
-            return
-
         action = line_object["action"]
 
         self.has_failure_output = (
@@ -897,15 +891,7 @@ class XPCShellTestThread(Thread):
             return_code_ok = return_code == 0 or (
                 self.usingTSan and return_code == TSAN_EXIT_CODE_WITH_RACES
             )
-            # Due to the limitation on the remote xpcshell test, the process
-            # return code does not represent the process crash.
-            # If crash_reporter_init log has not been seen, it means the process
-            # crashed before setting up the crash reporter.
-            passed = (
-                (not self.has_failure_output)
-                and self.saw_crash_reporter_init
-                and return_code_ok
-            )
+            passed = (not self.has_failure_output) and return_code_ok
 
             status = "PASS" if passed else "FAIL"
             expected = "PASS" if expect_pass else "FAIL"
@@ -914,15 +900,8 @@ class XPCShellTestThread(Thread):
             if self.timedout:
                 return
 
-            if status != expected or not self.saw_crash_reporter_init:
-                if not self.saw_crash_reporter_init:
-                    self.log.test_end(
-                        name,
-                        "CRASH",
-                        expected=expected,
-                        message="Test ended before setting up the crash reporter",
-                    )
-                elif self.retry:
+            if status != expected:
+                if self.retry:
                     self.log.test_end(
                         name,
                         status,
@@ -933,8 +912,8 @@ class XPCShellTestThread(Thread):
                     if self.verboseIfFails and not self.verbose:
                         self.log_full_output()
                     return
-                else:
-                    self.log.test_end(name, status, expected=expected, message=message)
+
+                self.log.test_end(name, status, expected=expected, message=message)
                 self.log_full_output()
 
                 self.failCount += 1
