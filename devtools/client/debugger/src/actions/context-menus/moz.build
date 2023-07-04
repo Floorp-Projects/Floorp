@@ -9,6 +9,7 @@ CompiledModules(
     "editor.js",
     "editor-breakpoint.js",
     "index.js",
+    "outline.js",
     "source-tree-item.js",
     "tab.js",
 )
