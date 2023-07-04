@@ -120,8 +120,6 @@ export var makeIdentityConfig = function (overrides) {
     fxaccount: {
       user: {
         email: "foo",
-        kSync: "a".repeat(128),
-        kXCS: "b".repeat(32),
         scopedKeys: {
           [SCOPE_OLD_SYNC]: {
             kid: "1234567890123-u7u7u7u7u7u7u7u7u7u7uw",

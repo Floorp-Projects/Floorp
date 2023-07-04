@@ -25,9 +25,6 @@ const MOCK_ACCOUNT_KEYS = {
       kty: "oct",
     },
   },
-  kSync:
-    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-  kXCS: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
 };
 
 (function initFxAccountsTestingInfrastructure() {
