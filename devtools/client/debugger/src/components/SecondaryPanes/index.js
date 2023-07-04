@@ -20,6 +20,7 @@ import {
   getShouldPauseOnCaughtExceptions,
   getThreads,
   getCurrentThread,
+  getThreadContext,
   getPauseReason,
   getShouldBreakpointsPaneOpenOnPause,
   getSkipPausing,
@@ -172,7 +173,7 @@ class SecondaryPanes extends Component {
       debugBtn(
         evt => {
           evt.stopPropagation();
-          this.props.removeAllBreakpoints();
+          this.props.removeAllBreakpoints(this.props.cx);
         },
         "removeAll",
         "active",
@@ -506,6 +507,7 @@ const mapStateToProps = state => {
   );
 
   return {
+    cx: getThreadContext(state),
     expressions: getExpressions(state),
     hasFrames: !!getTopFrame(state, thread),
     renderWhyPauseDelay: getRenderWhyPauseDelay(state, thread),

@@ -135,7 +135,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       label: deleteAllLabel,
       accesskey: deleteAllKey,
       disabled: false,
-      click: () => dispatch(removeAllBreakpoints()),
+      click: () => dispatch(removeAllBreakpoints(cx)),
     };
 
     const deleteOthersItem = {
