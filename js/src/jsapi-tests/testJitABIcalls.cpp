@@ -30,10 +30,10 @@
 using namespace js;
 using namespace js::jit;
 
-// This test case relies on VMFUNCTION_LIST, TAIL_CALL_VMFUNCTION_LIST,
-// ABIFUNCTION_LIST, ABIFUNCTION_AND_TYPE_LIST and ABIFUNCTIONSIG_LIST, to
-// create a test case for each function registered, in order to check if the
-// arguments are properly being interpreted after a call from the JIT.
+// This test case relies on VMFUNCTION_LIST, ABIFUNCTION_LIST,
+// ABIFUNCTION_AND_TYPE_LIST and ABIFUNCTIONSIG_LIST, to create a test case for
+// each function registered, in order to check if the arguments are properly
+// being interpreted after a call from the JIT.
 //
 // This test checks that the interpretation of the C++ compiler matches the
 // interpretation of the JIT. It works by generating a call to a function which
@@ -51,8 +51,7 @@ using namespace js::jit;
 #define ABIFUN_TO_ALLFUN(Fun) (#Fun, decltype(&::Fun))
 #define ABIFUN_AND_SIG_TO_ALLFUN(Fun, Sig) (#Fun " as " #Sig, Sig)
 #define ABISIG_TO_ALLFUN(Sig) ("(none) as " #Sig, Sig)
-#define VMFUN_TO_ALLFUN(Name, Fun) (#Fun, decltype(&::Fun))
-#define TC_VMFUN_TO_ALLFUN(Name, Fun, Pop) (#Fun, decltype(&::Fun))
+#define VMFUN_TO_ALLFUN(Name, Fun, Pop...) (#Fun, decltype(&::Fun))
 
 #define APPLY(A, B) A B
 
@@ -65,8 +64,7 @@ using namespace js::jit;
   ABIFUNCTION_LIST(PREFIX##_ABIFUN_TO_ALLFUN)                  \
   ABIFUNCTION_AND_TYPE_LIST(PREFIX##_ABIFUN_AND_SIG_TO_ALLFUN) \
   ABIFUNCTIONSIG_LIST(PREFIX##_ABISIG_TO_ALLFUN)               \
-  VMFUNCTION_LIST(PREFIX##_VMFUN_TO_ALLFUN)                    \
-  TAIL_CALL_VMFUNCTION_LIST(PREFIX##_TC_VMFUN_TO_ALLFUN)
+  VMFUNCTION_LIST(PREFIX##_VMFUN_TO_ALLFUN)
 
 // sizeof(const T&) is not equal to sizeof(const T*), but references are passed
 // as pointers.
@@ -708,8 +706,6 @@ class JitABICall final : public JSAPIRuntimeTest, public DefineCheckArgs<Sig> {
   APPLY(TEST_INSTANCE, ABISIG_TO_ALLFUN(__VA_ARGS__))
 #define TEST_INSTANCE_VMFUN_TO_ALLFUN(...) \
   APPLY(TEST_INSTANCE, VMFUN_TO_ALLFUN(__VA_ARGS__))
-#define TEST_INSTANCE_TC_VMFUN_TO_ALLFUN(...) \
-  APPLY(TEST_INSTANCE, TC_VMFUN_TO_ALLFUN(__VA_ARGS__))
 
 ALL_FUNCTIONS(TEST_INSTANCE)
 

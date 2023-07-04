@@ -63,8 +63,6 @@ enum DataType : uint8_t {
   Type_Handle
 };
 
-enum MaybeTailCall : bool { TailCall, NonTailCall };
-
 // [SMDOC] JIT-to-C++ Function Calls. (callVM)
 //
 // Sometimes it is easier to reuse C++ code by calling VM's functions. Calling a
@@ -204,11 +202,6 @@ struct VMFunctionData {
   // wrapper.
   uint8_t extraValuesToPop;
 
-  // On some architectures, called functions need to explicitly push their
-  // return address, for a tail call, there is nothing to push, so tail-callness
-  // needs to be known at compile time.
-  MaybeTailCall expectTailCall;
-
   uint32_t argc() const {
     // JSContext * + args + (OutParam? *)
     return 1 + explicitArgc() + ((outParam == Type_Void) ? 0 : 1);
@@ -306,8 +299,7 @@ struct VMFunctionData {
                            uint32_t argumentPassedInFloatRegs,
                            uint64_t argRootTypes, DataType outParam,
                            RootType outParamRootType, DataType returnType,
-                           uint8_t extraValuesToPop = 0,
-                           MaybeTailCall expectTailCall = NonTailCall)
+                           uint8_t extraValuesToPop = 0)
       :
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_ION_PERF)
         name_(name),
@@ -319,8 +311,7 @@ struct VMFunctionData {
         outParamRootType(outParamRootType),
         outParam(outParam),
         returnType(returnType),
-        extraValuesToPop(extraValuesToPop),
-        expectTailCall(expectTailCall) {
+        extraValuesToPop(extraValuesToPop) {
     // Check for valid failure/return type.
     MOZ_ASSERT_IF(outParam != Type_Void,
                   returnType == Type_Void || returnType == Type_Bool);
@@ -692,11 +683,9 @@ void AssumeUnreachable(const char* output);
 void Printf0(const char* output);
 void Printf1(const char* output, uintptr_t value);
 
-enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 
 extern const VMFunctionData& GetVMFunction(VMFunctionId id);
-extern const VMFunctionData& GetVMFunction(TailCallVMFunctionId id);
 
 }  // namespace jit
 }  // namespace js

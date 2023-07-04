@@ -51,7 +51,6 @@ class Label;
 class MacroAssembler;
 struct VMFunctionData;
 
-enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 
 enum class BaselineICFallbackKind : uint8_t {
@@ -189,10 +188,6 @@ class JitRuntime {
   using VMWrapperOffsets = Vector<uint32_t, 0, SystemAllocPolicy>;
   VMWrapperOffsets functionWrapperOffsets_;
 
-  // Maps TailCallVMFunctionId to the offset of the wrapper code in
-  // trampolineCode_.
-  VMWrapperOffsets tailCallFunctionWrapperOffsets_;
-
   MainThreadData<BaselineICFallbackCode> baselineICFallbackCode_;
 
   // Global table of jitcode native address => bytecode address mappings.
@@ -260,10 +255,6 @@ class JitRuntime {
                          const VMFunctionData& f, DynFn nativeFun,
                          uint32_t* wrapperOffset);
 
-  template <typename IdT>
-  bool generateVMWrappers(JSContext* cx, MacroAssembler& masm,
-                          VMWrapperOffsets& offsets,
-                          PerfSpewerRangeRecorder& rangeRecorder);
   bool generateVMWrappers(JSContext* cx, MacroAssembler& masm,
                           PerfSpewerRangeRecorder& rangeRecorder);
 
@@ -311,10 +302,6 @@ class JitRuntime {
   TrampolinePtr getVMWrapper(VMFunctionId funId) const {
     MOZ_ASSERT(trampolineCode_);
     return trampolineCode(functionWrapperOffsets_[size_t(funId)]);
-  }
-  TrampolinePtr getVMWrapper(TailCallVMFunctionId funId) const {
-    MOZ_ASSERT(trampolineCode_);
-    return trampolineCode(tailCallFunctionWrapperOffsets_[size_t(funId)]);
   }
 
   JitCode* debugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);

@@ -9430,7 +9430,6 @@ void CacheIRCompiler::callVMInternal(MacroAssembler& masm, VMFunctionId id) {
   MOZ_ASSERT(mode_ == Mode::Baseline);
 
   TrampolinePtr code = cx_->runtime()->jitRuntime()->getVMWrapper(id);
-  MOZ_ASSERT(GetVMFunction(id).expectTailCall == NonTailCall);
 
   EmitBaselineCallVM(code, masm);
 }

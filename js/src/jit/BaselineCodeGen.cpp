@@ -756,7 +756,6 @@ bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
 #endif
     masm.pushFrameDescriptor(FrameType::BaselineJS);
   }
-  MOZ_ASSERT(fun.expectTailCall == NonTailCall);
   // Perform the call.
   masm.call(code);
   uint32_t callOffset = masm.currentOffset();
