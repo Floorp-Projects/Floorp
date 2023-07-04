@@ -226,7 +226,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.push(reg_code);
 
     // Initialize the frame, including filling in the slots.
-    using Fn = bool (*)(BaselineFrame * frame, InterpreterFrame * interpFrame,
+    using Fn = bool (*)(BaselineFrame* frame, InterpreterFrame* interpFrame,
                         uint32_t numStackValues);
     masm.setupUnalignedABICall(r19);
     masm.passABIArg(framePtrScratch);  // BaselineFrame.
@@ -389,8 +389,7 @@ void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
   masm.Sub(x1, masm.GetStackPointer64(), Operand(sizeof(void*)));
   masm.moveToStackPtr(r1);
 
-  using Fn =
-      bool (*)(InvalidationBailoutStack * sp, BaselineBailoutInfo * *info);
+  using Fn = bool (*)(InvalidationBailoutStack* sp, BaselineBailoutInfo** info);
   masm.setupUnalignedABICall(r10);
   masm.passABIArg(r0);
   masm.passABIArg(r1);
@@ -551,7 +550,7 @@ static void GenerateBailoutThunk(MacroAssembler& masm, Label* bailoutTail) {
   masm.reserveStack(sizeof(void*));
   masm.moveStackPtrTo(r1);
 
-  using Fn = bool (*)(BailoutStack * sp, BaselineBailoutInfo * *info);
+  using Fn = bool (*)(BailoutStack* sp, BaselineBailoutInfo** info);
   masm.setupUnalignedABICall(r2);
   masm.passABIArg(r0);
   masm.passABIArg(r1);
@@ -592,11 +591,11 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
       (Register::Codes::VolatileMask & ~Register::Codes::WrapperMask) == 0,
       "Wrapper register set must be a superset of the Volatile register set.");
 
-  // Unlike on other platforms, it is the responsibility of the VM *callee* to
+  // On link-register platforms, it is the responsibility of the VM *callee* to
   // push the return address, while the caller must ensure that the address
   // is stored in lr on entry. This allows the VM wrapper to work with both
   // direct calls and tail calls.
-  masm.push(lr);
+  masm.pushReturnAddress();
 
   // First argument is the JSContext.
   Register reg_cx = IntArgReg0;

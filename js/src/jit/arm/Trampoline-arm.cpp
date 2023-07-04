@@ -264,7 +264,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
 
     masm.push(r0);  // jitcode
 
-    using Fn = bool (*)(BaselineFrame * frame, InterpreterFrame * interpFrame,
+    using Fn = bool (*)(BaselineFrame* frame, InterpreterFrame* interpFrame,
                         uint32_t numStackValues);
     masm.setupUnalignedABICall(scratch);
     masm.passABIArg(framePtrScratch);  // BaselineFrame
@@ -385,8 +385,7 @@ void JitRuntime::generateInvalidator(MacroAssembler& masm, Label* bailoutTail) {
   // setupAlignedABICall.
   masm.reserveStack(sizeof(void*) * 2);
   masm.mov(sp, r1);
-  using Fn =
-      bool (*)(InvalidationBailoutStack * sp, BaselineBailoutInfo * *info);
+  using Fn = bool (*)(InvalidationBailoutStack* sp, BaselineBailoutInfo** info);
   masm.setupAlignedABICall();
   masm.passABIArg(r0);
   masm.passABIArg(r1);
@@ -561,7 +560,7 @@ static void GenerateBailoutThunk(MacroAssembler& masm, Label* bailoutTail) {
   // Make space for Bailout's bailoutInfo outparam.
   masm.reserveStack(sizeof(void*));
   masm.mov(sp, r1);
-  using Fn = bool (*)(BailoutStack * sp, BaselineBailoutInfo * *info);
+  using Fn = bool (*)(BailoutStack* sp, BaselineBailoutInfo** info);
   masm.setupAlignedABICall();
 
   masm.passABIArg(r0);
@@ -604,16 +603,13 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
   Register cxreg = r0;
   regs.take(cxreg);
 
-  // Stack is:
-  //    ... frame ...
-  //  +8  [args] + argPadding
-  //  +0  ExitFrame
-  //
-  // If it isn't a tail call, then the return address needs to be saved.
+  // On link-register platforms, it is the responsibility of the VM *callee* to
+  // push the return address, while the caller must ensure that the address
+  // is stored in lr on entry. This allows the VM wrapper to work with both
+  // direct calls and tail calls.
+  masm.pushReturnAddress();
+
   // Push the frame pointer to finish the exit frame, then link it up.
-  if (f.expectTailCall == NonTailCall) {
-    masm.pushReturnAddress();
-  }
   masm.Push(FramePointer);
   masm.moveStackPtrTo(FramePointer);
   masm.loadJSContext(cxreg);
