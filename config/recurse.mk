@@ -235,7 +235,7 @@ endif
 # quickly without LTO, allowing the build system to go ahead with
 # plain gkrust and libxul while libxul-gtest is being linked and
 # dump-sym'ed.
-ifneq (,$(filter toolkit/library/gtest/rust/target,$(compile_targets)))
-toolkit/library/rust/target: toolkit/library/gtest/rust/target
+ifneq (,$(filter toolkit/library/gtest/rust/target-objects,$(compile_targets)))
+toolkit/library/rust/target-objects: toolkit/library/gtest/rust/target-objects
 endif
 endif
