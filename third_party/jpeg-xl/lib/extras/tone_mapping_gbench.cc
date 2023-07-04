@@ -26,7 +26,9 @@ static void BM_ToneMapping(benchmark::State& state) {
   for (auto _ : state) {
     state.PauseTiming();
     CodecInOut tone_mapping_input;
-    tone_mapping_input.SetFromImage(CopyImage(color), linear_rec2020);
+    Image3F color2(color.xsize(), color.ysize());
+    CopyImageTo(color, &color2);
+    tone_mapping_input.SetFromImage(std::move(color2), linear_rec2020);
     tone_mapping_input.metadata.m.SetIntensityTarget(255);
     state.ResumeTiming();
 

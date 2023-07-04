@@ -417,10 +417,7 @@ Status ColorEncoding::SetPrimaries(const PrimariesCIExy& xy) {
 
 Status ColorEncoding::CreateICC() {
   InternalRemoveICC();
-  if (!MaybeCreateProfile(*this, &icc_)) {
-    return JXL_FAILURE("Failed to create profile from fields");
-  }
-  return true;
+  return MaybeCreateProfile(*this, &icc_);
 }
 
 std::string Description(const ColorEncoding& c_in) {

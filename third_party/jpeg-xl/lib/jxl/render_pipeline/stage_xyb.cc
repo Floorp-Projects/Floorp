@@ -113,6 +113,7 @@ std::unique_ptr<RenderPipelineStage> GetXYBStage(
   return HWY_DYNAMIC_DISPATCH(GetXYBStage)(output_encoding_info);
 }
 
+#if !JXL_HIGH_PRECISION
 namespace {
 class FastXYBStage : public RenderPipelineStage {
  public:
@@ -169,6 +170,7 @@ std::unique_ptr<RenderPipelineStage> GetFastXYBTosRGB8Stage(
   return make_unique<FastXYBStage>(rgb, stride, width, height, rgba, has_alpha,
                                    alpha_c);
 }
+#endif
 
 }  // namespace jxl
 #endif

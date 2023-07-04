@@ -424,7 +424,6 @@ static gboolean load_increment(gpointer context, const guchar *buf, guint size,
         size_t icc_size;
         if (JXL_DEC_SUCCESS != JxlDecoderGetICCProfileSize(
                                    decoder_state->decoder,
-                                   &decoder_state->pixel_format,
                                    JXL_COLOR_PROFILE_TARGET_DATA, &icc_size)) {
           g_set_error(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED,
                       "JxlDecoderGetICCProfileSize failed");
@@ -437,7 +436,6 @@ static gboolean load_increment(gpointer context, const guchar *buf, guint size,
         }
         if (JXL_DEC_SUCCESS !=
             JxlDecoderGetColorAsICCProfile(decoder_state->decoder,
-                                           &decoder_state->pixel_format,
                                            JXL_COLOR_PROFILE_TARGET_DATA,
                                            decoder_state->icc_buff, icc_size)) {
           g_set_error(error, GDK_PIXBUF_ERROR, GDK_PIXBUF_ERROR_FAILED,

@@ -141,12 +141,11 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
       size_t icc_size = 0;
       JxlColorEncoding color_encoding;
       if (JXL_DEC_SUCCESS !=
-          JxlDecoderGetColorAsEncodedProfile(
-              dec.get(), &format, _PROFILE_ORIGIN_, &color_encoding)) {
+          JxlDecoderGetColorAsEncodedProfile(dec.get(), _PROFILE_ORIGIN_,
+                                             &color_encoding)) {
         // Attempt to load ICC profile when no internal color encoding
-        if (JXL_DEC_SUCCESS != JxlDecoderGetICCProfileSize(dec.get(), &format,
-                                                           _PROFILE_ORIGIN_,
-                                                           &icc_size)) {
+        if (JXL_DEC_SUCCESS != JxlDecoderGetICCProfileSize(
+                                   dec.get(), _PROFILE_ORIGIN_, &icc_size)) {
           g_printerr(LOAD_PROC
                      " Warning: JxlDecoderGetICCProfileSize failed\n");
         }
@@ -154,7 +153,7 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
         if (icc_size > 0) {
           icc_profile.resize(icc_size);
           if (JXL_DEC_SUCCESS != JxlDecoderGetColorAsICCProfile(
-                                     dec.get(), &format, _PROFILE_ORIGIN_,
+                                     dec.get(), _PROFILE_ORIGIN_,
                                      icc_profile.data(), icc_profile.size())) {
             g_printerr(LOAD_PROC
                        " Warning: JxlDecoderGetColorAsICCProfile failed\n");
@@ -177,8 +176,8 @@ bool LoadJpegXlImage(const gchar *const filename, gint32 *const image_id) {
 
       // Internal color profile detection...
       if (JXL_DEC_SUCCESS ==
-          JxlDecoderGetColorAsEncodedProfile(
-              dec.get(), &format, _PROFILE_TARGET_, &color_encoding)) {
+          JxlDecoderGetColorAsEncodedProfile(dec.get(), _PROFILE_TARGET_,
+                                             &color_encoding)) {
         g_printerr(LOAD_PROC " Info: Internal color encoding detected.\n");
 
         // figure out linearity of internal profile

@@ -89,8 +89,9 @@ struct CompressParams {
   // If true, the "modular mode options" members below are used.
   bool modular_mode = false;
 
-  // Change group size in modular mode (0=128, 1=256, 2=512, 3=1024).
-  size_t modular_group_size_shift = 1;
+  // Change group size in modular mode (0=128, 1=256, 2=512, 3=1024, -1=encoder
+  // chooses).
+  int modular_group_size_shift = -1;
 
   Override preview = Override::kDefault;
   Override noise = Override::kDefault;

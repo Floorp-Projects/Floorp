@@ -139,6 +139,7 @@ Status PassesDecoderState::PreparePipeline(ImageBundle* decoded,
   }
 
   if (fast_xyb_srgb8_conversion) {
+#if !JXL_HIGH_PRECISION
     JXL_ASSERT(!NeedsBlending(this));
     JXL_ASSERT(!frame_header.CanBeReferenced() ||
                frame_header.save_before_color_transform);
@@ -149,6 +150,7 @@ Status PassesDecoderState::PreparePipeline(ImageBundle* decoded,
     builder.AddStage(GetFastXYBTosRGB8Stage(rgb_output, main_output.stride,
                                             width, height, is_rgba, has_alpha,
                                             alpha_c));
+#endif
   } else {
     bool linear = false;
     if (frame_header.color_transform == ColorTransform::kYCbCr) {

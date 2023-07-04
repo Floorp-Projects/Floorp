@@ -8,7 +8,6 @@
 #include <jxl/encode.h>
 
 #include "lib/extras/dec/color_description.h"
-#include "lib/jxl/base/file_io.h"
 
 namespace jxl {
 namespace extras {
@@ -42,8 +41,10 @@ Status ApplyColorHints(const ColorHints& color_hints,
           }
 
           got_color_space = true;
-        } else if (key == "icc_pathname") {
-          JXL_RETURN_IF_ERROR(ReadFile(value, &ppf->icc));
+        } else if (key == "icc") {
+          const uint8_t* data = reinterpret_cast<const uint8_t*>(value.data());
+          std::vector<uint8_t> icc(data, data + value.size());
+          ppf->icc.swap(icc);
           got_color_space = true;
         } else {
           JXL_WARNING("Ignoring %s hint", key.c_str());

@@ -25,7 +25,9 @@ TEST(OpsinInverseTest, LinearInverseInverts) {
   CodecInOut io;
   io.metadata.m.SetFloat32Samples();
   io.metadata.m.color_encoding = ColorEncoding::LinearSRGB();
-  io.SetFromImage(CopyImage(linear), io.metadata.m.color_encoding);
+  Image3F linear2(128, 128);
+  CopyImageTo(linear, &linear2);
+  io.SetFromImage(std::move(linear2), io.metadata.m.color_encoding);
   ThreadPool* null_pool = nullptr;
   Image3F opsin(io.xsize(), io.ysize());
   (void)ToXYB(io.Main(), null_pool, &opsin, GetJxlCms());

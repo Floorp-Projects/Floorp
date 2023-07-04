@@ -6,11 +6,11 @@
 #include "lib/jpegli/test_utils.h"
 
 #include <cmath>
+#include <fstream>
 
 #include "lib/jpegli/decode.h"
 #include "lib/jpegli/encode.h"
 #include "lib/jxl/base/byte_order.h"
-#include "lib/jxl/base/file_io.h"
 #include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/sanitizers.h"
@@ -36,9 +36,13 @@ std::string GetTestDataPath(const std::string& filename) {
 
 std::vector<uint8_t> ReadTestData(const std::string& filename) {
   std::string full_path = GetTestDataPath(filename);
-  std::vector<uint8_t> data;
   fprintf(stderr, "ReadTestData %s\n", full_path.c_str());
-  JXL_CHECK(jxl::ReadFile(full_path, &data));
+  std::ifstream file(full_path, std::ios::binary);
+  std::vector<char> str((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+  JXL_CHECK(file.good());
+  const uint8_t* raw = reinterpret_cast<const uint8_t*>(str.data());
+  std::vector<uint8_t> data(raw, raw + str.size());
   printf("Test data %s is %d bytes long.\n", filename.c_str(),
          static_cast<int>(data.size()));
   return data;
@@ -1137,13 +1141,16 @@ void DecodeWithLibjpeg(const CompressParams& jparams,
 
 void DumpImage(const TestImage& image, const std::string fn) {
   JXL_CHECK(image.components == 1 || image.components == 3);
-  jxl::FileWrapper f(fn.c_str(), "wb");
   size_t bytes_per_sample = jpegli_bytes_per_sample(image.data_type);
   uint32_t maxval = (1u << (8 * bytes_per_sample)) - 1;
   char type = image.components == 1 ? '5' : '6';
-  fprintf(f, "P%c\n%" PRIuS " %" PRIuS "\n%u\n", type, image.xsize, image.ysize,
-          maxval);
-  fwrite(image.pixels.data(), 1, image.pixels.size(), f);
+  std::ofstream out(fn.c_str(), std::ofstream::binary);
+  out << "P" << type << std::endl
+      << image.xsize << " " << image.ysize << std::endl
+      << maxval << std::endl;
+  out.write(reinterpret_cast<const char*>(image.pixels.data()),
+            image.pixels.size());
+  out.close();
 }
 
 double DistanceRms(const TestImage& input, const TestImage& output,

@@ -219,7 +219,6 @@ TEST_P(RenderPipelineTestParam, PipelineTest) {
   ASSERT_TRUE(EncodeFile(config.cparams, &io, &enc_state, &compressed,
                          GetJxlCms(), /*aux_out=*/nullptr, &pool));
 
-
   CodecInOut io_default;
   ASSERT_TRUE(DecodeFile(Span<const uint8_t>(compressed),
                          /*use_slow_pipeline=*/false, &io_default, &pool));

@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-#ifndef LIB_JXL_ENC_BUTTERAUGLI_PNORM_H_
-#define LIB_JXL_ENC_BUTTERAUGLI_PNORM_H_
+#ifndef LIB_EXTRAS_METRICS_H_
+#define LIB_EXTRAS_METRICS_H_
 
 #include <stdint.h>
 
@@ -25,4 +25,4 @@ double ComputePSNR(const ImageBundle& ib1, const ImageBundle& ib2,
 
 }  // namespace jxl
 
-#endif  // LIB_JXL_ENC_BUTTERAUGLI_PNORM_H_
+#endif  // LIB_EXTRAS_METRICS_H_

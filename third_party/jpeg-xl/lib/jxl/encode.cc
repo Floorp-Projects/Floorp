@@ -258,13 +258,6 @@ JxlEncoderStatus CheckValidBitdepth(uint32_t bits_per_sample,
 
 JxlEncoderStatus VerifyInputBitDepth(JxlBitDepth bit_depth,
                                      JxlPixelFormat format) {
-  if ((format.data_type == JXL_TYPE_FLOAT ||
-       format.data_type == JXL_TYPE_FLOAT16) &&
-      bit_depth.type != JXL_BIT_DEPTH_FROM_PIXEL_FORMAT) {
-    return JXL_API_ERROR_NOSET(
-        "Only JXL_BIT_DEPTH_FROM_PIXEL_FORMAT is "
-        "implemented for float types.");
-  }
   return JXL_ENC_SUCCESS;
 }
 
@@ -995,12 +988,6 @@ JxlEncoderFrameSettings* JxlEncoderFrameSettingsCreate(
   return ret;
 }
 
-JxlEncoderFrameSettings* JxlEncoderOptionsCreate(
-    JxlEncoder* enc, const JxlEncoderFrameSettings* source) {
-  // Deprecated function name, call the non-deprecated function
-  return JxlEncoderFrameSettingsCreate(enc, source);
-}
-
 JxlEncoderStatus JxlEncoderSetFrameLossless(
     JxlEncoderFrameSettings* frame_settings, const JXL_BOOL lossless) {
   if (lossless && frame_settings->enc->basic_info_set &&
@@ -1011,18 +998,6 @@ JxlEncoderStatus JxlEncoderSetFrameLossless(
   }
   frame_settings->values.lossless = lossless;
   return JXL_ENC_SUCCESS;
-}
-
-JxlEncoderStatus JxlEncoderOptionsSetLossless(
-    JxlEncoderFrameSettings* frame_settings, JXL_BOOL lossless) {
-  // Deprecated function name, call the non-deprecated function
-  return JxlEncoderSetFrameLossless(frame_settings, lossless);
-}
-
-JxlEncoderStatus JxlEncoderOptionsSetEffort(
-    JxlEncoderFrameSettings* frame_settings, const int effort) {
-  return JxlEncoderFrameSettingsSetOption(frame_settings,
-                                          JXL_ENC_FRAME_SETTING_EFFORT, effort);
 }
 
 JxlEncoderStatus JxlEncoderSetFrameDistance(
@@ -1064,18 +1039,6 @@ JxlEncoderStatus JxlEncoderSetExtraChannelDistance(
 
   frame_settings->values.cparams.ec_distance[index] = distance;
   return JXL_ENC_SUCCESS;
-}
-
-JxlEncoderStatus JxlEncoderOptionsSetDistance(
-    JxlEncoderFrameSettings* frame_settings, float distance) {
-  // Deprecated function name, call the non-deprecated function
-  return JxlEncoderSetFrameDistance(frame_settings, distance);
-}
-
-JxlEncoderStatus JxlEncoderOptionsSetDecodingSpeed(
-    JxlEncoderFrameSettings* frame_settings, int tier) {
-  return JxlEncoderFrameSettingsSetOption(
-      frame_settings, JXL_ENC_FRAME_SETTING_DECODING_SPEED, tier);
 }
 
 JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
@@ -1269,15 +1232,7 @@ JxlEncoderStatus JxlEncoderFrameSettingsSetOption(
         return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                              "Option value has to be in [-1..3]");
       }
-      // TODO(lode): the default behavior of this parameter for cjxl is
-      // to choose 1 or 2 depending on the situation. This behavior needs to be
-      // implemented either in the C++ library by allowing to set this to -1, or
-      // kept in cjxl and set it to 1 or 2 using this API.
-      if (value == -1) {
-        frame_settings->values.cparams.modular_group_size_shift = 1;
-      } else {
-        frame_settings->values.cparams.modular_group_size_shift = value;
-      }
+      frame_settings->values.cparams.modular_group_size_shift = value;
       return JXL_ENC_SUCCESS;
     case JXL_ENC_FRAME_SETTING_MODULAR_PREDICTOR:
       if (value < -1 || value > 15) {
@@ -1955,8 +1910,9 @@ JxlEncoderStatus JxlEncoderAddBox(JxlEncoder* enc, const JxlBoxType type,
 }
 
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelBuffer(
-    const JxlEncoderOptions* frame_settings, const JxlPixelFormat* pixel_format,
-    const void* buffer, size_t size, uint32_t index) {
+    const JxlEncoderFrameSettings* frame_settings,
+    const JxlPixelFormat* pixel_format, const void* buffer, size_t size,
+    uint32_t index) {
   if (index >= frame_settings->enc->metadata.m.num_extra_channels) {
     return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                          "Invalid value for the index of extra channel");
@@ -2045,8 +2001,9 @@ JxlEncoderStatus JxlEncoderProcessOutput(JxlEncoder* enc, uint8_t** next_out,
   return JXL_ENC_SUCCESS;
 }
 
-JxlEncoderStatus JxlEncoderSetFrameHeader(JxlEncoderOptions* frame_settings,
-                                          const JxlFrameHeader* frame_header) {
+JxlEncoderStatus JxlEncoderSetFrameHeader(
+    JxlEncoderFrameSettings* frame_settings,
+    const JxlFrameHeader* frame_header) {
   if (frame_header->layer_info.blend_info.source > 3) {
     return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,
                          "invalid blending source index");
@@ -2068,7 +2025,7 @@ JxlEncoderStatus JxlEncoderSetFrameHeader(JxlEncoderOptions* frame_settings,
 }
 
 JxlEncoderStatus JxlEncoderSetExtraChannelBlendInfo(
-    JxlEncoderOptions* frame_settings, size_t index,
+    JxlEncoderFrameSettings* frame_settings, size_t index,
     const JxlBlendInfo* blend_info) {
   if (index >= frame_settings->enc->metadata.m.num_extra_channels) {
     return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_API_USAGE,

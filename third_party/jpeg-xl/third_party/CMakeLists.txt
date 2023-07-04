@@ -95,7 +95,7 @@ else()
 endif()
 
 # *cms
-if (JPEGXL_ENABLE_SKCMS OR JPEGXL_ENABLE_PLUGINS)
+if (JPEGXL_ENABLE_SKCMS)
   if( NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/skcms/skcms.h" )
     message(FATAL_ERROR "Please run ${PROJECT_SOURCE_DIR}/deps.sh to fetch the "
             "build dependencies.")
