@@ -4,6 +4,7 @@
 
 export * from "./breakpoint-heading";
 export * from "./frame";
+export * from "./editor";
 export * from "./editor-breakpoint";
 export * from "./source-tree-item";
 export * from "./tab";

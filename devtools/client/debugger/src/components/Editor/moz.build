@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    "menus",
     "Preview",
 ]
 
@@ -16,7 +15,6 @@ CompiledModules(
     "ColumnBreakpoints.js",
     "ConditionalPanel.js",
     "DebugLine.js",
-    "EditorMenu.js",
     "EmptyLines.js",
     "Exception.js",
     "Exceptions.js",

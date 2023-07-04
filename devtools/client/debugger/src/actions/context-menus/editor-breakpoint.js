@@ -90,24 +90,28 @@ export function showEditorCreateBreakpointContextMenu(
   lineText
 ) {
   return async ({ dispatch, getState }) => {
-    const state = getState();
-    const cx = getThreadContext(state);
+    const cx = getThreadContext(getState());
 
-    const items = [
-      addBreakpointItem(cx, location, dispatch),
-      addConditionalBreakpointItem(location, dispatch),
-    ];
-
-    if (features.logPoints) {
-      items.push(addLogPointItem(location, dispatch));
-    }
-
-    if (lineText && lineText.startsWith("debugger")) {
-      items.push(toggleDbgStatementItem(cx, location, null, dispatch));
-    }
+    const items = createBreakpointItems(cx, location, lineText, dispatch);
 
     showMenu(event, items);
   };
+}
+
+export function createBreakpointItems(cx, location, lineText, dispatch) {
+  const items = [
+    addBreakpointItem(cx, location, dispatch),
+    addConditionalBreakpointItem(location, dispatch),
+  ];
+
+  if (features.logPoints) {
+    items.push(addLogPointItem(location, dispatch));
+  }
+
+  if (lineText && lineText.startsWith("debugger")) {
+    items.push(toggleDbgStatementItem(cx, location, null, dispatch));
+  }
+  return items;
 }
 
 const addBreakpointItem = (cx, location, dispatch) => ({
