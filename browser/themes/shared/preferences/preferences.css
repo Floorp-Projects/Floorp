@@ -443,6 +443,10 @@ richlistitem[selected] .actionsMenu:focus-visible {
   direction: rtl;
 }
 
+.homepage-buttons > .homepage-button {
+  flex: 1 auto;
+}
+
 .homepage-button:first-of-type {
   margin-inline-start: 0;
 }
