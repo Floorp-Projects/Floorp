@@ -990,8 +990,6 @@ class MOZ_RAII AutoOutputRegister {
   operator TypedOrValueRegister() const { return output_; }
 };
 
-enum class CallCanGC { CanGC, CanNotGC };
-
 // Instructions that have to perform a callVM require a stub frame. Call its
 // enter() and leave() methods to enter/leave the stub frame.
 // Hoisted from jit/BaselineCacheIRCompiler.cpp. See there for method
@@ -1008,8 +1006,7 @@ class MOZ_RAII AutoStubFrame {
  public:
   explicit AutoStubFrame(BaselineCacheIRCompiler& compiler);
 
-  void enter(MacroAssembler& masm, Register scratch,
-             CallCanGC canGC = CallCanGC::CanGC);
+  void enter(MacroAssembler& masm, Register scratch);
   void leave(MacroAssembler& masm);
 
 #ifdef DEBUG
