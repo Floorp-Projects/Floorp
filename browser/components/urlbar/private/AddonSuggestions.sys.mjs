@@ -179,19 +179,9 @@ export class AddonSuggestions extends BaseFeature {
       }
 
       const results = JSON.parse(new TextDecoder("utf-8").decode(buffer));
-
-      // The keywords in remote settings are full keywords. Map each one to an
-      // array containing the full keyword's first word plus every subsequent
-      // prefix of the full keyword.
-      await suggestionsMap.add(results, fullKeyword => {
-        let keywords = [fullKeyword];
-        let spaceIndex = fullKeyword.search(/\s/);
-        if (spaceIndex >= 0) {
-          for (let i = spaceIndex; i < fullKeyword.length; i++) {
-            keywords.push(fullKeyword.substring(0, i));
-          }
-        }
-        return keywords;
+      await suggestionsMap.add(results, {
+        mapKeyword:
+          lazy.SuggestionsMap.MAP_KEYWORD_PREFIXES_STARTING_AT_FIRST_WORD,
       });
       if (rs != lazy.QuickSuggestRemoteSettings.rs) {
         return;
