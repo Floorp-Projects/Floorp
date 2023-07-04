@@ -238,6 +238,14 @@ class QuotaManager final : public BackgroundThreadObject {
   Result<nsCOMPtr<nsIFile>, nsresult> GetOriginDirectory(
       const OriginMetadata& aOriginMetadata) const;
 
+  static nsresult CreateDirectoryMetadata(
+      nsIFile& aDirectory, int64_t aTimestamp,
+      const OriginMetadata& aOriginMetadata);
+
+  static nsresult CreateDirectoryMetadata2(
+      nsIFile& aDirectory, int64_t aTimestamp, bool aPersisted,
+      const OriginMetadata& aOriginMetadata);
+
   nsresult RestoreDirectoryMetadata2(nsIFile* aDirectory);
 
   // XXX Remove aPersistenceType argument once the persistence type is stored
