@@ -1590,6 +1590,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
           },
         },
       },
+      description: {
+        type: "string",
+      },
       displayUrl: {
         type: "string",
       },
