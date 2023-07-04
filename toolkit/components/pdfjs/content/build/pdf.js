@@ -42,7 +42,7 @@ return /******/ (() => { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.RenderingIntentFlag = exports.PromiseCapability = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.MAX_IMAGE_SIZE_TO_CACHE = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
+exports.VerbosityLevel = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.RenderingIntentFlag = exports.PromiseCapability = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.PageActionEventType = exports.OPS = exports.MissingPDFException = exports.MAX_IMAGE_SIZE_TO_CACHE = exports.LINE_FACTOR = exports.LINE_DESCENT_FACTOR = exports.InvalidPDFException = exports.ImageKind = exports.IDENTITY_MATRIX = exports.FormatError = exports.FeatureTest = exports.FONT_IDENTITY_MATRIX = exports.DocumentActionEventType = exports.CMapCompressionType = exports.BaseException = exports.BASELINE_FACTOR = exports.AnnotationType = exports.AnnotationReplyType = exports.AnnotationMode = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationEditorType = exports.AnnotationEditorPrefix = exports.AnnotationEditorParamsType = exports.AnnotationBorderStyleType = exports.AnnotationActionEventType = exports.AbortException = void 0;
 exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
@@ -100,6 +100,7 @@ const AnnotationEditorType = {
   DISABLE: -1,
   NONE: 0,
   FREETEXT: 3,
+  STAMP: 13,
   INK: 15
 };
 exports.AnnotationEditorType = AnnotationEditorType;
@@ -171,24 +172,6 @@ const AnnotationType = {
   REDACT: 26
 };
 exports.AnnotationType = AnnotationType;
-const AnnotationStateModelType = {
-  MARKED: "Marked",
-  REVIEW: "Review"
-};
-exports.AnnotationStateModelType = AnnotationStateModelType;
-const AnnotationMarkedState = {
-  MARKED: "Marked",
-  UNMARKED: "Unmarked"
-};
-exports.AnnotationMarkedState = AnnotationMarkedState;
-const AnnotationReviewState = {
-  ACCEPTED: "Accepted",
-  REJECTED: "Rejected",
-  CANCELLED: "Cancelled",
-  COMPLETED: "Completed",
-  NONE: "None"
-};
-exports.AnnotationReviewState = AnnotationReviewState;
 const AnnotationReplyType = {
   GROUP: "Group",
   REPLY: "R"
@@ -941,7 +924,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.8.107',
+    apiVersion: '3.8.138',
     data,
     password,
     disableAutoFetch,
@@ -1276,6 +1259,9 @@ class PDFPageProxy {
   getJSActions() {
     return this._transport.getPageJSActions(this._pageIndex);
   }
+  get filterFactory() {
+    return this._transport.filterFactory;
+  }
   get isPureXfa() {
     return (0, _util.shadow)(this, "isPureXfa", !!this._transport._htmlForXfa);
   }
@@ -1519,12 +1505,20 @@ class PDFPageProxy {
     cacheKey,
     annotationStorageMap
   }) {
+    const transfers = [];
+    if (annotationStorageMap) {
+      for (const annotation of annotationStorageMap.values()) {
+        if (annotation.bitmap) {
+          transfers.push(annotation.bitmap);
+        }
+      }
+    }
     const readableStream = this._transport.messageHandler.sendWithStream("GetOperatorList", {
       pageIndex: this._pageIndex,
       intent: renderingIntent,
       cacheKey,
       annotationStorage: annotationStorageMap
-    });
+    }, transfers);
     const reader = readableStream.getReader();
     const intentState = this._intentStates.get(cacheKey);
     intentState.streamReader = reader;
@@ -2219,12 +2213,21 @@ class WorkerTransport {
     if (this.annotationStorage.size <= 0) {
       (0, _util.warn)("saveDocument called while `annotationStorage` is empty, " + "please use the getData-method instead.");
     }
+    const annotationStorage = this.annotationStorage.serializable;
+    const transfers = [];
+    if (annotationStorage) {
+      for (const annotation of annotationStorage.values()) {
+        if (annotation.bitmap) {
+          transfers.push(annotation.bitmap);
+        }
+      }
+    }
     return this.messageHandler.sendWithPromise("SaveDocument", {
       isPureXfa: !!this._htmlForXfa,
       numPages: this._numPages,
-      annotationStorage: this.annotationStorage.serializable,
+      annotationStorage,
       filename: this._fullReader?.filename ?? null
-    }).finally(() => {
+    }, transfers).finally(() => {
       this.annotationStorage.resetModified();
     });
   }
@@ -2586,9 +2589,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.8.107';
+const version = '3.8.138';
 exports.version = version;
-const build = '03059e1f8';
+const build = '88c7c8b5b';
 exports.build = build;
 
 /***/ }),
@@ -3837,6 +3840,9 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
   #hcmFilter;
   #hcmKey;
   #hcmUrl;
+  #hcmHighlightFilter;
+  #hcmHighlightKey;
+  #hcmHighlightUrl;
   #id = 0;
   constructor({
     docId,
@@ -3870,12 +3876,6 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
       this.#document.body.append(div);
     }
     return this.#_defs;
-  }
-  #appendFeFunc(feComponentTransfer, func, table) {
-    const feFunc = this.#document.createElementNS(SVG_NS, func);
-    feFunc.setAttribute("type", "discrete");
-    feFunc.setAttribute("tableValues", table);
-    feComponentTransfer.append(feFunc);
   }
   addFilter(maps) {
     if (!maps) {
@@ -3917,15 +3917,8 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
     const url = `url(#${id})`;
     this.#cache.set(maps, url);
     this.#cache.set(key, url);
-    const filter = this.#document.createElementNS(SVG_NS, "filter", SVG_NS);
-    filter.setAttribute("id", id);
-    filter.setAttribute("color-interpolation-filters", "sRGB");
-    const feComponentTransfer = this.#document.createElementNS(SVG_NS, "feComponentTransfer");
-    filter.append(feComponentTransfer);
-    this.#appendFeFunc(feComponentTransfer, "feFuncR", tableR);
-    this.#appendFeFunc(feComponentTransfer, "feFuncG", tableG);
-    this.#appendFeFunc(feComponentTransfer, "feFuncB", tableB);
-    this.#defs.append(filter);
+    const filter = this.#createFilter(id);
+    this.#addTransferMapConversion(tableR, tableG, tableB, filter);
     return url;
   }
   addHCMFilter(fgColor, bgColor) {
@@ -3939,13 +3932,9 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
     if (!fgColor || !bgColor) {
       return this.#hcmUrl;
     }
-    this.#defs.style.color = fgColor;
-    fgColor = getComputedStyle(this.#defs).getPropertyValue("color");
-    const fgRGB = getRGB(fgColor);
+    const fgRGB = this.#getRGB(fgColor);
     fgColor = _util.Util.makeHexColor(...fgRGB);
-    this.#defs.style.color = bgColor;
-    bgColor = getComputedStyle(this.#defs).getPropertyValue("color");
-    const bgRGB = getRGB(bgColor);
+    const bgRGB = this.#getRGB(bgColor);
     bgColor = _util.Util.makeHexColor(...bgRGB);
     this.#defs.style.color = "";
     if (fgColor === "#000000" && bgColor === "#ffffff" || fgColor === bgColor) {
@@ -3958,20 +3947,9 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
     }
     const table = map.join(",");
     const id = `g_${this.#docId}_hcm_filter`;
-    const filter = this.#hcmFilter = this.#document.createElementNS(SVG_NS, "filter", SVG_NS);
-    filter.setAttribute("id", id);
-    filter.setAttribute("color-interpolation-filters", "sRGB");
-    let feComponentTransfer = this.#document.createElementNS(SVG_NS, "feComponentTransfer");
-    filter.append(feComponentTransfer);
-    this.#appendFeFunc(feComponentTransfer, "feFuncR", table);
-    this.#appendFeFunc(feComponentTransfer, "feFuncG", table);
-    this.#appendFeFunc(feComponentTransfer, "feFuncB", table);
-    const feColorMatrix = this.#document.createElementNS(SVG_NS, "feColorMatrix");
-    feColorMatrix.setAttribute("type", "matrix");
-    feColorMatrix.setAttribute("values", "0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0");
-    filter.append(feColorMatrix);
-    feComponentTransfer = this.#document.createElementNS(SVG_NS, "feComponentTransfer");
-    filter.append(feComponentTransfer);
+    const filter = this.#hcmHighlightFilter = this.#createFilter(id);
+    this.#addTransferMapConversion(table, table, table, filter);
+    this.#addGrayConversion(filter);
     const getSteps = (c, n) => {
       const start = fgRGB[c] / 255;
       const end = bgRGB[c] / 255;
@@ -3981,15 +3959,57 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
       }
       return arr.join(",");
     };
-    this.#appendFeFunc(feComponentTransfer, "feFuncR", getSteps(0, 5));
-    this.#appendFeFunc(feComponentTransfer, "feFuncG", getSteps(1, 5));
-    this.#appendFeFunc(feComponentTransfer, "feFuncB", getSteps(2, 5));
-    this.#defs.append(filter);
+    this.#addTransferMapConversion(getSteps(0, 5), getSteps(1, 5), getSteps(2, 5), filter);
     this.#hcmUrl = `url(#${id})`;
     return this.#hcmUrl;
   }
+  addHighlightHCMFilter(fgColor, bgColor, newFgColor, newBgColor) {
+    const key = `${fgColor}-${bgColor}-${newFgColor}-${newBgColor}`;
+    if (this.#hcmHighlightKey === key) {
+      return this.#hcmHighlightUrl;
+    }
+    this.#hcmHighlightKey = key;
+    this.#hcmHighlightUrl = "none";
+    this.#hcmHighlightFilter?.remove();
+    if (!fgColor || !bgColor) {
+      return this.#hcmHighlightUrl;
+    }
+    const [fgRGB, bgRGB] = [fgColor, bgColor].map(this.#getRGB.bind(this));
+    let fgGray = Math.round(0.2126 * fgRGB[0] + 0.7152 * fgRGB[1] + 0.0722 * fgRGB[2]);
+    let bgGray = Math.round(0.2126 * bgRGB[0] + 0.7152 * bgRGB[1] + 0.0722 * bgRGB[2]);
+    let [newFgRGB, newBgRGB] = [newFgColor, newBgColor].map(this.#getRGB.bind(this));
+    if (bgGray < fgGray) {
+      [fgGray, bgGray, newFgRGB, newBgRGB] = [bgGray, fgGray, newBgRGB, newFgRGB];
+    }
+    this.#defs.style.color = "";
+    const getSteps = (fg, bg, n) => {
+      const arr = new Array(256);
+      const step = (bgGray - fgGray) / n;
+      const newStart = fg / 255;
+      const newStep = (bg - fg) / (255 * n);
+      let prev = 0;
+      for (let i = 0; i <= n; i++) {
+        const k = Math.round(fgGray + i * step);
+        const value = newStart + i * newStep;
+        for (let j = prev; j <= k; j++) {
+          arr[j] = value;
+        }
+        prev = k + 1;
+      }
+      for (let i = prev; i < 256; i++) {
+        arr[i] = arr[prev - 1];
+      }
+      return arr.join(",");
+    };
+    const id = `g_${this.#docId}_hcm_highlight_filter`;
+    const filter = this.#hcmHighlightFilter = this.#createFilter(id);
+    this.#addGrayConversion(filter);
+    this.#addTransferMapConversion(getSteps(newFgRGB[0], newBgRGB[0], 5), getSteps(newFgRGB[1], newBgRGB[1], 5), getSteps(newFgRGB[2], newBgRGB[2], 5), filter);
+    this.#hcmHighlightUrl = `url(#${id})`;
+    return this.#hcmHighlightUrl;
+  }
   destroy(keepHCM = false) {
-    if (keepHCM && this.#hcmUrl) {
+    if (keepHCM && (this.#hcmUrl || this.#hcmHighlightUrl)) {
       return;
     }
     if (this.#_defs) {
@@ -4001,6 +4021,36 @@ class DOMFilterFactory extends _base_factory.BaseFilterFactory {
       this.#_cache = null;
     }
     this.#id = 0;
+  }
+  #addGrayConversion(filter) {
+    const feColorMatrix = this.#document.createElementNS(SVG_NS, "feColorMatrix");
+    feColorMatrix.setAttribute("type", "matrix");
+    feColorMatrix.setAttribute("values", "0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0");
+    filter.append(feColorMatrix);
+  }
+  #createFilter(id) {
+    const filter = this.#document.createElementNS(SVG_NS, "filter");
+    filter.setAttribute("color-interpolation-filters", "sRGB");
+    filter.setAttribute("id", id);
+    this.#defs.append(filter);
+    return filter;
+  }
+  #appendFeFunc(feComponentTransfer, func, table) {
+    const feFunc = this.#document.createElementNS(SVG_NS, func);
+    feFunc.setAttribute("type", "discrete");
+    feFunc.setAttribute("tableValues", table);
+    feComponentTransfer.append(feFunc);
+  }
+  #addTransferMapConversion(rTable, gTable, bTable, filter) {
+    const feComponentTransfer = this.#document.createElementNS(SVG_NS, "feComponentTransfer");
+    filter.append(feComponentTransfer);
+    this.#appendFeFunc(feComponentTransfer, "feFuncR", rTable);
+    this.#appendFeFunc(feComponentTransfer, "feFuncG", gTable);
+    this.#appendFeFunc(feComponentTransfer, "feFuncB", bTable);
+  }
+  #getRGB(color) {
+    this.#defs.style.color = color;
+    return getRGB(getComputedStyle(this.#defs).getPropertyValue("color"));
   }
 }
 exports.DOMFilterFactory = DOMFilterFactory;
@@ -4245,14 +4295,7 @@ class StatTimer {
 }
 exports.StatTimer = StatTimer;
 function isValidFetchUrl(url, baseUrl) {
-  try {
-    const {
-      protocol
-    } = baseUrl ? new URL(url, baseUrl) : new URL(url);
-    return protocol === "http:" || protocol === "https:";
-  } catch {
-    return false;
-  }
+  throw new Error("Not implemented: isValidFetchUrl");
 }
 function loadScript(src, removeScriptElement = false) {
   return new Promise((resolve, reject) => {
@@ -4418,6 +4461,9 @@ class BaseFilterFactory {
     return "none";
   }
   addHCMFilter(fgColor, bgColor) {
+    return "none";
+  }
+  addHighlightHCMFilter(fgColor, bgColor, newFgColor, newBgColor) {
     return "none";
   }
   destroy(keepHCM = false) {}
@@ -9976,7 +10022,7 @@ class AnnotationElement {
     container.setAttribute("data-annotation-id", data.id);
     container.style.zIndex = this.parent.zIndex++;
     if (this.data.popupRef) {
-      container.setAttribute("aria-haspopup", true);
+      container.setAttribute("aria-haspopup", "dialog");
     }
     if (data.noRotate) {
       container.classList.add("norotate");
@@ -10193,7 +10239,7 @@ class AnnotationElement {
       container,
       data
     } = this;
-    container.setAttribute("aria-haspopup", true);
+    container.setAttribute("aria-haspopup", "dialog");
     const popup = new PopupAnnotationElement({
       data: {
         color: data.color,
@@ -10284,6 +10330,16 @@ class AnnotationElement {
   }
   getElementsToTriggerPopup() {
     return this.quadrilaterals || this.container;
+  }
+  addHighlightArea() {
+    const triggers = this.getElementsToTriggerPopup();
+    if (Array.isArray(triggers)) {
+      for (const element of triggers) {
+        element.classList.add("highlightArea");
+      }
+    } else {
+      triggers.classList.add("highlightArea");
+    }
   }
 }
 class LinkAnnotationElement extends AnnotationElement {
@@ -11364,6 +11420,7 @@ class PopupAnnotationElement extends AnnotationElement {
     for (const element of this.elements) {
       element.popup = popup;
       elementIds.push(element.data.id);
+      element.addHighlightArea();
     }
     this.container.setAttribute("aria-controls", elementIds.join(","));
     return this.container;
@@ -11629,6 +11686,9 @@ class LineAnnotationElement extends AnnotationElement {
   getElementsToTriggerPopup() {
     return this.#line;
   }
+  addHighlightArea() {
+    this.container.classList.add("highlightArea");
+  }
 }
 class SquareAnnotationElement extends AnnotationElement {
   #square = null;
@@ -11666,6 +11726,9 @@ class SquareAnnotationElement extends AnnotationElement {
   getElementsToTriggerPopup() {
     return this.#square;
   }
+  addHighlightArea() {
+    this.container.classList.add("highlightArea");
+  }
 }
 class CircleAnnotationElement extends AnnotationElement {
   #circle = null;
@@ -11702,6 +11765,9 @@ class CircleAnnotationElement extends AnnotationElement {
   }
   getElementsToTriggerPopup() {
     return this.#circle;
+  }
+  addHighlightArea() {
+    this.container.classList.add("highlightArea");
   }
 }
 class PolylineAnnotationElement extends AnnotationElement {
@@ -11744,6 +11810,9 @@ class PolylineAnnotationElement extends AnnotationElement {
   }
   getElementsToTriggerPopup() {
     return this.#polyline;
+  }
+  addHighlightArea() {
+    this.container.classList.add("highlightArea");
   }
 }
 class PolygonAnnotationElement extends PolylineAnnotationElement {
@@ -11813,6 +11882,9 @@ class InkAnnotationElement extends AnnotationElement {
   }
   getElementsToTriggerPopup() {
     return this.#polylines;
+  }
+  addHighlightArea() {
+    this.container.classList.add("highlightArea");
   }
 }
 exports.InkAnnotationElement = InkAnnotationElement;
@@ -11950,6 +12022,9 @@ class FileAttachmentAnnotationElement extends AnnotationElement {
   }
   getElementsToTriggerPopup() {
     return this.#trigger;
+  }
+  addHighlightArea() {
+    this.container.classList.add("highlightArea");
   }
   _download() {
     this.downloadManager?.openOrDownloadData(this.container, this.content, this.filename);
@@ -13460,8 +13535,8 @@ var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.8.107';
-const pdfjsBuild = '03059e1f8';
+const pdfjsVersion = '3.8.138';
+const pdfjsBuild = '88c7c8b5b';
 const SVGGraphics = null;
 exports.SVGGraphics = SVGGraphics;
 })();
