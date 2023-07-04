@@ -1229,10 +1229,11 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
         TraceEdge(trc, &stubInfo->getStubField<T, GetterSetter*>(stub, offset),
                   "cacheir-getter-setter");
         break;
-      case StubField::Type::JSObject:
+      case StubField::Type::JSObject: {
         TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
                   "cacheir-object");
         break;
+      }
       case StubField::Type::WeakObject:
         if (ShouldTraceWeakEdgeInStub<T>(trc)) {
           TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
