@@ -256,6 +256,7 @@ fn define_benchmarks(c: &mut Criterion) {
             sign_extension: true,
             function_references: true,
             memory_control: true,
+            gc: true,
         })
     }
 

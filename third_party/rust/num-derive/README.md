@@ -2,7 +2,7 @@
 
 [![crate](https://img.shields.io/crates/v/num-derive.svg)](https://crates.io/crates/num-derive)
 [![documentation](https://docs.rs/num-derive/badge.svg)](https://docs.rs/num-derive)
-[![minimum rustc 1.31](https://img.shields.io/badge/rustc-1.31+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+[![minimum rustc 1.56](https://img.shields.io/badge/rustc-1.56+-red.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 [![build status](https://github.com/rust-num/num-derive/workflows/master/badge.svg)](https://github.com/rust-num/num-derive/actions)
 
 Procedural macros to derive numeric traits in Rust.
@@ -14,7 +14,7 @@ Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
 num-traits = "0.2"
-num-derive = "0.3"
+num-derive = "0.4"
 ```
 
 and this to your crate root:
@@ -51,7 +51,7 @@ Release notes are available in [RELEASES.md](RELEASES.md).
 
 ## Compatibility
 
-The `num-derive` crate is tested for rustc 1.31 and greater.
+The `num-derive` crate is tested for rustc 1.56 and greater.
 
 ## License
 

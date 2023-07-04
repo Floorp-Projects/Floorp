@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    of extra channels (like alpha) separately.
 
 ### Removed
+ - API: the Butteraugli API (`jxl/butteraugli.h`) was removed.
+ - encoder and decoder API: all deprecated functions were removed:
+   `JxlDecoderDefaultPixelFormat`, `JxlEncoderOptionsSetLossless`,
+   `JxlEncoderOptionsSetEffort`, `JxlEncoderOptionsSetDecodingSpeed`,
+   `JxlEncoderOptionsSetDistance`, `JxlEncoderOptionsCreate`, as well as
+   the deprecated enumerator values `JXL_DEC_EXTENSIONS`, `JXL_ENC_NOT_SUPPORTED`,
+   `JXL_TYPE_BOOLEAN`, `JXL_TYPE_UINT32`, and deprecated type `JxlEncoderOptions`.
+ - decoder API: the signature of `JxlDecoderGetColorAsEncodedProfile`,
+   `JxlDecoderGetICCProfileSize`, and `JxlDecoderGetColorAsICCProfile`
+   changed: a deprecated unused argument was removed.
 
 ### Changed 
  - changed the name of the cjxl flag `photon_noise` to `photon_noise_iso`

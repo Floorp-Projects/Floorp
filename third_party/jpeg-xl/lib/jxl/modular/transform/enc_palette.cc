@@ -268,12 +268,12 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
       begin_c, end_c, nb_colors);
   nb_deltas = 0;
   bool delta_used = false;
-  std::set<std::vector<pixel_type>>
-      candidate_palette;  // ordered lexicographically
+  std::set<std::vector<pixel_type>> candidate_palette;
   std::vector<std::vector<pixel_type>> candidate_palette_imageorder;
   std::vector<pixel_type> color(nb);
   std::vector<float> color_with_error(nb);
   std::vector<const pixel_type *> p_in(nb);
+  std::map<std::vector<pixel_type>, size_t> inv_palette;
 
   if (lossy) {
     palette_iteration_data.FindFrequentColorDeltas(w * h, input.bitdepth);
@@ -355,28 +355,30 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
   }
 
   int x = 0;
-  if (ordered) {
-    JXL_DEBUG_V(7, "Palette of %i colors, using lexicographic order",
-                nb_colors);
-    for (auto pcol : candidate_palette) {
-      JXL_DEBUG_V(9, "  Color %i :  ", x);
-      for (size_t i = 0; i < nb; i++) {
-        p_palette[nb_deltas + i * onerow + x] = pcol[i];
-      }
-      for (size_t i = 0; i < nb; i++) {
-        JXL_DEBUG_V(9, "%i ", pcol[i]);
-      }
-      x++;
-    }
+  if (ordered && nb >= 3) {
+    JXL_DEBUG_V(7, "Palette of %i colors, using luma order", nb_colors);
+    // sort on luma (multiplied by alpha if available)
+    std::sort(candidate_palette_imageorder.begin(),
+              candidate_palette_imageorder.end(),
+              [](std::vector<pixel_type> ap, std::vector<pixel_type> bp) {
+                float ay, by;
+                ay = (0.299f * ap[0] + 0.587f * ap[1] + 0.114f * ap[2] + 0.1f);
+                if (ap.size() > 3) ay *= 1.f + ap[3];
+                by = (0.299f * bp[0] + 0.587f * bp[1] + 0.114f * bp[2] + 0.1f);
+                if (bp.size() > 3) by *= 1.f + bp[3];
+                return ay < by;
+              });
   } else {
     JXL_DEBUG_V(7, "Palette of %i colors, using image order", nb_colors);
-    for (auto pcol : candidate_palette_imageorder) {
-      JXL_DEBUG_V(9, "  Color %i :  ", x);
-      for (size_t i = 0; i < nb; i++)
-        p_palette[nb_deltas + i * onerow + x] = pcol[i];
-      for (size_t i = 0; i < nb; i++) JXL_DEBUG_V(9, "%i ", pcol[i]);
-      x++;
+  }
+  for (auto pcol : candidate_palette_imageorder) {
+    JXL_DEBUG_V(9, "  Color %i :  ", x);
+    for (size_t i = 0; i < nb; i++) {
+      p_palette[nb_deltas + i * onerow + x] = pcol[i];
+      JXL_DEBUG_V(9, "%i ", pcol[i]);
     }
+    inv_palette[pcol] = x;
+    x++;
   }
   std::vector<weighted::State> wp_states;
   for (size_t c = 0; c < nb; c++) {
@@ -405,20 +407,7 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
       int index;
       if (!lossy) {
         for (size_t c = 0; c < nb; c++) color[c] = p_in[c][x];
-        // Exact search.
-        for (index = 0; static_cast<uint32_t>(index) < nb_colors; index++) {
-          bool found = true;
-          for (size_t c = 0; c < nb; c++) {
-            if (color[c] != p_palette[c * onerow + index]) {
-              found = false;
-              break;
-            }
-          }
-          if (found) break;
-        }
-        if (index < static_cast<int>(nb_deltas)) {
-          delta_used = true;
-        }
+        index = inv_palette[color];
       } else {
         int best_index = 0;
         bool best_is_delta = false;

@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "lib/jxl/base/bits.h"
+#include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/image_bundle.h"
 #include "lib/jxl/jpeg/dec_jpeg_serialization_state.h"
@@ -76,18 +77,19 @@ static JXL_INLINE void Reserve(JpegBitWriter* bw, size_t n_bytes) {
  * space in the output buffer. Emits up to 2 bytes to buffer.
  */
 static JXL_INLINE void EmitByte(JpegBitWriter* bw, int byte) {
-  bw->data[bw->pos++] = byte;
-  if (byte == 0xFF) bw->data[bw->pos++] = 0;
+  bw->data[bw->pos] = byte;
+  bw->data[bw->pos + 1] = 0;
+  bw->pos += (byte != 0xFF ? 1 : 2);
 }
 
-static JXL_INLINE void DischargeBitBuffer(JpegBitWriter* bw) {
-  // At this point we are ready to emit the most significant 6 bytes of
-  // put_buffer_ to the output.
+static JXL_INLINE void DischargeBitBuffer(JpegBitWriter* bw, int nbits,
+                                          uint64_t bits) {
+  // At this point we are ready to emit the put_buffer to the output.
   // The JPEG format requires that after every 0xff byte in the entropy
   // coded section, there is a zero byte, therefore we first check if any of
-  // the 6 most significant bytes of put_buffer_ is 0xFF.
-  Reserve(bw, 12);
-  if (HasZeroByte(~bw->put_buffer | 0xFFFF)) {
+  // the 8 bytes of put_buffer is 0xFF.
+  bw->put_buffer |= (bits >> -bw->put_bits);
+  if (JXL_UNLIKELY(HasZeroByte(~bw->put_buffer))) {
     // We have a 0xFF byte somewhere, examine each byte and append a zero
     // byte if necessary.
     EmitByte(bw, (bw->put_buffer >> 56) & 0xFF);
@@ -96,32 +98,25 @@ static JXL_INLINE void DischargeBitBuffer(JpegBitWriter* bw) {
     EmitByte(bw, (bw->put_buffer >> 32) & 0xFF);
     EmitByte(bw, (bw->put_buffer >> 24) & 0xFF);
     EmitByte(bw, (bw->put_buffer >> 16) & 0xFF);
+    EmitByte(bw, (bw->put_buffer >> 8) & 0xFF);
+    EmitByte(bw, (bw->put_buffer) & 0xFF);
   } else {
-    // We don't have any 0xFF bytes, output all 6 bytes without checking.
-    bw->data[bw->pos] = (bw->put_buffer >> 56) & 0xFF;
-    bw->data[bw->pos + 1] = (bw->put_buffer >> 48) & 0xFF;
-    bw->data[bw->pos + 2] = (bw->put_buffer >> 40) & 0xFF;
-    bw->data[bw->pos + 3] = (bw->put_buffer >> 32) & 0xFF;
-    bw->data[bw->pos + 4] = (bw->put_buffer >> 24) & 0xFF;
-    bw->data[bw->pos + 5] = (bw->put_buffer >> 16) & 0xFF;
-    bw->pos += 6;
+    // We don't have any 0xFF bytes, output all 8 bytes without checking.
+    StoreBE64(bw->put_buffer, bw->data + bw->pos);
+    bw->pos += 8;
   }
-  bw->put_buffer <<= 48;
-  bw->put_bits += 48;
+
+  bw->put_bits += 64;
+  bw->put_buffer = bits << bw->put_bits;
 }
 
 static JXL_INLINE void WriteBits(JpegBitWriter* bw, int nbits, uint64_t bits) {
-  // This is an optimization; if everything goes well,
-  // then |nbits| is positive; if non-existing Huffman symbol is going to be
-  // encoded, its length should be zero; later encoder could check the
-  // "health" of JpegBitWriter.
-  if (nbits == 0) {
-    bw->healthy = false;
-    return;
-  }
   bw->put_bits -= nbits;
-  bw->put_buffer |= (bits << bw->put_bits);
-  if (bw->put_bits <= 16) DischargeBitBuffer(bw);
+  if (JXL_UNLIKELY(bw->put_bits < 0)) {
+    DischargeBitBuffer(bw, nbits, bits);
+  } else {
+    bw->put_buffer |= (bits << bw->put_bits);
+  }
 }
 
 void EmitMarker(JpegBitWriter* bw, int marker) {
@@ -196,7 +191,28 @@ static JXL_INLINE void WriteSymbol(int symbol, HuffmanCodeTable* table,
   if (kOutputMode == OutputModes::kModeHistogram) {
     ++table->depth[symbol];
   } else {
+    // This is an optimization; if everything goes well,
+    // then |nbits| is positive; if non-existing Huffman symbol is going to be
+    // encoded, its length should be zero; later the encoder could check the
+    // "health" of JpegBitWriter.
+    // Not checking this can cause bad output without error on corrupt input,
+    // but that's OK. The check causes a noticeable slowdown.
+#if false
+    bw->healthy &= table->depth[symbol] != 0;
+#endif
     WriteBits(bw, table->depth[symbol], table->code[symbol]);
+  }
+}
+
+template <int kOutputMode>
+static JXL_INLINE void WriteSymbolBits(int symbol, HuffmanCodeTable* table,
+                                       JpegBitWriter* bw, int nbits,
+                                       uint64_t bits) {
+  if (kOutputMode == OutputModes::kModeHistogram) {
+    ++table->depth[symbol];
+  } else {
+    WriteBits(bw, nbits + table->depth[symbol],
+              bits | (table->code[symbol] << nbits));
   }
 }
 
@@ -490,42 +506,115 @@ bool EncodeDCTBlockSequential(const coeff_t* coeffs, HuffmanCodeTable* dc_huff,
   temp2 = coeffs[0];
   temp = temp2 - *last_dc_coeff;
   *last_dc_coeff = temp2;
-  temp2 = temp;
-  if (temp < 0) {
-    temp = -temp;
-    if (temp < 0) return false;
-    temp2--;
-  }
-  int dc_nbits = (temp == 0) ? 0 : (FloorLog2Nonzero<uint32_t>(temp) + 1);
+  temp2 = temp >> (8 * sizeof(coeff_t) - 1);
+  temp += temp2;
+  temp2 ^= temp;
+
+  int dc_nbits = (temp2 == 0) ? 0 : (FloorLog2Nonzero<uint32_t>(temp2) + 1);
   WriteSymbol<kOutputMode>(dc_nbits, dc_huff, bw);
+#if false
+  // If the input is corrupt, this could be triggered. Checking is
+  // costly though, so it makes more sense to avoid this branch.
+  // (producing a corrupt JPEG when the input is corrupt, instead
+  // of catching it and returning error)
   if (dc_nbits >= 12) return false;
-  if (dc_nbits > 0) {
-    WriteBits(bw, dc_nbits, temp2 & ((1u << dc_nbits) - 1));
+#endif
+  WriteBits(bw, dc_nbits, temp & ((1u << dc_nbits) - 1));
+  int16_t r = 0;
+
+  // Manually unfolded loop over kJPEGNaturalOrder[k] for k=1..63
+#define kloop(jpeg_natural_order_of_k)                            \
+  {                                                               \
+    if ((temp = coeffs[jpeg_natural_order_of_k]) == 0) {          \
+      r++;                                                        \
+    } else {                                                      \
+      temp2 = temp >> (8 * sizeof(coeff_t) - 1);                  \
+      temp += temp2;                                              \
+      temp2 ^= temp;                                              \
+      if (JXL_UNLIKELY(r > 15)) {                                 \
+        WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);              \
+        r -= 16;                                                  \
+      }                                                           \
+      if (JXL_UNLIKELY(r > 15)) {                                 \
+        WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);              \
+        r -= 16;                                                  \
+      }                                                           \
+      if (JXL_UNLIKELY(r > 15)) {                                 \
+        WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);              \
+        r -= 16;                                                  \
+      }                                                           \
+      int ac_nbits = FloorLog2Nonzero<uint32_t>(temp2) + 1;       \
+      int symbol = (r << 4u) + ac_nbits;                          \
+      WriteSymbolBits<kOutputMode>(symbol, ac_huff, bw, ac_nbits, \
+                                   temp & ((1 << ac_nbits) - 1)); \
+      r = 0;                                                      \
+    }                                                             \
   }
-  int r = 0;
-  for (int k = 1; k < 64; ++k) {
-    if ((temp = coeffs[kJPEGNaturalOrder[k]]) == 0) {
-      r++;
-      continue;
-    }
-    if (temp < 0) {
-      temp = -temp;
-      if (temp < 0) return false;
-      temp2 = ~temp;
-    } else {
-      temp2 = temp;
-    }
-    while (r > 15) {
-      WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);
-      r -= 16;
-    }
-    int ac_nbits = FloorLog2Nonzero<uint32_t>(temp) + 1;
-    if (ac_nbits >= 16) return false;
-    int symbol = (r << 4u) + ac_nbits;
-    WriteSymbol<kOutputMode>(symbol, ac_huff, bw);
-    WriteBits(bw, ac_nbits, temp2 & ((1 << ac_nbits) - 1));
-    r = 0;
-  }
+
+  kloop(1);
+  kloop(8);
+  kloop(16);
+  kloop(9);
+  kloop(2);
+  kloop(3);
+  kloop(10);
+  kloop(17);
+  kloop(24);
+  kloop(32);
+  kloop(25);
+  kloop(18);
+  kloop(11);
+  kloop(4);
+  kloop(5);
+  kloop(12);
+  kloop(19);
+  kloop(26);
+  kloop(33);
+  kloop(40);
+  kloop(48);
+  kloop(41);
+  kloop(34);
+  kloop(27);
+  kloop(20);
+  kloop(13);
+  kloop(6);
+  kloop(7);
+  kloop(14);
+  kloop(21);
+  kloop(28);
+  kloop(35);
+  kloop(42);
+  kloop(49);
+  kloop(56);
+  kloop(57);
+  kloop(50);
+  kloop(43);
+  kloop(36);
+  kloop(29);
+  kloop(22);
+  kloop(15);
+  kloop(23);
+  kloop(30);
+  kloop(37);
+  kloop(44);
+  kloop(51);
+  kloop(58);
+  kloop(59);
+  kloop(52);
+  kloop(45);
+  kloop(38);
+  kloop(31);
+  kloop(39);
+  kloop(46);
+  kloop(53);
+  kloop(60);
+  kloop(61);
+  kloop(54);
+  kloop(47);
+  kloop(55);
+  kloop(62);
+  kloop(63);
+
   for (int i = 0; i < num_zero_runs; ++i) {
     WriteSymbol<kOutputMode>(0xf0, ac_huff, bw);
     r -= 16;
@@ -783,6 +872,7 @@ SerializationStatus JXL_NOINLINE DoEncodeScan(const JPEGData& jpg,
         ss.restarts_to_go = restart_interval;
         memset(ss.last_dc_coeff, 0, sizeof(ss.last_dc_coeff));
       }
+
       // Encode one MCU
       for (size_t i = 0; i < scan_info.num_components; ++i) {
         const JPEGComponentScanInfo& si = scan_info.components[i];
@@ -797,6 +887,8 @@ SerializationStatus JXL_NOINLINE DoEncodeScan(const JPEGData& jpg,
         HuffmanCodeTable* ac_huff = &state->ac_huff_table[ac_tbl_idx];
         int n_blocks_y = is_interleaved ? c.v_samp_factor : 1;
         int n_blocks_x = is_interleaved ? c.h_samp_factor : 1;
+        // compressed size per block cannot be more than 512 bytes per component
+        Reserve(bw, 512 * n_blocks_y * n_blocks_x);
         for (int iy = 0; iy < n_blocks_y; ++iy) {
           for (int ix = 0; ix < n_blocks_x; ++ix) {
             int block_y = ss.mcu_y * n_blocks_y + iy;

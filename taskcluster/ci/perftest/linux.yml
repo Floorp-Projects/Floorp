@@ -28,7 +28,7 @@ try-xpcshell:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             --on-try
             --flavor desktop-browser
             --output $MOZ_FETCHES_DIR/../artifacts
@@ -50,7 +50,7 @@ webpagetest-firefox:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             testing/performance/perftest_WPT_firefox_init_file.js
             --flavor=webpagetest
             --webpagetest
@@ -72,7 +72,7 @@ webpagetest-chrome:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             testing/performance/perftest_WPT_chrome_init_file.js
             --flavor=webpagetest
             --webpagetest
@@ -89,7 +89,7 @@ try-browsertime:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             --on-try
             --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
             --flavor desktop-browser
@@ -107,7 +107,7 @@ domcount:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             browser/base/content/test/perftest_browser_xhtml_dom.js
             --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
             --flavor desktop-browser
@@ -127,7 +127,7 @@ http3:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             xpcshell/tests/netwerk/test/unit/test_http3_perf.js
             --flavor xpcshell
             --perfherder
@@ -221,7 +221,7 @@ livesites:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             {perftest_testname}
             --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
             --browsertime-iterations 10
@@ -246,7 +246,7 @@ controlled:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             netwerk/test/perf/perftest_http3_controlled.js
             --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
             --browsertime-iterations 1
@@ -269,7 +269,7 @@ perfstats:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
             --flavor desktop-browser
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver
@@ -297,7 +297,7 @@ record-websites:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             --flavor desktop-browser
             --verbose
             --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox-bin
@@ -319,7 +319,7 @@ side-by-side:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             tools side-by-side
             -t {test_name}
             --base-platform {platform}
@@ -340,7 +340,7 @@ mwu-change-detector:
         command: >-
             mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
             cd $MOZ_FETCHES_DIR &&
-            python3.8 python/mozperftest/mozperftest/runner.py
+            python3 python/mozperftest/mozperftest/runner.py
             tools change-detector
             --task-name {task_name}
             --base-revision {base_revision}

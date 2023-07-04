@@ -285,10 +285,6 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
 
   RefPtr<EarlyHintPreloader> earlyHintPreloader = new EarlyHintPreloader();
 
-  DebugOnly<bool> result =
-      aOngoingEarlyHints->Add(*hashKey, earlyHintPreloader);
-  MOZ_ASSERT(result);
-
   // Security flags for modulepreload's request mode are computed here directly
   // until full support for worker destinations can be added.
   //
@@ -381,6 +377,10 @@ void EarlyHintPreloader::MaybeCreateAndInsertPreload(
       aCookieJarSettings, aBrowsingContextID, aCallbacks));
 
   earlyHintPreloader->SetLinkHeader(aLinkHeader);
+
+  DebugOnly<bool> result =
+      aOngoingEarlyHints->Add(*hashKey, earlyHintPreloader);
+  MOZ_ASSERT(result);
 }
 
 nsresult EarlyHintPreloader::OpenChannel(
@@ -429,7 +429,10 @@ nsresult EarlyHintPreloader::OpenChannel(
   PriorizeAsPreload();
 
   rv = mChannel->AsyncOpen(mParentListener);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    mParentListener = nullptr;
+    return rv;
+  }
 
   SetState(ePreloaderOpened);
 

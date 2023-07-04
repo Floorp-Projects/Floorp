@@ -724,6 +724,8 @@ pub struct Type<'a> {
     pub def: TypeDef<'a>,
     /// The declared parent type of this definition.
     pub parent: Option<Index<'a>>,
+    /// Whether this type is final or not. By default types are final.
+    pub final_type: Option<bool>,
 }
 
 impl<'a> Peek for Type<'a> {
@@ -741,19 +743,28 @@ impl<'a> Parse<'a> for Type<'a> {
         let id = parser.parse()?;
         let name = parser.parse()?;
 
-        let (parent, def) = if parser.peek2::<kw::sub>() {
+        let (parent, def, final_type) = if parser.peek2::<kw::sub>() {
             parser.parens(|parser| {
                 parser.parse::<kw::sub>()?;
+
+                let final_type: Option<bool> =
+                if parser.peek::<kw::r#final>() {
+                    parser.parse::<kw::r#final>()?;
+                    Some(true)
+                } else {
+                    Some(false)
+                };
+
                 let parent = if parser.peek::<Index<'a>>() {
                     parser.parse()?
                 } else {
                     None
                 };
                 let def = parser.parens(|parser| parser.parse())?;
-                Ok((parent, def))
+                Ok((parent, def, final_type))
             })?
         } else {
-            (None, parser.parens(|parser| parser.parse())?)
+            (None, parser.parens(|parser| parser.parse())?, None)
         };
 
         Ok(Type {
@@ -762,6 +773,7 @@ impl<'a> Parse<'a> for Type<'a> {
             name,
             def,
             parent,
+            final_type,
         })
     }
 }

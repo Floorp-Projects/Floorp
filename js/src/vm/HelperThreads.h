@@ -241,11 +241,6 @@ JS::OffThreadToken* StartOffThreadDecodeStencil(
     const JS::TranscodeRange& range, JS::OffThreadCompileCallback callback,
     void* callbackData);
 
-JS::OffThreadToken* StartOffThreadDecodeMultiStencils(
-    JSContext* cx, const JS::DecodeOptions& options,
-    JS::TranscodeSources& sources, JS::OffThreadCompileCallback callback,
-    void* callbackData);
-
 // Start off-thread delazification task, to race the delazification of inner
 // functions.
 void StartOffThreadDelazification(JSContext* cx,

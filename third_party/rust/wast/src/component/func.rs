@@ -38,6 +38,7 @@ impl<'a> Parse<'a> for CoreFunc<'a> {
 
 /// Represents the kind of core functions.
 #[derive(Debug)]
+#[allow(missing_docs)]
 pub enum CoreFuncKind<'a> {
     /// The core function is defined in terms of lowering a component function.
     ///
@@ -46,7 +47,10 @@ pub enum CoreFuncKind<'a> {
     /// The core function is defined in terms of aliasing a module instance export.
     ///
     /// The core function is actually a member of the core alias section.
-    Alias(InlineExportAlias<'a>),
+    Alias(InlineExportAlias<'a, true>),
+    ResourceNew(CanonResourceNew<'a>),
+    ResourceDrop(CanonResourceDrop<'a>),
+    ResourceRep(CanonResourceRep<'a>),
 }
 
 impl<'a> Parse<'a> for CoreFuncKind<'a> {
@@ -55,9 +59,20 @@ impl<'a> Parse<'a> for CoreFuncKind<'a> {
             let mut l = parser.lookahead1();
             if l.peek::<kw::canon>() {
                 parser.parse::<kw::canon>()?;
-                Ok(Self::Lower(parser.parse()?))
             } else if l.peek::<kw::alias>() {
-                Ok(Self::Alias(parser.parse()?))
+                return Ok(Self::Alias(parser.parse()?));
+            } else {
+                return Err(l.error());
+            }
+            let mut l = parser.lookahead1();
+            if l.peek::<kw::lower>() {
+                Ok(CoreFuncKind::Lower(parser.parse()?))
+            } else if l.peek::<kw::resource_new>() {
+                Ok(CoreFuncKind::ResourceNew(parser.parse()?))
+            } else if l.peek::<kw::resource_drop>() {
+                Ok(CoreFuncKind::ResourceDrop(parser.parse()?))
+            } else if l.peek::<kw::resource_rep>() {
+                Ok(CoreFuncKind::ResourceRep(parser.parse()?))
             } else {
                 Err(l.error())
             }
@@ -128,7 +143,7 @@ pub enum FuncKind<'a> {
     /// The function is defined in terms of aliasing a component instance export.
     ///
     /// The function is actually a member of the alias section.
-    Alias(InlineExportAlias<'a>),
+    Alias(InlineExportAlias<'a, false>),
 }
 
 impl<'a> Parse<'a> for FuncKind<'a> {
@@ -189,29 +204,49 @@ impl<'a> Parse<'a> for CanonicalFunc<'a> {
                 kind: CanonicalFuncKind::Lift { info, ty },
             })
         } else if parser.peek::<kw::lower>() {
-            let info = parser.parse()?;
-            let (id, name) = parser.parens(|parser| {
-                parser.parse::<kw::core>()?;
-                parser.parse::<kw::func>()?;
-                let id = parser.parse()?;
-                let name = parser.parse()?;
-                Ok((id, name))
-            })?;
-
-            Ok(Self {
-                span,
-                id,
-                name,
-                kind: CanonicalFuncKind::Lower(info),
-            })
+            Self::parse_core_func(span, parser, CanonicalFuncKind::Lower)
+        } else if parser.peek::<kw::resource_new>() {
+            Self::parse_core_func(span, parser, CanonicalFuncKind::ResourceNew)
+        } else if parser.peek::<kw::resource_drop>() {
+            Self::parse_core_func(span, parser, CanonicalFuncKind::ResourceDrop)
+        } else if parser.peek::<kw::resource_rep>() {
+            Self::parse_core_func(span, parser, CanonicalFuncKind::ResourceRep)
         } else {
             Err(parser.error("expected `canon lift` or `canon lower`"))
         }
     }
 }
 
+impl<'a> CanonicalFunc<'a> {
+    fn parse_core_func<T>(
+        span: Span,
+        parser: Parser<'a>,
+        variant: fn(T) -> CanonicalFuncKind<'a>,
+    ) -> Result<Self>
+    where
+        T: Parse<'a>,
+    {
+        let info = parser.parse()?;
+        let (id, name) = parser.parens(|parser| {
+            parser.parse::<kw::core>()?;
+            parser.parse::<kw::func>()?;
+            let id = parser.parse()?;
+            let name = parser.parse()?;
+            Ok((id, name))
+        })?;
+
+        Ok(Self {
+            span,
+            id,
+            name,
+            kind: variant(info),
+        })
+    }
+}
+
 /// Possible ways to define a canonical function in the text format.
 #[derive(Debug)]
+#[allow(missing_docs)]
 pub enum CanonicalFuncKind<'a> {
     /// A canonical function that is defined in terms of lifting a core function.
     Lift {
@@ -222,6 +257,10 @@ pub enum CanonicalFuncKind<'a> {
     },
     /// A canonical function that is defined in terms of lowering a component function.
     Lower(CanonLower<'a>),
+
+    ResourceNew(CanonResourceNew<'a>),
+    ResourceDrop(CanonResourceDrop<'a>),
+    ResourceRep(CanonResourceRep<'a>),
 }
 
 /// Information relating to lifting a core function.
@@ -291,6 +330,81 @@ impl Default for CanonLower<'_> {
                 export_names: Vec::new(),
             },
             opts: Vec::new(),
+        }
+    }
+}
+
+/// Information relating to the `resource.new` intrinsic.
+#[derive(Debug)]
+pub struct CanonResourceNew<'a> {
+    /// The resource type that this intrinsic creates an owned reference to.
+    pub ty: Index<'a>,
+}
+
+impl<'a> Parse<'a> for CanonResourceNew<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        parser.parse::<kw::resource_new>()?;
+
+        Ok(Self {
+            ty: parser.parse()?,
+        })
+    }
+}
+
+impl Default for CanonResourceNew<'_> {
+    fn default() -> Self {
+        CanonResourceNew {
+            ty: Index::Num(0, Span::from_offset(0)),
+        }
+    }
+}
+
+/// Information relating to the `resource.drop` intrinsic.
+#[derive(Debug)]
+pub struct CanonResourceDrop<'a> {
+    /// The type that this intrinsic is dropping, either (borrow T) or (own T)
+    pub ty: ComponentValType<'a>,
+}
+
+impl<'a> Parse<'a> for CanonResourceDrop<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        parser.parse::<kw::resource_drop>()?;
+
+        Ok(Self {
+            ty: parser.parse()?,
+        })
+    }
+}
+
+impl Default for CanonResourceDrop<'_> {
+    fn default() -> Self {
+        CanonResourceDrop {
+            ty: ComponentValType::Ref(Index::Num(0, Span::from_offset(0))),
+        }
+    }
+}
+
+/// Information relating to the `resource.rep` intrinsic.
+#[derive(Debug)]
+pub struct CanonResourceRep<'a> {
+    /// The resource type that this intrinsic is accessing.
+    pub ty: Index<'a>,
+}
+
+impl<'a> Parse<'a> for CanonResourceRep<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        parser.parse::<kw::resource_rep>()?;
+
+        Ok(Self {
+            ty: parser.parse()?,
+        })
+    }
+}
+
+impl Default for CanonResourceRep<'_> {
+    fn default() -> Self {
+        CanonResourceRep {
+            ty: Index::Num(0, Span::from_offset(0)),
         }
     }
 }

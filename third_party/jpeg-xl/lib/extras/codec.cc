@@ -26,7 +26,6 @@
 #include "lib/extras/enc/pgx.h"
 #include "lib/extras/enc/pnm.h"
 #include "lib/extras/packed_image_convert.h"
-#include "lib/jxl/base/file_io.h"
 #include "lib/jxl/image_bundle.h"
 
 namespace jxl {
@@ -50,20 +49,10 @@ Status SetFromBytes(const Span<const uint8_t> bytes,
   return JXL_FAILURE("Codecs failed to decode");
 }
 
-Status SetFromFile(const std::string& pathname,
-                   const extras::ColorHints& color_hints, CodecInOut* io,
-                   ThreadPool* pool, const SizeConstraints* constraints,
-                   extras::Codec* orig_codec) {
-  std::vector<uint8_t> encoded;
-  JXL_RETURN_IF_ERROR(ReadFile(pathname, &encoded));
-  JXL_RETURN_IF_ERROR(SetFromBytes(Span<const uint8_t>(encoded), color_hints,
-                                   io, pool, constraints, orig_codec));
-  return true;
-}
-
 Status Encode(const CodecInOut& io, const extras::Codec codec,
               const ColorEncoding& c_desired, size_t bits_per_sample,
               std::vector<uint8_t>* bytes, ThreadPool* pool) {
+  bytes->clear();
   JXL_CHECK(!io.Main().c_current().ICC().empty());
   JXL_CHECK(!c_desired.ICC().empty());
   io.CheckMetadata();
@@ -148,15 +137,15 @@ Status Encode(const CodecInOut& io, const extras::Codec codec,
   return true;
 }
 
-Status EncodeToFile(const CodecInOut& io, const ColorEncoding& c_desired,
-                    size_t bits_per_sample, const std::string& pathname,
-                    ThreadPool* pool) {
-  const std::string extension = Extension(pathname);
-  const extras::Codec codec =
-      extras::CodecFromExtension(extension, &bits_per_sample);
+Status Encode(const CodecInOut& io, const ColorEncoding& c_desired,
+              size_t bits_per_sample, const std::string& pathname,
+              std::vector<uint8_t>* bytes, ThreadPool* pool) {
+  std::string extension;
+  const extras::Codec codec = extras::CodecFromPath(
+      pathname, &bits_per_sample, /* basename */ nullptr, &extension);
 
   // Warn about incorrect usage of PGM/PGX/PPM - only the latter supports
-  // color, but CodecFromExtension lumps them all together.
+  // color, but CodecFromPath lumps them all together.
   if (codec == extras::Codec::kPNM && extension != ".pfm") {
     if (io.Main().HasAlpha() && extension != ".pam") {
       JXL_WARNING(
@@ -179,16 +168,14 @@ Status EncodeToFile(const CodecInOut& io, const ColorEncoding& c_desired,
     bits_per_sample = 16;
   }
 
-  std::vector<uint8_t> encoded;
-  return Encode(io, codec, c_desired, bits_per_sample, &encoded, pool) &&
-         WriteFile(encoded, pathname);
+  return Encode(io, codec, c_desired, bits_per_sample, bytes, pool);
 }
 
-Status EncodeToFile(const CodecInOut& io, const std::string& pathname,
-                    ThreadPool* pool) {
+Status Encode(const CodecInOut& io, const std::string& pathname,
+              std::vector<uint8_t>* bytes, ThreadPool* pool) {
   // TODO(lode): need to take the floating_point_sample field into account
-  return EncodeToFile(io, io.metadata.m.color_encoding,
-                      io.metadata.m.bit_depth.bits_per_sample, pathname, pool);
+  return Encode(io, io.metadata.m.color_encoding,
+                io.metadata.m.bit_depth.bits_per_sample, pathname, bytes, pool);
 }
 
 }  // namespace jxl

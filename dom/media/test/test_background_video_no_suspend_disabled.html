@@ -14,8 +14,8 @@ startTest({
   desc: "Test Background Video Doesn't Suspend When Feature Disabled.",
   prefs: [
     [ 'media.test.video-suspend', true ],
-    [ 'media.suspend-bkgnd-video.enabled', false ],
-    [ 'media.suspend-bkgnd-video.delay-ms', 0 ]
+    [ 'media.suspend-background-video.enabled', false ],
+    [ 'media.suspend-background-video.delay-ms', 0 ]
   ],
   tests: gDecodeSuspendTests,
   runTest: (test, token) => {

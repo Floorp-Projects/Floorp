@@ -609,6 +609,9 @@ impl Module {
                     new_types.push(Type::Func(Rc::clone(&func_type)));
                     new_index
                 }
+                Some((wasmparser::Type::Array(_array_type), _index_store)) => {
+                    unimplemented!("Array and struct types are not supported yet.");
+                }
             };
             match &new_types[serialized_sig_idx - first_type_index] {
                 Type::Func(f) => Some((serialized_sig_idx as u32, Rc::clone(f))),
@@ -1639,11 +1642,19 @@ fn convert_type(parsed_type: wasmparser::ValType) -> ValType {
 
 fn convert_reftype(ty: wasmparser::RefType) -> RefType {
     wasm_encoder::RefType {
-        nullable: ty.nullable,
-        heap_type: match ty.heap_type {
-            wasmparser::HeapType::Func => wasm_encoder::HeapType::Func,
-            wasmparser::HeapType::Extern => wasm_encoder::HeapType::Extern,
-            wasmparser::HeapType::TypedFunc(i) => wasm_encoder::HeapType::TypedFunc(i.into()),
+        nullable: ty.is_nullable(),
+        heap_type: match ty.heap_type() {
+            wasmparser::HeapType::Func => HeapType::Func,
+            wasmparser::HeapType::Extern => HeapType::Extern,
+            wasmparser::HeapType::Any => HeapType::Any,
+            wasmparser::HeapType::None => HeapType::None,
+            wasmparser::HeapType::NoExtern => HeapType::NoExtern,
+            wasmparser::HeapType::NoFunc => HeapType::NoFunc,
+            wasmparser::HeapType::Eq => HeapType::Eq,
+            wasmparser::HeapType::Struct => HeapType::Struct,
+            wasmparser::HeapType::Array => HeapType::Array,
+            wasmparser::HeapType::I31 => HeapType::I31,
+            wasmparser::HeapType::Indexed(i) => HeapType::Indexed(i.into()),
         },
     }
 }

@@ -116,10 +116,24 @@ function checkInvalid(body, errorMessage) {
 
 wasmEvalText(
     `(module
-      (type $node (struct (field (mut (ref null $node)))))
+      (type $node (sub (struct (field (mut (ref null $node))))))
       (type $nix (sub $node (struct (field (mut (ref null $node))) (field i32))))
       (func $f (param $p (ref null $node)) (param $q (ref null $nix))
        (struct.set $node 0 (local.get $p) (local.get $q))))`);
+
+// ref.cast: if the downcast succeeds we get the original pointer
+
+assertEq(wasmEvalText(
+  `(module
+    (type $node (sub (struct (field i32))))
+    (type $node2 (sub $node (struct (field i32) (field f32))))
+    (func $f (param $p (ref null $node)) (result (ref null $node2))
+     (ref.cast (ref null $node2) (local.get $p)))
+    (func (export "test") (result i32)
+     (local $n (ref null $node))
+     (local.set $n (struct.new $node2 (i32.const 0) (f32.const 12)))
+     (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
+       1);
 
 // ref.cast: if the pointer is null we trap
 
@@ -146,25 +160,12 @@ wasmEvalText(
     (func (export "test") (result eqref)
      (call $f (ref.null $node))))`).exports.test();
 
-// ref.cast: if the downcast succeeds we get the original pointer
-
-assertEq(wasmEvalText(
-    `(module
-      (type $node (struct (field i32)))
-      (type $node2 (sub $node (struct (field i32) (field f32))))
-      (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast (ref null $node2) (local.get $p)))
-      (func (export "test") (result i32)
-       (local $n (ref null $node))
-       (local.set $n (struct.new $node2 (i32.const 0) (f32.const 12)))
-       (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
-         1);
 
 // And once more with mutable fields
 
 assertEq(wasmEvalText(
     `(module
-      (type $node (struct (field (mut i32))))
+      (type $node (sub (struct (field (mut i32)))))
       (type $node2 (sub $node (struct (field (mut i32)) (field f32))))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
        (ref.cast (ref null $node2) (local.get $p)))

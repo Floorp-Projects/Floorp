@@ -162,12 +162,6 @@ moz_asserts = { path = "mozglue/static/rust/moz_asserts" }
 # Workaround for https://github.com/rust-lang/cargo/issues/11232
 rure = { path = "third_party/rust/rure" }
 
-# num-derive 0.3.3 + https://github.com/rust-num/num-derive/pull/54
-num-derive = { path = "third_party/rust/num-derive" }
-
-# phf_macros 0.10.0 + https://github.com/rust-phf/rust-phf/pull/284
-phf_macros = { path = "third_party/rust/phf_macros" }
-
 # Other overrides
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev="3484d3e3ebdc8931493aa5df4d7ee9360a90e76b" }
 chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }

@@ -509,17 +509,10 @@ bool ChannelWrapper::IsSystemLoad() const {
       return IsSystemPrincipal(prin);
     }
 
-    if (RefPtr<BrowsingContext> bc = loadInfo->GetBrowsingContext();
-        !bc || bc->IsTop()) {
-      return false;
-    }
-
-    if (nsIPrincipal* prin = loadInfo->PrincipalToInherit()) {
-      return IsSystemPrincipal(prin);
-    }
-    if (nsIPrincipal* prin = loadInfo->TriggeringPrincipal()) {
-      return IsSystemPrincipal(prin);
-    }
+    // loadingPrincipal is only non-null for top-level loads.
+    // In practice we would never encounter a system principal for a top-level
+    // load that passes through ChannelWrapper, at least not for HTTP channels.
+    MOZ_ASSERT(Type() == MozContentPolicyType::Main_frame);
   }
   return false;
 }

@@ -343,14 +343,12 @@ void VerifyRoundtripCompression(
 
   size_t icc_profile_size;
   EXPECT_EQ(JXL_DEC_SUCCESS,
-            JxlDecoderGetICCProfileSize(
-                dec, &output_pixel_format_with_extra_channel_alpha,
-                JXL_COLOR_PROFILE_TARGET_DATA, &icc_profile_size));
+            JxlDecoderGetICCProfileSize(dec, JXL_COLOR_PROFILE_TARGET_DATA,
+                                        &icc_profile_size));
   jxl::PaddedBytes icc_profile(icc_profile_size);
-  EXPECT_EQ(JXL_DEC_SUCCESS,
-            JxlDecoderGetColorAsICCProfile(
-                dec, &output_pixel_format, JXL_COLOR_PROFILE_TARGET_DATA,
-                icc_profile.data(), icc_profile.size()));
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetColorAsICCProfile(
+                                 dec, JXL_COLOR_PROFILE_TARGET_DATA,
+                                 icc_profile.data(), icc_profile.size()));
 
   std::vector<uint8_t> decoded_bytes(buffer_size);
 
@@ -629,14 +627,12 @@ TEST(RoundtripTest, ExtraBoxesTest) {
 
   size_t icc_profile_size;
   EXPECT_EQ(JXL_DEC_SUCCESS,
-            JxlDecoderGetICCProfileSize(dec, &pixel_format,
-                                        JXL_COLOR_PROFILE_TARGET_DATA,
+            JxlDecoderGetICCProfileSize(dec, JXL_COLOR_PROFILE_TARGET_DATA,
                                         &icc_profile_size));
   jxl::PaddedBytes icc_profile(icc_profile_size);
-  EXPECT_EQ(JXL_DEC_SUCCESS,
-            JxlDecoderGetColorAsICCProfile(
-                dec, &pixel_format, JXL_COLOR_PROFILE_TARGET_DATA,
-                icc_profile.data(), icc_profile.size()));
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetColorAsICCProfile(
+                                 dec, JXL_COLOR_PROFILE_TARGET_DATA,
+                                 icc_profile.data(), icc_profile.size()));
 
   std::vector<uint8_t> decoded_bytes(buffer_size);
 
@@ -763,16 +759,14 @@ TEST(RoundtripTest, TestICCProfile) {
   EXPECT_EQ(JXL_DEC_COLOR_ENCODING, JxlDecoderProcessInput(dec));
 
   size_t dec_icc_size;
-  EXPECT_EQ(
-      JXL_DEC_SUCCESS,
-      JxlDecoderGetICCProfileSize(
-          dec, &format, JXL_COLOR_PROFILE_TARGET_ORIGINAL, &dec_icc_size));
+  EXPECT_EQ(JXL_DEC_SUCCESS,
+            JxlDecoderGetICCProfileSize(dec, JXL_COLOR_PROFILE_TARGET_ORIGINAL,
+                                        &dec_icc_size));
   EXPECT_EQ(icc.size(), dec_icc_size);
   jxl::PaddedBytes dec_icc(dec_icc_size);
-  EXPECT_EQ(JXL_DEC_SUCCESS,
-            JxlDecoderGetColorAsICCProfile(dec, &format,
-                                           JXL_COLOR_PROFILE_TARGET_ORIGINAL,
-                                           dec_icc.data(), dec_icc.size()));
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderGetColorAsICCProfile(
+                                 dec, JXL_COLOR_PROFILE_TARGET_ORIGINAL,
+                                 dec_icc.data(), dec_icc.size()));
 
   std::vector<uint8_t> decoded_bytes(buffer_size);
 

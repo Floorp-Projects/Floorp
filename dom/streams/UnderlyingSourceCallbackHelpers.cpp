@@ -151,7 +151,9 @@ already_AddRefed<Promise> UnderlyingSourceAlgorithmsWrapper::CancelCallback(
   nsCOMPtr<nsIGlobalObject> global = xpc::CurrentNativeGlobal(aCx);
   return PromisifyAlgorithm(
       global,
-      [&](ErrorResult& aRv) { return CancelCallbackImpl(aCx, aReason, aRv); },
+      [&](ErrorResult& aRv) MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
+        return CancelCallbackImpl(aCx, aReason, aRv);
+      },
       aRv);
 }
 

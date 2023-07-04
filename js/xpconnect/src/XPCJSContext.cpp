@@ -1059,7 +1059,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
   }
 
   JS_SetParallelParsingEnabled(
-      cx, Preferences::GetBool(JS_OPTIONS_DOT_STR "parallel_parsing"));
+      cx, StaticPrefs::javascript_options_parallel_parsing());
 }
 
 XPCJSContext::~XPCJSContext() {

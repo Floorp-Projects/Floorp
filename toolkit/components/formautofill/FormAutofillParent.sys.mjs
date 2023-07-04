@@ -482,16 +482,16 @@ export class FormAutofillParent extends JSWindowActorParent {
       // filter invalid field
       const result = newAddress.compare(savedAddress);
 
-      // If any of the fields in the new address are different from the corresponding fields
-      // in the saved address, the two addresses are considered different. For example, if
-      // the name, email, country are the same but the street address is different, the two
-      // addresses are not considered the same.
       if (Object.values(result).includes("different")) {
+        // If any of the fields in the new address are different from the corresponding fields
+        // in the saved address, the two addresses are considered different. For example, if
+        // the name, email, country are the same but the street address is different, the two
+        // addresses are not considered the same.
         continue;
+      } else if (
         // If every field of the new address is either the same or is subset of the corresponding
         // field in the saved address, the new address is duplicated. We don't need capture
         // the new address.
-      } else if (
         Object.values(result).every(r => ["same", "subset"].includes(r))
       ) {
         lazy.log.debug(
@@ -499,9 +499,9 @@ export class FormAutofillParent extends JSWindowActorParent {
         );
         storage.notifyUsed(record.guid);
         return false;
+      } else {
         // If the new address is neither a duplicate of the saved address nor a different address.
         // There must be at least one field we can merge, show the update doorhanger
-      } else {
         lazy.log.debug(
           "A mergeable address record is found, show the update prompt"
         );
@@ -524,11 +524,12 @@ export class FormAutofillParent extends JSWindowActorParent {
       return false;
     }
 
+    dump(`[Dimi]Save: ${JSON.stringify(newAddress.record)}\n`);
     return async () => {
       await lazy.FormAutofillPrompter.promptToSaveAddress(
         browser,
         storage,
-        address.record,
+        newAddress.record,
         address.flowId,
         { mergeableRecord, mergeableFields }
       );

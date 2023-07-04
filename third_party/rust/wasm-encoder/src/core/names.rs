@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::{encoding_size, CustomSection, Encode, Section, SectionId};
 
 /// An encoder for the custom `name` section.
@@ -153,8 +155,8 @@ impl NameSection {
     /// View the encoded section as a CustomSection.
     pub fn as_custom<'a>(&'a self) -> CustomSection<'a> {
         CustomSection {
-            name: "name",
-            data: &self.bytes,
+            name: "name".into(),
+            data: Cow::Borrowed(&self.bytes),
         }
     }
 }

@@ -4,8 +4,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 CompiledModules(
+    "breakpoint.js",
+    "breakpoint-heading.js",
     "frame.js",
+    "editor.js",
+    "editor-breakpoint.js",
     "index.js",
+    "outline.js",
     "source-tree-item.js",
     "tab.js",
 )

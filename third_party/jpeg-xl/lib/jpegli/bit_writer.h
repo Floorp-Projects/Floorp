@@ -13,6 +13,7 @@
 #include <string.h>
 /* clang-format on */
 
+#include "lib/jxl/base/byte_order.h"
 #include "lib/jxl/base/compiler_specific.h"
 
 namespace jpegli {
@@ -69,15 +70,8 @@ static JXL_INLINE void DischargeBitBuffer(JpegBitWriter* bw) {
     EmitByte(bw, (bw->put_buffer >> 8) & 0xFF);
     EmitByte(bw, (bw->put_buffer >> 0) & 0xFF);
   } else {
-    // We don't have any 0xFF bytes, output all 6 bytes without checking.
-    bw->data[bw->pos] = (bw->put_buffer >> 56) & 0xFF;
-    bw->data[bw->pos + 1] = (bw->put_buffer >> 48) & 0xFF;
-    bw->data[bw->pos + 2] = (bw->put_buffer >> 40) & 0xFF;
-    bw->data[bw->pos + 3] = (bw->put_buffer >> 32) & 0xFF;
-    bw->data[bw->pos + 4] = (bw->put_buffer >> 24) & 0xFF;
-    bw->data[bw->pos + 5] = (bw->put_buffer >> 16) & 0xFF;
-    bw->data[bw->pos + 6] = (bw->put_buffer >> 8) & 0xFF;
-    bw->data[bw->pos + 7] = (bw->put_buffer >> 0) & 0xFF;
+    // We don't have any 0xFF bytes, output all 8 bytes without checking.
+    StoreBE64(bw->put_buffer, bw->data + bw->pos);
     bw->pos += 8;
   }
 }

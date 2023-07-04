@@ -1,4 +1,8 @@
-#![doc(html_root_url = "https://docs.rs/phf_shared/0.9")]
+//! See [the `phf` crate's documentation][phf] for details.
+//!
+//! [phf]: https://docs.rs/phf
+
+#![doc(html_root_url = "https://docs.rs/phf_shared/0.11")]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 #[cfg(feature = "std")]
@@ -94,7 +98,7 @@ pub trait FmtConst {
 /// ### Motivation
 /// The conventional signature for lookup methods on collections looks something like this:
 ///
-/// ```rust,ignore
+/// ```ignore
 /// impl<K, V> Map<K, V> where K: PhfHash + Eq {
 ///     fn get<T: ?Sized>(&self, key: &T) -> Option<&V> where T: PhfHash + Eq, K: Borrow<T> {
 ///         ...
@@ -148,6 +152,8 @@ delegate_debug!(u32);
 delegate_debug!(i32);
 delegate_debug!(u64);
 delegate_debug!(i64);
+delegate_debug!(usize);
+delegate_debug!(isize);
 delegate_debug!(u128);
 delegate_debug!(i128);
 delegate_debug!(bool);
@@ -174,6 +180,8 @@ impl_reflexive!(
     i32,
     u64,
     i64,
+    usize,
+    isize,
     u128,
     i128,
     bool,
@@ -308,7 +316,7 @@ impl FmtConst for uncased::UncasedStr {
         // transmute is not stable in const fns (rust-lang/rust#53605), so
         // `UncasedStr::new` can't be a const fn itself, but we can inline the
         // call to transmute here in the meantime.
-        f.write_str("unsafe { ::std::mem::transmute::<&'static str, &'static UncasedStr>(")?;
+        f.write_str("unsafe { ::core::mem::transmute::<&'static str, &'static UncasedStr>(")?;
         self.as_str().fmt_const(f)?;
         f.write_str(") }")
     }
@@ -348,6 +356,8 @@ sip_impl!(le u32);
 sip_impl!(le i32);
 sip_impl!(le u64);
 sip_impl!(le i64);
+sip_impl!(le usize);
+sip_impl!(le isize);
 sip_impl!(le u128);
 sip_impl!(le i128);
 sip_impl!(bool);
@@ -360,26 +370,28 @@ impl PhfHash for char {
 }
 
 // minimize duplicated code since formatting drags in quite a bit
-fn fmt_array(array: &[u8], f: &mut fmt::Formatter<'_>) -> fmt::Result {
+fn fmt_array<T: core::fmt::Debug>(array: &[T], f: &mut fmt::Formatter<'_>) -> fmt::Result {
     write!(f, "{:?}", array)
 }
 
 macro_rules! array_impl (
-    ($t:ty, $n:expr) => (
-        impl PhfHash for [$t; $n] {
+    ($t:ty) => (
+        impl<const N: usize> PhfHash for [$t; N] {
             #[inline]
             fn phf_hash<H: Hasher>(&self, state: &mut H) {
-                state.write(self);
+                for v in &self[..] {
+                    v.phf_hash(state);
+                }
             }
         }
 
-        impl FmtConst for [$t; $n] {
+        impl<const N: usize> FmtConst for [$t; N] {
             fn fmt_const(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 fmt_array(self, f)
             }
         }
 
-        impl PhfBorrow<[$t]> for [$t; $n] {
+        impl<const N: usize> PhfBorrow<[$t]> for [$t; N] {
             fn borrow(&self) -> &[$t] {
                 self
             }
@@ -387,35 +399,44 @@ macro_rules! array_impl (
     )
 );
 
-array_impl!(u8, 1);
-array_impl!(u8, 2);
-array_impl!(u8, 3);
-array_impl!(u8, 4);
-array_impl!(u8, 5);
-array_impl!(u8, 6);
-array_impl!(u8, 7);
-array_impl!(u8, 8);
-array_impl!(u8, 9);
-array_impl!(u8, 10);
-array_impl!(u8, 11);
-array_impl!(u8, 12);
-array_impl!(u8, 13);
-array_impl!(u8, 14);
-array_impl!(u8, 15);
-array_impl!(u8, 16);
-array_impl!(u8, 17);
-array_impl!(u8, 18);
-array_impl!(u8, 19);
-array_impl!(u8, 20);
-array_impl!(u8, 21);
-array_impl!(u8, 22);
-array_impl!(u8, 23);
-array_impl!(u8, 24);
-array_impl!(u8, 25);
-array_impl!(u8, 26);
-array_impl!(u8, 27);
-array_impl!(u8, 28);
-array_impl!(u8, 29);
-array_impl!(u8, 30);
-array_impl!(u8, 31);
-array_impl!(u8, 32);
+array_impl!(u8);
+array_impl!(i8);
+array_impl!(u16);
+array_impl!(i16);
+array_impl!(u32);
+array_impl!(i32);
+array_impl!(u64);
+array_impl!(i64);
+array_impl!(usize);
+array_impl!(isize);
+array_impl!(u128);
+array_impl!(i128);
+array_impl!(bool);
+array_impl!(char);
+
+macro_rules! slice_impl (
+    ($t:ty) => {
+        impl PhfHash for [$t] {
+            #[inline]
+            fn phf_hash<H: Hasher>(&self, state: &mut H) {
+                for v in self {
+                    v.phf_hash(state);
+                }
+            }
+        }
+    };
+);
+
+slice_impl!(i8);
+slice_impl!(u16);
+slice_impl!(i16);
+slice_impl!(u32);
+slice_impl!(i32);
+slice_impl!(u64);
+slice_impl!(i64);
+slice_impl!(usize);
+slice_impl!(isize);
+slice_impl!(u128);
+slice_impl!(i128);
+slice_impl!(bool);
+slice_impl!(char);

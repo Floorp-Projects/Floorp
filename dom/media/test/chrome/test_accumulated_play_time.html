@@ -41,8 +41,8 @@ add_task(async function setTestPref() {
   await SpecialPowers.pushPrefEnv({
     set: [["media.testing-only-events", true],
           ["media.test.video-suspend", true],
-          ["media.suspend-bkgnd-video.enabled", true],
-          ["media.suspend-bkgnd-video.delay-ms", 0],
+          ["media.suspend-background-video.enabled", true],
+          ["media.suspend-background-video.delay-ms", 0],
           ["dom.media.silence_duration_for_audibility", 0.1]
     ]});
 });
@@ -396,7 +396,7 @@ add_task(async function testMutedAudioPlayTime() {
 });
 
 // Note that video suspended time is not always align with the invisible play
-// time even if `media.suspend-bkgnd-video.delay-ms` is `0`, because not all
+// time even if `media.suspend-background-video.delay-ms` is `0`, because not all
 // invisible videos would be suspended under current strategy.
 add_task(async function testDecodeSuspendedTime() {
   const video = document.createElement('video');

@@ -75,7 +75,8 @@ Status InvPalette(Image &input, uint32_t begin_c, uint32_t nb_colors,
     }
   } else {
     // Parallelized per channel.
-    ImageI indices = CopyImage(input.channel[c0].plane);
+    ImageI indices = std::move(input.channel[c0].plane);
+    input.channel[c0].plane = ImageI(indices.xsize(), indices.ysize());
     if (predictor == Predictor::Weighted) {
       JXL_RETURN_IF_ERROR(RunOnPool(
           pool, 0, nb, ThreadPool::NoInit,

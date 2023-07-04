@@ -12,7 +12,6 @@
 #include "lib/jpegli/test_utils.h"
 #include "lib/jpegli/testing.h"
 #include "lib/jxl/base/byte_order.h"
-#include "lib/jxl/base/file_io.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/sanitizers.h"
 

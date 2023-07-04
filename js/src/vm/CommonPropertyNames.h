@@ -237,6 +237,7 @@
   MACRO_(GetBuiltinSymbol, GetBuiltinSymbol, "GetBuiltinSymbol")               \
   MACRO_(GetInternalError, GetInternalError, "GetInternalError")               \
   MACRO_(getInternals, getInternals, "getInternals")                           \
+  MACRO_(GetIterator, GetIterator, "GetIterator")                              \
   MACRO_(GetModuleNamespace, GetModuleNamespace, "GetModuleNamespace")         \
   MACRO_(getOffsetNanosecondsFor, getOffsetNanosecondsFor,                     \
          "getOffsetNanosecondsFor")                                            \
@@ -331,6 +332,7 @@
   MACRO_(isSubsetOf, isSubsetOf, "isSubsetOf")                                 \
   MACRO_(isSupersetOf, isSupersetOf, "isSupersetOf")                           \
   MACRO_(IterableToList, IterableToList, "IterableToList")                     \
+  MACRO_(IteratorNext, IteratorNext, "IteratorNext")                           \
   MACRO_(iterate, iterate, "iterate")                                          \
   MACRO_(join, join, "join")                                                   \
   MACRO2(js, js, "js")                                                         \
@@ -402,6 +404,7 @@
   MACRO_(NegativeInfinity, NegativeInfinity, "-Infinity")                      \
   MACRO_(new, new_, "new")                                                     \
   MACRO_(next, next, "next")                                                   \
+  MACRO_(nextMethod, nextMethod, "nextMethod")                                 \
   MACRO_(NFC, NFC, "NFC")                                                      \
   MACRO_(NFD, NFD, "NFD")                                                      \
   MACRO_(NFKC, NFKC, "NFKC")                                                   \

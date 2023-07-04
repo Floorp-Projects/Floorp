@@ -126,7 +126,7 @@ impl<K, V> OrderedMap<K, V> {
             return None;
         } //Prevent panic on empty map
         let hashes = phf_shared::hash(key, &self.key);
-        let idx_index = phf_shared::get_index(&hashes, &*self.disps, self.idxs.len());
+        let idx_index = phf_shared::get_index(&hashes, self.disps, self.idxs.len());
         let idx = self.idxs[idx_index as usize];
         let entry = &self.entries[idx];
 

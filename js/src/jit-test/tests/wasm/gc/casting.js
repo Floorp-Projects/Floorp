@@ -3,7 +3,7 @@
 // Test the maximum depth limit
 {
   const MaxDepth = 31;
-  let types = `(type (struct))\n`;
+  let types = `(type (sub (struct)))\n`;
   for (let depth = 1; depth <= MaxDepth + 1; depth++) {
     types += `(type (sub ${depth - 1} (struct)))\n`;
   }
@@ -83,7 +83,7 @@ function testAllCasts(types) {
   for (let name in types) {
     let type = types[name];
     if (type.super === null) {
-      typeSection += `(type \$${name} (struct))\n`;
+      typeSection += `(type \$${name} (sub (struct)))\n`;
     } else {
       typeSection += `(type \$${name} (sub \$${type.super} (struct)))\n`;
     }

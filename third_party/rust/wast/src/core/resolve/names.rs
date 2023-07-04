@@ -482,6 +482,10 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 self.resolver.resolve_type_use(&mut c.ty)?;
             }
 
+            CallRef(i) | ReturnCallRef(i) => {
+                self.resolver.resolve(i, Ns::Type)?;
+            }
+
             FuncBind(b) => {
                 self.resolver.resolve_type_use(&mut b.ty)?;
             }
@@ -637,7 +641,7 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 self.resolver.elems.resolve(&mut a.segment, "elem")?;
             }
 
-            RefNull(ty) | CallRef(ty) | ReturnCallRef(ty) => self.resolver.resolve_heaptype(ty)?,
+            RefNull(ty) => self.resolver.resolve_heaptype(ty)?,
 
             _ => {}
         }

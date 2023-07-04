@@ -40,7 +40,7 @@ pub enum ElementKind<'a> {
     /// The element segment is active.
     Active {
         /// The index of the table being initialized.
-        table_index: u32,
+        table_index: Option<u32>,
         /// The initial expression of the element segment.
         offset_expr: ConstExpr<'a>,
     },
@@ -91,9 +91,9 @@ impl<'a> FromReader<'a> for Element<'a> {
             }
         } else {
             let table_index = if flags & 0b010 == 0 {
-                0
+                None
             } else {
-                reader.read_var_u32()?
+                Some(reader.read_var_u32()?)
             };
             let offset_expr = reader.read()?;
             ElementKind::Active {

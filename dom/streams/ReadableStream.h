@@ -199,6 +199,10 @@ class ReadableStream : public nsISupports, public nsWrapperCache {
               const Optional<JS::Handle<JSObject*>>& aUnderlyingSource,
               const QueuingStrategy& aStrategy, ErrorResult& aRv);
 
+  MOZ_CAN_RUN_SCRIPT static already_AddRefed<ReadableStream> From(
+      const GlobalObject& aGlobal, JS::Handle<JS::Value> asyncIterable,
+      ErrorResult& aRv);
+
   bool Locked() const;
 
   MOZ_CAN_RUN_SCRIPT already_AddRefed<Promise> Cancel(

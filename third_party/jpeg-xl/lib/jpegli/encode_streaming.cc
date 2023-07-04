@@ -41,6 +41,7 @@ void ProcessiMCURow(j_compress_ptr cinfo) {
   int32_t* symbols = m->block_tmp + DCTSIZE2;
   int32_t* nonzero_idx = m->block_tmp + 3 * DCTSIZE2;
   coeff_t* JXL_RESTRICT last_dc_coeff = m->last_dc_coeff;
+  bool adaptive_quant = m->use_adaptive_quantization && m->psnr_target == 0;
   JBLOCKARRAY ba[kMaxComponents];
   if (kMode == kStreamingModeCoefficients) {
     for (int c = 0; c < cinfo->num_components; ++c) {
@@ -75,7 +76,7 @@ void ProcessiMCURow(j_compress_ptr cinfo) {
     imcu_start[c] = m->raw_data[c]->Row(mcu_y * comp->v_samp_factor * DCTSIZE);
   }
   const float* qf = nullptr;
-  if (m->use_adaptive_quantization) {
+  if (adaptive_quant) {
     qf = m->quant_field.Row(0);
   }
   HuffmanCodeTable* dc_code = nullptr;
@@ -108,7 +109,7 @@ void ProcessiMCURow(j_compress_ptr cinfo) {
             }
             continue;
           }
-          if (m->use_adaptive_quantization) {
+          if (adaptive_quant) {
             aq_strength = qf[iy * qf_stride + bx * h_factor];
           }
           const float* pixels = imcu_start[c] + (iy * stride + bx) * DCTSIZE;

@@ -8,7 +8,6 @@ import { connect } from "../../../utils/connect";
 import { createSelector } from "reselect";
 import actions from "../../../actions";
 
-import showContextMenu from "./BreakpointsContextMenu";
 import { CloseButton } from "../../shared/Button";
 
 import { getSelectedText, makeBreakpointId } from "../../../utils/breakpoint";
@@ -16,13 +15,13 @@ import { getSelectedLocation } from "../../../utils/selected-location";
 import { isLineBlackboxed } from "../../../utils/source";
 
 import {
-  getBreakpointsList,
   getSelectedFrame,
   getSelectedSource,
   getCurrentThread,
   getContext,
   isSourceMapIgnoreListEnabled,
   isSourceOnSourceMapIgnoreList,
+  getBlackBoxRanges,
 } from "../../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
@@ -46,14 +45,22 @@ class Breakpoint extends PureComponent {
     };
   }
 
-  onContextMenu = e => {
-    showContextMenu({ ...this.props, contextMenuEvent: e });
+  onContextMenu = event => {
+    event.preventDefault();
+
+    this.props.showBreakpointContextMenu(
+      event,
+      this.props.breakpoint,
+      this.props.source
+    );
   };
 
   get selectedLocation() {
     const { breakpoint, selectedSource } = this.props;
     return getSelectedLocation(breakpoint, selectedSource);
   }
+
+  stopClicks = event => event.stopPropagation();
 
   onDoubleClick = () => {
     const { breakpoint, openConditionalPanel } = this.props;
@@ -122,12 +129,7 @@ class Breakpoint extends PureComponent {
   }
 
   render() {
-    const {
-      breakpoint,
-      editor,
-      blackboxedRangesForSource,
-      checkSourceOnIgnoreList,
-    } = this.props;
+    const { breakpoint, editor, isBreakpointLineBlackboxed } = this.props;
     const text = this.getBreakpointText();
     const labelId = `${breakpoint.id}-label`;
 
@@ -149,13 +151,9 @@ class Breakpoint extends PureComponent {
           type="checkbox"
           className="breakpoint-checkbox"
           checked={!breakpoint.disabled}
-          disabled={isLineBlackboxed(
-            blackboxedRangesForSource,
-            breakpoint.location.line,
-            checkSourceOnIgnoreList(breakpoint.location.source)
-          )}
+          disabled={isBreakpointLineBlackboxed}
           onChange={this.handleBreakpointCheckbox}
-          onClick={ev => ev.stopPropagation()}
+          onClick={this.stopClicks}
           aria-labelledby={labelId}
         />
         <span
@@ -171,7 +169,7 @@ class Breakpoint extends PureComponent {
             {this.getBreakpointLocation()}
           </div>
           <CloseButton
-            handleClick={e => this.removeBreakpoint(e)}
+            handleClick={this.removeBreakpoint}
             tooltip={L10N.getStr("breakpoints.removeBreakpointTooltip")}
           />
         </div>
@@ -195,25 +193,28 @@ const getFormattedFrame = createSelector(
   }
 );
 
-const mapStateToProps = (state, p) => ({
-  cx: getContext(state),
-  breakpoints: getBreakpointsList(state),
-  frame: getFormattedFrame(state, getCurrentThread(state)),
-  checkSourceOnIgnoreList: source =>
+const mapStateToProps = (state, props) => {
+  const blackboxedRangesForSource = getBlackBoxRanges(state)[props.source.url];
+  const isSourceOnIgnoreList =
     isSourceMapIgnoreListEnabled(state) &&
-    isSourceOnSourceMapIgnoreList(state, source),
-});
+    isSourceOnSourceMapIgnoreList(state, props.source);
+  return {
+    cx: getContext(state),
+    selectedSource: getSelectedSource(state),
+    isBreakpointLineBlackboxed: isLineBlackboxed(
+      blackboxedRangesForSource,
+      props.breakpoint.location.line,
+      isSourceOnIgnoreList
+    ),
+    frame: getFormattedFrame(state, getCurrentThread(state)),
+  };
+};
 
 export default connect(mapStateToProps, {
   enableBreakpoint: actions.enableBreakpoint,
   removeBreakpoint: actions.removeBreakpoint,
-  removeBreakpoints: actions.removeBreakpoints,
-  removeAllBreakpoints: actions.removeAllBreakpoints,
   disableBreakpoint: actions.disableBreakpoint,
   selectSpecificLocation: actions.selectSpecificLocation,
-  setBreakpointOptions: actions.setBreakpointOptions,
-  toggleAllBreakpoints: actions.toggleAllBreakpoints,
-  toggleBreakpoints: actions.toggleBreakpoints,
-  toggleDisabledBreakpoint: actions.toggleDisabledBreakpoint,
   openConditionalPanel: actions.openConditionalPanel,
+  showBreakpointContextMenu: actions.showBreakpointContextMenu,
 })(Breakpoint);

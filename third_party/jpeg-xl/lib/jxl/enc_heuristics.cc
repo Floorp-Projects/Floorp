@@ -305,7 +305,8 @@ void DownsampleImage2_Sharper(const ImageF& input, ImageF* output) {
   int64_t xsize = input.xsize();
   int64_t ysize = input.ysize();
 
-  ImageF box_downsample = CopyImage(input);
+  ImageF box_downsample(xsize, ysize);
+  CopyImageTo(input, &box_downsample);
   DownsampleImage(&box_downsample, 2);
 
   ImageF mask(box_downsample.xsize(), box_downsample.ysize());
@@ -616,7 +617,8 @@ void DownsampleImage2_Iterative(const ImageF& orig, ImageF* output) {
   int64_t xsize2 = DivCeil(orig.xsize(), 2);
   int64_t ysize2 = DivCeil(orig.ysize(), 2);
 
-  ImageF box_downsample = CopyImage(orig);
+  ImageF box_downsample(xsize, ysize);
+  CopyImageTo(orig, &box_downsample);
   DownsampleImage(&box_downsample, 2);
   ImageF mask(box_downsample.xsize(), box_downsample.ysize());
   CreateMask(box_downsample, mask);
@@ -630,7 +632,8 @@ void DownsampleImage2_Iterative(const ImageF& orig, ImageF* output) {
   initial.ShrinkTo(initial.xsize() - kBlockDim, initial.ysize() - kBlockDim);
   DownsampleImage2_Sharper(orig, &initial);
 
-  ImageF down = CopyImage(initial);
+  ImageF down(initial.xsize(), initial.ysize());
+  CopyImageTo(initial, &down);
   ImageF up(xsize, ysize);
   ImageF corr(xsize, ysize);
   ImageF corr2(xsize2, ysize2);

@@ -11,7 +11,6 @@
 #include "lib/jpegli/decode.h"
 #include "lib/jpegli/test_utils.h"
 #include "lib/jpegli/testing.h"
-#include "lib/jxl/base/file_io.h"
 #include "lib/jxl/base/status.h"
 
 namespace jpegli {
@@ -40,22 +39,24 @@ struct TestConfig {
 
 class SourceManagerTestParam : public ::testing::TestWithParam<TestConfig> {};
 
+namespace {
+FILE* MemOpen(const std::vector<uint8_t>& data) {
+  FILE* src = tmpfile();
+  if (!src) return nullptr;
+  fwrite(data.data(), 1, data.size(), src);
+  rewind(src);
+  return src;
+}
+}  // namespace
+
 TEST_P(SourceManagerTestParam, TestStdioSourceManager) {
   TestConfig config = GetParam();
-  jxl::FileWrapper testfile(GetTestDataPath(config.fn), "rb");
-  FILE* src = nullptr;
-  if (config.dparams.size_factor != 1.0) {
-    std::vector<uint8_t> compressed = ReadTestData(config.fn.c_str());
+  std::vector<uint8_t> compressed = ReadTestData(config.fn.c_str());
+  if (config.dparams.size_factor < 1.0) {
     compressed.resize(compressed.size() * config.dparams.size_factor);
-    src = tmpfile();
-    ASSERT_TRUE(src != nullptr);
-    fwrite(compressed.data(), 1, compressed.size(), src);
-    rewind(src);
-    return;
-  } else {
-    src = testfile;
   }
-  ASSERT_TRUE(src != nullptr);
+  FILE* src = MemOpen(compressed);
+  ASSERT_TRUE(src);
   TestImage output0;
   jpeg_decompress_struct cinfo;
   const auto try_catch_block = [&]() -> bool {
@@ -65,12 +66,13 @@ TEST_P(SourceManagerTestParam, TestStdioSourceManager) {
     ReadOutputImage(&cinfo, &output0);
     return true;
   };
-  ASSERT_TRUE(try_catch_block());
+  bool ok = try_catch_block();
+  fclose(src);
+  ASSERT_TRUE(ok);
   jpegli_destroy_decompress(&cinfo);
 
   TestImage output1;
-  DecodeWithLibjpeg(CompressParams(), DecompressParams(),
-                    ReadTestData(config.fn.c_str()), &output1);
+  DecodeWithLibjpeg(CompressParams(), DecompressParams(), compressed, &output1);
   VerifyOutputImage(output1, output0, 1.0f);
 }
 

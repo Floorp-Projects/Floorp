@@ -138,12 +138,26 @@ pub struct Type<'a> {
     pub def: TypeDef<'a>,
 }
 
-impl<'a> Parse<'a> for Type<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
+impl<'a> Type<'a> {
+    /// Parses a `Type` while allowing inline `(export "...")` names to be
+    /// defined.
+    pub fn parse_maybe_with_inline_exports(parser: Parser<'a>) -> Result<Self> {
+        Type::parse(parser, true)
+    }
+
+    fn parse_no_inline_exports(parser: Parser<'a>) -> Result<Self> {
+        Type::parse(parser, false)
+    }
+
+    fn parse(parser: Parser<'a>, allow_inline_exports: bool) -> Result<Self> {
         let span = parser.parse::<kw::r#type>()?.0;
         let id = parser.parse()?;
         let name = parser.parse()?;
-        let exports = parser.parse()?;
+        let exports = if allow_inline_exports {
+            parser.parse()?
+        } else {
+            Default::default()
+        };
         let def = parser.parse()?;
 
         Ok(Self {
@@ -167,6 +181,8 @@ pub enum TypeDef<'a> {
     Component(ComponentType<'a>),
     /// An instance type.
     Instance(InstanceType<'a>),
+    /// A resource type.
+    Resource(ResourceType<'a>),
 }
 
 impl<'a> Parse<'a> for TypeDef<'a> {
@@ -183,6 +199,9 @@ impl<'a> Parse<'a> for TypeDef<'a> {
                 } else if l.peek::<kw::instance>() {
                     parser.parse::<kw::instance>()?;
                     Ok(Self::Instance(parser.parse()?))
+                } else if l.peek::<kw::resource>() {
+                    parser.parse::<kw::resource>()?;
+                    Ok(Self::Resource(parser.parse()?))
                 } else {
                     Ok(Self::Defined(ComponentDefinedType::parse_non_primitive(
                         parser, l,
@@ -356,6 +375,8 @@ pub enum ComponentDefinedType<'a> {
     Union(Union<'a>),
     Option(OptionType<'a>),
     Result(ResultType<'a>),
+    Own(Index<'a>),
+    Borrow(Index<'a>),
 }
 
 impl<'a> ComponentDefinedType<'a> {
@@ -379,6 +400,12 @@ impl<'a> ComponentDefinedType<'a> {
             Ok(Self::Option(parser.parse()?))
         } else if l.peek::<kw::result>() {
             Ok(Self::Result(parser.parse()?))
+        } else if l.peek::<kw::own>() {
+            parser.parse::<kw::own>()?;
+            Ok(Self::Own(parser.parse()?))
+        } else if l.peek::<kw::borrow>() {
+            parser.parse::<kw::borrow>()?;
+            Ok(Self::Borrow(parser.parse()?))
         } else {
             Err(l.error())
         }
@@ -409,6 +436,8 @@ impl Peek for ComponentDefinedType<'_> {
                     | Some(("union", _))
                     | Some(("option", _))
                     | Some(("result", _))
+                    | Some(("own", _))
+                    | Some(("borrow", _))
             ),
             None => false,
         }
@@ -739,9 +768,7 @@ pub struct ComponentExportType<'a> {
     /// Where this export was defined.
     pub span: Span,
     /// The name of this export.
-    pub name: &'a str,
-    /// The optional URL of this export.
-    pub url: Option<&'a str>,
+    pub name: ComponentExternName<'a>,
     /// The signature of the item.
     pub item: ItemSig<'a>,
 }
@@ -752,19 +779,13 @@ impl<'a> Parse<'a> for ComponentExportType<'a> {
         let id = parser.parse()?;
         let debug_name = parser.parse()?;
         let name = parser.parse()?;
-        let url = parser.parse()?;
         let item = parser.parens(|p| {
             let mut item = p.parse::<ItemSigNoName<'_>>()?.0;
             item.id = id;
             item.name = debug_name;
             Ok(item)
         })?;
-        Ok(Self {
-            span,
-            name,
-            url,
-            item,
-        })
+        Ok(Self { span, name, item })
     }
 }
 
@@ -805,7 +826,7 @@ impl<'a> Parse<'a> for ComponentTypeDecl<'a> {
         if l.peek::<kw::core>() {
             Ok(Self::CoreType(parser.parse()?))
         } else if l.peek::<kw::r#type>() {
-            Ok(Self::Type(parser.parse()?))
+            Ok(Self::Type(Type::parse_no_inline_exports(parser)?))
         } else if l.peek::<kw::alias>() {
             Ok(Self::Alias(parser.parse()?))
         } else if l.peek::<kw::import>() {
@@ -863,7 +884,7 @@ impl<'a> Parse<'a> for InstanceTypeDecl<'a> {
         if l.peek::<kw::core>() {
             Ok(Self::CoreType(parser.parse()?))
         } else if l.peek::<kw::r#type>() {
-            Ok(Self::Type(parser.parse()?))
+            Ok(Self::Type(Type::parse_no_inline_exports(parser)?))
         } else if l.peek::<kw::alias>() {
             Ok(Self::Alias(parser.parse()?))
         } else if l.peek::<kw::export>() {
@@ -881,6 +902,33 @@ impl<'a> Parse<'a> for Vec<InstanceTypeDecl<'a>> {
             decls.push(parser.parens(|parser| parser.parse())?);
         }
         Ok(decls)
+    }
+}
+
+/// A type definition for an instance type.
+#[derive(Debug)]
+pub struct ResourceType<'a> {
+    /// Representation, in core WebAssembly, of this resource.
+    pub rep: core::ValType<'a>,
+    /// The declarations of the instance type.
+    pub dtor: Option<CoreItemRef<'a, kw::func>>,
+}
+
+impl<'a> Parse<'a> for ResourceType<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        let rep = parser.parens(|p| {
+            p.parse::<kw::rep>()?;
+            p.parse()
+        })?;
+        let dtor = if parser.is_empty() {
+            None
+        } else {
+            Some(parser.parens(|p| {
+                p.parse::<kw::dtor>()?;
+                p.parens(|p| p.parse())
+            })?)
+        };
+        Ok(Self { rep, dtor })
     }
 }
 

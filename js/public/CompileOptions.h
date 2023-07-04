@@ -706,6 +706,10 @@ class JS_PUBLIC_API DecodeOptions {
     options.introductionLineno = introductionLineno;
     options.introductionOffset = introductionOffset;
   }
+
+  bool hasExternalData() const {
+    return introducerFilename || introductionType;
+  }
 };
 
 }  // namespace JS

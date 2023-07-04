@@ -5,11 +5,23 @@
 //! generate a Rust source file that will be included in a library at build
 //! time.
 //!
-//! # Examples
+//! For more information about `rust-phf` crates, see [the `phf` crate's documentation][phf].
 //!
-//! build.rs:
+//! [phf]: https://docs.rs/phf
 //!
-//! ```rust,no_run
+//! ## Examples
+//!
+//! To use `phf_codegen` on build.rs, you have to add dependencies under `[build-dependencies]`:
+//!
+//! ```toml
+//! [build-dependencies]
+//! phf = { version = "0.11.1", default-features = false }
+//! phf_codegen = "0.11.1"
+//! ```
+//!
+//! Then put code on build.rs:
+//!
+//! ```ignore
 //! use std::env;
 //! use std::fs::File;
 //! use std::io::{BufWriter, Write};
@@ -19,21 +31,23 @@
 //!     let path = Path::new(&env::var("OUT_DIR").unwrap()).join("codegen.rs");
 //!     let mut file = BufWriter::new(File::create(&path).unwrap());
 //!
-//!     writeln!(
+//!     write!(
 //!         &mut file,
-//!          "static KEYWORDS: phf::Map<&'static str, Keyword> = \n{};\n",
-//!          phf_codegen::Map::new()
-//!              .entry("loop", "Keyword::Loop")
-//!              .entry("continue", "Keyword::Continue")
-//!              .entry("break", "Keyword::Break")
-//!              .entry("fn", "Keyword::Fn")
-//!              .entry("extern", "Keyword::Extern")
-//!              .build()
-//!     ).unwrap();
+//!         "static KEYWORDS: phf::Map<&'static str, Keyword> = {}",
+//!         phf_codegen::Map::new()
+//!             .entry("loop", "Keyword::Loop")
+//!             .entry("continue", "Keyword::Continue")
+//!             .entry("break", "Keyword::Break")
+//!             .entry("fn", "Keyword::Fn")
+//!             .entry("extern", "Keyword::Extern")
+//!             .build()
+//!     )
+//!     .unwrap();
+//!     write!(&mut file, ";\n").unwrap();
 //! }
 //! ```
 //!
-//! lib.rs:
+//! and lib.rs:
 //!
 //! ```ignore
 //! #[derive(Clone)]
@@ -52,13 +66,13 @@
 //! }
 //! ```
 //!
-//! ##### Byte-String Keys
+//! ### Byte-String Keys
 //! Byte strings by default produce references to fixed-size arrays; the compiler needs a hint
 //! to coerce them to slices:
 //!
 //! build.rs:
 //!
-//! ```rust,no_run
+//! ```no_run
 //! use std::env;
 //! use std::fs::File;
 //! use std::io::{BufWriter, Write};
@@ -84,7 +98,7 @@
 //!
 //! lib.rs:
 //!
-//! ```rust,ignore
+//! ```ignore
 //! #[derive(Clone)]
 //! enum Keyword {
 //!     Loop,
@@ -101,7 +115,7 @@
 //! }
 //! ```
 //!
-//! # Note
+//! ## Note
 //!
 //! The compiler's stack will overflow when processing extremely long method
 //! chains (500+ calls). When generating large PHF data structures, consider
@@ -123,7 +137,9 @@
 //! builder.entry("world", "2");
 //! // ...
 //! ```
-#![doc(html_root_url = "https://docs.rs/phf_codegen/0.9")]
+
+#![doc(html_root_url = "https://docs.rs/phf_codegen/0.11")]
+#![allow(clippy::new_without_default)]
 
 use phf_shared::{FmtConst, PhfHash};
 use std::collections::HashSet;

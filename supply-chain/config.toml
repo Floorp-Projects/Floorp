@@ -130,10 +130,6 @@ audit-as-crates-io = false
 audit-as-crates-io = true
 notes = "wgpu-core pins this crate."
 
-[policy.num-derive]
-audit-as-crates-io = true
-notes = "Local fork with a patch from https://github.com/rust-num/num-derive/pull/54"
-
 [policy.packed_simd_2]
 audit-as-crates-io = true
 notes = "Based on upstream, see bug 1719674."
@@ -143,10 +139,6 @@ audit-as-crates-io = false
 
 [policy.peek-poke-derive]
 audit-as-crates-io = false
-
-[policy.phf_macros]
-audit-as-crates-io = true
-notes = "Local fork with a patch from https://github.com/rust-phf/rust-phf/pull/284"
 
 [policy.pulse]
 audit-as-crates-io = false

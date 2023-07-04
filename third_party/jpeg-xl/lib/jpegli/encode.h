@@ -122,6 +122,10 @@ void jpegli_set_distance(j_compress_ptr cinfo, float distance,
 // Returns the butteraugli target distance for the given quality parameter.
 float jpegli_quality_to_distance(int quality);
 
+// Enables distance parameter search to meet the given psnr target.
+void jpegli_set_psnr(j_compress_ptr cinfo, float psnr, float tolerance,
+                     float min_distance, float max_distance);
+
 // Changes the default behaviour of the encoder in the selection of quantization
 // matrices and chroma subsampling. Must be called before jpegli_set_defaults()
 // because some default setting depend on the XYB mode.

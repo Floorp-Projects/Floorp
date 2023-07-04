@@ -99,11 +99,11 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
       (1 << AcStrategy::Type::DCT8X4) | (1 << AcStrategy::Type::AFV0) |
       (1 << AcStrategy::Type::AFV1) | (1 << AcStrategy::Type::AFV2) |
       (1 << AcStrategy::Type::AFV3);
-  if ((1 << quant_kind) & kPartialBlockKinds) return;
+  if ((1 << quant_kind) & kPartialBlockKinds) {
+    return;
+  }
 
   const float* JXL_RESTRICT qm = quantizer.InvDequantMatrix(quant_kind, c);
-  const float kQuantNormalizer = 2.9037220690527175;
-  float orig_quant = kQuantNormalizer;
   float qac = quantizer.Scale() * (*quant);
   if (xsize > 1 || ysize > 1) {
     for (int i = 0; i < 4; ++i) {
@@ -146,12 +146,37 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
       }
     }
   }
-  if (c == 1) {
-    static const double kLimit = 0.49f;
+  if (c == 1 && sum_of_vals < std::max(xsize, ysize)) {
+    static const double kLimit[4] = {
+        0.46,
+        0.46,
+        0.46,
+        0.46,
+    };
+    static const double kMul[4] = {
+        0.9999,
+        0.9999,
+        0.9999,
+        0.9999,
+    };
+    const int32_t orig_quant = *quant;
+    int32_t new_quant = *quant;
     for (int i = 1; i < 4; ++i) {
-      if (hfNonZeros[i] == 0.0 && hfMaxError[i] > kLimit) {
-        thresholds[i] = 0.9999 * hfMaxError[i];
+      if (hfNonZeros[i] == 0.0 && hfMaxError[i] > kLimit[i]) {
+        new_quant = orig_quant + 1;
+        break;
       }
+    }
+    *quant = new_quant;
+    if (hfNonZeros[3] == 0.0 && hfMaxError[3] > kLimit[3]) {
+      thresholds[3] = kMul[3] * hfMaxError[3] * new_quant / orig_quant;
+    } else if ((hfNonZeros[1] == 0.0 && hfMaxError[1] > kLimit[1]) ||
+               (hfNonZeros[2] == 0.0 && hfMaxError[2] > kLimit[2])) {
+      thresholds[1] = kMul[1] * std::max(hfMaxError[1], hfMaxError[2]) *
+                      new_quant / orig_quant;
+      thresholds[2] = thresholds[1];
+    } else if (hfNonZeros[0] == 0.0 && hfMaxError[0] > kLimit[0]) {
+      thresholds[0] = kMul[0] * hfMaxError[0] * new_quant / orig_quant;
     }
   }
   // Heuristic for improving accuracy of high-frequency patterns
@@ -220,8 +245,9 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
             0.3793181712352986,
         },
     };
-    sum_of_error *= orig_quant;
-    sum_of_vals *= orig_quant;
+    const float kQuantNormalizer = 2.9037220690527175;
+    sum_of_error *= kQuantNormalizer;
+    sum_of_vals *= kQuantNormalizer;
     if (quant_kind >= AcStrategy::Type::DCT16X16) {
       int ix = 2;
       if (quant_kind == AcStrategy::Type::DCT32X16 ||
@@ -251,6 +277,11 @@ void AdjustQuantBlockAC(const Quantizer& quantizer, size_t c,
       activity = 15;
     }
     int32_t qp = *quant - activity;
+    if (c == 1) {
+      for (int i = 1; i < 4; ++i) {
+        thresholds[i] += 0.01 * activity;
+      }
+    }
     if (qp < orig_qp_limit) {
       qp = orig_qp_limit;
     }

@@ -20,8 +20,8 @@ async function test_suspend_video_decoding() {
 add_task(async function setup_test_preference() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["media.suspend-bkgnd-video.enabled", true],
-      ["media.suspend-bkgnd-video.delay-ms", 0],
+      ["media.suspend-background-video.enabled", true],
+      ["media.suspend-background-video.delay-ms", 0],
     ],
   });
 });

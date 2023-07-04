@@ -46,7 +46,8 @@ void GaborishInverse(Image3F* in_out, float mul[3], ThreadPool* pool) {
   // Note that we cannot *allocate* a plane, as doing so might cause Image3F to
   // have planes of different stride. Instead, we copy one plane in a temporary
   // image and reuse the existing planes of the in/out image.
-  ImageF temp = CopyImage(in_out->Plane(2));
+  ImageF temp(in_out->Plane(2).xsize(), in_out->Plane(2).ysize());
+  CopyImageTo(in_out->Plane(2), &temp);
   Symmetric5(in_out->Plane(0), Rect(*in_out), weights[0], pool,
              &in_out->Plane(2));
   Symmetric5(in_out->Plane(1), Rect(*in_out), weights[1], pool,

@@ -26,7 +26,7 @@
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions, JS::DecodeOptions
 #include "js/OffThreadScriptCompilation.h"  // JS::OffThreadCompileCallback
 #include "js/SourceText.h"                  // JS::SourceText
-#include "js/Transcoding.h"  // JS::TranscodeSources, JS::TranscodeBuffer, JS::TranscodeRange
+#include "js/Transcoding.h"  // JS::TranscodeBuffer, JS::TranscodeRange
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSTracer;
@@ -268,17 +268,6 @@ extern JS_PUBLIC_API OffThreadToken* DecodeStencilOffThread(
     JSContext* cx, const DecodeOptions& options, const TranscodeRange& range,
     OffThreadCompileCallback callback, void* callbackData);
 
-// Start an off-thread task to decode multiple stencils.
-//
-// The start of `TranscodeSource.range` in `sources` should meet
-// IsTranscodingBytecodeAligned and AlignTranscodingBytecodeOffset
-//
-// `sources` should be alive until the end of
-// `FinishDecodeMultiStencilsOffThread`.
-extern JS_PUBLIC_API OffThreadToken* DecodeMultiStencilsOffThread(
-    JSContext* cx, const DecodeOptions& options, TranscodeSources& sources,
-    OffThreadCompileCallback callback, void* callbackData);
-
 // Finish the off-thread task to compile the source text into a JS::Stencil,
 // started by JS::CompileToStencilOffThread, and return the result JS::Stencil.
 //
@@ -288,10 +277,6 @@ extern JS_PUBLIC_API OffThreadToken* DecodeMultiStencilsOffThread(
 extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadStencil(
     JSContext* cx, OffThreadToken* token,
     InstantiationStorage* storage = nullptr);
-
-extern JS_PUBLIC_API bool FinishDecodeMultiStencilsOffThread(
-    JSContext* cx, OffThreadToken* token,
-    mozilla::Vector<RefPtr<Stencil>>* stencils);
 
 // Cancel the off-thread task to compile/decode.
 extern JS_PUBLIC_API void CancelOffThreadToken(JSContext* cx,

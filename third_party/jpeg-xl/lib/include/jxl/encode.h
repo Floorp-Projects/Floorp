@@ -51,10 +51,6 @@ typedef struct JxlEncoderStruct JxlEncoder;
  */
 typedef struct JxlEncoderFrameSettingsStruct JxlEncoderFrameSettings;
 
-/** DEPRECATED: Use JxlEncoderFrameSettings instead.
- */
-typedef JxlEncoderFrameSettings JxlEncoderOptions;
-
 /**
  * Return value for multiple encoder functions.
  */
@@ -71,13 +67,6 @@ typedef enum {
   /** The encoder needs more output buffer to continue encoding.
    */
   JXL_ENC_NEED_MORE_OUTPUT = 2,
-
-  /** DEPRECATED: the encoder does not return this status and there is no need
-   * to handle or expect it.
-   * Instead, JXL_ENC_ERROR is returned with error condition
-   * JXL_ENC_ERR_NOT_SUPPORTED.
-   */
-  JXL_ENC_NOT_SUPPORTED = 3,
 
 } JxlEncoderStatus;
 
@@ -1084,37 +1073,6 @@ JXL_EXPORT int JxlEncoderGetRequiredCodestreamLevel(const JxlEncoder* enc);
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetFrameLossless(
     JxlEncoderFrameSettings* frame_settings, JXL_BOOL lossless);
 
-/** DEPRECATED: use JxlEncoderSetFrameLossless instead.
- */
-JXL_EXPORT JxlEncoderStatus
-JxlEncoderOptionsSetLossless(JxlEncoderFrameSettings*, JXL_BOOL);
-
-/**
- * @param frame_settings set of options and metadata for this frame. Also
- * includes reference to the encoder object.
- * @param effort the effort value to set.
- * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR
- * otherwise.
- *
- * DEPRECATED: use JxlEncoderFrameSettingsSetOption(frame_settings,
- * JXL_ENC_FRAME_SETTING_EFFORT, effort) instead.
- */
-JXL_DEPRECATED JXL_EXPORT JxlEncoderStatus
-JxlEncoderOptionsSetEffort(JxlEncoderFrameSettings* frame_settings, int effort);
-
-/**
- * @param frame_settings set of options and metadata for this frame. Also
- * includes reference to the encoder object.
- * @param tier the decoding speed tier to set.
- * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR
- * otherwise.
- *
- * DEPRECATED: use JxlEncoderFrameSettingsSetOption(frame_settings,
- * JXL_ENC_FRAME_SETTING_DECODING_SPEED, tier) instead.
- */
-JXL_DEPRECATED JXL_EXPORT JxlEncoderStatus JxlEncoderOptionsSetDecodingSpeed(
-    JxlEncoderFrameSettings* frame_settings, int tier);
-
 /**
  * Sets the distance level for lossy compression: target max butteraugli
  * distance, lower = higher quality. Range: 0 .. 15.
@@ -1131,11 +1089,6 @@ JXL_DEPRECATED JXL_EXPORT JxlEncoderStatus JxlEncoderOptionsSetDecodingSpeed(
  */
 JXL_EXPORT JxlEncoderStatus JxlEncoderSetFrameDistance(
     JxlEncoderFrameSettings* frame_settings, float distance);
-
-/** DEPRECATED: use JxlEncoderSetFrameDistance instead.
- */
-JXL_DEPRECATED JXL_EXPORT JxlEncoderStatus
-JxlEncoderOptionsSetDistance(JxlEncoderFrameSettings*, float);
 
 /**
  * Sets the distance level for lossy compression of extra channels.
@@ -1170,11 +1123,6 @@ JXL_EXPORT JxlEncoderStatus JxlEncoderSetExtraChannelDistance(
  */
 JXL_EXPORT JxlEncoderFrameSettings* JxlEncoderFrameSettingsCreate(
     JxlEncoder* enc, const JxlEncoderFrameSettings* source);
-
-/** DEPRECATED: use JxlEncoderFrameSettingsCreate instead.
- */
-JXL_DEPRECATED JXL_EXPORT JxlEncoderFrameSettings* JxlEncoderOptionsCreate(
-    JxlEncoder*, const JxlEncoderFrameSettings*);
 
 /**
  * Sets a color encoding to be sRGB.
