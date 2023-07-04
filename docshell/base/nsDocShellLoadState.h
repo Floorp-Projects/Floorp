@@ -330,6 +330,18 @@ class nsDocShellLoadState final {
 
   void SetTriggeringRemoteType(const nsACString& aTriggeringRemoteType);
 
+  // Diagnostic assert if this is a system-principal triggered load, and it is
+  // trivial to determine that the effective triggering remote type would not be
+  // allowed to perform this load.
+  //
+  // This is called early during the load to crash as close to the cause as
+  // possible. See bug 1838686 for details.
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  void AssertProcessCouldTriggerLoadIfSystem();
+#else
+  void AssertProcessCouldTriggerLoadIfSystem() {}
+#endif
+
   // When loading a document through nsDocShell::LoadURI(), a special set of
   // flags needs to be set based on other values in nsDocShellLoadState. This
   // function calculates those flags, before the LoadState is passed to

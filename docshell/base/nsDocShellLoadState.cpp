@@ -7,11 +7,13 @@
 #include "nsDocShellLoadState.h"
 #include "nsIDocShell.h"
 #include "nsDocShell.h"
+#include "nsIProtocolHandler.h"
 #include "nsISHEntry.h"
 #include "nsIURIFixup.h"
 #include "nsIWebNavigation.h"
 #include "nsIChannel.h"
 #include "nsIURLQueryStringStripper.h"
+#include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
 #include "ReferrerInfo.h"
@@ -886,6 +888,30 @@ void nsDocShellLoadState::SetTriggeringRemoteType(
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "only settable in parent");
   mTriggeringRemoteType = aTriggeringRemoteType;
 }
+
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+void nsDocShellLoadState::AssertProcessCouldTriggerLoadIfSystem() {
+  // Early check to see if we're trying to start a file URI load with a system
+  // principal within a web content process.
+  // If this assertion fails, the load will fail later during
+  // nsContentSecurityManager checks, however this assertion should happen
+  // closer to whichever caller is triggering the system-principal load.
+  if (mozilla::SessionHistoryInParent() &&
+      TriggeringPrincipal()->IsSystemPrincipal() &&
+      mozilla::dom::IsWebRemoteType(GetEffectiveTriggeringRemoteType())) {
+    bool localFile = false;
+    if (NS_SUCCEEDED(NS_URIChainHasFlags(
+            URI(), nsIProtocolHandler::URI_IS_LOCAL_FILE, &localFile)) &&
+        localFile) {
+      NS_WARNING(nsPrintfCString("Unexpected system load of file URI (%s) from "
+                                 "web content process",
+                                 URI()->GetSpecOrDefault().get())
+                     .get());
+      MOZ_CRASH("Unexpected system load of file URI from web content process");
+    }
+  }
+}
+#endif
 
 nsresult nsDocShellLoadState::SetupInheritingPrincipal(
     BrowsingContext::Type aType,
