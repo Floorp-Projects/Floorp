@@ -4,11 +4,18 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 116.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v115..main)
+# 117.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v116..main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+
+# 116.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v115..releases_v116)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v116/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v116/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v116/android-components/.config.yml)
 
 * **support-base**
   * Adds `NotificationManangerCompat` extension functions `areNotificationsEnabledSafe()` and  `isNotificationChannelEnabled()`.
