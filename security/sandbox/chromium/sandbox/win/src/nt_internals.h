@@ -304,6 +304,9 @@ typedef enum _NT_THREAD_INFORMATION_CLASS {
 } NT_THREAD_INFORMATION_CLASS,
     *PNT_THREAD_INFORMATION_CLASS;
 
+typedef NTSTATUS(WINAPI* NtImpersonateAnonymousTokenFunction)(
+    IN HANDLE ThreadHandle);
+
 typedef NTSTATUS(WINAPI* NtSetInformationThreadFunction)(
     IN HANDLE ThreadHandle,
     IN NT_THREAD_INFORMATION_CLASS ThreadInformationClass,

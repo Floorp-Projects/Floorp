@@ -72,6 +72,20 @@ bool QueryBroker(IpcTag ipc_id, CountedParameterSetBase* params) {
 
 // -----------------------------------------------------------------------
 
+// Hooks NtImpersonateAnonymousToken so we can block until call to LowerToken.
+// This means a non-retricted token behaves the same as restricted one before
+// LowerToken and prevents us from being left with an anonymous logon token
+// because we are blocking the RevertToSelf that would undo it.
+NTSTATUS WINAPI TargetNtImpersonateAnonymousToken(
+    NtImpersonateAnonymousTokenFunction orig_ImpersonateAnonymousToken,
+    HANDLE thread) {
+  if (!SandboxFactory::GetTargetServices()->GetState()->RevertedToSelf()) {
+    return STATUS_ACCESS_DENIED;
+  }
+
+  return orig_ImpersonateAnonymousToken(thread);
+}
+
 // Hooks NtSetInformationThread to block RevertToSelf from being
 // called before the actual call to LowerToken.
 NTSTATUS WINAPI TargetNtSetInformationThread(
@@ -85,16 +99,6 @@ NTSTATUS WINAPI TargetNtSetInformationThread(
       break;
     if (ThreadImpersonationToken != thread_info_class)
       break;
-    if (!thread_information)
-      break;
-    HANDLE token;
-    if (sizeof(token) > thread_information_bytes)
-      break;
-
-    NTSTATUS ret = CopyData(&token, thread_information, sizeof(token));
-    if (!NT_SUCCESS(ret) || NULL != token)
-      break;
-
     // This is a revert to self.
     return STATUS_SUCCESS;
   } while (false);

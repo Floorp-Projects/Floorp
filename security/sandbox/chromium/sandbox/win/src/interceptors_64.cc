@@ -51,6 +51,14 @@ NTSTATUS WINAPI TargetNtUnmapViewOfSection64(HANDLE process, PVOID base) {
 // -----------------------------------------------------------------------
 
 NTSTATUS WINAPI
+TargetNtImpersonateAnonymousToken64(HANDLE thread) {
+  NtImpersonateAnonymousTokenFunction orig_fn =
+      reinterpret_cast<NtImpersonateAnonymousTokenFunction>(
+          g_originals[IMPERSONATE_ANONYMOUS_TOKEN_ID]);
+  return TargetNtImpersonateAnonymousToken(orig_fn, thread);
+}
+
+NTSTATUS WINAPI
 TargetNtSetInformationThread64(HANDLE thread,
                                NT_THREAD_INFORMATION_CLASS thread_info_class,
                                PVOID thread_information,
