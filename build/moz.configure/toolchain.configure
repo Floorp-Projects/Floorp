@@ -104,6 +104,7 @@ with only_when(host_is_osx | target_is_osx):
         bootstrap_path(
             "MacOSX{}.sdk".format(sdk_min_version()),
             when=depends("--with-macos-sdk")(lambda x: not x),
+            allow_failure=True,
         ),
     )
     @imports(_from="__builtin__", _import="Exception")

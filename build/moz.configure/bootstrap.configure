@@ -138,8 +138,11 @@ def bootstrap_toolchain_tasks(host):
 @template
 def bootstrap_path(path, **kwargs):
     when = kwargs.pop("when", None)
+    allow_failure = kwargs.pop("allow_failure", None)
     if kwargs:
-        configure_error("bootstrap_path only takes `when` as a keyword argument")
+        configure_error(
+            "bootstrap_path only takes `when` and `allow_failure` as a keyword argument"
+        )
 
     @depends(
         enable_bootstrap,
@@ -148,6 +151,7 @@ def bootstrap_path(path, **kwargs):
         bootstrap_toolchain_tasks,
         build_environment,
         dependable(path),
+        dependable(allow_failure),
         when=when,
     )
     @imports("os")
@@ -159,7 +163,13 @@ def bootstrap_path(path, **kwargs):
     @imports(_from="__builtin__", _import="open")
     @imports(_from="__builtin__", _import="Exception")
     def bootstrap_path(
-        bootstrap, toolchains_base_dir, moz_fetches_dir, tasks, build_env, path
+        bootstrap,
+        toolchains_base_dir,
+        moz_fetches_dir,
+        tasks,
+        build_env,
+        path,
+        allow_failure,
     ):
         if not path:
             return
@@ -266,7 +276,7 @@ def bootstrap_path(path, **kwargs):
                 os.path.join(toolchains_base_dir, path_prefix, path_parts[0]),
             )
             os.makedirs(os.path.join(toolchains_base_dir, path_prefix), exist_ok=True)
-            subprocess.run(
+            proc = subprocess.run(
                 [
                     sys.executable,
                     os.path.join(build_env.topsrcdir, "mach"),
@@ -274,8 +284,10 @@ def bootstrap_path(path, **kwargs):
                 ]
                 + command,
                 cwd=os.path.join(toolchains_base_dir, path_prefix),
-                check=True,
+                check=not allow_failure,
             )
+            if proc.returncode != 0 and allow_failure:
+                return False
             ensureParentDir(index_file)
             with open(index_file, "w") as fh:
                 fh.write(task_index)
