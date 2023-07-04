@@ -1139,18 +1139,10 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
       case StubField::Type::Shape:
         InitGCPtr<Shape*>(destWords, field.asWord());
         break;
-      case StubField::Type::WeakShape:
-        // No read barrier required to copy weak pointer.
-        InitGCPtr<Shape*>(destWords, field.asWord());
-        break;
       case StubField::Type::GetterSetter:
         InitGCPtr<GetterSetter*>(destWords, field.asWord());
         break;
       case StubField::Type::JSObject:
-        InitGCPtr<JSObject*>(destWords, field.asWord());
-        break;
-      case StubField::Type::WeakObject:
-        // No read barrier required to copy weak pointer.
         InitGCPtr<JSObject*>(destWords, field.asWord());
         break;
       case StubField::Type::Symbol:
@@ -1184,17 +1176,6 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
 }
 
 template <typename T>
-static inline bool ShouldTraceWeakEdgeInStub(JSTracer* trc) {
-  if constexpr (std::is_same_v<T, IonICStub>) {
-    // 'Weak' edges are traced strongly in IonICs.
-    return true;
-  } else {
-    static_assert(std::is_same_v<T, ICCacheIRStub>);
-    return trc->traceWeakEdges();
-  }
-}
-
-template <typename T>
 void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
                            const CacheIRStubInfo* stubInfo) {
   uint32_t field = 0;
@@ -1217,28 +1198,13 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
         TraceSameZoneCrossCompartmentEdge(trc, &shapeField, "cacheir-shape");
         break;
       }
-      case StubField::Type::WeakShape:
-        if (ShouldTraceWeakEdgeInStub<T>(trc)) {
-          GCPtr<Shape*>& shapeField =
-              stubInfo->getStubField<T, Shape*>(stub, offset);
-          TraceSameZoneCrossCompartmentEdge(trc, &shapeField,
-                                            "cacheir-weak-shape");
-        }
-        break;
       case StubField::Type::GetterSetter:
         TraceEdge(trc, &stubInfo->getStubField<T, GetterSetter*>(stub, offset),
                   "cacheir-getter-setter");
         break;
-      case StubField::Type::JSObject: {
+      case StubField::Type::JSObject:
         TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
                   "cacheir-object");
-        break;
-      }
-      case StubField::Type::WeakObject:
-        if (ShouldTraceWeakEdgeInStub<T>(trc)) {
-          TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
-                    "cacheir-weak-object");
-        }
         break;
       case StubField::Type::Symbol:
         TraceEdge(trc, &stubInfo->getStubField<T, JS::Symbol*>(stub, offset),
@@ -1283,48 +1249,6 @@ template void jit::TraceCacheIRStub(JSTracer* trc, ICCacheIRStub* stub,
 
 template void jit::TraceCacheIRStub(JSTracer* trc, IonICStub* stub,
                                     const CacheIRStubInfo* stubInfo);
-
-template <typename T>
-bool jit::TraceWeakCacheIRStub(JSTracer* trc, T* stub,
-                               const CacheIRStubInfo* stubInfo) {
-  uint32_t field = 0;
-  size_t offset = 0;
-  while (true) {
-    StubField::Type fieldType = stubInfo->fieldType(field);
-    switch (fieldType) {
-      case StubField::Type::WeakShape: {
-        GCPtr<Shape*>& shapeField =
-            stubInfo->getStubField<T, Shape*>(stub, offset);
-        auto r = TraceWeakEdge(trc, &shapeField, "cacheir-weak-shape");
-        if (r.isDead()) {
-          return false;
-        }
-        break;
-      }
-      case StubField::Type::WeakObject: {
-        GCPtr<JSObject*>& objectField =
-            stubInfo->getStubField<T, JSObject*>(stub, offset);
-        auto r = TraceWeakEdge(trc, &objectField, "cacheir-weak-object");
-        if (r.isDead()) {
-          return false;
-        }
-        break;
-      }
-      case StubField::Type::Limit:
-        return true;  // Done.
-      default:
-        break;  // Skip non-weak fields.
-    }
-    field++;
-    offset += StubField::sizeInBytes(fieldType);
-  }
-}
-
-template bool jit::TraceWeakCacheIRStub(JSTracer* trc, ICCacheIRStub* stub,
-                                        const CacheIRStubInfo* stubInfo);
-
-template bool jit::TraceWeakCacheIRStub(JSTracer* trc, IonICStub* stub,
-                                        const CacheIRStubInfo* stubInfo);
 
 bool CacheIRWriter::stubDataEquals(const uint8_t* stubData) const {
   MOZ_ASSERT(!failed());

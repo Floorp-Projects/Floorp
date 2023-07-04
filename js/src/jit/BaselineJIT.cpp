@@ -945,19 +945,20 @@ void jit::ToggleBaselineProfiling(JSContext* cx, bool enable) {
   jrt->baselineInterpreter().toggleProfilerInstrumentation(enable);
 
   for (ZonesIter zone(cx->runtime(), SkipAtoms); !zone.done(); zone.next()) {
-    if (!zone->jitZone()) {
-      continue;
-    }
-    zone->jitZone()->forEachJitScript([&](jit::JitScript* jitScript) {
-      JSScript* script = jitScript->owningScript();
+    for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
+      if (!base->hasJitScript()) {
+        continue;
+      }
+      JSScript* script = base->asJSScript();
       if (enable) {
-        jitScript->ensureProfileString(cx, script);
+        script->jitScript()->ensureProfileString(cx, script);
       }
-      if (script->hasBaselineScript()) {
-        AutoWritableJitCode awjc(script->baselineScript()->method());
-        script->baselineScript()->toggleProfilerInstrumentation(enable);
+      if (!script->hasBaselineScript()) {
+        continue;
       }
-    });
+      AutoWritableJitCode awjc(script->baselineScript()->method());
+      script->baselineScript()->toggleProfilerInstrumentation(enable);
+    }
   }
 }
 

@@ -653,7 +653,7 @@ bool IonCacheIRCompiler::emitGuardShape(ObjOperandId objId,
                                         uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
-  Shape* shape = weakShapeStubField(shapeOffset);
+  Shape* shape = shapeStubField(shapeOffset);
 
   bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
 
@@ -682,7 +682,7 @@ bool IonCacheIRCompiler::emitGuardProto(ObjOperandId objId,
                                         uint32_t protoOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
-  JSObject* proto = weakObjectStubField(protoOffset);
+  JSObject* proto = objectStubField(protoOffset);
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -768,7 +768,7 @@ bool IonCacheIRCompiler::emitGuardSpecificObject(ObjOperandId objId,
                                                  uint32_t expectedOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
   Register obj = allocator.useRegister(masm, objId);
-  JSObject* expected = weakObjectStubField(expectedOffset);
+  JSObject* expected = objectStubField(expectedOffset);
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {

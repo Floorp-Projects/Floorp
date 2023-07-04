@@ -129,7 +129,6 @@ class ICEntry {
   }
 
   void trace(JSTracer* trc);
-  void traceWeak(JSTracer* trc);
 };
 
 //
@@ -253,8 +252,6 @@ class ICFallbackStub final : public ICStub {
 
   void unlinkStub(Zone* zone, ICEntry* icEntry, ICCacheIRStub* prev,
                   ICCacheIRStub* stub);
-  void unlinkStubUnbarriered(ICEntry* icEntry, ICCacheIRStub* prev,
-                             ICCacheIRStub* stub);
 };
 
 class ICCacheIRStub final : public ICStub {
@@ -284,7 +281,6 @@ class ICCacheIRStub final : public ICStub {
   uint8_t* stubDataStart();
 
   void trace(JSTracer* trc);
-  bool traceWeak(JSTracer* trc);
 
   // Optimized stubs get purged on GC.  But some stubs can be active on the
   // stack during GC - specifically the ones that can make calls.  To ensure
