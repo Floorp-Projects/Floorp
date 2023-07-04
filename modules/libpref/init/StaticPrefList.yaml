@@ -7800,6 +7800,12 @@
   mirror: always
   do_not_use_directly: true
 
+# Whether to use the off-thread script compilation and decoding.
+- name: javascript.options.parallel_parsing
+  type: bool
+  value: true
+  mirror: always
+
 # Whether to use fdlibm for Math.sin, Math.cos, and Math.tan. When
 # privacy.resistFingerprinting is true, this pref is ignored and fdlibm is used
 # anyway.
