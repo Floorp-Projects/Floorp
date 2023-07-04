@@ -15,6 +15,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Components.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/IOBuffers.h"
 #include "mozilla/Logging.h"
@@ -253,9 +254,6 @@ ScriptPreloader::~ScriptPreloader() { Cleanup(); }
 void ScriptPreloader::Cleanup() {
   mScripts.Clear();
   UnregisterWeakMemoryReporter(this);
-
-  UniquePtr<Vector<RefPtr<JS::Stencil>>> stencils(
-      mDecodedStencils.exchange(nullptr));
 }
 
 void ScriptPreloader::StartCacheWrite() {
@@ -274,15 +272,14 @@ void ScriptPreloader::InvalidateCache() {
     MonitorAutoLock mal(mMonitor);
 
     // Wait for pending off-thread parses to finish, since they depend on the
-    // memory allocated by our CachedScripts, and can't be canceled
+    // memory allocated by our CachedStencil, and can't be canceled
     // asynchronously.
     FinishPendingParses(mal);
 
-    // Pending scripts should have been cleared by the above, and new parses
-    // should not have been queued.
-    MOZ_ASSERT(mDecodingScripts.empty());
-    MOZ_ASSERT(!mDecodedStencils.exchange(nullptr));
-    MOZ_ASSERT(mPendingScripts.isEmpty());
+    // Pending scripts should have been cleared by the above, and the queue
+    // should have been reset.
+    MOZ_ASSERT(mDecodingScripts.isEmpty());
+    MOZ_ASSERT(!mDecodedStencils);
 
     mScripts.Clear();
 
@@ -606,11 +603,11 @@ Result<Ok, nsresult> ScriptPreloader::InitCacheInternal(
       return Err(NS_ERROR_UNEXPECTED);
     }
 
-    mPendingScripts = std::move(scripts);
+    mDecodingScripts = std::move(scripts);
     cleanup.release();
   }
 
-  DecodeNextBatch(OFF_THREAD_FIRST_CHUNK_SIZE, scope);
+  StartDecodeTask(scope);
   return Ok();
 }
 
@@ -978,87 +975,97 @@ already_AddRefed<JS::Stencil> ScriptPreloader::GetCachedStencilInternal(
 
 already_AddRefed<JS::Stencil> ScriptPreloader::WaitForCachedStencil(
     JSContext* cx, const JS::DecodeOptions& options, CachedStencil* script) {
-  // Always check for finished operations so that we can move on to decoding the
-  // next batch as soon as possible after the pending batch is ready. If we wait
-  // until we hit an unfinished script, we wind up having at most one batch of
-  // buffered scripts, and occasionally under-running that buffer.
-  if (Vector<RefPtr<JS::Stencil>>* stencils =
-          mDecodedStencils.exchange(nullptr)) {
-    FinishOffThreadDecode(stencils);
-  }
-
   if (!script->mReadyToExecute) {
-    LOG(Info, "Must wait for async script load: %s\n", script->mURL.get());
-    auto start = TimeStamp::Now();
+    MOZ_ASSERT(mDecodedStencils);
 
-    // If script is small enough, we'd rather recompile on main-thread than wait
-    // for a decode task to complete.
-    if (script->mSize < MAX_MAINTHREAD_DECODE_SIZE) {
-      LOG(Info, "Script is small enough to recompile on main thread\n");
-
-      script->mReadyToExecute = true;
-      Telemetry::ScalarAdd(
-          Telemetry::ScalarID::SCRIPT_PRELOADER_MAINTHREAD_RECOMPILE, 1);
-    } else {
-      MonitorAutoLock mal(mMonitor);
-
-      // Process script batches until our target is found.
-      while (!script->mReadyToExecute) {
-        if (Vector<RefPtr<JS::Stencil>>* stencils =
-                mDecodedStencils.exchange(nullptr)) {
-          MonitorAutoUnlock mau(mMonitor);
-          FinishOffThreadDecode(stencils);
-        } else {
-          MOZ_ASSERT(!mDecodingScripts.empty());
-          mWaitingForDecode = true;
-          mal.Wait();
-          mWaitingForDecode = false;
-        }
-      }
+    // Check for the finished operations that can contain our target.
+    if (mDecodedStencils->AvailableRead() > 0) {
+      FinishOffThreadDecode();
     }
 
-    double waitedMS = (TimeStamp::Now() - start).ToMilliseconds();
-    Telemetry::Accumulate(Telemetry::SCRIPT_PRELOADER_WAIT_TIME, int(waitedMS));
-    LOG(Debug, "Waited %fms\n", waitedMS);
+    if (!script->mReadyToExecute) {
+      // Our target is not yet decoded.
+
+      // If script is small enough, we'd rather decode on main-thread than wait
+      // for a decode task to complete.
+      if (script->mSize < MAX_MAINTHREAD_DECODE_SIZE) {
+        LOG(Info, "Script is small enough to recompile on main thread\n");
+
+        script->mReadyToExecute = true;
+        Telemetry::ScalarAdd(
+            Telemetry::ScalarID::SCRIPT_PRELOADER_MAINTHREAD_RECOMPILE, 1);
+      } else {
+        LOG(Info, "Must wait for async script load: %s\n", script->mURL.get());
+        auto start = TimeStamp::Now();
+
+        MonitorAutoLock mal(mMonitor);
+
+        // Process finished tasks until our target is found.
+        while (!script->mReadyToExecute) {
+          if (mDecodedStencils->AvailableRead() > 0) {
+            FinishOffThreadDecode();
+          } else {
+            MOZ_ASSERT(!mDecodingScripts.isEmpty());
+            mWaitingForDecode = true;
+            mal.Wait();
+            mWaitingForDecode = false;
+          }
+        }
+
+        double waitedMS = (TimeStamp::Now() - start).ToMilliseconds();
+        Telemetry::Accumulate(Telemetry::SCRIPT_PRELOADER_WAIT_TIME,
+                              int(waitedMS));
+        LOG(Debug, "Waited %fms\n", waitedMS);
+      }
+    }
   }
 
   return script->GetStencil(cx, options);
 }
 
-void ScriptPreloader::OnDecodeTaskFinished(
-    UniquePtr<Vector<RefPtr<JS::Stencil>>>&& stencils) {
+void ScriptPreloader::onDecodedStencilQueued() {
   mMonitor.AssertNotCurrentThreadOwns();
   MonitorAutoLock mal(mMonitor);
-
-  MOZ_ALWAYS_FALSE(mDecodedStencils.exchange(stencils.release()));
 
   if (mWaitingForDecode) {
     // Wake up the blocked main thread.
     mal.Notify();
-  } else if (!mFinishDecodeRunnablePending) {
-    // Issue a Runnable to ensure batches continue to decode even if the next
-    // WaitForCachedScript call has not happened yet.
-    mFinishDecodeRunnablePending = true;
+  }
+
+  // NOTE: Do not perform DoFinishOffThreadDecode for partial data.
+}
+
+void ScriptPreloader::OnDecodeTaskFinished() {
+  mMonitor.AssertNotCurrentThreadOwns();
+  MonitorAutoLock mal(mMonitor);
+
+  if (mWaitingForDecode) {
+    // Wake up the blocked main thread.
+    mal.Notify();
+  } else {
+    // Issue a Runnable to handle all decoded stencils, even if the next
+    // WaitForCachedStencil call has not happened yet.
     NS_DispatchToMainThread(
         NewRunnableMethod("ScriptPreloader::DoFinishOffThreadDecode", this,
                           &ScriptPreloader::DoFinishOffThreadDecode));
   }
 }
 
-void ScriptPreloader::OnDecodeTaskFailed() { OnDecodeTaskFinished(nullptr); }
+void ScriptPreloader::OnDecodeTaskFailed() {
+  // NOTE: nullptr is enqueued to mDecodedStencils, and FinishOffThreadDecode
+  //       handles it as failure.
+  OnDecodeTaskFinished();
+}
 
 void ScriptPreloader::FinishPendingParses(MonitorAutoLock& aMal) {
   mMonitor.AssertCurrentThreadOwns();
 
-  // Clear out scripts that we have not issued batch for yet.
-  mPendingScripts.clear();
+  MOZ_ASSERT_IF(!mDecodingScripts.isEmpty(), mDecodedStencils);
 
   // Process any pending decodes that are in flight.
-  while (!mDecodingScripts.empty()) {
-    if (Vector<RefPtr<JS::Stencil>>* stencils =
-            mDecodedStencils.exchange(nullptr)) {
-      MonitorAutoUnlock mau(mMonitor);
-      FinishOffThreadDecode(stencils);
+  while (!mDecodingScripts.isEmpty()) {
+    if (mDecodedStencils->AvailableRead() > 0) {
+      FinishOffThreadDecode();
     } else {
       mWaitingForDecode = true;
       aMal.Wait();
@@ -1068,54 +1075,56 @@ void ScriptPreloader::FinishPendingParses(MonitorAutoLock& aMal) {
 }
 
 void ScriptPreloader::DoFinishOffThreadDecode() {
-  {
-    MonitorAutoLock mal(mMonitor);
-    mFinishDecodeRunnablePending = false;
-  }
-
-  if (Vector<RefPtr<JS::Stencil>>* stencils =
-          mDecodedStencils.exchange(nullptr)) {
-    FinishOffThreadDecode(stencils);
+  // NOTE: mDecodedStencils could already be reset.
+  if (mDecodedStencils && mDecodedStencils->AvailableRead() > 0) {
+    FinishOffThreadDecode();
   }
 }
 
-void ScriptPreloader::FinishOffThreadDecode(
-    Vector<RefPtr<JS::Stencil>>* stencilsPtr) {
-  UniquePtr<Vector<RefPtr<JS::Stencil>>> stencils(stencilsPtr);
+void ScriptPreloader::FinishOffThreadDecode() {
+  MOZ_ASSERT(mDecodedStencils);
 
-  mMonitor.AssertNotCurrentThreadOwns();
+  while (mDecodedStencils->AvailableRead() > 0) {
+    RefPtr<JS::Stencil> stencil;
+    DebugOnly<int> reads = mDecodedStencils->Dequeue(&stencil, 1);
+    MOZ_ASSERT(reads == 1);
 
-  auto cleanup = MakeScopeExit([&]() {
-    mDecodingScripts.clear();
+    if (!stencil) {
+      // DecodeTask failed.
+      // Mark all remaining scripts to be decoded on the main thread.
+      for (CachedStencil* next = mDecodingScripts.getFirst(); next;) {
+        auto* script = next;
+        next = script->getNext();
 
-    DecodeNextBatch(OFF_THREAD_CHUNK_SIZE);
-  });
+        script->mReadyToExecute = true;
+        script->remove();
+      }
 
-  unsigned i = 0;
-  unsigned length = stencils ? stencils->length() : 0;
-  for (auto* script : mDecodingScripts) {
-    LOG(Debug, "Finished off-thread decode of %s\n", script->mURL.get());
-    if (i < length) {
-      script->mStencil = (*stencils)[i++].forget();
+      break;
     }
+
+    CachedStencil* script = mDecodingScripts.getFirst();
+    MOZ_ASSERT(script);
+
+    LOG(Debug, "Finished off-thread decode of %s\n", script->mURL.get());
+    script->mStencil = stencil.forget();
     script->mReadyToExecute = true;
+    script->remove();
+  }
+
+  if (mDecodingScripts.isEmpty()) {
+    mDecodedStencils.reset();
   }
 }
 
-void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
-                                      JS::HandleObject scope) {
-  MOZ_ASSERT(mDecodingScripts.length() == 0);
-  MOZ_ASSERT(!mDecodedStencils.exchange(nullptr));
-
-  auto cleanup = MakeScopeExit([&]() { mDecodingScripts.clearAndFree(); });
-
+void ScriptPreloader::StartDecodeTask(JS::HandleObject scope) {
   auto start = TimeStamp::Now();
   LOG(Debug, "Off-thread decoding scripts...\n");
 
-  JS::TranscodeSources parsingSources;
+  JS::TranscodeSources decodingSources;
 
   size_t size = 0;
-  for (CachedStencil* next = mPendingScripts.getFirst(); next;) {
+  for (CachedStencil* next = mDecodingScripts.getFirst(); next;) {
     auto* script = next;
     next = script->getNext();
 
@@ -1127,25 +1136,19 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
       script->remove();
       continue;
     }
-    // If we have enough data for one chunk and this script would put us
-    // over our chunk size limit, we're done.
-    if (size > SMALL_SCRIPT_CHUNK_THRESHOLD &&
-        size + script->mSize > chunkSize) {
-      break;
-    }
-    if (!mDecodingScripts.append(script) ||
-        !parsingSources.emplaceBack(script->Range(), script->mURL.get(), 0)) {
+    if (!decodingSources.emplaceBack(script->Range(), script->mURL.get(), 0)) {
       break;
     }
 
     LOG(Debug, "Beginning off-thread decode of script %s (%u bytes)\n",
         script->mURL.get(), script->mSize);
 
-    script->remove();
     size += script->mSize;
   }
 
-  if (size == 0 && mPendingScripts.isEmpty()) {
+  MOZ_ASSERT(decodingSources.length() == mDecodingScripts.length());
+
+  if (size == 0 && mDecodingScripts.isEmpty()) {
     return;
   }
 
@@ -1163,17 +1166,10 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
 
   JS::DecodeOptions decodeOptions(options);
 
-  size_t parsingSourcesLength = parsingSources.length();
+  size_t decodingSourcesLength = decodingSources.length();
 
   if (!StaticPrefs::javascript_options_parallel_parsing() ||
-      !StartDecodeTask(decodeOptions, std::move(parsingSources))) {
-    // If we fail here, we don't move on to process the next batch, so make
-    // sure we don't have any other scripts left to process.
-    MOZ_ASSERT(mPendingScripts.isEmpty());
-    for (auto* script : mPendingScripts) {
-      script->mReadyToExecute = true;
-    }
-
+      !StartDecodeTask(decodeOptions, std::move(decodingSources))) {
     LOG(Info, "Can't decode %lu bytes of scripts off-thread",
         (unsigned long)size);
     for (auto* script : mDecodingScripts) {
@@ -1182,17 +1178,18 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
     return;
   }
 
-  cleanup.release();
-
   LOG(Debug, "Initialized decoding of %u scripts (%u bytes) in %fms\n",
-      (unsigned)parsingSourcesLength, (unsigned)size,
+      (unsigned)decodingSourcesLength, (unsigned)size,
       (TimeStamp::Now() - start).ToMilliseconds());
 }
 
 bool ScriptPreloader::StartDecodeTask(JS::DecodeOptions decodeOptions,
-                                      JS::TranscodeSources&& parsingSources) {
+                                      JS::TranscodeSources&& decodingSources) {
+  mDecodedStencils.emplace(decodingSources.length());
+  MOZ_ASSERT(mDecodedStencils);
+
   nsCOMPtr<nsIRunnable> task =
-      new DecodeTask(this, decodeOptions, std::move(parsingSources));
+      new DecodeTask(this, decodeOptions, std::move(decodingSources));
 
   nsresult rv = NS_DispatchBackgroundTask(task.forget());
 
@@ -1200,42 +1197,45 @@ bool ScriptPreloader::StartDecodeTask(JS::DecodeOptions decodeOptions,
 }
 
 NS_IMETHODIMP ScriptPreloader::DecodeTask::Run() {
+  auto failure = [&]() {
+    RefPtr<JS::Stencil> stencil;
+    DebugOnly<int> writes = mPreloader->mDecodedStencils->Enqueue(stencil);
+    MOZ_ASSERT(writes == 1);
+    mPreloader->OnDecodeTaskFailed();
+  };
+
   JS::FrontendContext* fc = JS::NewFrontendContext();
   if (!fc) {
-    mPreloader->OnDecodeTaskFailed();
+    failure();
     return NS_OK;
   }
 
   auto cleanup = MakeScopeExit([&]() { JS::DestroyFrontendContext(fc); });
 
-  JS::SetNativeStackQuota(fc, 128 * sizeof(size_t) * 1024);
+  const size_t kDefaultStackQuota = 128 * sizeof(size_t) * 1024;
 
-  size_t count = mParsingSources.length();
+  JS::SetNativeStackQuota(fc, kDefaultStackQuota);
 
-  UniquePtr<Vector<RefPtr<JS::Stencil>>> stencils =
-      MakeUnique<Vector<RefPtr<JS::Stencil>>>();
-  if (!stencils) {
-    mPreloader->OnDecodeTaskFailed();
-    return NS_OK;
-  }
-
-  if (!stencils->reserve(count)) {
-    mPreloader->OnDecodeTaskFailed();
-    return NS_OK;
-  }
-
-  for (auto& source : mParsingSources) {
+  size_t remaining = mDecodingSources.length();
+  for (auto& source : mDecodingSources) {
     RefPtr<JS::Stencil> stencil;
-    if (JS::DecodeStencil(fc, mDecodeOptions, source.range,
-                          getter_AddRefs(stencil)) != JS::TranscodeResult::Ok) {
-      // NOTE: Return the partial result.
-      break;
+    auto result = JS::DecodeStencil(fc, mDecodeOptions, source.range,
+                                    getter_AddRefs(stencil));
+    if (result != JS::TranscodeResult::Ok) {
+      failure();
+      return NS_OK;
     }
 
-    stencils->infallibleEmplaceBack(stencil.forget());
+    DebugOnly<int> writes = mPreloader->mDecodedStencils->Enqueue(stencil);
+    MOZ_ASSERT(writes == 1);
+
+    remaining--;
+    if (remaining) {
+      mPreloader->onDecodedStencilQueued();
+    }
   }
 
-  mPreloader->OnDecodeTaskFinished(std::move(stencils));
+  mPreloader->OnDecodeTaskFinished();
   return NS_OK;
 }
 
