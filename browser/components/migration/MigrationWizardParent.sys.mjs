@@ -54,6 +54,7 @@ export class MigrationWizardParent extends JSWindowActorParent {
 
   didDestroy() {
     Services.obs.notifyObservers(this, "MigrationWizard:Destroyed");
+    MigrationUtils.finishMigration();
   }
 
   /**
