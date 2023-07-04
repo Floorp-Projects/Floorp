@@ -19,6 +19,12 @@ bool QueryBroker(IpcTag ipc_id, CountedParameterSetBase* params);
 
 extern "C" {
 
+// Interception of NtImpersonateAnonymousToken on the child process.
+// It should never be called directly.
+SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtImpersonateAnonymousToken(
+    NtImpersonateAnonymousTokenFunction orig_ImpersonateAnonymousToken,
+    HANDLE thread);
+
 // Interception of NtSetInformationThread on the child process.
 // It should never be called directly.
 SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtSetInformationThread(
