@@ -78,6 +78,12 @@ class CustomTabsToolbarFeature(
     private var scope: CoroutineScope? = null
 
     /**
+     * Gets the current custom tab session.
+     */
+    private val session: CustomTabSessionState?
+        get() = sessionId?.let { store.state.findCustomTab(it) }
+
+    /**
      * Initializes the feature and registers the [CustomTabSessionTitleObserver].
      */
     override fun start() {
@@ -93,7 +99,7 @@ class CustomTabsToolbarFeature(
 
         if (!initialized) {
             initialized = true
-            init(tab)
+            init(tab.config)
         }
     }
 
@@ -105,9 +111,7 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun init(tab: CustomTabSessionState) {
-        val config = tab.config
-
+    internal fun init(config: CustomTabConfig) {
         // Don't allow clickable toolbar so a custom tab can't switch to edit mode.
         toolbar.display.onUrlClicked = { false }
 
@@ -124,20 +128,20 @@ class CustomTabsToolbarFeature(
 
         // Add navigation close action
         if (config.showCloseButton) {
-            addCloseButton(tab, config.closeButtonIcon)
+            addCloseButton(config.closeButtonIcon)
         }
 
         // Add action button
-        addActionButton(tab, config.actionButtonConfig)
+        addActionButton(config.actionButtonConfig)
 
         // Show share button
         if (config.showShareMenuItem) {
-            addShareButton(tab)
+            addShareButton()
         }
 
         // Add menu items
         if (config.menuItems.isNotEmpty() || menuBuilder?.items?.isNotEmpty() == true) {
-            addMenuItems(tab, config.menuItems, menuItemIndex)
+            addMenuItems(config.menuItems, menuItemIndex)
         }
     }
 
@@ -167,7 +171,7 @@ class CustomTabsToolbarFeature(
      * When clicked, it calls [closeListener].
      */
     @VisibleForTesting
-    internal fun addCloseButton(tab: CustomTabSessionState, bitmap: Bitmap?) {
+    internal fun addCloseButton(bitmap: Bitmap?) {
         val drawableIcon = bitmap?.toDrawable(context.resources)
             ?: getDrawable(context, iconsR.drawable.mozac_ic_cross_24)!!.mutate()
 
@@ -178,7 +182,9 @@ class CustomTabsToolbarFeature(
             context.getString(R.string.mozac_feature_customtabs_exit_button),
         ) {
             emitCloseFact()
-            useCases.remove(tab.id)
+            session?.let {
+                useCases.remove(it.id)
+            }
             closeListener.invoke()
         }
         toolbar.addNavigationAction(button)
@@ -189,7 +195,7 @@ class CustomTabsToolbarFeature(
      * When clicked, it activates the corresponding [PendingIntent].
      */
     @VisibleForTesting
-    internal fun addActionButton(tab: CustomTabSessionState, buttonConfig: CustomTabActionButtonConfig?) {
+    internal fun addActionButton(buttonConfig: CustomTabActionButtonConfig?) {
         buttonConfig?.let { config ->
             val drawableIcon = Bitmap.createScaledBitmap(
                 config.icon,
@@ -207,7 +213,9 @@ class CustomTabsToolbarFeature(
                 config.description,
             ) {
                 emitActionButtonFact()
-                config.pendingIntent.sendWithUrl(context, tab.content.url)
+                session?.let {
+                    config.pendingIntent.sendWithUrl(context, it.content.url)
+                }
             }
 
             toolbar.addBrowserAction(button)
@@ -219,7 +227,7 @@ class CustomTabsToolbarFeature(
      * When clicked, it activates [shareListener] and defaults to the [share] KTX helper.
      */
     @VisibleForTesting
-    internal fun addShareButton(tab: CustomTabSessionState) {
+    internal fun addShareButton() {
         val drawableIcon = getDrawable(context, iconsR.drawable.mozac_ic_share_android_24)!!
         drawableIcon.setTint(readableColor)
 
@@ -227,7 +235,11 @@ class CustomTabsToolbarFeature(
             drawableIcon,
             context.getString(R.string.mozac_feature_customtabs_share_link),
         ) {
-            val listener = shareListener ?: { context.share(tab.content.url) }
+            val listener = shareListener ?: {
+                session?.let {
+                    context.share(it.content.url)
+                }
+            }
             emitActionButtonFact()
             listener.invoke()
         }
@@ -240,13 +252,14 @@ class CustomTabsToolbarFeature(
      */
     @VisibleForTesting
     internal fun addMenuItems(
-        tab: CustomTabSessionState,
         menuItems: List<CustomTabMenuItem>,
         index: Int,
     ) {
         menuItems.map { item ->
             SimpleBrowserMenuItem(item.name) {
-                item.pendingIntent.sendWithUrl(context, tab.content.url)
+                session?.let {
+                    item.pendingIntent.sendWithUrl(context, it.content.url)
+                }
             }
         }.also { items ->
             val combinedItems = menuBuilder?.let { builder ->

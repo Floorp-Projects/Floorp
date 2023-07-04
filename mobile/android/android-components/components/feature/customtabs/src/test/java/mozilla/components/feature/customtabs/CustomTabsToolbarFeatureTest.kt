@@ -5,18 +5,21 @@
 package mozilla.components.feature.customtabs
 
 import android.app.PendingIntent
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.TextView
 import androidx.core.view.forEach
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.state.action.BrowserAction
@@ -45,6 +48,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyList
 import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -86,13 +90,13 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature).init(tab)
+        verify(feature).init(tab.config)
 
         // Calling start again should NOT call init again
 
         feature.start()
 
-        verify(feature, times(1)).init(tab)
+        verify(feature, times(1)).init(tab.config)
     }
 
     @Test
@@ -111,7 +115,7 @@ class CustomTabsToolbarFeatureTest {
         )
         val feature = CustomTabsToolbarFeature(store, toolbar, sessionId = "mozilla", useCases = useCases) {}
 
-        feature.init(tab)
+        feature.init(tab.config)
 
         assertFalse(toolbar.display.onUrlClicked.invoke())
     }
@@ -141,7 +145,7 @@ class CustomTabsToolbarFeatureTest {
         `when`(window.decorView).thenReturn(mock())
         val feature = CustomTabsToolbarFeature(store, toolbar, sessionId = "mozilla", useCases = useCases, window = window) {}
 
-        feature.init(tab)
+        feature.init(tab.config)
 
         verify(toolbar).setBackgroundColor(Color.RED)
         verify(window).statusBarColor = Color.RED
@@ -184,7 +188,7 @@ class CustomTabsToolbarFeatureTest {
                 updateToolbarBackground = false,
             ) {}
 
-            feature.init(tab)
+            feature.init(tab.config)
 
             verify(toolbar, never()).setBackgroundColor(Color.RED)
         }
@@ -199,7 +203,7 @@ class CustomTabsToolbarFeatureTest {
                 updateToolbarBackground = true,
             ) {}
 
-            feature.init(tab)
+            feature.init(tab.config)
 
             verify(toolbar).setBackgroundColor(Color.RED)
         }
@@ -310,7 +314,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature, never()).addShareButton(tab)
+        verify(feature, never()).addShareButton()
         verify(toolbar, never()).addBrowserAction(any())
     }
 
@@ -337,7 +341,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature).addShareButton(tab)
+        verify(feature).addShareButton()
         verify(toolbar).addBrowserAction(any())
     }
 
@@ -396,7 +400,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature).addActionButton(any(), any())
+        verify(feature).addActionButton(any())
     }
 
     @Test
@@ -429,12 +433,63 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature).addActionButton(any(), any())
+        verify(feature).addActionButton(any())
         verify(toolbar).addBrowserAction(captor.capture())
 
         val button = captor.value.createView(FrameLayout(testContext))
         assertEquals(24, (button as ImageButton).drawable.intrinsicHeight)
         assertEquals(24, button.drawable.intrinsicWidth)
+    }
+
+    @Test
+    fun `action button uses updated url`() {
+        val size = 48
+        val pendingIntent: PendingIntent = mock()
+        val captor = argumentCaptor<Toolbar.ActionButton>()
+        val intentCaptor = argumentCaptor<Intent>()
+
+        val tab = createCustomTab(
+            "https://www.mozilla.org",
+            id = "mozilla",
+            config = CustomTabConfig(
+                actionButtonConfig = CustomTabActionButtonConfig(
+                    description = "Button",
+                    icon = Bitmap.createBitmap(IntArray(size * size), size, size, Bitmap.Config.ARGB_8888),
+                    pendingIntent = pendingIntent,
+                ),
+            ),
+        )
+        val store = BrowserStore(
+            BrowserState(
+                customTabs = listOf(tab),
+            ),
+        )
+        val toolbar = spy(BrowserToolbar(testContext))
+        val useCases = CustomTabsUseCases(
+            store = store,
+            loadUrlUseCase = SessionUseCases(store).loadUrl,
+        )
+        val feature = spy(CustomTabsToolbarFeature(store, toolbar, sessionId = "mozilla", useCases = useCases) {})
+
+        feature.start()
+
+        store.dispatch(
+            ContentAction.UpdateUrlAction(
+                "mozilla",
+                "https://github.com/mozilla-mobile/android-components",
+            ),
+        ).joinBlocking()
+
+        verify(feature).addActionButton(any())
+        verify(toolbar).addBrowserAction(captor.capture())
+
+        doNothing().`when`(pendingIntent).send(any(), anyInt(), any())
+
+        val button = captor.value.createView(FrameLayout(testContext))
+        button.performClick()
+
+        verify(pendingIntent).send(any(), anyInt(), intentCaptor.capture())
+        assertEquals("https://github.com/mozilla-mobile/android-components", intentCaptor.value.getDataString())
     }
 
     @Test
@@ -462,7 +517,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature).addMenuItems(any(), anyList(), anyInt())
+        verify(feature).addMenuItems(anyList(), anyInt())
     }
 
     @Test
@@ -498,7 +553,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.start()
 
-        verify(feature).addMenuItems(any(), anyList(), anyInt())
+        verify(feature).addMenuItems(anyList(), anyInt())
     }
 
     @Test
@@ -692,6 +747,57 @@ class CustomTabsToolbarFeatureTest {
 
         assertEquals(3, menuBuilder.items.size)
         assertTrue(menuBuilder.items[0] is SimpleBrowserMenuItem)
+    }
+
+    @Test
+    fun `menu item uses updated url`() {
+        val pendingIntent: PendingIntent = mock()
+        val intentCaptor = argumentCaptor<Intent>()
+        val tab = createCustomTab(
+            "https://www.mozilla.org",
+            id = "mozilla",
+            config = CustomTabConfig(
+                menuItems = listOf(
+                    CustomTabMenuItem("Share", pendingIntent),
+                ),
+            ),
+        )
+        val store = BrowserStore(
+            BrowserState(
+                customTabs = listOf(tab),
+            ),
+        )
+        val toolbar = spy(BrowserToolbar(testContext))
+        val useCases = CustomTabsUseCases(
+            store = store,
+            loadUrlUseCase = SessionUseCases(store).loadUrl,
+        )
+        val feature = spy(CustomTabsToolbarFeature(store, toolbar, sessionId = "mozilla", useCases = useCases) {})
+
+        feature.start()
+
+        store.dispatch(
+            ContentAction.UpdateUrlAction(
+                "mozilla",
+                "https://github.com/mozilla-mobile/android-components",
+            ),
+        ).joinBlocking()
+
+        val menuBuilder = toolbar.display.menuBuilder!!
+
+        val item = menuBuilder.items[0]
+
+        val menu: BrowserMenu = mock()
+        val view = TextView(testContext)
+
+        item.bind(menu, view)
+
+        view.performClick()
+
+        doNothing().`when`(pendingIntent).send(any(), anyInt(), any())
+
+        verify(pendingIntent).send(any(), anyInt(), intentCaptor.capture())
+        assertEquals("https://github.com/mozilla-mobile/android-components", intentCaptor.value.getDataString())
     }
 
     @Test

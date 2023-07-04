@@ -10,6 +10,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **feature-customtabs**
+ * Sharing a URL from a custom tab always uses the current url of the session. [bug #1831803](https://bugzilla.mozilla.org/show_bug.cgi?id=1831803)
+
 # 122.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v121..releases_v122)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v122/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
@@ -33,7 +36,7 @@ permalink: /changelog/
   * Adds support to toggle Email Tracker Blocking in Private Mode with new `emailTrackerBlockingPrivateBrowsing` API [Bug 1866927](https://bugzilla.mozilla.org/show_bug.cgi?id=1866927)
 
 * **samples-browser**
-  * Use `VerticalSwipeRefreshLayout` from AndroidComponents instead of AndroidX `SwipeRefreshLayout` to represent better Fenix behavior  
+  * Use `VerticalSwipeRefreshLayout` from AndroidComponents instead of AndroidX `SwipeRefreshLayout` to represent better Fenix behavior
 
 * **places-bookmark-storage**:
   * Added `countBookmarksInTrees` to more efficiently determine how many bookmarks exist under part or parts of a bookmarks tree, which
