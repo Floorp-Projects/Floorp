@@ -6,17 +6,10 @@ import PropTypes from "prop-types";
 import React, { Component } from "react";
 import Breakpoint from "./Breakpoint";
 
-import {
-  getSelectedSource,
-  getFirstVisibleBreakpoints,
-  getBlackBoxRanges,
-  isSourceMapIgnoreListEnabled,
-  isSourceOnSourceMapIgnoreList,
-} from "../../selectors";
+import { getSelectedSource, getFirstVisibleBreakpoints } from "../../selectors";
 import { makeBreakpointId } from "../../utils/breakpoint";
 import { connect } from "../../utils/connect";
-import { breakpointItemActions } from "./menus/breakpoints";
-import { editorItemActions } from "./menus/editor";
+import actions from "../../actions";
 
 class Breakpoints extends Component {
   static get propTypes() {
@@ -24,12 +17,7 @@ class Breakpoints extends Component {
       cx: PropTypes.object,
       breakpoints: PropTypes.array,
       editor: PropTypes.object,
-      breakpointActions: PropTypes.object,
-      editorActions: PropTypes.object,
       selectedSource: PropTypes.object,
-      blackboxedRanges: PropTypes.object,
-      isSelectedSourceOnIgnoreList: PropTypes.bool,
-      blackboxedRangesForSelectedSource: PropTypes.array,
     };
   }
   render() {
@@ -38,10 +26,10 @@ class Breakpoints extends Component {
       breakpoints,
       selectedSource,
       editor,
-      breakpointActions,
-      editorActions,
-      blackboxedRangesForSelectedSource,
-      isSelectedSourceOnIgnoreList,
+      showEditorEditBreakpointContextMenu,
+      continueToHere,
+      toggleBreakpointsAtLine,
+      removeBreakpointsAtLine,
     } = this.props;
 
     if (!selectedSource || !breakpoints) {
@@ -57,13 +45,13 @@ class Breakpoints extends Component {
               key={makeBreakpointId(bp.location)}
               breakpoint={bp}
               selectedSource={selectedSource}
-              blackboxedRangesForSelectedSource={
-                blackboxedRangesForSelectedSource
+              showEditorEditBreakpointContextMenu={
+                showEditorEditBreakpointContextMenu
               }
-              isSelectedSourceOnIgnoreList={isSelectedSourceOnIgnoreList}
+              continueToHere={continueToHere}
+              toggleBreakpointsAtLine={toggleBreakpointsAtLine}
+              removeBreakpointsAtLine={removeBreakpointsAtLine}
               editor={editor}
-              breakpointActions={breakpointActions}
-              editorActions={editorActions}
             />
           );
         })}
@@ -72,25 +60,20 @@ class Breakpoints extends Component {
   }
 }
 
-export default connect(
-  state => {
-    const selectedSource = getSelectedSource(state);
-    const blackboxedRanges = getBlackBoxRanges(state);
-    return {
-      // Retrieves only the first breakpoint per line so that the
-      // breakpoint marker represents only the first breakpoint
-      breakpoints: getFirstVisibleBreakpoints(state),
-      selectedSource,
-      blackboxedRangesForSelectedSource:
-        selectedSource && blackboxedRanges[selectedSource.url],
-      isSelectedSourceOnIgnoreList:
-        selectedSource &&
-        isSourceMapIgnoreListEnabled(state) &&
-        isSourceOnSourceMapIgnoreList(state, selectedSource),
-    };
-  },
-  dispatch => ({
-    breakpointActions: breakpointItemActions(dispatch),
-    editorActions: editorItemActions(dispatch),
-  })
-)(Breakpoints);
+const mapStateToProps = state => {
+  const selectedSource = getSelectedSource(state);
+  return {
+    // Retrieves only the first breakpoint per line so that the
+    // breakpoint marker represents only the first breakpoint
+    breakpoints: getFirstVisibleBreakpoints(state),
+    selectedSource,
+  };
+};
+
+export default connect(mapStateToProps, {
+  showEditorEditBreakpointContextMenu:
+    actions.showEditorEditBreakpointContextMenu,
+  continueToHere: actions.continueToHere,
+  toggleBreakpointsAtLine: actions.toggleBreakpointsAtLine,
+  removeBreakpointsAtLine: actions.removeBreakpointsAtLine,
+})(Breakpoints);

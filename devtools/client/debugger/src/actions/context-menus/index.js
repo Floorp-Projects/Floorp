@@ -3,5 +3,6 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 export * from "./frame";
+export * from "./editor-breakpoint";
 export * from "./source-tree-item";
 export * from "./tab";

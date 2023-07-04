@@ -5,6 +5,7 @@
 
 CompiledModules(
     "frame.js",
+    "editor-breakpoint.js",
     "index.js",
     "source-tree-item.js",
     "tab.js",
