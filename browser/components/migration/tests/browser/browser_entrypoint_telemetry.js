@@ -20,6 +20,32 @@ async function showThenCloseMigrationWizardViaEntrypoint(entrypoint) {
 
   let wizard = await openedPromise;
   Assert.ok(wizard, "Migration wizard opened.");
+
+  if (!Services.prefs.getBoolPref(CONTENT_MODAL_ENABLED_PREF)) {
+    // This scalar gets written to asynchronously. The old wizard will be going
+    // away soon, so we'll just poll for it to be set rather than doing anything
+    // fancier.
+    await BrowserTestUtils.waitForCondition(() => {
+      // We should make sure that the migration.time_to_produce_legacy_migrator_list
+      // scalar was set, since we know that at least one legacy migration wizard has
+      // been opened.
+      let scalars = TelemetryTestUtils.getProcessScalars(
+        "parent",
+        false,
+        false
+      );
+      if (!scalars["migration.time_to_produce_legacy_migrator_list"]) {
+        return false;
+      }
+
+      Assert.ok(
+        scalars["migration.time_to_produce_legacy_migrator_list"] > 0,
+        "Non-zero scalar value recorded for migration.time_to_produce_migrator_list"
+      );
+      return true;
+    });
+  }
+
   await BrowserTestUtils.closeMigrationWizard(wizard);
 }
 
@@ -99,4 +125,13 @@ add_task(async function test_legacy_wizard() {
       TelemetryTestUtils.assertHistogram(legacyHistogram, entrypointId, 1);
     }
   }
+
+  // We should make sure that the migration.time_to_produce_legacy_migrator_list
+  // scalar was set, since we know that at least one legacy migration wizard has
+  // been opened.
+  let scalars = TelemetryTestUtils.getProcessScalars("parent", false, false);
+  Assert.ok(
+    scalars["migration.time_to_produce_legacy_migrator_list"] > 0,
+    "Non-zero scalar value recorded for migration.time_to_produce_migrator_list"
+  );
 });
