@@ -204,7 +204,7 @@ class CommandBar extends Component {
     }
     // Display a button which:
     // - on left click, would toggle on/off javascript tracing
-    // - on right click, would display a context menu allowing to choose the loggin output (console or stdout)
+    // - on right click, would display a context menu allowing to choose the logging output (console or stdout)
     return (
       <button
         className={`devtools-button command-bar-button debugger-trace-menu-button ${
@@ -226,7 +226,7 @@ class CommandBar extends Component {
           event.preventDefault();
           event.stopPropagation();
 
-          // Avoid showing the menu to avoid having to support chaging tracing config "live"
+          // Avoid showing the menu to avoid having to support changing tracing config "live"
           if (this.props.isTracingEnabled) {
             return;
           }

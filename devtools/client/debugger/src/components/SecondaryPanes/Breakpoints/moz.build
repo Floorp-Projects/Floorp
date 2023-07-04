@@ -8,7 +8,6 @@ DIRS += []
 CompiledModules(
     "Breakpoint.js",
     "BreakpointHeading.js",
-    "BreakpointsContextMenu.js",
     "ExceptionOption.js",
     "index.js",
 )
