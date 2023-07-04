@@ -2267,6 +2267,16 @@ class EventManager {
     this.register = register;
     this.inputHandling = inputHandling;
     this.resetIdleOnEvent = resetIdleOnEvent;
+
+    const isBackgroundParent =
+      this.context.envType === "addon_parent" &&
+      this.context.isBackgroundContext;
+
+    // Avoid resetIdleOnEvent overhead by only consider it when applicable.
+    if (!isBackgroundParent || context.extension.persistentBackground) {
+      this.resetIdleOnEvent = false;
+    }
+
     if (!name) {
       this.name = `${module}.${event}`;
     }
@@ -2285,11 +2295,7 @@ class EventManager {
       );
     }
 
-    this.canPersistEvents =
-      module &&
-      event &&
-      ["background", "background_worker"].includes(this.context.viewType) &&
-      this.context.envType == "addon_parent";
+    this.canPersistEvents = module && event && isBackgroundParent;
 
     if (this.canPersistEvents) {
       let { extension } = context;
