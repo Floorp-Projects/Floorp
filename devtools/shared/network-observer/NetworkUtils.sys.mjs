@@ -605,7 +605,7 @@ function legacyMatchRequest(channel, filters) {
   return false;
 }
 
-function getBlockedReason(channel) {
+function getBlockedReason(channel, fromCache = false) {
   let blockingExtension, blockedReason;
   const { status } = channel;
 
@@ -627,7 +627,7 @@ function getBlockedReason(channel) {
   // usually the requests (with these errors) might be displayed with various
   // other status codes.
   const ignoreList = [
-    // This is emited when the request is already in the cache.
+    // These are emited when the request is already in the cache.
     "NS_ERROR_PARSED_DATA_CACHED",
     // This is emited when there is some issues around images e.g When the img.src
     // links to a non existent url. This is typically shown as a 404 request.
@@ -637,6 +637,12 @@ function getBlockedReason(channel) {
     // E.g Emited by send beacon requests.
     "NS_ERROR_ABORT",
   ];
+
+  // NS_BINDING_ABORTED are emmited when request are abruptly halted, these are valid and should not be ignored.
+  // They can also be emmited for requests already cache which have the `cached` status, these should be ignored.
+  if (fromCache) {
+    ignoreList.push("NS_BINDING_ABORTED");
+  }
 
   // If the request has not failed or is not blocked by a web extension, check for
   // any errors not on the ignore list. e.g When a host is not found (NS_ERROR_UNKNOWN_HOST).
