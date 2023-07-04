@@ -65,7 +65,7 @@ use arbitrary::{Result, Unstructured};
 pub use component::{Component, ConfiguredComponent};
 pub use config::{Config, DefaultConfig, SwarmConfig};
 use std::{collections::HashSet, fmt::Write, str};
-use wasmparser::types::{KebabStr, KebabString};
+use wasmparser::names::{KebabStr, KebabString};
 
 /// Do something an arbitrary number of times.
 ///

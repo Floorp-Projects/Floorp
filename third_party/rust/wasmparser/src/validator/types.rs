@@ -1,21 +1,26 @@
 //! Types relating to type information provided by validation.
 
-use super::{component::ComponentState, core::Module};
+use super::{
+    component::{ComponentState, ExternKind},
+    core::Module,
+};
+use crate::validator::names::KebabString;
 use crate::{
-    Export, ExternalKind, FuncType, GlobalType, Import, MemoryType, PrimitiveValType, RefType,
-    TableType, TypeRef, ValType,
+    ArrayType, BinaryReaderError, Export, ExternalKind, FuncType, GlobalType, Import, MemoryType,
+    PrimitiveValType, RefType, Result, TableType, TypeRef, ValType,
 };
 use indexmap::{IndexMap, IndexSet};
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::ops::Index;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::{
     borrow::Borrow,
-    fmt,
     hash::{Hash, Hasher},
     mem,
     ops::{Deref, DerefMut},
     sync::Arc,
 };
-use url::Url;
 
 /// The maximum number of parameters in the canonical ABI that can be passed by value.
 ///
@@ -30,199 +35,6 @@ const MAX_FLAT_FUNC_RESULTS: usize = 1;
 
 /// The maximum lowered types, including a possible type for a return pointer parameter.
 const MAX_LOWERED_TYPES: usize = MAX_FLAT_FUNC_PARAMS + 1;
-
-/// Represents a kebab string slice used in validation.
-///
-/// This is a wrapper around `str` that ensures the slice is
-/// a valid kebab case string according to the component model
-/// specification.
-///
-/// It also provides an equality and hashing implementation
-/// that ignores ASCII case.
-#[derive(Debug, Eq)]
-#[repr(transparent)]
-pub struct KebabStr(str);
-
-impl KebabStr {
-    /// Creates a new kebab string slice.
-    ///
-    /// Returns `None` if the given string is not a valid kebab string.
-    pub fn new<'a>(s: impl AsRef<str> + 'a) -> Option<&'a Self> {
-        let s = Self::new_unchecked(s);
-        if s.is_kebab_case() {
-            Some(s)
-        } else {
-            None
-        }
-    }
-
-    pub(crate) fn new_unchecked<'a>(s: impl AsRef<str> + 'a) -> &'a Self {
-        // Safety: `KebabStr` is a transparent wrapper around `str`
-        // Therefore transmuting `&str` to `&KebabStr` is safe.
-        unsafe { std::mem::transmute::<_, &Self>(s.as_ref()) }
-    }
-
-    /// Gets the underlying string slice.
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-
-    /// Converts the slice to an owned string.
-    pub fn to_kebab_string(&self) -> KebabString {
-        KebabString(self.to_string())
-    }
-
-    fn is_kebab_case(&self) -> bool {
-        let mut lower = false;
-        let mut upper = false;
-        for c in self.chars() {
-            match c {
-                'a'..='z' if !lower && !upper => lower = true,
-                'A'..='Z' if !lower && !upper => upper = true,
-                'a'..='z' if lower => {}
-                'A'..='Z' if upper => {}
-                '0'..='9' if lower || upper => {}
-                '-' if lower || upper => {
-                    lower = false;
-                    upper = false;
-                }
-                _ => return false,
-            }
-        }
-
-        !self.is_empty() && !self.ends_with('-')
-    }
-}
-
-impl Deref for KebabStr {
-    type Target = str;
-
-    fn deref(&self) -> &str {
-        self.as_str()
-    }
-}
-
-impl PartialEq for KebabStr {
-    fn eq(&self, other: &Self) -> bool {
-        if self.len() != other.len() {
-            return false;
-        }
-
-        self.chars()
-            .zip(other.chars())
-            .all(|(a, b)| a.to_ascii_lowercase() == b.to_ascii_lowercase())
-    }
-}
-
-impl PartialEq<KebabString> for KebabStr {
-    fn eq(&self, other: &KebabString) -> bool {
-        self.eq(other.as_kebab_str())
-    }
-}
-
-impl Hash for KebabStr {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.len().hash(state);
-
-        for b in self.chars() {
-            b.to_ascii_lowercase().hash(state);
-        }
-    }
-}
-
-impl fmt::Display for KebabStr {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        (self as &str).fmt(f)
-    }
-}
-
-impl ToOwned for KebabStr {
-    type Owned = KebabString;
-
-    fn to_owned(&self) -> Self::Owned {
-        self.to_kebab_string()
-    }
-}
-
-/// Represents an owned kebab string for validation.
-///
-/// This is a wrapper around `String` that ensures the string is
-/// a valid kebab case string according to the component model
-/// specification.
-///
-/// It also provides an equality and hashing implementation
-/// that ignores ASCII case.
-#[derive(Debug, Clone, Eq)]
-pub struct KebabString(String);
-
-impl KebabString {
-    /// Creates a new kebab string.
-    ///
-    /// Returns `None` if the given string is not a valid kebab string.
-    pub fn new(s: impl Into<String>) -> Option<Self> {
-        let s = s.into();
-        if KebabStr::new(&s).is_some() {
-            Some(Self(s))
-        } else {
-            None
-        }
-    }
-
-    /// Gets the underlying string.
-    pub fn as_str(&self) -> &str {
-        self.0.as_str()
-    }
-
-    /// Converts the kebab string to a kebab string slice.
-    pub fn as_kebab_str(&self) -> &KebabStr {
-        // Safety: internal string is always valid kebab-case
-        KebabStr::new_unchecked(self.as_str())
-    }
-}
-
-impl Deref for KebabString {
-    type Target = KebabStr;
-
-    fn deref(&self) -> &Self::Target {
-        self.as_kebab_str()
-    }
-}
-
-impl Borrow<KebabStr> for KebabString {
-    fn borrow(&self) -> &KebabStr {
-        self.as_kebab_str()
-    }
-}
-
-impl PartialEq for KebabString {
-    fn eq(&self, other: &Self) -> bool {
-        self.as_kebab_str().eq(other.as_kebab_str())
-    }
-}
-
-impl PartialEq<KebabStr> for KebabString {
-    fn eq(&self, other: &KebabStr) -> bool {
-        self.as_kebab_str().eq(other)
-    }
-}
-
-impl Hash for KebabString {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.as_kebab_str().hash(state)
-    }
-}
-
-impl fmt::Display for KebabString {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.as_kebab_str().fmt(f)
-    }
-}
-
-impl From<KebabString> for String {
-    fn from(s: KebabString) -> String {
-        s.0
-    }
-}
 
 /// A simple alloc-free list of types used for calculating lowered function signatures.
 pub(crate) struct LoweredTypes {
@@ -329,6 +141,7 @@ fn push_primitive_wasm_types(ty: &PrimitiveValType, lowered_types: &mut LoweredT
 
 /// Represents a unique identifier for a type known to a [`crate::Validator`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[repr(C)] // use fixed field layout to ensure minimal size
 pub struct TypeId {
     /// The index into the global list of types.
     pub(crate) index: usize,
@@ -357,22 +170,24 @@ const _: () = {
 pub enum Type {
     /// The definition is for a core function type.
     Func(FuncType),
+    /// The definition is for a core array type.
+    Array(ArrayType),
     /// The definition is for a core module type.
     ///
     /// This variant is only supported when parsing a component.
-    Module(ModuleType),
+    Module(Box<ModuleType>),
     /// The definition is for a core module instance type.
     ///
     /// This variant is only supported when parsing a component.
-    Instance(InstanceType),
+    Instance(Box<InstanceType>),
     /// The definition is for a component type.
     ///
     /// This variant is only supported when parsing a component.
-    Component(ComponentType),
+    Component(Box<ComponentType>),
     /// The definition is for a component instance type.
     ///
     /// This variant is only supported when parsing a component.
-    ComponentInstance(ComponentInstanceType),
+    ComponentInstance(Box<ComponentInstanceType>),
     /// The definition is for a component function type.
     ///
     /// This variant is only supported when parsing a component.
@@ -381,6 +196,10 @@ pub enum Type {
     ///
     /// This variant is only supported when parsing a component.
     Defined(ComponentDefinedType),
+    /// This definition is for a resource type in the component model.
+    ///
+    /// Each resource is identified by a unique identifier specified here.
+    Resource(ResourceId),
 }
 
 impl Type {
@@ -388,6 +207,14 @@ impl Type {
     pub fn as_func_type(&self) -> Option<&FuncType> {
         match self {
             Self::Func(ty) => Some(ty),
+            _ => None,
+        }
+    }
+
+    /// Converts the type to an array type.
+    pub fn as_array_type(&self) -> Option<&ArrayType> {
+        match self {
+            Self::Array(ty) => Some(ty),
             _ => None,
         }
     }
@@ -440,15 +267,25 @@ impl Type {
         }
     }
 
+    /// Converts this type to a resource type, returning the corresponding id.
+    pub fn as_resource(&self) -> Option<ResourceId> {
+        match self {
+            Self::Resource(id) => Some(*id),
+            _ => None,
+        }
+    }
+
     pub(crate) fn type_size(&self) -> u32 {
         match self {
             Self::Func(ty) => 1 + (ty.params().len() + ty.results().len()) as u32,
+            Self::Array(_) => 2, // 2 is a guess.
             Self::Module(ty) => ty.type_size,
             Self::Instance(ty) => ty.type_size,
             Self::Component(ty) => ty.type_size,
             Self::ComponentInstance(ty) => ty.type_size,
             Self::ComponentFunc(ty) => ty.type_size,
             Self::Defined(ty) => ty.type_size(),
+            Self::Resource(_) => 1,
         }
     }
 }
@@ -470,39 +307,6 @@ impl ComponentValType {
                 .as_defined_type()
                 .unwrap()
                 .requires_realloc(types),
-        }
-    }
-
-    /// Determines if component value type `a` is a subtype of `b`.
-    pub fn is_subtype_of(a: &Self, at: TypesRef, b: &Self, bt: TypesRef) -> bool {
-        Self::internal_is_subtype_of(a, at.list, b, bt.list)
-    }
-
-    pub(crate) fn internal_is_subtype_of(a: &Self, at: &TypeList, b: &Self, bt: &TypeList) -> bool {
-        match (a, b) {
-            (ComponentValType::Primitive(a), ComponentValType::Primitive(b)) => {
-                PrimitiveValType::is_subtype_of(*a, *b)
-            }
-            (ComponentValType::Type(a), ComponentValType::Type(b)) => {
-                ComponentDefinedType::internal_is_subtype_of(
-                    at[*a].as_defined_type().unwrap(),
-                    at,
-                    bt[*b].as_defined_type().unwrap(),
-                    bt,
-                )
-            }
-            (ComponentValType::Primitive(a), ComponentValType::Type(b)) => {
-                match bt[*b].as_defined_type().unwrap() {
-                    ComponentDefinedType::Primitive(b) => PrimitiveValType::is_subtype_of(*a, *b),
-                    _ => false,
-                }
-            }
-            (ComponentValType::Type(a), ComponentValType::Primitive(b)) => {
-                match at[*a].as_defined_type().unwrap() {
-                    ComponentDefinedType::Primitive(a) => PrimitiveValType::is_subtype_of(*a, *b),
-                    _ => false,
-                }
-            }
         }
     }
 
@@ -540,48 +344,9 @@ pub enum EntityType {
 }
 
 impl EntityType {
-    /// Determines if entity type `a` is a subtype of `b`.
-    pub fn is_subtype_of(a: &Self, at: TypesRef, b: &Self, bt: TypesRef) -> bool {
-        Self::internal_is_subtype_of(a, at.list, b, bt.list)
-    }
-
-    pub(crate) fn internal_is_subtype_of(a: &Self, at: &TypeList, b: &Self, bt: &TypeList) -> bool {
-        macro_rules! limits_match {
-            ($a:expr, $b:expr) => {{
-                let a = $a;
-                let b = $b;
-                a.initial >= b.initial
-                    && match b.maximum {
-                        Some(b_max) => match a.maximum {
-                            Some(a_max) => a_max <= b_max,
-                            None => false,
-                        },
-                        None => true,
-                    }
-            }};
-        }
-
-        match (a, b) {
-            (EntityType::Func(a), EntityType::Func(b)) => {
-                at[*a].as_func_type().unwrap() == bt[*b].as_func_type().unwrap()
-            }
-            (EntityType::Table(a), EntityType::Table(b)) => {
-                a.element_type == b.element_type && limits_match!(a, b)
-            }
-            (EntityType::Memory(a), EntityType::Memory(b)) => {
-                a.shared == b.shared && a.memory64 == b.memory64 && limits_match!(a, b)
-            }
-            (EntityType::Global(a), EntityType::Global(b)) => a == b,
-            (EntityType::Tag(a), EntityType::Tag(b)) => {
-                at[*a].as_func_type().unwrap() == bt[*b].as_func_type().unwrap()
-            }
-            _ => false,
-        }
-    }
-
     pub(crate) fn desc(&self) -> &'static str {
         match self {
-            Self::Func(_) => "function",
+            Self::Func(_) => "func",
             Self::Table(_) => "table",
             Self::Memory(_) => "memory",
             Self::Global(_) => "global",
@@ -661,26 +426,6 @@ impl ModuleType {
     pub fn lookup_import(&self, module: &str, name: &str) -> Option<&EntityType> {
         self.imports.get(&(module, name) as &dyn ModuleImportKey)
     }
-
-    /// Determines if module type `a` is a subtype of `b`.
-    pub fn is_subtype_of(a: &Self, at: TypesRef, b: &Self, bt: TypesRef) -> bool {
-        Self::internal_is_subtype_of(a, at.list, b, bt.list)
-    }
-
-    pub(crate) fn internal_is_subtype_of(a: &Self, at: &TypeList, b: &Self, bt: &TypeList) -> bool {
-        // For module type subtyping, all exports in the other module type
-        // must be present in this module type's exports (i.e. it can export
-        // *more* than what this module type needs).
-        // However, for imports, the check is reversed (i.e. it is okay
-        // to import *less* than what this module type needs).
-        a.imports.iter().all(|(k, a)| match b.imports.get(k) {
-            Some(b) => EntityType::internal_is_subtype_of(b, bt, a, at),
-            None => false,
-        }) && b.exports.iter().all(|(k, b)| match a.exports.get(k) {
-            Some(a) => EntityType::internal_is_subtype_of(a, at, b, bt),
-            None => false,
-        })
-    }
 }
 
 /// Represents the kind of module instance type.
@@ -749,56 +494,15 @@ pub enum ComponentEntityType {
 impl ComponentEntityType {
     /// Determines if component entity type `a` is a subtype of `b`.
     pub fn is_subtype_of(a: &Self, at: TypesRef, b: &Self, bt: TypesRef) -> bool {
-        Self::internal_is_subtype_of(a, at.list, b, bt.list)
-    }
-
-    pub(crate) fn internal_is_subtype_of(a: &Self, at: &TypeList, b: &Self, bt: &TypeList) -> bool {
-        match (a, b) {
-            (Self::Module(a), Self::Module(b)) => ModuleType::internal_is_subtype_of(
-                at[*a].as_module_type().unwrap(),
-                at,
-                bt[*b].as_module_type().unwrap(),
-                bt,
-            ),
-            (Self::Func(a), Self::Func(b)) => ComponentFuncType::internal_is_subtype_of(
-                at[*a].as_component_func_type().unwrap(),
-                at,
-                bt[*b].as_component_func_type().unwrap(),
-                bt,
-            ),
-            (Self::Value(a), Self::Value(b)) => {
-                ComponentValType::internal_is_subtype_of(a, at, b, bt)
-            }
-            (Self::Type { referenced: a, .. }, Self::Type { referenced: b, .. }) => {
-                ComponentDefinedType::internal_is_subtype_of(
-                    at[*a].as_defined_type().unwrap(),
-                    at,
-                    bt[*b].as_defined_type().unwrap(),
-                    bt,
-                )
-            }
-            (Self::Instance(a), Self::Instance(b)) => {
-                ComponentInstanceType::internal_is_subtype_of(
-                    at[*a].as_component_instance_type().unwrap(),
-                    at,
-                    bt[*b].as_component_instance_type().unwrap(),
-                    bt,
-                )
-            }
-            (Self::Component(a), Self::Component(b)) => ComponentType::internal_is_subtype_of(
-                at[*a].as_component_type().unwrap(),
-                at,
-                bt[*b].as_component_type().unwrap(),
-                bt,
-            ),
-            _ => false,
-        }
+        SubtypeCx::new(at.list, bt.list)
+            .component_entity_type(a, b, 0)
+            .is_ok()
     }
 
     pub(crate) fn desc(&self) -> &'static str {
         match self {
             Self::Module(_) => "module",
-            Self::Func(_) => "function",
+            Self::Func(_) => "func",
             Self::Value(_) => "value",
             Self::Type { .. } => "type",
             Self::Instance(_) => "instance",
@@ -823,43 +527,55 @@ impl ComponentEntityType {
 pub struct ComponentType {
     /// The effective type size for the component type.
     pub(crate) type_size: u32,
+
     /// The imports of the component type.
-    pub imports: IndexMap<KebabString, (Option<Url>, ComponentEntityType)>,
+    ///
+    /// Each import has its own kebab-name and an optional URL listed. Note that
+    /// the set of import names is disjoint with the set of export names.
+    pub imports: IndexMap<String, ComponentEntityType>,
+
     /// The exports of the component type.
-    pub exports: IndexMap<KebabString, (Option<Url>, ComponentEntityType)>,
-}
+    ///
+    /// Each export has its own kebab-name and an optional URL listed. Note that
+    /// the set of export names is disjoint with the set of import names.
+    pub exports: IndexMap<String, ComponentEntityType>,
 
-impl ComponentType {
-    /// Determines if component type `a` is a subtype of `b`.
-    pub fn is_subtype_of(a: &Self, at: TypesRef, b: &Self, bt: TypesRef) -> bool {
-        Self::internal_is_subtype_of(a, at.list, b, bt.list)
-    }
+    /// Universally quantified resources required to be provided when
+    /// instantiating this component type.
+    ///
+    /// Each resource in this map is explicitly imported somewhere in the
+    /// `imports` map. The "path" to where it's imported is specified by the
+    /// `Vec<usize>` payload here. For more information about the indexes see
+    /// the documentation on `ComponentState::imported_resources`.
+    ///
+    /// This should technically be inferrable from the structure of `imports`,
+    /// but it's stored as an auxiliary set for subtype checking and
+    /// instantiation.
+    ///
+    /// Note that this is not a set of all resources referred to by the
+    /// `imports`. Instead it's only those created, relative to the internals of
+    /// this component, by the imports.
+    pub imported_resources: Vec<(ResourceId, Vec<usize>)>,
 
-    pub(crate) fn internal_is_subtype_of(a: &Self, at: &TypeList, b: &Self, bt: &TypeList) -> bool {
-        // For component type subtyping, all exports in the other component type
-        // must be present in this component type's exports (i.e. it can export
-        // *more* than what this component type needs).
-        // However, for imports, the check is reversed (i.e. it is okay
-        // to import *less* than what this component type needs).
-        a.imports.iter().all(|(k, (_, a))| match b.imports.get(k) {
-            Some((_, b)) => ComponentEntityType::internal_is_subtype_of(b, bt, a, at),
-            None => false,
-        }) && b.exports.iter().all(|(k, (_, b))| match a.exports.get(k) {
-            Some((_, a)) => ComponentEntityType::internal_is_subtype_of(a, at, b, bt),
-            None => false,
-        })
-    }
-}
+    /// The dual of the `imported_resources`, or the set of defined
+    /// resources -- those created through the instantiation process which are
+    /// unique to this component.
+    ///
+    /// This set is similar to the `imported_resources` set but it's those
+    /// contained within the `exports`. Instantiating this component will
+    /// create fresh new versions of all of these resources. The path here is
+    /// within the `exports` array.
+    pub defined_resources: Vec<(ResourceId, Vec<usize>)>,
 
-/// Represents the kind of a component instance.
-#[derive(Debug, Clone)]
-pub enum ComponentInstanceTypeKind {
-    /// The instance type is from a definition.
-    Defined(IndexMap<KebabString, (Option<Url>, ComponentEntityType)>),
-    /// The instance type is the result of instantiating a component type.
-    Instantiated(TypeId),
-    /// The instance type is the result of instantiating from exported items.
-    Exports(IndexMap<KebabString, (Option<Url>, ComponentEntityType)>),
+    /// The set of all resources which are explicitly exported by this
+    /// component, and where they're exported.
+    ///
+    /// This mapping is stored separately from `defined_resources` to ensure
+    /// that it contains all exported resources, not just those which are
+    /// defined. That means that this can cover reexports of imported
+    /// resources, exports of local resources, or exports of closed-over
+    /// resources for example.
+    pub explicit_resources: IndexMap<ResourceId, Vec<usize>>,
 }
 
 /// Represents a type of a component instance.
@@ -867,53 +583,49 @@ pub enum ComponentInstanceTypeKind {
 pub struct ComponentInstanceType {
     /// The effective type size for the instance type.
     pub(crate) type_size: u32,
-    /// The kind of instance type.
-    pub kind: ComponentInstanceTypeKind,
-}
 
-impl ComponentInstanceType {
-    /// Gets the exports of the instance type.
-    pub fn exports<'a>(
-        &'a self,
-        types: TypesRef<'a>,
-    ) -> impl ExactSizeIterator<Item = (&'a KebabStr, &'a Option<Url>, ComponentEntityType)> + Clone
-    {
-        self.internal_exports(types.list)
-            .iter()
-            .map(|(n, (u, t))| (n.as_kebab_str(), u, *t))
-    }
+    /// The list of exports, keyed by name, that this instance has.
+    ///
+    /// An optional URL and type of each export is provided as well.
+    pub exports: IndexMap<String, ComponentEntityType>,
 
-    pub(crate) fn internal_exports<'a>(
-        &'a self,
-        types: &'a TypeList,
-    ) -> &'a IndexMap<KebabString, (Option<Url>, ComponentEntityType)> {
-        match &self.kind {
-            ComponentInstanceTypeKind::Defined(exports)
-            | ComponentInstanceTypeKind::Exports(exports) => exports,
-            ComponentInstanceTypeKind::Instantiated(id) => {
-                &types[*id].as_component_type().unwrap().exports
-            }
-        }
-    }
+    /// The list of "defined resources" or those which are closed over in
+    /// this instance type.
+    ///
+    /// This list is populated, for example, when the type of an instance is
+    /// declared and it contains its own resource type exports defined
+    /// internally. For example:
+    ///
+    /// ```wasm
+    /// (component
+    ///     (type (instance
+    ///         (export "x" (type sub resource)) ;; one `defined_resources` entry
+    ///     ))
+    /// )
+    /// ```
+    ///
+    /// This list is also a bit of an oddity, however, because the type of a
+    /// concrete instance will always have this as empty. For example:
+    ///
+    /// ```wasm
+    /// (component
+    ///     (type $t (instance (export "x" (type sub resource))))
+    ///
+    ///     ;; the type of this instance has no defined resources
+    ///     (import "i" (instance (type $t)))
+    /// )
+    /// ```
+    ///
+    /// This list ends up only being populated for instance types declared in a
+    /// module which aren't yet "attached" to anything. Once something is
+    /// instantiated, imported, exported, or otherwise refers to a concrete
+    /// instance then this list is always empty. For concrete instances
+    /// defined resources are tracked in the component state or component type.
+    pub defined_resources: Vec<ResourceId>,
 
-    /// Determines if component instance type `a` is a subtype of `b`.
-    pub fn is_subtype_of(a: &Self, at: TypesRef, b: &Self, bt: TypesRef) -> bool {
-        Self::internal_is_subtype_of(a, at.list, b, bt.list)
-    }
-
-    pub(crate) fn internal_is_subtype_of(a: &Self, at: &TypeList, b: &Self, bt: &TypeList) -> bool {
-        let exports = a.internal_exports(at);
-
-        // For instance type subtyping, all exports in the other instance type
-        // must be present in this instance type's exports (i.e. it can export
-        // *more* than what this instance type needs).
-        b.internal_exports(bt)
-            .iter()
-            .all(|(k, (_, b))| match exports.get(k) {
-                Some((_, a)) => ComponentEntityType::internal_is_subtype_of(a, at, b, bt),
-                None => false,
-            })
-    }
+    /// The list of all resources that are explicitly exported from this
+    /// instance type along with the path they're exported at.
+    pub explicit_resources: IndexMap<ResourceId, Vec<usize>>,
 }
 
 /// Represents a type of a component function.
@@ -928,54 +640,6 @@ pub struct ComponentFuncType {
 }
 
 impl ComponentFuncType {
-    /// Determines if component function type `a` is a subtype of `b`.
-    pub fn is_subtype_of(a: &Self, at: TypesRef, b: &Self, bt: TypesRef) -> bool {
-        Self::internal_is_subtype_of(a, at.list, b, bt.list)
-    }
-
-    pub(crate) fn internal_is_subtype_of(a: &Self, at: &TypeList, b: &Self, bt: &TypeList) -> bool {
-        // Note that this intentionally diverges from the upstream specification
-        // in terms of subtyping. This is a full type-equality check which
-        // ensures that the structure of `a` exactly matches the structure of
-        // `b`. The rationale for this is:
-        //
-        // * Primarily in Wasmtime subtyping based on function types is not
-        //   implemented. This includes both subtyping a host import and
-        //   additionally handling subtyping as functions cross component
-        //   boundaries. The host import subtyping (or component export
-        //   subtyping) is not clear how to handle at all at this time. The
-        //   subtyping of functions between components can more easily be
-        //   handled by extending the `fact` compiler, but that hasn't been done
-        //   yet.
-        //
-        // * The upstream specification is currently pretty intentionally vague
-        //   precisely what subtyping is allowed. Implementing a strict check
-        //   here is intended to be a conservative starting point for the
-        //   component model which can be extended in the future if necessary.
-        //
-        // * The interaction with subtyping on bindings generation, for example,
-        //   is a tricky problem that doesn't have a clear answer at this time.
-        //   Effectively this is more rationale for being conservative in the
-        //   first pass of the component model.
-        //
-        // So, in conclusion, the test here (and other places that reference
-        // this comment) is for exact type equality with no differences.
-        a.params.len() == b.params.len()
-            && a.results.len() == b.results.len()
-            && a.params
-                .iter()
-                .zip(b.params.iter())
-                .all(|((an, a), (bn, b))| {
-                    an == bn && ComponentValType::internal_is_subtype_of(a, at, b, bt)
-                })
-            && a.results
-                .iter()
-                .zip(b.results.iter())
-                .all(|((an, a), (bn, b))| {
-                    an == bn && ComponentValType::internal_is_subtype_of(a, at, b, bt)
-                })
-    }
-
     /// Lowers the component function type to core parameter and result types for the
     /// canonical ABI.
     pub(crate) fn lower(&self, types: &TypeList, import: bool) -> LoweringInfo {
@@ -1106,6 +770,10 @@ pub enum ComponentDefinedType {
         /// The `error` type.
         err: Option<ComponentValType>,
     },
+    /// The type is an owned handle to the specified resource.
+    Own(TypeId),
+    /// The type is a borrowed handle to the specified resource.
+    Borrow(TypeId),
 }
 
 impl ComponentDefinedType {
@@ -1121,7 +789,7 @@ impl ComponentDefinedType {
             Self::List(_) => true,
             Self::Tuple(t) => t.types.iter().any(|ty| ty.requires_realloc(types)),
             Self::Union(u) => u.types.iter().any(|ty| ty.requires_realloc(types)),
-            Self::Flags(_) | Self::Enum(_) => false,
+            Self::Flags(_) | Self::Enum(_) | Self::Own(_) | Self::Borrow(_) => false,
             Self::Option(ty) => ty.requires_realloc(types),
             Self::Result { ok, err } => {
                 ok.map(|ty| ty.requires_realloc(types)).unwrap_or(false)
@@ -1130,78 +798,13 @@ impl ComponentDefinedType {
         }
     }
 
-    /// Determines if component defined type `a` is a subtype of `b`.
-    pub fn is_subtype_of(a: &Self, at: TypesRef, b: &Self, bt: TypesRef) -> bool {
-        Self::internal_is_subtype_of(a, at.list, b, bt.list)
-    }
-
-    pub(crate) fn internal_is_subtype_of(a: &Self, at: &TypeList, b: &Self, bt: &TypeList) -> bool {
-        // Note that the implementation of subtyping here diverges from the
-        // upstream specification intentionally, see the documentation on
-        // function subtyping for more information.
-        match (a, b) {
-            (Self::Primitive(a), Self::Primitive(b)) => PrimitiveValType::is_subtype_of(*a, *b),
-            (Self::Record(a), Self::Record(b)) => {
-                a.fields.len() == b.fields.len()
-                    && a.fields
-                        .iter()
-                        .zip(b.fields.iter())
-                        .all(|((aname, a), (bname, b))| {
-                            aname == bname && ComponentValType::internal_is_subtype_of(a, at, b, bt)
-                        })
-            }
-            (Self::Variant(a), Self::Variant(b)) => {
-                a.cases.len() == b.cases.len()
-                    && a.cases
-                        .iter()
-                        .zip(b.cases.iter())
-                        .all(|((aname, a), (bname, b))| {
-                            aname == bname
-                                && match (&a.ty, &b.ty) {
-                                    (Some(a), Some(b)) => {
-                                        ComponentValType::internal_is_subtype_of(a, at, b, bt)
-                                    }
-                                    (None, None) => true,
-                                    _ => false,
-                                }
-                        })
-            }
-            (Self::List(a), Self::List(b)) | (Self::Option(a), Self::Option(b)) => {
-                ComponentValType::internal_is_subtype_of(a, at, b, bt)
-            }
-            (Self::Tuple(a), Self::Tuple(b)) => {
-                if a.types.len() != b.types.len() {
-                    return false;
-                }
-                a.types
-                    .iter()
-                    .zip(b.types.iter())
-                    .all(|(a, b)| ComponentValType::internal_is_subtype_of(a, at, b, bt))
-            }
-            (Self::Union(a), Self::Union(b)) => {
-                if a.types.len() != b.types.len() {
-                    return false;
-                }
-                a.types
-                    .iter()
-                    .zip(b.types.iter())
-                    .all(|(a, b)| ComponentValType::internal_is_subtype_of(a, at, b, bt))
-            }
-            (Self::Flags(a), Self::Flags(b)) | (Self::Enum(a), Self::Enum(b)) => {
-                a.len() == b.len() && a.iter().eq(b.iter())
-            }
-            (Self::Result { ok: ao, err: ae }, Self::Result { ok: bo, err: be }) => {
-                Self::is_optional_subtype_of(*ao, at, *bo, bt)
-                    && Self::is_optional_subtype_of(*ae, at, *be, bt)
-            }
-            _ => false,
-        }
-    }
-
     pub(crate) fn type_size(&self) -> u32 {
         match self {
-            Self::Primitive(_) => 1,
-            Self::Flags(_) | Self::Enum(_) => 1,
+            Self::Primitive(_)
+            | Self::Flags(_)
+            | Self::Enum(_)
+            | Self::Own(_)
+            | Self::Borrow(_) => 1,
             Self::Record(r) => r.type_size,
             Self::Variant(v) => v.type_size,
             Self::Tuple(t) => t.type_size,
@@ -1213,18 +816,6 @@ impl ComponentDefinedType {
         }
     }
 
-    fn is_optional_subtype_of(
-        a: Option<ComponentValType>,
-        at: &TypeList,
-        b: Option<ComponentValType>,
-        bt: &TypeList,
-    ) -> bool {
-        match (a, b) {
-            (None, None) => true,
-            (Some(a), Some(b)) => ComponentValType::internal_is_subtype_of(&a, at, &b, bt),
-            _ => false,
-        }
-    }
     fn push_wasm_types(&self, types: &TypeList, lowered_types: &mut LoweredTypes) -> bool {
         match self {
             Self::Primitive(ty) => push_primitive_wasm_types(ty, lowered_types),
@@ -1245,7 +836,7 @@ impl ComponentDefinedType {
             Self::Flags(names) => {
                 (0..(names.len() + 31) / 32).all(|_| lowered_types.push(ValType::I32))
             }
-            Self::Enum(_) => lowered_types.push(ValType::I32),
+            Self::Enum(_) | Self::Own(_) | Self::Borrow(_) => lowered_types.push(ValType::I32),
             Self::Union(u) => Self::push_variant_wasm_types(u.types.iter(), types, lowered_types),
             Self::Option(ty) => {
                 Self::push_variant_wasm_types([ty].into_iter(), types, lowered_types)
@@ -1300,6 +891,50 @@ impl ComponentDefinedType {
             _ => panic!("unexpected wasm type for canonical ABI"),
         }
     }
+
+    fn desc(&self) -> &'static str {
+        match self {
+            ComponentDefinedType::Record(_) => "record",
+            ComponentDefinedType::Primitive(_) => "primitive",
+            ComponentDefinedType::Variant(_) => "variant",
+            ComponentDefinedType::Tuple(_) => "tuple",
+            ComponentDefinedType::Enum(_) => "enum",
+            ComponentDefinedType::Flags(_) => "flags",
+            ComponentDefinedType::Option(_) => "option",
+            ComponentDefinedType::List(_) => "list",
+            ComponentDefinedType::Union(_) => "union",
+            ComponentDefinedType::Result { .. } => "result",
+            ComponentDefinedType::Own(_) => "own",
+            ComponentDefinedType::Borrow(_) => "borrow",
+        }
+    }
+}
+
+/// An opaque identifier intended to be used to distinguish whether two
+/// resource types are equivalent or not.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Copy)]
+#[repr(packed(4))] // try to not waste 4 bytes in padding
+pub struct ResourceId {
+    // This is a globally unique identifier which is assigned once per
+    // `TypeAlloc`. This ensures that resource identifiers from different
+    // instances of `Types`, for example, are considered unique.
+    //
+    // Technically 64-bits should be enough for all resource ids ever, but
+    // they're allocated so often it's predicted that an atomic increment
+    // per resource id is probably too expensive. To amortize that cost each
+    // top-level wasm component gets a single globally unique identifier, and
+    // then within a component contextually unique identifiers are handed out.
+    globally_unique_id: u64,
+
+    // A contextually unique id within the globally unique id above. This is
+    // allocated within a `TypeAlloc` with its own counter, and allocations of
+    // this are cheap as nothing atomic is required.
+    //
+    // The 32-bit storage here should ideally be enough for any component
+    // containing resources. If memory usage becomes an issue (this struct is
+    // 12 bytes instead of 8 or 4) then this coudl get folded into the globally
+    // unique id with everything using an atomic increment perhaps.
+    contextually_unique_id: u32,
 }
 
 #[allow(clippy::large_enum_variant)]
@@ -1385,7 +1020,7 @@ impl<'a> TypesRef<'a> {
     /// Returns `None` if the type index is out of bounds or the type has not
     /// been parsed yet.
     pub fn type_at(&self, index: u32, core: bool) -> Option<&'a Type> {
-        self.type_from_id(*self.types(core)?.get(index as usize)?)
+        self.type_from_id(self.id_from_type_index(index, core)?)
     }
 
     /// Gets a defined core function type at the given type index.
@@ -1550,16 +1185,10 @@ impl<'a> TypesRef<'a> {
     ///
     /// Returns `None` if the type index is out of bounds or the type has not
     /// been parsed yet.
-    pub fn component_instance_at(&self, index: u32) -> Option<&'a ComponentInstanceType> {
+    pub fn component_instance_at(&self, index: u32) -> Option<TypeId> {
         match &self.kind {
             TypesRefKind::Module(_) => None,
-            TypesRefKind::Component(component) => {
-                let id = component.instances.get(index as usize)?;
-                match &self.list[*id] {
-                    Type::ComponentInstance(ty) => Some(ty),
-                    _ => None,
-                }
-            }
+            TypesRefKind::Component(component) => component.instances.get(index as usize).copied(),
         }
     }
 
@@ -1615,13 +1244,18 @@ impl<'a> TypesRef<'a> {
     }
 
     /// Gets the component entity type for the given component import.
-    pub fn component_entity_type_of_extern(&self, name: &str) -> Option<ComponentEntityType> {
+    pub fn component_entity_type_of_import(&self, name: &str) -> Option<ComponentEntityType> {
         match &self.kind {
             TypesRefKind::Module(_) => None,
-            TypesRefKind::Component(component) => {
-                let key = KebabStr::new(name)?;
-                Some(component.externs.get(key)?.1)
-            }
+            TypesRefKind::Component(component) => Some(*component.imports.get(name)?),
+        }
+    }
+
+    /// Gets the component entity type for the given component export.
+    pub fn component_entity_type_of_export(&self, name: &str) -> Option<ComponentEntityType> {
+        match &self.kind {
+            TypesRefKind::Module(_) => None,
+            TypesRefKind::Component(component) => Some(*component.exports.get(name)?),
         }
     }
 }
@@ -1846,7 +1480,7 @@ impl Types {
     /// Gets the type of an component instance at the given component instance index.
     ///
     /// Returns `None` if the index is out of bounds.
-    pub fn component_instance_at(&self, index: u32) -> Option<&ComponentInstanceType> {
+    pub fn component_instance_at(&self, index: u32) -> Option<TypeId> {
         self.as_ref().component_instance_at(index)
     }
 
@@ -1883,10 +1517,14 @@ impl Types {
         self.as_ref().entity_type_from_export(export)
     }
 
-    /// Gets the component entity type for the given component import or export
-    /// name.
-    pub fn component_entity_type_of_extern(&self, name: &str) -> Option<ComponentEntityType> {
-        self.as_ref().component_entity_type_of_extern(name)
+    /// Gets the component entity type for the given component import name.
+    pub fn component_entity_type_of_import(&self, name: &str) -> Option<ComponentEntityType> {
+        self.as_ref().component_entity_type_of_import(name)
+    }
+
+    /// Gets the component entity type for the given component export name.
+    pub fn component_entity_type_of_export(&self, name: &str) -> Option<ComponentEntityType> {
+        self.as_ref().component_entity_type_of_export(name)
     }
 
     /// Attempts to lookup the type id that `ty` is an alias of.
@@ -1956,22 +1594,6 @@ impl<T> SnapshotList<T> {
         };
         let snapshot = &self.snapshots[i];
         Some(&snapshot.items[index - snapshot.prior_types])
-    }
-
-    /// Same as `<&mut [T]>::get_mut`, except only works for indexes into the
-    /// current snapshot being built.
-    ///
-    /// # Panics
-    ///
-    /// Panics if an index is passed in which falls within the
-    /// previously-snapshotted list of types. This should never happen in our
-    /// context and the panic is intended to weed out possible bugs in
-    /// wasmparser.
-    pub(crate) fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        if index >= self.snapshots_total {
-            return self.cur.get_mut(index - self.snapshots_total);
-        }
-        panic!("cannot get a mutable reference in snapshotted part of list")
     }
 
     /// Same as `Vec::push`
@@ -2066,7 +1688,7 @@ impl<T> SnapshotList<T> {
     }
 }
 
-impl<T> std::ops::Index<usize> for SnapshotList<T> {
+impl<T> Index<usize> for SnapshotList<T> {
     type Output = T;
 
     #[inline]
@@ -2075,26 +1697,12 @@ impl<T> std::ops::Index<usize> for SnapshotList<T> {
     }
 }
 
-impl<T> std::ops::IndexMut<usize> for SnapshotList<T> {
-    #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut T {
-        self.get_mut(index).unwrap()
-    }
-}
-
-impl<T> std::ops::Index<TypeId> for SnapshotList<T> {
+impl<T> Index<TypeId> for SnapshotList<T> {
     type Output = T;
 
     #[inline]
     fn index(&self, id: TypeId) -> &T {
         self.get(id.index).unwrap()
-    }
-}
-
-impl<T> std::ops::IndexMut<TypeId> for SnapshotList<T> {
-    #[inline]
-    fn index_mut(&mut self, id: TypeId) -> &mut T {
-        self.get_mut(id.index).unwrap()
     }
 }
 
@@ -2117,6 +1725,25 @@ pub(crate) type TypeList = SnapshotList<Type>;
 /// types contained within this list.
 pub(crate) struct TypeAlloc {
     list: TypeList,
+
+    // This is assigned at creation of a `TypeAlloc` and then never changed.
+    // It's used in one entry for all `ResourceId`s contained within.
+    globally_unique_id: u64,
+
+    // This is a counter that's incremeneted each time `alloc_resource_id` is
+    // called.
+    next_resource_id: u32,
+}
+
+impl Default for TypeAlloc {
+    fn default() -> TypeAlloc {
+        static NEXT_GLOBAL_ID: AtomicU64 = AtomicU64::new(0);
+        TypeAlloc {
+            list: TypeList::default(),
+            globally_unique_id: NEXT_GLOBAL_ID.fetch_add(1, Ordering::Relaxed),
+            next_resource_id: 0,
+        }
+    }
 }
 
 impl Deref for TypeAlloc {
@@ -2133,9 +1760,12 @@ impl DerefMut for TypeAlloc {
 }
 
 impl TypeAlloc {
-    /// Pushes a new anonymous type into this list which will have its
-    /// `unique_id` field cleared.
-    pub fn push_anon(&mut self, ty: Type) -> TypeId {
+    /// Pushes a new type into this list, returning an identifier which can be
+    /// used to later retrieve it.
+    ///
+    /// The returned identifier is unique within this `TypeAlloc` and won't be
+    /// hash-equivalent to anything else.
+    pub fn push_ty(&mut self, ty: Type) -> TypeId {
         let index = self.list.len();
         let type_size = ty.type_size();
         self.list.push(ty);
@@ -2146,21 +1776,1295 @@ impl TypeAlloc {
         }
     }
 
-    /// Pushes a new defined type which has an index in core wasm onto this
-    /// list.
+    /// Allocates a new unique resource identifier.
     ///
-    /// The returned `TypeId` is guaranteed to be unique and not hash-equivalent
-    /// to any other prior ID in this list.
-    pub fn push_defined(&mut self, ty: Type) -> TypeId {
-        let id = self.push_anon(ty);
-        self.with_unique(id)
+    /// Note that uniqueness is only a property within this `TypeAlloc`.
+    pub fn alloc_resource_id(&mut self) -> ResourceId {
+        let contextually_unique_id = self.next_resource_id;
+        self.next_resource_id = self.next_resource_id.checked_add(1).unwrap();
+        ResourceId {
+            globally_unique_id: self.globally_unique_id,
+            contextually_unique_id,
+        }
+    }
+
+    /// Adds the set of "free variables" of the `id` provided to the `set`
+    /// provided.
+    ///
+    /// Free variables are defined as resources. Any resource, perhaps
+    /// transitively, referred to but not defined by `id` is added to the `set`
+    /// and returned.
+    pub fn free_variables_type_id(&self, id: TypeId, set: &mut IndexSet<ResourceId>) {
+        match &self[id] {
+            // Core wasm constructs cannot reference resources.
+            Type::Func(_) | Type::Array(_) | Type::Module(_) | Type::Instance(_) => {}
+
+            // Recurse on the imports/exports of components, but remove the
+            // imported and defined resources within the component itself.
+            //
+            // Technically this needs to add all the free variables of the
+            // exports, remove the defined resources, then add the free
+            // variables of imports, then remove the imported resources. Given
+            // prior validation of component types, however, the defined
+            // and imported resources are disjoint and imports can't refer to
+            // defined resources, so doing this all in one go should be
+            // equivalent.
+            Type::Component(i) => {
+                for ty in i.imports.values().chain(i.exports.values()) {
+                    self.free_variables_component_entity(ty, set);
+                }
+                for (id, _path) in i.imported_resources.iter().chain(&i.defined_resources) {
+                    set.remove(id);
+                }
+            }
+
+            // Like components, add in all the free variables of referenced
+            // types but then remove those defined by this component instance
+            // itself.
+            Type::ComponentInstance(i) => {
+                for ty in i.exports.values() {
+                    self.free_variables_component_entity(ty, set);
+                }
+                for id in i.defined_resources.iter() {
+                    set.remove(id);
+                }
+            }
+
+            Type::Resource(r) => {
+                set.insert(*r);
+            }
+
+            Type::ComponentFunc(i) => {
+                for ty in i
+                    .params
+                    .iter()
+                    .map(|(_, ty)| ty)
+                    .chain(i.results.iter().map(|(_, ty)| ty))
+                {
+                    self.free_variables_valtype(ty, set);
+                }
+            }
+
+            Type::Defined(i) => match i {
+                ComponentDefinedType::Primitive(_)
+                | ComponentDefinedType::Flags(_)
+                | ComponentDefinedType::Enum(_) => {}
+                ComponentDefinedType::Record(r) => {
+                    for ty in r.fields.values() {
+                        self.free_variables_valtype(ty, set);
+                    }
+                }
+                ComponentDefinedType::Tuple(r) => {
+                    for ty in r.types.iter() {
+                        self.free_variables_valtype(ty, set);
+                    }
+                }
+                ComponentDefinedType::Union(r) => {
+                    for ty in r.types.iter() {
+                        self.free_variables_valtype(ty, set);
+                    }
+                }
+                ComponentDefinedType::Variant(r) => {
+                    for ty in r.cases.values() {
+                        if let Some(ty) = &ty.ty {
+                            self.free_variables_valtype(ty, set);
+                        }
+                    }
+                }
+                ComponentDefinedType::List(ty) | ComponentDefinedType::Option(ty) => {
+                    self.free_variables_valtype(ty, set);
+                }
+                ComponentDefinedType::Result { ok, err } => {
+                    if let Some(ok) = ok {
+                        self.free_variables_valtype(ok, set);
+                    }
+                    if let Some(err) = err {
+                        self.free_variables_valtype(err, set);
+                    }
+                }
+                ComponentDefinedType::Own(id) | ComponentDefinedType::Borrow(id) => {
+                    self.free_variables_type_id(*id, set);
+                }
+            },
+        }
+    }
+
+    /// Same as `free_variables_type_id`, but for `ComponentEntityType`.
+    pub fn free_variables_component_entity(
+        &self,
+        ty: &ComponentEntityType,
+        set: &mut IndexSet<ResourceId>,
+    ) {
+        match ty {
+            ComponentEntityType::Module(id)
+            | ComponentEntityType::Func(id)
+            | ComponentEntityType::Instance(id)
+            | ComponentEntityType::Component(id) => self.free_variables_type_id(*id, set),
+            ComponentEntityType::Type { created, .. } => {
+                self.free_variables_type_id(*created, set);
+            }
+            ComponentEntityType::Value(ty) => self.free_variables_valtype(ty, set),
+        }
+    }
+
+    /// Same as `free_variables_type_id`, but for `ComponentValType`.
+    fn free_variables_valtype(&self, ty: &ComponentValType, set: &mut IndexSet<ResourceId>) {
+        match ty {
+            ComponentValType::Primitive(_) => {}
+            ComponentValType::Type(id) => self.free_variables_type_id(*id, set),
+        }
+    }
+
+    /// Returns whether the type `id` is "named" where named types are presented
+    /// via the provided `set`.
+    ///
+    /// This requires that `id` is a `Defined` type.
+    pub(crate) fn type_named_type_id(&self, id: TypeId, set: &HashSet<TypeId>) -> bool {
+        let ty = self[id].as_defined_type().unwrap();
+        match ty {
+            // Primitives are always considered named
+            ComponentDefinedType::Primitive(_) => true,
+
+            // These structures are never allowed to be anonymous, so they
+            // themselves must be named.
+            ComponentDefinedType::Flags(_)
+            | ComponentDefinedType::Enum(_)
+            | ComponentDefinedType::Record(_)
+            | ComponentDefinedType::Union(_)
+            | ComponentDefinedType::Variant(_) => set.contains(&id),
+
+            // All types below here are allowed to be anonymous, but their
+            // own components must be appropriately named.
+            ComponentDefinedType::Tuple(r) => {
+                r.types.iter().all(|t| self.type_named_valtype(t, set))
+            }
+            ComponentDefinedType::Result { ok, err } => {
+                ok.as_ref()
+                    .map(|t| self.type_named_valtype(t, set))
+                    .unwrap_or(true)
+                    && err
+                        .as_ref()
+                        .map(|t| self.type_named_valtype(t, set))
+                        .unwrap_or(true)
+            }
+            ComponentDefinedType::List(ty) | ComponentDefinedType::Option(ty) => {
+                self.type_named_valtype(ty, set)
+            }
+
+            // own/borrow themselves don't have to be named, but the resource
+            // they refer to must be named.
+            ComponentDefinedType::Own(id) | ComponentDefinedType::Borrow(id) => set.contains(id),
+        }
+    }
+
+    pub(crate) fn type_named_valtype(&self, ty: &ComponentValType, set: &HashSet<TypeId>) -> bool {
+        match ty {
+            ComponentValType::Primitive(_) => true,
+            ComponentValType::Type(id) => self.type_named_type_id(*id, set),
+        }
     }
 }
 
-impl Default for TypeAlloc {
-    fn default() -> TypeAlloc {
-        TypeAlloc {
-            list: Default::default(),
+/// A helper trait to provide the functionality necessary to resources within a
+/// type.
+///
+/// This currently exists to abstract over `TypeAlloc` and `SubtypeArena` which
+/// both need to perform remapping operations.
+pub(crate) trait Remap: Index<TypeId, Output = Type> {
+    /// Pushes a new anonymous type within this object, returning an identifier
+    /// which can be used to refer to it.
+    fn push_ty(&mut self, ty: Type) -> TypeId;
+
+    /// Applies a resource and type renaming map to the `id` specified,
+    /// returning `true` if the `id` was modified or `false` if it didn't need
+    /// changing.
+    ///
+    /// This will recursively modify the structure of the `id` specified and
+    /// update all references to resources found. The resource identifier keys
+    /// in the `map` specified will become the corresponding value, in addition
+    /// to any existing types in `map` becoming different tyeps.
+    ///
+    /// The `id` argument will be rewritten to a new identifier if `true` is
+    /// returned.
+    fn remap_type_id(&mut self, id: &mut TypeId, map: &mut Remapping) -> bool {
+        if let Some(new) = map.types.get(id) {
+            let changed = *new != *id;
+            *id = *new;
+            return changed;
         }
+
+        // This function attempts what ends up probably being a relatively
+        // minor optimization where a new `id` isn't manufactured unless
+        // something about the type actually changed. That means that if the
+        // type doesn't actually use any resources, for example, then no new
+        // id is allocated.
+        let mut any_changed = false;
+
+        let map_map = |tmp: &mut IndexMap<ResourceId, Vec<usize>>,
+                       any_changed: &mut bool,
+                       map: &mut Remapping| {
+            for (id, path) in mem::take(tmp) {
+                let id = match map.resources.get(&id) {
+                    Some(id) => {
+                        *any_changed = true;
+                        *id
+                    }
+                    None => id,
+                };
+                tmp.insert(id, path);
+            }
+        };
+
+        let ty = match &self[*id] {
+            // Core wasm functions/modules/instances don't have resource types
+            // in them.
+            Type::Func(_) | Type::Array(_) | Type::Module(_) | Type::Instance(_) => return false,
+
+            Type::Component(i) => {
+                let mut tmp = i.clone();
+                for ty in tmp.imports.values_mut().chain(tmp.exports.values_mut()) {
+                    if self.remap_component_entity(ty, map) {
+                        any_changed = true;
+                    }
+                }
+                for (id, _) in tmp
+                    .imported_resources
+                    .iter_mut()
+                    .chain(&mut tmp.defined_resources)
+                {
+                    if let Some(new) = map.resources.get(id) {
+                        *id = *new;
+                        any_changed = true;
+                    }
+                }
+                map_map(&mut tmp.explicit_resources, &mut any_changed, map);
+                Type::Component(tmp)
+            }
+
+            Type::ComponentInstance(i) => {
+                let mut tmp = i.clone();
+                for ty in tmp.exports.values_mut() {
+                    if self.remap_component_entity(ty, map) {
+                        any_changed = true;
+                    }
+                }
+                for id in tmp.defined_resources.iter_mut() {
+                    if let Some(new) = map.resources.get(id) {
+                        *id = *new;
+                        any_changed = true;
+                    }
+                }
+                map_map(&mut tmp.explicit_resources, &mut any_changed, map);
+                Type::ComponentInstance(tmp)
+            }
+
+            Type::Resource(id) => {
+                let id = match map.resources.get(id).copied() {
+                    Some(id) => id,
+                    None => return false,
+                };
+                any_changed = true;
+                Type::Resource(id)
+            }
+
+            Type::ComponentFunc(i) => {
+                let mut tmp = i.clone();
+                for ty in tmp
+                    .params
+                    .iter_mut()
+                    .map(|(_, ty)| ty)
+                    .chain(tmp.results.iter_mut().map(|(_, ty)| ty))
+                {
+                    if self.remap_valtype(ty, map) {
+                        any_changed = true;
+                    }
+                }
+                Type::ComponentFunc(tmp)
+            }
+            Type::Defined(i) => {
+                let mut tmp = i.clone();
+                match &mut tmp {
+                    ComponentDefinedType::Primitive(_)
+                    | ComponentDefinedType::Flags(_)
+                    | ComponentDefinedType::Enum(_) => {}
+                    ComponentDefinedType::Record(r) => {
+                        for ty in r.fields.values_mut() {
+                            if self.remap_valtype(ty, map) {
+                                any_changed = true;
+                            }
+                        }
+                    }
+                    ComponentDefinedType::Tuple(r) => {
+                        for ty in r.types.iter_mut() {
+                            if self.remap_valtype(ty, map) {
+                                any_changed = true;
+                            }
+                        }
+                    }
+                    ComponentDefinedType::Union(r) => {
+                        for ty in r.types.iter_mut() {
+                            if self.remap_valtype(ty, map) {
+                                any_changed = true;
+                            }
+                        }
+                    }
+                    ComponentDefinedType::Variant(r) => {
+                        for ty in r.cases.values_mut() {
+                            if let Some(ty) = &mut ty.ty {
+                                if self.remap_valtype(ty, map) {
+                                    any_changed = true;
+                                }
+                            }
+                        }
+                    }
+                    ComponentDefinedType::List(ty) | ComponentDefinedType::Option(ty) => {
+                        if self.remap_valtype(ty, map) {
+                            any_changed = true;
+                        }
+                    }
+                    ComponentDefinedType::Result { ok, err } => {
+                        if let Some(ok) = ok {
+                            if self.remap_valtype(ok, map) {
+                                any_changed = true;
+                            }
+                        }
+                        if let Some(err) = err {
+                            if self.remap_valtype(err, map) {
+                                any_changed = true;
+                            }
+                        }
+                    }
+                    ComponentDefinedType::Own(id) | ComponentDefinedType::Borrow(id) => {
+                        if self.remap_type_id(id, map) {
+                            any_changed = true;
+                        }
+                    }
+                }
+                Type::Defined(tmp)
+            }
+        };
+
+        let new = if any_changed { self.push_ty(ty) } else { *id };
+        let prev = map.types.insert(*id, new);
+        assert!(prev.is_none());
+        let changed = *id != new;
+        *id = new;
+        changed
+    }
+
+    /// Same as `remap_type_id`, but works with `ComponentEntityType`.
+    fn remap_component_entity(
+        &mut self,
+        ty: &mut ComponentEntityType,
+        map: &mut Remapping,
+    ) -> bool {
+        match ty {
+            ComponentEntityType::Module(id)
+            | ComponentEntityType::Func(id)
+            | ComponentEntityType::Instance(id)
+            | ComponentEntityType::Component(id) => self.remap_type_id(id, map),
+            ComponentEntityType::Type {
+                referenced,
+                created,
+            } => {
+                let changed = self.remap_type_id(referenced, map);
+                if *referenced == *created {
+                    *created = *referenced;
+                    changed
+                } else {
+                    self.remap_type_id(created, map) || changed
+                }
+            }
+            ComponentEntityType::Value(ty) => self.remap_valtype(ty, map),
+        }
+    }
+
+    /// Same as `remap_type_id`, but works with `ComponentValType`.
+    fn remap_valtype(&mut self, ty: &mut ComponentValType, map: &mut Remapping) -> bool {
+        match ty {
+            ComponentValType::Primitive(_) => false,
+            ComponentValType::Type(id) => self.remap_type_id(id, map),
+        }
+    }
+}
+
+#[derive(Default)]
+pub(crate) struct Remapping {
+    /// A mapping from old resource ID to new resource ID.
+    pub(crate) resources: HashMap<ResourceId, ResourceId>,
+
+    /// A mapping filled in during the remapping process which records how a
+    /// type was remapped, if applicable. This avoids remapping multiple
+    /// references to the same type and instead only processing it once.
+    types: HashMap<TypeId, TypeId>,
+}
+
+impl Remap for TypeAlloc {
+    fn push_ty(&mut self, ty: Type) -> TypeId {
+        <TypeAlloc>::push_ty(self, ty)
+    }
+}
+
+impl Index<TypeId> for TypeAlloc {
+    type Output = Type;
+
+    #[inline]
+    fn index(&self, id: TypeId) -> &Type {
+        &self.list[id]
+    }
+}
+
+/// Helper structure used to perform subtyping computations.
+///
+/// This type is used whenever a subtype needs to be tested in one direction or
+/// the other. The methods of this type are the various entry points for
+/// subtyping.
+///
+/// Internally this contains arenas for two lists of types. The `a` arena is
+/// intended to be used for lookup of the first argument to all of the methods
+/// below, and the `b` arena is used for lookup of the second argument.
+///
+/// Arenas here are used specifically for component-based subtyping queries. In
+/// these situations new types must be created based on substitution mappings,
+/// but the types all have temporary lifetimes. Everything in these arenas is
+/// thrown away once the subtyping computation has finished.
+///
+/// Note that this subtyping context also explicitly supports being created
+/// from to different lists `a` and `b` originally, for testing subtyping
+/// between two different components for example.
+pub(crate) struct SubtypeCx<'a> {
+    pub(crate) a: SubtypeArena<'a>,
+    pub(crate) b: SubtypeArena<'a>,
+}
+
+impl<'a> SubtypeCx<'a> {
+    pub(crate) fn new(a: &'a TypeList, b: &'a TypeList) -> SubtypeCx<'a> {
+        SubtypeCx {
+            a: SubtypeArena::new(a),
+            b: SubtypeArena::new(b),
+        }
+    }
+
+    fn swap(&mut self) {
+        mem::swap(&mut self.a, &mut self.b);
+    }
+
+    /// Executes the closure `f`, resetting the internal arenas to their
+    /// original size after the closure finishes.
+    ///
+    /// This enables `f` to modify the internal arenas while relying on all
+    /// changes being discarded after the closure finishes.
+    fn mark<T>(&mut self, f: impl FnOnce(&mut Self) -> T) -> T {
+        let a_len = self.a.list.len();
+        let b_len = self.b.list.len();
+        let result = f(self);
+        self.a.list.truncate(a_len);
+        self.b.list.truncate(b_len);
+        result
+    }
+
+    /// Tests whether `a` is a subtype of `b`.
+    ///
+    /// Errors are reported at the `offset` specified.
+    pub fn component_entity_type(
+        &mut self,
+        a: &ComponentEntityType,
+        b: &ComponentEntityType,
+        offset: usize,
+    ) -> Result<()> {
+        use ComponentEntityType::*;
+
+        match (a, b) {
+            (Module(a), Module(b)) => {
+                // For module type subtyping, all exports in the other module
+                // type must be present in this module type's exports (i.e. it
+                // can export *more* than what this module type needs).
+                // However, for imports, the check is reversed (i.e. it is okay
+                // to import *less* than what this module type needs).
+                self.swap();
+                let a_imports = &self.b[*a].as_module_type().unwrap().imports;
+                let b_imports = &self.a[*b].as_module_type().unwrap().imports;
+                for (k, a) in a_imports {
+                    match b_imports.get(k) {
+                        Some(b) => self.entity_type(b, a, offset).with_context(|| {
+                            format!("type mismatch in import `{}::{}`", k.0, k.1)
+                        })?,
+                        None => bail!(offset, "missing expected import `{}::{}`", k.0, k.1),
+                    }
+                }
+                self.swap();
+                let a = self.a[*a].as_module_type().unwrap();
+                let b = self.b[*b].as_module_type().unwrap();
+                for (k, b) in b.exports.iter() {
+                    match a.exports.get(k) {
+                        Some(a) => self
+                            .entity_type(a, b, offset)
+                            .with_context(|| format!("type mismatch in export `{k}`"))?,
+                        None => bail!(offset, "missing expected export `{k}`"),
+                    }
+                }
+                Ok(())
+            }
+            (Module(_), b) => bail!(offset, "expected {}, found module", b.desc()),
+
+            (Func(a), Func(b)) => {
+                let a = self.a[*a].as_component_func_type().unwrap();
+                let b = self.b[*b].as_component_func_type().unwrap();
+
+                // Note that this intentionally diverges from the upstream
+                // specification in terms of subtyping. This is a full
+                // type-equality check which ensures that the structure of `a`
+                // exactly matches the structure of `b`. The rationale for this
+                // is:
+                //
+                // * Primarily in Wasmtime subtyping based on function types is
+                //   not implemented. This includes both subtyping a host
+                //   import and additionally handling subtyping as functions
+                //   cross component boundaries. The host import subtyping (or
+                //   component export subtyping) is not clear how to handle at
+                //   all at this time. The subtyping of functions between
+                //   components can more easily be handled by extending the
+                //   `fact` compiler, but that hasn't been done yet.
+                //
+                // * The upstream specification is currently pretty
+                //   intentionally vague precisely what subtyping is allowed.
+                //   Implementing a strict check here is intended to be a
+                //   conservative starting point for the component model which
+                //   can be extended in the future if necessary.
+                //
+                // * The interaction with subtyping on bindings generation, for
+                //   example, is a tricky problem that doesn't have a clear
+                //   answer at this time.  Effectively this is more rationale
+                //   for being conservative in the first pass of the component
+                //   model.
+                //
+                // So, in conclusion, the test here (and other places that
+                // reference this comment) is for exact type equality with no
+                // differences.
+                if a.params.len() != b.params.len() {
+                    bail!(
+                        offset,
+                        "expected {} parameters, found {}",
+                        b.params.len(),
+                        a.params.len(),
+                    );
+                }
+                if a.results.len() != b.results.len() {
+                    bail!(
+                        offset,
+                        "expected {} results, found {}",
+                        b.results.len(),
+                        a.results.len(),
+                    );
+                }
+                for ((an, a), (bn, b)) in a.params.iter().zip(b.params.iter()) {
+                    if an != bn {
+                        bail!(offset, "expected parameter named `{bn}`, found `{an}`");
+                    }
+                    self.component_val_type(a, b, offset)
+                        .with_context(|| format!("type mismatch in function parameter `{an}`"))?;
+                }
+                for ((an, a), (bn, b)) in a.results.iter().zip(b.results.iter()) {
+                    if an != bn {
+                        bail!(offset, "mismatched result names");
+                    }
+                    self.component_val_type(a, b, offset)
+                        .with_context(|| "type mismatch with result type")?;
+                }
+                Ok(())
+            }
+            (Func(_), b) => bail!(offset, "expected {}, found func", b.desc()),
+
+            (Value(a), Value(b)) => self.component_val_type(a, b, offset),
+            (Value(_), b) => bail!(offset, "expected {}, found value", b.desc()),
+
+            (Type { referenced: a, .. }, Type { referenced: b, .. }) => {
+                use self::Type::*;
+                match (&self.a[*a], &self.b[*b]) {
+                    (Defined(a), Defined(b)) => self.component_defined_type(a, b, offset),
+                    (Defined(_), Resource(_)) => bail!(offset, "expected resource, found type"),
+                    (Resource(a), Resource(b)) => {
+                        if a == b {
+                            Ok(())
+                        } else {
+                            bail!(offset, "resource types are not the same")
+                        }
+                    }
+                    (Resource(_), Defined(_)) => bail!(offset, "expected type, found resource"),
+                    _ => unreachable!(),
+                }
+            }
+            (Type { .. }, b) => bail!(offset, "expected {}, found type", b.desc()),
+
+            (Instance(a_id), Instance(b_id)) => {
+                // For instance type subtyping, all exports in the other
+                // instance type must be present in this instance type's
+                // exports (i.e. it can export *more* than what this instance
+                // type needs).
+                let a = self.a[*a_id].as_component_instance_type().unwrap();
+                let b = self.b[*b_id].as_component_instance_type().unwrap();
+
+                let mut exports = Vec::with_capacity(b.exports.len());
+                for (k, b) in b.exports.iter() {
+                    match a.exports.get(k) {
+                        Some(a) => exports.push((*a, *b)),
+                        None => bail!(offset, "missing expected export `{k}`"),
+                    }
+                }
+                for (i, (a, b)) in exports.iter().enumerate() {
+                    let err = match self.component_entity_type(a, b, offset) {
+                        Ok(()) => continue,
+                        Err(e) => e,
+                    };
+                    // On failure attach the name of this export as context to
+                    // the error message to leave a breadcrumb trail.
+                    let (name, _) = self.b[*b_id]
+                        .as_component_instance_type()
+                        .unwrap()
+                        .exports
+                        .get_index(i)
+                        .unwrap();
+                    return Err(
+                        err.with_context(|| format!("type mismatch in instance export `{name}`"))
+                    );
+                }
+                Ok(())
+            }
+            (Instance(_), b) => bail!(offset, "expected {}, found instance", b.desc()),
+
+            (Component(a), Component(b)) => {
+                // Components are ... tricky. They follow the same basic
+                // structure as core wasm modules, but they also have extra
+                // logic to handle resource types. Resources are effectively
+                // abstract types so this is sort of where an ML module system
+                // in the component model becomes a reality.
+                //
+                // This also leverages the `open_instance_type` method below
+                // heavily which internally has its own quite large suite of
+                // logic. More-or-less what's happening here is:
+                //
+                // 1. Pretend that the imports of B are given as values to the
+                //    imports of A. If A didn't import anything, for example,
+                //    that's great and the subtyping definitely passes there.
+                //    This operation produces a mapping of all the resources of
+                //    A's imports to resources in B's imports.
+                //
+                // 2. This mapping is applied to all of A's exports. This means
+                //    that all exports of A referring to A's imported resources
+                //    now instead refer to B's. Note, though that A's exports
+                //    still refer to its own defined resources.
+                //
+                // 3. The same `open_instance_type` method used during the
+                //    first step is used again, but this time on the exports
+                //    in the reverse direction. This performs a similar
+                //    operation, though, by creating a mapping from B's
+                //    defined resources to A's defined resources. The map
+                //    itself is discarded as it's not needed.
+                //
+                // The order that everything passed here is intentional, but
+                // also subtle. I personally think of it as
+                // `open_instance_type` takes a list of things to satisfy a
+                // signature and produces a mapping of resources in the
+                // signature to those provided in the list of things. The
+                // order of operations then goes:
+                //
+                // * Someone thinks they have a component of type B, but they
+                //   actually have a component of type A (e.g. due to this
+                //   subtype check passing).
+                // * This person provides the imports of B and that must be
+                //   sufficient to satisfy the imports of A. This is the first
+                //   `open_instance_type` check.
+                // * Now though the resources provided by B are substituted
+                //   into A's exports since that's what was provided.
+                // * A's exports are then handed back to the original person,
+                //   and these exports must satisfy the signature required by B
+                //   since that's what they're expecting.
+                // * This is the second `open_instance_type` which, to get
+                //   resource types to line up, will map from A's defined
+                //   resources to B's defined resources.
+                //
+                // If all that passes then the resources should all line up
+                // perfectly. Any misalignment is reported as a subtyping
+                // error.
+                let b_imports = self.b[*b]
+                    .as_component_type()
+                    .unwrap()
+                    .imports
+                    .iter()
+                    .map(|(name, ty)| (name.clone(), ty.clone()))
+                    .collect();
+                self.swap();
+                let mut import_mapping =
+                    self.open_instance_type(&b_imports, *a, ExternKind::Import, offset)?;
+                self.swap();
+                self.mark(|this| {
+                    let mut a_exports = this.a[*a]
+                        .as_component_type()
+                        .unwrap()
+                        .exports
+                        .iter()
+                        .map(|(name, ty)| (name.clone(), ty.clone()))
+                        .collect::<IndexMap<_, _>>();
+                    for ty in a_exports.values_mut() {
+                        this.a.remap_component_entity(ty, &mut import_mapping);
+                    }
+                    this.open_instance_type(&a_exports, *b, ExternKind::Export, offset)?;
+                    Ok(())
+                })
+            }
+            (Component(_), b) => bail!(offset, "expected {}, found component", b.desc()),
+        }
+    }
+
+    /// The building block for subtyping checks when components are
+    /// instantiated and when components are tested if they're subtypes of each
+    /// other.
+    ///
+    /// This method takes a number of arguments:
+    ///
+    /// * `a` - this is a list of typed items which can be thought of as
+    ///   concrete values to test against `b`.
+    /// * `b` - this `TypeId` must point to `Type::Component`.
+    /// * `kind` - indicates whether the `imports` or `exports` of `b` are
+    ///   being tested against for the values in `a`.
+    /// * `offset` - the binary offset at which to report errors if one happens.
+    ///
+    /// This will attempt to determine if the items in `a` satisfy the
+    /// signature required by the `kind` items of `b`. For example component
+    /// instantiation will have `a` as the list of arguments provided to
+    /// instantiation, `b` is the component being instantiated, and `kind` is
+    /// `ExternKind::Import`.
+    ///
+    /// This function, if successful, will return a mapping of the resources in
+    /// `b` to the resources in `a` provided. This mapping is guaranteed to
+    /// contain all the resources for `b` (all imported resources for
+    /// `ExternKind::Import` or all defined resources for `ExternKind::Export`).
+    pub fn open_instance_type(
+        &mut self,
+        a: &IndexMap<String, ComponentEntityType>,
+        b: TypeId,
+        kind: ExternKind,
+        offset: usize,
+    ) -> Result<Remapping> {
+        // First, determine the mapping from resources in `b` to those supplied
+        // by arguments in `a`.
+        //
+        // This loop will iterate over all the appropriate resources in `b`
+        // and find the corresponding resource in `args`. The exact lists
+        // in use here depend on the `kind` provided. This necessarily requires
+        // a sequence of string lookups to find the corresponding items in each
+        // list.
+        //
+        // The path to each resource in `resources` is precomputed as a list of
+        // indexes. The first index is into `b`'s list of `entities`, and gives
+        // the name that `b` assigns to the resource.  Each subsequent index,
+        // if present, means that this resource was present through a layer of
+        // an instance type, and the index is into the instance type's exports.
+        // More information about this can be found on
+        // `ComponentState::imported_resources`.
+        //
+        // This loop will follow the list of indices for each resource and, at
+        // the same time, walk through the arguments supplied to instantiating
+        // the `component_type`. This means that within `component_type`
+        // index-based lookups are performed while in `args` name-based
+        // lookups are performed.
+        //
+        // Note that here it's possible that `args` doesn't actually supply the
+        // correct type of import for each item since argument checking has
+        // not proceeded yet. These type errors, however, aren't handled by
+        // this loop and are deferred below to the main subtyping check. That
+        // means that `mapping` won't necessarily have a mapping for all
+        // imported resources into `component_type`, but that should be ok.
+        let component_type = self.b[b].as_component_type().unwrap();
+        let entities = match kind {
+            ExternKind::Import => &component_type.imports,
+            ExternKind::Export => &component_type.exports,
+        };
+        let resources = match kind {
+            ExternKind::Import => &component_type.imported_resources,
+            ExternKind::Export => &component_type.defined_resources,
+        };
+        let mut mapping = Remapping::default();
+        'outer: for (resource, path) in resources.iter() {
+            // Lookup the first path item in `imports` and the corresponding
+            // entry in `args` by name.
+            let (name, ty) = entities.get_index(path[0]).unwrap();
+            let mut ty = *ty;
+            let mut arg = a.get(name);
+
+            // Lookup all the subsequent `path` entries, if any, by index in
+            // `ty` and by name in `arg`. Type errors in `arg` are skipped over
+            // entirely.
+            for i in path.iter().skip(1).copied() {
+                let id = match ty {
+                    ComponentEntityType::Instance(id) => id,
+                    _ => unreachable!(),
+                };
+                let (name, next_ty) = self.b[id]
+                    .as_component_instance_type()
+                    .unwrap()
+                    .exports
+                    .get_index(i)
+                    .unwrap();
+                ty = *next_ty;
+                arg = match arg {
+                    Some(ComponentEntityType::Instance(id)) => self.a[*id]
+                        .as_component_instance_type()
+                        .unwrap()
+                        .exports
+                        .get(name),
+                    _ => continue 'outer,
+                };
+            }
+
+            // Double-check that `ty`, the leaf type of `component_type`, is
+            // indeed the expected resource.
+            if cfg!(debug_assertions) {
+                let id = match ty {
+                    ComponentEntityType::Type { created, .. } => match &self.a[created] {
+                        Type::Resource(r) => *r,
+                        _ => unreachable!(),
+                    },
+                    _ => unreachable!(),
+                };
+                assert_eq!(id, *resource);
+            }
+
+            // The leaf of `arg` should be a type which is a resource. If not
+            // it's skipped and this'll wind up generating an error later on in
+            // subtype checking below.
+            if let Some(ComponentEntityType::Type { created, .. }) = arg {
+                if let Type::Resource(r) = &self.b[*created] {
+                    mapping.resources.insert(*resource, *r);
+                }
+            }
+        }
+
+        // Now that a mapping from the resources in `b` to the resources in `a`
+        // has been determined it's possible to perform the actual subtype
+        // check.
+        //
+        // This subtype check notably needs to ensure that all resource types
+        // line up. To achieve this the `mapping` previously calculated is used
+        // to perform a substitution on each component entity type.
+        //
+        // The first loop here performs a name lookup to create a list of
+        // values from `a` to expected items in `b`. Once the list is created
+        // the substitution check is performed on each element.
+        let mut to_typecheck = Vec::new();
+        for (name, expected) in entities.iter() {
+            match a.get(name) {
+                Some(arg) => to_typecheck.push((arg.clone(), expected.clone())),
+                None => bail!(offset, "missing {} named `{name}`", kind.desc()),
+            }
+        }
+        let mut type_map = HashMap::new();
+        for (i, (actual, expected)) in to_typecheck.into_iter().enumerate() {
+            let result = self.mark(|this| {
+                let mut expected = expected;
+                this.b.remap_component_entity(&mut expected, &mut mapping);
+                mapping.types.clear();
+                this.component_entity_type(&actual, &expected, offset)
+            });
+            let err = match result {
+                Ok(()) => {
+                    // On a successful type-check record a mapping of
+                    // type-to-type in `type_map` for any type imports that were
+                    // satisfied. This is then used afterwards when performing
+                    // type substitution to remap all component-local types to
+                    // those that were provided in the imports.
+                    match (expected, actual) {
+                        (
+                            ComponentEntityType::Type {
+                                created: expected, ..
+                            },
+                            ComponentEntityType::Type {
+                                created: actual, ..
+                            },
+                        ) => {
+                            let prev = type_map.insert(expected, actual);
+                            assert!(prev.is_none());
+                        }
+                        _ => {}
+                    }
+                    continue;
+                }
+                Err(e) => e,
+            };
+
+            // If an error happens then attach the name of the entity to the
+            // error message using the `i` iteration counter.
+            let component_type = self.b[b].as_component_type().unwrap();
+            let entities = match kind {
+                ExternKind::Import => &component_type.imports,
+                ExternKind::Export => &component_type.exports,
+            };
+            let (name, _) = entities.get_index(i).unwrap();
+            return Err(err.with_context(|| format!("type mismatch for {} `{name}`", kind.desc())));
+        }
+        mapping.types = type_map;
+        Ok(mapping)
+    }
+
+    pub(crate) fn entity_type(&self, a: &EntityType, b: &EntityType, offset: usize) -> Result<()> {
+        macro_rules! limits_match {
+            ($a:expr, $b:expr) => {{
+                let a = $a;
+                let b = $b;
+                a.initial >= b.initial
+                    && match b.maximum {
+                        Some(b_max) => match a.maximum {
+                            Some(a_max) => a_max <= b_max,
+                            None => false,
+                        },
+                        None => true,
+                    }
+            }};
+        }
+
+        match (a, b) {
+            (EntityType::Func(a), EntityType::Func(b)) => self.func_type(
+                self.a[*a].as_func_type().unwrap(),
+                self.b[*b].as_func_type().unwrap(),
+                offset,
+            ),
+            (EntityType::Func(_), b) => bail!(offset, "expected {}, found func", b.desc()),
+            (EntityType::Table(a), EntityType::Table(b)) => {
+                if a.element_type != b.element_type {
+                    bail!(
+                        offset,
+                        "expected table element type {}, found {}",
+                        b.element_type,
+                        a.element_type,
+                    )
+                }
+                if limits_match!(a, b) {
+                    Ok(())
+                } else {
+                    bail!(offset, "mismatch in table limits")
+                }
+            }
+            (EntityType::Table(_), b) => bail!(offset, "expected {}, found table", b.desc()),
+            (EntityType::Memory(a), EntityType::Memory(b)) => {
+                if a.shared != b.shared {
+                    bail!(offset, "mismatch in the shared flag for memories")
+                }
+                if a.memory64 != b.memory64 {
+                    bail!(offset, "mismatch in index type used for memories")
+                }
+                if limits_match!(a, b) {
+                    Ok(())
+                } else {
+                    bail!(offset, "mismatch in memory limits")
+                }
+            }
+            (EntityType::Memory(_), b) => bail!(offset, "expected {}, found memory", b.desc()),
+            (EntityType::Global(a), EntityType::Global(b)) => {
+                if a.mutable != b.mutable {
+                    bail!(offset, "global types differ in mutability")
+                }
+                if a.content_type == b.content_type {
+                    Ok(())
+                } else {
+                    bail!(
+                        offset,
+                        "expected global type {}, found {}",
+                        b.content_type,
+                        a.content_type,
+                    )
+                }
+            }
+            (EntityType::Global(_), b) => bail!(offset, "expected {}, found global", b.desc()),
+            (EntityType::Tag(a), EntityType::Tag(b)) => self.func_type(
+                self.a[*a].as_func_type().unwrap(),
+                self.b[*b].as_func_type().unwrap(),
+                offset,
+            ),
+            (EntityType::Tag(_), b) => bail!(offset, "expected {}, found tag", b.desc()),
+        }
+    }
+
+    fn func_type(&self, a: &FuncType, b: &FuncType, offset: usize) -> Result<()> {
+        if a == b {
+            Ok(())
+        } else {
+            bail!(
+                offset,
+                "expected: {}\n\
+                 found:    {}",
+                b.desc(),
+                a.desc(),
+            )
+        }
+    }
+
+    pub(crate) fn component_val_type(
+        &self,
+        a: &ComponentValType,
+        b: &ComponentValType,
+        offset: usize,
+    ) -> Result<()> {
+        match (a, b) {
+            (ComponentValType::Primitive(a), ComponentValType::Primitive(b)) => {
+                self.primitive_val_type(*a, *b, offset)
+            }
+            (ComponentValType::Type(a), ComponentValType::Type(b)) => self.component_defined_type(
+                self.a[*a].as_defined_type().unwrap(),
+                self.b[*b].as_defined_type().unwrap(),
+                offset,
+            ),
+            (ComponentValType::Primitive(a), ComponentValType::Type(b)) => {
+                match self.b[*b].as_defined_type().unwrap() {
+                    ComponentDefinedType::Primitive(b) => self.primitive_val_type(*a, *b, offset),
+                    b => bail!(offset, "expected {}, found {a}", b.desc()),
+                }
+            }
+            (ComponentValType::Type(a), ComponentValType::Primitive(b)) => {
+                match self.a[*a].as_defined_type().unwrap() {
+                    ComponentDefinedType::Primitive(a) => self.primitive_val_type(*a, *b, offset),
+                    a => bail!(offset, "expected {b}, found {}", a.desc()),
+                }
+            }
+        }
+    }
+
+    fn component_defined_type(
+        &self,
+        a: &ComponentDefinedType,
+        b: &ComponentDefinedType,
+        offset: usize,
+    ) -> Result<()> {
+        use ComponentDefinedType::*;
+
+        // Note that the implementation of subtyping here diverges from the
+        // upstream specification intentionally, see the documentation on
+        // function subtyping for more information.
+        match (a, b) {
+            (Primitive(a), Primitive(b)) => self.primitive_val_type(*a, *b, offset),
+            (Primitive(a), b) => bail!(offset, "expected {}, found {a}", b.desc()),
+            (Record(a), Record(b)) => {
+                if a.fields.len() != b.fields.len() {
+                    bail!(
+                        offset,
+                        "expected {} fields, found {}",
+                        b.fields.len(),
+                        a.fields.len(),
+                    );
+                }
+
+                for ((aname, a), (bname, b)) in a.fields.iter().zip(b.fields.iter()) {
+                    if aname != bname {
+                        bail!(offset, "expected field name `{bname}`, found `{aname}`");
+                    }
+                    self.component_val_type(a, b, offset)
+                        .with_context(|| format!("type mismatch in record field `{aname}`"))?;
+                }
+                Ok(())
+            }
+            (Record(_), b) => bail!(offset, "expected {}, found record", b.desc()),
+            (Variant(a), Variant(b)) => {
+                if a.cases.len() != b.cases.len() {
+                    bail!(
+                        offset,
+                        "expected {} cases, found {}",
+                        b.cases.len(),
+                        a.cases.len(),
+                    );
+                }
+                for ((aname, a), (bname, b)) in a.cases.iter().zip(b.cases.iter()) {
+                    if aname != bname {
+                        bail!(offset, "expected case named `{bname}`, found `{aname}`");
+                    }
+                    match (&a.ty, &b.ty) {
+                        (Some(a), Some(b)) => self
+                            .component_val_type(a, b, offset)
+                            .with_context(|| format!("type mismatch in variant case `{aname}`"))?,
+                        (None, None) => {}
+                        (None, Some(_)) => {
+                            bail!(offset, "expected case `{aname}` to have a type, found none")
+                        }
+                        (Some(_), None) => bail!(offset, "expected case `{aname}` to have no type"),
+                    }
+                }
+                Ok(())
+            }
+            (Variant(_), b) => bail!(offset, "expected {}, found variant", b.desc()),
+            (List(a), List(b)) | (Option(a), Option(b)) => self.component_val_type(a, b, offset),
+            (List(_), b) => bail!(offset, "expected {}, found list", b.desc()),
+            (Option(_), b) => bail!(offset, "expected {}, found option", b.desc()),
+            (Tuple(a), Tuple(b)) => {
+                if a.types.len() != b.types.len() {
+                    bail!(
+                        offset,
+                        "expected {} types, found {}",
+                        b.types.len(),
+                        a.types.len(),
+                    );
+                }
+                for (i, (a, b)) in a.types.iter().zip(b.types.iter()).enumerate() {
+                    self.component_val_type(a, b, offset)
+                        .with_context(|| format!("type mismatch in tuple field {i}"))?;
+                }
+                Ok(())
+            }
+            (Tuple(_), b) => bail!(offset, "expected {}, found tuple", b.desc()),
+            (Union(a), Union(b)) => {
+                if a.types.len() != b.types.len() {
+                    bail!(
+                        offset,
+                        "expected {} types, found {}",
+                        b.types.len(),
+                        a.types.len(),
+                    );
+                }
+                for (i, (a, b)) in a.types.iter().zip(b.types.iter()).enumerate() {
+                    self.component_val_type(a, b, offset)
+                        .with_context(|| format!("type mismatch in tuple field {i}"))?;
+                }
+                Ok(())
+            }
+            (Union(_), b) => bail!(offset, "expected {}, found union", b.desc()),
+            (at @ Flags(a), Flags(b)) | (at @ Enum(a), Enum(b)) => {
+                let desc = match at {
+                    Flags(_) => "flags",
+                    _ => "enum",
+                };
+                if a.len() == b.len() && a.iter().eq(b.iter()) {
+                    Ok(())
+                } else {
+                    bail!(offset, "mismatch in {desc} elements")
+                }
+            }
+            (Flags(_), b) => bail!(offset, "expected {}, found flags", b.desc()),
+            (Enum(_), b) => bail!(offset, "expected {}, found enum", b.desc()),
+            (Result { ok: ao, err: ae }, Result { ok: bo, err: be }) => {
+                match (ao, bo) {
+                    (None, None) => {}
+                    (Some(a), Some(b)) => self
+                        .component_val_type(a, b, offset)
+                        .with_context(|| "type mismatch in ok variant")?,
+                    (None, Some(_)) => bail!(offset, "expected ok type, but found none"),
+                    (Some(_), None) => bail!(offset, "expected ok type to not be present"),
+                }
+                match (ae, be) {
+                    (None, None) => {}
+                    (Some(a), Some(b)) => self
+                        .component_val_type(a, b, offset)
+                        .with_context(|| "type mismatch in err variant")?,
+                    (None, Some(_)) => bail!(offset, "expected err type, but found none"),
+                    (Some(_), None) => bail!(offset, "expected err type to not be present"),
+                }
+                Ok(())
+            }
+            (Result { .. }, b) => bail!(offset, "expected {}, found result", b.desc()),
+            (Own(a), Own(b)) | (Borrow(a), Borrow(b)) => {
+                let a = self.a[*a].as_resource().unwrap();
+                let b = self.b[*b].as_resource().unwrap();
+                if a == b {
+                    Ok(())
+                } else {
+                    bail!(offset, "resource types are not the same")
+                }
+            }
+            (Own(_), b) => bail!(offset, "expected {}, found own", b.desc()),
+            (Borrow(_), b) => bail!(offset, "expected {}, found borrow", b.desc()),
+        }
+    }
+
+    fn primitive_val_type(
+        &self,
+        a: PrimitiveValType,
+        b: PrimitiveValType,
+        offset: usize,
+    ) -> Result<()> {
+        // Note that this intentionally diverges from the upstream specification
+        // at this time and only considers exact equality for subtyping
+        // relationships.
+        //
+        // More information can be found in the subtyping implementation for
+        // component functions.
+        if a == b {
+            Ok(())
+        } else {
+            bail!(offset, "expected primitive `{b}` found primitive `{a}`")
+        }
+    }
+}
+
+/// A helper typed used purely during subtyping as part of `SubtypeCx`.
+///
+/// This takes a `types` list as input which is the "base" of the ids that can
+/// be indexed through this arena. All future types pushed into this, if any,
+/// are stored in `self.list`.
+///
+/// This is intended to have arena-like behavior where everything pushed onto
+/// `self.list` is thrown away after a subtyping computation is performed. All
+/// new types pushed into this arena are purely temporary.
+pub(crate) struct SubtypeArena<'a> {
+    types: &'a TypeList,
+    list: Vec<Type>,
+}
+
+impl<'a> SubtypeArena<'a> {
+    fn new(types: &'a TypeList) -> SubtypeArena<'a> {
+        SubtypeArena {
+            types,
+            list: Vec::new(),
+        }
+    }
+}
+
+impl Index<TypeId> for SubtypeArena<'_> {
+    type Output = Type;
+
+    fn index(&self, id: TypeId) -> &Type {
+        if id.index < self.types.len() {
+            &self.types[id]
+        } else {
+            &self.list[id.index - self.types.len()]
+        }
+    }
+}
+
+impl Remap for SubtypeArena<'_> {
+    fn push_ty(&mut self, ty: Type) -> TypeId {
+        let index = self.list.len() + self.types.len();
+        let type_size = ty.type_size();
+        self.list.push(ty);
+        TypeId {
+            index,
+            type_size,
+            unique_id: 0,
+        }
+    }
+}
+
+/// Helper trait for adding contextual information to an error, modeled after
+/// `anyhow::Context`.
+pub(crate) trait Context {
+    fn with_context<S>(self, context: impl FnOnce() -> S) -> Self
+    where
+        S: Into<String>;
+}
+
+impl<T> Context for Result<T> {
+    fn with_context<S>(self, context: impl FnOnce() -> S) -> Self
+    where
+        S: Into<String>,
+    {
+        match self {
+            Ok(val) => Ok(val),
+            Err(e) => Err(e.with_context(context)),
+        }
+    }
+}
+
+impl Context for BinaryReaderError {
+    fn with_context<S>(mut self, context: impl FnOnce() -> S) -> Self
+    where
+        S: Into<String>,
+    {
+        self.add_context(context().into());
+        self
     }
 }

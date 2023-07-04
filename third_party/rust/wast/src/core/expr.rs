@@ -522,8 +522,8 @@ instructions! {
         ReturnCallIndirect(CallIndirect<'a>) : [0x13] : "return_call_indirect",
 
         // function-references proposal
-        CallRef(HeapType<'a>) : [0x14] : "call_ref",
-        ReturnCallRef(HeapType<'a>) : [0x15] : "return_call_ref",
+        CallRef(Index<'a>) : [0x14] : "call_ref",
+        ReturnCallRef(Index<'a>) : [0x15] : "return_call_ref",
         FuncBind(FuncBindType<'a>) : [0x16] : "func.bind",
         Let(LetType<'a>) : [0x17] : "let",
 

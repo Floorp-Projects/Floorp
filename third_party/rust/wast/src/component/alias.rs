@@ -4,17 +4,22 @@ use crate::parser::{Parse, Parser, Result};
 use crate::token::{Id, Index, NameAnnotation, Span};
 
 /// A inline alias for component exported items.
+///
+/// Handles both `core export` and `export` aliases
 #[derive(Debug)]
-pub struct InlineExportAlias<'a> {
+pub struct InlineExportAlias<'a, const CORE: bool> {
     /// The instance to alias the export from.
     pub instance: Index<'a>,
     /// The name of the export to alias.
     pub name: &'a str,
 }
 
-impl<'a> Parse<'a> for InlineExportAlias<'a> {
+impl<'a, const CORE: bool> Parse<'a> for InlineExportAlias<'a, CORE> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         parser.parse::<kw::alias>()?;
+        if CORE {
+            parser.parse::<kw::core>()?;
+        }
         parser.parse::<kw::export>()?;
         let instance = parser.parse()?;
         let name = parser.parse()?;

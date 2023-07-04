@@ -141,7 +141,6 @@ impl<'a> FromReader<'a> for ComponentInstance<'a> {
                     .map(|_| {
                         Ok(ComponentExport {
                             name: reader.read()?,
-                            url: "",
                             kind: reader.read()?,
                             index: reader.read()?,
                             ty: None,

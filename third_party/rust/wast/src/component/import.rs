@@ -1,18 +1,15 @@
 use crate::component::*;
 use crate::kw;
 use crate::parser::{Cursor, Parse, Parser, Peek, Result};
-use crate::token::Index;
-use crate::token::{Id, NameAnnotation, Span};
+use crate::token::{Id, Index, LParen, NameAnnotation, Span};
 
 /// An `import` statement and entry in a WebAssembly component.
 #[derive(Debug)]
 pub struct ComponentImport<'a> {
     /// Where this `import` was defined
     pub span: Span,
-    /// The name of the item to import.
-    pub name: &'a str,
-    /// The optional URL of the import.
-    pub url: Option<&'a str>,
+    /// The name of the item being imported.
+    pub name: ComponentExternName<'a>,
     /// The item that's being imported.
     pub item: ItemSig<'a>,
 }
@@ -21,14 +18,30 @@ impl<'a> Parse<'a> for ComponentImport<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         let span = parser.parse::<kw::import>()?.0;
         let name = parser.parse()?;
-        let url = parser.parse()?;
         let item = parser.parens(|p| p.parse())?;
-        Ok(ComponentImport {
-            span,
-            name,
-            url,
-            item,
-        })
+        Ok(ComponentImport { span, name, item })
+    }
+}
+
+/// The different ways an import can be named.
+#[derive(Debug, Copy, Clone)]
+pub enum ComponentExternName<'a> {
+    /// This is a kebab-named import where a top-level name is assigned.
+    Kebab(&'a str),
+    /// This is an interface import where the string is an ID.
+    Interface(&'a str),
+}
+
+impl<'a> Parse<'a> for ComponentExternName<'a> {
+    fn parse(parser: Parser<'a>) -> Result<Self> {
+        if parser.peek::<LParen>() {
+            Ok(ComponentExternName::Interface(parser.parens(|p| {
+                p.parse::<kw::interface>()?;
+                p.parse()
+            })?))
+        } else {
+            Ok(ComponentExternName::Kebab(parser.parse()?))
+        }
     }
 }
 
@@ -119,13 +132,23 @@ pub enum ItemSigKind<'a> {
 pub enum TypeBounds<'a> {
     /// The equality type bounds.
     Eq(Index<'a>),
+    /// A resource type is imported/exported,
+    SubResource,
 }
 
 impl<'a> Parse<'a> for TypeBounds<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
-        // Currently this is the only supported type bounds.
-        parser.parse::<kw::eq>()?;
-        Ok(Self::Eq(parser.parse()?))
+        let mut l = parser.lookahead1();
+        if l.peek::<kw::eq>() {
+            parser.parse::<kw::eq>()?;
+            Ok(Self::Eq(parser.parse()?))
+        } else if l.peek::<kw::sub>() {
+            parser.parse::<kw::sub>()?;
+            parser.parse::<kw::resource>()?;
+            Ok(Self::SubResource)
+        } else {
+            Err(l.error())
+        }
     }
 }
 
@@ -136,19 +159,14 @@ impl<'a> Parse<'a> for TypeBounds<'a> {
 #[derive(Debug, Clone)]
 pub struct InlineImport<'a> {
     /// The name of the item being imported.
-    pub name: &'a str,
-    /// The optional URL of the item being imported.
-    pub url: Option<&'a str>,
+    pub name: ComponentExternName<'a>,
 }
 
 impl<'a> Parse<'a> for InlineImport<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
         parser.parens(|p| {
             p.parse::<kw::import>()?;
-            Ok(InlineImport {
-                name: p.parse()?,
-                url: p.parse()?,
-            })
+            Ok(InlineImport { name: p.parse()? })
         })
     }
 }
@@ -163,9 +181,28 @@ impl Peek for InlineImport<'_> {
             Some(("import", cursor)) => cursor,
             _ => return false,
         };
+
+        // (import "foo")
+        if let Some((_, cursor)) = cursor.string() {
+            return cursor.rparen().is_some();
+        }
+
+        // (import (interface "foo"))
+        let cursor = match cursor.lparen() {
+            Some(cursor) => cursor,
+            None => return false,
+        };
+        let cursor = match cursor.keyword() {
+            Some(("interface", cursor)) => cursor,
+            _ => return false,
+        };
         let cursor = match cursor.string() {
             Some((_, cursor)) => cursor,
-            None => return false,
+            _ => return false,
+        };
+        let cursor = match cursor.rparen() {
+            Some(cursor) => cursor,
+            _ => return false,
         };
         cursor.rparen().is_some()
     }

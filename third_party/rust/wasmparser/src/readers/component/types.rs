@@ -1,8 +1,9 @@
 use crate::limits::*;
 use crate::{
-    BinaryReader, ComponentAlias, ComponentImport, ComponentTypeRef, FromReader, FuncType, Import,
-    Result, SectionLimited, Type, TypeRef,
+    BinaryReader, ComponentAlias, ComponentExternName, ComponentImport, ComponentTypeRef,
+    FromReader, FuncType, Import, Result, SectionLimited, Type, TypeRef, ValType,
 };
+use std::fmt;
 
 /// Represents the kind of an outer core alias in a WebAssembly component.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -201,6 +202,28 @@ impl PrimitiveValType {
     }
 }
 
+impl fmt::Display for PrimitiveValType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use PrimitiveValType::*;
+        let s = match self {
+            Bool => "bool",
+            S8 => "s8",
+            U8 => "u8",
+            S16 => "s16",
+            U16 => "u16",
+            S32 => "s32",
+            U32 => "u32",
+            S64 => "s64",
+            U64 => "u64",
+            Float32 => "float32",
+            Float64 => "float64",
+            Char => "char",
+            String => "string",
+        };
+        s.fmt(f)
+    }
+}
+
 /// Represents a type in a WebAssembly component.
 #[derive(Debug, Clone)]
 pub enum ComponentType<'a> {
@@ -212,11 +235,27 @@ pub enum ComponentType<'a> {
     Component(Box<[ComponentTypeDeclaration<'a>]>),
     /// The type is an instance type.
     Instance(Box<[InstanceTypeDeclaration<'a>]>),
+    /// The type is a fresh new resource type.
+    Resource {
+        /// The representation of this resource type in core WebAssembly.
+        rep: ValType,
+        /// An optionally-specified destructor to use for when this resource is
+        /// no longer needed.
+        dtor: Option<u32>,
+    },
 }
 
 impl<'a> FromReader<'a> for ComponentType<'a> {
     fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
         Ok(match reader.read_u8()? {
+            0x3f => ComponentType::Resource {
+                rep: reader.read()?,
+                dtor: match reader.read_u8()? {
+                    0x00 => None,
+                    0x01 => Some(reader.read()?),
+                    b => return reader.invalid_leading_byte(b, "resource destructor"),
+                },
+            },
             0x40 => {
                 let params = reader
                     .read_iter(MAX_WASM_FUNCTION_PARAMS, "component function parameters")?
@@ -257,9 +296,7 @@ pub enum ComponentTypeDeclaration<'a> {
     /// The component type declaration is for an export.
     Export {
         /// The name of the export.
-        name: &'a str,
-        /// The optional URL of the export.
-        url: &'a str,
+        name: ComponentExternName<'a>,
         /// The type reference for the export.
         ty: ComponentTypeRef,
     },
@@ -281,8 +318,8 @@ impl<'a> FromReader<'a> for ComponentTypeDeclaration<'a> {
             InstanceTypeDeclaration::CoreType(t) => ComponentTypeDeclaration::CoreType(t),
             InstanceTypeDeclaration::Type(t) => ComponentTypeDeclaration::Type(t),
             InstanceTypeDeclaration::Alias(a) => ComponentTypeDeclaration::Alias(a),
-            InstanceTypeDeclaration::Export { name, url, ty } => {
-                ComponentTypeDeclaration::Export { name, url, ty }
+            InstanceTypeDeclaration::Export { name, ty } => {
+                ComponentTypeDeclaration::Export { name, ty }
             }
         })
     }
@@ -300,9 +337,7 @@ pub enum InstanceTypeDeclaration<'a> {
     /// The instance type declaration is for an export.
     Export {
         /// The name of the export.
-        name: &'a str,
-        /// The URL for the export.
-        url: &'a str,
+        name: ComponentExternName<'a>,
         /// The type reference for the export.
         ty: ComponentTypeRef,
     },
@@ -316,7 +351,6 @@ impl<'a> FromReader<'a> for InstanceTypeDeclaration<'a> {
             0x02 => InstanceTypeDeclaration::Alias(reader.read()?),
             0x04 => InstanceTypeDeclaration::Export {
                 name: reader.read()?,
-                url: reader.read()?,
                 ty: reader.read()?,
             },
             x => return reader.invalid_leading_byte(x, "component or instance type declaration"),
@@ -447,6 +481,10 @@ pub enum ComponentDefinedType<'a> {
         /// The type returned for failure.
         err: Option<ComponentValType>,
     },
+    /// An owned handle to a resource.
+    Own(u32),
+    /// A borrowed handle to a resource.
+    Borrow(u32),
 }
 
 impl<'a> ComponentDefinedType<'a> {
@@ -488,6 +526,8 @@ impl<'a> ComponentDefinedType<'a> {
                 ok: reader.read()?,
                 err: reader.read()?,
             },
+            0x69 => ComponentDefinedType::Own(reader.read()?),
+            0x68 => ComponentDefinedType::Borrow(reader.read()?),
             x => return reader.invalid_leading_byte(x, "component defined type"),
         })
     }

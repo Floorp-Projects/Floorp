@@ -1,0 +1,5 @@
+unexpected token, expected `module`
+     --> tests/parse-fail/bad-func-alias.wat:6:37
+      |
+    6 |     (alias export $inst "fun" (core func $alias3))
+      |                                     ^
