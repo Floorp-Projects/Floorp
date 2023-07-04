@@ -382,6 +382,7 @@ class CommandBar extends Component {
           tooltip={L10N.getStr("settings.enableSourceMapIgnoreList.tooltip")}
           onClick={() =>
             this.props.toggleSourceMapIgnoreList(
+              this.props.cx,
               !prefs.sourceMapIgnoreListEnabled
             )
           }

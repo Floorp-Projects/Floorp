@@ -17,7 +17,6 @@ import {
   getBreakpointAtLocation,
   getBreakpointsForSource,
   getBreakpointsAtLine,
-  getContext,
 } from "../../selectors";
 import { createXHRBreakpoint } from "../../utils/breakpoint";
 import {
@@ -128,10 +127,10 @@ export function toggleBreakpointsAtLine(cx, shouldDisableBreakpoints, line) {
  * @memberof actions/breakpoints
  * @static
  */
-export function removeAllBreakpoints() {
+export function removeAllBreakpoints(cx) {
   return async ({ dispatch, getState }) => {
-    const cx = getContext(getState());
     const breakpointList = getBreakpointsList(getState());
+
     await Promise.all(
       breakpointList.map(bp => dispatch(removeBreakpoint(cx, bp)))
     );
