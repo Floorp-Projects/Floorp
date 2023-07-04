@@ -1348,7 +1348,7 @@ void GCRuntime::sweepJitDataOnMainThread(JS::GCContext* gcx) {
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_JIT_DATA);
 
-    if (initialState != State::NotActive) {
+    if (!haveDiscardedJITCodeThisSlice) {
       // Cancel any active or pending off thread compilations. We also did
       // this before marking (in DiscardJITCodeForGC) so this is a no-op
       // for non-incremental GCs.
@@ -1358,12 +1358,12 @@ void GCRuntime::sweepJitDataOnMainThread(JS::GCContext* gcx) {
     // Bug 1071218: the following method has not yet been refactored to
     // work on a single zone-group at once.
 
-    // Sweep entries containing about-to-be-finalized JitCode and
-    // update relocated TypeSet::Types inside the JitcodeGlobalTable.
+    // Sweep entries containing about-to-be-finalized JitCode in the
+    // JitcodeGlobalTable.
     jit::JitRuntime::TraceWeakJitcodeGlobalTable(rt, &trc);
   }
 
-  if (initialState != State::NotActive) {
+  if (!haveDiscardedJITCodeThisSlice) {
     gcstats::AutoPhase apdc(stats(), gcstats::PhaseKind::SWEEP_DISCARD_CODE);
     for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
       zone->discardJitCode(gcx);
