@@ -17,7 +17,7 @@
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[      <ul>
         <li>Faqja që po provoni të shihni s’shfaqet dot, ngaqë mirëfilltësia e të dhënave të marra s’u vërtetua dot.</li>
-        <li>Ju lutemi, lidhuni me të zotët e sajtit për t’u bërë të ditur këtë problem.</li>
+        <li>Ju lutemi, lidhuni me të zotët e sajtit, për t’u bërë të ditur këtë problem.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
@@ -55,10 +55,6 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Të mëtejshme…</string>
 
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label><b>%1$s</b> përmban një rregull sigurie të quajtur HTTP Strict Transport Security (HSTS), që do të thotë se <b>%2$s</b>-i mund të lidhet me të vetëm nën mënyrë të sigurt. S’shtoni dot një përjashtim që të vizitoni këtë sajt.
-    ]]></string>
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label><b>%1$s</b> përmban një rregull sigurie të quajtur HTTP Strict Transport Security (HSTS), që do të thotë se <b>%2$s</b>-i mund të lidhet me të vetëm nën mënyrë të sigurt. S’shtoni dot një përjashtim që të vizitoni këtë sajt. </label>
@@ -141,7 +137,7 @@
     <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
       <ul>
-        <li>Ju lutemi, lidhuni me të zotët e sajtit për t’u bërë të ditur këtë problem.</li>
+        <li>Ju lutemi, lidhuni me të zotët e sajtit, për t’u bërë të ditur këtë problem.</li>
       </ul>
     ]]></string>
 

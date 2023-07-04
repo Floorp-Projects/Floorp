@@ -9,7 +9,7 @@
     <!-- Title of notification shown when the device's microphone is shared with a website (WebRTC) -->
     <string name="mozac_feature_media_sharing_microphone">El micrófonu ta activáu</string>
     <!-- Title of notification shown when the device's camera and microphone is shared with a website (WebRTC) -->
-    <string name="mozac_feature_media_sharing_camera_and_microphone">La cámara y el micrófonu tán activaos</string>
+    <string name="mozac_feature_media_sharing_camera_and_microphone">La cámara ya\'l micrófonu tán activaos</string>
 
     <!--This is the title of the "play" action media shown in the media notification while web content is playing media. Clicking it will resume playing paused media. On most modern Android system only an icon is visible. But screen readers may read this title. -->
     <string name="mozac_feature_media_notification_action_play">Reproducir</string>

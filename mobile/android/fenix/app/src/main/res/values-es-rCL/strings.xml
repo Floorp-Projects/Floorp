@@ -1206,6 +1206,10 @@
     <string name="share_save_to_pdf">Guardar como PDF</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">No se pudo generar el PDF</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">No se pudo imprimir</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Imprimir</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Enviar a dispositivo</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->

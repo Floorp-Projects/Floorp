@@ -8,7 +8,7 @@
     <string name="mozac_browser_errorpages_generic_title">Nun se pue completar la solicitú</string>
 
     <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
-    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>La información adicional tocante a esti problema o error nun ta disponible anguaño.</p>]]></string>
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[<p>La información adicional tocante a esti problema o error nun ta disponible.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">La conexón segura falló</string>
@@ -31,13 +31,13 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">Opciones avanzaes…</string>
     <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Daquién podría tar tentando de suplantar el sitiu y nun deberíes siguir.</label>
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[<label>Daquién podría tar tentando de suplantar el sitiu ya nun habríes siguir.</label>
         <br><br>
         <label>Los sitios web demuestren la so identidá per certificaos. %1$s nun s\'enfota en <b>%2$s</b> porque\'l so emisor de certificaos ye desconocíu, el certificáu ta autorobláu o\'l sirvidor nun ta unviando los certificaos intermedios correutos.</label>]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">Dir p\'atrás (aconséyase)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
-    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Aceutar el riesgu y siguir</string>
+    <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">Aceptar el riesgu ya siguir</string>
 
     <!-- The document title and heading of the error page shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">Esti sitiu web rique una conexón segura.</string>
@@ -45,7 +45,7 @@
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[
       <ul>
          <li>Nun se pue amosar la páxina que tentes de ver porque esti sitiu web rique una conexón segura.</li>
-         <li>Ye mui probable que\'l problema seya del sitiu web y nun puedas facer nada pa igualu.</li>
+         <li>Ye mui probable que\'l problema seya del sitiu web ya nun puedas facer nada pa igualu.</li>
          <li>Pues avisar a l\'alministración del sitiu web pa informar del problema.</li>
       </ul>
     ]]></string>
@@ -53,10 +53,6 @@
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">Opciones avanzaes…</string>
 
-    <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
-    <string moz:removedIn="104" name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo" tools:ignore="UnusedResources"><![CDATA[
-        <label> <b>%1$s</b> tien una política de seguranza llamada HSTS (HTTP Strict Transport Security), lo que significa que <b>%2$s</b> namás se pue conectar con seguranza al sitiu. Nun pues amestar nenguna esceición pa visitar esti sitiu.
-    ]]></string>
     <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[
         <label> <b>%1$s</b> tien una política de seguranza llamada HSTS (HTTP Strict Transport Security), lo que significa que <b>%2$s</b> namás se pue conectar con seguranza al sitiu. Nun pues amestar nenguna esceición pa visitar esti sitiu. </label>
@@ -78,12 +74,12 @@
     <string name="mozac_browser_errorpages_net_timeout_title">Escosó\'l tiempu d\'espera de la conexón</string>
 
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>El sitiu solicitáu nun respondió a una solicitú de conexón y el restolador dexó d\'esperar una rempuesta.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>El sitiu solicitáu nun respondió a una solicitú de conexón ya\'l restolador dexó d\'esperar una rempuesta.</p>
       <ul>
         <li>¿Pue ser que\'l sirvidor tea sufriendo una demanda alta o una cayida temporal? Volvi tentalo dempués.</li>
         <li>¿Nun yes a restolar per otros sitios? Comprueba la conexón del preséu a la rede.</li>
-        <li>¿El preséu ta protexíu por un tornafuéu o proxy? Unos axustes incorreutos puen afeutar al restolar de la web.</li>
-        <li>¿Sigues teniendo problemes? Consulta al to alministrador de redes o fornidor d\'internet pa más asistencia.</li>
+        <li>¿El preséu ta protexíu por un tornafuéu o proxy? Una configuración incorreuta pue afeutar al restolar de la web.</li>
+        <li>¿Sigues teniendo problemes? Consulta al to alministrador de redes o fornidor d\'internet pa consiguir más asistencia.</li>
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
@@ -98,7 +94,7 @@
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_title">Rempuesta inesperada del sirvidor</string>
     <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
-    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>El sitiu respondió d\'una forma inesperada a la solicitú de rede y el restolador nun pue siguir.</p>]]></string>
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>El sitiu respondió d\'una forma inesperada a la solicitú de rede ya\'l restolador nun pue siguir.</p>]]></string>
 
     <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_title">La páxina nun ta redirixendo afayadizamente</string>

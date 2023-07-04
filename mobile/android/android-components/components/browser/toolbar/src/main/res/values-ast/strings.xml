@@ -14,5 +14,5 @@
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
     <string name="mozac_browser_toolbar_progress_loading">Cargando</string>
     <!-- Content description: For the autoplay toolbar icon, it is set when the auto play permission is blocking content playing.-->
-    <string name="mozac_browser_toolbar_content_description_autoplay_blocked">L\'axuste de reproducción automática bloquió parte del conteníu</string>
+    <string name="mozac_browser_toolbar_content_description_autoplay_blocked">La configuración de la reproducción automática bloquió parte del conteníu</string>
 </resources>
