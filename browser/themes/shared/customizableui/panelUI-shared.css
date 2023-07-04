@@ -1316,6 +1316,7 @@ toolbarpaletteitem[place="panel"] > toolbaritem {
 }
 
 #zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
+  display: block;
   /* 4 chars max, but `ch` is the width of the `0` glyph, so account for larger glyphs by adding 1ch */
   min-width: calc(5ch + var(--toolbarbutton-inner-padding) * 2);
 }
