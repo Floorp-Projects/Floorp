@@ -71,19 +71,11 @@ use quote::quote;
 use syn::{Data, Fields, Ident};
 
 /// Try to parse the tokens, or else return a compilation error
-/// suggesting "full-syntax" if that's not already enabled.
 macro_rules! parse {
     ($tokens:ident as $type:ty) => {
         match syn::parse::<$type>($tokens) {
             Ok(parsed) => parsed,
-            Err(mut error) => {
-                if cfg!(not(feature = "full-syntax")) {
-                    let hint = syn::Error::new(
-                        Span::call_site(),
-                        r#"this might need the "full-syntax" feature of `num-derive`"#,
-                    );
-                    error.combine(hint);
-                }
+            Err(error) => {
                 return TokenStream::from(error.to_compile_error());
             }
         }
