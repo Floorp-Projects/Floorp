@@ -3,16 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // eslint-disable-next-line import/no-unassigned-import
-import "./panel-list.js";
-import { html, ifDefined } from "../vendor/lit.all.mjs";
+import "toolkit-widgets/panel-list.js";
+import { html, ifDefined } from "lit.all.mjs";
 
 export default {
-  title: "UI Widgets/Panel List",
+  title: "UI Widgets/Panel Menu",
   component: "panel-list",
   parameters: {
-    status: "in-development",
+    status: "stable",
     actions: {
-      handles: ["showing", "shown", "hidden", "click"],
+      handles: ["click"],
     },
     fluent: `
 panel-list-item-one = Item One
@@ -26,15 +26,9 @@ panel-list-settings = Settings
   },
 };
 
-function openMenu(event) {
-  if (
-    event.type == "mousedown" ||
-    event.mozInputSource == MouseEvent.MOZ_SOURCE_KEYBOARD ||
-    !event.detail
-  ) {
-    event.target.getRootNode().querySelector("panel-list").toggle(event);
-  }
-}
+const openMenu = e => {
+  e.target.getRootNode().querySelector("panel-list").toggle(e);
+};
 
 const Template = ({ isOpen, items, wideAnchor }) =>
   html`
@@ -60,34 +54,26 @@ const Template = ({ isOpen, items, wideAnchor }) =>
         inset-block-end: 30px;
       }
     </style>
-    ${isOpen
-      ? ""
-      : html`
-          <button
-            class="ghost-button icon-button"
-            @click=${openMenu}
-            @mousedown=${openMenu}
-            ?wide="${wideAnchor}"
-          ></button>
-          <button
-            class="ghost-button icon-button end"
-            @click=${openMenu}
-            @mousedown=${openMenu}
-            ?wide="${wideAnchor}"
-          ></button>
-          <button
-            class="ghost-button icon-button bottom"
-            @click=${openMenu}
-            @mousedown=${openMenu}
-            ?wide="${wideAnchor}"
-          ></button>
-          <button
-            class="ghost-button icon-button bottom end"
-            @click=${openMenu}
-            @mousedown=${openMenu}
-            ?wide="${wideAnchor}"
-          ></button>
-        `}
+    <button
+      class="ghost-button icon-button"
+      @click=${openMenu}
+      ?wide="${wideAnchor}"
+    ></button>
+    <button
+      class="ghost-button icon-button end"
+      @click=${openMenu}
+      ?wide="${wideAnchor}"
+    ></button>
+    <button
+      class="ghost-button icon-button bottom"
+      @click=${openMenu}
+      ?wide="${wideAnchor}"
+    ></button>
+    <button
+      class="ghost-button icon-button bottom end"
+      @click=${openMenu}
+      ?wide="${wideAnchor}"
+    ></button>
     <panel-list
       ?stay-open=${isOpen}
       ?open=${isOpen}

@@ -25,11 +25,6 @@
   cursor: default;
 }
 
-:host([stay-open]) {
-  position: initial;
-  display: inline-block;
-}
-
 :host([inxulpanel]) {
   position: static;
   margin: 0;
