@@ -1,5 +1,7 @@
-// FIXME: Remove `extern crate` below when we bump MSRV to 1.42 or higher.
-extern crate proc_macro;
+//! A set of macros to generate Rust source for PHF data structures at compile time.
+//! See [the `phf` crate's documentation][phf] for details.
+//!
+//! [phf]: https://docs.rs/phf
 
 use phf_generator::HashState;
 use phf_shared::PhfHash;
@@ -9,9 +11,7 @@ use std::collections::HashSet;
 use std::hash::Hasher;
 use syn::parse::{self, Parse, ParseStream};
 use syn::punctuated::Punctuated;
-#[cfg(feature = "unicase")]
-use syn::ExprLit;
-use syn::{parse_macro_input, Error, Expr, Lit, Token, UnOp};
+use syn::{parse_macro_input, Error, Expr, ExprLit, Lit, Token, UnOp};
 #[cfg(feature = "unicase")]
 use unicase_::UniCase;
 
@@ -121,6 +121,19 @@ impl ParsedKey {
                         ParsedKey::I128(v) => Some(ParsedKey::I128(try_negate!(v))),
                         _ => None,
                     },
+                    UnOp::Deref(_) => {
+                        let mut expr = &*unary.expr;
+                        while let Expr::Group(group) = expr {
+                            expr = &*group.expr;
+                        }
+                        match expr {
+                            Expr::Lit(ExprLit {
+                                lit: Lit::ByteStr(s),
+                                ..
+                            }) => Some(ParsedKey::Binary(s.value())),
+                            _ => None,
+                        }
+                    }
                     _ => None,
                 }
             }
@@ -283,7 +296,7 @@ fn build_ordered_map(entries: &[Entry], state: HashState) -> proc_macro2::TokenS
     }
 }
 
-#[::proc_macro_hack::proc_macro_hack]
+#[proc_macro]
 pub fn phf_map(input: TokenStream) -> TokenStream {
     let map = parse_macro_input!(input as Map);
     let state = phf_generator::generate_hash(&map.0);
@@ -291,7 +304,7 @@ pub fn phf_map(input: TokenStream) -> TokenStream {
     build_map(&map.0, state).into()
 }
 
-#[::proc_macro_hack::proc_macro_hack]
+#[proc_macro]
 pub fn phf_set(input: TokenStream) -> TokenStream {
     let set = parse_macro_input!(input as Set);
     let state = phf_generator::generate_hash(&set.0);
@@ -300,7 +313,7 @@ pub fn phf_set(input: TokenStream) -> TokenStream {
     quote!(phf::Set { map: #map }).into()
 }
 
-#[::proc_macro_hack::proc_macro_hack]
+#[proc_macro]
 pub fn phf_ordered_map(input: TokenStream) -> TokenStream {
     let map = parse_macro_input!(input as Map);
     let state = phf_generator::generate_hash(&map.0);
@@ -308,7 +321,7 @@ pub fn phf_ordered_map(input: TokenStream) -> TokenStream {
     build_ordered_map(&map.0, state).into()
 }
 
-#[::proc_macro_hack::proc_macro_hack]
+#[proc_macro]
 pub fn phf_ordered_set(input: TokenStream) -> TokenStream {
     let set = parse_macro_input!(input as Set);
     let state = phf_generator::generate_hash(&set.0);

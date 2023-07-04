@@ -144,10 +144,6 @@ audit-as-crates-io = false
 [policy.peek-poke-derive]
 audit-as-crates-io = false
 
-[policy.phf_macros]
-audit-as-crates-io = true
-notes = "Local fork with a patch from https://github.com/rust-phf/rust-phf/pull/284"
-
 [policy.pulse]
 audit-as-crates-io = false
 notes = "This is a first-party crate which is entirely unrelated to the crates.io package of the same name."

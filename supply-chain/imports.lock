@@ -343,13 +343,6 @@ when = "2023-04-13"
 user-id = 101233
 user-login = "le-automaton"
 
-[[publisher.proc-macro-hack]]
-version = "0.5.20+deprecated"
-when = "2022-12-19"
-user-id = 3618
-user-login = "dtolnay"
-user-name = "David Tolnay"
-
 [[publisher.proc-macro2]]
 version = "1.0.59"
 when = "2023-05-25"

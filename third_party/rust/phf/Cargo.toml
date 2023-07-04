@@ -10,32 +10,41 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.60"
 name = "phf"
-version = "0.10.1"
+version = "0.11.2"
 authors = ["Steven Fackler <sfackler@gmail.com>"]
 description = "Runtime support for perfect hash function data structures"
-readme = "../README.md"
+readme = "README.md"
+categories = [
+    "data-structures",
+    "no-std",
+]
 license = "MIT"
-repository = "https://github.com/sfackler/rust-phf"
+repository = "https://github.com/rust-phf/rust-phf"
+resolver = "1"
+
 [package.metadata.docs.rs]
+features = ["macros"]
+
+[package.metadata.playground]
+all-features = false
+default-features = true
 features = ["macros"]
 
 [lib]
 name = "phf"
 path = "src/lib.rs"
 test = false
+
 [dependencies.phf_macros]
-version = "0.10.0"
+version = "^0.11.2"
 optional = true
 
 [dependencies.phf_shared]
-version = "0.10.0"
+version = "^0.11.2"
 default-features = false
-
-[dependencies.proc-macro-hack]
-version = "0.5.4"
-optional = true
 
 [dependencies.serde]
 version = "1.0"
@@ -43,7 +52,10 @@ optional = true
 
 [features]
 default = ["std"]
-macros = ["phf_macros", "proc-macro-hack"]
+macros = ["phf_macros"]
 std = ["phf_shared/std"]
 uncased = ["phf_shared/uncased"]
-unicase = ["phf_shared/unicase"]
+unicase = [
+    "phf_macros?/unicase",
+    "phf_shared/unicase",
+]

@@ -10,16 +10,20 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.60"
 name = "phf_codegen"
-version = "0.10.0"
+version = "0.11.2"
 authors = ["Steven Fackler <sfackler@gmail.com>"]
 description = "Codegen library for PHF types"
-readme = "../README.md"
+readme = "README.md"
+categories = ["data-structures"]
 license = "MIT"
-repository = "https://github.com/sfackler/rust-phf"
+repository = "https://github.com/rust-phf/rust-phf"
+resolver = "1"
+
 [dependencies.phf_generator]
-version = "0.10.0"
+version = "0.11.0"
 
 [dependencies.phf_shared]
-version = "0.10.0"
+version = "0.11.0"
