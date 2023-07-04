@@ -280,9 +280,17 @@ void WriteBlock(const int32_t* JXL_RESTRICT symbols,
   WriteBits(bw, dc_code->depth[symbol], dc_code->code[symbol] | extra_bits[0]);
   for (int i = 1; i < num_nonzeros; ++i) {
     symbol = symbols[i];
-    while (symbol > 255) {
+    if (symbol > 255) {
       WriteBits(bw, ac_code->depth[0xf0], ac_code->code[0xf0]);
       symbol -= 256;
+      if (symbol > 255) {
+        WriteBits(bw, ac_code->depth[0xf0], ac_code->code[0xf0]);
+        symbol -= 256;
+        if (symbol > 255) {
+          WriteBits(bw, ac_code->depth[0xf0], ac_code->code[0xf0]);
+          symbol -= 256;
+        }
+      }
     }
     WriteBits(bw, ac_code->depth[symbol],
               ac_code->code[symbol] | extra_bits[i]);

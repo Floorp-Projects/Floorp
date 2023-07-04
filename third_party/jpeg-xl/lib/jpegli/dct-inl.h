@@ -227,18 +227,6 @@ void QuantizeBlock(const float* dct, const float* qmc, float aq_strength,
 }
 
 template <typename T>
-void QuantizeBlockNoAQ(const float* dct, const float* qmc, T* block) {
-  D d;
-  DI di;
-  for (size_t k = 0; k < DCTSIZE2; k += Lanes(d)) {
-    const auto val = Load(d, dct + k);
-    const auto q = Load(d, qmc + k);
-    const auto ival = ConvertTo(di, Round(Mul(val, q)));
-    StoreQuantizedValue(ival, block + k);
-  }
-}
-
-template <typename T>
 void ComputeCoefficientBlock(const float* JXL_RESTRICT pixels, size_t stride,
                              const float* JXL_RESTRICT qmc,
                              int16_t last_dc_coeff, float aq_strength,
@@ -248,17 +236,11 @@ void ComputeCoefficientBlock(const float* JXL_RESTRICT pixels, size_t stride,
   float* JXL_RESTRICT dct = tmp;
   float* JXL_RESTRICT scratch_space = tmp + DCTSIZE2;
   TransformFromPixels(pixels, stride, dct, scratch_space);
-  float dc_threshold = 0.0f;
-  if (aq_strength > 0.0f) {
-    QuantizeBlock(dct, qmc, aq_strength, zero_bias_offset, zero_bias_mul,
-                  block);
-    dc_threshold = zero_bias_offset[0] + aq_strength * zero_bias_mul[0];
-  } else {
-    QuantizeBlockNoAQ(dct, qmc, block);
-  }
+  QuantizeBlock(dct, qmc, aq_strength, zero_bias_offset, zero_bias_mul, block);
   // Center DC values around zero.
   static constexpr float kDCBias = 128.0f;
   const float dc = (dct[0] - kDCBias) * qmc[0];
+  float dc_threshold = zero_bias_offset[0] + aq_strength * zero_bias_mul[0];
   if (std::abs(dc - last_dc_coeff) < dc_threshold) {
     block[0] = last_dc_coeff;
   } else {

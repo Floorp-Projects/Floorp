@@ -11,7 +11,10 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <fstream>
 #include <iterator>
+#include <memory>
 #include <numeric>
 #include <sstream>
 #include <utility>
@@ -22,6 +25,7 @@
 #include "lib/jxl/sanitizers.h"
 #if JPEGXL_ENABLE_SJPEG
 #include "sjpeg.h"
+#include "sjpegi.h"
 #endif
 
 namespace jxl {
@@ -254,6 +258,16 @@ struct JpegParams {
   // Sjpeg parameters
   int libjpeg_quality = 0;
   std::string libjpeg_chroma_subsampling = "444";
+  float psnr_target = 0;
+  std::string custom_base_quant_fn;
+  float search_q_start = 65.0f;
+  float search_q_min = 1.0f;
+  float search_q_max = 100.0f;
+  int search_max_iters = 20;
+  float search_tolerance = 0.1f;
+  float search_q_precision = 0.01f;
+  float search_first_iter_slope = 3.0f;
+  bool enable_adaptive_quant = true;
 };
 
 Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
@@ -318,6 +332,79 @@ Status EncodeWithLibJpeg(const PackedImage& image, const JxlBasicInfo& info,
   return true;
 }
 
+#if JPEGXL_ENABLE_SJPEG
+struct MySearchHook : public sjpeg::SearchHook {
+  uint8_t base_tables[2][64];
+  float q_start;
+  float q_precision;
+  float first_iter_slope;
+  void ReadBaseTables(const std::string& fn) {
+    const uint8_t kJPEGAnnexKMatrices[2][64] = {
+        {16, 11, 10, 16, 24,  40,  51,  61,  12, 12, 14, 19, 26,  58,  60,  55,
+         14, 13, 16, 24, 40,  57,  69,  56,  14, 17, 22, 29, 51,  87,  80,  62,
+         18, 22, 37, 56, 68,  109, 103, 77,  24, 35, 55, 64, 81,  104, 113, 92,
+         49, 64, 78, 87, 103, 121, 120, 101, 72, 92, 95, 98, 112, 100, 103, 99},
+        {17, 18, 24, 47, 99, 99, 99, 99, 18, 21, 26, 66, 99, 99, 99, 99,
+         24, 26, 56, 99, 99, 99, 99, 99, 47, 66, 99, 99, 99, 99, 99, 99,
+         99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
+         99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99}};
+    memcpy(base_tables[0], kJPEGAnnexKMatrices[0], sizeof(base_tables[0]));
+    memcpy(base_tables[1], kJPEGAnnexKMatrices[1], sizeof(base_tables[1]));
+    if (!fn.empty()) {
+      std::ifstream f(fn);
+      std::string line;
+      int idx = 0;
+      while (idx < 128 && std::getline(f, line)) {
+        if (line.empty() || line[0] == '#') continue;
+        std::istringstream line_stream(line);
+        std::string token;
+        while (idx < 128 && std::getline(line_stream, token, ',')) {
+          uint8_t val = std::stoi(token);
+          base_tables[idx / 64][idx % 64] = val;
+          idx++;
+        }
+      }
+    }
+  }
+  bool Setup(const sjpeg::EncoderParam& param) override {
+    sjpeg::SearchHook::Setup(param);
+    q = q_start;
+    return true;
+  }
+  void NextMatrix(int idx, uint8_t dst[64]) override {
+    float factor = (q <= 0)       ? 5000.0f
+                   : (q < 50.0f)  ? 5000.0f / q
+                   : (q < 100.0f) ? 2 * (100.0f - q)
+                                  : 0.0f;
+    sjpeg::SetQuantMatrix(base_tables[idx], factor, dst);
+  }
+  bool Update(float result) override {
+    value = result;
+    if (fabs(value - target) < tolerance * target) {
+      return true;
+    }
+    if (value > target) {
+      qmax = q;
+    } else {
+      qmin = q;
+    }
+    if (qmin == qmax) {
+      return true;
+    }
+    const float last_q = q;
+    if (pass == 0) {
+      q += first_iter_slope *
+           (for_size ? 0.1 * std::log(target / value) : (target - value));
+      q = std::max(qmin, std::min(qmax, q));
+    } else {
+      q = (qmin + qmax) / 2.;
+    }
+    return (pass > 0 && fabs(q - last_q) < q_precision);
+  }
+  ~MySearchHook() override {}
+};
+#endif
+
 Status EncodeWithSJpeg(const PackedImage& image, const JxlBasicInfo& info,
                        const std::vector<uint8_t>& icc,
                        std::vector<uint8_t> exif, const JpegParams& params,
@@ -342,6 +429,8 @@ Status EncodeWithSJpeg(const PackedImage& image, const JxlBasicInfo& info,
   } else {
     return JXL_FAILURE("sjpeg does not support this chroma subsampling mode");
   }
+  param.adaptive_quantization = params.enable_adaptive_quant;
+  std::unique_ptr<MySearchHook> hook;
   if (params.libjpeg_quality > 0) {
     JpegParams libjpeg_params;
     libjpeg_params.quality = params.libjpeg_quality;
@@ -351,8 +440,22 @@ Status EncodeWithSJpeg(const PackedImage& image, const JxlBasicInfo& info,
                                           libjpeg_params, &libjpeg_bytes));
     param.target_mode = sjpeg::EncoderParam::TARGET_SIZE;
     param.target_value = libjpeg_bytes.size();
-    param.passes = 20;
-    param.tolerance = 0.1f;
+  }
+  if (params.psnr_target > 0) {
+    param.target_mode = sjpeg::EncoderParam::TARGET_PSNR;
+    param.target_value = params.psnr_target;
+  }
+  if (param.target_mode != sjpeg::EncoderParam::TARGET_NONE) {
+    param.passes = params.search_max_iters;
+    param.tolerance = params.search_tolerance;
+    param.qmin = params.search_q_min;
+    param.qmax = params.search_q_max;
+    hook.reset(new MySearchHook());
+    hook->ReadBaseTables(params.custom_base_quant_fn);
+    hook->q_start = params.search_q_start;
+    hook->q_precision = params.search_q_precision;
+    hook->first_iter_slope = params.search_first_iter_slope;
+    param.search_hook = hook.get();
   }
   size_t stride = info.xsize * 3;
   const uint8_t* pixels = reinterpret_cast<const uint8_t*>(image.pixels());
@@ -439,6 +542,26 @@ class JPEGEncoder : public Encoder {
         JXL_RETURN_IF_ERROR(static_cast<bool>(is >> params.progressive_id));
       } else if (it.first == "optimize" && it.second == "OFF") {
         params.optimize_coding = false;
+      } else if (it.first == "adaptive_q" && it.second == "OFF") {
+        params.enable_adaptive_quant = false;
+      } else if (it.first == "psnr") {
+        params.psnr_target = std::stof(it.second);
+      } else if (it.first == "base_quant_fn") {
+        params.custom_base_quant_fn = it.second;
+      } else if (it.first == "search_q_start") {
+        params.search_q_start = std::stof(it.second);
+      } else if (it.first == "search_q_min") {
+        params.search_q_min = std::stof(it.second);
+      } else if (it.first == "search_q_max") {
+        params.search_q_max = std::stof(it.second);
+      } else if (it.first == "search_max_iters") {
+        params.search_max_iters = std::stoi(it.second);
+      } else if (it.first == "search_tolerance") {
+        params.search_tolerance = std::stof(it.second);
+      } else if (it.first == "search_q_precision") {
+        params.search_q_precision = std::stof(it.second);
+      } else if (it.first == "search_first_iter_slope") {
+        params.search_first_iter_slope = std::stof(it.second);
       }
     }
     params.is_xyb = (ppf.color_encoding.color_space == JXL_COLOR_SPACE_XYB);

@@ -35,6 +35,13 @@ T* Allocate(j_compress_ptr cinfo, size_t len, int pool_id = JPOOL_PERMANENT) {
   return Allocate<T>(reinterpret_cast<j_common_ptr>(cinfo), len, pool_id);
 }
 
+template <typename T>
+JBLOCKARRAY GetBlockRow(T cinfo, int c, JDIMENSION by) {
+  return (*cinfo->mem->access_virt_barray)(
+      reinterpret_cast<j_common_ptr>(cinfo), cinfo->master->coeff_buffers[c],
+      by, 1, true);
+}
+
 }  // namespace jpegli
 
 #endif  // LIB_JPEGLI_MEMORY_MANAGER_H_

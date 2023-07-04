@@ -15,7 +15,6 @@
 
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
-#include "lib/jxl/base/file_io.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/enc_color_management.h"
 #include "lib/jxl/enc_xyb.h"
@@ -378,7 +377,8 @@ TEST_F(ColorManagementTest, XYBProfile) {
   Image3F opsin(kNumColors, 1);
   ToXYB(ib, nullptr, &opsin, cms, nullptr);
 
-  Image3F opsin2 = CopyImage(opsin);
+  Image3F opsin2(kNumColors, 1);
+  CopyImageTo(opsin, &opsin2);
   ScaleXYB(&opsin2);
 
   float* src = xform.BufSrc(0);

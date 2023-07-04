@@ -418,9 +418,6 @@ Status DecodeGroupImpl(GetBlock* JXL_RESTRICT get_block,
       }
     }
   }
-  if (draw == kDontDraw) {
-    return true;
-  }
   return true;
 }
 

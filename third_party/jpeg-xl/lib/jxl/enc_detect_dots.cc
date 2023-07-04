@@ -293,7 +293,8 @@ std::vector<ConnectedComponent> FindCC(const ImageF& energy, double t_low,
                                        double t_high, uint32_t maxWindow,
                                        double minScore) {
   const int kExtraRect = 4;
-  ImageF img = CopyImage(energy);
+  ImageF img(energy.xsize(), energy.ysize());
+  CopyImageTo(energy, &img);
   std::vector<ConnectedComponent> ans;
   for (size_t y = 0; y < img.ysize(); y++) {
     float* JXL_RESTRICT row = img.Row(y);

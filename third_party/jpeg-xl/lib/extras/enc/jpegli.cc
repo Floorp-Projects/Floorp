@@ -420,7 +420,16 @@ Status EncodeJpeg(const PackedPixelFile& ppf, const JpegSettings& jpeg_settings,
     }
     jpegli_enable_adaptive_quantization(
         &cinfo, jpeg_settings.use_adaptive_quantization);
-    jpegli_set_distance(&cinfo, jpeg_settings.distance, TRUE);
+    if (jpeg_settings.psnr_target > 0.0) {
+      jpegli_set_psnr(&cinfo, jpeg_settings.psnr_target,
+                      jpeg_settings.search_tolerance,
+                      jpeg_settings.min_distance, jpeg_settings.max_distance);
+    } else if (jpeg_settings.quality > 0.0) {
+      float distance = jpegli_quality_to_distance(jpeg_settings.quality);
+      jpegli_set_distance(&cinfo, distance, TRUE);
+    } else {
+      jpegli_set_distance(&cinfo, jpeg_settings.distance, TRUE);
+    }
     jpegli_set_progressive_level(&cinfo, jpeg_settings.progressive_level);
     cinfo.optimize_coding = jpeg_settings.optimize_coding;
     if (!jpeg_settings.app_data.empty()) {

@@ -153,6 +153,7 @@ void int_to_float(const pixel_type* const JXL_RESTRICT row_in,
   }
 }
 
+#if JXL_DEBUG_V_LEVEL >= 1
 std::string ModularStreamId::DebugString() const {
   std::ostringstream os;
   os << (kind == kGlobalData   ? "ModularGlobal"
@@ -174,6 +175,7 @@ std::string ModularStreamId::DebugString() const {
   }
   return os.str();
 }
+#endif
 
 Status ModularFrameDecoder::DecodeGlobalInfo(BitReader* reader,
                                              const FrameHeader& frame_header,
