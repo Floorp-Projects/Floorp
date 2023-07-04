@@ -57,8 +57,8 @@ startTest({
   desc: 'Test Background Video Displays Video Frame via drawImage When Suspended',
   prefs: [
     [ "media.test.video-suspend", true ],
-    [ "media.suspend-bkgnd-video.enabled", true ],
-    [ "media.suspend-bkgnd-video.delay-ms", 500 ]
+    [ "media.suspend-background-video.enabled", true ],
+    [ "media.suspend-background-video.delay-ms", 500 ]
   ],
   tests: gDecodeSuspendTests,
   runTest: (test, token) => {

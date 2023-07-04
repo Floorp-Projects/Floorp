@@ -17,8 +17,8 @@ add_task(async function setupTestingPref() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.test.video-suspend", true],
-      ["media.suspend-bkgnd-video.enabled", true],
-      ["media.suspend-bkgnd-video.delay-ms", 0],
+      ["media.suspend-background-video.enabled", true],
+      ["media.suspend-background-video.delay-ms", 0],
     ],
   });
 });

@@ -10400,14 +10400,14 @@
   mirror: always
 
 # Whether to suspend decoding of videos in background tabs.
-- name: media.suspend-bkgnd-video.enabled
+- name: media.suspend-background-video.enabled
   type: RelaxedAtomicBool
   value: true
   mirror: always
 
 # Delay, in ms, from time window goes to background to suspending
 # video decoders. Defaults to 10 seconds.
-- name: media.suspend-bkgnd-video.delay-ms
+- name: media.suspend-background-video.delay-ms
   type: RelaxedAtomicUint32
   value: 10000
   mirror: always
@@ -10624,7 +10624,7 @@
 
 # Resume video decoding when the cursor is hovering on a background tab to
 # reduce the resume latency and improve the user experience.
-- name: media.resume-bkgnd-video-on-tabhover
+- name: media.resume-background-video-on-tabhover
   type: bool
   value: true
   mirror: always

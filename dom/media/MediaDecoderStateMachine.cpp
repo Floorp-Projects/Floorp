@@ -180,7 +180,7 @@ static void DiscardFramesFromTail(MediaQueue<Type>& aQueue,
 // decoding is suspended.
 static TimeDuration SuspendBackgroundVideoDelay() {
   return TimeDuration::FromMilliseconds(
-      StaticPrefs::media_suspend_bkgnd_video_delay_ms());
+      StaticPrefs::media_suspend_background_video_delay_ms());
 }
 
 class MediaDecoderStateMachine::StateObject {
@@ -3768,7 +3768,7 @@ void MediaDecoderStateMachine::SetVideoDecodeModeInternal(
       mVideoDecodeSuspended ? 'T' : 'F');
 
   // Should not suspend decoding if we don't turn on the pref.
-  if (!StaticPrefs::media_suspend_bkgnd_video_enabled() &&
+  if (!StaticPrefs::media_suspend_background_video_enabled() &&
       aMode == VideoDecodeMode::Suspend) {
     LOG("SetVideoDecodeModeInternal(), early return because preference off and "
         "set to Suspend");
