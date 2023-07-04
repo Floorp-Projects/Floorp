@@ -335,9 +335,7 @@ void WarpCacheIR::traceData(JSTracer* trc) {
         case StubField::Type::RawInt64:
         case StubField::Type::Double:
           break;
-        case StubField::Type::Shape:
-        case StubField::Type::WeakShape: {
-          // WeakShape pointers are traced strongly in this context.
+        case StubField::Type::Shape: {
           uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);
           TraceWarpStubPtr<Shape>(trc, word, "warp-cacheir-shape");
           break;
@@ -348,9 +346,7 @@ void WarpCacheIR::traceData(JSTracer* trc) {
                                          "warp-cacheir-getter-setter");
           break;
         }
-        case StubField::Type::JSObject:
-        case StubField::Type::WeakObject: {
-          // WeakObject pointers are traced strongly in this context.
+        case StubField::Type::JSObject: {
           uintptr_t word = stubInfo_->getStubRawWord(stubData_, offset);
           WarpObjectField field = WarpObjectField::fromData(word);
           if (!field.isNurseryIndex()) {

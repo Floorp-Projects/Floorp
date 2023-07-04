@@ -105,7 +105,8 @@ AutoStubFrame::AutoStubFrame(BaselineCacheIRCompiler& compiler)
 #endif
 {
 }
-void AutoStubFrame::enter(MacroAssembler& masm, Register scratch) {
+void AutoStubFrame::enter(MacroAssembler& masm, Register scratch,
+                          CallCanGC canGC) {
   MOZ_ASSERT(compiler.allocator.stackPushed() == 0);
 
   if (JitOptions.enableICFramePointers) {
@@ -121,9 +122,9 @@ void AutoStubFrame::enter(MacroAssembler& masm, Register scratch) {
 
   MOZ_ASSERT(!compiler.enteredStubFrame_);
   compiler.enteredStubFrame_ = true;
-
-  // All current uses of this are to call VM functions that can GC.
-  compiler.makesGCCalls_ = true;
+  if (canGC == CallCanGC::CanGC) {
+    compiler.makesGCCalls_ = true;
+  }
 }
 void AutoStubFrame::leave(MacroAssembler& masm) {
   MOZ_ASSERT(compiler.enteredStubFrame_);
@@ -2096,67 +2097,6 @@ static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
 
 static const uint32_t MaxFoldedShapes = 16;
 
-const JSClass ShapeListObject::class_ = {"JIT ShapeList", 0, &classOps_};
-
-const JSClassOps ShapeListObject::classOps_ = {
-    nullptr,                 // addProperty
-    nullptr,                 // delProperty
-    nullptr,                 // enumerate
-    nullptr,                 // newEnumerate
-    nullptr,                 // resolve
-    nullptr,                 // mayResolve
-    nullptr,                 // finalize
-    nullptr,                 // call
-    nullptr,                 // construct
-    ShapeListObject::trace,  // trace
-};
-
-/* static */ ShapeListObject* ShapeListObject::create(JSContext* cx) {
-  NativeObject* obj = NewTenuredObjectWithGivenProto(cx, &class_, nullptr);
-  if (!obj) {
-    return nullptr;
-  }
-
-  // Register this object so the GC can sweep its weak pointers.
-  if (!cx->zone()->registerObjectWithWeakPointers(obj)) {
-    return nullptr;
-  }
-
-  return &obj->as<ShapeListObject>();
-}
-
-Shape* ShapeListObject::get(uint32_t index) {
-  Value value = ListObject::get(index);
-  return static_cast<Shape*>(value.toPrivate());
-}
-
-void ShapeListObject::trace(JSTracer* trc, JSObject* obj) {
-  if (trc->traceWeakEdges()) {
-    obj->as<ShapeListObject>().traceWeak(trc);
-  }
-}
-
-bool ShapeListObject::traceWeak(JSTracer* trc) {
-  const HeapSlot* src = elements_;
-  const HeapSlot* end = src + getDenseInitializedLength();
-  HeapSlot* dst = elements_;
-  while (src != end) {
-    Shape* shape = static_cast<Shape*>(src->toPrivate());
-    MOZ_ASSERT(shape->is<Shape>());
-    if (TraceManuallyBarrieredWeakEdge(trc, &shape, "ShapeListObject shape")) {
-      dst->unbarrieredSet(PrivateValue(shape));
-      dst++;
-    }
-    src++;
-  }
-
-  MOZ_ASSERT(dst <= end);
-  size_t length = dst - elements_;
-  setDenseInitializedLength(length);
-
-  return length != 0;
-}
-
 bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
                               JSScript* script, ICScript* icScript) {
   ICEntry* icEntry = icScript->icEntryForStub(fallback);
@@ -2197,9 +2137,7 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
       return false;
     }
 
-    gc::ReadBarrier(shape);
-
-    if (!shapeList.append(PrivateValue(shape))) {
+    if (!shapeList.append(PrivateGCThingValue(shape))) {
       cx->recoverFromOutOfMemory();
       return false;
     }
@@ -2228,7 +2166,7 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
         uintptr_t otherRaw = stubInfo->getStubRawWord(otherStubData, offset);
 
         if (firstRaw != otherRaw) {
-          if (fieldType != StubField::Type::WeakShape) {
+          if (fieldType != StubField::Type::Shape) {
             // Case 1: a field differs that is not a Shape. We only support
             // folding GuardShape to GuardMultipleShapes.
             return true;
@@ -2290,13 +2228,13 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
         ObjOperandId objId = reader.objOperandId();
         uint32_t shapeOffset = reader.stubOffset();
         if (shapeOffset == *foldableFieldOffset) {
-          // Ensure that the allocation of the ShapeListObject doesn't trigger a
-          // GC and free the stubInfo we're currently reading. Note that
+          // Ensure that the allocation of the ListObject doesn't trigger a GC
+          // and free the stubInfo we're currently reading. Note that
           // AutoKeepJitScripts isn't sufficient, because optimized stubs can be
           // discarded even if the JitScript is preserved.
           gc::AutoSuppressGC suppressGC(cx);
 
-          Rooted<ShapeListObject*> shapeObj(cx, ShapeListObject::create(cx));
+          Rooted<ListObject*> shapeObj(cx, ListObject::create(cx));
           if (!shapeObj) {
             return false;
           }
@@ -2306,8 +2244,9 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
               return false;
             }
 
-            MOZ_ASSERT(static_cast<Shape*>(shapeList[i].toPrivate())->realm() ==
-                       shapeObj->realm());
+            MOZ_ASSERT(
+                reinterpret_cast<Shape*>(shapeList[i].toGCThing())->realm() ==
+                shapeObj->realm());
           }
 
           writer.guardMultipleShapes(objId, shapeObj);
@@ -2363,7 +2302,7 @@ static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
 
   Maybe<uint32_t> shapeFieldOffset;
   RootedValue newShape(cx);
-  Rooted<ShapeListObject*> foldedShapes(cx);
+  Rooted<ListObject*> foldedShapes(cx);
 
   CacheIRReader stubReader(stubInfo);
   CacheIRReader newReader(writer);
@@ -2393,14 +2332,14 @@ static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
 
         // Get the shape from the new stub
         StubField shapeField =
-            writer.readStubField(newShapeOffset, StubField::Type::WeakShape);
+            writer.readStubField(newShapeOffset, StubField::Type::Shape);
         Shape* shape = reinterpret_cast<Shape*>(shapeField.asWord());
-        newShape = PrivateValue(shape);
+        newShape = PrivateGCThingValue(shape);
 
         // Get the shape array from the old stub.
         JSObject* shapeList =
             stubInfo->getStubField<JSObject*>(stub, stubShapesOffset);
-        foldedShapes = &shapeList->as<ShapeListObject>();
+        foldedShapes = &shapeList->as<ListObject>();
         MOZ_ASSERT(foldedShapes->compartment() == shape->compartment());
 
         // Don't add a shape if it's from a different realm than the first
@@ -2413,8 +2352,8 @@ static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
         // The assert verifies this property by checking the first element has
         // the same realm (and since everything in the list has the same realm,
         // checking the first element suffices)
-        MOZ_ASSERT_IF(!foldedShapes->isEmpty(),
-                      foldedShapes->get(0)->realm() == foldedShapes->realm());
+        MOZ_ASSERT(reinterpret_cast<Shape*>(foldedShapes->get(0).toGCThing())
+                       ->realm() == foldedShapes->realm());
         if (foldedShapes->realm() != shape->realm()) {
           return false;
         }
@@ -2557,12 +2496,12 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
 
   // Try including this case in an existing folded stub.
   if (stub->hasFoldedStub() && AddToFoldedStub(cx, writer, icScript, stub)) {
-    // Instead of adding a new stub, we have added a new case to an existing
-    // folded stub. We do not have to invalidate Warp, because the
-    // ShapeListObject that stores the cases is shared between baseline and
-    // Warp. Reset the entered count for the fallback stub so that we can still
-    // transpile, and reset the bailout counter if we have already been
-    // transpiled.
+    // Instead of adding a new stub, we have added a new case to an
+    // existing folded stub. We do not have to invalidate Warp,
+    // because the ListObject that stores the cases is shared between
+    // baseline and Warp. Reset the entered count for the fallback
+    // stub so that we can still transpile, and reset the bailout
+    // counter if we have already been transpiled.
     stub->resetEnteredCount();
     JSScript* owningScript = nullptr;
     if (outerScript == cx->lastStubFoldingBailoutChild_.ref()) {

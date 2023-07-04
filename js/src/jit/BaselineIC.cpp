@@ -179,48 +179,6 @@ void ICEntry::trace(JSTracer* trc) {
   MOZ_ASSERT(stub->usesTrampolineCode());
 }
 
-inline ICFallbackStub* GetFallbackStub(ICEntry* entry) {
-  ICStub* stub = entry->firstStub();
-  while (!stub->isFallback()) {
-    stub = stub->toCacheIRStub()->next();
-  }
-  return stub->toFallbackStub();
-}
-
-void ICEntry::traceWeak(JSTracer* trc) {
-  // Trace CacheIR stubs and remove those containing weak pointers to dead GC
-  // things.  Prebarriers are not necessary because this happens as part of GC.
-
-  ICFallbackStub* fallbackStub = GetFallbackStub(this);
-
-  ICStub* stub = firstStub();
-  ICCacheIRStub* prev = nullptr;
-  while (!stub->isFallback()) {
-    ICCacheIRStub* cacheIRStub = stub->toCacheIRStub();
-    if (!cacheIRStub->traceWeak(trc)) {
-      fallbackStub->unlinkStubUnbarriered(this, prev, cacheIRStub);
-    } else {
-      prev = cacheIRStub;
-    }
-
-    stub = cacheIRStub->next();
-    MOZ_ASSERT_IF(prev, prev->next() == stub);
-  }
-
-  if (fallbackStub->numOptimizedStubs() == 0 && fallbackStub->hasFoldedStub()) {
-    fallbackStub->clearHasFoldedStub();
-  }
-
-#ifdef DEBUG
-  size_t count = 0;
-  for (ICStub* stub = firstStub(); stub != fallbackStub;
-       stub = stub->toCacheIRStub()->next()) {
-    count++;
-  }
-  MOZ_ASSERT(count == fallbackStub->state().numOptimizedStubs());
-#endif
-}
-
 // constexpr table mapping JSOp to BaselineICFallbackKind. Each value in the
 // table is either a fallback kind or a sentinel value (NoICValue) indicating
 // the JSOp is not a JOF_IC op.
@@ -444,10 +402,6 @@ void ICCacheIRStub::trace(JSTracer* trc) {
   TraceCacheIRStub(trc, this, stubInfo());
 }
 
-bool ICCacheIRStub::traceWeak(JSTracer* trc) {
-  return TraceWeakCacheIRStub(trc, this, stubInfo());
-}
-
 static void MaybeTransition(JSContext* cx, BaselineFrame* frame,
                             ICFallbackStub* stub) {
   if (stub->state().shouldTransition()) {
@@ -508,16 +462,6 @@ static void TryAttachStub(const char* name, JSContext* cx, BaselineFrame* frame,
 
 void ICFallbackStub::unlinkStub(Zone* zone, ICEntry* icEntry,
                                 ICCacheIRStub* prev, ICCacheIRStub* stub) {
-  // We are removing edges from ICStub to gcthings. Perform a barrier to let the
-  // GC know about those edges.
-  PreWriteBarrier(zone, stub);
-
-  unlinkStubUnbarriered(icEntry, prev, stub);
-}
-
-void ICFallbackStub::unlinkStubUnbarriered(ICEntry* icEntry,
-                                           ICCacheIRStub* prev,
-                                           ICCacheIRStub* stub) {
   if (prev) {
     MOZ_ASSERT(prev->next() == stub);
     prev->setNext(stub->next());
@@ -527,6 +471,10 @@ void ICFallbackStub::unlinkStubUnbarriered(ICEntry* icEntry,
   }
 
   state_.trackUnlinkedStub();
+
+  // We are removing edges from ICStub to gcthings. Perform a barrier to let the
+  // GC know about those edges.
+  PreWriteBarrier(zone, stub);
 
 #ifdef DEBUG
   // Poison stub code to ensure we don't call this stub again. However, if

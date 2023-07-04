@@ -87,11 +87,11 @@
 #include "frontend/Parser.h"
 #include "frontend/ScopeBindingCache.h"  // js::frontend::ScopeBindingCache
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
-#include "gc/GC.h"
 #include "gc/PublicIterators.h"
 #ifdef DEBUG
 #  include "irregexp/RegExpAPI.h"
 #endif
+#include "gc/GC-inl.h"  // ZoneCellIter
 
 #ifdef JS_SIMULATOR_ARM
 #  include "jit/arm/Simulator-arm.h"
@@ -112,7 +112,6 @@
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
 #include "jit/JitcodeMap.h"
-#include "jit/JitZone.h"
 #include "jit/shared/CodeGenerator-shared.h"
 #include "js/Array.h"        // JS::NewArrayObject
 #include "js/ArrayBuffer.h"  // JS::{CreateMappedArrayBufferContents,NewMappedArrayBufferWithContents,IsArrayBufferObject,GetArrayBufferLengthAndData}
@@ -3471,13 +3470,14 @@ static bool CacheIRHealthReport(JSContext* cx, unsigned argc, Value* vp) {
   if (!argc) {
     // Calling CacheIRHealthReport without any arguments will create health
     // reports for all scripts in the zone.
-    if (jit::JitZone* jitZone = cx->zone()->jitZone()) {
-      jitZone->forEachJitScript([&](jit::JitScript* jitScript) {
-        script = jitScript->owningScript();
-        if (!script->selfHosted()) {
-          cih.healthReportForScript(cx, script, js::jit::SpewContext::Shell);
-        }
-      });
+    for (auto base = cx->zone()->cellIter<BaseScript>(); !base.done();
+         base.next()) {
+      if (!base->hasJitScript() || base->selfHosted()) {
+        continue;
+      }
+
+      script = base->asJSScript();
+      cih.healthReportForScript(cx, script, js::jit::SpewContext::Shell);
     }
   } else {
     RootedValue value(cx, args.get(0));
