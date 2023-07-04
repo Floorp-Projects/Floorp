@@ -2,32 +2,120 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import { bindActionCreators } from "redux";
+import { showMenu } from "../../context-menu/menu";
 
-import { copyToTheClipboard } from "../../../utils/clipboard";
+import { copyToTheClipboard } from "../../utils/clipboard";
 import {
+  isPretty,
   getRawSourceURL,
   getFilename,
   shouldBlackbox,
   findBlackBoxRange,
-} from "../../../utils/source";
-import { toSourceLine } from "../../../utils/editor";
-import { downloadFile } from "../../../utils/utils";
-import { features } from "../../../utils/prefs";
+} from "../../utils/source";
+import { toSourceLine } from "../../utils/editor";
+import { downloadFile } from "../../utils/utils";
+import { features } from "../../utils/prefs";
+import { isFulfilled } from "../../utils/async-value";
 
-import { isFulfilled } from "../../../utils/async-value";
-import actions from "../../../actions";
+import { createBreakpointItems } from "./editor-breakpoint";
+
+import {
+  getPrettySource,
+  getIsCurrentThreadPaused,
+  getThreadContext,
+  isSourceWithMap,
+  getBlackBoxRanges,
+  isSourceOnSourceMapIgnoreList,
+  isSourceMapIgnoreListEnabled,
+  getEditorWrapping,
+} from "../../selectors";
+
+import { continueToHere } from "../../actions/pause/continueToHere";
+import { jumpToMappedLocation } from "../../actions/sources/select";
+import {
+  showSource,
+  toggleInlinePreview,
+  toggleEditorWrapping,
+} from "../../actions/ui";
+import { toggleBlackBox } from "../../actions/sources/blackbox";
+import { addExpression } from "../../actions/expressions";
+import { evaluateInConsole } from "../../actions/toolbox";
+
+export function showEditorContextMenu(event, editor, location) {
+  return async ({ dispatch, getState }) => {
+    const { source } = location;
+    const state = getState();
+    const cx = getThreadContext(state);
+    const blackboxedRanges = getBlackBoxRanges(state);
+    const isPaused = getIsCurrentThreadPaused(state);
+    const hasMappedLocation =
+      (source.isOriginal ||
+        isSourceWithMap(state, source.id) ||
+        isPretty(source)) &&
+      !getPrettySource(state, source.id);
+    const isSourceOnIgnoreList =
+      isSourceMapIgnoreListEnabled(state) &&
+      isSourceOnSourceMapIgnoreList(state, source);
+    const editorWrappingEnabled = getEditorWrapping(state);
+
+    showMenu(
+      event,
+      editorMenuItems({
+        cx,
+        blackboxedRanges,
+        hasMappedLocation,
+        location,
+        isPaused,
+        editorWrappingEnabled,
+        selectionText: editor.codeMirror.getSelection().trim(),
+        isTextSelected: editor.codeMirror.somethingSelected(),
+        editor,
+        isSourceOnIgnoreList,
+        dispatch,
+      })
+    );
+  };
+}
+
+export function showEditorGutterContextMenu(event, editor, location, lineText) {
+  return async ({ dispatch, getState }) => {
+    const { source } = location;
+    const state = getState();
+    const cx = getThreadContext(state);
+    const blackboxedRanges = getBlackBoxRanges(state);
+    const isPaused = getIsCurrentThreadPaused(state);
+    const isSourceOnIgnoreList =
+      isSourceMapIgnoreListEnabled(state) &&
+      isSourceOnSourceMapIgnoreList(state, source);
+
+    showMenu(event, [
+      ...createBreakpointItems(cx, location, lineText, dispatch),
+      { type: "separator" },
+      continueToHereItem(cx, location, isPaused, dispatch),
+      { type: "separator" },
+      blackBoxLineMenuItem(
+        cx,
+        source,
+        editor,
+        blackboxedRanges,
+        isSourceOnIgnoreList,
+        location.line,
+        dispatch
+      ),
+    ]);
+  };
+}
 
 // Menu Items
-export const continueToHereItem = (cx, location, isPaused, editorActions) => ({
+const continueToHereItem = (cx, location, isPaused, dispatch) => ({
   accesskey: L10N.getStr("editor.continueToHere.accesskey"),
   disabled: !isPaused,
-  click: () => editorActions.continueToHere(cx, location),
+  click: () => dispatch(continueToHere(cx, location)),
   id: "node-menu-continue-to-here",
   label: L10N.getStr("editor.continueToHere.label"),
 });
 
-const copyToClipboardItem = (selectionText, editorActions) => ({
+const copyToClipboardItem = selectionText => ({
   id: "node-menu-copy-to-clipboard",
   label: L10N.getStr("copyToClipboard.label"),
   accesskey: L10N.getStr("copyToClipboard.accesskey"),
@@ -35,7 +123,7 @@ const copyToClipboardItem = (selectionText, editorActions) => ({
   click: () => copyToTheClipboard(selectionText),
 });
 
-const copySourceItem = (selectedContent, editorActions) => ({
+const copySourceItem = selectedContent => ({
   id: "node-menu-copy-source",
   label: L10N.getStr("copySource.label"),
   accesskey: L10N.getStr("copySource.accesskey"),
@@ -45,7 +133,7 @@ const copySourceItem = (selectedContent, editorActions) => ({
     copyToTheClipboard(selectedContent.value),
 });
 
-const copySourceUri2Item = (selectedSource, editorActions) => ({
+const copySourceUri2Item = selectedSource => ({
   id: "node-menu-copy-source-url",
   label: L10N.getStr("copySourceUri2"),
   accesskey: L10N.getStr("copySourceUri2.accesskey"),
@@ -55,37 +143,36 @@ const copySourceUri2Item = (selectedSource, editorActions) => ({
 
 const jumpToMappedLocationItem = (
   cx,
-  selectedSource,
   location,
   hasMappedLocation,
-  editorActions
+  dispatch
 ) => ({
   id: "node-menu-jump",
   label: L10N.getFormatStr(
     "editor.jumpToMappedLocation1",
-    selectedSource.isOriginal
+    location.source.isOriginal
       ? L10N.getStr("generated")
       : L10N.getStr("original")
   ),
   accesskey: L10N.getStr("editor.jumpToMappedLocation1.accesskey"),
   disabled: !hasMappedLocation,
-  click: () => editorActions.jumpToMappedLocation(cx, location),
+  click: () => dispatch(jumpToMappedLocation(cx, location)),
 });
 
-const showSourceMenuItem = (cx, selectedSource, editorActions) => ({
+const showSourceMenuItem = (cx, selectedSource, dispatch) => ({
   id: "node-menu-show-source",
   label: L10N.getStr("sourceTabs.revealInTree"),
   accesskey: L10N.getStr("sourceTabs.revealInTree.accesskey"),
   disabled: !selectedSource.url,
-  click: () => editorActions.showSource(cx, selectedSource.id),
+  click: () => dispatch(showSource(cx, selectedSource.id)),
 });
 
 const blackBoxMenuItem = (
   cx,
   selectedSource,
   blackboxedRanges,
-  editorActions,
-  isSourceOnIgnoreList
+  isSourceOnIgnoreList,
+  dispatch
 ) => {
   const isBlackBoxed = !!blackboxedRanges[selectedSource.url];
   return {
@@ -97,21 +184,21 @@ const blackBoxMenuItem = (
       ? L10N.getStr("ignoreContextItem.unignore.accesskey")
       : L10N.getStr("ignoreContextItem.ignore.accesskey"),
     disabled: isSourceOnIgnoreList || !shouldBlackbox(selectedSource),
-    click: () => editorActions.toggleBlackBox(cx, selectedSource),
+    click: () => dispatch(toggleBlackBox(cx, selectedSource)),
   };
 };
 
-export const blackBoxLineMenuItem = (
+const blackBoxLineMenuItem = (
   cx,
   selectedSource,
-  editorActions,
   editor,
   blackboxedRanges,
   isSourceOnIgnoreList,
   // the clickedLine is passed when the context menu
   // is opened from the gutter, it is not available when the
   // the context menu is opened from the editor.
-  clickedLine = null
+  clickedLine = null,
+  dispatch
 ) => {
   const { codeMirror } = editor;
   const from = codeMirror.getCursor("from");
@@ -164,11 +251,13 @@ export const blackBoxLineMenuItem = (
         },
       };
 
-      editorActions.toggleBlackBox(
-        cx,
-        selectedSource,
-        !selectedLineIsBlackBoxed,
-        selectedLineIsBlackBoxed ? [blackboxRange] : [selectionRange]
+      dispatch(
+        toggleBlackBox(
+          cx,
+          selectedSource,
+          !selectedLineIsBlackBoxed,
+          selectedLineIsBlackBoxed ? [blackboxRange] : [selectionRange]
+        )
       );
     },
   };
@@ -177,10 +266,11 @@ export const blackBoxLineMenuItem = (
 const blackBoxLinesMenuItem = (
   cx,
   selectedSource,
-  editorActions,
   editor,
   blackboxedRanges,
-  isSourceOnIgnoreList
+  isSourceOnIgnoreList,
+  clickedLine = null,
+  dispatch
 ) => {
   const { codeMirror } = editor;
   const from = codeMirror.getCursor("from");
@@ -217,65 +307,56 @@ const blackBoxLinesMenuItem = (
         },
       };
 
-      editorActions.toggleBlackBox(
-        cx,
-        selectedSource,
-        !selectedLinesAreBlackBoxed,
-        selectedLinesAreBlackBoxed ? [blackboxRange] : [selectionRange]
+      dispatch(
+        toggleBlackBox(
+          cx,
+          selectedSource,
+          !selectedLinesAreBlackBoxed,
+          selectedLinesAreBlackBoxed ? [blackboxRange] : [selectionRange]
+        )
       );
     },
   };
 };
 
-const watchExpressionItem = (
-  cx,
-  selectedSource,
-  selectionText,
-  editorActions
-) => ({
+const watchExpressionItem = (cx, selectedSource, selectionText, dispatch) => ({
   id: "node-menu-add-watch-expression",
   label: L10N.getStr("expressions.label"),
   accesskey: L10N.getStr("expressions.accesskey"),
-  click: () => editorActions.addExpression(cx, selectionText),
+  click: () => dispatch(addExpression(cx, selectionText)),
 });
 
-const evaluateInConsoleItem = (
-  selectedSource,
-  selectionText,
-  editorActions
-) => ({
+const evaluateInConsoleItem = (selectedSource, selectionText, dispatch) => ({
   id: "node-menu-evaluate-in-console",
   label: L10N.getStr("evaluateInConsole.label"),
-  click: () => editorActions.evaluateInConsole(selectionText),
+  click: () => dispatch(evaluateInConsole(selectionText)),
 });
 
-const downloadFileItem = (selectedSource, selectedContent, editorActions) => ({
+const downloadFileItem = (selectedSource, selectedContent) => ({
   id: "node-menu-download-file",
   label: L10N.getStr("downloadFile.label"),
   accesskey: L10N.getStr("downloadFile.accesskey"),
   click: () => downloadFile(selectedContent, getFilename(selectedSource)),
 });
 
-const inlinePreviewItem = editorActions => ({
+const inlinePreviewItem = dispatch => ({
   id: "node-menu-inline-preview",
   label: features.inlinePreview
     ? L10N.getStr("inlinePreview.hide.label")
     : L10N.getStr("inlinePreview.show.label"),
-  click: () => editorActions.toggleInlinePreview(!features.inlinePreview),
+  click: () => dispatch(toggleInlinePreview(!features.inlinePreview)),
 });
 
-const editorWrappingItem = (editorActions, editorWrappingEnabled) => ({
+const editorWrappingItem = (editorWrappingEnabled, dispatch) => ({
   id: "node-menu-editor-wrapping",
   label: editorWrappingEnabled
     ? L10N.getStr("editorWrapping.hide.label")
     : L10N.getStr("editorWrapping.show.label"),
-  click: () => editorActions.toggleEditorWrapping(!editorWrappingEnabled),
+  click: () => dispatch(toggleEditorWrapping(!editorWrappingEnabled)),
 });
 
-export function editorMenuItems({
+function editorMenuItems({
   cx,
-  editorActions,
-  selectedSource,
   blackboxedRanges,
   location,
   selectionText,
@@ -285,57 +366,50 @@ export function editorMenuItems({
   editorWrappingEnabled,
   editor,
   isSourceOnIgnoreList,
+  dispatch,
 }) {
   const items = [];
 
+  const { source } = location;
+
   const content =
-    selectedSource.content && isFulfilled(selectedSource.content)
-      ? selectedSource.content.value
-      : null;
+    source.content && isFulfilled(source.content) ? source.content.value : null;
 
   items.push(
-    jumpToMappedLocationItem(
-      cx,
-      selectedSource,
-      location,
-      hasMappedLocation,
-      editorActions
-    ),
-    continueToHereItem(cx, location, isPaused, editorActions),
+    jumpToMappedLocationItem(cx, location, hasMappedLocation, dispatch),
+    continueToHereItem(cx, location, isPaused, dispatch),
     { type: "separator" },
-    copyToClipboardItem(selectionText, editorActions),
-    ...(!selectedSource.isWasm
+    copyToClipboardItem(selectionText),
+    ...(!source.isWasm
       ? [
-          ...(content ? [copySourceItem(content, editorActions)] : []),
-          copySourceUri2Item(selectedSource, editorActions),
+          ...(content ? [copySourceItem(content)] : []),
+          copySourceUri2Item(source),
         ]
       : []),
-    ...(content
-      ? [downloadFileItem(selectedSource, content, editorActions)]
-      : []),
+    ...(content ? [downloadFileItem(source, content)] : []),
     { type: "separator" },
-    showSourceMenuItem(cx, selectedSource, editorActions),
+    showSourceMenuItem(cx, source, dispatch),
     { type: "separator" },
     blackBoxMenuItem(
       cx,
-      selectedSource,
+      source,
       blackboxedRanges,
-      editorActions,
-      isSourceOnIgnoreList
+      isSourceOnIgnoreList,
+      dispatch
     )
   );
 
   const startLine = toSourceLine(
-    selectedSource.id,
+    source.id,
     editor.codeMirror.getCursor("from").line
   );
   const endLine = toSourceLine(
-    selectedSource.id,
+    source.id,
     editor.codeMirror.getCursor("to").line
   );
 
   // Find any blackbox ranges that exist for the selected lines
-  const blackboxRange = findBlackBoxRange(selectedSource, blackboxedRanges, {
+  const blackboxRange = findBlackBoxRange(source, blackboxedRanges, {
     start: startLine,
     end: endLine,
   });
@@ -347,8 +421,7 @@ export function editorMenuItems({
   // When the range is defined and is an empty array,
   // the whole source is blackboxed
   const theWholeSourceIsBlackBoxed =
-    blackboxedRanges[selectedSource.url] &&
-    !blackboxedRanges[selectedSource.url].length;
+    blackboxedRanges[source.url] && !blackboxedRanges[source.url].length;
 
   if (!theWholeSourceIsBlackBoxed) {
     const blackBoxSourceLinesMenuItem = isMultiLineSelection
@@ -358,11 +431,12 @@ export function editorMenuItems({
     items.push(
       blackBoxSourceLinesMenuItem(
         cx,
-        selectedSource,
-        editorActions,
+        source,
         editor,
         blackboxedRanges,
-        isSourceOnIgnoreList
+        isSourceOnIgnoreList,
+        null,
+        dispatch
       )
     );
   }
@@ -370,34 +444,16 @@ export function editorMenuItems({
   if (isTextSelected) {
     items.push(
       { type: "separator" },
-      watchExpressionItem(cx, selectedSource, selectionText, editorActions),
-      evaluateInConsoleItem(selectedSource, selectionText, editorActions)
+      watchExpressionItem(cx, source, selectionText, dispatch),
+      evaluateInConsoleItem(source, selectionText, dispatch)
     );
   }
 
   items.push(
     { type: "separator" },
-    inlinePreviewItem(editorActions),
-    editorWrappingItem(editorActions, editorWrappingEnabled)
+    inlinePreviewItem(dispatch),
+    editorWrappingItem(editorWrappingEnabled, dispatch)
   );
 
   return items;
-}
-
-export function editorItemActions(dispatch) {
-  return bindActionCreators(
-    {
-      addExpression: actions.addExpression,
-      continueToHere: actions.continueToHere,
-      evaluateInConsole: actions.evaluateInConsole,
-      flashLineRange: actions.flashLineRange,
-      jumpToMappedLocation: actions.jumpToMappedLocation,
-      showSource: actions.showSource,
-      toggleBlackBox: actions.toggleBlackBox,
-      toggleBlackBoxLines: actions.toggleBlackBoxLines,
-      toggleInlinePreview: actions.toggleInlinePreview,
-      toggleEditorWrapping: actions.toggleEditorWrapping,
-    },
-    dispatch
-  );
 }
