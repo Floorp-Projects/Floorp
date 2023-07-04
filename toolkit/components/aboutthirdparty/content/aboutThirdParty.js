@@ -233,11 +233,11 @@ async function onBlock(event) {
     event.target.classList.toggle("module-blocked");
     let blockButtonL10nId;
     if (wasBlocked) {
-      blockButtonL10nId = "third-party-button-to-block";
+      blockButtonL10nId = "third-party-button-to-block-module";
     } else {
       blockButtonL10nId = AboutThirdParty.isDynamicBlocklistDisabled
-        ? "third-party-button-to-unblock-disabled"
-        : "third-party-button-to-unblock";
+        ? "third-party-button-to-unblock-module-disabled"
+        : "third-party-button-to-unblock-module";
     }
     document.l10n.setAttributes(event.target, blockButtonL10nId);
     updatedBlocklist = true;
@@ -402,8 +402,8 @@ function setUpBlockButton(aCard, isBlocklistDisabled, aModule) {
     document.l10n.setAttributes(
       blockButton,
       isBlocklistDisabled
-        ? "third-party-button-to-unblock-disabled"
-        : "third-party-button-to-unblock"
+        ? "third-party-button-to-unblock-module-disabled"
+        : "third-party-button-to-unblock-module"
     );
   }
 }

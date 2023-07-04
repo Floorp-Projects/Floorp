@@ -180,7 +180,7 @@ add_task(async () => {
     );
     Assert.equal(
       blockedBlockButton.getAttribute("data-l10n-id"),
-      "third-party-button-to-unblock",
+      "third-party-button-to-unblock-module",
       "Button to block the module has correct title"
     );
     blockedBlockButton.click();
@@ -191,7 +191,7 @@ add_task(async () => {
     );
     Assert.equal(
       blockedBlockButton.getAttribute("data-l10n-id"),
-      "third-party-button-to-block",
+      "third-party-button-to-block-module",
       "After clicking to unblock a module, button should have correct title."
     );
     // Restore this to blocked for later tests
@@ -203,7 +203,7 @@ add_task(async () => {
     );
     Assert.equal(
       blockedBlockButton.getAttribute("data-l10n-id"),
-      "third-party-button-to-unblock",
+      "third-party-button-to-unblock-module",
       "After clicking to block a module, button should have correct title."
     );
 
