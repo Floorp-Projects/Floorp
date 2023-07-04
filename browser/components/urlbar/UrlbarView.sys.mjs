@@ -1604,7 +1604,6 @@ export class UrlbarView {
       item.appendChild(item._content);
       item.removeAttribute("tip-type");
       item.removeAttribute("dynamicType");
-      item.removeAttribute("feedback-acknowledgment");
       item.removeAttribute("bestmatch");
       if (item.result.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) {
         this.#createRowContentForDynamicType(item, result);
@@ -1618,6 +1617,8 @@ export class UrlbarView {
       this.#addRowButtons(item, result);
     }
     item._content.id = item.id + "-inner";
+
+    item.removeAttribute("feedback-acknowledgment");
 
     if (
       result.type == lazy.UrlbarUtils.RESULT_TYPE.SEARCH &&

@@ -664,7 +664,9 @@ bool RemoteTextureMap::GetRemoteTextureForDisplayList(
           gfxCriticalNoteOnce << "unexpected remote texture size: "
                               << owner->mLatestTextureHost->GetSize()
                               << " expected: " << size;
-          MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+          if (!owner->mIsContextLost) {
+            MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+          }
         }
       } else {
         gfxCriticalNoteOnce << "remote texture does not exist";
