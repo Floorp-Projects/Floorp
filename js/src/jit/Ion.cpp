@@ -526,17 +526,6 @@ void JitZone::traceWeak(JSTracer* trc, Zone* zone) {
 
   baselineCacheIRStubCodes_.traceWeak(trc);
   inlinedCompilations_.traceWeak(trc);
-
-  // Trace all IC chains to remove ICs with edges to dying GC things.
-  for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
-    MOZ_ASSERT_IF(IsTracerKind(trc, JS::TracerKind::Sweeping),
-                  base->isMarkedAny());
-
-    jit::JitScript* jitScript = base->maybeJitScript();
-    if (jitScript) {
-      jitScript->traceWeak(trc);
-    }
-  }
 }
 
 size_t JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
