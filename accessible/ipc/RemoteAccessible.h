@@ -365,9 +365,10 @@ class RemoteAccessible : public Accessible, public HyperTextAccessibleBase {
 
   virtual void DOMNodeID(nsString& aID) const override;
 
-#if !defined(XP_WIN)
-  void ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY);
+  virtual void ScrollToPoint(uint32_t aScrollType, int32_t aX,
+                             int32_t aY) override;
 
+#if !defined(XP_WIN)
   void Announce(const nsString& aAnnouncement, uint16_t aPriority);
 
   void ScrollSubstringToPoint(int32_t aStartOffset, int32_t aEndOffset,

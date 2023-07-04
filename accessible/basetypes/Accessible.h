@@ -373,6 +373,12 @@ class Accessible {
   virtual void ScrollTo(uint32_t aHow) const = 0;
 
   /**
+   * Scroll the accessible to the given point.
+   */
+  virtual void ScrollToPoint(uint32_t aCoordinateType, int32_t aX,
+                             int32_t aY) = 0;
+
+  /**
    * Return tag name of associated DOM node.
    */
   virtual nsAtom* TagName() const = 0;

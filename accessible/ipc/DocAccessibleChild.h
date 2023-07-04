@@ -125,6 +125,11 @@ class DocAccessibleChild : public PDocAccessibleChild {
 
   virtual mozilla::ipc::IPCResult RecvRestoreFocus() override;
 
+  virtual mozilla::ipc::IPCResult RecvScrollToPoint(const uint64_t& aID,
+                                                    const uint32_t& aScrollType,
+                                                    const int32_t& aX,
+                                                    const int32_t& aY) override;
+
 #if defined(XP_WIN)
   bool SendCaretMoveEvent(const uint64_t& aID, const int32_t& aOffset,
                           const bool& aIsSelectionCollapsed,
@@ -136,11 +141,6 @@ class DocAccessibleChild : public PDocAccessibleChild {
   LayoutDeviceIntRect GetCaretRectFor(const uint64_t& aID);
 
 #else   // defined(XP_WIN)
-  virtual mozilla::ipc::IPCResult RecvScrollToPoint(const uint64_t& aID,
-                                                    const uint32_t& aScrollType,
-                                                    const int32_t& aX,
-                                                    const int32_t& aY) override;
-
   virtual mozilla::ipc::IPCResult RecvAnnounce(
       const uint64_t& aID, const nsAString& aAnnouncement,
       const uint16_t& aPriority) override;

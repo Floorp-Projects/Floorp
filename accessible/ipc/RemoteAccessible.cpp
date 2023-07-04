@@ -1284,12 +1284,12 @@ void RemoteAccessible::DOMNodeID(nsString& aID) const {
   }
 }
 
-#if !defined(XP_WIN)
 void RemoteAccessible::ScrollToPoint(uint32_t aScrollType, int32_t aX,
                                      int32_t aY) {
   Unused << mDoc->SendScrollToPoint(mID, aScrollType, aX, aY);
 }
 
+#if !defined(XP_WIN)
 void RemoteAccessible::Announce(const nsString& aAnnouncement,
                                 uint16_t aPriority) {
   Unused << mDoc->SendAnnounce(mID, aAnnouncement, aPriority);

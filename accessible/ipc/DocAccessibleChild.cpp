@@ -331,6 +331,17 @@ ipc::IPCResult DocAccessibleChild::RecvRestoreFocus() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollToPoint(
+    const uint64_t& aID, const uint32_t& aScrollType, const int32_t& aX,
+    const int32_t& aY) {
+  LocalAccessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->ScrollToPoint(aScrollType, aX, aY);
+  }
+
+  return IPC_OK();
+}
+
 #if defined(XP_WIN)
 LayoutDeviceIntRect DocAccessibleChild::GetCaretRectFor(const uint64_t& aID) {
   LocalAccessible* target;
@@ -367,17 +378,6 @@ bool DocAccessibleChild::SendCaretMoveEvent(const uint64_t& aID,
 }
 
 #else   // defined(XP_WIN)
-mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollToPoint(
-    const uint64_t& aID, const uint32_t& aScrollType, const int32_t& aX,
-    const int32_t& aY) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc) {
-    acc->ScrollToPoint(aScrollType, aX, aY);
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvAnnounce(
     const uint64_t& aID, const nsAString& aAnnouncement,
     const uint16_t& aPriority) {

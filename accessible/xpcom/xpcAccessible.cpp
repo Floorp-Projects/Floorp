@@ -655,15 +655,7 @@ NS_IMETHODIMP
 xpcAccessible::ScrollToPoint(uint32_t aCoordinateType, int32_t aX, int32_t aY) {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-#if defined(XP_WIN)
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    proxy->ScrollToPoint(aCoordinateType, aX, aY);
-#endif
-  } else {
-    Intl()->ScrollToPoint(aCoordinateType, aX, aY);
-  }
+  IntlGeneric()->ScrollToPoint(aCoordinateType, aX, aY);
 
   return NS_OK;
 }

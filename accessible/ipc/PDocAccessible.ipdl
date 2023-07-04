@@ -128,9 +128,9 @@ child:
 
   // LocalAccessible
   async ScrollTo(uint64_t aID, uint32_t aScrollType);
-#ifndef XP_WIN
   async ScrollToPoint(uint64_t aID, uint32_t aScrollType, int32_t aX,
                       int32_t aY);
+#ifndef XP_WIN
   async Announce(uint64_t aID, nsString aAnnouncement, uint16_t aPriority);
 #endif
 
