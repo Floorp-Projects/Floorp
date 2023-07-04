@@ -308,6 +308,9 @@ class TbplFormatter(BaseFormatter):
     def suite_end(self, data):
         start_time = self.suite_start_time
         # pylint --py3k W1619
+        # in wpt --repeat mode sometimes we miss suite_start()
+        if start_time is None:
+            start_time = data["time"]
         time = int((data["time"] - start_time) / 1000)
 
         return "SUITE-END | took %is\n" % time

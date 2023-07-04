@@ -195,6 +195,16 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                     "help": "Add test tag (which includes URL prefix) to exclude.",
                 },
             ],
+            [
+                ["--repeat"],
+                {
+                    "action": "store",
+                    "dest": "repeat",
+                    "default": 0,
+                    "type": int,
+                    "help": "Repeat tests (used for confirm-failures) X times.",
+                },
+            ],
         ]
         + copy.deepcopy(testing_config_options)
         + copy.deepcopy(code_coverage_config_options)
@@ -225,6 +235,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         self.test_packages_url = c.get("test_packages_url")
         self.installer_path = c.get("installer_path")
         self.binary_path = c.get("binary_path")
+        self.repeat = c.get("repeat")
         self.abs_app_dir = None
         self.xre_path = None
         if self.is_emulator:
@@ -359,6 +370,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         is_windows_7 = (
             mozinfo.info["os"] == "win" and mozinfo.info["os_version"] == "6.1"
         )
+
+        if self.repeat > 0:
+            # repeat should repeat the original test, so +1 for first run
+            cmd.append("--repeat=%s" % (self.repeat + 1))
 
         if (
             self.is_android
