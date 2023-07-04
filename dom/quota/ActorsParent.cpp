@@ -13,6 +13,7 @@
 #include "FirstInitializationAttemptsImpl.h"
 #include "GroupInfo.h"
 #include "GroupInfoPair.h"
+#include "NormalOriginOperationBase.h"
 #include "OriginOperationBase.h"
 #include "OriginScope.h"
 #include "OriginInfo.h"
@@ -800,65 +801,6 @@ class FinalizeOriginEvictionOp : public OriginOperationBase {
 
   virtual void UnblockOpen() override;
 };
-
-}  // namespace
-
-class NormalOriginOperationBase
-    : public OriginOperationBase,
-      public OpenDirectoryListener,
-      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
- protected:
-  OriginScope mOriginScope;
-  RefPtr<DirectoryLock> mDirectoryLock;
-  Nullable<PersistenceType> mPersistenceType;
-  Nullable<Client::Type> mClientType;
-  mozilla::Atomic<bool> mCanceled;
-  const bool mExclusive;
-
- public:
-  void RunImmediately() {
-    MOZ_ASSERT(GetState() == State_Initial);
-
-    MOZ_ALWAYS_SUCCEEDS(this->Run());
-  }
-
- protected:
-  NormalOriginOperationBase(const char* aRunnableName,
-                            const Nullable<PersistenceType>& aPersistenceType,
-                            const OriginScope& aOriginScope,
-                            const Nullable<Client::Type> aClientType,
-                            bool aExclusive)
-      : OriginOperationBase(GetCurrentSerialEventTarget(), aRunnableName),
-        mOriginScope(aOriginScope),
-        mPersistenceType(aPersistenceType),
-        mClientType(aClientType),
-        mExclusive(aExclusive) {
-    AssertIsOnOwningThread();
-  }
-
-  ~NormalOriginOperationBase() = default;
-
-  virtual RefPtr<DirectoryLock> CreateDirectoryLock();
-
- private:
-  // Need to declare refcounting unconditionally, because
-  // OpenDirectoryListener has pure-virtual refcounting.
-  NS_DECL_ISUPPORTS_INHERITED
-
-  virtual void Open() override;
-
-  virtual void UnblockOpen() override;
-
-  // OpenDirectoryListener overrides.
-  virtual void DirectoryLockAcquired(DirectoryLock* aLock) override;
-
-  virtual void DirectoryLockFailed() override;
-
-  // Used to send results before unblocking open.
-  virtual void SendResults() = 0;
-};
-
-namespace {
 
 class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
   const OriginMetadata mOriginMetadata;
@@ -7147,69 +7089,6 @@ void FinalizeOriginEvictionOp::UnblockOpen() {
   mLocks.Clear();
 
   AdvanceState();
-}
-
-NS_IMPL_ISUPPORTS_INHERITED0(NormalOriginOperationBase, Runnable)
-
-RefPtr<DirectoryLock> NormalOriginOperationBase::CreateDirectoryLock() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(GetState() == State_DirectoryOpenPending);
-  MOZ_ASSERT(QuotaManager::Get());
-
-  return QuotaManager::Get()->CreateDirectoryLockInternal(
-      mPersistenceType, mOriginScope, mClientType, mExclusive);
-}
-
-void NormalOriginOperationBase::Open() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(GetState() == State_Initial);
-  MOZ_ASSERT(QuotaManager::Get());
-
-  AdvanceState();
-
-  RefPtr<DirectoryLock> directoryLock = CreateDirectoryLock();
-  if (directoryLock) {
-    directoryLock->Acquire(this);
-  } else {
-    QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID,
-           [this](const nsresult rv) { Finish(rv); });
-  }
-}
-
-void NormalOriginOperationBase::UnblockOpen() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(QuotaManager::Get());
-  MOZ_ASSERT(GetState() == State_UnblockingOpen);
-
-  SendResults();
-
-  if (mDirectoryLock) {
-    mDirectoryLock = nullptr;
-  }
-
-  QuotaManager::Get()->UnregisterNormalOriginOp(*this);
-
-  AdvanceState();
-}
-
-void NormalOriginOperationBase::DirectoryLockAcquired(DirectoryLock* aLock) {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(aLock);
-  MOZ_ASSERT(GetState() == State_DirectoryOpenPending);
-  MOZ_ASSERT(!mDirectoryLock);
-
-  mDirectoryLock = aLock;
-
-  QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID,
-         [this](const nsresult rv) { Finish(rv); });
-}
-
-void NormalOriginOperationBase::DirectoryLockFailed() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(GetState() == State_DirectoryOpenPending);
-  MOZ_ASSERT(!mDirectoryLock);
-
-  Finish(NS_ERROR_FAILURE);
 }
 
 nsresult SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager& aQuotaManager) {

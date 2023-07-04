@@ -90,6 +90,7 @@ UNIFIED_SOURCES += [
     "GroupInfo.cpp",
     "GroupInfoPair.cpp",
     "InitializationTypes.cpp",
+    "NormalOriginOperationBase.cpp",
     "nsIndexedDBProtocolHandler.cpp",
     "NSSCipherStrategy.cpp",
     "OriginInfo.cpp",
