@@ -191,9 +191,6 @@ pref("app.support.baseURL", "https://support.mozilla.org/1/mobile/%VERSION%/%OS%
   pref("app.releaseNotesURL", "https://www.mozilla.com/%LOCALE%/mobile/%VERSION%/releasenotes/");
 #endif
 
-// Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
-pref("security.alternate_certificate_error_page", "certerror");
-
 // Enable pinning
 pref("security.cert_pinning.enforcement_level", 1);
 
