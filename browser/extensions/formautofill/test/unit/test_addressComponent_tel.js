@@ -53,7 +53,7 @@ const COMPARE_TESTS = [
   //["+64 3 331-6005", "3 331 6005#1234", A_CONTAINS_B],
 ];
 
-const TEST_FIELD_NAME = "Tel";
+const TEST_FIELD_NAME = "tel";
 
 add_setup(async () => {
   Services.prefs.setBoolPref("browser.search.region", "US");

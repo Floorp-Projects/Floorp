@@ -84,7 +84,7 @@ const COMPARE_TESTS = [
   ["John Middle Doe", "J. M. D.", DIFFERENT],
 ];
 
-const TEST_FIELD_NAME = "Name";
+const TEST_FIELD_NAME = "name";
 
 add_setup(async () => {});
 

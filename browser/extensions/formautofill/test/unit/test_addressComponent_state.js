@@ -17,7 +17,7 @@ const COMPARE_TESTS = [
   ["New York", "New Jersey", DIFFERENT],
 ];
 
-const TEST_FIELD_NAME = "State";
+const TEST_FIELD_NAME = "address-level1";
 
 add_task(async function test_isValid() {
   runIsValidTest(VALID_TESTS, TEST_FIELD_NAME, value => {

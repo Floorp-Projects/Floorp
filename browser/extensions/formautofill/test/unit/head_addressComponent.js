@@ -20,10 +20,9 @@ const SAME = AddressComparison.SAME;
 const DIFFERENT = AddressComparison.DIFFERENT;
 
 function runIsValidTest(tests, fieldName, funcSetupRecord) {
-  let region = FormAutofill.DEFAULT_REGION;
   for (const test of tests) {
     if (!Array.isArray(test)) {
-      region = test.region;
+      FormAutofill.DEFAULT_REGION = test.region;
       info(`Change region to ${JSON.stringify(test.region)}`);
       continue;
     }
@@ -31,7 +30,9 @@ function runIsValidTest(tests, fieldName, funcSetupRecord) {
     const [testValue, expected] = test;
     const record = funcSetupRecord(testValue);
 
-    const field = new AddressComponent(record, region).getField(fieldName);
+    const field = new AddressComponent(record, {
+      ignoreInvalid: false,
+    }).getField(fieldName);
     const result = field.isValid();
     Assert.equal(
       result,
@@ -39,23 +40,27 @@ function runIsValidTest(tests, fieldName, funcSetupRecord) {
       `Expect isValid returns ${expected} for ${testValue}`
     );
   }
+  FormAutofill.DEFAULT_REGION = null;
 }
 
 function runCompareTest(tests, fieldName, funcSetupRecord) {
-  let region = FormAutofill.DEFAULT_REGION;
   for (const test of tests) {
     if (!Array.isArray(test)) {
       info(`change region to ${JSON.stringify(test.region)}`);
-      region = test.region;
+      FormAutofill.DEFAULT_REGION = test.region;
       continue;
     }
 
     const [v1, v2, expected] = test;
     const r1 = funcSetupRecord(v1);
-    const f1 = new AddressComponent(r1, region).getField(fieldName);
+    const f1 = new AddressComponent(r1, { ignoreInvalid: false }).getField(
+      fieldName
+    );
 
     const r2 = funcSetupRecord(v2);
-    const f2 = new AddressComponent(r2, region).getField(fieldName);
+    const f2 = new AddressComponent(r2, { ignoreInvalid: false }).getField(
+      fieldName
+    );
 
     const result = AddressComparison.compare(f1, f2);
     const resultString = AddressComparison.resultToString(result);
@@ -66,4 +71,5 @@ function runCompareTest(tests, fieldName, funcSetupRecord) {
       `Expect ${expectedString} when comparing "${v1}" & "${v2}", got ${resultString}`
     );
   }
+  FormAutofill.DEFAULT_REGION = null;
 }
