@@ -64,8 +64,7 @@ struct IonOsrTempData;
 
 struct PopValues {
   uint8_t numValues;
-
-  explicit constexpr PopValues(uint8_t numValues) : numValues(numValues) {}
+  explicit constexpr PopValues(uint8_t numValues = 0) : numValues(numValues) {}
 };
 
 template <class>
@@ -342,14 +341,13 @@ struct VMFunctionDataHelper<R (*)(JSContext*, Args...)>
       : VMFunctionData(name, explicitArgs(), argumentProperties(),
                        argumentPassedInFloatRegs(), argumentRootTypes(),
                        outParam(), outParamRootType(), returnType(),
-                       /* extraValuesToPop = */ 0, NonTailCall) {}
+                       /* extraValuesToPop = */ 0) {}
   constexpr explicit VMFunctionDataHelper(const char* name,
-                                          MaybeTailCall expectTailCall,
                                           PopValues extraValuesToPop)
       : VMFunctionData(name, explicitArgs(), argumentProperties(),
                        argumentPassedInFloatRegs(), argumentRootTypes(),
                        outParam(), outParamRootType(), returnType(),
-                       extraValuesToPop.numValues, expectTailCall) {}
+                       extraValuesToPop.numValues) {}
 };
 
 // GCC warns when the signature does not have matching attributes (for example
@@ -361,15 +359,9 @@ struct VMFunctionDataHelper<R (*)(JSContext*, Args...)>
 
 // Generate VMFunctionData array.
 static constexpr VMFunctionData vmFunctions[] = {
-#define DEF_VMFUNCTION(name, fp) VMFunctionDataHelper<decltype(&(::fp))>(#name),
+#define DEF_VMFUNCTION(name, fp, valuesToPop...) \
+  VMFunctionDataHelper<decltype(&(::fp))>(#name, PopValues(valuesToPop)),
     VMFUNCTION_LIST(DEF_VMFUNCTION)
-#undef DEF_VMFUNCTION
-};
-static constexpr VMFunctionData tailCallVMFunctions[] = {
-#define DEF_VMFUNCTION(name, fp, valuesToPop)              \
-  VMFunctionDataHelper<decltype(&(::fp))>(#name, TailCall, \
-                                          PopValues(valuesToPop)),
-    TAIL_CALL_VMFUNCTION_LIST(DEF_VMFUNCTION)
 #undef DEF_VMFUNCTION
 };
 
@@ -383,34 +375,23 @@ static constexpr VMFunctionData tailCallVMFunctions[] = {
 // constexpr.
 #define DEF_VMFUNCTION(name, fp, ...) (void*)(::fp),
 static void* const vmFunctionTargets[] = {VMFUNCTION_LIST(DEF_VMFUNCTION)};
-static void* const tailCallVMFunctionTargets[] = {
-    TAIL_CALL_VMFUNCTION_LIST(DEF_VMFUNCTION)};
 #undef DEF_VMFUNCTION
 
 const VMFunctionData& GetVMFunction(VMFunctionId id) {
   return vmFunctions[size_t(id)];
-}
-const VMFunctionData& GetVMFunction(TailCallVMFunctionId id) {
-  return tailCallVMFunctions[size_t(id)];
 }
 
 static DynFn GetVMFunctionTarget(VMFunctionId id) {
   return DynFn{vmFunctionTargets[size_t(id)]};
 }
 
-static DynFn GetVMFunctionTarget(TailCallVMFunctionId id) {
-  return DynFn{tailCallVMFunctionTargets[size_t(id)]};
-}
-
-template <typename IdT>
 bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
-                                    VMWrapperOffsets& offsets,
                                     PerfSpewerRangeRecorder& rangeRecorder) {
   // Generate all VM function wrappers.
 
-  static constexpr size_t NumVMFunctions = size_t(IdT::Count);
+  static constexpr size_t NumVMFunctions = size_t(VMFunctionId::Count);
 
-  if (!offsets.reserve(NumVMFunctions)) {
+  if (!functionWrapperOffsets_.reserve(NumVMFunctions)) {
     return false;
   }
 
@@ -419,7 +400,7 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
 #endif
 
   for (size_t i = 0; i < NumVMFunctions; i++) {
-    IdT id = IdT(i);
+    VMFunctionId id = VMFunctionId(i);
     const VMFunctionData& fun = GetVMFunction(id);
 
 #ifdef DEBUG
@@ -441,27 +422,12 @@ bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
     rangeRecorder.recordVMWrapperOffset(fun.name());
 #endif
 
-    MOZ_ASSERT(offsets.length() == size_t(id));
-    offsets.infallibleAppend(offset);
+    MOZ_ASSERT(functionWrapperOffsets_.length() == size_t(id));
+    functionWrapperOffsets_.infallibleAppend(offset);
   }
 
   return true;
 };
-
-bool JitRuntime::generateVMWrappers(JSContext* cx, MacroAssembler& masm,
-                                    PerfSpewerRangeRecorder& rangeRecorder) {
-  if (!generateVMWrappers<VMFunctionId>(cx, masm, functionWrapperOffsets_,
-                                        rangeRecorder)) {
-    return false;
-  }
-
-  if (!generateVMWrappers<TailCallVMFunctionId>(
-          cx, masm, tailCallFunctionWrapperOffsets_, rangeRecorder)) {
-    return false;
-  }
-
-  return true;
-}
 
 bool InvokeFunction(JSContext* cx, HandleObject obj, bool constructing,
                     bool ignoresReturnValue, uint32_t argc, Value* argv,

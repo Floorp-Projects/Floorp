@@ -33,7 +33,6 @@ class BaselineFrame;
 class CacheIRStubInfo;
 class ICScript;
 
-enum class TailCallVMFunctionId;
 enum class VMFunctionId;
 
 // [SMDOC] JIT Inline Caches (ICs)

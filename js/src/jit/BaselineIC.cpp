@@ -86,8 +86,7 @@ class MOZ_RAII FallbackICCodeCompiler final {
   void pushStubPayload(MacroAssembler& masm, Register scratch);
 
   // Emits a tail call to a VMFunction wrapper.
-  [[nodiscard]] bool tailCallVMInternal(MacroAssembler& masm,
-                                        TailCallVMFunctionId id);
+  [[nodiscard]] bool tailCallVMInternal(MacroAssembler& masm, VMFunctionId id);
 
   template <typename Fn, Fn fn>
   [[nodiscard]] bool tailCallVM(MacroAssembler& masm);
@@ -509,10 +508,9 @@ static void InitMacroAssemblerForICStub(StackMacroAssembler& masm) {
 }
 
 bool FallbackICCodeCompiler::tailCallVMInternal(MacroAssembler& masm,
-                                                TailCallVMFunctionId id) {
+                                                VMFunctionId id) {
   TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
   const VMFunctionData& fun = GetVMFunction(id);
-  MOZ_ASSERT(fun.expectTailCall == TailCall);
   uint32_t argSize = fun.explicitStackSlots() * sizeof(void*);
   EmitBaselineTailCallVM(code, masm, argSize);
   return true;
@@ -523,7 +521,6 @@ bool FallbackICCodeCompiler::callVMInternal(MacroAssembler& masm,
   MOZ_ASSERT(inStubFrame_);
 
   TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
-  MOZ_ASSERT(GetVMFunction(id).expectTailCall == NonTailCall);
 
   EmitBaselineCallVM(code, masm);
   return true;
@@ -537,7 +534,7 @@ bool FallbackICCodeCompiler::callVM(MacroAssembler& masm) {
 
 template <typename Fn, Fn fn>
 bool FallbackICCodeCompiler::tailCallVM(MacroAssembler& masm) {
-  TailCallVMFunctionId id = TailCallVMFunctionToId<Fn, fn>::id;
+  VMFunctionId id = VMFunctionToId<Fn, fn>::id;
   return tailCallVMInternal(masm, id);
 }
 
