@@ -440,6 +440,10 @@ class InputResultDetailTest : BaseSessionTest() {
             """.trimIndent(),
         )
 
+        // Explicitly call `waitForRoundTrip()` to make sure the above event listners
+        // have set up in the content.
+        mainSession.waitForRoundTrip()
+
         mainSession.flushApzRepaints()
 
         val downTime = SystemClock.uptimeMillis()
