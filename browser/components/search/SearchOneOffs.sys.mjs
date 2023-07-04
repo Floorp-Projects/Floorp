@@ -398,6 +398,7 @@ export class SearchOneOffs {
       console.error("Search-one-offs::_rebuild() error:", ex);
     } finally {
       this._rebuilding = false;
+      this.dispatchEvent(new Event("rebuild"));
     }
   }
 
@@ -470,8 +471,6 @@ export class SearchOneOffs {
 
     let engines = (await this.getEngineInfo()).engines;
     this._rebuildEngineList(engines, addEngines);
-
-    this.dispatchEvent(new Event("rebuild"));
   }
 
   /**

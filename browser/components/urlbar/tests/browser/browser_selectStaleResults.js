@@ -16,10 +16,8 @@ add_setup(async function () {
     set: [["browser.urlbar.suggest.quickactions", false]],
   });
 
-  // Increase the timeout of the remove-stale-rows timer so that it doesn't
-  // interfere with the tests.
+  // We'll later replace this, so ensure it's restored.
   let originalRemoveStaleRowsTimeout = UrlbarView.removeStaleRowsTimeout;
-  UrlbarView.removeStaleRowsTimeout = 1000;
   registerCleanupFunction(() => {
     UrlbarView.removeStaleRowsTimeout = originalRemoveStaleRowsTimeout;
   });
@@ -28,6 +26,22 @@ add_setup(async function () {
 // This tests the case where queryContext.results.length < the number of rows in
 // the view, i.e., the view contains stale rows.
 add_task(async function viewContainsStaleRows() {
+  // Set the remove-stale-rows timer to a very large value, so there's no
+  // possibility it interferes with this test.
+  UrlbarView.removeStaleRowsTimeout = 10000;
+
+  // For the test stability we need a slow provider that ensures the search
+  // doesn't complete too fast.
+  let slowProvider = new UrlbarTestUtils.TestProvider({
+    results: [],
+    name: "emptySlowProvider",
+    addTimeout: 1000,
+  });
+  UrlbarProvidersManager.registerProvider(slowProvider);
+  registerCleanupFunction(() => {
+    UrlbarProvidersManager.unregisterProvider(slowProvider);
+  });
+
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
 
@@ -63,29 +77,22 @@ add_task(async function viewContainsStaleRows() {
   });
 
   // Below we'll do a search for "xx".  Get the row that will show the last
-  // result in that search.
-  let row = UrlbarTestUtils.getRowAt(window, halfResults);
+  // result in that search, and await for it to be updated.
+  Assert.ok(
+    !UrlbarTestUtils.getRowAt(window, halfResults).hasAttribute("stale"),
+    "Should not be stale"
+  );
 
-  // Add a mutation listener on that row.  Wait for its "stale" attribute to be
-  // removed.
-  let mutationPromise = new Promise(resolve => {
-    let observer = new MutationObserver(mutations => {
-      for (let mut of mutations) {
-        if (mut.attributeName == "stale" && !row.hasAttribute("stale")) {
-          observer.disconnect();
-          resolve();
-          break;
-        }
-      }
-    });
-    observer.observe(row, { attributes: true });
-  });
+  let lastMatchingResultUpdatedPromise = TestUtils.waitForCondition(() => {
+    let row = UrlbarTestUtils.getRowAt(window, halfResults);
+    console.log(row.result.title);
+    return row.result.title.startsWith("xx");
+  }, "Wait for the result to be updated");
 
   // Type another "x" so that we search for "xx", but don't wait for the search
-  // to finish.  Instead, wait for the row's stale attribute to be removed.
+  // to finish.  Instead, wait for the row to be updated.
   EventUtils.synthesizeKey("x");
-  info("Waiting for 'stale' attribute to be removed... ");
-  await mutationPromise;
+  await lastMatchingResultUpdatedPromise;
 
   // Now arrow down.  The search, which is still ongoing, will now stop and the
   // view won't be updated anymore.
@@ -94,6 +101,16 @@ add_task(async function viewContainsStaleRows() {
   // Wait for the search to stop.
   info("Waiting for the search to stop... ");
   await gURLBar.lastQueryContextPromise;
+
+  // Check stale status of results.
+  Assert.ok(
+    !UrlbarTestUtils.getRowAt(window, halfResults).hasAttribute("stale"),
+    "Should not be stale"
+  );
+  Assert.ok(
+    UrlbarTestUtils.getRowAt(window, halfResults + 1).hasAttribute("stale"),
+    "Should be stale"
+  );
 
   // The query context for the last search ("xx") should contain only
   // halfResults + 1 results (+ 1 for the heuristic).
@@ -131,6 +148,7 @@ add_task(async function viewContainsStaleRows() {
   await UrlbarTestUtils.promisePopupClose(window, () =>
     EventUtils.synthesizeKey("KEY_Escape")
   );
+  UrlbarProvidersManager.unregisterProvider(slowProvider);
 });
 
 // This tests the case where, before the search finishes, stale results have
@@ -154,8 +172,8 @@ add_task(async function staleReplacedWithFresh() {
   //
   // NB: If this test ends up failing, it may be because the remove-stale-rows
   // timer fires before the history results are added.  i.e., steps 2 and 3
-  // above happen out of order.  If that happens, try increasing
-  // UrlbarView.removeStaleRowsTimeout above.
+  // above happen out of order.  If that happens, try increasing it.
+  UrlbarView.removeStaleRowsTimeout = 1000;
 
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
