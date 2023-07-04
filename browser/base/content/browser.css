@@ -545,10 +545,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   flex: 1 auto;
 }
 
-#zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button > .toolbarbutton-text {
-  display: flex;
-}
-
 #reload-button:not([displaystop]) + #stop-button,
 #reload-button[displaystop] {
   display: none;
