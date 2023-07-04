@@ -28,7 +28,7 @@
   <hbox id="homepageAndNewWindowsOption" align="center" data-subcategory="homeOverride">
     <label control="homeMode" data-l10n-id="home-homepage-mode-label" flex="1" />
 
-    <vbox class="homepageMenuItemContainer" flex="1">
+    <vbox flex="1">
       <menulist id="homeMode"
                 class="check-home-page-controlled"
                 data-preference-related="browser.startup.homepage">
@@ -76,10 +76,10 @@
       </vbox>
     </vbox>
   </hbox>
-  <vbox data-subcategory="newtabOverride">
-    <hbox id="newTabsOption" align="center">
-      <label control="newTabMode" data-l10n-id="home-newtabs-mode-label" flex="1" />
+  <hbox id="newTabsOption" data-subcategory="newtabOverride" align="center">
+    <label control="newTabMode" data-l10n-id="home-newtabs-mode-label" flex="1" />
 
+    <vbox flex="1">
       <!-- This can be set to an extension value which is managed outside of
         Preferences so we need to handle setting the pref manually.-->
       <menulist id="newTabMode" flex="1" data-preference-related="browser.newtabpage.enabled">
@@ -88,7 +88,7 @@
           <menuitem value="1" data-l10n-id="home-mode-choice-blank" />
         </menupopup>
       </menulist>
-    </hbox>
-  </vbox>
+    </vbox>
+  </hbox>
 </groupbox>
 </html:template>
