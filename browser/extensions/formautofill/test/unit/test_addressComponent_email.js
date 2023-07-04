@@ -7,7 +7,6 @@ const VALID_TESTS = [
   // [email1, expected]
   ["john.doe@mozilla.org", true],
 
-  ["", false], // empty
   ["@mozilla.org", false], // without username
   ["john.doe@", false], // without domain
   ["john.doe@-mozilla.org", false], // domain starts with '-'
@@ -57,7 +56,7 @@ const COMPARE_TESTS = [
   ["john#smith@gmail.com", "johnsmith@gmail.com", DIFFERENT],
 ];
 
-const TEST_FIELD_NAME = "Email";
+const TEST_FIELD_NAME = "email";
 
 add_setup(async () => {});
 

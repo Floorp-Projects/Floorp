@@ -55,7 +55,7 @@ add_task(async function test_save_doorhanger_shown_different_address() {
       await focusUpdateSubmitForm(browser, {
         focusSelector: "#given-name",
         newValues: {
-          "#given-name": TEST_ADDRESS_2["give-name"],
+          "#given-name": TEST_ADDRESS_2["given-name"],
           "#street-address": TEST_ADDRESS_2["street-address"],
           "#country": TEST_ADDRESS_2.country,
         },

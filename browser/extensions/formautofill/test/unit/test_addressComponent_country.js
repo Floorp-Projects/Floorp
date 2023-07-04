@@ -32,7 +32,7 @@ const COMPARE_TESTS = [
   ["AAA", "BBB", SAME],
 ];
 
-const TEST_FIELD_NAME = "Country";
+const TEST_FIELD_NAME = "country";
 
 add_task(async function test_isValid() {
   runIsValidTest(VALID_TESTS, TEST_FIELD_NAME, value => {

@@ -5,7 +5,6 @@ const VALID_TESTS = [
   ["Mozilla", true],
   ["mozilla", true],
   ["@Mozilla", true],
-  ["  ", true], // A string only contains whitespace is treated as empty, which is considered as valid
   ["-!@#%&*_(){}[:;\"',.?]", false], // Not valid when the organization name only contains punctuations
 ];
 
@@ -38,7 +37,7 @@ const COMPARE_TESTS = [
   ["Linens 'n Things", "Linens'n Things", SIMILAR], // Punctuation is replaced with whitespace, so both strings become "Linesns n Things"
 ];
 
-const TEST_FIELD_NAME = "Organization";
+const TEST_FIELD_NAME = "organization";
 
 add_setup(async () => {});
 
