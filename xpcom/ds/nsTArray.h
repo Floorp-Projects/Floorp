@@ -2397,6 +2397,12 @@ class nsTArray_Impl
                      });
   }
 
+  // A variation on the StableSort method defined above that assumes that
+  // 'operator<' is defined for value_type.
+  void StableSort() {
+    StableSort(nsDefaultComparator<value_type, value_type>());
+  }
+
   // This method reverses the array in place.
   void Reverse() {
     value_type* elements = Elements();
