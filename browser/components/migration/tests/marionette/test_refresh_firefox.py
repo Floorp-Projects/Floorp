@@ -480,6 +480,17 @@ class TestFirefoxRefresh(MarionetteTestCase):
         expected_value = "test@test.com" if expect_sync_user else None
         self.assertEqual(pref_value, expected_value)
 
+    def checkStartupMigrationStateCleared(self):
+        result = self.runCode(
+            """
+          let { MigrationUtils } = ChromeUtils.importESModule(
+            "resource:///modules/MigrationUtils.sys.mjs"
+          );
+          return MigrationUtils.isStartupMigration;
+        """
+        )
+        self.assertFalse(result)
+
     def checkProfile(self, has_migrated=False, expect_sync_user=True):
         self.checkPassword()
         self.checkBookmarkInMenu()
@@ -492,6 +503,7 @@ class TestFirefoxRefresh(MarionetteTestCase):
         if has_migrated:
             self.checkBookmarkToolbarVisibility()
             self.checkSession()
+            self.checkStartupMigrationStateCleared()
 
     def createProfileData(self):
         self.savePassword()
