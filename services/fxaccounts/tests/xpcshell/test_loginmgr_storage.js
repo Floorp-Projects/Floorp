@@ -81,9 +81,8 @@ add_task(async function test_simple() {
     uid: "abcd",
     email: "test@example.com",
     sessionToken: "sessionToken",
-    scopedKeys: {
-      ...MOCK_ACCOUNT_KEYS.scopedKeys,
-    },
+    kSync: "the kSync value",
+    kXCS: "the kXCS value",
     verified: true,
   };
   await fxa._internal.setSignedInUser(creds);
@@ -109,10 +108,8 @@ add_task(async function test_simple() {
     "correct verified flag"
   );
 
-  Assert.ok(
-    !("scopedKeys" in data.accountData),
-    "scopedKeys not stored in clear text"
-  );
+  Assert.ok(!("kSync" in data.accountData), "kSync not stored in clear text");
+  Assert.ok(!("kXCS" in data.accountData), "kXCS not stored in clear text");
 
   let login = getLoginMgrData();
   Assert.strictEqual(login.username, creds.uid, "uid used for username");
@@ -122,11 +119,17 @@ add_task(async function test_simple() {
     data.version,
     "same version flag in both places"
   );
-  Assert.deepEqual(
-    loginData.accountData.scopedKeys,
-    creds.scopedKeys,
-    "correct scoped keys in the login mgr"
+  Assert.strictEqual(
+    loginData.accountData.kSync,
+    creds.kSync,
+    "correct kSync in the login mgr"
   );
+  Assert.strictEqual(
+    loginData.accountData.kXCS,
+    creds.kXCS,
+    "correct kXCS in the login mgr"
+  );
+
   Assert.ok(!("email" in loginData), "email not stored in the login mgr json");
   Assert.ok(
     !("sessionToken" in loginData),
@@ -152,9 +155,8 @@ add_task(async function test_MPLocked() {
     uid: "abcd",
     email: "test@example.com",
     sessionToken: "sessionToken",
-    scopedKeys: {
-      ...MOCK_ACCOUNT_KEYS.scopedKeys,
-    },
+    kSync: "the kSync value",
+    kXCS: "the kXCS value",
     verified: true,
   };
 
@@ -184,10 +186,8 @@ add_task(async function test_MPLocked() {
     "correct verified flag"
   );
 
-  Assert.ok(
-    !("scopedKeys" in data.accountData),
-    "scopedKeys not stored in clear text"
-  );
+  Assert.ok(!("kSync" in data.accountData), "kSync not stored in clear text");
+  Assert.ok(!("kXCS" in data.accountData), "kXCS not stored in clear text");
 
   Assert.strictEqual(getLoginMgrData(), null, "login mgr data doesn't exist");
   await fxa.signOut(/* localOnly = */ true);
@@ -202,13 +202,8 @@ add_task(async function test_consistentWithMPEdgeCases() {
     uid: "uid1",
     email: "test@example.com",
     sessionToken: "sessionToken",
-    scopedKeys: {
-      [SCOPE_OLD_SYNC]: {
-        kid: "key id 1",
-        k: "key material 1",
-        kty: "oct",
-      },
-    },
+    kSync: "the kSync value",
+    kXCS: "the kXCS value",
     verified: true,
   };
 
@@ -216,11 +211,8 @@ add_task(async function test_consistentWithMPEdgeCases() {
     uid: "uid2",
     email: "test2@example.com",
     sessionToken: "sessionToken2",
-    [SCOPE_OLD_SYNC]: {
-      kid: "key id 2",
-      k: "key material 2",
-      kty: "oct",
-    },
+    kSync: "the kSync value2",
+    kXCS: "the kXCS value2",
     verified: false,
   };
 
@@ -237,10 +229,10 @@ add_task(async function test_consistentWithMPEdgeCases() {
   // We should still have creds1 data in the login manager.
   let login = getLoginMgrData();
   Assert.strictEqual(login.username, creds1.uid);
-  // and that we do have the first scopedKeys in the login manager.
-  Assert.deepEqual(
-    JSON.parse(login.password).accountData.scopedKeys,
-    creds1.scopedKeys,
+  // and that we do have the first kSync in the login manager.
+  Assert.strictEqual(
+    JSON.parse(login.password).accountData.kSync,
+    creds1.kSync,
     "stale data still in login mgr"
   );
 
@@ -251,12 +243,8 @@ add_task(async function test_consistentWithMPEdgeCases() {
 
   let accountData = await fxa.getSignedInUser();
   Assert.strictEqual(accountData.email, creds2.email);
-  // we should have no scopedKeys at all.
-  Assert.strictEqual(
-    accountData.scopedKeys,
-    undefined,
-    "stale scopedKey wasn't used"
-  );
+  // we should have no kSync at all.
+  Assert.strictEqual(accountData.kSync, undefined, "stale kSync wasn't used");
   await fxa.signOut(/* localOnly = */ true);
 });
 
@@ -267,11 +255,7 @@ add_task(async function test_uidMigration() {
   Assert.strictEqual(getLoginMgrData(), null, "expect no logins at the start");
 
   // create the login entry using email as a key.
-  let contents = {
-    scopedKeys: {
-      ...MOCK_ACCOUNT_KEYS.scopedKeys,
-    },
-  };
+  let contents = { kSync: "kSync" };
 
   let loginInfo = new Components.Constructor(
     "@mozilla.org/login-manager/loginInfo;1",
