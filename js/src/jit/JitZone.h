@@ -111,7 +111,7 @@ class JitZone {
  public:
   ~JitZone() { MOZ_ASSERT(!keepJitScripts_); }
 
-  void traceWeak(JSTracer* trc);
+  void traceWeak(JSTracer* trc, Zone* zone);
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               JS::CodeSizes* code, size_t* jitZone,

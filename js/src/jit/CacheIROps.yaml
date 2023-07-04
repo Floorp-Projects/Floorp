@@ -237,7 +237,7 @@
   cost_estimate: 1
   args:
     obj: ObjId
-    shape: ShapeField
+    shape: WeakShapeField
 
 - name: GuardMultipleShapes
   shared: true
