@@ -170,3 +170,23 @@ extensions.apis.dnr:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_APIS_DNR_EVALUATE_RULES_COUNT_MAX
+
+extensions.quarantined_domains:
+
+  listsize:
+    type: quantity
+    unit: domains
+    description: >
+      Number of domains listed in the quarantined domains list pref for the client during
+      this session.
+    lifetime: application
+    expires: 123
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/1840615/
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840615
+    data_sensitivity:
+      - technical
+    telemetry_mirror: EXTENSIONS_QUARANTINEDDOMAINS_LISTSIZE

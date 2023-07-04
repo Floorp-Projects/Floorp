@@ -700,12 +700,26 @@ export var QuarantinedDomains = {
   // Implementation internals.
 
   PREF_ADDONS_BRANCH_NAME: `extensions.quarantineIgnoredByUser.`,
+  PREF_DOMAINSLIST_NAME: `extensions.quarantinedDomains.list`,
   _init() {
     const onUserAllowedPrefChanged = this._onUserAllowedPrefChanged.bind(this);
     Services.prefs.addObserver(
       this.PREF_ADDONS_BRANCH_NAME,
       onUserAllowedPrefChanged
     );
+
+    const onUpdatedDomainsListTelemetry =
+      this._onUpdatedDomainsListTelemetry.bind(this);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "currentDomainsList",
+      this.PREF_DOMAINSLIST_NAME,
+      "",
+      onUpdatedDomainsListTelemetry,
+      value => this._transformDomainsListPrefValue(value || "")
+    );
+    // Collect it at least once per session (and update it when the pref value changes).
+    onUpdatedDomainsListTelemetry();
   },
   async _onUserAllowedPrefChanged(_subject, _topic, prefName) {
     let addonId = prefName.slice(this.PREF_ADDONS_BRANCH_NAME.length);
@@ -719,6 +733,25 @@ export var QuarantinedDomains = {
     lazy.AddonManagerPrivate.callAddonListeners("onPropertyChanged", addon, [
       "quarantineIgnoredByUser",
     ]);
+  },
+  _onUpdatedDomainsListTelemetry(_subject, _topic, _prefName) {
+    Glean.extensionsQuarantinedDomains.listsize.set(
+      this.currentDomainsList.set.size
+    );
+  },
+  _transformDomainsListPrefValue(value) {
+    try {
+      return {
+        set: new Set(
+          value
+            .split(",")
+            .map(v => v.trim())
+            .filter(v => v.length)
+        ),
+      };
+    } catch (err) {
+      return { hash: "unexpected-error", set: new Set() };
+    }
   },
 };
 QuarantinedDomains._init();

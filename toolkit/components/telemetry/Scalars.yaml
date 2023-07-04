@@ -1661,6 +1661,23 @@ extensions.apis.dnr:
     record_in_processes:
       - main
 
+extensions.quarantinedDomains:
+
+  listsize:
+    bug_numbers:
+      - 1840615
+    description: >
+      Number of domains listed in the quarantined domains list pref for the client during
+      this session.
+    kind: uint
+    expires: "123"
+    notification_emails:
+      - addons-dev-internal@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 extensions.startupCache:
   write_byteLength:
     bug_numbers:
