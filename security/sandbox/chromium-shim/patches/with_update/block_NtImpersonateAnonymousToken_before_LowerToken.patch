@@ -1,0 +1,189 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1687248452 -3600
+#      Tue Jun 20 09:07:32 2023 +0100
+# Node ID a07e3be35d9e5558fb95a18e3b858d5f4654dce9
+# Parent  5f4aecabd0376981a5f837f5de593c106c194712
+Bug 1839463: Block NtImpersonateAnonymousToken before RevertToSelf.
+
+Note this patch is slightly different from what landed for Bug 1839463, because
+that also included the reversion of a different patch.
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/interceptors.h b/security/sandbox/chromium/sandbox/win/src/interceptors.h
+--- a/security/sandbox/chromium/sandbox/win/src/interceptors.h
++++ b/security/sandbox/chromium/sandbox/win/src/interceptors.h
+@@ -11,16 +11,17 @@
+ 
+ namespace sandbox {
+ 
+ enum InterceptorId {
+   // Internal use:
+   MAP_VIEW_OF_SECTION_ID = 0,
+   UNMAP_VIEW_OF_SECTION_ID,
+   // Policy broker:
++  IMPERSONATE_ANONYMOUS_TOKEN_ID,
+   SET_INFORMATION_THREAD_ID,
+   OPEN_THREAD_TOKEN_ID,
+   OPEN_THREAD_TOKEN_EX_ID,
+   OPEN_THREAD_ID,
+   OPEN_PROCESS_ID,
+   OPEN_PROCESS_TOKEN_ID,
+   OPEN_PROCESS_TOKEN_EX_ID,
+   // Filesystem dispatcher:
+diff --git a/security/sandbox/chromium/sandbox/win/src/interceptors_64.cc b/security/sandbox/chromium/sandbox/win/src/interceptors_64.cc
+--- a/security/sandbox/chromium/sandbox/win/src/interceptors_64.cc
++++ b/security/sandbox/chromium/sandbox/win/src/interceptors_64.cc
+@@ -46,16 +46,24 @@ NTSTATUS WINAPI TargetNtUnmapViewOfSecti
+       reinterpret_cast<NtUnmapViewOfSectionFunction>(
+           g_originals[UNMAP_VIEW_OF_SECTION_ID]);
+   return TargetNtUnmapViewOfSection(orig_fn, process, base);
+ }
+ 
+ // -----------------------------------------------------------------------
+ 
+ NTSTATUS WINAPI
++TargetNtImpersonateAnonymousToken64(HANDLE thread) {
++  NtImpersonateAnonymousTokenFunction orig_fn =
++      reinterpret_cast<NtImpersonateAnonymousTokenFunction>(
++          g_originals[IMPERSONATE_ANONYMOUS_TOKEN_ID]);
++  return TargetNtImpersonateAnonymousToken(orig_fn, thread);
++}
++
++NTSTATUS WINAPI
+ TargetNtSetInformationThread64(HANDLE thread,
+                                NT_THREAD_INFORMATION_CLASS thread_info_class,
+                                PVOID thread_information,
+                                ULONG thread_information_bytes) {
+   NtSetInformationThreadFunction orig_fn =
+       reinterpret_cast<NtSetInformationThreadFunction>(
+           g_originals[SET_INFORMATION_THREAD_ID]);
+   return TargetNtSetInformationThread(orig_fn, thread, thread_info_class,
+diff --git a/security/sandbox/chromium/sandbox/win/src/interceptors_64.h b/security/sandbox/chromium/sandbox/win/src/interceptors_64.h
+--- a/security/sandbox/chromium/sandbox/win/src/interceptors_64.h
++++ b/security/sandbox/chromium/sandbox/win/src/interceptors_64.h
+@@ -31,16 +31,20 @@ TargetNtMapViewOfSection64(HANDLE sectio
+ // It should never be called directly. This function provides the means to
+ // detect dlls being unloaded, so we can clean up our interceptions.
+ SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtUnmapViewOfSection64(HANDLE process,
+                                                                PVOID base);
+ 
+ // -----------------------------------------------------------------------
+ // Interceptors without IPC.
+ 
++// Interception of NtImpersonateAnonymousToken on the child process.
++SANDBOX_INTERCEPT NTSTATUS WINAPI
++TargetNtImpersonateAnonymousToken64(HANDLE thread);
++
+ // Interception of NtSetInformationThread on the child process.
+ SANDBOX_INTERCEPT NTSTATUS WINAPI
+ TargetNtSetInformationThread64(HANDLE thread,
+                                NT_THREAD_INFORMATION_CLASS thread_info_class,
+                                PVOID thread_information,
+                                ULONG thread_information_bytes);
+ 
+ // Interception of NtOpenThreadToken on the child process.
+diff --git a/security/sandbox/chromium/sandbox/win/src/nt_internals.h b/security/sandbox/chromium/sandbox/win/src/nt_internals.h
+--- a/security/sandbox/chromium/sandbox/win/src/nt_internals.h
++++ b/security/sandbox/chromium/sandbox/win/src/nt_internals.h
+@@ -299,16 +299,19 @@ typedef enum _NT_THREAD_INFORMATION_CLAS
+   ThreadIdealProcessor,
+   ThreadPriorityBoost,
+   ThreadSetTlsArrayAddress,
+   ThreadIsIoPending,
+   ThreadHideFromDebugger
+ } NT_THREAD_INFORMATION_CLASS,
+     *PNT_THREAD_INFORMATION_CLASS;
+ 
++typedef NTSTATUS(WINAPI* NtImpersonateAnonymousTokenFunction)(
++    IN HANDLE ThreadHandle);
++
+ typedef NTSTATUS(WINAPI* NtSetInformationThreadFunction)(
+     IN HANDLE ThreadHandle,
+     IN NT_THREAD_INFORMATION_CLASS ThreadInformationClass,
+     IN PVOID ThreadInformation,
+     IN ULONG ThreadInformationLength);
+ 
+ // Partial definition only:
+ typedef enum _PROCESSINFOCLASS {
+diff --git a/security/sandbox/chromium/sandbox/win/src/policy_broker.cc b/security/sandbox/chromium/sandbox/win/src/policy_broker.cc
+--- a/security/sandbox/chromium/sandbox/win/src/policy_broker.cc
++++ b/security/sandbox/chromium/sandbox/win/src/policy_broker.cc
+@@ -95,16 +95,18 @@ bool SetupBasicInterceptions(Interceptio
+   if (!INTERCEPT_NT(manager, NtOpenThread, OPEN_THREAD_ID, 20) ||
+       !INTERCEPT_NT(manager, NtOpenProcess, OPEN_PROCESS_ID, 20) ||
+       !INTERCEPT_NT(manager, NtOpenProcessToken, OPEN_PROCESS_TOKEN_ID, 16))
+     return false;
+ 
+   // Interceptions with neither policy nor IPC.
+   if (!INTERCEPT_NT(manager, NtSetInformationThread, SET_INFORMATION_THREAD_ID,
+                     20) ||
++      !INTERCEPT_NT(manager, NtImpersonateAnonymousToken,
++                    IMPERSONATE_ANONYMOUS_TOKEN_ID, 8) ||
+       !INTERCEPT_NT(manager, NtOpenThreadToken, OPEN_THREAD_TOKEN_ID, 20))
+     return false;
+ 
+   // This one is also provided by process_thread_policy.
+   if (!INTERCEPT_NT(manager, NtOpenProcessTokenEx, OPEN_PROCESS_TOKEN_EX_ID,
+                     20))
+     return false;
+ 
+diff --git a/security/sandbox/chromium/sandbox/win/src/policy_target.cc b/security/sandbox/chromium/sandbox/win/src/policy_target.cc
+--- a/security/sandbox/chromium/sandbox/win/src/policy_target.cc
++++ b/security/sandbox/chromium/sandbox/win/src/policy_target.cc
+@@ -67,16 +67,30 @@ bool QueryBroker(IpcTag ipc_id, CountedP
+       processor.Evaluate(kShortEval, params->parameters, params->count);
+   DCHECK_NT(POLICY_ERROR != result);
+ 
+   return POLICY_MATCH == result && ASK_BROKER == processor.GetAction();
+ }
+ 
+ // -----------------------------------------------------------------------
+ 
++// Hooks NtImpersonateAnonymousToken so we can block until call to LowerToken.
++// This means a non-retricted token behaves the same as restricted one before
++// LowerToken and prevents us from being left with an anonymous logon token
++// because we are blocking the RevertToSelf that would undo it.
++NTSTATUS WINAPI TargetNtImpersonateAnonymousToken(
++    NtImpersonateAnonymousTokenFunction orig_ImpersonateAnonymousToken,
++    HANDLE thread) {
++  if (!SandboxFactory::GetTargetServices()->GetState()->RevertedToSelf()) {
++    return STATUS_ACCESS_DENIED;
++  }
++
++  return orig_ImpersonateAnonymousToken(thread);
++}
++
+ // Hooks NtSetInformationThread to block RevertToSelf from being
+ // called before the actual call to LowerToken.
+ NTSTATUS WINAPI TargetNtSetInformationThread(
+     NtSetInformationThreadFunction orig_SetInformationThread,
+     HANDLE thread,
+     NT_THREAD_INFORMATION_CLASS thread_info_class,
+     PVOID thread_information,
+     ULONG thread_information_bytes) {
+diff --git a/security/sandbox/chromium/sandbox/win/src/policy_target.h b/security/sandbox/chromium/sandbox/win/src/policy_target.h
+--- a/security/sandbox/chromium/sandbox/win/src/policy_target.h
++++ b/security/sandbox/chromium/sandbox/win/src/policy_target.h
+@@ -14,16 +14,22 @@ namespace sandbox {
+ struct CountedParameterSetBase;
+ 
+ // Performs a policy lookup and returns true if the request should be passed to
+ // the broker process.
+ bool QueryBroker(IpcTag ipc_id, CountedParameterSetBase* params);
+ 
+ extern "C" {
+ 
++// Interception of NtImpersonateAnonymousToken on the child process.
++// It should never be called directly.
++SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtImpersonateAnonymousToken(
++    NtImpersonateAnonymousTokenFunction orig_ImpersonateAnonymousToken,
++    HANDLE thread);
++
+ // Interception of NtSetInformationThread on the child process.
+ // It should never be called directly.
+ SANDBOX_INTERCEPT NTSTATUS WINAPI TargetNtSetInformationThread(
+     NtSetInformationThreadFunction orig_SetInformationThread, HANDLE thread,
+     NT_THREAD_INFORMATION_CLASS thread_info_class, PVOID thread_information,
+     ULONG thread_information_bytes);
+ 
+ // Interception of NtOpenThreadToken on the child process.
