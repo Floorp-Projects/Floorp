@@ -17,6 +17,12 @@
     <dimen name="mozac_browser_menu_item_container_padding_end">16dp</dimen>
     <!--Menu Item -->
 
+    <!--Checkbox Menu Item -->
+    <dimen name="mozac_browser_menu_item_checkbox_container_layout_height">48dp</dimen>
+    <dimen name="mozac_browser_menu_item_checkbox_container_padding_start">16dp</dimen>
+    <dimen name="mozac_browser_menu_item_checkbox_container_padding_end">16dp</dimen>
+     <!--Checkbox Menu Item -->
+
     <!--DynamicWidthRecyclerView -->
     <dimen name="mozac_browser_menu_material_min_tap_area">48dp</dimen>
     <dimen name="mozac_browser_menu_material_min_item_width">112dp</dimen>
@@ -58,7 +64,14 @@
 
     <!--Label-->
     <dimen name="mozac_browser_menu_item_image_text_label_padding_start">20dp</dimen>
+    <dimen name="mozac_browser_menu_item_checkbox_text_label_padding_start">20dp</dimen>
+    <dimen name="mozac_browser_menu_item_checkbox_text_label_padding_end">20dp</dimen>
     <!--Label-->
+
+    <!--Checkbox-->
+    <dimen name="mozac_browser_menu_item_image_checkbox_padding_start">12dp</dimen>
+    <dimen name="mozac_browser_menu_item_image_checkbox_padding_end">12dp</dimen>
+    <!--Checkbox-->
 
     <!--BrowserMenuImageText-->
 

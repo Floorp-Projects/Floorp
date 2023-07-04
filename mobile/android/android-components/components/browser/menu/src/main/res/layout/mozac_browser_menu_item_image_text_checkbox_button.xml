@@ -4,7 +4,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    style="@style/Mozac.Browser.Menu.Item.Container"
+    style="@style/Mozac.Browser.Menu.Item.Checkbox.Container"
     android:layout_width="match_parent"
     android:clickable="true"
     android:focusable="true"
@@ -24,7 +24,7 @@
 
     <TextView
         android:id="@+id/text"
-        style="@style/Mozac.Browser.Menu.Item.ImageText.Label"
+        style="@style/Mozac.Browser.Menu.Item.Checkbox.Label"
         android:background="@android:color/transparent"
         android:gravity="center_vertical"
         android:importantForAccessibility="no"
@@ -50,10 +50,7 @@
 
     <androidx.appcompat.widget.AppCompatCheckBox
         android:id="@+id/checkbox"
-        style="@style/Mozac.Browser.Menu.Item.Text"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:paddingHorizontal="12dp"
+        style="@style/Mozac.Browser.Menu.Item.Checkbox.Text"
         android:button="@null"
         android:drawablePadding="7dp"
         android:textAlignment="gravity"

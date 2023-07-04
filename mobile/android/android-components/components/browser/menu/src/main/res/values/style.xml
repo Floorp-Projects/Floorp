@@ -68,6 +68,24 @@
         <item name="android:paddingEnd">@dimen/mozac_browser_menu_item_image_text_label_padding_start</item>
     </style>
 
+    <style name="Mozac.Browser.Menu.Item.Checkbox.Label" parent="Mozac.Browser.Menu.Item.ImageText.Label">
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_checkbox_text_label_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_item_checkbox_text_label_padding_end</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.Checkbox.Text" parent="Mozac.Browser.Menu.Item.Text">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_image_checkbox_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_item_image_checkbox_padding_end</item>
+    </style>
+
+    <style name="Mozac.Browser.Menu.Item.Checkbox.Container" parent="Mozac.Browser.Menu.Item.Container">
+        <item name="android:layout_height">@dimen/mozac_browser_menu_item_checkbox_container_layout_height</item>
+        <item name="android:paddingStart">@dimen/mozac_browser_menu_item_checkbox_container_padding_start</item>
+        <item name="android:paddingEnd">@dimen/mozac_browser_menu_item_checkbox_container_padding_end</item>
+    </style>
+
     <style name="Mozac.Browser.Menu.Item.CandidateLabel" parent="Mozac.Browser.Menu.Item.Text">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
