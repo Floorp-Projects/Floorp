@@ -19,7 +19,7 @@ const { ContentTaskUtils } = SpecialPowers.ChromeUtils.import(
 );
 
 add_setup(async () => {
-  await addLoginsInParent(
+  await setStoredLoginsAsync(
     [location.origin, "https://autocomplete", null, "user1", "pass1", "", ""],
     [location.origin, "https://autocomplete", null, "user2", "pass2", "", ""]
   );

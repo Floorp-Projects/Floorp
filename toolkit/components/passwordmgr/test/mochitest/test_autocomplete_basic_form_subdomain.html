@@ -35,7 +35,7 @@ add_setup(async () => {
   const oldSecureHost = "https://old.example" + suffix;
   const newHost = "https://new.example" + suffix;
 
-  await addLoginsInParent(
+  await setStoredLoginsAsync(
     // The first two logins should never be visible on https: versions of
     // *.example.com since the login is for http: and an https: login exists for this username.
     [oldHost, oldSecureHost, null, "dsdu1", "dsdp1new", "uname", "pword"],

@@ -63,7 +63,7 @@ let prompterParent = runInParent(() => {
 let prompter1 = new PrompterProxy(prompterParent);
 
 add_setup(async () => {
-  await addLoginsInParent(
+  await setStoredLoginsAsync(
     ["http://mochi.test:8888", null, "xhr", "xhruser1", "xhrpass1"],
     ["http://mochi.test:8888", null, "xhr2", "xhruser2", "xhrpass2"]
   );

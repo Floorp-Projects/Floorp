@@ -36,10 +36,7 @@
       onpageshow = async function(pageShow) {
         if (!pageShow.persisted) {
           // This is the initial page load.
-          let loginAddedPromise = promiseStorageChanged(["addLogin"]);
-          let origin = window.location.origin;
-          await addLoginsInParent([origin, "", null, "autofilled", "pass1", "", ""]);
-          await loginAddedPromise;
+          await setStoredLoginsAsync([location.origin, "", null, "autofilled", "pass1", "", ""]);
         } else {
           await promiseFormsProcessedInSameProcess();
           let uname = document.getElementById("form-basic-username");

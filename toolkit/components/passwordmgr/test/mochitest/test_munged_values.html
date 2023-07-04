@@ -10,8 +10,6 @@
 </head>
 <body>
 <script type="application/javascript">
-const readyPromise = registerRunTests();
-
 const DEFAULT_ORIGIN = window.location.origin;
 
 function removeAllUserFacingLoginsInParent() {
@@ -61,8 +59,8 @@ const loadPromise = new Promise(resolve => {
 });
 
 add_setup(async () => {
-  info("Waiting for setup and page and window loads");
-  await readyPromise;
+  await setStoredLoginsAsync();
+  info("Waiting for page and window loads");
   await loadPromise;
 });
 

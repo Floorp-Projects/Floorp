@@ -19,7 +19,7 @@ const action1 = "http://username-focus-1";
 const action2 = "http://username-focus-2";
 
 add_setup(async () => {
-  await addLoginsInParent(
+  await setStoredLoginsAsync(
     [location.origin, action1, null, "testuser1A", "testpass1A", "", ""],
     [location.origin, action2, null, "testuser2A", "testpass2A", "", ""],
     [location.origin, action2, null, "testuser2B", "testpass2B", "", ""]
