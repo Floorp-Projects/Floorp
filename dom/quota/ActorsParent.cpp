@@ -260,13 +260,11 @@ const int32_t kStorageVersion =
 const int32_t kHackyPreDowngradeStorageVersion = int32_t((3 << 16) + 0);
 const int32_t kHackyPostDowngradeStorageVersion = int32_t((2 << 16) + 1);
 
-const char kChromeOrigin[] = "chrome";
 const char kAboutHomeOriginPrefix[] = "moz-safe-about:home";
 const char kIndexedDBOriginPrefix[] = "indexeddb://";
 const char kResourceOriginPrefix[] = "resource://";
 
 constexpr auto kStorageName = u"storage"_ns;
-constexpr auto kSQLiteSuffix = u".sqlite"_ns;
 
 #define INDEXEDDB_DIRECTORY_NAME u"indexedDB"
 #define ARCHIVES_DIRECTORY_NAME u"archives"
@@ -275,14 +273,6 @@ constexpr auto kSQLiteSuffix = u".sqlite"_ns;
 #define TEMPORARY_DIRECTORY_NAME u"temporary"
 #define DEFAULT_DIRECTORY_NAME u"default"
 #define DEFAULT_PRIVATE_DIRECTORY_NAME u"private"
-
-// The name of the file that we use to load/save the last access time of an
-// origin.
-// XXX We should get rid of old metadata files at some point, bug 1343576.
-#define METADATA_FILE_NAME u".metadata"
-#define METADATA_TMP_FILE_NAME u".metadata-tmp"
-#define METADATA_V2_FILE_NAME u".metadata-v2"
-#define METADATA_V2_TMP_FILE_NAME u".metadata-v2-tmp"
 
 #define WEB_APPS_STORE_FILE_NAME u"webappsstore.sqlite"
 #define LS_ARCHIVE_FILE_NAME u"ls-archive.sqlite"
