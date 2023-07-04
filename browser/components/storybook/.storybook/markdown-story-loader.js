@@ -77,7 +77,7 @@ function parseStoriesFromMarkdown(source) {
   // of any code in between backticks and gets run when used in a Canvas component.
   return source.replace(
     storiesRegex,
-    "<Canvas withSource='none'><with-common-styles>$<code></with-common-styles></Canvas>"
+    "<Canvas withSource='none'><with-common-styles>\n$<code></with-common-styles></Canvas>"
   );
 }
 
@@ -96,10 +96,11 @@ module.exports = function markdownStoryLoader(source) {
   let relativePath = path
     .relative(projectRoot, this.resourcePath)
     .replaceAll(path.sep, "/");
+  let componentName;
 
   if (relativePath.includes("toolkit/content/widgets")) {
     let storyNameRegex = /(?<=\/widgets\/)(?<name>.*?)(?=\/)/g;
-    let componentName = storyNameRegex.exec(relativePath)?.groups?.name;
+    componentName = storyNameRegex.exec(relativePath)?.groups?.name;
     if (componentName) {
       // Get the common name for a component e.g. Toggle for moz-toggle
       storyPath =
@@ -112,13 +113,28 @@ module.exports = function markdownStoryLoader(source) {
     ? storyTitle
     : `${storyPath}/${storyTitle}`;
 
+  let componentStories;
+  if (componentName) {
+    componentStories = this.resourcePath
+      .replace("README", componentName)
+      .replace(".md", ".mjs");
+    try {
+      fs.statSync(componentStories);
+      componentStories = "./" + path.basename(componentStories);
+    } catch {
+      componentStories = null;
+    }
+  }
+
   // Unfortunately the indentation/spacing here seems to be important for the
   // MDX parser to know what to do in the next step of the Webpack process.
   let mdxSource = `
-import { Meta, Description, Canvas } from "@storybook/addon-docs";
+import { Meta, Description, Canvas, Story } from "@storybook/addon-docs";
+${componentStories ? `import * as Stories from "${componentStories}";` : ""}
 
 <Meta
   title="${title}"
+  ${componentStories ? `of={Stories}` : ""}
   parameters={{
     previewTabs: {
       canvas: { hidden: true },
