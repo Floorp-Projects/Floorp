@@ -8,11 +8,8 @@ import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoResult
-import org.mozilla.geckoview.GeckoSession
-import org.mozilla.geckoview.GeckoSession.ContentDelegate
 import org.mozilla.geckoview.PanZoomController
 import org.mozilla.geckoview.PanZoomController.InputResultDetail
-import org.mozilla.geckoview.test.rule.GeckoSessionTestRule
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
 @RunWith(AndroidJUnit4::class)
@@ -22,11 +19,8 @@ class InputResultDetailTest : BaseSessionTest() {
 
     private fun setupDocument(documentPath: String) {
         mainSession.loadTestPath(documentPath)
-        sessionRule.waitUntilCalled(object : ContentDelegate {
-            @GeckoSessionTestRule.AssertCalled(count = 1)
-            override fun onFirstContentfulPaint(session: GeckoSession) {
-            }
-        })
+        mainSession.waitForPageStop()
+        mainSession.promiseAllPaintsDone()
         mainSession.flushApzRepaints()
     }
 
