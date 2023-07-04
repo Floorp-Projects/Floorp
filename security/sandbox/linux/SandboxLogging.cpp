@@ -44,18 +44,25 @@ void SandboxLogError(const char* message) {
   // This uses writev internally and appears to be async signal safe.
   __android_log_write(ANDROID_LOG_ERROR, "Sandbox", message);
 #endif
+  static char logPrefixProcess[16];
+  static const ssize_t printfSize =
+      ::base::strings::SafeSPrintf(logPrefixProcess, "[%d] ", getpid());
+  static const size_t pidSize =
+      std::clamp(static_cast<size_t>(printfSize), static_cast<size_t>(0),
+                 static_cast<size_t>(sizeof(logPrefixProcess) - 1));
   static const char logPrefix[] = "Sandbox: ", logSuffix[] = "\n";
-  struct iovec iovs[3] = {
+  struct iovec iovs[4] = {
+      {const_cast<char*>(logPrefixProcess), pidSize},
       {const_cast<char*>(logPrefix), sizeof(logPrefix) - 1},
       {const_cast<char*>(message), strlen(message)},
       {const_cast<char*>(logSuffix), sizeof(logSuffix) - 1},
   };
   while (iovs[2].iov_len > 0) {
-    ssize_t written = HANDLE_EINTR(writev(STDERR_FILENO, iovs, 3));
+    ssize_t written = HANDLE_EINTR(writev(STDERR_FILENO, iovs, 4));
     if (written <= 0) {
       break;
     }
-    IOVecDrop(iovs, 3, static_cast<size_t>(written));
+    IOVecDrop(iovs, 4, static_cast<size_t>(written));
   }
 }
 
