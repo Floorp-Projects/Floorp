@@ -55,9 +55,6 @@ enum class ParseTaskKind {
 
   // The output is CompilationStencil for script/stencil.
   StencilDecode,
-
-  // The output is an array of CompilationStencil.
-  MultiStencilsDecode,
 };
 
 namespace wasm {
@@ -401,10 +398,6 @@ class GlobalHelperThreadState {
   UniquePtr<ParseTask> finishParseTaskCommon(JSContext* cx,
                                              JS::OffThreadToken* token);
 
-  bool finishMultiParseTask(JSContext* cx, ParseTaskKind kind,
-                            JS::OffThreadToken* token,
-                            mozilla::Vector<RefPtr<JS::Stencil>>* stencils);
-
  public:
   void cancelParseTask(JSRuntime* rt, JS::OffThreadToken* token);
   void destroyParseTask(JSRuntime* rt, ParseTask* parseTask);
@@ -414,9 +407,6 @@ class GlobalHelperThreadState {
   already_AddRefed<frontend::CompilationStencil> finishStencilTask(
       JSContext* cx, JS::OffThreadToken* token,
       JS::InstantiationStorage* storage);
-  bool finishMultiStencilsDecodeTask(
-      JSContext* cx, JS::OffThreadToken* token,
-      mozilla::Vector<RefPtr<JS::Stencil>>* stencils);
 
   bool hasActiveThreads(const AutoLockHelperThreadState&);
   bool canStartTasks(const AutoLockHelperThreadState& locked);
@@ -517,10 +507,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   // Callback invoked off thread when the parse finishes.
   JS::OffThreadCompileCallback callback;
   void* callbackData;
-
-  // For the multi-decode stencil case, holds onto the set of stencils produced
-  // offthread
-  mozilla::Vector<RefPtr<JS::Stencil>> stencils;
 
   // The input of the compilation.
   JS::CompilationStorage compileStorage_;

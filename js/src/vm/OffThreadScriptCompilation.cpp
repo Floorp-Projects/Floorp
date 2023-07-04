@@ -129,25 +129,3 @@ JS_PUBLIC_API bool JS::CanDecodeOffThread(JSContext* cx,
                                           size_t length) {
   return CanDoOffThread(cx, options, length);
 }
-
-JS_PUBLIC_API JS::OffThreadToken* JS::DecodeMultiStencilsOffThread(
-    JSContext* cx, const DecodeOptions& options, TranscodeSources& sources,
-    OffThreadCompileCallback callback, void* callbackData) {
-#ifdef DEBUG
-  size_t length = 0;
-  for (auto& source : sources) {
-    length += source.range.length();
-  }
-  MOZ_ASSERT(CanDecodeOffThread(cx, options, length));
-#endif
-  return StartOffThreadDecodeMultiStencils(cx, options, sources, callback,
-                                           callbackData);
-}
-
-JS_PUBLIC_API bool JS::FinishDecodeMultiStencilsOffThread(
-    JSContext* cx, JS::OffThreadToken* token,
-    mozilla::Vector<RefPtr<JS::Stencil>>* stencils) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  return HelperThreadState().finishMultiStencilsDecodeTask(cx, token, stencils);
-}

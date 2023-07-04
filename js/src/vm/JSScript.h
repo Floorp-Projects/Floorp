@@ -2231,8 +2231,7 @@ extern void DescribeScriptedCallerForDirectEval(
     unsigned* linenop, uint32_t* pcOffset, bool* mutedErrors);
 
 bool CheckCompileOptionsMatch(const JS::ReadOnlyCompileOptions& options,
-                              js::ImmutableScriptFlags flags,
-                              bool isMultiDecode);
+                              js::ImmutableScriptFlags flags);
 
 void FillImmutableFlagsFromCompileOptionsForTopLevel(
     const JS::ReadOnlyCompileOptions& options, js::ImmutableScriptFlags& flags);
