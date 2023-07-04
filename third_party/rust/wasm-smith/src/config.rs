@@ -578,7 +578,6 @@ impl<'a> Arbitrary<'a> for SwarmConfig {
             min_uleb_size: u.int_in_range(0..=5)?,
             bulk_memory_enabled: reference_types_enabled || u.arbitrary()?,
             reference_types_enabled,
-            tail_call_enabled: u.arbitrary()?,
             simd_enabled: u.arbitrary()?,
             multi_value_enabled: u.arbitrary()?,
             max_aliases: u.int_in_range(0..=MAX_MAXIMUM)?,
@@ -628,6 +627,7 @@ impl<'a> Arbitrary<'a> for SwarmConfig {
             threads_enabled: false,
             export_everything: false,
             disallow_traps: false,
+            tail_call_enabled: false,
         })
     }
 }

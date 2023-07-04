@@ -188,7 +188,7 @@ impl<'a> Parse<'a> for ComponentField<'a> {
                 return Ok(Self::Alias(parser.parse()?));
             }
             if parser.peek::<kw::r#type>() {
-                return Ok(Self::Type(parser.parse()?));
+                return Ok(Self::Type(Type::parse_maybe_with_inline_exports(parser)?));
             }
             if parser.peek::<kw::import>() {
                 return Ok(Self::Import(parser.parse()?));

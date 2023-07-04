@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::{CustomSection, Encode, Section, SectionId};
 
 /// An encoder for the [producers custom
@@ -61,8 +63,8 @@ impl Encode for ProducersSection {
         data.extend(&self.bytes);
 
         CustomSection {
-            name: "producers",
-            data: &data,
+            name: "producers".into(),
+            data: Cow::Borrowed(&data),
         }
         .encode(sink);
     }

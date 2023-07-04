@@ -1,6 +1,7 @@
 mod code;
 mod custom;
 mod data;
+mod dump;
 mod elements;
 mod exports;
 mod functions;
@@ -18,6 +19,7 @@ mod types;
 pub use code::*;
 pub use custom::*;
 pub use data::*;
+pub use dump::*;
 pub use elements::*;
 pub use exports::*;
 pub use functions::*;

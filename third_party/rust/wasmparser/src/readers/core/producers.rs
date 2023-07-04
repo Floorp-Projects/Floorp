@@ -44,7 +44,12 @@ pub struct ProducersField<'a> {
 
 impl<'a> FromReader<'a> for ProducersField<'a> {
     fn from_reader(reader: &mut BinaryReader<'a>) -> Result<Self> {
+        let offset = reader.original_position();
         let name = reader.read_string()?;
+        match name {
+            "language" | "sdk" | "processed-by" => {}
+            _ => bail!(offset, "invalid producers field name: `{name}`"),
+        }
         let values = reader.skip(|reader| {
             // FIXME(#188) ideally shouldn't need to skip here
             for _ in 0..reader.read_var_u32()? {

@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::{encode_section, CustomSection, Encode, Section, SectionId};
 
 const VERSION: u32 = 2;
@@ -72,8 +74,8 @@ impl Default for LinkingSection {
 impl Encode for LinkingSection {
     fn encode(&self, sink: &mut Vec<u8>) {
         CustomSection {
-            name: "linking",
-            data: &self.bytes,
+            name: "linking".into(),
+            data: Cow::Borrowed(&self.bytes),
         }
         .encode(sink);
     }

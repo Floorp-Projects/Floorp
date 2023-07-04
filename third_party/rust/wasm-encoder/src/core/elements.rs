@@ -111,7 +111,7 @@ impl ElementSection {
             ElementMode::Active {
                 table: None,
                 offset,
-            } => {
+            } if segment.element_type == RefType::FUNCREF => {
                 (/* 0x00 | */expr_bit).encode(&mut self.bytes);
                 offset.encode(&mut self.bytes);
             }
@@ -123,12 +123,9 @@ impl ElementSection {
                     segment.element_type.encode(&mut self.bytes);
                 }
             }
-            ElementMode::Active {
-                table: Some(i),
-                offset,
-            } => {
+            ElementMode::Active { table, offset } => {
                 (0x02 | expr_bit).encode(&mut self.bytes);
-                i.encode(&mut self.bytes);
+                table.unwrap_or(0).encode(&mut self.bytes);
                 offset.encode(&mut self.bytes);
                 if expr_bit == 0 {
                     self.bytes.push(0x00); // elemkind == funcref
