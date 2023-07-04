@@ -335,7 +335,7 @@ export class NetworkObserver {
       } else {
         // Handles any early blockings e.g by Web Extensions or by CORS
         const { blockingExtension, blockedReason } =
-          lazy.NetworkUtils.getBlockedReason(channel);
+          lazy.NetworkUtils.getBlockedReason(channel, httpActivity.fromCache);
         this.#createNetworkEvent(subject, { blockedReason, blockingExtension });
       }
     }
@@ -440,7 +440,10 @@ export class NetworkObserver {
           serverTimings
         );
       } else if (topic === "http-on-failed-opening-request") {
-        const { blockedReason } = lazy.NetworkUtils.getBlockedReason(channel);
+        const { blockedReason } = lazy.NetworkUtils.getBlockedReason(
+          channel,
+          httpActivity.fromCache
+        );
         this.#createNetworkEvent(channel, { blockedReason });
       }
 
