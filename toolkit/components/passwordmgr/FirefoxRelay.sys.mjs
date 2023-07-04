@@ -478,12 +478,12 @@ class RelayOffered {
       dismiss: true,
       callback: async () => {
         lazy.log.info("user opted in to Firefox Relay integration");
+        // Capture the flowId here since async operations might take some time to resolve
+        // and by then FirefoxRelay.flowId might have another value
+        const flowId = FirefoxRelay.flowId;
         if (await this.notifyServerTermsAcceptedAsync(browser)) {
           feature.markAsEnabled();
-          FirefoxRelayTelemetry.recordRelayOptInPanelEvent(
-            "enabled",
-            FirefoxRelay.flowId
-          );
+          FirefoxRelayTelemetry.recordRelayOptInPanelEvent("enabled", flowId);
           fillUsername(await generateUsernameAsync(browser, origin));
         }
       },
@@ -627,6 +627,7 @@ class RelayFeature extends OptInFeature {
     );
     gConfig.addressesUrl = newBaseUrl + `relayaddresses/`;
     gConfig.profilesUrl = newBaseUrl + `profiles/`;
+    gConfig.acceptTermsUrl = newBaseUrl + `terms-accepted-user/`;
   }
 
   async autocompleteItemsAsync({ origin, scenarioName, hasInput }) {
