@@ -12,8 +12,8 @@ async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["media.test.video-suspend", true],
-      ["media.suspend-bkgnd-video.enabled", true],
-      ["media.suspend-bkgnd-video.delay-ms", 500],
+      ["media.suspend-background-video.enabled", true],
+      ["media.suspend-background-video.delay-ms", 500],
       ["media.dormant-on-pause-timeout-ms", 0],
       ["media.cloneElementVisually.testing", true],
     ],
