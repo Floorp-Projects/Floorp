@@ -33,7 +33,7 @@
       }
       let frag = this._template.content.cloneNode(true);
       if (window.IS_STORYBOOK) {
-        frag.querySelector("link").href = "./panel-list.css";
+        frag.querySelector("link").href = "./panel-list/panel-list.css";
       }
       return frag;
     }
@@ -493,7 +493,9 @@
     }
 
     sendEvent(name, detail) {
-      this.dispatchEvent(new CustomEvent(name, { detail }));
+      this.dispatchEvent(
+        new CustomEvent(name, { detail, bubbles: true, composed: true })
+      );
     }
   }
   customElements.define("panel-list", PanelList);
@@ -513,7 +515,7 @@
       let style = document.createElement("link");
       style.rel = "stylesheet";
       style.href = window.IS_STORYBOOK
-        ? "./panel-item.css"
+        ? "./panel-list/panel-item.css"
         : "chrome://global/content/elements/panel-item.css";
 
       this.button = document.createElement("button");

@@ -5,7 +5,7 @@
 // Imported for side-effects.
 import { html } from "lit.all.mjs";
 // eslint-disable-next-line import/no-unassigned-import
-import "toolkit-widgets/panel-list.js";
+import "chrome://global/content/elements/panel-list.js";
 // eslint-disable-next-line import/no-unassigned-import
 import "browser/components/migration/content/migration-wizard.mjs";
 import { MigrationWizardConstants } from "chrome://browser/content/migration/migration-wizard-constants.mjs";
