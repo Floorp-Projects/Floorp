@@ -30,7 +30,8 @@ const RESULT_MENU_COMMAND = {
 export class PocketSuggestions extends BaseFeature {
   constructor() {
     super();
-    this.#suggestionsMap = new lazy.SuggestionsMap();
+    this.#lowConfidenceSuggestionsMap = new lazy.SuggestionsMap();
+    this.#highConfidenceSuggestionsMap = new lazy.SuggestionsMap();
   }
 
   get shouldEnable() {
@@ -66,53 +67,83 @@ export class PocketSuggestions extends BaseFeature {
       lazy.QuickSuggestRemoteSettings.register(this);
     } else {
       lazy.QuickSuggestRemoteSettings.unregister(this);
+      this.#lowConfidenceSuggestionsMap.clear();
+      this.#highConfidenceSuggestionsMap.clear();
     }
   }
 
   async queryRemoteSettings(searchString) {
-    let suggestions = this.#suggestionsMap.get(searchString);
-    if (!suggestions) {
-      return [];
+    // If the search string matches high confidence suggestions, they should be
+    // treated as top picks. Otherwise try to match low confidence suggestions.
+    let is_top_pick = false;
+    let suggestions = this.#highConfidenceSuggestionsMap.get(searchString);
+    if (suggestions.length) {
+      is_top_pick = true;
+    } else {
+      suggestions = this.#lowConfidenceSuggestionsMap.get(searchString);
     }
 
-    return suggestions.map(suggestion => ({
-      url: suggestion.url,
-      title: suggestion.title,
-      score: suggestion.score,
-      is_top_pick: suggestion.is_top_pick,
-    }));
+    let lowerSearchString = searchString.toLocaleLowerCase();
+    return suggestions.map(suggestion => {
+      // Add `full_keyword` to each matched suggestion. It should be the longest
+      // keyword that starts with the user's search string.
+      let full_keyword = lowerSearchString;
+      let keywords = is_top_pick
+        ? suggestion.highConfidenceKeywords
+        : suggestion.lowConfidenceKeywords;
+      for (let keyword of keywords) {
+        if (
+          keyword.startsWith(lowerSearchString) &&
+          full_keyword.length < keyword.length
+        ) {
+          full_keyword = keyword;
+        }
+      }
+      return { ...suggestion, is_top_pick, full_keyword };
+    });
   }
 
   async onRemoteSettingsSync(rs) {
     let records = await rs.get({ filters: { type: "pocket-suggestions" } });
-    if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+    if (!this.isEnabled) {
       return;
     }
 
-    let suggestionsMap = new lazy.SuggestionsMap();
+    let lowMap = new lazy.SuggestionsMap();
+    let highMap = new lazy.SuggestionsMap();
 
     this.logger.debug(`Got ${records.length} records`);
     for (let record of records) {
       let { buffer } = await rs.attachments.download(record);
-      if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+      if (!this.isEnabled) {
         return;
       }
 
       let suggestions = JSON.parse(new TextDecoder("utf-8").decode(buffer));
       this.logger.debug(`Adding ${suggestions.length} suggestions`);
-      await suggestionsMap.add(suggestions);
-      if (rs != lazy.QuickSuggestRemoteSettings.rs) {
+
+      await lowMap.add(suggestions, {
+        keywordsProperty: "lowConfidenceKeywords",
+        mapKeyword:
+          lazy.SuggestionsMap.MAP_KEYWORD_PREFIXES_STARTING_AT_FIRST_WORD,
+      });
+      if (!this.isEnabled) {
+        return;
+      }
+
+      await highMap.add(suggestions, {
+        keywordsProperty: "highConfidenceKeywords",
+      });
+      if (!this.isEnabled) {
         return;
       }
     }
 
-    this.#suggestionsMap = suggestionsMap;
+    this.#lowConfidenceSuggestionsMap = lowMap;
+    this.#highConfidenceSuggestionsMap = highMap;
   }
 
   makeResult(queryContext, suggestion, searchString) {
-    // If `is_top_pick` is not specified, handle it as top pick suggestion.
-    suggestion.is_top_pick = suggestion.is_top_pick ?? true;
-
     return Object.assign(
       new lazy.UrlbarResult(
         lazy.UrlbarUtils.RESULT_TYPE.URL,
@@ -120,6 +151,7 @@ export class PocketSuggestions extends BaseFeature {
         ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
           url: suggestion.url,
           title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
+          description: suggestion.description,
           icon: "chrome://global/skin/icons/pocket.svg",
           helpUrl: lazy.QuickSuggest.HELP_URL,
         })
@@ -200,5 +232,6 @@ export class PocketSuggestions extends BaseFeature {
     }
   }
 
-  #suggestionsMap;
+  #lowConfidenceSuggestionsMap;
+  #highConfidenceSuggestionsMap;
 }

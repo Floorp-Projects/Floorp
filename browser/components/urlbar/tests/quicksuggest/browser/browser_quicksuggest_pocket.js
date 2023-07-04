@@ -12,7 +12,9 @@ const REMOTE_SETTINGS_DATA = [
       {
         url: "https://example.com/pocket-suggestion",
         title: "Pocket Suggestion",
-        keywords: ["pocket-suggestion"],
+        description: "Pocket description",
+        lowConfidenceKeywords: ["pocket-suggestion"],
+        highConfidenceKeywords: ["high"],
       },
     ],
   },
