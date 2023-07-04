@@ -6,9 +6,9 @@ load(libdir + "wasm-binary.js");
 const specificTest = '';
 
 const preamble = `
-  (type $s1 (struct))
+  (type $s1 (sub (struct)))
   (type $s2 (sub $s1 (struct (field i32))))
-  (type $a1 (array (ref null $s1)))
+  (type $a1 (sub (array (ref null $s1))))
   (type $a2 (sub $a1 (array (ref null $s2))))
   (type $f1 (func))
 
@@ -16,10 +16,10 @@ const preamble = `
   (elem declare func $f) ;; allow $f to be ref.func'd
 `;
 const preambleTypesV5 = [
-  { kind: StructCode, fields: [] },
-  { kind: StructCode, sub: 0, fields: [I32Code] },
-  { kind: ArrayCode, elem: [OptRefCode, ...varU32(0)] },
-  { kind: ArrayCode, sub: 2, elem: [OptRefCode, ...varU32(1)] },
+  { kind: StructCode, final: false, fields: [] },
+  { kind: StructCode, final: false, sub: 0, fields: [I32Code] },
+  { kind: ArrayCode, final: false, elem: [OptRefCode, ...varU32(0)] },
+  { kind: ArrayCode, final: false, sub: 2, elem: [OptRefCode, ...varU32(1)] },
 ]
 
 // All the concrete subtype relationships present in the preamble.
