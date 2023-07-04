@@ -134,8 +134,19 @@ export class ChromeProfileMigrator extends MigratorBase {
             this._GetPaymentMethodsResource(profileFolder)
           );
         }
-        let possibleResources = await Promise.all(possibleResourcePromises);
-        return possibleResources.filter(r => r != null);
+
+        // Some of these Promises might reject due to things like database
+        // corruptions. We absorb those rejections here and filter them
+        // out so that we only try to import the resources that don't appear
+        // corrupted.
+        let possibleResources = await Promise.allSettled(
+          possibleResourcePromises
+        );
+        return possibleResources
+          .filter(promise => {
+            return promise.status == "fulfilled" && promise.value !== null;
+          })
+          .map(promise => promise.value);
       }
     }
     return [];
