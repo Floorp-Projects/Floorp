@@ -19,7 +19,7 @@ Login Manager test: autocomplete due to multiple matching logins
 /** Test for Login Manager: autocomplete due to multiple matching logins **/
 
 add_setup(async () => {
-  await addLoginsInParent(
+  await setStoredLoginsAsync(
     [location.origin, "https://autocomplete:8888", null, "name", "pass", "uname", "pword"],
     [location.origin, "https://autocomplete:8888", null, "Name", "Pass", "uname", "pword"],
     [location.origin, "https://autocomplete:8888", null, "USER", "PASS", "uname", "pword"]

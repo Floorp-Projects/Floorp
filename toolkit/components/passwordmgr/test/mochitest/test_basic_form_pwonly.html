@@ -9,21 +9,6 @@
 </head>
 <body>
 Login Manager test: forms and logins without a username.
-<script>
-gTestDependsOnDeprecatedLogin = true;
-runChecksAfterCommonInit(async () => {
-  // The first login uses a unique formActionOrigin, to check forms where no other logins
-  // will apply. The second login uses the normal formActionOrigin, so that we can test
-  // forms with a mix of username and non-username logins that might apply.
-  //
-  // Note: the second login is deleted at the end of the test.
-  await addLoginsInParent(
-    ["http://mochi.test:8888", "http://mochi.test:1111", null, "", "1234"],
-    ["http://mochi.test:8888", "http://mochi.test:8888", null, "", "1234"]
-  );
-  await startTest();
-});
-</script>
 <p id="display"></p>
 
 <div id="content" style="display: none">
@@ -31,13 +16,20 @@ runChecksAfterCommonInit(async () => {
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
-const DEFAULT_ORIGIN = window.location.origin;
+
+add_setup(async () => {
+  await setStoredLoginsAsync(
+    ["http://mochi.test:8888", "http://mochi.test:8888", null, "testuser", "testpass", "uname", "pword"],
+    ["http://mochi.test:8888", "http://mochi.test:1111", null, "", "1234"],
+    ["http://mochi.test:8888", "http://mochi.test:8888", null, "", "1234"]
+  );
+});
 
 /** Test for Login Manager: password-only logins **/
-async function startTest() {
+add_task(async function startTest() {
   const win = window.open("about:blank");
   SimpleTest.registerCleanupFunction(() => win.close());
-  await loadFormIntoWindow(DEFAULT_ORIGIN, `
+  await loadFormIntoWindow(location.origin, `
     <!-- simple form: no username field, 1 password field -->
     <form id='form1' action='http://mochi.test:1111/formtest.js'> 1
         <input type='password' name='pname' value=''>
@@ -90,8 +82,6 @@ async function startTest() {
         <button type='reset'> Reset </button>
     </form>
 
-
-
     <!-- 1 username field -->
     <form id='form6' action='http://mochi.test:1111/formtest.js'> 6
         <input type='text'     name='uname' value=''>
@@ -100,7 +90,6 @@ async function startTest() {
         <button type='submit'>Submit</button>
         <button type='reset'> Reset </button>
     </form>
-
 
     <!-- 1 username field, with a value set -->
     <form id='form7' action='http://mochi.test:1111/formtest.js'> 7
@@ -111,14 +100,10 @@ async function startTest() {
         <button type='reset'> Reset </button>
     </form>
 
-
-
     <!--
     (The following forms have 2 potentially-matching logins, on is
     password-only, the other is username+password)
     -->
-
-
 
     <!-- 1 username field, with value set. Fill in the matching U+P login -->
     <form id='form8' action='formtest.js'> 8
@@ -137,8 +122,6 @@ async function startTest() {
         <button type='submit'>Submit</button>
         <button type='reset'> Reset </button>
     </form>
-
-
 
     <!-- 1 username field, too small for U+P login -->
     <form id='form10' action='formtest.js'> 10
@@ -203,9 +186,7 @@ async function startTest() {
 
   await checkUnmodifiedFormInFrame(win, 13);
   await checkUnmodifiedFormInFrame(win, 14);
-
-  SimpleTest.finish();
-}
+});
 </script>
 </pre>
 </body>

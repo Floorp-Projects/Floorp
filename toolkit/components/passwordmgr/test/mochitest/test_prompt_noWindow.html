@@ -21,7 +21,7 @@
 modalType = authPromptModalType;
 
 add_setup(async () => {
-  await addLoginsInParent(
+  await setStoredLoginsAsync(
     ["http://mochi.test:8888", null, "mochitest", "mochiuser1", "mochipass1", "", ""]
   );
 });

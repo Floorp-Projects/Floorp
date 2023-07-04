@@ -222,6 +222,8 @@ function createLoginForm({
   password.value ||= null;
   password.label ||= null;
   password.autocomplete ||= null;
+  password.readonly ||= null;
+  password.disabled ||= null;
 
   info(
     `Creating login form ${JSON.stringify({ num, action, username, password })}`
@@ -270,6 +272,12 @@ function createLoginForm({
       form.appendChild(passwordLabel);
     } else {
       form.appendChild(passwordInput);
+    }
+    if (password.readonly != null) {
+      passwordInput.setAttribute("readonly", password.readonly);
+    }
+    if (password.disabled != null) {
+      passwordInput.setAttribute("disabled", password.disabled);
     }
   }
 

@@ -48,7 +48,7 @@ const defaultTitle = "the title";
 const defaultMsg = "the message";
 
 add_setup(async () => {
-    await addLoginsInParent(
+    await setStoredLoginsAsync(
     ["http://example.com", null, "http://example.com", "", "examplepass", "", ""],
     ["http://example2.com", null, "http://example2.com", "user1name", "user1pass", "", ""],
     ["http://example2.com", null, "http://example2.com", "user2name", "user2pass", "", ""],

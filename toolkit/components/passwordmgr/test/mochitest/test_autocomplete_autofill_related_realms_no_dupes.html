@@ -42,7 +42,7 @@ async function promiseACPopupClosed() {
 }
 
 add_setup(async () => {
-  await addLoginsInParent(
+  await setStoredLoginsAsync(
     // Simple related domain relationship where example.com and other-example.com are in the related domains list
     ["https://other-example.com", "https://other-example.com", null, "relatedUser1", "relatedPass1", "uname", "pword"],
 

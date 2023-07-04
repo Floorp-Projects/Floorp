@@ -10,19 +10,18 @@
 <body>
 Login Manager test: form with JS submit action
 <script>
-runChecksAfterCommonInit(() => startTest());
 
-const origin = window.location.origin;
+add_setup(async () => {
+  await setStoredLoginsAsync(
+    [location.origin, "javascript:", null, "jsuser", "jspass123", "uname", "pword"]
+  );
+});
 
 /** Test for Login Manager: JS action URL **/
-
-async function startTest() {
-  await addLoginsInParent(
-    [origin, "javascript:", null, "jsuser", "jspass123", "uname", "pword"]
-  );
+add_task(async function startTest() {
   const win = window.open("about:blank");
   SimpleTest.registerCleanupFunction(() => win.close());
-  await loadFormIntoWindow(origin, `
+  await loadFormIntoWindow(location.origin, `
     <form id='form1' action='javascript:alert("never shows")'> 1
       <input name="uname">
       <input name="pword" type="password">
@@ -32,9 +31,7 @@ async function startTest() {
     </form>`, win);
 
   await checkLoginFormInFrameWithElementValues(win, 1, "jsuser", "jspass123");
-
-  SimpleTest.finish();
-}
+});
 </script>
 
 <p id="display"></p>
