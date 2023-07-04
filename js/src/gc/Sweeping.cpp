@@ -1356,10 +1356,19 @@ void GCRuntime::sweepJitDataOnMainThread(JS::GCContext* gcx) {
     jit::JitRuntime::TraceWeakJitcodeGlobalTable(rt, &trc);
   }
 
-  if (!haveDiscardedJITCodeThisSlice) {
+  // Discard JIT code and trace weak edges in JitScripts to remove edges to
+  // dying GC things. The latter is carried out as part of discardJitCode if
+  // possible to avoid iterating all scripts in the zone twice.
+  {
     gcstats::AutoPhase apdc(stats(), gcstats::PhaseKind::SWEEP_DISCARD_CODE);
+    Zone::DiscardOptions options;
+    options.traceWeakJitScripts = &trc;
     for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
-      zone->discardJitCode(gcx);
+      if (!haveDiscardedJITCodeThisSlice && !zone->isPreservingCode()) {
+        zone->forceDiscardJitCode(gcx, options);
+      } else {
+        zone->traceWeakJitScripts(&trc);
+      }
     }
   }
 

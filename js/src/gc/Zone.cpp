@@ -18,6 +18,7 @@
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Invalidation.h"
+#include "jit/JitScript.h"
 #include "jit/JitZone.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"
@@ -471,8 +472,13 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
                                  options.resetPretenuredAllocSites);
     }
 
-    // Finally, reset the active flag.
+    // Reset the active flag.
     jitScript->resetActive();
+
+    // Optionally trace weak edges in remaining JitScripts.
+    if (options.traceWeakJitScripts) {
+      jitScript->traceWeak(options.traceWeakJitScripts);
+    }
   }
 
   // Also clear references to jit code from RegExpShared cells at this point.
@@ -546,6 +552,15 @@ void JS::Zone::resetAllocSitesAndInvalidate(bool resetNurserySites,
     jit::Invalidate(cx, script,
                     /* resetUses = */ true,
                     /* cancelOffThread = */ true);
+  }
+}
+
+void JS::Zone::traceWeakJitScripts(JSTracer* trc) {
+  for (auto base = cellIter<BaseScript>(); !base.done(); base.next()) {
+    jit::JitScript* jitScript = base->maybeJitScript();
+    if (jitScript) {
+      jitScript->traceWeak(trc);
+    }
   }
 }
 
