@@ -393,6 +393,9 @@ export const FormAutofillHeuristics = {
     return true;
   },
 
+  // The old heuristics can be removed when we fully adopt fathom, so disable the
+  // esline complexity check for now
+  /* eslint-disable complexity */
   /**
    * Try to look for expiration date fields and revise the field names if needed.
    *
@@ -454,57 +457,6 @@ export const FormAutofillHeuristics = {
   },
 
   /**
-   * Look for cc-*-name fields when *-name field is present
-   *
-   * @param {FieldScanner} scanner
-   *        The current parsing status for all elements
-   * @returns {boolean}
-   *          Return true if there is any field can be recognized in the parser,
-   *          otherwise false.
-   */
-  _parseCreditCardNameFields(scanner, fieldDetail) {
-    const INTERESTED_FIELDS = ["given-name", "additional-name", "family-name"];
-
-    if (!INTERESTED_FIELDS.includes(fieldDetail.fieldName)) {
-      return false;
-    }
-
-    const fields = [];
-    for (let idx = scanner.parsingIndex; !scanner.parsingFinished; idx++) {
-      const detail = scanner.getFieldDetailByIndex(idx);
-      if (!INTERESTED_FIELDS.includes(detail?.fieldName)) {
-        break;
-      }
-      fields.push(detail);
-    }
-
-    // If the previous element is a cc-number field, these name fields is likely cc name fields
-    const previous = scanner.getFieldDetailByIndex(
-      scanner.parsingIndex - 1
-    )?.fieldName;
-    if (previous?.startsWith("cc-") && previous != "cc-name") {
-      // If there is only one field, assume the name field a `cc-name` field
-      if (fields.length == 1) {
-        scanner.updateFieldName(scanner.parsingIndex, `cc-name`, true);
-        scanner.parsingIndex += 1;
-      } else {
-        // update *-name to cc-*-name
-        for (const field of fields) {
-          scanner.updateFieldName(
-            scanner.parsingIndex,
-            `cc-${field.fieldName}`,
-            true
-          );
-          scanner.parsingIndex += 1;
-        }
-      }
-      return true;
-    }
-
-    return false;
-  },
-
-  /**
    * This function should provide all field details of a form which are placed
    * in the belonging section. The details contain the autocomplete info
    * (e.g. fieldName, section, etc).
@@ -549,8 +501,7 @@ export const FormAutofillHeuristics = {
         this._parsePhoneFields(scanner, fieldDetail) ||
         this._parseStreetAddressFields(scanner, fieldDetail) ||
         this._parseAddressFields(scanner, fieldDetail) ||
-        this._parseCreditCardExpiryFields(scanner, fieldDetail) ||
-        this._parseCreditCardNameFields(scanner, fieldDetail)
+        this._parseCreditCardExpiryFields(scanner, fieldDetail)
       ) {
         continue;
       }

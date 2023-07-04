@@ -845,7 +845,7 @@ function verifySectionAutofillResult(sections, expectedSectionsInfo) {
 
       Assert.equal(
         field.element.value,
-        expeceted.autofill ?? "",
+        expeceted.autofill,
         `Autofilled value for element(id=${field.element.id}, field name=${field.fieldName}) should be equal`
       );
     });
