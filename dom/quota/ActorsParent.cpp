@@ -944,11 +944,6 @@ class Quota final : public PQuotaParent {
 
 class QuotaUsageRequestBase : public NormalOriginOperationBase,
                               public PQuotaUsageRequestParent {
- public:
-  // Must be overridden by subclasses to perform work on the background thread
-  // before being run.
-  virtual void Init(Quota& aQuota) = 0;
-
  protected:
   QuotaUsageRequestBase(const char* aRunnableName)
       : NormalOriginOperationBase(aRunnableName, Nullable<PersistenceType>(),
@@ -1011,8 +1006,6 @@ class GetUsageOp final : public QuotaUsageRequestBase,
  public:
   explicit GetUsageOp(const UsageRequestParams& aParams);
 
-  void Init(Quota& aQuota) override { mNeedsStorageInit = true; }
-
  private:
   ~GetUsageOp() = default;
 
@@ -1045,8 +1038,6 @@ class GetOriginUsageOp final : public QuotaUsageRequestBase {
 
  public:
   explicit GetOriginUsageOp(const UsageRequestParams& aParams);
-
-  void Init(Quota& aQuota) override { mNeedsStorageInit = true; }
 
  private:
   ~GetOriginUsageOp() = default;
@@ -7561,8 +7552,6 @@ mozilla::ipc::IPCResult Quota::RecvPQuotaUsageRequestConstructor(
 
   auto* op = static_cast<QuotaUsageRequestBase*>(aActor);
 
-  op->Init(*this);
-
   op->RunImmediately();
   return IPC_OK();
 }
@@ -8062,9 +8051,10 @@ nsresult GetUsageOp::ProcessOrigin(QuotaManager& aQuotaManager,
 
 nsresult GetUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
-  aQuotaManager.AssertStorageIsInitialized();
 
   AUTO_PROFILER_LABEL("GetUsageOp::DoDirectoryWork", OTHER);
+
+  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitialized()));
 
   nsresult rv;
 
@@ -8142,11 +8132,12 @@ RefPtr<DirectoryLock> GetOriginUsageOp::CreateDirectoryLock() {
 
 nsresult GetOriginUsageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   AssertIsOnIOThread();
-  aQuotaManager.AssertStorageIsInitialized();
   MOZ_ASSERT(mUsage == 0);
   MOZ_ASSERT(mFileUsage == 0);
 
   AUTO_PROFILER_LABEL("GetOriginUsageOp::DoDirectoryWork", OTHER);
+
+  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitialized()));
 
   if (mFromMemory) {
     const PrincipalMetadata principalMetadata = {
