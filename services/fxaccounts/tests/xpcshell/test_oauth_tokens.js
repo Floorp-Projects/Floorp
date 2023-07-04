@@ -147,13 +147,8 @@ async function createMockFxA() {
     email: "foo@example.com",
     uid: "1234@lcip.org",
     sessionToken: "dead",
-    scopedKeys: {
-      [SCOPE_OLD_SYNC]: {
-        kid: "key id for sync key",
-        k: "key material for sync key",
-        kty: "oct",
-      },
-    },
+    kSync: "beef",
+    kXCS: "cafe",
     verified: true,
   };
 

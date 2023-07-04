@@ -100,7 +100,7 @@ add_storage_task(async function checkInitializedEmpty(sm) {
   await sm.initialize();
   Assert.strictEqual(await sm.getAccountData(), null);
   await Assert.rejects(
-    sm.updateAccountData({ scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys } }),
+    sm.updateAccountData({ kXCS: "kXCS" }),
     /No user is logged in/
   );
 });
@@ -111,7 +111,7 @@ add_storage_task(async function checkNewUser(sm) {
   let initialAccountData = {
     uid: "uid",
     email: "someone@somewhere.com",
-    scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
+    kXCS: "kXCS",
     device: {
       id: "device id",
     },
@@ -124,7 +124,7 @@ add_storage_task(async function checkNewUser(sm) {
   let accountData = await sm.getAccountData();
   Assert.equal(accountData.uid, initialAccountData.uid);
   Assert.equal(accountData.email, initialAccountData.email);
-  Assert.deepEqual(accountData.scopedKeys, initialAccountData.scopedKeys);
+  Assert.equal(accountData.kXCS, initialAccountData.kXCS);
   Assert.deepEqual(accountData.device, initialAccountData.device);
 
   // and it should have been written to storage.
@@ -139,14 +139,14 @@ add_storage_task(async function checkNewUser(sm) {
   );
   // check secure
   if (sm.secureStorage) {
-    Assert.deepEqual(
-      sm.secureStorage.data.accountData.scopedKeys,
-      initialAccountData.scopedKeys
+    Assert.equal(
+      sm.secureStorage.data.accountData.kXCS,
+      initialAccountData.kXCS
     );
   } else {
-    Assert.deepEqual(
-      sm.plainStorage.data.accountData.scopedKeys,
-      initialAccountData.scopedKeys
+    Assert.equal(
+      sm.plainStorage.data.accountData.kXCS,
+      initialAccountData.kXCS
     );
   }
 });
@@ -177,14 +177,16 @@ add_storage_task(async function checkEverythingRead(sm) {
   // in our storage.
   await sm.updateAccountData({
     verified: true,
-    scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
+    kSync: "kSync",
+    kXCS: "kXCS",
     device: {
       id: "wibble",
       registrationVersion: DEVICE_REGISTRATION_VERSION,
     },
   });
   accountData = await sm.getAccountData();
-  Assert.deepEqual(accountData.scopedKeys, MOCK_ACCOUNT_KEYS.scopedKeys);
+  Assert.equal(accountData.kSync, "kSync");
+  Assert.equal(accountData.kXCS, "kXCS");
   Assert.deepEqual(accountData.device, {
     id: "wibble",
     registrationVersion: DEVICE_REGISTRATION_VERSION,
@@ -198,15 +200,11 @@ add_storage_task(async function checkEverythingRead(sm) {
   });
   // derive keys are secure
   if (sm.secureStorage) {
-    Assert.deepEqual(
-      sm.secureStorage.data.accountData.scopedKeys,
-      MOCK_ACCOUNT_KEYS.scopedKeys
-    );
+    Assert.equal(sm.secureStorage.data.accountData.kXCS, "kXCS");
+    Assert.equal(sm.secureStorage.data.accountData.kSync, "kSync");
   } else {
-    Assert.deepEqual(
-      sm.plainStorage.data.accountData.scopedKeys,
-      MOCK_ACCOUNT_KEYS.scopedKeys
-    );
+    Assert.equal(sm.plainStorage.data.accountData.kXCS, "kXCS");
+    Assert.equal(sm.plainStorage.data.accountData.kSync, "kSync");
   }
 });
 
@@ -233,23 +231,23 @@ add_storage_task(async function checkNullUpdatesRemovedUnlocked(sm) {
       email: "someone@somewhere.com",
     });
     sm.secureStorage = new MockedSecureStorage({
-      scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
-      unwrapBKey: "unwrapBKey",
+      kSync: "kSync",
+      kXCS: "kXCS",
     });
   } else {
     sm.plainStorage = new MockedPlainStorage({
       uid: "uid",
       email: "someone@somewhere.com",
-      scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
-      unwrapBKey: "unwrapBKey",
+      kSync: "kSync",
+      kXCS: "kXCS",
     });
   }
   await sm.initialize();
 
-  await sm.updateAccountData({ unwrapBKey: null });
+  await sm.updateAccountData({ kXCS: null });
   let accountData = await sm.getAccountData();
-  Assert.ok(!accountData.unwrapBKey);
-  Assert.deepEqual(accountData.scopedKeys, MOCK_ACCOUNT_KEYS.scopedKeys);
+  Assert.ok(!accountData.kXCS);
+  Assert.equal(accountData.kSync, "kSync");
 });
 
 add_storage_task(async function checkNullRemovesUnlistedFields(sm) {
@@ -284,13 +282,15 @@ add_storage_task(async function checkDelete(sm) {
       email: "someone@somewhere.com",
     });
     sm.secureStorage = new MockedSecureStorage({
-      scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
+      kSync: "kSync",
+      kXCS: "kXCS",
     });
   } else {
     sm.plainStorage = new MockedPlainStorage({
       uid: "uid",
       email: "someone@somewhere.com",
-      scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
+      kSync: "kSync",
+      kXCS: "kXCS",
     });
   }
   await sm.initialize();
@@ -313,31 +313,27 @@ add_task(async function checkNullUpdatesRemovedLocked() {
     email: "someone@somewhere.com",
   });
   sm.secureStorage = new MockedSecureStorage({
-    scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
-    unwrapBKey: "unwrapBKey is another secure value",
+    kSync: "kSync",
+    kXCS: "kXCS",
   });
   sm.secureStorage.locked = true;
   await sm.initialize();
 
-  await sm.updateAccountData({ scopedKeys: null });
+  await sm.updateAccountData({ kSync: null });
   let accountData = await sm.getAccountData();
-  // No scopedKeys because it was removed.
-  Assert.ok(!accountData.scopedKeys);
-  // No unwrapBKey because we are locked
-  Assert.ok(!accountData.unwrapBKey);
+  Assert.ok(!accountData.kSync);
+  // still no kXCS as we are locked.
+  Assert.ok(!accountData.kXCS);
 
-  // now unlock - should still be no scopedKeys but unwrapBKey should appear.
+  // now unlock - should still be no kSync but kXCS should appear.
   sm.secureStorage.locked = false;
   accountData = await sm.getAccountData();
-  Assert.ok(!accountData.scopedKeys);
-  Assert.equal(accountData.unwrapBKey, "unwrapBKey is another secure value");
+  Assert.ok(!accountData.kSync);
+  Assert.equal(accountData.kXCS, "kXCS");
   // And secure storage should have been written with our previously-cached
   // data.
-  Assert.strictEqual(sm.secureStorage.data.accountData.scopedKeys, undefined);
-  Assert.strictEqual(
-    sm.secureStorage.data.accountData.unwrapBKey,
-    "unwrapBKey is another secure value"
-  );
+  Assert.strictEqual(sm.secureStorage.data.accountData.kSync, undefined);
+  Assert.strictEqual(sm.secureStorage.data.accountData.kXCS, "kXCS");
 });
 
 add_task(async function checkEverythingReadSecure() {
@@ -346,16 +342,14 @@ add_task(async function checkEverythingReadSecure() {
     uid: "uid",
     email: "someone@somewhere.com",
   });
-  sm.secureStorage = new MockedSecureStorage({
-    scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
-  });
+  sm.secureStorage = new MockedSecureStorage({ kXCS: "kXCS" });
   await sm.initialize();
 
   let accountData = await sm.getAccountData();
   Assert.ok(accountData, "read account data");
   Assert.equal(accountData.uid, "uid");
   Assert.equal(accountData.email, "someone@somewhere.com");
-  Assert.deepEqual(accountData.scopedKeys, MOCK_ACCOUNT_KEYS.scopedKeys);
+  Assert.equal(accountData.kXCS, "kXCS");
 });
 
 add_task(async function checkExplicitGet() {
@@ -364,15 +358,13 @@ add_task(async function checkExplicitGet() {
     uid: "uid",
     email: "someone@somewhere.com",
   });
-  sm.secureStorage = new MockedSecureStorage({
-    scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
-  });
+  sm.secureStorage = new MockedSecureStorage({ kXCS: "kXCS" });
   await sm.initialize();
 
-  let accountData = await sm.getAccountData(["uid", "scopedKeys"]);
+  let accountData = await sm.getAccountData(["uid", "kXCS"]);
   Assert.ok(accountData, "read account data");
   Assert.equal(accountData.uid, "uid");
-  Assert.deepEqual(accountData.scopedKeys, MOCK_ACCOUNT_KEYS.scopedKeys);
+  Assert.equal(accountData.kXCS, "kXCS");
   // We didn't ask for email so shouldn't have got it.
   Assert.strictEqual(accountData.email, undefined);
 });
@@ -383,9 +375,7 @@ add_task(async function checkExplicitGetNoSecureRead() {
     uid: "uid",
     email: "someone@somewhere.com",
   });
-  sm.secureStorage = new MockedSecureStorage({
-    scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
-  });
+  sm.secureStorage = new MockedSecureStorage({ kXCS: "kXCS" });
   await sm.initialize();
 
   Assert.equal(sm.secureStorage.fetchCount, 0);
@@ -394,7 +384,7 @@ add_task(async function checkExplicitGetNoSecureRead() {
   Assert.ok(accountData, "read account data");
   Assert.equal(accountData.uid, "uid");
   Assert.equal(accountData.email, "someone@somewhere.com");
-  Assert.strictEqual(accountData.scopedKeys, undefined);
+  Assert.strictEqual(accountData.kXCS, undefined);
   Assert.equal(sm.secureStorage.fetchCount, 1);
 });
 
@@ -405,34 +395,29 @@ add_task(async function checkLockedUpdates() {
     email: "someone@somewhere.com",
   });
   sm.secureStorage = new MockedSecureStorage({
-    scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
-    unwrapBKey: "unwrapBKey",
+    kSync: "old-kSync",
+    kXCS: "kXCS",
   });
   sm.secureStorage.locked = true;
   await sm.initialize();
 
   let accountData = await sm.getAccountData();
-  // requesting scopedKeys will fail as storage is locked.
-  Assert.ok(!accountData.scopedKeys);
+  // requesting kSync and kXCS will fail as storage is locked.
+  Assert.ok(!accountData.kSync);
+  Assert.ok(!accountData.kXCS);
   // While locked we can still update it and see the updated value.
-  sm.updateAccountData({ unwrapBKey: "new-unwrapBKey" });
+  sm.updateAccountData({ kSync: "new-kSync" });
   accountData = await sm.getAccountData();
-  Assert.equal(accountData.unwrapBKey, "new-unwrapBKey");
+  Assert.equal(accountData.kSync, "new-kSync");
   // unlock.
   sm.secureStorage.locked = false;
   accountData = await sm.getAccountData();
   // should reflect the value we updated and the one we didn't.
-  Assert.equal(accountData.unwrapBKey, "new-unwrapBKey");
-  Assert.deepEqual(accountData.scopedKeys, MOCK_ACCOUNT_KEYS.scopedKeys);
+  Assert.equal(accountData.kSync, "new-kSync");
+  Assert.equal(accountData.kXCS, "kXCS");
   // And storage should also reflect it.
-  Assert.deepEqual(
-    sm.secureStorage.data.accountData.scopedKeys,
-    MOCK_ACCOUNT_KEYS.scopedKeys
-  );
-  Assert.strictEqual(
-    sm.secureStorage.data.accountData.unwrapBKey,
-    "new-unwrapBKey"
-  );
+  Assert.strictEqual(sm.secureStorage.data.accountData.kSync, "new-kSync");
+  Assert.strictEqual(sm.secureStorage.data.accountData.kXCS, "kXCS");
 });
 
 // Some tests for the "storage queue" functionality.
@@ -446,9 +431,7 @@ async function setupStorageManagerForQueueTest() {
     uid: "uid",
     email: "someone@somewhere.com",
   });
-  sm.secureStorage = new MockedSecureStorage({
-    scopedKeys: { ...MOCK_ACCOUNT_KEYS.scopedKeys },
-  });
+  sm.secureStorage = new MockedSecureStorage({ kXCS: "kXCS" });
   sm.secureStorage.locked = true;
   await sm.initialize();
 
