@@ -501,12 +501,12 @@ impl<H: ToShmem, T: ToShmem> ToShmem for ThinArc<H, T> {
 
 impl<T: ToShmem> ToShmem for ThinVec<T> {
     fn to_shmem(&self, builder: &mut SharedMemoryBuilder) -> Result<Self> {
-        let len = self.len();
-        if len == 0 {
-            return Ok(ManuallyDrop::new(Self::new()));
-        }
-
         assert_eq!(mem::size_of::<Self>(), mem::size_of::<*const ()>());
+
+        // NOTE: We need to do the work of allocating the header in shared memory even if the
+        // length is zero, because an empty ThinVec, even though it doesn't allocate, references
+        // static memory which will not be mapped to other processes, see bug 1841011.
+        let len = self.len();
 
         // nsTArrayHeader size.
         // FIXME: Would be nice not to hard-code this, but in practice thin-vec crate also relies
