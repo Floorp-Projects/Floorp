@@ -23,6 +23,13 @@
 
 .button-block {
   background-image: url(chrome://global/skin/icons/blocked.svg);
+  background-position: left 8px center;
+  background-repeat: no-repeat;
+  padding-inline-start: 2em;
+}
+
+.button-block:dir(rtl) {
+  background-position-x: right 8px;
 }
 
 .button-expand {
@@ -45,8 +52,9 @@
   fill: red;
 }
 .button-block.module-blocked {
-  fill: red;
   background-image: url(chrome://global/skin/icons/close-fill.svg);
+  -moz-context-properties: fill;
+  fill: red;
 }
 .button-block.module-blocked.blocklist-disabled {
   fill: goldenrod;
