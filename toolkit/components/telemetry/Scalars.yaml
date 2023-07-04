@@ -9907,6 +9907,38 @@ firstStartup:
     record_in_processes:
       - main
 
+  normandyInitTime:
+    bug_numbers:
+      - 1841138
+    description: >
+      Number of milliseconds until Normandy.init resolved in FirstStartup.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rhelmer@mozilla.com
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
+  deleteTasksTime:
+    bug_numbers:
+      - 1841138
+    description: >
+      Number of milliseconds until TaskScheduler.deleteAllTasks resolved in FirstStartup.
+    expires: never
+    kind: uint
+    notification_emails:
+      - rhelmer@mozilla.com
+      - mconley@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last
 # one for readability.

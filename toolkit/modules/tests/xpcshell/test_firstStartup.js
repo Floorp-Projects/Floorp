@@ -33,6 +33,15 @@ add_task(async function test_success() {
           Glean.firstStartup.statusCode.testGetValue(),
           FirstStartup.SUCCESS
         );
+
+        if (AppConstants.MOZ_NORMANDY) {
+          Assert.ok(Glean.firstStartup.normandyInitTime.testGetValue() > 0);
+        }
+
+        if (AppConstants.MOZ_UPDATE_AGENT) {
+          Assert.ok(Glean.firstStartup.deleteTasksTime.testGetValue() > 0);
+        }
+
         resolve();
       });
     });
@@ -64,6 +73,15 @@ add_task(async function test_timeout() {
       GleanPings.firstStartup.testBeforeNextSubmit(() => {
         Assert.equal(FirstStartup.state, FirstStartup.TIMED_OUT);
         Assert.ok(Glean.firstStartup.elapsed.testGetValue() > 0);
+
+        if (AppConstants.MOZ_NORMANDY) {
+          Assert.ok(Glean.firstStartup.normandyInitTime.testGetValue() > 0);
+        }
+
+        if (AppConstants.MOZ_UPDATE_AGENT) {
+          Assert.ok(Glean.firstStartup.deleteTasksTime.testGetValue() > 0);
+        }
+
         resolve();
       });
     });
