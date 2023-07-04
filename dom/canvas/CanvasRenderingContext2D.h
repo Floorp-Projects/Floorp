@@ -315,16 +315,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     }
   }
 
-  CanvasFontVariantCaps FontVariantCaps() {
-    return CurrentState().fontVariantCaps;
-  }
-  void SetFontVariantCaps(const CanvasFontVariantCaps& aFontVariantCaps) {
-    if (CurrentState().fontVariantCaps != aFontVariantCaps) {
-      CurrentState().fontVariantCaps = aFontVariantCaps;
-      CurrentState().fontGroup = nullptr;
-    }
-  }
-
   CanvasTextRendering TextRendering() { return CurrentState().textRendering; }
   void SetTextRendering(const CanvasTextRendering& aTextRendering) {
     CurrentState().textRendering = aTextRendering;
@@ -971,7 +961,6 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
     CanvasTextBaseline textBaseline = CanvasTextBaseline::Alphabetic;
     CanvasDirection textDirection = CanvasDirection::Inherit;
     CanvasFontKerning fontKerning = CanvasFontKerning::Auto;
-    CanvasFontVariantCaps fontVariantCaps = CanvasFontVariantCaps::Normal;
     CanvasTextRendering textRendering = CanvasTextRendering::Auto;
 
     gfx::Float letterSpacing = 0.0f;
