@@ -15,6 +15,7 @@
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Range.h"
+#include "mozilla/SPSCQueue.h"
 #include "mozilla/Vector.h"
 #include "mozilla/Result.h"
 #include "mozilla/loader/AutoMemMap.h"
@@ -159,13 +160,30 @@ class ScriptPreloader : public nsIObserver,
   // cache file, to be added to the next session's stencil cache file, or
   // both.
   //
-  //  - Read from the cache, and being decoded off thread. In this case,
-  //    mReadyToExecute is false, and mDecodedStencils is null.
-  //  - Off-thread decode has finished, but the stencil has not yet been
-  //    executed. In this case, mReadyToExecute is true, and mDecodedStencils
-  //    has a non-null value.
+  //  - Read from the cache, and being decoded off thread. In this case:
+  //      - mReadyToExecute is false
+  //      - mDecodingScripts contains the CachedStencil
+  //      - mDecodedStencils have never contained the stencil
+  //      - mStencil is null
+  //
+  //  - Off-thread decode for the stencil has finished, but the stencil has not
+  //    yet been dequeued nor executed. In this case:
+  //      - mReadyToExecute is true
+  //      - mDecodingScripts contains the CachedStencil
+  //      - mDecodedStencils contains the decoded stencil
+  //      - mStencil is null
+  //
+  //  - Off-thread decode for the stencil has finished, and the stencil has
+  //    been dequeued, but has not yet been executed. In this case:
+  //      - mReadyToExecute is true
+  //      - mDecodingScripts no longer contains the CachedStencil
+  //      - mDecodedStencils no longer contains the decoded stencil
+  //      - mStencil is non-null
+  //
   //  - Fully decoded, and ready to be added to the next session's cache
-  //    file. In this case, mReadyToExecute is true, and mStencil is non-null.
+  //    file. In this case:
+  //      - mReadyToExecute is true
+  //      - mStencil is non-null
   //
   // A stencil to be added to the next session's cache file always has a
   // non-null mStencil value. If it was read from the last session's cache
@@ -373,27 +391,6 @@ class ScriptPreloader : public nsIObserver,
     return &matcher;
   }
 
-  // There's a significant setup cost for each off-thread decode operation,
-  // so scripts are decoded in chunks to minimize the overhead. There's a
-  // careful balancing act in choosing the size of chunks, to minimize the
-  // number of decode operations, while also minimizing the number of buffer
-  // underruns that require the main thread to wait for a script to finish
-  // decoding.
-  //
-  // For the first chunk, we don't have much time between the start of the
-  // decode operation and the time the first script is needed, so that chunk
-  // needs to be fairly small. After the first chunk is finished, we have
-  // some buffered scripts to fall back on, and a lot more breathing room,
-  // so the chunks can be a bit bigger, but still not too big.
-  static constexpr int OFF_THREAD_FIRST_CHUNK_SIZE = 128 * 1024;
-  static constexpr int OFF_THREAD_CHUNK_SIZE = 512 * 1024;
-
-  // Ideally, we want every chunk to be smaller than the chunk sizes
-  // specified above. However, if we have some number of small scripts
-  // followed by a huge script that would put us over the normal chunk size,
-  // we're better off processing them as a single chunk.
-  static constexpr int SMALL_SCRIPT_CHUNK_THRESHOLD = 128 * 1024;
-
   // The maximum size of scripts to re-decode on the main thread if off-thread
   // decoding hasn't finished yet. In practice, we don't hit this very often,
   // but when we do, re-decoding some smaller scripts on the main thread gives
@@ -441,24 +438,24 @@ class ScriptPreloader : public nsIObserver,
   already_AddRefed<JS::Stencil> WaitForCachedStencil(
       JSContext* cx, const JS::DecodeOptions& options, CachedStencil* script);
 
-  void DecodeNextBatch(size_t chunkSize, JS::Handle<JSObject*> scope = nullptr);
+  void StartDecodeTask(JS::Handle<JSObject*> scope);
 
  private:
   bool StartDecodeTask(JS::DecodeOptions decodeOptions,
-                       JS::TranscodeSources&& parsingSources);
+                       JS::TranscodeSources&& decodingSources);
 
   class DecodeTask : public Runnable {
     ScriptPreloader* mPreloader;
     JS::DecodeOptions mDecodeOptions;
-    JS::TranscodeSources mParsingSources;
+    JS::TranscodeSources mDecodingSources;
 
    public:
     DecodeTask(ScriptPreloader* preloader, JS::DecodeOptions decodeOptions,
-               JS::TranscodeSources&& parsingSources)
+               JS::TranscodeSources&& decodingSources)
         : Runnable("ScriptPreloaderDecodeTask"),
           mPreloader(preloader),
           mDecodeOptions(decodeOptions),
-          mParsingSources(std::move(parsingSources)) {
+          mDecodingSources(std::move(decodingSources)) {
       // NOTE: the JS::DecodeOptions is created on the main thread and is going
       // to be used off main thread.  There shouldn't be any external data
       // reference, such as filename.
@@ -470,11 +467,12 @@ class ScriptPreloader : public nsIObserver,
 
   friend class DecodeTask;
 
-  void OnDecodeTaskFinished(UniquePtr<Vector<RefPtr<JS::Stencil>>>&& stencils);
+  void onDecodedStencilQueued();
+  void OnDecodeTaskFinished();
   void OnDecodeTaskFailed();
 
  public:
-  void FinishOffThreadDecode(Vector<RefPtr<JS::Stencil>>* stencils);
+  void FinishOffThreadDecode();
   void DoFinishOffThreadDecode();
 
   already_AddRefed<nsIAsyncShutdownClient> GetShutdownBarrier();
@@ -509,20 +507,16 @@ class ScriptPreloader : public nsIObserver,
   // May only be changed on the main thread, while `mSaveMonitor` is held.
   bool mCacheInvalidated MOZ_GUARDED_BY(mSaveMonitor) = false;
 
-  // The list of scripts that we read from the initial startup cache file,
-  // but have yet to initiate a decode task for.
-  LinkedList<CachedStencil> mPendingScripts;
-
-  // The lists of scripts that make up the chunk currently being decoded in a
-  // background thread.
-  Vector<CachedStencil*> mDecodingScripts;
+  // The list of scripts currently being decoded in a background thread.
+  LinkedList<CachedStencil> mDecodingScripts;
 
   // The result of the decode task.
-  Atomic<Vector<RefPtr<JS::Stencil>>*, ReleaseAcquire> mDecodedStencils;
-
-  // True if a runnable has been dispatched to the main thread to finish an
-  // off-thread decode operation. Access only while 'mMonitor' is held.
-  bool mFinishDecodeRunnablePending MOZ_GUARDED_BY(mMonitor) = false;
+  //
+  // This is emplaced when starting the decode task, with the capacity equal
+  // to the number of sources.
+  //
+  // If the decode task failed, nullptr is enqueued.
+  Maybe<SPSCQueue<RefPtr<JS::Stencil>>> mDecodedStencils;
 
   // True is main-thread is blocked and we should notify with Monitor. Access
   // only while `mMonitor` is held.
