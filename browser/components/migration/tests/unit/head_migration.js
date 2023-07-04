@@ -191,3 +191,73 @@ function PRTimeDaysAgo(daysAgo) {
 function dateDaysAgo(daysAgo) {
   return new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
 }
+
+/**
+ * Constructs and returns a data structure consistent with the Chrome
+ * browsers bookmarks storage. This data structure can then be serialized
+ * to JSON and written to disk to simulate a Chrome browser's bookmarks
+ * database.
+ *
+ * @param {number} [totalBookmarks=100]
+ *   How many bookmarks to create.
+ * @returns {object}
+ */
+function createChromeBookmarkStructure(totalBookmarks = 100) {
+  let bookmarksData = {
+    roots: {
+      bookmark_bar: { children: [] },
+      other: { children: [] },
+      synced: { children: [] },
+    },
+  };
+  const MAX_BMS = totalBookmarks;
+  let barKids = bookmarksData.roots.bookmark_bar.children;
+  let menuKids = bookmarksData.roots.other.children;
+  let syncedKids = bookmarksData.roots.synced.children;
+  let currentMenuKids = menuKids;
+  let currentBarKids = barKids;
+  let currentSyncedKids = syncedKids;
+  for (let i = 0; i < MAX_BMS; i++) {
+    currentBarKids.push({
+      url: "https://www.chrome-bookmark-bar-bookmark" + i + ".com",
+      name: "bookmark " + i,
+      type: "url",
+    });
+    currentMenuKids.push({
+      url: "https://www.chrome-menu-bookmark" + i + ".com",
+      name: "bookmark for menu " + i,
+      type: "url",
+    });
+    currentSyncedKids.push({
+      url: "https://www.chrome-synced-bookmark" + i + ".com",
+      name: "bookmark for synced " + i,
+      type: "url",
+    });
+    if (i % 20 == 19) {
+      let nextFolder = {
+        name: "toolbar folder " + Math.ceil(i / 20),
+        type: "folder",
+        children: [],
+      };
+      currentBarKids.push(nextFolder);
+      currentBarKids = nextFolder.children;
+
+      nextFolder = {
+        name: "menu folder " + Math.ceil(i / 20),
+        type: "folder",
+        children: [],
+      };
+      currentMenuKids.push(nextFolder);
+      currentMenuKids = nextFolder.children;
+
+      nextFolder = {
+        name: "synced folder " + Math.ceil(i / 20),
+        type: "folder",
+        children: [],
+      };
+      currentSyncedKids.push(nextFolder);
+      currentSyncedKids = nextFolder.children;
+    }
+  }
+  return bookmarksData;
+}
