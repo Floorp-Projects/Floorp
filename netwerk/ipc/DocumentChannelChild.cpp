@@ -152,6 +152,8 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
       break;
   }
 
+  mLoadState->AssertProcessCouldTriggerLoadIfSystem();
+
   DocumentChannelCreationArgs args(
       mozilla::WrapNotNull(mLoadState), TimeStamp::Now(), mChannelId, mCacheKey,
       mTiming, ipcClientInfo, ipcElementCreationArgs,
