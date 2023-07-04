@@ -1121,7 +1121,7 @@ void ScriptPreloader::StartDecodeTask(JS::HandleObject scope) {
   auto start = TimeStamp::Now();
   LOG(Debug, "Off-thread decoding scripts...\n");
 
-  JS::TranscodeSources decodingSources;
+  Vector<JS::TranscodeSource> decodingSources;
 
   size_t size = 0;
   for (CachedStencil* next = mDecodingScripts.getFirst(); next;) {
@@ -1183,8 +1183,9 @@ void ScriptPreloader::StartDecodeTask(JS::HandleObject scope) {
       (TimeStamp::Now() - start).ToMilliseconds());
 }
 
-bool ScriptPreloader::StartDecodeTask(JS::DecodeOptions decodeOptions,
-                                      JS::TranscodeSources&& decodingSources) {
+bool ScriptPreloader::StartDecodeTask(
+    JS::DecodeOptions decodeOptions,
+    Vector<JS::TranscodeSource>&& decodingSources) {
   mDecodedStencils.emplace(decodingSources.length());
   MOZ_ASSERT(mDecodedStencils);
 

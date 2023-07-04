@@ -33,7 +33,7 @@
 #include "js/experimental/JSStencil.h"  // JS::Stencil
 #include "js/GCAnnotations.h"           // for JS_HAZ_NON_GC_POINTER
 #include "js/RootingAPI.h"              // for Handle, Heap
-#include "js/Transcoding.h"  // for TranscodeBuffer, TranscodeRange, TranscodeSources
+#include "js/Transcoding.h"  // for TranscodeBuffer, TranscodeRange, TranscodeSource
 #include "js/TypeDecls.h"  // for HandleObject, HandleScript
 
 #include <prio.h>
@@ -442,16 +442,16 @@ class ScriptPreloader : public nsIObserver,
 
  private:
   bool StartDecodeTask(JS::DecodeOptions decodeOptions,
-                       JS::TranscodeSources&& decodingSources);
+                       Vector<JS::TranscodeSource>&& decodingSources);
 
   class DecodeTask : public Runnable {
     ScriptPreloader* mPreloader;
     JS::DecodeOptions mDecodeOptions;
-    JS::TranscodeSources mDecodingSources;
+    Vector<JS::TranscodeSource> mDecodingSources;
 
    public:
     DecodeTask(ScriptPreloader* preloader, JS::DecodeOptions decodeOptions,
-               JS::TranscodeSources&& decodingSources)
+               Vector<JS::TranscodeSource>&& decodingSources)
         : Runnable("ScriptPreloaderDecodeTask"),
           mPreloader(preloader),
           mDecodeOptions(decodeOptions),
