@@ -498,6 +498,10 @@ def _docheckout(
             ui.warn(b"ssl error: %s\n" % pycompat.bytestr(str(e)))
             handlenetworkfailure()
             return True
+        elif isinstance(e, urllibcompat.urlerr.httperror) and e.code >= 500:
+            ui.warn(b"http error: %s\n" % pycompat.bytestr(str(e.reason)))
+            handlenetworkfailure()
+            return True
         elif isinstance(e, urllibcompat.urlerr.urlerror):
             if isinstance(e.reason, socket.error):
                 ui.warn(b"socket error: %s\n" % pycompat.bytestr(str(e.reason)))
