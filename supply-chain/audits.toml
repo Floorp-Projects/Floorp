@@ -2019,6 +2019,11 @@ criteria = "safe-to-deploy"
 version = "0.3.3"
 notes = "All code written or reviewed by Josh Stone."
 
+[[audits.num-derive]]
+who = "Mike Hommey <mh+mozilla@glandium.org>"
+criteria = "safe-to-deploy"
+delta = "0.3.3 -> 0.4.0"
+
 [[audits.num-integer]]
 who = "Josh Stone <jistone@redhat.com>"
 criteria = "safe-to-deploy"

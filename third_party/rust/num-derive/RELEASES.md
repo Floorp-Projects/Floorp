@@ -1,3 +1,11 @@
+# Release 0.4.0 (2023-06-29)
+
+- [Update to syn-2][54] -- thanks @maurer!
+  - This raises the minimum supported rustc to 1.56.
+  - The "full-syntax" feature has also been removed.
+
+[54]: https://github.com/rust-num/num-derive/pull/54
+
 # Release 0.3.3 (2020-10-29)
 
 - [Make `NumOps` work with `no_std`][41] -- thanks @jedrzejboczar!
