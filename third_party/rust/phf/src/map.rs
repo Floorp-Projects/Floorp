@@ -46,7 +46,23 @@ where
     }
 }
 
+impl<K, V> Default for Map<K, V> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<K, V> Map<K, V> {
+    /// Create a new, empty, immutable map.
+    #[inline]
+    pub const fn new() -> Self {
+        Self {
+            key: 0,
+            disps: &[],
+            entries: &[],
+        }
+    }
+
     /// Returns the number of entries in the `Map`.
     #[inline]
     pub const fn len(&self) -> usize {
@@ -99,7 +115,7 @@ impl<K, V> Map<K, V> {
             return None;
         } //Prevent panic on empty map
         let hashes = phf_shared::hash(key, &self.key);
-        let index = phf_shared::get_index(&hashes, &*self.disps, self.entries.len());
+        let index = phf_shared::get_index(&hashes, self.disps, self.entries.len());
         let entry = &self.entries[index as usize];
         let b: &T = entry.0.borrow();
         if b == key {

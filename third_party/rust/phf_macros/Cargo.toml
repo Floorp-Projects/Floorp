@@ -10,27 +10,28 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
+rust-version = "1.60"
 name = "phf_macros"
-version = "0.10.0"
+version = "0.11.2"
 authors = ["Steven Fackler <sfackler@gmail.com>"]
 include = ["src/lib.rs"]
 description = "Macros to generate types in the phf crate"
-readme = "../README.md"
+readme = "README.md"
+categories = ["data-structures"]
 license = "MIT"
-repository = "https://github.com/sfackler/rust-phf"
+repository = "https://github.com/rust-phf/rust-phf"
+resolver = "1"
 
 [lib]
 proc-macro = true
+
 [dependencies.phf_generator]
-version = "0.10.0"
+version = "0.11.1"
 
 [dependencies.phf_shared]
-version = "0.10.0"
+version = "^0.11.2"
 default-features = false
-
-[dependencies.proc-macro-hack]
-version = "0.5.4"
 
 [dependencies.proc-macro2]
 version = "1"
@@ -46,16 +47,9 @@ features = ["full"]
 version = "2.4.0"
 optional = true
 package = "unicase"
-[dev-dependencies.phf]
-version = "0.9"
-features = ["macros", "unicase"]
-
-[dev-dependencies.trybuild]
-version = "1.0"
-
-[dev-dependencies.unicase_]
-version = "2.4.0"
-package = "unicase"
 
 [features]
-unicase = ["unicase_", "phf_shared/unicase"]
+unicase = [
+    "unicase_",
+    "phf_shared/unicase",
+]
