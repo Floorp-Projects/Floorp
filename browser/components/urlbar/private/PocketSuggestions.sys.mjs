@@ -144,6 +144,11 @@ export class PocketSuggestions extends BaseFeature {
   }
 
   makeResult(queryContext, suggestion, searchString) {
+    let isBestMatch =
+      suggestion.is_top_pick &&
+      lazy.UrlbarPrefs.get("bestMatchEnabled") &&
+      lazy.UrlbarPrefs.get("suggest.bestmatch");
+
     return Object.assign(
       new lazy.UrlbarResult(
         lazy.UrlbarUtils.RESULT_TYPE.URL,
@@ -156,7 +161,11 @@ export class PocketSuggestions extends BaseFeature {
           helpUrl: lazy.QuickSuggest.HELP_URL,
         })
       ),
-      { showFeedbackMenu: true }
+      {
+        isRichSuggestion: true,
+        richSuggestionIconSize: isBestMatch ? 24 : 16,
+        showFeedbackMenu: true,
+      }
     );
   }
 

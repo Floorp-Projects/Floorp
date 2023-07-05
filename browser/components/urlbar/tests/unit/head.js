@@ -762,7 +762,7 @@ function makeSearchResult(
     result.payload.lowerCaseSuggestion =
       result.payload.suggestion.toLocaleLowerCase();
     result.payload.trending = trending;
-    result.payload.isRichSuggestion = isRichSuggestion;
+    result.isRichSuggestion = isRichSuggestion;
   }
 
   if (providerName) {

@@ -191,6 +191,9 @@ add_task(async function () {
         sponsoredAdvertiser: qsResult.advertiser,
         sponsoredIabCategory: qsResult.iab_category,
         icon: null,
+        descriptionL10n: isSponsored
+          ? { id: "urlbar-result-action-sponsored" }
+          : undefined,
         helpUrl: QuickSuggest.HELP_URL,
         helpL10n: {
           id: UrlbarPrefs.get("resultMenu")

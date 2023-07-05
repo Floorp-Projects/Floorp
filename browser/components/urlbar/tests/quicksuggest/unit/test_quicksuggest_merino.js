@@ -41,6 +41,7 @@ const EXPECTED_REMOTE_SETTINGS_URLBAR_RESULT = {
     sponsoredBlockId: 1,
     sponsoredAdvertiser: "TestAdvertiser",
     isSponsored: true,
+    descriptionL10n: { id: "urlbar-result-action-sponsored" },
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
       id: UrlbarPrefs.get("resultMenu")
@@ -75,6 +76,7 @@ const EXPECTED_MERINO_URLBAR_RESULT = {
     sponsoredBlockId: 1,
     sponsoredAdvertiser: "advertiser",
     isSponsored: true,
+    descriptionL10n: { id: "urlbar-result-action-sponsored" },
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
       id: UrlbarPrefs.get("resultMenu")
@@ -491,6 +493,7 @@ add_task(async function multipleMerinoSuggestions() {
           sponsoredBlockId: 1,
           sponsoredAdvertiser: "multipleMerinoSuggestions 1 advertiser",
           isSponsored: true,
+          descriptionL10n: { id: "urlbar-result-action-sponsored" },
           helpUrl: QuickSuggest.HELP_URL,
           helpL10n: {
             id: UrlbarPrefs.get("resultMenu")

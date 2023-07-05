@@ -157,6 +157,9 @@ function createExpectedQuickSuggestResult(suggest) {
       sponsoredAdvertiser: suggest.advertiser,
       sponsoredIabCategory: suggest.iab_category,
       isSponsored,
+      descriptionL10n: isSponsored
+        ? { id: "urlbar-result-action-sponsored" }
+        : undefined,
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
         id: UrlbarPrefs.get("resultMenu")
