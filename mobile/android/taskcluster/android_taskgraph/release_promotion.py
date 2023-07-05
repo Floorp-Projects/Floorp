@@ -125,11 +125,11 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     target_tasks_method = promotion_config["target-tasks-method"].format(
         project=parameters["project"]
     )
-    rebuild_kinds = input.get("rebuild_kinds") or promotion_config.get(
-        "rebuild-kinds", []
+    rebuild_kinds = input.get(
+        "rebuild_kinds", promotion_config.get("rebuild-kinds", [])
     )
-    do_not_optimize = input.get("do_not_optimize") or promotion_config.get(
-        "do-not-optimize", []
+    do_not_optimize = input.get(
+        "do_not_optimize", promotion_config.get("do-not-optimize", [])
     )
 
     # make parameters read-write
