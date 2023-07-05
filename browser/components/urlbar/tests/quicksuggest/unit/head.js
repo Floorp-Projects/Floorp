@@ -225,3 +225,245 @@ async function doMigrateTest({
   }
   UrlbarPrefs._updatingFirefoxSuggestScenario = false;
 }
+
+/**
+ * Does some "show less frequently" tests where the cap is set in remote
+ * settings and Nimbus. See `doOneShowLessFrequentlyTest()`. This function
+ * assumes the matching behavior implemented by the given `BaseFeature` is based
+ * on matching prefixes of the given keyword starting at the first word. It
+ * also assumes the `BaseFeature` provides suggestions in remote settings.
+ *
+ * @param {object} options
+ *   Options object.
+ * @param {BaseFeature} options.feature
+ *   The feature that provides the suggestion matched by the searches.
+ * @param {*} options.expectedResult
+ *   The expected result that should be matched, for searches that are expected
+ *   to match a result. Can also be a function; it's passed the current search
+ *   string and it should return the expected result.
+ * @param {string} options.showLessFrequentlyCountPref
+ *   The name of the pref that stores the "show less frequently" count being
+ *   tested.
+ * @param {string} options.nimbusCapVariable
+ *   The name of the Nimbus variable that stores the "show less frequently" cap
+ *   being tested.
+ * @param {object} options.keyword
+ *   The primary keyword to use during the test. It must contain more than one
+ *   word, and it must have at least two chars after the first space.
+ */
+async function doShowLessFrequentlyTests({
+  feature,
+  expectedResult,
+  showLessFrequentlyCountPref,
+  nimbusCapVariable,
+  keyword,
+}) {
+  // Do some sanity checks on the keyword. Any checks that fail are errors in
+  // the test. This function assumes
+  let spaceIndex = keyword.indexOf(" ");
+  if (spaceIndex < 0) {
+    throw new Error("keyword must contain a space");
+  }
+  if (spaceIndex == 0) {
+    throw new Error("keyword must not start with a space");
+  }
+  if (keyword.length < spaceIndex + 3) {
+    throw new Error("keyword must have at least two chars after the space");
+  }
+
+  let tests = [
+    {
+      showLessFrequentlyCount: 0,
+      canShowLessFrequently: true,
+      newSearches: {
+        [keyword.substring(0, spaceIndex - 1)]: false,
+        [keyword.substring(0, spaceIndex)]: true,
+        [keyword.substring(0, spaceIndex + 1)]: true,
+        [keyword.substring(0, spaceIndex + 2)]: true,
+        [keyword.substring(0, spaceIndex + 3)]: true,
+      },
+    },
+    {
+      showLessFrequentlyCount: 1,
+      canShowLessFrequently: true,
+      newSearches: {
+        [keyword.substring(0, spaceIndex)]: false,
+      },
+    },
+    {
+      showLessFrequentlyCount: 2,
+      canShowLessFrequently: true,
+      newSearches: {
+        [keyword.substring(0, spaceIndex + 1)]: false,
+      },
+    },
+    {
+      showLessFrequentlyCount: 3,
+      canShowLessFrequently: false,
+      newSearches: {
+        [keyword.substring(0, spaceIndex + 2)]: false,
+      },
+    },
+    {
+      showLessFrequentlyCount: 3,
+      canShowLessFrequently: false,
+      newSearches: {},
+    },
+  ];
+
+  info("Testing 'show less frequently' with cap in remote settings");
+  await doOneShowLessFrequentlyTest({
+    tests,
+    feature,
+    expectedResult,
+    showLessFrequentlyCountPref,
+    rs: {
+      show_less_frequently_cap: 3,
+    },
+  });
+
+  // Nimbus should override remote settings.
+  info("Testing 'show less frequently' with cap in Nimbus and remote settings");
+  await doOneShowLessFrequentlyTest({
+    tests,
+    feature,
+    expectedResult,
+    showLessFrequentlyCountPref,
+    rs: {
+      show_less_frequently_cap: 10,
+    },
+    nimbus: {
+      [nimbusCapVariable]: 3,
+    },
+  });
+}
+
+/**
+ * Does a group of searches, increments the "show less frequently" count, and
+ * repeats until all groups are done. The cap can be set by remote settings
+ * config and/or Nimbus.
+ *
+ * @param {object} options
+ *   Options object.
+ * @param {BaseFeature} options.feature
+ *   The feature that provides the suggestion matched by the searches.
+ * @param {*} options.expectedResult
+ *   The expected result that should be matched, for searches that are expected
+ *   to match a result. Can also be a function; it's passed the current search
+ *   string and it should return the expected result.
+ * @param {string} options.showLessFrequentlyCountPref
+ *   The name of the pref that stores the "show less frequently" count being
+ *   tested.
+ * @param {object} options.tests
+ *   An array where each item describes a group of new searches to perform and
+ *   expected state. Each item should look like this:
+ *   `{ showLessFrequentlyCount, canShowLessFrequently, newSearches }`
+ *
+ *   {number} showLessFrequentlyCount
+ *     The expected value of `showLessFrequentlyCount` before the group of
+ *     searches is performed.
+ *   {boolean} canShowLessFrequently
+ *     The expected value of `canShowLessFrequently` before the group of
+ *     searches is performed.
+ *   {object} newSearches
+ *     An object that maps each search string to a boolean that indicates
+ *     whether the first remote settings suggestion should be triggered by the
+ *     search string. Searches are cumulative: The intended use is to pass a
+ *     large initial group of searches in the first search group, and then each
+ *     following `newSearches` is a diff against the previous.
+ * @param {object} options.rs
+ *   The remote settings config to set.
+ * @param {object} options.nimbus
+ *   The Nimbus variables to set.
+ */
+async function doOneShowLessFrequentlyTest({
+  feature,
+  expectedResult,
+  showLessFrequentlyCountPref,
+  tests,
+  rs = {},
+  nimbus = {},
+}) {
+  // Disable Merino so we trigger only remote settings suggestions. The
+  // `BaseFeature` is expected to add remote settings suggestions using keywords
+  // start starting with the first word in each full keyword, but the mock
+  // Merino server will always return whatever suggestion it's told to return
+  // regardless of the search string. That means Merino will return a suggestion
+  // for a keyword that's smaller than the first full word.
+  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
+
+  // Set Nimbus variables and RS config.
+  let cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature(nimbus);
+  await QuickSuggestTestUtils.withConfig({
+    config: rs,
+    callback: async () => {
+      let cumulativeSearches = {};
+
+      for (let {
+        showLessFrequentlyCount,
+        canShowLessFrequently,
+        newSearches,
+      } of tests) {
+        info(
+          "Starting subtest: " +
+            JSON.stringify({
+              showLessFrequentlyCount,
+              canShowLessFrequently,
+              newSearches,
+            })
+        );
+
+        Assert.equal(
+          feature.showLessFrequentlyCount,
+          showLessFrequentlyCount,
+          "showLessFrequentlyCount should be correct initially"
+        );
+        Assert.equal(
+          UrlbarPrefs.get(showLessFrequentlyCountPref),
+          showLessFrequentlyCount,
+          "Pref should be correct initially"
+        );
+        Assert.equal(
+          feature.canShowLessFrequently,
+          canShowLessFrequently,
+          "canShowLessFrequently should be correct initially"
+        );
+
+        // Merge the current `newSearches` object into the cumulative object.
+        cumulativeSearches = {
+          ...cumulativeSearches,
+          ...newSearches,
+        };
+
+        for (let [searchString, isExpected] of Object.entries(
+          cumulativeSearches
+        )) {
+          info("Doing search: " + JSON.stringify({ searchString, isExpected }));
+
+          let results = [];
+          if (isExpected) {
+            results.push(
+              typeof expectedResult == "function"
+                ? expectedResult(searchString)
+                : expectedResult
+            );
+          }
+
+          await check_results({
+            context: createContext(searchString, {
+              providers: [UrlbarProviderQuickSuggest.name],
+              isPrivate: false,
+            }),
+            matches: results,
+          });
+        }
+
+        feature.incrementShowLessFrequentlyCount();
+      }
+    },
+  });
+
+  await cleanUpNimbus();
+  UrlbarPrefs.clear(showLessFrequentlyCountPref);
+  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+}

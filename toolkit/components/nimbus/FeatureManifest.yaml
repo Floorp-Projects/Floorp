@@ -239,6 +239,13 @@ urlbar:
       description: >-
         Feature gate that controls whether all aspects of the Pocket suggestions
         feature are exposed to the user.
+    pocketShowLessFrequentlyCap:
+      type: int
+      description: >-
+        If defined and non-zero, this is the maximum number of times the user
+        will be able to click the "Show less frequently" command for Pocket
+        suggestions. If undefined or zero, the user will be able to click the
+        command without any limit.
     quickSuggestAllowPositionInSuggestions:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.allowPositionInSuggestions
