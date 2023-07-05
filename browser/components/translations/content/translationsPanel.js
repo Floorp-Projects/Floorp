@@ -423,7 +423,7 @@ var TranslationsPanel = new (class {
     try {
       /** @type {SupportedLanguages} */
       const { languagePairs, fromLanguages, toLanguages } =
-        await this.#getTranslationsActor().getSupportedLanguages();
+        await TranslationsParent.getSupportedLanguages();
 
       // Verify that we are in a proper state.
       if (languagePairs.length === 0) {

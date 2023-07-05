@@ -10,7 +10,7 @@
  * https://firefox-source-docs.mozilla.org/services/settings/index.html#unit-tests
  */
 add_task(async function test_translations_actor_sync_update() {
-  const { actor, remoteClients, cleanup } = await setupActorTest({
+  const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
       { fromLang: "en", toLang: "es", isBeta: false },
@@ -19,7 +19,10 @@ add_task(async function test_translations_actor_sync_update() {
   });
 
   const decoder = new TextDecoder();
-  const modelsPromise = actor.getLanguageTranslationModelFiles("en", "es");
+  const modelsPromise = TranslationsParent.getLanguageTranslationModelFiles(
+    "en",
+    "es"
+  );
 
   await remoteClients.translationModels.resolvePendingDownloads(
     FILES_PER_LANGUAGE_PAIR
@@ -50,10 +53,8 @@ add_task(async function test_translations_actor_sync_update() {
     },
   });
 
-  const updatedModelsPromise = actor.getLanguageTranslationModelFiles(
-    "en",
-    "es"
-  );
+  const updatedModelsPromise =
+    TranslationsParent.getLanguageTranslationModelFiles("en", "es");
 
   await remoteClients.translationModels.resolvePendingDownloads(
     FILES_PER_LANGUAGE_PAIR
@@ -74,7 +75,7 @@ add_task(async function test_translations_actor_sync_update() {
  * An actor unit test for testing RemoteSettings delete behavior.
  */
 add_task(async function test_translations_actor_sync_delete() {
-  const { actor, remoteClients, cleanup } = await setupActorTest({
+  const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
       { fromLang: "en", toLang: "es", isBeta: false },
@@ -83,7 +84,10 @@ add_task(async function test_translations_actor_sync_delete() {
   });
 
   const decoder = new TextDecoder();
-  const modelsPromise = actor.getLanguageTranslationModelFiles("en", "es");
+  const modelsPromise = TranslationsParent.getLanguageTranslationModelFiles(
+    "en",
+    "es"
+  );
 
   await remoteClients.translationModels.resolvePendingDownloads(
     FILES_PER_LANGUAGE_PAIR
@@ -107,9 +111,11 @@ add_task(async function test_translations_actor_sync_delete() {
   });
 
   let errorMessage;
-  await actor.getLanguageTranslationModelFiles("en", "es").catch(error => {
-    errorMessage = error?.message;
-  });
+  await TranslationsParent.getLanguageTranslationModelFiles("en", "es").catch(
+    error => {
+      errorMessage = error?.message;
+    }
+  );
 
   is(
     errorMessage,
@@ -124,7 +130,7 @@ add_task(async function test_translations_actor_sync_delete() {
  * An actor unit test for testing RemoteSettings creation behavior.
  */
 add_task(async function test_translations_actor_sync_create() {
-  const { actor, remoteClients, cleanup } = await setupActorTest({
+  const { remoteClients, cleanup } = await setupActorTest({
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
       { fromLang: "en", toLang: "es", isBeta: false },
@@ -133,7 +139,10 @@ add_task(async function test_translations_actor_sync_create() {
   });
 
   const decoder = new TextDecoder();
-  const modelsPromise = actor.getLanguageTranslationModelFiles("en", "es");
+  const modelsPromise = TranslationsParent.getLanguageTranslationModelFiles(
+    "en",
+    "es"
+  );
 
   await remoteClients.translationModels.resolvePendingDownloads(
     FILES_PER_LANGUAGE_PAIR
@@ -154,10 +163,8 @@ add_task(async function test_translations_actor_sync_create() {
     },
   });
 
-  const updatedModelsPromise = actor.getLanguageTranslationModelFiles(
-    "en",
-    "fr"
-  );
+  const updatedModelsPromise =
+    TranslationsParent.getLanguageTranslationModelFiles("en", "fr");
 
   await remoteClients.translationModels.resolvePendingDownloads(
     FILES_PER_LANGUAGE_PAIR

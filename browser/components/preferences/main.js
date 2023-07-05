@@ -11,6 +11,7 @@
 ChromeUtils.defineESModuleGetters(this, {
   BackgroundUpdate: "resource://gre/modules/BackgroundUpdate.sys.mjs",
   MigrationUtils: "resource:///modules/MigrationUtils.sys.mjs",
+  TranslationsParent: "resource://gre/actors/TranslationsParent.sys.mjs",
 });
 
 // Constants & Enumeration Values
@@ -981,18 +982,11 @@ var gMainPane = {
       /**
        * The fully initialized state.
        *
-       * @param {TranslationsActor} translationsActor
        * @param {Object} supportedLanguages
        * @param {Array<{ langTag: string, displayName: string}} languageList
        * @param {Map<string, DownloadPhase>} downloadPhases
        */
-      constructor(
-        translationsActor,
-        supportedLanguages,
-        languageList,
-        downloadPhases
-      ) {
-        this.translationsActor = translationsActor;
+      constructor(supportedLanguages, languageList, downloadPhases) {
         this.supportedLanguages = supportedLanguages;
         this.languageList = languageList;
         this.downloadPhases = downloadPhases;
@@ -1002,14 +996,11 @@ var gMainPane = {
        * Handles all of the async initialization logic.
        */
       static async create() {
-        const translationsActor =
-          window.windowGlobalChild.getActor("Translations");
         const supportedLanguages =
-          await translationsActor.getSupportedLanguages();
+          await TranslationsParent.getSupportedLanguages();
         const languageList =
           TranslationsState.getLanguageList(supportedLanguages);
         const downloadPhases = await TranslationsState.createDownloadPhases(
-          translationsActor,
           languageList
         );
 
@@ -1020,7 +1011,6 @@ var gMainPane = {
         }
 
         return new TranslationsState(
-          translationsActor,
           supportedLanguages,
           languageList,
           downloadPhases
@@ -1062,16 +1052,15 @@ var gMainPane = {
       /**
        * Determine the download phase of each language file.
        *
-       * @param {TranslationsChild} translationsActor
        * @param {Array<{ langTag: string, displayName: string}} languageList.
        * @returns {Map<string, DownloadPhase>} Map the language tag to whether it is downloaded.
        */
-      static async createDownloadPhases(translationsActor, languageList) {
+      static async createDownloadPhases(languageList) {
         const downloadPhases = new Map();
         for (const { langTag } of languageList) {
           downloadPhases.set(
             langTag,
-            (await translationsActor.hasAllFilesForLanguage(langTag))
+            (await TranslationsParent.hasAllFilesForLanguage(langTag))
               ? "downloaded"
               : "uninstalled"
           );
@@ -1128,7 +1117,7 @@ var gMainPane = {
         this.hideError();
         this.disableButtons(true);
         try {
-          await this.state.translationsActor.downloadAllFiles();
+          await TranslationsParent.downloadAllFiles();
           this.markAllDownloadPhases("downloaded");
         } catch (error) {
           TranslationsView.showError(
@@ -1145,7 +1134,7 @@ var gMainPane = {
         this.hideError();
         this.disableButtons(true);
         try {
-          await this.state.translationsActor.deleteAllLanguageFiles();
+          await TranslationsParent.deleteAllLanguageFiles();
           this.markAllDownloadPhases("uninstalled");
         } catch (error) {
           TranslationsView.showError("translations-manage-error-delete", error);
@@ -1165,7 +1154,7 @@ var gMainPane = {
           this.hideError();
           this.updateDownloadPhase(langTag, "loading");
           try {
-            await this.state.translationsActor.downloadLanguageFiles(langTag);
+            await TranslationsParent.downloadLanguageFiles(langTag);
             this.updateDownloadPhase(langTag, "downloaded");
           } catch (error) {
             TranslationsView.showError(
@@ -1186,7 +1175,7 @@ var gMainPane = {
           this.hideError();
           this.updateDownloadPhase(langTag, "loading");
           try {
-            await this.state.translationsActor.deleteLanguageFiles(langTag);
+            await TranslationsParent.deleteLanguageFiles(langTag);
             this.updateDownloadPhase(langTag, "uninstalled");
           } catch (error) {
             TranslationsView.showError(
@@ -1262,10 +1251,7 @@ var gMainPane = {
        */
       async reloadDownloadPhases() {
         this.state.downloadPhases =
-          await TranslationsState.createDownloadPhases(
-            this.state.translationsActor,
-            this.state.languageList
-          );
+          await TranslationsState.createDownloadPhases(this.state.languageList);
         this.updateAllButtons();
       }
 
