@@ -1,58 +1,62 @@
 <!DOCTYPE HTML>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>Test InspectorUtils::getCSSPseudoElementNames</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <script type="application/javascript">
-  const InspectorUtils = SpecialPowers.InspectorUtils;
+    const InspectorUtils = SpecialPowers.InspectorUtils;
 
-  // NOTE(emilio): When this changes, make sure to update _pseudoIsRelevant in devtools/server/actors/styles.js
-  let expected = new Set([
-    "::after",
-    "::before",
-    "::marker",
-    "::backdrop",
-    "::cue",
-    "::file-selector-button",
-    "::first-letter",
-    "::first-line",
-    "::placeholder",
-    "::selection",
-    "::-moz-color-swatch",
-    "::-moz-focus-inner",
-    "::-moz-meter-bar",
-    "::-moz-placeholder",
-    "::-moz-progress-bar",
-    "::-moz-range-progress",
-    "::-moz-range-thumb",
-    "::-moz-range-track",
-  ]);
+    // NOTE(emilio): When this changes, make sure to update _pseudoIsRelevant in devtools/server/actors/styles.js
+    let expected = new Set([
+      "::after",
+      "::before",
+      "::marker",
+      "::backdrop",
+      "::cue",
+      "::file-selector-button",
+      "::first-letter",
+      "::first-line",
+      "::highlight",
+      "::placeholder",
+      "::selection",
+      "::-moz-color-swatch",
+      "::-moz-focus-inner",
+      "::-moz-meter-bar",
+      "::-moz-placeholder",
+      "::-moz-progress-bar",
+      "::-moz-range-progress",
+      "::-moz-range-thumb",
+      "::-moz-range-track",
+    ]);
 
-  let names = InspectorUtils.getCSSPseudoElementNames();
-  for (let name of names) {
-    ok(expected.has(name), name + " is included");
-    expected.delete(name);
-  }
-
-  if (expected.size > 0) {
-    todo_is(expected.size, 0,
-            "ideally all pseudo-element names would be listed in this test");
-    for (let extra of expected) {
-      info("extra element: " + extra);
+    let names = InspectorUtils.getCSSPseudoElementNames();
+    for (let name of names) {
+      ok(expected.has(name), name + " is included");
+      expected.delete(name);
     }
-  }
+
+    if (expected.size > 0) {
+      todo_is(expected.size, 0,
+        "ideally all pseudo-element names would be listed in this test");
+      for (let extra of expected) {
+        info("extra element: " + extra);
+      }
+    }
 
   </script>
 </head>
-<body>
-<h1>Test InspectorUtils::getCSSPseudoElementNames</h1>
-<p id="display"></p>
-<div id="content" style="display: none">
 
-</div>
-<pre id="test">
+<body>
+  <h1>Test InspectorUtils::getCSSPseudoElementNames</h1>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+
+  </div>
+  <pre id="test">
 </pre>
 </body>
+
 </html>
