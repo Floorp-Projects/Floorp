@@ -171,8 +171,8 @@ class FileSystemDataManager
   MozPromiseHolder<BoolPromise> mOpenPromiseHolder;
   MozPromiseHolder<BoolPromise> mClosePromiseHolder;
   uint32_t mRegCount;
-  State mState;
   DatabaseVersion mVersion;
+  State mState;
 };
 
 }  // namespace fs::data
