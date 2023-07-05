@@ -118,7 +118,7 @@ pub fn late_process_mappings(pid: Pid, mappings: &mut [MappingInfo]) -> Result<(
     // where the ELF header indicates a mapped shared library.
     for mut map in mappings
         .iter_mut()
-        .filter(|m| m.is_executable() && m.name_is_path())
+        .filter(|m| m.executable && m.name.as_ref().map_or(false, |n| n.starts_with("/")))
     {
         let ehdr_opt = PtraceDumper::copy_from_process(
             pid,

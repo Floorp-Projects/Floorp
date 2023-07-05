@@ -2,7 +2,7 @@ use super::{CommonThreadInfo, NT_Elf, Pid};
 use crate::{errors::ThreadInfoError, minidump_cpu::RawContextCPU, minidump_format::format};
 use core::mem::size_of_val;
 use libc::user;
-use nix::sys::ptrace;
+use nix::{sys::ptrace, unistd};
 use scroll::Pwrite;
 
 type Result<T> = std::result::Result<T, ThreadInfoError>;
@@ -28,26 +28,17 @@ impl CommonThreadInfo for ThreadInfoX86 {}
 impl ThreadInfoX86 {
     // nix currently doesn't support PTRACE_GETREGSET, so we have to do it ourselves
     fn getregset(pid: Pid) -> Result<libc::user_regs_struct> {
-        Self::ptrace_get_data_via_io(
-            0x4204 as ptrace::RequestType, // PTRACE_GETREGSET
+        Self::ptrace_get_data_via_io::<libc::user_regs_struct>(
+            ptrace::Request::PTRACE_GETREGSET,
             Some(NT_Elf::NT_PRSTATUS),
-            nix::unistd::Pid::from_raw(pid),
-        )
-    }
-
-    pub fn getregs(pid: Pid) -> Result<libc::user_regs_struct> {
-        // TODO: nix restricts PTRACE_GETREGS to arm android for some reason
-        Self::ptrace_get_data(
-            12 as ptrace::RequestType, // PTRACE_GETREGS
-            None,
             nix::unistd::Pid::from_raw(pid),
         )
     }
 
     // nix currently doesn't support PTRACE_GETREGSET, so we have to do it ourselves
     fn getfpregset(pid: Pid) -> Result<libc::user_fpregs_struct> {
-        Self::ptrace_get_data_via_io(
-            0x4204 as ptrace::RequestType, // PTRACE_GETREGSET
+        Self::ptrace_get_data_via_io::<libc::user_fpregs_struct>(
+            ptrace::Request::PTRACE_GETREGSET,
             Some(NT_Elf::NT_PRFPREGSET),
             nix::unistd::Pid::from_raw(pid),
         )
@@ -55,8 +46,8 @@ impl ThreadInfoX86 {
 
     // nix currently doesn't support PTRACE_GETFPREGS, so we have to do it ourselves
     fn getfpregs(pid: Pid) -> Result<libc::user_fpregs_struct> {
-        Self::ptrace_get_data(
-            14 as ptrace::RequestType, // PTRACE_GETFPREGS
+        Self::ptrace_get_data::<libc::user_fpregs_struct>(
+            ptrace::Request::PTRACE_GETFPREGS,
             None,
             nix::unistd::Pid::from_raw(pid),
         )
@@ -65,8 +56,8 @@ impl ThreadInfoX86 {
     // nix currently doesn't support PTRACE_GETFPXREGS, so we have to do it ourselves
     #[cfg(target_arch = "x86")]
     fn getfpxregs(pid: Pid) -> Result<libc::user_fpxregs_struct> {
-        Self::ptrace_get_data(
-            ptrace::Request::PTRACE_GETFPXREGS as ptrace::RequestType,
+        Self::ptrace_get_data::<libc::user_fpxregs_struct>(
+            ptrace::Request::PTRACE_GETFPXREGS,
             None,
             nix::unistd::Pid::from_raw(pid),
         )
@@ -74,7 +65,7 @@ impl ThreadInfoX86 {
 
     fn peek_user(pid: Pid, addr: ptrace::AddressType) -> nix::Result<libc::c_long> {
         Self::ptrace_peek(
-            ptrace::Request::PTRACE_PEEKUSER as ptrace::RequestType,
+            ptrace::Request::PTRACE_PEEKUSER,
             nix::unistd::Pid::from_raw(pid),
             addr,
             std::ptr::null_mut(),
@@ -83,7 +74,7 @@ impl ThreadInfoX86 {
 
     pub fn create_impl(_pid: Pid, tid: Pid) -> Result<Self> {
         let (ppid, tgid) = Self::get_ppid_and_tgid(tid)?;
-        let regs = Self::getregset(tid).or_else(|_| Self::getregs(tid))?;
+        let regs = Self::getregset(tid).or_else(|_| ptrace::getregs(unistd::Pid::from_raw(tid)))?;
         let fpregs = Self::getfpregset(tid).or_else(|_| Self::getfpregs(tid))?;
         #[cfg(target_arch = "x86")]
         let fpxregs: libc::user_fpxregs_struct;

@@ -25,7 +25,7 @@ pub struct AuxvPair {
     pub value: AuxvType,
 }
 
-/// An iterator across auxv pairs from procfs.
+/// An iterator across auxv pairs froom procfs.
 pub struct ProcfsAuxvIter {
     pair_size: usize,
     buf: Vec<u8>,
