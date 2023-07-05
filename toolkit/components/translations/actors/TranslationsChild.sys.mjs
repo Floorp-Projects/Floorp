@@ -31,48 +31,26 @@ export class TranslationsChild extends JSWindowActorChild {
       case "DOMContentLoaded":
         this.innerWindowId =
           this.contentWindow?.windowGlobalChild.innerWindowId;
-        if (!this.#isRestrictedPage()) {
-          this.sendAsyncMessage("Translations:ReportLangTags", {
-            documentElementLang: this.document.documentElement.lang,
-          });
-        }
-        break;
+        this.sendAsyncMessage("Translations:ReportLangTags", {
+          documentElementLang: this.document.documentElement.lang,
+        });
         break;
     }
-  }
-
-  /**
-   * Only translate pages that match certain protocols, that way internal pages like
-   * about:* pages will not be translated.
-   */
-  #isRestrictedPage() {
-    if (!this.contentWindow?.location) {
-      return true;
-    }
-    const { href } = this.contentWindow.location;
-    // Keep this logic up to date with TranslationsParent.isRestrictedPage.
-    return !(
-      href.startsWith("http://") ||
-      href.startsWith("https://") ||
-      href.startsWith("file:///")
-    );
   }
 
   async receiveMessage({ name, data }) {
     switch (name) {
       case "Translations:TranslatePage": {
-        if (!this.#isRestrictedPage()) {
-          lazy.TranslationsEngine.translatePage(this, data).then(
-            () => {
-              this.#wasTranslationsEngineCreated = true;
-            },
-            () => {
-              this.sendAsyncMessage("Translations:FullPageTranslationFailed", {
-                reason: "engine-load-failure",
-              });
-            }
-          );
-        }
+        lazy.TranslationsEngine.translatePage(this, data).then(
+          () => {
+            this.#wasTranslationsEngineCreated = true;
+          },
+          () => {
+            this.sendAsyncMessage("Translations:FullPageTranslationFailed", {
+              reason: "engine-load-failure",
+            });
+          }
+        );
         return undefined;
       }
       case "Translations:GetDocumentElementLang":
