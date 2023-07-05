@@ -33,13 +33,6 @@ function sendFakeAutocompleteEvent(element) {
   element.dispatchEvent(acEvent);
 }
 
-async function promiseACPopupClosed() {
-  return SimpleTest.promiseWaitForCondition(async () => {
-    let popupState = await getPopupState();
-    return !popupState.open;
-  }, "Wait for AC popup to be closed");
-}
-
 add_setup(async () => {
   listenForUnexpectedPopupShown();
 });
@@ -88,7 +81,7 @@ add_task(async function form1_warning_entry() {
   synthesizeKey("KEY_ArrowDown"); // select insecure warning
   checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update just by selecting
   synthesizeKey("KEY_Enter");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "", form.pword, "");
 });
 
@@ -158,7 +151,7 @@ add_task(async function form1_wraparound_first_entry() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_Enter");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-1", form.pword, "pass-1");
 });
 
@@ -178,7 +171,7 @@ add_task(async function form1_wraparound_up_last_entry() {
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // last (fourth)
   synthesizeKey("KEY_Enter");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
@@ -200,7 +193,7 @@ add_task(async function form1_wraparound_down_up_up() {
   synthesizeKey("KEY_ArrowUp"); // selects footer
   synthesizeKey("KEY_ArrowUp"); // select last entry
   synthesizeKey("KEY_Enter");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
@@ -227,7 +220,7 @@ add_task(async function form1_wraparound_up_last() {
   synthesizeKey("KEY_ArrowUp"); // footer
   synthesizeKey("KEY_ArrowUp"); // last entry
   synthesizeKey("KEY_Enter");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
@@ -248,7 +241,7 @@ add_task(async function form1_fill_username_without_autofill_right() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowRight");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-1", form.pword, ""); // empty password
 });
 
@@ -269,7 +262,7 @@ add_task(async function form1_fill_username_without_autofill_left() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowLeft");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-1", form.pword, ""); // empty password
 });
 
@@ -292,7 +285,7 @@ add_task(async function form1_pageup_first() {
   synthesizeKey("KEY_PageUp"); // first
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_Enter");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-1", form.pword, "pass-1");
 });
 
@@ -315,7 +308,7 @@ add_task(async function form1_pagedown_last() {
   synthesizeKey("KEY_PageDown"); // last
   synthesizeKey("KEY_ArrowUp"); // skip footer
   synthesizeKey("KEY_Enter");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
@@ -377,7 +370,7 @@ add_task(async function form1_delete() {
   is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
   await countChangedPromise;
   synthesizeKey("KEY_Enter");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-2", form.pword, "pass-2");
 });
 
@@ -404,7 +397,7 @@ add_task(async function form1_delete_second() {
   const numLoginsAfterDeletion = await LoginManager.countLogins(location.origin, "http://autocomplete:8888", null);
   is(numLoginsAfterDeletion, 2, "Correct number of logins after deleting one");
   synthesizeKey("KEY_Enter");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-3", form.pword, "pass-3");
 });
 
@@ -437,7 +430,7 @@ add_task(async function form1_delete_last() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user-1", form.pword, "pass-1");
 });
 
@@ -491,7 +484,7 @@ add_task(async function username_autocomplete_off() {
   checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
@@ -515,7 +508,7 @@ add_task(async function form_autocomplete_off() {
   checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
@@ -544,7 +537,7 @@ add_task(async function username_and_password_autocomplete_off() {
   checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user", form.pword, "pass");
 });
 
@@ -632,7 +625,7 @@ add_task(async function form7_2() {
   // the password field should have any values filled in.
   await SimpleTest.promiseWaitForCondition(() => form.uname.value == "user",
                                            "Wait for username to get filled");
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user", form.pword, "");
   is(newField.value, "", "Verifying empty uname2");
 });
@@ -703,7 +696,7 @@ add_task(async function form9_filtering() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "form9userAAB", form.pword, "pass-2");
 });
 
@@ -774,7 +767,7 @@ add_task(async function form12_recipes() {
   checkLoginForm(form.uname, "", form.pword, ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessedInSameProcess();
-  await promiseACPopupClosed();
+  await untilAutocompletePopupClosed();
   checkLoginForm(form.uname, "user", form.pword, "pass");
 
   // Now test recipes with blur on the username field.
