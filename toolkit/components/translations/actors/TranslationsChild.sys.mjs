@@ -24,7 +24,6 @@ export class TranslationsChild extends JSWindowActorChild {
    */
   innerWindowId = null;
   isDestroyed = false;
-  #isPageHidden = false;
   #wasTranslationsEngineCreated = false;
 
   handleEvent(event) {
@@ -38,11 +37,6 @@ export class TranslationsChild extends JSWindowActorChild {
           });
         }
         break;
-      case "pageshow":
-        this.#isPageHidden = false;
-        break;
-      case "pagehide":
-        this.#isPageHidden = true;
         break;
     }
   }
@@ -134,7 +128,7 @@ export class TranslationsChild extends JSWindowActorChild {
 
   getOrCreateLanguageIdEngine() {
     return lazy.LanguageIdEngine.getOrCreate(() => {
-      if (this.#isPageHidden) {
+      if (!this.manager || !this.manager.isCurrentGlobal) {
         throw new Error("The page was already hidden.");
       }
       return this.sendQuery("Translations:GetLanguageIdEnginePayload");
