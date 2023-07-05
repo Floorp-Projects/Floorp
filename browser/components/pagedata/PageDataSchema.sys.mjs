@@ -77,7 +77,7 @@ async function validateData(schemaName, data) {
   let result = lazy.JsonSchemaValidator.validate(data, schema, {
     allowExplicitUndefinedProperties: true,
     // Allowed for future expansion of the schema.
-    allowExtraProperties: true,
+    allowAdditionalProperties: true,
   });
 
   if (!result.valid) {
