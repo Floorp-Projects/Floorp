@@ -192,7 +192,8 @@ export class UrlbarResult {
     let result = lazy.JsonSchemaValidator.validate(payload, schema, {
       allowExplicitUndefinedProperties: true,
       allowNullAsUndefinedProperties: true,
-      allowExtraProperties: this.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
+      allowAdditionalProperties:
+        this.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC,
     });
     if (!result.valid) {
       throw result.error;
