@@ -38,7 +38,6 @@ using mozilla::CheckedInt;
 JitScript::JitScript(JSScript* script, Offset fallbackStubsOffset,
                      Offset endOffset, const char* profileString)
     : profileString_(profileString),
-      owningScript_(script),
       endOffset_(endOffset),
       icScript_(script->getWarmUpCount(),
                 fallbackStubsOffset - offsetOfICScript(),
@@ -63,8 +62,6 @@ JitScript::~JitScript() {
   // BaselineScript and IonScript must have been destroyed at this point.
   MOZ_ASSERT(!hasBaselineScript());
   MOZ_ASSERT(!hasIonScript());
-
-  MOZ_ASSERT(!isInList());
 }
 #else
 JitScript::~JitScript() = default;
@@ -123,8 +120,6 @@ bool JSScript::createJitScript(JSContext* cx) {
 
   jitScript->icScript()->initICEntries(cx, this);
 
-  cx->zone()->jitZone()->registerJitScript(jitScript.get());
-
   warmUpData_.initJitScript(jitScript.release());
   AddCellMemory(this, allocSize.value(), MemoryUse::JitScript);
 
@@ -175,8 +170,6 @@ void JSScript::releaseJitScriptOnFinalize(JS::GCContext* gcx) {
 }
 
 void JitScript::trace(JSTracer* trc) {
-  TraceEdge(trc, &owningScript_, "JitScript::owningScript_");
-
   icScript_.trace(trc);
 
   if (hasBaselineScript()) {
@@ -196,41 +189,12 @@ void JitScript::trace(JSTracer* trc) {
   }
 }
 
-void JitScript::traceWeak(JSTracer* trc) {
-  if (!icScript_.traceWeak(trc)) {
-#ifdef DEBUG
-    hasPurgedStubs_ = true;
-#endif
-  }
-
-  if (hasInliningRoot()) {
-    inliningRoot()->traceWeak(trc);
-  }
-
-  if (hasIonScript()) {
-    ionScript()->traceWeak(trc);
-  }
-}
-
 void ICScript::trace(JSTracer* trc) {
   // Mark all IC stub codes hanging off the IC stub entries.
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& ent = icEntry(i);
     ent.trace(trc);
   }
-}
-
-bool ICScript::traceWeak(JSTracer* trc) {
-  // Mark all IC stub codes hanging off the IC stub entries.
-  bool allSurvived = true;
-  for (size_t i = 0; i < numICEntries(); i++) {
-    ICEntry& ent = icEntry(i);
-    if (!ent.traceWeak(trc)) {
-      allSurvived = false;
-    }
-  }
-
-  return allSurvived;
 }
 
 bool ICScript::addInlinedChild(JSContext* cx, UniquePtr<ICScript> child,
@@ -310,9 +274,6 @@ void JitScript::ensureProfileString(JSContext* cx, JSScript* script) {
 void JitScript::Destroy(Zone* zone, JitScript* script) {
   script->prepareForDestruction(zone);
 
-  // Remove from JitZone's linked list of JitScripts.
-  script->remove();
-
   js_delete(script);
 }
 
@@ -326,7 +287,6 @@ void JitScript::prepareForDestruction(Zone* zone) {
   jitScriptStubSpace_.freeAllAfterMinorGC(zone);
 
   // Trigger write barriers.
-  owningScript_ = nullptr;
   baselineScript_.set(zone, nullptr);
   ionScript_.set(zone, nullptr);
 }
@@ -442,7 +402,7 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
       stub = stub->toCacheIRStub()->next();
     }
 
-    lastStub->toFallbackStub()->clearMayHaveFoldedStub();
+    lastStub->toFallbackStub()->clearHasFoldedStub();
   }
 
 #ifdef DEBUG

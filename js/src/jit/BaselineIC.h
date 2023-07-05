@@ -128,7 +128,6 @@ class ICEntry {
   }
 
   void trace(JSTracer* trc);
-  bool traceWeak(JSTracer* trc);
 };
 
 //
@@ -237,9 +236,9 @@ class ICFallbackStub final : public ICStub {
   void setUsedByTranspiler() { state_.setUsedByTranspiler(); }
   bool usedByTranspiler() const { return state_.usedByTranspiler(); }
 
-  void clearMayHaveFoldedStub() { state_.clearMayHaveFoldedStub(); }
-  void setMayHaveFoldedStub() { state_.setMayHaveFoldedStub(); }
-  bool mayHaveFoldedStub() const { return state_.mayHaveFoldedStub(); }
+  void clearHasFoldedStub() { state_.clearHasFoldedStub(); }
+  void setHasFoldedStub() { state_.setHasFoldedStub(); }
+  bool hasFoldedStub() const { return state_.hasFoldedStub(); }
 
   TrialInliningState trialInliningState() const {
     return state_.trialInliningState();
@@ -252,8 +251,6 @@ class ICFallbackStub final : public ICStub {
 
   void unlinkStub(Zone* zone, ICEntry* icEntry, ICCacheIRStub* prev,
                   ICCacheIRStub* stub);
-  void unlinkStubUnbarriered(ICEntry* icEntry, ICCacheIRStub* prev,
-                             ICCacheIRStub* stub);
 };
 
 class ICCacheIRStub final : public ICStub {
@@ -283,7 +280,6 @@ class ICCacheIRStub final : public ICStub {
   uint8_t* stubDataStart();
 
   void trace(JSTracer* trc);
-  bool traceWeak(JSTracer* trc);
 
   // Optimized stubs get purged on GC.  But some stubs can be active on the
   // stack during GC - specifically the ones that can make calls.  To ensure

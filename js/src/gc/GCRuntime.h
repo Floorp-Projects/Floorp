@@ -840,7 +840,6 @@ class GCRuntime {
   void sweepCompressionTasks();
   void sweepWeakMaps();
   void sweepUniqueIds();
-  void sweepObjectsWithWeakPointers();
   void sweepDebuggerOnMainThread(JS::GCContext* gcx);
   void sweepJitDataOnMainThread(JS::GCContext* gcx);
   void sweepFinalizationObserversOnMainThread();
@@ -1131,10 +1130,6 @@ class GCRuntime {
   // Whether any sweeping and decommitting will run on a separate GC helper
   // thread.
   MainThreadData<bool> useBackgroundThreads;
-
-  // Whether we have already discarded JIT code for all collected zones in this
-  // slice.
-  MainThreadData<bool> haveDiscardedJITCodeThisSlice;
 
 #ifdef DEBUG
   /* Shutdown has started. Further collections must be shutdown collections. */

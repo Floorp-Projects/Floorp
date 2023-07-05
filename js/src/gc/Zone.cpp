@@ -18,7 +18,6 @@
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Invalidation.h"
-#include "jit/JitScript.h"
 #include "jit/JitZone.h"
 #include "vm/Runtime.h"
 #include "vm/Time.h"
@@ -196,7 +195,6 @@ Zone::~Zone() {
   js_delete(finalizationObservers_.ref().release());
 
   MOZ_ASSERT(gcWeakMapList().isEmpty());
-  MOZ_ASSERT(objectsWithWeakPointers.ref().empty());
 
   JSRuntime* rt = runtimeFromAnyThread();
   if (this == rt->gc.systemZone) {
@@ -406,8 +404,12 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
   if (options.discardBaselineCode || options.discardJitScripts) {
 #ifdef DEBUG
     // Assert no JitScripts are marked as active.
-    jitZone()->forEachJitScript(
-        [](jit::JitScript* jitScript) { MOZ_ASSERT(!jitScript->active()); });
+    for (auto iter = cellIter<BaseScript>(); !iter.done(); iter.next()) {
+      BaseScript* base = iter.unbarrieredGet();
+      if (jit::JitScript* jitScript = base->maybeJitScript()) {
+        MOZ_ASSERT(!jitScript->active());
+      }
+    }
 #endif
 
     // Mark JitScripts on the stack as active.
@@ -417,8 +419,13 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
   // Invalidate all Ion code in this zone.
   jit::InvalidateAll(gcx, this);
 
-  jitZone()->forEachJitScript([&](jit::JitScript* jitScript) {
-    JSScript* script = jitScript->owningScript();
+  for (auto base = cellIterUnsafe<BaseScript>(); !base.done(); base.next()) {
+    jit::JitScript* jitScript = base->maybeJitScript();
+    if (!jitScript) {
+      continue;
+    }
+
+    JSScript* script = base->asJSScript();
     jit::FinishInvalidation(gcx, script);
 
     // Discard baseline script if it's not marked as active.
@@ -449,7 +456,7 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
             !gcx->runtime()->profilingScripts) {
           script->destroyScriptCounts();
         }
-        return;  // Continue script loop.
+        continue;
       }
     }
 
@@ -464,14 +471,9 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
                                  options.resetPretenuredAllocSites);
     }
 
-    // Reset the active flag.
+    // Finally, reset the active flag.
     jitScript->resetActive();
-
-    // Optionally trace weak edges in remaining JitScripts.
-    if (options.traceWeakJitScripts) {
-      jitScript->traceWeak(options.traceWeakJitScripts);
-    }
-  });
+  }
 
   // Also clear references to jit code from RegExpShared cells at this point.
   // This avoid holding onto ExecutablePools.
@@ -524,23 +526,26 @@ void JS::Zone::resetAllocSitesAndInvalidate(bool resetNurserySites,
   }
 
   JSContext* cx = runtime_->mainContextFromOwnThread();
-  jitZone()->forEachJitScript([&](jit::JitScript* jitScript) {
-    if (jitScript->resetAllocSites(resetNurserySites, resetPretenuredSites)) {
-      JSScript* script = jitScript->owningScript();
-      CancelOffThreadIonCompile(script);
-      if (script->hasIonScript()) {
-        jit::Invalidate(cx, script,
-                        /* resetUses = */ true,
-                        /* cancelOffThread = */ true);
-      }
+  for (auto base = cellIterUnsafe<BaseScript>(); !base.done(); base.next()) {
+    jit::JitScript* jitScript = base->maybeJitScript();
+    if (!jitScript) {
+      continue;
     }
-  });
-}
 
-void JS::Zone::traceWeakJitScripts(JSTracer* trc) {
-  if (jitZone()) {
-    jitZone()->forEachJitScript(
-        [&](jit::JitScript* jitScript) { jitScript->traceWeak(trc); });
+    if (!jitScript->resetAllocSites(resetNurserySites, resetPretenuredSites)) {
+      continue;
+    }
+
+    JSScript* script = base->asJSScript();
+    CancelOffThreadIonCompile(script);
+
+    if (!script->hasIonScript()) {
+      continue;
+    }
+
+    jit::Invalidate(cx, script,
+                    /* resetUses = */ true,
+                    /* cancelOffThread = */ true);
   }
 }
 
@@ -971,10 +976,4 @@ bool Zone::ensureFinalizationObservers() {
 
   finalizationObservers_ = js::MakeUnique<FinalizationObservers>(this);
   return bool(finalizationObservers_.ref());
-}
-
-bool Zone::registerObjectWithWeakPointers(JSObject* obj) {
-  MOZ_ASSERT(obj->getClass()->hasTrace());
-  MOZ_ASSERT(!IsInsideNursery(obj));
-  return objectsWithWeakPointers.ref().append(obj);
 }
