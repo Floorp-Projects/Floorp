@@ -136,8 +136,9 @@ menupopup {
   background: url(chrome://global/skin/icons/warning-fill-12.svg) center / contain no-repeat transparent;
   box-shadow: none;
   border-radius: 0;
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, stroke;
   fill: var(--warning-icon-bgcolor);
+  stroke: var(--toolbar-bgcolor);
 }
 
 #fxa-toolbar-menu-button[badge-status="login_failed"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
