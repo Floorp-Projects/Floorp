@@ -1325,60 +1325,62 @@ class MediaDecoderStateMachine::LoopingDecodingState
     }
 
     // Single track situations
-    if (mMaster->HasAudio() && !mMaster->HasVideo()) {
-      MOZ_ASSERT(mMaster->mAudioTrackDecodedDuration);
+    if (mMaster->HasAudio() && !mMaster->HasVideo() &&
+        mMaster->mAudioTrackDecodedDuration) {
       mMaster->mOriginalDecodedDuration = *mMaster->mAudioTrackDecodedDuration;
       SLOG("audio only, duration=%" PRId64,
            mMaster->mOriginalDecodedDuration.ToMicroseconds());
       return true;
     }
-    if (mMaster->HasVideo() && !mMaster->HasAudio()) {
-      MOZ_ASSERT(mMaster->mVideoTrackDecodedDuration);
+    if (mMaster->HasVideo() && !mMaster->HasAudio() &&
+        mMaster->mVideoTrackDecodedDuration) {
       mMaster->mOriginalDecodedDuration = *mMaster->mVideoTrackDecodedDuration;
       SLOG("video only, duration=%" PRId64,
            mMaster->mOriginalDecodedDuration.ToMicroseconds());
       return true;
     }
-
-    MOZ_ASSERT(mMaster->HasAudio() && mMaster->HasVideo());
-
-    // Both tracks have ended so that we can check which track is longer.
-    if (mMaster->mAudioTrackDecodedDuration &&
-        mMaster->mVideoTrackDecodedDuration) {
-      mMaster->mOriginalDecodedDuration =
-          std::max(*mMaster->mVideoTrackDecodedDuration,
-                   *mMaster->mAudioTrackDecodedDuration);
-      SLOG("Both tracks ended, original duration=%" PRId64 " (a=%" PRId64
-           ", v=%" PRId64 ")",
-           mMaster->mOriginalDecodedDuration.ToMicroseconds(),
-           mMaster->mAudioTrackDecodedDuration->ToMicroseconds(),
-           mMaster->mVideoTrackDecodedDuration->ToMicroseconds());
-      return true;
+    // Two tracks situation
+    if (mMaster->HasAudio() && mMaster->HasVideo()) {
+      // Both tracks have ended so that we can check which track is longer.
+      if (mMaster->mAudioTrackDecodedDuration &&
+          mMaster->mVideoTrackDecodedDuration) {
+        mMaster->mOriginalDecodedDuration =
+            std::max(*mMaster->mVideoTrackDecodedDuration,
+                     *mMaster->mAudioTrackDecodedDuration);
+        SLOG("Both tracks ended, original duration=%" PRId64 " (a=%" PRId64
+             ", v=%" PRId64 ")",
+             mMaster->mOriginalDecodedDuration.ToMicroseconds(),
+             mMaster->mAudioTrackDecodedDuration->ToMicroseconds(),
+             mMaster->mVideoTrackDecodedDuration->ToMicroseconds());
+        return true;
+      }
+      // When entering the state, video has ended but audio hasn't, which means
+      // audio is longer.
+      if (mMaster->mAudioTrackDecodedDuration &&
+          mVideoEndedBeforeEnteringStateWithoutDuration) {
+        mMaster->mOriginalDecodedDuration =
+            *mMaster->mAudioTrackDecodedDuration;
+        mVideoEndedBeforeEnteringStateWithoutDuration = false;
+        SLOG("audio is longer, duration=%" PRId64,
+             mMaster->mOriginalDecodedDuration.ToMicroseconds());
+        return true;
+      }
+      // When entering the state, audio has ended but video hasn't, which means
+      // video is longer.
+      if (mMaster->mVideoTrackDecodedDuration &&
+          mAudioEndedBeforeEnteringStateWithoutDuration) {
+        mMaster->mOriginalDecodedDuration =
+            *mMaster->mVideoTrackDecodedDuration;
+        mAudioEndedBeforeEnteringStateWithoutDuration = false;
+        SLOG("video is longer, duration=%" PRId64,
+             mMaster->mOriginalDecodedDuration.ToMicroseconds());
+        return true;
+      }
+      SLOG("Still waiting for another track ends...");
+      MOZ_ASSERT(!mMaster->mAudioTrackDecodedDuration ||
+                 !mMaster->mVideoTrackDecodedDuration);
     }
-    // When entering the state, video has ended but audio hasn't, which means
-    // audio is longer.
-    if (mMaster->mAudioTrackDecodedDuration &&
-        mVideoEndedBeforeEnteringStateWithoutDuration) {
-      mMaster->mOriginalDecodedDuration = *mMaster->mAudioTrackDecodedDuration;
-      mVideoEndedBeforeEnteringStateWithoutDuration = false;
-      SLOG("audio is longer, duration=%" PRId64,
-           mMaster->mOriginalDecodedDuration.ToMicroseconds());
-      return true;
-    }
-    // When entering the state, audio has ended but video hasn't, which means
-    // video is longer.
-    if (mMaster->mVideoTrackDecodedDuration &&
-        mAudioEndedBeforeEnteringStateWithoutDuration) {
-      mMaster->mOriginalDecodedDuration = *mMaster->mVideoTrackDecodedDuration;
-      mAudioEndedBeforeEnteringStateWithoutDuration = false;
-      SLOG("video is longer, duration=%" PRId64,
-           mMaster->mOriginalDecodedDuration.ToMicroseconds());
-      return true;
-    }
-
-    SLOG("Still waiting for another track ends...");
-    MOZ_ASSERT(!mMaster->mAudioTrackDecodedDuration ||
-               !mMaster->mVideoTrackDecodedDuration);
+    SLOG("can't determine the original decoded duration yet");
     MOZ_ASSERT(mMaster->mOriginalDecodedDuration == media::TimeUnit::Zero());
     return false;
   }
