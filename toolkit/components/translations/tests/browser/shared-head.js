@@ -373,6 +373,10 @@ async function createAndMockRemoteSettings({
     ),
   };
 
+  // The TranslationsParent will pull the language pair values from the JSON dump
+  // of Remote Settings. Clear these before mocking the translations engine.
+  TranslationsParent.clearCache();
+
   TranslationsParent.mockTranslationsEngine(
     remoteClients.translationModels.client,
     remoteClients.translationsWasm.client
@@ -395,6 +399,7 @@ async function createAndMockRemoteSettings({
 
       TranslationsParent.unmockTranslationsEngine();
       TranslationsParent.unmockLanguageIdentification();
+      TranslationsParent.clearCache();
     },
     remoteClients,
   };

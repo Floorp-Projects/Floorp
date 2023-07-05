@@ -108,10 +108,6 @@ export class TranslationsChild extends JSWindowActorChild {
           return null;
         }
       }
-      case "Translations:DownloadedLanguageFile":
-      case "Translations:DownloadLanguageFileError":
-        // Currently unhandled.
-        return undefined;
       default:
         throw new Error("Unknown message.", name);
     }
@@ -119,32 +115,6 @@ export class TranslationsChild extends JSWindowActorChild {
 
   getSupportedLanguages() {
     return this.sendQuery("Translations:GetSupportedLanguages");
-  }
-
-  hasAllFilesForLanguage(language) {
-    return this.sendQuery("Translations:HasAllFilesForLanguage", {
-      language,
-    });
-  }
-
-  deleteLanguageFiles(language) {
-    return this.sendQuery("Translations:DeleteLanguageFiles", {
-      language,
-    });
-  }
-
-  downloadLanguageFiles(language) {
-    return this.sendQuery("Translations:DownloadLanguageFiles", {
-      language,
-    });
-  }
-
-  downloadAllFiles() {
-    return this.sendQuery("Translations:DownloadAllFiles");
-  }
-
-  deleteAllLanguageFiles() {
-    return this.sendQuery("Translations:DeleteAllLanguageFiles");
   }
 
   sendEngineIsReady() {

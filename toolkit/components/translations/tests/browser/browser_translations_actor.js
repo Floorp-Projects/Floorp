@@ -17,7 +17,7 @@ add_task(async function test_pivot_language_behavior() {
     "Expect 4 console.error messages notifying of the lack of a pivot language."
   );
 
-  const { actor, cleanup } = await setupActorTest({
+  const { cleanup } = await setupActorTest({
     languagePairs: [
       { fromLang: "en", toLang: "es", isBeta: false },
       { fromLang: "es", toLang: "en", isBeta: false },
@@ -31,7 +31,7 @@ add_task(async function test_pivot_language_behavior() {
     ],
   });
 
-  const { languagePairs } = await actor.getSupportedLanguages();
+  const { languagePairs } = await TranslationsParent.getSupportedLanguages();
 
   // The pairs aren't guaranteed to be sorted.
   languagePairs.sort((a, b) =>
@@ -74,7 +74,7 @@ async function usingAppLocale(locale, callback) {
 add_task(async function test_translating_to_and_from_app_language() {
   const PIVOT_LANGUAGE = "en";
 
-  const { actor, cleanup } = await setupActorTest({
+  const { cleanup } = await setupActorTest({
     languagePairs: [
       { fromLang: PIVOT_LANGUAGE, toLang: "es" },
       { fromLang: "es", toLang: PIVOT_LANGUAGE },
@@ -115,7 +115,7 @@ add_task(async function test_translating_to_and_from_app_language() {
     return usingAppLocale(app, async () => {
       Assert.deepEqual(
         getUniqueLanguagePairs(
-          await actor.getRecordsForTranslatingToAndFromAppLanguage(
+          await TranslationsParent.getRecordsForTranslatingToAndFromAppLanguage(
             requested,
             isForDeletion
           )
