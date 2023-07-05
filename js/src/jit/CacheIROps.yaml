@@ -237,7 +237,7 @@
   cost_estimate: 1
   args:
     obj: ObjId
-    shape: WeakShapeField
+    shape: ShapeField
 
 - name: GuardMultipleShapes
   shared: true
@@ -254,7 +254,7 @@
   cost_estimate: 1
   args:
     obj: ObjId
-    proto: WeakObjectField
+    proto: ObjectField
 
 - name: GuardNullProto
   shared: true
@@ -464,7 +464,7 @@
   cost_estimate: 1
   args:
     obj: ObjId
-    expected: WeakObjectField
+    expected: ObjectField
 
 - name: GuardObjectIdentity
   shared: true
@@ -481,7 +481,7 @@
   custom_writer: true
   args:
     fun: ObjId
-    expected: WeakObjectField
+    expected: ObjectField
     nargsAndFlags: RawInt32Field
 
 - name: GuardFunctionScript

@@ -4454,9 +4454,14 @@ void MacroAssembler::branchTestObjShapeList(
   Label* onMatch = cond == Assembler::Equal ? label : &done;
 
   // Load the object's shape pointer into shapeScratch, and prepare to compare
-  // it with the shapes in the list. The shapes are stored as private values so
-  // we can compare directly.
+  // it with the shapes in the list. On 64-bit, we box the shape. On 32-bit,
+  // we only have to compare the 32-bit payload.
+#ifdef JS_PUNBOX64
+  loadPtr(Address(obj, JSObject::offsetOfShape()), endScratch);
+  tagValue(JSVAL_TYPE_PRIVATE_GCTHING, endScratch, ValueOperand(shapeScratch));
+#else
   loadPtr(Address(obj, JSObject::offsetOfShape()), shapeScratch);
+#endif
 
   // Compute end pointer.
   Address lengthAddr(shapeElements,
