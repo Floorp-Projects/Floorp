@@ -2136,6 +2136,8 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
       return false;
     }
 
+    gc::ReadBarrier(shape);
+
     if (!shapeList.append(PrivateGCThingValue(shape))) {
       cx->recoverFromOutOfMemory();
       return false;
@@ -2165,7 +2167,7 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
         uintptr_t otherRaw = stubInfo->getStubRawWord(otherStubData, offset);
 
         if (firstRaw != otherRaw) {
-          if (fieldType != StubField::Type::Shape) {
+          if (fieldType != StubField::Type::WeakShape) {
             // Case 1: a field differs that is not a Shape. We only support
             // folding GuardShape to GuardMultipleShapes.
             return true;
@@ -2331,7 +2333,7 @@ static bool AddToFoldedStub(JSContext* cx, const CacheIRWriter& writer,
 
         // Get the shape from the new stub
         StubField shapeField =
-            writer.readStubField(newShapeOffset, StubField::Type::Shape);
+            writer.readStubField(newShapeOffset, StubField::Type::WeakShape);
         Shape* shape = reinterpret_cast<Shape*>(shapeField.asWord());
         newShape = PrivateGCThingValue(shape);
 

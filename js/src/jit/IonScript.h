@@ -276,6 +276,7 @@ class alignas(8) IonScript final : public TrailingArray {
   static void Destroy(JS::GCContext* gcx, IonScript* script);
 
   void trace(JSTracer* trc);
+  void traceWeak(JSTracer* trc);
 
   static inline size_t offsetOfInvalidationCount() {
     return offsetof(IonScript, invalidationCount_);
