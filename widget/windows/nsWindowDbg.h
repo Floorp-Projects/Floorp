@@ -11,7 +11,6 @@
  */
 
 #include "nsWindowDefs.h"
-#include "mozilla/BaseProfilerMarkersPrerequisites.h"
 
 // Enables debug output for popup rollup hooks
 // #define POPUP_ROLLUP_DEBUG_OUTPUT
@@ -27,22 +26,6 @@
 // #define DEBUG_VK
 
 namespace mozilla::widget {
-
-class MOZ_RAII AutoProfilerMessageMarker {
- public:
-  explicit AutoProfilerMessageMarker(Span<const char> aMsgLoopName, HWND hWnd,
-                                     UINT msg, WPARAM wParam, LPARAM lParam);
-
-  ~AutoProfilerMessageMarker();
-
- protected:
-  Maybe<MarkerOptions> mOptions;
-  Span<const char> mMsgLoopName;
-  UINT mMsg;
-  WPARAM mWParam;
-  LPARAM mLParam;
-};
-
 // Windows message debugging data
 struct EventMsgInfo {
   const char* mStr;
@@ -58,26 +41,18 @@ struct EventMsgInfo {
 extern std::unordered_map<UINT, EventMsgInfo> gAllEvents;
 
 // RAII-style class to log before and after an event is handled.
-class NativeEventLogger final {
+class PrintEvent final {
  public:
-  template <size_t N>
-  NativeEventLogger(const char (&aMsgLoopName)[N], HWND hwnd, UINT msg,
-                    WPARAM wParam, LPARAM lParam)
-      : NativeEventLogger(Span(aMsgLoopName), hwnd, msg, wParam, lParam) {}
-
+  PrintEvent(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
   void SetResult(LRESULT lresult, bool result) {
     mRetValue = lresult;
     mResult = mozilla::Some(result);
   }
-  ~NativeEventLogger();
+  ~PrintEvent();
 
  private:
-  NativeEventLogger(Span<const char> aMsgLoopName, HWND hwnd, UINT msg,
-                    WPARAM wParam, LPARAM lParam);
-  bool NativeEventLoggerInternal();
+  bool PrintEventInternal();
 
-  AutoProfilerMessageMarker mProfilerMarker;
-  const char* mMsgLoopName;
   const HWND mHwnd;
   const UINT mMsg;
   const WPARAM mWParam;
