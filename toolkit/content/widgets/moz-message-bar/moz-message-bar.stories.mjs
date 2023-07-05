@@ -11,7 +11,7 @@ export default {
   component: "moz-message-bar",
   argTypes: {
     type: {
-      options: ["info", "other"],
+      options: ["info", "warning", "success", "error"],
       control: { type: "select" },
     },
     message: {
