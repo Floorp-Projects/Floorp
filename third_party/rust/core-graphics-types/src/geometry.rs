@@ -138,11 +138,6 @@ impl CGRect {
             ffi::CGRectApplyAffineTransform(*self, *t)
         }
     }
-
-    #[inline]
-    pub fn contains(&self, point: &CGPoint) -> bool {
-        unsafe { ffi::CGRectContainsPoint(*self,*point) == 1 }
-    }
 }
 
 #[repr(C)]
@@ -195,8 +190,6 @@ mod ffi {
         pub fn CGPointApplyAffineTransform(point: CGPoint, t: CGAffineTransform) -> CGPoint;
         pub fn CGRectApplyAffineTransform(rect: CGRect, t: CGAffineTransform) -> CGRect;
         pub fn CGSizeApplyAffineTransform(size: CGSize, t: CGAffineTransform) -> CGSize;
-
-        pub fn CGRectContainsPoint(rect:CGRect, point: CGPoint) -> boolean_t;
     }
 }
 

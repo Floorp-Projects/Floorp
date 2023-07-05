@@ -1,5 +1,3 @@
-use std::num::NonZeroU32;
-
 use crate::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
 use crate::front::wgsl::index::Index;
 use crate::front::wgsl::parse::number::Number;
@@ -344,8 +342,85 @@ impl<'a> ExpressionContext<'a, '_, '_> {
         }
     }
 
+    /// Creates a zero value constant of type `ty`
+    ///
+    /// Returns `None` if the given `ty` is not a constructible type
+    fn create_zero_value_constant(
+        &mut self,
+        ty: Handle<crate::Type>,
+    ) -> Option<Handle<crate::Constant>> {
+        let inner = match self.module.types[ty].inner {
+            crate::TypeInner::Scalar { kind, width } => {
+                let value = match kind {
+                    crate::ScalarKind::Sint => crate::ScalarValue::Sint(0),
+                    crate::ScalarKind::Uint => crate::ScalarValue::Uint(0),
+                    crate::ScalarKind::Float => crate::ScalarValue::Float(0.),
+                    crate::ScalarKind::Bool => crate::ScalarValue::Bool(false),
+                };
+                crate::ConstantInner::Scalar { width, value }
+            }
+            crate::TypeInner::Vector { size, kind, width } => {
+                let scalar_ty = self.ensure_type_exists(crate::TypeInner::Scalar { width, kind });
+                let component = self.create_zero_value_constant(scalar_ty)?;
+                crate::ConstantInner::Composite {
+                    ty,
+                    components: (0..size as u8).map(|_| component).collect(),
+                }
+            }
+            crate::TypeInner::Matrix {
+                columns,
+                rows,
+                width,
+            } => {
+                let vec_ty = self.ensure_type_exists(crate::TypeInner::Vector {
+                    width,
+                    kind: crate::ScalarKind::Float,
+                    size: rows,
+                });
+                let component = self.create_zero_value_constant(vec_ty)?;
+                crate::ConstantInner::Composite {
+                    ty,
+                    components: (0..columns as u8).map(|_| component).collect(),
+                }
+            }
+            crate::TypeInner::Array {
+                base,
+                size: crate::ArraySize::Constant(size),
+                ..
+            } => {
+                let size = self.module.constants[size].to_array_length()?;
+                let component = self.create_zero_value_constant(base)?;
+                crate::ConstantInner::Composite {
+                    ty,
+                    components: (0..size).map(|_| component).collect(),
+                }
+            }
+            crate::TypeInner::Struct { ref members, .. } => {
+                let members = members.clone();
+                crate::ConstantInner::Composite {
+                    ty,
+                    components: members
+                        .iter()
+                        .map(|member| self.create_zero_value_constant(member.ty))
+                        .collect::<Option<_>>()?,
+                }
+            }
+            _ => return None,
+        };
+
+        let constant = self.module.constants.fetch_or_append(
+            crate::Constant {
+                name: None,
+                specialization: None,
+                inner,
+            },
+            Span::UNDEFINED,
+        );
+        Some(constant)
+    }
+
     fn format_typeinner(&self, inner: &crate::TypeInner) -> String {
-        inner.to_wgsl(self.module.to_ctx())
+        inner.to_wgsl(&self.module.types, &self.module.constants)
     }
 
     fn format_type(&self, handle: Handle<crate::Type>) -> String {
@@ -626,16 +701,14 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                     if let Some(explicit) = explicit_ty {
                         if explicit != inferred_type {
                             let ty = &ctx.module.types[explicit];
-                            let explicit = ty
-                                .name
-                                .clone()
-                                .unwrap_or_else(|| ty.inner.to_wgsl(ctx.module.to_ctx()));
+                            let explicit = ty.name.clone().unwrap_or_else(|| {
+                                ty.inner.to_wgsl(&ctx.module.types, &ctx.module.constants)
+                            });
 
                             let ty = &ctx.module.types[inferred_type];
-                            let inferred = ty
-                                .name
-                                .clone()
-                                .unwrap_or_else(|| ty.inner.to_wgsl(ctx.module.to_ctx()));
+                            let inferred = ty.name.clone().unwrap_or_else(|| {
+                                ty.inner.to_wgsl(&ctx.module.types, &ctx.module.constants)
+                            });
 
                             return Err(Error::InitializationTypeMismatch(
                                 c.name.span,
@@ -1137,16 +1210,36 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
 
         let (expr, is_reference) = match *expr {
             ast::Expression::Literal(literal) => {
-                let literal = match literal {
-                    ast::Literal::Number(Number::F32(f)) => crate::Literal::F32(f),
-                    ast::Literal::Number(Number::I32(i)) => crate::Literal::I32(i),
-                    ast::Literal::Number(Number::U32(u)) => crate::Literal::U32(u),
+                let inner = match literal {
+                    ast::Literal::Number(Number::F32(f)) => crate::ConstantInner::Scalar {
+                        width: 4,
+                        value: crate::ScalarValue::Float(f as _),
+                    },
+                    ast::Literal::Number(Number::I32(i)) => crate::ConstantInner::Scalar {
+                        width: 4,
+                        value: crate::ScalarValue::Sint(i as _),
+                    },
+                    ast::Literal::Number(Number::U32(u)) => crate::ConstantInner::Scalar {
+                        width: 4,
+                        value: crate::ScalarValue::Uint(u as _),
+                    },
                     ast::Literal::Number(_) => {
                         unreachable!("got abstract numeric type when not expected");
                     }
-                    ast::Literal::Bool(b) => crate::Literal::Bool(b),
+                    ast::Literal::Bool(b) => crate::ConstantInner::Scalar {
+                        width: 1,
+                        value: crate::ScalarValue::Bool(b),
+                    },
                 };
-                let handle = ctx.interrupt_emitter(crate::Expression::Literal(literal), span);
+                let handle = ctx.module.constants.fetch_or_append(
+                    crate::Constant {
+                        name: None,
+                        specialization: None,
+                        inner,
+                    },
+                    Span::UNDEFINED,
+                );
+                let handle = ctx.interrupt_emitter(crate::Expression::Constant(handle), span);
                 return Ok(TypedExpression::non_reference(handle));
             }
             ast::Expression::Ident(ast::IdentExpr::Local(local)) => {
@@ -1248,54 +1341,35 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                     ));
                 }
 
-                match ctx.naga_expressions[index] {
-                    crate::Expression::Constant(constant) => {
-                        let span = ctx.naga_expressions.get_span(index);
-                        let index = match ctx.module.constants[constant].inner {
-                            crate::ConstantInner::Scalar {
-                                value: crate::ScalarValue::Uint(int),
-                                ..
-                            } => u32::try_from(int).map_err(|_| Error::BadU32Constant(span)),
-                            crate::ConstantInner::Scalar {
-                                value: crate::ScalarValue::Sint(int),
-                                ..
-                            } => u32::try_from(int).map_err(|_| Error::BadU32Constant(span)),
-                            _ => Err(Error::BadU32Constant(span)),
-                        }?;
+                if let crate::Expression::Constant(constant) = ctx.naga_expressions[index] {
+                    let span = ctx.naga_expressions.get_span(index);
+                    let index = match ctx.module.constants[constant].inner {
+                        crate::ConstantInner::Scalar {
+                            value: crate::ScalarValue::Uint(int),
+                            ..
+                        } => u32::try_from(int).map_err(|_| Error::BadU32Constant(span)),
+                        crate::ConstantInner::Scalar {
+                            value: crate::ScalarValue::Sint(int),
+                            ..
+                        } => u32::try_from(int).map_err(|_| Error::BadU32Constant(span)),
+                        _ => Err(Error::BadU32Constant(span)),
+                    }?;
 
-                        (
-                            crate::Expression::AccessIndex {
-                                base: expr.handle,
-                                index,
-                            },
-                            expr.is_reference,
-                        )
-                    }
-                    crate::Expression::Literal(literal) => {
-                        let span = ctx.naga_expressions.get_span(index);
-                        let index = match literal {
-                            crate::Literal::U32(n) => n,
-                            crate::Literal::I32(n) => {
-                                u32::try_from(n).map_err(|_| Error::BadU32Constant(span))?
-                            }
-                            _ => return Err(Error::BadU32Constant(span)),
-                        };
-
-                        (
-                            crate::Expression::AccessIndex {
-                                base: expr.handle,
-                                index,
-                            },
-                            expr.is_reference,
-                        )
-                    }
-                    _ => (
+                    (
+                        crate::Expression::AccessIndex {
+                            base: expr.handle,
+                            index,
+                        },
+                        expr.is_reference,
+                    )
+                } else {
+                    (
                         crate::Expression::Access {
                             base: expr.handle,
                             index,
                         },
                         expr.is_reference,
-                    ),
+                    )
                 }
             }
             ast::Expression::Member { base, ref field } => {
@@ -1691,36 +1765,6 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                                 .push(crate::Statement::Barrier(crate::Barrier::WORK_GROUP), span);
                             return Ok(None);
                         }
-                        "workgroupUniformLoad" => {
-                            let mut args = ctx.prepare_args(arguments, 1, span);
-                            let expr = args.next()?;
-                            args.finish()?;
-
-                            let pointer = self.expression(expr, ctx.reborrow())?;
-                            ctx.grow_types(pointer)?;
-                            let result_ty = match *ctx.resolved_inner(pointer) {
-                                crate::TypeInner::Pointer {
-                                    base,
-                                    space: crate::AddressSpace::WorkGroup,
-                                } => base,
-                                ref other => {
-                                    log::error!("Type {other:?} passed to workgroupUniformLoad");
-                                    let span = ctx.ast_expressions.get_span(expr);
-                                    return Err(Error::InvalidWorkGroupUniformLoad(span));
-                                }
-                            };
-                            let result = ctx.interrupt_emitter(
-                                crate::Expression::WorkGroupUniformLoadResult { ty: result_ty },
-                                span,
-                            );
-                            ctx.block.push(
-                                crate::Statement::WorkGroupUniformLoad { pointer, result },
-                                span,
-                            );
-
-                            ctx.grow_types(pointer)?;
-                            return Ok(Some(result));
-                        }
                         "textureStore" => {
                             let mut args = ctx.prepare_args(arguments, 3, span);
 
@@ -2099,7 +2143,9 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
         for member in s.members.iter() {
             let ty = self.resolve_ast_type(member.ty, ctx.reborrow())?;
 
-            self.layouter.update(ctx.module.to_ctx()).unwrap();
+            self.layouter
+                .update(&ctx.module.types, &ctx.module.constants)
+                .unwrap();
 
             let member_min_size = self.layouter[ty].size;
             let member_min_alignment = self.layouter[ty].alignment;
@@ -2186,20 +2232,16 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
             }
             ast::Type::Array { base, size } => {
                 let base = self.resolve_ast_type(base, ctx.reborrow())?;
-                self.layouter.update(ctx.module.to_ctx()).unwrap();
+                self.layouter
+                    .update(&ctx.module.types, &ctx.module.constants)
+                    .unwrap();
 
                 crate::TypeInner::Array {
                     base,
                     size: match size {
                         ast::ArraySize::Constant(constant) => {
-                            let span = ctx.ast_expressions.get_span(constant);
                             let constant = self.constant(constant, ctx.reborrow())?;
-                            let size = ctx.module.constants[constant]
-                                .to_array_length()
-                                .ok_or(Error::ExpectedArraySize(span))?;
-                            let size =
-                                NonZeroU32::new(size).ok_or(Error::NonPositiveArrayLength(span))?;
-                            crate::ArraySize::Constant(size)
+                            crate::ArraySize::Constant(constant)
                         }
                         ast::ArraySize::Dynamic => crate::ArraySize::Dynamic,
                     },
@@ -2225,14 +2267,8 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                     base,
                     size: match size {
                         ast::ArraySize::Constant(constant) => {
-                            let span = ctx.ast_expressions.get_span(constant);
                             let constant = self.constant(constant, ctx.reborrow())?;
-                            let size = ctx.module.constants[constant]
-                                .to_array_length()
-                                .ok_or(Error::ExpectedArraySize(span))?;
-                            let size =
-                                NonZeroU32::new(size).ok_or(Error::NonPositiveArrayLength(span))?;
-                            crate::ArraySize::Constant(size)
+                            crate::ArraySize::Constant(constant)
                         }
                         ast::ArraySize::Dynamic => crate::ArraySize::Dynamic,
                     },

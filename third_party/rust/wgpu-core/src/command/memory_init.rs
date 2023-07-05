@@ -4,11 +4,10 @@ use hal::CommandEncoder;
 
 use crate::{
     device::Device,
-    hal_api::HalApi,
+    hub::{HalApi, Storage},
     id::{self, TextureId},
     init_tracker::*,
     resource::{Buffer, Texture},
-    storage::Storage,
     track::{TextureTracker, Tracker},
     FastHashMap,
 };

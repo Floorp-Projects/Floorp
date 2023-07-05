@@ -21,11 +21,11 @@ use std::slice;
 
 foreign_type! {
     #[doc(hidden)]
-    pub unsafe type CGPath {
-        type CType = ::sys::CGPath;
-        fn drop = |p| CFRelease(p as *mut _);
-        fn clone = |p| CFRetain(p as *const _) as *mut _;
-    }
+    type CType = ::sys::CGPath;
+    fn drop = |p| CFRelease(p as *mut _);
+    fn clone = |p| CFRetain(p as *const _) as *mut _;
+    pub struct CGPath;
+    pub struct CGPathRef;
 }
 
 impl CGPath {
@@ -35,7 +35,7 @@ impl CGPath {
                 None => ptr::null(),
                 Some(transform) => transform as *const CGAffineTransform,
             };
-            CGPath::from_ptr(CGPathCreateWithRect(rect, transform))
+            CGPath(CGPathCreateWithRect(rect, transform))
         }
     }
 
