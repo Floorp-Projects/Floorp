@@ -109,7 +109,7 @@ export class BaseAction {
       args,
       schema,
       {
-        allowExtraProperties: true,
+        allowAdditionalProperties: true,
       }
     );
     if (!valid) {
