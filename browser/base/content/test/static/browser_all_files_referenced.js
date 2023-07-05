@@ -166,6 +166,9 @@ var whitelist = [
   // toolkit/mozapps/extensions/AddonContentPolicy.cpp
   { file: "resource://gre/localization/en-US/toolkit/global/cspErrors.ftl" },
 
+  // layout/base/AccessibleCaret.cpp
+  { file: "resource://content-accessible/accessiblecaret.css" },
+
   // The l10n build system can't package string files only for some platforms.
   {
     file: "resource://gre/chrome/en-US/locale/en-US/global-platform/mac/accessible.properties",
@@ -904,6 +907,8 @@ add_task(async function checkAllTheFiles() {
     "resource://devtools/",
     "resource://devtools-client-jsonview/",
     "resource://devtools-client-shared/",
+    "resource://devtools-shared-images/",
+    "resource://devtools-highlighter-styles/",
     "resource://app/modules/devtools",
     "resource://gre/modules/devtools",
     "resource://app/localization/en-US/startup/aboutDevTools.ftl",
