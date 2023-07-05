@@ -22,7 +22,7 @@ namespace mozilla::dom {
  * The followings are helpers for VideoDecoder methods
  */
 
-nsTArray<nsCString> GuessContainers(const nsString& aCodec) {
+nsTArray<nsCString> GuessContainers(const nsAString& aCodec) {
   if (IsAV1CodecString(aCodec)) {
     return {"mp4"_ns, "webm"_ns};
   }
