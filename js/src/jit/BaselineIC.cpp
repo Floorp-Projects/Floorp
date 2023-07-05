@@ -211,8 +211,9 @@ bool ICEntry::traceWeak(JSTracer* trc) {
   // Clear the folded stubs flag if we know for sure that there are none
   // left. The flag will remain set if we have removed all folded stubs but
   // other stubs remain.
-   if (fallbackStub->numOptimizedStubs() == 0 && fallbackStub->hasFoldedStub()) {
-    fallbackStub->clearHasFoldedStub();
+   if (fallbackStub->numOptimizedStubs() == 0 &&
+      fallbackStub->mayHaveFoldedStub()) {
+    fallbackStub->clearMayHaveFoldedStub();
   }
 
 #ifdef DEBUG
@@ -552,7 +553,7 @@ void ICFallbackStub::discardStubs(JSContext* cx, ICEntry* icEntry) {
                stub->toCacheIRStub());
     stub = stub->toCacheIRStub()->next();
   }
-  clearHasFoldedStub();
+  clearMayHaveFoldedStub();
 }
 
 static void InitMacroAssemblerForICStub(StackMacroAssembler& masm) {

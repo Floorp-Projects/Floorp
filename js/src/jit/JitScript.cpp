@@ -431,7 +431,7 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
       stub = stub->toCacheIRStub()->next();
     }
 
-    lastStub->toFallbackStub()->clearHasFoldedStub();
+    lastStub->toFallbackStub()->clearMayHaveFoldedStub();
   }
 
 #ifdef DEBUG
