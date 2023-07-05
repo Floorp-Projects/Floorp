@@ -344,16 +344,13 @@ renaming_overrides_prefixing = true
 
 "GenericCalcNode" = """
  private:
-
-  template <typename ResultT, typename PercentageConverter>
-  ResultT ResolveInternal(ResultT aPercentageBasis,
-                          PercentageConverter aPercentageConverter) const;
+  CSSCoord ResolveInternal(CSSCoord aPercentageBasis) const;
 
  public:
   CSSCoord ResolveToCSSPixels(CSSCoord aPercentageBasis) const;
 
-  using CoordPercentageRounder = nscoord(*)(float);
-  nscoord Resolve(nscoord aBasis, CoordPercentageRounder) const;
+  using CoordRounder = nscoord(*)(float);
+  nscoord Resolve(nscoord aBasis, CoordRounder) const;
 
   void ScaleLengthsBy(float);
 """
@@ -413,9 +410,9 @@ renaming_overrides_prefixing = true
   inline CSSCoord ResolveToCSSPixels(CSSCoord aPercentageBasisInCSSPixels) const;
   template<typename T> inline CSSCoord ResolveToCSSPixelsWith(T aPercentageGetter) const;
   template<typename T, typename U>
-  inline nscoord Resolve(T aPercentageGetter, U aPercentRoundingFunction) const;
+  inline nscoord Resolve(T aPercentageGetter, U aRoundingFunction) const;
   template<typename T>
-  inline nscoord Resolve(nscoord aPercentageBasis, T aPercentRoundingFunction) const;
+  inline nscoord Resolve(nscoord aPercentageBasis, T aRoundingFunction) const;
   template<typename T> inline nscoord Resolve(T aPercentageGetter) const;
   inline nscoord Resolve(nscoord aPercentageBasis) const;
 """
