@@ -143,7 +143,6 @@ class ImageCache final : public nsExpirationTracker<ImageCacheEntryData, 4> {
   ~ImageCache();
 
   virtual void NotifyExpired(ImageCacheEntryData* aObject) override {
-    mTotal -= aObject->SizeInBytes();
     RemoveObject(aObject);
 
     // Remove from the all canvas cache entry first since nsExpirationTracker
@@ -158,7 +157,6 @@ class ImageCache final : public nsExpirationTracker<ImageCacheEntryData, 4> {
 
   nsTHashtable<ImageCacheEntry> mCache;
   nsTHashtable<AllCanvasImageCacheEntry> mAllCanvasCache;
-  size_t mTotal;
   RefPtr<ImageCacheObserver> mImageCacheObserver;
 };
 
@@ -232,8 +230,7 @@ class CanvasImageCacheShutdownObserver final : public nsIObserver {
 };
 
 ImageCache::ImageCache()
-    : nsExpirationTracker<ImageCacheEntryData, 4>(GENERATION_MS, "ImageCache"),
-      mTotal(0) {
+    : nsExpirationTracker<ImageCacheEntryData, 4>(GENERATION_MS, "ImageCache") {
   mImageCacheObserver = new ImageCacheObserver(this);
   MOZ_RELEASE_ASSERT(mImageCacheObserver,
                      "GFX: Can't alloc ImageCacheObserver");
@@ -295,7 +292,6 @@ void CanvasImageCache::NotifyDrawImage(Element* aImage,
   if (entry) {
     if (entry->mData->mSourceSurface) {
       // We are overwriting an existing entry.
-      gImageCache->mTotal -= entry->mData->SizeInBytes();
       gImageCache->RemoveObject(entry->mData.get());
       gImageCache->mAllCanvasCache.RemoveEntry(allCanvasCacheKey);
     }
@@ -304,23 +300,12 @@ void CanvasImageCache::NotifyDrawImage(Element* aImage,
     entry->mData->mSourceSurface = aSource;
     entry->mData->mSize = aSize;
     entry->mData->mIntrinsicSize = aIntrinsicSize;
-    gImageCache->mTotal += entry->mData->SizeInBytes();
 
     AllCanvasImageCacheEntry* allEntry =
         gImageCache->mAllCanvasCache.PutEntry(allCanvasCacheKey);
     if (allEntry) {
       allEntry->mSourceSurface = aSource;
     }
-  }
-
-  if (!StaticPrefs::canvas_image_cache_limit()) {
-    return;
-  }
-
-  // Expire the image cache early if its larger than we want it to be.
-  while (gImageCache->mTotal >
-         size_t(StaticPrefs::canvas_image_cache_limit())) {
-    gImageCache->AgeOneGeneration();
   }
 }
 
