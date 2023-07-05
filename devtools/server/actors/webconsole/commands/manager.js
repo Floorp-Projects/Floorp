@@ -111,7 +111,8 @@ const WebConsoleCommandsManager = {
     if (frame && frame.environment) {
       return !!frame.environment.find(name);
     }
-    return !!dbgGlobal.getOwnPropertyDescriptor(name);
+
+    return !!dbgGlobal.asEnvironment().find(name);
   },
 
   /**
