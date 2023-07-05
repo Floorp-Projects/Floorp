@@ -1102,6 +1102,10 @@ class TSFTextStore final : public ITextStoreACP,
   bool mBeingDestroyed = false;
   // Whether we're in the private browsing mode.
   bool mInPrivateBrowsing = true;
+  // Debug flag to check whether we're initializing mContentForTSF and
+  // mSelectionForTSF.
+  bool mIsInitializingContentForTSF = false;
+  bool mIsInitializingSelectionForTSF = false;
 
   // TSF thread manager object for the current application
   static StaticRefPtr<ITfThreadMgr> sThreadMgr;
