@@ -352,8 +352,10 @@ class ThreadRegistration {
   static MOZ_THREAD_LOCAL(ThreadRegistration*) tlsThreadRegistration;
 
   [[nodiscard]] static decltype(tlsThreadRegistration)* GetTLS() {
-    static const bool initialized = tlsThreadRegistration.init();
-    return initialized ? &tlsThreadRegistration : nullptr;
+    if (tlsThreadRegistration.init())
+      return &tlsThreadRegistration;
+    else
+      return nullptr;
   }
 
   [[nodiscard]] static ThreadRegistration* GetFromTLS() {
