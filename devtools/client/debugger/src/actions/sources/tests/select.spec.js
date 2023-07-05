@@ -187,17 +187,17 @@ describe("sources", () => {
     });
 
     // clear value
-    dispatch(actions.clearSelectedLocation(cx));
+    dispatch(actions.clearSelectedLocation());
     expect(getSelectedLocation(getState())).toEqual(null);
   });
 
   it("sets and clears pending selected location correctly", () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
     const url = "testURL";
     const options = { line: "testLine", column: "testColumn" };
 
     // set value
-    dispatch(actions.setPendingSelectedLocation(cx, url, options));
+    dispatch(actions.setPendingSelectedLocation(url, options));
     const setResult = getState().sources.pendingSelectedLocation;
     expect(setResult).toEqual({
       url,
@@ -206,7 +206,7 @@ describe("sources", () => {
     });
 
     // clear value
-    dispatch(actions.clearSelectedLocation(cx));
+    dispatch(actions.clearSelectedLocation());
     const clearResult = getState().sources.pendingSelectedLocation;
     expect(clearResult).toEqual({ url: "" });
   });
@@ -271,9 +271,9 @@ describe("sources", () => {
 
   describe("selectSourceURL", () => {
     it("should automatically select a pending source", async () => {
-      const { dispatch, getState, cx } = createStore(mockCommandClient);
+      const { dispatch, getState } = createStore(mockCommandClient);
       const baseSourceURL = makeSourceURL("base.js");
-      await dispatch(actions.selectSourceURL(cx, baseSourceURL));
+      await dispatch(actions.selectSourceURL(baseSourceURL));
 
       expect(getSelectedSource(getState())).toBe(undefined);
       const baseSource = await dispatch(

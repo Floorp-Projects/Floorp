@@ -79,14 +79,15 @@ class ExceptionPopup extends Component {
   }
 
   buildStackFrame(frame) {
-    const { cx, selectSourceURL } = this.props;
     const { filename, lineNumber } = frame;
     const functionName = frame.functionName || ANONYMOUS_FN_NAME;
 
     return (
       <div
         className="frame"
-        onClick={() => selectSourceURL(cx, filename, { line: lineNumber })}
+        onClick={() =>
+          this.props.selectSourceURL(filename, { line: lineNumber })
+        }
       >
         <span className="title">{functionName}</span>
         <span className="location">
