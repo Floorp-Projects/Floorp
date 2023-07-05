@@ -92,6 +92,7 @@ const EXPECTED_SPONSORED_RESULT = {
     sponsoredAdvertiser: "TestAdvertiser",
     sponsoredIabCategory: "22 - Shopping",
     isSponsored: true,
+    descriptionL10n: { id: "urlbar-result-action-sponsored" },
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
       id: UrlbarPrefs.get("resultMenu")
@@ -162,6 +163,7 @@ const EXPECTED_HTTP_RESULT = {
     sponsoredAdvertiser: "TestAdvertiserPrefix",
     sponsoredIabCategory: "22 - Shopping",
     isSponsored: true,
+    descriptionL10n: { id: "urlbar-result-action-sponsored" },
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
       id: UrlbarPrefs.get("resultMenu")
@@ -197,6 +199,7 @@ const EXPECTED_HTTPS_RESULT = {
     sponsoredAdvertiser: "TestAdvertiserPrefix",
     sponsoredIabCategory: "22 - Shopping",
     isSponsored: true,
+    descriptionL10n: { id: "urlbar-result-action-sponsored" },
     helpUrl: QuickSuggest.HELP_URL,
     helpL10n: {
       id: UrlbarPrefs.get("resultMenu")
@@ -1040,6 +1043,7 @@ add_task(async function dedupeAgainstURL_timestamps() {
       sponsoredAdvertiser: "TestAdvertiserTimestamp",
       sponsoredIabCategory: "22 - Shopping",
       isSponsored: true,
+      descriptionL10n: { id: "urlbar-result-action-sponsored" },
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
         id: UrlbarPrefs.get("resultMenu")

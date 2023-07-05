@@ -142,8 +142,6 @@ async function checkBestMatchRow({
   let details = await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   let { row } = details.element;
 
-  Assert.ok(row.hasAttribute("bestmatch"), "row has bestmatch attribute");
-
   let favicon = row._elements.get("favicon");
   Assert.ok(favicon, "Row has a favicon");
 
@@ -160,27 +158,6 @@ async function checkBestMatchRow({
     result.payload.displayUrl,
     "Row URL is correct"
   );
-
-  let bottom = row._elements.get("bottom");
-  Assert.ok(bottom, "Row has a bottom");
-  Assert.equal(
-    !!result.payload.isSponsored,
-    isSponsored,
-    "Sanity check: Row's expected isSponsored matches result's"
-  );
-  if (isSponsored) {
-    Assert.equal(
-      bottom.textContent,
-      "Sponsored",
-      "Sponsored row bottom has Sponsored textContext"
-    );
-  } else {
-    Assert.equal(
-      bottom.textContent,
-      "",
-      "Non-sponsored row bottom has empty textContext"
-    );
-  }
 
   let button = row._buttons.get(
     UrlbarPrefs.get("resultMenu") ? "menu" : "help"
