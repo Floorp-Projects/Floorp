@@ -870,6 +870,9 @@ async function doMatchingQuickSuggestTest(pref, isSponsored) {
           sponsoredAdvertiser: "TestAdvertiser",
           sponsoredIabCategory: iab_category,
           isSponsored,
+          descriptionL10n: isSponsored
+            ? { id: "urlbar-result-action-sponsored" }
+            : undefined,
           helpUrl: QuickSuggest.HELP_URL,
           helpL10n: {
             id: UrlbarPrefs.get("resultMenu")

@@ -722,6 +722,9 @@ function makeExpectedAdmResult({
       sponsoredAdvertiser: suggestion.advertiser,
       sponsoredIabCategory: suggestion.iab_category,
       qsSuggestion: keyword,
+      descriptionL10n: isSponsored
+        ? { id: "urlbar-result-action-sponsored" }
+        : undefined,
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
         id: "urlbar-result-menu-learn-more-about-firefox-suggest",
@@ -785,6 +788,10 @@ function makeExpectedDefaultResult({ suggestion }) {
       url: suggestion.url,
       displayUrl: suggestion.url.replace(/^https:\/\//, ""),
       icon: suggestion.icon,
+      descriptionL10n: suggestion.is_sponsored
+        ? { id: "urlbar-result-action-sponsored" }
+        : undefined,
+      shouldShowUrl: true,
       helpUrl: QuickSuggest.HELP_URL,
       helpL10n: {
         id: "urlbar-result-menu-learn-more-about-firefox-suggest",

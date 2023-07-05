@@ -369,6 +369,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
         lazy.UrlbarPrefs.get("suggest.bestmatch")
       ) {
         result.isBestMatch = true;
+        result.isRichSuggestion = true;
+        result.richSuggestionIconSize ||= 52;
         result.suggestedIndex = 1;
       } else if (
         !isNaN(suggestion.position) &&
@@ -411,6 +413,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       ];
     } else {
       payload.title = [suggestion.title, UrlbarUtils.HIGHLIGHT.TYPED];
+      payload.shouldShowUrl = true;
     }
 
     return new lazy.UrlbarResult(

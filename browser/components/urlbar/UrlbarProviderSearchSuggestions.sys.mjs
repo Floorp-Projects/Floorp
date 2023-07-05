@@ -450,29 +450,31 @@ class ProviderSearchSuggestions extends UrlbarProvider {
 
       try {
         results.push(
-          new lazy.UrlbarResult(
-            UrlbarUtils.RESULT_TYPE.SEARCH,
-            UrlbarUtils.RESULT_SOURCE.SEARCH,
-            ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-              queryContext.tokens,
-              {
-                engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-                suggestion: [entry.value, UrlbarUtils.HIGHLIGHT.SUGGESTED],
-                lowerCaseSuggestion: entry.value.toLocaleLowerCase(),
-                tailPrefix,
-                tail: [tail, UrlbarUtils.HIGHLIGHT.SUGGESTED],
-                tailOffsetIndex: tail ? entry.tailOffsetIndex : undefined,
-                keyword: [
-                  alias ? alias : undefined,
-                  UrlbarUtils.HIGHLIGHT.TYPED,
-                ],
-                trending: entry.trending,
-                isRichSuggestion: !!entry.icon,
-                description: entry.description || undefined,
-                query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.NONE],
-                icon: !entry.value ? engine.iconURI?.spec : entry.icon,
-              }
-            )
+          Object.assign(
+            new lazy.UrlbarResult(
+              UrlbarUtils.RESULT_TYPE.SEARCH,
+              UrlbarUtils.RESULT_SOURCE.SEARCH,
+              ...lazy.UrlbarResult.payloadAndSimpleHighlights(
+                queryContext.tokens,
+                {
+                  engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
+                  suggestion: [entry.value, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+                  lowerCaseSuggestion: entry.value.toLocaleLowerCase(),
+                  tailPrefix,
+                  tail: [tail, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+                  tailOffsetIndex: tail ? entry.tailOffsetIndex : undefined,
+                  keyword: [
+                    alias ? alias : undefined,
+                    UrlbarUtils.HIGHLIGHT.TYPED,
+                  ],
+                  trending: entry.trending,
+                  description: entry.description || undefined,
+                  query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.NONE],
+                  icon: !entry.value ? engine.iconURI?.spec : entry.icon,
+                }
+              )
+            ),
+            { isRichSuggestion: !!entry.icon }
           )
         );
       } catch (err) {

@@ -1408,17 +1408,13 @@ export class UrlbarView {
     }
   }
 
-  #createRowContentForBestMatch(item, result) {
+  #createRowContentForRichSuggestion(item, result) {
     item._content.toggleAttribute("selectable", true);
 
     let favicon = this.#createElement("img");
     favicon.className = "urlbarView-favicon";
     item._content.appendChild(favicon);
     item._elements.set("favicon", favicon);
-
-    let typeIcon = this.#createElement("span");
-    typeIcon.className = "urlbarView-type-icon";
-    item._content.appendChild(typeIcon);
 
     let body = this.#createElement("span");
     body.className = "urlbarView-row-body";
@@ -1443,53 +1439,28 @@ export class UrlbarView {
     noWrap.appendChild(titleSeparator);
     item._elements.set("titleSeparator", titleSeparator);
 
+    let action = this.#createElement("span");
+    action.className = "urlbarView-action";
+    noWrap.appendChild(action);
+    item._elements.set("action", action);
+
     let url = this.#createElement("span");
     url.className = "urlbarView-url";
     top.appendChild(url);
     item._elements.set("url", url);
 
+    let description = this.#createElement("div");
+    description.classList.add(
+      "urlbarView-row-body-description",
+      "urlbarView-overflowable"
+    );
+    body.appendChild(description);
+    item._elements.set("description", description);
+
     let bottom = this.#createElement("div");
     bottom.className = "urlbarView-row-body-bottom";
     body.appendChild(bottom);
     item._elements.set("bottom", bottom);
-  }
-
-  #createRowContentForRichSuggestion(item, result) {
-    item._content.toggleAttribute("selectable", true);
-
-    let favicon = this.#createElement("img");
-    favicon.className = "urlbarView-favicon";
-    item._content.appendChild(favicon);
-    item._elements.set("favicon", favicon);
-
-    let body = this.#createElement("span");
-    body.classList.add("urlbarView-no-wrap", "urlbarView-overflowable");
-    item._content.appendChild(body);
-
-    let title = this.#createElement("span");
-    title.classList.add("urlbarView-title");
-    body.appendChild(title);
-    item._elements.set("title", title);
-
-    let description = this.#createElement("small");
-    description.className = "urlbarView-description";
-    body.appendChild(description);
-    item._elements.set("description", description);
-
-    let titleSeparator = this.#createElement("span");
-    titleSeparator.className = "urlbarView-title-separator";
-    body.appendChild(titleSeparator);
-    item._elements.set("titleSeparator", titleSeparator);
-
-    let action = this.#createElement("span");
-    action.className = "urlbarView-action";
-    body.appendChild(action);
-    item._elements.set("action", action);
-
-    let url = this.#createElement("span");
-    url.className = "urlbarView-url";
-    item._content.appendChild(url);
-    item._elements.set("url", url);
   }
 
   #addRowButtons(item, result) {
@@ -1582,8 +1553,7 @@ export class UrlbarView {
       // Dynamic results that implement getViewTemplate will
       // always need updating.
       provider?.getViewTemplate ||
-      oldResult.isBestMatch != result.isBestMatch ||
-      oldResult.payload.isRichSuggestion != result.payload.isRichSuggestion ||
+      oldResult.isRichSuggestion != result.isRichSuggestion ||
       (!lazy.UrlbarPrefs.get("resultMenu") &&
         (!!result.payload.helpUrl != item._buttons.has("help") ||
           !!result.payload.isBlockable != item._buttons.has("block"))) ||
@@ -1604,12 +1574,9 @@ export class UrlbarView {
       item.appendChild(item._content);
       item.removeAttribute("tip-type");
       item.removeAttribute("dynamicType");
-      item.removeAttribute("bestmatch");
       if (item.result.type == lazy.UrlbarUtils.RESULT_TYPE.DYNAMIC) {
         this.#createRowContentForDynamicType(item, result);
-      } else if (item.result.isBestMatch) {
-        this.#createRowContentForBestMatch(item, result);
-      } else if (result.payload.isRichSuggestion) {
+      } else if (result.isRichSuggestion) {
         this.#createRowContentForRichSuggestion(item, result);
       } else {
         this.#createRowContent(item, result);
@@ -1666,11 +1633,6 @@ export class UrlbarView {
         "type",
         lazy.UrlbarUtils.searchEngagementTelemetryType(result)
       );
-      if (result.isBestMatch) {
-        item.toggleAttribute("bestmatch", true);
-        this.#updateRowForBestMatch(item, result);
-        return;
-      }
     }
 
     let favicon = item._elements.get("favicon");
@@ -1787,7 +1749,8 @@ export class UrlbarView {
         if (result.heuristic && !result.payload.title) {
           isVisitAction = true;
         } else if (
-          result.providerName != lazy.UrlbarProviderQuickSuggest.name
+          result.providerName != lazy.UrlbarProviderQuickSuggest.name ||
+          result.payload.shouldShowUrl
         ) {
           setURL = true;
         }
@@ -1810,7 +1773,8 @@ export class UrlbarView {
 
     if (
       result.payload.isSponsored &&
-      result.type != lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH
+      result.type != lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH &&
+      result.providerName != lazy.UrlbarProviderQuickSuggest.name
     ) {
       item.toggleAttribute("sponsored", true);
       actionSetter = () => {
@@ -1822,23 +1786,9 @@ export class UrlbarView {
       item.removeAttribute("sponsored");
     }
 
-    if (
-      result.providerName == lazy.UrlbarProviderQuickSuggest.name &&
-      result.payload.isSponsored
-    ) {
-      item.toggleAttribute("firefox-suggest-sponsored", true);
-    } else {
-      item.removeAttribute("firefox-suggest-sponsored");
-    }
-
-    if (result.payload.isRichSuggestion) {
-      let description = item._elements.get("description");
-      description.textContent = result.payload.description;
-      item.setAttribute("rich-suggestion", "with-icon");
-    } else if (lazy.UrlbarPrefs.get("richSuggestions.featureGate")) {
-      // We need to modify the layout of standard urlbar results when
-      // richSuggestions are enabled so the titles align.
-      item.setAttribute("rich-suggestion", "no-icon");
+    if (result.isRichSuggestion) {
+      item.toggleAttribute("rich-suggestion", true);
+      this.#updateRowForRichSuggestion(item, result);
     } else {
       item.removeAttribute("rich-suggestion");
     }
@@ -1975,27 +1925,28 @@ export class UrlbarView {
     }
   }
 
-  #updateRowForBestMatch(item, result) {
+  #updateRowForRichSuggestion(item, result) {
     this.#setRowSelectable(item, true);
 
-    let favicon = item._elements.get("favicon");
-    favicon.src = this.#iconForResult(result);
+    if (result.richSuggestionIconSize) {
+      item.setAttribute("icon-size", result.richSuggestionIconSize);
+    } else {
+      item.removeAttribute("icon-size");
+    }
 
-    let title = item._elements.get("title");
-    this.#setResultTitle(result, title);
-    this.#updateOverflowTooltip(title, result.title);
-
-    let url = item._elements.get("url");
-    this.#addTextContentWithHighlights(
-      url,
-      result.payload.displayUrl,
-      result.payloadHighlights.displayUrl || []
-    );
-    this.#updateOverflowTooltip(url, result.payload.displayUrl);
+    let description = item._elements.get("description");
+    if (result.payload.descriptionL10n) {
+      this.#setElementL10n(description, result.payload.descriptionL10n);
+    } else {
+      this.#removeElementL10n(description);
+      if (result.payload.description) {
+        description.textContent = result.payload.description;
+      }
+    }
 
     let bottom = item._elements.get("bottom");
-    if (result.payload.isSponsored) {
-      this.#setElementL10n(bottom, { id: "urlbar-result-action-sponsored" });
+    if (result.payload.bottomTextL10n) {
+      this.#setElementL10n(bottom, result.payload.bottomTextL10n);
     } else {
       this.#removeElementL10n(bottom);
     }
