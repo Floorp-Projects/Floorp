@@ -1605,7 +1605,10 @@ with only_when("--enable-compile-environment"):
                     configure_cache,
                     [c_compiler.compiler] + c_compiler.flags,
                     c_compiler.language,
-                    "int main() { return 0; }",
+                    # The resulting binary is expected to have relative
+                    # relocations, the `ptr` variable attempts to ensure
+                    # there is at least one.
+                    "int main() { return 0; }\nint (*ptr)() = main;",
                     pack_rel_relocs
                     + ["-o", path]
                     + (extra_toolchain_flags or [])
