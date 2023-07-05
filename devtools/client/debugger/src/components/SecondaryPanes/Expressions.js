@@ -14,7 +14,6 @@ import {
   getExpressions,
   getExpressionError,
   getAutocompleteMatchset,
-  getThreadContext,
 } from "../../selectors";
 import { getExpressionResultGripAndFront } from "../../utils/expressions";
 
@@ -46,7 +45,6 @@ class Expressions extends Component {
       autocompleteMatches: PropTypes.array,
       clearAutocomplete: PropTypes.func.isRequired,
       clearExpressionError: PropTypes.func.isRequired,
-      cx: PropTypes.object.isRequired,
       deleteExpression: PropTypes.func.isRequired,
       expressionError: PropTypes.bool.isRequired,
       expressions: PropTypes.array.isRequired,
@@ -145,7 +143,7 @@ class Expressions extends Component {
 
   findAutocompleteMatches = debounce((value, selectionStart) => {
     const { autocomplete } = this.props;
-    autocomplete(this.props.cx, value, selectionStart);
+    autocomplete(value, selectionStart);
   }, 250);
 
   handleKeyDown = e => {
@@ -177,11 +175,7 @@ class Expressions extends Component {
     e.preventDefault();
     e.stopPropagation();
 
-    this.props.updateExpression(
-      this.props.cx,
-      this.state.inputValue,
-      expression
-    );
+    this.props.updateExpression(this.state.inputValue, expression);
   };
 
   handleNewSubmit = async e => {
@@ -190,7 +184,7 @@ class Expressions extends Component {
     e.stopPropagation();
 
     this.props.clearExpressionError();
-    await this.props.addExpression(this.props.cx, this.state.inputValue);
+    await this.props.addExpression(this.state.inputValue);
     this.setState({
       editing: false,
       editIndex: -1,
@@ -375,7 +369,6 @@ class Expressions extends Component {
 }
 
 const mapStateToProps = state => ({
-  cx: getThreadContext(state),
   autocompleteMatches: getAutocompleteMatchset(state),
   expressions: getExpressions(state),
   expressionError: getExpressionError(state),
