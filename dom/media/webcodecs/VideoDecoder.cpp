@@ -85,6 +85,10 @@ NS_IMPL_RELEASE_INHERITED(VideoDecoder, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VideoDecoder)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
+/*
+ * Below are helpers for conversion among Maybe<T>, Optional<T>, and Nullable<T>
+ */
+
 template <typename T>
 Maybe<T> OptionalToMaybe(const dom::Optional<T>& aOptional) {
   if (aOptional.WasPassed()) {
@@ -107,63 +111,6 @@ Nullable<T> MaybeToNullable(const Maybe<T>& aOptional) {
     return Nullable<T>(aOptional.value());
   }
   return Nullable<T>();
-}
-
-VideoColorSpaceInternal::VideoColorSpaceInternal(
-    const dom::VideoColorSpaceInit& aColorSpaceInit) {
-  mFullRange = NullableToMaybe(aColorSpaceInit.mFullRange);
-  mMatrix = NullableToMaybe(aColorSpaceInit.mMatrix);
-  mPrimaries = NullableToMaybe(aColorSpaceInit.mPrimaries);
-  mTransfer = NullableToMaybe(aColorSpaceInit.mTransfer);
-}
-
-VideoColorSpaceInit VideoColorSpaceInternal::ToColorSpaceInit() const {
-  VideoColorSpaceInit init;
-  init.mFullRange = MaybeToNullable(mFullRange);
-  init.mMatrix = MaybeToNullable(mMatrix);
-  init.mPrimaries = MaybeToNullable(mPrimaries);
-  init.mTransfer = MaybeToNullable(mTransfer);
-  return init;
-}
-
-static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
-    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
-  RefPtr<MediaByteBuffer> data = nullptr;
-  Span<uint8_t> buf;
-  MOZ_TRY_VAR(buf, GetSharedArrayBufferData(aBuffer));
-  if (buf.empty()) {
-    return data;
-  }
-  data = MakeRefPtr<MediaByteBuffer>();
-  data->AppendElements(buf);
-  return data;
-}
-
-VideoDecoderConfigInternal::VideoDecoderConfigInternal(
-    const VideoDecoderConfig& aConfig) {
-  mCodec = aConfig.mCodec;
-  mCodedHeight = OptionalToMaybe(aConfig.mCodedHeight);
-  mCodedWidth = OptionalToMaybe(aConfig.mCodedWidth);
-  if (aConfig.mColorSpace.WasPassed()) {
-    auto colorspace(aConfig.mColorSpace.Value());
-    VideoColorSpaceInternal internal(colorspace);
-    mColorSpace = Some(internal);
-  } else {
-    mColorSpace = Nothing();
-  }
-  if (aConfig.mDescription.WasPassed()) {
-    auto rv = GetExtraData(aConfig.mDescription.Value());
-    if (rv.isErr()) {
-      MOZ_ASSERT(false, "OOM?");
-    }
-    mDescription = Some(rv.unwrap());
-  } else {
-    mDescription = Nothing();
-  }
-  mDisplayAspectHeight = OptionalToMaybe(aConfig.mDisplayAspectHeight);
-  mDisplayAspectWidth = OptionalToMaybe(aConfig.mDisplayAspectWidth);
-  mHardwareAcceleration = aConfig.mHardwareAcceleration;
-  mOptimizeForLatency = OptionalToMaybe(aConfig.mOptimizeForLatency);
 }
 
 /*
@@ -276,6 +223,19 @@ static nsTArray<UniquePtr<TrackInfo>> GetTracksInfo(
     }
   }
   return {};
+}
+
+static Result<RefPtr<MediaByteBuffer>, nsresult> GetExtraData(
+    const OwningMaybeSharedArrayBufferViewOrMaybeSharedArrayBuffer& aBuffer) {
+  RefPtr<MediaByteBuffer> data = nullptr;
+  Span<uint8_t> buf;
+  MOZ_TRY_VAR(buf, GetSharedArrayBufferData(aBuffer));
+  if (buf.empty()) {
+    return data;
+  }
+  data = MakeRefPtr<MediaByteBuffer>();
+  data->AppendElements(buf);
+  return data;
 }
 
 static Result<UniquePtr<TrackInfo>, nsresult> CreateVideoInfo(
@@ -663,6 +623,75 @@ static nsTArray<RefPtr<VideoFrame>> DecodedDataToVideoFrames(
   return frames;
 }
 
+/*
+ * Below are helper classes used in VideoDecoder
+ */
+
+VideoColorSpaceInternal::VideoColorSpaceInternal(
+    const VideoColorSpaceInit& aColorSpaceInit) {
+  mFullRange = NullableToMaybe(aColorSpaceInit.mFullRange);
+  mMatrix = NullableToMaybe(aColorSpaceInit.mMatrix);
+  mPrimaries = NullableToMaybe(aColorSpaceInit.mPrimaries);
+  mTransfer = NullableToMaybe(aColorSpaceInit.mTransfer);
+}
+
+VideoColorSpaceInit VideoColorSpaceInternal::ToColorSpaceInit() const {
+  VideoColorSpaceInit init;
+  init.mFullRange = MaybeToNullable(mFullRange);
+  init.mMatrix = MaybeToNullable(mMatrix);
+  init.mPrimaries = MaybeToNullable(mPrimaries);
+  init.mTransfer = MaybeToNullable(mTransfer);
+  return init;
+}
+
+/* static */
+UniquePtr<VideoDecoderConfigInternal> VideoDecoderConfigInternal::Create(
+    const VideoDecoderConfig& aConfig) {
+  if (!IsValid(aConfig)) {
+    return nullptr;
+  }
+
+  Maybe<RefPtr<MediaByteBuffer>> description;
+  if (aConfig.mDescription.WasPassed()) {
+    auto rv = GetExtraData(aConfig.mDescription.Value());
+    if (rv.isErr()) {  // Invalid description data.
+      return nullptr;
+    }
+    description.emplace(rv.unwrap());
+  }
+
+  Maybe<VideoColorSpaceInternal> colorSpace;
+  if (aConfig.mColorSpace.WasPassed()) {
+    colorSpace.emplace(VideoColorSpaceInternal(aConfig.mColorSpace.Value()));
+  }
+
+  return UniquePtr<VideoDecoderConfigInternal>(new VideoDecoderConfigInternal(
+      aConfig.mCodec, OptionalToMaybe(aConfig.mCodedHeight),
+      OptionalToMaybe(aConfig.mCodedWidth), std::move(colorSpace),
+      std::move(description), OptionalToMaybe(aConfig.mDisplayAspectHeight),
+      OptionalToMaybe(aConfig.mDisplayAspectWidth),
+      aConfig.mHardwareAcceleration,
+      OptionalToMaybe(aConfig.mOptimizeForLatency)));
+}
+
+VideoDecoderConfigInternal::VideoDecoderConfigInternal(
+    const nsAString& aCodec, Maybe<uint32_t>&& aCodedHeight,
+    Maybe<uint32_t>&& aCodedWidth, Maybe<VideoColorSpaceInternal>&& aColorSpace,
+    Maybe<RefPtr<MediaByteBuffer>>&& aDescription,
+    Maybe<uint32_t>&& aDisplayAspectHeight,
+    Maybe<uint32_t>&& aDisplayAspectWidth,
+    const HardwareAcceleration& aHardwareAcceleration,
+    Maybe<bool>&& aOptimizeForLatency)
+    : mCodec(aCodec),
+      mCodedHeight(std::move(aCodedHeight)),
+      mCodedWidth(std::move(aCodedWidth)),
+      mColorSpace(std::move(aColorSpace)),
+      mDescription(std::move(aDescription)),
+      mDisplayAspectHeight(std::move(aDisplayAspectHeight)),
+      mDisplayAspectWidth(std::move(aDisplayAspectWidth)),
+      mHardwareAcceleration(aHardwareAcceleration),
+      mOptimizeForLatency(std::move(aOptimizeForLatency)) {}
+
 template <typename T>
 class MessageRequestHolder {
  public:
@@ -687,7 +716,7 @@ class ConfigureMessage final
   using Id = DecoderAgent::Id;
   static constexpr Id NoId = 0;
   static ConfigureMessage* Create(
-      UniquePtr<VideoDecoderConfigInternal>& aConfig) {
+      UniquePtr<VideoDecoderConfigInternal>&& aConfig) {
     // This needs to be atomic since this can run on the main thread or worker
     // thread.
     static std::atomic<Id> sNextId = NoId;
@@ -833,6 +862,10 @@ RefPtr<MediaRawData> DecodeMessage::ChunkData::IntoMediaRawData(
   return sample.forget();
 }
 
+/*
+ * Below are VideoDecoder implementation
+ */
+
 VideoDecoder::VideoDecoder(nsIGlobalObject* aParent,
                            RefPtr<WebCodecsErrorCallback>&& aErrorCallback,
                            RefPtr<VideoFrameOutputCallback>&& aOutputCallback)
@@ -906,28 +939,20 @@ void VideoDecoder::Configure(const VideoDecoderConfig& aConfig,
   }
 
   // Clone a VideoDecoderConfig as the active decoder config.
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(GetParentObject())) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+  UniquePtr<VideoDecoderConfigInternal> config =
+      VideoDecoderConfigInternal::Create(aConfig);
+  if (!config) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);  // Invalid description data.
     return;
   }
-  RootedDictionary<VideoDecoderConfig> config(jsapi.cx());
-  auto c = CloneConfiguration(config, jsapi.cx(), aConfig);
-  if (c.isErr()) {
-    aRv.Throw(c.unwrapErr());
-    return;
-  }
-  MOZ_ASSERT(IsValid(config));
 
   mState = CodecState::Configured;
   mKeyChunkRequired = true;
   mDecodeCounter = 0;
   mFlushCounter = 0;
 
-  auto conf = MakeUnique<VideoDecoderConfigInternal>(config);
-
   mControlMessageQueue.emplace(
-      UniquePtr<ControlMessage>(ConfigureMessage::Create(conf)));
+      UniquePtr<ControlMessage>(ConfigureMessage::Create(std::move(config))));
   mLatestConfigureId = mControlMessageQueue.back()->AsConfigureMessage()->mId;
   LOG("VideoDecoder %p enqueues %s", this,
       mControlMessageQueue.back()->ToString().get());
@@ -1048,8 +1073,17 @@ already_AddRefed<Promise> VideoDecoder::IsConfigSupported(
     aRv.Throw(e);
     return p.forget();
   }
-  VideoDecoderConfigInternal internal(config);
-  bool canDecode = CanDecode(internal);
+
+  // TODO: Make `CanDecode` work with a VideoDecoderConfig so we don't need a
+  // copy here.
+  UniquePtr<VideoDecoderConfigInternal> conf =
+      VideoDecoderConfigInternal::Create(config);
+  if (!conf) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);  // Invalid description data.
+    return p.forget();
+  }
+
+  bool canDecode = CanDecode(*conf);
   RootedDictionary<VideoDecoderSupport> s(aGlobal.Context());
   s.mConfig.Construct(std::move(config));
   s.mSupported.Construct(canDecode);
