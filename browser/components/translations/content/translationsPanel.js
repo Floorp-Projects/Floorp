@@ -194,11 +194,6 @@ var TranslationsPanel = new (class {
   detectedLanguages = null;
 
   /**
-   * Suppress any popups showing until the browser windows are all loaded.
-   */
-  canShowPopup = false;
-
-  /**
    * Lazily get a console instance.
    *
    * @returns {Console}
@@ -1069,18 +1064,6 @@ var TranslationsPanel = new (class {
     this.#getTranslationsActor().restorePage(docLangTag);
   }
 
-  observe = (_subject, topic, _data) => {
-    switch (topic) {
-      case "sessionstore-windows-restored":
-        Services.obs.removeObserver(
-          TranslationsPanel,
-          "sessionstore-windows-restored"
-        );
-        this.canShowPopup = true;
-        break;
-    }
-  };
-
   handleEventId = 0;
 
   /**
@@ -1091,12 +1074,7 @@ var TranslationsPanel = new (class {
   handleEvent = async event => {
     switch (event.type) {
       case "TranslationsParent:OfferTranslation": {
-        if (
-          this.canShowPopup &&
-          Services.wm.getMostRecentBrowserWindow()?.gBrowser === gBrowser
-        ) {
-          this.open(event);
-        }
+        this.open(event);
         break;
       }
       case "TranslationsParent:LanguageState":
@@ -1219,5 +1197,3 @@ var TranslationsPanel = new (class {
     }
   };
 })();
-
-Services.obs.addObserver(TranslationsPanel, "sessionstore-windows-restored");
