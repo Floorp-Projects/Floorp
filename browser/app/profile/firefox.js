@@ -692,7 +692,11 @@ pref("browser.search.separatePrivateDefault.ui.enabled", false);
 pref("browser.search.separatePrivateDefault.ui.banner.max", 0);
 
 // Enables search SERP telemetry (impressions, engagements and abandonment)
+#ifdef NIGHTLY_BUILD
+pref("browser.search.serpEventTelemetry.enabled", true);
+#else
 pref("browser.search.serpEventTelemetry.enabled", false);
+#endif
 
 // Enable new experimental shopping features. This is solely intended as a
 // rollout/"emergency stop" button - it will go away once the feature has
