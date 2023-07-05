@@ -32,16 +32,16 @@ window.onload = async function() {
   const id = elementID => `${highlighter.ID_CLASS_PREFIX}${elementID}`;
 
   function isHidden(elementID) {
-    const attr = anonymousContent.root.getElementById(id(elementID)).getAttribute("hidden");
+    const attr = anonymousContent.getAttributeForElement(id(elementID), "hidden");
     return typeof attr === "string" && attr == "true";
   }
 
   function getReason() {
-    return anonymousContent.root.getElementById(id("reason")).textContent;
+    return anonymousContent.getTextContentForElement(id("reason"));
   }
 
   function isOverlayShown() {
-    const attr = anonymousContent.root.getElementById(id("root")).getAttribute("overlay");
+    const attr = anonymousContent.getAttributeForElement(id("root"), "overlay");
     return typeof attr === "string" && attr == "true";
   }
 
