@@ -43,8 +43,12 @@ urlbar-result-menu-learn-more-about-firefox-suggest =
 # A message shown in a result when the user gives feedback on it.
 firefox-suggest-feedback-acknowledgment = Thanks for your feedback
 
-# A message that replaces a result when the user dismisses it.
-firefox-suggest-dismissal-acknowledgment = Thanks for your feedback. You won’t see this again.
+# A message that replaces a result when the user dismisses a single suggestion.
+firefox-suggest-dismissal-acknowledgment-one = Thanks for your feedback. You won’t see this suggestion again.
+
+# A message that replaces a result when the user dismisses all suggestions of a
+# particular type.
+firefox-suggest-dismissal-acknowledgment-all = Thanks for your feedback. You won’t see these suggestions anymore.
 
 ## These strings are used for weather suggestions in the urlbar.
 
