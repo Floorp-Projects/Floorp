@@ -178,7 +178,7 @@ async function startTestConditions(contextId) {
     "Empty cache to start"
   );
   equal(
-    (await Services.logins.getAllLogins()).length,
+    Services.logins.getAllLogins().length,
     0,
     "Should have no saved logins at the start of the test"
   );
@@ -223,7 +223,7 @@ add_task(async function test_onPasswordEditedOrGenerated_generatedPassword() {
   );
 
   equal(
-    (await Services.logins.getAllLogins()).length,
+    Services.logins.getAllLogins().length,
     0,
     "Should have no saved logins at the start of the test"
   );
@@ -293,7 +293,7 @@ add_task(async function test_onPasswordEditedOrGenerated_generatedPassword() {
   expected.password = newPassword;
   Assert.ok(login.equals(expected), "Check updated login");
   equal(
-    (await Services.logins.getAllLogins()).length,
+    Services.logins.getAllLogins().length,
     1,
     "Should have 1 saved login still"
   );
@@ -327,7 +327,7 @@ add_task(async function test_onPasswordEditedOrGenerated_generatedPassword() {
   expected.password = newerPassword;
   Assert.ok(login.equals(expected), "Check updated login");
   equal(
-    (await Services.logins.getAllLogins()).length,
+    Services.logins.getAllLogins().length,
     1,
     "Should have 1 saved login still"
   );
@@ -356,7 +356,7 @@ add_task(
     );
 
     equal(
-      (await Services.logins.getAllLogins()).length,
+      Services.logins.getAllLogins().length,
       0,
       "Should have no saved logins at the start of the test"
     );
@@ -456,7 +456,7 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
   );
 
   equal(
-    (await Services.logins.getAllLogins()).length,
+    Services.logins.getAllLogins().length,
     0,
     "Should have no saved logins at the start of the test"
   );
@@ -540,7 +540,7 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
   assertLoginProperties(login, loginWithUsername);
   Assert.ok(login.matches(loginWithUsername, false), "Check updated login");
   equal(
-    (await Services.logins.getAllLogins()).length,
+    Services.logins.getAllLogins().length,
     1,
     "Should have 1 saved login still"
   );
@@ -596,7 +596,7 @@ add_task(async function test_addUsernameBeforeAutoSaveEdit() {
   assertLoginProperties(login, loginWithUsername);
   Assert.ok(login.matches(loginWithUsername, false), "Check updated login");
   equal(
-    (await Services.logins.getAllLogins()).length,
+    Services.logins.getAllLogins().length,
     1,
     "Should have 1 saved login still"
   );
@@ -653,10 +653,15 @@ add_task(async function test_editUsernameOfFilledSavedLogin() {
   info("Adding initial login: " + JSON.stringify(login0Props));
   let savedLogin = await LoginTestUtils.addLogin(login0Props);
 
-  let logins = await Services.logins.getAllLogins();
-  info("Saved initial login: " + JSON.stringify(logins[0]));
+  info(
+    "Saved initial login: " + JSON.stringify(Services.logins.getAllLogins()[0])
+  );
 
-  equal(logins.length, 1, "Should have 1 saved login at the start of the test");
+  equal(
+    Services.logins.getAllLogins().length,
+    1,
+    "Should have 1 saved login at the start of the test"
+  );
 
   // first prompt to save a new login
   let newUsername = "differentuser";
@@ -779,7 +784,7 @@ add_task(
       }
     );
     equal(
-      (await Services.logins.getAllLogins()).length,
+      Services.logins.getAllLogins().length,
       0,
       "Should have no saved logins since saving is disabled"
     );
@@ -827,13 +832,12 @@ add_task(
         triggeredByFillingGenerated: true,
       }
     );
-    let logins = await Services.logins.getAllLogins();
     equal(
-      logins.length,
+      Services.logins.getAllLogins().length,
       1,
       "Should just have the previously-saved login with empty username"
     );
-    assertLoginProperties(logins[0], login0Props);
+    assertLoginProperties(Services.logins.getAllLogins()[0], login0Props);
 
     Assert.ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
     Assert.ok(
@@ -869,10 +873,16 @@ add_task(
     Assert.ok(generatedPW.edited, "Cached edited boolean should be true");
     equal(generatedPW.storageGUID, null, "Should have no storageGUID");
     equal(generatedPW.value, newPassword, "Cached password should be updated");
-    logins = await Services.logins.getAllLogins();
-    assertLoginProperties(logins[0], login0Props);
-    Assert.ok(logins[0].equals(expected), "Ensure no changes");
-    equal(logins.length, 1, "Should have 1 saved login still");
+    assertLoginProperties(Services.logins.getAllLogins()[0], login0Props);
+    Assert.ok(
+      Services.logins.getAllLogins()[0].equals(expected),
+      "Ensure no changes"
+    );
+    equal(
+      Services.logins.getAllLogins().length,
+      1,
+      "Should have 1 saved login still"
+    );
 
     checkEditTelemetryRecorded(1, "Updating cache, not storage (no auto-save)");
 
@@ -897,7 +907,7 @@ add_task(
 
     info(
       "Saved initial login: " +
-        JSON.stringify(await Services.logins.getAllLogins()[0])
+        JSON.stringify(Services.logins.getAllLogins()[0])
     );
 
     let { generatedPassword: password1 } =
@@ -920,13 +930,12 @@ add_task(
         triggeredByFillingGenerated: true,
       }
     );
-    let logins = await Services.logins.getAllLogins();
     equal(
-      logins.length,
+      Services.logins.getAllLogins().length,
       1,
       "Should just have the previously-saved login with empty username"
     );
-    assertLoginProperties(logins[0], login0Props);
+    assertLoginProperties(Services.logins.getAllLogins()[0], login0Props);
 
     Assert.ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
     Assert.ok(
@@ -983,10 +992,16 @@ add_task(
     Assert.ok(generatedPW.edited, "Cached edited boolean should be true");
     equal(generatedPW.storageGUID, null, "Should have no storageGUID");
     equal(generatedPW.value, newPassword, "Cached password should be updated");
-    logins = await Services.logins.getAllLogins();
-    assertLoginProperties(logins[0], login0Props);
-    Assert.ok(logins[0].equals(expected), "Ensure no changes");
-    equal(logins.length, 1, "Should have 1 saved login still");
+    assertLoginProperties(Services.logins.getAllLogins()[0], login0Props);
+    Assert.ok(
+      Services.logins.getAllLogins()[0].equals(expected),
+      "Ensure no changes"
+    );
+    equal(
+      Services.logins.getAllLogins().length,
+      1,
+      "Should have 1 saved login still"
+    );
 
     checkEditTelemetryRecorded(
       1,
@@ -1026,7 +1041,7 @@ add_task(
       }
     );
 
-    let savedLogins = await Services.logins.getAllLogins();
+    let savedLogins = Services.logins.getAllLogins();
     equal(
       savedLogins.length,
       2,
@@ -1089,13 +1104,13 @@ add_task(
       }
     );
 
-    let savedLogins = await Services.logins.getAllLogins();
+    let savedLogins = Services.logins.getAllLogins();
     equal(
       savedLogins.length,
       2,
       "Should have saved the generated-password login"
     );
-    assertLoginProperties(savedLogins[0], login0Props);
+    assertLoginProperties(Services.logins.getAllLogins()[0], login0Props);
     assertLoginProperties(
       savedLogins[1],
       Object.assign({}, loginTemplate, {
