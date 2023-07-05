@@ -2045,6 +2045,8 @@ var gBrowserInit = {
 
     CaptivePortalWatcher.delayedStartup();
 
+    ShoppingSidebarManager.init();
+
     SessionStore.promiseAllWindowsRestored.then(() => {
       this._schedulePerWindowIdleTasks();
       document.documentElement.setAttribute("sessionrestored", "true");
@@ -2463,6 +2465,8 @@ var gBrowserInit = {
     NewTabPagePreloading.removePreloadedBrowser(window);
 
     FirefoxViewHandler.uninit();
+
+    ShoppingSidebarManager.uninit();
 
     // Now either cancel delayedStartup, or clean up the services initialized from
     // it.
@@ -5998,6 +6002,7 @@ var TabsProgressListener = {
 
     FullZoom.onLocationChange(aLocationURI, false, aBrowser);
     CaptivePortalWatcher.onLocationChange(aBrowser);
+    ShoppingSidebarManager.onLocationChange(aBrowser, aLocationURI);
   },
 
   onLinkIconAvailable(browser, dataURI, iconURI) {
@@ -10012,5 +10017,60 @@ var FirefoxViewHandler = {
   },
   _toggleNotificationDot(shouldShow) {
     this.button?.toggleAttribute("attention", shouldShow);
+  },
+};
+
+var ShoppingSidebarManager = {
+  init() {
+    this._updateEnabledState = this._updateEnabledState.bind(this);
+    NimbusFeatures.shopping2023.onUpdate(this._updateEnabledState);
+    this._updateEnabledState();
+  },
+
+  uninit() {
+    NimbusFeatures.shopping2023.offUpdate(this._updateEnabledState);
+  },
+
+  _updateEnabledState() {
+    this._enabled = NimbusFeatures.shopping2023.getVariable("enabled");
+
+    if (!this._enabled) {
+      document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
+        sidebar.remove();
+      });
+    }
+  },
+
+  // TODO (bug 1840852): use the toolkit shopping regex added in bug 1836741.
+  _isProductPage(locationURI) {
+    // amazon product page: URL contains /dp/ followed by 10 alphanum chars.
+    let regex = /\/dp\/[\w]{10}/;
+    return (
+      locationURI.host == "www.amazon.com" && regex.test(locationURI.asciiSpec)
+    );
+  },
+
+  onLocationChange(aBrowser, aLocationURI) {
+    if (!this._enabled) {
+      return;
+    }
+
+    let browserPanel = gBrowser.getPanel(aBrowser);
+    let sidebar = browserPanel.querySelector("shopping-sidebar");
+    if (this._isProductPage(aLocationURI)) {
+      if (!sidebar) {
+        sidebar = document.createXULElement("shopping-sidebar");
+        sidebar.setAttribute("style", "width: 320px");
+        sidebar.setAttribute("url", aLocationURI.asciiSpec);
+        sidebar.hidden = false;
+        browserPanel.appendChild(sidebar);
+      } else {
+        sidebar.setAttribute("url", aLocationURI.asciiSpec);
+        sidebar.hidden = false;
+      }
+    } else if (sidebar && !sidebar.hidden) {
+      sidebar.setAttribute("url", null);
+      sidebar.hidden = true;
+    }
   },
 };
