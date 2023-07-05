@@ -214,7 +214,7 @@ fn parse_number_with_clamping_mode<'i, 't>(
 /// A CSS `<number>` specified value.
 ///
 /// https://drafts.csswg.org/css-values-3/#number-value
-#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, PartialOrd, ToShmem)]
+#[derive(Clone, Copy, Debug, MallocSizeOf, PartialOrd, ToShmem)]
 pub struct Number {
     /// The numeric value itself.
     value: CSSFloat,
@@ -229,6 +229,16 @@ impl Parse for Number {
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
         parse_number_with_clamping_mode(context, input, AllowedNumericType::All)
+    }
+}
+
+impl PartialEq<Number> for Number {
+    fn eq(&self, other: &Number) -> bool {
+        if self.calc_clamping_mode != other.calc_clamping_mode {
+            return false;
+        }
+
+        self.value == other.value || (self.value.is_nan() && other.value.is_nan())
     }
 }
 
