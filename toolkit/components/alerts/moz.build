@@ -42,4 +42,4 @@ FINAL_LIBRARY = "xul"
 JAR_MANIFESTS += ["jar.mn"]
 
 with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+    BUG_COMPONENT = ("Toolkit", "Alerts Service")

@@ -557,7 +557,7 @@ with Files("tests/netinfo/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
 with Files("tests/notifications/**"):
-    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+    BUG_COMPONENT = ("Core", "DOM: Notifications")
 
 with Files("tests/network-error-logging/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")

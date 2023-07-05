@@ -103,7 +103,7 @@ with Files("PermissionsUtils.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
 
 with Files("PopupNotifications.sys.mjs"):
-    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+    BUG_COMPONENT = ("Toolkit", "PopupNotifications and Notification Bars")
 
 with Files("PrivateBrowsingUtils.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Private Browsing")
@@ -121,7 +121,7 @@ with Files("Sqlite.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Storage")
 
 with Files("SubDialog.sys.mjs"):
-    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+    BUG_COMPONENT = ("Toolkit", "Content Prompts")
 
 with Files("UpdateUtils.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Application Update")

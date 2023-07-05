@@ -17,7 +17,7 @@ with Files("test/about/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
 with Files("test/alerts/**"):
-    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+    BUG_COMPONENT = ("Toolkit", "Alerts Service")
 
 with Files("test/captivePortal/**"):
     BUG_COMPONENT = ("Firefox", "General")
@@ -59,7 +59,7 @@ with Files("test/plugins/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: GMP")
 
 with Files("test/popupNotifications/**"):
-    BUG_COMPONENT = ("Toolkit", "Notifications and Alerts")
+    BUG_COMPONENT = ("Toolkit", "PopupNotifications and Notification Bars")
 
 with Files("test/popups/**"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
