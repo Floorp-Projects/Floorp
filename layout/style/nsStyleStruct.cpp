@@ -3535,9 +3535,9 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
       break;
     }
     case Tag::ModRem: {
-      const auto& mod_rem = AsModRem();
-      ScaleNode(*mod_rem.dividend);
-      ScaleNode(*mod_rem.divisor);
+      const auto& modRem = AsModRem();
+      ScaleNode(*modRem.dividend);
+      ScaleNode(*modRem.divisor);
       break;
     }
     case Tag::MinMax: {
@@ -3572,35 +3572,25 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
 }
 
 template <>
-template <typename ResultT, typename PercentageConverter>
-ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
-                                       PercentageConverter aConverter) const {
-  static_assert(std::is_same_v<decltype(aConverter(1.0f)), ResultT>);
-  static_assert(std::is_same_v<ResultT, nscoord> ||
-                std::is_same_v<ResultT, CSSCoord>);
-
+CSSCoord StyleCalcNode::ResolveInternal(CSSCoord aPercentageBasis) const {
   switch (tag) {
     case Tag::Leaf: {
-      auto& leaf = AsLeaf();
+      const auto& leaf = AsLeaf();
       if (leaf.IsPercentage()) {
-        return aConverter(leaf.AsPercentage()._0 * aPercentageBasis);
+        return leaf.AsPercentage()._0 * aPercentageBasis;
       }
-      if constexpr (std::is_same_v<ResultT, nscoord>) {
-        return leaf.AsLength().ToAppUnits();
-      } else {
-        return leaf.AsLength().ToCSSPixels();
-      }
+      return leaf.AsLength().ToCSSPixels();
     }
     case Tag::Negate: {
       const auto& negate = AsNegate();
-      auto value = negate->ResolveInternal(aPercentageBasis, aConverter);
+      auto value = negate->ResolveInternal(aPercentageBasis);
       return -value;
     }
     case Tag::Clamp: {
-      auto& clamp = AsClamp();
-      auto min = clamp.min->ResolveInternal(aPercentageBasis, aConverter);
-      auto center = clamp.center->ResolveInternal(aPercentageBasis, aConverter);
-      auto max = clamp.max->ResolveInternal(aPercentageBasis, aConverter);
+      const auto& clamp = AsClamp();
+      auto min = clamp.min->ResolveInternal(aPercentageBasis);
+      auto center = clamp.center->ResolveInternal(aPercentageBasis);
+      auto max = clamp.max->ResolveInternal(aPercentageBasis);
       return std::max(min, std::min(center, max));
     }
     case Tag::Round: {
@@ -3608,16 +3598,8 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
 
       // Make sure to do the math in CSS pixels, so that floor() and ceil()
       // below round to an integer number of CSS pixels, not app units.
-      CSSCoord step, value;
-      if constexpr (std::is_same_v<ResultT, CSSCoord>) {
-        step = round.step->ResolveInternal(aPercentageBasis, aConverter);
-        value = round.value->ResolveInternal(aPercentageBasis, aConverter);
-      } else {
-        step = CSSPixel::FromAppUnits(
-            round.step->ResolveInternal(aPercentageBasis, aConverter));
-        value = CSSPixel::FromAppUnits(
-            round.value->ResolveInternal(aPercentageBasis, aConverter));
-      }
+      const CSSCoord step = round.step->ResolveInternal(aPercentageBasis);
+      const CSSCoord value = round.value->ResolveInternal(aPercentageBasis);
 
       const float div = value / step;
       const CSSCoord lowerBound = std::floor(div) * step;
@@ -3643,49 +3625,28 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
         return CSSCoord(0);
       }();
 
-      if constexpr (std::is_same_v<ResultT, CSSCoord>) {
-        return result;
-      } else {
-        return CSSPixel::ToAppUnits(result);
-      }
+      return result;
     }
     case Tag::ModRem: {
-      const auto& mod_rem = AsModRem();
+      const auto& modRem = AsModRem();
 
-      // Make sure to do the math in CSS pixels, so that floor() and trunc()
-      // below round to an integer number of CSS pixels, not app units.
-      CSSCoord dividend, divisor;
-      if constexpr (std::is_same_v<ResultT, CSSCoord>) {
-        dividend =
-            mod_rem.dividend->ResolveInternal(aPercentageBasis, aConverter);
-        divisor =
-            mod_rem.divisor->ResolveInternal(aPercentageBasis, aConverter);
-      } else {
-        dividend = CSSPixel::FromAppUnits(
-            mod_rem.dividend->ResolveInternal(aPercentageBasis, aConverter));
-        divisor = CSSPixel::FromAppUnits(
-            mod_rem.divisor->ResolveInternal(aPercentageBasis, aConverter));
-      }
+      CSSCoord dividend = modRem.dividend->ResolveInternal(aPercentageBasis);
+      CSSCoord divisor = modRem.divisor->ResolveInternal(aPercentageBasis);
 
       const CSSCoord result =
-          mod_rem.op == StyleModRemOp::Mod
+          modRem.op == StyleModRemOp::Mod
               ? dividend - divisor * std::floor(dividend / divisor)
               : dividend - divisor * std::trunc(dividend / divisor);
 
-      if constexpr (std::is_same_v<ResultT, CSSCoord>) {
-        return result;
-      } else {
-        return CSSPixel::ToAppUnits(result);
-      }
+      return result;
     }
     case Tag::MinMax: {
       auto children = AsMinMax()._0.AsSpan();
       StyleMinMaxOp op = AsMinMax()._1;
 
-      ResultT result =
-          children[0].ResolveInternal(aPercentageBasis, aConverter);
-      for (auto& child : children.From(1)) {
-        ResultT candidate = child.ResolveInternal(aPercentageBasis, aConverter);
+      CSSCoord result = children[0].ResolveInternal(aPercentageBasis);
+      for (const auto& child : children.From(1)) {
+        CSSCoord candidate = child.ResolveInternal(aPercentageBasis);
         if (op == StyleMinMaxOp::Max) {
           result = std::max(result, candidate);
         } else {
@@ -3695,36 +3656,26 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
       return result;
     }
     case Tag::Sum: {
-      ResultT result = 0;
-      for (auto& child : AsSum().AsSpan()) {
-        result += child.ResolveInternal(aPercentageBasis, aConverter);
+      CSSCoord result = 0.0f;
+      for (const auto& child : AsSum().AsSpan()) {
+        result += child.ResolveInternal(aPercentageBasis);
       }
       return result;
     }
     case Tag::Hypot: {
       //  Doing math in CSS pixels to avoid exceeding integer range of app units
-      CSSCoord result = 0;
+      CSSCoord result = 0.0f;
       for (const auto& child : AsHypot().AsSpan()) {
-        CSSCoord value;
-        if constexpr (std::is_same_v<ResultT, CSSCoord>) {
-          value = child.ResolveInternal(aPercentageBasis, aConverter);
-        } else {
-          value = CSSPixel::FromAppUnits(
-              child.ResolveInternal(aPercentageBasis, aConverter));
-        }
+        CSSCoord value = child.ResolveInternal(aPercentageBasis);
         result += std::pow(value, 2);
       }
       result = std::sqrt(result);
 
-      if constexpr (std::is_same_v<ResultT, CSSCoord>) {
-        return result;
-      } else {
-        return CSSPixel::ToAppUnits(result);
-      }
+      return result;
     }
     case Tag::Abs: {
       const auto& abs = AsAbs();
-      auto value = abs->ResolveInternal(aPercentageBasis, aConverter);
+      auto value = abs->ResolveInternal(aPercentageBasis);
       if (value == 0) {
         return value;
       }
@@ -3738,8 +3689,7 @@ ResultT StyleCalcNode::ResolveInternal(ResultT aPercentageBasis,
 
 template <>
 CSSCoord StyleCalcNode::ResolveToCSSPixels(CSSCoord aBasis) const {
-  CSSCoord result =
-      ResolveInternal(aBasis, [](CSSCoord aPercent) { return aPercent; });
+  CSSCoord result = ResolveInternal(aBasis);
   if (std::isnan(float(result))) {
     return 0.0f;  // This matches style::values::normalize
   }
@@ -3747,9 +3697,9 @@ CSSCoord StyleCalcNode::ResolveToCSSPixels(CSSCoord aBasis) const {
 }
 
 template <>
-nscoord StyleCalcNode::Resolve(nscoord aBasis,
-                               CoordPercentageRounder aRounder) const {
-  return ResolveInternal(aBasis, aRounder);
+nscoord StyleCalcNode::Resolve(nscoord aBasis, CoordRounder aRounder) const {
+  CSSCoord result = ResolveToCSSPixels(CSSPixel::FromAppUnits(aBasis));
+  return aRounder(result * AppUnitsPerCSSPixel());
 }
 
 bool nsStyleDisplay::PrecludesSizeContainmentOrContentVisibilityWithFrame(
