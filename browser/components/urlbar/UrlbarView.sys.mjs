@@ -1572,7 +1572,6 @@ export class UrlbarView {
         (!!result.payload.helpUrl != item._buttons.has("help") ||
           !!result.payload.isBlockable != item._buttons.has("block"))) ||
       !!this.#getResultMenuCommands(result) != item._buttons.has("menu") ||
-      !!oldResult.showFeedbackMenu != !!result.showFeedbackMenu ||
       !lazy.ObjectUtils.deepEqual(
         oldResult.payload.buttons,
         result.payload.buttons
