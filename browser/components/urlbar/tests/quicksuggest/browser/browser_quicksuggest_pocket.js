@@ -13,7 +13,7 @@ const REMOTE_SETTINGS_DATA = [
         url: "https://example.com/pocket-suggestion",
         title: "Pocket Suggestion",
         description: "Pocket description",
-        lowConfidenceKeywords: ["pocket-suggestion"],
+        lowConfidenceKeywords: ["pocket suggestion"],
         highConfidenceKeywords: ["high"],
       },
     ],
@@ -47,7 +47,7 @@ add_task(async function basic() {
     // Do a search.
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: "pocket-suggestion",
+      value: "pocket suggestion",
     });
 
     // Check the result.
@@ -85,6 +85,132 @@ add_task(async function basic() {
   });
 });
 
+// Tests the "Show less frequently" command.
+add_task(async function resultMenu_showLessFrequently() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.pocket.featureGate", true],
+      ["browser.urlbar.pocket.showLessFrequentlyCount", 0],
+    ],
+  });
+
+  const cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
+    pocketShowLessFrequentlyCap: 3,
+  });
+
+  // Sanity check.
+  Assert.equal(UrlbarPrefs.get("pocketShowLessFrequentlyCap"), 3);
+  Assert.equal(UrlbarPrefs.get("pocket.showLessFrequentlyCount"), 0);
+
+  await doShowLessFrequently({
+    input: "pocket s",
+    expected: {
+      isSuggestionShown: true,
+      isMenuItemShown: true,
+    },
+  });
+  Assert.equal(UrlbarPrefs.get("pocket.showLessFrequentlyCount"), 1);
+
+  await doShowLessFrequently({
+    input: "pocket s",
+    expected: {
+      isSuggestionShown: true,
+      isMenuItemShown: true,
+    },
+  });
+  Assert.equal(UrlbarPrefs.get("pocket.showLessFrequentlyCount"), 2);
+
+  await doShowLessFrequently({
+    input: "pocket s",
+    expected: {
+      isSuggestionShown: true,
+      isMenuItemShown: true,
+    },
+  });
+  Assert.equal(UrlbarPrefs.get("pocket.showLessFrequentlyCount"), 3);
+
+  await doShowLessFrequently({
+    input: "pocket s",
+    expected: {
+      isSuggestionShown: false,
+    },
+  });
+
+  await doShowLessFrequently({
+    input: "pocket su",
+    expected: {
+      isSuggestionShown: true,
+      isMenuItemShown: false,
+    },
+  });
+
+  await cleanUpNimbus();
+  await SpecialPowers.popPrefEnv();
+});
+
+async function doShowLessFrequently({ input, expected }) {
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: input,
+  });
+
+  if (!expected.isSuggestionShown) {
+    for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
+      const details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+      Assert.notEqual(
+        details.result.payload.telemetryType,
+        "pocket",
+        `Pocket suggestion should be absent (checking index ${i})`
+      );
+    }
+
+    return;
+  }
+
+  const resultIndex = 1;
+  const details = await UrlbarTestUtils.getDetailsOfResultAt(
+    window,
+    resultIndex
+  );
+  Assert.equal(
+    details.result.payload.telemetryType,
+    "pocket",
+    `Pocket suggestion should be present at expected index after ${input} search`
+  );
+
+  // Click the command.
+  try {
+    await UrlbarTestUtils.openResultMenuAndClickItem(
+      window,
+      "show_less_frequently",
+      {
+        resultIndex,
+      }
+    );
+    Assert.ok(expected.isMenuItemShown);
+    Assert.ok(
+      gURLBar.view.isOpen,
+      "The view should remain open clicking the command"
+    );
+    Assert.ok(
+      details.element.row.hasAttribute("feedback-acknowledgment"),
+      "Row should have feedback acknowledgment after clicking command"
+    );
+  } catch (e) {
+    Assert.ok(!expected.isMenuItemShown);
+    Assert.ok(
+      !details.element.row.hasAttribute("feedback-acknowledgment"),
+      "Row should not have feedback acknowledgment after clicking command"
+    );
+    Assert.equal(
+      e.message,
+      "Menu item not found for command: show_less_frequently"
+    );
+  }
+
+  await UrlbarTestUtils.promisePopupClose(window);
+}
+
 // Tests the "Not interested" result menu dismissal command.
 add_task(async function resultMenu_notInterested() {
   await doDismissTest("not_interested");
@@ -99,7 +225,7 @@ async function doDismissTest(command) {
   // Do a search.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: "pocket-suggestion",
+    value: "pocket suggestion",
   });
 
   // Check the result.
@@ -189,7 +315,7 @@ async function doDismissTest(command) {
   // Do the search again.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
-    value: "pocket-suggestion",
+    value: "pocket suggestion",
   });
   for (let i = 0; i < UrlbarTestUtils.getResultCount(window); i++) {
     details = await UrlbarTestUtils.getDetailsOfResultAt(window, i);

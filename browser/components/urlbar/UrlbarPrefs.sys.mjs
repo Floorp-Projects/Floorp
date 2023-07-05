@@ -189,6 +189,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Feature gate pref for Pocket suggestions in the urlbar.
   ["pocket.featureGate", false],
 
+  // The number of times the user has clicked the "Show less frequently" command
+  // for Pocket suggestions.
+  ["pocket.showLessFrequentlyCount", 0],
+
   // When true, URLs in the user's history that look like search result pages
   // are styled to look like search engine results instead of the usual history
   // results.
@@ -453,6 +457,7 @@ const NIMBUS_DEFAULTS = {
   addonsUITreatment: "a",
   experimentType: "",
   isBestMatchExperiment: false,
+  pocketShowLessFrequentlyCap: 0,
   quickSuggestRemoteSettingsDataType: "data",
   quickSuggestScoreMap: null,
   recordNavigationalSuggestionTelemetry: false,

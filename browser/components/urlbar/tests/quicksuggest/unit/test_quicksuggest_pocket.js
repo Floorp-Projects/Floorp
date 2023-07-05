@@ -409,6 +409,18 @@ add_task(async function block() {
   });
 });
 
+// Tests the "show less frequently" behavior.
+add_task(async function showLessFrequently() {
+  await doShowLessFrequentlyTests({
+    feature: QuickSuggest.getFeature("PocketSuggestions"),
+    showLessFrequentlyCountPref: "pocket.showLessFrequentlyCount",
+    nimbusCapVariable: "pocketShowLessFrequentlyCap",
+    expectedResult: searchString =>
+      makeExpectedResult({ searchString, fullKeyword: LOW_KEYWORD }),
+    keyword: LOW_KEYWORD,
+  });
+});
+
 function makeExpectedResult({
   searchString,
   fullKeyword = searchString,
