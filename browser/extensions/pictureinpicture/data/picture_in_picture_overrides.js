@@ -61,6 +61,12 @@ let AVAILABLE_PIP_OVERRIDES;
       },
     },
 
+    arte: {
+      "https://*.arte.tv/*": {
+        videoWrapperScriptPath: "video-wrappers/arte.js",
+      },
+    },
+
     bbc: {
       "https://*.bbc.com/*": {
         videoWrapperScriptPath: "video-wrappers/bbc.js",
