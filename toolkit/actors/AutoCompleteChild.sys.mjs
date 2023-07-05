@@ -143,12 +143,14 @@ export class AutoCompleteChild extends JSWindowActorChild {
   }
 
   closePopup() {
-    // We set this here instead of just waiting for the
-    // PopupClosed message to do it so that we don't end
-    // up in a state where the content thinks that a popup
-    // is open when it isn't (or soon won't be).
-    this._popupOpen = false;
-    this.sendAsyncMessage("FormAutoComplete:ClosePopup", {});
+    if (this._popupOpen) {
+      // We set this here instead of just waiting for the
+      // PopupClosed message to do it so that we don't end
+      // up in a state where the content thinks that a popup
+      // is open when it isn't (or soon won't be).
+      this._popupOpen = false;
+      this.sendAsyncMessage("FormAutoComplete:ClosePopup", {});
+    }
   }
 
   invalidate() {
