@@ -2280,7 +2280,7 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
   }
   MOZ_ASSERT(result == ICAttachResult::Attached);
 
-  fallback->setHasFoldedStub();
+  fallback->setMayHaveFoldedStub();
   return true;
 }
 
@@ -2496,7 +2496,8 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
   }
 
   // Try including this case in an existing folded stub.
-  if (stub->hasFoldedStub() && AddToFoldedStub(cx, writer, icScript, stub)) {
+  if (stub->mayHaveFoldedStub() &&
+      AddToFoldedStub(cx, writer, icScript, stub)) {
     // Instead of adding a new stub, we have added a new case to an
     // existing folded stub. We do not have to invalidate Warp,
     // because the ListObject that stores the cases is shared between
