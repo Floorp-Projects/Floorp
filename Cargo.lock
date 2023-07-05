@@ -3392,9 +3392,6 @@ dependencies = [
 [[package]]
 name = "mozbuild"
 version = "0.1.0"
-dependencies = [
- "once_cell",
-]
 
 [[package]]
 name = "mozdevice"
