@@ -455,8 +455,6 @@ class BaseMatrix {
   /**
    * Computes the scale factors of this matrix; that is,
    * the amounts each basis vector is scaled by.
-   * The xMajor parameter indicates if the larger scale is
-   * to be assumed to be in the X direction or not.
    */
   BaseMatrixScales<T> ScaleFactors() const {
     T det = Determinant();
