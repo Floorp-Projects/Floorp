@@ -3,11 +3,13 @@
 <!--
 Test that css-logic calculates CSS specificity properly
 -->
-<meta charset="utf-8">
-<title>Test css-logic specificity</title>
-<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<head>
+  <meta charset="utf-8">
+  <title>Test css-logic specificity</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+</head>
 <body style="background:blue;">
-<script>
+  <script type="application/javascript">
   "use strict";
 
   window.onload = function() {
@@ -35,7 +37,7 @@ Test that css-logic calculates CSS specificity properly
 
     function createDocument() {
       let text = TEST_DATA.map(i=>i.text).join(",");
-      text = '<style>' + text + " {color:red;}</style>";
+      text = '<style type="text/css">' + text + " {color:red;}</style>";
       // eslint-disable-next-line no-unsanitized/property
       document.body.innerHTML = text;
     }
@@ -50,18 +52,11 @@ Test that css-logic calculates CSS specificity properly
     const cssLogic = new CssLogic();
 
     cssLogic.highlight(document.body);
-
-    // There could be more stylesheets due to e.g, accessiblecaret, so find the
-    // right one.
-    info(`Sheets: ${cssLogic.sheets.map(s => s.href).join(", ")}`);
-
-    const cssSheet = cssLogic.sheets.find(s => s.href == location.href);
+    const cssSheet = cssLogic.sheets[0];
     const cssRule = cssSheet.domSheet.cssRules[0];
     const selectors = CssLogic.getSelectors(cssRule);
 
-    is(selectors.length, TEST_DATA.length, "Should be the right rule");
-
-    info("Iterating over the test selectors: " + selectors.join(", "));
+    info("Iterating over the test selectors");
     for (let i = 0; i < selectors.length; i++) {
       const selectorText = selectors[i];
       info("Testing selector " + selectorText);

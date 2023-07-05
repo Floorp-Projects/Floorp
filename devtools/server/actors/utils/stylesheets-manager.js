@@ -663,17 +663,7 @@ class StyleSheetsManager extends EventEmitter {
       this._targetActor.window.document,
       true
     );
-    let i = 0;
-    for (const sheet of styleSheets) {
-      if (!this._shouldListSheet(sheet)) {
-        continue;
-      }
-      if (sheet == styleSheet) {
-        return i;
-      }
-      i++;
-    }
-    return -1;
+    return styleSheets.indexOf(styleSheet);
   }
 
   /**
@@ -825,18 +815,13 @@ class StyleSheetsManager extends EventEmitter {
    * @returns {Boolean}
    */
   _shouldListSheet(styleSheet) {
-    // Special case about:PreferenceStyleSheet, as it is generated on the fly
-    // and the URI is not registered with the about: handler.
+    // Special case about:PreferenceStyleSheet, as it is generated on the
+    // fly and the URI is not registered with the about: handler.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=935803#c37
-    const href = styleSheet.href?.toLowerCase();
-    if (href === "about:preferencestylesheet") {
+    if (styleSheet.href?.toLowerCase() === "about:preferencestylesheet") {
       return false;
     }
-    // FIXME(bug 1826538): Make accessiblecaret.css and similar UA-widget
-    // sheets system sheets, then remove this special-case.
-    if (href === "resource://content-accessible/accessiblecaret.css") {
-      return false;
-    }
+
     return true;
   }
 

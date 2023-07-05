@@ -16,6 +16,12 @@ let whitelist = [
     sourceName: /devtools\/content\/debugger\/src\/components\/([A-z\/]+).css/i,
     isFromDevTools: true,
   },
+  // Highlighter CSS uses a UA-only pseudo-class, see bug 985597.
+  {
+    sourceName: /highlighters\.css$/i,
+    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
+    isFromDevTools: true,
+  },
   // UA-only media features.
   {
     sourceName: /\b(autocomplete-item)\.css$/,
@@ -60,6 +66,11 @@ let whitelist = [
     sourceName: /web\/viewer\.css$/i,
     errorMessage:
       /Unknown property ‘text-size-adjust’\. {2}Declaration dropped\./i,
+    isFromDevTools: false,
+  },
+  {
+    sourceName: /overlay\.css$/i,
+    errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
     isFromDevTools: false,
   },
 ];
@@ -136,7 +147,6 @@ let propNameWhitelist = [
   // These variables are used in a shorthand, but the CSS parser deletes the values
   // when expanding the shorthands. See https://github.com/w3c/csswg-drafts/issues/2515
   { propName: "--bezier-diagonal-color", isFromDevTools: true },
-  { propName: "--highlighter-font-family", isFromDevTools: true },
 
   // This variable is used from CSS embedded in JS in adjustableTitle.js
   { propName: "--icon-url", isFromDevTools: false },
