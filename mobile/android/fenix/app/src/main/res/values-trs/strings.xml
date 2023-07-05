@@ -485,6 +485,8 @@
     <string name="errorpage_httpsonly_title">Nitāj si huā nî’nïnj riña sitiô dugumîn sò’</string>
     <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
     <string name="errorpage_httpsonly_message_title">Si gūruhuaj nī nitāj si aran’ dugui’ sitiô web ngà HTTPS.</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
+    <string name="errorpage_httpsonly_message_summary">Si gūruhuaj nī, huā ‘ngō sa yī’ìi gatûj riña aga’ nan. Sisī huā nï̀n’ gīnunt riña sitiô nan nī, sī gachrûnt à’ngō nuguan’ gā’hue gārasun nej si da’ gī’hiaj yī’ì nej si sò’. Sisī huā nï̀n’ gīnunt hiūj nan don nī, gī’hiaj desaktivando akuan’ HTTPS.</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Dàj gā gātū\'</string>
     <!-- Preference to override the Firefox Account server -->
@@ -575,6 +577,9 @@
     <string name="customize_addon_collection_hint">Si yūgui yi’nïn’ nan</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">Sisi’hiaj yi’nïn’ nan (ID si’hija si)</string>
+
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">Nahuin nākà nej sa gā’hue nūtà’t doj. Gāhui akuanj riña aplikasiûn nan da’ nāhuin nākà riña man…</string>
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
@@ -708,6 +713,8 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Sa huā rayi\'î Marketin</string>
 
+    <!-- Preference description for marketing data collection -->
+    <string name="preferences_marketing_data_description2">Dūyinga’ nej dato ngà Adjust, dadain’ huej huin sa nīkāj ñu’ūnj marketing móvil </string>
     <!-- Title for studies preferences -->
     <string name="preference_experiments_2">Nej ēstûdio</string>
     <!-- Summary for studies preferences -->
@@ -778,6 +785,9 @@
     <!-- Title to show in alert when a lot of tabs are to be opened
     %d is a placeholder for the number of tabs that will be opened -->
     <string name="open_all_warning_title">Nā’nï̄n %d nej rakïj ñanj anj</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Si nā’nï̄nt gā’ì nej rakïj ñanj nī gā’hue nāhuin nāj %s. Gān’ānjt ne’ ñāan aj.</string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Na\'nïn nej rakïj ñanj </string>
     <!-- Dialog button text for canceling open all tabs -->
@@ -858,11 +868,16 @@
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">Dūre’ nej rakïj ñanj nitāj si arâj sunt ngà’</string>
 
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">Nātū nej rakïj ñanj nitāj si gini’hiājt gachîn riña huìj semana riña mà nej sa nitāj si ni’ñānj an.</string>
+
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">Nādure\'</string>
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Ngà \'hiaj sunj</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s gā’hue gà’nïn nī gāyi’ìj gi’hia estudio.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Gāhuin chrūn doj</string>
     <!-- Dialog message shown after removing a study -->
@@ -1154,6 +1169,8 @@
     <string name="collections_header">Koleksiôn</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Si menû koleksiûn</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">Nāgi’hiaj chrē’ nej sa ñā’an doj ruhuât.\n Nāgi’hiaj chrē’ nej sa nana’huî’t, nej sitio nī nej rakïj ñanj nīkò’ dugui’ hua da’ hìo doj gātūt ne’ ñān doj.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Nāguī nej rakïj ñanj</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1266,6 +1283,23 @@
     <!-- Title shown in the notification that pops up to re-engage the user -->
     <string name="notification_re_engagement_title">Ni’hiāj dàj ‘hiaj sun riña sa aché nu yītï̀njt</string>
 
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Si ga’na’ nej kôki nī nej dukuán nej sa gini’hiājt riña %1$s</string>
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Gachē nu nī gà’ si ‘ngō da’nga’a sī dunâjt</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Riña aché nun huìt riña %1$s nitāj si na’nḯn sà’aj nej nuguan’ huā rayi’ît.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Gāyi’ì nānà’huì’t </string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Narì’ ‘ngō sa huin nīchrù’un. Asi nārì’ ‘ngō sa gī’hiaj nāhuin nīhià’ ruhuât.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">Gī’hiaj ‘ngō sunūnj un, nāchra ‘ngō nej nuguan’ nan da’ nahuin hue’ê doj Firefox.</string>
     <!-- Preference for taking the short survey. -->
     <string name="preferences_take_survey">Nātsij ēnkuêsta</string>
     <!-- Preference for not taking the short survey. -->
@@ -1305,6 +1339,8 @@
     <string name="qr_scanner_dialog_invalid_ok">GĀ’HUE</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Huā yītïnj ruhuât nādure\'t %1$s anj</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">Sisī nādurê’t rakïj ñanj nan nī, nārè da’ huā ngè koleksiôn. Gā’hue nāgi’hiát a’ngô koleksiôn ahuin mān’an diû garan’ ruhuât.</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">Nādurê\'t %1$s raj</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -1362,6 +1398,8 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Gāhuī</string>
 
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Diû gāchīn da’ gā’hue nārè’ej</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Sa gahuin akuan\'</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
@@ -1401,10 +1439,18 @@
     <string name="onboarding_firefox_account_sign_in">Gāyi\'ì sēsiûn</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Ngà nanûn Sync</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Sa ‘na’ niñā da’ dūgumîn sò’ da’ gāchē nun huìt</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Sa huā chre\' (dàj huaj \'naj)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Sa nùkuaj doj</string>
+    <!-- text for the toolbar position card header  -->
+    <string name="onboarding_toolbar_placement_header_1">Nānà’huì’ riña ginun dukuá ‘na’ nej rasūun</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Dūnâj man ginùn man ne’ rīki asi dūguachîn man gān’an ne’ ràa.</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Sò’ ni’in dàj gī’hiaj sunt ngà nej si datôt</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Gahiā sa atāj na\'ānj ñûnj guendâ sa huìi</string>
 
