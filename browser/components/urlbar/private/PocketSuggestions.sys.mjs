@@ -57,9 +57,11 @@ export class PocketSuggestions extends BaseFeature {
   }
 
   get canShowLessFrequently() {
-    // TODO (bug 1837097): To be implemented once the "Show less frequently"
-    // logic is decided.
-    return false;
+    let cap =
+      lazy.UrlbarPrefs.get("pocketShowLessFrequentlyCap") ||
+      lazy.QuickSuggestRemoteSettings.config.show_less_frequently_cap ||
+      0;
+    return !cap || this.showLessFrequentlyCount < cap;
   }
 
   enable(enabled) {
@@ -144,6 +146,26 @@ export class PocketSuggestions extends BaseFeature {
   }
 
   makeResult(queryContext, suggestion, searchString) {
+    if (!this.isEnabled) {
+      // The feature is disabled on the client, but Merino may still return
+      // suggestions anyway, and we filter them out here.
+      return null;
+    }
+
+    // If the user hasn't clicked the "Show less frequently" command, the
+    // suggestion can be shown. Otherwise, the suggestion can be shown if the
+    // user typed more than one word with at least `showLessFrequentlyCount`
+    // characters after the first word, including spaces.
+    if (this.showLessFrequentlyCount) {
+      let spaceIndex = searchString.search(/\s/);
+      if (
+        spaceIndex < 0 ||
+        searchString.length - spaceIndex < this.showLessFrequentlyCount
+      ) {
+        return null;
+      }
+    }
+
     let isBestMatch =
       suggestion.is_top_pick &&
       lazy.UrlbarPrefs.get("bestMatchEnabled") &&
@@ -193,7 +215,7 @@ export class PocketSuggestions extends BaseFeature {
         break;
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
         queryContext.view.acknowledgeFeedback(result);
-        this.#incrementShowLessFrequentlyCount();
+        this.incrementShowLessFrequentlyCount();
         break;
     }
   }
@@ -242,7 +264,7 @@ export class PocketSuggestions extends BaseFeature {
     return commands;
   }
 
-  #incrementShowLessFrequentlyCount() {
+  incrementShowLessFrequentlyCount() {
     if (this.canShowLessFrequently) {
       lazy.UrlbarPrefs.set(
         "pocket.showLessFrequentlyCount",
