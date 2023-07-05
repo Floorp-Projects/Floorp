@@ -2746,9 +2746,10 @@ void GCRuntime::endPreparePhase(JS::GCReason reason) {
 
     AutoUnlockHelperThreadState unlock(helperLock);
 
-    // Discard JIT code. For incremental collections, the sweep phase will
+    // Discard JIT code. For incremental collections, the sweep phase may
     // also discard JIT code.
     discardJITCodeForGC();
+    haveDiscardedJITCodeThisSlice = true;
 
     /*
      * Relazify functions after discarding JIT code (we can't relazify
@@ -3529,6 +3530,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
   initialState = incrementalState;
   isIncremental = !budget.isUnlimited();
   useBackgroundThreads = ShouldUseBackgroundThreads(isIncremental, reason);
+  haveDiscardedJITCodeThisSlice = false;
 
 #ifdef JS_GC_ZEAL
   // Do the incremental collection type specified by zeal mode if the collection
