@@ -4,11 +4,13 @@ use crate::thread_info::Pid;
 use byteorder::{NativeEndian, ReadBytesExt};
 use goblin::elf;
 use memmap2::{Mmap, MmapOptions};
+use procfs_core::process::{MMPermissions, MMapPath, MemoryMaps};
+use std::ffi::{OsStr, OsString};
+use std::os::unix::ffi::OsStrExt;
 use std::{fs::File, mem::size_of, path::PathBuf};
 
 pub const LINUX_GATE_LIBRARY_NAME: &str = "linux-gate.so";
-pub const DELETED_SUFFIX: &str = " (deleted)";
-pub const RESERVED_FLAGS: &str = "---p";
+pub const DELETED_SUFFIX: &[u8] = b" (deleted)";
 
 type Result<T> = std::result::Result<T, MapsReaderError>;
 
@@ -34,9 +36,9 @@ pub struct MappingInfo {
     // address range. The following structure holds the original mapping
     // address range as reported by the operating system.
     pub system_mapping_info: SystemMappingInfo,
-    pub offset: usize,    // offset into the backed file.
-    pub executable: bool, // true if the mapping has the execute bit set.
-    pub name: Option<String>,
+    pub offset: usize,              // offset into the backed file.
+    pub permissions: MMPermissions, // read, write and execute permissions.
+    pub name: Option<OsString>,
     // pub elf_obj: Option<elf::Elf>,
 }
 
@@ -55,133 +57,94 @@ pub enum MappingInfoParsingResult {
     Success(MappingInfo),
 }
 
-fn is_mapping_a_path(pathname: Option<&str>) -> bool {
+fn is_mapping_a_path(pathname: Option<&OsStr>) -> bool {
     match pathname {
-        Some(x) => x.contains('/'),
+        Some(x) => x.as_bytes().contains(&b'/'),
         None => false,
     }
 }
 
 impl MappingInfo {
-    pub fn parse_from_line(
-        line: &str,
-        linux_gate_loc: AuxvType,
-        last_mapping: Option<&mut MappingInfo>,
-    ) -> Result<MappingInfoParsingResult> {
-        let mut last_whitespace = false;
-
-        // There is no `line.splitn_whitespace(6)`, so we have to do it somewhat manually
-        // Split at the first whitespace, trim of the rest.
-        let mut splits = line
-            .trim()
-            .splitn(6, |c: char| {
-                if c.is_whitespace() {
-                    if last_whitespace {
-                        return false;
-                    }
-                    last_whitespace = true;
-                    true
-                } else {
-                    last_whitespace = false;
-                    false
-                }
-            })
-            .map(str::trim);
-
-        let address = splits
-            .next()
-            .ok_or(MapsReaderError::MapEntryMalformed("address"))?;
-        let perms = splits
-            .next()
-            .ok_or(MapsReaderError::MapEntryMalformed("permissions"))?;
-        let mut offset = usize::from_str_radix(
-            splits
-                .next()
-                .ok_or(MapsReaderError::MapEntryMalformed("offset"))?,
-            16,
-        )?;
-        let _dev = splits
-            .next()
-            .ok_or(MapsReaderError::MapEntryMalformed("dev"))?;
-        let _inode = splits
-            .next()
-            .ok_or(MapsReaderError::MapEntryMalformed("inode"))?;
-        let mut pathname = splits.next(); // Optional
-
-        // Due to our ugly `splitn_whitespace()` hack from above, we might have
-        // only trailing whitespaces as the name, so we it might still be "Some()"
-        if let Some(x) = pathname {
-            if x.is_empty() {
-                pathname = None;
-            }
-        }
-
-        let mut addresses = address.split('-');
-        let start_address = usize::from_str_radix(addresses.next().unwrap(), 16)?;
-        let end_address = usize::from_str_radix(addresses.next().unwrap(), 16)?;
-
-        let executable = perms.contains('x');
-
-        // Only copy name if the name is a valid path name, or if
-        // it's the VDSO image.
-        let is_path = is_mapping_a_path(pathname);
-
-        if !is_path && linux_gate_loc != 0 && start_address == linux_gate_loc.try_into()? {
-            pathname = Some(LINUX_GATE_LIBRARY_NAME);
-            offset = 0;
-        }
-
-        match (pathname, last_mapping) {
-            (Some(_name), Some(module)) => {
-                // Merge adjacent mappings into one module, assuming they're a single
-                // library mapped by the dynamic linker.
-                if (start_address == module.start_address + module.size)
-                    && (pathname == module.name.as_deref())
-                {
-                    module.system_mapping_info.end_address = end_address;
-                    module.size = end_address - module.start_address;
-                    module.executable |= executable;
-                    return Ok(MappingInfoParsingResult::SkipLine);
-                }
-            }
-            (None, Some(module)) => {
-                // Also merge mappings that result from address ranges that the
-                // linker reserved but which a loaded library did not use. These
-                // appear as an anonymous private mapping with no access flags set
-                // and which directly follow an executable mapping.
-                let module_end_address = module.start_address + module.size;
-                if (start_address == module_end_address)
-                    && module.executable
-                    && is_mapping_a_path(module.name.as_deref())
-                    && (offset == 0 || offset == module_end_address)
-                    && perms == RESERVED_FLAGS
-                {
-                    module.size = end_address - module.start_address;
-                    return Ok(MappingInfoParsingResult::SkipLine);
-                }
-            }
-            _ => (),
-        }
-
-        let name = pathname.map(ToOwned::to_owned);
-
-        let info = MappingInfo {
-            start_address,
-            size: end_address - start_address,
-            system_mapping_info: SystemMappingInfo {
-                start_address,
-                end_address,
-            },
-            offset,
-            executable,
-            name,
-            // elf_obj,
-        };
-
-        Ok(MappingInfoParsingResult::Success(info))
+    /// Return whether the `name` field is a path (contains a `/`).
+    pub fn name_is_path(&self) -> bool {
+        is_mapping_a_path(self.name.as_deref())
     }
 
-    pub fn get_mmap(name: &Option<String>, offset: usize) -> Result<Mmap> {
+    pub fn aggregate(memory_maps: MemoryMaps, linux_gate_loc: AuxvType) -> Result<Vec<Self>> {
+        let mut infos = Vec::<Self>::new();
+
+        for mm in memory_maps {
+            let start_address: usize = mm.address.0.try_into()?;
+            let end_address: usize = mm.address.1.try_into()?;
+            let mut offset: usize = mm.offset.try_into()?;
+
+            let mut pathname: Option<OsString> = match mm.pathname {
+                MMapPath::Path(p) => Some(p.into()),
+                MMapPath::Heap => Some("[heap]".into()),
+                MMapPath::Stack => Some("[stack]".into()),
+                MMapPath::TStack(i) => Some(format!("[stack:{i}]").into()),
+                MMapPath::Vdso => Some("[vdso]".into()),
+                MMapPath::Vvar => Some("[vvar]".into()),
+                MMapPath::Vsyscall => Some("[vsyscall]".into()),
+                MMapPath::Rollup => Some("[rollup]".into()),
+                MMapPath::Vsys(i) => Some(format!("/SYSV{i:x}").into()),
+                MMapPath::Other(n) => Some(format!("[{n}]").into()),
+                MMapPath::Anonymous => None,
+            };
+
+            let is_path = is_mapping_a_path(pathname.as_deref());
+
+            if !is_path && linux_gate_loc != 0 && start_address == linux_gate_loc.try_into()? {
+                pathname = Some(LINUX_GATE_LIBRARY_NAME.into());
+                offset = 0;
+            }
+
+            // Merge adjacent mappings into one module, assuming they're a single
+            // library mapped by the dynamic linker.
+            if let Some(module) = infos.last_mut() {
+                if pathname.is_some() {
+                    if (start_address == module.start_address + module.size)
+                        && (pathname == module.name)
+                    {
+                        module.system_mapping_info.end_address = end_address;
+                        module.size = end_address - module.start_address;
+                        module.permissions |= mm.perms;
+                        continue;
+                    }
+                } else {
+                    // Also merge mappings that result from address ranges that the
+                    // linker reserved but which a loaded library did not use. These
+                    // appear as an anonymous private mapping with no access flags set
+                    // and which directly follow an executable mapping.
+                    let module_end_address = module.start_address + module.size;
+                    if (start_address == module_end_address)
+                        && module.is_executable()
+                        && is_mapping_a_path(module.name.as_deref())
+                        && (offset == 0 || offset == module_end_address)
+                        && mm.perms == MMPermissions::PRIVATE
+                    {
+                        module.size = end_address - module.start_address;
+                        continue;
+                    }
+                }
+            }
+
+            infos.push(MappingInfo {
+                start_address,
+                size: end_address - start_address,
+                system_mapping_info: SystemMappingInfo {
+                    start_address,
+                    end_address,
+                },
+                offset,
+                permissions: mm.perms,
+                name: pathname,
+            });
+        }
+        Ok(infos)
+    }
+
+    pub fn get_mmap(name: &Option<OsString>, offset: usize) -> Result<Mmap> {
         if !MappingInfo::is_mapped_file_safe_to_open(name) {
             return Err(MapsReaderError::NotSafeToOpenMapping(
                 name.clone().unwrap_or_default(),
@@ -203,12 +166,25 @@ impl MappingInfo {
         Ok(mapped_file)
     }
 
-    pub fn handle_deleted_file_in_mapping(path: &str, pid: Pid) -> Result<String> {
+    /// Check whether the mapping refers to a deleted file, and if so try to find the file
+    /// elsewhere and return that path.
+    ///
+    /// Currently this only supports fixing a deleted file that was the main exe of the given
+    /// `pid`.
+    ///
+    /// Returns a tuple, where the first element is the file path (which is possibly different than
+    /// `self.name`), and the second element is the original file path if a different path was
+    /// used. If no mapping name exists, returns an error.
+    pub fn fixup_deleted_file(&self, pid: Pid) -> Result<(OsString, Option<&OsStr>)> {
         // Check for ' (deleted)' in |path|.
         // |path| has to be at least as long as "/x (deleted)".
-        if !path.ends_with(DELETED_SUFFIX) {
-            return Ok(path.to_string());
-        }
+        let Some(path) = &self.name else {
+            return Err(MapsReaderError::AnonymousMapping);
+        };
+
+        let Some(old_path) = path.as_bytes().strip_suffix(DELETED_SUFFIX) else {
+            return Ok((path.clone(), None));
+        };
 
         // Check |path| against the /proc/pid/exe 'symlink'.
         let exe_link = format!("/proc/{}/exe", pid);
@@ -218,7 +194,7 @@ impl MappingInfo {
         // if (!GetMappingAbsolutePath(new_mapping, new_path))
         //   return false;
 
-        if link_path != PathBuf::from(path) {
+        if &link_path != path {
             return Err(MapsReaderError::SymlinkError(
                 PathBuf::from(path),
                 link_path,
@@ -233,7 +209,7 @@ impl MappingInfo {
         //         return Err("".into());
         //     }
         // }
-        Ok(exe_link)
+        Ok((exe_link.into(), Some(OsStr::from_bytes(old_path))))
     }
 
     pub fn stack_has_pointer_to_mapping(&self, stack_copy: &[u8], sp_offset: usize) -> bool {
@@ -269,13 +245,13 @@ impl MappingInfo {
         false
     }
 
-    pub fn is_mapped_file_safe_to_open(name: &Option<String>) -> bool {
+    pub fn is_mapped_file_safe_to_open(name: &Option<OsString>) -> bool {
         // It is unsafe to attempt to open a mapped file that lives under /dev,
         // because the semantics of the open may be driver-specific so we'd risk
         // hanging the crash dumper. And a file in /dev/ almost certainly has no
         // ELF file identifier anyways.
         if let Some(name) = name {
-            if name.starts_with("/dev/") {
+            if name.as_bytes().starts_with(b"/dev/") {
                 return false;
             }
         }
@@ -291,13 +267,13 @@ impl MappingInfo {
         let elf_obj = elf::Elf::parse(&mapped_file)?;
 
         let soname = elf_obj.soname.ok_or_else(|| {
-            MapsReaderError::NoSoName(self.name.clone().unwrap_or_else(|| "None".to_string()))
+            MapsReaderError::NoSoName(self.name.clone().unwrap_or_else(|| "None".into()))
         })?;
         Ok(soname.to_string())
     }
 
-    pub fn get_mapping_effective_name_and_path(&self) -> Result<(String, String)> {
-        let mut file_path = self.name.clone().unwrap_or_default();
+    pub fn get_mapping_effective_path_and_name(&self) -> Result<(PathBuf, String)> {
+        let mut file_path = PathBuf::from(self.name.clone().unwrap_or_default());
 
         // Tools such as minidump_stackwalk use the name of the module to look up
         // symbols produced by dump_syms. dump_syms will prefer to use a module's
@@ -310,28 +286,24 @@ impl MappingInfo {
         } else {
             //   file_path := /path/to/libname.so
             //   file_name := libname.so
-            // SAFETY: The unwrap is safe as rsplit always returns at least one item
-            let file_name = file_path.rsplit('/').next().unwrap().to_owned();
+            let file_name = file_path
+                .file_name()
+                .map(|s| s.to_string_lossy().into_owned())
+                .unwrap_or_default();
             return Ok((file_path, file_name));
         };
 
-        if self.executable && self.offset != 0 {
+        if self.is_executable() && self.offset != 0 {
             // If an executable is mapped from a non-zero offset, this is likely because
             // the executable was loaded directly from inside an archive file (e.g., an
             // apk on Android).
             // In this case, we append the file_name to the mapped archive path:
             //   file_name := libname.so
             //   file_path := /path/to/ARCHIVE.APK/libname.so
-            file_path = format!("{}/{}", file_path, file_name);
+            file_path.push(&file_name);
         } else {
             // Otherwise, replace the basename with the SONAME.
-            let split: Vec<_> = file_path.rsplitn(2, '/').collect();
-            if split.len() == 2 {
-                // NOTE: rsplitn reverses the order, so the remainder is the last item
-                file_path = format!("{}/{}", split[1], file_name);
-            } else {
-                file_path = file_name.clone();
-            }
+            file_path.set_file_name(&file_name);
         }
 
         Ok((file_path, file_name))
@@ -356,7 +328,7 @@ impl MappingInfo {
         self.name.is_some() &&
         // Only want to include one mapping per shared lib.
         // Avoid filtering executable mappings.
-        (self.offset == 0 || self.executable) &&
+        (self.offset == 0 || self.is_executable()) &&
         // big enough to get a signature for.
         self.size >= 4096
     }
@@ -365,84 +337,92 @@ impl MappingInfo {
         self.system_mapping_info.start_address <= address
             && address < self.system_mapping_info.end_address
     }
+
+    pub fn is_executable(&self) -> bool {
+        self.permissions.contains(MMPermissions::EXECUTE)
+    }
+
+    pub fn is_readable(&self) -> bool {
+        self.permissions.contains(MMPermissions::READ)
+    }
+
+    pub fn is_writable(&self) -> bool {
+        self.permissions.contains(MMPermissions::WRITE)
+    }
 }
 
 #[cfg(test)]
 #[cfg(target_pointer_width = "64")] // All addresses are 64 bit and I'm currently too lazy to adjust it to work for both
 mod tests {
     use super::*;
+    use procfs_core::FromRead;
 
-    fn get_lines_and_loc() -> (Vec<&'static str>, u64) {
-        (vec![
-"5597483fc000-5597483fe000 r--p 00000000 00:31 4750073                    /usr/bin/cat",
-"5597483fe000-559748402000 r-xp 00002000 00:31 4750073                    /usr/bin/cat",
-"559748402000-559748404000 r--p 00006000 00:31 4750073                    /usr/bin/cat",
-"559748404000-559748405000 r--p 00007000 00:31 4750073                    /usr/bin/cat",
-"559748405000-559748406000 rw-p 00008000 00:31 4750073                    /usr/bin/cat",
-"559749b0e000-559749b2f000 rw-p 00000000 00:00 0                          [heap]",
-"7efd968d3000-7efd968f5000 rw-p 00000000 00:00 0",
-"7efd968f5000-7efd9694a000 r--p 00000000 00:31 5004638                    /usr/lib/locale/en_US.utf8/LC_CTYPE",
-"7efd9694a000-7efd96bc2000 r--p 00000000 00:31 5004373                    /usr/lib/locale/en_US.utf8/LC_COLLATE",
-"7efd96bc2000-7efd96bc4000 rw-p 00000000 00:00 0",
-"7efd96bc4000-7efd96bea000 r--p 00000000 00:31 4996104                    /lib64/libc-2.32.so",
-"7efd96bea000-7efd96d39000 r-xp 00026000 00:31 4996104                    /lib64/libc-2.32.so",
-"7efd96d39000-7efd96d85000 r--p 00175000 00:31 4996104                    /lib64/libc-2.32.so",
-"7efd96d85000-7efd96d86000 ---p 001c1000 00:31 4996104                    /lib64/libc-2.32.so",
-"7efd96d86000-7efd96d89000 r--p 001c1000 00:31 4996104                    /lib64/libc-2.32.so",
-"7efd96d89000-7efd96d8c000 rw-p 001c4000 00:31 4996104                    /lib64/libc-2.32.so",
-"7efd96d8c000-7efd96d92000 ---p 00000000 00:00 0",
-"7efd96da0000-7efd96da1000 r--p 00000000 00:31 5004379                    /usr/lib/locale/en_US.utf8/LC_NUMERIC",
-"7efd96da1000-7efd96da2000 r--p 00000000 00:31 5004382                    /usr/lib/locale/en_US.utf8/LC_TIME",
-"7efd96da2000-7efd96da3000 r--p 00000000 00:31 5004377                    /usr/lib/locale/en_US.utf8/LC_MONETARY",
-"7efd96da3000-7efd96da4000 r--p 00000000 00:31 5004376                    /usr/lib/locale/en_US.utf8/LC_MESSAGES/SYS_LC_MESSAGES",
-"7efd96da4000-7efd96da5000 r--p 00000000 00:31 5004380                    /usr/lib/locale/en_US.utf8/LC_PAPER",
-"7efd96da5000-7efd96da6000 r--p 00000000 00:31 5004378                    /usr/lib/locale/en_US.utf8/LC_NAME",
-"7efd96da6000-7efd96da7000 r--p 00000000 00:31 5004372                    /usr/lib/locale/en_US.utf8/LC_ADDRESS",
-"7efd96da7000-7efd96da8000 r--p 00000000 00:31 5004381                    /usr/lib/locale/en_US.utf8/LC_TELEPHONE",
-"7efd96da8000-7efd96da9000 r--p 00000000 00:31 5004375                    /usr/lib/locale/en_US.utf8/LC_MEASUREMENT",
-"7efd96da9000-7efd96db0000 r--s 00000000 00:31 5004639                    /usr/lib64/gconv/gconv-modules.cache",
-"7efd96db0000-7efd96db1000 r--p 00000000 00:31 5004374                    /usr/lib/locale/en_US.utf8/LC_IDENTIFICATION",
-"7efd96db1000-7efd96db2000 r--p 00000000 00:31 4996100                    /lib64/ld-2.32.so",
-"7efd96db2000-7efd96dd3000 r-xp 00001000 00:31 4996100                    /lib64/ld-2.32.so",
-"7efd96dd3000-7efd96ddc000 r--p 00022000 00:31 4996100                    /lib64/ld-2.32.so",
-"7efd96ddc000-7efd96ddd000 r--p 0002a000 00:31 4996100                    /lib64/ld-2.32.so",
-"7efd96ddd000-7efd96ddf000 rw-p 0002b000 00:31 4996100                    /lib64/ld-2.32.so",
-"7ffc6dfda000-7ffc6dffb000 rw-p 00000000 00:00 0                          [stack]",
-"7ffc6e0f3000-7ffc6e0f7000 r--p 00000000 00:00 0                          [vvar]",
-"7ffc6e0f7000-7ffc6e0f9000 r-xp 00000000 00:00 0                          [vdso]",
-"ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]"
-        ], 0x7ffc6e0f7000)
+    fn get_mappings_for(map: &str, linux_gate_loc: u64) -> Vec<MappingInfo> {
+        MappingInfo::aggregate(
+            MemoryMaps::from_read(map.as_bytes()).expect("failed to read mapping info"),
+            linux_gate_loc,
+        )
+        .unwrap_or_default()
     }
 
+    const LINES: &str = "\
+5597483fc000-5597483fe000 r--p 00000000 00:31 4750073                    /usr/bin/cat
+5597483fe000-559748402000 r-xp 00002000 00:31 4750073                    /usr/bin/cat
+559748402000-559748404000 r--p 00006000 00:31 4750073                    /usr/bin/cat
+559748404000-559748405000 r--p 00007000 00:31 4750073                    /usr/bin/cat
+559748405000-559748406000 rw-p 00008000 00:31 4750073                    /usr/bin/cat
+559749b0e000-559749b2f000 rw-p 00000000 00:00 0                          [heap]
+7efd968d3000-7efd968f5000 rw-p 00000000 00:00 0 
+7efd968f5000-7efd9694a000 r--p 00000000 00:31 5004638                    /usr/lib/locale/en_US.utf8/LC_CTYPE
+7efd9694a000-7efd96bc2000 r--p 00000000 00:31 5004373                    /usr/lib/locale/en_US.utf8/LC_COLLATE
+7efd96bc2000-7efd96bc4000 rw-p 00000000 00:00 0 
+7efd96bc4000-7efd96bea000 r--p 00000000 00:31 4996104                    /lib64/libc-2.32.so
+7efd96bea000-7efd96d39000 r-xp 00026000 00:31 4996104                    /lib64/libc-2.32.so
+7efd96d39000-7efd96d85000 r--p 00175000 00:31 4996104                    /lib64/libc-2.32.so
+7efd96d85000-7efd96d86000 ---p 001c1000 00:31 4996104                    /lib64/libc-2.32.so
+7efd96d86000-7efd96d89000 r--p 001c1000 00:31 4996104                    /lib64/libc-2.32.so
+7efd96d89000-7efd96d8c000 rw-p 001c4000 00:31 4996104                    /lib64/libc-2.32.so
+7efd96d8c000-7efd96d92000 ---p 00000000 00:00 0 
+7efd96da0000-7efd96da1000 r--p 00000000 00:31 5004379                    /usr/lib/locale/en_US.utf8/LC_NUMERIC
+7efd96da1000-7efd96da2000 r--p 00000000 00:31 5004382                    /usr/lib/locale/en_US.utf8/LC_TIME
+7efd96da2000-7efd96da3000 r--p 00000000 00:31 5004377                    /usr/lib/locale/en_US.utf8/LC_MONETARY
+7efd96da3000-7efd96da4000 r--p 00000000 00:31 5004376                    /usr/lib/locale/en_US.utf8/LC_MESSAGES/SYS_LC_MESSAGES
+7efd96da4000-7efd96da5000 r--p 00000000 00:31 5004380                    /usr/lib/locale/en_US.utf8/LC_PAPER
+7efd96da5000-7efd96da6000 r--p 00000000 00:31 5004378                    /usr/lib/locale/en_US.utf8/LC_NAME
+7efd96da6000-7efd96da7000 r--p 00000000 00:31 5004372                    /usr/lib/locale/en_US.utf8/LC_ADDRESS
+7efd96da7000-7efd96da8000 r--p 00000000 00:31 5004381                    /usr/lib/locale/en_US.utf8/LC_TELEPHONE
+7efd96da8000-7efd96da9000 r--p 00000000 00:31 5004375                    /usr/lib/locale/en_US.utf8/LC_MEASUREMENT
+7efd96da9000-7efd96db0000 r--s 00000000 00:31 5004639                    /usr/lib64/gconv/gconv-modules.cache
+7efd96db0000-7efd96db1000 r--p 00000000 00:31 5004374                    /usr/lib/locale/en_US.utf8/LC_IDENTIFICATION
+7efd96db1000-7efd96db2000 r--p 00000000 00:31 4996100                    /lib64/ld-2.32.so
+7efd96db2000-7efd96dd3000 r-xp 00001000 00:31 4996100                    /lib64/ld-2.32.so
+7efd96dd3000-7efd96ddc000 r--p 00022000 00:31 4996100                    /lib64/ld-2.32.so
+7efd96ddc000-7efd96ddd000 r--p 0002a000 00:31 4996100                    /lib64/ld-2.32.so
+7efd96ddd000-7efd96ddf000 rw-p 0002b000 00:31 4996100                    /lib64/ld-2.32.so
+7ffc6dfda000-7ffc6dffb000 rw-p 00000000 00:00 0                          [stack]
+7ffc6e0f3000-7ffc6e0f7000 r--p 00000000 00:00 0                          [vvar]
+7ffc6e0f7000-7ffc6e0f9000 r-xp 00000000 00:00 0                          [vdso]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]";
+    const LINUX_GATE_LOC: u64 = 0x7ffc6e0f7000;
+
     fn get_all_mappings() -> Vec<MappingInfo> {
-        let mut mappings: Vec<MappingInfo> = Vec::new();
-        let (lines, linux_gate_loc) = get_lines_and_loc();
-        // Only /usr/bin/cat and [heap]
-        for line in lines {
-            match MappingInfo::parse_from_line(line, linux_gate_loc, mappings.last_mut())
-                .expect("failed to read mapping info")
-            {
-                MappingInfoParsingResult::Success(map) => mappings.push(map),
-                MappingInfoParsingResult::SkipLine => continue,
-            }
-        }
-        assert_eq!(mappings.len(), 23);
-        mappings
+        get_mappings_for(LINES, LINUX_GATE_LOC)
     }
 
     #[test]
     fn test_merged() {
-        let mut mappings: Vec<MappingInfo> = Vec::new();
-        let (lines, linux_gate_loc) = get_lines_and_loc();
         // Only /usr/bin/cat and [heap]
-        for line in lines[0..=6].iter() {
-            match MappingInfo::parse_from_line(line, linux_gate_loc, mappings.last_mut())
-                .expect("failed to read mapping info")
-            {
-                MappingInfoParsingResult::Success(map) => mappings.push(map),
-                MappingInfoParsingResult::SkipLine => continue,
-            }
-        }
+        let mappings = get_mappings_for(
+            "\
+5597483fc000-5597483fe000 r--p 00000000 00:31 4750073                    /usr/bin/cat
+5597483fe000-559748402000 r-xp 00002000 00:31 4750073                    /usr/bin/cat
+559748402000-559748404000 r--p 00006000 00:31 4750073                    /usr/bin/cat
+559748404000-559748405000 r--p 00007000 00:31 4750073                    /usr/bin/cat
+559748405000-559748406000 rw-p 00008000 00:31 4750073                    /usr/bin/cat
+559749b0e000-559749b2f000 rw-p 00000000 00:00 0                          [heap]
+7efd968d3000-7efd968f5000 rw-p 00000000 00:00 0 ",
+            0x7ffc6e0f7000,
+        );
 
         assert_eq!(mappings.len(), 3);
         let cat_map = MappingInfo {
@@ -453,8 +433,11 @@ mod tests {
                 end_address: 0x559748406000,
             },
             offset: 0,
-            executable: true,
-            name: Some("/usr/bin/cat".to_string()),
+            permissions: MMPermissions::READ
+                | MMPermissions::WRITE
+                | MMPermissions::EXECUTE
+                | MMPermissions::PRIVATE,
+            name: Some("/usr/bin/cat".into()),
         };
 
         assert_eq!(mappings[0], cat_map);
@@ -467,8 +450,8 @@ mod tests {
                 end_address: 0x559749b2f000,
             },
             offset: 0,
-            executable: false,
-            name: Some("[heap]".to_string()),
+            permissions: MMPermissions::READ | MMPermissions::WRITE | MMPermissions::PRIVATE,
+            name: Some("[heap]".into()),
         };
 
         assert_eq!(mappings[1], heap_map);
@@ -481,7 +464,7 @@ mod tests {
                 end_address: 0x7efd968f5000,
             },
             offset: 0,
-            executable: false,
+            permissions: MMPermissions::READ | MMPermissions::WRITE | MMPermissions::PRIVATE,
             name: None,
         };
 
@@ -500,8 +483,8 @@ mod tests {
                 end_address: 0x7ffc6e0f9000,
             },
             offset: 0,
-            executable: true,
-            name: Some("linux-gate.so".to_string()),
+            permissions: MMPermissions::READ | MMPermissions::EXECUTE | MMPermissions::PRIVATE,
+            name: Some("linux-gate.so".into()),
         };
 
         assert_eq!(mappings[21], gate_map);
@@ -511,35 +494,35 @@ mod tests {
     fn test_reading_all() {
         let mappings = get_all_mappings();
 
-        let found_items = vec![
-            Some("/usr/bin/cat".to_string()),
-            Some("[heap]".to_string()),
+        let found_items: Vec<Option<OsString>> = vec![
+            Some("/usr/bin/cat".into()),
+            Some("[heap]".into()),
             None,
-            Some("/usr/lib/locale/en_US.utf8/LC_CTYPE".to_string()),
-            Some("/usr/lib/locale/en_US.utf8/LC_COLLATE".to_string()),
+            Some("/usr/lib/locale/en_US.utf8/LC_CTYPE".into()),
+            Some("/usr/lib/locale/en_US.utf8/LC_COLLATE".into()),
             None,
-            Some("/lib64/libc-2.32.so".to_string()),
+            Some("/lib64/libc-2.32.so".into()),
             // The original shows a None here, but this is an address ranges that the
             // linker reserved but which a loaded library did not use. These
             // appear as an anonymous private mapping with no access flags set
             // and which directly follow an executable mapping.
-            Some("/usr/lib/locale/en_US.utf8/LC_NUMERIC".to_string()),
-            Some("/usr/lib/locale/en_US.utf8/LC_TIME".to_string()),
-            Some("/usr/lib/locale/en_US.utf8/LC_MONETARY".to_string()),
-            Some("/usr/lib/locale/en_US.utf8/LC_MESSAGES/SYS_LC_MESSAGES".to_string()),
-            Some("/usr/lib/locale/en_US.utf8/LC_PAPER".to_string()),
-            Some("/usr/lib/locale/en_US.utf8/LC_NAME".to_string()),
-            Some("/usr/lib/locale/en_US.utf8/LC_ADDRESS".to_string()),
-            Some("/usr/lib/locale/en_US.utf8/LC_TELEPHONE".to_string()),
-            Some("/usr/lib/locale/en_US.utf8/LC_MEASUREMENT".to_string()),
-            Some("/usr/lib64/gconv/gconv-modules.cache".to_string()),
-            Some("/usr/lib/locale/en_US.utf8/LC_IDENTIFICATION".to_string()),
-            Some("/lib64/ld-2.32.so".to_string()),
-            Some("[stack]".to_string()),
-            Some("[vvar]".to_string()),
+            Some("/usr/lib/locale/en_US.utf8/LC_NUMERIC".into()),
+            Some("/usr/lib/locale/en_US.utf8/LC_TIME".into()),
+            Some("/usr/lib/locale/en_US.utf8/LC_MONETARY".into()),
+            Some("/usr/lib/locale/en_US.utf8/LC_MESSAGES/SYS_LC_MESSAGES".into()),
+            Some("/usr/lib/locale/en_US.utf8/LC_PAPER".into()),
+            Some("/usr/lib/locale/en_US.utf8/LC_NAME".into()),
+            Some("/usr/lib/locale/en_US.utf8/LC_ADDRESS".into()),
+            Some("/usr/lib/locale/en_US.utf8/LC_TELEPHONE".into()),
+            Some("/usr/lib/locale/en_US.utf8/LC_MEASUREMENT".into()),
+            Some("/usr/lib64/gconv/gconv-modules.cache".into()),
+            Some("/usr/lib/locale/en_US.utf8/LC_IDENTIFICATION".into()),
+            Some("/lib64/ld-2.32.so".into()),
+            Some("[stack]".into()),
+            Some("[vvar]".into()),
             // This is rewritten from [vdso] to linux-gate.so
-            Some("linux-gate.so".to_string()),
-            Some("[vsyscall]".to_string()),
+            Some("linux-gate.so".into()),
+            Some("[vsyscall]".into()),
         ];
 
         assert_eq!(
@@ -560,8 +543,11 @@ mod tests {
                 end_address: 0x7efd96d8c000, // ..but this is not visible here
             },
             offset: 0,
-            executable: true,
-            name: Some("/lib64/libc-2.32.so".to_string()),
+            permissions: MMPermissions::READ
+                | MMPermissions::WRITE
+                | MMPermissions::EXECUTE
+                | MMPermissions::PRIVATE,
+            name: Some("/lib64/libc-2.32.so".into()),
         };
 
         assert_eq!(mappings[6], gate_map);
@@ -569,89 +555,40 @@ mod tests {
 
     #[test]
     fn test_get_mapping_effective_name() {
-        let lines = vec![
-"7f0b97b6f000-7f0b97b70000 r--p 00000000 00:3e 27136458                   /home/martin/Documents/mozilla/devel/mozilla-central/obj/widget/gtk/mozgtk/gtk3/libmozgtk.so",
-"7f0b97b70000-7f0b97b71000 r-xp 00000000 00:3e 27136458                   /home/martin/Documents/mozilla/devel/mozilla-central/obj/widget/gtk/mozgtk/gtk3/libmozgtk.so",
-"7f0b97b71000-7f0b97b73000 r--p 00000000 00:3e 27136458                   /home/martin/Documents/mozilla/devel/mozilla-central/obj/widget/gtk/mozgtk/gtk3/libmozgtk.so",
-"7f0b97b73000-7f0b97b74000 rw-p 00001000 00:3e 27136458                   /home/martin/Documents/mozilla/devel/mozilla-central/obj/widget/gtk/mozgtk/gtk3/libmozgtk.so",
-        ];
-        let linux_gate_loc = 0x7ffe091bf000;
-        let mut mappings: Vec<MappingInfo> = Vec::new();
-        for line in lines {
-            match MappingInfo::parse_from_line(line, linux_gate_loc, mappings.last_mut())
-                .expect("failed to read mapping info")
-            {
-                MappingInfoParsingResult::Success(map) => mappings.push(map),
-                MappingInfoParsingResult::SkipLine => continue,
-            }
-        }
+        let mappings = get_mappings_for(
+            "\
+7f0b97b6f000-7f0b97b70000 r--p 00000000 00:3e 27136458                   /home/martin/Documents/mozilla/devel/mozilla-central/obj/widget/gtk/mozgtk/gtk3/libmozgtk.so
+7f0b97b70000-7f0b97b71000 r-xp 00000000 00:3e 27136458                   /home/martin/Documents/mozilla/devel/mozilla-central/obj/widget/gtk/mozgtk/gtk3/libmozgtk.so
+7f0b97b71000-7f0b97b73000 r--p 00000000 00:3e 27136458                   /home/martin/Documents/mozilla/devel/mozilla-central/obj/widget/gtk/mozgtk/gtk3/libmozgtk.so
+7f0b97b73000-7f0b97b74000 rw-p 00001000 00:3e 27136458                   /home/martin/Documents/mozilla/devel/mozilla-central/obj/widget/gtk/mozgtk/gtk3/libmozgtk.so",
+            0x7ffe091bf000,
+        );
         assert_eq!(mappings.len(), 1);
 
         let (file_path, file_name) = mappings[0]
-            .get_mapping_effective_name_and_path()
+            .get_mapping_effective_path_and_name()
             .expect("Couldn't get effective name for mapping");
         assert_eq!(file_name, "libmozgtk.so");
-        assert_eq!(file_path, "/home/martin/Documents/mozilla/devel/mozilla-central/obj/widget/gtk/mozgtk/gtk3/libmozgtk.so");
-    }
-
-    #[test]
-    fn test_whitespaces_in_maps() {
-        let lines = vec![
-"   7f0b97b6f000-7f0b97b70000 r--p 00000000 00:3e 27136458                   libmozgtk.so",
-"7f0b97b70000-7f0b97b71000 r-xp 00000000 00:3e 27136458                   libmozgtk.so    ",
-"7f0b97b71000-7f0b97b73000     r--p 00000000 00:3e 27136458\t\t\tlibmozgtk.so",
-        ];
-        let linux_gate_loc = 0x7ffe091bf000;
-        let mut mappings: Vec<MappingInfo> = Vec::new();
-        for line in lines {
-            match MappingInfo::parse_from_line(line, linux_gate_loc, mappings.last_mut())
-                .expect("failed to read mapping info")
-            {
-                MappingInfoParsingResult::Success(map) => mappings.push(map),
-                MappingInfoParsingResult::SkipLine => continue,
-            }
-        }
-        assert_eq!(mappings.len(), 1);
-
-        let expected_map = MappingInfo {
-            start_address: 0x7f0b97b6f000,
-            size: 16384,
-            system_mapping_info: SystemMappingInfo {
-                start_address: 0x7f0b97b6f000,
-                end_address: 0x7f0b97b73000,
-            },
-            offset: 0,
-            executable: true,
-            name: Some("libmozgtk.so".to_string()),
-        };
-
-        assert_eq!(expected_map, mappings[0]);
+        assert_eq!(file_path, PathBuf::from("/home/martin/Documents/mozilla/devel/mozilla-central/obj/widget/gtk/mozgtk/gtk3/libmozgtk.so"));
     }
 
     #[test]
     fn test_whitespaces_in_name() {
-        let lines = vec![
-"10000000-20000000 r--p 00000000 00:3e 27136458                   libmoz    gtk.so",
-"20000000-30000000 r--p 00000000 00:3e 27136458                   libmozgtk.so (deleted)",
-"30000000-40000000 r--p 00000000 00:3e 27136458                   \"libmoz     gtk.so (deleted)\"",
-"30000000-40000000 r--p 00000000 00:3e 27136458                   ",
-        ];
-        let linux_gate_loc = 0x7ffe091bf000;
-        let mut mappings: Vec<MappingInfo> = Vec::new();
-        for line in lines {
-            match MappingInfo::parse_from_line(line, linux_gate_loc, mappings.last_mut())
-                .expect("failed to read mapping info")
-            {
-                MappingInfoParsingResult::Success(map) => mappings.push(map),
-                MappingInfoParsingResult::SkipLine => continue,
-            }
-        }
+        let mappings = get_mappings_for(
+            "\
+10000000-20000000 r--p 00000000 00:3e 27136458                   libmoz    gtk.so
+20000000-30000000 r--p 00000000 00:3e 27136458                   libmozgtk.so (deleted)
+30000000-40000000 r--p 00000000 00:3e 27136458                   \"libmoz     gtk.so (deleted)\"
+30000000-40000000 r--p 00000000 00:3e 27136458                   ",
+            0x7ffe091bf000,
+        );
+
         assert_eq!(mappings.len(), 4);
-        assert_eq!(mappings[0].name, Some("libmoz    gtk.so".to_string()));
-        assert_eq!(mappings[1].name, Some("libmozgtk.so (deleted)".to_string()));
+        assert_eq!(mappings[0].name, Some("libmoz    gtk.so".into()));
+        assert_eq!(mappings[1].name, Some("libmozgtk.so (deleted)".into()));
         assert_eq!(
             mappings[2].name,
-            Some("\"libmoz     gtk.so (deleted)\"".to_string())
+            Some("\"libmoz     gtk.so (deleted)\"".into())
         );
         assert_eq!(mappings[3].name, None);
     }

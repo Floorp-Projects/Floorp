@@ -21,19 +21,21 @@
 
 ## Supported targets
 
-- `x86_64-unknown-linux-gnu`
-- `x86_64-unknown-linux-musl`
-- `i686-unknown-linux-gnu`
-- `i686-unknown-linux-musl`
+- `aarch64-android-linux`
+- `aarch64-apple-darwin`
 - `aarch64-unknown-linux-gnu`
 - `aarch64-unknown-linux-musl`
-- `aarch64-android-linux`
 - `arm-linux-androideabi`
 - `arm-unknown-linux-gnueabi`
 - `arm-unknown-linux-musleabi`
-- `x86_64-pc-windows-msvc`
+- `i686-linux-android`
+- `i686-unknown-linux-gnu`
+- `i686-unknown-linux-musl`
 - `x86_64-apple-darwin`
-- `aarch64-apple-darwin`
+- `x86_64-linux-android`
+- `x86_64-pc-windows-msvc`
+- `x86_64-unknown-linux-gnu`
+- `x86_64-unknown-linux-musl`
 
 ## Contribution
 

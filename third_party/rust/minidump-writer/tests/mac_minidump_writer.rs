@@ -182,10 +182,9 @@ fn stackwalks() {
     )
     .expect("failed to dump symbols");
 
-    let provider =
-        minidump_processor::Symbolizer::new(minidump_processor::simple_symbol_supplier(vec![
-            ".test-symbols".into(),
-        ]));
+    let provider = minidump_unwind::Symbolizer::new(minidump_unwind::simple_symbol_supplier(vec![
+        ".test-symbols".into(),
+    ]));
 
     let state = futures::executor::block_on(async {
         minidump_processor::process_minidump(&md.minidump, &provider).await

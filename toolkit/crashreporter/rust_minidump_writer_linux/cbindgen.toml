@@ -9,7 +9,7 @@ line_length = 100
 tab_width = 2
 language = "C++"
 include_guard = "rust_minidump_writer_linux_ffi_generated_h"
-sys_includes = ["sys/signalfd.h"]
+sys_includes = ["signal.h", "sys/signalfd.h"]
 
-[export.rename]
-"fpregset_t" = "struct _libc_fpstate"
+[export]
+exclude = ["fpregset_t"]

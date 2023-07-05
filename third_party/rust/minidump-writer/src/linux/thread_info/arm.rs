@@ -1,43 +1,21 @@
-use super::{CommonThreadInfo, Pid};
+use super::{CommonThreadInfo, NT_Elf, Pid};
 use crate::{errors::ThreadInfoError, minidump_cpu::RawContextCPU};
 use nix::sys::ptrace;
 
 type Result<T> = std::result::Result<T, ThreadInfoError>;
-// These are not (yet) part of the libc-crate
-// #[repr(C)]
-// #[derive(Debug, Eq, Hash, PartialEq, Copy, Clone, Default)]
-// pub struct fp_reg {
-//     // TODO: No bitfields at the moment, just the next best integer-type
-//     sign1: u8,
-//     unused: u16,
-//     sign2: u8,
-//     exponent: u16,
-//     j: u8,
-//     mantissa1: u32,
-//     mantissa2: u32,
-//     // unsigned int sign1:1;
-//     // unsigned int unused:15;
-//     // unsigned int sign2:1;
-//     // unsigned int exponent:14;
-//     // unsigned int j:1;
-//     // unsigned int mantissa1:31;
-//     // unsigned int mantissa0:32;
-// }
 
+// Not defined by libc because this works only for cores support VFP
+#[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Debug, Eq, Hash, PartialEq, Copy, Clone, Default)]
-pub struct user_fpregs {
-    // fpregs: [fp_reg; 8],
-    fpregs: [u32; 8 * 3], // Fields not used, so shortening the struct to 3 x u32
-    fpsr: u32,
-    fpcr: u32,
-    ftype: [u8; 8],
-    init_flag: u32,
+pub struct user_fpregs_struct {
+    pub fpregs: [u64; 32],
+    pub fpscr: u32,
 }
 
 #[repr(C)]
 #[derive(Debug, Eq, Hash, PartialEq, Copy, Clone, Default)]
-pub struct user_regs {
+pub struct user_regs_struct {
     uregs: [u32; 18],
 }
 
@@ -46,26 +24,26 @@ pub struct ThreadInfoArm {
     pub stack_pointer: usize,
     pub tgid: Pid, // thread group id
     pub ppid: Pid, // parent process
-    pub regs: user_regs,
-    pub fpregs: user_fpregs,
+    pub regs: user_regs_struct,
+    pub fpregs: user_fpregs_struct,
 }
 
 impl CommonThreadInfo for ThreadInfoArm {}
 
 impl ThreadInfoArm {
     // nix currently doesn't support PTRACE_GETFPREGS, so we have to do it ourselves
-    fn getfpregs(pid: Pid) -> Result<user_fpregs> {
-        Self::ptrace_get_data::<user_fpregs>(
-            ptrace::Request::PTRACE_GETFPREGS,
-            None,
+    fn getfpregs(pid: Pid) -> Result<user_fpregs_struct> {
+        Self::ptrace_get_data_via_io(
+            0x4204 as ptrace::RequestType, // PTRACE_GETREGSET
+            Some(NT_Elf::NT_ARM_VFP),
             nix::unistd::Pid::from_raw(pid),
         )
     }
 
-    // nix currently doesn't support PTRACE_GETFPREGS, so we have to do it ourselves
-    fn getregs(pid: Pid) -> Result<user_regs> {
-        Self::ptrace_get_data::<user_regs>(
-            ptrace::Request::PTRACE_GETFPREGS,
+    // nix currently doesn't support PTRACE_GETREGS, so we have to do it ourselves
+    fn getregs(pid: Pid) -> Result<user_regs_struct> {
+        Self::ptrace_get_data::<user_regs_struct>(
+            ptrace::Request::PTRACE_GETREGS as ptrace::RequestType,
             None,
             nix::unistd::Pid::from_raw(pid),
         )
@@ -80,19 +58,15 @@ impl ThreadInfoArm {
             crate::minidump_format::format::ContextFlagsArm::CONTEXT_ARM_FULL.bits();
 
         out.iregs.copy_from_slice(&self.regs.uregs[..16]);
-        // No CPSR register in ThreadInfo(it's not accessible via ptrace)
-        out.cpsr = 0;
-
-        #[cfg(not(target_os = "android"))]
-        {
-            out.float_save.fpscr = self.fpregs.fpsr as u64 | ((self.fpregs.fpcr as u64) << 32);
-        }
+        out.cpsr = self.regs.uregs[16];
+        out.float_save.fpscr = self.fpregs.fpscr as u64;
+        out.float_save.regs = self.fpregs.fpregs;
     }
 
     pub fn create_impl(_pid: Pid, tid: Pid) -> Result<Self> {
         let (ppid, tgid) = Self::get_ppid_and_tgid(tid)?;
         let regs = Self::getregs(tid)?;
-        let fpregs = Self::getfpregs(tid)?;
+        let fpregs = Self::getfpregs(tid).unwrap_or(Default::default());
 
         let stack_pointer = regs.uregs[13] as usize;
 

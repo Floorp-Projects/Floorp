@@ -60,13 +60,20 @@ pub unsafe extern "C" fn write_minidump_linux(
     }
 }
 
+#[allow(non_camel_case_types)]
+#[cfg(not(target_arch = "arm"))]
+type fpregset_t = crash_context::fpregset_t;
+#[allow(non_camel_case_types)]
+#[cfg(target_arch = "arm")]
+pub struct fpregset_t {}
+
 // This function will be exposed to C++
 #[no_mangle]
 pub unsafe extern "C" fn write_minidump_linux_with_context(
     dump_path: *const c_char,
     child: pid_t,
     ucontext: *const crash_context::ucontext_t,
-    float_state: *const crash_context::fpregset_t,
+    #[allow(unused)] float_state: *const fpregset_t,
     siginfo: *const libc::signalfd_siginfo,
     child_thread: libc::pid_t,
     error_msg: &mut nsCString,
@@ -78,10 +85,8 @@ pub unsafe extern "C" fn write_minidump_linux_with_context(
 
     core::ptr::copy_nonoverlapping(siginfo, &mut cc.siginfo, 1);
     core::ptr::copy_nonoverlapping(ucontext, &mut cc.context, 1);
-
     #[cfg(not(target_arch = "arm"))]
     core::ptr::copy_nonoverlapping(float_state, &mut cc.float_state, 1);
-    // core::ptr::copy_nonoverlapping(float_state, ((&mut cc.float_state) as *mut crash_context::fpregset_t).cast(), 1);
 
     cc.pid = child;
     cc.tid = child_thread;

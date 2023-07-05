@@ -1,3 +1,5 @@
+use std::cmp::min;
+
 use super::*;
 use crate::{minidump_cpu::RawContextCPU, minidump_writer::CrashingThreadContext};
 
@@ -185,27 +187,19 @@ fn fill_thread_stack(
     thread.stack.memory.data_size = 0;
     thread.stack.memory.rva = buffer.position() as u32;
 
-    if let Ok((mut stack, mut stack_len)) = dumper.get_stack_info(stack_ptr) {
-        if let MaxStackLen::Len(max_stack_len) = max_stack_len {
-            if stack_len > max_stack_len {
-                stack_len = max_stack_len;
-
-                // Skip empty chunks of length max_stack_len.
-                // Meaning != 0
-                if stack_len > 0 {
-                    while stack + stack_len < stack_ptr {
-                        stack += stack_len;
-                    }
-                }
-            }
-        }
+    if let Ok((valid_stack_ptr, stack_len)) = dumper.get_stack_info(stack_ptr) {
+        let stack_len = if let MaxStackLen::Len(max_stack_len) = max_stack_len {
+            min(stack_len, max_stack_len)
+        } else {
+            stack_len
+        };
 
         let mut stack_bytes = PtraceDumper::copy_from_process(
             thread.thread_id.try_into()?,
-            stack as *mut libc::c_void,
+            valid_stack_ptr as *mut libc::c_void,
             stack_len,
         )?;
-        let stack_pointer_offset = stack_ptr - stack;
+        let stack_pointer_offset = stack_ptr.saturating_sub(valid_stack_ptr);
         if config.skip_stacks_if_mapping_unreferenced {
             if let Some(principal_mapping) = &config.principal_mapping {
                 let low_addr = principal_mapping.system_mapping_info.start_address;
@@ -230,7 +224,7 @@ fn fill_thread_stack(
             rva: buffer.position() as u32,
         };
         buffer.write_all(&stack_bytes);
-        thread.stack.start_of_memory_range = stack as u64;
+        thread.stack.start_of_memory_range = valid_stack_ptr as u64;
         thread.stack.memory = stack_location;
         config.memory_blocks.push(thread.stack);
     }
