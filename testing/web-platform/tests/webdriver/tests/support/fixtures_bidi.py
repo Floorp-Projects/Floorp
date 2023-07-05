@@ -60,9 +60,13 @@ async def subscribe_events(bidi_session):
 async def new_tab(bidi_session):
     """Open and focus a new tab to run the test in a foreground tab."""
     new_tab = await bidi_session.browsing_context.create(type_hint='tab')
+
     yield new_tab
-    # Close the tab.
-    await bidi_session.browsing_context.close(context=new_tab["context"])
+
+    try:
+        await bidi_session.browsing_context.close(context=new_tab["context"])
+    except NoSuchFrameException:
+        print(f"Tab with id {new_tab['context']} has already been closed")
 
 
 @pytest.fixture
