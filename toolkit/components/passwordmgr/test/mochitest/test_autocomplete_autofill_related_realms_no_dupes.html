@@ -24,23 +24,6 @@ function restoreForm(form) {
   form.uname.focus();
 }
 
-function sendFakeAutocompleteEvent(element) {
-  const acEvent = document.createEvent("HTMLEvents");
-  acEvent.initEvent("DOMAutoComplete", true, false);
-  element.dispatchEvent(acEvent);
-}
-
-function spinEventLoop() {
-  return Promise.resolve();
-}
-
-async function promiseACPopupClosed() {
-  return SimpleTest.promiseWaitForCondition(async () => {
-    const popupState = await getPopupState();
-    return !popupState.open;
-  }, "Wait for AC popup to be closed");
-}
-
 add_setup(async () => {
   await setStoredLoginsAsync(
     // Simple related domain relationship where example.com and other-example.com are in the related domains list

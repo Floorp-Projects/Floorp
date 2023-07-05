@@ -100,6 +100,17 @@ function checkAutoCompleteResults(actualValues, expectedValues, hostname, msg) {
   _checkArrayValues(actualValues.slice(0, -1), expectedValues, msg);
 }
 
+/**
+ * Wait for autocomplete popup to get closed
+ * @return {Promise} resolving when the AC popup is closed
+ */
+async function untilAutocompletePopupClosed() {
+  return SimpleTest.promiseWaitForCondition(async () => {
+    const popupState = await getPopupState();
+    return !popupState.open;
+  }, "Wait for autocomplete popup to be closed");
+}
+
 function getIframeBrowsingContext(window, iframeNumber = 0) {
   let bc = SpecialPowers.wrap(window).windowGlobalChild.browsingContext;
   return SpecialPowers.unwrap(bc.children[iframeNumber]);
@@ -211,14 +222,15 @@ function createLoginForm({
   username = {},
   password = {},
 } = {}) {
-  username.id ||= null;
   username.name ||= "uname";
   username.type ||= "text";
+  username.id ||= null;
   username.value ||= null;
   username.autocomplete ||= null;
-  password.id ||= null;
+
   password.name ||= "pword";
   password.type ||= "password";
+  password.id ||= null;
   password.value ||= null;
   password.label ||= null;
   password.autocomplete ||= null;
@@ -239,32 +251,44 @@ function createLoginForm({
   }
 
   const usernameInput = document.createElement("input");
+
+  usernameInput.type = username.type;
+  usernameInput.name = username.name;
+
   if (username.id != null) {
     usernameInput.id = username.id;
   }
-  usernameInput.type = username.type;
-  usernameInput.name = username.name;
   if (username.value != null) {
     usernameInput.value = username.value;
   }
   if (username.autocomplete != null) {
     usernameInput.setAttribute("autocomplete", username.autocomplete);
   }
+
   form.appendChild(usernameInput);
 
   if (password) {
     const passwordInput = document.createElement("input");
+
+    passwordInput.type = password.type;
+    passwordInput.name = password.name;
+
     if (password.id != null) {
       passwordInput.id = password.id;
     }
-    passwordInput.type = password.type;
-    passwordInput.name = password.name;
     if (password.value != null) {
       passwordInput.value = password.value;
     }
     if (password.autocomplete != null) {
       passwordInput.setAttribute("autocomplete", password.autocomplete);
     }
+    if (password.readonly != null) {
+      passwordInput.setAttribute("readonly", password.readonly);
+    }
+    if (password.disabled != null) {
+      passwordInput.setAttribute("disabled", password.disabled);
+    }
+
     if (password.label != null) {
       const passwordLabel = document.createElement("label");
       passwordLabel.innerText = password.label;
@@ -272,12 +296,6 @@ function createLoginForm({
       form.appendChild(passwordLabel);
     } else {
       form.appendChild(passwordInput);
-    }
-    if (password.readonly != null) {
-      passwordInput.setAttribute("readonly", password.readonly);
-    }
-    if (password.disabled != null) {
-      passwordInput.setAttribute("disabled", password.disabled);
     }
   }
 
