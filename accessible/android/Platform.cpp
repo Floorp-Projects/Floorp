@@ -92,9 +92,6 @@ void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
   }
 
   switch (aEventType) {
-    case nsIAccessibleEvent::EVENT_FOCUS:
-      sessionAcc->SendFocusEvent(aTarget);
-      break;
     case nsIAccessibleEvent::EVENT_REORDER:
       sessionAcc->SendWindowContentChangedEvent();
       break;
@@ -134,9 +131,17 @@ void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
   }
 }
 
+void a11y::ProxyFocusEvent(RemoteAccessible* aTarget,
+                           const LayoutDeviceIntRect& aCaretRect) {
+  if (RefPtr<SessionAccessibility> sessionAcc =
+          SessionAccessibility::GetInstanceFor(aTarget)) {
+    sessionAcc->SendFocusEvent(aTarget);
+  }
+}
+
 void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                               bool aIsSelectionCollapsed,
-                               int32_t aGranularity) {
+                               bool aIsSelectionCollapsed, int32_t aGranularity,
+                               const LayoutDeviceIntRect& aCaretRect) {
   RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 

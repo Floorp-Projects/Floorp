@@ -107,10 +107,7 @@ class DocAccessibleParent : public RemoteAccessible,
                                                const bool& aEnabled) final;
 
   mozilla::ipc::IPCResult RecvCaretMoveEvent(
-      const uint64_t& aID,
-#if defined(XP_WIN)
-      const LayoutDeviceIntRect& aCaretRect,
-#endif
+      const uint64_t& aID, const LayoutDeviceIntRect& aCaretRect,
       const int32_t& aOffset, const bool& aIsSelectionCollapsed,
       const bool& aIsAtEndOfLine, const int32_t& aGranularity) final;
 
@@ -119,10 +116,8 @@ class DocAccessibleParent : public RemoteAccessible,
       const uint32_t& aLen, const bool& aIsInsert,
       const bool& aFromUser) override;
 
-#if defined(XP_WIN)
   virtual mozilla::ipc::IPCResult RecvFocusEvent(
       const uint64_t& aID, const LayoutDeviceIntRect& aCaretRect) override;
-#endif  // defined(XP_WIN)
 
   virtual mozilla::ipc::IPCResult RecvSelectionEvent(
       const uint64_t& aID, const uint64_t& aWidgetID,

@@ -342,8 +342,8 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollToPoint(
   return IPC_OK();
 }
 
-#if defined(XP_WIN)
 LayoutDeviceIntRect DocAccessibleChild::GetCaretRectFor(const uint64_t& aID) {
+#if defined(XP_WIN)
   LocalAccessible* target;
 
   if (aID) {
@@ -361,6 +361,11 @@ LayoutDeviceIntRect DocAccessibleChild::GetCaretRectFor(const uint64_t& aID) {
 
   nsIWidget* widget = nullptr;
   return text->GetCaretRect(&widget);
+#else
+  // The caret rect is only used on Windows, so just return an empty rect
+  // on other platforms.
+  return LayoutDeviceIntRect();
+#endif  // defined(XP_WIN)
 }
 
 bool DocAccessibleChild::SendFocusEvent(const uint64_t& aID) {
@@ -377,7 +382,7 @@ bool DocAccessibleChild::SendCaretMoveEvent(const uint64_t& aID,
                                                  aIsAtEndOfLine, aGranularity);
 }
 
-#else   // defined(XP_WIN)
+#if !defined(XP_WIN)
 mozilla::ipc::IPCResult DocAccessibleChild::RecvAnnounce(
     const uint64_t& aID, const nsAString& aAnnouncement,
     const uint16_t& aPriority) {
@@ -400,7 +405,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollSubstringToPoint(
 
   return IPC_OK();
 }
-#endif  // defined(XP_WIN)
+#endif  // !defined(XP_WIN)
 
 LocalAccessible* DocAccessibleChild::IdToAccessible(const uint64_t& aID) const {
   if (!aID) return mDoc;

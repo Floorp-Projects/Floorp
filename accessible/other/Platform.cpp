@@ -21,9 +21,12 @@ void a11y::ProxyEvent(RemoteAccessible*, uint32_t) {}
 
 void a11y::ProxyStateChangeEvent(RemoteAccessible*, uint64_t, bool) {}
 
+void a11y::ProxyFocusEvent(RemoteAccessible* aTarget,
+                           const LayoutDeviceIntRect& aCaretRect) {}
+
 void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                               bool aIsSelectionCollapsed,
-                               int32_t aGranularity) {}
+                               bool aIsSelectionCollapsed, int32_t aGranularity,
+                               const LayoutDeviceIntRect& aCaretRect) {}
 
 void a11y::ProxyTextChangeEvent(RemoteAccessible*, const nsAString&, int32_t,
                                 uint32_t, bool, bool) {}

@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "nsStringFwd.h"
+#include "Units.h"
 
 #if defined(ANDROID)
 #  include "nsTArray.h"
@@ -18,10 +19,6 @@
 #ifdef MOZ_WIDGET_COCOA
 #  include "mozilla/a11y/Role.h"
 #  include "nsTArray.h"
-#endif
-
-#if defined(XP_WIN)
-#  include "Units.h"
 #endif
 
 namespace mozilla {
@@ -96,16 +93,11 @@ void ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType);
 void ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
                            bool aEnabled);
 
-#if defined(XP_WIN)
 void ProxyFocusEvent(RemoteAccessible* aTarget,
                      const LayoutDeviceIntRect& aCaretRect);
-void ProxyCaretMoveEvent(RemoteAccessible* aTarget,
-                         const LayoutDeviceIntRect& aCaretRect,
-                         int32_t aGranularity);
-#else
 void ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                         bool aIsSelectionCollapsed, int32_t aGranularity);
-#endif
+                         bool aIsSelectionCollapsed, int32_t aGranularity,
+                         const LayoutDeviceIntRect& aCaretRect);
 void ProxyTextChangeEvent(RemoteAccessible* aTarget, const nsAString& aStr,
                           int32_t aStart, uint32_t aLen, bool aIsInsert,
                           bool aFromUser);

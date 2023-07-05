@@ -67,9 +67,7 @@ parent:
   async HideEvent(uint64_t aRootID, bool aFromUser);
   async StateChangeEvent(uint64_t aID, uint64_t aState, bool aEnabled);
   async CaretMoveEvent(uint64_t aID,
-#ifdef XP_WIN
                        LayoutDeviceIntRect aCaretRect,
-#endif
                        int32_t aOffset,
                        bool aIsSelectionCollapsed, bool aIsAtEndOfLine,
                        int32_t aGranularity);
@@ -77,9 +75,7 @@ parent:
                         bool aIsInsert, bool aFromUser);
   async SelectionEvent(uint64_t aID, uint64_t aWidgetID, uint32_t aType);
   async RoleChangedEvent(role aRole, uint8_t aRoleMapEntryIndex);
-#ifdef XP_WIN
   async FocusEvent(uint64_t aID, LayoutDeviceIntRect aCaretRect);
-#endif
   async VirtualCursorChangeEvent(uint64_t aID,
                                  uint64_t aOldPosition,
                                  uint64_t aPosition,

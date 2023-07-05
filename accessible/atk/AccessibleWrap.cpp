@@ -1234,10 +1234,6 @@ void a11y::ProxyEvent(RemoteAccessible* aTarget, uint32_t aEventType) {
   AtkObject* wrapper = GetWrapperFor(aTarget);
 
   switch (aEventType) {
-    case nsIAccessibleEvent::EVENT_FOCUS:
-      atk_focus_tracker_notify(wrapper);
-      atk_object_notify_state_change(wrapper, ATK_STATE_FOCUSED, true);
-      break;
     case nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE:
       if (aTarget->IsDoc()) {
         g_signal_emit_by_name(wrapper, "load_complete");
@@ -1287,9 +1283,17 @@ void a11y::ProxyStateChangeEvent(RemoteAccessible* aTarget, uint64_t aState,
   atkObj->FireStateChangeEvent(aState, aEnabled);
 }
 
+void a11y::ProxyFocusEvent(RemoteAccessible* aTarget,
+                           const LayoutDeviceIntRect& aCaretRect) {
+  AtkObject* wrapper = GetWrapperFor(aTarget);
+
+  atk_focus_tracker_notify(wrapper);
+  atk_object_notify_state_change(wrapper, ATK_STATE_FOCUSED, true);
+}
+
 void a11y::ProxyCaretMoveEvent(RemoteAccessible* aTarget, int32_t aOffset,
-                               bool aIsSelectionCollapsed,
-                               int32_t aGranularity) {
+                               bool aIsSelectionCollapsed, int32_t aGranularity,
+                               const LayoutDeviceIntRect& aCaretRect) {
   AtkObject* wrapper = GetWrapperFor(aTarget);
   g_signal_emit_by_name(wrapper, "text_caret_moved", aOffset);
 }
