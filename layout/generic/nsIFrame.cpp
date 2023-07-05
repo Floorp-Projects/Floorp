@@ -1428,8 +1428,8 @@ void nsIFrame::HandleLastRememberedSize() {
   }
   const WritingMode wm = GetWritingMode();
   const nsStylePosition* stylePos = StylePosition();
-  bool canRememberBSize = stylePos->ContainIntrinsicBSize(wm).IsAutoLength();
-  bool canRememberISize = stylePos->ContainIntrinsicISize(wm).IsAutoLength();
+  bool canRememberBSize = stylePos->ContainIntrinsicBSize(wm).HasAuto();
+  bool canRememberISize = stylePos->ContainIntrinsicISize(wm).HasAuto();
   if (!canRememberBSize) {
     element->RemoveLastRememberedBSize();
   }
