@@ -447,7 +447,7 @@ ifeq ($(OS_ARCH), Linux)
 ifeq (,$(rustflags_sancov)$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN))
 ifndef MOZ_LTO_RUST_CROSS
 ifneq (,$(filter -Clto,$(cargo_rustc_flags)))
-	$(call py_action,check_binary,--target --networking $@)
+	$(call py_action,check_binary,--networking $@)
 endif
 endif
 endif
