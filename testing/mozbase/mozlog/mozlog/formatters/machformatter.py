@@ -535,8 +535,14 @@ class MachFormatter(base.BaseFormatter):
             success = False
 
         rv = [
-            "pid:%s. Test:%s. Minidump analysed:%s. Signature:[%s]"
-            % (data.get("pid", None), test, success, data["signature"])
+            "pid:%s. Process type: %s. Test:%s. Minidump analysed:%s. Signature:[%s]"
+            % (
+                data.get("pid", "unknown"),
+                data.get("process_type", None),
+                test,
+                success,
+                data["signature"],
+            )
         ]
 
         if data.get("java_stack"):
