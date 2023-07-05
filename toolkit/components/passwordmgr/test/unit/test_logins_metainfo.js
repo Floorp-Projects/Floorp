@@ -116,7 +116,7 @@ add_task(async function test_addLogin_metainfo() {
   // Add an authentication login to the database before continuing.
   await Services.logins.addLoginAsync(gLoginInfo3);
   gLoginMetaInfo3 = retrieveLoginMatching(gLoginInfo3);
-  LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
+  await LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
 });
 
 /**
@@ -133,7 +133,7 @@ add_task(async function test_addLogin_metainfo_duplicate() {
   );
 
   // Verify that no data was stored by the previous call.
-  LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
+  await LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
 });
 
 /**
@@ -231,7 +231,7 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo() {
 /**
  * Tests that modifying a login to a duplicate GUID throws an exception.
  */
-add_task(function test_modifyLogin_nsIProperyBag_metainfo_duplicate() {
+add_task(async function test_modifyLogin_nsIProperyBag_metainfo_duplicate() {
   Assert.throws(
     () =>
       Services.logins.modifyLogin(
@@ -242,7 +242,7 @@ add_task(function test_modifyLogin_nsIProperyBag_metainfo_duplicate() {
       ),
     /specified GUID already exists/
   );
-  LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
+  await LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
 });
 
 /**
@@ -287,7 +287,7 @@ add_task(function test_searchLogins_metainfo() {
  */
 add_task(async function test_storage_metainfo() {
   await LoginTestUtils.reloadData();
-  LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
+  await LoginTestUtils.checkLogins([gLoginInfo1, gLoginInfo2, gLoginInfo3]);
 
   assertMetaInfoEqual(retrieveLoginMatching(gLoginInfo1), gLoginMetaInfo1);
   assertMetaInfoEqual(retrieveLoginMatching(gLoginInfo2), gLoginMetaInfo2);

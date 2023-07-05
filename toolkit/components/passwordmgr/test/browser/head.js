@@ -58,8 +58,8 @@ registerCleanupFunction(
  *        An array of expected login properties
  * @return {nsILoginInfo[]} - All saved logins sorted by timeCreated
  */
-function verifyLogins(expectedLogins = []) {
-  let allLogins = Services.logins.getAllLogins();
+async function verifyLogins(expectedLogins = []) {
+  let allLogins = await Services.logins.getAllLogins();
   allLogins.sort((a, b) => a.timeCreated > b.timeCreated);
   Assert.equal(
     allLogins.length,
@@ -268,10 +268,10 @@ function testSubmittingLoginFormHTTP(
   return testSubmittingLoginForm(aPageFile, aTaskFn, aOrigin);
 }
 
-function checkOnlyLoginWasUsedTwice({ justChanged }) {
+async function checkOnlyLoginWasUsedTwice({ justChanged }) {
   // Check to make sure we updated the timestamps and use count on the
   // existing login that was submitted for the test.
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login");
   Assert.ok(logins[0] instanceof Ci.nsILoginMetaInfo, "metainfo QI");
   Assert.equal(

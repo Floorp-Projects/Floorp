@@ -426,7 +426,7 @@ const PasswordsCleaner = {
 
   async _deleteInternal(aCb) {
     try {
-      let logins = Services.logins.getAllLogins();
+      let logins = await Services.logins.getAllLogins();
       for (let login of logins) {
         if (aCb(login)) {
           Services.logins.removeLogin(login);

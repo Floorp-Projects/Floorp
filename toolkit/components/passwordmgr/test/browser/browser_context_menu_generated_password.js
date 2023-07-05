@@ -26,7 +26,7 @@ add_setup(async function () {
     ],
   });
   // assert that there are no logins
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 0, "There are no logins");
 });
 
@@ -365,7 +365,7 @@ add_task(async function fill_generated_password_with_matching_logins() {
     }
   );
 
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 2, "Check 2 logins");
   isnot(
     logins[0].password,

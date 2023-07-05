@@ -150,7 +150,7 @@ async function test_save_change(testData) {
       await cleanupDoorhanger(notif); // clean slate for the next test
 
       // Check that the values in the database match the expected values.
-      verifyLogins(expectOutcome);
+      await verifyLogins(expectOutcome);
     }
   );
 
