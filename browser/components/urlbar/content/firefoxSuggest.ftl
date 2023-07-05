@@ -21,6 +21,10 @@ urlbar-group-best-match =
 urlbar-group-addon =
   .label = { -brand-product-name } extension
 
+# Label shown above a Pocket suggestion in the urlbar results.
+urlbar-group-pocket =
+  .label = Recommended reads
+
 # Tooltip text for the block button shown in top pick rows.
 firefox-suggest-urlbar-block =
   .title = Dismiss this suggestion
