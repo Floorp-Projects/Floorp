@@ -123,37 +123,6 @@ For example, [we use `window.ensureCustomElements("moz-button-group")` in `brows
 **Note** you will need to add your new widget to [the switch in importCustomElementFromESModule](https://searchfox.org/mozilla-central/rev/85b4f7363292b272eb9b606e00de2c37a6be73f0/toolkit/content/customElements.js#845-859) for `ensureCustomElements()` to work as expected.
 Once [Bug 1803810](https://bugzilla.mozilla.org/show_bug.cgi?id=1803810) lands, this process will be simplified: you won't need to use `ensureCustomElements()` and you will [add your widget to the appropriate array in customElements.js instead of the switch statement](https://searchfox.org/mozilla-central/rev/85b4f7363292b272eb9b606e00de2c37a6be73f0/toolkit/content/customElements.js#818-841).
 
-## Adding new domain-specific widgets
-
-While we do have the `./mach addwidget` command, as noted in the [adding new design system components](#adding-new-design-system-components), this does not currently support the domain-specific widget case.
-[See Bug 1828181 for more details on supporting this case](https://bugzilla.mozilla.org/show_bug.cgi?id=1828181).
-Instead, you will need to do two things to have your new story appear in Storybook:
-1. Create `<your-team-or-project>/<your-widget>.stories.mjs` in `browser/components/storybook/stories`
-2. In this newly created story file, add the following default export:
-  ```js
-    export default {
-      title: "Domain-specific UI Widgets/<your-team-or-project>/<your-widget>"
-      component: "<your-widget>"
-    };
-  ```
-The next time you run `./mach storybook`, a blank story entry for your widget should appear in your local Storybook.
-
-Since Storybook is unaware of how the actual code is added or built, we won't go into detail about adding your new widget to the codebase.
-It's recommended to have a `.html` test for your new widget since this lets you unit test the component directly rather than using integration tests with the domain.
-To see what kind of files you may need for your widget, please refer back to [the output of the `./mach addwidget` command](#adding-new-design-system-components).
-Just like with the UI widgets, [the `browser_all_files_referenced.js` will fail unless you use your component immediately outside of Storybook.](#known-browser_all_files_referencedjs-issue)
-
-### Using new domain-specific widgets
-
-This is effectively the same as [using new design system components](#using-new-design-system-components).
-You will need to import your widget into the relevant `html`/`xhtml` files via a `script` tag with `type="module"`:
-
-```html
-<script type="module" src="chrome://browser/content/<domain-directory>/<your-widget>.mjs"></script>
-```
-
-Or use `window.ensureCustomElements("<your-widget>")` as previously stated in [the using new design system components section.](#using-new-design-system-components)
-
 ## Common pitfalls
 
 If you're trying to use a reusable widget but nothing is appearing on the
