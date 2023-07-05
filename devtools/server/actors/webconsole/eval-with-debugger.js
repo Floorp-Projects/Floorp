@@ -115,6 +115,7 @@ exports.evalWithDebugger = function (string, options = {}, webConsole) {
     };
   }
 
+  const evalString = getEvalInput(string);
   const { frame, dbg } = getFrameDbg(options, webConsole);
 
   const { dbgGlobal, bindSelf } = getDbgGlobal(options, dbg, webConsole);
@@ -169,7 +170,6 @@ exports.evalWithDebugger = function (string, options = {}, webConsole) {
 
   let result;
   try {
-    const evalString = getEvalInput(string, bindings);
     result = getEvalResult(
       dbg,
       evalString,
@@ -517,10 +517,10 @@ function updateConsoleInputEvaluation(dbg, webConsole) {
   }
 }
 
-function getEvalInput(string, bindings) {
+function getEvalInput(string) {
   const trimmedString = string.trim();
   // The help function needs to be easy to guess, so we make the () optional.
-  if (bindings?.help && (trimmedString === "help" || trimmedString === "?")) {
+  if (trimmedString === "help" || trimmedString === "?") {
     return "help()";
   }
   // we support Unix like syntax for commands if it is preceeded by `:`
