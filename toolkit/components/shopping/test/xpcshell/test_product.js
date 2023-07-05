@@ -5,7 +5,12 @@
 "use strict";
 /* global createHttpServer */
 
-const { ANALYSIS_SCHEMA, RECOMMENDATIONS_SCHEMA } = ChromeUtils.importESModule(
+const {
+  ANALYSIS_RESPONSE_SCHEMA,
+  ANALYSIS_REQUEST_SCHEMA,
+  RECOMMENDATIONS_RESPONSE_SCHEMA,
+  RECOMMENDATIONS_REQUEST_SCHEMA,
+} = ChromeUtils.importESModule(
   "chrome://global/content/shopping/ProductConfig.mjs"
 );
 
@@ -13,21 +18,24 @@ const { ShoppingProduct } = ChromeUtils.importESModule(
   "chrome://global/content/shopping/ShoppingProduct.mjs"
 );
 
-const ANALYSIS_API_MOCK = "http://example.com/analysis.json";
-const RECOMMENDATIONS_API_MOCK = "http://example.com/recommendations.json";
-const ANALYSIS_API_MOCK_INVALID = "http://example.com/invalid_analysis.json";
+const ANALYSIS_API_MOCK = "http://example.com/analysis_response.json";
+const RECOMMENDATIONS_API_MOCK =
+  "http://example.com/recommendations_response.json";
+const ANALYSIS_API_MOCK_INVALID =
+  "http://example.com/invalid_analysis_response.json";
 
 const server = createHttpServer({ hosts: ["example.com"] });
 server.registerDirectory("/", do_get_file("/data"));
 
 add_task(async function test_product_requestAnalysis() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
-  let product = new ShoppingProduct(uri);
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
 
   if (product.isProduct()) {
     let analysis = await product.requestAnalysis(true, undefined, {
       url: ANALYSIS_API_MOCK,
-      schema: ANALYSIS_SCHEMA,
+      requestSchema: ANALYSIS_REQUEST_SCHEMA,
+      responseSchema: ANALYSIS_RESPONSE_SCHEMA,
     });
 
     Assert.ok(
@@ -39,12 +47,13 @@ add_task(async function test_product_requestAnalysis() {
 
 add_task(async function test_product_requestAnalysis_invalid() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
-  let product = new ShoppingProduct(uri);
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
 
   if (product.isProduct()) {
     let analysis = await product.requestAnalysis(true, undefined, {
       url: ANALYSIS_API_MOCK_INVALID,
-      schema: ANALYSIS_SCHEMA,
+      requestSchema: ANALYSIS_REQUEST_SCHEMA,
+      responseSchema: ANALYSIS_RESPONSE_SCHEMA,
     });
 
     Assert.equal(analysis, undefined, "Analysis object is invalidated");
@@ -53,14 +62,15 @@ add_task(async function test_product_requestAnalysis_invalid() {
 
 add_task(async function test_product_requestRecommendations() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
-  let product = new ShoppingProduct(uri);
+  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
   if (product.isProduct()) {
     let recommendations = await product.requestRecommendations(
       true,
       undefined,
       {
         url: RECOMMENDATIONS_API_MOCK,
-        schema: RECOMMENDATIONS_SCHEMA,
+        requestSchema: RECOMMENDATIONS_REQUEST_SCHEMA,
+        responseSchema: RECOMMENDATIONS_RESPONSE_SCHEMA,
       }
     );
     Assert.ok(

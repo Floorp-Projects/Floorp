@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "chrome://global/content/shopping/analysis.schema.json",
+  "$id": "chrome://global/content/shopping/analysis_response.schema.json",
   "title": "Product",
   "description": "A product analysis result",
   "type": "object",
@@ -19,8 +19,15 @@
     },
     "grade": {
       "description": "Reliability grade for the product's reviews.",
-      "type": "string",
-      "examples": ["A", "B", "C", "D", "F", "?"]
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "examples": ["A", "B", "C", "D", "F"]
     },
     "adjusted_rating": {
       "description": "Product rating adjusted to exclude untrusted reviews.",
@@ -37,10 +44,6 @@
     "needs_analysis": {
       "description": "Boolean indicating if the analysis is stale.",
       "type": "boolean"
-    },
-    "highlights_count": {
-      "description": "Number of highlights available for an Amazon product",
-      "type": "integer"
     },
     "highlights": {
       "description": "Object containing highlights for Amazon product.",
@@ -76,29 +79,10 @@
   },
   "$defs": {
     "highlights": {
-      "type": "object",
-      "properties": {
-        "positive": {
-          "description": "Possibly empty array of positive highlights.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "neutral": {
-          "description": "Possibly empty array of neutral highlights.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "negative": {
-          "description": "Possibly empty array of negative highlights.",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
+      "description": "Possibly empty array of highlights.",
+      "type": "array",
+      "items": {
+        "type": "string"
       }
     }
   }

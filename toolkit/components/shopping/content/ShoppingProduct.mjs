@@ -4,9 +4,11 @@
 
 import {
   ANALYSIS_API,
-  ANALYSIS_SCHEMA,
+  ANALYSIS_RESPONSE_SCHEMA,
+  ANALYSIS_REQUEST_SCHEMA,
   RECOMMENDATIONS_API,
-  RECOMMENDATIONS_SCHEMA,
+  RECOMMENDATIONS_RESPONSE_SCHEMA,
+  RECOMMENDATIONS_REQUEST_SCHEMA,
   ProductConfig,
 } from "chrome://global/content/shopping/ProductConfig.mjs";
 
@@ -36,7 +38,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * and querying the shopping API for information on it.
  *
  * @example
- * let product = new Product(url);
+ * let product = new ShoppingProduct(url);
  * if (product.isProduct()) {
  *  let analysis = await product.requestAnalysis();
  *  let recommendations = await product.requestRecommendations();
@@ -58,10 +60,10 @@ export class ShoppingProduct {
    * @param {URL} url
    *  URL to get the product info from.
    * @param {object} options
-   *  shouldValidate: false - only for debugging API calls.
+   *  allowValidationFailure: true
    */
-  constructor(url, options = {}) {
-    this.shouldValidate = !!options.shouldValidate;
+  constructor(url, options = { allowValidationFailure: true }) {
+    this.allowValidationFailure = !!options.allowValidationFailure;
     this.analysis = undefined;
     this.recommendations = undefined;
 
@@ -187,7 +189,11 @@ export class ShoppingProduct {
   async requestAnalysis(
     force = false,
     product = this.product,
-    options = { url: ANALYSIS_API, schema: ANALYSIS_SCHEMA }
+    options = {
+      url: ANALYSIS_API,
+      requestSchema: ANALYSIS_REQUEST_SCHEMA,
+      responseSchema: ANALYSIS_RESPONSE_SCHEMA,
+    }
   ) {
     if (!product) {
       return null;
@@ -205,7 +211,8 @@ export class ShoppingProduct {
     let result = await this.#request(
       options.url,
       requestOptions,
-      options.schema
+      options.requestSchema,
+      options.responseSchema
     );
 
     this.analysis = result;
@@ -230,7 +237,11 @@ export class ShoppingProduct {
   async requestRecommendations(
     force = false,
     product = this.product,
-    options = { url: RECOMMENDATIONS_API, schema: RECOMMENDATIONS_SCHEMA }
+    options = {
+      url: RECOMMENDATIONS_API,
+      requestSchema: RECOMMENDATIONS_REQUEST_SCHEMA,
+      responseSchema: RECOMMENDATIONS_RESPONSE_SCHEMA,
+    }
   ) {
     if (!product) {
       return null;
@@ -248,7 +259,8 @@ export class ShoppingProduct {
     let result = await this.#request(
       options.url,
       requestOptions,
-      options.schema
+      options.requestSchema,
+      options.responseSchema
     );
 
     this.recommendations = result;
@@ -263,13 +275,27 @@ export class ShoppingProduct {
    *  URL string for the API to request.
    * @param {object} bodyObj
    *  Options to send to the API.
-   * @param {string} SchemaURL
-   *  URL string for the JSON Schema to validated with.
+   * @param {string} RequestSchemaURL
+   *  URL string for the JSON Schema to validated the request.
+   * @param {string} ResponseSchemaURL
+   *  URL string for the JSON Schema to validated the response.
    * @returns {object} result
    *  Parsed JSON API result or null.
    */
-  async #request(ApiURL, bodyObj = {}, SchemaURL) {
+  async #request(ApiURL, bodyObj = {}, RequestSchemaURL, ResponseSchemaURL) {
     let responseOk;
+
+    if (bodyObj && RequestSchemaURL) {
+      let validRequest = await lazy.ProductValidator.validate(
+        bodyObj,
+        RequestSchemaURL,
+        this.allowValidationFailure
+      );
+      if (!validRequest && !this.allowValidationFailure) {
+        return null;
+      }
+    }
+
     let result = await fetch(ApiURL, {
       method: "POST",
       headers: {
@@ -283,10 +309,13 @@ export class ShoppingProduct {
       return resp.json();
     });
 
-    let valid = !SchemaURL;
-    if (responseOk && SchemaURL) {
-      valid = await lazy.ProductValidator.validate(result, SchemaURL);
-      if (!valid) {
+    if (responseOk && ResponseSchemaURL) {
+      let validResponse = await lazy.ProductValidator.validate(
+        result,
+        ResponseSchemaURL,
+        this.allowValidationFailure
+      );
+      if (!validResponse && !this.allowValidationFailure) {
         return null;
       }
     }

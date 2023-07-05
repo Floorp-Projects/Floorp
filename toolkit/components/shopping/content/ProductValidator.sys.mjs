@@ -11,18 +11,20 @@ let schemas = {};
  *
  * @param {object} json
  *  JSON object from the API request.
+ * @param {string} SchemaURL
+ *  URL string for the schema to validate with.
+ * @param {boolean} logErrors
+ *  Should invalid JSON log out the errors.
  * @returns {boolean} result
  *  If the JSON is valid or not.
  */
-async function validate(json, SchemaURL) {
+async function validate(json, SchemaURL, logErrors) {
   if (!schemas[SchemaURL]) {
     schemas[SchemaURL] = await fetch(SchemaURL).then(rsp => rsp.json());
   }
 
   let result = JsonSchema.validate(json, schemas[SchemaURL]);
-
-  // TODO: maybe just for debug?
-  if (!result.valid) {
+  if (!result.valid && logErrors) {
     console.error(
       `Invalid result: ${JSON.stringify(result.errors, undefined, 2)}`
     );

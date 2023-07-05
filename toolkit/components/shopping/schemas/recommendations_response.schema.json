@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "chrome://global/content/shopping/recommendations_response.schema.json",
+  "title": "Recommendations",
+  "description": "Recommendations for a product",
+  "type": "array",
+  "items": {
+    "$ref": "#/$defs/recommendation"
+  },
+  "$defs": {
+    "recommendation": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "image_url": {
+          "type": "string"
+        },
+        "price": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string",
+          "examples": ["USD"]
+        },
+        "grade": {
+          "description": "Reliability grade for the product's reviews.",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "examples": ["A", "B", "C", "D", "F"]
+        },
+        "adjusted_rating": {
+          "type": "number"
+        },
+        "analysis_url": {
+          "type": "string"
+        },
+        "sponsored": {
+          "type": "boolean"
+        },
+        "aid": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

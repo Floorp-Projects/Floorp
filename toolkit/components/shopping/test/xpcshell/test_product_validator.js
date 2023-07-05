@@ -5,7 +5,12 @@
 "use strict";
 /* global loadJSONfromFile */
 
-const { ANALYSIS_SCHEMA, RECOMMENDATIONS_SCHEMA } = ChromeUtils.importESModule(
+const {
+  ANALYSIS_RESPONSE_SCHEMA,
+  ANALYSIS_REQUEST_SCHEMA,
+  RECOMMENDATIONS_RESPONSE_SCHEMA,
+  RECOMMENDATIONS_REQUEST_SCHEMA,
+} = ChromeUtils.importESModule(
   "chrome://global/content/shopping/ProductConfig.mjs"
 );
 
@@ -14,29 +19,73 @@ const { ProductValidator } = ChromeUtils.importESModule(
 );
 
 add_task(async function test_validate_analysis() {
-  const json = await loadJSONfromFile("data/analysis.json");
-  let valid = await ProductValidator.validate(json, ANALYSIS_SCHEMA);
+  const json = await loadJSONfromFile("data/analysis_response.json");
+  let valid = await ProductValidator.validate(json, ANALYSIS_RESPONSE_SCHEMA);
 
   Assert.equal(valid, true, "Analysis JSON is valid");
 });
 
 add_task(async function test_validate_analysis_invalid() {
-  const json = await loadJSONfromFile("data/invalid_analysis.json");
-  let valid = await ProductValidator.validate(json, ANALYSIS_SCHEMA);
+  const json = await loadJSONfromFile("data/invalid_analysis_response.json");
+  let valid = await ProductValidator.validate(json, ANALYSIS_RESPONSE_SCHEMA);
 
   Assert.equal(valid, false, "Analysis JSON is invalid");
 });
 
 add_task(async function test_validate_recommendations() {
-  const json = await loadJSONfromFile("data/recommendations.json");
-  let valid = await ProductValidator.validate(json, RECOMMENDATIONS_SCHEMA);
+  const json = await loadJSONfromFile("data/recommendations_response.json");
+  let valid = await ProductValidator.validate(
+    json,
+    RECOMMENDATIONS_RESPONSE_SCHEMA
+  );
 
   Assert.equal(valid, true, "Recommendations JSON is valid");
 });
 
 add_task(async function test_validate_recommendations_invalid() {
-  const json = await loadJSONfromFile("data/invalid_recommendations.json");
-  let valid = await ProductValidator.validate(json, RECOMMENDATIONS_SCHEMA);
+  const json = await loadJSONfromFile(
+    "data/invalid_recommendations_response.json"
+  );
+  let valid = await ProductValidator.validate(
+    json,
+    RECOMMENDATIONS_RESPONSE_SCHEMA
+  );
+
+  Assert.equal(valid, false, "Recommendations JSON is invalid");
+});
+
+add_task(async function test_validate_analysis() {
+  const json = await loadJSONfromFile("data/analysis_request.json");
+  let valid = await ProductValidator.validate(json, ANALYSIS_REQUEST_SCHEMA);
+
+  Assert.equal(valid, true, "Analysis JSON is valid");
+});
+
+add_task(async function test_validate_analysis_invalid() {
+  const json = await loadJSONfromFile("data/invalid_analysis_request.json");
+  let valid = await ProductValidator.validate(json, ANALYSIS_REQUEST_SCHEMA);
+
+  Assert.equal(valid, false, "Analysis JSON is invalid");
+});
+
+add_task(async function test_validate_recommendations() {
+  const json = await loadJSONfromFile("data/recommendations_request.json");
+  let valid = await ProductValidator.validate(
+    json,
+    RECOMMENDATIONS_REQUEST_SCHEMA
+  );
+
+  Assert.equal(valid, true, "Recommendations JSON is valid");
+});
+
+add_task(async function test_validate_recommendations_invalid() {
+  const json = await loadJSONfromFile(
+    "data/invalid_recommendations_request.json"
+  );
+  let valid = await ProductValidator.validate(
+    json,
+    RECOMMENDATIONS_REQUEST_SCHEMA
+  );
 
   Assert.equal(valid, false, "Recommendations JSON is invalid");
 });
