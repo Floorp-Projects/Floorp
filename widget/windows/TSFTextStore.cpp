@@ -2798,7 +2798,13 @@ Maybe<TSFTextStore::Content>& TSFTextStore::ContentForTSF() {
   }
 
   if (mContentForTSF.isNothing()) {
+    MOZ_DIAGNOSTIC_ASSERT(
+        !mIsInitializingContentForTSF,
+        "TSFTextStore::ContentForTSF() shouldn't be called recursively");
+
     AutoNotifyingTSFBatch deferNotifyingTSF(*this);
+    AutoRestore<bool> saveInitializingContetTSF(mIsInitializingContentForTSF);
+    mIsInitializingContentForTSF = true;
 
     nsString text;  // Don't use auto string for avoiding to copy long string.
     if (NS_WARN_IF(!GetCurrentText(text))) {
@@ -2890,7 +2896,14 @@ Maybe<TSFTextStore::Selection>& TSFTextStore::SelectionForTSF() {
       MOZ_ASSERT_UNREACHABLE("There should be non-destroyed widget");
     }
 
+    MOZ_DIAGNOSTIC_ASSERT(
+        !mIsInitializingSelectionForTSF,
+        "TSFTextStore::SelectionForTSF() shouldn't be called recursively");
+
     AutoNotifyingTSFBatch deferNotifyingTSF(*this);
+    AutoRestore<bool> saveInitializingSelectionForTSF(
+        mIsInitializingSelectionForTSF);
+    mIsInitializingSelectionForTSF = true;
 
     WidgetQueryContentEvent querySelectedTextEvent(true, eQuerySelectedText,
                                                    mWidget);
@@ -6084,6 +6097,9 @@ void TSFTextStore::NotifyTSFOfSelectionChange() {
   // If selection range isn't actually changed, we don't need to notify TSF
   // of this selection change.
   if (mSelectionForTSF.isNothing()) {
+    MOZ_DIAGNOSTIC_ASSERT(!mIsInitializingSelectionForTSF,
+                          "While mSelectionForTSF is being initialized, this "
+                          "should not be called");
     mSelectionForTSF.emplace(*mPendingSelectionChangeData);
   } else if (!mSelectionForTSF->SetSelection(*mPendingSelectionChangeData)) {
     mPendingSelectionChangeData.reset();
