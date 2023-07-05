@@ -34,11 +34,11 @@ function setVerticalTabs() {
       let list = Services.wm.getEnumerator("navigator:browser");
       while (list.hasMoreElements()) { if (list.getNext() != window) return; }
 
-      if(!gBrowser){
-        window.setTimeout(setWorkspaceLabel, 2000);
-      } else {
+      if (typeof gBrowser !== 'undefined') {
         setWorkspaceLabel();
-      }
+      } else {
+        window.setTimeout(setWorkspaceLabel, 100);
+      }    
     }
     checkBrowserIsStartup();
 

@@ -823,8 +823,13 @@ window.setTimeout(function() {
     }
   }
 
-  //run codes
-  workspaceFunctions.manageWorkspaceFunctions.initWorkspace();
+  //run codes 
+  if (typeof gBrowser !== 'undefined') {
+    workspaceFunctions.manageWorkspaceFunctions.initWorkspace();
+  } else {
+    setTimeout(workspaceFunctions.manageWorkspaceFunctions.initWorkspace, 100);
+  }
+
   workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
 
   gBrowser.tabContainer.addEventListener(
