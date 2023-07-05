@@ -177,6 +177,11 @@ export class AdmWikipedia extends BaseFeature {
         lazy.UrlbarUtils.HIGHLIGHT.SUGGESTED,
       ];
     }
+
+    // Set `is_top_pick` on the suggestion to tell the provider to set
+    // best-match related properties on the result.
+    suggestion.is_top_pick = isResultBestMatch;
+
     payload.isBlockable = lazy.UrlbarPrefs.get(
       isResultBestMatch
         ? "bestMatchBlockingEnabled"
@@ -192,9 +197,10 @@ export class AdmWikipedia extends BaseFeature {
       )
     );
 
-    if (isResultBestMatch) {
-      result.isBestMatch = true;
-      result.suggestedIndex = 1;
+    if (suggestion.is_sponsored) {
+      result.isRichSuggestion = true;
+      result.richSuggestionIconSize = 16;
+      result.payload.descriptionL10n = { id: "urlbar-result-action-sponsored" };
     }
 
     return result;

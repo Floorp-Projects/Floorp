@@ -74,7 +74,7 @@ async function check_results({ featureEnabled = false }) {
     Assert.equal(result.type, UrlbarUtils.RESULT_TYPE.SEARCH);
     Assert.equal(result.providerName, "SearchSuggestions");
     Assert.equal(result.payload.engine, "basic");
-    Assert.equal(result.payload.isRichSuggestion, featureEnabled);
+    Assert.equal(result.isRichSuggestion, featureEnabled);
     if (featureEnabled) {
       Assert.equal(typeof result.payload.description, "string");
       Assert.ok(result.payload.icon.startsWith("data:"));

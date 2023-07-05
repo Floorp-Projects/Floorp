@@ -490,15 +490,20 @@ class _QuickSuggestTestUtils {
 
     let { row } = details.element;
 
-    let sponsoredElement = isBestMatch
-      ? row._elements.get("bottom")
-      : row._elements.get("action");
-    this.Assert.ok(sponsoredElement, "Result sponsored label element exists");
-    this.Assert.equal(
-      sponsoredElement.textContent,
-      isSponsored ? "Sponsored" : "",
-      "Result sponsored label"
-    );
+    let sponsoredElement = row._elements.get("description");
+    if (isSponsored || isBestMatch) {
+      this.Assert.ok(sponsoredElement, "Result sponsored label element exists");
+      this.Assert.equal(
+        sponsoredElement.textContent,
+        isSponsored ? "Sponsored" : "",
+        "Result sponsored label"
+      );
+    } else {
+      this.Assert.ok(
+        !sponsoredElement,
+        "Result sponsored label element should not exist"
+      );
+    }
 
     this.Assert.equal(
       result.payload.helpUrl,
