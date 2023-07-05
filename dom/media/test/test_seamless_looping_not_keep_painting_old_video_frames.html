@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Seamless looping test : do not keep painting old video frames</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="text/javascript" src="manifest.js"></script>
+</head>
+<script type="application/javascript">
+
+/**
+ * This test is used to ensure that after seeking to EOS directly, video can
+ * display its frame sucessfully, not showing the incorrect frame which should
+ * be discarded during seeking. The test video contains three seconds white
+ * frames [0s-3s] and one second black frames [3s-4s], so after seeking to
+ * EOS and start looping video again, video should display white frames, instead
+ * of black frames.
+ */
+add_task(async function testSeamlessLoopingDoNotKeepPaintingOldVideoFrame() {
+  info(`create video and play it`);
+  const WIDTH = 10, HEIGHT = 10;
+  let video = document.createElement('video');
+  video.loop = true;
+  video.src = "white-3s-black-1s.webm";
+  video.width = WIDTH;
+  video.height = HEIGHT;
+  document.body.appendChild(video);
+  await video.play();
+
+  info(`seek to EOS (${video.duration}s) and waiting for looping`);
+  video.currentTime = video.duration;
+  await once(video, "seeked");
+
+  // We can't control the exact timing when the compositor would render next
+  // frame so we wait for the next timeupdate to ensure the media has been
+  // moved forward to the place where video should show white frames.
+  info(`wait for timeupdate then check the painted frame`);
+  await once(video, "timeupdate");
+  const canvas = document.createElement('canvas');
+  const context = canvas.getContext('2d');
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const pixelData = context.getImageData(0, 0, WIDTH, HEIGHT).data;
+  for (let idx = 0; idx < WIDTH * HEIGHT; idx++) {
+    let pixelCount = 4 * idx; // RGBA
+    // White frame's RGB value should be [255,255,255]
+    is(pixelData[pixelCount + 0], 255, `R should be 255`);
+    is(pixelData[pixelCount + 1], 255, `G should be 255`);
+    is(pixelData[pixelCount + 2], 255, `B should be 255`);
+  }
+});
+
+</script>
+<body>
+</body>
+</html>
