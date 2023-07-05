@@ -2099,10 +2099,14 @@ export class UrlbarView {
 
     if (
       row.result.isBestMatch &&
-      row.result.providerName == lazy.UrlbarProviderQuickSuggest.name &&
-      row.result.payload.telemetryType == "amo"
+      row.result.providerName == lazy.UrlbarProviderQuickSuggest.name
     ) {
-      return { id: "urlbar-group-addon" };
+      switch (row.result.payload.telemetryType) {
+        case "amo":
+          return { id: "urlbar-group-addon" };
+        case "pocket":
+          return { id: "urlbar-group-pocket" };
+      }
     }
 
     if (
