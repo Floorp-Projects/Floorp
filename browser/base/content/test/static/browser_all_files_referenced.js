@@ -282,6 +282,9 @@ var whitelist = [
   { file: "chrome://browser/content/screenshots/copy.svg" },
   { file: "chrome://browser/content/screenshots/download.svg" },
   { file: "chrome://browser/content/screenshots/download-white.svg" },
+
+  // FIXME: Bug 1840396 - The moz-message-bar component isn't in use yet.
+  { file: "chrome://global/content/elements/moz-message-bar.mjs" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {

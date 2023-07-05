@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MozMessageBar tests</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="module" src="chrome://global/content/elements/moz-message-bar.mjs"></script>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+  <moz-message-bar id="testElement" message="Test message"></moz-message-bar>
+  <moz-message-bar id="testElement2" dismissable message="Test message"></moz-message-bar>
+</div>
+<pre id="test">
+  <script class="testbody" type="application/javascript">
+    add_task(async function test_component_declaration() {
+      const mozMessageBar = document.querySelector("#testElement");
+      ok(mozMessageBar, "moz-message-bar component is rendered.");
+
+      const icon = mozMessageBar.shadowRoot.querySelector(".icon");
+      const iconUrl = window.getComputedStyle(icon, "::after").content;
+      ok(iconUrl.includes("info-filled.svg"), "Info icon is showing up.");
+
+      const message = mozMessageBar.shadowRoot.querySelector(".message");
+      is(message.textContent.trim(), "Test message", "Message is showing up.");
+    });
+    add_task(async function test_close_button() {
+      const notDismissableComponent = document.querySelector("#testElement");
+      let closeButton = notDismissableComponent.shadowRoot.querySelector(".close");
+      let closeButtonDislay = window.getComputedStyle(closeButton).display;
+      is(closeButtonDislay, "none", "Close button doesn't show when the message bar isn't dismissable.");
+
+      let dismissableComponent = document.querySelector("#testElement2");
+      closeButton = dismissableComponent.shadowRoot.querySelector(".close");
+      closeButtonDislay = window.getComputedStyle(closeButton).display;
+      is(closeButtonDislay, "block", "Close button is displayed when the message bar is dismissable.");
+
+      closeButton.click();
+      dismissableComponent = document.querySelector("#testElement2");
+      is(dismissableComponent, null, "Clicking on the close button removes the message bar element.");
+    });
+  </script>
+</pre>
+</body>
+</html>

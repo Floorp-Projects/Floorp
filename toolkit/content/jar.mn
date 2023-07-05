@@ -100,6 +100,8 @@ toolkit.jar:
    content/global/elements/moz-input-box.js    (widgets/moz-input-box.js)
    content/global/elements/moz-label.css       (widgets/moz-label/moz-label.css)
    content/global/elements/moz-label.mjs       (widgets/moz-label/moz-label.mjs)
+   content/global/elements/moz-message-bar.css    (widgets/moz-message-bar/moz-message-bar.css)
+   content/global/elements/moz-message-bar.mjs    (widgets/moz-message-bar/moz-message-bar.mjs)
    content/global/elements/moz-support-link.mjs    (widgets/moz-support-link/moz-support-link.mjs)
    content/global/elements/moz-toggle.css      (widgets/moz-toggle/moz-toggle.css)
    content/global/elements/moz-toggle.mjs      (widgets/moz-toggle/moz-toggle.mjs)
