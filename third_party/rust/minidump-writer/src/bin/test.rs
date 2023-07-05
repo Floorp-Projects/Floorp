@@ -109,11 +109,7 @@ mod linux {
         let dumper = PtraceDumper::new(getppid().as_raw())?;
         let mut mapping_count = 0;
         for map in &dumper.mappings {
-            if map
-                .name
-                .as_ref()
-                .map_or(false, |name| name.to_string_lossy().starts_with(&path))
-            {
+            if map.name == Some(path.clone()) {
                 mapping_count += 1;
                 // This mapping should encompass the entire original mapped
                 // range.
@@ -131,7 +127,7 @@ mod linux {
         let mut dumper = PtraceDumper::new(ppid)?;
         let mut found_linux_gate = false;
         for mut mapping in dumper.mappings.clone() {
-            if mapping.name == Some(LINUX_GATE_LIBRARY_NAME.into()) {
+            if mapping.name.as_deref() == Some(LINUX_GATE_LIBRARY_NAME) {
                 found_linux_gate = true;
                 dumper.suspend_threads()?;
                 let id = PtraceDumper::elf_identifier_for_mapping(&mut mapping, ppid)?;
@@ -152,7 +148,7 @@ mod linux {
         test!(linux_gate_loc != 0, "linux_gate_loc == 0")?;
         let mut found_linux_gate = false;
         for mapping in &dumper.mappings {
-            if mapping.name == Some(LINUX_GATE_LIBRARY_NAME.into()) {
+            if mapping.name.as_deref() == Some(LINUX_GATE_LIBRARY_NAME) {
                 found_linux_gate = true;
                 test!(
                     linux_gate_loc == mapping.start_address.try_into()?,

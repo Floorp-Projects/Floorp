@@ -470,7 +470,7 @@ if_alloc! {
             Ok(section_headers)
         }
         pub fn check_size(&self, size: usize) -> error::Result<()> {
-            if self.sh_type == SHT_NOBITS || self.sh_size == 0 {
+            if self.sh_type == SHT_NOBITS {
                 return Ok(());
             }
             let (end, overflow) = self.sh_offset.overflowing_add(self.sh_size);

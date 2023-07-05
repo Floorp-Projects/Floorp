@@ -415,11 +415,7 @@ if_alloc! {
         /// Parse a REL or RELA section of size `filesz` from `offset`.
         pub fn parse(bytes: &'a [u8], offset: usize, filesz: usize, is_rela: bool, ctx: Ctx) -> crate::error::Result<RelocSection<'a>> {
             // TODO: better error message when too large (see symtab implementation)
-            let bytes = if filesz != 0 {
-                bytes.pread_with::<&'a [u8]>(offset, filesz)?
-            } else {
-                &[]
-            };
+            let bytes = bytes.pread_with(offset, filesz)?;
 
             Ok(RelocSection {
                 bytes: bytes,

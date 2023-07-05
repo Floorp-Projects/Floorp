@@ -3,8 +3,6 @@ use crate::maps_reader::MappingInfo;
 use crate::mem_writer::MemoryWriterError;
 use crate::thread_info::Pid;
 use goblin;
-use nix::errno::Errno;
-use std::ffi::OsString;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -17,8 +15,6 @@ pub enum InitError {
     PrincipalMappingNotReferenced,
     #[error("Failed Android specific late init")]
     AndroidLateInitError(#[from] AndroidError),
-    #[error("Failed to read the page size")]
-    PageSizeError(#[from] Errno),
 }
 
 #[derive(Error, Debug)]
@@ -32,22 +28,20 @@ pub enum MapsReaderError {
     LinuxGateNotConvertable(#[from] std::num::TryFromIntError),
 
     // get_mmap()
-    #[error("Not safe to open mapping {}", .0.to_string_lossy())]
-    NotSafeToOpenMapping(OsString),
+    #[error("Not safe to open mapping {0}")]
+    NotSafeToOpenMapping(String),
     #[error("IO Error")]
     FileError(#[from] std::io::Error),
     #[error("Mmapped file empty or not an ELF file")]
     MmapSanityCheckFailed,
-    #[error("Symlink does not match ({0} vs. {1})")]
+    #[error("Symlink does not match ({0} vs. {1}")]
     SymlinkError(std::path::PathBuf, std::path::PathBuf),
 
-    // fixup_deleted_file()
+    // handle_deleted_file_in_mapping()
     #[error("Couldn't parse as ELF file")]
     ELFParsingFailed(#[from] goblin::error::Error),
-    #[error("An anonymous mapping has no associated file")]
-    AnonymousMapping,
-    #[error("No soname found (filename: {})", .0.to_string_lossy())]
-    NoSoName(OsString),
+    #[error("No soname found (filename: {0}")]
+    NoSoName(String),
 }
 
 #[derive(Debug, Error)]
@@ -120,8 +114,8 @@ pub enum DumperError {
     ELFParsingFailed(#[from] goblin::error::Error),
     #[error("No build-id found")]
     NoBuildIDFound,
-    #[error("Not safe to open mapping: {}", .0.to_string_lossy())]
-    NotSafeToOpenMapping(OsString),
+    #[error("Not safe to open mapping: {0}")]
+    NotSafeToOpenMapping(String),
     #[error("Failed integer conversion")]
     TryFromIntError(#[from] std::num::TryFromIntError),
     #[error("Maps reader error")]
@@ -148,14 +142,6 @@ pub enum SectionMappingsError {
     MemoryWriterError(#[from] MemoryWriterError),
     #[error("Failed to get effective path of mapping ({0:?})")]
     GetEffectivePathError(MappingInfo, #[source] MapsReaderError),
-}
-
-#[derive(Debug, Error)]
-pub enum SectionMemInfoListError {
-    #[error("Failed to write to memory")]
-    MemoryWriterError(#[from] MemoryWriterError),
-    #[error("Failed to read from procfs")]
-    ProcfsError(#[from] procfs_core::ProcError),
 }
 
 #[derive(Debug, Error)]
@@ -224,8 +210,6 @@ pub enum WriterError {
     SectionMemListError(#[from] SectionMemListError),
     #[error("Failed when writing section SystemInfo")]
     SectionSystemInfoError(#[from] SectionSystemInfoError),
-    #[error("Failed when writing section MemoryInfoList")]
-    SectionMemoryInfoListError(#[from] SectionMemInfoListError),
     #[error("Failed when writing section ThreadList")]
     SectionThreadListError(#[from] SectionThreadListError),
     #[error("Failed when writing section ThreadNameList")]
