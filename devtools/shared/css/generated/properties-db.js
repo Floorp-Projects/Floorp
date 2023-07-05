@@ -12334,7 +12334,6 @@ exports.PSEUDO_ELEMENTS = [
   "::cue",
   "::first-letter",
   "::first-line",
-  "::highlight",
   "::selection",
   "::-moz-focus-inner",
   "::-moz-progress-bar",
