@@ -98,10 +98,10 @@
 !define MinSupportedVer "Microsoft Windows 10 for ARM"
 #else
 !define ARCH "x64"
-!define MinSupportedVer "Microsoft Windows 7 x64"
+!define MinSupportedVer "Microsoft Windows 10 x64"
 #endif
 #else
-!define MinSupportedVer "Microsoft Windows 7"
+!define MinSupportedVer "Microsoft Windows 10"
 !define ARCH "x86"
 #endif
 
