@@ -222,8 +222,7 @@ class DebuggerPanel {
   }
 
   selectSourceURL(url, line, column) {
-    const cx = this._selectors.getContext(this._getState());
-    return this._actions.selectSourceURL(cx, url, { line, column });
+    return this._actions.selectSourceURL(url, { line, column });
   }
 
   /**

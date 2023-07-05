@@ -33,6 +33,7 @@ import {
   getIsCurrentThreadPaused,
   getSourceTextContent,
   tabExists,
+  getContext,
 } from "../../selectors";
 
 // This is only used by jest tests (and within this module)
@@ -48,18 +49,16 @@ export const setSelectedLocation = (
 });
 
 // This is only used by jest tests (and within this module)
-export const setPendingSelectedLocation = (cx, url, options) => ({
+export const setPendingSelectedLocation = (url, options) => ({
   type: "SET_PENDING_SELECTED_LOCATION",
-  cx,
   url,
   line: options?.line,
   column: options?.column,
 });
 
 // This is only used by jest tests (and within this module)
-export const clearSelectedLocation = cx => ({
+export const clearSelectedLocation = () => ({
   type: "CLEAR_SELECTED_LOCATION",
-  cx,
 });
 
 /**
@@ -70,13 +69,14 @@ export const clearSelectedLocation = cx => ({
  * This exists mostly for external things to interact with the
  * debugger.
  */
-export function selectSourceURL(cx, url, options) {
+export function selectSourceURL(url, options) {
   return async ({ dispatch, getState }) => {
     const source = getSourceByURL(getState(), url);
     if (!source) {
-      return dispatch(setPendingSelectedLocation(cx, url, options));
+      return dispatch(setPendingSelectedLocation(url, options));
     }
 
+    const cx = getContext(getState());
     const location = createLocation({ ...options, source });
     return dispatch(selectLocation(cx, location));
   };
@@ -135,7 +135,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
 
     if (!source) {
       // If there is no source we deselect the current selected source
-      dispatch(clearSelectedLocation(cx));
+      dispatch(clearSelectedLocation());
       return;
     }
 

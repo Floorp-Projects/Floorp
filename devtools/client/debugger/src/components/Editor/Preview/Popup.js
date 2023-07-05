@@ -22,7 +22,6 @@ const {
 import ExceptionPopup from "./ExceptionPopup";
 
 import actions from "../../../actions";
-import { getThreadContext } from "../../../selectors";
 import Popover from "../../shared/Popover";
 import PreviewFunction from "../../shared/PreviewFunction";
 
@@ -36,7 +35,6 @@ export class Popup extends Component {
   static get propTypes() {
     return {
       clearPreview: PropTypes.func.isRequired,
-      cx: PropTypes.object.isRequired,
       editorRef: PropTypes.object.isRequired,
       highlightDomElement: PropTypes.func.isRequired,
       openElementInInspector: PropTypes.func.isRequired,
@@ -92,7 +90,6 @@ export class Popup extends Component {
 
   renderFunctionPreview() {
     const {
-      cx,
       selectSourceURL,
       preview: { resultGrip },
     } = this.props;
@@ -108,7 +105,7 @@ export class Popup extends Component {
         className="preview-popup"
         onClick={() =>
           location &&
-          selectSourceURL(cx, location.url, {
+          selectSourceURL(location.url, {
             line: location.line,
           })
         }
@@ -351,10 +348,6 @@ export function removeHighlightForTargetSiblings(target) {
   }
 }
 
-const mapStateToProps = state => ({
-  cx: getThreadContext(state),
-});
-
 const {
   addExpression,
   selectSourceURL,
@@ -373,4 +366,4 @@ const mapDispatchToProps = {
   unHighlightDomElement,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Popup);
+export default connect(null, mapDispatchToProps)(Popup);

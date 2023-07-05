@@ -54,9 +54,9 @@ describe("sources - new sources", () => {
   });
 
   it("should automatically select a pending source", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
     const baseSourceURL = makeSourceURL("base.js");
-    await dispatch(actions.selectSourceURL(cx, baseSourceURL));
+    await dispatch(actions.selectSourceURL(baseSourceURL));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     const baseSource = await dispatch(
