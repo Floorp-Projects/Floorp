@@ -156,8 +156,18 @@ export class PocketSuggestions extends BaseFeature {
         ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
           url: suggestion.url,
           title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
-          description: suggestion.description,
+          description: isBestMatch ? suggestion.description : "",
           icon: "chrome://global/skin/icons/pocket.svg",
+          shouldShowUrl: true,
+          bottomTextL10n: {
+            id: "firefox-suggest-pocket-bottom-text",
+            args: {
+              keywordSubstringTyped: searchString,
+              keywordSubstringNotTyped: suggestion.full_keyword.substring(
+                searchString.length
+              ),
+            },
+          },
           helpUrl: lazy.QuickSuggest.HELP_URL,
         })
       ),

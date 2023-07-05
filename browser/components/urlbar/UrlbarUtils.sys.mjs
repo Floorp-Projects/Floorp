@@ -1588,6 +1588,20 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
           },
         },
       },
+      // l10n { id, args }
+      bottomTextL10n: {
+        type: "object",
+        required: ["id"],
+        properties: {
+          id: {
+            type: "string",
+          },
+          args: {
+            type: "object",
+            additionalProperties: true,
+          },
+        },
+      },
       description: {
         type: "string",
       },
