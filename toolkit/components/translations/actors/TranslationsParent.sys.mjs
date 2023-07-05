@@ -301,7 +301,14 @@ export class TranslationsParent extends JSWindowActorParent {
       // behavior.
       return;
     }
-    const { host } = this.browsingContext.currentWindowGlobal.documentURI;
+    let host;
+    try {
+      host = this.browsingContext.currentWindowGlobal.documentURI.host;
+    } catch {
+      // nsIURI.host can throw if the URI scheme doesn't have a host. In this case
+      // do not offer a translation.
+      return;
+    }
     if (TranslationsParent.#hostsOffered.has(host)) {
       // This host was already offered a translation.
       return;
@@ -395,7 +402,9 @@ export class TranslationsParent extends JSWindowActorParent {
 
   /**
    * Only translate pages that match certain protocols, that way internal pages like
-   * about:* pages will not be translated.
+   * about:* pages will not be translated. Keep this logic up to date with the "matches"
+   * array in the `toolkit/modules/ActorManagerParent.sys.mjs` definition.
+   *
    * @param {string} scheme - The URI spec
    * @returns {boolean}
    */
@@ -1754,9 +1763,17 @@ export class TranslationsParent extends JSWindowActorParent {
       return;
     }
     let windowGlobal = browser.browsingContext.currentWindowGlobal;
-    let actor = windowGlobal.getActor("Translations");
     TranslationsParent.#locationChangeId++;
-    actor.languageState.locationChangeId = TranslationsParent.#locationChangeId;
+    let actor;
+    try {
+      actor = windowGlobal.getActor("Translations");
+    } catch (_) {
+      // The actor may not be supported on this page.
+    }
+    if (actor) {
+      actor.languageState.locationChangeId =
+        TranslationsParent.#locationChangeId;
+    }
   }
 
   /**
@@ -1830,13 +1847,6 @@ export class TranslationsParent extends JSWindowActorParent {
       return langTags;
     }
 
-    if (
-      TranslationsParent.isRestrictedPage(
-        this.browsingContext.currentWindowGlobal.documentURI.scheme
-      )
-    ) {
-      return langTags;
-    }
     if (documentElementLang === undefined) {
       documentElementLang = await this.queryDocumentElementLang();
       if (this.#isDestroyed) {

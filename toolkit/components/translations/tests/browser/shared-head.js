@@ -330,7 +330,7 @@ async function setupActorTest({
   // Create a new tab so each test gets a new actor, and doesn't re-use the old one.
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    BLANK_PAGE,
+    TRANSLATIONS_TESTER_EN,
     true // waitForLoad
   );
 

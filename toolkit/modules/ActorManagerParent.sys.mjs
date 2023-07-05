@@ -492,6 +492,15 @@ let JSWINDOWACTORS = {
         DOMContentLoaded: {},
       },
     },
+    matches: [
+      "http://*/*",
+      "https://*/*",
+      "file:///*",
+
+      // The actor is explicitly loaded by this page,
+      // so it needs to be allowed for it.
+      "about:translations",
+    ],
     enablePreference: "browser.translations.enable",
   },
 
