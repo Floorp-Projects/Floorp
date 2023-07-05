@@ -10,9 +10,9 @@
 # See Cargo.toml.orig for the original contents.
 
 [package]
-edition = "2018"
+edition = "2021"
 name = "metal"
-version = "0.24.0"
+version = "0.25.0"
 authors = ["GFX Developers"]
 exclude = [
     "guide/**/*",
@@ -44,6 +44,9 @@ name = "headless-render"
 
 [[example]]
 name = "library"
+
+[[example]]
+name = "raytracing"
 
 [[example]]
 name = "reflection"
@@ -101,7 +104,7 @@ version = "0.2"
 optional = true
 
 [dependencies.foreign-types]
-version = "0.3.2"
+version = "0.5"
 
 [dependencies.log]
 version = "0.4"
@@ -110,20 +113,29 @@ version = "0.4"
 version = "0.2.4"
 features = ["objc_exception"]
 
+[dependencies.paste]
+version = "1"
+
 [dev-dependencies.cocoa]
 version = "0.24.0"
 
 [dev-dependencies.cty]
 version = "0.2.1"
 
+[dev-dependencies.glam]
+version = "0.22"
+
 [dev-dependencies.png]
-version = "0.16"
+version = "0.17"
+
+[dev-dependencies.rand]
+version = "0.8"
 
 [dev-dependencies.sema]
 version = "0.1.4"
 
 [dev-dependencies.winit]
-version = "0.24"
+version = "0.27"
 
 [features]
 default = []

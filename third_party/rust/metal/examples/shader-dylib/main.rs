@@ -13,7 +13,7 @@ use winit::{
 use std::mem;
 
 struct App {
-    pub device: Device,
+    pub _device: Device,
     pub command_queue: CommandQueue,
     pub layer: MetalLayer,
     pub image_fill_cps: ComputePipelineState,
@@ -98,7 +98,7 @@ impl App {
             .unwrap();
 
         Self {
-            device,
+            _device: device,
             command_queue,
             layer,
             image_fill_cps,

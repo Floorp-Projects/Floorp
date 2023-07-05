@@ -109,11 +109,11 @@ pub enum CGInterpolationQuality {
 
 foreign_type! {
     #[doc(hidden)]
-    type CType = ::sys::CGContext;
-    fn drop = |cs| CGContextRelease(cs);
-    fn clone = |p| CGContextRetain(p);
-    pub struct CGContext;
-    pub struct CGContextRef;
+    pub unsafe type CGContext {
+        type CType = ::sys::CGContext;
+        fn drop = |cs| CGContextRelease(cs);
+        fn clone = |p| CGContextRetain(p);
+    }
 }
 
 impl CGContext {
@@ -389,6 +389,12 @@ impl CGContextRef {
         }
     }
 
+    pub fn reset_clip(&self) {
+        unsafe {
+            CGContextResetClip(self.as_ptr());
+        }
+    }
+
     pub fn draw_path(&self, mode: CGPathDrawingMode) {
         unsafe {
             CGContextDrawPath(self.as_ptr(), mode);
@@ -612,6 +618,12 @@ impl CGContextRef {
             CGContextSetShadowWithColor(self.as_ptr(), offset, blur, color.as_concrete_TypeRef());
         }
     }
+
+    pub fn set_alpha(&self, alpha: CGFloat) {
+        unsafe {
+            CGContextSetAlpha(self.as_ptr(), alpha);
+        }
+    }
 }
 
 #[test]
@@ -708,6 +720,7 @@ extern {
     fn CGContextEOFillPath(c: ::sys::CGContextRef);
     fn CGContextClip(c: ::sys::CGContextRef);
     fn CGContextEOClip(c: ::sys::CGContextRef);
+    fn CGContextResetClip(c: ::sys::CGContextRef);
     fn CGContextStrokePath(c: ::sys::CGContextRef);
     fn CGContextSetRGBFillColor(context: ::sys::CGContextRef,
                                 red: CGFloat,
@@ -771,5 +784,7 @@ extern {
 
     fn CGContextSetShadow(c: ::sys::CGContextRef, offset: CGSize, blur: CGFloat);
     fn CGContextSetShadowWithColor(c: ::sys::CGContextRef, offset: CGSize, blur: CGFloat, color: ::sys::CGColorRef);
+
+    fn CGContextSetAlpha(c: ::sys::CGContextRef, alpha: CGFloat);
 }
 

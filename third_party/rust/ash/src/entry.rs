@@ -37,8 +37,14 @@ impl Entry {
     /// development packages installed (e.g. the Vulkan SDK, or Ubuntu's `libvulkan-dev`).
     ///
     /// # Safety
+    ///
     /// `dlopen`ing native libraries is inherently unsafe. The safety guidelines
     /// for [`Library::new()`] and [`Library::get()`] apply here.
+    ///
+    /// No Vulkan functions loaded directly or indirectly from this [`Entry`]
+    /// may be called after it is [dropped][drop()].
+    ///
+    /// # Example
     ///
     /// ```no_run
     /// use ash::{vk, Entry};
@@ -86,6 +92,11 @@ impl Entry {
     /// Note that instance/device functions are still fetched via `vkGetInstanceProcAddr` and
     /// `vkGetDeviceProcAddr` for maximum performance.
     ///
+    /// Any Vulkan function acquired directly or indirectly from this [`Entry`] may be called after it
+    /// is [dropped][drop()].
+    ///
+    /// # Example
+    ///
     /// ```no_run
     /// use ash::{vk, Entry};
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -116,8 +127,12 @@ impl Entry {
     /// Load Vulkan library at `path`
     ///
     /// # Safety
+    ///
     /// `dlopen`ing native libraries is inherently unsafe. The safety guidelines
     /// for [`Library::new()`] and [`Library::get()`] apply here.
+    ///
+    /// No Vulkan functions loaded directly or indirectly from this [`Entry`]
+    /// may be called after it is [dropped][drop()].
     #[cfg(feature = "loaded")]
     #[cfg_attr(docsrs, doc(cfg(feature = "loaded")))]
     pub unsafe fn load_from(path: impl AsRef<OsStr>) -> Result<Self, LoadingError> {
@@ -140,8 +155,9 @@ impl Entry {
     /// Load entry points based on an already-loaded [`vk::StaticFn`]
     ///
     /// # Safety
-    /// `static_fn` must contain valid function pointers that comply with the semantics specified by
-    /// Vulkan 1.0, which must remain valid for at least the lifetime of the returned [`Entry`].
+    ///
+    /// `static_fn` must contain valid function pointers that comply with the semantics specified
+    /// by Vulkan 1.0, which must remain valid for at least the lifetime of the returned [`Entry`].
     pub unsafe fn from_static_fn(static_fn: vk::StaticFn) -> Self {
         let load_fn = |name: &std::ffi::CStr| {
             mem::transmute((static_fn.get_instance_proc_addr)(
@@ -176,6 +192,9 @@ impl Entry {
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkEnumerateInstanceVersion.html>
+    ///
+    /// # Example
+    ///
     /// ```no_run
     /// # use ash::{Entry, vk};
     /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -217,9 +236,13 @@ impl Entry {
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateInstance.html>
     ///
     /// # Safety
-    /// In order for the created [`Instance`] to be valid for the duration of its
-    /// usage, the [`Entry`](Self) this was called on must be dropped later than the
-    /// resulting [`Instance`].
+    ///
+    /// The resulting [`Instance`] and any function-pointer objects (e.g. [`Device`][crate::Device]
+    /// and [extensions][crate::extensions]) loaded from it may not be used after this [`Entry`]
+    /// object is dropped, unless it was crated using [`Entry::linked()`].
+    ///
+    /// [`Instance`] does _not_ implement [drop][drop()] semantics and can only be destroyed via
+    /// [`destroy_instance()`][Instance::destroy_instance()].
     #[inline]
     pub unsafe fn create_instance(
         &self,

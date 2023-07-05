@@ -11,8 +11,6 @@ mod parse;
 #[cfg(test)]
 mod tests;
 
-use crate::arena::{Arena, UniqueArena};
-
 use crate::front::wgsl::error::Error;
 use crate::front::wgsl::parse::Parser;
 use thiserror::Error;
@@ -100,11 +98,7 @@ impl crate::TypeInner {
     /// For example `vec3<f32>`.
     ///
     /// Note: The names of a `TypeInner::Struct` is not known. Therefore this method will simply return "struct" for them.
-    fn to_wgsl(
-        &self,
-        types: &UniqueArena<crate::Type>,
-        constants: &Arena<crate::Constant>,
-    ) -> String {
+    fn to_wgsl(&self, gctx: crate::proc::GlobalCtx) -> String {
         use crate::TypeInner as Ti;
 
         match *self {
@@ -128,7 +122,7 @@ impl crate::TypeInner {
                 format!("atomic<{}>", kind.to_wgsl(width))
             }
             Ti::Pointer { base, .. } => {
-                let base = &types[base];
+                let base = &gctx.types[base];
                 let name = base.name.as_deref().unwrap_or("unknown");
                 format!("ptr<{name}>")
             }
@@ -136,27 +130,10 @@ impl crate::TypeInner {
                 format!("ptr<{}>", kind.to_wgsl(width))
             }
             Ti::Array { base, size, .. } => {
-                let member_type = &types[base];
+                let member_type = &gctx.types[base];
                 let base = member_type.name.as_deref().unwrap_or("unknown");
                 match size {
-                    crate::ArraySize::Constant(size) => {
-                        let constant = &constants[size];
-                        let size = constant
-                            .name
-                            .clone()
-                            .unwrap_or_else(|| match constant.inner {
-                                crate::ConstantInner::Scalar {
-                                    value: crate::ScalarValue::Uint(size),
-                                    ..
-                                } => size.to_string(),
-                                crate::ConstantInner::Scalar {
-                                    value: crate::ScalarValue::Sint(size),
-                                    ..
-                                } => size.to_string(),
-                                _ => "?".to_string(),
-                            });
-                        format!("array<{base}, {size}>")
-                    }
+                    crate::ArraySize::Constant(size) => format!("array<{base}, {size}>"),
                     crate::ArraySize::Dynamic => format!("array<{base}>"),
                 }
             }
@@ -209,13 +186,10 @@ impl crate::TypeInner {
             Ti::AccelerationStructure => "acceleration_structure".to_string(),
             Ti::RayQuery => "ray_query".to_string(),
             Ti::BindingArray { base, size, .. } => {
-                let member_type = &types[base];
+                let member_type = &gctx.types[base];
                 let base = member_type.name.as_deref().unwrap_or("unknown");
                 match size {
-                    crate::ArraySize::Constant(size) => {
-                        let size = constants[size].name.as_deref().unwrap_or("unknown");
-                        format!("binding_array<{base}, {size}>")
-                    }
+                    crate::ArraySize::Constant(size) => format!("binding_array<{base}, {size}>"),
                     crate::ArraySize::Dynamic => format!("binding_array<{base}>"),
                 }
             }
@@ -226,19 +200,9 @@ impl crate::TypeInner {
 mod type_inner_tests {
     #[test]
     fn to_wgsl() {
+        use std::num::NonZeroU32;
+
         let mut types = crate::UniqueArena::new();
-        let mut constants = crate::Arena::new();
-        let c = constants.append(
-            crate::Constant {
-                name: Some("C".to_string()),
-                specialization: None,
-                inner: crate::ConstantInner::Scalar {
-                    width: 4,
-                    value: crate::ScalarValue::Uint(32),
-                },
-            },
-            Default::default(),
-        );
 
         let mytype1 = types.insert(
             crate::Type {
@@ -261,19 +225,23 @@ mod type_inner_tests {
             Default::default(),
         );
 
+        let gctx = crate::proc::GlobalCtx {
+            types: &types,
+            constants: &crate::Arena::new(),
+        };
         let array = crate::TypeInner::Array {
             base: mytype1,
             stride: 4,
-            size: crate::ArraySize::Constant(c),
+            size: crate::ArraySize::Constant(unsafe { NonZeroU32::new_unchecked(32) }),
         };
-        assert_eq!(array.to_wgsl(&types, &constants), "array<MyType1, C>");
+        assert_eq!(array.to_wgsl(gctx), "array<MyType1, 32>");
 
         let mat = crate::TypeInner::Matrix {
             rows: crate::VectorSize::Quad,
             columns: crate::VectorSize::Bi,
             width: 8,
         };
-        assert_eq!(mat.to_wgsl(&types, &constants), "mat2x4<f64>");
+        assert_eq!(mat.to_wgsl(gctx), "mat2x4<f64>");
 
         let ptr = crate::TypeInner::Pointer {
             base: mytype2,
@@ -281,7 +249,7 @@ mod type_inner_tests {
                 access: crate::StorageAccess::default(),
             },
         };
-        assert_eq!(ptr.to_wgsl(&types, &constants), "ptr<MyType2>");
+        assert_eq!(ptr.to_wgsl(gctx), "ptr<MyType2>");
 
         let img1 = crate::TypeInner::Image {
             dim: crate::ImageDimension::D2,
@@ -291,36 +259,27 @@ mod type_inner_tests {
                 multi: true,
             },
         };
-        assert_eq!(
-            img1.to_wgsl(&types, &constants),
-            "texture_multisampled_2d<f32>"
-        );
+        assert_eq!(img1.to_wgsl(gctx), "texture_multisampled_2d<f32>");
 
         let img2 = crate::TypeInner::Image {
             dim: crate::ImageDimension::Cube,
             arrayed: true,
             class: crate::ImageClass::Depth { multi: false },
         };
-        assert_eq!(img2.to_wgsl(&types, &constants), "texture_depth_cube_array");
+        assert_eq!(img2.to_wgsl(gctx), "texture_depth_cube_array");
 
         let img3 = crate::TypeInner::Image {
             dim: crate::ImageDimension::D2,
             arrayed: false,
             class: crate::ImageClass::Depth { multi: true },
         };
-        assert_eq!(
-            img3.to_wgsl(&types, &constants),
-            "texture_depth_multisampled_2d"
-        );
+        assert_eq!(img3.to_wgsl(gctx), "texture_depth_multisampled_2d");
 
         let array = crate::TypeInner::BindingArray {
             base: mytype1,
-            size: crate::ArraySize::Constant(c),
+            size: crate::ArraySize::Constant(unsafe { NonZeroU32::new_unchecked(32) }),
         };
-        assert_eq!(
-            array.to_wgsl(&types, &constants),
-            "binding_array<MyType1, C>"
-        );
+        assert_eq!(array.to_wgsl(gctx), "binding_array<MyType1, 32>");
     }
 }
 

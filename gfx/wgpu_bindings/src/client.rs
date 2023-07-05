@@ -7,7 +7,7 @@ use crate::{
     DropAction, ImageDataLayout, ImplicitLayout, QueueWriteAction, RawString, TextureAction,
 };
 
-use wgc::{hub::IdentityManager, id};
+use wgc::{identity::IdentityManager, id};
 use wgt::{Backend, TextureFormat};
 
 pub use wgc::command::{compute_ffi::*, render_ffi::*};

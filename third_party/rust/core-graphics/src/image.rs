@@ -32,11 +32,11 @@ pub enum CGImageByteOrderInfo {
 
 foreign_type! {
     #[doc(hidden)]
-    type CType = ::sys::CGImage;
-    fn drop = CGImageRelease;
-    fn clone = |p| CFRetain(p as *const _) as *mut _;
-    pub struct CGImage;
-    pub struct CGImageRef;
+    pub unsafe type CGImage {
+        type CType = ::sys::CGImage;
+        fn drop = CGImageRelease;
+        fn clone = |p| CFRetain(p as *const _) as *mut _;
+    }
 }
 
 impl CGImage {

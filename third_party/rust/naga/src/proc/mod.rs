@@ -82,6 +82,101 @@ impl super::ScalarKind {
     }
 }
 
+impl PartialEq for crate::Literal {
+    fn eq(&self, other: &Self) -> bool {
+        match (*self, *other) {
+            (Self::F64(a), Self::F64(b)) => a.to_bits() == b.to_bits(),
+            (Self::F32(a), Self::F32(b)) => a.to_bits() == b.to_bits(),
+            (Self::U32(a), Self::U32(b)) => a == b,
+            (Self::I32(a), Self::I32(b)) => a == b,
+            (Self::Bool(a), Self::Bool(b)) => a == b,
+            _ => false,
+        }
+    }
+}
+impl Eq for crate::Literal {}
+impl std::hash::Hash for crate::Literal {
+    fn hash<H: std::hash::Hasher>(&self, hasher: &mut H) {
+        match *self {
+            Self::F64(v) => {
+                hasher.write_u8(0);
+                v.to_bits().hash(hasher);
+            }
+            Self::F32(v) => {
+                hasher.write_u8(1);
+                v.to_bits().hash(hasher);
+            }
+            Self::U32(v) => {
+                hasher.write_u8(2);
+                v.hash(hasher);
+            }
+            Self::I32(v) => {
+                hasher.write_u8(3);
+                v.hash(hasher);
+            }
+            Self::Bool(v) => {
+                hasher.write_u8(4);
+                v.hash(hasher);
+            }
+        }
+    }
+}
+
+impl crate::Literal {
+    pub const fn new(value: u8, kind: crate::ScalarKind, width: crate::Bytes) -> Option<Self> {
+        match (value, kind, width) {
+            (value, crate::ScalarKind::Float, 8) => Some(Self::F64(value as _)),
+            (value, crate::ScalarKind::Float, 4) => Some(Self::F32(value as _)),
+            (value, crate::ScalarKind::Uint, 4) => Some(Self::U32(value as _)),
+            (value, crate::ScalarKind::Sint, 4) => Some(Self::I32(value as _)),
+            (1, crate::ScalarKind::Bool, 4) => Some(Self::Bool(true)),
+            (0, crate::ScalarKind::Bool, 4) => Some(Self::Bool(false)),
+            _ => None,
+        }
+    }
+
+    pub const fn from_scalar(scalar: crate::ScalarValue, width: crate::Bytes) -> Option<Self> {
+        match (scalar, width) {
+            (crate::ScalarValue::Sint(n), 4) => Some(Self::I32(n as _)),
+            (crate::ScalarValue::Uint(n), 4) => Some(Self::U32(n as _)),
+            (crate::ScalarValue::Float(n), 4) => Some(Self::F32(n as _)),
+            (crate::ScalarValue::Float(n), 8) => Some(Self::F64(n)),
+            (crate::ScalarValue::Bool(b), _) => Some(Self::Bool(b)),
+            _ => None,
+        }
+    }
+
+    pub const fn zero(kind: crate::ScalarKind, width: crate::Bytes) -> Option<Self> {
+        Self::new(0, kind, width)
+    }
+
+    pub const fn one(kind: crate::ScalarKind, width: crate::Bytes) -> Option<Self> {
+        Self::new(1, kind, width)
+    }
+
+    pub const fn width(&self) -> crate::Bytes {
+        match *self {
+            Self::F64(_) => 8,
+            Self::F32(_) | Self::U32(_) | Self::I32(_) => 4,
+            Self::Bool(_) => 1,
+        }
+    }
+    pub const fn scalar_kind(&self) -> crate::ScalarKind {
+        match *self {
+            Self::F64(_) | Self::F32(_) => crate::ScalarKind::Float,
+            Self::U32(_) => crate::ScalarKind::Uint,
+            Self::I32(_) => crate::ScalarKind::Sint,
+            Self::Bool(_) => crate::ScalarKind::Bool,
+        }
+    }
+    pub const fn ty_inner(&self) -> crate::TypeInner {
+        crate::TypeInner::Scalar {
+            kind: self.scalar_kind(),
+            width: self.width(),
+        }
+    }
+}
+
 pub const POINTER_SPAN: u32 = 4;
 
 impl super::TypeInner {
@@ -104,7 +199,7 @@ impl super::TypeInner {
     }
 
     /// Get the size of this type.
-    pub fn size(&self, constants: &super::Arena<super::Constant>) -> u32 {
+    pub fn size(&self, _gctx: GlobalCtx) -> u32 {
         match *self {
             Self::Scalar { kind: _, width } | Self::Atomic { kind: _, width } => width as u32,
             Self::Vector {
@@ -125,9 +220,7 @@ impl super::TypeInner {
                 stride,
             } => {
                 let count = match size {
-                    super::ArraySize::Constant(handle) => {
-                        constants[handle].to_array_length().unwrap_or(1)
-                    }
+                    super::ArraySize::Constant(count) => count.get(),
                     // A dynamically-sized array has to have at least one element
                     super::ArraySize::Dynamic => 1,
                 };
@@ -311,7 +404,9 @@ impl crate::Expression {
     /// Returns true if the expression is considered emitted at the start of a function.
     pub const fn needs_pre_emit(&self) -> bool {
         match *self {
-            Self::Constant(_)
+            Self::Literal(_)
+            | Self::Constant(_)
+            | Self::ZeroValue(_)
             | Self::FunctionArgument(_)
             | Self::GlobalVariable(_)
             | Self::LocalVariable(_) => true,
@@ -478,16 +573,31 @@ impl super::ImageClass {
     }
 }
 
+impl crate::Module {
+    pub const fn to_ctx(&self) -> GlobalCtx<'_> {
+        GlobalCtx {
+            types: &self.types,
+            constants: &self.constants,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub struct GlobalCtx<'a> {
+    pub types: &'a crate::UniqueArena<crate::Type>,
+    pub constants: &'a crate::Arena<crate::Constant>,
+}
+
 #[test]
 fn test_matrix_size() {
-    let constants = crate::Arena::new();
+    let module = crate::Module::default();
     assert_eq!(
         crate::TypeInner::Matrix {
             columns: crate::VectorSize::Tri,
             rows: crate::VectorSize::Tri,
             width: 4
         }
-        .size(&constants),
+        .size(module.to_ctx()),
         48,
     );
 }

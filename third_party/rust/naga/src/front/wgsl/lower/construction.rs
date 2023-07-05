@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use crate::front::wgsl::parse::ast;
 use crate::{Handle, Span};
 
@@ -199,12 +201,7 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                     _ => return Err(Error::TypeNotInferrable(ty_span)),
                 };
 
-                return match ctx.create_zero_value_constant(ty) {
-                    Some(constant) => {
-                        Ok(ctx.interrupt_emitter(crate::Expression::Constant(constant), span))
-                    }
-                    None => Err(Error::TypeNotConstructible(ty_span)),
-                };
+                return Ok(ctx.interrupt_emitter(crate::Expression::ZeroValue(ty), span));
             }
 
             // Scalar constructor & conversion (scalar -> scalar)
@@ -461,24 +458,13 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
 
                 let base = ctx.register_type(components[0])?;
 
-                let size = crate::Constant {
-                    name: None,
-                    specialization: None,
-                    inner: crate::ConstantInner::Scalar {
-                        width: 4,
-                        value: crate::ScalarValue::Uint(components.len() as _),
-                    },
-                };
-
                 let inner = crate::TypeInner::Array {
                     base,
                     size: crate::ArraySize::Constant(
-                        ctx.module.constants.fetch_or_append(size, Span::UNDEFINED),
+                        NonZeroU32::new(u32::try_from(components.len()).unwrap()).unwrap(),
                     ),
                     stride: {
-                        self.layouter
-                            .update(&ctx.module.types, &ctx.module.constants)
-                            .unwrap();
+                        self.layouter.update(ctx.module.to_ctx()).unwrap();
                         self.layouter[base].to_stride()
                     },
                 };
@@ -645,14 +631,19 @@ impl<'source, 'temp> Lowerer<'source, 'temp> {
                 let base = self.resolve_ast_type(base, ctx.reborrow())?;
                 let size = match size {
                     ast::ArraySize::Constant(expr) => {
-                        crate::ArraySize::Constant(self.constant(expr, ctx.reborrow())?)
+                        let span = ctx.ast_expressions.get_span(expr);
+                        let constant = self.constant(expr, ctx.reborrow())?;
+                        let size = ctx.module.constants[constant]
+                            .to_array_length()
+                            .ok_or(Error::ExpectedArraySize(span))?;
+                        let size =
+                            NonZeroU32::new(size).ok_or(Error::NonPositiveArrayLength(span))?;
+                        crate::ArraySize::Constant(size)
                     }
                     ast::ArraySize::Dynamic => crate::ArraySize::Dynamic,
                 };
 
-                self.layouter
-                    .update(&ctx.module.types, &ctx.module.constants)
-                    .unwrap();
+                self.layouter.update(ctx.module.to_ctx()).unwrap();
                 let ty = ctx.ensure_type_exists(crate::TypeInner::Array {
                     base,
                     size,

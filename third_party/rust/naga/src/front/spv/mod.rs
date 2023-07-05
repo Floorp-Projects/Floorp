@@ -168,7 +168,7 @@ impl crate::ImageDimension {
 type MemberIndex = u32;
 
 bitflags::bitflags! {
-    #[derive(Default)]
+    #[derive(Clone, Copy, Debug, Default)]
     struct DecorationFlags: u32 {
         const NON_READABLE = 0x1;
         const NON_WRITABLE = 0x2;
@@ -386,8 +386,18 @@ enum BodyFragment {
         reject: BodyIndex,
     },
     Loop {
+        /// The body of the loop. Its [`Body::parent`] is the block containing
+        /// this `Loop` fragment.
         body: BodyIndex,
+
+        /// The loop's continuing block. This is a grandchild: its
+        /// [`Body::parent`] is the loop body block, whose index is above.
         continuing: BodyIndex,
+
+        /// If the SPIR-V loop's back-edge branch is conditional, this is the
+        /// expression that must be `false` for the back-edge to be taken, with
+        /// `true` being for the "loop merge" (which breaks out of the loop).
+        break_if: Option<Handle<crate::Expression>>,
     },
     Switch {
         selector: Handle<crate::Expression>,
@@ -429,7 +439,7 @@ struct PhiExpression {
     expressions: Vec<(spirv::Word, spirv::Word)>,
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 enum MergeBlockInformation {
     LoopMerge,
     LoopContinue,
@@ -440,8 +450,16 @@ enum MergeBlockInformation {
 /// Fragments of Naga IR, to be assembled into `Statements` once data flow is
 /// resolved.
 ///
-/// We can't build a Naga `Statement` tree directly from SPIR-V blocks for two
+/// We can't build a Naga `Statement` tree directly from SPIR-V blocks for three
 /// main reasons:
+///
+/// - We parse a function's SPIR-V blocks in the order they appear in the file.
+///   Within a function, SPIR-V requires that a block must precede any blocks it
+///   structurally dominates, but doesn't say much else about the order in which
+///   they must appear. So while we know we'll see control flow header blocks
+///   before their child constructs and merge blocks, those children and the
+///   merge blocks may appear in any order - perhaps even intermingled with
+///   children of other constructs.
 ///
 /// - A SPIR-V expression can be used in any SPIR-V block dominated by its
 ///   definition, whereas Naga expressions are scoped to the rest of their
@@ -452,7 +470,7 @@ enum MergeBlockInformation {
 /// - We translate SPIR-V OpPhi expressions as Naga local variables in which we
 ///   store the appropriate value before jumping to the OpPhi's block.
 ///
-/// Both cases require us to go back and amend previously generated Naga IR
+/// All these cases require us to go back and amend previously generated Naga IR
 /// based on things we discover later. But modifying old blocks in arbitrary
 /// spots in a `Statement` tree is awkward.
 ///
@@ -477,18 +495,37 @@ struct BlockContext<'function> {
 
     /// Fragments of control-flow-free Naga IR.
     ///
-    /// These will be stitched together into a proper `Statement` tree according
+    /// These will be stitched together into a proper [`Statement`] tree according
     /// to `bodies`, once parsing is complete.
+    ///
+    /// [`Statement`]: crate::Statement
     blocks: FastHashMap<spirv::Word, crate::Block>,
 
-    /// Map from block label ids to the index of the corresponding `Body` in
-    /// `bodies`.
+    /// Map from each SPIR-V block's label id to the index of the [`Body`] in
+    /// [`bodies`] the block should append its contents to.
+    ///
+    /// Since each statement in a Naga [`Block`] dominates the next, we are sure
+    /// to encounter their SPIR-V blocks in order. Thus, by having this table
+    /// map a SPIR-V structured control flow construct's merge block to the same
+    /// body index as its header block, when we encounter the merge block, we
+    /// will simply pick up building the [`Body`] where the header left off.
+    ///
+    /// A function's first block is special: it is the only block we encounter
+    /// without having seen its label mentioned in advance. (It's simply the
+    /// first `OpLabel` after the `OpFunction`.) We thus assume that any block
+    /// missing an entry here must be the first block, which always has body
+    /// index zero.
+    ///
+    /// [`bodies`]: BlockContext::bodies
+    /// [`Block`]: crate::Block
     body_for_label: FastHashMap<spirv::Word, BodyIndex>,
 
     /// SPIR-V metadata about merge/continue blocks.
     mergers: FastHashMap<spirv::Word, MergeBlockInformation>,
 
     /// A table of `Body` values, each representing a block in the final IR.
+    ///
+    /// The first element is always the function's top-level block.
     bodies: Vec<Body>,
 
     /// Id of the function currently being processed
@@ -1164,7 +1201,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         selections: &[spirv::Word],
         type_arena: &UniqueArena<crate::Type>,
         expressions: &mut Arena<crate::Expression>,
-        constants: &Arena<crate::Constant>,
         span: crate::Span,
     ) -> Result<Handle<crate::Expression>, Error> {
         let selection = match selections.first() {
@@ -1173,6 +1209,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         };
         let root_span = expressions.get_span(root_expr);
         let root_lookup = self.lookup_type.lookup(root_type_id)?;
+
         let (count, child_type_id) = match type_arena[root_lookup.handle].inner {
             crate::TypeInner::Struct { ref members, .. } => {
                 let child_member = self
@@ -1183,15 +1220,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             }
             crate::TypeInner::Array { size, .. } => {
                 let size = match size {
-                    crate::ArraySize::Constant(handle) => match constants[handle] {
-                        crate::Constant {
-                            specialization: Some(_),
-                            ..
-                        } => return Err(Error::UnsupportedType(root_lookup.handle)),
-                        ref unspecialized => unspecialized
-                            .to_array_length()
-                            .ok_or(Error::InvalidArraySize(handle))?,
-                    },
+                    crate::ArraySize::Constant(size) => size.get(),
                     // A runtime sized array is not a composite type
                     crate::ArraySize::Dynamic => {
                         return Err(Error::InvalidAccessType(root_type_id))
@@ -1232,7 +1261,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             &selections[1..],
             type_arena,
             expressions,
-            constants,
             span,
         )?;
 
@@ -1268,10 +1296,26 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         let mut emitter = super::Emitter::default();
         emitter.start(ctx.expressions);
 
-        // Find the `Body` that this block belongs to. Index zero is the
-        // function's root `Body`, corresponding to `Function::body`.
+        // Find the `Body` to which this block contributes.
+        //
+        // If this is some SPIR-V structured control flow construct's merge
+        // block, then `body_idx` will refer to the same `Body` as the header,
+        // so that we simply pick up accumulating the `Body` where the header
+        // left off. Each of the statements in a block dominates the next, so
+        // we're sure to encounter their SPIR-V blocks in order, ensuring that
+        // the `Body` will be assembled in the proper order.
+        //
+        // Note that, unlike every other kind of SPIR-V block, we don't know the
+        // function's first block's label in advance. Thus, we assume that if
+        // this block has no entry in `ctx.body_for_label`, it must be the
+        // function's first block. This always has body index zero.
         let mut body_idx = *ctx.body_for_label.entry(block_id).or_default();
+
+        // The Naga IR block this call builds. This will end up as
+        // `ctx.blocks[&block_id]`, and `ctx.bodies[body_idx]` will refer to it
+        // via a `BodyFragment::BlockId`.
         let mut block = crate::Block::new();
+
         // Stores the merge block as defined by a `OpSelectionMerge` otherwise is `None`
         //
         // This is used in `OpSwitch` to promote the `MergeBlockInformation` from
@@ -1324,14 +1368,17 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                 Op::NoLine => inst.expect(1)?,
                 Op::Undef => {
                     inst.expect(3)?;
-                    let (type_id, id, handle) =
-                        self.parse_null_constant(inst, ctx.type_arena, ctx.const_arena)?;
+                    let type_id = self.next()?;
+                    let id = self.next()?;
+                    let type_lookup = self.lookup_type.lookup(type_id)?;
+                    let ty = type_lookup.handle;
+
                     self.lookup_expression.insert(
                         id,
                         LookupExpression {
                             handle: ctx
                                 .expressions
-                                .append(crate::Expression::Constant(handle), span),
+                                .append(crate::Expression::ZeroValue(ty), span),
                             type_id,
                             block_id,
                         },
@@ -1675,20 +1722,35 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     let root_type_lookup = self.lookup_type.lookup(root_lexp.type_id)?;
                     let index_lexp = self.lookup_expression.lookup(index_id)?;
                     let index_handle = get_expr_handle!(index_id, index_lexp);
+                    let index_type = self.lookup_type.lookup(index_lexp.type_id)?.handle;
 
                     let num_components = match ctx.type_arena[root_type_lookup.handle].inner {
-                        crate::TypeInner::Vector { size, .. } => size as usize,
+                        crate::TypeInner::Vector { size, .. } => size as u32,
                         _ => return Err(Error::InvalidVectorType(root_type_lookup.handle)),
                     };
 
+                    let mut make_index = |ctx: &mut BlockContext, index: u32| {
+                        make_index_literal(
+                            ctx,
+                            index,
+                            &mut block,
+                            &mut emitter,
+                            index_type,
+                            index_lexp.type_id,
+                            span,
+                        )
+                    };
+
+                    let index_expr = make_index(ctx, 0)?;
                     let mut handle = ctx.expressions.append(
                         crate::Expression::Access {
                             base: root_handle,
-                            index: self.index_constant_expressions[0],
+                            index: index_expr,
                         },
                         span,
                     );
-                    for &index_expr in self.index_constant_expressions[1..num_components].iter() {
+                    for index in 1..num_components {
+                        let index_expr = make_index(ctx, index)?;
                         let access_expr = ctx.expressions.append(
                             crate::Expression::Access {
                                 base: root_handle,
@@ -1738,31 +1800,25 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     let root_handle = get_expr_handle!(composite_id, root_lexp);
                     let root_type_lookup = self.lookup_type.lookup(root_lexp.type_id)?;
                     let index_lexp = self.lookup_expression.lookup(index_id)?;
-                    let mut index_handle = get_expr_handle!(index_id, index_lexp);
+                    let index_handle = get_expr_handle!(index_id, index_lexp);
                     let index_type = self.lookup_type.lookup(index_lexp.type_id)?.handle;
 
-                    // SPIR-V allows signed and unsigned indices but naga's is strict about
-                    // types and since the `index_constants` are all signed integers, we need
-                    // to cast the index to a signed integer if it's unsigned.
-                    if let Some(crate::ScalarKind::Uint) =
-                        ctx.type_arena[index_type].inner.scalar_kind()
-                    {
-                        index_handle = ctx.expressions.append(
-                            crate::Expression::As {
-                                expr: index_handle,
-                                kind: crate::ScalarKind::Sint,
-                                convert: None,
-                            },
-                            span,
-                        )
-                    }
-
                     let num_components = match ctx.type_arena[root_type_lookup.handle].inner {
-                        crate::TypeInner::Vector { size, .. } => size as usize,
+                        crate::TypeInner::Vector { size, .. } => size as u32,
                         _ => return Err(Error::InvalidVectorType(root_type_lookup.handle)),
                     };
-                    let mut components = Vec::with_capacity(num_components);
-                    for &index_expr in self.index_constant_expressions[..num_components].iter() {
+
+                    let mut components = Vec::with_capacity(num_components as usize);
+                    for index in 0..num_components {
+                        let index_expr = make_index_literal(
+                            ctx,
+                            index,
+                            &mut block,
+                            &mut emitter,
+                            index_type,
+                            index_lexp.type_id,
+                            span,
+                        )?;
                         let access_expr = ctx.expressions.append(
                             crate::Expression::Access {
                                 base: root_handle,
@@ -1880,7 +1936,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                         &selections,
                         ctx.type_arena,
                         ctx.expressions,
-                        ctx.const_arena,
                         span,
                     )?;
 
@@ -2089,7 +2144,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     let result_ty = self.lookup_type.lookup(result_type_id)?;
                     let inner = &ctx.type_arena[result_ty.handle].inner;
                     let kind = inner.scalar_kind().unwrap();
-                    let size = inner.size(ctx.const_arena) as u8;
+                    let size = inner.size(ctx.gctx()) as u8;
 
                     let left_cast = ctx.expressions.append(
                         crate::Expression::As {
@@ -3079,8 +3134,14 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     inst.expect(2)?;
                     let target_id = self.next()?;
 
-                    // If this is a branch to a merge or continue block,
-                    // then that ends the current body.
+                    // If this is a branch to a merge or continue block, then
+                    // that ends the current body.
+                    //
+                    // Why can we count on finding an entry here when it's
+                    // needed? SPIR-V requires dominators to appear before
+                    // blocks they dominate, so we will have visited a
+                    // structured control construct's header block before
+                    // anything that could exit it.
                     if let Some(info) = ctx.mergers.get(&target_id) {
                         block.extend(emitter.finish(ctx.expressions));
                         ctx.blocks.insert(block_id, block);
@@ -3092,15 +3153,22 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                         return Ok(());
                     }
 
-                    // Since the target of the branch has no merge information,
-                    // this must be the only branch to that block. This means
-                    // we can treat it as an extension of the current `Body`.
+                    // If `target_id` has no entry in `ctx.body_for_label`, then
+                    // this must be the only branch to it:
                     //
-                    // NOTE: it's possible that another branch was already made to this block
-                    // setting the body index in which case it SHOULD NOT be overridden.
-                    // For example a switch with falltrough, the OpSwitch will set the body to
-                    // the respective case and the case may branch to another case in which case
-                    // the body index shouldn't be changed
+                    // - We've already established that it's not anybody's merge
+                    //   block.
+                    //
+                    // - It can't be a switch case. Only switch header blocks
+                    //   and other switch cases can branch to a switch case.
+                    //   Switch header blocks must dominate all their cases, so
+                    //   they must appear in the file before them, and when we
+                    //   see `Op::Switch` we populate `ctx.body_for_label` for
+                    //   every switch case.
+                    //
+                    // Thus, `target_id` must be a simple extension of the
+                    // current block, which we dominate, so we know we'll
+                    // encounter it later in the file.
                     ctx.body_for_label.entry(target_id).or_insert(body_idx);
 
                     break None;
@@ -3114,35 +3182,121 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                         get_expr_handle!(condition_id, lexp)
                     };
 
+                    // HACK(eddyb) Naga doesn't seem to have this helper,
+                    // so it's declared on the fly here for convenience.
+                    #[derive(Copy, Clone)]
+                    struct BranchTarget {
+                        label_id: spirv::Word,
+                        merge_info: Option<MergeBlockInformation>,
+                    }
+                    let branch_target = |label_id| BranchTarget {
+                        label_id,
+                        merge_info: ctx.mergers.get(&label_id).copied(),
+                    };
+
+                    let true_target = branch_target(self.next()?);
+                    let false_target = branch_target(self.next()?);
+
+                    // Consume branch weights
+                    for _ in 4..inst.wc {
+                        let _ = self.next()?;
+                    }
+
+                    // Handle `OpBranchConditional`s used at the end of a loop
+                    // body's "continuing" section as a "conditional backedge",
+                    // i.e. a `do`-`while` condition, or `break if` in WGSL.
+
+                    // HACK(eddyb) this has to go to the parent *twice*, because
+                    // `OpLoopMerge` left the "continuing" section nested in the
+                    // loop body in terms of `parent`, but not `BodyFragment`.
+                    let parent_body_idx = ctx.bodies[body_idx].parent;
+                    let parent_parent_body_idx = ctx.bodies[parent_body_idx].parent;
+                    match ctx.bodies[parent_parent_body_idx].data[..] {
+                        // The `OpLoopMerge`'s `continuing` block and the loop's
+                        // backedge block may not be the same, but they'll both
+                        // belong to the same body.
+                        [.., BodyFragment::Loop {
+                            body: loop_body_idx,
+                            continuing: loop_continuing_idx,
+                            break_if: ref mut break_if_slot @ None,
+                        }] if body_idx == loop_continuing_idx => {
+                            // Try both orderings of break-vs-backedge, because
+                            // SPIR-V is symmetrical here, unlike WGSL `break if`.
+                            let break_if_cond = [true, false].into_iter().find_map(|true_breaks| {
+                                let (break_candidate, backedge_candidate) = if true_breaks {
+                                    (true_target, false_target)
+                                } else {
+                                    (false_target, true_target)
+                                };
+
+                                if break_candidate.merge_info
+                                    != Some(MergeBlockInformation::LoopMerge)
+                                {
+                                    return None;
+                                }
+
+                                // HACK(eddyb) since Naga doesn't explicitly track
+                                // backedges, this is checking for the outcome of
+                                // `OpLoopMerge` below (even if it looks weird).
+                                let backedge_candidate_is_backedge =
+                                    backedge_candidate.merge_info.is_none()
+                                        && ctx.body_for_label.get(&backedge_candidate.label_id)
+                                            == Some(&loop_body_idx);
+                                if !backedge_candidate_is_backedge {
+                                    return None;
+                                }
+
+                                Some(if true_breaks {
+                                    condition
+                                } else {
+                                    ctx.expressions.append(
+                                        crate::Expression::Unary {
+                                            op: crate::UnaryOperator::Not,
+                                            expr: condition,
+                                        },
+                                        span,
+                                    )
+                                })
+                            });
+
+                            if let Some(break_if_cond) = break_if_cond {
+                                *break_if_slot = Some(break_if_cond);
+
+                                // This `OpBranchConditional` ends the "continuing"
+                                // section of the loop body as normal, with the
+                                // `break if` condition having been stashed above.
+                                break None;
+                            }
+                        }
+                        _ => {}
+                    }
+
                     block.extend(emitter.finish(ctx.expressions));
                     ctx.blocks.insert(block_id, block);
                     let body = &mut ctx.bodies[body_idx];
                     body.data.push(BodyFragment::BlockId(block_id));
 
-                    let true_id = self.next()?;
-                    let false_id = self.next()?;
-
-                    let same_target = true_id == false_id;
+                    let same_target = true_target.label_id == false_target.label_id;
 
                     // Start a body block for the `accept` branch.
                     let accept = ctx.bodies.len();
                     let mut accept_block = Body::with_parent(body_idx);
 
-                    // If the `OpBranchConditional`target is somebody else's
+                    // If the `OpBranchConditional` target is somebody else's
                     // merge or continue block, then put a `Break` or `Continue`
                     // statement in this new body block.
-                    if let Some(info) = ctx.mergers.get(&true_id) {
+                    if let Some(info) = true_target.merge_info {
                         merger(
                             match same_target {
                                 true => &mut ctx.bodies[body_idx],
                                 false => &mut accept_block,
                             },
-                            info,
+                            &info,
                         )
                     } else {
                         // Note the body index for the block we're branching to.
                         let prev = ctx.body_for_label.insert(
-                            true_id,
+                            true_target.label_id,
                             match same_target {
                                 true => body_idx,
                                 false => accept,
@@ -3161,10 +3315,10 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     let reject = ctx.bodies.len();
                     let mut reject_block = Body::with_parent(body_idx);
 
-                    if let Some(info) = ctx.mergers.get(&false_id) {
-                        merger(&mut reject_block, info)
+                    if let Some(info) = false_target.merge_info {
+                        merger(&mut reject_block, &info)
                     } else {
-                        let prev = ctx.body_for_label.insert(false_id, reject);
+                        let prev = ctx.body_for_label.insert(false_target.label_id, reject);
                         debug_assert!(prev.is_none());
                     }
 
@@ -3176,11 +3330,6 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                         accept,
                         reject,
                     });
-
-                    // Consume branch weights
-                    for _ in 4..inst.wc {
-                        let _ = self.next()?;
-                    }
 
                     return Ok(());
                 }
@@ -3351,6 +3500,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     parent_body.data.push(BodyFragment::Loop {
                         body: loop_body_idx,
                         continuing: continue_idx,
+                        break_if: None,
                     });
                     body_idx = loop_body_idx;
                 }
@@ -3495,20 +3645,12 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                     let semantics_id = self.next()?;
                     let exec_scope_const = self.lookup_constant.lookup(exec_scope_id)?;
                     let semantics_const = self.lookup_constant.lookup(semantics_id)?;
-                    let exec_scope = match ctx.const_arena[exec_scope_const.handle].inner {
-                        crate::ConstantInner::Scalar {
-                            value: crate::ScalarValue::Uint(raw),
-                            width: _,
-                        } => raw as u32,
-                        _ => return Err(Error::InvalidBarrierScope(exec_scope_id)),
-                    };
-                    let semantics = match ctx.const_arena[semantics_const.handle].inner {
-                        crate::ConstantInner::Scalar {
-                            value: crate::ScalarValue::Uint(raw),
-                            width: _,
-                        } => raw as u32,
-                        _ => return Err(Error::InvalidBarrierMemorySemantics(semantics_id)),
-                    };
+
+                    let exec_scope = resolve_constant(ctx.gctx(), exec_scope_const.handle)
+                        .ok_or(Error::InvalidBarrierScope(exec_scope_id))?;
+                    let semantics = resolve_constant(ctx.gctx(), semantics_const.handle)
+                        .ok_or(Error::InvalidBarrierMemorySemantics(semantics_id))?;
+
                     if exec_scope == spirv::Scope::Workgroup as u32 {
                         let mut flags = crate::Barrier::empty();
                         flags.set(
@@ -3703,6 +3845,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
                         }
                     }
                 }
+                S::WorkGroupUniformLoad { .. } => unreachable!(),
             }
             i += 1;
         }
@@ -4384,12 +4527,14 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         let length_id = self.next()?;
         let length_const = self.lookup_constant.lookup(length_id)?;
 
+        let size = resolve_constant(module.to_ctx(), length_const.handle)
+            .and_then(NonZeroU32::new)
+            .ok_or(Error::InvalidArraySize(length_const.handle))?;
+
         let decor = self.future_decor.remove(&id).unwrap_or_default();
         let base = self.lookup_type.lookup(type_id)?.handle;
 
-        self.layouter
-            .update(&module.types, &module.constants)
-            .unwrap();
+        self.layouter.update(module.to_ctx()).unwrap();
 
         // HACK if the underlying type is an image or a sampler, let's assume
         //      that we're dealing with a binding-array
@@ -4427,12 +4572,12 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         {
             crate::TypeInner::BindingArray {
                 base,
-                size: crate::ArraySize::Constant(length_const.handle),
+                size: crate::ArraySize::Constant(size),
             }
         } else {
             crate::TypeInner::Array {
                 base,
-                size: crate::ArraySize::Constant(length_const.handle),
+                size: crate::ArraySize::Constant(size),
                 stride: match decor.array_stride {
                     Some(stride) => stride.get(),
                     None => self.layouter[base].to_stride(),
@@ -4470,9 +4615,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         let decor = self.future_decor.remove(&id).unwrap_or_default();
         let base = self.lookup_type.lookup(type_id)?.handle;
 
-        self.layouter
-            .update(&module.types, &module.constants)
-            .unwrap();
+        self.layouter.update(module.to_ctx()).unwrap();
 
         // HACK same case as in `parse_type_array()`
         let inner = if let crate::TypeInner::Image { .. } | crate::TypeInner::Sampler { .. } =
@@ -4523,9 +4666,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             .as_ref()
             .map_or(false, |decor| decor.storage_buffer);
 
-        self.layouter
-            .update(&module.types, &module.constants)
-            .unwrap();
+        self.layouter.update(module.to_ctx()).unwrap();
 
         let mut members = Vec::<crate::StructMember>::with_capacity(inst.wc as usize - 2);
         let mut member_lookups = Vec::with_capacity(members.capacity());
@@ -4629,7 +4770,7 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         let id = self.next()?;
         let sample_type_id = self.next()?;
         let dim = self.next()?;
-        let _is_depth = self.next()?;
+        let is_depth = self.next()?;
         let is_array = self.next()? != 0;
         let is_msaa = self.next()? != 0;
         let _is_sampled = self.next()?;
@@ -4661,7 +4802,9 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
             .ok_or(Error::InvalidImageBaseType(base_handle))?;
 
         let inner = crate::TypeInner::Image {
-            class: if format != 0 {
+            class: if is_depth == 1 {
+                crate::ImageClass::Depth { multi: is_msaa }
+            } else if format != 0 {
                 crate::ImageClass::Storage {
                     format: map_image_format(format)?,
                     access: crate::StorageAccess::default(),
@@ -5149,6 +5292,37 @@ impl<I: Iterator<Item = u32>> Frontend<I> {
         );
         Ok(())
     }
+}
+
+fn make_index_literal(
+    ctx: &mut BlockContext,
+    index: u32,
+    block: &mut crate::Block,
+    emitter: &mut super::Emitter,
+    index_type: Handle<crate::Type>,
+    index_type_id: spirv::Word,
+    span: crate::Span,
+) -> Result<Handle<crate::Expression>, Error> {
+    block.extend(emitter.finish(ctx.expressions));
+
+    let literal = match ctx.type_arena[index_type].inner.scalar_kind() {
+        Some(crate::ScalarKind::Uint) => crate::Literal::U32(index),
+        Some(crate::ScalarKind::Sint) => crate::Literal::I32(index as i32),
+        _ => return Err(Error::InvalidIndexType(index_type_id)),
+    };
+    let expr = ctx
+        .expressions
+        .append(crate::Expression::Literal(literal), span);
+
+    emitter.start(ctx.expressions);
+    Ok(expr)
+}
+
+fn resolve_constant(
+    gctx: crate::proc::GlobalCtx,
+    constant: Handle<crate::Constant>,
+) -> Option<u32> {
+    gctx.constants[constant].to_array_length()
 }
 
 pub fn parse_u8_slice(data: &[u8], options: &Options) -> Result<crate::Module, Error> {
