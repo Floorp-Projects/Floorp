@@ -36,18 +36,19 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * and querying the shopping API for information on it.
  *
  * @example
- * let product = new ShoppingProduct(url);
+ * let product = new Product(url);
  * if (product.isProduct()) {
  *  let analysis = await product.requestAnalysis();
  *  let recommendations = await product.requestRecommendations();
  * }
  * @example
- * if (!isProductURL(url)) {
- *  return;
- * }
- * let product = new ShoppingProduct(url);
- * let analysis = await product.requestAnalysis();
- * let recommendations = await product.requestRecommendations();
+ * let url = new URL(location.href);
+ * let parsed = ShoppingProduct.fromURL(url);
+ * if (parsed.valid) {
+ *  let product = new ShoppingProduct();
+ *  product.assignProduct(parsed);
+ *  let analysis = await product.requestAnalysis();
+ *  let recommendations = await product.requestRecommendations();
  * }
  */
 export class ShoppingProduct {
@@ -296,22 +297,4 @@ export class ShoppingProduct {
   destroy() {
     this.abortController.abort();
   }
-}
-
-/**
- * Check if a URL is a valid product.
- *
- * @param {URL | nsIURI } url
- *  URL to check.
- * @returns {boolean}
- */
-export function isProductURL(url) {
-  if (url instanceof Ci.nsIURI) {
-    url = URL.fromURI(url);
-  }
-  if (!URL.isInstance(url)) {
-    return false;
-  }
-  let productInfo = ShoppingProduct.fromURL(url);
-  return ShoppingProduct.isProduct(productInfo);
 }
