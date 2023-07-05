@@ -60,7 +60,7 @@ add_task(async function test_saveTargetBlank() {
   );
 
   // Check result of clicking Remember
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login now");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(

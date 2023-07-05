@@ -33,7 +33,7 @@ async function setup_withNoLogins() {
   // Reset to a single, known login
   await task_setup();
   Assert.equal(
-    Services.logins.getAllLogins().length,
+    (await Services.logins.getAllLogins()).length,
     0,
     "0 logins at the start of the test"
   );
@@ -288,7 +288,7 @@ add_setup(async function () {
     ],
   });
   // assert that there are no logins
-  let logins = Services.logins.getAllLogins();
+  let logins = await Services.logins.getAllLogins();
   Assert.equal(logins.length, 0, "There are no logins");
 });
 
@@ -355,11 +355,11 @@ add_task(async function autocomplete_generated_password_auto_saved() {
         "passwordmgr-storage-changed",
         (_, data) => data == "modifyLogin"
       );
-      let [autoSavedLogin] = Services.logins.getAllLogins();
+      let [autoSavedLogin] = await Services.logins.getAllLogins();
       info("waiting for submitForm");
       await submitForm(browser);
       await storageChangedPromise;
-      verifyLogins([
+      await verifyLogins([
         {
           timesUsed: autoSavedLogin.timesUsed + 1,
           username: "",
@@ -440,11 +440,11 @@ add_task(
           "passwordmgr-storage-changed",
           (_, data) => data == "modifyLogin"
         );
-        let [autoSavedLogin] = Services.logins.getAllLogins();
+        let [autoSavedLogin] = await Services.logins.getAllLogins();
         info("waiting for submitForm");
         await submitForm(browser);
         await storageChangedPromise;
-        verifyLogins([
+        await verifyLogins([
           {
             timesUsed: autoSavedLogin.timesUsed + 1,
             username: "",
@@ -471,7 +471,7 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
       username: { selector: usernameInputSelector, expectedValue: "" },
     },
     async function taskFn(browser) {
-      let [savedLogin] = Services.logins.getAllLogins();
+      let [savedLogin] = await Services.logins.getAllLogins();
       let storageChangedPromise = TestUtils.topicObserved(
         "passwordmgr-storage-changed",
         (_, data) => data == "modifyLogin"
@@ -507,7 +507,7 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
 
       info("Waiting for modifyLogin");
       await storageChangedPromise;
-      verifyLogins([
+      await verifyLogins([
         {
           timesUsed: savedLogin.timesUsed + 1,
           username: "",
@@ -559,7 +559,7 @@ add_task(async function autocomplete_generated_password_saved_username() {
       await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
 
       // Check properties of the newly auto-saved login
-      let [user1LoginSnapshot, autoSavedLogin] = verifyLogins([
+      let [user1LoginSnapshot, autoSavedLogin] = await verifyLogins([
         {
           username: "user1",
           password: "xyzpassword", // user1 is unchanged
@@ -605,7 +605,7 @@ add_task(async function autocomplete_generated_password_saved_username() {
       clickDoorhangerButton(notif, CHANGE_BUTTON);
       await promiseHidden;
       await storageChangedPromise;
-      verifyLogins([
+      await verifyLogins([
         {
           timesUsed: user1LoginSnapshot.timesUsed + 1,
           username: "user1",
@@ -638,7 +638,7 @@ add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
       },
     },
     async function taskFn(browser) {
-      let [savedLogin] = Services.logins.getAllLogins();
+      let [savedLogin] = await Services.logins.getAllLogins();
       let storageChangedPromise = TestUtils.topicObserved(
         "passwordmgr-storage-changed",
         (_, data) => data == "addLogin"
@@ -674,7 +674,7 @@ add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
 
       info("Waiting for addLogin");
       await storageChangedPromise;
-      verifyLogins([
+      await verifyLogins([
         {
           timesUsed: savedLogin.timesUsed,
           username: "",
@@ -706,7 +706,7 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
       username: { selector: usernameInputSelector, expectedValue: "" },
     },
     async function taskFn(browser) {
-      let [savedLogin] = Services.logins.getAllLogins();
+      let [savedLogin] = await Services.logins.getAllLogins();
       let storageChangedPromise = TestUtils.topicObserved(
         "passwordmgr-storage-changed",
         (_, data) => data == "modifyLogin"
@@ -745,7 +745,7 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
 
       info("Waiting for modifyLogin");
       await storageChangedPromise;
-      verifyLogins([
+      await verifyLogins([
         {
           timesUsed: savedLogin.timesUsed + 1,
           username: "",
@@ -776,7 +776,7 @@ async function autocomplete_generated_password_edited_no_auto_save(
       username: { selector: usernameInputSelector, expectedValue: "" },
     },
     async function taskFn(browser) {
-      let [savedLogin] = Services.logins.getAllLogins();
+      let [savedLogin] = await Services.logins.getAllLogins();
       let storageChangedPromise = TestUtils.topicObserved(
         "passwordmgr-storage-changed",
         (_, data) => data == "modifyLogin"
@@ -824,7 +824,7 @@ async function autocomplete_generated_password_edited_no_auto_save(
       clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
       await promiseHidden;
 
-      verifyLogins([
+      await verifyLogins([
         {
           timesUsed: savedLogin.timesUsed,
           username: "",
@@ -850,7 +850,7 @@ async function autocomplete_generated_password_edited_no_auto_save(
 
       info("Waiting for modifyLogin");
       await storageChangedPromise;
-      verifyLogins([
+      await verifyLogins([
         {
           timesUsed: savedLogin.timesUsed + 1,
           username: "",
@@ -933,7 +933,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
       await storageChangedPromise;
 
       // Check properties of the newly auto-saved login
-      verifyLogins([
+      await verifyLogins([
         null, // ignore the first one
         {
           timesUsed: 1,
@@ -976,7 +976,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
 
       info("Waiting for modifyLogin");
       await storageChangedPromise;
-      verifyLogins([
+      await verifyLogins([
         null,
         {
           username: "differentuser",
@@ -1036,7 +1036,7 @@ add_task(async function contextmenu_password_change_form_without_username() {
       info("waiting for addLogin");
       await storageChangedPromise;
       // Check properties of the newly auto-saved login
-      verifyLogins([
+      await verifyLogins([
         null, // ignore the first one
         null, // ignore the 2nd one
         {
@@ -1063,14 +1063,14 @@ add_task(async function contextmenu_password_change_form_without_username() {
         "passwordmgr-storage-changed",
         (_, data) => data == "modifyLogin"
       );
-      let { timeLastUsed } = Services.logins.getAllLogins()[2];
+      let { timeLastUsed } = (await Services.logins.getAllLogins())[2];
 
       info("waiting for submitForm");
       await submitForm(browser);
 
       info("Waiting for modifyLogin");
       await storageChangedPromise;
-      verifyLogins([
+      await verifyLogins([
         null, // ignore the first one
         null, // ignore the 2nd one
         {
@@ -1142,7 +1142,7 @@ add_task(
         await storageChangedPromise;
         info("addLogin promise resolved");
         // Check properties of the newly auto-saved login
-        let [user1LoginSnapshot, unused, autoSavedLogin] = verifyLogins([
+        let [user1LoginSnapshot, unused, autoSavedLogin] = await verifyLogins([
           null, // ignore the first one
           null, // ignore the 2nd one
           {
@@ -1230,7 +1230,7 @@ add_task(
 
         info("storage-change promises resolved");
         // Check the auto-saved login was removed and the original login updated
-        verifyLogins([
+        await verifyLogins([
           {
             username: "user1",
             password: autoSavedLogin.password,
@@ -1320,7 +1320,7 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
       await storageChangedPromise;
       info("addLogin promise resolved");
       // Check properties of the newly auto-saved login
-      let [user1LoginSnapshot, autoSavedLogin] = verifyLogins([
+      let [user1LoginSnapshot, autoSavedLogin] = await verifyLogins([
         null, // ignore the first one
         {
           timesUsed: 1,
@@ -1430,7 +1430,7 @@ add_task(async function autosaved_login_updated_to_existing_login_onsubmit() {
 
       info("storage-change promises resolved");
       // Check the auto-saved login was removed and the original login updated
-      verifyLogins([
+      await verifyLogins([
         {
           username: "user1",
           password: autoSavedLogin.password,
@@ -1512,7 +1512,7 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
       await storageChangedPromise;
       info("addLogin promise resolved");
       // Check properties of the newly auto-saved login
-      let [user1LoginSnapshot, autoSavedLogin] = verifyLogins([
+      let [user1LoginSnapshot, autoSavedLogin] = await verifyLogins([
         null, // ignore the first one
         {
           timesUsed: 1,
@@ -1628,7 +1628,7 @@ add_task(async function form_change_from_autosaved_login_to_existing_login() {
       await storageChangedPromise;
 
       // Check the auto-saved login has not changed and only metadata on the original login updated
-      verifyLogins([
+      await verifyLogins([
         {
           username: "user1",
           password: "xyzpassword",
@@ -1706,7 +1706,7 @@ add_task(async function form_edit_username_and_password_of_generated_login() {
       await storageChangedPromise;
       info("addLogin promise resolved");
       // Check properties of the newly auto-saved login
-      let [autoSavedLoginSnapshot] = verifyLogins([
+      let [autoSavedLoginSnapshot] = await verifyLogins([
         {
           timesUsed: 1,
           username: "",

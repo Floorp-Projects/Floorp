@@ -1734,7 +1734,7 @@ export const LoginHelper = {
 
   async getAllUserFacingLogins() {
     try {
-      let logins = await Services.logins.getAllLoginsAsync();
+      let logins = await Services.logins.getAllLogins();
       return logins.filter(this.isUserFacingLogin);
     } catch (e) {
       if (e.result == Cr.NS_ERROR_ABORT) {

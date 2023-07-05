@@ -461,28 +461,13 @@ export class LoginManagerStorage_json {
   }
 
   /**
-   * @return {nsILoginInfo[]}
-   */
-  getAllLogins() {
-    this._store.ensureDataReady();
-
-    let [logins] = this._searchLogins({});
-
-    // decrypt entries for caller.
-    logins = this._decryptLogins(logins);
-
-    this.log(`Returning ${logins.length} logins.`);
-    return logins;
-  }
-
-  /**
    * Returns an array of nsILoginInfo. If decryption of a login
    * fails due to a corrupt entry, the login is not included in
    * the resulting array.
    *
    * @resolve {nsILoginInfo[]}
    */
-  async getAllLoginsAsync(includeDeleted) {
+  async getAllLogins(includeDeleted) {
     this._store.ensureDataReady();
 
     let [logins] = this._searchLogins({}, includeDeleted);

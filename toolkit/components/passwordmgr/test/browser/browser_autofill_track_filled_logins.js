@@ -93,7 +93,7 @@ add_task(async function test() {
     });
     await processedPromise;
 
-    let logins = Services.logins.getAllLogins();
+    let logins = await Services.logins.getAllLogins();
 
     Assert.equal(logins.length, 1, "There should only be one login saved");
     Assert.equal(
@@ -101,7 +101,7 @@ add_task(async function test() {
       login.guid,
       "The saved login should match the one added and used above"
     );
-    checkOnlyLoginWasUsedTwice({ justChanged: false });
+    await checkOnlyLoginWasUsedTwice({ justChanged: false });
 
     BrowserTestUtils.removeTab(tab);
 
