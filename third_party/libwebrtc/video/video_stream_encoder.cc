@@ -1396,7 +1396,7 @@ void VideoStreamEncoder::ReconfigureEncoder() {
 
   bool is_svc = false;
   bool single_stream_or_non_first_inactive = true;
-  for (size_t i = 1; i < encoder_config_.number_of_streams; ++i) {
+  for (size_t i = 1; i < encoder_config_.simulcast_layers.size(); ++i) {
     if (encoder_config_.simulcast_layers[i].active) {
       single_stream_or_non_first_inactive = false;
       break;
