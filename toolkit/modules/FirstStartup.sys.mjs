@@ -86,13 +86,15 @@ export var FirstStartup = {
       this._state = this.UNSUPPORTED;
     }
 
-    Glean.firstStartup.normandyInitTime.set(
-      normandyInitEndTime || Cu.now() - startingTime
-    );
+    if (AppConstants.MOZ_NORMANDY) {
+      Glean.firstStartup.normandyInitTime.set(
+        Math.ceil(normandyInitEndTime || Cu.now() - startingTime)
+      );
+    }
 
     if (AppConstants.MOZ_UPDATE_AGENT) {
       Glean.firstStartup.deleteTasksTime.set(
-        deleteTasksEndTime || Cu.now() - startingTime
+        Math.ceil(deleteTasksEndTime || Cu.now() - startingTime)
       );
     }
 
