@@ -16,6 +16,7 @@ let expectedMatch = (key, inputLength) => ({
   payload: {
     results: [{ key }],
     dynamicType: "quickactions",
+    inQuickActionsSearchMode: false,
     helpUrl: UrlbarProviderQuickActions.helpUrl,
     inputLength,
   },
