@@ -587,14 +587,22 @@ Result<FileId, QMResult> FileSystemDatabaseManagerVersion002::EnsureFileId(
     return Err(QMResult(NS_ERROR_DOM_NOT_FOUND_ERR));
   }
 
-  auto mainFileRes = GetFileId(aEntryId);
-  if (mainFileRes.isOk()) {
-    return mainFileRes.unwrap();
-  }
+  QM_TRY_UNWRAP(Maybe<FileId> maybeMainFileId,
+                QM_OR_ELSE_LOG_VERBOSE_IF(
+                    // Expression.
+                    GetFileId(aEntryId).map([](auto mainFileId) {
+                      return Some(std::move(mainFileId));
+                    }),
+                    // Predicate.
+                    IsSpecificError<NS_ERROR_DOM_NOT_FOUND_ERR>,
+                    // Fallback.
+                    ([](const auto&) -> Result<Maybe<FileId>, QMResult> {
+                      return Maybe<FileId>{};
+                    })));
 
-  QM_TRY(
-      OkIf(ToNSResult(mainFileRes.inspectErr()) == NS_ERROR_DOM_NOT_FOUND_ERR),
-      Err(mainFileRes.unwrapErr()));
+  if (maybeMainFileId) {
+    return *maybeMainFileId;
+  }
 
   QM_TRY_UNWRAP(auto transaction, StartedTransaction::Create(mConnection));
 

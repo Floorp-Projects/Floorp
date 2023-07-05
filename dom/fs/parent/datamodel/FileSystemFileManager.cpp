@@ -21,7 +21,6 @@
 #include "nsIFile.h"
 #include "nsIFileProtocolHandler.h"
 #include "nsIFileURL.h"
-#include "nsILocalFileWin.h"
 #include "nsIURIMutator.h"
 #include "nsTHashMap.h"
 #include "nsXPCOM.h"
@@ -285,6 +284,7 @@ Result<nsCOMPtr<nsIFile>, QMResult> FileSystemFileManager::CreateFileFrom(
     const FileId& aDestinationFileId, const FileId& aSourceFileId) {
   MOZ_ASSERT(!aDestinationFileId.IsEmpty());
   MOZ_ASSERT(!aSourceFileId.IsEmpty());
+
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> original, GetFile(aSourceFileId));
 
   QM_TRY_UNWRAP(nsCOMPtr<nsIFile> destination,
