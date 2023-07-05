@@ -37,18 +37,6 @@ HomeOverlay.prototype = {
         utmSource={utmSource}
         utmCampaign={utmCampaign}
         utmContent={utmContent}
-        topics={[
-          { title: "Technology", topic: "technology" },
-          { title: "Self Improvement", topic: "self-improvement" },
-          { title: "Food", topic: "food" },
-          { title: "Parenting", topic: "parenting" },
-          { title: "Science", topic: "science" },
-          { title: "Entertainment", topic: "entertainment" },
-          { title: "Career", topic: "career" },
-          { title: "Health", topic: "health" },
-          { title: "Travel", topic: "travel" },
-          { title: "Must-Reads", topic: "must-reads" },
-        ]}
       />,
       document.querySelector(`body`)
     );
