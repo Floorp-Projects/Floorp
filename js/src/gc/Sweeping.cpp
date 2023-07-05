@@ -1389,6 +1389,29 @@ void GCRuntime::sweepJitDataOnMainThread(JS::GCContext* gcx) {
   }
 }
 
+void GCRuntime::sweepObjectsWithWeakPointers() {
+  SweepingTracer trc(rt);
+  for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
+    AutoSetThreadIsSweeping threadIsSweeping(zone);
+    zone->sweepObjectsWithWeakPointers(&trc);
+  }
+}
+
+void JS::Zone::sweepObjectsWithWeakPointers(JSTracer* trc) {
+  MOZ_ASSERT(trc->traceWeakEdges());
+
+  objectsWithWeakPointers.ref().mutableEraseIf([&](JSObject*& obj) {
+    if (!TraceManuallyBarrieredWeakEdge(trc, &obj, "objectsWithWeakPointers")) {
+      // Object itself is dead.
+      return true;
+    }
+
+    // Call trace hook to sweep weak pointers.
+    obj->getClass()->doTrace(trc, obj);
+    return false;
+  });
+}
+
 using WeakCacheTaskVector =
     mozilla::Vector<ImmediateSweepWeakCacheTask, 0, SystemAllocPolicy>;
 
@@ -1563,6 +1586,9 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JS::GCContext* gcx,
     AutoRunParallelTask sweepUniqueIds(this, &GCRuntime::sweepUniqueIds,
                                        PhaseKind::SWEEP_UNIQUEIDS,
                                        GCUse::Sweeping, lock);
+    AutoRunParallelTask sweepWeakPointers(
+        this, &GCRuntime::sweepObjectsWithWeakPointers,
+        PhaseKind::SWEEP_WEAK_POINTERS, GCUse::Sweeping, lock);
 
     WeakCacheTaskVector sweepCacheTasks;
     bool canSweepWeakCachesOffThread =
