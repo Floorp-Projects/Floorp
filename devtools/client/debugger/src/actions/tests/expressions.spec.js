@@ -51,60 +51,60 @@ const mockThreadFront = {
 
 describe("expressions", () => {
   it("should add an expression", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadFront);
+    const { dispatch, getState } = createStore(mockThreadFront);
 
-    await dispatch(actions.addExpression(cx, "foo"));
+    await dispatch(actions.addExpression("foo"));
     expect(selectors.getExpressions(getState())).toHaveLength(1);
   });
 
   it("should not add empty expressions", () => {
-    const { dispatch, getState, cx } = createStore(mockThreadFront);
+    const { dispatch, getState } = createStore(mockThreadFront);
 
-    dispatch(actions.addExpression(cx, undefined));
-    dispatch(actions.addExpression(cx, ""));
+    dispatch(actions.addExpression(undefined));
+    dispatch(actions.addExpression(""));
     expect(selectors.getExpressions(getState())).toHaveLength(0);
   });
 
   it("should not add invalid expressions", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadFront);
-    await dispatch(actions.addExpression(cx, "foo#"));
+    const { dispatch, getState } = createStore(mockThreadFront);
+    await dispatch(actions.addExpression("foo#"));
     const state = getState();
     expect(selectors.getExpressions(state)).toHaveLength(0);
     expect(selectors.getExpressionError(state)).toBe(true);
   });
 
   it("should update an expression", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadFront);
+    const { dispatch, getState } = createStore(mockThreadFront);
 
-    await dispatch(actions.addExpression(cx, "foo"));
+    await dispatch(actions.addExpression("foo"));
     const expression = selectors.getExpression(getState(), "foo");
     if (!expression) {
       throw new Error("expression must exist");
     }
 
-    await dispatch(actions.updateExpression(cx, "bar", expression));
+    await dispatch(actions.updateExpression("bar", expression));
     const bar = selectors.getExpression(getState(), "bar");
 
     expect(bar && bar.input).toBe("bar");
   });
 
   it("should not update an expression w/ invalid code", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadFront);
+    const { dispatch, getState } = createStore(mockThreadFront);
 
-    await dispatch(actions.addExpression(cx, "foo"));
+    await dispatch(actions.addExpression("foo"));
     const expression = selectors.getExpression(getState(), "foo");
     if (!expression) {
       throw new Error("expression must exist");
     }
-    await dispatch(actions.updateExpression(cx, "#bar", expression));
+    await dispatch(actions.updateExpression("#bar", expression));
     expect(selectors.getExpression(getState(), "bar")).toBeUndefined();
   });
 
   it("should delete an expression", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadFront);
+    const { dispatch, getState } = createStore(mockThreadFront);
 
-    await dispatch(actions.addExpression(cx, "foo"));
-    await dispatch(actions.addExpression(cx, "bar"));
+    await dispatch(actions.addExpression("foo"));
+    await dispatch(actions.addExpression("bar"));
     expect(selectors.getExpressions(getState())).toHaveLength(2);
 
     const expression = selectors.getExpression(getState(), "foo");
@@ -121,8 +121,8 @@ describe("expressions", () => {
 
   it("should evaluate expressions global scope", async () => {
     const { dispatch, getState, cx } = createStore(mockThreadFront);
-    await dispatch(actions.addExpression(cx, "foo"));
-    await dispatch(actions.addExpression(cx, "bar"));
+    await dispatch(actions.addExpression("foo"));
+    await dispatch(actions.addExpression("bar"));
 
     let foo = selectors.getExpression(getState(), "foo");
     let bar = selectors.getExpression(getState(), "bar");
@@ -142,8 +142,8 @@ describe("expressions", () => {
 
     const cx = selectors.getThreadContext(getState());
     await dispatch(actions.newGeneratedSource(makeSource("source")));
-    await dispatch(actions.addExpression(cx, "foo"));
-    await dispatch(actions.addExpression(cx, "bar"));
+    await dispatch(actions.addExpression("foo"));
+    await dispatch(actions.addExpression("bar"));
 
     let foo = selectors.getExpression(getState(), "foo");
     let bar = selectors.getExpression(getState(), "bar");

@@ -12,6 +12,7 @@ import {
   getSelectedFrameBindings,
   getIsPaused,
   isMapScopesEnabled,
+  getThreadContext,
 } from "../selectors";
 import { PROMISE } from "./utils/middleware/promise";
 import { wrapExpression } from "../utils/expressions";
@@ -20,10 +21,9 @@ import { features } from "../utils/prefs";
 /**
  * Add expression for debugger to watch
  *
- * @param {object} cx
  * @param {string} input
  */
-export function addExpression(cx, input) {
+export function addExpression(input) {
   return async ({ dispatch, getState, parserWorker }) => {
     if (!input) {
       return null;
@@ -45,7 +45,7 @@ export function addExpression(cx, input) {
       }
     }
 
-    return dispatch(evaluateExpression(cx, expression));
+    return dispatch(evaluateExpression(expression));
   };
 }
 
@@ -68,8 +68,8 @@ export function clearExpressionError() {
   return { type: "CLEAR_EXPRESSION_ERROR" };
 }
 
-export function updateExpression(cx, input, expression) {
-  return async ({ dispatch, parserWorker }) => {
+export function updateExpression(input, expression) {
+  return async ({ getState, dispatch, parserWorker }) => {
     if (!input) {
       return;
     }
@@ -82,7 +82,7 @@ export function updateExpression(cx, input, expression) {
       expressionError,
     });
 
-    await dispatch(evaluateExpressions(cx));
+    await dispatch(evaluateExpressionsForCurrentContext());
   };
 }
 
@@ -95,6 +95,13 @@ export function deleteExpression(expression) {
   return {
     type: "DELETE_EXPRESSION",
     input: expression.input,
+  };
+}
+
+export function evaluateExpressionsForCurrentContext() {
+  return async ({ getState, dispatch, parserWorker }) => {
+    const threadcx = getThreadContext(getState());
+    await dispatch(evaluateExpressions(threadcx));
   };
 }
 
@@ -116,13 +123,14 @@ export function evaluateExpressions(cx) {
   };
 }
 
-function evaluateExpression(cx, expression) {
+function evaluateExpression(expression) {
   return async function (thunkArgs) {
     if (!expression.input) {
       console.warn("Expressions should not be empty");
       return null;
     }
     const { dispatch, getState, client } = thunkArgs;
+    const cx = getThreadContext(getState());
     let { input } = expression;
     const frame = getSelectedFrame(getState(), cx.thread);
 

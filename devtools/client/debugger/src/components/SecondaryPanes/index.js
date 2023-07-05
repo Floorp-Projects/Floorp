@@ -76,7 +76,7 @@ class SecondaryPanes extends Component {
   static get propTypes() {
     return {
       cx: PropTypes.object.isRequired,
-      evaluateExpressions: PropTypes.func.isRequired,
+      evaluateExpressionsForCurrentContext: PropTypes.func.isRequired,
       expressions: PropTypes.array.isRequired,
       hasFrames: PropTypes.bool.isRequired,
       horizontal: PropTypes.bool.isRequired,
@@ -118,7 +118,7 @@ class SecondaryPanes extends Component {
         debugBtn(
           evt => {
             evt.stopPropagation();
-            this.props.evaluateExpressions(this.props.cx);
+            this.props.evaluateExpressionsForCurrentContext();
           },
           "refresh",
           "active",
@@ -526,7 +526,8 @@ const mapStateToProps = state => {
 };
 
 export default connect(mapStateToProps, {
-  evaluateExpressions: actions.evaluateExpressions,
+  evaluateExpressionsForCurrentContext:
+    actions.evaluateExpressionsForCurrentContext,
   pauseOnExceptions: actions.pauseOnExceptions,
   toggleMapScopes: actions.toggleMapScopes,
   breakOnNext: actions.breakOnNext,

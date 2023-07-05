@@ -344,12 +344,12 @@ describe("pause", () => {
     it("resuming - will re-evaluate watch expressions", async () => {
       const client = { ...mockCommandClient, evaluateExpressions: jest.fn() };
       const store = createStore(client);
-      const { dispatch, getState, cx } = store;
+      const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo();
 
       await dispatch(actions.newGeneratedSource(makeSource("foo1")));
       await dispatch(actions.newGeneratedSource(makeSource("foo")));
-      await dispatch(actions.addExpression(cx, "foo"));
+      await dispatch(actions.addExpression("foo"));
       await waitForState(store, state => selectors.getExpression(state, "foo"));
 
       client.evaluateExpressions.mockReturnValue(Promise.resolve(["YAY"]));
