@@ -139,5 +139,5 @@
     <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Use %1$s as a login provider</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
-    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ Logging in to %1$s with a %2$s account is subject to their <a href="%3$s">Privacy Policy</a> and <a href="%4$s">Terms of Service</a>]]></string>
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[Logging in to %1$s with a %2$s account is subject to their <a href="%3$s">Privacy Policy</a> and <a href="%4$s">Terms of Service</a>]]></string>
 </resources>
