@@ -781,6 +781,10 @@ password-autocomplete:
     firefoxRelayIntegration:
       type: boolean
       description: Can show Firefox Relay integration offer?
+    csvImport:
+      type: boolean
+      description: Can show CSV Import in about:logins or Migration Wizard
+      setPref: "signon.management.page.fileImport.enabled"
 
 shellService:
   description: "Interface with OS, e.g., pinning and set default"
