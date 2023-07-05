@@ -1,3 +1,4 @@
+#[cfg(feature = "validate")]
 use std::ops::Index;
 
 #[cfg(feature = "validate")]
@@ -118,10 +119,6 @@ pub enum ExpressionError {
     InvalidArgumentType(crate::MathFunction, u32, Handle<crate::Expression>),
     #[error("Atomic result type can't be {0:?}")]
     InvalidAtomicResultType(Handle<crate::Type>),
-    #[error(
-        "workgroupUniformLoad result type can't be {0:?}. It can only be a constructible type."
-    )]
-    InvalidWorkGroupUniformLoadResultType(Handle<crate::Type>),
     #[error("Shader requires capability {0:?}")]
     MissingCapabilities(super::Capabilities),
 }
@@ -247,9 +244,9 @@ impl super::Validator {
                         } => size as u32,
                         Ti::Matrix { columns, .. } => columns as u32,
                         Ti::Array {
-                            size: crate::ArraySize::Constant(len),
+                            size: crate::ArraySize::Constant(handle),
                             ..
-                        } => len.get(),
+                        } => module.constants[handle].to_array_length().unwrap(),
                         Ti::Array { .. } | Ti::BindingArray { .. } => u32::MAX, // can't statically know, but need run-time checks
                         Ti::Pointer { base, .. } if top_level => {
                             resolve_index_limit(module, top, &module.types[base].inner, false)?
@@ -272,9 +269,7 @@ impl super::Validator {
                 }
                 ShaderStages::all()
             }
-            E::Literal(_value) => ShaderStages::all(),
             E::Constant(_handle) => ShaderStages::all(),
-            E::ZeroValue(_type) => ShaderStages::all(),
             E::Splat { size: _, value } => match resolver[value] {
                 Ti::Scalar { .. } => ShaderStages::all(),
                 ref other => {
@@ -304,7 +299,8 @@ impl super::Validator {
             E::Compose { ref components, ty } => {
                 validate_compose(
                     ty,
-                    module.to_ctx(),
+                    &module.constants,
+                    &module.types,
                     components.iter().map(|&handle| info[handle].ty.clone()),
                 )?;
                 ShaderStages::all()
@@ -1414,18 +1410,6 @@ impl super::Validator {
                     return Err(ExpressionError::InvalidAtomicResultType(ty));
                 }
                 ShaderStages::all()
-            }
-            E::WorkGroupUniformLoadResult { ty } => {
-                if self.types[ty.index()]
-                    .flags
-                    // Sized | Constructible is exactly the types currently supported by
-                    // WorkGroupUniformLoad
-                    .contains(TypeFlags::SIZED | TypeFlags::CONSTRUCTIBLE)
-                {
-                    ShaderStages::COMPUTE
-                } else {
-                    return Err(ExpressionError::InvalidWorkGroupUniformLoadResultType(ty));
-                }
             }
             E::ArrayLength(expr) => match resolver[expr] {
                 Ti::Pointer { base, .. } => {

@@ -540,7 +540,8 @@ impl Writer {
                         );
                         iface.varying_ids.push(varying_id);
 
-                        let default_value_id = self.get_constant_scalar(crate::Literal::F32(1.0));
+                        let default_value_id =
+                            self.get_constant_scalar(crate::ScalarValue::Float(1.0), 4);
                         prelude
                             .body
                             .push(Instruction::store(varying_id, default_value_id, None));
@@ -936,14 +937,13 @@ impl Writer {
             }
             LocalType::BindingArray { base, size } => {
                 let inner_ty = self.get_type_id(LookupType::Handle(base));
-                let scalar_id = self.get_constant_scalar(crate::Literal::U32(size));
+                let scalar_id = self.get_constant_scalar(crate::ScalarValue::Uint(size), 4);
                 Instruction::type_array(id, inner_ty, scalar_id)
             }
-            LocalType::PointerToBindingArray { base, size, space } => {
+            LocalType::PointerToBindingArray { base, size } => {
                 let inner_ty =
                     self.get_type_id(LookupType::Local(LocalType::BindingArray { base, size }));
-                let class = map_storage_class(space);
-                Instruction::type_pointer(id, class, inner_ty)
+                Instruction::type_pointer(id, spirv::StorageClass::UniformConstant, inner_ty)
             }
             LocalType::AccelerationStructure => Instruction::type_acceleration_structure(id),
             LocalType::RayQuery => Instruction::type_ray_query(id),
@@ -990,8 +990,8 @@ impl Writer {
 
                     let type_id = self.get_type_id(LookupType::Handle(base));
                     match size {
-                        crate::ArraySize::Constant(length) => {
-                            let length_id = self.get_index_constant(length.get());
+                        crate::ArraySize::Constant(const_handle) => {
+                            let length_id = self.constant_ids[const_handle.index()];
                             Instruction::type_array(id, type_id, length_id)
                         }
                         crate::ArraySize::Dynamic => Instruction::type_runtime_array(id, type_id),
@@ -1000,8 +1000,8 @@ impl Writer {
                 crate::TypeInner::BindingArray { base, size } => {
                     let type_id = self.get_type_id(LookupType::Handle(base));
                     match size {
-                        crate::ArraySize::Constant(length) => {
-                            let length_id = self.get_index_constant(length.get());
+                        crate::ArraySize::Constant(const_handle) => {
+                            let length_id = self.constant_ids[const_handle.index()];
                             Instruction::type_array(id, type_id, length_id)
                         }
                         crate::ArraySize::Dynamic => Instruction::type_runtime_array(id, type_id),
@@ -1107,29 +1107,20 @@ impl Writer {
     }
 
     pub(super) fn get_index_constant(&mut self, index: Word) -> Word {
-        self.get_constant_scalar(crate::Literal::U32(index))
+        self.get_constant_scalar(crate::ScalarValue::Uint(index as _), 4)
     }
 
-    pub(super) fn get_constant_scalar_with(
+    pub(super) fn get_constant_scalar(
         &mut self,
-        value: u8,
-        kind: crate::ScalarKind,
+        value: crate::ScalarValue,
         width: crate::Bytes,
-    ) -> Result<Word, Error> {
-        Ok(
-            self.get_constant_scalar(crate::Literal::new(value, kind, width).ok_or(
-                Error::Validation("Unexpected kind and/or width for Literal"),
-            )?),
-        )
-    }
-
-    pub(super) fn get_constant_scalar(&mut self, value: crate::Literal) -> Word {
-        let scalar = CachedConstant::Literal(value);
+    ) -> Word {
+        let scalar = CachedConstant::Scalar { value, width };
         if let Some(&id) = self.cached_constants.get(&scalar) {
             return id;
         }
         let id = self.id_gen.next();
-        self.write_constant_scalar(id, &value, None);
+        self.write_constant_scalar(id, &value, width, None);
         self.cached_constants.insert(scalar, id);
         id
     }
@@ -1137,7 +1128,8 @@ impl Writer {
     fn write_constant_scalar(
         &mut self,
         id: Word,
-        value: &crate::Literal,
+        value: &crate::ScalarValue,
+        width: crate::Bytes,
         debug_name: Option<&String>,
     ) {
         if self.flags.contains(WriterFlags::DEBUG) {
@@ -1148,19 +1140,56 @@ impl Writer {
         let type_id = self.get_type_id(LookupType::Local(LocalType::Value {
             vector_size: None,
             kind: value.scalar_kind(),
-            width: value.width(),
+            width,
             pointer_space: None,
         }));
+        let (solo, pair);
         let instruction = match *value {
-            crate::Literal::F64(value) => {
-                let bits = value.to_bits();
-                Instruction::constant_64bit(type_id, id, bits as u32, (bits >> 32) as u32)
+            crate::ScalarValue::Sint(val) => {
+                let words = match width {
+                    4 => {
+                        solo = [val as u32];
+                        &solo[..]
+                    }
+                    8 => {
+                        pair = [val as u32, (val >> 32) as u32];
+                        &pair
+                    }
+                    _ => unreachable!(),
+                };
+                Instruction::constant(type_id, id, words)
             }
-            crate::Literal::F32(value) => Instruction::constant_32bit(type_id, id, value.to_bits()),
-            crate::Literal::U32(value) => Instruction::constant_32bit(type_id, id, value),
-            crate::Literal::I32(value) => Instruction::constant_32bit(type_id, id, value as u32),
-            crate::Literal::Bool(true) => Instruction::constant_true(type_id, id),
-            crate::Literal::Bool(false) => Instruction::constant_false(type_id, id),
+            crate::ScalarValue::Uint(val) => {
+                let words = match width {
+                    4 => {
+                        solo = [val as u32];
+                        &solo[..]
+                    }
+                    8 => {
+                        pair = [val as u32, (val >> 32) as u32];
+                        &pair
+                    }
+                    _ => unreachable!(),
+                };
+                Instruction::constant(type_id, id, words)
+            }
+            crate::ScalarValue::Float(val) => {
+                let words = match width {
+                    4 => {
+                        solo = [(val as f32).to_bits()];
+                        &solo[..]
+                    }
+                    8 => {
+                        let bits = f64::to_bits(val);
+                        pair = [bits as u32, (bits >> 32) as u32];
+                        &pair
+                    }
+                    _ => unreachable!(),
+                };
+                Instruction::constant(type_id, id, words)
+            }
+            crate::ScalarValue::Bool(true) => Instruction::constant_true(type_id, id),
+            crate::ScalarValue::Bool(false) => Instruction::constant_false(type_id, id),
         };
 
         instruction.to_words(&mut self.logical_layout.declarations);
@@ -1550,9 +1579,6 @@ impl Writer {
             }
         }
 
-        // Note: we should be able to substitute `binding_array<Foo, 0>`,
-        // but there is still code that tries to register the pre-substituted type,
-        // and it is failing on 0.
         let mut substitute_inner_type_lookup = None;
         if let Some(ref res_binding) = global_variable.binding {
             self.decorate(id, Decoration::DescriptorSet, &[res_binding.group]);
@@ -1568,8 +1594,7 @@ impl Writer {
                     substitute_inner_type_lookup =
                         Some(LookupType::Local(LocalType::PointerToBindingArray {
                             base,
-                            size: remapped_binding_array_size,
-                            space: global_variable.space,
+                            size: remapped_binding_array_size as u64,
                         }))
                 }
             } else {
@@ -1610,13 +1635,7 @@ impl Writer {
             // a runtime-sized array. In this case, we need to decorate it with
             // Block.
             if let crate::AddressSpace::Storage { .. } = global_variable.space {
-                let decorated_id = match ir_module.types[global_variable.ty].inner {
-                    crate::TypeInner::BindingArray { base, .. } => {
-                        self.get_type_id(LookupType::Handle(base))
-                    }
-                    _ => inner_type_id,
-                };
-                self.decorate(decorated_id, Decoration::Block, &[]);
+                self.decorate(inner_type_id, Decoration::Block, &[]);
             }
             if substitute_inner_type_lookup.is_some() {
                 inner_type_id
@@ -1782,16 +1801,13 @@ impl Writer {
             match constant.inner {
                 crate::ConstantInner::Composite { .. } => continue,
                 crate::ConstantInner::Scalar { width, ref value } => {
-                    let literal = crate::Literal::from_scalar(*value, width).ok_or(
-                        Error::Validation("Unexpected kind and/or width for Literal"),
-                    )?;
                     self.constant_ids[handle.index()] = match constant.name {
                         Some(ref name) => {
                             let id = self.id_gen.next();
-                            self.write_constant_scalar(id, &literal, Some(name));
+                            self.write_constant_scalar(id, value, width, Some(name));
                             id
                         }
-                        None => self.get_constant_scalar(literal),
+                        None => self.get_constant_scalar(*value, width),
                     };
                 }
             }
@@ -1938,13 +1954,6 @@ impl Writer {
     /// Return the set of capabilities the last module written used.
     pub const fn get_capabilities_used(&self) -> &crate::FastHashSet<spirv::Capability> {
         &self.capabilities_used
-    }
-
-    pub fn decorate_non_uniform_binding_array_access(&mut self, id: Word) -> Result<(), Error> {
-        self.require_any("NonUniformEXT", &[spirv::Capability::ShaderNonUniform])?;
-        self.use_extension("SPV_EXT_descriptor_indexing");
-        self.decorate(id, spirv::Decoration::NonUniform, &[]);
-        Ok(())
     }
 }
 

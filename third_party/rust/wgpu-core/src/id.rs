@@ -42,10 +42,10 @@ type Dummy = hal::api::Empty;
 /// `X<Empty>` type with the resource type `X<A>`, for some specific backend
 /// `A`.
 ///
-/// [`Global`]: crate::global::Global
+/// [`Global`]: crate::hub::Global
 /// [`Hub`]: crate::hub::Hub
 /// [`Hub<A>`]: crate::hub::Hub
-/// [`Storage`]: crate::storage::Storage
+/// [`Storage`]: crate::hub::Storage
 /// [`Texture<A>`]: crate::resource::Texture
 /// [`Index`]: std::ops::Index
 /// [`IndexMut`]: std::ops::IndexMut

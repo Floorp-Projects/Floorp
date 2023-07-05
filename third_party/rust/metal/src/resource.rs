@@ -5,10 +5,9 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-use super::*;
+use super::{DeviceRef, HeapRef, NSUInteger};
 use objc::runtime::{NO, YES};
 
-/// See <https://developer.apple.com/documentation/metal/mtlpurgeablestate>
 #[repr(u64)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum MTLPurgeableState {
@@ -18,7 +17,6 @@ pub enum MTLPurgeableState {
     Empty = 4,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlcpucachemode>
 #[repr(u64)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum MTLCPUCacheMode {
@@ -26,7 +24,6 @@ pub enum MTLCPUCacheMode {
     WriteCombined = 1,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlstoragemode>
 #[repr(u64)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum MTLStorageMode {
@@ -38,8 +35,6 @@ pub enum MTLStorageMode {
 }
 
 /// Only available on macos(10.15), ios(13.0)
-///
-/// See <https://developer.apple.com/documentation/metal/mtlhazardtrackingmode>
 #[repr(u64)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum MTLHazardTrackingMode {
@@ -56,7 +51,6 @@ pub const MTLResourceHazardTrackingModeShift: NSUInteger = 8;
 pub const MTLResourceHazardTrackingModeMask: NSUInteger = 0x3 << MTLResourceHazardTrackingModeShift;
 
 bitflags! {
-    /// See <https://developer.apple.com/documentation/metal/mtlresourceoptions>
     #[allow(non_upper_case_globals)]
     pub struct MTLResourceOptions: NSUInteger {
         const CPUCacheModeDefaultCache  = (MTLCPUCacheMode::DefaultCache as NSUInteger) << MTLResourceCPUCacheModeShift;
@@ -81,8 +75,6 @@ bitflags! {
     ///
     /// Enabling certain options for certain resources determines whether the Metal driver should
     /// convert the resource to another format (for example, whether to decompress a color render target).
-    ///
-    /// See <https://developer.apple.com/documentation/metal/mtlresourceusage>
     pub struct MTLResourceUsage: NSUInteger {
         /// An option that enables reading from the resource.
         const Read   = 1 << 0;
@@ -95,7 +87,6 @@ bitflags! {
     }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlsizeandalign>
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(C)]
 pub struct MTLSizeAndAlign {
@@ -103,13 +94,12 @@ pub struct MTLSizeAndAlign {
     pub align: NSUInteger,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlresource>
 pub enum MTLResource {}
 
 foreign_obj_type! {
     type CType = MTLResource;
     pub struct Resource;
-    type ParentType = NsObject;
+    pub struct ResourceRef;
 }
 
 impl ResourceRef {

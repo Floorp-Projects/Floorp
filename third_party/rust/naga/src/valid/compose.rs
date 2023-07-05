@@ -1,5 +1,8 @@
 #[cfg(feature = "validate")]
-use crate::proc::TypeResolution;
+use crate::{
+    arena::{Arena, UniqueArena},
+    proc::TypeResolution,
+};
 
 use crate::arena::Handle;
 
@@ -17,17 +20,18 @@ pub enum ComposeError {
 #[cfg(feature = "validate")]
 pub fn validate_compose(
     self_ty_handle: Handle<crate::Type>,
-    gctx: crate::proc::GlobalCtx,
+    constant_arena: &Arena<crate::Constant>,
+    type_arena: &UniqueArena<crate::Type>,
     component_resolutions: impl ExactSizeIterator<Item = TypeResolution>,
 ) -> Result<(), ComposeError> {
     use crate::TypeInner as Ti;
 
-    match gctx.types[self_ty_handle].inner {
+    match type_arena[self_ty_handle].inner {
         // vectors are composed from scalars or other vectors
         Ti::Vector { size, kind, width } => {
             let mut total = 0;
             for (index, comp_res) in component_resolutions.enumerate() {
-                total += match *comp_res.inner_with(gctx.types) {
+                total += match *comp_res.inner_with(type_arena) {
                     Ti::Scalar {
                         kind: comp_kind,
                         width: comp_width,
@@ -70,7 +74,7 @@ pub fn validate_compose(
                 });
             }
             for (index, comp_res) in component_resolutions.enumerate() {
-                if comp_res.inner_with(gctx.types) != &inner {
+                if comp_res.inner_with(type_arena) != &inner {
                     log::error!("Matrix component[{}] type {:?}", index, comp_res);
                     return Err(ComposeError::ComponentType {
                         index: index as u32,
@@ -80,21 +84,22 @@ pub fn validate_compose(
         }
         Ti::Array {
             base,
-            size: crate::ArraySize::Constant(count),
+            size: crate::ArraySize::Constant(handle),
             stride: _,
         } => {
-            if count.get() as usize != component_resolutions.len() {
+            let count = constant_arena[handle].to_array_length().unwrap();
+            if count as usize != component_resolutions.len() {
                 return Err(ComposeError::ComponentCount {
-                    expected: count.get(),
+                    expected: count,
                     given: component_resolutions.len() as u32,
                 });
             }
             for (index, comp_res) in component_resolutions.enumerate() {
-                let base_inner = &gctx.types[base].inner;
-                let comp_res_inner = comp_res.inner_with(gctx.types);
+                let base_inner = &type_arena[base].inner;
+                let comp_res_inner = comp_res.inner_with(type_arena);
                 // We don't support arrays of pointers, but it seems best not to
                 // embed that assumption here, so use `TypeInner::equivalent`.
-                if !base_inner.equivalent(comp_res_inner, gctx.types) {
+                if !base_inner.equivalent(comp_res_inner, type_arena) {
                     log::error!("Array component[{}] type {:?}", index, comp_res);
                     return Err(ComposeError::ComponentType {
                         index: index as u32,
@@ -111,11 +116,11 @@ pub fn validate_compose(
             }
             for (index, (member, comp_res)) in members.iter().zip(component_resolutions).enumerate()
             {
-                let member_inner = &gctx.types[member.ty].inner;
-                let comp_res_inner = comp_res.inner_with(gctx.types);
+                let member_inner = &type_arena[member.ty].inner;
+                let comp_res_inner = comp_res.inner_with(type_arena);
                 // We don't support pointers in structs, but it seems best not to embed
                 // that assumption here, so use `TypeInner::equivalent`.
-                if !comp_res_inner.equivalent(member_inner, gctx.types) {
+                if !comp_res_inner.equivalent(member_inner, type_arena) {
                     log::error!("Struct component[{}] type {:?}", index, comp_res);
                     return Err(ComposeError::ComponentType {
                         index: index as u32,

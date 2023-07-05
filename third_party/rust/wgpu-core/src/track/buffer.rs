@@ -9,10 +9,9 @@ use std::{borrow::Cow, marker::PhantomData, vec::Drain};
 
 use super::PendingTransition;
 use crate::{
-    hal_api::HalApi,
+    hub,
     id::{BufferId, TypedId, Valid},
     resource::Buffer,
-    storage,
     track::{
         invalid_resource_state, skip_barrier, ResourceMetadata, ResourceMetadataProvider,
         ResourceUses, UsageConflict,
@@ -42,12 +41,12 @@ impl ResourceUses for BufferUses {
 }
 
 /// Stores all the buffers that a bind group stores.
-pub(crate) struct BufferBindGroupState<A: HalApi> {
+pub(crate) struct BufferBindGroupState<A: hub::HalApi> {
     buffers: Vec<(Valid<BufferId>, RefCount, BufferUses)>,
 
     _phantom: PhantomData<A>,
 }
-impl<A: HalApi> BufferBindGroupState<A> {
+impl<A: hub::HalApi> BufferBindGroupState<A> {
     pub fn new() -> Self {
         Self {
             buffers: Vec::new(),
@@ -73,7 +72,7 @@ impl<A: HalApi> BufferBindGroupState<A> {
     /// Adds the given resource with the given state.
     pub fn add_single<'a>(
         &mut self,
-        storage: &'a storage::Storage<Buffer<A>, BufferId>,
+        storage: &'a hub::Storage<Buffer<A>, BufferId>,
         id: BufferId,
         state: BufferUses,
     ) -> Option<&'a Buffer<A>> {
@@ -88,13 +87,13 @@ impl<A: HalApi> BufferBindGroupState<A> {
 
 /// Stores all buffer state within a single usage scope.
 #[derive(Debug)]
-pub(crate) struct BufferUsageScope<A: HalApi> {
+pub(crate) struct BufferUsageScope<A: hub::HalApi> {
     state: Vec<BufferUses>,
 
     metadata: ResourceMetadata<A>,
 }
 
-impl<A: HalApi> BufferUsageScope<A> {
+impl<A: hub::HalApi> BufferUsageScope<A> {
     pub fn new() -> Self {
         Self {
             state: Vec::new(),
@@ -216,7 +215,7 @@ impl<A: HalApi> BufferUsageScope<A> {
     /// the vectors will be extended. A call to set_size is not needed.
     pub fn merge_single<'a>(
         &mut self,
-        storage: &'a storage::Storage<Buffer<A>, BufferId>,
+        storage: &'a hub::Storage<Buffer<A>, BufferId>,
         id: BufferId,
         new_state: BufferUses,
     ) -> Result<&'a Buffer<A>, UsageConflict> {
@@ -249,7 +248,7 @@ impl<A: HalApi> BufferUsageScope<A> {
 }
 
 /// Stores all buffer state within a command buffer or device.
-pub(crate) struct BufferTracker<A: HalApi> {
+pub(crate) struct BufferTracker<A: hub::HalApi> {
     start: Vec<BufferUses>,
     end: Vec<BufferUses>,
 
@@ -257,7 +256,7 @@ pub(crate) struct BufferTracker<A: HalApi> {
 
     temp: Vec<PendingTransition<BufferUses>>,
 }
-impl<A: HalApi> BufferTracker<A> {
+impl<A: hub::HalApi> BufferTracker<A> {
     pub fn new() -> Self {
         Self {
             start: Vec::new(),
@@ -349,7 +348,7 @@ impl<A: HalApi> BufferTracker<A> {
     /// the vectors will be extended. A call to set_size is not needed.
     pub fn set_single<'a>(
         &mut self,
-        storage: &'a storage::Storage<Buffer<A>, BufferId>,
+        storage: &'a hub::Storage<Buffer<A>, BufferId>,
         id: BufferId,
         state: BufferUses,
     ) -> Option<(&'a Buffer<A>, Option<PendingTransition<BufferUses>>)> {
@@ -589,7 +588,7 @@ impl BufferStateProvider<'_> {
 /// Indexes must be valid indexes into all arrays passed in
 /// to this function, either directly or via metadata or provider structs.
 #[inline(always)]
-unsafe fn insert_or_merge<A: HalApi>(
+unsafe fn insert_or_merge<A: hub::HalApi>(
     life_guard: Option<&LifeGuard>,
     start_states: Option<&mut [BufferUses]>,
     current_states: &mut [BufferUses],
@@ -646,7 +645,7 @@ unsafe fn insert_or_merge<A: HalApi>(
 /// Indexes must be valid indexes into all arrays passed in
 /// to this function, either directly or via metadata or provider structs.
 #[inline(always)]
-unsafe fn insert_or_barrier_update<A: HalApi>(
+unsafe fn insert_or_barrier_update<A: hub::HalApi>(
     life_guard: Option<&LifeGuard>,
     start_states: Option<&mut [BufferUses]>,
     current_states: &mut [BufferUses],
@@ -691,7 +690,7 @@ unsafe fn insert_or_barrier_update<A: HalApi>(
 }
 
 #[inline(always)]
-unsafe fn insert<A: HalApi>(
+unsafe fn insert<A: hub::HalApi>(
     life_guard: Option<&LifeGuard>,
     start_states: Option<&mut [BufferUses]>,
     current_states: &mut [BufferUses],
@@ -724,7 +723,7 @@ unsafe fn insert<A: HalApi>(
 }
 
 #[inline(always)]
-unsafe fn merge<A: HalApi>(
+unsafe fn merge<A: hub::HalApi>(
     current_states: &mut [BufferUses],
     index32: u32,
     index: usize,
