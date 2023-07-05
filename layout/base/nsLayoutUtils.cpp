@@ -731,7 +731,7 @@ static bool HasVisibleAnonymousContents(Document* aDoc) {
     // For now we assume that if it has a frame, it is visible. We might be able
     // to refine this further by adding complexity if it turns out this
     // condition results in a lot of false positives.
-    if (ac->ContentNode().GetPrimaryFrame()) {
+    if (ac->Host()->GetPrimaryFrame()) {
       return true;
     }
   }

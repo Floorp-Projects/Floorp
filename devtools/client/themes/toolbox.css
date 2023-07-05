@@ -473,7 +473,7 @@
 }
 
 .toolbox-error::before {
-  background-image: url("chrome://devtools/skin/images/error-small.svg");
+  background-image: url("resource://devtools-shared-images/error-small.svg");
   fill: var(--theme-icon-error-color) !important;
 }
 
@@ -488,7 +488,7 @@
 }
 
 #command-button-pick::before {
-  background-image: url("chrome://devtools/content/shared/images/command-pick.svg");
+  background-image: url("resource://devtools-shared-images/command-pick.svg");
 }
 
 #command-button-pick.accessibility::before {
@@ -496,7 +496,7 @@
 }
 
 #command-button-pick.remote-fenix::before {
-  background-image: url("chrome://devtools/content/shared/images/command-pick-remote-touch.svg");
+  background-image: url("resource://devtools-shared-images/command-pick-remote-touch.svg");
 }
 
 /* Command button images */

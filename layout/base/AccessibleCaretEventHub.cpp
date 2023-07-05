@@ -332,11 +332,7 @@ AccessibleCaretEventHub::AccessibleCaretEventHub(PresShell* aPresShell)
     : mPresShell(aPresShell) {}
 
 void AccessibleCaretEventHub::Init() {
-  if (mInitialized && mManager) {
-    mManager->OnFrameReconstruction();
-  }
-
-  if (mInitialized || !mPresShell || !mPresShell->GetCanvasFrame()) {
+  if (mInitialized || !mPresShell) {
     return;
   }
 

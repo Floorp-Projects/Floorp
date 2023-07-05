@@ -1,25 +1,22 @@
 <!DOCTYPE HTML>
 <html>
 <!-- https://bugzilla.mozilla.org/show_bug.cgi?id=1020244 -->
-<head>
-  <meta charset="utf-8">
-  <title>Test for Bug 1020244 - Make sure anonymous content still works after a reflow (after the canvasframe has been reconstructed)</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
+<meta charset="utf-8">
+<title>Test for Bug 1020244 - Make sure anonymous content still works after a reflow (after the canvasframe has been reconstructed)</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 <div>
   <div id="test-element" style="color:red;">text content</div>
 </div>
-<script type="application/javascript">
+<script>
   info("Inserting anonymous content into the document frame");
   let chromeDocument = SpecialPowers.wrap(document);
+  let anonymousContent = chromeDocument.insertAnonymousContent();
   let testElement = document.querySelector("div");
-  let anonymousContent = chromeDocument.insertAnonymousContent(testElement);
+  anonymousContent.root.appendChild(testElement.cloneNode(true));
 
   info("Modifying the style of an element in the anonymous content");
-  let style = anonymousContent.setAttributeForElement("test-element",
-                                                      "style", "color:green;");
+  anonymousContent.root.getElementById("test-element").style.color = "green";
 
   info("Toggling the display style on the document element to force reframing");
   // Note that we force sync reflows to make sure the canvasframe is recreated
@@ -30,11 +27,9 @@
   forceFlush = document.documentElement.offsetHeight;
 
   info("Checking that the anonymous content can be retrieved still");
-  style = anonymousContent.getAttributeForElement("test-element", "style");
-  is(style, "color:green;", "The anonymous content still exists after reflow");
+  let color = anonymousContent.root.getElementById("test-element").style.color;
+  is(color, "green", "The anonymous content still exists after reflow");
 
   info("Removing the anonymous content");
   chromeDocument.removeAnonymousContent(anonymousContent);
 </script>
-</body>
-</html>

@@ -12,6 +12,7 @@ DIRS += [
     "compatibility",
     "discovery",
     "heapsnapshot",
+    "images",
     "inspector",
     "jsbeautify",
     "layout",

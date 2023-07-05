@@ -7,25 +7,15 @@
 #ifndef mozilla_dom_AnonymousContent_h
 #define mozilla_dom_AnonymousContent_h
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupportsImpl.h"
 
-class nsIPrincipal;
+namespace mozilla::dom {
 
-namespace mozilla {
-class ErrorResult;
-
-namespace dom {
-
-class Animation;
-class DOMRect;
-class DOMString;
 class Element;
-class Event;
-template <typename T>
-class Sequence;
-class UnrestrictedDoubleOrAnonymousKeyframeAnimationOptions;
-class UnrestrictedDoubleOrKeyframeAnimationOptions;
+class Document;
+class ShadowRoot;
 
 class AnonymousContent final {
  public:
@@ -33,61 +23,23 @@ class AnonymousContent final {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnonymousContent)
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(AnonymousContent)
 
-  explicit AnonymousContent(already_AddRefed<Element> aContentNode);
-  Element& ContentNode() { return *mContentNode; }
+  static already_AddRefed<AnonymousContent> Create(Document&);
 
-  Element* GetElementById(const nsAString& aElementId);
+  Element* Host() const { return mHost.get(); }
+  ShadowRoot* Root() const { return mRoot.get(); }
+
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector);
 
-  // WebIDL methods
-  void SetTextContentForElement(const nsAString& aElementId,
-                                const nsAString& aText, ErrorResult& aRv);
-
-  void GetTextContentForElement(const nsAString& aElementId, DOMString& aText,
-                                ErrorResult& aRv);
-
-  void SetAttributeForElement(const nsAString& aElementId,
-                              const nsAString& aName, const nsAString& aValue,
-                              nsIPrincipal* aSubjectPrincipal,
-                              ErrorResult& aRv);
-
-  void GetAttributeForElement(const nsAString& aElementId,
-                              const nsAString& aName, DOMString& aValue,
-                              ErrorResult& aRv);
-
-  void RemoveAttributeForElement(const nsAString& aElementId,
-                                 const nsAString& aName, ErrorResult& aRv);
-
-  already_AddRefed<nsISupports> GetCanvasContext(const nsAString& aElementId,
-                                                 const nsAString& aContextId,
-                                                 ErrorResult& aRv);
-
-  already_AddRefed<Animation> SetAnimationForElement(
-      JSContext* aContext, const nsAString& aElementId,
-      JS::Handle<JSObject*> aKeyframes,
-      const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions,
-      ErrorResult& aError);
-
-  void SetCutoutRectsForElement(const nsAString& aElementId,
-                                const Sequence<OwningNonNull<DOMRect>>& aRects,
-                                ErrorResult& aError);
-
-  void GetComputedStylePropertyValue(const nsAString& aElementId,
-                                     const nsACString& aPropertyName,
-                                     nsACString& aResult, ErrorResult& aRv);
-
-  void GetTargetIdForEvent(Event& aEvent, DOMString& aResult);
-
-  void SetStyle(const nsACString& aProperty, const nsACString& aValue,
-                ErrorResult& aRv);
-
  private:
   ~AnonymousContent();
-  RefPtr<Element> mContentNode;
+
+  explicit AnonymousContent(already_AddRefed<Element> aHost,
+                            already_AddRefed<ShadowRoot> aRoot);
+  RefPtr<Element> mHost;
+  RefPtr<ShadowRoot> mRoot;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_AnonymousContent_h

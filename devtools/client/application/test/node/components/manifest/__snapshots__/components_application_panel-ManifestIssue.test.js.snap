@@ -39,7 +39,7 @@ exports[`ManifestIssue renders the expected snapshot for an error 1`] = `
   >
     <img
       className="manifest-issue__icon manifest-issue__icon--error"
-      src="chrome://devtools/skin/images/error-small.svg"
+      src="resource://devtools-shared-images/error-small.svg"
     />
   </Localized>
   <span>
