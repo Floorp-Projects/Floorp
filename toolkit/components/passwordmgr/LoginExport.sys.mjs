@@ -42,7 +42,7 @@ export class LoginExport {
    */
   static async exportAsCSV(path, logins = null) {
     if (!logins) {
-      logins = await Services.logins.getAllLogins();
+      logins = await Services.logins.getAllLoginsAsync();
     }
     let columns = [
       "origin",

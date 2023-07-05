@@ -32,7 +32,7 @@ add_task(async function test_httpsUpgradeCaptureFields_noChange() {
   );
   await Services.logins.addLoginAsync(login1);
   // Sanity check the HTTP login exists.
-  let logins = await Services.logins.getAllLogins();
+  let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should have the HTTP login");
 
   await testSubmittingLoginForm(
@@ -54,7 +54,7 @@ add_task(async function test_httpsUpgradeCaptureFields_noChange() {
     "https://example.com"
   ); // This is HTTPS whereas the saved login is HTTP
 
-  logins = await Services.logins.getAllLogins();
+  logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login still");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(
@@ -75,7 +75,7 @@ add_task(async function test_httpsUpgradeCaptureFields_changePW() {
   );
   await Services.logins.addLoginAsync(login1);
   // Sanity check the HTTP login exists.
-  let logins = await Services.logins.getAllLogins();
+  let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should have the HTTP login");
 
   await testSubmittingLoginForm(
@@ -105,8 +105,8 @@ add_task(async function test_httpsUpgradeCaptureFields_changePW() {
     "https://example.com"
   ); // This is HTTPS whereas the saved login is HTTP
 
-  await checkOnlyLoginWasUsedTwice({ justChanged: true });
-  logins = await Services.logins.getAllLogins();
+  checkOnlyLoginWasUsedTwice({ justChanged: true });
+  logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 1, "Should only have 1 login still");
   let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   Assert.equal(
@@ -133,7 +133,7 @@ add_task(
     );
     await Services.logins.addLogins([login1, login1HTTPS]);
 
-    let logins = await Services.logins.getAllLogins();
+    let logins = Services.logins.getAllLogins();
     Assert.equal(logins.length, 2, "Should have both HTTP and HTTPS logins");
 
     await testSubmittingLoginForm(
@@ -163,7 +163,7 @@ add_task(
       "https://example.com"
     );
 
-    logins = await Services.logins.getAllLogins();
+    logins = Services.logins.getAllLogins();
     Assert.equal(logins.length, 2, "Should have 2 logins still");
     let loginHTTP = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
     let loginHTTPS = logins[1].QueryInterface(Ci.nsILoginMetaInfo);
@@ -236,7 +236,7 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
       Assert.ok(notif, "got notification popup");
 
       Assert.equal(
-        (await Services.logins.getAllLogins()).length,
+        Services.logins.getAllLogins().length,
         1,
         "Should only have the HTTPS login"
       );
@@ -248,7 +248,7 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
 
   await storageChangedPromise;
 
-  let logins = await Services.logins.getAllLogins();
+  let logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 2, "Should have both HTTP and HTTPS logins");
   for (let login of logins) {
     login = login.QueryInterface(Ci.nsILoginMetaInfo);
@@ -286,7 +286,7 @@ add_task(async function test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
     }
   );
 
-  logins = await Services.logins.getAllLogins();
+  logins = Services.logins.getAllLogins();
   Assert.equal(logins.length, 2, "Should have both HTTP and HTTPS still");
 
   let httpsLogins = LoginHelper.searchLoginsWithObject({
