@@ -8293,8 +8293,14 @@ static Element* GetCustomContentContainer(PresShell* aPresShell) {
 }
 
 already_AddRefed<AnonymousContent> Document::InsertAnonymousContent(
-    bool aForce, ErrorResult& aRv) {
-  RefPtr<PresShell> shell = GetPresShell();
+    Element& aElement, bool aForce, ErrorResult& aRv) {
+  // Clone the node to avoid returning a direct reference.
+  nsCOMPtr<nsINode> clone = aElement.CloneNode(true, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  PresShell* shell = GetPresShell();
   if (aForce && !GetCustomContentContainer(shell)) {
     FlushPendingNotifications(FlushType::Layout);
     shell = GetPresShell();
@@ -8302,23 +8308,14 @@ already_AddRefed<AnonymousContent> Document::InsertAnonymousContent(
 
   nsAutoScriptBlocker scriptBlocker;
 
-  RefPtr<AnonymousContent> anonContent = AnonymousContent::Create(*this);
-  if (!anonContent) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
-  }
+  auto anonContent =
+      MakeRefPtr<AnonymousContent>(clone.forget().downcast<Element>());
 
   mAnonymousContents.AppendElement(anonContent);
 
-  if (RefPtr<Element> container = GetCustomContentContainer(shell)) {
-    // If the container is empty and we have other anon content we should be
-    // about to show all the other anonymous content nodes.
-    if (container->HasChildren() || mAnonymousContents.Length() == 1) {
-      container->AppendChildTo(anonContent->Host(), true, IgnoreErrors());
-      if (auto* canvasFrame = shell->GetCanvasFrame()) {
-        canvasFrame->ShowCustomContentContainer();
-      }
-    }
+  if (Element* container = GetCustomContentContainer(shell)) {
+    container->AppendChildTo(&anonContent->ContentNode(), true, IgnoreErrors());
+    shell->GetCanvasFrame()->ShowCustomContentContainer();
   }
 
   return anonContent.forget();
@@ -8330,7 +8327,7 @@ static void RemoveAnonContentFromCanvas(AnonymousContent& aAnonContent,
   if (!container) {
     return;
   }
-  container->RemoveChild(*aAnonContent.Host(), IgnoreErrors());
+  container->RemoveChild(aAnonContent.ContentNode(), IgnoreErrors());
 }
 
 void Document::RemoveAnonymousContent(AnonymousContent& aContent) {
