@@ -40,7 +40,6 @@ def get_default_config(topsrcdir, strings_path):
                     "beta": "releases/mozilla-beta",
                     "release": "releases/mozilla-release",
                     "esr115": "releases/mozilla-esr115",
-                    "esr102": "releases/mozilla-esr102",
                 },
                 "config_files": [
                     "browser/locales/l10n.toml",
