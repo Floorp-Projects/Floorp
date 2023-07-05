@@ -155,6 +155,8 @@ class ProviderQuickActions extends UrlbarProvider {
         results: results.map(key => ({ key })),
         dynamicType: DYNAMIC_TYPE_NAME,
         inputLength: input.length,
+        inQuickActionsSearchMode:
+          queryContext.searchMode?.source == UrlbarUtils.RESULT_SOURCE.ACTIONS,
       }
     );
     result.suggestedIndex = SUGGESTED_INDEX;
@@ -168,6 +170,10 @@ class ProviderQuickActions extends UrlbarProvider {
         {
           name: "buttons",
           tag: "div",
+          attributes: {
+            "data-is-quickactions-searchmode":
+              result.payload.inQuickActionsSearchMode,
+          },
           children: result.payload.results.map(({ key }, i) => {
             let action = this.#actions.get(key);
             let inActive = "isActive" in action && !action.isActive();
