@@ -33,6 +33,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -178,6 +179,18 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         assertItemContainingTextExists(itemContainingText(getStringResource(R.string.saved_login_password_required)))
 
     fun clickGoBackButton() = goBackButton().click()
+
+    fun clickCopyUserNameButton() =
+        itemWithResId("$packageName:id/copyUsername").also {
+            it.waitForExists(waitingTime)
+            it.click()
+        }
+
+    fun clickCopyPasswordButton() =
+        itemWithResId("$packageName:id/copyPassword").also {
+            it.waitForExists(waitingTime)
+            it.click()
+        }
 
     class Transition {
         fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
