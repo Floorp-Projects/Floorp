@@ -60,6 +60,7 @@
 #include "jit/JitContext.h"           // for JitContext
 #include "jit/JitOptions.h"           // for fuzzingSafe
 #include "jit/JitScript.h"            // for JitScript
+#include "jit/JitZone.h"              // for JitZone
 #include "jit/JSJitFrameIter.h"       // for InlineFrameIterator
 #include "jit/RematerializedFrame.h"  // for RematerializedFrame
 #include "js/CallAndConstruct.h"      // JS::IsCallable
@@ -3187,18 +3188,19 @@ static bool UpdateExecutionObservabilityOfScriptsInZone(
           return false;
         }
       }
-    } else {
-      for (auto base = zone->cellIter<BaseScript>(); !base.done();
-           base.next()) {
-        if (!base->hasJitScript()) {
-          continue;
-        }
-        JSScript* script = base->asJSScript();
-        if (obs.shouldRecompileOrInvalidate(script)) {
-          if (!AppendAndInvalidateScript(cx, zone, script, invalid, scripts)) {
-            return false;
-          }
-        }
+    } else if (zone->jitZone()) {
+      if (!zone->jitZone()->forEachJitScriptFallible(
+              [&](jit::JitScript* jitScript) {
+                JSScript* script = jitScript->owningScript();
+                if (obs.shouldRecompileOrInvalidate(script)) {
+                  if (!AppendAndInvalidateScript(cx, zone, script, invalid,
+                                                 scripts)) {
+                    return false;
+                  }
+                }
+                return true;
+              })) {
+        return false;
       }
     }
     Invalidate(cx, invalid);

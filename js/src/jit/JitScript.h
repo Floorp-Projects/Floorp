@@ -11,6 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
@@ -274,7 +275,9 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 //     ICFallbackStub[]     | fallbackStubsOffset()
 //
 // These offsets are also used to compute numICEntries.
-class alignas(uintptr_t) JitScript final : public TrailingArray {
+class alignas(uintptr_t) JitScript final
+    : public mozilla::LinkedListElement<JitScript>,
+      public TrailingArray {
   friend class ::JSScript;
 
   // Allocated space for Can-GC CacheIR stubs.
@@ -282,6 +285,8 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
 
   // Profile string used by the profiler for Baseline Interpreter frames.
   const char* profileString_ = nullptr;
+
+  HeapPtr<JSScript*> owningScript_;
 
   // Baseline code for the script. Either nullptr, BaselineDisabledScriptPtr or
   // a valid BaselineScript*.
@@ -341,6 +346,8 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
             const char* profileString);
 
   ~JitScript();
+
+  JSScript* owningScript() const { return owningScript_; }
 
   [[nodiscard]] bool ensureHasCachedBaselineJitData(JSContext* cx,
                                                     HandleScript script);
