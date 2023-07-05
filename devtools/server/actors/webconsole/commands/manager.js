@@ -111,6 +111,15 @@ const WebConsoleCommandsManager = {
     if (frame && frame.environment) {
       return !!frame.environment.find(name);
     }
+
+    try {
+      // This can throw in Browser Toolbox tests
+      const globalEnv = dbgGlobal.asEnvironment();
+      if (globalEnv) {
+        return !!dbgGlobal.asEnvironment().find(name);
+      }
+    } catch {}
+
     return !!dbgGlobal.getOwnPropertyDescriptor(name);
   },
 
