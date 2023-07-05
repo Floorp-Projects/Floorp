@@ -54,7 +54,7 @@ add_task(async function () {
   await checkWorkerThreads(dbg, 1);
 
   await resume(dbg);
-  await dbg.actions.removeAllBreakpoints(getContext(dbg));
+  await dbg.actions.removeAllBreakpoints();
 
   info("Wait for reload to complete after resume");
   await onReloaded;
