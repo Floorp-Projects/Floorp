@@ -74,6 +74,39 @@ void nsCanvasFrame::HideCustomContentContainer() {
   }
 }
 
+// Do this off a script-runner because some anon content might load CSS which we
+// don't want to deal with while doing frame construction.
+void InsertAnonymousContentInContainer(Document& aDoc, Element& aContainer) {
+  if (!aContainer.IsInComposedDoc() || aDoc.GetAnonymousContents().IsEmpty()) {
+    return;
+  }
+  for (RefPtr<AnonymousContent>& anonContent : aDoc.GetAnonymousContents()) {
+    if (nsCOMPtr<nsINode> parent = anonContent->Host()->GetParentNode()) {
+      // Parent had better be an old custom content container already
+      // removed from a reframe. Forget about it since we're about to get
+      // inserted in a new one.
+      //
+      // TODO(emilio): Maybe we should extend PostDestroyData and do this
+      // stuff there instead, or something...
+      MOZ_ASSERT(parent != &aContainer);
+      MOZ_ASSERT(parent->IsElement());
+      MOZ_ASSERT(parent->AsElement()->IsRootOfNativeAnonymousSubtree());
+      MOZ_ASSERT(!parent->IsInComposedDoc());
+      MOZ_ASSERT(!parent->GetParentNode());
+
+      parent->RemoveChildNode(anonContent->Host(), true);
+    }
+    aContainer.AppendChildTo(anonContent->Host(), true, IgnoreErrors());
+  }
+  // Flush frames now. This is really sadly needed, but otherwise stylesheets
+  // inserted by the above DOM changes might not be processed in time for layout
+  // to run.
+  // FIXME(emilio): This is because we have a script-running checkpoint just
+  // after ProcessPendingRestyles but before DoReflow. That seems wrong! Ideally
+  // the whole layout / styling pass should be atomic.
+  aDoc.FlushPendingNotifications(FlushType::Frames);
+}
+
 nsresult nsCanvasFrame::CreateAnonymousContent(
     nsTArray<ContentInfo>& aElements) {
   MOZ_ASSERT(!mCustomContentContainer);
@@ -82,19 +115,7 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
     return NS_OK;
   }
 
-  nsCOMPtr<Document> doc = mContent->OwnerDoc();
-
-  RefPtr<AccessibleCaretEventHub> eventHub =
-      PresShell()->GetAccessibleCaretEventHub();
-
-  // This will go through InsertAnonymousContent and such, and we don't really
-  // want it to end up inserting into our content container.
-  //
-  // FIXME(emilio): The fact that this enters into InsertAnonymousContent is a
-  // bit nasty, can we avoid it, maybe doing this off a scriptrunner?
-  if (eventHub) {
-    eventHub->Init();
-  }
+  Document* doc = mContent->OwnerDoc();
 
   // Create the custom content container.
   mCustomContentContainer = doc->CreateHTMLElement(nsGkAtoms::div);
@@ -129,27 +150,12 @@ nsresult nsCanvasFrame::CreateAnonymousContent(
   // Only create a frame for mCustomContentContainer if it has some children.
   if (doc->GetAnonymousContents().IsEmpty()) {
     HideCustomContentContainer();
-  }
-
-  for (RefPtr<AnonymousContent>& anonContent : doc->GetAnonymousContents()) {
-    if (nsCOMPtr<nsINode> parent = anonContent->ContentNode().GetParentNode()) {
-      // Parent had better be an old custom content container already removed
-      // from a reframe. Forget about it since we're about to get inserted in a
-      // new one.
-      //
-      // TODO(emilio): Maybe we should extend PostDestroyData and do this stuff
-      // there instead, or something...
-      MOZ_ASSERT(parent != mCustomContentContainer);
-      MOZ_ASSERT(parent->IsElement());
-      MOZ_ASSERT(parent->AsElement()->IsRootOfNativeAnonymousSubtree());
-      MOZ_ASSERT(!parent->IsInComposedDoc());
-      MOZ_ASSERT(!parent->GetParentNode());
-
-      parent->RemoveChildNode(&anonContent->ContentNode(), false);
-    }
-
-    mCustomContentContainer->AppendChildTo(&anonContent->ContentNode(), false,
-                                           IgnoreErrors());
+  } else {
+    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+        "InsertAnonymousContentInContainer",
+        [doc = RefPtr{doc}, container = RefPtr{mCustomContentContainer.get()}] {
+          InsertAnonymousContentInContainer(*doc, *container);
+        }));
   }
 
   // Create a popupgroup element for system privileged non-XUL documents to

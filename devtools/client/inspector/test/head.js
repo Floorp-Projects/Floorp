@@ -814,6 +814,11 @@ function waitForStyleEditor(toolbox, href) {
       // A helper that resolves the promise once it receives an editor that
       // matches the expected href. Returns false if the editor was not correct.
       const gotEditor = editor => {
+        if (!editor) {
+          info("Editor went away after selected?");
+          return false;
+        }
+
         const currentHref = editor.styleSheet.href;
         if (!href || (href && currentHref.endsWith(href))) {
           info("Stylesheet editor selected");

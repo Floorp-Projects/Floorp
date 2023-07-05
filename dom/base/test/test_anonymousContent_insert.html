@@ -3,18 +3,15 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
 -->
-<head>
-  <meta charset="utf-8">
-  <title>Test for Bug 1020244 - Insert content using the AnonymousContent API, several times, and don't remove it</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
+<meta charset="utf-8">
+<title>Test for Bug 1020244 - Insert content using the AnonymousContent API, several times, and don't remove it</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1020244">Mozilla Bug 1020244</a>
 <div>
   <div id="id" class="test">text content</div>
 </div>
-  <script type="application/javascript">
+  <script>
   const INSERTED_NB = 5;
 
   // Insert the same content several times
@@ -23,7 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
 
   let anonymousContents = [];
   for (let i = 0; i < INSERTED_NB; i ++) {
-    let content = chromeDocument.insertAnonymousContent(testElement);
+    let content = chromeDocument.insertAnonymousContent();
+    content.root.appendChild(testElement.cloneNode(true));
     // Adding an expando pointing to the document to make sure this doesn't
     // cause leaks.
     content.dummyExpando = testElement.ownerDocument;
@@ -32,14 +30,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
 
   // Make sure that modifying one of the inserted elements does not modify the
   // other ones.
-  anonymousContents[0].setAttributeForElement("id", "class", "updated");
+  anonymousContents[0].root.getElementById("id").className = "updated";
   for (let i = 1; i < INSERTED_NB; i ++) {
-    is(anonymousContents[i].getAttributeForElement("id", "class"),
-       "test",
-       "Element " + i + " didn't change when element 0 was changed");
+    is(
+      anonymousContents[i].root.getElementById("id").className,
+      "test",
+      "Element " + i + " didn't change when element 0 was changed"
+    );
   }
-
   // Do not remove inserted elements on purpose to test for potential leaks too.
-  </script>
-</body>
-</html>
+</script>

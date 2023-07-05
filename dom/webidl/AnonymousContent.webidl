@@ -7,94 +7,11 @@
 /*
  * This file declares the AnonymousContent interface which is used to
  * manipulate content that has been inserted into the document's canvasFrame
- * anonymous container.
- * See Document.insertAnonymousContent.
- *
- * This API never returns a reference to the actual inserted DOM node on
- * purpose. This is to make sure the content cannot be randomly changed and the
- * DOM cannot be traversed from the node, so that Gecko can remain in control of
- * the inserted content.
+ * anonymous container. See Document.insertAnonymousContent.
+ * Users of this API must never remove the host of the shadow root.
  */
 
 [ChromeOnly, Exposed=Window]
 interface AnonymousContent {
-  /**
-   * Get the text content of an element inside this custom anonymous content.
-   */
-  [Throws]
-  DOMString getTextContentForElement(DOMString elementId);
-
-  /**
-   * Set the text content of an element inside this custom anonymous content.
-   */
-  [Throws]
-  undefined setTextContentForElement(DOMString elementId, DOMString text);
-
-  /**
-   * Get the value of an attribute of an element inside this custom anonymous
-   * content.
-   */
-  [Throws]
-  DOMString? getAttributeForElement(DOMString elementId,
-                                    DOMString attributeName);
-
-  /**
-   * Set the value of an attribute of an element inside this custom anonymous
-   * content.
-   */
-  [NeedsSubjectPrincipal=NonSystem, Throws]
-  undefined setAttributeForElement(DOMString elementId,
-                                   DOMString attributeName,
-                                   DOMString value);
-
-  /**
-   * Remove an attribute from an element inside this custom anonymous content.
-   */
-  [Throws]
-  undefined removeAttributeForElement(DOMString elementId,
-                                      DOMString attributeName);
-
-  /**
-   * Get the canvas' context for the element specified if it's a <canvas>
-   * node, `null` otherwise.
-   */
-  [Throws]
-  nsISupports? getCanvasContext(DOMString elementId,
-                                DOMString contextId);
-
-  [Throws]
-  Animation setAnimationForElement(DOMString elementId,
-                                   object? keyframes,
-                                   optional UnrestrictedDoubleOrKeyframeAnimationOptions
-                                     options = {});
-
-  /**
-   * Accepts a list of (possibly overlapping) DOMRects which describe a shape
-   * in CSS pixels relative to the element's border box. This shape will be
-   * excluded from the element's background color rendering. The element will
-   * not render any background images once this method has been called.
-   */
-  [Throws]
-  undefined setCutoutRectsForElement(DOMString elementId,
-                                     sequence<DOMRect> rects);
-
-  /**
-   * Get the computed value of a property on an element inside this custom
-   * anonymous content.
-   */
-  [Throws]
-  UTF8String? getComputedStylePropertyValue(DOMString elementId,
-                                            UTF8String propertyName);
-
-  /**
-   * If event's original target is in the anonymous content, this returns the id
-   * attribute value of the target.
-   */
-  DOMString? getTargetIdForEvent(Event event);
-
-  /**
-   * Set given style to this AnonymousContent.
-   */
-  [Throws]
-  undefined setStyle(UTF8String property, UTF8String value);
+  readonly attribute ShadowRoot root;
 };

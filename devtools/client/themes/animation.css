@@ -750,5 +750,5 @@ select.playback-rate-selector.devtools-button:not(:empty, :disabled, .checked):h
 }
 
 .animation-element-picker::before {
-  background-image: url("chrome://devtools/content/shared/images/command-pick.svg");
+  background-image: url("resource://devtools-shared-images/command-pick.svg");
 }

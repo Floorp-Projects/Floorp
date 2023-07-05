@@ -296,7 +296,7 @@
 
 .message.error > .icon {
   color: var(--theme-icon-error-color);
-  background-image: url(chrome://devtools/skin/images/error-small.svg);
+  background-image: url(resource://devtools-shared-images/error-small.svg);
 }
 
 .message.warn > .icon {

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:-moz-native-anonymous #screenshots-component {
+#screenshots-component {
   --in-content-page-background: #fff;
 
   --in-content-button-text-color: rgb(21, 20, 26);
@@ -29,7 +29,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :-moz-native-anonymous #screenshots-component {
+  #screenshots-component {
     --in-content-page-background: #42414d;
 
     --in-content-button-text-color: rgb(251,251,254);
@@ -45,7 +45,7 @@
 }
 
 @media (forced-colors: active), (prefers-contrast) {
-  :-moz-native-anonymous #screenshots-component {
+  #screenshots-component {
     --in-content-page-background: Canvas;
 
     --in-content-button-text-color: ButtonText;
@@ -72,7 +72,7 @@
   }
 }
 
-:-moz-native-anonymous #screenshots-component {
+#screenshots-component {
   width: 100%;
   height: 100%;
   overflow: clip;
@@ -85,7 +85,7 @@
  * Overlay content is position: fixed as we need to allow for the possiblily
  * of the document scrolling or changing size while the overlay is visible
  */
-:-moz-native-anonymous #screenshots-overlay-container {
+#screenshots-overlay-container {
   /*
   Content CSS applying to the html element can impact the overlay.
   To avoid that, possible cases have been set to initial.
@@ -103,7 +103,7 @@
   cursor: crosshair;
 }
 
-:-moz-native-anonymous #preview-container {
+#preview-container {
   background-color: rgba(0, 0, 0, 0.7);
   position: fixed;
   top: 0;
@@ -112,7 +112,7 @@
   height: 100%;
 }
 
-:-moz-native-anonymous #selection-container {
+#selection-container {
   overflow: clip;
   position: absolute;
   top: 0;
@@ -121,15 +121,15 @@
   height: 100%;
 }
 
-:-moz-native-anonymous #screenshots-overlay-container[hidden] {
+#screenshots-overlay-container[hidden] {
   display: none;
 }
 
-:-moz-native-anonymous #screenshots-overlay-container[dragging] {
+#screenshots-overlay-container[dragging] {
   cursor: grabbing;
 }
 
-:-moz-native-anonymous #buttons {
+#buttons {
   position: absolute;
   margin: 10px 0;
   display: flex;
@@ -140,7 +140,7 @@
   padding: 4px;
 }
 
-:-moz-native-anonymous .screenshots-button {
+.screenshots-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -167,43 +167,43 @@
   background-color: var(--in-content-button-background);
 }
 
-:-moz-native-anonymous .screenshots-button:focus-visible,
-:-moz-native-anonymous #screenshots-cancel-button:focus-visible {
+.screenshots-button:focus-visible,
+#screenshots-cancel-button:focus-visible {
   outline: 2px solid var(--in-content-focus-outline-color);
   outline-offset: 2px;
 }
 
-:-moz-native-anonymous .screenshots-button:hover {
+.screenshots-button:hover {
   background-color: var(--in-content-button-background-hover);
   border-color: var(--in-content-button-border-color-hover);
   color: var(--in-content-button-text-color-hover);
 }
 
-:-moz-native-anonymous .screenshots-button:active {
+.screenshots-button:active {
   background-color: var(--in-content-button-background-active);
   border-color: var(--in-content-button-border-color-active);
   color: var(--in-content-button-text-color-active);
 }
 
-:-moz-native-anonymous .primary {
+.primary {
   background-color: var(--in-content-primary-button-background);
   border-color: var(--in-content-primary-button-border-color);
   color: var(--in-content-primary-button-text-color);
 }
 
-:-moz-native-anonymous .primary:hover {
+.primary:hover {
   background-color: var(--in-content-primary-button-background-hover);
   border-color: var(--in-content-primary-button-border-color-hover);
   color: var(--in-content-primary-button-text-color-hover);
 }
 
-:-moz-native-anonymous .primary:active {
+.primary:active {
   background-color: var(--in-content-primary-button-background-active);
   border-color: var(--in-content-primary-button-border-color-active);
   color: var(--in-content-primary-button-text-color-active);
 }
 
-:-moz-native-anonymous #screenshots-cancel-button {
+#screenshots-cancel-button {
   background-color: transparent;
   margin-top: 40px;
   width: fit-content;
@@ -211,43 +211,43 @@
   color: #fff;
 }
 
-:-moz-native-anonymous #screenshots-cancel-button:hover {
+#screenshots-cancel-button:hover {
   background-color: #fff;
   color: #000;
 }
 
 @media (forced-colors: active), (prefers-contrast) {
-  :-moz-native-anonymous #screenshots-cancel-button {
+  #screenshots-cancel-button {
     border-color: ButtonBorder;
     color: CanvasText;
   }
 }
 
-:-moz-native-anonymous .screenshots-button > img {
+.screenshots-button > img {
   -moz-context-properties: fill;
   fill: currentColor;
   width: 16px;
   height: 16px;
 }
 
-:-moz-native-anonymous #cancel > img {
+#cancel > img {
   content: url("chrome://global/skin/icons/close.svg");
 }
 
-:-moz-native-anonymous #copy > img {
+#copy > img {
   content: url("chrome://global/skin/icons/edit-copy.svg");
 }
 
-:-moz-native-anonymous #download > img {
+#download > img {
   content: url("chrome://browser/skin/downloads/downloads.svg");
 }
 
-:-moz-native-anonymous #download > img,
-:-moz-native-anonymous #copy > img {
+#download > img,
+#copy > img {
   margin-inline-end: 5px;
 }
 
-:-moz-native-anonymous .fixed-container {
+.fixed-container {
   align-items: center;
   display: flex;
   flex-direction: column;
@@ -261,20 +261,20 @@
   width: 100%;
 }
 
-:-moz-native-anonymous .face-container {
+.face-container {
   position: relative;
   width: 64px;
   height: 64px;
 }
 
-:-moz-native-anonymous .face {
+.face {
   width: 62px;
   height: 62px;
   display: block;
   background-image: url("chrome://browser/content/screenshots/icon-welcome-face-without-eyes.svg");
 }
 
-:-moz-native-anonymous .eye {
+.eye {
   background-color: #fff;
   width: 10px;
   height: 14px;
@@ -285,7 +285,7 @@
   top: 19px;
 }
 
-:-moz-native-anonymous .eyeball {
+.eyeball {
   position: absolute;
   width: 6px;
   height: 6px;
@@ -296,19 +296,19 @@
   z-index: 10;
 }
 
-:-moz-native-anonymous .left {
+.left {
   margin-inline-start: 0;
 }
 
-:-moz-native-anonymous .right {
+.right {
   margin-inline-start: 20px;
 }
 
-:-moz-native-anonymous .preview-instructions {
+.preview-instructions {
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: pulse 125mm cubic-bezier(0.07, 0.95, 0, 1);
+  animation: pulse 125ms cubic-bezier(0.07, 0.95, 0, 1);
   color: #fff;
   font-family: -apple-system, BlinkMacSystemFont, "segoe ui", "helvetica neue", helvetica, ubuntu, roboto, noto, arial, sans-serif;
   font-size: 24px;
@@ -319,12 +319,12 @@
 }
 
 @media (forced-colors: active), (prefers-contrast) {
-  :-moz-native-anonymous .preview-instructions {
+  .preview-instructions {
     color: CanvasText;
   }
 }
 
-:-moz-native-anonymous #hover-highlight {
+#hover-highlight {
   animation: fade-in 125ms forwards cubic-bezier(0.07, 0.95, 0, 1);
   background: rgba(255, 255, 255, 0.2);
   border-radius: 1px;
@@ -333,7 +333,7 @@
   z-index: 11;
 }
 
-:-moz-native-anonymous #hover-highlight::before {
+#hover-highlight::before {
   border: 2px dashed rgba(255, 255, 255, 0.4);
   bottom: 0;
   content: "";
@@ -343,13 +343,13 @@
   top: 0;
 }
 
-:-moz-native-anonymous .bghighlight {
+.bghighlight {
   background-color: rgba(0, 0, 0, 0.7);
   position: absolute;
   overflow: clip;
 }
 
-:-moz-native-anonymous .highlight {
+.highlight {
   border-radius: 1px;
   border: 2px dashed rgba(255, 255, 255, 0.8);
   box-sizing: border-box;
@@ -359,7 +359,7 @@
   z-index: 2;
 }
 
-:-moz-native-anonymous .mover-target {
+.mover-target {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -368,7 +368,7 @@
   pointer-events: auto;
 }
 
-:-moz-native-anonymous .mover-target.direction-topLeft {
+.mover-target.direction-topLeft {
   cursor: nwse-resize;
   height: 60px;
   left: -30px;
@@ -376,7 +376,7 @@
   width: 60px;
 }
 
-:-moz-native-anonymous .mover-target.direction-top {
+.mover-target.direction-top {
   cursor: ns-resize;
   height: 60px;
   inset-inline-start: 0;
@@ -385,7 +385,7 @@
   z-index: 4;
 }
 
-:-moz-native-anonymous .mover-target.direction-topRight {
+.mover-target.direction-topRight {
   cursor: nesw-resize;
   height: 60px;
   right: -30px;
@@ -393,7 +393,7 @@
   width: 60px;
 }
 
-:-moz-native-anonymous .mover-target.direction-left {
+.mover-target.direction-left {
   cursor: ew-resize;
   height: 100%;
   left: -30px;
@@ -402,7 +402,7 @@
   z-index: 4;
 }
 
-:-moz-native-anonymous .mover-target.direction-right {
+.mover-target.direction-right {
   cursor: ew-resize;
   height: 100%;
   right: -30px;
@@ -411,7 +411,7 @@
   z-index: 4;
 }
 
-:-moz-native-anonymous .mover-target.direction-bottomLeft {
+.mover-target.direction-bottomLeft {
   bottom: -30px;
   cursor: nesw-resize;
   height: 60px;
@@ -419,7 +419,7 @@
   width: 60px;
 }
 
-:-moz-native-anonymous .mover-target.direction-bottom {
+.mover-target.direction-bottom {
   bottom: -30px;
   cursor: ns-resize;
   height: 60px;
@@ -428,7 +428,7 @@
   z-index: 4;
 }
 
-:-moz-native-anonymous .mover-target.direction-bottomRight {
+.mover-target.direction-bottomRight {
   bottom: -30px;
   cursor: nwse-resize;
   height: 60px;
@@ -436,11 +436,11 @@
   width: 60px;
 }
 
-:-moz-native-anonymous .mover-target:hover .mover {
+.mover-target:hover .mover {
   transform: scale(1.05);
 }
 
-:-moz-native-anonymous .mover {
+.mover {
   background-color: #fff;
   border-radius: 50%;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
@@ -451,31 +451,31 @@
   width: 16px;
 }
 
-:-moz-native-anonymous .small-selection .mover {
+.small-selection .mover {
   height: 10px;
   width: 10px;
 }
 
-:-moz-native-anonymous .direction-topLeft .mover,
-:-moz-native-anonymous .direction-left .mover,
-:-moz-native-anonymous .direction-bottomLeft .mover {
+.direction-topLeft .mover,
+.direction-left .mover,
+.direction-bottomLeft .mover {
   left: -1px;
 }
 
-:-moz-native-anonymous .direction-topLeft .mover,
-:-moz-native-anonymous .direction-top .mover,
-:-moz-native-anonymous .direction-topRight .mover {
+.direction-topLeft .mover,
+.direction-top .mover,
+.direction-topRight .mover {
   top: -1px;
 }
 
-:-moz-native-anonymous .direction-topRight .mover,
-:-moz-native-anonymous .direction-right .mover,
-:-moz-native-anonymous .direction-bottomRight .mover {
+.direction-topRight .mover,
+.direction-right .mover,
+.direction-bottomRight .mover {
   right: -1px;
 }
 
-:-moz-native-anonymous .direction-bottomRight .mover,
-:-moz-native-anonymous .direction-bottom .mover,
-:-moz-native-anonymous .direction-bottomLeft .mover {
+.direction-bottomRight .mover,
+.direction-bottom .mover,
+.direction-bottomLeft .mover {
   bottom: -1px;
 }

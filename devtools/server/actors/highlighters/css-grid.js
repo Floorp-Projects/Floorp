@@ -1801,7 +1801,10 @@ class CssGridHighlighter extends AutoRefreshHighlighter {
     setIgnoreLayoutChanges(true);
 
     // Set z-index.
-    this.markup.content.setStyle("z-index", this.options.zIndex);
+    this.markup.content.root.firstElementChild.style.setProperty(
+      "z-index",
+      this.options.zIndex
+    );
 
     const root = this.getElement("root");
     const cells = this.getElement("cells");

@@ -6,6 +6,7 @@
 
 DIRS += [
     "utils",
+    "css",
 ]
 
 DevToolsModules(
