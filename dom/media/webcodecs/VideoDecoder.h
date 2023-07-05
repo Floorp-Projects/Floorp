@@ -67,8 +67,12 @@ struct VideoColorSpaceInternal {
   Maybe<VideoTransferCharacteristics> mTransfer;
 };
 
-struct VideoDecoderConfigInternal {
-  explicit VideoDecoderConfigInternal(const VideoDecoderConfig& aConfig);
+class VideoDecoderConfigInternal {
+ public:
+  static UniquePtr<VideoDecoderConfigInternal> Create(
+      const VideoDecoderConfig& aConfig);
+  ~VideoDecoderConfigInternal() = default;
+
   nsString mCodec;
   Maybe<uint32_t> mCodedHeight;
   Maybe<uint32_t> mCodedWidth;
@@ -78,6 +82,17 @@ struct VideoDecoderConfigInternal {
   Maybe<uint32_t> mDisplayAspectWidth;
   HardwareAcceleration mHardwareAcceleration;
   Maybe<bool> mOptimizeForLatency;
+
+ private:
+  VideoDecoderConfigInternal(const nsAString& aCodec,
+                             Maybe<uint32_t>&& aCodedHeight,
+                             Maybe<uint32_t>&& aCodedWidth,
+                             Maybe<VideoColorSpaceInternal>&& aColorSpace,
+                             Maybe<RefPtr<MediaByteBuffer>>&& aDescription,
+                             Maybe<uint32_t>&& aDisplayAspectHeight,
+                             Maybe<uint32_t>&& aDisplayAspectWidth,
+                             const HardwareAcceleration& aHardwareAcceleration,
+                             Maybe<bool>&& aOptimizeForLatency);
 };
 
 class ConfigureMessage;
