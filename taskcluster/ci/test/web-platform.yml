@@ -226,7 +226,7 @@ web-platform-tests-webgpu:
         by-test-platform:
             android.*: []  # Out of scope
             macos.*: []  # Disabled
-            linux.*: []  # Broken on CI
+            linux.*: []  # Broken on CI; follow-up at https://bugzilla.mozilla.org/show_bug.cgi?id=webgpu-v1-cts-linux
             .*wayland.*: []
             default: ['trunk']
     mozharness:
