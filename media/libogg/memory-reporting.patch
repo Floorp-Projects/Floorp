@@ -4,10 +4,10 @@ Date:   Wed Mar 5 10:58:29 2014 -0500
 
     Bug 677653 - part 1 - indirect libogg memory allocations through variables
 
-diff --git a/media/libogg/include/ogg/ogg.h b/media/libogg/include/ogg/ogg.h
+diff --git a/include/ogg/ogg.h b/include/ogg/ogg.h
 index cea4ebe..cebe38e 100644
---- include/ogg/ogg.h
-+++ include/ogg/ogg.h
+--- a/include/ogg/ogg.h
++++ b/include/ogg/ogg.h
 @@ -202,6 +202,10 @@ extern int      ogg_page_packets(const ogg_page *og);
  
  extern void     ogg_packet_clear(ogg_packet *op);
@@ -19,10 +19,10 @@ index cea4ebe..cebe38e 100644
  
  #ifdef __cplusplus
  }
-diff --git a/media/libogg/include/ogg/os_types.h b/media/libogg/include/ogg/os_types.h
+diff --git a/include/ogg/os_types.h b/include/ogg/os_types.h
 index 2c75a20..83ed732 100644
---- include/ogg/os_types.h
-+++ include/ogg/os_types.h
+--- a/include/ogg/os_types.h
++++ b/include/ogg/os_types.h
 @@ -17,12 +17,33 @@
  #ifndef _OS_TYPES_H
  #define _OS_TYPES_H
@@ -63,11 +63,11 @@ index 2c75a20..83ed732 100644
  
  #if defined(_WIN32) 
  
-diff --git a/media/libogg/src/ogg_alloc.c b/media/libogg/src/ogg_alloc.c
+diff --git a/src/ogg_alloc.c b/src/ogg_alloc.c
 new file mode 100644
 index 0000000..4238d7b
 --- /dev/null
-+++ src/ogg_alloc.c
++++ b/src/ogg_alloc.c
 @@ -0,0 +1,31 @@
 +/********************************************************************
 + *                                                                  *
