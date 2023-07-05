@@ -1,0 +1,108 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  /* Add transition effect to make caret size changing smoother. */
+  transition-property: width, height, margin-left;
+
+  position: absolute;
+  z-index: 2147483647;
+}
+
+#image,
+#text-overlay {
+  width: 100%;
+
+  /* Override this property in moz-custom-content-container to make dummy touch
+   * listener work. */
+  pointer-events: auto;
+}
+
+#image {
+  background-position: center top;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-origin: content-box;
+}
+
+:host(.normal) #image {
+  background-image: image-set(
+    url("resource://gre-resources/accessiblecaret-normal@1x.png"),
+    url("resource://gre-resources/accessiblecaret-normal@1.5x.png") 1.5x,
+    url("resource://gre-resources/accessiblecaret-normal@2x.png") 2x,
+    url("resource://gre-resources/accessiblecaret-normal@2.25x.png") 2.25x
+  );
+}
+
+:host(.left) #image,
+:host(.left) #text-overlay {
+  margin-left: -39%;
+}
+
+:host(.left) > #image {
+  background-image: image-set(
+    url("resource://gre-resources/accessiblecaret-tilt-left@1x.png"),
+    url("resource://gre-resources/accessiblecaret-tilt-left@1.5x.png") 1.5x,
+    url("resource://gre-resources/accessiblecaret-tilt-left@2x.png") 2x,
+    url("resource://gre-resources/accessiblecaret-tilt-left@2.25x.png") 2.25x
+  );
+}
+
+:host(.right) #image,
+:host(.right) #text-overlay {
+  margin-left: 41%;
+}
+
+:host(.right) #image {
+  background-image: image-set(
+    url("resource://gre-resources/accessiblecaret-tilt-right@1x.png"),
+    url("resource://gre-resources/accessiblecaret-tilt-right@1.5x.png") 1.5x,
+    url("resource://gre-resources/accessiblecaret-tilt-right@2x.png") 2x,
+    url("resource://gre-resources/accessiblecaret-tilt-right@2.25x.png") 2.25x
+  );
+}
+
+:host(.none) {
+  display: none;
+}
+
+:host(.hidden) {
+  visibility: hidden;
+}
+
+@media (-moz-platform: android) {
+  #image,
+  #text-overlay {
+    /* border: 0.1px solid red; */ /* Uncomment border to see the touch target. */
+    padding-left: 59%; /* Enlarge the touch area. ((48-22)/2)px / 22px ~= 59% */
+    padding-right: 59%; /* Enlarge the touch area. */
+    margin-left: -59%;
+  }
+
+  #image {
+    padding-bottom: 59%; /* Enlarge the touch area. */
+  }
+
+  :host(.normal) #image {
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal.svg");
+  }
+
+  :host(.left) #image,
+  :host(.left) #text-overlay {
+    margin-left: -109%;
+  }
+
+  :host(.left) #image {
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left.svg");
+  }
+
+  :host(.right) #image,
+  :host(.right) #text-overlay {
+    margin-left: -12%;
+  }
+
+  :host(.right) #image {
+    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right.svg");
+  }
+}

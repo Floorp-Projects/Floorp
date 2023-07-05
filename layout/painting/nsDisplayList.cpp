@@ -41,6 +41,7 @@
 #include "mozilla/ViewportUtils.h"
 #include "nsCSSRendering.h"
 #include "nsCSSRenderingGradients.h"
+#include "nsCaseTreatment.h"
 #include "nsRefreshDriver.h"
 #include "nsRegion.h"
 #include "nsStyleStructInlines.h"
@@ -1383,8 +1384,9 @@ void nsDisplayListBuilder::MarkFramesForDisplayList(
       nsIContent* content = e->GetContent();
       if (content && content->IsInNativeAnonymousSubtree() &&
           content->IsElement()) {
-        auto* classList = content->AsElement()->ClassList();
-        if (classList->Contains(u"moz-accessiblecaret"_ns)) {
+        const nsAttrValue* classes = content->AsElement()->GetClasses();
+        if (classes &&
+            classes->Contains(nsGkAtoms::mozAccessiblecaret, eCaseMatters)) {
           continue;
         }
       }

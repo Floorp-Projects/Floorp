@@ -37,7 +37,6 @@ DevToolsModules(
     "errordocs.js",
     "frame.js",
     "heap-snapshot-file.js",
-    "highlighters.css",
     "highlighters.js",
     "layout.js",
     "manifest.js",

@@ -15,9 +15,11 @@ const TEST_LEVELS = [2, 1, 0.5];
 // Returns the expected style attribute value to check for on the highlighter's elements
 // node, for the values given.
 const expectedStyle = (w, h, z) =>
-  (z !== 1 ? `transform-origin:top left; transform:scale(${1 / z}); ` : "") +
-  `position:absolute; width:${w * z}px;height:${h * z}px; ` +
-  "overflow:hidden";
+  (z !== 1
+    ? `transform-origin: left top 0px; transform: scale(${1 / z}); `
+    : "") +
+  `position: absolute; width: ${w * z}px; height: ${h * z}px; ` +
+  "overflow: hidden;";
 
 add_task(async function () {
   const { inspector, highlighterTestFront } = await openInspectorForURL(

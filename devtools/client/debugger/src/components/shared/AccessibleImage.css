@@ -158,7 +158,7 @@ html[dir="rtl"] .img.more-tabs {
 }
 
 .img.resume {
-  mask-image: url(chrome://devtools/content/shared/images/resume.svg);
+  mask-image: url(resource://devtools-shared-images/resume.svg);
 }
 
 .img.search {
@@ -182,7 +182,7 @@ html[dir="rtl"] .img.more-tabs {
 }
 
 .img.stepOver {
-  mask-image: url(chrome://devtools/content/shared/images/stepOver.svg);
+  mask-image: url(resource://devtools-shared-images/stepOver.svg);
 }
 
 .img.tab {

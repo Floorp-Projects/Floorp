@@ -33,10 +33,11 @@ function startTest() {
   div.id = "ac-child";
   div.textContent = " This div text should be green.";
   bq.appendChild(div);
-  var ac = document.insertAnonymousContent(bq);
+  var ac = document.insertAnonymousContent();
+  ac.root.appendChild(bq);
   document.body.offsetWidth;
 
-  is(ac.getComputedStylePropertyValue("ac-child", "color"), "rgb(0, 128, 0)",
+  is(getComputedStyle(div).color, "rgb(0, 128, 0)",
      "color before reframing");
 
   // reframe the root
@@ -44,10 +45,10 @@ function startTest() {
   document.body.offsetWidth;
 
   // restyle the div
-  ac.setAttributeForElement("ac-child", "class", "abc");
+  div.className = "abc";
   document.body.offsetWidth;
 
-  is(ac.getComputedStylePropertyValue("ac-child", "color"), "rgb(0, 128, 0)",
+  is(getComputedStyle(div).color, "rgb(0, 128, 0)",
      "color after reframing");
   SimpleTest.finish();
 }
