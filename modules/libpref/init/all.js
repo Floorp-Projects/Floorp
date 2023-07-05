@@ -3977,11 +3977,11 @@ pref("security.external_protocol_requires_permission", true);
 
 // Preferences for the form autofill toolkit component.
 // The truthy values of "extensions.formautofill.addresses.available"
-// and "extensions.formautofill.creditCards.available" are "on" and "detect",
+// is "on" and "detect",
 // any other value means autofill isn't available.
 // "detect" means it's enabled if conditions defined in the extension are met.
-// Note: "extensions.formautofill.available" and "extensions.formautofill.creditCards.available"
-// are not being used in form autofill, but need to exist for migration purposes.
+// Note: "extensions.formautofill.available"
+// is not being used in form autofill, but need to exist for migration purposes.
 pref("extensions.formautofill.available", "detect");
 pref("extensions.formautofill.addresses.supported", "detect");
 pref("extensions.formautofill.addresses.enabled", true);
@@ -3991,8 +3991,6 @@ pref("extensions.formautofill.addresses.capture.v2.enabled", false);
 pref("extensions.formautofill.addresses.ignoreAutocompleteOff", true);
 // Supported countries need to follow ISO 3166-1 to align with "browser.search.region"
 pref("extensions.formautofill.addresses.supportedCountries", "US,CA");
-// Note: this ".available" pref is only used for migration purposes and will be removed/replaced later.
-pref("extensions.formautofill.creditCards.available", true);
 pref("extensions.formautofill.creditCards.supported", "detect");
 pref("extensions.formautofill.creditCards.enabled", true);
 pref("extensions.formautofill.creditCards.ignoreAutocompleteOff", true);
