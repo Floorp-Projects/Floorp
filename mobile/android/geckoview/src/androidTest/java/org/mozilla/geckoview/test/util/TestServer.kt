@@ -15,12 +15,15 @@ import java.math.BigInteger
 import java.security.MessageDigest
 import java.util.* // ktlint-disable no-wildcard-imports
 
-class TestServer {
+class TestServer @JvmOverloads constructor(
+    context: Context,
+    private val customHeaders: Map<String, String>? = null,
+) {
     private val server = AsyncHttpServer()
     private val assets: AssetManager
     private val stallingResponses = Vector<AsyncHttpServerResponse>()
 
-    constructor(context: Context) {
+    init {
         assets = context.resources.assets
 
         val anything = { request: AsyncHttpServerRequest, response: AsyncHttpServerResponse ->
@@ -53,6 +56,9 @@ class TestServer {
                 val name = request.path.substring("/assets/".count())
                 val asset = assets.open(name).readBytes()
 
+                customHeaders?.forEach { (header, value) ->
+                    response.headers.set(header, value)
+                }
                 response.send(mimeType, asset)
             } catch (e: FileNotFoundException) {
                 response.code(404)

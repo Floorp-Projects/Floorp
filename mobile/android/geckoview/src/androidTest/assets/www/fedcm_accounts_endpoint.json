@@ -1,0 +1,12 @@
+{
+  "accounts": [
+    {
+      "id": "z_JXqzcjcfBgsuMfV_Nw4fW_9KA7TElnyiMfT2ws1RU",
+      "given_name": "",
+      "name": " ",
+      "email": "demo",
+      "picture": "http://localhost:4245/assets/www/images/test.gif",
+      "approved_clients": ["fedcm_rp.html"]
+    }
+  ]
+}

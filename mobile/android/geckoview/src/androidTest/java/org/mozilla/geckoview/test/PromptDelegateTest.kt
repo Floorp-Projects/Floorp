@@ -27,7 +27,9 @@ import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
-class PromptDelegateTest : BaseSessionTest() {
+class PromptDelegateTest : BaseSessionTest(
+    serverCustomHeaders = mapOf("Access-Control-Allow-Origin" to "*"),
+) {
     @Test fun popupTestAllow() {
         // Ensure popup blocking is enabled for this test.
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.disable_open_during_load" to true))
@@ -579,6 +581,11 @@ class PromptDelegateTest : BaseSessionTest() {
                 "dom.security.credentialmanagement.identity.enabled" to true,
             ),
         )
+        sessionRule.setPrefsUntilTestEnd(
+            mapOf(
+                "dom.security.credentialmanagement.identity.test_ignore_well_known" to true,
+            ),
+        )
         mainSession.loadTestPath(FEDCM_RP_HTML_PATH)
 
         sessionRule.delegateDuringNextWait(object : PromptDelegate {
@@ -595,6 +602,17 @@ class PromptDelegateTest : BaseSessionTest() {
                         containsString("$TEST_HOST:$TEST_PORT"),
                     )
                     assertThat("Icon should be null", item.icon, isEmptyOrNullString())
+                }
+                return GeckoResult.fromValue(prompt.confirm(0))
+            }
+
+            @AssertCalled(count = 1)
+            override fun onSelectIdentityCredentialAccount(
+                session: GeckoSession,
+                prompt: PromptDelegate.IdentityCredential.AccountSelectorPrompt,
+            ): GeckoResult<PromptResponse> {
+                prompt.accounts.forEachIndexed { index, item ->
+                    assertThat("ID should match", index, equalTo(item.id))
                 }
                 return GeckoResult.fromValue(prompt.confirm(0))
             }
