@@ -286,10 +286,6 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
     { what: RECORD_PREF_VALUE },
   ],
   ["extensions.formautofill.creditCards.enabled", { what: RECORD_PREF_VALUE }],
-  [
-    "extensions.formautofill.creditCards.available",
-    { what: RECORD_PREF_VALUE },
-  ],
   ["extensions.manifestV3.enabled", { what: RECORD_PREF_VALUE }],
   ["extensions.quarantinedDomains.enabled", { what: RECORD_PREF_VALUE }],
   ["extensions.strictCompatibility", { what: RECORD_PREF_VALUE }],
