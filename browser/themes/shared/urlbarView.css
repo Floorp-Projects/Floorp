@@ -797,6 +797,11 @@
   background-color: var(--urlbarView-result-button-selected-background-color);
 }
 
+.urlbarView-row[type$=_pocket] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-description,
+.urlbarView-row[type$=_pocket] > .urlbarView-row-inner > .urlbarView-row-body > .urlbarView-row-body-bottom {
+  white-space: normal;
+}
+
 /* Search one-offs */
 
 #urlbar .search-one-offs:not([hidden]) {

@@ -80,6 +80,8 @@ firefox-suggest-weather-high-low = High: { $high }°{ $unit } · Low: { $low }°
 #   $provider (String) - The name of the weather provider
 firefox-suggest-weather-sponsored = { $provider } · Sponsored
 
+## These strings are used as labels of menu items in the result menu.
+
 firefox-suggest-command-show-less-frequently =
   .label = Show less frequently
 firefox-suggest-command-dont-show-this =
@@ -90,6 +92,8 @@ firefox-suggest-command-not-interested =
   .label = Not interested
 firefox-suggest-weather-command-inaccurate-location =
   .label = Report inaccurate location
+
+## These strings are used for add-on suggestions in the urlbar.
 
 # This string displays the number of reviews in the add-ons suggestion
 # Variables:
@@ -102,6 +106,16 @@ firefox-suggest-addons-reviews =
 
 # This string explaining that the add-on suggestion is a recommendation.
 firefox-suggest-addons-recommended = Recommended
+
+## These strings are used for Pocket suggestions in the urlbar.
+
+# This string is shown in Pocket suggestions and indicates the suggestion is
+# from Pocket and is related to a particular keyword that matches the user's
+# search string.
+# Variables:
+#   $keywordSubstringTyped (string) - The part of the suggestion keyword that the user typed
+#   $keywordSubstringNotTyped (string) - The part of the suggestion keyword that the user did not yet type
+firefox-suggest-pocket-bottom-text = { -pocket-brand-name } · Related to <strong>{ $keywordSubstringTyped }</strong>{ $keywordSubstringNotTyped }
 
 ## These strings are used in the preferences UI (about:preferences). Their names
 ## follow the naming conventions of other strings used in the preferences UI.
