@@ -182,6 +182,7 @@ export class Popup extends Component {
       <ExceptionPopup
         exception={exception}
         mouseout={this.onMouseOutException}
+        clearPreview={this.props.clearPreview}
       />
     );
   }
