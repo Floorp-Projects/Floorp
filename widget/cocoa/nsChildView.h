@@ -140,6 +140,9 @@ class WidgetRenderingContext;
   // Whether we're inside updateRootCALayer at the moment.
   BOOL mIsUpdatingLayer;
 
+  // Whether the drag and drop was performed.
+  BOOL mPerformedDrag;
+
   // Holds our drag service across multiple drag calls. The reference to the
   // service is obtained when the mouse enters the view and is released when
   // the mouse exits or there is a drop. This prevents us from having to

@@ -2736,6 +2736,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
 - (void)mouseDown:(NSEvent*)theEvent {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+  mPerformedDrag = NO;
 
   if ([self shouldDelayWindowOrderingForEvent:theEvent]) {
     [NSApp preventWindowOrdering];
@@ -2811,7 +2812,13 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
   gLastDragView = nil;
 
-  if (!mGeckoChild || mBlockedLastMouseDown) return;
+  if (!mGeckoChild || mBlockedLastMouseDown || mPerformedDrag) {
+    // There is case that mouseUp event will be fired right after DnD on OSX. As
+    // mPerformedDrag will be YES at end of DnD processing, ignore this mouseUp
+    // event fired right after DnD.
+    return;
+  }
+
   if (mTextInputHandler->OnHandleEvent(theEvent)) {
     return;
   }
@@ -2910,6 +2917,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
 - (void)rightMouseDown:(NSEvent*)theEvent {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+  mPerformedDrag = NO;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -2995,6 +3003,7 @@ static bool ShouldDispatchBackForwardCommandForMouseButton(int16_t aButton) {
 
 - (void)otherMouseDown:(NSEvent*)theEvent {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+  mPerformedDrag = NO;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -4219,6 +4228,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
   globalDragPboard = nil;
   [gLastDragMouseDownEvent release];
   gLastDragMouseDownEvent = nil;
+  mPerformedDrag = YES;
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
