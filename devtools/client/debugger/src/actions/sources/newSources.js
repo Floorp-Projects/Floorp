@@ -201,7 +201,7 @@ function restoreBlackBoxedSources(cx, sources) {
     }
 
     if (prefs.sourceMapIgnoreListEnabled) {
-      await dispatch(toggleSourceMapIgnoreList(cx, true));
+      await dispatch(toggleSourceMapIgnoreList(true));
     }
   };
 }

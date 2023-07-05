@@ -173,7 +173,7 @@ class SecondaryPanes extends Component {
       debugBtn(
         evt => {
           evt.stopPropagation();
-          this.props.removeAllBreakpoints(this.props.cx);
+          this.props.removeAllBreakpoints();
         },
         "removeAll",
         "active",

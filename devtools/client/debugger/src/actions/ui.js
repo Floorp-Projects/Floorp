@@ -11,6 +11,7 @@ import {
   getIgnoreListSourceUrls,
   getSourceByURL,
   getBreakpointsForSource,
+  getContext,
 } from "../selectors";
 import { selectSource } from "../actions/sources/select";
 import {
@@ -240,9 +241,10 @@ export function setHideOrShowIgnoredSources(shouldHide) {
   };
 }
 
-export function toggleSourceMapIgnoreList(cx, shouldEnable) {
+export function toggleSourceMapIgnoreList(shouldEnable) {
   return async thunkArgs => {
     const { dispatch, getState } = thunkArgs;
+    const cx = getContext(getState());
     const ignoreListSourceUrls = getIgnoreListSourceUrls(getState());
     // Blackbox the source actors on the server
     for (const url of ignoreListSourceUrls) {
