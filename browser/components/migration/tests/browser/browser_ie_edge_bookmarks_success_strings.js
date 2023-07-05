@@ -54,24 +54,24 @@ add_task(async function test_ie_edge_bookmarks_success_strings() {
       let bookmarksProgressGroup = shadow.querySelector(
         `.resource-progress-group[data-resource-type="${MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS}"`
       );
-      let successTextElement =
-        bookmarksProgressGroup.querySelector(".success-text");
+      let messageTextElement =
+        bookmarksProgressGroup.querySelector(".message-text");
 
       await BrowserTestUtils.waitForCondition(() => {
-        return successTextElement.textContent.trim();
+        return messageTextElement.textContent.trim();
       });
 
-      let successText = successTextElement.textContent.toLowerCase();
+      let messageText = messageTextElement.textContent.toLowerCase();
 
       if (key == "internal-testing") {
         Assert.ok(
-          successText.includes("bookmarks"),
-          `Success test should refer to bookmarks: ${successText}.`
+          messageText.includes("bookmarks"),
+          `Message text should refer to bookmarks: ${messageText}.`
         );
       } else {
         Assert.ok(
-          successText.includes("favorites"),
-          `Success test should refer to favorites: ${successText}`
+          messageText.includes("favorites"),
+          `Message text should refer to favorites: ${messageText}`
         );
       }
 

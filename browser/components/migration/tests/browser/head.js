@@ -387,8 +387,8 @@ function assertQuantitiesShown(wizard, expectedResourceTypes) {
   for (let progressGroup of progressGroups) {
     if (expectedResourceTypes.includes(progressGroup.dataset.resourceType)) {
       let progressIcon = progressGroup.querySelector(".progress-icon");
-      let successText =
-        progressGroup.querySelector(".success-text").textContent;
+      let messageText =
+        progressGroup.querySelector(".message-text").textContent;
 
       Assert.notEqual(
         progressIcon.getAttribute("state"),
@@ -409,20 +409,20 @@ function assertQuantitiesShown(wizard, expectedResourceTypes) {
           // history entries, but instead shows the maximum number of days of history
           // that might have been imported.
           Assert.notEqual(
-            successText.indexOf(MigrationUtils.HISTORY_MAX_AGE_IN_DAYS),
+            messageText.indexOf(MigrationUtils.HISTORY_MAX_AGE_IN_DAYS),
             -1,
-            `Found expected maximum number of days of history: ${successText}`
+            `Found expected maximum number of days of history: ${messageText}`
           );
         } else if (
           progressGroup.dataset.resourceType ==
           MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA
         ) {
           // FORMDATA is another special case, because we simply show "Form history" as
-          // the success string, rather than a particular quantity.
+          // the message string, rather than a particular quantity.
           Assert.equal(
-            successText,
+            messageText,
             "Form history",
-            `Found expected form data string: ${successText}`
+            `Found expected form data string: ${messageText}`
           );
         } else if (
           progressGroup.dataset.resourceType ==
@@ -430,12 +430,12 @@ function assertQuantitiesShown(wizard, expectedResourceTypes) {
         ) {
           // waitForTestMigration by default sets up a "successful" migration of 1
           // extension.
-          Assert.stringMatches(successText, "1 extension");
+          Assert.stringMatches(messageText, "1 extension");
         } else {
           Assert.notEqual(
-            successText.indexOf(EXPECTED_QUANTITY),
+            messageText.indexOf(EXPECTED_QUANTITY),
             -1,
-            `Found expected quantity in success string: ${successText}`
+            `Found expected quantity in message string: ${messageText}`
           );
         }
       } else {
@@ -444,7 +444,7 @@ function assertQuantitiesShown(wizard, expectedResourceTypes) {
         // a resource type that's not in RESOURCE_TYPES_WITH_QUANTITIES, and you'll need
         // to modify this function to check for that string.
         Assert.equal(
-          successText,
+          messageText,
           "",
           "Expected the empty string if the resource type " +
             "isn't in RESOURCE_TYPES_WITH_QUANTITIES"

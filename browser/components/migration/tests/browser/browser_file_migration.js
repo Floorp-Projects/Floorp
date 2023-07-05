@@ -170,9 +170,9 @@ add_task(async function test_file_migration() {
       "div[name='page-file-import-progress'] .resource-progress-group"
     );
     for (let progressGroup of progressGroups) {
-      let expectedSuccessText =
+      let expectedMessageText =
         SUCCESS_STATE[progressGroup.dataset.resourceType];
-      if (expectedSuccessText) {
+      if (expectedMessageText) {
         let progressIcon = progressGroup.querySelector(".progress-icon");
         Assert.stringMatches(
           progressIcon.getAttribute("state"),
@@ -180,9 +180,9 @@ add_task(async function test_file_migration() {
           "Should be showing completed state."
         );
 
-        let successText =
-          progressGroup.querySelector(".success-text").textContent;
-        Assert.equal(successText, expectedSuccessText);
+        let messageText =
+          progressGroup.querySelector(".message-text").textContent;
+        Assert.equal(messageText, expectedMessageText);
       } else {
         Assert.ok(
           BrowserTestUtils.is_hidden(progressGroup),
