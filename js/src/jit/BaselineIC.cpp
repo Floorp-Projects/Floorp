@@ -211,7 +211,7 @@ bool ICEntry::traceWeak(JSTracer* trc) {
   // Clear the folded stubs flag if we know for sure that there are none
   // left. The flag will remain set if we have removed all folded stubs but
   // other stubs remain.
-   if (fallbackStub->numOptimizedStubs() == 0 &&
+  if (fallbackStub->numOptimizedStubs() == 0 &&
       fallbackStub->mayHaveFoldedStub()) {
     fallbackStub->clearMayHaveFoldedStub();
   }
