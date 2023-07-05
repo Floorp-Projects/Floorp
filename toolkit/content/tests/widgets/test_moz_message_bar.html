@@ -11,36 +11,69 @@
 <body>
 <p id="display"></p>
 <div id="content">
-  <moz-message-bar id="testElement" message="Test message"></moz-message-bar>
-  <moz-message-bar id="testElement2" dismissable message="Test message"></moz-message-bar>
+  <moz-message-bar id="infoMessage" message="Test message"></moz-message-bar>
+  <moz-message-bar id="infoMessage2" dismissable message="Test message"></moz-message-bar>
+  <moz-message-bar id="warningMessage" type="warning" message="Test message"></moz-message-bar>
+  <moz-message-bar id="successMessage" type="success" message="Test message"></moz-message-bar>
+  <moz-message-bar id="errorMessage" type="error" message="Test message"></moz-message-bar>
 </div>
 <pre id="test">
   <script class="testbody" type="application/javascript">
     add_task(async function test_component_declaration() {
-      const mozMessageBar = document.querySelector("#testElement");
+      const mozMessageBar = document.querySelector("#infoMessage");
       ok(mozMessageBar, "moz-message-bar component is rendered.");
 
       const icon = mozMessageBar.shadowRoot.querySelector(".icon");
-      const iconUrl = window.getComputedStyle(icon, "::after").content;
+      const iconUrl = icon.src;
       ok(iconUrl.includes("info-filled.svg"), "Info icon is showing up.");
+      const iconAlt = icon.alt;
+      is(iconAlt, "Info", "Alternate text for the info icon is present.");
 
       const message = mozMessageBar.shadowRoot.querySelector(".message");
       is(message.textContent.trim(), "Test message", "Message is showing up.");
     });
+
     add_task(async function test_close_button() {
-      const notDismissableComponent = document.querySelector("#testElement");
+      const notDismissableComponent = document.querySelector("#infoMessage");
       let closeButton = notDismissableComponent.shadowRoot.querySelector(".close");
       let closeButtonDislay = window.getComputedStyle(closeButton).display;
       is(closeButtonDislay, "none", "Close button doesn't show when the message bar isn't dismissable.");
 
-      let dismissableComponent = document.querySelector("#testElement2");
+      let dismissableComponent = document.querySelector("#infoMessage2");
       closeButton = dismissableComponent.shadowRoot.querySelector(".close");
       closeButtonDislay = window.getComputedStyle(closeButton).display;
       is(closeButtonDislay, "block", "Close button is displayed when the message bar is dismissable.");
 
       closeButton.click();
-      dismissableComponent = document.querySelector("#testElement2");
+      dismissableComponent = document.querySelector("#infoMessage2");
       is(dismissableComponent, null, "Clicking on the close button removes the message bar element.");
+    });
+
+    add_task(async function test_warning_message_component() {
+      const mozMessageBar = document.querySelector("#warningMessage");
+      const icon = mozMessageBar.shadowRoot.querySelector(".icon");
+      const iconUrl = icon.src;
+      ok(iconUrl.includes("warning.svg"), "Warning icon is showing up.");
+      const iconAlt = icon.alt;
+      is(iconAlt, "Warning", "Alternate text for the warning icon is present.");
+    });
+
+    add_task(async function test_success_message_component() {
+      const mozMessageBar = document.querySelector("#successMessage");
+      const icon = mozMessageBar.shadowRoot.querySelector(".icon");
+      const iconUrl = icon.src;
+      ok(iconUrl.includes("check.svg"), "Success icon is showing up.");
+      const iconAlt = icon.alt;
+      is(iconAlt, "Success", "Alternate text for the success icon is present.");
+    });
+
+    add_task(async function test_error_message_component() {
+      const mozMessageBar = document.querySelector("#errorMessage");
+      const icon = mozMessageBar.shadowRoot.querySelector(".icon");
+      const iconUrl = icon.src;
+      ok(iconUrl.includes("error.svg"), "Error icon is showing up.");
+      const iconAlt = icon.alt;
+      is(iconAlt, "Error", "Alternate text for the error icon is present.");
     });
   </script>
 </pre>

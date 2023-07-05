@@ -2,8 +2,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "../vendor/lit.all.mjs";
+import { html, ifDefined } from "../vendor/lit.all.mjs";
 import { MozLitElement } from "../lit-utils.mjs";
+
+const messageTypeToIconData = {
+  info: {
+    iconSrc: "chrome://global/skin/icons/info-filled.svg",
+    l10nId: "moz-message-bar-icon-info",
+  },
+  warning: {
+    iconSrc: "chrome://global/skin/icons/warning.svg",
+    l10nId: "moz-message-bar-icon-warning",
+  },
+  success: {
+    iconSrc: "chrome://global/skin/icons/check.svg",
+    l10nId: "moz-message-bar-icon-success",
+  },
+  error: {
+    iconSrc: "chrome://global/skin/icons/error.svg",
+    l10nId: "moz-message-bar-icon-error",
+  },
+};
 
 /**
  * A simple message bar element that can be used to display
@@ -31,13 +50,29 @@ export default class MozMessageBar extends MozLitElement {
 
   constructor() {
     super();
-    MozXULElement.insertFTLIfNeeded("toolkit/global/notification.ftl");
+    MozXULElement.insertFTLIfNeeded("toolkit/global/mozMessageBar.ftl");
     this.type = "info";
     this.role = "status";
   }
 
   disconnectedCallback() {
     this.dispatchEvent(new CustomEvent("message-bar:close"));
+  }
+
+  iconTemplate() {
+    let iconData = messageTypeToIconData[this.type];
+    if (iconData) {
+      let { iconSrc, l10nId } = iconData;
+      return html`
+        <img
+          class="icon"
+          src=${iconSrc}
+          data-l10n-id=${l10nId}
+          data-l10n-attrs="alt"
+        />
+      `;
+    }
+    return "";
   }
 
   render() {
@@ -48,16 +83,16 @@ export default class MozMessageBar extends MozLitElement {
       />
       <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
       <div class="container">
-        <span class="icon"></span>
+        ${this.iconTemplate()}
         <div class="content">
-          <span class="message">${this.message}</span>
+          <span class="message">${ifDefined(this.message)}</span>
           <slot name="link"></slot>
         </div>
         <slot name="actions"></slot>
         <span class="spacer"></span>
         <button
           class="close ghost-button"
-          data-l10n-id="notification-close-button"
+          data-l10n-id="moz-message-bar-close-button"
           @click=${this.dismiss}
         ></button>
       </div>
