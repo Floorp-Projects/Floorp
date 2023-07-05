@@ -105,7 +105,7 @@ let JSWINDOWACTORS = {
       },
     },
     matches: ["about:translations"],
-
+    remoteTypes: ["privilegedabout"],
     enablePreference: "browser.translations.enable",
   },
 
