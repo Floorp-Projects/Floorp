@@ -786,7 +786,7 @@ popupnotificationcontent {
 }
 
 #webRTC-selectSpeaker-icon {
-  list-style-image: url("chrome://global/skin/media/audio.svg");
+  list-style-image: url("chrome://browser/skin/notification-icons/speaker.svg");
 }
 
 .popup-notification-body :is(description, label:not(.learnMore), checkbox, input) {

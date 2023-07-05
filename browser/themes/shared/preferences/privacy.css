@@ -42,7 +42,7 @@
 }
 
 .speaker-icon {
-  list-style-image: url(chrome://global/skin/media/audio.svg);
+  list-style-image: url(chrome://browser/skin/notification-icons/speaker.svg);
 }
 
 .desktop-notification-icon {
