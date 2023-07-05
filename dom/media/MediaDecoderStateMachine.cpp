@@ -855,6 +855,10 @@ class MediaDecoderStateMachine::LoopingDecodingState
         mAudioEndedBeforeEnteringStateWithoutDuration(false),
         mVideoEndedBeforeEnteringStateWithoutDuration(false) {
     MOZ_ASSERT(mMaster->mLooping);
+    SLOG(
+        "LoopingDecodingState ctor, mIsReachingAudioEOS=%d, "
+        "mIsReachingVideoEOS=%d",
+        mIsReachingAudioEOS, mIsReachingVideoEOS);
     // If the track has reached EOS and we already have its last data, then we
     // can know its duration. But if playback starts from EOS (due to seeking),
     // the decoded end time would be zero because none of data gets decoded yet.
@@ -863,8 +867,10 @@ class MediaDecoderStateMachine::LoopingDecodingState
           !mMaster->mAudioTrackDecodedDuration) {
         mMaster->mAudioTrackDecodedDuration.emplace(
             mMaster->mDecodedAudioEndTime);
+        SLOG("determine mAudioTrackDecodedDuration");
       } else {
         mAudioEndedBeforeEnteringStateWithoutDuration = true;
+        SLOG("still don't know mAudioTrackDecodedDuration");
       }
     }
 
@@ -873,14 +879,21 @@ class MediaDecoderStateMachine::LoopingDecodingState
           !mMaster->mVideoTrackDecodedDuration) {
         mMaster->mVideoTrackDecodedDuration.emplace(
             mMaster->mDecodedVideoEndTime);
+        SLOG("determine mVideoTrackDecodedDuration");
       } else {
         mVideoEndedBeforeEnteringStateWithoutDuration = true;
+        SLOG("still don't know mVideoTrackDecodedDuration");
       }
     }
 
-    // If we've looped at least once before, the master's media queues have
-    // already stored some adjusted data. If a track has reached EOS, we need to
-    // update queue offset correctly. Otherwise, it would cause a/v unsync.
+    // We might be able to determine the duration already, let's check.
+    if (mIsReachingAudioEOS || mIsReachingVideoEOS) {
+      Unused << DetermineOriginalDecodedDurationIfNeeded();
+    }
+
+    // If we've looped at least once before, then we need to update queue offset
+    // correctly to make the media data time and the clock time consistent.
+    // Otherwise, it would cause a/v desync.
     if (mMaster->mOriginalDecodedDuration != media::TimeUnit::Zero()) {
       if (mIsReachingAudioEOS && mMaster->HasAudio()) {
         AudioQueue().SetOffset(AudioQueue().GetOffset() +
@@ -894,7 +907,6 @@ class MediaDecoderStateMachine::LoopingDecodingState
   }
 
   void Enter() {
-    UpdatePlaybackPositionToZeroIfNeeded();
     if (mMaster->HasAudio() && mIsReachingAudioEOS) {
       SLOG("audio has ended, request the data again.");
       RequestDataFromStartPosition(TrackInfo::TrackType::kAudioTrack);
@@ -1236,27 +1248,6 @@ class MediaDecoderStateMachine::LoopingDecodingState
               HandleError(aError, false /* isAudio */);
             })
         ->Track(mVideoDataRequest);
-  }
-
-  void UpdatePlaybackPositionToZeroIfNeeded() {
-    // Hasn't reached EOS, no need to adjust playback position.
-    if (!mIsReachingAudioEOS || !mIsReachingVideoEOS) {
-      return;
-    }
-
-    // If we have already reached EOS before starting media sink, the sink
-    // has not started yet and the current position is larger than last decoded
-    // end time, that means we directly seeked to EOS and playback would start
-    // from the start position soon. Therefore, we should reset the position to
-    // 0s so that when media sink starts we can make it start from 0s, not from
-    // EOS position which would result in wrong estimation of decoded audio
-    // duration because decoded data's time which can't be adjusted as offset is
-    // zero would be always less than media sink time.
-    if (!mMaster->mMediaSink->IsStarted() &&
-        (mMaster->mCurrentPosition.Ref() > mMaster->mDecodedAudioEndTime ||
-         mMaster->mCurrentPosition.Ref() > mMaster->mDecodedVideoEndTime)) {
-      mMaster->UpdatePlaybackPositionInternal(TimeUnit::Zero());
-    }
   }
 
   void HandleError(const MediaResult& aError, bool aIsAudio);
@@ -4049,7 +4040,9 @@ nsresult MediaDecoderStateMachine::StartMediaSink() {
   }
 
   mAudioCompleted = false;
-  nsresult rv = mMediaSink->Start(GetMediaTime(), Info());
+  const auto startTime = GetMediaTime();
+  LOG("StartMediaSink, mediaTime=%" PRId64, startTime.ToMicroseconds());
+  nsresult rv = mMediaSink->Start(startTime, Info());
   StreamNameChanged();
 
   auto videoPromise = mMediaSink->OnEnded(TrackInfo::kVideoTrack);
