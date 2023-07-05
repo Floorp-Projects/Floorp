@@ -261,7 +261,8 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
             state.copy(
                 searchEngineSource = SearchEngineSource.Default(action.engine),
                 showSearchSuggestions = shouldShowSearchSuggestions(action.browsingMode, action.settings),
-                showSearchShortcuts = action.settings.shouldShowSearchShortcuts,
+                showSearchShortcuts = action.settings.shouldShowSearchShortcuts &&
+                    !action.settings.showUnifiedSearchFeature,
                 showClipboardSuggestions = action.settings.shouldShowClipboardSuggestions,
                 showSearchTermHistory = action.settings.showUnifiedSearchFeature &&
                     action.settings.shouldShowHistorySuggestions,

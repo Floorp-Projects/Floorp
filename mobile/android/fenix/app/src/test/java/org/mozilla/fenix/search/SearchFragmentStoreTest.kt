@@ -178,6 +178,180 @@ class SearchFragmentStoreTest {
     }
 
     @Test
+    fun `GIVEN search shortcuts are disabled and unified search is enabled in settings WHEN the default search engine is selected THEN search shortcuts are not displayed`() = runTest {
+        val initialState = emptyDefaultState(showHistorySuggestionsForCurrentEngine = false)
+        val store = SearchFragmentStore(initialState)
+        every { settings.showUnifiedSearchFeature } returns true
+        every { settings.shouldShowSearchShortcuts } returns false
+
+        store.dispatch(
+            SearchFragmentAction.SearchDefaultEngineSelected(
+                engine = searchEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
+
+        assertNotSame(initialState, store.state)
+        assertFalse(store.state.showSearchShortcuts)
+    }
+
+    @Test
+    fun `GIVEN search shortcuts are enabled and unified search is disabled in settings WHEN the default search engine is selected THEN search shortcuts are displayed`() = runTest {
+        val initialState = emptyDefaultState(showHistorySuggestionsForCurrentEngine = false)
+        val store = SearchFragmentStore(initialState)
+        every { settings.showUnifiedSearchFeature } returns false
+        every { settings.shouldShowSearchShortcuts } returns true
+
+        store.dispatch(
+            SearchFragmentAction.SearchDefaultEngineSelected(
+                engine = searchEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
+
+        assertNotSame(initialState, store.state)
+        assertTrue(store.state.showSearchShortcuts)
+    }
+
+    @Test
+    fun `GIVEN search shortcuts and unified search are both enabled in settings WHEN the default search engine is selected THEN search shortcuts are not displayed`() = runTest {
+        val initialState = emptyDefaultState(showHistorySuggestionsForCurrentEngine = false)
+        val store = SearchFragmentStore(initialState)
+        every { settings.showUnifiedSearchFeature } returns true
+        every { settings.shouldShowSearchShortcuts } returns true
+
+        store.dispatch(
+            SearchFragmentAction.SearchDefaultEngineSelected(
+                engine = searchEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
+
+        assertNotSame(initialState, store.state)
+        assertFalse(store.state.showSearchShortcuts)
+    }
+
+    @Test
+    fun `GIVEN search shortcuts and unified search are both disabled in settings WHEN the default search engine is selected THEN search shortcuts are not displayed`() = runTest {
+        val initialState = emptyDefaultState(showHistorySuggestionsForCurrentEngine = false)
+        val store = SearchFragmentStore(initialState)
+        every { settings.showUnifiedSearchFeature } returns true
+        every { settings.shouldShowSearchShortcuts } returns true
+
+        store.dispatch(
+            SearchFragmentAction.SearchDefaultEngineSelected(
+                engine = searchEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
+
+        assertNotSame(initialState, store.state)
+        assertFalse(store.state.showSearchShortcuts)
+    }
+
+    // non default tests
+
+    @Test
+    fun `GIVEN search shortcuts are disabled and unified search is enabled in settings WHEN the search engine shortcut is selected THEN search shortcuts are not displayed`() = runTest {
+        val initialState = emptyDefaultState(showHistorySuggestionsForCurrentEngine = false)
+        val store = SearchFragmentStore(initialState)
+        every { settings.shouldShowSearchShortcuts } returns false
+        every { settings.showUnifiedSearchFeature } returns true
+
+        val newEngine: SearchEngine = mockk {
+            every { id } returns "DuckDuckGo"
+            every { isGeneral } returns true
+        }
+
+        store.dispatch(
+            SearchFragmentAction.SearchShortcutEngineSelected(
+                engine = newEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
+
+        assertNotSame(initialState, store.state)
+        assertFalse(store.state.showSearchShortcuts)
+    }
+
+    @Test
+    fun `GIVEN search shortcuts are enabled and unified search is disabled in settings WHEN the search engine shortcut is selected THEN search shortcuts are displayed`() = runTest {
+        val initialState = emptyDefaultState(showHistorySuggestionsForCurrentEngine = false)
+        val store = SearchFragmentStore(initialState)
+        every { settings.shouldShowSearchShortcuts } returns true
+        every { settings.showUnifiedSearchFeature } returns false
+
+        val newEngine: SearchEngine = mockk {
+            every { id } returns "DuckDuckGo"
+            every { isGeneral } returns true
+        }
+
+        store.dispatch(
+            SearchFragmentAction.SearchDefaultEngineSelected(
+                engine = newEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
+
+        assertNotSame(initialState, store.state)
+        assertTrue(store.state.showSearchShortcuts)
+    }
+
+    @Test
+    fun `GIVEN search shortcuts and unified search are both enabled in settings WHEN the search engine shortcut is selected THEN search shortcuts are not displayed`() = runTest {
+        val initialState = emptyDefaultState(showHistorySuggestionsForCurrentEngine = false)
+        val store = SearchFragmentStore(initialState)
+        every { settings.shouldShowSearchShortcuts } returns true
+        every { settings.showUnifiedSearchFeature } returns true
+
+        val newEngine: SearchEngine = mockk {
+            every { id } returns "DuckDuckGo"
+            every { isGeneral } returns true
+        }
+
+        store.dispatch(
+            SearchFragmentAction.SearchDefaultEngineSelected(
+                engine = newEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
+
+        assertNotSame(initialState, store.state)
+        assertFalse(store.state.showSearchShortcuts)
+    }
+
+    @Test
+    fun `GIVEN search shortcuts and unified search are both disabled in settings WHEN the search engine shortcut is selected THEN search shortcuts are not displayed`() = runTest {
+        val initialState = emptyDefaultState(showHistorySuggestionsForCurrentEngine = false)
+        val store = SearchFragmentStore(initialState)
+        every { settings.shouldShowSearchShortcuts } returns true
+        every { settings.showUnifiedSearchFeature } returns true
+
+        val newEngine: SearchEngine = mockk {
+            every { id } returns "DuckDuckGo"
+            every { isGeneral } returns true
+        }
+
+        store.dispatch(
+            SearchFragmentAction.SearchDefaultEngineSelected(
+                engine = newEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
+
+        assertNotSame(initialState, store.state)
+        assertFalse(store.state.showSearchShortcuts)
+    }
+
+    @Test
     fun `WHEN the search engine is the default one THEN search suggestions providers are updated`() = runTest {
         val initialState = emptyDefaultState(showHistorySuggestionsForCurrentEngine = false)
         val store = SearchFragmentStore(initialState)
