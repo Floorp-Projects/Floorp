@@ -866,15 +866,8 @@ public class GeckoSessionTestRule implements TestRule {
   protected boolean mClosedSession;
   protected boolean mIgnoreCrash;
 
-  @Nullable private Map<String, String> mServerCustomHeaders = null;
-
   public GeckoSessionTestRule() {
     mDefaultSettings = new GeckoSessionSettings.Builder().build();
-  }
-
-  public GeckoSessionTestRule(@Nullable Map<String, String> mServerCustomHeaders) {
-    this();
-    this.mServerCustomHeaders = mServerCustomHeaders;
   }
 
   /**
@@ -1471,10 +1464,7 @@ public class GeckoSessionTestRule implements TestRule {
       public void evaluate() throws Throwable {
         final AtomicReference<Throwable> exceptionRef = new AtomicReference<>();
 
-        mServer =
-            new TestServer(
-                InstrumentationRegistry.getInstrumentation().getTargetContext(),
-                mServerCustomHeaders);
+        mServer = new TestServer(InstrumentationRegistry.getInstrumentation().getTargetContext());
 
         mInstrumentation.runOnMainSync(
             () -> {
