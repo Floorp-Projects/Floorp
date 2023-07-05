@@ -103,7 +103,7 @@ fn save_image(texture: &TextureRef) {
     let ref mut w = BufWriter::new(file);
 
     let mut encoder = png::Encoder::new(w, VIEW_WIDTH as u32, VIEW_HEIGHT as u32);
-    encoder.set_color(ColorType::RGBA);
+    encoder.set_color(ColorType::Rgba);
     encoder.set_depth(png::BitDepth::Eight);
     let mut writer = encoder.write_header().unwrap();
 

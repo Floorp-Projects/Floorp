@@ -390,7 +390,9 @@ impl crate::TypeInner {
                 match *base_inner {
                     Ti::Vector { size, .. } => size as _,
                     Ti::Matrix { columns, .. } => columns as _,
-                    Ti::Array { size, .. } => return size.to_indexable_length(module),
+                    Ti::Array { size, .. } | Ti::BindingArray { size, .. } => {
+                        return size.to_indexable_length(module)
+                    }
                     _ => return Err(IndexableLengthError::TypeNotIndexable),
                 }
             }
@@ -414,23 +416,12 @@ pub enum IndexableLength {
 }
 
 impl crate::ArraySize {
-    pub fn to_indexable_length(
+    pub const fn to_indexable_length(
         self,
-        module: &crate::Module,
+        _module: &crate::Module,
     ) -> Result<IndexableLength, IndexableLengthError> {
         Ok(match self {
-            Self::Constant(k) => {
-                let constant = &module.constants[k];
-                if constant.specialization.is_some() {
-                    // Specializable constants are not supported as array lengths.
-                    // See valid::TypeError::UnsupportedSpecializedArrayLength.
-                    return Err(IndexableLengthError::InvalidArrayLength(k));
-                }
-                let length = constant
-                    .to_array_length()
-                    .ok_or(IndexableLengthError::InvalidArrayLength(k))?;
-                IndexableLength::Known(length)
-            }
+            Self::Constant(length) => IndexableLength::Known(length.get()),
             Self::Dynamic => IndexableLength::Dynamic,
         })
     }

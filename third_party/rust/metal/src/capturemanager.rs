@@ -8,12 +8,12 @@
 use super::*;
 use std::ffi::CStr;
 
+/// See <https://developer.apple.com/documentation/metal/mtlcapturescope>
 pub enum MTLCaptureScope {}
 
 foreign_obj_type! {
     type CType = MTLCaptureScope;
     pub struct CaptureScope;
-    pub struct CaptureScopeRef;
 }
 
 impl CaptureScopeRef {
@@ -33,12 +33,12 @@ impl CaptureScopeRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlcapturemanager>
 pub enum MTLCaptureManager {}
 
 foreign_obj_type! {
     type CType = MTLCaptureManager;
     pub struct CaptureManager;
-    pub struct CaptureManagerRef;
 }
 
 impl CaptureManager {
@@ -70,13 +70,19 @@ impl CaptureManagerRef {
         unsafe { msg_send![self, setDefaultCaptureScope: scope] }
     }
 
-    /// https://developer.apple.com/documentation/metal/mtlcapturemanager/3237259-startcapture
+    /// Starts capturing with the capture session defined by a descriptor object.
+    ///
+    /// This function will panic if Metal capture is not enabled.  Capture can be enabled by
+    /// either:
+    ///   1. Running from Xcode
+    ///   2. Setting the environment variable `METAL_CAPTURE_ENABLED=1`
+    ///   3. Adding an info.plist file containing the `MetalCaptureEnabled` key set to `YES`
     pub fn start_capture(&self, descriptor: &CaptureDescriptorRef) -> Result<(), String> {
         unsafe {
-            try_objc! { err =>
+            Ok(try_objc! { err =>
                 msg_send![self, startCaptureWithDescriptor: descriptor
                                 error: &mut err]
-            }
+            })
         }
     }
 
@@ -100,7 +106,7 @@ impl CaptureManagerRef {
         unsafe { msg_send![self, isCapturing] }
     }
 
-    /// https://developer.apple.com/documentation/metal/mtlcapturemanager/3237260-supportsdestination?language=objc
+    /// See <https://developer.apple.com/documentation/metal/mtlcapturemanager/3237260-supportsdestination?language=objc>
     pub fn supports_destination(&self, destination: MTLCaptureDestination) -> bool {
         unsafe { msg_send![self, supportsDestination: destination] }
     }

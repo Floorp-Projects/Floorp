@@ -216,6 +216,7 @@ bitflags::bitflags! {
     /// Configuration flags for the [`Writer`].
     #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
     #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct WriterFlags: u32 {
         /// Flip output Y and extend Z from (0, 1) to (-1, 1).
         const ADJUST_COORDINATE_SPACE = 0x1;
@@ -484,7 +485,14 @@ impl<'a, W: Write> Writer<'a, W> {
         // Generate a map with names required to write the module
         let mut names = crate::FastHashMap::default();
         let mut namer = proc::Namer::default();
-        namer.reset(module, keywords::RESERVED_KEYWORDS, &["gl_"], &mut names);
+        namer.reset(
+            module,
+            keywords::RESERVED_KEYWORDS,
+            &[],
+            &[],
+            &["gl_"],
+            &mut names,
+        );
 
         // Build the instance
         let mut this = Self {
@@ -785,20 +793,9 @@ impl<'a, W: Write> Writer<'a, W> {
 
         // Write the array size
         // Writes nothing if `ArraySize::Dynamic`
-        // Panics if `ArraySize::Constant` has a constant that isn't an sint or uint
         match size {
-            crate::ArraySize::Constant(const_handle) => {
-                match self.module.constants[const_handle].inner {
-                    crate::ConstantInner::Scalar {
-                        width: _,
-                        value: crate::ScalarValue::Uint(size),
-                    } => write!(self.out, "{size}")?,
-                    crate::ConstantInner::Scalar {
-                        width: _,
-                        value: crate::ScalarValue::Sint(size),
-                    } => write!(self.out, "{size}")?,
-                    _ => unreachable!(),
-                }
+            crate::ArraySize::Constant(size) => {
+                write!(self.out, "{size}")?;
             }
             crate::ArraySize::Dynamic => (),
         }
@@ -1806,8 +1803,6 @@ impl<'a, W: Write> Writer<'a, W> {
                         Some(self.namer.call(name))
                     } else if self.need_bake_expressions.contains(&handle) {
                         Some(format!("{}{}", back::BAKE_PREFIX, handle.index()))
-                    } else if info.ref_count == 0 {
-                        Some(self.namer.call(""))
                     } else {
                         None
                     };
@@ -1835,7 +1830,7 @@ impl<'a, W: Write> Writer<'a, W> {
 
                     if let Some(name) = expr_name {
                         write!(self.out, "{level}")?;
-                        self.write_named_expr(handle, name, ctx)?;
+                        self.write_named_expr(handle, name, handle, ctx)?;
                     }
                 }
             }
@@ -2125,6 +2120,19 @@ impl<'a, W: Write> Writer<'a, W> {
                 self.write_expr(value, ctx)?;
                 writeln!(self.out, ";")?
             }
+            Statement::WorkGroupUniformLoad { pointer, result } => {
+                // GLSL doesn't have pointers, which means that this backend needs to ensure that
+                // the actual "loading" is happening between the two barriers.
+                // This is done in `Emit` by never emitting a variable name for pointer variables
+                self.write_barrier(crate::Barrier::WORK_GROUP, level)?;
+
+                let result_name = format!("{}{}", back::BAKE_PREFIX, result.index());
+                write!(self.out, "{level}")?;
+                // Expressions cannot have side effects, so just writing the expression here is fine.
+                self.write_named_expr(pointer, result_name, result, ctx)?;
+
+                self.write_barrier(crate::Barrier::WORK_GROUP, level)?;
+            }
             // Stores a value into an image.
             Statement::ImageStore {
                 image,
@@ -2267,6 +2275,24 @@ impl<'a, W: Write> Writer<'a, W> {
             }
             // Constants are delegated to `write_constant`
             Expression::Constant(constant) => self.write_constant(constant)?,
+            Expression::ZeroValue(ty) => {
+                self.write_zero_init_value(ty)?;
+            }
+            Expression::Literal(literal) => {
+                match literal {
+                    // Floats are written using `Debug` instead of `Display` because it always appends the
+                    // decimal part even it's zero which is needed for a valid glsl float constant
+                    crate::Literal::F64(value) => write!(self.out, "{:?}LF", value)?,
+                    crate::Literal::F32(value) => write!(self.out, "{:?}", value)?,
+                    // Unsigned integers need a `u` at the end
+                    //
+                    // While `core` doesn't necessarily need it, it's allowed and since `es` needs it we
+                    // always write it as the extra branch wouldn't have any benefit in readability
+                    crate::Literal::U32(value) => write!(self.out, "{}u", value)?,
+                    crate::Literal::I32(value) => write!(self.out, "{}", value)?,
+                    crate::Literal::Bool(value) => write!(self.out, "{}", value)?,
+                }
+            }
             // `Splat` needs to actually write down a vector, it's not always inferred in GLSL.
             Expression::Splat { size: _, value } => {
                 let resolved = ctx.info[expr].ty.inner_with(&self.module.types);
@@ -3282,7 +3308,8 @@ impl<'a, W: Write> Writer<'a, W> {
             // These expressions never show up in `Emit`.
             Expression::CallResult(_)
             | Expression::AtomicResult { .. }
-            | Expression::RayQueryProceedResult => unreachable!(),
+            | Expression::RayQueryProceedResult
+            | Expression::WorkGroupUniformLoadResult { .. } => unreachable!(),
             // `ArrayLength` is written as `expr.length()` and we convert it to a uint
             Expression::ArrayLength(expr) => {
                 write!(self.out, "uint(")?;
@@ -3718,9 +3745,12 @@ impl<'a, W: Write> Writer<'a, W> {
         &mut self,
         handle: Handle<crate::Expression>,
         name: String,
+        // The expression which is being named.
+        // Generally, this is the same as handle, except in WorkGroupUniformLoad
+        named: Handle<crate::Expression>,
         ctx: &back::FunctionCtx,
     ) -> BackendResult {
-        match ctx.info[handle].ty {
+        match ctx.info[named].ty {
             proc::TypeResolution::Handle(ty_handle) => match self.module.types[ty_handle].inner {
                 TypeInner::Struct { .. } => {
                     let ty_name = &self.names[&NameKey::Type(ty_handle)];
@@ -3735,7 +3765,7 @@ impl<'a, W: Write> Writer<'a, W> {
             }
         }
 
-        let base_ty_res = &ctx.info[handle].ty;
+        let base_ty_res = &ctx.info[named].ty;
         let resolved = base_ty_res.inner_with(&self.module.types);
 
         write!(self.out, " {name}")?;
@@ -3745,7 +3775,7 @@ impl<'a, W: Write> Writer<'a, W> {
         write!(self.out, " = ")?;
         self.write_expr(handle, ctx)?;
         writeln!(self.out, ";")?;
-        self.named_expressions.insert(handle, name);
+        self.named_expressions.insert(named, name);
 
         Ok(())
     }

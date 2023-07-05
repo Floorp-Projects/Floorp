@@ -12,22 +12,33 @@
 [package]
 edition = "2018"
 name = "gpu-alloc"
-version = "0.5.3"
+version = "0.6.0"
 authors = ["Zakarum <zakarumych@ya.ru>"]
 description = "Implementation agnostic memory allocator for Vulkan like APIs"
 homepage = "https://github.com/zakarumych/gpu-alloc"
 documentation = "https://docs.rs/gpu-alloc-types"
-readme = "../README.md"
-keywords = ["gpu", "vulkan", "allocation", "no-std"]
-categories = ["graphics", "memory-management", "no-std", "game-development"]
+readme = "README.md"
+keywords = [
+    "gpu",
+    "vulkan",
+    "allocation",
+    "no-std",
+]
+categories = [
+    "graphics",
+    "memory-management",
+    "no-std",
+    "game-development",
+]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/zakarumych/gpu-alloc"
+
 [dependencies.bitflags]
-version = "1.2"
+version = "2.0"
 default-features = false
 
 [dependencies.gpu-alloc-types]
-version = "0.2"
+version = "=0.3.0"
 
 [dependencies.serde]
 version = "1.0"
@@ -43,4 +54,8 @@ default-features = false
 
 [features]
 default = ["std"]
+serde = [
+    "dep:serde",
+    "bitflags/serde",
+]
 std = []

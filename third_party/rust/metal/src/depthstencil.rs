@@ -8,6 +8,7 @@
 use crate::DeviceRef;
 use objc::runtime::{NO, YES};
 
+/// See <https://developer.apple.com/documentation/metal/mtlcomparefunction>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLCompareFunction {
@@ -21,6 +22,7 @@ pub enum MTLCompareFunction {
     Always = 7,
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlstenciloperation>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLStencilOperation {
@@ -34,12 +36,12 @@ pub enum MTLStencilOperation {
     DecrementWrap = 7,
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlstencildescriptor>
 pub enum MTLStencilDescriptor {}
 
 foreign_obj_type! {
     type CType = MTLStencilDescriptor;
     pub struct StencilDescriptor;
-    pub struct StencilDescriptorRef;
 }
 
 impl StencilDescriptor {
@@ -101,12 +103,12 @@ impl StencilDescriptorRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtldepthstencildescriptor>
 pub enum MTLDepthStencilDescriptor {}
 
 foreign_obj_type! {
     type CType = MTLDepthStencilDescriptor;
     pub struct DepthStencilDescriptor;
-    pub struct DepthStencilDescriptorRef;
 }
 
 impl DepthStencilDescriptor {
@@ -172,12 +174,12 @@ impl DepthStencilDescriptorRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtldepthstencilstate>
 pub enum MTLDepthStencilState {}
 
 foreign_obj_type! {
     type CType = MTLDepthStencilState;
     pub struct DepthStencilState;
-    pub struct DepthStencilStateRef;
 }
 
 impl DepthStencilStateRef {

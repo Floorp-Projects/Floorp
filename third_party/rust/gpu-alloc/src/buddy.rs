@@ -318,6 +318,8 @@ where
             .and_then(|size| size.checked_next_power_of_two())
             .ok_or(AllocationError::OutOfDeviceMemory)?;
 
+        let size = size.max(self.minimal_size);
+
         let size_index = size.trailing_zeros() - self.minimal_size.trailing_zeros();
         let size_index =
             usize::try_from(size_index).map_err(|_| AllocationError::OutOfDeviceMemory)?;

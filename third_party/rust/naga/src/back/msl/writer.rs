@@ -77,7 +77,7 @@ const CLAMPED_LOD_LOAD_PREFIX: &str = "clamped_lod_e";
 
 struct TypeContext<'a> {
     handle: Handle<crate::Type>,
-    module: &'a crate::Module,
+    gctx: proc::GlobalCtx<'a>,
     names: &'a FastHashMap<NameKey, String>,
     access: crate::StorageAccess,
     binding: Option<&'a super::ResolvedBinding>,
@@ -86,7 +86,7 @@ struct TypeContext<'a> {
 
 impl<'a> Display for TypeContext<'a> {
     fn fmt(&self, out: &mut Formatter<'_>) -> Result<(), FmtError> {
-        let ty = &self.module.types[self.handle];
+        let ty = &self.gctx.types[self.handle];
         if ty.needs_alias() && !self.first_time {
             let name = &self.names[&NameKey::Type(self.handle)];
             return write!(out, "{name}");
@@ -221,13 +221,7 @@ impl<'a> Display for TypeContext<'a> {
                 {
                     write!(out, "{NAMESPACE}::array<{base_tyname}, {override_size}>")
                 } else if let crate::ArraySize::Constant(size) = size {
-                    let constant_ctx = ConstantContext {
-                        handle: size,
-                        arena: &self.module.constants,
-                        names: self.names,
-                        first_time: false,
-                    };
-                    write!(out, "{NAMESPACE}::array<{base_tyname}, {constant_ctx}>")
+                    write!(out, "{NAMESPACE}::array<{base_tyname}, {size}>")
                 } else {
                     unreachable!("metal requires all arrays be constant sized");
                 }
@@ -271,7 +265,7 @@ impl<'a> TypedGlobalVariable<'a> {
         };
         let ty_name = TypeContext {
             handle: var.ty,
-            module: self.module,
+            gctx: self.module.to_ctx(),
             names: self.names,
             access: storage_access,
             binding: self.binding,
@@ -399,7 +393,7 @@ fn should_pack_struct_member(
     }
 
     let ty_inner = &module.types[member.ty].inner;
-    let last_offset = member.offset + ty_inner.size(&module.constants);
+    let last_offset = member.offset + ty_inner.size(module.to_ctx());
     let next_offset = match members.get(index + 1) {
         Some(next) => next.offset,
         None => span,
@@ -1153,7 +1147,7 @@ impl<W: Write> Writer<W> {
             crate::TypeInner::Array { base, stride, .. } => (
                 context.module.types[base]
                     .inner
-                    .size(&context.module.constants),
+                    .size(context.module.to_ctx()),
                 stride,
             ),
             _ => return Err(Error::Validation),
@@ -1333,6 +1327,42 @@ impl<W: Write> Writer<W> {
                 };
                 write!(self.out, "{coco}")?;
             }
+            crate::Expression::ZeroValue(ty) => {
+                let ty_name = TypeContext {
+                    handle: ty,
+                    gctx: context.module.to_ctx(),
+                    names: &self.names,
+                    access: crate::StorageAccess::empty(),
+                    binding: None,
+                    first_time: false,
+                };
+                write!(self.out, "{ty_name} {{}}")?;
+            }
+            crate::Expression::Literal(literal) => match literal {
+                crate::Literal::F64(_) => {
+                    return Err(Error::CapabilityNotSupported(valid::Capabilities::FLOAT64))
+                }
+                crate::Literal::F32(value) => {
+                    if value.is_infinite() {
+                        let sign = if value.is_sign_negative() { "-" } else { "" };
+                        write!(self.out, "{sign}INFINITY")?;
+                    } else if value.is_nan() {
+                        write!(self.out, "NAN")?;
+                    } else {
+                        let suffix = if value.fract() == 0.0 { ".0" } else { "" };
+                        write!(self.out, "{value}{suffix}")?;
+                    }
+                }
+                crate::Literal::U32(value) => {
+                    write!(self.out, "{value}u")?;
+                }
+                crate::Literal::I32(value) => {
+                    write!(self.out, "{value}")?;
+                }
+                crate::Literal::Bool(value) => {
+                    write!(self.out, "{value}")?;
+                }
+            },
             crate::Expression::Splat { size, value } => {
                 let scalar_kind = match *context.resolve_type(value) {
                     crate::TypeInner::Scalar { kind, .. } => kind,
@@ -1850,6 +1880,7 @@ impl<W: Write> Writer<W> {
             // has to be a named expression
             crate::Expression::CallResult(_)
             | crate::Expression::AtomicResult { .. }
+            | crate::Expression::WorkGroupUniformLoadResult { .. }
             | crate::Expression::RayQueryProceedResult => {
                 unreachable!()
             }
@@ -2302,15 +2333,12 @@ impl<W: Write> Writer<W> {
                             // to convert from a wrapped struct to a raw array, e.g.
                             // `float gl_ClipDistance1 [[clip_distance]] [1];`.
                             if let crate::TypeInner::Array {
-                                size: crate::ArraySize::Constant(const_handle),
+                                size: crate::ArraySize::Constant(size),
                                 ..
                             } = context.module.types[member.ty].inner
                             {
-                                let size = context.module.constants[const_handle]
-                                    .to_array_length()
-                                    .unwrap();
                                 write!(self.out, "{comma} {{")?;
-                                for j in 0..size {
+                                for j in 0..size.get() {
                                     if j != 0 {
                                         write!(self.out, ",")?;
                                     }
@@ -2423,7 +2451,7 @@ impl<W: Write> Writer<W> {
             TypeResolution::Handle(ty_handle) => {
                 let ty_name = TypeContext {
                     handle: ty_handle,
-                    module: context.module,
+                    gctx: context.module.to_ctx(),
                     names: &self.names,
                     access: crate::StorageAccess::empty(),
                     binding: None,
@@ -2553,8 +2581,6 @@ impl<W: Write> Writer<W> {
                             // Don't assume the names in `named_expressions` are unique,
                             // or even valid. Use the `Namer`.
                             Some(self.namer.call(name))
-                        } else if info.ref_count == 0 {
-                            Some(self.namer.call(""))
                         } else {
                             // If this expression is an index that we're going to first compare
                             // against a limit, and then actually use as an index, then we may
@@ -2815,6 +2841,18 @@ impl<W: Write> Writer<W> {
                     // done
                     writeln!(self.out, ";")?;
                 }
+                crate::Statement::WorkGroupUniformLoad { pointer, result } => {
+                    self.write_barrier(crate::Barrier::WORK_GROUP, level)?;
+
+                    write!(self.out, "{level}")?;
+                    let name = self.namer.call("");
+                    self.start_baking_expression(result, &context.expression, &name)?;
+                    self.put_load(pointer, &context.expression, true)?;
+                    self.named_expressions.insert(result, name);
+
+                    writeln!(self.out, ";")?;
+                    self.write_barrier(crate::Barrier::WORK_GROUP, level)?;
+                }
                 crate::Statement::RayQuery { query, ref fun } => {
                     match *fun {
                         crate::RayQueryFunction::Initialize {
@@ -2954,31 +2992,17 @@ impl<W: Write> Writer<W> {
         context: &StatementContext,
     ) -> BackendResult {
         let pointer_inner = context.expression.resolve_type(pointer);
-        let (array_size, is_atomic) = match *pointer_inner {
+        let is_atomic = match *pointer_inner {
             crate::TypeInner::Pointer { base, .. } => {
                 match context.expression.module.types[base].inner {
-                    crate::TypeInner::Array {
-                        size: crate::ArraySize::Constant(ch),
-                        ..
-                    } => (Some(ch), false),
-                    crate::TypeInner::Atomic { .. } => (None, true),
-                    _ => (None, false),
+                    crate::TypeInner::Atomic { .. } => true,
+                    _ => false,
                 }
             }
-            _ => (None, false),
+            _ => false,
         };
 
-        // we can't assign fixed-size arrays
-        if let Some(const_handle) = array_size {
-            let size = context.expression.module.constants[const_handle]
-                .to_array_length()
-                .unwrap();
-            write!(self.out, "{level}for(int _i=0; _i<{size}; ++_i) ")?;
-            self.put_access_chain(pointer, policy, &context.expression)?;
-            write!(self.out, ".{WRAPPED_ARRAY_FIELD}[_i] = ")?;
-            self.put_expression(value, &context.expression, true)?;
-            writeln!(self.out, ".{WRAPPED_ARRAY_FIELD}[_i];")?;
-        } else if is_atomic {
+        if is_atomic {
             write!(
                 self.out,
                 "{level}{NAMESPACE}::atomic_store_explicit({ATOMIC_REFERENCE}"
@@ -3006,8 +3030,14 @@ impl<W: Write> Writer<W> {
         pipeline_options: &PipelineOptions,
     ) -> Result<TranslationInfo, Error> {
         self.names.clear();
-        self.namer
-            .reset(module, super::keywords::RESERVED, &[], &mut self.names);
+        self.namer.reset(
+            module,
+            super::keywords::RESERVED,
+            &[],
+            &[],
+            &[],
+            &mut self.names,
+        );
         self.struct_member_pads.clear();
 
         writeln!(
@@ -3133,7 +3163,7 @@ impl<W: Write> Writer<W> {
                 } => {
                     let base_name = TypeContext {
                         handle: base,
-                        module,
+                        gctx: module.to_ctx(),
                         names: &self.names,
                         access: crate::StorageAccess::empty(),
                         binding: None,
@@ -3141,14 +3171,7 @@ impl<W: Write> Writer<W> {
                     };
 
                     match size {
-                        crate::ArraySize::Constant(const_handle) => {
-                            let coco = ConstantContext {
-                                handle: const_handle,
-                                arena: &module.constants,
-                                names: &self.names,
-                                first_time: false,
-                            };
-
+                        crate::ArraySize::Constant(size) => {
                             writeln!(self.out, "struct {name} {{")?;
                             writeln!(
                                 self.out,
@@ -3156,7 +3179,7 @@ impl<W: Write> Writer<W> {
                                 back::INDENT,
                                 base_name,
                                 WRAPPED_ARRAY_FIELD,
-                                coco
+                                size
                             )?;
                             writeln!(self.out, "}};")?;
                         }
@@ -3178,7 +3201,7 @@ impl<W: Write> Writer<W> {
                             writeln!(self.out, "{}char _pad{}[{}];", back::INDENT, index, pad)?;
                         }
                         let ty_inner = &module.types[member.ty].inner;
-                        last_offset = member.offset + ty_inner.size(&module.constants);
+                        last_offset = member.offset + ty_inner.size(module.to_ctx());
 
                         let member_name = &self.names[&NameKey::StructMember(handle, index as u32)];
 
@@ -3197,7 +3220,7 @@ impl<W: Write> Writer<W> {
                             None => {
                                 let base_name = TypeContext {
                                     handle: member.ty,
-                                    module,
+                                    gctx: module.to_ctx(),
                                     names: &self.names,
                                     access: crate::StorageAccess::empty(),
                                     binding: None,
@@ -3228,7 +3251,7 @@ impl<W: Write> Writer<W> {
                 _ => {
                     let ty_name = TypeContext {
                         handle,
-                        module,
+                        gctx: module.to_ctx(),
                         names: &self.names,
                         access: crate::StorageAccess::empty(),
                         binding: None,
@@ -3288,7 +3311,7 @@ impl<W: Write> Writer<W> {
                     let name = &self.names[&NameKey::Constant(handle)];
                     let ty_name = TypeContext {
                         handle: ty,
-                        module,
+                        gctx: module.to_ctx(),
                         names: &self.names,
                         access: crate::StorageAccess::empty(),
                         binding: None,
@@ -3428,7 +3451,7 @@ impl<W: Write> Writer<W> {
                 Some(ref result) => {
                     let ty_name = TypeContext {
                         handle: result.ty,
-                        module,
+                        gctx: module.to_ctx(),
                         names: &self.names,
                         access: crate::StorageAccess::empty(),
                         binding: None,
@@ -3446,7 +3469,7 @@ impl<W: Write> Writer<W> {
                 let name = &self.names[&NameKey::FunctionArgument(fun_handle, index as u32)];
                 let param_type_name = TypeContext {
                     handle: arg.ty,
-                    module,
+                    gctx: module.to_ctx(),
                     names: &self.names,
                     access: crate::StorageAccess::empty(),
                     binding: None,
@@ -3495,7 +3518,7 @@ impl<W: Write> Writer<W> {
             for (local_handle, local) in fun.local_variables.iter() {
                 let ty_name = TypeContext {
                     handle: local.ty,
-                    module,
+                    gctx: module.to_ctx(),
                     names: &self.names,
                     access: crate::StorageAccess::empty(),
                     binding: None,
@@ -3692,7 +3715,7 @@ impl<W: Write> Writer<W> {
                     let name = &self.names[name_key];
                     let ty_name = TypeContext {
                         handle: ty,
-                        module,
+                        gctx: module.to_ctx(),
                         names: &self.names,
                         access: crate::StorageAccess::empty(),
                         binding: None,
@@ -3736,7 +3759,7 @@ impl<W: Write> Writer<W> {
                     for (name, ty, binding) in result_members {
                         let ty_name = TypeContext {
                             handle: ty,
-                            module,
+                            gctx: module.to_ctx(),
                             names: &self.names,
                             access: crate::StorageAccess::empty(),
                             binding: None,
@@ -3753,9 +3776,9 @@ impl<W: Write> Writer<W> {
 
                         let array_len = match module.types[ty].inner {
                             crate::TypeInner::Array {
-                                size: crate::ArraySize::Constant(handle),
+                                size: crate::ArraySize::Constant(size),
                                 ..
-                            } => module.constants[handle].to_array_length(),
+                            } => Some(size),
                             _ => None,
                         };
                         let resolved = options.resolve_local_binding(binding, out_mode)?;
@@ -3831,7 +3854,7 @@ impl<W: Write> Writer<W> {
 
                 let ty_name = TypeContext {
                     handle: ty,
-                    module,
+                    gctx: module.to_ctx(),
                     names: &self.names,
                     access: crate::StorageAccess::empty(),
                     binding: None,
@@ -4068,7 +4091,7 @@ impl<W: Write> Writer<W> {
                 let name = &self.names[&NameKey::EntryPointLocal(ep_index as _, local_handle)];
                 let ty_name = TypeContext {
                     handle: local.ty,
-                    module,
+                    gctx: module.to_ctx(),
                     names: &self.names,
                     access: crate::StorageAccess::empty(),
                     binding: None,

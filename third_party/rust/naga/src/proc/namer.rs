@@ -1,5 +1,6 @@
 use crate::{arena::Handle, FastHashMap, FastHashSet};
 use std::borrow::Cow;
+use std::hash::{Hash, Hasher};
 
 pub type EntryPointIndex = u16;
 const SEPARATOR: char = '_';
@@ -24,8 +25,9 @@ pub enum NameKey {
 pub struct Namer {
     /// The last numeric suffix used for each base name. Zero means "no suffix".
     unique: FastHashMap<String, u32>,
-    keywords: FastHashSet<String>,
-    reserved_prefixes: Vec<String>,
+    keywords: FastHashSet<&'static str>,
+    keywords_case_insensitive: FastHashSet<AsciiUniCase<&'static str>>,
+    reserved_prefixes: Vec<&'static str>,
 }
 
 impl Namer {
@@ -102,10 +104,15 @@ impl Namer {
             }
             None => {
                 let mut suffixed = base.to_string();
-                if base.ends_with(char::is_numeric) || self.keywords.contains(base.as_ref()) {
+                if base.ends_with(char::is_numeric)
+                    || self.keywords.contains(base.as_ref())
+                    || self
+                        .keywords_case_insensitive
+                        .contains(&AsciiUniCase(base.as_ref()))
+                {
                     suffixed.push(SEPARATOR);
                 }
-                debug_assert!(!self.keywords.contains(&suffixed));
+                debug_assert!(!self.keywords.contains::<str>(&suffixed));
                 // `self.unique` wants to own its keys. This allocates only if we haven't
                 // already done so earlier.
                 self.unique.insert(base.into_owned(), 0);
@@ -136,18 +143,30 @@ impl Namer {
     pub fn reset(
         &mut self,
         module: &crate::Module,
-        reserved_keywords: &[&str],
-        reserved_prefixes: &[&str],
+        reserved_keywords: &[&'static str],
+        extra_reserved_keywords: &[&'static str],
+        reserved_keywords_case_insensitive: &[&'static str],
+        reserved_prefixes: &[&'static str],
         output: &mut FastHashMap<NameKey, String>,
     ) {
         self.reserved_prefixes.clear();
-        self.reserved_prefixes
-            .extend(reserved_prefixes.iter().map(|string| string.to_string()));
+        self.reserved_prefixes.extend(reserved_prefixes.iter());
 
         self.unique.clear();
         self.keywords.clear();
-        self.keywords
-            .extend(reserved_keywords.iter().map(|string| (string.to_string())));
+        self.keywords.extend(reserved_keywords.iter());
+        self.keywords.extend(extra_reserved_keywords.iter());
+
+        debug_assert!(reserved_keywords_case_insensitive
+            .iter()
+            .all(|s| s.is_ascii()));
+        self.keywords_case_insensitive.clear();
+        self.keywords_case_insensitive.extend(
+            reserved_keywords_case_insensitive
+                .iter()
+                .map(|string| (AsciiUniCase(*string))),
+        );
+
         let mut temp = String::new();
 
         for (ty_handle, ty) in module.types.iter() {
@@ -248,6 +267,33 @@ impl Namer {
             };
             let name = self.call(label);
             output.insert(NameKey::Constant(handle), name);
+        }
+    }
+}
+
+/// A string wrapper type with an ascii case insensitive Eq and Hash impl
+struct AsciiUniCase<S: AsRef<str> + ?Sized>(S);
+
+impl<S: AsRef<str>> PartialEq<Self> for AsciiUniCase<S> {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.0.as_ref().eq_ignore_ascii_case(other.0.as_ref())
+    }
+}
+
+impl<S: AsRef<str>> Eq for AsciiUniCase<S> {}
+
+impl<S: AsRef<str>> Hash for AsciiUniCase<S> {
+    #[inline]
+    fn hash<H: Hasher>(&self, hasher: &mut H) {
+        for byte in self
+            .0
+            .as_ref()
+            .as_bytes()
+            .iter()
+            .map(|b| b.to_ascii_lowercase())
+        {
+            hasher.write_u8(byte);
         }
     }
 }

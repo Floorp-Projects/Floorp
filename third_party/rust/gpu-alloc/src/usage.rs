@@ -7,6 +7,7 @@ bitflags::bitflags! {
     /// Memory usage type.
     /// Bits set define intended usage for requested memory.
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     pub struct UsageFlags: u8 {
         /// Hints for allocator to find memory with faster device access.
         /// If no flags is specified than `FAST_DEVICE_ACCESS` is implied.
@@ -110,7 +111,7 @@ fn one_usage(usage: UsageFlags, memory_types: &[MemoryType]) -> MemoryForOneUsag
     }
 
     types[..types_count as usize]
-        .sort_unstable_by_key(|&index| priority(usage, memory_types[index as usize].props));
+        .sort_unstable_by_key(|&index| reverse_priority(usage, memory_types[index as usize].props));
 
     let mask = types[..types_count as usize]
         .iter()
@@ -137,9 +138,9 @@ fn compatible(usage: UsageFlags, flags: MemoryPropertyFlags) -> bool {
     }
 }
 
-/// Returns priority of memory with specified flags for specified usage.
+/// Returns reversed priority of memory with specified flags for specified usage.
 /// Lesser value returned = more prioritized.
-fn priority(usage: UsageFlags, flags: MemoryPropertyFlags) -> u32 {
+fn reverse_priority(usage: UsageFlags, flags: MemoryPropertyFlags) -> u32 {
     type Flags = MemoryPropertyFlags;
 
     // Highly prefer device local memory when `FAST_DEVICE_ACCESS` usage is specified
@@ -153,15 +154,23 @@ fn priority(usage: UsageFlags, flags: MemoryPropertyFlags) -> u32 {
                 .intersects(UsageFlags::HOST_ACCESS | UsageFlags::UPLOAD | UsageFlags::DOWNLOAD)
     );
 
+    // Prefer non-host-visible memory when host access is not required.
+    let host_visible: bool = flags.contains(Flags::HOST_VISIBLE)
+        ^ usage.intersects(UsageFlags::HOST_ACCESS | UsageFlags::UPLOAD | UsageFlags::DOWNLOAD);
+
     // Prefer cached memory for downloads.
     // Or non-cached if downloads are not expected.
-    let cached: bool = flags.contains(Flags::HOST_CACHED) ^ usage.contains(UsageFlags::DOWNLOAD);
+    let host_cached: bool =
+        flags.contains(Flags::HOST_CACHED) ^ usage.contains(UsageFlags::DOWNLOAD);
 
     // Prefer coherent for both uploads and downloads.
     // Prefer non-coherent if neither flags is set.
-    let coherent: bool = flags.contains(Flags::HOST_COHERENT)
+    let host_coherent: bool = flags.contains(Flags::HOST_COHERENT)
         ^ (usage.intersects(UsageFlags::UPLOAD | UsageFlags::DOWNLOAD));
 
     // Each boolean is false if flags are preferred.
-    device_local as u32 * 4 + cached as u32 * 2 + coherent as u32
+    device_local as u32 * 8
+        + host_visible as u32 * 4
+        + host_cached as u32 * 2
+        + host_coherent as u32
 }

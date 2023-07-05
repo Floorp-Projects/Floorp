@@ -59,8 +59,14 @@ impl DeviceGroupCreation {
         &self.fp
     }
 
+    #[deprecated = "typo: this function is called `device()`, but returns an `Instance`."]
     #[inline]
     pub fn device(&self) -> vk::Instance {
+        self.handle
+    }
+
+    #[inline]
+    pub fn instance(&self) -> vk::Instance {
         self.handle
     }
 }

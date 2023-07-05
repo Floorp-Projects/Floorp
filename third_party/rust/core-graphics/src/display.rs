@@ -23,6 +23,7 @@ use foreign_types::ForeignType;
 
 pub type CGDirectDisplayID = u32;
 pub type CGWindowID        = u32;
+pub type CGWindowLevel = i32;
 
 pub const kCGNullWindowID: CGWindowID = 0 as CGWindowID;
 pub const kCGNullDirectDisplayID: CGDirectDisplayID = 0 as CGDirectDisplayID;
@@ -68,6 +69,17 @@ pub const kDisplayModeNativeFlag: u32              = 0x02000000;
 
 pub const kDisplayModeSafetyFlags: u32             = 0x00000007;
 
+pub type CGDisplayBlendFraction = f32;
+pub const kCGDisplayBlendNormal: CGDisplayBlendFraction = 0.0;
+pub const kCGDisplayBlendSolidColor: CGDisplayBlendFraction = 1.0;
+
+pub type CGDisplayFadeReservationToken = u32;
+pub const kCGDisplayFadeReservationInvalidToken: CGDisplayFadeReservationToken = 0;
+
+pub type CGDisplayFadeInterval = f32;
+pub type CGDisplayReservationInterval = f32;
+pub const kCGMaxDisplayReservationInterval: CGDisplayReservationInterval = 15.0;
+
 pub const IO1BitIndexedPixels: &str =     "P";
 pub const IO2BitIndexedPixels: &str =     "PP";
 pub const IO4BitIndexedPixels: &str =     "PPPP";
@@ -104,11 +116,11 @@ pub struct CGDisplay {
 
 foreign_type! {
     #[doc(hidden)]
-    type CType = ::sys::CGDisplayMode;
-    fn drop = CGDisplayModeRelease;
-    fn clone = |p| CFRetain(p as *const _) as *mut _;
-    pub struct CGDisplayMode;
-    pub struct CGDisplayModeRef;
+    pub unsafe type CGDisplayMode {
+        type CType = ::sys::CGDisplayMode;
+        fn drop = CGDisplayModeRelease;
+        fn clone = |p| CFRetain(p as *const _) as *mut _;
+    }
 }
 
 impl CGDisplay {
@@ -241,6 +253,19 @@ impl CGDisplay {
     pub fn image(&self) -> Option<CGImage> {
         unsafe {
             let image_ref = CGDisplayCreateImage(self.id);
+            if !image_ref.is_null() {
+                Some(CGImage::from_ptr(image_ref))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Returns an image containing the contents of a portion of the specified display.
+    #[inline]
+    pub fn image_for_rect(&self, bounds: CGRect) -> Option<CGImage> {
+        unsafe {
+            let image_ref = CGDisplayCreateImageForRect(self.id, bounds);
             if !image_ref.is_null() {
                 Some(CGImage::from_ptr(image_ref))
             } else {
@@ -604,7 +629,7 @@ impl CGDisplayMode {
             16
         } else if pixel_encoding.eq_ignore_ascii_case(IO8BitIndexedPixels) {
             8
-        }else{
+        } else {
             0
         }
     }
@@ -621,6 +646,7 @@ extern "C" {
 
     pub static kCGDisplayShowDuplicateLowResolutionModes: CFStringRef;
 
+    pub fn CGDisplayModeRetain(mode: ::sys::CGDisplayModeRef);
     pub fn CGDisplayModeRelease(mode: ::sys::CGDisplayModeRef);
 
     pub fn CGMainDisplayID() -> CGDirectDisplayID;
@@ -657,7 +683,17 @@ extern "C" {
     pub fn CGDisplayPixelsWide(display: CGDirectDisplayID) -> libc::size_t;
     pub fn CGDisplayBounds(display: CGDirectDisplayID) -> CGRect;
     pub fn CGDisplayCreateImage(display: CGDirectDisplayID) -> ::sys::CGImageRef;
+    pub fn CGDisplayCreateImageForRect(
+        display: CGDirectDisplayID,
+        rect: CGRect,
+    ) -> ::sys::CGImageRef;
 
+    // Capturing and Releasing Displays
+    pub fn CGDisplayCapture(display: CGDirectDisplayID) -> CGError;
+    pub fn CGDisplayRelease(display: CGDirectDisplayID) -> CGError;
+    pub fn CGShieldingWindowLevel() -> CGWindowLevel;
+
+    // Configuring Displays
     pub fn CGBeginDisplayConfiguration(config: *mut CGDisplayConfigRef) -> CGError;
     pub fn CGCancelDisplayConfiguration(config: CGDisplayConfigRef) -> CGError;
     pub fn CGCompleteDisplayConfiguration(
@@ -681,6 +717,7 @@ extern "C" {
         x: i32,
         y: i32,
     ) -> CGError;
+    pub fn CGRestorePermanentDisplayConfiguration();
 
     pub fn CGDisplayCopyDisplayMode(display: CGDirectDisplayID) -> ::sys::CGDisplayModeRef;
     pub fn CGDisplayModeGetHeight(mode: ::sys::CGDisplayModeRef) -> libc::size_t;
@@ -696,6 +733,11 @@ extern "C" {
         display: CGDirectDisplayID,
         options: CFDictionaryRef,
     ) -> CFArrayRef;
+    pub fn CGDisplaySetDisplayMode(
+        display: CGDirectDisplayID,
+        mode: ::sys::CGDisplayModeRef,
+        options: CFDictionaryRef,
+    ) -> CGError;
 
     // mouse stuff
     pub fn CGDisplayHideCursor(display: CGDirectDisplayID) -> CGError;
@@ -703,6 +745,32 @@ extern "C" {
     pub fn CGDisplayMoveCursorToPoint(display: CGDirectDisplayID, point: CGPoint) -> CGError;
     pub fn CGWarpMouseCursorPosition(point: CGPoint) -> CGError;
     pub fn CGAssociateMouseAndMouseCursorPosition(connected: boolean_t) -> CGError;
+
+    // Display Fade Effects
+    pub fn CGConfigureDisplayFadeEffect(
+        config: CGDisplayConfigRef,
+        fadeOutSeconds: CGDisplayFadeInterval,
+        fadeInSeconds: CGDisplayFadeInterval,
+        fadeRed: f32,
+        fadeGreen: f32,
+        fadeBlue: f32,
+    ) -> CGError;
+    pub fn CGAcquireDisplayFadeReservation(
+        seconds: CGDisplayReservationInterval,
+        token: *mut CGDisplayFadeReservationToken,
+    ) -> CGError;
+    pub fn CGDisplayFade(
+        token: CGDisplayFadeReservationToken,
+        duration: CGDisplayFadeInterval,
+        startBlend: CGDisplayBlendFraction,
+        endBlend: CGDisplayBlendFraction,
+        redBlend: f32,
+        greenBlend: f32,
+        blueBlend: f32,
+        synchronous: boolean_t,
+    ) -> CGError;
+    // CGDisplayFadeOperationInProgress
+    pub fn CGReleaseDisplayFadeReservation(token: CGDisplayFadeReservationToken) -> CGError;
 
     // Window Services Reference
     pub fn CGWindowListCopyWindowInfo(

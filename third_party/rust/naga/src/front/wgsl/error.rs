@@ -239,7 +239,10 @@ pub enum Error<'a> {
         found: u32,
     },
     FunctionReturnsVoid(Span),
+    InvalidWorkGroupUniformLoad(Span),
     Other,
+    ExpectedArraySize(Span),
+    NonPositiveArrayLength(Span),
 }
 
 impl<'a> Error<'a> {
@@ -680,9 +683,25 @@ impl<'a> Error<'a> {
                     "perhaps you meant to call the function in a separate statement?".into(),
                 ],
             },
+            Error::InvalidWorkGroupUniformLoad(span) => ParseError {
+                message: "incorrect type passed to workgroupUniformLoad".into(),
+                labels: vec![(span, "".into())],
+                notes: vec!["passed type must be a workgroup pointer".into()],
+            },
             Error::Other => ParseError {
                 message: "other error".to_string(),
                 labels: vec![],
+                notes: vec![],
+            },
+            Error::ExpectedArraySize(span) => ParseError {
+                message: "array element count must resolve to an integer scalar (u32 or i32)"
+                    .to_string(),
+                labels: vec![(span, "must resolve to u32/i32".into())],
+                notes: vec![],
+            },
+            Error::NonPositiveArrayLength(span) => ParseError {
+                message: "array element count must be greater than zero".to_string(),
+                labels: vec![(span, "must be positive".into())],
                 notes: vec![],
             },
         }
