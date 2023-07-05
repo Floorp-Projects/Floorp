@@ -9,6 +9,8 @@
 #include "prtime.h"
 
 #include "IMContextWrapper.h"
+
+#include "GRefPtr.h"
 #include "nsGtkKeyUtils.h"
 #include "nsWindow.h"
 #include "mozilla/AutoRestore.h"
@@ -1701,7 +1703,17 @@ void IMContextWrapper::OnEndCompositionNative(GtkIMContext* aContext) {
 /* static */
 void IMContextWrapper::OnChangeCompositionCallback(GtkIMContext* aContext,
                                                    IMContextWrapper* aModule) {
-  aModule->OnChangeCompositionNative(aContext);
+  RefPtr module = aModule;
+  module->OnChangeCompositionNative(aContext);
+
+  if (module->IsDestroyed()) {
+    // A strong reference is already held during "preedit-changed" emission,
+    // but _ibus_context_destroy_cb() in ibus 1.5.28 and
+    // _fcitx_im_context_close_im_cb() in fcitx 4.2.9.9 want their
+    // GtkIMContexts to live a little longer.  See bug 1824634.
+    NS_DispatchToMainThread(
+        NS_NewRunnableFunction(__func__, [context = RefPtr{aContext}]() {}));
+  }
 }
 
 void IMContextWrapper::OnChangeCompositionNative(GtkIMContext* aContext) {
