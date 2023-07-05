@@ -1,8 +1,8 @@
 {
-  "accounts_endpoint": "accounts_endpoint",
-  "client_metadata_endpoint": "client_metadata_endpoint",
-  "id_assertion_endpoint": "id_assertion_endpoint",
-  "id_token_endpoint": "id_token_endpoint",
+  "accounts_endpoint": "fedcm_accounts_endpoint.json",
+  "client_metadata_endpoint": "fedcm_accounts_endpoint.json",
+  "id_assertion_endpoint": "fedcm_idtokens_endpoint.json",
+  "id_token_endpoint": "fedcm_idtokens_endpoint.json",
   "revocation_endpoint": "revocation_endpoint",
   "branding": {
     "background_color": "0x6200ee",
