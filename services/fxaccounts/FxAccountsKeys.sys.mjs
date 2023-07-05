@@ -9,7 +9,6 @@ import { CommonUtils } from "resource://services-common/utils.sys.mjs";
 import { CryptoUtils } from "resource://services-crypto/utils.sys.mjs";
 
 const {
-  LEGACY_DERIVED_KEYS_NAMES,
   SCOPE_OLD_SYNC,
   DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY,
   FX_OAUTH_CLIENT_ID,
@@ -21,6 +20,8 @@ const {
 // to be removed from the account state when seen. After a reasonable period of time
 // has passed, where users have been migrated away from those keys they should be safe to be removed
 const DEPRECATED_DERIVED_KEYS_NAMES = [
+  "kSync",
+  "kXCS",
   "kExtSync",
   "kExtKbHash",
   "ecosystemUserId",
@@ -133,19 +134,6 @@ export class FxAccountsKeys {
   }
 
   /**
-   * Format a JWK key material as hex rather than base64.
-   *
-   * This is a backwards-compatibility helper for code that needs raw key bytes rather
-   * than the JWK format offered by FxA scopes keys.
-   *
-   * @param {Object} jwk The JWK from which to extract the `k` field as hex.
-   *
-   */
-  keyAsHex(jwk) {
-    return CommonUtils.base64urlToHex(jwk.k);
-  }
-
-  /**
    * Format a JWK kid as hex rather than base64.
    *
    * This is a backwards-compatibility helper for code that needs a raw key fingerprint
@@ -179,8 +167,6 @@ export class FxAccountsKeys {
    *          uid: The user's unique id
    *          sessionToken: Session for the FxA server
    *          scopedKeys: Object mapping OAuth scopes to corresponding derived keys
-   *          kSync: An encryption key for Sync
-   *          kXCS: A key hash of kB for the X-Client-State header
    *          verified: email verification status
    *        }
    * @throws If there is no user signed in.
@@ -374,11 +360,9 @@ export class FxAccountsKeys {
       );
     }
 
-    // Just double-check that we derived all the right stuff.
-    const EXPECTED_FIELDS = LEGACY_DERIVED_KEYS_NAMES.concat(["scopedKeys"]);
-    if (EXPECTED_FIELDS.some(k => !updateData[k])) {
-      const missing = EXPECTED_FIELDS.filter(k => !updateData[k]);
-      throw new Error(`user data missing: ${missing.join(", ")}`);
+    // Just double-check that scoped keys are there now
+    if (!updateData.scopedKeys) {
+      throw new Error(`user data missing: scopedKeys`);
     }
 
     await currentState.updateUserAccountData(updateData);
@@ -448,15 +432,6 @@ export class FxAccountsKeys {
     );
     return {
       scopedKeys,
-      // Existing browser code might expect sync keys to be available as top-level account data.
-      // For b/w compat we can derive these even if they're not in our list of scoped keys for
-      // some reason (since the derivation doesn't depend on server-provided data).
-      kSync: scopedKeys[SCOPE_OLD_SYNC]
-        ? this.keyAsHex(scopedKeys[SCOPE_OLD_SYNC])
-        : CommonUtils.bytesAsHex(await this._deriveSyncKey(kBbytes)),
-      kXCS: scopedKeys[SCOPE_OLD_SYNC]
-        ? this.kidAsHex(scopedKeys[SCOPE_OLD_SYNC])
-        : CommonUtils.bytesAsHex(await this._deriveXClientState(kBbytes)),
     };
   }
 

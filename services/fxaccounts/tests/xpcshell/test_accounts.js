@@ -282,14 +282,11 @@ add_task(async function test_get_signed_in_user_initially_unset() {
   result = await account.getSignedInUser();
   Assert.deepEqual(result.email, credentials.email);
   Assert.deepEqual(result.scopedKeys, undefined);
-  Assert.deepEqual(result.kSync, undefined);
-  Assert.deepEqual(result.kXCS, undefined);
+
   // for the sake of testing, use the low-level function to check it's all there
   result = await account._internal.currentAccountState.getUserAccountData();
   Assert.deepEqual(result.email, credentials.email);
   Assert.deepEqual(result.scopedKeys, credentials.scopedKeys);
-  Assert.ok(result.kSync);
-  Assert.ok(result.kXCS);
 
   // sign out
   let localOnly = true;
@@ -678,8 +675,6 @@ add_test(function test_getKeyForScope() {
     fxa._internal.getUserAccountData().then(user2 => {
       // Before getKeyForScope, we have no keys
       Assert.equal(!!user2.scopedKeys, false);
-      Assert.equal(!!user2.kSync, false);
-      Assert.equal(!!user2.kXCS, false);
       // And we still have a key-fetch token and unwrapBKey to use
       Assert.equal(!!user2.keyFetchToken, true);
       Assert.equal(!!user2.unwrapBKey, true);
@@ -690,8 +685,6 @@ add_test(function test_getKeyForScope() {
           Assert.equal(fxa._internal.isUserEmailVerified(user3), true);
           Assert.equal(!!user3.verified, true);
           Assert.notEqual(null, user3.scopedKeys);
-          Assert.notEqual(null, user3.kSync);
-          Assert.notEqual(null, user3.kXCS);
           Assert.equal(user3.keyFetchToken, undefined);
           Assert.equal(user3.unwrapBKey, undefined);
           run_next_test();
@@ -935,9 +928,11 @@ add_task(async function test_getScopedKeys_misconfigured_fxa_server() {
     ...getTestUser("eusebius"),
     uid: "aeaa1725c7a24ff983c6295725d5fc9b",
     verified: true,
-    kSync:
-      "0d6fe59791b05fa489e463ea25502e3143f6b7a903aa152e95cd9c6eddbac5b4dc68a19097ef65dbd147010ee45222444e66b8b3d7c8a441ebb7dd3dce015a9e",
-    kXCS: "22a42fe289dced5715135913424cb23b",
+    keyFetchToken:
+      "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f",
+    unwrapBKey:
+      "6ea660be9c89ec355397f89afb282ea0bf21095760c8c5009bbcc894155bbe2a",
+    sessionToken: "mock session token, used in metadata request",
   };
   await fxa.setSignedInUser(user);
   await Assert.rejects(
@@ -1553,23 +1548,6 @@ add_task(async function test_checkVerificationStatusFailed() {
   user = await fxa._internal.getUserAccountData();
   Assert.equal(user.email, alice.email);
   Assert.equal(user.sessionToken, null);
-});
-
-add_task(async function test_deriveKeys() {
-  let account = await MakeFxAccounts();
-  let kBhex =
-    "fd5c747806c07ce0b9d69dcfea144663e630b65ec4963596a22f24910d7dd15d";
-  let kB = CommonUtils.hexToBytes(kBhex);
-  const uid = "1ad7f502-4cc7-4ec1-a209-071fd2fae348";
-
-  const { kSync, kXCS } = await account.keys._deriveKeys(uid, kB);
-
-  Assert.equal(
-    kSync,
-    "ad501a50561be52b008878b2e0d8a73357778a712255f7722f497b5d4df14b05" +
-      "dc06afb836e1521e882f521eb34691d172337accdbf6e2a5b968b05a7bbb9885"
-  );
-  Assert.equal(kXCS, "6ae94683571c7a7c54dab4700aa3995f");
 });
 
 add_task(async function test_flushLogFile() {

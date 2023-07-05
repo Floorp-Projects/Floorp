@@ -262,15 +262,6 @@ exports.ERROR_INVALID_PARAMETER = "INVALID_PARAMETER";
 exports.ERROR_CODE_METHOD_NOT_ALLOWED = 405;
 exports.ERROR_MSG_METHOD_NOT_ALLOWED = "METHOD_NOT_ALLOWED";
 
-// When FxA support first landed in Firefox, it was only used for sync and
-// we stored the relevant encryption keys as top-level fields in the account state.
-// We've since grown a more elaborate scheme of derived keys linked to specific
-// OAuth scopes, which are stored in a map in the `scopedKeys` field.
-// These are the names of pre-scoped-keys key material, maintained for b/w
-// compatibility to code elsewhere in Firefox; once all consuming code is updated
-// to use scoped keys, these fields can be removed from the account userData.
-exports.LEGACY_DERIVED_KEYS_NAMES = ["kSync", "kXCS"];
-
 // FxAccounts has the ability to "split" the credentials between a plain-text
 // JSON file in the profile dir and in the login manager.
 // In order to prevent new fields accidentally ending up in the "wrong" place,
@@ -293,7 +284,6 @@ exports.FXA_PWDMGR_PLAINTEXT_FIELDS = new Set([
 
 // Fields we store in secure storage if it exists.
 exports.FXA_PWDMGR_SECURE_FIELDS = new Set([
-  ...exports.LEGACY_DERIVED_KEYS_NAMES,
   "keyFetchToken",
   "unwrapBKey",
   "scopedKeys",
