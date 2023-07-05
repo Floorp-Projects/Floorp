@@ -275,6 +275,11 @@ XPCOMUtils.defineLazyGetter(
  *
  * nsIAuthPrompt: Used by SeaMonkey, Thunderbird, but not Firefox.
  *
+ * Note this implementation no longer provides `nsIAuthPrompt.promptPassword()`
+ * and `nsIAuthPrompt.promptUsernameAndPassword()`. Use their async
+ * counterparts `asyncPromptPassword` and `asyncPromptUsernameAndPassword`
+ * instead.
+ *
  * nsIAuthPrompt2: Is invoked by a channel for protocol-based authentication
  * (eg HTTP Authenticate, FTP login).
  *
