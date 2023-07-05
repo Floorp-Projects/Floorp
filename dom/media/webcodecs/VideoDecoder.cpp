@@ -152,7 +152,6 @@ VideoDecoderConfigInternal::VideoDecoderConfigInternal(
     mColorSpace = Nothing();
   }
   if (aConfig.mDescription.WasPassed()) {
-    RefPtr<MediaByteBuffer> buf;
     auto rv = GetExtraData(aConfig.mDescription.Value());
     if (rv.isErr()) {
       MOZ_ASSERT(false, "OOM?");
