@@ -220,7 +220,7 @@ summary {
   display: none;
 }
 
-.success-text,
+.message-text,
 .error-text {
   grid-area: status;
 }

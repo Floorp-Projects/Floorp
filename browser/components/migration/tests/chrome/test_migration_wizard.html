@@ -491,7 +491,7 @@
           "Progress should be completed"
         );
         is(
-          bookmarksGroup.querySelector(".success-text").textContent,
+          bookmarksGroup.querySelector(".message-text").textContent,
           BOOKMARKS_SUCCESS_STRING
         );
 
@@ -512,7 +512,7 @@
           "loading",
           "Progress should be still be underway"
         );
-        is(historyGroup.querySelector(".success-text").textContent.trim(), "");
+        is(historyGroup.querySelector(".message-text").textContent.trim(), "");
 
         // Extensions
         let extensionsGroup = getResourceGroup(MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS);
@@ -523,8 +523,8 @@
           "loading",
           "Progress should be still be underway"
         );
-        is(extensionsGroup.querySelector("a.success-text").textContent.trim(), "");
-        is(extensionsGroup.querySelector("span.success-text").textContent.trim(), "");
+        is(extensionsGroup.querySelector("a.message-text").textContent.trim(), "");
+        is(extensionsGroup.querySelector("span.message-text").textContent.trim(), "");
 
         // Form Data
         let formDataGroup = getResourceGroup(
@@ -537,7 +537,7 @@
           "loading",
           "Progress should be still be underway"
         );
-        is(formDataGroup.querySelector(".success-text").textContent.trim(), "");
+        is(formDataGroup.querySelector(".message-text").textContent.trim(), "");
 
         // With progress still being underway, the header should be using the
         // in progress string.
@@ -606,7 +606,7 @@
           "Progress should be completed"
         );
         is(
-          bookmarksGroup.querySelector(".success-text").textContent,
+          bookmarksGroup.querySelector(".message-text").textContent,
           BOOKMARKS_SUCCESS_STRING
         );
 
@@ -622,7 +622,7 @@
           "Progress should be completed"
         );
         is(
-          passwordsGroup.querySelector(".success-text").textContent,
+          passwordsGroup.querySelector(".message-text").textContent,
           PASSWORDS_SUCCESS_STRING
         );
 
@@ -642,11 +642,11 @@
           "Progress should be completed"
         );
         is(
-          extensionsDataGroup.querySelector("a.success-text").textContent,
+          extensionsDataGroup.querySelector("a.message-text").textContent,
           EXTENSIONS_SUCCESS_STRING
         );
         is(
-          extensionsDataGroup.querySelector("a.success-text").href,
+          extensionsDataGroup.querySelector("a.message-text").href,
           EXTENSIONS_SUCCESS_HREF
         )
         // Form Data
@@ -661,7 +661,7 @@
           "Progress should be completed"
         );
         is(
-          formDataGroup.querySelector(".success-text").textContent,
+          formDataGroup.querySelector(".message-text").textContent,
           FORMDATA_SUCCESS_STRING
         );
 
@@ -714,11 +714,11 @@
           "Progress should be completed, in info state"
         );
         is(
-          extensionsGroup.querySelector("a.success-text").textContent,
+          extensionsGroup.querySelector("a.message-text").textContent,
           EXTENSIONS_INFO_STRING
         );
         is(
-          extensionsGroup.querySelector("a.success-text").href,
+          extensionsGroup.querySelector("a.message-text").href,
           EXTENSIONS_INFO_HREF
         );
         is(
@@ -774,11 +774,11 @@
         let progressIcon = extensionsGroup.querySelector(".progress-icon");
         is(progressIcon.getAttribute("state"), "warning");
         is(
-          extensionsGroup.querySelector("a.success-text").textContent,
+          extensionsGroup.querySelector("a.message-text").textContent,
           ""
         );
         is(
-          extensionsGroup.querySelector("span.success-text").textContent,
+          extensionsGroup.querySelector("span.message-text").textContent,
           EXTENSIONS_ERROR_STRING
         );
         is(
@@ -847,7 +847,7 @@
           "Progress should be completed"
         );
         is(
-          passwordsFromFileGroup.querySelector(".success-text").textContent,
+          passwordsFromFileGroup.querySelector(".message-text").textContent,
           PASSWORDS_SUCCESS_STRING
         );
 
@@ -866,7 +866,7 @@
           "loading",
           "Progress should be still be underway"
         );
-        is(passwordsNewGroup.querySelector(".success-text").textContent.trim(), "");
+        is(passwordsNewGroup.querySelector(".message-text").textContent.trim(), "");
 
         let progressPage = gShadowRoot.querySelector("div[name='page-file-import-progress']");
         let doneButton = progressPage.querySelector(".done-button");
@@ -918,7 +918,7 @@
           "Progress should be completed"
         );
         is(
-          passwordsNewGroup.querySelector(".success-text").textContent,
+          passwordsNewGroup.querySelector(".message-text").textContent,
           PASSWORDS_NEW_SUCCESS_STRING
         );
 
@@ -933,7 +933,7 @@
           "Progress should be completed"
         );
         is(
-          passwordsUpdatedGroup.querySelector(".success-text").textContent,
+          passwordsUpdatedGroup.querySelector(".message-text").textContent,
           PASSWORDS_UPDATED_SUCCESS_STRING
         );
 
@@ -1229,7 +1229,7 @@
           "Progress should be completed"
         );
         is(
-          bookmarksGroup.querySelector(".success-text").textContent,
+          bookmarksGroup.querySelector(".message-text").textContent,
           STRING_TO_CLEAR
         );
 
@@ -1251,7 +1251,7 @@
           "Progress should be still be underway"
         );
         is(
-          bookmarksGroup.querySelector(".success-text").textContent.trim(),
+          bookmarksGroup.querySelector(".message-text").textContent.trim(),
           ""
         );
       });
@@ -1288,7 +1288,7 @@
           "Progress should be completed"
         );
         is(
-          passwordsGroup.querySelector(".success-text").textContent,
+          passwordsGroup.querySelector(".message-text").textContent,
           STRING_TO_CLEAR
         );
 
@@ -1310,7 +1310,7 @@
           "Progress should be still be underway"
         );
         is(
-          passwordsGroup.querySelector(".success-text").textContent.trim(),
+          passwordsGroup.querySelector(".message-text").textContent.trim(),
           ""
         );
       });
