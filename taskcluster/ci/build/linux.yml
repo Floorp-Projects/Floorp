@@ -435,7 +435,7 @@ linux64-devedition/opt:
     treeherder:
         platform: linux64-devedition/opt
         symbol: B
-    worker-type: b-linux-gcp
+    worker-type: b-linux-xlarge-gcp
     worker:
         max-run-time: 7200
         env:
@@ -453,6 +453,7 @@ linux64-devedition/opt:
             - taskcluster_nightly.py
         extra-config:
             stage_platform: 'linux64-devedition'
+            max_build_output_timeout: 3600
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -885,7 +886,7 @@ linux64-reproduced/opt:
     treeherder:
         platform: linux64-shippable/opt
         symbol: Bpgo(repr)
-    worker-type: b-linux-gcp
+    worker-type: b-linux-xlarge-gcp
     worker:
         max-run-time: 9000
         env:
@@ -897,6 +898,8 @@ linux64-reproduced/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - taskcluster_nightly.py
+        extra-config:
+            max_build_output_timeout: 3600
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -1281,7 +1284,7 @@ linux64-asan-reporter-shippable/opt:
         platform: linux64-asan-reporter/opt
         symbol: BoR
     run-on-projects: ['mozilla-central']
-    worker-type: b-linux-gcp
+    worker-type: b-linux-xlarge-gcp
     worker:
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-reporter
@@ -1294,6 +1297,8 @@ linux64-asan-reporter-shippable/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - taskcluster_nightly.py
+        extra-config:
+            max_build_output_timeout: 3600
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         custom-build-variant-cfg: asan-reporter-tc
@@ -1374,7 +1379,7 @@ linux64-shippable/opt:
         platform: linux64-shippable/opt
         symbol: Bpgo(B)
     run-on-projects: ['release']
-    worker-type: b-linux-gcp
+    worker-type: b-linux-xlarge-gcp
     worker:
         max-run-time: 9000
         env:
@@ -1390,6 +1395,8 @@ linux64-shippable/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - taskcluster_nightly.py
+        extra-config:
+            max_build_output_timeout: 3600
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
         tooltool-downloads: public
@@ -1419,7 +1426,7 @@ linux64-nightlyasrelease/opt:
         platform: linux64-nightlyasrelease/opt
         symbol: Bpgo(Bnar)
     run-on-projects: [trunk-only]
-    worker-type: b-linux-gcp
+    worker-type: b-linux-xlarge-gcp
     worker:
         max-run-time: 9000
         env:
@@ -1436,6 +1443,8 @@ linux64-nightlyasrelease/opt:
             - builds/releng_base_firefox.py
             - builds/releng_base_linux_64_builds.py
             - taskcluster_nightly.py
+        extra-config:
+            max_build_output_timeout: 3600
         script: "mozharness/scripts/fx_desktop_build.py"
         mozconfig-variant: nightly-as-release
         secrets: true
