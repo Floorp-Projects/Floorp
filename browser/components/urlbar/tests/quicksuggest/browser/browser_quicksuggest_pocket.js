@@ -214,6 +214,15 @@ async function doShowLessFrequently({ input, expected }) {
 // Tests the "Not interested" result menu dismissal command.
 add_task(async function resultMenu_notInterested() {
   await doDismissTest("not_interested");
+
+  // Re-enable suggestions and wait until PocketSuggestions syncs them from
+  // remote settings again.
+  UrlbarPrefs.set("suggest.pocket", true);
+  let feature = QuickSuggest.getFeature("PocketSuggestions");
+  await TestUtils.waitForCondition(async () => {
+    let suggestions = await feature.queryRemoteSettings("pocket suggestion");
+    return !!suggestions.length;
+  }, "Waiting for PocketSuggestions to serve remote settings suggestions");
 });
 
 // Tests the "Not relevant" result menu dismissal command.
