@@ -9,6 +9,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/LinkedList.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
@@ -20,6 +21,7 @@
 #include "jit/ExecutableAllocator.h"
 #include "jit/ICStubSpace.h"
 #include "jit/Invalidation.h"
+#include "jit/JitScript.h"
 #include "js/AllocPolicy.h"
 #include "js/GCHashTable.h"
 #include "js/HashTable.h"
@@ -39,6 +41,7 @@ namespace jit {
 enum class CacheKind : uint8_t;
 class CacheIRStubInfo;
 class JitCode;
+class JitScript;
 
 enum class ICStubEngine : uint8_t {
   // Baseline IC, see BaselineIC.h.
@@ -105,11 +108,16 @@ class JitZone {
                 StableCellHasher<WeakHeapPtr<BaseScript*>>, SystemAllocPolicy>;
   InlinedScriptMap inlinedCompilations_;
 
+  mozilla::LinkedList<JitScript> jitScripts_;
+
   mozilla::Maybe<IonCompilationId> currentCompilationId_;
   bool keepJitScripts_ = false;
 
  public:
-  ~JitZone() { MOZ_ASSERT(!keepJitScripts_); }
+  ~JitZone() {
+    MOZ_ASSERT(jitScripts_.isEmpty());
+    MOZ_ASSERT(!keepJitScripts_);
+  }
 
   void traceWeak(JSTracer* trc, Zone* zone);
 
@@ -163,6 +171,34 @@ class JitZone {
 
   void removeInlinedCompilations(JSScript* inlined) {
     inlinedCompilations_.remove(inlined);
+  }
+
+  void registerJitScript(JitScript* script) { jitScripts_.insertBack(script); }
+
+  // Iterate over all JitScripts in this zone calling |f| on each, allowing |f|
+  // to remove the script.
+  template <typename F>
+  void forEachJitScript(F&& f) {
+    JitScript* script = jitScripts_.getFirst();
+    while (script) {
+      JitScript* next = script->getNext();
+      f(script);
+      script = next;
+    }
+  }
+
+  // Like forEachJitScript above, but abort if |f| returns false.
+  template <typename F>
+  bool forEachJitScriptFallible(F&& f) {
+    JitScript* script = jitScripts_.getFirst();
+    while (script) {
+      JitScript* next = script->getNext();
+      if (!f(script)) {
+        return false;
+      }
+      script = next;
+    }
+    return true;
   }
 
   bool keepJitScripts() const { return keepJitScripts_; }
