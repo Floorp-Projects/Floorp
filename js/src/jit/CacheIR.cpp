@@ -203,6 +203,10 @@ GetterSetter* CacheIRCloner::getGetterSetterField(uint32_t stubOffset) {
 JSObject* CacheIRCloner::getObjectField(uint32_t stubOffset) {
   return reinterpret_cast<JSObject*>(readStubWord(stubOffset));
 }
+JSObject* CacheIRCloner::getWeakObjectField(uint32_t stubOffset) {
+  // No barrier is required to clone a weak pointer.
+  return reinterpret_cast<JSObject*>(readStubWord(stubOffset));
+}
 JSString* CacheIRCloner::getStringField(uint32_t stubOffset) {
   return reinterpret_cast<JSString*>(readStubWord(stubOffset));
 }
