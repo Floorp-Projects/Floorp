@@ -61,7 +61,7 @@ object FeatureFlags {
      * Enables new search settings UI with two extra fragments, for managing the default engine
      * and managing search shortcuts in the quick search menu.
      */
-    val unifiedSearchSettings = Config.channel.isNightlyOrDebug
+    const val unifiedSearchSettings = true
 
     /**
      * Enables printing from the share and primary menu.
