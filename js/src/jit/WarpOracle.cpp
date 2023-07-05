@@ -898,6 +898,12 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     }
   }
 
+  JS::AutoAssertNoGC nogc;
+  Zone* zone = cx_->zone();
+  if (zone->needsIncrementalBarrier()) {
+    TraceWeakCacheIRStub(zone->barrierTracer(), stub, stub->stubInfo());
+  }
+
   // Copy the ICStub data to protect against the stub being unlinked or mutated.
   // We don't need to copy the CacheIRStubInfo: because we store and trace the
   // stub's JitCode*, the baselineCacheIRStubCodes_ map in JitZone will keep it
@@ -910,8 +916,8 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
       return abort(AbortReason::Alloc);
     }
 
-    // Note: nursery pointers are handled below so we don't need to trigger any
-    // GC barriers and can do a bitwise copy.
+    // Note: nursery pointers are handled below and the read barrier for weak
+    // pointers is handled above so we can do a bitwise copy here.
     std::copy_n(stubData, bytesNeeded, stubDataCopy);
 
     if (!replaceNurseryAndAllocSitePointers(stub, stubInfo, stubDataCopy)) {
@@ -1014,6 +1020,12 @@ AbortReasonOr<bool> WarpScriptOracle::maybeInlineCall(
       WarpCacheIR(offset, jitCode, stubInfo, stubDataCopy);
   if (!cacheIRSnapshot) {
     return abort(AbortReason::Alloc);
+  }
+
+  // Read barrier for weak stub data copied into the snapshot.
+  Zone* zone = jitCode->zone();
+  if (zone->needsIncrementalBarrier()) {
+    TraceWeakCacheIRStub(zone->barrierTracer(), stub, stub->stubInfo());
   }
 
   // Take a snapshot of the inlined script (which may do more
@@ -1145,6 +1157,7 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
       case StubField::Type::Double:
         break;
       case StubField::Type::Shape:
+      case StubField::Type::WeakShape:
         static_assert(std::is_convertible_v<Shape*, gc::TenuredCell*>,
                       "Code assumes shapes are tenured");
         break;

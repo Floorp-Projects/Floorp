@@ -196,6 +196,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     assertSameZone(shape);
     addStubField(uintptr_t(shape), StubField::Type::Shape);
   }
+  void writeWeakShapeField(Shape* shape) {
+    MOZ_ASSERT(shape);
+    assertSameZone(shape);
+    addStubField(uintptr_t(shape), StubField::Type::WeakShape);
+  }
   void writeGetterSetterField(GetterSetter* gs) {
     MOZ_ASSERT(gs);
     addStubField(uintptr_t(gs), StubField::Type::GetterSetter);

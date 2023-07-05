@@ -521,9 +521,22 @@ bool RecompileInfo::traceWeak(JSTracer* trc) {
   return maybeIonScriptToInvalidate() != nullptr;
 }
 
-void JitZone::traceWeak(JSTracer* trc) {
+void JitZone::traceWeak(JSTracer* trc, Zone* zone) {
+  MOZ_ASSERT(this == zone->jitZone());
+
   baselineCacheIRStubCodes_.traceWeak(trc);
   inlinedCompilations_.traceWeak(trc);
+
+  // Trace all IC chains to remove ICs with edges to dying GC things.
+  for (auto base = zone->cellIter<BaseScript>(); !base.done(); base.next()) {
+    MOZ_ASSERT_IF(IsTracerKind(trc, JS::TracerKind::Sweeping),
+                  base->isMarkedAny());
+
+    jit::JitScript* jitScript = base->maybeJitScript();
+    if (jitScript) {
+      jitScript->traceWeak(trc);
+    }
+  }
 }
 
 size_t JitRealm::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
@@ -779,6 +792,11 @@ void IonScript::trace(JSTracer* trc) {
   for (size_t i = 0; i < numICs(); i++) {
     getICFromIndex(i).trace(trc, this);
   }
+}
+
+void IonScript::traceWeak(JSTracer* trc) {
+  // IonICs do not currently contain weak pointers. If this is added then they
+  // should be traced here.
 }
 
 /* static */

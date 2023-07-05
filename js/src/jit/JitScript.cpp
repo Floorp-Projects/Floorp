@@ -189,12 +189,41 @@ void JitScript::trace(JSTracer* trc) {
   }
 }
 
+void JitScript::traceWeak(JSTracer* trc) {
+  if (!icScript_.traceWeak(trc)) {
+#ifdef DEBUG
+    hasPurgedStubs_ = true;
+#endif
+  }
+
+  if (hasInliningRoot()) {
+    inliningRoot()->traceWeak(trc);
+  }
+
+  if (hasIonScript()) {
+    ionScript()->traceWeak(trc);
+  }
+}
+
 void ICScript::trace(JSTracer* trc) {
   // Mark all IC stub codes hanging off the IC stub entries.
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& ent = icEntry(i);
     ent.trace(trc);
   }
+}
+
+bool ICScript::traceWeak(JSTracer* trc) {
+  // Mark all IC stub codes hanging off the IC stub entries.
+  bool allSurvived = true;
+  for (size_t i = 0; i < numICEntries(); i++) {
+    ICEntry& ent = icEntry(i);
+    if (!ent.traceWeak(trc)) {
+      allSurvived = false;
+    }
+  }
+
+  return allSurvived;
 }
 
 bool ICScript::addInlinedChild(JSContext* cx, UniquePtr<ICScript> child,

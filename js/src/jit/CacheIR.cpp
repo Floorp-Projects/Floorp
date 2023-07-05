@@ -193,6 +193,10 @@ int64_t CacheIRCloner::readStubInt64(uint32_t offset) {
 Shape* CacheIRCloner::getShapeField(uint32_t stubOffset) {
   return reinterpret_cast<Shape*>(readStubWord(stubOffset));
 }
+Shape* CacheIRCloner::getWeakShapeField(uint32_t stubOffset) {
+  // No barrier is required to clone a weak pointer.
+  return reinterpret_cast<Shape*>(readStubWord(stubOffset));
+}
 GetterSetter* CacheIRCloner::getGetterSetterField(uint32_t stubOffset) {
   return reinterpret_cast<GetterSetter*>(readStubWord(stubOffset));
 }
