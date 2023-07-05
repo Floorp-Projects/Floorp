@@ -437,7 +437,17 @@ export class UrlbarView {
     });
   }
 
-  acknowledgeDismissal(result) {
+  /**
+   * Replaces the given result's row with a dismissal-acknowledgment tip.
+   *
+   * @param {UrlbarResult} result
+   *   The result that was dismissed.
+   * @param {boolean} allOfType
+   *   If true, the tip's text will indicate that all results of the given
+   *   result's type have been dismissed and won't be shown anymore. If false,
+   *   the text will indicate that only the one result was dismissed.
+   */
+  acknowledgeDismissal(result, allOfType = false) {
     let row = this.#rows.children[result.rowIndex];
     if (!row || row.result != result) {
       return;
@@ -459,7 +469,11 @@ export class UrlbarView {
       lazy.UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       {
         type: "dismissalAcknowledgment",
-        titleL10n: { id: "firefox-suggest-dismissal-acknowledgment" },
+        titleL10n: {
+          id: allOfType
+            ? "firefox-suggest-dismissal-acknowledgment-all"
+            : "firefox-suggest-dismissal-acknowledgment-one",
+        },
         buttons: [{ l10n: { id: "urlbar-search-tips-confirm-short" } }],
         icon: "chrome://branding/content/icon32.png",
       }

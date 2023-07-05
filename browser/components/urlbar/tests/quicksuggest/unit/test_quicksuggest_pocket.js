@@ -342,8 +342,8 @@ add_task(async function uppercase() {
   });
 });
 
-// A blocked/dismissed suggestion shouldn't be added.
-add_task(async function block() {
+// Tests the "Not relevant" command: a dismissed suggestion shouldn't be added.
+add_task(async function notRelevant() {
   let result = makeExpectedResult({ searchString: LOW_KEYWORD });
   let queryContext = {
     view: {
@@ -351,11 +351,11 @@ add_task(async function block() {
     },
   };
 
-  info("Blocking suggestion");
+  info("Triggering the 'Not relevant' command");
   QuickSuggest.getFeature("PocketSuggestions").handleCommand(
     queryContext,
     result,
-    "dismiss"
+    "not_relevant"
   );
   await QuickSuggest.blockedSuggestions._test_readyPromise;
 
@@ -407,6 +407,50 @@ add_task(async function block() {
     }),
     matches: [result],
   });
+});
+
+// Tests the "Not interested" command: all Pocket suggestions should be disabled
+// and not added anymore.
+add_task(async function notInterested() {
+  let result = makeExpectedResult({ searchString: LOW_KEYWORD });
+  let queryContext = {
+    view: {
+      acknowledgeDismissal() {},
+    },
+  };
+
+  info("Triggering the 'Not interested' command");
+  QuickSuggest.getFeature("PocketSuggestions").handleCommand(
+    queryContext,
+    result,
+    "not_interested"
+  );
+
+  Assert.ok(
+    !UrlbarPrefs.get("suggest.pocket"),
+    "Pocket suggestions should be disabled"
+  );
+
+  info("Doing search for the suggestion the command was used on");
+  await check_results({
+    context: createContext(LOW_KEYWORD, {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+
+  info("Doing search for another Pocket suggestion");
+  await check_results({
+    context: createContext("other low", {
+      providers: [UrlbarProviderQuickSuggest.name],
+      isPrivate: false,
+    }),
+    matches: [],
+  });
+
+  UrlbarPrefs.clear("suggest.pocket");
+  await waitForSuggestions();
 });
 
 // Tests the "show less frequently" behavior.
