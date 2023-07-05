@@ -103,3 +103,15 @@ ITEM_VALUE(SiteSpecificZoom,            1llu << 60)
  * this value in the overrides pref is undefined behavior and may do anything.)
  */
 ITEM_VALUE(IsAlwaysEnabledForPrecompute, 0)
+
+/*
+ * Some users desperately want the entire ResistFingerprinting experience, except
+ * one particular behavior (usually TimeZone or ColorScheme.)  This value enables
+ * them to specify an override list that will include or exclude everything,
+ * allowing them to opt-in or opt-out of new RFPTargets we add in Firefox or to
+ * the default set enabled.  It should come first, otherwise behavior is undefined.
+ * Examples:
+ *    +AllTargets,-CSSPrefersColorScheme
+ *    -AllTargets,+Gamepad
+ */
+ITEM_VALUE(AllTargets, 0xFFFFFFFF)
