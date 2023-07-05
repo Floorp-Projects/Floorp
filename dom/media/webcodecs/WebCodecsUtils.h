@@ -32,7 +32,7 @@ namespace dom {
  * The followings are helpers for VideoDecoder methods
  */
 
-nsTArray<nsCString> GuessContainers(const nsString& aCodec);
+nsTArray<nsCString> GuessContainers(const nsAString& aCodec);
 
 /*
  * Below are helpers to operate ArrayBuffer or ArrayBufferView.
