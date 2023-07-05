@@ -1,0 +1,97 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "Audio/Video"
+
+origin:
+  name: libogg
+  description: multimedia container format
+
+  url: https://www.xiph.org/ogg/
+
+  release: v1.3.3 (2017-11-07T12:38:19-08:00).
+  revision: v1.3.3
+
+  license: BSD-3-Clause
+  license-file: COPYING
+
+vendoring:
+  url: https://gitlab.xiph.org/xiph/ogg/
+  source-hosting: gitlab
+  tracking: tag
+
+  exclude:
+    - ".*"
+    - "*"
+    - "**"
+
+  keep:
+    - geckoextra
+    - sources.mozbuild
+
+  include:
+    - "include/ogg/config_types.h.in"
+    - "include/ogg/ogg.h"
+    - "include/ogg/os_types.h"
+    - "src/bitwise.c"
+    - "src/framing.c"
+    - AUTHORS
+    - CHANGES
+    - COPYING
+    - README.md
+
+  update-actions:
+    - action: move-file
+      from: '{vendor_dir}/README.md'
+      to: '{vendor_dir}/README'
+    - action: move-file
+      from: '{vendor_dir}/src/bitwise.c'
+      to: '{vendor_dir}/src/ogg_bitwise.c'
+    - action: move-file
+      from: '{vendor_dir}/src/framing.c'
+      to: '{vendor_dir}/src/ogg_framing.c'
+    - action: delete-path
+      path: '{vendor_dir}/win32/.gitignore'
+
+    # Manually reproduce configure step here
+    - action: replace-in-file
+      pattern: '@INCLUDE_INTTYPES_H@'
+      with: '1'
+      file: '{vendor_dir}/include/ogg/config_types.h.in'
+    - action: replace-in-file
+      pattern: '@INCLUDE_STDINT_H@'
+      with: '1'
+      file: '{vendor_dir}/include/ogg/config_types.h.in'
+    - action: replace-in-file
+      pattern: '@INCLUDE_SYS_TYPES_H@'
+      with: '1'
+      file: '{vendor_dir}/include/ogg/config_types.h.in'
+    - action: replace-in-file
+      pattern: '@SIZE16@'
+      with: 'int16_t'
+      file: '{vendor_dir}/include/ogg/config_types.h.in'
+    - action: replace-in-file
+      pattern: '@USIZE16@'
+      with: 'uint16_t'
+      file: '{vendor_dir}/include/ogg/config_types.h.in'
+    - action: replace-in-file
+      pattern: '@SIZE32@'
+      with: 'int32_t'
+      file: '{vendor_dir}/include/ogg/config_types.h.in'
+    - action: replace-in-file
+      pattern: '@USIZE32@'
+      with: 'uint32_t'
+      file: '{vendor_dir}/include/ogg/config_types.h.in'
+    - action: replace-in-file
+      pattern: '@SIZE64@'
+      with: 'int64_t'
+      file: '{vendor_dir}/include/ogg/config_types.h.in'
+    - action: move-file
+      from: '{vendor_dir}/include/ogg/config_types.h.in'
+      to: '{vendor_dir}/include/ogg/config_types.h'
+
+  patches:
+    - solaris-types.patch
+    - memory-reporting.patch
+    - ogg-fuzzing.patch

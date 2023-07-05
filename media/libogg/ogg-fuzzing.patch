@@ -6,9 +6,9 @@
 # Parent  2388cab0a545d744bd109fa3a7af3b22a3dc4ced
 Bug 1561256 - Disable CRC checks in ogg framing for FUZZING. r=drno
 
-diff --git a/media/libogg/src/ogg_framing.c b/media/libogg/src/ogg_framing.c
---- a/media/libogg/src/ogg_framing.c
-+++ b/media/libogg/src/ogg_framing.c
+diff --git a/src/ogg_framing.c b/src/ogg_framing.c
+--- a/src/ogg_framing.c
++++ b/src/ogg_framing.c
 @@ -287,34 +287,38 @@ static int _os_lacing_expand(ogg_stream_
  }
  
