@@ -5379,8 +5379,8 @@
         Quit
       ${EndIf}
 
-      ; Windows NT 6.0 (Vista/Server 2008) and lower are not supported.
-      ${Unless} ${AtLeastWin7}
+      ; Windows 8.1/Server 2012 R2 and lower are not supported.
+      ${Unless} ${AtLeastWin10}
         MessageBox MB_OK|MB_ICONSTOP "$R9"
         ; Nothing initialized so no need to call OnEndCommon
         Quit
