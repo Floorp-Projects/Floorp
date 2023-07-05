@@ -28,13 +28,10 @@ pub type ContainIntrinsicSize = GenericContainIntrinsicSize<NonNegativeLength>;
 impl ContainIntrinsicSize {
     /// Converts contain-intrinsic-size to auto style.
     pub fn add_auto_if_needed(&self) -> Option<Self> {
-        use crate::Zero;
-        // TODO: support contain-intrinsic-size: auto none, see
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1835813
         Some(match *self {
-            Self::None => Self::AutoLength(Zero::zero()),
+            Self::None => Self::AutoNone,
             Self::Length(ref l) => Self::AutoLength(*l),
-            Self::AutoLength(..) => return None,
+            Self::AutoNone | Self::AutoLength(..) => return None,
         })
     }
 }

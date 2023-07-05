@@ -98,6 +98,8 @@ impl<L> ToAnimatedZero for VerticalAlign<L> {
 pub enum GenericContainIntrinsicSize<L> {
     /// The keyword `none`.
     None,
+    /// The keywords 'auto none',
+    AutoNone,
     /// A non-negative length.
     Length(L),
     /// "auto <Length>"
@@ -113,6 +115,7 @@ impl<L: ToCss> ToCss for ContainIntrinsicSize<L> {
     {
         match *self {
             Self::None => dest.write_str("none"),
+            Self::AutoNone => dest.write_str("auto none"),
             Self::Length(ref l) => l.to_css(dest),
             Self::AutoLength(ref l) => {
                 dest.write_str("auto ")?;
