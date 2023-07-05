@@ -198,7 +198,7 @@ EnterprisePoliciesManager.prototype = {
 
       let { valid: parametersAreValid, parsedValue: parsedParameters } =
         lazy.JsonSchemaValidator.validate(policyParameters, policySchema, {
-          allowExtraProperties: true,
+          allowAdditionalProperties: true,
         });
 
       if (!parametersAreValid) {

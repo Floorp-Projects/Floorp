@@ -911,7 +911,34 @@ add_task(async function test_object_values() {
     },
   });
 
-  // allowExtraProperties
+  validate({
+    value: {
+      foo: "hello",
+      bar: 123,
+      baz: "an additional property",
+    },
+    schema: {
+      type: "object",
+      additionalProperties: true,
+      properties: {
+        foo: {
+          type: "string",
+        },
+        bar: {
+          type: "number",
+        },
+      },
+    },
+    expectedResult: {
+      valid: true,
+      parsedValue: {
+        foo: "hello",
+        bar: 123,
+      },
+    },
+  });
+
+  // allowAdditionalProperties
   let result = validate({
     value: {
       url: "https://www.example.com/foo#bar",
@@ -930,7 +957,7 @@ add_task(async function test_object_values() {
       },
     },
     options: {
-      allowExtraProperties: true,
+      allowAdditionalProperties: true,
     },
     expectedResult: {
       valid: true,
