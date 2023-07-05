@@ -459,6 +459,7 @@ void GCRuntime::sweepZoneAfterCompacting(MovingTracer* trc, Zone* zone) {
   MOZ_ASSERT(zone->isGCCompacting());
 
   zone->traceWeakMaps(trc);
+  zone->sweepObjectsWithWeakPointers(trc);
 
   traceWeakFinalizationObserverEdges(trc, zone);
 
