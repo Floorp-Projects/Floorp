@@ -32,7 +32,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.  */
 // adding certain lines/blocks of asm based using cfg https://github.com/rust-lang/rust/issues/15701
 // and they're not really inputs, just literals, so...yah
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 
 // Unfortunately, the asm! macro has a few really annoying limitations at the
 // moment

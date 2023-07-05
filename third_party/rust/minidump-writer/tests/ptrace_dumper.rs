@@ -39,9 +39,10 @@ fn test_thread_list_from_parent() {
         let info = dumper
             .get_thread_info_by_index(idx)
             .expect("Could not get thread info by index");
-        let (_stack_ptr, stack_len) = dumper
+        let (_valid_stack_ptr, stack_len) = dumper
             .get_stack_info(info.stack_pointer)
             .expect("Could not get stack_pointer");
+
         assert!(stack_len > 0);
 
         // TODO: I currently know of no way to write the thread_id into the registers using Rust,
@@ -259,7 +260,7 @@ fn test_sanitize_stack_copy() {
     let mapping_info = dumper
         .find_mapping_no_bias(instr_ptr)
         .expect("Failed to find mapping info");
-    assert!(mapping_info.executable);
+    assert!(mapping_info.is_executable());
 
     // Pointers to code shouldn't be sanitized.
     simulated_stack = vec![0u8; 2 * size_of::<usize>()];

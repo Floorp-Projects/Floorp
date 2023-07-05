@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.59.0"
 name = "crash-context"
-version = "0.6.0"
+version = "0.6.1"
 authors = [
     "Embark <opensource@embark-studios.com>",
     "Jake Shadle <jake.shadle@embark-studios.com>",

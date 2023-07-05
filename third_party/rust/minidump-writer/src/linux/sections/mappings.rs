@@ -84,9 +84,9 @@ fn fill_raw_module(
     };
 
     let (file_path, _) = mapping
-        .get_mapping_effective_name_and_path()
+        .get_mapping_effective_path_and_name()
         .map_err(|e| errors::SectionMappingsError::GetEffectivePathError(mapping.clone(), e))?;
-    let name_header = write_string_to_location(buffer, &file_path)?;
+    let name_header = write_string_to_location(buffer, file_path.to_string_lossy().as_ref())?;
 
     Ok(MDRawModule {
         base_of_image: mapping.start_address as u64,
