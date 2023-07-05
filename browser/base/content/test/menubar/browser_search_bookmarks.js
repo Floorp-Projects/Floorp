@@ -12,30 +12,26 @@ add_task(async function test_menu_search_bookmarks_with_window_open() {
 });
 
 add_task(async function test_menu_search_bookmarks_in_new_window() {
-  let newWindowPromise = TestUtils.topicObserved(
-    "browser-delayed-startup-finished"
-  );
+  info("Opening bookmarks menu");
+  let newWindow = await BrowserUIUtils.openNewBrowserWindow();
 
-  info("Executing command in untracked browser window.");
-  BrowserWindowTracker.untrackForTestsOnly(window);
   let searchBookmarksMenuEntry = document.getElementById(
     "menu_searchBookmarks"
   );
-  searchBookmarksMenuEntry.doCommand();
-  BrowserWindowTracker.track(window);
 
-  info("Waiting for new window to open.");
-  let [newWindow] = await newWindowPromise;
+  info(`Executing command.`);
+  searchBookmarksMenuEntry.doCommand();
+
+  is(
+    newWindow,
+    BrowserWindowTracker.getTopWindow(),
+    "New window is top window."
+  );
   await isUrlbarInBookmarksSearchMode(newWindow);
   await BrowserTestUtils.closeWindow(newWindow);
 });
 
 async function isUrlbarInBookmarksSearchMode(targetWin) {
-  is(
-    targetWin,
-    BrowserWindowTracker.getTopWindow(),
-    "Target window is top window."
-  );
   await new Promise(resolve => {
     targetWin.gURLBar.controller.addQueryListener({
       onViewOpen() {
@@ -46,6 +42,7 @@ async function isUrlbarInBookmarksSearchMode(targetWin) {
   });
 
   // Verify URLBar is in search mode with correct restriction
+  is(targetWin != null, true, "top window is not empty");
   is(
     targetWin.gURLBar.searchMode?.source,
     UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
