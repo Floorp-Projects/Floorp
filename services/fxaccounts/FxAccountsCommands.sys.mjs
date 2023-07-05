@@ -417,7 +417,7 @@ export class SendTab {
     const keyBundle = lazy.BulkKeyBundle.fromJWK(oldsyncKey);
     await wrapper.encrypt(keyBundle);
     const encryptedSendTabKeys = JSON.stringify({
-      // Older clients expect this to be hex, due to pre-JWK sync key ids :-(
+      // This is expected in hex, due to pre-JWK sync key ids :-(
       kid: this._fxai.keys.kidAsHex(oldsyncKey),
       IV: wrapper.IV,
       hmac: wrapper.hmac,
