@@ -121,6 +121,11 @@ class TbplFormatter(BaseFormatter):
             reason = data.get("reason", "application crashed")
             rv = ["PROCESS-CRASH | %s [%s] | %s " % (reason, signature, id)]
 
+            if data.get("process_type"):
+                rv.append("Process type: {}".format(data["process_type"]))
+
+            rv.append("Process pid: {}".format(data.get("pid", "unknown")))
+
             if data.get("reason"):
                 rv.append("Mozilla crash reason: %s" % data["reason"])
 

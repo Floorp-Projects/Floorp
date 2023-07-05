@@ -538,6 +538,7 @@ class StructuredLogger(object):
         Unicode("stackwalk_stderr", default=None, optional=True),
         Unicode("reason", default=None, optional=True),
         Unicode("java_stack", default=None, optional=True),
+        Unicode("process_type", default=None, optional=True),
         List(Unicode, "stackwalk_errors", default=None),
         Unicode("subsuite", default=None, optional=True),
     )
