@@ -76,6 +76,7 @@ def is_release_promotion_available(parameters):
                     "Optional: an array of kinds to ignore from the previous "
                     "graph(s)."
                 ),
+                "default": graph_config["release-promotion"].get("rebuild-kinds", []),
                 "items": {
                     "type": "string",
                 },

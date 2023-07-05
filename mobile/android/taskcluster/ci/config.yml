@@ -263,3 +263,7 @@ release-promotion:
             target-tasks-method: push
         ship:
             target-tasks-method: ship
+    rebuild-kinds:
+        - docker-image
+        - fetch
+        - toolchain
