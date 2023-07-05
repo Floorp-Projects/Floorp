@@ -5,13 +5,14 @@
 package org.mozilla.fenix.shopping
 
 import android.app.Dialog
-import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.ComposeView
-import androidx.fragment.app.activityViewModels
+import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import org.mozilla.fenix.shopping.ui.ReviewQualityCheckContent
@@ -22,7 +23,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  */
 class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
 
-    private val viewModel: ReviewQualityCheckViewModel by activityViewModels()
     private var behavior: BottomSheetBehavior<View>? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
@@ -46,18 +46,9 @@ class ReviewQualityCheckFragment : BottomSheetDialogFragment() {
                     onRequestDismiss = {
                         behavior?.state = BottomSheetBehavior.STATE_HIDDEN
                     },
+                    modifier = Modifier.nestedScroll(rememberNestedScrollInteropConnection()),
                 )
             }
         }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel.onDialogCreated()
-    }
-
-    override fun onDismiss(dialog: DialogInterface) {
-        super.onDismiss(dialog)
-        viewModel.onDialogDismissed()
     }
 }
