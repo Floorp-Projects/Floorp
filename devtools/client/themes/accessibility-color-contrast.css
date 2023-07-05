@@ -42,7 +42,7 @@
   height: 12px;
   content: "";
   vertical-align: -2px;
-  background-image: url(chrome://devtools/skin/images/error-small.svg);
+  background-image: url(resource://devtools-shared-images/error-small.svg);
   background-position: center;
   background-repeat: no-repeat;
   -moz-context-properties: fill;

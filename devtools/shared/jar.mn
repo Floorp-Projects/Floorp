@@ -5,18 +5,11 @@
 devtools.jar:
 %   content devtools %content/
     content/shared/webextension-fallback.html (webextension-fallback.html)
-# Those images are in devtools/shared (and not in devtools/client/debugger/images like
-# the other debugger images) because they are used in both the debugger UI and in the
-# PausedDebuggerOverlay (which is in devtools/server).
-    content/shared/images/resume.svg (images/resume.svg)
-    content/shared/images/stepOver.svg (images/stepOver.svg)
-# These images are in devtools/shared (and not in devtools/client/themes/images/) because
-# they're also used in the RemoteNodePickerNotice (which is in devtools/server).
-    content/shared/images/command-pick.svg (images/command-pick.svg)
-    content/shared/images/command-pick-remote-touch.svg (images/command-pick-remote-touch.svg)
 %   resource devtools %modules/devtools/
 %   resource devtools-client-jsonview resource://devtools/client/jsonview/ contentaccessible=yes
 %   resource devtools-client-shared resource://devtools/client/shared/ contentaccessible=yes
+%   resource devtools-highlighter-styles resource://devtools/server/actors/highlighters/css/ contentaccessible=yes
+%   resource devtools-shared-images resource://devtools/shared/images/ contentaccessible=true
 %   content devtools-jsonview-styles %modules/devtools/client/jsonview/css/ contentaccessible=yes
 # The typical approach would be to list all the resource files in this manifest
 # for installation.  Instead of doing this, use the DevToolsModules syntax via
