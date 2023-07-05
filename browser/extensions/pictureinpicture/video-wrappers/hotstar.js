@@ -6,14 +6,12 @@
 
 class PictureInPictureVideoWrapper {
   setCaptionContainerObserver(video, updateCaptionsFunction) {
-    let container = document.querySelector(".subtitle-container");
+    let container = document.querySelector(".shaka-text-container");
 
     if (container) {
       updateCaptionsFunction("");
       const callback = function (mutationsList, observer) {
-        let textNodeList = container
-          .querySelector(".shaka-text-container")
-          ?.querySelectorAll("span");
+        let textNodeList = container?.querySelectorAll("span");
         if (!textNodeList) {
           updateCaptionsFunction("");
           return;
