@@ -957,12 +957,9 @@ nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
               vcEvent->IsFromUserInput());
           break;
         }
-#if defined(XP_WIN)
-        case nsIAccessibleEvent::EVENT_FOCUS: {
+        case nsIAccessibleEvent::EVENT_FOCUS:
           ipcDoc->SendFocusEvent(id);
           break;
-        }
-#endif
         case nsIAccessibleEvent::EVENT_SCROLLING_END:
         case nsIAccessibleEvent::EVENT_SCROLLING: {
           AccScrollingEvent* scrollingEvent = downcast_accEvent(aEvent);
