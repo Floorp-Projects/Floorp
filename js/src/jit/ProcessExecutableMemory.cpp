@@ -352,9 +352,6 @@ static void* ReserveProcessExecutableMemory(size_t bytes) {
 
 #  ifdef NEED_JIT_UNWIND_HANDLING
   if (RegisterExecutableMemory(p, bytes, pageSize)) {
-    // If this returns false the page remained unused.
-    p = (uint8_t*)p + pageSize;
-    bytes -= pageSize;
     sHasInstalledFunctionTable = true;
   } else {
     if (sJitExceptionHandler) {
@@ -363,6 +360,11 @@ static void* ReserveProcessExecutableMemory(size_t bytes) {
       return nullptr;
     }
   }
+
+  // Skip the first page where we might have allocated an exception handler
+  // record.
+  p = (uint8_t*)p + pageSize;
+  bytes -= pageSize;
 
   RegisterJitCodeRegion((uint8_t*)p, bytes);
 #  endif
@@ -373,9 +375,10 @@ static void DeallocateProcessExecutableMemory(void* addr, size_t bytes) {
 #  ifdef NEED_JIT_UNWIND_HANDLING
   UnregisterJitCodeRegion((uint8_t*)addr, bytes);
 
+  size_t pageSize = gc::SystemPageSize();
+  addr = (uint8_t*)addr - pageSize;
+
   if (sHasInstalledFunctionTable) {
-    size_t pageSize = gc::SystemPageSize();
-    addr = (uint8_t*)addr - pageSize;
     UnregisterExecutableMemory(addr, bytes, pageSize);
   }
 #  endif
