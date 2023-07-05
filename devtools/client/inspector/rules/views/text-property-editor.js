@@ -44,6 +44,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
+// @backward-compat { version 117 } The pref is enabled by default since 117.
+//                                  Let's completely remove it once 117 hits release.
 const INLINE_COMPATIBILITY_WARNING_PREF =
   "devtools.inspector.ruleview.inline-compatibility-warning.enabled";
 
