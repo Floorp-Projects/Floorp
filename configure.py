@@ -222,23 +222,6 @@ def config_status(config, execute=True):
         print("Please file a bug for the above.", file=sys.stderr)
         sys.exit(1)
 
-    # Some values in sanitized_config also have more complex types, such as
-    # EnumString, which using when calling config_status would currently
-    # break the build, as well as making it inconsistent with re-running
-    # config.status, for which they are normalized to plain strings via
-    # indented_repr. Likewise for non-dict non-string iterables being
-    # converted to lists.
-    def normalize(obj):
-        if isinstance(obj, dict):
-            return {k: normalize(v) for k, v in six.iteritems(obj)}
-        if isinstance(obj, six.text_type):
-            return six.text_type(obj)
-        if isinstance(obj, Iterable):
-            return [normalize(o) for o in obj]
-        return obj
-
-    sanitized_config = normalize(sanitized_config)
-
     # Create config.status. Eventually, we'll want to just do the work it does
     # here, when we're able to skip configure tests/use cached results/not rely
     # on autoconf.
@@ -248,6 +231,7 @@ def config_status(config, execute=True):
                 """\
             #!%(python)s
             # coding=utf-8
+            from mozbuild.configure.constants import *
         """
             )
             % {"python": config["PYTHON3"]}
