@@ -856,9 +856,7 @@ nsAppShell::Exit(void) {
   // mento) an nsAppExitEvent dispatched by nsAppStartup::Quit() and from an
   // XPCOM shutdown notification that nsBaseAppShell has registered to
   // receive.  So we need to ensure that multiple calls won't break anything.
-  // But we should also complain about it (since it isn't quite kosher).
   if (mTerminated) {
-    NS_WARNING("nsAppShell::Exit() called redundantly");
     return NS_OK;
   }
 
