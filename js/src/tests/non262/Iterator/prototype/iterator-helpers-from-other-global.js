@@ -26,7 +26,6 @@ const methods = [
   ["filter", x => true],
   ["take", Infinity],
   ["drop", 0],
-  ["asIndexedPairs", undefined],
   ["flatMap", x => [x]],
 ];
 
@@ -48,16 +47,6 @@ for (const [method, arg] of methods) {
   assertEq(iterator.closed, false);
   checkIterResult(otherReturn.call(helper), true, undefined);
   assertEq(iterator.closed, true);
-}
-
-for (const [method, arg] of methods) {
-  const {throw: otherThrow} = Object.getPrototypeOf(
-    new otherGlobal.Array().values()[method](arg)
-  );
-  const iterator = new TestIterator();
-  const helper = iterator[method](arg);
-  assertThrowsInstanceOf(otherThrow.bind(helper, new TestError()), TestError);
-  checkIterResult(helper.next(), true, undefined);
 }
 
 if (typeof reportCompare === 'function')

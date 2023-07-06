@@ -334,6 +334,7 @@
   MACRO_(isSubsetOf, isSubsetOf, "isSubsetOf")                                 \
   MACRO_(isSupersetOf, isSupersetOf, "isSupersetOf")                           \
   MACRO_(IterableToList, IterableToList, "IterableToList")                     \
+  MACRO_(IteratorHelper, IteratorHelper, "Iterator Helper")                    \
   MACRO_(IteratorNext, IteratorNext, "IteratorNext")                           \
   MACRO_(iterate, iterate, "iterate")                                          \
   MACRO_(join, join, "join")                                                   \

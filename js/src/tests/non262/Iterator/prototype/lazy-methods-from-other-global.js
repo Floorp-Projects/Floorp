@@ -7,7 +7,6 @@ const methods = [
   ["filter", x => true],
   ["take", Infinity],
   ["drop", 0],
-  ["asIndexedPairs", undefined],
   ["flatMap", x => [x]],
 ];
 

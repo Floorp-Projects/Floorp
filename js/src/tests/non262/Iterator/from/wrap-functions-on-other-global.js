@@ -21,11 +21,9 @@ const otherGlobal = newGlobal({newCompartment: true});
 const otherWrap = otherGlobal.Iterator.from(iter);
 
 checkIterResult(thisWrap.next.call(otherWrap), false, 0);
-checkIterResult(thisWrap.next.call(otherWrap, 'value'), false, 1);
+checkIterResult(thisWrap.next.call(otherWrap, 'value'), false, 0);
 
 assertThrowsInstanceOf(thisWrap.return.bind(otherWrap), TestError);
-
-checkIterResult(thisWrap.throw.call(otherWrap, 'value'), true, 'value');
 
 if (typeof reportCompare === 'function')
   reportCompare(0, 0);

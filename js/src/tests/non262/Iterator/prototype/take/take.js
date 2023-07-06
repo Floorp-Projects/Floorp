@@ -18,9 +18,8 @@ for (const v of [1, 2]) {
 
 assertEq(iter.next().done, true);
 
-// `take`, when called without arguments, has a limit of undefined,
-// which converts to 0.
-assertEq(['test'].values().take().next().done, true);
+// `take`, when called without arguments, throws a RangeError,
+assertThrowsInstanceOf(() => ['test'].values().take(), RangeError);
 
 if (typeof reportCompare === 'function')
   reportCompare(0, 0);
