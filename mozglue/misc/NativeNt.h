@@ -972,6 +972,11 @@ class MOZ_RAII PEHeaders final {
     auto dirEnt =
         reinterpret_cast<PIMAGE_RESOURCE_DIRECTORY_ENTRY>(aCurLevel + 1) +
         aCurLevel->NumberOfNamedEntries;
+    if (!(IsWithinImage(dirEnt) &&
+          IsWithinImage(&dirEnt[aCurLevel->NumberOfIdEntries - 1].Id))) {
+      return nullptr;
+    }
+
     for (WORD i = 0; i < aCurLevel->NumberOfIdEntries; ++i) {
       if (dirEnt[i].Id == aId) {
         return &dirEnt[i];
