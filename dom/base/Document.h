@@ -4029,9 +4029,9 @@ class Document : public nsINode,
 
   mozilla::dom::FeaturePolicy* FeaturePolicy() const;
 
-  bool ModuleScriptsEnabled();
+  bool ModuleScriptsEnabled() const;
 
-  bool ImportMapsEnabled();
+  bool ImportMapsEnabled() const;
 
   /**
    * Find the (non-anonymous) content in this document for aFrame. It will

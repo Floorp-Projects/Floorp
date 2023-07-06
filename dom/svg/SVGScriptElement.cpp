@@ -14,6 +14,8 @@
 
 NS_IMPL_NS_NEW_SVG_ELEMENT_CHECK_PARSER(Script)
 
+using JS::loader::ScriptKind;
+
 namespace mozilla::dom {
 
 JSObject* SVGScriptElement::WrapNode(JSContext* aCx,
@@ -106,10 +108,13 @@ void SVGScriptElement::GetScriptCharset(nsAString& charset) {
   charset.Truncate();
 }
 
-void SVGScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
+void SVGScriptElement::FreezeExecutionAttrs(const Document* aOwnerDoc) {
   if (mFrozen) {
     return;
   }
+
+  // Determine whether this is a(n) classic/module/importmap script.
+  DetermineKindFromType(aOwnerDoc);
 
   if (mStringAttributes[HREF].IsExplicitlySet() ||
       mStringAttributes[XLINK_HREF].IsExplicitlySet()) {
@@ -149,6 +154,12 @@ void SVGScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
     // At this point mUri will be null for invalid URLs.
     mExternal = true;
   }
+
+  bool async = (mExternal || mKind == ScriptKind::eModule) && Async();
+  bool defer = mExternal && Defer();
+
+  mDefer = !async && defer;
+  mAsync = async;
 
   mFrozen = true;
 }

@@ -150,33 +150,13 @@ void HTMLScriptElement::GetScriptCharset(nsAString& charset) {
   GetCharset(charset);
 }
 
-void HTMLScriptElement::FreezeExecutionAttrs(Document* aOwnerDoc) {
+void HTMLScriptElement::FreezeExecutionAttrs(const Document* aOwnerDoc) {
   if (mFrozen) {
     return;
   }
 
-  MOZ_ASSERT((mKind != ScriptKind::eModule) &&
-             (mKind != ScriptKind::eImportMap) && !mAsync && !mDefer &&
-             !mExternal);
-
   // Determine whether this is a(n) classic/module/importmap script.
-  nsAutoString type;
-  GetScriptType(type);
-  if (!type.IsEmpty()) {
-    if (aOwnerDoc->ModuleScriptsEnabled() &&
-        type.LowerCaseEqualsASCII("module")) {
-      mKind = ScriptKind::eModule;
-    }
-
-    // https://html.spec.whatwg.org/multipage/scripting.html#prepare-the-script-element
-    // Step 11. Otherwise, if the script block's type string is an ASCII
-    // case-insensitive match for the string "importmap", then set el's type to
-    // "importmap".
-    if (aOwnerDoc->ImportMapsEnabled() &&
-        type.LowerCaseEqualsASCII("importmap")) {
-      mKind = ScriptKind::eImportMap;
-    }
-  }
+  DetermineKindFromType(aOwnerDoc);
 
   // variation of this code in SVGScriptElement - check if changes
   // need to be transfered when modifying.  Note that we don't use GetSrc here
