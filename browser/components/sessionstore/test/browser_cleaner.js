@@ -113,14 +113,14 @@ add_task(async function test_restore() {
   let newWin = ss.undoCloseWindow(0);
   await promiseDelayedStartupFinished(newWin);
 
-  let newTab2 = ss.undoCloseTab(window, 0);
+  let newTab2 = ss.undoCloseTab(window, 0, window);
   await promiseTabRestored(newTab2);
 
-  let newTab1 = ss.undoCloseTab(window, 0);
+  let newTab1 = ss.undoCloseTab(window, 0, window);
   await promiseTabRestored(newTab1);
 
   let state = JSON.parse(ss.getBrowserState());
-
+  console.log("examining state:", state);
   is(
     state.windows[0].closedAt || false,
     false,

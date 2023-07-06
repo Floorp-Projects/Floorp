@@ -7502,7 +7502,7 @@ var TabContextMenu = {
 
     // Session store
     document.getElementById("context_undoCloseTab").disabled =
-      SessionStore.getClosedTabCountForWindow(window) == 0;
+      SessionStore.getClosedTabCount() == 0;
 
     // Show/hide fullscreen context menu items and set the
     // autohide item's checked state to mirror the autohide pref.
