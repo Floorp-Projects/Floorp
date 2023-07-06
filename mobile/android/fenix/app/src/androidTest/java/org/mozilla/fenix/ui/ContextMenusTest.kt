@@ -81,7 +81,7 @@ class ContextMenusTest {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
             longClickPageObject(itemWithText("Link 1"))
-            verifyLinkContextMenuItems(genericURL.url)
+            verifyContextMenuForLocalHostLinks(genericURL.url)
             clickContextMenuItem("Open link in new tab")
             verifySnackBarText("New tab opened")
             clickSnackbarButton("SWITCH")
@@ -105,7 +105,7 @@ class ContextMenusTest {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
             longClickPageObject(itemWithText("Link 2"))
-            verifyLinkContextMenuItems(genericURL.url)
+            verifyContextMenuForLocalHostLinks(genericURL.url)
             clickContextMenuItem("Open link in private tab")
             verifySnackBarText("New private tab opened")
             clickSnackbarButton("SWITCH")
@@ -127,7 +127,7 @@ class ContextMenusTest {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
             longClickPageObject(itemWithText("Link 3"))
-            verifyLinkContextMenuItems(genericURL.url)
+            verifyContextMenuForLocalHostLinks(genericURL.url)
             clickContextMenuItem("Copy link")
             verifySnackBarText("Link copied to clipboard")
         }.openNavigationToolbar {
@@ -144,7 +144,7 @@ class ContextMenusTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             longClickPageObject(itemWithText("Link 3"))
-            verifyLinkContextMenuItems(genericURL.url)
+            verifyContextMenuForLocalHostLinks(genericURL.url)
             clickContextMenuItem("Copy link")
             verifySnackBarText("Link copied to clipboard")
         }.openNavigationToolbar {
@@ -169,7 +169,7 @@ class ContextMenusTest {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
             longClickPageObject(itemWithText("Link 1"))
-            verifyLinkContextMenuItems(genericURL.url)
+            verifyContextMenuForLocalHostLinks(genericURL.url)
             clickContextMenuItem("Share link")
             shareOverlay {
                 verifyShareLinkIntent(genericURL.url)
@@ -252,7 +252,7 @@ class ContextMenusTest {
         }.enterURLAndEnterToBrowser(pageLinks.url) {
             mDevice.waitForIdle()
             longClickPageObject(itemWithText("Link 1"))
-            verifyLinkContextMenuItems(genericURL.url)
+            verifyContextMenuForLocalHostLinks(genericURL.url)
             dismissContentContextMenu()
             longClickPageObject(itemWithText("test_link_image"))
             verifyLinkImageContextMenuItems(imageResource.url)
@@ -272,12 +272,12 @@ class ContextMenusTest {
             clickPageObject(itemWithText("PDF form file"))
             waitForPageToLoad()
             longClickPageObject(itemWithText("Wikipedia link"))
-            verifyLinkContextMenuItems("wikipedia.org".toUri(), false)
+            verifyContextMenuForLinksToOtherHosts("wikipedia.org".toUri())
             dismissContentContextMenu()
             // Some options are missing from the linked and non liked images context menus in PDF files
             // See https://bugzilla.mozilla.org/show_bug.cgi?id=1012805 for more details
             longClickPDFImage()
-            verifyLinkContextMenuItems("wikipedia.org".toUri())
+            verifyContextMenuForLinksToOtherHosts("wikipedia.org".toUri())
             dismissContentContextMenu()
         }
     }
@@ -289,6 +289,7 @@ class ContextMenusTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
             longClickPageObject(itemContainingText("Youtube link"))
+            verifyContextMenuForLinksToOtherApps("youtube.com".toUri())
             clickContextMenuItem("Open link in external app")
             assertYoutubeAppOpens()
         }
