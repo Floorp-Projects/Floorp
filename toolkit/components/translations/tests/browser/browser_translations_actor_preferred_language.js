@@ -63,13 +63,13 @@ add_task(async function test_preferred_language() {
       Assert.deepEqual(
         TranslationsParent.getPreferredLanguages(),
         [
+          // webLanguages
+          "cs",
+          "hu",
           // appLocales, notice that "en" is the last fallback.
           "pt",
           "pl",
           "en",
-          // webLanguages
-          "cs",
-          "hu",
           // systemLocales
           "zh",
           "de",
