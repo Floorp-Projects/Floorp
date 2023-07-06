@@ -1927,7 +1927,9 @@ JS_PUBLIC_API JSObject* JS::NewArrayBuffer(JSContext* cx, size_t nbytes) {
 JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(
     JSContext* cx, size_t nbytes,
     mozilla::UniquePtr<void, JS::FreePolicy> contents) {
-  auto* result = NewArrayBufferWithContents(cx, nbytes, contents.get());
+  auto* result = NewArrayBufferWithContents(
+      cx, nbytes, contents.get(),
+      JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory);
   if (result) {
     // If and only if an ArrayBuffer is successfully created, ownership of
     // |contents| is transferred to the new ArrayBuffer.
@@ -1936,9 +1938,8 @@ JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(
   return result;
 }
 
-JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(JSContext* cx,
-                                                       size_t nbytes,
-                                                       void* data) {
+JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(
+    JSContext* cx, size_t nbytes, void* data, NewArrayBufferOutOfMemory) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   MOZ_ASSERT_IF(!data, nbytes == 0);
