@@ -2784,7 +2784,7 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
 JSOp BytecodeEmitter::getIterCallOp(JSOp callOp,
                                     SelfHostedIter selfHostedIter) {
   if (emitterMode == BytecodeEmitter::SelfHosting) {
-    MOZ_ASSERT(selfHostedIter != SelfHostedIter::Deny);
+    MOZ_ASSERT(selfHostedIter == SelfHostedIter::Allow);
 
     switch (callOp) {
       case JSOp::Call:
@@ -2803,7 +2803,7 @@ bool BytecodeEmitter::emitIteratorNext(
     const Maybe<uint32_t>& callSourceCoordOffset,
     IteratorKind iterKind /* = IteratorKind::Sync */,
     SelfHostedIter selfHostedIter /* = SelfHostedIter::Deny */) {
-  MOZ_ASSERT(selfHostedIter != SelfHostedIter::Deny ||
+  MOZ_ASSERT(selfHostedIter == SelfHostedIter::Allow ||
                  emitterMode != BytecodeEmitter::SelfHosting,
              ".next() iteration is prohibited in self-hosted code because it"
              "can run user-modifiable iteration code");
@@ -2836,7 +2836,7 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
     IteratorKind iterKind /* = IteratorKind::Sync */,
     CompletionKind completionKind /* = CompletionKind::Normal */,
     SelfHostedIter selfHostedIter /* = SelfHostedIter::Deny */) {
-  MOZ_ASSERT(selfHostedIter != SelfHostedIter::Deny ||
+  MOZ_ASSERT(selfHostedIter == SelfHostedIter::Allow ||
                  emitterMode != BytecodeEmitter::SelfHosting,
              ".close() on iterators is prohibited in self-hosted code because "
              "it can run user-modifiable iteration code");
@@ -3127,9 +3127,6 @@ bool BytecodeEmitter::emitInitializer(ParseNode* initializer,
 
 bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
                                                 DestructuringFlavor flav) {
-  MOZ_ASSERT(getSelfHostedIterFor(pattern) == SelfHostedIter::Deny,
-             "array destructuring is prohibited in self-hosted code because it"
-             "can run user-modifiable iteration code");
   MOZ_ASSERT(pattern->isKind(ParseNodeKind::ArrayExpr));
   MOZ_ASSERT(bytecodeSection().stackDepth() != 0);
 
@@ -3225,7 +3222,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
     //              [stack] ... OBJ OBJ
     return false;
   }
-  if (!emitIterator(SelfHostedIter::Deny)) {
+  if (!emitIterator()) {
     //              [stack] ... OBJ NEXT ITER
     return false;
   }
@@ -3347,7 +3344,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
         //          [stack] ... OBJ NEXT ITER LREF* NEXT ITER ARRAY INDEX
         return false;
       }
-      if (!emitSpread(SelfHostedIter::Deny)) {
+      if (!emitSpread()) {
         //          [stack] ... OBJ NEXT ITER LREF* ARRAY INDEX
         return false;
       }
@@ -5102,96 +5099,15 @@ bool BytecodeEmitter::emitBigIntOp(BigIntLiteral* bigint) {
   return emitGCIndexOp(JSOp::BigInt, index);
 }
 
-bool BytecodeEmitter::emitIterable(ParseNode* value,
-                                   SelfHostedIter selfHostedIter,
-                                   IteratorKind iterKind) {
-  MOZ_ASSERT(getSelfHostedIterFor(value) == selfHostedIter);
-
-  if (!emitTree(value)) {
-    //              [stack] ITERABLE
-    return false;
-  }
-
-  switch (selfHostedIter) {
-    case SelfHostedIter::Deny:
-    case SelfHostedIter::AllowContent:
-      //            [stack] ITERABLE
-      return true;
-
-    case SelfHostedIter::AllowContentWith: {
-      // This is the following case:
-      //
-      //   for (const nextValue of allowContentIterWith(items, usingIterator)) {
-      //
-      // `items` is emitted by `emitTree(value)` above, and the result is on the
-      // stack as ITERABLE.
-      // `usingIterator` is the value of `items[Symbol.iterator]`, that's
-      // already retrieved.
-      ListNode* argsList = value->as<CallNode>().args();
-      MOZ_ASSERT_IF(iterKind == IteratorKind::Sync, argsList->count() == 2);
-      MOZ_ASSERT_IF(iterKind == IteratorKind::Async, argsList->count() == 3);
-
-      if (!emitTree(argsList->head()->pn_next)) {
-        //          [stack] ITERABLE ITERFN
-        return false;
-      }
-
-      // Async iterator has two possible iterators: An async iterator and a sync
-      // iterator.
-      if (iterKind == IteratorKind::Async) {
-        if (!emitTree(argsList->head()->pn_next->pn_next)) {
-          //        [stack] ITERABLE ASYNC_ITERFN SYNC_ITERFN
-          return false;
-        }
-      }
-
-      //            [stack] ITERABLE ASYNC_ITERFN? SYNC_ITERFN
-      return true;
-    }
-
-    case SelfHostedIter::AllowContentWithNext: {
-      // This is the following case:
-      //
-      //   for (const nextValue of allowContentIterWithNext(iterator, next)) {
-      //
-      // `iterator` is emitted by `emitTree(value)` above, and the result is on
-      // the stack as ITER.
-      // `next` is the value of `iterator.next`, that's already retrieved.
-      ListNode* argsList = value->as<CallNode>().args();
-      MOZ_ASSERT(argsList->count() == 2);
-
-      if (!emitTree(argsList->head()->pn_next)) {
-        //          [stack] ITER NEXT
-        return false;
-      }
-
-      if (!emit1(JSOp::Swap)) {
-        //          [stack] NEXT ITER
-        return false;
-      }
-
-      //            [stack] NEXT ITER
-      return true;
-    }
-  }
-
-  MOZ_CRASH("invalid self-hosted iteration kind");
-}
-
-bool BytecodeEmitter::emitIterator(SelfHostedIter selfHostedIter) {
-  MOZ_ASSERT(selfHostedIter != SelfHostedIter::Deny ||
+bool BytecodeEmitter::emitIterator(
+    SelfHostedIter selfHostedIter /* = SelfHostedIter::Deny */,
+    bool isIteratorMethodOnStack /* = false */) {
+  MOZ_ASSERT(selfHostedIter == SelfHostedIter::Allow ||
                  emitterMode != BytecodeEmitter::SelfHosting,
              "[Symbol.iterator]() call is prohibited in self-hosted code "
              "because it can run user-modifiable iteration code");
 
-  if (selfHostedIter == SelfHostedIter::AllowContentWithNext) {
-    //              [stack] NEXT ITER
-
-    // Nothing to do, stack already contains the iterator and its `next` method.
-    return true;
-  }
-
-  if (selfHostedIter != SelfHostedIter::AllowContentWith) {
+  if (!isIteratorMethodOnStack) {
     //              [stack] OBJ
 
     // Convert iterable to iterator.
@@ -5236,14 +5152,15 @@ bool BytecodeEmitter::emitIterator(SelfHostedIter selfHostedIter) {
   return true;
 }
 
-bool BytecodeEmitter::emitAsyncIterator(SelfHostedIter selfHostedIter) {
-  MOZ_ASSERT(selfHostedIter != SelfHostedIter::AllowContentWithNext);
-  MOZ_ASSERT(selfHostedIter != SelfHostedIter::Deny ||
+bool BytecodeEmitter::emitAsyncIterator(
+    SelfHostedIter selfHostedIter /* = SelfHostedIter::Deny */,
+    bool isIteratorMethodOnStack /* = false */) {
+  MOZ_ASSERT(selfHostedIter == SelfHostedIter::Allow ||
                  emitterMode != BytecodeEmitter::SelfHosting,
              "[Symbol.asyncIterator]() call is prohibited in self-hosted code "
              "because it can run user-modifiable iteration code");
 
-  if (selfHostedIter != SelfHostedIter::AllowContentWith) {
+  if (!isIteratorMethodOnStack) {
     //              [stack] OBJ
 
     // Convert iterable to iterator.
@@ -5283,7 +5200,7 @@ bool BytecodeEmitter::emitAsyncIterator(SelfHostedIter selfHostedIter) {
     return false;
   }
 
-  if (selfHostedIter != SelfHostedIter::AllowContentWith) {
+  if (!isIteratorMethodOnStack) {
     if (!emit1(JSOp::Dup)) {
       //            [stack] OBJ OBJ
       return false;
@@ -5332,7 +5249,7 @@ bool BytecodeEmitter::emitAsyncIterator(SelfHostedIter selfHostedIter) {
     return false;
   }
 
-  if (selfHostedIter == SelfHostedIter::AllowContentWith) {
+  if (isIteratorMethodOnStack) {
     if (!emit1(JSOp::Swap)) {
       //            [stack] OBJ ASYNC_ITERFN SYNC_ITERFN
       return false;
@@ -5560,8 +5477,8 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
 
   // Certain builtins (e.g. Array.from) are implemented in self-hosting
   // as for-of loops.
-  auto selfHostedIter = getSelfHostedIterFor(forHeadExpr);
-  ForOfEmitter forOf(this, headLexicalEmitterScope, selfHostedIter, iterKind);
+  ForOfEmitter forOf(this, headLexicalEmitterScope,
+                     getSelfHostedIterFor(forHeadExpr), iterKind);
 
   if (!forOf.emitIterated()) {
     //              [stack]
@@ -5574,7 +5491,7 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
   if (!markStepBreakpoint()) {
     return false;
   }
-  if (!emitIterable(forHeadExpr, selfHostedIter, iterKind)) {
+  if (!emitTree(forHeadExpr)) {
     //              [stack] ITERABLE
     return false;
   }
@@ -5585,7 +5502,41 @@ bool BytecodeEmitter::emitForOf(ForNode* forOfLoop,
                forOfTarget->isKind(ParseNodeKind::ConstDecl));
   }
 
-  if (!forOf.emitInitialize(forOfHead->pn_pos.begin)) {
+  bool isIteratorMethodOnStack = false;
+  if (emitterMode == BytecodeEmitter::SelfHosting &&
+      forHeadExpr->isKind(ParseNodeKind::CallExpr) &&
+      forHeadExpr->as<BinaryNode>().left()->isName(
+          TaggedParserAtomIndex::WellKnown::allowContentIterWith())) {
+    // This is the following case:
+    //
+    //   for (const nextValue of allowContentIterWith(items, usingIterator)) {
+    //
+    // `items` is emitted by `emitTree(forHeadExpr)` above, and the result
+    // is on the stack as ITERABLE.
+    // `usingIterator` is the value of `items[Symbol.iterator]`, that's already
+    // retrieved.
+    ListNode* argsList = &forHeadExpr->as<BinaryNode>().right()->as<ListNode>();
+    MOZ_ASSERT_IF(iterKind == IteratorKind::Sync, argsList->count() == 2);
+    MOZ_ASSERT_IF(iterKind == IteratorKind::Async, argsList->count() == 3);
+
+    if (!emitTree(argsList->head()->pn_next)) {
+      //            [stack] ITERABLE ITERFN
+      return false;
+    }
+
+    // Async iterator has two possible iterators: An async iterator and a sync
+    // iterator.
+    if (iterKind == IteratorKind::Async) {
+      if (!emitTree(argsList->head()->pn_next->pn_next)) {
+        //          [stack] ITERABLE ASYNC_ITERFN SYNC_ITERFN
+        return false;
+      }
+    }
+
+    isIteratorMethodOnStack = true;
+  }
+
+  if (!forOf.emitInitialize(forOfHead->pn_pos.begin, isIteratorMethodOnStack)) {
     //              [stack] NEXT ITER VALUE
     return false;
   }
@@ -6377,7 +6328,7 @@ bool BytecodeEmitter::emitAwaitInScope(EmitterScope& currentScope) {
 // 14.4.14 Runtime Semantics: Evaluation
 // YieldExpression : yield* AssignmentExpression
 bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
-  MOZ_ASSERT(getSelfHostedIterFor(iter) == SelfHostedIter::Deny,
+  MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting,
              "yield* is prohibited in self-hosted code because it can run "
              "user-modifiable iteration code");
 
@@ -6396,12 +6347,12 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
   if (iterKind == IteratorKind::Async) {
-    if (!emitAsyncIterator(SelfHostedIter::Deny)) {
+    if (!emitAsyncIterator()) {
       //            [stack] NEXT ITER
       return false;
     }
   } else {
-    if (!emitIterator(SelfHostedIter::Deny)) {
+    if (!emitIterator()) {
       //            [stack] NEXT ITER
       return false;
     }
@@ -6590,7 +6541,8 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //
     // If the iterator does not have a "throw" method, it calls IteratorClose
     // and then throws a TypeError.
-    if (!emitIteratorCloseInInnermostScope(iterKind, CompletionKind::Normal)) {
+    if (!emitIteratorCloseInInnermostScope(iterKind, CompletionKind::Normal,
+                                           getSelfHostedIterFor(iter))) {
       //            [stack] NEXT ITER RECEIVED ITER
       return false;
     }
@@ -7211,8 +7163,8 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode, JSOp op) {
   //
   // argc is set to the amount of actually emitted args and the
   // emitting of args below is disabled by setting emitArgs to false.
-  NameNode* calleeNode = &callNode->callee()->as<NameNode>();
-  ListNode* argsList = callNode->args();
+  NameNode* calleeNode = &callNode->left()->as<NameNode>();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() >= 2);
 
@@ -7279,7 +7231,7 @@ bool BytecodeEmitter::emitSelfHostedCallFunction(CallNode* callNode, JSOp op) {
 }
 
 bool BytecodeEmitter::emitSelfHostedResumeGenerator(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   // Syntax: resumeGenerator(gen, value, 'next'|'throw'|'return')
   MOZ_ASSERT(argsList->count() == 3);
@@ -7331,7 +7283,7 @@ bool BytecodeEmitter::emitSelfHostedForceInterpreter() {
 }
 
 bool BytecodeEmitter::emitSelfHostedAllowContentIter(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 1);
 
@@ -7340,7 +7292,7 @@ bool BytecodeEmitter::emitSelfHostedAllowContentIter(CallNode* callNode) {
 }
 
 bool BytecodeEmitter::emitSelfHostedAllowContentIterWith(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 2 || argsList->count() == 3);
 
@@ -7348,18 +7300,8 @@ bool BytecodeEmitter::emitSelfHostedAllowContentIterWith(CallNode* callNode) {
   return emitTree(argsList->head());
 }
 
-bool BytecodeEmitter::emitSelfHostedAllowContentIterWithNext(
-    CallNode* callNode) {
-  ListNode* argsList = callNode->args();
-
-  MOZ_ASSERT(argsList->count() == 2);
-
-  // We're just here as a sentinel. Pass the value through directly.
-  return emitTree(argsList->head());
-}
-
 bool BytecodeEmitter::emitSelfHostedDefineDataProperty(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   // Only optimize when 3 arguments are passed.
   MOZ_ASSERT(argsList->count() == 3);
@@ -7386,7 +7328,7 @@ bool BytecodeEmitter::emitSelfHostedDefineDataProperty(CallNode* callNode) {
 }
 
 bool BytecodeEmitter::emitSelfHostedHasOwn(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 2);
 
@@ -7404,7 +7346,7 @@ bool BytecodeEmitter::emitSelfHostedHasOwn(CallNode* callNode) {
 }
 
 bool BytecodeEmitter::emitSelfHostedGetPropertySuper(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 3);
 
@@ -7428,7 +7370,7 @@ bool BytecodeEmitter::emitSelfHostedGetPropertySuper(CallNode* callNode) {
 }
 
 bool BytecodeEmitter::emitSelfHostedToNumeric(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 1);
 
@@ -7442,7 +7384,7 @@ bool BytecodeEmitter::emitSelfHostedToNumeric(CallNode* callNode) {
 }
 
 bool BytecodeEmitter::emitSelfHostedToString(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 1);
 
@@ -7456,7 +7398,7 @@ bool BytecodeEmitter::emitSelfHostedToString(CallNode* callNode) {
 }
 
 bool BytecodeEmitter::emitSelfHostedIsNullOrUndefined(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 1);
 
@@ -7481,33 +7423,9 @@ bool BytecodeEmitter::emitSelfHostedIsNullOrUndefined(CallNode* callNode) {
   return true;
 }
 
-bool BytecodeEmitter::emitSelfHostedIteratorClose(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
-  MOZ_ASSERT(argsList->count() == 1);
-
-  ParseNode* argNode = argsList->head();
-  if (!emitTree(argNode)) {
-    //              [stack] ARG
-    return false;
-  }
-
-  if (!emit2(JSOp::CloseIter, uint8_t(CompletionKind::Normal))) {
-    //              [stack]
-    return false;
-  }
-
-  // This is still a call node, so we must generate a stack value.
-  if (!emit1(JSOp::Undefined)) {
-    //              [stack] RVAL
-    return false;
-  }
-
-  return true;
-}
-
 bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructorOrPrototype(
     CallNode* callNode, bool isConstructor) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 1);
 
@@ -7561,7 +7479,7 @@ JS::SymbolCode ParserAtomToSymbolCode(TaggedParserAtomIndex atom) {
 }
 
 bool BytecodeEmitter::emitSelfHostedGetBuiltinSymbol(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 1);
 
@@ -7589,7 +7507,7 @@ bool BytecodeEmitter::emitSelfHostedArgumentsLength(CallNode* callNode) {
   MOZ_ASSERT(!sc->asFunctionBox()->needsArgsObj());
   sc->asFunctionBox()->setUsesArgumentsIntrinsics();
 
-  MOZ_ASSERT(callNode->args()->count() == 0);
+  MOZ_ASSERT(callNode->right()->as<ListNode>().count() == 0);
 
   return emit1(JSOp::ArgumentsLength);
 }
@@ -7598,7 +7516,7 @@ bool BytecodeEmitter::emitSelfHostedGetArgument(CallNode* callNode) {
   MOZ_ASSERT(!sc->asFunctionBox()->needsArgsObj());
   sc->asFunctionBox()->setUsesArgumentsIntrinsics();
 
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
   MOZ_ASSERT(argsList->count() == 1);
 
   ParseNode* argNode = argsList->head();
@@ -7632,7 +7550,7 @@ void BytecodeEmitter::assertSelfHostedExpectedTopLevel(ParseNode* node) {
 bool BytecodeEmitter::emitSelfHostedSetIsInlinableLargeFunction(
     CallNode* callNode) {
 #ifdef DEBUG
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 1);
 
@@ -7647,7 +7565,7 @@ bool BytecodeEmitter::emitSelfHostedSetIsInlinableLargeFunction(
 }
 
 bool BytecodeEmitter::emitSelfHostedSetCanonicalName(CallNode* callNode) {
-  ListNode* argsList = callNode->args();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
 
   MOZ_ASSERT(argsList->count() == 2);
 
@@ -7820,10 +7738,8 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
   return true;
 }
 
-bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, CallNode* call,
+bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call,
                                         CallOrNewEmitter& cone) {
-  MOZ_ASSERT(call->callee() == callee);
-
   switch (callee->getKind()) {
     case ParseNodeKind::Name: {
       auto name = callee->as<NameNode>().name();
@@ -7920,8 +7836,8 @@ bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, CallNode* call,
       }
       break;
     case ParseNodeKind::OptionalChain: {
-      return emitCalleeAndThisForOptionalChain(&callee->as<UnaryNode>(), call,
-                                               cone);
+      return emitCalleeAndThisForOptionalChain(&callee->as<UnaryNode>(),
+                                               &call->as<CallNode>(), cone);
     }
     default:
       if (!cone.prepareForOtherCallee()) {
@@ -8056,8 +7972,8 @@ bool BytecodeEmitter::emitOptionalCall(CallNode* callNode, OptionalEmitter& oe,
    *
    * See CallOrNewEmitter for more context.
    */
-  ParseNode* calleeNode = callNode->callee();
-  ListNode* argsList = callNode->args();
+  ParseNode* calleeNode = callNode->left();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
   bool isSpread = IsSpreadOp(callNode->callOp());
   JSOp op = callNode->callOp();
   uint32_t argc = argsList->count();
@@ -8109,8 +8025,8 @@ bool BytecodeEmitter::emitCallOrNew(CallNode* callNode, ValueUsage valueUsage) {
    */
   bool isCall = callNode->isKind(ParseNodeKind::CallExpr) ||
                 callNode->isKind(ParseNodeKind::TaggedTemplateExpr);
-  ParseNode* calleeNode = callNode->callee();
-  ListNode* argsList = callNode->args();
+  ParseNode* calleeNode = callNode->left();
+  ListNode* argsList = &callNode->right()->as<ListNode>();
   JSOp op = callNode->callOp();
 
   if (calleeNode->isKind(ParseNodeKind::Name) &&
@@ -8144,10 +8060,6 @@ bool BytecodeEmitter::emitCallOrNew(CallNode* callNode, ValueUsage valueUsage) {
     if (calleeName ==
         TaggedParserAtomIndex::WellKnown::allowContentIterWith()) {
       return emitSelfHostedAllowContentIterWith(callNode);
-    }
-    if (calleeName ==
-        TaggedParserAtomIndex::WellKnown::allowContentIterWithNext()) {
-      return emitSelfHostedAllowContentIterWithNext(callNode);
     }
     if (calleeName ==
             TaggedParserAtomIndex::WellKnown::defineDataPropertyIntrinsic() &&
@@ -8191,9 +8103,6 @@ bool BytecodeEmitter::emitCallOrNew(CallNode* callNode, ValueUsage valueUsage) {
     }
     if (calleeName == TaggedParserAtomIndex::WellKnown::IsNullOrUndefined()) {
       return emitSelfHostedIsNullOrUndefined(callNode);
-    }
-    if (calleeName == TaggedParserAtomIndex::WellKnown::IteratorClose()) {
-      return emitSelfHostedIteratorClose(callNode);
     }
 #ifdef DEBUG
     if (calleeName ==
@@ -10506,8 +10415,8 @@ bool BytecodeEmitter::emitArray(ListNode* array) {
       if (!updateSourceCoordNotes(elem->pn_pos.begin)) {
         return false;
       }
-      if (!emitIterable(expr, selfHostedIter)) {
-        //          [stack] ARRAY INDEX ITERABLE
+      if (!emitTree(expr, ValueUsage::WantValue)) {
+        //          [stack] ARRAY INDEX VALUE
         return false;
       }
       if (!emitIterator(selfHostedIter)) {
@@ -10575,9 +10484,6 @@ bool BytecodeEmitter::emitSpreadIntoArray(UnaryNode* elem) {
   }
 
   SelfHostedIter selfHostedIter = getSelfHostedIterFor(elem->kid());
-  MOZ_ASSERT(selfHostedIter == SelfHostedIter::Deny ||
-             selfHostedIter == SelfHostedIter::AllowContent);
-
   if (!emitIterator(selfHostedIter)) {
     //              [stack] NEXT ITER
     return false;
@@ -10679,10 +10585,9 @@ bool BytecodeEmitter::emitTupleLiteral(ListNode* tuple) {
   for (ParseNode* elt : tuple->contents()) {
     if (elt->isKind(ParseNodeKind::Spread)) {
       ParseNode* expr = elt->as<UnaryNode>().kid();
-      auto selfHostedIter = getSelfHostedIterFor(expr);
 
-      if (!emitIterable(expr, selfHostedIter)) {
-        //          [stack] TUPLE ITERABLE
+      if (!emitTree(expr)) {
+        //          [stack] TUPLE VALUE
         return false;
       }
       if (!emitIterator()) {
@@ -10693,7 +10598,7 @@ bool BytecodeEmitter::emitTupleLiteral(ListNode* tuple) {
         //          [stack] NEXT ITER TUPLE
         return false;
       }
-      if (!emitSpread(selfHostedIter, /* spreadeeStackItems = */ 1,
+      if (!emitSpread(getSelfHostedIterFor(expr), /* spreadeeStackItems = */ 1,
                       JSOp::AddTupleElement)) {
         //          [stack] TUPLE
         return false;
@@ -12108,19 +12013,12 @@ bool BytecodeEmitter::intoScriptStencil(ScriptIndex scriptIndex) {
 
 SelfHostedIter BytecodeEmitter::getSelfHostedIterFor(ParseNode* parseNode) {
   if (emitterMode == BytecodeEmitter::SelfHosting &&
-      parseNode->isKind(ParseNodeKind::CallExpr)) {
-    auto* callee = parseNode->as<CallNode>().callee();
-    if (callee->isName(TaggedParserAtomIndex::WellKnown::allowContentIter())) {
-      return SelfHostedIter::AllowContent;
-    }
-    if (callee->isName(
-            TaggedParserAtomIndex::WellKnown::allowContentIterWith())) {
-      return SelfHostedIter::AllowContentWith;
-    }
-    if (callee->isName(
-            TaggedParserAtomIndex::WellKnown::allowContentIterWithNext())) {
-      return SelfHostedIter::AllowContentWithNext;
-    }
+      parseNode->isKind(ParseNodeKind::CallExpr) &&
+      (parseNode->as<BinaryNode>().left()->isName(
+           TaggedParserAtomIndex::WellKnown::allowContentIter()) ||
+       parseNode->as<BinaryNode>().left()->isName(
+           TaggedParserAtomIndex::WellKnown::allowContentIterWith()))) {
+    return SelfHostedIter::Allow;
   }
 
   return SelfHostedIter::Deny;

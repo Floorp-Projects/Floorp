@@ -1,4 +1,4 @@
-// |reftest| shell-option(--enable-iterator-helpers) skip-if(!this.hasOwnProperty('Iterator')||!xulRuntime.shell) -- iterator-helpers is not enabled unconditionally, requires shell-options
+// |reftest| skip -- iterator-helpers is not supported
 // Copyright (C) 2019 Alexey Shvayka. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---

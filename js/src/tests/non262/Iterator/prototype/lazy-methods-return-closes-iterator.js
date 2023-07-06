@@ -27,6 +27,7 @@ const methods = [
   iter => iter.filter(x => x),
   iter => iter.take(1),
   iter => iter.drop(0),
+  iter => iter.asIndexedPairs(),
   iter => iter.flatMap(x => [x]),
 ];
 
@@ -36,10 +37,10 @@ for (const method of methods) {
   iterHelper.next();
 
   assertEq(iter.closed, false);
-  const result = iterHelper.return("ignored");
+  const result = iterHelper.return(0);
   assertEq(iter.closed, true);
   assertEq(result.done, true);
-  assertEq(result.value, undefined);
+  assertEq(result.value, 0);
 }
 
 for (const method of methods) {
@@ -47,10 +48,10 @@ for (const method of methods) {
   const iterHelper = method(iter);
 
   assertEq(iter.closed, false);
-  const result = iterHelper.return("ignored");
+  const result = iterHelper.return(0);
   assertEq(iter.closed, true);
   assertEq(result.done, true);
-  assertEq(result.value, undefined);
+  assertEq(result.value, 0);
 }
 
 if (typeof reportCompare == 'function')

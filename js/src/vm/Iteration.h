@@ -760,15 +760,11 @@ class WrapForValidIteratorObject : public NativeObject {
  public:
   static const JSClass class_;
 
-  enum { IteratorSlot, NextMethodSlot, SlotCount };
+  enum { IteratedSlot, SlotCount };
 
   static_assert(
-      IteratorSlot == WRAP_FOR_VALID_ITERATOR_ITERATOR_SLOT,
-      "IteratedSlot must match self-hosting define for iterator object slot.");
-
-  static_assert(
-      NextMethodSlot == WRAP_FOR_VALID_ITERATOR_NEXT_METHOD_SLOT,
-      "NextMethodSlot must match self-hosting define for next method slot.");
+      IteratedSlot == ITERATED_SLOT,
+      "IteratedSlot must match self-hosting define for iterated object slot.");
 };
 
 WrapForValidIteratorObject* NewWrapForValidIterator(JSContext* cx);

@@ -1,8 +1,7 @@
 // |reftest| skip-if(!this.hasOwnProperty('Iterator'))
 
 class TestIterator extends Iterator {
-  next(value = "next value") {
-    assertEq(arguments.length, 0);
+  next(value) { 
     return {done: false, value};
   }
 }
@@ -12,6 +11,7 @@ const methods = [
   iter => iter.filter(x => true),
   iter => iter.take(2),
   iter => iter.drop(0),
+  iter => iter.asIndexedPairs(),
 ];
 
 for (const method of methods) {
@@ -20,7 +20,8 @@ for (const method of methods) {
   iteratorHelper.next();
   let result = iteratorHelper.next('last value');
   assertEq(result.done, false);
-  assertEq(result.value, 'next value');
+  // Array.isArray is used to make sure we unwrap asIndexedPairs results.
+  assertEq(Array.isArray(result.value) ? result.value[1] : result.value, 'last value');
 }
 
 if (typeof reportCompare == 'function')

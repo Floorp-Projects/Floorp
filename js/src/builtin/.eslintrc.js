@@ -93,13 +93,13 @@ module.exports = {
           {
             selector: "ForOfStatement > :not(CallExpression).right",
             message:
-              "for-of loops must use allowContentIter(), allowContentIterWith(), or allowContentIterWithNext()",
+              "for-of loops must use allowContentIter() or allowContentIterWith()",
           },
           {
             selector:
-              "ForOfStatement > CallExpression.right > :not(Identifier[name='allowContentIter'], Identifier[name='allowContentIterWith'], Identifier[name='allowContentIterWithNext']).callee",
+              "ForOfStatement > CallExpression.right > :not(Identifier[name='allowContentIter'], Identifier[name='allowContentIterWith']).callee",
             message:
-              "for-of loops must use allowContentIter(), allowContentIterWith(), or allowContentIterWithNext",
+              "for-of loops must use allowContentIter() or allowContentIterWith()",
           },
           {
             selector:
@@ -120,7 +120,6 @@ module.exports = {
         ArgumentsLength: "readonly",
         allowContentIter: "readonly",
         allowContentIterWith: "readonly",
-        allowContentIterWithNext: "readonly",
         callContentFunction: "readonly",
         callFunction: "readonly",
         constructContentFunction: "readonly",
@@ -132,13 +131,12 @@ module.exports = {
         GetBuiltinSymbol: "readonly",
         getPropertySuper: "readonly",
         hasOwn: "readonly",
-        IsNullOrUndefined: "readonly",
-        IteratorClose: "readonly",
         resumeGenerator: "readonly",
         SetCanonicalName: "readonly",
         SetIsInlinableLargeFunction: "readonly",
         ToNumeric: "readonly",
         ToString: "readonly",
+        IsNullOrUndefined: "readonly",
 
         // We've disabled all built-in environments, which also removed
         // `undefined` from the list of globals. Put it back because it's
