@@ -1565,43 +1565,23 @@ nsresult HTMLEditor::InsertLineBreakAsSubAction() {
     CreateElementResult unwrappedInsertBRElementResult =
         insertBRElementResult.unwrap();
     MOZ_ASSERT(unwrappedInsertBRElementResult.GetNewNode());
-    unwrappedInsertBRElementResult.IgnoreCaretPointSuggestion();
-
-    auto pointToPutCaret =
-        EditorDOMPoint::After(*unwrappedInsertBRElementResult.GetNewNode());
-    WSScanResult forwardScanFromAfterBRElementResult =
-        WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(editingHost,
-                                                         pointToPutCaret);
-    if (MOZ_UNLIKELY(forwardScanFromAfterBRElementResult.Failed())) {
-      NS_WARNING("WSRunScanner::ScanNextVisibleNodeOrBlockBoundary() failed");
-      return Err(NS_ERROR_FAILURE);
-    }
-
-    if (forwardScanFromAfterBRElementResult.ReachedBlockBoundary()) {
-      // Empty last line is invisible if it's immediately before either parent
-      // or another block's boundary so that we need to put invisible <br>
-      // element here for making it visible.
-      Result<CreateElementResult, nsresult> invisibleAdditionalBRElementResult =
-          WhiteSpaceVisibilityKeeper::InsertBRElement(*this, pointToPutCaret,
-                                                      *editingHost);
-      if (MOZ_UNLIKELY(invisibleAdditionalBRElementResult.isErr())) {
-        NS_WARNING("WhiteSpaceVisibilityKeeper::InsertBRElement() failed");
-        return invisibleAdditionalBRElementResult.unwrapErr();
+    // Next inserting text should be inserted into styled inline elements if
+    // they have first visible thing in the new line.
+    auto pointToPutCaret = [&]() -> EditorDOMPoint {
+      WSScanResult forwardScanResult =
+          WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(
+              editingHost, EditorRawDOMPoint::After(
+                               *unwrappedInsertBRElementResult.GetNewNode()));
+      if (forwardScanResult.InVisibleOrCollapsibleCharacters()) {
+        unwrappedInsertBRElementResult.IgnoreCaretPointSuggestion();
+        return forwardScanResult.Point<EditorDOMPoint>();
       }
-      CreateElementResult unwrappedInvisibleAdditionalBRElement =
-          invisibleAdditionalBRElementResult.unwrap();
-      pointToPutCaret.Set(unwrappedInvisibleAdditionalBRElement.GetNewNode());
-      unwrappedInvisibleAdditionalBRElement.IgnoreCaretPointSuggestion();
-    } else if (forwardScanFromAfterBRElementResult
-                   .InVisibleOrCollapsibleCharacters()) {
-      pointToPutCaret =
-          forwardScanFromAfterBRElementResult.Point<EditorDOMPoint>();
-    } else if (forwardScanFromAfterBRElementResult.ReachedSpecialContent()) {
-      // Next inserting text should be inserted into styled inline elements if
-      // they have first visible thing in the new line.
-      pointToPutCaret =
-          forwardScanFromAfterBRElementResult.PointAtContent<EditorDOMPoint>();
-    }
+      if (forwardScanResult.ReachedSpecialContent()) {
+        unwrappedInsertBRElementResult.IgnoreCaretPointSuggestion();
+        return forwardScanResult.PointAtContent<EditorDOMPoint>();
+      }
+      return unwrappedInsertBRElementResult.UnwrapCaretPoint();
+    }();
 
     nsresult rv = CollapseSelectionTo(pointToPutCaret);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -2186,7 +2166,6 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   bool brElementIsAfterBlock = false, brElementIsBeforeBlock = false;
-  const bool editingHostIsEmpty = HTMLEditUtils::IsEmptyNode(aEditingHost);
 
   // First, insert a <br> element.
   RefPtr<Element> brElement;
@@ -2272,25 +2251,6 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
     NS_WARNING("Inserted <br> element was removed by the web app");
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
-  auto afterBRElement = EditorDOMPoint::After(brElement);
-
-  auto InsertAdditionalInvisibleLineBreak =
-      [&]() MOZ_CAN_RUN_SCRIPT -> Result<CreateElementResult, nsresult> {
-    // Empty last line is invisible if it's immediately before either parent or
-    // another block's boundary so that we need to put invisible <br> element
-    // here for making it visible.
-    Result<CreateElementResult, nsresult> invisibleAdditionalBRElementResult =
-        WhiteSpaceVisibilityKeeper::InsertBRElement(*this, afterBRElement,
-                                                    aEditingHost);
-    if (MOZ_UNLIKELY(invisibleAdditionalBRElementResult.isErr())) {
-      NS_WARNING("WhiteSpaceVisibilityKeeper::InsertBRElement() failed");
-      return invisibleAdditionalBRElementResult;
-    }
-    afterBRElement.Set(
-        invisibleAdditionalBRElementResult.inspect().GetNewNode());
-    invisibleAdditionalBRElementResult.inspect().IgnoreCaretPointSuggestion();
-    return invisibleAdditionalBRElementResult;
-  };
 
   if (brElementIsAfterBlock && brElementIsBeforeBlock) {
     // We just placed a <br> between block boundaries.  This is the one case
@@ -2299,19 +2259,13 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
     // XXX brElementIsAfterBlock and brElementIsBeforeBlock were set before
     //     modifying the DOM tree.  So, now, the <br> element may not be
     //     between blocks.
-    if (editingHostIsEmpty) {
-      auto invisibleAdditionalBRElementResult =
-          InsertAdditionalInvisibleLineBreak();
-      if (invisibleAdditionalBRElementResult.isErr()) {
-        return invisibleAdditionalBRElementResult;
-      }
-    }
     EditorDOMPoint pointToPutCaret(brElement,
                                    InterlinePosition::StartOfNextLine);
     return CreateElementResult(std::move(brElement),
                                std::move(pointToPutCaret));
   }
 
+  auto afterBRElement = EditorDOMPoint::After(brElement);
   WSScanResult forwardScanFromAfterBRElementResult =
       WSRunScanner::ScanNextVisibleNodeOrBlockBoundary(&aEditingHost,
                                                        afterBRElement);
@@ -2349,12 +2303,6 @@ Result<CreateElementResult, nsresult> HTMLEditor::HandleInsertBRElement(
       NS_WARNING_ASSERTION(
           rv != NS_SUCCESS_EDITOR_BUT_IGNORED_TRIVIAL_ERROR,
           "MoveNodeResult::SuggestCaretPointTo() failed, but ignored");
-    }
-  } else if (forwardScanFromAfterBRElementResult.ReachedBlockBoundary()) {
-    auto invisibleAdditionalBRElementResult =
-        InsertAdditionalInvisibleLineBreak();
-    if (invisibleAdditionalBRElementResult.isErr()) {
-      return invisibleAdditionalBRElementResult;
     }
   }
 
