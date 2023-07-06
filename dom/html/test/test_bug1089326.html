@@ -42,22 +42,22 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1089326
     synthesizeMouseAtCenter(s12, { type: "mouseup" });
     is(clickCount, 1, "Should have got a click event.");
 
-    expectedTarget = null;
+    expectedTarget = container;
     synthesizeMouseAtCenter(s11, { type: "mousedown" });
     synthesizeMouseAtCenter(s21, { type: "mouseup" });
-    is(clickCount, 1, "Should not have got a click event.");
+    is(clickCount, 2, "Should not have got a click event.");
 
-    expectedTarget = null;
+    expectedTarget = container;
     synthesizeMouseAtCenter(s21, { type: "mousedown" });
     synthesizeMouseAtCenter(s11, { type: "mouseup" });
-    is(clickCount, 1, "Should not have got a click event.");
+    is(clickCount, 3, "Should not have got a click event.");
 
     var span1 = document.getElementById("span1");
     var span2 = document.getElementById("span2");
     expectedTarget = container;
     synthesizeMouseAtCenter(span1, { type: "mousedown" });
     synthesizeMouseAtCenter(span2, { type: "mouseup" });
-    is(clickCount, 2, "Should not have got a click event.");
+    is(clickCount, 4, "Should not have got a click event.");
 
     button.addEventListener("click", function(event) {
         is(event.target, expectedTarget, "Got expected click event target.");
@@ -67,12 +67,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1089326
     expectedTarget = a;
     synthesizeMouseAtCenter(a, { type: "mousedown" });
     synthesizeMouseAtCenter(a, { type: "mouseup" });
-    is(clickCount, 3, "Should have got a click event.");
+    is(clickCount, 5, "Should have got a click event.");
 
     expectedTarget = a;
     synthesizeMouseAtCenter(b, { type: "mousedown" });
     synthesizeMouseAtCenter(b, { type: "mouseup" });
-    is(clickCount, 4, "Should have got a click event.");
+    is(clickCount, 6, "Should have got a click event.");
 
     SimpleTest.finish();
   }
