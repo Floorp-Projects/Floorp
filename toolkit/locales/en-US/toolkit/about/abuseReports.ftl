@@ -18,9 +18,8 @@ abuse-report-subtitle = What’s the issue?
 #   $author-name (string) - Name of the add-on author
 abuse-report-addon-authored-by = by <a data-l10n-name="author-name">{ $author-name }</a>
 
-abuse-report-learnmore =
-  Unsure what issue to select?
-  <a data-l10n-name="learnmore-link">Learn more about reporting extensions and themes</a>
+abuse-report-learnmore-intro = Unsure what issue to select?
+abuse-report-learnmore-link = Learn more about reporting extensions and themes
 
 abuse-report-submit-description = Describe the problem (optional)
 abuse-report-textarea =
