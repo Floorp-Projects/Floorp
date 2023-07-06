@@ -179,6 +179,8 @@ class SettingsAdvancedTest {
             clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
             waitForPageToLoad()
             verifyUrl("youtube.com")
+        }.openTabDrawer {
+            closeTab()
         }
 
         navigationToolbar {
@@ -222,6 +224,8 @@ class SettingsAdvancedTest {
             clickPageObject(itemWithResIdAndText("android:id/button2", "CANCEL"))
             waitForPageToLoad()
             verifyUrl("youtube.com")
+        }.openTabDrawer {
+            closeTab()
         }
 
         navigationToolbar {

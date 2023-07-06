@@ -90,6 +90,7 @@ class AppLinksFeatureTest {
         `when`(mockGetRedirect.invoke(webUrl)).thenReturn(webRedirect)
         `when`(mockGetRedirect.invoke(intentUrl)).thenReturn(appRedirect)
         `when`(mockGetRedirect.invoke(webUrlWithAppLink)).thenReturn(appRedirectFromWebUrl)
+        AppLinksFeature.doNotOpenCacheMap = mutableMapOf()
 
         feature = spy(
             AppLinksFeature(
@@ -219,6 +220,135 @@ class AppLinksFeatureTest {
 
         feature.handleAppIntent(tab, intentUrl, appIntent)
 
+        verify(mockDialog, never()).showNow(eq(mockFragmentManager), anyString())
+    }
+
+    @Test
+    fun `WHEN user rejected external app THEN an external app dialog is not shown`() {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase,
+                shouldPrompt = { true },
+            ),
+        ).also {
+            it.start()
+        }
+
+        val tab = createTab(webUrl)
+        val appIntent: Intent = mock()
+        val componentName: ComponentName = mock()
+        doReturn(componentName).`when`(appIntent).component
+        doReturn("com.zxing.app").`when`(componentName).packageName
+        AppLinksFeature.doNotOpenCacheMap[("com.zxing.app" + tab.id).hashCode()] = System.currentTimeMillis()
+
+        feature.handleAppIntent(tab, intentUrl, appIntent)
+        verify(mockDialog, never()).showNow(eq(mockFragmentManager), anyString())
+    }
+
+    @Test
+    fun `WHEN user rejected external app on one tab THEN external app dialog will still show on another tab`() {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase,
+                shouldPrompt = { true },
+            ),
+        ).also {
+            it.start()
+        }
+
+        val tab = createTab(webUrl)
+        val appIntent: Intent = mock()
+        val componentName: ComponentName = mock()
+        doReturn(componentName).`when`(appIntent).component
+        doReturn("com.zxing.app").`when`(componentName).packageName
+        AppLinksFeature.doNotOpenCacheMap[("com.zxing.app" + 123).hashCode()] = System.currentTimeMillis()
+
+        feature.handleAppIntent(tab, intentUrl, appIntent)
+        verify(mockDialog).showNow(eq(mockFragmentManager), anyString())
+    }
+
+    @Test
+    fun `WHEN user rejected external app long ago THEN an external app dialog is shown`() {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase,
+                shouldPrompt = { true },
+            ),
+        ).also {
+            it.start()
+        }
+
+        val tab = createTab(webUrl)
+        val appIntent: Intent = mock()
+        val componentName: ComponentName = mock()
+        doReturn(componentName).`when`(appIntent).component
+        doReturn("com.zxing.app").`when`(componentName).packageName
+        AppLinksFeature.doNotOpenCacheMap[("com.zxing.app" + tab.id).hashCode()] = -APP_LINKS_DO_NOT_OPEN_CACHE_INTERVAL
+
+        feature.handleAppIntent(tab, intentUrl, appIntent)
+        verify(mockDialog).showNow(eq(mockFragmentManager), anyString())
+    }
+
+    @Test
+    fun `WHEN user rejected with no component THEN the url scheme is used AND an external app dialog is not shown`() {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase,
+                shouldPrompt = { true },
+            ),
+        ).also {
+            it.start()
+        }
+
+        val tab = createTab(webUrl)
+        val appIntent: Intent = mock()
+        AppLinksFeature.doNotOpenCacheMap[("zxing" + tab.id).hashCode()] = System.currentTimeMillis()
+
+        feature.handleAppIntent(tab, intentUrl, appIntent)
+        verify(mockDialog, never()).showNow(eq(mockFragmentManager), anyString())
+    }
+
+    @Test
+    fun `WHEN user rejected with no component AND https scheme THEN host is used AND an external app dialog is not shown`() {
+        feature = spy(
+            AppLinksFeature(
+                context = mockContext,
+                store = store,
+                fragmentManager = mockFragmentManager,
+                useCases = mockUseCases,
+                dialog = mockDialog,
+                loadUrlUseCase = mockLoadUrlUseCase,
+                shouldPrompt = { true },
+            ),
+        ).also {
+            it.start()
+        }
+
+        val tab = createTab(webUrl)
+        val appIntent: Intent = mock()
+        AppLinksFeature.doNotOpenCacheMap[("soundcloud.com" + tab.id).hashCode()] = System.currentTimeMillis()
+
+        feature.handleAppIntent(tab, webUrlWithAppLink, appIntent)
         verify(mockDialog, never()).showNow(eq(mockFragmentManager), anyString())
     }
 

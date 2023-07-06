@@ -7,6 +7,7 @@ package mozilla.components.feature.app.links
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.SystemClock
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.FragmentManager
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +27,10 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.appName
+import mozilla.components.support.ktx.android.net.isHttpOrHttps
+
+@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+internal const val APP_LINKS_DO_NOT_OPEN_CACHE_INTERVAL = 60 * 60 * 1000L // 1 hour
 
 /**
  * This feature implements observer for handling redirects to external apps. The users are asked to
@@ -95,7 +100,30 @@ class AppLinksFeature(
             return
         }
 
+        val cacheKey = Uri.parse(url)?.let { uri ->
+            when {
+                appIntent.component?.packageName != null -> appIntent.component?.packageName
+                !uri.isHttpOrHttps -> uri.scheme
+                else -> uri.host // worst case we do not prompt again on this host
+            }
+        }?.let {
+            (it + tab.id).hashCode() // do not open cache should only apply to this tab
+        }
+
+        val cacheTimeStamp = doNotOpenCacheMap[cacheKey]
+        val currentTimeStamp = SystemClock.elapsedRealtime()
+        if (cacheTimeStamp != null &&
+            currentTimeStamp <= cacheTimeStamp + APP_LINKS_DO_NOT_OPEN_CACHE_INTERVAL
+        ) {
+            loadUrlIfSchemeSupported(tab, url)
+            return
+        }
+
         val doNotOpenApp = {
+            cacheKey?.let {
+                doNotOpenCacheMap[it] = currentTimeStamp
+            }
+
             loadUrlIfSchemeSupported(tab, url)
         }
 
@@ -179,5 +207,11 @@ class AppLinksFeature(
                 else -> false
             }
         } ?: false
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    companion object {
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal var doNotOpenCacheMap: MutableMap<Int, Long> = mutableMapOf()
     }
 }
