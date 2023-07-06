@@ -206,7 +206,7 @@ fn uInt16Number_to_float(a: uInt16Number) -> f32 {
     a as f32 / 65535.0
 }
 
-fn invalid_source(mut mem: &mut MemSource, reason: &'static str) {
+fn invalid_source(mem: &mut MemSource, reason: &'static str) {
     mem.valid = false;
     mem.invalid_reason = Some(reason);
 }
@@ -299,7 +299,7 @@ const COLOR_SPACE_PROFILE: u32 = 0x73706163; // 'spac'
 const ABSTRACT_PROFILE: u32 = 0x61627374; // 'abst'
 const NAMED_COLOR_PROFILE: u32 = 0x6e6d636c; // 'nmcl'
 
-fn read_class_signature(mut profile: &mut Profile, mem: &mut MemSource) {
+fn read_class_signature(profile: &mut Profile, mem: &mut MemSource) {
     profile.class_type = read_u32(mem, 12);
     match profile.class_type {
         DISPLAY_DEVICE_PROFILE
@@ -311,7 +311,7 @@ fn read_class_signature(mut profile: &mut Profile, mem: &mut MemSource) {
         }
     };
 }
-fn read_color_space(mut profile: &mut Profile, mem: &mut MemSource) {
+fn read_color_space(profile: &mut Profile, mem: &mut MemSource) {
     profile.color_space = read_u32(mem, 16);
     match profile.color_space {
         RGB_SIGNATURE | GRAY_SIGNATURE => {}
@@ -322,7 +322,7 @@ fn read_color_space(mut profile: &mut Profile, mem: &mut MemSource) {
         }
     };
 }
-fn read_pcs(mut profile: &mut Profile, mem: &mut MemSource) {
+fn read_pcs(profile: &mut Profile, mem: &mut MemSource) {
     profile.pcs = read_u32(mem, 20);
     match profile.pcs {
         XYZ_SIGNATURE | LAB_SIGNATURE => {}
@@ -863,7 +863,7 @@ fn read_tag_lutType(src: &mut MemSource, tag: &Tag) -> Option<Box<lutType>> {
         output_table,
     }))
 }
-fn read_rendering_intent(mut profile: &mut Profile, src: &mut MemSource) {
+fn read_rendering_intent(profile: &mut Profile, src: &mut MemSource) {
     let intent = read_u32(src, 64);
     profile.rendering_intent = match intent {
         x if x == Perceptual as u32 => Perceptual,
@@ -1602,7 +1602,7 @@ impl Profile {
         };
         let index;
         source.valid = true;
-        let mut src: &mut MemSource = &mut source;
+        let src: &mut MemSource = &mut source;
         if mem.len() < 4 {
             return None;
         }
