@@ -21,7 +21,6 @@
 #include "js/Conversions.h"
 #include "js/SourceText.h"
 #include "js/String.h"  // JS::{,Lossy}CopyLinearStringChars, JS::CopyStringChars, JS::Get{,Linear}StringLength, JS::MaxStringLength, JS::StringHasLatin1Chars
-#include "js/Utility.h"  // JS::FreePolicy
 #include "nsString.h"
 #include "xpcpublic.h"
 
@@ -88,9 +87,8 @@ class nsJSUtils {
   // Note that the buffer needs to be created by JS_malloc (or at least can be
   // freed by JS_free), as the resulting Uint8Array takes the ownership of the
   // buffer.
-  static JSObject* MoveBufferAsUint8Array(
-      JSContext* aCx, size_t aSize,
-      mozilla::UniquePtr<uint8_t[], JS::FreePolicy> aBuffer);
+  static JSObject* MoveBufferAsUint8Array(JSContext* aCx, size_t aSize,
+                                          mozilla::UniquePtr<uint8_t>& aBuffer);
 };
 
 inline void AssignFromStringBuffer(nsStringBuffer* buffer, size_t len,

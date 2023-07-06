@@ -85,11 +85,14 @@ void FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
   }
 
   JSObject* arrayBuffer =
-      JS::NewArrayBufferWithContents(aCx, blobSize, std::move(bufferData));
+      JS::NewArrayBufferWithContents(aCx, blobSize, bufferData.get());
   if (!arrayBuffer) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
+  // arrayBuffer takes the ownership when it is not null. Otherwise we
+  // need to release it explicitly.
+  (void)bufferData.release();
 
   aRetval.set(arrayBuffer);
 }

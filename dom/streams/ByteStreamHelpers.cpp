@@ -26,8 +26,7 @@ JSObject* TransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject) {
   size_t bufferLength = JS::GetArrayBufferByteLength(aObject);
 
   // Step 2 (Reordered)
-  UniquePtr<void, JS::FreePolicy> bufferData{
-      JS::StealArrayBufferContents(aCx, aObject)};
+  void* bufferData = JS::StealArrayBufferContents(aCx, aObject);
 
   // Step 4.
   if (!JS::DetachArrayBuffer(aCx, aObject)) {
@@ -35,8 +34,7 @@ JSObject* TransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject) {
   }
 
   // Step 5.
-  return JS::NewArrayBufferWithContents(aCx, bufferLength,
-                                        std::move(bufferData));
+  return JS::NewArrayBufferWithContents(aCx, bufferLength, bufferData);
 }
 
 // https://streams.spec.whatwg.org/#can-transfer-array-buffer

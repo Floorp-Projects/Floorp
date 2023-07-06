@@ -2708,15 +2708,20 @@ JSObject* IOUtils::JsBuffer::IntoUint8Array(JSContext* aCx, JsBuffer aBuffer) {
     return JS_NewUint8Array(aCx, 0);
   }
 
-  MOZ_RELEASE_ASSERT(aBuffer.mBuffer);
+  char* rawBuffer = aBuffer.mBuffer.release();
+  MOZ_RELEASE_ASSERT(rawBuffer);
   JS::Rooted<JSObject*> arrayBuffer(
       aCx, JS::NewArrayBufferWithContents(aCx, aBuffer.mLength,
-                                          std::move(aBuffer.mBuffer)));
+                                          reinterpret_cast<void*>(rawBuffer)));
 
   if (!arrayBuffer) {
+    // The array buffer does not take ownership of the data pointer unless
+    // creation succeeds. We are still on the hook to free it.
+    //
     // aBuffer will be destructed at end of scope, but its destructor does not
     // take into account |mCapacity| or |mLength|, so it is OK for them to be
     // non-zero here with a null |mBuffer|.
+    js_free(rawBuffer);
     return nullptr;
   }
 
