@@ -1,6 +1,60 @@
 {
   "data": [
     {
+      "schema": 1687877276036,
+      "derHash": "wKn7Ql0O3rxyvGxHrT06K2gkXtHVmliDvxnOn4xN7R8=",
+      "subject": "CN=Actalis DV Server ACME CA G1,O=Actalis S.p.A.,L=Ponte San Pietro,ST=Bergamo,C=IT",
+      "subjectDN": "MHoxCzAJBgNVBAYTAklUMRAwDgYDVQQIDAdCZXJnYW1vMRkwFwYDVQQHDBBQb250ZSBTYW4gUGlldHJvMRcwFQYDVQQKDA5BY3RhbGlzIFMucC5BLjElMCMGA1UEAwwcQWN0YWxpcyBEViBTZXJ2ZXIgQUNNRSBDQSBHMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "de56d1fe035c597187e0333871ac0a512392b087362ef7c5a411e358dc269822",
+        "size": 2495,
+        "filename": "V0cn4PMpbP5Kgy3YAtRYNPab9sGk1bTKtSfb8c3y94Y=.pem",
+        "location": "security-state-staging/intermediates/655eb17a-d709-45c1-819e-c6e6e2f4a1db.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "V0cn4PMpbP5Kgy3YAtRYNPab9sGk1bTKtSfb8c3y94Y=",
+      "crlite_enrolled": false,
+      "id": "77e25342-e454-42ca-9d31-b555cf0068e0",
+      "last_modified": 1687877823463
+    },
+    {
+      "schema": 1687816081823,
+      "derHash": "U1XE+MbMMwsNgT1hlM8gaJXubzl3rAyZ5QkmBIjm1cg=",
+      "subject": "CN=LATSSL TLS Issuing RSA CA 1,O=LATSSL (Intradigital Soluciones Tecnologicas S. de R.L. de C.V),C=MX",
+      "subjectDN": "MH0xCzAJBgNVBAYTAk1YMUgwRgYDVQQKDD9MQVRTU0wgKEludHJhZGlnaXRhbCBTb2x1Y2lvbmVzIFRlY25vbG9naWNhcyBTLiBkZSBSLkwuIGRlIEMuVikxJDAiBgNVBAMMG0xBVFNTTCBUTFMgSXNzdWluZyBSU0EgQ0EgMQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a4cbd18d02c7966e268c1a4aea091c019b944a8605ec8f3e8f6a4526443460c4",
+        "size": 2328,
+        "filename": "puwKaFX3k90WcKWRSDiurWSEa9Hgs8O-94WEe_gawXY=.pem",
+        "location": "security-state-staging/intermediates/3b2e9ab4-d2e4-447c-a89b-fa73725d6eca.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "puwKaFX3k90WcKWRSDiurWSEa9Hgs8O+94WEe/gawXY=",
+      "crlite_enrolled": false,
+      "id": "57ec0c70-a903-43ab-8a82-faee4c808be8",
+      "last_modified": 1687816623247
+    },
+    {
+      "schema": 1687816081505,
+      "derHash": "fxrXOHjg6nz9cFZ1xN2miMsl4SL2yFZP3fwUvb8EGDc=",
+      "subject": "CN=LATSSL EV TLS Issuing RSA CA 1,O=LATSSL (Intradigital Soluciones Tecnologicas S. de R.L. de C.V),C=MX",
+      "subjectDN": "MIGAMQswCQYDVQQGEwJNWDFIMEYGA1UECgw/TEFUU1NMIChJbnRyYWRpZ2l0YWwgU29sdWNpb25lcyBUZWNub2xvZ2ljYXMgUy4gZGUgUi5MLiBkZSBDLlYpMScwJQYDVQQDDB5MQVRTU0wgRVYgVExTIElzc3VpbmcgUlNBIENBIDE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9d0d9016e5744a3c0ac5fbf9c233299993b44f712424d692d3274df4c68dca3a",
+        "size": 2393,
+        "filename": "qf37enNi1OcQ1LDIDTLDgFICNwKh-fDECCAXU1KQbYU=.pem",
+        "location": "security-state-staging/intermediates/800aa953-54b2-4661-9185-868b7b9e345c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "qf37enNi1OcQ1LDIDTLDgFICNwKh+fDECCAXU1KQbYU=",
+      "crlite_enrolled": false,
+      "id": "0c16b2ff-27ba-41f9-b609-cf6610888cc3",
+      "last_modified": 1687816623245
+    },
+    {
       "schema": 1687384083870,
       "derHash": "gvvoZdoi0fJa35S72AnT9RYSWEnnktt7sYRSMEwuzEM=",
       "subject": "CN=Telekom Security EV RSA CA 23A,O=Deutsche Telekom Security GmbH,C=DE",
@@ -5255,60 +5309,6 @@
       "crlite_enrolled": false,
       "id": "6a2eddcc-3e30-4ca4-9940-4edce439b163",
       "last_modified": 1666727873084
-    },
-    {
-      "schema": 1666727445516,
-      "derHash": "Z/kfJvW/v6SHOL4GeN0vj3X3uAdh1WVng8qLkgqqVlk=",
-      "subject": "CN=SwissSign Server Silver CA 2014 - G22,O=SwissSign AG,C=CH",
-      "subjectDN": "MFQxCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxLjAsBgNVBAMTJVN3aXNzU2lnbiBTZXJ2ZXIgU2lsdmVyIENBIDIwMTQgLSBHMjI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a57cf71c0388c65ff88458240a3172504ec1bec49381cd3711b4403c60d9cd06",
-        "size": 2393,
-        "filename": "mJwcSA1WE5bfCsQ5o79wGCvasvwdVsznZlqR1H3YPdI=.pem",
-        "location": "security-state-staging/intermediates/7cd962f0-d1e7-4935-b0c3-8a88414cbafc.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "mJwcSA1WE5bfCsQ5o79wGCvasvwdVsznZlqR1H3YPdI=",
-      "crlite_enrolled": false,
-      "id": "e5b5ea99-6ffd-494f-a33d-c7e05abcd103",
-      "last_modified": 1666727873064
-    },
-    {
-      "schema": 1666727394273,
-      "derHash": "Vh3Hg1H15+5aRkrG5YoNFk7ydo+Y8C5u5lUBEg/NnF4=",
-      "subject": "CN=SwissSign Server Gold CA 2014 - G22,O=SwissSign AG,C=CH",
-      "subjectDN": "MFIxCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxLDAqBgNVBAMTI1N3aXNzU2lnbiBTZXJ2ZXIgR29sZCBDQSAyMDE0IC0gRzIy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "b44b7aee422e730e14cf3b845c69862c0c573458ff55af4b3a534005005b358a",
-        "size": 2389,
-        "filename": "skyozdmp140ljrHvjRijq3v2_yQ1nyfFyBiA9uOKuw8=.pem",
-        "location": "security-state-staging/intermediates/ef30ec5a-365b-47f4-b6c5-f11d5c720e99.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "skyozdmp140ljrHvjRijq3v2/yQ1nyfFyBiA9uOKuw8=",
-      "crlite_enrolled": false,
-      "id": "e9049b0c-8a98-4b05-abb3-fa6928effd62",
-      "last_modified": 1666727873049
-    },
-    {
-      "schema": 1666727392086,
-      "derHash": "pDSq5OFaVRnpsRH9COwZD9Kt8Tu+MIFcbhYGVVyzFFA=",
-      "subject": "CN=SwissSign EV Gold CA 2014 - G22,O=SwissSign AG,C=CH",
-      "subjectDN": "ME4xCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxKDAmBgNVBAMTH1N3aXNzU2lnbiBFViBHb2xkIENBIDIwMTQgLSBHMjI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6adec53afaeac81fd0e85e675219c92a638f9f249f381dfac8c6f8f4b591b137",
-        "size": 2389,
-        "filename": "mDKR5ptpp7PqVUefxx2Ftq5ymsEuzCEg-EVrLOrQFB8=.pem",
-        "location": "security-state-staging/intermediates/0cec1d67-bead-4bb6-85d5-a11312ecfaf8.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "mDKR5ptpp7PqVUefxx2Ftq5ymsEuzCEg+EVrLOrQFB8=",
-      "crlite_enrolled": false,
-      "id": "ef05a6b5-bda6-4917-a51a-a6ce6523d866",
-      "last_modified": 1666727873035
     },
     {
       "schema": 1666727377048,
@@ -25867,24 +25867,6 @@
       "last_modified": 1576536532463
     },
     {
-      "schema": 1576536110684,
-      "derHash": "BuXewxyR19M0NSAdLiIRbCBxk6h04KQmUyovaVMMhrU=",
-      "subject": "CN=SwissSign Server Silver CA 2008 - G2,O=SwissSign AG,C=CH",
-      "subjectDN": "MFMxCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxLTArBgNVBAMTJFN3aXNzU2lnbiBTZXJ2ZXIgU2lsdmVyIENBIDIwMDggLSBHMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "dae13d2d8c181bf4ec65a316a2ba892ac9d49b530d749454a41b697b93c0e4ad",
-        "size": 2276,
-        "filename": "pdw-szkFhaLHw56vsd_eV19nZd8tlYabs6ie9lk3vz0=.pem",
-        "location": "security-state-staging/intermediates/a8e67472-ca0f-418d-8e14-eded55f5c9b6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "pdw+szkFhaLHw56vsd/eV19nZd8tlYabs6ie9lk3vz0=",
-      "crlite_enrolled": false,
-      "id": "626a64c6-27bd-4788-ac43-961a6c286a2f",
-      "last_modified": 1576536532446
-    },
-    {
       "schema": 1576536101946,
       "derHash": "q6amXc6JVbrwaFq4iAm3aZwXRJbvnumRUzJRSU9DzhA=",
       "subject": "CN=emSign ECC Class 1 CA - G3,OU=emSign PKI,O=eMudhra Technologies Limited,C=IN",
@@ -26009,24 +25991,6 @@
       "crlite_enrolled": false,
       "id": "6f7f445a-9db3-41b6-8e6e-c97091de4b0d",
       "last_modified": 1576536531660
-    },
-    {
-      "schema": 1576536074509,
-      "derHash": "/SmRsTTOV7+c1oaHiFSl7tXqZEMwAkUrpAOY2niEXKc=",
-      "subject": "CN=SwissSign Server Gold CA 2008 - G2,O=SwissSign AG,C=CH",
-      "subjectDN": "MFExCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxKzApBgNVBAMTIlN3aXNzU2lnbiBTZXJ2ZXIgR29sZCBDQSAyMDA4IC0gRzI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "f15bb6ffc3798a8b4808913b8ac6cc390cb6a0a58fbd2d65caf2e689c58711c6",
-        "size": 2268,
-        "filename": "4wrJfevPFcxD_U4tiJM27RJ1g4zjbu-B3eTgC_qPxGg=.pem",
-        "location": "security-state-staging/intermediates/56bf7371-6dd1-4cf7-a321-74547c1d3616.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "4wrJfevPFcxD/U4tiJM27RJ1g4zjbu+B3eTgC/qPxGg=",
-      "crlite_enrolled": false,
-      "id": "6ea46eb8-ddab-4129-8cd8-2b50d6580b24",
-      "last_modified": 1576536531598
     },
     {
       "schema": 1576536084043,
@@ -26171,24 +26135,6 @@
       "crlite_enrolled": false,
       "id": "2938bfef-51d8-4a22-8411-49848fd8bfc8",
       "last_modified": 1576536531087
-    },
-    {
-      "schema": 1576536109863,
-      "derHash": "K2XkXqGBwcwhscyen7HhD1QSlDK7eJc/YIxmpBUfvw4=",
-      "subject": "CN=SwissSign Personal Gold CA 2008 - G2,O=SwissSign AG,C=CH",
-      "subjectDN": "MFMxCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxLTArBgNVBAMTJFN3aXNzU2lnbiBQZXJzb25hbCBHb2xkIENBIDIwMDggLSBHMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "598861c42588dab6e66731a8211dd284f0fd76066d4512d38abb614bf0c0fec1",
-        "size": 2272,
-        "filename": "H8wvfs1_9UKqnEqfWrRdcjdulVUeWxShhG-KY5EtdAA=.pem",
-        "location": "security-state-staging/intermediates/c3f9f87d-4c3d-46e8-a9e5-97afdf8a5d56.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "H8wvfs1/9UKqnEqfWrRdcjdulVUeWxShhG+KY5EtdAA=",
-      "crlite_enrolled": false,
-      "id": "eebb6ed7-cb4d-4157-8fc3-1589b7cf744e",
-      "last_modified": 1576536531073
     },
     {
       "schema": 1576536095441,
@@ -26855,24 +26801,6 @@
       "crlite_enrolled": false,
       "id": "69330f6b-0bbf-4528-a402-c89b6262cce4",
       "last_modified": 1562025293606
-    },
-    {
-      "schema": 1562025283917,
-      "derHash": "+jl96NtvEQp/o00QG6yKkUdQ9TsCI6i9L7gS51cVXCA=",
-      "subject": "CN=SwissSign Personal Silver CA 2008 - G2,O=SwissSign AG,C=CH",
-      "subjectDN": "MFUxCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxLzAtBgNVBAMTJlN3aXNzU2lnbiBQZXJzb25hbCBTaWx2ZXIgQ0EgMjAwOCAtIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c1c9d52213575e65ceed56f35a6ed33a249d8d1c3a280659df44920339ef7ffe",
-        "size": 2280,
-        "filename": "jyhVT5llCBR7-xwGoq2SlKQcMasWHqmouxTYUO1Fhiw=.pem",
-        "location": "security-state-staging/intermediates/ea4ea5bd-3a75-4cd2-a235-c3e8ef18c8c6.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "jyhVT5llCBR7+xwGoq2SlKQcMasWHqmouxTYUO1Fhiw=",
-      "crlite_enrolled": false,
-      "id": "4f348dc6-e98b-4a77-a839-d0327398fe7f",
-      "last_modified": 1562025284661
     },
     {
       "schema": 1562025276325,
@@ -27703,5 +27631,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1687384623199
+  "timestamp": 1688050623254
 }
