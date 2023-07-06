@@ -247,8 +247,10 @@ void Buffer::GetMappedRange(JSContext* aCx, uint64_t aOffset,
 
   std::shared_ptr<ipc::WritableSharedMemoryMapping>* userData =
       new std::shared_ptr<ipc::WritableSharedMemoryMapping>(mShmem);
-  auto* const arrayBuffer = JS::NewExternalArrayBuffer(
-      aCx, size, span.data(), &ExternalBufferFreeCallback, userData);
+  UniquePtr<void, JS::BufferContentsDeleter> dataPtr{
+      span.data(), {&ExternalBufferFreeCallback, userData}};
+  auto* const arrayBuffer =
+      JS::NewExternalArrayBuffer(aCx, size, std::move(dataPtr));
 
   if (!arrayBuffer) {
     aRv.NoteJSContextException(aCx);

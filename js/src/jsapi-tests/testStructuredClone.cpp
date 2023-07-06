@@ -103,6 +103,7 @@ END_TEST(testStructuredClone_string)
 
 BEGIN_TEST(testStructuredClone_externalArrayBuffer) {
   ExternalData data("One two three four");
+  auto dataPointer = data.pointer();
   JS::RootedObject g1(cx, createGlobal());
   JS::RootedObject g2(cx, createGlobal());
   CHECK(g1);
@@ -114,8 +115,7 @@ BEGIN_TEST(testStructuredClone_externalArrayBuffer) {
     JSAutoRealm ar(cx, g1);
 
     JS::RootedObject obj(
-        cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(),
-                                       &ExternalData::freeCallback, &data));
+        cx, JS::NewExternalArrayBuffer(cx, data.len(), std::move(dataPointer)));
     CHECK(!data.wasFreed());
 
     v1 = JS::ObjectOrNullValue(obj);
@@ -164,9 +164,9 @@ BEGIN_TEST(testStructuredClone_externalArrayBufferDifferentThreadOrProcess) {
 
 bool testStructuredCloneCopy(JS::StructuredCloneScope scope) {
   ExternalData data("One two three four");
+  auto dataPointer = data.pointer();
   JS::RootedObject buffer(
-      cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(),
-                                     &ExternalData::freeCallback, &data));
+      cx, JS::NewExternalArrayBuffer(cx, data.len(), std::move(dataPointer)));
   CHECK(buffer);
   CHECK(!data.wasFreed());
 

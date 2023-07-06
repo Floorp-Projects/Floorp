@@ -1743,14 +1743,16 @@ static bool CreateExternalArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  void* buffer = js_malloc(bytes);
+  void* buffer = js_calloc(bytes);
   if (!buffer) {
     JS_ReportOutOfMemory(cx);
     return false;
   }
 
+  UniquePtr<void, JS::BufferContentsDeleter> ptr{buffer,
+                                                 {&freeExternalCallback}};
   RootedObject arrayBuffer(
-      cx, JS::NewExternalArrayBuffer(cx, bytes, buffer, &freeExternalCallback));
+      cx, JS::NewExternalArrayBuffer(cx, bytes, std::move(ptr)));
   if (!arrayBuffer) {
     return false;
   }
