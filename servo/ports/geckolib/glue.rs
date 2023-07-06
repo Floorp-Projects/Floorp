@@ -5855,7 +5855,7 @@ pub extern "C" fn Servo_ResolveStyleLazily(
     let guard = global_style_data.shared_lock.read();
     let element = GeckoElement(element);
     let mut data = raw_data.borrow_mut();
-    let mut data = &mut *data;
+    let data = &mut *data;
     let rule_inclusion = RuleInclusion::from(rule_inclusion);
     let pseudo = PseudoElement::from_pseudo_type(pseudo_type);
 
