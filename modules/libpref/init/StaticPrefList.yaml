@@ -7787,10 +7787,14 @@
   mirror: always
 
 # Whether the W^X policy is enforced to mark JIT code pages as either writable
-# or executable but never both at the same time.
+# or executable but never both at the same time. OpenBSD defaults to W^X.
 - name: javascript.options.content_process_write_protect_code
   type: bool
+#if defined(XP_OPENBSD)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 # Whether to use the XPCOM thread pool for JS helper tasks.
