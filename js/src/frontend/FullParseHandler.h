@@ -329,11 +329,11 @@ class FullParseHandler {
     addList(/* list = */ literal, /* kid = */ element);
   }
 
-  CallNodeType newCall(Node callee, Node args, JSOp callOp) {
+  CallNodeType newCall(Node callee, ListNodeType args, JSOp callOp) {
     return new_<CallNode>(ParseNodeKind::CallExpr, callOp, callee, args);
   }
 
-  OptionalCallNodeType newOptionalCall(Node callee, Node args, JSOp callOp) {
+  CallNodeType newOptionalCall(Node callee, ListNodeType args, JSOp callOp) {
     return new_<CallNode>(ParseNodeKind::OptionalCallExpr, callOp, callee,
                           args);
   }
@@ -342,13 +342,13 @@ class FullParseHandler {
     return new_<ListNode>(ParseNodeKind::Arguments, pos);
   }
 
-  CallNodeType newSuperCall(Node callee, Node args, bool isSpread) {
+  CallNodeType newSuperCall(Node callee, ListNodeType args, bool isSpread) {
     return new_<CallNode>(ParseNodeKind::SuperCallExpr,
                           isSpread ? JSOp::SpreadSuperCall : JSOp::SuperCall,
                           callee, args);
   }
 
-  CallNodeType newTaggedTemplate(Node tag, Node args, JSOp callOp) {
+  CallNodeType newTaggedTemplate(Node tag, ListNodeType args, JSOp callOp) {
     return new_<CallNode>(ParseNodeKind::TaggedTemplateExpr, callOp, tag, args);
   }
 
@@ -962,7 +962,7 @@ class FullParseHandler {
     return new_<ClassBodyScopeNode>(bindings, body);
   }
 
-  CallNodeType newNewExpression(uint32_t begin, Node ctor, Node args,
+  CallNodeType newNewExpression(uint32_t begin, Node ctor, ListNodeType args,
                                 bool isSpread) {
     return new_<CallNode>(ParseNodeKind::NewExpr,
                           isSpread ? JSOp::SpreadNew : JSOp::New,
