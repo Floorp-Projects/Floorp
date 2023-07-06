@@ -572,8 +572,10 @@ MediaByteRange MP3TrackDemuxer::FindNextFrame() {
     }
   }
 
-  mEOS = frameHeaderOffset + mParser.CurrentFrame().Length() + BUFFER_SIZE >
-         StreamLength();
+  if (StreamLength() != -1) {
+    mEOS = frameHeaderOffset + mParser.CurrentFrame().Length() + BUFFER_SIZE >
+           StreamLength();
+  }
 
   if (!foundFrame || !mParser.CurrentFrame().Length()) {
     MP3LOG("FindNext() Exit foundFrame=%d mParser.CurrentFrame().Length()=%d ",
