@@ -440,7 +440,7 @@ void LIRGeneratorRiscv64::lowerWasmSelectI64(MWasmSelect* select) {
   defineInt64ReuseInput(lir, select, LWasmSelectI64::TrueExprIndex);
 }
 
-// On loong64 we specialize the only cases where compare is {U,}Int32 and select
+// On riscv we specialize the only cases where compare is {U,}Int32 and select
 // is {U,}Int32.
 bool LIRGeneratorShared::canSpecializeWasmCompareAndSelect(
     MCompare::CompareType compTy, MIRType insTy) {
@@ -846,8 +846,9 @@ void LIRGenerator::visitWasmHeapBase(MWasmHeapBase* ins) {
 void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
   MDefinition* base = ins->base();
   // 'base' is a GPR but may be of either type. If it is 32-bit, it is
-  // sign-extended on loongarch64 platform and we should explicitly promote it
-  // to 64-bit when use it as an index register in memory accesses.
+  // sign-extended on riscv64 platform and we should explicitly promote it
+  // to 64-bit by zero-extension when use it as an index register in memory
+  // accesses.
   MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
 
   LAllocation ptr;
