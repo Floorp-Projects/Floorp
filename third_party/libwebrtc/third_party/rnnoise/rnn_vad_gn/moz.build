@@ -104,6 +104,14 @@ if CONFIG["CPU_ARCH"] == "arm":
         "-mfpu=neon"
     ]
 
+if CONFIG["CPU_ARCH"] == "mips32":
+
+    DEFINES["_GNU_SOURCE"] = True
+
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    DEFINES["_GNU_SOURCE"] = True
+
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
     DEFINES["_DEBUG"] = True
