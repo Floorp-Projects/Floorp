@@ -796,8 +796,11 @@ VectorImage::GetImageProvider(WindowRenderer* aRenderer,
       mHaveAnimations ? PlaybackType::eAnimated : PlaybackType::eStatic;
   auto surfaceFlags = ToSurfaceFlags(aFlags);
 
-  SurfaceKey surfaceKey =
-      VectorSurfaceKey(aSize, aRegion, aSVGContext, surfaceFlags, playbackType);
+  SVGImageContext newSVGContext = aSVGContext;
+  bool contextPaint = MaybeRestrictSVGContext(newSVGContext, aFlags);
+
+  SurfaceKey surfaceKey = VectorSurfaceKey(aSize, aRegion, newSVGContext,
+                                           surfaceFlags, playbackType);
   if ((aFlags & FLAG_SYNC_DECODE) || !(aFlags & FLAG_HIGH_QUALITY_SCALING)) {
     result = SurfaceCache::Lookup(ImageKey(this), surfaceKey,
                                   /* aMarkUsed = */ true);
@@ -870,10 +873,9 @@ VectorImage::GetImageProvider(WindowRenderer* aRenderer,
     // we cannot cache.
     SVGDrawingParameters params(
         nullptr, rasterSize, aSize, ImageRegion::Create(rasterSize),
-        SamplingFilter::POINT, aSVGContext, animTime, aFlags, 1.0);
+        SamplingFilter::POINT, newSVGContext, animTime, aFlags, 1.0);
 
     RefPtr<gfxDrawable> svgDrawable = CreateSVGDrawable(params);
-    bool contextPaint = aSVGContext.GetContextPaint();
     AutoRestoreSVGState autoRestore(params, mSVGDocumentWrapper, contextPaint);
 
     mSVGDocumentWrapper->UpdateViewportBounds(params.viewportSize);
