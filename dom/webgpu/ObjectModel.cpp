@@ -12,6 +12,7 @@
 #include "CommandEncoder.h"
 #include "Instance.h"
 #include "Texture.h"
+#include "nsIGlobalObject.h"
 
 namespace mozilla::webgpu {
 
