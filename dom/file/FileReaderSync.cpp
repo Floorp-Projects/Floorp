@@ -84,9 +84,8 @@ void FileReaderSync::ReadAsArrayBuffer(JSContext* aCx,
     return;
   }
 
-  UniquePtr<void, JS::FreePolicy> dataPtr{bufferData.release()};
   JSObject* arrayBuffer =
-      JS::NewArrayBufferWithContents(aCx, blobSize, std::move(dataPtr));
+      JS::NewArrayBufferWithContents(aCx, blobSize, std::move(bufferData));
   if (!arrayBuffer) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;

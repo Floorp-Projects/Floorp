@@ -2708,11 +2708,10 @@ JSObject* IOUtils::JsBuffer::IntoUint8Array(JSContext* aCx, JsBuffer aBuffer) {
     return JS_NewUint8Array(aCx, 0);
   }
 
-  UniquePtr<void, JS::FreePolicy> rawBuffer{aBuffer.mBuffer.release()};
-  MOZ_RELEASE_ASSERT(rawBuffer);
+  MOZ_RELEASE_ASSERT(aBuffer.mBuffer);
   JS::Rooted<JSObject*> arrayBuffer(
       aCx, JS::NewArrayBufferWithContents(aCx, aBuffer.mLength,
-                                          std::move(rawBuffer)));
+                                          std::move(aBuffer.mBuffer)));
 
   if (!arrayBuffer) {
     // aBuffer will be destructed at end of scope, but its destructor does not
