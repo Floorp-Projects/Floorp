@@ -20,7 +20,7 @@ enum CanvasTextBaseline { "top", "hanging", "middle", "alphabetic", "ideographic
 enum CanvasDirection { "ltr", "rtl", "inherit" };
 enum CanvasFontKerning { "auto", "normal", "none" };
 // enum CanvasFontStretch { "ultra-condensed", "extra-condensed", "condensed", "semi-condensed", "normal", "semi-expanded", "expanded", "extra-expanded", "ultra-expanded" };
-// enum CanvasFontVariantCaps { "normal", "small-caps", "all-small-caps", "petite-caps", "all-petite-caps", "unicase", "titling-caps" };
+enum CanvasFontVariantCaps { "normal", "small-caps", "all-small-caps", "petite-caps", "all-petite-caps", "unicase", "titling-caps" };
 enum CanvasTextRendering { "auto", "optimizeSpeed", "optimizeLegibility", "geometricPrecision" };
 
 [GenerateInit]
@@ -299,7 +299,7 @@ interface mixin CanvasTextDrawingStyles {
   attribute UTF8String letterSpacing; // default: "0px"
   attribute CanvasFontKerning fontKerning; // (default: "auto")
 // NOT IMPLEMENTED  attribute CanvasFontStretch fontStretch; // (default: "normal")
-// NOT IMPLEMENTED  attribute CanvasFontVariantCaps fontVariantCaps; // (default: "normal")
+  attribute CanvasFontVariantCaps fontVariantCaps; // (default: "normal")
   attribute CanvasTextRendering textRendering; // (default: "auto")
   attribute UTF8String wordSpacing; // default: "0px"
 };
