@@ -293,7 +293,7 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/svc/svc_rate_allocator_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/decode_time_percentile_filter_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/frame_delay_variation_kalman_filter_gn",
-    "/third_party/libwebrtc/modules/video_coding/timing/inter_frame_delay_gn",
+    "/third_party/libwebrtc/modules/video_coding/timing/inter_frame_delay_variation_calculator_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/jitter_estimator_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/rtt_filter_gn",
     "/third_party/libwebrtc/modules/video_coding/timing/timestamp_extrapolator_gn",
