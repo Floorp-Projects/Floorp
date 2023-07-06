@@ -308,6 +308,7 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
     static BufferContents createExternal(void* data,
                                          JS::BufferContentsFreeFunc freeFunc,
                                          void* freeUserData = nullptr) {
+      MOZ_ASSERT(freeFunc);
       return BufferContents(static_cast<uint8_t*>(data), EXTERNAL, freeFunc,
                             freeUserData);
     }

@@ -1018,7 +1018,8 @@ void ArrayBufferObject::releaseData(JS::GCContext* gcx) {
       gcx->removeCellMemory(this, byteLength(), MemoryUse::ArrayBufferContents);
       break;
     case EXTERNAL:
-      if (freeInfo()->freeFunc) {
+      MOZ_ASSERT(freeInfo()->freeFunc);
+      {
         // The analyzer can't know for sure whether the embedder-supplied
         // free function will GC. We give the analyzer a hint here.
         // (Doing a GC in the free function is considered a programmer
@@ -1972,30 +1973,24 @@ JS_PUBLIC_API JSObject* JS::CopyArrayBuffer(JSContext* cx,
 JS_PUBLIC_API JSObject* JS::NewExternalArrayBuffer(
     JSContext* cx, size_t nbytes,
     mozilla::UniquePtr<void, JS::BufferContentsDeleter> contents) {
-  auto* result = NewExternalArrayBuffer(cx, nbytes, contents.get(),
-                                        contents.get_deleter().freeFunc(),
-                                        contents.get_deleter().userData());
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+
+  MOZ_ASSERT(contents);
+
+  using BufferContents = ArrayBufferObject::BufferContents;
+
+  BufferContents bufferContents = BufferContents::createExternal(
+      contents.get(), contents.get_deleter().freeFunc(),
+      contents.get_deleter().userData());
+  auto* result =
+      ArrayBufferObject::createForContents(cx, nbytes, bufferContents);
   if (result) {
     // If and only if an ArrayBuffer is successfully created, ownership of
     // |contents| is transferred to the new ArrayBuffer.
     (void)contents.release();
   }
   return result;
-}
-
-JS_PUBLIC_API JSObject* JS::NewExternalArrayBuffer(
-    JSContext* cx, size_t nbytes, void* data,
-    JS::BufferContentsFreeFunc freeFunc, void* freeUserData) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  MOZ_ASSERT(data);
-
-  using BufferContents = ArrayBufferObject::BufferContents;
-
-  BufferContents contents =
-      BufferContents::createExternal(data, freeFunc, freeUserData);
-  return ArrayBufferObject::createForContents(cx, nbytes, contents);
 }
 
 JS_PUBLIC_API JSObject* JS::NewArrayBufferWithUserOwnedContents(JSContext* cx,
