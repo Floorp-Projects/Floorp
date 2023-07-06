@@ -11,7 +11,6 @@ const methods = [
   iter => iter.filter(x => true),
   iter => iter.take(1),
   iter => iter.drop(0),
-  iter => iter.asIndexedPairs(),
   iter => iter.flatMap(x => [x]),
 ];
 

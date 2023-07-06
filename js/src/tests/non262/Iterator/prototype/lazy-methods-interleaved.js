@@ -18,10 +18,6 @@ class TestIterator extends Iterator {
 }
 
 function unwrapResult(result) {
-  // Unwrap the asIndexedPair return values.
-  while (Array.isArray(result.value)) {
-    result.value = result.value[1];
-  }
   return result;
 }
 
@@ -30,7 +26,6 @@ const methods = [
   iter => iter.filter(x => true),
   iter => iter.take(2),
   iter => iter.drop(0),
-  iter => iter.asIndexedPairs(),
   iter => iter.flatMap(x => [x]),
 ];
 

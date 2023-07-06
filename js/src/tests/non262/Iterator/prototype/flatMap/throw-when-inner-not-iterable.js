@@ -9,16 +9,10 @@ info: >
   Iterator Helpers proposal 2.1.5.7
   1. Repeat,
     ...
-    f. Let innerIterator be GetIterator(mapped, sync).
+    f. Let innerIterator be GetIteratorFlattenable(mapped).
     g. IfAbruptCloseIterator(innerIterator, iterated).
 features: [iterator-helpers]
 ---*/
-
-class NotIterable {
-  next() {
-    return {done: true};
-  }
-}
 
 class InvalidIterable {
   [Symbol.iterator]() {
@@ -39,7 +33,6 @@ class TestIterator extends Iterator {
 }
 
 const nonIterables = [
-  new NotIterable(),
   new InvalidIterable(),
   undefined,
   null,
