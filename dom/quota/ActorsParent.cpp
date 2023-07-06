@@ -3492,12 +3492,12 @@ nsresult QuotaManager::LoadQuota() {
             QM_TRY_INSPECT(const bool& exists,
                            MOZ_TO_RESULT_INVOKE_MEMBER(directory, Exists));
 
-            QM_TRY(OkIf(exists), Err(NS_ERROR_FAILURE));
+            QM_TRY(OkIf(exists), Err(NS_ERROR_FILE_NOT_FOUND));
 
             QM_TRY_INSPECT(const bool& isDirectory,
                            MOZ_TO_RESULT_INVOKE_MEMBER(directory, IsDirectory));
 
-            QM_TRY(OkIf(isDirectory), Err(NS_ERROR_FAILURE));
+            QM_TRY(OkIf(isDirectory), Err(NS_ERROR_FILE_DESTINATION_NOT_DIR));
 
             // Calling LoadFullOriginMetadataWithRestore might update the group
             // in the metadata file, but only as a side-effect. The actual place
