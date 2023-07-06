@@ -1922,6 +1922,18 @@ JS_PUBLIC_API JSObject* JS::NewArrayBuffer(JSContext* cx, size_t nbytes) {
   return ArrayBufferObject::createZeroed(cx, nbytes);
 }
 
+JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(
+    JSContext* cx, size_t nbytes,
+    mozilla::UniquePtr<void, JS::FreePolicy> contents) {
+  auto* result = NewArrayBufferWithContents(cx, nbytes, contents.get());
+  if (result) {
+    // If and only if an ArrayBuffer is successfully created, ownership of
+    // |contents| is transferred to the new ArrayBuffer.
+    (void)contents.release();
+  }
+  return result;
+}
+
 JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(JSContext* cx,
                                                        size_t nbytes,
                                                        void* data) {
@@ -1954,6 +1966,20 @@ JS_PUBLIC_API JSObject* JS::CopyArrayBuffer(JSContext* cx,
   }
 
   return ArrayBufferObject::copy(cx, unwrappedSource);
+}
+
+JS_PUBLIC_API JSObject* JS::NewExternalArrayBuffer(
+    JSContext* cx, size_t nbytes,
+    mozilla::UniquePtr<void, JS::BufferContentsDeleter> contents) {
+  auto* result = NewExternalArrayBuffer(cx, nbytes, contents.get(),
+                                        contents.get_deleter().freeFunc(),
+                                        contents.get_deleter().userData());
+  if (result) {
+    // If and only if an ArrayBuffer is successfully created, ownership of
+    // |contents| is transferred to the new ArrayBuffer.
+    (void)contents.release();
+  }
+  return result;
 }
 
 JS_PUBLIC_API JSObject* JS::NewExternalArrayBuffer(
