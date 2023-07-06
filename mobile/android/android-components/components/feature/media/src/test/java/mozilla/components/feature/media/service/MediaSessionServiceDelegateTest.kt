@@ -479,6 +479,7 @@ class MediaSessionServiceDelegateTest {
 
         verify(delegate.mediaSession).release()
         verify(delegate.service).stopSelf()
+        assertNull(delegate.noisyAudioStreamReceiver)
     }
 
     @Test

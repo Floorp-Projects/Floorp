@@ -267,6 +267,7 @@ internal class MediaSessionServiceDelegate(
         // Otherwise, when media is paused, with [STOP_FOREGROUND_DETACH] notification behavior,
         // the notification will persist even after service is stopped and destroyed.
         notificationsDelegate.notificationManagerCompat.cancel(notificationId)
+        unregisterBecomingNoisyListenerIfNeeded()
         service.stopSelf()
     }
 
