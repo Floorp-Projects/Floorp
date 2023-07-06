@@ -126,6 +126,19 @@ class Pickle {
   }
 #endif
 
+  template <class T>
+  [[nodiscard]] bool ReadScalar(PickleIterator* iter, T* result) const {
+    DCHECK(iter);
+
+    if (!IteratorHasRoomFor(*iter, sizeof(*result)))
+      return ReadBytesInto(iter, result, sizeof(*result));
+
+    iter->CopyInto(result);
+
+    UpdateIter(iter, sizeof(*result));
+    return true;
+  }
+
   bool IgnoreSentinel(PickleIterator* iter) const
 #ifdef MOZ_PICKLE_SENTINEL_CHECKING
       ;
