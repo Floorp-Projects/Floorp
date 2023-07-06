@@ -55,7 +55,6 @@ ExtensionEventManager::ExtensionEventManager(
   MOZ_DIAGNOSTIC_ASSERT(mGlobal);
   MOZ_DIAGNOSTIC_ASSERT(mExtensionBrowser);
 
-  RefPtr<ExtensionEventManager> self = this;
   mozilla::HoldJSObjects(this);
 }
 
