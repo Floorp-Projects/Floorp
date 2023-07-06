@@ -25,20 +25,6 @@ function IteratorNext(iteratorRecord, value) {
   return result;
 }
 
-/* ECMA262 7.4.6 */
-function IteratorClose(iterator) {
-  // Step 4.
-  const returnMethod = iterator.return;
-  // Step 5.
-  if (!IsNullOrUndefined(returnMethod)) {
-    const result = callContentFunction(returnMethod, iterator);
-    // Step 8.
-    if (!IsObject(result)) {
-      ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, result));
-    }
-  }
-}
-
 /**
  * ES2022 draft rev c5f683e61d5dce703650f1c90d2309c46f8c157a
  *

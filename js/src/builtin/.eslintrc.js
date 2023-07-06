@@ -132,12 +132,13 @@ module.exports = {
         GetBuiltinSymbol: "readonly",
         getPropertySuper: "readonly",
         hasOwn: "readonly",
+        IsNullOrUndefined: "readonly",
+        IteratorClose: "readonly",
         resumeGenerator: "readonly",
         SetCanonicalName: "readonly",
         SetIsInlinableLargeFunction: "readonly",
         ToNumeric: "readonly",
         ToString: "readonly",
-        IsNullOrUndefined: "readonly",
 
         // We've disabled all built-in environments, which also removed
         // `undefined` from the list of globals. Put it back because it's
