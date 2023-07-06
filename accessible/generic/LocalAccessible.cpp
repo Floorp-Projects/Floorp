@@ -1341,6 +1341,17 @@ void LocalAccessible::DOMAttributeChanged(int32_t aNameSpaceID,
     return;
   }
 
+  if (aAttribute == nsGkAtoms::aria_description) {
+    // A valid aria-describedby would take precedence so an aria-description
+    // change won't change the description.
+    IDRefsIterator iter(mDoc, elm, nsGkAtoms::aria_describedby);
+    if (!iter.NextElem()) {
+      mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE,
+                             this);
+    }
+    return;
+  }
+
   if (aAttribute == nsGkAtoms::aria_describedby) {
     mDoc->QueueCacheUpdate(this, CacheDomain::Relations);
     mDoc->FireDelayedEvent(nsIAccessibleEvent::EVENT_DESCRIPTION_CHANGE, this);
