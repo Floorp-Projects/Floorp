@@ -3693,6 +3693,10 @@ void CanvasRenderingContext2D::SetFont(const nsACString& aFont,
     return;
   }
 
+  // Setting the font attribute magically resets fontVariantCaps to normal.
+  // (spec unclear, cf. https://github.com/whatwg/html/issues/8103)
+  SetFontVariantCaps(CanvasFontVariantCaps::Normal);
+
   // If letterSpacing or wordSpacing is present, recompute to account for
   // changes to font-relative dimensions.
   UpdateSpacing();
@@ -3751,6 +3755,38 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
       QuantizeFontSize(resizedFont.size.ToCSSPixels()));
 
   resizedFont.kerning = CanvasToGfx(CurrentState().fontKerning);
+
+  // fontVariantCaps handling: if fontVariantCaps is not 'normal', apply it;
+  // if it is, then use the smallCaps boolean from the shorthand.
+  // XXX(jfkthame) The interaction between the shorthand and the separate attr
+  // here is not clearly spec'd, and we may want to reconsider it (or revise
+  // the available values); see https://github.com/whatwg/html/issues/8103.
+  switch (CurrentState().fontVariantCaps) {
+    case CanvasFontVariantCaps::Normal:
+      // Leave whatever the shorthand set.
+      break;
+    case CanvasFontVariantCaps::Small_caps:
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_SMALLCAPS;
+      break;
+    case CanvasFontVariantCaps::All_small_caps:
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_ALLSMALL;
+      break;
+    case CanvasFontVariantCaps::Petite_caps:
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_PETITECAPS;
+      break;
+    case CanvasFontVariantCaps::All_petite_caps:
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_ALLPETITE;
+      break;
+    case CanvasFontVariantCaps::Unicase:
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_UNICASE;
+      break;
+    case CanvasFontVariantCaps::Titling_caps:
+      resizedFont.variantCaps = NS_FONT_VARIANT_CAPS_TITLING;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown caps value");
+      break;
+  }
 
   c->Document()->FlushUserFontSet();
 
@@ -3857,8 +3893,42 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
   }
 
   fontStyle.size = QuantizeFontSize(size);
-  fontStyle.variantCaps =
-      smallCaps ? NS_FONT_VARIANT_CAPS_SMALLCAPS : NS_FONT_VARIANT_CAPS_NORMAL;
+
+  // fontVariantCaps handling: if fontVariantCaps is not 'normal', apply it;
+  // if it is, then use the smallCaps boolean from the shorthand.
+  // XXX(jfkthame) The interaction between the shorthand and the separate attr
+  // here is not clearly spec'd, and we may want to reconsider it (or revise
+  // the available values); see https://github.com/whatwg/html/issues/8103.
+  switch (CurrentState().fontVariantCaps) {
+    case CanvasFontVariantCaps::Normal:
+      fontStyle.variantCaps = smallCaps ? NS_FONT_VARIANT_CAPS_SMALLCAPS
+                                        : NS_FONT_VARIANT_CAPS_NORMAL;
+      break;
+    case CanvasFontVariantCaps::Small_caps:
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_SMALLCAPS;
+      break;
+    case CanvasFontVariantCaps::All_small_caps:
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_ALLSMALL;
+      break;
+    case CanvasFontVariantCaps::Petite_caps:
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_PETITECAPS;
+      break;
+    case CanvasFontVariantCaps::All_petite_caps:
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_ALLPETITE;
+      break;
+    case CanvasFontVariantCaps::Unicase:
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_UNICASE;
+      break;
+    case CanvasFontVariantCaps::Titling_caps:
+      fontStyle.variantCaps = NS_FONT_VARIANT_CAPS_TITLING;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown caps value");
+      break;
+  }
+  // If variantCaps is set, we need to disable a gfxFont fast-path.
+  fontStyle.noFallbackVariantFeatures =
+      (fontStyle.variantCaps == NS_FONT_VARIANT_CAPS_NORMAL);
 
   // Set the kerning feature, if required by the fontKerning attribute.
   gfxFontFeature setting{TRUETYPE_TAG('k', 'e', 'r', 'n'), 0};
@@ -3907,6 +3977,7 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
   SerializeFontForCanvas(list, fontStyle, CurrentState().font);
   CurrentState().fontFont = nsFont(StyleFontFamily{list, false, false},
                                    StyleCSSPixelLength::FromPixels(size));
+  CurrentState().fontFont.variantCaps = fontStyle.variantCaps;
   CurrentState().fontLanguage = nullptr;
   CurrentState().fontExplicitLanguage = false;
   return true;
