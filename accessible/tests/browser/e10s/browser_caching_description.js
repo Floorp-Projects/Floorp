@@ -251,3 +251,30 @@ addAccessibleTask(
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test aria-description, including mutations.
+ */
+addAccessibleTask(
+  `<button id="button" aria-description="a">button</button>`,
+  async function (browser, docAcc) {
+    const button = findAccessibleChildByID(docAcc, "button");
+    testDescr(button, "a");
+    info("Changing aria-description");
+    let changed = waitForEvent(EVENT_DESCRIPTION_CHANGE, button);
+    await invokeSetAttribute(browser, "button", "aria-description", "b");
+    await changed;
+    testDescr(button, "b");
+    info("Removing aria-description");
+    changed = waitForEvent(EVENT_DESCRIPTION_CHANGE, button);
+    await invokeSetAttribute(browser, "button", "aria-description");
+    await changed;
+    testDescr(button, "");
+    info("Setting aria-description");
+    changed = waitForEvent(EVENT_DESCRIPTION_CHANGE, button);
+    await invokeSetAttribute(browser, "button", "aria-description", "c");
+    await changed;
+    testDescr(button, "c");
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
