@@ -815,7 +815,7 @@ const workspaceFunctions = {
   },
 };
 
-window.setTimeout(function() {
+startWorkspace = function() {
   let list = Services.wm.getEnumerator("navigator:browser");
   while (list.hasMoreElements()) {
     if (list.getNext() != window) {
@@ -827,7 +827,8 @@ window.setTimeout(function() {
   if (typeof gBrowser !== 'undefined') {
     workspaceFunctions.manageWorkspaceFunctions.initWorkspace();
   } else {
-    setTimeout(workspaceFunctions.manageWorkspaceFunctions.initWorkspace, 100);
+    window.setTimeout(startWorkspace, 100);
+    return;
   }
 
   workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
@@ -864,4 +865,6 @@ window.setTimeout(function() {
     "keydown",
     workspaceFunctions.eventListeners.keyboradEventListeners.handle_keydown
   );
-}, 1000);
+};
+
+startWorkspace();

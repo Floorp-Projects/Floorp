@@ -35,10 +35,11 @@ function setVerticalTabs() {
       while (list.hasMoreElements()) { if (list.getNext() != window) return; }
 
       if (typeof gBrowser !== 'undefined') {
-        setWorkspaceLabel();
+        window.setTimeout(setWorkspaceLabel, 500);
       } else {
-        window.setTimeout(setWorkspaceLabel, 100);
-      }    
+        window.setTimeout(checkBrowserIsStartup, 100);
+        return;
+      }
     }
     checkBrowserIsStartup();
 
