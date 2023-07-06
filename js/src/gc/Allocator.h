@@ -85,18 +85,18 @@ class CellAllocator {
   // allocation is disabled for |traceKind| in the current zone.
   template <JS::TraceKind traceKind, AllowGC allowGC = CanGC>
   static void* AllocNurseryOrTenuredCell(JS::RootingContext* rcx,
-                                         gc::AllocKind allocKind, gc::Heap heap,
+                                         gc::AllocKind allocKind,
+                                         size_t thingSize, gc::Heap heap,
                                          AllocSite* site) {
     MOZ_ASSERT(IsNurseryAllocable(allocKind));
     MOZ_ASSERT(MapAllocToTraceKind(allocKind) == traceKind);
+    MOZ_ASSERT(thingSize == Arena::thingSize(allocKind));
     MOZ_ASSERT_IF(site && site->initialHeap() == Heap::Tenured,
                   heap == Heap::Tenured);
 
     if (!PreAllocChecks<allowGC>(rcx, allocKind)) {
       return nullptr;
     }
-
-    size_t thingSize = Arena::thingSize(allocKind);
 
     JS::Zone* zone = rcx->zoneUnchecked();
     gc::Heap minHeapToTenure = CheckedHeap(zone->minHeapToTenure(traceKind));
@@ -132,7 +132,7 @@ class CellAllocator {
     static_assert(std::is_base_of_v<JSString, T>);
     gc::AllocKind kind = gc::MapTypeToAllocKind<T>::kind;
     void* ptr = AllocNurseryOrTenuredCell<JS::TraceKind::String, allowGC>(
-        rcx, kind, heap, nullptr);
+        rcx, kind, sizeof(T), heap, nullptr);
     if (MOZ_UNLIKELY(!ptr)) {
       return nullptr;
     }
@@ -142,7 +142,7 @@ class CellAllocator {
   template <typename T, AllowGC allowGC /* = CanGC */>
   static T* NewBigInt(JS::RootingContext* rcx, Heap heap) {
     void* ptr = AllocNurseryOrTenuredCell<JS::TraceKind::BigInt, allowGC>(
-        rcx, gc::AllocKind::BIGINT, heap, nullptr);
+        rcx, gc::AllocKind::BIGINT, sizeof(T), heap, nullptr);
     if (MOZ_UNLIKELY(!ptr)) {
       return nullptr;
     }
@@ -157,8 +157,9 @@ class CellAllocator {
     MOZ_ASSERT_IF(heap != gc::Heap::Tenured && clasp->hasFinalize() &&
                       !clasp->isProxyObject(),
                   CanNurseryAllocateFinalizedClass(clasp));
+    size_t thingSize = JSObject::thingSize(kind);
     void* cell = AllocNurseryOrTenuredCell<JS::TraceKind::Object, allowGC>(
-        rcx, kind, heap, site);
+        rcx, kind, thingSize, heap, site);
     if (MOZ_UNLIKELY(!cell)) {
       return nullptr;
     }
