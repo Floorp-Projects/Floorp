@@ -81,13 +81,13 @@ class FunctionBox;
   F(OptionalChain, UnaryNode)                                    \
   F(OptionalElemExpr, OptionalPropertyByValue)                   \
   F(OptionalPrivateMemberExpr, OptionalPrivateMemberAccess)      \
-  F(OptionalCallExpr, BinaryNode)                                \
+  F(OptionalCallExpr, CallNode)                                  \
   F(ArrayExpr, ListNode)                                         \
   F(Elision, NullaryNode)                                        \
   F(StatementList, ListNode)                                     \
   F(LabelStmt, LabeledStatement)                                 \
   F(ObjectExpr, ListNode)                                        \
-  F(CallExpr, BinaryNode)                                        \
+  F(CallExpr, CallNode)                                          \
   F(Arguments, ListNode)                                         \
   F(Name, NameNode)                                              \
   F(ObjectPropertyName, NameNode)                                \
@@ -98,7 +98,7 @@ class FunctionBox;
   F(StringExpr, NameNode)                                        \
   F(TemplateStringListExpr, ListNode)                            \
   F(TemplateStringExpr, NameNode)                                \
-  F(TaggedTemplateExpr, BinaryNode)                              \
+  F(TaggedTemplateExpr, CallNode)                                \
   F(CallSiteObj, CallSiteNode)                                   \
   F(RegExpExpr, RegExpLiteral)                                   \
   F(TrueExpr, BooleanLiteral)                                    \
@@ -122,7 +122,7 @@ class FunctionBox;
   F(ConstDecl, DeclarationListNode)                              \
   F(WithStmt, BinaryNode)                                        \
   F(ReturnStmt, UnaryNode)                                       \
-  F(NewExpr, BinaryNode)                                         \
+  F(NewExpr, CallNode)                                           \
   IF_DECORATORS(F(DecoratorList, ListNode))                      \
   /* Delete operations.  These must be sequential. */            \
   F(DeleteNameExpr, UnaryNode)                                   \
@@ -171,7 +171,7 @@ class FunctionBox;
   F(NewTargetExpr, NewTargetNode)                                \
   F(PosHolder, NullaryNode)                                      \
   F(SuperBase, UnaryNode)                                        \
-  F(SuperCallExpr, BinaryNode)                                   \
+  F(SuperCallExpr, CallNode)                                     \
   F(SetThis, BinaryNode)                                         \
   F(ImportMetaExpr, BinaryNode)                                  \
   F(CallImportExpr, BinaryNode)                                  \
@@ -639,7 +639,6 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
   MACRO(ListNode, ListNodeType, asList)                                      \
   MACRO(CallSiteNode, CallSiteNodeType, asCallSite)                          \
   MACRO(CallNode, CallNodeType, asCallNode)                                  \
-  MACRO(CallNode, OptionalCallNodeType, asOptionalCallNode)                  \
                                                                              \
   MACRO(LoopControlStatement, LoopControlStatementType,                      \
         asLoopControlStatement)                                              \
@@ -2214,12 +2213,12 @@ class CallNode : public BinaryNode {
   const JSOp callOp_;
 
  public:
-  CallNode(ParseNodeKind kind, JSOp callOp, ParseNode* left, ParseNode* right)
+  CallNode(ParseNodeKind kind, JSOp callOp, ParseNode* left, ListNode* right)
       : CallNode(kind, callOp, TokenPos(left->pn_pos.begin, right->pn_pos.end),
                  left, right) {}
 
   CallNode(ParseNodeKind kind, JSOp callOp, TokenPos pos, ParseNode* left,
-           ParseNode* right)
+           ListNode* right)
       : BinaryNode(kind, pos, left, right), callOp_(callOp) {
     MOZ_ASSERT(is<CallNode>());
   }
@@ -2229,13 +2228,14 @@ class CallNode : public BinaryNode {
                  node.isKind(ParseNodeKind::SuperCallExpr) ||
                  node.isKind(ParseNodeKind::OptionalCallExpr) ||
                  node.isKind(ParseNodeKind::TaggedTemplateExpr) ||
-                 node.isKind(ParseNodeKind::CallImportExpr) ||
                  node.isKind(ParseNodeKind::NewExpr);
     MOZ_ASSERT_IF(match, node.is<BinaryNode>());
     return match;
   }
 
-  JSOp callOp() { return callOp_; }
+  JSOp callOp() const { return callOp_; }
+  auto* callee() const { return left(); }
+  auto* args() const { return &right()->as<ListNode>(); }
 };
 
 class ClassMethod : public BinaryNode {
