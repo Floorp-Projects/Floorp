@@ -1,0 +1,80 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://global/skin/in-content/common.css");
+
+:host {
+  display: block;
+  width: 288px;
+  border: 1px solid var(--in-content-box-border-color);
+  border-radius: 8px;
+  background-color: var(--in-content-page-background);
+  box-shadow: var(--shadow-10);
+}
+
+.shopping-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+}
+
+button {
+  margin: 0;
+}
+
+#shopping-details {
+  width: 100%;
+}
+
+#label-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-self: stretch;
+}
+
+:host([type="accordion"]) #label-wrapper {
+  cursor: pointer;
+}
+
+#header {
+  color: var(--in-content-text-color);
+  font-size: 1em;
+  font-weight: 600;
+}
+
+#footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  border-top: 1px solid var(--in-content-box-border-color);
+}
+
+details > summary {
+  list-style: none;
+}
+
+details > summary:focus-visible {
+  outline: var(--in-content-focus-outline);
+}
+
+.chevron-icon {
+  background-image: url("chrome://global/skin/icons/arrow-down.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+details[open] .chevron-icon {
+  background-image: url("chrome://global/skin/icons/arrow-up.svg");
+}
