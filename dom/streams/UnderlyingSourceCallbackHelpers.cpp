@@ -429,7 +429,8 @@ void InputToReadableStreamAlgorithms::PullFromInputStream(JSContext* aCx,
   else {
     // Step 9.1. Set view to the result of creating a Uint8Array from pulled in
     // stream’s relevant Realm.
-    UniquePtr<uint8_t> buffer(static_cast<uint8_t*>(JS_malloc(aCx, pullSize)));
+    UniquePtr<uint8_t[], JS::FreePolicy> buffer(
+        static_cast<uint8_t*>(JS_malloc(aCx, pullSize)));
     if (!buffer) {
       aRv.ThrowTypeError("Out of memory");
       return;
@@ -446,8 +447,8 @@ void InputToReadableStreamAlgorithms::PullFromInputStream(JSContext* aCx,
     }
 
     MOZ_DIAGNOSTIC_ASSERT(pullSize == bytesWritten);
-    JS::Rooted<JSObject*> view(
-        aCx, nsJSUtils::MoveBufferAsUint8Array(aCx, bytesWritten, buffer));
+    JS::Rooted<JSObject*> view(aCx, nsJSUtils::MoveBufferAsUint8Array(
+                                        aCx, bytesWritten, std::move(buffer)));
     if (!view) {
       JS_ClearPendingException(aCx);
       aRv.ThrowTypeError("Out of memory");

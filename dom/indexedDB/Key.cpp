@@ -855,12 +855,19 @@ JSObject* Key::DecodeBinary(const EncodedDataType*& aPos,
   DecodeStringy<eBinary, uint8_t>(
       aPos, aEnd,
       [&rv, aCx](uint8_t** out, uint32_t decodedSize) {
-        *out = static_cast<uint8_t*>(JS_malloc(aCx, decodedSize));
-        if (NS_WARN_IF(!*out)) {
+        UniquePtr<void, JS::FreePolicy> ptr{JS_malloc(aCx, decodedSize)};
+        if (NS_WARN_IF(!ptr)) {
+          *out = nullptr;
           rv = nullptr;
           return false;
         }
-        rv = JS::NewArrayBufferWithContents(aCx, decodedSize, *out);
+
+        *out = static_cast<uint8_t*>(ptr.get());
+        rv = JS::NewArrayBufferWithContents(aCx, decodedSize, std::move(ptr));
+        if (NS_WARN_IF(!rv)) {
+          *out = nullptr;
+          return false;
+        }
         return true;
       },
       [&rv, aCx] { rv = JS::NewArrayBuffer(aCx, 0); });
