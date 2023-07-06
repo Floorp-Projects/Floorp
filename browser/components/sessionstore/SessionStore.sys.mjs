@@ -407,6 +407,11 @@ export var SessionStore = {
    * @param {Window} [aWindow] Optional window argument used to determine if we're counting for private or non-private windows
    */
   getClosedTabCount: function ss_getClosedTabCount(aWindow) {
+    if (!SessionStoreInternal._closedTabsFromAllWindowsEnabled) {
+      return this.getClosedTabCountForWindow(
+        aWindow ?? SessionStoreInternal._getTopWindow()
+      );
+    }
     return SessionStoreInternal.getClosedTabCount(aWindow);
   },
 
@@ -423,6 +428,11 @@ export var SessionStore = {
    * @param {Window} [aWindow] Optional window argument used to determine if we're collecting data for private or non-private windows
    */
   getClosedTabData: function ss_getClosedTabData(aWindow) {
+    if (!SessionStoreInternal._closedTabsFromAllWindowsEnabled) {
+      return this.getClosedTabDataForWindow(
+        aWindow ?? SessionStoreInternal._getTopWindow()
+      );
+    }
     return SessionStoreInternal.getClosedTabData(aWindow);
   },
 
@@ -1200,6 +1210,16 @@ var SessionStoreInternal = {
       "sessionstore.max_tabs_undo"
     );
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);
+
+    this._closedTabsFromAllWindowsEnabled = this._prefBranch.getBoolPref(
+      "sessionstore.closedTabsFromAllWindows",
+      true
+    );
+    this._prefBranch.addObserver(
+      "sessionstore.closedTabsFromAllWindows",
+      this,
+      true
+    );
 
     this._max_windows_undo = this._prefBranch.getIntPref(
       "sessionstore.max_windows_undo"
@@ -2697,6 +2717,12 @@ var SessionStoreInternal = {
       case "sessionstore.restore_on_demand":
         this._restore_on_demand = this._prefBranch.getBoolPref(
           "sessionstore.restore_on_demand"
+        );
+        break;
+      case "sessionstore.closedTabsFromAllWindows":
+        this._closedTabsFromAllWindowsEnabled = this._prefBranch.getBoolPref(
+          "sessionstore.closedTabsFromAllWindows",
+          true
         );
         break;
     }
