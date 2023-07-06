@@ -49,8 +49,6 @@ class HTMLDialogElement final : public nsGenericHTMLElement {
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY void FocusDialog();
 
-  int32_t TabIndexDefault() override;
-
   nsString mReturnValue;
 
  protected:
