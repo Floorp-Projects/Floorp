@@ -94,10 +94,6 @@
         .getInterface(Ci.nsIWebBrowserFind);
     }
 
-    get markupDocumentViewer() {
-      return this.docShell.contentViewer;
-    }
-
     get editingSession() {
       return this.docShell.editingSession;
     }

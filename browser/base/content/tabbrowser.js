@@ -615,10 +615,6 @@
       return this.selectedBrowser.sessionHistory;
     },
 
-    get markupDocumentViewer() {
-      return this.selectedBrowser.markupDocumentViewer;
-    },
-
     get contentDocument() {
       return this.selectedBrowser.contentDocument;
     },
