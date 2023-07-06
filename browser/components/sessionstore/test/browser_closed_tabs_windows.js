@@ -147,7 +147,7 @@ add_task(async function test_ClosedTabMethods() {
   closedCount = SessionStore.getClosedTabCount();
   Assert.equal(3, closedCount, "3 closed tab for all windows");
 
-  const allWindowsClosedTabs = SessionStore.getClosedTabData();
+  let allWindowsClosedTabs = SessionStore.getClosedTabData();
   Assert.equal(
     closedCount,
     allWindowsClosedTabs.length,
@@ -156,6 +156,29 @@ add_task(async function test_ClosedTabMethods() {
   for (let tabData of allWindowsClosedTabs) {
     Assert.ok(tabData.sourceWindowId, "each tab has a sourceWindowId property");
   }
+
+  // ***********************************
+  // check with the pref off
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.sessionstore.closedTabsFromAllWindows", false]],
+  });
+
+  closedCount = SessionStore.getClosedTabCount();
+
+  Assert.equal(2, closedCount, "2 closed tabs for the top window");
+
+  allWindowsClosedTabs = SessionStore.getClosedTabData();
+  Assert.equal(
+    closedCount,
+    2,
+    "getClosedTabData returned the number of entries for the top window"
+  );
+  for (let tabData of allWindowsClosedTabs) {
+    Assert.ok(tabData.sourceWindowId, "each tab has a sourceWindowId property");
+  }
+  SpecialPowers.popPrefEnv();
+  //
+  // ***********************************
 
   sessionStoreUpdated = TestUtils.topicObserved(
     "sessionstore-closed-objects-changed"

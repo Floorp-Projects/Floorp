@@ -15,6 +15,13 @@ XPCOMUtils.defineLazyGetter(lazy, "l10n", () => {
   return new Localization(["browser/recentlyClosed.ftl"], true);
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "closedTabsFromAllWindowsEnabled",
+  "browser.sessionstore.closedTabsFromAllWindows",
+  true
+);
+
 export var RecentlyClosedTabsAndWindowsMenuUtils = {
   /**
    * Builds up a document fragment of UI items for the recently closed tabs.
@@ -30,7 +37,9 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
   getTabsFragment(aWindow, aTagName, aPrefixRestoreAll = false) {
     let doc = aWindow.document;
     const fragment = doc.createDocumentFragment();
-    const browserWindows = lazy.SessionStore.getWindows(aWindow);
+    const browserWindows = lazy.closedTabsFromAllWindowsEnabled
+      ? lazy.SessionStore.getWindows(aWindow)
+      : [aWindow];
     const tabCount = lazy.SessionStore.getClosedTabCount(aWindow);
 
     if (tabCount > 0) {
@@ -112,7 +121,9 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
    */
   onRestoreAllTabsCommand(aEvent) {
     const currentWindow = aEvent.target.ownerGlobal;
-    const browserWindows = lazy.SessionStore.getWindows(currentWindow);
+    const browserWindows = lazy.closedTabsFromAllWindowsEnabled
+      ? lazy.SessionStore.getWindows(currentWindow)
+      : [currentWindow];
     for (const sourceWindow of browserWindows) {
       const count = lazy.SessionStore.getClosedTabCountForWindow(sourceWindow);
       for (let index = 0; index < count; index++) {
