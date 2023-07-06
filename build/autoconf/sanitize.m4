@@ -27,12 +27,8 @@ if test -n "$MOZ_ASAN"; then
             CXXFLAGS="-fsanitize-blacklist=$_topsrcdir/build/sanitizers/asan_blacklist_win.txt $CXXFLAGS"
         fi
     fi
-    # -fno-sanitize-address-globals-dead-stripping is used to work around
-    # https://github.com/rust-lang/rust/issues/113404
-    # It forces clang not to use __asan_register_elf_globals/__asan_globals_registered,
-    # avoiding the conflict with rust.
-    CFLAGS="-fsanitize=address -fno-sanitize-address-globals-dead-stripping $CFLAGS"
-    CXXFLAGS="-fsanitize=address -fno-sanitize-address-globals-dead-stripping $CXXFLAGS"
+    CFLAGS="-fsanitize=address $CFLAGS"
+    CXXFLAGS="-fsanitize=address $CXXFLAGS"
     if test -z "$CLANG_CL"; then
         LDFLAGS="-fsanitize=address -rdynamic $LDFLAGS"
     fi
