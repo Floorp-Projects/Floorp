@@ -3,12 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["getUniqueDomainsVisitedInPast24Hours"];
-
 // Used by nsIBrowserUsage
-function getUniqueDomainsVisitedInPast24Hours() {
+export function getUniqueDomainsVisitedInPast24Hours() {
   // The prompting heuristic for the storage access API looks at 1% of the
   // number of the domains visited in the past 24 hours, with a minimum cap of
   // 5 domains, in order to prevent prompts from showing up before a tracker is
