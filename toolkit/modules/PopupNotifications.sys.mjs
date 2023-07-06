@@ -1259,7 +1259,7 @@ PopupNotifications.prototype = {
 
     // Remember the time the notification was shown for the security delay.
     notificationsToShow.forEach(
-      n => (n.timeShown ??= this.window.performance.now())
+      n => (n.timeShown = this.window.performance.now())
     );
 
     if (this.isPanelOpen && this._currentAnchorElement == anchorElement) {
