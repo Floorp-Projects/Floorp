@@ -5,6 +5,7 @@
 import os
 import sys
 import time
+from collections.abc import Iterable
 
 import gyp
 import gyp.msvs_emulation
@@ -464,7 +465,18 @@ class GypProcessor(object):
                 for name, _ in finder.find("*/supplement.gypi")
             )
 
-        str_vars = dict(gyp_dir_attrs.variables)
+        # We need to normalize EnumStrings to strings because the gyp code is
+        # not guaranteed to like them.
+        def normalize(obj):
+            if isinstance(obj, dict):
+                return {k: normalize(v) for k, v in obj.items()}
+            if isinstance(obj, str):  # includes EnumStrings
+                return str(obj)
+            if isinstance(obj, Iterable):
+                return [normalize(o) for o in obj]
+            return obj
+
+        str_vars = normalize(gyp_dir_attrs.variables)
         str_vars["python"] = sys.executable
         self._gyp_loader_future = executor.submit(
             load_gyp, [path], "mozbuild", str_vars, includes, depth, params

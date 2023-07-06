@@ -61,7 +61,7 @@ DEFINES['NSS'] = 1
 # falling back to the (presumably) slower-on-this-architecture but working
 # code path.  https://bugzilla.mozilla.org/show_bug.cgi?id=822380 has been filed
 # to make the right and more performant fix and push it back upstream.
-if CONFIG['CPU_ARCH'] in ('arm', 'x86', 'x86_64', 'mips', 'mips64'):
+if CONFIG['CPU_ARCH'] in ('arm', 'x86', 'x86_64', 'mips32', 'mips64'):
     DEFINES['CPU_CISC'] = 1
 else:
     # best guess
