@@ -7481,6 +7481,30 @@ bool BytecodeEmitter::emitSelfHostedIsNullOrUndefined(CallNode* callNode) {
   return true;
 }
 
+bool BytecodeEmitter::emitSelfHostedIteratorClose(CallNode* callNode) {
+  ListNode* argsList = callNode->args();
+  MOZ_ASSERT(argsList->count() == 1);
+
+  ParseNode* argNode = argsList->head();
+  if (!emitTree(argNode)) {
+    //              [stack] ARG
+    return false;
+  }
+
+  if (!emit2(JSOp::CloseIter, uint8_t(CompletionKind::Normal))) {
+    //              [stack]
+    return false;
+  }
+
+  // This is still a call node, so we must generate a stack value.
+  if (!emit1(JSOp::Undefined)) {
+    //              [stack] RVAL
+    return false;
+  }
+
+  return true;
+}
+
 bool BytecodeEmitter::emitSelfHostedGetBuiltinConstructorOrPrototype(
     CallNode* callNode, bool isConstructor) {
   ListNode* argsList = callNode->args();
@@ -8167,6 +8191,9 @@ bool BytecodeEmitter::emitCallOrNew(CallNode* callNode, ValueUsage valueUsage) {
     }
     if (calleeName == TaggedParserAtomIndex::WellKnown::IsNullOrUndefined()) {
       return emitSelfHostedIsNullOrUndefined(callNode);
+    }
+    if (calleeName == TaggedParserAtomIndex::WellKnown::IteratorClose()) {
+      return emitSelfHostedIteratorClose(callNode);
     }
 #ifdef DEBUG
     if (calleeName ==
