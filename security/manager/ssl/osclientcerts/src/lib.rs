@@ -534,7 +534,7 @@ extern "C" fn C_GetAttributeValue(
         return CKR_DEVICE_ERROR;
     }
     for (i, value) in values.iter().enumerate().take(ulCount as usize) {
-        let mut attr = unsafe { &mut *pTemplate.add(i) };
+        let attr = unsafe { &mut *pTemplate.add(i) };
         if let Some(attr_value) = value {
             if attr.pValue.is_null() {
                 attr.ulValueLen = attr_value.len() as CK_ULONG;
