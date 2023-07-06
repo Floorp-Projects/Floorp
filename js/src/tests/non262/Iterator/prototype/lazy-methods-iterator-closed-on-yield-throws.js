@@ -10,6 +10,7 @@ info: >
 features: [iterator-helpers]
 ---*/
 
+class TestError extends Error {}
 class TestIterator extends Iterator {
   next() { 
     return {done: false, value: 1};
@@ -27,6 +28,7 @@ const methods = [
   iter => iter.filter(x => true),
   iter => iter.take(1),
   iter => iter.drop(0),
+  iter => iter.asIndexedPairs(),
   iter => iter.flatMap(x => [x]),
 ];
 
@@ -35,7 +37,7 @@ for (const method of methods) {
   assertEq(iterator.closed, false);
   const iteratorHelper = method(iterator);
   iteratorHelper.next();
-  iteratorHelper.return();
+  assertThrowsInstanceOf(() => iteratorHelper.throw(new TestError()), TestError);
   assertEq(iterator.closed, true); 
 }
 

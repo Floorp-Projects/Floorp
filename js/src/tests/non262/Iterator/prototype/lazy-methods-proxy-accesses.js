@@ -33,6 +33,7 @@ const methods = [
   [iter => iter.filter(x => true), 'filter'],
   [iter => iter.take(4), 'take'],
   [iter => iter.drop(0), 'drop'],
+  [iter => iter.asIndexedPairs(), 'asIndexedPairs'],
   [iter => iter.flatMap(x => [x]), 'flatMap'],
 ];
 

@@ -28,8 +28,6 @@
   IF_DECORATORS(MACRO_(addInitializer, addInitializer, "addInitializer"))      \
   MACRO_(allowContentIter, allowContentIter, "allowContentIter")               \
   MACRO_(allowContentIterWith, allowContentIterWith, "allowContentIterWith")   \
-  MACRO_(allowContentIterWithNext, allowContentIterWithNext,                   \
-         "allowContentIterWithNext")                                           \
   MACRO_(ambiguous, ambiguous, "ambiguous")                                    \
   MACRO_(anonymous, anonymous, "anonymous")                                    \
   MACRO_(Any, Any, "Any")                                                      \
@@ -334,8 +332,6 @@
   MACRO_(isSubsetOf, isSubsetOf, "isSubsetOf")                                 \
   MACRO_(isSupersetOf, isSupersetOf, "isSupersetOf")                           \
   MACRO_(IterableToList, IterableToList, "IterableToList")                     \
-  MACRO_(IteratorClose, IteratorClose, "IteratorClose")                        \
-  MACRO_(IteratorHelper, IteratorHelper, "Iterator Helper")                    \
   MACRO_(IteratorNext, IteratorNext, "IteratorNext")                           \
   MACRO_(iterate, iterate, "iterate")                                          \
   MACRO_(join, join, "join")                                                   \

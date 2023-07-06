@@ -1,8 +1,7 @@
 // |reftest| skip-if(!this.hasOwnProperty('Iterator'))
 
 class TestIterator extends Iterator {
-  next(value = "next value") {
-    assertEq(arguments.length, 0);
+  next(value) {
     return {done: false, value};
   }
 }
@@ -12,6 +11,7 @@ const methods = [
   iter => iter.filter(x => true),
   iter => iter.take(2),
   iter => iter.drop(0),
+  iter => iter.asIndexedPairs(),
 ];
 
 for (const outerMethod of methods) {
@@ -21,7 +21,11 @@ for (const outerMethod of methods) {
     iteratorChain.next();
     let result = iteratorChain.next('last value');
     assertEq(result.done, false);
-    assertEq(result.value, 'next value');
+    // Unwrap the asIndexedPair return values.
+    while (Array.isArray(result.value)) {
+      result.value = result.value[1];
+    }
+    assertEq(result.value, 'last value');
   }
 }
 

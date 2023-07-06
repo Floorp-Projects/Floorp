@@ -7,9 +7,8 @@ class Iter {
   }
 
   return(value) {
-    assertEq(arguments.length, 0);
     this.closed = true;
-    return { done: true, value: 42 };
+    return { done: true, value };
   }
 }
 
@@ -23,7 +22,7 @@ assertEq(result.value, 0);
 
 result = wrap.return(1);
 assertEq(result.done, true);
-assertEq(result.value, 42);
+assertEq(result.value, 1);
 
 assertEq(iter.closed, true);
 result = wrap.next();

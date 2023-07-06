@@ -1,7 +1,7 @@
 // |reftest| skip-if(!this.hasOwnProperty('Iterator')) -- Iterator is not enabled unconditionally
 class Iter {
   next(value) {
-    assertEq(arguments.length, 0);
+    this.v = value;
     return { done: false, value };
   }
 }
@@ -12,6 +12,7 @@ assertEq(iter !== wrap, true);
 
 assertEq(iter.v, undefined);
 wrap.next(1);
+assertEq(iter.v, 1);
 
 if (typeof reportCompare === 'function')
   reportCompare(0, 0);
