@@ -82,9 +82,8 @@ JSObject* OwnedRustBuffer::IntoArrayBuffer(JSContext* cx) {
   int32_t len = mBuf.len;
   void* data = mBuf.data;
   auto userData = MakeUnique<OwnedRustBuffer>(std::move(*this));
-  UniquePtr<void, JS::BufferContentsDeleter> dataPtr{
-      data, {&ArrayBufferFreeFunc, userData.release()}};
-  return JS::NewExternalArrayBuffer(cx, len, std::move(dataPtr));
+  return JS::NewExternalArrayBuffer(cx, len, data, &ArrayBufferFreeFunc,
+                                    userData.release());
 }
 
 void OwnedRustBuffer::ArrayBufferFreeFunc(void* contents, void* userData) {

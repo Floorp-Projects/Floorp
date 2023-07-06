@@ -1018,8 +1018,7 @@ void ArrayBufferObject::releaseData(JS::GCContext* gcx) {
       gcx->removeCellMemory(this, byteLength(), MemoryUse::ArrayBufferContents);
       break;
     case EXTERNAL:
-      MOZ_ASSERT(freeInfo()->freeFunc);
-      {
+      if (freeInfo()->freeFunc) {
         // The analyzer can't know for sure whether the embedder-supplied
         // free function will GC. We give the analyzer a hint here.
         // (Doing a GC in the free function is considered a programmer
@@ -1357,10 +1356,9 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
   } else if (contents.kind() == EXTERNAL) {
     // Store the FreeInfo in the inline data slots so that we
     // don't use up slots for it in non-refcounted array buffers.
-    constexpr size_t freeInfoSlots = HowMany(sizeof(FreeInfo), sizeof(Value));
-    static_assert(
-        reservedSlots + freeInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
-        "FreeInfo must fit in inline slots");
+    size_t freeInfoSlots = HowMany(sizeof(FreeInfo), sizeof(Value));
+    MOZ_ASSERT(reservedSlots + freeInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
+               "FreeInfo must fit in inline slots");
     nslots += freeInfoSlots;
   } else {
     // The ABO is taking ownership, so account the bytes against the zone.
@@ -1924,22 +1922,9 @@ JS_PUBLIC_API JSObject* JS::NewArrayBuffer(JSContext* cx, size_t nbytes) {
   return ArrayBufferObject::createZeroed(cx, nbytes);
 }
 
-JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(
-    JSContext* cx, size_t nbytes,
-    mozilla::UniquePtr<void, JS::FreePolicy> contents) {
-  auto* result = NewArrayBufferWithContents(
-      cx, nbytes, contents.get(),
-      JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory);
-  if (result) {
-    // If and only if an ArrayBuffer is successfully created, ownership of
-    // |contents| is transferred to the new ArrayBuffer.
-    (void)contents.release();
-  }
-  return result;
-}
-
-JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(
-    JSContext* cx, size_t nbytes, void* data, NewArrayBufferOutOfMemory) {
+JS_PUBLIC_API JSObject* JS::NewArrayBufferWithContents(JSContext* cx,
+                                                       size_t nbytes,
+                                                       void* data) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   MOZ_ASSERT_IF(!data, nbytes == 0);
@@ -1972,26 +1957,18 @@ JS_PUBLIC_API JSObject* JS::CopyArrayBuffer(JSContext* cx,
 }
 
 JS_PUBLIC_API JSObject* JS::NewExternalArrayBuffer(
-    JSContext* cx, size_t nbytes,
-    mozilla::UniquePtr<void, JS::BufferContentsDeleter> contents) {
+    JSContext* cx, size_t nbytes, void* data,
+    JS::BufferContentsFreeFunc freeFunc, void* freeUserData) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
 
-  MOZ_ASSERT(contents);
+  MOZ_ASSERT(data);
 
   using BufferContents = ArrayBufferObject::BufferContents;
 
-  BufferContents bufferContents = BufferContents::createExternal(
-      contents.get(), contents.get_deleter().freeFunc(),
-      contents.get_deleter().userData());
-  auto* result =
-      ArrayBufferObject::createForContents(cx, nbytes, bufferContents);
-  if (result) {
-    // If and only if an ArrayBuffer is successfully created, ownership of
-    // |contents| is transferred to the new ArrayBuffer.
-    (void)contents.release();
-  }
-  return result;
+  BufferContents contents =
+      BufferContents::createExternal(data, freeFunc, freeUserData);
+  return ArrayBufferObject::createForContents(cx, nbytes, contents);
 }
 
 JS_PUBLIC_API JSObject* JS::NewArrayBufferWithUserOwnedContents(JSContext* cx,
