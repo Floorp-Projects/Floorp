@@ -5241,8 +5241,8 @@ nsresult EventStateManager::SetClickCount(WidgetMouseEvent* aEvent,
     mouseDownInfo.mLastMouseDownContent =
         !aEvent->mClickEventPrevented ? mouseContent : nullptr;
 
-    if (HTMLInputElement* input =
-            HTMLInputElement::FromNodeOrNull(mouseDownInfo.mLastMouseDownContent)) {
+    if (HTMLInputElement* input = HTMLInputElement::FromNodeOrNull(
+            mouseDownInfo.mLastMouseDownContent)) {
       mouseDownInfo.mLastMouseDownInputControlType = Some(input->ControlType());
     }
   } else {
