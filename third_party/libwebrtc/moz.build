@@ -155,7 +155,6 @@ DIRS += [
     "/third_party/libwebrtc/media/media_channel_impl_gn",
     "/third_party/libwebrtc/media/media_constants_gn",
     "/third_party/libwebrtc/media/rid_description_gn",
-    "/third_party/libwebrtc/media/rtc_encoder_simulcast_proxy_gn",
     "/third_party/libwebrtc/media/rtc_media_base_gn",
     "/third_party/libwebrtc/media/rtc_media_config_gn",
     "/third_party/libwebrtc/media/rtc_simulcast_encoder_adapter_gn",
