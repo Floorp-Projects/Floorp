@@ -143,6 +143,7 @@ DIRS += [
     "/third_party/libwebrtc/logging/rtc_event_audio_gn",
     "/third_party/libwebrtc/logging/rtc_event_bwe_gn",
     "/third_party/libwebrtc/logging/rtc_event_field_gn",
+    "/third_party/libwebrtc/logging/rtc_event_log_parse_status_gn",
     "/third_party/libwebrtc/logging/rtc_event_number_encodings_gn",
     "/third_party/libwebrtc/logging/rtc_event_pacing_gn",
     "/third_party/libwebrtc/logging/rtc_event_rtp_rtcp_gn",
