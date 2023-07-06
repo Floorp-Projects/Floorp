@@ -9,6 +9,8 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/shopping/highlight-item.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/shopping/shopping-card.mjs";
 
 const { ShoppingUtils } = ChromeUtils.importESModule(
   "chrome://browser/content/shopping/ShoppingUtils.sys.mjs"
@@ -108,17 +110,14 @@ class ReviewHighlights extends MozLitElement {
       highlightsTemplate.push(highlightEl);
     }
     return html`
-      <link
-        rel="stylesheet"
-        href="chrome://browser/content/shopping/highlights.css"
-      />
-      <div id="review-highlights-wrapper">
-        <h2
-          id="review-highlights-heading"
-          data-l10n-id="shopping-highlights-heading"
-        ></h2>
-        <dl id="review-highlights-list">${highlightsTemplate}</dl>
-      </div>
+      <shopping-card
+        data-l10n-id="shopping-highlights-label"
+        data-l10n-attrs="label"
+      >
+        <div slot="content" id="review-highlights-wrapper">
+          <dl id="review-highlights-list">${highlightsTemplate}</dl>
+        </div>
+      </shopping-card>
     `;
   }
 }

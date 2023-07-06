@@ -10,7 +10,8 @@ shopping-page-title = { -brand-product-name } Shopping
 
 ## Strings for the product review snippets card
 
-shopping-highlights-heading = Snippets from recent reviews
+shopping-highlights-label =
+  .label = Snippets from recent reviews
 
 shopping-highlight-price = Price
 shopping-highlight-quality = Quality
