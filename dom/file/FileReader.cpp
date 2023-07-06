@@ -201,7 +201,11 @@ void FileReader::OnLoadEndArrayBuffer() {
 
   JSContext* cx = jsapi.cx();
 
-  mResultArrayBuffer = JS::NewArrayBufferWithContents(cx, mDataLen, mFileData);
+  // |mFileData| will be deallocated in FileReader's destructor when this
+  // ArrayBuffer allocation failed.
+  mResultArrayBuffer = JS::NewArrayBufferWithContents(
+      cx, mDataLen, mFileData,
+      JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory);
   if (mResultArrayBuffer) {
     mFileData = nullptr;  // Transfer ownership
     FreeDataAndDispatchSuccess();
