@@ -87,6 +87,11 @@ interface FeatureSettingsHelper {
      */
     var isUnifiedSearchEnabled: Boolean
 
+    /**
+     * Enable or disable the Unified search settings feature.
+     */
+    var newSearchSettingsEnabled: Boolean
+
     fun applyFlagUpdates()
 
     fun resetAllFeatureFlags()

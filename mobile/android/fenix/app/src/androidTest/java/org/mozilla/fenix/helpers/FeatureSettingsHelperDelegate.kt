@@ -58,6 +58,7 @@ class FeatureSettingsHelperDelegate() : FeatureSettingsHelper {
         }
 
     override var isUnifiedSearchEnabled: Boolean by updatedFeatureFlags::isUnifiedSearchEnabled
+    override var newSearchSettingsEnabled: Boolean by updatedFeatureFlags::newSearchSettingsEnabled
     override var isPocketEnabled: Boolean by updatedFeatureFlags::isPocketEnabled
     override var isJumpBackInCFREnabled: Boolean by updatedFeatureFlags::isJumpBackInCFREnabled
     override var isWallpaperOnboardingEnabled: Boolean by updatedFeatureFlags::isWallpaperOnboardingEnabled

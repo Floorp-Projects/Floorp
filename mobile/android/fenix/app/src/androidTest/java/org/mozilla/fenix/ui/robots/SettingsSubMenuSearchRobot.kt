@@ -8,11 +8,13 @@ package org.mozilla.fenix.ui.robots
 
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withClassName
@@ -30,6 +32,7 @@ import org.hamcrest.Matchers.endsWith
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.getStringResource
@@ -38,87 +41,133 @@ import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.isChecked
+import org.mozilla.fenix.helpers.isEnabled
 
 /**
  * Implementation of Robot Pattern for the settings search sub menu.
  */
 class SettingsSubMenuSearchRobot {
-    fun verifySearchToolbar() = assertSearchToolbar()
-    fun verifyDefaultSearchEngineHeader() = assertDefaultSearchEngineHeader()
-    fun verifySearchEngineList() = assertSearchEngineList()
-
-    fun verifyShowSearchSuggestions() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Show search suggestions")),
+    fun verifySearchSettingsToolbar() {
+        onView(
+            allOf(
+                withId(R.id.navigationToolbar),
+                hasDescendant(withContentDescription(R.string.action_bar_up_description)),
+                hasDescendant(withText(R.string.preferences_search)),
             ),
-        )
-        onView(withText("Show search suggestions"))
+        ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    }
+
+    fun verifySearchEnginesSectionHeader() {
+        onView(withText("Search Engines")).check(matches(isDisplayed()))
+    }
+
+    fun verifyDefaultSearchEngineHeader() {
+        defaultSearchEngineHeader
             .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     }
 
-    fun verifyShowSearchShortcuts() = assertShowSearchShortcuts()
-
-    fun verifyShowClipboardSuggestionsDefault() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText(getStringResource(R.string.preferences_show_clipboard_suggestions))),
-            ),
-        )
-        onView(withText(getStringResource(R.string.preferences_show_clipboard_suggestions)))
-            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-            .check(matches(hasCousin(allOf(withClassName(endsWith("Switch")), isChecked(true)))))
+    fun verifyDefaultSearchEngineSummary(engineName: String) {
+        defaultSearchEngineHeader.check(matches(hasSibling(withText(engineName))))
     }
 
-    fun toggleClipboardSuggestion() {
-        onView(withText(getStringResource(R.string.preferences_show_clipboard_suggestions)))
-            .click()
+    fun verifyManageSearchShortcutsHeader() {
+        manageSearchShortcutsHeader.check(matches(isDisplayed()))
     }
 
-    fun verifySearchBrowsingHistory() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Search browsing history")),
-            ),
-        )
-        searchHistoryToggle
+    fun verifyManageShortcutsSummary() {
+        manageSearchShortcutsHeader
+            .check(matches(hasSibling(withText("Edit engines visible in the search menu"))))
+    }
+
+    fun verifyAddressBarSectionHeader() {
+        onView(withText("Address bar")).check(matches(isDisplayed()))
+    }
+
+    fun verifySearchEngineList() {
+        onView(withText("Google"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        onView(withText("Amazon.com"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        onView(withText("Bing"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        onView(withText("DuckDuckGo"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        onView(withText("Wikipedia"))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+        onView(withText("Add search engine"))
             .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
     }
 
-    fun verifySearchBookmarks() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Search bookmarks")),
-            ),
-        )
-        searchBookmarksToggle
+    fun verifyAutocompleteURlsIsEnabled(enabled: Boolean) {
+        autocompleteSwitchButton()
+            .check(matches(hasCousin(allOf(withClassName(endsWith("Switch")), isChecked(enabled)))))
+    }
+
+    fun verifyShowSearchSuggestionsEnabled(enabled: Boolean) {
+        showSearchSuggestionSwitchButton()
+            .check(matches(hasCousin(allOf(withClassName(endsWith("Switch")), isChecked(enabled)))))
+    }
+
+    fun verifyShowSearchSuggestionsInPrivateEnabled(enabled: Boolean) {
+        showSuggestionsInPrivateModeSwitch()
+            .check(
+                matches(
+                    hasSibling(
+                        withChild(
+                            allOf(
+                                withClassName(endsWith("CheckBox")),
+                                isChecked(enabled),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+    }
+
+    fun verifyShowClipboardSuggestionsEnabled(enabled: Boolean) {
+        showClipboardSuggestionSwitch()
             .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .check(matches(hasCousin(allOf(withClassName(endsWith("Switch")), isChecked(enabled)))))
+    }
+
+    fun verifySearchBrowsingHistoryEnabled(enabled: Boolean) {
+        searchHistorySwitchButton()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .check(matches(hasCousin(allOf(withClassName(endsWith("Switch")), isChecked(enabled)))))
+    }
+
+    fun verifySearchBookmarksEnabled(enabled: Boolean) {
+        searchBookmarksSwitchButton()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .check(matches(hasCousin(allOf(withClassName(endsWith("Switch")), isChecked(enabled)))))
+    }
+
+    fun verifySearchSyncedTabsEnabled(enabled: Boolean) {
+        searchSyncedTabsSwitchButton()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .check(matches(hasCousin(allOf(withClassName(endsWith("Switch")), isChecked(enabled)))))
+    }
+
+    fun verifyVoiceSearchEnabled(enabled: Boolean) {
+        voiceSearchSwitchButton()
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .check(matches(hasCousin(allOf(withClassName(endsWith("Switch")), isChecked(enabled)))))
+    }
+
+    fun openDefaultSearchEngineMenu() {
+        defaultSearchEngineHeader.click()
+    }
+
+    fun openManageShortcutsMenu() {
+        manageSearchShortcutsHeader.click()
     }
 
     fun changeDefaultSearchEngine(searchEngineName: String) =
         selectSearchEngine(searchEngineName)
 
-    fun toggleAutocomplete() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText(getStringResource(R.string.preferences_enable_autocomplete_urls))),
-            ),
-        )
+    fun toggleAutocomplete() = autocompleteSwitchButton().click()
 
-        onView(withText(getStringResource(R.string.preferences_enable_autocomplete_urls)))
-            .click()
-    }
-
-    fun toggleShowSearchSuggestions() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Show search suggestions")),
-            ),
-        )
-
-        onView(withText("Show search suggestions"))
-            .perform(click())
-    }
+    fun toggleShowSearchSuggestions() = showSearchSuggestionSwitchButton().click()
 
     fun toggleShowSearchShortcuts() =
         itemContainingText(getStringResource(R.string.preferences_show_search_engines))
@@ -128,58 +177,46 @@ class SettingsSubMenuSearchRobot {
             }
 
     fun toggleVoiceSearch() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Show voice search")),
-            ),
-        )
-        onView(withText("Show voice search")).perform(click())
+        voiceSearchSwitchButton().perform(click())
     }
 
-    fun switchSearchHistoryToggle() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Search browsing history")),
-            ),
-        )
-        searchHistoryToggle.click()
+    fun toggleClipboardSuggestion() {
+        showClipboardSuggestionSwitch().click()
     }
 
-    fun switchSearchBookmarksToggle() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText("Search bookmarks")),
-            ),
-        )
-        searchBookmarksToggle.click()
-    }
+    fun switchSearchHistoryToggle() = searchHistorySwitchButton().click()
 
-    fun toggleShowSuggestionsInPrivateSessions() {
-        onView(withId(androidx.preference.R.id.recycler_view)).perform(
-            RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-                hasDescendant(withText(getStringResource(R.string.preferences_show_search_suggestions_in_private))),
-            ),
-        )
-        onView(withText(getStringResource(R.string.preferences_show_search_suggestions_in_private)))
-            .click()
-    }
+    fun switchSearchBookmarksToggle() = searchBookmarksSwitchButton().click()
+
+    fun switchShowSuggestionsInPrivateSessionsToggle() = showSuggestionsInPrivateModeSwitch().click()
 
     fun openAddSearchEngineMenu() = addSearchEngineButton().click()
 
-    fun verifyAddSearchEngineList() = assertAddSearchEngineList()
-
-    fun verifyEngineListContains(searchEngineName: String) = assertEngineListContains(searchEngineName)
+    fun verifyEngineListContains(searchEngineName: String) {
+        assertTrue(itemWithText(searchEngineName).waitForExists(waitingTimeShort))
+    }
 
     fun verifyEngineListDoesNotContain(searchEngineName: String) = assertEngineListDoesNotContain(searchEngineName)
 
-    fun verifyDefaultSearchEngine(searchEngineName: String) = assertDefaultSearchEngine(searchEngineName)
+    fun verifyDefaultSearchEngine(searchEngineName: String) {
+        onView(
+            allOf(
+                withId(R.id.radio_button),
+                withParent(withChild(withText(searchEngineName))),
+            ),
+        ).check(matches(isChecked(true)))
+    }
 
     fun verifyThreeDotButtonIsNotDisplayed(searchEngineName: String) = assertThreeDotButtonIsNotDisplayed(searchEngineName)
 
     fun verifyAddSearchEngineListContains(vararg searchEngines: String) {
         for (searchEngine in searchEngines) {
-            assertEngineListContains(searchEngine)
+            onView(withId(R.id.search_engine_group)).check(matches(hasDescendant(withText(searchEngine))))
         }
+    }
+
+    fun verifySaveSearchEngineButtonEnabled(enabled: Boolean) {
+        addSearchEngineSaveButton().check(matches(isEnabled(enabled)))
     }
 
     fun saveNewSearchEngine() {
@@ -191,20 +228,10 @@ class SettingsSubMenuSearchRobot {
         )
     }
 
-    fun addNewSearchEngine(searchEngineName: String) {
-        selectSearchEngine(searchEngineName)
-        saveNewSearchEngine()
-    }
-
-    fun selectAddCustomSearchEngine() = onView(withText("Other")).click()
-
     fun typeCustomEngineDetails(engineName: String, engineURL: String) {
-        mDevice.findObject(By.res("$packageName:id/edit_engine_name")).clear()
-        mDevice.findObject(By.res("$packageName:id/edit_engine_name")).setText(engineName)
-        mDevice.findObject(By.res("$packageName:id/edit_search_string")).clear()
-        mDevice.findObject(By.res("$packageName:id/edit_search_string")).setText(engineURL)
-
         try {
+            mDevice.findObject(By.res("$packageName:id/edit_engine_name")).clear()
+            mDevice.findObject(By.res("$packageName:id/edit_engine_name")).text = engineName
             assertTrue(
                 mDevice.findObject(
                     UiSelector()
@@ -213,6 +240,8 @@ class SettingsSubMenuSearchRobot {
                 ).waitForExists(waitingTime),
             )
 
+            mDevice.findObject(By.res("$packageName:id/edit_search_string")).clear()
+            mDevice.findObject(By.res("$packageName:id/edit_search_string")).text = engineURL
             assertTrue(
                 mDevice.findObject(
                     UiSelector()
@@ -222,17 +251,13 @@ class SettingsSubMenuSearchRobot {
             )
         } catch (e: AssertionError) {
             println("The name or the search string were not set properly")
-
-            // Lets again set both name and search string
-            goBackButton().click()
-            openAddSearchEngineMenu()
-            selectAddCustomSearchEngine()
+//
+//            // Lets again set both name and search string
+//            goBackButton().click()
+//            openAddSearchEngineMenu()
 
             mDevice.findObject(By.res("$packageName:id/edit_engine_name")).clear()
             mDevice.findObject(By.res("$packageName:id/edit_engine_name")).setText(engineName)
-            mDevice.findObject(By.res("$packageName:id/edit_search_string")).clear()
-            mDevice.findObject(By.res("$packageName:id/edit_search_string")).setText(engineURL)
-
             assertTrue(
                 mDevice.findObject(
                     UiSelector()
@@ -241,6 +266,8 @@ class SettingsSubMenuSearchRobot {
                 ).waitForExists(waitingTime),
             )
 
+            mDevice.findObject(By.res("$packageName:id/edit_search_string")).clear()
+            mDevice.findObject(By.res("$packageName:id/edit_search_string")).setText(engineURL)
             assertTrue(
                 mDevice.findObject(
                     UiSelector()
@@ -305,47 +332,84 @@ fun searchSettingsScreen(interact: SettingsSubMenuSearchRobot.() -> Unit): Setti
     return SettingsSubMenuSearchRobot.Transition()
 }
 
-private fun assertSearchToolbar() =
-    onView(
-        allOf(
-            withId(R.id.navigationToolbar),
-            hasDescendant(withContentDescription(R.string.action_bar_up_description)),
-            hasDescendant(withText(R.string.preferences_search)),
-        ),
-    ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertDefaultSearchEngineHeader() =
+private val defaultSearchEngineHeader =
     onView(withText("Default search engine"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-private fun assertSearchEngineList() {
-    onView(withText("Google"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(withText("Amazon.com"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(withText("Bing"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(withText("DuckDuckGo"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(withText("Wikipedia"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-    onView(withText("Add search engine"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-}
+private val manageSearchShortcutsHeader = onView(withText("Manage search shortcuts"))
 
-private fun assertShowSearchShortcuts() {
+private fun searchHistorySwitchButton(): ViewInteraction {
     onView(withId(androidx.preference.R.id.recycler_view)).perform(
         RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
-            hasDescendant(withText("Show search engines")),
+            hasDescendant(withText("Search browsing history")),
         ),
     )
-    onView(withText("Show search engines"))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    return onView(withText("Search browsing history"))
 }
 
-private val searchHistoryToggle = onView(withText("Search browsing history"))
+private fun searchBookmarksSwitchButton(): ViewInteraction {
+    onView(withId(androidx.preference.R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText("Search bookmarks")),
+        ),
+    )
+    return onView(withText("Search bookmarks"))
+}
 
-private val searchBookmarksToggle = onView(withText("Search bookmarks"))
+private fun searchSyncedTabsSwitchButton(): ViewInteraction {
+    onView(withId(androidx.preference.R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText("Search synced tabs")),
+        ),
+    )
+    return onView(withText("Search synced tabs"))
+}
+
+private fun voiceSearchSwitchButton(): ViewInteraction {
+    onView(withId(androidx.preference.R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText("Show voice search")),
+        ),
+    )
+    return onView(withText("Show voice search"))
+}
+
+private fun autocompleteSwitchButton(): ViewInteraction {
+    onView(withId(androidx.preference.R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText(getStringResource(R.string.preferences_enable_autocomplete_urls))),
+        ),
+    )
+
+    return onView(withText(getStringResource(R.string.preferences_enable_autocomplete_urls)))
+}
+
+private fun showSearchSuggestionSwitchButton(): ViewInteraction {
+    onView(withId(androidx.preference.R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText("Show search suggestions")),
+        ),
+    )
+
+    return onView(withText("Show search suggestions"))
+}
+
+private fun showClipboardSuggestionSwitch(): ViewInteraction {
+    onView(withId(androidx.preference.R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText(getStringResource(R.string.preferences_show_clipboard_suggestions))),
+        ),
+    )
+    return onView(withText(getStringResource(R.string.preferences_show_clipboard_suggestions)))
+}
+
+private fun showSuggestionsInPrivateModeSwitch(): ViewInteraction {
+    onView(withId(androidx.preference.R.id.recycler_view)).perform(
+        RecyclerViewActions.scrollTo<RecyclerView.ViewHolder>(
+            hasDescendant(withText(getStringResource(R.string.preferences_show_search_suggestions_in_private))),
+        ),
+    )
+    return onView(withText(getStringResource(R.string.preferences_show_search_suggestions_in_private)))
+}
 
 private fun selectSearchEngine(searchEngine: String) {
     onView(withText(searchEngine))
@@ -358,25 +422,7 @@ private fun goBackButton() =
 
 private fun addSearchEngineButton() = onView(withText("Add search engine"))
 
-private fun assertAddSearchEngineList() {
-    onView(withText("Reddit")).check(matches(isDisplayed()))
-    onView(withText("YouTube")).check(matches(isDisplayed()))
-    onView(withText("Other")).check(matches(isDisplayed()))
-}
-
-private fun addSearchEngineSaveButton() = onView(withId(R.id.add_search_engine))
-
-private fun assertEngineListContains(searchEngineName: String) {
-    onView(withId(R.id.search_engine_group)).check(matches(hasDescendant(withText(searchEngineName))))
-}
-
-private fun assertDefaultSearchEngine(searchEngineName: String) =
-    onView(
-        allOf(
-            withId(R.id.radio_button),
-            withParent(withChild(withText(searchEngineName))),
-        ),
-    ).check(matches(isChecked(true)))
+private fun addSearchEngineSaveButton() = onView(withId(R.id.save_button))
 
 private fun assertEngineListDoesNotContain(searchEngineName: String) {
     onView(withId(R.id.search_engine_group)).check(matches(not(hasDescendant(withText(searchEngineName)))))
