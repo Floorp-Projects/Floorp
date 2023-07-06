@@ -61,7 +61,13 @@ class HistoryInView extends ViewPage {
 
   async updateHistoryData(newHistoryData) {
     if (!newHistoryData) {
-      this.allHistoryItems = await this.placesQuery.getHistory({ daysOld: 60 });
+      this.allHistoryItems = await this.placesQuery.getHistory({
+        daysOld: 60,
+        limit: Services.prefs.getIntPref(
+          "browser.firefox-view.max-history-rows",
+          -1
+        ),
+      });
     } else {
       this.allHistoryItems = newHistoryData;
       // Reset history maps before sorting, normalizing, and creating updated maps

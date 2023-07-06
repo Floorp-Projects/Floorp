@@ -63,11 +63,13 @@ export class PlacesQuery {
    *   Options to apply to the database query.
    * @param {number} [options.daysOld]
    *   The maximum number of days to go back in history.
+   * @param {number} [options.limit]
+   *   The maximum number of visits to return.
    * @returns {HistoryVisit[]}
    *   History visits obtained from the database query.
    */
-  async getHistory({ daysOld = 60 } = {}) {
-    const options = { daysOld };
+  async getHistory({ daysOld = 60, limit } = {}) {
+    const options = { daysOld, limit };
     const cacheInvalid =
       this.#cachedHistory == null ||
       !lazy.ObjectUtils.deepEqual(options, this.#cachedHistoryOptions);
@@ -75,6 +77,7 @@ export class PlacesQuery {
       this.#cachedHistory = [];
       this.#cachedHistoryOptions = options;
       const db = await lazy.PlacesUtils.promiseDBConnection();
+      const limitClause = limit > 0 ? `LIMIT ${limit}` : "";
       const sql = `SELECT v.id, visit_date, title, url, visit_type, from_visit, hidden
         FROM moz_historyvisits v
         JOIN moz_places h
@@ -82,7 +85,8 @@ export class PlacesQuery {
         WHERE visit_date >= (strftime('%s','now','localtime','start of day','-${Number(
           daysOld
         )} days','utc') * 1000000)
-        ORDER BY visit_date DESC`;
+        ORDER BY visit_date DESC
+        ${limitClause}`;
       const rows = await db.executeCached(sql);
       let lastUrl; // Avoid listing consecutive visits to the same URL.
       let lastRedirectFromVisitId; // Avoid listing redirecting visits.

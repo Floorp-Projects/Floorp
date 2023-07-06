@@ -98,3 +98,21 @@ add_task(async function test_filter_redirecting_visits() {
   await PlacesUtils.history.clear();
   placesQuery.close();
 });
+
+add_task(async function test_visits_limit_option() {
+  const placesQuery = new PlacesQuery();
+  await PlacesUtils.history.insertMany([
+    {
+      url: "https://www.example.com/",
+      visits: [{ date: new Date() }],
+    },
+    {
+      url: "https://example.net/",
+      visits: [{ date: new Date() }],
+    },
+  ]);
+  const history = await placesQuery.getHistory({ limit: 1 });
+  Assert.equal(history.length, 1, "Number of visits should be limited to 1.");
+  await PlacesUtils.history.clear();
+  placesQuery.close();
+});
