@@ -172,65 +172,33 @@ void Pickle::CopyFrom(const Pickle& other) {
 }
 
 bool Pickle::ReadBool(PickleIterator* iter, bool* result) const {
-  DCHECK(iter);
-
   int tmp;
-  if (!ReadInt(iter, &tmp)) return false;
+  if (!ReadScalar(iter, &tmp)) return false;
+
   DCHECK(0 == tmp || 1 == tmp);
   *result = tmp ? true : false;
+
   return true;
 }
 
 bool Pickle::ReadInt16(PickleIterator* iter, int16_t* result) const {
-  DCHECK(iter);
-
-  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
-    return ReadBytesInto(iter, result, sizeof(*result));
-
-  iter->CopyInto(result);
-
-  UpdateIter(iter, sizeof(*result));
-  return true;
+  return ReadScalar(iter, result);
 }
 
 bool Pickle::ReadUInt16(PickleIterator* iter, uint16_t* result) const {
-  DCHECK(iter);
-
-  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
-    return ReadBytesInto(iter, result, sizeof(*result));
-
-  iter->CopyInto(result);
-
-  UpdateIter(iter, sizeof(*result));
-  return true;
+  return ReadScalar(iter, result);
 }
 
 bool Pickle::ReadInt(PickleIterator* iter, int* result) const {
-  DCHECK(iter);
-
-  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
-    return ReadBytesInto(iter, result, sizeof(*result));
-
-  iter->CopyInto(result);
-
-  UpdateIter(iter, sizeof(*result));
-  return true;
+  return ReadScalar(iter, result);
 }
 
 // Always written as a 64-bit value since the size for this type can
 // differ between architectures.
 bool Pickle::ReadLong(PickleIterator* iter, long* result) const {
-  DCHECK(iter);
+  int64_t big_result;
+  if (!ReadScalar(iter, &big_result)) return false;
 
-  int64_t big_result = 0;
-  if (IteratorHasRoomFor(*iter, sizeof(big_result))) {
-    iter->CopyInto(&big_result);
-    UpdateIter(iter, sizeof(big_result));
-  } else {
-    if (!ReadBytesInto(iter, &big_result, sizeof(big_result))) {
-      return false;
-    }
-  }
   DCHECK(big_result <= LONG_MAX && big_result >= LONG_MIN);
   *result = static_cast<long>(big_result);
 
@@ -240,17 +208,8 @@ bool Pickle::ReadLong(PickleIterator* iter, long* result) const {
 // Always written as a 64-bit value since the size for this type can
 // differ between architectures.
 bool Pickle::ReadULong(PickleIterator* iter, unsigned long* result) const {
-  DCHECK(iter);
-
-  uint64_t big_result = 0;
-  if (IteratorHasRoomFor(*iter, sizeof(big_result))) {
-    iter->CopyInto(&big_result);
-    UpdateIter(iter, sizeof(big_result));
-  } else {
-    if (!ReadBytesInto(iter, &big_result, sizeof(big_result))) {
-      return false;
-    }
-  }
+  uint64_t big_result;
+  if (!ReadScalar(iter, &big_result)) return false;
   DCHECK(big_result <= ULONG_MAX);
   *result = static_cast<unsigned long>(big_result);
 
@@ -258,68 +217,28 @@ bool Pickle::ReadULong(PickleIterator* iter, unsigned long* result) const {
 }
 
 bool Pickle::ReadLength(PickleIterator* iter, int* result) const {
-  if (!ReadInt(iter, result)) return false;
+  if (!ReadScalar(iter, result)) return false;
   return ((*result) >= 0);
 }
 
 bool Pickle::ReadInt32(PickleIterator* iter, int32_t* result) const {
-  DCHECK(iter);
-
-  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
-    return ReadBytesInto(iter, result, sizeof(*result));
-
-  iter->CopyInto(result);
-
-  UpdateIter(iter, sizeof(*result));
-  return true;
+  return ReadScalar(iter, result);
 }
 
 bool Pickle::ReadUInt32(PickleIterator* iter, uint32_t* result) const {
-  DCHECK(iter);
-
-  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
-    return ReadBytesInto(iter, result, sizeof(*result));
-
-  iter->CopyInto(result);
-
-  UpdateIter(iter, sizeof(*result));
-  return true;
+  return ReadScalar(iter, result);
 }
 
 bool Pickle::ReadInt64(PickleIterator* iter, int64_t* result) const {
-  DCHECK(iter);
-
-  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
-    return ReadBytesInto(iter, result, sizeof(*result));
-
-  iter->CopyInto(result);
-
-  UpdateIter(iter, sizeof(*result));
-  return true;
+  return ReadScalar(iter, result);
 }
 
 bool Pickle::ReadUInt64(PickleIterator* iter, uint64_t* result) const {
-  DCHECK(iter);
-
-  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
-    return ReadBytesInto(iter, result, sizeof(*result));
-
-  iter->CopyInto(result);
-
-  UpdateIter(iter, sizeof(*result));
-  return true;
+  return ReadScalar(iter, result);
 }
 
 bool Pickle::ReadDouble(PickleIterator* iter, double* result) const {
-  DCHECK(iter);
-
-  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
-    return ReadBytesInto(iter, result, sizeof(*result));
-
-  iter->CopyInto(result);
-
-  UpdateIter(iter, sizeof(*result));
-  return true;
+  return ReadScalar(iter, result);
 }
 
 // Always written as a 64-bit value since the size for this type can
@@ -327,15 +246,8 @@ bool Pickle::ReadDouble(PickleIterator* iter, double* result) const {
 bool Pickle::ReadIntPtr(PickleIterator* iter, intptr_t* result) const {
   DCHECK(iter);
 
-  int64_t big_result = 0;
-  if (IteratorHasRoomFor(*iter, sizeof(big_result))) {
-    iter->CopyInto(&big_result);
-    UpdateIter(iter, sizeof(big_result));
-  } else {
-    if (!ReadBytesInto(iter, &big_result, sizeof(big_result))) {
-      return false;
-    }
-  }
+  int64_t big_result;
+  if (!ReadScalar(iter, &big_result)) return false;
 
   DCHECK(big_result <= std::numeric_limits<intptr_t>::max() &&
          big_result >= std::numeric_limits<intptr_t>::min());
@@ -346,15 +258,7 @@ bool Pickle::ReadIntPtr(PickleIterator* iter, intptr_t* result) const {
 
 bool Pickle::ReadUnsignedChar(PickleIterator* iter,
                               unsigned char* result) const {
-  DCHECK(iter);
-
-  if (!IteratorHasRoomFor(*iter, sizeof(*result)))
-    return ReadBytesInto(iter, result, sizeof(*result));
-
-  iter->CopyInto(result);
-
-  UpdateIter(iter, sizeof(*result));
-  return true;
+  return ReadScalar(iter, result);
 }
 
 bool Pickle::ReadString(PickleIterator* iter, std::string* result) const {
@@ -414,7 +318,7 @@ bool Pickle::IgnoreBytes(PickleIterator* iter, uint32_t length) const {
 MOZ_NEVER_INLINE
 bool Pickle::ReadSentinel(PickleIterator* iter, uint32_t sentinel) const {
   uint32_t found;
-  if (!ReadUInt32(iter, &found)) {
+  if (!ReadScalar(iter, &found)) {
     return false;
   }
   return found == sentinel;
