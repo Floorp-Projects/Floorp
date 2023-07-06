@@ -75,7 +75,7 @@ ContentCompositorBridgeParent::AllocPAPZCTreeManagerParent(
     // retain a reference to itself, through the checkerboard observer.
     LayersId dummyId{0};
     const bool connectedToWebRender = false;
-    RefPtr<APZCTreeManager> temp = new APZCTreeManager(dummyId);
+    RefPtr<APZCTreeManager> temp = APZCTreeManager::Create(dummyId);
     RefPtr<APZUpdater> tempUpdater = new APZUpdater(temp, connectedToWebRender);
     tempUpdater->ClearTree(dummyId);
     return new APZCTreeManagerParent(aLayersId, temp, tempUpdater);
