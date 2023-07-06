@@ -16,6 +16,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ThemeVariableMap: "resource:///modules/ThemeVariableMap.sys.mjs",
 });
 
+const {AddonManager} = ChromeUtils.import(
+  "resource://gre/modules/AddonManager.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  lazy,
+  "BuiltInThemeConfig",
+  "resource:///modules/BuiltInThemeConfig.jsm",
+);
+
 // Whether the content and chrome areas should always use the same color
 // scheme (unless user-overridden). Thunderbird uses this.
 XPCOMUtils.defineLazyPreferenceGetter(
@@ -168,11 +177,26 @@ export function LightweightThemeConsumer(aDocument) {
   );
   this._update(LightweightThemeManager.themeData);
 
+  Services.prefs.addObserver("floorp.dualtheme.theme",this.dual_obs.bind(this))
+  Services.prefs.addObserver("floorp.enable.dualtheme",this.dual_obs.bind(this))
+  Services.prefs.addObserver("extensions.experiments.enabled",this.dual_obs.bind(this))
+
   this._win.addEventListener("unload", this, { once: true });
 }
 
 LightweightThemeConsumer.prototype = {
   _lastData: null,
+  dualtheme_count_url:0,
+  protocolHandler: Services.io
+    .getProtocolHandler("resource")
+    .QueryInterface(Ci.nsIResProtocolHandler),
+
+  dual_obs(){
+    const { LightweightThemeManager } = ChromeUtils.import(
+      "resource://gre/modules/LightweightThemeManager.jsm"
+    );
+    this._update(LightweightThemeManager.themeData);
+  },
 
   observe(aSubject, aTopic, aData) {
     if (aTopic != "lightweight-theme-styling-update") {
@@ -206,7 +230,13 @@ LightweightThemeConsumer.prototype = {
     }
   },
 
-  _update(themeData) {
+  async _update(themeData_) {
+    let themeData
+    if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
+      themeData = JSON.parse(JSON.stringify(themeData_))
+    }else{
+      themeData = themeData_;
+    }
     this._lastData = themeData;
 
     const hasDarkTheme = !!themeData.darkTheme;
@@ -257,6 +287,244 @@ LightweightThemeConsumer.prototype = {
     if (!theme) {
       theme = { id: DEFAULT_THEME_ID };
     }
+
+    if(Services.prefs.getBoolPref("floorp.enable.dualtheme", false)){
+      let kaonasi_dual_theme = []
+      try {
+        kaonasi_dual_theme = JSON.parse(Services.prefs.getStringPref("floorp.dualtheme.theme"))
+      } catch (e) {
+        kaonasi_dual_theme = "error"
+      }
+      if(kaonasi_dual_theme != "error"){
+        let dualtheme_data = {}
+        let dualtheme_experiment = {}
+        let jsondata = {}
+        let theme_path = ""
+        for (let elem of kaonasi_dual_theme){
+          if(lazy.BuiltInThemeConfig.has(elem)){
+            theme_path = lazy.BuiltInThemeConfig.get(elem).path
+            let res = await fetch(theme_path + "manifest.json")
+            jsondata = await res.json()
+            dualtheme_data = (useDarkTheme && !!jsondata.dark_theme) ? jsondata.dark_theme : jsondata.theme;
+            dualtheme_experiment = jsondata.theme_experiment
+          }
+          else{
+            let addon = await AddonManager.getAddonByID(elem)
+            this.protocolHandler.setSubstitution("j" + this.dualtheme_count_url , Services.io.newURI(addon.getResourceURI().displaySpec, null, null));
+            theme_path = `resource://j${this.dualtheme_count_url}/`
+            this.dualtheme_count_url += 1
+            let res = await fetch(`${theme_path}manifest.json`)
+            jsondata = await res.json()
+            dualtheme_data = (useDarkTheme && !!jsondata.dark_theme) ? jsondata.dark_theme : jsondata.theme;
+            dualtheme_experiment = jsondata.theme_experiment
+          }
+          if(dualtheme_data.colors != undefined){
+            for (let color of Object.keys(dualtheme_data.colors)) {
+              let val = dualtheme_data.colors[color];
+              if (!val) {
+                continue;
+              }
+              let cssColor = val;
+              if (Array.isArray(val)) {
+                cssColor =
+                    "rgb" + (val.length > 3 ? "a" : "") + "(" + val.join(",") + ")";
+              }
+              switch (color) {
+                case "frame":
+                  if (!theme.accentcolor) theme.accentcolor = cssColor;
+                  break;
+                case "frame_inactive":
+                  if (!theme.accentcolorInactive) theme.accentcolorInactive = cssColor;
+                  break;
+                case "tab_background_text":
+                  if (!theme.textcolor) theme.textcolor = cssColor;
+                  break;
+                case "toolbar":
+                  if (!theme.toolbarColor) theme.toolbarColor = cssColor;
+                  break;
+                case "toolbar_text":
+                case "bookmark_text":
+                  if (!theme.toolbar_text) theme.toolbar_text = cssColor;
+                  break;
+                case "icons":
+                  if (!theme.icon_color) theme.icon_color = cssColor;
+                  break;
+                case "icons_attention":
+                  if (!theme.icon_attention_color) theme.icon_attention_color = cssColor;
+                  break;
+                case "tab_background_separator":
+                case "tab_loading":
+                case "tab_text":
+                case "tab_line":
+                case "tab_selected":
+                case "toolbar_field":
+                case "toolbar_field_text":
+                case "toolbar_field_border":
+                case "toolbar_field_focus":
+                case "toolbar_field_text_focus":
+                case "toolbar_field_border_focus":
+                case "toolbar_top_separator":
+                case "toolbar_bottom_separator":
+                case "toolbar_vertical_separator":
+                case "button_background_hover":
+                case "button_background_active":
+                case "popup":
+                case "popup_text":
+                case "popup_border":
+                case "popup_highlight":
+                case "popup_highlight_text":
+                case "ntp_background":
+                case "ntp_card_background":
+                case "ntp_text":
+                case "sidebar":
+                case "sidebar_border":
+                case "sidebar_text":
+                case "sidebar_highlight":
+                case "sidebar_highlight_text":
+                case "toolbar_field_highlight":
+                case "toolbar_field_highlight_text":
+                  if (!theme[color]) theme[color] = cssColor;
+                  break;
+                default:
+                  if (
+                    (lazy.BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false)) &&
+                    dualtheme_experiment &&
+                    dualtheme_experiment.colors &&
+                    color in dualtheme_experiment.colors
+                  ) {
+                    let color_experiment = color
+                    if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"colors":{}}
+                    if(!("colors" in themeData.experiment && themeData.experiment != null && themeData.experiment.colors != null)) themeData.experiment.colors = {}
+                    if("experimental" in theme && "colors" in theme.experimental){
+                      while(color_experiment in themeData.experiment.colors || color_experiment in theme.experimental.colors){
+                        color_experiment += "_"
+                      }
+                    }
+                    if(!("experimental" in theme)) theme.experimental = {}
+                    theme.experimental.colors = { [color_experiment]:cssColor , ...theme.experimental.colors }
+                    themeData.experiment.colors[color_experiment] = dualtheme_experiment.colors[color]
+                  }
+                  break;
+              }
+            }
+          }
+  
+          if(dualtheme_data.images != undefined){
+            for (let image of Object.keys(dualtheme_data.images)) {
+              let val = dualtheme_data.images[image];
+              if (!val) {
+                continue;
+              }
+              switch (image) {
+                case "additional_backgrounds": {
+                  let backgroundImages = val.map(img => (new URL(img.slice(0,2) != "./" ? img : "./" + img,theme_path)).href);
+                  if (!theme.additionalBackgrounds) theme.additionalBackgrounds = backgroundImages;
+                  break;
+                }
+                case "theme_frame": {
+                  if(val.slice(0,2) != "./") val = "./" + val
+                  let resolvedURL = (new URL(val,theme_path)).href;
+                  if (!theme.headerURL) theme.headerURL = resolvedURL;
+                  break;
+                }
+                default: {
+                  if (
+                    (lazy.BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false)) &&
+                    dualtheme_experiment &&
+                    dualtheme_experiment.images &&
+                    image in dualtheme_experiment.images
+                  ) {
+                    let image_experiment = image
+                    if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"images":{}}
+                    if(!("images" in themeData.experiment && themeData.experiment != null && themeData.experiment.images != null)) themeData.experiment.images = {}
+                    if("experimental" in theme && "images" in theme.experimental){
+                      while(image_experiment in themeData.experiment.images || image_experiment in theme.experimental.images){
+                        image_experiment += "_"
+                      }
+                    }
+                    if(!("experimental" in theme)) theme.experimental = {}
+                    if(val.slice(0,2) != "./") val = "./" + val
+                    theme.experimental.images = { [image_experiment]:(new URL(val,theme_path)).href , ...theme.experimental.images }
+                    themeData.experiment.images[image_experiment] = dualtheme_experiment.images[image]
+                  }
+                  break;
+                }
+              }
+            }
+          }
+          if(dualtheme_data.properties != undefined){
+            let additionalBackgroundsCount =
+              (theme.additionalBackgrounds && theme.additionalBackgrounds.length) || 0;
+            const assertValidAdditionalBackgrounds = (property, valueCount) => {
+              if (!additionalBackgroundsCount) {
+                return false;
+              }
+              return true;
+            }
+            for (let property of Object.getOwnPropertyNames(dualtheme_data.properties)) {
+              let val = dualtheme_data.properties[property];
+              if (!val) {
+                continue;
+              }
+              switch (property) {
+                case "additional_backgrounds_alignment": {
+                  if (!assertValidAdditionalBackgrounds(property, val.length)) {
+                    break;
+                  }
+  
+                  if (!theme.backgroundsAlignment) theme.backgroundsAlignment = val.join(",");
+                  break;
+                }
+                case "additional_backgrounds_tiling": {
+                  if (!assertValidAdditionalBackgrounds(property, val.length)) {
+                    break;
+                  }
+                  let tiling = [];
+                  for (let i = 0, l = theme.additionalBackgrounds.length; i < l; ++i) {
+                    tiling.push(val[i] || "no-repeat");
+                  }
+                  if (!theme.backgroundsTiling) theme.backgroundsTiling = tiling.join(",");
+                  break;
+                }
+                case "color_scheme":
+                case "content_color_scheme": {
+                  if (!theme[property]) theme[property] = val;
+                  break;
+                }
+                default: {
+                  if (
+                    (lazy.BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false)) &&
+                    dualtheme_experiment &&
+                    dualtheme_experiment.properties &&
+                    property in dualtheme_experiment.properties
+                  ) {
+                    let property_experiment = property
+                    if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"properties":{}}
+                    if(!("properties" in themeData.experiment && themeData.experiment != null && themeData.experiment.properties != null)) themeData.experiment.properties = {}
+                    if("experimental" in theme && "properties" in theme.experimental){
+                      while(property_experiment in themeData.experiment.properties || property_experiment in theme.experimental.properties){
+                        property_experiment += "_"
+                      }
+                    }
+                    if(!("experimental" in theme)) theme.experimental = {}
+                    theme.experimental.properties = { [property_experiment]:val , ...theme.experimental.properties }
+                    themeData.experiment.properties[property_experiment] = dualtheme_experiment.properties[property]
+                  }
+                  break;
+                }
+              }
+            }
+          }
+          if(dualtheme_experiment != undefined && dualtheme_experiment.stylesheet != undefined && dualtheme_experiment.stylesheet != null && (lazy.BuiltInThemeConfig.has(elem) || Services.prefs.getBoolPref("extensions.experiments.enabled",false))) {
+            let val = dualtheme_experiment.stylesheet;
+            if(val.slice(0,2) != "./") val = "./" + val
+            if(!("experiment" in themeData && themeData != null)) themeData.experiment = {"dual_stylesheets":[]}
+            if(!("dual_stylesheets" in themeData.experiment && themeData.experiment != null)) themeData.experiment.dual_stylesheets = []
+            themeData.experiment.dual_stylesheets.unshift((new URL(val,theme_path)).href)
+            }
+          }
+        }
+      }
 
     let active = (this._active = Object.keys(theme).length);
 
@@ -315,7 +583,10 @@ LightweightThemeConsumer.prototype = {
   _setExperiment(active, experiment, properties) {
     const root = this._doc.documentElement;
     if (this._lastExperimentData) {
-      const { stylesheet, usedVariables } = this._lastExperimentData;
+      const { stylesheet, dual_stylesheets, usedVariables } = this._lastExperimentData;
+      if (dual_stylesheets) {
+        dual_stylesheets.forEach(elem => elem.remove());
+      }
       if (stylesheet) {
         stylesheet.remove();
       }
@@ -362,6 +633,20 @@ LightweightThemeConsumer.prototype = {
       _setProperty(root, true, variable, value);
     }
     this._lastExperimentData.usedVariables = usedVariables;
+
+    if (experiment.dual_stylesheets && experiment.dual_stylesheets.length != 0) {
+      for( let elem of experiment.dual_stylesheets ) {
+              /* Stylesheet URLs are validated using WebExtension schemas */
+      let stylesheetAttr = `href="${elem}" type="text/css"`;
+      let stylesheet = this._doc.createProcessingInstruction(
+        "xml-stylesheet",
+        stylesheetAttr
+      );
+      this._doc.insertBefore(stylesheet, root);
+      if(this._lastExperimentData.dual_stylesheets == undefined) this._lastExperimentData.dual_stylesheets = []
+      this._lastExperimentData.dual_stylesheets.push(stylesheet)
+      }
+    }
 
     if (experiment.stylesheet) {
       /* Stylesheet URLs are validated using WebExtension schemas */

@@ -7194,7 +7194,11 @@
 # Whether we attempt to decode JXL images or not.
 - name: image.jxl.enabled
   type: RelaxedAtomicBool
+#if defined(MOZ_JXL)
+  value: true
+#else
   value: false
+#endif
   mirror: always
 
 #---------------------------------------------------------------------------

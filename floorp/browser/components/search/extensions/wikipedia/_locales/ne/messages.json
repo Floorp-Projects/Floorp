@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "विकिपीडिया (ne)"
+  },
+  "extensionDescription": {
+    "message": "विकिपिडिया एक स्वतन्त्र विश्वकोष"
+  },
+  "searchUrl": {
+    "message": "https://ne.wikipedia.org/wiki/विशेष:Search"
+  },
+  "searchForm": {
+    "message": "https://ne.wikipedia.org/wiki/विशेष:Search?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://ne.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

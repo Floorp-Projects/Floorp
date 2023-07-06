@@ -378,7 +378,7 @@ static void ConvertMissingSymbolFile(const MissingSymbolInfo &missing_info,
     // symbol server when crashes occur in Google extension code hosted by a
     // Firefox process.
     if (_stricmp(code_extension.c_str(), ".exe") == 0 &&
-        _stricmp(missing_info.code_file.c_str(), "firefox.exe") != 0) {
+        _stricmp(missing_info.code_file.c_str(), "floorp.exe") != 0) {
       is_exe = true;
     }
   }
