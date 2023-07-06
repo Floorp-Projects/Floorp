@@ -992,6 +992,12 @@ bool SchemeIsViewSource(nsIURI* aURI);
 bool SchemeIsResource(nsIURI* aURI);
 bool SchemeIsFTP(nsIURI* aURI);
 
+// Helper functions for SetProtocol methods to follow
+// step 2.1 in https://url.spec.whatwg.org/#scheme-state
+bool SchemeIsSpecial(const nsACString&);
+bool IsSchemeChangePermitted(nsIURI*, const nsACString&);
+already_AddRefed<nsIURI> TryChangeProtocol(nsIURI*, const nsAString&);
+
 struct LinkHeader {
   nsString mHref;
   nsString mRel;

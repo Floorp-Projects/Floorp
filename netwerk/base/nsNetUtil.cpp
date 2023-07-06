@@ -3363,6 +3363,102 @@ bool SchemeIsFTP(nsIURI* aURI) {
   return aURI->SchemeIs("ftp");
 }
 
+bool SchemeIsSpecial(const nsACString& aScheme) {
+  // See https://url.spec.whatwg.org/#special-scheme
+  return aScheme.EqualsIgnoreCase("ftp") || aScheme.EqualsIgnoreCase("file") ||
+         aScheme.EqualsIgnoreCase("http") ||
+         aScheme.EqualsIgnoreCase("https") || aScheme.EqualsIgnoreCase("ws") ||
+         aScheme.EqualsIgnoreCase("wss");
+}
+
+bool IsSchemeChangePermitted(nsIURI* aOldURI, const nsACString& newScheme) {
+  // See step 2.1 in https://url.spec.whatwg.org/#special-scheme
+  // Note: The spec text uses "buffer" instead of newScheme, and "url"
+  MOZ_ASSERT(aOldURI);
+
+  nsAutoCString tmp;
+  nsresult rv = aOldURI->GetScheme(tmp);
+  // If url's scheme is a special scheme and buffer is not a
+  // special scheme, then return.
+  // If url's scheme is not a special scheme and buffer is a
+  // special scheme, then return.
+  if (NS_FAILED(rv) || SchemeIsSpecial(tmp) != SchemeIsSpecial(newScheme)) {
+    return false;
+  }
+
+  // If url's scheme is "file" and its host is an empty host, then return.
+  if (aOldURI->SchemeIs("file")) {
+    rv = aOldURI->GetHost(tmp);
+    if (NS_FAILED(rv) || tmp.IsEmpty()) {
+      return false;
+    }
+  }
+
+  // URL Spec: If url includes credentials or has a non-null port, and
+  // buffer is "file", then return.
+  if (newScheme.EqualsIgnoreCase("file")) {
+    rv = aOldURI->GetUsername(tmp);
+    if (NS_FAILED(rv) || !tmp.IsEmpty()) {
+      return false;
+    }
+    rv = aOldURI->GetPassword(tmp);
+    if (NS_FAILED(rv) || !tmp.IsEmpty()) {
+      return false;
+    }
+    int32_t port;
+    rv = aOldURI->GetPort(&port);
+    if (NS_FAILED(rv) || port != -1) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+already_AddRefed<nsIURI> TryChangeProtocol(nsIURI* aURI,
+                                           const nsAString& aProtocol) {
+  MOZ_ASSERT(aURI);
+
+  nsAString::const_iterator start;
+  aProtocol.BeginReading(start);
+
+  nsAString::const_iterator end;
+  aProtocol.EndReading(end);
+
+  nsAString::const_iterator iter(start);
+  FindCharInReadable(':', iter, end);
+
+  // Changing the protocol of a URL, changes the "nature" of the URI
+  // implementation. In order to do this properly, we have to serialize the
+  // existing URL and reparse it in a new object.
+  nsCOMPtr<nsIURI> clone;
+  nsresult rv = NS_MutateURI(aURI)
+                    .SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)))
+                    .Finalize(clone);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  nsAutoCString newScheme;
+  rv = clone->GetScheme(newScheme);
+  if (NS_FAILED(rv) || !net::IsSchemeChangePermitted(aURI, newScheme)) {
+    return nullptr;
+  }
+
+  nsAutoCString href;
+  rv = clone->GetSpec(href);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  RefPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), href);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+  return uri.forget();
+}
+
 // Decode a parameter value using the encoding defined in RFC 5987 (in place)
 //
 //   charset  "'" [ language ] "'" value-chars
