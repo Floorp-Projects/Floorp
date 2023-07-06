@@ -34,7 +34,12 @@ job-defaults:
 
 jobs:
     devedition:
-        bouncer-products-per-alias: {}
+        bouncer-products-per-alias:
+            firefox-devedition-latest-ssl: installer-ssl
+            firefox-devedition-latest: installer
+            firefox-devedition-stub: stub-installer
+            firefox-devedition-msi-latest-ssl: msi
+            firefox-devedition-msix-latest-ssl: msix
         shipping-product: devedition
         treeherder:
             platform: devedition-release/opt
@@ -42,6 +47,14 @@ jobs:
     firefox:
         bouncer-products-per-alias:
             by-release-type:
+                beta:
+                    firefox-beta-latest-ssl: installer-ssl
+                    firefox-beta-latest: installer
+                    firefox-beta-stub: stub-installer
+                    firefox-beta-msi-latest-ssl: msi
+                    firefox-beta-msix-latest-ssl: msix
+                    firefox-beta-pkg-latest-ssl: pkg
+                    firefox-beta-langpack-latest-ssl: langpack
                 release.*:
                     firefox-latest-ssl: installer-ssl
                     firefox-latest: installer
