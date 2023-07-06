@@ -171,11 +171,11 @@ END_TEST(testArrayBuffer_bug720949_viewList)
 
 BEGIN_TEST(testArrayBuffer_customFreeFunc) {
   ExternalData data("One two three four");
+  auto dataPointer = data.pointer();
 
   // The buffer takes ownership of the data.
   JS::RootedObject buffer(
-      cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(),
-                                     &ExternalData::freeCallback, &data));
+      cx, JS::NewExternalArrayBuffer(cx, data.len(), std::move(dataPointer)));
   CHECK(buffer);
   CHECK(!data.wasFreed());
 
@@ -226,9 +226,9 @@ END_TEST(testArrayBuffer_staticContents)
 BEGIN_TEST(testArrayBuffer_stealDetachExternal) {
   static const char dataBytes[] = "One two three four";
   ExternalData data(dataBytes);
+  auto dataPointer = data.pointer();
   JS::RootedObject buffer(
-      cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(),
-                                     &ExternalData::freeCallback, &data));
+      cx, JS::NewExternalArrayBuffer(cx, data.len(), std::move(dataPointer)));
   CHECK(buffer);
   CHECK(!data.wasFreed());
 
@@ -260,9 +260,9 @@ BEGIN_TEST(testArrayBuffer_serializeExternal) {
   }
 
   ExternalData data("One two three four");
+  auto dataPointer = data.pointer();
   JS::RootedObject externalBuffer(
-      cx, JS::NewExternalArrayBuffer(cx, data.len(), data.contents(),
-                                     &ExternalData::freeCallback, &data));
+      cx, JS::NewExternalArrayBuffer(cx, data.len(), std::move(dataPointer)));
   CHECK(externalBuffer);
   CHECK(!data.wasFreed());
 
