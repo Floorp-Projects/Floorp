@@ -1,0 +1,4 @@
+[function]
+# Disable function sanitizer for all C files (new feature in clang 17) until we
+# we can narrow this down. See bug 1841935.
+src:*.c
