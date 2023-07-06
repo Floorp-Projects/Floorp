@@ -19,9 +19,9 @@ const methods = [
 for (const method of methods) {
   assertThrowsInstanceOf(() => method(-1), RangeError);
   assertThrowsInstanceOf(() => method(-Infinity), RangeError);
+  assertThrowsInstanceOf(() => method(NaN), RangeError);
+  assertThrowsInstanceOf(() => method(-NaN), RangeError);
 
-  method(NaN);
-  method(-NaN);
   method(-0);
   method(-0.9);
 }

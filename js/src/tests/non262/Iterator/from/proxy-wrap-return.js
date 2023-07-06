@@ -2,7 +2,7 @@
 const log = [];
 const handlerProxy = new Proxy({}, {
   get: (target, key, receiver) => (...args) => {
-    log.push(`${key}: ${args[1].toString()}`);
+    log.push(`${key}: ${args[1]?.toString()}`);
 
     const item = Reflect[key](...args);
     if (typeof item === 'function')
@@ -19,13 +19,13 @@ const wrap = Iterator.from(iter);
 wrap.return();
 wrap.return();
 
-assertEq(
-  log.join('\n'),
-  `get: Symbol(Symbol.iterator)
-get: next
-get: return
-get: return`
-);
+assertEqArray(log, [
+  "get: Symbol(Symbol.iterator)",
+  "get: next",
+  "getPrototypeOf: undefined",
+  "get: return",
+  "get: return",
+]);
 
 if (typeof reportCompare === 'function')
   reportCompare(0, 0);

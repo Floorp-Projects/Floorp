@@ -49,6 +49,28 @@ async function AsyncIteratorClose(iteratorRecord, value) {
 }
 
 /* Iterator Helpers proposal 1.1.1 */
+function GetIteratorDirect(obj) {
+  // Step 1.
+  if (!IsObject(obj)) {
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, obj));
+  }
+
+  // Step 2.
+  const nextMethod = obj.next;
+  // Step 3.
+  if (!IsCallable(nextMethod)) {
+    ThrowTypeError(JSMSG_NOT_FUNCTION, DecompileArg(0, nextMethod));
+  }
+
+  // Steps 4-5.
+  return {
+    iterator: obj,
+    nextMethod,
+    done: false,
+  };
+}
+
+/* Iterator Helpers proposal 1.1.1 */
 function GetAsyncIteratorDirectWrapper(obj) {
   // Step 1.
   if (!IsObject(obj)) {
