@@ -256,6 +256,11 @@ release-promotion:
         - 'devedition'
         - 'fennec'
         - 'firefox'
+    rebuild-kinds:
+        - docker-image
+        - fetch
+        - packages
+        - toolchain
     flavors:
         promote_devedition:
             product: devedition

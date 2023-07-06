@@ -42,6 +42,7 @@ graph_config_schema = Schema(
                     Optional("partial-updates"): bool,
                 }
             },
+            Optional("rebuild-kinds"): [str],
         },
         Required("merge-automation"): {
             Required("behaviors"): {

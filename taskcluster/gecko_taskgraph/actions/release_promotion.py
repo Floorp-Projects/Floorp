@@ -128,6 +128,7 @@ def get_flavors(graph_config, param):
                     "Optional: an array of kinds to ignore from the previous "
                     "graph(s)."
                 ),
+                "default": graph_config["release-promotion"].get("rebuild-kinds", []),
                 "items": {
                     "type": "string",
                 },
