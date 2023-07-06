@@ -1610,11 +1610,20 @@ static nsresult ReadStencil(nsIObjectInputStream* aStream, JSContext* aCx,
   return rv;
 }
 
-void nsXULPrototypeScript::FillCompileOptions(JS::CompileOptions& options) {
+void nsXULPrototypeScript::FillCompileOptions(JS::CompileOptions& aOptions,
+                                              const char* aFilename,
+                                              uint32_t aLineNo) {
+  // NOTE: This method shouldn't change any field which also exists in
+  //       JS::InstantiateOptions.  If such field is added,
+  //       nsXULPrototypeScript::InstantiateScript should also call this method.
+
   // If the script was inline, tell the JS parser to save source for
   // Function.prototype.toSource(). If it's out of line, we retrieve the
   // source from the files on demand.
-  options.setSourceIsLazy(mOutOfLine);
+  aOptions.setSourceIsLazy(mOutOfLine);
+
+  aOptions.setIntroductionType(mOutOfLine ? "srcScript" : "inlineScript")
+      .setFileAndLine(aFilename, mOutOfLine ? 1 : aLineNo);
 }
 
 nsresult nsXULPrototypeScript::Serialize(
@@ -1853,26 +1862,18 @@ static void OffThreadScriptReceiverCallback(JS::OffThreadToken* aToken,
   NS_DispatchToMainThread(notify);
 }
 
-template <typename Unit>
-nsresult nsXULPrototypeScript::Compile(
-    const Unit* aText, size_t aTextLength, JS::SourceOwnership aOwnership,
-    nsIURI* aURI, uint32_t aLineNo, Document* aDocument,
-    nsIOffThreadScriptReceiver* aOffThreadReceiver /* = nullptr */) {
-  // We'll compile the script in the compilation scope.
+nsresult nsXULPrototypeScript::Compile(const char16_t* aText,
+                                       size_t aTextLength, nsIURI* aURI,
+                                       uint32_t aLineNo, Document* aDocument) {
   AutoJSAPI jsapi;
   if (!jsapi.Init(xpc::CompilationScope())) {
-    if (aOwnership == JS::SourceOwnership::TakeOwnership) {
-      // In this early-exit case -- before the |srcBuf.init| call will
-      // own |aText| -- we must relinquish ownership manually.
-      js_free(const_cast<Unit*>(aText));
-    }
-
     return NS_ERROR_UNEXPECTED;
   }
   JSContext* cx = jsapi.cx();
 
-  JS::SourceText<Unit> srcBuf;
-  if (NS_WARN_IF(!srcBuf.init(cx, aText, aTextLength, aOwnership))) {
+  JS::SourceText<char16_t> srcBuf;
+  if (NS_WARN_IF(!srcBuf.init(cx, aText, aTextLength,
+                              JS::SourceOwnership::Borrowed))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1882,15 +1883,45 @@ nsresult nsXULPrototypeScript::Compile(
     return rv;
   }
 
-  // Ok, compile it to create a prototype script object!
   JS::CompileOptions options(cx);
-  FillCompileOptions(options);
-  options.setIntroductionType(mOutOfLine ? "srcScript" : "inlineScript")
-      .setFileAndLine(urlspec.get(), mOutOfLine ? 1 : aLineNo);
+  FillCompileOptions(options, urlspec.get(), aLineNo);
 
-  JS::Rooted<JSObject*> scope(cx, JS::CurrentGlobalOrNull(cx));
+  RefPtr<JS::Stencil> stencil =
+      JS::CompileGlobalScriptToStencil(cx, options, srcBuf);
+  if (!stencil) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  Set(stencil);
+  return NS_OK;
+}
 
-  if (aOffThreadReceiver && JS::CanCompileOffThread(cx, options, aTextLength)) {
+nsresult nsXULPrototypeScript::CompileMaybeOffThread(
+    mozilla::UniquePtr<mozilla::Utf8Unit[], JS::FreePolicy>&& aText,
+    size_t aTextLength, nsIURI* aURI, uint32_t aLineNo, Document* aDocument,
+    nsIOffThreadScriptReceiver* aOffThreadReceiver) {
+  MOZ_ASSERT(aOffThreadReceiver);
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(xpc::CompilationScope())) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  JSContext* cx = jsapi.cx();
+
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  if (NS_WARN_IF(!srcBuf.init(cx, std::move(aText), aTextLength))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString urlspec;
+  nsresult rv = aURI->GetSpec(urlspec);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  JS::CompileOptions options(cx);
+  FillCompileOptions(options, urlspec.get(), aLineNo);
+
+  if (JS::CanCompileOffThread(cx, options, aTextLength)) {
     if (!JS::CompileToStencilOffThread(
             cx, options, srcBuf, OffThreadScriptReceiverCallback,
             static_cast<void*>(aOffThreadReceiver))) {
@@ -1909,21 +1940,11 @@ nsresult nsXULPrototypeScript::Compile(
   return NS_OK;
 }
 
-template nsresult nsXULPrototypeScript::Compile<char16_t>(
-    const char16_t* aText, size_t aTextLength, JS::SourceOwnership aOwnership,
-    nsIURI* aURI, uint32_t aLineNo, Document* aDocument,
-    nsIOffThreadScriptReceiver* aOffThreadReceiver);
-template nsresult nsXULPrototypeScript::Compile<Utf8Unit>(
-    const Utf8Unit* aText, size_t aTextLength, JS::SourceOwnership aOwnership,
-    nsIURI* aURI, uint32_t aLineNo, Document* aDocument,
-    nsIOffThreadScriptReceiver* aOffThreadReceiver);
-
 nsresult nsXULPrototypeScript::InstantiateScript(
     JSContext* aCx, JS::MutableHandle<JSScript*> aScript) {
   MOZ_ASSERT(mStencil);
 
   JS::CompileOptions options(aCx);
-  FillCompileOptions(options);
   JS::InstantiateOptions instantiateOptions(options);
   aScript.set(JS::InstantiateGlobalStencil(aCx, instantiateOptions, mStencil));
   if (!aScript) {

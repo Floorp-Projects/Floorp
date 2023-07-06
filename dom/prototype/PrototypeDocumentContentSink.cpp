@@ -855,9 +855,8 @@ PrototypeDocumentContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
     rv = ScriptLoader::ConvertToUTF8(channel, string, stringLen, u""_ns,
                                      mDocument, units, unitsLength);
     if (NS_SUCCEEDED(rv)) {
-      rv = mCurrentScriptProto->Compile(units.release(), unitsLength,
-                                        JS::SourceOwnership::TakeOwnership, uri,
-                                        1, mDocument, this);
+      rv = mCurrentScriptProto->CompileMaybeOffThread(
+          std::move(units), unitsLength, uri, 1, mDocument, this);
       if (NS_SUCCEEDED(rv) && !mCurrentScriptProto->HasStencil()) {
         mOffThreadCompiling = true;
         mDocument->BlockOnload();
