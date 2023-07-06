@@ -51,6 +51,7 @@ class HistoryInView extends ViewPage {
     allHistoryItems: { type: Array },
     historyMapByDate: { type: Array },
     historyMapBySite: { type: Array },
+    sortOption: { type: String },
   };
 
   async getUpdateComplete() {
@@ -248,9 +249,8 @@ class HistoryInView extends ViewPage {
     e.target.querySelector("panel-list").toggle(e.detail.originalEvent);
   }
 
-  async toggleSortOption(e) {
+  async onChangeSortOption(e) {
     this.sortOption = e.target.value;
-    this.updateHistoryData();
   }
 
   showAllHistory() {
@@ -363,7 +363,7 @@ class HistoryInView extends ViewPage {
               name="history-sort-option"
               value="date"
               checked
-              @click=${this.toggleSortOption}
+              @click=${this.onChangeSortOption}
             />
             <label
               for="sort-by-date"
@@ -375,7 +375,7 @@ class HistoryInView extends ViewPage {
               type="radio"
               name="history-sort-option"
               value="site"
-              @click=${this.toggleSortOption}
+              @click=${this.onChangeSortOption}
             />
             <label
               for="sort-by-site"
