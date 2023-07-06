@@ -329,11 +329,18 @@ export class TranslationsParent extends JSWindowActorParent {
       return;
     }
 
-    browser.dispatchEvent(
-      new CustomEvent("TranslationsParent:OfferTranslation", {
-        bubbles: true,
-      })
-    );
+    // Only offer the translation if it's still the current page.
+    if (
+      this.browsingContext.currentWindowGlobal.documentURI.spec ===
+      this.browsingContext.topChromeWindow.gBrowser.selectedBrowser.documentURI
+        .spec
+    ) {
+      browser.dispatchEvent(
+        new CustomEvent("TranslationsParent:OfferTranslation", {
+          bubbles: true,
+        })
+      );
+    }
   }
 
   /**
