@@ -8,11 +8,14 @@
 #ifndef js_ArrayBuffer_h
 #define js_ArrayBuffer_h
 
+#include "mozilla/UniquePtr.h"
+
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint32_t
 
 #include "jstypes.h"  // JS_PUBLIC_API
 #include "js/TypeDecls.h"
+#include "js/Utility.h"
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSObject;
@@ -33,10 +36,26 @@ extern JS_PUBLIC_API JSObject* NewArrayBuffer(JSContext* cx, size_t nbytes);
  * if |nbytes == 0|.  |contents| must be allocated compatible with deallocation
  * by |JS_free|.
  *
+ * Care must be taken that |nbytes| bytes of |contents| remain valid for the
+ * duration of this call.  In particular, passing the length/pointer of existing
+ * typed array or ArrayBuffer data is generally unsafe: if a GC occurs during a
+ * call to this function, it could move those contents to a different location
+ * and invalidate the provided pointer.
+ */
+extern JS_PUBLIC_API JSObject* NewArrayBufferWithContents(
+    JSContext* cx, size_t nbytes,
+    mozilla::UniquePtr<void, JS::FreePolicy> contents);
+
+/**
+ * Create a new ArrayBuffer with the given |contents|, which may be null only
+ * if |nbytes == 0|.  |contents| must be allocated compatible with deallocation
+ * by |JS_free|.
+ *
+ * !!! IMPORTANT !!!
  * If and only if an ArrayBuffer is successfully created and returned,
  * ownership of |contents| is transferred to the new ArrayBuffer.
  *
- * Care must be taken that |nbytes| bytes of |content| remain valid for the
+ * Care must be taken that |nbytes| bytes of |contents| remain valid for the
  * duration of this call.  In particular, passing the length/pointer of existing
  * typed array or ArrayBuffer data is generally unsafe: if a GC occurs during a
  * call to this function, it could move those contents to a different location
@@ -70,8 +89,60 @@ extern JS_PUBLIC_API JSObject* CopyArrayBuffer(
 using BufferContentsFreeFunc = void (*)(void* contents, void* userData);
 
 /**
+ * UniquePtr deleter for external buffer contents.
+ */
+class JS_PUBLIC_API BufferContentsDeleter {
+  BufferContentsFreeFunc freeFunc_ = nullptr;
+  void* userData_ = nullptr;
+
+ public:
+  MOZ_IMPLICIT BufferContentsDeleter(BufferContentsFreeFunc freeFunc,
+                                     void* userData = nullptr)
+      : freeFunc_(freeFunc), userData_(userData) {}
+
+  void operator()(void* contents) const { freeFunc_(contents, userData_); }
+
+  BufferContentsFreeFunc freeFunc() const { return freeFunc_; }
+  void* userData() const { return userData_; }
+};
+
+/**
  * Create a new ArrayBuffer with the given contents. The contents must not be
  * modified by any other code, internal or external.
+ *
+ * When the ArrayBuffer is ready to be disposed of, `freeFunc(contents,
+ * freeUserData)` will be called to release the ArrayBuffer's reference on the
+ * contents.
+ *
+ * `freeFunc()` must not call any JSAPI functions that could cause a garbage
+ * collection.
+ *
+ * The caller must keep the buffer alive until `freeFunc()` is called, or, if
+ * `freeFunc` is null, until the JSRuntime is destroyed.
+ *
+ * The caller must not access the buffer on other threads. The JS engine will
+ * not allow the buffer to be transferred to other threads. If you try to
+ * transfer an external ArrayBuffer to another thread, the data is copied to a
+ * new malloc buffer. `freeFunc()` must be threadsafe, and may be called from
+ * any thread.
+ *
+ * This allows ArrayBuffers to be used with embedder objects that use reference
+ * counting, for example. In that case the caller is responsible
+ * for incrementing the reference count before passing the contents to this
+ * function. This also allows using non-reference-counted contents that must be
+ * freed with some function other than free().
+ */
+extern JS_PUBLIC_API JSObject* NewExternalArrayBuffer(
+    JSContext* cx, size_t nbytes,
+    mozilla::UniquePtr<void, BufferContentsDeleter> contents);
+
+/**
+ * Create a new ArrayBuffer with the given contents. The contents must not be
+ * modified by any other code, internal or external.
+ *
+ * !!! IMPORTANT !!!
+ * If and only if an ArrayBuffer is successfully created and returned,
+ * ownership of |contents| is transferred to the new ArrayBuffer.
  *
  * When the ArrayBuffer is ready to be disposed of, `freeFunc(contents,
  * freeUserData)` will be called to release the ArrayBuffer's reference on the
