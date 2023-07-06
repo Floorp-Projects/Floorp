@@ -549,13 +549,6 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
     return stubStatus;
   }
 
-  if (!(aProtectionFlags & kPageExecutable)) {
-    // Bail out early if an executable mapping was not asked. In particular,
-    // we will not use stack buffers during calls to Thread32Next, which can
-    // result in crashes with third-party software (see bug 1733532).
-    return stubStatus;
-  }
-
   return AfterMapExecutableViewOfSection(aProcess, aBaseAddress, stubStatus);
 }
 
