@@ -1142,15 +1142,17 @@ already_AddRefed<AccAttributes> LocalAccessible::NativeAttributes() {
     return attributes.forget();
   }
 
+  // Expose 'display' attribute.
+  if (RefPtr<nsAtom> display = DisplayStyle()) {
+    attributes->SetAttribute(nsGkAtoms::display, display);
+  }
+
   const ComputedStyle& style = *f->Style();
   auto Atomize = [&](nsCSSPropertyID aId) -> RefPtr<nsAtom> {
     nsAutoCString value;
     style.GetComputedPropertyValue(aId, value);
     return NS_Atomize(value);
   };
-
-  // Expose 'display' attribute.
-  attributes->SetAttribute(nsGkAtoms::display, Atomize(eCSSProperty_display));
 
   // Expose 'text-align' attribute.
   attributes->SetAttribute(nsGkAtoms::textAlign,
@@ -3926,6 +3928,17 @@ already_AddRefed<nsAtom> LocalAccessible::DisplayStyle() const {
   }
   if (elm->IsHTMLElement(nsGkAtoms::area)) {
     // This is an image map area. CSS is irrelevant here.
+    return nullptr;
+  }
+  static const dom::Element::AttrValuesArray presentationRoles[] = {
+      nsGkAtoms::none, nsGkAtoms::presentation, nullptr};
+  if (nsAccUtils::FindARIAAttrValueIn(elm, nsGkAtoms::role, presentationRoles,
+                                      eIgnoreCase) != AttrArray::ATTR_MISSING &&
+      IsGeneric()) {
+    // This Accessible has been marked presentational, but we forced a generic
+    // Accessible for some reason; e.g. CSS transform. Don't expose display in
+    // this case, as the author might be explicitly trying to avoid said
+    // exposure.
     return nullptr;
   }
   RefPtr<const ComputedStyle> style =
