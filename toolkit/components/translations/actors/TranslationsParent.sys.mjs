@@ -274,6 +274,14 @@ export class TranslationsParent extends JSWindowActorParent {
    * @type {null | string[]}
    */
   static #preferredLanguages = null;
+
+  /**
+   * The value of navigator.languages.
+   *
+   * @type {null | Set<string>}
+   */
+  static #webContentLanguages = null;
+
   static #observingLanguages = false;
 
   // On a fast connection, 10 concurrent downloads were measured to be the fastest when
@@ -427,6 +435,7 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   static #resetPreferredLanguages() {
+    TranslationsParent.#webContentLanguages = null;
     TranslationsParent.#preferredLanguages = null;
     TranslationsParent.getPreferredLanguages();
   }
@@ -448,6 +457,50 @@ export class TranslationsParent extends JSWindowActorParent {
    * @type {null | string[]}
    */
   static mockedSystemLocales = null;
+
+  /**
+   * The "Accept-Language" values that the localizer or user has indicated for
+   * the preferences for the web. https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
+   *
+   * Note that this preference always has English in the fallback chain, even if the
+   * user doesn't actually speak English, and to other languages they potentially do
+   * not speak. However, this preference will be used as an indication that a user may
+   * prefer this language.
+   *
+   * https://transvision.flod.org/string/?entity=toolkit/chrome/global/intl.properties:intl.accept_languages&repo=gecko_strings
+   */
+  static getWebContentLanguages() {
+    if (!TranslationsParent.#webContentLanguages) {
+      const values = Services.prefs
+        .getComplexValue("intl.accept_languages", Ci.nsIPrefLocalizedString)
+        .data.split(/\s*,\s*/g);
+
+      TranslationsParent.#webContentLanguages = new Set();
+
+      for (const locale of values) {
+        try {
+          // Wrap this in a try statement since users can manually edit this pref.
+          TranslationsParent.#webContentLanguages.add(
+            new Intl.Locale(locale).language
+          );
+        } catch {
+          // The locale was invalid, discard it.
+        }
+      }
+
+      if (
+        Services.prefs.prefHasDefaultValue("intl.accept_languages") &&
+        Services.locale.appLocaleAsBCP47 !== "en" &&
+        !Services.locale.appLocaleAsBCP47.startsWith("en-")
+      ) {
+        // The user hasn't customized their accept languages, this means that English
+        // is always provided as a fallback language, even if it is not available.
+        TranslationsParent.#webContentLanguages.delete("en");
+      }
+    }
+
+    return TranslationsParent.#webContentLanguages;
+  }
 
   /**
    * An ordered list of preferred languages based on:
@@ -475,16 +528,6 @@ export class TranslationsParent extends JSWindowActorParent {
       TranslationsParent.#observingLanguages = true;
     }
 
-    // The "Accept-Language" values that the localizer or user has indicated for
-    // the preferences for the web. https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language
-    // Note that this preference often falls back ultimately to English, even if the
-    // user doesn't actually speak English, or to other languages they do not speak.
-    // However, this preference will be used as an indication that a user may prefer
-    // this language.
-    const webLanguages = Services.prefs
-      .getComplexValue("intl.accept_languages", Ci.nsIPrefLocalizedString)
-      .data.split(/\s*,\s*/g);
-
     // The system language could also be a good option for a language to offer the user.
     const osPrefs = Cc["@mozilla.org/intl/ospreferences;1"].getService(
       Ci.mozIOSPreferences
@@ -494,8 +537,8 @@ export class TranslationsParent extends JSWindowActorParent {
 
     // Combine the locales together.
     const preferredLocales = new Set([
+      ...TranslationsParent.getWebContentLanguages(),
       ...Services.locale.appLocalesAsBCP47,
-      ...webLanguages,
       ...systemLocales,
     ]);
 
@@ -1935,11 +1978,9 @@ export class TranslationsParent extends JSWindowActorParent {
       return langTags;
     }
 
-    // This is a special case where we do not offer a translation if the main app language
-    // and the doc language match. The main app language should be the first preferred
-    // language.
-    if (preferredLanguages[0] === langTags.docLangTag) {
-      // The doc language and the main language match.
+    if (TranslationsParent.getWebContentLanguages().has(langTags.docLangTag)) {
+      // The doc language has been marked as a known language by the user, do not
+      // offer a translation.
       const message =
         "The app and document languages match, so not translating.";
       ChromeUtils.addProfilerMarker(
