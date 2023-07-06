@@ -238,8 +238,9 @@ INSTANTIATE_TEST_SUITE_P(DOM_IndexedDB_Key, TestWithParam_LiteralString,
 
 static JS::Value CreateArrayBufferValue(JSContext* const aContext,
                                         const size_t aSize, char* const aData) {
-  Rooted<JSObject*> arrayBuffer{
-      aContext, JS::NewArrayBufferWithContents(aContext, aSize, aData)};
+  mozilla::UniquePtr<void, JS::FreePolicy> ptr{aData};
+  Rooted<JSObject*> arrayBuffer{aContext, JS::NewArrayBufferWithContents(
+                                              aContext, aSize, std::move(ptr))};
   EXPECT_TRUE(arrayBuffer);
   return JS::ObjectValue(*arrayBuffer);
 }

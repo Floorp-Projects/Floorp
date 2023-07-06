@@ -66,14 +66,15 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal) {
     CHECK(v.isInt32(MAGIC_VALUE_2));
 
     // Steal the contents
-    void* contents = JS::StealArrayBufferContents(cx, obj);
+    mozilla::UniquePtr<void, JS::FreePolicy> contents{
+        JS::StealArrayBufferContents(cx, obj)};
     CHECK(contents != nullptr);
 
     CHECK(JS::IsDetachedArrayBufferObject(obj));
 
     // Transfer to a new ArrayBuffer
-    JS::RootedObject dst(cx,
-                         JS::NewArrayBufferWithContents(cx, size, contents));
+    JS::RootedObject dst(
+        cx, JS::NewArrayBufferWithContents(cx, size, std::move(contents)));
     CHECK(JS::IsArrayBufferObject(dst));
     {
       JS::AutoCheckCannotGC nogc;
