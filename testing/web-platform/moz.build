@@ -728,6 +728,9 @@ with Files("tests/webaudio/**"):
 with Files("tests/webauthn/**"):
     BUG_COMPONENT = ("Core", "DOM: Web Authentication")
 
+with Files("tests/webcodecs/**"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Web Codecs")
+
 with Files("tests/webdriver/**"):
     BUG_COMPONENT = ("Remote Protocol", "Marionette")
 
