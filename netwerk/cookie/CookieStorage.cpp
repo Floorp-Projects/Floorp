@@ -559,7 +559,7 @@ void CookieStorage::AddCookie(nsIConsoleReportCollector* aCRC,
         RefPtr<Cookie> evictedCookie = (*it).Cookie();
         COOKIE_LOGEVICTED(evictedCookie, "Too many cookies for this domain");
         RemoveCookieFromList(*it);
-        CreateOrUpdatePurgeList(getter_AddRefs(purgedList), evictedCookie);
+        CreateOrUpdatePurgeList(purgedList, evictedCookie);
         MOZ_ASSERT((*it).entry);
       }
 
@@ -678,16 +678,15 @@ void CookieStorage::FindStaleCookies(CookieEntry* aEntry, int64_t aCurrentTime,
 }
 
 // static
-void CookieStorage::CreateOrUpdatePurgeList(nsIArray** aPurgedList,
+void CookieStorage::CreateOrUpdatePurgeList(nsCOMPtr<nsIArray>& aPurgedList,
                                             nsICookie* aCookie) {
-  if (!*aPurgedList) {
+  if (!aPurgedList) {
     COOKIE_LOGSTRING(LogLevel::Debug, ("Creating new purge list"));
-    nsCOMPtr<nsIArray> purgedList = CreatePurgeList(aCookie);
-    purgedList.forget(aPurgedList);
+    aPurgedList = CreatePurgeList(aCookie);
     return;
   }
 
-  nsCOMPtr<nsIMutableArray> purgedList = do_QueryInterface(*aPurgedList);
+  nsCOMPtr<nsIMutableArray> purgedList = do_QueryInterface(aPurgedList);
   if (purgedList) {
     COOKIE_LOGSTRING(LogLevel::Debug, ("Updating existing purge list"));
     purgedList->AppendElement(aCookie);
