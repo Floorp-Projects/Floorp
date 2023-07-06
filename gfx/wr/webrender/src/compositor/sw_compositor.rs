@@ -1026,7 +1026,7 @@ impl SwCompositor {
         if let Some(surface) = self.surfaces.get_mut(id) {
             if let Some(external_image) = surface.external_image {
                 assert!(!surface.tiles.is_empty());
-                let mut tile = &mut surface.tiles[0];
+                let tile = &mut surface.tiles[0];
                 if let Some(info) = self.composite_surfaces.get(&external_image) {
                     tile.valid_rect = DeviceIntRect::from_size(info.size);
                     return;
