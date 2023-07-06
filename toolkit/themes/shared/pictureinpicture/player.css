@@ -634,7 +634,29 @@ input:checked + .slider::before {
   }
 }
 
-@media (height <= 325px), (width <= 475px) {
+@media (width <= 475px) {
+  #closed-caption {
+    display: none;
+  }
+
+  .end-controls {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-areas: "audio fullscreen";
+  }
+}
+
+@media (height <= 325px) and (width > 630px) {
+  #closed-caption {
+    display: none;
+  }
+
+  .end-controls {
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-areas: "audio audio-scrubber fullscreen";
+  }
+}
+
+@media (height <= 325px) and (width <= 630px) {
   #closed-caption,
   #audio-scrubber {
     display: none;
