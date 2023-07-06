@@ -222,7 +222,7 @@ impl FileSource {
     }
 
     pub fn set_reporter(&mut self, reporter: impl ErrorReporter + 'static) {
-        let mut shared = Rc::get_mut(&mut self.shared).unwrap();
+        let shared = Rc::get_mut(&mut self.shared).unwrap();
         shared.error_reporter = Some(RefCell::new(Box::new(reporter)));
     }
 }
@@ -441,7 +441,7 @@ async fn read_resource(resource_id: ResourceId, shared: Rc<Inner>) -> ResourceOp
         .map(|source| match FluentResource::try_new(source) {
             Ok(res) => ResourceOption::Some(Rc::new(res)),
             Err((res, errors)) => {
-                if let Some(reporter) = &shared.error_reporter.borrow() {
+                if let Some(reporter) = &shared.error_reporter {
                     reporter.borrow().report_errors(
                         errors
                             .into_iter()
