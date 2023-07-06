@@ -111,21 +111,17 @@ In some cases, it can be appropriate to initiate side-effects from the view when
 -------
 
 ## Simplified Example
-When reading through live code trying to understand an architecture, it can be difficult to find canonical examples, and often hard to locate the most important aspects. This is a simplified example using a hypothetical app that should help clarify the above patterns.
+When reading through live code trying to understand an architecture, it can be difficult to find canonical examples, and often hard to locate the most important aspects. This is a simplified example of a basic history screen that includes a list of history items and which can be opened, multi-selected, and deleted.
 
-![example app wireframe](./architectureexample/example-app-wireframe.png?raw=true)
+The following are links to the example versions of the architectural components listed above.
 
-This app currently has three (wonderful) features.
-- Clicking on one of the colored circles will update the toolbar color
-- Clicking on 'Rename', typing a new name, and selecting return will update the name of the contact
-- Clicking anywhere else on a contact will navigate to a text message fragment
-
-These link to the architectural code that accomplishes those features:
-- [ContactsView](./architectureexample/ContactsView.kt)
-- [ContactsStore](./architectureexample/ContactsStore.kt)
-- [ContactsState](./architectureexample/ContactsStore.kt)
-- [ContactsReducer](./architectureexample/ContactsStore.kt)
-- [ContactsFragment](./architectureexample/ContactsFragment.kt)
+- [HistoryFragment](./architectureexample/HistoryFragmentExample.kt)
+- [HistoryStore](./architectureexample/HistoryStoreExample.kt)
+- [HistoryState](./architectureexample/HistoryStoreExample.kt)
+- [HistoryReducer](./architectureexample/HistoryStoreExample.kt)
+- [HistoryNavigationMiddleware](./architectureexample/HistoryNavigationMiddlewareExample.kt)
+- [HistoryStorageMiddleware](./architectureexample/HistoryStorageMiddlewareExample.kt)
+- [HistoryTelemetryMiddleware](./architectureexample/HistoryTelemetryMiddlewareExample.kt)
 
 -------
 
