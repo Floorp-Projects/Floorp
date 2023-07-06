@@ -2922,23 +2922,31 @@ static nsresult ConvertToUnicode(nsIChannel* aChannel, const uint8_t* aData,
 }
 
 /* static */
-nsresult ScriptLoader::ConvertToUTF16(nsIChannel* aChannel,
-                                      const uint8_t* aData, uint32_t aLength,
-                                      const nsAString& aHintCharset,
-                                      Document* aDocument, char16_t*& aBufOut,
-                                      size_t& aLengthOut) {
-  return ConvertToUnicode(aChannel, aData, aLength, aHintCharset, aDocument,
-                          aBufOut, aLengthOut);
+nsresult ScriptLoader::ConvertToUTF16(
+    nsIChannel* aChannel, const uint8_t* aData, uint32_t aLength,
+    const nsAString& aHintCharset, Document* aDocument,
+    UniquePtr<char16_t[], JS::FreePolicy>& aBufOut, size_t& aLengthOut) {
+  char16_t* bufOut;
+  nsresult rv = ConvertToUnicode(aChannel, aData, aLength, aHintCharset,
+                                 aDocument, bufOut, aLengthOut);
+  if (NS_SUCCEEDED(rv)) {
+    aBufOut.reset(bufOut);
+  }
+  return rv;
 }
 
 /* static */
-nsresult ScriptLoader::ConvertToUTF8(nsIChannel* aChannel, const uint8_t* aData,
-                                     uint32_t aLength,
-                                     const nsAString& aHintCharset,
-                                     Document* aDocument, Utf8Unit*& aBufOut,
-                                     size_t& aLengthOut) {
-  return ConvertToUnicode(aChannel, aData, aLength, aHintCharset, aDocument,
-                          aBufOut, aLengthOut);
+nsresult ScriptLoader::ConvertToUTF8(
+    nsIChannel* aChannel, const uint8_t* aData, uint32_t aLength,
+    const nsAString& aHintCharset, Document* aDocument,
+    UniquePtr<Utf8Unit[], JS::FreePolicy>& aBufOut, size_t& aLengthOut) {
+  Utf8Unit* bufOut;
+  nsresult rv = ConvertToUnicode(aChannel, aData, aLength, aHintCharset,
+                                 aDocument, bufOut, aLengthOut);
+  if (NS_SUCCEEDED(rv)) {
+    aBufOut.reset(bufOut);
+  }
+  return rv;
 }
 
 nsresult ScriptLoader::OnStreamComplete(

@@ -8,6 +8,7 @@
 #define mozilla_dom_ScriptLoader_h
 
 #include "js/TypeDecls.h"
+#include "js/Utility.h"  // JS::FreePolicy
 #include "js/loader/LoadedScript.h"
 #include "js/loader/ScriptKind.h"
 #include "js/loader/ScriptLoadRequest.h"
@@ -266,31 +267,16 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * @param aHintCharset Character set hint (e.g., from a charset attribute).
    * @param aDocument    Document which the data is loaded for. May be null.
    * @param aBufOut      [out] fresh char16_t array containing data converted to
-   *                     Unicode.  Caller must js_free() this data when finished
-   *                     with it.
+   *                     Unicode.
    * @param aLengthOut   [out] Length of array returned in aBufOut in number
    *                     of char16_t code units.
    */
   static nsresult ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
                                  uint32_t aLength,
                                  const nsAString& aHintCharset,
-                                 Document* aDocument, char16_t*& aBufOut,
-                                 size_t& aLengthOut);
-
-  static nsresult ConvertToUTF16(nsIChannel* aChannel, const uint8_t* aData,
-                                 uint32_t aLength,
-                                 const nsAString& aHintCharset,
                                  Document* aDocument,
-                                 JS::UniqueTwoByteChars& aBufOut,
-                                 size_t& aLengthOut) {
-    char16_t* bufOut;
-    nsresult rv = ConvertToUTF16(aChannel, aData, aLength, aHintCharset,
-                                 aDocument, bufOut, aLengthOut);
-    if (NS_SUCCEEDED(rv)) {
-      aBufOut.reset(bufOut);
-    }
-    return rv;
-  };
+                                 UniquePtr<char16_t[], JS::FreePolicy>& aBufOut,
+                                 size_t& aLengthOut);
 
   /**
    * Convert the given buffer to a UTF-8 string.  If the buffer begins with a
@@ -307,28 +293,15 @@ class ScriptLoader final : public JS::loader::ScriptLoaderInterface {
    * @param aHintCharset Character set hint (e.g., from a charset attribute).
    * @param aDocument    Document which the data is loaded for. May be null.
    * @param aBufOut      [out] fresh Utf8Unit array containing data converted to
-   *                     Unicode.  Caller must js_free() this data when finished
-   *                     with it.
+   *                     Unicode.
    * @param aLengthOut   [out] Length of array returned in aBufOut in UTF-8 code
    *                     units (i.e. in bytes).
    */
   static nsresult ConvertToUTF8(nsIChannel* aChannel, const uint8_t* aData,
                                 uint32_t aLength, const nsAString& aHintCharset,
-                                Document* aDocument, Utf8Unit*& aBufOut,
+                                Document* aDocument,
+                                UniquePtr<Utf8Unit[], JS::FreePolicy>& aBufOut,
                                 size_t& aLengthOut);
-
-  static inline nsresult ConvertToUTF8(
-      nsIChannel* aChannel, const uint8_t* aData, uint32_t aLength,
-      const nsAString& aHintCharset, Document* aDocument,
-      UniquePtr<Utf8Unit[], JS::FreePolicy>& aBufOut, size_t& aLengthOut) {
-    Utf8Unit* bufOut;
-    nsresult rv = ConvertToUTF8(aChannel, aData, aLength, aHintCharset,
-                                aDocument, bufOut, aLengthOut);
-    if (NS_SUCCEEDED(rv)) {
-      aBufOut.reset(bufOut);
-    }
-    return rv;
-  };
 
   /**
    * Handle the completion of a stream.  This is called by the

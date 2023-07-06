@@ -58,6 +58,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/experimental/JSStencil.h"
+#include "js/Utility.h"  // JS::FreePolicy
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -848,13 +849,13 @@ PrototypeDocumentContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
     MOZ_ASSERT(!mOffThreadCompiling,
                "PrototypeDocument can't load multiple scripts at once");
 
-    Utf8Unit* units = nullptr;
+    UniquePtr<Utf8Unit[], JS::FreePolicy> units;
     size_t unitsLength = 0;
 
     rv = ScriptLoader::ConvertToUTF8(channel, string, stringLen, u""_ns,
                                      mDocument, units, unitsLength);
     if (NS_SUCCEEDED(rv)) {
-      rv = mCurrentScriptProto->Compile(units, unitsLength,
+      rv = mCurrentScriptProto->Compile(units.release(), unitsLength,
                                         JS::SourceOwnership::TakeOwnership, uri,
                                         1, mDocument, this);
       if (NS_SUCCEEDED(rv) && !mCurrentScriptProto->HasStencil()) {
