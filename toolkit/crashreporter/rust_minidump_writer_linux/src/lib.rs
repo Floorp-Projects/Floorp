@@ -74,7 +74,7 @@ pub unsafe extern "C" fn write_minidump_linux_with_context(
     let c_path = CStr::from_ptr(dump_path);
 
     let mut crash_context: MaybeUninit<crash_context::CrashContext> = mem::MaybeUninit::zeroed();
-    let mut cc = &mut *crash_context.as_mut_ptr();
+    let cc = &mut *crash_context.as_mut_ptr();
 
     core::ptr::copy_nonoverlapping(siginfo, &mut cc.siginfo, 1);
     core::ptr::copy_nonoverlapping(ucontext, &mut cc.context, 1);
