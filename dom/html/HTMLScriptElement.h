@@ -32,7 +32,7 @@ class HTMLScriptElement final : public nsGenericHTMLElement,
   // nsIScriptElement
   virtual void GetScriptText(nsAString& text) const override;
   virtual void GetScriptCharset(nsAString& charset) override;
-  virtual void FreezeExecutionAttrs(Document* aOwnerDoc) override;
+  virtual void FreezeExecutionAttrs(const Document* aOwnerDoc) override;
   virtual CORSMode GetCORSMode() const override;
   virtual mozilla::dom::ReferrerPolicy GetReferrerPolicy() override;
 
