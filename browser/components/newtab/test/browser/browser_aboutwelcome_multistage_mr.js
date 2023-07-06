@@ -621,6 +621,12 @@ add_task(async function test_aboutwelcome_embedded_migration() {
       "MigrationWizard:Ready"
     );
 
+    // Waiting for the history length to update seems to allow us to avoid
+    // an intermittent test failure.
+    await ContentTaskUtils.waitForCondition(() => {
+      return content.history.length === 2;
+    });
+
     content.history.back();
     await migrationWizardReady;
 
