@@ -577,10 +577,12 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     sourceMapURL_ = rhs.sourceMapURL();
   }
 
-  // Construct CompileOptions for FrontendContext-APIs.
-  struct ForFrontendContext {};
-  explicit CompileOptions(const ForFrontendContext&)
-      : ReadOnlyCompileOptions() {}
+  // Construct a CompileOption in the context where JSContext is not available.
+  // prefableOptions should reflect the compilation-specific user prefs.
+  explicit CompileOptions(const PrefableCompileOptions& prefableOptions)
+      : ReadOnlyCompileOptions() {
+    prefableOptions_ = prefableOptions;
+  }
 
   CompileOptions& setFile(const char* f) {
     filename_ = JS::ConstUTF8CharsZ(f);
