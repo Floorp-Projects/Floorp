@@ -17,7 +17,6 @@ DEFINES["RTC_DAV1D_IN_INTERNAL_DECODER_FACTORY"] = True
 DEFINES["RTC_ENABLE_VP9"] = True
 DEFINES["WEBRTC_ANDROID"] = True
 DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
-DEFINES["WEBRTC_ENABLE_AVX2"] = True
 DEFINES["WEBRTC_ENABLE_PROTOBUF"] = "0"
 DEFINES["WEBRTC_LIBRARY_IMPL"] = True
 DEFINES["WEBRTC_LINUX"] = True
@@ -87,8 +86,14 @@ if CONFIG["CPU_ARCH"] == "x86":
         "-msse2"
     ]
 
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
+
     OS_LIBS += [
         "android_support"
     ]
+
+if CONFIG["CPU_ARCH"] == "x86_64":
+
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
 
 Library("ifaddrs_android_gn")
