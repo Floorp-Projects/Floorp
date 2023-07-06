@@ -809,15 +809,16 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   JSOp getIterCallOp(JSOp callOp, SelfHostedIter selfHostedIter);
 
+  // Push the operands for emit(Async)Iterator onto the stack.
+  [[nodiscard]] bool emitIterable(ParseNode* value,
+                                  SelfHostedIter selfHostedIter,
+                                  IteratorKind iterKind = IteratorKind::Sync);
+
   // emitIterator expects the iterable to already be on the stack.
   // It will replace that stack value with the corresponding iterator
-  [[nodiscard]] bool emitIterator(
-      SelfHostedIter selfHostedIter = SelfHostedIter::Deny,
-      bool isIteratorMethodOnStack = false);
+  [[nodiscard]] bool emitIterator(SelfHostedIter selfHostedIter);
 
-  [[nodiscard]] bool emitAsyncIterator(
-      SelfHostedIter selfHostedIter = SelfHostedIter::Deny,
-      bool isIteratorMethodOnStack = false);
+  [[nodiscard]] bool emitAsyncIterator(SelfHostedIter selfHostedIter);
 
   // Pops iterator from the top of the stack. Pushes the result of |.next()|
   // onto the stack.
@@ -994,8 +995,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // This shortcut can be used when spreading into arrays, as it assumes
   // `spreadeeStackItems = 2` (|ARRAY INDEX|) and `storeElementOp =
   // JSOp::InitElemInc`
-  [[nodiscard]] bool emitSpread(
-      SelfHostedIter selfHostedIter = SelfHostedIter::Deny);
+  [[nodiscard]] bool emitSpread(SelfHostedIter selfHostedIter);
 
   enum class ClassNameKind {
     // The class name is defined through its BindingIdentifier, if present.
