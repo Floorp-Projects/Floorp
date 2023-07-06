@@ -867,17 +867,19 @@ if (IS_DIALOG_WINDOW) {
     async () => {
       const form = document.querySelector("form");
       await document.l10n.translateFragment(form);
-      const { clientWidth, clientHeight } = await window.promiseDocumentFlushed(
+      const { scrollWidth, scrollHeight } = await window.promiseDocumentFlushed(
         () => form
       );
       // Resolve promiseReportPanel once the panel completed the initial render
       // (used in tests).
       deferredReportPanel.resolve(el);
       if (
-        window.innerWidth !== clientWidth ||
-        window.innerheight !== clientHeight
+        window.innerWidth !== scrollWidth ||
+        window.innerHeight !== scrollHeight
       ) {
-        window.resizeTo(clientWidth, clientHeight);
+        const width = window.outerWidth - window.innerWidth + scrollWidth;
+        const height = window.outerHeight - window.innerHeight + scrollHeight;
+        window.resizeTo(width, height);
       }
     },
     { once: true }
