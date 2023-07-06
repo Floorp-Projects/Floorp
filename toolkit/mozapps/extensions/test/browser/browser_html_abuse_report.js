@@ -346,11 +346,20 @@ async function test_abusereport_suggestions(addonId) {
     }
 
     const learnMoreLinks = [];
-    for (const linkClass of _suggestions.LEARNMORE_LINKS) {
-      learnMoreLinks.push(..._suggestions.querySelectorAll(linkClass));
-    }
+    learnMoreLinks.push(
+      ..._suggestions.querySelectorAll(
+        'a[is="moz-support-link"], .abuse-policy-learnmore'
+      )
+    );
 
     if (learnMoreLinks.length) {
+      is(
+        _suggestions.querySelectorAll(
+          'a[is="moz-support-link"]:not([support-page])'
+        ).length,
+        0,
+        "Every SUMO link should point to a specific page"
+      );
       ok(
         learnMoreLinks.every(el => el.getAttribute("target") === "_blank"),
         "All the learn more links have target _blank"

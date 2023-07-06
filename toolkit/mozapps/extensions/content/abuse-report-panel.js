@@ -121,15 +121,6 @@ function getSuggestionsTemplate({ addonType, reason, supportURL }) {
 
 // Map of the learnmore links metadata, keyed by link element class.
 const LEARNMORE_LINKS = {
-  ".abuse-report-learnmore": {
-    path: "reporting-extensions-and-themes-abuse",
-  },
-  ".abuse-settings-search-learnmore": {
-    path: "prefs-search",
-  },
-  ".abuse-settings-homepage-learnmore": {
-    path: "prefs-homepage",
-  },
   ".abuse-policy-learnmore": {
     baseURL: "https://www.mozilla.org/%LOCALE%/",
     path: "about/legal/report-infringement/",
@@ -141,9 +132,7 @@ const LEARNMORE_LINKS = {
 function formatLearnMoreURLs(containerEl) {
   for (const [linkClass, linkInfo] of Object.entries(LEARNMORE_LINKS)) {
     for (const element of containerEl.querySelectorAll(linkClass)) {
-      const baseURL = linkInfo.baseURL
-        ? Services.urlFormatter.formatURL(linkInfo.baseURL)
-        : Services.urlFormatter.formatURLPref("app.support.baseURL");
+      const baseURL = Services.urlFormatter.formatURL(linkInfo.baseURL);
 
       element.href = baseURL + linkInfo.path;
     }
@@ -368,10 +357,6 @@ class AbuseReasonSuggestions extends HTMLElement {
     } else {
       this.hidden = true;
     }
-  }
-
-  get LEARNMORE_LINKS() {
-    return Object.keys(LEARNMORE_LINKS);
   }
 }
 
