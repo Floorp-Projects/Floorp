@@ -47,6 +47,12 @@ extern JS_PUBLIC_API JSObject* NewArrayBufferWithContents(
     mozilla::UniquePtr<void, JS::FreePolicy> contents);
 
 /**
+ * Marker enum to notify callers that the buffer contents must be freed manually
+ * when the ArrayBuffer allocation failed.
+ */
+enum class NewArrayBufferOutOfMemory { CallerMustFreeMemory };
+
+/**
  * Create a new ArrayBuffer with the given |contents|, which may be null only
  * if |nbytes == 0|.  |contents| must be allocated compatible with deallocation
  * by |JS_free|.
@@ -61,9 +67,8 @@ extern JS_PUBLIC_API JSObject* NewArrayBufferWithContents(
  * call to this function, it could move those contents to a different location
  * and invalidate the provided pointer.
  */
-extern JS_PUBLIC_API JSObject* NewArrayBufferWithContents(JSContext* cx,
-                                                          size_t nbytes,
-                                                          void* contents);
+extern JS_PUBLIC_API JSObject* NewArrayBufferWithContents(
+    JSContext* cx, size_t nbytes, void* contents, NewArrayBufferOutOfMemory);
 
 /**
  * Create a new ArrayBuffer, whose bytes are set to the values of the bytes in
