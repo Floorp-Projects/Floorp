@@ -9340,6 +9340,13 @@
   value: false
   mirror: always
 
+# Is support for -webkit-slider* pseudos enabled?
+- name: layout.css.webkit-range-pseudos.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Is 'content:none' supported on (non-pseudo) elements?
 - name: layout.css.element-content-none.enabled
   type: RelaxedAtomicBool
