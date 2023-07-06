@@ -424,18 +424,12 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Anfon cais</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Cyfyngu Baneri Cwcis</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Gwneud cais am gefnogaeth ar gyfer y wefan hon?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Cais i’r wefan cymorth wedi’i gyflwyno.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Cais wedi ei anfon</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Ymlaen ar gyfer y wefan hon</string>
 
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Cais am gefnogaeth gwefan wedi’i gyflwyno</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Cais am gefnogaeth wedi’i anfon</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -444,8 +438,6 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Troi Llai o Faneri Cwcis ymlaen ar %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Diffodd Llai o Faneri Cwcis ar %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Nid yw’r wefan hon yn cael ei chefnogi ar hyn o bryd gan Llai o Faneri Cwcis. Hoffech chi ofyn i’n tîm adolygu’r wefan hon ac ychwanegu cefnogaeth yn y dyfodol?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">Nid yw %1$s yn gallu gwrthod ceisiadau cwcis ar y wefan hon yn awtomatig. Gallwch anfon cais i gefnogi’r wefan hon yn y dyfodol.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -552,6 +544,11 @@
     <string name="preferences_open_links_in_apps_never">Byth</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Rheolwr llwytho i lawr allanol</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Galluogi logiau Gecko</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Yn gadael y rhaglen er mwyn gosod y newidiadau…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Ychwanegion</string>
 
@@ -1500,12 +1497,8 @@
     <string name="etp_settings">Gosodiadau Diogelu</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Diogelwch Uwch Rhag Tracio</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Pori heb gael eich dilyn</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Nawr yn cynnwys Diogelwch Cwci Llwyr, ein rhwystr mwyaf pwerus eto yn erbyn tracwyr traws-gwefan.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Cadwch eich data i chi’ch hun. Mae %s yn eich diogelu rhag llawer o’r tracwyr mwyaf cyffredin sy’n eich dilyn ar-lein.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">Mae %s yn eich diogelu rhag llawer o’r tracwyr mwyaf cyffredin sy’n dilyn yr hyn rydych chi’n ei wneud ar-lein.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1513,15 +1506,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Safonol (rhagosodedig)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Cydbwysedd rhwng diogelwch a pherfformiad. Bydd tudalennau’n llwytho fel arfer.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Bydd tudalennau’n llwytho fel arfer, ond yn rhwystro llai o dracwyr.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Beth sydd wedi’i rwystro gan ddiogelu tracio safonol</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Llym</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Yn rhwystro mwy o dracwyr fel bod tudalennau’n llwytho’n gyflymach, ond gall dorri rhai swyddogaethau ar y dudalen.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Diogelwch tracio cryfach a pherfformiad cyflymach, ond efallai na fydd rhai gwefannau’n gweithio’n iawn.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
