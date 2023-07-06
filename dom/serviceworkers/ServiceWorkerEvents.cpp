@@ -1093,7 +1093,9 @@ void PushMessageData::ArrayBuffer(JSContext* cx,
                                   ErrorResult& aRv) {
   uint8_t* data = GetContentsCopy();
   if (data) {
-    BodyUtil::ConsumeArrayBuffer(cx, aRetval, mBytes.Length(), data, aRv);
+    UniquePtr<uint8_t[], JS::FreePolicy> dataPtr(data);
+    BodyUtil::ConsumeArrayBuffer(cx, aRetval, mBytes.Length(),
+                                 std::move(dataPtr), aRv);
   }
 }
 
