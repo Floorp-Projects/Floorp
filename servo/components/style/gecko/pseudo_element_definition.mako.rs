@@ -208,6 +208,13 @@ impl PseudoElement {
             "-moz-list-bullet" | "-moz-list-number" => {
                 return Some(PseudoElement::Marker);
             },
+            // Compat aliases for some `::-webkit-` pseudo-elements.
+            "-webkit-slider-runnable-track" if static_prefs::pref!("layout.css.webkit-range-pseudos.enabled") => {
+                return Some(PseudoElement::MozRangeTrack);
+            },
+            "-webkit-slider-thumb" if static_prefs::pref!("layout.css.webkit-range-pseudos.enabled") => {
+                return Some(PseudoElement::MozRangeThumb);
+            },
             _ => {
                 if starts_with_ignore_ascii_case(name, "-moz-tree-") {
                     return PseudoElement::tree_pseudo_element(name, Default::default())
