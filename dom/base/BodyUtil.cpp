@@ -353,11 +353,13 @@ class MOZ_STACK_CLASS FormDataParser {
 // static
 void BodyUtil::ConsumeArrayBuffer(JSContext* aCx,
                                   JS::MutableHandle<JSObject*> aValue,
-                                  uint32_t aInputLength, uint8_t* aInput,
+                                  uint32_t aInputLength,
+                                  UniquePtr<uint8_t[], JS::FreePolicy> aInput,
                                   ErrorResult& aRv) {
+  UniquePtr<void, JS::FreePolicy> dataPtr{aInput.release()};
   JS::Rooted<JSObject*> arrayBuffer(aCx);
-  arrayBuffer = JS::NewArrayBufferWithContents(aCx, aInputLength,
-                                               reinterpret_cast<void*>(aInput));
+  arrayBuffer =
+      JS::NewArrayBufferWithContents(aCx, aInputLength, std::move(dataPtr));
   if (!arrayBuffer) {
     JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);

@@ -108,7 +108,7 @@ class CompressionStreamAlgorithms : public TransformerAlgorithmsWrapper {
 
     do {
       static uint16_t kBufferSize = 16384;
-      UniquePtr<uint8_t> buffer(
+      UniquePtr<uint8_t[], JS::FreePolicy> buffer(
           static_cast<uint8_t*>(JS_malloc(aCx, kBufferSize)));
       if (!buffer) {
         aRv.ThrowTypeError("Out of memory");
@@ -164,8 +164,8 @@ class CompressionStreamAlgorithms : public TransformerAlgorithmsWrapper {
       // into Uint8Arrays.
       // (The buffer is 'split' by having a fixed sized buffer above.)
 
-      JS::Rooted<JSObject*> view(
-          aCx, nsJSUtils::MoveBufferAsUint8Array(aCx, written, buffer));
+      JS::Rooted<JSObject*> view(aCx, nsJSUtils::MoveBufferAsUint8Array(
+                                          aCx, written, std::move(buffer)));
       if (!view || !array.append(view)) {
         JS_ClearPendingException(aCx);
         aRv.ThrowTypeError("Out of memory");
