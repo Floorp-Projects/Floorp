@@ -208,6 +208,12 @@ addAccessibleTask(
   <ins id="ins">a</ins>
   <button id="button">b</button>
 </div>
+<p>
+  <span id="presentationalSpan" role="none"
+      style="display: block; position: absolute; top: 0; left: 0; translate: 1px;">
+    a
+  </span>
+</p>
   `,
   async function (browser, docAcc) {
     const div = findAccessibleChildByID(docAcc, "div");
@@ -228,6 +234,15 @@ addAccessibleTask(
       "block",
       "ins display attribute changed to block"
     );
+
+    // This span has role="none", but we force a generic Accessible because it
+    // has a transform. role="none" might have been used to avoid exposing
+    // display: block, so ensure we don't expose that.
+    const presentationalSpan = findAccessibleChildByID(
+      docAcc,
+      "presentationalSpan"
+    );
+    testAbsentAttrs(presentationalSpan, { display: "" });
   },
   { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
 );
