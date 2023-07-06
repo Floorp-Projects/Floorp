@@ -102,6 +102,8 @@ If you are using Linux, please show the [Linux](#linux) section.
 
 - Floorp Browser is based on Mozilla Firefox. Floorp Browser is not affiliated with Mozilla & Mozilla Firefox.
 
+- Floorp uses Mozilla Firefox's source code & other open source projects. See [Floorp License Notices](https://github.com/Floorp-Projects/Floorp/raw/ESR115/toolkit/content/license.html) for details.
+
 ### 📧 Contact
 
 - [Official Support Site](https://support.ablaze.one)
