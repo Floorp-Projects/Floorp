@@ -24,6 +24,9 @@ enum class SelfHostedIter {
 
   // The operand is marked and the `@@iterator` method is on the stack.
   AllowContentWith,
+
+  // The operand is marked and the `next` method is on the stack.
+  AllowContentWithNext,
 };
 
 } /* namespace js::frontend */
