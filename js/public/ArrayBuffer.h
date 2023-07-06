@@ -137,40 +137,6 @@ extern JS_PUBLIC_API JSObject* NewExternalArrayBuffer(
     mozilla::UniquePtr<void, BufferContentsDeleter> contents);
 
 /**
- * Create a new ArrayBuffer with the given contents. The contents must not be
- * modified by any other code, internal or external.
- *
- * !!! IMPORTANT !!!
- * If and only if an ArrayBuffer is successfully created and returned,
- * ownership of |contents| is transferred to the new ArrayBuffer.
- *
- * When the ArrayBuffer is ready to be disposed of, `freeFunc(contents,
- * freeUserData)` will be called to release the ArrayBuffer's reference on the
- * contents.
- *
- * `freeFunc()` must not call any JSAPI functions that could cause a garbage
- * collection.
- *
- * The caller must keep the buffer alive until `freeFunc()` is called, or, if
- * `freeFunc` is null, until the JSRuntime is destroyed.
- *
- * The caller must not access the buffer on other threads. The JS engine will
- * not allow the buffer to be transferred to other threads. If you try to
- * transfer an external ArrayBuffer to another thread, the data is copied to a
- * new malloc buffer. `freeFunc()` must be threadsafe, and may be called from
- * any thread.
- *
- * This allows ArrayBuffers to be used with embedder objects that use reference
- * counting, for example. In that case the caller is responsible
- * for incrementing the reference count before passing the contents to this
- * function. This also allows using non-reference-counted contents that must be
- * freed with some function other than free().
- */
-extern JS_PUBLIC_API JSObject* NewExternalArrayBuffer(
-    JSContext* cx, size_t nbytes, void* contents,
-    BufferContentsFreeFunc freeFunc, void* freeUserData = nullptr);
-
-/**
  * Create a new ArrayBuffer with the given non-null |contents|.
  *
  * Ownership of |contents| remains with the caller: it isn't transferred to the
