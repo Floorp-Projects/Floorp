@@ -1074,7 +1074,9 @@ var TranslationsPanel = new (class {
   handleEvent = async event => {
     switch (event.type) {
       case "TranslationsParent:OfferTranslation": {
-        this.open(event);
+        if (Services.wm.getMostRecentBrowserWindow()?.gBrowser === gBrowser) {
+          this.open(event);
+        }
         break;
       }
       case "TranslationsParent:LanguageState":
