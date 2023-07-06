@@ -14,7 +14,7 @@ const {
   "chrome://global/content/shopping/ProductConfig.mjs"
 );
 
-const { ShoppingProduct } = ChromeUtils.importESModule(
+const { ShoppingProduct, isProductURL } = ChromeUtils.importESModule(
   "chrome://global/content/shopping/ShoppingProduct.mjs"
 );
 
@@ -280,5 +280,47 @@ add_task(function test_bestbuy_product_urls() {
     ShoppingProduct.isProduct(product),
     false,
     "Url is not a product"
+  );
+});
+
+add_task(function test_isProductURL() {
+  let product_string =
+    "https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/";
+  let product_url = new URL(product_string);
+  let product_uri = Services.io.newURI(product_string);
+  Assert.equal(
+    isProductURL(product_url),
+    true,
+    "Passing a product URL returns true"
+  );
+  Assert.equal(
+    isProductURL(product_uri),
+    true,
+    "Passing a product URI returns true"
+  );
+
+  let content_string =
+    "https://www.walmart.com/browse/food/grilling-foods/976759_1567409_8808777";
+  let content_url = new URL(content_string);
+  let content_uri = Services.io.newURI(content_string);
+  Assert.equal(
+    isProductURL(content_url),
+    false,
+    "Passing a content URL returns false"
+  );
+  Assert.equal(
+    isProductURL(content_uri),
+    false,
+    "Passing a content URI returns false"
+  );
+
+  Assert.equal(isProductURL(), false, "Passing nothing returns false");
+
+  Assert.equal(isProductURL(1234), false, "Passing a number returns false");
+
+  Assert.equal(
+    isProductURL("1234"),
+    false,
+    "Passing a junk string returns false"
   );
 });
