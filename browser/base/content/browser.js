@@ -6527,7 +6527,7 @@ function onViewToolbarsPopupShowing(aEvent, aInsertPoint) {
     document.getElementById("toolbar-context-selectAllTabs").disabled =
       gBrowser.allTabsSelected();
     document.getElementById("toolbar-context-undoCloseTab").disabled =
-      SessionStore.getClosedTabCountForWindow(window) == 0;
+      SessionStore.getClosedTabCount() == 0;
     return;
   }
 
@@ -8200,33 +8200,58 @@ function restoreLastClosedTabOrWindowOrSession() {
 }
 
 /**
- * Re-open a closed tab.
- * @param aIndex
- *        The index of the tab (via SessionStore.getClosedTabDataForWindow)
+ * Re-open a closed tab into the current window.
+ * @param [aIndex]
+ *        The index of the tab (via SessionStore.getClosedTabData).
+ *        When undefined, the first n closed tabs will be re-opened, where n is provided by getLastClosedTabCount.
+ * @param {string} [sourceWindowSSId]
+ *        An optional sessionstore id to identify the source window for the tab.
+ *        I.e. the window the tab belonged to when closed.
+ *        When undefined we'll use the current window
  * @returns a reference to the reopened tab.
  */
-function undoCloseTab(aIndex) {
-  // wallpaper patch to prevent an unnecessary blank tab (bug 343895)
-  let blankTabToRemove = null;
-  if (gBrowser.tabs.length == 1 && gBrowser.selectedTab.isEmpty) {
-    blankTabToRemove = gBrowser.selectedTab;
+function undoCloseTab(aIndex, sourceWindowSSId) {
+  // the window we'll open the tab into
+  let targetWindow = window;
+  // the window the tab was closed from
+  let sourceWindow;
+  if (sourceWindowSSId) {
+    sourceWindow = SessionStore.getWindowById(sourceWindowSSId);
+    if (!sourceWindow) {
+      throw new Error(
+        "sourceWindowSSId argument to undoCloseTab didn't resolve to a window"
+      );
+    }
+  } else {
+    sourceWindow = window;
   }
 
-  let closedTabCount = SessionStore.getLastClosedTabCount(window);
+  // wallpaper patch to prevent an unnecessary blank tab (bug 343895)
+  let blankTabToRemove = null;
+  if (
+    targetWindow.gBrowser.visibleTabs.length == 1 &&
+    targetWindow.gBrowser.selectedTab.isEmpty
+  ) {
+    blankTabToRemove = targetWindow.gBrowser.selectedTab;
+  }
+
+  // We are specifically interested in the lastClosedTabCount for the source window.
+  // When aIndex is undefined, we restore all the lastClosedTabCount tabs.
+  let lastClosedTabCount = SessionStore.getLastClosedTabCount(sourceWindow);
   let tab = null;
   // aIndex is undefined if the function is called without a specific tab to restore.
   let tabsToRemove =
-    aIndex !== undefined ? [aIndex] : new Array(closedTabCount).fill(0);
+    aIndex !== undefined ? [aIndex] : new Array(lastClosedTabCount).fill(0);
   let tabsRemoved = false;
   for (let index of tabsToRemove) {
-    if (SessionStore.getClosedTabCountForWindow(window) > index) {
-      tab = SessionStore.undoCloseTab(window, index);
+    if (SessionStore.getClosedTabCountForWindow(sourceWindow) > index) {
+      tab = SessionStore.undoCloseTab(sourceWindow, index, targetWindow);
       tabsRemoved = true;
     }
   }
 
   if (tabsRemoved && blankTabToRemove) {
-    gBrowser.removeTab(blankTabToRemove);
+    targetWindow.gBrowser.removeTab(blankTabToRemove);
   }
 
   return tab;

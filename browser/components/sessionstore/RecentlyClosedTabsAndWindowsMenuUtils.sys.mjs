@@ -29,19 +29,24 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
    */
   getTabsFragment(aWindow, aTagName, aPrefixRestoreAll = false) {
     let doc = aWindow.document;
-    let fragment = doc.createDocumentFragment();
-    if (lazy.SessionStore.getClosedTabCountForWindow(aWindow) != 0) {
-      let closedTabs = lazy.SessionStore.getClosedTabDataForWindow(aWindow);
-      for (let i = 0; i < closedTabs.length; i++) {
-        createEntry(
-          aTagName,
-          false,
-          i,
-          closedTabs[i],
-          doc,
-          closedTabs[i].title,
-          fragment
-        );
+    const fragment = doc.createDocumentFragment();
+    const browserWindows = lazy.SessionStore.getWindows(aWindow);
+    const tabCount = lazy.SessionStore.getClosedTabCount(aWindow);
+
+    if (tabCount > 0) {
+      for (const win of browserWindows) {
+        const closedTabs = lazy.SessionStore.getClosedTabDataForWindow(win);
+        for (let i = 0; i < closedTabs.length; i++) {
+          createEntry(
+            aTagName,
+            false,
+            i,
+            closedTabs[i],
+            doc,
+            closedTabs[i].title,
+            fragment
+          );
+        }
       }
 
       createRestoreAllEntry(
@@ -52,7 +57,6 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
         aTagName == "menuitem"
           ? "recently-closed-menu-reopen-all-tabs"
           : "recently-closed-panel-reopen-all-tabs",
-        closedTabs.length,
         aTagName
       );
     }
@@ -95,11 +99,38 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
         aTagName == "menuitem"
           ? "recently-closed-menu-reopen-all-windows"
           : "recently-closed-panel-reopen-all-windows",
-        closedWindowData.length,
         aTagName
       );
     }
     return fragment;
+  },
+
+  /**
+   * Handle a command event to re-open all closed tabs
+   * @param aEvent
+   *        The command event when the user clicks the restore all menu item
+   */
+  onRestoreAllTabsCommand(aEvent) {
+    const currentWindow = aEvent.target.ownerGlobal;
+    const browserWindows = lazy.SessionStore.getWindows(currentWindow);
+    for (const sourceWindow of browserWindows) {
+      const count = lazy.SessionStore.getClosedTabCountForWindow(sourceWindow);
+      for (let index = 0; index < count; index++) {
+        lazy.SessionStore.undoCloseTab(sourceWindow, index, currentWindow);
+      }
+    }
+  },
+
+  /**
+   * Handle a command event to re-open all closed windows
+   * @param aEvent
+   *        The command event when the user clicks the restore all menu item
+   */
+  onRestoreAllWindowsCommand(aEvent) {
+    const count = lazy.SessionStore.getClosedWindowCount();
+    for (let index = 0; index < count; index++) {
+      lazy.SessionStore.undoCloseWindow(index);
+    }
   },
 
   /**
@@ -113,7 +144,10 @@ export var RecentlyClosedTabsAndWindowsMenuUtils = {
       return;
     }
 
-    aEvent.view.undoCloseTab(aEvent.originalTarget.getAttribute("value"));
+    aEvent.view.undoCloseTab(
+      aEvent.originalTarget.getAttribute("value"),
+      aEvent.originalTarget.getAttribute("source-window-id")
+    );
     aEvent.view.gBrowser.moveTabToEnd();
     let ancestorPanel = aEvent.target.closest("panel");
     if (ancestorPanel) {
@@ -155,8 +189,18 @@ function createEntry(
     const iconURL = lazy.PlacesUIUtils.getImageURL(aClosedTab.image);
     element.setAttribute("image", iconURL);
   }
-  if (!aIsWindowsFragment) {
+
+  if (aIsWindowsFragment) {
+    element.setAttribute("oncommand", `undoCloseWindow("${aIndex}");`);
+  } else {
+    // sourceWindowId is used to look up the closed tab entry to remove it when it is restored
+    let sourceWindowId = aClosedTab.sourceWindowId;
     element.setAttribute("value", aIndex);
+    element.setAttribute("source-window-id", sourceWindowId);
+    element.setAttribute(
+      "oncommand",
+      `undoCloseTab(${aIndex}, "${sourceWindowId}");`
+    );
   }
 
   if (aTagName == "menuitem") {
@@ -165,11 +209,6 @@ function createEntry(
       "menuitem-iconic bookmark-item menuitem-with-favicon"
     );
   }
-
-  element.setAttribute(
-    "oncommand",
-    "undoClose" + (aIsWindowsFragment ? "Window" : "Tab") + "(" + aIndex + ");"
-  );
 
   // Set the targetURI attribute so it will be shown in tooltip.
   // SessionStore uses one-based indexes, so we need to normalize them.
@@ -237,14 +276,13 @@ function createRestoreAllEntry(
     lazy.l10n.formatValueSync(aRestoreAllLabel)
   );
 
-  restoreAllElements.setAttribute(
-    "oncommand",
-    "for (var i = 0; i < " +
-      aEntryCount +
-      "; i++) undoClose" +
-      (aIsWindowsFragment ? "Window" : "Tab") +
-      "();"
+  restoreAllElements.addEventListener(
+    "command",
+    aIsWindowsFragment
+      ? RecentlyClosedTabsAndWindowsMenuUtils.onRestoreAllWindowsCommand
+      : RecentlyClosedTabsAndWindowsMenuUtils.onRestoreAllTabsCommand
   );
+
   if (aPrefixRestoreAll) {
     aFragment.insertBefore(restoreAllElements, aFragment.firstChild);
   } else {

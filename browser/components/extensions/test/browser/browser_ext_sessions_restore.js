@@ -33,7 +33,7 @@ add_task(async function test_sessions_restore() {
           error => {
             browser.test.assertTrue(
               error.message.includes(
-                "Could not restore object using sessionId not-a-valid-session-id."
+                "Invalid sessionId: not-a-valid-session-id."
               )
             );
             browser.test.sendMessage("restore-rejected");
