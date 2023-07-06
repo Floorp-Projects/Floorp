@@ -32,7 +32,7 @@ for path in paths:
         raise IOError("%s does not exist. " % path)
     sys.path.insert(0, path)
 
-from cmdline import FIREFOX, FIREFOX_ANDROID_APPS
+from cmdline import FIREFOX_ANDROID_APPS
 from condprof.client import ProfileNotFoundError, get_profile
 from condprof.util import get_current_platform
 from gecko_profile import GeckoProfile
@@ -40,7 +40,6 @@ from logger.logger import RaptorLogger
 from results import RaptorResultsHandler
 
 LOG = RaptorLogger(component="raptor-perftest")
-FIREFOX_APPS = FIREFOX_ANDROID_APPS + [FIREFOX]
 
 # - mozproxy.utils LOG displayed INFO messages even when LOG.error() was used in mitm.py
 mpu.LOG = RaptorLogger(component="raptor-mitmproxy")
@@ -382,17 +381,19 @@ class Perftest(object):
         return self.conditioned_profile_copy
 
     def build_browser_profile(self):
-        if self.config["app"] in FIREFOX_APPS:
-            if self.config.get("conditioned_profile") is None:
-                self.profile = create_profile(self.profile_class)
-            else:
-                # use mozprofile to create a profile for us, from our conditioned profile's path
-                self.profile = create_profile(
-                    self.profile_class, profile=self.get_conditioned_profile()
-                )
-        else:
+        if self.config["app"] in ["safari"]:
             self.profile = None
             return
+        elif (
+            self.config["app"] in ["chrome", "chromium", "chrome-m", "custom-car"]
+            or self.config.get("conditioned_profile") is None
+        ):
+            self.profile = create_profile(self.profile_class)
+        else:
+            # use mozprofile to create a profile for us, from our conditioned profile's path
+            self.profile = create_profile(
+                self.profile_class, profile=self.get_conditioned_profile()
+            )
         # Merge extra profile data from testing/profiles
         with open(os.path.join(self.profile_data_dir, "profiles.json"), "r") as fh:
             base_profiles = json.load(fh)["raptor"]
@@ -446,7 +447,7 @@ class Perftest(object):
         if test.get("playback") is not None and self.playback is None:
             self.start_playback(test)
 
-        if test.get("preferences") is not None and self.config["app"] in FIREFOX_APPS:
+        if test.get("preferences") is not None and self.config["app"] not in "safari":
             self.set_browser_test_prefs(test["preferences"])
 
     @abstractmethod
