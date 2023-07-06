@@ -87,8 +87,6 @@ PrototypeDocumentContentSink::PrototypeDocumentContentSink()
     : mNextSrcLoadWaiter(nullptr),
       mCurrentScriptProto(nullptr),
       mOffThreadCompiling(false),
-      mOffThreadCompileStringBuf(nullptr),
-      mOffThreadCompileStringLength(0),
       mStillWalking(false),
       mPendingSheets(0) {}
 
@@ -96,10 +94,6 @@ PrototypeDocumentContentSink::~PrototypeDocumentContentSink() {
   NS_ASSERTION(
       mNextSrcLoadWaiter == nullptr,
       "unreferenced document still waiting for script source to load?");
-
-  if (mOffThreadCompileStringBuf) {
-    js_free(mOffThreadCompileStringBuf);
-  }
 }
 
 nsresult PrototypeDocumentContentSink::Init(Document* aDoc, nsIURI* aURI,
@@ -851,23 +845,15 @@ PrototypeDocumentContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
 
     // XXX should also check nsIHttpChannel::requestSucceeded
 
-    MOZ_ASSERT(!mOffThreadCompiling && (mOffThreadCompileStringLength == 0 &&
-                                        !mOffThreadCompileStringBuf),
+    MOZ_ASSERT(!mOffThreadCompiling,
                "PrototypeDocument can't load multiple scripts at once");
 
+    Utf8Unit* units = nullptr;
+    size_t unitsLength = 0;
+
     rv = ScriptLoader::ConvertToUTF8(channel, string, stringLen, u""_ns,
-                                     mDocument, mOffThreadCompileStringBuf,
-                                     mOffThreadCompileStringLength);
+                                     mDocument, units, unitsLength);
     if (NS_SUCCEEDED(rv)) {
-      // Pass ownership of the buffer, carefully emptying the existing
-      // fields in the process.  Note that the |Compile| function called
-      // below always takes ownership of the buffer.
-      Utf8Unit* units = nullptr;
-      size_t unitsLength = 0;
-
-      std::swap(units, mOffThreadCompileStringBuf);
-      std::swap(unitsLength, mOffThreadCompileStringLength);
-
       rv = mCurrentScriptProto->Compile(units, unitsLength,
                                         JS::SourceOwnership::TakeOwnership, uri,
                                         1, mDocument, this);
@@ -901,13 +887,6 @@ PrototypeDocumentContentSink::OnScriptCompileComplete(JS::Stencil* aStencil,
   if (mOffThreadCompiling) {
     mOffThreadCompiling = false;
     mDocument->UnblockOnload(false);
-  }
-
-  // After compilation finishes the script's characters are no longer needed.
-  if (mOffThreadCompileStringBuf) {
-    js_free(mOffThreadCompileStringBuf);
-    mOffThreadCompileStringBuf = nullptr;
-    mOffThreadCompileStringLength = 0;
   }
 
   // Clear mCurrentScriptProto now, but save it first for use below in
