@@ -1054,9 +1054,9 @@ class GetOriginUsageOp final : public QuotaUsageRequestBase {
 class QuotaRequestBase : public NormalOriginOperationBase,
                          public PQuotaRequestParent {
  public:
-  // May be overridden by subclasses if they need to perform work on the
-  // background thread before being run.
-  virtual void Init(Quota& aQuota);
+  // Must be overridden by subclasses to perform work on the background thread
+  // before being run.
+  virtual void Init(Quota& aQuota) = 0;
 
  protected:
   explicit QuotaRequestBase(const char* aRunnableName, bool aExclusive)
@@ -1220,6 +1220,8 @@ class GetFullOriginMetadataOp : public QuotaRequestBase {
  public:
   explicit GetFullOriginMetadataOp(const GetFullOriginMetadataParams& aParams);
 
+  void Init(Quota& aQuota) override;
+
  private:
   nsresult DoInit(QuotaManager& aQuotaManager) override;
 
@@ -1253,6 +1255,8 @@ class ResetOrClearOp final : public QuotaRequestBase {
 class ClearPrivateBrowsingOp final : public QuotaRequestBase {
  public:
   ClearPrivateBrowsingOp();
+
+  void Init(Quota& aQuota) override;
 
  private:
   ~ClearPrivateBrowsingOp() = default;
@@ -1376,6 +1380,8 @@ class EstimateOp final : public QuotaRequestBase {
 
  public:
   explicit EstimateOp(const EstimateParams& aParams);
+
+  void Init(Quota& aQuota) override;
 
  private:
   ~EstimateOp() = default;
@@ -8190,12 +8196,6 @@ void GetOriginUsageOp::GetResponse(UsageRequestResponse& aResponse) {
   aResponse = usageResponse;
 }
 
-void QuotaRequestBase::Init(Quota& aQuota) {
-  AssertIsOnOwningThread();
-
-  mNeedsStorageInit = true;
-}
-
 void QuotaRequestBase::SendResults() {
   AssertIsOnOwningThread();
 
@@ -8489,6 +8489,12 @@ GetFullOriginMetadataOp::GetFullOriginMetadataOp(
   AssertIsOnOwningThread();
 }
 
+void GetFullOriginMetadataOp::Init(Quota& aQuota) {
+  AssertIsOnOwningThread();
+
+  mNeedsStorageInit = true;
+}
+
 nsresult GetFullOriginMetadataOp::DoInit(QuotaManager& aQuotaManager) {
   AssertIsOnOwningThread();
 
@@ -8622,6 +8628,12 @@ ClearPrivateBrowsingOp::ClearPrivateBrowsingOp()
                        OriginScope::FromNull(), Nullable<Client::Type>(),
                        /* aExclusive */ true) {
   AssertIsOnOwningThread();
+}
+
+void ClearPrivateBrowsingOp::Init(Quota& aQuota) {
+  AssertIsOnOwningThread();
+
+  mNeedsStorageInit = true;
 }
 
 nsresult ClearPrivateBrowsingOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
@@ -8899,7 +8911,7 @@ ClearOriginOp::ClearOriginOp(const RequestParams& aParams)
 void ClearOriginOp::Init(Quota& aQuota) {
   AssertIsOnOwningThread();
 
-  QuotaRequestBase::Init(aQuota);
+  mNeedsStorageInit = true;
 
   if (mParams.persistenceTypeIsExplicit()) {
     mPersistenceType.SetValue(mParams.persistenceType());
@@ -8935,7 +8947,7 @@ ClearDataOp::ClearDataOp(const RequestParams& aParams)
 void ClearDataOp::Init(Quota& aQuota) {
   AssertIsOnOwningThread();
 
-  QuotaRequestBase::Init(aQuota);
+  mNeedsStorageInit = true;
 
   mOriginScope.SetFromPattern(mParams.pattern());
 }
@@ -9002,7 +9014,7 @@ PersistRequestBase::PersistRequestBase(const PrincipalInfo& aPrincipalInfo)
 void PersistRequestBase::Init(Quota& aQuota) {
   AssertIsOnOwningThread();
 
-  QuotaRequestBase::Init(aQuota);
+  mNeedsStorageInit = true;
 
   mPersistenceType.SetValue(PERSISTENCE_TYPE_DEFAULT);
 }
@@ -9170,6 +9182,12 @@ EstimateOp::EstimateOp(const EstimateParams& aParams)
   AssertIsOnOwningThread();
 
   // Overwrite OriginOperationBase default values.
+  mNeedsStorageInit = true;
+}
+
+void EstimateOp::Init(Quota& aQuota) {
+  AssertIsOnOwningThread();
+
   mNeedsStorageInit = true;
 }
 
