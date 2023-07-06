@@ -141,6 +141,10 @@ class alignas(TypicalCacheLineSize) Nursery {
 
     void* cell =
         reinterpret_cast<void*>(uintptr_t(ptr) + sizeof(gc::NurseryCellHeader));
+    if (!cell) {
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+          "Successful allocation cannot result in nullptr");
+    }
 
     // Update the allocation site. This code is also inlined in
     // MacroAssembler::updateAllocSite.
@@ -619,6 +623,11 @@ class alignas(TypicalCacheLineSize) Nursery {
     }
 
     void* ptr = reinterpret_cast<void*>(position());
+    if (!ptr) {
+      MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
+          "Successful allocation cannot result in nullptr");
+    }
+
     position_ = position() + size;
 
     DebugOnlyPoison(ptr, JS_ALLOCATED_NURSERY_PATTERN, size,
