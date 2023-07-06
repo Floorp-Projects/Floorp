@@ -189,9 +189,8 @@ bool nsJSUtils::DumpEnabled() {
 JSObject* nsJSUtils::MoveBufferAsUint8Array(
     JSContext* aCx, size_t aSize,
     UniquePtr<uint8_t[], JS::FreePolicy> aBuffer) {
-  UniquePtr<void, JS::FreePolicy> dataPtr{aBuffer.release()};
   JS::Rooted<JSObject*> arrayBuffer(
-      aCx, JS::NewArrayBufferWithContents(aCx, aSize, std::move(dataPtr)));
+      aCx, JS::NewArrayBufferWithContents(aCx, aSize, std::move(aBuffer)));
   if (!arrayBuffer) {
     return nullptr;
   }

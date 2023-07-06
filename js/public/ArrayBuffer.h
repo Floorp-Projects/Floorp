@@ -47,6 +47,44 @@ extern JS_PUBLIC_API JSObject* NewArrayBufferWithContents(
     mozilla::UniquePtr<void, JS::FreePolicy> contents);
 
 /**
+ * Create a new ArrayBuffer with the given |contents|, which may be null only
+ * if |nbytes == 0|.  |contents| must be allocated compatible with deallocation
+ * by |JS_free|.
+ *
+ * Care must be taken that |nbytes| bytes of |contents| remain valid for the
+ * duration of this call.  In particular, passing the length/pointer of existing
+ * typed array or ArrayBuffer data is generally unsafe: if a GC occurs during a
+ * call to this function, it could move those contents to a different location
+ * and invalidate the provided pointer.
+ */
+inline JS_PUBLIC_API JSObject* NewArrayBufferWithContents(
+    JSContext* cx, size_t nbytes,
+    mozilla::UniquePtr<char[], JS::FreePolicy> contents) {
+  // As a convenience, provide an overload for UniquePtr<char[]>.
+  mozilla::UniquePtr<void, JS::FreePolicy> ptr{contents.release()};
+  return NewArrayBufferWithContents(cx, nbytes, std::move(ptr));
+}
+
+/**
+ * Create a new ArrayBuffer with the given |contents|, which may be null only
+ * if |nbytes == 0|.  |contents| must be allocated compatible with deallocation
+ * by |JS_free|.
+ *
+ * Care must be taken that |nbytes| bytes of |contents| remain valid for the
+ * duration of this call.  In particular, passing the length/pointer of existing
+ * typed array or ArrayBuffer data is generally unsafe: if a GC occurs during a
+ * call to this function, it could move those contents to a different location
+ * and invalidate the provided pointer.
+ */
+inline JS_PUBLIC_API JSObject* NewArrayBufferWithContents(
+    JSContext* cx, size_t nbytes,
+    mozilla::UniquePtr<uint8_t[], JS::FreePolicy> contents) {
+  // As a convenience, provide an overload for UniquePtr<uint8_t[]>.
+  mozilla::UniquePtr<void, JS::FreePolicy> ptr{contents.release()};
+  return NewArrayBufferWithContents(cx, nbytes, std::move(ptr));
+}
+
+/**
  * Marker enum to notify callers that the buffer contents must be freed manually
  * when the ArrayBuffer allocation failed.
  */

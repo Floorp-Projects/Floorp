@@ -356,10 +356,9 @@ void BodyUtil::ConsumeArrayBuffer(JSContext* aCx,
                                   uint32_t aInputLength,
                                   UniquePtr<uint8_t[], JS::FreePolicy> aInput,
                                   ErrorResult& aRv) {
-  UniquePtr<void, JS::FreePolicy> dataPtr{aInput.release()};
   JS::Rooted<JSObject*> arrayBuffer(aCx);
   arrayBuffer =
-      JS::NewArrayBufferWithContents(aCx, aInputLength, std::move(dataPtr));
+      JS::NewArrayBufferWithContents(aCx, aInputLength, std::move(aInput));
   if (!arrayBuffer) {
     JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
