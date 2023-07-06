@@ -1356,9 +1356,10 @@ ArrayBufferObject* ArrayBufferObject::createForContents(
   } else if (contents.kind() == EXTERNAL) {
     // Store the FreeInfo in the inline data slots so that we
     // don't use up slots for it in non-refcounted array buffers.
-    size_t freeInfoSlots = HowMany(sizeof(FreeInfo), sizeof(Value));
-    MOZ_ASSERT(reservedSlots + freeInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
-               "FreeInfo must fit in inline slots");
+    constexpr size_t freeInfoSlots = HowMany(sizeof(FreeInfo), sizeof(Value));
+    static_assert(
+        reservedSlots + freeInfoSlots <= NativeObject::MAX_FIXED_SLOTS,
+        "FreeInfo must fit in inline slots");
     nslots += freeInfoSlots;
   } else {
     // The ABO is taking ownership, so account the bytes against the zone.
