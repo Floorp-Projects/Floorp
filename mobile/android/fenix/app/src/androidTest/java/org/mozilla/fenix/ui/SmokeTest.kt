@@ -29,12 +29,10 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.RetryTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper.assertYoutubeAppOpens
-import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.registerAndCleanupIdlingResources
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickPageObject
-import org.mozilla.fenix.ui.robots.customTabScreen
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -320,51 +318,6 @@ class SmokeTest {
             verifyAppearanceColorDark(true)
             verifyAppearanceColorLight(true)
             verifyAppearanceColorSepia(true)
-        }
-    }
-
-    // Verifies the main menu of a custom tab with a custom menu item
-    @Test
-    fun customTabMenuItemsTest() {
-        val customTabPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        intentReceiverActivityTestRule.launchActivity(
-            createCustomTabIntent(
-                customTabPage.url.toString(),
-                customMenuItem,
-            ),
-        )
-
-        customTabScreen {
-            verifyCustomTabCloseButton()
-        }.openMainMenu {
-            verifyPoweredByTextIsDisplayed()
-            verifyCustomMenuItem(customMenuItem)
-            verifyDesktopSiteButtonExists()
-            verifyFindInPageButtonExists()
-            verifyOpenInBrowserButtonExists()
-            verifyBackButtonExists()
-            verifyForwardButtonExists()
-            verifyRefreshButtonExists()
-        }
-    }
-
-    // The test opens a link in a custom tab then sends it to the browser
-    @Test
-    fun openCustomTabInBrowserTest() {
-        val customTabPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        intentReceiverActivityTestRule.launchActivity(
-            createCustomTabIntent(
-                customTabPage.url.toString(),
-            ),
-        )
-
-        customTabScreen {
-            verifyCustomTabCloseButton()
-        }.openMainMenu {
-        }.clickOpenInBrowserButton {
-            verifyTabCounter("1")
         }
     }
 

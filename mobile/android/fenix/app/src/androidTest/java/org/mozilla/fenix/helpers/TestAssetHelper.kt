@@ -81,6 +81,12 @@ object TestAssetHelper {
         return TestAsset(url, "", "")
     }
 
+    fun getPdfFormAsset(server: MockWebServer): TestAsset {
+        val url = server.url("resources/pdfForm.pdf").toString().toUri()!!
+
+        return TestAsset(url, "", "")
+    }
+
     fun getSaveLoginAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/password.html").toString().toUri()!!
 

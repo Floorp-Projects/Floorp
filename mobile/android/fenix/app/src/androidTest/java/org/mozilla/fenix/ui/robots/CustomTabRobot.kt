@@ -15,17 +15,37 @@ import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.waitForObjects
+import org.mozilla.fenix.helpers.click
 
 /**
  *  Implementation of the robot pattern for Custom tabs
  */
 class CustomTabRobot {
+
+    fun verifyCustomTabsSiteInfoButton() =
+        assertItemWithResIdExists(
+            itemWithResId("$packageName:id/mozac_browser_toolbar_security_indicator"),
+        )
+
+    fun verifyCustomTabsShareButton() =
+        assertItemWithDescriptionExists(
+            itemWithDescription(getStringResource(R.string.mozac_feature_customtabs_share_link)),
+        )
+
+    fun verifyMainMenuButton() = assertItemWithResIdExists(mainMenuButton)
 
     fun verifyDesktopSiteButtonExists() {
         desktopSiteButton().check(matches(isDisplayed()))
@@ -84,6 +104,12 @@ class CustomTabRobot {
         )
     }
 
+    fun verifyCustomTabUrl(Url: String) {
+        assertItemWithResIdAndTextExists(
+            itemWithResIdContainingText("$packageName:id/mozac_browser_toolbar_url_view", Url.drop(7)),
+        )
+    }
+
     fun longCLickAndCopyToolbarUrl() {
         mDevice.waitForObjects(
             mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar")),
@@ -106,10 +132,23 @@ class CustomTabRobot {
 
     fun waitForPageToLoad() = progressBar.waitUntilGone(waitingTime)
 
+    fun clickCustomTabCloseButton() = closeButton().click()
+
+    fun verifyCustomTabActionButton(customTabActionButtonDescription: String) =
+        assertItemWithDescriptionExists(itemWithDescription(customTabActionButtonDescription))
+
+    fun verifyPDFReaderToolbarItems() =
+        assertItemWithResIdAndTextExists(
+            itemWithResIdAndText("download", "Download"),
+            itemWithResIdAndText("openInApp", "Open in app"),
+        )
+
     class Transition {
         fun openMainMenu(interact: CustomTabRobot.() -> Unit): Transition {
-            mainMenuButton().waitForExists(waitingTime)
-            mainMenuButton().click()
+            mainMenuButton.also {
+                it.waitForExists(waitingTime)
+                it.click()
+            }
 
             CustomTabRobot().interact()
             return Transition()
@@ -120,6 +159,13 @@ class CustomTabRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun clickShareButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+            itemWithDescription(getStringResource(R.string.mozac_feature_customtabs_share_link)).click()
+
+            ShareOverlayRobot().interact()
+            return ShareOverlayRobot.Transition()
         }
 
         fun goBackToOnboardingScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
@@ -136,7 +182,7 @@ fun customTabScreen(interact: CustomTabRobot.() -> Unit): CustomTabRobot.Transit
     return CustomTabRobot.Transition()
 }
 
-private fun mainMenuButton() = mDevice.findObject(UiSelector().description("Menu"))
+private val mainMenuButton = itemWithResId("$packageName:id/mozac_browser_toolbar_menu")
 
 private fun desktopSiteButton() = onView(withId(R.id.switch_widget))
 

@@ -25,6 +25,7 @@ import org.mozilla.fenix.helpers.TestHelper.openAppFromExternalLink
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.customTabScreen
+import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.longClickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.notificationShade
@@ -35,6 +36,7 @@ class CustomTabsTest {
     private lateinit var mDevice: UiDevice
     private lateinit var mockWebServer: MockWebServer
     private val customMenuItem = "TestMenuItem"
+    private val customTabActionButton = "CustomActionButton"
 
     /* Updated externalLinks.html to v2.0,
        changed the hypertext reference to mozilla-mobile.github.io/testapp/downloads for "External link"
@@ -202,6 +204,122 @@ class CustomTabsTest {
         mDevice.openNotification()
         notificationShade {
             verifySystemNotificationExists("Download completed")
+        }
+    }
+
+    // Verifies the main menu of a custom tab with a custom menu item
+    @SmokeTest
+    @Test
+    fun customTabMenuItemsTest() {
+        val customTabPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                customTabPage.url.toString(),
+                customMenuItem,
+            ),
+        )
+
+        customTabScreen {
+            verifyCustomTabCloseButton()
+        }.openMainMenu {
+            verifyPoweredByTextIsDisplayed()
+            verifyCustomMenuItem(customMenuItem)
+            verifyDesktopSiteButtonExists()
+            verifyFindInPageButtonExists()
+            verifyOpenInBrowserButtonExists()
+            verifyBackButtonExists()
+            verifyForwardButtonExists()
+            verifyRefreshButtonExists()
+        }
+    }
+
+    // The test opens a link in a custom tab then sends it to the browser
+    @Test
+    fun openCustomTabInBrowserTest() {
+        val customTabPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                customTabPage.url.toString(),
+            ),
+        )
+
+        customTabScreen {
+            verifyCustomTabCloseButton()
+        }.openMainMenu {
+        }.clickOpenInBrowserButton {
+            verifyTabCounter("1")
+        }
+    }
+
+    @Test
+    fun shareCustomTabTest() {
+        val customTabPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                customTabPage.url.toString(),
+            ),
+        )
+
+        customTabScreen {
+        }.clickShareButton {
+            verifyShareTabLayout()
+        }
+    }
+
+    @Test
+    fun verifyCustomTabViewTest() {
+        val customTabPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                pageUrl = customTabPage.url.toString(),
+                customActionButtonDescription = customTabActionButton,
+            ),
+        )
+
+        customTabScreen {
+            verifyCustomTabCloseButton()
+            verifyCustomTabsSiteInfoButton()
+            verifyCustomTabToolbarTitle(customTabPage.title)
+            verifyCustomTabUrl(customTabPage.url.toString())
+            verifyCustomTabActionButton(customTabActionButton)
+            verifyCustomTabsShareButton()
+            verifyMainMenuButton()
+            clickCustomTabCloseButton()
+        }
+        homeScreen {
+            verifyHomeScreenAppBarItems()
+        }
+    }
+
+    @Test
+    fun verifyPdfCustomTabViewTest() {
+        val customTabPage = TestAssetHelper.getGenericAsset(mockWebServer, 3)
+        val pdfFormResource = TestAssetHelper.getPdfFormAsset(mockWebServer)
+
+        intentReceiverActivityTestRule.launchActivity(
+            createCustomTabIntent(
+                customTabPage.url.toString(),
+            ),
+        )
+
+        customTabScreen {
+            clickPageObject(itemWithText("PDF form file"))
+            waitForPageToLoad()
+            verifyPDFReaderToolbarItems()
+            verifyCustomTabCloseButton()
+            verifyCustomTabsSiteInfoButton()
+            verifyCustomTabToolbarTitle("pdfForm.pdf")
+            verifyCustomTabUrl(pdfFormResource.url.toString())
+            verifyCustomTabsShareButton()
+            verifyMainMenuButton()
+            clickCustomTabCloseButton()
+        }
+        homeScreen {
+            verifyHomeScreenAppBarItems()
         }
     }
 }
