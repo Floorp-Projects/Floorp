@@ -29,6 +29,7 @@
 #include "js/SourceText.h"
 #include "js/StructuredClone.h"
 #include "js/TypeDecls.h"
+#include "js/Utility.h"  // JS::FreePolicy
 #include "js/Wrapper.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -1301,7 +1302,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     rv = channel->Open(getter_AddRefs(input));
     NS_ENSURE_SUCCESS(rv, nullptr);
     nsString dataString;
-    Utf8Unit* dataStringBuf = nullptr;
+    UniquePtr<Utf8Unit[], JS::FreePolicy> dataStringBuf;
     size_t dataStringLength = 0;
     if (input) {
       nsCString buffer;
@@ -1330,8 +1331,7 @@ nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     }
 
     JS::SourceText<Utf8Unit> srcBuf;
-    if (!srcBuf.init(cx, dataStringBuf, dataStringLength,
-                     JS::SourceOwnership::TakeOwnership)) {
+    if (!srcBuf.init(cx, std::move(dataStringBuf), dataStringLength)) {
       return nullptr;
     }
 
