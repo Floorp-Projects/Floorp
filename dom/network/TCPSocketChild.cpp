@@ -32,9 +32,8 @@ bool DeserializeArrayBuffer(JSContext* cx, const nsTArray<uint8_t>& aBuffer,
   if (!data) return false;
   memcpy(data.get(), aBuffer.Elements(), aBuffer.Length());
 
-  mozilla::UniquePtr<void, JS::FreePolicy> dataPtr{data.release()};
   JSObject* obj =
-      JS::NewArrayBufferWithContents(cx, aBuffer.Length(), std::move(dataPtr));
+      JS::NewArrayBufferWithContents(cx, aBuffer.Length(), std::move(data));
   if (!obj) return false;
 
   aVal.setObject(*obj);

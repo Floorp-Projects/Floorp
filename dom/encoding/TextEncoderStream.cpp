@@ -98,9 +98,8 @@ static void EncodeNative(JSContext* aCx, mozilla::Decoder* aDecoder,
   // https://encoding.spec.whatwg.org/#encode-and-enqueue-a-chunk
   // Step 4.2.2.1. Let chunk be a Uint8Array object wrapping an ArrayBuffer
   // containing output.
-  UniquePtr<void, JS::FreePolicy> dataPtr{buffer.release()};
   JS::Rooted<JSObject*> arrayBuffer(
-      aCx, JS::NewArrayBufferWithContents(aCx, written, std::move(dataPtr)));
+      aCx, JS::NewArrayBufferWithContents(aCx, written, std::move(buffer)));
   if (!arrayBuffer.get()) {
     JS_ClearPendingException(aCx);
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);

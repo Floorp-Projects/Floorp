@@ -4989,9 +4989,8 @@ class CloneBufferObject : public NativeObject {
       return false;
     }
 
-    UniquePtr<void, JS::FreePolicy> dataBuffer{buffer.release()};
     JSObject* arrayBuffer =
-        JS::NewArrayBufferWithContents(cx, size, std::move(dataBuffer));
+        JS::NewArrayBufferWithContents(cx, size, std::move(buffer));
     if (!arrayBuffer) {
       return false;
     }
