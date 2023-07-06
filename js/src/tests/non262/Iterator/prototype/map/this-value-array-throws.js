@@ -3,12 +3,12 @@
 
 /*---
 esid: pending
-description: TypeError is thrown if `this` is an Array.
+description: TypeError not thrown when `this` is an Array.
 info:
 features: [Symbol.iterator]
 ---*/
 
-assertThrowsInstanceOf(() => Iterator.prototype.map.call([], x => x), TypeError);
+Iterator.prototype.map.call([], x => x);
 
 if (typeof reportCompare == 'function')
   reportCompare(0, 0);

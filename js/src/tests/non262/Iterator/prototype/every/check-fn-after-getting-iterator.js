@@ -16,10 +16,9 @@ class TestIterator extends Iterator {
 const iter = new Proxy(new TestIterator(), handlerProxy);
 assertThrowsInstanceOf(() => iter.every(1), TypeError);
 
-assertEq(
-  log.join('\n'),
-  `get: every
-get: next`
+assertEqArray(
+  log,
+  ["get: every"]
 );
 
 if (typeof reportCompare === 'function')

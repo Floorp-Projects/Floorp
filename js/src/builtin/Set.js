@@ -22,6 +22,32 @@ function SetConstructorInit(iterable) {
 }
 
 #ifdef ENABLE_NEW_SET_METHODS
+/* Iterator Helpers proposal 1.1.2 */
+function IteratorStep(iteratorRecord, value) {
+  // Steps 2-3.
+  let result;
+  if (ArgumentsLength() === 2) {
+    result = callContentFunction(
+      iteratorRecord.nextMethod,
+      iteratorRecord.iterator,
+      value
+    );
+  } else {
+    result = callContentFunction(
+      iteratorRecord.nextMethod,
+      iteratorRecord.iterator
+    );
+  }
+
+  // IteratorNext Step 3.
+  if (!IsObject(result)) {
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, DecompileArg(0, result));
+  }
+
+  // Steps 4-6.
+  return result.done ? false : result;
+}
+
 // New Set methods proposal
 //
 // Set.prototype.union(iterable)
@@ -114,7 +140,7 @@ function SetIntersection(iterable) {
       if (needClose) {
         // Step e. If has is an abrupt completion,
         // return ? IteratorClose(iteratorRecord, has).
-        IteratorClose(iteratorRecord);
+        IteratorClose(iteratorRecord.iterator);
       }
     }
 
@@ -129,7 +155,7 @@ function SetIntersection(iterable) {
         if (needClose) {
           // Step ii. If status is an abrupt completion, return ?
           // IteratorClose(iteratorRecord, status).
-          IteratorClose(iteratorRecord);
+          IteratorClose(iteratorRecord.iterator);
         }
       }
     }
@@ -187,7 +213,7 @@ function SetDifference(iterable) {
       if (needClose) {
         // Step e. If status is an abrupt completion,
         // return ? IteratorClose(iteratorRecord, status).
-        IteratorClose(iteratorRecord);
+        IteratorClose(iteratorRecord.iterator);
       }
     }
   }
@@ -253,7 +279,7 @@ function SetSymmetricDifference(iterable) {
       if (needClose) {
         // Step e. If removed is an abrupt completion,
         // return ? IteratorClose(iteratorRecord, removed).
-        IteratorClose(iteratorRecord);
+        IteratorClose(iteratorRecord.iterator);
       }
     }
 
@@ -268,7 +294,7 @@ function SetSymmetricDifference(iterable) {
         if (needClose) {
           // Step ii. If status is an abrupt completion,
           // return ? IteratorClose(iteratorRecord, status).
-          IteratorClose(iteratorRecord);
+          IteratorClose(iteratorRecord.iterator);
         }
       }
     }
@@ -334,7 +360,7 @@ function SetIsSubsetOf(iterable) {
       if (needClose) {
         // Step e. If has is an abrupt completion,
         // return ? IteratorClose(iteratorRecord, has).
-        IteratorClose(iteratorRecord);
+        IteratorClose(iteratorRecord.iterator);
       }
     }
 
@@ -391,7 +417,7 @@ function SetIsSupersetOf(iterable) {
       if (needClose) {
         // Step e. If has is an abrupt completion,
         // return ? IteratorClose(iteratorRecord, has).
-        IteratorClose(iteratorRecord);
+        IteratorClose(iteratorRecord.iterator);
       }
     }
 
@@ -448,7 +474,7 @@ function SetIsDisjointFrom(iterable) {
       if (needClose) {
         // Step e. If has is an abrupt completion,
         // return ? IteratorClose(iteratorRecord, has).
-        IteratorClose(iteratorRecord);
+        IteratorClose(iteratorRecord.iterator);
       }
     }
 
@@ -490,7 +516,7 @@ function AddEntryFromIterable(target, iterable, adder) {
       if (needClose) {
         // Step e. If status is an abrupt completion,
         // return ? IteratorClose(iteratorRecord, status).
-        IteratorClose(iteratorRecord);
+        IteratorClose(iteratorRecord.iterator);
       }
     }
   }

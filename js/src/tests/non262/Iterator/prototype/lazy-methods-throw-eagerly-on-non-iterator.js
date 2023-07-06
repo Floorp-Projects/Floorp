@@ -4,7 +4,7 @@
 //
 /*---
 esid: pending
-description: Lazy %Iterator.prototype% methods throw eagerly when called on non-iterators.
+description: Lazy %Iterator.prototype% methods don't throw when called with non-objects.
 info: >
   Iterator Helpers proposal 1.1.1
 features: [iterator-helpers]
@@ -15,7 +15,6 @@ const methods = [
   iter => Iterator.prototype.filter.bind(iter, x => x),
   iter => Iterator.prototype.take.bind(iter, 1),
   iter => Iterator.prototype.drop.bind(iter, 0),
-  iter => Iterator.prototype.asIndexedPairs.bind(iter),
   iter => Iterator.prototype.flatMap.bind(iter, x => [x]),
 ];
 
@@ -26,8 +25,10 @@ for (const method of methods) {
   assertThrowsInstanceOf(method(false), TypeError);
   assertThrowsInstanceOf(method(''), TypeError);
   assertThrowsInstanceOf(method(Symbol('')), TypeError);
-  assertThrowsInstanceOf(method({}), TypeError);
-  assertThrowsInstanceOf(method([]), TypeError);
+
+  // No error here.
+  method({});
+  method([]);
 }
 
 if (typeof reportCompare == 'function')

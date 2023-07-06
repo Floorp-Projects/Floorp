@@ -14,7 +14,6 @@ assertThrowsInstanceOf(() => Iterator.prototype.map.call(undefined, mapper), Typ
 assertThrowsInstanceOf(() => Iterator.prototype.map.call(null, mapper), TypeError);
 assertThrowsInstanceOf(() => Iterator.prototype.map.call(0, mapper), TypeError);
 assertThrowsInstanceOf(() => Iterator.prototype.map.call(false, mapper), TypeError);
-assertThrowsInstanceOf(() => Iterator.prototype.map.call({}, mapper), TypeError);
 assertThrowsInstanceOf(() => Iterator.prototype.map.call('', mapper), TypeError);
 assertThrowsInstanceOf(() => Iterator.prototype.map.call(new Symbol(''), mapper), TypeError);
 

@@ -47,7 +47,7 @@ const iteratorProxy = new Proxy(iterator, handlerProxy(log));
 const mappedProxy = iteratorProxy.map(x => x);
 
 mappedProxy.next();
-assertThrowsInstanceOf(() => mappedProxy.throw(new TestError()), TestError);
+mappedProxy.return();
 mappedProxy.next();
 
 assertEq(
