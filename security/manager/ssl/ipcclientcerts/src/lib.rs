@@ -455,7 +455,7 @@ extern "C" fn C_GetAttributeValue(
         return CKR_DEVICE_ERROR;
     }
     for i in 0..ulCount as usize {
-        let mut attr = unsafe { &mut *pTemplate.offset(i as isize) };
+        let attr = unsafe { &mut *pTemplate.offset(i as isize) };
         // NB: the safety of this array access depends on the length check above
         if let Some(attr_value) = &values[i] {
             if attr.pValue.is_null() {
