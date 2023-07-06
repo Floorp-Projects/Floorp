@@ -3927,7 +3927,11 @@ JSObject* ArrayBufferBuilder::TakeArrayBuffer(JSContext* aCx) {
     }
   }
 
-  JSObject* obj = JS::NewArrayBufferWithContents(aCx, mLength, mDataPtr);
+  // |mDataPtr| will be deallocated in ArrayBufferBuilder's destructor when this
+  // ArrayBuffer allocation failed.
+  JSObject* obj = JS::NewArrayBufferWithContents(
+      aCx, mLength, mDataPtr,
+      JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory);
   if (!obj) {
     return nullptr;
   }
