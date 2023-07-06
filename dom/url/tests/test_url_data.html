@@ -32,12 +32,12 @@ try {
 }
 
 base.protocol = "http:";
-ok(true, "Protocol: http changed");
-is(base.href, "http://text/plain,", "Base URL is correct");
+ok(true, "Protocol: http not changed (special scheme)");
+is(base.href, "chrome://text/plain,", "Base URL is correct");
 
 relative = new URL("a", base);
 ok(relative, "This works.");
-is(relative.href, "http://text/a", "Relative URL is correct");
+is(relative.href, "chrome://text/a", "Relative URL is correct");
 
 </script>
 

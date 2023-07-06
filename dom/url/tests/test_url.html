@@ -193,6 +193,7 @@
       base: undefined,
       error: false,
       protocol: "gopher:",
+      expectedChangedProtocol: "https:",
     },
     { url: "ws://ws.something.net",
       base: undefined,
@@ -208,6 +209,7 @@
       base: undefined,
       error: false,
       protocol: "foo:",
+      expectedChangedProtocol: "https:",
     },
 
     { url: "about:blank",
@@ -319,7 +321,8 @@
 
     if ("href" in test) is(url.href, test.href, "href");
     if ("origin" in test) is(url.origin, test.origin, "origin");
-    if ("protocol" in test) is(url.protocol, test.protocol, "protocol");
+    if ("expectedChangedProtocol" in test) is(url.protocol, test.expectedChangedProtocol, "protocol");
+    else if ("protocol" in test) is(url.protocol, test.protocol, "protocol");
     if ("username" in test) is(url.username, test.username, "username");
     if ("password" in test) is(url.password, test.password, "password");
     if ("host" in test) is(url.host, test.host, "host");
