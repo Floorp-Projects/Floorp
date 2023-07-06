@@ -1742,6 +1742,9 @@ MOZ_ALWAYS_INLINE void js::Nursery::setCurrentChunk(unsigned chunkno) {
   currentChunk_ = chunkno;
   position_ = chunk(chunkno).start();
   setCurrentEnd();
+
+  MOZ_ASSERT(position_ != 0);
+  MOZ_ASSERT(currentEnd_ > position_);  // Check this cannot wrap.
 }
 
 void js::Nursery::poisonAndInitCurrentChunk(size_t extent) {
