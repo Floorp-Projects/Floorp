@@ -541,8 +541,802 @@ jobs:
 
 ################################################################ ↑ Linux x86_64 Build ####################################################################################
 
+  build-macOS-AArch64-with-profile-generate:
+    runs-on: 'ubuntu-latest'
+
+    needs: [get-buildid, get-display-version, get-inside-version]
+
+    steps:
+    - name: Init
+      run: |
+        export RUNNER_USERDIR=`echo ~`
+        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+        sudo apt upgrade -y
+
+    - name: Setup Disk & Swap Space 💿
+      if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
+      run: |
+        echo Before:
+        free -h
+        df -h
+        echo
+        echo
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo apt clean
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/graalvm
+        sudo rm -rf /usr/local/share/powershell
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /usr/local/lib/node_modules
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /etc/apache2
+        sudo rm -rf /etc/nginx
+        sudo rm -rf /usr/local/share/chrome_driver
+        sudo rm -rf /usr/local/share/edge_driver
+        sudo rm -rf /usr/local/share/gecko_driver
+        sudo rm -rf /usr/share/java
+        sudo fallocate -l 10G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+        echo
+        echo
+        echo After:
+        free -h
+        df -h
+
+    - uses: actions/checkout@v3
+      with:
+        ref: ESR115
+
+    - name: Create environment 🌲
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        sudo apt update
+        sudo apt upgrade -y
+
+        cp ./.github/mozconfig_darwin_pgo_base mozconfig
+
+        echo 'ac_add_options --target=aarch64-apple-darwin' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O3 -mcpu=apple-m1 -w"' >> mozconfig
+        echo 'export RUSTFLAGS="-Ctarget-cpu=apple-m1"' >> mozconfig
+
+        echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
+
+        echo 'mozconfig: **********************'
+        cat ./mozconfig
+        echo '*********************************'
+
+        ./mach --no-interactive bootstrap --application-choice browser
+        sudo apt install -y p7zip-full zip tar
+
+    - name: setup cross compile environment 📀
+      run: |
+        wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools.7z
+        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
+
+    - name: setup rust 🦀
+      run: |
+        rustup target add aarch64-apple-darwin
+
+    - name: Build 🔨
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        ./mach configure
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        ./mach package
+        tar zcvf aarch64-apple-darwin-output.tar.xz ./obj-aarch64-apple-darwin/dist/floorp
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: aarch64-apple-darwin
+        path: aarch64-apple-darwin-output.tar.xz
+
+  generate-profdata-and-jarlog-AArch64:
+    name: Generate profdata and jarlog for AArch64
+    needs: [build-macOS-AArch64-with-profile-generate, get-buildid]
+
+    runs-on: self-hosted
+    # GitHub doesn't support M1 macs yet, so we need to use a self-hosted runner.
+
+    steps:
+      - name: Init
+        run: |
+          export RUNNER_USERDIR=`echo ~`
+          export WORKING_DIR=`pwd`
+          echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+          echo "WORKING_DIR=$WORKING_DIR" >> $GITHUB_ENV
+          mkdir -p ~/downloads/artifacts
+
+      - name: Clean up (Self-hosted only)
+        if: ${{ runner.name }} == 'self-hosted'
+        run: |
+         rm -rf ~/downloads/artifacts
+         rm -rf ./floorp
+
+      - uses: actions/download-artifact@v3
+        id: download-artifact-M1
+        name: Download artifact 📥
+        with:
+          name: aarch64-apple-darwin
+          path: ~/downloads/artifacts
+
+      - uses: actions/checkout@v3
+        name: Clone 🧬
+        with:
+          ref: ESR115
+
+      - name: setup environment 🌲
+        run: |
+          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+          echo -e "ac_add_options --enable-bootstrap" >> mozconfig
+
+          echo 'mozconfig: **********************'
+          cat ./mozconfig
+          echo '*********************************'
+
+          brew install gnu-tar
+          export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
+          ./mach --no-interactive bootstrap --application-choice browser
+
+      - name: Extract Artifact 📦
+        run: |
+          cp ${{steps.download-artifact-M1.outputs.download-path}}/aarch64-apple-darwin-output.tar.xz ./
+          tar xf aarch64-apple-darwin-output.tar.xz
+
+      - name: Generate Profdata 📊
+        run: |
+          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+          LLVM_PROFDATA=/Users/surapunoyousei/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-aarch64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
+
+      - name: Publish 🎁
+        uses: actions/upload-artifact@master
+        with:
+         name: floorp-aarch64-apple-darwin-profdata-and-jarlog
+         path: |
+           merged.profdata
+           en-US.log
+
+  macOS-AArch64-build-with-profdata-and-jarlog:
+    runs-on: 'ubuntu-latest'
+
+    needs: [generate-profdata-and-jarlog-AArch64, get-buildid]
+
+    steps:
+    - name: Init
+      run: |
+        export RUNNER_USERDIR=`echo ~`
+        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+        
+    - name: Change PPA mirror servers 
+      run: | 
+         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list 
+         sudo apt update 
+         sudo apt upgrade -y
+        
+    - name: Setup Disk & Swap Space 💿
+      if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
+      run: |
+       echo Before:
+       free -h
+       df -h
+       echo
+       echo
+       sudo swapoff /mnt/swapfile
+       sudo rm /mnt/swapfile
+       sudo fallocate -l 10G /mnt/swapfile
+       sudo chmod 600 /mnt/swapfile
+       sudo mkswap /mnt/swapfile
+       sudo swapon /mnt/swapfile
+       sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+       sudo apt autoremove -y
+       sudo apt clean
+       sudo rm -rf /usr/share/dotnet
+       sudo rm -rf /usr/local/lib/android
+       sudo rm -rf /usr/local/graalvm
+       sudo rm -rf /usr/local/share/powershell
+       sudo rm -rf /usr/local/share/chromium
+       sudo rm -rf /usr/local/lib/node_modules
+       sudo rm -rf /opt/ghc
+       sudo rm -rf /usr/local/share/boost
+       sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+       sudo rm -rf /etc/apache2
+       sudo rm -rf /etc/nginx
+       sudo rm -rf /usr/local/share/chrome_driver
+       sudo rm -rf /usr/local/share/edge_driver
+       sudo rm -rf /usr/local/share/gecko_driver
+       sudo rm -rf /usr/share/java
+       sudo fallocate -l 10G /home/runner/swapfile2
+       sudo chmod 600 /home/runner/swapfile2
+       sudo mkswap /home/runner/swapfile2
+       sudo swapon /home/runner/swapfile2
+       echo
+       echo
+       echo After:
+       free -h
+       df -h
+
+    - uses: actions/checkout@v3
+      with:
+        ref: ESR115
+
+    - name: download artifact 📥
+      uses: actions/download-artifact@v3
+      with:
+        name: floorp-aarch64-apple-darwin-profdata-and-jarlog
+        path: /home/runner/profdata-and-jarlog/
+
+    - name: Clone l10n-central 🧬
+      run: |
+        git clone --depth 1 -b 11.0.0 https://github.com/Floorp-Projects/l10n-central.git $RUNNER_USERDIR/l10n-central
+
+    - name: Copy l10n files
+      run: |
+        for dir in $(ls -l $RUNNER_USERDIR/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+           mkdir -p $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta
+           cp ./browser/branding/beta/locales/en-US/brand.dtd $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+           cp ./browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+           cp ./browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+        done
+
+    - name: Change update url
+      run: |
+        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{ github.repository }}/releases/download/beta/DARWIN-Universal.xml |g' ./build/application.ini.in
+        sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
+
+    - name: Create environment 🌲
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        sudo apt update
+        sudo apt upgrade -y
+
+        cp ./.github/mozconfig_darwin_pgo_base mozconfig
+
+        echo 'ac_add_options --target=aarch64-apple-darwin' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O3 -mcpu=apple-m1 -w"' >> mozconfig
+        echo 'export RUSTFLAGS="-Ctarget-cpu=apple-m1"' >> mozconfig
+        echo 'ac_add_options --with-pgo-profile-path=/home/runner/profdata-and-jarlog/merged.profdata' >> mozconfig
+        echo 'ac_add_options --with-pgo-jarlog=/home/runner/profdata-and-jarlog/en-US.log' >> mozconfig
+        echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
+
+        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+
+        echo 'mozconfig: **********************'
+        cat ./mozconfig
+        echo '*********************************'
+
+        ./mach --no-interactive bootstrap --application-choice browser
+        sudo apt install -y p7zip-full zip tar
+
+    - name: setup cross compile environment 📀
+      run: |
+        wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools.7z
+        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
+
+    - name: setup rust 🦀
+      run: |
+        rustup target add aarch64-apple-darwin
+
+    - name: Build 🔨
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        ./mach configure
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        ./mach package
+        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        ./mach build
+        ./mach package
+        AB_CD=multi ./mach package
+
+    - name: compression 🗜️
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        tar -czf floorp-aarch64-apple-darwin-with-pgo.tar.gz ./obj-aarch64-apple-darwin/dist/
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@master
+      with:
+        name: floorp-aarch64-apple-darwin-with-pgo
+        path: floorp-aarch64-apple-darwin-with-pgo.tar.gz
+
+##################################################################### Intel Build #######################################################################################################
+
+  build-macOS-x86_64-with-profile-generate:
+    runs-on: 'ubuntu-latest'
+
+    needs: get-buildid
+
+    steps:
+    - name: Init
+      run: |
+        export RUNNER_USERDIR=`echo ~`
+        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+
+    - uses: actions/checkout@v3
+      with:
+        ref: ESR115
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+
+    - name: Setup Disk & Swap Space 💿
+      if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
+      run: |
+       echo Before:
+       free -h
+       df -h
+       echo
+       echo
+       sudo swapoff /mnt/swapfile
+       sudo rm /mnt/swapfile
+       sudo fallocate -l 10G /mnt/swapfile
+       sudo chmod 600 /mnt/swapfile
+       sudo mkswap /mnt/swapfile
+       sudo swapon /mnt/swapfile
+       sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+       sudo apt autoremove -y
+       sudo apt clean
+       sudo rm -rf /usr/share/dotnet
+       sudo rm -rf /usr/local/lib/android
+       sudo rm -rf /usr/local/graalvm
+       sudo rm -rf /usr/local/share/powershell
+       sudo rm -rf /usr/local/share/chromium
+       sudo rm -rf /usr/local/lib/node_modules
+       sudo rm -rf /opt/ghc
+       sudo rm -rf /usr/local/share/boost
+       sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+       sudo rm -rf /etc/apache2
+       sudo rm -rf /etc/nginx
+       sudo rm -rf /usr/local/share/chrome_driver
+       sudo rm -rf /usr/local/share/edge_driver
+       sudo rm -rf /usr/local/share/gecko_driver
+       sudo rm -rf /usr/share/java
+       sudo fallocate -l 10G /home/runner/swapfile2
+       sudo chmod 600 /home/runner/swapfile2
+       sudo mkswap /home/runner/swapfile2
+       sudo swapon /home/runner/swapfile2
+       echo
+       echo
+       echo After:
+       free -h
+       df -h
+
+    - name: Create environment 🌲
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        sudo apt update
+        sudo apt upgrade -y
+
+        cp ./.github/mozconfig_darwin_pgo_base mozconfig
+
+        echo 'ac_add_options --target=x86_64-apple-darwin' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O3 -march=nehalem -mtune=haswell -w"' >> mozconfig
+        echo 'export RUSTFLAGS="-Ctarget-cpu=nehalem"' >> mozconfig
+
+        echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
+
+        echo 'mozconfig: **********************'
+        cat ./mozconfig
+        echo '*********************************'
+
+        ./mach --no-interactive bootstrap --application-choice browser
+        sudo apt install -y p7zip-full zip tar
+
+    - name: setup cross compile environment 📀
+      run: |
+        wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools.7z
+        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
+
+    - name: setup rust 🦀
+      run: |
+        rustup target add x86_64-apple-darwin
+
+    - name: Build 🔨
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        ./mach configure
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        ./mach package
+        tar zcvf x86_64-apple-darwin.tar.xz ./obj-x86_64-apple-darwin/dist/floorp
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: x86_64-apple-darwin
+        path: x86_64-apple-darwin.tar.xz
+
+  generate-profdata-and-jarlog-x86_64:
+    name: Generate profdata and jarlog for intel
+    needs: [build-macOS-x86_64-with-profile-generate, get-buildid]
+
+    runs-on: macos-latest
+
+    steps:
+      - name: Init
+        run: |
+          export RUNNER_USERDIR=`echo ~`
+          echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+          mkdir -p ~/downloads/artifacts
+
+      - uses: actions/download-artifact@v3
+        name: Download artifact 📥
+        id: download-artifact-Intel
+        with:
+          name: x86_64-apple-darwin
+          path: ~/downloads/artifacts
+
+      - uses: actions/checkout@v3
+        name: Clone 🧬
+        with:
+          ref: ESR115
+
+      - name: setup environment 🌲
+        run: |
+          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+          echo -e "ac_add_options --enable-bootstrap" >> mozconfig
+
+          echo 'mozconfig: **********************'
+          cat ./mozconfig
+          echo '*********************************'
+
+          brew install gnu-tar
+          export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
+          ./mach --no-interactive bootstrap --application-choice browser
+
+      - name: Extract Artifact 📦
+        run: |
+          cp ${{ steps.download-artifact-Intel.outputs.download-path }}/x86_64-apple-darwin.tar.xz ./
+          tar xf x86_64-apple-darwin.tar.xz
+
+      - name: Generate Profdata 📊
+        run: |
+         export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+         LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
+
+      - name: Publish 🎁
+        uses: actions/upload-artifact@master
+        with:
+         name: floorp-x86_64-apple-darwin-profdata-and-jarlog
+         path: |
+           merged.profdata
+           en-US.log
+
+  macOS-x86_64-build-with-profdata-and-jarlog:
+    runs-on: 'ubuntu-latest'
+
+    needs: [generate-profdata-and-jarlog-x86_64, get-buildid]
+
+    steps:
+    - name: Init
+      run: |
+        export RUNNER_USERDIR=`echo ~`
+        echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
+
+    - name: Change PPA mirror servers 
+      run: |
+         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list 
+         sudo apt update 
+         sudo apt upgrade -y
+         
+    - name: Setup Disk & Swap Space 💿
+      if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
+      run: |
+       echo Before:
+       free -h
+       df -h
+       echo
+       echo
+       sudo swapoff /mnt/swapfile
+       sudo rm /mnt/swapfile
+       sudo fallocate -l 10G /mnt/swapfile
+       sudo chmod 600 /mnt/swapfile
+       sudo mkswap /mnt/swapfile
+       sudo swapon /mnt/swapfile
+       sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+       sudo apt autoremove -y
+       sudo apt clean
+       sudo rm -rf /usr/share/dotnet
+       sudo rm -rf /usr/local/lib/android
+       sudo rm -rf /usr/local/graalvm
+       sudo rm -rf /usr/local/share/powershell
+       sudo rm -rf /usr/local/share/chromium
+       sudo rm -rf /usr/local/lib/node_modules
+       sudo rm -rf /opt/ghc
+       sudo rm -rf /usr/local/share/boost
+       sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+       sudo rm -rf /etc/apache2
+       sudo rm -rf /etc/nginx
+       sudo rm -rf /usr/local/share/chrome_driver
+       sudo rm -rf /usr/local/share/edge_driver
+       sudo rm -rf /usr/local/share/gecko_driver
+       sudo rm -rf /usr/share/java
+       sudo fallocate -l 10G /home/runner/swapfile2
+       sudo chmod 600 /home/runner/swapfile2
+       sudo mkswap /home/runner/swapfile2
+       sudo swapon /home/runner/swapfile2
+       echo
+       echo
+       echo After:
+       free -h
+       df -h
+
+    - uses: actions/checkout@v3
+      with:
+        ref: ESR115
+
+    - name: download artifact 📥
+      uses: actions/download-artifact@v3
+      with:
+        name: floorp-x86_64-apple-darwin-profdata-and-jarlog
+        path: /home/runner/profdata-and-jarlog/
+
+    - name: Clone l10n-central 🧬
+      run: |
+        git clone --depth 1 -b 11.0.0 https://github.com/Floorp-Projects/l10n-central.git $RUNNER_USERDIR/l10n-central
+
+    - name: Copy l10n files
+      run: |
+        for dir in $(ls -l $RUNNER_USERDIR/l10n-central/l10n-central | grep ^d | awk '{print $9}'); do
+           mkdir -p $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta
+           cp ./browser/branding/beta/locales/en-US/brand.dtd $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.dtd
+           cp ./browser/branding/beta/locales/en-US/brand.ftl $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.ftl
+           cp ./browser/branding/beta/locales/en-US/brand.properties $RUNNER_USERDIR/l10n-central/l10n-central/$dir/browser/branding/beta/brand.properties
+        done
+
+    - name: Change update url
+      run: |
+        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{ github.repository }}/releases/download/beta/DARWIN-Universal.xml |g' ./build/application.ini.in
+        sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
+
+    - name: Create environment 🌲
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        sudo apt update
+        sudo apt upgrade -y
+
+        cp ./.github/mozconfig_darwin_pgo_base mozconfig
+
+        echo 'ac_add_options --target=x86_64-apple-darwin' >> mozconfig
+        echo 'ac_add_options --enable-optimize="-O3 -march=nehalem -mtune=haswell -w"' >> mozconfig
+        echo 'export RUSTFLAGS="-Ctarget-cpu=nehalem"' >> mozconfig
+        echo 'ac_add_options --with-pgo-profile-path=/home/runner/profdata-and-jarlog/merged.profdata' >> mozconfig
+        echo 'ac_add_options --with-pgo-jarlog=/home/runner/profdata-and-jarlog/en-US.log' >> mozconfig
+        echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
+
+        echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+
+        echo 'mozconfig: **********************'
+        cat ./mozconfig
+        echo '*********************************'
+
+        ./mach --no-interactive bootstrap --application-choice browser
+        sudo apt install -y p7zip-full zip tar
+
+    - name: setup cross compile environment 📀
+      run: |
+        wget -P /home/runner/cross-tools/ https://repo.ablaze.one/data/floorp/macos-cross-tools/macOS-cross-tools.7z
+        7z x -y -p${{ secrets.MACOS_CROSS_TOOLS_KEY }} /home/runner/cross-tools/macOS-cross-tools.7z -o/home/runner/cross-tools/
+
+    - name: setup rust 🦀
+      run: |
+        rustup target add x86_64-apple-darwin
+
+    - name: Build 🔨
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        ./mach configure
+        ./mach build
+
+    - name: Package 📦
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        ./mach package
+        export MOZ_CHROME_MULTILOCALE="ar cs da de el en-GB en-US es-ES es-MX fr hu id it ja ko lt nl nn-NO pl pt-BR pt-PT ru sv-SE th vi zh-CN zh-TW"
+        for AB_CD in $MOZ_CHROME_MULTILOCALE; do    ./mach build chrome-$AB_CD; done
+        ./mach build
+        ./mach package
+        AB_CD=multi ./mach package
+
+    - name: compression 🗜️
+      run: |
+        export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+
+        tar -czf floorp-x86_64-apple-darwin-with-pgo.tar.gz ./obj-x86_64-apple-darwin/dist/
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@master
+      with:
+       name: floorp-x86_64-apple-darwin-with-pgo
+       path: floorp-x86_64-apple-darwin-with-pgo.tar.gz
+
+######################################################## Integration #######################################################
+
+  integration:
+    needs: [macOS-x86_64-build-with-profdata-and-jarlog, macOS-AArch64-build-with-profdata-and-jarlog, get-display-version, get-buildid, get-inside-version]
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        ref: ESR115
+
+    - name: download M1 build artifact 📥
+      uses: actions/download-artifact@v3
+      with:
+        name: floorp-aarch64-apple-darwin-with-pgo
+        path: ./
+
+    - name: download Intel build artifact 📥
+      uses: actions/download-artifact@v3
+      with:
+        name: floorp-x86_64-apple-darwin-with-pgo
+        path: ./
+
+    - name: Extract 📦
+      run: |
+        brew install gnu-tar
+        export PATH=/usr/local/opt/gnu-tar/libexec/gnubin:$PATH
+        tar -xf ./floorp-aarch64-apple-darwin-with-pgo.tar.gz
+        tar -xf ./floorp-x86_64-apple-darwin-with-pgo.tar.gz
+
+    - name: Create environment 🌲
+      shell: bash
+      run: |
+        ./mach --no-interactive bootstrap --application-choice browser
+        echo -e "ac_add_options --enable-bootstrap" >> mozconfig
+
+        echo 'export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
+        echo 'MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
+
+        echo 'export MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
+        echo 'MOZ_BUILDID=${{ needs.get-buildid.outputs.buildids }}' >> mozconfig
+
+        echo 'mozconfig: **********************'
+        cat ./mozconfig
+        echo '*********************************'
+
+        echo "****************************************************************************************************"
+        echo "floorp.app folder structure: x86_64-apple-darwin"
+        ls -l ./obj-x86_64-apple-darwin/dist/
+        echo "****************************************************************************************************"
+        echo "floorp.app folder structure: aarch64-apple-darwin"
+        ls -l ./obj-aarch64-apple-darwin/dist/
+        echo "****************************************************************************************************"
+
+    - name: Integration 🗃
+      run: |       
+        ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/Floorp/Floorp.app ./obj-aarch64-apple-darwin/dist/Floorp/Floorp.app
+
+    - name: import APPLE DEVELOPER ID CERTIFICATE for .app 🔑
+      uses: apple-actions/import-codesign-certs@v2
+      with: 
+        p12-file-base64: ${{ secrets.macOS_CERTIFICATES_P12_For_App_BASE64 }}
+        p12-password: ${{ secrets.macOS_CERTIFICATES_P12_PASSWORD }}
+
+    - name: Sign to .app 🖋️
+      run: |
+        chmod +x ./floorp/codesign/codesign.bash
+
+        ./floorp/codesign/codesign.bash \
+          -a ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app \
+          -i "${{ secrets.macOS_AppleDeveloperId }}" \
+          -b ./floorp/codesign/browser.developer.entitlements.xml \
+          -p ./floorp/codesign/plugin-container.developer.entitlements.xml
+
+        echo "Sign Complete ! ****************************************" 
+        pkgutil --check-signature ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app
+
+    - name: Package 📦
+      run: |
+        ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal-temp.dmg
+        unzip ./.github/base.zip
+        hdiutil attach ./floorp-macOS-universal-temp.dmg
+        hdiutil attach ./base.dmg
+        cp -r /Volumes/Floorp/Floorp.app /Volumes/Floorp\ Installer/
+        hdiutil detach /Volumes/Floorp\ Installer/
+        hdiutil convert ./base.dmg -format UDZO -imagekey zlib-level=9 -o floorp-macOS-universal.dmg
+
+    - name: Sign to .dmg 🖋️
+      run: |
+         codesign -s "${{ secrets.macOS_AppleDeveloperId }}" floorp-macOS-universal.dmg
+
+         xcrun notarytool submit "floorp-macOS-universal.dmg" \
+           --apple-id "${{ secrets.macOS_AppleAccountId }}" \
+           --team-id "${{ secrets.macOS_AppleTeamId }}" \
+           --password "${{ secrets.macOS_AppleAccountAppSpecificPassword }}" \
+           --wait
+
+         mkdir -p ./output
+         mv ./floorp-macOS-universal.dmg ./output/floorp-macOS-universal.dmg
+
+    - name: Create MAR artifact 📦
+      run: |
+        brew install tree
+        wget -P ./martools https://github.com/surapunoyousei/Floorp/releases/download/v11.0.0/mar
+        chmod +x ./martools/mar
+        chmod +x ./tools/update-packaging/make_full_update.sh
+
+        tree ./martools
+
+        touch "obj-x86_64-apple-darwin/dist/floorp/precomplete"
+        MAR="martools/mar" MOMOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
+
+        stat -c "%s" ./output/DARWIN-Universal.mar > MACOS-MAR-sizes.txt
+        export MACOS_MAR_SIZE=`stat -c "%s" ./output/DARWIN-Universal.mar`
+        echo "MACOS_MAR_SIZE=$MACOS_MAR_SIZE" >> $GITHUB_ENV
+
+    - name: generate update XML file 
+      run: |
+         echo '<?xml version="1.0" encoding="UTF-8"?>
+           <updates>
+            <update type="minor" displayVersion="${{ needs.get-display-version.outputs.display-version }}" appVersion="${{ needs.get-inside-version.outputs.inside-version }}" platformVersion="${{ needs.get-inside-version.outputs.inside-version }}" buildID="${{ needs.get-buildid.outputs.buildids }}" detailsURL="https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/">
+            <patch type="complete" URL="https://github.com/${{ github.repository }}/releases/download/beta/LINUX-x86_64.mar" size="${{ env.MACOS_MAR_SIZE }}" />
+           </update>
+          </updates>' > DARWIN-Universal.xml
+
+         cp DARWIN-Universal.xml output/DARWIN-Universal.xml
+
+    - name: Publish 🎁
+      uses: actions/upload-artifact@v3
+      with:
+        name: Universal-Artifact
+        path: |
+          ./output/floorp-macOS-universal.dmg
+          ./output/DARWIN-Universal.mar
+          ./output/DARWIN-Universal.xml
+
+##################################################################### Deployments #######################################################################################################
+
   Deployments:
-   needs: [get-display-version, get-buildid, get-inside-version, build-linux-x86_64-with-PGO, Windows-x86_64-build-with-profdata-and-jarlog]
+   needs: [get-display-version, get-buildid, get-inside-version, build-linux-x86_64-with-PGO, Windows-x86_64-build-with-profdata-and-jarlog, integration]
    runs-on: ubuntu-latest
    environment: 
     name: Deploy-to-stable-release
@@ -558,6 +1352,7 @@ jobs:
       mkdir -p ~/downloads/artifacts
       mkdir -p ~/downloads/artifacts/linux-x64
       mkdir -p ~/downloads/artifacts/windows-x64
+      mkdir -p ~/downloads/artifacts/macOS-x64
 
    - name: download Linux x86_64 build artifact 📥
      uses: actions/download-artifact@v3
@@ -570,6 +1365,12 @@ jobs:
      with:
       name: please-use-this-floorp-windows-x86_64-package-build-with-profdata-and-jarlog
       path: ~/downloads/artifacts/windows-x64
+
+   - name: download macOS x86_64 build artifact📥
+     uses: actions/download-artifact@v3
+     with:
+       name: Universal-Artifact
+       path: ~/downloads/artifacts/macOS-x64
 
    - name: check file structure 🗃
      run: |
@@ -586,11 +1387,14 @@ jobs:
       files: |
         /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.mar
         /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.mar
+        /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.mar
         /home/runner/downloads/artifacts/linux-x64/floorp.en-US.linux-x86_64.tar.bz2
         /home/runner/downloads/artifacts/windows-x64/floorp.en-US.win64.installer.exe
         /home/runner/downloads/artifacts/windows-x64/floorp.en-US.win64.zip
+        /home/runner/downloads/artifacts/macOS-x64/floorp-macOS-universal.dmg
         /home/runner/downloads/artifacts/windows-x64/WINNT-x86_64.xml
         /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64.xml
+        /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal.xml
 
       tag_name: "beta"
       name: "Floorp beta build: v${{ needs.get-display-version.outputs.display-version }} | ${{ needs.get-buildid.outputs.buildids }}"
