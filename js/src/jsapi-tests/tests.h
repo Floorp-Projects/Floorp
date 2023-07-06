@@ -20,7 +20,6 @@
 
 #include "gc/GC.h"
 #include "js/AllocPolicy.h"
-#include "js/ArrayBuffer.h"
 #include "js/CharacterEncoding.h"
 #include "js/Conversions.h"
 #include "js/Equality.h"      // JS::SameValue
@@ -543,7 +542,6 @@ class TestJSPrincipals : public JSPrincipals {
 class ExternalData {
   char* contents_;
   size_t len_;
-  bool uniquePointerCreated_ = false;
 
  public:
   explicit ExternalData(const char* str)
@@ -558,13 +556,6 @@ class ExternalData {
     MOZ_ASSERT(!wasFreed());
     ::free(contents_);
     contents_ = nullptr;
-  }
-
-  mozilla::UniquePtr<void, JS::BufferContentsDeleter> pointer() {
-    MOZ_ASSERT(!uniquePointerCreated_,
-               "Not allowed to create multiple unique pointers to contents");
-    uniquePointerCreated_ = true;
-    return {contents_, {ExternalData::freeCallback, this}};
   }
 
   static void freeCallback(void* contents, void* userData) {

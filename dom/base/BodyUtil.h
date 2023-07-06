@@ -13,8 +13,6 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormData.h"
 
-#include "js/Utility.h"  // JS::FreePolicy
-
 namespace mozilla {
 class ErrorResult;
 
@@ -32,8 +30,7 @@ class BodyUtil final {
    */
   static void ConsumeArrayBuffer(JSContext* aCx,
                                  JS::MutableHandle<JSObject*> aValue,
-                                 uint32_t aInputLength,
-                                 UniquePtr<uint8_t[], JS::FreePolicy> aInput,
+                                 uint32_t aInputLength, uint8_t* aInput,
                                  ErrorResult& aRv);
 
   /**

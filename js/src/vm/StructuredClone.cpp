@@ -3261,11 +3261,7 @@ bool JSStructuredCloneReader::readTransferMap() {
       MOZ_ASSERT(data == JS::SCTAG_TMO_ALLOC_DATA ||
                  data == JS::SCTAG_TMO_MAPPED_DATA);
       if (data == JS::SCTAG_TMO_ALLOC_DATA) {
-        // When the ArrayBuffer can't be allocated, |content| will be free'ed
-        // in `JSStructuredCloneData::discardTransferables()`.
-        obj = JS::NewArrayBufferWithContents(
-            cx, nbytes, content,
-            JS::NewArrayBufferOutOfMemory::CallerMustFreeMemory);
+        obj = JS::NewArrayBufferWithContents(cx, nbytes, content);
       } else if (data == JS::SCTAG_TMO_MAPPED_DATA) {
         obj = JS::NewMappedArrayBufferWithContents(cx, nbytes, content);
       }

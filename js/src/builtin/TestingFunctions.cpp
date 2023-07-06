@@ -4989,9 +4989,10 @@ class CloneBufferObject : public NativeObject {
       return false;
     }
 
-    JSObject* arrayBuffer =
-        JS::NewArrayBufferWithContents(cx, size, std::move(buffer));
+    auto* rawBuffer = buffer.release();
+    JSObject* arrayBuffer = JS::NewArrayBufferWithContents(cx, size, rawBuffer);
     if (!arrayBuffer) {
+      js_free(rawBuffer);
       return false;
     }
 
