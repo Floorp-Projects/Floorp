@@ -9917,7 +9917,11 @@ var FirefoxViewHandler = {
     const viewURL = NimbusFeatures.firefoxViewNext.getVariable("enabled")
       ? "about:firefoxview-next"
       : "about:firefoxview";
-    if (this.tab && this.tab.linkedBrowser.currentURI.spec != viewURL) {
+    // Need to account for navigation to Firefox View pages
+    if (
+      this.tab &&
+      this.tab.linkedBrowser.currentURI.spec.split("#")[0] != viewURL
+    ) {
       gBrowser.removeTab(this.tab);
       this.tab = null;
     }
