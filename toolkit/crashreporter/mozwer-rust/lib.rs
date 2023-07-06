@@ -136,7 +136,7 @@ fn out_of_process_exception_event_callback(
     context: PVOID,
     exception_information: PWER_RUNTIME_EXCEPTION_INFORMATION,
 ) -> Result<()> {
-    let mut exception_information = unsafe { &mut *exception_information };
+    let exception_information = unsafe { &mut *exception_information };
     let is_fatal = exception_information.bIsFatal.to_bool();
     let mut is_ui_hang = false;
     if !is_fatal {
