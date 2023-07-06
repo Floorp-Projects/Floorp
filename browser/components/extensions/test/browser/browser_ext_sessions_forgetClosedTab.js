@@ -2,6 +2,10 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+const { TabStateFlusher } = ChromeUtils.importESModule(
+  "resource:///modules/sessionstore/TabStateFlusher.sys.mjs"
+);
+
 function getExtension(incognitoOverride) {
   function background() {
     browser.test.onMessage.addListener((msg, windowId, sessionId) => {
@@ -31,17 +35,29 @@ function getExtension(incognitoOverride) {
   });
 }
 
+async function openAndCloseTab(window, url) {
+  const tab = await BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
+  await TabStateFlusher.flush(tab.linkedBrowser);
+  const sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
+  BrowserTestUtils.removeTab(tab);
+  await sessionUpdatePromise;
+}
+
+add_setup(async function prepare() {
+  // Clean up any session state left by previous tests that might impact this one
+  while (SessionStore.getClosedTabCountForWindow(window) > 0) {
+    SessionStore.forgetClosedTab(window, 0);
+  }
+  await TestUtils.waitForTick();
+});
+
 add_task(async function test_sessions_forget_closed_tab() {
   let extension = getExtension();
   await extension.startup();
 
   let tabUrl = "http://example.com";
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
-  BrowserTestUtils.removeTab(tab);
-  tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, tabUrl);
-  let sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
-  BrowserTestUtils.removeTab(tab);
-  await sessionUpdatePromise;
+  await openAndCloseTab(window, tabUrl);
+  await openAndCloseTab(window, tabUrl);
 
   extension.sendMessage("check-sessions");
   let recentlyClosed = await extension.awaitMessage("recentlyClosed");
@@ -108,18 +124,7 @@ add_task(async function test_sessions_forget_closed_tab_private() {
   });
 
   let tabUrl = "http://example.com";
-  let tab = await BrowserTestUtils.openNewForegroundTab(
-    privateWin.gBrowser,
-    tabUrl
-  );
-  BrowserTestUtils.removeTab(tab);
-  tab = await BrowserTestUtils.openNewForegroundTab(
-    privateWin.gBrowser,
-    tabUrl
-  );
-  let sessionUpdatePromise = BrowserTestUtils.waitForSessionStoreUpdate(tab);
-  BrowserTestUtils.removeTab(tab);
-  await sessionUpdatePromise;
+  await openAndCloseTab(privateWin, tabUrl);
 
   pb_extension.sendMessage("check-sessions");
   let recentlyClosed = await pb_extension.awaitMessage("recentlyClosed");

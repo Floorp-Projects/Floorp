@@ -144,6 +144,19 @@ add_task(async function test_ClosedTabMethods() {
   closedCount = SessionStore.getClosedTabCountForWindow(browserWindows[1]);
   Assert.equal(1, closedCount, "1 closed tab for this window");
 
+  closedCount = SessionStore.getClosedTabCount();
+  Assert.equal(3, closedCount, "3 closed tab for all windows");
+
+  const allWindowsClosedTabs = SessionStore.getClosedTabData();
+  Assert.equal(
+    closedCount,
+    allWindowsClosedTabs.length,
+    "getClosedTabData returned the correct number of entries"
+  );
+  for (let tabData of allWindowsClosedTabs) {
+    Assert.ok(tabData.sourceWindowId, "each tab has a sourceWindowId property");
+  }
+
   sessionStoreUpdated = TestUtils.topicObserved(
     "sessionstore-closed-objects-changed"
   );
@@ -161,6 +174,18 @@ add_task(async function test_ClosedTabMethods() {
     "Theres still one closed tab in the 2nd window"
   );
 
+  Assert.equal(
+    2,
+    SessionStore.getClosedTabCount(),
+    "Theres a total for 2 closed tabs"
+  );
+
+  Assert.equal(
+    2,
+    SessionStore.getClosedTabData().length,
+    "We get the right number of tab entries from getClosedTabData()"
+  );
+
   sessionStoreUpdated = TestUtils.topicObserved(
     "sessionstore-closed-objects-changed"
   );
@@ -170,12 +195,23 @@ add_task(async function test_ClosedTabMethods() {
   Assert.equal(
     0,
     SessionStore.getClosedTabCountForWindow(browserWindows[0]),
-    "No closed tabs after forgetting the last one"
+    "The first window has closed tabs after forgetting the last tab"
   );
   Assert.equal(
     1,
     SessionStore.getClosedTabCountForWindow(browserWindows[1]),
     "Theres still one closed tab in the 2nd window"
+  );
+
+  Assert.equal(
+    1,
+    SessionStore.getClosedTabCount(),
+    "Theres a total of one closed tabs"
+  );
+  Assert.equal(
+    1,
+    SessionStore.getClosedTabData().length,
+    "We get the right number of tab entries from getClosedTabData()"
   );
 
   await promiseAllButPrimaryWindowClosed();
@@ -184,6 +220,18 @@ add_task(async function test_ClosedTabMethods() {
     0,
     SessionStore.getClosedTabCountForWindow(browserWindows[0]),
     "Closed tab count is unchanged after closing the other browser window"
+  );
+
+  Assert.equal(
+    0,
+    SessionStore.getClosedTabCount(),
+    "Theres now 0 closed tabs after closing the other browser window which had the last one"
+  );
+
+  Assert.equal(
+    0,
+    SessionStore.getClosedTabData().length,
+    "We get the right number of tab entries from getClosedTabData()"
   );
 
   // Cleanup.

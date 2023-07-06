@@ -111,11 +111,12 @@ export const CustomizableWidgets = [
       let panelview = event.target;
       let document = panelview.ownerDocument;
       let window = document.defaultView;
+      const closedTabCount = lazy.SessionStore.getClosedTabCount();
 
       lazy.PanelMultiView.getViewNode(
         document,
         "appMenuRecentlyClosedTabs"
-      ).disabled = lazy.SessionStore.getClosedTabCountForWindow(window) == 0;
+      ).disabled = closedTabCount == 0;
       lazy.PanelMultiView.getViewNode(
         document,
         "appMenuRecentlyClosedWindows"

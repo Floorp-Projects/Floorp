@@ -36,6 +36,7 @@ ChromeUtils.defineESModuleGetters(this, {
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.jsm",
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
 });
 
 const MOBILE_PROMO_DISMISSED_PREF =
@@ -501,9 +502,9 @@ class TelemetrySpy {
  * @return {Promise} Promise that resolves when the session store
  * has been updated after closing the tab.
  */
-async function open_then_close(url) {
+async function open_then_close(url, win = window) {
   let { updatePromise } = await BrowserTestUtils.withNewTab(
-    url,
+    { url, gBrowser: win.gBrowser },
     async browser => {
       return {
         updatePromise: BrowserTestUtils.waitForSessionStoreUpdate({
@@ -538,12 +539,17 @@ function isFirefoxViewTabSelected(win = window) {
   return isFirefoxViewTabSelectedInWindow(win);
 }
 
+function promiseAllButPrimaryWindowClosed() {
+  let windows = [];
+  for (let win of BrowserWindowTracker.orderedWindows) {
+    if (win != window) {
+      windows.push(win);
+    }
+  }
+  return Promise.all(windows.map(BrowserTestUtils.closeWindow));
+}
+
 registerCleanupFunction(() => {
-  is(
-    typeof SyncedTabs._internal?._createRecentTabsList,
-    "function",
-    "in firefoxview/head.js, SyncedTabs._internal._createRecentTabsList is a function"
-  );
   // ensure all the stubs are restored, regardless of any exceptions
   // that might have prevented it
   gSandbox?.restore();

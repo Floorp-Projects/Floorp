@@ -1,5 +1,5 @@
 function numClosedTabs() {
-  return SessionStore.getClosedTabCountForWindow(window);
+  return SessionStore.getClosedTabCount();
 }
 
 function isUndoCloseEnabled() {
