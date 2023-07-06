@@ -514,7 +514,7 @@ impl ReftestManifest {
                         max_difference: options.allow_max_difference,
                         num_differences: options.allow_num_differences }),
                 1 => {
-                    let mut fuzzy = &mut fuzziness[0];
+                    let fuzzy = &mut fuzziness[0];
                     fuzzy.max_difference = cmp::max(fuzzy.max_difference, options.allow_max_difference);
                     fuzzy.num_differences = cmp::max(fuzzy.num_differences, options.allow_num_differences);
                 },
