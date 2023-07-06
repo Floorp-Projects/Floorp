@@ -93,13 +93,13 @@ module.exports = {
           {
             selector: "ForOfStatement > :not(CallExpression).right",
             message:
-              "for-of loops must use allowContentIter() or allowContentIterWith()",
+              "for-of loops must use allowContentIter(), allowContentIterWith(), or allowContentIterWithNext()",
           },
           {
             selector:
-              "ForOfStatement > CallExpression.right > :not(Identifier[name='allowContentIter'], Identifier[name='allowContentIterWith']).callee",
+              "ForOfStatement > CallExpression.right > :not(Identifier[name='allowContentIter'], Identifier[name='allowContentIterWith'], Identifier[name='allowContentIterWithNext']).callee",
             message:
-              "for-of loops must use allowContentIter() or allowContentIterWith()",
+              "for-of loops must use allowContentIter(), allowContentIterWith(), or allowContentIterWithNext",
           },
           {
             selector:
@@ -120,6 +120,7 @@ module.exports = {
         ArgumentsLength: "readonly",
         allowContentIter: "readonly",
         allowContentIterWith: "readonly",
+        allowContentIterWithNext: "readonly",
         callContentFunction: "readonly",
         callFunction: "readonly",
         constructContentFunction: "readonly",

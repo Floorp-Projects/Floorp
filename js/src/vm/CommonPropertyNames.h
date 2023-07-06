@@ -28,6 +28,8 @@
   IF_DECORATORS(MACRO_(addInitializer, addInitializer, "addInitializer"))      \
   MACRO_(allowContentIter, allowContentIter, "allowContentIter")               \
   MACRO_(allowContentIterWith, allowContentIterWith, "allowContentIterWith")   \
+  MACRO_(allowContentIterWithNext, allowContentIterWithNext,                   \
+         "allowContentIterWithNext")                                           \
   MACRO_(ambiguous, ambiguous, "ambiguous")                                    \
   MACRO_(anonymous, anonymous, "anonymous")                                    \
   MACRO_(Any, Any, "Any")                                                      \

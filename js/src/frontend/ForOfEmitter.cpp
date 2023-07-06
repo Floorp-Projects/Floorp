@@ -44,7 +44,9 @@ bool ForOfEmitter::emitInitialize(uint32_t forPos) {
 
   tdzCacheForIteratedValue_.reset();
 
-  //                [stack] # if AllowContentWith
+  //                [stack] # if AllowContentWithNext
+  //                [stack] NEXT ITER
+  //                [stack] # elif AllowContentWith
   //                [stack] ITERABLE ITERFN SYNC_ITERFN?
   //                [stack] # else
   //                [stack] ITERABLE
