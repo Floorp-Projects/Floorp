@@ -123,6 +123,16 @@ this.sessions = class extends ExtensionAPIPersistent {
       return { encodedKey, win };
     }
 
+    function getClosedIdFromSessionId(sessionId) {
+      // sessionId is a string, but internally closedId values are integers.
+      // convertFromSessionStoreClosedData in ext-browser.js does the opposite conversion.
+      let closedId = parseInt(sessionId, 10);
+      if (Number.isInteger(closedId)) {
+        return closedId;
+      }
+      throw new ExtensionError(`Invalid sessionId: ${sessionId}.`);
+    }
+
     return {
       sessions: {
         async getRecentlyClosed(filter) {
@@ -138,9 +148,10 @@ this.sessions = class extends ExtensionAPIPersistent {
           await SessionStore.promiseInitialized;
           let window = windowTracker.getWindow(windowId, context);
           let closedTabData = SessionStore.getClosedTabDataForWindow(window);
+          let closedId = getClosedIdFromSessionId(sessionId);
 
           let closedTabIndex = closedTabData.findIndex(closedTab => {
-            return closedTab.closedId === parseInt(sessionId, 10);
+            return closedTab.closedId === closedId;
           });
 
           if (closedTabIndex < 0) {
@@ -155,9 +166,9 @@ this.sessions = class extends ExtensionAPIPersistent {
         async forgetClosedWindow(sessionId) {
           await SessionStore.promiseInitialized;
           let closedWindowData = SessionStore.getClosedWindowData();
-
+          let closedId = getClosedIdFromSessionId(sessionId);
           let closedWindowIndex = closedWindowData.findIndex(closedWindow => {
-            return closedWindow.closedId === parseInt(sessionId, 10);
+            return closedWindow.closedId === closedId;
           });
 
           if (closedWindowIndex < 0) {
@@ -171,12 +182,26 @@ this.sessions = class extends ExtensionAPIPersistent {
 
         async restore(sessionId) {
           await SessionStore.promiseInitialized;
-          let session, closedId;
+          let session;
+          let closedId;
           if (sessionId) {
-            closedId = sessionId;
+            closedId = getClosedIdFromSessionId(sessionId);
+          }
+          let targetWindow;
+
+          // closedId is internally represented as an integer and could be 0.
+          if (closedId !== undefined) {
+            if (SessionStore.getObjectTypeForClosedId(closedId) == "tab") {
+              // we want to restore the tab to the original window is was closed from
+              targetWindow = SessionStore.getWindowForTabClosedId(
+                closedId,
+                extension.privateBrowsingAllowed
+              );
+            }
             session = SessionStore.undoCloseById(
               closedId,
-              extension.privateBrowsingAllowed
+              extension.privateBrowsingAllowed,
+              targetWindow // ignored if we are restoring a window
             );
           } else if (SessionStore.lastClosedObjectType == "window") {
             // If the most recently closed object is a window, just undo closing the most recent window.
@@ -199,9 +224,15 @@ this.sessions = class extends ExtensionAPIPersistent {
 
               // Use the closedId of the most recently closed tab to restore it.
               closedId = recentlyClosedTabs[0].closedId;
-              session = SessionStore.undoCloseById(
+              // we want the tab to be re-opened into the same window it was closed from
+              targetWindow = SessionStore.getWindowForTabClosedId(
                 closedId,
                 extension.privateBrowsingAllowed
+              );
+              session = SessionStore.undoCloseById(
+                closedId,
+                extension.privateBrowsingAllowed,
+                targetWindow
               );
             }
           }

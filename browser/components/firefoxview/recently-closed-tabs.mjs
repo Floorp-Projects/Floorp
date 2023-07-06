@@ -83,8 +83,8 @@ class RecentlyClosedTabsList extends MozLitElement {
 
   getTabStateValue(tab, key) {
     let value = "";
-    const tabEntries = tab.state.entries;
-    const activeIndex = tab.state.index - 1;
+    const tabEntries = tab.entries;
+    const activeIndex = tab.index - 1;
 
     if (activeIndex >= 0 && tabEntries[activeIndex]) {
       value = tabEntries[activeIndex][key];
@@ -104,7 +104,7 @@ class RecentlyClosedTabsList extends MozLitElement {
       const position = [...this.tabsList.children].indexOf(item) + 1;
       const closedId = item.dataset.tabid;
 
-      lazy.SessionStore.undoCloseById(closedId);
+      lazy.SessionStore.undoCloseById(closedId, undefined, getWindow());
 
       // record telemetry
       let tabClosedAt = parseInt(
@@ -133,9 +133,11 @@ class RecentlyClosedTabsList extends MozLitElement {
   }
 
   dismissTabAndUpdateForElement(item) {
-    let recentlyClosedList = lazy.SessionStore.getClosedTabDataForWindow(
-      getWindow()
+    const sourceWindow = lazy.SessionStore.getWindowById(
+      item.dataset.sourceWindowId
     );
+    let recentlyClosedList =
+      lazy.SessionStore.getClosedTabDataForWindow(sourceWindow);
     let closedTabIndex = recentlyClosedList.findIndex(closedTab => {
       return closedTab.closedId === parseInt(item.dataset.tabid, 10);
     });
@@ -143,7 +145,8 @@ class RecentlyClosedTabsList extends MozLitElement {
       // Tab not found in recently closed list
       return;
     }
-    lazy.SessionStore.forgetClosedTab(getWindow(), closedTabIndex);
+    // in order forget a closed tab, we need to pass the window the closed tab data is associated with
+    lazy.SessionStore.forgetClosedTab(sourceWindow, closedTabIndex);
 
     // record telemetry
     let tabClosedAt = parseInt(
@@ -163,10 +166,25 @@ class RecentlyClosedTabsList extends MozLitElement {
     );
   }
 
+  getClosedTabsDataForOpenWindows() {
+    // get closed tabs in currently-open windows
+    const closedTabsData = lazy.SessionStore.getClosedTabData().map(tabData => {
+      // flatten the object; move properties of `.state` into the top-level object
+      const stateData = tabData.state;
+      delete tabData.state;
+      return {
+        ...tabData,
+        ...stateData,
+      };
+    });
+    return closedTabsData;
+  }
+
   updateRecentlyClosedTabs() {
-    let recentlyClosedTabsData = lazy.SessionStore.getClosedTabDataForWindow(
-      getWindow()
-    );
+    // add recently-closed tabs from currently-open windows
+    const recentlyClosedTabsData = this.getClosedTabsDataForOpenWindows();
+
+    recentlyClosedTabsData.sort((a, b) => a.closedAt < b.closedAt);
     this.recentlyClosedTabs = recentlyClosedTabsData.slice(
       0,
       this.maxTabsLength
@@ -247,7 +265,7 @@ class RecentlyClosedTabsList extends MozLitElement {
             class="placeholder-header"
           ></h4>
           <p
-            data-l10n-id="firefoxview-closed-tabs-placeholder-body"
+            data-l10n-id="firefoxview-closed-tabs-placeholder-body2"
             class="placeholder-body"
           ></p>
         </div>
@@ -266,6 +284,7 @@ class RecentlyClosedTabsList extends MozLitElement {
       <li
         class="closed-tab-li"
         data-tabid=${tab.closedId}
+        data-source-window-id=${tab.sourceWindowId}
         data-targeturi=${targetURI}
         tabindex=${ifDefined(primary ? null : "-1")}
         @contextmenu=${e => (this.contextTriggerNode = e.currentTarget)}
