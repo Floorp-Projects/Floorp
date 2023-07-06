@@ -811,22 +811,6 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
       // The timeout is on the list to run at this depth, go ahead and
       // process it.
 
-      // Record the first time we try to fire a timeout, and ensure that
-      // all actual firings occur in that order.  This ensures that we
-      // retain compliance with the spec language
-      // (https://html.spec.whatwg.org/#dom-settimeout) specifically items
-      // 15 ("If method context is a Window object, wait until the Document
-      // associated with method context has been fully active for a further
-      // timeout milliseconds (not necessarily consecutively)") and item 16
-      // ("Wait until any invocations of this algorithm that had the same
-      // method context, that started before this one, and whose timeout is
-      // equal to or less than this one's, have completed.").
-#ifdef DEBUG
-      if (timeout->mFiringIndex == -1) {
-        timeout->mFiringIndex = mFiringIndex++;
-      }
-#endif
-
       if (mIsLoading && !aProcessIdle) {
         // Any timeouts that would fire during a load will be deferred
         // until the load event occurs, but if there's an idle time,
@@ -849,6 +833,22 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
         }
         MOZ_ALWAYS_SUCCEEDS(mIdleExecutor->MaybeSchedule(now, TimeDuration()));
       } else {
+        // Record the first time we try to fire a timeout, and ensure that
+        // all actual firings occur in that order.  This ensures that we
+        // retain compliance with the spec language
+        // (https://html.spec.whatwg.org/#dom-settimeout) specifically items
+        // 15 ("If method context is a Window object, wait until the Document
+        // associated with method context has been fully active for a further
+        // timeout milliseconds (not necessarily consecutively)") and item 16
+        // ("Wait until any invocations of this algorithm that had the same
+        // method context, that started before this one, and whose timeout is
+        // equal to or less than this one's, have completed.").
+#ifdef DEBUG
+        if (timeout->mFiringIndex == -1) {
+          timeout->mFiringIndex = mFiringIndex++;
+        }
+#endif
+
         // Get the script context (a strong ref to prevent it going away)
         // for this timeout and ensure the script language is enabled.
         nsCOMPtr<nsIScriptContext> scx = mWindow.GetContextInternal();
