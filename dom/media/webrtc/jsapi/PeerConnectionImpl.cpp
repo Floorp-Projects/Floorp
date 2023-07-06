@@ -2166,9 +2166,10 @@ void PeerConnectionImpl::DumpPacket_m(size_t level, dom::mozPacketDumpType type,
     return;
   }
 
+  UniquePtr<void, JS::FreePolicy> packetPtr{packet.release()};
   JS::Rooted<JSObject*> jsobj(
       jsapi.cx(),
-      JS::NewArrayBufferWithContents(jsapi.cx(), size, packet.release()));
+      JS::NewArrayBufferWithContents(jsapi.cx(), size, std::move(packetPtr)));
 
   RootedSpiderMonkeyInterface<ArrayBuffer> arrayBuffer(jsapi.cx());
   if (!arrayBuffer.Init(jsobj)) {

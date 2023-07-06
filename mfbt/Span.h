@@ -490,8 +490,9 @@ class Span {
   /**
    * Constructor for mozilla::UniquePtr holding an array and length.
    */
-  template <class ArrayElementType = std::add_pointer<element_type>>
-  constexpr Span(const mozilla::UniquePtr<ArrayElementType>& aPtr,
+  template <class ArrayElementType = std::add_pointer<element_type>,
+            class DeleterType>
+  constexpr Span(const mozilla::UniquePtr<ArrayElementType, DeleterType>& aPtr,
                  index_type aLength)
       : storage_(aPtr.get(), aLength) {}
 
