@@ -274,6 +274,8 @@ class JSObject
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Object;
 
+  static constexpr size_t thingSize(js::gc::AllocKind kind);
+
   MOZ_ALWAYS_INLINE JS::Zone* zone() const {
     MOZ_ASSERT_IF(!isTenured(), nurseryZone() == shape()->zone());
     return shape()->zone();
@@ -720,6 +722,15 @@ struct JSObject_Slots16 : JSObject {
   void* data[2];
   js::Value fslots[16];
 };
+
+/* static */
+constexpr size_t JSObject::thingSize(js::gc::AllocKind kind) {
+  MOZ_ASSERT(IsObjectAllocKind(kind));
+  constexpr uint8_t objectSizes[] = {
+#define EXPAND_OJBECT_SIZE(_1, _2, _3, sizedType, _4, _5, _6) sizeof(sizedType),
+      FOR_EACH_OBJECT_ALLOCKIND(EXPAND_OJBECT_SIZE)};
+  return objectSizes[size_t(kind)];
+}
 
 namespace js {
 
