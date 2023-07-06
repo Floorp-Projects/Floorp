@@ -4099,11 +4099,6 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
       return NS_OK;
     }
     auto* cs = static_cast<CookieServiceParent*>(csParent);
-    // Do not push these cookie updates to the same process they originated
-    // from.
-    if (cs->ProcessingCookie()) {
-      return NS_OK;
-    }
     if (!nsCRT::strcmp(aData, u"batch-deleted")) {
       nsCOMPtr<nsIArray> cookieList = do_QueryInterface(aSubject);
       NS_ASSERTION(cookieList, "couldn't get cookie list");
@@ -4113,6 +4108,12 @@ ContentParent::Observe(nsISupports* aSubject, const char* aTopic,
 
     if (!nsCRT::strcmp(aData, u"cleared")) {
       cs->RemoveAll();
+      return NS_OK;
+    }
+
+    // Do not push these cookie updates to the same process they originated
+    // from.
+    if (cs->ProcessingCookie()) {
       return NS_OK;
     }
 
