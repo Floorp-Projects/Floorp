@@ -6,7 +6,7 @@
 
 # Some huge-mapping optimization instead of bounds checks on supported
 # platforms.
-if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_ARM64']:
+if CONFIG['JS_CODEGEN_X64'] or CONFIG['JS_CODEGEN_ARM64'] or CONFIG['JS_CODEGEN_RISCV64']:
     DEFINES['WASM_SUPPORTS_HUGE_MEMORY'] = True
 
 # Enables CACHEIR_LOGS to diagnose IC coverage, and

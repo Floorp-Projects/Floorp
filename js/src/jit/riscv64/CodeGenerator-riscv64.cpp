@@ -538,7 +538,7 @@ void CodeGenerator::visitCompareAndBranch(LCompareAndBranch* comp) {
   } else if (comp->right()->isGeneralReg()) {
     emitBranch(lhsReg, ToRegister(rhs), cond, ifTrue, ifFalse);
   } else {
-    // TODO(loong64): emitBranch with 32-bit comparision
+    // TODO(riscv): emitBranch with 32-bit comparision
     ScratchRegisterScope scratch(masm);
     masm.load32(ToAddress(rhs), scratch);
     emitBranch(lhsReg, Register(scratch), cond, ifTrue, ifFalse);
@@ -637,7 +637,13 @@ void CodeGenerator::visitWasmLoadI64(LWasmLoadI64* lir) {
     ptrScratch = ToRegister(lir->ptrCopy());
   }
 
-  masm.wasmLoadI64(mir->access(), HeapReg, ToRegister(lir->ptr()), ptrScratch,
+  Register ptrReg = ToRegister(lir->ptr());
+  if (mir->base()->type() == MIRType::Int32) {
+    // See comment in visitWasmLoad re the type of 'base'.
+    masm.move32ZeroExtendToPtr(ptrReg, ptrReg);
+  }
+
+  masm.wasmLoadI64(mir->access(), HeapReg, ptrReg, ptrScratch,
                    ToOutRegister64(lir));
 }
 
@@ -649,8 +655,14 @@ void CodeGenerator::visitWasmStoreI64(LWasmStoreI64* lir) {
     ptrScratch = ToRegister(lir->ptrCopy());
   }
 
-  masm.wasmStoreI64(mir->access(), ToRegister64(lir->value()), HeapReg,
-                    ToRegister(lir->ptr()), ptrScratch);
+  Register ptrReg = ToRegister(lir->ptr());
+  if (mir->base()->type() == MIRType::Int32) {
+    // See comment in visitWasmLoad re the type of 'base'.
+    masm.move32ZeroExtendToPtr(ptrReg, ptrReg);
+  }
+
+  masm.wasmStoreI64(mir->access(), ToRegister64(lir->value()), HeapReg, ptrReg,
+                    ptrScratch);
 }
 
 void CodeGenerator::visitWasmSelectI64(LWasmSelectI64* lir) {

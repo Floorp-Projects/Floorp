@@ -34,7 +34,7 @@ static const LiveRegisterSet AllRegs =
 
 static void PushBailoutFrame(MacroAssembler& masm, Register spArg) {
   // Push the frameSize_ stored in ra
-  // See: CodeGeneratorLOONG64::generateOutOfLineCode()
+  // See: CodeGeneratorRiscv64::generateOutOfLineCode()
   masm.push(ra);
 
   // Push registers such that we can access them from [base + code].
@@ -779,8 +779,7 @@ bool JitRuntime::generateVMWrapper(JSContext* cx, MacroAssembler& masm,
         break;
       case VMFunctionData::DoubleByValue:
       case VMFunctionData::DoubleByRef:
-        MOZ_CRASH(
-            "NYI: LOONG64 callVM should not be used with 128bits values.");
+        MOZ_CRASH("NYI: riscv callVM should not be used with 128bits values.");
         break;
     }
   }

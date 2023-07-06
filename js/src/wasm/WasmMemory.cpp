@@ -209,8 +209,9 @@ static_assert(MaxMemoryAccessSize <= HugeUnalignedGuardPage,
 static_assert(HugeOffsetGuardLimit < UINT32_MAX,
               "checking for overflow against OffsetGuardLimit is enough.");
 
-// We have only tested huge memory on x64 and arm64.
-#  if !(defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64))
+// We have only tested huge memory on x64, arm64 and riscv64.
+#  if !(defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64) || \
+        defined(JS_CODEGEN_RISCV64))
 #    error "Not an expected configuration"
 #  endif
 
