@@ -156,74 +156,81 @@ async function run_test_extension(incognitoOverride, testData) {
   await extension.unload();
 }
 
+const spanningTestData = {
+  private: {
+    initialTabURL: "https://example.com/",
+    tabToClose: "https://example.org/?private",
+    // restore should succeed when incognito is allowed
+    expected: {
+      url: "https://example.org/?private",
+      incognito: true,
+    },
+  },
+  notPrivate: {
+    initialTabURL: "https://example.com/",
+    tabToClose: "https://example.org/?notprivate",
+    expected: {
+      url: "https://example.org/?notprivate",
+      incognito: false,
+    },
+  },
+};
+
 add_task(
   async function test_sessions_get_recently_closed_private_incognito_spanning() {
-    await run_test_extension("spanning", {
-      private: {
-        initialTabURL: "https://example.com/",
-        tabToClose: "https://example.org/?private",
-        // restore should succeed when incognito is allowed
-        expected: {
-          url: "https://example.org/?private",
-          incognito: true,
-        },
-      },
-      notPrivate: {
-        initialTabURL: "https://example.com/",
-        tabToClose: "https://example.org/?notprivate",
-        expected: {
-          url: "https://example.org/?notprivate",
-          incognito: false,
-        },
-      },
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.sessionstore.closedTabsFromAllWindows", true]],
     });
+    await run_test_extension("spanning", spanningTestData);
+    SpecialPowers.popPrefEnv();
   }
 );
+add_task(
+  async function test_sessions_get_recently_closed_private_incognito_spanning_pref_off() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.sessionstore.closedTabsFromAllWindows", false]],
+    });
+    await run_test_extension("spanning", spanningTestData);
+    SpecialPowers.popPrefEnv();
+  }
+);
+
+const notAllowedTestData = {
+  private: {
+    initialTabURL: "https://example.com/",
+    tabToClose: "https://example.org/?private",
+    // this is expected to fail when incognito is not_allowed
+    expected: {
+      error: "Could not restore object using sessionId.",
+    },
+  },
+  notPrivate: {
+    // we'll open tabs for each URL
+    initialTabURL: "https://example.com/",
+    tabToClose: "https://example.org/?notprivate",
+    expected: {
+      url: "https://example.org/?notprivate",
+      incognito: false,
+    },
+  },
+};
 
 add_task(
   async function test_sessions_get_recently_closed_private_incognito_not_allowed() {
-    await run_test_extension("not_allowed", {
-      private: {
-        initialTabURL: "https://example.com/",
-        tabToClose: "https://example.org/?private",
-        // this is expected to fail when incognito is not_allowed
-        expected: {
-          error: "Could not restore object using sessionId.",
-        },
-      },
-      notPrivate: {
-        // we'll open tabs for each URL
-        initialTabURL: "https://example.com/",
-        tabToClose: "https://example.org/?notprivate",
-        expected: {
-          url: "https://example.org/?notprivate",
-          incognito: false,
-        },
-      },
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.sessionstore.closedTabsFromAllWindows", true]],
     });
+    await run_test_extension("not_allowed", notAllowedTestData);
+    SpecialPowers.popPrefEnv();
   }
 );
 
 add_task(
-  async function test_sessions_get_recently_closed_private_incognito_spanning() {
-    await run_test_extension("spanning", {
-      private: {
-        initialTabURL: "https://example.com/",
-        tabToClose: "https://example.org/?private",
-        // restore should succeed when incognito is allowed
-        expected: {
-          url: "https://example.org/?private",
-          incognito: true,
-        },
-      },
-      notPrivate: {
-        initialTabURL: "https://example.com/",
-        tabToClose: "https://example.org/?notprivate",
-        expected: {
-          url: "https://example.org/?notprivate",
-          incognito: false,
-        },
-      },
+  async function test_sessions_get_recently_closed_private_incognito_not_allowed_pref_off() {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.sessionstore.closedTabsFromAllWindows", false]],
     });
+    await run_test_extension("not_allowed", notAllowedTestData);
+    SpecialPowers.popPrefEnv();
   }
 );
