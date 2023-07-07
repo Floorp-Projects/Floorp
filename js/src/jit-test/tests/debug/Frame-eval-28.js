@@ -1,5 +1,5 @@
 // Test that strict Debugger.Frame.eval has a correct static scope.
-"use strict";
+options('strict_mode');
 var g = newGlobal({newCompartment: true});
 var dbg = new Debugger(g);
 var hits = 0;

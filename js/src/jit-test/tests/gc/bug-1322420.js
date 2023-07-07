@@ -1,4 +1,4 @@
-"use strict";
+options('strict_mode');
 var g1 = newGlobal({newCompartment: true});
 var g2 = newGlobal({newCompartment: true});
 var dbg = new Debugger();

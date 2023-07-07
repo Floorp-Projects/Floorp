@@ -1927,6 +1927,8 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
 
     if (StringEqualsLiteral(opt, "throw_on_asmjs_validation_failure")) {
       JS::ContextOptionsRef(cx).toggleThrowOnAsmJSValidationFailure();
+    } else if (StringEqualsLiteral(opt, "strict_mode")) {
+      JS::ContextOptionsRef(cx).toggleStrictMode();
     } else {
       UniqueChars optChars = QuoteString(cx, opt, '"');
       if (!optChars) {
@@ -1935,8 +1937,8 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
 
       JS_ReportErrorASCII(cx,
                           "unknown option name %s."
-                          " The valid name is "
-                          "throw_on_asmjs_validation_failure.",
+                          " The valid names are "
+                          "throw_on_asmjs_validation_failure and strict_mode.",
                           optChars.get());
       return false;
     }
@@ -1947,6 +1949,11 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
   if (names && oldContextOptions.throwOnAsmJSValidationFailure()) {
     names = JS_sprintf_append(std::move(names), "%s%s", found ? "," : "",
                               "throw_on_asmjs_validation_failure");
+    found = true;
+  }
+  if (names && oldContextOptions.strictMode()) {
+    names = JS_sprintf_append(std::move(names), "%s%s", found ? "," : "",
+                              "strict_mode");
     found = true;
   }
   if (!names) {
