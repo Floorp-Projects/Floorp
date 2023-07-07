@@ -750,6 +750,9 @@ struct BaseCompiler final {
   inline RegI32 popI64ToI32();
   inline RegI32 popI64ToSpecificI32(RegI32 specific);
 
+  // Pop an I32 or I64 as an I64. The value is zero extended out to 64-bits.
+  inline RegI64 popIndexToInt64(IndexType indexType);
+
   // Pop the stack until it has the desired size, but do not move the physical
   // stack pointer.
   inline void popValueStackTo(uint32_t stackSize);
@@ -1613,7 +1616,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitAtomicXchg(ValType type, Scalar::Type viewType);
   [[nodiscard]] bool emitMemInit();
   [[nodiscard]] bool emitMemCopy();
-  [[nodiscard]] bool memCopyCall();
+  [[nodiscard]] bool memCopyCall(uint32_t dstMemIndex, uint32_t srcMemIndex);
   void memCopyInlineM32();
   [[nodiscard]] bool emitTableCopy();
   [[nodiscard]] bool emitDataOrElemDrop(bool isData);

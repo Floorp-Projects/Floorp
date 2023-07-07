@@ -105,6 +105,7 @@ enum class SymbolicAddress {
   MemCopySharedM32,
   MemCopyM64,
   MemCopySharedM64,
+  MemCopyAny,
   DataDrop,
   MemFillM32,
   MemFillSharedM32,
@@ -236,6 +237,7 @@ extern const SymbolicAddressSignature SASigMemCopyM32;
 extern const SymbolicAddressSignature SASigMemCopySharedM32;
 extern const SymbolicAddressSignature SASigMemCopyM64;
 extern const SymbolicAddressSignature SASigMemCopySharedM64;
+extern const SymbolicAddressSignature SASigMemCopyAny;
 extern const SymbolicAddressSignature SASigDataDrop;
 extern const SymbolicAddressSignature SASigMemFillM32;
 extern const SymbolicAddressSignature SASigMemFillSharedM32;

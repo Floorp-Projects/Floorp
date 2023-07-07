@@ -190,6 +190,12 @@ const SymbolicAddressSignature SASigMemCopySharedM64 = {
     _FailOnNegI32,
     5,
     {_PTR, _I64, _I64, _I64, _PTR, _END}};
+const SymbolicAddressSignature SASigMemCopyAny = {
+    SymbolicAddress::MemCopyAny,
+    _VOID,
+    _FailOnNegI32,
+    6,
+    {_PTR, _I64, _I64, _I64, _PTR, _PTR, _END}};
 const SymbolicAddressSignature SASigDataDrop = {
     SymbolicAddress::DataDrop, _VOID, _FailOnNegI32, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigMemFillM32 = {
@@ -1239,6 +1245,10 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralInt64Int64Int64General;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemCopySharedM64));
       return FuncCast(Instance::memCopyShared_m64, *abiType);
+    case SymbolicAddress::MemCopyAny:
+      *abiType = Args_Int32_GeneralInt64Int64Int64GeneralGeneral;
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemCopyAny));
+      return FuncCast(Instance::memCopy_any, *abiType);
     case SymbolicAddress::DataDrop:
       *abiType = Args_Int32_GeneralInt32;
       MOZ_ASSERT(*abiType == ToABIType(SASigDataDrop));
@@ -1511,6 +1521,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::MemCopySharedM32:
     case SymbolicAddress::MemCopyM64:
     case SymbolicAddress::MemCopySharedM64:
+    case SymbolicAddress::MemCopyAny:
     case SymbolicAddress::DataDrop:
     case SymbolicAddress::MemFillM32:
     case SymbolicAddress::MemFillSharedM32:

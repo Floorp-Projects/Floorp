@@ -441,7 +441,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readFixedF32(float* out) { return d_.readFixedF32(out); }
   [[nodiscard]] bool readFixedF64(double* out) { return d_.readFixedF64(out); }
 
-  [[nodiscard]] bool readMemOrTableIndex(bool isMem, uint32_t* index);
   [[nodiscard]] bool readLinearMemoryAddress(uint32_t byteSize,
                                              LinearMemoryAddress<Value>* addr);
   [[nodiscard]] bool readLinearMemoryAddressAligned(
@@ -1855,23 +1854,6 @@ inline bool OpIter<Policy>::readTernary(ValType operandType, Value* v0,
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readMemOrTableIndex(bool isMem, uint32_t* index) {
-  bool readByte = isMem;
-  if (readByte) {
-    uint8_t indexTmp;
-    if (!readFixedU8(&indexTmp)) {
-      return fail("unable to read memory or table index");
-    }
-    *index = indexTmp;
-  } else {
-    if (!readVarU32(index)) {
-      return fail("unable to read memory or table index");
-    }
-  }
-  return true;
-}
-
-template <typename Policy>
 inline bool OpIter<Policy>::readLinearMemoryAddress(
     uint32_t byteSize, LinearMemoryAddress<Value>* addr) {
   if (env_.numMemories() == 0) {
@@ -2711,18 +2693,16 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
   MOZ_ASSERT(dstMemOrTableIndex != srcMemOrTableIndex);
 
   // Spec requires (dest, src) as of 2019-10-04.
-  if (!readMemOrTableIndex(isMem, dstMemOrTableIndex)) {
+  if (!readVarU32(dstMemOrTableIndex)) {
     return false;
   }
-  if (!readMemOrTableIndex(isMem, srcMemOrTableIndex)) {
+  if (!readVarU32(srcMemOrTableIndex)) {
     return false;
   }
 
   if (isMem) {
-    if (env_.numMemories() == 0) {
-      return fail("can't touch memory without memory");
-    }
-    if (*srcMemOrTableIndex != 0 || *dstMemOrTableIndex != 0) {
+    if (*srcMemOrTableIndex >= env_.memories.length() ||
+        *dstMemOrTableIndex >= env_.memories.length()) {
       return fail("memory index out of range for memory.copy");
     }
   } else {
@@ -2737,18 +2717,30 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
     }
   }
 
-  ValType ptrType =
-      isMem ? ToValType(env_.memories[0].indexType()) : ValType::I32;
+  ValType dstPtrType;
+  ValType srcPtrType;
+  ValType lenType;
+  if (isMem) {
+    dstPtrType = ToValType(env_.memories[*dstMemOrTableIndex].indexType());
+    srcPtrType = ToValType(env_.memories[*srcMemOrTableIndex].indexType());
+    if (dstPtrType == ValType::I64 && srcPtrType == ValType::I64) {
+      lenType = ValType::I64;
+    } else {
+      lenType = ValType::I32;
+    }
+  } else {
+    dstPtrType = srcPtrType = lenType = ValType::I32;
+  }
 
-  if (!popWithType(ptrType, len)) {
+  if (!popWithType(lenType, len)) {
     return false;
   }
 
-  if (!popWithType(ptrType, src)) {
+  if (!popWithType(srcPtrType, src)) {
     return false;
   }
 
-  if (!popWithType(ptrType, dst)) {
+  if (!popWithType(dstPtrType, dst)) {
     return false;
   }
 

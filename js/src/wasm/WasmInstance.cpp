@@ -503,18 +503,20 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   return pages.value();
 }
 
-template <typename T, typename F, typename I>
-inline int32_t WasmMemoryCopy(JSContext* cx, T memBase, size_t memLen,
-                              I dstByteOffset, I srcByteOffset, I len,
-                              F memMove) {
-  if (!MemoryBoundsCheck(dstByteOffset, len, memLen) ||
-      !MemoryBoundsCheck(srcByteOffset, len, memLen)) {
+template <typename PointerT, typename CopyFuncT, typename IndexT>
+inline int32_t WasmMemoryCopy(JSContext* cx, PointerT dstMemBase,
+                              PointerT srcMemBase, size_t dstMemLen,
+                              size_t srcMemLen, IndexT dstByteOffset,
+                              IndexT srcByteOffset, IndexT len,
+                              CopyFuncT memMove) {
+  if (!MemoryBoundsCheck(dstByteOffset, len, dstMemLen) ||
+      !MemoryBoundsCheck(srcByteOffset, len, srcMemLen)) {
     ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
-  memMove(memBase + uintptr_t(dstByteOffset),
-          memBase + uintptr_t(srcByteOffset), size_t(len));
+  memMove(dstMemBase + uintptr_t(dstByteOffset),
+          srcMemBase + uintptr_t(srcByteOffset), size_t(len));
   return 0;
 }
 
@@ -523,8 +525,8 @@ inline int32_t MemoryCopy(JSContext* cx, I dstByteOffset, I srcByteOffset,
                           I len, uint8_t* memBase) {
   const WasmArrayRawBuffer* rawBuf = WasmArrayRawBuffer::fromDataPtr(memBase);
   size_t memLen = rawBuf->byteLength();
-  return WasmMemoryCopy(cx, memBase, memLen, dstByteOffset, srcByteOffset, len,
-                        memmove);
+  return WasmMemoryCopy(cx, memBase, memBase, memLen, memLen, dstByteOffset,
+                        srcByteOffset, len, memmove);
 }
 
 template <typename I>
@@ -537,8 +539,9 @@ inline int32_t MemoryCopyShared(JSContext* cx, I dstByteOffset, I srcByteOffset,
       WasmSharedArrayRawBuffer::fromDataPtr(memBase);
   size_t memLen = rawBuf->volatileByteLength();
 
+  SharedMem<uint8_t*> sharedMemBase = SharedMem<uint8_t*>::shared(memBase);
   return WasmMemoryCopy<SharedMem<uint8_t*>, RacyMemMove>(
-      cx, SharedMem<uint8_t*>::shared(memBase), memLen, dstByteOffset,
+      cx, sharedMemBase, sharedMemBase, memLen, memLen, dstByteOffset,
       srcByteOffset, len, AtomicOperations::memmoveSafeWhenRacy);
 }
 
@@ -578,6 +581,44 @@ inline int32_t MemoryCopyShared(JSContext* cx, I dstByteOffset, I srcByteOffset,
   MOZ_ASSERT(SASigMemCopySharedM64.failureMode == FailureMode::FailOnNegI32);
   JSContext* cx = instance->cx();
   return MemoryCopyShared(cx, dstByteOffset, srcByteOffset, len, memBase);
+}
+
+// Dynamic dispatch to get the length of a memory given just the base and
+// whether it is shared or not. This is only used for memCopy_any, where being
+// slower is okay.
+static inline size_t GetVolatileByteLength(uint8_t* memBase, bool isShared) {
+  if (isShared) {
+    return WasmSharedArrayRawBuffer::fromDataPtr(memBase)->volatileByteLength();
+  }
+  return WasmArrayRawBuffer::fromDataPtr(memBase)->byteLength();
+}
+
+/* static */ int32_t Instance::memCopy_any(Instance* instance,
+                                           uint64_t dstByteOffset,
+                                           uint64_t srcByteOffset, uint64_t len,
+                                           uint32_t dstMemIndex,
+                                           uint32_t srcMemIndex) {
+  MOZ_ASSERT(SASigMemCopyAny.failureMode == FailureMode::FailOnNegI32);
+  JSContext* cx = instance->cx();
+
+  using RacyMemMove =
+      void (*)(SharedMem<uint8_t*>, SharedMem<uint8_t*>, size_t);
+
+  const MemoryInstanceData& dstMemory =
+      instance->memoryInstanceData(instance->metadata().memories[dstMemIndex]);
+  const MemoryInstanceData& srcMemory =
+      instance->memoryInstanceData(instance->metadata().memories[srcMemIndex]);
+
+  uint8_t* dstMemBase = dstMemory.memoryBase;
+  uint8_t* srcMemBase = srcMemory.memoryBase;
+
+  size_t dstMemLen = GetVolatileByteLength(dstMemBase, dstMemory.isShared);
+  size_t srcMemLen = GetVolatileByteLength(srcMemBase, srcMemory.isShared);
+
+  return WasmMemoryCopy<SharedMem<uint8_t*>, RacyMemMove>(
+      cx, SharedMem<uint8_t*>::shared(dstMemBase),
+      SharedMem<uint8_t*>::shared(srcMemBase), dstMemLen, srcMemLen,
+      dstByteOffset, srcByteOffset, len, AtomicOperations::memmoveSafeWhenRacy);
 }
 
 template <typename T, typename F, typename I>
@@ -1774,6 +1815,7 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
     MOZ_ASSERT(limit <= UINT32_MAX);
 #endif
     data.boundsCheckLimit = limit;
+    data.isShared = md.isShared();
 
     // Add observer if our memory base may grow
     if (memory && memory->movingGrowable() &&
