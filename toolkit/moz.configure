@@ -1356,6 +1356,9 @@ def webrtc_default(target):
         "riscv64",
     )
 
+    if not cpu_match:
+        cpu_match = target.endianness == "little" and target.cpu in ("mips32", "mips64")
+
     return os_match and cpu_match
 
 
