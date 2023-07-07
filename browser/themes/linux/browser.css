@@ -290,126 +290,124 @@ menuitem.bookmark-item {
  * appearance: none and the titlebar radius on the toolbox. In X11 however, we
  * do need the native titlebar behind at all times.
  */
-@media (-moz-gtk-csd-available) {
-  :root[tabsintitlebar][sizemode="normal"] {
-    background-color: transparent;
-  }
+:root[tabsintitlebar][sizemode="normal"] {
+  background-color: transparent;
+}
 
-  :root[tabsintitlebar] #navigator-toolbox-background {
-    appearance: auto;
-    -moz-default-appearance: -moz-window-titlebar-maximized;
-  }
+:root[tabsintitlebar] #navigator-toolbox-background {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-titlebar-maximized;
+}
 
-  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox-background {
-    -moz-default-appearance: -moz-window-titlebar;
-  }
+:root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox-background {
+  -moz-default-appearance: -moz-window-titlebar;
+}
 
-  :root[tabsintitlebar] #titlebar {
-    /* Use the toolbox background */
-    background-color: transparent;
-  }
+:root[tabsintitlebar] #titlebar {
+  /* Use the toolbox background */
+  background-color: transparent;
+}
 
-  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox:-moz-lwtheme,
-  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) dialog::backdrop {
-    border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
-    border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
-  }
+:root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox:-moz-lwtheme,
+:root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) dialog::backdrop {
+  border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
+  border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
+}
 
-  /* When temporarily showing the menu bar, make it at least as tall as the tab
-   * bar such that the window controls don't appear to move up. */
-  :root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
-    height: calc(var(--tab-min-height) + 2 * var(--tab-block-margin));
-  }
+/* When temporarily showing the menu bar, make it at least as tall as the tab
+ * bar such that the window controls don't appear to move up. */
+:root[tabsintitlebar] #toolbar-menubar[autohide="true"] {
+  height: calc(var(--tab-min-height) + 2 * var(--tab-block-margin));
+}
 
-  /* The button box must appear on top of the navigator-toolbox in order for
-   * click and hover mouse events to work properly for the button in the restored
-   * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
-   * can swallow those events. */
-  .titlebar-buttonbox {
-    z-index: 1;
-    align-items: center;
-  }
+/* The button box must appear on top of the navigator-toolbox in order for
+ * click and hover mouse events to work properly for the button in the restored
+ * window state. Otherwise, elements in the navigator-toolbox, like the menubar,
+ * can swallow those events. */
+.titlebar-buttonbox {
+  z-index: 1;
+  align-items: center;
+}
 
-  /* Render titlebar command buttons according to system config.
-   * Use full scale icons here as the Gtk+ does. */
+/* Render titlebar command buttons according to system config.
+ * Use full scale icons here as the Gtk+ does. */
+.titlebar-min {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-minimize;
+  order: env(-moz-gtk-csd-minimize-button-position);
+}
+.titlebar-max {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-maximize;
+  order: env(-moz-gtk-csd-maximize-button-position);
+}
+.titlebar-restore {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-restore;
+  order: env(-moz-gtk-csd-maximize-button-position);
+}
+.titlebar-close {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-close;
+  order: env(-moz-gtk-csd-close-button-position);
+}
+
+/* When using lightweight themes, use our own buttons since native ones might
+ * assume a native background in order to be visible. */
+.titlebar-button:-moz-lwtheme {
+  appearance: none;
+  border-radius: 100%;
+}
+.titlebar-button > .toolbarbutton-icon:-moz-lwtheme {
+  padding: 6px;
+  -moz-context-properties: stroke;
+  stroke: currentColor;
+}
+.titlebar-min:-moz-lwtheme {
+  list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
+}
+.titlebar-max:-moz-lwtheme {
+  list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
+}
+.titlebar-restore:-moz-lwtheme {
+  list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
+}
+.titlebar-close:-moz-lwtheme {
+  list-style-image: url(chrome://browser/skin/window-controls/close.svg);
+}
+.titlebar-button:-moz-lwtheme:hover {
+  background-color: color-mix(in srgb, currentColor 12%, transparent);
+}
+.titlebar-button:-moz-lwtheme:hover:active {
+  background-color: color-mix(in srgb, currentColor 20%, transparent);
+}
+.titlebar-close:-moz-lwtheme:hover {
+  background-color: #d70022;
+  color: white;
+}
+.titlebar-close:-moz-lwtheme:hover:active {
+  background-color: #ff0039;
+}
+
+@media not (-moz-gtk-csd-minimize-button) {
   .titlebar-min {
-    appearance: auto;
-    -moz-default-appearance: -moz-window-button-minimize;
-    order: env(-moz-gtk-csd-minimize-button-position);
+    display: none;
   }
+}
+@media not (-moz-gtk-csd-maximize-button) {
+  .titlebar-restore,
   .titlebar-max {
-    appearance: auto;
-    -moz-default-appearance: -moz-window-button-maximize;
-    order: env(-moz-gtk-csd-maximize-button-position);
+    display: none;
   }
-  .titlebar-restore {
-    appearance: auto;
-    -moz-default-appearance: -moz-window-button-restore;
-    order: env(-moz-gtk-csd-maximize-button-position);
-  }
+}
+@media not (-moz-gtk-csd-close-button) {
   .titlebar-close {
-    appearance: auto;
-    -moz-default-appearance: -moz-window-button-close;
-    order: env(-moz-gtk-csd-close-button-position);
+    display: none;
   }
+}
 
-  /* When using lightweight themes, use our own buttons since native ones might
-   * assume a native background in order to be visible. */
-  .titlebar-button:-moz-lwtheme {
-    appearance: none;
-    border-radius: 100%;
-  }
-  .titlebar-button > .toolbarbutton-icon:-moz-lwtheme {
-    padding: 6px;
-    -moz-context-properties: stroke;
-    stroke: currentColor;
-  }
-  .titlebar-min:-moz-lwtheme {
-    list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
-  }
-  .titlebar-max:-moz-lwtheme {
-    list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
-  }
-  .titlebar-restore:-moz-lwtheme {
-    list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
-  }
-  .titlebar-close:-moz-lwtheme {
-    list-style-image: url(chrome://browser/skin/window-controls/close.svg);
-  }
-  .titlebar-button:-moz-lwtheme:hover {
-    background-color: color-mix(in srgb, currentColor 12%, transparent);
-  }
-  .titlebar-button:-moz-lwtheme:hover:active {
-    background-color: color-mix(in srgb, currentColor 20%, transparent);
-  }
-  .titlebar-close:-moz-lwtheme:hover {
-    background-color: #d70022;
-    color: white;
-  }
-  .titlebar-close:-moz-lwtheme:hover:active {
-    background-color: #ff0039;
-  }
-
-  @media not (-moz-gtk-csd-minimize-button) {
-    .titlebar-min {
-      display: none;
-    }
-  }
-  @media not (-moz-gtk-csd-maximize-button) {
-    .titlebar-restore,
-    .titlebar-max {
-      display: none;
-    }
-  }
-  @media not (-moz-gtk-csd-close-button) {
-    .titlebar-close {
-      display: none;
-    }
-  }
-
-  @media (-moz-gtk-csd-reversed-placement) {
-    .titlebar-buttonbox-container {
-      order: -1;
-    }
+@media (-moz-gtk-csd-reversed-placement) {
+  .titlebar-buttonbox-container {
+    order: -1;
   }
 }
