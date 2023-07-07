@@ -86,6 +86,34 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VideoDecoder)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 /*
+ * Below are helpers for conversion among Maybe<T>, Optional<T>, and Nullable<T>
+ */
+
+template <typename T>
+Maybe<T> OptionalToMaybe(const dom::Optional<T>& aOptional) {
+  if (aOptional.WasPassed()) {
+    return Some(aOptional.Value());
+  }
+  return Nothing();
+}
+
+template <typename T>
+Maybe<T> NullableToMaybe(const dom::Nullable<T>& aNullable) {
+  if (!aNullable.IsNull()) {
+    return Some(aNullable.Value());
+  }
+  return Nothing();
+}
+
+template <typename T>
+Nullable<T> MaybeToNullable(const Maybe<T>& aOptional) {
+  if (aOptional.isSome()) {
+    return Nullable<T>(aOptional.value());
+  }
+  return Nullable<T>();
+}
+
+/*
  * The followings are helpers for VideoDecoder methods
  */
 
@@ -747,7 +775,9 @@ class DecodeMessage final
         : mBuffer(aChunk.Data(), static_cast<size_t>(aChunk.ByteLength())),
           mIsKey(aChunk.Type() == EncodedVideoChunkType::Key),
           mTimestamp(aChunk.Timestamp()),
-          mDuration(NullableToMaybe(aChunk.GetDuration())) {
+          mDuration(aChunk.GetDuration().IsNull()
+                        ? Nothing()
+                        : Some(aChunk.GetDuration().Value())) {
       LOGV("Create %zu-byte ChunkData from %u-byte EncodedVideoChunk",
            mBuffer ? mBuffer.Size() : 0, aChunk.ByteLength());
     }
@@ -757,9 +787,9 @@ class DecodeMessage final
         const VideoDecoderConfigInternal& aConfig);
 
     AlignedByteBuffer mBuffer;
-    const bool mIsKey;
-    const int64_t mTimestamp;
-    const Maybe<uint64_t> mDuration;
+    bool mIsKey;
+    int64_t mTimestamp;
+    Maybe<uint64_t> mDuration;
   };
 
   DecodeMessage(Id aId, ConfigureMessage::Id aConfigId,
