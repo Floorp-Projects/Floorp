@@ -119,6 +119,25 @@ add_task(async function test_middleClickOnHomeButtonWithNewWindow() {
   await testMiddleClickOnHomeButtonWithNewWindow(true);
 });
 
+add_task(async function test_middleClickOnComponentNotHandlingPasteEvent() {
+  Services.prefs.setBoolPref("middlemouse.paste", true);
+
+  info("Set initial value");
+  SpecialPowers.clipboardCopyString("test\nsample");
+  gURLBar.value = "";
+  gURLBar.focus();
+
+  info("Middle click on a component that does not handle paste event");
+  const onPasted = new Promise(r =>
+    gURLBar.addEventListener("paste", r, { once: true })
+  );
+  const allTabsButton = document.getElementById("alltabs-button");
+  EventUtils.synthesizeMouseAtCenter(allTabsButton, { button: 1 });
+  await onPasted;
+
+  Assert.equal(gURLBar.value, "", "URLBar has no pasted value");
+});
+
 async function testMiddleClickOnTab(isMiddleMousePastePrefOn) {
   info(`Set middlemouse.paste [${isMiddleMousePastePrefOn}]`);
   Services.prefs.setBoolPref("middlemouse.paste", isMiddleMousePastePrefOn);
