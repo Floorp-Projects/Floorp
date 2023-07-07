@@ -354,9 +354,22 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static ArrayBufferObject* createForContents(JSContext* cx, size_t nbytes,
                                               BufferContents contents);
 
-  static ArrayBufferObject* copy(
-      JSContext* cx, JS::Handle<ArrayBufferObject*> unwrappedArrayBuffer);
+  static ArrayBufferObject* copy(JSContext* cx, size_t newByteLength,
+                                 JS::Handle<ArrayBufferObject*> source);
 
+  static ArrayBufferObject* copyAndDetach(
+      JSContext* cx, size_t newByteLength,
+      JS::Handle<ArrayBufferObject*> source);
+
+ private:
+  static ArrayBufferObject* copyAndDetachSteal(
+      JSContext* cx, JS::Handle<ArrayBufferObject*> source);
+
+  static ArrayBufferObject* copyAndDetachRealloc(
+      JSContext* cx, size_t newByteLength,
+      JS::Handle<ArrayBufferObject*> source);
+
+ public:
   static ArrayBufferObject* createZeroed(JSContext* cx, size_t nbytes,
                                          HandleObject proto = nullptr);
 
