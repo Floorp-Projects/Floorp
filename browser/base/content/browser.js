@@ -37,6 +37,7 @@ ChromeUtils.defineESModuleGetters(this, {
   FirefoxViewNotificationManager:
     "resource:///modules/firefox-view-notification-manager.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
+  isProductURL: "chrome://global/content/shopping/ShoppingProduct.mjs",
   LightweightThemeConsumer:
     "resource://gre/modules/LightweightThemeConsumer.sys.mjs",
   Log: "resource://gre/modules/Log.sys.mjs",
@@ -9976,13 +9977,8 @@ var ShoppingSidebarManager = {
     }
   },
 
-  // TODO (bug 1840852): use the toolkit shopping regex added in bug 1836741.
   _isProductPage(locationURI) {
-    // amazon product page: URL contains /dp/ followed by 10 alphanum chars.
-    let regex = /\/dp\/[\w]{10}/;
-    return (
-      locationURI.host == "www.amazon.com" && regex.test(locationURI.asciiSpec)
-    );
+    return isProductURL(locationURI);
   },
 
   onLocationChange(aBrowser, aLocationURI) {
