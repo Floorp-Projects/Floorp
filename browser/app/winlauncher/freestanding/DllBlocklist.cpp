@@ -384,29 +384,11 @@ constexpr DWORD kPageExecutable = PAGE_EXECUTE | PAGE_EXECUTE_READ |
                                   PAGE_EXECUTE_READWRITE |
                                   PAGE_EXECUTE_WRITECOPY;
 
-// All the code for patched_NtMapViewOfSection that relies on stack buffers
-// (e.g. mbi and sectionFileName) should be put in this helper function (see
+// All the code for patched_NtMapViewOfSection that relies on checked stack
+// buffers (e.g. sectionFileName) should be put in this helper function (see
 // bug 1733532).
-MOZ_NEVER_INLINE NTSTATUS AfterMapExecutableViewOfSection(
+MOZ_NEVER_INLINE NTSTATUS AfterMapViewOfExecutableImageSection(
     HANDLE aProcess, PVOID* aBaseAddress, NTSTATUS aStubStatus) {
-  // Do a query to see if the memory is MEM_IMAGE. If not, continue
-  MEMORY_BASIC_INFORMATION mbi;
-  NTSTATUS ntStatus =
-      ::NtQueryVirtualMemory(aProcess, *aBaseAddress, MemoryBasicInformation,
-                             &mbi, sizeof(mbi), nullptr);
-  if (!NT_SUCCESS(ntStatus)) {
-    ::NtUnmapViewOfSection(aProcess, *aBaseAddress);
-    return STATUS_ACCESS_DENIED;
-  }
-
-  // We don't care about mappings that aren't MEM_IMAGE or executable.
-  // We check for the AllocationProtect, not the Protect field because
-  // the first section of a mapped image is always PAGE_READONLY even
-  // when it's mapped as an executable.
-  if (!(mbi.Type & MEM_IMAGE) || !(mbi.AllocationProtect & kPageExecutable)) {
-    return aStubStatus;
-  }
-
   // Get the section name
   nt::MemorySectionNameBuf sectionFileName(
       gLoaderPrivateAPI.GetSectionNameBuffer(*aBaseAddress));
@@ -528,9 +510,13 @@ MOZ_NEVER_INLINE NTSTATUS AfterMapExecutableViewOfSection(
 }
 
 // To preserve compatibility with third-parties, calling into this function
-// must not use stack buffers when reached through Thread32Next (see bug
-// 1733532). Therefore, all code relying on stack buffers should be put in the
-// dedicated helper function AfterMapExecutableViewOfSection.
+// must not use checked stack buffers when reached through Thread32Next (see
+// bug 1733532). Hence this function is declared as MOZ_NO_STACK_PROTECTOR.
+// Ideally, all code relying on stack buffers should be put in the dedicated
+// helper function AfterMapViewOfExecutableImageSection, which does not have
+// the MOZ_NO_STACK_PROTECTOR attribute. The mbi variable below is an
+// exception to this rule, as it is required to collect the information that
+// lets us decide whether we really need to go through the helper function.
 NTSTATUS NTAPI patched_NtMapViewOfSection(
     HANDLE aSection, HANDLE aProcess, PVOID* aBaseAddress, ULONG_PTR aZeroBits,
     SIZE_T aCommitSize, PLARGE_INTEGER aSectionOffset, PSIZE_T aViewSize,
@@ -549,7 +535,28 @@ NTSTATUS NTAPI patched_NtMapViewOfSection(
     return stubStatus;
   }
 
-  return AfterMapExecutableViewOfSection(aProcess, aBaseAddress, stubStatus);
+  // Do a query to see if we are mapping a MEM_IMAGE section that was created
+  // as executable. If not, we bail out. In particular, this avoids using stack
+  // buffers during calls to Thread32Next.
+  MEMORY_BASIC_INFORMATION mbi;
+  NTSTATUS ntStatus =
+      ::NtQueryVirtualMemory(aProcess, *aBaseAddress, MemoryBasicInformation,
+                             &mbi, sizeof(mbi), nullptr);
+  if (!NT_SUCCESS(ntStatus)) {
+    ::NtUnmapViewOfSection(aProcess, *aBaseAddress);
+    return STATUS_ACCESS_DENIED;
+  }
+
+  // We don't care about mappings that aren't MEM_IMAGE or executable.
+  // We check for the AllocationProtect, not the Protect field (nor the
+  // aProtectionFlags argument) because the first section of a mapped image is
+  // always PAGE_READONLY even when it's mapped as an executable.
+  if (!(mbi.Type & MEM_IMAGE) || !(mbi.AllocationProtect & kPageExecutable)) {
+    return stubStatus;
+  }
+
+  return AfterMapViewOfExecutableImageSection(aProcess, aBaseAddress,
+                                              stubStatus);
 }
 
 }  // namespace freestanding
