@@ -1028,6 +1028,34 @@ set_config("ENABLE_WASM_MEMORY_CONTROL", wasm_memory_control)
 set_define("ENABLE_WASM_MEMORY_CONTROL", wasm_memory_control)
 
 
+# Support for WebAssembly Multi Memory.
+# =====================================
+
+
+@depends(milestone.is_nightly)
+def default_wasm_multi_memory(is_nightly):
+    if is_nightly:
+        return True
+
+
+option(
+    "--enable-wasm-multi-memory",
+    default=default_wasm_multi_memory,
+    help="{Enable|Disable} WebAssembly multi-memory",
+)
+
+
+@depends("--enable-wasm-multi-memory", "--wasm-no-experimental")
+def wasm_multi_memory(value, no_experimental):
+    if no_experimental or not value:
+        return
+
+    return True
+
+
+set_config("ENABLE_WASM_MULTI_MEMORY", wasm_multi_memory)
+set_define("ENABLE_WASM_MULTI_MEMORY", wasm_multi_memory)
+
 # Options for generating the shell as a script
 # ============================================
 option("--with-qemu-exe", nargs=1, help="Use path as an arm emulator on host platforms")
