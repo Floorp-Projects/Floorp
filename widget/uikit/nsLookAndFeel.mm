@@ -88,7 +88,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID, ColorScheme, nscolor& aResult) {
     case ColorID::Captiontext:
     case ColorID::Menutext:
     case ColorID::Infotext:
-    case ColorID::MozMenubartext:
     case ColorID::Windowtext:
       aResult = mColorDarkText;
       break;

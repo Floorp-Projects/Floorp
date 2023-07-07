@@ -188,7 +188,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::Captiontext:
     case ColorID::Menutext:
     case ColorID::Infotext:
-    case ColorID::MozMenubartext:
       color = GetColorFromNSColor(NSColor.textColor);
       break;
     case ColorID::Windowtext:
