@@ -1318,11 +1318,11 @@ class FunctionCompiler {
   }
 
  public:
-  bool isMem32() {
-    return moduleEnv_.memories[0].indexType() == IndexType::I32;
+  bool isMem32(uint32_t memoryIndex = 0) {
+    return moduleEnv_.memories[memoryIndex].indexType() == IndexType::I32;
   }
-  bool isMem64() {
-    return moduleEnv_.memories[0].indexType() == IndexType::I64;
+  bool isMem64(uint32_t memoryIndex = 0) {
+    return moduleEnv_.memories[memoryIndex].indexType() == IndexType::I64;
   }
 
   // Sometimes, we need to determine the memory type before the opcode reader
@@ -5531,15 +5531,26 @@ static bool EmitMemoryGrow(FunctionCompiler& f) {
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
   MDefinition* delta;
-  if (!f.iter().readMemoryGrow(&delta)) {
+  uint32_t memoryIndex;
+  if (!f.iter().readMemoryGrow(&memoryIndex, &delta)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  MDefinition* memoryIndexValue = f.constantI32(int32_t(memoryIndex));
+  if (!memoryIndexValue) {
     return false;
   }
 
   const SymbolicAddressSignature& callee =
-      f.isNoMemOrMem32() ? SASigMemoryGrowM32 : SASigMemoryGrowM64;
+      f.isMem32(memoryIndex) ? SASigMemoryGrowM32 : SASigMemoryGrowM64;
 
   MDefinition* ret;
-  if (!f.emitInstanceCall1(bytecodeOffset, callee, delta, &ret)) {
+  if (!f.emitInstanceCall2(bytecodeOffset, callee, delta, memoryIndexValue,
+                           &ret)) {
     return false;
   }
 
@@ -5550,15 +5561,25 @@ static bool EmitMemoryGrow(FunctionCompiler& f) {
 static bool EmitMemorySize(FunctionCompiler& f) {
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  if (!f.iter().readMemorySize()) {
+  uint32_t memoryIndex;
+  if (!f.iter().readMemorySize(&memoryIndex)) {
+    return false;
+  }
+
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  MDefinition* memoryIndexValue = f.constantI32(int32_t(memoryIndex));
+  if (!memoryIndexValue) {
     return false;
   }
 
   const SymbolicAddressSignature& callee =
-      f.isNoMemOrMem32() ? SASigMemorySizeM32 : SASigMemorySizeM64;
+      f.isMem32(memoryIndex) ? SASigMemorySizeM32 : SASigMemorySizeM64;
 
   MDefinition* ret;
-  if (!f.emitInstanceCall0(bytecodeOffset, callee, &ret)) {
+  if (!f.emitInstanceCall1(bytecodeOffset, callee, memoryIndexValue, &ret)) {
     return false;
   }
 

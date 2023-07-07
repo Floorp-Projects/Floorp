@@ -431,42 +431,47 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
 // Bulk memory operations.
 
 /* static */ uint32_t Instance::memoryGrow_m32(Instance* instance,
-                                               uint32_t delta) {
+                                               uint32_t delta,
+                                               uint32_t memoryIndex) {
   MOZ_ASSERT(SASigMemoryGrowM32.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(!instance->isAsmJS());
 
   JSContext* cx = instance->cx();
-  Rooted<WasmMemoryObject*> memory(cx, instance->memory(0));
+  Rooted<WasmMemoryObject*> memory(cx, instance->memory(memoryIndex));
 
   // It is safe to cast to uint32_t, as all limits have been checked inside
   // grow() and will not have been exceeded for a 32-bit memory.
   uint32_t ret = uint32_t(WasmMemoryObject::grow(memory, uint64_t(delta), cx));
 
   // If there has been a moving grow, this Instance should have been notified.
-  MOZ_RELEASE_ASSERT(instance->memoryBase_ ==
-                     instance->memory(0)->buffer().dataPointerEither());
+  MOZ_RELEASE_ASSERT(
+      instance->memoryBase(memoryIndex) ==
+      instance->memory(memoryIndex)->buffer().dataPointerEither());
 
   return ret;
 }
 
 /* static */ uint64_t Instance::memoryGrow_m64(Instance* instance,
-                                               uint64_t delta) {
+                                               uint64_t delta,
+                                               uint32_t memoryIndex) {
   MOZ_ASSERT(SASigMemoryGrowM64.failureMode == FailureMode::Infallible);
   MOZ_ASSERT(!instance->isAsmJS());
 
   JSContext* cx = instance->cx();
-  Rooted<WasmMemoryObject*> memory(cx, instance->memory(0));
+  Rooted<WasmMemoryObject*> memory(cx, instance->memory(memoryIndex));
 
   uint64_t ret = WasmMemoryObject::grow(memory, delta, cx);
 
   // If there has been a moving grow, this Instance should have been notified.
-  MOZ_RELEASE_ASSERT(instance->memoryBase_ ==
-                     instance->memory(0)->buffer().dataPointerEither());
+  MOZ_RELEASE_ASSERT(
+      instance->memoryBase(memoryIndex) ==
+      instance->memory(memoryIndex)->buffer().dataPointerEither());
 
   return ret;
 }
 
-/* static */ uint32_t Instance::memorySize_m32(Instance* instance) {
+/* static */ uint32_t Instance::memorySize_m32(Instance* instance,
+                                               uint32_t memoryIndex) {
   MOZ_ASSERT(SASigMemorySizeM32.failureMode == FailureMode::Infallible);
 
   // This invariant must hold when running Wasm code. Assert it here so we can
@@ -474,7 +479,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   DebugOnly<JSContext*> cx = instance->cx();
   MOZ_ASSERT(cx->realm() == instance->realm());
 
-  Pages pages = instance->memory(0)->volatilePages();
+  Pages pages = instance->memory(memoryIndex)->volatilePages();
 #ifdef JS_64BIT
   // Ensure that the memory size is no more than 4GiB.
   MOZ_ASSERT(pages <= Pages(MaxMemory32LimitField));
@@ -482,7 +487,8 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   return uint32_t(pages.value());
 }
 
-/* static */ uint64_t Instance::memorySize_m64(Instance* instance) {
+/* static */ uint64_t Instance::memorySize_m64(Instance* instance,
+                                               uint32_t memoryIndex) {
   MOZ_ASSERT(SASigMemorySizeM64.failureMode == FailureMode::Infallible);
 
   // This invariant must hold when running Wasm code. Assert it here so we can
@@ -490,7 +496,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   DebugOnly<JSContext*> cx = instance->cx();
   MOZ_ASSERT(cx->realm() == instance->realm());
 
-  Pages pages = instance->memory(0)->volatilePages();
+  Pages pages = instance->memory(memoryIndex)->volatilePages();
 #ifdef JS_64BIT
   MOZ_ASSERT(pages <= Pages(MaxMemory64LimitField));
 #endif

@@ -5941,18 +5941,32 @@ bool BaseCompiler::emitFence() {
 // Bulk memory operations.
 
 bool BaseCompiler::emitMemoryGrow() {
-  return emitInstanceCallOp(
-      !usesMemory() || isMem32() ? SASigMemoryGrowM32 : SASigMemoryGrowM64,
-      [this]() -> bool {
-        Nothing arg;
-        return iter_.readMemoryGrow(&arg);
-      });
+  uint32_t memoryIndex;
+  Nothing nothing;
+  if (!iter_.readMemoryGrow(&memoryIndex, &nothing)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+
+  pushI32(memoryIndex);
+  return emitInstanceCall(isMem32(memoryIndex) ? SASigMemoryGrowM32
+                                               : SASigMemoryGrowM64);
 }
 
 bool BaseCompiler::emitMemorySize() {
-  return emitInstanceCallOp(
-      !usesMemory() || isMem32() ? SASigMemorySizeM32 : SASigMemorySizeM64,
-      [this]() -> bool { return iter_.readMemorySize(); });
+  uint32_t memoryIndex;
+  if (!iter_.readMemorySize(&memoryIndex)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+
+  pushI32(memoryIndex);
+  return emitInstanceCall(isMem32(memoryIndex) ? SASigMemorySizeM32
+                                               : SASigMemorySizeM64);
 }
 
 bool BaseCompiler::emitMemCopy() {

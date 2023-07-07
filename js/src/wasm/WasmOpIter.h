@@ -656,8 +656,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                   LinearMemoryAddress<Value>* addr,
                                   Value* value);
   [[nodiscard]] bool readNop();
-  [[nodiscard]] bool readMemorySize();
-  [[nodiscard]] bool readMemoryGrow(Value* input);
+  [[nodiscard]] bool readMemorySize(uint32_t* memoryIndex);
+  [[nodiscard]] bool readMemoryGrow(uint32_t* memoryIndex, Value* input);
   [[nodiscard]] bool readSelect(bool typed, StackType* type, Value* trueValue,
                                 Value* falseValue, Value* condition);
   [[nodiscard]] bool readGetLocal(const ValTypeVector& locals, uint32_t* id);
@@ -1981,44 +1981,35 @@ inline bool OpIter<Policy>::readNop() {
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readMemorySize() {
+inline bool OpIter<Policy>::readMemorySize(uint32_t* memoryIndex) {
   MOZ_ASSERT(Classify(op_) == OpKind::MemorySize);
 
-  if (env_.numMemories() == 0) {
-    return fail("can't touch memory without memory");
-  }
-
-  uint8_t flags;
-  if (!readFixedU8(&flags)) {
+  if (!readVarU32(memoryIndex)) {
     return fail("failed to read memory flags");
   }
 
-  if (flags != uint8_t(0)) {
-    return fail("unexpected flags");
+  if (*memoryIndex >= env_.numMemories()) {
+    return fail("memory index out of range for memory.size");
   }
 
-  ValType ptrType = ToValType(env_.memories[0].indexType());
+  ValType ptrType = ToValType(env_.memories[*memoryIndex].indexType());
   return push(ptrType);
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readMemoryGrow(Value* input) {
+inline bool OpIter<Policy>::readMemoryGrow(uint32_t* memoryIndex,
+                                           Value* input) {
   MOZ_ASSERT(Classify(op_) == OpKind::MemoryGrow);
 
-  if (env_.numMemories() == 0) {
-    return fail("can't touch memory without memory");
-  }
-
-  uint8_t flags;
-  if (!readFixedU8(&flags)) {
+  if (!readVarU32(memoryIndex)) {
     return fail("failed to read memory flags");
   }
 
-  if (flags != uint8_t(0)) {
-    return fail("unexpected flags");
+  if (*memoryIndex >= env_.numMemories()) {
+    return fail("memory index out of range for memory.grow");
   }
 
-  ValType ptrType = ToValType(env_.memories[0].indexType());
+  ValType ptrType = ToValType(env_.memories[*memoryIndex].indexType());
   if (!popWithType(ptrType, input)) {
     return false;
   }

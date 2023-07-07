@@ -123,13 +123,21 @@ const SymbolicAddressSignature SASigPowD = {
 const SymbolicAddressSignature SASigATan2D = {
     SymbolicAddress::ATan2D, _F64, _Infallible, 2, {_F64, _F64, _END}};
 const SymbolicAddressSignature SASigMemoryGrowM32 = {
-    SymbolicAddress::MemoryGrowM32, _I32, _Infallible, 2, {_PTR, _I32, _END}};
+    SymbolicAddress::MemoryGrowM32,
+    _I32,
+    _Infallible,
+    3,
+    {_PTR, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigMemoryGrowM64 = {
-    SymbolicAddress::MemoryGrowM64, _I64, _Infallible, 2, {_PTR, _I64, _END}};
+    SymbolicAddress::MemoryGrowM64,
+    _I64,
+    _Infallible,
+    3,
+    {_PTR, _I64, _I32, _END}};
 const SymbolicAddressSignature SASigMemorySizeM32 = {
-    SymbolicAddress::MemorySizeM32, _I32, _Infallible, 1, {_PTR, _END}};
+    SymbolicAddress::MemorySizeM32, _I32, _Infallible, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigMemorySizeM64 = {
-    SymbolicAddress::MemorySizeM64, _I64, _Infallible, 1, {_PTR, _END}};
+    SymbolicAddress::MemorySizeM64, _I64, _Infallible, 2, {_PTR, _I32, _END}};
 const SymbolicAddressSignature SASigWaitI32M32 = {
     SymbolicAddress::WaitI32M32,
     _I32,
@@ -1176,19 +1184,19 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       return FuncCast(ecmaAtan2, *abiType);
 
     case SymbolicAddress::MemoryGrowM32:
-      *abiType = Args_Int32_GeneralInt32;
+      *abiType = Args_Int32_GeneralInt32Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemoryGrowM32));
       return FuncCast(Instance::memoryGrow_m32, *abiType);
     case SymbolicAddress::MemoryGrowM64:
-      *abiType = Args_Int64_GeneralInt64;
+      *abiType = Args_Int64_GeneralInt64Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemoryGrowM64));
       return FuncCast(Instance::memoryGrow_m64, *abiType);
     case SymbolicAddress::MemorySizeM32:
-      *abiType = Args_Int32_General;
+      *abiType = Args_Int32_GeneralInt32;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemorySizeM32));
       return FuncCast(Instance::memorySize_m32, *abiType);
     case SymbolicAddress::MemorySizeM64:
-      *abiType = Args_Int64_General;
+      *abiType = Args_Int64_GeneralInt32;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemorySizeM64));
       return FuncCast(Instance::memorySize_m64, *abiType);
     case SymbolicAddress::WaitI32M32:

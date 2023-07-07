@@ -46,14 +46,12 @@ BytecodeOffset BaseCompiler::bytecodeOffset() const {
   return iter_.bytecodeOffset();
 }
 
-bool BaseCompiler::isMem32() const {
-  MOZ_ASSERT(moduleEnv_.memories.length() == 1);
-  return moduleEnv_.memories[0].indexType() == IndexType::I32;
+bool BaseCompiler::isMem32(uint32_t memoryIndex) const {
+  return moduleEnv_.memories[memoryIndex].indexType() == IndexType::I32;
 }
 
-bool BaseCompiler::isMem64() const {
-  MOZ_ASSERT(moduleEnv_.memories.length() == 1);
-  return moduleEnv_.memories[0].indexType() == IndexType::I64;
+bool BaseCompiler::isMem64(uint32_t memoryIndex) const {
+  return moduleEnv_.memories[memoryIndex].indexType() == IndexType::I64;
 }
 
 }  // namespace wasm
