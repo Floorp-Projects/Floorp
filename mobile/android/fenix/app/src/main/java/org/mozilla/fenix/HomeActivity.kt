@@ -83,6 +83,7 @@ import mozilla.components.support.utils.toSafeIntent
 import mozilla.components.support.webextensions.WebExtensionPopupFeature
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.experiments.nimbus.initializeTooling
+import org.mozilla.fenix.GleanMetrics.AppIcon
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.SplashScreen
@@ -150,6 +151,7 @@ import org.mozilla.fenix.settings.search.SaveSearchEngineFragmentDirections
 import org.mozilla.fenix.settings.studies.StudiesFragmentDirections
 import org.mozilla.fenix.settings.wallpaper.WallpaperSettingsFragmentDirections
 import org.mozilla.fenix.share.AddNewDeviceFragmentDirections
+import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor.Companion.ACTION_OPEN_PRIVATE_TAB
 import org.mozilla.fenix.tabhistory.TabHistoryDialogFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragment
 import org.mozilla.fenix.tabstray.TabsTrayFragmentDirections
@@ -328,6 +330,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                     Events.appOpened.record(Events.AppOpenedExtra(it))
                     // This will record an event in Nimbus' internal event store. Used for behavioral targeting
                     components.analytics.experiments.recordEvent("app_opened")
+
+                    if (safeIntent.action.equals(ACTION_OPEN_PRIVATE_TAB) && it == APP_ICON) {
+                        AppIcon.newPrivateTabTapped.record(NoExtras())
+                    }
                 }
         }
         supportActionBar?.hide()
@@ -832,7 +838,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     @VisibleForTesting(otherwise = PROTECTED)
     internal open fun getIntentSource(intent: SafeIntent): String? {
         return when {
-            intent.isLauncherIntent -> "APP_ICON"
+            intent.isLauncherIntent -> APP_ICON
             intent.action == Intent.ACTION_VIEW -> "LINK"
             else -> null
         }
@@ -1278,6 +1284,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         const val PRIVATE_BROWSING_MODE = "private_browsing_mode"
         const val START_IN_RECENTS_SCREEN = "start_in_recents_screen"
         const val OPEN_PASSWORD_MANAGER = "open_password_manager"
+        const val APP_ICON = "APP_ICON"
 
         // PWA must have been used within last 30 days to be considered "recently used" for the
         // telemetry purposes.

@@ -62,6 +62,7 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.GleanMetrics.HomeScreen
+import org.mozilla.fenix.GleanMetrics.Homepage
 import org.mozilla.fenix.GleanMetrics.PrivateBrowsingShortcutCfr
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -552,6 +553,7 @@ class HomeFragment : Fragment() {
                 newMode,
                 userHasBeenOnboarded = true,
             )
+            Homepage.privateModeIconTapped.record(mozilla.telemetry.glean.private.NoExtras())
         }
 
         consumeFrom(requireComponents.core.store) {

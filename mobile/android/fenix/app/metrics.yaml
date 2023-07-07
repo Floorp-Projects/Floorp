@@ -8881,6 +8881,25 @@ home_screen:
       - cgordon@mozilla.com
     expires: never
 
+homepage:
+  private_mode_icon_tapped:
+    type: event
+    description: |
+      A user tapped the private browsing icon on the homepage.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841153
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/2725
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Tabs
+
 start_on_home:
   enter_home_screen:
     type: event
@@ -9913,3 +9932,22 @@ pull_to_refresh_in_browser:
     notification_emails:
       - android-probes@mozilla.com
     expires: 126
+
+app_icon:
+  new_private_tab_tapped:
+    type: event
+    description: |
+      A user tapped to open new private tab in Firefox Android app shortcuts menu.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1841153
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/2725
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+      - cgordon@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Tabs
