@@ -59,7 +59,8 @@ var subtests = [
   // Scrolling with mouse down on the scrollbar
   {"file": "helper_scrollbartrack_click_overshoot.html",
    "prefs": [["test.events.async.enabled", true], ["apz.test.logging_enabled", true],
-             ["ui.useOverlayScrollbars", 0]]},
+             ["ui.useOverlayScrollbars", 0],
+             ["layout.scrollbars.click_and_hold_track.continue_to_end", false]]},
   {"file": "helper_bug1756814.html", "prefs": [
     ["ui.useOverlayScrollbars", 0]
   ]},
