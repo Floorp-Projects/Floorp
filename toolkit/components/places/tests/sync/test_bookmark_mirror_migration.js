@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Keep in sync with `SyncedBookmarksMirror.jsm`.
-const CURRENT_MIRROR_SCHEMA_VERSION = 8;
+const CURRENT_MIRROR_SCHEMA_VERSION = 9;
 
 // The oldest schema version that we support. Any databases with schemas older
 // than this will be dropped and recreated.
@@ -159,8 +159,8 @@ add_task(async function test_database_corrupt() {
   await buf.finalize();
 });
 
-add_task(async function test_migrate_v8() {
-  let buf = await openMirror("test_migrate_v8");
+add_task(async function test_migrate_v7_v9() {
+  let buf = await openMirror("test_migrate_v7_v9");
 
   await PlacesUtils.bookmarks.insertTree({
     guid: PlacesUtils.bookmarks.menuGuid,
@@ -205,8 +205,8 @@ add_task(async function test_migrate_v8() {
   await buf.finalize();
 
   // reopen it.
-  buf = await openMirror("test_migrate_v8");
-  Assert.equal(await buf.db.getSchemaVersion("mirror"), 8, "did upgrade");
+  buf = await openMirror("test_migrate_v7_v9");
+  Assert.equal(await buf.db.getSchemaVersion("mirror"), 9, "did upgrade");
 
   let fields = await PlacesTestUtils.fetchBookmarkSyncFields(
     "bookmarkAAAA",
@@ -225,4 +225,22 @@ add_task(async function test_migrate_v8() {
   Assert.equal(fieldsMenu.guid, PlacesUtils.bookmarks.menuGuid);
   Assert.equal(fieldsMenu.syncStatus, PlacesUtils.bookmarks.SYNC_STATUS.NORMAL);
   await buf.finalize();
+});
+
+add_task(async function test_migrate_v8_v9() {
+  let dbFile = await setupFixtureFile("mirror_v8.sqlite");
+  let buf = await SyncedBookmarksMirror.open({
+    path: dbFile.path,
+    recordStepTelemetry() {},
+    recordValidationTelemetry() {},
+  });
+
+  Assert.equal(await buf.db.getSchemaVersion("mirror"), 9, "did upgrade");
+
+  // Verify the new column is there
+  Assert.ok(await buf.db.execute("SELECT unknownFields FROM items"));
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
 });
