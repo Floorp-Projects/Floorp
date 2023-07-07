@@ -180,8 +180,6 @@ def filter_gn_config(path, gn_result, sandbox_vars, input_vars, gn_target):
     cpus = {
         "arm64": "aarch64",
         "x64": "x86_64",
-        "mipsel": "mips32",
-        "mips64el": "mips64",
     }
     oses = {
         "android": "Android",
@@ -744,7 +742,7 @@ def main():
             if target_os in ("android", "linux", "win"):
                 target_cpus.append("x86")
             if target_os == "linux":
-                target_cpus.extend(["ppc64", "riscv64", "mipsel", "mips64el"])
+                target_cpus.extend(["ppc64", "riscv64"])
             for target_cpu in target_cpus:
                 vars = {
                     "host_cpu": "x64",

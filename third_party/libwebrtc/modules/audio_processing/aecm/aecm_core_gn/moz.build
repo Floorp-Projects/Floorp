@@ -32,6 +32,7 @@ LOCAL_INCLUDES += [
 
 SOURCES += [
     "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core.cc",
+    "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc",
     "/third_party/libwebrtc/modules/audio_processing/aecm/echo_control_mobile.cc"
 ]
 
@@ -62,10 +63,6 @@ if CONFIG["OS_TARGET"] == "Android":
         "log"
     ]
 
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
-
 if CONFIG["OS_TARGET"] == "Darwin":
 
     DEFINES["WEBRTC_MAC"] = True
@@ -74,10 +71,6 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES"] = "0"
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
-
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
 
 if CONFIG["OS_TARGET"] == "Linux":
 
@@ -110,10 +103,6 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
-
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
 
 if CONFIG["OS_TARGET"] == "WINNT":
 
@@ -148,10 +137,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "winmm"
     ]
 
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "aarch64":
 
     DEFINES["WEBRTC_ARCH_ARM64"] = True
@@ -173,36 +158,6 @@ if CONFIG["CPU_ARCH"] == "arm":
 
     SOURCES += [
         "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_neon.cc"
-    ]
-
-if CONFIG["CPU_ARCH"] == "mips32":
-
-    DEFINES["MIPS32_LE"] = True
-    DEFINES["MIPS_FPU_LE"] = True
-    DEFINES["_GNU_SOURCE"] = True
-
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_mips.cc"
-    ]
-
-if CONFIG["CPU_ARCH"] == "mips64":
-
-    DEFINES["_GNU_SOURCE"] = True
-
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
-
-if CONFIG["CPU_ARCH"] == "ppc64":
-
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
-
-if CONFIG["CPU_ARCH"] == "riscv64":
-
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86":
@@ -258,17 +213,9 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["_GNU_SOURCE"] = True
 
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["_GNU_SOURCE"] = True
-
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
@@ -278,16 +225,8 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["_GNU_SOURCE"] = True
 
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
-
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["_GNU_SOURCE"] = True
-
-    SOURCES += [
-        "/third_party/libwebrtc/modules/audio_processing/aecm/aecm_core_c.cc"
-    ]
 
 Library("aecm_core_gn")
