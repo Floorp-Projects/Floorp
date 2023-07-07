@@ -159,13 +159,13 @@ class Export {
   Export() = default;
   explicit Export(CacheableName&& fieldName, uint32_t index,
                   DefinitionKind kind);
-  explicit Export(CacheableName&& fieldName, DefinitionKind kind);
 
   const CacheableName& fieldName() const { return fieldName_; }
 
   DefinitionKind kind() const { return pod.kind_; }
   uint32_t funcIndex() const;
   uint32_t tagIndex() const;
+  uint32_t memoryIndex() const;
   uint32_t globalIndex() const;
   uint32_t tableIndex() const;
 
@@ -587,6 +587,8 @@ struct MemoryDesc {
 };
 
 WASM_DECLARE_CACHEABLE_POD(MemoryDesc);
+
+using MemoryDescVector = Vector<MemoryDesc, 1, SystemAllocPolicy>;
 
 // We don't need to worry about overflow with a Memory32 field when
 // using a uint64_t.

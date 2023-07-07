@@ -2106,7 +2106,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
   }
 
   SharedModule finish() {
-    MOZ_ASSERT(!moduleEnv_.usesMemory());
+    MOZ_ASSERT(moduleEnv_.numMemories() == 0);
     if (memory_.usage != MemoryUsage::None) {
       Limits limits;
       limits.shared = memory_.usage == MemoryUsage::Shared ? Shareable::True
@@ -2114,7 +2114,9 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
       limits.initial = memory_.minPages();
       limits.maximum = Nothing();
       limits.indexType = IndexType::I32;
-      moduleEnv_.memory = Some(MemoryDesc(limits));
+      if (!moduleEnv_.memories.append(MemoryDesc(limits))) {
+        return nullptr;
+      }
     }
     MOZ_ASSERT(moduleEnv_.funcs.empty());
     if (!moduleEnv_.funcs.resize(funcImportMap_.count() + funcDefs_.length())) {
@@ -6803,7 +6805,7 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   }
   JSObject* bufferObj = &bufferVal.toObject();
 
-  if (metadata.usesSharedMemory()) {
+  if (metadata.memories[0].isShared()) {
     if (!bufferObj->is<SharedArrayBufferObject>()) {
       return LinkFail(
           cx, "shared views can only be constructed onto SharedArrayBuffer");
@@ -6843,8 +6845,9 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   // This check is sufficient without considering the size of the loaded datum
   // because heap loads and stores start on an aligned boundary and the heap
   // byteLength has larger alignment.
-  uint64_t minMemoryLength =
-      metadata.usesMemory() ? metadata.memory->initialLength32() : 0;
+  uint64_t minMemoryLength = metadata.memories.length() != 0
+                                 ? metadata.memories[0].initialLength32()
+                                 : 0;
   MOZ_ASSERT((minMemoryLength - 1) <= INT32_MAX);
   if (memoryLength < minMemoryLength) {
     UniqueChars msg(JS_smprintf("ArrayBuffer byteLength of 0x%" PRIx64
@@ -6950,15 +6953,16 @@ static bool TryInstantiate(JSContext* cx, CallArgs args, const Module& module,
 
   Rooted<ImportValues> imports(cx);
 
-  if (module.metadata().usesMemory()) {
+  if (module.metadata().memories.length() != 0) {
+    MOZ_ASSERT(module.metadata().memories.length() == 1);
     RootedArrayBufferObject buffer(cx);
     if (!CheckBuffer(cx, metadata, bufferVal, &buffer)) {
       return false;
     }
 
-    imports.get().memory =
-        WasmMemoryObject::create(cx, buffer, /* isHuge= */ false, nullptr);
-    if (!imports.get().memory) {
+    Rooted<WasmMemoryObject*> memory(
+        cx, WasmMemoryObject::create(cx, buffer, /* isHuge= */ false, nullptr));
+    if (!memory || !imports.get().memories.append(memory)) {
       return false;
     }
   }

@@ -963,6 +963,7 @@ CoderResult CodeMetadata(Coder<mode>& coder,
   MOZ_TRY(CodePod(coder, &item->pod()));
   MOZ_TRY((CodeRefPtr<mode, const TypeContext, &CodeTypeContext>(
       coder, &item->types)));
+  MOZ_TRY(CodePodVector(coder, &item->memories));
   MOZ_TRY((CodeVector<mode, GlobalDesc, &CodeGlobalDesc<mode>>(
       coder, &item->globals)));
   MOZ_TRY((

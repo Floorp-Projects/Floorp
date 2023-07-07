@@ -2057,8 +2057,9 @@ static bool DecodeGlobalType(Decoder& d, const SharedTypeContext& types,
   return true;
 }
 
-static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
-  if (env->usesMemory()) {
+static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env,
+                                      MemoryDescVector* memories) {
+  if (!env->features.multiMemory && env->numMemories() == 1) {
     return d.fail("already have default memory");
   }
 
@@ -2086,8 +2087,7 @@ static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env) {
     return d.fail("memory64 is disabled");
   }
 
-  env->memory = Some(MemoryDesc(limits));
-  return true;
+  return memories->emplaceBack(MemoryDesc(limits));
 }
 
 static bool DecodeTag(Decoder& d, ModuleEnvironment* env, TagKind* tagKind,
@@ -2158,7 +2158,7 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       break;
     }
     case DefinitionKind::Memory: {
-      if (!DecodeMemoryTypeAndLimits(d, env)) {
+      if (!DecodeMemoryTypeAndLimits(d, env, &env->memories)) {
         return false;
       }
       break;
@@ -2313,12 +2313,12 @@ static bool DecodeMemorySection(Decoder& d, ModuleEnvironment* env) {
     return d.fail("failed to read number of memories");
   }
 
-  if (numMemories > 1) {
+  if (!env->features.multiMemory && numMemories > 1) {
     return d.fail("the number of memories must be at most one");
   }
 
   for (uint32_t i = 0; i < numMemories; ++i) {
-    if (!DecodeMemoryTypeAndLimits(d, env)) {
+    if (!DecodeMemoryTypeAndLimits(d, env, &env->memories)) {
       return false;
     }
   }
@@ -2481,11 +2481,11 @@ static bool DecodeExport(Decoder& d, ModuleEnvironment* env, NameSet* dupSet) {
         return d.fail("expected memory index");
       }
 
-      if (memoryIndex > 0 || !env->usesMemory()) {
+      if (memoryIndex >= env->numMemories()) {
         return d.fail("exported memory index out of bounds");
       }
 
-      return env->exports.emplaceBack(std::move(fieldName),
+      return env->exports.emplaceBack(std::move(fieldName), memoryIndex,
                                       DefinitionKind::Memory);
     }
     case DefinitionKind::Global: {
@@ -3002,7 +3002,8 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
 
     DataSegmentKind initializerKind = DataSegmentKind(initializerKindVal);
 
-    if (initializerKind != DataSegmentKind::Passive && !env->usesMemory()) {
+    if (initializerKind != DataSegmentKind::Passive &&
+        env->numMemories() == 0) {
       return d.fail("active data segment requires a memory section");
     }
 
@@ -3020,7 +3021,7 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
     if (initializerKind == DataSegmentKind::Active ||
         initializerKind == DataSegmentKind::ActiveWithMemoryIndex) {
       InitExpr segOffset;
-      ValType exprType = ToValType(env->memory->indexType());
+      ValType exprType = ToValType(env->memories[memIndex].indexType());
       if (!InitExpr::decodeAndValidate(d, env, exprType, env->globals.length(),
                                        &segOffset)) {
         return false;

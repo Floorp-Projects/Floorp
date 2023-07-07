@@ -41,6 +41,8 @@ class WasmTagObject;
 class WasmExceptionObject;
 
 using WasmInstanceObjectVector = GCVector<WasmInstanceObject*>;
+using WasmMemoryObjectVector =
+    GCVector<WasmMemoryObject*, 0, SystemAllocPolicy>;
 using WasmTableObjectVector = GCVector<WasmTableObject*, 0, SystemAllocPolicy>;
 using WasmGlobalObjectVector =
     GCVector<WasmGlobalObject*, 0, SystemAllocPolicy>;

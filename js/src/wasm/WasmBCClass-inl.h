@@ -29,10 +29,12 @@ const FuncType& BaseCompiler::funcType() const {
   return *moduleEnv_.funcs[func_.index].type;
 }
 
-bool BaseCompiler::usesMemory() const { return moduleEnv_.usesMemory(); }
+bool BaseCompiler::usesMemory() const {
+  return moduleEnv_.memories.length() > 0;
+}
 
 bool BaseCompiler::usesSharedMemory() const {
-  return moduleEnv_.usesSharedMemory();
+  return moduleEnv_.usesSharedMemory(0);
 }
 
 const Local& BaseCompiler::localFromSlot(uint32_t slot, MIRType type) {
@@ -45,11 +47,13 @@ BytecodeOffset BaseCompiler::bytecodeOffset() const {
 }
 
 bool BaseCompiler::isMem32() const {
-  return moduleEnv_.memory->indexType() == IndexType::I32;
+  MOZ_ASSERT(moduleEnv_.memories.length() == 1);
+  return moduleEnv_.memories[0].indexType() == IndexType::I32;
 }
 
 bool BaseCompiler::isMem64() const {
-  return moduleEnv_.memory->indexType() == IndexType::I64;
+  MOZ_ASSERT(moduleEnv_.memories.length() == 1);
+  return moduleEnv_.memories[0].indexType() == IndexType::I64;
 }
 
 }  // namespace wasm

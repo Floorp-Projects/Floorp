@@ -1879,11 +1879,11 @@ inline bool OpIter<Policy>::readMemOrTableIndex(bool isMem, uint32_t* index) {
 template <typename Policy>
 inline bool OpIter<Policy>::readLinearMemoryAddress(
     uint32_t byteSize, LinearMemoryAddress<Value>* addr) {
-  if (!env_.usesMemory()) {
+  if (env_.numMemories() == 0) {
     return fail("can't touch memory without memory");
   }
 
-  IndexType it = env_.memory->indexType();
+  IndexType it = env_.memories[0].indexType();
 
   uint32_t alignLog2;
   if (!readVarU32(&alignLog2)) {
@@ -1984,7 +1984,7 @@ template <typename Policy>
 inline bool OpIter<Policy>::readMemorySize() {
   MOZ_ASSERT(Classify(op_) == OpKind::MemorySize);
 
-  if (!env_.usesMemory()) {
+  if (env_.numMemories() == 0) {
     return fail("can't touch memory without memory");
   }
 
@@ -1997,7 +1997,7 @@ inline bool OpIter<Policy>::readMemorySize() {
     return fail("unexpected flags");
   }
 
-  ValType ptrType = ToValType(env_.memory->indexType());
+  ValType ptrType = ToValType(env_.memories[0].indexType());
   return push(ptrType);
 }
 
@@ -2005,7 +2005,7 @@ template <typename Policy>
 inline bool OpIter<Policy>::readMemoryGrow(Value* input) {
   MOZ_ASSERT(Classify(op_) == OpKind::MemoryGrow);
 
-  if (!env_.usesMemory()) {
+  if (env_.numMemories() == 0) {
     return fail("can't touch memory without memory");
   }
 
@@ -2018,7 +2018,7 @@ inline bool OpIter<Policy>::readMemoryGrow(Value* input) {
     return fail("unexpected flags");
   }
 
-  ValType ptrType = ToValType(env_.memory->indexType());
+  ValType ptrType = ToValType(env_.memories[0].indexType());
   if (!popWithType(ptrType, input)) {
     return false;
   }
@@ -2733,7 +2733,7 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
   }
 
   if (isMem) {
-    if (!env_.usesMemory()) {
+    if (env_.numMemories() == 0) {
       return fail("can't touch memory without memory");
     }
     if (*srcMemOrTableIndex != 0 || *dstMemOrTableIndex != 0) {
@@ -2751,7 +2751,8 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
     }
   }
 
-  ValType ptrType = isMem ? ToValType(env_.memory->indexType()) : ValType::I32;
+  ValType ptrType =
+      isMem ? ToValType(env_.memories[0].indexType()) : ValType::I32;
 
   if (!popWithType(ptrType, len)) {
     return false;
@@ -2797,7 +2798,7 @@ template <typename Policy>
 inline bool OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len) {
   MOZ_ASSERT(Classify(op_) == OpKind::MemFill);
 
-  if (!env_.usesMemory()) {
+  if (env_.numMemories() == 0) {
     return fail("can't touch memory without memory");
   }
 
@@ -2805,14 +2806,14 @@ inline bool OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len) {
   if (!readFixedU8(&memoryIndex)) {
     return fail("failed to read memory index");
   }
-  if (!env_.usesMemory()) {
+  if (env_.numMemories() == 0) {
     return fail("can't touch memory without memory");
   }
   if (memoryIndex != 0) {
     return fail("memory index must be zero");
   }
 
-  ValType ptrType = ToValType(env_.memory->indexType());
+  ValType ptrType = ToValType(env_.memories[0].indexType());
 
   if (!popWithType(ptrType, len)) {
     return false;
@@ -2847,7 +2848,7 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
   }
 
   if (isMem) {
-    if (!env_.usesMemory()) {
+    if (env_.numMemories() == 0) {
       return fail("can't touch memory without memory");
     }
     if (memOrTableIndex != 0) {
@@ -2882,7 +2883,8 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     return false;
   }
 
-  ValType ptrType = isMem ? ToValType(env_.memory->indexType()) : ValType::I32;
+  ValType ptrType =
+      isMem ? ToValType(env_.memories[0].indexType()) : ValType::I32;
   return popWithType(ptrType, dst);
 }
 
@@ -2915,19 +2917,18 @@ template <typename Policy>
 inline bool OpIter<Policy>::readMemDiscard(Value* start, Value* len) {
   MOZ_ASSERT(Classify(op_) == OpKind::MemDiscard);
 
-  if (!env_.usesMemory()) {
-    return fail("can't touch memory without memory");
-  }
-
   uint8_t memoryIndex;
   if (!readFixedU8(&memoryIndex)) {
     return fail("failed to read memory index");
+  }
+  if (env_.numMemories() == 0) {
+    return fail("can't touch memory without memory");
   }
   if (memoryIndex != 0) {
     return fail("memory index must be zero");
   }
 
-  ValType ptrType = ToValType(env_.memory->indexType());
+  ValType ptrType = ToValType(env_.memories[0].indexType());
 
   if (!popWithType(ptrType, len)) {
     return false;
@@ -4213,7 +4214,7 @@ inline bool OpIter<Policy>::readIntrinsic(const Intrinsic** intrinsic,
 
   *intrinsic = &Intrinsic::getFromId(IntrinsicId(id));
 
-  if (!env_.usesMemory()) {
+  if (env_.numMemories() == 0) {
     return fail("can't touch memory without memory");
   }
   return popWithTypes((*intrinsic)->params, params);

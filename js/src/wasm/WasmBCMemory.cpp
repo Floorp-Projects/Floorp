@@ -94,7 +94,7 @@ void BaseCompiler::bceCheckLocal(MemoryAccessDesc* access, AccessCheck* check,
   }
 
   uint32_t offsetGuardLimit =
-      GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+      GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled(0));
 
   if ((bceSafe_ & (BCESet(1) << local)) &&
       access->offset64() < offsetGuardLimit) {
@@ -131,10 +131,10 @@ RegI32 BaseCompiler::popConstMemoryAccess<RegI32>(MemoryAccessDesc* access,
   uint32_t addr = addrTemp;
 
   uint32_t offsetGuardLimit =
-      GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+      GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled(0));
 
   uint64_t ea = uint64_t(addr) + uint64_t(access->offset());
-  uint64_t limit = moduleEnv_.memory->initialLength32() + offsetGuardLimit;
+  uint64_t limit = moduleEnv_.memories[0].initialLength32() + offsetGuardLimit;
 
   check->omitBoundsCheck = ea < limit;
   check->omitAlignmentCheck = (ea & (access->byteSize() - 1)) == 0;
@@ -160,11 +160,11 @@ RegI64 BaseCompiler::popConstMemoryAccess<RegI64>(MemoryAccessDesc* access,
   uint64_t addr = addrTemp;
 
   uint32_t offsetGuardLimit =
-      GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+      GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled(0));
 
   uint64_t ea = addr + access->offset64();
   bool overflow = ea < addr;
-  uint64_t limit = moduleEnv_.memory->initialLength64() + offsetGuardLimit;
+  uint64_t limit = moduleEnv_.memories[0].initialLength64() + offsetGuardLimit;
 
   if (!overflow) {
     check->omitBoundsCheck = ea < limit;
@@ -351,7 +351,7 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
                                        AccessCheck* check, RegPtr instance,
                                        RegIndexType ptr) {
   uint32_t offsetGuardLimit =
-      GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+      GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled(0));
 
   // Fold offset if necessary for further computations.
   if (access->offset64() >= offsetGuardLimit ||
@@ -379,7 +379,7 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
 
   // Ensure no instance if we don't need it.
 
-  if (moduleEnv_.hugeMemoryEnabled()) {
+  if (moduleEnv_.hugeMemoryEnabled(0)) {
     // We have HeapReg and no bounds checking and need load neither
     // memoryBase nor boundsCheckLimit from instance.
     MOZ_ASSERT_IF(check->omitBoundsCheck, instance.isInvalid());
@@ -391,14 +391,14 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
 
   // Bounds check if required.
 
-  if (!moduleEnv_.hugeMemoryEnabled() && !check->omitBoundsCheck) {
+  if (!moduleEnv_.hugeMemoryEnabled(0) && !check->omitBoundsCheck) {
     Label ok;
 #ifdef JS_64BIT
     // The checking depends on how many bits are in the pointer and how many
     // bits are in the bound.
     static_assert(0x100000000 % PageSize == 0);
-    if (!moduleEnv_.memory->boundsCheckLimitIs32Bits() &&
-        MaxMemoryPages(moduleEnv_.memory->indexType()) >=
+    if (!moduleEnv_.memories[0].boundsCheckLimitIs32Bits() &&
+        MaxMemoryPages(moduleEnv_.memories[0].indexType()) >=
             Pages(0x100000000 / PageSize)) {
       boundsCheck4GBOrLargerAccess(instance, ptr, &ok);
     } else {
@@ -432,7 +432,7 @@ bool BaseCompiler::needInstanceForAccess(const AccessCheck& check) {
   // Platform requires instance for memory base.
   return true;
 #else
-  return !moduleEnv_.hugeMemoryEnabled() && !check.omitBoundsCheck;
+  return !moduleEnv_.hugeMemoryEnabled(0) && !check.omitBoundsCheck;
 #endif
 }
 

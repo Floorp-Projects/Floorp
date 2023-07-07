@@ -10896,7 +10896,7 @@ BaseCompiler::~BaseCompiler() {
 
 bool BaseCompiler::init() {
   // We may lift this restriction in the future.
-  MOZ_ASSERT_IF(usesMemory() && isMem64(), !moduleEnv_.hugeMemoryEnabled());
+  MOZ_ASSERT_IF(usesMemory() && isMem64(), !moduleEnv_.hugeMemoryEnabled(0));
   // asm.js is not supported in baseline
   MOZ_ASSERT(!moduleEnv_.isAsmJS());
   // Only asm.js modules have call site line numbers

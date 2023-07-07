@@ -1049,15 +1049,15 @@ SharedMetadata ModuleGenerator::finishMetadata(const Bytes& bytecode) {
 
   // Copy over data from the ModuleEnvironment.
 
-  metadata_->memory = moduleEnv_->memory;
   metadata_->startFuncIndex = moduleEnv_->startFuncIndex;
+  metadata_->memories = std::move(moduleEnv_->memories);
   metadata_->tables = std::move(moduleEnv_->tables);
   metadata_->globals = std::move(moduleEnv_->globals);
   metadata_->tags = std::move(moduleEnv_->tags);
   metadata_->nameCustomSectionIndex = moduleEnv_->nameCustomSectionIndex;
   metadata_->moduleName = moduleEnv_->moduleName;
   metadata_->funcNames = std::move(moduleEnv_->funcNames);
-  metadata_->omitsBoundsChecks = moduleEnv_->hugeMemoryEnabled();
+  metadata_->omitsBoundsChecks = moduleEnv_->hugeMemoryEnabled(0);
 
   // Copy over additional debug information.
 

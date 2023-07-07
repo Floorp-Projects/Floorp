@@ -3551,7 +3551,7 @@ WasmMacroAssembler::WasmMacroAssembler(TempAllocator& alloc,
   SetStackPointer64(sp);
 #endif
   setWasmMaxOffsetGuardLimit(
-      wasm::GetMaxOffsetGuardLimit(env.hugeMemoryEnabled()));
+      wasm::GetMaxOffsetGuardLimit(env.hugeMemoryEnabled(0)));
   if (!limitedSize) {
     setUnlimitedBuffer();
   }
