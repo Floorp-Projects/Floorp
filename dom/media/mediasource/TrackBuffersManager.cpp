@@ -2610,7 +2610,7 @@ uint32_t TrackBuffersManager::FindSampleIndex(const TrackBuffer& aTrackBuffer,
       return i;
     }
   }
-  MOZ_CRASH("FindSampleIndex called with invalid arguments");
+  MOZ_ASSERT(false, "FindSampleIndex called with invalid arguments");
 
   return 0;
 }
@@ -2641,8 +2641,8 @@ TimeUnit TrackBuffersManager::Seek(TrackInfo::TrackType aTrack,
     // that are less than aFuzz wide, we set a fuzz factor aFuzz/2.
     buffered.SetFuzz(aFuzz / 2);
     TimeIntervals::IndexType index = buffered.Find(aTime);
-    MOZ_RELEASE_ASSERT(index != TimeIntervals::NoIndex,
-                       "We shouldn't be called if aTime isn't buffered");
+    MOZ_ASSERT(index != TimeIntervals::NoIndex,
+               "We shouldn't be called if aTime isn't buffered");
     TimeInterval target = buffered[index];
     target.mFuzz = aFuzz;
     i = FindSampleIndex(track, target);
