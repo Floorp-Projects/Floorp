@@ -3004,25 +3004,6 @@ pref("font.size.monospace.x-math", 13);
 
 #endif
 
-#if OS_ARCH==AIX
-
-  // Override default Japanese fonts
-  pref("font.name-list.serif.ja", "dt-interface system-jisx0208.1983-0");
-  pref("font.name-list.sans-serif.ja", "dt-interface system-jisx0208.1983-0");
-  pref("font.name-list.monospace.ja", "dt-interface user-jisx0208.1983-0");
-
-  // Override default Cyrillic fonts
-  pref("font.name-list.serif.x-cyrillic", "dt-interface system-iso8859-5");
-  pref("font.name-list.sans-serif.x-cyrillic", "dt-interface system-iso8859-5");
-  pref("font.name-list.monospace.x-cyrillic", "dt-interface user-iso8859-5");
-
-  // Override default Unicode fonts
-  pref("font.name-list.serif.x-unicode", "dt-interface system-ucs2.cjk_japan-0");
-  pref("font.name-list.sans-serif.x-unicode", "dt-interface system-ucs2.cjk_japan-0");
-  pref("font.name-list.monospace.x-unicode", "dt-interface user-ucs2.cjk_japan-0");
-
-#endif // AIX
-
 // Login Manager prefs
 pref("signon.rememberSignons",              true);
 pref("signon.rememberSignons.visibilityToggle", true);
