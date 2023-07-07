@@ -1914,6 +1914,20 @@ static bool DecodeFuncTypeIndex(Decoder& d, const SharedTypeContext& types,
   return true;
 }
 
+static bool DecodeLimitBound(Decoder& d, IndexType indexType, uint64_t* bound) {
+  if (indexType == IndexType::I64) {
+    return d.readVarU64(bound);
+  }
+
+  // Spec tests assert that we only decode a LEB32 when index type is I32.
+  uint32_t bound32;
+  if (!d.readVarU32(&bound32)) {
+    return false;
+  }
+  *bound = bound32;
+  return true;
+}
+
 static bool DecodeLimits(Decoder& d, LimitsKind kind, Limits* limits) {
   uint8_t flags;
   if (!d.readFixedU8(&flags)) {
@@ -1927,31 +1941,6 @@ static bool DecodeLimits(Decoder& d, LimitsKind kind, Limits* limits) {
     return d.failf("unexpected bits set in flags: %" PRIu32,
                    uint32_t(flags & ~uint8_t(mask)));
   }
-
-  uint64_t initial;
-  if (!d.readVarU64(&initial)) {
-    return d.fail("expected initial length");
-  }
-  limits->initial = initial;
-
-  if (flags & uint8_t(LimitsFlags::HasMaximum)) {
-    uint64_t maximum;
-    if (!d.readVarU64(&maximum)) {
-      return d.fail("expected maximum length");
-    }
-
-    if (limits->initial > maximum) {
-      return d.failf(
-          "memory size minimum must not be greater than maximum; "
-          "maximum length %" PRIu64 " is less than initial length %" PRIu64,
-          maximum, limits->initial);
-    }
-
-    limits->maximum.emplace(maximum);
-  }
-
-  limits->shared = Shareable::False;
-  limits->indexType = IndexType::I32;
 
   // Memory limits may be shared or specify an alternate index type
   if (kind == LimitsKind::Memory) {
@@ -1973,6 +1962,31 @@ static bool DecodeLimits(Decoder& d, LimitsKind kind, Limits* limits) {
       return d.fail("i64 is not supported for memory limits");
     }
 #endif
+  } else {
+    limits->shared = Shareable::False;
+    limits->indexType = IndexType::I32;
+  }
+
+  uint64_t initial;
+  if (!DecodeLimitBound(d, limits->indexType, &initial)) {
+    return d.fail("expected initial length");
+  }
+  limits->initial = initial;
+
+  if (flags & uint8_t(LimitsFlags::HasMaximum)) {
+    uint64_t maximum;
+    if (!DecodeLimitBound(d, limits->indexType, &maximum)) {
+      return d.fail("expected maximum length");
+    }
+
+    if (limits->initial > maximum) {
+      return d.failf(
+          "memory size minimum must not be greater than maximum; "
+          "maximum length %" PRIu64 " is less than initial length %" PRIu64,
+          maximum, limits->initial);
+    }
+
+    limits->maximum.emplace(maximum);
   }
 
   return true;
