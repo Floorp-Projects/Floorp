@@ -7,7 +7,6 @@
 #include "xpcAccessibleTextLeafRange.h"
 
 #include "nsIAccessible.h"
-#include "nsISupportsImpl.h"
 #include "TextLeafRange.h"
 #include "xpcAccessibleDocument.h"
 

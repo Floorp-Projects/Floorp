@@ -6,10 +6,6 @@
 
 #include "xpcAccessibleHyperText.h"
 
-#include "LocalAccessible-inl.h"
-#include "HyperTextAccessible-inl.h"
-#include "mozilla/a11y/PDocAccessible.h"
-#include "nsAccessibilityService.h"
 #include "TextRange.h"
 #include "AccAttributes.h"
 #include "nsComponentManagerUtils.h"

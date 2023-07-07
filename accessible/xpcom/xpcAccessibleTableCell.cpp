@@ -6,7 +6,6 @@
 
 #include "xpcAccessibleTableCell.h"
 
-#include "mozilla/a11y/Accessible.h"
 #include "mozilla/a11y/TableAccessible.h"
 #include "mozilla/a11y/TableCellAccessible.h"
 #include "nsIAccessibleTable.h"

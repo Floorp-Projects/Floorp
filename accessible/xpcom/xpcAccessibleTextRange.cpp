@@ -8,8 +8,6 @@
 
 #include "TextRange-inl.h"
 
-#include "nsIMutableArray.h"
-#include "nsComponentManagerUtils.h"
 #include "nsQueryObject.h"
 #include "xpcAccessibleDocument.h"
 

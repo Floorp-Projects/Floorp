@@ -6,9 +6,6 @@
 
 #include "xpcAccessibleHyperLink.h"
 
-#include "LocalAccessible-inl.h"
-#include "nsAccessibilityService.h"
-#include "nsNetUtil.h"
 #include "xpcAccessibleDocument.h"
 
 using namespace mozilla::a11y;

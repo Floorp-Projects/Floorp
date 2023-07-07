@@ -9,7 +9,6 @@
 #include "xpcAccessibleTable.h"
 #include "xpcAccessibleTableCell.h"
 
-#include "mozilla/a11y/DocAccessibleParent.h"
 #include "nsAccUtils.h"
 #include "DocAccessible-inl.h"
 

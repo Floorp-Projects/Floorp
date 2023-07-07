@@ -8,7 +8,6 @@
 
 #include "xpcAccessiblePivot.h"
 #include "nsAccessibilityService.h"
-#include "Platform.h"
 #include "xpcAccessibleApplication.h"
 #include "xpcAccessibleDocument.h"
 #include "xpcAccessibleTextLeafRange.h"
