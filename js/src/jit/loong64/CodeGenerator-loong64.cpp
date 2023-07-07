@@ -184,11 +184,6 @@ void CodeGeneratorLOONG64::emitTableSwitchDispatch(MTableSwitch* mir,
   masm.branchToComputedAddress(pointer);
 }
 
-void CodeGenerator::visitWasmHeapBase(LWasmHeapBase* ins) {
-  MOZ_ASSERT(ins->instance()->isBogus());
-  masm.movePtr(HeapReg, ToRegister(ins->output()));
-}
-
 template <typename T>
 void CodeGeneratorLOONG64::emitWasmLoad(T* lir) {
   const MWasmLoad* mir = lir->mir();

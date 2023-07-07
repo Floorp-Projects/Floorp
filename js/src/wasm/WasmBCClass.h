@@ -336,7 +336,7 @@ struct BaseCompiler final {
 
   inline const FuncType& funcType() const;
   inline bool usesMemory() const;
-  inline bool usesSharedMemory() const;
+  inline bool usesSharedMemory(uint32_t memoryIndex = 0) const;
   inline bool isMem32(uint32_t memoryIndex = 0) const;
   inline bool isMem64(uint32_t memoryIndex = 0) const;
 
@@ -1216,7 +1216,7 @@ struct BaseCompiler final {
   template <typename RegType>
   RegType popMemoryAccess(MemoryAccessDesc* access, AccessCheck* check);
 
-  void pushHeapBase();
+  void pushHeapBase(uint32_t memoryIndex = 0);
 
   ////////////////////////////////////////////////////////////////////////////
   //
@@ -1618,7 +1618,7 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitTableCopy();
   [[nodiscard]] bool emitDataOrElemDrop(bool isData);
   [[nodiscard]] bool emitMemFill();
-  [[nodiscard]] bool memFillCall();
+  [[nodiscard]] bool memFillCall(uint32_t memoryIndex);
   void memFillInlineM32();
   [[nodiscard]] bool emitTableInit();
   [[nodiscard]] bool emitTableFill();

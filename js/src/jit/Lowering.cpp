@@ -5435,6 +5435,15 @@ void LIRGenerator::visitWasmStoreInstance(MWasmStoreInstance* ins) {
   }
 }
 
+void LIRGenerator::visitWasmHeapReg(MWasmHeapReg* ins) {
+#ifdef WASM_HAS_HEAPREG
+  auto* lir = new (alloc()) LWasmHeapReg();
+  define(lir, ins);
+#else
+  MOZ_CRASH();
+#endif
+}
+
 void LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins) {
   MOZ_ASSERT(!ins->isRedundant());
 

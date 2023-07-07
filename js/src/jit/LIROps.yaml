@@ -2887,10 +2887,8 @@
     instance: WordSized
   mir_op: WasmLoadInstance
 
-- name: WasmHeapBase
+- name: WasmHeapReg
   result_type: WordSized
-  operands:
-    instance: WordSized
   mir_op: true
 
 - name: WasmLoad

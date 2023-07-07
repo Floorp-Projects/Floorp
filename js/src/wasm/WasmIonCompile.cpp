@@ -1071,29 +1071,35 @@ class FunctionCompiler {
  private:
   // If the platform does not have a HeapReg, load the memory base from
   // instance.
-  MWasmLoadInstance* maybeLoadMemoryBase() {
-    MWasmLoadInstance* load = nullptr;
-#ifdef JS_CODEGEN_X86
-    AliasSet aliases = !moduleEnv_.memories[0].canMovingGrow()
-                           ? AliasSet::None()
-                           : AliasSet::Load(AliasSet::WasmHeapMeta);
-    load = MWasmLoadInstance::New(alloc(), instancePointer_,
-                                  wasm::Instance::offsetOfMemoryBase(),
-                                  MIRType::Pointer, aliases);
-    curBlock_->add(load);
+  MDefinition* maybeLoadMemoryBase() {
+#ifdef WASM_HAS_HEAPREG
+    return nullptr;
+#else
+    return memoryBase(0);
 #endif
-    return load;
   }
 
  public:
   // A value holding the memory base, whether that's HeapReg or some other
   // register.
-  MWasmHeapBase* memoryBase() {
-    MWasmHeapBase* base = nullptr;
-    AliasSet aliases = !moduleEnv_.memories[0].canMovingGrow()
+  MDefinition* memoryBase(uint32_t memoryIndex = 0) {
+    AliasSet aliases = !moduleEnv_.memories[memoryIndex].canMovingGrow()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
-    base = MWasmHeapBase::New(alloc(), instancePointer_, aliases);
+#ifdef WASM_HAS_HEAPREG
+    if (memoryIndex == 0) {
+      MWasmHeapReg* base = MWasmHeapReg::New(alloc(), aliases);
+      curBlock_->add(base);
+      return base;
+    }
+#endif
+    uint32_t offset =
+        memoryIndex == 0
+            ? Instance::offsetOfMemoryBase()
+            : Instance::offsetInData(
+                  moduleEnv_.memories[memoryIndex].globalDataOffset);
+    MWasmLoadInstance* base = MWasmLoadInstance::New(
+        alloc(), instancePointer_, offset, MIRType::Pointer, aliases);
     curBlock_->add(base);
     return base;
   }
@@ -1355,7 +1361,7 @@ class FunctionCompiler {
       return nullptr;
     }
 
-    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase();
     MInstruction* load = nullptr;
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(access->offset64() == 0);
@@ -1383,7 +1389,7 @@ class FunctionCompiler {
       return;
     }
 
-    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase();
     MInstruction* store = nullptr;
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(access->offset64() == 0);
@@ -1429,7 +1435,7 @@ class FunctionCompiler {
       newv = cvtNewv;
     }
 
-    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase();
     MInstruction* cas = MWasmCompareExchangeHeap::New(
         alloc(), bytecodeOffset(), memoryBase, base, *access, oldv, newv,
         instancePointer_);
@@ -1464,7 +1470,7 @@ class FunctionCompiler {
       value = cvtValue;
     }
 
-    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase();
     MInstruction* xchg =
         MWasmAtomicExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase,
                                      base, *access, value, instancePointer_);
@@ -1500,7 +1506,7 @@ class FunctionCompiler {
       value = cvtValue;
     }
 
-    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase();
     MInstruction* binop =
         MWasmAtomicBinopHeap::New(alloc(), bytecodeOffset(), op, memoryBase,
                                   base, *access, value, instancePointer_);
@@ -1588,7 +1594,7 @@ class FunctionCompiler {
 
     MemoryAccessDesc access(Scalar::Simd128, addr.align, addr.offset,
                             bytecodeIfNotAsmJS());
-    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase();
     MDefinition* base = addr.base;
     MOZ_ASSERT(!moduleEnv_.isAsmJS());
     checkOffsetAndAlignmentAndBounds(&access, &base);
@@ -1612,7 +1618,7 @@ class FunctionCompiler {
     }
     MemoryAccessDesc access(Scalar::Simd128, addr.align, addr.offset,
                             bytecodeIfNotAsmJS());
-    MWasmLoadInstance* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase();
     MDefinition* base = addr.base;
     MOZ_ASSERT(!moduleEnv_.isAsmJS());
     checkOffsetAndAlignmentAndBounds(&access, &base);
@@ -5963,16 +5969,17 @@ static bool EmitDataOrElemDrop(FunctionCompiler& f, bool isData) {
   return f.emitInstanceCall1(bytecodeOffset, callee, segIndex);
 }
 
-static bool EmitMemFillCall(FunctionCompiler& f, MDefinition* start,
-                            MDefinition* val, MDefinition* len) {
+static bool EmitMemFillCall(FunctionCompiler& f, uint32_t memoryIndex,
+                            MDefinition* start, MDefinition* val,
+                            MDefinition* len) {
+  MDefinition* memoryBase = f.memoryBase(memoryIndex);
+
   uint32_t bytecodeOffset = f.readBytecodeOffset();
-
-  MDefinition* memoryBase = f.memoryBase();
-
   const SymbolicAddressSignature& callee =
-      (f.moduleEnv().usesSharedMemory(0)
-           ? (f.isMem32() ? SASigMemFillSharedM32 : SASigMemFillSharedM64)
-           : (f.isMem32() ? SASigMemFillM32 : SASigMemFillM64));
+      (f.moduleEnv().usesSharedMemory(memoryIndex)
+           ? (f.isMem32(memoryIndex) ? SASigMemFillSharedM32
+                                     : SASigMemFillSharedM64)
+           : (f.isMem32(memoryIndex) ? SASigMemFillM32 : SASigMemFillM64));
   return f.emitInstanceCall4(bytecodeOffset, callee, start, val, len,
                              memoryBase);
 }
@@ -6065,8 +6072,9 @@ static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
 }
 
 static bool EmitMemFill(FunctionCompiler& f) {
+  uint32_t memoryIndex;
   MDefinition *start, *val, *len;
-  if (!f.iter().readMemFill(&start, &val, &len)) {
+  if (!f.iter().readMemFill(&memoryIndex, &start, &val, &len)) {
     return false;
   }
 
@@ -6074,16 +6082,16 @@ static bool EmitMemFill(FunctionCompiler& f) {
     return true;
   }
 
-  if (len->isConstant() && val->isConstant()) {
-    uint64_t length = f.isMem32() ? len->toConstant()->toInt32()
-                                  : len->toConstant()->toInt64();
+  if (memoryIndex == 0 && len->isConstant() && val->isConstant()) {
+    uint64_t length = f.isMem32(memoryIndex) ? len->toConstant()->toInt32()
+                                             : len->toConstant()->toInt64();
     static_assert(MaxInlineMemoryFillLength <= UINT32_MAX);
     if (length != 0 && length <= MaxInlineMemoryFillLength) {
       return EmitMemFillInline(f, start, val, uint32_t(length));
     }
   }
 
-  return EmitMemFillCall(f, start, val, len);
+  return EmitMemFillCall(f, memoryIndex, start, val, len);
 }
 
 static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {

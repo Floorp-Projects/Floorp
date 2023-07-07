@@ -919,11 +919,6 @@ void LIRGeneratorARM64::lowerBuiltinInt64ToFloatingPoint(
   MOZ_CRASH("We don't use it for this architecture");
 }
 
-void LIRGenerator::visitWasmHeapBase(MWasmHeapBase* ins) {
-  auto* lir = new (alloc()) LWasmHeapBase(LAllocation());
-  define(lir, ins);
-}
-
 void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
   MDefinition* base = ins->base();
   // 'base' is a GPR but may be of either type.  If it is 32-bit it is

@@ -715,7 +715,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                         uint32_t* srcMemOrTableIndex,
                                         Value* src, Value* len);
   [[nodiscard]] bool readDataOrElemDrop(bool isData, uint32_t* segIndex);
-  [[nodiscard]] bool readMemFill(Value* start, Value* val, Value* len);
+  [[nodiscard]] bool readMemFill(uint32_t* memoryIndex, Value* start,
+                                 Value* val, Value* len);
   [[nodiscard]] bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
                                         uint32_t* dstTableIndex, Value* dst,
                                         Value* src, Value* len);
@@ -2786,25 +2787,19 @@ inline bool OpIter<Policy>::readDataOrElemDrop(bool isData,
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readMemFill(Value* start, Value* val, Value* len) {
+inline bool OpIter<Policy>::readMemFill(uint32_t* memoryIndex, Value* start,
+                                        Value* val, Value* len) {
   MOZ_ASSERT(Classify(op_) == OpKind::MemFill);
 
-  if (env_.numMemories() == 0) {
-    return fail("can't touch memory without memory");
-  }
-
-  uint8_t memoryIndex;
-  if (!readFixedU8(&memoryIndex)) {
+  if (!readVarU32(memoryIndex)) {
     return fail("failed to read memory index");
   }
-  if (env_.numMemories() == 0) {
-    return fail("can't touch memory without memory");
-  }
-  if (memoryIndex != 0) {
-    return fail("memory index must be zero");
+
+  if (*memoryIndex >= env_.numMemories()) {
+    return fail("memory index out of range for memory.fill");
   }
 
-  ValType ptrType = ToValType(env_.memories[0].indexType());
+  ValType ptrType = ToValType(env_.memories[*memoryIndex].indexType());
 
   if (!popWithType(ptrType, len)) {
     return false;
