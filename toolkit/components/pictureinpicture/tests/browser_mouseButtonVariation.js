@@ -88,7 +88,7 @@ add_task(async () => {
       });
 
       await BrowserTestUtils.closeWindow(win);
-      await assertSawMouseEvents(browser, false);
+      await assertSawClickEventOnly(browser);
 
       await BrowserTestUtils.synthesizeMouseAtPoint(1, 1, {}, browser);
       await assertSawMouseEvents(browser, true);
