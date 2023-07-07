@@ -116,31 +116,27 @@ xpcshell:
     fetches:
         toolchain:
             by-test-platform:
-                # xpcshell-tests are limited to *-node-12 as node 14+ dropped
-                # support for Windows 7. Once support for Windows 7 is dropped
-                # (bug 1594270) we should be able to revert these to the latest
-                # node version (*-node).
                 linux.*:
-                    - linux64-node-12
+                    - linux64-node
                     - linux64-minidump-stackwalk
                     - linux64-fix-stacks
                 macosx.*:
-                    - macosx64-node-12
+                    - macosx64-node
                     - macosx64-minidump-stackwalk
                     - macosx64-fix-stacks
                 win.*-64.*:
-                    - win64-node-12
+                    - win64-node
                     - win32-minidump-stackwalk
                     - win32-fix-stacks
                 win.*32.*:
-                    - win32-node-12
+                    - win32-node
                     - win32-minidump-stackwalk
                     - win32-fix-stacks
                 android-em-7.*:
                     - android-system-image-x86_64-linux
                     - android-avd-x86_64-linux
                     - android-emulator-linux
-                    - linux64-node-12
+                    - linux64-node
                     - linux64-minidump-stackwalk
 
 xpcshell-failures:
@@ -171,15 +167,11 @@ xpcshell-failures:
     fetches:
         toolchain:
             by-test-platform:
-                # xpcshell-tests are limited to *-node-12 as node 14+ dropped
-                # support for Windows 7. Once support for Windows 7 is dropped
-                # (bug 1594270) we should be able to revert these to the latest
-                # node version (*-node).
                 macosx.*:
-                    - macosx64-node-12
+                    - macosx64-node
                     - macosx64-minidump-stackwalk
                     - macosx64-fix-stacks
                 win.*32.*:
-                    - win32-node-12
+                    - win32-node
                     - win32-minidump-stackwalk
                     - win32-fix-stacks
