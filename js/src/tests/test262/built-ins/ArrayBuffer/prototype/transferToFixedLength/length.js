@@ -1,4 +1,4 @@
-// |reftest| skip -- resizable-arraybuffer,arraybuffer-transfer is not supported
+// |reftest| shell-option(--enable-arraybuffer-transfer) skip-if(!ArrayBuffer.prototype.transfer||!xulRuntime.shell) -- arraybuffer-transfer is not enabled unconditionally, requires shell-options
 // Copyright (C) 2023 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -20,7 +20,7 @@ info: |
     object has the attributes { [[Writable]]: false, [[Enumerable]]: false,
     [[Configurable]]: true }.
 includes: [propertyHelper.js]
-features: [resizable-arraybuffer, arraybuffer-transfer]
+features: [arraybuffer-transfer]
 ---*/
 
 verifyProperty(ArrayBuffer.prototype.transferToFixedLength, 'length', {

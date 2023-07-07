@@ -1,9 +1,9 @@
-// |reftest| skip -- resizable-arraybuffer is not supported
+// |reftest| shell-option(--enable-arraybuffer-transfer) skip-if(!ArrayBuffer.prototype.transfer||!xulRuntime.shell) -- arraybuffer-transfer is not enabled unconditionally, requires shell-options
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-arraybuffer.prototype.transfer
-description: Transfering from a fixed-size ArrayBuffer into a smaller ArrayBuffer
+description: Transfering from a fixed-size ArrayBuffer into a zero-length ArrayBuffer
 info: |
   ArrayBuffer.prototype.transfer ( [ newLength ] )
 
@@ -25,8 +25,12 @@ info: |
       this method as a zero-copy move or a realloc.
   14. Perform ! DetachArrayBuffer(O).
   15. Return new.
-features: [resizable-arraybuffer, arraybuffer-transfer]
+features: [arraybuffer-transfer]
 ---*/
+
+// NOTE: This file is a copy of "from-fixed-to-zero.js" with the resizable
+// ArrayBuffer parts removed, so it can run in implementations which don't yet
+// support the "resizable-arraybuffer" feature.
 
 var source = new ArrayBuffer(4);
 
@@ -36,21 +40,13 @@ sourceArray[1] = 2;
 sourceArray[2] = 3;
 sourceArray[3] = 4;
 
-var dest = source.transfer(3);
+var dest = source.transfer(0);
 
 assert.sameValue(source.byteLength, 0, 'source.byteLength');
 assert.throws(TypeError, function() {
   source.slice();
 });
 
-assert.sameValue(dest.resizable, false, 'dest.resizable');
-assert.sameValue(dest.byteLength, 3, 'dest.byteLength');
-assert.sameValue(dest.maxByteLength, 3, 'dest.maxByteLength');
-
-var destArray = new Uint8Array(dest);
-
-assert.sameValue(destArray[0], 1, 'destArray[0]');
-assert.sameValue(destArray[1], 2, 'destArray[1]');
-assert.sameValue(destArray[2], 3, 'destArray[2]');
+assert.sameValue(dest.byteLength, 0, 'dest.byteLength');
 
 reportCompare(0, 0);
