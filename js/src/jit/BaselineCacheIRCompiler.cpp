@@ -105,8 +105,7 @@ AutoStubFrame::AutoStubFrame(BaselineCacheIRCompiler& compiler)
 #endif
 {
 }
-void AutoStubFrame::enter(MacroAssembler& masm, Register scratch,
-                          CallCanGC canGC) {
+void AutoStubFrame::enter(MacroAssembler& masm, Register scratch) {
   MOZ_ASSERT(compiler.allocator.stackPushed() == 0);
 
   if (JitOptions.enableICFramePointers) {
@@ -122,9 +121,9 @@ void AutoStubFrame::enter(MacroAssembler& masm, Register scratch,
 
   MOZ_ASSERT(!compiler.enteredStubFrame_);
   compiler.enteredStubFrame_ = true;
-  if (canGC == CallCanGC::CanGC) {
-    compiler.makesGCCalls_ = true;
-  }
+
+  // All current uses of this are to call VM functions that can GC.
+  compiler.makesGCCalls_ = true;
 }
 void AutoStubFrame::leave(MacroAssembler& masm) {
   MOZ_ASSERT(compiler.enteredStubFrame_);
