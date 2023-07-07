@@ -5796,8 +5796,7 @@ pub unsafe extern "C" fn Servo_NoteExplicitHints(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_TakeChangeHint(element: &RawGeckoElement, was_restyled: *mut bool) -> u32 {
-    let was_restyled = unsafe { was_restyled.as_mut().unwrap() };
+pub extern "C" fn Servo_TakeChangeHint(element: &RawGeckoElement, was_restyled: &mut bool) -> u32 {
     let element = GeckoElement(element);
 
     let damage = match element.mutate_data() {
