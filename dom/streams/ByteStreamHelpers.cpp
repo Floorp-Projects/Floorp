@@ -55,7 +55,7 @@ bool CanTransferArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aObject,
   // return false.
   // Step 5. Return true.
   // Note: WASM memories are the only buffers that would qualify
-  // as having an undefined [[ArrayBufferDetachKey]],
+  // as having an [[ArrayBufferDetachKey]] which is not undefined.
   bool hasDefinedArrayBufferDetachKey = false;
   if (!JS::HasDefinedArrayBufferDetachKey(aCx, aObject,
                                           &hasDefinedArrayBufferDetachKey)) {
