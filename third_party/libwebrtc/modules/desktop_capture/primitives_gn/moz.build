@@ -129,6 +129,16 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_HAS_NEON"] = True
     DEFINES["_GNU_SOURCE"] = True
 
+if CONFIG["CPU_ARCH"] == "mips32":
+
+    DEFINES["MIPS32_LE"] = True
+    DEFINES["MIPS_FPU_LE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    DEFINES["_GNU_SOURCE"] = True
+
 if CONFIG["CPU_ARCH"] == "ppc64":
 
     DEFINES["USE_X11"] = "1"
@@ -182,6 +192,14 @@ if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_T
     DEFINES["USE_X11"] = "1"
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["USE_X11"] = "1"
+
+if CONFIG["CPU_ARCH"] == "mips32" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
+
+    DEFINES["USE_X11"] = "1"
+
+if CONFIG["CPU_ARCH"] == "mips64" and CONFIG["MOZ_X11"] == "1" and CONFIG["OS_TARGET"] == "Linux":
 
     DEFINES["USE_X11"] = "1"
 

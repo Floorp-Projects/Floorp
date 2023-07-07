@@ -575,6 +575,30 @@ if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
         "/third_party/libwebrtc/third_party/pipewire/pipewire_gn"
     ]
 
+if CONFIG["CPU_ARCH"] == "mips32" and CONFIG["OS_TARGET"] == "Linux":
+
+    DIRS += [
+        "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
+        "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
+        "/third_party/libwebrtc/modules/portal/portal_gn",
+        "/third_party/libwebrtc/third_party/drm/drm_gn",
+        "/third_party/libwebrtc/third_party/gbm/gbm_gn",
+        "/third_party/libwebrtc/third_party/libepoxy/libepoxy_gn",
+        "/third_party/libwebrtc/third_party/pipewire/pipewire_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "mips64" and CONFIG["OS_TARGET"] == "Linux":
+
+    DIRS += [
+        "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
+        "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
+        "/third_party/libwebrtc/modules/portal/portal_gn",
+        "/third_party/libwebrtc/third_party/drm/drm_gn",
+        "/third_party/libwebrtc/third_party/gbm/gbm_gn",
+        "/third_party/libwebrtc/third_party/libepoxy/libepoxy_gn",
+        "/third_party/libwebrtc/third_party/pipewire/pipewire_gn"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
     DIRS += [
