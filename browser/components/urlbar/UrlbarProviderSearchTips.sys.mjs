@@ -274,7 +274,7 @@ class ProviderSearchTips extends UrlbarProvider {
     lazy.UrlbarPrefs.set(`tipShownCount.${tip}`, MAX_SHOWN_COUNT);
   }
 
-  onEngagement(isPrivate, state, queryContext, details, controller) {
+  onEngagement(state, queryContext, details, controller) {
     // Ignore engagements on other results that didn't end the session.
     let { result } = details;
     if (result?.providerName != this.name && details.isSessionOngoing) {

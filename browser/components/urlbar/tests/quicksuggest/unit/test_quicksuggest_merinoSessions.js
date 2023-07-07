@@ -151,7 +151,6 @@ add_task(async function canceledQueries() {
 
 function endEngagement({ controller, context = null, state = "engagement" }) {
   UrlbarProviderQuickSuggest.onEngagement(
-    false,
     state,
     context ||
       createContext("endEngagement", {

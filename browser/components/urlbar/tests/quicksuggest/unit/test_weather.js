@@ -725,7 +725,6 @@ add_task(async function block() {
     acknowledgeDismissal() {},
   });
   UrlbarProviderWeather.onEngagement(
-    false,
     "engagement",
     context,
     {

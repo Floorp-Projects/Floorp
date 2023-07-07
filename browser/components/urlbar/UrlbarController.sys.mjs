@@ -711,7 +711,6 @@ class TelemetryEvent {
   constructor(controller, category) {
     this._controller = controller;
     this._category = category;
-    this._isPrivate = controller.input.isPrivate;
     this.#exposureResultTypes = new Set();
     this.#beginObservingPingPrefs();
   }
@@ -789,9 +788,7 @@ class TelemetryEvent {
     };
 
     let { queryContext } = this._controller._lastQueryContextWrapper || {};
-
     this._controller.manager.notifyEngagementChange(
-      this._isPrivate,
       "start",
       queryContext,
       {},
@@ -901,7 +898,6 @@ class TelemetryEvent {
       if (this._discarded && this._category && details?.selType !== "dismiss") {
         let { queryContext } = this._controller._lastQueryContextWrapper || {};
         this._controller.manager.notifyEngagementChange(
-          this._isPrivate,
           "discard",
           queryContext,
           {},
@@ -993,7 +989,6 @@ class TelemetryEvent {
 
     if (skipLegacyTelemetry) {
       this._controller.manager.notifyEngagementChange(
-        this._isPrivate,
         method,
         queryContext,
         details,
@@ -1063,7 +1058,6 @@ class TelemetryEvent {
     }
 
     this._controller.manager.notifyEngagementChange(
-      this._isPrivate,
       method,
       queryContext,
       details,

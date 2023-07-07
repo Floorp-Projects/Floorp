@@ -208,7 +208,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
   }
 
-  onEngagement(isPrivate, state, queryContext, details, controller) {
+  onEngagement(state, queryContext, details, controller) {
     // Ignore engagements on other results that didn't end the session.
     if (details.result?.providerName != this.name && details.isSessionOngoing) {
       return;
@@ -232,7 +232,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
         result = this.#getVisibleResultFromLastQuery(controller.view);
       }
 
-      this.#recordEngagement(queryContext, isPrivate, result, details);
+      this.#recordEngagement(
+        queryContext,
+        controller.input.isPrivate,
+        result,
+        details
+      );
     }
 
     if (details.result?.providerName == this.name) {

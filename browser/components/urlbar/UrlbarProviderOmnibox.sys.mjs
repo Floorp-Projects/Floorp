@@ -180,7 +180,7 @@ class ProviderOmnibox extends UrlbarProvider {
     );
   }
 
-  onEngagement(isPrivate, state, queryContext, details, controller) {
+  onEngagement(state, queryContext, details, controller) {
     let { result } = details;
     if (result?.providerName != this.name) {
       return;
