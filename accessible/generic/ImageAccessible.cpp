@@ -14,7 +14,6 @@
 #include "CacheConstants.h"
 #include "States.h"
 
-#include "imgIContainer.h"
 #include "imgIRequest.h"
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/BrowsingContext.h"

@@ -5,14 +5,7 @@
 
 #include "BaseAccessibles.h"
 
-#include "LocalAccessible-inl.h"
-#include "HyperTextAccessibleWrap.h"
-#include "nsAccessibilityService.h"
-#include "nsAccUtils.h"
-#include "nsCoreUtils.h"
-#include "Role.h"
 #include "States.h"
-#include "nsIURI.h"
 
 using namespace mozilla::a11y;
 
