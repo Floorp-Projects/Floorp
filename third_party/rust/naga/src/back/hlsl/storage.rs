@@ -209,15 +209,17 @@ impl<W: fmt::Write> super::Writer<'_, W> {
             }
             crate::TypeInner::Array {
                 base,
-                size: crate::ArraySize::Constant(size),
-                stride,
+                size: crate::ArraySize::Constant(const_handle),
+                ..
             } => {
                 let constructor = super::help::WrappedConstructor {
                     ty: result_ty.handle().unwrap(),
                 };
                 self.write_wrapped_constructor_function_name(module, constructor)?;
                 write!(self.out, "(")?;
-                let iter = (0..size.get()).map(|i| (TypeResolution::Handle(base), stride * i));
+                let count = module.constants[const_handle].to_array_length().unwrap();
+                let stride = module.types[base].inner.size(&module.constants);
+                let iter = (0..count).map(|i| (TypeResolution::Handle(base), stride * i));
                 self.write_storage_load_sequence(module, var_handle, iter, func_ctx)?;
                 write!(self.out, ")")?;
             }
@@ -364,8 +366,8 @@ impl<W: fmt::Write> super::Writer<'_, W> {
             }
             crate::TypeInner::Array {
                 base,
-                size: crate::ArraySize::Constant(size),
-                stride,
+                size: crate::ArraySize::Constant(const_handle),
+                ..
             } => {
                 // first, assign the value to a temporary
                 writeln!(self.out, "{level}{{")?;
@@ -373,12 +375,14 @@ impl<W: fmt::Write> super::Writer<'_, W> {
                 self.write_value_type(module, &module.types[base].inner)?;
                 let depth = level.next().0;
                 write!(self.out, " {STORE_TEMP_NAME}{depth}")?;
-                self.write_array_size(module, base, crate::ArraySize::Constant(size))?;
+                self.write_array_size(module, base, crate::ArraySize::Constant(const_handle))?;
                 write!(self.out, " = ")?;
                 self.write_store_value(module, &value, func_ctx)?;
                 writeln!(self.out, ";")?;
                 // then iterate the stores
-                for i in 0..size.get() {
+                let count = module.constants[const_handle].to_array_length().unwrap();
+                let stride = module.types[base].inner.size(&module.constants);
+                for i in 0..count {
                     self.temp_access_chain.push(SubAccess::Offset(i * stride));
                     let sv = StoreValue::TempIndex {
                         depth,

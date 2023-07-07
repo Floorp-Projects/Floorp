@@ -102,8 +102,7 @@ pub fn global_needs_wrapper(ir_module: &crate::Module, var: &crate::GlobalVariab
             },
             None => false,
         },
-        crate::TypeInner::BindingArray { .. } => false,
-        // if it's not a structure or a binding array, let's wrap it to be able to put "Block"
+        // if it's not a structure, let's wrap it to be able to put "Block"
         _ => true,
     }
 }

@@ -5,14 +5,10 @@ use crate::device::trace::Command as TraceCommand;
 use crate::{
     command::CommandBuffer,
     get_lowest_common_denom,
-    global::Global,
-    hal_api::HalApi,
-    hub::Token,
+    hub::{self, Global, GlobalIdentityHandlerFactory, HalApi, Token},
     id::{BufferId, CommandEncoderId, DeviceId, TextureId, Valid},
-    identity::GlobalIdentityHandlerFactory,
     init_tracker::{MemoryInitKind, TextureInitRange},
     resource::{Texture, TextureClearMode},
-    storage,
     track::{TextureSelector, TextureTracker},
 };
 
@@ -236,7 +232,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 }
 
 pub(crate) fn clear_texture<A: HalApi>(
-    storage: &storage::Storage<Texture<A>, TextureId>,
+    storage: &hub::Storage<Texture<A>, TextureId>,
     dst_texture_id: Valid<TextureId>,
     range: TextureInitRange,
     encoder: &mut A::CommandEncoder,
