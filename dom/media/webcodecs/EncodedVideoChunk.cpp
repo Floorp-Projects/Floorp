@@ -86,8 +86,7 @@ already_AddRefed<EncodedVideoChunk> EncodedVideoChunk::Constructor(
 
   RefPtr<EncodedVideoChunk> chunk(new EncodedVideoChunk(
       global, std::move(buffer), buf.size_bytes(), aInit.mType,
-      aInit.mTimestamp,
-      aInit.mDuration.WasPassed() ? Some(aInit.mDuration.Value()) : Nothing()));
+      aInit.mTimestamp, OptionalToMaybe(aInit.mDuration)));
   return aRv.Failed() ? nullptr : chunk.forget();
 }
 
@@ -105,11 +104,7 @@ int64_t EncodedVideoChunk::Timestamp() const {
 
 Nullable<uint64_t> EncodedVideoChunk::GetDuration() const {
   AssertIsOnOwningThread();
-
-  if (mDuration) {
-    return Nullable<uint64_t>(*mDuration);
-  }
-  return nullptr;
+  return MaybeToNullable(mDuration);
 }
 
 uint32_t EncodedVideoChunk::ByteLength() const {
