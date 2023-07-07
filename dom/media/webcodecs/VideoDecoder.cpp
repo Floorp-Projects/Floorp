@@ -747,9 +747,7 @@ class DecodeMessage final
         : mBuffer(aChunk.Data(), static_cast<size_t>(aChunk.ByteLength())),
           mIsKey(aChunk.Type() == EncodedVideoChunkType::Key),
           mTimestamp(aChunk.Timestamp()),
-          mDuration(aChunk.GetDuration().IsNull()
-                        ? Nothing()
-                        : Some(aChunk.GetDuration().Value())) {
+          mDuration(NullableToMaybe(aChunk.GetDuration())) {
       LOGV("Create %zu-byte ChunkData from %u-byte EncodedVideoChunk",
            mBuffer ? mBuffer.Size() : 0, aChunk.ByteLength());
     }
