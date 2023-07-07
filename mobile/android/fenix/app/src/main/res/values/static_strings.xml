@@ -118,4 +118,5 @@
     <string name="review_quality_check_grade_a_b_description" translatable="false">Reliable reviews</string>
     <string name="review_quality_check_grade_c_description" translatable="false">Only some reliable reviews</string>
     <string name="review_quality_check_grade_d_f_description" translatable="false">Unreliable reviews</string>
+    <string name="review_quality_check_star_rating_content_description">%1$s out of 5 stars</string>
 </resources>
