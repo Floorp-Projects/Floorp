@@ -31,11 +31,10 @@ function whenNewWindowLoaded(aOptions, aCallback) {
 }
 
 function openWindow(aParent, aOptions) {
-  let win = aParent.OpenBrowserWindow(aOptions);
-  return TestUtils.topicObserved(
-    "browser-delayed-startup-finished",
-    subject => subject == win
-  ).then(() => win);
+  return BrowserWindowTracker.promiseOpenWindow({
+    openerWindow: aParent,
+    ...aOptions,
+  });
 }
 
 /**

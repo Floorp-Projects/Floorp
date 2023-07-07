@@ -5,16 +5,6 @@
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const lazy = {};
-
-XPCOMUtils.defineLazyServiceGetters(lazy, {
-  BrowserHandler: ["@mozilla.org/browser/clh;1", "nsIBrowserHandler"],
-});
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
-});
-
 export var BrowserUIUtils = {
   /**
    * Check whether a page can be considered as 'empty', that its URI
@@ -172,63 +162,6 @@ export var BrowserUIUtils = {
     return url.startsWith(this.trimURLProtocol)
       ? url.substring(this.trimURLProtocol.length)
       : url;
-  },
-
-  /**
-   * Open a new browser window without being dependent on other windows.
-   * @returns {ChromeWindow} A new browser window.
-   */
-  async openNewBrowserWindow() {
-    var telemetryObj = {};
-    TelemetryStopwatch.start("FX_NEW_WINDOW_MS", telemetryObj);
-
-    let defaultArgs = Cc["@mozilla.org/supports-string;1"].createInstance(
-      Ci.nsISupportsString
-    );
-    defaultArgs.data = lazy.BrowserHandler.defaultArgs;
-
-    let extraFeatures = "suppressanimation";
-
-    let win = lazy.BrowserWindowTracker.openWindow({
-      args: defaultArgs,
-      features: extraFeatures,
-    });
-
-    win.addEventListener(
-      "MozAfterPaint",
-      () => {
-        TelemetryStopwatch.finish("FX_NEW_WINDOW_MS", telemetryObj);
-      },
-      { once: true }
-    );
-
-    await this._topicObserved(
-      "browser-delayed-startup-finished",
-      subject => subject == win
-    );
-
-    win.focus();
-
-    return win;
-  },
-  _topicObserved(observeTopic, checkFn) {
-    return new Promise((resolve, reject) => {
-      function observer(subject, topic, data) {
-        try {
-          if (checkFn && !checkFn(subject, data)) {
-            return;
-          }
-          Services.obs.removeObserver(observer, topic);
-          checkFn = null;
-          resolve([subject, data]);
-        } catch (ex) {
-          Services.obs.removeObserver(observer, topic);
-          checkFn = null;
-          reject(ex);
-        }
-      }
-      Services.obs.addObserver(observer, observeTopic);
-    });
   },
 };
 
