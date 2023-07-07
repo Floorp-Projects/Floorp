@@ -912,6 +912,12 @@ void InliningRoot::trace(JSTracer* trc) {
   }
 }
 
+void InliningRoot::traceWeak(JSTracer* trc) {
+  for (auto& inlinedScript : inlinedScripts_) {
+    inlinedScript->traceWeak(trc);
+  }
+}
+
 void InliningRoot::purgeOptimizedStubs(Zone* zone) {
   for (auto& inlinedScript : inlinedScripts_) {
     inlinedScript->purgeOptimizedStubs(zone);

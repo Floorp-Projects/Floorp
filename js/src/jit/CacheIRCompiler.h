@@ -896,6 +896,12 @@ class MOZ_RAII CacheIRCompiler {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     return (Shape*)readStubWord(offset, StubField::Type::Shape);
   }
+  Shape* weakShapeStubField(uint32_t offset) {
+    MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
+    Shape* shape = (Shape*)readStubWord(offset, StubField::Type::WeakShape);
+    gc::ReadBarrier(shape);
+    return shape;
+  }
   GetterSetter* getterSetterStubField(uint32_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     return (GetterSetter*)readStubWord(offset, StubField::Type::GetterSetter);
@@ -1304,6 +1310,10 @@ class CacheIRStubInfo {
 
 template <typename T>
 void TraceCacheIRStub(JSTracer* trc, T* stub, const CacheIRStubInfo* stubInfo);
+
+template <typename T>
+bool TraceWeakCacheIRStub(JSTracer* trc, T* stub,
+                          const CacheIRStubInfo* stubInfo);
 
 }  // namespace jit
 }  // namespace js

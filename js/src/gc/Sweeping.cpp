@@ -1381,7 +1381,7 @@ void GCRuntime::sweepJitDataOnMainThread(JS::GCContext* gcx) {
 
     for (SweepGroupZonesIter zone(this); !zone.done(); zone.next()) {
       if (jit::JitZone* jitZone = zone->jitZone()) {
-        jitZone->traceWeak(&trc);
+        jitZone->traceWeak(&trc, zone);
       }
     }
   }
