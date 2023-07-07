@@ -366,3 +366,50 @@ add_task(async function rowLabel() {
     Assert.equal(row.getAttribute("label"), expected);
   }
 });
+
+// Tests visibility of "Show less frequently" menu.
+add_task(async function showLessFrequentlyMenuVisibility() {
+  const testCases = [
+    // high confidence keyword best match
+    {
+      searchString: "high",
+      expected: false,
+    },
+    // low confidence keyword non-best match
+    {
+      searchString: "pocket suggestion",
+      expected: true,
+    },
+  ];
+
+  for (const { searchString, expected } of testCases) {
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: searchString,
+    });
+    Assert.equal(UrlbarTestUtils.getResultCount(window), 2);
+
+    const resultIndex = 1;
+    const details = await UrlbarTestUtils.getDetailsOfResultAt(
+      window,
+      resultIndex
+    );
+    Assert.equal(
+      details.result.payload.telemetryType,
+      "pocket",
+      "Pocket suggestion should be present at expected index"
+    );
+
+    const menuitem = await UrlbarTestUtils.openResultMenuAndGetItem({
+      resultIndex,
+      openByMouse: false,
+      command: "show_less_frequently",
+      window,
+    });
+    Assert.equal(!!menuitem, expected);
+
+    gURLBar.view.resultMenu.hidePopup(true);
+  }
+
+  await UrlbarTestUtils.promisePopupClose(window);
+});
