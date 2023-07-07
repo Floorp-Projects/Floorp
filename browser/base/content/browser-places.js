@@ -812,8 +812,6 @@ var BookmarksEventHandler = {
       // Call onCommand in the cases where it's not called automatically:
       // Middle-clicks outside of menus.
       this.onCommand(aEvent);
-      aEvent.preventDefault();
-      aEvent.stopPropagation();
     }
   },
 
