@@ -9,8 +9,6 @@
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 #include "DocAccessible.h"
-#include "nsEventShell.h"
-#include "nsTextEquivUtils.h"
 #include "Role.h"
 #include "States.h"
 

@@ -6,15 +6,12 @@
 #include "HTMLImageMapAccessible.h"
 
 #include "ARIAMap.h"
-#include "nsAccUtils.h"
-#include "DocAccessible-inl.h"
 #include "EventTree.h"
 #include "Role.h"
 
 #include "nsIFrame.h"
 #include "nsImageFrame.h"
 #include "nsImageMap.h"
-#include "nsIURI.h"
 #include "nsLayoutUtils.h"
 #include "mozilla/dom/HTMLAreaElement.h"
 

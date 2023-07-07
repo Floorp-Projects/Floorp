@@ -19,11 +19,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "nsIFormControl.h"
-#include "nsITextControlFrame.h"
-#include "nsNameSpaceManager.h"
-#include "mozilla/dom/ScriptSettings.h"
 
-#include "mozilla/EditorBase.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEditor.h"

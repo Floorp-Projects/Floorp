@@ -6,8 +6,7 @@
 #include "HTMLElementAccessibles.h"
 
 #include "CacheConstants.h"
-#include "DocAccessible.h"
-#include "nsAccUtils.h"
+#include "nsCoreUtils.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
 #include "Role.h"

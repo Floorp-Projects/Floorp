@@ -6,25 +6,21 @@
 #include "HTMLTableAccessible.h"
 
 #include <stdint.h>
-#include "mozilla/DebugOnly.h"
 
 #include "nsAccessibilityService.h"
 #include "AccAttributes.h"
 #include "ARIAMap.h"
 #include "CacheConstants.h"
-#include "DocAccessible.h"
 #include "LocalAccessible-inl.h"
 #include "nsTextEquivUtils.h"
 #include "Relation.h"
 #include "Role.h"
 #include "States.h"
 
-#include "mozilla/PresShell.h"
 #include "mozilla/a11y/TableAccessible.h"
 #include "mozilla/a11y/TableCellAccessible.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/HTMLTableElement.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "nsCaseTreatment.h"
 #include "nsColor.h"
@@ -33,7 +29,6 @@
 #include "nsDebug.h"
 #include "nsIHTMLCollection.h"
 #include "nsITableCellLayout.h"
-#include "nsFrameSelection.h"
 #include "nsError.h"
 #include "nsGkAtoms.h"
 #include "nsLiteralString.h"
