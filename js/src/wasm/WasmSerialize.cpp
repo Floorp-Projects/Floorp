@@ -703,7 +703,8 @@ CoderResult CodeElemSegment(Coder<mode>& coder,
 template <CoderMode mode>
 CoderResult CodeDataSegment(Coder<mode>& coder,
                             CoderArg<mode, DataSegment> item) {
-  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::DataSegment, 136);
+  WASM_VERIFY_SERIALIZATION_FOR_SIZE(wasm::DataSegment, 144);
+  MOZ_TRY(CodePod(coder, &item->memoryIndex));
   MOZ_TRY((CodeMaybe<mode, InitExpr, &CodeInitExpr<mode>>(
       coder, &item->offsetIfActive)));
   MOZ_TRY(CodePodVector(coder, &item->bytes));

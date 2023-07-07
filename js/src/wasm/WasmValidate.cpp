@@ -2063,6 +2063,10 @@ static bool DecodeMemoryTypeAndLimits(Decoder& d, ModuleEnvironment* env,
     return d.fail("already have default memory");
   }
 
+  if (env->numMemories() >= MaxMemories) {
+    return d.fail("too many memories");
+  }
+
   Limits limits;
   if (!DecodeLimits(d, LimitsKind::Memory, &limits)) {
     return false;
@@ -3007,21 +3011,25 @@ static bool DecodeDataSection(Decoder& d, ModuleEnvironment* env) {
       return d.fail("active data segment requires a memory section");
     }
 
-    uint32_t memIndex = 0;
+    DataSegmentEnv seg;
     if (initializerKind == DataSegmentKind::ActiveWithMemoryIndex) {
-      if (!d.readVarU32(&memIndex)) {
+      if (!d.readVarU32(&seg.memoryIndex)) {
         return d.fail("expected memory index");
       }
-      if (memIndex > 0) {
-        return d.fail("memory index must be zero");
-      }
+    } else if (initializerKind == DataSegmentKind::Active) {
+      seg.memoryIndex = 0;
+    } else {
+      seg.memoryIndex = InvalidMemoryIndex;
     }
 
-    DataSegmentEnv seg;
     if (initializerKind == DataSegmentKind::Active ||
         initializerKind == DataSegmentKind::ActiveWithMemoryIndex) {
+      if (seg.memoryIndex >= env->numMemories()) {
+        return d.fail("invalid memory index");
+      }
+
       InitExpr segOffset;
-      ValType exprType = ToValType(env->memories[memIndex].indexType());
+      ValType exprType = ToValType(env->memories[seg.memoryIndex].indexType());
       if (!InitExpr::decodeAndValidate(d, env, exprType, env->globals.length(),
                                        &segOffset)) {
         return false;
