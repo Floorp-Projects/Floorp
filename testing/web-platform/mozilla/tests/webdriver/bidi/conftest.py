@@ -22,18 +22,25 @@ def match_capabilities(add_browser_capabilities):
 
 @pytest_asyncio.fixture
 async def bidi_client(browser):
-    current_browser = browser(use_bidi=True)
     bidi_session = None
-
-    server_host = current_browser.remote_agent_host
-    server_port = current_browser.remote_agent_port
+    current_browser = browser(use_bidi=True)
 
     async def bidi_client(capabilities={}):
+        nonlocal current_browser
+
+        # Launch the browser again if it's not running.
+        if current_browser.is_running is False:
+            current_browser = browser(use_bidi=True)
+
+        server_host = current_browser.remote_agent_host
+        server_port = current_browser.remote_agent_port
+
         nonlocal bidi_session
 
         bidi_session = BidiSession.bidi_only(
             f"ws://{server_host}:{server_port}", requested_capabilities=capabilities
         )
+        bidi_session.current_browser = current_browser
 
         await bidi_session.start_transport()
 
@@ -63,13 +70,14 @@ async def new_session(bidi_client):
 
     yield new_session
 
-    if bidi_session is not None:
-        # Check if the session and websocket connection was not closed already.
-        if (
-            bidi_session.session_id is not None
-            and bidi_session.transport.connection.closed is False
-        ):
-            await bidi_session.session.end()
+    # Check if the browser, the session or websocket connection was not closed already.
+    if (
+        bidi_session is not None
+        and bidi_session.current_browser.is_running is True
+        and bidi_session.session_id is not None
+        and bidi_session.transport.connection.closed is False
+    ):
+        await bidi_session.session.end()
 
 
 @pytest.fixture(name="add_browser_capabilities")
