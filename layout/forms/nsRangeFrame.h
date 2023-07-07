@@ -115,6 +115,18 @@ class nsRangeFrame final : public nsContainerFrame,
     return GetWritingMode().IsPhysicalRTL();
   }
 
+  /**
+   * Returns true if the range progresses upwards (for vertical ranges in
+   * horizontal writing mode, or for bidi-RTL in vertical mode). Only
+   * relevant when IsHorizontal() is false.
+   */
+  bool IsUpwards() const {
+    MOZ_ASSERT(!IsHorizontal());
+    mozilla::WritingMode wm = GetWritingMode();
+    return wm.GetBlockDir() == mozilla::WritingMode::eBlockTB ||
+           wm.GetInlineDir() == mozilla::WritingMode::eInlineBTT;
+  }
+
   double GetMin() const;
   double GetMax() const;
   double GetValue() const;
