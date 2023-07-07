@@ -8,36 +8,36 @@
 use metal::*;
 use objc::rc::autoreleasepool;
 
-const PROGRAM: &'static str = "
-    #include <metal_stdlib>\n\
+const PROGRAM: &'static str = r"
+    #include <metal_stdlib>
 
-    using namespace metal;\n\
+    using namespace metal;
 
-    typedef struct {\n\
-        float2 position;\n\
-        float3 color;\n\
-    } vertex_t;\n\
+    typedef struct {
+        float2 position;
+        float3 color;
+    } vertex_t;
 
-    struct ColorInOut {\n\
-        float4 position [[position]];\n\
-        float4 color;\n\
-    };\n\
+    struct ColorInOut {
+        float4 position [[position]];
+        float4 color;
+    };
 
-    vertex ColorInOut vs(device vertex_t* vertex_array [[ buffer(0) ]],\n\
-                                      unsigned int vid [[ vertex_id ]])\n\
-    {\n\
-        ColorInOut out;\n\
+    vertex ColorInOut vs(device vertex_t* vertex_array [[ buffer(0) ]],
+                                      unsigned int vid [[ vertex_id ]])
+    {
+        ColorInOut out;
 
-        out.position = float4(float2(vertex_array[vid].position), 0.0, 1.0);\n\
-        out.color = float4(float3(vertex_array[vid].color), 1.0);\n\
+        out.position = float4(float2(vertex_array[vid].position), 0.0, 1.0);
+        out.color = float4(float3(vertex_array[vid].color), 1.0);
 
-        return out;\n\
-    }\n\
+        return out;
+    }
 
-    fragment float4 ps(ColorInOut in [[stage_in]])\n\
-    {\n\
-        return in.color;\n\
-    };\n\
+    fragment float4 ps(ColorInOut in [[stage_in]])
+    {
+        return in.color;
+    };
 ";
 
 fn main() {

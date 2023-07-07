@@ -67,6 +67,7 @@ pub struct DeviceProperties<'a> {
 bitflags::bitflags! {
     /// Allocation flags
     #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+    #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
     pub struct AllocationFlags : u8 {
         /// Specifies that the memory can be used for buffers created
         /// with flag that allows fetching device address.
@@ -84,7 +85,7 @@ pub trait MemoryDevice<M> {
     /// # Safety
     ///
     /// `memory_type` must be valid index for memory type associated with this device.
-    /// Retreiving this information is implementation specific.
+    /// Retrieving this information is implementation specific.
     ///
     /// `flags` must be supported by the device.
     unsafe fn allocate_memory(

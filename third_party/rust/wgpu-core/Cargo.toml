@@ -54,7 +54,7 @@ package = "wgpu-hal"
 [dependencies.naga]
 version = "0.12.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "b99d58ea435090e561377949f428bce2c18451bb"
+rev = "76003dc0035d53a474d366dcdf49d2e4d12e921f"
 features = [
     "clone",
     "span",

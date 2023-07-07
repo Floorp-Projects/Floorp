@@ -13,11 +13,11 @@ use foreign_types::ForeignType;
 
 foreign_type! {
     #[doc(hidden)]
-    type CType = ::sys::CGColorSpace;
-    fn drop = |p| CFRelease(p as *mut _);
-    fn clone = |p| CFRetain(p as *const _) as *mut _;
-    pub struct CGColorSpace;
-    pub struct CGColorSpaceRef;
+    pub unsafe type CGColorSpace {
+        type CType = ::sys::CGColorSpace;
+        fn drop = |p| CFRelease(p as *mut _);
+        fn clone = |p| CFRetain(p as *const _) as *mut _;
+    }
 }
 
 impl CGColorSpace {
@@ -53,13 +53,61 @@ impl CGColorSpace {
 
 #[link(name = "CoreGraphics", kind = "framework")]
 extern {
+    /// The Display P3 color space, created by Apple.
+    pub static kCGColorSpaceDisplayP3: CFStringRef;
+    /// The Display P3 color space, using the HLG transfer function.
+    pub static kCGColorSpaceDisplayP3_HLG: CFStringRef;
+    /// The Display P3 color space with a linear transfer function
+    /// and extended-range values.
+    pub static kCGColorSpaceExtendedLinearDisplayP3: CFStringRef;
+    /// The standard Red Green Blue (sRGB) color space.
     pub static kCGColorSpaceSRGB: CFStringRef;
-    pub static kCGColorSpaceAdobeRGB1998: CFStringRef;
-    pub static kCGColorSpaceGenericGray: CFStringRef;
-    pub static kCGColorSpaceGenericRGB: CFStringRef;
-    pub static kCGColorSpaceGenericCMYK: CFStringRef;
-    pub static kCGColorSpaceGenericRGBLinear: CFStringRef;
+    /// The sRGB color space with a linear transfer function.
+    pub static kCGColorSpaceLinearSRGB: CFStringRef;
+    /// The extended sRGB color space.
+    pub static kCGColorSpaceExtendedSRGB: CFStringRef;
+    /// The sRGB color space with a linear transfer function and
+    /// extended-range values.
+    pub static kCGColorSpaceExtendedLinearSRGB: CFStringRef;
+    /// The generic gray color space that has an exponential transfer
+    /// function with a power of 2.2.
     pub static kCGColorSpaceGenericGrayGamma2_2: CFStringRef;
+    /// The gray color space using a linear transfer function.
+    pub static kCGColorSpaceLinearGray: CFStringRef;
+    /// The extended gray color space.
+    pub static kCGColorSpaceExtendedGray: CFStringRef;
+    /// The extended gray color space with a linear transfer function.
+    pub static kCGColorSpaceExtendedLinearGray: CFStringRef;
+    /// The generic RGB color space with a linear transfer function.
+    pub static kCGColorSpaceGenericRGBLinear: CFStringRef;
+    /// The generic CMYK color space.
+    pub static kCGColorSpaceGenericCMYK: CFStringRef;
+    /// The XYZ color space, as defined by the CIE 1931 standard.
+    pub static kCGColorSpaceGenericXYZ: CFStringRef;
+    /// The generic LAB color space.
+    pub static kCGColorSpaceGenericLab: CFStringRef;
+    /// The ACEScg color space.
+    pub static kCGColorSpaceACESCGLinear: CFStringRef;
+    /// The Adobe RGB (1998) color space.
+    pub static kCGColorSpaceAdobeRGB1998: CFStringRef;
+    /// The DCI P3 color space, which is the digital cinema standard.
+    pub static kCGColorSpaceDCIP3: CFStringRef;
+    /// The recommendation of the International Telecommunication Union
+    /// (ITU) Radiocommunication sector for the BT.709 color space.
+    pub static kCGColorSpaceITUR_709: CFStringRef;
+    /// The Reference Output Medium Metric (ROMM) RGB color space.
+    pub static kCGColorSpaceROMMRGB: CFStringRef;
+    /// The recommendation of the International Telecommunication Union
+    /// (ITU) Radiocommunication sector for the BT.2020 color space.
+    pub static kCGColorSpaceITUR_2020: CFStringRef;
+    /// The recommendation of the International Telecommunication Union
+    /// (ITU) Radiocommunication sector for the BT.2020 color space, with
+    /// a linear transfer function and extended range values.
+    pub static kCGColorSpaceExtendedLinearITUR_2020: CFStringRef;
+    /// The name of the generic RGB color space.
+    pub static kCGColorSpaceGenericRGB: CFStringRef;
+    /// The name of the generic gray color space.
+    pub static kCGColorSpaceGenericGray: CFStringRef;
 
     fn CGColorSpaceCreateDeviceRGB() -> ::sys::CGColorSpaceRef;
     fn CGColorSpaceCreateDeviceGray() -> ::sys::CGColorSpaceRef;

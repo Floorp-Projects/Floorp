@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -11,12 +11,20 @@
 # will likely look very different (and much more reasonable)
 
 [package]
+edition = "2018"
 name = "foreign-types"
-version = "0.3.2"
+version = "0.5.0"
 authors = ["Steven Fackler <sfackler@gmail.com>"]
 description = "A framework for Rust wrappers over C APIs"
 readme = "README.md"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/sfackler/foreign-types"
+[dependencies.foreign-types-macros]
+version = "0.2"
+
 [dependencies.foreign-types-shared]
-version = "0.1"
+version = "0.3"
+
+[features]
+default = ["std"]
+std = ["foreign-types-macros/std"]

@@ -13,6 +13,7 @@ mod render;
 pub use self::compute::*;
 pub use self::render::*;
 
+/// See <https://developer.apple.com/documentation/metal/mtlmutability>
 #[repr(u64)]
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -29,12 +30,12 @@ impl Default for MTLMutability {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlpipelinebufferdescriptorarray>
 pub enum MTLPipelineBufferDescriptorArray {}
 
 foreign_obj_type! {
     type CType = MTLPipelineBufferDescriptorArray;
     pub struct PipelineBufferDescriptorArray;
-    pub struct PipelineBufferDescriptorArrayRef;
 }
 
 impl PipelineBufferDescriptorArrayRef {
@@ -51,12 +52,12 @@ impl PipelineBufferDescriptorArrayRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlpipelinebufferdescriptor>
 pub enum MTLPipelineBufferDescriptor {}
 
 foreign_obj_type! {
     type CType = MTLPipelineBufferDescriptor;
     pub struct PipelineBufferDescriptor;
-    pub struct PipelineBufferDescriptorRef;
 }
 
 impl PipelineBufferDescriptorRef {

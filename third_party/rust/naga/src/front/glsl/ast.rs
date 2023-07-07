@@ -3,7 +3,7 @@ use std::{borrow::Cow, fmt};
 use super::{builtins::MacroCall, context::ExprPos, Span};
 use crate::{
     AddressSpace, BinaryOperator, Binding, Constant, Expression, Function, GlobalVariable, Handle,
-    Interpolation, Sampling, StorageAccess, Type, UnaryOperator,
+    Interpolation, Literal, Sampling, StorageAccess, Type, UnaryOperator,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -67,6 +67,7 @@ bitflags::bitflags! {
     /// builtins overloads can't be generated unless explicitly used, since they might cause
     /// unneeded capabilities to be requested
     #[derive(Default)]
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct BuiltinVariations: u32 {
         /// Request the standard overloads
         const STANDARD = 1 << 0;
@@ -121,7 +122,7 @@ pub enum HirExprKind {
         base: Handle<HirExpr>,
         field: String,
     },
-    Constant(Handle<Constant>),
+    Literal(Literal),
     Binary {
         left: Handle<HirExpr>,
         op: BinaryOperator,

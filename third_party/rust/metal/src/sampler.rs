@@ -7,6 +7,7 @@
 
 use super::{depthstencil::MTLCompareFunction, DeviceRef, NSUInteger};
 
+/// See <https://developer.apple.com/documentation/metal/mtlsamplerminmagfilter>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLSamplerMinMagFilter {
@@ -14,6 +15,7 @@ pub enum MTLSamplerMinMagFilter {
     Linear = 1,
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlsamplermipfilter>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLSamplerMipFilter {
@@ -22,6 +24,7 @@ pub enum MTLSamplerMipFilter {
     Linear = 2,
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlsampleraddressmode>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLSamplerAddressMode {
@@ -33,6 +36,7 @@ pub enum MTLSamplerAddressMode {
     ClampToBorderColor = 5,
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlsamplerbordercolor>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLSamplerBorderColor {
@@ -41,12 +45,12 @@ pub enum MTLSamplerBorderColor {
     OpaqueWhite = 2,
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlsamplerdescriptor>
 pub enum MTLSamplerDescriptor {}
 
 foreign_obj_type! {
     type CType = MTLSamplerDescriptor;
     pub struct SamplerDescriptor;
-    pub struct SamplerDescriptorRef;
 }
 
 impl SamplerDescriptor {
@@ -135,12 +139,12 @@ impl SamplerDescriptorRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlsamplerstate>
 pub enum MTLSamplerState {}
 
 foreign_obj_type! {
     type CType = MTLSamplerState;
     pub struct SamplerState;
-    pub struct SamplerStateRef;
 }
 
 impl SamplerStateRef {

@@ -13,12 +13,12 @@ fn main() {
                 ("windows", "64") => "Lib",
                 _ => "lib",
             };
-            println!("cargo:rustc-link-search={}/{}", var, suffix);
+            println!("cargo:rustc-link-search={var}/{suffix}");
         }
         let lib = match &*target_family {
             "windows" => "vulkan-1",
             _ => "vulkan",
         };
-        println!("cargo:rustc-link-lib={}", lib);
+        println!("cargo:rustc-link-lib={lib}");
     }
 }

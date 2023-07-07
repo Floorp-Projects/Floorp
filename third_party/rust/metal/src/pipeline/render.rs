@@ -9,6 +9,7 @@ use super::*;
 
 use objc::runtime::{NO, YES};
 
+/// See <https://developer.apple.com/documentation/metal/mtlblendfactor>
 #[repr(u64)]
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -34,6 +35,7 @@ pub enum MTLBlendFactor {
     OneMinusSource1Alpha = 18,
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlblendoperation>
 #[repr(u64)]
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -46,6 +48,7 @@ pub enum MTLBlendOperation {
 }
 
 bitflags! {
+    /// See <https://developer.apple.com/documentation/metal/mtlcolorwritemask>
     pub struct MTLColorWriteMask: NSUInteger {
         const None  = 0;
         const Red   = 0x1 << 3;
@@ -56,6 +59,7 @@ bitflags! {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlprimitivetopologyclass>
 #[repr(u64)]
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -71,12 +75,12 @@ pub enum MTLPrimitiveTopologyClass {
 // TODO: MTLTessellationFactorFormat
 // TODO: MTLTessellationControlPointIndexType
 
+/// See <https://developer.apple.com/documentation/metal/mtlrenderpipelinecolorattachmentdescriptor>
 pub enum MTLRenderPipelineColorAttachmentDescriptor {}
 
 foreign_obj_type! {
     type CType = MTLRenderPipelineColorAttachmentDescriptor;
     pub struct RenderPipelineColorAttachmentDescriptor;
-    pub struct RenderPipelineColorAttachmentDescriptorRef;
 }
 
 impl RenderPipelineColorAttachmentDescriptorRef {
@@ -159,12 +163,12 @@ impl RenderPipelineColorAttachmentDescriptorRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlrenderpipelinereflection>
 pub enum MTLRenderPipelineReflection {}
 
 foreign_obj_type! {
     type CType = MTLRenderPipelineReflection;
     pub struct RenderPipelineReflection;
-    pub struct RenderPipelineReflectionRef;
 }
 
 impl RenderPipelineReflection {
@@ -209,12 +213,12 @@ impl RenderPipelineReflectionRef {
     }
 }
 
+/// TODO: Find documentation link.
 pub enum MTLArgumentArray {}
 
 foreign_obj_type! {
     type CType = MTLArgumentArray;
     pub struct ArgumentArray;
-    pub struct ArgumentArrayRef;
 }
 
 impl ArgumentArrayRef {
@@ -227,12 +231,12 @@ impl ArgumentArrayRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlcomputepipelinereflection>
 pub enum MTLComputePipelineReflection {}
 
 foreign_obj_type! {
     type CType = MTLComputePipelineReflection;
     pub struct ComputePipelineReflection;
-    pub struct ComputePipelineReflectionRef;
 }
 
 impl ComputePipelineReflectionRef {
@@ -242,12 +246,274 @@ impl ComputePipelineReflectionRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlmeshrenderpipelinedescriptor>
+/// Only available in (macos(13.0), ios(16.0))
+pub enum MTLMeshRenderPipelineDescriptor {}
+
+foreign_obj_type! {
+    type CType = MTLMeshRenderPipelineDescriptor;
+    pub struct MeshRenderPipelineDescriptor;
+}
+
+impl MeshRenderPipelineDescriptor {
+    pub fn new() -> Self {
+        unsafe {
+            let class = class!(MTLMeshRenderPipelineDescriptor);
+            msg_send![class, new]
+        }
+    }
+}
+
+impl MeshRenderPipelineDescriptorRef {
+    pub fn color_attachments(&self) -> &RenderPipelineColorAttachmentDescriptorArrayRef {
+        unsafe { msg_send![self, colorAttachments] }
+    }
+
+    pub fn depth_attachment_pixel_format(&self) -> MTLPixelFormat {
+        unsafe { msg_send![self, depthAttachmentPixelFormat] }
+    }
+
+    pub fn set_depth_attachment_pixel_format(&self, pixel_format: MTLPixelFormat) {
+        unsafe { msg_send![self, setDepthAttachmentPixelFormat: pixel_format] }
+    }
+
+    pub fn fragment_buffers(&self) -> Option<&PipelineBufferDescriptorArrayRef> {
+        unsafe { msg_send![self, fragmentBuffers] }
+    }
+
+    pub fn fragment_function(&self) -> Option<&FunctionRef> {
+        unsafe { msg_send![self, fragmentFunction] }
+    }
+
+    pub fn set_fragment_function(&self, function: Option<&FunctionRef>) {
+        unsafe { msg_send![self, setFragmentFunction: function] }
+    }
+
+    pub fn is_alpha_to_coverage_enabled(&self) -> bool {
+        unsafe {
+            match msg_send![self, isAlphaToCoverageEnabled] {
+                YES => true,
+                NO => false,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn set_alpha_to_coverage_enabled(&self, enabled: bool) {
+        unsafe { msg_send![self, setAlphaToCoverageEnabled: enabled] }
+    }
+
+    pub fn is_alpha_to_one_enabled(&self) -> bool {
+        unsafe {
+            match msg_send![self, isAlphaToOneEnabled] {
+                YES => true,
+                NO => false,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn set_alpha_to_one_enabled(&self, enabled: bool) {
+        unsafe { msg_send![self, setAlphaToOneEnabled: enabled] }
+    }
+
+    pub fn is_rasterization_enabled(&self) -> bool {
+        unsafe {
+            match msg_send![self, isRasterizationEnabled] {
+                YES => true,
+                NO => false,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn set_rasterization_enabled(&self, enabled: bool) {
+        unsafe { msg_send![self, setRasterizationEnabled: enabled] }
+    }
+
+    pub fn label(&self) -> &str {
+        unsafe {
+            let label = msg_send![self, label];
+            crate::nsstring_as_str(label)
+        }
+    }
+
+    pub fn set_label(&self, label: &str) {
+        unsafe {
+            let nslabel = crate::nsstring_from_str(label);
+            let () = msg_send![self, setLabel: nslabel];
+        }
+    }
+
+    pub fn max_total_threadgroups_per_mesh_grid(&self) -> NSUInteger {
+        unsafe { msg_send![self, maxTotalThreadgroupsPerMeshGrid] }
+    }
+
+    pub fn set_max_total_threadgroups_per_mesh_grid(
+        &self,
+        max_total_threadgroups_per_mesh_grid: NSUInteger,
+    ) {
+        unsafe {
+            msg_send![
+                self,
+                setMaxTotalThreadgroupsPerMeshGrid: max_total_threadgroups_per_mesh_grid
+            ]
+        }
+    }
+
+    pub fn max_total_threads_per_mesh_threadgroup(&self) -> NSUInteger {
+        unsafe { msg_send![self, maxTotalThreadsPerMeshThreadgroup] }
+    }
+
+    pub fn set_max_total_threads_per_mesh_threadgroup(
+        &self,
+        max_total_threads_per_mesh_threadgroup: NSUInteger,
+    ) {
+        unsafe {
+            msg_send![
+                self,
+                setMaxTotalThreadsPerMeshThreadgroup: max_total_threads_per_mesh_threadgroup
+            ]
+        }
+    }
+
+    pub fn max_total_threads_per_object_threadgroup(&self) -> NSUInteger {
+        unsafe { msg_send![self, maxTotalThreadsPerObjectThreadgroup] }
+    }
+
+    pub fn set_max_total_threads_per_object_threadgroup(
+        &self,
+        max_total_threads_per_object_threadgroup: NSUInteger,
+    ) {
+        unsafe {
+            msg_send![
+                self,
+                setMaxTotalThreadsPerObjectThreadgroup: max_total_threads_per_object_threadgroup
+            ]
+        }
+    }
+
+    pub fn max_vertex_amplification_count(&self) -> NSUInteger {
+        unsafe { msg_send![self, maxVertexAmplificationCount] }
+    }
+
+    pub fn set_max_vertex_amplification_count(&self, max_vertex_amplification_count: NSUInteger) {
+        unsafe {
+            msg_send![
+                self,
+                setMaxVertexAmplificationCount: max_vertex_amplification_count
+            ]
+        }
+    }
+
+    pub fn mesh_buffers(&self) -> Option<&PipelineBufferDescriptorArrayRef> {
+        unsafe { msg_send![self, meshBuffers] }
+    }
+
+    pub fn mesh_function(&self) -> Option<&FunctionRef> {
+        unsafe { msg_send![self, meshFunction] }
+    }
+
+    pub fn set_mesh_function(&self, function: Option<&FunctionRef>) {
+        unsafe { msg_send![self, setMeshFunction: function] }
+    }
+
+    pub fn mesh_threadgroup_size_is_multiple_of_thread_execution_width(&self) -> bool {
+        unsafe {
+            match msg_send![self, isMeshThreadgroupSizeIsMultipleOfThreadExecutionWidth] {
+                YES => true,
+                NO => false,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn set_mesh_threadgroup_size_is_multiple_of_thread_execution_width(
+        &self,
+        mesh_threadgroup_size_is_multiple_of_thread_execution_width: bool,
+    ) {
+        unsafe {
+            msg_send![
+                self,
+                setMeshThreadgroupSizeIsMultipleOfThreadExecutionWidth:
+                    mesh_threadgroup_size_is_multiple_of_thread_execution_width
+            ]
+        }
+    }
+
+    pub fn object_buffers(&self) -> Option<&PipelineBufferDescriptorArrayRef> {
+        unsafe { msg_send![self, objectBuffers] }
+    }
+
+    pub fn object_function(&self) -> Option<&FunctionRef> {
+        unsafe { msg_send![self, objectFunction] }
+    }
+
+    pub fn set_object_function(&self, function: Option<&FunctionRef>) {
+        unsafe { msg_send![self, setObjectFunction: function] }
+    }
+
+    pub fn object_threadgroup_size_is_multiple_of_thread_execution_width(&self) -> bool {
+        unsafe {
+            match msg_send![
+                self,
+                isObjectThreadgroupSizeIsMultipleOfThreadExecutionWidth
+            ] {
+                YES => true,
+                NO => false,
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    pub fn set_object_threadgroup_size_is_multiple_of_thread_execution_width(
+        &self,
+        object_threadgroup_size_is_multiple_of_thread_execution_width: bool,
+    ) {
+        unsafe {
+            msg_send![
+                self,
+                setObjectThreadgroupSizeIsMultipleOfThreadExecutionWidth:
+                    object_threadgroup_size_is_multiple_of_thread_execution_width
+            ]
+        }
+    }
+
+    pub fn payload_memory_length(&self) -> NSUInteger {
+        unsafe { msg_send![self, payloadMemoryLength] }
+    }
+
+    pub fn set_payload_memory_length(&self, payload_memory_length: NSUInteger) {
+        unsafe { msg_send![self, setPayloadMemoryLength: payload_memory_length] }
+    }
+
+    pub fn raster_sample_count(&self) -> NSUInteger {
+        unsafe { msg_send![self, rasterSampleCount] }
+    }
+
+    pub fn set_raster_sample_count(&self, raster_sample_count: NSUInteger) {
+        unsafe { msg_send![self, setRasterSampleCount: raster_sample_count] }
+    }
+
+    pub fn stencil_attachment_pixel_format(&self) -> MTLPixelFormat {
+        unsafe { msg_send![self, stencilAttachmentPixelFormat] }
+    }
+
+    pub fn set_stencil_attachment_pixel_format(&self, pixel_format: MTLPixelFormat) {
+        unsafe { msg_send![self, setStencilAttachmentPixelFormat: pixel_format] }
+    }
+
+    pub fn reset(&self) {
+        unsafe { msg_send![self, reset] }
+    }
+}
+
+/// See <https://developer.apple.com/documentation/metal/mtlrenderpipelinedescriptor>
 pub enum MTLRenderPipelineDescriptor {}
 
 foreign_obj_type! {
     type CType = MTLRenderPipelineDescriptor;
     pub struct RenderPipelineDescriptor;
-    pub struct RenderPipelineDescriptorRef;
 }
 
 impl RenderPipelineDescriptor {
@@ -460,12 +726,12 @@ impl RenderPipelineDescriptorRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlrenderpipelinestate>
 pub enum MTLRenderPipelineState {}
 
 foreign_obj_type! {
     type CType = MTLRenderPipelineState;
     pub struct RenderPipelineState;
-    pub struct RenderPipelineStateRef;
 }
 
 impl RenderPipelineStateRef {
@@ -481,12 +747,12 @@ impl RenderPipelineStateRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlrenderpipelinecolorattachmentdescriptorarray>
 pub enum MTLRenderPipelineColorAttachmentDescriptorArray {}
 
 foreign_obj_type! {
     type CType = MTLRenderPipelineColorAttachmentDescriptorArray;
     pub struct RenderPipelineColorAttachmentDescriptorArray;
-    pub struct RenderPipelineColorAttachmentDescriptorArrayRef;
 }
 
 impl RenderPipelineColorAttachmentDescriptorArrayRef {
