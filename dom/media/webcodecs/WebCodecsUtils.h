@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_webcodecs_Utils
-#define mozilla_webcodecs_Utils
+#ifndef MOZILLA_DOM_WEBCODECS_WEBCODECSUTILS_H
+#define MOZILLA_DOM_WEBCODECS_WEBCODECSUTILS_H
 
 #include <tuple>
 
@@ -127,4 +127,4 @@ Maybe<VideoPixelFormat> ImageBitmapFormatToVideoPixelFormat(
 }  // namespace dom
 }  // namespace mozilla
 
-#endif  // mozilla_webcodecs_Utils
+#endif  // MOZILLA_DOM_WEBCODECS_WEBCODECSUTILS_H
