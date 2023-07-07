@@ -33,6 +33,7 @@
 #include <limits.h>
 #include <windows.h>
 
+#define PTHREAD_MUTEX_INITIALIZER SRWLOCK_INIT
 #define PTHREAD_ONCE_INIT INIT_ONCE_STATIC_INIT
 
 typedef struct {

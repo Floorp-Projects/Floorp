@@ -91,7 +91,7 @@ typedef struct Dav1dPicture {
      */
     size_t n_itut_t35;
 
-    uintptr_t reserved[3]; ///< reserved for future use
+    uintptr_t reserved[4]; ///< reserved for future use
 
     struct Dav1dRef *frame_hdr_ref; ///< Dav1dFrameHeader allocation origin
     struct Dav1dRef *seq_hdr_ref; ///< Dav1dSequenceHeader allocation origin
