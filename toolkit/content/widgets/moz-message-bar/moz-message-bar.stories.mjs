@@ -40,8 +40,15 @@ const Template = ({ type, message, l10nId, dismissable }) => html`
   </moz-message-bar>
 `;
 
-export const Info = Template.bind({});
-Info.args = {
+export const Default = Template.bind({});
+Default.args = {
+  type: "info",
+  l10nId: "moz-message-bar-message",
+  dismissable: false,
+};
+
+export const Dismissable = Template.bind({});
+Dismissable.args = {
   type: "info",
   l10nId: "moz-message-bar-message",
   dismissable: true,
