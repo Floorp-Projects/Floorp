@@ -13,8 +13,13 @@ use objc::runtime::{Object, NO, YES};
 
 use std::{ffi::CStr, os::raw::c_char, path::Path, ptr};
 
-// Available on macOS 10.11+, iOS 8.0+, tvOS 9.0+
+/// Available on macOS 10.11+, iOS 8.0+, tvOS 9.0+
+///
+/// See <https://developer.apple.com/documentation/metal/mtlfeatureset>
 #[allow(non_camel_case_types)]
+#[deprecated(
+    note = "Since iOS 8.0–16.0 iPadOS 8.0–16.0 macOS 10.11–13.0 Mac Catalyst 13.1–16.0 tvOS 9.0–16.0"
+)]
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLFeatureSet {
@@ -52,7 +57,9 @@ pub enum MTLFeatureSet {
     macOS_GPUFamily2_v1 = 10005,
 }
 
-// Available on macOS 10.15+, iOS 13.0+
+/// Available on macOS 10.15+, iOS 13.0+
+///
+/// See <https://developer.apple.com/documentation/metal/mtlgpufamily>
 #[repr(i64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 #[non_exhaustive]
@@ -73,8 +80,10 @@ pub enum MTLGPUFamily {
     Mac2 = 2002,
     MacCatalyst1 = 4001,
     MacCatalyst2 = 4002,
+    Metal3 = 5001,
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtldevicelocation>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLDeviceLocation {
@@ -1380,6 +1389,7 @@ impl MTLFeatureSet {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlargumentbufferstier>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLArgumentBuffersTier {
@@ -1387,6 +1397,7 @@ pub enum MTLArgumentBuffersTier {
     Tier2 = 1,
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlreadwritetexturetier>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLReadWriteTextureTier {
@@ -1396,6 +1407,8 @@ pub enum MTLReadWriteTextureTier {
 }
 
 /// Only available on (macos(11.0), ios(14.0))
+///
+/// See <https://developer.apple.com/documentation/metal/mtlcountersamplingpoint>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLCounterSamplingPoint {
@@ -1407,6 +1420,9 @@ pub enum MTLCounterSamplingPoint {
 }
 
 /// Only available on (macos(11.0), macCatalyst(14.0), ios(13.0))
+/// Kinda a long name!
+///
+/// See <https://developer.apple.com/documentation/metal/mtlsparsetextureregionalignmentmode>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLSparseTextureRegionAlignmentMode {
@@ -1431,6 +1447,7 @@ bitflags! {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metal/mtlaccelerationstructuresizes>
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[repr(C)]
 pub struct MTLAccelerationStructureSizes {
@@ -1480,18 +1497,22 @@ type MTLNewRenderPipelineStateWithReflectionCompletionHandler = extern fn(render
 type MTLNewComputePipelineStateCompletionHandler = extern fn(computePipelineState: id, error: id);
 type MTLNewComputePipelineStateWithReflectionCompletionHandler = extern fn(computePipelineState: id, reflection: id, error: id);*/
 
+/// See <https://developer.apple.com/documentation/metal/mtldevice>
 pub enum MTLDevice {}
 
 foreign_obj_type! {
     type CType = MTLDevice;
     pub struct Device;
-    pub struct DeviceRef;
 }
 
 impl Device {
     pub fn system_default() -> Option<Self> {
         // `MTLCreateSystemDefaultDevice` may return null if Metal is not supported
-        unsafe { MTLCreateSystemDefaultDevice().as_mut().map(|x| Self(x)) }
+        unsafe {
+            MTLCreateSystemDefaultDevice()
+                .as_mut()
+                .map(|x| Self(x.into()))
+        }
     }
 
     pub fn all() -> Vec<Self> {
@@ -1878,6 +1899,45 @@ impl DeviceRef {
         }
     }
 
+    /// Only available on (macos(13.0), ios(16.0))
+    pub fn new_mesh_render_pipeline_state_with_reflection(
+        &self,
+        descriptor: &MeshRenderPipelineDescriptorRef,
+        reflection_options: MTLPipelineOption,
+    ) -> Result<(RenderPipelineState, RenderPipelineReflection), String> {
+        unsafe {
+            let mut reflection: *mut Object = ptr::null_mut();
+            let pipeline_state: *mut MTLRenderPipelineState = try_objc! { err =>
+                msg_send![self, newRenderPipelineStateWithMeshDescriptor:descriptor
+                                                             options:reflection_options
+                                                          reflection:&mut reflection
+                                                               error:&mut err]
+            };
+
+            let state = RenderPipelineState::from_ptr(pipeline_state);
+
+            let () = msg_send![reflection, retain];
+            let reflection = RenderPipelineReflection::from_ptr(reflection as _);
+
+            Ok((state, reflection))
+        }
+    }
+
+    /// Only available on (macos(13.0), ios(16.0))
+    pub fn new_mesh_render_pipeline_state(
+        &self,
+        descriptor: &MeshRenderPipelineDescriptorRef,
+    ) -> Result<RenderPipelineState, String> {
+        unsafe {
+            let pipeline_state: *mut MTLRenderPipelineState = try_objc! { err =>
+                msg_send![self, newRenderPipelineStateWithMeshDescriptor:descriptor
+                                                               error:&mut err]
+            };
+
+            Ok(RenderPipelineState::from_ptr(pipeline_state))
+        }
+    }
+
     pub fn new_compute_pipeline_state_with_function(
         &self,
         function: &FunctionRef,
@@ -1963,6 +2023,20 @@ impl DeviceRef {
             msg_send![self, newBufferWithBytes:bytes
                                         length:length
                                        options:options]
+        }
+    }
+
+    pub fn new_counter_sample_buffer_with_descriptor(
+        &self,
+        descriptor: &CounterSampleBufferDescriptorRef,
+    ) -> Result<CounterSampleBuffer, String> {
+        unsafe {
+            let counter_sample_buffer: *mut MTLCounterSampleBuffer = try_objc! { err =>
+                msg_send![self, newCounterSampleBufferWithDescriptor: descriptor error:&mut err]
+            };
+
+            assert!(!counter_sample_buffer.is_null());
+            Ok(CounterSampleBuffer::from_ptr(counter_sample_buffer))
         }
     }
 
@@ -2113,5 +2187,38 @@ impl DeviceRef {
     /// Only available on (macos(10.14), ios(12.0), tvos(12.0))
     pub fn max_buffer_length(&self) -> NSUInteger {
         unsafe { msg_send![self, maxBufferLength] }
+    }
+
+    pub fn acceleration_structure_sizes_with_descriptor(
+        &self,
+        desc: &AccelerationStructureDescriptorRef,
+    ) -> MTLAccelerationStructureSizes {
+        unsafe { msg_send![self, accelerationStructureSizesWithDescriptor: desc] }
+    }
+
+    pub fn new_acceleration_structure_with_size(
+        &self,
+        size: NSUInteger,
+    ) -> accelerator_structure::AccelerationStructure {
+        unsafe { msg_send![self, newAccelerationStructureWithSize: size] }
+    }
+
+    pub fn sample_timestamps(&self, cpu_timestamp: &mut u64, gpu_timestamp: &mut u64) {
+        unsafe { msg_send![self, sampleTimestamps: cpu_timestamp gpuTimestamp: gpu_timestamp] }
+    }
+
+    pub fn counter_sets(&self) -> Vec<CounterSet> {
+        unsafe {
+            let counter_sets: *mut Object = msg_send![self, counterSets];
+            let count: NSUInteger = msg_send![counter_sets, count];
+            let ret = (0..count)
+                .map(|i| {
+                    let csp: *mut MTLCounterSet = msg_send![counter_sets, objectAtIndex: i];
+                    let () = msg_send![csp, retain];
+                    CounterSet::from_ptr(csp)
+                })
+                .collect();
+            ret
+        }
     }
 }

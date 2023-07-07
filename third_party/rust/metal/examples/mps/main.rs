@@ -7,8 +7,8 @@ struct Vertex {
     xyz: [f32; 3],
 }
 
-type Ray = MPSRayOriginMinDistanceDirectionMaxDistance;
-type Intersection = MPSIntersectionDistancePrimitiveIndexCoordinates;
+type Ray = mps::MPSRayOriginMinDistanceDirectionMaxDistance;
+type Intersection = mps::MPSIntersectionDistancePrimitiveIndexCoordinates;
 
 // Original example taken from https://sergeyreznik.github.io/metal-ray-tracer/part-1/index.html
 fn main() {
@@ -61,25 +61,26 @@ fn main() {
     );
 
     // Build an acceleration structure using our vertex and index buffers containing the single triangle.
-    let acceleration_structure = TriangleAccelerationStructure::from_device(&device)
+    let acceleration_structure = mps::TriangleAccelerationStructure::from_device(&device)
         .expect("Failed to create acceleration structure");
 
     acceleration_structure.set_vertex_buffer(Some(&vertex_buffer));
     acceleration_structure.set_vertex_stride(vertex_stride as u64);
     acceleration_structure.set_index_buffer(Some(&index_buffer));
-    acceleration_structure.set_index_type(MPSDataType::UInt32);
+    acceleration_structure.set_index_type(mps::MPSDataType::UInt32);
     acceleration_structure.set_triangle_count(1);
-    acceleration_structure.set_usage(MPSAccelerationStructureUsage::None);
+    acceleration_structure.set_usage(mps::MPSAccelerationStructureUsage::None);
     acceleration_structure.rebuild();
 
     let ray_intersector =
-        RayIntersector::from_device(&device).expect("Failed to create ray intersector");
+        mps::RayIntersector::from_device(&device).expect("Failed to create ray intersector");
 
     ray_intersector.set_ray_stride(mem::size_of::<Ray>() as u64);
-    ray_intersector.set_ray_data_type(MPSRayDataType::OriginMinDistanceDirectionMaxDistance);
+    ray_intersector.set_ray_data_type(mps::MPSRayDataType::OriginMinDistanceDirectionMaxDistance);
     ray_intersector.set_intersection_stride(mem::size_of::<Intersection>() as u64);
-    ray_intersector
-        .set_intersection_data_type(MPSIntersectionDataType::DistancePrimitiveIndexCoordinates);
+    ray_intersector.set_intersection_data_type(
+        mps::MPSIntersectionDataType::DistancePrimitiveIndexCoordinates,
+    );
 
     // Create a buffer to hold generated rays and intersection results
     let ray_count = 1024;
@@ -114,7 +115,7 @@ fn main() {
     // Intersect rays with triangles inside acceleration structure
     ray_intersector.encode_intersection_to_command_buffer(
         &command_buffer,
-        MPSIntersectionType::Nearest,
+        mps::MPSIntersectionType::Nearest,
         &ray_buffer,
         0,
         &intersection_buffer,

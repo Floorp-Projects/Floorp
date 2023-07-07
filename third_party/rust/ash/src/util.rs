@@ -104,7 +104,9 @@ impl<'a, T: Copy + 'a> Iterator for AlignIter<'a, T> {
 /// let words = ash::util::read_spv(&mut std::io::Cursor::new(&SPIRV[..])).unwrap();
 /// ```
 pub fn read_spv<R: io::Read + io::Seek>(x: &mut R) -> io::Result<Vec<u32>> {
+    // TODO use stream_len() once it is stabilized and remove the subsequent rewind() call
     let size = x.seek(io::SeekFrom::End(0))?;
+    x.rewind()?;
     if size % 4 != 0 {
         return Err(io::Error::new(
             io::ErrorKind::InvalidData,
@@ -119,7 +121,6 @@ pub fn read_spv<R: io::Read + io::Seek>(x: &mut R) -> io::Result<Vec<u32>> {
     // Zero-initialize the result to prevent read_exact from possibly
     // reading uninitialized memory.
     let mut result = vec![0u32; words];
-    x.seek(io::SeekFrom::Start(0))?;
     x.read_exact(unsafe {
         slice::from_raw_parts_mut(result.as_mut_ptr().cast::<u8>(), words * 4)
     })?;

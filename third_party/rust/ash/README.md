@@ -8,6 +8,7 @@ A very lightweight wrapper around Vulkan
 [![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE-MIT)
 [![LICENSE](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE-APACHE)
 [![Join the chat at https://gitter.im/MaikKlein/ash](https://badges.gitter.im/MaikKlein/ash.svg)](https://gitter.im/MaikKlein/ash?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![MSRV](https://img.shields.io/badge/rustc-1.60.0+-ab6000.svg)](https://blog.rust-lang.org/2022/04/07/Rust-1.60.0.html)
 
 ## Overview
 - [x] A true Vulkan API without compromises

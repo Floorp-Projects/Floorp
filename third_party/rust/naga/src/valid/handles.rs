@@ -9,7 +9,7 @@ use crate::{
 use crate::{Arena, UniqueArena};
 
 #[cfg(feature = "validate")]
-use super::{TypeError, ValidationError};
+use super::ValidationError;
 
 #[cfg(feature = "validate")]
 use std::{convert::TryInto, hash::Hash, num::NonZeroU32};
@@ -44,33 +44,7 @@ impl super::Validator {
 
         // NOTE: Types being first is important. All other forms of validation depend on this.
         for (this_handle, ty) in types.iter() {
-            let &crate::Type {
-                ref name,
-                ref inner,
-            } = ty;
-
-            let validate_array_size = |size| {
-                match size {
-                    crate::ArraySize::Constant(constant) => {
-                        let &crate::Constant {
-                            name: _,
-                            specialization: _,
-                            ref inner,
-                        } = constants.try_get(constant)?;
-                        if !matches!(inner, &crate::ConstantInner::Scalar { .. }) {
-                            return Err(ValidationError::Type {
-                                handle: this_handle,
-                                name: name.clone().unwrap_or_default(),
-                                source: TypeError::InvalidArraySizeConstant(constant),
-                            });
-                        }
-                    }
-                    crate::ArraySize::Dynamic => (),
-                };
-                Ok(this_handle)
-            };
-
-            match *inner {
+            match ty.inner {
                 crate::TypeInner::Scalar { .. }
                 | crate::TypeInner::Vector { .. }
                 | crate::TypeInner::Matrix { .. }
@@ -83,14 +57,9 @@ impl super::Validator {
                 crate::TypeInner::Pointer { base, space: _ } => {
                     this_handle.check_dep(base)?;
                 }
-                crate::TypeInner::Array {
-                    base,
-                    size,
-                    stride: _,
-                }
-                | crate::TypeInner::BindingArray { base, size } => {
+                crate::TypeInner::Array { base, .. }
+                | crate::TypeInner::BindingArray { base, .. } => {
                     this_handle.check_dep(base)?;
-                    validate_array_size(size)?;
                 }
                 crate::TypeInner::Struct {
                     ref members,
@@ -253,8 +222,12 @@ impl super::Validator {
             crate::Expression::AccessIndex { base, .. } => {
                 handle.check_dep(base)?;
             }
+            crate::Expression::Literal(_value) => {}
             crate::Expression::Constant(constant) => {
                 validate_constant(constant)?;
+            }
+            crate::Expression::ZeroValue(ty) => {
+                validate_type(ty)?;
             }
             crate::Expression::Splat { value, .. } => {
                 handle.check_dep(value)?;
@@ -387,7 +360,9 @@ impl super::Validator {
                     handle.check_dep(function)?;
                 }
             }
-            crate::Expression::AtomicResult { .. } | crate::Expression::RayQueryProceedResult => (),
+            crate::Expression::AtomicResult { .. }
+            | crate::Expression::RayQueryProceedResult
+            | crate::Expression::WorkGroupUniformLoadResult { .. } => (),
             crate::Expression::ArrayLength(array) => {
                 handle.check_dep(array)?;
             }
@@ -495,6 +470,11 @@ impl super::Validator {
                     crate::AtomicFunction::Exchange { compare } => validate_expr_opt(compare)?,
                 };
                 validate_expr(value)?;
+                validate_expr(result)?;
+                Ok(())
+            }
+            crate::Statement::WorkGroupUniformLoad { pointer, result } => {
+                validate_expr(pointer)?;
                 validate_expr(result)?;
                 Ok(())
             }
