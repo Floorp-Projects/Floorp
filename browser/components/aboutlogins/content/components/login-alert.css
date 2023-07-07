@@ -21,8 +21,13 @@
 }
 
 :host([variant="error"]) {
-  background-color: var(--red-70);
+  background-color: #a4000f;
   color: white;
+}
+
+:host([variant="warning"]) {
+  background: #d7b600;
+  color: black;
 }
 
 :host(login-alert) img {
@@ -48,8 +53,21 @@
   grid-area: content;
 }
 
-:host(login-breach-alert) div[slot="content"] {
+:host(login-breach-alert) div[slot="content"],
+:host(login-vulnerable-password-alert) div[slot="content"] {
   margin-block-start: 8px;
+}
+
+:host(login-vulnerable-password-alert) a {
+  font-weight: 600;
+}
+
+:host(login-vulnerable-password-alert) div[slot="content"] > a {
+  color: var(--in-content-link-color-visited);
+}
+
+:host(login-vulnerable-password-alert) a[slot="action"] {
+  color: var(--text-color-deemphasized);
 }
 
 :host(login-breach-alert) h4 {
