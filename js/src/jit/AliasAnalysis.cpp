@@ -187,8 +187,7 @@ bool AliasAnalysis::analyze() {
       def->setId(newId++);
     }
 
-    for (MInstructionIterator def(block->begin()),
-         end(block->begin(block->lastIns()));
+    for (MInstructionIterator def(block->begin()), end(block->end());
          def != end; ++def) {
       def->setId(newId++);
 
@@ -251,10 +250,6 @@ bool AliasAnalysis::analyze() {
         }
       }
     }
-
-    // Renumber the last instruction, as the analysis depends on this and the
-    // order.
-    block->lastIns()->setId(newId++);
 
     if (block->isLoopBackedge()) {
       MOZ_ASSERT(loop_->loopHeader() == block->loopHeaderOfBackedge());

@@ -1647,6 +1647,8 @@ class MTableSwitch final : public MControlInstruction,
   }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 template <size_t Arity, size_t Successors>
@@ -9839,6 +9841,8 @@ class MWasmReturn : public MAryControlInstruction<2, 0>,
  public:
   INSTRUCTION_HEADER(WasmReturn)
   TRIVIAL_NEW_WRAPPERS
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 class MWasmReturnVoid : public MAryControlInstruction<1, 0>,
@@ -9851,6 +9855,8 @@ class MWasmReturnVoid : public MAryControlInstruction<1, 0>,
  public:
   INSTRUCTION_HEADER(WasmReturnVoid)
   TRIVIAL_NEW_WRAPPERS
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 class MWasmStackArg : public MUnaryInstruction, public NoTypePolicy::Data {
