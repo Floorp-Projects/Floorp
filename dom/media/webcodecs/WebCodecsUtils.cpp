@@ -45,6 +45,7 @@ nsTArray<nsCString> GuessContainers(const nsAString& aCodec) {
 /*
  * The below are helpers to operate ArrayBuffer or ArrayBufferView.
  */
+
 template <class T>
 Result<Span<uint8_t>, nsresult> GetArrayBufferData(const T& aBuffer) {
   // Get buffer's data and length before using it.
@@ -137,6 +138,7 @@ Result<Ok, nsresult> CloneBuffer(
  * The following are utilities to convert between VideoColorSpace values to
  * gfx's values.
  */
+
 gfx::ColorRange ToColorRange(bool aIsFullRange) {
   return aIsFullRange ? gfx::ColorRange::FULL : gfx::ColorRange::LIMITED;
 }
