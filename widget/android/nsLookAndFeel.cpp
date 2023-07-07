@@ -119,10 +119,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
   switch (aID) {
       // These colors don't seem to be used for anything anymore in Mozilla
       // The CSS2 colors below are used.
-    case ColorID::MozMenubartext:
-      aColor = mSystemColors.colorForeground;
-      break;
-
     case ColorID::ThemedScrollbarThumbInactive:
     case ColorID::ThemedScrollbarThumb:
       // We don't need to care about the Active and Hover colors because Android

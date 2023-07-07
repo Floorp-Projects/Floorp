@@ -322,7 +322,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_MENU;
       break;
     case ColorID::Menutext:
-    case ColorID::MozMenubartext:
       if (UseNonNativeMenuColors(aScheme)) {
         aColor = kNonNativeMenuText;
         return NS_OK;

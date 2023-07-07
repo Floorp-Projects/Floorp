@@ -1489,15 +1489,6 @@ function getFixtureColorData() {
       hwg: "",
       cycle: false,
     },
-    {
-      authored: "-moz-menubartext",
-      name: "",
-      hex: "",
-      hsl: "",
-      rgb: "",
-      hwg: "",
-      cycle: false,
-    },
   ];
 }
 /* eslint-enable max-len */
