@@ -7,7 +7,6 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import("//build/config/ui.gni")
-import("//third_party/google_benchmark/buildconfig.gni")
 import("../webrtc.gni")
 if (is_android) {
   import("//build/config/android/rules.gni")
@@ -92,7 +91,10 @@ rtc_library("y4m_frame_generator") {
     "../api/video:video_frame",
     "../rtc_base:checks",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("frame_utils") {
@@ -499,246 +501,249 @@ rtc_library("video_test_support") {
   }
 }
 
-if (rtc_include_tests && enable_google_benchmarks) {
-  rtc_library("benchmark_main") {
-    testonly = true
-    sources = [ "benchmark_main.cc" ]
-
-    deps = [ "//third_party/google_benchmark" ]
-  }
-}
-
-if (rtc_include_tests && !build_with_chromium) {
-  rtc_library("resources_dir_flag") {
-    testonly = true
-    visibility = [ "*" ]
-    sources = [
-      "testsupport/resources_dir_flag.cc",
-      "testsupport/resources_dir_flag.h",
-    ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/flags:flag" ]
-  }
-
-  rtc_library("test_flags") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [
-      "test_flags.cc",
-      "test_flags.h",
-    ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/flags:flag" ]
-  }
-
-  rtc_library("test_main_lib") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [
-      "test_main_lib.cc",
-      "test_main_lib.h",
-    ]
-
-    deps = [
-      ":field_trial",
-      ":perf_test",
-      ":resources_dir_flag",
-      ":test_flags",
-      ":test_support",
-      "../api/test/metrics:chrome_perf_dashboard_metrics_exporter",
-      "../api/test/metrics:global_metrics_logger_and_exporter",
-      "../api/test/metrics:metrics_exporter",
-      "../api/test/metrics:metrics_set_proto_file_exporter",
-      "../api/test/metrics:print_result_proxy_metrics_exporter",
-      "../api/test/metrics:stdout_metrics_exporter",
-      "../rtc_base:checks",
-      "../rtc_base:event_tracer",
-      "../rtc_base:logging",
-      "../rtc_base:ssl",
-      "../rtc_base:threading",
-      "../system_wrappers:field_trial",
-      "../system_wrappers:metrics",
-    ]
-    absl_deps = [
-      "//third_party/abseil-cpp/absl/flags:flag",
-      "//third_party/abseil-cpp/absl/memory",
-      "//third_party/abseil-cpp/absl/strings:strings",
-      "//third_party/abseil-cpp/absl/types:optional",
-    ]
-
-    if (is_win) {
-      deps += [ "../rtc_base:win32_socket_init" ]
-    }
-  }
-
-  rtc_library("test_main") {
-    visibility = [ "*" ]
-    testonly = true
-    sources = [ "test_main.cc" ]
-
-    deps = [
-      ":test_main_lib",
-      ":test_support",
-    ]
-
-    absl_deps = [
-      "//third_party/abseil-cpp/absl/debugging:failure_signal_handler",
-      "//third_party/abseil-cpp/absl/debugging:symbolize",
-      "//third_party/abseil-cpp/absl/flags:parse",
-    ]
-  }
-
-  rtc_library("test_support_test_artifacts") {
-    testonly = true
-    sources = [
-      "testsupport/test_artifacts.cc",
-      "testsupport/test_artifacts.h",
-    ]
-    deps = [
-      ":fileutils",
-      "../rtc_base:logging",
-      "../rtc_base/system:file_wrapper",
-    ]
-    absl_deps = [
-      "//third_party/abseil-cpp/absl/flags:flag",
-      "//third_party/abseil-cpp/absl/flags:parse",
-    ]
-  }
-
-  test_support_unittests_resources = [
-    "../resources/foreman_cif_short.yuv",
-    "../resources/video_coding/frame-ethernet-ii.pcap",
-    "../resources/video_coding/frame-loopback.pcap",
-    "../resources/video_coding/pltype103.rtp",
-    "../resources/video_coding/pltype103_header_only.rtp",
-    "../resources/video_coding/ssrcs-2.pcap",
-    "../resources/video_coding/ssrcs-3.pcap",
-  ]
-
-  if (is_ios) {
-    bundle_data("test_support_unittests_bundle_data") {
+if (rtc_include_tests) {
+  if (rtc_enable_google_benchmarks) {
+    rtc_library("benchmark_main") {
       testonly = true
-      sources = test_support_unittests_resources
-      outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+      sources = [ "benchmark_main.cc" ]
+
+      deps = [ "//third_party/google_benchmark" ]
     }
   }
 
-  rtc_library("fixed_fps_video_frame_writer_adapter_test") {
-    testonly = true
-    sources = [ "testsupport/fixed_fps_video_frame_writer_adapter_test.cc" ]
-    deps = [
-      ":fixed_fps_video_frame_writer_adapter",
-      ":test_support",
-      ":video_test_support",
-      "../api/units:time_delta",
-      "../api/units:timestamp",
-      "../api/video:video_frame",
-      "../rtc_base/synchronization:mutex",
-      "time_controller",
-    ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
-  }
-
-  rtc_test("test_support_unittests") {
-    deps = [
-      ":call_config_utils",
-      ":copy_to_file_audio_capturer_unittest",
-      ":direct_transport",
-      ":fake_video_codecs",
-      ":fileutils",
-      ":fileutils_unittests",
-      ":fixed_fps_video_frame_writer_adapter_test",
-      ":frame_generator_impl",
-      ":perf_test",
-      ":rtc_expect_death",
-      ":rtp_test_utils",
-      ":run_loop",
-      ":scoped_key_value_config",
-      ":test_main",
-      ":test_support",
-      ":test_support_test_artifacts",
-      ":video_test_common",
-      ":video_test_support",
-      ":y4m_frame_generator",
-      "../api:array_view",
-      "../api:create_frame_generator",
-      "../api:create_simulcast_test_fixture_api",
-      "../api:frame_generator_api",
-      "../api:scoped_refptr",
-      "../api:simulcast_test_fixture_api",
-      "../api/task_queue:task_queue_test",
-      "../api/test/video:function_video_factory",
-      "../api/test/video:video_frame_writer",
-      "../api/units:time_delta",
-      "../api/video:encoded_image",
-      "../api/video:video_frame",
-      "../api/video_codecs:video_codecs_api",
-      "../call:video_stream_api",
-      "../common_video",
-      "../media:codec",
-      "../media:media_constants",
-      "../media:rtc_media_base",
-      "../modules/rtp_rtcp:rtp_rtcp_format",
-      "../modules/video_coding:simulcast_test_fixture_impl",
-      "../modules/video_coding:video_codec_interface",
-      "../modules/video_coding:video_coding_utility",
-      "../modules/video_coding:webrtc_h264",
-      "../modules/video_coding:webrtc_vp8",
-      "../modules/video_coding:webrtc_vp9",
-      "../rtc_base:criticalsection",
-      "../rtc_base:rtc_event",
-      "../rtc_base:rtc_task_queue",
-      "../rtc_base/synchronization:mutex",
-      "../rtc_base/system:file_wrapper",
-      "pc/e2e:e2e_unittests",
-      "pc/e2e/analyzer/video:video_analyzer_unittests",
-      "peer_scenario/tests",
-      "scenario:scenario_unittests",
-      "time_controller:time_controller",
-      "time_controller:time_controller_unittests",
-    ]
-    absl_deps = [
-      "//third_party/abseil-cpp/absl/flags:flag",
-      "//third_party/abseil-cpp/absl/strings",
-      "//third_party/abseil-cpp/absl/types:optional",
-    ]
-    sources = [
-      "call_config_utils_unittest.cc",
-      "direct_transport_unittest.cc",
-      "fake_vp8_encoder_unittest.cc",
-      "frame_generator_capturer_unittest.cc",
-      "frame_generator_unittest.cc",
-      "rtp_file_reader_unittest.cc",
-      "rtp_file_writer_unittest.cc",
-      "run_loop_unittest.cc",
-      "testsupport/ivf_video_frame_generator_unittest.cc",
-      "testsupport/perf_test_unittest.cc",
-      "testsupport/test_artifacts_unittest.cc",
-      "testsupport/video_frame_writer_unittest.cc",
-      "testsupport/y4m_frame_generator_test.cc",
-      "testsupport/y4m_frame_reader_unittest.cc",
-      "testsupport/y4m_frame_writer_unittest.cc",
-      "testsupport/yuv_frame_reader_unittest.cc",
-      "testsupport/yuv_frame_writer_unittest.cc",
-    ]
-
-    if (rtc_enable_protobuf) {
-      sources += [ "testsupport/perf_test_histogram_writer_unittest.cc" ]
-      deps += [ "//third_party/catapult/tracing/tracing:histogram" ]
+  if (!build_with_chromium) {
+    rtc_library("resources_dir_flag") {
+      testonly = true
+      visibility = [ "*" ]
+      sources = [
+        "testsupport/resources_dir_flag.cc",
+        "testsupport/resources_dir_flag.h",
+      ]
+      absl_deps = [ "//third_party/abseil-cpp/absl/flags:flag" ]
     }
 
-    data = test_support_unittests_resources
-    if (is_android) {
-      deps += [ "//testing/android/native_test:native_test_support" ]
-      shard_timeout = 900
+    rtc_library("test_flags") {
+      visibility = [ "*" ]
+      testonly = true
+      sources = [
+        "test_flags.cc",
+        "test_flags.h",
+      ]
+      absl_deps = [ "//third_party/abseil-cpp/absl/flags:flag" ]
     }
+
+    rtc_library("test_main_lib") {
+      visibility = [ "*" ]
+      testonly = true
+      sources = [
+        "test_main_lib.cc",
+        "test_main_lib.h",
+      ]
+
+      deps = [
+        ":field_trial",
+        ":perf_test",
+        ":resources_dir_flag",
+        ":test_flags",
+        ":test_support",
+        "../api/test/metrics:chrome_perf_dashboard_metrics_exporter",
+        "../api/test/metrics:global_metrics_logger_and_exporter",
+        "../api/test/metrics:metrics_exporter",
+        "../api/test/metrics:metrics_set_proto_file_exporter",
+        "../api/test/metrics:print_result_proxy_metrics_exporter",
+        "../api/test/metrics:stdout_metrics_exporter",
+        "../rtc_base:checks",
+        "../rtc_base:event_tracer",
+        "../rtc_base:logging",
+        "../rtc_base:ssl",
+        "../rtc_base:threading",
+        "../system_wrappers:field_trial",
+        "../system_wrappers:metrics",
+      ]
+      absl_deps = [
+        "//third_party/abseil-cpp/absl/flags:flag",
+        "//third_party/abseil-cpp/absl/memory",
+        "//third_party/abseil-cpp/absl/strings:strings",
+        "//third_party/abseil-cpp/absl/types:optional",
+      ]
+
+      if (is_win) {
+        deps += [ "../rtc_base:win32_socket_init" ]
+      }
+    }
+
+    rtc_library("test_main") {
+      visibility = [ "*" ]
+      testonly = true
+      sources = [ "test_main.cc" ]
+
+      deps = [
+        ":test_main_lib",
+        ":test_support",
+      ]
+
+      absl_deps = [
+        "//third_party/abseil-cpp/absl/debugging:failure_signal_handler",
+        "//third_party/abseil-cpp/absl/debugging:symbolize",
+        "//third_party/abseil-cpp/absl/flags:parse",
+      ]
+    }
+
+    rtc_library("test_support_test_artifacts") {
+      testonly = true
+      sources = [
+        "testsupport/test_artifacts.cc",
+        "testsupport/test_artifacts.h",
+      ]
+      deps = [
+        ":fileutils",
+        "../rtc_base:logging",
+        "../rtc_base/system:file_wrapper",
+      ]
+      absl_deps = [
+        "//third_party/abseil-cpp/absl/flags:flag",
+        "//third_party/abseil-cpp/absl/flags:parse",
+      ]
+    }
+
+    test_support_unittests_resources = [
+      "../resources/foreman_cif_short.yuv",
+      "../resources/video_coding/frame-ethernet-ii.pcap",
+      "../resources/video_coding/frame-loopback.pcap",
+      "../resources/video_coding/pltype103.rtp",
+      "../resources/video_coding/pltype103_header_only.rtp",
+      "../resources/video_coding/ssrcs-2.pcap",
+      "../resources/video_coding/ssrcs-3.pcap",
+    ]
 
     if (is_ios) {
-      deps += [ ":test_support_unittests_bundle_data" ]
+      bundle_data("test_support_unittests_bundle_data") {
+        testonly = true
+        sources = test_support_unittests_resources
+        outputs = [ "{{bundle_resources_dir}}/{{source_file_part}}" ]
+      }
     }
 
-    if (!is_android) {
-      # This is needed in order to avoid:
-      # undefined symbol: webrtc::videocapturemodule::VideoCaptureImpl::Create
-      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
+    rtc_library("fixed_fps_video_frame_writer_adapter_test") {
+      testonly = true
+      sources = [ "testsupport/fixed_fps_video_frame_writer_adapter_test.cc" ]
+      deps = [
+        ":fixed_fps_video_frame_writer_adapter",
+        ":test_support",
+        ":video_test_support",
+        "../api/units:time_delta",
+        "../api/units:timestamp",
+        "../api/video:video_frame",
+        "../rtc_base/synchronization:mutex",
+        "time_controller",
+      ]
+      absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    }
+
+    rtc_test("test_support_unittests") {
+      deps = [
+        ":call_config_utils",
+        ":copy_to_file_audio_capturer_unittest",
+        ":direct_transport",
+        ":fake_video_codecs",
+        ":fileutils",
+        ":fileutils_unittests",
+        ":fixed_fps_video_frame_writer_adapter_test",
+        ":frame_generator_impl",
+        ":perf_test",
+        ":rtc_expect_death",
+        ":rtp_test_utils",
+        ":run_loop",
+        ":scoped_key_value_config",
+        ":test_main",
+        ":test_support",
+        ":test_support_test_artifacts",
+        ":video_test_common",
+        ":video_test_support",
+        ":y4m_frame_generator",
+        "../api:array_view",
+        "../api:create_frame_generator",
+        "../api:create_simulcast_test_fixture_api",
+        "../api:frame_generator_api",
+        "../api:scoped_refptr",
+        "../api:simulcast_test_fixture_api",
+        "../api/task_queue:task_queue_test",
+        "../api/test/video:function_video_factory",
+        "../api/test/video:video_frame_writer",
+        "../api/units:time_delta",
+        "../api/video:encoded_image",
+        "../api/video:video_frame",
+        "../api/video_codecs:video_codecs_api",
+        "../call:video_stream_api",
+        "../common_video",
+        "../media:codec",
+        "../media:media_constants",
+        "../media:rtc_media_base",
+        "../modules/rtp_rtcp:rtp_rtcp_format",
+        "../modules/video_coding:simulcast_test_fixture_impl",
+        "../modules/video_coding:video_codec_interface",
+        "../modules/video_coding:video_coding_utility",
+        "../modules/video_coding:webrtc_h264",
+        "../modules/video_coding:webrtc_vp8",
+        "../modules/video_coding:webrtc_vp9",
+        "../rtc_base:criticalsection",
+        "../rtc_base:rtc_event",
+        "../rtc_base:rtc_task_queue",
+        "../rtc_base/synchronization:mutex",
+        "../rtc_base/system:file_wrapper",
+        "pc/e2e:e2e_unittests",
+        "pc/e2e/analyzer/video:video_analyzer_unittests",
+        "pc/e2e/analyzer/video/dvqa:dvqa_unittests",
+        "peer_scenario/tests",
+        "scenario:scenario_unittests",
+        "time_controller:time_controller",
+        "time_controller:time_controller_unittests",
+      ]
+      absl_deps = [
+        "//third_party/abseil-cpp/absl/flags:flag",
+        "//third_party/abseil-cpp/absl/strings",
+        "//third_party/abseil-cpp/absl/types:optional",
+      ]
+      sources = [
+        "call_config_utils_unittest.cc",
+        "direct_transport_unittest.cc",
+        "fake_vp8_encoder_unittest.cc",
+        "frame_generator_capturer_unittest.cc",
+        "frame_generator_unittest.cc",
+        "rtp_file_reader_unittest.cc",
+        "rtp_file_writer_unittest.cc",
+        "run_loop_unittest.cc",
+        "testsupport/ivf_video_frame_generator_unittest.cc",
+        "testsupport/perf_test_unittest.cc",
+        "testsupport/test_artifacts_unittest.cc",
+        "testsupport/video_frame_writer_unittest.cc",
+        "testsupport/y4m_frame_generator_test.cc",
+        "testsupport/y4m_frame_reader_unittest.cc",
+        "testsupport/y4m_frame_writer_unittest.cc",
+        "testsupport/yuv_frame_reader_unittest.cc",
+        "testsupport/yuv_frame_writer_unittest.cc",
+      ]
+
+      if (rtc_enable_protobuf) {
+        sources += [ "testsupport/perf_test_histogram_writer_unittest.cc" ]
+        deps += [ "//third_party/catapult/tracing/tracing:histogram" ]
+      }
+
+      data = test_support_unittests_resources
+      if (is_android) {
+        deps += [ "//testing/android/native_test:native_test_support" ]
+        shard_timeout = 900
+      }
+
+      if (is_ios) {
+        deps += [ ":test_support_unittests_bundle_data" ]
+      }
+
+      if (!is_android) {
+        # This is needed in order to avoid:
+        # undefined symbol: webrtc::videocapturemodule::VideoCaptureImpl::Create
+        deps += [ "../modules/video_capture:video_capture_internal_impl" ]
+      }
     }
   }
 }

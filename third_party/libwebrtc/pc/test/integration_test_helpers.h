@@ -173,7 +173,7 @@ void RemoveSsrcsAndKeepMsids(cricket::SessionDescription* desc);
 
 int FindFirstMediaStatsIndexByKind(
     const std::string& kind,
-    const std::vector<const webrtc::RTCInboundRTPStreamStats*>& inbound_rtps);
+    const std::vector<const webrtc::RTCInboundRtpStreamStats*>& inbound_rtps);
 
 class TaskQueueMetronome : public webrtc::Metronome {
  public:
@@ -648,7 +648,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     // Get the baseline numbers for audio_packets and audio_delay.
     auto received_stats = NewGetStats();
     auto rtp_stats =
-        received_stats->GetStatsOfType<webrtc::RTCInboundRTPStreamStats>()[0];
+        received_stats->GetStatsOfType<webrtc::RTCInboundRtpStreamStats>()[0];
     ASSERT_TRUE(rtp_stats->relative_packet_arrival_delay.is_defined());
     ASSERT_TRUE(rtp_stats->packets_received.is_defined());
     ASSERT_TRUE(rtp_stats->track_id.is_defined());
@@ -662,7 +662,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   void UpdateDelayStats(std::string tag, int desc_size) {
     auto report = NewGetStats();
     auto rtp_stats =
-        report->GetAs<webrtc::RTCInboundRTPStreamStats>(rtp_stats_id_);
+        report->GetAs<webrtc::RTCInboundRtpStreamStats>(rtp_stats_id_);
     ASSERT_TRUE(rtp_stats);
     auto delta_packets = *rtp_stats->packets_received - audio_packets_stat_;
     auto delta_rpad =
@@ -868,9 +868,9 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     video_track_sources_.emplace_back(
         rtc::make_ref_counted<webrtc::FakePeriodicVideoTrackSource>(
             config, false /* remote */));
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> track(
-        peer_connection_factory_->CreateVideoTrack(
-            rtc::CreateRandomUuid(), video_track_sources_.back().get()));
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> track =
+        peer_connection_factory_->CreateVideoTrack(video_track_sources_.back(),
+                                                   rtc::CreateRandomUuid());
     if (!local_video_renderer_) {
       local_video_renderer_.reset(
           new webrtc::FakeVideoTrackRenderer(track.get()));

@@ -43,7 +43,6 @@ using ::webrtc::test::StdoutMetricsExporter;
 using ::webrtc::test::Unit;
 
 constexpr int kAnalyzerMaxThreadsCount = 1;
-constexpr int kMaxFramesInFlightPerStream = 10;
 constexpr int kFrameWidth = 320;
 constexpr int kFrameHeight = 240;
 
@@ -52,7 +51,6 @@ DefaultVideoQualityAnalyzerOptions AnalyzerOptionsForTest() {
   options.compute_psnr = true;
   options.compute_ssim = true;
   options.adjust_cropping_before_comparing_frames = false;
-  options.max_frames_in_flight_per_stream_count = kMaxFramesInFlightPerStream;
   options.report_detailed_frame_stats = true;
   return options;
 }

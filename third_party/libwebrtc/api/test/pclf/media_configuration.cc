@@ -27,7 +27,7 @@ namespace webrtc {
 namespace webrtc_pc_e2e {
 namespace {
 
-std::string SpecToString(VideoResolution::Spec spec) {
+absl::string_view SpecToString(VideoResolution::Spec spec) {
   switch (spec) {
     case VideoResolution::Spec::kNone:
       return "None";
@@ -207,24 +207,22 @@ VideoConfig::VideoConfig(const VideoResolution& resolution)
 }
 VideoConfig::VideoConfig(size_t width, size_t height, int32_t fps)
     : width(width), height(height), fps(fps) {}
-VideoConfig::VideoConfig(std::string stream_label,
+VideoConfig::VideoConfig(absl::string_view stream_label,
                          size_t width,
                          size_t height,
                          int32_t fps)
-    : width(width),
-      height(height),
-      fps(fps),
-      stream_label(std::move(stream_label)) {}
+    : width(width), height(height), fps(fps), stream_label(stream_label) {}
 
-AudioConfig::AudioConfig(std::string stream_label)
-    : stream_label(std::move(stream_label)) {}
+AudioConfig::AudioConfig(absl::string_view stream_label)
+    : stream_label(stream_label) {}
 
-VideoCodecConfig::VideoCodecConfig(std::string name)
-    : name(std::move(name)), required_params() {}
+VideoCodecConfig::VideoCodecConfig(absl::string_view name)
+    : name(name), required_params() {}
+
 VideoCodecConfig::VideoCodecConfig(
-    std::string name,
+    absl::string_view name,
     std::map<std::string, std::string> required_params)
-    : name(std::move(name)), required_params(std::move(required_params)) {}
+    : name(name), required_params(std::move(required_params)) {}
 
 absl::optional<VideoResolution> VideoSubscription::GetMaxResolution(
     rtc::ArrayView<const VideoConfig> video_configs) {

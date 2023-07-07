@@ -185,6 +185,11 @@ class RTC_EXPORT DesktopCaptureOptions {
   void set_allow_wgc_capturer_fallback(bool allow) {
     allow_wgc_capturer_fallback_ = allow;
   }
+
+  // This flag enables 0Hz mode in combination with the WGC capturer.
+  // The flag has no effect if the allow_wgc_capturer flag is false.
+  bool allow_wgc_zero_hertz() const { return allow_wgc_zero_hertz_; }
+  void set_allow_wgc_zero_hertz(bool allow) { allow_wgc_zero_hertz_ = allow; }
 #endif  // defined(RTC_ENABLE_WIN_WGC)
 #endif  // defined(WEBRTC_WIN)
 
@@ -239,6 +244,7 @@ class RTC_EXPORT DesktopCaptureOptions {
 #if defined(RTC_ENABLE_WIN_WGC)
   bool allow_wgc_capturer_ = false;
   bool allow_wgc_capturer_fallback_ = false;
+  bool allow_wgc_zero_hertz_ = false;
 #endif
 #endif
 #if defined(WEBRTC_USE_X11)

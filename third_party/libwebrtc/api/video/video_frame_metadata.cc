@@ -152,4 +152,23 @@ void VideoFrameMetadata::SetCsrcs(std::vector<uint32_t> csrcs) {
   csrcs_ = std::move(csrcs);
 }
 
+bool operator==(const VideoFrameMetadata& lhs, const VideoFrameMetadata& rhs) {
+  return lhs.frame_type_ == rhs.frame_type_ && lhs.width_ == rhs.width_ &&
+         lhs.height_ == rhs.height_ && lhs.rotation_ == rhs.rotation_ &&
+         lhs.content_type_ == rhs.content_type_ &&
+         lhs.frame_id_ == rhs.frame_id_ &&
+         lhs.spatial_index_ == rhs.spatial_index_ &&
+         lhs.temporal_index_ == rhs.temporal_index_ &&
+         lhs.frame_dependencies_ == rhs.frame_dependencies_ &&
+         lhs.decode_target_indications_ == rhs.decode_target_indications_ &&
+         lhs.is_last_frame_in_picture_ == rhs.is_last_frame_in_picture_ &&
+         lhs.simulcast_idx_ == rhs.simulcast_idx_ && lhs.codec_ == rhs.codec_ &&
+         lhs.codec_specifics_ == rhs.codec_specifics_ &&
+         lhs.ssrc_ == rhs.ssrc_ && lhs.csrcs_ == rhs.csrcs_;
+}
+
+bool operator!=(const VideoFrameMetadata& lhs, const VideoFrameMetadata& rhs) {
+  return !(lhs == rhs);
+}
+
 }  // namespace webrtc

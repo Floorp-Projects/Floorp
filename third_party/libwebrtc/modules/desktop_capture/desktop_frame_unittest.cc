@@ -87,6 +87,23 @@ void RunTests(const TestData* tests, int num_tests) {
 
 }  // namespace
 
+TEST(DesktopFrameTest, NewFrameIsBlack) {
+  auto frame = std::make_unique<BasicDesktopFrame>(DesktopSize(10, 10));
+  EXPECT_TRUE(frame->FrameDataIsBlack());
+}
+
+TEST(DesktopFrameTest, EmptyFrameIsNotBlack) {
+  auto frame = std::make_unique<BasicDesktopFrame>(DesktopSize());
+  EXPECT_FALSE(frame->FrameDataIsBlack());
+}
+
+TEST(DesktopFrameTest, FrameDataSwitchesBetweenNonBlackAndBlack) {
+  auto frame = CreateTestFrame(DesktopRect::MakeXYWH(0, 0, 10, 10), 0xff);
+  EXPECT_FALSE(frame->FrameDataIsBlack());
+  frame->SetFrameDataToBlack();
+  EXPECT_TRUE(frame->FrameDataIsBlack());
+}
+
 TEST(DesktopFrameTest, CopyIntersectingPixelsMatchingRects) {
   const TestData tests[] = {
     {"0 origin",

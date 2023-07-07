@@ -37,6 +37,8 @@ class IvfVideoFrameGenerator : public FrameGeneratorInterface {
   void ChangeResolution(size_t width, size_t height) override;
   Resolution GetResolution() const override;
 
+  absl::optional<int> fps() const override { return absl::nullopt; }
+
  private:
   class DecodedCallback : public DecodedImageCallback {
    public:

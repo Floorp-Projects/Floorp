@@ -42,15 +42,11 @@ static const double kTimestampToMs = 1.0 / 90.0;
 
 struct RemoteBitrateEstimatorSingleStream::Detector {
   explicit Detector(int64_t last_packet_time_ms,
-                    const OverUseDetectorOptions& options,
-                    bool enable_burst_grouping,
                     const FieldTrialsView* key_value_config)
       : last_packet_time_ms(last_packet_time_ms),
-        inter_arrival(90 * kTimestampGroupLengthMs,
-                      kTimestampToMs,
-                      enable_burst_grouping),
-        estimator(options),
+        inter_arrival(90 * kTimestampGroupLengthMs, kTimestampToMs),
         detector(key_value_config) {}
+
   int64_t last_packet_time_ms;
   InterArrival inter_arrival;
   OveruseEstimator estimator;
@@ -94,7 +90,6 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
   uint32_t rtp_timestamp =
       header.timestamp + header.extension.transmissionTimeOffset;
   int64_t now_ms = clock_->TimeInMilliseconds();
-  MutexLock lock(&mutex_);
   SsrcOveruseEstimatorMap::iterator it = overuse_detectors_.find(ssrc);
   if (it == overuse_detectors_.end()) {
     // This is a new SSRC. Adding to map.
@@ -105,8 +100,7 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
     // group.
     std::pair<SsrcOveruseEstimatorMap::iterator, bool> insert_result =
         overuse_detectors_.insert(
-            std::make_pair(ssrc, new Detector(now_ms, OverUseDetectorOptions(),
-                                              true, &field_trials_)));
+            std::make_pair(ssrc, new Detector(now_ms, &field_trials_)));
     it = insert_result.first;
   }
   Detector* estimator = it->second;
@@ -156,7 +150,6 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
 }
 
 TimeDelta RemoteBitrateEstimatorSingleStream::Process() {
-  MutexLock lock(&mutex_);
   int64_t now_ms = clock_->TimeInMilliseconds();
   int64_t next_process_time_ms = last_process_time_ + process_interval_ms_;
   if (last_process_time_ == -1 || now_ms >= next_process_time_ms) {
@@ -210,12 +203,10 @@ void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t now_ms) {
 
 void RemoteBitrateEstimatorSingleStream::OnRttUpdate(int64_t avg_rtt_ms,
                                                      int64_t max_rtt_ms) {
-  MutexLock lock(&mutex_);
   remote_rate_.SetRtt(TimeDelta::Millis(avg_rtt_ms));
 }
 
 void RemoteBitrateEstimatorSingleStream::RemoveStream(unsigned int ssrc) {
-  MutexLock lock(&mutex_);
   SsrcOveruseEstimatorMap::iterator it = overuse_detectors_.find(ssrc);
   if (it != overuse_detectors_.end()) {
     delete it->second;
@@ -224,7 +215,6 @@ void RemoteBitrateEstimatorSingleStream::RemoveStream(unsigned int ssrc) {
 }
 
 DataRate RemoteBitrateEstimatorSingleStream::LatestEstimate() const {
-  MutexLock lock(&mutex_);
   if (!remote_rate_.ValidEstimate() || overuse_detectors_.empty()) {
     return DataRate::Zero();
   }

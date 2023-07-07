@@ -43,8 +43,8 @@ void CrossMediaMetricsReporter::Start(
 void CrossMediaMetricsReporter::OnStatsReports(
     absl::string_view pc_label,
     const rtc::scoped_refptr<const RTCStatsReport>& report) {
-  auto inbound_stats = report->GetStatsOfType<RTCInboundRTPStreamStats>();
-  std::map<std::string, std::vector<const RTCInboundRTPStreamStats*>>
+  auto inbound_stats = report->GetStatsOfType<RTCInboundRtpStreamStats>();
+  std::map<std::string, std::vector<const RTCInboundRtpStreamStats*>>
       sync_group_stats;
   for (const auto& stat : inbound_stats) {
     if (stat->estimated_playout_timestamp.ValueOrDefault(0.) > 0 &&
@@ -63,8 +63,8 @@ void CrossMediaMetricsReporter::OnStatsReports(
       continue;
     }
     auto sync_group = std::string(pair.first);
-    const RTCInboundRTPStreamStats* audio_stat = pair.second[0];
-    const RTCInboundRTPStreamStats* video_stat = pair.second[1];
+    const RTCInboundRtpStreamStats* audio_stat = pair.second[0];
+    const RTCInboundRtpStreamStats* video_stat = pair.second[1];
 
     RTC_CHECK(pair.second.size() == 2 && audio_stat->kind.is_defined() &&
               video_stat->kind.is_defined() &&

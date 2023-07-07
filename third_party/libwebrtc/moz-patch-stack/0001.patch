@@ -232,14 +232,14 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9
  modules/video_capture/video_capture_impl.h    |   6 +-
  .../codecs/vp9/libvpx_vp9_encoder.cc          |   2 +
  .../codecs/vp9/libvpx_vp9_encoder.h           |   4 +
+ .../video_coding/deprecated/session_info.cc   |  32 ++-
  modules/video_coding/generic_decoder.cc       |   5 +-
- modules/video_coding/session_info.cc          |  32 ++-
  test/fuzzers/rtp_packet_fuzzer.cc             |   5 +
  test/vcm_capturer.cc                          |   2 +-
  45 files changed, 652 insertions(+), 134 deletions(-)
 
 diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
-index e0ad9eb26e..8e1efc7262 100644
+index 0573e54684..40d4690397 100644
 --- a/api/rtp_headers.cc
 +++ b/api/rtp_headers.cc
 @@ -26,7 +26,8 @@ RTPHeaderExtension::RTPHeaderExtension()
@@ -253,7 +253,7 @@ index e0ad9eb26e..8e1efc7262 100644
  RTPHeaderExtension::RTPHeaderExtension(const RTPHeaderExtension& other) =
      default;
 diff --git a/api/rtp_headers.h b/api/rtp_headers.h
-index 743fd6d1b6..261c984d05 100644
+index 5d4d4190d5..9868365f24 100644
 --- a/api/rtp_headers.h
 +++ b/api/rtp_headers.h
 @@ -89,6 +89,19 @@ inline bool operator!=(const AbsoluteCaptureTime& lhs,
@@ -1012,10 +1012,10 @@ index 214eb0e463..ce747e0141 100644
  
  void ScreenCapturerWinMagnifier::Start(Callback* callback) {
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index 7983371097..983851a55b 100644
+index 75f403d6fa..c62c65506a 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtcp_sender.cc
-@@ -201,7 +201,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
+@@ -199,7 +199,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
      next_time_to_send_rtcp_ = absl::nullopt;
    } else if (method_ == RtcpMode::kOff) {
      // When switching on, reschedule the next packet
@@ -1116,10 +1116,10 @@ index 6c7dff322b..9495841984 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index 1d51d75662..41bc114efb 100644
+index bf9f757647..09a1c87eb7 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-@@ -121,6 +121,18 @@ constexpr uint8_t kPacketWithMid[] = {
+@@ -123,6 +123,18 @@ constexpr uint8_t kPacketWithMid[] = {
      0xbe, 0xde, 0x00, 0x01,
      0xb2, 'm', 'i', 'd'};
  
@@ -1138,7 +1138,7 @@ index 1d51d75662..41bc114efb 100644
  constexpr uint32_t kCsrcs[] = {0x34567890, 0x32435465};
  constexpr uint8_t kPayload[] = {'p', 'a', 'y', 'l', 'o', 'a', 'd'};
  constexpr uint8_t kPacketPaddingSize = 8;
-@@ -385,6 +397,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
+@@ -395,6 +407,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
    EXPECT_EQ(packet.GetExtension<TransportSequenceNumber>(), absl::nullopt);
  }
  
@@ -1836,26 +1836,10 @@ index 6b662ae8f9..bb871f8498 100644
  
    std::unique_ptr<ScalableVideoController> svc_controller_;
    absl::optional<ScalabilityMode> scalability_mode_;
-diff --git a/modules/video_coding/generic_decoder.cc b/modules/video_coding/generic_decoder.cc
-index b660e02b72..54467d1477 100644
---- a/modules/video_coding/generic_decoder.cc
-+++ b/modules/video_coding/generic_decoder.cc
-@@ -32,7 +32,10 @@ namespace webrtc {
- 
- namespace {
- 
--constexpr size_t kDecoderFrameMemoryLength = 10;
-+// Changed from 10 to 30 in Mozilla Bug 989944: Increase decode
-+// timestamp map to handle delayed decode on 8x10.  The map is
-+// now a deque (as of libwebrtc upstream commit 1c51ec4d74).
-+constexpr size_t kDecoderFrameMemoryLength = 30;
- 
- }
- 
-diff --git a/modules/video_coding/session_info.cc b/modules/video_coding/session_info.cc
-index 854230ae0a..e31b8b1d25 100644
---- a/modules/video_coding/session_info.cc
-+++ b/modules/video_coding/session_info.cc
+diff --git a/modules/video_coding/deprecated/session_info.cc b/modules/video_coding/deprecated/session_info.cc
+index b15dc0a9ff..837dccaeb6 100644
+--- a/modules/video_coding/deprecated/session_info.cc
++++ b/modules/video_coding/deprecated/session_info.cc
 @@ -210,16 +210,26 @@ size_t VCMSessionInfo::InsertBuffer(uint8_t* frame_buffer,
    if (h264 && h264->packetization_type == kH264StapA) {
      size_t required_length = 0;
@@ -1918,6 +1902,22 @@ index 854230ae0a..e31b8b1d25 100644
    UpdateCompleteSession();
 -
    return static_cast<int>(returnLength);
+ }
+ 
+diff --git a/modules/video_coding/generic_decoder.cc b/modules/video_coding/generic_decoder.cc
+index b660e02b72..54467d1477 100644
+--- a/modules/video_coding/generic_decoder.cc
++++ b/modules/video_coding/generic_decoder.cc
+@@ -32,7 +32,10 @@ namespace webrtc {
+ 
+ namespace {
+ 
+-constexpr size_t kDecoderFrameMemoryLength = 10;
++// Changed from 10 to 30 in Mozilla Bug 989944: Increase decode
++// timestamp map to handle delayed decode on 8x10.  The map is
++// now a deque (as of libwebrtc upstream commit 1c51ec4d74).
++constexpr size_t kDecoderFrameMemoryLength = 30;
+ 
  }
  
 diff --git a/test/fuzzers/rtp_packet_fuzzer.cc b/test/fuzzers/rtp_packet_fuzzer.cc

@@ -117,6 +117,7 @@ class MockCodedVideoSource : public CodedVideoSource {
 
 class MockDecoder : public Decoder {
  public:
+  MOCK_METHOD(void, Initialize, (), (override));
   MOCK_METHOD(void,
               Decode,
               (const EncodedImage& frame, DecodeCallback callback),
@@ -126,6 +127,7 @@ class MockDecoder : public Decoder {
 
 class MockEncoder : public Encoder {
  public:
+  MOCK_METHOD(void, Initialize, (), (override));
   MOCK_METHOD(void,
               Encode,
               (const VideoFrame& frame, EncodeCallback callback),

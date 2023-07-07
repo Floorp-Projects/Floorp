@@ -60,24 +60,13 @@ class RTC_EXPORT RTCStatsReport final
     StatsMap::const_iterator it_;
   };
 
-  // TODO(bugs.webrtc.org/13756): deprecate this in favor of Timestamp.
-  // TODO(hbos): Remove "= 0" once downstream has been updated to call with a
-  // parameter.
-  ABSL_DEPRECATED("Call Create with Timestamp instead")
-  static rtc::scoped_refptr<RTCStatsReport> Create(int64_t timestamp_us = 0);
   static rtc::scoped_refptr<RTCStatsReport> Create(Timestamp timestamp);
 
-  // TODO(bugs.webrtc.org/13756): deprecate this in favor of Timestamp.
-  ABSL_DEPRECATED("Use constructor with Timestamp instead")
-  explicit RTCStatsReport(int64_t timestamp_us);
   explicit RTCStatsReport(Timestamp timestamp);
 
   RTCStatsReport(const RTCStatsReport& other) = delete;
   rtc::scoped_refptr<RTCStatsReport> Copy() const;
 
-  // TODO(bugs.webrtc.org/13756): deprecate this in favor of Timestamp.
-  ABSL_DEPRECATED("Call timestamp() instead")
-  int64_t timestamp_us() const { return timestamp_.us_or(-1); }
   Timestamp timestamp() const { return timestamp_; }
   void AddStats(std::unique_ptr<const RTCStats> stats);
   // On success, returns a non-owning pointer to `stats`. If the stats ID is not

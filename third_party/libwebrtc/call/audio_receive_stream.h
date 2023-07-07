@@ -95,12 +95,12 @@ class AudioReceiveStreamInterface : public MediaReceiveStreamInterface {
     // https://w3c.github.io/webrtc-stats/#remoteoutboundrtpstats-dict*
     absl::optional<int64_t> last_sender_report_timestamp_ms;
     absl::optional<int64_t> last_sender_report_remote_timestamp_ms;
-    uint32_t sender_reports_packets_sent = 0;
+    uint64_t sender_reports_packets_sent = 0;
     uint64_t sender_reports_bytes_sent = 0;
     uint64_t sender_reports_reports_count = 0;
     absl::optional<TimeDelta> round_trip_time;
     TimeDelta total_round_trip_time = TimeDelta::Zero();
-    int round_trip_time_measurements;
+    int round_trip_time_measurements = 0;
   };
 
   struct Config {

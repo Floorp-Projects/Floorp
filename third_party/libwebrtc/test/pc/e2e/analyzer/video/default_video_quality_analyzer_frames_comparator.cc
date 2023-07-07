@@ -37,6 +37,7 @@ using ::webrtc::webrtc_pc_e2e::SampleMetadataKey;
 
 constexpr TimeDelta kFreezeThreshold = TimeDelta::Millis(150);
 constexpr int kMaxActiveComparisons = 10;
+constexpr int kMillisInSecond = 1000;
 
 SamplesStatsCounter::StatsSample StatsSample(
     double value,
@@ -235,12 +236,34 @@ void DefaultVideoQualityAnalyzerFramesComparator::Stop(
           Now(), /*metadata=*/{}));
     }
 
-    // Freeze Time:
-    // If there were no freezes on a video stream, add only one sample with
-    // value 0 (0ms freezes time).
     for (auto& [key, stream_stats] : stream_stats_) {
+      // Freeze Time:
+      // If there were no freezes on a video stream, add only one sample with
+      // value 0 (0ms freezes time).
       if (stream_stats.freeze_time_ms.IsEmpty()) {
         stream_stats.freeze_time_ms.AddSample(0);
+      }
+
+      // Harmonic framerate (fps):
+      // sum of interframe delays / squared sum of interframe delays.
+      // The metric aims to reflect overall experience related to smoothness of
+      // video playback and includes both freezes and pauses.
+      double sum_squared_interframe_delays_secs = 0;
+      double sum_interframe_delays_ms = 0;
+      for (const SamplesStatsCounter::StatsSample& sample :
+           stream_stats.time_between_rendered_frames_ms.GetTimedSamples()) {
+        double interframe_delay_ms = sample.value;
+        const double interframe_delays_secs =
+            interframe_delay_ms / static_cast<double>(kMillisInSecond);
+        sum_squared_interframe_delays_secs +=
+            interframe_delays_secs * interframe_delays_secs;
+
+        sum_interframe_delays_ms += interframe_delay_ms;
+      }
+      if (sum_squared_interframe_delays_secs > 0.0) {
+        stream_stats.harmonic_framerate_fps =
+            sum_interframe_delays_ms / static_cast<double>(kMillisInSecond) /
+            sum_squared_interframe_delays_secs;
       }
     }
   }
@@ -523,20 +546,21 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
 
     if (frame_stats.prev_frame_rendered_time.IsFinite() &&
         frame_stats.rendered_time.IsFinite()) {
-      TimeDelta time_between_rendered_frames =
-          frame_stats.rendered_time - frame_stats.prev_frame_rendered_time;
-      stats->time_between_rendered_frames_ms.AddSample(StatsSample(
-          time_between_rendered_frames, frame_stats.rendered_time, metadata));
+      stats->time_between_rendered_frames_ms.AddSample(
+          StatsSample(frame_stats.time_between_rendered_frames,
+                      frame_stats.rendered_time, metadata));
       TimeDelta average_time_between_rendered_frames = TimeDelta::Millis(
           stats->time_between_rendered_frames_ms.GetAverage());
-      if (time_between_rendered_frames >
+      if (frame_stats.time_between_rendered_frames >
           std::max(kFreezeThreshold + average_time_between_rendered_frames,
                    3 * average_time_between_rendered_frames)) {
-        stats->freeze_time_ms.AddSample(StatsSample(
-            time_between_rendered_frames, frame_stats.rendered_time, metadata));
+        stats->freeze_time_ms.AddSample(
+            StatsSample(frame_stats.time_between_rendered_frames,
+                        frame_stats.rendered_time, metadata));
         auto freeze_end_it =
             stream_last_freeze_end_time_.find(comparison.stats_key);
         RTC_DCHECK(freeze_end_it != stream_last_freeze_end_time_.end());
+        // TODO(bugs.webrtc.org/14995): rethink this metric for paused stream.
         stats->time_between_freezes_ms.AddSample(StatsSample(
             frame_stats.prev_frame_rendered_time - freeze_end_it->second,
             frame_stats.rendered_time, metadata));

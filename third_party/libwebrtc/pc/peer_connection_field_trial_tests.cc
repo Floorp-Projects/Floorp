@@ -237,8 +237,7 @@ TEST_F(PeerConnectionFieldTrialTest, ApplyFakeNetworkConfig) {
   auto video_track_source =
       rtc::make_ref_counted<FrameGeneratorCapturerVideoTrackSource>(
           config, clock_, /*is_screencast=*/false);
-  caller->AddTrack(
-      pc_factory_->CreateVideoTrack("v", video_track_source.get()));
+  caller->AddTrack(pc_factory_->CreateVideoTrack(video_track_source, "v"));
   WrapperPtr callee = CreatePeerConnection();
 
   ASSERT_TRUE(callee->SetRemoteDescription(caller->CreateOfferAndSetAsLocal()));
@@ -266,8 +265,8 @@ TEST_F(PeerConnectionFieldTrialTest, ApplyFakeNetworkConfig) {
   // Send packets for kDefaultTimeoutMs
   WAIT(false, kDefaultTimeoutMs);
 
-  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtp_stats =
-      caller->GetStats()->GetStatsOfType<RTCOutboundRTPStreamStats>();
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtp_stats =
+      caller->GetStats()->GetStatsOfType<RTCOutboundRtpStreamStats>();
   ASSERT_GE(outbound_rtp_stats.size(), 1u);
   ASSERT_TRUE(outbound_rtp_stats[0]->target_bitrate.is_defined());
   // Link capacity is limited to 500k, so BWE is expected to be close to 500k.

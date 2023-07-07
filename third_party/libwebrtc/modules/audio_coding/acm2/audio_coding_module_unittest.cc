@@ -85,8 +85,6 @@ class RtpData {
     rtp_header->markerBit = false;
     rtp_header->ssrc = 0x1234;
     rtp_header->numCSRCs = 0;
-
-    rtp_header->payload_type_frequency = kSampleRateHz;
   }
 
   void Forward(RTPHeader* rtp_header) {

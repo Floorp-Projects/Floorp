@@ -58,15 +58,13 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {
   virtual ~TransformableVideoFrameInterface() = default;
   virtual bool IsKeyFrame() const = 0;
 
-  // Returns data needed in the frame transformation logic; for example,
-  // when the transformation applied to the frame is encryption/decryption, the
-  // additional data holds the serialized generic frame descriptor extension
-  // calculated in webrtc::RtpDescriptorAuthentication.
-  // This has been superseeded by GetMetadata() and will be removed shortly.
-  [[deprecated("https://crbug.com/1414370")]] virtual std::vector<uint8_t>
-  GetAdditionalData() const = 0;
+  // The returned const ref may become invalid due to later SetMetadata calls,
+  // or other modifications. Use Metadata() instead.
+  [[deprecated("Use Metadata() instead")]] virtual const VideoFrameMetadata&
+  GetMetadata() const = 0;
 
-  virtual const VideoFrameMetadata& GetMetadata() const = 0;
+  virtual VideoFrameMetadata Metadata() const = 0;
+
   // TODO(https://crbug.com/webrtc/14709): Make pure virtual when Chromium MOCK
   // has implemented this.
   virtual void SetMetadata(const VideoFrameMetadata&) {}

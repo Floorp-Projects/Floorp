@@ -248,11 +248,28 @@ int32_t AudioDeviceBuffer::SetRecordedBuffer(
   }
 
   if (capture_timestamp_ns) {
-    capture_timestamp_ns_ =
-        rtc::kNumNanosecsPerMicrosec *
-        timestamp_aligner_.TranslateTimestamp(
-            *capture_timestamp_ns / rtc::kNumNanosecsPerMicrosec,
-            rtc::TimeMicros());
+    int64_t align_offsync_estimation_time = rtc::TimeMicros();
+    if (align_offsync_estimation_time -
+            rtc::TimestampAligner::kMinFrameIntervalUs >
+        align_offsync_estimation_time_) {
+      align_offsync_estimation_time_ = align_offsync_estimation_time;
+      capture_timestamp_ns_ =
+          rtc::kNumNanosecsPerMicrosec *
+          timestamp_aligner_.TranslateTimestamp(
+              *capture_timestamp_ns / rtc::kNumNanosecsPerMicrosec,
+              align_offsync_estimation_time);
+    } else {
+      // The Timestamp aligner is designed to prevent timestamps that are too
+      // similar, and produces warnings if it is called to often. We do not care
+      // about that here, so we do this workaround. If we where to call the
+      // aligner within a millisecond, we instead call this, that do not update
+      // the clock offset estimation. This get us timestamps without generating
+      // warnings, but could generate two timestamps within a millisecond.
+      capture_timestamp_ns_ =
+          rtc::kNumNanosecsPerMicrosec *
+          timestamp_aligner_.TranslateTimestamp(*capture_timestamp_ns /
+                                                rtc::kNumNanosecsPerMicrosec);
+    }
   }
   // Derive a new level value twice per second and check if it is non-zero.
   int16_t max_abs = 0;

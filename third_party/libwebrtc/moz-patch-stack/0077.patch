@@ -166,7 +166,7 @@ index f5011c46ef..508c36eaaf 100644
  }
  
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 9c47e2ccac..c15a7c4a28 100644
+index 289c8990bb..61ee86ee35 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -44,6 +44,7 @@
@@ -177,7 +177,7 @@ index 9c47e2ccac..c15a7c4a28 100644
  #include "system_wrappers/include/metrics.h"
  #include "system_wrappers/include/ntp_time.h"
  
-@@ -1212,6 +1213,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
+@@ -1210,6 +1211,9 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
                          packet_infos_.upper_bound(unwrapped_rtp_seq_num));
      uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
      if (num_packets_cleared > 0) {
@@ -188,10 +188,10 @@ index 9c47e2ccac..c15a7c4a28 100644
      }
      reference_finder_->ClearTo(seq_num);
 diff --git a/video/video_stream_buffer_controller.cc b/video/video_stream_buffer_controller.cc
-index 7e44eff39a..37724a8338 100644
+index cc2b7854cf..b543103c7b 100644
 --- a/video/video_stream_buffer_controller.cc
 +++ b/video/video_stream_buffer_controller.cc
-@@ -28,6 +28,7 @@
+@@ -30,6 +30,7 @@
  #include "rtc_base/checks.h"
  #include "rtc_base/logging.h"
  #include "rtc_base/thread_annotations.h"
@@ -199,7 +199,7 @@ index 7e44eff39a..37724a8338 100644
  #include "video/frame_decode_scheduler.h"
  #include "video/frame_decode_timing.h"
  #include "video/task_queue_frame_decode_scheduler.h"
-@@ -139,6 +140,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
+@@ -141,6 +142,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
      std::unique_ptr<EncodedFrame> frame) {
    RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
    FrameMetadata metadata(*frame);
@@ -209,7 +209,7 @@ index 7e44eff39a..37724a8338 100644
    int complete_units = buffer_->GetTotalNumberOfContinuousTemporalUnits();
    if (buffer_->InsertFrame(std::move(frame))) {
      RTC_DCHECK(metadata.receive_time) << "Frame receive time must be set!";
-@@ -149,6 +153,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
+@@ -151,6 +155,9 @@ absl::optional<int64_t> VideoStreamBufferController::InsertFrame(
                                   *metadata.receive_time);
      }
      if (complete_units < buffer_->GetTotalNumberOfContinuousTemporalUnits()) {

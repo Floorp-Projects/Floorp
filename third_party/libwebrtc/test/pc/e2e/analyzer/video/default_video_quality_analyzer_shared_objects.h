@@ -22,15 +22,15 @@
 
 #include "absl/types/optional.h"
 #include "api/numerics/samples_stats_counter.h"
+#include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "rtc_base/strings/string_builder.h"
 
 namespace webrtc {
 
 // WebRTC will request a key frame after 3 seconds if no frames were received.
-// We assume max frame rate ~60 fps, so 270 frames will cover max freeze without
-// key frame request.
-constexpr size_t kDefaultMaxFramesInFlightPerStream = 270;
+// Uses 3x time to account for possible freezes which we still want to account.
+constexpr TimeDelta kDefaultMaxFramesStorageDuration = TimeDelta::Seconds(9);
 
 class SamplesRateCounter {
  public:
@@ -165,6 +165,8 @@ struct StreamStats {
   std::vector<StreamCodecInfo> encoders;
   // Vectors of decoders used for this stream by receiving client.
   std::vector<StreamCodecInfo> decoders;
+
+  double harmonic_framerate_fps = 0;
 };
 
 struct AnalyzerStats {
@@ -270,11 +272,9 @@ struct DefaultVideoQualityAnalyzerOptions {
   // significantly slows down the comparison, so turn it on only when it is
   // needed.
   bool adjust_cropping_before_comparing_frames = false;
-  // Amount of frames that are queued in the DefaultVideoQualityAnalyzer from
-  // the point they were captured to the point they were rendered on all
-  // receivers per stream.
-  size_t max_frames_in_flight_per_stream_count =
-      kDefaultMaxFramesInFlightPerStream;
+  // Amount of time for which DefaultVideoQualityAnalyzer will store frames
+  // which were captured but not yet rendered on all receivers per stream.
+  TimeDelta max_frames_storage_duration = kDefaultMaxFramesStorageDuration;
   // If true, the analyzer will expect peers to receive their own video streams.
   bool enable_receive_own_stream = false;
 };

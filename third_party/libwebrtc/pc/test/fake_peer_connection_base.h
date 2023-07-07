@@ -255,10 +255,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
     return {};
   }
 
-  sigslot::signal1<SctpDataChannel*>& SignalSctpDataChannelCreated() override {
-    return SignalSctpDataChannelCreated_;
-  }
-
   absl::optional<std::string> sctp_transport_name() const override {
     return absl::nullopt;
   }
@@ -325,6 +321,10 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   LegacyStatsCollector* legacy_stats() override { return nullptr; }
   PeerConnectionObserver* Observer() const override { return nullptr; }
   bool GetSctpSslRole(rtc::SSLRole* role) override { return false; }
+  absl::optional<rtc::SSLRole> GetSctpSslRole_n(
+      absl::optional<bool> is_caller) override {
+    return absl::nullopt;
+  }
   PeerConnectionInterface::IceConnectionState ice_connection_state_internal()
       override {
     return PeerConnectionInterface::IceConnectionState::kIceConnectionNew;
@@ -371,7 +371,6 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
 
  protected:
   webrtc::test::ScopedKeyValueConfig field_trials_;
-  sigslot::signal1<SctpDataChannel*> SignalSctpDataChannelCreated_;
 };
 
 }  // namespace webrtc

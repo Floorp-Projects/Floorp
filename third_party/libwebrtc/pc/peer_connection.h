@@ -283,11 +283,6 @@ class PeerConnection : public PeerConnectionInternal,
     return rtp_manager()->transceivers()->List();
   }
 
-  sigslot::signal1<SctpDataChannel*>& SignalSctpDataChannelCreated() override {
-    RTC_DCHECK_RUN_ON(signaling_thread());
-    return data_channel_controller_.SignalSctpDataChannelCreated();
-  }
-
   std::vector<DataChannelStats> GetDataChannelStats() const override;
 
   absl::optional<std::string> sctp_transport_name() const override;
@@ -320,8 +315,12 @@ class PeerConnection : public PeerConnectionInternal,
   }
   // Get current SSL role used by SCTP's underlying transport.
   bool GetSctpSslRole(rtc::SSLRole* role) override;
-  // Handler for the "channel closed" signal
-  void OnSctpDataChannelClosed(DataChannelInterface* channel) override;
+  absl::optional<rtc::SSLRole> GetSctpSslRole_n(
+      absl::optional<bool> is_caller) override;
+
+  void OnSctpDataChannelStateChanged(
+      DataChannelInterface* channel,
+      DataChannelInterface::DataState state) override;
 
   bool ShouldFireNegotiationNeededEvent(uint32_t event_id) override;
 

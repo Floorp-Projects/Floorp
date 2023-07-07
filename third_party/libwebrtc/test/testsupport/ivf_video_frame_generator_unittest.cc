@@ -164,6 +164,12 @@ class IvfVideoFrameGeneratorTest : public ::testing::Test {
 
 }  // namespace
 
+TEST_F(IvfVideoFrameGeneratorTest, DoesNotKnowFps) {
+  CreateTestVideoFile(VideoCodecType::kVideoCodecVP8, VP8Encoder::Create());
+  IvfVideoFrameGenerator generator(file_name_);
+  EXPECT_EQ(generator.fps(), absl::nullopt);
+}
+
 TEST_F(IvfVideoFrameGeneratorTest, Vp8) {
   CreateTestVideoFile(VideoCodecType::kVideoCodecVP8, VP8Encoder::Create());
   IvfVideoFrameGenerator generator(file_name_);

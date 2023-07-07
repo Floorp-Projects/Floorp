@@ -52,6 +52,9 @@ constexpr TimeDelta kEncoderTimeOut = TimeDelta::Seconds(2);
 constexpr double kVideoHysteresis = 1.2;
 constexpr double kScreenshareHysteresis = 1.35;
 
+constexpr int kMinDefaultAv1BitrateBps =
+    15000;  // This value acts as an absolute minimum AV1 bitrate limit.
+
 // When send-side BWE is used a stricter 1.1x pacing factor is used, rather than
 // the 2.5x which is used with receive-side BWE. Provides a more careful
 // bandwidth rampup with less risk of overshoots causing adverse effects like
@@ -192,6 +195,13 @@ uint32_t GetInitialEncoderMaxBitrate(int initial_encoder_max_bitrate) {
                      << initial_encoder_max_bitrate << " which is <= 0!";
   RTC_DLOG(LS_INFO) << "Using default encoder max bitrate = 10 Mbps";
   return kFallbackMaxBitrateBps;
+}
+
+int GetDefaultMinVideoBitrateBps(VideoCodecType codec_type) {
+  if (codec_type == VideoCodecType::kVideoCodecAV1) {
+    return kMinDefaultAv1BitrateBps;
+  }
+  return kDefaultMinVideoBitrateBps;
 }
 
 }  // namespace
@@ -485,7 +495,8 @@ void VideoSendStreamImpl::OnEncoderConfigurationChanged(
     encoder_min_bitrate_bps_ =
         experimental_min_bitrate
             ? experimental_min_bitrate->bps()
-            : std::max(streams[0].min_bitrate_bps, kDefaultMinVideoBitrateBps);
+            : std::max(streams[0].min_bitrate_bps,
+                       GetDefaultMinVideoBitrateBps(codec_type));
 
     encoder_max_bitrate_bps_ = 0;
     double stream_bitrate_priority_sum = 0;

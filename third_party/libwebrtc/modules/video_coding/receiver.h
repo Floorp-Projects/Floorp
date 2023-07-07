@@ -15,11 +15,11 @@
 #include <vector>
 
 #include "api/field_trials_view.h"
-#include "modules/video_coding/event_wrapper.h"
+#include "modules/video_coding/deprecated/event_wrapper.h"
+#include "modules/video_coding/deprecated/packet.h"
 #include "modules/video_coding/include/video_coding.h"
 #include "modules/video_coding/include/video_coding_defines.h"
 #include "modules/video_coding/jitter_buffer.h"
-#include "modules/video_coding/packet.h"
 #include "modules/video_coding/timing/timing.h"
 
 namespace webrtc {

@@ -516,6 +516,8 @@ class FakeVideoMediaChannel : public RtpHelper<VideoMediaChannel> {
   webrtc::RtcpMode SendCodecRtcpMode() const override {
     return webrtc::RtcpMode::kCompound;
   }
+  void SetSendCodecChangedCallback(
+      absl::AnyInvocable<void()> callback) override {}
   bool SendCodecHasLntf() const override { return false; }
   bool SendCodecHasNack() const override { return false; }
   absl::optional<int> SendCodecRtxTime() const override {

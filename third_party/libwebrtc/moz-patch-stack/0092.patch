@@ -1,146 +1,100 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 20 Apr 2023 09:59:00 -0500
-Subject: Bug 1828517 - (fix-794d599741) account for moved files in BUILD.gn
- that we don't want to build.
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 10 May 2023 07:06:00 +0000
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit 32b64e895c.
+ r=webrtc-reviewers,mjf
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/4a969f6709183d4f55215adaffb8a52b790a8492
+Upstream commit: https://webrtc.googlesource.com/src/+/32b64e895c0231fe6891a8f6335d66f1dad4f1f5
+    Improve ergonomics of dealing with pixel formats in v4l2 camera backend
+
+    Bug: webrtc:14830
+    Change-Id: Ib49bf65895fe008e75223abb03867d412c1b5a60
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291531
+    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Reviewed-by: Stefan Holmer <stefan@webrtc.org>
+    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39976}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177231
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/f0afe1a1097f3e02d59fd06d5e83d00a0f4d69ae
 ---
- api/BUILD.gn   | 10 ++++++++++
- media/BUILD.gn | 20 ++++++++++----------
- 2 files changed, 20 insertions(+), 10 deletions(-)
+ .../video_capture/linux/device_info_v4l2.cc   |  4 ++-
+ .../video_capture/linux/video_capture_v4l2.cc | 31 +++++++++----------
+ 2 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 31213c6460..0ddeead669 100644
---- a/api/BUILD.gn
-+++ b/api/BUILD.gn
-@@ -175,6 +175,10 @@ rtc_source_set("ice_transport_interface") {
- }
+diff --git a/modules/video_capture/linux/device_info_v4l2.cc b/modules/video_capture/linux/device_info_v4l2.cc
+index 7651dd6651..f854c2ccc7 100644
+--- a/modules/video_capture/linux/device_info_v4l2.cc
++++ b/modules/video_capture/linux/device_info_v4l2.cc
+@@ -391,10 +391,10 @@ int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
+   video_fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+   video_fmt.fmt.pix.sizeimage = 0;
  
- rtc_library("dtls_transport_interface") {
-+# Previously, Mozilla has tried to limit including this dep, but as
-+# upstream changes, it requires whack-a-mole.  Making it an empty
-+# definition has the same effect, but only requires one change.
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
+-  int totalFmts = 5;
+   unsigned int videoFormats[] = {V4L2_PIX_FMT_MJPEG, V4L2_PIX_FMT_YUV420,
+                                  V4L2_PIX_FMT_YUYV, V4L2_PIX_FMT_UYVY,
+                                  V4L2_PIX_FMT_NV12};
++  constexpr int totalFmts = sizeof(videoFormats) / sizeof(unsigned int);
  
-   sources = [
-@@ -191,6 +195,7 @@ rtc_library("dtls_transport_interface") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
- }
-+}
+   int sizes = 13;
+   unsigned int size[][2] = {{128, 96},   {160, 120},  {176, 144},  {320, 240},
+@@ -424,6 +424,8 @@ int32_t DeviceInfoV4l2::FillCapabilities(int fd) {
+             cap.videoType = VideoType::kUYVY;
+           } else if (videoFormats[fmts] == V4L2_PIX_FMT_NV12) {
+             cap.videoType = VideoType::kNV12;
++          } else {
++            RTC_DCHECK_NOTREACHED();
+           }
  
- rtc_library("dtmf_sender_interface") {
-   visibility = [ "*" ]
-@@ -203,6 +208,10 @@ rtc_library("dtmf_sender_interface") {
- }
+           // get fps of current camera mode
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index c7dcb722bc..baf1916331 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -130,23 +130,18 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   // Supported video formats in preferred order.
+   // If the requested resolution is larger than VGA, we prefer MJPEG. Go for
+   // I420 otherwise.
+-  const int nFormats = 6;
+-  unsigned int fmts[nFormats];
+-  if (capability.width > 640 || capability.height > 480) {
+-    fmts[0] = V4L2_PIX_FMT_MJPEG;
+-    fmts[1] = V4L2_PIX_FMT_YUV420;
+-    fmts[2] = V4L2_PIX_FMT_YUYV;
+-    fmts[3] = V4L2_PIX_FMT_UYVY;
+-    fmts[4] = V4L2_PIX_FMT_NV12;
+-    fmts[5] = V4L2_PIX_FMT_JPEG;
+-  } else {
+-    fmts[0] = V4L2_PIX_FMT_YUV420;
+-    fmts[1] = V4L2_PIX_FMT_YUYV;
+-    fmts[2] = V4L2_PIX_FMT_UYVY;
+-    fmts[3] = V4L2_PIX_FMT_NV12;
+-    fmts[4] = V4L2_PIX_FMT_MJPEG;
+-    fmts[5] = V4L2_PIX_FMT_JPEG;
+-  }
++  unsigned int hdFmts[] = {
++      V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YUYV,
++      V4L2_PIX_FMT_UYVY,   V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_JPEG,
++  };
++  unsigned int sdFmts[] = {
++      V4L2_PIX_FMT_YUV420, V4L2_PIX_FMT_YUYV,   V4L2_PIX_FMT_UYVY,
++      V4L2_PIX_FMT_NV12,   V4L2_PIX_FMT_MJPEG,  V4L2_PIX_FMT_JPEG,
++  };
++  const bool isHd = capability.width > 640 || capability.height > 480;
++  unsigned int* fmts = isHd ? hdFmts : sdFmts;
++  static_assert(sizeof(hdFmts) == sizeof(sdFmts));
++  constexpr int nFormats = sizeof(hdFmts) / sizeof(unsigned int);
  
- rtc_library("rtp_sender_interface") {
-+# Previously, Mozilla has tried to limit including this dep, but as
-+# upstream changes, it requires whack-a-mole.  Making it an empty
-+# definition has the same effect, but only requires one change.
-+if (!build_with_mozilla) {
-   visibility = [ "*" ]
+   // Enumerate image formats.
+   struct v4l2_fmtdesc fmt;
+@@ -195,6 +190,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   else if (video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG ||
+            video_fmt.fmt.pix.pixelformat == V4L2_PIX_FMT_JPEG)
+     _captureVideoType = VideoType::kMJPEG;
++  else
++    RTC_DCHECK_NOTREACHED();
  
-   sources = [
-@@ -224,6 +233,7 @@ rtc_library("rtp_sender_interface") {
-     "video_codecs:video_codecs_api",
-   ]
- }
-+}
- 
- rtc_library("rtp_sender_setparameters_callback") {
-   visibility = [ "*" ]
-diff --git a/media/BUILD.gn b/media/BUILD.gn
-index 80662563b0..36c3aa9d1c 100644
---- a/media/BUILD.gn
-+++ b/media/BUILD.gn
-@@ -154,23 +154,14 @@ rtc_library("rtc_media_base") {
-       "base/audio_source.h",
-       "base/delayable.h",
-       "base/media_channel.h",
--      "base/media_channel_impl.cc",
--      "base/media_channel_impl.h",
-       "base/media_engine.cc",
-       "base/media_engine.h",
--      "base/rid_description.cc",
--      "base/rid_description.h",
--      "base/rtp_utils.cc",
--      "base/rtp_utils.h",
--      "base/stream_params.cc",
--      "base/stream_params.h",
--      "base/turn_utils.cc",
--      "base/turn_utils.h",
-     ]
-   }
- }
- 
- rtc_library("media_channel_impl") {
-+if (!build_with_mozilla) {
-   sources = [
-     "base/media_channel_impl.cc",
-     "base/media_channel_impl.h",
-@@ -219,6 +210,7 @@ rtc_library("media_channel_impl") {
-     "//third_party/abseil-cpp/absl/types:optional",
-   ]
- }
-+}
- 
- rtc_source_set("media_channel") {
-   sources = [ "base/media_channel.h" ]
-@@ -292,6 +284,7 @@ rtc_library("codec") {
- }
- 
- rtc_library("rtp_utils") {
-+if (!build_with_mozilla) {
-   sources = [
-     "base/rtp_utils.cc",
-     "base/rtp_utils.h",
-@@ -308,8 +301,10 @@ rtc_library("rtp_utils") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
- }
-+}
- 
- rtc_library("stream_params") {
-+if (!build_with_mozilla) {
-   sources = [
-     "base/stream_params.cc",
-     "base/stream_params.h",
-@@ -322,6 +317,7 @@ rtc_library("stream_params") {
-   ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/algorithm:container" ]
- }
-+}
- 
- rtc_library("media_constants") {
-   sources = [
-@@ -332,6 +328,7 @@ rtc_library("media_constants") {
- }
- 
- rtc_library("turn_utils") {
-+if (!build_with_mozilla) {
-   sources = [
-     "base/turn_utils.cc",
-     "base/turn_utils.h",
-@@ -342,14 +339,17 @@ rtc_library("turn_utils") {
-     "../rtc_base/system:rtc_export",
-   ]
- }
-+}
- 
- rtc_library("rid_description") {
-+if (!build_with_mozilla) {
-   sources = [
-     "base/rid_description.cc",
-     "base/rid_description.h",
-   ]
-   deps = []
- }
-+}
- 
- rtc_library("rtc_simulcast_encoder_adapter") {
-   visibility = [ "*" ]
+   // set format and frame size now
+   if (ioctl(_deviceFd, VIDIOC_S_FMT, &video_fmt) < 0) {
 -- 
 2.34.1
 

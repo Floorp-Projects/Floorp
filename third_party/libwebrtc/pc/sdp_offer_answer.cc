@@ -694,7 +694,7 @@ cricket::MediaDescriptionOptions GetMediaDescriptionOptionsForTransceiver(
   media_description_options.codec_preferences =
       transceiver->codec_preferences();
   media_description_options.header_extensions =
-      transceiver->HeaderExtensionsToOffer();
+      transceiver->GetHeaderExtensionsToNegotiate();
   // This behavior is specified in JSEP. The gist is that:
   // 1. The MSID is included if the RtpTransceiver's direction is sendonly or
   //    sendrecv.
@@ -856,7 +856,7 @@ class SdpOfferAnswerHandler::RemoteDescriptionOperation {
       std::string error_message =
           GetSetDescriptionErrorMessage(cricket::CS_REMOTE, type_, error_);
       RTC_LOG(LS_ERROR) << error_message;
-      error_.set_message(std::move(error_message));
+      error_.set_message(error_message);
     }
 
     observer_->OnSetRemoteDescriptionComplete(error_);
@@ -1739,10 +1739,7 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
 
   // If setting the description decided our SSL role, allocate any necessary
   // SCTP sids.
-  rtc::SSLRole role;
-  if (pc_->GetSctpSslRole(&role)) {
-    data_channel_controller()->AllocateSctpSids(role);
-  }
+  AllocateSctpSids();
 
   if (IsUnifiedPlan()) {
     if (ConfiguredForMedia()) {
@@ -1990,10 +1987,7 @@ void SdpOfferAnswerHandler::ApplyRemoteDescription(
 
   // If setting the description decided our SSL role, allocate any necessary
   // SCTP sids.
-  rtc::SSLRole role;
-  if (pc_->GetSctpSslRole(&role)) {
-    data_channel_controller()->AllocateSctpSids(role);
-  }
+  AllocateSctpSids();
 
   if (operation->unified_plan()) {
     ApplyRemoteDescriptionUpdateTransceiverState(operation->type());
@@ -3231,6 +3225,28 @@ void SdpOfferAnswerHandler::UpdateNegotiationNeeded() {
   GenerateNegotiationNeededEvent();
 }
 
+void SdpOfferAnswerHandler::AllocateSctpSids() {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  if (!local_description() || !remote_description()) {
+    RTC_DLOG(LS_VERBOSE)
+        << "Local and Remote descriptions must be applied to get the "
+           "SSL Role of the SCTP transport.";
+    return;
+  }
+
+  absl::optional<rtc::SSLRole> role =
+      network_thread()->BlockingCall([this, is_caller = is_caller()] {
+        RTC_DCHECK_RUN_ON(network_thread());
+        return pc_->GetSctpSslRole_n(is_caller);
+      });
+
+  if (role) {
+    // TODO(webrtc:11547): Make this call on the network thread too once
+    // `AllocateSctpSids` has been updated.
+    data_channel_controller()->AllocateSctpSids(*role);
+  }
+}
+
 bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {
   RTC_DCHECK_RUN_ON(signaling_thread());
   // 1. If any implementation-specific negotiation is required, as described
@@ -3249,7 +3265,7 @@ bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {
 
   // 4. If connection has created any RTCDataChannels, and no m= section in
   // description has been negotiated yet for data, return true.
-  if (data_channel_controller()->HasSctpDataChannels()) {
+  if (data_channel_controller()->HasDataChannels()) {
     if (!cricket::GetFirstDataContent(description->description()->contents()))
       return true;
   }
@@ -3957,7 +3973,7 @@ void SdpOfferAnswerHandler::GetOptionsForPlanBOffer(
     const PeerConnectionInterface::RTCOfferAnswerOptions& offer_answer_options,
     cricket::MediaSessionOptions* session_options) {
   bool offer_new_data_description =
-      data_channel_controller()->HasDataChannels();
+      data_channel_controller()->HasUsedDataChannels();
   bool send_audio = false;
   bool send_video = false;
   bool recv_audio = false;
@@ -4174,9 +4190,9 @@ void SdpOfferAnswerHandler::GetOptionsForUnifiedPlanOffer(
       transceiver->set_mline_index(mline_index);
     }
   }
-  // Lastly, add a m-section if we have local data channels and an m section
-  // does not already exist.
-  if (!pc_->GetDataMid() && data_channel_controller()->HasDataChannels()) {
+  // Lastly, add a m-section if we have requested local data channels and an
+  // m section does not already exist.
+  if (!pc_->GetDataMid() && data_channel_controller()->HasUsedDataChannels()) {
     session_options->media_description_options.push_back(
         GetMediaDescriptionOptionsForActiveData(
             mid_generator_.GenerateString()));

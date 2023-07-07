@@ -1,269 +1,177 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Fri, 31 Mar 2023 16:21:00 -0500
-Subject: Bug 1822194 - (fix-acabb3641b) Break the new SetParametersCallback
- stuff into stand-alone files.
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 20 Apr 2023 14:52:00 -0500
+Subject: Bug 1828517 - (fix-a138c6c8a5) handle file moves in BUILD.gn
 
-acabb3641b from upstream added a callback mechanism to allow failures to be
-propagated back to RTCRtpSender.setParameters. Unfortunately, this callback
-mechanism was (needlessly) tightly coupled to libwebrtc's implementation of
-RTCRtpSender, and also their media channel code. This introduced a lot of
-unnecessary dependencies throughout libwebrtc, that spilled into our code as
-well.
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/59232687efa00e5f7b7bd3d6befca129149e2bf5
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/cf7e333da17689b3c115a6ffd07fab042bc5f086
 ---
- api/BUILD.gn                             | 14 +++++++++++-
- api/rtp_sender_interface.h               |  4 ++--
- api/rtp_sender_setparameters_callback.cc | 27 +++++++++++++++++++++++
- api/rtp_sender_setparameters_callback.h  | 28 ++++++++++++++++++++++++
- call/BUILD.gn                            |  4 ++--
- call/audio_send_stream.h                 |  2 +-
- call/video_send_stream.h                 |  2 +-
- media/BUILD.gn                           |  2 +-
- media/base/media_channel.h               |  4 ----
- media/base/media_channel_impl.cc         | 13 -----------
- video/BUILD.gn                           |  4 ++--
- 11 files changed, 77 insertions(+), 27 deletions(-)
- create mode 100644 api/rtp_sender_setparameters_callback.cc
- create mode 100644 api/rtp_sender_setparameters_callback.h
+ rtc_base/BUILD.gn | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 654359ed37..31213c6460 100644
---- a/api/BUILD.gn
-+++ b/api/BUILD.gn
-@@ -214,8 +214,8 @@ rtc_library("rtp_sender_interface") {
-     ":dtmf_sender_interface",
-     ":frame_transformer_interface",
-     ":media_stream_interface",
--    ":rtc_error",
-     ":rtp_parameters",
-+    ":rtp_sender_setparameters_callback",
-     ":scoped_refptr",
-     "../rtc_base:checks",
-     "../rtc_base:refcount",
-@@ -223,6 +223,18 @@ rtc_library("rtp_sender_interface") {
-     "crypto:frame_encryptor_interface",
-     "video_codecs:video_codecs_api",
-   ]
-+}
-+
-+rtc_library("rtp_sender_setparameters_callback") {
-+  visibility = [ "*" ]
-+
-+  sources = [
-+    "rtp_sender_setparameters_callback.cc",
-+    "rtp_sender_setparameters_callback.h",
-+  ]
-+  deps = [
-+    ":rtc_error",
-+  ]
-   absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
+diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
+index e474ba8202..8f1be481ef 100644
+--- a/rtc_base/BUILD.gn
++++ b/rtc_base/BUILD.gn
+@@ -1154,6 +1154,7 @@ if (!build_with_chromium) {
  }
  
-diff --git a/api/rtp_sender_interface.h b/api/rtp_sender_interface.h
-index 2786a2ac19..98ee91b1cc 100644
---- a/api/rtp_sender_interface.h
-+++ b/api/rtp_sender_interface.h
-@@ -32,9 +32,9 @@
- #include "rtc_base/ref_count.h"
- #include "rtc_base/system/rtc_export.h"
- 
--namespace webrtc {
-+#include "api/rtp_sender_setparameters_callback.h"
- 
--using SetParametersCallback = absl::AnyInvocable<void(RTCError) &&>;
-+namespace webrtc {
- 
- class RTC_EXPORT RtpSenderInterface : public rtc::RefCountInterface {
-  public:
-diff --git a/api/rtp_sender_setparameters_callback.cc b/api/rtp_sender_setparameters_callback.cc
-new file mode 100644
-index 0000000000..99728ef95e
---- /dev/null
-+++ b/api/rtp_sender_setparameters_callback.cc
-@@ -0,0 +1,27 @@
-+/*
-+ *  Copyright 2015 The WebRTC project authors. All Rights Reserved.
-+ *
-+ *  Use of this source code is governed by a BSD-style license
-+ *  that can be found in the LICENSE file in the root of the source
-+ *  tree. An additional intellectual property rights grant can be found
-+ *  in the file PATENTS.  All contributing project authors may
-+ *  be found in the AUTHORS file in the root of the source tree.
-+ */
-+
-+// File added by mozilla, to decouple this from libwebrtc's implementation of
-+// RTCRtpSender.
-+
-+#include "api/rtp_sender_setparameters_callback.h"
-+
-+namespace webrtc {
-+
-+webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
-+                                             RTCError error) {
-+  if (callback) {
-+    std::move(callback)(error);
-+    callback = nullptr;
-+  }
-+  return error;
+ rtc_library("network") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "network.cc",
+@@ -1192,16 +1193,20 @@ rtc_library("network") {
+     deps += [ ":win32" ]
+   }
+ }
 +}
-+
-+} // namespace webrtc
-diff --git a/api/rtp_sender_setparameters_callback.h b/api/rtp_sender_setparameters_callback.h
-new file mode 100644
-index 0000000000..45194f5ace
---- /dev/null
-+++ b/api/rtp_sender_setparameters_callback.h
-@@ -0,0 +1,28 @@
-+/*
-+ *  Copyright 2015 The WebRTC project authors. All Rights Reserved.
-+ *
-+ *  Use of this source code is governed by a BSD-style license
-+ *  that can be found in the LICENSE file in the root of the source
-+ *  tree. An additional intellectual property rights grant can be found
-+ *  in the file PATENTS.  All contributing project authors may
-+ *  be found in the AUTHORS file in the root of the source tree.
-+ */
-+
-+// File added by mozilla, to decouple this from libwebrtc's implementation of
-+// RTCRtpSender.
-+
-+#ifndef API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
-+#define API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
-+
-+#include "api/rtc_error.h"
-+#include "absl/functional/any_invocable.h"
-+
-+namespace webrtc {
-+
-+using SetParametersCallback = absl::AnyInvocable<void(RTCError) &&>;
-+
-+webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
-+                                             RTCError error);
-+} // namespace webrtc
-+
-+#endif  // API_RTP_SENDER_SETPARAMETERS_CALLBACK_H_
-diff --git a/call/BUILD.gn b/call/BUILD.gn
-index fb23b7ef39..2bc7aaec92 100644
---- a/call/BUILD.gn
-+++ b/call/BUILD.gn
-@@ -52,7 +52,7 @@ rtc_library("call_interfaces") {
-     "../api:rtc_error",
-     "../api:rtp_headers",
-     "../api:rtp_parameters",
--    "../api:rtp_sender_interface",
-+    "../api:rtp_sender_setparameters_callback",
-     "../api:scoped_refptr",
-     "../api:transport_api",
-     "../api/adaptation:resource_adaptation_api",
-@@ -389,7 +389,7 @@ rtc_library("video_stream_api") {
-     "../api:frame_transformer_interface",
-     "../api:rtp_headers",
-     "../api:rtp_parameters",
--    "../api:rtp_sender_interface",
-+    "../api:rtp_sender_setparameters_callback",
-     "../api:scoped_refptr",
-     "../api:transport_api",
-     "../api/adaptation:resource_adaptation_api",
-diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
-index bafa22d312..187ec65ed8 100644
---- a/call/audio_send_stream.h
-+++ b/call/audio_send_stream.h
-@@ -25,7 +25,7 @@
- #include "api/crypto/frame_encryptor_interface.h"
- #include "api/frame_transformer_interface.h"
- #include "api/rtp_parameters.h"
--#include "api/rtp_sender_interface.h"
-+#include "api/rtp_sender_setparameters_callback.h"
- #include "api/scoped_refptr.h"
- #include "call/audio_sender.h"
- #include "call/rtp_config.h"
-diff --git a/call/video_send_stream.h b/call/video_send_stream.h
-index 431c267e1e..de18fc7b92 100644
---- a/call/video_send_stream.h
-+++ b/call/video_send_stream.h
-@@ -23,7 +23,7 @@
- #include "api/crypto/crypto_options.h"
- #include "api/frame_transformer_interface.h"
- #include "api/rtp_parameters.h"
--#include "api/rtp_sender_interface.h"
-+#include "api/rtp_sender_setparameters_callback.h"
- #include "api/scoped_refptr.h"
- #include "api/video/video_content_type.h"
- #include "api/video/video_frame.h"
-diff --git a/media/BUILD.gn b/media/BUILD.gn
-index daca67e033..80662563b0 100644
---- a/media/BUILD.gn
-+++ b/media/BUILD.gn
-@@ -64,7 +64,7 @@ rtc_library("rtc_media_base") {
-     "../api:media_stream_interface",
-     "../api:rtc_error",
-     "../api:rtp_parameters",
--    "../api:rtp_sender_interface",
-+    "../api:rtp_sender_setparameters_callback",
-     "../api:scoped_refptr",
-     "../api:sequence_checker",
-     "../api:transport_api",
-diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index 571d661d45..014b3d4079 100644
---- a/media/base/media_channel.h
-+++ b/media/base/media_channel.h
-@@ -64,10 +64,6 @@ class Timing;
  
- namespace webrtc {
- class VideoFrame;
--
--webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
--                                             RTCError error);
--
- }  // namespace webrtc
+ rtc_library("socket_address_pair") {
++if (!build_with_mozilla) {
+   sources = [
+     "socket_address_pair.cc",
+     "socket_address_pair.h",
+   ]
+   deps = [ ":socket_address" ]
+ }
++}
  
- namespace cricket {
-diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index ca2a117fd1..f323503d59 100644
---- a/media/base/media_channel_impl.cc
-+++ b/media/base/media_channel_impl.cc
-@@ -31,19 +31,6 @@
- #include "modules/rtp_rtcp/include/report_block_data.h"
- #include "rtc_base/checks.h"
+ rtc_library("net_helper") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "net_helper.cc",
+@@ -1210,8 +1215,10 @@ rtc_library("net_helper") {
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+   deps = [ "system:rtc_export" ]
+ }
++}
  
--namespace webrtc {
--
--webrtc::RTCError InvokeSetParametersCallback(SetParametersCallback& callback,
--                                             RTCError error) {
--  if (callback) {
--    std::move(callback)(error);
--    callback = nullptr;
--  }
--  return error;
--}
--
--}  // namespace webrtc
--
- namespace cricket {
- using webrtc::FrameDecryptorInterface;
- using webrtc::FrameEncryptorInterface;
-diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 0a697f2488..adbe375076 100644
---- a/video/BUILD.gn
-+++ b/video/BUILD.gn
-@@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {
-     "../api:fec_controller_api",
-     "../api:rtc_error",
-     "../api:rtp_parameters",
--    "../api:rtp_sender_interface",
-+    "../api:rtp_sender_setparameters_callback",
-     "../api:scoped_refptr",
-     "../api/adaptation:resource_adaptation_api",
-     "../api/units:data_rate",
-@@ -375,7 +375,7 @@ rtc_library("video_stream_encoder_impl") {
-     ":video_stream_encoder_interface",
-     "../api:field_trials_view",
-     "../api:rtp_parameters",
--    "../api:rtp_sender_interface",
-+    "../api:rtp_sender_setparameters_callback",
-     "../api:sequence_checker",
-     "../api/adaptation:resource_adaptation_api",
-     "../api/task_queue:pending_task_safety_flag",
+ rtc_library("socket_adapters") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "socket_adapters.cc",
+@@ -1231,6 +1238,7 @@ rtc_library("socket_adapters") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ rtc_library("network_route") {
+   sources = [
+@@ -1245,6 +1253,7 @@ rtc_library("network_route") {
+ }
+ 
+ rtc_library("async_tcp_socket") {
++if (!build_with_mozilla) {
+   sources = [
+     "async_tcp_socket.cc",
+     "async_tcp_socket.h",
+@@ -1263,8 +1272,10 @@ rtc_library("async_tcp_socket") {
+     "third_party/sigslot",
+   ]
+ }
++}
+ 
+ rtc_library("async_udp_socket") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "async_udp_socket.cc",
+@@ -1286,8 +1297,10 @@ rtc_library("async_udp_socket") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+ }
++}
+ 
+ rtc_library("async_packet_socket") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "async_packet_socket.cc",
+@@ -1305,6 +1318,7 @@ rtc_library("async_packet_socket") {
+     "third_party/sigslot",
+   ]
+ }
++}
+ 
+ rtc_library("mdns_responder_interface") {
+   sources = [ "mdns_responder_interface.h" ]
+@@ -1317,6 +1331,7 @@ rtc_library("dscp") {
+ }
+ 
+ rtc_library("proxy_info") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "proxy_info.cc",
+@@ -1327,6 +1342,7 @@ rtc_library("proxy_info") {
+     ":socket_address",
+   ]
+ }
++}
+ 
+ rtc_library("file_rotating_stream") {
+   sources = [
+@@ -1355,6 +1371,7 @@ rtc_library("data_rate_limiter") {
+ }
+ 
+ rtc_library("unique_id_generator") {
++if (!build_with_mozilla) {
+   sources = [
+     "unique_id_generator.cc",
+     "unique_id_generator.h",
+@@ -1369,6 +1386,7 @@ rtc_library("unique_id_generator") {
+   ]
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ rtc_library("crc32") {
+   sources = [
+@@ -1396,6 +1414,7 @@ rtc_library("stream") {
+ }
+ 
+ rtc_library("rtc_certificate_generator") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "rtc_certificate_generator.cc",
+@@ -1413,8 +1432,10 @@ rtc_library("rtc_certificate_generator") {
+     "//third_party/abseil-cpp/absl/types:optional",
+   ]
+ }
++}
+ 
+ rtc_library("ssl") {
++if (!build_with_mozilla) {
+   visibility = [ "*" ]
+   sources = [
+     "helpers.cc",
+@@ -1513,6 +1534,7 @@ rtc_library("ssl") {
+     deps += [ ":win32" ]
+   }
+ }
++}
+ 
+ rtc_library("crypt_string") {
+   sources = [
+@@ -1522,6 +1544,7 @@ rtc_library("crypt_string") {
+ }
+ 
+ rtc_library("http_common") {
++if (!build_with_mozilla) {
+   sources = [
+     "http_common.cc",
+     "http_common.h",
+@@ -1538,6 +1561,7 @@ rtc_library("http_common") {
+ 
+   absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+ }
++}
+ 
+ rtc_source_set("gtest_prod") {
+   sources = [ "gtest_prod_util.h" ]
 -- 
 2.34.1
 

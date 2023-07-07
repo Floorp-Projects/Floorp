@@ -61,7 +61,8 @@ void SimulatedThread::RunReady(Timestamp at_time) {
   }
 }
 
-void SimulatedThread::BlockingCall(rtc::FunctionView<void()> functor) {
+void SimulatedThread::BlockingCallImpl(rtc::FunctionView<void()> functor,
+                                       const Location& /*location*/) {
   if (IsQuitting())
     return;
 
@@ -77,24 +78,19 @@ void SimulatedThread::BlockingCall(rtc::FunctionView<void()> functor) {
   }
 }
 
-void SimulatedThread::PostTask(absl::AnyInvocable<void() &&> task) {
-  rtc::Thread::PostTask(std::move(task));
+void SimulatedThread::PostTaskImpl(absl::AnyInvocable<void() &&> task,
+                                   const PostTaskTraits& traits,
+                                   const Location& location) {
+  rtc::Thread::PostTaskImpl(std::move(task), traits, location);
   MutexLock lock(&lock_);
   next_run_time_ = Timestamp::MinusInfinity();
 }
 
-void SimulatedThread::PostDelayedTask(absl::AnyInvocable<void() &&> task,
-                                      TimeDelta delay) {
-  rtc::Thread::PostDelayedTask(std::move(task), delay);
-  MutexLock lock(&lock_);
-  next_run_time_ =
-      std::min(next_run_time_, Timestamp::Millis(rtc::TimeMillis()) + delay);
-}
-
-void SimulatedThread::PostDelayedHighPrecisionTask(
-    absl::AnyInvocable<void() &&> task,
-    TimeDelta delay) {
-  rtc::Thread::PostDelayedHighPrecisionTask(std::move(task), delay);
+void SimulatedThread::PostDelayedTaskImpl(absl::AnyInvocable<void() &&> task,
+                                          TimeDelta delay,
+                                          const PostDelayedTaskTraits& traits,
+                                          const Location& location) {
+  rtc::Thread::PostDelayedTaskImpl(std::move(task), delay, traits, location);
   MutexLock lock(&lock_);
   next_run_time_ =
       std::min(next_run_time_, Timestamp::Millis(rtc::TimeMillis()) + delay);

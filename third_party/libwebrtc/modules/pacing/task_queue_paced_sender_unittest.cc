@@ -18,11 +18,14 @@
 #include <utility>
 #include <vector>
 
-#include "absl/functional/any_invocable.h"
 #include "api/task_queue/task_queue_base.h"
+#include "api/task_queue/task_queue_factory.h"
 #include "api/transport/network_types.h"
 #include "api/units/data_rate.h"
+#include "api/units/data_size.h"
+#include "api/units/time_delta.h"
 #include "modules/pacing/packet_router.h"
+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/scoped_key_value_config.h"
@@ -78,79 +81,6 @@ std::vector<std::unique_ptr<RtpPacketToSend>> GeneratePadding(
   return padding_packets;
 }
 
-class TaskQueueWithFakePrecisionFactory : public TaskQueueFactory {
- public:
-  explicit TaskQueueWithFakePrecisionFactory(
-      TaskQueueFactory* task_queue_factory)
-      : task_queue_factory_(task_queue_factory) {}
-
-  std::unique_ptr<TaskQueueBase, TaskQueueDeleter> CreateTaskQueue(
-      absl::string_view name,
-      Priority priority) const override {
-    return std::unique_ptr<TaskQueueBase, TaskQueueDeleter>(
-        new TaskQueueWithFakePrecision(
-            const_cast<TaskQueueWithFakePrecisionFactory*>(this),
-            task_queue_factory_));
-  }
-
-  int delayed_low_precision_count() const {
-    return delayed_low_precision_count_;
-  }
-  int delayed_high_precision_count() const {
-    return delayed_high_precision_count_;
-  }
-
- private:
-  friend class TaskQueueWithFakePrecision;
-
-  class TaskQueueWithFakePrecision : public TaskQueueBase {
-   public:
-    TaskQueueWithFakePrecision(
-        TaskQueueWithFakePrecisionFactory* parent_factory,
-        TaskQueueFactory* task_queue_factory)
-        : parent_factory_(parent_factory),
-          task_queue_(task_queue_factory->CreateTaskQueue(
-              "TaskQueueWithFakePrecision",
-              TaskQueueFactory::Priority::NORMAL)) {}
-    ~TaskQueueWithFakePrecision() override {}
-
-    void Delete() override {
-      // `task_queue_->Delete()` is implicitly called in the destructor due to
-      // TaskQueueDeleter.
-      delete this;
-    }
-    void PostTask(absl::AnyInvocable<void() &&> task) override {
-      task_queue_->PostTask(WrapTask(std::move(task)));
-    }
-    void PostDelayedTask(absl::AnyInvocable<void() &&> task,
-                         TimeDelta delay) override {
-      ++parent_factory_->delayed_low_precision_count_;
-      task_queue_->PostDelayedTask(WrapTask(std::move(task)), delay);
-    }
-    void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
-                                      TimeDelta delay) override {
-      ++parent_factory_->delayed_high_precision_count_;
-      task_queue_->PostDelayedHighPrecisionTask(WrapTask(std::move(task)),
-                                                delay);
-    }
-
-   private:
-    absl::AnyInvocable<void() &&> WrapTask(absl::AnyInvocable<void() &&> task) {
-      return [this, task = std::move(task)]() mutable {
-        CurrentTaskQueueSetter set_current(this);
-        std::move(task)();
-      };
-    }
-
-    TaskQueueWithFakePrecisionFactory* parent_factory_;
-    std::unique_ptr<TaskQueueBase, TaskQueueDeleter> task_queue_;
-  };
-
-  TaskQueueFactory* task_queue_factory_;
-  std::atomic<int> delayed_low_precision_count_ = 0u;
-  std::atomic<int> delayed_high_precision_count_ = 0u;
-};
-
 }  // namespace
 
 namespace test {
@@ -188,15 +118,15 @@ std::vector<std::unique_ptr<RtpPacketToSend>> GeneratePackets(
   return packets;
 }
 
-constexpr char kSendPacketOnWorkerThreadFieldTrial[] =
-    "WebRTC-SendPacketsOnWorkerThread/Enabled/";
+constexpr char kSendPacketOnWorkerThreadFieldTrialDisabled[] =
+    "WebRTC-SendPacketsOnWorkerThread/Disabled/";
 
 std::vector<std::string> ParameterizedFieldTrials() {
-  return {{""}, {kSendPacketOnWorkerThreadFieldTrial}};
+  return {{""}, {kSendPacketOnWorkerThreadFieldTrialDisabled}};
 }
 
 bool UsingWorkerThread(absl::string_view field_trials) {
-  return field_trials.find(kSendPacketOnWorkerThreadFieldTrial) !=
+  return field_trials.find(kSendPacketOnWorkerThreadFieldTrialDisabled) ==
          std::string::npos;
 }
 
@@ -738,6 +668,48 @@ TEST_P(TaskQueuePacedSenderTest, ProbingStopDuringSendLoop) {
   pacer.EnqueuePackets(
       GeneratePackets(RtpPacketMediaType::kVideo, kPacketsToSend));
   time_controller.AdvanceTime(kPacketsPacedTime + TimeDelta::Millis(1));
+}
+
+TEST_P(TaskQueuePacedSenderTest, PostedPacketsNotSendFromRemovePacketsForSsrc) {
+  static constexpr Timestamp kStartTime = Timestamp::Millis(1234);
+  GlobalSimulatedTimeController time_controller(kStartTime);
+  ScopedKeyValueConfig trials(GetParam());
+  MockPacketRouter packet_router;
+  TaskQueuePacedSender pacer(time_controller.GetClock(), &packet_router, trials,
+                             time_controller.GetTaskQueueFactory(),
+                             PacingController::kMinSleepTime,
+                             TaskQueuePacedSender::kNoPacketHoldback);
+
+  static constexpr DataRate kPacingRate =
+      DataRate::BytesPerSec(kDefaultPacketSize * 10);
+  pacer.SetPacingRates(kPacingRate, DataRate::Zero());
+  pacer.EnsureStarted();
+
+  auto encoder_queue = time_controller.GetTaskQueueFactory()->CreateTaskQueue(
+      "encoder_queue", TaskQueueFactory::Priority::HIGH);
+
+  EXPECT_CALL(packet_router, SendPacket).Times(5);
+  encoder_queue->PostTask([&pacer] {
+    pacer.EnqueuePackets(GeneratePackets(RtpPacketMediaType::kVideo, 6));
+  });
+
+  time_controller.AdvanceTime(TimeDelta::Millis(400));
+  // 1 packet left.
+  EXPECT_EQ(pacer.OldestPacketWaitTime(), TimeDelta::Millis(400));
+  EXPECT_EQ(pacer.FirstSentPacketTime(), kStartTime);
+
+  // Enqueue packets while removing ssrcs should not send any more packets.
+  encoder_queue->PostTask(
+      [&pacer, worker_thread = time_controller.GetMainThread()] {
+        worker_thread->PostTask(
+            [&pacer] { pacer.RemovePacketsForSsrc(kVideoSsrc); });
+        pacer.EnqueuePackets(GeneratePackets(RtpPacketMediaType::kVideo, 5));
+      });
+  time_controller.AdvanceTime(TimeDelta::Seconds(1));
+  EXPECT_EQ(pacer.OldestPacketWaitTime(), TimeDelta::Zero());
+  EXPECT_EQ(pacer.FirstSentPacketTime(), kStartTime);
+  EXPECT_EQ(pacer.QueueSizeData(), DataSize::Zero());
+  EXPECT_EQ(pacer.ExpectedQueueTime(), TimeDelta::Zero());
 }
 
 TEST_P(TaskQueuePacedSenderTest, Stats) {

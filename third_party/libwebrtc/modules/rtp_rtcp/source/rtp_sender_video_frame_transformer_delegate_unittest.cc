@@ -58,9 +58,12 @@ class RtpSenderVideoFrameTransformerDelegateTest : public ::testing::Test {
   ~RtpSenderVideoFrameTransformerDelegateTest() override = default;
 
   std::unique_ptr<TransformableFrameInterface> GetTransformableFrame(
-      rtc::scoped_refptr<RTPSenderVideoFrameTransformerDelegate> delegate) {
+      rtc::scoped_refptr<RTPSenderVideoFrameTransformerDelegate> delegate,
+      bool key_frame = false) {
     EncodedImage encoded_image;
     encoded_image.SetEncodedData(EncodedImageBuffer::Create(1));
+    encoded_image._frameType = key_frame ? VideoFrameType::kVideoFrameKey
+                                         : VideoFrameType::kVideoFrameDelta;
     std::unique_ptr<TransformableFrameInterface> frame = nullptr;
     EXPECT_CALL(*frame_transformer_, Transform)
         .WillOnce([&](std::unique_ptr<TransformableFrameInterface>
@@ -154,17 +157,64 @@ TEST_F(RtpSenderVideoFrameTransformerDelegateTest, CloneSenderVideoFrame) {
       GetTransformableFrame(delegate);
   ASSERT_TRUE(frame);
 
-  TransformableVideoFrameInterface* video_frame =
-      static_cast<TransformableVideoFrameInterface*>(frame.get());
+  auto& video_frame = static_cast<TransformableVideoFrameInterface&>(*frame);
   std::unique_ptr<TransformableVideoFrameInterface> clone =
-      CloneSenderVideoFrame(video_frame);
+      CloneSenderVideoFrame(&video_frame);
 
-  EXPECT_EQ(video_frame->IsKeyFrame(), clone->IsKeyFrame());
-  EXPECT_EQ(video_frame->GetPayloadType(), clone->GetPayloadType());
-  EXPECT_EQ(video_frame->GetSsrc(), clone->GetSsrc());
-  EXPECT_EQ(video_frame->GetTimestamp(), clone->GetTimestamp());
-  // TODO(bugs.webrtc.org/14708): Expect equality of GetMetadata() once we have
-  // an equality operator defined.
+  EXPECT_EQ(clone->IsKeyFrame(), video_frame.IsKeyFrame());
+  EXPECT_EQ(clone->GetPayloadType(), video_frame.GetPayloadType());
+  EXPECT_EQ(clone->GetSsrc(), video_frame.GetSsrc());
+  EXPECT_EQ(clone->GetTimestamp(), video_frame.GetTimestamp());
+  EXPECT_EQ(clone->Metadata(), video_frame.Metadata());
+}
+
+TEST_F(RtpSenderVideoFrameTransformerDelegateTest, CloneKeyFrame) {
+  auto delegate = rtc::make_ref_counted<RTPSenderVideoFrameTransformerDelegate>(
+      &test_sender_, frame_transformer_,
+      /*ssrc=*/1111, /*csrcs=*/std::vector<uint32_t>(),
+      time_controller_.CreateTaskQueueFactory().get());
+
+  std::unique_ptr<TransformableFrameInterface> frame =
+      GetTransformableFrame(delegate, /*key_frame=*/true);
+  ASSERT_TRUE(frame);
+
+  auto& video_frame = static_cast<TransformableVideoFrameInterface&>(*frame);
+  std::unique_ptr<TransformableVideoFrameInterface> clone =
+      CloneSenderVideoFrame(&video_frame);
+
+  EXPECT_EQ(clone->IsKeyFrame(), video_frame.IsKeyFrame());
+  EXPECT_EQ(clone->GetPayloadType(), video_frame.GetPayloadType());
+  EXPECT_EQ(clone->GetSsrc(), video_frame.GetSsrc());
+  EXPECT_EQ(clone->GetTimestamp(), video_frame.GetTimestamp());
+  EXPECT_EQ(clone->Metadata(), video_frame.Metadata());
+}
+
+TEST_F(RtpSenderVideoFrameTransformerDelegateTest, MetadataAfterSetMetadata) {
+  auto delegate = rtc::make_ref_counted<RTPSenderVideoFrameTransformerDelegate>(
+      &test_sender_, frame_transformer_,
+      /*ssrc=*/1111, /*csrcs=*/std::vector<uint32_t>(),
+      time_controller_.CreateTaskQueueFactory().get());
+
+  std::unique_ptr<TransformableFrameInterface> frame =
+      GetTransformableFrame(delegate);
+  ASSERT_TRUE(frame);
+  auto& video_frame = static_cast<TransformableVideoFrameInterface&>(*frame);
+
+  VideoFrameMetadata metadata;
+  metadata.SetFrameType(VideoFrameType::kVideoFrameKey);
+  metadata.SetFrameId(654);
+  metadata.SetSsrc(2222);
+  metadata.SetCsrcs({1, 2, 3});
+
+  video_frame.SetMetadata(metadata);
+  VideoFrameMetadata actual_metadata = video_frame.Metadata();
+
+  // TODO(bugs.webrtc.org/14708): Just EXPECT_EQ the whole Metadata once the
+  // equality operator lands.
+  EXPECT_EQ(metadata.GetFrameType(), actual_metadata.GetFrameType());
+  EXPECT_EQ(metadata.GetFrameId(), actual_metadata.GetFrameId());
+  EXPECT_EQ(metadata.GetSsrc(), actual_metadata.GetSsrc());
+  EXPECT_EQ(metadata.GetCsrcs(), actual_metadata.GetCsrcs());
 }
 
 }  // namespace

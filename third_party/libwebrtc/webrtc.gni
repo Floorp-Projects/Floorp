@@ -64,6 +64,10 @@ declare_args() {
   # This is useful for example to be able to get RTC_DLOGs on a release build.
   rtc_dlog_always_on = false
 
+  # Enables additional build targets that rely on
+  # //third_party/google_benchmarks.
+  rtc_enable_google_benchmarks = true
+
   # Setting this to true will make RTC_OBJC_EXPORT expand to code that will
   # manage symbols visibility. By default, Obj-C/Obj-C++ symbols are exported
   # if C++ symbols are but setting this arg to true while keeping
@@ -239,10 +243,16 @@ declare_args() {
   # Includes the dav1d decoder in the internal decoder factory when set to true.
   rtc_include_dav1d_in_internal_decoder_factory = true
 
-  # When set to true, a run-time check will make sure that all field trial keys
-  # have been registered in accordance with the field trial policy. The check
-  # will only run with builds that have RTC_DCHECKs enabled.
-  rtc_strict_field_trials = false
+  # When enabled, a run-time check will make sure that all field trial keys have
+  # been registered in accordance with the field trial policy, see
+  # g3doc/field-trials.md. The value can be set to the following:
+  #
+  #  "dcheck": RTC_DCHECKs that the field trial has been registered. RTC_DCHECK
+  #            must be enabled separately.
+  #
+  #  "warn": RTC_LOGs a message with LS_WARNING severity if the field trial
+  #          hasn't been registered.
+  rtc_strict_field_trials = ""
 }
 
 if (!build_with_mozilla) {

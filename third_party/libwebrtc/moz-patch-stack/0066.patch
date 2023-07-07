@@ -8,10 +8,10 @@ Subject: Bug 1773223 - Generate webrtc moz.builds for all platforms at once.
  1 file changed, 4 insertions(+)
 
 diff --git a/build_overrides/build.gni b/build_overrides/build.gni
-index 137b6a40b2..e662c94ece 100644
+index 34f58c7e66..bdc7df2365 100644
 --- a/build_overrides/build.gni
 +++ b/build_overrides/build.gni
-@@ -45,6 +45,10 @@ if (host_os == "mac" || host_os == "linux") {
+@@ -42,6 +42,10 @@ if (host_os == "mac" || host_os == "linux") {
    use_system_xcode = _result == 0
  }
  

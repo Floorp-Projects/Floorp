@@ -1317,8 +1317,7 @@ class WebRtcSdpTest : public ::testing::Test {
         1, "AES_CM_128_HMAC_SHA1_80",
         "inline:d0RmdmcmVCspeEc3QGZiNWpVLFJhQX1cfHAwJSoj|2^20|1:32", ""));
     video->set_protocol(cricket::kMediaProtocolSavpf);
-    video->AddCodec(
-        VideoCodec(120, JsepSessionDescription::kDefaultVideoCodecName));
+    video->AddCodec(VideoCodec(120, "VP8"));
     return video;
   }
 
@@ -1969,8 +1968,7 @@ class WebRtcSdpTest : public ::testing::Test {
     ASSERT_TRUE(vcd);
     ASSERT_FALSE(vcd->codecs().empty());
     cricket::VideoCodec vp8 = vcd->codecs()[0];
-    EXPECT_STREQ(webrtc::JsepSessionDescription::kDefaultVideoCodecName,
-                 vp8.name.c_str());
+    EXPECT_EQ(vp8.name, "VP8");
     EXPECT_EQ(101, vp8.id);
     EXPECT_TRUE(vp8.HasFeedbackParam(cricket::FeedbackParam(
         cricket::kRtcpFbParamLntf, cricket::kParamValueEmpty)));

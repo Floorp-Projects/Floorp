@@ -138,10 +138,26 @@ std::vector<webrtc::VideoStream> EncoderStreamFactory::CreateEncoderStreams(
   const absl::optional<webrtc::DataRate> experimental_min_bitrate =
       GetExperimentalMinVideoBitrate(encoder_config.codec_type);
 
-  if (encoder_config.number_of_streams > 1 ||
-      ((absl::EqualsIgnoreCase(codec_name_, kVp8CodecName) ||
-        absl::EqualsIgnoreCase(codec_name_, kH264CodecName)) &&
-       is_screenshare_ && conference_mode_)) {
+  bool is_simulcast = (encoder_config.number_of_streams > 1);
+  // If scalability mode was specified, don't treat {active,inactive,inactive}
+  // as simulcast since the simulcast configuration assumes very low bitrates
+  // on the first layer. This would prevent rampup of multiple spatial layers.
+  // See https://crbug.com/webrtc/15041.
+  if (is_simulcast &&
+      encoder_config.simulcast_layers[0].scalability_mode.has_value()) {
+    // Require at least one non-first layer to be active for is_simulcast=true.
+    is_simulcast = false;
+    for (size_t i = 1; i < encoder_config.simulcast_layers.size(); ++i) {
+      if (encoder_config.simulcast_layers[i].active) {
+        is_simulcast = true;
+        break;
+      }
+    }
+  }
+
+  if (is_simulcast || ((absl::EqualsIgnoreCase(codec_name_, kVp8CodecName) ||
+                        absl::EqualsIgnoreCase(codec_name_, kH264CodecName)) &&
+                       is_screenshare_ && conference_mode_)) {
     return CreateSimulcastOrConferenceModeScreenshareStreams(
         frame_width, frame_height, encoder_config, experimental_min_bitrate);
   }

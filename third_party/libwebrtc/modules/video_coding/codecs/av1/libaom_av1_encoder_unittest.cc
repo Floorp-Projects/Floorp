@@ -15,10 +15,13 @@
 #include <vector>
 
 #include "absl/types/optional.h"
+#include "api/test/create_frame_generator.h"
+#include "api/test/frame_generator_interface.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder.h"
 #include "modules/video_coding/codecs/test/encoded_video_frame_producer.h"
 #include "modules/video_coding/include/video_error_codes.h"
+#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -184,6 +187,28 @@ TEST(LibaomAv1EncoderTest, CheckOddDimensionsWithSpatialLayers) {
   ASSERT_THAT(encoded_frames, SizeIs(6));
 }
 
+TEST(LibaomAv1EncoderTest, EncoderInfoWithoutResolutionBitrateLimits) {
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+  EXPECT_TRUE(encoder->GetEncoderInfo().resolution_bitrate_limits.empty());
+}
+
+TEST(LibaomAv1EncoderTest, EncoderInfoWithBitrateLimitsFromFieldTrial) {
+  test::ScopedFieldTrials field_trials(
+      "WebRTC-Av1-GetEncoderInfoOverride/"
+      "frame_size_pixels:123|456|789,"
+      "min_start_bitrate_bps:11000|22000|33000,"
+      "min_bitrate_bps:44000|55000|66000,"
+      "max_bitrate_bps:77000|88000|99000/");
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+
+  EXPECT_THAT(
+      encoder->GetEncoderInfo().resolution_bitrate_limits,
+      ::testing::ElementsAre(
+          VideoEncoder::ResolutionBitrateLimits{123, 11000, 44000, 77000},
+          VideoEncoder::ResolutionBitrateLimits{456, 22000, 55000, 88000},
+          VideoEncoder::ResolutionBitrateLimits{789, 33000, 66000, 99000}));
+}
+
 TEST(LibaomAv1EncoderTest, EncoderInfoProvidesFpsAllocation) {
   std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   VideoCodec codec_settings = DefaultCodecSettings();
@@ -293,6 +318,84 @@ TEST(LibaomAv1EncoderTest, TestCaptureTimeId) {
             capture_time_id.us());
   EXPECT_EQ(encoded_frames[1].encoded_image.CaptureTimeIdentifier()->us(),
             capture_time_id.us());
+}
+
+TEST(LibaomAv1EncoderTest, AdheresToTargetBitrateDespiteUnevenFrameTiming) {
+  std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
+  VideoCodec codec_settings = DefaultCodecSettings();
+  codec_settings.SetScalabilityMode(ScalabilityMode::kL1T1);
+  codec_settings.maxBitrate = 300;  // kbps
+  codec_settings.width = 320;
+  codec_settings.height = 180;
+  ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
+            WEBRTC_VIDEO_CODEC_OK);
+
+  const int kFps = 30;
+  const int kTargetBitrateBps = codec_settings.maxBitrate * 1000;
+  VideoEncoder::RateControlParameters rate_parameters;
+  rate_parameters.framerate_fps = kFps;
+  rate_parameters.bitrate.SetBitrate(/*spatial_index=*/0, 0, kTargetBitrateBps);
+  encoder->SetRates(rate_parameters);
+
+  class EncoderCallback : public EncodedImageCallback {
+   public:
+    EncoderCallback() = default;
+    DataSize BytesEncoded() const { return bytes_encoded_; }
+
+   private:
+    Result OnEncodedImage(
+        const EncodedImage& encoded_image,
+        const CodecSpecificInfo* codec_specific_info) override {
+      bytes_encoded_ += DataSize::Bytes(encoded_image.size());
+      return Result(Result::Error::OK);
+    }
+
+    DataSize bytes_encoded_ = DataSize::Zero();
+  } callback;
+  encoder->RegisterEncodeCompleteCallback(&callback);
+
+  // Insert frames with too low rtp timestamp delta compared to what is expected
+  // based on the framerate, then insert on with 2x the delta it should - making
+  // the average correct.
+  const uint32_t kHighTimestampDelta =
+      static_cast<uint32_t>((90000.0 / kFps) * 2 + 0.5);
+  const uint32_t kLowTimestampDelta =
+      static_cast<uint32_t>((90000.0 - kHighTimestampDelta) / (kFps - 1));
+
+  std::unique_ptr<test::FrameGeneratorInterface> frame_buffer_generator =
+      test::CreateSquareFrameGenerator(
+          codec_settings.width, codec_settings.height,
+          test::FrameGeneratorInterface::OutputType::kI420, /*num_squares=*/20);
+
+  uint32_t rtp_timestamp = 1000;
+  std::vector<VideoFrameType> frame_types = {VideoFrameType::kVideoFrameKey};
+
+  const int kRunTimeSeconds = 3;
+  for (int i = 0; i < kRunTimeSeconds; ++i) {
+    for (int j = 0; j < kFps; ++j) {
+      if (j < kFps - 1) {
+        rtp_timestamp += kLowTimestampDelta;
+      } else {
+        rtp_timestamp += kHighTimestampDelta;
+      }
+      VideoFrame frame = VideoFrame::Builder()
+                             .set_video_frame_buffer(
+                                 frame_buffer_generator->NextFrame().buffer)
+                             .set_timestamp_rtp(rtp_timestamp)
+                             .build();
+
+      RTC_CHECK_EQ(encoder->Encode(frame, &frame_types), WEBRTC_VIDEO_CODEC_OK);
+      frame_types[0] = VideoFrameType::kVideoFrameDelta;
+    }
+  }
+
+  // Expect produced bitrate to match, to within 10%.
+  // This catches an issue that was seen when real frame timestamps with jitter
+  // was used. It resulted in the overall produced bitrate to be overshot by
+  // ~30% even though the averages should have been ok.
+  EXPECT_NEAR(
+      (callback.BytesEncoded() / TimeDelta::Seconds(kRunTimeSeconds)).bps(),
+      kTargetBitrateBps, kTargetBitrateBps / 10);
 }
 
 }  // namespace

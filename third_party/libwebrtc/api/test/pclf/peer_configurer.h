@@ -152,10 +152,10 @@ class PeerConfigurer {
 
   // If is set, an RTCEventLog will be saved in that location and it will be
   // available for further analysis.
-  PeerConfigurer* SetRtcEventLogPath(std::string path);
+  PeerConfigurer* SetRtcEventLogPath(absl::string_view path);
   // If is set, an AEC dump will be saved in that location and it will be
   // available for further analysis.
-  PeerConfigurer* SetAecDumpPath(std::string path);
+  PeerConfigurer* SetAecDumpPath(absl::string_view path);
   PeerConfigurer* SetRTCConfiguration(
       PeerConnectionInterface::RTCConfiguration configuration);
   PeerConfigurer* SetRTCOfferAnswerOptions(

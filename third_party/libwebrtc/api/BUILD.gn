@@ -65,6 +65,17 @@ if (!build_with_chromium && !build_with_mozilla) {
   }
 }
 
+rtc_library("location") {
+  visibility = [ "*" ]
+  deps = [ "../rtc_base/system:rtc_export" ]
+  if (build_with_chromium) {
+    sources = [ "../../webrtc_overrides/api/location.h" ]
+    deps += [ "//base" ]
+  } else {
+    sources = [ "location.h" ]
+  }
+}
+
 rtc_library("rtp_headers") {
   visibility = [ "*" ]
   sources = [
@@ -392,7 +403,10 @@ rtc_library("rtc_error") {
     "../rtc_base:macromagic",
     "../rtc_base/system:rtc_export",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_source_set("packet_socket_factory") {
@@ -629,7 +643,6 @@ if (!build_with_mozilla) {
 
 rtc_source_set("frame_generator_api") {
   visibility = [ "*" ]
-  testonly = true
   sources = [
     "test/frame_generator_interface.cc",
     "test/frame_generator_interface.h",
@@ -1040,6 +1053,7 @@ if (rtc_include_tests) {
     deps = [
       "../api/numerics:numerics",
       "../api/units:data_rate",
+      "../api/units:data_size",
       "../api/units:frequency",
       "test/metrics:metric",
       "test/metrics:metrics_logger",
@@ -1311,6 +1325,17 @@ if (rtc_include_tests) {
     ]
   }
 
+  rtc_source_set("mock_transformable_audio_frame") {
+    visibility = [ "*" ]
+    testonly = true
+    sources = [ "test/mock_transformable_audio_frame.h" ]
+
+    deps = [
+      ":frame_transformer_interface",
+      "../test:test_support",
+    ]
+  }
+
   rtc_source_set("mock_transformable_video_frame") {
     visibility = [ "*" ]
     testonly = true
@@ -1467,6 +1492,7 @@ if (rtc_include_tests) {
       "units:units_unittests",
       "video:frame_buffer_unittest",
       "video:rtp_video_frame_assembler_unittests",
+      "video:video_frame_metadata_unittest",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/strings",
@@ -1495,6 +1521,7 @@ if (rtc_include_tests) {
       ":mock_peerconnectioninterface",
       ":mock_rtp",
       ":mock_session_description_interface",
+      ":mock_transformable_audio_frame",
       ":mock_transformable_video_frame",
       ":mock_video_bitrate_allocator",
       ":mock_video_bitrate_allocator_factory",
@@ -1518,6 +1545,7 @@ rtc_source_set("field_trials_registry") {
     ":field_trials_view",
     "../experiments:registered_field_trials",
     "../rtc_base:checks",
+    "../rtc_base:logging",
     "../rtc_base/containers:flat_set",
     "../rtc_base/system:rtc_export",
   ]
@@ -1564,6 +1592,7 @@ rtc_library("frame_transformer_factory") {
   deps = [
     ":frame_transformer_interface",
     ":scoped_refptr",
+    "../audio:audio",
     "../modules/rtp_rtcp",
     "../rtc_base:refcount",
     "video:encoded_frame",

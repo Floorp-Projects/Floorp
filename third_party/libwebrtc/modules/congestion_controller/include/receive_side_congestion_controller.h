@@ -74,9 +74,8 @@ class ReceiveSideCongestionController : public CallStatsObserver {
   TimeDelta MaybeProcess();
 
  private:
-  void PickEstimatorFromHeader(const RTPHeader& header)
+  void PickEstimator(bool has_absolute_send_time)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
-  void PickEstimator() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Clock& clock_;
   RembThrottler remb_throttler_;

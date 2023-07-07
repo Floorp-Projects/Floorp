@@ -309,14 +309,15 @@ static bool ValidateStreamParams(const StreamParams& sp) {
 }
 
 // Returns true if the given codec is disallowed from doing simulcast.
-bool IsCodecDisabledForSimulcast(const std::string& codec_name,
+bool IsCodecDisabledForSimulcast(bool legacy_scalability_mode,
+                                 webrtc::VideoCodecType codec_type,
                                  const webrtc::FieldTrialsView& trials) {
-  if (absl::EqualsIgnoreCase(codec_name, kVp9CodecName) ||
-      absl::EqualsIgnoreCase(codec_name, kAv1CodecName)) {
+  if (legacy_scalability_mode && (codec_type == webrtc::kVideoCodecVP9 ||
+                                  codec_type == webrtc::kVideoCodecAV1)) {
     return true;
   }
 
-  if (absl::EqualsIgnoreCase(codec_name, kH264CodecName)) {
+  if (codec_type == webrtc::kVideoCodecH264) {
     return absl::StartsWith(trials.Lookup("WebRTC-H264Simulcast"), "Disabled");
   }
 
@@ -473,6 +474,11 @@ void FallbackToDefaultScalabilityModeIfNotSupported(
   for (auto& encoding : encodings) {
     RTC_LOG(LS_INFO) << "Encoding scalability_mode: "
                      << encoding.scalability_mode.value_or("-");
+    if (!encoding.active && !encoding.scalability_mode.has_value()) {
+      // Inactive encodings should not fallback since apps may only specify the
+      // scalability mode of the first encoding when the others are inactive.
+      continue;
+    }
     if (!encoding.scalability_mode.has_value() ||
         !IsScalabilityModeSupportedByCodec(codec, *encoding.scalability_mode,
                                            config)) {
@@ -682,7 +688,8 @@ WebRtcVideoChannel::WebRtcVideoChannel(
       decoder_factory_(decoder_factory),
       bitrate_allocator_factory_(bitrate_allocator_factory),
       default_send_options_(options),
-      last_stats_log_ms_(-1),
+      last_send_stats_log_ms_(-1),
+      last_receive_stats_log_ms_(-1),
       discard_unknown_ssrc_packets_(
           IsEnabled(call_->trials(),
                     "WebRTC-Video-DiscardPacketsWithUnknownSsrc")),
@@ -984,14 +991,20 @@ bool WebRtcVideoChannel::ApplyChangedParams(
   if (role() == MediaChannel::Role::kBoth) {
     if (changed_params.send_codec || changed_params.rtcp_mode) {
       // Update receive feedback parameters from new codec or RTCP mode.
-      RTC_LOG(LS_INFO) << "SetFeedbackParameters on all the receive streams "
-                          "because the send "
-                          "codec or RTCP mode has changed.";
-      SetReceiverFeedbackParameters(
-          HasLntf(send_codec_->codec), HasNack(send_codec_->codec),
-          send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
-                                         : webrtc::RtcpMode::kCompound,
-          send_codec_->rtx_time);
+      if (send_codec_) {
+        RTC_LOG(LS_INFO) << "SetFeedbackParameters on all the receive streams "
+                            "because the send "
+                            "codec or RTCP mode has changed.";
+        SetReceiverFeedbackParameters(
+            HasLntf(send_codec_->codec), HasNack(send_codec_->codec),
+            send_params_.rtcp.reduced_size ? webrtc::RtcpMode::kReducedSize
+                                           : webrtc::RtcpMode::kCompound,
+            send_codec_->rtx_time);
+      }
+    }
+  } else {
+    if (changed_params.send_codec || changed_params.rtcp_mode) {
+      send_codec_changed_callback_();
     }
   }
   return true;
@@ -1645,9 +1658,9 @@ bool WebRtcVideoChannel::GetSendStats(VideoMediaSendInfo* info) {
   // Log stats periodically.
   bool log_stats = false;
   int64_t now_ms = rtc::TimeMillis();
-  if (last_stats_log_ms_ == -1 ||
-      now_ms - last_stats_log_ms_ > kStatsLogIntervalMs) {
-    last_stats_log_ms_ = now_ms;
+  if (last_send_stats_log_ms_ == -1 ||
+      now_ms - last_send_stats_log_ms_ > kStatsLogIntervalMs) {
+    last_send_stats_log_ms_ = now_ms;
     log_stats = true;
   }
 
@@ -1683,9 +1696,9 @@ bool WebRtcVideoChannel::GetReceiveStats(VideoMediaReceiveInfo* info) {
   // Log stats periodically.
   bool log_stats = false;
   int64_t now_ms = rtc::TimeMillis();
-  if (last_stats_log_ms_ == -1 ||
-      now_ms - last_stats_log_ms_ > kStatsLogIntervalMs) {
-    last_stats_log_ms_ = now_ms;
+  if (last_receive_stats_log_ms_ == -1 ||
+      now_ms - last_receive_stats_log_ms_ > kStatsLogIntervalMs) {
+    last_receive_stats_log_ms_ = now_ms;
     log_stats = true;
   }
 
@@ -1756,34 +1769,23 @@ void WebRtcVideoChannel::FillReceiveCodecStats(
 
 void WebRtcVideoChannel::OnPacketReceived(
     const webrtc::RtpPacketReceived& packet) {
+  // Note: the network_thread_checker may refer to the worker thread if the two
+  // threads are combined, but this is either always true or always false
+  // depending on configuration set at object initialization.
   RTC_DCHECK_RUN_ON(&network_thread_checker_);
 
-  // TODO(bugs.webrtc.org/11993): This code is very similar to what
-  // WebRtcVoiceMediaChannel::OnPacketReceived does. For maintainability and
-  // consistency it would be good to move the interaction with call_->Receiver()
-  // to a common implementation and provide a callback on the worker thread
-  // for the exception case (DELIVERY_UNKNOWN_SSRC) and how retry is attempted.
-  worker_thread_->PostTask(
-      SafeTask(task_safety_.flag(), [this, packet = packet]() mutable {
-        RTC_DCHECK_RUN_ON(&thread_checker_);
-
-        // TODO(bugs.webrtc.org/7135): extensions in `packet` is currently set
-        // in RtpTransport and does not neccessarily include extensions specific
-        // to this channel/MID. Also see comment in
-        // BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w.
-        // It would likely be good if extensions where merged per BUNDLE and
-        // applied directly in RtpTransport::DemuxPacket;
-        packet.IdentifyExtensions(recv_rtp_extension_map_);
-        packet.set_payload_type_frequency(webrtc::kVideoPayloadTypeFrequency);
-        if (!packet.arrival_time().IsFinite()) {
-          packet.set_arrival_time(webrtc::Timestamp::Micros(rtc::TimeMicros()));
-        }
-
-        call_->Receiver()->DeliverRtpPacket(
-            webrtc::MediaType::VIDEO, std::move(packet),
-            absl::bind_front(
-                &WebRtcVideoChannel::MaybeCreateDefaultReceiveStream, this));
-      }));
+  // TODO(bugs.webrtc.org/137439): Stop posting to the worker thread when the
+  // combined network/worker project launches.
+  if (webrtc::TaskQueueBase::Current() != worker_thread_) {
+    worker_thread_->PostTask(
+        SafeTask(task_safety_.flag(), [this, packet = packet]() mutable {
+          RTC_DCHECK_RUN_ON(&thread_checker_);
+          ProcessReceivedPacket(std::move(packet));
+        }));
+  } else {
+    RTC_DCHECK_RUN_ON(&thread_checker_);
+    ProcessReceivedPacket(packet);
+  }
 }
 
 bool WebRtcVideoChannel::MaybeCreateDefaultReceiveStream(
@@ -2501,11 +2503,27 @@ WebRtcVideoChannel::WebRtcVideoSendStream::CreateVideoEncoderConfig(
   }
 
   // By default, the stream count for the codec configuration should match the
-  // number of negotiated ssrcs. But if the codec is disabled for simulcast
-  // or a screencast (and not in simulcast screenshare experiment), only
-  // configure a single stream.
+  // number of negotiated ssrcs but this may be capped below depending on the
+  // `legacy_scalability_mode` and codec used.
   encoder_config.number_of_streams = parameters_.config.rtp.ssrcs.size();
-  if (IsCodecDisabledForSimulcast(codec.name, call_->trials())) {
+  bool legacy_scalability_mode = true;
+  // TODO(https://crbug.com/webrtc/14884): This is only used as a kill-switch
+  // in case of serious bugs - when this reaches Stable, delete the field trial.
+  if (!call_->trials().IsDisabled("WebRTC-AllowDisablingLegacyScalability")) {
+    for (const webrtc::RtpEncodingParameters& encoding :
+         rtp_parameters_.encodings) {
+      if (encoding.scalability_mode.has_value() &&
+          encoding.scale_resolution_down_by.has_value()) {
+        legacy_scalability_mode = false;
+        break;
+      }
+    }
+  }
+  // Maybe limit the number of simulcast layers depending on
+  // `legacy_scalability_mode`, codec types (VP9/AV1) and the
+  // WebRTC-H264Simulcast/Disabled/ field trial.
+  if (IsCodecDisabledForSimulcast(legacy_scalability_mode,
+                                  encoder_config.codec_type, call_->trials())) {
     encoder_config.number_of_streams = 1;
   }
 
@@ -2620,17 +2638,37 @@ void WebRtcVideoChannel::WebRtcVideoSendStream::ReconfigureEncoder(
   FallbackToDefaultScalabilityModeIfNotSupported(
       codec_settings.codec, parameters_.config, rtp_parameters_.encodings);
 
+  // Latest config, with and without encoder specfic settings.
   webrtc::VideoEncoderConfig encoder_config =
       CreateVideoEncoderConfig(codec_settings.codec);
-
   encoder_config.encoder_specific_settings =
       ConfigureVideoEncoderSettings(codec_settings.codec);
+  webrtc::VideoEncoderConfig encoder_config_with_specifics =
+      encoder_config.Copy();
+  encoder_config.encoder_specific_settings = nullptr;
 
-  stream_->ReconfigureVideoEncoder(encoder_config.Copy(), std::move(callback));
-
-  encoder_config.encoder_specific_settings = NULL;
+  // When switching between legacy SVC (3 encodings interpreted as 1 stream with
+  // 3 spatial layers) and the standard API (3 encodings = 3 streams and spatial
+  // layers specified by `scalability_mode`), the number of streams can change.
+  bool num_streams_changed = parameters_.encoder_config.number_of_streams !=
+                             encoder_config.number_of_streams;
+  bool scalability_mode_used = !codec_settings.codec.scalability_modes.empty();
+  bool scalability_modes = absl::c_any_of(
+      rtp_parameters_.encodings,
+      [](const auto& e) { return e.scalability_mode.has_value(); });
 
   parameters_.encoder_config = std::move(encoder_config);
+
+  if (num_streams_changed && (scalability_mode_used != scalability_modes)) {
+    // The app is switching between legacy and standard modes, recreate instead
+    // of reconfiguring to avoid number of streams not matching in lower layers.
+    RecreateWebRtcStream();
+    webrtc::InvokeSetParametersCallback(callback, webrtc::RTCError::OK());
+    return;
+  }
+
+  stream_->ReconfigureVideoEncoder(std::move(encoder_config_with_specifics),
+                                   std::move(callback));
 }
 
 void WebRtcVideoChannel::WebRtcVideoSendStream::SetSend(bool send) {
@@ -3568,6 +3606,32 @@ WebRtcVideoChannel::FindReceiveStream(uint32_t ssrc) {
     return it->second;
   }
   return nullptr;
+}
+
+// RTC_RUN_ON(worker_thread_)
+void WebRtcVideoChannel::ProcessReceivedPacket(
+    webrtc::RtpPacketReceived packet) {
+  // TODO(bugs.webrtc.org/11993): This code is very similar to what
+  // WebRtcVoiceMediaChannel::OnPacketReceived does. For maintainability and
+  // consistency it would be good to move the interaction with call_->Receiver()
+  // to a common implementation and provide a callback on the worker thread
+  // for the exception case (DELIVERY_UNKNOWN_SSRC) and how retry is attempted.
+  // TODO(bugs.webrtc.org/7135): extensions in `packet` is currently set
+  // in RtpTransport and does not neccessarily include extensions specific
+  // to this channel/MID. Also see comment in
+  // BaseChannel::MaybeUpdateDemuxerAndRtpExtensions_w.
+  // It would likely be good if extensions where merged per BUNDLE and
+  // applied directly in RtpTransport::DemuxPacket;
+  packet.IdentifyExtensions(recv_rtp_extension_map_);
+  packet.set_payload_type_frequency(webrtc::kVideoPayloadTypeFrequency);
+  if (!packet.arrival_time().IsFinite()) {
+    packet.set_arrival_time(webrtc::Timestamp::Micros(rtc::TimeMicros()));
+  }
+
+  call_->Receiver()->DeliverRtpPacket(
+      webrtc::MediaType::VIDEO, std::move(packet),
+      absl::bind_front(&WebRtcVideoChannel::MaybeCreateDefaultReceiveStream,
+                       this));
 }
 
 void WebRtcVideoChannel::SetRecordableEncodedFrameCallback(

@@ -27,6 +27,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/strings/string_builder.h"
+#include "system_wrappers/include/clock.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_frame_in_flight.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_frames_comparator.h"
 #include "test/pc/e2e/analyzer/video/default_video_quality_analyzer_internal_shared_objects.h"
@@ -132,6 +133,7 @@ DefaultVideoQualityAnalyzer::DefaultVideoQualityAnalyzer(
     : options_(options),
       clock_(clock),
       metrics_logger_(metrics_logger),
+      frames_storage_(options.max_frames_storage_duration, clock_),
       frames_comparator_(clock, cpu_measurer_, options) {
   RTC_CHECK(metrics_logger_);
 }
@@ -203,9 +205,9 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
 
     auto state_it = stream_states_.find(stream_index);
     if (state_it == stream_states_.end()) {
-      stream_states_.emplace(
-          stream_index,
-          StreamState(peer_index, frame_receivers_indexes, captured_time));
+      stream_states_.emplace(stream_index,
+                             StreamState(peer_index, frame_receivers_indexes,
+                                         captured_time, clock_));
     }
     StreamState* state = &stream_states_.at(stream_index);
     state->PushBack(frame_id);
@@ -222,6 +224,11 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
 
         uint16_t oldest_frame_id = state->PopFront(i);
         RTC_DCHECK_EQ(frame_id, oldest_frame_id);
+
+        if (state->GetPausableState(i)->IsPaused()) {
+          continue;
+        }
+
         frame_counters_.dropped++;
         InternalStatsKey key(stream_index, peer_index, i);
         stream_frame_counters_.at(key).dropped++;
@@ -235,13 +242,16 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
             it->second.GetStatsForPeer(i));
       }
 
+      frames_storage_.Remove(it->second.id());
       captured_frames_in_flight_.erase(it);
     }
     captured_frames_in_flight_.emplace(
-        frame_id, FrameInFlight(stream_index, frame, captured_time,
+        frame_id, FrameInFlight(stream_index, frame_id, captured_time,
                                 std::move(frame_receivers_indexes)));
-    // Set frame id on local copy of the frame
-    captured_frames_in_flight_.at(frame_id).SetFrameId(frame_id);
+    // Store local copy of the frame with frame_id set.
+    VideoFrame local_frame(frame);
+    local_frame.set_id(frame_id);
+    frames_storage_.Add(std::move(local_frame), captured_time);
 
     // Update history stream<->frame mapping
     for (auto it = stream_to_frame_id_history_.begin();
@@ -251,20 +261,6 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     stream_to_frame_id_history_[stream_index].insert(frame_id);
     stream_to_frame_id_full_history_[stream_index].push_back(frame_id);
 
-    // If state has too many frames that are in flight => remove the oldest
-    // queued frame in order to avoid to use too much memory.
-    if (state->GetAliveFramesCount() >
-        options_.max_frames_in_flight_per_stream_count) {
-      uint16_t frame_id_to_remove = state->MarkNextAliveFrameAsDead();
-      auto it = captured_frames_in_flight_.find(frame_id_to_remove);
-      RTC_CHECK(it != captured_frames_in_flight_.end())
-          << "Frame with ID " << frame_id_to_remove
-          << " is expected to be in flight, but hasn't been found in "
-          << "|captured_frames_in_flight_|";
-      bool is_removed = it->second.RemoveFrame();
-      RTC_DCHECK(is_removed)
-          << "Invalid stream state: alive frame is removed already";
-    }
     if (options_.report_infra_metrics) {
       analyzer_stats_.on_frame_captured_processing_time_ms.AddSample(
           (Now() - captured_time).ms<double>());
@@ -512,7 +508,7 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
 
   // Find corresponding captured frame.
   FrameInFlight* frame_in_flight = &frame_it->second;
-  absl::optional<VideoFrame> captured_frame = frame_in_flight->frame();
+  absl::optional<VideoFrame> captured_frame = frames_storage_.Get(frame.id());
 
   const size_t stream_index = frame_in_flight->stream();
   StreamState* state = &stream_states_.at(stream_index);
@@ -528,40 +524,27 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
   // After we received frame here we need to check if there are any dropped
   // frames between this one and last one, that was rendered for this video
   // stream.
-  int dropped_count = 0;
-  while (!state->IsEmpty(peer_index) &&
-         state->Front(peer_index) != frame.id()) {
-    dropped_count++;
-    uint16_t dropped_frame_id = state->PopFront(peer_index);
-    // Frame with id `dropped_frame_id` was dropped. We need:
-    // 1. Update global and stream frame counters
-    // 2. Extract corresponding frame from `captured_frames_in_flight_`
-    // 3. Send extracted frame to comparison with dropped=true
-    // 4. Cleanup dropped frame
-    frame_counters_.dropped++;
-    stream_frame_counters_.at(stats_key).dropped++;
-
-    auto dropped_frame_it = captured_frames_in_flight_.find(dropped_frame_id);
-    RTC_DCHECK(dropped_frame_it != captured_frames_in_flight_.end());
-    dropped_frame_it->second.MarkDropped(peer_index);
-
-    analyzer_stats_.frames_in_flight_left_count.AddSample(
-        StatsSample(captured_frames_in_flight_.size(), Now()));
-    frames_comparator_.AddComparison(
-        stats_key, /*captured=*/absl::nullopt, /*rendered=*/absl::nullopt,
-        FrameComparisonType::kDroppedFrame,
-        dropped_frame_it->second.GetStatsForPeer(peer_index));
-
-    if (dropped_frame_it->second.HaveAllPeersReceived()) {
-      captured_frames_in_flight_.erase(dropped_frame_it);
-    }
-  }
+  int dropped_count = ProcessNotSeenFramesBeforeRendered(peer_index, frame.id(),
+                                                         stats_key, *state);
   RTC_DCHECK(!state->IsEmpty(peer_index));
   state->PopFront(peer_index);
 
-  if (state->last_rendered_frame_time(peer_index)) {
+  if (state->last_rendered_frame_time(peer_index).has_value()) {
+    TimeDelta time_between_rendered_frames =
+        state->GetPausableState(peer_index)
+            ->GetActiveDurationFrom(
+                *state->last_rendered_frame_time(peer_index));
+    if (state->GetPausableState(peer_index)->IsPaused()) {
+      // If stream is currently paused for this receiver, but we still received
+      // frame, we have to add time from last pause up to Now() to the time
+      // between rendered frames.
+      time_between_rendered_frames +=
+          Now() - state->GetPausableState(peer_index)->GetLastEventTime();
+    }
+    frame_in_flight->SetTimeBetweenRenderedFrames(peer_index,
+                                                  time_between_rendered_frames);
     frame_in_flight->SetPrevFrameRenderedTime(
-        peer_index, state->last_rendered_frame_time(peer_index).value());
+        peer_index, *state->last_rendered_frame_time(peer_index));
   }
   state->SetLastRenderedFrameTime(peer_index,
                                   frame_in_flight->rendered_time(peer_index));
@@ -573,6 +556,7 @@ void DefaultVideoQualityAnalyzer::OnFrameRendered(
       frame_in_flight->GetStatsForPeer(peer_index));
 
   if (frame_it->second.HaveAllPeersReceived()) {
+    frames_storage_.Remove(frame_it->second.id());
     captured_frames_in_flight_.erase(frame_it);
   }
 
@@ -727,9 +711,42 @@ void DefaultVideoQualityAnalyzer::UnregisterParticipantInCall(
     // is no FrameInFlight for the received encoded image.
     if (frame_in_flight.HasEncodedTime() &&
         frame_in_flight.HaveAllPeersReceived()) {
+      frames_storage_.Remove(frame_in_flight.id());
       it = captured_frames_in_flight_.erase(it);
     } else {
       it++;
+    }
+  }
+}
+
+void DefaultVideoQualityAnalyzer::OnPauseAllStreamsFrom(
+    absl::string_view sender_peer_name,
+    absl::string_view receiver_peer_name) {
+  MutexLock lock(&mutex_);
+  RTC_CHECK(peers_->HasName(sender_peer_name));
+  size_t sender_peer_index = peers_->index(sender_peer_name);
+  RTC_CHECK(peers_->HasName(receiver_peer_name));
+  size_t receiver_peer_index = peers_->index(receiver_peer_name);
+
+  for (auto& [unused, stream_state] : stream_states_) {
+    if (stream_state.sender() == sender_peer_index) {
+      stream_state.GetPausableState(receiver_peer_index)->Pause();
+    }
+  }
+}
+
+void DefaultVideoQualityAnalyzer::OnResumeAllStreamsFrom(
+    absl::string_view sender_peer_name,
+    absl::string_view receiver_peer_name) {
+  MutexLock lock(&mutex_);
+  RTC_CHECK(peers_->HasName(sender_peer_name));
+  size_t sender_peer_index = peers_->index(sender_peer_name);
+  RTC_CHECK(peers_->HasName(receiver_peer_name));
+  size_t receiver_peer_index = peers_->index(receiver_peer_name);
+
+  for (auto& [unused, stream_state] : stream_states_) {
+    if (stream_state.sender() == sender_peer_index) {
+      stream_state.GetPausableState(receiver_peer_index)->Resume();
     }
   }
 }
@@ -923,7 +940,8 @@ void DefaultVideoQualityAnalyzer::
   // Add frames in flight for this stream into frames comparator.
   // Frames in flight were not rendered, so they won't affect stream's
   // last rendered frame time.
-  while (!stream_state.IsEmpty(peer_index)) {
+  while (!stream_state.IsEmpty(peer_index) &&
+         !stream_state.GetPausableState(peer_index)->IsPaused()) {
     uint16_t frame_id = stream_state.PopFront(peer_index);
     auto it = captured_frames_in_flight_.find(frame_id);
     RTC_DCHECK(it != captured_frames_in_flight_.end());
@@ -934,6 +952,104 @@ void DefaultVideoQualityAnalyzer::
                                      FrameComparisonType::kFrameInFlight,
                                      frame.GetStatsForPeer(peer_index));
   }
+}
+
+int DefaultVideoQualityAnalyzer::ProcessNotSeenFramesBeforeRendered(
+    size_t peer_index,
+    uint16_t rendered_frame_id,
+    const InternalStatsKey& stats_key,
+    StreamState& state) {
+  int dropped_count = 0;
+  while (!state.IsEmpty(peer_index) &&
+         state.Front(peer_index) != rendered_frame_id) {
+    uint16_t next_frame_id = state.PopFront(peer_index);
+    auto next_frame_it = captured_frames_in_flight_.find(next_frame_id);
+    RTC_DCHECK(next_frame_it != captured_frames_in_flight_.end());
+    FrameInFlight& next_frame = next_frame_it->second;
+
+    // Depending if the receiver was subscribed to this stream or not at the
+    // time when frame was captured, the frame should be considered as dropped
+    // or superfluous (see below for explanation). Superfluous frames must be
+    // excluded from stats calculations.
+    //
+    // We should consider next cases:
+    // Legend:
+    //    + - frame captured on the stream
+    //    p - stream is paused
+    //    r - stream is resumed
+    //
+    //    last                                                   currently
+    //  rendered                                                  rendered
+    //    frame                                                    frame
+    //      |---------------------- dropped -------------------------|
+    // (1) -[]---+---+---+---+---+---+---+---+---+---+---+---+---+---[]-> time
+    //      |                                                        |
+    //      |                                                        |
+    //      |-- dropped ---┐       ┌- dropped -┐       ┌- dropped ---|
+    // (2) -[]---+---+---+-|-+---+-|-+---+---+-|-+---+-|-+---+---+---[]-> time
+    //      |              p       r           p       r             |
+    //      |                                                        |
+    //      |-- dropped ---┐       ┌------------ dropped ------------|
+    // (3) -[]---+---+---+-|-+---+-|-+---+---+---+---+---+-|-+---+---[]-> time
+    //                     p       r                       p
+    //
+    // Cases explanation:
+    //   (1) Regular media flow, frame is received after freeze.
+    //   (2) Stream was paused and received multiple times. Frame is received
+    //       after freeze from last resume.
+    //   (3) Stream was paused and received multiple times. Frame is received
+    //       after stream was paused because frame was already in the network.
+    //
+    // Based on that if stream wasn't paused when `next_frame_id` was captured,
+    // then `next_frame_id` should be considered as dropped. If stream was NOT
+    // resumed after `next_frame_id` was captured but we still received a
+    // `rendered_frame_id` on this stream, then `next_frame_id` also should
+    // be considered as dropped. In other cases `next_frame_id` should be
+    // considered as superfluous, because receiver wasn't expected to receive
+    // `next_frame_id` at all.
+
+    bool is_dropped = false;
+    bool is_paused = state.GetPausableState(peer_index)
+                         ->WasPausedAt(next_frame.captured_time());
+    if (!is_paused) {
+      is_dropped = true;
+    } else {
+      bool was_resumed_after =
+          state.GetPausableState(peer_index)
+              ->WasResumedAfter(next_frame.captured_time());
+      if (!was_resumed_after) {
+        is_dropped = true;
+      }
+    }
+
+    if (is_dropped) {
+      dropped_count++;
+      // Frame with id `dropped_frame_id` was dropped. We need:
+      // 1. Update global and stream frame counters
+      // 2. Extract corresponding frame from `captured_frames_in_flight_`
+      // 3. Send extracted frame to comparison with dropped=true
+      // 4. Cleanup dropped frame
+      frame_counters_.dropped++;
+      stream_frame_counters_.at(stats_key).dropped++;
+
+      next_frame.MarkDropped(peer_index);
+
+      analyzer_stats_.frames_in_flight_left_count.AddSample(
+          StatsSample(captured_frames_in_flight_.size(), Now()));
+      frames_comparator_.AddComparison(stats_key, /*captured=*/absl::nullopt,
+                                       /*rendered=*/absl::nullopt,
+                                       FrameComparisonType::kDroppedFrame,
+                                       next_frame.GetStatsForPeer(peer_index));
+    } else {
+      next_frame.MarkSuperfluous(peer_index);
+    }
+
+    if (next_frame_it->second.HaveAllPeersReceived()) {
+      frames_storage_.Remove(next_frame_it->second.id());
+      captured_frames_in_flight_.erase(next_frame_it);
+    }
+  }
+  return dropped_count;
 }
 
 void DefaultVideoQualityAnalyzer::ReportResults() {
@@ -1046,32 +1162,6 @@ void DefaultVideoQualityAnalyzer::ReportResults(
       {MetricMetadataKey::kReceiverMetadataKey, peers_->name(key.receiver)},
       {MetricMetadataKey::kExperimentalTestNameMetadataKey, test_label_}};
 
-  double sum_squared_interframe_delays_secs = 0;
-  Timestamp video_start_time = Timestamp::PlusInfinity();
-  Timestamp video_end_time = Timestamp::MinusInfinity();
-  for (const SamplesStatsCounter::StatsSample& sample :
-       stats.time_between_rendered_frames_ms.GetTimedSamples()) {
-    double interframe_delay_ms = sample.value;
-    const double interframe_delays_secs = interframe_delay_ms / 1000.0;
-    // Sum of squared inter frame intervals is used to calculate the harmonic
-    // frame rate metric. The metric aims to reflect overall experience related
-    // to smoothness of video playback and includes both freezes and pauses.
-    sum_squared_interframe_delays_secs +=
-        interframe_delays_secs * interframe_delays_secs;
-    if (sample.time < video_start_time) {
-      video_start_time = sample.time;
-    }
-    if (sample.time > video_end_time) {
-      video_end_time = sample.time;
-    }
-  }
-  double harmonic_framerate_fps = 0;
-  TimeDelta video_duration = video_end_time - video_start_time;
-  if (sum_squared_interframe_delays_secs > 0.0 && video_duration.IsFinite()) {
-    harmonic_framerate_fps =
-        video_duration.seconds<double>() / sum_squared_interframe_delays_secs;
-  }
-
   metrics_logger_->LogMetric(
       "psnr_dB", test_case_name, stats.psnr, Unit::kUnitless,
       ImprovementDirection::kBiggerIsBetter, metric_metadata);
@@ -1091,7 +1181,7 @@ void DefaultVideoQualityAnalyzer::ReportResults(
       stats.time_between_rendered_frames_ms, Unit::kMilliseconds,
       ImprovementDirection::kSmallerIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
-      "harmonic_framerate", test_case_name, harmonic_framerate_fps,
+      "harmonic_framerate", test_case_name, stats.harmonic_framerate_fps,
       Unit::kHertz, ImprovementDirection::kBiggerIsBetter, metric_metadata);
   metrics_logger_->LogSingleValueMetric(
       "encode_frame_rate", test_case_name,

@@ -455,7 +455,9 @@ absl::AnyInvocable<void() &&> Thread::Get(int cmsWait) {
   return nullptr;
 }
 
-void Thread::PostTask(absl::AnyInvocable<void() &&> task) {
+void Thread::PostTaskImpl(absl::AnyInvocable<void() &&> task,
+                          const PostTaskTraits& traits,
+                          const webrtc::Location& location) {
   if (IsQuitting()) {
     return;
   }
@@ -471,8 +473,10 @@ void Thread::PostTask(absl::AnyInvocable<void() &&> task) {
   WakeUpSocketServer();
 }
 
-void Thread::PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
-                                          webrtc::TimeDelta delay) {
+void Thread::PostDelayedTaskImpl(absl::AnyInvocable<void() &&> task,
+                                 webrtc::TimeDelta delay,
+                                 const PostDelayedTaskTraits& traits,
+                                 const webrtc::Location& location) {
   if (IsQuitting()) {
     return;
   }
@@ -719,7 +723,8 @@ void Thread::Stop() {
   Join();
 }
 
-void Thread::BlockingCall(rtc::FunctionView<void()> functor) {
+void Thread::BlockingCallImpl(rtc::FunctionView<void()> functor,
+                              const webrtc::Location& location) {
   TRACE_EVENT0("webrtc", "Thread::BlockingCall");
 
   RTC_DCHECK(!IsQuitting());
@@ -821,12 +826,6 @@ bool Thread::IsInvokeToThreadAllowed(rtc::Thread* target) {
 void Thread::Delete() {
   Stop();
   delete this;
-}
-
-void Thread::PostDelayedTask(absl::AnyInvocable<void() &&> task,
-                             webrtc::TimeDelta delay) {
-  // This implementation does not support low precision yet.
-  PostDelayedHighPrecisionTask(std::move(task), delay);
 }
 
 bool Thread::IsProcessingMessagesForTesting() {

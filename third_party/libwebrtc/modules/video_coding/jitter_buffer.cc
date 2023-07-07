@@ -14,12 +14,12 @@
 #include <utility>
 
 #include "api/units/timestamp.h"
-#include "modules/video_coding/frame_buffer.h"
+#include "modules/video_coding/deprecated/frame_buffer.h"
+#include "modules/video_coding/deprecated/jitter_buffer_common.h"
+#include "modules/video_coding/deprecated/packet.h"
 #include "modules/video_coding/include/video_coding.h"
 #include "modules/video_coding/internal_defines.h"
-#include "modules/video_coding/jitter_buffer_common.h"
-#include "modules/video_coding/packet.h"
-#include "modules/video_coding/timing/inter_frame_delay.h"
+#include "modules/video_coding/timing/inter_frame_delay_variation_calculator.h"
 #include "modules/video_coding/timing/jitter_estimator.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
@@ -873,7 +873,7 @@ void VCMJitterBuffer::UpdateJitterEstimate(int64_t latest_packet_time_ms,
   if (latest_packet_time_ms == -1) {
     return;
   }
-  auto frame_delay = inter_frame_delay_.CalculateDelay(
+  auto frame_delay = inter_frame_delay_.Calculate(
       timestamp, Timestamp::Millis(latest_packet_time_ms));
 
   bool not_reordered = frame_delay.has_value();

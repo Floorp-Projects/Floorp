@@ -140,6 +140,32 @@ BaseChannel::BaseChannel(
   RTC_DLOG(LS_INFO) << "Created channel: " << ToString();
 }
 
+BaseChannel::BaseChannel(rtc::Thread* worker_thread,
+                         rtc::Thread* network_thread,
+                         rtc::Thread* signaling_thread,
+                         std::unique_ptr<MediaChannel> media_channel_impl,
+                         absl::string_view mid,
+                         bool srtp_required,
+                         webrtc::CryptoOptions crypto_options,
+                         UniqueRandomIdGenerator* ssrc_generator)
+    : media_channel_impl_(std::move(media_channel_impl)),
+      worker_thread_(worker_thread),
+      network_thread_(network_thread),
+      signaling_thread_(signaling_thread),
+      alive_(PendingTaskSafetyFlag::Create()),
+      srtp_required_(srtp_required),
+      extensions_filter_(
+          crypto_options.srtp.enable_encrypted_rtp_header_extensions
+              ? webrtc::RtpExtension::kPreferEncryptedExtension
+              : webrtc::RtpExtension::kDiscardEncryptedExtension),
+      demuxer_criteria_(mid),
+      ssrc_generator_(ssrc_generator) {
+  RTC_DCHECK_RUN_ON(worker_thread_);
+  RTC_DCHECK(media_channel_impl_);
+  RTC_DCHECK(ssrc_generator_);
+  RTC_DLOG(LS_INFO) << "Created channel: " << ToString();
+}
+
 BaseChannel::~BaseChannel() {
   TRACE_EVENT0("webrtc", "BaseChannel::~BaseChannel");
   RTC_DCHECK_RUN_ON(worker_thread_);
@@ -152,9 +178,15 @@ BaseChannel::~BaseChannel() {
 }
 
 std::string BaseChannel::ToString() const {
-  return StringFormat(
-      "{mid: %s, media_type: %s}", mid().c_str(),
-      MediaTypeToString(media_send_channel_impl_->media_type()).c_str());
+  if (media_send_channel_impl_) {
+    return StringFormat(
+        "{mid: %s, media_type: %s}", mid().c_str(),
+        MediaTypeToString(media_send_channel_impl_->media_type()).c_str());
+  } else {
+    return StringFormat(
+        "{mid: %s, media_type: %s}", mid().c_str(),
+        MediaTypeToString(media_channel_impl_->media_type()).c_str());
+  }
 }
 
 bool BaseChannel::ConnectToRtpTransport_n() {
@@ -682,12 +714,14 @@ bool BaseChannel::UpdateLocalStreams_w(const std::vector<StreamParams>& streams,
                        << " into " << ToString();
       // Must also tell the corresponding receive stream to listen for
       // RRs coming in on the new stream's SSRC
-      if (all_streams.size() == 1) {
-        if (!media_receive_channel()->SetLocalSsrc(new_stream)) {
-          error_desc = StringFormat(
-              "Failed to set local ssrc: %u into m-section with mid='%s'",
-              new_stream.first_ssrc(), mid().c_str());
-          ret = false;
+      if (media_send_channel_impl_) {
+        if (all_streams.size() == 1) {
+          if (!media_receive_channel()->SetLocalSsrc(new_stream)) {
+            error_desc = StringFormat(
+                "Failed to set local ssrc: %u into m-section with mid='%s'",
+                new_stream.first_ssrc(), mid().c_str());
+            ret = false;
+          }
         }
       }
     } else {
@@ -848,6 +882,26 @@ VoiceChannel::VoiceChannel(
       send_channel_(media_send_channel_impl_->AsVoiceChannel()),
       receive_channel_(media_receive_channel_impl_->AsVoiceChannel()) {}
 
+VoiceChannel::VoiceChannel(
+    rtc::Thread* worker_thread,
+    rtc::Thread* network_thread,
+    rtc::Thread* signaling_thread,
+    std::unique_ptr<VoiceMediaChannel> media_channel_impl,
+    absl::string_view mid,
+    bool srtp_required,
+    webrtc::CryptoOptions crypto_options,
+    UniqueRandomIdGenerator* ssrc_generator)
+    : BaseChannel(worker_thread,
+                  network_thread,
+                  signaling_thread,
+                  std::move(media_channel_impl),
+                  mid,
+                  srtp_required,
+                  crypto_options,
+                  ssrc_generator),
+      send_channel_(media_channel_impl_->AsVoiceChannel()),
+      receive_channel_(media_channel_impl_->AsVoiceChannel()) {}
+
 VoiceChannel::~VoiceChannel() {
   TRACE_EVENT0("webrtc", "VoiceChannel::~VoiceChannel");
   // this can't be done in the base class, since it calls a virtual
@@ -981,7 +1035,38 @@ VideoChannel::VideoChannel(
                   crypto_options,
                   ssrc_generator),
       send_channel_(media_send_channel_impl_->AsVideoChannel()),
-      receive_channel_(media_receive_channel_impl_->AsVideoChannel()) {}
+      receive_channel_(media_receive_channel_impl_->AsVideoChannel()) {
+  // TODO(bugs.webrtc.org/13931): Remove when values are set
+  // in a more sensible fashion
+  media_send_channel_impl_->AsVideoChannel()->SetSendCodecChangedCallback(
+      [this]() {
+        // Adjust receive streams based on send codec.
+        media_receive_channel()->SetReceiverFeedbackParameters(
+            media_send_channel()->SendCodecHasLntf(),
+            media_send_channel()->SendCodecHasNack(),
+            media_send_channel()->SendCodecRtcpMode(),
+            media_send_channel()->SendCodecRtxTime());
+      });
+}
+VideoChannel::VideoChannel(
+    rtc::Thread* worker_thread,
+    rtc::Thread* network_thread,
+    rtc::Thread* signaling_thread,
+    std::unique_ptr<VideoMediaChannel> media_channel_impl,
+    absl::string_view mid,
+    bool srtp_required,
+    webrtc::CryptoOptions crypto_options,
+    UniqueRandomIdGenerator* ssrc_generator)
+    : BaseChannel(worker_thread,
+                  network_thread,
+                  signaling_thread,
+                  std::move(media_channel_impl),
+                  mid,
+                  srtp_required,
+                  crypto_options,
+                  ssrc_generator),
+      send_channel_(media_channel_impl_->AsVideoChannel()),
+      receive_channel_(media_channel_impl_->AsVideoChannel()) {}
 
 VideoChannel::~VideoChannel() {
   TRACE_EVENT0("webrtc", "VideoChannel::~VideoChannel");
@@ -1064,12 +1149,6 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
           mid().c_str());
       return false;
     }
-    // adjust receive streams based on send codec
-    media_receive_channel()->SetReceiverFeedbackParameters(
-        media_send_channel()->SendCodecHasLntf(),
-        media_send_channel()->SendCodecHasNack(),
-        media_send_channel()->SendCodecRtcpMode(),
-        media_send_channel()->SendCodecRtxTime());
     last_send_params_ = send_params;
   }
 

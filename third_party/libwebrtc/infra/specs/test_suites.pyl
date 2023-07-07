@@ -40,6 +40,7 @@
       'modules_unittests': {
         'mixins': ['shards-6'],
       },
+      'peer_connection_mediachannel_split_unittests': {},
       'peerconnection_unittests': {
         'mixins': ['shards-4'],
       },
@@ -94,6 +95,7 @@
       'modules_unittests': {
         'mixins': ['shards-6'],
       },
+      'peer_connection_mediachannel_split_unittests': {},
       'peerconnection_unittests': {
         'mixins': ['shards-4'],
       },
@@ -146,6 +148,7 @@
         'mixins': ['shards-4'],
       },
       'voip_unittests': {},
+      'webrtc_nonparallel_tests': {},
       # TODO(bugs.fuchsia.dev/115601): Enable when cpu time API's are implemented in Fuchsia
       # 'test_support_unittests': {},
       # TODO(bugs.webrtc.org/14707): chromium.test component needs to allow creating listening ports.

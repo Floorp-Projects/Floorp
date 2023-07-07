@@ -1,71 +1,81 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 08:01:00 +0000
-Subject: Bug 1828065 - cherry-pick upstream libwebrtc commit 6fc1ae58be.
+Date: Tue, 16 May 2023 06:38:00 +0000
+Subject: Bug 1832804 - cherry-pick upstream webrtc commit a09331a603.
  r=webrtc-reviewers,mjf
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Upstream commit: https://webrtc.googlesource.com/src/+/6fc1ae58be7cbb61ad0431d90eb7a7dc333de2f2
-    In DeviceInfoDS check that out vars were set
+Upstream commit: https://webrtc.googlesource.com/src/+/a09331a6038bb6191c7662680d8928940463a099
+    Don't write TransmissionOffset when capture time is not set
 
-    Bug: chromium:1441804
-    Change-Id: Id07cb61519315d77c2d7cdab1053efaaf7473e1a
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304060
-    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    RTX padding packets sent before media packets can legitimately have no
+    timestamps set (they are 0). Writing the TransmissionOffset extension
+    with capture time 0 will overflow once current time exceeds ~3 minutes.
+
+    Bug: webrtc:15172
+    Change-Id: I4dd1f341802d45016549b330f0e08cd3a00cfa19
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305020
+    Reviewed-by: Erik Språng <sprang@webrtc.org>
     Reviewed-by: Per Kjellander <perkj@webrtc.org>
-    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39982}
+    Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+    Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#40055}
 
-Differential Revision: https://phabricator.services.mozilla.com/D177236
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/60d381b6016ae5af0181b44c6a31b41eab094793
+Differential Revision: https://phabricator.services.mozilla.com/D178007
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c303f3d267415184f3d023b022e4bd309d540fec
 ---
- modules/video_capture/windows/device_info_ds.cc    | 13 +++++++------
- modules/video_capture/windows/help_functions_ds.cc |  3 +++
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ modules/rtp_rtcp/source/rtp_sender_egress.cc  |  5 +++--
+ .../source/rtp_sender_egress_unittest.cc      | 20 +++++++++++++++++++
+ 2 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 6b4c57d01e..2c192fe4f6 100644
---- a/modules/video_capture/windows/device_info_ds.cc
-+++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -505,9 +505,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-       }
+diff --git a/modules/rtp_rtcp/source/rtp_sender_egress.cc b/modules/rtp_rtcp/source/rtp_sender_egress.cc
+index d8163dc2e7..7931dd824d 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_egress.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_egress.cc
+@@ -210,8 +210,9 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
+   // In case of VideoTimingExtension, since it's present not in every packet,
+   // data after rtp header may be corrupted if these packets are protected by
+   // the FEC.
+-  TimeDelta diff = now - packet->capture_time();
+-  if (packet->HasExtension<TransmissionOffset>()) {
++  if (packet->HasExtension<TransmissionOffset>() &&
++      packet->capture_time() > Timestamp::Zero()) {
++    TimeDelta diff = now - packet->capture_time();
+     packet->SetExtension<TransmissionOffset>(kTimestampTicksPerMs * diff.ms());
+   }
+   if (packet->HasExtension<AbsoluteSendTime>()) {
+diff --git a/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
+index cc1c8feb8d..bfaffa1bdb 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
+@@ -268,6 +268,26 @@ TEST_F(RtpSenderEgressTest,
+   EXPECT_TRUE(transport_.last_packet()->options.included_in_allocation);
+ }
  
-       if (hrVC == S_OK) {
--        LONGLONG* frameDurationList;
--        LONGLONG maxFPS;
--        long listSize;
-+        LONGLONG* frameDurationList = NULL;
-+        LONGLONG maxFPS = 0;
-+        long listSize = 0;
-         SIZE size;
-         size.cx = capability.width;
-         size.cy = capability.height;
-@@ -520,9 +520,10 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-         hrVC = videoControlConfig->GetFrameRateList(
-             outputCapturePin, tmp, size, &listSize, &frameDurationList);
- 
--        // On some odd cameras, you may get a 0 for duration.
--        // GetMaxOfFrameArray returns the lowest duration (highest FPS)
--        if (hrVC == S_OK && listSize > 0 &&
-+        // On some odd cameras, you may get a 0 for duration. Some others may
-+        // not update the out vars. GetMaxOfFrameArray returns the lowest
-+        // duration (highest FPS), or 0 if there was no list with elements.
-+        if (hrVC == S_OK &&
-             0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
-           capability.maxFPS = static_cast<int>(10000000 / maxFPS);
-           capability.supportFrameRateControl = true;
-diff --git a/modules/video_capture/windows/help_functions_ds.cc b/modules/video_capture/windows/help_functions_ds.cc
-index b767726107..47fecfe4a1 100644
---- a/modules/video_capture/windows/help_functions_ds.cc
-+++ b/modules/video_capture/windows/help_functions_ds.cc
-@@ -21,6 +21,9 @@ namespace webrtc {
- namespace videocapturemodule {
- // This returns minimum :), which will give max frame rate...
- LONGLONG GetMaxOfFrameArray(LONGLONG* maxFps, long size) {
-+  if (!maxFps || size <= 0) {
-+    return 0;
-+  }
-   LONGLONG maxFPS = maxFps[0];
-   for (int i = 0; i < size; i++) {
-     if (maxFPS > maxFps[i])
++TEST_F(RtpSenderEgressTest,
++       DoesntWriteTransmissionOffsetOnRtxPaddingBeforeMedia) {
++  header_extensions_.RegisterByUri(kTransmissionOffsetExtensionId,
++                                   TransmissionOffset::Uri());
++
++  // Prior to sending media, timestamps are 0.
++  std::unique_ptr<RtpPacketToSend> padding =
++      BuildRtpPacket(/*marker_bit=*/true, /*capture_time_ms=*/0);
++  padding->set_packet_type(RtpPacketMediaType::kPadding);
++  padding->SetSsrc(kRtxSsrc);
++  EXPECT_TRUE(padding->HasExtension<TransmissionOffset>());
++
++  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
++  sender->SendPacket(std::move(padding), PacedPacketInfo());
++
++  absl::optional<int32_t> offset =
++      transport_.last_packet()->packet.GetExtension<TransmissionOffset>();
++  EXPECT_EQ(offset, 0);
++}
++
+ TEST_F(RtpSenderEgressTest, OnSendSideDelayUpdated) {
+   StrictMock<MockSendSideDelayObserver> send_side_delay_observer;
+   RtpRtcpInterface::Configuration config = DefaultConfig();
 -- 
 2.34.1
 

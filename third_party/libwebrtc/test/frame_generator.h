@@ -40,6 +40,8 @@ class SquareGenerator : public FrameGeneratorInterface {
   VideoFrameData NextFrame() override;
   Resolution GetResolution() const override;
 
+  absl::optional<int> fps() const override { return absl::nullopt; }
+
  private:
   rtc::scoped_refptr<I420Buffer> CreateI420Buffer(int width, int height);
 
@@ -82,6 +84,8 @@ class YuvFileGenerator : public FrameGeneratorInterface {
   }
   Resolution GetResolution() const override;
 
+  absl::optional<int> fps() const override { return absl::nullopt; }
+
  private:
   // Returns true if the new frame was loaded.
   // False only in case of a single file with a single frame in it.
@@ -115,6 +119,8 @@ class NV12FileGenerator : public FrameGeneratorInterface {
   }
   Resolution GetResolution() const override;
 
+  absl::optional<int> fps() const override { return absl::nullopt; }
+
  private:
   // Returns true if the new frame was loaded.
   // False only in case of a single file with a single frame in it.
@@ -144,6 +150,8 @@ class SlideGenerator : public FrameGeneratorInterface {
     RTC_LOG(LS_WARNING) << "SlideGenerator::ChangeResolution not implemented";
   }
   Resolution GetResolution() const override;
+
+  absl::optional<int> fps() const override { return absl::nullopt; }
 
  private:
   // Generates some randomly sized and colored squares scattered
@@ -176,6 +184,8 @@ class ScrollingImageFrameGenerator : public FrameGeneratorInterface {
         << "ScrollingImageFrameGenerator::ChangeResolution not implemented";
   }
   Resolution GetResolution() const override;
+
+  absl::optional<int> fps() const override { return absl::nullopt; }
 
  private:
   void UpdateSourceFrame(size_t frame_num);

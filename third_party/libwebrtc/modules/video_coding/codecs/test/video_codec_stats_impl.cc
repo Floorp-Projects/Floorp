@@ -15,6 +15,7 @@
 #include "api/numerics/samples_stats_counter.h"
 #include "api/test/metrics/global_metrics_logger_and_exporter.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/time_utils.h"
 
 namespace webrtc {
 namespace test {
@@ -23,6 +24,112 @@ using Frame = VideoCodecStats::Frame;
 using Stream = VideoCodecStats::Stream;
 
 constexpr Frequency k90kHz = Frequency::Hertz(90000);
+
+class LeakyBucket {
+ public:
+  LeakyBucket() : level_bits_(0) {}
+
+  // Updates bucket level and returns its current level in bits. Data is remove
+  // from bucket with rate equal to target bitrate of previous frame. Bucket
+  // level is tracked with floating point precision. Returned value of bucket
+  // level is rounded up.
+  int Update(const Frame& frame) {
+    RTC_CHECK(frame.target_bitrate) << "Bitrate must be specified.";
+
+    if (prev_frame_) {
+      RTC_CHECK_GT(frame.timestamp_rtp, prev_frame_->timestamp_rtp)
+          << "Timestamp must increase.";
+      TimeDelta passed =
+          (frame.timestamp_rtp - prev_frame_->timestamp_rtp) / k90kHz;
+      level_bits_ -=
+          prev_frame_->target_bitrate->bps() * passed.us() / 1000000.0;
+      level_bits_ = std::max(level_bits_, 0.0);
+    }
+
+    prev_frame_ = frame;
+
+    level_bits_ += frame.frame_size.bytes() * 8;
+    return static_cast<int>(std::ceil(level_bits_));
+  }
+
+ private:
+  absl::optional<Frame> prev_frame_;
+  double level_bits_;
+};
+
+// Merges spatial layer frames into superframes.
+std::vector<Frame> Merge(const std::vector<Frame>& frames) {
+  std::vector<Frame> superframes;
+  // Map from frame timestamp to index in `superframes` vector.
+  std::map<uint32_t, int> index;
+
+  for (const auto& f : frames) {
+    if (index.find(f.timestamp_rtp) == index.end()) {
+      index[f.timestamp_rtp] = static_cast<int>(superframes.size());
+      superframes.push_back(f);
+      continue;
+    }
+
+    Frame& sf = superframes[index[f.timestamp_rtp]];
+
+    sf.width = std::max(sf.width, f.width);
+    sf.height = std::max(sf.height, f.height);
+    sf.frame_size += f.frame_size;
+    sf.keyframe |= f.keyframe;
+
+    sf.encode_time = std::max(sf.encode_time, f.encode_time);
+    sf.decode_time = std::max(sf.decode_time, f.decode_time);
+
+    if (f.spatial_idx > sf.spatial_idx) {
+      if (f.qp) {
+        sf.qp = f.qp;
+      }
+      if (f.psnr) {
+        sf.psnr = f.psnr;
+      }
+    }
+
+    sf.spatial_idx = std::max(sf.spatial_idx, f.spatial_idx);
+    sf.temporal_idx = std::max(sf.temporal_idx, f.temporal_idx);
+
+    sf.encoded |= f.encoded;
+    sf.decoded |= f.decoded;
+  }
+
+  return superframes;
+}
+
+Timestamp RtpToTime(uint32_t timestamp_rtp) {
+  return Timestamp::Micros((timestamp_rtp / k90kHz).us());
+}
+
+SamplesStatsCounter::StatsSample StatsSample(double value, Timestamp time) {
+  return SamplesStatsCounter::StatsSample{value, time};
+}
+
+TimeDelta CalcTotalDuration(const std::vector<Frame>& frames) {
+  RTC_CHECK(!frames.empty());
+  TimeDelta duration = TimeDelta::Zero();
+  if (frames.size() > 1) {
+    duration +=
+        (frames.rbegin()->timestamp_rtp - frames.begin()->timestamp_rtp) /
+        k90kHz;
+  }
+
+  // Add last frame duration. If target frame rate is provided, calculate frame
+  // duration from it. Otherwise, assume duration of last frame is the same as
+  // duration of preceding frame.
+  if (frames.rbegin()->target_framerate) {
+    duration += 1 / *frames.rbegin()->target_framerate;
+  } else {
+    RTC_CHECK_GT(frames.size(), 1u);
+    duration += (frames.rbegin()->timestamp_rtp -
+                 std::next(frames.rbegin())->timestamp_rtp) /
+                k90kHz;
+  }
+
+  return duration;
+}
 }  // namespace
 
 std::vector<Frame> VideoCodecStatsImpl::Slice(
@@ -51,134 +158,203 @@ std::vector<Frame> VideoCodecStatsImpl::Slice(
   return frames;
 }
 
-Stream VideoCodecStatsImpl::Aggregate(
-    const std::vector<Frame>& frames,
-    absl::optional<DataRate> bitrate,
-    absl::optional<Frequency> framerate) const {
+Stream VideoCodecStatsImpl::Aggregate(const std::vector<Frame>& frames) const {
   std::vector<Frame> superframes = Merge(frames);
+  RTC_CHECK(!superframes.empty());
 
+  LeakyBucket leacky_bucket;
   Stream stream;
-  stream.num_frames = static_cast<int>(superframes.size());
+  for (size_t i = 0; i < superframes.size(); ++i) {
+    Frame& f = superframes[i];
+    Timestamp time = RtpToTime(f.timestamp_rtp);
 
-  for (const auto& f : superframes) {
-    Timestamp time = Timestamp::Micros((f.timestamp_rtp / k90kHz).us());
-    // TODO(webrtc:14852): Add AddSample(double value, Timestamp time) method to
-    // SamplesStatsCounter.
-    stream.decode_time_us.AddSample(SamplesStatsCounter::StatsSample(
-        {.value = static_cast<double>(f.decode_time.us()), .time = time}));
+    if (!f.frame_size.IsZero()) {
+      stream.width.AddSample(StatsSample(f.width, time));
+      stream.height.AddSample(StatsSample(f.height, time));
+      stream.frame_size_bytes.AddSample(
+          StatsSample(f.frame_size.bytes(), time));
+      stream.keyframe.AddSample(StatsSample(f.keyframe, time));
+      if (f.qp) {
+        stream.qp.AddSample(StatsSample(*f.qp, time));
+      }
+    }
+
+    if (f.encoded) {
+      stream.encode_time_ms.AddSample(StatsSample(f.encode_time.ms(), time));
+    }
+
+    if (f.decoded) {
+      stream.decode_time_ms.AddSample(StatsSample(f.decode_time.ms(), time));
+    }
 
     if (f.psnr) {
-      stream.psnr.y.AddSample(
-          SamplesStatsCounter::StatsSample({.value = f.psnr->y, .time = time}));
-      stream.psnr.u.AddSample(
-          SamplesStatsCounter::StatsSample({.value = f.psnr->u, .time = time}));
-      stream.psnr.v.AddSample(
-          SamplesStatsCounter::StatsSample({.value = f.psnr->v, .time = time}));
+      stream.psnr.y.AddSample(StatsSample(f.psnr->y, time));
+      stream.psnr.u.AddSample(StatsSample(f.psnr->u, time));
+      stream.psnr.v.AddSample(StatsSample(f.psnr->v, time));
     }
 
-    if (f.keyframe) {
-      ++stream.num_keyframes;
+    if (f.target_framerate) {
+      stream.target_framerate_fps.AddSample(
+          StatsSample(f.target_framerate->millihertz() / 1000.0, time));
     }
 
-    // TODO(webrtc:14852): Aggregate other metrics.
+    if (f.target_bitrate) {
+      stream.target_bitrate_kbps.AddSample(
+          StatsSample(f.target_bitrate->bps() / 1000.0, time));
+
+      int buffer_level_bits = leacky_bucket.Update(f);
+      stream.transmission_time_ms.AddSample(
+          StatsSample(buffer_level_bits * rtc::kNumMillisecsPerSec /
+                          f.target_bitrate->bps(),
+                      RtpToTime(f.timestamp_rtp)));
+    }
+  }
+
+  TimeDelta duration = CalcTotalDuration(superframes);
+  DataRate encoded_bitrate =
+      DataSize::Bytes(stream.frame_size_bytes.GetSum()) / duration;
+
+  int num_encoded_frames = stream.frame_size_bytes.NumSamples();
+  Frequency encoded_framerate = num_encoded_frames / duration;
+
+  absl::optional<double> bitrate_mismatch_pct;
+  if (auto target_bitrate = superframes.begin()->target_bitrate;
+      target_bitrate) {
+    bitrate_mismatch_pct = 100.0 *
+                           (encoded_bitrate.bps() - target_bitrate->bps()) /
+                           target_bitrate->bps();
+  }
+
+  absl::optional<double> framerate_mismatch_pct;
+  if (auto target_framerate = superframes.begin()->target_framerate;
+      target_framerate) {
+    framerate_mismatch_pct =
+        100.0 *
+        (encoded_framerate.millihertz() - target_framerate->millihertz()) /
+        target_framerate->millihertz();
+  }
+
+  for (auto& f : superframes) {
+    Timestamp time = RtpToTime(f.timestamp_rtp);
+    stream.encoded_bitrate_kbps.AddSample(
+        StatsSample(encoded_bitrate.bps() / 1000.0, time));
+
+    stream.encoded_framerate_fps.AddSample(
+        StatsSample(encoded_framerate.millihertz() / 1000.0, time));
+
+    if (bitrate_mismatch_pct) {
+      stream.bitrate_mismatch_pct.AddSample(
+          StatsSample(*bitrate_mismatch_pct, time));
+    }
+
+    if (framerate_mismatch_pct) {
+      stream.framerate_mismatch_pct.AddSample(
+          StatsSample(*framerate_mismatch_pct, time));
+    }
   }
 
   return stream;
 }
 
-void VideoCodecStatsImpl::LogMetrics(MetricsLogger* logger,
-                                     const Stream& stream,
-                                     std::string test_case_name) const {
+void VideoCodecStatsImpl::LogMetrics(
+    MetricsLogger* logger,
+    const Stream& stream,
+    std::string test_case_name,
+    std::map<std::string, std::string> metadata) const {
   logger->LogMetric("width", test_case_name, stream.width, Unit::kCount,
-                    webrtc::test::ImprovementDirection::kBiggerIsBetter);
-  // TODO(webrtc:14852): Log other metrics.
+                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
+                    metadata);
+
+  logger->LogMetric("height", test_case_name, stream.height, Unit::kCount,
+                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
+                    metadata);
+
+  logger->LogMetric(
+      "frame_size_bytes", test_case_name, stream.frame_size_bytes, Unit::kBytes,
+      webrtc::test::ImprovementDirection::kNeitherIsBetter, metadata);
+
+  logger->LogMetric("keyframe", test_case_name, stream.keyframe, Unit::kCount,
+                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
+                    metadata);
+
+  logger->LogMetric("qp", test_case_name, stream.qp, Unit::kUnitless,
+                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
+                    metadata);
+
+  logger->LogMetric("encode_time_ms", test_case_name, stream.encode_time_ms,
+                    Unit::kMilliseconds,
+                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
+                    metadata);
+
+  logger->LogMetric("decode_time_ms", test_case_name, stream.decode_time_ms,
+                    Unit::kMilliseconds,
+                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
+                    metadata);
+
+  logger->LogMetric("target_bitrate_kbps", test_case_name,
+                    stream.target_bitrate_kbps, Unit::kKilobitsPerSecond,
+                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
+                    metadata);
+
+  logger->LogMetric("target_framerate_fps", test_case_name,
+                    stream.target_framerate_fps, Unit::kHertz,
+                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
+                    metadata);
+
+  logger->LogMetric("encoded_bitrate_kbps", test_case_name,
+                    stream.encoded_bitrate_kbps, Unit::kKilobitsPerSecond,
+                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
+                    metadata);
+
+  logger->LogMetric("encoded_framerate_fps", test_case_name,
+                    stream.encoded_framerate_fps, Unit::kHertz,
+                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
+                    metadata);
+
+  logger->LogMetric("bitrate_mismatch_pct", test_case_name,
+                    stream.bitrate_mismatch_pct, Unit::kPercent,
+                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
+                    metadata);
+
+  logger->LogMetric("framerate_mismatch_pct", test_case_name,
+                    stream.framerate_mismatch_pct, Unit::kPercent,
+                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
+                    metadata);
+
+  logger->LogMetric("transmission_time_ms", test_case_name,
+                    stream.transmission_time_ms, Unit::kMilliseconds,
+                    webrtc::test::ImprovementDirection::kSmallerIsBetter,
+                    metadata);
+
+  logger->LogMetric("psnr_y_db", test_case_name, stream.psnr.y, Unit::kUnitless,
+                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
+                    metadata);
+
+  logger->LogMetric("psnr_u_db", test_case_name, stream.psnr.u, Unit::kUnitless,
+                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
+                    metadata);
+
+  logger->LogMetric("psnr_v_db", test_case_name, stream.psnr.v, Unit::kUnitless,
+                    webrtc::test::ImprovementDirection::kBiggerIsBetter,
+                    metadata);
 }
 
-Frame* VideoCodecStatsImpl::AddFrame(int frame_num,
-                                     uint32_t timestamp_rtp,
-                                     int spatial_idx) {
-  Frame frame;
-  frame.frame_num = frame_num;
-  frame.timestamp_rtp = timestamp_rtp;
-  frame.spatial_idx = spatial_idx;
-
-  FrameId frame_id;
-  frame_id.frame_num = frame_num;
-  frame_id.spatial_idx = spatial_idx;
-
+void VideoCodecStatsImpl::AddFrame(const Frame& frame) {
+  FrameId frame_id{.timestamp_rtp = frame.timestamp_rtp,
+                   .spatial_idx = frame.spatial_idx};
   RTC_CHECK(frames_.find(frame_id) == frames_.end())
-      << "Frame with frame_num=" << frame_num
-      << " and spatial_idx=" << spatial_idx << " already exists";
+      << "Frame with timestamp_rtp=" << frame.timestamp_rtp
+      << " and spatial_idx=" << frame.spatial_idx << " already exists";
 
   frames_[frame_id] = frame;
-
-  if (frame_num_.find(timestamp_rtp) == frame_num_.end()) {
-    frame_num_[timestamp_rtp] = frame_num;
-  }
-
-  return &frames_[frame_id];
 }
 
 Frame* VideoCodecStatsImpl::GetFrame(uint32_t timestamp_rtp, int spatial_idx) {
-  if (frame_num_.find(timestamp_rtp) == frame_num_.end()) {
-    return nullptr;
-  }
-
-  FrameId frame_id;
-  frame_id.frame_num = frame_num_[timestamp_rtp];
-  frame_id.spatial_idx = spatial_idx;
-
+  FrameId frame_id{.timestamp_rtp = timestamp_rtp, .spatial_idx = spatial_idx};
   if (frames_.find(frame_id) == frames_.end()) {
     return nullptr;
   }
-
-  return &frames_[frame_id];
-}
-
-std::vector<Frame> VideoCodecStatsImpl::Merge(
-    const std::vector<Frame>& frames) const {
-  std::vector<Frame> superframes;
-  // Map from frame_num to index in `superframes` vector.
-  std::map<int, int> index;
-
-  for (const auto& f : frames) {
-    if (f.encoded == false && f.decoded == false) {
-      continue;
-    }
-
-    if (index.find(f.frame_num) == index.end()) {
-      index[f.frame_num] = static_cast<int>(superframes.size());
-      superframes.push_back(f);
-      continue;
-    }
-
-    Frame& sf = superframes[index[f.frame_num]];
-
-    sf.width = std::max(sf.width, f.width);
-    sf.height = std::max(sf.height, f.height);
-    sf.size_bytes += f.size_bytes;
-    sf.keyframe |= f.keyframe;
-
-    sf.encode_time = std::max(sf.encode_time, f.encode_time);
-    sf.decode_time += f.decode_time;
-
-    if (f.spatial_idx > sf.spatial_idx) {
-      if (f.qp) {
-        sf.qp = f.qp;
-      }
-      if (f.psnr) {
-        sf.psnr = f.psnr;
-      }
-    }
-
-    sf.spatial_idx = std::max(sf.spatial_idx, f.spatial_idx);
-    sf.temporal_idx = std::max(sf.temporal_idx, f.temporal_idx);
-
-    sf.encoded |= f.encoded;
-    sf.decoded |= f.decoded;
-  }
-
-  return superframes;
+  return &frames_.find(frame_id)->second;
 }
 
 }  // namespace test

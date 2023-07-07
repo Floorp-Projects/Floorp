@@ -66,6 +66,7 @@ DecodeSynchronizer::SynchronizedFrameDecodeScheduler::ScheduledRtpTimestamp() {
 
 DecodeSynchronizer::ScheduledFrame
 DecodeSynchronizer::SynchronizedFrameDecodeScheduler::ReleaseNextFrame() {
+  RTC_DCHECK(!stopped_);
   RTC_DCHECK(next_frame_);
   auto res = std::move(*next_frame_);
   next_frame_.reset();
@@ -82,6 +83,7 @@ void DecodeSynchronizer::SynchronizedFrameDecodeScheduler::ScheduleFrame(
     uint32_t rtp,
     FrameDecodeTiming::FrameSchedule schedule,
     FrameReleaseCallback cb) {
+  RTC_DCHECK(!stopped_);
   RTC_DCHECK(!next_frame_) << "Can not schedule two frames at once.";
   next_frame_ = ScheduledFrame(rtp, std::move(schedule), std::move(cb));
   sync_->OnFrameScheduled(this);
@@ -92,6 +94,9 @@ void DecodeSynchronizer::SynchronizedFrameDecodeScheduler::CancelOutstanding() {
 }
 
 void DecodeSynchronizer::SynchronizedFrameDecodeScheduler::Stop() {
+  if (stopped_) {
+    return;
+  }
   CancelOutstanding();
   stopped_ = true;
   sync_->RemoveFrameScheduler(this);
@@ -107,7 +112,7 @@ DecodeSynchronizer::DecodeSynchronizer(Clock* clock,
 
 DecodeSynchronizer::~DecodeSynchronizer() {
   RTC_DCHECK_RUN_ON(worker_queue_);
-  RTC_DCHECK(schedulers_.empty());
+  RTC_CHECK(schedulers_.empty());
 }
 
 std::unique_ptr<FrameDecodeScheduler>

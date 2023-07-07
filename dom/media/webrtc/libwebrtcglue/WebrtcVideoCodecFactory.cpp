@@ -14,7 +14,7 @@
 #include "api/rtp_headers.h"
 #include "api/video_codecs/video_codec.h"
 #include "api/video_codecs/video_encoder_software_fallback_wrapper.h"
-#include "media/engine/encoder_simulcast_proxy.h"
+#include "media/engine/simulcast_encoder_adapter.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
 
@@ -71,7 +71,7 @@ WebrtcVideoEncoderFactory::CreateVideoEncoder(
     case webrtc::VideoCodecType::kVideoCodecVP8:
       // XXX We might be able to use the simulcast proxy for more codecs, but
       // that requires testing.
-      return std::make_unique<webrtc::EncoderSimulcastProxy>(
+      return std::make_unique<webrtc::SimulcastEncoderAdapter>(
           mInternalFactory.get(), aFormat);
     default:
       return mInternalFactory->CreateVideoEncoder(aFormat);

@@ -191,9 +191,8 @@ TEST(RtcpReceiverTest, InvalidFeedbackPacketIsIgnored) {
   // Too short feedback packet.
   const uint8_t bad_packet[] = {0x81, rtcp::Rtpfb::kPacketType, 0, 0};
 
-  // TODO(danilchap): Add expectation RtcpPacketTypesCounterUpdated
-  // is not called once parser would be adjusted to avoid that callback on
-  // semi-valid packets.
+  EXPECT_CALL(mocks.packet_type_counter_observer, RtcpPacketTypesCounterUpdated)
+      .Times(0);
   receiver.IncomingPacket(bad_packet);
 }
 
@@ -202,8 +201,7 @@ TEST(RtcpReceiverTest, InjectSrPacket) {
   RTCPReceiver receiver(DefaultConfiguration(&mocks), &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
 
-  EXPECT_FALSE(receiver.NTP(nullptr, nullptr, nullptr, nullptr, nullptr,
-                            nullptr, nullptr, nullptr));
+  EXPECT_FALSE(receiver.GetSenderReportStats());
 
   int64_t now = mocks.clock.TimeInMilliseconds();
   rtcp::SenderReport sr;
@@ -214,8 +212,7 @@ TEST(RtcpReceiverTest, InjectSrPacket) {
               OnReceivedRtcpReceiverReport(IsEmpty(), _, now));
   receiver.IncomingPacket(sr.Build());
 
-  EXPECT_TRUE(receiver.NTP(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-                           nullptr, nullptr));
+  EXPECT_TRUE(receiver.GetSenderReportStats());
 }
 
 TEST(RtcpReceiverTest, InjectSrPacketFromUnknownSender) {
@@ -235,8 +232,7 @@ TEST(RtcpReceiverTest, InjectSrPacketFromUnknownSender) {
   receiver.IncomingPacket(sr.Build());
 
   // But will not flag that he's gotten sender information.
-  EXPECT_FALSE(receiver.NTP(nullptr, nullptr, nullptr, nullptr, nullptr,
-                            nullptr, nullptr, nullptr));
+  EXPECT_FALSE(receiver.GetSenderReportStats());
 }
 
 TEST(RtcpReceiverTest, InjectSrPacketCalculatesRTT) {

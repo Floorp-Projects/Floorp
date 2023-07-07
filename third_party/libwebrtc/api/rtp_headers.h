@@ -175,7 +175,6 @@ struct RTC_EXPORT RTPHeader {
   uint32_t arrOfCSRCs[kRtpCsrcSize];
   size_t paddingLength;
   size_t headerLength;
-  int payload_type_frequency;
   RTPHeaderExtension extension;
 };
 

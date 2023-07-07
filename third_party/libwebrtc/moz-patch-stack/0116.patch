@@ -1,0 +1,26 @@
+From: Jan-Ivar Bruaroey <jib@mozilla.com>
+Date: Fri, 30 Jun 2023 12:20:00 -0400
+Subject: Bug 1839451 - (fix-f6eae959bf)
+ s/rtc_encoder_simulcast_proxy/rtc_simulcast_encoder_adapter/ BUILD ref.
+
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/876b3f5821cd5c30564a82c1da7d057d79d17b01
+---
+ BUILD.gn | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/BUILD.gn b/BUILD.gn
+index 0f39264f56..6eb14773b0 100644
+--- a/BUILD.gn
++++ b/BUILD.gn
+@@ -560,7 +560,7 @@ if (!build_with_chromium) {
+       deps += [
+         "api/video_codecs:video_codecs_api",
+         "api/video_codecs:rtc_software_fallback_wrappers",
+-        "media:rtc_encoder_simulcast_proxy",
++        "media:rtc_simulcast_encoder_adapter",
+         "modules/video_coding:webrtc_vp8",
+         "modules/video_coding:webrtc_vp9",
+       ]
+-- 
+2.34.1
+
