@@ -122,11 +122,11 @@ function testStoreOOB(type, ext, base, offset, align, value) {
 }
 
 function badLoadModule(type, ext) {
-    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (local.get 0))) (export "" (func 0)))`, /(can't touch memory)|(unknown memory 0)/);
+    wasmFailValidateText( `(module (func (param i32) (${type}.load${ext} (local.get 0))) (export "" (func 0)))`, /memory index/);
 }
 
 function badStoreModule(type, ext) {
-    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (local.get 0) (${type}.const 0))) (export "" (func 0)))`, /(can't touch memory)|(unknown memory 0)/);
+    wasmFailValidateText(`(module (func (param i32) (${type}.store${ext} (local.get 0) (${type}.const 0))) (export "" (func 0)))`, /memory index/);
 }
 
 // Can't touch memory.
@@ -454,7 +454,7 @@ setJitCompilerOption('wasm.fold-offsets', 1);
     // Should fail because the memory index is bad
     assertErrorMessage(() => new WebAssembly.Module(makeIt(0x02, 0x01)),
                        WebAssembly.CompileError,
-                       /memory index must be zero/);
+                       /invalid memory index/);
 }
 
 // Misc syntax for data.
@@ -469,12 +469,12 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (memor
                    /wasm text error/);
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (memory 1) (data 1 (i32.const 0) ""))`)),
                    WebAssembly.CompileError,
-                   /memory index must be zero/);
+                   /invalid memory index/);
 
 
 // Make sure we handle memory instructions without memory
 
-var nomem = /(can't touch memory without memory)|(unknown memory)/;
+var nomem = /memory index out of range/;
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`(module (func (result i32) memory.size))`)),
                    WebAssembly.CompileError,

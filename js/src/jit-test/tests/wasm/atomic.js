@@ -537,7 +537,7 @@ assertErrorMessage(() => wasmEvalText(`(module
 
 // Make sure we can handle wait and notify without memory
 
-var nomem = /(can't touch memory without memory)|(unknown memory)/;
+var nomem = /memory index out of range/;
 
 assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module

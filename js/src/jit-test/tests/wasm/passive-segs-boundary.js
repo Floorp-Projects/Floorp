@@ -164,7 +164,7 @@ mem_test_nofail("data.drop 1", "",
 
 // init with no memory and no data segs
 mem_test("(memory.init 1 (i32.const 1234) (i32.const 1) (i32.const 1))", "",
-         WebAssembly.CompileError, /(can't touch memory without memory)|(unknown memory 0)/,
+         WebAssembly.CompileError, /memory index/,
          /*haveStorage=*/false, /*haveInitA=*/false, /*haveInitP=*/false);
 
 // drop with data seg ix out of range
