@@ -398,10 +398,12 @@ class alignas(16) Instance {
  public:
   // Functions to be called directly from wasm code.
   static int32_t callImport_general(Instance*, int32_t, int32_t, uint64_t*);
-  static uint32_t memoryGrow_m32(Instance* instance, uint32_t delta);
-  static uint64_t memoryGrow_m64(Instance* instance, uint64_t delta);
-  static uint32_t memorySize_m32(Instance* instance);
-  static uint64_t memorySize_m64(Instance* instance);
+  static uint32_t memoryGrow_m32(Instance* instance, uint32_t delta,
+                                 uint32_t memoryIndex);
+  static uint64_t memoryGrow_m64(Instance* instance, uint64_t delta,
+                                 uint32_t memoryIndex);
+  static uint32_t memorySize_m32(Instance* instance, uint32_t memoryIndex);
+  static uint64_t memorySize_m64(Instance* instance, uint32_t memoryIndex);
   static int32_t memCopy_m32(Instance* instance, uint32_t dstByteOffset,
                              uint32_t srcByteOffset, uint32_t len,
                              uint8_t* memBase);

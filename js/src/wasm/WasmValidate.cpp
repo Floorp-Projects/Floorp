@@ -518,10 +518,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         LinearMemoryAddress<Nothing> addr;
         CHECK(iter.readStore(ValType::F64, 8, &addr, &nothing));
       }
-      case uint16_t(Op::MemoryGrow):
-        CHECK(iter.readMemoryGrow(&nothing));
-      case uint16_t(Op::MemorySize):
-        CHECK(iter.readMemorySize());
+      case uint16_t(Op::MemoryGrow): {
+        uint32_t memoryIndex;
+        CHECK(iter.readMemoryGrow(&memoryIndex, &nothing));
+      }
+      case uint16_t(Op::MemorySize): {
+        uint32_t memoryIndex;
+        CHECK(iter.readMemorySize(&memoryIndex));
+      }
       case uint16_t(Op::Br): {
         uint32_t unusedDepth;
         CHECK(iter.readBr(&unusedDepth, &unusedType, &nothings));
