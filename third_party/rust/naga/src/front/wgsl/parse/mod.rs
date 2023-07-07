@@ -84,18 +84,6 @@ impl<'a> ExpressionContext<'a, '_, '_> {
         }
         Ok(accumulator)
     }
-
-    fn declare_local(&mut self, name: ast::Ident<'a>) -> Result<Handle<ast::Local>, Error<'a>> {
-        let handle = self.locals.append(ast::Local, name.span);
-        if let Some(old) = self.local_table.add(name.name, handle) {
-            Err(Error::Redefinition {
-                previous: self.locals.get_span(old),
-                current: name.span,
-            })
-        } else {
-            Ok(handle)
-        }
-    }
 }
 
 /// Which grammar rule we are in the midst of parsing.
@@ -1624,7 +1612,14 @@ impl Parser {
                         let expr_id = self.general_expression(lexer, ctx.reborrow())?;
                         lexer.expect(Token::Separator(';'))?;
 
-                        let handle = ctx.declare_local(name)?;
+                        let handle = ctx.locals.append(ast::Local, name.span);
+                        if let Some(old) = ctx.local_table.add(name.name, handle) {
+                            return Err(Error::Redefinition {
+                                previous: ctx.locals.get_span(old),
+                                current: name.span,
+                            });
+                        }
+
                         ast::StatementKind::LocalDecl(ast::LocalDecl::Let(ast::Let {
                             name,
                             ty: given_ty,
@@ -1652,7 +1647,14 @@ impl Parser {
 
                         lexer.expect(Token::Separator(';'))?;
 
-                        let handle = ctx.declare_local(name)?;
+                        let handle = ctx.locals.append(ast::Local, name.span);
+                        if let Some(old) = ctx.local_table.add(name.name, handle) {
+                            return Err(Error::Redefinition {
+                                previous: ctx.locals.get_span(old),
+                                current: name.span,
+                            });
+                        }
+
                         ast::StatementKind::LocalDecl(ast::LocalDecl::Var(ast::LocalVariable {
                             name,
                             ty,
@@ -2011,15 +2013,15 @@ impl Parser {
         ctx.local_table.push_scope();
 
         lexer.expect(Token::Paren('{'))?;
-        let mut block = ast::Block::default();
+        let mut statements = ast::Block::default();
         while !lexer.skip(Token::Paren('}')) {
-            self.statement(lexer, ctx.reborrow(), &mut block)?;
+            self.statement(lexer, ctx.reborrow(), &mut statements)?;
         }
 
         ctx.local_table.pop_scope();
 
         let span = self.pop_rule_span(lexer);
-        Ok((block, span))
+        Ok((statements, span))
     }
 
     fn varying_binding<'a>(
@@ -2058,9 +2060,6 @@ impl Parser {
             unresolved: dependencies,
         };
 
-        // start a scope that contains arguments as well as the function body
-        ctx.local_table.push_scope();
-
         // read parameter list
         let mut arguments = Vec::new();
         lexer.expect(Token::Paren('('))?;
@@ -2079,7 +2078,8 @@ impl Parser {
             lexer.expect(Token::Separator(':'))?;
             let param_type = self.type_decl(lexer, ctx.reborrow())?;
 
-            let handle = ctx.declare_local(param_name)?;
+            let handle = ctx.locals.append(ast::Local, param_name.span);
+            ctx.local_table.add(param_name.name, handle);
             arguments.push(ast::FunctionArgument {
                 name: param_name,
                 ty: param_type,
@@ -2097,14 +2097,8 @@ impl Parser {
             None
         };
 
-        // do not use `self.block` here, since we must not push a new scope
-        lexer.expect(Token::Paren('{'))?;
-        let mut body = ast::Block::default();
-        while !lexer.skip(Token::Paren('}')) {
-            self.statement(lexer, ctx.reborrow(), &mut body)?;
-        }
-
-        ctx.local_table.pop_scope();
+        // read body
+        let body = self.block(lexer, ctx)?.0;
 
         let fun = ast::Function {
             entry_point: None,

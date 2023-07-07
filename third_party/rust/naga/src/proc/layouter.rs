@@ -1,4 +1,4 @@
-use crate::arena::Handle;
+use crate::arena::{Arena, Handle, UniqueArena};
 use std::{fmt::Display, num::NonZeroU32, ops};
 
 /// A newtype struct where its only valid values are powers of 2
@@ -165,11 +165,15 @@ impl Layouter {
     /// constant arenas, and then assume that layouts are available for all
     /// types.
     #[allow(clippy::or_fun_call)]
-    pub fn update(&mut self, gctx: super::GlobalCtx) -> Result<(), LayoutError> {
+    pub fn update(
+        &mut self,
+        types: &UniqueArena<crate::Type>,
+        constants: &Arena<crate::Constant>,
+    ) -> Result<(), LayoutError> {
         use crate::TypeInner as Ti;
 
-        for (ty_handle, ty) in gctx.types.iter().skip(self.layouts.len()) {
-            let size = ty.inner.size(gctx);
+        for (ty_handle, ty) in types.iter().skip(self.layouts.len()) {
+            let size = ty.inner.size(constants);
             let layout = match ty.inner {
                 Ti::Scalar { width, .. } | Ti::Atomic { width, .. } => {
                     let alignment = Alignment::new(width as u32)

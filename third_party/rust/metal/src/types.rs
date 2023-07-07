@@ -8,7 +8,6 @@
 use super::NSUInteger;
 use std::default::Default;
 
-/// See <https://developer.apple.com/documentation/metal/mtlorigin>
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default)]
 pub struct MTLOrigin {
@@ -17,7 +16,6 @@ pub struct MTLOrigin {
     pub z: NSUInteger,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlsize>
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default)]
 pub struct MTLSize {
@@ -36,7 +34,6 @@ impl MTLSize {
     }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlregion>
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default)]
 pub struct MTLRegion {
@@ -75,16 +72,9 @@ impl MTLRegion {
     }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlsampleposition>
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq, Default)]
 pub struct MTLSamplePosition {
     pub x: f32,
     pub y: f32,
-}
-
-#[repr(C)]
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Default)]
-pub struct MTLResourceID {
-    pub _impl: u64,
 }
