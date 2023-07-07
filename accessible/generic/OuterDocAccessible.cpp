@@ -6,14 +6,12 @@
 #include "OuterDocAccessible.h"
 
 #include "LocalAccessible-inl.h"
-#include "nsAccUtils.h"
 #include "DocAccessible-inl.h"
 #include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "Role.h"
-#include "States.h"
 
 #ifdef A11Y_LOG
 #  include "Logging.h"

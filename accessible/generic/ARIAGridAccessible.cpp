@@ -8,7 +8,6 @@
 #include <stdint.h>
 #include "LocalAccessible-inl.h"
 #include "AccAttributes.h"
-#include "AccIterator.h"
 #include "mozilla/a11y/TableAccessible.h"
 #include "mozilla/a11y/TableCellAccessible.h"
 #include "nsAccessibilityService.h"

@@ -5,8 +5,6 @@
 
 #include "TextLeafAccessible.h"
 
-#include "nsAccUtils.h"
-#include "DocAccessible.h"
 #include "Role.h"
 
 using namespace mozilla::a11y;
