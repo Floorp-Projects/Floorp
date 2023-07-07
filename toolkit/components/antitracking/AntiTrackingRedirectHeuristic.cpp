@@ -381,16 +381,16 @@ void FinishAntiTrackingRedirectHeuristic(nsIChannel* aNewChannel,
   }
 
   nsAutoCString oldOrigin;
-  rv = oldPrincipal->GetOrigin(oldOrigin);
+  rv = oldPrincipal->GetOriginNoSuffix(oldOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Can't get the origin from the Principal"));
+    LOG(("Can't get the origin from the old Principal"));
     return;
   }
 
   nsAutoCString newOrigin;
-  rv = nsContentUtils::GetWebExposedOriginSerialization(aNewURI, newOrigin);
+  rv = newPrincipal->GetOriginNoSuffix(newOrigin);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Can't get the origin from the URI"));
+    LOG(("Can't get the origin from the new Principal"));
     return;
   }
 

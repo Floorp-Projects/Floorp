@@ -87,15 +87,15 @@ void ReportUnblockingToConsole(
             break;
         }
 
-        nsAutoString origin;
-        nsresult rv =
-            nsContentUtils::GetWebExposedOriginSerialization(principal, origin);
+        nsAutoCString origin;
+        nsresult rv = principal->GetOriginNoSuffix(origin);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return;
         }
 
         // Not adding grantedOrigin yet because we may not want it later.
-        AutoTArray<nsString, 2> params = {origin, trackingOrigin};
+        AutoTArray<nsString, 2> params = {NS_ConvertUTF8toUTF16(origin),
+                                          trackingOrigin};
 
         nsAutoString errorText;
         rv = nsContentUtils::FormatLocalizedString(
@@ -286,8 +286,11 @@ void NotifyBlockingDecision(nsIChannel* aTrackingChannel,
 
   nsAutoCString trackingOrigin;
   if (aURI) {
-    Unused << nsContentUtils::GetWebExposedOriginSerialization(aURI,
-                                                               trackingOrigin);
+    // Using an empty OriginAttributes is OK here, as we'll only be accessing
+    // OriginNoSuffix.
+    nsCOMPtr<nsIPrincipal> principal =
+        BasePrincipal::CreateContentPrincipal(aURI, OriginAttributes{});
+    principal->GetOriginNoSuffix(trackingOrigin);
   }
 
   if (aDecision == ContentBlockingNotifier::BlockingDecision::eBlock) {
@@ -547,8 +550,11 @@ void ContentBlockingNotifier::OnEvent(nsIChannel* aTrackingChannel,
 
   nsAutoCString trackingOrigin;
   if (uri) {
-    Unused << nsContentUtils::GetWebExposedOriginSerialization(uri,
-                                                               trackingOrigin);
+    // Using empty OriginAttributes is OK here, as we only want to access
+    // OriginNoSuffix.
+    nsCOMPtr<nsIPrincipal> trackingPrincipal =
+        BasePrincipal::CreateContentPrincipal(uri, OriginAttributes{});
+    trackingPrincipal->GetOriginNoSuffix(trackingOrigin);
   }
 
   return ContentBlockingNotifier::OnEvent(aTrackingChannel, aBlocked,

@@ -106,7 +106,7 @@ StorageAccessAPIHelper::AllowAccessFor(
 
   if (MOZ_LOG_TEST(gAntiTrackingLog, mozilla::LogLevel::Debug)) {
     nsAutoCString origin;
-    aPrincipal->GetWebExposedOriginSerialization(origin);
+    aPrincipal->GetOriginNoSuffix(origin);
     LOG(("Adding a first-party storage exception for %s, triggered by %s",
          PromiseFlatCString(origin).get(),
          AntiTrackingUtils::GrantedReasonToString(aReason).get()));
@@ -172,7 +172,7 @@ StorageAccessAPIHelper::AllowAccessFor(
   // We are a first party resource.
   if (!isParentThirdParty) {
     nsAutoCString origin;
-    nsresult rv = aPrincipal->GetWebExposedOriginSerialization(origin);
+    nsresult rv = aPrincipal->GetOriginNoSuffix(origin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       LOG(("Can't get the origin from the URI"));
       return StorageAccessPermissionGrantPromise::CreateAndReject(false,
