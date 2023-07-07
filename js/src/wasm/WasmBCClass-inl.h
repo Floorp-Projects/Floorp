@@ -60,20 +60,20 @@ bool BaseCompiler::hugeMemoryEnabled(uint32_t memoryIndex) const {
 
 uint32_t BaseCompiler::instanceOffsetOfMemoryBase(uint32_t memoryIndex) const {
   if (memoryIndex == 0) {
-    return Instance::offsetOfMemoryBase();
+    return Instance::offsetOfMemory0Base();
   }
   return Instance::offsetInData(
-      moduleEnv_.memories[memoryIndex].globalDataOffset +
-      offsetof(MemoryInstanceData, memoryBase));
+      moduleEnv_.offsetOfMemoryInstanceData(memoryIndex) +
+      offsetof(MemoryInstanceData, base));
 }
 
 uint32_t BaseCompiler::instanceOffsetOfBoundsCheckLimit(
     uint32_t memoryIndex) const {
   if (memoryIndex == 0) {
-    return Instance::offsetOfBoundsCheckLimit();
+    return Instance::offsetOfMemory0BoundsCheckLimit();
   }
   return Instance::offsetInData(
-      moduleEnv_.memories[memoryIndex].globalDataOffset +
+      moduleEnv_.offsetOfMemoryInstanceData(memoryIndex) +
       offsetof(MemoryInstanceData, boundsCheckLimit));
 }
 

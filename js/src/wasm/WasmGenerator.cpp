@@ -280,12 +280,12 @@ bool ModuleGenerator::init(Metadata* maybeAsmJSMetadata) {
   }
 
   // Allocate space for every memory
-  for (MemoryDesc& memory : moduleEnv_->memories) {
-    if (!allocateInstanceDataBytes(sizeof(MemoryInstanceData), sizeof(void*),
-                                   &memory.globalDataOffset)) {
-      return false;
-    }
+  if (!allocateInstanceDataBytesN(
+          sizeof(MemoryInstanceData), alignof(MemoryInstanceData),
+          moduleEnv_->memories.length(), &moduleEnv_->memoriesOffsetStart)) {
+    return false;
   }
+  metadata_->memoriesOffsetStart = moduleEnv_->memoriesOffsetStart;
 
   // Allocate space for every table
   if (!allocateInstanceDataBytesN(

@@ -78,16 +78,17 @@ class alignas(16) Instance {
   // from the JIT, such that they have as small an offset as possible. See the
   // next note for the end of this region.
 
-  // Pointer to the base of the default memory (or null if there is none).
-  uint8_t* memoryBase_;
+  // Pointer to the base of memory 0 (or null if there is no memories). This is
+  // always in sync with the MemoryInstanceData for memory 0.
+  uint8_t* memory0Base_;
 
-  // Bounds check limit in bytes (or zero if there is no memory) for the
-  // default memory.  This is 64-bits on 64-bit systems so as to allow for
-  // heap lengths up to and beyond 4GB, and 32-bits on 32-bit systems, where
-  // memories are limited to 2GB.
+  // Bounds check limit in bytes (or zero if there is no memory) for memory 0
+  // This is 64-bits on 64-bit systems so as to allow for heap lengths up to and
+  // beyond 4GB, and 32-bits on 32-bit systems, where memories are limited to
+  // 2GB.
   //
   // See "Linear memory addresses and bounds checking" in WasmMemory.cpp.
-  uintptr_t boundsCheckLimit_;
+  uintptr_t memory0BoundsCheckLimit_;
 
   // Null or a pointer to a per-process builtin thunk that will invoke the Debug
   // Trap Handler.
@@ -199,7 +200,7 @@ class alignas(16) Instance {
   TypeDefInstanceData* typeDefInstanceData(uint32_t typeIndex) const;
   const void* addressOfGlobalCell(const GlobalDesc& globalDesc) const;
   FuncImportInstanceData& funcImportInstanceData(const FuncImport& fi);
-  MemoryInstanceData& memoryInstanceData(const MemoryDesc& md) const;
+  MemoryInstanceData& memoryInstanceData(uint32_t memoryIndex) const;
   TableInstanceData& tableInstanceData(uint32_t tableIndex) const;
   TagInstanceData& tagInstanceData(uint32_t tagIndex) const;
 
@@ -241,11 +242,11 @@ class alignas(16) Instance {
                        uint8_t* nextPC,
                        uintptr_t highestByteVisitedInPrevFrame);
 
-  static constexpr size_t offsetOfMemoryBase() {
-    return offsetof(Instance, memoryBase_);
+  static constexpr size_t offsetOfMemory0Base() {
+    return offsetof(Instance, memory0Base_);
   }
-  static constexpr size_t offsetOfBoundsCheckLimit() {
-    return offsetof(Instance, boundsCheckLimit_);
+  static constexpr size_t offsetOfMemory0BoundsCheckLimit() {
+    return offsetof(Instance, memory0BoundsCheckLimit_);
   }
   static constexpr size_t offsetOfDebugTrapHandler() {
     return offsetof(Instance, debugTrapHandler_);
