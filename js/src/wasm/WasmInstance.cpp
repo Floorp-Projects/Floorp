@@ -832,7 +832,7 @@ bool Instance::initSegments(JSContext* cx,
       continue;
     }
 
-    const WasmMemoryObject* memoryObj = memory(0);
+    Rooted<const WasmMemoryObject*> memoryObj(cx, memory(seg->memoryIndex));
     size_t memoryLength = memoryObj->volatileMemoryLength();
     uint8_t* memoryBase =
         memoryObj->buffer().dataPointerEither().unwrap(/* memcpy */);
