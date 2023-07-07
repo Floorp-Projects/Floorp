@@ -33,8 +33,8 @@ bool BaseCompiler::usesMemory() const {
   return moduleEnv_.memories.length() > 0;
 }
 
-bool BaseCompiler::usesSharedMemory() const {
-  return moduleEnv_.usesSharedMemory(0);
+bool BaseCompiler::usesSharedMemory(uint32_t memoryIndex) const {
+  return moduleEnv_.usesSharedMemory(memoryIndex);
 }
 
 const Local& BaseCompiler::localFromSlot(uint32_t slot, MIRType type) {

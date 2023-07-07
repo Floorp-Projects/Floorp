@@ -153,7 +153,6 @@ void CodeGenerator::visitAtomicTypedArrayElementBinopForEffect(
   MOZ_CRASH();
 }
 void CodeGenerator::visitWasmSelect(LWasmSelect* ins) { MOZ_CRASH(); }
-void CodeGenerator::visitWasmHeapBase(LWasmHeapBase* ins) { MOZ_CRASH(); }
 void CodeGenerator::visitWasmLoad(LWasmLoad* lir) { MOZ_CRASH(); }
 void CodeGenerator::visitWasmLoadI64(LWasmLoadI64* lir) { MOZ_CRASH(); }
 void CodeGenerator::visitWasmStore(LWasmStore* lir) { MOZ_CRASH(); }

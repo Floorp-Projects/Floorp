@@ -2834,7 +2834,7 @@
 - name: WasmStoreInstance
   gen_boilerplate: false
 
-- name: WasmHeapBase
+- name: WasmHeapReg
   gen_boilerplate: false
 
 - name: WasmBoundsCheck

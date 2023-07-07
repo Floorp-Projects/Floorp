@@ -9425,22 +9425,21 @@ class MWasmStoreInstance : public MBinaryInstruction,
   AliasSet getAliasSet() const override { return aliases_; }
 };
 
-class MWasmHeapBase : public MUnaryInstruction, public NoTypePolicy::Data {
+class MWasmHeapReg : public MNullaryInstruction {
   AliasSet aliases_;
 
-  explicit MWasmHeapBase(MDefinition* instance, AliasSet aliases)
-      : MUnaryInstruction(classOpcode, instance), aliases_(aliases) {
+  explicit MWasmHeapReg(AliasSet aliases)
+      : MNullaryInstruction(classOpcode), aliases_(aliases) {
     setMovable();
     setResultType(MIRType::Pointer);
   }
 
  public:
-  INSTRUCTION_HEADER(WasmHeapBase)
+  INSTRUCTION_HEADER(WasmHeapReg)
   TRIVIAL_NEW_WRAPPERS
-  NAMED_OPERANDS((0, instance))
 
   bool congruentTo(const MDefinition* ins) const override {
-    return ins->isWasmHeapBase();
+    return ins->isWasmHeapReg();
   }
 
   AliasSet getAliasSet() const override { return aliases_; }

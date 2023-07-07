@@ -220,24 +220,30 @@ static inline RegPtr RegIntptrToRegPtr(RegI32 r) { return RegPtr(Register(r)); }
 #  endif
 #endif
 
+void BaseCompiler::pushHeapBase(uint32_t memoryIndex) {
+  RegPtr heapBase = need<RegPtr>();
+
 #ifdef WASM_HAS_HEAPREG
-void BaseCompiler::pushHeapBase() {
-  RegPtr heapBase = need<RegPtr>();
-  move(RegPtr(HeapReg), heapBase);
-  push(RegPtrToRegIntptr(heapBase));
-}
-#else
-void BaseCompiler::pushHeapBase() {
-  RegPtr heapBase = need<RegPtr>();
-#  ifdef RABALDR_PIN_INSTANCE
-  movePtr(RegPtr(InstanceReg), heapBase);
-#  else
-  fr.loadInstancePtr(heapBase);
-#  endif
-  masm.loadPtr(Address(heapBase, Instance::offsetOfMemoryBase()), heapBase);
-  push(RegPtrToRegIntptr(heapBase));
-}
+  if (memoryIndex == 0) {
+    move(RegPtr(HeapReg), heapBase);
+    push(RegPtrToRegIntptr(heapBase));
+    return;
+  }
 #endif
+
+#ifdef RABALDR_PIN_INSTANCE
+  movePtr(RegPtr(InstanceReg), heapBase);
+#else
+  fr.loadInstancePtr(heapBase);
+#endif
+
+  uint32_t offset =
+      memoryIndex == 0 ? Instance::offsetOfMemoryBase()
+                       : Instance::offsetInData(
+                             moduleEnv_.memories[memoryIndex].globalDataOffset);
+  masm.loadPtr(Address(heapBase, offset), heapBase);
+  push(RegPtrToRegIntptr(heapBase));
+}
 
 void BaseCompiler::branchAddNoOverflow(uint64_t offset, RegI32 ptr, Label* ok) {
   // The invariant holds because ptr is RegI32 - this is m32.

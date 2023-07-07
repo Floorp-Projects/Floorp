@@ -1192,8 +1192,10 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             uint32_t unusedSegIndex;
             CHECK(iter.readDataOrElemDrop(/*isData=*/true, &unusedSegIndex));
           }
-          case uint32_t(MiscOp::MemoryFill):
-            CHECK(iter.readMemFill(&nothing, &nothing, &nothing));
+          case uint32_t(MiscOp::MemoryFill): {
+            uint32_t memoryIndex;
+            CHECK(iter.readMemFill(&memoryIndex, &nothing, &nothing, &nothing));
+          }
           case uint32_t(MiscOp::MemoryInit): {
             uint32_t unusedSegIndex;
             uint32_t unusedTableIndex;

@@ -16883,6 +16883,14 @@ void CodeGenerator::visitWasmGcObjectIsSubtypeOfConcreteAndBranch(
   masm.jump(onFail);
 }
 
+void CodeGenerator::visitWasmHeapReg(LWasmHeapReg* ins) {
+#ifdef WASM_HAS_HEAPREG
+  masm.movePtr(HeapReg, ToRegister(ins->output()));
+#else
+  MOZ_CRASH();
+#endif
+}
+
 void CodeGenerator::visitWasmBoundsCheck(LWasmBoundsCheck* ins) {
   const MWasmBoundsCheck* mir = ins->mir();
   Register ptr = ToRegister(ins->ptr());

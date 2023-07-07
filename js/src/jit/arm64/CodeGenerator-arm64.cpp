@@ -2280,11 +2280,6 @@ void CodeGenerator::visitShiftI64(LShiftI64* lir) {
   }
 }
 
-void CodeGenerator::visitWasmHeapBase(LWasmHeapBase* ins) {
-  MOZ_ASSERT(ins->instance()->isBogus());
-  masm.movePtr(HeapReg, ToRegister(ins->output()));
-}
-
 // If we have a constant base ptr, try to add the offset to it, to generate
 // better code when the full address is known.  The addition may overflow past
 // 32 bits because the front end does nothing special if the base is a large

@@ -6002,15 +6002,16 @@ bool BaseCompiler::memCopyCall() {
 }
 
 bool BaseCompiler::emitMemFill() {
+  uint32_t memoryIndex;
   Nothing nothing;
-  if (!iter_.readMemFill(&nothing, &nothing, &nothing)) {
+  if (!iter_.readMemFill(&memoryIndex, &nothing, &nothing, &nothing)) {
     return false;
   }
   if (deadCode_) {
     return true;
   }
 
-  if (isMem32()) {
+  if (memoryIndex == 0 && isMem32(memoryIndex)) {
     int32_t signedLength;
     int32_t signedValue;
     if (peek2xConst(&signedLength, &signedValue) && signedLength != 0 &&
@@ -6019,15 +6020,16 @@ bool BaseCompiler::emitMemFill() {
       return true;
     }
   }
-  return memFillCall();
+  return memFillCall(memoryIndex);
 }
 
-bool BaseCompiler::memFillCall() {
-  pushHeapBase();
+bool BaseCompiler::memFillCall(uint32_t memoryIndex) {
+  pushHeapBase(memoryIndex);
   return emitInstanceCall(
-      usesSharedMemory()
-          ? (isMem32() ? SASigMemFillSharedM32 : SASigMemFillSharedM64)
-          : (isMem32() ? SASigMemFillM32 : SASigMemFillM64));
+      usesSharedMemory(memoryIndex)
+          ? (isMem32(memoryIndex) ? SASigMemFillSharedM32
+                                  : SASigMemFillSharedM64)
+          : (isMem32(memoryIndex) ? SASigMemFillM32 : SASigMemFillM64));
 }
 
 bool BaseCompiler::emitMemInit() {
