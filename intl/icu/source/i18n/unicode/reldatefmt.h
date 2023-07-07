@@ -248,8 +248,6 @@ typedef enum UDateDirection {
 #endif  // U_HIDE_DEPRECATED_API
 } UDateDirection;
 
-#if !UCONFIG_NO_BREAK_ITERATION
-
 U_NAMESPACE_BEGIN
 
 class BreakIterator;
@@ -696,11 +694,19 @@ private:
     const SharedPluralRules *fPluralRules;
     UDateRelativeDateTimeFormatterStyle fStyle;
     UDisplayContext fContext;
+#if !UCONFIG_NO_BREAK_ITERATION
     const SharedBreakIterator *fOptBreakIterator;
+#else
+    std::nullptr_t fOptBreakIterator = nullptr;
+#endif // !UCONFIG_NO_BREAK_ITERATION
     Locale fLocale;
     void init(
             NumberFormat *nfToAdopt,
+#if !UCONFIG_NO_BREAK_ITERATION
             BreakIterator *brkIter,
+#else
+            std::nullptr_t,
+#endif // !UCONFIG_NO_BREAK_ITERATION
             UErrorCode &status);
     UnicodeString& adjustForContext(UnicodeString &) const;
     UBool checkNoAdjustForContext(UErrorCode& status) const;
@@ -743,7 +749,6 @@ private:
 
 U_NAMESPACE_END
 
-#endif /* !UCONFIG_NO_BREAK_ITERATION */
 #endif /* !UCONFIG_NO_FORMATTING */
 
 #endif /* U_SHOW_CPLUSPLUS_API */
