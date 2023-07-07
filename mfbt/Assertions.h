@@ -347,12 +347,13 @@ MOZ_END_EXTERN_C
  * *only* during debugging, not "in the field". If you want the latter, use
  * MOZ_RELEASE_ASSERT, which applies to non-debug builds as well.
  *
- * MOZ_DIAGNOSTIC_ASSERT works like MOZ_RELEASE_ASSERT in Nightly/Aurora and
- * MOZ_ASSERT in Beta/Release - use this when a condition is potentially rare
- * enough to require real user testing to hit, but is not security-sensitive.
- * This can cause user pain, so use it sparingly. If a MOZ_DIAGNOSTIC_ASSERT
- * is firing, it should promptly be converted to a MOZ_ASSERT while the failure
- * is being investigated, rather than letting users suffer.
+ * MOZ_DIAGNOSTIC_ASSERT works like MOZ_RELEASE_ASSERT in Nightly and early beta
+ * and MOZ_ASSERT in late Beta and Release - use this when a condition is
+ * potentially rare enough to require real user testing to hit, but is not
+ * security-sensitive. This can cause user pain, so use it sparingly. If a
+ * MOZ_DIAGNOSTIC_ASSERT is firing, it should promptly be converted to a
+ * MOZ_ASSERT while the failure is being investigated, rather than letting users
+ * suffer.
  *
  * MOZ_DIAGNOSTIC_ASSERT_ENABLED is defined when MOZ_DIAGNOSTIC_ASSERT is like
  * MOZ_RELEASE_ASSERT rather than MOZ_ASSERT.
@@ -616,7 +617,7 @@ struct AssertionConditionType {
 /*
  * MOZ_ALWAYS_TRUE(expr) and friends always evaluate the provided expression,
  * in debug builds and in release builds both.  Then, in debug builds and
- * Nightly and DevEdition release builds, the value of the expression is
+ * Nightly and early beta builds, the value of the expression is
  * asserted either true or false using MOZ_DIAGNOSTIC_ASSERT.
  */
 #define MOZ_ALWAYS_TRUE(expr)              \
