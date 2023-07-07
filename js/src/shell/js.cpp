@@ -628,6 +628,8 @@ bool shell::enableArrayFromAsync = true;
 bool shell::enableArrayGrouping = false;
 // Pref for String.prototype.{is,to}WellFormed() methods.
 bool shell::enableWellFormedUnicodeStrings = false;
+// Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
+bool shell::enableArrayBufferTransfer = false;
 #endif
 bool shell::enableChangeArrayByCopy = false;
 #ifdef ENABLE_NEW_SET_METHODS
@@ -3890,6 +3892,7 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(enableArrayGrouping)
       .setWellFormedUnicodeStringsEnabled(enableWellFormedUnicodeStrings)
+      .setArrayBufferTransferEnabled(enableArrayBufferTransfer)
 #endif
       .setChangeArrayByCopyEnabled(enableChangeArrayByCopy)
 #ifdef ENABLE_NEW_SET_METHODS
@@ -11415,6 +11418,8 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "enable-well-formed-unicode-strings",
                         "Enable String.prototype.{is,to}WellFormed() methods"
                         "(Well-Formed Unicode Strings)") ||
+      !op.addBoolOption('\0', "enable-arraybuffer-transfer",
+                        "Enable ArrayBuffer.prototype.transfer() methods") ||
       !op.addBoolOption('\0', "enable-change-array-by-copy",
                         "Enable change-array-by-copy methods") ||
       !op.addBoolOption('\0', "disable-change-array-by-copy",
@@ -11938,6 +11943,7 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableArrayGrouping = op.getBoolOption("enable-array-grouping");
   enableWellFormedUnicodeStrings =
       op.getBoolOption("enable-well-formed-unicode-strings");
+  enableArrayBufferTransfer = op.getBoolOption("enable-arraybuffer-transfer");
 #endif
   enableChangeArrayByCopy = !op.getBoolOption("disable-change-array-by-copy");
 #ifdef ENABLE_NEW_SET_METHODS
