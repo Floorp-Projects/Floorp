@@ -41,6 +41,7 @@ const char* const sExecutableExts[] = {
   ".air",         // Adobe AIR installer
   ".app",         // executable application
   ".application", // from bug 348763
+  ".appref-ms",   // ClickOnce link
   ".asp",
   ".atloc",       // Appletalk Location
   ".bas",
