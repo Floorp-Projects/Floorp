@@ -557,6 +557,7 @@ class nsWindow final : public nsBaseWidget {
     HWND owner = GetOwnerWnd();
     return owner && owner == ::GetForegroundWindow();
   }
+  bool IsForegroundWindow() const { return mWnd == ::GetForegroundWindow(); }
   bool IsPopup() const { return mWindowType == WindowType::Popup; }
   bool IsCloaked() const { return mIsCloaked; }
 
