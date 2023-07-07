@@ -5,10 +5,8 @@
 
 #include "TextUpdater.h"
 
-#include "LocalAccessible-inl.h"
 #include "CacheConstants.h"
 #include "DocAccessible-inl.h"
-#include "nsAccessibilityService.h"
 #include "TextLeafAccessible.h"
 #include <algorithm>
 

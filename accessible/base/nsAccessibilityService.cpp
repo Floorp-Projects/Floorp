@@ -6,7 +6,6 @@
 #include "nsAccessibilityService.h"
 
 // NOTE: alphabetically ordered
-#include "AccAttributes.h"
 #include "ApplicationAccessibleWrap.h"
 #include "ARIAGridAccessible.h"
 #include "ARIAMap.h"
@@ -22,7 +21,6 @@
 #include "HTMLTableAccessible.h"
 #include "HyperTextAccessibleWrap.h"
 #include "RootAccessible.h"
-#include "StyleInfo.h"
 #include "nsAccUtils.h"
 #include "nsArrayUtils.h"
 #include "nsAttrName.h"
@@ -41,7 +39,6 @@
 #include "States.h"
 #include "Statistics.h"
 #include "TextLeafAccessible.h"
-#include "TreeWalker.h"
 #include "xpcAccessibleApplication.h"
 
 #ifdef XP_WIN
@@ -55,12 +52,10 @@
 
 #include "nsExceptionHandler.h"
 #include "nsImageFrame.h"
-#include "nsINamed.h"
 #include "nsIObserverService.h"
 #include "nsMenuPopupFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsTreeBodyFrame.h"
-#include "nsTreeColumns.h"
 #include "nsTreeUtils.h"
 #include "mozilla/a11y/AccTypes.h"
 #include "mozilla/ArrayUtils.h"

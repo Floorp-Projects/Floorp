@@ -7,7 +7,6 @@
 
 #include "LocalAccessible-inl.h"
 #include "nsEventShell.h"
-#include "DocAccessible.h"
 #include "DocAccessibleChild.h"
 #include "nsTextEquivUtils.h"
 #ifdef A11Y_LOG

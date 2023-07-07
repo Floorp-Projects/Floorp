@@ -7,13 +7,11 @@
 
 #include "nsTextEquivUtils.h"
 
-#include "LocalAccessible.h"
 #include "LocalAccessible-inl.h"
 #include "AccIterator.h"
 #include "nsCoreUtils.h"
 #include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/Text.h"
-#include "nsIContentInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

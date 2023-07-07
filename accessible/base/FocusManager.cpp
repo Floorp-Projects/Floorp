@@ -5,16 +5,12 @@
 #include "FocusManager.h"
 
 #include "LocalAccessible-inl.h"
-#include "AccIterator.h"
 #include "DocAccessible-inl.h"
 #include "nsAccessibilityService.h"
-#include "nsAccUtils.h"
 #include "nsEventShell.h"
-#include "Role.h"
 
 #include "nsFocusManager.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
-#include "mozilla/a11y/DocManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowsingContext.h"

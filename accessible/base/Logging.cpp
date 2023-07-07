@@ -16,7 +16,6 @@
 
 #include "nsDocShellLoadTypes.h"
 #include "nsIChannel.h"
-#include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgress.h"
 #include "prenv.h"
 #include "nsIDocShellTreeItem.h"
