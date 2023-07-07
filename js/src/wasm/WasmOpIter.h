@@ -718,8 +718,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readMemFill(uint32_t* memoryIndex, Value* start,
                                  Value* val, Value* len);
   [[nodiscard]] bool readMemOrTableInit(bool isMem, uint32_t* segIndex,
-                                        uint32_t* dstTableIndex, Value* dst,
-                                        Value* src, Value* len);
+                                        uint32_t* dstMemOrTableIndex,
+                                        Value* dst, Value* src, Value* len);
   [[nodiscard]] bool readTableFill(uint32_t* tableIndex, Value* start,
                                    Value* val, Value* len);
   [[nodiscard]] bool readMemDiscard(Value* start, Value* len);
@@ -1854,12 +1854,6 @@ inline bool OpIter<Policy>::readTernary(ValType operandType, Value* v0,
   return true;
 }
 
-// For memories, the index is currently always a placeholder zero byte.
-//
-// For tables, the index is a placeholder zero byte until we get multi-table
-// with the reftypes proposal.
-//
-// The zero-ness of the value must be checked by the caller.
 template <typename Policy>
 inline bool OpIter<Policy>::readMemOrTableIndex(bool isMem, uint32_t* index) {
   bool readByte = isMem;
@@ -2818,28 +2812,27 @@ inline bool OpIter<Policy>::readMemFill(uint32_t* memoryIndex, Value* start,
 
 template <typename Policy>
 inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
-                                               uint32_t* dstTableIndex,
+                                               uint32_t* dstMemOrTableIndex,
                                                Value* dst, Value* src,
                                                Value* len) {
   MOZ_ASSERT(Classify(op_) == OpKind::MemOrTableInit);
-  MOZ_ASSERT(segIndex != dstTableIndex);
+  MOZ_ASSERT(segIndex != dstMemOrTableIndex);
 
   if (!readVarU32(segIndex)) {
     return fail("unable to read segment index");
   }
 
   uint32_t memOrTableIndex = 0;
-  if (!readMemOrTableIndex(isMem, &memOrTableIndex)) {
+  if (!readVarU32(&memOrTableIndex)) {
     return false;
   }
 
   if (isMem) {
-    if (env_.numMemories() == 0) {
-      return fail("can't touch memory without memory");
+    if (memOrTableIndex >= env_.memories.length()) {
+      return fail("memory index out of range for memory.init");
     }
-    if (memOrTableIndex != 0) {
-      return fail("memory index must be zero");
-    }
+    *dstMemOrTableIndex = memOrTableIndex;
+
     if (env_.dataCount.isNothing()) {
       return fail("memory.init requires a DataCount section");
     }
@@ -2850,13 +2843,13 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
     if (memOrTableIndex >= env_.tables.length()) {
       return fail("table index out of range for table.init");
     }
-    *dstTableIndex = memOrTableIndex;
+    *dstMemOrTableIndex = memOrTableIndex;
 
     if (*segIndex >= env_.elemSegments.length()) {
       return fail("table.init segment index out of range");
     }
     if (!checkIsSubtypeOf(env_.elemSegments[*segIndex]->elemType,
-                          env_.tables[*dstTableIndex].elemType)) {
+                          env_.tables[*dstMemOrTableIndex].elemType)) {
       return false;
     }
   }
@@ -2870,7 +2863,8 @@ inline bool OpIter<Policy>::readMemOrTableInit(bool isMem, uint32_t* segIndex,
   }
 
   ValType ptrType =
-      isMem ? ToValType(env_.memories[0].indexType()) : ValType::I32;
+      isMem ? ToValType(env_.memories[*dstMemOrTableIndex].indexType())
+            : ValType::I32;
   return popWithType(ptrType, dst);
 }
 

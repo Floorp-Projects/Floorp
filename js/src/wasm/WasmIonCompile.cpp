@@ -6095,10 +6095,10 @@ static bool EmitMemFill(FunctionCompiler& f) {
 }
 
 static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
-  uint32_t segIndexVal = 0, dstTableIndex = 0;
+  uint32_t segIndexVal = 0, dstMemOrTableIndex = 0;
   MDefinition *dstOff, *srcOff, *len;
-  if (!f.iter().readMemOrTableInit(isMem, &segIndexVal, &dstTableIndex, &dstOff,
-                                   &srcOff, &len)) {
+  if (!f.iter().readMemOrTableInit(isMem, &segIndexVal, &dstMemOrTableIndex,
+                                   &dstOff, &srcOff, &len)) {
     return false;
   }
 
@@ -6107,19 +6107,23 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
   }
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
+  const SymbolicAddressSignature& callee =
+      isMem
+          ? (f.isMem32(dstMemOrTableIndex) ? SASigMemInitM32 : SASigMemInitM64)
+          : SASigTableInit;
 
   MDefinition* segIndex = f.constantI32(int32_t(segIndexVal));
-
-  if (isMem) {
-    const SymbolicAddressSignature& callee =
-        f.isMem32() ? SASigMemInitM32 : SASigMemInitM64;
-    return f.emitInstanceCall4(bytecodeOffset, callee, dstOff, srcOff, len,
-                               segIndex);
+  if (!segIndex) {
+    return false;
   }
 
-  MDefinition* dti = f.constantI32(int32_t(dstTableIndex));
-  return f.emitInstanceCall5(bytecodeOffset, SASigTableInit, dstOff, srcOff,
-                             len, segIndex, dti);
+  MDefinition* dti = f.constantI32(int32_t(dstMemOrTableIndex));
+  if (!dti) {
+    return false;
+  }
+
+  return f.emitInstanceCall5(bytecodeOffset, callee, dstOff, srcOff, len,
+                             segIndex, dti);
 }
 
 // Note, table.{get,grow,set} on table(funcref) are currently rejected by the

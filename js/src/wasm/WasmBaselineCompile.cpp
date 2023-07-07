@@ -6033,16 +6033,21 @@ bool BaseCompiler::memFillCall(uint32_t memoryIndex) {
 }
 
 bool BaseCompiler::emitMemInit() {
-  return emitInstanceCallOp<uint32_t>(
-      (!usesMemory() || isMem32() ? SASigMemInitM32 : SASigMemInitM64),
-      [this](uint32_t* segIndex) -> bool {
-        Nothing nothing;
-        if (iter_.readMemOrTableInit(/*isMem*/ true, segIndex, nullptr,
-                                     &nothing, &nothing, &nothing)) {
-          return true;
-        }
-        return false;
-      });
+  uint32_t segIndex;
+  uint32_t memIndex;
+  Nothing nothing;
+  if (!iter_.readMemOrTableInit(/*isMem*/ true, &segIndex, &memIndex, &nothing,
+                                &nothing, &nothing)) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+
+  pushI32(segIndex);
+  pushI32(memIndex);
+  return emitInstanceCall(isMem32(memIndex) ? SASigMemInitM32
+                                            : SASigMemInitM64);
 }
 
 //////////////////////////////////////////////////////////////////////////////
