@@ -7,13 +7,13 @@
 
 use super::*;
 
+/// See <https://developer.apple.com/documentation/metal/mtlbuffer>
 pub enum MTLBuffer {}
 
 foreign_obj_type! {
     type CType = MTLBuffer;
     pub struct Buffer;
-    pub struct BufferRef;
-    type ParentType = ResourceRef;
+    type ParentType = Resource;
 }
 
 impl BufferRef {
@@ -63,5 +63,9 @@ impl BufferRef {
 
     pub fn remove_all_debug_markers(&self) {
         unsafe { msg_send![self, removeAllDebugMarkers] }
+    }
+
+    pub fn gpu_address(&self) -> u64 {
+        unsafe { msg_send![self, gpuAddress] }
     }
 }

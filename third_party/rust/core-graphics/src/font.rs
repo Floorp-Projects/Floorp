@@ -15,6 +15,7 @@ use core_foundation::string::{CFString, CFStringRef};
 use core_foundation::dictionary::{CFDictionary, CFDictionaryRef};
 use data_provider::CGDataProvider;
 use geometry::CGRect;
+use std::ptr::NonNull;
 
 use foreign_types::ForeignType;
 
@@ -24,15 +25,12 @@ pub use core_graphics_types::base::CGGlyph;
 
 foreign_type! {
     #[doc(hidden)]
-    type CType = ::sys::CGFont;
-    fn drop = |p| CFRelease(p as *mut _);
-    fn clone = |p| CFRetain(p as *const _) as *mut _;
-    pub struct CGFont;
-    pub struct CGFontRef;
+    pub unsafe type CGFont: Send + Sync {
+        type CType = ::sys::CGFont;
+        fn drop = |p| CFRelease(p as *mut _);
+        fn clone = |p| CFRetain(p as *const _) as *mut _;
+    }
 }
-
-unsafe impl Send for CGFont {}
-unsafe impl Sync for CGFont {}
 
 impl CGFont {
     pub fn type_id() -> CFTypeID {
@@ -44,10 +42,9 @@ impl CGFont {
     pub fn from_data_provider(provider: CGDataProvider) -> Result<CGFont, ()> {
         unsafe {
             let font_ref = CGFontCreateWithDataProvider(provider.as_ptr());
-            if !font_ref.is_null() {
-                Ok(CGFont::from_ptr(font_ref))
-            } else {
-                Err(())
+            match NonNull::new(font_ref) {
+                Some(font_ref) => Ok(CGFont(font_ref)),
+                None => Err(()),
             }
         }
     }
@@ -55,10 +52,9 @@ impl CGFont {
     pub fn from_name(name: &CFString) -> Result<CGFont, ()> {
         unsafe {
             let font_ref = CGFontCreateWithFontName(name.as_concrete_TypeRef());
-            if !font_ref.is_null() {
-                Ok(CGFont::from_ptr(font_ref))
-            } else {
-                Err(())
+            match NonNull::new(font_ref) {
+                Some(font_ref) => Ok(CGFont(font_ref)),
+                None => Err(()),
             }
         }
     }
@@ -67,10 +63,9 @@ impl CGFont {
         unsafe {
             let font_ref = CGFontCreateCopyWithVariations(self.as_ptr(),
                                                           vars.as_concrete_TypeRef());
-            if !font_ref.is_null() {
-                Ok(CGFont::from_ptr(font_ref))
-            } else {
-                Err(())
+            match NonNull::new(font_ref) {
+                Some(font_ref) => Ok(CGFont(font_ref)),
+                None => Err(()),
             }
         }
     }

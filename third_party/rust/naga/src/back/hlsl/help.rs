@@ -347,12 +347,7 @@ impl<'a, W: Write> super::Writer<'a, W> {
         module: &crate::Module,
         constructor: WrappedConstructor,
     ) -> BackendResult {
-        let name = crate::TypeInner::hlsl_type_id(
-            constructor.ty,
-            &module.types,
-            &module.constants,
-            &self.names,
-        )?;
+        let name = crate::TypeInner::hlsl_type_id(constructor.ty, module.to_ctx(), &self.names)?;
         write!(self.out, "Construct{name}")?;
         Ok(())
     }
@@ -411,8 +406,7 @@ impl<'a, W: Write> super::Writer<'a, W> {
                 size: crate::ArraySize::Constant(size),
                 ..
             } => {
-                let count = module.constants[size].to_array_length().unwrap();
-                for i in 0..count as usize {
+                for i in 0..size.get() as usize {
                     write_arg(i, base)?;
                 }
             }
@@ -486,8 +480,7 @@ impl<'a, W: Write> super::Writer<'a, W> {
                 write!(self.out, " {RETURN_VARIABLE_NAME}")?;
                 self.write_array_size(module, base, crate::ArraySize::Constant(size))?;
                 write!(self.out, " = {{ ")?;
-                let count = module.constants[size].to_array_length().unwrap();
-                for i in 0..count {
+                for i in 0..size.get() {
                     if i != 0 {
                         write!(self.out, ", ")?;
                     }
