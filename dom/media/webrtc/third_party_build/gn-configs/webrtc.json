@@ -24,6 +24,7 @@
     "third_party/libwebrtc/audio/channel_send_frame_transformer_delegate.cc",
     "third_party/libwebrtc/common_audio/vad/vad_core.c",
     "third_party/libwebrtc/common_audio/vad/webrtc_vad.c",
+    "third_party/libwebrtc/common_audio/signal_processing/resample_by_2_mips.c",
     "third_party/libwebrtc/modules/audio_coding/codecs/isac/fix/source/decode_plc.c",
     "third_party/libwebrtc/modules/audio_coding/codecs/isac/fix/source/lpc_masking_model.c",
     "third_party/libwebrtc/modules/audio_coding/codecs/isac/fix/source/pitch_filter.c",
