@@ -10,7 +10,6 @@ pub(super) struct LookupSampledImage {
 
 bitflags::bitflags! {
     /// Flags describing sampling method.
-    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct SamplingFlags: u32 {
         /// Regular sampling.
         const REGULAR = 0x1;

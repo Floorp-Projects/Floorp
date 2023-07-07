@@ -8,8 +8,6 @@
 use super::*;
 
 /// Only available on macos(10.15), ios(13.0)
-///
-/// See <https://developer.apple.com/documentation/metal/mtlheaptype/>
 #[repr(u64)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum MTLHeapType {
@@ -19,12 +17,12 @@ pub enum MTLHeapType {
     Sparse = 2,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlheap/>
 pub enum MTLHeap {}
 
 foreign_obj_type! {
     type CType = MTLHeap;
     pub struct Heap;
+    pub struct HeapRef;
 }
 
 impl HeapRef {
@@ -150,12 +148,12 @@ impl HeapRef {
     }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlheapdescriptor/>
 pub enum MTLHeapDescriptor {}
 
 foreign_obj_type! {
     type CType = MTLHeapDescriptor;
     pub struct HeapDescriptor;
+    pub struct HeapDescriptorRef;
 }
 
 impl HeapDescriptor {

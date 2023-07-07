@@ -4,7 +4,6 @@ on:
     paths:
       - '.github/workflows/validation-macos.yml'
       - 'tests/out/msl/*.msl'
-      - 'xtask/**'
 
 jobs:
   validate-macos:
@@ -13,9 +12,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            xtask -> target
-
-      - run: cargo xtask validate msl
+      - run: make validate-msl

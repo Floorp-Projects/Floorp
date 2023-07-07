@@ -11,7 +11,7 @@ mod interface;
 mod r#type;
 
 #[cfg(feature = "validate")]
-use crate::arena::UniqueArena;
+use crate::arena::{Arena, UniqueArena};
 
 use crate::{
     arena::Handle,
@@ -53,7 +53,6 @@ bitflags::bitflags! {
     /// by default.)
     #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
     #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
-    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct ValidationFlags: u8 {
         /// Expressions.
         #[cfg(feature = "validate")]
@@ -87,7 +86,6 @@ bitflags::bitflags! {
     #[must_use]
     #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
     #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
-    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct Capabilities: u16 {
         /// Support for [`AddressSpace:PushConstant`].
         const PUSH_CONSTANT = 0x1;
@@ -128,7 +126,6 @@ bitflags::bitflags! {
     /// Validation flags.
     #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
     #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
-    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct ShaderStages: u8 {
         const VERTEX = 0x1;
         const FRAGMENT = 0x2;
@@ -177,6 +174,10 @@ pub struct Validator {
 pub enum ConstantError {
     #[error("The type doesn't match the constant")]
     InvalidType,
+    #[error("The component handle {0:?} can not be resolved")]
+    UnresolvedComponent(Handle<crate::Constant>),
+    #[error("The array size handle {0:?} can not be resolved")]
+    UnresolvedSize(Handle<crate::Constant>),
     #[error(transparent)]
     Compose(#[from] ComposeError),
 }
@@ -299,9 +300,10 @@ impl Validator {
     fn validate_constant(
         &self,
         handle: Handle<crate::Constant>,
-        gctx: crate::proc::GlobalCtx,
+        constants: &Arena<crate::Constant>,
+        types: &UniqueArena<crate::Type>,
     ) -> Result<(), ConstantError> {
-        let con = &gctx.constants[handle];
+        let con = &constants[handle];
         match con.inner {
             crate::ConstantInner::Scalar { width, ref value } => {
                 if self.check_width(value.scalar_kind(), width).is_err() {
@@ -309,12 +311,25 @@ impl Validator {
                 }
             }
             crate::ConstantInner::Composite { ty, ref components } => {
+                match types[ty].inner {
+                    crate::TypeInner::Array {
+                        size: crate::ArraySize::Constant(size_handle),
+                        ..
+                    } if handle <= size_handle => {
+                        return Err(ConstantError::UnresolvedSize(size_handle));
+                    }
+                    _ => {}
+                }
+                if let Some(&comp) = components.iter().find(|&&comp| handle <= comp) {
+                    return Err(ConstantError::UnresolvedComponent(comp));
+                }
                 compose::validate_compose(
                     ty,
-                    gctx,
+                    constants,
+                    types,
                     components
                         .iter()
-                        .map(|&component| gctx.constants[component].inner.resolve_type()),
+                        .map(|&component| constants[component].inner.resolve_type()),
                 )?;
             }
         }
@@ -332,15 +347,17 @@ impl Validator {
         #[cfg(feature = "validate")]
         Self::validate_module_handles(module).map_err(|e| e.with_span())?;
 
-        self.layouter.update(module.to_ctx()).map_err(|e| {
-            let handle = e.ty;
-            ValidationError::from(e).with_span_handle(handle, &module.types)
-        })?;
+        self.layouter
+            .update(&module.types, &module.constants)
+            .map_err(|e| {
+                let handle = e.ty;
+                ValidationError::from(e).with_span_handle(handle, &module.types)
+            })?;
 
         #[cfg(feature = "validate")]
         if self.flags.contains(ValidationFlags::CONSTANTS) {
             for (handle, constant) in module.constants.iter() {
-                self.validate_constant(handle, module.to_ctx())
+                self.validate_constant(handle, &module.constants, &module.types)
                     .map_err(|source| {
                         ValidationError::Constant {
                             handle,
@@ -360,7 +377,7 @@ impl Validator {
 
         for (handle, ty) in module.types.iter() {
             let ty_info = self
-                .validate_type(handle, module.to_ctx())
+                .validate_type(handle, &module.types, &module.constants)
                 .map_err(|source| {
                     ValidationError::Type {
                         handle,
@@ -375,7 +392,7 @@ impl Validator {
 
         #[cfg(feature = "validate")]
         for (var_handle, var) in module.global_variables.iter() {
-            self.validate_global_var(var, module.to_ctx())
+            self.validate_global_var(var, &module.types)
                 .map_err(|source| {
                     ValidationError::GlobalVariable {
                         handle: var_handle,
