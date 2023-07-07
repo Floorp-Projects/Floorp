@@ -475,17 +475,15 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
     return nsILoadInfo::NoStoragePermission;
   }
 
-  nsAutoCString trackingOrigin;
-  rv = nsContentUtils::GetWebExposedOriginSerialization(trackingURI,
-                                                        trackingOrigin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nsILoadInfo::NoStoragePermission;
-  }
+  nsCOMPtr<nsIPrincipal> trackingPrincipal =
+      BasePrincipal::CreateContentPrincipal(trackingURI,
+                                            loadInfo->GetOriginAttributes());
 
   if (IsThirdPartyChannel(aChannel)) {
     nsAutoCString targetOrigin;
-    if (NS_FAILED(
-            targetPrincipal->GetWebExposedOriginSerialization(targetOrigin))) {
+    nsAutoCString trackingOrigin;
+    if (NS_FAILED(targetPrincipal->GetOriginNoSuffix(targetOrigin)) ||
+        NS_FAILED(trackingPrincipal->GetOriginNoSuffix(trackingOrigin))) {
       return nsILoadInfo::NoStoragePermission;
     }
 
@@ -495,7 +493,7 @@ AntiTrackingUtils::GetStoragePermissionStateInParent(nsIChannel* aChannel) {
   }
 
   nsAutoCString type;
-  AntiTrackingUtils::CreateStoragePermissionKey(trackingOrigin, type);
+  AntiTrackingUtils::CreateStoragePermissionKey(trackingPrincipal, type);
 
   uint32_t unusedReason = 0;
 

@@ -897,17 +897,13 @@ bool ApproximateAllowAccessForWithoutChannel(
     return cookiePermission != nsICookiePermission::ACCESS_DENY;
   }
 
-  nsAutoCString origin;
-  nsresult rv = nsContentUtils::GetWebExposedOriginSerialization(aURI, origin);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG_SPEC(("Failed to compute the origin from %s", _spec), aURI);
-    return false;
-  }
-
   nsIPrincipal* parentPrincipal = parentDocument->NodePrincipal();
 
+  nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
+      aURI, parentPrincipal->OriginAttributesRef());
+
   nsAutoCString type;
-  AntiTrackingUtils::CreateStoragePermissionKey(origin, type);
+  AntiTrackingUtils::CreateStoragePermissionKey(principal, type);
 
   return AntiTrackingUtils::CheckStoragePermission(
       parentPrincipal, type,

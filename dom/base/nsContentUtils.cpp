@@ -2493,7 +2493,7 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
   if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
                    mozilla::LogLevel::Debug)) {
     nsAutoCString origin;
-    aPrincipal->GetWebExposedOriginSerialization(origin);
+    aPrincipal->GetOrigin(origin);
     LogDomainAndPrefList(kExemptedDomainsPrefName, origin, isExemptDomain);
   }
 
