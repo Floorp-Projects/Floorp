@@ -68,6 +68,7 @@ if sys.platform == "win32":
 
 EXPECTED_LOG_ACTIONS = set(
     [
+        "crash_reporter_init",
         "test_status",
         "log",
     ]
@@ -156,7 +157,13 @@ def markGotSIGINT(signum, stackFrame):
 
 class XPCShellTestThread(Thread):
     def __init__(
-        self, test_object, retry=True, verbose=False, usingTSan=False, **kwargs
+        self,
+        test_object,
+        retry=True,
+        verbose=False,
+        usingTSan=False,
+        usingCrashReporter=False,
+        **kwargs
     ):
         Thread.__init__(self)
         self.daemon = True
@@ -165,6 +172,7 @@ class XPCShellTestThread(Thread):
         self.retry = retry
         self.verbose = verbose
         self.usingTSan = usingTSan
+        self.usingCrashReporter = usingCrashReporter
 
         self.appPath = kwargs.get("appPath")
         self.xrePath = kwargs.get("xrePath")
@@ -216,6 +224,7 @@ class XPCShellTestThread(Thread):
         # Context for output processing
         self.output_lines = []
         self.has_failure_output = False
+        self.saw_crash_reporter_init = False
         self.saw_proc_start = False
         self.saw_proc_end = False
         self.command = None
@@ -721,6 +730,10 @@ class XPCShellTestThread(Thread):
             self.report_message(line_string)
             return
 
+        if line_object["action"] == "crash_reporter_init":
+            self.saw_crash_reporter_init = True
+            return
+
         action = line_object["action"]
 
         self.has_failure_output = (
@@ -891,7 +904,32 @@ class XPCShellTestThread(Thread):
             return_code_ok = return_code == 0 or (
                 self.usingTSan and return_code == TSAN_EXIT_CODE_WITH_RACES
             )
-            passed = (not self.has_failure_output) and return_code_ok
+
+            # Due to the limitation on the remote xpcshell test, the process
+            # return code does not represent the process crash.
+            # If crash_reporter_init log has not been seen and the return code
+            # is 0, it means the process crashed before setting up the crash
+            # reporter.
+            #
+            # NOTE: Crash reporter is not enabled on some configuration, such
+            #       as ASAN and TSAN. Those configuration shouldn't be using
+            #       remote xpcshell test, and the crash should be caught by
+            #       the process return code.
+            # NOTE: self.saw_crash_reporter_init is False also when adb failed
+            #       to launch process, and in that case the return code is
+            #       not 0.
+            #       (see launchProcess in remotexpcshelltests.py)
+            ended_before_crash_reporter_init = (
+                return_code_ok
+                and self.usingCrashReporter
+                and not self.saw_crash_reporter_init
+            )
+
+            passed = (
+                (not self.has_failure_output)
+                and not ended_before_crash_reporter_init
+                and return_code_ok
+            )
 
             status = "PASS" if passed else "FAIL"
             expected = "PASS" if expect_pass else "FAIL"
@@ -900,8 +938,15 @@ class XPCShellTestThread(Thread):
             if self.timedout:
                 return
 
-            if status != expected:
-                if self.retry:
+            if status != expected or ended_before_crash_reporter_init:
+                if ended_before_crash_reporter_init:
+                    self.log.test_end(
+                        name,
+                        "CRASH",
+                        expected=expected,
+                        message="Test ended before setting up the crash reporter",
+                    )
+                elif self.retry:
                     self.log.test_end(
                         name,
                         status,
@@ -912,8 +957,8 @@ class XPCShellTestThread(Thread):
                     if self.verboseIfFails and not self.verbose:
                         self.log_full_output()
                     return
-
-                self.log.test_end(name, status, expected=expected, message=message)
+                else:
+                    self.log.test_end(name, status, expected=expected, message=message)
                 self.log_full_output()
 
                 self.failCount += 1
@@ -1871,6 +1916,10 @@ class XPCShellTests(object):
         # that has an effect on interpretation of the process return value.
         usingTSan = "tsan" in self.mozInfo and self.mozInfo["tsan"]
 
+        usingCrashReporter = (
+            "crashreporter" in self.mozInfo and self.mozInfo["crashreporter"]
+        )
+
         # create a queue of all tests that will run
         tests_queue = deque()
         # also a list for the tests that need to be run sequentially
@@ -1899,6 +1948,7 @@ class XPCShellTests(object):
                         test_object,
                         verbose=self.verbose or test_object.get("verbose") == "true",
                         usingTSan=usingTSan,
+                        usingCrashReporter=usingCrashReporter,
                         mobileArgs=mobileArgs,
                         **kwargs,
                     )
