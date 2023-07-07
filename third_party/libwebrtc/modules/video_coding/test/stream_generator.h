@@ -14,7 +14,7 @@
 
 #include <list>
 
-#include "modules/video_coding/packet.h"
+#include "modules/video_coding/deprecated/packet.h"
 
 namespace webrtc {
 

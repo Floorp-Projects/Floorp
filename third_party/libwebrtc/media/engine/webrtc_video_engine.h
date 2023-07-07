@@ -16,6 +16,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "absl/types/optional.h"
@@ -184,6 +185,11 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   absl::optional<int> GetBaseMinimumPlayoutDelayMs(
       uint32_t ssrc) const override;
 
+  void SetSendCodecChangedCallback(
+      absl::AnyInvocable<void()> callback) override {
+    send_codec_changed_callback_ = std::move(callback);
+  }
+
   // Implemented for VideoMediaChannelTest.
   bool sending() const {
     RTC_DCHECK_RUN_ON(&thread_checker_);
@@ -267,11 +273,6 @@ class WebRtcVideoChannel : public VideoMediaChannel,
  private:
   class WebRtcVideoReceiveStream;
 
-  // Finds VideoReceiveStreamInterface corresponding to ssrc. Aware of
-  // unsignalled ssrc handling.
-  WebRtcVideoReceiveStream* FindReceiveStream(uint32_t ssrc)
-      RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
-
   struct VideoCodecSettings {
     VideoCodecSettings();
 
@@ -313,6 +314,14 @@ class WebRtcVideoChannel : public VideoMediaChannel,
     // VideoReceiveStreamInterface when the FlexFEC payload type is changed.
     absl::optional<int> flexfec_payload_type;
   };
+
+  // Finds VideoReceiveStreamInterface corresponding to ssrc. Aware of
+  // unsignalled ssrc handling.
+  WebRtcVideoReceiveStream* FindReceiveStream(uint32_t ssrc)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(thread_checker_);
+
+  void ProcessReceivedPacket(webrtc::RtpPacketReceived packet)
+      RTC_RUN_ON(thread_checker_);
 
   bool GetChangedSendParameters(const VideoSendParameters& params,
                                 ChangedSendParameters* changed_params) const
@@ -673,7 +682,8 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   VideoSendParameters send_params_ RTC_GUARDED_BY(thread_checker_);
   VideoOptions default_send_options_ RTC_GUARDED_BY(thread_checker_);
   VideoRecvParameters recv_params_ RTC_GUARDED_BY(thread_checker_);
-  int64_t last_stats_log_ms_ RTC_GUARDED_BY(thread_checker_);
+  int64_t last_send_stats_log_ms_ RTC_GUARDED_BY(thread_checker_);
+  int64_t last_receive_stats_log_ms_ RTC_GUARDED_BY(thread_checker_);
   const bool discard_unknown_ssrc_packets_ RTC_GUARDED_BY(thread_checker_);
   // This is a stream param that comes from the remote description, but wasn't
   // signaled with any a=ssrc lines. It holds information that was signaled
@@ -692,6 +702,10 @@ class WebRtcVideoChannel : public VideoMediaChannel,
   // of multiple negotiated codecs allows generic encoder fallback on failures.
   // Presence of EncoderSelector allows switching to specific encoders.
   bool allow_codec_switching_ = false;
+
+  // Callback invoked whenever the send codec changes.
+  // TODO(bugs.webrtc.org/13931): Remove again when coupling isn't needed.
+  absl::AnyInvocable<void()> send_codec_changed_callback_;
 };
 
 }  // namespace cricket

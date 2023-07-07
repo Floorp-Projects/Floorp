@@ -41,7 +41,11 @@ Y4mFrameGenerator::Y4mFrameGenerator(absl::string_view filename,
   RTC_CHECK(fgets(header, sizeof(header), file) != nullptr)
       << "File " << filename_ << " is too small";
   fclose(file);
-  RTC_CHECK_EQ(sscanf(header, "YUV4MPEG2 W%zu H%zu", &width_, &height_), 2);
+  int fps_denominator;
+  RTC_CHECK_EQ(sscanf(header, "YUV4MPEG2 W%zu H%zu F%i:%i", &width_, &height_,
+                      &fps_, &fps_denominator),
+               4);
+  fps_ /= fps_denominator;
   RTC_CHECK_GT(width_, 0);
   RTC_CHECK_GT(height_, 0);
 

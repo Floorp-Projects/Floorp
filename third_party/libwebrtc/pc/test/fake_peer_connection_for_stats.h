@@ -342,9 +342,9 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
   void AddSctpDataChannel(const std::string& label,
                           const InternalDataChannelInit& init) {
     // TODO(bugs.webrtc.org/11547): Supply a separate network thread.
-    AddSctpDataChannel(SctpDataChannel::Create(&data_channel_controller_, label,
-                                               init, rtc::Thread::Current(),
-                                               rtc::Thread::Current()));
+    AddSctpDataChannel(SctpDataChannel::Create(
+        data_channel_controller_.weak_ptr(), label, false, init,
+        rtc::Thread::Current(), rtc::Thread::Current()));
   }
 
   void AddSctpDataChannel(rtc::scoped_refptr<SctpDataChannel> data_channel) {

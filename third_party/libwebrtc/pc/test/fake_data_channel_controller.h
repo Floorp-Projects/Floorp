@@ -12,9 +12,11 @@
 #define PC_TEST_FAKE_DATA_CHANNEL_CONTROLLER_H_
 
 #include <set>
+#include <string>
 
 #include "pc/sctp_data_channel.h"
 #include "rtc_base/checks.h"
+#include "rtc_base/weak_ptr.h"
 
 class FakeDataChannelController
     : public webrtc::SctpDataChannelControllerInterface {
@@ -26,83 +28,94 @@ class FakeDataChannelController
         transport_error_(false) {}
   virtual ~FakeDataChannelController() {}
 
-  bool SendData(int sid,
-                const webrtc::SendDataParams& params,
-                const rtc::CopyOnWriteBuffer& payload,
-                cricket::SendDataResult* result) override {
+  rtc::WeakPtr<FakeDataChannelController> weak_ptr() {
+    return weak_factory_.GetWeakPtr();
+  }
+
+  rtc::scoped_refptr<webrtc::SctpDataChannel> CreateDataChannel(
+      absl::string_view label,
+      webrtc::InternalDataChannelInit init,
+      rtc::Thread* network_thread = rtc::Thread::Current()) {
+    rtc::Thread* signaling_thread = rtc::Thread::Current();
+    rtc::scoped_refptr<webrtc::SctpDataChannel> channel =
+        webrtc::SctpDataChannel::Create(weak_ptr(), std::string(label),
+                                        transport_available_, init,
+                                        signaling_thread, network_thread);
+    if (ReadyToSendData()) {
+      signaling_thread->PostTask(
+          SafeTask(signaling_safety_.flag(), [channel = channel] {
+            if (channel->state() !=
+                webrtc::DataChannelInterface::DataState::kClosed) {
+              channel->OnTransportReady();
+            }
+          }));
+    }
+    connected_channels_.insert(channel.get());
+    return channel;
+  }
+
+  webrtc::RTCError SendData(webrtc::StreamId sid,
+                            const webrtc::SendDataParams& params,
+                            const rtc::CopyOnWriteBuffer& payload) override {
     RTC_CHECK(ready_to_send_);
     RTC_CHECK(transport_available_);
     if (send_blocked_) {
-      *result = cricket::SDR_BLOCK;
-      return false;
+      return webrtc::RTCError(webrtc::RTCErrorType::RESOURCE_EXHAUSTED);
     }
 
     if (transport_error_) {
-      *result = cricket::SDR_ERROR;
-      return false;
+      return webrtc::RTCError(webrtc::RTCErrorType::INTERNAL_ERROR);
     }
 
-    last_sid_ = sid;
+    last_sid_ = sid.stream_id_int();
     last_send_data_params_ = params;
-    return true;
+    return webrtc::RTCError::OK();
   }
 
-  bool ConnectDataChannel(webrtc::SctpDataChannel* data_channel) override {
-    RTC_CHECK(connected_channels_.find(data_channel) ==
-              connected_channels_.end());
-    if (!transport_available_) {
-      return false;
-    }
-    RTC_LOG(LS_INFO) << "DataChannel connected " << data_channel;
-    connected_channels_.insert(data_channel);
-    return true;
-  }
-
-  void DisconnectDataChannel(webrtc::SctpDataChannel* data_channel) override {
-    RTC_CHECK(connected_channels_.find(data_channel) !=
-              connected_channels_.end());
-    RTC_LOG(LS_INFO) << "DataChannel disconnected " << data_channel;
-    connected_channels_.erase(data_channel);
-  }
-
-  void AddSctpDataStream(int sid) override {
-    RTC_CHECK(sid >= 0);
+  void AddSctpDataStream(webrtc::StreamId sid) override {
+    RTC_CHECK(sid.HasValue());
     if (!transport_available_) {
       return;
     }
-    send_ssrcs_.insert(sid);
-    recv_ssrcs_.insert(sid);
+    known_stream_ids_.insert(sid);
   }
 
-  void RemoveSctpDataStream(int sid) override {
-    RTC_CHECK(sid >= 0);
-    send_ssrcs_.erase(sid);
-    recv_ssrcs_.erase(sid);
+  void RemoveSctpDataStream(webrtc::StreamId sid) override {
+    RTC_CHECK(sid.HasValue());
+    known_stream_ids_.erase(sid);
     // Unlike the real SCTP transport, act like the closing procedure finished
     // instantly, doing the same snapshot thing as below.
-    for (webrtc::SctpDataChannel* ch : std::set<webrtc::SctpDataChannel*>(
-             connected_channels_.begin(), connected_channels_.end())) {
-      if (connected_channels_.count(ch)) {
-        ch->OnClosingProcedureComplete(sid);
-      }
-    }
+    auto it = absl::c_find_if(connected_channels_,
+                              [&](const auto* c) { return c->sid() == sid; });
+    // This path mimics the DCC's OnChannelClosed handler since the FDCC
+    // (this class) doesn't have a transport that would do that.
+    if (it != connected_channels_.end())
+      (*it)->OnClosingProcedureComplete();
   }
 
   bool ReadyToSendData() const override { return ready_to_send_; }
+
+  void OnChannelStateChanged(
+      webrtc::SctpDataChannel* data_channel,
+      webrtc::DataChannelInterface::DataState state) override {
+    if (state == webrtc::DataChannelInterface::DataState::kOpen) {
+      ++channels_opened_;
+    } else if (state == webrtc::DataChannelInterface::DataState::kClosed) {
+      ++channels_closed_;
+      connected_channels_.erase(data_channel);
+    }
+  }
 
   // Set true to emulate the SCTP stream being blocked by congestion control.
   void set_send_blocked(bool blocked) {
     send_blocked_ = blocked;
     if (!blocked) {
-      // Take a snapshot of the connected channels and check to see whether
-      // each value is still in connected_channels_ before calling
-      // OnTransportReady().  This avoids problems where the set gets modified
-      // in response to OnTransportReady().
-      for (webrtc::SctpDataChannel* ch : std::set<webrtc::SctpDataChannel*>(
-               connected_channels_.begin(), connected_channels_.end())) {
-        if (connected_channels_.count(ch)) {
-          ch->OnTransportReady(true);
-        }
+      RTC_CHECK(transport_available_);
+      // Make a copy since `connected_channels_` may change while
+      // OnTransportReady is called.
+      auto copy = connected_channels_;
+      for (webrtc::SctpDataChannel* ch : copy) {
+        ch->OnTransportReady();
       }
     }
   }
@@ -122,7 +135,7 @@ class FakeDataChannelController
       std::set<webrtc::SctpDataChannel*>::iterator it;
       for (it = connected_channels_.begin(); it != connected_channels_.end();
            ++it) {
-        (*it)->OnTransportReady(true);
+        (*it)->OnTransportReady();
       }
     }
   }
@@ -138,13 +151,12 @@ class FakeDataChannelController
     return connected_channels_.find(data_channel) != connected_channels_.end();
   }
 
-  bool IsSendStreamAdded(uint32_t stream) const {
-    return send_ssrcs_.find(stream) != send_ssrcs_.end();
+  bool IsStreamAdded(webrtc::StreamId id) const {
+    return known_stream_ids_.find(id) != known_stream_ids_.end();
   }
 
-  bool IsRecvStreamAdded(uint32_t stream) const {
-    return recv_ssrcs_.find(stream) != recv_ssrcs_.end();
-  }
+  int channels_opened() const { return channels_opened_; }
+  int channels_closed() const { return channels_closed_; }
 
  private:
   int last_sid_;
@@ -153,8 +165,11 @@ class FakeDataChannelController
   bool transport_available_;
   bool ready_to_send_;
   bool transport_error_;
+  int channels_closed_ = 0;
+  int channels_opened_ = 0;
   std::set<webrtc::SctpDataChannel*> connected_channels_;
-  std::set<uint32_t> send_ssrcs_;
-  std::set<uint32_t> recv_ssrcs_;
+  std::set<webrtc::StreamId> known_stream_ids_;
+  rtc::WeakPtrFactory<FakeDataChannelController> weak_factory_{this};
+  webrtc::ScopedTaskSafety signaling_safety_;
 };
 #endif  // PC_TEST_FAKE_DATA_CHANNEL_CONTROLLER_H_

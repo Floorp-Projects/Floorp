@@ -17,6 +17,7 @@ rtc_library("task_queue") {
   sources = [ "task_queue_base.cc" ]
 
   deps = [
+    "..:location",
     "../../rtc_base:checks",
     "../../rtc_base:macromagic",
     "../../rtc_base/system:rtc_export",

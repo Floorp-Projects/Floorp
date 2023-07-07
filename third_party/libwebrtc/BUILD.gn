@@ -23,7 +23,6 @@
 
 import("//build/config/linux/pkg_config.gni")
 import("//build/config/sanitizers/sanitizers.gni")
-import("//third_party/google_benchmark/buildconfig.gni")
 import("webrtc.gni")
 if (rtc_enable_protobuf) {
   import("//third_party/protobuf/proto_library.gni")
@@ -64,6 +63,7 @@ if (!build_with_chromium && !build_with_mozilla) {
         "modules/rtp_rtcp:test_packet_masks_metrics",
         "modules/video_capture:video_capture_internal_impl",
         "net/dcsctp:dcsctp_unittests",
+        "pc:peer_connection_mediachannel_split_unittests",
         "pc:peerconnection_unittests",
         "pc:rtc_pc_unittests",
         "pc:slow_peer_connection_unittests",
@@ -283,10 +283,16 @@ config("common_config") {
     defines += [ "WEBRTC_ENABLE_PROTOBUF=0" ]
   }
 
-  if (rtc_strict_field_trials) {
-    defines += [ "WEBRTC_STRICT_FIELD_TRIALS=1" ]
-  } else {
+  if (rtc_strict_field_trials == "") {
     defines += [ "WEBRTC_STRICT_FIELD_TRIALS=0" ]
+  } else if (rtc_strict_field_trials == "dcheck") {
+    defines += [ "WEBRTC_STRICT_FIELD_TRIALS=1" ]
+  } else if (rtc_strict_field_trials == "warn") {
+    defines += [ "WEBRTC_STRICT_FIELD_TRIALS=2" ]
+  } else {
+    assert(false,
+           "Unsupported value for rtc_strict_field_trials: " +
+               "$rtc_strict_field_trials")
   }
 
   if (rtc_include_internal_audio_device) {
@@ -554,7 +560,7 @@ if (!build_with_chromium) {
       deps += [
         "api/video_codecs:video_codecs_api",
         "api/video_codecs:rtc_software_fallback_wrappers",
-        "media:rtc_encoder_simulcast_proxy",
+        "media:rtc_simulcast_encoder_adapter",
         "modules/video_coding:webrtc_vp8",
         "modules/video_coding:webrtc_vp9",
       ]
@@ -661,7 +667,7 @@ if (rtc_include_tests && !build_with_chromium) {
     }
   }
 
-  if (enable_google_benchmarks) {
+  if (rtc_enable_google_benchmarks) {
     rtc_test("benchmarks") {
       testonly = true
       deps = [

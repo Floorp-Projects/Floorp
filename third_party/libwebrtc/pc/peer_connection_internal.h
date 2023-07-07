@@ -76,7 +76,13 @@ class PeerConnectionSdpMethods {
   virtual LegacyStatsCollector* legacy_stats() = 0;
   // Returns the observer. Will crash on CHECK if the observer is removed.
   virtual PeerConnectionObserver* Observer() const = 0;
+  // TODO(webrtc:11547): Remove `GetSctpSslRole` and require `GetSctpSslRole_n`
+  // instead. Currently `GetSctpSslRole` relied upon by `DataChannelController`.
+  // Once that path has been updated to use `GetSctpSslRole_n`, this method
+  // can be removed.
   virtual bool GetSctpSslRole(rtc::SSLRole* role) = 0;
+  virtual absl::optional<rtc::SSLRole> GetSctpSslRole_n(
+      absl::optional<bool> is_caller) = 0;
   virtual PeerConnectionInterface::IceConnectionState
   ice_connection_state_internal() = 0;
   virtual void SetIceConnectionState(
@@ -130,8 +136,7 @@ class PeerConnectionSdpMethods {
 // Functions defined in this class are called by other objects,
 // but not by SdpOfferAnswerHandler.
 class PeerConnectionInternal : public PeerConnectionInterface,
-                               public PeerConnectionSdpMethods,
-                               public sigslot::has_slots<> {
+                               public PeerConnectionSdpMethods {
  public:
   virtual rtc::Thread* network_thread() const = 0;
   virtual rtc::Thread* worker_thread() const = 0;
@@ -142,9 +147,6 @@ class PeerConnectionInternal : public PeerConnectionInterface,
   virtual std::vector<
       rtc::scoped_refptr<RtpTransceiverProxyWithInternal<RtpTransceiver>>>
   GetTransceiversInternal() const = 0;
-
-  virtual sigslot::signal1<SctpDataChannel*>&
-  SignalSctpDataChannelCreated() = 0;
 
   // Call on the network thread to fetch stats for all the data channels.
   // TODO(tommi): Make pure virtual after downstream updates.
@@ -180,8 +182,10 @@ class PeerConnectionInternal : public PeerConnectionInterface,
                           rtc::SSLRole* role) = 0;
   // Functions needed by DataChannelController
   virtual void NoteDataAddedEvent() {}
-  // Handler for the "channel closed" signal
-  virtual void OnSctpDataChannelClosed(DataChannelInterface* channel) {}
+  // Handler for sctp data channel state changes.
+  virtual void OnSctpDataChannelStateChanged(
+      DataChannelInterface* channel,
+      DataChannelInterface::DataState state) {}
 };
 
 }  // namespace webrtc

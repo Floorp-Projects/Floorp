@@ -12,6 +12,7 @@
 
 #include <memory>
 
+#include "absl/base/attributes.h"
 #include "absl/base/macros.h"
 #include "api/video/video_bitrate_allocator.h"
 #include "api/video_codecs/video_codec.h"
@@ -33,7 +34,12 @@ class BuiltinVideoBitrateAllocatorFactory
     switch (codec.codecType) {
       case kVideoCodecAV1:
       case kVideoCodecVP9:
-        return std::make_unique<SvcRateAllocator>(codec);
+        // TODO(https://crbug.com/webrtc/14884): Update SvcRateAllocator to
+        // support simulcast and use it for VP9/AV1 simulcast as well.
+        if (codec.IsSinglecastOrAllNonFirstLayersInactive()) {
+          return std::make_unique<SvcRateAllocator>(codec);
+        }
+        ABSL_FALLTHROUGH_INTENDED;
       default:
         return std::make_unique<SimulcastRateAllocator>(codec);
     }

@@ -20,10 +20,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/58f47eacaf10d12e2
  11 files changed, 27 insertions(+), 27 deletions(-)
 
 diff --git a/BUILD.gn b/BUILD.gn
-index 8b2648a306..f32e632ff6 100644
+index 4c23fdf957..a2ab84ab69 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
-@@ -407,12 +407,12 @@ config("common_config") {
+@@ -413,12 +413,12 @@ config("common_config") {
      }
    }
  
@@ -38,7 +38,7 @@ index 8b2648a306..f32e632ff6 100644
      defines += [ "WEBRTC_ARCH_ARM" ]
      if (arm_version >= 7) {
        defines += [ "WEBRTC_ARCH_ARM_V7" ]
-@@ -422,7 +422,7 @@ config("common_config") {
+@@ -428,7 +428,7 @@ config("common_config") {
      }
    }
  
@@ -276,10 +276,10 @@ index 42d72865b9..c184e2fbbc 100644
  config("x11_config") {
    if (rtc_use_x11_extensions) {
 diff --git a/webrtc.gni b/webrtc.gni
-index 6ae1b2329c..e23c9a1cc4 100644
+index d1f9de6968..aa304001c7 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
-@@ -167,13 +167,13 @@ declare_args() {
+@@ -171,13 +171,13 @@ declare_args() {
  
    # Selects fixed-point code where possible.
    rtc_prefer_fixed_point = false

@@ -155,8 +155,8 @@ class RtcpTransceiverImpl {
 
   bool ready_to_send_;
   absl::optional<rtcp::Remb> remb_;
-  // TODO(danilchap): Remove entries from remote_senders_ that are no longer
-  // needed.
+  // TODO(bugs.webrtc.org/8239): Remove entries from remote_senders_ that are no
+  // longer needed.
   flat_map<uint32_t, RemoteSenderState> remote_senders_;
   std::list<LocalSenderState> local_senders_;
   flat_map<uint32_t, std::list<LocalSenderState>::iterator>

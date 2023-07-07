@@ -784,7 +784,26 @@ webrtc::VideoCodec SimulcastEncoderAdapter::MakeStreamCodec(
   codec_params.maxFramerate = stream_params.maxFramerate;
   codec_params.qpMax = stream_params.qpMax;
   codec_params.active = stream_params.active;
-  codec_params.SetScalabilityMode(stream_params.GetScalabilityMode());
+  // By default, `scalability_mode` comes from SimulcastStream when
+  // SimulcastEncoderAdapter is used. This allows multiple encodings of L1Tx,
+  // but SimulcastStream currently does not support multiple spatial layers.
+  ScalabilityMode scalability_mode = stream_params.GetScalabilityMode();
+  // To support the full set of scalability modes in the event that this is the
+  // only active encoding, prefer VideoCodec::GetScalabilityMode() if all other
+  // encodings are inactive.
+  if (codec.GetScalabilityMode().has_value()) {
+    bool only_active_stream = true;
+    for (int i = 0; i < codec.numberOfSimulcastStreams; ++i) {
+      if (i != stream_idx && codec.simulcastStream[i].active) {
+        only_active_stream = false;
+        break;
+      }
+    }
+    if (only_active_stream) {
+      scalability_mode = codec.GetScalabilityMode().value();
+    }
+  }
+  codec_params.SetScalabilityMode(scalability_mode);
   // Settings that are based on stream/resolution.
   if (is_lowest_quality_stream) {
     // Settings for lowest spatial resolutions.

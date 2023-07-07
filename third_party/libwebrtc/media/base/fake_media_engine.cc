@@ -470,8 +470,11 @@ VoiceMediaChannel* FakeVoiceEngine::CreateMediaChannel(
     case MediaChannel::Role::kReceive:
       receive_channels_.push_back(ch);
       break;
+    case MediaChannel::Role::kBoth:
+      send_channels_.push_back(ch);
+      receive_channels_.push_back(ch);
+      break;
     default:
-      // kBoth isn't supported any more.
       RTC_CHECK_NOTREACHED();
   }
   return ch;
@@ -488,6 +491,10 @@ void FakeVoiceEngine::UnregisterChannel(VoiceMediaChannel* channel) {
       send_channels_.erase(absl::c_find(send_channels_, channel));
       break;
     case MediaChannel::Role::kReceive:
+      receive_channels_.erase(absl::c_find(receive_channels_, channel));
+      break;
+    case MediaChannel::Role::kBoth:
+      send_channels_.erase(absl::c_find(send_channels_, channel));
       receive_channels_.erase(absl::c_find(receive_channels_, channel));
       break;
     default:
@@ -564,8 +571,11 @@ VideoMediaChannel* FakeVideoEngine::CreateMediaChannel(
     case MediaChannel::Role::kReceive:
       receive_channels_.emplace_back(ch);
       break;
+    case MediaChannel::Role::kBoth:
+      send_channels_.push_back(ch);
+      receive_channels_.push_back(ch);
+      break;
     default:
-      // kBoth isn't supported
       RTC_CHECK_NOTREACHED();
   }
   return ch;
@@ -586,6 +596,14 @@ void FakeVideoEngine::UnregisterChannel(VideoMediaChannel* channel) {
     } break;
     case MediaChannel::Role::kReceive: {
       auto it = absl::c_find(receive_channels_, channel);
+      RTC_DCHECK(it != receive_channels_.end());
+      receive_channels_.erase(it);
+    } break;
+    case MediaChannel::Role::kBoth: {
+      auto it = absl::c_find(send_channels_, channel);
+      RTC_DCHECK(it != send_channels_.end());
+      send_channels_.erase(it);
+      it = absl::c_find(receive_channels_, channel);
       RTC_DCHECK(it != receive_channels_.end());
       receive_channels_.erase(it);
     } break;

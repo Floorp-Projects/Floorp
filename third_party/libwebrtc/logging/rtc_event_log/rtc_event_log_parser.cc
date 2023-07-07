@@ -45,61 +45,6 @@
 #include "rtc_base/protobuf_utils.h"
 #include "rtc_base/system/file_wrapper.h"
 
-// These macros were added to convert existing code using RTC_CHECKs
-// to returning a Status object instead. Macros are necessary (over
-// e.g. helper functions) since we want to return from the current
-// function.
-#define RTC_PARSE_CHECK_OR_RETURN(X)                                        \
-  do {                                                                      \
-    if (!(X))                                                               \
-      return ParsedRtcEventLog::ParseStatus::Error(#X, __FILE__, __LINE__); \
-  } while (0)
-
-#define RTC_PARSE_CHECK_OR_RETURN_MESSAGE(X, M)                              \
-  do {                                                                       \
-    if (!(X))                                                                \
-      return ParsedRtcEventLog::ParseStatus::Error((M), __FILE__, __LINE__); \
-  } while (0)
-
-#define RTC_PARSE_CHECK_OR_RETURN_OP(OP, X, Y)                          \
-  do {                                                                  \
-    if (!((X)OP(Y)))                                                    \
-      return ParsedRtcEventLog::ParseStatus::Error(#X #OP #Y, __FILE__, \
-                                                   __LINE__);           \
-  } while (0)
-
-#define RTC_PARSE_CHECK_OR_RETURN_EQ(X, Y) \
-  RTC_PARSE_CHECK_OR_RETURN_OP(==, X, Y)
-
-#define RTC_PARSE_CHECK_OR_RETURN_NE(X, Y) \
-  RTC_PARSE_CHECK_OR_RETURN_OP(!=, X, Y)
-
-#define RTC_PARSE_CHECK_OR_RETURN_LT(X, Y) RTC_PARSE_CHECK_OR_RETURN_OP(<, X, Y)
-
-#define RTC_PARSE_CHECK_OR_RETURN_LE(X, Y) \
-  RTC_PARSE_CHECK_OR_RETURN_OP(<=, X, Y)
-
-#define RTC_PARSE_CHECK_OR_RETURN_GT(X, Y) RTC_PARSE_CHECK_OR_RETURN_OP(>, X, Y)
-
-#define RTC_PARSE_CHECK_OR_RETURN_GE(X, Y) \
-  RTC_PARSE_CHECK_OR_RETURN_OP(>=, X, Y)
-
-#define RTC_PARSE_WARN_AND_RETURN_SUCCESS_IF(X, M)      \
-  do {                                                  \
-    if (X) {                                            \
-      RTC_LOG(LS_WARNING) << (M);                       \
-      return ParsedRtcEventLog::ParseStatus::Success(); \
-    }                                                   \
-  } while (0)
-
-#define RTC_RETURN_IF_ERROR(X)                                 \
-  do {                                                         \
-    const ParsedRtcEventLog::ParseStatus _rtc_parse_status(X); \
-    if (!_rtc_parse_status.ok()) {                             \
-      return _rtc_parse_status;                                \
-    }                                                          \
-  } while (0)
-
 using webrtc_event_logging::ToSigned;
 using webrtc_event_logging::ToUnsigned;
 

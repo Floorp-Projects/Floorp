@@ -1,25 +1,69 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Tue, 4 Apr 2023 16:34:00 -0500
-Subject: Bug 1822194 - (fix-3b51cd328e) - Add missing designated initializer
- that gcc is sad about.
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Wed, 10 May 2023 07:06:00 +0000
+Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit ba41b40461.
+ r=webrtc-reviewers,mjf
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/108046c7cbb21c6cf19320c0804e9aee1a3eb4bf
+Upstream commit: https://webrtc.googlesource.com/src/+/ba41b40461df191624c61f0c98ae76e69fe1d46b
+    webrtc_libyuv: Add support for more video types for consistency
+
+    Bug: webrtc:14830
+    Change-Id: I0998fb04a03745131f9f5cca878b0cdb46f3b62b
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291529
+    Reviewed-by: Erik Språng <sprang@webrtc.org>
+    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39940}
+
+Differential Revision: https://phabricator.services.mozilla.com/D177229
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b6eaef560895caa06e11cce40083eb87fd8724a8
 ---
- modules/audio_processing/audio_processing_impl.cc | 1 +
- 1 file changed, 1 insertion(+)
+ common_video/libyuv/include/webrtc_libyuv.h | 3 ++-
+ common_video/libyuv/webrtc_libyuv.cc        | 4 ++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/modules/audio_processing/audio_processing_impl.cc b/modules/audio_processing/audio_processing_impl.cc
-index c80cc76a3d..c304453388 100644
---- a/modules/audio_processing/audio_processing_impl.cc
-+++ b/modules/audio_processing/audio_processing_impl.cc
-@@ -450,6 +450,7 @@ AudioProcessingImpl::GetGainController2ExperimentParams() {
-                   },
-               .adaptive_digital_controller =
-                   {
-+                      .enabled = false,
-                       .headroom_db = static_cast<float>(headroom_db.Get()),
-                       .max_gain_db = static_cast<float>(max_gain_db.Get()),
-                       .initial_gain_db =
+diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
+index 6d9071bcd5..253a33294d 100644
+--- a/common_video/libyuv/include/webrtc_libyuv.h
++++ b/common_video/libyuv/include/webrtc_libyuv.h
+@@ -32,8 +32,9 @@ enum class VideoType {
+   kI420,
+   kIYUV,
+   kRGB24,
+-  kABGR,
++  kBGR24,
+   kARGB,
++  kABGR,
+   kARGB4444,
+   kRGB565,
+   kARGB1555,
+diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
+index 4c6911b4a3..05a4b184c2 100644
+--- a/common_video/libyuv/webrtc_libyuv.cc
++++ b/common_video/libyuv/webrtc_libyuv.cc
+@@ -39,9 +39,11 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+     case VideoType::kUYVY:
+       return width * height * 2;
+     case VideoType::kRGB24:
++    case VideoType::kBGR24:
+       return width * height * 3;
+     case VideoType::kBGRA:
+     case VideoType::kARGB:
++    case VideoType::kABGR:
+       return width * height * 4;
+     case VideoType::kMJPEG:
+     case VideoType::kUnknown:
+@@ -93,6 +95,8 @@ int ConvertVideoType(VideoType video_type) {
+       return libyuv::FOURCC_YV12;
+     case VideoType::kRGB24:
+       return libyuv::FOURCC_24BG;
++    case VideoType::kBGR24:
++      return libyuv::FOURCC_RAW;
+     case VideoType::kABGR:
+       return libyuv::FOURCC_ABGR;
+     case VideoType::kRGB565:
 -- 
 2.34.1
 

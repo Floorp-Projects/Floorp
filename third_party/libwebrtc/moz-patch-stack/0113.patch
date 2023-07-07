@@ -1,0 +1,89 @@
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Tue, 20 Jun 2023 16:31:00 +0000
+Subject: Bug 1837667 - avoid calling GetDpiForMonitor on Windows <
+ 8.1;r=mjf,webrtc-reviewers,pehrsons
+
+Differential Revision: https://phabricator.services.mozilla.com/D180763
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1877c1e6db6f8a23c52ab9238c7f62d0b696f0ce
+---
+ .../win/screen_capture_utils.cc               | 33 +++++++++++++++----
+ 1 file changed, 26 insertions(+), 7 deletions(-)
+
+diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
+index c0144b0ef3..a5b0fc597c 100644
+--- a/modules/desktop_capture/win/screen_capture_utils.cc
++++ b/modules/desktop_capture/win/screen_capture_utils.cc
+@@ -10,14 +10,17 @@
+ 
+ #include "modules/desktop_capture/win/screen_capture_utils.h"
+ 
++#include <libloaderapi.h>
+ #include <shellscalingapi.h>
+ #include <windows.h>
++#include <winnt.h>
+ 
+ #include <string>
+ #include <vector>
+ 
+ #include "modules/desktop_capture/desktop_capturer.h"
+ #include "modules/desktop_capture/desktop_geometry.h"
++#include "mozilla/WindowsVersion.h"  // See Bug 1837647
+ #include "rtc_base/checks.h"
+ #include "rtc_base/logging.h"
+ #include "rtc_base/string_utils.h"
+@@ -25,6 +28,28 @@
+ 
+ namespace webrtc {
+ 
++// See Bug 1837647 - upstream commit 60795e8c7a added a method using
++// ::GetDpiForMonitor which is not available on Win7 machines.  For Win7,
++// fail as to provoke it to get the system DPI.
++HRESULT TryGetDpiForMonitor(HMONITOR hmonitor,
++                            MONITOR_DPI_TYPE dpiType,
++                            UINT* dpiX,
++                            UINT* dpiY) {
++  static HRESULT (*plat_fn)(HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);
++  // Grab a pointer to ::GetDpiForMonitor if that has been loaded.
++  // It is available in Windows 8.1 and up. Can we drop the version check? It
++  // would make upstreaming easier.
++  if (!plat_fn) {
++    if (auto* module = ::GetModuleHandle(L"Shcore.dll"); module) {
++      plat_fn = reinterpret_cast<decltype(plat_fn)>(
++          ::GetProcAddress(module, "GetDpiForMonitor"));
++    }
++  }
++  // Call the function we got or return a failure value in the case that
++  // we didn't manage to get a pointer to ::GetDpiForMonitor
++  return plat_fn ? ((*plat_fn)(hmonitor, dpiType, dpiX, dpiY)) : -1;
++}
++
+ bool HasActiveDisplay() {
+   DesktopCapturer::SourceList screens;
+ 
+@@ -147,14 +172,9 @@ DesktopRect GetFullscreenRect() {
+ }
+ 
+ DesktopVector GetDpiForMonitor(HMONITOR monitor) {
+-// See Bug 1837647 - upstream commit 60795e8c7a added this method using
+-// ::GetDpiForMonitor which is not available on Win7 machines.  For now,
+-// we'll return the default case of {96, 96} until we can properly
+-// restore the functionality for newer machines (See Bug 1837667).
+-#if 0
+   UINT dpi_x, dpi_y;
+   // MDT_EFFECTIVE_DPI includes the scale factor as well as the system DPI.
+-  HRESULT hr = ::GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
++  HRESULT hr = TryGetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
+   if (SUCCEEDED(hr)) {
+     return {static_cast<INT>(dpi_x), static_cast<INT>(dpi_y)};
+   }
+@@ -168,7 +188,6 @@ DesktopVector GetDpiForMonitor(HMONITOR monitor) {
+     ReleaseDC(nullptr, hdc);
+     return dpi;
+   }
+-#endif
+ 
+   // If everything fails, then return the default DPI for Windows.
+   return {96, 96};
+-- 
+2.34.1
+

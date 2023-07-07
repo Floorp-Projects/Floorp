@@ -278,13 +278,20 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
     RtpPacketMediaType packet_type = *packet->packet_type();
     RtpPacketCounter counter(*packet);
     size_t size = packet->size();
-    worker_queue_->PostTask(
-        SafeTask(task_safety_.flag(), [this, now, packet_ssrc, packet_type,
-                                       counter = std::move(counter), size]() {
-          RTC_DCHECK_RUN_ON(worker_queue_);
-          UpdateRtpStats(now, packet_ssrc, packet_type, std::move(counter),
-                         size);
-        }));
+    // TODO(bugs.webrtc.org/137439): clean up task posting when the combined
+    // network/worker project launches.
+    if (TaskQueueBase::Current() != worker_queue_) {
+      worker_queue_->PostTask(
+          SafeTask(task_safety_.flag(), [this, now, packet_ssrc, packet_type,
+                                         counter = std::move(counter), size]() {
+            RTC_DCHECK_RUN_ON(worker_queue_);
+            UpdateRtpStats(now, packet_ssrc, packet_type, std::move(counter),
+                           size);
+          }));
+    } else {
+      RTC_DCHECK_RUN_ON(worker_queue_);
+      UpdateRtpStats(now, packet_ssrc, packet_type, std::move(counter), size);
+    }
   }
 }
 

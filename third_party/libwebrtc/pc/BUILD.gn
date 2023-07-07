@@ -519,10 +519,13 @@ rtc_source_set("sctp_utils") {
     "../api:priority",
     "../api/transport:datagram_transport_interface",
     "../media:media_channel",
+    "../media:rtc_data_sctp_transport_internal",
     "../media:rtc_media_base",
+    "../net/dcsctp/public:types",
     "../rtc_base:byte_buffer",
     "../rtc_base:copy_on_write_buffer",
     "../rtc_base:logging",
+    "../rtc_base:ssl",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -872,6 +875,7 @@ rtc_library("sctp_data_channel") {
     "../api:priority",
     "../api:rtc_error",
     "../api:scoped_refptr",
+    "../api:sequence_checker",
     "../api/transport:datagram_transport_interface",
     "../media:media_channel",
     "../media:rtc_data_sctp_transport_internal",
@@ -882,9 +886,10 @@ rtc_library("sctp_data_channel") {
     "../rtc_base:macromagic",
     "../rtc_base:ssl",
     "../rtc_base:threading",
-    "../rtc_base:threading",
+    "../rtc_base:weak_ptr",
+    "../rtc_base/containers:flat_set",
+    "../rtc_base/system:no_unique_address",
     "../rtc_base/system:unused",
-    "../rtc_base/third_party/sigslot:sigslot",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/cleanup",
@@ -955,6 +960,7 @@ rtc_source_set("data_channel_controller") {
     "../api:rtc_error",
     "../api:scoped_refptr",
     "../api:sequence_checker",
+    "../api/task_queue:pending_task_safety_flag",
     "../api/transport:datagram_transport_interface",
     "../media:media_channel",
     "../media:rtc_media_base",
@@ -965,24 +971,10 @@ rtc_source_set("data_channel_controller") {
     "../rtc_base:ssl",
     "../rtc_base:threading",
     "../rtc_base:weak_ptr",
-    "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/types:optional",
-  ]
-}
-
-rtc_source_set("peer_connection_sdp_methods") {
-  visibility = [ ":*" ]
-  sources = [ "peer_connection_sdp_methods.h" ]
-  deps = [
-    ":jsep_transport_controller",
-    ":peer_connection_message_handler",
-    ":sctp_data_channel",
-    ":usage_pattern",
-    "../api:libjingle_peerconnection_api",
-    "../call:call_interfaces",
   ]
 }
 
@@ -992,7 +984,6 @@ rtc_source_set("peer_connection_internal") {
   deps = [
     ":jsep_transport_controller",
     ":peer_connection_message_handler",
-    ":peer_connection_sdp_methods",
     ":rtp_transceiver",
     ":rtp_transmission_manager",
     ":sctp_data_channel",
@@ -1062,8 +1053,8 @@ rtc_source_set("rtc_stats_collector") {
     "../rtc_base:stringutils",
     "../rtc_base:threading",
     "../rtc_base:timeutils",
+    "../rtc_base/containers:flat_set",
     "../rtc_base/synchronization:mutex",
-    "../rtc_base/third_party/sigslot:sigslot",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/functional:bind_front",
@@ -1593,7 +1584,6 @@ rtc_library("rtp_transceiver") {
     ":channel",
     ":channel_interface",
     ":connection_context",
-    ":peer_connection_sdp_methods",
     ":proxy",
     ":rtp_media_utils",
     ":rtp_parameters_conversion",
@@ -2486,6 +2476,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base/third_party/base64",
       "../rtc_base/third_party/sigslot",
       "../system_wrappers:metrics",
+      "../test:field_trial",
       "../test:run_loop",
       "../test:scoped_key_value_config",
       "../test/pc/sctp:fake_sctp_transport",
@@ -2542,6 +2533,27 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
   }
 
+  rtc_test("peer_connection_mediachannel_split_unittests") {
+    testonly = true
+    sources = [ "peer_connection_mediachannel_split_unittest.cc" ]
+    deps = [
+      ":integration_test_helpers",
+      ":session_description",
+      "../api:libjingle_peerconnection_api",
+      "../api:media_stream_interface",
+      "../api:rtc_error",
+      "../api:rtc_stats_api",
+      "../api:scoped_refptr",
+      "../media:codec",
+      "../media:media_constants",
+      "../rtc_base:gunit_helpers",
+      "../rtc_base:rtc_base_tests_utils",
+      "../test:test_main",
+      "../test:test_support",
+    ]
+    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  }
+
   rtc_library("data_channel_controller_unittest") {
     testonly = true
     sources = [ "data_channel_controller_unittest.cc" ]
@@ -2550,6 +2562,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":pc_test_utils",
       ":peer_connection_internal",
       ":sctp_data_channel",
+      "../test:run_loop",
       "../test:test_support",
     ]
   }
@@ -2784,6 +2797,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:task_queue_for_test",
       "../rtc_base:threading",
       "../rtc_base:timeutils",
+      "../rtc_base:weak_ptr",
       "../rtc_base/synchronization:mutex",
       "../rtc_base/task_utils:repeating_task",
       "../rtc_base/third_party/sigslot",

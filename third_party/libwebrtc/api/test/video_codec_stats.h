@@ -11,6 +11,7 @@
 #ifndef API_TEST_VIDEO_CODEC_STATS_H_
 #define API_TEST_VIDEO_CODEC_STATS_H_
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,7 @@
 #include "api/test/metrics/metric.h"
 #include "api/test/metrics/metrics_logger.h"
 #include "api/units/data_rate.h"
+#include "api/units/data_size.h"
 #include "api/units/frequency.h"
 
 namespace webrtc {
@@ -44,10 +46,10 @@ class VideoCodecStats {
 
     int width = 0;
     int height = 0;
-    int size_bytes = 0;
+    DataSize frame_size = DataSize::Zero();
     bool keyframe = false;
-    absl::optional<int> qp = absl::nullopt;
-    absl::optional<int> base_spatial_idx = absl::nullopt;
+    absl::optional<int> qp;
+    absl::optional<int> base_spatial_idx;
 
     Timestamp encode_start = Timestamp::Zero();
     TimeDelta encode_time = TimeDelta::Zero();
@@ -59,29 +61,35 @@ class VideoCodecStats {
       double u = 0.0;
       double v = 0.0;
     };
-    absl::optional<Psnr> psnr = absl::nullopt;
+    absl::optional<Psnr> psnr;
+
+    absl::optional<DataRate> target_bitrate;
+    absl::optional<Frequency> target_framerate;
 
     bool encoded = false;
     bool decoded = false;
   };
 
   struct Stream {
-    int num_frames = 0;
-    int num_keyframes = 0;
-
     SamplesStatsCounter width;
     SamplesStatsCounter height;
-    SamplesStatsCounter size_bytes;
+    SamplesStatsCounter frame_size_bytes;
+    SamplesStatsCounter keyframe;
     SamplesStatsCounter qp;
 
-    SamplesStatsCounter encode_time_us;
-    SamplesStatsCounter decode_time_us;
+    SamplesStatsCounter encode_time_ms;
+    SamplesStatsCounter decode_time_ms;
 
-    DataRate bitrate = DataRate::Zero();
-    Frequency framerate = Frequency::Zero();
-    int bitrate_mismatch_pct = 0;
-    int framerate_mismatch_pct = 0;
-    SamplesStatsCounter transmission_time_us;
+    SamplesStatsCounter target_bitrate_kbps;
+    SamplesStatsCounter target_framerate_fps;
+
+    SamplesStatsCounter encoded_bitrate_kbps;
+    SamplesStatsCounter encoded_framerate_fps;
+
+    SamplesStatsCounter bitrate_mismatch_pct;
+    SamplesStatsCounter framerate_mismatch_pct;
+
+    SamplesStatsCounter transmission_time_ms;
 
     struct Psnr {
       SamplesStatsCounter y;
@@ -97,18 +105,15 @@ class VideoCodecStats {
   virtual std::vector<Frame> Slice(
       absl::optional<Filter> filter = absl::nullopt) const = 0;
 
-  // Returns video statistics aggregated for given `frames`. If `bitrate` is
-  // provided, also performs rate control analysis. If `framerate` is provided,
-  // also calculates frame rate mismatch.
-  virtual Stream Aggregate(
-      const std::vector<Frame>& frames,
-      absl::optional<DataRate> bitrate = absl::nullopt,
-      absl::optional<Frequency> framerate = absl::nullopt) const = 0;
+  // Returns video statistics aggregated for given `frames`.
+  virtual Stream Aggregate(const std::vector<Frame>& frames) const = 0;
 
   // Logs `Stream` metrics to provided `MetricsLogger`.
-  virtual void LogMetrics(MetricsLogger* logger,
-                          const Stream& stream,
-                          std::string test_case_name) const = 0;
+  virtual void LogMetrics(
+      MetricsLogger* logger,
+      const Stream& stream,
+      std::string test_case_name,
+      std::map<std::string, std::string> metadata = {}) const = 0;
 };
 
 }  // namespace test

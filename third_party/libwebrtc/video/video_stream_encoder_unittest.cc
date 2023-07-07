@@ -8996,31 +8996,8 @@ std::string TestParametersVideoCodecAndAllowI420ConversionToString(
     testing::TestParamInfo<std::pair<VideoCodecType, bool>> info) {
   VideoCodecType codec_type = std::get<0>(info.param);
   bool allow_i420_conversion = std::get<1>(info.param);
-  std::string str;
-  switch (codec_type) {
-    case kVideoCodecGeneric:
-      str = "Generic";
-      break;
-    case kVideoCodecVP8:
-      str = "VP8";
-      break;
-    case kVideoCodecVP9:
-      str = "VP9";
-      break;
-    case kVideoCodecAV1:
-      str = "AV1";
-      break;
-    case kVideoCodecH264:
-      str = "H264";
-      break;
-    case kVideoCodecMultiplex:
-      str = "Multiplex";
-      break;
-    default:
-      RTC_DCHECK_NOTREACHED();
-  }
-  str += allow_i420_conversion ? "_AllowToI420" : "_DisallowToI420";
-  return str;
+  return std::string(CodecTypeToPayloadString(codec_type)) +
+         (allow_i420_conversion ? "_AllowToI420" : "_DisallowToI420");
 }
 
 constexpr std::pair<VideoCodecType, bool> kVP8DisallowConversion =
@@ -9220,15 +9197,15 @@ TEST(VideoStreamEncoderSimpleTest, CreateDestroy) {
 
    private:
     void Delete() override { delete this; }
-    void PostTask(absl::AnyInvocable<void() &&> task) override {
+    void PostTaskImpl(absl::AnyInvocable<void() &&> task,
+                      const PostTaskTraits& traits,
+                      const Location& location) override {
       // meh.
     }
-    void PostDelayedTask(absl::AnyInvocable<void() &&> task,
-                         TimeDelta delay) override {
-      ASSERT_TRUE(false);
-    }
-    void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
-                                      TimeDelta delay) override {
+    void PostDelayedTaskImpl(absl::AnyInvocable<void() &&> task,
+                             TimeDelta delay,
+                             const PostDelayedTaskTraits& traits,
+                             const Location& location) override {
       ADD_FAILURE();
     }
   };

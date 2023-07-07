@@ -12,6 +12,7 @@
 #define API_TEST_VIDEO_CODEC_TESTER_H_
 
 #include <memory>
+#include <string>
 
 #include "absl/functional/any_invocable.h"
 #include "absl/types/optional.h"
@@ -46,10 +47,14 @@ class VideoCodecTester {
 
   struct DecoderSettings {
     PacingSettings pacing;
+    absl::optional<std::string> decoder_input_base_path;
+    absl::optional<std::string> decoder_output_base_path;
   };
 
   struct EncoderSettings {
     PacingSettings pacing;
+    absl::optional<std::string> encoder_input_base_path;
+    absl::optional<std::string> encoder_output_base_path;
   };
 
   virtual ~VideoCodecTester() = default;
@@ -88,6 +93,8 @@ class VideoCodecTester {
 
     virtual ~Encoder() = default;
 
+    virtual void Initialize() = 0;
+
     virtual void Encode(const VideoFrame& frame, EncodeCallback callback) = 0;
 
     virtual void Flush() = 0;
@@ -100,6 +107,8 @@ class VideoCodecTester {
         absl::AnyInvocable<void(const VideoFrame& decoded_frame)>;
 
     virtual ~Decoder() = default;
+
+    virtual void Initialize() = 0;
 
     virtual void Decode(const EncodedImage& frame, DecodeCallback callback) = 0;
 

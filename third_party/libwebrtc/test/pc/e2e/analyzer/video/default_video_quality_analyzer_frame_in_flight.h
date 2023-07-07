@@ -13,12 +13,14 @@
 
 #include <map>
 #include <set>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include "absl/types/optional.h"
 #include "api/numerics/samples_stats_counter.h"
 #include "api/units/data_size.h"
+#include "api/units/time_delta.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_frame.h"
 #include "api/video/video_frame_type.h"
@@ -34,6 +36,8 @@ struct ReceiverFrameStats {
   Timestamp rendered_time = Timestamp::MinusInfinity();
   Timestamp prev_frame_rendered_time = Timestamp::MinusInfinity();
 
+  TimeDelta time_between_rendered_frames = TimeDelta::Zero();
+
   // Type and encoded size of received frame.
   VideoFrameType frame_type = VideoFrameType::kEmptyFrame;
   DataSize encoded_image_size = DataSize::Bytes(0);
@@ -46,6 +50,9 @@ struct ReceiverFrameStats {
 
   bool dropped = false;
   bool decoder_failed = false;
+
+  // Superfluous frames should be used for stats calculation for that peer.
+  bool superfluous = false;
 };
 
 // Represents a frame which was sent by sender and is currently on the way to
@@ -59,18 +66,15 @@ struct ReceiverFrameStats {
 class FrameInFlight {
  public:
   FrameInFlight(size_t stream,
-                VideoFrame frame,
+                uint16_t frame_id,
                 Timestamp captured_time,
                 std::set<size_t> expected_receivers);
 
   size_t stream() const { return stream_; }
-  // Returns internal copy of source `VideoFrame` or `absl::nullopt` if it was
-  // removed before.
-  const absl::optional<VideoFrame>& frame() const { return frame_; }
-  // Removes internal copy of the source `VideoFrame` to free up extra memory.
-  // Returns was frame removed or not.
-  bool RemoveFrame();
-  void SetFrameId(uint16_t id);
+
+  uint16_t id() const { return frame_id_; }
+
+  Timestamp captured_time() const { return captured_time_; }
 
   void AddExpectedReceiver(size_t peer) { expected_receivers_.insert(peer); }
 
@@ -82,9 +86,9 @@ class FrameInFlight {
   // received it or not.
   bool HaveAllPeersReceived() const;
 
-  void SetPreEncodeTime(webrtc::Timestamp time) { pre_encode_time_ = time; }
+  void SetPreEncodeTime(Timestamp time) { pre_encode_time_ = time; }
 
-  void OnFrameEncoded(webrtc::Timestamp time,
+  void OnFrameEncoded(Timestamp time,
                       VideoFrameType frame_type,
                       DataSize encoded_image_size,
                       uint32_t target_encode_bitrate,
@@ -95,15 +99,15 @@ class FrameInFlight {
   bool HasEncodedTime() const { return encoded_time_.IsFinite(); }
 
   void OnFramePreDecode(size_t peer,
-                        webrtc::Timestamp received_time,
-                        webrtc::Timestamp decode_start_time,
+                        Timestamp received_time,
+                        Timestamp decode_start_time,
                         VideoFrameType frame_type,
                         DataSize encoded_image_size);
 
   bool HasReceivedTime(size_t peer) const;
 
   void OnFrameDecoded(size_t peer,
-                      webrtc::Timestamp time,
+                      Timestamp time,
                       int width,
                       int height,
                       const StreamCodecInfo& used_decoder);
@@ -111,12 +115,12 @@ class FrameInFlight {
 
   bool HasDecodeEndTime(size_t peer) const;
 
-  void OnFrameRendered(size_t peer, webrtc::Timestamp time);
+  void OnFrameRendered(size_t peer, Timestamp time);
 
   bool HasRenderedTime(size_t peer) const;
 
   // Crash if rendered time is not set for specified `peer`.
-  webrtc::Timestamp rendered_time(size_t peer) const {
+  Timestamp rendered_time(size_t peer) const {
     return receiver_stats_.at(peer).rendered_time;
   }
 
@@ -124,13 +128,23 @@ class FrameInFlight {
   void MarkDropped(size_t peer) { receiver_stats_[peer].dropped = true; }
   bool IsDropped(size_t peer) const;
 
+  void MarkSuperfluous(size_t peer) {
+    receiver_stats_[peer].superfluous = true;
+  }
+
   void SetPrevFrameRenderedTime(size_t peer, webrtc::Timestamp time) {
     receiver_stats_[peer].prev_frame_rendered_time = time;
+  }
+
+  void SetTimeBetweenRenderedFrames(size_t peer, TimeDelta time) {
+    receiver_stats_[peer].time_between_rendered_frames = time;
   }
 
   FrameStats GetStatsForPeer(size_t peer) const;
 
  private:
+  bool IsSuperfluous(size_t peer) const;
+
   const size_t stream_;
   // Set of peer's indexes who are expected to receive this frame. This is not
   // the set of peer's indexes that received the frame. For example, if peer A
@@ -142,7 +156,6 @@ class FrameInFlight {
   // any peer or can be safely deleted. It is responsibility of the user of this
   // object to decide when it should be deleted.
   std::set<size_t> expected_receivers_;
-  absl::optional<VideoFrame> frame_;
   // Store frame id separately because `frame_` can be removed when we have too
   // much memory consuption.
   uint16_t frame_id_ = VideoFrame::kNotSetId;
@@ -156,12 +169,12 @@ class FrameInFlight {
   DataSize encoded_image_size_ = DataSize::Bytes(0);
   uint32_t target_encode_bitrate_ = 0;
   // Sender side qp values per spatial or simulcast layer. If neither the
-  // spatial or simulcast index is set in `webrtc::EncodedImage`, 0 is used.
+  // spatial or simulcast index is set in `EncodedImage`, 0 is used.
   std::map<int, SamplesStatsCounter> stream_layers_qp_;
   // Can be not set if frame was dropped by encoder.
   absl::optional<StreamCodecInfo> used_encoder_ = absl::nullopt;
   // Map from the receiver peer's index to frame stats for that peer.
-  std::map<size_t, ReceiverFrameStats> receiver_stats_;
+  std::unordered_map<size_t, ReceiverFrameStats> receiver_stats_;
 };
 
 }  // namespace webrtc

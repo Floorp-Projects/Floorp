@@ -1,69 +1,71 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 10 May 2023 07:06:00 +0000
-Subject: Bug 1810949 - cherry-pick upstream libwebrtc commit ba41b40461.
+Date: Wed, 10 May 2023 08:01:00 +0000
+Subject: Bug 1828065 - cherry-pick upstream libwebrtc commit 6fc1ae58be.
  r=webrtc-reviewers,mjf
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-Upstream commit: https://webrtc.googlesource.com/src/+/ba41b40461df191624c61f0c98ae76e69fe1d46b
-    webrtc_libyuv: Add support for more video types for consistency
+Upstream commit: https://webrtc.googlesource.com/src/+/6fc1ae58be7cbb61ad0431d90eb7a7dc333de2f2
+    In DeviceInfoDS check that out vars were set
 
-    Bug: webrtc:14830
-    Change-Id: I0998fb04a03745131f9f5cca878b0cdb46f3b62b
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/291529
-    Reviewed-by: Erik Språng <sprang@webrtc.org>
-    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Bug: chromium:1441804
+    Change-Id: Id07cb61519315d77c2d7cdab1053efaaf7473e1a
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304060
     Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39940}
+    Reviewed-by: Per Kjellander <perkj@webrtc.org>
+    Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39982}
 
-Differential Revision: https://phabricator.services.mozilla.com/D177229
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/b6eaef560895caa06e11cce40083eb87fd8724a8
+Differential Revision: https://phabricator.services.mozilla.com/D177236
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/60d381b6016ae5af0181b44c6a31b41eab094793
 ---
- common_video/libyuv/include/webrtc_libyuv.h | 3 ++-
- common_video/libyuv/webrtc_libyuv.cc        | 4 ++++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ modules/video_capture/windows/device_info_ds.cc    | 13 +++++++------
+ modules/video_capture/windows/help_functions_ds.cc |  3 +++
+ 2 files changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
-index 6d9071bcd5..253a33294d 100644
---- a/common_video/libyuv/include/webrtc_libyuv.h
-+++ b/common_video/libyuv/include/webrtc_libyuv.h
-@@ -32,8 +32,9 @@ enum class VideoType {
-   kI420,
-   kIYUV,
-   kRGB24,
--  kABGR,
-+  kBGR24,
-   kARGB,
-+  kABGR,
-   kARGB4444,
-   kRGB565,
-   kARGB1555,
-diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
-index 4c6911b4a3..05a4b184c2 100644
---- a/common_video/libyuv/webrtc_libyuv.cc
-+++ b/common_video/libyuv/webrtc_libyuv.cc
-@@ -39,9 +39,11 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
-     case VideoType::kUYVY:
-       return width * height * 2;
-     case VideoType::kRGB24:
-+    case VideoType::kBGR24:
-       return width * height * 3;
-     case VideoType::kBGRA:
-     case VideoType::kARGB:
-+    case VideoType::kABGR:
-       return width * height * 4;
-     case VideoType::kMJPEG:
-     case VideoType::kUnknown:
-@@ -93,6 +95,8 @@ int ConvertVideoType(VideoType video_type) {
-       return libyuv::FOURCC_YV12;
-     case VideoType::kRGB24:
-       return libyuv::FOURCC_24BG;
-+    case VideoType::kBGR24:
-+      return libyuv::FOURCC_RAW;
-     case VideoType::kABGR:
-       return libyuv::FOURCC_ABGR;
-     case VideoType::kRGB565:
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index 6b4c57d01e..2c192fe4f6 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -505,9 +505,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
+       }
+ 
+       if (hrVC == S_OK) {
+-        LONGLONG* frameDurationList;
+-        LONGLONG maxFPS;
+-        long listSize;
++        LONGLONG* frameDurationList = NULL;
++        LONGLONG maxFPS = 0;
++        long listSize = 0;
+         SIZE size;
+         size.cx = capability.width;
+         size.cy = capability.height;
+@@ -520,9 +520,10 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
+         hrVC = videoControlConfig->GetFrameRateList(
+             outputCapturePin, tmp, size, &listSize, &frameDurationList);
+ 
+-        // On some odd cameras, you may get a 0 for duration.
+-        // GetMaxOfFrameArray returns the lowest duration (highest FPS)
+-        if (hrVC == S_OK && listSize > 0 &&
++        // On some odd cameras, you may get a 0 for duration. Some others may
++        // not update the out vars. GetMaxOfFrameArray returns the lowest
++        // duration (highest FPS), or 0 if there was no list with elements.
++        if (hrVC == S_OK &&
+             0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
+           capability.maxFPS = static_cast<int>(10000000 / maxFPS);
+           capability.supportFrameRateControl = true;
+diff --git a/modules/video_capture/windows/help_functions_ds.cc b/modules/video_capture/windows/help_functions_ds.cc
+index b767726107..47fecfe4a1 100644
+--- a/modules/video_capture/windows/help_functions_ds.cc
++++ b/modules/video_capture/windows/help_functions_ds.cc
+@@ -21,6 +21,9 @@ namespace webrtc {
+ namespace videocapturemodule {
+ // This returns minimum :), which will give max frame rate...
+ LONGLONG GetMaxOfFrameArray(LONGLONG* maxFps, long size) {
++  if (!maxFps || size <= 0) {
++    return 0;
++  }
+   LONGLONG maxFPS = maxFps[0];
+   for (int i = 0; i < size; i++) {
+     if (maxFPS > maxFps[i])
 -- 
 2.34.1
 

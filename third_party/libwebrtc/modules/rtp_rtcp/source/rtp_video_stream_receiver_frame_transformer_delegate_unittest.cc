@@ -160,7 +160,7 @@ TEST(RtpVideoStreamReceiverFrameTransformerDelegateTest,
             absl::WrapUnique(static_cast<TransformableVideoFrameInterface*>(
                 transformable_frame.release()));
         ASSERT_TRUE(frame);
-        auto metadata = frame->GetMetadata();
+        auto metadata = frame->Metadata();
         EXPECT_EQ(metadata.GetWidth(), 1280u);
         EXPECT_EQ(metadata.GetHeight(), 720u);
         EXPECT_EQ(metadata.GetFrameId(), 10);

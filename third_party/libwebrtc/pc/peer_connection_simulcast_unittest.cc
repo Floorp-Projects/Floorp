@@ -60,6 +60,7 @@
 #include "rtc_base/thread.h"
 #include "rtc_base/unique_id_generator.h"
 #include "system_wrappers/include/metrics.h"
+#include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -70,11 +71,15 @@ using ::testing::ElementsAreArray;
 using ::testing::Eq;
 using ::testing::Field;
 using ::testing::IsEmpty;
+using ::testing::Le;
 using ::testing::Ne;
+using ::testing::Optional;
 using ::testing::Pair;
 using ::testing::Property;
 using ::testing::SizeIs;
 using ::testing::StartsWith;
+using ::testing::StrCaseEq;
+using ::testing::StrEq;
 
 using cricket::MediaContentDescription;
 using cricket::RidDescription;
@@ -134,11 +139,28 @@ bool IsReliabilityMechanism(const webrtc::RtpCodecCapability& codec) {
 
 std::string GetCurrentCodecMimeType(
     rtc::scoped_refptr<const webrtc::RTCStatsReport> report,
-    const webrtc::RTCOutboundRTPStreamStats& outbound_rtp) {
+    const webrtc::RTCOutboundRtpStreamStats& outbound_rtp) {
   return outbound_rtp.codec_id.is_defined()
              ? *report->GetAs<webrtc::RTCCodecStats>(*outbound_rtp.codec_id)
                     ->mime_type
              : "";
+}
+
+struct RidAndResolution {
+  std::string rid;
+  uint32_t width;
+  uint32_t height;
+};
+
+const webrtc::RTCOutboundRtpStreamStats* FindOutboundRtpByRid(
+    const std::vector<const webrtc::RTCOutboundRtpStreamStats*>& outbound_rtps,
+    const absl::string_view& rid) {
+  for (const auto* outbound_rtp : outbound_rtps) {
+    if (outbound_rtp->rid.is_defined() && *outbound_rtp->rid == rid) {
+      return outbound_rtp;
+    }
+  }
+  return nullptr;
 }
 
 }  // namespace
@@ -146,7 +168,11 @@ std::string GetCurrentCodecMimeType(
 namespace webrtc {
 
 constexpr TimeDelta kDefaultTimeout = TimeDelta::Seconds(5);
-constexpr TimeDelta kLongTimeoutForRampingUp = TimeDelta::Seconds(20);
+
+// Only used by tests disabled under ASAN, avoids unsued variable compile error.
+#if !defined(ADDRESS_SANITIZER)
+constexpr TimeDelta kLongTimeoutForRampingUp = TimeDelta::Seconds(30);
+#endif  // !defined(ADDRESS_SANITIZER)
 
 class PeerConnectionSimulcastTests : public ::testing::Test {
  public:
@@ -829,6 +855,8 @@ INSTANTIATE_TEST_SUITE_P(NumberOfSendEncodings,
 // Inherits some helper methods from PeerConnectionSimulcastTests but
 // uses real threads and PeerConnectionTestWrapper to create fake media streams
 // with flowing media and establish connections.
+// TODO(https://crbug.com/webrtc/14884): Move these integration tests into a
+// separate file and rename them to PeerConnectionEncodingIntegrationTests.
 class PeerConnectionSimulcastWithMediaFlowTests
     : public PeerConnectionSimulcastTests {
  public:
@@ -860,6 +888,19 @@ class PeerConnectionSimulcastWithMediaFlowTests
             track, CreateTransceiverInit(init_layers));
     EXPECT_TRUE(transceiver_or_error.ok());
     return transceiver_or_error.value();
+  }
+
+  bool HasSenderVideoCodecCapability(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+      absl::string_view codec_name) {
+    std::vector<RtpCodecCapability> codecs =
+        pc_wrapper->pc_factory()
+            ->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_VIDEO)
+            .codecs;
+    return std::find_if(codecs.begin(), codecs.end(),
+                        [&codec_name](const RtpCodecCapability& codec) {
+                          return absl::EqualsIgnoreCase(codec.name, codec_name);
+                        }) != codecs.end();
   }
 
   std::vector<RtpCodecCapability> GetCapabilitiesAndRestrictToCodec(
@@ -940,15 +981,87 @@ class PeerConnectionSimulcastWithMediaFlowTests
   bool HasOutboundRtpBytesSent(
       rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
       size_t num_layers) {
+    return HasOutboundRtpBytesSent(pc_wrapper, num_layers, num_layers);
+  }
+
+  bool HasOutboundRtpBytesSent(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+      size_t num_layers,
+      size_t num_active_layers) {
     rtc::scoped_refptr<const RTCStatsReport> report = GetStats(pc_wrapper);
-    std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
-        report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+    std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+        report->GetStatsOfType<RTCOutboundRtpStreamStats>();
     if (outbound_rtps.size() != num_layers) {
       return false;
     }
+    size_t num_sending_layers = 0;
     for (const auto* outbound_rtp : outbound_rtps) {
-      if (!outbound_rtp->bytes_sent.is_defined() ||
-          *outbound_rtp->bytes_sent == 0u) {
+      if (outbound_rtp->bytes_sent.is_defined() &&
+          *outbound_rtp->bytes_sent > 0u) {
+        ++num_sending_layers;
+      }
+    }
+    return num_sending_layers == num_active_layers;
+  }
+
+  bool HasOutboundRtpWithRidAndScalabilityMode(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+      absl::string_view rid,
+      absl::string_view expected_scalability_mode,
+      uint32_t frame_height) {
+    rtc::scoped_refptr<const RTCStatsReport> report = GetStats(pc_wrapper);
+    std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+        report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+    auto* outbound_rtp = FindOutboundRtpByRid(outbound_rtps, rid);
+    if (!outbound_rtp || !outbound_rtp->scalability_mode.is_defined() ||
+        *outbound_rtp->scalability_mode != expected_scalability_mode) {
+      return false;
+    }
+    if (outbound_rtp->frame_height.is_defined()) {
+      RTC_LOG(LS_INFO) << "Waiting for target resolution (" << frame_height
+                       << "p). Currently at " << *outbound_rtp->frame_height
+                       << "p...";
+    } else {
+      RTC_LOG(LS_INFO)
+          << "Waiting for target resolution. No frames encoded yet...";
+    }
+    if (!outbound_rtp->frame_height.is_defined() ||
+        *outbound_rtp->frame_height != frame_height) {
+      // Sleep to avoid log spam when this is used in EXPECT_TRUE_WAIT().
+      rtc::Thread::Current()->SleepMs(1000);
+      return false;
+    }
+    return true;
+  }
+
+  bool OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
+      rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper,
+      std::vector<RidAndResolution> resolutions) {
+    rtc::scoped_refptr<const RTCStatsReport> report = GetStats(pc_wrapper);
+    std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+        report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+    for (const RidAndResolution& resolution : resolutions) {
+      const RTCOutboundRtpStreamStats* outbound_rtp = nullptr;
+      if (!resolution.rid.empty()) {
+        outbound_rtp = FindOutboundRtpByRid(outbound_rtps, resolution.rid);
+      } else if (outbound_rtps.size() == 1u) {
+        outbound_rtp = outbound_rtps[0];
+      }
+      if (!outbound_rtp || !outbound_rtp->frame_width.is_defined() ||
+          !outbound_rtp->frame_height.is_defined()) {
+        // RTP not found by rid or has not encoded a frame yet.
+        RTC_LOG(LS_ERROR) << "rid=" << resolution.rid << " does not have "
+                          << "resolution metrics";
+        return false;
+      }
+      if (*outbound_rtp->frame_width > resolution.width ||
+          *outbound_rtp->frame_height > resolution.height) {
+        RTC_LOG(LS_ERROR) << "rid=" << resolution.rid << " is "
+                          << *outbound_rtp->frame_width << "x"
+                          << *outbound_rtp->frame_height
+                          << ", this is greater than the "
+                          << "expected " << resolution.width << "x"
+                          << resolution.height;
         return false;
       }
     }
@@ -1012,6 +1125,45 @@ class PeerConnectionSimulcastWithMediaFlowTests
 };
 
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingOneEncodings_VP8_DefaultsToL1T1) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers = CreateLayers({"f"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP8");
+  transceiver->SetCodecPreferences(codecs);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+                   kDefaultTimeout.ms());
+  EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
+      local_pc_wrapper, {{"", 1280, 720}}));
+  // Verify codec and scalability mode.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(1u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/VP8"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T1"));
+}
+
+// TODO(https://crbug.com/webrtc/15018): Investigate heap-use-after free during
+// shutdown of the test that is flakily happening on bots. It's not only
+// happening on ASAN, but it is rare enough on non-ASAN that we don't have to
+// disable everywhere.
+#if !defined(ADDRESS_SANITIZER)
+
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
        SendingThreeEncodings_VP8_Simulcast) {
   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
   rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
@@ -1031,23 +1183,174 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   remote_pc_wrapper->WaitForConnection();
 
   // Wait until media is flowing on all three layers.
+  // Ramp up time is needed before all three layers are sending.
   EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
                    kLongTimeoutForRampingUp.ms());
+  EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
+      local_pc_wrapper, {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}}));
   // Verify codec and scalability mode.
   rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
-  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
-      report->GetStatsOfType<RTCOutboundRTPStreamStats>();
-  ASSERT_EQ(outbound_rtps.size(), 3u);
-  EXPECT_TRUE(absl::EqualsIgnoreCase(
-      GetCurrentCodecMimeType(report, *outbound_rtps[0]), "video/VP8"));
-  EXPECT_TRUE(absl::EqualsIgnoreCase(
-      GetCurrentCodecMimeType(report, *outbound_rtps[1]), "video/VP8"));
-  EXPECT_TRUE(absl::EqualsIgnoreCase(
-      GetCurrentCodecMimeType(report, *outbound_rtps[2]), "video/VP8"));
-  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StartsWith("L1T"));
-  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StartsWith("L1T"));
-  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StartsWith("L1T"));
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(3u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/VP8"));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[1]),
+              StrCaseEq("video/VP8"));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[2]),
+              StrCaseEq("video/VP8"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
 }
+
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingOneEncoding_VP8_RejectsSVCWhenNotPossibleAndDefaultsToL1T1) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers = CreateLayers({"f"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  // Restricting codecs restricts what SetParameters() will accept or reject.
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP8");
+  transceiver->SetCodecPreferences(codecs);
+  // Attempt SVC (L3T3_KEY). This is not possible because only VP8 is up for
+  // negotiation and VP8 does not support it.
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  parameters.encodings[0].scalability_mode = "L3T3_KEY";
+  EXPECT_FALSE(sender->SetParameters(parameters).ok());
+  // `scalability_mode` remains unset because SetParameters() failed.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode, Eq(absl::nullopt));
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+                   kDefaultTimeout.ms());
+  // When `scalability_mode` is not set, VP8 defaults to L1T1.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(1u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/VP8"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T1"));
+  // GetParameters() confirms `scalability_mode` is still not set.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode, Eq(absl::nullopt));
+}
+
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingOneEncoding_VP8_FallbackFromSVCResultsInL1T2) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers = CreateLayers({"f"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  // Verify test assumption that VP8 is first in the list, but don't modify the
+  // codec preferences because we want the sender to think SVC is a possibility.
+  std::vector<RtpCodecCapability> codecs =
+      local_pc_wrapper->pc_factory()
+          ->GetRtpSenderCapabilities(cricket::MEDIA_TYPE_VIDEO)
+          .codecs;
+  EXPECT_THAT(codecs[0].name, StrCaseEq("VP8"));
+  // Attempt SVC (L3T3_KEY), which is not possible with VP8, but the sender does
+  // not yet know which codec we'll use so the parameters will be accepted.
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  parameters.encodings[0].scalability_mode = "L3T3_KEY";
+  EXPECT_TRUE(sender->SetParameters(parameters).ok());
+  // Verify fallback has not happened yet.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode,
+              Optional(std::string("L3T3_KEY")));
+
+  // Negotiate, this results in VP8 being picked and fallback happening.
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+  // `scalaiblity_mode` is assigned the fallback value "L1T2" which is different
+  // than the default of absl::nullopt.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode,
+              Optional(std::string("L1T2")));
+
+  // Wait until media is flowing, no significant time needed because we only
+  // have one layer.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+                   kDefaultTimeout.ms());
+  // GetStats() confirms "L1T2" is used which is different than the "L1T1"
+  // default or the "L3T3_KEY" that was attempted.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(1u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/VP8"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T2"));
+}
+
+#if defined(WEBRTC_USE_H264)
+
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingThreeEncodings_H264_Simulcast) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "H264");
+  transceiver->SetCodecPreferences(codecs);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing on all three layers.
+  // Ramp up time is needed before all three layers are sending.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+                   kLongTimeoutForRampingUp.ms());
+  EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
+      local_pc_wrapper, {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}}));
+  // Verify codec and scalability mode.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(3u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/H264"));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[1]),
+              StrCaseEq("video/H264"));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[2]),
+              StrCaseEq("video/H264"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
+}
+
+#endif  // defined(WEBRTC_USE_H264)
 
 // The legacy SVC path is triggered when VP9 us used, but `scalability_mode` has
 // not been specified.
@@ -1074,16 +1377,14 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   remote_pc_wrapper->WaitForConnection();
 
   // Wait until media is flowing. We only expect a single RTP stream.
+  // We expect to see bytes flowing almost immediately on the lowest layer.
   EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
-                   kLongTimeoutForRampingUp.ms());
-  // Verify codec and scalability mode.
-  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
-  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
-      report->GetStatsOfType<RTCOutboundRTPStreamStats>();
-  ASSERT_EQ(outbound_rtps.size(), 1u);
-  EXPECT_TRUE(absl::EqualsIgnoreCase(
-      GetCurrentCodecMimeType(report, *outbound_rtps[0]), "video/VP9"));
-  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StartsWith("L3T3_KEY"));
+                   kDefaultTimeout.ms());
+  // Wait until scalability mode is reported and expected resolution reached.
+  // Ramp up time may be significant.
+  EXPECT_TRUE_WAIT(HasOutboundRtpWithRidAndScalabilityMode(
+                       local_pc_wrapper, "f", "L3T3_KEY", 720),
+                   (2 * kLongTimeoutForRampingUp).ms());
 
   // Despite SVC being used on a single RTP stream, GetParameters() returns the
   // three encodings that we configured earlier (this is not spec-compliant but
@@ -1098,9 +1399,107 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_FALSE(encodings[2].scalability_mode.has_value());
 }
 
-// TODO(https://crbug.com/webrtc/14884): Support VP9 simulcast and update this
-// test to EXPECT three encodings of L1T3, not the VP9 SVC legacy fallback path
-// that happens today which is wrong.
+// The spec-compliant way to configure SVC for a single stream. The expected
+// outcome is the same as for the legacy SVC case except that we only have one
+// encoding in GetParameters().
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingOneEncoding_VP9_StandardSVC) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers = CreateLayers({"f"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP9");
+  transceiver->SetCodecPreferences(codecs);
+  // Configure SVC, a.k.a. "L3T3_KEY".
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  parameters.encodings[0].scalability_mode = "L3T3_KEY";
+  EXPECT_TRUE(sender->SetParameters(parameters).ok());
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Wait until media is flowing. We only expect a single RTP stream.
+  // We expect to see bytes flowing almost immediately on the lowest layer.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+                   kDefaultTimeout.ms());
+  EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
+      local_pc_wrapper, {{"", 1280, 720}}));
+  // Verify codec and scalability mode.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(1u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/VP9"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L3T3_KEY"));
+
+  // GetParameters() is consistent with what we asked for and got.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 1u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode,
+              Optional(std::string("L3T3_KEY")));
+}
+
+// The {active,inactive,inactive} case is technically simulcast but since we
+// only have one active stream, we're able to do SVC (multiple spatial layers
+// is not supported if multiple encodings are active). The expected outcome is
+// the same as above except we end up with two inactive RTP streams which are
+// observable in GetStats().
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingThreeEncodings_VP9_StandardSVC) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP9");
+  transceiver->SetCodecPreferences(codecs);
+  // Configure SVC, a.k.a. "L3T3_KEY".
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  parameters.encodings[0].scalability_mode = "L3T3_KEY";
+  parameters.encodings[0].scale_resolution_down_by = 1;
+  parameters.encodings[1].active = false;
+  parameters.encodings[2].active = false;
+  EXPECT_TRUE(sender->SetParameters(parameters).ok());
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Since the standard API is configuring simulcast we get three outbound-rtps,
+  // but only one is active.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u, 1u),
+                   kDefaultTimeout.ms());
+  // Wait until scalability mode is reported and expected resolution reached.
+  // Ramp up time is significant.
+  EXPECT_TRUE_WAIT(HasOutboundRtpWithRidAndScalabilityMode(
+                       local_pc_wrapper, "f", "L3T3_KEY", 720),
+                   (2 * kLongTimeoutForRampingUp).ms());
+
+  // GetParameters() is consistent with what we asked for and got.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode,
+              Optional(std::string("L3T3_KEY")));
+  EXPECT_FALSE(parameters.encodings[1].scalability_mode.has_value());
+  EXPECT_FALSE(parameters.encodings[2].scalability_mode.has_value());
+}
+
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
        SendingThreeEncodings_VP9_Simulcast) {
   rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
@@ -1117,41 +1516,187 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   transceiver->SetCodecPreferences(codecs);
 
   // Opt-in to spec-compliant simulcast by explicitly setting the
-  // `scalability_mode`.
+  // `scalability_mode` and `scale_resolution_down_by` parameters.
   rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
   RtpParameters parameters = sender->GetParameters();
-  std::vector<RtpEncodingParameters> encodings = parameters.encodings;
-  ASSERT_EQ(encodings.size(), 3u);
-  encodings[0].scalability_mode = "L1T3";
-  encodings[1].scalability_mode = "L1T3";
-  encodings[2].scalability_mode = "L1T3";
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  parameters.encodings[0].scalability_mode = "L1T3";
+  parameters.encodings[0].scale_resolution_down_by = 4;
+  parameters.encodings[1].scalability_mode = "L1T3";
+  parameters.encodings[1].scale_resolution_down_by = 2;
+  parameters.encodings[2].scalability_mode = "L1T3";
+  parameters.encodings[2].scale_resolution_down_by = 1;
   sender->SetParameters(parameters);
 
   NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
   local_pc_wrapper->WaitForConnection();
   remote_pc_wrapper->WaitForConnection();
 
-  // We want to EXPECT to get 3 "outbound-rtps" using L1T3 and that
-  // GetParameters() reflects what was set, but because this is not supported
-  // yet (webrtc:14884), we expect legacy SVC fallback for now...
+  // GetParameters() does not report any fallback.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode,
+              Optional(std::string("L1T3")));
+  EXPECT_THAT(parameters.encodings[1].scalability_mode,
+              Optional(std::string("L1T3")));
+  EXPECT_THAT(parameters.encodings[2].scalability_mode,
+              Optional(std::string("L1T3")));
 
-  // Legacy SVC fallback only has a single RTP stream.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+  // Wait until media is flowing on all three layers.
+  // Ramp up time is needed before all three layers are sending.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
                    kLongTimeoutForRampingUp.ms());
-  // Legacy SVC fallback uses L3T3_KEY.
+  EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
+      local_pc_wrapper, {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}}));
+  // Verify codec and scalability mode.
   rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
-  std::vector<const RTCOutboundRTPStreamStats*> outbound_rtps =
-      report->GetStatsOfType<RTCOutboundRTPStreamStats>();
-  ASSERT_EQ(outbound_rtps.size(), 1u);
-  EXPECT_TRUE(absl::EqualsIgnoreCase(
-      GetCurrentCodecMimeType(report, *outbound_rtps[0]), "video/VP9"));
-  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StartsWith("L3T3_KEY"));
-  // Legacy SVC fallback sets `scalability_mode` to absl::nullopt.
-  encodings = sender->GetParameters().encodings;
-  ASSERT_EQ(encodings.size(), 3u);
-  EXPECT_FALSE(encodings[0].scalability_mode.has_value());
-  EXPECT_FALSE(encodings[1].scalability_mode.has_value());
-  EXPECT_FALSE(encodings[2].scalability_mode.has_value());
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(3u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/VP9"));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[1]),
+              StrCaseEq("video/VP9"));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[2]),
+              StrCaseEq("video/VP9"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
 }
+
+// Exercise common path where `scalability_mode` is not specified until after
+// negotiation, requring us to recreate the stream when the number of streams
+// changes from 1 (legacy SVC) to 3 (standard simulcast).
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingThreeEncodings_VP9_FromLegacyToSingleActiveWithScalability) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "VP9");
+  transceiver->SetCodecPreferences(codecs);
+
+  // The original negotiation triggers legacy SVC because we didn't specify
+  // any scalability mode.
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // Switch to the standard mode. Despite only having a single active stream in
+  // both cases, this internally reconfigures from 1 stream to 3 streams.
+  // Test coverage for https://crbug.com/webrtc/15016.
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  parameters.encodings[0].active = true;
+  parameters.encodings[0].scalability_mode = "L2T2_KEY";
+  parameters.encodings[0].scale_resolution_down_by = 2.0;
+  parameters.encodings[1].active = false;
+  parameters.encodings[1].scalability_mode = absl::nullopt;
+  parameters.encodings[2].active = false;
+  parameters.encodings[2].scalability_mode = absl::nullopt;
+  sender->SetParameters(parameters);
+
+  // Since the standard API is configuring simulcast we get three outbound-rtps,
+  // but only one is active.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u, 1u),
+                   kDefaultTimeout.ms());
+  // Wait until scalability mode is reported and expected resolution reached.
+  // Ramp up time may be significant.
+  EXPECT_TRUE_WAIT(HasOutboundRtpWithRidAndScalabilityMode(
+                       local_pc_wrapper, "f", "L2T2_KEY", 720 / 2),
+                   (2 * kLongTimeoutForRampingUp).ms());
+
+  // GetParameters() does not report any fallback.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode,
+              Optional(std::string("L2T2_KEY")));
+  EXPECT_FALSE(parameters.encodings[1].scalability_mode.has_value());
+  EXPECT_FALSE(parameters.encodings[2].scalability_mode.has_value());
+}
+
+TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+       SendingThreeEncodings_AV1_Simulcast) {
+  rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
+  // TODO(https://crbug.com/webrtc/15011): Expand testing support for AV1 or
+  // allow compile time checks so that gates like this isn't needed at runtime.
+  if (!HasSenderVideoCodecCapability(local_pc_wrapper, "AV1")) {
+    RTC_LOG(LS_WARNING) << "\n***\nAV1 is not available, skipping test.\n***";
+    return;
+  }
+  rtc::scoped_refptr<PeerConnectionTestWrapper> remote_pc_wrapper = CreatePc();
+  ExchangeIceCandidates(local_pc_wrapper, remote_pc_wrapper);
+
+  std::vector<SimulcastLayer> layers =
+      CreateLayers({"f", "h", "q"}, /*active=*/true);
+  rtc::scoped_refptr<RtpTransceiverInterface> transceiver =
+      AddTransceiverWithSimulcastLayers(local_pc_wrapper, remote_pc_wrapper,
+                                        layers);
+  std::vector<RtpCodecCapability> codecs =
+      GetCapabilitiesAndRestrictToCodec(local_pc_wrapper, "AV1");
+  transceiver->SetCodecPreferences(codecs);
+
+  // Opt-in to spec-compliant simulcast by explicitly setting the
+  // `scalability_mode`.
+  rtc::scoped_refptr<RtpSenderInterface> sender = transceiver->sender();
+  RtpParameters parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  parameters.encodings[0].scalability_mode = "L1T3";
+  parameters.encodings[0].scale_resolution_down_by = 4;
+  parameters.encodings[1].scalability_mode = "L1T3";
+  parameters.encodings[1].scale_resolution_down_by = 2;
+  parameters.encodings[2].scalability_mode = "L1T3";
+  parameters.encodings[2].scale_resolution_down_by = 1;
+  sender->SetParameters(parameters);
+
+  NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
+  local_pc_wrapper->WaitForConnection();
+  remote_pc_wrapper->WaitForConnection();
+
+  // GetParameters() does not report any fallback.
+  parameters = sender->GetParameters();
+  ASSERT_EQ(parameters.encodings.size(), 3u);
+  EXPECT_THAT(parameters.encodings[0].scalability_mode,
+              Optional(std::string("L1T3")));
+  EXPECT_THAT(parameters.encodings[1].scalability_mode,
+              Optional(std::string("L1T3")));
+  EXPECT_THAT(parameters.encodings[2].scalability_mode,
+              Optional(std::string("L1T3")));
+
+  // Wait until media is flowing on all three layers.
+  // Ramp up time is needed before all three layers are sending.
+  //
+  // This test is given 2X timeout because AV1 simulcast ramp-up time is
+  // terrible compared to other codecs.
+  // TODO(https://crbug.com/webrtc/15006): Improve the ramp-up time and stop
+  // giving this test extra long timeout.
+  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+                   (2 * kLongTimeoutForRampingUp).ms());
+  EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
+      local_pc_wrapper, {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}}));
+  // Verify codec and scalability mode.
+  rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
+  std::vector<const RTCOutboundRtpStreamStats*> outbound_rtps =
+      report->GetStatsOfType<RTCOutboundRtpStreamStats>();
+  ASSERT_THAT(outbound_rtps, SizeIs(3u));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
+              StrCaseEq("video/AV1"));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[1]),
+              StrCaseEq("video/AV1"));
+  EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[2]),
+              StrCaseEq("video/AV1"));
+  EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
+  EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
+}
+
+#endif  // !defined(ADDRESS_SANITIZER)
 
 }  // namespace webrtc

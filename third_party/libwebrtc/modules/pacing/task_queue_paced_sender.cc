@@ -155,11 +155,12 @@ void TaskQueuePacedSender::EnqueuePackets(
 }
 
 void TaskQueuePacedSender::RemovePacketsForSsrc(uint32_t ssrc) {
-  task_queue_.RunOrPost([this, ssrc]() {
-    RTC_DCHECK_RUN_ON(&task_queue_);
-    pacing_controller_.RemovePacketsForSsrc(ssrc);
-    MaybeProcessPackets(Timestamp::MinusInfinity());
-  });
+  task_queue_.TaskQueueForPost()->PostTask(
+      task_queue_.MaybeSafeTask(safety_.flag(), [this, ssrc] {
+        RTC_DCHECK_RUN_ON(&task_queue_);
+        pacing_controller_.RemovePacketsForSsrc(ssrc);
+        MaybeProcessPackets(Timestamp::MinusInfinity());
+      }));
 }
 
 void TaskQueuePacedSender::SetAccountForAudioPackets(bool account_for_audio) {

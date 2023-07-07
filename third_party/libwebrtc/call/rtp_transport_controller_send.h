@@ -141,6 +141,11 @@ class RtpTransportControllerSend final
   void PostUpdates(NetworkControlUpdate update) RTC_RUN_ON(task_queue_);
   void UpdateControlState() RTC_RUN_ON(task_queue_);
   void UpdateCongestedState() RTC_RUN_ON(task_queue_);
+  absl::optional<bool> GetCongestedStateUpdate() const RTC_RUN_ON(task_queue_);
+  void ProcessSentPacket(const rtc::SentPacket& sent_packet,
+                         bool posted_to_worker) RTC_RUN_ON(task_queue_);
+  void ProcessSentPacketUpdates(NetworkControlUpdate updates)
+      RTC_RUN_ON(task_queue_);
 
   Clock* const clock_;
   RtcEventLog* const event_log_;

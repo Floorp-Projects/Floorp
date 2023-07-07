@@ -249,6 +249,10 @@ class VideoMediaChannel : public MediaChannel,
   virtual bool GetSendStats(VideoMediaSendInfo* info) = 0;
   virtual bool GetReceiveStats(VideoMediaReceiveInfo* info) = 0;
 
+  // TODO(bugs.webrtc.org/13931): Remove when configuration is more sensible
+  virtual void SetSendCodecChangedCallback(
+      absl::AnyInvocable<void()> callback) = 0;
+
  private:
   // Functions not implemented on this interface
   bool GetStats(VideoMediaSendInfo* info) override {

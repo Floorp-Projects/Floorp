@@ -114,15 +114,12 @@ std::unique_ptr<TestAudioDeviceModule::Capturer> CreateAudioCapturer(
     return TestAudioDeviceModule::CreatePulsedNoiseCapturer(
         kGeneratedAudioMaxAmplitude, kDefaultSamplingFrequencyInHz);
   }
-
-  switch (audio_config->mode) {
-    case AudioConfig::Mode::kGenerated:
-      return TestAudioDeviceModule::CreatePulsedNoiseCapturer(
-          kGeneratedAudioMaxAmplitude, audio_config->sampling_frequency_in_hz);
-    case AudioConfig::Mode::kFile:
-      RTC_DCHECK(audio_config->input_file_name);
-      return TestAudioDeviceModule::CreateWavFileReader(
-          audio_config->input_file_name.value(), /*repeat=*/true);
+  if (audio_config->input_file_name) {
+    return TestAudioDeviceModule::CreateWavFileReader(
+        *audio_config->input_file_name, /*repeat=*/true);
+  } else {
+    return TestAudioDeviceModule::CreatePulsedNoiseCapturer(
+        kGeneratedAudioMaxAmplitude, audio_config->sampling_frequency_in_hz);
   }
 }
 

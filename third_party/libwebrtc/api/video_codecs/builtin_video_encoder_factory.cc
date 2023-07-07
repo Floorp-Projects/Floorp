@@ -20,8 +20,8 @@
 #include "api/video_codecs/video_encoder.h"
 #include "media/base/codec.h"
 #include "media/base/media_constants.h"
-#include "media/engine/encoder_simulcast_proxy.h"
 #include "media/engine/internal_encoder_factory.h"
+#include "media/engine/simulcast_encoder_adapter.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
@@ -36,15 +36,17 @@ class BuiltinVideoEncoderFactory : public VideoEncoderFactory {
 
   std::unique_ptr<VideoEncoder> CreateVideoEncoder(
       const SdpVideoFormat& format) override {
-    // Try creating internal encoder.
-    std::unique_ptr<VideoEncoder> internal_encoder;
+    // Try creating an InternalEncoderFactory-backed SimulcastEncoderAdapter.
+    // The adapter has a passthrough mode for the case that simulcast is not
+    // used, so all responsibility can be delegated to it.
+    std::unique_ptr<VideoEncoder> encoder;
     if (format.IsCodecInList(
             internal_encoder_factory_->GetSupportedFormats())) {
-      internal_encoder = std::make_unique<EncoderSimulcastProxy>(
+      encoder = std::make_unique<SimulcastEncoderAdapter>(
           internal_encoder_factory_.get(), format);
     }
 
-    return internal_encoder;
+    return encoder;
   }
 
   std::vector<SdpVideoFormat> GetSupportedFormats() const override {

@@ -547,7 +547,7 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
   // https://w3c.github.io/webrtc-stats/#remoteoutboundrtpstats-dict*
   absl::optional<int64_t> last_sender_report_timestamp_ms;
   absl::optional<int64_t> last_sender_report_remote_timestamp_ms;
-  uint32_t sender_reports_packets_sent = 0;
+  uint64_t sender_reports_packets_sent = 0;
   uint64_t sender_reports_bytes_sent = 0;
   uint64_t sender_reports_reports_count = 0;
   absl::optional<webrtc::TimeDelta> round_trip_time;
@@ -994,21 +994,6 @@ class VideoMediaReceiveChannelInterface : public MediaReceiveChannelInterface {
                                              webrtc::RtcpMode rtcp_mode,
                                              absl::optional<int> rtx_time) = 0;
 };
-
-// Info about data received in DataMediaChannel.  For use in
-// DataMediaChannel::SignalDataReceived and in all of the signals that
-// signal fires, on up the chain.
-struct ReceiveDataParams {
-  // The in-packet stream indentifier.
-  // SCTP data channels use SIDs.
-  int sid = 0;
-  // The type of message (binary, text, or control).
-  webrtc::DataMessageType type = webrtc::DataMessageType::kText;
-  // A per-stream value incremented per packet in the stream.
-  int seq_num = 0;
-};
-
-enum SendDataResult { SDR_SUCCESS, SDR_ERROR, SDR_BLOCK };
 
 }  // namespace cricket
 

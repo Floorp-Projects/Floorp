@@ -756,9 +756,10 @@ enum IceAttributeType {
   STUN_ATTR_GOOG_MISC_INFO = 0xC059,
   // Obsolete.
   STUN_ATTR_GOOG_OBSOLETE_1 = 0xC05A,
-  STUN_ATTR_GOOG_CONNECTION_ID = 0xC05B,  // Not yet implemented.
-  STUN_ATTR_GOOG_DELTA = 0xC05C,          // Not yet implemented.
-  STUN_ATTR_GOOG_DELTA_ACK = 0xC05D,      // Not yet implemented.
+  STUN_ATTR_GOOG_CONNECTION_ID = 0xC05B,   // Not yet implemented.
+  STUN_ATTR_GOOG_DELTA = 0xC05C,           // Not yet implemented.
+  STUN_ATTR_GOOG_DELTA_ACK = 0xC05D,       // Not yet implemented.
+  STUN_ATTR_GOOG_DELTA_SYNC_REQ = 0xC05E,  // Not yet implemented.
   // MESSAGE-INTEGRITY truncated to 32-bit.
   STUN_ATTR_GOOG_MESSAGE_INTEGRITY_32 = 0xC060,
 };

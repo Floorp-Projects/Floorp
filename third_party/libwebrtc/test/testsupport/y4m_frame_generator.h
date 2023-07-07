@@ -16,6 +16,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "api/test/frame_generator_interface.h"
 #include "rtc_base/checks.h"
 #include "test/testsupport/frame_reader.h"
@@ -50,6 +51,8 @@ class Y4mFrameGenerator : public FrameGeneratorInterface {
 
   Resolution GetResolution() const override;
 
+  absl::optional<int> fps() const override { return fps_; }
+
  private:
   YuvFrameReaderImpl::RepeatMode ToYuvFrameReaderRepeatMode(
       RepeatMode repeat_mode) const;
@@ -57,6 +60,7 @@ class Y4mFrameGenerator : public FrameGeneratorInterface {
   std::string filename_;
   size_t width_;
   size_t height_;
+  int fps_;
   const RepeatMode repeat_mode_;
 };
 

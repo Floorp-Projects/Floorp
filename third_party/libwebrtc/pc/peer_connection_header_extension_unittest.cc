@@ -132,7 +132,7 @@ TEST_P(PeerConnectionHeaderExtensionTest, TransceiverOffersHeaderExtensions) {
   std::unique_ptr<PeerConnectionWrapper> wrapper =
       CreatePeerConnection(media_type, semantics);
   auto transceiver = wrapper->AddTransceiver(media_type);
-  EXPECT_EQ(transceiver->HeaderExtensionsToOffer(), extensions_);
+  EXPECT_EQ(transceiver->GetHeaderExtensionsToNegotiate(), extensions_);
 }
 
 TEST_P(PeerConnectionHeaderExtensionTest,
@@ -184,11 +184,11 @@ TEST_P(PeerConnectionHeaderExtensionTest, OffersUnstoppedModifiedExtensions) {
   std::unique_ptr<PeerConnectionWrapper> wrapper =
       CreatePeerConnection(media_type, semantics);
   auto transceiver = wrapper->AddTransceiver(media_type);
-  auto modified_extensions = transceiver->HeaderExtensionsToOffer();
+  auto modified_extensions = transceiver->GetHeaderExtensionsToNegotiate();
   modified_extensions[0].direction = RtpTransceiverDirection::kSendRecv;
   modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
   EXPECT_TRUE(
-      transceiver->SetOfferedRtpHeaderExtensions(modified_extensions).ok());
+      transceiver->SetHeaderExtensionsToNegotiate(modified_extensions).ok());
   auto session_description = wrapper->CreateOffer();
   EXPECT_THAT(session_description->description()
                   ->contents()[0]
@@ -208,9 +208,9 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
   std::unique_ptr<PeerConnectionWrapper> pc1 =
       CreatePeerConnection(media_type, semantics);
   auto transceiver1 = pc1->AddTransceiver(media_type);
-  auto modified_extensions = transceiver1->HeaderExtensionsToOffer();
+  auto modified_extensions = transceiver1->GetHeaderExtensionsToNegotiate();
   modified_extensions[3].direction = RtpTransceiverDirection::kStopped;
-  transceiver1->SetOfferedRtpHeaderExtensions(modified_extensions);
+  transceiver1->SetHeaderExtensionsToNegotiate(modified_extensions);
   auto offer = pc1->CreateOfferAndSetAsLocal(
       PeerConnectionInterface::RTCOfferAnswerOptions());
 
@@ -224,9 +224,94 @@ TEST_P(PeerConnectionHeaderExtensionTest, NegotiatedExtensionsAreAccessible) {
 
   // PC1 has exts 2-4 unstopped and PC2 has exts 1-3 unstopped -> ext 2, 3
   // survives.
-  EXPECT_THAT(transceiver1->HeaderExtensionsNegotiated(),
-              ElementsAre(Field(&RtpHeaderExtensionCapability::uri, "uri2"),
-                          Field(&RtpHeaderExtensionCapability::uri, "uri3")));
+  EXPECT_THAT(transceiver1->GetNegotiatedHeaderExtensions(),
+              ElementsAre(Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kSendRecv),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kSendRecv),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kStopped)));
+}
+
+TEST_P(PeerConnectionHeaderExtensionTest,
+       StoppedByDefaultExtensionCanBeActivatedByRemoteSdp) {
+  cricket::MediaType media_type;
+  SdpSemantics semantics;
+  std::tie(media_type, semantics) = GetParam();
+  if (semantics != SdpSemantics::kUnifiedPlan)
+    return;
+  std::unique_ptr<PeerConnectionWrapper> pc1 =
+      CreatePeerConnection(media_type, semantics);
+  std::unique_ptr<PeerConnectionWrapper> pc2 =
+      CreatePeerConnection(media_type, semantics);
+  auto transceiver1 = pc1->AddTransceiver(media_type);
+
+  auto offer = pc1->CreateOfferAndSetAsLocal(
+      PeerConnectionInterface::RTCOfferAnswerOptions());
+  pc2->SetRemoteDescription(std::move(offer));
+  auto answer = pc2->CreateAnswerAndSetAsLocal(
+      PeerConnectionInterface::RTCOfferAnswerOptions());
+  std::string sdp;
+  ASSERT_TRUE(answer->ToString(&sdp));
+  // We support uri1 but it is stopped by default. Let the remote reactivate it.
+  sdp += "a=extmap:15 uri1\r\n";
+  auto modified_answer = CreateSessionDescription(SdpType::kAnswer, sdp);
+  pc1->SetRemoteDescription(std::move(modified_answer));
+  EXPECT_THAT(transceiver1->GetNegotiatedHeaderExtensions(),
+              ElementsAre(Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kSendRecv),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kSendRecv),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kSendRecv),
+                          Field(&RtpHeaderExtensionCapability::direction,
+                                RtpTransceiverDirection::kSendRecv)));
+}
+
+TEST_P(PeerConnectionHeaderExtensionTest,
+       UnknownExtensionInRemoteOfferDoesNotShowUp) {
+  cricket::MediaType media_type;
+  SdpSemantics semantics;
+  std::tie(media_type, semantics) = GetParam();
+  if (semantics != SdpSemantics::kUnifiedPlan)
+    return;
+  std::unique_ptr<PeerConnectionWrapper> pc =
+      CreatePeerConnection(media_type, semantics);
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 0 3 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=fingerprint:sha-256 "
+      "A7:24:72:CA:6E:02:55:39:BA:66:DF:6E:CC:4C:D8:B0:1A:BF:1A:56:65:7D:F4:03:"
+      "AD:7E:77:43:2A:29:EC:93\r\n"
+      "a=ice-ufrag:6HHHdzzeIhkE0CKj\r\n"
+      "a=ice-pwd:XYDGVpfvklQIEnZ6YnyLsAew\r\n"
+      "m=audio 9 RTP/AVPF 111\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=rtcp-mux\r\n"
+      "a=sendonly\r\n"
+      "a=mid:audio\r\n"
+      "a=rtpmap:111 fake_audio_codec/0\r\n"
+      "a=setup:actpass\r\n"
+      "a=extmap:1 urn:bogus\r\n";
+  RTC_LOG(LS_ERROR) << sdp;
+  auto offer = CreateSessionDescription(SdpType::kOffer, sdp);
+  pc->SetRemoteDescription(std::move(offer));
+  pc->CreateAnswerAndSetAsLocal(
+      PeerConnectionInterface::RTCOfferAnswerOptions());
+  ASSERT_GT(pc->pc()->GetTransceivers().size(), 0u);
+  auto transceiver = pc->pc()->GetTransceivers()[0];
+  auto negotiated = transceiver->GetNegotiatedHeaderExtensions();
+  EXPECT_EQ(negotiated.size(),
+            transceiver->GetHeaderExtensionsToNegotiate().size());
+  // All extensions are stopped, the "bogus" one does not show up.
+  for (const auto& extension : negotiated) {
+    EXPECT_EQ(extension.direction, RtpTransceiverDirection::kStopped);
+    EXPECT_NE(extension.uri, "urn:bogus");
+  }
 }
 
 INSTANTIATE_TEST_SUITE_P(

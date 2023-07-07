@@ -144,13 +144,6 @@ class NetEqController {
   virtual bool SetBaseMinimumDelay(int delay_ms) = 0;
   virtual int GetBaseMinimumDelay() const = 0;
 
-  // These methods test the `cng_state_` for different conditions.
-  virtual bool CngRfc3389On() const = 0;
-  virtual bool CngOff() const = 0;
-
-  // Resets the `cng_state_` to kCngOff.
-  virtual void SetCngOff() = 0;
-
   // Reports back to DecisionLogic whether the decision to do expand remains or
   // not. Note that this is necessary, since an expand decision can be changed
   // to kNormal in NetEqImpl::GetDecision if there is still enough data in the

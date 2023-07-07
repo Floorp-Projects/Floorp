@@ -150,6 +150,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../time_controller",
     ]
     absl_deps = [
+      "//third_party/abseil-cpp/absl/cleanup",
       "//third_party/abseil-cpp/absl/flags:flag",
       "//third_party/abseil-cpp/absl/flags:parse",
       "//third_party/abseil-cpp/absl/functional:any_invocable",

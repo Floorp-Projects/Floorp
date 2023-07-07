@@ -294,10 +294,9 @@ void SharedScreenCastStreamPrivate::OnStreamParamChanged(
   that->modifier_ =
       has_modifier ? that->spa_video_format_.modifier : DRM_FORMAT_MOD_INVALID;
   std::vector<const spa_pod*> params;
-  const int buffer_types =
-      has_modifier
-          ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
-          : (1 << SPA_DATA_MemFd);
+  const int buffer_types = has_modifier
+                               ? (1 << SPA_DATA_DmaBuf) | (1 << SPA_DATA_MemFd)
+                               : (1 << SPA_DATA_MemFd);
 
   params.push_back(reinterpret_cast<spa_pod*>(spa_pod_builder_add_object(
       &builder, SPA_TYPE_OBJECT_ParamBuffers, SPA_PARAM_Buffers,

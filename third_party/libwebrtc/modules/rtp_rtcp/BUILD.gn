@@ -709,6 +709,7 @@ if (rtc_include_tests) {
     sources = [ "source/frame_transformer_factory_unittest.cc" ]
     deps = [
       "../../api:frame_transformer_factory",
+      "../../api:mock_transformable_audio_frame",
       "../../api:mock_transformable_video_frame",
       "../../api:transport_api",
       "../../call:video_stream_api",

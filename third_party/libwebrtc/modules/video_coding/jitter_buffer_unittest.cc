@@ -17,9 +17,9 @@
 
 #include "absl/memory/memory.h"
 #include "common_video/h264/h264_common.h"
-#include "modules/video_coding/frame_buffer.h"
+#include "modules/video_coding/deprecated/frame_buffer.h"
+#include "modules/video_coding/deprecated/packet.h"
 #include "modules/video_coding/media_opt_util.h"
-#include "modules/video_coding/packet.h"
 #include "modules/video_coding/test/stream_generator.h"
 #include "system_wrappers/include/clock.h"
 #include "system_wrappers/include/metrics.h"

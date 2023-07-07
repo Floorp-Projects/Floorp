@@ -128,7 +128,7 @@ class SvcTest : public testing::TestWithParam<
           {{kVP9FmtpProfileId, VP9ProfileToString(VP9Profile::kProfile0)}});
     }
 
-    return VideoCodecConfig(std::string(codec));
+    return VideoCodecConfig(codec);
   }
 
   const SvcTestParameters& SvcTestParameters() const {
@@ -209,7 +209,7 @@ class SvcVideoQualityAnalyzer : public DefaultVideoQualityAnalyzer {
       absl::string_view pc_label,
       const rtc::scoped_refptr<const RTCStatsReport>& report) override {
     // Extract the scalability mode reported in the stats.
-    auto outbound_stats = report->GetStatsOfType<RTCOutboundRTPStreamStats>();
+    auto outbound_stats = report->GetStatsOfType<RTCOutboundRtpStreamStats>();
     for (const auto& stat : outbound_stats) {
       if (stat->scalability_mode.is_defined()) {
         reported_scalability_mode_ = *stat->scalability_mode;

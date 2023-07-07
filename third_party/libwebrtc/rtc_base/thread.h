@@ -31,6 +31,7 @@
 #include "absl/base/attributes.h"
 #include "absl/functional/any_invocable.h"
 #include "api/function_view.h"
+#include "api/location.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/checks.h"
@@ -308,14 +309,20 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
   // See ScopedDisallowBlockingCalls for details.
   // NOTE: Blocking calls are DISCOURAGED, consider if what you're doing can
   // be achieved with PostTask() and callbacks instead.
-  virtual void BlockingCall(FunctionView<void()> functor);
+  void BlockingCall(
+      FunctionView<void()> functor,
+      const webrtc::Location& location = webrtc::Location::Current()) {
+    BlockingCallImpl(std::move(functor), location);
+  }
 
   template <typename Functor,
             typename ReturnT = std::invoke_result_t<Functor>,
             typename = typename std::enable_if_t<!std::is_void_v<ReturnT>>>
-  ReturnT BlockingCall(Functor&& functor) {
+  ReturnT BlockingCall(
+      Functor&& functor,
+      const webrtc::Location& location = webrtc::Location::Current()) {
     ReturnT result;
-    BlockingCall([&] { result = std::forward<Functor>(functor)(); });
+    BlockingCall([&] { result = std::forward<Functor>(functor)(); }, location);
     return result;
   }
 
@@ -336,11 +343,6 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
 
   // From TaskQueueBase
   void Delete() override;
-  void PostTask(absl::AnyInvocable<void() &&> task) override;
-  void PostDelayedTask(absl::AnyInvocable<void() &&> task,
-                       webrtc::TimeDelta delay) override;
-  void PostDelayedHighPrecisionTask(absl::AnyInvocable<void() &&> task,
-                                    webrtc::TimeDelta delay) override;
 
   // ProcessMessages will process I/O and dispatch messages until:
   //  1) cms milliseconds have elapsed (returns true)
@@ -411,6 +413,18 @@ class RTC_LOCKABLE RTC_EXPORT Thread : public webrtc::TaskQueueBase {
     // priority queue. That is ok because `functor` doesn't affect operator<
     mutable absl::AnyInvocable<void() &&> functor;
   };
+
+  // TaskQueueBase implementation.
+  void PostTaskImpl(absl::AnyInvocable<void() &&> task,
+                    const PostTaskTraits& traits,
+                    const webrtc::Location& location) override;
+  void PostDelayedTaskImpl(absl::AnyInvocable<void() &&> task,
+                           webrtc::TimeDelta delay,
+                           const PostDelayedTaskTraits& traits,
+                           const webrtc::Location& location) override;
+
+  virtual void BlockingCallImpl(FunctionView<void()> functor,
+                                const webrtc::Location& location);
 
   // Perform initialization, subclasses must call this from their constructor
   // if false was passed as init_queue to the Thread constructor.

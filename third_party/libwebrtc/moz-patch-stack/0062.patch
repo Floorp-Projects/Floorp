@@ -29,28 +29,28 @@ index 08a035a8d7..6d9071bcd5 100644
    kNV12,
  };
 diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
-index 14e2d22612..8998af191d 100644
+index 46322501ad..4c6911b4a3 100644
 --- a/common_video/libyuv/webrtc_libyuv.cc
 +++ b/common_video/libyuv/webrtc_libyuv.cc
-@@ -25,6 +25,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
-   size_t buffer_size = 0;
+@@ -24,6 +24,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+   RTC_DCHECK_GE(height, 0);
    switch (type) {
      case VideoType::kI420:
 +    case VideoType::kNV21:
      case VideoType::kIYUV:
      case VideoType::kYV12:
      case VideoType::kNV12: {
-@@ -33,7 +34,9 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
-       buffer_size = width * height + half_width * half_height * 2;
-       break;
+@@ -31,7 +32,9 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
+       int half_height = (height + 1) >> 1;
+       return width * height + half_width * half_height * 2;
      }
 +    case VideoType::kARGB4444:
      case VideoType::kRGB565:
 +    case VideoType::kARGB1555:
      case VideoType::kYUY2:
      case VideoType::kUYVY:
-       buffer_size = width * height * 2;
-@@ -94,6 +97,8 @@ int ConvertVideoType(VideoType video_type) {
+       return width * height * 2;
+@@ -90,6 +93,8 @@ int ConvertVideoType(VideoType video_type) {
        return libyuv::FOURCC_YV12;
      case VideoType::kRGB24:
        return libyuv::FOURCC_24BG;
@@ -59,7 +59,7 @@ index 14e2d22612..8998af191d 100644
      case VideoType::kRGB565:
        return libyuv::FOURCC_RGBP;
      case VideoType::kYUY2:
-@@ -102,10 +107,16 @@ int ConvertVideoType(VideoType video_type) {
+@@ -98,10 +103,16 @@ int ConvertVideoType(VideoType video_type) {
        return libyuv::FOURCC_UYVY;
      case VideoType::kMJPEG:
        return libyuv::FOURCC_MJPG;

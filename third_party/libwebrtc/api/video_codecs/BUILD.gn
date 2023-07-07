@@ -139,9 +139,9 @@ rtc_library("builtin_video_encoder_factory") {
     "../../api:scoped_refptr",
     "../../media:codec",
     "../../media:media_constants",
-    "../../media:rtc_encoder_simulcast_proxy",
     "../../media:rtc_internal_video_codecs",
     "../../media:rtc_media_base",
+    "../../media:rtc_simulcast_encoder_adapter",
     "../../rtc_base:checks",
     "../../rtc_base/system:rtc_export",
   ]

@@ -84,6 +84,10 @@
     "label": "//modules:modules_unittests",
     "type": "windowed_test_launcher",
   },
+  "peer_connection_mediachannel_split_unittests": {
+    "label": "//pc:peer_connection_mediachannel_split_unittests",
+    "type": "console_test_launcher",
+  },
   "peerconnection_unittests": {
     "label": "//pc:peerconnection_unittests",
     "type": "console_test_launcher",

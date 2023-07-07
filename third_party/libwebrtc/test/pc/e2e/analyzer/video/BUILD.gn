@@ -233,6 +233,7 @@ rtc_library("default_video_quality_analyzer_internal") {
     "../../../../../api:scoped_refptr",
     "../../../../../api/numerics",
     "../../../../../api/units:data_size",
+    "../../../../../api/units:time_delta",
     "../../../../../api/units:timestamp",
     "../../../../../api/video:video_frame",
     "../../../../../api/video:video_frame_type",
@@ -246,6 +247,7 @@ rtc_library("default_video_quality_analyzer_internal") {
     "../../../../../rtc_base/synchronization:mutex",
     "../../../../../rtc_tools:video_quality_analysis",
     "../../../../../system_wrappers",
+    "dvqa:pausable_state",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/strings:strings",
@@ -311,6 +313,7 @@ rtc_library("default_video_quality_analyzer") {
     "../../../../../rtc_base:stringutils",
     "../../../../../rtc_base/synchronization:mutex",
     "../../../../../system_wrappers",
+    "dvqa:frames_storage",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -324,6 +327,7 @@ rtc_library("default_video_quality_analyzer_shared") {
 
   deps = [
     "../../../../../api/numerics",
+    "../../../../../api/units:time_delta",
     "../../../../../api/units:timestamp",
     "../../../../../rtc_base:checks",
     "../../../../../rtc_base:stringutils",
@@ -492,6 +496,7 @@ if (rtc_include_tests) {
       ":default_video_quality_analyzer_internal",
       "../../../..:test_support",
       "../../../../../api/units:timestamp",
+      "../../../../../system_wrappers",
     ]
     absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
   }
@@ -505,13 +510,17 @@ if (rtc_include_tests) {
       "../../../..:test_support",
       "../../../../../api:create_frame_generator",
       "../../../../../api:rtp_packet_info",
+      "../../../../../api:time_controller",
       "../../../../../api/test/metrics:global_metrics_logger_and_exporter",
+      "../../../../../api/units:time_delta",
+      "../../../../../api/units:timestamp",
       "../../../../../api/video:encoded_image",
       "../../../../../api/video:video_frame",
       "../../../../../common_video",
       "../../../../../rtc_base:stringutils",
       "../../../../../rtc_tools:video_quality_analysis",
       "../../../../../system_wrappers",
+      "../../../../time_controller",
     ]
   }
 

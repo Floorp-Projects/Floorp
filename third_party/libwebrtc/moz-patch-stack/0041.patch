@@ -10,10 +10,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bb6417a4cfac1416a
  1 file changed, 7 insertions(+)
 
 diff --git a/rtc_base/platform_thread.h b/rtc_base/platform_thread.h
-index 3ab2761f43..52497ffd0c 100644
+index befd61849d..5b7c6884fe 100644
 --- a/rtc_base/platform_thread.h
 +++ b/rtc_base/platform_thread.h
-@@ -18,8 +18,13 @@
+@@ -21,8 +21,13 @@
  #include "absl/types/optional.h"
  #include "rtc_base/platform_thread_types.h"
  
@@ -27,7 +27,7 @@ index 3ab2761f43..52497ffd0c 100644
  enum class ThreadPriority {
    kLow = 1,
    kNormal,
-@@ -110,6 +115,8 @@ class PlatformThread final {
+@@ -113,6 +118,8 @@ class PlatformThread final {
  
    absl::optional<Handle> handle_;
    bool joinable_ = false;

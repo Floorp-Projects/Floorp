@@ -82,11 +82,23 @@ class BaseChannel : public ChannelInterface,
   // responsibility of the user to ensure it outlives this object.
   // TODO(zhihuang:) Create a BaseChannel::Config struct for the parameter lists
   // which will make it easier to change the constructor.
+
+  // Constructor for use when the MediaChannels are split
   BaseChannel(rtc::Thread* worker_thread,
               rtc::Thread* network_thread,
               rtc::Thread* signaling_thread,
               std::unique_ptr<MediaChannel> media_send_channel_impl,
               std::unique_ptr<MediaChannel> media_receive_channel_impl,
+              absl::string_view mid,
+              bool srtp_required,
+              webrtc::CryptoOptions crypto_options,
+              rtc::UniqueRandomIdGenerator* ssrc_generator);
+  // Constructor for use when the MediaChannel is not split
+  // TODO(bugs.webrtc.org/13931): Delete when split channel project is complete.
+  BaseChannel(rtc::Thread* worker_thread,
+              rtc::Thread* network_thread,
+              rtc::Thread* signaling_thread,
+              std::unique_ptr<MediaChannel> media_channel_impl,
               absl::string_view mid,
               bool srtp_required,
               webrtc::CryptoOptions crypto_options,
@@ -306,6 +318,11 @@ class BaseChannel : public ChannelInterface,
   // MediaChannel related members that should be accessed from the worker
   // thread. These are used in initializing the subclasses and deleting
   // the channels when exiting; they have no accessors.
+  // Either the media_channel_impl_ is set, or the media_send_channel_impl_
+  // and the media_receive_channel_impl_ is set.
+  // TODO(bugs.webrtc.org/13931): Delete when split channel project is complete.
+  const std::unique_ptr<MediaChannel> media_channel_impl_;
+
   const std::unique_ptr<MediaChannel> media_send_channel_impl_;
   const std::unique_ptr<MediaChannel> media_receive_channel_impl_;
 
@@ -378,6 +395,17 @@ class VoiceChannel : public BaseChannel {
                bool srtp_required,
                webrtc::CryptoOptions crypto_options,
                rtc::UniqueRandomIdGenerator* ssrc_generator);
+  // Constructor for use when the MediaChannel is not split
+  // TODO(bugs.webrtc.org/13931): Delete when split channel project is complete.
+  VoiceChannel(rtc::Thread* worker_thread,
+               rtc::Thread* network_thread,
+               rtc::Thread* signaling_thread,
+               std::unique_ptr<VoiceMediaChannel> media_channel_impl,
+               absl::string_view mid,
+               bool srtp_required,
+               webrtc::CryptoOptions crypto_options,
+               rtc::UniqueRandomIdGenerator* ssrc_generator);
+
   ~VoiceChannel();
 
   VideoChannel* AsVideoChannel() override {
@@ -436,6 +464,16 @@ class VideoChannel : public BaseChannel {
                rtc::Thread* signaling_thread,
                std::unique_ptr<VideoMediaChannel> media_send_channel_impl,
                std::unique_ptr<VideoMediaChannel> media_receive_channel_impl,
+               absl::string_view mid,
+               bool srtp_required,
+               webrtc::CryptoOptions crypto_options,
+               rtc::UniqueRandomIdGenerator* ssrc_generator);
+  // Constructor for use when the MediaChannel is not split
+  // TODO(bugs.webrtc.org/13931): Delete when split channel project is complete.
+  VideoChannel(rtc::Thread* worker_thread,
+               rtc::Thread* network_thread,
+               rtc::Thread* signaling_thread,
+               std::unique_ptr<VideoMediaChannel> media_channel_impl,
                absl::string_view mid,
                bool srtp_required,
                webrtc::CryptoOptions crypto_options,

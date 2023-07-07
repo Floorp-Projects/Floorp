@@ -179,13 +179,6 @@ class ModuleRtpRtcpImpl2 final : public RtpRtcpInterface,
   // Set RTCP CName.
   int32_t SetCNAME(absl::string_view c_name) override;
 
-  // Get remote NTP.
-  int32_t RemoteNTP(uint32_t* received_ntp_secs,
-                    uint32_t* received_ntp_frac,
-                    uint32_t* rtcp_arrival_time_secs,
-                    uint32_t* rtcp_arrival_time_frac,
-                    uint32_t* rtcp_timestamp) const override;
-
   // Get RoundTripTime.
   int32_t RTT(uint32_t remote_ssrc,
               int64_t* rtt,

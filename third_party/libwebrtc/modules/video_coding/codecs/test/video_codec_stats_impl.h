@@ -27,46 +27,37 @@ class VideoCodecStatsImpl : public VideoCodecStats {
   std::vector<Frame> Slice(
       absl::optional<Filter> filter = absl::nullopt) const override;
 
-  Stream Aggregate(
-      const std::vector<Frame>& frames,
-      absl::optional<DataRate> bitrate = absl::nullopt,
-      absl::optional<Frequency> framerate = absl::nullopt) const override;
+  Stream Aggregate(const std::vector<Frame>& frames) const override;
 
-  void LogMetrics(MetricsLogger* logger,
-                  const Stream& stream,
-                  std::string test_case_name) const override;
+  void LogMetrics(
+      MetricsLogger* logger,
+      const Stream& stream,
+      std::string test_case_name,
+      std::map<std::string, std::string> metadata = {}) const override;
 
-  // Creates new frame, caches it and returns raw pointer to it.
-  Frame* AddFrame(int frame_num, uint32_t timestamp_rtp, int spatial_idx);
+  void AddFrame(const Frame& frame);
 
-  // Returns raw pointers to requested frame. If frame does not exist, returns
-  // `nullptr`.
+  // Returns raw pointers to previously added frame. If frame does not exist,
+  // returns `nullptr`.
   Frame* GetFrame(uint32_t timestamp_rtp, int spatial_idx);
 
  private:
   struct FrameId {
-    int frame_num;
+    uint32_t timestamp_rtp;
     int spatial_idx;
 
     bool operator==(const FrameId& o) const {
-      return frame_num == o.frame_num && spatial_idx == o.spatial_idx;
+      return timestamp_rtp == o.timestamp_rtp && spatial_idx == o.spatial_idx;
     }
 
     bool operator<(const FrameId& o) const {
-      if (frame_num < o.frame_num)
+      if (timestamp_rtp < o.timestamp_rtp)
         return true;
-      if (spatial_idx < o.spatial_idx)
+      if (timestamp_rtp == o.timestamp_rtp && spatial_idx < o.spatial_idx)
         return true;
       return false;
     }
   };
-
-  // Merges frame stats from different spatial layers and returns vector of
-  // superframes.
-  std::vector<Frame> Merge(const std::vector<Frame>& frames) const;
-
-  // Map from RTP timestamp to frame number (`Frame::frame_num`).
-  std::map<uint32_t, int> frame_num_;
 
   std::map<FrameId, Frame> frames_;
 };

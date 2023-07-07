@@ -128,16 +128,8 @@ rtc_library("rtc_media_base") {
     "base/adapted_video_track_source.cc",
     "base/adapted_video_track_source.h",
     "base/audio_source.h",
-    "base/codec.h",  # temporary - bugs.webrtc.org/14775
-    "base/delayable.h",  # temporary - bugs.webrtc.org/14775
-    "base/media_channel.h",  # temporary - bugs.webrtc.org/14775
-    "base/media_constants.h",  # temporary - bugs.webrtc.org/14775
     "base/media_engine.cc",
     "base/media_engine.h",
-    "base/rid_description.h",  # temporary - bugs.webrtc.org/14775
-    "base/rtp_utils.h",  # temporary - bugs.webrtc.org/14775
-    "base/stream_params.h",  # temporary - bugs.webrtc.org/14775
-    "base/turn_utils.h",  # temporary - bugs.webrtc.org/14775
     "base/video_adapter.cc",
     "base/video_adapter.h",
     "base/video_broadcaster.cc",
@@ -152,8 +144,6 @@ rtc_library("rtc_media_base") {
       "base/adapted_video_track_source.cc",
       "base/adapted_video_track_source.h",
       "base/audio_source.h",
-      "base/delayable.h",
-      "base/media_channel.h",
       "base/media_engine.cc",
       "base/media_engine.h",
     ]
@@ -388,25 +378,6 @@ rtc_library("rtc_simulcast_encoder_adapter") {
   ]
 }
 
-rtc_library("rtc_encoder_simulcast_proxy") {
-  visibility = [ "*" ]
-  defines = []
-  libs = []
-  sources = [
-    "engine/encoder_simulcast_proxy.cc",
-    "engine/encoder_simulcast_proxy.h",
-  ]
-  deps = [
-    ":rtc_simulcast_encoder_adapter",
-    "../api/video:video_bitrate_allocation",
-    "../api/video:video_frame",
-    "../api/video:video_rtp_headers",
-    "../api/video_codecs:video_codecs_api",
-    "../modules/video_coding:video_codec_interface",
-    "../rtc_base/system:rtc_export",
-  ]
-}
-
 rtc_library("rtc_internal_video_codecs") {
   visibility = [ "*" ]
   allow_poison = [ "software_video_codecs" ]
@@ -415,7 +386,6 @@ rtc_library("rtc_internal_video_codecs") {
   deps = [
     ":codec",
     ":media_constants",
-    ":rtc_encoder_simulcast_proxy",
     ":rtc_media_base",
     ":rtc_simulcast_encoder_adapter",
     "../api/video:encoded_image",
@@ -471,10 +441,6 @@ rtc_library("rtc_internal_video_codecs") {
     "engine/internal_encoder_factory.h",
     "engine/multiplex_codec_factory.cc",
     "engine/multiplex_codec_factory.h",
-
-    # TODO(bugs.webrtc.org/7925): stop exporting this header once downstream
-    # targets depend on :rtc_encoder_simulcast_proxy directly.
-    "engine/encoder_simulcast_proxy.h",
   ]
   if (build_with_mozilla) {
     sources -= [
@@ -636,6 +602,7 @@ rtc_source_set("rtc_data_sctp_transport_internal") {
   sources = [ "sctp/sctp_transport_internal.h" ]
   deps = [
     ":media_channel",
+    "../api:rtc_error",
     "../api/transport:datagram_transport_interface",
     "../media:rtc_media_base",
     "../p2p:rtc_p2p",
@@ -826,7 +793,6 @@ if (rtc_include_tests) {
         ":codec",
         ":media_constants",
         ":rtc_audio_video",
-        ":rtc_encoder_simulcast_proxy",
         ":rtc_internal_video_codecs",
         ":rtc_media",
         ":rtc_media_base",
@@ -930,7 +896,6 @@ if (rtc_include_tests) {
         "base/video_adapter_unittest.cc",
         "base/video_broadcaster_unittest.cc",
         "base/video_common_unittest.cc",
-        "engine/encoder_simulcast_proxy_unittest.cc",
         "engine/internal_decoder_factory_unittest.cc",
         "engine/internal_encoder_factory_unittest.cc",
         "engine/multiplex_codec_factory_unittest.cc",

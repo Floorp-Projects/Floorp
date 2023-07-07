@@ -372,3 +372,16 @@ rtc_library("frame_buffer_unittest") {
     "../../test:test_support",
   ]
 }
+
+rtc_library("video_frame_metadata_unittest") {
+  testonly = true
+  sources = [ "video_frame_metadata_unittest.cc" ]
+
+  deps = [
+    ":video_frame_metadata",
+    "../../api/video:video_frame",
+    "../../modules/video_coding:codec_globals_headers",
+    "../../test:test_support",
+    "../../video:video",
+  ]
+}
