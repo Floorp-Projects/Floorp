@@ -482,15 +482,15 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
 
     fn adjust_for_contain(&mut self) {
         let box_style = self.style.get_box();
-        debug_assert_eq!(
-            box_style.clone_contain(),
-            box_style.clone_effective_containment()
-        );
         let container_type = box_style.clone_container_type();
         let content_visibility = box_style.clone_content_visibility();
         if container_type == ContainerType::Normal &&
             content_visibility == ContentVisibility::Visible
         {
+            debug_assert_eq!(
+                box_style.clone_contain(),
+                box_style.clone_effective_containment()
+            );
             return;
         }
         let old_contain = box_style.clone_contain();
@@ -522,6 +522,10 @@ impl<'a, 'b: 'a> StyleAdjuster<'a, 'b> {
             },
         }
         if new_contain == old_contain {
+            debug_assert_eq!(
+                box_style.clone_contain(),
+                box_style.clone_effective_containment()
+            );
             return;
         }
         self.style
