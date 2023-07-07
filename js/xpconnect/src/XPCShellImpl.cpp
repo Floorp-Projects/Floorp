@@ -468,12 +468,11 @@ static bool SendCommand(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool Options(JSContext* cx, unsigned argc, Value* vp) {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
-  ContextOptions oldContextOptions = ContextOptionsRef(cx);
 
   RootedString str(cx);
   JS::UniqueChars opt;
-  for (unsigned i = 0; i < args.length(); ++i) {
-    str = ToString(cx, args[i]);
+  if (args.length() > 0) {
+    str = ToString(cx, args[0]);
     if (!str) {
       return false;
     }
@@ -483,33 +482,11 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (strcmp(opt.get(), "strict_mode") == 0) {
-      ContextOptionsRef(cx).toggleStrictMode();
-    } else {
-      JS_ReportErrorUTF8(cx,
-                         "unknown option name '%s'. The valid name is "
-                         "strict_mode.",
-                         opt.get());
-      return false;
-    }
-  }
-
-  UniqueChars names;
-  if (names && oldContextOptions.strictMode()) {
-    names = JS_sprintf_append(std::move(names), "%s%s", names ? "," : "",
-                              "strict_mode");
-    if (!names) {
-      JS_ReportOutOfMemory(cx);
-      return false;
-    }
-  }
-
-  str = JS_NewStringCopyZ(cx, names.get());
-  if (!str) {
+    JS_ReportErrorUTF8(cx, "unknown option name '%s'.", opt.get());
     return false;
   }
 
-  args.rval().setString(str);
+  args.rval().setString(JS_GetEmptyString(cx));
   return true;
 }
 

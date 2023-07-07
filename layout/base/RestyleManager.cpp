@@ -2413,7 +2413,7 @@ void RestyleManager::ClearRestyleStateFromSubtree(Element* aElement) {
     }
   }
 
-  bool wasRestyled;
+  bool wasRestyled = false;
   Unused << Servo_TakeChangeHint(aElement, &wasRestyled);
   aElement->UnsetFlags(Element::kAllServoDescendantBits);
 }
@@ -2729,7 +2729,7 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
       primaryFrame && primaryFrame->IsColumnSpanInMulticolSubtree();
 
   // Grab the change hint from Servo.
-  bool wasRestyled;
+  bool wasRestyled = false;
   nsChangeHint changeHint =
       static_cast<nsChangeHint>(Servo_TakeChangeHint(aElement, &wasRestyled));
 
@@ -3603,11 +3603,25 @@ void RestyleManager::ReparentComputedStyleForFirstLine(nsIFrame* aFrame) {
   DoReparentComputedStyleForFirstLine(aFrame, *StyleSet());
 }
 
+static bool IsFrameAboutToGoAway(nsIFrame* aFrame) {
+  auto* element = Element::FromNode(aFrame->GetContent());
+  if (!element) {
+    return false;
+  }
+  return !element->HasServoData();
+}
+
 void RestyleManager::DoReparentComputedStyleForFirstLine(
     nsIFrame* aFrame, ServoStyleSet& aStyleSet) {
   if (aFrame->IsBackdropFrame()) {
     // Style context of backdrop frame has no parent style, and thus we do not
     // need to reparent it.
+    return;
+  }
+
+  if (IsFrameAboutToGoAway(aFrame)) {
+    // We're entering a display: none subtree, which we know it's going to get
+    // rebuilt. Don't bother reparenting.
     return;
   }
 
@@ -3686,23 +3700,6 @@ void RestyleManager::DoReparentComputedStyleForFirstLine(
   Element* ourElement = isElement ? aFrame->GetContent()->AsElement() : nullptr;
   ComputedStyle* newParent = newParentStyle;
 
-  ComputedStyle* newParentIgnoringFirstLine;
-  if (newParent->GetPseudoType() == PseudoStyleType::firstLine) {
-    MOZ_ASSERT(
-        providerFrame && providerFrame->GetParent()->IsBlockFrameOrSubclass(),
-        "How could we get a ::first-line parent style without having "
-        "a ::first-line provider frame?");
-    // If newParent is a ::first-line style, get the parent blockframe, and then
-    // correct it for our pseudo as needed (e.g. stepping out of anon boxes).
-    // Use the resulting style for the "parent style ignoring ::first-line".
-    nsIFrame* blockFrame = providerFrame->GetParent();
-    nsIFrame* correctedFrame = nsIFrame::CorrectStyleParentFrame(
-        blockFrame, oldStyle->GetPseudoType());
-    newParentIgnoringFirstLine = correctedFrame->Style();
-  } else {
-    newParentIgnoringFirstLine = newParent;
-  }
-
   if (!providerFrame) {
     // No providerFrame means we inherited from a display:contents thing.  Our
     // layout parent style is the style of our nearest ancestor frame.  But we
@@ -3720,8 +3717,7 @@ void RestyleManager::DoReparentComputedStyleForFirstLine(
   ComputedStyle* layoutParent = providerFrame->Style();
 
   RefPtr<ComputedStyle> newStyle = aStyleSet.ReparentComputedStyle(
-      oldStyle, newParent, newParentIgnoringFirstLine, layoutParent,
-      ourElement);
+      oldStyle, newParent, layoutParent, ourElement);
   aFrame->SetComputedStyle(newStyle);
 
   // This logic somewhat mirrors the logic in
@@ -3730,12 +3726,12 @@ void RestyleManager::DoReparentComputedStyleForFirstLine(
     // We can't use UpdateAdditionalComputedStyles as-is because it needs a
     // ServoRestyleState and maintaining one of those during a _frametree_
     // traversal is basically impossible.
-    uint32_t index = 0;
+    int32_t index = 0;
     while (auto* oldAdditionalStyle =
                aFrame->GetAdditionalComputedStyle(index)) {
       RefPtr<ComputedStyle> newAdditionalContext =
           aStyleSet.ReparentComputedStyle(oldAdditionalStyle, newStyle,
-                                          newStyle, newStyle, nullptr);
+                                          newStyle, nullptr);
       aFrame->SetAdditionalComputedStyle(index, newAdditionalContext);
       ++index;
     }
@@ -3761,12 +3757,6 @@ void RestyleManager::DoReparentComputedStyleForFirstLine(
 void RestyleManager::ReparentFrameDescendants(nsIFrame* aFrame,
                                               nsIFrame* aProviderChild,
                                               ServoStyleSet& aStyleSet) {
-  if (aFrame->GetContent()->IsElement() &&
-      !aFrame->GetContent()->AsElement()->HasServoData()) {
-    // We're getting into a display: none subtree, avoid reparenting into stuff
-    // that is going to go away anyway in seconds.
-    return;
-  }
   for (const auto& childList : aFrame->ChildLists()) {
     for (nsIFrame* child : childList.mList) {
       // only do frames that are in flow

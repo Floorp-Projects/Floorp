@@ -132,6 +132,16 @@ if CONFIG["CPU_ARCH"] == "arm":
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12_armv7.S"
     ]
 
+if CONFIG["CPU_ARCH"] == "mips32":
+
+    DEFINES["MIPS32_LE"] = True
+    DEFINES["MIPS_FPU_LE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    DEFINES["_GNU_SOURCE"] = True
+
 if CONFIG["CPU_ARCH"] == "x86":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True

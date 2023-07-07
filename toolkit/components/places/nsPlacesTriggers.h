@@ -33,8 +33,8 @@
         "SELECT store_last_inserted_id('moz_historyvisits', NEW.id); "        \
         "UPDATE moz_places SET "                                              \
         "visit_count = visit_count + " VISIT_COUNT_INC("NEW.visit_type") ", " \
-        "recalc_frecency = (frecency <> 0), "                                 \
-        "recalc_alt_frecency = (frecency <> 0), "                             \
+        "recalc_frecency = 1, "                                               \
+        "recalc_alt_frecency = 1, "                                           \
         "last_visit_date = MAX(IFNULL(last_visit_date, 0), NEW.visit_date) "  \
         "WHERE id = NEW.place_id;"                                            \
         "END")

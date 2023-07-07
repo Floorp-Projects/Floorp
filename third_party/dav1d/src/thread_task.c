@@ -224,7 +224,7 @@ static int create_filter_sbrow(Dav1dFrameContext *const f,
     int num_tasks = f->sbh * (1 + uses_2pass);
     if (num_tasks > f->task_thread.num_tasks) {
         const size_t size = sizeof(Dav1dTask) * num_tasks;
-        tasks = realloc(f->task_thread.tasks, size);
+        tasks = dav1d_realloc(ALLOC_COMMON_CTX, f->task_thread.tasks, size);
         if (!tasks) return -1;
         memset(tasks, 0, size);
         f->task_thread.tasks = tasks;
@@ -237,8 +237,8 @@ static int create_filter_sbrow(Dav1dFrameContext *const f,
     } else {
         const int prog_sz = ((f->sbh + 31) & ~31) >> 5;
         if (prog_sz > f->frame_thread.prog_sz) {
-            atomic_uint *const prog = realloc(f->frame_thread.frame_progress,
-                                              2 * prog_sz * sizeof(*prog));
+            atomic_uint *const prog = dav1d_realloc(ALLOC_COMMON_CTX, f->frame_thread.frame_progress,
+                                                    2 * prog_sz * sizeof(*prog));
             if (!prog) return -1;
             f->frame_thread.frame_progress = prog;
             f->frame_thread.copy_lpf_progress = prog + prog_sz;
@@ -275,7 +275,7 @@ int dav1d_task_create_tile_sbrow(Dav1dFrameContext *const f, const int pass,
         int alloc_num_tasks = num_tasks * (1 + uses_2pass);
         if (alloc_num_tasks > f->task_thread.num_tile_tasks) {
             const size_t size = sizeof(Dav1dTask) * alloc_num_tasks;
-            tasks = realloc(f->task_thread.tile_tasks[0], size);
+            tasks = dav1d_realloc(ALLOC_COMMON_CTX, f->task_thread.tile_tasks[0], size);
             if (!tasks) return -1;
             memset(tasks, 0, size);
             f->task_thread.tile_tasks[0] = tasks;

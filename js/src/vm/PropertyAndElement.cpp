@@ -855,6 +855,10 @@ JS_PUBLIC_API bool JS_DefineProperties(JSContext* cx, JS::Handle<JSObject*> obj,
       return false;
     }
 
+    if (ShouldIgnorePropertyDefinition(cx, StandardProtoKeyOrNull(obj), id)) {
+      continue;
+    }
+
     if (ps->isAccessor()) {
       if (ps->isSelfHosted()) {
         if (!::DefineSelfHostedProperty(

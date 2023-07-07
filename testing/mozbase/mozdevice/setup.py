@@ -5,7 +5,7 @@
 from setuptools import setup
 
 PACKAGE_NAME = "mozdevice"
-PACKAGE_VERSION = "4.1.0"
+PACKAGE_VERSION = "4.1.1"
 
 deps = ["mozlog >= 6.0"]
 

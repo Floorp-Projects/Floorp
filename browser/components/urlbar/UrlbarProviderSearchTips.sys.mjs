@@ -274,26 +274,7 @@ class ProviderSearchTips extends UrlbarProvider {
     lazy.UrlbarPrefs.set(`tipShownCount.${tip}`, MAX_SHOWN_COUNT);
   }
 
-  /**
-   * Called when the user starts and ends an engagement with the urlbar.  For
-   * details on parameters, see UrlbarProvider.onEngagement().
-   *
-   * @param {boolean} isPrivate
-   *   True if the engagement is in a private context.
-   * @param {string} state
-   *   The state of the engagement, one of: start, engagement, abandonment,
-   *   discard
-   * @param {UrlbarQueryContext} queryContext
-   *   The engagement's query context.  This is *not* guaranteed to be defined
-   *   when `state` is "start".  It will always be defined for "engagement" and
-   *   "abandonment".
-   * @param {object} details
-   *   This is defined only when `state` is "engagement" or "abandonment", and
-   *   it describes the search string and picked result.
-   * @param {window} window
-   *   The browser window where the engagement event took place.
-   */
-  onEngagement(isPrivate, state, queryContext, details, window) {
+  onEngagement(state, queryContext, details, controller) {
     // Ignore engagements on other results that didn't end the session.
     let { result } = details;
     if (result?.providerName != this.name && details.isSessionOngoing) {
@@ -301,7 +282,7 @@ class ProviderSearchTips extends UrlbarProvider {
     }
 
     if (result?.providerName == this.name) {
-      this.#pickResult(result, window);
+      this.#pickResult(result, controller.browserWindow);
     }
 
     this.showedTipTypeInCurrentEngagement = TIPS.NONE;

@@ -1,13 +1,8 @@
-diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/src/resample.c
---- a/media/libspeex_resampler/src/resample.c
-+++ b/media/libspeex_resampler/src/resample.c
-@@ -92,23 +92,17 @@ static void speex_free (void *ptr) {free
-                
- #define IMAX(a,b) ((a) > (b) ? (a) : (b))
- #define IMIN(a,b) ((a) < (b) ? (a) : (b))
- 
- #ifndef NULL
- #define NULL 0
+diff --git a/src/resample.c b/src/resample.c
+--- a/src/resample.c
++++ b/src/resample.c
+@@ -94,13 +94,7 @@ static void speex_free (void *ptr) {free(ptr);}
+ #define UINT32_MAX 4294967296U
  #endif
  
 -#ifdef _USE_SSE
@@ -21,17 +16,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
  
  /* Numer of elements to allocate on the stack */
  #ifdef VAR_ARRAYS
- #define FIXED_STACK_ALLOC 8192
- #else
- #define FIXED_STACK_ALLOC 1024
- #endif
- 
-@@ -344,17 +338,19 @@ static int resampler_basic_direct_single
-    const spx_uint32_t den_rate = st->den_rate;
-    spx_word32_t sum;
- 
-    while (!(last_sample >= (spx_int32_t)*in_len || out_sample >= (spx_int32_t)*out_len))
-    {
+@@ -346,7 +340,9 @@ static int resampler_basic_direct_single(SpeexResamplerState *st, spx_uint32_t c
        const spx_word16_t *sinct = & sinc_table[samp_frac_num*N];
        const spx_word16_t *iptr = & in[last_sample];
  
@@ -42,17 +27,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
        int j;
        sum = 0;
        for(j=0;j<N;j++) sum += MULT16_16(sinct[j], iptr[j]);
- 
- /*    This code is slower on most DSPs which have only 2 accumulators.
-       Plus this this forces truncation to 32 bits and you lose the HW guard bits.
-       I think we can trust the compiler and let it vectorize and/or unroll itself.
-       spx_word32_t accum[4] = {0,0,0,0};
-@@ -362,18 +358,20 @@ static int resampler_basic_direct_single
-         accum[0] += MULT16_16(sinct[j], iptr[j]);
-         accum[1] += MULT16_16(sinct[j+1], iptr[j+1]);
-         accum[2] += MULT16_16(sinct[j+2], iptr[j+2]);
-         accum[3] += MULT16_16(sinct[j+3], iptr[j+3]);
-       }
+@@ -364,8 +360,10 @@ static int resampler_basic_direct_single(SpeexResamplerState *st, spx_uint32_t c
        sum = accum[0] + accum[1] + accum[2] + accum[3];
  */
        sum = SATURATE32PSHR(sum, 15, 32767);
@@ -64,17 +39,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
  #endif
  
        out[out_stride * out_sample++] = sum;
-       last_sample += int_advance;
-       samp_frac_num += frac_advance;
-       if (samp_frac_num >= den_rate)
-       {
-          samp_frac_num -= den_rate;
-@@ -402,29 +400,33 @@ static int resampler_basic_direct_double
-    const spx_uint32_t den_rate = st->den_rate;
-    double sum;
- 
-    while (!(last_sample >= (spx_int32_t)*in_len || out_sample >= (spx_int32_t)*out_len))
-    {
+@@ -404,7 +402,9 @@ static int resampler_basic_direct_double(SpeexResamplerState *st, spx_uint32_t c
        const spx_word16_t *sinct = & sinc_table[samp_frac_num*N];
        const spx_word16_t *iptr = & in[last_sample];
  
@@ -85,10 +50,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
        int j;
        double accum[4] = {0,0,0,0};
  
-       for(j=0;j<N;j+=4) {
-         accum[0] += sinct[j]*iptr[j];
-         accum[1] += sinct[j+1]*iptr[j+1];
-         accum[2] += sinct[j+2]*iptr[j+2];
+@@ -415,8 +415,10 @@ static int resampler_basic_direct_double(SpeexResamplerState *st, spx_uint32_t c
          accum[3] += sinct[j+3]*iptr[j+3];
        }
        sum = accum[0] + accum[1] + accum[2] + accum[3];
@@ -100,17 +62,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
  #endif
  
        out[out_stride * out_sample++] = PSHR32(sum, 15);
-       last_sample += int_advance;
-       samp_frac_num += frac_advance;
-       if (samp_frac_num >= den_rate)
-       {
-          samp_frac_num -= den_rate;
-@@ -458,34 +460,38 @@ static int resampler_basic_interpolate_s
- #ifdef FIXED_POINT
-       const spx_word16_t frac = PDIV32(SHL32((samp_frac_num*st->oversample) % st->den_rate,15),st->den_rate);
- #else
-       const spx_word16_t frac = ((float)((samp_frac_num*st->oversample) % st->den_rate))/st->den_rate;
- #endif
+@@ -460,7 +462,9 @@ static int resampler_basic_interpolate_single(SpeexResamplerState *st, spx_uint3
        spx_word16_t interp[4];
  
  
@@ -121,14 +73,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
        int j;
        spx_word32_t accum[4] = {0,0,0,0};
  
-       for(j=0;j<N;j++) {
-         const spx_word16_t curr_in=iptr[j];
-         accum[0] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-2]);
-         accum[1] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-1]);
-         accum[2] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset]);
-         accum[3] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset+1]);
-       }
- 
+@@ -475,9 +479,11 @@ static int resampler_basic_interpolate_single(SpeexResamplerState *st, spx_uint3
        cubic_coef(frac, interp);
        sum = MULT16_32_Q15(interp[0],SHR32(accum[0], 1)) + MULT16_32_Q15(interp[1],SHR32(accum[1], 1)) + MULT16_32_Q15(interp[2],SHR32(accum[2], 1)) + MULT16_32_Q15(interp[3],SHR32(accum[3], 1));
        sum = SATURATE32PSHR(sum, 15, 32767);
@@ -139,19 +84,9 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
        sum = interpolate_product_single(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
 +      }
  #endif
-       
+ 
        out[out_stride * out_sample++] = sum;
-       last_sample += int_advance;
-       samp_frac_num += frac_advance;
-       if (samp_frac_num >= den_rate)
-       {
-          samp_frac_num -= den_rate;
-@@ -521,33 +527,37 @@ static int resampler_basic_interpolate_d
- #ifdef FIXED_POINT
-       const spx_word16_t frac = PDIV32(SHL32((samp_frac_num*st->oversample) % st->den_rate,15),st->den_rate);
- #else
-       const spx_word16_t frac = ((float)((samp_frac_num*st->oversample) % st->den_rate))/st->den_rate;
- #endif
+@@ -523,7 +529,9 @@ static int resampler_basic_interpolate_double(SpeexResamplerState *st, spx_uint3
        spx_word16_t interp[4];
  
  
@@ -162,13 +97,7 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
        int j;
        double accum[4] = {0,0,0,0};
  
-       for(j=0;j<N;j++) {
-         const double curr_in=iptr[j];
-         accum[0] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-2]);
-         accum[1] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset-1]);
-         accum[2] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset]);
-         accum[3] += MULT16_16(curr_in,st->sinc_table[4+(j+1)*st->oversample-offset+1]);
-       }
+@@ -537,9 +545,11 @@ static int resampler_basic_interpolate_double(SpeexResamplerState *st, spx_uint3
  
        cubic_coef(frac, interp);
        sum = MULT16_32_Q15(interp[0],accum[0]) + MULT16_32_Q15(interp[1],accum[1]) + MULT16_32_Q15(interp[2],accum[2]) + MULT16_32_Q15(interp[3],accum[3]);
@@ -179,16 +108,11 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
        sum = interpolate_product_double(iptr, st->sinc_table + st->oversample + 4 - offset - 2, N, st->oversample, interp);
 +      }
  #endif
-       
+ 
        out[out_stride * out_sample++] = PSHR32(sum,15);
-       last_sample += int_advance;
-       samp_frac_num += frac_advance;
-       if (samp_frac_num >= den_rate)
-       {
-          samp_frac_num -= den_rate;
-diff --git a/media/libspeex_resampler/src/resample_neon.c b/media/libspeex_resampler/src/resample_neon.c
---- a/media/libspeex_resampler/src/resample_neon.c
-+++ b/media/libspeex_resampler/src/resample_neon.c
+diff --git a/src/resample_neon.c b/src/resample_neon.c
+--- a/src/resample_neon.c
++++ b/src/resample_neon.c
 @@ -31,16 +31,18 @@
     EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
     PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
@@ -246,9 +170,9 @@ diff --git a/media/libspeex_resampler/src/resample_neon.c b/media/libspeex_resam
      asm volatile ("	 cmp %[len], #0\n"
  		  "	 bne 1f\n"
  		  "	 vld1.32 {q4}, [%[b]]!\n"
-diff --git a/media/libspeex_resampler/src/resample_sse.c b/media/libspeex_resampler/src/resample_sse.c
---- a/media/libspeex_resampler/src/resample_sse.c
-+++ b/media/libspeex_resampler/src/resample_sse.c
+diff --git a/src/resample_sse.c b/src/resample_sse.c
+--- a/src/resample_sse.c
++++ b/src/resample_sse.c
 @@ -29,37 +29,39 @@
     EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
     PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR

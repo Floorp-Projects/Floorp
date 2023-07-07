@@ -318,7 +318,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
     }
   }
 
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(state, queryContext, details, controller) {
     let { result } = details;
     if (result?.providerName != this.name) {
       return;
@@ -332,7 +332,7 @@ class ProviderSearchSuggestions extends UrlbarProvider {
       }).catch(error =>
         console.error(`Removing form history failed: ${error}`)
       );
-      queryContext.view.controller.removeResult(result);
+      controller.removeResult(result);
     }
   }
 

@@ -2427,9 +2427,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
 
   sourcePragmas_ = cx->options().sourcePragmas();
 
-  // Certain modes of operation force strict-mode in general.
-  forceStrictMode_ = cx->options().strictMode();
-
   // Certain modes of operation disallow syntax parsing in general.
   if (coverage::IsLCovEnabled()) {
     eagerDelazificationStrategy_ = DelazificationOption::ParseEverythingEagerly;

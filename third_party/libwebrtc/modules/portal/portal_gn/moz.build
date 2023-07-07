@@ -85,6 +85,11 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+if CONFIG["CPU_ARCH"] == "mips32":
+
+    DEFINES["MIPS32_LE"] = True
+    DEFINES["MIPS_FPU_LE"] = True
+
 if CONFIG["CPU_ARCH"] == "x86":
 
     CXXFLAGS += [

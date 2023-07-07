@@ -34,10 +34,10 @@ static void default_free_callback(const uint8_t *const data, void *const user_da
     dav1d_free_aligned(user_data);
 }
 
-Dav1dRef *dav1d_ref_create(size_t size) {
+Dav1dRef *dav1d_ref_create(const enum AllocationType type, size_t size) {
     size = (size + sizeof(void*) - 1) & ~(sizeof(void*) - 1);
 
-    uint8_t *const data = dav1d_alloc_aligned(size + sizeof(Dav1dRef), 64);
+    uint8_t *const data = dav1d_alloc_aligned(type, size + sizeof(Dav1dRef), 64);
     if (!data) return NULL;
 
     Dav1dRef *const res = (Dav1dRef*)(data + size);
@@ -81,6 +81,6 @@ void dav1d_ref_dec(Dav1dRef **const pref) {
     if (atomic_fetch_sub(&ref->ref_cnt, 1) == 1) {
         const int free_ref = ref->free_ref;
         ref->free_callback(ref->const_data, ref->user_data);
-        if (free_ref) free(ref);
+        if (free_ref) dav1d_free(ref);
     }
 }

@@ -56,6 +56,7 @@
 #include "xpcpublic.h"
 #include "nsIFrame.h"
 #include "nsDisplayList.h"
+#include "nsPIWindowRoot.h"
 
 namespace mozilla {
 
@@ -1319,11 +1320,21 @@ already_AddRefed<nsPIDOMWindowInner> EventListenerManager::WindowFromListener(
         innerWindow = global->AsInnerWindow();  // Can be nullptr
       }
     } else {
-      // Can't get the global from
-      // listener->mListener.GetXPCOMCallback().
-      // In most cases, it would be the same as for
-      // the target, so let's do that.
-      innerWindow = GetInnerWindowForTarget();  // Can be nullptr
+      // This ensures `window.event` can be set properly for
+      // nsWindowRoot to handle KeyPress event.
+      if (aListener && aListener->mEventMessage == eKeyPress && mTarget &&
+          mTarget->IsRootWindow()) {
+        nsPIWindowRoot* root = mTarget->AsWindowRoot();
+        if (nsPIDOMWindowOuter* outerWindow = root->GetWindow()) {
+          innerWindow = outerWindow->GetCurrentInnerWindow();
+        }
+      } else {
+        // Can't get the global from
+        // listener->mListener.GetXPCOMCallback().
+        // In most cases, it would be the same as for
+        // the target, so let's do that.
+        innerWindow = GetInnerWindowForTarget();  // Can be nullptr
+      }
     }
   }
   return innerWindow.forget();

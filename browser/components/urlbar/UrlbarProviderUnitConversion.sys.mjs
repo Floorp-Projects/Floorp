@@ -169,7 +169,7 @@ class ProviderUnitConversion extends UrlbarProvider {
     addCallback(this, result);
   }
 
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(state, queryContext, details, controller) {
     let { result, element } = details;
     if (result?.providerName == this.name) {
       const { textContent } = element.querySelector(

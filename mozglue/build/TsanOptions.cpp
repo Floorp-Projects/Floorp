@@ -59,6 +59,9 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1825171
          "mutex:libffi.so\n"
          "mutex:wl_registry_destroy\n"
+         // Bug 1824768
+         "mutex:libdbus-1\n"
+         "mutex:swrast_dri.so\n"
          // Bug 1651446 - permanent (ffmpeg)
          "race:libavcodec.so*\n"
          "race:libavutil.so*\n"
@@ -80,6 +83,10 @@ extern "C" const char* __tsan_default_suppressions() {
          // calling into uninstrumented external graphics driver code.
          // For example: iris_dri.so and swrast_dri.so.
          "race:fire_glxtest_process\n"
+         "race:iris_dri\n"
+         // Bug 1824768
+         "race:libLLVM-12\n"
+         "race:radeonsi_dri\n"
          // Bug 1722721 - WebRender using uninstrumented Mesa drivers
          "race:swrast_dri.so\n"
          // Bug 1825171

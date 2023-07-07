@@ -19,4 +19,12 @@ shopping-highlight-shipping = Shipping
 shopping-highlight-competitiveness = Competitiveness
 shopping-highlight-packaging = Packaging
 
+## Strings for the settings card
+
+shopping-settings-label =
+  .label = Settings
+shopping-settings-recommendations-toggle =
+  .label = Show products recommended by { -brand-product-name }
+shopping-settings-opt-out-button = Turn off review quality check
+
 ##

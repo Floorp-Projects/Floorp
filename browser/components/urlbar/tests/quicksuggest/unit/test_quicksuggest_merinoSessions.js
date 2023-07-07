@@ -50,7 +50,7 @@ add_task(async function singleEngagement() {
   }
 
   // End the engagement to reset the session for the next test.
-  endEngagement();
+  endEngagement({ controller });
 });
 
 // New engagements should not use the same session ID as previous engagements
@@ -86,7 +86,7 @@ async function doManyEngagementsTest(state) {
       },
     ]);
 
-    endEngagement(context, state);
+    endEngagement({ context, state, controller });
   }
 }
 
@@ -146,19 +146,19 @@ add_task(async function canceledQueries() {
   }
 
   // End the engagement to reset the session for the next test.
-  endEngagement();
+  endEngagement({ controller });
 });
 
-function endEngagement(context = null, state = "engagement") {
+function endEngagement({ controller, context = null, state = "engagement" }) {
   UrlbarProviderQuickSuggest.onEngagement(
-    false,
     state,
     context ||
       createContext("endEngagement", {
         providers: [UrlbarProviderQuickSuggest.name],
         isPrivate: false,
       }),
-    { selIndex: -1 }
+    { selIndex: -1 },
+    controller
   );
 
   Assert.strictEqual(

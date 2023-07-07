@@ -127,15 +127,6 @@ function createContext(searchString = "foo", properties = {}) {
       properties
     )
   );
-  context.view = {
-    get visibleResults() {
-      return context.results;
-    },
-    controller: {
-      removeResult() {},
-    },
-    acknowledgeDismissal() {},
-  };
   UrlbarTokenizer.tokenize(context);
   return context;
 }
@@ -901,6 +892,15 @@ async function check_results({
         },
       },
     },
+  });
+  controller.setView({
+    get visibleResults() {
+      return context.results;
+    },
+    controller: {
+      removeResult() {},
+    },
+    acknowledgeDismissal() {},
   });
 
   if (incompleteSearch) {

@@ -228,8 +228,6 @@ pub enum SystemColor {
     MozMenuhoverdisabled,
     /// Used for menu item text when hovered.
     MozMenuhovertext,
-    /// Used for menubar item text.
-    MozMenubartext,
     /// Used for menubar item text when hovered.
     MozMenubarhovertext,
 

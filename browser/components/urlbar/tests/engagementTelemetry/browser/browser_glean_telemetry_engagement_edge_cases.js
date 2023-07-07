@@ -85,10 +85,13 @@ add_task(async function engagement_before_showing_results() {
     set: [["browser.urlbar.tipShownCount.searchTip_onboard", 999]],
   });
 
-  // Update chunkResultsDelayMs to delay the call to notifyResults.
-  const originalChuldResultDelayMs =
-    UrlbarProvidersManager._chunkResultsDelayMs;
-  UrlbarProvidersManager._chunkResultsDelayMs = 1000000;
+  // Increase chunk delays to delay the call to notifyResults.
+  let originalHeuristicTimeout =
+    UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS;
+  UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS = 1000000;
+  let originalOtherTimeout =
+    UrlbarProvidersManager.CHUNK_OTHER_RESULTS_DELAY_MS;
+  UrlbarProvidersManager.CHUNK_OTHER_RESULTS_DELAY_MS = 1000000;
 
   // Add a provider that waits forever in startQuery() to avoid fireing
   // heuristicProviderTimer.
@@ -100,7 +103,9 @@ add_task(async function engagement_before_showing_results() {
   const cleanup = () => {
     UrlbarProvidersManager.unregisterProvider(noResponseProvider);
     UrlbarProvidersManager.unregisterProvider(anotherHeuristicProvider);
-    UrlbarProvidersManager._chunkResultsDelayMs = originalChuldResultDelayMs;
+    UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS =
+      originalHeuristicTimeout;
+    UrlbarProvidersManager.CHUNK_OTHER_RESULTS_DELAY_MS = originalOtherTimeout;
   };
   registerCleanupFunction(cleanup);
 

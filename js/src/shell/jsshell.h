@@ -130,6 +130,7 @@ extern bool enableShadowRealms;
 extern bool enableArrayGrouping;
 extern bool enableArrayFromAsync;
 extern bool enableWellFormedUnicodeStrings;
+extern bool enableArrayBufferTransfer;
 extern bool enablePrivateClassFields;
 extern bool enablePrivateClassMethods;
 extern bool enableChangeArrayByCopy;
