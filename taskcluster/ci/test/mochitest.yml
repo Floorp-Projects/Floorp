@@ -846,10 +846,10 @@ mochitest-webgl1-ext:
         by-variant:
             webgl-ipc:
                 by-test-platform:
-                    .*-(ccov|tsan|wayland).*: []
-                    linux.*-64.*: built-projects
+                    .*-(ccov|tsan|wayland).*/.*: []
+                    linux.*-64.*: ["trunk"]
                     mac.*: ["trunk"]
-                    windows.*-64.*: built-projects
+                    win.*: ["trunk"]
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
