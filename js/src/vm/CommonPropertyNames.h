@@ -142,6 +142,7 @@
   MACRO_(defineSetter, defineSetter, "__defineSetter__")                       \
   MACRO_(delete, delete_, "delete")                                            \
   MACRO_(deleteProperty, deleteProperty, "deleteProperty")                     \
+  MACRO_(detached, detached, "detached")                                       \
   MACRO_(difference, difference, "difference")                                 \
   MACRO_(disambiguation, disambiguation, "disambiguation")                     \
   MACRO_(displayURL, displayURL, "displayURL")                                 \
@@ -564,6 +565,9 @@
   MACRO_(ToString, ToString, "ToString")                                       \
   MACRO_(toUTCString, toUTCString, "toUTCString")                              \
   MACRO_(trailingZeroDisplay, trailingZeroDisplay, "trailingZeroDisplay")      \
+  MACRO_(transfer, transfer, "transfer")                                       \
+  MACRO_(transferToFixedLength, transferToFixedLength,                         \
+         "transferToFixedLength")                                              \
   MACRO_(trimEnd, trimEnd, "trimEnd")                                          \
   MACRO_(trimLeft, trimLeft, "trimLeft")                                       \
   MACRO_(trimRight, trimRight, "trimRight")                                    \
