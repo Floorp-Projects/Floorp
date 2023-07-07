@@ -6,7 +6,6 @@
 #include "nsAccessibleRelation.h"
 
 #include "Relation.h"
-#include "LocalAccessible.h"
 #include "xpcAccessibleDocument.h"
 
 #include "nsArrayUtils.h"

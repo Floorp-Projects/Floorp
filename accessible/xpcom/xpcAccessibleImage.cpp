@@ -6,8 +6,6 @@
 
 #include "xpcAccessibleImage.h"
 
-#include "ImageAccessible.h"
-
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////

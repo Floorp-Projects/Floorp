@@ -4,9 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "LocalAccessible-inl.h"
-#include "mozilla/a11y/DocAccessibleParent.h"
-#include "nsAccessibilityService.h"
 #include "AccAttributes.h"
 #include "nsAccUtils.h"
 #include "nsComponentManagerUtils.h"
@@ -14,7 +11,6 @@
 #include "nsIAccessibleRole.h"
 #include "nsAccessibleRelation.h"
 #include "Relation.h"
-#include "Role.h"
 #include "RootAccessible.h"
 #include "xpcAccessibleDocument.h"
 
