@@ -5945,17 +5945,25 @@ pub extern "C" fn Servo_ResolveStyleLazily(
 pub extern "C" fn Servo_ReparentStyle(
     style_to_reparent: &ComputedValues,
     parent_style: &ComputedValues,
-    parent_style_ignoring_first_line: &ComputedValues,
     layout_parent_style: &ComputedValues,
     element: Option<&RawGeckoElement>,
     raw_data: &PerDocumentStyleData,
 ) -> Strong<ComputedValues> {
+    use style::properties::FirstLineReparenting;
+
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     let doc_data = raw_data.borrow();
     let inputs = CascadeInputs::new_from_style(style_to_reparent);
     let pseudo = style_to_reparent.pseudo();
     let element = element.map(GeckoElement);
+
+    let is_pseudo_element = element.is_some() && pseudo.is_some();
+    let originating_element_style = if is_pseudo_element {
+        Some(parent_style)
+    } else {
+        None
+    };
 
     doc_data
         .stylist
@@ -5964,13 +5972,10 @@ pub extern "C" fn Servo_ReparentStyle(
             pseudo.as_ref(),
             inputs,
             &StylesheetGuards::same(&guard),
-            match element.is_some() && pseudo.is_some() {
-                true => Some(parent_style),
-                false => None,
-            },
+            originating_element_style,
             Some(parent_style),
-            Some(parent_style_ignoring_first_line),
             Some(layout_parent_style),
+            FirstLineReparenting::Yes { style_to_reparent },
             /* rule_cache = */ None,
             &mut RuleCacheConditions::default(),
         )
