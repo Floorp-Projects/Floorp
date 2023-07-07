@@ -3873,9 +3873,25 @@ async function checkSearch({ name, searchString, expectedResults }) {
   if (UrlbarProviderQuickSuggest._resultFromLastQuery) {
     UrlbarProviderQuickSuggest._resultFromLastQuery.isVisible = true;
   }
-  UrlbarProviderQuickSuggest.onEngagement(isPrivate, "engagement", context, {
-    selIndex: -1,
+  const controller = UrlbarTestUtils.newMockController();
+  controller.setView({
+    get visibleResults() {
+      return context.results;
+    },
+    controller: {
+      removeResult() {},
+    },
+    acknowledgeDismissal() {},
   });
+  UrlbarProviderQuickSuggest.onEngagement(
+    isPrivate,
+    "engagement",
+    context,
+    {
+      selIndex: -1,
+    },
+    controller
+  );
 }
 
 async function checkTelemetryEvents(expectedEvents) {

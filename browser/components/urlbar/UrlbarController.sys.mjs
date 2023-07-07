@@ -795,7 +795,7 @@ class TelemetryEvent {
       "start",
       queryContext,
       {},
-      this._controller.browserWindow
+      this._controller
     );
   }
 
@@ -905,7 +905,7 @@ class TelemetryEvent {
           "discard",
           queryContext,
           {},
-          this._controller.browserWindow
+          this._controller
         );
       }
       return;
@@ -997,7 +997,7 @@ class TelemetryEvent {
         method,
         queryContext,
         details,
-        this._controller.browserWindow
+        this._controller
       );
       return;
     }
@@ -1053,11 +1053,11 @@ class TelemetryEvent {
 
     if (
       method === "engagement" &&
-      queryContext?.view?.visibleResults?.[0]?.autofill
+      this._controller.view?.visibleResults?.[0]?.autofill
     ) {
       // Record autofill impressions upon engagement.
       const type = lazy.UrlbarUtils.telemetryTypeFromResult(
-        queryContext.view.visibleResults[0]
+        this._controller.view.visibleResults[0]
       );
       Services.telemetry.scalarAdd(`urlbar.impression.${type}`, 1);
     }
@@ -1067,7 +1067,7 @@ class TelemetryEvent {
       method,
       queryContext,
       details,
-      this._controller.browserWindow
+      this._controller
     );
   }
 
@@ -1112,7 +1112,7 @@ class TelemetryEvent {
       searchMode
     );
     const search_mode = this.#getSearchMode(searchMode);
-    const currentResults = queryContext?.view?.visibleResults ?? [];
+    const currentResults = this._controller.view?.visibleResults ?? [];
     let numResults = currentResults.length;
     let groups = currentResults
       .map(r => lazy.UrlbarUtils.searchEngagementTelemetryGroup(r))
@@ -1133,7 +1133,7 @@ class TelemetryEvent {
           selectedElement
         );
 
-      if (selected_result === "input_field" && !queryContext?.view?.isOpen) {
+      if (selected_result === "input_field" && !this._controller.view?.isOpen) {
         numResults = 0;
         groups = "";
         results = "";

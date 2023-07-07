@@ -345,15 +345,12 @@ add_task(async function uppercase() {
 // Tests the "Not relevant" command: a dismissed suggestion shouldn't be added.
 add_task(async function notRelevant() {
   let result = makeExpectedResult({ searchString: LOW_KEYWORD });
-  let queryContext = {
-    view: {
-      acknowledgeDismissal() {},
-    },
-  };
 
   info("Triggering the 'Not relevant' command");
   QuickSuggest.getFeature("PocketSuggestions").handleCommand(
-    queryContext,
+    {
+      acknowledgeDismissal() {},
+    },
     result,
     "not_relevant"
   );
@@ -413,15 +410,12 @@ add_task(async function notRelevant() {
 // and not added anymore.
 add_task(async function notInterested() {
   let result = makeExpectedResult({ searchString: LOW_KEYWORD });
-  let queryContext = {
-    view: {
-      acknowledgeDismissal() {},
-    },
-  };
 
   info("Triggering the 'Not interested' command");
   QuickSuggest.getFeature("PocketSuggestions").handleCommand(
-    queryContext,
+    {
+      acknowledgeDismissal() {},
+    },
     result,
     "not_interested"
   );
