@@ -20,7 +20,6 @@
 #include "js/Array.h"  // JS::IsArrayObject
 #include "js/CallAndConstruct.h"  // JS::IsCallable, JS_CallFunctionName, JS_CallFunctionValue
 #include "js/CharacterEncoding.h"
-#include "js/ContextOptions.h"
 #include "js/friend/WindowProxy.h"  // js::ToWindowProxyIfWindow
 #include "js/Object.h"              // JS::GetClass, JS::GetCompartment
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_DefinePropertyById, JS_Enumerate, JS_GetProperty, JS_GetPropertyById, JS_HasProperty, JS_SetProperty, JS_SetPropertyById
@@ -2061,22 +2060,6 @@ nsXPCComponents_Utils::Dispatch(HandleValue runnableArg, HandleValue scope,
   // Dispatch.
   return NS_DispatchToMainThread(run);
 }
-
-#define GENERATE_JSCONTEXTOPTION_GETTER_SETTER(_attr, _getter, _setter) \
-  NS_IMETHODIMP                                                         \
-  nsXPCComponents_Utils::Get##_attr(JSContext* cx, bool* aValue) {      \
-    *aValue = ContextOptionsRef(cx)._getter();                          \
-    return NS_OK;                                                       \
-  }                                                                     \
-  NS_IMETHODIMP                                                         \
-  nsXPCComponents_Utils::Set##_attr(JSContext* cx, bool aValue) {       \
-    ContextOptionsRef(cx)._setter(aValue);                              \
-    return NS_OK;                                                       \
-  }
-
-GENERATE_JSCONTEXTOPTION_GETTER_SETTER(Strict_mode, strictMode, setStrictMode)
-
-#undef GENERATE_JSCONTEXTOPTION_GETTER_SETTER
 
 NS_IMETHODIMP
 nsXPCComponents_Utils::SetGCZeal(int32_t aValue, JSContext* cx) {
