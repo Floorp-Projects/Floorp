@@ -479,8 +479,9 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
           return ThrowBadImportType(cx, import.field, "Memory");
         }
 
-        MOZ_ASSERT(!imports->memory);
-        imports->memory = &v.toObject().as<WasmMemoryObject>();
+        if (!imports->memories.append(&v.toObject().as<WasmMemoryObject>())) {
+          return false;
+        }
         break;
       }
       case DefinitionKind::Tag: {
@@ -1398,9 +1399,8 @@ bool WasmModuleObject::imports(JSContext* cx, unsigned argc, Value* vp) {
         break;
       }
       case DefinitionKind::Memory: {
-        DebugOnly<size_t> memoryIndex = numMemoryImport++;
-        MOZ_ASSERT(memoryIndex == 0);
-        const MemoryDesc& memory = *metadata.memory;
+        size_t memoryIndex = numMemoryImport++;
+        const MemoryDesc& memory = metadata.memories[memoryIndex];
         typeObj =
             MemoryTypeToObject(cx, memory.isShared(), memory.indexType(),
                                memory.initialPages(), memory.maximumPages());
@@ -1506,7 +1506,7 @@ bool WasmModuleObject::exports(JSContext* cx, unsigned argc, Value* vp) {
         break;
       }
       case DefinitionKind::Memory: {
-        const MemoryDesc& memory = *metadata.memory;
+        const MemoryDesc& memory = metadata.memories[exp.memoryIndex()];
         typeObj =
             MemoryTypeToObject(cx, memory.isShared(), memory.indexType(),
                                memory.initialPages(), memory.maximumPages());

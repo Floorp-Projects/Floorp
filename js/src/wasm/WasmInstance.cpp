@@ -1929,9 +1929,10 @@ bool Instance::memoryAccessInGuardRegion(const uint8_t* addr,
                                          unsigned numBytes) const {
   MOZ_ASSERT(numBytes > 0);
 
-  if (!metadata().usesMemory()) {
+  if (metadata().memories.length() != 0) {
     return false;
   }
+  MOZ_RELEASE_ASSERT(metadata().memories.length() == 1);
 
   uint8_t* base = memoryBase().unwrap(/* comparison */);
   if (addr < base) {
@@ -2103,7 +2104,7 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
 WasmMemoryObject* Instance::memory() const { return memory_; }
 
 SharedMem<uint8_t*> Instance::memoryBase() const {
-  MOZ_ASSERT(metadata().usesMemory());
+  MOZ_ASSERT(metadata().memories.length() > 0);
   MOZ_ASSERT(memoryBase_ == memory_->buffer().dataPointerEither());
   return memory_->buffer().dataPointerEither();
 }

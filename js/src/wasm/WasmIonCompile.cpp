@@ -1074,7 +1074,7 @@ class FunctionCompiler {
   MWasmLoadInstance* maybeLoadMemoryBase() {
     MWasmLoadInstance* load = nullptr;
 #ifdef JS_CODEGEN_X86
-    AliasSet aliases = !moduleEnv_.memory->canMovingGrow()
+    AliasSet aliases = !moduleEnv_.memories[0].canMovingGrow()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     load = MWasmLoadInstance::New(alloc(), instancePointer_,
@@ -1090,7 +1090,7 @@ class FunctionCompiler {
   // register.
   MWasmHeapBase* memoryBase() {
     MWasmHeapBase* base = nullptr;
-    AliasSet aliases = !moduleEnv_.memory->canMovingGrow()
+    AliasSet aliases = !moduleEnv_.memories[0].canMovingGrow()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     base = MWasmHeapBase::New(alloc(), instancePointer_, aliases);
@@ -1103,10 +1103,10 @@ class FunctionCompiler {
   // from the instance.
   MWasmLoadInstance* maybeLoadBoundsCheckLimit(MIRType type) {
     MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64);
-    if (moduleEnv_.hugeMemoryEnabled()) {
+    if (moduleEnv_.hugeMemoryEnabled(0)) {
       return nullptr;
     }
-    AliasSet aliases = !moduleEnv_.memory->canMovingGrow()
+    AliasSet aliases = !moduleEnv_.memories[0].canMovingGrow()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     auto* load = MWasmLoadInstance::New(
@@ -1155,7 +1155,7 @@ class FunctionCompiler {
   // by both explicit bounds checking and bounds check elimination.
   void foldConstantPointer(MemoryAccessDesc* access, MDefinition** base) {
     uint32_t offsetGuardLimit =
-        GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+        GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled(0));
 
     if ((*base)->isConstant()) {
       uint64_t basePtr = 0;
@@ -1180,7 +1180,7 @@ class FunctionCompiler {
   void maybeComputeEffectiveAddress(MemoryAccessDesc* access,
                                     MDefinition** base, bool mustAddOffset) {
     uint32_t offsetGuardLimit =
-        GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled());
+        GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled(0));
 
     if (access->offset64() >= offsetGuardLimit ||
         access->offset64() > UINT32_MAX || mustAddOffset ||
@@ -1201,10 +1201,10 @@ class FunctionCompiler {
     // If the memory's max size is known to be smaller than 64K pages exactly,
     // we can use a 32-bit check and avoid extension and wrapping.
     static_assert(0x100000000 % PageSize == 0);
-    bool mem32LimitIs64Bits = isMem32() &&
-                              !moduleEnv_.memory->boundsCheckLimitIs32Bits() &&
-                              MaxMemoryPages(moduleEnv_.memory->indexType()) >=
-                                  Pages(0x100000000 / PageSize);
+    bool mem32LimitIs64Bits =
+        isMem32() && !moduleEnv_.memories[0].boundsCheckLimitIs32Bits() &&
+        MaxMemoryPages(moduleEnv_.memories[0].indexType()) >=
+            Pages(0x100000000 / PageSize);
 #else
     // On 32-bit platforms we have no more than 2GB memory and the limit for a
     // 32-bit base pointer is never a 64-bit value.
@@ -1299,7 +1299,7 @@ class FunctionCompiler {
       // 32 bits: the max memory is 2GB.  So chop the index down to 32-bit to
       // simplify the back-end.
       MOZ_ASSERT((*base)->type() == MIRType::Int64);
-      MOZ_ASSERT(!moduleEnv_.hugeMemoryEnabled());
+      MOZ_ASSERT(!moduleEnv_.hugeMemoryEnabled(0));
       auto* chopped = MWasmWrapU32Index::New(alloc(), *base);
       MOZ_ASSERT(chopped->type() == MIRType::Int32);
       curBlock_->add(chopped);
@@ -1318,15 +1318,19 @@ class FunctionCompiler {
   }
 
  public:
-  bool isMem32() { return moduleEnv_.memory->indexType() == IndexType::I32; }
-  bool isMem64() { return moduleEnv_.memory->indexType() == IndexType::I64; }
+  bool isMem32() {
+    return moduleEnv_.memories[0].indexType() == IndexType::I32;
+  }
+  bool isMem64() {
+    return moduleEnv_.memories[0].indexType() == IndexType::I64;
+  }
 
   // Sometimes, we need to determine the memory type before the opcode reader
   // that will reject a memory opcode in the presence of no-memory gets a chance
   // to do so. This predicate is safe.
   bool isNoMemOrMem32() {
-    return !moduleEnv_.usesMemory() ||
-           moduleEnv_.memory->indexType() == IndexType::I32;
+    return moduleEnv_.numMemories() == 0 ||
+           moduleEnv_.memories[0].indexType() == IndexType::I32;
   }
 
   // Add the offset into the pointer to yield the EA; trap on overflow.
@@ -5733,7 +5737,7 @@ static bool EmitMemCopyCall(FunctionCompiler& f, MDefinition* dst,
 
   MDefinition* memoryBase = f.memoryBase();
   const SymbolicAddressSignature& callee =
-      (f.moduleEnv().usesSharedMemory()
+      (f.moduleEnv().usesSharedMemory(0)
            ? (f.isMem32() ? SASigMemCopySharedM32 : SASigMemCopySharedM64)
            : (f.isMem32() ? SASigMemCopyM32 : SASigMemCopyM64));
 
@@ -5945,7 +5949,7 @@ static bool EmitMemFillCall(FunctionCompiler& f, MDefinition* start,
   MDefinition* memoryBase = f.memoryBase();
 
   const SymbolicAddressSignature& callee =
-      (f.moduleEnv().usesSharedMemory()
+      (f.moduleEnv().usesSharedMemory(0)
            ? (f.isMem32() ? SASigMemFillSharedM32 : SASigMemFillSharedM64)
            : (f.isMem32() ? SASigMemFillM32 : SASigMemFillM64));
   return f.emitInstanceCall4(bytecodeOffset, callee, start, val, len,
@@ -6130,7 +6134,7 @@ static bool EmitMemDiscard(FunctionCompiler& f) {
   MDefinition* memoryBase = f.memoryBase();
 
   const SymbolicAddressSignature& callee =
-      (f.moduleEnv().usesSharedMemory()
+      (f.moduleEnv().usesSharedMemory(0)
            ? (f.isMem32() ? SASigMemDiscardSharedM32 : SASigMemDiscardSharedM64)
            : (f.isMem32() ? SASigMemDiscardM32 : SASigMemDiscardM64));
   return f.emitInstanceCall3(bytecodeOffset, callee, start, len, memoryBase);
@@ -8603,11 +8607,11 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
     CompileInfo compileInfo(locals.length());
     MIRGenerator mir(nullptr, options, &alloc, &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::Wasm));
-    if (moduleEnv.usesMemory()) {
-      if (moduleEnv.memory->indexType() == IndexType::I32) {
-        mir.initMinWasmHeapLength(moduleEnv.memory->initialLength32());
+    if (moduleEnv.numMemories() > 0) {
+      if (moduleEnv.memories[0].indexType() == IndexType::I32) {
+        mir.initMinWasmHeapLength(moduleEnv.memories[0].initialLength32());
       } else {
-        mir.initMinWasmHeapLength(moduleEnv.memory->initialLength64());
+        mir.initMinWasmHeapLength(moduleEnv.memories[0].initialLength64());
       }
     }
 

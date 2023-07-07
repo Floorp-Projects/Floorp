@@ -55,7 +55,7 @@ struct ModuleEnvironment {
   // Module fields decoded from the module environment (or initialized while
   // validating an asm.js module) and immutable during compilation:
   Maybe<uint32_t> dataCount;
-  Maybe<MemoryDesc> memory;
+  MemoryDescVector memories;
   MutableTypeContext types;
   FuncDescVector funcs;
   uint32_t numFuncImports;
@@ -93,7 +93,6 @@ struct ModuleEnvironment {
                              ModuleKind kind = ModuleKind::Wasm)
       : kind(kind),
         features(features),
-        memory(Nothing()),
         numFuncImports(0),
         funcImportsOffsetStart(UINT32_MAX),
         typeDefsOffsetStart(UINT32_MAX),
@@ -113,24 +112,24 @@ struct ModuleEnvironment {
   bool funcIsImport(uint32_t funcIndex) const {
     return funcIndex < numFuncImports;
   }
+  size_t numMemories() const { return memories.length(); }
 
 #define WASM_FEATURE(NAME, SHORT_NAME, ...) \
   bool SHORT_NAME##Enabled() const { return features.SHORT_NAME; }
   JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
   Shareable sharedMemoryEnabled() const { return features.sharedMemory; }
-  bool hugeMemoryEnabled() const {
-    return !isAsmJS() && usesMemory() &&
-           IsHugeMemoryEnabled(memory->indexType());
-  }
   bool simdAvailable() const { return features.simd; }
   bool intrinsicsEnabled() const { return features.intrinsics; }
 
   bool isAsmJS() const { return kind == ModuleKind::AsmJS; }
 
-  bool usesMemory() const { return memory.isSome(); }
-  bool usesSharedMemory() const {
-    return memory.isSome() && memory->isShared();
+  bool hugeMemoryEnabled(uint32_t memoryIndex) const {
+    return !isAsmJS() && memoryIndex < memories.length() &&
+           IsHugeMemoryEnabled(memories[memoryIndex].indexType());
+  }
+  bool usesSharedMemory(uint32_t memoryIndex) const {
+    return memoryIndex < memories.length() && memories[memoryIndex].isShared();
   }
 
   void declareFuncExported(uint32_t funcIndex, bool eager, bool canRefFunc) {
