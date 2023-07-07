@@ -1231,7 +1231,8 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             if (!env.memoryControlEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }
-            CHECK(iter.readMemDiscard(&nothing, &nothing));
+            uint32_t unusedMemoryIndex;
+            CHECK(iter.readMemDiscard(&unusedMemoryIndex, &nothing, &nothing));
           }
 #endif
           case uint32_t(MiscOp::TableGrow): {

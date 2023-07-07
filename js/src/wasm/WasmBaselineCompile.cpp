@@ -6136,19 +6136,21 @@ bool BaseCompiler::emitTableFill() {
 }
 
 bool BaseCompiler::emitMemDiscard() {
+  uint32_t memoryIndex;
   Nothing nothing;
-  if (!iter_.readMemDiscard(&nothing, &nothing)) {
+  if (!iter_.readMemDiscard(&memoryIndex, &nothing, &nothing)) {
     return false;
   }
   if (deadCode_) {
     return true;
   }
 
-  pushHeapBase();
+  pushHeapBase(memoryIndex);
   return emitInstanceCall(
-      usesSharedMemory()
-          ? (isMem32() ? SASigMemDiscardSharedM32 : SASigMemDiscardSharedM64)
-          : (isMem32() ? SASigMemDiscardM32 : SASigMemDiscardM64));
+      usesSharedMemory(memoryIndex)
+          ? (isMem32(memoryIndex) ? SASigMemDiscardSharedM32
+                                  : SASigMemDiscardSharedM64)
+          : (isMem32(memoryIndex) ? SASigMemDiscardM32 : SASigMemDiscardM64));
 }
 
 bool BaseCompiler::emitTableGet() {
