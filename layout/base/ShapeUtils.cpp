@@ -137,13 +137,11 @@ nsRect ShapeUtils::ComputeInsetRect(
 }
 
 /* static */
-bool ShapeUtils::ComputeInsetRadii(const StyleBasicShape& aBasicShape,
-                                   const nsRect& aRefBox,
-                                   const nsRect& aInsetRect,
-                                   nscoord aRadii[8]) {
-  const auto& radius = aBasicShape.AsInset().round;
-  return nsIFrame::ComputeBorderRadii(radius, aRefBox.Size(), aInsetRect.Size(),
-                                      Sides(), aRadii);
+bool ShapeUtils::ComputeRectRadii(const StyleBorderRadius& aBorderRadius,
+                                  const nsRect& aRefBox, const nsRect& aRect,
+                                  nscoord aRadii[8]) {
+  return nsIFrame::ComputeBorderRadii(aBorderRadius, aRefBox.Size(),
+                                      aRect.Size(), Sides(), aRadii);
 }
 
 /* static */
@@ -228,17 +226,17 @@ already_AddRefed<gfx::Path> ShapeUtils::BuildInsetPath(
     nscoord aAppUnitsPerPixel, gfx::PathBuilder* aPathBuilder) {
   const nsRect insetRect = ComputeInsetRect(aShape, aRefBox);
   nscoord appUnitsRadii[8];
-  const bool hasRadii =
-      ComputeInsetRadii(aShape, aRefBox, insetRect, appUnitsRadii);
-  return BuildInsetPath(insetRect, hasRadii ? appUnitsRadii : nullptr, aRefBox,
-                        aAppUnitsPerPixel, aPathBuilder);
+  const bool hasRadii = ComputeRectRadii(aShape.AsInset().round, aRefBox,
+                                         insetRect, appUnitsRadii);
+  return BuildRectPath(insetRect, hasRadii ? appUnitsRadii : nullptr, aRefBox,
+                       aAppUnitsPerPixel, aPathBuilder);
 }
 
 /* static */
-already_AddRefed<gfx::Path> ShapeUtils::BuildInsetPath(
-    const nsRect& aInsetRect, const nscoord aRadii[8], const nsRect& aRefBox,
+already_AddRefed<gfx::Path> ShapeUtils::BuildRectPath(
+    const nsRect& aRect, const nscoord aRadii[8], const nsRect& aRefBox,
     nscoord aAppUnitsPerPixel, gfx::PathBuilder* aPathBuilder) {
-  const gfx::Rect insetRectPixels = NSRectToRect(aInsetRect, aAppUnitsPerPixel);
+  const gfx::Rect insetRectPixels = NSRectToRect(aRect, aAppUnitsPerPixel);
   if (aRadii) {
     gfx::RectCornerRadii corners;
     nsCSSRendering::ComputePixelRadii(aRadii, aAppUnitsPerPixel, &corners);
