@@ -28,7 +28,7 @@ FRAGMENT(asmjs, segfault) {
 
   JS::CompileOptions opts(cx);
   opts.setFileAndLine(__FILE__, line0 + 1);
-  opts.setAsmJSOption(JS::AsmJSOption::Enabled);
+  opts.asmJSOption = JS::AsmJSOption::Enabled;
 
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   JS::Rooted<JS::Value> rval(cx);

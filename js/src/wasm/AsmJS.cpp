@@ -1955,7 +1955,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
     auto& ts = tokenStream();
     ErrorMetadata metadata;
     if (ts.computeErrorMetadata(&metadata, AsVariant(offset))) {
-      if (ts.anyCharsAccess().options().throwOnAsmJSValidationFailure()) {
+      if (ts.anyCharsAccess().options().throwOnAsmJSValidationFailureOption) {
         ReportCompileErrorLatin1(fc_, std::move(metadata), nullptr,
                                  JSMSG_USE_ASM_TYPE_FAIL, &args);
       } else {
@@ -7014,7 +7014,7 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
   options.setMutedErrors(source->mutedErrors())
       .setFile(source->filename())
       .setNoScriptRval(false);
-  options.setAsmJSOption(AsmJSOption::DisabledByLinker);
+  options.asmJSOption = AsmJSOption::DisabledByLinker;
 
   // The exported function inherits an implicit strict context if the module
   // also inherited it somehow.
@@ -7094,7 +7094,7 @@ static bool SuccessfulValidation(frontend::ParserBase& parser,
 }
 
 static bool TypeFailureWarning(frontend::ParserBase& parser, const char* str) {
-  if (parser.options().throwOnAsmJSValidationFailure()) {
+  if (parser.options().throwOnAsmJSValidationFailureOption) {
     parser.errorNoOffset(JSMSG_USE_ASM_TYPE_FAIL, str ? str : "");
     return false;
   }
@@ -7113,7 +7113,7 @@ static bool IsAsmJSCompilerAvailable(JSContext* cx) {
 }
 
 static bool EstablishPreconditions(frontend::ParserBase& parser) {
-  switch (parser.options().asmJSOption()) {
+  switch (parser.options().asmJSOption) {
     case AsmJSOption::DisabledByAsmJSPref:
       return TypeFailureWarning(
           parser, "Asm.js optimizer disabled by 'asmjs' runtime option");
