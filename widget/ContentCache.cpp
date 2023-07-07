@@ -149,7 +149,7 @@ bool ContentCacheInChild::CacheAll(nsIWidget* aWidget,
   const bool textCached = CacheText(aWidget, aNotification);
   const bool editorRectCached = CacheEditorRect(aWidget, aNotification);
   MOZ_DIAGNOSTIC_ASSERT(IsValid());
-  return textCached || editorRectCached;
+  return (textCached || editorRectCached) && IsValid();
 }
 
 bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
@@ -196,8 +196,9 @@ bool ContentCacheInChild::CacheSelection(nsIWidget* aWidget,
     mSelection.emplace(querySelectedTextEvent);
   }
 
-  return CacheCaretAndTextRects(aWidget, aNotification) ||
-         querySelectedTextEvent.Succeeded();
+  return (CacheCaretAndTextRects(aWidget, aNotification) ||
+          querySelectedTextEvent.Succeeded()) &&
+         IsValid();
 }
 
 bool ContentCacheInChild::CacheCaret(nsIWidget* aWidget,
@@ -233,7 +234,7 @@ bool ContentCacheInChild::CacheCaret(nsIWidget* aWidget,
           ("0x%p   CacheCaret(), Succeeded, mSelection=%s, mCaret=%s", this,
            ToString(mSelection).c_str(), ToString(mCaret).c_str()));
   MOZ_DIAGNOSTIC_ASSERT(IsValid());
-  return true;
+  return IsValid();
 }
 
 bool ContentCacheInChild::CacheEditorRect(
@@ -278,7 +279,7 @@ bool ContentCacheInChild::CacheCaretAndTextRects(
   const bool caretCached = CacheCaret(aWidget, aNotification);
   const bool textRectsCached = CacheTextRects(aWidget, aNotification);
   MOZ_DIAGNOSTIC_ASSERT(IsValid());
-  return caretCached || textRectsCached;
+  return (caretCached || textRectsCached) && IsValid();
 }
 
 bool ContentCacheInChild::CacheText(nsIWidget* aWidget,
@@ -615,7 +616,7 @@ bool ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
        ToString(mFirstCharRect).c_str(),
        ToString(mLastCommitStringTextRectArray).c_str()));
   MOZ_DIAGNOSTIC_ASSERT(IsValid());
-  return true;
+  return IsValid();
 }
 
 bool ContentCacheInChild::SetSelection(
@@ -650,7 +651,7 @@ bool ContentCacheInChild::SetSelection(
   CacheCaret(aWidget);
   CacheTextRects(aWidget);
 
-  return mSelection.isSome();
+  return mSelection.isSome() && IsValid();
 }
 
 /*****************************************************************************
