@@ -6215,38 +6215,14 @@ HttpBaseChannel::GetIsProxyUsed(bool* aIsProxyUsed) {
   return NS_OK;
 }
 
-void HttpBaseChannel::LogORBError(
-    const nsAString& aReason,
-    const OpaqueResponseBlockedTelemetryReason aTelemetryReason) {
-  RefPtr<dom::Document> doc;
-  mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
-
-  nsAutoCString uri;
-  nsresult rv = nsContentUtils::AnonymizeURI(mURI, uri);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  uint64_t contentWindowId;
-  GetTopLevelContentWindowId(&contentWindowId);
-  if (contentWindowId) {
-    nsContentUtils::ReportToConsoleByWindowID(
-        u"A resource is blocked by OpaqueResponseBlocking, please check browser console for details."_ns,
-        nsIScriptError::warningFlag, "ORB"_ns, contentWindowId, mURI);
-  }
-
-  AutoTArray<nsString, 2> params;
-  params.AppendElement(NS_ConvertUTF8toUTF16(uri));
-  params.AppendElement(aReason);
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "ORB"_ns, doc,
-                                  nsContentUtils::eNECKO_PROPERTIES,
-                                  "ResourceBlockedORB", params);
-
+static void CollectORBBlockTelemetry(
+    const OpaqueResponseBlockedTelemetryReason aTelemetryReason,
+    ExtContentPolicy aPolicy) {
   Telemetry::LABELS_ORB_BLOCK_REASON label{
       static_cast<uint32_t>(aTelemetryReason)};
   Telemetry::AccumulateCategorical(label);
 
-  switch (mLoadInfo->GetExternalContentPolicyType()) {
+  switch (aPolicy) {
     case ExtContentPolicy::TYPE_INVALID:
       Telemetry::AccumulateCategorical(
           Telemetry::LABELS_ORB_BLOCK_INITIATOR::INVALID);
@@ -6335,6 +6311,43 @@ void HttpBaseChannel::LogORBError(
           Telemetry::LABELS_ORB_BLOCK_INITIATOR::EXCLUDED);
       break;
   }
+}
+
+void HttpBaseChannel::LogORBError(
+    const nsAString& aReason,
+    const OpaqueResponseBlockedTelemetryReason aTelemetryReason) {
+  auto policy = mLoadInfo->GetExternalContentPolicyType();
+  CollectORBBlockTelemetry(aTelemetryReason, policy);
+
+  // Blocking `ExtContentPolicy::TYPE_BEACON` isn't web observable, so keep
+  // quiet in the console about blocking it.
+  if (policy == ExtContentPolicy::TYPE_BEACON) {
+    return;
+  }
+
+  RefPtr<dom::Document> doc;
+  mLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
+
+  nsAutoCString uri;
+  nsresult rv = nsContentUtils::AnonymizeURI(mURI, uri);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  uint64_t contentWindowId;
+  GetTopLevelContentWindowId(&contentWindowId);
+  if (contentWindowId) {
+    nsContentUtils::ReportToConsoleByWindowID(
+        u"A resource is blocked by OpaqueResponseBlocking, please check browser console for details."_ns,
+        nsIScriptError::warningFlag, "ORB"_ns, contentWindowId, mURI);
+  }
+
+  AutoTArray<nsString, 2> params;
+  params.AppendElement(NS_ConvertUTF8toUTF16(uri));
+  params.AppendElement(aReason);
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag, "ORB"_ns, doc,
+                                  nsContentUtils::eNECKO_PROPERTIES,
+                                  "ResourceBlockedORB", params);
 }
 
 NS_IMETHODIMP HttpBaseChannel::SetEarlyHintLinkType(
