@@ -18,20 +18,24 @@ macro.
 
 ## Supported architectures
 
-### `aarch64`: Android, iOS, Linux, and macOS/M4 only
+# Supported target architectures
 
-Note: ARM64 does not support OS-independent feature detection, so support must
-be implemented on an OS-by-OS basis.
+*NOTE: target features with an asterisk are unstable (nightly-only) and subject
+to change to match upstream name changes in the Rust standard library.
+
+## `aarch64`
+
+Linux, iOS, and macOS/ARM only (ARM64 does not support OS-independent feature detection)
 
 Target features:
 
-- `aes`
-- `sha2`
-- `sha3`
+- `aes`*
+- `sha2`*
+- `sha3`*
 
-Note: please open a GitHub Issue to request support for additional features.
+## `x86`/`x86_64`
 
-### `x86`/`x86_64`: OS independent and `no_std`-friendly
+OS independent and `no_std`-friendly
 
 Target features:
 
@@ -39,9 +43,17 @@ Target features:
 - `aes`
 - `avx`
 - `avx2`
+- `avx512bw`*
+- `avx512cd`*
+- `avx512dq`*
+- `avx512er`*
+- `avx512f`*
+- `avx512ifma`*
+- `avx512pf`*
+- `avx512vl`*
 - `bmi1`
 - `bmi2`
-- `fma`
+- `fma`,
 - `mmx`
 - `pclmulqdq`
 - `popcnt`
@@ -55,6 +67,9 @@ Target features:
 - `sse4.1`
 - `sse4.2`
 - `ssse3`
+
+If you would like detection support for a target feature which is not on
+this list, please [open a GitHub issue].
 
 ## License
 
@@ -88,3 +103,4 @@ dual licensed as above, without any additional terms or conditions.
 
 [RustCrypto]: https://github.com/rustcrypto
 [RustCrypto/utils#378]: https://github.com/RustCrypto/utils/issues/378
+[open a GitHub issue]: https://github.com/RustCrypto/utils/issues/new?title=cpufeatures:%20requesting%20support%20for%20CHANGEME%20target%20feature

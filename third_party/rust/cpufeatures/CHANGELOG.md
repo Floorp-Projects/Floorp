@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 0.2.8 (2023-06-15)
+### Fixed
+- Check OS register support on x86 targets ([#919])
+
+[#919]: https://github.com/RustCrypto/utils/issues/919
+
+## 0.2.7 (2023-04-20)
+### Added
+- Support freestanding/UEFI `x86` targets ([#821])
+
+[#821]: https://github.com/RustCrypto/utils/issues/821
+
+## 0.2.6 (2023-03-24)
+### Added
+- Support dynamic feature detection on iOS and derivative platforms ([#848])
+- Support for detecting AVX-512 target features ([#862])
+
+[#848]: https://github.com/RustCrypto/utils/issues/848
+[#862]: https://github.com/RustCrypto/utils/pull/862
+
 ## 0.2.5 (2022-09-04)
 ### Fixed
 - Add workaround for [CPUID bug] in `std` ([#800])
@@ -12,13 +32,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [CPUID bug]: https://github.com/rust-lang/rust/issues/101346
 [#800]: https://github.com/RustCrypto/utils/pull/800
 
-## 0.2.4 (2022-08-22)
+## 0.2.4 (2022-08-22) [YANKED]
 - Re-release v0.2.3 without any changes to fix [#795] ([#796])
 
 [#795]: https://github.com/RustCrypto/utils/issues/795
 [#796]: https://github.com/RustCrypto/utils/pull/796
 
-## 0.2.3 (2022-08-18)
+## 0.2.3 (2022-08-18) [YANKED]
 ### Changed
 - Update `libc` version to v0.2.95 ([#789])
 - Disable all target features under MIRI ([#779])
@@ -28,7 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#789]: https://github.com/RustCrypto/utils/pull/789
 [#792]: https://github.com/RustCrypto/utils/pull/792
 
-## 0.2.2 (2022-03-18)
+## 0.2.2 (2022-03-18) [YANKED]
 ### Added
 - Support for Android on `aarch64` ([#752])
 
@@ -38,7 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#600]: https://github.com/RustCrypto/utils/pull/600
 [#752]: https://github.com/RustCrypto/utils/pull/752
 
-## 0.2.1 (2021-08-26)
+## 0.2.1 (2021-08-26) [YANKED]
 ### Changed
 - Revert [#583] "Use from_bytes_with_nul for string check" ([#597])
 
