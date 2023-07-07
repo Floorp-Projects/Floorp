@@ -54,6 +54,29 @@ bool BaseCompiler::isMem64(uint32_t memoryIndex) const {
   return moduleEnv_.memories[memoryIndex].indexType() == IndexType::I64;
 }
 
+bool BaseCompiler::hugeMemoryEnabled(uint32_t memoryIndex) const {
+  return moduleEnv_.hugeMemoryEnabled(memoryIndex);
+}
+
+uint32_t BaseCompiler::instanceOffsetOfMemoryBase(uint32_t memoryIndex) const {
+  if (memoryIndex == 0) {
+    return Instance::offsetOfMemoryBase();
+  }
+  return Instance::offsetInData(
+      moduleEnv_.memories[memoryIndex].globalDataOffset +
+      offsetof(MemoryInstanceData, memoryBase));
+}
+
+uint32_t BaseCompiler::instanceOffsetOfBoundsCheckLimit(
+    uint32_t memoryIndex) const {
+  if (memoryIndex == 0) {
+    return Instance::offsetOfBoundsCheckLimit();
+  }
+  return Instance::offsetInData(
+      moduleEnv_.memories[memoryIndex].globalDataOffset +
+      offsetof(MemoryInstanceData, boundsCheckLimit));
+}
+
 }  // namespace wasm
 }  // namespace js
 

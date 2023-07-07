@@ -3328,7 +3328,7 @@ void MacroAssemblerARMCompat::handleFailureWithHandlerTail(
   ma_mov(sp, r0);
 
   // Call the handler.
-  using Fn = void (*)(ResumeFromException * rfe);
+  using Fn = void (*)(ResumeFromException* rfe);
   asMasm().setupUnalignedABICall(r1);
   asMasm().passABIArg(r0);
   asMasm().callWithABI<Fn, HandleException>(
@@ -6173,13 +6173,16 @@ void MacroAssemblerARM::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
                                      Register memoryBase, Register ptr,
                                      Register ptrScratch, AnyRegister output,
                                      Register64 out64) {
+  MOZ_ASSERT(memoryBase != ptr);
+  MOZ_ASSERT_IF(out64 != Register64::Invalid(), memoryBase != out64.high);
+  MOZ_ASSERT_IF(out64 != Register64::Invalid(), memoryBase != out64.low);
   MOZ_ASSERT(ptr == ptrScratch);
   MOZ_ASSERT(!access.isZeroExtendSimd128Load());
   MOZ_ASSERT(!access.isSplatSimd128Load());
   MOZ_ASSERT(!access.isWidenSimd128Load());
 
+  access.assertOffsetInGuardPages();
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < asMasm().wasmMaxOffsetGuardLimit());
 
   Scalar::Type type = access.type();
 
@@ -6290,9 +6293,8 @@ void MacroAssemblerARM::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
 
   MOZ_ASSERT(ptr == ptrScratch);
 
+  access.assertOffsetInGuardPages();
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < asMasm().wasmMaxOffsetGuardLimit());
-
   unsigned byteSize = access.byteSize();
   Scalar::Type type = access.type();
 

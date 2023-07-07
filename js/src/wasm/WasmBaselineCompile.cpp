@@ -5431,7 +5431,9 @@ bool BaseCompiler::emitLoad(ValType type, Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(),
+                          hugeMemoryEnabled(addr.memoryIndex));
   loadCommon(&access, AccessCheck(), type);
   return true;
 }
@@ -5446,7 +5448,9 @@ bool BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(),
+                          hugeMemoryEnabled(addr.memoryIndex));
   storeCommon(&access, AccessCheck(), resultType);
   return true;
 }
@@ -5827,7 +5831,8 @@ bool BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(), hugeMemoryEnabled(addr.memoryIndex),
                           Synchronization::Full());
   atomicCmpXchg(&access, type);
   return true;
@@ -5841,7 +5846,8 @@ bool BaseCompiler::emitAtomicLoad(ValType type, Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(), hugeMemoryEnabled(addr.memoryIndex),
                           Synchronization::Load());
   atomicLoad(&access, type);
   return true;
@@ -5858,7 +5864,8 @@ bool BaseCompiler::emitAtomicRMW(ValType type, Scalar::Type viewType,
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(), hugeMemoryEnabled(addr.memoryIndex),
                           Synchronization::Full());
   atomicRMW(&access, type, op);
   return true;
@@ -5874,7 +5881,8 @@ bool BaseCompiler::emitAtomicStore(ValType type, Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(), hugeMemoryEnabled(addr.memoryIndex),
                           Synchronization::Store());
   atomicStore(&access, type);
   return true;
@@ -5890,7 +5898,8 @@ bool BaseCompiler::emitAtomicXchg(ValType type, Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset(),
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(), hugeMemoryEnabled(addr.memoryIndex),
                           Synchronization::Full());
   atomicXchg(&access, type);
   return true;
@@ -5906,8 +5915,9 @@ bool BaseCompiler::emitWait(ValType type, uint32_t byteSize) {
     return true;
   }
   MemoryAccessDesc access(
+      addr.memoryIndex,
       type.kind() == ValType::I32 ? Scalar::Int32 : Scalar::Int64, addr.align,
-      addr.offset, bytecodeOffset());
+      addr.offset, bytecodeOffset(), hugeMemoryEnabled(addr.memoryIndex));
   return atomicWait(type, &access);
 }
 
@@ -5920,8 +5930,9 @@ bool BaseCompiler::emitWake() {
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(Scalar::Int32, addr.align, addr.offset,
-                          bytecodeOffset());
+  MemoryAccessDesc access(addr.memoryIndex, Scalar::Int32, addr.align,
+                          addr.offset, bytecodeOffset(),
+                          hugeMemoryEnabled(addr.memoryIndex));
   return atomicWake(&access);
 }
 
@@ -8673,7 +8684,9 @@ bool BaseCompiler::emitLoadSplat(Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(),
+                          hugeMemoryEnabled(addr.memoryIndex));
   loadSplat(&access);
   return true;
 }
@@ -8687,7 +8700,9 @@ bool BaseCompiler::emitLoadZero(Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(),
+                          hugeMemoryEnabled(addr.memoryIndex));
   loadZero(&access);
   return true;
 }
@@ -8700,8 +8715,9 @@ bool BaseCompiler::emitLoadExtend(Scalar::Type viewType) {
   if (deadCode_) {
     return true;
   }
-  MemoryAccessDesc access(Scalar::Int64, addr.align, addr.offset,
-                          bytecodeOffset());
+  MemoryAccessDesc access(addr.memoryIndex, Scalar::Int64, addr.align,
+                          addr.offset, bytecodeOffset(),
+                          hugeMemoryEnabled(addr.memoryIndex));
   loadExtend(&access, viewType);
   return true;
 }
@@ -8733,7 +8749,9 @@ bool BaseCompiler::emitLoadLane(uint32_t laneSize) {
     default:
       MOZ_CRASH("unsupported laneSize");
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(),
+                          hugeMemoryEnabled(addr.memoryIndex));
   loadLane(&access, laneIndex);
   return true;
 }
@@ -8765,7 +8783,9 @@ bool BaseCompiler::emitStoreLane(uint32_t laneSize) {
     default:
       MOZ_CRASH("unsupported laneSize");
   }
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, bytecodeOffset());
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          bytecodeOffset(),
+                          hugeMemoryEnabled(addr.memoryIndex));
   storeLane(&access, laneIndex);
   return true;
 }
@@ -8875,7 +8895,7 @@ bool BaseCompiler::emitIntrinsic() {
   }
 
   // The final parameter of an intrinsic is implicitly the heap base
-  pushHeapBase();
+  pushHeapBase(0);
 
   // Call the intrinsic
   return emitInstanceCall(intrinsic->signature);
@@ -10962,7 +10982,11 @@ BaseCompiler::~BaseCompiler() {
 
 bool BaseCompiler::init() {
   // We may lift this restriction in the future.
-  MOZ_ASSERT_IF(usesMemory() && isMem64(), !moduleEnv_.hugeMemoryEnabled(0));
+  for (uint32_t memoryIndex = 0; memoryIndex < moduleEnv_.memories.length();
+       memoryIndex++) {
+    MOZ_ASSERT_IF(isMem64(memoryIndex),
+                  !moduleEnv_.hugeMemoryEnabled(memoryIndex));
+  }
   // asm.js is not supported in baseline
   MOZ_ASSERT(!moduleEnv_.isAsmJS());
   // Only asm.js modules have call site line numbers

@@ -9490,7 +9490,7 @@ class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
-  bool isMemory() const { return target_ == MWasmBoundsCheck::Memory0; }
+  bool isMemory0() const { return target_ == MWasmBoundsCheck::Memory0; }
 
   bool isRedundant() const { return !isGuard(); }
 
@@ -9598,6 +9598,8 @@ class MWasmLoad
     return AliasSet::Load(AliasSet::WasmHeap);
   }
 
+  bool hasMemoryBase() const { return numOperands() > 1; }
+
 #ifdef JS_JITSPEW
   void getExtras(ExtrasCollector* extras) override {
     char buf[64];
@@ -9643,6 +9645,8 @@ class MWasmStore : public MVariadicInstruction, public NoTypePolicy::Data {
     return AliasSet::Store(AliasSet::WasmHeap);
   }
 
+  bool hasMemoryBase() const { return numOperands() > 2; }
+
 #ifdef JS_JITSPEW
   void getExtras(ExtrasCollector* extras) override {
     char buf[64];
@@ -9667,8 +9671,8 @@ class MAsmJSMemoryAccess {
   bool needsBoundsCheck() const { return needsBoundsCheck_; }
 
   wasm::MemoryAccessDesc access() const {
-    return wasm::MemoryAccessDesc(accessType_, Scalar::byteSize(accessType_), 0,
-                                  wasm::BytecodeOffset());
+    return wasm::MemoryAccessDesc(0, accessType_, Scalar::byteSize(accessType_),
+                                  0, wasm::BytecodeOffset(), false);
   }
 
   void removeBoundsCheck() { needsBoundsCheck_ = false; }
@@ -9822,6 +9826,8 @@ class MWasmCompareExchangeHeap : public MVariadicInstruction,
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::WasmHeap);
   }
+
+  bool hasMemoryBase() const { return numOperands() > 4; }
 };
 
 class MWasmAtomicExchangeHeap : public MVariadicInstruction,
@@ -9871,6 +9877,8 @@ class MWasmAtomicExchangeHeap : public MVariadicInstruction,
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::WasmHeap);
   }
+
+  bool hasMemoryBase() const { return numOperands() > 3; }
 };
 
 class MWasmAtomicBinopHeap : public MVariadicInstruction,
@@ -9923,6 +9931,8 @@ class MWasmAtomicBinopHeap : public MVariadicInstruction,
   AliasSet getAliasSet() const override {
     return AliasSet::Store(AliasSet::WasmHeap);
   }
+
+  bool hasMemoryBase() const { return numOperands() > 3; }
 };
 
 class MWasmLoadInstanceDataField : public MUnaryInstruction,
