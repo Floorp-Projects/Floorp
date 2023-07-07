@@ -56,7 +56,7 @@ const FAKE_MIGRATOR_LIST = [
     displayName: "Microsoft Internet Explorer",
     resourceTypes: ["HISTORY", "BOOKMARKS"],
     profile: null,
-    brandImage: "chrome://browser/content/migration/brands/ie.png",
+    brandImage: "chrome://global/skin/icons/defaultFavicon.svg",
   },
   {
     type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
@@ -64,6 +64,7 @@ const FAKE_MIGRATOR_LIST = [
     displayName: "Microsoft Edge Legacy",
     resourceTypes: ["HISTORY", "FORMDATA", "PASSWORDS", "BOOKMARKS"],
     profile: null,
+    brandImage: "chrome://global/skin/icons/defaultFavicon.svg",
   },
   {
     type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
@@ -99,6 +100,7 @@ const FAKE_MIGRATOR_LIST = [
     displayName: "Internal Testing Migrator",
     resourceTypes: ["HISTORY", "PASSWORDS", "BOOKMARKS"],
     profile: null,
+    brandImage: "chrome://global/skin/icons/defaultFavicon.svg",
   },
   {
     type: MigrationWizardConstants.MIGRATOR_TYPES.BROWSER,
@@ -138,6 +140,7 @@ const FAKE_MIGRATOR_LIST = [
     displayName: "Browser with no resources",
     resourceTypes: [],
     profile: { id: "Default", name: "Default" },
+    brandImage: "chrome://global/skin/icons/defaultFavicon.svg",
   },
   {
     type: MigrationWizardConstants.MIGRATOR_TYPES.FILE,
@@ -165,9 +168,10 @@ const Template = ({ state, dialogMode }) => html`
   </style>
 
   <div class="card card-no-hover" style="width: fit-content">
-    <migration-wizard ?dialog-mode=${dialogMode} .state=${state}>
-      <panel-list></panel-list>
-    </migration-wizard>
+    <migration-wizard
+      ?dialog-mode=${dialogMode}
+      .state=${state}
+    ></migration-wizard>
   </div>
 `;
 
