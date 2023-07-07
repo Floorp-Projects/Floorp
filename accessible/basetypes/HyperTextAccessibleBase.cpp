@@ -5,10 +5,8 @@
 
 #include "HyperTextAccessibleBase.h"
 
-#include "AccAttributes.h"
 #include "mozilla/a11y/Accessible.h"
 #include "nsAccUtils.h"
-#include "mozilla/a11y/RemoteAccessible.h"
 #include "TextLeafRange.h"
 #include "TextRange.h"
 
