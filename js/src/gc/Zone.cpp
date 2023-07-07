@@ -406,12 +406,8 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
   if (options.discardBaselineCode || options.discardJitScripts) {
 #ifdef DEBUG
     // Assert no JitScripts are marked as active.
-    for (auto iter = cellIter<BaseScript>(); !iter.done(); iter.next()) {
-      BaseScript* base = iter.unbarrieredGet();
-      if (jit::JitScript* jitScript = base->maybeJitScript()) {
-        MOZ_ASSERT(!jitScript->active());
-      }
-    }
+    jitZone()->forEachJitScript(
+        [](jit::JitScript* jitScript) { MOZ_ASSERT(!jitScript->active()); });
 #endif
 
     // Mark JitScripts on the stack as active.
@@ -421,66 +417,63 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
   // Invalidate all Ion code in this zone.
   jit::InvalidateAll(gcx, this);
 
-  for (auto base = cellIterUnsafe<BaseScript>(); !base.done(); base.next()) {
-    jit::JitScript* jitScript = base->maybeJitScript();
-    if (!jitScript) {
-      continue;
-    }
+  jitZone()->forEachJitScript<jit::IncludeDyingScripts>(
+      [&](jit::JitScript* jitScript) {
+        JSScript* script = jitScript->owningScript();
+        jit::FinishInvalidation(gcx, script);
 
-    JSScript* script = base->asJSScript();
-    jit::FinishInvalidation(gcx, script);
-
-    // Discard baseline script if it's not marked as active.
-    if (options.discardBaselineCode) {
-      if (jitScript->hasBaselineScript() && !jitScript->active()) {
-        jit::FinishDiscardBaselineScript(gcx, script);
-      }
-    }
+        // Discard baseline script if it's not marked as active.
+        if (options.discardBaselineCode) {
+          if (jitScript->hasBaselineScript() && !jitScript->active()) {
+            jit::FinishDiscardBaselineScript(gcx, script);
+          }
+        }
 
 #ifdef JS_CACHEIR_SPEW
-    maybeUpdateWarmUpCount(script);
+        maybeUpdateWarmUpCount(script);
 #endif
 
-    // Warm-up counter for scripts are reset on GC. After discarding code we
-    // need to let it warm back up to get information such as which
-    // opcodes are setting array holes or accessing getter properties.
-    script->resetWarmUpCounterForGC();
+        // Warm-up counter for scripts are reset on GC. After discarding code we
+        // need to let it warm back up to get information such as which
+        // opcodes are setting array holes or accessing getter properties.
+        script->resetWarmUpCounterForGC();
 
-    // Try to release the script's JitScript. This should happen after
-    // releasing JIT code because we can't do this when the script still has
-    // JIT code.
-    if (options.discardJitScripts) {
-      script->maybeReleaseJitScript(gcx);
-      jitScript = script->maybeJitScript();
-      if (!jitScript) {
-        // Try to discard the ScriptCounts too.
-        if (!script->realm()->collectCoverageForDebug() &&
-            !gcx->runtime()->profilingScripts) {
-          script->destroyScriptCounts();
+        // Try to release the script's JitScript. This should happen after
+        // releasing JIT code because we can't do this when the script still has
+        // JIT code.
+        if (options.discardJitScripts) {
+          script->maybeReleaseJitScript(gcx);
+          jitScript = script->maybeJitScript();
+          if (!jitScript) {
+            // Try to discard the ScriptCounts too.
+            if (!script->realm()->collectCoverageForDebug() &&
+                !gcx->runtime()->profilingScripts) {
+              script->destroyScriptCounts();
+            }
+            return;  // Continue script loop.
+          }
         }
-        continue;
-      }
-    }
 
-    // If we did not release the JitScript, we need to purge optimized IC
-    // stubs because the optimizedStubSpace will be purged below.
-    if (options.discardBaselineCode) {
-      jitScript->purgeOptimizedStubs(script);
-    }
+        // If we did not release the JitScript, we need to purge optimized IC
+        // stubs because the optimizedStubSpace will be purged below.
+        if (options.discardBaselineCode) {
+          jitScript->purgeOptimizedStubs(script);
+        }
 
-    if (options.resetNurseryAllocSites || options.resetPretenuredAllocSites) {
-      jitScript->resetAllocSites(options.resetNurseryAllocSites,
-                                 options.resetPretenuredAllocSites);
-    }
+        if (options.resetNurseryAllocSites ||
+            options.resetPretenuredAllocSites) {
+          jitScript->resetAllocSites(options.resetNurseryAllocSites,
+                                     options.resetPretenuredAllocSites);
+        }
 
-    // Reset the active flag.
-    jitScript->resetActive();
+        // Reset the active flag.
+        jitScript->resetActive();
 
-    // Optionally trace weak edges in remaining JitScripts.
-    if (options.traceWeakJitScripts) {
-      jitScript->traceWeak(options.traceWeakJitScripts);
-    }
-  }
+        // Optionally trace weak edges in remaining JitScripts.
+        if (options.traceWeakJitScripts) {
+          jitScript->traceWeak(options.traceWeakJitScripts);
+        }
+      });
 
   // Also clear references to jit code from RegExpShared cells at this point.
   // This avoid holding onto ExecutablePools.
@@ -533,35 +526,25 @@ void JS::Zone::resetAllocSitesAndInvalidate(bool resetNurserySites,
   }
 
   JSContext* cx = runtime_->mainContextFromOwnThread();
-  for (auto base = cellIterUnsafe<BaseScript>(); !base.done(); base.next()) {
-    jit::JitScript* jitScript = base->maybeJitScript();
-    if (!jitScript) {
-      continue;
-    }
-
-    if (!jitScript->resetAllocSites(resetNurserySites, resetPretenuredSites)) {
-      continue;
-    }
-
-    JSScript* script = base->asJSScript();
-    CancelOffThreadIonCompile(script);
-
-    if (!script->hasIonScript()) {
-      continue;
-    }
-
-    jit::Invalidate(cx, script,
-                    /* resetUses = */ true,
-                    /* cancelOffThread = */ true);
-  }
+  jitZone()->forEachJitScript<jit::IncludeDyingScripts>(
+      [&](jit::JitScript* jitScript) {
+        if (jitScript->resetAllocSites(resetNurserySites,
+                                       resetPretenuredSites)) {
+          JSScript* script = jitScript->owningScript();
+          CancelOffThreadIonCompile(script);
+          if (script->hasIonScript()) {
+            jit::Invalidate(cx, script,
+                            /* resetUses = */ true,
+                            /* cancelOffThread = */ true);
+          }
+        }
+      });
 }
 
 void JS::Zone::traceWeakJitScripts(JSTracer* trc) {
-  for (auto base = cellIter<BaseScript>(); !base.done(); base.next()) {
-    jit::JitScript* jitScript = base->maybeJitScript();
-    if (jitScript) {
-      jitScript->traceWeak(trc);
-    }
+  if (jitZone()) {
+    jitZone()->forEachJitScript(
+        [&](jit::JitScript* jitScript) { jitScript->traceWeak(trc); });
   }
 }
 
