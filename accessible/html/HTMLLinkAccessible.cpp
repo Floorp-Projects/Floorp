@@ -7,7 +7,6 @@
 
 #include "CacheConstants.h"
 #include "nsCoreUtils.h"
-#include "DocAccessible.h"
 #include "Role.h"
 #include "States.h"
 

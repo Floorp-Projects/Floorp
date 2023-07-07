@@ -7,10 +7,7 @@
 #include "HTMLListAccessible.h"
 
 #include "AccAttributes.h"
-#include "DocAccessible.h"
-#include "EventTree.h"
-#include "nsAccUtils.h"
-#include "nsPersistentProperties.h"
+#include "nsAccessibilityService.h"
 #include "Role.h"
 #include "States.h"
 
