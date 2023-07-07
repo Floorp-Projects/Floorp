@@ -1310,7 +1310,7 @@ jobs:
         tree ./martools
 
         touch "obj-x86_64-apple-darwin/dist/floorp/precomplete"
-        MAR="martools/mar" MOMOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
+        MAR="martools/mar" MOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
 
         stat -c "%s" ./output/DARWIN-Universal.mar > MACOS-MAR-sizes.txt
         export MACOS_MAR_SIZE=`stat -c "%s" ./output/DARWIN-Universal.mar`
