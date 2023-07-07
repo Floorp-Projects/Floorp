@@ -854,21 +854,14 @@ var basicShapeOtherValues = [
   "polygon(20cm 20mm)",
   "polygon(20px 20px, 30px 30px)",
   "polygon(20px 20px, 30% 30%, 30px 30px)",
-  "polygon(nonzero, 20px 20px, 30% 30%, 30px 30px)",
-  "polygon(evenodd, 20px 20px, 30% 30%, 30px 30px)",
 
   "content-box",
   "padding-box",
   "border-box",
-  "margin-box",
 
   "polygon(0 0) content-box",
   "border-box polygon(0 0)",
   "padding-box    polygon(   0  20px ,  30px    20% )  ",
-  "polygon(evenodd, 20% 20em) content-box",
-  "polygon(evenodd, 20vh 20em) padding-box",
-  "polygon(evenodd, 20vh calc(20% + 20em)) border-box",
-  "polygon(evenodd, 20vh 20vw) margin-box",
 
   "circle()",
   "circle(at center)",
@@ -911,6 +904,15 @@ var basicShapeOtherValues = [
   "inset(1px 2px round 3px / 3px)",
   "inset(1px 2px 3px round 3px 2em / 20%)",
   "inset(1px 2px 3px 4px round 3px 2vw 20% / 20px 3em 2vh 20%)",
+];
+
+var basicShapeOtherValuesWithFillRule = [
+  "polygon(nonzero, 20px 20px, 30% 30%, 30px 30px)",
+  "polygon(evenodd, 20px 20px, 30% 30%, 30px 30px)",
+  "polygon(evenodd, 20% 20em) content-box",
+  "polygon(evenodd, 20vh 20em) padding-box",
+  "polygon(evenodd, 20vh calc(20% + 20em)) border-box",
+  "polygon(evenodd, 20vh 20vw) margin-box",
 ];
 
 var basicShapeInvalidValues = [
@@ -1014,6 +1016,17 @@ var basicShapeUnbalancedValues = [
   "inset(1px 2px 3px 4px round 5px",
   "inset(1px 2px 3px 4px round 5px / 6px",
 ];
+
+var basicShapeXywhValues = [];
+if (IsCSSPropertyPrefEnabled("layout.css.basic-shape-xywh.enabled")) {
+  basicShapeXywhValues = [
+    "xywh(1px 2% 3px 4em)",
+    "xywh(1px 2% 3px 4em round 0px)",
+    "xywh(1px 2% 3px 4em round 0px 1%)",
+    "xywh(1px 2% 3px 4em round 0px 1% 2px)",
+    "xywh(1px 2% 3px 4em round 0px 1% 2px 3em)",
+  ];
+}
 
 if (/* mozGradientsEnabled */ true) {
   // Maybe one day :(
@@ -8675,9 +8688,12 @@ var gCSSProperties = {
       "url(#mypath)",
       "url('404.svg#mypath')",
       "url(#my-clip-path)",
+      "margin-box",
     ]
       .concat(basicShapeSVGBoxValues)
-      .concat(basicShapeOtherValues),
+      .concat(basicShapeOtherValues)
+      .concat(basicShapeOtherValuesWithFillRule)
+      .concat(basicShapeXywhValues),
     invalid_values: [
       "path(nonzero)",
       "path(abs, 'M 10 10 L 10 10 z')",
@@ -9180,8 +9196,9 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
     initial_values: ["none"],
-    other_values: ["url(#my-shape-outside)"].concat(
+    other_values: ["url(#my-shape-outside)", "margin-box"].concat(
       basicShapeOtherValues,
+      basicShapeOtherValuesWithFillRule,
       validNonUrlImageValues
     ),
     invalid_values: [].concat(
@@ -13463,6 +13480,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
       "ray(closest-side)",
       "ray(0deg, closest-side)",
       "ray(contain 0deg closest-side contain)"
+    );
+  }
+
+  if (IsCSSPropertyPrefEnabled("layout.css.motion-path-basic-shapes.enabled")) {
+    gCSSProperties["offset-path"]["other_values"].push(
+      ...basicShapeOtherValues,
+      ...basicShapeXywhValues
     );
   }
 

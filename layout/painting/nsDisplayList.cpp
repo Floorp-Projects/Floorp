@@ -8067,6 +8067,7 @@ static Maybe<wr::WrClipChainId> CreateSimpleClipRegion(
   wr::WrClipId clipId{};
 
   switch (shape.tag) {
+    // TODO: Add xywh() in the patch series.
     case StyleBasicShape::Tag::Inset: {
       const nsRect insetRect = ShapeUtils::ComputeInsetRect(shape, refBox) +
                                aDisplayItem.ToReferenceFrame();

@@ -33,5 +33,8 @@ pub type Circle = generic::Circle<Position, NonNegativeLengthPercentage>;
 /// A computed ellipse.
 pub type Ellipse = generic::Ellipse<Position, NonNegativeLengthPercentage>;
 
+/// The computed value of `xywh()`
+pub type Xywh = generic::Xywh<LengthPercentage, NonNegativeLengthPercentage>;
+
 /// The computed value of `ShapeRadius`
 pub type ShapeRadius = generic::GenericShapeRadius<NonNegativeLengthPercentage>;

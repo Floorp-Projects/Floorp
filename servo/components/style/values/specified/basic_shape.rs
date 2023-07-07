@@ -48,6 +48,9 @@ pub type ShapeRadius = generic::ShapeRadius<NonNegativeLengthPercentage>;
 /// The specified value of `Polygon`
 pub type Polygon = generic::GenericPolygon<LengthPercentage>;
 
+/// The specified value of `xywh()`
+pub type Xywh = generic::Xywh<LengthPercentage, NonNegativeLengthPercentage>;
+
 /// For filled shapes, we use fill-rule, and store it for path() and polygon().
 /// For outline shapes, we should ignore fill-rule.
 ///
@@ -102,8 +105,8 @@ bitflags! {
     pub struct AllowedBasicShapes: u8 {
         /// inset().
         const INSET = 1 << 0;
-        // TODO: Bug 1786160. Add xywh().
-        // const XYWH = 1 << 1;
+        /// xywh().
+        const XYWH = 1 << 1;
         // TODO: Bug 1786161. Add rect().
         // const RECT = 1 << 2;
         /// circle().
@@ -120,6 +123,7 @@ bitflags! {
         /// All flags.
         const ALL =
             Self::INSET.bits |
+            Self::XYWH.bits |
             Self::CIRCLE.bits |
             Self::ELLIPSE.bits |
             Self::POLYGON.bits |
@@ -266,13 +270,14 @@ impl BasicShape {
                 "path" if flags.contains(AllowedBasicShapes::PATH) => {
                     Path::parse_function_arguments(i, shape_type).map(BasicShape::Path)
                 },
-                _ => {
-                    Err(
-                        location.new_custom_error(StyleParseErrorKind::UnexpectedFunction(
-                            function.clone(),
-                        )),
-                    )
+                "xywh"
+                    if flags.contains(AllowedBasicShapes::XYWH)
+                        && static_prefs::pref!("layout.css.basic-shape-xywh.enabled") =>
+                {
+                    Xywh::parse_function_arguments(context, i).map(BasicShape::Xywh)
                 },
+                _ => Err(location
+                    .new_custom_error(StyleParseErrorKind::UnexpectedFunction(function.clone()))),
             }
         })
     }
@@ -388,10 +393,7 @@ impl Ellipse {
     }
 }
 
-fn parse_fill_rule<'i, 't>(
-    input: &mut Parser<'i, 't>,
-    shape_type: ShapeType,
-) -> FillRule {
+fn parse_fill_rule<'i, 't>(input: &mut Parser<'i, 't>, shape_type: ShapeType) -> FillRule {
     match shape_type {
         // Per [1] and [2], we ignore `<fill-rule>` for outline shapes, so always use a default
         // value.
@@ -458,5 +460,30 @@ impl Path {
         let fill = parse_fill_rule(input, shape_type);
         let path = SVGPathData::parse(input, AllowEmpty::No)?;
         Ok(Path { fill, path })
+    }
+}
+
+impl Xywh {
+    /// Parse the inner function arguments of `xywh()`
+    fn parse_function_arguments<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        use crate::values::generics::size::Size2D;
+
+        let x = LengthPercentage::parse(context, input)?;
+        let y = LengthPercentage::parse(context, input)?;
+        let size =
+            Size2D::parse_all_components_with(context, input, NonNegativeLengthPercentage::parse)?;
+        let round = if input
+            .try_parse(|i| i.expect_ident_matching("round"))
+            .is_ok()
+        {
+            BorderRadius::parse(context, input)?
+        } else {
+            BorderRadius::zero()
+        };
+
+        Ok(generic::Xywh { x, y, size, round })
     }
 }

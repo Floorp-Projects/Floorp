@@ -632,6 +632,9 @@ already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
       // building its gfx::Path directly by its SVGPathData without other
       // reference. https://github.com/w3c/fxtf-drafts/issues/504
       return BuildSVGPath(aBasicShape.AsPath().path, aPathBuilder);
+    case StyleBasicShape::Tag::Xywh:
+      // TODO: Implement this in the patch series.
+      return nullptr;
   }
 
   return nullptr;
