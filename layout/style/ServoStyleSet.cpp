@@ -1428,8 +1428,10 @@ bool ServoStyleSet::HasDocumentStateDependency(
 
 already_AddRefed<ComputedStyle> ServoStyleSet::ReparentComputedStyle(
     ComputedStyle* aComputedStyle, ComputedStyle* aNewParent,
-    ComputedStyle* aNewLayoutParent, Element* aElement) {
-  return Servo_ReparentStyle(aComputedStyle, aNewParent, aNewLayoutParent,
+    ComputedStyle* aNewParentIgnoringFirstLine, ComputedStyle* aNewLayoutParent,
+    Element* aElement) {
+  return Servo_ReparentStyle(aComputedStyle, aNewParent,
+                             aNewParentIgnoringFirstLine, aNewLayoutParent,
                              aElement, mRawData.get())
       .Consume();
 }
