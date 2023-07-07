@@ -7,5 +7,8 @@ license = "MIT/Apache-2.0"
 [lib]
 path = "lib.rs"
 
+[features]
+serde = []
+
 [dependencies.bitflags]
 version = "1.0"

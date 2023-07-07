@@ -176,6 +176,7 @@ struct LocalImageType {
 
 bitflags::bitflags! {
     /// Flags corresponding to the boolean(-ish) parameters to OpTypeImage.
+    #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
     pub struct ImageTypeFlags: u8 {
         const DEPTH = 0x1;
         const ARRAYED = 0x2;
@@ -288,13 +289,19 @@ enum LocalType {
         image_type_id: Word,
     },
     Sampler,
+    /// Equivalent to a [`LocalType::Pointer`] whose `base` is a Naga IR [`BindingArray`]. SPIR-V
+    /// permits duplicated `OpTypePointer` ids, so it's fine to have two different [`LocalType`]
+    /// representations for pointer types.
+    ///
+    /// [`BindingArray`]: crate::TypeInner::BindingArray
     PointerToBindingArray {
         base: Handle<crate::Type>,
-        size: u64,
+        size: u32,
+        space: crate::AddressSpace,
     },
     BindingArray {
         base: Handle<crate::Type>,
-        size: u64,
+        size: u32,
     },
     AccelerationStructure,
     RayQuery,
@@ -448,10 +455,7 @@ impl recyclable::Recyclable for CachedExpressions {
 
 #[derive(Eq, Hash, PartialEq)]
 enum CachedConstant {
-    Scalar {
-        value: crate::ScalarValue,
-        width: crate::Bytes,
-    },
+    Literal(crate::Literal),
     Composite {
         ty: LookupType,
         constituent_ids: Vec<Word>,
@@ -562,13 +566,12 @@ impl BlockContext<'_> {
     }
 
     fn get_index_constant(&mut self, index: Word) -> Word {
-        self.writer
-            .get_constant_scalar(crate::ScalarValue::Uint(index as _), 4)
+        self.writer.get_constant_scalar(crate::Literal::U32(index))
     }
 
     fn get_scope_constant(&mut self, scope: Word) -> Word {
         self.writer
-            .get_constant_scalar(crate::ScalarValue::Sint(scope as _), 4)
+            .get_constant_scalar(crate::Literal::I32(scope as _))
     }
 }
 
@@ -622,6 +625,7 @@ pub struct Writer {
 }
 
 bitflags::bitflags! {
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct WriterFlags: u32 {
         /// Include debug labels for everything.
         const DEBUG = 0x1;

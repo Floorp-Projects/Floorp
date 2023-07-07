@@ -568,6 +568,13 @@ impl<I: Iterator<Item = u32>> super::Frontend<I> {
 }
 
 impl<'function> BlockContext<'function> {
+    pub(super) fn gctx(&self) -> crate::proc::GlobalCtx {
+        crate::proc::GlobalCtx {
+            types: self.type_arena,
+            constants: self.const_arena,
+        }
+    }
+
     /// Consumes the `BlockContext` producing a Ir [`Block`](crate::Block)
     fn lower(mut self) -> crate::Block {
         fn lower_impl(
@@ -597,7 +604,11 @@ impl<'function> BlockContext<'function> {
                             crate::Span::default(),
                         )
                     }
-                    super::BodyFragment::Loop { body, continuing } => {
+                    super::BodyFragment::Loop {
+                        body,
+                        continuing,
+                        break_if,
+                    } => {
                         let body = lower_impl(blocks, bodies, body);
                         let continuing = lower_impl(blocks, bodies, continuing);
 
@@ -605,7 +616,7 @@ impl<'function> BlockContext<'function> {
                             crate::Statement::Loop {
                                 body,
                                 continuing,
-                                break_if: None,
+                                break_if,
                             },
                             crate::Span::default(),
                         )

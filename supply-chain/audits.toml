@@ -471,6 +471,11 @@ who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.37.1+1.3.235 -> 0.37.2+1.3.238"
 
+[[audits.ash]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.37.2+1.3.238 -> 0.37.3+1.3.251"
+
 [[audits.ashmem]]
 who = "Matthew Gregan <kinetik@flim.org>"
 criteria = "safe-to-deploy"
@@ -601,6 +606,11 @@ who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "2.0.2 -> 2.1.0"
 
+[[audits.bitflags]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "2.2.1 -> 2.3.2"
+
 [[audits.block-buffer]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -719,6 +729,21 @@ here.
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
 delta = "0.16.0 -> 0.16.2"
+
+[[audits.core-graphics]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.22.3 -> 0.23.0"
+
+[[audits.core-graphics-types]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.1 -> 0.1.2"
+
+[[audits.core-text]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "19.2.0 -> 20.0.0"
 
 [[audits.coreaudio-sys]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -1277,6 +1302,21 @@ criteria = "safe-to-deploy"
 version = "1.0.7"
 notes = "Simple hasher implementation with no unsafe code."
 
+[[audits.foreign-types]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.3.2 -> 0.5.0"
+
+[[audits.foreign-types-macros]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+version = "0.2.3"
+
+[[audits.foreign-types-shared]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.1.1 -> 0.3.1"
+
 [[audits.fs-err]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -1545,6 +1585,16 @@ who = "Gabriele Svelto <gsvelto@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.5.4 -> 0.6.0"
 notes = "Mostly bug fixes and some added functionality"
+
+[[audits.gpu-alloc]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.5.3 -> 0.6.0"
+
+[[audits.gpu-alloc-types]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.2.0 -> 0.3.0"
 
 [[audits.gpu-descriptor]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -1840,6 +1890,11 @@ criteria = "safe-to-deploy"
 delta = "0.23.1 -> 0.24.0"
 notes = "This audit treats Dzmitry Malyshau (kvark) as a trusted reviewer."
 
+[[audits.metal]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.24.0 -> 0.25.0"
+
 [[audits.midir]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
@@ -1945,6 +2000,11 @@ delta = "0.11.0@git:f0edae8ce9e55eeef489fc53b10dc95fb79561cc -> 0.11.0@git:4b796
 who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.11.0@git:f59668ccfaf7bdb3a7e43d84363a21c77357b2fe -> 0.12.0@git:b99d58ea435090e561377949f428bce2c18451bb"
+
+[[audits.naga]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.12.0@git:b99d58ea435090e561377949f428bce2c18451bb -> 0.12.0@git:76003dc0035d53a474d366dcdf49d2e4d12e921f"
 
 [[audits.net2]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
@@ -3533,6 +3593,11 @@ who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.16.0@git:25cb9f61e9a6be572ee42536bbe57aa5f759a700 -> 0.16.0@git:f71a1bc736fde37509262ca03e91d8f56a13aeb5"
 
+[[audits.wgpu-core]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.16.0@git:f71a1bc736fde37509262ca03e91d8f56a13aeb5 -> 0.16.0@git:dcad7dfba92dd85c3ca21bb553a61834e01b04f5"
+
 [[audits.wgpu-hal]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -3611,6 +3676,11 @@ who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.16.0@git:25cb9f61e9a6be572ee42536bbe57aa5f759a700 -> 0.16.0@git:f71a1bc736fde37509262ca03e91d8f56a13aeb5"
 
+[[audits.wgpu-hal]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.16.0@git:f71a1bc736fde37509262ca03e91d8f56a13aeb5 -> 0.16.0@git:dcad7dfba92dd85c3ca21bb553a61834e01b04f5"
+
 [[audits.wgpu-types]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -3688,6 +3758,11 @@ delta = "0.15.0@git:f3bf0f782e4dfc561d48e758e1f1e04f77860925 -> 0.16.0@git:25cb9
 who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.16.0@git:25cb9f61e9a6be572ee42536bbe57aa5f759a700 -> 0.16.0@git:f71a1bc736fde37509262ca03e91d8f56a13aeb5"
+
+[[audits.wgpu-types]]
+who = "Teodor Tanasoaia <ttanasoaia@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.16.0@git:f71a1bc736fde37509262ca03e91d8f56a13aeb5 -> 0.16.0@git:dcad7dfba92dd85c3ca21bb553a61834e01b04f5"
 
 [[audits.whatsys]]
 who = "Bobby Holley <bobbyholley@gmail.com>"

@@ -34,18 +34,29 @@ pub struct AAPLVertex {
 fn main() {
     // Create a window for viewing the content
     let event_loop = EventLoop::new();
-    let events_loop = winit::event_loop::EventLoop::new();
     let size = winit::dpi::LogicalSize::new(800, 600);
 
     let window = winit::window::WindowBuilder::new()
         .with_inner_size(size)
         .with_title("Metal".to_string())
-        .build(&events_loop)
+        .build(&event_loop)
         .unwrap();
 
     // Set up the GPU device found in the system
     let device = Device::system_default().expect("no device found");
     println!("Your device is: {}", device.name(),);
+
+    // Scaffold required to sample the GPU and CPU timestamps
+    let mut cpu_start = 0;
+    let mut gpu_start = 0;
+    device.sample_timestamps(&mut cpu_start, &mut gpu_start);
+    let counter_sample_buffer = create_counter_sample_buffer(&device);
+    let destination_buffer = device.new_buffer(
+        (std::mem::size_of::<u64>() * 4 as usize) as u64,
+        MTLResourceOptions::StorageModeShared,
+    );
+    let counter_sampling_point = MTLCounterSamplingPoint::AtStageBoundary;
+    assert!(device.supports_counter_sampling(counter_sampling_point));
 
     let binary_archive_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("examples/circle/binary_archive.metallib");
@@ -141,7 +152,14 @@ fn main() {
 
                     // Obtain a renderPassDescriptor generated from the view's drawable textures.
                     let render_pass_descriptor = RenderPassDescriptor::new();
-                    prepare_render_pass_descriptor(&render_pass_descriptor, drawable.texture());
+                    handle_render_pass_color_attachment(
+                        &render_pass_descriptor,
+                        drawable.texture(),
+                    );
+                    handle_render_pass_sample_buffer_attachment(
+                        &render_pass_descriptor,
+                        &counter_sample_buffer,
+                    );
 
                     // Create a render command encoder.
                     let encoder =
@@ -153,11 +171,23 @@ fn main() {
                     encoder.draw_primitives(MTLPrimitiveType::TriangleStrip, 0, 1080);
                     encoder.end_encoding();
 
+                    resolve_samples_into_buffer(
+                        &command_buffer,
+                        &counter_sample_buffer,
+                        &destination_buffer,
+                    );
+
                     // Schedule a present once the framebuffer is complete using the current drawable.
                     command_buffer.present_drawable(&drawable);
 
                     // Finalize rendering here & push the command buffer to the GPU.
                     command_buffer.commit();
+                    command_buffer.wait_until_completed();
+
+                    let mut cpu_end = 0;
+                    let mut gpu_end = 0;
+                    device.sample_timestamps(&mut cpu_end, &mut gpu_end);
+                    handle_timestamps(&destination_buffer, cpu_start, cpu_end, gpu_start, gpu_end);
                 }
                 _ => (),
             }
@@ -211,7 +241,20 @@ fn create_vertex_points_for_circle() -> Vec<AAPLVertex> {
     v
 }
 
-fn prepare_render_pass_descriptor(descriptor: &RenderPassDescriptorRef, texture: &TextureRef) {
+fn handle_render_pass_sample_buffer_attachment(
+    descriptor: &RenderPassDescriptorRef,
+    counter_sample_buffer: &CounterSampleBufferRef,
+) {
+    let sample_buffer_attachment_descriptor =
+        descriptor.sample_buffer_attachments().object_at(0).unwrap();
+    sample_buffer_attachment_descriptor.set_sample_buffer(&counter_sample_buffer);
+    sample_buffer_attachment_descriptor.set_start_of_vertex_sample_index(0 as NSUInteger);
+    sample_buffer_attachment_descriptor.set_end_of_vertex_sample_index(1 as NSUInteger);
+    sample_buffer_attachment_descriptor.set_start_of_fragment_sample_index(2 as NSUInteger);
+    sample_buffer_attachment_descriptor.set_end_of_fragment_sample_index(3 as NSUInteger);
+}
+
+fn handle_render_pass_color_attachment(descriptor: &RenderPassDescriptorRef, texture: &TextureRef) {
     let color_attachment = descriptor.color_attachments().object_at(0).unwrap();
 
     color_attachment.set_texture(Some(texture));
@@ -248,4 +291,87 @@ fn prepare_pipeline_state(
     device
         .new_render_pipeline_state(&pipeline_state_descriptor)
         .unwrap()
+}
+
+fn resolve_samples_into_buffer(
+    command_buffer: &CommandBufferRef,
+    counter_sample_buffer: &CounterSampleBufferRef,
+    destination_buffer: &BufferRef,
+) {
+    let blit_encoder = command_buffer.new_blit_command_encoder();
+    blit_encoder.resolve_counters(
+        &counter_sample_buffer,
+        crate::NSRange::new(0_u64, 4),
+        &destination_buffer,
+        0_u64,
+    );
+    blit_encoder.end_encoding();
+}
+
+fn handle_timestamps(
+    resolved_sample_buffer: &BufferRef,
+    cpu_start: u64,
+    cpu_end: u64,
+    gpu_start: u64,
+    gpu_end: u64,
+) {
+    let samples = unsafe {
+        std::slice::from_raw_parts(resolved_sample_buffer.contents() as *const u64, 4 as usize)
+    };
+    let vertex_pass_start = samples[0];
+    let vertex_pass_end = samples[1];
+    let fragment_pass_start = samples[2];
+    let fragment_pass_end = samples[3];
+
+    let cpu_time_span = cpu_end - cpu_start;
+    let gpu_time_span = gpu_end - gpu_start;
+
+    let vertex_micros = microseconds_between_begin(
+        vertex_pass_start,
+        vertex_pass_end,
+        gpu_time_span,
+        cpu_time_span,
+    );
+    let fragment_micros = microseconds_between_begin(
+        fragment_pass_start,
+        fragment_pass_end,
+        gpu_time_span,
+        cpu_time_span,
+    );
+
+    println!("Vertex pass duration:   {:.2} µs", vertex_micros);
+    println!("Fragment pass duration: {:.2} µs\n", fragment_micros);
+}
+
+fn create_counter_sample_buffer(device: &Device) -> CounterSampleBuffer {
+    let counter_sample_buffer_desc = metal::CounterSampleBufferDescriptor::new();
+    counter_sample_buffer_desc.set_storage_mode(metal::MTLStorageMode::Shared);
+    counter_sample_buffer_desc.set_sample_count(4_u64);
+    counter_sample_buffer_desc.set_counter_set(&fetch_timestamp_counter_set(device));
+
+    device
+        .new_counter_sample_buffer_with_descriptor(&counter_sample_buffer_desc)
+        .unwrap()
+}
+
+fn fetch_timestamp_counter_set(device: &Device) -> metal::CounterSet {
+    let counter_sets = device.counter_sets();
+    let mut timestamp_counter = None;
+    for cs in counter_sets.iter() {
+        if cs.name() == "timestamp" {
+            timestamp_counter = Some(cs);
+            break;
+        }
+    }
+    timestamp_counter
+        .expect("No timestamp counter found")
+        .clone()
+}
+
+/// <https://developer.apple.com/documentation/metal/gpu_counters_and_counter_sample_buffers/converting_gpu_timestamps_into_cpu_time>
+fn microseconds_between_begin(begin: u64, end: u64, gpu_time_span: u64, cpu_time_span: u64) -> f64 {
+    let time_span = (end as f64) - (begin as f64);
+    let nanoseconds = time_span / (gpu_time_span as f64) * (cpu_time_span as f64);
+    let microseconds = nanoseconds / 1000.0;
+    return microseconds;
 }

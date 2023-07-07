@@ -53,6 +53,7 @@ enum Indirection {
 bitflags::bitflags! {
     #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
     #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct WriterFlags: u32 {
         /// Always annotate the type information instead of inferring.
         const EXPLICIT_TYPES = 0x1;
@@ -86,6 +87,8 @@ impl<W: Write> Writer<W> {
             module,
             crate::keywords::wgsl::RESERVED,
             // an identifier must not start with two underscore
+            &[],
+            &[],
             &["__"],
             &mut self.names,
         );
@@ -244,10 +247,7 @@ impl<W: Write> Writer<W> {
         for (index, arg) in func.arguments.iter().enumerate() {
             // Write argument attribute if a binding is present
             if let Some(ref binding) = arg.binding {
-                self.write_attributes(&map_binding_to_attribute(
-                    binding,
-                    module.types[arg.ty].inner.scalar_kind(),
-                ))?;
+                self.write_attributes(&map_binding_to_attribute(binding))?;
             }
             // Write argument name
             let argument_name = match func_ctx.ty {
@@ -274,10 +274,7 @@ impl<W: Write> Writer<W> {
         if let Some(ref result) = func.result {
             write!(self.out, " -> ")?;
             if let Some(ref binding) = result.binding {
-                self.write_attributes(&map_binding_to_attribute(
-                    binding,
-                    module.types[result.ty].inner.scalar_kind(),
-                ))?;
+                self.write_attributes(&map_binding_to_attribute(binding))?;
             }
             self.write_type(module, result.ty)?;
         }
@@ -401,10 +398,7 @@ impl<W: Write> Writer<W> {
             // The indentation is only for readability
             write!(self.out, "{}", back::INDENT)?;
             if let Some(ref binding) = member.binding {
-                self.write_attributes(&map_binding_to_attribute(
-                    binding,
-                    module.types[member.ty].inner.scalar_kind(),
-                ))?;
+                self.write_attributes(&map_binding_to_attribute(binding))?;
             }
             // Write struct member name and type
             let member_name = &self.names[&NameKey::StructMember(handle, index as u32)];
@@ -512,10 +506,9 @@ impl<W: Write> Writer<W> {
                 // array<A> -- Dynamic array
                 write!(self.out, "array<")?;
                 match size {
-                    crate::ArraySize::Constant(handle) => {
+                    crate::ArraySize::Constant(len) => {
                         self.write_type(module, base)?;
-                        write!(self.out, ",")?;
-                        self.write_constant(module, handle)?;
+                        write!(self.out, ", {len}")?;
                     }
                     crate::ArraySize::Dynamic => {
                         self.write_type(module, base)?;
@@ -527,10 +520,9 @@ impl<W: Write> Writer<W> {
                 // More info https://github.com/gpuweb/gpuweb/issues/2105
                 write!(self.out, "binding_array<")?;
                 match size {
-                    crate::ArraySize::Constant(handle) => {
+                    crate::ArraySize::Constant(len) => {
                         self.write_type(module, base)?;
-                        write!(self.out, ",")?;
-                        self.write_constant(module, handle)?;
+                        write!(self.out, ", {len}")?;
                     }
                     crate::ArraySize::Dynamic => {
                         self.write_type(module, base)?;
@@ -642,11 +634,6 @@ impl<W: Write> Writer<W> {
                         // Otherwise, we could accidentally write variable name instead of full expression.
                         // Also, we use sanitized names! It defense backend from generating variable with name from reserved keywords.
                         Some(self.namer.call(name))
-                    } else if info.ref_count == 0 {
-                        write!(self.out, "{level}_ = ")?;
-                        self.write_expr(module, handle, func_ctx)?;
-                        writeln!(self.out, ";")?;
-                        continue;
                     } else {
                         let expr = &func_ctx.expressions[handle];
                         let min_ref_count = expr.bake_ref_count();
@@ -790,6 +777,16 @@ impl<W: Write> Writer<W> {
                 write!(self.out, ", ")?;
                 self.write_expr(module, value, func_ctx)?;
                 writeln!(self.out, ");")?
+            }
+            Statement::WorkGroupUniformLoad { pointer, result } => {
+                write!(self.out, "{level}")?;
+                // TODO: Obey named expressions here.
+                let res_name = format!("{}{}", back::BAKE_PREFIX, result.index());
+                self.start_named_expr(module, result, func_ctx, &res_name)?;
+                self.named_expressions.insert(result, res_name);
+                write!(self.out, "workgroupUniformLoad(")?;
+                self.write_expr(module, pointer, func_ctx)?;
+                writeln!(self.out, ");")?;
             }
             Statement::ImageStore {
                 image,
@@ -1112,7 +1109,24 @@ impl<W: Write> Writer<W> {
         // `postfix_expression` forms for member/component access and
         // subscripting.
         match *expression {
+            Expression::Literal(literal) => {
+                match literal {
+                    // Floats are written using `Debug` instead of `Display` because it always appends the
+                    // decimal part even it's zero
+                    crate::Literal::F64(_) => {
+                        return Err(Error::Custom("unsupported f64 literal".to_string()));
+                    }
+                    crate::Literal::F32(value) => write!(self.out, "{:?}", value)?,
+                    crate::Literal::U32(value) => write!(self.out, "{}u", value)?,
+                    crate::Literal::I32(value) => write!(self.out, "{}", value)?,
+                    crate::Literal::Bool(value) => write!(self.out, "{}", value)?,
+                }
+            }
             Expression::Constant(constant) => self.write_constant(module, constant)?,
+            Expression::ZeroValue(ty) => {
+                self.write_type(module, ty)?;
+                write!(self.out, "()")?;
+            }
             Expression::Compose { ty, ref components } => {
                 self.write_type(module, ty)?;
                 write!(self.out, "(")?;
@@ -1627,7 +1641,8 @@ impl<W: Write> Writer<W> {
             // Nothing to do here, since call expression already cached
             Expression::CallResult(_)
             | Expression::AtomicResult { .. }
-            | Expression::RayQueryProceedResult => {}
+            | Expression::RayQueryProceedResult
+            | Expression::WorkGroupUniformLoadResult { .. } => {}
         }
 
         Ok(())
@@ -1941,10 +1956,7 @@ const fn address_space_str(
     )
 }
 
-fn map_binding_to_attribute(
-    binding: &crate::Binding,
-    scalar_kind: Option<crate::ScalarKind>,
-) -> Vec<Attribute> {
+fn map_binding_to_attribute(binding: &crate::Binding) -> Vec<Attribute> {
     match *binding {
         crate::Binding::BuiltIn(built_in) => {
             if let crate::BuiltIn::Position { invariant: true } = built_in {
@@ -1957,12 +1969,9 @@ fn map_binding_to_attribute(
             location,
             interpolation,
             sampling,
-        } => match scalar_kind {
-            Some(crate::ScalarKind::Float) => vec![
-                Attribute::Location(location),
-                Attribute::Interpolate(interpolation, sampling),
-            ],
-            _ => vec![Attribute::Location(location)],
-        },
+        } => vec![
+            Attribute::Location(location),
+            Attribute::Interpolate(interpolation, sampling),
+        ],
     }
 }

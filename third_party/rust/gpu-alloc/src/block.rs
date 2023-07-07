@@ -86,8 +86,8 @@ impl<M> MemoryBlock<M> {
     pub fn memory(&self) -> &M {
         match &self.flavor {
             MemoryBlockFlavor::Dedicated { memory } => memory,
-            MemoryBlockFlavor::Buddy { memory, .. } => &**memory,
-            MemoryBlockFlavor::FreeList { memory, .. } => &**memory,
+            MemoryBlockFlavor::Buddy { memory, .. } => memory,
+            MemoryBlockFlavor::FreeList { memory, .. } => memory,
         }
     }
 

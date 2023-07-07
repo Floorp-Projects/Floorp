@@ -10,6 +10,12 @@ packages = [
     "core-foundation",
     "core-foundation-sys",
     "core-graphics",
+    # requires a new version of font-loader, see https://github.com/matprec/rust-font-loader/pull/36
+    "core-text",
+    # requires updating winit to v0.28 and glutin to v0.30 (to get rid of cocoa v0.24)
+    # AND also requires bumping the core-graphics dependency of winit (not present in v0.28)
+    "foreign-types",
+    "foreign-types-shared",
     "gl_generator",
     # Internal dependencies of glsl-lang (only used in wrench) require different versions.
     "hashbrown",
