@@ -244,14 +244,14 @@ const SymbolicAddressSignature SASigMemInitM32 = {
     SymbolicAddress::MemInitM32,
     _VOID,
     _FailOnNegI32,
-    5,
-    {_PTR, _I32, _I32, _I32, _I32, _END}};
+    6,
+    {_PTR, _I32, _I32, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigMemInitM64 = {
     SymbolicAddress::MemInitM64,
     _VOID,
     _FailOnNegI32,
-    5,
-    {_PTR, _I64, _I32, _I32, _I32, _END}};
+    6,
+    {_PTR, _I64, _I32, _I32, _I32, _I32, _END}};
 const SymbolicAddressSignature SASigTableCopy = {
     SymbolicAddress::TableCopy,
     _VOID,
@@ -1276,11 +1276,11 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       MOZ_ASSERT(*abiType == ToABIType(SASigMemDiscardSharedM64));
       return FuncCast(Instance::memDiscardShared_m64, *abiType);
     case SymbolicAddress::MemInitM32:
-      *abiType = Args_Int32_GeneralInt32Int32Int32Int32;
+      *abiType = Args_Int32_GeneralInt32Int32Int32Int32Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemInitM32));
       return FuncCast(Instance::memInit_m32, *abiType);
     case SymbolicAddress::MemInitM64:
-      *abiType = Args_Int32_GeneralInt64Int32Int32Int32;
+      *abiType = Args_Int32_GeneralInt64Int32Int32Int32Int32;
       MOZ_ASSERT(*abiType == ToABIType(SASigMemInitM64));
       return FuncCast(Instance::memInit_m64, *abiType);
     case SymbolicAddress::TableCopy:

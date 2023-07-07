@@ -665,9 +665,9 @@ static bool BoundsCheckInit(uint64_t dstOffset, uint32_t srcOffset,
 }
 
 template <typename I>
-static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
-                          uint32_t srcOffset, uint32_t len,
-                          const DataSegment* maybeSeg) {
+static int32_t MemoryInit(JSContext* cx, Instance* instance,
+                          uint32_t memoryIndex, I dstOffset, uint32_t srcOffset,
+                          uint32_t len, const DataSegment* maybeSeg) {
   if (!maybeSeg) {
     if (len == 0 && srcOffset == 0) {
       return 0;
@@ -681,8 +681,7 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
   MOZ_RELEASE_ASSERT(!seg.active());
 
   const uint32_t segLen = seg.bytes.length();
-
-  WasmMemoryObject* mem = instance->memory(0);
+  WasmMemoryObject* mem = instance->memory(memoryIndex);
   const size_t memLen = mem->volatileMemoryLength();
 
   // We are proposing to copy
@@ -714,26 +713,28 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
 /* static */ int32_t Instance::memInit_m32(Instance* instance,
                                            uint32_t dstOffset,
                                            uint32_t srcOffset, uint32_t len,
-                                           uint32_t segIndex) {
+                                           uint32_t segIndex,
+                                           uint32_t memIndex) {
   MOZ_ASSERT(SASigMemInitM32.failureMode == FailureMode::FailOnNegI32);
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
                      "ensured by validation");
 
   JSContext* cx = instance->cx();
-  return MemoryInit(cx, instance, dstOffset, srcOffset, len,
+  return MemoryInit(cx, instance, memIndex, dstOffset, srcOffset, len,
                     instance->passiveDataSegments_[segIndex]);
 }
 
 /* static */ int32_t Instance::memInit_m64(Instance* instance,
                                            uint64_t dstOffset,
                                            uint32_t srcOffset, uint32_t len,
-                                           uint32_t segIndex) {
+                                           uint32_t segIndex,
+                                           uint32_t memIndex) {
   MOZ_ASSERT(SASigMemInitM64.failureMode == FailureMode::FailOnNegI32);
   MOZ_RELEASE_ASSERT(size_t(segIndex) < instance->passiveDataSegments_.length(),
                      "ensured by validation");
 
   JSContext* cx = instance->cx();
-  return MemoryInit(cx, instance, dstOffset, srcOffset, len,
+  return MemoryInit(cx, instance, memIndex, dstOffset, srcOffset, len,
                     instance->passiveDataSegments_[segIndex]);
 }
 

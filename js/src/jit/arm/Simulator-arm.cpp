@@ -3052,12 +3052,12 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
           setCallResult(result);
           break;
         }
-        case Args_Int32_GeneralInt64Int32Int32Int32: {
-          Prototype_Int32_GeneralInt64Int32Int32Int32 target =
-              reinterpret_cast<Prototype_Int32_GeneralInt64Int32Int32Int32>(
-                  external);
+        case Args_Int32_GeneralInt64Int32Int32Int32Int32: {
+          Prototype_Int32_GeneralInt64Int32Int32Int32Int32 target =
+              reinterpret_cast<
+                  Prototype_Int32_GeneralInt64Int32Int32Int32Int32>(external);
           int64_t result =
-              target(arg0, MakeInt64(arg2, arg3), arg4, arg5, arg6);
+              target(arg0, MakeInt64(arg2, arg3), arg4, arg5, arg6, arg7);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;

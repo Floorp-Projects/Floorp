@@ -428,10 +428,10 @@ class alignas(16) Instance {
                                    uint8_t* memBase);
   static int32_t memInit_m32(Instance* instance, uint32_t dstOffset,
                              uint32_t srcOffset, uint32_t len,
-                             uint32_t segIndex);
+                             uint32_t segIndex, uint32_t memIndex);
   static int32_t memInit_m64(Instance* instance, uint64_t dstOffset,
                              uint32_t srcOffset, uint32_t len,
-                             uint32_t segIndex);
+                             uint32_t segIndex, uint32_t memIndex);
   static int32_t dataDrop(Instance* instance, uint32_t segIndex);
   static int32_t tableCopy(Instance* instance, uint32_t dstOffset,
                            uint32_t srcOffset, uint32_t len,
