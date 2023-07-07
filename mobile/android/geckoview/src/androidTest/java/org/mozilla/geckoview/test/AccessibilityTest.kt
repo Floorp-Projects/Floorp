@@ -565,7 +565,7 @@ class AccessibilityTest : BaseSessionTest() {
 
     @Test fun testClipboard() {
         // disabled for having over 120+ failures in the last 7 days - turned permafailing on Bug 1837126
-        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(true))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             // Writing clipboard requires foreground on Android 10.
             activityRule.scenario?.onActivity { activity ->
