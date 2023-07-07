@@ -1071,18 +1071,19 @@ class FunctionCompiler {
  private:
   // If the platform does not have a HeapReg, load the memory base from
   // instance.
-  MDefinition* maybeLoadMemoryBase() {
+  MDefinition* maybeLoadMemoryBase(uint32_t memoryIndex) {
 #ifdef WASM_HAS_HEAPREG
-    return nullptr;
-#else
-    return memoryBase(0);
+    if (memoryIndex == 0) {
+      return nullptr;
+    }
 #endif
+    return memoryBase(memoryIndex);
   }
 
  public:
   // A value holding the memory base, whether that's HeapReg or some other
   // register.
-  MDefinition* memoryBase(uint32_t memoryIndex = 0) {
+  MDefinition* memoryBase(uint32_t memoryIndex) {
     AliasSet aliases = !moduleEnv_.memories[memoryIndex].canMovingGrow()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
@@ -1096,8 +1097,9 @@ class FunctionCompiler {
     uint32_t offset =
         memoryIndex == 0
             ? Instance::offsetOfMemoryBase()
-            : Instance::offsetInData(
-                  moduleEnv_.memories[memoryIndex].globalDataOffset);
+            : (Instance::offsetInData(
+                  moduleEnv_.memories[memoryIndex].globalDataOffset +
+                  offsetof(MemoryInstanceData, memoryBase)));
     MWasmLoadInstance* base = MWasmLoadInstance::New(
         alloc(), instancePointer_, offset, MIRType::Pointer, aliases);
     curBlock_->add(base);
@@ -1107,17 +1109,23 @@ class FunctionCompiler {
  private:
   // If the bounds checking strategy requires it, load the bounds check limit
   // from the instance.
-  MWasmLoadInstance* maybeLoadBoundsCheckLimit(MIRType type) {
+  MWasmLoadInstance* maybeLoadBoundsCheckLimit(uint32_t memoryIndex,
+                                               MIRType type) {
     MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64);
-    if (moduleEnv_.hugeMemoryEnabled(0)) {
+    if (moduleEnv_.hugeMemoryEnabled(memoryIndex)) {
       return nullptr;
     }
-    AliasSet aliases = !moduleEnv_.memories[0].canMovingGrow()
+    uint32_t offset =
+        memoryIndex == 0
+            ? Instance::offsetOfBoundsCheckLimit()
+            : (Instance::offsetInData(
+                  moduleEnv_.memories[memoryIndex].globalDataOffset +
+                  offsetof(MemoryInstanceData, boundsCheckLimit)));
+    AliasSet aliases = !moduleEnv_.memories[memoryIndex].canMovingGrow()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
-    auto* load = MWasmLoadInstance::New(
-        alloc(), instancePointer_, wasm::Instance::offsetOfBoundsCheckLimit(),
-        type, aliases);
+    auto* load = MWasmLoadInstance::New(alloc(), instancePointer_, offset, type,
+                                        aliases);
     curBlock_->add(load);
     return load;
   }
@@ -1139,7 +1147,7 @@ class FunctionCompiler {
       // We only care about the low bits, so overflow is OK, as is chopping off
       // the high bits of an i64 pointer.
       uint32_t ptr = 0;
-      if (isMem64()) {
+      if (isMem64(access->memoryIndex())) {
         ptr = uint32_t(base->toConstant()->toInt64());
       } else {
         ptr = base->toConstant()->toInt32();
@@ -1160,12 +1168,12 @@ class FunctionCompiler {
   // the offset rather than vice versa is that a small offset can be ignored
   // by both explicit bounds checking and bounds check elimination.
   void foldConstantPointer(MemoryAccessDesc* access, MDefinition** base) {
-    uint32_t offsetGuardLimit =
-        GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled(0));
+    uint32_t offsetGuardLimit = GetMaxOffsetGuardLimit(
+        moduleEnv_.hugeMemoryEnabled(access->memoryIndex()));
 
     if ((*base)->isConstant()) {
       uint64_t basePtr = 0;
-      if (isMem64()) {
+      if (isMem64(access->memoryIndex())) {
         basePtr = uint64_t((*base)->toConstant()->toInt64());
       } else {
         basePtr = uint64_t(int64_t((*base)->toConstant()->toInt32()));
@@ -1176,7 +1184,8 @@ class FunctionCompiler {
       if (offset < offsetGuardLimit && basePtr < offsetGuardLimit - offset) {
         offset += uint32_t(basePtr);
         access->setOffset32(uint32_t(offset));
-        *base = isMem64() ? constantI64(int64_t(0)) : constantI32(0);
+        *base = isMem64(access->memoryIndex()) ? constantI64(int64_t(0))
+                                               : constantI32(0);
       }
     }
   }
@@ -1185,8 +1194,8 @@ class FunctionCompiler {
   // be checked, compute the effective address, trapping on overflow.
   void maybeComputeEffectiveAddress(MemoryAccessDesc* access,
                                     MDefinition** base, bool mustAddOffset) {
-    uint32_t offsetGuardLimit =
-        GetMaxOffsetGuardLimit(moduleEnv_.hugeMemoryEnabled(0));
+    uint32_t offsetGuardLimit = GetMaxOffsetGuardLimit(
+        moduleEnv_.hugeMemoryEnabled(access->memoryIndex()));
 
     if (access->offset64() >= offsetGuardLimit ||
         access->offset64() > UINT32_MAX || mustAddOffset ||
@@ -1195,7 +1204,7 @@ class FunctionCompiler {
     }
   }
 
-  MWasmLoadInstance* needBoundsCheck() {
+  MWasmLoadInstance* needBoundsCheck(uint32_t memoryIndex) {
 #ifdef JS_64BIT
     // For 32-bit base pointers:
     //
@@ -1208,19 +1217,22 @@ class FunctionCompiler {
     // we can use a 32-bit check and avoid extension and wrapping.
     static_assert(0x100000000 % PageSize == 0);
     bool mem32LimitIs64Bits =
-        isMem32() && !moduleEnv_.memories[0].boundsCheckLimitIs32Bits() &&
-        MaxMemoryPages(moduleEnv_.memories[0].indexType()) >=
+        isMem32(memoryIndex) &&
+        !moduleEnv_.memories[memoryIndex].boundsCheckLimitIs32Bits() &&
+        MaxMemoryPages(moduleEnv_.memories[memoryIndex].indexType()) >=
             Pages(0x100000000 / PageSize);
 #else
     // On 32-bit platforms we have no more than 2GB memory and the limit for a
     // 32-bit base pointer is never a 64-bit value.
     bool mem32LimitIs64Bits = false;
 #endif
-    return maybeLoadBoundsCheckLimit(
-        mem32LimitIs64Bits || isMem64() ? MIRType::Int64 : MIRType::Int32);
+    return maybeLoadBoundsCheckLimit(memoryIndex,
+                                     mem32LimitIs64Bits || isMem64(memoryIndex)
+                                         ? MIRType::Int64
+                                         : MIRType::Int32);
   }
 
-  void performBoundsCheck(MDefinition** base,
+  void performBoundsCheck(uint32_t memoryIndex, MDefinition** base,
                           MWasmLoadInstance* boundsCheckLimit) {
     // At the outset, actualBase could be the result of pretty much any integer
     // operation, or it could be the load of an integer constant.  If its type
@@ -1231,16 +1243,17 @@ class FunctionCompiler {
     // Extend an i32 index value to perform a 64-bit bounds check if the memory
     // can be 4GB or larger.
     bool extendAndWrapIndex =
-        isMem32() && boundsCheckLimit->type() == MIRType::Int64;
+        isMem32(memoryIndex) && boundsCheckLimit->type() == MIRType::Int64;
     if (extendAndWrapIndex) {
       auto* extended = MWasmExtendU32Index::New(alloc(), actualBase);
       curBlock_->add(extended);
       actualBase = extended;
     }
 
-    auto* ins =
-        MWasmBoundsCheck::New(alloc(), actualBase, boundsCheckLimit,
-                              bytecodeOffset(), MWasmBoundsCheck::Memory0);
+    auto target = memoryIndex == 0 ? MWasmBoundsCheck::Memory0
+                                   : MWasmBoundsCheck::Unknown;
+    auto* ins = MWasmBoundsCheck::New(alloc(), actualBase, boundsCheckLimit,
+                                      bytecodeOffset(), target);
     curBlock_->add(ins);
     actualBase = ins;
 
@@ -1293,19 +1306,20 @@ class FunctionCompiler {
 
     // Emit the bounds check if necessary; it traps if it fails.  This may
     // update *base.
-    MWasmLoadInstance* boundsCheckLimit = needBoundsCheck();
+    MWasmLoadInstance* boundsCheckLimit =
+        needBoundsCheck(access->memoryIndex());
     if (boundsCheckLimit) {
-      performBoundsCheck(base, boundsCheckLimit);
+      performBoundsCheck(access->memoryIndex(), base, boundsCheckLimit);
     }
 
 #ifndef JS_64BIT
-    if (isMem64()) {
+    if (isMem64(access->memoryIndex())) {
       // We must have had an explicit bounds check (or one was elided if it was
       // proved redundant), and on 32-bit systems the index will for sure fit in
       // 32 bits: the max memory is 2GB.  So chop the index down to 32-bit to
       // simplify the back-end.
       MOZ_ASSERT((*base)->type() == MIRType::Int64);
-      MOZ_ASSERT(!moduleEnv_.hugeMemoryEnabled(0));
+      MOZ_ASSERT(!moduleEnv_.hugeMemoryEnabled(access->memoryIndex()));
       auto* chopped = MWasmWrapU32Index::New(alloc(), *base);
       MOZ_ASSERT(chopped->type() == MIRType::Int32);
       curBlock_->add(chopped);
@@ -1324,19 +1338,14 @@ class FunctionCompiler {
   }
 
  public:
-  bool isMem32(uint32_t memoryIndex = 0) {
+  bool isMem32(uint32_t memoryIndex) {
     return moduleEnv_.memories[memoryIndex].indexType() == IndexType::I32;
   }
-  bool isMem64(uint32_t memoryIndex = 0) {
+  bool isMem64(uint32_t memoryIndex) {
     return moduleEnv_.memories[memoryIndex].indexType() == IndexType::I64;
   }
-
-  // Sometimes, we need to determine the memory type before the opcode reader
-  // that will reject a memory opcode in the presence of no-memory gets a chance
-  // to do so. This predicate is safe.
-  bool isNoMemOrMem32() {
-    return moduleEnv_.numMemories() == 0 ||
-           moduleEnv_.memories[0].indexType() == IndexType::I32;
+  bool hugeMemoryEnabled(uint32_t memoryIndex) {
+    return moduleEnv_.hugeMemoryEnabled(memoryIndex);
   }
 
   // Add the offset into the pointer to yield the EA; trap on overflow.
@@ -1361,12 +1370,12 @@ class FunctionCompiler {
       return nullptr;
     }
 
-    MDefinition* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase(access->memoryIndex());
     MInstruction* load = nullptr;
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(access->offset64() == 0);
       MWasmLoadInstance* boundsCheckLimit =
-          maybeLoadBoundsCheckLimit(MIRType::Int32);
+          maybeLoadBoundsCheckLimit(access->memoryIndex(), MIRType::Int32);
       load = MAsmJSLoadHeap::New(alloc(), memoryBase, base, boundsCheckLimit,
                                  access->type());
     } else {
@@ -1389,12 +1398,12 @@ class FunctionCompiler {
       return;
     }
 
-    MDefinition* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase(access->memoryIndex());
     MInstruction* store = nullptr;
     if (moduleEnv_.isAsmJS()) {
       MOZ_ASSERT(access->offset64() == 0);
       MWasmLoadInstance* boundsCheckLimit =
-          maybeLoadBoundsCheckLimit(MIRType::Int32);
+          maybeLoadBoundsCheckLimit(access->memoryIndex(), MIRType::Int32);
       store = MAsmJSStoreHeap::New(alloc(), memoryBase, base, boundsCheckLimit,
                                    access->type(), v);
     } else {
@@ -1435,7 +1444,7 @@ class FunctionCompiler {
       newv = cvtNewv;
     }
 
-    MDefinition* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase(access->memoryIndex());
     MInstruction* cas = MWasmCompareExchangeHeap::New(
         alloc(), bytecodeOffset(), memoryBase, base, *access, oldv, newv,
         instancePointer_);
@@ -1470,7 +1479,7 @@ class FunctionCompiler {
       value = cvtValue;
     }
 
-    MDefinition* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase(access->memoryIndex());
     MInstruction* xchg =
         MWasmAtomicExchangeHeap::New(alloc(), bytecodeOffset(), memoryBase,
                                      base, *access, value, instancePointer_);
@@ -1506,7 +1515,7 @@ class FunctionCompiler {
       value = cvtValue;
     }
 
-    MDefinition* memoryBase = maybeLoadMemoryBase();
+    MDefinition* memoryBase = maybeLoadMemoryBase(access->memoryIndex());
     MInstruction* binop =
         MWasmAtomicBinopHeap::New(alloc(), bytecodeOffset(), op, memoryBase,
                                   base, *access, value, instancePointer_);
@@ -1531,8 +1540,9 @@ class FunctionCompiler {
       return nullptr;
     }
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset,
-                            bytecodeIfNotAsmJS());
+    MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                            bytecodeIfNotAsmJS(),
+                            hugeMemoryEnabled(addr.memoryIndex));
 
     // Generate better code (on x86)
     // If AVX2 is enabled, more broadcast operators are available.
@@ -1567,8 +1577,9 @@ class FunctionCompiler {
 
     // Generate better code (on x86) by loading as a double with an
     // operation that sign extends directly.
-    MemoryAccessDesc access(Scalar::Float64, addr.align, addr.offset,
-                            bytecodeIfNotAsmJS());
+    MemoryAccessDesc access(addr.memoryIndex, Scalar::Float64, addr.align,
+                            addr.offset, bytecodeIfNotAsmJS(),
+                            hugeMemoryEnabled(addr.memoryIndex));
     access.setWidenSimd128Load(op);
     return load(addr.base, &access, ValType::V128);
   }
@@ -1579,8 +1590,9 @@ class FunctionCompiler {
       return nullptr;
     }
 
-    MemoryAccessDesc access(viewType, addr.align, addr.offset,
-                            bytecodeIfNotAsmJS());
+    MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                            bytecodeIfNotAsmJS(),
+                            hugeMemoryEnabled(addr.memoryIndex));
     access.setZeroExtendSimd128Load();
     return load(addr.base, &access, ValType::V128);
   }
@@ -1592,9 +1604,10 @@ class FunctionCompiler {
       return nullptr;
     }
 
-    MemoryAccessDesc access(Scalar::Simd128, addr.align, addr.offset,
-                            bytecodeIfNotAsmJS());
-    MDefinition* memoryBase = maybeLoadMemoryBase();
+    MemoryAccessDesc access(addr.memoryIndex, Scalar::Simd128, addr.align,
+                            addr.offset, bytecodeIfNotAsmJS(),
+                            hugeMemoryEnabled(addr.memoryIndex));
+    MDefinition* memoryBase = maybeLoadMemoryBase(access.memoryIndex());
     MDefinition* base = addr.base;
     MOZ_ASSERT(!moduleEnv_.isAsmJS());
     checkOffsetAndAlignmentAndBounds(&access, &base);
@@ -1616,9 +1629,10 @@ class FunctionCompiler {
     if (inDeadCode()) {
       return;
     }
-    MemoryAccessDesc access(Scalar::Simd128, addr.align, addr.offset,
-                            bytecodeIfNotAsmJS());
-    MDefinition* memoryBase = maybeLoadMemoryBase();
+    MemoryAccessDesc access(addr.memoryIndex, Scalar::Simd128, addr.align,
+                            addr.offset, bytecodeIfNotAsmJS(),
+                            hugeMemoryEnabled(addr.memoryIndex));
+    MDefinition* memoryBase = maybeLoadMemoryBase(access.memoryIndex());
     MDefinition* base = addr.base;
     MOZ_ASSERT(!moduleEnv_.isAsmJS());
     checkOffsetAndAlignmentAndBounds(&access, &base);
@@ -5373,8 +5387,9 @@ static bool EmitLoad(FunctionCompiler& f, ValType type, Scalar::Type viewType) {
     return false;
   }
 
-  MemoryAccessDesc access(viewType, addr.align, addr.offset,
-                          f.bytecodeIfNotAsmJS());
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          f.bytecodeIfNotAsmJS(),
+                          f.hugeMemoryEnabled(addr.memoryIndex));
   auto* ins = f.load(addr.base, &access, type);
   if (!f.inDeadCode() && !ins) {
     return false;
@@ -5393,8 +5408,9 @@ static bool EmitStore(FunctionCompiler& f, ValType resultType,
     return false;
   }
 
-  MemoryAccessDesc access(viewType, addr.align, addr.offset,
-                          f.bytecodeIfNotAsmJS());
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          f.bytecodeIfNotAsmJS(),
+                          f.hugeMemoryEnabled(addr.memoryIndex));
 
   f.store(addr.base, &access, value);
   return true;
@@ -5409,9 +5425,10 @@ static bool EmitTeeStore(FunctionCompiler& f, ValType resultType,
     return false;
   }
 
-  MOZ_ASSERT(f.isMem32());  // asm.js opcode
-  MemoryAccessDesc access(viewType, addr.align, addr.offset,
-                          f.bytecodeIfNotAsmJS());
+  MOZ_ASSERT(f.isMem32(addr.memoryIndex));  // asm.js opcode
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          f.bytecodeIfNotAsmJS(),
+                          f.hugeMemoryEnabled(addr.memoryIndex));
 
   f.store(addr.base, &access, value);
   return true;
@@ -5434,9 +5451,10 @@ static bool EmitTeeStoreWithCoercion(FunctionCompiler& f, ValType resultType,
     MOZ_CRASH("unexpected coerced store");
   }
 
-  MOZ_ASSERT(f.isMem32());  // asm.js opcode
-  MemoryAccessDesc access(viewType, addr.align, addr.offset,
-                          f.bytecodeIfNotAsmJS());
+  MOZ_ASSERT(f.isMem32(addr.memoryIndex));  // asm.js opcode
+  MemoryAccessDesc access(addr.memoryIndex, viewType, addr.align, addr.offset,
+                          f.bytecodeIfNotAsmJS(),
+                          f.hugeMemoryEnabled(addr.memoryIndex));
 
   f.store(addr.base, &access, value);
   return true;
@@ -5603,8 +5621,9 @@ static bool EmitAtomicCmpXchg(FunctionCompiler& f, ValType type,
     return false;
   }
 
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                          Synchronization::Full());
+  MemoryAccessDesc access(
+      addr.memoryIndex, viewType, addr.align, addr.offset, f.bytecodeOffset(),
+      f.hugeMemoryEnabled(addr.memoryIndex), Synchronization::Full());
   auto* ins =
       f.atomicCompareExchangeHeap(addr.base, &access, type, oldValue, newValue);
   if (!f.inDeadCode() && !ins) {
@@ -5622,8 +5641,9 @@ static bool EmitAtomicLoad(FunctionCompiler& f, ValType type,
     return false;
   }
 
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                          Synchronization::Load());
+  MemoryAccessDesc access(
+      addr.memoryIndex, viewType, addr.align, addr.offset, f.bytecodeOffset(),
+      f.hugeMemoryEnabled(addr.memoryIndex), Synchronization::Load());
   auto* ins = f.load(addr.base, &access, type);
   if (!f.inDeadCode() && !ins) {
     return false;
@@ -5641,8 +5661,9 @@ static bool EmitAtomicRMW(FunctionCompiler& f, ValType type,
     return false;
   }
 
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                          Synchronization::Full());
+  MemoryAccessDesc access(
+      addr.memoryIndex, viewType, addr.align, addr.offset, f.bytecodeOffset(),
+      f.hugeMemoryEnabled(addr.memoryIndex), Synchronization::Full());
   auto* ins = f.atomicBinopHeap(op, addr.base, &access, type, value);
   if (!f.inDeadCode() && !ins) {
     return false;
@@ -5660,8 +5681,9 @@ static bool EmitAtomicStore(FunctionCompiler& f, ValType type,
     return false;
   }
 
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                          Synchronization::Store());
+  MemoryAccessDesc access(
+      addr.memoryIndex, viewType, addr.align, addr.offset, f.bytecodeOffset(),
+      f.hugeMemoryEnabled(addr.memoryIndex), Synchronization::Store());
   f.store(addr.base, &access, value);
   return true;
 }
@@ -5679,22 +5701,32 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
     return false;
   }
 
-  MemoryAccessDesc access(type == ValType::I32 ? Scalar::Int32 : Scalar::Int64,
-                          addr.align, addr.offset, f.bytecodeOffset());
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  MemoryAccessDesc access(addr.memoryIndex,
+                          type == ValType::I32 ? Scalar::Int32 : Scalar::Int64,
+                          addr.align, addr.offset, f.bytecodeOffset(),
+                          f.hugeMemoryEnabled(addr.memoryIndex));
   MDefinition* ptr = f.computeEffectiveAddress(addr.base, &access);
-  if (!f.inDeadCode() && !ptr) {
+  if (!ptr) {
+    return false;
+  }
+
+  MDefinition* memoryIndex = f.constantI32(int32_t(addr.memoryIndex));
+  if (!memoryIndex) {
     return false;
   }
 
   const SymbolicAddressSignature& callee =
-      f.isNoMemOrMem32()
+      f.isMem32(addr.memoryIndex)
           ? (type == ValType::I32 ? SASigWaitI32M32 : SASigWaitI64M32)
           : (type == ValType::I32 ? SASigWaitI32M64 : SASigWaitI64M64);
-  MOZ_ASSERT(type.toMIRType() == callee.argTypes[2]);
 
   MDefinition* ret;
-  if (!f.emitInstanceCall3(bytecodeOffset, callee, ptr, expected, timeout,
-                           &ret)) {
+  if (!f.emitInstanceCall4(bytecodeOffset, callee, ptr, expected, timeout,
+                           memoryIndex, &ret)) {
     return false;
   }
 
@@ -5720,18 +5752,29 @@ static bool EmitWake(FunctionCompiler& f) {
     return false;
   }
 
-  MemoryAccessDesc access(Scalar::Int32, addr.align, addr.offset,
-                          f.bytecodeOffset());
+  if (f.inDeadCode()) {
+    return true;
+  }
+
+  MemoryAccessDesc access(addr.memoryIndex, Scalar::Int32, addr.align,
+                          addr.offset, f.bytecodeOffset(),
+                          f.hugeMemoryEnabled(addr.memoryIndex));
   MDefinition* ptr = f.computeEffectiveAddress(addr.base, &access);
-  if (!f.inDeadCode() && !ptr) {
+  if (!ptr) {
+    return false;
+  }
+
+  MDefinition* memoryIndex = f.constantI32(int32_t(addr.memoryIndex));
+  if (!memoryIndex) {
     return false;
   }
 
   const SymbolicAddressSignature& callee =
-      f.isNoMemOrMem32() ? SASigWakeM32 : SASigWakeM64;
+      f.isMem32(addr.memoryIndex) ? SASigWakeM32 : SASigWakeM64;
 
   MDefinition* ret;
-  if (!f.emitInstanceCall2(bytecodeOffset, callee, ptr, count, &ret)) {
+  if (!f.emitInstanceCall3(bytecodeOffset, callee, ptr, count, memoryIndex,
+                           &ret)) {
     return false;
   }
 
@@ -5747,8 +5790,9 @@ static bool EmitAtomicXchg(FunctionCompiler& f, ValType type,
     return false;
   }
 
-  MemoryAccessDesc access(viewType, addr.align, addr.offset, f.bytecodeOffset(),
-                          Synchronization::Full());
+  MemoryAccessDesc access(
+      addr.memoryIndex, viewType, addr.align, addr.offset, f.bytecodeOffset(),
+      f.hugeMemoryEnabled(addr.memoryIndex), Synchronization::Full());
   MDefinition* ins = f.atomicExchangeHeap(addr.base, &access, type, value);
   if (!f.inDeadCode() && !ins) {
     return false;
@@ -5763,13 +5807,6 @@ static bool EmitMemCopyCall(FunctionCompiler& f, uint32_t dstMemIndex,
                             MDefinition* src, MDefinition* len) {
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  MDefinition* memoryBase = f.memoryBase();
-  const SymbolicAddressSignature& callee =
-      (f.moduleEnv().usesSharedMemory(0)
-           ? (f.isMem32() ? SASigMemCopySharedM32 : SASigMemCopySharedM64)
-           : (f.isMem32() ? SASigMemCopyM32 : SASigMemCopyM64));
-
-  return f.emitInstanceCall4(bytecodeOffset, callee, dst, src, len, memoryBase);
   if (dstMemIndex == srcMemIndex) {
     const SymbolicAddressSignature& callee =
         (f.moduleEnv().usesSharedMemory(dstMemIndex)
@@ -5811,8 +5848,9 @@ static bool EmitMemCopyCall(FunctionCompiler& f, uint32_t dstMemIndex,
                              dstMemIndexValue, srcMemIndexValue);
 }
 
-static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
-                              MDefinition* src, uint32_t length) {
+static bool EmitMemCopyInline(FunctionCompiler& f, uint32_t memoryIndex,
+                              MDefinition* dst, MDefinition* src,
+                              uint32_t length) {
   MOZ_ASSERT(length != 0 && length <= MaxInlineMemoryCopyLength);
 
   // Compute the number of copies of each width we will need to do
@@ -5842,7 +5880,9 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
 
 #ifdef ENABLE_WASM_SIMD
   for (uint32_t i = 0; i < numCopies16; i++) {
-    MemoryAccessDesc access(Scalar::Simd128, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Simd128, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     auto* load = f.load(src, &access, ValType::V128);
     if (!load || !loadedValues.append(load)) {
       return false;
@@ -5854,7 +5894,9 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
 
 #ifdef JS_64BIT
   for (uint32_t i = 0; i < numCopies8; i++) {
-    MemoryAccessDesc access(Scalar::Int64, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Int64, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     auto* load = f.load(src, &access, ValType::I64);
     if (!load || !loadedValues.append(load)) {
       return false;
@@ -5865,7 +5907,9 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
 #endif
 
   for (uint32_t i = 0; i < numCopies4; i++) {
-    MemoryAccessDesc access(Scalar::Uint32, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Uint32, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     auto* load = f.load(src, &access, ValType::I32);
     if (!load || !loadedValues.append(load)) {
       return false;
@@ -5875,7 +5919,9 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
   }
 
   if (numCopies2) {
-    MemoryAccessDesc access(Scalar::Uint16, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Uint16, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     auto* load = f.load(src, &access, ValType::I32);
     if (!load || !loadedValues.append(load)) {
       return false;
@@ -5885,7 +5931,9 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
   }
 
   if (numCopies1) {
-    MemoryAccessDesc access(Scalar::Uint8, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Uint8, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     auto* load = f.load(src, &access, ValType::I32);
     if (!load || !loadedValues.append(load)) {
       return false;
@@ -5900,7 +5948,9 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
   if (numCopies1) {
     offset -= sizeof(uint8_t);
 
-    MemoryAccessDesc access(Scalar::Uint8, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Uint8, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     auto* value = loadedValues.popCopy();
     f.store(dst, &access, value);
   }
@@ -5908,7 +5958,9 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
   if (numCopies2) {
     offset -= sizeof(uint16_t);
 
-    MemoryAccessDesc access(Scalar::Uint16, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Uint16, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     auto* value = loadedValues.popCopy();
     f.store(dst, &access, value);
   }
@@ -5916,7 +5968,9 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
   for (uint32_t i = 0; i < numCopies4; i++) {
     offset -= sizeof(uint32_t);
 
-    MemoryAccessDesc access(Scalar::Uint32, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Uint32, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     auto* value = loadedValues.popCopy();
     f.store(dst, &access, value);
   }
@@ -5925,7 +5979,9 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
   for (uint32_t i = 0; i < numCopies8; i++) {
     offset -= sizeof(uint64_t);
 
-    MemoryAccessDesc access(Scalar::Int64, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Int64, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     auto* value = loadedValues.popCopy();
     f.store(dst, &access, value);
   }
@@ -5935,7 +5991,9 @@ static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
   for (uint32_t i = 0; i < numCopies16; i++) {
     offset -= sizeof(V128);
 
-    MemoryAccessDesc access(Scalar::Simd128, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Simd128, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     auto* value = loadedValues.popCopy();
     f.store(dst, &access, value);
   }
@@ -5957,12 +6015,12 @@ static bool EmitMemCopy(FunctionCompiler& f) {
     return true;
   }
 
-  if (len->isConstant()) {
-    uint64_t length = f.isMem32() ? len->toConstant()->toInt32()
-                                  : len->toConstant()->toInt64();
+  if (dstMemIndex == srcMemIndex && len->isConstant()) {
+    uint64_t length = f.isMem32(dstMemIndex) ? len->toConstant()->toInt32()
+                                             : len->toConstant()->toInt64();
     static_assert(MaxInlineMemoryCopyLength <= UINT32_MAX);
     if (length != 0 && length <= MaxInlineMemoryCopyLength) {
-      return EmitMemCopyInline(f, dst, src, uint32_t(length));
+      return EmitMemCopyInline(f, dstMemIndex, dst, src, uint32_t(length));
     }
   }
 
@@ -6024,8 +6082,9 @@ static bool EmitMemFillCall(FunctionCompiler& f, uint32_t memoryIndex,
                              memoryBase);
 }
 
-static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
-                              MDefinition* val, uint32_t length) {
+static bool EmitMemFillInline(FunctionCompiler& f, uint32_t memoryIndex,
+                              MDefinition* start, MDefinition* val,
+                              uint32_t length) {
   MOZ_ASSERT(length != 0 && length <= MaxInlineMemoryFillLength);
   uint32_t value = val->toConstant()->toInt32();
 
@@ -6072,21 +6131,27 @@ static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
   if (numCopies1) {
     offset -= sizeof(uint8_t);
 
-    MemoryAccessDesc access(Scalar::Uint8, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Uint8, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     f.store(start, &access, val);
   }
 
   if (numCopies2) {
     offset -= sizeof(uint16_t);
 
-    MemoryAccessDesc access(Scalar::Uint16, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Uint16, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     f.store(start, &access, val2);
   }
 
   for (uint32_t i = 0; i < numCopies4; i++) {
     offset -= sizeof(uint32_t);
 
-    MemoryAccessDesc access(Scalar::Uint32, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Uint32, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     f.store(start, &access, val4);
   }
 
@@ -6094,7 +6159,9 @@ static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
   for (uint32_t i = 0; i < numCopies8; i++) {
     offset -= sizeof(uint64_t);
 
-    MemoryAccessDesc access(Scalar::Int64, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Int64, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     f.store(start, &access, val8);
   }
 #endif
@@ -6103,7 +6170,9 @@ static bool EmitMemFillInline(FunctionCompiler& f, MDefinition* start,
   for (uint32_t i = 0; i < numCopies16; i++) {
     offset -= sizeof(V128);
 
-    MemoryAccessDesc access(Scalar::Simd128, 1, offset, f.bytecodeOffset());
+    MemoryAccessDesc access(memoryIndex, Scalar::Simd128, 1, offset,
+                            f.bytecodeOffset(),
+                            f.hugeMemoryEnabled(memoryIndex));
     f.store(start, &access, val16);
   }
 #endif
@@ -6122,12 +6191,12 @@ static bool EmitMemFill(FunctionCompiler& f) {
     return true;
   }
 
-  if (memoryIndex == 0 && len->isConstant() && val->isConstant()) {
+  if (len->isConstant() && val->isConstant()) {
     uint64_t length = f.isMem32(memoryIndex) ? len->toConstant()->toInt32()
                                              : len->toConstant()->toInt64();
     static_assert(MaxInlineMemoryFillLength <= UINT32_MAX);
     if (length != 0 && length <= MaxInlineMemoryFillLength) {
-      return EmitMemFillInline(f, start, val, uint32_t(length));
+      return EmitMemFillInline(f, memoryIndex, start, val, uint32_t(length));
     }
   }
 
@@ -6193,8 +6262,9 @@ static bool EmitTableFill(FunctionCompiler& f) {
 
 #if ENABLE_WASM_MEMORY_CONTROL
 static bool EmitMemDiscard(FunctionCompiler& f) {
+  uint32_t memoryIndex;
   MDefinition *start, *len;
-  if (!f.iter().readMemDiscard(&start, &len)) {
+  if (!f.iter().readMemDiscard(&memoryIndex, &start, &len)) {
     return false;
   }
 
@@ -7321,7 +7391,7 @@ static bool EmitIntrinsic(FunctionCompiler& f) {
     return false;
   }
 
-  MDefinition* memoryBase = f.memoryBase();
+  MDefinition* memoryBase = f.memoryBase(0);
   if (!f.passArg(memoryBase, MIRType::Pointer, &args)) {
     return false;
   }
@@ -8683,9 +8753,9 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
                      IonOptimizations.get(OptimizationLevel::Wasm));
     if (moduleEnv.numMemories() > 0) {
       if (moduleEnv.memories[0].indexType() == IndexType::I32) {
-        mir.initMinWasmHeapLength(moduleEnv.memories[0].initialLength32());
+        mir.initMinWasmMemory0Length(moduleEnv.memories[0].initialLength32());
       } else {
-        mir.initMinWasmHeapLength(moduleEnv.memories[0].initialLength64());
+        mir.initMinWasmMemory0Length(moduleEnv.memories[0].initialLength64());
       }
     }
 

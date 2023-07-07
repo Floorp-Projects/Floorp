@@ -241,12 +241,14 @@ OpKind Classify(OpBytes op);
 template <typename Value>
 struct LinearMemoryAddress {
   Value base;
+  uint32_t memoryIndex;
   uint64_t offset;
   uint32_t align;
 
-  LinearMemoryAddress() : offset(0), align(0) {}
-  LinearMemoryAddress(Value base, uint64_t offset, uint32_t align)
-      : base(base), offset(offset), align(align) {}
+  LinearMemoryAddress() : memoryIndex(0), offset(0), align(0) {}
+  LinearMemoryAddress(Value base, uint32_t memoryIndex, uint64_t offset,
+                      uint32_t align)
+      : base(base), memoryIndex(memoryIndex), offset(offset), align(align) {}
 };
 
 template <typename ControlItem>
@@ -1857,21 +1859,36 @@ inline bool OpIter<Policy>::readTernary(ValType operandType, Value* v0,
 template <typename Policy>
 inline bool OpIter<Policy>::readLinearMemoryAddress(
     uint32_t byteSize, LinearMemoryAddress<Value>* addr) {
-  if (env_.numMemories() == 0) {
-    return fail("can't touch memory without memory");
+  uint32_t flags;
+  if (!readVarU32(&flags)) {
+    return fail("unable to read load alignment");
   }
 
-  IndexType it = env_.memories[0].indexType();
+  uint8_t alignLog2 = flags & ((1 << 6) - 1);
+  uint8_t hasMemoryIndex = flags & (1 << 6);
+  uint8_t undefinedBits = flags & ~((1 << 7) - 1);
 
-  uint32_t alignLog2;
-  if (!readVarU32(&alignLog2)) {
-    return fail("unable to read load alignment");
+  if (undefinedBits != 0) {
+    return fail("invalid memory flags");
+  }
+
+  if (hasMemoryIndex != 0) {
+    if (!readVarU32(&addr->memoryIndex)) {
+      return fail("unable to read memory index");
+    }
+  } else {
+    addr->memoryIndex = 0;
+  }
+
+  if (addr->memoryIndex >= env_.numMemories()) {
+    return fail("memory index out of range");
   }
 
   if (!readVarU64(&addr->offset)) {
     return fail("unable to read load offset");
   }
 
+  IndexType it = env_.memories[addr->memoryIndex].indexType();
   if (it == IndexType::I32 && addr->offset > UINT32_MAX) {
     return fail("offset too large for memory type");
   }

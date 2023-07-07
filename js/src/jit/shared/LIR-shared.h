@@ -3046,15 +3046,17 @@ class LWasmLoad : public details::LWasmLoadBase<1, 1> {
   LIR_HEADER(WasmLoad);
 };
 
-class LWasmLoadI64 : public details::LWasmLoadBase<INT64_PIECES, 1> {
+class LWasmLoadI64 : public details::LWasmLoadBase<INT64_PIECES, 2> {
  public:
   explicit LWasmLoadI64(const LAllocation& ptr,
                         const LAllocation& memoryBase = LAllocation())
       : LWasmLoadBase(classOpcode, ptr, memoryBase) {
     setTemp(0, LDefinition::BogusTemp());
+    setTemp(1, LDefinition::BogusTemp());
   }
 
   const LDefinition* ptrCopy() { return Base::getTemp(0); }
+  const LDefinition* memoryBaseCopy() { return Base::getTemp(1); }
 
   LIR_HEADER(WasmLoadI64);
 };

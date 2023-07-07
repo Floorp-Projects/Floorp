@@ -42,7 +42,7 @@ class MIRGenerator final {
                const CompileInfo* outerInfo,
                const OptimizationInfo* optimizationInfo);
 
-  void initMinWasmHeapLength(uint64_t init) { minWasmHeapLength_ = init; }
+  void initMinWasmMemory0Length(uint64_t init) { minWasmMemory0Length_ = init; }
 
   TempAllocator& alloc() { return *alloc_; }
   MIRGraph& graph() { return *graph_; }
@@ -122,7 +122,7 @@ class MIRGenerator final {
     MOZ_ASSERT(wasmMaxStackArgBytes_ == 0);
     wasmMaxStackArgBytes_ = n;
   }
-  uint64_t minWasmHeapLength() const { return minWasmHeapLength_; }
+  uint64_t minWasmMemory0Length() const { return minWasmMemory0Length_; }
 
   void setNeedsOverrecursedCheck() { needsOverrecursedCheck_ = true; }
   bool needsOverrecursedCheck() const { return needsOverrecursedCheck_; }
@@ -160,7 +160,7 @@ class MIRGenerator final {
   bool licmEnabled() const;
 
  private:
-  uint64_t minWasmHeapLength_;
+  uint64_t minWasmMemory0Length_;
 
   IonPerfSpewer wasmPerfSpewer_;
 

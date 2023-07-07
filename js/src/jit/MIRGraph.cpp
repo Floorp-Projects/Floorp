@@ -38,7 +38,7 @@ MIRGenerator::MIRGenerator(CompileRealm* realm,
                                    : false),
       bigIntsCanBeInNursery_(realm ? realm->zone()->canNurseryAllocateBigInts()
                                    : false),
-      minWasmHeapLength_(0),
+      minWasmMemory0Length_(0),
       options(options),
       gs_(alloc) {}
 

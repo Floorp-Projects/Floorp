@@ -1968,6 +1968,7 @@ static bool DecodeLimits(Decoder& d, LimitsKind kind, Limits* limits) {
     limits->indexType =
         (flags & uint8_t(LimitsFlags::IsI64)) ? IndexType::I64 : IndexType::I32;
 #else
+    limits->indexType = IndexType::I32;
     if (flags & uint8_t(LimitsFlags::IsI64)) {
       return d.fail("i64 is not supported for memory limits");
     }

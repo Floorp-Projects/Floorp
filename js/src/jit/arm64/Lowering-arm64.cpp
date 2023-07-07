@@ -681,11 +681,15 @@ void LIRGenerator::visitWasmCompareExchangeHeap(MWasmCompareExchangeHeap* ins) {
   // See comment in visitWasmLoad re the type of 'base'.
   MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
 
+  LAllocation memoryBase = ins->hasMemoryBase()
+                               ? LAllocation(useRegister(ins->memoryBase()))
+                               : LGeneralReg(HeapReg);
+
   // Note, the access type may be Int64 here.
 
   LWasmCompareExchangeHeap* lir = new (alloc())
       LWasmCompareExchangeHeap(useRegister(base), useRegister(ins->oldValue()),
-                               useRegister(ins->newValue()));
+                               useRegister(ins->newValue()), memoryBase);
 
   define(lir, ins);
 }
@@ -695,10 +699,14 @@ void LIRGenerator::visitWasmAtomicExchangeHeap(MWasmAtomicExchangeHeap* ins) {
   // See comment in visitWasmLoad re the type of 'base'.
   MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
 
+  LAllocation memoryBase = ins->hasMemoryBase()
+                               ? LAllocation(useRegister(ins->memoryBase()))
+                               : LGeneralReg(HeapReg);
+
   // Note, the access type may be Int64 here.
 
-  LWasmAtomicExchangeHeap* lir = new (alloc())
-      LWasmAtomicExchangeHeap(useRegister(base), useRegister(ins->value()));
+  LWasmAtomicExchangeHeap* lir = new (alloc()) LWasmAtomicExchangeHeap(
+      useRegister(base), useRegister(ins->value()), memoryBase);
   define(lir, ins);
 }
 
@@ -707,13 +715,17 @@ void LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) {
   // See comment in visitWasmLoad re the type of 'base'.
   MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
 
+  LAllocation memoryBase = ins->hasMemoryBase()
+                               ? LAllocation(useRegister(ins->memoryBase()))
+                               : LGeneralReg(HeapReg);
+
   // Note, the access type may be Int64 here.
 
   if (!ins->hasUses()) {
-    LWasmAtomicBinopHeapForEffect* lir =
-        new (alloc()) LWasmAtomicBinopHeapForEffect(useRegister(base),
-                                                    useRegister(ins->value()),
-                                                    /* flagTemp= */ temp());
+    LWasmAtomicBinopHeapForEffect* lir = new (alloc())
+        LWasmAtomicBinopHeapForEffect(useRegister(base),
+                                      useRegister(ins->value()),
+                                      /* flagTemp= */ temp(), memoryBase);
     add(lir, ins);
     return;
   }
@@ -721,7 +733,7 @@ void LIRGenerator::visitWasmAtomicBinopHeap(MWasmAtomicBinopHeap* ins) {
   LWasmAtomicBinopHeap* lir = new (alloc())
       LWasmAtomicBinopHeap(useRegister(base), useRegister(ins->value()),
                            /* temp= */ LDefinition::BogusTemp(),
-                           /* flagTemp= */ temp());
+                           /* flagTemp= */ temp(), memoryBase);
   define(lir, ins);
 }
 
@@ -925,13 +937,16 @@ void LIRGenerator::visitWasmLoad(MWasmLoad* ins) {
   // zero-extended and can act as 64-bit.
   MOZ_ASSERT(base->type() == MIRType::Int32 || base->type() == MIRType::Int64);
 
+  LAllocation memoryBase =
+      ins->hasMemoryBase() ? LAllocation(useRegisterAtStart(ins->memoryBase()))
+                           : LGeneralReg(HeapReg);
   LAllocation ptr = useRegisterOrConstantAtStart(base);
 
   if (ins->type() == MIRType::Int64) {
-    auto* lir = new (alloc()) LWasmLoadI64(ptr);
+    auto* lir = new (alloc()) LWasmLoadI64(ptr, memoryBase);
     defineInt64(lir, ins);
   } else {
-    auto* lir = new (alloc()) LWasmLoad(ptr);
+    auto* lir = new (alloc()) LWasmLoad(ptr, memoryBase);
     define(lir, ins);
   }
 }
@@ -943,17 +958,21 @@ void LIRGenerator::visitWasmStore(MWasmStore* ins) {
 
   MDefinition* value = ins->value();
 
+  LAllocation memoryBase =
+      ins->hasMemoryBase() ? LAllocation(useRegisterAtStart(ins->memoryBase()))
+                           : LGeneralReg(HeapReg);
+
   if (ins->access().type() == Scalar::Int64) {
     LAllocation baseAlloc = useRegisterOrConstantAtStart(base);
     LInt64Allocation valueAlloc = useInt64RegisterAtStart(value);
-    auto* lir = new (alloc()) LWasmStoreI64(baseAlloc, valueAlloc);
+    auto* lir = new (alloc()) LWasmStoreI64(baseAlloc, valueAlloc, memoryBase);
     add(lir, ins);
     return;
   }
 
   LAllocation baseAlloc = useRegisterOrConstantAtStart(base);
   LAllocation valueAlloc = useRegisterAtStart(value);
-  auto* lir = new (alloc()) LWasmStore(baseAlloc, valueAlloc);
+  auto* lir = new (alloc()) LWasmStore(baseAlloc, valueAlloc, memoryBase);
   add(lir, ins);
 }
 
@@ -1408,9 +1427,11 @@ void LIRGenerator::visitWasmLoadLaneSimd128(MWasmLoadLaneSimd128* ins) {
   // change all of that, so leave it alone for now.
   LUse base = useRegisterAtStart(ins->base());
   LUse inputUse = useRegisterAtStart(ins->value());
-  MOZ_ASSERT(!ins->hasMemoryBase());
+  LAllocation memoryBase =
+      ins->hasMemoryBase() ? LAllocation(useRegisterAtStart(ins->memoryBase()))
+                           : LGeneralReg(HeapReg);
   LWasmLoadLaneSimd128* lir =
-      new (alloc()) LWasmLoadLaneSimd128(base, inputUse, temp(), LAllocation());
+      new (alloc()) LWasmLoadLaneSimd128(base, inputUse, temp(), memoryBase);
   define(lir, ins);
 #else
   MOZ_CRASH("No SIMD");
@@ -1423,9 +1444,11 @@ void LIRGenerator::visitWasmStoreLaneSimd128(MWasmStoreLaneSimd128* ins) {
 
   LUse base = useRegisterAtStart(ins->base());
   LUse input = useRegisterAtStart(ins->value());
-  MOZ_ASSERT(!ins->hasMemoryBase());
+  LAllocation memoryBase =
+      ins->hasMemoryBase() ? LAllocation(useRegisterAtStart(ins->memoryBase()))
+                           : LGeneralReg(HeapReg);
   LWasmStoreLaneSimd128* lir =
-      new (alloc()) LWasmStoreLaneSimd128(base, input, temp(), LAllocation());
+      new (alloc()) LWasmStoreLaneSimd128(base, input, temp(), memoryBase);
   add(lir, ins);
 #else
   MOZ_CRASH("No SIMD");

@@ -645,15 +645,16 @@ template <typename T>
 void CodeGeneratorX64::emitWasmLoad(T* ins) {
   const MWasmLoad* mir = ins->mir();
 
+  mir->access().assertOffsetInGuardPages();
   uint32_t offset = mir->access().offset();
-  MOZ_ASSERT(offset < masm.wasmMaxOffsetGuardLimit());
 
   // ptr is a GPR and is either a 32-bit value zero-extended to 64-bit, or a
   // true 64-bit value.
   const LAllocation* ptr = ins->ptr();
-  Operand srcAddr = ptr->isBogus()
-                        ? Operand(HeapReg, offset)
-                        : Operand(HeapReg, ToRegister(ptr), TimesOne, offset);
+  Register memoryBase = ToRegister(ins->memoryBase());
+  Operand srcAddr =
+      ptr->isBogus() ? Operand(memoryBase, offset)
+                     : Operand(memoryBase, ToRegister(ptr), TimesOne, offset);
 
   if (mir->type() == MIRType::Int64) {
     masm.wasmLoadI64(mir->access(), srcAddr, ToOutRegister64(ins));
@@ -671,14 +672,15 @@ void CodeGeneratorX64::emitWasmStore(T* ins) {
   const MWasmStore* mir = ins->mir();
   const wasm::MemoryAccessDesc& access = mir->access();
 
+  mir->access().assertOffsetInGuardPages();
   uint32_t offset = access.offset();
-  MOZ_ASSERT(offset < masm.wasmMaxOffsetGuardLimit());
 
   const LAllocation* value = ins->getOperand(ins->ValueIndex);
   const LAllocation* ptr = ins->ptr();
-  Operand dstAddr = ptr->isBogus()
-                        ? Operand(HeapReg, offset)
-                        : Operand(HeapReg, ToRegister(ptr), TimesOne, offset);
+  Register memoryBase = ToRegister(ins->memoryBase());
+  Operand dstAddr =
+      ptr->isBogus() ? Operand(memoryBase, offset)
+                     : Operand(memoryBase, ToRegister(ptr), TimesOne, offset);
 
   wasmStore(access, value, dstAddr);
 }
@@ -696,10 +698,11 @@ void CodeGenerator::visitWasmCompareExchangeHeap(
   Register ptr = ToRegister(ins->ptr());
   Register oldval = ToRegister(ins->oldValue());
   Register newval = ToRegister(ins->newValue());
+  Register memoryBase = ToRegister(ins->memoryBase());
   MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
   Scalar::Type accessType = mir->access().type();
-  BaseIndex srcAddr(HeapReg, ptr, TimesOne, mir->access().offset());
+  BaseIndex srcAddr(memoryBase, ptr, TimesOne, mir->access().offset());
 
   if (accessType == Scalar::Int64) {
     masm.wasmCompareExchange64(mir->access(), srcAddr, Register64(oldval),
@@ -715,11 +718,12 @@ void CodeGenerator::visitWasmAtomicExchangeHeap(LWasmAtomicExchangeHeap* ins) {
 
   Register ptr = ToRegister(ins->ptr());
   Register value = ToRegister(ins->value());
+  Register memoryBase = ToRegister(ins->memoryBase());
   MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
   Scalar::Type accessType = mir->access().type();
 
-  BaseIndex srcAddr(HeapReg, ptr, TimesOne, mir->access().offset());
+  BaseIndex srcAddr(memoryBase, ptr, TimesOne, mir->access().offset());
 
   if (accessType == Scalar::Int64) {
     masm.wasmAtomicExchange64(mir->access(), srcAddr, Register64(value),
@@ -735,6 +739,7 @@ void CodeGenerator::visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins) {
   MOZ_ASSERT(mir->hasUses());
 
   Register ptr = ToRegister(ins->ptr());
+  Register memoryBase = ToRegister(ins->memoryBase());
   const LAllocation* value = ins->value();
   Register temp =
       ins->temp()->isBogusTemp() ? InvalidReg : ToRegister(ins->temp());
@@ -747,7 +752,7 @@ void CodeGenerator::visitWasmAtomicBinopHeap(LWasmAtomicBinopHeap* ins) {
   }
 
   AtomicOp op = mir->operation();
-  BaseIndex srcAddr(HeapReg, ptr, TimesOne, mir->access().offset());
+  BaseIndex srcAddr(memoryBase, ptr, TimesOne, mir->access().offset());
 
   if (accessType == Scalar::Int64) {
     Register64 val = Register64(ToRegister(value));
@@ -769,13 +774,14 @@ void CodeGenerator::visitWasmAtomicBinopHeapForEffect(
   MOZ_ASSERT(!mir->hasUses());
 
   Register ptr = ToRegister(ins->ptr());
+  Register memoryBase = ToRegister(ins->memoryBase());
   const LAllocation* value = ins->value();
   MOZ_ASSERT(ins->addrTemp()->isBogusTemp());
 
   Scalar::Type accessType = mir->access().type();
   AtomicOp op = mir->operation();
 
-  BaseIndex srcAddr(HeapReg, ptr, TimesOne, mir->access().offset());
+  BaseIndex srcAddr(memoryBase, ptr, TimesOne, mir->access().offset());
 
   if (accessType == Scalar::Int64) {
     Register64 val = Register64(ToRegister(value));

@@ -462,17 +462,21 @@ class alignas(16) Instance {
                            uint32_t tableIndex);
   static int32_t elemDrop(Instance* instance, uint32_t segIndex);
   static int32_t wait_i32_m32(Instance* instance, uint32_t byteOffset,
-                              int32_t value, int64_t timeout);
+                              int32_t value, int64_t timeout,
+                              uint32_t memoryIndex);
   static int32_t wait_i32_m64(Instance* instance, uint64_t byteOffset,
-                              int32_t value, int64_t timeout);
+                              int32_t value, int64_t timeout,
+                              uint32_t memoryIndex);
   static int32_t wait_i64_m32(Instance* instance, uint32_t byteOffset,
-                              int64_t value, int64_t timeout);
+                              int64_t value, int64_t timeout,
+                              uint32_t memoryIndex);
   static int32_t wait_i64_m64(Instance* instance, uint64_t byteOffset,
-                              int64_t value, int64_t timeout);
+                              int64_t value, int64_t timeout,
+                              uint32_t memoryIndex);
   static int32_t wake_m32(Instance* instance, uint32_t byteOffset,
-                          int32_t count);
+                          int32_t count, uint32_t memoryIndex);
   static int32_t wake_m64(Instance* instance, uint64_t byteOffset,
-                          int32_t count);
+                          int32_t count, uint32_t memoryIndex);
   static void* refFunc(Instance* instance, uint32_t funcIndex);
   static void postBarrier(Instance* instance, gc::Cell** location);
   static void postBarrierPrecise(Instance* instance, JSObject** location,

@@ -311,11 +311,11 @@ Instance::callImport_general(Instance* instance, int32_t funcImportIndex,
 // Atomic operations and shared memory.
 
 template <typename ValT, typename PtrT>
-static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
-                           int64_t timeout_ns) {
+static int32_t PerformWait(Instance* instance, uint32_t memoryIndex,
+                           PtrT byteOffset, ValT value, int64_t timeout_ns) {
   JSContext* cx = instance->cx();
 
-  if (!instance->memory(0)->isShared()) {
+  if (!instance->memory(memoryIndex)->isShared()) {
     ReportTrapError(cx, JSMSG_WASM_NONSHARED_WAIT);
     return -1;
   }
@@ -325,7 +325,8 @@ static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
     return -1;
   }
 
-  if (byteOffset + sizeof(ValT) > instance->memory(0)->volatileMemoryLength()) {
+  if (byteOffset + sizeof(ValT) >
+      instance->memory(memoryIndex)->volatileMemoryLength()) {
     ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
@@ -337,7 +338,7 @@ static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
   }
 
   MOZ_ASSERT(byteOffset <= SIZE_MAX, "Bounds check is broken");
-  switch (atomics_wait_impl(cx, instance->sharedMemoryBuffer(0),
+  switch (atomics_wait_impl(cx, instance->sharedMemoryBuffer(memoryIndex),
                             size_t(byteOffset), value, timeout)) {
     case FutexThread::WaitResult::OK:
       return 0;
@@ -354,34 +355,39 @@ static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
 
 /* static */ int32_t Instance::wait_i32_m32(Instance* instance,
                                             uint32_t byteOffset, int32_t value,
-                                            int64_t timeout_ns) {
+                                            int64_t timeout_ns,
+                                            uint32_t memoryIndex) {
   MOZ_ASSERT(SASigWaitI32M32.failureMode == FailureMode::FailOnNegI32);
-  return PerformWait(instance, byteOffset, value, timeout_ns);
+  return PerformWait(instance, memoryIndex, byteOffset, value, timeout_ns);
 }
 
 /* static */ int32_t Instance::wait_i32_m64(Instance* instance,
                                             uint64_t byteOffset, int32_t value,
-                                            int64_t timeout_ns) {
+                                            int64_t timeout_ns,
+                                            uint32_t memoryIndex) {
   MOZ_ASSERT(SASigWaitI32M64.failureMode == FailureMode::FailOnNegI32);
-  return PerformWait(instance, byteOffset, value, timeout_ns);
+  return PerformWait(instance, memoryIndex, byteOffset, value, timeout_ns);
 }
 
 /* static */ int32_t Instance::wait_i64_m32(Instance* instance,
                                             uint32_t byteOffset, int64_t value,
-                                            int64_t timeout_ns) {
+                                            int64_t timeout_ns,
+                                            uint32_t memoryIndex) {
   MOZ_ASSERT(SASigWaitI64M32.failureMode == FailureMode::FailOnNegI32);
-  return PerformWait(instance, byteOffset, value, timeout_ns);
+  return PerformWait(instance, memoryIndex, byteOffset, value, timeout_ns);
 }
 
 /* static */ int32_t Instance::wait_i64_m64(Instance* instance,
                                             uint64_t byteOffset, int64_t value,
-                                            int64_t timeout_ns) {
+                                            int64_t timeout_ns,
+                                            uint32_t memoryIndex) {
   MOZ_ASSERT(SASigWaitI64M64.failureMode == FailureMode::FailOnNegI32);
-  return PerformWait(instance, byteOffset, value, timeout_ns);
+  return PerformWait(instance, memoryIndex, byteOffset, value, timeout_ns);
 }
 
 template <typename PtrT>
-static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
+static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count,
+                           uint32_t memoryIndex) {
   JSContext* cx = instance->cx();
 
   // The alignment guard is not in the wasm spec as of 2017-11-02, but is
@@ -393,17 +399,17 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
     return -1;
   }
 
-  if (byteOffset >= instance->memory(0)->volatileMemoryLength()) {
+  if (byteOffset >= instance->memory(memoryIndex)->volatileMemoryLength()) {
     ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
-  if (!instance->memory(0)->isShared()) {
+  if (!instance->memory(memoryIndex)->isShared()) {
     return 0;
   }
 
   MOZ_ASSERT(byteOffset <= SIZE_MAX, "Bounds check is broken");
-  int64_t woken = atomics_notify_impl(instance->sharedMemoryBuffer(0),
+  int64_t woken = atomics_notify_impl(instance->sharedMemoryBuffer(memoryIndex),
                                       size_t(byteOffset), int64_t(count));
 
   if (woken > INT32_MAX) {
@@ -415,15 +421,15 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
 }
 
 /* static */ int32_t Instance::wake_m32(Instance* instance, uint32_t byteOffset,
-                                        int32_t count) {
+                                        int32_t count, uint32_t memoryIndex) {
   MOZ_ASSERT(SASigWakeM32.failureMode == FailureMode::FailOnNegI32);
-  return PerformWake(instance, byteOffset, count);
+  return PerformWake(instance, byteOffset, count, memoryIndex);
 }
 
 /* static */ int32_t Instance::wake_m64(Instance* instance, uint64_t byteOffset,
-                                        int32_t count) {
+                                        int32_t count, uint32_t memoryIndex) {
   MOZ_ASSERT(SASigWakeM32.failureMode == FailureMode::FailOnNegI32);
-  return PerformWake(instance, byteOffset, count);
+  return PerformWake(instance, byteOffset, count, memoryIndex);
 }
 
 //////////////////////////////////////////////////////////////////////////////

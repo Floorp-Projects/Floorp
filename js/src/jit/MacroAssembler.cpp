@@ -3509,7 +3509,6 @@ MacroAssembler::MacroAssembler(TempAllocator& alloc,
                                CompileRealm* maybeRealm)
     : maybeRuntime_(maybeRuntime),
       maybeRealm_(maybeRealm),
-      wasmMaxOffsetGuardLimit_(0),
       framePushed_(0),
 #ifdef DEBUG
       inCall_(false),
@@ -3550,8 +3549,6 @@ WasmMacroAssembler::WasmMacroAssembler(TempAllocator& alloc,
   // not the PSP.
   SetStackPointer64(sp);
 #endif
-  setWasmMaxOffsetGuardLimit(
-      wasm::GetMaxOffsetGuardLimit(env.hugeMemoryEnabled(0)));
   if (!limitedSize) {
     setUnlimitedBuffer();
   }

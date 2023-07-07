@@ -336,9 +336,12 @@ struct BaseCompiler final {
 
   inline const FuncType& funcType() const;
   inline bool usesMemory() const;
-  inline bool usesSharedMemory(uint32_t memoryIndex = 0) const;
-  inline bool isMem32(uint32_t memoryIndex = 0) const;
-  inline bool isMem64(uint32_t memoryIndex = 0) const;
+  inline bool usesSharedMemory(uint32_t memoryIndex) const;
+  inline bool isMem32(uint32_t memoryIndex) const;
+  inline bool isMem64(uint32_t memoryIndex) const;
+  inline bool hugeMemoryEnabled(uint32_t memoryIndex) const;
+  inline uint32_t instanceOffsetOfMemoryBase(uint32_t memoryIndex) const;
+  inline uint32_t instanceOffsetOfBoundsCheckLimit(uint32_t memoryIndex) const;
 
   // The casts are used by some of the ScratchRegister implementations.
   operator MacroAssembler&() const { return masm; }
@@ -1127,42 +1130,41 @@ struct BaseCompiler final {
 
   void branchAddNoOverflow(uint64_t offset, RegI32 ptr, Label* ok);
   void branchTestLowZero(RegI32 ptr, Imm32 mask, Label* ok);
-  void boundsCheck4GBOrLargerAccess(RegPtr instance, RegI32 ptr, Label* ok);
-  void boundsCheckBelow4GBAccess(RegPtr instance, RegI32 ptr, Label* ok);
+  void boundsCheck4GBOrLargerAccess(uint32_t memoryIndex, RegPtr instance,
+                                    RegI32 ptr, Label* ok);
+  void boundsCheckBelow4GBAccess(uint32_t memoryIndex, RegPtr instance,
+                                 RegI32 ptr, Label* ok);
 
   void branchAddNoOverflow(uint64_t offset, RegI64 ptr, Label* ok);
   void branchTestLowZero(RegI64 ptr, Imm32 mask, Label* ok);
-  void boundsCheck4GBOrLargerAccess(RegPtr instance, RegI64 ptr, Label* ok);
-  void boundsCheckBelow4GBAccess(RegPtr instance, RegI64 ptr, Label* ok);
+  void boundsCheck4GBOrLargerAccess(uint32_t memoryIndex, RegPtr instance,
+                                    RegI64 ptr, Label* ok);
+  void boundsCheckBelow4GBAccess(uint32_t memoryIndex, RegPtr instance,
+                                 RegI64 ptr, Label* ok);
 
-#if defined(WASM_HAS_HEAPREG)
-  template <typename RegIndexType>
-  BaseIndex prepareAtomicMemoryAccess(MemoryAccessDesc* access,
-                                      AccessCheck* check, RegPtr instance,
-                                      RegIndexType ptr);
-#else
   // Some consumers depend on the returned Address not incorporating instance,
   // as instance may be the scratch register.
   template <typename RegIndexType>
   Address prepareAtomicMemoryAccess(MemoryAccessDesc* access,
                                     AccessCheck* check, RegPtr instance,
                                     RegIndexType ptr);
-#endif
 
   template <typename RegIndexType>
   void computeEffectiveAddress(MemoryAccessDesc* access);
 
-  [[nodiscard]] bool needInstanceForAccess(const AccessCheck& check);
+  [[nodiscard]] bool needInstanceForAccess(const MemoryAccessDesc* access,
+                                           const AccessCheck& check);
 
   // ptr and dest may be the same iff dest is I32.
   // This may destroy ptr even if ptr and dest are not the same.
   void executeLoad(MemoryAccessDesc* access, AccessCheck* check,
-                   RegPtr instance, RegI32 ptr, AnyReg dest, RegI32 temp);
+                   RegPtr instance, RegPtr memoryBase, RegI32 ptr, AnyReg dest,
+                   RegI32 temp);
   void load(MemoryAccessDesc* access, AccessCheck* check, RegPtr instance,
-            RegI32 ptr, AnyReg dest, RegI32 temp);
+            RegPtr memoryBase, RegI32 ptr, AnyReg dest, RegI32 temp);
 #ifdef ENABLE_WASM_MEMORY64
   void load(MemoryAccessDesc* access, AccessCheck* check, RegPtr instance,
-            RegI64 ptr, AnyReg dest, RegI64 temp);
+            RegPtr memoryBase, RegI64 ptr, AnyReg dest, RegI64 temp);
 #endif
 
   template <typename RegType>
@@ -1173,12 +1175,13 @@ struct BaseCompiler final {
   // ptr and src must not be the same register.
   // This may destroy ptr and src.
   void executeStore(MemoryAccessDesc* access, AccessCheck* check,
-                    RegPtr instance, RegI32 ptr, AnyReg src, RegI32 temp);
+                    RegPtr instance, RegPtr memoryBase, RegI32 ptr, AnyReg src,
+                    RegI32 temp);
   void store(MemoryAccessDesc* access, AccessCheck* check, RegPtr instance,
-             RegI32 ptr, AnyReg src, RegI32 temp);
+             RegPtr memoryBase, RegI32 ptr, AnyReg src, RegI32 temp);
 #ifdef ENABLE_WASM_MEMORY64
   void store(MemoryAccessDesc* access, AccessCheck* check, RegPtr instance,
-             RegI64 ptr, AnyReg src, RegI64 temp);
+             RegPtr memoryBase, RegI64 ptr, AnyReg src, RegI64 temp);
 #endif
 
   template <typename RegType>
@@ -1219,7 +1222,7 @@ struct BaseCompiler final {
   template <typename RegType>
   RegType popMemoryAccess(MemoryAccessDesc* access, AccessCheck* check);
 
-  void pushHeapBase(uint32_t memoryIndex = 0);
+  void pushHeapBase(uint32_t memoryIndex);
 
   ////////////////////////////////////////////////////////////////////////////
   //
@@ -1407,9 +1410,13 @@ struct BaseCompiler final {
   [[nodiscard]] bool emitTeeLocal();
   [[nodiscard]] bool emitGetGlobal();
   [[nodiscard]] bool emitSetGlobal();
-  [[nodiscard]] RegPtr maybeLoadInstanceForAccess(const AccessCheck& check);
-  [[nodiscard]] RegPtr maybeLoadInstanceForAccess(const AccessCheck& check,
-                                                  RegPtr specific);
+  [[nodiscard]] RegPtr maybeLoadMemoryBaseForAccess(
+      RegPtr instance, const MemoryAccessDesc* access);
+  [[nodiscard]] RegPtr maybeLoadInstanceForAccess(
+      const MemoryAccessDesc* access, const AccessCheck& check);
+  [[nodiscard]] RegPtr maybeLoadInstanceForAccess(
+      const MemoryAccessDesc* access, const AccessCheck& check,
+      RegPtr specific);
   [[nodiscard]] bool emitLoad(ValType type, Scalar::Type viewType);
   [[nodiscard]] bool emitStore(ValType resultType, Scalar::Type viewType);
   [[nodiscard]] bool emitSelect(bool typed);
