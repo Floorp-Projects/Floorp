@@ -7,7 +7,6 @@
 #include "CachedTableAccessible.h"
 
 #include "AccIterator.h"
-#include "DocAccessibleParent.h"
 #include "HTMLTableAccessible.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"

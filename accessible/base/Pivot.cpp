@@ -8,14 +8,10 @@
 #include "AccIterator.h"
 #include "LocalAccessible.h"
 #include "RemoteAccessible.h"
-#include "DocAccessible.h"
 #include "nsAccUtils.h"
 #include "nsIAccessiblePivot.h"
 
 #include "mozilla/a11y/Accessible.h"
-#include "mozilla/a11y/HyperTextAccessibleBase.h"
-#include "mozilla/dom/ChildIterator.h"
-#include "mozilla/dom/Element.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;

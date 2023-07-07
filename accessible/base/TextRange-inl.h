@@ -8,7 +8,6 @@
 #define mozilla_a11y_TextRange_inl_h__
 
 #include "TextRange.h"
-#include "HyperTextAccessible.h"
 
 namespace mozilla {
 namespace a11y {

@@ -7,7 +7,6 @@
 #include "AccEvent.h"
 
 #include "nsAccUtils.h"
-#include "DocAccessible.h"
 #include "xpcAccEvents.h"
 #include "States.h"
 #include "TextRange.h"
