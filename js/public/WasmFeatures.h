@@ -95,6 +95,11 @@
 #else
 #  define WASM_MOZ_INTGEMM_ENABLED 0
 #endif
+#ifdef ENABLE_WASM_MULTI_MEMORY
+#  define WASM_MULTI_MEMORY_ENABLED 1
+#else
+#  define WASM_MULTI_MEMORY_ENABLED 0
+#endif
 
 // clang-format off
 #define JS_FOR_WASM_FEATURES(DEFAULT, TENTATIVE, EXPERIMENTAL)                \
@@ -151,6 +156,14 @@
       /* flag predicate     */ true,                                          \
       /* shell flag         */ "memory-control",                              \
       /* preference name    */ "memory_control")                              \
+  EXPERIMENTAL(                                                               \
+      /* capitalized name   */ MultiMemory,                                   \
+      /* lower case name    */ multiMemory,                                   \
+      /* compile predicate  */ WASM_MULTI_MEMORY_ENABLED,                     \
+      /* compiler predicate */ BaselineAvailable(cx) || IonAvailable(cx),     \
+      /* flag predicate     */ true,                                          \
+      /* shell flag         */ "multi-memory",                                \
+      /* preference name    */ "multi_memory")                                \
   EXPERIMENTAL(/* capitalized name   */ MozIntGemm,                           \
                /* lower case name    */ mozIntGemm,                           \
                /* compile predicate  */ WASM_MOZ_INTGEMM_ENABLED,             \
