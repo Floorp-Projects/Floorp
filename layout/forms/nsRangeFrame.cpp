@@ -434,10 +434,8 @@ Decimal nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent) {
     nscoord posOfPoint = mozilla::clamped(point.y, posAtStart, posAtEnd);
     // For a vertical range, the top (posAtStart) is the highest value, so we
     // subtract the fraction from 1.0 to get that polarity correct.
-    fraction = Decimal(posOfPoint - posAtStart) / Decimal(traversableDistance);
-    if (IsUpwards()) {
-      fraction = Decimal(1) - fraction;
-    }
+    fraction = Decimal(1) -
+               Decimal(posOfPoint - posAtStart) / Decimal(traversableDistance);
   }
 
   MOZ_ASSERT(fraction >= Decimal(0) && fraction <= Decimal(1));
@@ -574,11 +572,7 @@ void nsRangeFrame::DoUpdateThumbPosition(nsIFrame* aThumbFrame,
       nscoord traversableDistance =
           rangeContentBoxSize.height - thumbSize.height;
       newPosition.x += (rangeContentBoxSize.width - thumbSize.width) / 2;
-      if (IsUpwards()) {
-        newPosition.y += NSToCoordRound((1.0 - fraction) * traversableDistance);
-      } else {
-        newPosition.y += NSToCoordRound(fraction * traversableDistance);
-      }
+      newPosition.y += NSToCoordRound((1.0 - fraction) * traversableDistance);
     }
   }
   aThumbFrame->SetPosition(newPosition);
@@ -619,9 +613,7 @@ void nsRangeFrame::DoUpdateRangeProgressFrame(nsIFrame* aRangeProgressFrame,
   } else {
     nscoord progLength = NSToCoordRound(fraction * rangeContentBoxSize.height);
     progRect.x += (rangeContentBoxSize.width - progSize.width) / 2;
-    if (IsUpwards()) {
-      progRect.y += rangeContentBoxSize.height - progLength;
-    }
+    progRect.y += rangeContentBoxSize.height - progLength;
     progRect.height = progLength;
   }
   aRangeProgressFrame->SetRect(progRect);
