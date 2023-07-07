@@ -130,8 +130,7 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
     case StyleBasicShape::Tag::Inset:
       return CreateClipPathInset(aDrawTarget, r);
     case StyleBasicShape::Tag::Xywh:
-      // TODO: Implement this in the patch series.
-      return nullptr;
+      return CreateClipPathXywh(aDrawTarget, r);
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected shape type");
   }
@@ -193,6 +192,14 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPathPath(
                 mTargetFrame->PresContext()->AppUnitsPerDevPixel();
   return SVGPathData::BuildPath(path.path._0.AsSpan(), builder,
                                 StyleStrokeLinecap::Butt, 0.0, scale);
+}
+
+already_AddRefed<Path> CSSClipPathInstance::CreateClipPathXywh(
+    DrawTarget* aDrawTarget, const nsRect& aRefBox) {
+  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
+  return ShapeUtils::BuildXywhPath(
+      *mClipPathStyle.AsShape()._0, aRefBox,
+      mTargetFrame->PresContext()->AppUnitsPerDevPixel(), builder);
 }
 
 }  // namespace mozilla

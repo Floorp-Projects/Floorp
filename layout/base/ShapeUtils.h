@@ -64,25 +64,27 @@ struct ShapeUtils final {
                                     const nsPoint& aCenter,
                                     const nsRect& aRefBox);
 
-  // Compute the rect for an inset. If the inset amount is larger than
-  // aRefBox itself, this will return a rect the same shape as the inverse
-  // rect that would be created by insetting aRefBox by the inset amount.
-  // This process is *not* what is called for by the current spec at
+  // Compute the rect for an inset()/xywh()/rect().
+  // If the inset amount is larger than aRefBox itself, this will return a rect
+  // the same shape as the inverse rect that would be created by insetting
+  // aRefBox by the inset amount. This process is *not* what is called for by
+  // the current spec at
   // https://drafts.csswg.org/css-shapes-1/#supported-basic-shapes.
+  //
   // The spec currently treats empty shapes, including overly-inset rects, as
   // defining 'empty float areas' that don't affect layout. However, it is
   // practically useful to treat empty shapes as having edges for purposes of
   // affecting layout, and there is growing momentum for the approach we
   // are taking here.
-  // @param aRefBox the reference box of the inset.
-  // @return The inset rect in app units.
-  static nsRect ComputeInsetRect(const StyleBasicShape&, const nsRect& aRefBox);
+  // @param aRefBox the reference box of the inset/xywh/rect.
+  // @return The inset/xywh/rect rect in app units.
+  static nsRect ComputeRect(const StyleBasicShape&, const nsRect& aRefBox);
   static nsRect ComputeInsetRect(const StyleRect<LengthPercentage>& aStyleRect,
                                  const nsRect& aRefBox);
 
   // Compute the radii for a rectanglar shape, i.e. inset()/xywh()/rect().
   // @param aRefBox the reference box of the rect.
-  // @param aRect the rect we computed from ComputeInsetRect(), in app units.
+  // @param aRect the rect we computed from Compute{Inset}Rect(), in app units.
   // @param aRadii the returned radii in app units.
   // @return true if any of the radii is nonzero; false otherwise.
   static bool ComputeRectRadii(const StyleBorderRadius&, const nsRect& aRefBox,
@@ -141,7 +143,7 @@ struct ShapeUtils final {
 
   // Compute a gfx::path from a rectanglar shape (i.e. inset()/xywh()/rect())
   // and the round radii.
-  // @param aRect the rect we computed from ComputeInsetRect().
+  // @param aRect the rect we computed from Compute{Inset}Rect().
   // @param aRadii the radii of the rect. It should be an array with length 8.
   //               If it's nullptr, we don't have the valid radii.
   // @param aRefBox the reference box of the rect.
