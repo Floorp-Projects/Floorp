@@ -7,7 +7,6 @@
 #include "mozilla/a11y/DocAccessibleChild.h"
 #include "mozilla/a11y/CacheConstants.h"
 #include "mozilla/a11y/FocusManager.h"
-#include "mozilla/a11y/RemoteAccessible.h"
 #include "mozilla/ipc/ProcessChild.h"
 #include "nsAccessibilityService.h"
 
