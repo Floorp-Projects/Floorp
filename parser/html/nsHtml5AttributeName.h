@@ -267,7 +267,6 @@ class nsHtml5AttributeName {
   static nsHtml5AttributeName* ATTR_CALCMODE;
   static nsHtml5AttributeName* ATTR_CHECKED;
   static nsHtml5AttributeName* ATTR_FENCE;
-  static nsHtml5AttributeName* ATTR_NONCE;
   static nsHtml5AttributeName* ATTR_ONSCROLL;
   static nsHtml5AttributeName* ATTR_ONACTIVATE;
   static nsHtml5AttributeName* ATTR_OPACITY;
