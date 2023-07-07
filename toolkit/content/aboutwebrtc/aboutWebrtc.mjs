@@ -257,37 +257,17 @@ class SavePage extends Control {
   }
 }
 
-class DebugMode extends Control {
+class EnableLogging extends Control {
   constructor() {
     super();
-    this.messageHeader = "about-webrtc-debug-mode-msg-label";
-
-    if (WGI.debugLevel > 0) {
-      this.setState(true);
-    } else {
-      this.label = "about-webrtc-debug-mode-off-state-label";
-    }
-  }
-
-  setState(state) {
-    this.label = state
-      ? "about-webrtc-debug-mode-on-state-label"
-      : "about-webrtc-debug-mode-off-state-label";
-    try {
-      const file = Services.prefs.getCharPref("media.webrtc.debug.log_file");
-      this.message = state
-        ? "about-webrtc-debug-mode-toggled-on-state-msg"
-        : "about-webrtc-debug-mode-toggled-off-state-msg";
-      this.messageArgs = { path: file };
-    } catch (e) {
-      this.message = null;
-    }
-    return state;
+    this.label = "about-webrtc-enable-logging-label";
+    this.message = null;
   }
 
   onClick() {
-    this.setState((WGI.debugLevel = WGI.debugLevel ? 0 : WEBRTC_TRACE_ALL));
+    WGI.debugLevel = WEBRTC_TRACE_ALL;
     this.update();
+    window.open("about:logging?preset=webrtc");
   }
 }
 
@@ -363,7 +343,7 @@ class ShowTab extends Control {
       msg.appendChild(message);
     };
     add(new SavePage().render());
-    add(new DebugMode().render());
+    add(new EnableLogging().render());
     add(new AecLogging().render());
     // Add the autorefresh checkbox and its label
     const autorefresh = document.createElement("input");
