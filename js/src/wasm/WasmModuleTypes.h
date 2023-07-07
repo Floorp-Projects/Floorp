@@ -550,9 +550,8 @@ WASM_DECLARE_CACHEABLE_POD(Limits);
 
 struct MemoryDesc {
   Limits limits;
-  uint32_t globalDataOffset;
 
-  WASM_CHECK_CACHEABLE_POD(limits, globalDataOffset);
+  WASM_CHECK_CACHEABLE_POD(limits);
 
   bool isShared() const { return limits.shared == Shareable::True; }
 
@@ -589,9 +588,8 @@ struct MemoryDesc {
     return limits.initial * PageSize;
   }
 
-  MemoryDesc() : globalDataOffset(UINT32_MAX) {}
-  explicit MemoryDesc(Limits limits)
-      : limits(limits), globalDataOffset(UINT32_MAX) {}
+  MemoryDesc() {}
+  explicit MemoryDesc(Limits limits) : limits(limits) {}
 };
 
 WASM_DECLARE_CACHEABLE_POD(MemoryDesc);

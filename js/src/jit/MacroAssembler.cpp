@@ -5269,13 +5269,13 @@ void MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length,
 void MacroAssembler::loadWasmPinnedRegsFromInstance(
     mozilla::Maybe<wasm::BytecodeOffset> trapOffset) {
 #ifdef WASM_HAS_HEAPREG
-  static_assert(wasm::Instance::offsetOfMemoryBase() < 4096,
+  static_assert(wasm::Instance::offsetOfMemory0Base() < 4096,
                 "We count only on the low page being inaccessible");
   if (trapOffset) {
     append(wasm::Trap::IndirectCallToNull,
            wasm::TrapSite(currentOffset(), *trapOffset));
   }
-  loadPtr(Address(InstanceReg, wasm::Instance::offsetOfMemoryBase()), HeapReg);
+  loadPtr(Address(InstanceReg, wasm::Instance::offsetOfMemory0Base()), HeapReg);
 #else
   MOZ_ASSERT(!trapOffset);
 #endif

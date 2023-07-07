@@ -75,6 +75,9 @@ struct ModuleEnvironment {
   // The start offset of the TypeDefInstanceData[] section of the instance
   // data. There is one entry for every type.
   uint32_t typeDefsOffsetStart;
+  // The start offset of the MemoryInstanceData[] section of the instance data.
+  // There is one entry for every memory.
+  uint32_t memoriesOffsetStart;
   // The start offset of the TableInstanceData[] section of the instance data.
   // There is one entry for every table.
   uint32_t tablesOffsetStart;
@@ -96,6 +99,7 @@ struct ModuleEnvironment {
         numFuncImports(0),
         funcImportsOffsetStart(UINT32_MAX),
         typeDefsOffsetStart(UINT32_MAX),
+        memoriesOffsetStart(UINT32_MAX),
         tablesOffsetStart(UINT32_MAX),
         tagsOffsetStart(UINT32_MAX) {}
 
@@ -169,6 +173,10 @@ struct ModuleEnvironment {
            offsetof(TypeDefInstanceData, superTypeVector);
   }
 
+  uint32_t offsetOfMemoryInstanceData(uint32_t memoryIndex) const {
+    MOZ_ASSERT(memoryIndex < memories.length());
+    return memoriesOffsetStart + memoryIndex * sizeof(MemoryInstanceData);
+  }
   uint32_t offsetOfTableInstanceData(uint32_t tableIndex) const {
     MOZ_ASSERT(tableIndex < tables.length());
     return tablesOffsetStart + tableIndex * sizeof(TableInstanceData);

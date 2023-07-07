@@ -84,7 +84,7 @@ static_assert(Instance::offsetOfData() % alignof(Instance) == 0);
 // We want the memory base to be the first field, and accessible with no
 // offset. This incidentally is also an assertion that there is no superclass
 // with fields.
-static_assert(Instance::offsetOfMemoryBase() == 0);
+static_assert(Instance::offsetOfMemory0Base() == 0);
 
 // We want instance fields that are commonly accessed by the JIT to have
 // compact encodings. A limit of less than 128 bytes is chosen to fit within
@@ -115,14 +115,16 @@ FuncImportInstanceData& Instance::funcImportInstanceData(const FuncImport& fi) {
   return *(FuncImportInstanceData*)(data() + fi.instanceOffset());
 }
 
+MemoryInstanceData& Instance::memoryInstanceData(uint32_t memoryIndex) const {
+  MemoryInstanceData* instanceData =
+      (MemoryInstanceData*)(data() + metadata().memoriesOffsetStart);
+  return instanceData[memoryIndex];
+}
+
 TableInstanceData& Instance::tableInstanceData(uint32_t tableIndex) const {
   TableInstanceData* instanceData =
       (TableInstanceData*)(data() + metadata().tablesOffsetStart);
   return instanceData[tableIndex];
-}
-
-MemoryInstanceData& Instance::memoryInstanceData(const MemoryDesc& md) const {
-  return *(MemoryInstanceData*)(data() + md.globalDataOffset);
 }
 
 TagInstanceData& Instance::tagInstanceData(uint32_t tagIndex) const {
@@ -611,12 +613,12 @@ static inline size_t GetVolatileByteLength(uint8_t* memBase, bool isShared) {
       void (*)(SharedMem<uint8_t*>, SharedMem<uint8_t*>, size_t);
 
   const MemoryInstanceData& dstMemory =
-      instance->memoryInstanceData(instance->metadata().memories[dstMemIndex]);
+      instance->memoryInstanceData(dstMemIndex);
   const MemoryInstanceData& srcMemory =
-      instance->memoryInstanceData(instance->metadata().memories[srcMemIndex]);
+      instance->memoryInstanceData(srcMemIndex);
 
-  uint8_t* dstMemBase = dstMemory.memoryBase;
-  uint8_t* srcMemBase = srcMemory.memoryBase;
+  uint8_t* dstMemBase = dstMemory.base;
+  uint8_t* srcMemBase = srcMemory.base;
 
   size_t dstMemLen = GetVolatileByteLength(dstMemBase, dstMemory.isShared);
   size_t srcMemLen = GetVolatileByteLength(srcMemBase, srcMemory.isShared);
@@ -1810,11 +1812,11 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
   // Initialize memories in the instance data
   for (size_t i = 0; i < memories.length(); i++) {
     const MemoryDesc& md = metadata().memories[i];
-    MemoryInstanceData& data = memoryInstanceData(md);
+    MemoryInstanceData& data = memoryInstanceData(i);
     WasmMemoryObject* memory = memories.get()[i];
 
     data.memory = memory;
-    data.memoryBase = memory->buffer().dataPointerEither().unwrap();
+    data.base = memory->buffer().dataPointerEither().unwrap();
     size_t limit = memory->boundsCheckLimit();
 #if !defined(JS_64BIT)
     // We assume that the limit is a 32-bit quantity
@@ -1832,13 +1834,12 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
 
   // Cache the default memory's values
   if (memories.length() > 0) {
-    const MemoryDesc& md = metadata().memories[0];
-    MemoryInstanceData& data = memoryInstanceData(md);
-    memoryBase_ = data.memoryBase;
-    boundsCheckLimit_ = data.boundsCheckLimit;
+    MemoryInstanceData& data = memoryInstanceData(0);
+    memory0Base_ = data.base;
+    memory0BoundsCheckLimit_ = data.boundsCheckLimit;
   } else {
-    memoryBase_ = nullptr;
-    boundsCheckLimit_ = 0;
+    memory0Base_ = nullptr;
+    memory0BoundsCheckLimit_ = 0;
   }
 
   // Initialize tables in the instance data
@@ -2105,8 +2106,9 @@ void Instance::tracePrivate(JSTracer* trc) {
     TraceNullableEdge(trc, &funcImportInstanceData(fi).callable, "wasm import");
   }
 
-  for (const MemoryDesc& memory : code().metadata().memories) {
-    MemoryInstanceData& memoryData = memoryInstanceData(memory);
+  for (uint32_t memoryIndex = 0;
+       memoryIndex < code().metadata().memories.length(); memoryIndex++) {
+    MemoryInstanceData& memoryData = memoryInstanceData(memoryIndex);
     TraceNullableEdge(trc, &memoryData.memory, "wasm memory object");
   }
 
@@ -2254,13 +2256,13 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
 }
 
 WasmMemoryObject* Instance::memory(uint32_t memoryIndex) const {
-  return memoryInstanceData(metadata().memories[memoryIndex]).memory;
+  return memoryInstanceData(memoryIndex).memory;
 }
 
 SharedMem<uint8_t*> Instance::memoryBase(uint32_t memoryIndex) const {
   MOZ_ASSERT_IF(
       memoryIndex == 0,
-      memoryBase_ == memory(memoryIndex)->buffer().dataPointerEither());
+      memory0Base_ == memory(memoryIndex)->buffer().dataPointerEither());
   return memory(memoryIndex)->buffer().dataPointerEither();
 }
 
@@ -2513,9 +2515,9 @@ class MOZ_RAII ReturnToJSResultCollector {
 
 bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
                           CoercionLevel level) {
-  if (memoryBase_) {
+  if (memory0Base_) {
     // If there has been a moving grow, this Instance should have been notified.
-    MOZ_RELEASE_ASSERT(memoryBase(0).unwrap() == memoryBase_);
+    MOZ_RELEASE_ASSERT(memoryBase(0).unwrap() == memory0Base_);
   }
 
   void* interpEntry;
@@ -2724,13 +2726,13 @@ void Instance::onMovingGrowMemory(const WasmMemoryObject* memory) {
   MOZ_ASSERT(!memory->isShared());
 
   for (uint32_t i = 0; i < metadata().memories.length(); i++) {
-    MemoryInstanceData& md = memoryInstanceData(metadata().memories[i]);
+    MemoryInstanceData& md = memoryInstanceData(i);
     if (memory != md.memory) {
       continue;
     }
     ArrayBufferObject& buffer = md.memory->buffer().as<ArrayBufferObject>();
 
-    md.memoryBase = buffer.dataPointer();
+    md.base = buffer.dataPointer();
     size_t limit = md.memory->boundsCheckLimit();
 #if !defined(JS_64BIT)
     // We assume that the limit is a 32-bit quantity
@@ -2739,8 +2741,8 @@ void Instance::onMovingGrowMemory(const WasmMemoryObject* memory) {
     md.boundsCheckLimit = limit;
 
     if (i == 0) {
-      memoryBase_ = md.memoryBase;
-      boundsCheckLimit_ = md.boundsCheckLimit;
+      memory0Base_ = md.base;
+      memory0BoundsCheckLimit_ = md.boundsCheckLimit;
     }
   }
 }

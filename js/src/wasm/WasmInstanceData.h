@@ -101,7 +101,7 @@ struct MemoryInstanceData {
   GCPtr<WasmMemoryObject*> memory;
 
   // Pointer to the base of the memory.
-  uint8_t* memoryBase;
+  uint8_t* base;
 
   // Bounds check limit in bytes (or zero if there is no memory).  This is
   // 64-bits on 64-bit systems so as to allow for heap lengths up to and beyond

@@ -1096,10 +1096,10 @@ class FunctionCompiler {
 #endif
     uint32_t offset =
         memoryIndex == 0
-            ? Instance::offsetOfMemoryBase()
+            ? Instance::offsetOfMemory0Base()
             : (Instance::offsetInData(
-                  moduleEnv_.memories[memoryIndex].globalDataOffset +
-                  offsetof(MemoryInstanceData, memoryBase)));
+                  moduleEnv_.offsetOfMemoryInstanceData(memoryIndex) +
+                  offsetof(MemoryInstanceData, base)));
     MWasmLoadInstance* base = MWasmLoadInstance::New(
         alloc(), instancePointer_, offset, MIRType::Pointer, aliases);
     curBlock_->add(base);
@@ -1117,9 +1117,9 @@ class FunctionCompiler {
     }
     uint32_t offset =
         memoryIndex == 0
-            ? Instance::offsetOfBoundsCheckLimit()
+            ? Instance::offsetOfMemory0BoundsCheckLimit()
             : (Instance::offsetInData(
-                  moduleEnv_.memories[memoryIndex].globalDataOffset +
+                  moduleEnv_.offsetOfMemoryInstanceData(memoryIndex) +
                   offsetof(MemoryInstanceData, boundsCheckLimit)));
     AliasSet aliases = !moduleEnv_.memories[memoryIndex].canMovingGrow()
                            ? AliasSet::None()
