@@ -43,6 +43,34 @@ nsTArray<nsCString> GuessContainers(const nsAString& aCodec) {
 }
 
 /*
+ * Below are helpers for conversion among Maybe, Optional, and Nullable.
+ */
+
+template <typename T>
+Maybe<T> OptionalToMaybe(const Optional<T>& aOptional) {
+  if (aOptional.WasPassed()) {
+    return Some(aOptional.Value());
+  }
+  return Nothing();
+}
+
+template <typename T>
+Maybe<T> NullableToMaybe(const Nullable<T>& aNullable) {
+  if (!aNullable.IsNull()) {
+    return Some(aNullable.Value());
+  }
+  return Nothing();
+}
+
+template <typename T>
+Nullable<T> MaybeToNullable(const Maybe<T>& aOptional) {
+  if (aOptional.isSome()) {
+    return Nullable<T>(aOptional.value());
+  }
+  return Nullable<T>();
+}
+
+/*
  * The below are helpers to operate ArrayBuffer or ArrayBufferView.
  */
 template <class T>

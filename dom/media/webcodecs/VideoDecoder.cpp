@@ -86,34 +86,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(VideoDecoder)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 /*
- * Below are helpers for conversion among Maybe<T>, Optional<T>, and Nullable<T>
- */
-
-template <typename T>
-Maybe<T> OptionalToMaybe(const dom::Optional<T>& aOptional) {
-  if (aOptional.WasPassed()) {
-    return Some(aOptional.Value());
-  }
-  return Nothing();
-}
-
-template <typename T>
-Maybe<T> NullableToMaybe(const dom::Nullable<T>& aNullable) {
-  if (!aNullable.IsNull()) {
-    return Some(aNullable.Value());
-  }
-  return Nothing();
-}
-
-template <typename T>
-Nullable<T> MaybeToNullable(const Maybe<T>& aOptional) {
-  if (aOptional.isSome()) {
-    return Nullable<T>(aOptional.value());
-  }
-  return Nullable<T>();
-}
-
-/*
  * The followings are helpers for VideoDecoder methods
  */
 
