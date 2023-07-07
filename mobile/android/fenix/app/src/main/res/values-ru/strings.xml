@@ -436,17 +436,11 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Отправить запрос</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Снижение числа уведомлений о куках</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Запросить поддержку для этого сайта?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Запрос на поддержку сайта отправлен.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Запрос отправлен</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Включено для этого сайта</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Запрос на поддержку сайта отправлен</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Запрос на поддержку отправлен</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -455,8 +449,6 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Включить Снижение количества уведомлений о куках для %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Отключить Снижение количества уведомлений о куках для %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Этот сайт в настоящее время не поддерживается функцией снижения числа уведомлений о куках. Хотите ли вы, чтобы наша команда рассмотрела этот сайт и добавила поддержку в будущем?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s не может автоматически отклонять запросы на использование кук на этом сайте. Вы можете отправить запрос на поддержку этого сайта в будущем.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -562,6 +554,11 @@
     <string name="preferences_open_links_in_apps_never">Никогда</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Внешний менеджер загрузок</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Включить журналы Gecko</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Выход из приложения для применения изменений…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Дополнения</string>
 
@@ -1025,7 +1022,7 @@
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Изменить</string>
     <!-- Bookmark overflow menu copy button -->
-    <string name="bookmark_menu_copy_button">Копировать</string>
+    <string name="bookmark_menu_copy_button">Скопировать</string>
     <!-- Bookmark overflow menu share button -->
     <string name="bookmark_menu_share_button">Поделиться</string>
     <!-- Bookmark overflow menu open in new tab button -->
@@ -1244,7 +1241,7 @@
     <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
     <string name="share_link_recent_apps_subheader">Недавно использованные</string>
     <!-- Text for the copy link action in the share screen. -->
-    <string name="share_copy_link_to_clipboard">Копировать в буфер обмена</string>
+    <string name="share_copy_link_to_clipboard">Скопировать в буфер обмена</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Скопировано в буфер обмена</string>
     <!-- An option from the share dialog to sign into sync -->
@@ -1534,12 +1531,8 @@
     <string name="etp_settings">Настройки защиты</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Улучшенная защита от отслеживания</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Используйте Интернет без слежки</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Теперь у нас есть полная защита от кук, наша самая крепкая преграда против межсайтовых трекеров.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Храните свои данные при себе. %s защитит вас от многих наиболее известных трекеров, которые следят за вашим поведением в Интернете.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s защищает вас от многих наиболее распространённых трекеров, которые следят за вами, когда вы находитесь в сети.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1547,15 +1540,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Обычная (по умолчанию)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Золотая середина: приватность и производительность. Страницы будут загружаться нормально.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Страницы будут загружаться нормально, но трекеров блокироваться будет меньше.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Что блокируется обычной защитой от отслеживания</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Строгая</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Блокирует больше трекеров, так что страницы загружаются быстрее, но некоторые страницы могут работать некорректно.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Строгая защита от отслеживания с увеличенной производительностью, некоторые сайты могут работать неправильно.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
@@ -1747,7 +1736,7 @@
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
     <string name="saved_logins_clear_password">Очистить пароль</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
-    <string name="saved_login_copy_username">Копировать имя пользователя</string>
+    <string name="saved_login_copy_username">Скопировать имя пользователя</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">Очистить имя пользователя</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->

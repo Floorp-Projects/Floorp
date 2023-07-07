@@ -371,13 +371,13 @@
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">關於</string>
     <!-- Preference category for settings related to changing the default search engine -->
-    <string name="preferences_category_select_default_search_engine" tools:ignore="UnusedResources">選擇一套</string>
+    <string name="preferences_category_select_default_search_engine">選擇一套</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts" tools:ignore="UnusedResources">管理搜尋捷徑</string>
+    <string name="preferences_manage_search_shortcuts">管理搜尋捷徑</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary" tools:ignore="UnusedResources">編輯搜尋選單中要出現的搜尋引擎</string>
+    <string name="preferences_manage_search_shortcuts_summary">編輯搜尋選單中要出現的搜尋引擎</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_category_engines_in_search_menu" tools:ignore="UnusedResources">要在搜尋選單中顯示的搜尋引擎</string>
+    <string name="preferences_category_engines_in_search_menu">要在搜尋選單中顯示的搜尋引擎</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">預設搜尋引擎</string>
     <!-- Preference for settings related to Search -->
@@ -430,17 +430,11 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">傳送請求</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">減少 Cookie 橫幅</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">要請求支援此網站嗎？</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">已送出對此網站的需求。</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">已請求</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">對此網站開啟</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">已送出對此網站的需求</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">已送出支援請求</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -449,8 +443,6 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">要為 %1$s 開啟減少 Cookie 橫幅功能嗎？</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">要為 %1$s 關閉減少 Cookie 橫幅功能嗎？</string>
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">「減少 Cookie 橫幅」功能目前暫不支援此網站。您想要將此網站回報給我們的團隊，看看是否未來有機會支援嗎？</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s 無法自動拒絕此網站上的 Cookie 請求。您可以請求我們未來支援此網站。</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -558,6 +550,11 @@
     <string name="preferences_open_links_in_apps_never">永不</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">外部下載管理員</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">啟用 Gecko 記錄</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">結束應用程式讓變更生效…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">附加元件</string>
 
@@ -642,6 +639,8 @@
     <string name="addon_already_installed">已經安裝的附加元件</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">管理帳號</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">立即同步</string>
     <!-- Preference category for sync -->
@@ -1231,6 +1230,10 @@
     <string name="share_save_to_pdf">儲存為 PDF</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">無法產生 PDF</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">無法列印</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">列印</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">傳送到裝置</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1530,12 +1533,8 @@
     <string name="etp_settings">保護設定</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">加強型追蹤保護</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">上網不被追蹤</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">現在提供 Total Cookie Protection 功能，這是我們針對跨網站追蹤器迄今最強大的屏障。</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">自己保留自己的資料。%s 不讓常見的追蹤器記錄您的上網行為。</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s 不讓常見的追蹤器記錄您的上網行為。</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1543,15 +1542,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">標準（預設）</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">隱私權保護與效能兼顧。網站可正常運作。</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">頁面可正常載入，但封鎖少一點追蹤器。</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">標準追蹤保護會封鎖哪些內容</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">嚴格</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">封鎖更多追蹤器，讓網頁可以更快載入，但頁面上的某些功能可能會故障。</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">更強大的追蹤保護功能與更快的效能，但某些網站會無法正常運作。</string>
     <!--  Accessibility text for the Strict protection information icon  -->
@@ -1910,7 +1905,7 @@
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">新增搜尋引擎</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-    <string name="search_engine_add_custom_search_engine_button_content_description" tools:ignore="UnusedResources">新增搜尋引擎</string>
+    <string name="search_engine_add_custom_search_engine_button_content_description">新增搜尋引擎</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">編輯搜尋引擎</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1925,17 +1920,17 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">其他</string>
     <!-- Label for the TextField in which user enters custom search engine name -->
-    <string name="search_add_custom_engine_name_label" tools:ignore="UnusedResources">名稱</string>
+    <string name="search_add_custom_engine_name_label">名稱</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">名稱</string>
     <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-    <string name="search_add_custom_engine_name_hint_2" tools:ignore="UnusedResources">搜尋引擎名稱</string>
+    <string name="search_add_custom_engine_name_hint_2">搜尋引擎名稱</string>
     <!-- Label for the TextField in which user enters custom search engine URL -->
-    <string name="search_add_custom_engine_url_label" tools:ignore="UnusedResources">搜尋字串</string>
+    <string name="search_add_custom_engine_url_label">搜尋字串</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">要使用的搜尋字串</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint_2" tools:ignore="UnusedResources">用來搜尋的網址</string>
+    <string name="search_add_custom_engine_search_string_hint_2">用來搜尋的網址</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">用「%s」取代查詢關鍵字。例如:\nhttps://www.google.com/search?q=%s</string>
 
@@ -1943,7 +1938,7 @@
     <string name="search_add_custom_engine_form_description">自訂搜尋引擎詳細資訊</string>
 
     <!-- The text for the "Save" button for saving a custom search engine -->
-    <string name="search_custom_engine_save_button" tools:ignore="UnusedResources">儲存</string>
+    <string name="search_custom_engine_save_button">儲存</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">輸入搜尋引擎名稱</string>
