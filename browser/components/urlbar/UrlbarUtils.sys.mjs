@@ -2446,6 +2446,11 @@ export class UrlbarProvider {
  */
 export class SkippableTimer {
   /**
+   * This can be used to track whether the timer completed.
+   */
+  done = false;
+
+  /**
    * Creates a skippable timer for the given callback and time.
    *
    * @param {object} options An object that configures the timer
@@ -2495,6 +2500,7 @@ export class SkippableTimer {
     });
 
     this.promise = Promise.race([timerPromise, firePromise]).then(() => {
+      this.done = true;
       // If we've been canceled, don't call back.
       if (callback && !this._canceled) {
         callback();

@@ -18,10 +18,6 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.UrlbarUtils.getLogger({ prefix: "EventBufferer" })
 );
 
-// Maximum time events can be deferred for. In automation providers can be quite
-// slow, thus we need a longer timeout to avoid intermittent failures.
-const DEFERRING_TIMEOUT_MS = Cu.isInAutomation ? 1000 : 300;
-
 // Array of keyCodes to defer.
 const DEFERRED_KEY_CODES = new Set([
   KeyboardEvent.DOM_VK_RETURN,
@@ -52,6 +48,12 @@ const QUERY_STATUS = {
  * until more results arrive, at which time they're replayed.
  */
 export class UrlbarEventBufferer {
+  // Maximum time events can be deferred for. In automation providers can be
+  // quite slow, thus we need a longer timeout to avoid intermittent failures.
+  // Note: to avoid handling events too early, this timer should be larger than
+  // UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS.
+  static DEFERRING_TIMEOUT_MS = Cu.isInAutomation ? 1000 : 300;
+
   /**
    * Initialises the class.
    *
@@ -183,7 +185,7 @@ export class UrlbarEventBufferer {
 
     if (!this._deferringTimeout) {
       let elapsed = Cu.now() - this._lastQuery.startDate;
-      let remaining = DEFERRING_TIMEOUT_MS - elapsed;
+      let remaining = UrlbarEventBufferer.DEFERRING_TIMEOUT_MS - elapsed;
       this._deferringTimeout = lazy.setTimeout(() => {
         this.replayDeferredEvents(false);
         this._deferringTimeout = null;
@@ -260,7 +262,10 @@ export class UrlbarEventBufferer {
 
     // This is an event that we'd defer, but if enough time has passed since the
     // start of the search, we don't want to block the user's workflow anymore.
-    if (this._lastQuery.startDate + DEFERRING_TIMEOUT_MS <= Cu.now()) {
+    if (
+      this._lastQuery.startDate + UrlbarEventBufferer.DEFERRING_TIMEOUT_MS <=
+      Cu.now()
+    ) {
       return false;
     }
 
