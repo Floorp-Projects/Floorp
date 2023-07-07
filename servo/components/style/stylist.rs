@@ -17,7 +17,7 @@ use crate::invalidation::media_queries::{
 };
 use crate::invalidation::stylesheets::RuleChangeKind;
 use crate::media_queries::Device;
-use crate::properties::{self, CascadeMode, ComputedValues};
+use crate::properties::{self, CascadeMode, ComputedValues, FirstLineReparenting};
 use crate::properties::{AnimationDeclarations, PropertyDeclarationBlock};
 use crate::properties_and_values::registry::{ScriptRegistry as CustomPropertyScriptRegistry, PropertyRegistration};
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
@@ -1014,7 +1014,7 @@ impl Stylist {
             originating_element_style,
             parent_style,
             parent_style,
-            parent_style,
+            FirstLineReparenting::No,
             /* rule_cache = */ None,
             &mut RuleCacheConditions::default(),
         )
@@ -1040,8 +1040,8 @@ impl Stylist {
         guards: &StylesheetGuards,
         originating_element_style: Option<&ComputedValues>,
         parent_style: Option<&ComputedValues>,
-        parent_style_ignoring_first_line: Option<&ComputedValues>,
         layout_parent_style: Option<&ComputedValues>,
+        first_line_reparenting: FirstLineReparenting,
         rule_cache: Option<&RuleCache>,
         rule_cache_conditions: &mut RuleCacheConditions,
     ) -> Arc<ComputedValues>
@@ -1076,8 +1076,8 @@ impl Stylist {
             guards,
             originating_element_style,
             parent_style,
-            parent_style_ignoring_first_line,
             layout_parent_style,
+            first_line_reparenting,
             visited_rules,
             inputs.flags,
             self.quirks_mode,
@@ -1472,7 +1472,7 @@ impl Stylist {
             /* originating_element_style */ None,
             Some(parent_style),
             Some(parent_style),
-            Some(parent_style),
+            FirstLineReparenting::No,
             CascadeMode::Unvisited {
                 visited_rules: None,
             },
