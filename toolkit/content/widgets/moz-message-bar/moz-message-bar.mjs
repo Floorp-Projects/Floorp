@@ -86,7 +86,7 @@ export default class MozMessageBar extends MozLitElement {
         ${this.iconTemplate()}
         <div class="content">
           <span class="message">${ifDefined(this.message)}</span>
-          <slot name="link"></slot>
+          <slot name="support-link"></slot>
         </div>
         <slot name="actions"></slot>
         <span class="spacer"></span>
