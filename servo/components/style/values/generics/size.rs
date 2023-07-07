@@ -69,6 +69,21 @@ impl<L> Size2D<L> {
             .unwrap_or_else(|_| first.clone());
         Ok(Self::new(first, second))
     }
+
+    /// Parse a `Size2D` which must have x and y components, with a given parsing function.
+    pub fn parse_all_components_with<'i, 't, F>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+        parse_one: F,
+    ) -> Result<Self, ParseError<'i>>
+    where
+        L: Clone,
+        F: Fn(&ParserContext, &mut Parser<'i, 't>) -> Result<L, ParseError<'i>>,
+    {
+        let first = parse_one(context, input)?;
+        let second = parse_one(context, input)?;
+        Ok(Self::new(first, second))
+    }
 }
 
 impl<L> ToCss for Size2D<L>

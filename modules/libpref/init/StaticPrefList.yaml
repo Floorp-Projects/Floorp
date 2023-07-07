@@ -8433,6 +8433,13 @@
   value: false
   mirror: always
 
+# Is support for xywh() enabled?
+- name: layout.css.basic-shape-xywh.enabled
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+  rust: true
+
 # Should stray control characters be rendered visibly?
 - name: layout.css.control-characters.visible
   type: RelaxedAtomicBool
