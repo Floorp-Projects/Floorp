@@ -5,9 +5,9 @@ b=913854 add speex_resampler_set_skip_frac_num r=jmspeex
 This allows a client to align output samples consistently for independent
 resampling of contiguous input buffers.
 
-diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/src/resample.c
---- a/media/libspeex_resampler/src/resample.c
-+++ b/media/libspeex_resampler/src/resample.c
+diff --git a/src/resample.c b/src/resample.c
+--- a/src/resample.c
++++ b/src/resample.c
 @@ -1128,16 +1128,28 @@ EXPORT int speex_resampler_get_output_la
  EXPORT int speex_resampler_skip_zeros(SpeexResamplerState *st)
  {
@@ -37,9 +37,9 @@ diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/
        st->last_sample[i] = 0;
        st->magic_samples[i] = 0;
        st->samp_frac_num[i] = 0;
-diff --git a/media/libspeex_resampler/src/speex_resampler.h b/media/libspeex_resampler/src/speex_resampler.h
---- a/media/libspeex_resampler/src/speex_resampler.h
-+++ b/media/libspeex_resampler/src/speex_resampler.h
+diff --git a/src/speex_resampler.h b/src/speex_resampler.h
+--- a/src/speex_resampler.h
++++ b/src/speex_resampler.h
 @@ -69,16 +69,17 @@
  #define speex_resampler_get_quality CAT_PREFIX(RANDOM_PREFIX,_resampler_get_quality)
  #define speex_resampler_set_input_stride CAT_PREFIX(RANDOM_PREFIX,_resampler_set_input_stride)
