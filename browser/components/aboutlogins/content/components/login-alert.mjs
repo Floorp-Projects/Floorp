@@ -36,6 +36,58 @@ export class LoginAlert extends MozLitElement {
   }
 }
 
+export class VulnerablePasswordAlert extends MozLitElement {
+  static get properties() {
+    return {
+      hostname: { type: String, reflect: true },
+    };
+  }
+
+  static stylesheetUrl = window.IS_STORYBOOK
+    ? "./login-alert.css"
+    : "chrome://browser/content/aboutlogins/components/login-alert.css";
+
+  constructor() {
+    super();
+    this.hostname = "";
+  }
+  render() {
+    return html`
+      <link rel="stylesheet" href=${this.constructor.stylesheetUrl} />
+      <login-alert
+        variant="info"
+        icon="chrome://browser/content/aboutlogins/icons/vulnerable-password.svg"
+        titleId="about-logins-vulnerable-alert-title"
+      >
+        <div slot="content">
+          <span
+            class="alert-text"
+            data-l10n-id="about-logins-vulnerable-alert-text2"
+          ></span>
+          <a
+            class="alert-link"
+            data-l10n-id="about-logins-vulnerable-alert-link"
+            data-l10n-args=${JSON.stringify({
+              hostname: this.hostname,
+            })}
+            href=${this.hostname}
+            rel="noreferrer"
+            target="_blank"
+          ></a>
+        </div>
+        <a
+          slot="action"
+          class="alert-learn-more-link"
+          data-l10n-id="about-logins-vulnerable-alert-learn-more-link"
+          href="https://support.mozilla.org/1/firefox/114.0.1/Darwin/en-CA/lockwise-alerts"
+          rel="noreferrer"
+          target="_blank"
+        ></a>
+      </login-alert>
+    `;
+  }
+}
+
 export class LoginBreachAlert extends MozLitElement {
   static get properties() {
     return {
@@ -93,5 +145,9 @@ export class LoginBreachAlert extends MozLitElement {
   }
 }
 
+customElements.define(
+  "login-vulnerable-password-alert",
+  VulnerablePasswordAlert
+);
 customElements.define("login-breach-alert", LoginBreachAlert);
 customElements.define("login-alert", LoginAlert);
