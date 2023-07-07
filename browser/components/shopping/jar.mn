@@ -13,3 +13,5 @@ browser.jar:
     content/browser/shopping/highlight-item.mjs (content/highlight-item.mjs)
     content/browser/shopping/shopping-card.css (content/shopping-card.css)
     content/browser/shopping/shopping-card.mjs (content/shopping-card.mjs)
+    content/browser/shopping/settings.mjs (content/settings.mjs)
+    content/browser/shopping/settings.css (content/settings.css)
