@@ -43,16 +43,13 @@ juno-onboarding:
       type: boolean
       description: "if true, juno onboarding is shown to the user."
 messaging:
-  description: "Configuration for the messaging system.\n\nIn practice this is a set of growable lookup tables for the\nmessage controller to piece together.\n"
+  description: "The in-app messaging system.\n"
   hasExposure: true
   exposureDescription: ""
   variables:
     actions:
       type: json
       description: A growable map of action URLs.
-    message-under-experiment:
-      type: string
-      description: Id or prefix of the message under experiment.
     messages:
       type: json
       description: A growable collection of messages

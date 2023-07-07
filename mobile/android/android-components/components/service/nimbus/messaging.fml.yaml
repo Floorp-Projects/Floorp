@@ -21,17 +21,11 @@ features:
 
   messaging:
     description: |
-      Configuration for the messaging system.
+      The in-app messaging system.
 
-      In practice this is a set of growable lookup tables for the
-      message controller to piece together.
+    allow-coenrollment: true
 
     variables:
-      message-under-experiment:
-        description: Id or prefix of the message under experiment.
-        type: Option<String>
-        default: null
-
       messages:
         description: A growable collection of messages
         type: Map<String, MessageData>
@@ -93,6 +87,10 @@ objects:
         type: Boolean
         description: "Indicates if this message is the control message, if true shouldn't be displayed"
         default: false
+      experiment:
+        type: Option<String>
+        description: The slug of the experiment that this message came from.
+        default: null
       button-label:
         type: Option<Text>
         description: >

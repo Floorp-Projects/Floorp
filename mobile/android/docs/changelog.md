@@ -10,6 +10,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
 
+* **service-nimbus**
+  * Add `allow-coenrollment` to the `messaging` feature, making it possible to enroll in multiple experiments involving messaging.
+    * Modified the mechanism that ties a message back to experiment, to make sure we record exposure events correctly.
 
 # 116.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v115..releases_v116)

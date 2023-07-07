@@ -6,6 +6,7 @@ package mozilla.components.service.nimbus.messaging
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.Companion.PRIVATE
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
@@ -34,7 +35,7 @@ const val MESSAGING_FEATURE_ID = "messaging"
 class NimbusMessagingStorage(
     private val context: Context,
     private val metadataStorage: MessageMetadataStorage,
-    private val reportMalformedMessage: (String) -> Unit = {
+    private val onMalformedMessage: (String) -> Unit = {
         GleanMessaging.malformed.record(GleanMessaging.MalformedExtra(it))
     },
     private val gleanPlumb: GleanPlumbInterface,
@@ -81,6 +82,12 @@ class NimbusMessagingStorage(
         )
     }
 
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun reportMalformedMessage(key: String) {
+        messagingFeature.recordMalformedConfiguration(key)
+        onMalformedMessage(key)
+    }
+
     /**
      * Returns a list of currently available messages descending sorted by their priority.
      * This list of messages will not include any expired, pressed or dismissed messages.
@@ -103,43 +110,62 @@ class NimbusMessagingStorage(
     /**
      * Returns the next higher priority message which all their triggers are true.
      */
-    fun getNextMessage(surface: MessageSurfaceId, availableMessages: List<Message>): Message? {
-        val jexlCache = HashMap<String, Boolean>()
-        val helper = gleanPlumb.createMessageHelper(customAttributes)
-        val message = availableMessages.firstOrNull {
-            surface == it.surface && isMessageEligible(it, helper, jexlCache)
-        } ?: return null
+    fun getNextMessage(surface: MessageSurfaceId, availableMessages: List<Message>): Message? =
+        getNextMessage(
+            surface,
+            availableMessages,
+            setOf(),
+            gleanPlumb.createMessageHelper(customAttributes),
+            mutableMapOf(),
+        )
+
+    @Suppress("ReturnCount")
+    private fun getNextMessage(
+        surface: MessageSurfaceId,
+        availableMessages: List<Message>,
+        excluded: Set<String>,
+        helper: GleanPlumbMessageHelper,
+        jexlCache: MutableMap<String, Boolean>,
+    ): Message? {
+        val message = availableMessages
+            .filter { surface == it.surface }
+            .filter { !excluded.contains(it.id) }
+            .firstOrNull { isMessageEligible(it, helper, jexlCache) } ?: return null
 
         // Check this isn't an experimental message. If not, we can go ahead and return it.
-        if (!isMessageUnderExperiment(message, nimbusFeature.value().messageUnderExperiment)) {
-            return message
-        }
-        // If the message is under experiment, then we need to record the exposure
-        messagingFeature.recordExposure()
+        val slug = message.data.experiment ?: return message
+
+        // We know that it's experimental, and we know which experiment it came from.
+        messagingFeature.recordExperimentExposure(slug)
 
         // If this is an experimental message, but not a placebo, then just return the message.
-        return if (!message.data.isControl) {
-            message
-        } else {
-            // If a message is control then it's considered as displayed
-            val updatedMetadata = message.metadata.copy(
-                displayCount = message.metadata.displayCount + 1,
-                lastTimeShown = System.currentTimeMillis(),
-            )
+        if (!message.data.isControl) {
+            return message
+        }
 
-            runBlocking {
-                updateMetadata(updatedMetadata)
-            }
+        // If a message is a control then it's considered as displayed
+        val updatedMetadata = message.metadata.copy(
+            displayCount = message.metadata.displayCount + 1,
+            lastTimeShown = System.currentTimeMillis(),
+        )
 
-            // This is a control, so we need to either return the next message (there may not be one)
-            // or not display anything.
-            when (getOnControlBehavior()) {
-                ControlMessageBehavior.SHOW_NEXT_MESSAGE -> availableMessages.firstOrNull {
-                    // There should only be one control message, and we've just detected it.
-                    surface == it.surface && !it.data.isControl && isMessageEligible(it, helper, jexlCache)
-                }
-                ControlMessageBehavior.SHOW_NONE -> null
-            }
+        runBlocking {
+            updateMetadata(updatedMetadata)
+        }
+
+        // This is a control, so we need to either return the next message (there may not be one)
+        // or not display anything.
+        return when (getOnControlBehavior()) {
+            ControlMessageBehavior.SHOW_NEXT_MESSAGE ->
+                getNextMessage(
+                    surface,
+                    availableMessages,
+                    excluded + message.id,
+                    helper,
+                    jexlCache,
+                )
+
+            ControlMessageBehavior.SHOW_NONE -> null
         }
     }
 
@@ -214,22 +240,6 @@ class NimbusMessagingStorage(
                 return null
             }
             safeTrigger
-        }
-    }
-
-    /**
-     * Return true if the message passed as a parameter is under experiment
-     *
-     * Aimed to be used from tests only, but currently public because some tests inside Fenix need
-     * it. This should be set as internal when this bug is fixed:
-     * https://bugzilla.mozilla.org/show_bug.cgi?id=1823472
-     */
-    @VisibleForTesting
-    fun isMessageUnderExperiment(message: Message, expression: String?): Boolean {
-        return message.data.isControl || when {
-            expression.isNullOrBlank() -> false
-            expression.endsWith("-") -> message.id.startsWith(expression)
-            else -> message.id == expression
         }
     }
 

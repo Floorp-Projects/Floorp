@@ -92,6 +92,11 @@ class NimbusMessagingStorageTest {
     }
 
     @Test
+    fun `WHEN calling getCoenrollingFeatureIds THEN messaging is in that list`() {
+        assertTrue(FxNimbusMessaging.getCoenrollingFeatureIds().contains(MESSAGING_FEATURE_ID))
+    }
+
+    @Test
     fun `WHEN calling getMessages THEN provide a list of available messages for a given surface`() =
         runTest {
             val homescreenMessage = storage.getMessages().first()
@@ -380,54 +385,6 @@ class NimbusMessagingStorageTest {
     }
 
     @Test
-    fun `GIVEN a null or black expression WHEN calling isMessageUnderExperiment THEN return false`() {
-        val message = Message(
-            "id",
-            mock(),
-            action = "action",
-            mock(),
-            emptyList(),
-            Message.Metadata("id"),
-        )
-
-        val result = storage.isMessageUnderExperiment(message, null)
-
-        assertFalse(result)
-    }
-
-    @Test
-    fun `GIVEN messages id that ends with - WHEN calling isMessageUnderExperiment THEN return true`() {
-        val message = Message(
-            "end-",
-            mock(),
-            action = "action",
-            mock(),
-            emptyList(),
-            Message.Metadata("end-"),
-        )
-
-        val result = storage.isMessageUnderExperiment(message, "end-")
-
-        assertTrue(result)
-    }
-
-    @Test
-    fun `GIVEN message under experiment WHEN calling isMessageUnderExperiment THEN return true`() {
-        val message = Message(
-            "same-id",
-            mock(),
-            action = "action",
-            mock(),
-            emptyList(),
-            Message.Metadata("same-id"),
-        )
-
-        val result = storage.isMessageUnderExperiment(message, "same-id")
-
-        assertTrue(result)
-    }
-
-    @Test
     fun `GIVEN an eligible message WHEN calling isMessageEligible THEN return true`() {
         val helper: GleanPlumbMessageHelper = mock()
         val message = Message(
@@ -444,6 +401,15 @@ class NimbusMessagingStorageTest {
         val result = storage.isMessageEligible(message, helper)
 
         assertTrue(result)
+    }
+
+    @Test
+    fun `GIVEN a malformed message key WHEN calling reportMalformedMessage THEN record a malformed feature event`() {
+        val key = "malformed-message"
+        storage.reportMalformedMessage(key)
+
+        assertTrue(malformedWasReported)
+        verify(featuresInterface).recordMalformedConfiguration("messaging", key)
     }
 
     @Test
@@ -543,7 +509,6 @@ class NimbusMessagingStorageTest {
         )
 
         doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
-        doReturn(false).`when`(spiedStorage).isMessageUnderExperiment(any(), any())
 
         val result = spiedStorage.getNextMessage(HOMESCREEN, listOf(message))
 
@@ -551,9 +516,10 @@ class NimbusMessagingStorageTest {
     }
 
     @Test
-    fun `GIVEN a message under experiment WHEN calling getNextMessage THEN call recordExposure`() {
+    fun `GIVEN a message under experiment WHEN calling getNextMessage THEN call recordExposureEvent`() {
         val spiedStorage = spy(storage)
-        val messageData: MessageData = createMessageData(isControl = false)
+        val experiment = "my-experiment"
+        val messageData: MessageData = createMessageData(isControl = false, experiment = experiment)
 
         val message = Message(
             "same-id",
@@ -565,19 +531,19 @@ class NimbusMessagingStorageTest {
         )
 
         doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
-        doReturn(true).`when`(spiedStorage).isMessageUnderExperiment(any(), any())
 
         val result = spiedStorage.getNextMessage(HOMESCREEN, listOf(message))
 
-        verify(featuresInterface).recordExposureEvent("messaging")
+        verify(featuresInterface).recordExposureEvent("messaging", experiment)
         assertEquals(message.id, result!!.id)
     }
 
     @Test
     fun `GIVEN a control message WHEN calling getNextMessage THEN return the next eligible message`() {
         val spiedStorage = spy(storage)
+        val experiment = "my-experiment"
         val messageData: MessageData = createMessageData()
-        val controlMessageData: MessageData = createMessageData(isControl = true)
+        val controlMessageData: MessageData = createMessageData(isControl = true, experiment = experiment)
 
         doReturn(SHOW_NEXT_MESSAGE).`when`(spiedStorage).getOnControlBehavior()
 
@@ -600,23 +566,23 @@ class NimbusMessagingStorageTest {
         )
 
         doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
-        doReturn(true).`when`(spiedStorage).isMessageUnderExperiment(any(), any())
 
         val result = spiedStorage.getNextMessage(
             HOMESCREEN,
             listOf(controlMessage, message),
         )
 
-        verify(messagingFeature).recordExposure()
+        verify(messagingFeature).recordExperimentExposure(experiment)
         assertEquals(message.id, result!!.id)
     }
 
     @Test
     fun `GIVEN a control message WHEN calling getNextMessage THEN return the next eligible message with the correct surface`() {
         val spiedStorage = spy(storage)
+        val experiment = "my-experiment"
         val messageData: MessageData = createMessageData()
         val incorrectMessageData: MessageData = createMessageData(surface = NOTIFICATION)
-        val controlMessageData: MessageData = createMessageData(isControl = true)
+        val controlMessageData: MessageData = createMessageData(isControl = true, experiment = experiment)
 
         doReturn(SHOW_NEXT_MESSAGE).`when`(spiedStorage).getOnControlBehavior()
 
@@ -648,14 +614,13 @@ class NimbusMessagingStorageTest {
         )
 
         doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
-        doReturn(true).`when`(spiedStorage).isMessageUnderExperiment(any(), any())
 
         var result = spiedStorage.getNextMessage(
             HOMESCREEN,
             listOf(controlMessage, incorrectMessage, message),
         )
 
-        verify(messagingFeature, times(1)).recordExposure()
+        verify(messagingFeature, times(1)).recordExperimentExposure(experiment)
         assertEquals(message.id, result!!.id)
 
         result = spiedStorage.getNextMessage(
@@ -663,7 +628,7 @@ class NimbusMessagingStorageTest {
             listOf(controlMessage, incorrectMessage),
         )
 
-        verify(messagingFeature, times(2)).recordExposure()
+        verify(messagingFeature, times(2)).recordExperimentExposure(experiment)
         assertNull(result)
     }
 
@@ -753,6 +718,7 @@ class NimbusMessagingStorageTest {
         triggers: List<String> = listOf("trigger-1"),
         surface: MessageSurfaceId = HOMESCREEN,
         isControl: Boolean = false,
+        experiment: String? = null,
     ) = MessageData(
         action = Res.string(action),
         style = style,
@@ -760,6 +726,7 @@ class NimbusMessagingStorageTest {
         surface = surface,
         isControl = isControl,
         text = Res.string(text),
+        experiment = experiment,
     )
 
     private fun createMessagingFeature(
