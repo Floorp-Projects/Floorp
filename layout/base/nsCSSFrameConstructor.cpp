@@ -10114,12 +10114,9 @@ void nsCSSFrameConstructor::CreateLetterFrame(
 
   if (sc) {
     if (parentFrame->IsLineFrame()) {
-      nsIFrame* parentIgnoringFirstLine = nsIFrame::CorrectStyleParentFrame(
-          aBlockFrame, PseudoStyleType::firstLetter);
-
       sc = mPresShell->StyleSet()->ReparentComputedStyle(
-          sc, parentComputedStyle, parentIgnoringFirstLine->Style(),
-          parentComputedStyle, blockContent->AsElement());
+          sc, parentComputedStyle, parentComputedStyle,
+          blockContent->AsElement());
     }
 
     RefPtr<ComputedStyle> textSC =
