@@ -1763,7 +1763,7 @@ void MacroAssemblerMIPSCompat::handleFailureWithHandlerTail(
   ma_move(a0, StackPointer);  // Use a0 since it is a first function argument
 
   // Call the handler.
-  using Fn = void (*)(ResumeFromException * rfe);
+  using Fn = void (*)(ResumeFromException* rfe);
   asMasm().setupUnalignedABICall(a1);
   asMasm().passABIArg(a0);
   asMasm().callWithABI<Fn, HandleException>(
