@@ -49,7 +49,7 @@ harness = false
 
 [dependencies]
 bit-set = "0.5"
-bitflags = "1.0.5"
+bitflags = "2"
 log = "0.4"
 num-traits = "0.2"
 rustc-hash = "1.1.0"
@@ -107,6 +107,9 @@ ron = "~0.7.1"
 version = "0.3"
 features = []
 
+[dev-dependencies.hlsl-snapshots]
+path = "./xtask/hlsl-snapshots"
+
 [dev-dependencies.rspirv]
 version = "0.11"
 git = "https://github.com/gfx-rs/rspirv"
@@ -123,12 +126,14 @@ features = ["deserialize"]
 [features]
 arbitrary = [
     "dep:arbitrary",
+    "bitflags/arbitrary",
     "indexmap/arbitrary",
 ]
 clone = []
 default = []
 deserialize = [
     "serde",
+    "bitflags/serde",
     "indexmap/serde-1",
 ]
 dot-out = []
@@ -138,6 +143,7 @@ hlsl-out = []
 msl-out = []
 serialize = [
     "serde",
+    "bitflags/serde",
     "indexmap/serde-1",
 ]
 span = [

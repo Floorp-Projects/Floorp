@@ -71,6 +71,8 @@ impl<'a> ConstantSolver<'a> {
         let span = self.expressions.get_span(expr);
         match self.expressions[expr] {
             Expression::Constant(constant) => Ok(constant),
+            Expression::ZeroValue(ty) => self.register_zero_constant(ty, span),
+            Expression::Literal(literal) => Ok(self.register_literal(literal, span)),
             Expression::AccessIndex { base, index } => self.access(base, index as usize),
             Expression::Access { base, index } => {
                 let index = self.solve(index)?;
@@ -275,7 +277,13 @@ impl<'a> ConstantSolver<'a> {
                     }
                     ConstantInner::Composite { ty, .. } => match self.types[ty].inner {
                         TypeInner::Array { size, .. } => match size {
-                            crate::ArraySize::Constant(constant) => Ok(constant),
+                            crate::ArraySize::Constant(size) => Ok(self.register_constant(
+                                ConstantInner::Scalar {
+                                    width: 4,
+                                    value: ScalarValue::Uint(size.get() as u64),
+                                },
+                                span,
+                            )),
                             crate::ArraySize::Dynamic => {
                                 Err(ConstantSolvingError::ArrayLengthDynamic)
                             }
@@ -291,6 +299,7 @@ impl<'a> ConstantSolver<'a> {
             Expression::Derivative { .. } => Err(ConstantSolvingError::Derivative),
             Expression::Relational { .. } => Err(ConstantSolvingError::Relational),
             Expression::CallResult { .. } => Err(ConstantSolvingError::Call),
+            Expression::WorkGroupUniformLoadResult { .. } => unreachable!(),
             Expression::AtomicResult { .. } => Err(ConstantSolvingError::Atomic),
             Expression::FunctionArgument(_) => Err(ConstantSolvingError::FunctionArg),
             Expression::GlobalVariable(_) => Err(ConstantSolvingError::GlobalVariable),
@@ -545,6 +554,101 @@ impl<'a> ConstantSolver<'a> {
         };
 
         Ok(self.register_constant(inner, span))
+    }
+
+    fn register_zero_constant(
+        &mut self,
+        ty: Handle<Type>,
+        span: crate::Span,
+    ) -> Result<Handle<Constant>, ConstantSolvingError> {
+        let inner = match self.types[ty].inner {
+            TypeInner::Scalar { kind, width } => {
+                let value = match kind {
+                    ScalarKind::Sint => ScalarValue::Sint(0),
+                    ScalarKind::Uint => ScalarValue::Uint(0),
+                    ScalarKind::Float => ScalarValue::Float(1.0),
+                    ScalarKind::Bool => ScalarValue::Bool(false),
+                };
+                ConstantInner::Scalar { width, value }
+            }
+            TypeInner::Vector { size, kind, width } => {
+                let element_type = self.types.insert(
+                    Type {
+                        name: None,
+                        inner: TypeInner::Scalar { kind, width },
+                    },
+                    span,
+                );
+                let element = self.register_zero_constant(element_type, span)?;
+                let components = std::iter::repeat(element)
+                    .take(size as u8 as usize)
+                    .collect();
+                ConstantInner::Composite { ty, components }
+            }
+            TypeInner::Matrix {
+                columns,
+                rows,
+                width,
+            } => {
+                let column_type = self.types.insert(
+                    Type {
+                        name: None,
+                        inner: TypeInner::Vector {
+                            size: rows,
+                            kind: ScalarKind::Float,
+                            width,
+                        },
+                    },
+                    span,
+                );
+                let column = self.register_zero_constant(column_type, span)?;
+                let components = std::iter::repeat(column)
+                    .take(columns as u8 as usize)
+                    .collect();
+                ConstantInner::Composite { ty, components }
+            }
+            TypeInner::Array { base, size, .. } => {
+                let length = match size {
+                    crate::ArraySize::Constant(size) => size.get(),
+                    crate::ArraySize::Dynamic => {
+                        return Err(ConstantSolvingError::ArrayLengthDynamic)
+                    }
+                };
+                let element = self.register_zero_constant(base, span)?;
+                let components = std::iter::repeat(element).take(length as usize).collect();
+                ConstantInner::Composite { ty, components }
+            }
+            TypeInner::Struct { ref members, .. } => {
+                // Make a copy of the member types, for the borrow checker.
+                let types: Vec<Handle<Type>> = members.iter().map(|member| member.ty).collect();
+                let mut components = vec![];
+                for member_ty in types {
+                    let value = self.register_zero_constant(member_ty, span)?;
+                    components.push(value);
+                }
+                ConstantInner::Composite { ty, components }
+            }
+            ref inner => {
+                return Err(ConstantSolvingError::NotImplemented(format!(
+                    "zero-value construction for types: {:?}",
+                    inner
+                )));
+            }
+        };
+
+        Ok(self.register_constant(inner, span))
+    }
+
+    fn register_literal(&mut self, literal: crate::Literal, span: crate::Span) -> Handle<Constant> {
+        let (width, value) = match literal {
+            crate::Literal::F64(n) => (8, ScalarValue::Float(n)),
+            crate::Literal::F32(n) => (4, ScalarValue::Float(n as f64)),
+            crate::Literal::U32(n) => (4, ScalarValue::Uint(n as u64)),
+            crate::Literal::I32(n) => (4, ScalarValue::Sint(n as i64)),
+            crate::Literal::Bool(b) => (1, ScalarValue::Bool(b)),
+        };
+
+        self.register_constant(ConstantInner::Scalar { width, value }, span)
     }
 
     fn register_constant(&mut self, inner: ConstantInner, span: crate::Span) -> Handle<Constant> {

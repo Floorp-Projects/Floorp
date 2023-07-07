@@ -1744,6 +1744,8 @@ impl VendorId {
     pub const MESA: Self = Self(0x1_0005);
     #[doc = "PoCL vendor ID"]
     pub const POCL: Self = Self(0x1_0006);
+    #[doc = "Mobileye vendor ID"]
+    pub const MOBILEYE: Self = Self(0x1_0007);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -1808,6 +1810,8 @@ impl DriverId {
     pub const MESA_DOZEN: Self = Self(23);
     #[doc = "Mesa open source project"]
     pub const MESA_NVK: Self = Self(24);
+    #[doc = "Imagination Technologies"]
+    pub const IMAGINATION_OPEN_SOURCE_MESA: Self = Self(25);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]
@@ -2780,6 +2784,43 @@ impl DeviceFaultVendorBinaryHeaderVersionEXT {
 impl DeviceFaultVendorBinaryHeaderVersionEXT {
     pub const ONE: Self = Self(1);
 }
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkDisplacementMicromapFormatNV.html>"]
+pub struct DisplacementMicromapFormatNV(pub(crate) i32);
+impl DisplacementMicromapFormatNV {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl DisplacementMicromapFormatNV {
+    pub const TYPE_64_TRIANGLES_64_BYTES: Self = Self(1);
+    pub const TYPE_256_TRIANGLES_128_BYTES: Self = Self(2);
+    pub const TYPE_1024_TRIANGLES_128_BYTES: Self = Self(3);
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[repr(transparent)]
+#[doc = "<https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VkShaderCodeTypeEXT.html>"]
+pub struct ShaderCodeTypeEXT(pub(crate) i32);
+impl ShaderCodeTypeEXT {
+    #[inline]
+    pub const fn from_raw(x: i32) -> Self {
+        Self(x)
+    }
+    #[inline]
+    pub const fn as_raw(self) -> i32 {
+        self.0
+    }
+}
+impl ShaderCodeTypeEXT {
+    pub const BINARY: Self = Self(0);
+    pub const SPIRV: Self = Self(1);
+}
 impl fmt::Debug for ObjectType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let name = match *self {
@@ -2828,6 +2869,7 @@ impl fmt::Debug for ObjectType {
             Self::BUFFER_COLLECTION_FUCHSIA => Some("BUFFER_COLLECTION_FUCHSIA"),
             Self::MICROMAP_EXT => Some("MICROMAP_EXT"),
             Self::OPTICAL_FLOW_SESSION_NV => Some("OPTICAL_FLOW_SESSION_NV"),
+            Self::SHADER_EXT => Some("SHADER_EXT"),
             Self::SAMPLER_YCBCR_CONVERSION => Some("SAMPLER_YCBCR_CONVERSION"),
             Self::DESCRIPTOR_UPDATE_TEMPLATE => Some("DESCRIPTOR_UPDATE_TEMPLATE"),
             Self::PRIVATE_DATA_SLOT => Some("PRIVATE_DATA_SLOT"),
@@ -2898,7 +2940,13 @@ impl fmt::Debug for Result {
             Self::THREAD_DONE_KHR => Some("THREAD_DONE_KHR"),
             Self::OPERATION_DEFERRED_KHR => Some("OPERATION_DEFERRED_KHR"),
             Self::OPERATION_NOT_DEFERRED_KHR => Some("OPERATION_NOT_DEFERRED_KHR"),
+            Self::ERROR_INVALID_VIDEO_STD_PARAMETERS_KHR => {
+                Some("ERROR_INVALID_VIDEO_STD_PARAMETERS_KHR")
+            }
             Self::ERROR_COMPRESSION_EXHAUSTED_EXT => Some("ERROR_COMPRESSION_EXHAUSTED_EXT"),
+            Self::ERROR_INCOMPATIBLE_SHADER_BINARY_EXT => {
+                Some("ERROR_INCOMPATIBLE_SHADER_BINARY_EXT")
+            }
             Self::ERROR_OUT_OF_POOL_MEMORY => Some("ERROR_OUT_OF_POOL_MEMORY"),
             Self::ERROR_INVALID_EXTERNAL_HANDLE => Some("ERROR_INVALID_EXTERNAL_HANDLE"),
             Self::ERROR_FRAGMENTATION => Some("ERROR_FRAGMENTATION"),

@@ -1,3 +1,5 @@
+#[cfg(doc)]
+use super::Entry;
 use crate::device::Device;
 use crate::prelude::*;
 use crate::vk;
@@ -335,9 +337,17 @@ impl Instance {
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkCreateDevice.html>
     ///
     /// # Safety
-    /// In order for the created [`Device`] to be valid for the duration of its
-    /// usage, the [`Instance`] this was called on must be dropped later than the
-    /// resulting [`Device`].
+    ///
+    /// There is a [parent/child relation] between [`Instance`] and the resulting [`Device`].  The
+    /// application must not [destroy][Instance::destroy_instance()] the parent [`Instance`] object
+    /// before first [destroying][Device::destroy_device()] the returned [`Device`] child object.
+    /// [`Device`] does _not_ implement [drop][drop()] semantics and can only be destroyed via
+    /// [`destroy_device()`][Device::destroy_device()].
+    ///
+    /// See the [`Entry::create_instance()`] documentation for more destruction ordering rules on
+    /// [`Instance`].
+    ///
+    /// [parent/child relation]: https://registry.khronos.org/vulkan/specs/1.3-extensions/html/vkspec.html#fundamentals-objectmodel-lifetime
     #[inline]
     pub unsafe fn create_device(
         &self,

@@ -22,32 +22,32 @@ impl Maintenance4 {
     #[inline]
     pub unsafe fn get_device_buffer_memory_requirements(
         &self,
-        create_info: &vk::DeviceBufferMemoryRequirementsKHR,
+        memory_requirements: &vk::DeviceBufferMemoryRequirementsKHR,
         out: &mut vk::MemoryRequirements2,
     ) {
-        (self.fp.get_device_buffer_memory_requirements_khr)(self.handle, create_info, out)
+        (self.fp.get_device_buffer_memory_requirements_khr)(self.handle, memory_requirements, out)
     }
 
     /// <https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkGetDeviceImageMemoryRequirementsKHR.html>
     #[inline]
     pub unsafe fn get_device_image_memory_requirements(
         &self,
-        create_info: &vk::DeviceImageMemoryRequirementsKHR,
+        memory_requirements: &vk::DeviceImageMemoryRequirementsKHR,
         out: &mut vk::MemoryRequirements2,
     ) {
-        (self.fp.get_device_image_memory_requirements_khr)(self.handle, create_info, out)
+        (self.fp.get_device_image_memory_requirements_khr)(self.handle, memory_requirements, out)
     }
 
     /// Retrieve the number of elements to pass to [`get_device_image_sparse_memory_requirements()`][Self::get_device_image_sparse_memory_requirements()]
     #[inline]
     pub unsafe fn get_device_image_sparse_memory_requirements_len(
         &self,
-        create_info: &vk::DeviceImageMemoryRequirementsKHR,
+        memory_requirements: &vk::DeviceImageMemoryRequirementsKHR,
     ) -> usize {
         let mut count = 0;
         (self.fp.get_device_image_sparse_memory_requirements_khr)(
             self.handle,
-            create_info,
+            memory_requirements,
             &mut count,
             std::ptr::null_mut(),
         );
@@ -61,13 +61,13 @@ impl Maintenance4 {
     #[inline]
     pub unsafe fn get_device_image_sparse_memory_requirements(
         &self,
-        create_info: &vk::DeviceImageMemoryRequirementsKHR,
+        memory_requirements: &vk::DeviceImageMemoryRequirementsKHR,
         out: &mut [vk::SparseImageMemoryRequirements2],
     ) {
         let mut count = out.len() as u32;
         (self.fp.get_device_image_sparse_memory_requirements_khr)(
             self.handle,
-            create_info,
+            memory_requirements,
             &mut count,
             out.as_mut_ptr(),
         );

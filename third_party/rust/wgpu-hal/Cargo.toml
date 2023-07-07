@@ -58,13 +58,13 @@ rustc-hash = "1.1"
 thiserror = "1"
 
 [dependencies.glow]
-version = "0.12.1"
+version = "0.12.2"
 optional = true
 
 [dependencies.naga]
 version = "0.12.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "b99d58ea435090e561377949f428bce2c18451bb"
+rev = "76003dc0035d53a474d366dcdf49d2e4d12e921f"
 features = ["clone"]
 
 [dependencies.profiling]
@@ -77,13 +77,14 @@ path = "../wgpu-types"
 package = "wgpu-types"
 
 [dev-dependencies]
+cfg-if = "1"
 env_logger = "0.10"
 winit = "0.27.1"
 
 [dev-dependencies.naga]
 version = "0.12.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "b99d58ea435090e561377949f428bce2c18451bb"
+rev = "76003dc0035d53a474d366dcdf49d2e4d12e921f"
 features = ["wgsl-in"]
 
 [features]
@@ -121,7 +122,6 @@ gles = [
 metal = [
     "naga/msl-out",
     "block",
-    "foreign-types",
 ]
 renderdoc = [
     "libloading",
@@ -138,8 +138,8 @@ vulkan = [
 windows_rs = ["gpu-allocator"]
 
 [target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies]
-js-sys = "0.3.61"
-wasm-bindgen = "0.2.84"
+js-sys = "0.3.63"
+wasm-bindgen = "0.2.86"
 
 [target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.web-sys]
 version = "0.3.61"
@@ -152,23 +152,19 @@ features = [
 
 [target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies]
 core-graphics-types = "0.1"
-metal = "0.24.0"
+metal = "0.25.0"
 objc = "0.2.5"
 
 [target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.block]
 version = "0.1"
 optional = true
 
-[target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.foreign-types]
-version = "0.3"
-optional = true
-
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.ash]
-version = "0.37.2"
+version = "0.37.3"
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.gpu-alloc]
-version = "0.5"
+version = "0.6"
 optional = true
 
 [target."cfg(not(target_arch = \"wasm32\"))".dependencies.gpu-descriptor]

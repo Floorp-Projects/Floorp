@@ -22,14 +22,15 @@ pub fn mps_supports_device(device: &DeviceRef) -> bool {
     b == YES
 }
 
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpskernel>
 pub enum MPSKernel {}
 
 foreign_obj_type! {
     type CType = MPSKernel;
     pub struct Kernel;
-    pub struct KernelRef;
 }
 
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsraydatatype>
 pub enum MPSRayDataType {
     OriginDirection = 0,
     OriginMinDistanceDirectionMaxDistance = 1,
@@ -37,6 +38,7 @@ pub enum MPSRayDataType {
 }
 
 bitflags! {
+    /// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsraymaskoptions>
     #[allow(non_upper_case_globals)]
     pub struct MPSRayMaskOptions: NSUInteger {
         /// Enable primitive masks
@@ -47,6 +49,8 @@ bitflags! {
 }
 
 /// Options that determine the data contained in an intersection result.
+///
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsintersectiondatatype>
 pub enum MPSIntersectionDataType {
     Distance = 0,
     DistancePrimitiveIndex = 1,
@@ -55,6 +59,7 @@ pub enum MPSIntersectionDataType {
     DistancePrimitiveIndexInstanceIndexCoordinates = 4,
 }
 
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsintersectiontype>
 pub enum MPSIntersectionType {
     /// Find the closest intersection to the ray's origin along the ray direction.
     /// This is potentially slower than `Any` but is well suited to primary visibility rays.
@@ -64,6 +69,7 @@ pub enum MPSIntersectionType {
     Any = 1,
 }
 
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsraymaskoperator>
 pub enum MPSRayMaskOperator {
     /// Accept the intersection if `(primitive mask & ray mask) != 0`.
     And = 0,
@@ -89,6 +95,7 @@ pub enum MPSRayMaskOperator {
     GreaterThanOrEqualTo = 9,
 }
 
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpstriangleintersectiontesttype>
 pub enum MPSTriangleIntersectionTestType {
     /// Use the default ray/triangle intersection test
     Default = 0,
@@ -98,6 +105,7 @@ pub enum MPSTriangleIntersectionTestType {
     Watertight = 1,
 }
 
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsaccelerationstructurestatus>
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MPSAccelerationStructureStatus {
     Unbuilt = 0,
@@ -105,6 +113,7 @@ pub enum MPSAccelerationStructureStatus {
 }
 
 bitflags! {
+    /// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsaccelerationstructureusage>
     #[allow(non_upper_case_globals)]
     pub struct MPSAccelerationStructureUsage: NSUInteger {
         /// No usage options specified
@@ -123,6 +132,7 @@ const MPSDataTypeFloatBit: isize = 0x10000000;
 const MPSDataTypeSignedBit: isize = 0x20000000;
 const MPSDataTypeNormalizedBit: isize = 0x40000000;
 
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsdatatype>
 pub enum MPSDataType {
     Invalid = 0,
 
@@ -145,13 +155,14 @@ pub enum MPSDataType {
 }
 
 /// A kernel that performs intersection tests between rays and geometry.
+///
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsrayintersector>
 pub enum MPSRayIntersector {}
 
 foreign_obj_type! {
     type CType = MPSRayIntersector;
     pub struct RayIntersector;
-    pub struct RayIntersectorRef;
-    type ParentType = KernelRef;
+    type ParentType = Kernel;
 }
 
 impl RayIntersector {
@@ -247,13 +258,14 @@ impl RayIntersectorRef {
     }
 }
 
-/// A group of acceleration structures which may be used together in an instance acceleration structure
+/// A group of acceleration structures which may be used together in an instance acceleration structure.
+///
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsaccelerationstructuregroup>
 pub enum MPSAccelerationStructureGroup {}
 
 foreign_obj_type! {
     type CType = MPSAccelerationStructureGroup;
     pub struct AccelerationStructureGroup;
-    pub struct AccelerationStructureGroupRef;
 }
 
 impl AccelerationStructureGroup {
@@ -278,12 +290,13 @@ impl AccelerationStructureGroupRef {
 }
 
 /// The base class for data structures that are built over geometry and used to accelerate ray tracing.
+///
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsaccelerationstructure>
 pub enum MPSAccelerationStructure {}
 
 foreign_obj_type! {
     type CType = MPSAccelerationStructure;
     pub struct AccelerationStructure;
-    pub struct AccelerationStructureRef;
 }
 
 impl AccelerationStructureRef {
@@ -312,13 +325,13 @@ impl AccelerationStructureRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpspolygonaccelerationstructure>
 pub enum MPSPolygonAccelerationStructure {}
 
 foreign_obj_type! {
     type CType = MPSPolygonAccelerationStructure;
     pub struct PolygonAccelerationStructure;
-    pub struct PolygonAccelerationStructureRef;
-    type ParentType = AccelerationStructureRef;
+    type ParentType = AccelerationStructure;
 }
 
 impl PolygonAccelerationStructureRef {
@@ -356,13 +369,14 @@ impl PolygonAccelerationStructureRef {
 }
 
 /// An acceleration structure built over triangles.
+///
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpstriangleaccelerationstructure>
 pub enum MPSTriangleAccelerationStructure {}
 
 foreign_obj_type! {
     type CType = MPSTriangleAccelerationStructure;
     pub struct TriangleAccelerationStructure;
-    pub struct TriangleAccelerationStructureRef;
-    type ParentType = PolygonAccelerationStructureRef;
+    type ParentType = PolygonAccelerationStructure;
 }
 
 impl TriangleAccelerationStructure {
@@ -390,6 +404,7 @@ impl TriangleAccelerationStructureRef {
     }
 }
 
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpstransformtype>
 #[repr(u64)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum MPSTransformType {
@@ -398,13 +413,14 @@ pub enum MPSTransformType {
 }
 
 /// An acceleration structure built over instances of other acceleration structures
+///
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsinstanceaccelerationstructure>
 pub enum MPSInstanceAccelerationStructure {}
 
 foreign_obj_type! {
     type CType = MPSInstanceAccelerationStructure;
     pub struct InstanceAccelerationStructure;
-    pub struct InstanceAccelerationStructureRef;
-    type ParentType = AccelerationStructureRef;
+    type ParentType = AccelerationStructure;
 }
 
 impl InstanceAccelerationStructure {
@@ -515,6 +531,8 @@ pub struct MPSPackedFloat3 {
 }
 
 /// Represents a 3D ray with an origin, a direction, and an intersection distance range from the origin.
+///
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsrayoriginmindistancedirectionmaxdistance>
 #[repr(C)]
 pub struct MPSRayOriginMinDistanceDirectionMaxDistance {
     /// Ray origin. The intersection test will be skipped if the origin contains NaNs or infinities.
@@ -533,6 +551,8 @@ pub struct MPSRayOriginMinDistanceDirectionMaxDistance {
 
 /// Intersection result which contains the distance from the ray origin to the intersection point,
 /// the index of the intersected primitive, and the first two barycentric coordinates of the intersection point.
+///
+/// See <https://developer.apple.com/documentation/metalperformanceshaders/mpsintersectiondistanceprimitiveindexcoordinates>
 #[repr(C)]
 pub struct MPSIntersectionDistancePrimitiveIndexCoordinates {
     /// Distance from the ray origin to the intersection point along the ray direction vector such
