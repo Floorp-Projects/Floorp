@@ -2,13 +2,56 @@
 //! as a stopgap until Rust [RFC 2725] adding first-class target feature detection
 //! macros to `libcore` is implemented.
 //!
-//! Supported target architectures:
-//! - `aarch64`: Linux and macOS/M4 only (ARM64 does not support OS-independent feature detection)
-//!   - Target features: `aes`, `sha2`, `sha3`
-//! - `x86`/`x86_64`: OS independent and `no_std`-friendly
-//!   - Target features: `adx`, `aes`, `avx`, `avx2`, `bmi1`, `bmi2`, `fma`,
-//!     `mmx`, `pclmulqdq`, `popcnt`, `rdrand`, `rdseed`, `sgx`, `sha`, `sse`,
-//!     `sse2`, `sse3`, `sse4.1`, `sse4.2`, `ssse3`
+//! # Supported target architectures
+//!
+//! *NOTE: target features with an asterisk are unstable (nightly-only) and
+//! subject to change to match upstream name changes in the Rust standard
+//! library.
+//!
+//! ## `aarch64`
+//!
+//! Linux, iOS, and macOS/ARM only (ARM64 does not support OS-independent feature detection)
+//!
+//! Target features:
+//!
+//! - `aes`*
+//! - `sha2`*
+//! - `sha3`*
+//!
+//! ## `x86`/`x86_64`
+//!
+//! OS independent and `no_std`-friendly
+//!
+//! Target features:
+//!
+//! - `adx`
+//! - `aes`
+//! - `avx`
+//! - `avx2`
+//! - `avx512bw`*
+//! - `avx512cd`*
+//! - `avx512dq`*
+//! - `avx512er`*
+//! - `avx512f`*
+//! - `avx512ifma`*
+//! - `avx512pf`*
+//! - `avx512vl`*
+//! - `bmi1`
+//! - `bmi2`
+//! - `fma`,
+//! - `mmx`
+//! - `pclmulqdq`
+//! - `popcnt`
+//! - `rdrand`
+//! - `rdseed`
+//! - `sgx`
+//! - `sha`
+//! - `sse`
+//! - `sse2`
+//! - `sse3`
+//! - `sse4.1`
+//! - `sse4.2`
+//! - `ssse3`
 //!
 //! If you would like detection support for a target feature which is not on
 //! this list, please [open a GitHub issue][gh].

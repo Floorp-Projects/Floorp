@@ -37,8 +37,8 @@ pub fn getauxval_hwcap() -> u64 {
     unsafe { libc::getauxval(libc::AT_HWCAP) }
 }
 
-// MacOS runtime detection of target CPU features using `sysctlbyname`.
-#[cfg(target_os = "macos")]
+// Apple platform's runtime detection of target CPU features using `sysctlbyname`.
+#[cfg(target_vendor = "apple")]
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __detect_target_features {
@@ -87,7 +87,7 @@ pub mod hwcaps {
     pub const SHA3: c_ulong = libc::HWCAP_SHA3 | libc::HWCAP_SHA512;
 }
 
-// macOS `check!` macro.
+// Apple OS (macOS, iOS, watchOS, and tvOS) `check!` macro.
 //
 // NOTE: several of these instructions (e.g. `aes`, `sha2`) can be assumed to
 // be present on all Apple ARM64 hardware.
@@ -98,7 +98,7 @@ pub mod hwcaps {
 //
 // See discussion on this issue for more information:
 // <https://github.com/RustCrypto/utils/issues/378>
-#[cfg(target_os = "macos")]
+#[cfg(target_vendor = "apple")]
 #[macro_export]
 #[doc(hidden)]
 macro_rules! check {
@@ -117,8 +117,8 @@ macro_rules! check {
     };
 }
 
-/// macOS helper function for calling `sysctlbyname`.
-#[cfg(target_os = "macos")]
+/// Apple helper function for calling `sysctlbyname`.
+#[cfg(target_vendor = "apple")]
 pub unsafe fn sysctlbyname(name: &[u8]) -> bool {
     assert_eq!(
         name.last().cloned(),
@@ -143,36 +143,8 @@ pub unsafe fn sysctlbyname(name: &[u8]) -> bool {
     value != 0
 }
 
-// iOS `check!` macro.
-//
-// Unfortunately iOS does not provide access to the `sysctl(3)` API which means
-// we can only return static values for CPU features which  can be assumed to
-// be present on all Apple ARM64 hardware.
-//
-// See discussion on this issue for more information:
-// <https://github.com/RustCrypto/utils/issues/378>
-#[cfg(target_os = "ios")]
-#[macro_export]
-#[doc(hidden)]
-macro_rules! check {
-    ("aes") => {
-        true
-    };
-    ("sha2") => {
-        true
-    };
-    ("sha3") => {
-        false
-    };
-}
-
 // On other targets, runtime CPU feature detection is unavailable
-#[cfg(not(any(
-    target_os = "ios",
-    target_os = "linux",
-    target_os = "android",
-    target_os = "macos"
-)))]
+#[cfg(not(any(target_vendor = "apple", target_os = "linux", target_os = "android",)))]
 #[macro_export]
 #[doc(hidden)]
 macro_rules! __detect_target_features {
