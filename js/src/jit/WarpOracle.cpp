@@ -1177,7 +1177,8 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
         static_assert(std::is_convertible_v<JitCode*, gc::TenuredCell*>,
                       "Code assumes JitCodes are tenured");
         break;
-      case StubField::Type::JSObject: {
+      case StubField::Type::JSObject:
+      case StubField::Type::WeakObject: {
         JSObject* obj =
             stubInfo->getStubField<ICCacheIRStub, JSObject*>(stub, offset);
         if (IsInsideNursery(obj)) {
