@@ -1410,15 +1410,6 @@ nsresult imgLoader::RemoveEntriesInternal(nsIPrincipal* aPrincipal,
     return NS_ERROR_INVALID_ARG;
   }
 
-  nsAutoString origin;
-  if (aPrincipal) {
-    nsresult rv =
-        nsContentUtils::GetWebExposedOriginSerialization(aPrincipal, origin);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
   nsCOMPtr<nsIEffectiveTLDService> tldService;
   AutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
 
@@ -1428,19 +1419,10 @@ nsresult imgLoader::RemoveEntriesInternal(nsIPrincipal* aPrincipal,
 
     const bool shouldRemove = [&] {
       if (aPrincipal) {
-        if (key.OriginAttributesRef() !=
-            BasePrincipal::Cast(aPrincipal)->OriginAttributesRef()) {
-          return false;
-        }
-
-        nsAutoString imageOrigin;
-        nsresult rv = nsContentUtils::GetWebExposedOriginSerialization(
-            key.URI(), imageOrigin);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return false;
-        }
-
-        return imageOrigin == origin;
+        nsCOMPtr<nsIPrincipal> keyPrincipal =
+            BasePrincipal::CreateContentPrincipal(key.URI(),
+                                                  key.OriginAttributesRef());
+        return keyPrincipal->Equals(aPrincipal);
       }
 
       if (!aBaseDomain) {
