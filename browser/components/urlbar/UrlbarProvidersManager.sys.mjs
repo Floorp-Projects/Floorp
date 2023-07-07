@@ -342,10 +342,16 @@ class ProvidersManager {
    *   The engagement's query context, if available.
    * @param {object} details
    *   An object that describes the search string and the picked result, if any.
-   * @param {window} window
-   *   Browser window object associated with engagement
+   * @param {UrlbarController} controller
+   *   The controller associated with the engagement
    */
-  notifyEngagementChange(isPrivate, state, queryContext, details = {}, window) {
+  notifyEngagementChange(
+    isPrivate,
+    state,
+    queryContext,
+    details = {},
+    controller
+  ) {
     for (let provider of this.providers) {
       provider.tryMethod(
         "onEngagement",
@@ -353,7 +359,7 @@ class ProvidersManager {
         state,
         queryContext,
         details,
-        window
+        controller
       );
     }
   }

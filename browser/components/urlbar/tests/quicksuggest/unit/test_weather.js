@@ -714,11 +714,27 @@ add_task(async function block() {
   });
 
   // Block the result.
-  UrlbarProviderWeather.onEngagement(false, "engagement", context, {
-    result: context.results[0],
-    selType: "dismiss",
-    selIndex: context.results[0].rowIndex,
+  const controller = UrlbarTestUtils.newMockController();
+  controller.setView({
+    get visibleResults() {
+      return context.results;
+    },
+    controller: {
+      removeResult() {},
+    },
+    acknowledgeDismissal() {},
   });
+  UrlbarProviderWeather.onEngagement(
+    false,
+    "engagement",
+    context,
+    {
+      result: context.results[0],
+      selType: "dismiss",
+      selIndex: context.results[0].rowIndex,
+    },
+    controller
+  );
   Assert.ok(
     !UrlbarPrefs.get("suggest.weather"),
     "suggest.weather is false after blocking the result"

@@ -378,11 +378,19 @@ async function openViewAndAssertCached({
   let getContext = () =>
     searchString ? cache.get(searchString) : cache.topSitesContext;
 
+  let cachedContext = getContext();
   Assert.equal(
-    !!getContext(),
+    !!cachedContext,
     cached,
     "Context is present or not in cache as expected for search string: " +
       JSON.stringify(searchString)
+  );
+  // Our payload schema validator allows for explicit undefined properties,
+  // thus we must transform them for stringify.
+  Assert.deepEqual(
+    cachedContext,
+    JSON.parse(JSON.stringify(cachedContext, (k, v) => v ?? null)),
+    "The query context should be made of serializable properties"
   );
 
   // Open the view by performing the accel+L command.
