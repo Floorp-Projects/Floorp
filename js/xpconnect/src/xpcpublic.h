@@ -55,7 +55,6 @@ struct nsXPTInterfaceInfo;
 namespace JS {
 class Compartment;
 class ContextOptions;
-class PrefableCompileOptions;
 class Realm;
 class RealmOptions;
 class Value;
@@ -593,9 +592,6 @@ bool ShouldDiscardSystemSource();
 
 void SetPrefableRealmOptions(JS::RealmOptions& options);
 void SetPrefableContextOptions(JS::ContextOptions& options);
-
-// This function may be used off-main-thread.
-void SetPrefableCompileOptions(JS::PrefableCompileOptions& options);
 
 class ErrorBase {
  public:
