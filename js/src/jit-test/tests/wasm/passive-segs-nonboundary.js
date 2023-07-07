@@ -399,7 +399,7 @@ checkMiscPrefixed([0x13], true);        // table.size+1, which is currently unas
         )`;
         assertErrorMessage(() => wasmEvalText(text),
                            WebAssembly.CompileError,
-                           /(can't touch memory without memory)|(unknown memory)/);
+                           /memory index/);
     }
 }
 
