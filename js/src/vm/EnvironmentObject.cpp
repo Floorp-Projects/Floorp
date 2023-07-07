@@ -1806,9 +1806,8 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       if (action == GET) {
         if (instanceScope->memoriesStart() <= index &&
             index < instanceScope->globalsStart()) {
-          MOZ_ASSERT(instanceScope->memoriesStart() + 1 ==
-                     instanceScope->globalsStart());
-          vp.set(ObjectValue(*instance.memory()));
+          vp.set(ObjectValue(
+              *instance.memory(index - instanceScope->memoriesStart())));
         }
         if (instanceScope->globalsStart() <= index) {
           MOZ_ASSERT(index < instanceScope->namesCount());

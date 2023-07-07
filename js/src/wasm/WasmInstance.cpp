@@ -121,6 +121,10 @@ TableInstanceData& Instance::tableInstanceData(uint32_t tableIndex) const {
   return instanceData[tableIndex];
 }
 
+MemoryInstanceData& Instance::memoryInstanceData(const MemoryDesc& md) const {
+  return *(MemoryInstanceData*)(data() + md.globalDataOffset);
+}
+
 TagInstanceData& Instance::tagInstanceData(uint32_t tagIndex) const {
   TagInstanceData* instanceData =
       (TagInstanceData*)(data() + metadata().tagsOffsetStart);
@@ -311,7 +315,7 @@ static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
                            int64_t timeout_ns) {
   JSContext* cx = instance->cx();
 
-  if (!instance->memory()->isShared()) {
+  if (!instance->memory(0)->isShared()) {
     ReportTrapError(cx, JSMSG_WASM_NONSHARED_WAIT);
     return -1;
   }
@@ -321,7 +325,7 @@ static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
     return -1;
   }
 
-  if (byteOffset + sizeof(ValT) > instance->memory()->volatileMemoryLength()) {
+  if (byteOffset + sizeof(ValT) > instance->memory(0)->volatileMemoryLength()) {
     ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
@@ -333,7 +337,7 @@ static int32_t PerformWait(Instance* instance, PtrT byteOffset, ValT value,
   }
 
   MOZ_ASSERT(byteOffset <= SIZE_MAX, "Bounds check is broken");
-  switch (atomics_wait_impl(cx, instance->sharedMemoryBuffer(),
+  switch (atomics_wait_impl(cx, instance->sharedMemoryBuffer(0),
                             size_t(byteOffset), value, timeout)) {
     case FutexThread::WaitResult::OK:
       return 0;
@@ -389,17 +393,17 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
     return -1;
   }
 
-  if (byteOffset >= instance->memory()->volatileMemoryLength()) {
+  if (byteOffset >= instance->memory(0)->volatileMemoryLength()) {
     ReportTrapError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
   }
 
-  if (!instance->memory()->isShared()) {
+  if (!instance->memory(0)->isShared()) {
     return 0;
   }
 
   MOZ_ASSERT(byteOffset <= SIZE_MAX, "Bounds check is broken");
-  int64_t woken = atomics_notify_impl(instance->sharedMemoryBuffer(),
+  int64_t woken = atomics_notify_impl(instance->sharedMemoryBuffer(0),
                                       size_t(byteOffset), int64_t(count));
 
   if (woken > INT32_MAX) {
@@ -432,7 +436,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   MOZ_ASSERT(!instance->isAsmJS());
 
   JSContext* cx = instance->cx();
-  Rooted<WasmMemoryObject*> memory(cx, instance->memory_);
+  Rooted<WasmMemoryObject*> memory(cx, instance->memory(0));
 
   // It is safe to cast to uint32_t, as all limits have been checked inside
   // grow() and will not have been exceeded for a 32-bit memory.
@@ -440,7 +444,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
 
   // If there has been a moving grow, this Instance should have been notified.
   MOZ_RELEASE_ASSERT(instance->memoryBase_ ==
-                     instance->memory_->buffer().dataPointerEither());
+                     instance->memory(0)->buffer().dataPointerEither());
 
   return ret;
 }
@@ -451,13 +455,13 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   MOZ_ASSERT(!instance->isAsmJS());
 
   JSContext* cx = instance->cx();
-  Rooted<WasmMemoryObject*> memory(cx, instance->memory_);
+  Rooted<WasmMemoryObject*> memory(cx, instance->memory(0));
 
   uint64_t ret = WasmMemoryObject::grow(memory, delta, cx);
 
   // If there has been a moving grow, this Instance should have been notified.
   MOZ_RELEASE_ASSERT(instance->memoryBase_ ==
-                     instance->memory_->buffer().dataPointerEither());
+                     instance->memory(0)->buffer().dataPointerEither());
 
   return ret;
 }
@@ -470,7 +474,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   DebugOnly<JSContext*> cx = instance->cx();
   MOZ_ASSERT(cx->realm() == instance->realm());
 
-  Pages pages = instance->memory()->volatilePages();
+  Pages pages = instance->memory(0)->volatilePages();
 #ifdef JS_64BIT
   // Ensure that the memory size is no more than 4GiB.
   MOZ_ASSERT(pages <= Pages(MaxMemory32LimitField));
@@ -486,7 +490,7 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count) {
   DebugOnly<JSContext*> cx = instance->cx();
   MOZ_ASSERT(cx->realm() == instance->realm());
 
-  Pages pages = instance->memory()->volatilePages();
+  Pages pages = instance->memory(0)->volatilePages();
 #ifdef JS_64BIT
   MOZ_ASSERT(pages <= Pages(MaxMemory64LimitField));
 #endif
@@ -672,7 +676,7 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
 
   const uint32_t segLen = seg.bytes.length();
 
-  WasmMemoryObject* mem = instance->memory();
+  WasmMemoryObject* mem = instance->memory(0);
   const size_t memLen = mem->volatileMemoryLength();
 
   // We are proposing to copy
@@ -778,6 +782,79 @@ static int32_t MemoryInit(JSContext* cx, Instance* instance, I dstOffset,
     return -1;
   }
   return 0;
+}
+
+#ifdef DEBUG
+static bool AllSegmentsArePassive(const DataSegmentVector& vec) {
+  for (const DataSegment* seg : vec) {
+    if (seg->active()) {
+      return false;
+    }
+  }
+  return true;
+}
+#endif
+
+bool Instance::initSegments(JSContext* cx,
+                            const DataSegmentVector& dataSegments,
+                            const ElemSegmentVector& elemSegments) {
+  MOZ_ASSERT_IF(metadata().memories.length() == 0,
+                AllSegmentsArePassive(dataSegments));
+
+  Rooted<WasmInstanceObject*> instanceObj(cx, object());
+
+  // Write data/elem segments into memories/tables.
+
+  for (const ElemSegment* seg : elemSegments) {
+    if (seg->active()) {
+      RootedVal offsetVal(cx);
+      if (!seg->offset().evaluate(cx, instanceObj, &offsetVal)) {
+        return false;  // OOM
+      }
+      uint32_t offset = offsetVal.get().i32();
+      uint32_t count = seg->length();
+
+      uint32_t tableLength = tables()[seg->tableIndex]->length();
+      if (offset > tableLength || tableLength - offset < count) {
+        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                                 JSMSG_WASM_OUT_OF_BOUNDS);
+        return false;
+      }
+
+      if (!initElems(seg->tableIndex, *seg, offset, 0, count)) {
+        return false;  // OOM
+      }
+    }
+  }
+
+  for (const DataSegment* seg : dataSegments) {
+    if (!seg->active()) {
+      continue;
+    }
+
+    const WasmMemoryObject* memoryObj = memory(0);
+    size_t memoryLength = memoryObj->volatileMemoryLength();
+    uint8_t* memoryBase =
+        memoryObj->buffer().dataPointerEither().unwrap(/* memcpy */);
+
+    RootedVal offsetVal(cx);
+    if (!seg->offset().evaluate(cx, instanceObj, &offsetVal)) {
+      return false;  // OOM
+    }
+    uint64_t offset = memoryObj->indexType() == IndexType::I32
+                          ? offsetVal.get().i32()
+                          : offsetVal.get().i64();
+    uint32_t count = seg->bytes.length();
+
+    if (offset > memoryLength || memoryLength - offset < count) {
+      JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                               JSMSG_WASM_OUT_OF_BOUNDS);
+      return false;
+    }
+    memcpy(memoryBase + uintptr_t(offset), seg->bytes.begin(), count);
+  }
+
+  return true;
 }
 
 bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
@@ -1573,8 +1650,8 @@ static int32_t MemDiscardShared(Instance* instance, I byteOffset, I byteLen,
 // Instance creation and related.
 
 Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
-                   const SharedCode& code, Handle<WasmMemoryObject*> memory,
-                   SharedTableVector&& tables, UniqueDebugState maybeDebug)
+                   const SharedCode& code, SharedTableVector&& tables,
+                   UniqueDebugState maybeDebug)
     : realm_(cx->realm()),
       jsJitArgsRectifier_(
           cx->runtime()->jitRuntime()->getArgumentsRectifier().value),
@@ -1585,7 +1662,6 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
       storeBuffer_(&cx->runtime()->gc.storeBuffer()),
       object_(object),
       code_(std::move(code)),
-      memory_(memory),
       tables_(std::move(tables)),
       maybeDebug_(std::move(maybeDebug)),
       debugFilter_(nullptr),
@@ -1593,7 +1669,6 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
 
 Instance* Instance::create(JSContext* cx, Handle<WasmInstanceObject*> object,
                            const SharedCode& code, uint32_t instanceDataLength,
-                           Handle<WasmMemoryObject*> memory,
                            SharedTableVector&& tables,
                            UniqueDebugState maybeDebug) {
   void* base = js_calloc(alignof(Instance) + offsetof(Instance, data_) +
@@ -1604,8 +1679,8 @@ Instance* Instance::create(JSContext* cx, Handle<WasmInstanceObject*> object,
   }
   void* aligned = (void*)AlignBytes(uintptr_t(base), alignof(Instance));
 
-  auto* instance = new (aligned) Instance(
-      cx, object, code, memory, std::move(tables), std::move(maybeDebug));
+  auto* instance = new (aligned)
+      Instance(cx, object, code, std::move(tables), std::move(maybeDebug));
   instance->allocatedBase_ = base;
   return instance;
 }
@@ -1617,6 +1692,7 @@ void Instance::destroy(Instance* instance) {
 
 bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
                     const ValVector& globalImportValues,
+                    Handle<WasmMemoryObjectVector> memories,
                     const WasmGlobalObjectVector& globalObjs,
                     const WasmTagObjectVector& tagObjs,
                     const DataSegmentVector& dataSegments,
@@ -1630,14 +1706,6 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
 #endif
   MOZ_ASSERT(tables_.length() == metadata().tables.length());
 
-  memoryBase_ =
-      memory_ ? memory_->buffer().dataPointerEither().unwrap() : nullptr;
-  size_t limit = memory_ ? memory_->boundsCheckLimit() : 0;
-#if !defined(JS_64BIT)
-  // We assume that the limit is a 32-bit quantity
-  MOZ_ASSERT(limit <= UINT32_MAX);
-#endif
-  boundsCheckLimit_ = limit;
   cx_ = cx;
   valueBoxClass_ = &WasmValueBox::class_;
   resetInterrupt(cx);
@@ -1685,6 +1753,39 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
     }
   }
 
+  // Initialize memories in the instance data
+  for (size_t i = 0; i < memories.length(); i++) {
+    const MemoryDesc& md = metadata().memories[i];
+    MemoryInstanceData& data = memoryInstanceData(md);
+    WasmMemoryObject* memory = memories.get()[i];
+
+    data.memory = memory;
+    data.memoryBase = memory->buffer().dataPointerEither().unwrap();
+    size_t limit = memory->boundsCheckLimit();
+#if !defined(JS_64BIT)
+    // We assume that the limit is a 32-bit quantity
+    MOZ_ASSERT(limit <= UINT32_MAX);
+#endif
+    data.boundsCheckLimit = limit;
+
+    // Add observer if our memory base may grow
+    if (memory && memory->movingGrowable() &&
+        !memory->addMovingGrowObserver(cx, object_)) {
+      return false;
+    }
+  }
+
+  // Cache the default memory's values
+  if (memories.length() > 0) {
+    const MemoryDesc& md = metadata().memories[0];
+    MemoryInstanceData& data = memoryInstanceData(md);
+    memoryBase_ = data.memoryBase;
+    boundsCheckLimit_ = data.boundsCheckLimit;
+  } else {
+    memoryBase_ = nullptr;
+    boundsCheckLimit_ = 0;
+  }
+
   // Initialize tables in the instance data
   for (size_t i = 0; i < tables_.length(); i++) {
     const TableDesc& td = metadata().tables[i];
@@ -1730,12 +1831,6 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
     if (!debugFilter_) {
       return false;
     }
-  }
-
-  // Add observer if our memory base may grow
-  if (memory_ && memory_->movingGrowable() &&
-      !memory_->addMovingGrowObserver(cx, object_)) {
-    return false;
   }
 
   // Add observers if our tables may grow
@@ -1921,27 +2016,25 @@ void Instance::setDebugFilter(uint32_t funcIndex, bool value) {
   }
 }
 
-size_t Instance::memoryMappedSize() const {
-  return memory_->buffer().wasmMappedSize();
-}
-
 bool Instance::memoryAccessInGuardRegion(const uint8_t* addr,
                                          unsigned numBytes) const {
   MOZ_ASSERT(numBytes > 0);
 
-  if (metadata().memories.length() != 0) {
-    return false;
-  }
-  MOZ_RELEASE_ASSERT(metadata().memories.length() == 1);
+  for (uint32_t memoryIndex = 0; memoryIndex < metadata().memories.length();
+       memoryIndex++) {
+    uint8_t* base = memoryBase(memoryIndex).unwrap(/* comparison */);
+    if (addr < base) {
+      continue;
+    }
 
-  uint8_t* base = memoryBase().unwrap(/* comparison */);
-  if (addr < base) {
-    return false;
+    WasmMemoryObject* mem = memory(memoryIndex);
+    size_t lastByteOffset = addr - base + (numBytes - 1);
+    if (lastByteOffset >= mem->volatileMemoryLength() &&
+        lastByteOffset < mem->buffer().wasmMappedSize()) {
+      return true;
+    }
   }
-
-  size_t lastByteOffset = addr - base + (numBytes - 1);
-  return lastByteOffset >= memory()->volatileMemoryLength() &&
-         lastByteOffset < memoryMappedSize();
+  return false;
 }
 
 void Instance::tracePrivate(JSTracer* trc) {
@@ -1955,6 +2048,11 @@ void Instance::tracePrivate(JSTracer* trc) {
   // tables, they share the instance object.
   for (const FuncImport& fi : metadata(code().stableTier()).funcImports) {
     TraceNullableEdge(trc, &funcImportInstanceData(fi).callable, "wasm import");
+  }
+
+  for (const MemoryDesc& memory : code().metadata().memories) {
+    MemoryInstanceData& memoryData = memoryInstanceData(memory);
+    TraceNullableEdge(trc, &memoryData.memory, "wasm memory object");
   }
 
   for (const SharedTable& table : tables_) {
@@ -1982,7 +2080,6 @@ void Instance::tracePrivate(JSTracer* trc) {
     TraceNullableEdge(trc, &typeDefData->shape, "wasm shape");
   }
 
-  TraceNullableEdge(trc, &memory_, "wasm buffer");
   TraceNullableEdge(trc, &pendingException_, "wasm pending exception value");
   TraceNullableEdge(trc, &pendingExceptionTag_, "wasm pending exception tag");
 
@@ -2101,17 +2198,20 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   return scanStart + numMappedBytes - 1;
 }
 
-WasmMemoryObject* Instance::memory() const { return memory_; }
-
-SharedMem<uint8_t*> Instance::memoryBase() const {
-  MOZ_ASSERT(metadata().memories.length() > 0);
-  MOZ_ASSERT(memoryBase_ == memory_->buffer().dataPointerEither());
-  return memory_->buffer().dataPointerEither();
+WasmMemoryObject* Instance::memory(uint32_t memoryIndex) const {
+  return memoryInstanceData(metadata().memories[memoryIndex]).memory;
 }
 
-SharedArrayRawBuffer* Instance::sharedMemoryBuffer() const {
-  MOZ_ASSERT(memory_->isShared());
-  return memory_->sharedArrayRawBuffer();
+SharedMem<uint8_t*> Instance::memoryBase(uint32_t memoryIndex) const {
+  MOZ_ASSERT_IF(
+      memoryIndex == 0,
+      memoryBase_ == memory(memoryIndex)->buffer().dataPointerEither());
+  return memory(memoryIndex)->buffer().dataPointerEither();
+}
+
+SharedArrayRawBuffer* Instance::sharedMemoryBuffer(uint32_t memoryIndex) const {
+  MOZ_ASSERT(memory(memoryIndex)->isShared());
+  return memory(memoryIndex)->sharedArrayRawBuffer();
 }
 
 WasmInstanceObject* Instance::objectUnbarriered() const {
@@ -2358,9 +2458,9 @@ class MOZ_RAII ReturnToJSResultCollector {
 
 bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
                           CoercionLevel level) {
-  if (memory_) {
+  if (memoryBase_) {
     // If there has been a moving grow, this Instance should have been notified.
-    MOZ_RELEASE_ASSERT(memory_->buffer().dataPointerEither() == memoryBase());
+    MOZ_RELEASE_ASSERT(memoryBase(0).unwrap() == memoryBase_);
   }
 
   void* interpEntry;
@@ -2564,24 +2664,36 @@ void Instance::ensureProfilingLabels(bool profilingEnabled) const {
   return code_->ensureProfilingLabels(profilingEnabled);
 }
 
-void Instance::onMovingGrowMemory() {
+void Instance::onMovingGrowMemory(const WasmMemoryObject* memory) {
   MOZ_ASSERT(!isAsmJS());
-  MOZ_ASSERT(!memory_->isShared());
+  MOZ_ASSERT(!memory->isShared());
 
-  ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
-  memoryBase_ = buffer.dataPointer();
-  size_t limit = memory_->boundsCheckLimit();
+  for (uint32_t i = 0; i < metadata().memories.length(); i++) {
+    MemoryInstanceData& md = memoryInstanceData(metadata().memories[i]);
+    if (memory != md.memory) {
+      continue;
+    }
+    ArrayBufferObject& buffer = md.memory->buffer().as<ArrayBufferObject>();
+
+    md.memoryBase = buffer.dataPointer();
+    size_t limit = md.memory->boundsCheckLimit();
 #if !defined(JS_64BIT)
-  // We assume that the limit is a 32-bit quantity
-  MOZ_ASSERT(limit <= UINT32_MAX);
+    // We assume that the limit is a 32-bit quantity
+    MOZ_ASSERT(limit <= UINT32_MAX);
 #endif
-  boundsCheckLimit_ = limit;
+    md.boundsCheckLimit = limit;
+
+    if (i == 0) {
+      memoryBase_ = md.memoryBase;
+      boundsCheckLimit_ = md.boundsCheckLimit;
+    }
+  }
 }
 
-void Instance::onMovingGrowTable(const Table* theTable) {
+void Instance::onMovingGrowTable(const Table* table) {
   MOZ_ASSERT(!isAsmJS());
 
-  // `theTable` has grown and we must update cached data for it.  Importantly,
+  // `table` has grown and we must update cached data for it.  Importantly,
   // we can have cached those data in more than one location: we'll have
   // cached them once for each time the table was imported into this instance.
   //
@@ -2595,11 +2707,12 @@ void Instance::onMovingGrowTable(const Table* theTable) {
   // the first hit.
 
   for (uint32_t i = 0; i < tables_.length(); i++) {
-    if (tables_[i] == theTable) {
-      TableInstanceData& table = tableInstanceData(i);
-      table.length = tables_[i]->length();
-      table.elements = tables_[i]->instanceElements();
+    if (tables_[i] != table) {
+      continue;
     }
+    TableInstanceData& table = tableInstanceData(i);
+    table.length = tables_[i]->length();
+    table.elements = tables_[i]->instanceElements();
   }
 }
 

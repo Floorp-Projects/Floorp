@@ -1887,7 +1887,7 @@ WasmInstanceObject* WasmInstanceObject::create(
     JSContext* cx, const SharedCode& code,
     const DataSegmentVector& dataSegments,
     const ElemSegmentVector& elemSegments, uint32_t instanceDataLength,
-    Handle<WasmMemoryObject*> memory, SharedTableVector&& tables,
+    Handle<WasmMemoryObjectVector> memories, SharedTableVector&& tables,
     const JSObjectVector& funcImports, const GlobalDescVector& globals,
     const ValVector& globalImportValues,
     const WasmGlobalObjectVector& globalObjs,
@@ -1965,7 +1965,7 @@ WasmInstanceObject* WasmInstanceObject::create(
     MOZ_ASSERT(obj->isNewborn());
 
     // Create this just before constructing Instance to avoid rooting hazards.
-    instance = Instance::create(cx, obj, code, instanceDataLength, memory,
+    instance = Instance::create(cx, obj, code, instanceDataLength,
                                 std::move(tables), std::move(maybeDebug));
     if (!instance) {
       return nullptr;
@@ -1976,8 +1976,8 @@ WasmInstanceObject* WasmInstanceObject::create(
     MOZ_ASSERT(!obj->isNewborn());
   }
 
-  if (!instance->init(cx, funcImports, globalImportValues, globalObjs, tagObjs,
-                      dataSegments, elemSegments)) {
+  if (!instance->init(cx, funcImports, globalImportValues, memories, globalObjs,
+                      tagObjs, dataSegments, elemSegments)) {
     return nullptr;
   }
 
@@ -2891,7 +2891,9 @@ bool WasmMemoryObject::addMovingGrowObserver(JSContext* cx,
     return false;
   }
 
-  if (!observers->putNew(instance)) {
+  // A memory can be imported multiple times into an instance, but we only
+  // register the instance as an observer once.
+  if (!observers->put(instance)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -2962,7 +2964,7 @@ uint64_t WasmMemoryObject::grow(Handle<WasmMemoryObject*> memory,
   if (memory->hasObservers()) {
     for (InstanceSet::Range r = memory->observers().all(); !r.empty();
          r.popFront()) {
-      r.front()->instance().onMovingGrowMemory();
+      r.front()->instance().onMovingGrowMemory(memory);
     }
   }
 

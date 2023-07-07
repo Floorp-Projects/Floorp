@@ -129,8 +129,6 @@ class Module : public JS::WasmModule {
                          SharedTableVector* tables) const;
   bool instantiateGlobals(JSContext* cx, const ValVector& globalImportValues,
                           WasmGlobalObjectVector& globalObjs) const;
-  bool initSegments(JSContext* cx, Handle<WasmInstanceObject*> instance,
-                    Handle<WasmMemoryObject*> memory) const;
 
   class Tier2GeneratorTaskImpl;
 

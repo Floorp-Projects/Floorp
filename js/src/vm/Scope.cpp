@@ -730,9 +730,11 @@ WasmInstanceScope::RuntimeData::RuntimeData(size_t length) {
 WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
                                              WasmInstanceObject* instance) {
   size_t namesCount = 0;
-  if (instance->instance().memory()) {
-    namesCount++;
-  }
+
+  size_t memoriesStart = namesCount;
+  size_t memoriesCount = instance->instance().metadata().memories.length();
+  namesCount += memoriesCount;
+
   size_t globalsStart = namesCount;
   size_t globalsCount = instance->instance().metadata().globals.length();
   namesCount += globalsCount;
@@ -744,8 +746,8 @@ WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
   }
 
   Rooted<WasmInstanceObject*> rootedInstance(cx, instance);
-  if (instance->instance().memory()) {
-    JSAtom* wasmName = GenerateWasmName(cx, "memory", /* index = */ 0);
+  for (size_t i = 0; i < memoriesCount; i++) {
+    JSAtom* wasmName = GenerateWasmName(cx, "memory", i);
     if (!wasmName) {
       return nullptr;
     }
@@ -765,6 +767,7 @@ WasmInstanceScope* WasmInstanceScope::create(JSContext* cx,
   MOZ_ASSERT(data->length == namesCount);
 
   data->instance.init(rootedInstance);
+  data->slotInfo.memoriesStart = memoriesStart;
   data->slotInfo.globalsStart = globalsStart;
 
   Rooted<Scope*> enclosing(cx, &cx->global()->emptyGlobalScope());

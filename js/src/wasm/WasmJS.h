@@ -327,7 +327,7 @@ class WasmInstanceObject : public NativeObject {
       JSContext* cx, const RefPtr<const wasm::Code>& code,
       const wasm::DataSegmentVector& dataSegments,
       const wasm::ElemSegmentVector& elemSegments, uint32_t instanceDataLength,
-      Handle<WasmMemoryObject*> memory,
+      Handle<WasmMemoryObjectVector> memories,
       Vector<RefPtr<wasm::Table>, 0, SystemAllocPolicy>&& tables,
       const JSObjectVector& funcImports, const wasm::GlobalDescVector& globals,
       const wasm::ValVector& globalImportValues,

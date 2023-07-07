@@ -51,6 +51,8 @@ using mozilla::Atomic;
 
 class FuncImport;
 struct FuncImportInstanceData;
+struct MemoryDesc;
+struct MemoryInstanceData;
 class GlobalDesc;
 struct TableDesc;
 struct TableInstanceData;
@@ -79,9 +81,10 @@ class alignas(16) Instance {
   // Pointer to the base of the default memory (or null if there is none).
   uint8_t* memoryBase_;
 
-  // Bounds check limit in bytes (or zero if there is no memory).  This is
-  // 64-bits on 64-bit systems so as to allow for heap lengths up to and beyond
-  // 4GB, and 32-bits on 32-bit systems, where heaps are limited to 2GB.
+  // Bounds check limit in bytes (or zero if there is no memory) for the
+  // default memory.  This is 64-bits on 64-bit systems so as to allow for
+  // heap lengths up to and beyond 4GB, and 32-bits on 32-bit systems, where
+  // memories are limited to 2GB.
   //
   // See "Linear memory addresses and bounds checking" in WasmMemory.cpp.
   uintptr_t boundsCheckLimit_;
@@ -161,9 +164,6 @@ class alignas(16) Instance {
   // The wasm::Code for this instance
   const SharedCode code_;
 
-  // The memory for this instance, if any
-  const GCPtr<WasmMemoryObject*> memory_;
-
   // The tables for this instance, if any
   const SharedTableVector tables_;
 
@@ -199,6 +199,7 @@ class alignas(16) Instance {
   TypeDefInstanceData* typeDefInstanceData(uint32_t typeIndex) const;
   const void* addressOfGlobalCell(const GlobalDesc& globalDesc) const;
   FuncImportInstanceData& funcImportInstanceData(const FuncImport& fi);
+  MemoryInstanceData& memoryInstanceData(const MemoryDesc& md) const;
   TableInstanceData& tableInstanceData(uint32_t tableIndex) const;
   TagInstanceData& tagInstanceData(uint32_t tagIndex) const;
 
@@ -210,20 +211,20 @@ class alignas(16) Instance {
                   uint64_t* argv);
 
   Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
-           const SharedCode& code, Handle<WasmMemoryObject*> memory,
-           SharedTableVector&& tables, UniqueDebugState maybeDebug);
+           const SharedCode& code, SharedTableVector&& tables,
+           UniqueDebugState maybeDebug);
   ~Instance();
 
  public:
   static Instance* create(JSContext* cx, Handle<WasmInstanceObject*> object,
                           const SharedCode& code, uint32_t instanceDataLength,
-                          Handle<WasmMemoryObject*> memory,
                           SharedTableVector&& tables,
                           UniqueDebugState maybeDebug);
   static void destroy(Instance* instance);
 
   bool init(JSContext* cx, const JSObjectVector& funcImports,
             const ValVector& globalImportValues,
+            Handle<WasmMemoryObjectVector> memories,
             const WasmGlobalObjectVector& globalObjs,
             const WasmTagObjectVector& tagObjs,
             const DataSegmentVector& dataSegments,
@@ -304,10 +305,11 @@ class alignas(16) Instance {
   DebugState& debug() { return *maybeDebug_; }
   uint8_t* data() const { return (uint8_t*)&data_; }
   const SharedTableVector& tables() const { return tables_; }
-  SharedMem<uint8_t*> memoryBase() const;
-  WasmMemoryObject* memory() const;
-  size_t memoryMappedSize() const;
-  SharedArrayRawBuffer* sharedMemoryBuffer() const;  // never null
+  SharedMem<uint8_t*> memoryBase(uint32_t memoryIndex) const;
+  WasmMemoryObject* memory(uint32_t memoryIndex) const;
+  size_t memoryMappedSize(uint32_t memoryIndex) const;
+  SharedArrayRawBuffer* sharedMemoryBuffer(
+      uint32_t memoryIndex) const;  // never null
   bool memoryAccessInGuardRegion(const uint8_t* addr, unsigned numBytes) const;
 
   // Methods to set, test and clear the interrupt fields. Both interrupt
@@ -363,8 +365,11 @@ class alignas(16) Instance {
 
   // Called by Wasm(Memory|Table)Object when a moving resize occurs:
 
-  void onMovingGrowMemory();
-  void onMovingGrowTable(const Table* theTable);
+  void onMovingGrowMemory(const WasmMemoryObject* memory);
+  void onMovingGrowTable(const Table* table);
+
+  bool initSegments(JSContext* cx, const DataSegmentVector& dataSegments,
+                    const ElemSegmentVector& elemSegments);
 
   // Called to apply a single ElemSegment at a given offset, assuming
   // that all bounds validation has already been performed.

@@ -1060,6 +1060,7 @@ class WasmInstanceScope : public Scope {
     //
     // memories - [0, globalsStart)
     //  globals - [globalsStart, length)
+    uint32_t memoriesStart = 0;
     uint32_t globalsStart = 0;
   };
 
@@ -1094,7 +1095,7 @@ class WasmInstanceScope : public Scope {
  public:
   WasmInstanceObject* instance() const { return data().instance; }
 
-  uint32_t memoriesStart() const { return 0; }
+  uint32_t memoriesStart() const { return data().slotInfo.memoriesStart; }
 
   uint32_t globalsStart() const { return data().slotInfo.globalsStart; }
 
