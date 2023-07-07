@@ -172,6 +172,8 @@ nsresult nsRFPService::Init() {
 
 /* static */
 bool nsRFPService::IsRFPEnabledFor(RFPTarget aTarget) {
+  MOZ_ASSERT(aTarget != RFPTarget::AllTargets);
+
   if (StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() ||
       StaticPrefs::privacy_resistFingerprinting_pbmode_DoNotUseDirectly()) {
     return true;

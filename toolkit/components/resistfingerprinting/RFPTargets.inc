@@ -114,4 +114,4 @@ ITEM_VALUE(IsAlwaysEnabledForPrecompute, 0)
  *    +AllTargets,-CSSPrefersColorScheme
  *    -AllTargets,+Gamepad
  */
-ITEM_VALUE(AllTargets, 0xFFFFFFFF)
+ITEM_VALUE(AllTargets, 0xFFFFFFFF'FFFFFFFF)
