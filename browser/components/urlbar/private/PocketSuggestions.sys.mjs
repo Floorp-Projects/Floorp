@@ -226,7 +226,7 @@ export class PocketSuggestions extends BaseFeature {
   getResultCommands(result) {
     let commands = [];
 
-    if (this.canShowLessFrequently) {
+    if (!result.isBestMatch && this.canShowLessFrequently) {
       commands.push({
         name: RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY,
         l10n: {
