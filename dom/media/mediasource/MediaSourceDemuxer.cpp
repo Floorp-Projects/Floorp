@@ -395,7 +395,7 @@ RefPtr<MediaSourceTrackDemuxer::SeekPromise> MediaSourceTrackDemuxer::DoSeek(
   MediaResult result = NS_OK;
   RefPtr<MediaRawData> sample =
       mManager->GetSample(mType, TimeUnit::Zero(), result);
-  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(result) && sample);
+  MOZ_ASSERT(NS_SUCCEEDED(result) && sample);
   mNextSample = Some(sample);
   mReset = false;
   {
