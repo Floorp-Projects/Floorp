@@ -518,7 +518,6 @@ class ServoStyleSet {
    */
   already_AddRefed<ComputedStyle> ReparentComputedStyle(
       ComputedStyle* aComputedStyle, ComputedStyle* aNewParent,
-      ComputedStyle* aNewParentIgnoringFirstLine,
       ComputedStyle* aNewLayoutParent, dom::Element* aElement);
 
   /**
