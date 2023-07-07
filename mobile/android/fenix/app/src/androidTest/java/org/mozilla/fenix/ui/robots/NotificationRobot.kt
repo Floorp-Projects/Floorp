@@ -10,12 +10,15 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.packageName
 import kotlin.AssertionError
 
 class NotificationRobot {
@@ -67,18 +70,22 @@ class NotificationRobot {
     }
 
     fun clickDownloadNotificationControlButton(action: String) {
-        try {
-            assertTrue(downloadSystemNotificationButton(action).waitForExists(waitingTimeShort))
-        } catch (e: AssertionError) {
-            notificationTray().flingToEnd(1)
-        }
+        for (i in 1..RETRY_COUNT) {
+            try {
+                assertItemWithResIdAndTextExists(downloadSystemNotificationButton(action))
+                downloadSystemNotificationButton(action).clickAndWaitForNewWindow(waitingTimeShort)
+                assertItemWithResIdAndTextExists(
+                    downloadSystemNotificationButton(action),
+                    exists = false,
+                )
 
-        downloadSystemNotificationButton(action).click()
-        // API 30 Bug? Sometimes a click doesn't register, try again
-        try {
-            assertTrue(downloadSystemNotificationButton(action).waitUntilGone(waitingTime))
-        } catch (e: AssertionError) {
-            downloadSystemNotificationButton(action).click()
+                break
+            } catch (e: AssertionError) {
+                if (i == RETRY_COUNT) {
+                    throw e
+                }
+                mDevice.waitForWindowUpdate(packageName, waitingTimeShort)
+            }
         }
     }
 
