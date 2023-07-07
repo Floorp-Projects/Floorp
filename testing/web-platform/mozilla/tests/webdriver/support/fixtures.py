@@ -191,6 +191,10 @@ class Browser:
         if clean_profile:
             self.profile.cleanup()
 
+    def wait(self):
+        if self.is_running is True:
+            self.runner.wait()
+
 
 class Geckodriver:
     def __init__(self, configuration, hostname=None, extra_args=None):
