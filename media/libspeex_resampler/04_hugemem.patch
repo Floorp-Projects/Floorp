@@ -1,6 +1,6 @@
-diff --git a/media/libspeex_resampler/src/resample.c b/media/libspeex_resampler/src/resample.c
---- a/media/libspeex_resampler/src/resample.c
-+++ b/media/libspeex_resampler/src/resample.c
+diff --git a/src/resample.c b/src/resample.c
+--- a/src/resample.c
++++ b/src/resample.c
 @@ -56,16 +56,18 @@
     (e.g. 2/3), and get rid of the rounding operations in the inner loop.
     The latter both reduces CPU time and makes the algorithm more SIMD-friendly.

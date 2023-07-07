@@ -1,5 +1,0 @@
-This source is from the Speex DSP library
-(http://git.xiph.org/?p=speexdsp.git), from commit 79822c.
-
-It consists in the audio resampling code (resampler.c) and its header files
-dependancies, imported into the tree using the update.sh script.

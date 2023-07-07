@@ -1,0 +1,78 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "Web Audio"
+
+origin:
+  name: speexdsp
+  description: DSP library derived from speex
+
+  url: https://speex.org/
+
+  release: 79822c8fb79d202cbe7e899f7406acf17beb247c (2017-01-22T14:16:02.000-05:00).
+  revision: 79822c8fb79d202cbe7e899f7406acf17beb247c
+
+  license: BSD-3-Clause
+  license-file: COPYING
+
+vendoring:
+  url: https://gitlab.xiph.org/xiph/speexdsp
+  source-hosting: gitlab
+  tracking: commit
+
+  exclude:
+    - ".*"
+    - "*"
+    - "**"
+
+  keep:
+    - src/simd_detect.h
+    - src/simd_detect.cpp
+
+  include:
+    - libspeexdsp/resample.c
+    - libspeexdsp/resample_sse.h
+    - libspeexdsp/resample_neon.h
+    - libspeexdsp/arch.h
+    - libspeexdsp/stack_alloc.h
+    - libspeexdsp/fixed_generic.h
+    - include/speex/speex_resampler.h
+    - AUTHORS
+    - COPYING
+
+  update-actions:
+    - action: delete-path
+      path: '{vendor_dir}/doc'
+    - action: delete-path
+      path: '{vendor_dir}/libspeexdsp/.cvsignore'
+    - action: move-file
+      from: '{vendor_dir}/libspeexdsp/resample.c'
+      to: '{vendor_dir}/src/resample.c'
+    - action: move-file
+      from: '{vendor_dir}/libspeexdsp/resample_sse.h'
+      to: '{vendor_dir}/src/resample_sse.c'
+    - action: move-file
+      from: '{vendor_dir}/libspeexdsp/resample_neon.h'
+      to: '{vendor_dir}/src/resample_neon.c'
+    - action: move-file
+      from: '{vendor_dir}/libspeexdsp/arch.h'
+      to: '{vendor_dir}/src/arch.h'
+    - action: move-file
+      from: '{vendor_dir}/libspeexdsp/stack_alloc.h'
+      to: '{vendor_dir}/src/stack_alloc.h'
+    - action: move-file
+      from: '{vendor_dir}/libspeexdsp/fixed_generic.h'
+      to: '{vendor_dir}/src/fixed_generic.h'
+    - action: move-file
+      from: '{vendor_dir}/include/speex/speex_resampler.h'
+      to: '{vendor_dir}/src/speex_resampler.h'
+
+  patches:
+    - 01_outside-speex.patch
+    - 02_simd-detect-runtime.patch
+    - 03_set-skip-frac.patch
+    - 04_hugemem.patch
+    - 05_remove-empty-asm-clobber.patch
+    - 06_set-rate-overflow-no-return.patch
+    - 07_integer-halving.patch
