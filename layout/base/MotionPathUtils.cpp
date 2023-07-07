@@ -632,8 +632,8 @@ already_AddRefed<gfx::Path> MotionPathUtils::BuildPath(
       // reference. https://github.com/w3c/fxtf-drafts/issues/504
       return BuildSVGPath(aBasicShape.AsPath().path, aPathBuilder);
     case StyleBasicShape::Tag::Xywh:
-      // TODO: Implement this in the patch series.
-      return nullptr;
+      return ShapeUtils::BuildXywhPath(aBasicShape, aCoordBox,
+                                       AppUnitsPerCSSPixel(), aPathBuilder);
   }
 
   return nullptr;

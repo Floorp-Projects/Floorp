@@ -131,6 +131,14 @@ struct ShapeUtils final {
                                                     nscoord aAppUnitsPerPixel,
                                                     gfx::PathBuilder*);
 
+  // Compute a gfx::path from a StyleBasicShape which is a xywh function.
+  // @param aRefBox the reference box of the xywh.
+  // @return The gfx::Path of this xywh.
+  static already_AddRefed<gfx::Path> BuildXywhPath(const StyleBasicShape&,
+                                                   const nsRect& aRefBox,
+                                                   nscoord aAppUnitsPerPixel,
+                                                   gfx::PathBuilder*);
+
   // Compute a gfx::path from a rectanglar shape (i.e. inset()/xywh()/rect())
   // and the round radii.
   // @param aRect the rect we computed from ComputeInsetRect().
