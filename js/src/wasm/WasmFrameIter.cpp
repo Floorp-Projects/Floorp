@@ -1630,6 +1630,8 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::MemCopyM64:
     case SymbolicAddress::MemCopySharedM64:
       return "call to native memory.copy m64 function";
+    case SymbolicAddress::MemCopyAny:
+      return "call to native memory.copy any function";
     case SymbolicAddress::DataDrop:
       return "call to native data.drop function";
     case SymbolicAddress::MemFillM32:

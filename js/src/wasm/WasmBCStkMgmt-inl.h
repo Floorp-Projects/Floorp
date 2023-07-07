@@ -1200,6 +1200,22 @@ RegI64 BaseCompiler::popI64ToSpecific(RegI64 specific) {
   return popI64(specific);
 }
 
+RegI64 BaseCompiler::popIndexToInt64(IndexType indexType) {
+  if (indexType == IndexType::I64) {
+    return popI64();
+  }
+
+  MOZ_ASSERT(indexType == IndexType::I32);
+#ifdef JS_64BIT
+  return RegI64(Register64(popI32()));
+#else
+  RegI32 lowPart = popI32();
+  RegI32 highPart = needI32();
+  masm.xor32(highPart, highPart);
+  return RegI64(Register64(lowPart, highPart));
+#endif
+}
+
 #ifdef JS_CODEGEN_ARM
 // Pop an I64 as a valid register pair.
 RegI64 BaseCompiler::popI64Pair() {

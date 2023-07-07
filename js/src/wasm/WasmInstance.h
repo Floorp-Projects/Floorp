@@ -416,6 +416,10 @@ class alignas(16) Instance {
   static int32_t memCopyShared_m64(Instance* instance, uint64_t dstByteOffset,
                                    uint64_t srcByteOffset, uint64_t len,
                                    uint8_t* memBase);
+  static int32_t memCopy_any(Instance* instance, uint64_t dstByteOffset,
+                             uint64_t srcByteOffset, uint64_t len,
+                             uint32_t dstMemIndex, uint32_t srcMemIndex);
+
   static int32_t memFill_m32(Instance* instance, uint32_t byteOffset,
                              uint32_t value, uint32_t len, uint8_t* memBase);
   static int32_t memFillShared_m32(Instance* instance, uint32_t byteOffset,

@@ -5758,7 +5758,8 @@ static bool EmitAtomicXchg(FunctionCompiler& f, ValType type,
   return true;
 }
 
-static bool EmitMemCopyCall(FunctionCompiler& f, MDefinition* dst,
+static bool EmitMemCopyCall(FunctionCompiler& f, uint32_t dstMemIndex,
+                            uint32_t srcMemIndex, MDefinition* dst,
                             MDefinition* src, MDefinition* len) {
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
@@ -5769,6 +5770,45 @@ static bool EmitMemCopyCall(FunctionCompiler& f, MDefinition* dst,
            : (f.isMem32() ? SASigMemCopyM32 : SASigMemCopyM64));
 
   return f.emitInstanceCall4(bytecodeOffset, callee, dst, src, len, memoryBase);
+  if (dstMemIndex == srcMemIndex) {
+    const SymbolicAddressSignature& callee =
+        (f.moduleEnv().usesSharedMemory(dstMemIndex)
+             ? (f.isMem32(dstMemIndex) ? SASigMemCopySharedM32
+                                       : SASigMemCopySharedM64)
+             : (f.isMem32(dstMemIndex) ? SASigMemCopyM32 : SASigMemCopyM64));
+    MDefinition* memoryBase = f.memoryBase(dstMemIndex);
+    if (!memoryBase) {
+      return false;
+    }
+    return f.emitInstanceCall4(bytecodeOffset, callee, dst, src, len,
+                               memoryBase);
+  }
+
+  IndexType dstIndexType = f.moduleEnv().memories[dstMemIndex].indexType();
+  IndexType srcIndexType = f.moduleEnv().memories[srcMemIndex].indexType();
+
+  if (dstIndexType == IndexType::I32) {
+    dst = MExtendInt32ToInt64::New(f.alloc(), dst, true);
+  }
+  if (srcIndexType == IndexType::I32) {
+    src = MExtendInt32ToInt64::New(f.alloc(), src, true);
+  }
+  if (dstIndexType == IndexType::I32 || srcIndexType == IndexType::I32) {
+    len = MExtendInt32ToInt64::New(f.alloc(), len, true);
+  }
+
+  MDefinition* dstMemIndexValue = f.constantI32(int32_t(dstMemIndex));
+  if (!dstMemIndexValue) {
+    return false;
+  }
+
+  MDefinition* srcMemIndexValue = f.constantI32(int32_t(srcMemIndex));
+  if (!srcMemIndexValue) {
+    return false;
+  }
+
+  return f.emitInstanceCall5(bytecodeOffset, SASigMemCopyAny, dst, src, len,
+                             dstMemIndexValue, srcMemIndexValue);
 }
 
 static bool EmitMemCopyInline(FunctionCompiler& f, MDefinition* dst,
@@ -5926,7 +5966,7 @@ static bool EmitMemCopy(FunctionCompiler& f) {
     }
   }
 
-  return EmitMemCopyCall(f, dst, src, len);
+  return EmitMemCopyCall(f, dstMemIndex, srcMemIndex, dst, src, len);
 }
 
 static bool EmitTableCopy(FunctionCompiler& f) {

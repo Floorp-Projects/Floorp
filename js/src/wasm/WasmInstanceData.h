@@ -27,6 +27,7 @@
 #include "gc/Pretenuring.h"
 #include "js/Utility.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmMemory.h"
 #include "wasm/WasmTypeDecls.h"
 
 namespace js {
@@ -108,6 +109,9 @@ struct MemoryInstanceData {
   //
   // See "Linear memory addresses and bounds checking" in WasmMemory.cpp.
   uintptr_t boundsCheckLimit;
+
+  // Whether this memory is shared or not.
+  bool isShared;
 };
 
 // TableInstanceData describes the region of wasm global memory allocated in the
