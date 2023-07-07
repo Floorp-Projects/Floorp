@@ -101,11 +101,29 @@ nsSize ShapeUtils::ComputeEllipseRadii(const StyleBasicShape& aBasicShape,
   return radii;
 }
 
+static nsRect ComputeXywhRect(
+    const StyleXywh<LengthPercentage, NonNegativeLengthPercentage>& aStyleXywh,
+    const nsRect& aRefBox) {
+  // |aStyleXywh.left| is the offset from the left edge of |aRefBox|, and
+  // |aStyleXywh.top| is the offset from the top edge of |aRefBox|.
+  // https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-xywh
+  nsRect rect = {aRefBox.X() + aStyleXywh.x.Resolve(aRefBox.Width()),
+                 aRefBox.Y() + aStyleXywh.y.Resolve(aRefBox.Height()),
+                 aStyleXywh.size.width.Resolve(aRefBox.Width()),
+                 aStyleXywh.size.height.Resolve(aRefBox.Height())};
+  MOZ_ASSERT(rect.width >= 0 && rect.height >= 0);
+  return rect;
+}
+
 /* static */
-nsRect ShapeUtils::ComputeInsetRect(const StyleBasicShape& aBasicShape,
-                                    const nsRect& aRefBox) {
-  MOZ_ASSERT(aBasicShape.IsInset(), "The basic shape must be inset()!");
-  return ComputeInsetRect(aBasicShape.AsInset().rect, aRefBox);
+nsRect ShapeUtils::ComputeRect(const StyleBasicShape& aBasicShape,
+                               const nsRect& aRefBox) {
+  if (aBasicShape.IsInset()) {
+    return ComputeInsetRect(aBasicShape.AsInset().rect, aRefBox);
+  }
+
+  MOZ_ASSERT(aBasicShape.IsXywh(), "Unexpected rectangle");
+  return ComputeXywhRect(aBasicShape.AsXywh(), aRefBox);
 }
 
 /* static */
@@ -224,27 +242,12 @@ already_AddRefed<gfx::Path> ShapeUtils::BuildPolygonPath(
 already_AddRefed<gfx::Path> ShapeUtils::BuildInsetPath(
     const StyleBasicShape& aShape, const nsRect& aRefBox,
     nscoord aAppUnitsPerPixel, gfx::PathBuilder* aPathBuilder) {
-  const nsRect insetRect = ComputeInsetRect(aShape, aRefBox);
+  const nsRect insetRect = ComputeInsetRect(aShape.AsInset().rect, aRefBox);
   nscoord appUnitsRadii[8];
   const bool hasRadii = ComputeRectRadii(aShape.AsInset().round, aRefBox,
                                          insetRect, appUnitsRadii);
   return BuildRectPath(insetRect, hasRadii ? appUnitsRadii : nullptr, aRefBox,
                        aAppUnitsPerPixel, aPathBuilder);
-}
-
-using ComputedStyleXywh =
-    StyleXywh<LengthPercentage, NonNegativeLengthPercentage>;
-static nsRect ComputeXywhRect(const ComputedStyleXywh& aStyleXywh,
-                              const nsRect& aRefBox) {
-  // |aStyleXywh.left| is the offset from the left edge of |aRefBox|, and
-  // |aStyleXywh.top| is the offset from the top edge of |aRefBox|.
-  // https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-xywh
-  nsRect rect = {aRefBox.X() + aStyleXywh.x.Resolve(aRefBox.Width()),
-                 aRefBox.Y() + aStyleXywh.y.Resolve(aRefBox.Height()),
-                 aStyleXywh.size.width.Resolve(aRefBox.Width()),
-                 aStyleXywh.size.height.Resolve(aRefBox.Height())};
-  MOZ_ASSERT(rect.width >= 0 && rect.height >= 0);
-  return rect;
 }
 
 /* static */

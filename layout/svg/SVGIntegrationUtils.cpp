@@ -180,7 +180,8 @@ bool SVGIntegrationUtils::UsingSimpleClipPathForFrame(const nsIFrame* aFrame) {
   }
 
   const auto& shape = clipPath.AsShape()._0;
-  return shape->IsInset() || shape->IsCircle() || shape->IsEllipse();
+  return shape->IsInset() || shape->IsXywh() || shape->IsCircle() ||
+         shape->IsEllipse();
 }
 
 nsPoint SVGIntegrationUtils::GetOffsetToBoundingBox(nsIFrame* aFrame) {

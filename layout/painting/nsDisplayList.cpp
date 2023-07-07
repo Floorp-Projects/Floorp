@@ -8067,22 +8067,22 @@ static Maybe<wr::WrClipChainId> CreateSimpleClipRegion(
   wr::WrClipId clipId{};
 
   switch (shape.tag) {
-    // TODO: Add xywh() in the patch series.
+    case StyleBasicShape::Tag::Xywh:
     case StyleBasicShape::Tag::Inset: {
-      const nsRect insetRect = ShapeUtils::ComputeInsetRect(shape, refBox) +
-                               aDisplayItem.ToReferenceFrame();
+      const nsRect rect = ShapeUtils::ComputeRect(shape, refBox) +
+                          aDisplayItem.ToReferenceFrame();
+      const auto& round =
+          shape.IsInset() ? shape.AsInset().round : shape.AsXywh().round;
 
       nscoord radii[8] = {0};
-
-      if (ShapeUtils::ComputeRectRadii(shape.AsInset().round, refBox, insetRect,
-                                       radii)) {
+      if (ShapeUtils::ComputeRectRadii(round, refBox, rect, radii)) {
         clipId = aBuilder.DefineRoundedRectClip(
             Nothing(),
-            wr::ToComplexClipRegion(insetRect, radii, appUnitsPerDevPixel));
+            wr::ToComplexClipRegion(rect, radii, appUnitsPerDevPixel));
       } else {
         clipId = aBuilder.DefineRectClip(
             Nothing(), wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(
-                           insetRect, appUnitsPerDevPixel)));
+                           rect, appUnitsPerDevPixel)));
       }
 
       break;
