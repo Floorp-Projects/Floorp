@@ -29,11 +29,11 @@ bitflags! {
 
 foreign_type! {
     #[doc(hidden)]
-    type CType = ::sys::CGGradient;
-    fn drop = |p| CFRelease(p as *mut _);
-    fn clone = |p| CFRetain(p as *const _) as *mut _;
-    pub struct CGGradient;
-    pub struct CGGradientRef;
+    pub unsafe type CGGradient {
+        type CType = ::sys::CGGradient;
+        fn drop = |p| CFRelease(p as *mut _);
+        fn clone = |p| CFRetain(p as *const _) as *mut _;
+    }
 }
 
 impl CGGradient {

@@ -999,7 +999,7 @@ pub type PFN_vkCmdSetDepthBias = unsafe extern "system" fn(
 );
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetBlendConstants =
-    unsafe extern "system" fn(command_buffer: CommandBuffer, blend_constants: *const [f32; 4]);
+    unsafe extern "system" fn(command_buffer: CommandBuffer, blend_constants: *const [f32; 4usize]);
 #[allow(non_camel_case_types)]
 pub type PFN_vkCmdSetDepthBounds = unsafe extern "system" fn(
     command_buffer: CommandBuffer,
@@ -2876,7 +2876,7 @@ impl DeviceFnV1_0 {
             cmd_set_blend_constants: unsafe {
                 unsafe extern "system" fn cmd_set_blend_constants(
                     _command_buffer: CommandBuffer,
-                    _blend_constants: *const [f32; 4],
+                    _blend_constants: *const [f32; 4usize],
                 ) {
                     panic!(concat!(
                         "Unable to load ",

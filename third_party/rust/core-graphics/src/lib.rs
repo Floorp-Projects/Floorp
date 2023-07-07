@@ -41,3 +41,5 @@ pub mod private;
 pub mod image;
 pub mod path;
 pub mod sys;
+#[cfg(target_os = "macos")]
+pub mod access;

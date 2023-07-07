@@ -111,6 +111,21 @@ pub enum Backend {
     BrowserWebGpu = 6,
 }
 
+impl Backend {
+    /// Returns the string name of the backend.
+    pub fn to_str(self) -> &'static str {
+        match self {
+            Backend::Empty => "empty",
+            Backend::Vulkan => "vulkan",
+            Backend::Metal => "metal",
+            Backend::Dx12 => "dx12",
+            Backend::Dx11 => "dx11",
+            Backend::Gl => "gl",
+            Backend::BrowserWebGpu => "webgpu",
+        }
+    }
+}
+
 /// Power Preference when choosing a physical adapter.
 ///
 /// Corresponds to [WebGPU `GPUPowerPreference`](
@@ -844,7 +859,7 @@ pub struct Limits {
     pub max_samplers_per_shader_stage: u32,
     /// Amount of storage buffers visible in a single shader stage. Defaults to 8. Higher is "better".
     pub max_storage_buffers_per_shader_stage: u32,
-    /// Amount of storage textures visible in a single shader stage. Defaults to 8. Higher is "better".
+    /// Amount of storage textures visible in a single shader stage. Defaults to 4. Higher is "better".
     pub max_storage_textures_per_shader_stage: u32,
     /// Amount of uniform buffers visible in a single shader stage. Defaults to 12. Higher is "better".
     pub max_uniform_buffers_per_shader_stage: u32,
@@ -3025,6 +3040,92 @@ impl TextureFormat {
         }
     }
 
+    /// Returns the number of components this format has.
+    pub fn components(&self) -> u8 {
+        self.components_with_aspect(TextureAspect::All)
+    }
+
+    /// Returns the number of components this format has taking into account the `aspect`.
+    ///
+    /// The `aspect` is only relevant for combined depth-stencil formats.
+    pub fn components_with_aspect(&self, aspect: TextureAspect) -> u8 {
+        match *self {
+            Self::R8Unorm
+            | Self::R8Snorm
+            | Self::R8Uint
+            | Self::R8Sint
+            | Self::R16Unorm
+            | Self::R16Snorm
+            | Self::R16Uint
+            | Self::R16Sint
+            | Self::R16Float
+            | Self::R32Uint
+            | Self::R32Sint
+            | Self::R32Float => 1,
+
+            Self::Rg8Unorm
+            | Self::Rg8Snorm
+            | Self::Rg8Uint
+            | Self::Rg8Sint
+            | Self::Rg16Unorm
+            | Self::Rg16Snorm
+            | Self::Rg16Uint
+            | Self::Rg16Sint
+            | Self::Rg16Float
+            | Self::Rg32Uint
+            | Self::Rg32Sint
+            | Self::Rg32Float => 2,
+
+            Self::Rgba8Unorm
+            | Self::Rgba8UnormSrgb
+            | Self::Rgba8Snorm
+            | Self::Rgba8Uint
+            | Self::Rgba8Sint
+            | Self::Bgra8Unorm
+            | Self::Bgra8UnormSrgb
+            | Self::Rgba16Unorm
+            | Self::Rgba16Snorm
+            | Self::Rgba16Uint
+            | Self::Rgba16Sint
+            | Self::Rgba16Float
+            | Self::Rgba32Uint
+            | Self::Rgba32Sint
+            | Self::Rgba32Float => 4,
+
+            Self::Rgb9e5Ufloat | Self::Rg11b10Float => 3,
+            Self::Rgb10a2Unorm => 4,
+
+            Self::Stencil8 | Self::Depth16Unorm | Self::Depth24Plus | Self::Depth32Float => 1,
+
+            Self::Depth24PlusStencil8 | Self::Depth32FloatStencil8 => match aspect {
+                TextureAspect::All => 2,
+                TextureAspect::DepthOnly | TextureAspect::StencilOnly => 1,
+            },
+
+            Self::Bc4RUnorm | Self::Bc4RSnorm => 1,
+            Self::Bc5RgUnorm | Self::Bc5RgSnorm => 2,
+            Self::Bc6hRgbUfloat | Self::Bc6hRgbFloat => 3,
+            Self::Bc1RgbaUnorm
+            | Self::Bc1RgbaUnormSrgb
+            | Self::Bc2RgbaUnorm
+            | Self::Bc2RgbaUnormSrgb
+            | Self::Bc3RgbaUnorm
+            | Self::Bc3RgbaUnormSrgb
+            | Self::Bc7RgbaUnorm
+            | Self::Bc7RgbaUnormSrgb => 4,
+
+            Self::EacR11Unorm | Self::EacR11Snorm => 1,
+            Self::EacRg11Unorm | Self::EacRg11Snorm => 2,
+            Self::Etc2Rgb8Unorm | Self::Etc2Rgb8UnormSrgb => 3,
+            Self::Etc2Rgb8A1Unorm
+            | Self::Etc2Rgb8A1UnormSrgb
+            | Self::Etc2Rgba8Unorm
+            | Self::Etc2Rgba8UnormSrgb => 4,
+
+            Self::Astc { .. } => 4,
+        }
+    }
+
     /// Strips the `Srgb` suffix from the given texture format.
     pub fn remove_srgb_suffix(&self) -> TextureFormat {
         match *self {
@@ -4276,7 +4377,7 @@ impl_bitflags!(BufferUsages);
 pub struct BufferDescriptor<L> {
     /// Debug label of a buffer. This will show up in graphics debuggers for easy identification.
     pub label: L,
-    /// Size of a buffer.
+    /// Size of a buffer, in bytes.
     pub size: BufferAddress,
     /// Usages of a buffer. If the buffer is used in any way that isn't specified here, the operation
     /// will panic.
@@ -5196,11 +5297,16 @@ pub struct RenderBundleDepthStencil {
     ///
     /// This must match the [`RenderPassDepthStencilAttachment::depth_ops`] of the renderpass this render bundle is executed in.
     /// If depth_ops is `Some(..)` this must be false. If it is `None` this must be true.
+    ///
+    /// [`RenderPassDepthStencilAttachment::depth_ops`]: ../wgpu/struct.RenderPassDepthStencilAttachment.html#structfield.depth_ops
     pub depth_read_only: bool,
+
     /// If the stencil aspect of the depth stencil attachment is going to be written to.
     ///
     /// This must match the [`RenderPassDepthStencilAttachment::stencil_ops`] of the renderpass this render bundle is executed in.
     /// If depth_ops is `Some(..)` this must be false. If it is `None` this must be true.
+    ///
+    /// [`RenderPassDepthStencilAttachment::stencil_ops`]: ../wgpu/struct.RenderPassDepthStencilAttachment.html#structfield.stencil_ops
     pub stencil_read_only: bool,
 }
 
@@ -5531,18 +5637,41 @@ pub enum BindingType {
     Buffer {
         /// Sub-type of the buffer binding.
         ty: BufferBindingType,
+
         /// Indicates that the binding has a dynamic offset.
         ///
-        /// One offset must be passed to [`RenderPass::set_bind_group`][RPsbg] for each dynamic
-        /// binding in increasing order of binding number.
+        /// One offset must be passed to [`RenderPass::set_bind_group`][RPsbg]
+        /// for each dynamic binding in increasing order of binding number.
         ///
         /// [RPsbg]: ../wgpu/struct.RenderPass.html#method.set_bind_group
         #[cfg_attr(any(feature = "trace", feature = "replay"), serde(default))]
         has_dynamic_offset: bool,
-        /// Minimum size of the corresponding `BufferBinding` required to match this entry.
-        /// When pipeline is created, the size has to cover at least the corresponding structure in the shader
-        /// plus one element of the unbound array, which can only be last in the structure.
-        /// If `None`, the check is performed at draw call time instead of pipeline and bind group creation.
+
+        /// The minimum size for a [`BufferBinding`] matching this entry, in bytes.
+        ///
+        /// If this is `Some(size)`:
+        ///
+        /// - When calling [`create_bind_group`], the resource at this bind point
+        ///   must be a [`BindingResource::Buffer`] whose effective size is at
+        ///   least `size`.
+        ///
+        /// - When calling [`create_render_pipeline`] or [`create_compute_pipeline`],
+        ///   `size` must be at least the [minimum buffer binding size] for the
+        ///   shader module global at this bind point: large enough to hold the
+        ///   global's value, along with one element of a trailing runtime-sized
+        ///   array, if present.
+        ///
+        /// If this is `None`:
+        ///
+        /// - Each draw or dispatch command checks that the buffer range at this
+        ///   bind point satisfies the [minimum buffer binding size].
+        ///
+        /// [`BufferBinding`]: ../wgpu/struct.BufferBinding.html
+        /// [`create_bind_group`]: ../wgpu/struct.Device.html#method.create_bind_group
+        /// [`BindingResource::Buffer`]: ../wgpu/enum.BindingResource.html#variant.Buffer
+        /// [minimum buffer binding size]: https://www.w3.org/TR/webgpu/#minimum-buffer-binding-size
+        /// [`create_render_pipeline`]: ../wgpu/struct.Device.html#method.create_render_pipeline
+        /// [`create_compute_pipeline`]: ../wgpu/struct.Device.html#method.create_compute_pipeline
         #[cfg_attr(any(feature = "trace", feature = "replay"), serde(default))]
         min_binding_size: Option<BufferSize>,
     },
@@ -5747,7 +5876,7 @@ pub enum ExternalImageSource {
     HTMLCanvasElement(web_sys::HtmlCanvasElement),
     /// Copy from a off-screen canvas.
     ///
-    /// Requies [`DownlevelFlags::EXTERNAL_TEXTURE_OFFSCREEN_CANVAS`]
+    /// Requies [`DownlevelFlags::UNRESTRICTED_EXTERNAL_TEXTURE_COPIES`]
     OffscreenCanvas(web_sys::OffscreenCanvas),
 }
 

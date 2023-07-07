@@ -423,7 +423,6 @@ type CGEventTapCallBackInternal = unsafe extern "C" fn(
     user_info: *const c_void,
 ) -> ::sys::CGEventRef;
 
-#[no_mangle]
 unsafe extern "C" fn cg_event_tap_callback_internal(
     _proxy: CGEventTapProxy,
     _etype: CGEventType,
@@ -505,7 +504,7 @@ impl<'tap_life> CGEventTap<'tap_life> {
                     callback_ref: Box::from_raw(cbr),
                 })
             } else {
-                Box::from_raw(cbr);
+                let _ = Box::from_raw(cbr);
                 Err(())
             }
         }
@@ -518,11 +517,11 @@ impl<'tap_life> CGEventTap<'tap_life> {
 
 foreign_type! {
     #[doc(hidden)]
-    type CType = ::sys::CGEvent;
-    fn drop = |p| CFRelease(p as *mut _);
-    fn clone = |p| CFRetain(p as *const _) as *mut _;
-    pub struct CGEvent;
-    pub struct CGEventRef;
+    pub unsafe type CGEvent {
+        type CType = ::sys::CGEvent;
+        fn drop = |p| CFRelease(p as *mut _);
+        fn clone = |p| CFRetain(p as *const _) as *mut _;
+    }
 }
 
 impl CGEvent {
@@ -607,10 +606,14 @@ impl CGEvent {
         }
     }
 
-    pub fn location(&self) -> CGPoint {
+    pub fn post_from_tap(&self, tap_proxy: CGEventTapProxy) {
         unsafe {
-            CGEventGetLocation(self.as_ptr())
+            CGEventTapPostEvent(tap_proxy, self.as_ptr());
         }
+    }
+
+    pub fn location(&self) -> CGPoint {
+        unsafe { CGEventGetLocation(self.as_ptr()) }
     }
 
     #[cfg(feature = "elcapitan")]
@@ -733,6 +736,8 @@ extern {
     /// instantiated for that location, and the event passes through any such
     /// taps.
     fn CGEventPost(tapLocation: CGEventTapLocation, event: ::sys::CGEventRef);
+
+    fn CGEventTapPostEvent(tapProxy: CGEventTapProxy, event: ::sys::CGEventRef);
 
     #[cfg(feature = "elcapitan")]
     /// Post an event to a specified process ID

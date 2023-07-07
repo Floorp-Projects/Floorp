@@ -12,11 +12,11 @@ pub enum CGEventSourceStateID {
 
 foreign_type! {
     #[doc(hidden)]
-    type CType = ::sys::CGEventSource;
-    fn drop = |p| CFRelease(p as *mut _);
-    fn clone = |p| CFRetain(p as *const _) as *mut _;
-    pub struct CGEventSource;
-    pub struct CGEventSourceRef;
+    pub unsafe type CGEventSource {
+        type CType = ::sys::CGEventSource;
+        fn drop = |p| CFRelease(p as *mut _);
+        fn clone = |p| CFRetain(p as *const _) as *mut _;
+    }
 }
 
 impl CGEventSource {

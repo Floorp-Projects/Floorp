@@ -202,6 +202,11 @@ where
             let heap = memory_type.heap;
             let heap = &mut self.memory_heaps[heap as usize];
 
+            if request.size > heap.size() {
+                // Impossible to use memory type from this heap.
+                continue;
+            }
+
             let atom_mask = if host_visible_non_coherent(memory_type.props) {
                 self.non_coherent_atom_mask
             } else {
@@ -397,6 +402,78 @@ where
         Err(AllocationError::OutOfDeviceMemory)
     }
 
+    /// Creates a memory block from an existing memory allocation, transferring ownership to the allocator.
+    ///
+    /// This function allows the [`GpuAllocator`] to manage memory allocated outside of the typical
+    /// [`GpuAllocator::alloc`] family of functions.
+    ///
+    /// # Usage
+    ///
+    /// If you need to import external memory, such as a Win32 `HANDLE` or a Linux `dmabuf`, import the device
+    /// memory using the graphics api and platform dependent functions. Once that is done, call this function
+    /// to make the [`GpuAllocator`] take ownership of the imported memory.
+    ///
+    /// When calling this function, you **must** ensure there are [enough remaining allocations](GpuAllocator::remaining_allocations).
+    ///
+    /// # Safety
+    ///
+    /// - The `memory` must be allocated with the same device that was provided to create this [`GpuAllocator`]
+    ///   instance.
+    /// - The `memory` must be valid.
+    /// - The `props`, `offset` and `size` must match the properties, offset and size of the memory allocation.
+    /// - The memory must have been allocated with the specified `memory_type`.
+    /// - There must be enough remaining allocations.
+    /// - The memory allocation must not come from an existing memory block created by this allocator.
+    /// - The underlying memory object must be deallocated using the returned [`MemoryBlock`] with
+    ///   [`GpuAllocator::dealloc`].
+    pub unsafe fn import_memory(
+        &mut self,
+        memory: M,
+        memory_type: u32,
+        props: MemoryPropertyFlags,
+        offset: u64,
+        size: u64,
+    ) -> MemoryBlock<M> {
+        // Get the heap which the imported memory is from.
+        let heap = self
+            .memory_types
+            .get(memory_type as usize)
+            .expect("Invalid memory type specified when importing memory")
+            .heap;
+        let heap = &mut self.memory_heaps[heap as usize];
+
+        #[cfg(feature = "tracing")]
+        tracing::debug!(
+            "Importing memory object {:?} `{}@{:?}`",
+            memory,
+            size,
+            memory_type
+        );
+
+        assert_ne!(
+            self.allocations_remains, 0,
+            "Out of allocations when importing a memory block. Ensure you check GpuAllocator::remaining_allocations before import."
+        );
+        self.allocations_remains -= 1;
+
+        let atom_mask = if host_visible_non_coherent(props) {
+            self.non_coherent_atom_mask
+        } else {
+            0
+        };
+
+        heap.alloc(size);
+
+        MemoryBlock::new(
+            memory_type,
+            props,
+            offset,
+            size,
+            atom_mask,
+            MemoryBlockFlavor::Dedicated { memory },
+        )
+    }
+
     /// Deallocates memory block previously allocated from this `GpuAllocator` instance.
     ///
     /// # Safety
@@ -467,6 +544,30 @@ where
                 );
             }
         }
+    }
+
+    /// Returns the maximum allocation size supported.
+    pub fn max_allocation_size(&self) -> u64 {
+        self.max_memory_allocation_size
+    }
+
+    /// Returns the number of remaining available allocations.
+    ///
+    /// This may be useful if you need know if the allocator can allocate a number of allocations ahead of
+    /// time. This function is also useful for ensuring you do not allocate too much memory outside allocator
+    /// (such as external memory).
+    pub fn remaining_allocations(&self) -> u32 {
+        self.allocations_remains
+    }
+
+    /// Sets the number of remaining available allocations.
+    ///
+    /// # Safety
+    ///
+    /// The caller is responsible for ensuring the number of remaining allocations does not exceed how many
+    /// remaining allocations there actually are on the memory device.
+    pub unsafe fn set_remaining_allocations(&mut self, remaining: u32) {
+        self.allocations_remains = remaining;
     }
 
     /// Deallocates leftover memory objects.

@@ -252,6 +252,11 @@ impl StatementGraph {
                     }
                     "Atomic"
                 }
+                S::WorkGroupUniformLoad { pointer, result } => {
+                    self.emits.push((id, result));
+                    self.dependencies.push((id, pointer, "pointer"));
+                    "WorkGroupUniformLoad"
+                }
                 S::RayQuery { query, ref fun } => {
                     self.dependencies.push((id, query, "query"));
                     match *fun {
@@ -397,6 +402,9 @@ fn write_function_expressions(
     for (handle, expression) in fun.expressions.iter() {
         use crate::Expression as E;
         let (label, color_id) = match *expression {
+            E::Literal(_) => ("Literal".into(), 2),
+            E::Constant(_) => ("Constant".into(), 2),
+            E::ZeroValue(_) => ("ZeroValue".into(), 2),
             E::Access { base, index } => {
                 edges.insert("base", base);
                 edges.insert("index", index);
@@ -406,7 +414,6 @@ fn write_function_expressions(
                 edges.insert("base", base);
                 (format!("AccessIndex[{index}]").into(), 1)
             }
-            E::Constant(_) => ("Constant".into(), 2),
             E::Splat { size, value } => {
                 edges.insert("value", value);
                 (format!("Splat{size:?}").into(), 3)
@@ -568,6 +575,7 @@ fn write_function_expressions(
             }
             E::CallResult(_function) => ("CallResult".into(), 4),
             E::AtomicResult { .. } => ("AtomicResult".into(), 4),
+            E::WorkGroupUniformLoadResult { .. } => ("WorkGroupUniformLoadResult".into(), 4),
             E::ArrayLength(expr) => {
                 edges.insert("", expr);
                 ("ArrayLength".into(), 7)

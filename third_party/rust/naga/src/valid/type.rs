@@ -1,8 +1,5 @@
 use super::Capabilities;
-use crate::{
-    arena::{Arena, Handle, UniqueArena},
-    proc::Alignment,
-};
+use crate::{arena::Handle, proc::Alignment};
 
 bitflags::bitflags! {
     /// Flags associated with [`Type`]s by [`Validator`].
@@ -12,6 +9,7 @@ bitflags::bitflags! {
     #[cfg_attr(feature = "serialize", derive(serde::Serialize))]
     #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
     #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct TypeFlags: u8 {
         /// Can be used for data variables.
         ///
@@ -96,8 +94,6 @@ pub enum TypeError {
     InvalidWidth(crate::ScalarKind, crate::Bytes),
     #[error("The {0:?} scalar width {1} is not supported for an atomic")]
     InvalidAtomicWidth(crate::ScalarKind, crate::Bytes),
-    #[error("The base handle {0:?} can not be resolved")]
-    UnresolvedBase(Handle<crate::Type>),
     #[error("Invalid type for pointer target {0:?}")]
     InvalidPointerBase(Handle<crate::Type>),
     #[error("Unsized types like {base:?} must be in the `Storage` address space, not `{space:?}`")]
@@ -109,16 +105,14 @@ pub enum TypeError {
     InvalidData(Handle<crate::Type>),
     #[error("Base type {0:?} for the array is invalid")]
     InvalidArrayBaseType(Handle<crate::Type>),
-    #[error("The constant {0:?} can not be used for an array size")]
-    InvalidArraySizeConstant(Handle<crate::Constant>),
     #[error("The constant {0:?} is specialized, and cannot be used as an array size")]
     UnsupportedSpecializedArrayLength(Handle<crate::Constant>),
-    #[error("Array type {0:?} must have a length of one or more")]
-    NonPositiveArrayLength(Handle<crate::Constant>),
     #[error("Array stride {stride} does not match the expected {expected}")]
     InvalidArrayStride { stride: u32, expected: u32 },
     #[error("Field '{0}' can't be dynamically-sized, has type {1:?}")]
     InvalidDynamicArray(String, Handle<crate::Type>),
+    #[error("The base handle {0:?} has to be a struct")]
+    BindingArrayBaseTypeNotStruct(Handle<crate::Type>),
     #[error("Structure member[{index}] at {offset} overlaps the previous member")]
     MemberOverlap { index: u32, offset: u32 },
     #[error(
@@ -246,11 +240,10 @@ impl super::Validator {
     pub(super) fn validate_type(
         &self,
         handle: Handle<crate::Type>,
-        types: &UniqueArena<crate::Type>,
-        constants: &Arena<crate::Constant>,
+        gctx: crate::proc::GlobalCtx,
     ) -> Result<TypeInfo, TypeError> {
         use crate::TypeInner as Ti;
-        Ok(match types[handle].inner {
+        Ok(match gctx.types[handle].inner {
             Ti::Scalar { kind, width } => {
                 self.check_width(kind, width)?;
                 let shareable = if kind.is_numeric() {
@@ -317,10 +310,6 @@ impl super::Validator {
             }
             Ti::Pointer { base, space } => {
                 use crate::AddressSpace as As;
-
-                if base >= handle {
-                    return Err(TypeError::UnresolvedBase(base));
-                }
 
                 let base_info = &self.types[base.index()];
                 if !base_info.flags.contains(TypeFlags::DATA) {
@@ -389,9 +378,6 @@ impl super::Validator {
                 )
             }
             Ti::Array { base, size, stride } => {
-                if base >= handle {
-                    return Err(TypeError::UnresolvedBase(base));
-                }
                 let base_info = &self.types[base.index()];
                 if !base_info.flags.contains(TypeFlags::DATA | TypeFlags::SIZED) {
                     return Err(TypeError::InvalidArrayBaseType(base));
@@ -425,52 +411,7 @@ impl super::Validator {
                 };
 
                 let type_info_mask = match size {
-                    crate::ArraySize::Constant(const_handle) => {
-                        let constant = &constants[const_handle];
-                        let length_is_positive = match *constant {
-                            crate::Constant {
-                                specialization: Some(_),
-                                ..
-                            } => {
-                                // Many of our back ends don't seem to support
-                                // specializable array lengths. If you want to try to make
-                                // this work, be sure to address all uses of
-                                // `Constant::to_array_length`, which ignores
-                                // specialization.
-                                return Err(TypeError::UnsupportedSpecializedArrayLength(
-                                    const_handle,
-                                ));
-                            }
-                            crate::Constant {
-                                inner:
-                                    crate::ConstantInner::Scalar {
-                                        width: _,
-                                        value: crate::ScalarValue::Uint(length),
-                                    },
-                                ..
-                            } => length > 0,
-                            // Accept a signed integer size to avoid
-                            // requiring an explicit uint
-                            // literal. Type inference should make
-                            // this unnecessary.
-                            crate::Constant {
-                                inner:
-                                    crate::ConstantInner::Scalar {
-                                        width: _,
-                                        value: crate::ScalarValue::Sint(length),
-                                    },
-                                ..
-                            } => length > 0,
-                            _ => {
-                                log::warn!("Array size {:?}", constant);
-                                return Err(TypeError::InvalidArraySizeConstant(const_handle));
-                            }
-                        };
-
-                        if !length_is_positive {
-                            return Err(TypeError::NonPositiveArrayLength(const_handle));
-                        }
-
+                    crate::ArraySize::Constant(_) => {
                         TypeFlags::DATA
                             | TypeFlags::SIZED
                             | TypeFlags::COPY
@@ -514,9 +455,6 @@ impl super::Validator {
                 let mut prev_struct_data: Option<(u32, u32)> = None;
 
                 for (i, member) in members.iter().enumerate() {
-                    if member.ty >= handle {
-                        return Err(TypeError::UnresolvedBase(member.ty));
-                    }
                     let base_info = &self.types[member.ty.index()];
                     if !base_info.flags.contains(TypeFlags::DATA) {
                         return Err(TypeError::InvalidData(member.ty));
@@ -545,7 +483,7 @@ impl super::Validator {
                         }
                     }
 
-                    let base_size = types[member.ty].inner.size(constants);
+                    let base_size = gctx.types[member.ty].inner.size(gctx);
                     min_offset = member.offset + base_size;
                     if min_offset > span {
                         return Err(TypeError::MemberOutOfBounds {
@@ -589,14 +527,14 @@ impl super::Validator {
                         }
                     };
 
-                    prev_struct_data = match types[member.ty].inner {
+                    prev_struct_data = match gctx.types[member.ty].inner {
                         crate::TypeInner::Struct { span, .. } => Some((span, member.offset)),
                         _ => None,
                     };
 
                     // The last field may be an unsized array.
                     if !base_info.flags.contains(TypeFlags::SIZED) {
-                        let is_array = match types[member.ty].inner {
+                        let is_array = match gctx.types[member.ty].inner {
                             crate::TypeInner::Array { .. } => true,
                             _ => false,
                         };
@@ -624,13 +562,35 @@ impl super::Validator {
             }
             Ti::AccelerationStructure => {
                 self.require_type_capability(Capabilities::RAY_QUERY)?;
-                TypeInfo::new(TypeFlags::empty(), Alignment::ONE)
+                TypeInfo::new(TypeFlags::ARGUMENT, Alignment::ONE)
             }
             Ti::RayQuery => {
                 self.require_type_capability(Capabilities::RAY_QUERY)?;
                 TypeInfo::new(TypeFlags::DATA | TypeFlags::SIZED, Alignment::ONE)
             }
-            Ti::BindingArray { .. } => TypeInfo::new(TypeFlags::empty(), Alignment::ONE),
+            Ti::BindingArray { base, size } => {
+                if base >= handle {
+                    return Err(TypeError::InvalidArrayBaseType(base));
+                }
+                let type_info_mask = match size {
+                    crate::ArraySize::Constant(_) => TypeFlags::SIZED | TypeFlags::HOST_SHAREABLE,
+                    crate::ArraySize::Dynamic => {
+                        // Final type is non-sized
+                        TypeFlags::HOST_SHAREABLE
+                    }
+                };
+                let base_info = &self.types[base.index()];
+
+                if base_info.flags.contains(TypeFlags::DATA) {
+                    // Currently Naga only supports binding arrays of structs for non-handle types.
+                    match gctx.types[base].inner {
+                        crate::TypeInner::Struct { .. } => {}
+                        _ => return Err(TypeError::BindingArrayBaseTypeNotStruct(base)),
+                    };
+                }
+
+                TypeInfo::new(base_info.flags & type_info_mask, Alignment::ONE)
+            }
         })
     }
 }

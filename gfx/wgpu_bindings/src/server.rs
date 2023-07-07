@@ -88,10 +88,10 @@ impl ErrorBuffer {
 }
 
 // hide wgc's global in private
-pub struct Global(wgc::hub::Global<IdentityRecyclerFactory>);
+pub struct Global(wgc::global::Global<IdentityRecyclerFactory>);
 
 impl std::ops::Deref for Global {
-    type Target = wgc::hub::Global<IdentityRecyclerFactory>;
+    type Target = wgc::global::Global<IdentityRecyclerFactory>;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
@@ -110,7 +110,7 @@ pub extern "C" fn wgpu_server_new(factory: IdentityRecyclerFactory) -> *mut Glob
         );
         wgc::instance::parse_backends_from_comma_list(&backends_pref)
     };
-    let global = Global(wgc::hub::Global::new(
+    let global = Global(wgc::global::Global::new(
         "wgpu",
         factory,
         wgt::InstanceDescriptor {
@@ -448,7 +448,7 @@ pub extern "C" fn wgpu_server_buffer_drop(global: &Global, self_id: id::BufferId
 }
 
 impl Global {
-    fn device_action<A: wgc::hub::HalApi>(
+    fn device_action<A: wgc::hal_api::HalApi>(
         &self,
         self_id: id::DeviceId,
         action: DeviceAction,
@@ -548,7 +548,7 @@ impl Global {
         }
     }
 
-    fn texture_action<A: wgc::hub::HalApi>(
+    fn texture_action<A: wgc::hal_api::HalApi>(
         &self,
         self_id: id::TextureId,
         action: TextureAction,
@@ -564,7 +564,7 @@ impl Global {
         }
     }
 
-    fn command_encoder_action<A: wgc::hub::HalApi>(
+    fn command_encoder_action<A: wgc::hal_api::HalApi>(
         &self,
         self_id: id::CommandEncoderId,
         action: CommandEncoderAction,
