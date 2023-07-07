@@ -9,10 +9,14 @@ internal object TabsTrayTestTag {
 
     // Tabs Tray Banner
     private const val bannerTestTagRoot = "$tabsTray.banner"
+    const val bannerHandle = "$bannerTestTagRoot.handle"
     const val normalTabsPageButton = "$bannerTestTagRoot.normalTabsPageButton"
     const val normalTabsCounter = "$normalTabsPageButton.counter"
     const val privateTabsPageButton = "$bannerTestTagRoot.privateTabsPageButton"
     const val syncedTabsPageButton = "$bannerTestTagRoot.syncedTabsPageButton"
+
+    const val selectionCounter = "$bannerTestTagRoot.selectionCounter"
+    const val collectionsButton = "$bannerTestTagRoot.collections"
 
     // Tabs Tray Banner three dot menu
     const val threeDotButton = "$bannerTestTagRoot.threeDotButton"
@@ -37,7 +41,7 @@ internal object TabsTrayTestTag {
     const val emptyPrivateTabsList = "$privateTabsList.empty"
 
     // Tab items
-    private const val tabItemRoot = "$tabsTray.tabItem"
+    const val tabItemRoot = "$tabsTray.tabItem"
     const val tabItemClose = "$tabItemRoot.close"
     const val tabItemThumbnail = "$tabItemRoot.thumbnail"
 }

@@ -133,7 +133,11 @@ fun TabGridItem(
             },
         ),
     ) {
-        Box(modifier = Modifier.wrapContentSize()) {
+        Box(
+            modifier = Modifier
+                .wrapContentSize()
+                .testTag(TabsTrayTestTag.tabItemRoot),
+        ) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()

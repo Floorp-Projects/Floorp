@@ -84,6 +84,7 @@ import mozilla.components.browser.storage.sync.Tab as SyncTab
  * @param onBookmarkSelectedTabsClick Invoked when the user clicks on the bookmark banner menu item.
  * @param onDeleteSelectedTabsClick Invoked when the user clicks on the close selected tabs banner menu item.
  * @param onForceSelectedTabsAsInactiveClick Invoked when the user clicks on the make inactive banner menu item.
+ * @param onTabsTrayDismiss Invoked when accessibility services or UI automation requests dismissal.
  */
 @Suppress("LongMethod", "LongParameterList", "ComplexMethod")
 @Composable
@@ -117,6 +118,7 @@ fun TabsTray(
     onBookmarkSelectedTabsClick: () -> Unit,
     onDeleteSelectedTabsClick: () -> Unit,
     onForceSelectedTabsAsInactiveClick: () -> Unit,
+    onTabsTrayDismiss: () -> Unit,
 ) {
     val multiselectMode = tabsTrayStore
         .observeAsComposableState { state -> state.mode }.value ?: TabsTrayState.Mode.Normal
@@ -157,6 +159,7 @@ fun TabsTray(
                 onBookmarkSelectedTabsClick = onBookmarkSelectedTabsClick,
                 onDeleteSelectedTabsClick = onDeleteSelectedTabsClick,
                 onForceSelectedTabsAsInactiveClick = onForceSelectedTabsAsInactiveClick,
+                onDismissClick = onTabsTrayDismiss,
             )
         }
 
@@ -534,6 +537,7 @@ private fun TabsTrayPreviewRoot(
             onDeleteSelectedTabsClick = {},
             onBookmarkSelectedTabsClick = {},
             onForceSelectedTabsAsInactiveClick = {},
+            onTabsTrayDismiss = {},
         )
     }
 }

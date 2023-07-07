@@ -124,7 +124,8 @@ fun TabListItem(
                     onLongClick = { onLongClick(tab) },
                     onClick = { onClick(tab) },
                 )
-                .padding(start = 16.dp, top = 8.dp, bottom = 8.dp),
+                .padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                .testTag(TabsTrayTestTag.tabItemRoot),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Thumbnail(

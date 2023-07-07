@@ -336,7 +336,7 @@ class ComposeTabbedBrowsingTest {
             verifyFab()
             verifyTabThumbnail()
             verifyExistingOpenTabs(defaultWebPage.title)
-            verifyTabCloseButton(defaultWebPage.title)
+            verifyTabCloseButton()
         }.openTab(defaultWebPage.title) {
             verifyUrl(defaultWebPage.url.toString())
             verifyTabCounter("1")

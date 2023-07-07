@@ -784,6 +784,14 @@ class HomeScreenRobot {
             return TabDrawerRobot.Transition()
         }
 
+        fun clickSaveTabsToCollectionButton(composeTestRule: HomeActivityComposeTestRule, interact: ComposeTabDrawerRobot.() -> Unit): ComposeTabDrawerRobot.Transition {
+            scrollToElementByText(getStringResource(R.string.no_collections_description2))
+            saveTabsToCollectionButton().click()
+
+            ComposeTabDrawerRobot(composeTestRule).interact()
+            return ComposeTabDrawerRobot.Transition(composeTestRule)
+        }
+
         fun expandCollection(title: String, interact: CollectionRobot.() -> Unit): CollectionRobot.Transition {
             assertItemContainingTextExists(itemContainingText(title))
             itemContainingText(title).clickAndWaitForNewWindow(waitingTimeShort)

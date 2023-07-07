@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Tab
@@ -49,6 +48,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.ui.tabcounter.TabCounter
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.BottomSheetHandle
 import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
@@ -56,6 +56,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
 
 private val ICON_SIZE = 24.dp
 private const val MAX_WIDTH_TAB_ROW_PERCENT = 0.5f
+private const val BOTTOM_SHEET_HANDLE_WIDTH_PERCENT = 0.1f
 
 /**
  * Top-level UI for displaying the banner in [TabsTray].
@@ -74,6 +75,7 @@ private const val MAX_WIDTH_TAB_ROW_PERCENT = 0.5f
  * @param onDeleteSelectedTabsClick Invoked when user interacts with the close menu item.
  * @param onBookmarkSelectedTabsClick Invoked when user interacts with the bookmark menu item.
  * @param onForceSelectedTabsAsInactiveClick Invoked when user interacts with the make inactive menu item.
+ * @param onDismissClick Invoked when accessibility services or UI automation requests dismissal.
  */
 @Suppress("LongParameterList")
 @Composable
@@ -91,6 +93,7 @@ fun TabsTrayBanner(
     onDeleteSelectedTabsClick: () -> Unit,
     onBookmarkSelectedTabsClick: () -> Unit,
     onForceSelectedTabsAsInactiveClick: () -> Unit,
+    onDismissClick: () -> Unit,
 ) {
     val normalTabCount = tabsTrayStore.observeAsComposableState { state ->
         state.normalTabs.size + state.inactiveTabs.size
@@ -125,6 +128,7 @@ fun TabsTrayBanner(
             onRecentlyClosedClick = onRecentlyClosedClick,
             onAccountSettingsClick = onAccountSettingsClick,
             onDeleteAllTabsClick = onDeleteAllTabsClick,
+            onDismissClick = onDismissClick,
         )
     }
 }
@@ -142,6 +146,7 @@ private fun SingleSelectBanner(
     onRecentlyClosedClick: () -> Unit,
     onAccountSettingsClick: () -> Unit,
     onDeleteAllTabsClick: () -> Unit,
+    onDismissClick: () -> Unit,
 ) {
     val selectedColor = FirefoxTheme.colors.iconActive
     val inactiveColor = FirefoxTheme.colors.iconPrimaryInactive
@@ -150,12 +155,13 @@ private fun SingleSelectBanner(
     Column(modifier = Modifier.background(color = FirefoxTheme.colors.layer1)) {
         Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.bottom_sheet_handle_top_margin)))
 
-        Divider(
+        BottomSheetHandle(
+            onRequestDismiss = onDismissClick,
+            contentDescription = stringResource(R.string.a11y_action_label_collapse),
             modifier = Modifier
-                .fillMaxWidth(DRAG_INDICATOR_WIDTH_PERCENT)
-                .align(Alignment.CenterHorizontally),
-            color = FirefoxTheme.colors.textSecondary,
-            thickness = dimensionResource(id = R.dimen.bottom_sheet_handle_height),
+                .fillMaxWidth(BOTTOM_SHEET_HANDLE_WIDTH_PERCENT)
+                .align(Alignment.CenterHorizontally)
+                .testTag(TabsTrayTestTag.bannerHandle),
         )
 
         Row(
@@ -472,13 +478,17 @@ private fun MultiSelectBanner(
 
         Text(
             text = stringResource(R.string.tab_tray_multi_select_title, selectedTabCount),
+            modifier = Modifier.testTag(TabsTrayTestTag.selectionCounter),
             style = FirefoxTheme.typography.headline6,
             color = FirefoxTheme.colors.textOnColorPrimary,
         )
 
         Spacer(modifier = Modifier.weight(1.0f))
 
-        IconButton(onClick = onSaveToCollectionsClick) {
+        IconButton(
+            onClick = onSaveToCollectionsClick,
+            modifier = Modifier.testTag(TabsTrayTestTag.collectionsButton),
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_tab_collection),
                 contentDescription = stringResource(
@@ -592,12 +602,11 @@ private fun TabsTrayBannerPreviewRoot(
                 onBookmarkSelectedTabsClick = {},
                 onDeleteSelectedTabsClick = {},
                 onForceSelectedTabsAsInactiveClick = {},
+                onDismissClick = {},
             )
         }
     }
 }
-
-private const val DRAG_INDICATOR_WIDTH_PERCENT = 0.1f
 
 private object DisabledRippleTheme : RippleTheme {
     @Composable
