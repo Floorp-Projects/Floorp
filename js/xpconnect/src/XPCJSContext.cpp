@@ -781,6 +781,7 @@ static mozilla::Atomic<bool> sShadowRealmsEnabled(false);
 #ifdef NIGHTLY_BUILD
 static mozilla::Atomic<bool> sArrayGroupingEnabled(false);
 static mozilla::Atomic<bool> sWellFormedUnicodeStringsEnabled(false);
+static mozilla::Atomic<bool> sArrayBufferTransferEnabled(false);
 #endif
 static mozilla::Atomic<bool> sChangeArrayByCopyEnabled(false);
 static mozilla::Atomic<bool> sArrayFromAsyncEnabled(true);
@@ -813,6 +814,7 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(sArrayGroupingEnabled)
       .setWellFormedUnicodeStringsEnabled(sWellFormedUnicodeStringsEnabled)
+      .setArrayBufferTransferEnabled(sArrayBufferTransferEnabled)
 #endif
       .setChangeArrayByCopyEnabled(sChangeArrayByCopyEnabled)
       .setArrayFromAsyncEnabled(sArrayFromAsyncEnabled)
@@ -1021,6 +1023,8 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.array_grouping");
   sWellFormedUnicodeStringsEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.well_formed_unicode_strings");
+  sArrayBufferTransferEnabled = Preferences::GetBool(
+      JS_OPTIONS_DOT_STR "experimental.arraybuffer_transfer");
 #endif
   sChangeArrayByCopyEnabled = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "experimental.enable_change_array_by_copy");
