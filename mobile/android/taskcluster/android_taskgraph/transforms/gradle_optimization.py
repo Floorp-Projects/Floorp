@@ -55,6 +55,7 @@ def extend_optimization_if_one_already_exists(config, tasks):
         optimization = task.get("optimization")
         if optimization:
             skip_unless_changed = optimization["skip-unless-changed"]
+            skip_unless_changed.append(f"{config.path}/**")
 
             gradle_project = get_gradle_project(task)
             # TODO Remove this special case when ui-test.sh is able to accept "browser-engine-gecko"
