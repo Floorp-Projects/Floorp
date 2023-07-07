@@ -1348,13 +1348,6 @@ void GCRuntime::sweepJitDataOnMainThread(JS::GCContext* gcx) {
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_JIT_DATA);
 
-    if (!haveDiscardedJITCodeThisSlice) {
-      // Cancel any active or pending off thread compilations. We also did
-      // this before marking (in DiscardJITCodeForGC) so this is a no-op
-      // for non-incremental GCs.
-      js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
-    }
-
     // Bug 1071218: the following method has not yet been refactored to
     // work on a single zone-group at once.
 
@@ -1507,6 +1500,12 @@ IncrementalProgress GCRuntime::beginSweepingSweepGroup(JS::GCContext* gcx,
   }
   cellsToAssertNotGray.ref().clearAndFree();
 #endif
+
+  // Cancel off thread compilation as soon as possible, unless this already
+  // happened in GCRuntime::discardJITCodeForGC.
+  if (!haveDiscardedJITCodeThisSlice) {
+    js::CancelOffThreadIonCompile(rt, JS::Zone::Sweep);
+  }
 
   // Updating the atom marking bitmaps. This marks atoms referenced by
   // uncollected zones so cannot be done in parallel with the other sweeping
