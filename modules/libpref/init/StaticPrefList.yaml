@@ -4041,7 +4041,7 @@
 # Storage-access API.
 - name: dom.storage_access.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Forward-Declared Storage-access API.
