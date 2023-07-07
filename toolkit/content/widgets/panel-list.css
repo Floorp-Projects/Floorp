@@ -14,6 +14,7 @@
   position: absolute;
   font: menu;
   background-color: var(--in-content-box-background);
+  border: 1px solid var(--in-content-box-border-color);
   border-radius: 4px;
   padding: 6px 0;
   margin-bottom: 16px;
@@ -22,17 +23,11 @@
   z-index: var(--z-index-popup, 10);
   white-space: nowrap;
   cursor: default;
-  overflow-y: auto;
-  max-height: 100%;
 }
 
 :host([inxulpanel]) {
   position: static;
   margin: 0;
-}
-
-:host(:not([inxulpanel])) {
-  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
 }
 
 .list {
