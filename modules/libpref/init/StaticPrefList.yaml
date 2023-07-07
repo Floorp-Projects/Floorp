@@ -9200,6 +9200,19 @@
   value: false
   mirror: always
 
+- name: layout.scrollbars.click_and_hold_track.continue_to_end
+  type: bool
+# On Linux, click-and-hold on the scrollbar track should continue scrolling
+# until the mouse is released. On the other platforms we want to stop
+# scrolling as soon as the scrollbar thumb has reached the current mouse
+# position.
+#ifdef MOZ_WIDGET_GTK
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
 # Whether anchor is kept selected.
 - name: layout.selectanchor
   type: bool
