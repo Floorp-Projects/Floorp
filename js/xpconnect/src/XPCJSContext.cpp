@@ -824,20 +824,9 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
       ;
 }
 
-void xpc::SetPrefableCompileOptions(JS::PrefableCompileOptions& options) {
-  options
-      .setSourcePragmas(StaticPrefs::javascript_options_source_pragmas())
-#ifdef NIGHTLY_BUILD
-      .setImportAssertions(
-          StaticPrefs::javascript_options_experimental_import_assertions())
-#endif
-      .setAsmJS(StaticPrefs::javascript_options_asmjs())
-      .setThrowOnAsmJSValidationFailure(
-          StaticPrefs::javascript_options_throw_on_asmjs_validation_failure());
-}
-
 void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
   options
+      .setAsmJS(Preferences::GetBool(JS_OPTIONS_DOT_STR "asmjs"))
 #ifdef FUZZING
       .setFuzzing(Preferences::GetBool(JS_OPTIONS_DOT_STR "fuzzing.enabled"))
 #endif
@@ -853,11 +842,18 @@ void xpc::SetPrefableContextOptions(JS::ContextOptions& options) {
           JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
       .setWasmVerbose(Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_verbose"))
+      .setThrowOnAsmJSValidationFailure(Preferences::GetBool(
+          JS_OPTIONS_DOT_STR "throw_on_asmjs_validation_failure"))
+      .setSourcePragmas(
+          Preferences::GetBool(JS_OPTIONS_DOT_STR "source_pragmas"))
       .setAsyncStack(Preferences::GetBool(JS_OPTIONS_DOT_STR "asyncstack"))
       .setAsyncStackCaptureDebuggeeOnly(Preferences::GetBool(
-          JS_OPTIONS_DOT_STR "asyncstack_capture_debuggee_only"));
-
-  SetPrefableCompileOptions(options.compileOptions());
+          JS_OPTIONS_DOT_STR "asyncstack_capture_debuggee_only"))
+#ifdef NIGHTLY_BUILD
+      .setImportAssertions(Preferences::GetBool(
+          JS_OPTIONS_DOT_STR "experimental.import_assertions"))
+#endif
+      ;
 }
 
 // Mirrored value of javascript.options.self_hosted.use_shared_memory.
