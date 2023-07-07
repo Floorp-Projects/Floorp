@@ -101,9 +101,7 @@ about-webrtc-nominated = Nominated
 about-webrtc-selected = Selected
 
 about-webrtc-save-page-label = Save Page
-about-webrtc-debug-mode-msg-label = Debug Mode
-about-webrtc-debug-mode-off-state-label = Start Debug Mode
-about-webrtc-debug-mode-on-state-label = Stop Debug Mode
+about-webrtc-enable-logging-label = Enable WebRTC Log Preset
 about-webrtc-stats-heading = Session Statistics
 about-webrtc-stats-clear = Clear History
 about-webrtc-log-heading = Connection Log
@@ -218,16 +216,11 @@ about-webrtc-round-trip-time-ms = RTT ms
 #   $track-identifier (String) - The unique identifier for the MediaStreamTrack.
 about-webrtc-frame-stats-heading = Video Frame Statistics - MediaStreamTrack ID: { $track-identifier }
 
-## These are paths used for saving the about:webrtc page or log files so
-## they can be attached to bug reports.
-## Variables:
-##  $path (String) - The path to which the file is saved.
-
+# This path is used for saving the about:webrtc page so it can be attached to
+# bug reports.
+# Variables:
+#  $path (String) - The path to which the file is saved.
 about-webrtc-save-page-complete-msg = Page saved to: { $path }
-about-webrtc-debug-mode-toggled-off-state-msg = Trace log can be found at: { $path }
-about-webrtc-debug-mode-toggled-on-state-msg = Debug mode active, trace log at: { $path }
-
-##
 
 # This is the total number of frames encoded or decoded over an RTP stream.
 # Variables:
