@@ -48,6 +48,8 @@ class ContentCache {
   [[nodiscard]] bool IsValid() const;
 
  protected:
+  void AssertIfInvalid() const;
+
   // Whole text in the target
   Maybe<nsString> mText;
 
