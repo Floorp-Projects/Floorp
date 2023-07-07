@@ -26,12 +26,13 @@ impl vk::Result {
     }
 }
 
-/// Repeatedly calls `f` until it does not return [`vk::Result::INCOMPLETE`] anymore, ensuring all
-/// available data has been read into the vector.
+/// Repeatedly calls `f` until it does not return [`vk::Result::INCOMPLETE`] anymore,
+/// ensuring all available data has been read into the vector.
 ///
-/// See for example [`vkEnumerateInstanceExtensionProperties`]: the number of available items may
-/// change between calls; [`vk::Result::INCOMPLETE`] is returned when the count increased (and the
-/// vector is not large enough after querying the initial size), requiring Ash to try again.
+/// See for example [`vkEnumerateInstanceExtensionProperties`]: the number of available
+/// items may change between calls; [`vk::Result::INCOMPLETE`] is returned when the count
+/// increased (and the vector is not large enough after querying the initial size),
+/// requiring Ash to try again.
 ///
 /// [`vkEnumerateInstanceExtensionProperties`]: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkEnumerateInstanceExtensionProperties.html
 pub(crate) unsafe fn read_into_uninitialized_vector<N: Copy + Default + TryInto<usize>, T>(
@@ -55,17 +56,18 @@ where
     }
 }
 
-/// Repeatedly calls `f` until it does not return [`vk::Result::INCOMPLETE`] anymore, ensuring all
-/// available data has been read into the vector.
+/// Repeatedly calls `f` until it does not return [`vk::Result::INCOMPLETE`] anymore,
+/// ensuring all available data has been read into the vector.
 ///
-/// Items in the target vector are [`default()`][Default::default()]-initialized which is required
-/// for [`vk::BaseOutStructure`]-like structs where [`vk::BaseOutStructure::s_type`] needs to be a
-/// valid type and [`vk::BaseOutStructure::p_next`] a valid or [`null`][std::ptr::null_mut()]
-/// pointer.
+/// Items in the target vector are [`default()`][`Default::default()`]-initialized which
+/// is required for [`vk::BaseOutStructure`]-like structs where [`vk::BaseOutStructure::s_type`]
+/// needs to be a valid type and [`vk::BaseOutStructure::p_next`] a valid or
+/// [`null`][`std::ptr::null_mut()`] pointer.
 ///
-/// See for example [`vkEnumerateInstanceExtensionProperties`]: the number of available items may
-/// change between calls; [`vk::Result::INCOMPLETE`] is returned when the count increased (and the
-/// vector is not large enough after querying the initial size), requiring Ash to try again.
+/// See for example [`vkEnumerateInstanceExtensionProperties`]: the number of available
+/// items may change between calls; [`vk::Result::INCOMPLETE`] is returned when the count
+/// increased (and the vector is not large enough after querying the initial size),
+/// requiring Ash to try again.
 ///
 /// [`vkEnumerateInstanceExtensionProperties`]: https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/vkEnumerateInstanceExtensionProperties.html
 pub(crate) unsafe fn read_into_defaulted_vector<
@@ -114,7 +116,7 @@ pub(crate) fn debug_flags<Value: Into<u64> + Copy>(
         if !first {
             f.write_str(" | ")?;
         }
-        write!(f, "{accum:b}")?;
+        write!(f, "{:b}", accum)?;
     }
     Ok(())
 }

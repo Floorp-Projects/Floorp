@@ -9,7 +9,6 @@ use super::*;
 
 use objc::runtime::{NO, YES};
 
-/// See <https://developer.apple.com/documentation/metal/mtltexturetype>
 #[repr(u64)]
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
@@ -22,10 +21,8 @@ pub enum MTLTextureType {
     Cube = 5,
     CubeArray = 6,
     D3 = 7,
-    D2MultisampleArray = 8,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtltexturecompressiontype>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub enum MTLTextureCompressionType {
@@ -34,7 +31,6 @@ pub enum MTLTextureCompressionType {
 }
 
 bitflags! {
-    /// See <https://developer.apple.com/documentation/metal/mtltextureusage>
     pub struct MTLTextureUsage: NSUInteger {
         const Unknown         = 0x0000;
         const ShaderRead      = 0x0001;
@@ -44,12 +40,12 @@ bitflags! {
     }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtltexturedescriptor>
 pub enum MTLTextureDescriptor {}
 
 foreign_obj_type! {
     type CType = MTLTextureDescriptor;
     pub struct TextureDescriptor;
+    pub struct TextureDescriptorRef;
 }
 
 impl TextureDescriptor {
@@ -177,13 +173,13 @@ impl TextureDescriptorRef {
     }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtltexture>
 pub enum MTLTexture {}
 
 foreign_obj_type! {
     type CType = MTLTexture;
     pub struct Texture;
-    type ParentType = Resource;
+    pub struct TextureRef;
+    type ParentType = ResourceRef;
 }
 
 impl TextureRef {
@@ -348,9 +344,5 @@ impl TextureRef {
                                                      levels:mipmap_levels
                                                      slices:slices]
         }
-    }
-
-    pub fn gpu_resource_id(&self) -> MTLResourceID {
-        unsafe { msg_send![self, gpuResourceID] }
     }
 }

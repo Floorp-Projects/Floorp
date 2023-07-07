@@ -9,7 +9,6 @@ use super::*;
 
 use std::ops::Range;
 
-/// See <https://developer.apple.com/documentation/metal/mtlprimitivetype>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLPrimitiveType {
@@ -20,7 +19,6 @@ pub enum MTLPrimitiveType {
     TriangleStrip = 4,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlindextype>
 #[repr(u64)]
 #[allow(non_camel_case_types)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -29,7 +27,6 @@ pub enum MTLIndexType {
     UInt32 = 1,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlvisibilityresultmode>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLVisibilityResultMode {
@@ -38,7 +35,6 @@ pub enum MTLVisibilityResultMode {
     Counting = 2,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlcullmode>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLCullMode {
@@ -47,7 +43,6 @@ pub enum MTLCullMode {
     Back = 2,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlwinding>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLWinding {
@@ -55,7 +50,6 @@ pub enum MTLWinding {
     CounterClockwise = 1,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtldepthclipmode>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLDepthClipMode {
@@ -63,7 +57,6 @@ pub enum MTLDepthClipMode {
     Clamp = 1,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtltrianglefillmode>
 #[repr(u64)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum MTLTriangleFillMode {
@@ -86,7 +79,6 @@ bitflags! {
     }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlscissorrect>
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct MTLScissorRect {
@@ -96,7 +88,6 @@ pub struct MTLScissorRect {
     pub height: NSUInteger,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlviewport>
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct MTLViewport {
@@ -108,7 +99,6 @@ pub struct MTLViewport {
     pub zfar: f64,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtldrawprimitivesindirectarguments>
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct MTLDrawPrimitivesIndirectArguments {
@@ -118,7 +108,6 @@ pub struct MTLDrawPrimitivesIndirectArguments {
     pub baseInstance: u32,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtldrawindexedprimitivesindirectarguments>
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct MTLDrawIndexedPrimitivesIndirectArguments {
@@ -129,7 +118,6 @@ pub struct MTLDrawIndexedPrimitivesIndirectArguments {
     pub baseInstance: u32,
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlvertexamplificationviewmapping>
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct VertexAmplificationViewMapping {
@@ -137,15 +125,12 @@ pub struct VertexAmplificationViewMapping {
     pub viewportArrayIndexOffset: u32,
 }
 
-#[allow(dead_code)]
-type MTLVertexAmplicationViewMapping = VertexAmplificationViewMapping;
-
-/// See <https://developer.apple.com/documentation/metal/mtlcommandencoder>
 pub enum MTLCommandEncoder {}
 
 foreign_obj_type! {
     type CType = MTLCommandEncoder;
     pub struct CommandEncoder;
+    pub struct CommandEncoderRef;
 }
 
 impl CommandEncoderRef {
@@ -186,13 +171,13 @@ impl CommandEncoderRef {
     }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlparallelrendercommandencoder>
 pub enum MTLParallelRenderCommandEncoder {}
 
 foreign_obj_type! {
     type CType = MTLParallelRenderCommandEncoder;
     pub struct ParallelRenderCommandEncoder;
-    type ParentType = CommandEncoder;
+    pub struct ParallelRenderCommandEncoderRef;
+    type ParentType = CommandEncoderRef;
 }
 
 impl ParallelRenderCommandEncoderRef {
@@ -201,13 +186,13 @@ impl ParallelRenderCommandEncoderRef {
     }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlrendercommandencoder/>
 pub enum MTLRenderCommandEncoder {}
 
 foreign_obj_type! {
     type CType = MTLRenderCommandEncoder;
     pub struct RenderCommandEncoder;
-    type ParentType = CommandEncoder;
+    pub struct RenderCommandEncoderRef;
+    type ParentType = CommandEncoderRef;
 }
 
 impl RenderCommandEncoderRef {
@@ -410,308 +395,6 @@ impl RenderCommandEncoderRef {
         }
     }
 
-    /// Only available in (macos(12.0), ios(15.0))
-    pub fn set_vertex_acceleration_structure(
-        &self,
-        index: NSUInteger,
-        accel: Option<&accelerator_structure::AccelerationStructureRef>,
-    ) {
-        unsafe {
-            msg_send![
-                self,
-                setVertexAccelerationStructure: accel
-                atBufferIndex: index
-            ]
-        }
-    }
-
-    /// Only available in (macos(12.0), ios(15.0))
-    pub fn set_vertex_intersection_function_table(
-        &self,
-        index: NSUInteger,
-        table: Option<&IntersectionFunctionTableRef>,
-    ) {
-        unsafe {
-            msg_send![
-                self,
-                setVertexIntersectionFunctionTable: table
-                atBufferIndex: index
-            ]
-        }
-    }
-
-    // Specifying Resources for a Object Shader Function
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_object_buffer(
-        &self,
-        index: NSUInteger,
-        buffer: Option<&BufferRef>,
-        offset: NSUInteger,
-    ) {
-        unsafe {
-            msg_send![self,
-                setObjectBuffer:buffer
-                offset:offset
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_object_buffer_offset(&self, index: NSUInteger, offset: NSUInteger) {
-        unsafe {
-            msg_send![self,
-                setObjectBufferOffset:offset
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_object_bytes(
-        &self,
-        index: NSUInteger,
-        length: NSUInteger,
-        bytes: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            msg_send![self,
-                setObjectBytes:bytes
-                length:length
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_object_sampler_state(&self, index: NSUInteger, sampler: Option<&SamplerStateRef>) {
-        unsafe {
-            msg_send![self,
-                setObjectSamplerState:sampler
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_object_sampler_state_with_lod(
-        &self,
-        index: NSUInteger,
-        sampler: Option<&SamplerStateRef>,
-        lod_clamp: Range<f32>,
-    ) {
-        unsafe {
-            msg_send![self,
-                setObjectSamplerState:sampler
-                lodMinClamp:lod_clamp.start
-                lodMaxClamp:lod_clamp.end
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_object_texture(&self, index: NSUInteger, texture: Option<&TextureRef>) {
-        unsafe {
-            msg_send![self,
-                setObjectTexture:texture
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_object_threadgroup_memory_length(&self, index: NSUInteger, length: NSUInteger) {
-        unsafe {
-            msg_send![self,
-                setObjectThreadgroupMemoryLength: length
-                atIndex: index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_object_buffers(
-        &self,
-        start_index: NSUInteger,
-        data: &[Option<&BufferRef>],
-        offsets: &[NSUInteger],
-    ) {
-        debug_assert_eq!(offsets.len(), data.len());
-        unsafe {
-            msg_send![self,
-                setObjectBuffers: data.as_ptr()
-                offsets: offsets.as_ptr()
-                withRange: NSRange {
-                    location: start_index,
-                    length: data.len() as _,
-                }
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_object_sampler_states(
-        &self,
-        start_index: NSUInteger,
-        data: &[Option<&SamplerStateRef>],
-    ) {
-        unsafe {
-            msg_send![self,
-                setObjectSamplerStates: data.as_ptr()
-                withRange: NSRange {
-                    location: start_index,
-                    length: data.len() as _,
-                }
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_object_textures(&self, start_index: NSUInteger, data: &[Option<&TextureRef>]) {
-        unsafe {
-            msg_send![self,
-                setObjectTextures: data.as_ptr()
-                withRange: NSRange {
-                    location: start_index,
-                    length: data.len() as _,
-                }
-            ]
-        }
-    }
-
-    // Specifying Resources for a Mesh Shader
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_mesh_buffer(
-        &self,
-        index: NSUInteger,
-        buffer: Option<&BufferRef>,
-        offset: NSUInteger,
-    ) {
-        unsafe {
-            msg_send![self,
-                setMeshBuffer:buffer
-                offset:offset
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_mesh_buffer_offset(&self, index: NSUInteger, offset: NSUInteger) {
-        unsafe {
-            msg_send![self,
-                setMeshBufferOffset:offset
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_mesh_bytes(
-        &self,
-        index: NSUInteger,
-        length: NSUInteger,
-        bytes: *const std::ffi::c_void,
-    ) {
-        unsafe {
-            msg_send![self,
-                setMeshBytes:bytes
-                length:length
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_mesh_sampler_state(&self, index: NSUInteger, sampler: Option<&SamplerStateRef>) {
-        unsafe {
-            msg_send![self,
-                setMeshSamplerState:sampler
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_mesh_sampler_state_with_lod(
-        &self,
-        index: NSUInteger,
-        sampler: Option<&SamplerStateRef>,
-        lod_clamp: Range<f32>,
-    ) {
-        unsafe {
-            msg_send![self,
-                setMeshSamplerState:sampler
-                lodMinClamp:lod_clamp.start
-                lodMaxClamp:lod_clamp.end
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_mesh_texture(&self, index: NSUInteger, texture: Option<&TextureRef>) {
-        unsafe {
-            msg_send![self,
-                setMeshTexture:texture
-                atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_mesh_buffers(
-        &self,
-        start_index: NSUInteger,
-        data: &[Option<&BufferRef>],
-        offsets: &[NSUInteger],
-    ) {
-        debug_assert_eq!(offsets.len(), data.len());
-        unsafe {
-            msg_send![self,
-                setMeshBuffers: data.as_ptr()
-                offsets: offsets.as_ptr()
-                withRange: NSRange {
-                    location: start_index,
-                    length: data.len() as _,
-                }
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_mesh_sampler_states(
-        &self,
-        start_index: NSUInteger,
-        data: &[Option<&SamplerStateRef>],
-    ) {
-        unsafe {
-            msg_send![self,
-                setMeshSamplerStates: data.as_ptr()
-                withRange: NSRange {
-                    location: start_index,
-                    length: data.len() as _,
-                }
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn set_mesh_textures(&self, start_index: NSUInteger, data: &[Option<&TextureRef>]) {
-        unsafe {
-            msg_send![self,
-                setMeshTextures: data.as_ptr()
-                withRange: NSRange {
-                    location: start_index,
-                    length: data.len() as _,
-                }
-            ]
-        }
-    }
-
     // Specifying Resources for a Fragment Shader Function
 
     pub fn set_fragment_bytes(
@@ -828,36 +511,6 @@ impl RenderCommandEncoderRef {
                 lodMinClamp:lod_clamp.start
                 lodMaxClamp:lod_clamp.end
                 atIndex:index
-            ]
-        }
-    }
-
-    /// Only available in (macos(12.0), ios(15.0))
-    pub fn set_fragment_acceleration_structure(
-        &self,
-        index: NSUInteger,
-        accel: Option<&accelerator_structure::AccelerationStructureRef>,
-    ) {
-        unsafe {
-            msg_send![
-                self,
-                setFragmentAccelerationStructure: accel
-                atBufferIndex: index
-            ]
-        }
-    }
-
-    /// Only available in (macos(12.0), ios(15.0))
-    pub fn set_fragment_intersection_function_table(
-        &self,
-        index: NSUInteger,
-        table: Option<&IntersectionFunctionTableRef>,
-    ) {
-        unsafe {
-            msg_send![
-                self,
-                setFragmentIntersectionFunctionTable: table
-                atBufferIndex: index
             ]
         }
     }
@@ -1021,56 +674,6 @@ impl RenderCommandEncoderRef {
     // fn setVertexBuffers_offsets_withRange(self, buffers: *const id, offsets: *const NSUInteger, range: NSRange);
     // fn setVertexSamplerStates_lodMinClamps_lodMaxClamps_withRange(self, samplers: *const id, lodMinClamps: *const f32, lodMaxClamps: *const f32, range: NSRange);
 
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn draw_mesh_threadgroups(
-        &self,
-        threadgroups_per_grid: MTLSize,
-        threads_per_object_threadgroup: MTLSize,
-        threads_per_mesh_threadgroup: MTLSize,
-    ) {
-        unsafe {
-            msg_send![self,
-                drawMeshThreadgroups: threadgroups_per_grid
-                threadsPerObjectThreadgroup: threads_per_object_threadgroup
-                threadsPerMeshThreadgroup: threads_per_mesh_threadgroup
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn draw_mesh_threadgroups_with_indirect_buffer(
-        &self,
-        indirect_buffer: &BufferRef,
-        indirect_buffer_offset: NSUInteger,
-        threads_per_object_threadgroup: MTLSize,
-        threads_per_mesh_threadgroup: MTLSize,
-    ) {
-        unsafe {
-            msg_send![self,
-                drawMeshThreadgroupsWithIndirectBuffer: indirect_buffer
-                indirectBufferOffset: indirect_buffer_offset
-                threadsPerObjectThreadgroup: threads_per_object_threadgroup
-                threadsPerMeshThreadgroup: threads_per_mesh_threadgroup
-            ]
-        }
-    }
-
-    /// Only available in (macos(13.0), ios(16.0))
-    pub fn draw_mesh_threads(
-        &self,
-        threads_per_grid: MTLSize,
-        threads_per_object_threadgroup: MTLSize,
-        threads_per_mesh_threadgroup: MTLSize,
-    ) {
-        unsafe {
-            msg_send![self,
-                drawMeshThreads: threads_per_grid
-                threadsPerObjectThreadgroup: threads_per_object_threadgroup
-                threadsPerMeshThreadgroup: threads_per_mesh_threadgroup
-            ]
-        }
-    }
-
     /// Adds an untracked resource to the render pass.
     ///
     /// Availability: iOS 11.0+, macOS 10.13+
@@ -1216,13 +819,13 @@ impl RenderCommandEncoderRef {
     }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlblitcommandencoder/>
 pub enum MTLBlitCommandEncoder {}
 
 foreign_obj_type! {
     type CType = MTLBlitCommandEncoder;
     pub struct BlitCommandEncoder;
-    type ParentType = CommandEncoder;
+    pub struct BlitCommandEncoderRef;
+    type ParentType = CommandEncoderRef;
 }
 
 impl BlitCommandEncoderRef {
@@ -1319,7 +922,7 @@ impl BlitCommandEncoderRef {
         }
     }
 
-    /// See <https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400756-copy>
+    /// https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400756-copy
     pub fn copy_from_texture_to_buffer(
         &self,
         source_texture: &TextureRef,
@@ -1394,49 +997,15 @@ impl BlitCommandEncoderRef {
     pub fn wait_for_fence(&self, fence: &FenceRef) {
         unsafe { msg_send![self, waitForFence: fence] }
     }
-
-    /// See: <https://developer.apple.com/documentation/metal/mtlblitcommandencoder/3194348-samplecountersinbuffer>
-    pub fn sample_counters_in_buffer(
-        &self,
-        sample_buffer: &CounterSampleBufferRef,
-        sample_index: NSUInteger,
-        with_barrier: bool,
-    ) {
-        unsafe {
-            msg_send![self,
-                sampleCountersInBuffer: sample_buffer
-                atSampleIndex: sample_index
-                withBarrier: with_barrier
-            ]
-        }
-    }
-
-    /// See: <https://developer.apple.com/documentation/metal/mtlblitcommandencoder/3194347-resolvecounters>
-    pub fn resolve_counters(
-        &self,
-        sample_buffer: &CounterSampleBufferRef,
-        range: crate::NSRange,
-        destination_buffer: &BufferRef,
-        destination_offset: NSUInteger,
-    ) {
-        unsafe {
-            msg_send![self,
-                resolveCounters: sample_buffer
-                inRange: range
-                destinationBuffer: destination_buffer
-                destinationOffset: destination_offset
-            ]
-        }
-    }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/>
 pub enum MTLComputeCommandEncoder {}
 
 foreign_obj_type! {
     type CType = MTLComputeCommandEncoder;
     pub struct ComputeCommandEncoder;
-    type ParentType = CommandEncoder;
+    pub struct ComputeCommandEncoderRef;
+    type ParentType = CommandEncoderRef;
 }
 
 impl ComputeCommandEncoderRef {
@@ -1581,22 +1150,6 @@ impl ComputeCommandEncoderRef {
         }
     }
 
-    /// Encodes a barrier so that changes to a set of resources made by commands encoded before the
-    /// barrier are completed before further commands are executed.
-    ///
-    /// Availability: iOS 12.0+, macOS 10.14+
-    ///
-    /// # Arguments
-    /// * `resources`: A slice of resources.
-    pub fn memory_barrier_with_resources(&self, resources: &[&ResourceRef]) {
-        unsafe {
-            msg_send![self,
-                memoryBarrierWithResources: resources.as_ptr()
-                count: resources.len() as NSUInteger
-            ]
-        }
-    }
-
     /// Specifies that a resource in an argument buffer can be safely used by a compute pass.
     ///
     /// Availability: iOS 11.0+, macOS 10.13+
@@ -1667,60 +1220,14 @@ impl ComputeCommandEncoderRef {
     pub fn wait_for_fence(&self, fence: &FenceRef) {
         unsafe { msg_send![self, waitForFence: fence] }
     }
-
-    /// Only available in (macos(11.0), ios(14.0))
-    pub fn set_acceleration_structure(
-        &self,
-        index: NSUInteger,
-        accel: Option<&accelerator_structure::AccelerationStructureRef>,
-    ) {
-        unsafe {
-            msg_send![
-                self,
-                setAccelerationStructure: accel
-                atBufferIndex: index
-            ]
-        }
-    }
-
-    /// Only available in (macos(11.0), ios(14.0))
-    pub fn set_intersection_function_table(
-        &self,
-        index: NSUInteger,
-        table: Option<&IntersectionFunctionTableRef>,
-    ) {
-        unsafe {
-            msg_send![
-                self,
-                setIntersectionFunctionTable: table
-                atBufferIndex: index
-            ]
-        }
-    }
-
-    /// See: <https://developer.apple.com/documentation/metal/mtlcomputecommandencoder/3194349-samplecountersinbuffer>
-    pub fn sample_counters_in_buffer(
-        &self,
-        sample_buffer: &CounterSampleBufferRef,
-        sample_index: NSUInteger,
-        with_barrier: bool,
-    ) {
-        unsafe {
-            msg_send![self,
-                sampleCountersInBuffer: sample_buffer
-                atSampleIndex: sample_index
-                withBarrier: with_barrier
-            ]
-        }
-    }
 }
 
-/// See <https://developer.apple.com/documentation/metal/mtlargumentencoder/>
 pub enum MTLArgumentEncoder {}
 
 foreign_obj_type! {
     type CType = MTLArgumentEncoder;
     pub struct ArgumentEncoder;
+    pub struct ArgumentEncoderRef;
 }
 
 impl ArgumentEncoderRef {

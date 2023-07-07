@@ -4,8 +4,6 @@ on:
     paths:
       - '.github/workflows/validation-windows.yml'
       - 'tests/out/hlsl/*.hlsl'
-      - 'tests/out/hlsl/*.ron'
-      - 'xtask/**'
 
 jobs:
   validate-windows-dxc:
@@ -17,12 +15,8 @@ jobs:
       - name: Add DirectXShaderCompiler
         uses: napokue/setup-dxc@v1.1.0
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            xtask -> target
-
-      - run: cargo xtask validate hlsl dxc
+      - run: make validate-hlsl-dxc
+        shell: sh
 
   validate-windows-fxc:
     name: HLSL via FXC
@@ -39,9 +33,5 @@ jobs:
           | Out-File -FilePath $Env:GITHUB_PATH -Encoding utf8 -Append
         shell: powershell
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: |
-            xtask -> target
-
-      - run: cargo xtask validate hlsl fxc
+      - run: make validate-hlsl-fxc
+        shell: sh
