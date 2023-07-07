@@ -40,6 +40,19 @@ enum CanHaveLogicalProperties {
     Yes,
 }
 
+/// Whether we're resolving a style with the purposes of reparenting for ::first-line.
+#[derive(Copy, Clone)]
+#[allow(missing_docs)]
+pub enum FirstLineReparenting<'a> {
+    No,
+    Yes {
+        /// The style we're re-parenting for ::first-line. ::first-line only affects inherited
+        /// properties so we use this to avoid some work and also ensure correctness by copying the
+        /// reset structs from this style.
+        style_to_reparent: &'a ComputedValues,
+    },
+}
+
 /// Performs the CSS cascade, computing new styles for an element from its parent style.
 ///
 /// The arguments are:
@@ -61,8 +74,8 @@ pub fn cascade<E>(
     guards: &StylesheetGuards,
     originating_element_style: Option<&ComputedValues>,
     parent_style: Option<&ComputedValues>,
-    parent_style_ignoring_first_line: Option<&ComputedValues>,
     layout_parent_style: Option<&ComputedValues>,
+    first_line_reparenting: FirstLineReparenting,
     visited_rules: Option<&StrongRuleNode>,
     cascade_input_flags: ComputedValueFlags,
     quirks_mode: QuirksMode,
@@ -80,8 +93,8 @@ where
         guards,
         originating_element_style,
         parent_style,
-        parent_style_ignoring_first_line,
         layout_parent_style,
+        first_line_reparenting,
         CascadeMode::Unvisited { visited_rules },
         cascade_input_flags,
         quirks_mode,
@@ -181,8 +194,8 @@ fn cascade_rules<E>(
     guards: &StylesheetGuards,
     originating_element_style: Option<&ComputedValues>,
     parent_style: Option<&ComputedValues>,
-    parent_style_ignoring_first_line: Option<&ComputedValues>,
     layout_parent_style: Option<&ComputedValues>,
+    first_line_reparenting: FirstLineReparenting,
     cascade_mode: CascadeMode,
     cascade_input_flags: ComputedValueFlags,
     quirks_mode: QuirksMode,
@@ -193,10 +206,6 @@ fn cascade_rules<E>(
 where
     E: TElement,
 {
-    debug_assert_eq!(
-        parent_style.is_some(),
-        parent_style_ignoring_first_line.is_some()
-    );
     apply_declarations(
         device,
         pseudo,
@@ -205,8 +214,8 @@ where
         DeclarationIterator::new(rule_node, guards, pseudo),
         originating_element_style,
         parent_style,
-        parent_style_ignoring_first_line,
         layout_parent_style,
+        first_line_reparenting,
         cascade_mode,
         cascade_input_flags,
         quirks_mode,
@@ -242,8 +251,8 @@ pub fn apply_declarations<'a, E, I>(
     iter: I,
     originating_element_style: Option<&ComputedValues>,
     parent_style: Option<&ComputedValues>,
-    parent_style_ignoring_first_line: Option<&ComputedValues>,
     layout_parent_style: Option<&ComputedValues>,
+    first_line_reparenting: FirstLineReparenting,
     cascade_mode: CascadeMode,
     cascade_input_flags: ComputedValueFlags,
     quirks_mode: QuirksMode,
@@ -260,20 +269,6 @@ where
         element.is_some() && pseudo.is_some()
     );
     debug_assert!(layout_parent_style.is_none() || parent_style.is_some());
-    debug_assert_eq!(
-        parent_style.is_some(),
-        parent_style_ignoring_first_line.is_some()
-    );
-    #[cfg(feature = "gecko")]
-    debug_assert!(
-        parent_style.is_none() ||
-            ::std::ptr::eq(
-                parent_style.unwrap(),
-                parent_style_ignoring_first_line.unwrap()
-            ) ||
-            parent_style.unwrap().is_first_line_style()
-    );
-
     let inherited_style = parent_style.unwrap_or(device.default_computed_values());
 
     let mut declarations = SmallVec::<[(&_, CascadePriority); 32]>::new();
@@ -304,7 +299,6 @@ where
         StyleBuilder::new(
             device,
             parent_style,
-            parent_style_ignoring_first_line,
             pseudo,
             Some(rules.clone()),
             custom_properties,
@@ -318,7 +312,7 @@ where
     context.style().add_flags(cascade_input_flags);
 
     let using_cached_reset_properties;
-    let mut cascade = Cascade::new(&mut context, cascade_mode, &referenced_properties);
+    let mut cascade = Cascade::new(&mut context, cascade_mode, first_line_reparenting, &referenced_properties);
     let mut shorthand_cache = ShorthandsWithPropertyReferencesCache::default();
 
     let properties_to_apply = match cascade.cascade_mode {
@@ -326,7 +320,7 @@ where
             cascade.context.builder.writing_mode = writing_mode;
             // We never insert visited styles into the cache so we don't need to
             // try looking it up. It also wouldn't be super-profitable, only a
-            // handful reset properties are non-inherited.
+            // handful :visited properties are non-inherited.
             using_cached_reset_properties = false;
             LonghandIdSet::visited_dependent()
         },
@@ -354,7 +348,6 @@ where
                     element,
                     originating_element_style,
                     parent_style,
-                    parent_style_ignoring_first_line,
                     layout_parent_style,
                     visited_rules,
                     guards,
@@ -549,6 +542,7 @@ fn tweak_when_ignoring_colors(
 struct Cascade<'a, 'b: 'a> {
     context: &'a mut computed::Context<'b>,
     cascade_mode: CascadeMode<'a>,
+    first_line_reparenting: FirstLineReparenting<'b>,
     /// All the properties that have a declaration in the cascade.
     referenced: &'a LonghandIdSet,
     seen: LonghandIdSet,
@@ -561,11 +555,13 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
     fn new(
         context: &'a mut computed::Context<'b>,
         cascade_mode: CascadeMode<'a>,
+        first_line_reparenting: FirstLineReparenting<'b>,
         referenced: &'a LonghandIdSet,
     ) -> Self {
         Self {
             context,
             cascade_mode,
+            first_line_reparenting,
             referenced,
             seen: LonghandIdSet::default(),
             author_specified: LonghandIdSet::default(),
@@ -770,7 +766,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         element: Option<E>,
         originating_element_style: Option<&ComputedValues>,
         parent_style: Option<&ComputedValues>,
-        parent_style_ignoring_first_line: Option<&ComputedValues>,
         layout_parent_style: Option<&ComputedValues>,
         visited_rules: &StrongRuleNode,
         guards: &StylesheetGuards,
@@ -801,8 +796,8 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             guards,
             visited_parent!(originating_element_style),
             visited_parent!(parent_style),
-            visited_parent!(parent_style_ignoring_first_line),
             visited_parent!(layout_parent_style),
+            self.first_line_reparenting,
             CascadeMode::Visited { writing_mode },
             // Cascade input flags don't matter for the visited style, they are
             // in the main (unvisited) style.
@@ -883,19 +878,17 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         cache: Option<&'b RuleCache>,
         guards: &StylesheetGuards,
     ) -> bool {
-        let cache = match cache {
-            Some(cache) => cache,
-            None => return false,
+        let style = match self.first_line_reparenting {
+            FirstLineReparenting::Yes { style_to_reparent } => style_to_reparent,
+            FirstLineReparenting::No => {
+                let Some(cache) = cache else { return false };
+                let Some(style) = cache.find(guards, &self.context.builder) else { return false };
+                style
+            },
         };
 
         let builder = &mut self.context.builder;
-
-        let cached_style = match cache.find(guards, &builder) {
-            Some(style) => style,
-            None => return false,
-        };
-
-        builder.copy_reset_from(cached_style);
+        builder.copy_reset_from(style);
 
         // We're using the same reset style as another element, and we'll skip
         // applying the relevant properties. So we need to do the relevant
@@ -912,7 +905,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             ComputedValueFlags::DEPENDS_ON_SELF_FONT_METRICS |
             ComputedValueFlags::DEPENDS_ON_INHERITED_FONT_METRICS |
             ComputedValueFlags::USES_VIEWPORT_UNITS;
-        builder.add_flags(cached_style.flags & bits_to_copy);
+        builder.add_flags(style.flags & bits_to_copy);
 
         true
     }
