@@ -221,7 +221,7 @@ web-platform-tests-webgpu:
             android.*: []
             macos.*: []
             .*wayland.*: []
-            default: built-projects
+            default: ['trunk']
     mozharness:
         chunked: true
         extra-options:
