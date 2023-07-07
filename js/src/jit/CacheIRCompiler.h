@@ -910,6 +910,10 @@ class MOZ_RAII CacheIRCompiler {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     return (JSObject*)readStubWord(offset, StubField::Type::JSObject);
   }
+  JSObject* weakObjectStubField(uint32_t offset) {
+    MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
+    return (JSObject*)readStubWord(offset, StubField::Type::WeakObject);
+  }
   Value valueStubField(uint32_t offset) {
     MOZ_ASSERT(stubFieldPolicy_ == StubFieldPolicy::Constant);
     uint64_t raw = readStubInt64(offset, StubField::Type::Value);

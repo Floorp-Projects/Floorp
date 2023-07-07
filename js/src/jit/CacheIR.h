@@ -238,6 +238,7 @@ class StubField {
     WeakShape,
     GetterSetter,
     JSObject,
+    WeakObject,
     Symbol,
     String,
     BaseScript,

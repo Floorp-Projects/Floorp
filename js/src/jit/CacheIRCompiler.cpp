@@ -1149,6 +1149,10 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
       case StubField::Type::JSObject:
         InitGCPtr<JSObject*>(destWords, field.asWord());
         break;
+      case StubField::Type::WeakObject:
+        // No read barrier required to copy weak pointer.
+        InitGCPtr<JSObject*>(destWords, field.asWord());
+        break;
       case StubField::Type::Symbol:
         InitGCPtr<JS::Symbol*>(destWords, field.asWord());
         break;
@@ -1229,6 +1233,12 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
         TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
                   "cacheir-object");
         break;
+      case StubField::Type::WeakObject:
+        if (ShouldTraceWeakEdgeInStub<T>(trc)) {
+          TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
+                    "cacheir-weak-object");
+        }
+        break;
       case StubField::Type::Symbol:
         TraceEdge(trc, &stubInfo->getStubField<T, JS::Symbol*>(stub, offset),
                   "cacheir-symbol");
@@ -1285,6 +1295,15 @@ bool jit::TraceWeakCacheIRStub(JSTracer* trc, T* stub,
         GCPtr<Shape*>& shapeField =
             stubInfo->getStubField<T, Shape*>(stub, offset);
         auto r = TraceWeakEdge(trc, &shapeField, "cacheir-weak-shape");
+        if (r.isDead()) {
+          return false;
+        }
+        break;
+      }
+      case StubField::Type::WeakObject: {
+        GCPtr<JSObject*>& objectField =
+            stubInfo->getStubField<T, JSObject*>(stub, offset);
+        auto r = TraceWeakEdge(trc, &objectField, "cacheir-weak-object");
         if (r.isDead()) {
           return false;
         }
