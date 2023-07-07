@@ -6204,12 +6204,13 @@ static bool EmitMemDiscard(FunctionCompiler& f) {
 
   uint32_t bytecodeOffset = f.readBytecodeOffset();
 
-  MDefinition* memoryBase = f.memoryBase();
+  MDefinition* memoryBase = f.memoryBase(memoryIndex);
+  bool isMem32 = f.isMem32(memoryIndex);
 
   const SymbolicAddressSignature& callee =
-      (f.moduleEnv().usesSharedMemory(0)
-           ? (f.isMem32() ? SASigMemDiscardSharedM32 : SASigMemDiscardSharedM64)
-           : (f.isMem32() ? SASigMemDiscardM32 : SASigMemDiscardM64));
+      (f.moduleEnv().usesSharedMemory(memoryIndex)
+           ? (isMem32 ? SASigMemDiscardSharedM32 : SASigMemDiscardSharedM64)
+           : (isMem32 ? SASigMemDiscardM32 : SASigMemDiscardM64));
   return f.emitInstanceCall3(bytecodeOffset, callee, start, len, memoryBase);
 }
 #endif
