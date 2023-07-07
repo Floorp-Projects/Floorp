@@ -192,12 +192,8 @@ SOURCES += [
 ]
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
-    EXPORTS.mozilla.gfx += [
-        "QuartzSupport.h",
-    ]
     SOURCES += [
         "MacIOSurface.cpp",
-        "QuartzSupport.mm",
     ]
 
 if CONFIG["CPU_ARCH"] == "aarch64" or CONFIG["BUILD_ARM_NEON"]:
