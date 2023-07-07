@@ -158,6 +158,20 @@ if CONFIG["CPU_ARCH"] == "arm":
         "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_neon.cc"
     ]
 
+if CONFIG["CPU_ARCH"] == "mips32":
+
+    DEFINES["MIPS32_LE"] = True
+    DEFINES["MIPS_FPU_LE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/ooura/fft_size_128/ooura_fft_mips.cc"
+    ]
+
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    DEFINES["_GNU_SOURCE"] = True
+
 if CONFIG["CPU_ARCH"] == "x86":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
