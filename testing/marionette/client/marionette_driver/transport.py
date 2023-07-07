@@ -221,7 +221,8 @@ class TcpTransport(object):
 
                 try:
                     chunk = sock.recv(recv_bytes)
-                except OSError:
+                except socket.timeout:
+                    # Lets handle it with our own timeout check
                     continue
 
                 if not chunk:
