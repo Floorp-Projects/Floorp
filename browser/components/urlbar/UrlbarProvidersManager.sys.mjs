@@ -333,8 +333,6 @@ class ProvidersManager {
    * Notifies all providers when the user starts and ends an engagement with the
    * urlbar.  For details on parameters, see UrlbarProvider.onEngagement().
    *
-   * @param {boolean} isPrivate
-   *   True if the engagement is in a private context.
    * @param {string} state
    *   The state of the engagement, one of: start, engagement, abandonment,
    *   discard
@@ -345,17 +343,10 @@ class ProvidersManager {
    * @param {UrlbarController} controller
    *   The controller associated with the engagement
    */
-  notifyEngagementChange(
-    isPrivate,
-    state,
-    queryContext,
-    details = {},
-    controller
-  ) {
+  notifyEngagementChange(state, queryContext, details = {}, controller) {
     for (let provider of this.providers) {
       provider.tryMethod(
         "onEngagement",
-        isPrivate,
         state,
         queryContext,
         details,

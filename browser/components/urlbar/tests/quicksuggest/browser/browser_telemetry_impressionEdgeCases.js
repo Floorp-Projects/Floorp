@@ -475,7 +475,7 @@ async function doEngagementWithoutAddingResultToView(
   await loadPromise;
 
   let engagementCalls = onEngagementSpy.getCalls().filter(call => {
-    let state = call.args[1];
+    let state = call.args[0];
     return state == "engagement";
   });
   Assert.equal(engagementCalls.length, 1, "One engagement occurred");

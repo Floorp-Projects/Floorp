@@ -1474,9 +1474,9 @@ class TestProvider extends UrlbarProvider {
     }
   }
 
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(state, queryContext, details, controller) {
     if (this._onEngagement) {
-      this._onEngagement(isPrivate, state, queryContext, details);
+      this._onEngagement(state, queryContext, details, controller);
     }
   }
 }

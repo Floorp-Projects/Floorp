@@ -418,7 +418,7 @@ class ProviderWeather extends UrlbarProvider {
     };
   }
 
-  onEngagement(isPrivate, state, queryContext, details, controller) {
+  onEngagement(state, queryContext, details, controller) {
     // Ignore engagements on other results that didn't end the session.
     if (details.result?.providerName != this.name && details.isSessionOngoing) {
       return;
@@ -439,7 +439,7 @@ class ProviderWeather extends UrlbarProvider {
       if (result) {
         this.#recordEngagementTelemetry(
           result,
-          isPrivate,
+          controller.input.isPrivate,
           details.result == result ? details.selType : ""
         );
       }
