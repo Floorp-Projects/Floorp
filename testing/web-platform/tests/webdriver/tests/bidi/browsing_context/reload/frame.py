@@ -26,7 +26,7 @@ async def test_origin(bidi_session, new_tab, inline, domain):
 
     # Reload and assert (frame).
     result = await bidi_session.browsing_context.reload(
-        context=frame['context'])
+        context=frame['context'], wait="complete")
     assert result == {}
 
     contexts = await bidi_session.browsing_context.get_tree(
