@@ -92,7 +92,7 @@ add_setup(async function () {
       ["privacy.query_stripping.enabled", true],
       [
         "privacy.query_stripping.strip_list",
-        "foo mc_eid oly_anon_id oly_enc_id __s vero_id _hsenc mkt_tok fbclid",
+        "foo mc_eid oly_anon_id oly_enc_id __s vero_id _hsenc mkt_tok fbclid ysclid",
       ],
     ],
   });
@@ -143,17 +143,18 @@ add_task(async function test_queryParamCountTelemetry() {
   url = new URL(TEST_URI);
   url.searchParams.set("foo", "bar");
   url.searchParams.set("__s", "myValue4");
+  url.searchParams.set("ysclid", "myValue5");
   await BrowserTestUtils.withNewTab(url.href, async browser => {
     await verifyQueryString(browser, "");
   });
-  testTelemetry({ mc_eid: 2, fbclid: 1, mkt_tok: 1, __s: 1 });
+  testTelemetry({ mc_eid: 2, fbclid: 1, mkt_tok: 1, __s: 1, ysclid: 1 });
 
   url = new URL(TEST_URI);
   url.searchParams.set("foo", "bar");
   await BrowserTestUtils.withNewTab(url.href, async browser => {
     await verifyQueryString(browser, "");
   });
-  testTelemetry({ mc_eid: 2, fbclid: 1, mkt_tok: 1, __s: 1 });
+  testTelemetry({ mc_eid: 2, fbclid: 1, mkt_tok: 1, __s: 1, ysclid: 1 });
 
   await clearTelemetry();
 });
