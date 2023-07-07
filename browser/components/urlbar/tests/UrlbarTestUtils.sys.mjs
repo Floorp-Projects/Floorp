@@ -101,6 +101,17 @@ export var UrlbarTestUtils = {
       // Search mode may start a second query.
       context = await waitForQuery();
     }
+    if (win.gURLBar.view.oneOffSearchButtons._rebuilding) {
+      await new Promise(resolve =>
+        win.gURLBar.view.oneOffSearchButtons.addEventListener(
+          "rebuild",
+          resolve,
+          {
+            once: true,
+          }
+        )
+      );
+    }
     return context;
   },
 
@@ -1407,6 +1418,7 @@ class TestProvider extends UrlbarProvider {
    * @param {number} [options.addTimeout]
    *   If non-zero, each result will be added on this timeout.  If zero, all
    *   results will be added immediately and synchronously.
+   *   If there's no results, the query will be completed after this timeout.
    * @param {Function} [options.onCancel]
    *   If given, a function that will be called when the provider's cancelQuery
    *   method is called.
@@ -1449,6 +1461,9 @@ class TestProvider extends UrlbarProvider {
     return true;
   }
   async startQuery(context, addCallback) {
+    if (!this._results.length && this._addTimeout) {
+      await new Promise(resolve => lazy.setTimeout(resolve, this._addTimeout));
+    }
     for (let result of this._results) {
       if (!this._addTimeout) {
         addCallback(this, result);
@@ -1474,9 +1489,9 @@ class TestProvider extends UrlbarProvider {
     }
   }
 
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(state, queryContext, details, controller) {
     if (this._onEngagement) {
-      this._onEngagement(isPrivate, state, queryContext, details);
+      this._onEngagement(state, queryContext, details, controller);
     }
   }
 }

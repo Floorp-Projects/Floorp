@@ -315,7 +315,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
     ];
   }
 
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(state, queryContext, details, controller) {
     if (details.result?.providerName == this.name) {
       let { selType } = details;
 
@@ -328,13 +328,13 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
 
       switch (selType) {
         case FEEDBACK_COMMAND:
-          queryContext.view.acknowledgeFeedback(details.result);
+          controller.view.acknowledgeFeedback(details.result);
           break;
         case DISMISS_ONE_COMMAND:
-          queryContext.view.acknowledgeDismissal(details.result, false);
+          controller.view.acknowledgeDismissal(details.result, false);
           break;
         case DISMISS_ALL_COMMAND:
-          queryContext.view.acknowledgeDismissal(details.result, true);
+          controller.view.acknowledgeDismissal(details.result, true);
           break;
       }
     }

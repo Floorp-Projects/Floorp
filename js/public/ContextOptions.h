@@ -41,7 +41,6 @@ class JS_PUBLIC_API ContextOptions {
         sourcePragmas_(true),
         throwOnDebuggeeWouldRun_(true),
         dumpStackOnDebuggeeWouldRun_(false),
-        strictMode_(false),
 #ifdef JS_ENABLE_SMOOSH
         trackNotImplemented_(false),
         trySmoosh_(false),
@@ -180,16 +179,6 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
-  bool strictMode() const { return strictMode_; }
-  ContextOptions& setStrictMode(bool flag) {
-    strictMode_ = flag;
-    return *this;
-  }
-  ContextOptions& toggleStrictMode() {
-    strictMode_ = !strictMode_;
-    return *this;
-  }
-
 #ifdef JS_ENABLE_SMOOSH
   // Track Number of Not Implemented Calls by writing to a file
   bool trackNotImplemented() const { return trackNotImplemented_; }
@@ -236,7 +225,6 @@ class JS_PUBLIC_API ContextOptions {
   bool sourcePragmas_ : 1;
   bool throwOnDebuggeeWouldRun_ : 1;
   bool dumpStackOnDebuggeeWouldRun_ : 1;
-  bool strictMode_ : 1;
 #ifdef JS_ENABLE_SMOOSH
   bool trackNotImplemented_ : 1;
   bool trySmoosh_ : 1;

@@ -57,18 +57,21 @@ const SPOOFED_PLATFORM = {
 // If comparison with the WindowsOscpu value fails in the future, it's time to
 // evaluate if exposing a new Windows version to the Web is appropriate. See
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1693295
-let WindowsOscpu = null;
-if (AppConstants.platform == "win") {
-  let isWin11 = WindowsVersionInfo.get().buildNumber >= 22000;
-  WindowsOscpu =
-    cpuArch == "x86_64" || (cpuArch == "aarch64" && isWin11)
-      ? `Windows NT ${osVersion}; Win64; x64`
-      : `Windows NT ${osVersion}`;
-}
+const WindowsOscpuPromise = (async () => {
+  let WindowsOscpu = null;
+  if (AppConstants.platform == "win") {
+    let isWin11 = WindowsVersionInfo.get().buildNumber >= 22000;
+    let isWow64 = (await Services.sysinfo.processInfo).isWow64;
+    WindowsOscpu =
+      cpuArch == "x86_64" || isWow64 || (cpuArch == "aarch64" && isWin11)
+        ? `Windows NT ${osVersion}; Win64; x64`
+        : `Windows NT ${osVersion}`;
+  }
+  return WindowsOscpu;
+})();
 
 const DEFAULT_OSCPU = {
   linux: `Linux ${cpuArch}`,
-  win: WindowsOscpu,
   macosx: "Intel Mac OS X 10.15",
   android: `Linux ${cpuArch}`,
   other: `Linux ${cpuArch}`,
@@ -84,7 +87,6 @@ const SPOOFED_OSCPU = {
 
 const DEFAULT_UA_OS = {
   linux: `X11; Linux ${cpuArch}`,
-  win: WindowsOscpu,
   macosx: "Macintosh; Intel Mac OS X 10.15",
   android: `Android ${osVersion}; Mobile`,
   other: `X11; Linux ${cpuArch}`,
@@ -138,6 +140,10 @@ const SPOOFED_UA_GECKO_TRAIL = {
   android: `${spoofedVersion}.0`,
   other: LEGACY_UA_GECKO_TRAIL,
 };
+
+add_setup(async () => {
+  DEFAULT_OSCPU.win = DEFAULT_UA_OS.win = await WindowsOscpuPromise;
+});
 
 async function testUserAgentHeader() {
   const BASE =

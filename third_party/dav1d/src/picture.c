@@ -106,9 +106,9 @@ void dav1d_picture_free_itut_t35(const uint8_t *const data, void *const user_dat
     struct itut_t35_ctx_context *itut_t35_ctx = user_data;
 
     for (size_t i = 0; i < itut_t35_ctx->n_itut_t35; i++)
-        free(itut_t35_ctx->itut_t35[i].payload);
-    free(itut_t35_ctx->itut_t35);
-    free(itut_t35_ctx);
+        dav1d_free(itut_t35_ctx->itut_t35[i].payload);
+    dav1d_free(itut_t35_ctx->itut_t35);
+    dav1d_free(itut_t35_ctx);
 }
 
 static int picture_alloc_with_edges(Dav1dContext *const c,
@@ -249,12 +249,12 @@ int dav1d_picture_alloc_copy(Dav1dContext *const c, Dav1dPicture *const dst, con
 }
 
 void dav1d_picture_ref(Dav1dPicture *const dst, const Dav1dPicture *const src) {
-    validate_input(dst != NULL);
-    validate_input(dst->data[0] == NULL);
-    validate_input(src != NULL);
+    assert(dst != NULL);
+    assert(dst->data[0] == NULL);
+    assert(src != NULL);
 
     if (src->ref) {
-        validate_input(src->data[0] != NULL);
+        assert(src->data[0] != NULL);
         dav1d_ref_inc(src->ref);
     }
     if (src->frame_hdr_ref) dav1d_ref_inc(src->frame_hdr_ref);
@@ -267,12 +267,12 @@ void dav1d_picture_ref(Dav1dPicture *const dst, const Dav1dPicture *const src) {
 }
 
 void dav1d_picture_move_ref(Dav1dPicture *const dst, Dav1dPicture *const src) {
-    validate_input(dst != NULL);
-    validate_input(dst->data[0] == NULL);
-    validate_input(src != NULL);
+    assert(dst != NULL);
+    assert(dst->data[0] == NULL);
+    assert(src != NULL);
 
     if (src->ref)
-        validate_input(src->data[0] != NULL);
+        assert(src->data[0] != NULL);
 
     *dst = *src;
     memset(src, 0, sizeof(*src));

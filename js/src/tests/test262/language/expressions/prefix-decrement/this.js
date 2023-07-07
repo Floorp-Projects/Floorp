@@ -6,7 +6,7 @@
 esid: sec-update-expressions-static-semantics-early-errors
 description: >
     It is an early Syntax Error if AssignmentTargetType of UnaryExpression is not simple. (this)
-info: | 
+info: |
     sec-static-semantics-assignmenttargettype
 
       PrimaryExpression: this

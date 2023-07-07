@@ -201,7 +201,7 @@ export class PocketSuggestions extends BaseFeature {
     );
   }
 
-  handleCommand(queryContext, result, selType) {
+  handleCommand(view, result, selType) {
     switch (selType) {
       case RESULT_MENU_COMMAND.HELP:
         // "help" is handled by UrlbarInput, no need to do anything here.
@@ -210,14 +210,14 @@ export class PocketSuggestions extends BaseFeature {
       case "dismiss":
       case RESULT_MENU_COMMAND.NOT_RELEVANT:
         lazy.QuickSuggest.blockedSuggestions.add(result.payload.url);
-        queryContext.view.acknowledgeDismissal(result, false);
+        view.acknowledgeDismissal(result, false);
         break;
       case RESULT_MENU_COMMAND.NOT_INTERESTED:
         lazy.UrlbarPrefs.set("suggest.pocket", false);
-        queryContext.view.acknowledgeDismissal(result, true);
+        view.acknowledgeDismissal(result, true);
         break;
       case RESULT_MENU_COMMAND.SHOW_LESS_FREQUENTLY:
-        queryContext.view.acknowledgeFeedback(result);
+        view.acknowledgeFeedback(result);
         this.incrementShowLessFrequentlyCount();
         break;
     }

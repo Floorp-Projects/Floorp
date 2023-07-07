@@ -2249,8 +2249,6 @@ export class UrlbarProvider {
   /**
    * Called when the user starts and ends an engagement with the urlbar.
    *
-   * @param {boolean} isPrivate
-   *   True if the engagement is in a private context.
    * @param {string} state
    *   The state of the engagement, one of the following strings:
    *
@@ -2299,8 +2297,10 @@ export class UrlbarProvider {
    *       The name of the provider that produced the picked result.
    *
    *   For "abandonment", only `searchString` is defined.
+   * @param {UrlbarController} controller
+   *  The associated controller.
    */
-  onEngagement(isPrivate, state, queryContext, details) {}
+  onEngagement(state, queryContext, details, controller) {}
 
   /**
    * Called when a result from the provider is selected. "Selected" refers to
@@ -2446,6 +2446,11 @@ export class UrlbarProvider {
  */
 export class SkippableTimer {
   /**
+   * This can be used to track whether the timer completed.
+   */
+  done = false;
+
+  /**
    * Creates a skippable timer for the given callback and time.
    *
    * @param {object} options An object that configures the timer
@@ -2495,6 +2500,7 @@ export class SkippableTimer {
     });
 
     this.promise = Promise.race([timerPromise, firePromise]).then(() => {
+      this.done = true;
       // If we've been canceled, don't call back.
       if (callback && !this._canceled) {
         callback();

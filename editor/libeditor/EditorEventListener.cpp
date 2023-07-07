@@ -28,7 +28,8 @@
 #include "mozilla/dom/Element.h"      // for Element
 #include "mozilla/dom/Event.h"        // for Event
 #include "mozilla/dom/EventTarget.h"  // for EventTarget
-#include "mozilla/dom/MouseEvent.h"   // for MouseEvent
+#include "mozilla/dom/HTMLTextAreaElement.h"
+#include "mozilla/dom/MouseEvent.h"  // for MouseEvent
 #include "mozilla/dom/Selection.h"
 
 #include "nsAString.h"
@@ -154,20 +155,21 @@ nsresult EditorEventListener::InstallToEditor() {
     return NS_ERROR_FAILURE;
   }
 
+  // For non-html editor, ie.TextEditor, we want to preserve
+  // the event handling order to ensure listeners that are
+  // added to <input> and <texarea> still working as expected.
+  EventListenerFlags flags = mEditorBase->IsHTMLEditor()
+                                 ? TrustedEventsAtSystemGroupCapture()
+                                 : TrustedEventsAtSystemGroupBubble();
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-  eventListenerManager->AddEventListenerByType(
-      this, u"keydown"_ns, TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->AddEventListenerByType(
-      this, u"keyup"_ns, TrustedEventsAtSystemGroupBubble());
+  eventListenerManager->AddEventListenerByType(this, u"keydown"_ns, flags);
+  eventListenerManager->AddEventListenerByType(this, u"keyup"_ns, flags);
 #endif
-  eventListenerManager->AddEventListenerByType(
-      this, u"keypress"_ns, TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->AddEventListenerByType(
-      this, u"dragover"_ns, TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->AddEventListenerByType(
-      this, u"dragleave"_ns, TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->AddEventListenerByType(
-      this, u"drop"_ns, TrustedEventsAtSystemGroupBubble());
+
+  eventListenerManager->AddEventListenerByType(this, u"keypress"_ns, flags);
+  eventListenerManager->AddEventListenerByType(this, u"dragover"_ns, flags);
+  eventListenerManager->AddEventListenerByType(this, u"dragleave"_ns, flags);
+  eventListenerManager->AddEventListenerByType(this, u"drop"_ns, flags);
   // XXX We should add the mouse event listeners as system event group.
   //     E.g., web applications cannot prevent middle mouse paste by
   //     preventDefault() of click event at bubble phase.
@@ -236,20 +238,17 @@ void EditorEventListener::UninstallFromEditor() {
     return;
   }
 
+  EventListenerFlags flags = mEditorBase->IsHTMLEditor()
+                                 ? TrustedEventsAtSystemGroupCapture()
+                                 : TrustedEventsAtSystemGroupBubble();
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-  eventListenerManager->RemoveEventListenerByType(
-      this, u"keydown"_ns, TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->RemoveEventListenerByType(
-      this, u"keyup"_ns, TrustedEventsAtSystemGroupBubble());
+  eventListenerManager->RemoveEventListenerByType(this, u"keydown"_ns, flags);
+  eventListenerManager->RemoveEventListenerByType(this, u"keyup"_ns, flags);
 #endif
-  eventListenerManager->RemoveEventListenerByType(
-      this, u"keypress"_ns, TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->RemoveEventListenerByType(
-      this, u"dragover"_ns, TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->RemoveEventListenerByType(
-      this, u"dragleave"_ns, TrustedEventsAtSystemGroupBubble());
-  eventListenerManager->RemoveEventListenerByType(
-      this, u"drop"_ns, TrustedEventsAtSystemGroupBubble());
+  eventListenerManager->RemoveEventListenerByType(this, u"keypress"_ns, flags);
+  eventListenerManager->RemoveEventListenerByType(this, u"dragover"_ns, flags);
+  eventListenerManager->RemoveEventListenerByType(this, u"dragleave"_ns, flags);
+  eventListenerManager->RemoveEventListenerByType(this, u"drop"_ns, flags);
   eventListenerManager->RemoveEventListenerByType(this, u"mousedown"_ns,
                                                   TrustedEventsAtCapture());
   eventListenerManager->RemoveEventListenerByType(this, u"mouseup"_ns,
@@ -315,10 +314,36 @@ NS_IMETHODIMP EditorEventListener::HandleEvent(Event* aEvent) {
   //       each event handler would just ignore the event.  So, in this method,
   //       you don't need to check if the QI succeeded before each call.
   WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
+
+  if (DetachedFromEditor()) {
+    return NS_OK;
+  }
+
+  // For nested documents with multiple HTMLEditor registered on different
+  // nsWindowRoot, make sure the HTMLEditor for the original event target
+  // handles the events.
+  if (mEditorBase->IsHTMLEditor()) {
+    nsCOMPtr<nsINode> originalEventTargetNode =
+        nsINode::FromEventTargetOrNull(aEvent->GetOriginalTarget());
+
+    if (originalEventTargetNode &&
+        mEditorBase != originalEventTargetNode->OwnerDoc()->GetHTMLEditor()) {
+      return NS_OK;
+    }
+  }
+
   switch (internalEvent->mMessage) {
     // dragover and drop
     case eDragOver:
     case eDrop: {
+      // The editor which is registered on nsWindowRoot shouldn't handle
+      // drop events when it can be handled by Input or TextArea element on
+      // the chain.
+      if (aEvent->GetCurrentTarget()->IsRootWindow() &&
+          TextControlElement::FromEventTargetOrNull(
+              internalEvent->GetDOMEventTarget())) {
+        return NS_OK;
+      }
       // aEvent should be grabbed by the caller since this is
       // nsIDOMEventListener method.  However, our clang plugin cannot check it
       // if we use Event::As*Event().  So, we need to grab it by ourselves.
@@ -855,9 +880,13 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
   }
 
   aDragEvent->PreventDefault();
+
+  WidgetDragEvent* asWidgetEvent = aDragEvent->WidgetEventPtr()->AsDragEvent();
+  asWidgetEvent->UpdateDefaultPreventedOnContent(asWidgetEvent->mTarget);
+
   aDragEvent->StopImmediatePropagation();
 
-  if (aDragEvent->WidgetEventPtr()->mMessage == eDrop) {
+  if (asWidgetEvent->mMessage == eDrop) {
     RefPtr<EditorBase> editorBase = mEditorBase;
     nsresult rv = editorBase->HandleDropEvent(aDragEvent);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
@@ -865,7 +894,7 @@ nsresult EditorEventListener::DragOverOrDrop(DragEvent* aDragEvent) {
     return rv;
   }
 
-  MOZ_ASSERT(aDragEvent->WidgetEventPtr()->mMessage == eDragOver);
+  MOZ_ASSERT(asWidgetEvent->mMessage == eDragOver);
 
   // If we handle the dragged item, we need to adjust drop effect here
   // because once DataTransfer is retrieved, DragEvent has initialized it

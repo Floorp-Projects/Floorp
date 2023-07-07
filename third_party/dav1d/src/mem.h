@@ -28,15 +28,41 @@
 #ifndef DAV1D_SRC_MEM_H
 #define DAV1D_SRC_MEM_H
 
+#define TRACK_HEAP_ALLOCATIONS 0
+
 #include <stdlib.h>
 
-#if defined(HAVE_ALIGNED_MALLOC) || defined(HAVE_MEMALIGN)
+#if defined(_WIN32) || !defined(HAVE_POSIX_MEMALIGN)
 #include <malloc.h>
 #endif
+
+#include "dav1d/dav1d.h"
 
 #include "common/attributes.h"
 
 #include "src/thread.h"
+
+enum AllocationType {
+    ALLOC_BLOCK,
+    ALLOC_CDEF,
+    ALLOC_CDF,
+    ALLOC_COEF,
+    ALLOC_COMMON_CTX,
+    ALLOC_DAV1DDATA,
+    ALLOC_IPRED,
+    ALLOC_LF,
+    ALLOC_LR,
+    ALLOC_OBU_HDR,
+    ALLOC_OBU_META,
+    ALLOC_PAL,
+    ALLOC_PIC,
+    ALLOC_PIC_CTX,
+    ALLOC_REFMVS,
+    ALLOC_SEGMAP,
+    ALLOC_THREAD_CTX,
+    ALLOC_TILE,
+    N_ALLOC_TYPES,
+};
 
 typedef struct Dav1dMemPoolBuffer {
     void *data;
@@ -48,54 +74,62 @@ typedef struct Dav1dMemPool {
     Dav1dMemPoolBuffer *buf;
     int ref_cnt;
     int end;
+#if TRACK_HEAP_ALLOCATIONS
+    enum AllocationType type;
+#endif
 } Dav1dMemPool;
 
-void dav1d_mem_pool_push(Dav1dMemPool *pool, Dav1dMemPoolBuffer *buf);
-Dav1dMemPoolBuffer *dav1d_mem_pool_pop(Dav1dMemPool *pool, size_t size);
-int dav1d_mem_pool_init(Dav1dMemPool **pool);
-void dav1d_mem_pool_end(Dav1dMemPool *pool);
+
+#if TRACK_HEAP_ALLOCATIONS
+void *dav1d_malloc(enum AllocationType type, size_t sz);
+void *dav1d_realloc(enum AllocationType type, void *ptr, size_t sz);
+void *dav1d_alloc_aligned(enum AllocationType type, size_t sz, size_t align);
+void dav1d_free(void *ptr);
+void dav1d_free_aligned(void *ptr);
+void dav1d_log_alloc_stats(Dav1dContext *c);
+#else
+#define dav1d_mem_pool_init(type, pool) dav1d_mem_pool_init(pool)
+#define dav1d_malloc(type, sz) malloc(sz)
+#define dav1d_realloc(type, ptr, sz) realloc(ptr, sz)
+#define dav1d_free(ptr) free(ptr)
 
 /*
  * Allocate align-byte aligned memory. The return value can be released
  * by calling the dav1d_free_aligned() function.
  */
-static inline void *dav1d_alloc_aligned(size_t sz, size_t align) {
+static inline void *dav1d_alloc_aligned(const size_t sz, const size_t align) {
     assert(!(align & (align - 1)));
-#ifdef HAVE_POSIX_MEMALIGN
+#ifdef _WIN32
+    return _aligned_malloc(sz, align);
+#elif defined(HAVE_POSIX_MEMALIGN)
     void *ptr;
     if (posix_memalign(&ptr, align, sz)) return NULL;
     return ptr;
-#elif defined(HAVE_ALIGNED_MALLOC)
-    return _aligned_malloc(sz, align);
-#elif defined(HAVE_MEMALIGN)
-    return memalign(align, sz);
 #else
-#error Missing aligned alloc implementation
+    return memalign(align, sz);
 #endif
 }
+#define dav1d_alloc_aligned(type, sz, align) dav1d_alloc_aligned(sz, align)
 
-static inline void dav1d_free_aligned(void* ptr) {
-#ifdef HAVE_POSIX_MEMALIGN
-    free(ptr);
-#elif defined(HAVE_ALIGNED_MALLOC)
+static inline void dav1d_free_aligned(void *ptr) {
+#ifdef _WIN32
     _aligned_free(ptr);
-#elif defined(HAVE_MEMALIGN)
+#else
     free(ptr);
 #endif
 }
 
-static inline void dav1d_freep_aligned(void* ptr) {
+#endif /* TRACK_HEAP_ALLOCATIONS */
+
+void dav1d_mem_pool_push(Dav1dMemPool *pool, Dav1dMemPoolBuffer *buf);
+Dav1dMemPoolBuffer *dav1d_mem_pool_pop(Dav1dMemPool *pool, size_t size);
+int dav1d_mem_pool_init(enum AllocationType type, Dav1dMemPool **pool);
+void dav1d_mem_pool_end(Dav1dMemPool *pool);
+
+static inline void dav1d_freep_aligned(void *ptr) {
     void **mem = (void **) ptr;
     if (*mem) {
         dav1d_free_aligned(*mem);
-        *mem = NULL;
-    }
-}
-
-static inline void freep(void *ptr) {
-    void **mem = (void **) ptr;
-    if (*mem) {
-        free(*mem);
         *mem = NULL;
     }
 }

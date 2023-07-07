@@ -628,6 +628,8 @@ bool shell::enableArrayFromAsync = true;
 bool shell::enableArrayGrouping = false;
 // Pref for String.prototype.{is,to}WellFormed() methods.
 bool shell::enableWellFormedUnicodeStrings = false;
+// Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
+bool shell::enableArrayBufferTransfer = false;
 #endif
 bool shell::enableChangeArrayByCopy = false;
 #ifdef ENABLE_NEW_SET_METHODS
@@ -1858,6 +1860,134 @@ static bool CreateMappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
 
 #undef GET_FD_FROM_FILE
 
+class UserBufferObject : public NativeObject {
+  static const uint32_t BUFFER_SLOT = 0;
+  static const uint32_t BYTE_LENGTH_SLOT = 1;
+  static const uint32_t RESERVED_SLOTS = 2;
+
+  static constexpr auto BufferMemoryUse = MemoryUse::Embedding1;
+
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
+
+ public:
+  static const JSClassOps classOps_;
+  static const JSClass class_;
+
+  [[nodiscard]] static UserBufferObject* create(JSContext* cx,
+                                                size_t byteLength);
+
+  void* buffer() const {
+    auto& buffer = getReservedSlot(BUFFER_SLOT);
+    if (buffer.isUndefined()) {
+      return nullptr;
+    }
+    return buffer.toPrivate();
+  }
+
+  size_t byteLength() const {
+    return size_t(getReservedSlot(BYTE_LENGTH_SLOT).toPrivate());
+  }
+};
+
+const JSClassOps UserBufferObject::classOps_ = {
+    nullptr,                     // addProperty
+    nullptr,                     // delProperty
+    nullptr,                     // enumerate
+    nullptr,                     // newEnumerate
+    nullptr,                     // resolve
+    nullptr,                     // mayResolve
+    UserBufferObject::finalize,  // finalize
+    nullptr,                     // call
+    nullptr,                     // construct
+    nullptr,                     // trace
+};
+
+const JSClass UserBufferObject::class_ = {
+    "UserBufferObject",
+    JSCLASS_HAS_RESERVED_SLOTS(UserBufferObject::RESERVED_SLOTS) |
+        JSCLASS_BACKGROUND_FINALIZE,
+    &UserBufferObject::classOps_,
+};
+
+UserBufferObject* UserBufferObject::create(JSContext* cx, size_t byteLength) {
+  void* buffer = js_calloc(byteLength);
+  if (!buffer) {
+    JS_ReportOutOfMemory(cx);
+    return nullptr;
+  }
+  UniquePtr<void, JS::FreePolicy> ptr(buffer);
+
+  auto* userBuffer = NewObjectWithGivenProto<UserBufferObject>(cx, nullptr);
+  if (!userBuffer) {
+    return nullptr;
+  }
+
+  InitReservedSlot(userBuffer, BUFFER_SLOT, ptr.release(), byteLength,
+                   BufferMemoryUse);
+  userBuffer->initReservedSlot(BYTE_LENGTH_SLOT, PrivateValue(byteLength));
+
+  return userBuffer;
+}
+
+void UserBufferObject::finalize(JS::GCContext* gcx, JSObject* obj) {
+  auto* userBuffer = &obj->as<UserBufferObject>();
+  if (auto* buffer = userBuffer->buffer()) {
+    gcx->free_(userBuffer, buffer, userBuffer->byteLength(), BufferMemoryUse);
+  }
+}
+
+static bool CreateUserArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  if (args.length() != 1) {
+    JS_ReportErrorNumberASCII(
+        cx, my_GetErrorMessage, nullptr,
+        args.length() < 1 ? JSSMSG_NOT_ENOUGH_ARGS : JSSMSG_TOO_MANY_ARGS,
+        "createUserArrayBuffer");
+    return false;
+  }
+
+  int32_t bytes = 0;
+  if (!ToInt32(cx, args[0], &bytes)) {
+    return false;
+  }
+  if (bytes < 0) {
+    JS_ReportErrorASCII(cx, "Size must be non-negative");
+    return false;
+  }
+
+  Rooted<UserBufferObject*> userBuffer(cx, UserBufferObject::create(cx, bytes));
+  if (!userBuffer) {
+    return false;
+  }
+
+  Rooted<JSObject*> arrayBuffer(
+      cx, JS::NewArrayBufferWithUserOwnedContents(cx, userBuffer->byteLength(),
+                                                  userBuffer->buffer()));
+  if (!arrayBuffer) {
+    return false;
+  }
+
+  // Create a strong reference from |arrayBuffer| to |userBuffer|. This ensures
+  // |userBuffer| can't outlive |arrayBuffer|. That way we don't have to worry
+  // about detaching the ArrayBuffer object when |userBuffer| gets finalized.
+  // The reference is made through a private name, because we don't want to
+  // expose |userBuffer| to user-code.
+
+  auto* privateName = NewPrivateName(cx, cx->names().empty.toHandle());
+  if (!privateName) {
+    return false;
+  }
+
+  Rooted<PropertyKey> id(cx, PropertyKey::Symbol(privateName));
+  Rooted<JS::Value> userBufferVal(cx, ObjectValue(*userBuffer));
+  if (!js::DefineDataProperty(cx, arrayBuffer, id, userBufferVal, 0)) {
+    return false;
+  }
+
+  args.rval().setObject(*arrayBuffer);
+  return true;
+}
+
 static bool AddPromiseReactions(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -1927,8 +2057,6 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
 
     if (StringEqualsLiteral(opt, "throw_on_asmjs_validation_failure")) {
       JS::ContextOptionsRef(cx).toggleThrowOnAsmJSValidationFailure();
-    } else if (StringEqualsLiteral(opt, "strict_mode")) {
-      JS::ContextOptionsRef(cx).toggleStrictMode();
     } else {
       UniqueChars optChars = QuoteString(cx, opt, '"');
       if (!optChars) {
@@ -1937,8 +2065,8 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
 
       JS_ReportErrorASCII(cx,
                           "unknown option name %s."
-                          " The valid names are "
-                          "throw_on_asmjs_validation_failure and strict_mode.",
+                          " The valid name is "
+                          "throw_on_asmjs_validation_failure.",
                           optChars.get());
       return false;
     }
@@ -1949,11 +2077,6 @@ static bool Options(JSContext* cx, unsigned argc, Value* vp) {
   if (names && oldContextOptions.throwOnAsmJSValidationFailure()) {
     names = JS_sprintf_append(std::move(names), "%s%s", found ? "," : "",
                               "throw_on_asmjs_validation_failure");
-    found = true;
-  }
-  if (names && oldContextOptions.strictMode()) {
-    names = JS_sprintf_append(std::move(names), "%s%s", found ? "," : "",
-                              "strict_mode");
     found = true;
   }
   if (!names) {
@@ -3897,6 +4020,7 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
 #ifdef NIGHTLY_BUILD
       .setArrayGroupingEnabled(enableArrayGrouping)
       .setWellFormedUnicodeStringsEnabled(enableWellFormedUnicodeStrings)
+      .setArrayBufferTransferEnabled(enableArrayBufferTransfer)
 #endif
       .setChangeArrayByCopyEnabled(enableChangeArrayByCopy)
 #ifdef ENABLE_NEW_SET_METHODS
@@ -9180,6 +9304,10 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "createMappedArrayBuffer(filename, [offset, [size]])",
 "  Create an array buffer that mmaps the given file."),
 
+JS_FN_HELP("createUserArrayBuffer", CreateUserArrayBuffer, 1, 0,
+"createUserArrayBuffer(size)",
+"  Create an array buffer that uses user-controlled memory."),
+
     JS_FN_HELP("addPromiseReactions", AddPromiseReactions, 3, 0,
 "addPromiseReactions(promise, onResolve, onReject)",
 "  Calls the JS::AddPromiseReactions JSAPI function with the given arguments."),
@@ -11422,6 +11550,8 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "enable-well-formed-unicode-strings",
                         "Enable String.prototype.{is,to}WellFormed() methods"
                         "(Well-Formed Unicode Strings)") ||
+      !op.addBoolOption('\0', "enable-arraybuffer-transfer",
+                        "Enable ArrayBuffer.prototype.transfer() methods") ||
       !op.addBoolOption('\0', "enable-change-array-by-copy",
                         "Enable change-array-by-copy methods") ||
       !op.addBoolOption('\0', "disable-change-array-by-copy",
@@ -11945,6 +12075,7 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableArrayGrouping = op.getBoolOption("enable-array-grouping");
   enableWellFormedUnicodeStrings =
       op.getBoolOption("enable-well-formed-unicode-strings");
+  enableArrayBufferTransfer = op.getBoolOption("enable-arraybuffer-transfer");
 #endif
   enableChangeArrayByCopy = !op.getBoolOption("disable-change-array-by-copy");
 #ifdef ENABLE_NEW_SET_METHODS

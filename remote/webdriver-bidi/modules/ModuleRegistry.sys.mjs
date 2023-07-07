@@ -10,6 +10,8 @@ export const modules = {
 
 // eslint-disable-next-line mozilla/lazy-getter-object-name
 ChromeUtils.defineESModuleGetters(modules.root, {
+  browser:
+    "chrome://remote/content/webdriver-bidi/modules/root/browser.sys.mjs",
   browsingContext:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
   input: "chrome://remote/content/webdriver-bidi/modules/root/input.sys.mjs",

@@ -398,7 +398,7 @@ tooltip:not([position]) {
 @media (-moz-platform: linux) {
   tooltip {
     padding: 6px 10px; /* Matches Adwaita. */
-    line-height: 1.2;
+    line-height: 1.4;  /* For Noto Sans; note that 1.2 may clip descenders. */
   }
 }
 

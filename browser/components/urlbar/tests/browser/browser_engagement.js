@@ -117,8 +117,12 @@ async function doTest({
     fireInputEvent: true,
   });
 
-  let [isPrivate, state, queryContext, details] = await startPromise;
-  Assert.equal(isPrivate, expectedIsPrivate, "Start isPrivate");
+  let [state, queryContext, details, controller] = await startPromise;
+  Assert.equal(
+    controller.input.isPrivate,
+    expectedIsPrivate,
+    "Start isPrivate"
+  );
   Assert.equal(state, "start", "Start state");
 
   // `queryContext` isn't always defined for `start`, and `onEngagement`
@@ -131,8 +135,8 @@ async function doTest({
   let endPromise = provider.promiseEngagement();
   let { result, element } = (await endEngagement()) ?? {};
 
-  [isPrivate, state, queryContext, details] = await endPromise;
-  Assert.equal(isPrivate, expectedIsPrivate, "End isPrivate");
+  [state, queryContext, details, controller] = await endPromise;
+  Assert.equal(controller.input.isPrivate, expectedIsPrivate, "End isPrivate");
   Assert.equal(state, expectedEndState, "End state");
   Assert.ok(queryContext, "End queryContext");
   Assert.equal(

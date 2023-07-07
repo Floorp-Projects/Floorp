@@ -385,11 +385,18 @@ async function doEngagementWithoutAddingResultToView(
   // Set the timeout of the chunk timer to a really high value so that it will
   // not fire. The view updates when the timer fires, which we specifically want
   // to avoid here.
-  let originalChunkDelayMs = UrlbarProvidersManager._chunkResultsDelayMs;
-  UrlbarProvidersManager._chunkResultsDelayMs = 30000;
-  registerCleanupFunction(() => {
-    UrlbarProvidersManager._chunkResultsDelayMs = originalChunkDelayMs;
-  });
+  let originalHeuristicTimeout =
+    UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS;
+  UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS = 30000;
+  let originalOtherTimeout =
+    UrlbarProvidersManager.CHUNK_OTHER_RESULTS_DELAY_MS;
+  UrlbarProvidersManager.CHUNK_OTHER_RESULTS_DELAY_MS = 30000;
+  const cleanup = () => {
+    UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS =
+      originalHeuristicTimeout;
+    UrlbarProvidersManager.CHUNK_OTHER_RESULTS_DELAY_MS = originalOtherTimeout;
+  };
+  registerCleanupFunction(cleanup);
 
   // Stub `UrlbarProviderQuickSuggest.getPriority()` to return Infinity.
   let sandbox = sinon.createSandbox();
@@ -475,7 +482,7 @@ async function doEngagementWithoutAddingResultToView(
   await loadPromise;
 
   let engagementCalls = onEngagementSpy.getCalls().filter(call => {
-    let state = call.args[1];
+    let state = call.args[0];
     return state == "engagement";
   });
   Assert.equal(engagementCalls.length, 1, "One engagement occurred");
@@ -483,7 +490,7 @@ async function doEngagementWithoutAddingResultToView(
   // Clean up.
   resolveQuery();
   UrlbarProvidersManager.unregisterProvider(provider);
-  UrlbarProvidersManager._chunkResultsDelayMs = originalChunkDelayMs;
+  cleanup();
   sandboxCleanup();
 }
 

@@ -208,24 +208,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
   }
 
-  /**
-   * Called when the user starts and ends an engagement with the urlbar.  For
-   * details on parameters, see UrlbarProvider.onEngagement().
-   *
-   * @param {boolean} isPrivate
-   *   True if the engagement is in a private context.
-   * @param {string} state
-   *   The state of the engagement, one of: start, engagement, abandonment,
-   *   discard
-   * @param {UrlbarQueryContext} queryContext
-   *   The engagement's query context.  This is *not* guaranteed to be defined
-   *   when `state` is "start".  It will always be defined for "engagement" and
-   *   "abandonment".
-   * @param {object} details
-   *   This is defined only when `state` is "engagement" or "abandonment", and
-   *   it describes the search string and picked result.
-   */
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(state, queryContext, details, controller) {
     // Ignore engagements on other results that didn't end the session.
     if (details.result?.providerName != this.name && details.isSessionOngoing) {
       return;
@@ -246,19 +229,24 @@ class ProviderQuickSuggest extends UrlbarProvider {
       // visible result. Otherwise fall back to #getVisibleResultFromLastQuery.
       let { result } = details;
       if (result?.providerName != this.name) {
-        result = this.#getVisibleResultFromLastQuery(queryContext.view);
+        result = this.#getVisibleResultFromLastQuery(controller.view);
       }
 
-      this.#recordEngagement(queryContext, isPrivate, result, details);
+      this.#recordEngagement(
+        queryContext,
+        controller.input.isPrivate,
+        result,
+        details
+      );
     }
 
     if (details.result?.providerName == this.name) {
       let feature = this.#getFeatureByResult(details.result);
       if (feature?.handleCommand) {
-        feature.handleCommand(queryContext, details.result, details.selType);
+        feature.handleCommand(controller.view, details.result, details.selType);
       } else if (details.selType == "dismiss") {
         // Handle dismissals.
-        this.#dismissResult(queryContext, details.result);
+        this.#dismissResult(controller, details.result);
       }
     }
 
@@ -442,7 +430,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     return view?.visibleResults?.findLast(r => r.providerName == this.name);
   }
 
-  #dismissResult(queryContext, result) {
+  #dismissResult(controller, result) {
     if (!result.payload.isBlockable) {
       this.logger.info("Dismissals disabled, ignoring dismissal");
       return;
@@ -453,7 +441,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       // adM results have `originalUrl`, which contains timestamp templates.
       result.payload.originalUrl ?? result.payload.url
     );
-    queryContext.view.controller.removeResult(result);
+    controller.removeResult(result);
   }
 
   /**

@@ -305,23 +305,9 @@ class ProviderTopSites extends UrlbarProvider {
     }
   }
 
-  /**
-   * Called when the user starts and ends an engagement with the urlbar. We send
-   * the impression ping for the sponsored TopSites, the impression scalar is
-   * recorded as well.
-   *
-   * Note:
-   *   No telemetry recording in private browsing mode
-   *   The impression is only recorded for the "engagement" and "abandonment"
-   *     states
-   *
-   * @param {boolean} isPrivate True if the engagement is in a private context.
-   * @param {string} state The state of the engagement, one of: start,
-   *        engagement, abandonment, discard.
-   */
-  onEngagement(isPrivate, state) {
+  onEngagement(state, queryContext, details, controller) {
     if (
-      !isPrivate &&
+      !controller.input.isPrivate &&
       this.sponsoredSites &&
       ["engagement", "abandonment"].includes(state)
     ) {

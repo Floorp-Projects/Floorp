@@ -45,7 +45,11 @@ struct Dav1dRef {
     void *user_data;
 };
 
-Dav1dRef *dav1d_ref_create(size_t size);
+#if !TRACK_HEAP_ALLOCATIONS
+#define dav1d_ref_create(type, size) dav1d_ref_create(size)
+#endif
+
+Dav1dRef *dav1d_ref_create(enum AllocationType type, size_t size);
 Dav1dRef *dav1d_ref_create_using_pool(Dav1dMemPool *pool, size_t size);
 void dav1d_ref_dec(Dav1dRef **ref);
 

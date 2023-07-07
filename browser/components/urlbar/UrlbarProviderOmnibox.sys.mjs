@@ -180,7 +180,7 @@ class ProviderOmnibox extends UrlbarProvider {
     );
   }
 
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(state, queryContext, details, controller) {
     let { result } = details;
     if (result?.providerName != this.name) {
       return;
@@ -188,7 +188,7 @@ class ProviderOmnibox extends UrlbarProvider {
 
     if (details.selType == "dismiss" && result.payload.isBlockable) {
       lazy.ExtensionSearchHandler.handleInputDeleted(result.payload.title);
-      queryContext.view.controller.removeResult(result);
+      controller.removeResult(result);
     }
   }
 }

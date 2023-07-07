@@ -1479,7 +1479,7 @@ class ProviderPlaces extends UrlbarProvider {
     search.notifyResult(false);
   }
 
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(state, queryContext, details, controller) {
     let { result } = details;
     if (result?.providerName != this.name) {
       return;
@@ -1492,14 +1492,14 @@ class ProviderPlaces extends UrlbarProvider {
           // from browsing history.
           let { url } = UrlbarUtils.getUrlFromResult(result);
           lazy.PlacesUtils.history.remove(url).catch(console.error);
-          queryContext.view.controller.removeResult(result);
+          controller.removeResult(result);
           break;
         case UrlbarUtils.RESULT_TYPE.URL:
           // Remove browsing history entries from Places.
           lazy.PlacesUtils.history
             .remove(result.payload.url)
             .catch(console.error);
-          queryContext.view.controller.removeResult(result);
+          controller.removeResult(result);
           break;
       }
     }

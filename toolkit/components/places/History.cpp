@@ -1079,6 +1079,24 @@ class InsertVisitedURIs final : public Runnable {
     rv = AddVisit(aPlace);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // Adding a visit sets the recalculation flags through a trigger, but for
+    // error pages we don't want that, because recalculation considers this a
+    // normal successful visit. In the future we should store the error state
+    // along with the visit, so that recalculation can do a better job and
+    // we can remove this workaround update. See Bug 1842008.
+    if (aPlace.isUnrecoverableError) {
+      nsCOMPtr<mozIStorageStatement> stmt = mHistory->GetStatement(
+          "UPDATE moz_places "
+          "SET recalc_frecency = 0, recalc_alt_frecency = 0 "
+          "WHERE id = :page_id");
+      NS_ENSURE_STATE(stmt);
+      mozStorageStatementScoper scoper(stmt);
+      rv = stmt->BindInt64ByName("page_id"_ns, aPlace.placeId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = stmt->Execute();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+
     return NS_OK;
   }
 

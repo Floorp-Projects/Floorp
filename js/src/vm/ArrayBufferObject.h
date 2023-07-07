@@ -167,6 +167,9 @@ using MutableHandleArrayBufferObjectMaybeShared =
  */
 class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static bool byteLengthGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool detachedGetterImpl(JSContext* cx, const CallArgs& args);
+  static bool transferImpl(JSContext* cx, const CallArgs& args);
+  static bool transferToFixedLengthImpl(JSContext* cx, const CallArgs& args);
 
  public:
   static const uint8_t DATA_SLOT = 0;
@@ -334,7 +337,13 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 
+  static bool detachedGetter(JSContext* cx, unsigned argc, Value* vp);
+
   static bool fun_isView(JSContext* cx, unsigned argc, Value* vp);
+
+  static bool transfer(JSContext* cx, unsigned argc, Value* vp);
+
+  static bool transferToFixedLength(JSContext* cx, unsigned argc, Value* vp);
 
   static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
 
@@ -345,9 +354,22 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static ArrayBufferObject* createForContents(JSContext* cx, size_t nbytes,
                                               BufferContents contents);
 
-  static ArrayBufferObject* copy(
-      JSContext* cx, JS::Handle<ArrayBufferObject*> unwrappedArrayBuffer);
+  static ArrayBufferObject* copy(JSContext* cx, size_t newByteLength,
+                                 JS::Handle<ArrayBufferObject*> source);
 
+  static ArrayBufferObject* copyAndDetach(
+      JSContext* cx, size_t newByteLength,
+      JS::Handle<ArrayBufferObject*> source);
+
+ private:
+  static ArrayBufferObject* copyAndDetachSteal(
+      JSContext* cx, JS::Handle<ArrayBufferObject*> source);
+
+  static ArrayBufferObject* copyAndDetachRealloc(
+      JSContext* cx, size_t newByteLength,
+      JS::Handle<ArrayBufferObject*> source);
+
+ public:
   static ArrayBufferObject* createZeroed(JSContext* cx, size_t nbytes,
                                          HandleObject proto = nullptr);
 
@@ -362,8 +384,8 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
                                                    WasmArrayRawBuffer* buffer,
                                                    size_t initialSize);
 
-  static void copyData(Handle<ArrayBufferObject*> toBuffer, size_t toIndex,
-                       Handle<ArrayBufferObject*> fromBuffer, size_t fromIndex,
+  static void copyData(ArrayBufferObject* toBuffer, size_t toIndex,
+                       ArrayBufferObject* fromBuffer, size_t fromIndex,
                        size_t count);
 
   static size_t objectMoved(JSObject* obj, JSObject* old);
@@ -441,6 +463,11 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   bool isDetached() const { return flags() & DETACHED; }
   bool isPreparedForAsmJS() const { return flags() & FOR_ASMJS; }
+
+  // Only WASM and asm.js buffers have a non-undefined [[ArrayBufferDetachKey]].
+  //
+  // https://tc39.es/ecma262/#sec-properties-of-the-arraybuffer-instances
+  bool hasDefinedDetachKey() const { return isWasm() || isPreparedForAsmJS(); }
 
   // WebAssembly support:
 

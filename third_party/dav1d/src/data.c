@@ -44,7 +44,7 @@ uint8_t *dav1d_data_create_internal(Dav1dData *const buf, const size_t sz) {
     validate_input_or_ret(buf != NULL, NULL);
 
     if (sz > SIZE_MAX / 2) return NULL;
-    buf->ref = dav1d_ref_create(sz);
+    buf->ref = dav1d_ref_create(ALLOC_DAV1DDATA, sz);
     if (!buf->ref) return NULL;
     buf->data = buf->ref->const_data;
     buf->sz = sz;
@@ -65,7 +65,7 @@ int dav1d_data_wrap_internal(Dav1dData *const buf, const uint8_t *const ptr,
     validate_input_or_ret(free_callback != NULL, DAV1D_ERR(EINVAL));
 
     if (sz > SIZE_MAX / 2) return DAV1D_ERR(EINVAL);
-    Dav1dRef *const ref = malloc(sizeof(Dav1dRef));
+    Dav1dRef *const ref = dav1d_malloc(ALLOC_DAV1DDATA, sizeof(Dav1dRef));
     if (!ref) return DAV1D_ERR(ENOMEM);
 
     buf->ref = dav1d_ref_init(ref, ptr, free_callback, cookie, 1);
@@ -86,7 +86,7 @@ int dav1d_data_wrap_user_data_internal(Dav1dData *const buf,
     validate_input_or_ret(buf != NULL, DAV1D_ERR(EINVAL));
     validate_input_or_ret(free_callback != NULL, DAV1D_ERR(EINVAL));
 
-    Dav1dRef *const ref = malloc(sizeof(Dav1dRef));
+    Dav1dRef *const ref = dav1d_malloc(ALLOC_DAV1DDATA, sizeof(Dav1dRef));
     if (!ref) return DAV1D_ERR(ENOMEM);
 
     buf->m.user_data.ref = dav1d_ref_init(ref, user_data, free_callback, cookie, 1);
@@ -95,14 +95,13 @@ int dav1d_data_wrap_user_data_internal(Dav1dData *const buf,
     return 0;
 }
 
-
 void dav1d_data_ref(Dav1dData *const dst, const Dav1dData *const src) {
-    validate_input(dst != NULL);
-    validate_input(dst->data == NULL);
-    validate_input(src != NULL);
+    assert(dst != NULL);
+    assert(dst->data == NULL);
+    assert(src != NULL);
 
     if (src->ref) {
-        validate_input(src->data != NULL);
+        assert(src->data != NULL);
         dav1d_ref_inc(src->ref);
     }
     if (src->m.user_data.ref) dav1d_ref_inc(src->m.user_data.ref);

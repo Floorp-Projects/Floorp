@@ -1,4 +1,4 @@
-// |reftest| skip -- resizable-arraybuffer,arraybuffer-transfer is not supported
+// |reftest| shell-option(--enable-arraybuffer-transfer) skip-if(!ArrayBuffer.prototype.transfer||!xulRuntime.shell) -- arraybuffer-transfer is not enabled unconditionally, requires shell-options
 // Copyright (C) 2023 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -11,7 +11,7 @@ info: |
   1. Let O be the this value.
   2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
   [...]
-features: [resizable-arraybuffer, arraybuffer-transfer]
+features: [arraybuffer-transfer]
 ---*/
 
 assert.sameValue(typeof ArrayBuffer.prototype.transferToFixedLength, 'function');

@@ -81,7 +81,7 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
     auto maybeShmem = ipc::UnsafeSharedMemoryHandle::CreateAndMap(size);
 
     if (maybeShmem.isNothing()) {
-      aRv.ThrowAbortError(
+      aRv.ThrowRangeError(
           nsPrintfCString("Unable to allocate shmem of size %" PRIuPTR, size));
       return nullptr;
     }

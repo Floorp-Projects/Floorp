@@ -182,6 +182,52 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+if CONFIG["CPU_ARCH"] == "mips32":
+
+    DEFINES["MIPS32_LE"] = True
+    DEFINES["MIPS_FPU_LE"] = True
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+    LOCAL_INCLUDES += [
+        "/gfx/angle/checkout/include/",
+        "/third_party/drm/drm/",
+        "/third_party/drm/drm/include/",
+        "/third_party/drm/drm/include/libdrm/",
+        "/third_party/gbm/gbm/",
+        "/third_party/libepoxy/libepoxy/include/",
+        "/third_party/pipewire/"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/video_capture/linux/camera_portal.cc",
+        "/third_party/libwebrtc/modules/video_capture/linux/device_info_pipewire.cc",
+        "/third_party/libwebrtc/modules/video_capture/linux/pipewire_session.cc",
+        "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
+    ]
+
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+    LOCAL_INCLUDES += [
+        "/gfx/angle/checkout/include/",
+        "/third_party/drm/drm/",
+        "/third_party/drm/drm/include/",
+        "/third_party/drm/drm/include/libdrm/",
+        "/third_party/gbm/gbm/",
+        "/third_party/libepoxy/libepoxy/include/",
+        "/third_party/pipewire/"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/modules/video_capture/linux/camera_portal.cc",
+        "/third_party/libwebrtc/modules/video_capture/linux/device_info_pipewire.cc",
+        "/third_party/libwebrtc/modules/video_capture/linux/pipewire_session.cc",
+        "/third_party/libwebrtc/modules/video_capture/linux/video_capture_pipewire.cc"
+    ]
+
 if CONFIG["CPU_ARCH"] == "x86":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True

@@ -266,7 +266,6 @@ static const char sColorPrefs[][41] = {
     "ui.-moz_menuhover",
     "ui.-moz_menuhoverdisabled",
     "ui.-moz_menuhovertext",
-    "ui.-moz_menubartext",
     "ui.-moz_menubarhovertext",
     "ui.-moz_eventreerow",
     "ui.-moz_oddtreerow",
@@ -712,7 +711,6 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(MozButtonactivetext, 0x00, 0x00, 0x00)
       COLOR(MozMenuhover, 0x33, 0x99, 0xFF)
       COLOR(MozMenuhovertext, 0x00, 0x00, 0x00)
-      COLOR(MozMenubartext, 0x00, 0x00, 0x00)
       COLOR(MozMenubarhovertext, 0x00, 0x00, 0x00)
       COLOR(MozMenuhoverdisabled, 0xF0, 0xF0, 0xF0)
       COLOR(MozEventreerow, 0xFF, 0xFF, 0xFF)

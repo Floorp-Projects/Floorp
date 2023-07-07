@@ -817,7 +817,7 @@ int dav1d_refmvs_init_frame(refmvs_frame *const rf,
     if (r_stride != rf->r_stride || n_tile_rows != rf->n_tile_rows) {
         if (rf->r) dav1d_freep_aligned(&rf->r);
         const int uses_2pass = n_tile_threads > 1 && n_frame_threads > 1;
-        rf->r = dav1d_alloc_aligned(sizeof(*rf->r) * 35 * r_stride * n_tile_rows * (1 + uses_2pass), 64);
+        rf->r = dav1d_alloc_aligned(ALLOC_REFMVS, sizeof(*rf->r) * 35 * r_stride * n_tile_rows * (1 + uses_2pass), 64);
         if (!rf->r) return DAV1D_ERR(ENOMEM);
         rf->r_stride = r_stride;
     }
@@ -825,7 +825,7 @@ int dav1d_refmvs_init_frame(refmvs_frame *const rf,
     const ptrdiff_t rp_stride = r_stride >> 1;
     if (rp_stride != rf->rp_stride || n_tile_rows != rf->n_tile_rows) {
         if (rf->rp_proj) dav1d_freep_aligned(&rf->rp_proj);
-        rf->rp_proj = dav1d_alloc_aligned(sizeof(*rf->rp_proj) * 16 * rp_stride * n_tile_rows, 64);
+        rf->rp_proj = dav1d_alloc_aligned(ALLOC_REFMVS, sizeof(*rf->rp_proj) * 16 * rp_stride * n_tile_rows, 64);
         if (!rf->rp_proj) return DAV1D_ERR(ENOMEM);
         rf->rp_stride = rp_stride;
     }

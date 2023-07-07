@@ -35,6 +35,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   permissions: "chrome://remote/content/marionette/permissions.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
   print: "chrome://remote/content/shared/PDF.sys.mjs",
+  quit: "chrome://remote/content/shared/Browser.sys.mjs",
   reftest: "chrome://remote/content/marionette/reftest.sys.mjs",
   registerCommandsActor:
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs",
@@ -49,7 +50,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "chrome://remote/content/marionette/actors/MarionetteCommandsParent.sys.mjs",
   waitForInitialNavigationCompleted:
     "chrome://remote/content/shared/Navigate.sys.mjs",
-  waitForObserverTopic: "chrome://remote/content/marionette/sync.sys.mjs",
   WebDriverSession: "chrome://remote/content/shared/webdriver/Session.sys.mjs",
   WebElement: "chrome://remote/content/marionette/web-reference.sys.mjs",
   windowManager: "chrome://remote/content/shared/WindowManager.sys.mjs",
@@ -84,6 +84,8 @@ const TIMEOUT_NO_WINDOW_MANAGER = 5000;
 
 // Observer topic to wait for until the browser window is ready.
 const TOPIC_BROWSER_READY = "browser-delayed-startup-finished";
+// Observer topic to perform clean up when application quit is requested.
+const TOPIC_QUIT_APPLICATION_REQUESTED = "quit-application-requested";
 
 /**
  * The Marionette WebDriver services provides a standard conforming
@@ -551,10 +553,17 @@ GeckoDriver.prototype.handleEvent = function ({ target, type }) {
   }
 };
 
-GeckoDriver.prototype.observe = function (subject, topic, data) {
+GeckoDriver.prototype.observe = async function (subject, topic, data) {
   switch (topic) {
     case TOPIC_BROWSER_READY:
       this.registerWindow(subject);
+      break;
+
+    case TOPIC_QUIT_APPLICATION_REQUESTED:
+      // Run Marionette specific cleanup steps before allowing
+      // the application to shutdown
+      await this._server.setAcceptConnections(false);
+      this.deleteSession();
       break;
   }
 };
@@ -2893,7 +2902,6 @@ GeckoDriver.prototype.acceptConnections = async function (cmd) {
  */
 GeckoDriver.prototype.quit = async function (cmd) {
   const { flags = [], safeMode = false } = cmd.parameters;
-  const quits = ["eConsiderQuit", "eAttemptQuit", "eForceQuit"];
 
   lazy.assert.array(flags, `Expected "flags" to be an array`);
   lazy.assert.boolean(safeMode, `Expected "safeMode" to be a boolean`);
@@ -2904,70 +2912,27 @@ GeckoDriver.prototype.quit = async function (cmd) {
     );
   }
 
-  if (flags.includes("eSilently")) {
-    if (!this.currentSession.capabilities.get("moz:windowless")) {
-      throw new lazy.error.UnsupportedOperationError(
-        `Silent restarts only allowed with "moz:windowless" capability set`
-      );
+  // Register handler to run Marionette specific shutdown code.
+  Services.obs.addObserver(this, TOPIC_QUIT_APPLICATION_REQUESTED);
+
+  let quitApplicationResponse;
+  try {
+    quitApplicationResponse = await lazy.quit(
+      flags,
+      safeMode,
+      this.currentSession.capabilities.get("moz:windowless")
+    );
+  } catch (e) {
+    if (e instanceof TypeError) {
+      throw new lazy.error.InvalidArgumentError(e.message);
     }
-    if (!flags.includes("eRestart")) {
-      throw new lazy.error.InvalidArgumentError(
-        `"silently" only works with restart flag`
-      );
-    }
+
+    throw new lazy.error.UnsupportedOperationError(e.message);
+  } finally {
+    Services.obs.removeObserver(this, TOPIC_QUIT_APPLICATION_REQUESTED);
   }
 
-  let quitSeen;
-  let mode = 0;
-  if (flags.length) {
-    for (let k of flags) {
-      lazy.assert.in(k, Ci.nsIAppStartup);
-
-      if (quits.includes(k)) {
-        if (quitSeen) {
-          throw new lazy.error.InvalidArgumentError(
-            `${k} cannot be combined with ${quitSeen}`
-          );
-        }
-        quitSeen = k;
-      }
-
-      mode |= Ci.nsIAppStartup[k];
-    }
-  }
-
-  if (!quitSeen) {
-    mode |= Ci.nsIAppStartup.eAttemptQuit;
-  }
-
-  await this._server.setAcceptConnections(false);
-  this.deleteSession();
-
-  // Notify all windows that an application quit has been requested.
-  const cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
-    Ci.nsISupportsPRBool
-  );
-  Services.obs.notifyObservers(cancelQuit, "quit-application-requested");
-
-  // If the shutdown of the application is prevented force quit it instead.
-  if (cancelQuit.data) {
-    mode |= Ci.nsIAppStartup.eForceQuit;
-  }
-
-  // delay response until the application is about to quit
-  let quitApplication = lazy.waitForObserverTopic("quit-application");
-
-  if (safeMode) {
-    Services.startup.restartInSafeMode(mode);
-  } else {
-    Services.startup.quit(mode);
-  }
-
-  return {
-    cause: (await quitApplication).data,
-    forced: cancelQuit.data,
-    in_app: true,
-  };
+  return quitApplicationResponse;
 };
 
 GeckoDriver.prototype.installAddon = function (cmd) {

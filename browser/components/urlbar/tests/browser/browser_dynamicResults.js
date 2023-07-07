@@ -705,7 +705,7 @@ class TestProvider extends UrlbarTestUtils.TestProvider {
     };
   }
 
-  onEngagement(isPrivate, state, queryContext, details) {
+  onEngagement(state, queryContext, details, controller) {
     if (this._pickPromiseResolve) {
       let { result, element } = details;
       this._pickPromiseResolve([result, element]);

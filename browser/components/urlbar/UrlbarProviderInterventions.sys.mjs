@@ -711,10 +711,10 @@ class ProviderInterventions extends UrlbarProvider {
     }
   }
 
-  onEngagement(isPrivate, state, queryContext, details, window) {
+  onEngagement(state, queryContext, details, controller) {
     let { result } = details;
     if (result?.providerName == this.name) {
-      this.#pickResult(result, window);
+      this.#pickResult(result, controller.browserWindow);
     }
 
     if (["engagement", "abandonment"].includes(state)) {

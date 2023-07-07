@@ -72,18 +72,21 @@ const SPOOFED_PLATFORM = {
 // If comparison with the WindowsOscpu value fails in the future, it's time to
 // evaluate if exposing a new Windows version to the Web is appropriate. See
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1693295
-let WindowsOscpu = null;
-if (AppConstants.platform == "win") {
-  let isWin11 = WindowsVersionInfo.get().buildNumber >= 22000;
-  WindowsOscpu =
-    cpuArch == "x86_64" || (cpuArch == "aarch64" && isWin11)
-      ? `Windows NT ${osVersion}; Win64; x64`
-      : `Windows NT ${osVersion}`;
-}
+const WindowsOscpuPromise = (async () => {
+  let WindowsOscpu = null;
+  if (AppConstants.platform == "win") {
+    let isWin11 = WindowsVersionInfo.get().buildNumber >= 22000;
+    let isWow64 = (await Services.sysinfo.processInfo).isWow64;
+    WindowsOscpu =
+      cpuArch == "x86_64" || isWow64 || (cpuArch == "aarch64" && isWin11)
+        ? `Windows NT ${osVersion}; Win64; x64`
+        : `Windows NT ${osVersion}`;
+  }
+  return WindowsOscpu;
+})();
 
 const DEFAULT_OSCPU = {
   linux: `Linux ${cpuArch}`,
-  win: WindowsOscpu,
   macosx: "Intel Mac OS X 10.15",
   android: `Linux ${cpuArch}`,
   other: `Linux ${cpuArch}`,
@@ -99,7 +102,6 @@ const SPOOFED_OSCPU = {
 
 const DEFAULT_UA_OS = {
   linux: `X11; Linux ${cpuArch}`,
-  win: WindowsOscpu,
   macosx: "Macintosh; Intel Mac OS X 10.15",
   android: `Android ${osVersion}; Mobile`,
   other: `X11; Linux ${cpuArch}`,
@@ -282,52 +284,61 @@ async function testNavigator(result, expectedResults, extraData) {
   );
 }
 
-const defaultUserAgent = `Mozilla/5.0 (${
-  DEFAULT_UA_OS[AppConstants.platform]
-}; rv:${rvVersion}.0) Gecko/${
-  DEFAULT_UA_GECKO_TRAIL[AppConstants.platform]
-} Firefox/${appVersion}.0`;
+let defaultUserAgent;
+let spoofedUserAgentNavigator;
+let spoofedUserAgentHeader;
+let allNotSpoofed;
+let allSpoofed;
 
-const spoofedUserAgentNavigator = `Mozilla/5.0 (${
-  SPOOFED_UA_NAVIGATOR_OS[AppConstants.platform]
-}; rv:${rvVersion}.0) Gecko/${
-  SPOOFED_UA_GECKO_TRAIL[AppConstants.platform]
-} Firefox/${appVersion}.0`;
+add_setup(async () => {
+  DEFAULT_OSCPU.win = DEFAULT_UA_OS.win = await WindowsOscpuPromise;
+  defaultUserAgent = `Mozilla/5.0 (${
+    DEFAULT_UA_OS[AppConstants.platform]
+  }; rv:${rvVersion}.0) Gecko/${
+    DEFAULT_UA_GECKO_TRAIL[AppConstants.platform]
+  } Firefox/${appVersion}.0`;
 
-const spoofedUserAgentHeader = `Mozilla/5.0 (${
-  SPOOFED_UA_HTTPHEADER_OS[AppConstants.platform]
-}; rv:${rvVersion}.0) Gecko/${
-  SPOOFED_UA_GECKO_TRAIL[AppConstants.platform]
-} Firefox/${appVersion}.0`;
+  spoofedUserAgentNavigator = `Mozilla/5.0 (${
+    SPOOFED_UA_NAVIGATOR_OS[AppConstants.platform]
+  }; rv:${rvVersion}.0) Gecko/${
+    SPOOFED_UA_GECKO_TRAIL[AppConstants.platform]
+  } Firefox/${appVersion}.0`;
 
-// The following are convenience objects that allow you to quickly see what is
-//   and is not modified from a logical set of values.
-// Be sure to always use `let expectedResults = structuredClone(allNotSpoofed)` to do a
-//   deep copy and avoiding corrupting the original 'const' object
-const allNotSpoofed = {
-  appVersion: DEFAULT_APPVERSION[AppConstants.platform],
-  hardwareConcurrency: navigator.hardwareConcurrency,
-  mimeTypesLength: 2,
-  oscpu: DEFAULT_OSCPU[AppConstants.platform],
-  platform: DEFAULT_PLATFORM[AppConstants.platform],
-  pluginsLength: 5,
-  userAgentNavigator: defaultUserAgent,
-  userAgentHTTPHeader: defaultUserAgent,
-  framer_crossOrigin_userAgentHTTPHeader: defaultUserAgent,
-  framee_crossOrigin_userAgentHTTPHeader: defaultUserAgent,
-};
-const allSpoofed = {
-  appVersion: SPOOFED_APPVERSION[AppConstants.platform],
-  hardwareConcurrency: SPOOFED_HW_CONCURRENCY,
-  mimeTypesLength: 2,
-  oscpu: SPOOFED_OSCPU[AppConstants.platform],
-  platform: SPOOFED_PLATFORM[AppConstants.platform],
-  pluginsLength: 5,
-  userAgentNavigator: spoofedUserAgentNavigator,
-  userAgentHTTPHeader: spoofedUserAgentHeader,
-  framer_crossOrigin_userAgentHTTPHeader: spoofedUserAgentHeader,
-  framee_crossOrigin_userAgentHTTPHeader: spoofedUserAgentHeader,
-};
+  spoofedUserAgentHeader = `Mozilla/5.0 (${
+    SPOOFED_UA_HTTPHEADER_OS[AppConstants.platform]
+  }; rv:${rvVersion}.0) Gecko/${
+    SPOOFED_UA_GECKO_TRAIL[AppConstants.platform]
+  } Firefox/${appVersion}.0`;
+
+  // The following are convenience objects that allow you to quickly see what is
+  //   and is not modified from a logical set of values.
+  // Be sure to always use `let expectedResults = structuredClone(allNotSpoofed)` to do a
+  //   deep copy and avoiding corrupting the original 'const' object
+  allNotSpoofed = {
+    appVersion: DEFAULT_APPVERSION[AppConstants.platform],
+    hardwareConcurrency: navigator.hardwareConcurrency,
+    mimeTypesLength: 2,
+    oscpu: DEFAULT_OSCPU[AppConstants.platform],
+    platform: DEFAULT_PLATFORM[AppConstants.platform],
+    pluginsLength: 5,
+    userAgentNavigator: defaultUserAgent,
+    userAgentHTTPHeader: defaultUserAgent,
+    framer_crossOrigin_userAgentHTTPHeader: defaultUserAgent,
+    framee_crossOrigin_userAgentHTTPHeader: defaultUserAgent,
+  };
+  allSpoofed = {
+    appVersion: SPOOFED_APPVERSION[AppConstants.platform],
+    hardwareConcurrency: SPOOFED_HW_CONCURRENCY,
+    mimeTypesLength: 2,
+    oscpu: SPOOFED_OSCPU[AppConstants.platform],
+    platform: SPOOFED_PLATFORM[AppConstants.platform],
+    pluginsLength: 5,
+    userAgentNavigator: spoofedUserAgentNavigator,
+    userAgentHTTPHeader: spoofedUserAgentHeader,
+    framer_crossOrigin_userAgentHTTPHeader: spoofedUserAgentHeader,
+    framee_crossOrigin_userAgentHTTPHeader: spoofedUserAgentHeader,
+  };
+});
 
 const uri = `https://${FRAMER_DOMAIN}/browser/browser/components/resistfingerprinting/test/browser/file_navigator_iframer.html`;
 
@@ -335,47 +346,69 @@ requestLongerTimeout(2);
 
 let expectedResults = {};
 
-expectedResults = structuredClone(allNotSpoofed);
-add_task(defaultsTest.bind(null, uri, testNavigator, expectedResults));
+add_task(async () => {
+  expectedResults = structuredClone(allNotSpoofed);
+  await defaultsTest(uri, testNavigator, expectedResults);
+});
 
-expectedResults = structuredClone(allSpoofed);
-add_task(simpleRFPTest.bind(null, uri, testNavigator, expectedResults));
+add_task(async () => {
+  expectedResults = structuredClone(allSpoofed);
+  await simpleRFPTest(uri, testNavigator, expectedResults);
+});
 
 // In the below tests, we use the cross-origin domain as the base URI of a resource we fetch (on both the framer and framee)
 // so we can check that the HTTP header is as expected.
 
 // (A) RFP is exempted on the framer and framee and (if needed) on another cross-origin domain
-expectedResults = structuredClone(allNotSpoofed);
-add_task(testA.bind(null, uri, testNavigator, expectedResults));
+add_task(async () => {
+  expectedResults = structuredClone(allNotSpoofed);
+  await testA(uri, testNavigator, expectedResults);
+});
 
 // (B) RFP is exempted on the framer and framee but is not on another (if needed) cross-origin domain
-expectedResults = structuredClone(allNotSpoofed);
-add_task(testB.bind(null, uri, testNavigator, expectedResults));
+add_task(async () => {
+  expectedResults = structuredClone(allNotSpoofed);
+  await testB(uri, testNavigator, expectedResults);
+});
 
 // (C) RFP is exempted on the framer and (if needed) on another cross-origin domain, but not the framee
-expectedResults = structuredClone(allSpoofed);
-expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
-expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
-add_task(testC.bind(null, uri, testNavigator, expectedResults));
+add_task(async () => {
+  expectedResults = structuredClone(allSpoofed);
+  expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
+  expectedResults.framee_crossOrigin_userAgentHTTPHeader =
+    spoofedUserAgentHeader;
+  await testC(uri, testNavigator, expectedResults);
+});
 
 // (D) RFP is exempted on the framer but not the framee nor another (if needed) cross-origin domain
-expectedResults = structuredClone(allSpoofed);
-expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
-expectedResults.framee_crossOrigin_userAgentHTTPHeader = spoofedUserAgentHeader;
-add_task(testD.bind(null, uri, testNavigator, expectedResults));
+add_task(async () => {
+  expectedResults = structuredClone(allSpoofed);
+  expectedResults.framer_crossOrigin_userAgentHTTPHeader = defaultUserAgent;
+  expectedResults.framee_crossOrigin_userAgentHTTPHeader =
+    spoofedUserAgentHeader;
+  await testD(uri, testNavigator, expectedResults);
+});
 
 // (E) RFP is not exempted on the framer nor the framee but (if needed) is exempted on another cross-origin domain
-expectedResults = structuredClone(allSpoofed);
-add_task(testE.bind(null, uri, testNavigator, expectedResults));
+add_task(async () => {
+  expectedResults = structuredClone(allSpoofed);
+  await testE(uri, testNavigator, expectedResults);
+});
 
 // (F) RFP is not exempted on the framer nor the framee nor another (if needed) cross-origin domain
-expectedResults = structuredClone(allSpoofed);
-add_task(testF.bind(null, uri, testNavigator, expectedResults));
+add_task(async () => {
+  expectedResults = structuredClone(allSpoofed);
+  await testF(uri, testNavigator, expectedResults);
+});
 
 // (G) RFP is not exempted on the framer but is on the framee and (if needed) on another cross-origin domain
-expectedResults = structuredClone(allSpoofed);
-add_task(testG.bind(null, uri, testNavigator, expectedResults));
+add_task(async () => {
+  expectedResults = structuredClone(allSpoofed);
+  await testG(uri, testNavigator, expectedResults);
+});
 
 // (H) RFP is not exempted on the framer nor another (if needed) cross-origin domain but is on the framee
-expectedResults = structuredClone(allSpoofed);
-add_task(testH.bind(null, uri, testNavigator, expectedResults));
+add_task(async () => {
+  expectedResults = structuredClone(allSpoofed);
+  await testH(uri, testNavigator, expectedResults);
+});
