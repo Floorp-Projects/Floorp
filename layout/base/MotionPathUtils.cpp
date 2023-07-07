@@ -96,8 +96,7 @@ nsTArray<nscoord> MotionPathUtils::ComputeBorderRadii(
       aCoordBox);
   nsTArray<nscoord> result(8);
   result.SetLength(8);
-  if (!nsIFrame::ComputeBorderRadii(aBorderRadius, aCoordBox.Size(),
-                                    insetRect.Size(), Sides(),
+  if (!ShapeUtils::ComputeRectRadii(aBorderRadius, aCoordBox, insetRect,
                                     result.Elements())) {
     result.Clear();
   }
@@ -398,11 +397,11 @@ static already_AddRefed<gfx::Path> BuildSimpleInsetPath(
       StyleRect<LengthPercentage>::WithAllSides(LengthPercentage::Zero()),
       aCoordBox);
   nscoord radii[8];
-  const bool hasRadii = nsIFrame::ComputeBorderRadii(
-      aBorderRadius, aCoordBox.Size(), insetRect.Size(), Sides(), radii);
-  return ShapeUtils::BuildInsetPath(insetRect, hasRadii ? radii : nullptr,
-                                    aCoordBox, AppUnitsPerCSSPixel(),
-                                    aPathBuilder);
+  const bool hasRadii =
+      ShapeUtils::ComputeRectRadii(aBorderRadius, aCoordBox, insetRect, radii);
+  return ShapeUtils::BuildRectPath(insetRect, hasRadii ? radii : nullptr,
+                                   aCoordBox, AppUnitsPerCSSPixel(),
+                                   aPathBuilder);
 }
 
 // Generate data for motion path on the main thread.
@@ -541,7 +540,7 @@ static OffsetPathData GenerateOffsetPathData(
         StyleRect<LengthPercentage>::WithAllSides(LengthPercentage::Zero()),
         coordBox);
     const nsTArray<nscoord>& radii = aMotionPathData.coordBoxInsetRadii();
-    path = ShapeUtils::BuildInsetPath(
+    path = ShapeUtils::BuildRectPath(
         insetRect, radii.IsEmpty() ? nullptr : radii.Elements(), coordBox,
         AppUnitsPerCSSPixel(), builder);
   } else {
