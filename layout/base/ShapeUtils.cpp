@@ -232,6 +232,34 @@ already_AddRefed<gfx::Path> ShapeUtils::BuildInsetPath(
                        aAppUnitsPerPixel, aPathBuilder);
 }
 
+using ComputedStyleXywh =
+    StyleXywh<LengthPercentage, NonNegativeLengthPercentage>;
+static nsRect ComputeXywhRect(const ComputedStyleXywh& aStyleXywh,
+                              const nsRect& aRefBox) {
+  // |aStyleXywh.left| is the offset from the left edge of |aRefBox|, and
+  // |aStyleXywh.top| is the offset from the top edge of |aRefBox|.
+  // https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-xywh
+  nsRect rect = {aRefBox.X() + aStyleXywh.x.Resolve(aRefBox.Width()),
+                 aRefBox.Y() + aStyleXywh.y.Resolve(aRefBox.Height()),
+                 aStyleXywh.size.width.Resolve(aRefBox.Width()),
+                 aStyleXywh.size.height.Resolve(aRefBox.Height())};
+  MOZ_ASSERT(rect.width >= 0 && rect.height >= 0);
+  return rect;
+}
+
+/* static */
+already_AddRefed<gfx::Path> ShapeUtils::BuildXywhPath(
+    const StyleBasicShape& aBasicShape, const nsRect& aRefBox,
+    nscoord aAppUnitsPerPixel, gfx::PathBuilder* aPathBuilder) {
+  const auto& xywh = aBasicShape.AsXywh();
+  const nsRect rect = ComputeXywhRect(xywh, aRefBox);
+  nscoord appUnitsRadii[8];
+  const bool hasRadii =
+      ComputeRectRadii(xywh.round, aRefBox, rect, appUnitsRadii);
+  return ShapeUtils::BuildRectPath(rect, hasRadii ? appUnitsRadii : nullptr,
+                                   aRefBox, aAppUnitsPerPixel, aPathBuilder);
+}
+
 /* static */
 already_AddRefed<gfx::Path> ShapeUtils::BuildRectPath(
     const nsRect& aRect, const nscoord aRadii[8], const nsRect& aRefBox,
