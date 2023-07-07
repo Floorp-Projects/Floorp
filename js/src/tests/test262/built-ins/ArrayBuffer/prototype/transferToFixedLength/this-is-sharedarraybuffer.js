@@ -1,4 +1,4 @@
-// |reftest| skip -- resizable-arraybuffer is not supported
+// |reftest| shell-option(--enable-arraybuffer-transfer) skip-if(!this.hasOwnProperty('SharedArrayBuffer')||!ArrayBuffer.prototype.transfer||!xulRuntime.shell) -- SharedArrayBuffer,arraybuffer-transfer is not enabled unconditionally, requires shell-options
 // Copyright (C) 2023 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -11,7 +11,7 @@ info: |
   2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
   3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
   [...]
-features: [SharedArrayBuffer, resizable-arraybuffer]
+features: [SharedArrayBuffer, arraybuffer-transfer]
 ---*/
 
 var sab = new SharedArrayBuffer(0);

@@ -1,15 +1,19 @@
-// |reftest| skip -- resizable-arraybuffer is not supported
+// |reftest| shell-option(--enable-arraybuffer-transfer) skip-if(!ArrayBuffer.prototype.transfer||!xulRuntime.shell) -- arraybuffer-transfer is not enabled unconditionally, requires shell-options
 // Copyright (C) 2023 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
 esid: sec-arraybuffer.prototype.transfertofixedlength
 description: |
-  Transfering from a resizable ArrayBuffer into an ArrayBuffer with the same
+  Transfering from a fixed-size ArrayBuffer into an ArrayBuffer with the same
   byte length
-features: [resizable-arraybuffer, arraybuffer-transfer]
+features: [arraybuffer-transfer]
 ---*/
 
-var source = new ArrayBuffer(4, { maxByteLength: 8 });
+// NOTE: This file is a copy of "from-fixed-to-same.js" with the resizable
+// ArrayBuffer parts removed, so it can run in implementations which don't yet
+// support the "resizable-arraybuffer" feature.
+
+var source = new ArrayBuffer(4);
 
 var sourceArray = new Uint8Array(source);
 sourceArray[0] = 1;
@@ -24,9 +28,7 @@ assert.throws(TypeError, function() {
   source.slice();
 });
 
-assert.sameValue(dest.resizable, false, 'dest.resizable');
 assert.sameValue(dest.byteLength, 4, 'dest.byteLength');
-assert.sameValue(dest.maxByteLength, 4, 'dest.maxByteLength');
 
 var destArray = new Uint8Array(dest);
 

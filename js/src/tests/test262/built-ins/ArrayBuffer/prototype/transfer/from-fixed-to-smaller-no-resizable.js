@@ -1,4 +1,4 @@
-// |reftest| skip -- resizable-arraybuffer is not supported
+// |reftest| shell-option(--enable-arraybuffer-transfer) skip-if(!ArrayBuffer.prototype.transfer||!xulRuntime.shell) -- arraybuffer-transfer is not enabled unconditionally, requires shell-options
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
@@ -25,8 +25,12 @@ info: |
       this method as a zero-copy move or a realloc.
   14. Perform ! DetachArrayBuffer(O).
   15. Return new.
-features: [resizable-arraybuffer, arraybuffer-transfer]
+features: [arraybuffer-transfer]
 ---*/
+
+// NOTE: This file is a copy of "from-fixed-to-smaller.js" with the resizable
+// ArrayBuffer parts removed, so it can run in implementations which don't yet
+// support the "resizable-arraybuffer" feature.
 
 var source = new ArrayBuffer(4);
 
@@ -43,9 +47,7 @@ assert.throws(TypeError, function() {
   source.slice();
 });
 
-assert.sameValue(dest.resizable, false, 'dest.resizable');
 assert.sameValue(dest.byteLength, 3, 'dest.byteLength');
-assert.sameValue(dest.maxByteLength, 3, 'dest.maxByteLength');
 
 var destArray = new Uint8Array(dest);
 

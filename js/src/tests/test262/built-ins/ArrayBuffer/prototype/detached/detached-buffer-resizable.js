@@ -1,4 +1,4 @@
-// |reftest| skip -- arraybuffer-transfer,resizable-arraybuffer is not supported
+// |reftest| skip -- resizable-arraybuffer is not supported
 // Copyright (C) 2023 Jordan Harband. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 /*---
