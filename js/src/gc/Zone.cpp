@@ -196,6 +196,7 @@ Zone::~Zone() {
   js_delete(finalizationObservers_.ref().release());
 
   MOZ_ASSERT(gcWeakMapList().isEmpty());
+  MOZ_ASSERT(objectsWithWeakPointers.ref().empty());
 
   JSRuntime* rt = runtimeFromAnyThread();
   if (this == rt->gc.systemZone) {
@@ -991,4 +992,10 @@ bool Zone::ensureFinalizationObservers() {
 
   finalizationObservers_ = js::MakeUnique<FinalizationObservers>(this);
   return bool(finalizationObservers_.ref());
+}
+
+bool Zone::registerObjectWithWeakPointers(JSObject* obj) {
+  MOZ_ASSERT(obj->getClass()->hasTrace());
+  MOZ_ASSERT(!IsInsideNursery(obj));
+  return objectsWithWeakPointers.ref().append(obj);
 }
