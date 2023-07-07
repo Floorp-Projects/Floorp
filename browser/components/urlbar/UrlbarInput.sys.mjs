@@ -3595,6 +3595,18 @@ export class UrlbarInput {
   }
 
   _on_paste(event) {
+    if (event.explicitOriginalTarget != this.inputField) {
+      // In Gecko, a paste event is fired on the field that has focus when
+      // pasting is performed by a middle mouse click. In normal web contents,
+      // it will not be issue because the focus will move to a component
+      // clicked. But for the urlbar (and XUL), as the focus is kept, the paste
+      // event is received even when clicking on other components. Thus, check
+      // the component that is the original source of the event, if it is not
+      // this input component, ignore.
+      event.preventDefault();
+      return;
+    }
+
     let originalPasteData = event.clipboardData.getData("text/plain");
     if (!originalPasteData) {
       return;
