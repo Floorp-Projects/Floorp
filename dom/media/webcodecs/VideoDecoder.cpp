@@ -757,9 +757,9 @@ class DecodeMessage final
         const VideoDecoderConfigInternal& aConfig);
 
     AlignedByteBuffer mBuffer;
-    bool mIsKey;
-    int64_t mTimestamp;
-    Maybe<uint64_t> mDuration;
+    const bool mIsKey;
+    const int64_t mTimestamp;
+    const Maybe<uint64_t> mDuration;
   };
 
   DecodeMessage(Id aId, ConfigureMessage::Id aConfigId,
