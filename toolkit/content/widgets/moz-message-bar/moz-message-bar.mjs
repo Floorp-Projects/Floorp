@@ -30,6 +30,7 @@ const messageTypeToIconData = {
  *
  * @tagname moz-message-bar
  * @property {string} type - The type of the displayed message.
+ * @property {string} header - The header of the message.
  * @property {string} message - The message text.
  * @fires message-bar:close
  *  Custom event indicating that message bar was closed.
@@ -40,6 +41,7 @@ const messageTypeToIconData = {
 export default class MozMessageBar extends MozLitElement {
   static properties = {
     type: { type: String },
+    header: { type: String },
     message: { type: String },
   };
 
@@ -75,6 +77,13 @@ export default class MozMessageBar extends MozLitElement {
     return "";
   }
 
+  headerTemplate() {
+    if (this.header) {
+      return html`<strong class="header">${this.header}</strong>`;
+    }
+    return "";
+  }
+
   render() {
     return html`
       <link
@@ -85,6 +94,7 @@ export default class MozMessageBar extends MozLitElement {
       <div class="container">
         ${this.iconTemplate()}
         <div class="content">
+          ${this.headerTemplate()}
           <span class="message">${ifDefined(this.message)}</span>
           <slot name="support-link"></slot>
         </div>

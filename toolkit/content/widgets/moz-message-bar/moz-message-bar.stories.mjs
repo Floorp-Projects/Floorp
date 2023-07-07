@@ -7,6 +7,11 @@ import { html, ifDefined } from "../vendor/lit.all.mjs";
 import "./moz-message-bar.mjs";
 import "../moz-support-link/moz-support-link.mjs";
 
+const fluentStrings = [
+  "moz-message-bar-message",
+  "moz-message-bar-message-header",
+];
+
 export default {
   title: "UI Widgets/Moz Message Bar",
   component: "moz-message-bar",
@@ -14,6 +19,15 @@ export default {
     type: {
       options: ["info", "warning", "success", "error"],
       control: { type: "select" },
+    },
+    l10nId: {
+      options: [fluentStrings[0], fluentStrings[1]],
+      control: { type: "select" },
+    },
+    header: {
+      table: {
+        disable: true,
+      },
     },
     message: {
       table: {
@@ -26,6 +40,9 @@ export default {
     fluent: `
 moz-message-bar-message =
   .message = For your information message
+moz-message-bar-message-header =
+  .header = Header
+  .message = For your information message
 moz-message-bar-button = Click me!
     `,
   },
@@ -33,6 +50,7 @@ moz-message-bar-button = Click me!
 
 const Template = ({
   type,
+  header,
   message,
   l10nId,
   dismissable,
@@ -41,9 +59,10 @@ const Template = ({
 }) => html`
   <moz-message-bar
     type=${type}
+    header=${ifDefined(header)}
     message=${ifDefined(message)}
     data-l10n-id=${ifDefined(l10nId)}
-    data-l10n-attrs="message"
+    data-l10n-attrs="header, message"
     ?dismissable=${dismissable}
   >
     ${hasSupportLink
