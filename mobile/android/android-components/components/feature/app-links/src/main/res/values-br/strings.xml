@@ -4,6 +4,11 @@
     <string name="mozac_feature_applinks_open_in">Digeriñ e…</string>
     <!-- The description to warn users that their private browsing session changes  -->
     <string name="mozac_feature_applinks_confirm_dialog_title">Digeriñ en arload? Gallout a rafe ocʼh oberiantiz paouez da vezañ prevez.</string>
+    <!-- The title of the prompt that warns users their normal browsing session is trying to open another app  -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_title">Digeriñ en un arload all</string>
+    <!-- The message of the prompt to confirm with users that they want to open the link in another app
+    %s is a placeholder that will be replaced by the app name -->
+    <string name="mozac_feature_applinks_normal_confirm_dialog_message">Fellout a ra deoc’h leuskel %s da welet an dra-mañ?</string>
     <!-- Opens the selected time -->
     <string name="mozac_feature_applinks_confirm_dialog_confirm">Digeriñ</string>
     <!-- Cancels the prompt -->

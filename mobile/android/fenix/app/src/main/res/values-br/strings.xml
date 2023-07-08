@@ -12,8 +12,10 @@
     <string name="content_description_private_browsing_button">Gweredekaat ar Merdeiñ Prevez</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Diweredekaat ar Merdeiñ Prevez</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Klask pe chomlecʼh</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Klask er web</string>
     <!-- Placeholder text shown in search bar when using history search -->
     <string name="history_search_hint">Klask er roll istor</string>
     <!-- Placeholder text shown in search bar when using bookmarks search -->
@@ -44,9 +46,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string moz:RemovedIn="106" name="recent_bookmarks_title" tools:ignore="UnusedResources">Sinedoù nevez</string>
-
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recently_saved_title">Enrollet nevez ’zo</string>
     <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
     <string name="recently_saved_show_all_content_description_2">Diskouez an holl sinedoù enrollet</string>
@@ -66,11 +65,11 @@
     </string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message">Ouzhpennañ ur verradenn evit digeriñ ivinelloù prevez adalek ho skramm degemer.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Ouzhpennañ ur verradenn</string>
-    <!-- Text for the negative button -->
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Lañsit hoc’h ivinell prevez a zeu en ur stokadenn.</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Ouzhpennañ dʼar skramm degemer</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Ket, trugarez</string>
 
     <!-- Open in App "contextual feature recommendation" (CFR) -->
@@ -80,9 +79,6 @@
     <string name="open_in_app_cfr_positive_button_text">Mont en arventennoù</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Argas</string>
-
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description">Argas</string>
 
     <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
     <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
@@ -127,6 +123,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Ivinell prevez nevez</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Berradennoù klavier</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Distreiñ</string>
@@ -168,6 +167,8 @@
     <string name="browser_menu_stop">Paouez</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Askouezhioù</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Titouroù ar gont</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Nʼeus tamm askouezh ebet amañ</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -247,7 +248,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s a ranno ar pezh a vizskrivit er varrenn chomlecʼhioù gant ho lusker enklask dre ziouer.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Klask %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Klask war-eeun eus ar varrenn chomlec’h</string>
@@ -256,40 +257,17 @@
     <string name="search_settings_menu_item">Arventennoù ar c’hlask</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item">Ar wech-mañ klaskit:</string>
+    <string name="search_header_menu_item_2">Evit ar c’hlask-mañ:</string>
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Lusker klask %s</string>
 
     <!-- Home onboarding -->
-    <!-- Onboarding home screen dialog title text. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_title_3" tools:ignore="UnusedResources">Petra zo nevez e %1$s</string>
-    <!-- Onboarding home screen dialog description text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_description_2" tools:ignore="UnusedResources">Aesoc’h eo adstagañ lec’h m’ho peus paouezet.</string>
-    <!-- Onboarding home screen dialog title text for the home section. The first parameter is the name of the application.-->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_title_3" tools:ignore="UnusedResources">Pajenn degemer %1$s personelaet</string>
-    <!-- Onboarding home screen dialog description text for the home section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_home_description_2" tools:ignore="UnusedResources">Mont d’hoc’h ivinelloù digor, sinedoù ha roll istor merdeiñ. </string>
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_title_2" tools:ignore="UnusedResources">Ivinelloù naet ha renket mat</string>
-
-    <!-- Onboarding home screen dialog description text for the tab tray section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_cleaner_tab_tray_description_2" tools:ignore="UnusedResources">Tennañ an ivinelloù diezhomm gant an aozadur gwellaet hag an ivinelloù a serr o-unan.</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_title_2" tools:ignore="UnusedResources">Klaskoù nevesañ</string>
-    <!-- Onboarding home screen dialog description text for the history section. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_section_useful_history_description_2" tools:ignore="UnusedResources">Adweladennit ho klaskoù nevesañ diwar ho pajenn degemer hag ivinelloù.</string>
-
-    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string moz:RemovedIn="106" name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Gant ho pajenn Firefox personelaet eo aesoc’h da adstagañ lec’h m’ho peus paouezet. Klaskit e-touez hoc’h ivinelloù nevez, sinedoù ha disoc’hoù enklask.</string>
-
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
     <string name="onboarding_home_screen_jump_back_contextual_hint_2">Kejit gant ho pajenn degemer personelaet. Ivinelloù nevez, sinedoù ha disoc’hoù enklask a vo diskouezet amañ.</string>
-    <!-- Home onboarding dialog welcome screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_welcome_title" tools:ignore="UnusedResources">Donemat war un internet dizalc’h</string>
     <!-- Home onboarding dialog welcome screen title text. -->
     <string name="onboarding_home_welcome_title_2">Donemat war un internet personeloc’h</string>
     <!-- Home onboarding dialog welcome screen description text. -->
     <string name="onboarding_home_welcome_description">Muioc’h a livioù, muioc’h a brevezded. An hevelep youl da lakaat an dud a-raok ar gounidoù.</string>
-    <!-- Home onboarding dialog sign into sync screen title text. -->
-    <string moz:RemovedIn="106" name="onboarding_home_sync_title_2" tools:ignore="UnusedResources">Tremenit deus ar pellgomz d’an urzhiataer hezoug hag ar c’hontrefed</string>
     <!-- Home onboarding dialog sign into sync screen title text. -->
     <string name="onboarding_home_sync_title_3">Cheñch skrammoù a zo aesoc’h c’hoazh bremañ</string>
     <!-- Home onboarding dialog sign into sync screen description text. -->
@@ -304,6 +282,64 @@
     <string name="sync_cfr_message">Goubredet eo hoc’h ivinelloù! Tapit an traoù en-dro lec’h m’ho peus laosket anezho e lec’h all.</string>
     <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
     <string name="onboarding_home_content_description_close_button">Serriñ</string>
+
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">Gant ar rebuzadurioù e c’hallit ober muioc’h a draoù gant %s</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Goubredit hoc’h ivinelloù etre ho trevnadoù, merit ho pellgargadurioù, lennit alioù evit tapout seizh gwellañ gwarez buhez prevez %s ha muioc’h c’hoazh.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Kenderc’hel</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">Ket bremañ</string>
+
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title">Lakait %s da vezañ ho merdeer dre ziouer</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Lakait Firefox da vezañ ho merdeer dre ziouer</string>
+    <!-- Description for set firefox as default browser screen.
+        The first parameter is the Firefox brand name.
+        The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
+    <string name="juno_onboarding_default_browser_description">%1$s a lak an dud a-raok an arc’hant ha difenn a ra ho puhez prevez en ur stankañ an heulierien etre al lec’hiennoù. \n\nDeskit hiroc’h en hor %2$s.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox a lak an dud a-raok an arc’hant ha difenn a ra ho puhez prevez en ur stankañ an heulierien etre al lec’hiennoù. \n\nDeskit hiroc’h en hor evezhiadennoù a-fet buhez prevez.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">evezhiadennoù a-fet buhez prevez</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">Lakaat da verdeer dre ziouer</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button">Ket bremañ</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title">Tremenit deus ar pellgomz d’an urzhiataer hezoug hag ar c’hontrol</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">Adtapit ivinelloù ha gerioù-tremen diouzh ho trevnadoù all evit distreiñ e-lec’h ma oac’h.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button">Kennaskañ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button">Ket bremañ</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title">Gant ar rebuzadurioù e c’hallit ober muioc’h a draoù gant %s</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Gant ar rebuzadurioù e c’hallit ober muioc’h a draoù gant Firefox</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">Kasit ivinelloù etre ho trevnadoù, merit pellgargadurioù, lennit alioù evit tapout seizh gwellañ gwarez buhez prevez %s.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Kasit ivinelloù etre ho trevnadoù, merit pellgargadurioù, lennit alioù evit tapout seizh gwellañ gwarez buhez prevez Firefox.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button">Gweredekaat ar rebuzadurioù</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button">Ket bremañ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -322,6 +358,14 @@
     <string name="preferences_category_general">Hollek</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">A-zivout</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">Dibabit unan</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts">Merañ ar berradennoù klask</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">Embann al luskerioù a c’haller gwelet el lañser klask</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu">Luskerioù a c’haller gwelet el lañser klask</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Keflusker enklask dre ziouer</string>
     <!-- Preference for settings related to Search -->
@@ -353,12 +397,66 @@
     <string name="preferences_add_private_browsing_shortcut">Ouzhpennañ ur verradenn merdeiñ prevez</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Mod HTTPS-hepken</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Bihanadur banniel an toupinoù</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Bihanaat banniel an toupinoù</string>
+
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Diweredekaet</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Gweredekaet</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s a glask nac’hañ ar goulennoù toupinoù ent emgefreek pa vez skrammet ur banniel toupinoù.</string>
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Diweredekaet evit al lec’hienn-mañ</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Nullañ</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Goulenn vefe skoret</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Kas ur goulenn</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Goulenn vefe skoret al lec’hienn-mañ?</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">Goulenn kaset</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Gweredekaet evit al lec’hienn-mañ</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Goulenn skor kaset</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site">N’eo ket skoret al lec’hienn-mañ c’hoazh</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Gweredekaat bihanaat banniel an toupinoù evit %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Diweredekaat bihanaat banniel an toupinoù evit %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
+    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s n’hall ket nac’hañ ar goulennoù toupinoù war al lec’hienn-mañ. Gallout a rit goulenn e vefe skoret al lec’hienn-mañ en dazont.</string>
+
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s a skarzho toupinoù al lec’hienn-mañ hag adkargañ a raio ar bajenn. Skarzhañ an holl doupinoù a c’hallfe digennaskañ ac’hanoc’h pe goullonderiñ ho panerioù.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s a c’hall klask nac’hañ ent emgefreek ar goulennoù toupinoù war al lec’hiennoù skoret.</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title">Aotren %1$s da nac’hañ ar goulennoù toupinoù?</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body">%1$s a c’hall nac’hañ ent emgefreek goulennoù ar bannieloù toupinoù.</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">Ket bremañ</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Nebeutoc’h a c’houlennoù toupinoù a vo gwelet ganeoc’h</string>
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Aotren</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Klask kennaskañ ent emgefreek gant ar c’homenad HTTPS evit muioc’h a surentez.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Gweredekaet</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Diweredekaet</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Gweredekaet en holl ivinelloù</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Gweredekaet en ivinelloù prevez</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Gouzout hiroc’h</string>
     <!-- Option for the https only setting -->
@@ -427,13 +525,30 @@
     <string name="preferences_enable_autocomplete_urls">Leuniañ an ereoù ent emgefreek</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Digeriñ ereoù en arloadoù</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Atav</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Goulenn a-raok digeriñ</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Morse</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Ardoer pellgargañ diavaez</string>
+
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Gweredekaat kerzhlevr Gecko</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">O serriñ emañ an arload evit kemer e kont ar cheñchamantoù…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Askouezhioù</string>
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Rebuzadurioù</string>
+
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Aotreet</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">N’int ket aotreet</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -459,8 +574,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Gweladennet nevez ’zo</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
 
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket_2">Boued spered</string>
@@ -495,6 +608,17 @@
     <!-- Text for limited edition wallpapers title. -->
     <string name="wallpaper_limited_edition_title">Embannadur bevennet</string>
 
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">Dastumad nevez ar Mouezhioù Dizalc’h. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">Dastumad nevez ar Mouezhioù Dizalc’h.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Klaskit un tachad liv</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Dibabit ur skeudenn drekleur a blij deoc’h.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Dizoleiñ skeudennoù drekleur all</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Ne vez skoret an enlugellad-mañ</string>
@@ -503,6 +627,8 @@
     <string name="addon_already_installed">An enlugellad-mañ a zo bet staliet endeo</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Ardeiñ ar gont</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Goubredañ bremañ</string>
     <!-- Preference category for sync -->
@@ -639,17 +765,20 @@
     <!-- Title to show in alert when a lot of tabs are to be opened
     %d is a placeholder for the number of tabs that will be opened -->
     <string name="open_all_warning_title">Digeriñ %d a ivinelloù?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Digeriñ kement a ivinelloù a c’hallfe gorrekaat %s keit m’emañ ar pajennoù o kargañ. Sur oc’h e fell deoc’h kenderc’hel? </string>
     <!-- Dialog button text for confirming open all tabs -->
     <string name="open_all_warning_confirm">Digeriñ ivinelloù</string>
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Nullañ</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site">Lec’hienn %d</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">Lec’hiennoù %d</string>
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d bajenn</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d a bajennoù</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Ivinelloù serret nevez zo</string>
@@ -704,6 +833,13 @@
     <string name="close_tabs_after_one_week_summary">Serriñ goude ur sizhun</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Serriñ goude ur miz</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Digeriñ er bennbajenn</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Digeriñ en ivinell ziwezhañ</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Digeriñ er bennbajenn goude peder eurvezh</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -873,6 +1009,8 @@
     <string name="bookmark_menu_open_in_private_tab_button">Digeriñ war un ivinell brevez</string>
     <!-- Bookmark overflow menu open all in tabs button -->
     <string name="bookmark_menu_open_all_in_tabs_button">Digeriñ an holl en ivinelloù nevez</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">Digeriñ en holl ivinelloù prevez</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Dilemel</string>
     <!--Bookmark overflow menu save button -->
@@ -964,10 +1102,14 @@
     <string name="phone_feature_blocked_by_android">Stanket gant Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Nemedennoù</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Gweredekaet</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Diweredekaet</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Skoueriek</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Strizh</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Personelaet</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Aotren an aodio ha video</string>
 
@@ -1049,6 +1191,14 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Rannañ</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Enrollañ evel PDF</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">N’haller ket sevel ar PDF</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">N’haller ket moullañ</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Moullañ</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Kas dʼun trevnad</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1059,11 +1209,11 @@
     <string name="share_copy_link_to_clipboard">Eilañ er golver</string>
     <!-- Toast shown after copying link to clipboard -->
     <string name="toast_copy_link_to_clipboard">Eilet er golver</string>
-    <!-- An option from the three dot menu to into sync -->
-    <string moz:removedIn="107" name="sync_menu_sign_in" tools:ignore="UnusedResources">Kennaskañ evit goubredañ</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Kennaskañ ouzh Sync</string>
-     <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Goubredañ hag enrollañ ar roadennoù</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Kas dʼan holl drevnadoù</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Adkennaskañ da Sync</string>
@@ -1091,12 +1241,36 @@
     <string name="notification_pbm_delete_text_2">Serriñ an ivinelloù prevez</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
+
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">Prim ha prevez eo %1$s</string>
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Firefox a zo prim ha prevez</string>
     <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">Lakaat %1$s da verdeer dre ziouer</string>
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Lakaat Firefox da vezañ ho merdeer dre ziouer</string>
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Klask ar merdeiñ prevez</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">Merdeiñ hep toupin enrollet pe roll istor e %1$s</string>
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">Merdeiñ hep roud ebet</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">Ar merdeiñ prevez e %1$s ne enroll ket ho titouroù.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">Kregiñ gant ho klask kentañ</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">Klask un dra nes. Pe dizoloit un dra bennak plijus.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">Sikourit da wellaat Firefox en ul leuniañ ur sontadegig.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey">Kemer perzh er sontadeg</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey">Ket, trugarez</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1189,6 +1363,14 @@
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Kuitaat</string>
 
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">Mare da zilemel</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Dilemel a ra ar roll istor (an hini goubredet eus trevnadoù all ivez), toupinoù ha roadennoù merdeiñ.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Dilemel a ra ar roll istor (ar roll istor goubredet eus trevnadoù all en o zouez)</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">An eurvezh tremenet</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
     <string name="delete_history_prompt_button_today_and_yesterday">Hiziv ha dec’h</string>
     <!-- Radio button in the delete browsing data dialog to delete all history. -->
@@ -1215,21 +1397,24 @@
     <string name="delete_history_group_snackbar">Strollad dilemet</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string moz:RemovedIn="106" name="onboarding_header" tools:ignore="UnusedResources">Donemat war %s!</string>
-    <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
-    <string moz:removedIn="106" name="onboarding_account_sign_in_header_1" tools:ignore="UnusedResources">Goubredañ Firefox etre an trevnadoù</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_manual_sign_in_description_2" tools:ignore="UnusedResources">Degasit sinedoù, ur roll-istor ha gerioù-tremen evit %1$s war an trevnad-mañ.</string>
-    <!-- text for the button to manually sign into Firefox account. -->
-    <string moz:removedIn="106" name="onboarding_firefox_account_sign_in_1" tools:ignore="UnusedResources">En em rollañ</string>
+    <!-- Text for onboarding welcome header. -->
+    <string name="onboarding_header_2">Donemat war un internet gwelloc’h</string>
+    <!-- Text for the onboarding welcome message. -->
+    <string name="onboarding_message">Ur merdeer savet evit an dud ha n’eo ket ar gounidoù.</string>
+    <!-- Text for the Firefox account onboarding sign in card header. -->
+    <string name="onboarding_account_sign_in_header">Adloc’hit el lec’h m’ho peus paouezet</string>
+    <!-- Text for the button to learn more about signing in to your Firefox account. -->
+    <string name="onboarding_manual_sign_in_description">Goubredit an ivinelloù hag ar gerioù-tremen a-dreuz ho trevnadoù evit tremen eus ur skramm d’egile digudenn.</string>
+    <!-- Text for the button to manually sign into Firefox account. -->
+    <string name="onboarding_firefox_account_sign_in">Kennaskañ</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Enaouet eo Sync</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_header_3" tools:ignore="UnusedResources">Prevezded gweredekaet bepred</string>
-    <!-- text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string moz:removedIn="106" name="onboarding_tracking_protection_description_4" tools:ignore="UnusedResources">%1$s a harz en un doare emgefreek ouzh an embregerezhioù d’ho heuliañ dre guzh war ar web.</string>
+    <!-- Text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header">Gwarez ar vuhez prevez dre ziouer</string>
+    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
+    <string name="onboarding_tracking_protection_description_old">%1$s a harz en un doare emgefreek ouzh an embregerezhioù d’ho heuliañ dre guzh war ar web.</string>
+    <!-- Text for the tracking protection card description. -->
+    <string name="onboarding_tracking_protection_description">Gant ar gwarez a-enep an toupinoù e c’hallit harzañ heulierien da implij an toupinoù evit spiañ ac’hanoc’h a-dreuz al lec’hiennoù.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Skoueriek (dre ziouer)</string>
     <!-- text for standard blocking option button description -->
@@ -1240,16 +1425,17 @@
     <string name="onboarding_tracking_protection_strict_button_description_3">Stankañ muioc’h a heulierien hag ar pajennoù da gargañ buanoc’h, met arc’hweladurioù zo a c’hallo mont a-dreuz.</string>
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">Dibabit e pelec’h lakaat ho parrenn ostilhoù</string>
-    <!-- text for the toolbar position card description -->
-    <string moz:removedIn="106" name="onboarding_toolbar_placement_description_1" tools:ignore="UnusedResources">Lakait ar varrenn ostilhoù en ul lec’h aes da dizhout. Dalc’hit hi en traoñ pe diblasit anezhi e-krec’h.</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_header" tools:ignore="UnusedResources">Ho puhez prevez</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) Substitute %s for long browser name. -->
-    <string moz:removedIn="106" name="onboarding_privacy_notice_description2" tools:ignore="UnusedResources">Savet hon eus %s evit ma c’hallfec’h reoliñ ar pezh a rannit enlinenn hag ar pezh a rannit ganeomp.</string>
+    <!-- Text for the toolbar position card description -->
+    <string name="onboarding_toolbar_placement_description">Mirit anezhi en traoñ pe lakait anezhi en nec’h.</string>
+    <!-- Text for the privacy notice onboarding card header -->
+    <string name="onboarding_privacy_notice_header_1">Mestroniañ a rit ho roadennoù</string>
+    <!-- Text for the privacy notice onboarding card description. -->
+    <string name="onboarding_privacy_notice_description">Firefox a ro deoc’h ar galloud war ar pezh a c’hallit rannañ enlinenn hag ar pezh a rannit ganeomp.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Lennit hon evezhiadenn a-get buhez prevez</string>
 
+    <!-- Text for the conclusion onboarding message -->
+    <string name="onboarding_conclusion_header">Prest d’ober anaoudegezh gant un internet digredus?</string>
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Kregiñ da verdeiñ</string>
 
@@ -1302,22 +1488,22 @@
     <string name="etp_settings">Arventennoù gwarez</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Gwarez heuliañ araoket</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Merdeit hep bezañ heuliet</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Mirit ho roadennoù ganeoc’h. %s a warezo ac’hanoc’h a-enep d’an heulierien a sell ouzhoc’h enlinenn.</string>
+    <!-- Preference summary for enhanced tracking protection settings on/off switch -->
+    <string name="preference_enhanced_tracking_protection_summary">Bremañ gant ar gwarez e-enep an toupinoù, an harz brasañ a-enep an heulierien etre al lec’hiennoù an hini eo.</string>
+    <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s a warezo ac’hanoc’h a-enep d’an heulierien a sell ouzhoc’h enlinenn.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Gouzout hiroc’h</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Skoueriek (dre ziouer)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Kempouezet evit prevezded hag efedusted. Ar pajennoù a garg en un doare ordinal.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Ar pajennoù a gargo evel boaz, met ne vo ket stanket kement a heulier.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ar pezh a zo stanket gant ar gwarez heuliañ skoueriek</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strizh</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Stankañ muioc’h a heulierien hag ar pajennoù da gargañ buanoc’h, met arc’hweladurioù zo a c’hallo mont a-dreuz.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Gwarez heuliañ kreñvoc’h ha digonusted gwelloc’h, met lec’hiennoù ’zo a c’hallo chom hep mont en-dro.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ar pezh a zo stanket gant ar gwarez heuliañ strizh</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1337,6 +1523,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cookies_3">Holl doupinoù an tredeoù (gallout a ra mirout lec’hiennoù ’zo da vont en-dro en un doare dereat)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">An holl doupinoù (gallout a ra terriñ lec’hiennoù)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Digenvezañ an toupinoù etre-lec’hiennoù.</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Endalc’had heuliañ</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1359,8 +1547,12 @@
     <string name="etp_social_media_trackers_description">Bevenniñ a ra barregezh ar rouedadoù kevredadel da heuliañ hoc’h oberiantiz merdeiñ.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Toupinoù heuliañ etre lec’hiennoù</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">Toupinoù etrelec’hienn</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Stankañ a ra an toupinoù implijet gant ar rouedadoù bruderezh hag an embregerezhioù dielfennañ evit kempunañ ho roadennoù merdeiñ a-dreuz meur a lec’hienn.</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description_2">Ar gwarez toupinoù klok a vir toupinoù al lec’hienn m’emaoc’h warni, evel-se n’hall ket an heulierien ober ganto evit heuliañ ac’hanoc’h etre al lec’hiennoù.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Kriptogleuzerien</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1399,6 +1591,10 @@
     <string name="preference_etp_smartblock_description">Un nebeud heulierien merket a-zindan a zo bet damzistanket war ar bajenn-mañ peogwir ho peus etrewezhiet gante *.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Gouzout hiroc’h</string>
+
+    <!-- Content description (not visible, for screen readers etc.):
+    Enhanced tracking protection exception preference icon for ETP settings. -->
+    <string name="preference_etp_exceptions_icon_description">Arlun gwellvezioù an nemedennoù evit ar gwarez kreñvaet a-enep an heuliañ</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Skor</string>
@@ -1532,6 +1728,9 @@
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Lañser rummañ an titouroù kennaskañ</string>
 
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">Leuniañ ent emgefreek</string>
     <!-- Preference and title for managing the settings for addresses -->
     <string name="preferences_addresses">Chomlec’hioù</string>
     <!-- Preference and title for managing the settings for credit cards -->
@@ -1553,6 +1752,11 @@
     <string name="preferences_addresses_add_address">Ouzhpennañ ur chomlec’h</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Merañ ar chomlec’hioù</string>
+
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">Enrollañ ha leuniañ ar chomlec’hioù en un doare emgefreek</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Enkorfañ a ra titouroù evel niverennoù, posteloù ha chomlec’hioù</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Ouzhpennañ ur gartenn</string>
@@ -1624,6 +1828,12 @@
     <string name="addresses_street_address">Chomlec’h</string>
     <!-- The header for the city of an address -->
     <string name="addresses_city">Kêr</string>
+    <!-- The header for the subregion of an address when "state" should be used -->
+    <string name="addresses_state">Stad</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">Rannvro</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">Zip</string>
     <!-- The header for the country or region of an address -->
     <string name="addresses_country">Bro pe rannvro</string>
     <!-- The header for the phone number of an address -->
@@ -1650,6 +1860,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Ouzhpennañ ul lusker klask</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description">Ouzhpennañ ul lusker enklask nevez</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Embann al lusker klask</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1663,14 +1875,25 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">All</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label">Anv</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Anv</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2">Anv ar c’heflusker enklask</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label">URL ar chadenn glask</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Testenn glask da implij</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2">URL da implij evit ar c’hlask</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string formatted="false" name="search_add_custom_engine_search_string_example">Amsaviñ ar gerioù klasket gant “%s”. Da skouer: \nhttps://www.google.com/search?q= %s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Amsaviñ ar gerioù klasket gant “%s”. Da skouer: \nhttps://www.google.com/search?q= %s</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Munudoù al lusker klask personelaet</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button">Enrollañ</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Enankit anv al lusker klask</string>
@@ -1823,6 +2046,9 @@
     <!-- Content description for expanding the inactive tabs section. -->
     <string name="inactive_tabs_expand_content_description">Displegañ an ivinelloù dioberiant</string>
 
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">Bihanaat an ivinelloù dioberiant</string>
+
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Serriñ emgefreek goude ur miz?</string>
@@ -1833,6 +2059,15 @@
 
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Em-serriñ enaouet</string>
+
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox a ginnig</string>
+
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Klask Google</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">Klask %s</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Digeriñ liammoù al lec’hiennoù, posteloù ha kemennadennoù e Firefox en un doare emgefreek.</string>
@@ -1856,8 +2091,8 @@
     <string name="pocket_stories_categories_header">Istorioù dre dem</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Dizoloiñ muioc’h</string>
-    <!-- Title of an app feature. Smaller than a heading.-->
-    <string moz:removedIn="108" name="pocket_stories_feature_title" tools:ignore="UnusedResources">Galloudekaet gant Pocket.</string>
+    <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
+    <string name="pocket_stories_feature_title_2">Lusket gant %s.</string>
     <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
     <string name="pocket_stories_feature_caption">Ezel eus familh Firefox. %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
@@ -1870,6 +2105,16 @@
     <string name="experiments_snackbar">Gweredekaet ar pellventerezh evit kas roadennoù.</string>
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Mont d’an arventennoù</string>
-    <string name="firefox_suggest_header">Firefox a ginnig</string>
 
-    </resources>
+    <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
+    <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
+    <string name="a11y_action_label_collapse">bihanaat</string>
+    <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
+    <string name="a11y_action_label_expand">astenn</string>
+    <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
+    <string name="a11y_action_label_wallpaper_collection_learn_more">digeriñ an ere evit gouzout hiroc’h diwar-benn an dastumad-mañ </string>
+    <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
+    <string name="a11y_action_label_read_article">lenn ar pennad</string>
+    <!-- Action label for links to the Firefox Pocket website. Talkback will append this to say "Double tap to open link to learn more". -->
+    <string name="a11y_action_label_pocket_learn_more">digeriñ an ere da c’houzout hiroc’h</string>
+</resources>
