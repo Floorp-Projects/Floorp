@@ -153,15 +153,13 @@ const workspaceFunctions = {
           );
         }
       } else {
-        let tabsState = JSON.parse(
+        let tabsStates = JSON.parse(
           Services.prefs.getStringPref(WORKSPACE_TABS_PREF)
         );
         for (let i = 0; i < tabs.length; i++) {
-          let tabStateSetting = tabsState[i];
-          let workspace =
-            tabStateSetting?.[i]?.workspace ??
-            Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF);
-          tabs[i].setAttribute("floorp-workspace", workspace);
+          let tab = tabs[i];
+          let state = tabsStates[i][i].workspace;
+          tab.setAttribute("floorp-workspace", state);
         }
       }
 
@@ -815,24 +813,7 @@ const workspaceFunctions = {
   },
 };
 
-startWorkspace = function() {
-  let list = Services.wm.getEnumerator("navigator:browser");
-  while (list.hasMoreElements()) {
-    if (list.getNext() != window) {
-      return;
-    }
-  }
-
-  //run codes 
-  if (typeof gBrowser !== 'undefined') {
-    workspaceFunctions.manageWorkspaceFunctions.initWorkspace();
-  } else {
-    window.setTimeout(startWorkspace, 100);
-    return;
-  }
-
-  workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
-
+const setEvenyListeners = function() {
   gBrowser.tabContainer.addEventListener(
     "TabOpen",
     workspaceFunctions.eventListeners.tabAddEventListeners.handleTabOpen
@@ -865,6 +846,25 @@ startWorkspace = function() {
     "keydown",
     workspaceFunctions.eventListeners.keyboradEventListeners.handle_keydown
   );
+};
+
+startWorkspace = function() {
+  let list = Services.wm.getEnumerator("navigator:browser");
+  while (list.hasMoreElements()) {
+    if (list.getNext() != window) {
+      return;
+    }
+  }
+
+  //run codes 
+  if (typeof gBrowser !== 'undefined') {
+    window.setTimeout(workspaceFunctions.manageWorkspaceFunctions.initWorkspace, 200);
+    window.setTimeout(workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace, 400);
+    window.setTimeout(setEvenyListeners, 600);
+  } else {
+    window.setTimeout(startWorkspace, 100);
+    return;
+  }
 };
 
 startWorkspace();
