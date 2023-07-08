@@ -62,17 +62,17 @@ void AddSharedLibraryFromModuleInfo(SharedLibraryInfo& sharedLibraryInfo,
     return;
   }
 
-  // Load the module again to make sure that its handle will remain
-  // valid as we attempt to read the PDB information from it.  We load the
-  // DLL as a datafile so that we don't end up running the newly loaded
-  // module's DllMain function.  If the original handle |aModule| is valid,
-  // LoadLibraryEx just increments its refcount.
-  // LOAD_LIBRARY_AS_IMAGE_RESOURCE is needed to read information from the
-  // sections (not PE headers) which should be relocated by the loader,
-  // otherwise GetPdbInfo() will cause a crash.
-  nsModuleHandle handleLock(::LoadLibraryExW(
-      aModulePath, NULL,
-      LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE));
+  // Load the module again - to make sure that its handle will remain valid as
+  // we attempt to read the PDB information from it - or for the first time if
+  // we only have a path. We want to load the DLL without running the newly
+  // loaded module's DllMain function, but not as a data file because we want
+  // to be able to do RVA computations easily. Hence, we use the flag
+  // LOAD_LIBRARY_AS_IMAGE_RESOURCE which ensures that the sections (not PE
+  // headers) will be relocated by the loader. Otherwise GetPdbInfo() and/or
+  // GetVersionInfo() can cause a crash. If the original handle |aModule| is
+  // valid, LoadLibraryEx just increments its refcount.
+  nsModuleHandle handleLock(
+      ::LoadLibraryExW(aModulePath, NULL, LOAD_LIBRARY_AS_IMAGE_RESOURCE));
   if (!handleLock) {
     return;
   }
