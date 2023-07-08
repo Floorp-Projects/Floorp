@@ -25,7 +25,7 @@ jobs:
     - name: Get Display Version
       id: get
       run: |
-        echo "::set-output name=display-version::$(cat browser/config/version_display.txt)"
+       echo "display-version=$(cat browser/config/version_display.txt)" >> $GITHUB_OUTPUT
       
   Windows-x86_64-build-with-enable-profile-generate:
     name: Windows x86_64 Build with --enable-profile-generate
@@ -1172,19 +1172,13 @@ jobs:
 ######################################################## Integration #######################################################
 
   integration:
-    needs: [macOS-x86_64-build-with-profdata-and-jarlog, macOS-AArch64-build-with-profdata-and-jarlog, get-buildid]
+    needs: [macOS-x86_64-build-with-profdata-and-jarlog, macOS-AArch64-build-with-profdata-and-jarlog, get-display-version, get-buildid]
     runs-on: macos-latest
 
     steps:
-
-    - name: delete old artifacts 🗑️
-      run: |
-       rm -rf ./obj-x86_64-apple-darwin/dist/
-       rm -rf ./obj-aarch64-apple-darwin/dist/
-       rm -rf ~/downloads/artifacts
-       rm -rf ./floorp
-
     - uses: actions/checkout@v3
+      with:
+        ref: ESR115
 
     - name: download M1 build artifact 📥
       uses: actions/download-artifact@v3
@@ -1229,9 +1223,31 @@ jobs:
         ls -l ./obj-aarch64-apple-darwin/dist/
         echo "****************************************************************************************************"
 
-    - name: Integration 🗃 & Package 📦
+    - name: Integration 🗃
       run: |       
         ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/Floorp/Floorp.app ./obj-aarch64-apple-darwin/dist/Floorp/Floorp.app
+
+    - name: import APPLE DEVELOPER ID CERTIFICATE for .app 🔑
+      uses: apple-actions/import-codesign-certs@v2
+      with: 
+        p12-file-base64: ${{ secrets.macOS_CERTIFICATES_P12_For_App_BASE64 }}
+        p12-password: ${{ secrets.macOS_CERTIFICATES_P12_PASSWORD }}
+
+    - name: Sign to .app 🖋️
+      run: |
+        chmod +x ./floorp/codesign/codesign.bash
+
+        ./floorp/codesign/codesign.bash \
+          -a ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app \
+          -i "${{ secrets.macOS_AppleDeveloperId }}" \
+          -b ./floorp/codesign/browser.developer.entitlements.xml \
+          -p ./floorp/codesign/plugin-container.developer.entitlements.xml
+
+        echo "Sign Complete ! ****************************************" 
+        pkgutil --check-signature ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app
+
+    - name: Package 📦
+      run: |
         ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal-temp.dmg
         unzip ./.github/base.zip
         hdiutil attach ./floorp-macOS-universal-temp.dmg
@@ -1240,11 +1256,35 @@ jobs:
         hdiutil detach /Volumes/Floorp\ Installer/
         hdiutil convert ./base.dmg -format UDZO -imagekey zlib-level=9 -o floorp-macOS-universal.dmg
 
+    - name: Sign to .dmg 🖋️
+      run: |
+         codesign -s "${{ secrets.macOS_AppleDeveloperId }}" floorp-macOS-universal.dmg
+
+         xcrun notarytool submit "floorp-macOS-universal.dmg" \
+           --apple-id "${{ secrets.macOS_AppleAccountId }}" \
+           --team-id "${{ secrets.macOS_AppleTeamId }}" \
+           --password "${{ secrets.macOS_AppleAccountAppSpecificPassword }}" \
+           --wait
+
+         mkdir -p ./output
+         mv ./floorp-macOS-universal.dmg ./output/floorp-macOS-universal.dmg
+
+    - name: Create MAR artifact 📦
+      run: |
+        brew install tree
+        chmod +x ./floorp/browser/build/bin/mac/mar
+        chmod +x ./tools/update-packaging/make_full_update.sh
+
+        touch "obj-x86_64-apple-darwin/dist/floorp/precomplete"
+        MAR="floorp/browser/build/bin/mac/mar" MOMOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
+
     - name: Publish 🎁
       uses: actions/upload-artifact@v3
       with:
         name: Universal-Artifact
-        path: floorp-macOS-universal.dmg
+        path: |
+          ./output/floorp-macOS-universal.dmg
+          ./output/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar
 
 ######################################################## Cleanup #######################################################
 
@@ -1262,11 +1302,13 @@ jobs:
          floorp-x86_64-apple-darwin-profdata-and-jarlog
          floorp-aarch64-apple-darwin-profdata-and-jarlog
 
-  Deployments:
+  Deploy-to-installer:
     needs: [build-linux-x86_64-with-PGO, build-linux-aarch64, cleanup-uselss-artifacts, Windows-x86_64-build-with-profdata-and-jarlog, get-display-version]
     runs-on: ubuntu-latest
+    outputs:
+      upload-url : ${{ steps.create_release.outputs.upload_url }}
     environment: 
-      name: Deploy-to-stable-release
+      name: Deploy-to-installer-release
 
     steps:
     - uses: actions/checkout@v3
@@ -1316,6 +1358,7 @@ jobs:
         files: |
           /home/runner/downloads/artifacts/linux-x64/LINUX-x86_64-${{ needs.get-display-version.outputs.display-version }}.mar
           /home/runner/downloads/artifacts/linux-aarch64/LINUX-aarch64-${{ needs.get-display-version.outputs.display-version }}.mar
+          /home/runner/downloads/artifacts/macOS-x64/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar
           /home/runner/downloads/artifacts/linux-x64/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-x86_64.tar.bz2
           /home/runner/downloads/artifacts/linux-aarch64/floorp-${{ needs.get-display-version.outputs.display-version }}.en-US.linux-aarch64.tar.bz2
           /home/runner/downloads/artifacts/macOS-universal/floorp-macOS-universal.dmg
@@ -1327,6 +1370,17 @@ jobs:
       env:
         GITHUB_REPOSITORY: ${{ github.repository }}
 
+    - name: save upload_url 📝
+      run: |
+        echo "upload_url=${{ steps.create_release.outputs.assets }}" >> $GITHUB_ENV
+
+  Deploy-to-updater:
+    needs: [build-linux-x86_64-with-PGO, build-linux-aarch64, cleanup-uselss-artifacts, Windows-x86_64-build-with-profdata-and-jarlog, get-display-version, Deploy-to-installer]
+    runs-on: ubuntu-latest
+    environment: 
+      name: Deploy-to-updater-release
+    
+    steps:
     - name: Run GitHub Actions for Release x86_64 Linux MAR "Floorp-Projects/Floorp-Update" 🚀
       run: |
          curl -X POST \
@@ -1335,8 +1389,8 @@ jobs:
            "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
            -d '{
              "ref": "main",
-             "inputs": {
-               "mar-url": "${{ fromJSON(steps.create_release.outputs.assets)[0].browser_download_url }}",
+             "inputs": {{
+               "mar-url": "${{ fromJSON(needs.Deploy-to-installer.outputs.upload-url)[0].browser_download_url }}",
                "os": "Linux",
                "arch": "x86_64"
              }
@@ -1351,8 +1405,38 @@ jobs:
            -d '{
              "ref": "main",
              "inputs": {
-               "mar-url": "${{ fromJSON(steps.create_release.outputs.assets)[1].browser_download_url }}",
+               "mar-url": "${{ fromJSON(needs.Deploy-to-installer.outputs.upload-url)[1].browser_download_url }}",
                "os": "Linux",
+               "arch": "aarch64"
+             }
+           }'
+
+    - name: Run GitHub Actions for Release x86_64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+           -d '{
+             "ref": "main",
+             "inputs": {
+               "mar-url": "${{ fromJSON(needs.Deploy-to-installer.outputs.upload-url)[2].browser_download_url }}",
+               "os": "Darwin",
+               "arch": "x86_64"
+             }
+           }'
+
+    - name: Run GitHub Actions for Release aarch64 Darwin MAR "Floorp-Projects/Floorp-Update" 🚀
+      run: |
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp-Updates/actions/workflows/deliver-updates-to-floorp-browser.yml/dispatches" \
+           -d '{
+             "ref": "main",
+             "inputs": {
+               "mar-url": "${{ fromJSON(needs.Deploy-to-installer.outputs.upload-url)[2].browser_download_url }}",
+               "os": "Darwin",
                "arch": "aarch64"
              }
            }'
