@@ -68,10 +68,11 @@ jobs:
           flatpak install --user -y flathub org.mozilla.firefox.BaseApp//22.08 --no-deps
           cp -r ~/.local/share/flatpak/app/org.mozilla.firefox.BaseApp/current/active/files/* ./flatpak_build/tmp/
         elif [[ "$FLATPAK_ARCH" == "aarch64" ]]; then
+          aria2c '${{ inputs.tarball-url-aarch64 }}' -o floorp.tar.bz2
+
           if [ ! -d ./org.mozilla.firefox.BaseApp/build-dir/files ]; then
             sudo apt install qemu-system-arm qemu-user-static flatpak-builder
 
-            aria2c '${{ inputs.tarball-url-aarch64 }}' -o floorp.tar.bz2
             sudo flatpak install -y flathub org.freedesktop.Sdk/aarch64/22.08
             sudo flatpak install -y flathub org.freedesktop.Platform/aarch64/22.08
 
