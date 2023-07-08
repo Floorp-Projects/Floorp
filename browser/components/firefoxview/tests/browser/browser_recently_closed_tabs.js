@@ -6,9 +6,12 @@
 requestLongerTimeout(10);
 
 /**
- * Ensure that the add_new_tab, close_tab, and open_then_close
- * functions are creating sessionstore entries associated with
- * the correct window where the tests are run.
+ * The recently closed tab list is populated on a per-window basis.
+ *
+ * By default, the withFirefoxView helper opens fx view in the current window.
+ * This ensures that the add_new_tab, close_tab,
+ * and open_then_close functions are creating sessionstore entries
+ * associated with the correct window where the tests are run.
  */
 
 ChromeUtils.defineESModuleGetters(globalThis, {
@@ -113,7 +116,7 @@ add_task(async function test_empty_list() {
 add_task(async function test_list_ordering() {
   Services.obs.notifyObservers(null, "browser:purge-session-history");
   is(
-    SessionStore.getClosedTabCount(),
+    SessionStore.getClosedTabCountForWindow(window),
     0,
     "Closed tab count after purging session history"
   );
