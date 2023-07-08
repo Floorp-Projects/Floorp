@@ -1127,14 +1127,6 @@ pref("browser.sessionstore.resume_from_crash", true);
 pref("browser.sessionstore.resume_session_once", false);
 pref("browser.sessionstore.resuming_after_os_restart", false);
 
-// Toggle for the behavior to include closed tabs from all windows in
-// recently-closed tab lists & counts, and re-open tabs into the current window
-#ifdef NIGHTLY_BUILD
-  pref("browser.sessionstore.closedTabsFromAllWindows", true);
-#else
-  pref("browser.sessionstore.closedTabsFromAllWindows", false);
-#endif
-
 // Minimal interval between two save operations in milliseconds (while the user is idle).
 pref("browser.sessionstore.interval.idle", 3600000); // 1h
 

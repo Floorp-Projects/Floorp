@@ -68,14 +68,12 @@ function closeFirefoxViewTab(win) {
  *   The value returned by the task.
  */
 async function withFirefoxView(
-  { openNewWindow = false, resetFlowManager = true, win = null },
+  { openNewWindow = false, resetFlowManager = true },
   taskFn
 ) {
-  if (!win) {
-    win = openNewWindow
-      ? await BrowserTestUtils.openNewBrowserWindow()
-      : Services.wm.getMostRecentBrowserWindow();
-  }
+  const win = openNewWindow
+    ? await BrowserTestUtils.openNewBrowserWindow()
+    : Services.wm.getMostRecentBrowserWindow();
   if (resetFlowManager) {
     const { TabsSetupFlowManager } = ChromeUtils.importESModule(
       "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs"
