@@ -1422,10 +1422,12 @@ static nsIntRegion ResultChangeRegionForPrimitive(
       IntSize kernelSize = aConvolveMatrix.mKernelSize;
       IntPoint target = aConvolveMatrix.mTarget;
       nsIntMargin m(
-          ceil(kernelUnitLength.width * (target.x)),
-          ceil(kernelUnitLength.height * (target.y)),
-          ceil(kernelUnitLength.width * (kernelSize.width - target.x - 1)),
-          ceil(kernelUnitLength.height * (kernelSize.height - target.y - 1)));
+          static_cast<int32_t>(ceil(kernelUnitLength.width * (target.x))),
+          static_cast<int32_t>(ceil(kernelUnitLength.height * (target.y))),
+          static_cast<int32_t>(
+              ceil(kernelUnitLength.width * (kernelSize.width - target.x - 1))),
+          static_cast<int32_t>(ceil(kernelUnitLength.height *
+                                    (kernelSize.height - target.y - 1))));
       return mInputChangeRegions[0].Inflated(m);
     }
 
@@ -1798,10 +1800,12 @@ static nsIntRegion SourceNeededRegionForPrimitive(
       IntSize kernelSize = aConvolveMatrix.mKernelSize;
       IntPoint target = aConvolveMatrix.mTarget;
       nsIntMargin m(
-          ceil(kernelUnitLength.width * (kernelSize.width - target.x - 1)),
-          ceil(kernelUnitLength.height * (kernelSize.height - target.y - 1)),
-          ceil(kernelUnitLength.width * (target.x)),
-          ceil(kernelUnitLength.height * (target.y)));
+          static_cast<int32_t>(
+              ceil(kernelUnitLength.width * (kernelSize.width - target.x - 1))),
+          static_cast<int32_t>(ceil(kernelUnitLength.height *
+                                    (kernelSize.height - target.y - 1))),
+          static_cast<int32_t>(ceil(kernelUnitLength.width * (target.x))),
+          static_cast<int32_t>(ceil(kernelUnitLength.height * (target.y))));
       return mResultNeededRegion.Inflated(m);
     }
 

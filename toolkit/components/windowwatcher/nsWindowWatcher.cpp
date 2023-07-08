@@ -2346,14 +2346,14 @@ static void SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
             winHeight = height + extraHeight;
           }
           if (winHeight > screenCssSize.height) {
-            height = screenCssSize.height - extraHeight;
+            height = static_cast<int32_t>(screenCssSize.height - extraHeight);
           }
           if (width < 100) {
             width = 100;
             winWidth = width + extraWidth;
           }
           if (winWidth > screenCssSize.width) {
-            width = screenCssSize.width - extraWidth;
+            width = static_cast<int32_t>(screenCssSize.width - extraWidth);
           }
         } else {
           int32_t targetContentWidth = 0;

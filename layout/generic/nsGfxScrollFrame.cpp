@@ -1835,7 +1835,7 @@ void nsHTMLScrollFrame::ScrollByLine(nsScrollbarFrame* aScrollbar,
   if (isHorizontal) {
     const double kScrollMultiplier =
         StaticPrefs::toolkit_scrollbox_horizontalScrollDistance();
-    delta.x = aDirection * kScrollMultiplier;
+    delta.x = static_cast<int32_t>(aDirection * kScrollMultiplier);
     if (GetLineScrollAmount().width * delta.x > GetPageScrollAmount().width) {
       // The scroll frame is so small that the delta would be more
       // than an entire page.  Scroll by one page instead to maintain
@@ -1846,7 +1846,7 @@ void nsHTMLScrollFrame::ScrollByLine(nsScrollbarFrame* aScrollbar,
   } else {
     const double kScrollMultiplier =
         StaticPrefs::toolkit_scrollbox_verticalScrollDistance();
-    delta.y = aDirection * kScrollMultiplier;
+    delta.y = static_cast<int32_t>(aDirection * kScrollMultiplier);
     if (GetLineScrollAmount().height * delta.y > GetPageScrollAmount().height) {
       // The scroll frame is so small that the delta would be more
       // than an entire page.  Scroll by one page instead to maintain
