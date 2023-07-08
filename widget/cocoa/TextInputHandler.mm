@@ -4297,9 +4297,9 @@ NSUInteger IMEInputHandler::CharacterIndexForPoint(NSPoint& aPoint) {
   NSPoint ptInWindow = nsCocoaUtils::ConvertPointFromScreen(mainWindow, aPoint);
   NSPoint ptInView = [mView convertPoint:ptInWindow fromView:nil];
   queryCharAtPointEvent.mRefPoint.x =
-      static_cast<int32_t>(ptInView.x) * mWidget->BackingScaleFactor();
+      static_cast<int32_t>(ptInView.x * mWidget->BackingScaleFactor());
   queryCharAtPointEvent.mRefPoint.y =
-      static_cast<int32_t>(ptInView.y) * mWidget->BackingScaleFactor();
+      static_cast<int32_t>(ptInView.y * mWidget->BackingScaleFactor());
   mWidget->DispatchWindowEvent(queryCharAtPointEvent);
   if (queryCharAtPointEvent.Failed() || queryCharAtPointEvent.DidNotFindChar() ||
       queryCharAtPointEvent.mReply->StartOffset() >= static_cast<uint32_t>(NSNotFound)) {

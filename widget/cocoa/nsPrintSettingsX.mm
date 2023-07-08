@@ -254,10 +254,10 @@ void nsPrintSettingsX::SetFromPrintInfo(NSPrintInfo* aPrintInfo, bool aAdoptPrin
     SetPaperHeight(PaperSizeFromCocoaPoints(paperSize.width));
   }
 
-  mUnwriteableMargin.top = [aPrintInfo topMargin];
-  mUnwriteableMargin.right = [aPrintInfo rightMargin];
-  mUnwriteableMargin.bottom = [aPrintInfo bottomMargin];
-  mUnwriteableMargin.left = [aPrintInfo leftMargin];
+  mUnwriteableMargin.top = static_cast<int32_t>([aPrintInfo topMargin]);
+  mUnwriteableMargin.right = static_cast<int32_t>([aPrintInfo rightMargin]);
+  mUnwriteableMargin.bottom = static_cast<int32_t>([aPrintInfo bottomMargin]);
+  mUnwriteableMargin.left = static_cast<int32_t>([aPrintInfo leftMargin]);
 
   if (aAdoptPrintInfo) {
     // Keep a reference to the printInfo; it may have settings that we don't know how to handle
