@@ -916,16 +916,6 @@ class Marionette(object):
         finally:
             self.set_prefs(original_prefs, default_branch=default_branch)
 
-    @contextmanager
-    def using_socket_timeout(self, timeout):
-        socket_timeout = self.client.socket_timeout
-        self.client.socket_timeout = timeout
-
-        try:
-            yield
-        finally:
-            self.client.socket_timeout = socket_timeout
-
     @do_process_check
     def enforce_gecko_prefs(self, prefs):
         """Checks if the running instance has the given prefs. If not,
