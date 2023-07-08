@@ -56,13 +56,13 @@ add_task(async function test_only_file_migrators() {
     await changedToSelectionPage;
 
     // No browser migrators should be listed.
-    let browserMigratorItems = shadow.querySelectorAll(
+    let browserMigratorItems = wizard.querySelectorAll(
       `panel-item[type="${MigrationWizardConstants.MIGRATOR_TYPES.BROWSER}"]`
     );
     Assert.ok(!browserMigratorItems.length, "No browser migrators listed.");
 
     // Check to make sure there's at least one file migrator listed.
-    let fileMigratorItems = shadow.querySelectorAll(
+    let fileMigratorItems = wizard.querySelectorAll(
       `panel-item[type="${MigrationWizardConstants.MIGRATOR_TYPES.FILE}"]`
     );
 
