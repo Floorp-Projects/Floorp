@@ -212,6 +212,7 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "mozilla/net/UrlClassifierCommon.h"
+#include "mozilla/Tokenizer.h"
 #include "mozilla/widget/IMEData.h"
 #include "nsAboutProtocolUtils.h"
 #include "nsAlgorithm.h"
@@ -7510,6 +7511,77 @@ bool nsContentUtils::ContainsForbiddenMethod(const nsACString& headerValue) {
   return hasInsecureMethod;
 }
 
+Maybe<nsContentUtils::ParsedRange> nsContentUtils::ParseSingleRangeRequest(
+    const nsACString& aHeaderValue, bool aAllowWhitespace) {
+  // See https://fetch.spec.whatwg.org/#simple-range-header-value
+  mozilla::Tokenizer p(aHeaderValue);
+  Maybe<uint32_t> rangeStart;
+  Maybe<uint32_t> rangeEnd;
+
+  // Step 2 and 3
+  if (!p.CheckWord("bytes")) {
+    return Nothing();
+  }
+
+  // Step 4
+  if (aAllowWhitespace) {
+    p.SkipWhites();
+  }
+
+  // Step 5 and 6
+  if (!p.CheckChar('=')) {
+    return Nothing();
+  }
+
+  // Step 7
+  if (aAllowWhitespace) {
+    p.SkipWhites();
+  }
+
+  // Step 8 and 9
+  int32_t res;
+  if (p.ReadInteger(&res)) {
+    rangeStart = Some(res);
+  }
+
+  // Step 10
+  if (aAllowWhitespace) {
+    p.SkipWhites();
+  }
+
+  // Step 11
+  if (!p.CheckChar('-')) {
+    return Nothing();
+  }
+
+  // Step 13
+  if (aAllowWhitespace) {
+    p.SkipWhites();
+  }
+
+  // Step 14 and 15
+  if (p.ReadInteger(&res)) {
+    rangeEnd = Some(res);
+  }
+
+  // Step 16
+  if (!p.CheckEOF()) {
+    return Nothing();
+  }
+
+  // Step 17
+  if (!rangeStart && !rangeEnd) {
+    return Nothing();
+  }
+
+  // Step 18
+  if (rangeStart && rangeEnd && *rangeStart > *rangeEnd) {
+    return Nothing();
+  }
+
+  return Some(ParsedRange(rangeStart, rangeEnd));
+}
+
 // static
 bool nsContentUtils::IsCorsUnsafeRequestHeaderValue(
     const nsACString& aHeaderValue) {
@@ -7579,6 +7651,19 @@ bool nsContentUtils::IsAllowedNonCorsLanguage(const nsACString& aHeaderValue) {
   return true;
 }
 
+bool nsContentUtils::IsAllowedNonCorsRange(const nsACString& aHeaderValue) {
+  Maybe<ParsedRange> parsedRange = ParseSingleRangeRequest(aHeaderValue, false);
+  if (!parsedRange) {
+    return false;
+  }
+
+  if (!parsedRange->Start()) {
+    return false;
+  }
+
+  return true;
+}
+
 // static
 bool nsContentUtils::IsCORSSafelistedRequestHeader(const nsACString& aName,
                                                    const nsACString& aValue) {
@@ -7593,7 +7678,9 @@ bool nsContentUtils::IsCORSSafelistedRequestHeader(const nsACString& aName,
          (aName.LowerCaseEqualsLiteral("content-language") &&
           nsContentUtils::IsAllowedNonCorsLanguage(aValue)) ||
          (aName.LowerCaseEqualsLiteral("content-type") &&
-          nsContentUtils::IsAllowedNonCorsContentType(aValue));
+          nsContentUtils::IsAllowedNonCorsContentType(aValue)) ||
+         (aName.LowerCaseEqualsLiteral("range") &&
+          nsContentUtils::IsAllowedNonCorsRange(aValue));
 }
 
 mozilla::LogModule* nsContentUtils::ResistFingerprintingLog() {
