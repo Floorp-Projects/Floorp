@@ -880,11 +880,18 @@ void Theme::PaintRange(nsIFrame* aFrame, PaintBackendData& aPaintData,
     tickMarkSize = LayoutDeviceSize(tickMarkHeight, tickMarkWidth);
     thumbRect.x = aRect.x + (aRect.width - thumbRect.width) / 2;
 
-    thumbRect.y =
-        aRect.y + (aRect.height - thumbRect.height) * (1.0 - progress);
-    float midPoint = thumbRect.Center().Y();
-    trackClipRect.SetBoxY(aRect.Y(), midPoint);
-    progressClipRect.SetBoxY(midPoint, aRect.YMost());
+    if (rangeFrame->IsUpwards()) {
+      thumbRect.y =
+          aRect.y + (aRect.height - thumbRect.height) * (1.0 - progress);
+      float midPoint = thumbRect.Center().Y();
+      trackClipRect.SetBoxY(aRect.Y(), midPoint);
+      progressClipRect.SetBoxY(midPoint, aRect.YMost());
+    } else {
+      thumbRect.y = aRect.y + (aRect.height - thumbRect.height) * progress;
+      float midPoint = thumbRect.Center().Y();
+      trackClipRect.SetBoxY(midPoint, aRect.YMost());
+      progressClipRect.SetBoxY(aRect.Y(), midPoint);
+    }
   }
 
   const CSSCoord borderWidth = 1.0f;

@@ -13,7 +13,6 @@
 <style>
   input[type=range] {
     writing-mode: vertical-lr;
-    direction: rtl; /* so the range progresses upwards, not downwards */
   }
 </style>
 <input type=range list=tickmarks min=-5 max=35>
@@ -24,16 +23,19 @@
 <script>
   const range = document.querySelector("input[type=range]");
   promise_test(async function snapToVerticalTickMarks() {
+    // Same assertions as range-snap-to-tick-marks-03, but without direction:rtl the range
+    // will progress downwards instead of upwards, so the coord calculation is reversed
+    // in the y-direction.
     const assertions = [[-3, "-3"], [-2, "0"], [1, "0"], [2, "3"], [5, "3"], [6, "6"]];
     const rect = range.getBoundingClientRect();
     const padding = 10;
-    const bottom = rect.bottom - padding;
+    const top = rect.top + padding;
     const height = rect.height - 2 * padding;
     const actions = new test_driver.Actions();
     const min = parseInt(range.min);
     const max = parseInt(range.max);
     for (const assertion of assertions) {
-      const moveTo = (bottom - height * (assertion[0] - min) / (max - min)) | 0;
+      const moveTo = (top + height * (assertion[0] - min) / (max - min)) | 0;
       const expected = assertion[1];
       await actions
           .pointerMove(rect.left, moveTo)
