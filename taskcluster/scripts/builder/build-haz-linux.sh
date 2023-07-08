@@ -142,20 +142,20 @@ function check_hazards () {
 
     if [ $NUM_HAZARDS -gt 0 ]; then
         echo "TEST-UNEXPECTED-FAIL | hazards | $NUM_HAZARDS rooting hazards detected" >&2
-        echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_rooting_hazards_failure'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
+        echo "TinderboxPrint: documentation<br/><a href='https://firefox-source-docs.mozilla.org/js/HazardAnalysis/#diagnosing-a-rooting-hazards-failure'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
         exit_status=1
     fi
 
     if [ $NUM_MISSING -gt 0 ]; then
         echo "TEST-UNEXPECTED-FAIL | hazards | $NUM_MISSING expected hazards went undetected" >&2
-        echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_rooting_hazards_failure'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
+        echo "TinderboxPrint: documentation<br/><a href='https://firefox-source-docs.mozilla.org/js/HazardAnalysis/#diagnosing-a-rooting-hazards-failure'>static rooting hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
         exit_status=1
     fi
 
     NUM_ALLOWED_WRITE_HAZARDS=0
     if [ $NUM_WRITE_HAZARDS -gt $NUM_ALLOWED_WRITE_HAZARDS ]; then
         echo "TEST-UNEXPECTED-FAIL | heap-write-hazards | $NUM_WRITE_HAZARDS heap write hazards detected out of $NUM_ALLOWED_WRITE_HAZARDS allowed" >&2
-        echo "TinderboxPrint: documentation<br/><a href='https://wiki.mozilla.org/Javascript:Hazard_Builds#Diagnosing_a_heap_write_hazard_failure'>heap write hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
+        echo "TinderboxPrint: documentation<br/><a href='https://firefox-source-docs.mozilla.org/js/HazardAnalysis/#diagnosing-a-heap-write-hazard-failure'>heap write hazard analysis failures</a>, visit \"Inspect Task\" link for hazard details"
         exit_status = 1
     fi
 

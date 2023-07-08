@@ -10,9 +10,9 @@ The summary output will include either the string `<N> rooting hazards detected`
 
 ## Diagnosing a rooting hazards failure
 
-Click on the `H` build link, select the "Artifacts" pane on the bottom left, and download the `public/build/hazards.txt.gz` file.
+Click on the `H` build link, select the "Artifacts" pane on the bottom left, and download the `public/build/hazards.txt.gz` and `public/build/hazards.html.gz` files. The HTML file is most useful when running the analysis locally, since it will link to the exact parts of the code in question, but it's easier to talk about the text file here.
 
-Example snippet:
+Example snippet from `hazards.txt`:
 
     Function 'jsopcode.cpp:uint8 DecompileExpressionFromStack(JSContext*, int32, int32, class JS::Handle<JS::Value>, int8**)' has unrooted 'ed' of type 'ExpressionDecompiler' live across GC call 'uint8 ExpressionDecompiler::decompilePC(uint8*)' at js/src/jsopcode.cpp:1866
         js/src/jsopcode.cpp:1866: Assume(74,75, !__temp_23*, true)
@@ -39,11 +39,11 @@ Example snippet:
 
 This means that a rooting hazard was discovered at `js/src/jsopcode.cpp` line 1866, in the function `DecompileExpressionFromStack` (it is prefixed with the filename because it's a static function.) The problem is that there is an unrooted variable `ed` that holds an `ExpressionDecompiler` live across a call to `decompilePC`. "Live" means that the variable is used after the call to `decompilePC` returns. `decompilePC` may trigger a GC according to the static call stack given starting from the line beginning with "`GC Function:`".
 
-The hazard itself has some barely comprehensible `Assume(...)` and `Call(...)` gibberish that describes the exact data flow path of the variable into the function call. That stuff is rarely useful -- usually, you'll only need to look at it if it's complaining about a temporary and you want to know where the temporary came from. The type `ExpressionDecompiler` is believed to hold pointers to GC-controlled objects of some sort. The analysis currently does not describe the exact field it is worried about.
+The hazard itself has some barely comprehensible `Assume(...)` and `Call(...)` [gibberish][CFG] that describes the exact data flow path of the variable into the function call. That stuff is rarely useful -- usually, you'll only need to look at it if it's complaining about a temporary and you want to know where the temporary came from. The type `ExpressionDecompiler` is believed to hold pointers to GC-controlled objects of some sort. The analysis currently does not describe the exact field it is worried about.
 
 To unpack this a little, the analysis is saying the following can happen:
 
-* `ExpressionDecompiler` contains some pointer to a GC thing. For example, it might have a field `obj` of type `JSObject*`.
+* `ExpressionDecompiler` contains some pointer to a GC thing. For example, it might have a field `obj` of type `JSObject*`. (There is a `gcTypes.txt` file inside `hazardIntermediates.tar.xz` that will give the detailed explanation for all types.)
 * `DecompileExpressionFromStack` is called.
 * A pointer is stored in that field of the `ed` variable.
 * `decompilePC` is invoked, which calls `ValueToSource`, which calls `Invoke`, which eventually calls `js::MinorGC`
@@ -51,6 +51,8 @@ To unpack this a little, the analysis is saying the following can happen:
 * After `decompilePC` returns, something accesses `ed.obj`. This is now a stale pointer, and may refer to just about anything -- the wrong object, an invalid object, or whatever. As TeX would say, **badness 10000**.
 
 ## Diagnosing a heap write hazard failure
+
+OBSOLETE: The heap write hazard analysis has not been updated in years and is looking for things that no longer exist, and therefore will always report zero problems.
 
 For the thread unsafe heap write analysis, a hazard means that some Gecko_* function calls, directly or indirectly, code that writes to something on the heap, or calls an unknown function that *might* write to something on the heap. The analysis requires quite a few annotations to describe things that are actually safe. This section will be expanded as we gain more experience with the analysis, but here are some common issues:
 
