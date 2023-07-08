@@ -1276,7 +1276,7 @@ jobs:
         chmod +x ./tools/update-packaging/make_full_update.sh
 
         touch "obj-x86_64-apple-darwin/dist/floorp/precomplete"
-        MAR="floorp/browser/build/bin/mac/mar" MOMOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
+        MAR="floorp/browser/build/bin/mac/mar" MOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal-${{ needs.get-display-version.outputs.display-version }}.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
 
     - name: Publish 🎁
       uses: actions/upload-artifact@v3
