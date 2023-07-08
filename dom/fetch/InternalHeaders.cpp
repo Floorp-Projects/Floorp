@@ -148,7 +148,6 @@ bool InternalHeaders::DeleteInternal(const nsCString& aLowerName,
 }
 
 void InternalHeaders::Delete(const nsACString& aName, ErrorResult& aRv) {
-  // See https://fetch.spec.whatwg.org/#dom-headers-delete
   nsAutoCString lowerName;
   ToLowerCase(aName, lowerName);
 
@@ -157,33 +156,36 @@ void InternalHeaders::Delete(const nsACString& aName, ErrorResult& aRv) {
     return;
   }
 
+  // Step 2
   if (IsImmutable(aRv)) {
     return;
   }
 
+  // Step 3
   nsAutoCString value;
   GetInternal(lowerName, value, aRv);
   if (IsForbiddenRequestHeader(lowerName, value)) {
     return;
   }
 
-  // Step 2
+  // Step 4
   if (mGuard == HeadersGuardEnum::Request_no_cors &&
       !IsNoCorsSafelistedRequestHeaderName(lowerName) &&
       !IsPrivilegedNoCorsRequestHeaderName(lowerName)) {
     return;
   }
 
+  // Step 5
   if (IsForbiddenResponseHeader(lowerName)) {
     return;
   }
 
-  // Steps 3, 4, and 5
+  // Steps 6 and 7
   if (!DeleteInternal(lowerName, aRv)) {
     return;
   }
 
-  // Step 6
+  // Step 8
   if (mGuard == HeadersGuardEnum::Request_no_cors) {
     RemovePrivilegedNoCorsRequestHeaders();
   }
@@ -350,9 +352,7 @@ bool InternalHeaders::IsSimpleHeader(const nsCString& aName,
          (aName.EqualsIgnoreCase("content-language") &&
           nsContentUtils::IsAllowedNonCorsLanguage(aValue)) ||
          (aName.EqualsIgnoreCase("content-type") &&
-          nsContentUtils::IsAllowedNonCorsContentType(aValue)) ||
-         (aName.EqualsIgnoreCase("range") &&
-          nsContentUtils::IsAllowedNonCorsRange(aValue));
+          nsContentUtils::IsAllowedNonCorsContentType(aValue));
 }
 
 // static
