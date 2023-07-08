@@ -2157,12 +2157,6 @@ var gMainPane = {
     if (!migrationWizardDialog.firstElementChild) {
       let wizard = document.createElement("migration-wizard");
       wizard.toggleAttribute("dialog-mode", true);
-
-      let panelList = document.createElement("panel-list");
-      let panel = document.createXULElement("panel");
-      panel.appendChild(panelList);
-      wizard.appendChild(panel);
-
       migrationWizardDialog.appendChild(wizard);
     }
     migrationWizardDialog.firstElementChild.requestState();

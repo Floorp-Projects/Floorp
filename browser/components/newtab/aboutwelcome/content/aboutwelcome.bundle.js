@@ -1918,7 +1918,7 @@ const EmbeddedMigrationWizard = ({
   return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("migration-wizard", {
     "auto-request-state": "",
     ref: ref
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("panel-list", null));
+  });
 };
 
 /***/ }),

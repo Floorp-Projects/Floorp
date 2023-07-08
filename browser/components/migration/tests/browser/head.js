@@ -335,12 +335,12 @@ async function selectResourceTypesAndStartMigration(
   selector.click();
 
   await new Promise(resolve => {
-    wizard
+    shadow
       .querySelector("panel-list")
       .addEventListener("shown", resolve, { once: true });
   });
 
-  let panelItem = wizard.querySelector(`panel-item[key="${migratorKey}"]`);
+  let panelItem = shadow.querySelector(`panel-item[key="${migratorKey}"]`);
   panelItem.click();
 
   // And then check the right checkboxes for the resource types.
