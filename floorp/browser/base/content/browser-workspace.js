@@ -859,8 +859,8 @@ startWorkspace = function() {
   //run codes 
   if (typeof gBrowser !== 'undefined') {
     window.setTimeout(workspaceFunctions.manageWorkspaceFunctions.initWorkspace, 200);
-    window.setTimeout(workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace, 400);
-    window.setTimeout(setEvenyListeners, 600);
+    window.setTimeout(workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace, 900);
+    window.setTimeout(setEvenyListeners, 1100);
   } else {
     window.setTimeout(startWorkspace, 100);
     return;
