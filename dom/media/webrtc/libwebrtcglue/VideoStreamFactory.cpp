@@ -7,8 +7,20 @@
 #include "VideoStreamFactory.h"
 
 #include "common/browser_logging/CSFLog.h"
-#include "nsThreadUtils.h"
 #include "VideoConduit.h"
+
+#include <algorithm>
+#include "api/video_codecs/video_codec.h"
+#include <cmath>
+#include <limits>
+#include "mozilla/Assertions.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/TemplateLib.h"
+#include "rtc_base/time_utils.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <vector>
+#include "video/config/video_encoder_config.h"
 
 template <class t>
 void ConstrainPreservingAspectRatio(uint16_t aMaxWidth, uint16_t aMaxHeight,
@@ -147,9 +159,8 @@ std::vector<webrtc::VideoStream> VideoStreamFactory::CreateEncoderStreams(
     frameRateController->Reset();
   }
 
-  for (int idx = streamCount - 1; idx >= 0; --idx) {
+  for (const auto& encoding : mCodecConfig.mEncodings) {
     webrtc::VideoStream video_stream;
-    auto& encoding = mCodecConfig.mEncodings[idx];
     video_stream.active = encoding.active;
     MOZ_ASSERT(encoding.constraints.scaleDownBy >= 1.0);
 
