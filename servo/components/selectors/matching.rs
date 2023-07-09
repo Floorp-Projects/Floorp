@@ -902,7 +902,7 @@ where
 }
 
 #[inline(always)]
-fn select_name<'a, E: Element, T: PartialEq>(
+pub fn select_name<'a, E: Element, T: PartialEq>(
     element: &E,
     local_name: &'a T,
     local_name_lower: &'a T,
@@ -915,7 +915,7 @@ fn select_name<'a, E: Element, T: PartialEq>(
 }
 
 #[inline(always)]
-fn to_unconditional_case_sensitivity<'a, E: Element>(
+pub fn to_unconditional_case_sensitivity<'a, E: Element>(
     parsed: ParsedCaseSensitivity,
     element: &E,
 ) -> CaseSensitivity {
