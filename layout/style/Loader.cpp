@@ -904,15 +904,22 @@ nsresult Loader::CheckContentPolicy(nsIPrincipal* aLoadingPrincipal,
 }
 
 static void RecordUseCountersIfNeeded(Document* aDoc,
-                                      const StyleUseCounters* aCounters) {
-  if (!aDoc || !aCounters) {
+                                      const StyleSheet& aSheet) {
+  if (!aDoc) {
     return;
   }
   const StyleUseCounters* docCounters = aDoc->GetStyleUseCounters();
   if (!docCounters) {
     return;
   }
-  Servo_UseCounters_Merge(docCounters, aCounters);
+  if (aSheet.URLData()->ChromeRulesEnabled()) {
+    return;
+  }
+  auto* sheetCounters = aSheet.GetStyleUseCounters();
+  if (!sheetCounters) {
+    return;
+  }
+  Servo_UseCounters_Merge(docCounters, sheetCounters);
   aDoc->MaybeWarnAboutZoom();
 }
 
@@ -959,7 +966,7 @@ std::tuple<RefPtr<StyleSheet>, Loader::SheetState> Loader::CreateSheet(
       if (cacheResult.mCompleteValue) {
         sheet = cacheResult.mCompleteValue->Clone(nullptr, nullptr);
         mDocument->SetDidHitCompleteSheetCache();
-        RecordUseCountersIfNeeded(mDocument, sheet->GetStyleUseCounters());
+        RecordUseCountersIfNeeded(mDocument, *sheet);
         mLoadsPerformed.PutEntry(key);
       } else {
         MOZ_ASSERT(cacheResult.mLoadingOrPendingValue);
@@ -1555,7 +1562,7 @@ Loader::Completed Loader::ParseSheet(const nsACString& aBytes,
 }
 
 void Loader::NotifyObservers(SheetLoadData& aData, nsresult aStatus) {
-  RecordUseCountersIfNeeded(mDocument, aData.mSheet->GetStyleUseCounters());
+  RecordUseCountersIfNeeded(mDocument, *aData.mSheet);
   RefPtr loadDispatcher = aData.PrepareLoadEventIfNeeded();
   if (aData.mURI) {
     mLoadsPerformed.PutEntry(SheetLoadDataHashKey(aData));

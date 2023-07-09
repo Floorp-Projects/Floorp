@@ -125,6 +125,18 @@ add_task(async function () {
   await testNestedResourceUpdateFeature();
 });
 
+function pushAvailableResource(availableResources) {
+  // TODO(bug 1826538): Find a better way of dealing with these.
+  return function (resources) {
+    for (const resource of resources) {
+      if (resource.href?.startsWith("resource://")) {
+        continue;
+      }
+      availableResources.push(resource);
+    }
+  };
+}
+
 async function testResourceAvailableFeature() {
   info("Check resource available feature of the ResourceCommand");
 
@@ -143,7 +155,7 @@ async function testResourceAvailableFeature() {
   info("Check whether ResourceCommand gets existing stylesheet");
   const availableResources = [];
   await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
-    onAvailable: resources => availableResources.push(...resources),
+    onAvailable: pushAvailableResource(availableResources),
   });
 
   is(
@@ -238,7 +250,7 @@ async function testResourceUpdateFeature() {
   const availableResources = [];
   const updates = [];
   await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
-    onAvailable: resources => availableResources.push(...resources),
+    onAvailable: pushAvailableResource(availableResources),
     onUpdated: newUpdates => updates.push(...newUpdates),
   });
   is(
@@ -376,7 +388,7 @@ async function testNestedResourceUpdateFeature() {
   const availableResources = [];
   const updates = [];
   await resourceCommand.watchResources([resourceCommand.TYPES.STYLESHEET], {
-    onAvailable: resources => availableResources.push(...resources),
+    onAvailable: pushAvailableResource(availableResources),
     onUpdated: newUpdates => updates.push(...newUpdates),
   });
   is(

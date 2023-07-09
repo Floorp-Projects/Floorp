@@ -1,18 +1,13 @@
 <!DOCTYPE HTML>
-<html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
 -->
-<head>
-  <meta charset="utf-8">
-  <title>Test for Bug 1020244 - Test the chrome-only AnonymousContent API</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
+<meta charset="utf-8">
+<title>Test for Bug 1020244 - Test the chrome-only AnonymousContent API</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1020244">Mozilla Bug 1020244</a>
-  <script type="application/javascript">
-
+<script>
   // Testing the presence of the chrome-only API
   ok(!document.insertAnonymousContent,
     "Content document shouldn't have access to insertAnonymousContent");
@@ -25,32 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
   ok(chromeDocument.removeAnonymousContent,
     "Chrome document should have access to removeAnonymousContent");
 
-  // Testing invalid inputs
-  let invalidNodes = [null, undefined, false, 1, "string"];
-  for (let node of invalidNodes) {
-    let didThrow = false;
-    try {
-      chromeDocument.insertAnonymousContent(node);
-    } catch (e) {
-      didThrow = true;
-    }
-    ok(didThrow, "Passing an invalid node to insertAnonymousContent should throw");
-  }
-
   // Testing the API of the returned object
+  let anonymousContent = chromeDocument.insertAnonymousContent();
+  ok(anonymousContent, "AnonymousContent object returned");
   let div = document.createElement("div");
   div.textContent = "this is a test element";
-  let anonymousContent = chromeDocument.insertAnonymousContent(div);
-  ok(anonymousContent, "AnonymousContent object returned");
-
-  let members = ["getTextContentForElement", "setTextContentForElement",
-                 "getAttributeForElement", "setAttributeForElement",
-                 "removeAttributeForElement", "getCanvasContext",
-                 "setAnimationForElement", "setStyle"];
-  for (let member of members) {
-    ok(member in anonymousContent, "AnonymousContent object defines " + member);
-  }
+  anonymousContent.root.appendChild(div);
   chromeDocument.removeAnonymousContent(anonymousContent);
-  </script>
-</body>
-</html>
+</script>

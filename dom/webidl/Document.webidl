@@ -506,20 +506,14 @@ partial interface Document {
  * Chrome document anonymous content management.
  * This is a Chrome-only API that allows inserting fixed positioned anonymous
  * content on top of the current page displayed in the document.
- * The supplied content is cloned and inserted into the document's CanvasFrame.
- * Note that this only works for HTML documents.
  */
 partial interface Document {
   /**
-   * Deep-clones the provided element and inserts it into the CanvasFrame.
-   * Returns an AnonymousContent instance that can be used to manipulate the
-   * inserted element.
-   *
    * If aForce is true, tries to update layout to be able to insert the element
    * synchronously.
    */
   [ChromeOnly, NewObject, Throws]
-  AnonymousContent insertAnonymousContent(Element aElement, optional boolean aForce = false);
+  AnonymousContent insertAnonymousContent(optional boolean aForce = false);
 
   /**
    * Removes the element inserted into the CanvasFrame given an AnonymousContent

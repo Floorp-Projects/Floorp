@@ -274,6 +274,7 @@ RESOURCE_FILES += [
 
 CONTENT_ACCESSIBLE_FILES += [
     "ImageDocument.css",
+    "res/accessiblecaret.css",
     "res/details.css",
     "res/plaintext.css",
     "res/searchfield-cancel.svg",
