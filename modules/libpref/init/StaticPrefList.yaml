@@ -2515,6 +2515,12 @@
   value: true
   mirror: always
 
+# Whether Shift+Right click force-opens the context menu
+- name: dom.event.contextmenu.shift_suppresses_event
+  type: bool
+  value: true
+  mirror: always
+
 # Whether touch event listeners are passive by default.
 - name: dom.event.default_to_passive_touch_listeners
   type: bool
