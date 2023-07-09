@@ -292,12 +292,6 @@ pref("network.tickle-wifi.enabled", true);
 // Hide common parts of URLs like "www." or "http://"
 pref("browser.urlbar.trimURLs", true);
 
-// Shortnumber matching needed for e.g. Brazil:
-// 01187654321 can be found with 87654321
-pref("dom.phonenumber.substringmatching.BR", 8);
-pref("dom.phonenumber.substringmatching.CO", 10);
-pref("dom.phonenumber.substringmatching.VE", 7);
-
 // The mode of home provider syncing.
 // 0: Sync always
 // 1: Sync only when on wifi
