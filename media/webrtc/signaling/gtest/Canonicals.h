@@ -29,8 +29,6 @@ class ConcreteCanonicals {
         INIT_CANONICAL(mLocalRecvRtpExtensions, RtpExtList()),
         INIT_CANONICAL(mRemoteSsrc, 0),
         INIT_CANONICAL(mRemoteVideoRtxSsrc, 0),
-        INIT_CANONICAL(mFrameTransformerProxySend, nullptr),
-        INIT_CANONICAL(mFrameTransformerProxyRecv, nullptr),
         INIT_CANONICAL(mAudioRecvCodecs, std::vector<AudioCodecConfig>()),
         INIT_CANONICAL(mAudioSendCodec, Nothing()),
         INIT_CANONICAL(mVideoRecvCodecs, std::vector<VideoCodecConfig>()),
@@ -51,8 +49,6 @@ class ConcreteCanonicals {
   Canonical<RtpExtList> mLocalRecvRtpExtensions;
   Canonical<Ssrc> mRemoteSsrc;
   Canonical<Ssrc> mRemoteVideoRtxSsrc;
-  Canonical<RefPtr<FrameTransformerProxy>> mFrameTransformerProxySend;
-  Canonical<RefPtr<FrameTransformerProxy>> mFrameTransformerProxyRecv;
 
   Canonical<std::vector<AudioCodecConfig>> mAudioRecvCodecs;
   Canonical<Maybe<AudioCodecConfig>> mAudioSendCodec;
@@ -106,14 +102,6 @@ class ConcreteControl : public AudioConduitControlInterface,
   }
   Canonical<RtpExtList>& CanonicalLocalSendRtpExtensions() override {
     return mLocalSendRtpExtensions;
-  }
-  Canonical<RefPtr<FrameTransformerProxy>>& CanonicalFrameTransformerProxySend()
-      override {
-    return mFrameTransformerProxySend;
-  }
-  Canonical<RefPtr<FrameTransformerProxy>>& CanonicalFrameTransformerProxyRecv()
-      override {
-    return mFrameTransformerProxyRecv;
   }
 
   // AudioConduitControlInterface

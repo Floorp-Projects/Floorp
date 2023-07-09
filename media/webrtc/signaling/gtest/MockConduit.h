@@ -9,7 +9,6 @@
 
 #include "gmock/gmock.h"
 #include "MediaConduitInterface.h"
-#include "libwebrtcglue/FrameTransformer.h"
 
 namespace webrtc {
 std::ostream& operator<<(std::ostream& aStream,
