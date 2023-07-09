@@ -1754,6 +1754,13 @@ void VideoFrame::Close() {
   mDisplaySize = gfx::IntSize();
 }
 
+already_AddRefed<layers::Image> VideoFrame::GetImage() const {
+  if (!mResource) {
+    return nullptr;
+  }
+  return do_AddRef(mResource->mImage);
+}
+
 // https://w3c.github.io/webcodecs/#ref-for-deserialization-steps%E2%91%A0
 /* static */
 JSObject* VideoFrame::ReadStructuredClone(
