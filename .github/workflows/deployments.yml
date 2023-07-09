@@ -1460,3 +1460,16 @@ jobs:
            -d '{
              "ref": "ESR115"
            }'
+
+    - name: Run GitHub Actions for update latest.json 🚀
+      run: |
+         curl -X POST \
+           -H "Authorization: token ${{ secrets.PAT }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           "https://api.github.com/repos/Floorp-Projects/Floorp/actions/workflows/linux-build-aarch64-deb.yml/dispatches" \
+           -d '{
+            "ref": "main",
+            "inputs": {
+              "display-version": "${{ needs.get-display-version.outputs.display-version }}"
+            }
+          }'
