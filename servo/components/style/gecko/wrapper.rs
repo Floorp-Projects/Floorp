@@ -598,11 +598,6 @@ impl<'le> GeckoElement<'le> {
         }
     }
 
-    #[inline]
-    fn iter_attrs(&self) -> impl Iterator<Item = &structs::AttrArray_InternalAttr> {
-        self.attrs().iter()
-    }
-
     #[inline(always)]
     fn get_part_attr(&self) -> Option<&structs::nsAttrValue> {
         if !self.has_part_attr() {
@@ -1192,7 +1187,7 @@ impl<'le> TElement for GeckoElement<'le> {
     where
         F: FnMut(&AtomIdent),
     {
-        for attr in self.iter_attrs() {
+        for attr in self.attrs() {
             unsafe {
                 AtomIdent::with(attr.mName.name(), |a| callback(a))
             }
@@ -1828,7 +1823,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
     }
 
     fn has_attr_in_no_namespace(&self, local_name: &LocalName) -> bool {
-        for attr in self.iter_attrs() {
+        for attr in self.attrs() {
             if attr.mName.mBits == local_name.as_ptr() as usize {
                 return true;
             }
@@ -1842,7 +1837,7 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
         local_name: &LocalName,
         operation: &AttrSelectorOperation<&AttrValue>,
     ) -> bool {
-        snapshot_helpers::attr_matches(self.iter_attrs(), ns, local_name, operation)
+        snapshot_helpers::attr_matches(self.attrs(), ns, local_name, operation)
     }
 
     #[inline]

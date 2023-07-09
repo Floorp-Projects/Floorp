@@ -227,14 +227,14 @@ pub fn classes_changed<E: TElement>(element: &E, snapshots: &SnapshotMap) -> Sma
 }
 
 /// Returns whether a given attribute selector matches given the internal attrs.
-pub(crate) fn attr_matches<'a>(
-    iter: impl Iterator<Item = &'a structs::AttrArray_InternalAttr>,
+pub(crate) fn attr_matches(
+    attrs: &[structs::AttrArray_InternalAttr],
     ns: &NamespaceConstraint<&Namespace>,
     local_name: &LocalName,
     operation: &AttrSelectorOperation<&AttrValue>,
 ) -> bool {
     let name_ptr = local_name.as_ptr();
-    for attr in iter {
+    for attr in attrs {
         if attr.mName.name() != name_ptr {
             continue;
         }

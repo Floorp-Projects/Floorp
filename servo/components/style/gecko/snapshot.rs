@@ -90,7 +90,7 @@ impl GeckoElementSnapshot {
         local_name: &LocalName,
         operation: &AttrSelectorOperation<&AttrValue>,
     ) -> bool {
-        snapshot_helpers::attr_matches(self.mAttrs.iter(), ns, local_name, operation)
+        snapshot_helpers::attr_matches(&self.mAttrs, ns, local_name, operation)
     }
 }
 
