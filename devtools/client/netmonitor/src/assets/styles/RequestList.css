@@ -336,7 +336,7 @@
 }
 
 .security-state-broken {
-  background-image: url(chrome://devtools/skin/images/error-small.svg);
+  background-image: url(resource://devtools-shared-images/error-small.svg);
   width: 16px;
   fill: var(--theme-icon-error-color);
 }

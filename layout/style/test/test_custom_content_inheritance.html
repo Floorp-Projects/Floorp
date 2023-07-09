@@ -6,20 +6,18 @@
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script>
 onload = function() {
-  try {
-    let doc = SpecialPowers.wrap(document);
-    let div = doc.createElement('div');
-    div.id = "test-id";
-    ok(!!doc.insertAnonymousContent,
-       "Must have the insertAnonymousContent API");
-    let content = doc.insertAnonymousContent(div);
-    ok(!!content, "Must have anon content");
-    isnot(content.getComputedStylePropertyValue("test-id", "color"),
-          getComputedStyle(document.documentElement).color,
-          "Custom anon content shouldn't inherit from the root element");
-  } catch(e) {
-    ok(false, "Threw: " + e);
-  }
+  let doc = SpecialPowers.wrap(document);
+  let div = doc.createElement('div');
+  div.id = "test-id";
+  ok(!!doc.insertAnonymousContent,
+     "Must have the insertAnonymousContent API");
+  let content = doc.insertAnonymousContent();
+  ok(!!content, "Must have anon content");
+  content.root.appendChild(div);
+  let color = SpecialPowers.wrap(window).getComputedStyle(div).color;
+  ok(!!color, "Should be able to get a color");
+  isnot(color, getComputedStyle(document.documentElement).color,
+        "Custom anon content shouldn't inherit from the root element");
   SimpleTest.finish();
 };
 SimpleTest.waitForExplicitFinish();

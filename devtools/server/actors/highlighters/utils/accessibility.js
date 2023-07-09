@@ -205,7 +205,8 @@ class Infobar {
    */
   getTextContent(id) {
     const anonymousContent = this.markup.content;
-    return anonymousContent.getTextContentForElement(`${this.prefix}${id}`);
+    return anonymousContent.root.getElementById(`${this.prefix}${id}`)
+      .textContent;
   }
 
   /**

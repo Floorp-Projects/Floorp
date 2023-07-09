@@ -3,64 +3,33 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
 -->
-<head>
-  <meta charset="utf-8">
-  <title>Test for Bug 1020244 - Manipulate content created with the AnonymousContent API</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-</head>
-<body>
+<meta charset="utf-8">
+<title>Test for Bug 1020244 - Manipulate content created with the AnonymousContent API</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1020244">Mozilla Bug 1020244</a>
 <div>
   <div id="test-element" class="test-class" test="test">text content</div>
 </div>
-  <script type="application/javascript">
-
+<script>
   // Insert content
   let chromeDocument = SpecialPowers.wrap(document);
   let testElement = document.querySelector("div");
-  let anonymousContent = chromeDocument.insertAnonymousContent(testElement);
+  let anonymousContent = chromeDocument.insertAnonymousContent();
+  anonymousContent.root.appendChild(testElement.cloneNode(true));
 
   // Test getting/setting text content.
-  is(anonymousContent.getTextContentForElement("test-element"),
+  is(anonymousContent.root.getElementById("test-element").textContent,
     "text content", "Textcontent for the test element is correct");
 
-  anonymousContent.setTextContentForElement("test-element",
-    "updated text content");
-  is(anonymousContent.getTextContentForElement("test-element"),
+  let anonTestElement = anonymousContent.root.getElementById("test-element");
+  anonTestElement.textContent =
+    "updated text content";
+  is(anonTestElement.textContent,
     "updated text content",
     "Textcontent for the test element is correct after update");
 
-  // Test that modifying the original DOM element doesn't change the inserted
-  // element.
-  testElement.removeAttribute("test");
-  is(anonymousContent.getAttributeForElement("test-element", "test"),
-    "test",
-    "Removing attributes on the original DOM node does not change the inserted node");
-
-  testElement.setAttribute("test", "test-updated");
-  is(anonymousContent.getAttributeForElement("test-element", "test"),
-    "test",
-    "Setting attributes on the original DOM node does not change the inserted node");
-
-  // Test getting/setting/removing attributes on the inserted element and test
-  // that this doesn't change the original DOM element.
-  is(anonymousContent.getAttributeForElement("test-element", "class"),
-    "test-class", "Class attribute for the test element is correct");
-
-  anonymousContent.setAttributeForElement("test-element", "class",
-    "updated-test-class");
-  is(anonymousContent.getAttributeForElement("test-element", "class"),
-    "updated-test-class",
-    "Class attribute for the test element is correct after update");
-  ok(testElement.getAttribute("class") !== "updated-test-class",
-    "Class attribute change on the inserted node does not change the original DOM node");
-
-  anonymousContent.removeAttributeForElement("test-element", "class");
-  is(anonymousContent.getAttributeForElement("test-element", "class"), null,
-    "Class attribute for the test element was removed");
-
-  let anim = anonymousContent.setAnimationForElement("test-element", [
+  let anim = anonTestElement.animate([
     { transform: 'translateY(0px)' },
     { transform: 'translateY(-300px)' }
   ], 2000);
@@ -69,6 +38,4 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1020244
   is(anim.playState, "idle", "Animation should have stopped immediately");
 
   chromeDocument.removeAnonymousContent(anonymousContent);
-  </script>
-</body>
-</html>
+</script>

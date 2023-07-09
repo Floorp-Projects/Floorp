@@ -110,6 +110,7 @@ class AnonymousContentOverlay {
     }
     return this._content;
   }
+
   async initialize() {
     if (this._initialized) {
       return;
@@ -118,24 +119,12 @@ class AnonymousContentOverlay {
     let document = this.contentDocument;
     let window = document.ownerGlobal;
 
-    // Inject stylesheet
     if (!this.overlayFragment) {
-      try {
-        window.windowUtils.loadSheetUsingURIString(
-          STYLESHEET_URL,
-          window.windowUtils.AGENT_SHEET
-        );
-      } catch {
-        // The method fails if the url is already loaded.
-      }
-      // Inject markup for the overlay UI
       this.overlayFragment = this.buildOverlay();
     }
 
-    this._content = document.insertAnonymousContent(
-      this.overlayFragment.children[0]
-    );
-
+    this._content = document.insertAnonymousContent();
+    this._content.root.appendChild(this.overlayFragment.cloneNode(true));
     this.addEventListeners();
 
     const hoverElementBox = new HoverElementBox(
@@ -304,6 +293,7 @@ class AnonymousContentOverlay {
 
     const htmlString = `
     <div id="screenshots-component">
+      <link rel="stylesheet" href="${STYLESHEET_URL}">
       <div id="${this.overlayId}">
         <div id="${this.previewId}">
           <div class="fixed-container">
@@ -1047,18 +1037,22 @@ class AnonLayer {
     this.content = content;
   }
 
+  _element(id) {
+    return this.content.root.getElementById(id);
+  }
+
   /**
    * Show element with id this.id
    */
   show() {
-    this.content.removeAttributeForElement(this.id, "style");
+    this._element(this.id).style = "";
   }
 
   /**
    * Hide element with id this.id
    */
   hide() {
-    this.content.setAttributeForElement(this.id, "style", "display:none;");
+    this._element(this.id).style.display = "none";
   }
 }
 
@@ -1097,11 +1091,9 @@ class HoverElementBox extends AnonLayer {
       let width =
         rect.left + rect.width > maxWidth ? maxWidth - rect.left : rect.width;
 
-      this.content.setAttributeForElement(
-        this.id,
-        "style",
-        `top:${top}px;left:${left}px;height:${height}px;width:${width}px;`
-      );
+      this._element(
+        this.id
+      ).style = `top:${top}px;left:${left}px;height:${height}px;width:${width}px;`;
     }
   }
 
@@ -1304,38 +1296,17 @@ class HoverElementBox extends AnonLayer {
    * get the screenshots elements as the elements from a given point
    */
   setPointerEventsNone() {
-    this.content.setAttributeForElement(
-      "screenshots-component",
-      "style",
-      "pointer-events:none;"
-    );
-
-    let temp = this.content.getAttributeForElement(
-      "screenshots-overlay-container",
-      "style"
-    );
-    this.content.setAttributeForElement(
-      "screenshots-overlay-container",
-      "style",
-      temp + "pointer-events:none;"
-    );
+    this._element("screenshots-component").style.pointerEvents = "none";
+    this._element("screenshots-overlay-container").style.pointerEvents = "none";
   }
 
   /**
    * Return the pointer events to the original state because we found the element
    */
   resetPointerEvents() {
-    this.content.setAttributeForElement("screenshots-component", "style", "");
+    this._element("screenshots-component").style.pointerEvents = "";
 
-    let temp = this.content.getAttributeForElement(
-      "screenshots-overlay-container",
-      "style"
-    );
-    this.content.setAttributeForElement(
-      "screenshots-overlay-container",
-      "style",
-      temp.replace("pointer-events:none;", "")
-    );
+    this._element("screenshots-overlay-container").style.pointerEvents = "";
   }
 }
 
@@ -1599,35 +1570,21 @@ class SelectionBox extends AnonLayer {
    * Draw the selected region for screenshotting
    */
   show() {
-    this.content.setAttributeForElement(
-      "highlight",
-      "style",
-      `top:${this.top}px;left:${this.left}px;height:${this.height}px;width:${this.width}px;`
-    );
-
-    this.content.setAttributeForElement(
-      "bgTop",
-      "style",
-      `top:0px;height:${this.top}px;left:0px;width:100%;`
-    );
-
-    this.content.setAttributeForElement(
-      "bgBottom",
-      "style",
-      `top:${this.bottom}px;height:calc(100% - ${this.bottom}px);left:0px;width:100%;`
-    );
-
-    this.content.setAttributeForElement(
-      "bgLeft",
-      "style",
-      `top:${this.top}px;height:${this.height}px;left:0px;width:${this.left}px;`
-    );
-
-    this.content.setAttributeForElement(
-      "bgRight",
-      "style",
-      `top:${this.top}px;height:${this.height}px;left:${this.right}px;width:calc(100% - ${this.right}px);`
-    );
+    this._element(
+      "highlight"
+    ).style = `top:${this.top}px;left:${this.left}px;height:${this.height}px;width:${this.width}px;`;
+    this._element(
+      "bgTop"
+    ).style = `top:0px;height:${this.top}px;left:0px;width:100%;`;
+    this._element(
+      "bgBottom"
+    ).style = `top:${this.bottom}px;height:calc(100% - ${this.bottom}px);left:0px;width:100%;`;
+    this._element(
+      "bgLeft"
+    ).style = `top:${this.top}px;height:${this.height}px;left:0px;width:${this.left}px;`;
+    this._element(
+      "bgRight"
+    ).style = `top:${this.top}px;height:${this.height}px;left:${this.right}px;width:calc(100% - ${this.right}px);`;
   }
 
   /**
@@ -1647,11 +1604,9 @@ class SelectionBox extends AnonLayer {
    * Hide the selected region
    */
   hide() {
-    this.content.setAttributeForElement("highlight", "style", "display:none;");
-    this.content.setAttributeForElement("bgTop", "style", "display:none;");
-    this.content.setAttributeForElement("bgBottom", "style", "display:none;");
-    this.content.setAttributeForElement("bgLeft", "style", "display:none;");
-    this.content.setAttributeForElement("bgRight", "style", "display:none;");
+    for (let id of ["highlight", "bgTop", "bgBottom", "bgLeft", "bgRight"]) {
+      this._element(id).style = `display:none;`;
+    }
   }
 
   /**
@@ -1826,11 +1781,7 @@ class ButtonsLayer extends AnonLayer {
       leftOrRight = `left:${boxLeft}px;`;
     }
 
-    this.content.setAttributeForElement(
-      "buttons",
-      "style",
-      `top:${top}px;${leftOrRight}`
-    );
+    this._element("buttons").style = `top:${top}px;${leftOrRight}`;
   }
 }
 
@@ -1850,8 +1801,8 @@ class PreviewLayer extends AnonLayer {
     const xpos = Math.floor((10 * (clientX - width / 2)) / width);
     const ypos = Math.floor((10 * (clientY - height / 2)) / height);
     const move = `transform:translate(${xpos}px, ${ypos}px);`;
-    this.content.setAttributeForElement("left-eye", "style", move);
-    this.content.setAttributeForElement("right-eye", "style", move);
+    this._element("left-eye").style = move;
+    this._element("right-eye").style = move;
   }
 }
 
@@ -2135,11 +2086,9 @@ class ScreenshotsContainerLayer extends AnonLayer {
    * Draw the screenshots container
    */
   drawScreenshotsContainer() {
-    this.content.setAttributeForElement(
-      this.id,
-      "style",
-      `top:0;left:0;width:${this.#width}px;height:${this.#height}px;`
-    );
+    this._element(this.id).style = `top:0;left:0;width:${
+      this.#width
+    }px;height:${this.#height}px;`;
   }
 
   get hoverElementBoxRect() {

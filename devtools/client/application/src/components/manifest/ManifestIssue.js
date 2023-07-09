@@ -44,7 +44,7 @@ class ManifestIssue extends PureComponent {
       case MANIFEST_ISSUE_LEVELS.ERROR:
       default:
         return {
-          src: "chrome://devtools/skin/images/error-small.svg",
+          src: "resource://devtools-shared-images/error-small.svg",
           localizationId: "icon-error",
         };
     }
