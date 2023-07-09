@@ -106,7 +106,7 @@ If you are using Linux, please show the [Linux](#linux) section.
 
 ### 📧 Contact
 
-- [Official Support Site](https://support.a📄blaze.one)
+- [Official Support Site](https://support.ablaze.one)
 
 - [Official Floorp Twitter](https://twitter.com/Floorp_Browser) or [Official Ablaze Twitter](https://twitter.com/Ablaze_MIRAI)
 
