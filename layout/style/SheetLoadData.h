@@ -18,7 +18,7 @@
 #include "nsProxyRelease.h"
 
 namespace mozilla {
-class LoadBlockingAsyncEventDispatcher;
+class AsyncEventDispatcher;
 class StyleSheet;
 }  // namespace mozilla
 class nsICSSLoaderObserver;
@@ -37,6 +37,8 @@ static_assert(eAuthorSheetFeatures == 0 && eUserSheetFeatures == 1 &&
                   eAgentSheetFeatures == 2,
               "sheet parsing mode constants won't fit "
               "in SheetLoadData::mParsingMode");
+
+enum class SyncLoad : bool { No, Yes };
 
 class SheetLoadData final
     : public PreloaderBase,
@@ -57,30 +59,26 @@ class SheetLoadData final
   void StartPendingLoad();
 
   // Data for loading a sheet linked from a document
-  SheetLoadData(css::Loader* aLoader, const nsAString& aTitle, nsIURI* aURI,
-                StyleSheet* aSheet, bool aSyncLoad, nsINode* aOwningNode,
-                IsAlternate aIsAlternate, MediaMatched aMediaMatched,
-                StylePreloadKind aPreloadKind, nsICSSLoaderObserver* aObserver,
-                nsIPrincipal* aTriggeringPrincipal,
-                nsIReferrerInfo* aReferrerInfo);
+  SheetLoadData(css::Loader*, const nsAString& aTitle, nsIURI*, StyleSheet*,
+                SyncLoad, nsINode* aOwningNode, IsAlternate, MediaMatched,
+                StylePreloadKind, nsICSSLoaderObserver* aObserver,
+                nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*);
 
   // Data for loading a sheet linked from an @import rule
-  SheetLoadData(css::Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
-                SheetLoadData* aParentData, nsICSSLoaderObserver* aObserver,
-                nsIPrincipal* aTriggeringPrincipal,
-                nsIReferrerInfo* aReferrerInfo);
+  SheetLoadData(css::Loader*, nsIURI*, StyleSheet*, SheetLoadData* aParentData,
+                nsICSSLoaderObserver* aObserver,
+                nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*);
 
   // Data for loading a non-document sheet
-  SheetLoadData(css::Loader* aLoader, nsIURI* aURI, StyleSheet* aSheet,
-                bool aSyncLoad, UseSystemPrincipal, StylePreloadKind,
+  SheetLoadData(css::Loader*, nsIURI*, StyleSheet*, SyncLoad,
+                UseSystemPrincipal, StylePreloadKind,
                 const Encoding* aPreloadEncoding,
                 nsICSSLoaderObserver* aObserver,
-                nsIPrincipal* aTriggeringPrincipal,
-                nsIReferrerInfo* aReferrerInfo);
+                nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo*);
 
   nsIReferrerInfo* ReferrerInfo() const { return mReferrerInfo; }
 
-  already_AddRefed<LoadBlockingAsyncEventDispatcher> PrepareLoadEventIfNeeded();
+  already_AddRefed<AsyncEventDispatcher> PrepareLoadEventIfNeeded();
 
   NotNull<const Encoding*> DetermineNonBOMEncoding(const nsACString& aSegment,
                                                    nsIChannel*) const;
@@ -254,7 +252,10 @@ class SheetLoadData final
   bool IsPreload() const { return mPreloadKind != StylePreloadKind::None; }
   bool IsLinkRelPreload() const { return css::IsLinkRelPreload(mPreloadKind); }
 
-  bool BlocksLoadEvent() const { return !RootLoadData().IsLinkRelPreload(); }
+  bool BlocksLoadEvent() const {
+    const auto& root = RootLoadData();
+    return !root.IsLinkRelPreload() && !root.IsSyncLoad();
+  }
 
   bool IsSyncLoad() const override { return mSyncLoad; }
   bool IsLoading() const override { return mIsLoading; }
