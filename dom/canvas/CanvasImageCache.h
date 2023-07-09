@@ -6,7 +6,9 @@
 #ifndef CANVASIMAGECACHE_H_
 #define CANVASIMAGECACHE_H_
 
+#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsSize.h"
 
 namespace mozilla {
@@ -37,7 +39,8 @@ class CanvasImageCache {
                               dom::HTMLCanvasElement* aCanvas,
                               gfx::DrawTarget* aTarget, SourceSurface* aSource,
                               const gfx::IntSize& aSize,
-                              const gfx::IntSize& aIntrinsicSize);
+                              const gfx::IntSize& aIntrinsicSize,
+                              const Maybe<gfx::IntRect>& aCropRect);
 
   /**
    * Check whether aImage has recently been drawn any canvas. If we return
@@ -54,7 +57,8 @@ class CanvasImageCache {
                                      dom::HTMLCanvasElement* aCanvas,
                                      gfx::DrawTarget* aTarget,
                                      gfx::IntSize* aSizeOut,
-                                     gfx::IntSize* aIntrinsicSizeOut);
+                                     gfx::IntSize* aIntrinsicSizeOut,
+                                     Maybe<gfx::IntRect>* aCropRectOut);
 };
 
 }  // namespace mozilla

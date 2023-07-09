@@ -671,6 +671,77 @@ void ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv) {
   mPictureRect = FixUpNegativeDimension(aRect, aRv);
 }
 
+SurfaceFromElementResult ImageBitmap::SurfaceFrom(uint32_t aSurfaceFlags) {
+  SurfaceFromElementResult sfer;
+
+  if (!mData) {
+    return sfer;
+  }
+
+  // An ImageBitmap, not being a DOM element, only has `origin-clean`
+  // (via our `IsWriteOnly`), and does not participate in CORS.
+  // Right now we mark this by setting mCORSUsed to true.
+  sfer.mCORSUsed = true;
+  sfer.mIsWriteOnly = mWriteOnly;
+
+  if (mParent) {
+    sfer.mPrincipal = mParent->PrincipalOrNull();
+  }
+
+  IntSize imageSize(mData->GetSize());
+  IntRect imageRect(IntPoint(0, 0), imageSize);
+  bool hasCropRect = mPictureRect.IsEqualEdges(imageRect);
+
+  bool wantExactSize =
+      bool(aSurfaceFlags & nsLayoutUtils::SFE_EXACT_SIZE_SURFACE);
+  bool allowNonPremult =
+      bool(aSurfaceFlags & nsLayoutUtils::SFE_ALLOW_NON_PREMULT);
+  bool allowUncropped =
+      bool(aSurfaceFlags & nsLayoutUtils::SFE_ALLOW_UNCROPPED_UNSCALED);
+  bool requiresPremult =
+      !allowNonPremult && mAlphaType == gfxAlphaType::NonPremult;
+  bool requiresCrop = !allowUncropped && hasCropRect;
+  if (wantExactSize || requiresPremult || requiresCrop || mSurface) {
+    RefPtr<DrawTarget> dt = Factory::CreateDrawTarget(
+        BackendType::SKIA, IntSize(1, 1), SurfaceFormat::B8G8R8A8);
+    sfer.mSourceSurface = PrepareForDrawTarget(dt);
+
+    if (!sfer.mSourceSurface) {
+      return sfer;
+    }
+
+    MOZ_ASSERT(mSurface);
+    MOZ_ASSERT(mPictureRect.IsEmpty());
+
+    sfer.mSize = sfer.mIntrinsicSize = sfer.mSourceSurface->GetSize();
+    sfer.mHasSize = true;
+    sfer.mAlphaType = IsOpaque(sfer.mSourceSurface->GetFormat())
+                          ? gfxAlphaType::Opaque
+                          : gfxAlphaType::Premult;
+    return sfer;
+  }
+
+  if (hasCropRect) {
+    IntRect imagePortion = imageRect.Intersect(mPictureRect);
+
+    // the crop lies entirely outside the surface area, nothing to draw
+    if (imagePortion.IsEmpty()) {
+      return sfer;
+    }
+
+    sfer.mCropRect = Some(imagePortion);
+    sfer.mIntrinsicSize = imagePortion.Size();
+  } else {
+    sfer.mIntrinsicSize = imageSize;
+  }
+
+  sfer.mSize = imageSize;
+  sfer.mHasSize = true;
+  sfer.mAlphaType = mAlphaType;
+  sfer.mLayersImage = mData;
+  return sfer;
+}
+
 /*
  * The functionality of PrepareForDrawTarget method:
  * (1) Get a SourceSurface from the mData (which is a layers::Image).
