@@ -56,6 +56,7 @@ class ImageUtils;
 class Promise;
 class PostMessageEvent;  // For StructuredClone between windows.
 class SVGImageElement;
+class VideoFrame;
 
 struct ImageBitmapCloneData final {
   RefPtr<gfx::DataSourceSurface> mSurface;
@@ -216,6 +217,11 @@ class ImageBitmap final : public nsISupports, public nsWrapperCache {
 
   static already_AddRefed<ImageBitmap> CreateInternal(
       nsIGlobalObject* aGlobal, ImageBitmap& aImageBitmap,
+      const Maybe<gfx::IntRect>& aCropRect, const ImageBitmapOptions& aOptions,
+      ErrorResult& aRv);
+
+  static already_AddRefed<ImageBitmap> CreateInternal(
+      nsIGlobalObject* aGlobal, VideoFrame& aVideoFrame,
       const Maybe<gfx::IntRect>& aCropRect, const ImageBitmapOptions& aOptions,
       ErrorResult& aRv);
 
