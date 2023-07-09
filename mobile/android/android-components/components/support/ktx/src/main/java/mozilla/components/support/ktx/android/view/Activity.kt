@@ -5,6 +5,8 @@
 package mozilla.components.support.ktx.android.view
 
 import android.app.Activity
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES
 import android.view.View
 import androidx.annotation.VisibleForTesting
 import androidx.core.view.ViewCompat
@@ -29,6 +31,9 @@ fun Activity.enterToImmersiveMode() {
 
 @VisibleForTesting
 internal fun Activity.setAsImmersive() {
+    if (SDK_INT >= VERSION_CODES.R) {
+        window.setDecorFitsSystemWindows(false)
+    }
     window.getWindowInsetsController().apply {
         hide(WindowInsetsCompat.Type.systemBars())
         systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
@@ -58,6 +63,9 @@ internal fun Activity.enableImmersiveModeRestore() {
 fun Activity.exitImmersiveMode() {
     ViewCompat.setOnApplyWindowInsetsListener(window.decorView, null)
 
+    if (SDK_INT >= VERSION_CODES.R) {
+        window.setDecorFitsSystemWindows(true)
+    }
     window.getWindowInsetsController().apply {
         show(WindowInsetsCompat.Type.systemBars())
     }

@@ -5,11 +5,14 @@
 package mozilla.components.support.ktx.android.view
 
 import android.app.Activity
+import android.os.Build
 import android.view.View
 import android.view.ViewTreeObserver
 import android.view.Window
 import android.view.WindowInsets
+import android.view.WindowInsetsController
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -23,6 +26,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
+import org.robolectric.annotation.Config
 
 @Suppress("DEPRECATION")
 @RunWith(AndroidJUnit4::class)
@@ -34,6 +38,7 @@ class ActivityTest {
     private lateinit var viewTreeObserver: ViewTreeObserver
     private lateinit var windowInsetsCompat: WindowInsetsCompat
     private lateinit var windowInsets: WindowInsets
+    private lateinit var windowInsetsController: WindowInsetsController
 
     @Before
     fun setup() {
@@ -43,6 +48,7 @@ class ActivityTest {
         viewTreeObserver = mock()
         windowInsetsCompat = mock()
         windowInsets = mock()
+        windowInsetsController = mock()
 
         `when`(activity.window).thenReturn(window)
         `when`(window.decorView).thenReturn(decorView)
@@ -63,12 +69,25 @@ class ActivityTest {
     }
 
     @Test
-    fun `check setAsImmersive sets the correct flags`() {
+    fun `check setAsImmersive sets the correct flags on devices with Android Q and below`() {
         activity.setAsImmersive()
 
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
         verify(decorView).systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
         verify(window.decorView, never()).setOnSystemUiVisibilityChangeListener(any())
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.R])
+    fun `check setAsImmersive sets the correct flags on devices with Android R and above`() {
+        `when`(window.insetsController).thenReturn(windowInsetsController)
+
+        activity.setAsImmersive()
+
+        verify(window).setDecorFitsSystemWindows(false)
+        verify(windowInsetsController).hide(WindowInsetsCompat.Type.systemBars())
+        verify(windowInsetsController).systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
     }
 
     @Test
@@ -112,11 +131,23 @@ class ActivityTest {
     }
 
     @Test
-    fun `check exitImmersiveMode sets the correct flags`() {
+    fun `check exitImmersiveMode sets the correct flags on devices with Android Q and below`() {
         activity.exitImmersiveMode()
 
         verify(decorView, times(2)).systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
         verify(decorView).setOnApplyWindowInsetsListener(null)
+    }
+
+    @Test
+    @Config(sdk = [Build.VERSION_CODES.R])
+    fun `check exitImmersiveMode sets the correct flags on devices with Android R and above`() {
+        `when`(window.insetsController).thenReturn(windowInsetsController)
+
+        activity.exitImmersiveMode()
+
+        verify(decorView).setOnApplyWindowInsetsListener(null)
+        verify(window).setDecorFitsSystemWindows(true)
+        verify(windowInsetsController).show(WindowInsetsCompat.Type.systemBars())
     }
 
     @Test
