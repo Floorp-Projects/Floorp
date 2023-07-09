@@ -39,8 +39,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
   RtpVideoStreamReceiverFrameTransformerDelegate(
       RtpVideoFrameReceiver* receiver,
       rtc::scoped_refptr<FrameTransformerInterface> frame_transformer,
-      rtc::Thread* network_thread,
-      uint32_t ssrc);
+      TaskQueueBase* network_thread, uint32_t ssrc);
 
   void Init();
   void Reset();
@@ -65,7 +64,7 @@ class RtpVideoStreamReceiverFrameTransformerDelegate
   RtpVideoFrameReceiver* receiver_ RTC_GUARDED_BY(network_sequence_checker_);
   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_
       RTC_GUARDED_BY(network_sequence_checker_);
-  rtc::Thread* const network_thread_;
+  TaskQueueBase* const network_thread_;
   const uint32_t ssrc_;
 };
 
