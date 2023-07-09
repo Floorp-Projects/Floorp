@@ -216,15 +216,15 @@
 
       // were all elements correctly initialized? (loose check)
       found = ReadPrefsFromUI(aPrefWindow);
-      ok(found.int == expected.int, "instant element init int");
-      ok(found.bool == expected.bool, "instant element init bool");
-      ok(found.string == expected.string, "instant element init string");
-      ok(found.unichar == expected.unichar, "instant element init unichar");
-      ok(
-        found.wstring_data == expected.wstring_data,
+      is(found.int, "" + expected.int, "instant element init int");
+      is(found.bool, expected.bool, "instant element init bool");
+      is(found.string, expected.string, "instant element init string");
+      is(found.unichar, expected.unichar, "instant element init unichar");
+      is(
+        found.wstring_data, expected.wstring_data,
         "instant element init wstring"
       );
-      todo(found.file_data == expected.file_data, "instant element init file");
+      todo_is(found.file_data == expected.file_data, "instant element init file");
 
       // do some changes in the UI
       expected = kPrefValueSet2;
@@ -368,6 +368,7 @@
         GetXULElement(aPrefWindow, "locked_checkbox").disabled,
         "Locked checkbox should stay disabled"
       );
+      SimpleTest.finish();
     }
 
     function RunResetPrefTest(aPrefWindow) {
@@ -402,15 +403,15 @@
       );
       let expected = kPrefValueSet1;
       let found = ReadPrefsFromSystem();
-      ok(found.int === expected.int, "instant reset deferred int");
-      ok(found.bool === expected.bool, "instant reset deferred bool");
-      ok(found.string === expected.string, "instant reset deferred string");
-      ok(found.unichar === expected.unichar, "instant reset deferred unichar");
-      ok(
-        found.wstring_data === expected.wstring_data,
+      is(found.int, expected.int, "instant reset deferred int");
+      is(found.bool, expected.bool, "instant reset deferred bool");
+      is(found.string, expected.string, "instant reset deferred string");
+      is(found.unichar, expected.unichar, "instant reset deferred unichar");
+      is(
+        found.wstring_data, expected.wstring_data,
         "instant reset deferred wstring"
       );
-      todo(found.file_data === expected.file_data, "instant reset deferred file");
+      todo_is(found.file_data, expected.file_data, "instant reset deferred file");
 
       // Test cancel in child window.
       WritePrefsToSystem(kPrefValueSet1);
@@ -511,7 +512,6 @@
       RunTestApplyPref();
       RunTestCommandRedirect();
       RunTestDisabled();
-      SimpleTest.finish();
     }
   ]]>
   </script>

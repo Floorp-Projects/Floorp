@@ -18,9 +18,11 @@
     /* import-globals-from ../../preferencesBindings.js */
     function RunTest(aArgs)
     {
-      aArgs[0](this);
-      let dialog = document.getElementById("disabled_dialog");
-      dialog.cancelDialog();
+      setTimeout(() => {
+        aArgs[0](this);
+        let dialog = document.getElementById("disabled_dialog");
+        dialog.cancelDialog();
+      });
     }
 
     Preferences.addAll([

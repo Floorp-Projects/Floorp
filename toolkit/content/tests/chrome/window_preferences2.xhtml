@@ -15,11 +15,13 @@
   <![CDATA[
     function RunTest(aArgs)
     {
-      // open child
-      openDialog("window_preferences3.xhtml", "", "modal,centerscreen,resizable=no", {test: aArgs[0], accept: aArgs[1]});
-      // close dialog
-      let dialog = document.getElementById("window_preferences2_dialog");
-      dialog[aArgs[1] ? "acceptDialog" : "cancelDialog"]();
+      setTimeout(() => {
+        // open child
+        openDialog("window_preferences3.xhtml", "", "modal,centerscreen,resizable=no", {test: aArgs[0], accept: aArgs[1]});
+        // close dialog
+        let dialog = document.getElementById("window_preferences2_dialog");
+        dialog[aArgs[1] ? "acceptDialog" : "cancelDialog"]();
+      });
     }
   ]]>
   </script>
