@@ -32,3 +32,9 @@ partial interface RTCRtpReceiver {
   [Throws]
   attribute DOMHighResTimeStamp? jitterBufferTarget;
 };
+
+// https://w3c.github.io/webrtc-encoded-transform/#specification
+partial interface RTCRtpReceiver {
+  [SetterThrows,
+   Pref="media.peerconnection.scripttransform.enabled"] attribute RTCRtpTransform? transform;
+};

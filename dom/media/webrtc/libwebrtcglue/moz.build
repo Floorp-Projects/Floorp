@@ -19,6 +19,8 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     "AudioConduit.cpp",
+    "FrameTransformer.cpp",
+    "FrameTransformerProxy.cpp",
     "GmpVideoCodec.cpp",
     "MediaConduitInterface.cpp",
     "MediaDataCodec.cpp",
