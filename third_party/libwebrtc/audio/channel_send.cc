@@ -285,12 +285,16 @@ class RtpPacketSenderProxy : public RtpPacketSender {
   void EnqueuePackets(
       std::vector<std::unique_ptr<RtpPacketToSend>> packets) override {
     MutexLock lock(&mutex_);
-    rtp_packet_pacer_->EnqueuePackets(std::move(packets));
+    if (rtp_packet_pacer_) {
+      rtp_packet_pacer_->EnqueuePackets(std::move(packets));
+    }
   }
 
   void RemovePacketsForSsrc(uint32_t ssrc) override {
     MutexLock lock(&mutex_);
-    rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
+    if (rtp_packet_pacer_) {
+      rtp_packet_pacer_->RemovePacketsForSsrc(ssrc);
+    }
   }
 
  private:
