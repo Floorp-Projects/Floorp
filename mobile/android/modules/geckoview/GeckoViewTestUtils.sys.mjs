@@ -1,9 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
-
-var EXPORTED_SYMBOLS = ["GeckoViewTabUtil"];
 
 const lazy = {};
 
@@ -11,7 +8,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
 });
 
-const GeckoViewTabUtil = {
+export const GeckoViewTabUtil = {
   /**
    * Creates a new tab through service worker delegate.
    * Needs to be ran in a parent process.
