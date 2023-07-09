@@ -5,7 +5,7 @@
 use api::BorderRadius;
 use api::units::*;
 use euclid::{Point2D, Rect, Box2D, Size2D, Vector2D, point2, point3};
-use euclid::{default, Transform2D, Transform3D, Scale};
+use euclid::{default, Transform2D, Transform3D, Scale, approxeq::ApproxEq};
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 use plane_split::{Clipper, Polygon};
 use std::{i32, f32, fmt, ptr};
@@ -197,6 +197,15 @@ impl ScaleOffset {
     }
 
     pub fn inverse(&self) -> Self {
+        // If either of the scale factors is 0, all we can do is
+        // return identity.
+        // TODO(gw): Consider making this return Option<Self> in future
+        //           so that callers can detect and handle when inverse
+        //           fails here.
+        if self.scale.x.approx_eq(&0.0) || self.scale.y.approx_eq(&0.0) {
+            return ScaleOffset::identity();
+        }
+
         ScaleOffset {
             scale: Vector2D::new(
                 1.0 / self.scale.x,
@@ -852,6 +861,17 @@ pub mod test {
         let x1 = LayoutTransform::scale(7.0, 3.0, 1.0);
 
         validate_accumulate(&x0, &x1);
+    }
+
+    #[test]
+    fn scale_offset_invalid_scale() {
+        let s0 = ScaleOffset::new(0.0, 1.0, 10.0, 20.0);
+        let i0 = s0.inverse();
+        assert_eq!(i0, ScaleOffset::identity());
+
+        let s1 = ScaleOffset::new(1.0, 0.0, 10.0, 20.0);
+        let i1 = s1.inverse();
+        assert_eq!(i1, ScaleOffset::identity());
     }
 
     #[test]
