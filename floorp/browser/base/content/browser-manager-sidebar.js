@@ -310,15 +310,11 @@
               //5~ CustomURLSetter | Custom URL have l10n, Userangent, Delete panel & etc...
               sidebarItem.classList.add("webpanel-icon");
               sidebarItem.setAttribute("context", "webpanel-context");
+              sidebarItem.setAttribute("tooltiptext", BROWSER_SIDEBAR_DATA.data[elem]["url"]);
             }
 
             if (BROWSER_SIDEBAR_DATA.data[elem]["url"].slice(0, 9) == "extension") {
-              sidebarItem.className += " extension-icon"
-            } else {
-              sidebarItem.style.listStyleImage = "";
-            }
-
-            if (BROWSER_SIDEBAR_DATA.data[elem]["url"].slice(0, 9) == "extension") {
+              sidebarItem.setAttribute("tooltiptext", BROWSER_SIDEBAR_DATA.data[elem]["url"].split(",")[1]);
               sidebarItem.className += " extension-icon"
               let listTexts = "chrome://browser/content/BMS-extension-needs-white-bg.txt";
               fetch(listTexts).then((response) => {
