@@ -6076,7 +6076,9 @@ impl PicturePrimitive {
                                 RasterSpace::Local(scale) => (scale, scale),
                             };
 
-                            let device_pixel_scale = Scale::new(world_scale_factors.0.max(world_scale_factors.1));
+                            let device_pixel_scale = Scale::new(
+                                world_scale_factors.0.max(world_scale_factors.1).min(max_scale)
+                            );
 
                             (device_pixel_scale, surface_spatial_node_index, (1.0, 1.0), world_scale_factors)
                         }
