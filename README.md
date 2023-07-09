@@ -223,6 +223,14 @@ Some of the listed software is not included in Floorp itself, but is downloaded 
 - [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/)
 - Authers: [Mozilla & Contributors](https://www.mozilla.org/credits/)
 
+### 💧 Waterfox
+
+- [Waterfox](https://www.waterfox.net/)
+- [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/)
+- Author: [MrAlex94](https://github.com/MrAlex94)
+
+Notice: Floorp is not based on Waterfox. The structure is a reference and has nothing to do with Waterfox.
+
 ### 🎨 Firefox UI FIX (Lepton)
 
 - [Firefox UI FIX (Lepton)](https://github.com/black7375/Firefox-UI-Fix)
