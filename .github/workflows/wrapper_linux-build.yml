@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+name: "(A) ⚒ Linux build"
+
+on:
+  workflow_dispatch:
+    inputs:
+      arch:
+        description: select build type
+        type: choice
+        options:
+          - x64_raw
+          - x64_deb
+          - x64_deb_ppa
+          - aarch64
+
+run-name: >
+  ${{fromJSON('["[raw","[deb"]')[inputs.arch == 'x64_deb' || inputs.arch == 'x64_deb_ppa']}}${{fromJson('["]"," ppa]"]')[inputs.arch == 'x64_deb_ppa']}}
+  Linux ${{fromJson('["x64","aarch64"]')[inputs.arch == 'aarch64']}} Build
+
+jobs:
+  linux-build:
+    name: linux-${{fromJson('["raw","deb"]')[inputs.arch == 'x64_deb' || inputs.arch == 'x64_deb_ppa']}}-${{fromJson('["no_ppa","ppa"]')[inputs.arch == 'x86_deb_ppa']}}-${{fromJson('["x86_64","aarch64"]')[inputs.arch == 'aarch64']}}
+    uses: ./.github/workflows/linux-build.yml
+    with:
+      aarch64: ${{inputs.arch == 'aarch64'}}
+      deb: ${{inputs.arch == 'x64_deb' || inputs.arch == 'x64_deb_ppa'}}
+      ppa: ${{inputs.arch == 'x86_deb_ppa'}}

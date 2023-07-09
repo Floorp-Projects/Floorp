@@ -1,0 +1,102 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+#? GitHubActionsなどの挙動実験室
+name: "(T) 🗿 Test GitHub"
+
+on:
+  workflow_dispatch:
+    inputs:
+      bool:
+        type: boolean
+        description: this is description
+        required: true
+
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # - name: tree inst
+      #   run: |
+      #     sudo apt install tree
+      #     cd /usr/local
+      #     tree
+      #     cd ~
+      - name: bash string test
+        run: |
+          a="aa"
+          echo b${a}b
+      - name: check swappiness
+        run: |
+          echo `cat /proc/sys/vm/swappiness`
+          #? https://qiita.com/onodes/items/c41b31e0f88babbb3baf#swappiness
+          #? https://gist.github.com/vaughany/1f576b1420a5fa26f6d812ff4182b620
+          sudo sysctl vm.swappiness=10
+          sudo sysctl -p
+          echo `cat /proc/sys/vm/swappiness`
+      - name: Check storage usage 1
+        run: |
+          df -h
+          
+          #? https://stackoverflow.com/questions/11231937/bash-ignoring-error-for-a-particular-command
+          sudo du -shc /* || true
+          sudo du -shc /opt/* || true
+          sudo du -shc /usr/* || true
+          sudo du -shc /usr/share/* || true
+          sudo du -shc /usr/local/* || true
+          sudo du -shc /usr/local/lib/* || true
+          
+      - name: package remove
+        run: |
+          sudo apt clean
+          # dpkg --list |grep "^rc" | cut -d " " -f 3 | xargs sudo dpkg --purge
+          sudo apt remove temurin* openjdk*
+          sudo apt remove microsoft-edge* firefox* google-chrome*
+          sudo apt remove mono* libmono* msbuild* dotnet*
+          sudo apt remove llvm-14* llvm-13* llvm-12* libllvm14* libllvm13* libllvm12*
+          sudo apt remove gfortran* php* julia* r-*
+          sudo apt remove mysql* postgresql*
+          sudo apt remove google-cloud-sdk azure-cli powershell snapd
+
+          sudo rm -rf /usr/share/swift &
+          sudo rm -rf /usr/local/aws-cli &
+          sudo rm -rf /usr/local/aws-sam-cli &
+          sudo rm -rf /usr/local/julia* &
+          sudo rm -rf /usr/local/lib/android &
+          sudo rm -rf /usr/local/lib/node_modules &
+          sudo rm -rf /opt/hostedtoolcache &
+          sudo rm -rf /opt/pipx &
+          sudo rm -rf /snap &
+          wait
+          
+      - name: dpkg list
+        run: |
+
+          dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n
+          # sudo dpkg -l
+      - name: Check storage usage 2
+        run: |
+          df -h
+
+          #? https://stackoverflow.com/questions/11231937/bash-ignoring-error-for-a-particular-command
+          sudo du -shc /* || true
+          sudo du -shc /opt/* || true
+          sudo du -shc /usr/* || true
+          sudo du -shc /usr/share/* || true
+          sudo du -shc /usr/local/* || true
+          sudo du -shc /usr/local/lib/* || true
+
+
+      # - uses: actions/checkout@v3
+      #   name: Clone 🧬
+
+      # - name: task
+      #   run: |
+      #     python3 ./.github/workflow_scripts/gh-test/main.py $GHA_bool
+      #   env:
+      #     GHA_bool: ${{inputs.bool}}

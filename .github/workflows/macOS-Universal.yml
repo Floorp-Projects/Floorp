@@ -1,4 +1,11 @@
-name: macOS Universal build
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+name: "(A) ⚒ macOS Universal build"
 
 on: workflow_dispatch
 
@@ -77,6 +84,13 @@ jobs:
 
     - uses: actions/checkout@v3
 
+    - name: Configure sccache
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
     - name: Create environment 🌲
       run: |
         export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
@@ -97,6 +111,13 @@ jobs:
         echo 'export RUSTFLAGS="-Ctarget-cpu=apple-m1"' >> mozconfig
 
         echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
+
+        # SCCACHE SETTINGS START
+        echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
+        echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
+        echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
+        echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
+        # SCCACHE SETTINGS END
 
         echo 'mozconfig: **********************'
         cat ./mozconfig
@@ -153,8 +174,8 @@ jobs:
       - name: Clean up (Self-hosted only)
         if: ${{ runner.name }} == 'self-hosted'
         run: |
-         rm -rf ~/downloads/artifacts
-         rm -rf ./floorp
+          rm -rf ~/downloads/artifacts
+          rm -rf ./floorp
 
       - uses: actions/download-artifact@v3
         id: download-artifact-M1
@@ -200,10 +221,10 @@ jobs:
       - name: Publish 🎁
         uses: actions/upload-artifact@master
         with:
-         name: floorp-aarch64-apple-darwin-profdata-and-jarlog
-         path: |
-           merged.profdata
-           en-US.log
+          name: floorp-aarch64-apple-darwin-profdata-and-jarlog
+          path: |
+            merged.profdata
+            en-US.log
 
   M1-build-with-PGO:
     runs-on: 'ubuntu-latest'
@@ -215,54 +236,54 @@ jobs:
       run: |
         export RUNNER_USERDIR=`echo ~`
         echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
-        
-    - name: Change PPA mirror servers 
-      run: | 
-         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list 
-         sudo apt update 
-         sudo apt upgrade -y
-        
+
+    - name: Change PPA mirror servers
+      run: |
+        sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list
+        sudo apt update
+        sudo apt upgrade -y
+
     - name: Setup Disk & Swap Space 💿
       if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
       run: |
-       echo Before:
-       free -h
-       df -h
-       echo
-       echo
-       sudo swapoff /mnt/swapfile
-       sudo rm /mnt/swapfile
-       sudo fallocate -l 10G /mnt/swapfile
-       sudo chmod 600 /mnt/swapfile
-       sudo mkswap /mnt/swapfile
-       sudo swapon /mnt/swapfile
-       sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-       sudo apt autoremove -y
-       sudo apt clean
-       sudo rm -rf /usr/share/dotnet
-       sudo rm -rf /usr/local/lib/android
-       sudo rm -rf /usr/local/graalvm
-       sudo rm -rf /usr/local/share/powershell
-       sudo rm -rf /usr/local/share/chromium
-       sudo rm -rf /usr/local/lib/node_modules
-       sudo rm -rf /opt/ghc
-       sudo rm -rf /usr/local/share/boost
-       sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-       sudo rm -rf /etc/apache2
-       sudo rm -rf /etc/nginx
-       sudo rm -rf /usr/local/share/chrome_driver
-       sudo rm -rf /usr/local/share/edge_driver
-       sudo rm -rf /usr/local/share/gecko_driver
-       sudo rm -rf /usr/share/java
-       sudo fallocate -l 10G /home/runner/swapfile2
-       sudo chmod 600 /home/runner/swapfile2
-       sudo mkswap /home/runner/swapfile2
-       sudo swapon /home/runner/swapfile2
-       echo
-       echo
-       echo After:
-       free -h
-       df -h
+        echo Before:
+        free -h
+        df -h
+        echo
+        echo
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo apt clean
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/graalvm
+        sudo rm -rf /usr/local/share/powershell
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /usr/local/lib/node_modules
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /etc/apache2
+        sudo rm -rf /etc/nginx
+        sudo rm -rf /usr/local/share/chrome_driver
+        sudo rm -rf /usr/local/share/edge_driver
+        sudo rm -rf /usr/local/share/gecko_driver
+        sudo rm -rf /usr/share/java
+        sudo fallocate -l 10G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+        echo
+        echo
+        echo After:
+        free -h
+        df -h
 
     - uses: actions/checkout@v3
 
@@ -272,6 +293,12 @@ jobs:
         name: floorp-aarch64-apple-darwin-profdata-and-jarlog
         path: /home/runner/profdata-and-jarlog/
 
+    - name: Configure sccache
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
     - name: Create environment 🌲
       run: |
@@ -296,6 +323,13 @@ jobs:
         echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
 
         echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+
+        # SCCACHE SETTINGS START
+        echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
+        echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
+        echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
+        echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
+        # SCCACHE SETTINGS END
 
         echo 'mozconfig: **********************'
         cat ./mozconfig
@@ -367,44 +401,51 @@ jobs:
     - name: Setup Disk & Swap Space 💿
       if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
       run: |
-       echo Before:
-       free -h
-       df -h
-       echo
-       echo
-       sudo swapoff /mnt/swapfile
-       sudo rm /mnt/swapfile
-       sudo fallocate -l 10G /mnt/swapfile
-       sudo chmod 600 /mnt/swapfile
-       sudo mkswap /mnt/swapfile
-       sudo swapon /mnt/swapfile
-       sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-       sudo apt autoremove -y
-       sudo apt clean
-       sudo rm -rf /usr/share/dotnet
-       sudo rm -rf /usr/local/lib/android
-       sudo rm -rf /usr/local/graalvm
-       sudo rm -rf /usr/local/share/powershell
-       sudo rm -rf /usr/local/share/chromium
-       sudo rm -rf /usr/local/lib/node_modules
-       sudo rm -rf /opt/ghc
-       sudo rm -rf /usr/local/share/boost
-       sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-       sudo rm -rf /etc/apache2
-       sudo rm -rf /etc/nginx
-       sudo rm -rf /usr/local/share/chrome_driver
-       sudo rm -rf /usr/local/share/edge_driver
-       sudo rm -rf /usr/local/share/gecko_driver
-       sudo rm -rf /usr/share/java
-       sudo fallocate -l 10G /home/runner/swapfile2
-       sudo chmod 600 /home/runner/swapfile2
-       sudo mkswap /home/runner/swapfile2
-       sudo swapon /home/runner/swapfile2
-       echo
-       echo
-       echo After:
-       free -h
-       df -h
+        echo Before:
+        free -h
+        df -h
+        echo
+        echo
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo apt clean
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/graalvm
+        sudo rm -rf /usr/local/share/powershell
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /usr/local/lib/node_modules
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /etc/apache2
+        sudo rm -rf /etc/nginx
+        sudo rm -rf /usr/local/share/chrome_driver
+        sudo rm -rf /usr/local/share/edge_driver
+        sudo rm -rf /usr/local/share/gecko_driver
+        sudo rm -rf /usr/share/java
+        sudo fallocate -l 10G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+        echo
+        echo
+        echo After:
+        free -h
+        df -h
+
+    - name: Configure sccache
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
     - name: Create environment 🌲
       run: |
@@ -426,6 +467,13 @@ jobs:
         echo 'export RUSTFLAGS="-Ctarget-cpu=nehalem"' >> mozconfig
 
         echo 'ac_add_options --enable-profile-generate=cross' >> mozconfig
+
+        # SCCACHE SETTINGS START
+        echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
+        echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
+        echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
+        echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
+        # SCCACHE SETTINGS END
 
         echo 'mozconfig: **********************'
         cat ./mozconfig
@@ -513,17 +561,17 @@ jobs:
 
       - name: Generate Profdata 📊
         run: |
-         export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
+          export MOZ_BUILD_DATE=${{ needs.get-buildid.outputs.buildids }}
 
-         LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
+          LLVM_PROFDATA=$RUNNER_USERDIR/.mozbuild/clang/bin/llvm-profdata JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app/Contents/MacOS/floorp
 
       - name: Publish 🎁
         uses: actions/upload-artifact@master
         with:
-         name: floorp-x86_64-apple-darwin-profdata-and-jarlog
-         path: |
-           merged.profdata
-           en-US.log
+          name: floorp-x86_64-apple-darwin-profdata-and-jarlog
+          path: |
+            merged.profdata
+            en-US.log
 
   Intel-build-with-PGO:
     runs-on: 'ubuntu-latest'
@@ -536,53 +584,53 @@ jobs:
         export RUNNER_USERDIR=`echo ~`
         echo "RUNNER_USERDIR=$RUNNER_USERDIR" >> $GITHUB_ENV
 
-    - name: Change PPA mirror servers 
+    - name: Change PPA mirror servers
       run: |
-         sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list 
-         sudo apt update 
-         sudo apt upgrade -y
-         
+          sudo perl -p -i -e 's%(deb(?:-src|)\s+)https?://(?!archive\.canonical\.com|security\.ubuntu\.com)[^\s]+%$1http://archive.ubuntu.com/ubuntu/%' /etc/apt/sources.list 
+          sudo apt update
+          sudo apt upgrade -y
+
     - name: Setup Disk & Swap Space 💿
       if: ${{ runner.name }} != 'buildjet-16vcpu-ubuntu-2204'
       run: |
-       echo Before:
-       free -h
-       df -h
-       echo
-       echo
-       sudo swapoff /mnt/swapfile
-       sudo rm /mnt/swapfile
-       sudo fallocate -l 10G /mnt/swapfile
-       sudo chmod 600 /mnt/swapfile
-       sudo mkswap /mnt/swapfile
-       sudo swapon /mnt/swapfile
-       sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
-       sudo apt autoremove -y
-       sudo apt clean
-       sudo rm -rf /usr/share/dotnet
-       sudo rm -rf /usr/local/lib/android
-       sudo rm -rf /usr/local/graalvm
-       sudo rm -rf /usr/local/share/powershell
-       sudo rm -rf /usr/local/share/chromium
-       sudo rm -rf /usr/local/lib/node_modules
-       sudo rm -rf /opt/ghc
-       sudo rm -rf /usr/local/share/boost
-       sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-       sudo rm -rf /etc/apache2
-       sudo rm -rf /etc/nginx
-       sudo rm -rf /usr/local/share/chrome_driver
-       sudo rm -rf /usr/local/share/edge_driver
-       sudo rm -rf /usr/local/share/gecko_driver
-       sudo rm -rf /usr/share/java
-       sudo fallocate -l 10G /home/runner/swapfile2
-       sudo chmod 600 /home/runner/swapfile2
-       sudo mkswap /home/runner/swapfile2
-       sudo swapon /home/runner/swapfile2
-       echo
-       echo
-       echo After:
-       free -h
-       df -h
+        echo Before:
+        free -h
+        df -h
+        echo
+        echo
+        sudo swapoff /mnt/swapfile
+        sudo rm /mnt/swapfile
+        sudo fallocate -l 10G /mnt/swapfile
+        sudo chmod 600 /mnt/swapfile
+        sudo mkswap /mnt/swapfile
+        sudo swapon /mnt/swapfile
+        sudo apt remove -y '^dotnet-.*' '^llvm-.*' '^php.*' '^mongodb-.*' '^mysql-.*' azure-cli google-cloud-sdk google-chrome-stable firefox powershell mono-devel libgl1-mesa-dri
+        sudo apt autoremove -y
+        sudo apt clean
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/local/graalvm
+        sudo rm -rf /usr/local/share/powershell
+        sudo rm -rf /usr/local/share/chromium
+        sudo rm -rf /usr/local/lib/node_modules
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        sudo rm -rf /etc/apache2
+        sudo rm -rf /etc/nginx
+        sudo rm -rf /usr/local/share/chrome_driver
+        sudo rm -rf /usr/local/share/edge_driver
+        sudo rm -rf /usr/local/share/gecko_driver
+        sudo rm -rf /usr/share/java
+        sudo fallocate -l 10G /home/runner/swapfile2
+        sudo chmod 600 /home/runner/swapfile2
+        sudo mkswap /home/runner/swapfile2
+        sudo swapon /home/runner/swapfile2
+        echo
+        echo
+        echo After:
+        free -h
+        df -h
 
     - uses: actions/checkout@v3
 
@@ -592,6 +640,12 @@ jobs:
         name: floorp-x86_64-apple-darwin-profdata-and-jarlog
         path: /home/runner/profdata-and-jarlog/
 
+    - name: Configure sccache
+      uses: actions/github-script@v6
+      with:
+        script: |
+          core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+          core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
     - name: Create environment 🌲
       run: |
@@ -616,6 +670,13 @@ jobs:
         echo 'ac_add_options --enable-profile-use=cross' >> mozconfig
 
         echo 'ac_add_options --with-l10n-base=$PWD/l10n-central/l10n-central' >> mozconfig
+
+        # SCCACHE SETTINGS START
+        echo "mk_add_options 'export RUSTC_WRAPPER=/home/runner/.mozbuild/sccache/sccache'" >> mozconfig
+        echo "mk_add_options 'export CCACHE_CPP2=yes'" >> mozconfig
+        echo "ac_add_options --with-ccache=/home/runner/.mozbuild/sccache/sccache" >> mozconfig
+        echo "mk_add_options 'export SCCACHE_GHA_ENABLED=on'" >> mozconfig
+        # SCCACHE SETTINGS END
 
         echo 'mozconfig: **********************'
         cat ./mozconfig
@@ -661,8 +722,8 @@ jobs:
     - name: Publish 🎁
       uses: actions/upload-artifact@master
       with:
-       name: floorp-x86_64-apple-darwin-with-pgo
-       path: floorp-x86_64-apple-darwin-with-pgo.tar.gz
+        name: floorp-x86_64-apple-darwin-with-pgo
+        path: floorp-x86_64-apple-darwin-with-pgo.tar.gz
 
 ######################################################## Integration #######################################################
 
@@ -674,10 +735,10 @@ jobs:
 
     - name: delete old artifacts 🗑️
       run: |
-       rm -rf ./obj-x86_64-apple-darwin/dist/
-       rm -rf ./obj-aarch64-apple-darwin/dist/
-       rm -rf ~/downloads/artifacts
-       rm -rf ./floorp
+        rm -rf ./obj-x86_64-apple-darwin/dist/
+        rm -rf ./obj-aarch64-apple-darwin/dist/
+        rm -rf ~/downloads/artifacts
+        rm -rf ./floorp
 
     - uses: actions/checkout@v3
 
@@ -725,7 +786,7 @@ jobs:
         echo "****************************************************************************************************"
 
     - name: Integration 🗃 & Package 📦
-      run: |       
+      run: |
         ./mach python ./toolkit/mozapps/installer/unify.py ./obj-x86_64-apple-darwin/dist/Floorp/Floorp.app ./obj-aarch64-apple-darwin/dist/Floorp/Floorp.app
         ./mach python -m mozbuild.action.make_dmg ./obj-x86_64-apple-darwin/dist/Floorp floorp-macOS-universal-temp.dmg
         unzip ./.github/base.zip
@@ -750,7 +811,7 @@ jobs:
     - uses: geekyeggo/delete-artifact@v2
       with:
         name: |
-         x86_64-apple-darwin
-         aarch64-apple-darwin
-         floorp-aarch64-apple-darwin-with-pgo
-         floorp-x86_64-apple-darwin-with-pgo
+          x86_64-apple-darwin
+          aarch64-apple-darwin
+          floorp-aarch64-apple-darwin-with-pgo
+          floorp-x86_64-apple-darwin-with-pgo

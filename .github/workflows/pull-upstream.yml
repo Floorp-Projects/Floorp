@@ -5,7 +5,7 @@
 # Please write our copyright if you use this file.
 # © 2023 Floorp Projects & Contributors
 
-name: Pull upstream
+name: "(U) 🧰 Pull upstream"
 
 on: workflow_dispatch
 

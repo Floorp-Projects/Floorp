@@ -98,7 +98,7 @@ jobs:
         )
         for line in "${launch_script[@]}" ; do echo $line >> ./flatpak_build/tmp/bin/floorp ; done
         chmod +x ./flatpak_build/tmp/bin/floorp
-        
+
         mkdir -p ./flatpak_build/tmp/lib/floorp/distribution
         distribution_file=(
         '{'

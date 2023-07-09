@@ -5,7 +5,7 @@
 # Please write our copyright if you use this file.
 # © 2023 Floorp Projects & Contributors
 
-name: User-Agent Scrape
+name: "(U) 🧰 User-Agent Scrape"
 
 on:
   workflow_dispatch:
