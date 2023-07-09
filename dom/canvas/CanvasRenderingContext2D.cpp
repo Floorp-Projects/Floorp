@@ -22,6 +22,7 @@
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/GeneratePlaceholderCanvasData.h"
+#include "mozilla/dom/VideoFrame.h"
 #include "nsPresContext.h"
 
 #include "nsIInterfaceRequestorUtils.h"
@@ -2281,6 +2282,7 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
 
   Element* element = nullptr;
   OffscreenCanvas* offscreenCanvas = nullptr;
+  VideoFrame* videoFrame = nullptr;
 
   if (aSource.IsHTMLCanvasElement()) {
     HTMLCanvasElement* canvas = &aSource.GetAsHTMLCanvasElement();
@@ -2356,6 +2358,18 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
 
       return pat.forget();
     }
+  } else if (aSource.IsVideoFrame()) {
+    videoFrame = &aSource.GetAsVideoFrame();
+
+    if (videoFrame->CodedWidth() == 0) {
+      aError.ThrowInvalidStateError("Passed-in canvas has width 0");
+      return nullptr;
+    }
+
+    if (videoFrame->CodedHeight() == 0) {
+      aError.ThrowInvalidStateError("Passed-in canvas has height 0");
+      return nullptr;
+    }
   } else {
     // Special case for ImageBitmap
     ImageBitmap& imgBitmap = aSource.GetAsImageBitmap();
@@ -2390,11 +2404,15 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
   // of animated images
   auto flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
                nsLayoutUtils::SFE_EXACT_SIZE_SURFACE;
-  SurfaceFromElementResult res =
-      offscreenCanvas
-          ? nsLayoutUtils::SurfaceFromOffscreenCanvas(offscreenCanvas, flags,
-                                                      mTarget)
-          : nsLayoutUtils::SurfaceFromElement(element, flags, mTarget);
+  SurfaceFromElementResult res;
+  if (offscreenCanvas) {
+    res = nsLayoutUtils::SurfaceFromOffscreenCanvas(offscreenCanvas, flags,
+                                                    mTarget);
+  } else if (videoFrame) {
+    res = nsLayoutUtils::SurfaceFromVideoFrame(videoFrame, flags, mTarget);
+  } else {
+    res = nsLayoutUtils::SurfaceFromElement(element, flags, mTarget);
+  }
 
   // Per spec, we should throw here for the HTMLImageElement and SVGImageElement
   // cases if the image request state is "broken".  In terms of the infromation
@@ -5101,6 +5119,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
   gfx::IntSize intrinsicImgSize;
   Element* element = nullptr;
   OffscreenCanvas* offscreenCanvas = nullptr;
+  VideoFrame* videoFrame = nullptr;
 
   EnsureTarget();
   if (!IsTargetValid()) {
@@ -5150,6 +5169,8 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
     imgSize = intrinsicImgSize =
         gfx::IntSize(imageBitmap.Width(), imageBitmap.Height());
+  } else if (aImage.IsVideoFrame()) {
+    videoFrame = &aImage.GetAsVideoFrame();
   } else {
     if (aImage.IsHTMLImageElement()) {
       HTMLImageElement* img = &aImage.GetAsHTMLImageElement();
@@ -5181,6 +5202,8 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     if (offscreenCanvas) {
       res = nsLayoutUtils::SurfaceFromOffscreenCanvas(offscreenCanvas, sfeFlags,
                                                       mTarget);
+    } else if (videoFrame) {
+      res = nsLayoutUtils::SurfaceFromVideoFrame(videoFrame, sfeFlags, mTarget);
     } else {
       res = CanvasRenderingContext2D::CachedSurfaceFromElement(element);
       if (!res.mSourceSurface) {
@@ -5188,7 +5211,8 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       }
     }
 
-    if (!res.mSourceSurface && !res.mDrawInfo.mImgContainer) {
+    srcSurf = res.GetSourceSurface();
+    if (!srcSurf && !res.mDrawInfo.mImgContainer) {
       // https://html.spec.whatwg.org/#check-the-usability-of-the-image-argument:
       //
       // Only throw if the request is broken and the element is an
@@ -5200,6 +5224,8 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       if (!res.mIsStillLoading && !res.mHasSize &&
           (aImage.IsHTMLImageElement() || aImage.IsSVGImageElement())) {
         aError.ThrowInvalidStateError("Passed-in image is \"broken\"");
+      } else if (videoFrame) {
+        aError.ThrowInvalidStateError("Passed-in video frame is \"broken\"");
       }
       return;
     }
@@ -5208,13 +5234,11 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     intrinsicImgSize = res.mIntrinsicSize;
     DoSecurityCheck(res.mPrincipal, res.mIsWriteOnly, res.mCORSUsed);
 
-    if (res.mSourceSurface) {
+    if (srcSurf) {
       if (res.mImageRequest) {
         CanvasImageCache::NotifyDrawImage(element, mCanvasElement, mTarget,
-                                          res.mSourceSurface, imgSize,
-                                          intrinsicImgSize);
+                                          srcSurf, imgSize, intrinsicImgSize);
       }
-      srcSurf = res.mSourceSurface;
     } else {
       drawInfo = res.mDrawInfo;
     }
