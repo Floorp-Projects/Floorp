@@ -12736,16 +12736,6 @@
   value: true
   mirror: always
 
-# When this pref is true we clear the Content-Encoding header for
-# application/x-gzip Content-Type responses, see bug 1030660.
-#
-# Assuming there are no regressions, this pref and related code should be
-# removed.
-- name: network.http.clear_bogus_content_encoding
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # When this pref is true, we will use the HTTPS acceptable content encoding
 # list for trustworthy domains such as http://localhost
 - name: network.http.encoding.trustworthy_is_https

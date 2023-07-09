@@ -2675,8 +2675,6 @@ nsresult nsHttpChannel::ContinueProcessNormal(nsresult rv) {
   // being called inside our OnDataAvailable (see bug 136678).
   StoreCachedContentIsPartial(false);
 
-  ClearBogusContentEncodingIfNeeded();
-
   UpdateInhibitPersistentCachingFlag();
 
   MaybeCreateCacheEntryWhenRCWN();
@@ -3256,9 +3254,6 @@ nsresult nsHttpChannel::ProcessPartialContent(
 
   NS_ENSURE_TRUE(mCachedResponseHead, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_INITIALIZED);
-
-  // Make sure to clear bogus content-encodings before looking at the header
-  ClearBogusContentEncodingIfNeeded();
 
   // Check if the content-encoding we now got is different from the one we
   // got before
@@ -5085,34 +5080,6 @@ nsresult nsHttpChannel::InstallCacheListener(int64_t offset) {
 
   mListener = tee;
   return NS_OK;
-}
-
-void nsHttpChannel::ClearBogusContentEncodingIfNeeded() {
-  if (!StaticPrefs::network_http_clear_bogus_content_encoding()) {
-    return;
-  }
-
-  // For .gz files, apache sends both a Content-Type: application/x-gzip
-  // as well as Content-Encoding: gzip, which is completely wrong.  In
-  // this case, we choose to ignore the rogue Content-Encoding header. We
-  // must do this early on so as to prevent it from being seen up stream.
-  // The same problem exists for Content-Encoding: compress in default
-  // Apache installs.
-  nsAutoCString contentType;
-  mResponseHead->ContentType(contentType);
-  if (mResponseHead->HasHeaderValue(nsHttp::Content_Encoding, "gzip") &&
-      (contentType.EqualsLiteral(APPLICATION_GZIP) ||
-       contentType.EqualsLiteral(APPLICATION_GZIP2) ||
-       contentType.EqualsLiteral(APPLICATION_GZIP3))) {
-    // clear the Content-Encoding header
-    mResponseHead->ClearHeader(nsHttp::Content_Encoding);
-  } else if (mResponseHead->HasHeaderValue(nsHttp::Content_Encoding,
-                                           "compress") &&
-             (contentType.EqualsLiteral(APPLICATION_COMPRESS) ||
-              contentType.EqualsLiteral(APPLICATION_COMPRESS2))) {
-    // clear the Content-Encoding header
-    mResponseHead->ClearHeader(nsHttp::Content_Encoding);
-  }
 }
 
 //-----------------------------------------------------------------------------

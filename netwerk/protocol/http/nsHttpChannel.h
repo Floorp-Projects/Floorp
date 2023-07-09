@@ -410,9 +410,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   void MaybeInvalidateCacheEntryForSubsequentGet();
   void AsyncOnExamineCachedResponse();
 
-  // Handle the bogus Content-Encoding Apache sometimes sends
-  void ClearBogusContentEncodingIfNeeded();
-
   // byte range request specific methods
   [[nodiscard]] nsresult ProcessPartialContent(
       const std::function<nsresult(nsHttpChannel*, nsresult)>&
