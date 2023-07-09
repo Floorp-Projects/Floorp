@@ -17,11 +17,13 @@
     /* import-globals-from ../../preferencesBindings.js */
     function RunTest(aArgs)
     {
-      // run test
-      aArgs[0](this);
-      // close dialog
-      let dialog = document.getElementById("window_preferences_dialog");
-      dialog[aArgs[1] ? "acceptDialog" : "cancelDialog"]();
+      setTimeout(() => {
+        // run test
+        aArgs[0](this);
+        // close dialog
+        let dialog = document.getElementById("window_preferences_dialog");
+        dialog[aArgs[1] ? "acceptDialog" : "cancelDialog"]();
+      });
     }
 
     Preferences.addAll([
