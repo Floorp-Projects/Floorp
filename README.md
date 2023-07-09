@@ -235,7 +235,7 @@ Notice: Floorp is not based on Waterfox. The structure is a reference and has no
 
 - [Firefox UI FIX (Lepton)](https://github.com/black7375/Firefox-UI-Fix)
 - [Mozilla Public License 2.0](https://github.com/black7375/Firefox-UI-Fix/blob/master/LICENSE)
-- Author: [black7375](https://github.com/black737)
+- Author: [black7375](https://github.com/black7375)
 
 ### 🎨 Edge-Frfox
 
