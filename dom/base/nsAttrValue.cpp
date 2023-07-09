@@ -9,6 +9,7 @@
  * attribute.
  */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"
 
@@ -962,18 +963,49 @@ bool nsAttrValue::Equals(const nsAString& aValue,
 
 bool nsAttrValue::Equals(const nsAtom* aValue,
                          nsCaseTreatment aCaseSensitive) const {
-  if (auto* atom = GetStoredAtom()) {
-    if (atom == aValue) {
-      return true;
+  switch (BaseType()) {
+    case eAtomBase: {
+      auto* atom = static_cast<nsAtom*>(GetPtr());
+      if (atom == aValue) {
+        return true;
+      }
+      if (aCaseSensitive == eCaseMatters) {
+        return false;
+      }
+      if (atom->IsAsciiLowercase() && aValue->IsAsciiLowercase()) {
+        return false;
+      }
+      return nsContentUtils::EqualsIgnoreASCIICase(
+          nsDependentAtomString(atom), nsDependentAtomString(aValue));
     }
-    if (aCaseSensitive == eCaseMatters) {
-      return false;
+    case eStringBase: {
+      if (auto* str = static_cast<nsStringBuffer*>(GetPtr())) {
+        size_t strLen = str->StorageSize() / sizeof(char16_t) - 1;
+        if (aValue->GetLength() != strLen) {
+          return false;
+        }
+        const char16_t* strData = static_cast<char16_t*>(str->Data());
+        const char16_t* valData = aValue->GetUTF16String();
+        if (aCaseSensitive == eCaseMatters) {
+          // Avoid string construction / destruction for the easy case.
+          return ArrayEqual(strData, valData, strLen);
+        }
+        nsDependentSubstring depStr(strData, strLen);
+        nsDependentSubstring depVal(valData, strLen);
+        return nsContentUtils::EqualsIgnoreASCIICase(depStr, depVal);
+      }
+      return aValue->IsEmpty();
     }
-    if (atom->IsAsciiLowercase() && aValue->IsAsciiLowercase()) {
-      return false;
-    }
+    default:
+      break;
   }
-  return Equals(nsDependentAtomString(aValue), aCaseSensitive);
+
+  nsAutoString val;
+  ToString(val);
+  nsDependentAtomString dep(aValue);
+  return aCaseSensitive == eCaseMatters
+             ? val.Equals(dep)
+             : nsContentUtils::EqualsIgnoreASCIICase(val, dep);
 }
 
 struct HasPrefixFn {
