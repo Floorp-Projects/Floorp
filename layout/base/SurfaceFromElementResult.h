@@ -22,8 +22,7 @@ namespace mozilla {
 
 namespace dom {
 class CanvasRenderingContext2D;
-class ImageBitmap;
-}  // namespace dom
+}
 
 namespace gfx {
 class SourceSurface;
@@ -40,7 +39,6 @@ struct DirectDrawInfo {
 
 struct SurfaceFromElementResult {
   friend class mozilla::dom::CanvasRenderingContext2D;
-  friend class mozilla::dom::ImageBitmap;
   friend class ::nsLayoutUtils;
 
   /* If SFEResult contains a valid surface, it either mLayersImage or
@@ -67,9 +65,6 @@ struct SurfaceFromElementResult {
   mozilla::gfx::IntSize mSize;
   /* The size the surface is intended to be rendered at */
   mozilla::gfx::IntSize mIntrinsicSize;
-  /* The crop rect of the surface, indicating what subset is valid. This will
-   * always be Nothing() unless SFE_ALLOW_UNCROPPED is set. */
-  mozilla::Maybe<mozilla::gfx::IntRect> mCropRect;
   /* The principal associated with the element whose surface was returned.
      If there is a surface, this will never be null. */
   nsCOMPtr<nsIPrincipal> mPrincipal;

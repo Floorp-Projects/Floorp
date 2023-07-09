@@ -22,7 +22,6 @@
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRef.h"
 #include "mozilla/dom/WorkerRunnable.h"
-#include "mozilla/dom/VideoFrame.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/Scale.h"
@@ -669,77 +668,6 @@ void ImageBitmap::OnShutdown() {
 
 void ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv) {
   mPictureRect = FixUpNegativeDimension(aRect, aRv);
-}
-
-SurfaceFromElementResult ImageBitmap::SurfaceFrom(uint32_t aSurfaceFlags) {
-  SurfaceFromElementResult sfer;
-
-  if (!mData) {
-    return sfer;
-  }
-
-  // An ImageBitmap, not being a DOM element, only has `origin-clean`
-  // (via our `IsWriteOnly`), and does not participate in CORS.
-  // Right now we mark this by setting mCORSUsed to true.
-  sfer.mCORSUsed = true;
-  sfer.mIsWriteOnly = mWriteOnly;
-
-  if (mParent) {
-    sfer.mPrincipal = mParent->PrincipalOrNull();
-  }
-
-  IntSize imageSize(mData->GetSize());
-  IntRect imageRect(IntPoint(0, 0), imageSize);
-  bool hasCropRect = mPictureRect.IsEqualEdges(imageRect);
-
-  bool wantExactSize =
-      bool(aSurfaceFlags & nsLayoutUtils::SFE_EXACT_SIZE_SURFACE);
-  bool allowNonPremult =
-      bool(aSurfaceFlags & nsLayoutUtils::SFE_ALLOW_NON_PREMULT);
-  bool allowUncropped =
-      bool(aSurfaceFlags & nsLayoutUtils::SFE_ALLOW_UNCROPPED_UNSCALED);
-  bool requiresPremult =
-      !allowNonPremult && mAlphaType == gfxAlphaType::NonPremult;
-  bool requiresCrop = !allowUncropped && hasCropRect;
-  if (wantExactSize || requiresPremult || requiresCrop || mSurface) {
-    RefPtr<DrawTarget> dt = Factory::CreateDrawTarget(
-        BackendType::SKIA, IntSize(1, 1), SurfaceFormat::B8G8R8A8);
-    sfer.mSourceSurface = PrepareForDrawTarget(dt);
-
-    if (!sfer.mSourceSurface) {
-      return sfer;
-    }
-
-    MOZ_ASSERT(mSurface);
-    MOZ_ASSERT(mPictureRect.IsEmpty());
-
-    sfer.mSize = sfer.mIntrinsicSize = sfer.mSourceSurface->GetSize();
-    sfer.mHasSize = true;
-    sfer.mAlphaType = IsOpaque(sfer.mSourceSurface->GetFormat())
-                          ? gfxAlphaType::Opaque
-                          : gfxAlphaType::Premult;
-    return sfer;
-  }
-
-  if (hasCropRect) {
-    IntRect imagePortion = imageRect.Intersect(mPictureRect);
-
-    // the crop lies entirely outside the surface area, nothing to draw
-    if (imagePortion.IsEmpty()) {
-      return sfer;
-    }
-
-    sfer.mCropRect = Some(imagePortion);
-    sfer.mIntrinsicSize = imagePortion.Size();
-  } else {
-    sfer.mIntrinsicSize = imageSize;
-  }
-
-  sfer.mSize = imageSize;
-  sfer.mHasSize = true;
-  sfer.mAlphaType = mAlphaType;
-  sfer.mLayersImage = mData;
-  return sfer;
 }
 
 /*
@@ -1442,48 +1370,6 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
       needToReportMemoryAllocation, false, aImageBitmap.mAlphaType, aRv);
 }
 
-/* static */
-already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
-    nsIGlobalObject* aGlobal, VideoFrame& aVideoFrame,
-    const Maybe<IntRect>& aCropRect, const ImageBitmapOptions& aOptions,
-    ErrorResult& aRv) {
-  if (aVideoFrame.CodedWidth() == 0) {
-    aRv.ThrowInvalidStateError("Passed-in video frame has width 0");
-    return nullptr;
-  }
-
-  if (aVideoFrame.CodedHeight() == 0) {
-    aRv.ThrowInvalidStateError("Passed-in video frame has height 0");
-    return nullptr;
-  }
-
-  uint32_t flags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE;
-
-  // by default surfaces have premultiplied alpha
-  // attempt to get non premultiplied if required
-  if (aOptions.mPremultiplyAlpha == PremultiplyAlpha::None) {
-    flags |= nsLayoutUtils::SFE_ALLOW_NON_PREMULT;
-  }
-
-  SurfaceFromElementResult res =
-      nsLayoutUtils::SurfaceFromVideoFrame(&aVideoFrame, flags);
-
-  RefPtr<SourceSurface> surface = res.GetSourceSurface();
-  if (NS_WARN_IF(!surface)) {
-    aRv.ThrowInvalidStateError("Passed-in video frame has no surface data");
-    return nullptr;
-  }
-
-  gfxAlphaType alphaType = res.mAlphaType;
-  bool writeOnly = res.mIsWriteOnly;
-  bool needToReportMemoryAllocation = false;
-  bool mustCopy = false;
-
-  return CreateImageBitmapInternal(aGlobal, surface, aCropRect, aOptions,
-                                   writeOnly, needToReportMemoryAllocation,
-                                   mustCopy, alphaType, aRv);
-}
-
 class FulfillImageBitmapPromise {
  protected:
   FulfillImageBitmapPromise(Promise* aPromise, ImageBitmap* aImageBitmap)
@@ -1770,9 +1656,6 @@ already_AddRefed<Promise> ImageBitmap::Create(
     AsyncCreateImageBitmapFromBlob(promise, aGlobal, aSrc.GetAsBlob(),
                                    aCropRect, aOptions);
     return promise.forget();
-  } else if (aSrc.IsVideoFrame()) {
-    imageBitmap = CreateInternal(aGlobal, aSrc.GetAsVideoFrame(), aCropRect,
-                                 aOptions, aRv);
   } else {
     MOZ_CRASH("Unsupported type!");
     return nullptr;
