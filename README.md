@@ -256,7 +256,7 @@ Some of the listed software is not included in Floorp itself, but is downloaded 
 ### 📦 userChromeCSS Loader
 
 - [userChromeCSS Loader](floorp/browser/base/content/browser-chromeCSS.js)
-- [MIT](floorp/browser/base/content/browser-chromeCSS.js)7
+- [MIT](floorp/browser/base/content/browser-chromeCSS.js)
 - Author: Griever
 
 NOTICE: If you are "userChromeCSS Loader" developer, please contact us. We add the site of your name.
@@ -297,7 +297,7 @@ Notice: Betterfox is not included in Floorp itself, but is downloaded from the I
 - [GNU GPLv3](https://github.com/gorhill/uBlock/blob/master/LICENSE.txt)
 - Author: [gorhill](https://github.com/gorhill/uBlock)
 
-Notice: uBlock Origin is not included in Floorp itself & Floorp doesn't insall itsself. In "about:prefernces" Floorp recommends installing uBlock Origin. Do not make the mistake of including the GPL.
+Notice: uBlock Origin is not included in Floorp itself & Floorp doesn't install it by itsself. In "about:prefernces" Floorp recommends installing uBlock Origin. Do not make the mistake of including the GPL.
 
 ### 📦 Gesturefy
 
@@ -305,10 +305,12 @@ Notice: uBlock Origin is not included in Floorp itself & Floorp doesn't insall i
 - [GNU GPLv3](https://github.com/Robbendebiene/Gesturefy/blob/master/LICENSE)
 - Author: [Robbendebiene](https://github.com/Robbendebiene)
 
-Notice: Gesturefy is not included in Floorp itself & Floorp doesn't insall itsself. In "about:prefernces" Floorp recommends installing Gesturefy. Do not make the mistake of including the GPL.
+Notice: Gesturefy is not included in Floorp itself & Floorp doesn't install it by itsself. In "about:prefernces" Floorp recommends installing Gesturefy. Do not make the mistake of including the GPL.
 
 ### 📦 Facebook Container
 
 - [Facebook Container](https://github.com/mozilla/contain-facebook)
 - [Mozilla Public License 2.0](https://github.com/mozilla/contain-facebook/blob/main/LICENSE)
 - Author: [Mozilla](https://mozilla.org)
+
+Notice: Facebook Container is not included in Floorp. In "about:prefernces" Floorp recommends installing Facebook Container.
