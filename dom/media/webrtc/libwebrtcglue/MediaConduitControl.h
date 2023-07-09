@@ -16,6 +16,7 @@
 #include "CodecConfig.h"                   // For Audio/VideoCodecConfig
 #include "api/rtp_parameters.h"            // For webrtc::RtpExtension
 #include "api/video_codecs/video_codec.h"  // For webrtc::VideoCodecMode
+#include "FrameTransformerProxy.h"
 
 namespace mozilla {
 
@@ -45,6 +46,10 @@ class MediaConduitControlInterface {
   virtual Canonical<std::string>& CanonicalSyncGroup() = 0;
   virtual Canonical<RtpExtList>& CanonicalLocalRecvRtpExtensions() = 0;
   virtual Canonical<RtpExtList>& CanonicalLocalSendRtpExtensions() = 0;
+  virtual Canonical<RefPtr<FrameTransformerProxy>>&
+  CanonicalFrameTransformerProxySend() = 0;
+  virtual Canonical<RefPtr<FrameTransformerProxy>>&
+  CanonicalFrameTransformerProxyRecv() = 0;
 };
 
 class AudioConduitControlInterface : public MediaConduitControlInterface {
