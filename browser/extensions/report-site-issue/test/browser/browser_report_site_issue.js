@@ -208,10 +208,6 @@ add_task(async function test_opened_page() {
         typeof details["gfx.webrender.enabled"] == "boolean",
         "Details has gfx.webrender.enabled."
       );
-      ok(
-        typeof details["image.mem.shared"] == "boolean",
-        "Details has image.mem.shared."
-      );
 
       is(
         preview.innerText,

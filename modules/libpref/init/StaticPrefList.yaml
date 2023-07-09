@@ -7030,13 +7030,6 @@
   value: false
   mirror: always
 
-# Decodes images into shared memory to allow direct use in separate
-# rendering processes. Only applicable with WebRender.
-- name: image.mem.shared
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Force unmapping of unused shared surfaces after a timeout period or when we
 # encounter virtual memory pressure. By default this is only enabled on 32-bit
 # Firefox.

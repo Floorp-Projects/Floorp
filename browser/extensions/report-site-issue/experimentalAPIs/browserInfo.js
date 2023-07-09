@@ -126,7 +126,6 @@ this.browserInfo = class extends ExtensionAPI {
             "gfx.webrender.all": false,
             "gfx.webrender.blob-images": true,
             "gfx.webrender.enabled": false,
-            "image.mem.shared": true,
           })) {
             prefs[name] = Services.prefs.getBoolPref(name, dflt);
           }
