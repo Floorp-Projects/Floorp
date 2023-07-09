@@ -102,11 +102,11 @@ If you are using Linux, please show the [Linux](#linux) section.
 
 - Floorp Browser is based on Mozilla Firefox. Floorp Browser is not affiliated with Mozilla & Mozilla Firefox.
 
-- Floorp uses Mozilla Firefox's source code & other open source projects. See [Floorp License Notices](https://github.com/Floorp-Projects/Floorp/raw/ESR115/toolkit/content/license.html) for details.
+- Floorp uses Mozilla Firefox's source code & other open source projects. See [Floorp License Notices](#floorp-license-notices-📄) section.
 
 ### 📧 Contact
 
-- [Official Support Site](https://support.ablaze.one)
+- [Official Support Site](https://support.a📄blaze.one)
 
 - [Official Floorp Twitter](https://twitter.com/Floorp_Browser) or [Official Ablaze Twitter](https://twitter.com/Ablaze_MIRAI)
 
@@ -210,3 +210,105 @@ $ ./mach build
 ** Run Floorp Browser **
 $ ./mach run
 ```
+
+## 📄 Floorp License Notices 📄
+
+Floorp uses some open source projects. Below is a list of open source projects used in Floorp.
+
+Some of the listed software is not included in Floorp itself, but is downloaded from the Internet. Also listed are add-ons that Floorp recommends installing.
+
+### 🦊 Mozilla Firefox
+
+- [Mozilla Firefox](https://www.mozilla.org/en-US/firefox/new/)
+- [Mozilla Public License 2.0](https://www.mozilla.org/en-US/MPL/2.0/)
+- Authers: [Mozilla & Contributors](https://www.mozilla.org/credits/)
+
+### 🎨 Firefox UI FIX (Lepton)
+
+- [Firefox UI FIX (Lepton)](https://github.com/black7375/Firefox-UI-Fix)
+- [Mozilla Public License 2.0](https://github.com/black7375/Firefox-UI-Fix/blob/master/LICENSE)
+- Author: [black7375](https://github.com/black737)
+
+### 🎨 Edge-Frfox
+
+- [Edge-Fox](https://github.com/bmFtZQ/edge-frfox)
+- [MIT](https://github.com/bmFtZQ/edge-frfox/blob/main/LICENSE)
+- Author: [bmFtZQ](https://github.com/bmFtZQ)
+
+### 🎨 Firefox-csshacks
+
+- [Firefox-csshacks](https://github.com/MrOtherGuy/firefox-csshacks)
+- [Mozilla Public License 2.0](https://github.com/MrOtherGuy/firefox-csshacks/blob/master/LICENSE)
+- Author: [MrOtherGuy](https://github.com/MrOtherGuy)
+
+### 🎨 Material-Fox
+
+- [Material-Fox](https://github.com/muckSponge/MaterialFox)
+- [MIT](https://github.com/muckSponge/MaterialFox/blob/master/LICENSE)
+- Author: [muckSponge](https://github.com/muckSponge)
+
+### 🎨 firefox-gnome-theme
+
+- [Firefox-Gnome-Theme](https://github.com/rafaelmardojai/firefox-gnome-theme/blob/master/LICENSE)
+- [The Unlicense](https://github.com/rafaelmardojai/firefox-gnome-theme/blob/master/LICENSE)
+- Author: [rafaelmardojai](https://github.com/rafaelmardojai)
+
+### 📦 userChromeCSS Loader
+
+- [userChromeCSS Loader](floorp/browser/base/content/browser-chromeCSS.js)
+- [MIT](floorp/browser/base/content/browser-chromeCSS.js)7
+- Author: Griever
+
+NOTICE: If you are "userChromeCSS Loader" developer, please contact us. We add the site of your name.
+
+### 📦 userChromeJS Loader
+
+- [userChromeJS Loader](https://github.com/xiaoxiaoflood/firefox-scripts/)
+- [Mozilla Public License 2.0](https://github.com/xiaoxiaoflood/firefox-scripts/blob/master/LICENSE)
+- Author: [Alice0775](https://github.com/Alice0775/), Endor8, TroudhuK, Izheil, Merci-chao, [xiaoxiaoflood](https://github.com/xiaoxiaoflood/)
+
+Notice: If you are "userChromeJS Loader" developer & doesn't list your name, please contact us. We add the site of your name.
+
+### 📦 Paxmod
+
+- [Paxmod](https://github.com/numirias/paxmod)
+- [MIT](https://github.com/numirias/paxmod/blob/master/LICENSE)
+- Author: [numirias](https://github.com/numirias/)
+
+### 📦 showdown
+
+- [showdown](https://github.com/showdownjs/showdown)
+- [MIT](https://github.com/showdownjs/showdown/blob/master/LICENSE)
+- Author: [SyntaxRules](https://github.com/SyntaxRules)
+
+Notice: If you are "showdown" developer & doesn't list your name, please contact us. We add the site of your name.
+
+### 📄 Betterfox
+
+- [Betterfox](https://github.com/yokoffing/Betterfox)
+- [MIT](https://github.com/yokoffing/Betterfox/blob/main/LICENSE)
+- Author: [yokoffing](https://github.com/yokoffing)
+
+Notice: Betterfox is not included in Floorp itself, but is downloaded from the Internet.
+
+### 📦 uBlock Origin
+
+- [uBlock Origin](https://github.com/gorhill/uBlock)
+- [GNU GPLv3](https://github.com/gorhill/uBlock/blob/master/LICENSE.txt)
+- Author: [gorhill](https://github.com/gorhill/uBlock)
+
+Notice: uBlock Origin is not included in Floorp itself & Floorp doesn't insall itsself. In "about:prefernces" Floorp recommends installing uBlock Origin. Do not make the mistake of including the GPL.
+
+### 📦 Gesturefy
+
+- [Gesturefy](https://github.com/Robbendebiene/Gesturefy)
+- [GNU GPLv3](https://github.com/Robbendebiene/Gesturefy/blob/master/LICENSE)
+- Author: [Robbendebiene](https://github.com/Robbendebiene)
+
+Notice: Gesturefy is not included in Floorp itself & Floorp doesn't insall itsself. In "about:prefernces" Floorp recommends installing Gesturefy. Do not make the mistake of including the GPL.
+
+### 📦 Facebook Container
+
+- [Facebook Container](https://github.com/mozilla/contain-facebook)
+- [Mozilla Public License 2.0](https://github.com/mozilla/contain-facebook/blob/main/LICENSE)
+- Author: [Mozilla](https://mozilla.org)
