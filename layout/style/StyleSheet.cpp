@@ -716,11 +716,10 @@ already_AddRefed<dom::Promise> StyleSheet::Replace(const nsACString& aText,
   // observers (i.e., set mMustNotify to true)?
   auto* loader = mConstructorDocument->CSSLoader();
   auto loadData = MakeRefPtr<css::SheetLoadData>(
-      loader, nullptr, this, /* aSyncLoad */ false,
+      loader, /* aURI = */ nullptr, this, css::SyncLoad::No,
       css::Loader::UseSystemPrincipal::No, css::StylePreloadKind::None,
-      /* aPreloadEncoding */ nullptr,
-      /* aObserver */ nullptr, mConstructorDocument->NodePrincipal(),
-      GetReferrerInfo());
+      /* aPreloadEncoding */ nullptr, /* aObserver */ nullptr,
+      mConstructorDocument->NodePrincipal(), GetReferrerInfo());
 
   // In parallel
   // 5.1 Parse aText into rules.
