@@ -3,9 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    # Run only on try and code-review tasks
-    # to avoid running clang tools on the whole codebase
-    run-on-projects: []
     platform: linux64/debug
     worker-type: t-linux-xlarge-source
     attributes:
@@ -59,6 +56,9 @@ format:
     description: Run clang-format on C/C++ patches
     treeherder:
         symbol: cpp(clang-format)
+    # Run only on try and code-review tasks
+    # to avoid running clang format on the whole codebase
+    run-on-projects: []
     run:
         cwd: '{checkout}'
         command: >-
