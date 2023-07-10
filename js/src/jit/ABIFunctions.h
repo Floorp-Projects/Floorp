@@ -67,6 +67,11 @@ struct DynFn {
   void* address;
 };
 
+#ifdef JS_SIMULATOR
+bool CallAnyNative(JSContext* cx, unsigned argc, Value* vp);
+const void* RedirectedCallAnyNative();
+#endif
+
 }  // namespace jit
 }  // namespace js
 
