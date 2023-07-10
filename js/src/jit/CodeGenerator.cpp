@@ -5662,6 +5662,27 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
   }
 }
 
+void JitRuntime::generateIonGenericCallArgumentsShift(
+    MacroAssembler& masm, Register argc, Register curr, Register end,
+    Register scratch, Label* done) {
+  static_assert(sizeof(Value) == 8);
+  // There are |argc| Values on the stack. Shift them all down by 8 bytes,
+  // overwriting the first value.
+
+  // Initialize `curr` to the destination of the first copy, and `end` to the
+  // final value of curr.
+  masm.moveStackPtrTo(curr);
+  masm.computeEffectiveAddress(BaseValueIndex(curr, argc), end);
+
+  Label loop;
+  masm.bind(&loop);
+  masm.branchPtr(Assembler::Equal, curr, end, done);
+  masm.loadPtr(Address(curr, 8), scratch);
+  masm.storePtr(scratch, Address(curr, 0));
+  masm.addPtr(Imm32(sizeof(uintptr_t)), curr);
+  masm.jump(&loop);
+}
+
 void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
                                             IonGenericCallKind kind) {
   AutoCreatedBy acb(masm, "JitRuntime::generateIonGenericCallStub");
@@ -5770,6 +5791,9 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
   // * Native functions *
   // ********************
   masm.bind(&noJitEntry);
+  if (!isConstructing) {
+    generateIonGenericCallFunCall(masm, &entry, &vmCall);
+  }
   generateIonGenericCallNativeFunction(masm, isConstructing);
 
   // *******************
@@ -5872,6 +5896,62 @@ void JitRuntime::generateIonGenericCallNativeFunction(MacroAssembler& masm,
   masm.ret();
 }
 
+void JitRuntime::generateIonGenericCallFunCall(MacroAssembler& masm,
+                                               Label* entry, Label* vmCall) {
+  Register calleeReg = IonGenericCallCalleeReg;
+  Register argcReg = IonGenericCallArgcReg;
+  Register scratch = IonGenericCallScratch;
+  Register scratch2 = IonGenericCallScratch2;
+  Register scratch3 = IonGenericCallScratch3;
+
+  Label notFunCall;
+  masm.branchPtr(Assembler::NotEqual,
+                 Address(calleeReg, JSFunction::offsetOfNativeOrEnv()),
+                 ImmPtr(js::fun_call), &notFunCall);
+
+  // In general, we can implement fun_call by replacing calleeReg with
+  // |this|, sliding all the other arguments down, and decrementing argc.
+  //
+  // *BEFORE*                           *AFTER*
+  //  [argN]  argc = N+1                 <padding>
+  //  ...                                [argN]  argc = N
+  //  [arg1]                             ...
+  //  [arg0]                             [arg1] <- now arg0
+  //  [this] <- top of stack (aligned)   [arg0] <- now this
+  //
+  // The only exception is when argc is already 0, in which case instead
+  // of shifting arguments down we replace [this] with UndefinedValue():
+  //
+  // *BEFORE*                           *AFTER*
+  // [this] argc = 0                     [undef] argc = 0
+  //
+  // After making this transformation, we can jump back to the beginning
+  // of this trampoline to handle the inner call.
+
+  // Guard that |this| is an object. If it is, replace calleeReg.
+  masm.fallibleUnboxObject(Address(masm.getStackPointer(), 0), scratch, vmCall);
+  masm.movePtr(scratch, calleeReg);
+
+  Label hasArgs;
+  masm.branch32(Assembler::NotEqual, argcReg, Imm32(0), &hasArgs);
+
+  // No arguments. Replace |this| with |undefined| and start from the top.
+  masm.storeValue(UndefinedValue(), Address(masm.getStackPointer(), 0));
+  masm.jump(entry);
+
+  masm.bind(&hasArgs);
+
+  Label doneSliding;
+  generateIonGenericCallArgumentsShift(masm, argcReg, scratch, scratch2,
+                                       scratch3, &doneSliding);
+  masm.bind(&doneSliding);
+  masm.sub32(Imm32(1), argcReg);
+
+  masm.jump(entry);
+
+  masm.bind(&notFunCall);
+}
+
 void JitRuntime::generateIonGenericCallBoundFunction(MacroAssembler& masm,
                                                      Label* entry,
                                                      Label* vmCall) {
@@ -5915,21 +5995,8 @@ void JitRuntime::generateIonGenericCallBoundFunction(MacroAssembler& masm,
 
     // We have an odd number of bound arguments. Shift the existing arguments
     // down by 8 bytes.
-
-    // Initialize `curr` to the destination of the first copy, and `end` to the
-    // final value of curr.
-    Register curr = scratch;
-    Register end = scratch2;
-    masm.moveStackPtrTo(curr);
-    masm.computeEffectiveAddress(BaseValueIndex(curr, argcReg), end);
-
-    Label loop;
-    masm.bind(&loop);
-    masm.branchPtr(Assembler::Equal, curr, end, &poppedThis);
-    masm.loadPtr(Address(curr, 8), scratch3);
-    masm.storePtr(scratch3, Address(curr, 0));
-    masm.addPtr(Imm32(sizeof(uintptr_t)), curr);
-    masm.jump(&loop);
+    generateIonGenericCallArgumentsShift(masm, argcReg, scratch, scratch2,
+                                         scratch3, &poppedThis);
     masm.bind(&alreadyAligned);
   }
 
