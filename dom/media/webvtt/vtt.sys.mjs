@@ -1484,8 +1484,6 @@ WebVTT.Parser.prototype = {
           });
         } catch(e) {
           dump("VTTRegion Error " + e + "\n");
-          let regionPref = Services.prefs.getBoolPref("media.webvtt.regions.enabled");
-          dump("regionPref " + regionPref + "\n");
         }
       }
     }

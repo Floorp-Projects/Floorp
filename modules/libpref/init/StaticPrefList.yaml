@@ -10471,12 +10471,6 @@
   value: false
   mirror: always
 
-# TextTrack WebVTT Region extension support.
-- name: media.webvtt.regions.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # This pref controls whether dispatch testing-only events.
 - name: media.webvtt.testing.events
   type: bool
