@@ -5,54 +5,27 @@
 var testnum = 0;
 var dbConnection; // used for deleted table tests
 
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
-
-function countDeletedEntries(expected) {
-  return new Promise((resolve, reject) => {
-    let stmt = dbConnection.createAsyncStatement(
-      "SELECT COUNT(*) AS numEntries FROM moz_deleted_formhistory"
-    );
-    stmt.executeAsync({
-      handleResult(resultSet) {
-        Assert.equal(
-          expected,
-          resultSet.getNextRow().getResultByName("numEntries")
-        );
-        resolve();
-      },
-      handleError(error) {
-        do_throw("Error occurred counting deleted entries: " + error);
-        reject();
-      },
-      handleCompletion() {
-        stmt.finalize();
-      },
-    });
-  });
+async function countDeletedEntries(expected) {
+  let stmt = "SELECT COUNT(*) AS numEntries FROM moz_deleted_formhistory";
+  try {
+    let requiredRow = await dbConnection.executeCached(stmt);
+    Assert.equal(expected, requiredRow[0].getResultByName("numEntries"));
+  } catch (error) {
+    do_throw("Error occurred counting deleted entries: " + error);
+  }
 }
 
-function checkTimeDeleted(guid, checkFunction) {
-  return new Promise((resolve, reject) => {
-    let stmt = dbConnection.createAsyncStatement(
-      "SELECT timeDeleted FROM moz_deleted_formhistory WHERE guid = :guid"
-    );
-    stmt.params.guid = guid;
-    stmt.executeAsync({
-      handleResult(resultSet) {
-        checkFunction(resultSet.getNextRow().getResultByName("timeDeleted"));
-        resolve();
-      },
-      handleError(error) {
-        do_throw("Error occurred getting deleted entries: " + error);
-        reject();
-      },
-      handleCompletion() {
-        stmt.finalize();
-      },
-    });
-  });
+async function checkTimeDeleted(guid, checkFunction) {
+  let stmt =
+    "SELECT timeDeleted FROM moz_deleted_formhistory WHERE guid = :guid";
+  let params = { guid };
+
+  try {
+    let requiredRow = await dbConnection.executeCached(stmt, params);
+    checkFunction(requiredRow[0].getResultByName("timeDeleted"));
+  } catch (error) {
+    do_throw("Error occurred getting deleted entries: " + error);
+  }
 }
 
 function promiseUpdateEntry(op, name, value) {
@@ -108,24 +81,18 @@ add_task(async function () {
     // Delete anything from the deleted table
     let dbFile = Services.dirsvc.get("ProfD", Ci.nsIFile).clone();
     dbFile.append("formhistory.sqlite");
-    dbConnection = Services.storage.openUnsharedDatabase(dbFile);
 
-    let deferred = PromiseUtils.defer();
-
-    let stmt = dbConnection.createAsyncStatement(
-      "DELETE FROM moz_deleted_formhistory"
-    );
-    stmt.executeAsync({
-      handleResult(resultSet) {},
-      handleError(error) {
-        do_throw("Error occurred counting deleted all entries: " + error);
-      },
-      handleCompletion() {
-        stmt.finalize();
-        deferred.resolve();
-      },
+    dbConnection = await Sqlite.openConnection({
+      path: dbFile.path,
+      sharedMemoryCache: false,
     });
-    await deferred.promise;
+
+    let stmt = "DELETE FROM moz_deleted_formhistory";
+    try {
+      await dbConnection.executeCached(stmt);
+    } catch (error) {
+      do_throw("Error occurred counting deleted all entries: " + error);
+    }
 
     // ===== 2 =====
     // Test looking for nonexistent / bogus data.
@@ -509,7 +476,7 @@ add_task(async function () {
     throw new Error(`FAILED in test #${testnum} -- ${e}`);
   } finally {
     FormHistory._supportsDeletedTable = oldSupportsDeletedTable;
-    dbConnection.asyncClose(do_test_finished);
+    await dbConnection.close(do_test_finished);
   }
 });
 

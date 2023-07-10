@@ -18,21 +18,24 @@ add_task(async function () {
     }
 
     testfile.copyTo(profileDir, "formhistory.sqlite");
-    Assert.equal(3, getDBVersion(testfile));
+    Assert.equal(3, await getDBVersion(testfile));
 
     // ===== 1 =====
     testnum++;
 
     destFile = profileDir.clone();
     destFile.append("formhistory.sqlite");
-    let dbConnection = Services.storage.openUnsharedDatabase(destFile);
+    let dbConnection = await Sqlite.openConnection({
+      path: destFile.path,
+      sharedMemoryCache: false,
+    });
 
     // Do something that will cause FormHistory to access and upgrade the
     // database
     await FormHistory.count({});
 
     // check for upgraded schema.
-    Assert.equal(CURRENT_SCHEMA, getDBVersion(destFile));
+    Assert.equal(CURRENT_SCHEMA, await getDBVersion(destFile));
 
     // Check that the index was added
     Assert.ok(dbConnection.tableExists("moz_deleted_formhistory"));

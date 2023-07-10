@@ -33,7 +33,7 @@ add_task(async function () {
     }
 
     testfile.copyTo(profileDir, "formhistory.sqlite");
-    Assert.equal(999, getDBVersion(destFile));
+    Assert.equal(999, await getDBVersion(destFile));
 
     // ===== 1 =====
     testnum++;
@@ -53,7 +53,7 @@ add_task(async function () {
     Assert.ok(!(await promiseCountEntries(null, null)));
     Assert.equal(0, await promiseCountEntries("name-A", "value-A"));
     // check for current schema.
-    Assert.equal(CURRENT_SCHEMA, getDBVersion(destFile));
+    Assert.equal(CURRENT_SCHEMA, await getDBVersion(destFile));
 
     // ===== 3 =====
     testnum++;

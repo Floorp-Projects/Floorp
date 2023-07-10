@@ -32,10 +32,10 @@ var formHistoryStartup = Cc[
 ].getService(Ci.nsIObserver);
 formHistoryStartup.observe(null, "profile-after-change", null);
 
-function getDBVersion(dbfile) {
-  let dbConnection = Services.storage.openDatabase(dbfile);
-  let version = dbConnection.schemaVersion;
-  dbConnection.close();
+async function getDBVersion(dbfile) {
+  let dbConnection = await Sqlite.openConnection({ path: dbfile.path });
+  let version = await dbConnection.getSchemaVersion();
+  await dbConnection.close();
 
   return version;
 }
