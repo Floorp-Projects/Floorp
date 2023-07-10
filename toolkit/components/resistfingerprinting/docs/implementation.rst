@@ -33,10 +33,10 @@ As you can see in the callgraph below, directly calling a *dangerous* function w
 	  SRFP_channel["ShouldResistFingerprinting(nsIChannel*)<br />ETPSaysShouldNotResistFingerprinting Check<br />CookieJarSettingsSaysShouldResistFingerprinting Check"]
 	  click SRFP_channel href "https://searchfox.org/mozilla-central/search?q=symbol:_ZN14nsContentUtils26ShouldResistFingerprintingEP10nsIChannelN7mozilla9RFPTargetE&redirect=false"
 
-	  SRFP_uri["ShouldResistFingerprinting_dangerous(nsIURI*, OriginAttributes)<br />PBM Check<br />Scheme (inc WebExtension) Check<br />About Page Check<br />URI Exempt Check"]
+	  SRFP_uri["ShouldResistFingerprinting_dangerous(nsIURI*, OriginAttributes)<br />PBM Check<br />Scheme (inc WebExtension) Check<br />About Page Check<br />URI & Partition Key Exempt Check"]
 	  click SRFP_uri href "https://searchfox.org/mozilla-central/search?q=symbol:_ZN14nsContentUtils36ShouldResistFingerprinting_dangerousEP6nsIURIRKN7mozilla16OriginAttributesEPKcNS2_9RFPTargetE&redirect=false"
 
-	  SRFP_principal["ShouldResistFingerprinting_dangerous(nsIPrincipal*)<br />System Principal Check<br />PBM Check<br />Scheme Check<br />About Page Check<br />Web Extension Principal Check<br />URI Exempt Check"]
+	  SRFP_principal["ShouldResistFingerprinting_dangerous(nsIPrincipal*)<br />System Principal Check<br />PBM Check<br />Scheme Check<br />About Page Check<br />Web Extension Principal Check<br />URI & Partition Key Exempt Check"]
 	  click SRFP_principal href "https://searchfox.org/mozilla-central/search?q=symbol:_ZN14nsContentUtils36ShouldResistFingerprinting_dangerousEP12nsIPrincipalPKcN7mozilla9RFPTargetE&redirect=false"
 
 
