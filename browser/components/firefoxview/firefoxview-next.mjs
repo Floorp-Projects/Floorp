@@ -65,7 +65,6 @@ window.addEventListener(
     // Clear out the document so the disconnectedCallback will trigger
     // properly and all of the custom elements can cleanup.
     document.body.textContent = "";
-    document.querySelector("view-recentlyclosed")?.cleanup();
   },
   { once: true }
 );
