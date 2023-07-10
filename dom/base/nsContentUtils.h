@@ -2769,6 +2769,34 @@ class nsContentUtils {
    * Checks whether the  header value contains any forbidden method
    */
   static bool ContainsForbiddenMethod(const nsACString& headerValue);
+
+  class ParsedRange {
+   public:
+    explicit ParsedRange(mozilla::Maybe<uint32_t> aStart,
+                         mozilla::Maybe<uint32_t> aEnd)
+        : mStart(aStart), mEnd(aEnd) {}
+
+    mozilla::Maybe<uint32_t> Start() const { return mStart; }
+    mozilla::Maybe<uint32_t> End() const { return mEnd; }
+
+    bool operator==(const ParsedRange& aOther) const {
+      return Start() == aOther.Start() && End() == aOther.End();
+    }
+
+   private:
+    mozilla::Maybe<uint32_t> mStart;
+    mozilla::Maybe<uint32_t> mEnd;
+  };
+
+  /**
+   * Parse a single range request and return a pair containing the resulting
+   * start and end of the range.
+   *
+   * See https://fetch.spec.whatwg.org/#simple-range-header-value
+   */
+  static mozilla::Maybe<ParsedRange> ParseSingleRangeRequest(
+      const nsACString& aHeaderValue, bool aAllowWhitespace);
+
   /**
    * Returns whether a given header has characters that aren't permitted
    */
@@ -2791,6 +2819,12 @@ class nsContentUtils {
    * allowed for a non-CORS XHR or fetch request.
    */
   static bool IsAllowedNonCorsLanguage(const nsACString& aHeaderValue);
+
+  /**
+   * Returns whether a given Range header value is allowed for a non-CORS XHR or
+   * fetch request.
+   */
+  static bool IsAllowedNonCorsRange(const nsACString& aHeaderValue);
 
   /**
    * Returns whether a given header and value is a CORS-safelisted request
