@@ -67,6 +67,17 @@ struct SecondScratchRegisterScope : public AutoRegisterScope {
   explicit SecondScratchRegisterScope(MacroAssembler& masm);
 };
 
+class MOZ_RAII AutoNonDefaultSecondScratchRegister {
+ public:
+  explicit AutoNonDefaultSecondScratchRegister(MacroAssembler& masm,
+                                               Register reg);
+  ~AutoNonDefaultSecondScratchRegister();
+
+ private:
+  Register prevSecondScratch_;
+  MacroAssembler& masm_;
+};
+
 static constexpr Register OsrFrameReg = r3;
 static constexpr Register CallTempReg0 = r5;
 static constexpr Register CallTempReg1 = r6;

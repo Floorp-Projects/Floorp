@@ -6819,7 +6819,7 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
   }
 #ifdef JS_CODEGEN_ARM
   regs.takeUnchecked(BaselineSecondScratchReg);
-  masm.setSecondScratchReg(BaselineSecondScratchReg);
+  AutoNonDefaultSecondScratchRegister andssr(masm, BaselineSecondScratchReg);
 #endif
   Register scratch1 = regs.takeAny();
   Register scratch2 = regs.takeAny();

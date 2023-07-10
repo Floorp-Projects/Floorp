@@ -21,6 +21,13 @@ static constexpr Register IonGenericCallScratch = CallTempReg3;
 static constexpr Register IonGenericCallScratch2 = CallTempReg4;
 static constexpr Register IonGenericCallScratch3 = CallTempReg5;
 
+#ifdef JS_CODEGEN_ARM
+// We need a second scratch register that does not alias `lr` or
+// any of the registers the ABI uses to pass arguments.
+static_assert(CallTempReg0 == CallTempNonArgRegs[0]);
+static constexpr Register IonGenericSecondScratchReg = CallTempReg0;
+#endif
+
 }  // namespace js::jit
 
 #endif /* jit_IonGenericCallStub_h */

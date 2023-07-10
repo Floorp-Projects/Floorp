@@ -167,7 +167,7 @@ JitCode* BaselineCacheIRCompiler::compile() {
   masm.adjustFrame(sizeof(intptr_t));
 #endif
 #ifdef JS_CODEGEN_ARM
-  masm.setSecondScratchReg(BaselineSecondScratchReg);
+  AutoNonDefaultSecondScratchRegister andssr(masm, BaselineSecondScratchReg);
 #endif
   if (JitOptions.enableICFramePointers) {
     /* [SMDOC] Baseline IC Frame Pointers
