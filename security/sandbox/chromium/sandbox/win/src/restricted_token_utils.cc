@@ -109,13 +109,15 @@ DWORD CreateRestrictedToken(HANDLE effective_token,
       sid_exceptions.push_back(WinInteractiveSid);
       sid_exceptions.push_back(WinAuthenticatedUserSid);
       privilege_exceptions.push_back(SE_CHANGE_NOTIFY_NAME);
-      restricted_token.AddRestrictingSid(WinBuiltinUsersSid);
-      restricted_token.AddRestrictingSid(WinWorldSid);
-      restricted_token.AddRestrictingSid(WinInteractiveSid);
-      restricted_token.AddRestrictingSid(WinAuthenticatedUserSid);
-      restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
-      restricted_token.AddRestrictingSidCurrentUser();
-      restricted_token.AddRestrictingSidLogonSession();
+      if (use_restricting_sids) {
+        restricted_token.AddRestrictingSid(WinBuiltinUsersSid);
+        restricted_token.AddRestrictingSid(WinWorldSid);
+        restricted_token.AddRestrictingSid(WinInteractiveSid);
+        restricted_token.AddRestrictingSid(WinAuthenticatedUserSid);
+        restricted_token.AddRestrictingSid(WinRestrictedCodeSid);
+        restricted_token.AddRestrictingSidCurrentUser();
+        restricted_token.AddRestrictingSidLogonSession();
+      }
       break;
     }
     case USER_INTERACTIVE: {
