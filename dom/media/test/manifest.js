@@ -2287,6 +2287,13 @@ function Log(token, msg) {
 // Number of tests to run in parallel.
 var PARALLEL_TESTS = 2;
 
+// Disable parallel test for media engine tests, see more info in bug 1840914.
+if (
+  SpecialPowers.Services.prefs.getIntPref("media.wmf.media-engine.enabled", 0)
+) {
+  PARALLEL_TESTS = 1;
+}
+
 // Prefs to set before running tests.  Use this to improve coverage of
 // conditions that might not otherwise be encountered on the test data.
 var gTestPrefs = [
