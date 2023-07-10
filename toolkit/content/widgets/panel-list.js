@@ -103,15 +103,23 @@
         this.toggleAttribute("inxulpanel", true);
         let panel = this.parentElement;
         panel.hidden = false;
-        panel.openPopup(
-          this.lastAnchorNode,
-          "after_start",
-          0,
-          0,
-          false,
-          false,
-          this.triggeringEvent
-        );
+        // Bug 1842070 - There appears to be a race here where panel-lists
+        // embedded in XUL panels won't appear during the first call to show()
+        // without waiting for a mix of rAF and another tick of the event
+        // loop.
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            panel.openPopup(
+              this.lastAnchorNode,
+              "after_start",
+              0,
+              0,
+              false,
+              false,
+              this.triggeringEvent
+            );
+          }, 0);
+        });
       } else {
         this.toggleAttribute("inxulpanel", false);
       }
