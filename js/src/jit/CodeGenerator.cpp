@@ -5766,9 +5766,11 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
   masm.bind(&noRectifier);
   masm.jump(scratch2);
 
+  // ********************
+  // * Native functions *
+  // ********************
   masm.bind(&noJitEntry);
-  // TODO: support native functions
-  masm.jump(&vmCall);
+  generateIonGenericCallNativeFunction(masm, isConstructing);
 
   // *******************
   // * Bound functions *
@@ -5803,6 +5805,71 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
   masm.push(returnAddrReg);
 #endif
   masm.jump(&invokeFunctionVMEntry);
+}
+
+void JitRuntime::generateIonGenericCallNativeFunction(MacroAssembler& masm,
+                                                      bool isConstructing) {
+  Register calleeReg = IonGenericCallCalleeReg;
+  Register argcReg = IonGenericCallArgcReg;
+  Register scratch = IonGenericCallScratch;
+  Register scratch2 = IonGenericCallScratch2;
+  Register contextReg = IonGenericCallScratch3;
+#ifndef JS_USE_LINK_REGISTER
+  Register returnAddrReg = IonGenericCallReturnAddrReg;
+#endif
+
+  // Push a value containing the callee, which will become argv[0].
+  masm.pushValue(JSVAL_TYPE_OBJECT, calleeReg);
+
+  // Load the callee address into calleeReg.
+#ifdef JS_SIMULATOR
+  masm.movePtr(ImmPtr(RedirectedCallAnyNative()), calleeReg);
+#else
+  masm.loadPrivate(Address(calleeReg, JSFunction::offsetOfNativeOrEnv()),
+                   calleeReg);
+#endif
+
+  // Load argv into scratch2.
+  masm.moveStackPtrTo(scratch2);
+
+  // Push argc.
+  masm.push(argcReg);
+
+  masm.loadJSContext(contextReg);
+
+  // Construct native exit frame. Note that unlike other cases in this
+  // trampoline, this code does not use a tail call.
+  masm.pushFrameDescriptor(FrameType::IonJS);
+#ifdef JS_USE_LINK_REGISTER
+  masm.pushReturnAddress();
+#else
+  masm.push(returnAddrReg);
+#endif
+
+  masm.push(FramePointer);
+  masm.moveStackPtrTo(FramePointer);
+  masm.enterFakeExitFrameForNative(contextReg, scratch, isConstructing);
+
+  masm.setupUnalignedABICall(scratch);
+  masm.passABIArg(contextReg);  // cx
+  masm.passABIArg(argcReg);     // argc
+  masm.passABIArg(scratch2);    // argv
+
+  masm.callWithABI(calleeReg);
+
+  // Test for failure.
+  masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
+
+  masm.loadValue(
+      Address(masm.getStackPointer(), NativeExitFrameLayout::offsetOfResult()),
+      JSReturnOperand);
+
+  // Leave the exit frame.
+  masm.moveToStackPtr(FramePointer);
+  masm.pop(FramePointer);
+
+  // Return.
+  masm.ret();
 }
 
 void JitRuntime::generateIonGenericCallBoundFunction(MacroAssembler& masm,
