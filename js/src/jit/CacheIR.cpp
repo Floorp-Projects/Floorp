@@ -13199,4 +13199,16 @@ bool js::jit::CallAnyNative(JSContext* cx, unsigned argc, Value* vp) {
   JSNative native = calleeFunc->native();
   return native(cx, args.length(), args.base());
 }
+
+const void* js::jit::RedirectedCallAnyNative() {
+  // The simulator requires native calls to be redirected to a
+  // special swi instruction. If we are calling an arbitrary native
+  // function, we can't wrap the real target ahead of time, so we
+  // call a wrapper function (CallAnyNative) that calls the target
+  // itself, and redirect that wrapper.
+  JSNative target = CallAnyNative;
+  void* rawPtr = JS_FUNC_TO_DATA_PTR(void*, target);
+  void* redirected = Simulator::RedirectNativeFunction(rawPtr, Args_General3);
+  return redirected;
+}
 #endif

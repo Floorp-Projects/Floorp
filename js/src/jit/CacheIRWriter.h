@@ -19,6 +19,7 @@
 #include "NamespaceImports.h"
 
 #include "gc/AllocKind.h"
+#include "jit/ABIFunctions.h"
 #include "jit/CacheIR.h"
 #include "jit/CacheIROpsGenerated.h"
 #include "jit/CompactBuffer.h"
@@ -65,10 +66,6 @@ class AllocSite;
 namespace jit {
 
 class ICScript;
-
-#ifdef JS_SIMULATOR
-bool CallAnyNative(JSContext* cx, unsigned argc, Value* vp);
-#endif
 
 // Class to record CacheIR + some additional metadata for code generation.
 class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
@@ -556,14 +553,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
                              CallFlags flags, uint32_t argcFixed) {
     MOZ_ASSERT(!flags.isSameRealm());
 #ifdef JS_SIMULATOR
-    // The simulator requires native calls to be redirected to a
-    // special swi instruction. If we are calling an arbitrary native
-    // function, we can't wrap the real target ahead of time, so we
-    // call a wrapper function (CallAnyNative) that calls the target
-    // itself, and redirect that wrapper.
-    JSNative target = CallAnyNative;
-    void* rawPtr = JS_FUNC_TO_DATA_PTR(void*, target);
-    void* redirected = Simulator::RedirectNativeFunction(rawPtr, Args_General3);
+    const void* redirected = RedirectedCallAnyNative();
     callNativeFunction_(calleeId, argc, flags, argcFixed, redirected);
 #else
     callNativeFunction_(calleeId, argc, flags, argcFixed,
