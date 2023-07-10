@@ -83,9 +83,11 @@ void text_shader_main(
 #define BRUSH_FLAG_SEGMENT_REPEAT_Y             8
 #define BRUSH_FLAG_SEGMENT_REPEAT_X_ROUND      16
 #define BRUSH_FLAG_SEGMENT_REPEAT_Y_ROUND      32
-#define BRUSH_FLAG_SEGMENT_NINEPATCH_MIDDLE    64
-#define BRUSH_FLAG_TEXEL_RECT                 128
-#define BRUSH_FLAG_FORCE_AA                   256
+#define BRUSH_FLAG_SEGMENT_REPEAT_X_CENTERED   64
+#define BRUSH_FLAG_SEGMENT_REPEAT_Y_CENTERED  128
+#define BRUSH_FLAG_SEGMENT_NINEPATCH_MIDDLE   256
+#define BRUSH_FLAG_TEXEL_RECT                 512
+#define BRUSH_FLAG_FORCE_AA                  1024
 
 #define INVALID_SEGMENT_INDEX                   0xffff
 
