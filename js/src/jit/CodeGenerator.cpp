@@ -5977,6 +5977,12 @@ void JitRuntime::generateIonGenericCallBoundFunction(MacroAssembler& masm,
   Address firstInlineArgSlot(
       calleeReg, BoundFunctionObject::offsetOfFirstInlineBoundArg());
 
+  // Check that we won't be pushing too many arguments.
+  masm.load32(flagsSlot, scratch);
+  masm.rshift32(Imm32(BoundFunctionObject::NumBoundArgsShift), scratch);
+  masm.add32(argcReg, scratch);
+  masm.branch32(Assembler::Above, scratch, Imm32(JIT_ARGS_LENGTH_MAX), vmCall);
+
   // The stack is currently correctly aligned for a jit call. We will
   // be updating the `this` value and potentially adding additional
   // arguments. On platforms with 16-byte alignment, if the number of
