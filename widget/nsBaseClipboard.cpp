@@ -269,13 +269,17 @@ NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard) {
 
   EmptyNativeClipboardData(aWhichClipboard);
 
+  const auto& clipboardCache = mCaches[aWhichClipboard];
+  MOZ_ASSERT(clipboardCache);
+
   if (mIgnoreEmptyNotification) {
-    MOZ_DIAGNOSTIC_ASSERT(false, "How did we get here?");
+    MOZ_DIAGNOSTIC_ASSERT(!clipboardCache->GetTransferable() &&
+                              !clipboardCache->GetClipboardOwner() &&
+                              clipboardCache->GetSequenceNumber() == -1,
+                          "How did we have data in clipboard cache here?");
     return NS_OK;
   }
 
-  const auto& clipboardCache = mCaches[aWhichClipboard];
-  MOZ_ASSERT(clipboardCache);
   clipboardCache->Clear();
 
   return NS_OK;
