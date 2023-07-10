@@ -125,7 +125,6 @@ constexpr inline bool IsAligned(T value, U alignment) {
   return (value & (alignment - 1)) == 0;
 }
 
-using byte = uint8_t;
 using Address = uintptr_t;
 static const Address kNullAddress = 0;
 
@@ -690,11 +689,11 @@ class ByteArray : public HeapObject {
   PseudoHandle<ByteArrayData> takeOwnership(Isolate* isolate);
   PseudoHandle<ByteArrayData> maybeTakeOwnership(Isolate* isolate);
 
-  byte get(uint32_t index) { return inner()->get(index); }
-  void set(uint32_t index, byte val) { inner()->set(index, val); }
+  uint8_t get(uint32_t index) { return inner()->get(index); }
+  void set(uint32_t index, uint8_t val) { inner()->set(index, val); }
 
   uint32_t length() const { return inner()->length; }
-  byte* GetDataStartAddress() { return inner()->data(); }
+  uint8_t* GetDataStartAddress() { return inner()->data(); }
 
   static ByteArray cast(Object object) {
     ByteArray b;
