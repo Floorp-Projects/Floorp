@@ -44,8 +44,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
-const INLINE_COMPATIBILITY_WARNING_PREF =
-  "devtools.inspector.ruleview.inline-compatibility-warning.enabled";
+const inlineCompatibilityWarningEnabled = Services.prefs.getBoolPref(
+  "devtools.inspector.ruleview.inline-compatibility-warning.enabled"
+);
 
 const SHARED_SWATCH_CLASS = "ruleview-swatch";
 const COLOR_SWATCH_CLASS = "ruleview-colorswatch";
@@ -256,10 +257,6 @@ TextPropertyEditor.prototype = {
       class: "ruleview-unused-warning",
       hidden: "",
     });
-
-    const inlineCompatibilityWarningEnabled = Services.prefs.getBoolPref(
-      INLINE_COMPATIBILITY_WARNING_PREF
-    );
 
     if (inlineCompatibilityWarningEnabled) {
       this.compatibilityState = createChild(this.container, "div", {
@@ -865,10 +862,6 @@ TextPropertyEditor.prototype = {
     }
 
     this.updatePropertyUsedIndicator();
-
-    const inlineCompatibilityWarningEnabled = Services.prefs.getBoolPref(
-      INLINE_COMPATIBILITY_WARNING_PREF
-    );
 
     if (inlineCompatibilityWarningEnabled) {
       this.updatePropertyCompatibilityIndicator();
