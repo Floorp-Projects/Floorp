@@ -5380,7 +5380,7 @@
 
 - name: full-screen-api.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 - name: full-screen-api.allow-trusted-requests-only

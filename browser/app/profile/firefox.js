@@ -1700,9 +1700,6 @@ pref("nimbus.validation.enabled", true);
 pref("nimbus.qa.pref-1", "default");
 pref("nimbus.qa.pref-2", "default");
 
-// Enable the DOM fullscreen API.
-pref("full-screen-api.enabled", true);
-
 // Startup Crash Tracking
 // number of startup crashes that can occur before starting into safe mode automatically
 // (this pref has no effect if more than 6 hours have passed since the last crash)
