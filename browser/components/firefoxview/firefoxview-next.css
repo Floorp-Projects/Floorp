@@ -79,7 +79,7 @@ fxview-category-button[name="overview"]::part(icon) {
 fxview-category-button[name="opentabs"]::part(icon) {
   background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
 }
-fxview-category-button[name="recently-closed"]::part(icon) {
+fxview-category-button[name="recentlyclosed"]::part(icon) {
   background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
 }
 fxview-category-button[name="synced-tabs"]::part(icon) {
@@ -87,6 +87,10 @@ fxview-category-button[name="synced-tabs"]::part(icon) {
 }
 fxview-category-button[name="history"]::part(icon) {
   background-image: url("chrome://mozapps/skin/extensions/category-discover.svg");
+}
+
+fxview-tab-list.with-dismiss-button::part(secondary-button) {
+  background-image: url("chrome://global/skin/icons/close.svg");
 }
 
 fxview-tab-list.history::part(secondary-button) {
