@@ -54,11 +54,6 @@ const MigrationDialog = {
     });
     observer.observe(this._wiz);
 
-    let panelList = this._wiz.querySelector("panel-list");
-    let panel = document.createXULElement("panel");
-    panel.appendChild(panelList);
-    this._wiz.appendChild(panel);
-
     customElements.whenDefined("migration-wizard").then(() => {
       if (args.options?.skipSourceSelection) {
         // This is an automigration for a profile refresh, so begin migration
