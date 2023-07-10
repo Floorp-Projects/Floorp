@@ -100,6 +100,7 @@ class ImageBitmap;
 class InspectorFontFace;
 class OffscreenCanvas;
 class Selection;
+class VideoFrame;
 }  // namespace dom
 namespace gfx {
 struct RectCornerRadii;
@@ -2197,7 +2198,9 @@ class nsLayoutUtils {
      * we don't rescale during decode. */
     SFE_EXACT_SIZE_SURFACE = 1 << 6,
     /* Use orientation from image */
-    SFE_ORIENTATION_FROM_IMAGE = 1 << 7
+    SFE_ORIENTATION_FROM_IMAGE = 1 << 7,
+    /* Caller handles SFER::mCropRect.isSome() */
+    SFE_ALLOW_UNCROPPED_UNSCALED = 1 << 8,
   };
 
   // This function can be called on any thread.
@@ -2210,6 +2213,16 @@ class nsLayoutUtils {
     RefPtr<DrawTarget> target = nullptr;
     return SurfaceFromOffscreenCanvas(aOffscreenCanvas, aSurfaceFlags, target);
   }
+  // This function can be called on any thread.
+  static mozilla::SurfaceFromElementResult SurfaceFromVideoFrame(
+      mozilla::dom::VideoFrame* aVideoFrame, uint32_t aSurfaceFlags,
+      RefPtr<DrawTarget>& aTarget);
+  static mozilla::SurfaceFromElementResult SurfaceFromVideoFrame(
+      mozilla::dom::VideoFrame* aVideoFrame, uint32_t aSurfaceFlags = 0) {
+    RefPtr<DrawTarget> target = nullptr;
+    return SurfaceFromVideoFrame(aVideoFrame, aSurfaceFlags, target);
+  }
+  // This function can be called on any thread.
   static mozilla::SurfaceFromElementResult SurfaceFromImageBitmap(
       mozilla::dom::ImageBitmap* aImageBitmap, uint32_t aSurfaceFlags);
 

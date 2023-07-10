@@ -182,6 +182,12 @@ class VideoFrame final : public nsISupports, public nsWrapperCache {
   static already_AddRefed<VideoFrame> FromTransferred(nsIGlobalObject* aGlobal,
                                                       TransferredData* aData);
 
+  // Native only methods.
+  const gfx::IntSize& NativeCodedSize() const { return mCodedSize; }
+  const gfx::IntSize& NativeDisplaySize() const { return mDisplaySize; }
+  const gfx::IntRect& NativeVisibleRect() const { return mVisibleRect; }
+  already_AddRefed<layers::Image> GetImage() const;
+
  public:
   // A VideoPixelFormat wrapper providing utilities for VideoFrame.
   class Format final {

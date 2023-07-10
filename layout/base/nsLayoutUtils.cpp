@@ -52,6 +52,7 @@
 #include "mozilla/dom/KeyframeEffect.h"
 #include "mozilla/dom/SVGViewportElement.h"
 #include "mozilla/dom/UIEvent.h"
+#include "mozilla/dom/VideoFrame.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
@@ -61,6 +62,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZPublicUtils.h"  // for apz::CalculatePendingDisplayPort
@@ -7170,6 +7172,106 @@ SurfaceFromElementResult nsLayoutUtils::SurfaceFromOffscreenCanvas(
   nsIGlobalObject* global = aOffscreenCanvas->GetParentObject();
   if (global) {
     result.mPrincipal = global->PrincipalOrNull();
+  }
+
+  return result;
+}
+
+SurfaceFromElementResult nsLayoutUtils::SurfaceFromVideoFrame(
+    VideoFrame* aVideoFrame, uint32_t aSurfaceFlags,
+    RefPtr<DrawTarget>& aTarget) {
+  SurfaceFromElementResult result;
+
+  RefPtr<layers::Image> layersImage = aVideoFrame->GetImage();
+  if (!layersImage) {
+    return result;
+  }
+
+  IntSize codedSize = aVideoFrame->NativeCodedSize();
+  IntRect visibleRect = aVideoFrame->NativeVisibleRect();
+  IntSize displaySize = aVideoFrame->NativeDisplaySize();
+
+  MOZ_ASSERT(layersImage->GetSize() == codedSize);
+  IntRect codedRect(IntPoint(0, 0), codedSize);
+
+  if (visibleRect.IsEqualEdges(codedRect) && displaySize == codedSize) {
+    // The display and coded rects are identical, which means we can just use
+    // the image as is.
+    result.mLayersImage = std::move(layersImage);
+    result.mSize = codedSize;
+    result.mIntrinsicSize = codedSize;
+  } else if (aSurfaceFlags & SFE_ALLOW_UNCROPPED_UNSCALED) {
+    // The caller supports cropping/scaling.
+    result.mLayersImage = std::move(layersImage);
+    result.mCropRect = Some(visibleRect);
+    result.mSize = codedSize;
+    result.mIntrinsicSize = displaySize;
+  } else {
+    // The caller does not support cropping/scaling. We need to on its behalf.
+    RefPtr<SourceSurface> surface = layersImage->GetAsSourceSurface();
+    if (!surface) {
+      return result;
+    }
+
+    RefPtr<DrawTarget> ref = aTarget
+                                 ? aTarget
+                                 : gfxPlatform::GetPlatform()
+                                       ->ThreadLocalScreenReferenceDrawTarget();
+    if (!ref->CanCreateSimilarDrawTarget(displaySize,
+                                         SurfaceFormat::B8G8R8A8)) {
+      return result;
+    }
+
+    RefPtr<DrawTarget> dt =
+        ref->CreateSimilarDrawTarget(displaySize, SurfaceFormat::B8G8R8A8);
+    if (!dt) {
+      return result;
+    }
+
+    gfx::Rect dstRect(0, 0, displaySize.Width(), displaySize.Height());
+    gfx::Rect srcRect(visibleRect.X(), visibleRect.Y(), visibleRect.Width(),
+                      visibleRect.Height());
+    dt->DrawSurface(surface, dstRect, srcRect);
+    result.mSourceSurface = dt->Snapshot();
+    if (NS_WARN_IF(!result.mSourceSurface)) {
+      return result;
+    }
+
+    result.mSize = displaySize;
+    result.mIntrinsicSize = displaySize;
+  }
+
+  // TODO(aosmond): Presumably we can do better than assuming premultiplied.
+  // Depending on how the VideoFrame was created, we may have had more
+  // information about its transpancy status.
+  result.mAlphaType = gfxAlphaType::Premult;
+  result.mHasSize = true;
+
+  // We shouldn't have a VideoFrame if either of these is true.
+  result.mHadCrossOriginRedirects = false;
+  result.mIsWriteOnly = false;
+
+  nsIGlobalObject* global = aVideoFrame->GetParentObject();
+  if (global) {
+    result.mPrincipal = global->PrincipalOrNull();
+  }
+
+  if (aTarget) {
+    // They gave us a DrawTarget to optimize for, so even though we may have a
+    // layers::Image, we should unconditionally try to grab a SourceSurface and
+    // try to optimize it.
+    if (result.mLayersImage) {
+      MOZ_ASSERT(!result.mSourceSurface);
+      result.mSourceSurface = result.mLayersImage->GetAsSourceSurface();
+    }
+
+    if (result.mSourceSurface) {
+      RefPtr<SourceSurface> opt =
+          aTarget->OptimizeSourceSurface(result.mSourceSurface);
+      if (opt) {
+        result.mSourceSurface = std::move(opt);
+      }
+    }
   }
 
   return result;
