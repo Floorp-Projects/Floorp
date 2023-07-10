@@ -171,3 +171,5 @@ firefoxview-history-date-prev-month = { DATETIME($date, month: "long", year: "nu
 ##
 
 firefoxview-show-all-history = Show all history
+
+firefoxview-view-more-browsing-history = View more browsing history

@@ -28,6 +28,7 @@ class CardContainer extends MozLitElement {
 
   static queries = {
     detailsEl: "details",
+    mainSlot: "slot[name=main]",
     summaryEl: "summary",
     viewAllLink: ".view-all-link",
   };
