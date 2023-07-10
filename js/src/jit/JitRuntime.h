@@ -260,8 +260,10 @@ class JitRuntime {
                                   IonGenericCallKind kind);
 
   // Helper functions for generateIonGenericCallStub
-  void generateIonGenericCallBoundFunction(MacroAssembler& masm,
-                                           Label* entry, Label* vmCall);
+  void generateIonGenericCallBoundFunction(MacroAssembler& masm, Label* entry,
+                                           Label* vmCall);
+  void generateIonGenericCallNativeFunction(MacroAssembler& masm,
+                                            bool isConstructing);
 
   JitCode* generateDebugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
 
