@@ -212,6 +212,10 @@ class WebRenderLayerManager final : public WindowRenderer {
   std::unordered_set<ScrollableLayerGuid::ViewID>
   ClearPendingScrollInfoUpdate();
 
+#ifdef DEBUG
+  gfxContext* GetTarget() const { return mTarget; }
+#endif
+
  private:
   /**
    * Take a snapshot of the parent context, and copy
