@@ -6,9 +6,6 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 );
 
 add_task(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [["pdfjs.eventBusDispatchToDOM", true]],
-  });
   await BrowserTestUtils.withNewTab(
     TEST_PATH + "file_pdfjs_not_subject_to_csp.html",
     async function (browser) {
