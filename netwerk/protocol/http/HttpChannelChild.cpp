@@ -360,12 +360,14 @@ void HttpChannelChild::ProcessOnStartRequest(
       this, [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
 #ifdef NIGHTLY_BUILD
              aUseResponseHead, aRequestHeaders, aArgs, start]() {
+        TimeDuration delay = TimeStamp::Now() - start;
         if (self->mLoadFlags & nsIRequest::LOAD_RECORD_START_REQUEST_DELAY) {
-          TimeDuration delay = TimeStamp::Now() - start;
           Telemetry::Accumulate(
               Telemetry::HTTP_PRELOAD_IMAGE_STARTREQUEST_DELAY,
               static_cast<uint32_t>(delay.ToMilliseconds()));
         }
+        glean::networking::http_content_onstart_delay.AccumulateRawDuration(
+            delay);
 #else
              aUseResponseHead, aRequestHeaders, aArgs]() {
 #endif
@@ -808,11 +810,22 @@ void HttpChannelChild::ProcessOnStopRequest(
        this, aFromSocketProcess));
   MOZ_ASSERT(OnSocketThread());
 
+#ifdef NIGHTLY_BUILD
+  TimeStamp start = TimeStamp::Now();
+#endif
+
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
       this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
              aResponseTrailers,
              consoleReports = CopyableTArray{aConsoleReports.Clone()},
-             aFromSocketProcess]() mutable {
+#ifdef NIGHTLY_BUILD
+             aFromSocketProcess, start]() mutable {
+        TimeDuration delay = TimeStamp::Now() - start;
+        glean::networking::http_content_onstop_delay.AccumulateRawDuration(
+            delay);
+#else
+              aFromSocketProcess]() mutable {
+#endif
         self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers);
         if (!aFromSocketProcess) {
           self->DoOnConsoleReport(std::move(consoleReports));

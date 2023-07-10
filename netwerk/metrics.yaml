@@ -164,3 +164,35 @@ networking:
       - acreskey@mozilla.com
     expires: never
     telemetry_mirror: DNS_FAILED_LOOKUP_TIME
+
+  http_content_onstart_delay:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time between dispatching OnStartRequest from the socket thread and processing it on the main thread (content process).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840703
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840703#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: 120
+
+  http_content_onstop_delay:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+      The time between dispatching OnStopRequest from the socket thread and processing it on the main thread (content process).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840703
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1840703#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - acreskey@mozilla.com
+    expires: 120
