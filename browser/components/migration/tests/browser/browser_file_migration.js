@@ -136,13 +136,13 @@ add_task(async function test_file_migration() {
 
     info("Waiting for panel-list shown");
     await new Promise(resolve => {
-      wizard
+      shadow
         .querySelector("panel-list")
         .addEventListener("shown", resolve, { once: true });
     });
 
     info("Panel list shown. Clicking on panel-item");
-    let panelItem = wizard.querySelector(
+    let panelItem = shadow.querySelector(
       `panel-item[key="${DUMMY_FILEMIGRATOR_KEY}"]`
     );
     panelItem.click();
@@ -250,13 +250,13 @@ add_task(async function test_file_migration_error() {
 
     info("Waiting for panel-list shown");
     await new Promise(resolve => {
-      wizard
+      shadow
         .querySelector("panel-list")
         .addEventListener("shown", resolve, { once: true });
     });
 
     info("Panel list shown. Clicking on panel-item");
-    let panelItem = wizard.querySelector(
+    let panelItem = shadow.querySelector(
       `panel-item[key="${DUMMY_FILEMIGRATOR_KEY}"]`
     );
     panelItem.click();
