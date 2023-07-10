@@ -32,10 +32,6 @@
     ></script>
     <script
       type="module"
-      src="chrome://browser/content/firefoxview/recentlyclosed.mjs"
-    ></script>
-    <script
-      type="module"
       src="chrome://browser/content/firefoxview/fxview-category-navigation.mjs"
     ></script>
     <script src="chrome://browser/content/contentTheme.js"></script>
@@ -61,7 +57,7 @@
       <fxview-category-button
         class="category"
         slot="category-button"
-        name="recentlyclosed"
+        name="recently-closed"
         data-l10n-id="firefoxview-recently-closed-nav"
       >
       </fxview-category-button>
@@ -86,13 +82,9 @@
           <div>
             <view-opentabs slot="opentabs"></view-opentabs>
           </div>
-          <div>
-            <view-recentlyclosed slot="recentlyclosed"></view-recentlyclosed>
-          </div>
         </view-overview>
         <view-history name="history"></view-history>
         <view-opentabs name="opentabs"></view-opentabs>
-        <view-recentlyclosed name="recentlyclosed"></view-recentlyclosed>
       </named-deck>
     </main>
     <script src="chrome://browser/content/firefoxview/firefoxview-next.mjs"></script>
