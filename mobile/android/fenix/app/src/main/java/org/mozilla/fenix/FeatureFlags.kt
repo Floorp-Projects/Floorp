@@ -50,7 +50,7 @@ object FeatureFlags {
     /**
      * Enables compose on the tabs tray items.
      */
-    const val composeTabsTray = false
+    val composeTabsTray = Config.channel.isNightlyOrDebug
 
     /**
      * Enables compose on the top sites.
