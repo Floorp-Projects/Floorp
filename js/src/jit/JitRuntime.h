@@ -264,6 +264,11 @@ class JitRuntime {
                                            Label* vmCall);
   void generateIonGenericCallNativeFunction(MacroAssembler& masm,
                                             bool isConstructing);
+  void generateIonGenericCallFunCall(MacroAssembler& masm, Label* entry,
+                                     Label* vmCall);
+  void generateIonGenericCallArgumentsShift(MacroAssembler& masm, Register argc,
+                                            Register curr, Register end,
+                                            Register scratch, Label* done);
 
   JitCode* generateDebugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
 
