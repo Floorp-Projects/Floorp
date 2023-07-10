@@ -46,7 +46,8 @@ struct ImageCacheEntryData {
         mBackendType(aOther.mBackendType),
         mSourceSurface(aOther.mSourceSurface),
         mSize(aOther.mSize),
-        mIntrinsicSize(aOther.mIntrinsicSize) {}
+        mIntrinsicSize(aOther.mIntrinsicSize),
+        mCropRect(aOther.mCropRect) {}
   explicit ImageCacheEntryData(const ImageCacheKey& aKey)
       : mImage(aKey.mImage),
         mCanvas(aKey.mCanvas),
@@ -63,6 +64,7 @@ struct ImageCacheEntryData {
   RefPtr<SourceSurface> mSourceSurface;
   IntSize mSize;
   IntSize mIntrinsicSize;
+  Maybe<IntRect> mCropRect;
   nsExpirationState mState;
 };
 
@@ -263,12 +265,10 @@ static already_AddRefed<imgIContainer> GetImageContainer(dom::Element* aImage) {
   return imgContainer.forget();
 }
 
-void CanvasImageCache::NotifyDrawImage(Element* aImage,
-                                       HTMLCanvasElement* aCanvas,
-                                       DrawTarget* aTarget,
-                                       SourceSurface* aSource,
-                                       const IntSize& aSize,
-                                       const IntSize& aIntrinsicSize) {
+void CanvasImageCache::NotifyDrawImage(
+    Element* aImage, HTMLCanvasElement* aCanvas, DrawTarget* aTarget,
+    SourceSurface* aSource, const IntSize& aSize, const IntSize& aIntrinsicSize,
+    const Maybe<IntRect>& aCropRect) {
   if (!aTarget) {
     return;
   }
@@ -300,6 +300,7 @@ void CanvasImageCache::NotifyDrawImage(Element* aImage,
     entry->mData->mSourceSurface = aSource;
     entry->mData->mSize = aSize;
     entry->mData->mIntrinsicSize = aIntrinsicSize;
+    entry->mData->mCropRect = aCropRect;
 
     AllCanvasImageCacheEntry* allEntry =
         gImageCache->mAllCanvasCache.PutEntry(allCanvasCacheKey);
@@ -333,7 +334,8 @@ SourceSurface* CanvasImageCache::LookupCanvas(Element* aImage,
                                               HTMLCanvasElement* aCanvas,
                                               DrawTarget* aTarget,
                                               IntSize* aSizeOut,
-                                              IntSize* aIntrinsicSizeOut) {
+                                              IntSize* aIntrinsicSizeOut,
+                                              Maybe<IntRect>* aCropRectOut) {
   if (!gImageCache || !aTarget) {
     return nullptr;
   }
@@ -360,6 +362,7 @@ SourceSurface* CanvasImageCache::LookupCanvas(Element* aImage,
   gImageCache->MarkUsed(entry->mData.get());
   *aSizeOut = entry->mData->mSize;
   *aIntrinsicSizeOut = entry->mData->mIntrinsicSize;
+  *aCropRectOut = entry->mData->mCropRect;
   return entry->mData->mSourceSurface;
 }
 

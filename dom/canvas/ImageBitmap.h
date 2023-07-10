@@ -8,6 +8,7 @@
 #define mozilla_dom_ImageBitmap_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/SurfaceFromElementResult.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/dom/TypedArray.h"
@@ -92,6 +93,8 @@ class ImageBitmap final : public nsISupports, public nsWrapperCache {
   uint32_t Height() const { return mPictureRect.Height(); }
 
   void Close();
+
+  SurfaceFromElementResult SurfaceFrom(uint32_t aSurfaceFlags);
 
   /*
    * The PrepareForDrawTarget() might return null if the mPictureRect does not

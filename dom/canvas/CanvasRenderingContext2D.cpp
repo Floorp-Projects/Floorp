@@ -4987,20 +4987,21 @@ static already_AddRefed<SourceSurface> ExtractSubrect(SourceSurface* aSurface,
 //
 
 static void ClipImageDimension(double& aSourceCoord, double& aSourceSize,
-                               int32_t aImageSize, double& aDestCoord,
-                               double& aDestSize) {
+                               double& aClipOriginCoord, double& aClipSize,
+                               double& aDestCoord, double& aDestSize) {
   double scale = aDestSize / aSourceSize;
-  if (aSourceCoord < 0.0) {
+  double relativeCoord = aSourceCoord - aClipOriginCoord;
+  if (relativeCoord < 0.0) {
     double destEnd = aDestCoord + aDestSize;
-    aDestCoord -= aSourceCoord * scale;
+    aDestCoord -= relativeCoord * scale;
     aDestSize = destEnd - aDestCoord;
-    aSourceSize += aSourceCoord;
-    aSourceCoord = 0.0;
+    aSourceSize += relativeCoord;
+    aSourceCoord = aClipOriginCoord;
   }
-  double delta = aImageSize - (aSourceCoord + aSourceSize);
+  double delta = aClipSize - (relativeCoord + aSourceSize);
   if (delta < 0.0) {
     aDestSize += delta * scale;
-    aSourceSize = aImageSize - aSourceCoord;
+    aSourceSize = aClipSize - relativeCoord;
   }
 }
 
@@ -5117,6 +5118,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
   RefPtr<SourceSurface> srcSurf;
   gfx::IntSize imgSize;
   gfx::IntSize intrinsicImgSize;
+  Maybe<IntRect> cropRect;
   Element* element = nullptr;
   OffscreenCanvas* offscreenCanvas = nullptr;
   VideoFrame* videoFrame = nullptr;
@@ -5185,8 +5187,9 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
       element = video;
     }
 
-    srcSurf = CanvasImageCache::LookupCanvas(element, mCanvasElement, mTarget,
-                                             &imgSize, &intrinsicImgSize);
+    srcSurf =
+        CanvasImageCache::LookupCanvas(element, mCanvasElement, mTarget,
+                                       &imgSize, &intrinsicImgSize, &cropRect);
   }
 
   DirectDrawInfo drawInfo;
@@ -5196,7 +5199,7 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
     // of animated images. We also don't want to rasterize vector images.
     uint32_t sfeFlags = nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE |
                         nsLayoutUtils::SFE_NO_RASTERIZING_VECTORS |
-                        nsLayoutUtils::SFE_EXACT_SIZE_SURFACE;
+                        nsLayoutUtils::SFE_ALLOW_UNCROPPED_UNSCALED;
 
     SurfaceFromElementResult res;
     if (offscreenCanvas) {
@@ -5232,36 +5235,65 @@ void CanvasRenderingContext2D::DrawImage(const CanvasImageSource& aImage,
 
     imgSize = res.mSize;
     intrinsicImgSize = res.mIntrinsicSize;
+    cropRect = res.mCropRect;
     DoSecurityCheck(res.mPrincipal, res.mIsWriteOnly, res.mCORSUsed);
 
     if (srcSurf) {
       if (res.mImageRequest) {
         CanvasImageCache::NotifyDrawImage(element, mCanvasElement, mTarget,
-                                          srcSurf, imgSize, intrinsicImgSize);
+                                          srcSurf, imgSize, intrinsicImgSize,
+                                          cropRect);
       }
     } else {
       drawInfo = res.mDrawInfo;
     }
   }
 
+  double clipOriginX, clipOriginY, clipWidth, clipHeight;
+  if (cropRect) {
+    clipOriginX = cropRect.ref().X();
+    clipOriginY = cropRect.ref().Y();
+    clipWidth = cropRect.ref().Width();
+    clipHeight = cropRect.ref().Height();
+  } else {
+    clipOriginX = clipOriginY = 0.0;
+    clipWidth = imgSize.width;
+    clipHeight = imgSize.height;
+  }
+
+  // Any provided coordinates are in the display space, or the same as the
+  // intrinsic size. In order to get to the surface coordinate space, we may
+  // need to adjust for scaling and/or cropping. If no source coordinates are
+  // provided, then we can just directly use the actual surface size.
   if (aOptional_argc == 0) {
-    aSx = aSy = 0.0;
-    aSw = (double)imgSize.width;
-    aSh = (double)imgSize.height;
+    aSx = clipOriginX;
+    aSy = clipOriginY;
+    aSw = clipWidth;
+    aSh = clipHeight;
     aDw = (double)intrinsicImgSize.width;
     aDh = (double)intrinsicImgSize.height;
   } else if (aOptional_argc == 2) {
-    aSx = aSy = 0.0;
-    aSw = (double)imgSize.width;
-    aSh = (double)imgSize.height;
+    aSx = clipOriginX;
+    aSy = clipOriginY;
+    aSw = clipWidth;
+    aSh = clipHeight;
+  } else if (cropRect || intrinsicImgSize != imgSize) {
+    // We need to first scale between the cropped size and the intrinsic size,
+    // and then adjust for the offset from the crop rect.
+    double scaleXToCrop = clipWidth / intrinsicImgSize.width;
+    double scaleYToCrop = clipHeight / intrinsicImgSize.height;
+    aSx = aSx * scaleXToCrop + clipOriginX;
+    aSy = aSy * scaleYToCrop + clipOriginY;
+    aSw = aSw * scaleXToCrop;
+    aSh = aSh * scaleYToCrop;
   }
 
   if (aSw == 0.0 || aSh == 0.0) {
     return;
   }
 
-  ClipImageDimension(aSx, aSw, imgSize.width, aDx, aDw);
-  ClipImageDimension(aSy, aSh, imgSize.height, aDy, aDh);
+  ClipImageDimension(aSx, aSw, clipOriginX, clipWidth, aDx, aDw);
+  ClipImageDimension(aSy, aSh, clipOriginY, clipHeight, aDy, aDh);
 
   if (aSw <= 0.0 || aSh <= 0.0 || aDw <= 0.0 || aDh <= 0.0) {
     // source and/or destination are fully clipped, so nothing is painted
