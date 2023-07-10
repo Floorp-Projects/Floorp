@@ -258,6 +258,11 @@ class JitRuntime {
   void generateFreeStub(MacroAssembler& masm);
   void generateIonGenericCallStub(MacroAssembler& masm,
                                   IonGenericCallKind kind);
+
+  // Helper functions for generateIonGenericCallStub
+  void generateIonGenericCallBoundFunction(MacroAssembler& masm,
+                                           Label* entry, Label* vmCall);
+
   JitCode* generateDebugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
 
   bool generateVMWrapper(JSContext* cx, MacroAssembler& masm,
