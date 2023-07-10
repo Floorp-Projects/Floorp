@@ -78,11 +78,8 @@ export default class LoginItem extends HTMLElement {
     this._favicon = this.shadowRoot.querySelector(".login-item-favicon");
     this._title = this.shadowRoot.querySelector(".login-item-title");
     this._breachAlert = this.shadowRoot.querySelector("login-breach-alert");
-    this._vulnerableAlert = this.shadowRoot.querySelector(".vulnerable-alert");
-    this._vulnerableAlertLink =
-      this._vulnerableAlert.querySelector(".alert-link");
-    this._vulnerableAlertLearnMoreLink = this._vulnerableAlert.querySelector(
-      ".alert-learn-more-link"
+    this._vulnerableAlert = this.shadowRoot.querySelector(
+      "login-vulnerable-password-alert"
     );
 
     this.render();
@@ -134,10 +131,6 @@ export default class LoginItem extends HTMLElement {
 
     this._revealCheckbox.addEventListener("click", e =>
       this.handleRevealPasswordClick(e)
-    );
-
-    this._vulnerableAlertLearnMoreLink.addEventListener("click", e =>
-      this.handleAlertLearnMoreClick(e)
     );
 
     this._passwordInput.addEventListener("focus", e =>
@@ -216,18 +209,7 @@ export default class LoginItem extends HTMLElement {
       !this._vulnerableLoginsMap.has(this._login.guid) ||
       !this._breachAlert.hidden;
     if (!this._vulnerableAlert.hidden) {
-      this._vulnerableAlertLink.href = this._login.origin;
-      document.l10n.setAttributes(
-        this._vulnerableAlertLink,
-        "about-logins-vulnerable-alert-link",
-        {
-          hostname: this._login.displayOrigin,
-        }
-      );
-      this._vulnerableAlertLearnMoreLink.setAttribute(
-        "href",
-        window.AboutLoginsUtils.supportBaseURL + "lockwise-alerts"
-      );
+      this.#updateVulnerablePasswordAlert(this._login.origin);
     }
     if (onlyUpdateErrorsAndAlerts) {
       return;
@@ -992,6 +974,10 @@ export default class LoginItem extends HTMLElement {
   #updateBreachAlert(hostname, date) {
     this._breachAlert.hostname = hostname;
     this._breachAlert.date = date;
+  }
+
+  #updateVulnerablePasswordAlert(hostname) {
+    this._vulnerableAlert.hostname = hostname;
   }
 }
 customElements.define("login-item", LoginItem);
