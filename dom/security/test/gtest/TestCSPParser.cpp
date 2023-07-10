@@ -150,8 +150,11 @@ nsresult runTestSuite(const PolicyTest* aPolicies, uint32_t aPolicyCount,
                       uint32_t aExpectedPolicyCount) {
   nsresult rv;
   nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  bool navigateTo = false;
   bool wasmUnsafeEval = false;
   if (prefs) {
+    prefs->GetBoolPref("security.csp.enableNavigateTo", &navigateTo);
+    prefs->SetBoolPref("security.csp.enableNavigateTo", true);
     prefs->GetBoolPref("security.csp.wasm-unsafe-eval.enabled",
                        &wasmUnsafeEval);
     prefs->SetBoolPref("security.csp.wasm-unsafe-eval.enabled", true);
@@ -164,6 +167,7 @@ nsresult runTestSuite(const PolicyTest* aPolicies, uint32_t aPolicyCount,
   }
 
   if (prefs) {
+    prefs->SetBoolPref("security.csp.enableNavigateTo", navigateTo);
     prefs->SetBoolPref("security.csp.wasm-unsafe-eval.enabled", wasmUnsafeEval);
   }
 
@@ -218,6 +222,10 @@ TEST(CSPParser, Directives)
       "worker-src https://example.com" },
     { "worker-src http://worker.com; frame-src http://frame.com; child-src http://child.com",
       "worker-src http://worker.com; frame-src http://frame.com; child-src http://child.com" },
+    { "navigate-to http://example.com",
+      "navigate-to http://example.com"},
+    { "navigate-to 'unsafe-allow-redirects' http://example.com",
+      "navigate-to 'unsafe-allow-redirects' http://example.com"},
     { "script-src 'unsafe-allow-redirects' http://example.com",
       "script-src http://example.com"},
       // clang-format on
