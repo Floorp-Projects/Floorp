@@ -16,6 +16,7 @@ const { clearInterval, setInterval } = ChromeUtils.import(
 const TAB_SLEEP_ENABLED_PREF = "floorp.tabsleep.enabled";
 const TAB_SLEEP_TESTMODE_ENABLED_PREF = "floorp.tabsleep.testmode.enabled";
 const TAB_SLEEP_TAB_TIMEOUT_MINUTES_PREF = "floorp.tabsleep.tabTimeoutMinutes";
+const TAB_SLEEP_EXCLUDE_HOSTS_PREF = "floorp.tabsleep.excludeHosts";
 
 const EXCLUDE_URL_PATTERNS = [
     "auth",
@@ -293,6 +294,9 @@ function enableTabSleep() {
 
     interval = setInterval(function() {
         let currentTime = Date.now();
+        let excludeHosts = Services.prefs.getStringPref(TAB_SLEEP_EXCLUDE_HOSTS_PREF, "")
+            .split(",")
+            .map(host => host.trim());
         for (let nativeTab of tabs) {
             if (nativeTab.selected) continue;
             if (nativeTab.multiselected) continue;
@@ -309,6 +313,7 @@ function enableTabSleep() {
                 }
             }
             if (!target) continue;
+            if (excludeHosts.includes(nativeTab.linkedBrowser.documentURI.hostPort)) continue;
             if (
                 (currentTime - nativeTab.lastAccessed) > (TAB_TIMEOUT_MINUTES * 60 * 1000) &&
                 (
