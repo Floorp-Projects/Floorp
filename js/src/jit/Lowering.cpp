@@ -14,6 +14,7 @@
 #include <type_traits>
 
 #include "jit/ABIArgGenerator.h"
+#include "jit/IonGenericCallStub.h"
 #include "jit/IonOptimizationLevels.h"
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
@@ -611,9 +612,9 @@ void LIRGenerator::visitCall(MCall* call) {
     }
   } else {
     // Call anything, using the most generic code.
-    lir = new (alloc())
-        LCallGeneric(useRegisterAtStart(call->getCallee()),
-                     tempFixed(CallTempReg0), tempFixed(CallTempReg1));
+    lir = new (alloc()) LCallGeneric(
+        useFixedAtStart(call->getCallee(), IonGenericCallCalleeReg),
+        tempFixed(IonGenericCallArgcReg));
   }
   defineReturn(lir, call);
   assignSafepoint(lir, call);

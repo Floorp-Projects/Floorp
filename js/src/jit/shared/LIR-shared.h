@@ -461,21 +461,18 @@ class LJSCallInstructionHelper
 
 // Generates a polymorphic callsite, wherein the function being called is
 // unknown and anticipated to vary.
-class LCallGeneric : public LJSCallInstructionHelper<BOX_PIECES, 1, 2> {
+class LCallGeneric : public LJSCallInstructionHelper<BOX_PIECES, 1, 1> {
  public:
   LIR_HEADER(CallGeneric)
 
-  LCallGeneric(const LAllocation& func, const LDefinition& nargsreg,
-               const LDefinition& tmpobjreg)
+  LCallGeneric(const LAllocation& callee, const LDefinition& argc)
       : LJSCallInstructionHelper(classOpcode) {
-    setOperand(0, func);
-    setTemp(0, nargsreg);
-    setTemp(1, tmpobjreg);
+    setOperand(0, callee);
+    setTemp(0, argc);
   }
 
-  const LAllocation* getFunction() { return getOperand(0); }
-  const LDefinition* getNargsReg() { return getTemp(0); }
-  const LDefinition* getTempObject() { return getTemp(1); }
+  const LAllocation* getCallee() { return getOperand(0); }
+  const LDefinition* getArgc() { return getTemp(0); }
 };
 
 // Generates a hardcoded callsite for a known, non-native target.
