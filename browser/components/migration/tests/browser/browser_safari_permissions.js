@@ -79,7 +79,7 @@ add_task(async function test_safari_permissions() {
     let shadow = wizard.openOrClosedShadowRoot;
 
     info("Choosing Safari");
-    let panelItem = wizard.querySelector(
+    let panelItem = shadow.querySelector(
       `panel-item[key="${SafariProfileMigrator.key}"]`
     );
     panelItem.click();

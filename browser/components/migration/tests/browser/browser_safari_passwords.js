@@ -166,7 +166,7 @@ async function testSafariPasswordHelper(
     let shadow = wizard.openOrClosedShadowRoot;
 
     info("Choosing Safari");
-    let panelItem = wizard.querySelector(
+    let panelItem = shadow.querySelector(
       `panel-item[key="${SafariProfileMigrator.key}"]`
     );
     panelItem.click();
@@ -379,7 +379,7 @@ add_task(async function test_safari_password_disabled() {
     let shadow = wizard.openOrClosedShadowRoot;
 
     info("Choosing Safari");
-    let panelItem = wizard.querySelector(
+    let panelItem = shadow.querySelector(
       `panel-item[key="${SafariProfileMigrator.key}"]`
     );
     panelItem.click();

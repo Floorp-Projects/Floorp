@@ -283,7 +283,7 @@ export class MigrationWizard extends HTMLElement {
 
   constructor() {
     super();
-    const shadow = this.attachShadow({ mode: "closed" });
+    const shadow = this.attachShadow({ mode: "open" });
 
     if (window.MozXULElement) {
       window.MozXULElement.insertFTLIfNeeded("branding/brand.ftl");
@@ -415,23 +415,20 @@ export class MigrationWizard extends HTMLElement {
     if (this.#browserProfileSelectorList) {
       return;
     }
-    this.#browserProfileSelectorList = this.querySelector("panel-list");
-    if (!this.#browserProfileSelectorList) {
-      throw new Error(
-        "Could not find a <panel-list> under the MigrationWizard during initialization."
-      );
-    }
+    this.#browserProfileSelectorList = document.createElement("panel-list");
     this.#browserProfileSelectorList.toggleAttribute(
       "min-width-from-anchor",
       true
     );
     this.#browserProfileSelectorList.addEventListener("click", this);
-    // Until bug 1823489 is fixed, this is the easiest way for the
-    // migration wizard to style the selector dropdown so that it more
-    // closely lines up with the edges of the selector button.
-    this.#browserProfileSelectorList.style.boxSizing = "border-box";
-    this.#browserProfileSelectorList.style.overflowY = "auto";
-    this.#browserProfileSelectorList.style.maxHeight = "100%";
+
+    if (document.createXULElement) {
+      let panel = document.createXULElement("panel");
+      panel.appendChild(this.#browserProfileSelectorList);
+      this.#shadowRoot.appendChild(panel);
+    } else {
+      this.#shadowRoot.appendChild(this.#browserProfileSelectorList);
+    }
   }
 
   /**
@@ -552,32 +549,9 @@ export class MigrationWizard extends HTMLElement {
       opt.hasPermissions = migrator.hasPermissions;
       opt.brandImage = migrator.brandImage;
 
-      // Bug 1823489 - since the panel-list and panel-items are slotted, we
-      // cannot style them directly from migration-wizard.css. We use inline
-      // styles for now to achieve the desired appearance, but bug 1823489
-      // will investigate having MigrationWizard own the <xul:panel>,
-      // <panel-list> and <panel-item>'s so that styling can be done in the
-      // stylesheet instead.
       let button = opt.shadowRoot.querySelector("button");
-      button.style.minHeight = "40px";
       if (migrator.brandImage) {
         button.style.backgroundImage = `url(${migrator.brandImage})`;
-      } else {
-        button.style.backgroundImage = `url("chrome://global/skin/icons/defaultFavicon.svg")`;
-      }
-
-      // Bug 1823489 - since the panel-list and panel-items are slotted, we
-      // cannot style them or their children in migration-wizard.css. We use
-      // inline styles for now to achieve the desired appearance, but bug 1823489
-      // will investigate having MigrationWizard own the <xul:panel>,
-      // <panel-list> and <panel-item>'s so that styling can be done in the
-      // stylesheet instead.
-      if (migrator.type == MigrationWizardConstants.MIGRATOR_TYPES.FILE) {
-        button.style.backgroundSize = "20px";
-        button.style.backgroundPosition = "6px center";
-        if (this.#browserProfileSelectorList.isDocumentRTL()) {
-          button.style.backgroundPositionX = "right 6px";
-        }
       }
 
       if (migrator.profile) {

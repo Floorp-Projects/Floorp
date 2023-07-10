@@ -81,7 +81,9 @@ add_task(async function test_embedded_import() {
 
   await migrationWizardReady;
 
-  let [panelList] = win.document.querySelector("migration-wizard").children;
+  let panelList = win.document
+    .querySelector("migration-wizard")
+    .openOrClosedShadowRoot.querySelector("panel-list");
   Assert.equal(panelList.tagName, "PANEL-LIST");
   Assert.equal(panelList.firstChild.tagName, "PANEL-ITEM");
 

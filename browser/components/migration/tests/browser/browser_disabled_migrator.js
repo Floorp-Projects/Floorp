@@ -20,12 +20,12 @@ add_task(async function test_enabled_migrator() {
     selector.click();
 
     await new Promise(resolve => {
-      wizard
+      shadow
         .querySelector("panel-list")
         .addEventListener("shown", resolve, { once: true });
     });
 
-    let panelItem = wizard.querySelector(
+    let panelItem = shadow.querySelector(
       `panel-item[key="${InternalTestingProfileMigrator.key}"]`
     );
 
@@ -81,12 +81,12 @@ add_task(async function test_disabling_migrator() {
     selector.click();
 
     await new Promise(resolve => {
-      wizard
+      shadow
         .querySelector("panel-list")
         .addEventListener("shown", resolve, { once: true });
     });
 
-    let panelItem = wizard.querySelector(
+    let panelItem = shadow.querySelector(
       `panel-item[key="${InternalTestingProfileMigrator.key}"]`
     );
 

@@ -127,14 +127,18 @@ label:not([hidden]) {
   text-transform: uppercase;
 }
 
-/**
- * Until we address bug 1823489, it's not that easy to apply styles on
- * the panel-list. We work around this by setting the CSS variable for
- * the border instead.
- */
-slot::slotted(panel-list),
-slot::slotted(panel) {
-  --in-content-box-border-color: transparent;
+panel-item::part(button) {
+  min-height: 40px;
+}
+
+panel-item[type="file"]::part(button) {
+  background-size: 20px;
+  background-position: 6px center;
+}
+
+panel-item[type="file"]:-moz-locale-dir(rtl)::part(button),
+panel-item[type="file"]:dir(rtl)::part(button) {
+  background-position-x: right 6px;
 }
 
 div[name="page-selection"]:not([show-import-all]) #select-all,
