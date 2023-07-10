@@ -8927,13 +8927,6 @@
   value: 200
   mirror: always
 
-# Is steps(jump-*) supported in easing functions?
-- name: layout.css.step-position-jump.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
 # Stylo thread-pool size.
 # Negative means auto, 0 disables the thread-pool (main-thread styling), other
 # numbers override as specified.
