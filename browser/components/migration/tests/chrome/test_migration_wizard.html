@@ -82,6 +82,8 @@
 
         let wiz = document.createElement("migration-wizard");
         wiz.toggleAttribute("auto-request-state", true);
+        let panelList = document.createElement("panel-list");
+        wiz.appendChild(panelList);
         let content = document.getElementById("content");
         let promise = new Promise(resolve => {
           content.addEventListener(REQUEST_STATE_EVENT, resolve, {
@@ -135,7 +137,7 @@
         let preamble = gShadowRoot.querySelector(".resource-selection-preamble");
         ok(!isHidden(preamble), "preamble should shown.");
 
-        let panelList = gShadowRoot.querySelector("panel-list");
+        let panelList = gWiz.querySelector("panel-list");
         is(panelList.childElementCount, 2, "Should have two child elements");
 
         let resourceTypeList = gShadowRoot.querySelector("#resource-type-list");
@@ -147,11 +149,11 @@
         for (let migratorInstance of MIGRATOR_PROFILE_INSTANCES) {
           selector.click();
           await new Promise(resolve => {
-            gShadowRoot
+            gWiz
               .querySelector("panel-list")
               .addEventListener("shown", resolve, { once: true });
           });
-          let panelItem = gShadowRoot.querySelector(
+          let panelItem = gWiz.querySelector(
             `panel-item[key="${migratorInstance.key}"]`
           );
           ok(panelItem, "Should find panel-item.");
@@ -247,13 +249,13 @@
         let selector = gShadowRoot.querySelector("#browser-profile-selector");
         selector.click();
         await new Promise(resolve => {
-          let panelList = gShadowRoot.querySelector("panel-list");
+          let panelList = gWiz.querySelector("panel-list");
           if (panelList) {
             panelList.addEventListener("shown", resolve, { once: true });
           }
         });
 
-        let panelItems = gShadowRoot.querySelectorAll("panel-list > panel-item");
+        let panelItems = gWiz.querySelectorAll("panel-list > panel-item");
         is(panelItems.length, 2, "Should have two panel items");
 
         let details = gShadowRoot.querySelector("details");
@@ -405,7 +407,7 @@
           gWiz,
           "MigrationWizard:ResourcesUpdated"
         );
-        let browser1Item = gShadowRoot.querySelector("panel-item[key='some-browser-1']");
+        let browser1Item = gWiz.querySelector("panel-item[key='some-browser-1']");
         browser1Item.click();
         await resourcesUpdated;
 
@@ -1371,7 +1373,9 @@
   <body>
     <p id="display"></p>
     <div id="content">
-      <migration-wizard id="test-wizard" dialog-mode=""></migration-wizard>
+      <migration-wizard id="test-wizard" dialog-mode="">
+        <panel-list></panel-list>
+      </migration-wizard>
     </div>
     <pre id="test"></pre>
   </body>
