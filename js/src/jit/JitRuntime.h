@@ -278,6 +278,11 @@ class JitRuntime {
   void generateBaselineInterpreterEntryTrampoline(MacroAssembler& masm);
   void generateInterpreterEntryTrampoline(MacroAssembler& masm);
 
+  void bindLabelToOffset(Label* label, uint32_t offset) {
+    MOZ_ASSERT(!trampolineCode_);
+    label->bind(offset);
+  }
+
  public:
   JitCode* generateEntryTrampolineForScript(JSContext* cx, JSScript* script);
 

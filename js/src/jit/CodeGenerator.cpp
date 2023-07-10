@@ -34,6 +34,7 @@
 #include "jit/CompileInfo.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/Invalidation.h"
+#include "jit/IonGenericCallStub.h"
 #include "jit/IonIC.h"
 #include "jit/IonScript.h"
 #include "jit/JitcodeMap.h"
@@ -5608,91 +5609,30 @@ void CodeGenerator::emitCallInvokeFunction(
 }
 
 void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
-  Register calleereg = ToRegister(call->getFunction());
-  Register objreg = ToRegister(call->getTempObject());
-  Register nargsreg = ToRegister(call->getNargsReg());
+  // The callee is passed straight through to the trampoline.
+  MOZ_ASSERT(ToRegister(call->getCallee()) == IonGenericCallCalleeReg);
+
+  Register argcReg = ToRegister(call->getArgc());
   uint32_t unusedStack =
       UnusedStackBytesForCall(call->mir()->paddedNumStackArgs());
-  Label invoke, thunk, makeCall, end;
 
   // Known-target case is handled by LCallKnown.
   MOZ_ASSERT(!call->hasSingleTarget());
 
   masm.checkStackAlignment();
 
-  // Guard that calleereg is actually a function object.
-  if (call->mir()->needsClassCheck()) {
-    masm.branchTestObjIsFunction(Assembler::NotEqual, calleereg, nargsreg,
-                                 calleereg, &invoke);
-  }
-
-  // Guard that callee allows the [[Call]] or [[Construct]] operation required.
-  if (call->mir()->isConstructing()) {
-    masm.branchTestFunctionFlags(calleereg, FunctionFlags::CONSTRUCTOR,
-                                 Assembler::Zero, &invoke);
-  } else {
-    masm.branchFunctionKind(Assembler::Equal, FunctionFlags::ClassConstructor,
-                            calleereg, objreg, &invoke);
-  }
-
-  // Use the slow path if CreateThis was unable to create the |this| object.
-  if (call->mir()->needsThisCheck()) {
-    MOZ_ASSERT(call->mir()->isConstructing());
-    Address thisAddr(masm.getStackPointer(), unusedStack);
-    masm.branchTestNull(Assembler::Equal, thisAddr, &invoke);
-  } else {
-#ifdef DEBUG
-    if (call->mir()->isConstructing()) {
-      Address thisAddr(masm.getStackPointer(), unusedStack);
-      Label ok;
-      masm.branchTestNull(Assembler::NotEqual, thisAddr, &ok);
-      masm.assumeUnreachable("Unexpected null this-value");
-      masm.bind(&ok);
-    }
-#endif
-  }
-
-  // Load jitCodeRaw for callee if it exists.
-  masm.branchIfFunctionHasNoJitEntry(calleereg, call->mir()->isConstructing(),
-                                     &invoke);
-  masm.loadJitCodeRaw(calleereg, objreg);
-
-  // Target may be a different realm even if same compartment.
-  if (call->mir()->maybeCrossRealm()) {
-    masm.switchToObjectRealm(calleereg, nargsreg);
-  }
+  masm.move32(Imm32(call->numActualArgs()), argcReg);
 
   // Nestle the StackPointer up to the argument vector.
   masm.freeStack(unusedStack);
-
-  // Construct the JitFrameLayout.
-  masm.PushCalleeToken(calleereg, call->mir()->isConstructing());
-  masm.PushFrameDescriptorForJitCall(FrameType::IonJS, call->numActualArgs());
-
-  // Check whether the provided arguments satisfy target argc.
-  // We cannot have lowered to LCallGeneric with a known target. Assert that we
-  // didn't add any undefineds in WarpBuilder. NB: MCall::numStackArgs includes
-  // |this|.
-  DebugOnly<unsigned> numNonArgsOnStack = 1 + call->isConstructing();
-  MOZ_ASSERT(call->numActualArgs() ==
-             call->mir()->numStackArgs() - numNonArgsOnStack);
-  masm.loadFunctionArgCount(calleereg, nargsreg);
-  masm.branch32(Assembler::Above, nargsreg, Imm32(call->numActualArgs()),
-                &thunk);
-  masm.jump(&makeCall);
-
-  // Argument fixup needed. Load the ArgumentsRectifier.
-  masm.bind(&thunk);
-  {
-    TrampolinePtr argumentsRectifier =
-        gen->jitRuntime()->getArgumentsRectifier();
-    masm.movePtr(argumentsRectifier, objreg);
-  }
-
-  // Finally call the function in objreg.
-  masm.bind(&makeCall);
   ensureOsiSpace();
-  uint32_t callOffset = masm.callJit(objreg);
+
+  auto kind = call->mir()->isConstructing() ? IonGenericCallKind::Construct
+                                            : IonGenericCallKind::Call;
+
+  TrampolinePtr genericCallStub =
+      gen->jitRuntime()->getIonGenericCallStub(kind);
+  uint32_t callOffset = masm.callJit(genericCallStub);
   markSafepointAt(callOffset, call);
 
   if (call->mir()->maybeCrossRealm()) {
@@ -5701,20 +5641,9 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
     masm.switchToRealm(gen->realm->realmPtr(), ReturnReg);
   }
 
-  // Restore stack pointer: pop JitFrameLayout fields still left on the stack
-  // and undo the earlier |freeStack(unusedStack)|.
-  int prefixGarbage =
-      sizeof(JitFrameLayout) - JitFrameLayout::bytesPoppedAfterCall();
-  masm.adjustStack(prefixGarbage - unusedStack);
-  masm.jump(&end);
-
-  // Handle uncompiled or native functions.
-  masm.bind(&invoke);
-  emitCallInvokeFunction(call, calleereg, call->isConstructing(),
-                         call->ignoresReturnValue(), call->numActualArgs(),
-                         unusedStack);
-
-  masm.bind(&end);
+  // Restore stack pointer.
+  masm.setFramePushed(frameSize());
+  emitRestoreStackPointerFromFP();
 
   // If the return value of the constructing function is Primitive,
   // replace the return value with the Object from CreateThis.
@@ -5737,6 +5666,135 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
                                             IonGenericCallKind kind) {
   AutoCreatedBy acb(masm, "JitRuntime::generateIonGenericCallStub");
   ionGenericCallStubOffset_[kind] = startTrampolineCode(masm);
+
+  // This code is tightly coupled with visitCallGeneric.
+  //
+  // Upon entry:
+  //   IonGenericCallCalleeReg contains a pointer to the callee object.
+  //   IonGenericCallArgcReg contains the number of actual args.
+  //   The arguments have been pushed onto the stack:
+  //     [newTarget] (iff isConstructing)
+  //     [argN]
+  //     ...
+  //     [arg1]
+  //     [arg0]
+  //     [this]
+  //     <return address> (if not JS_USE_LINK_REGISTER)
+  //
+  // This trampoline is responsible for entering the callee's realm,
+  // massaging the stack into the right shape, and then performing a
+  // tail call. We will return directly to the Ion code from the
+  // callee.
+  //
+  // To do a tail call, we keep the return address in a register, even
+  // on platforms that don't normally use a link register, and push it
+  // just before jumping to the callee, after we are done setting up
+  // the stack.
+  //
+  // The caller is responsible for switching back to the caller's
+  // realm and cleaning up the stack.
+
+  Register calleeReg = IonGenericCallCalleeReg;
+  Register argcReg = IonGenericCallArgcReg;
+  Register scratch = IonGenericCallScratch;
+  Register scratch2 = IonGenericCallScratch2;
+
+#ifndef JS_USE_LINK_REGISTER
+  Register returnAddrReg = IonGenericCallReturnAddrReg;
+  masm.pop(returnAddrReg);
+#endif
+
+  bool isConstructing = kind == IonGenericCallKind::Construct;
+
+  Label notFunction, noJitEntry, vmCall;
+
+  // Guard that the callee is actually a function.
+  masm.branchTestObjIsFunction(Assembler::NotEqual, calleeReg, scratch,
+                               calleeReg, &notFunction);
+
+  // Guard that the callee supports the [[Call]] or [[Construct]] operation.
+  // If these tests fail, we will call into the VM to throw an exception.
+  if (isConstructing) {
+    masm.branchTestFunctionFlags(calleeReg, FunctionFlags::CONSTRUCTOR,
+                                 Assembler::Zero, &vmCall);
+  } else {
+    masm.branchFunctionKind(Assembler::Equal, FunctionFlags::ClassConstructor,
+                            calleeReg, scratch, &vmCall);
+  }
+
+  if (isConstructing) {
+    // Use the slow path if CreateThis was unable to create the |this| object.
+    Address thisAddr(masm.getStackPointer(), 0);
+    masm.branchTestNull(Assembler::Equal, thisAddr, &vmCall);
+  }
+
+  masm.switchToObjectRealm(calleeReg, scratch);
+
+  // Load jitCodeRaw for callee if it exists.
+  masm.branchIfFunctionHasNoJitEntry(calleeReg, isConstructing, &noJitEntry);
+
+  // ****************************
+  // * Functions with jit entry *
+  // ****************************
+  masm.loadJitCodeRaw(calleeReg, scratch2);
+
+  // Construct the JitFrameLayout.
+  masm.PushCalleeToken(calleeReg, isConstructing);
+  masm.PushFrameDescriptorForJitCall(FrameType::IonJS, argcReg, scratch);
+#ifndef JS_USE_LINK_REGISTER
+  masm.push(returnAddrReg);
+#endif
+
+  // Check whether we need a rectifier frame.
+  Label noRectifier;
+  masm.loadFunctionArgCount(calleeReg, scratch);
+  masm.branch32(Assembler::BelowOrEqual, scratch, argcReg, &noRectifier);
+  {
+    // Tail-call the arguments rectifier.
+    // Because all trampolines are created at the same time,
+    // we can't create a TrampolinePtr for the arguments rectifier,
+    // because it hasn't been linked yet. We can, however, directly
+    // encode its offset.
+    Label rectifier;
+    bindLabelToOffset(&rectifier, argumentsRectifierOffset_);
+
+    masm.jump(&rectifier);
+  }
+
+  // Tail call the jit entry.
+  masm.bind(&noRectifier);
+  masm.jump(scratch2);
+
+  masm.bind(&noJitEntry);
+  // TODO: support native functions
+
+  masm.bind(&notFunction);
+  // TODO: support bound functions
+  // TODO: support class hooks?
+
+  // ********************
+  // * Fallback VM call *
+  // ********************
+  masm.bind(&vmCall);
+
+  masm.push(masm.getStackPointer());  // argv
+  masm.push(argcReg);                 // argc
+  masm.push(Imm32(false));            // ignores return value
+  masm.push(Imm32(isConstructing));   // constructing
+  masm.push(calleeReg);               // callee
+
+  using Fn = bool (*)(JSContext*, HandleObject, bool, bool, uint32_t, Value*,
+                      MutableHandleValue);
+  VMFunctionId id = VMFunctionToId<Fn, jit::InvokeFunction>::id;
+  uint32_t invokeFunctionOffset = functionWrapperOffsets_[size_t(id)];
+  Label invokeFunctionVMEntry;
+  bindLabelToOffset(&invokeFunctionVMEntry, invokeFunctionOffset);
+
+  masm.pushFrameDescriptor(FrameType::IonJS);
+#ifndef JS_USE_LINK_REGISTER
+  masm.push(returnAddrReg);
+#endif
+  masm.jump(&invokeFunctionVMEntry);
 }
 
 void CodeGenerator::visitCallKnown(LCallKnown* call) {
