@@ -31,7 +31,7 @@ export const BasicLoginAlert = ({ variant, icon }) => {
 
 BasicLoginAlert.argTypes = {
   variant: {
-    options: ["info", "error"],
+    options: ["info", "error", "warning"],
     control: { type: "radio" },
     defaultValue: "info",
   },
@@ -46,6 +46,17 @@ BasicLoginAlert.argTypes = {
     control: { type: "select" },
     defaultValue: "chrome://global/skin/icons/info-filled.svg",
   },
+};
+
+export const VulnerablePasswordAlert = ({ hostname }) =>
+  html`
+    <login-vulnerable-password-alert
+      .hostname=${hostname}
+    ></login-vulnerable-password-alert>
+  `;
+
+VulnerablePasswordAlert.args = {
+  hostname: "https://www.example.com",
 };
 
 export const LoginBreachAlert = ({ date, hostname }) =>
