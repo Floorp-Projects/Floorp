@@ -1387,12 +1387,7 @@ TextPropertyEditor.prototype = {
    */
   _isDraggableProperty(textProperty) {
     // Check if the feature is explicitly disabled.
-    if (
-      !Services.prefs.getBoolPref(
-        "devtools.inspector.draggable_properties",
-        false
-      )
-    ) {
+    if (!this.ruleView.draggablePropertiesEnabled) {
       return false;
     }
     // temporary way of fixing the bug when editing inline styles
