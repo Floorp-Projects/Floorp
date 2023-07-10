@@ -5706,7 +5706,8 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
 
   bool isConstructing = kind == IonGenericCallKind::Construct;
 
-  Label notFunction, noJitEntry, vmCall;
+  Label entry, notFunction, noJitEntry, vmCall;
+  masm.bind(&entry);
 
   // Guard that the callee is actually a function.
   masm.branchTestObjIsFunction(Assembler::NotEqual, calleeReg, scratch,
@@ -5767,10 +5768,17 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
 
   masm.bind(&noJitEntry);
   // TODO: support native functions
+  masm.jump(&vmCall);
 
-  masm.bind(&notFunction);
-  // TODO: support bound functions
+  // *******************
+  // * Bound functions *
+  // *******************
   // TODO: support class hooks?
+  masm.bind(&notFunction);
+  if (!isConstructing) {
+    // TODO: support generic bound constructors?
+    generateIonGenericCallBoundFunction(masm, &entry, &vmCall);
+  }
 
   // ********************
   // * Fallback VM call *
@@ -5795,6 +5803,124 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
   masm.push(returnAddrReg);
 #endif
   masm.jump(&invokeFunctionVMEntry);
+}
+
+void JitRuntime::generateIonGenericCallBoundFunction(MacroAssembler& masm,
+                                                     Label* entry,
+                                                     Label* vmCall) {
+  Register calleeReg = IonGenericCallCalleeReg;
+  Register argcReg = IonGenericCallArgcReg;
+  Register scratch = IonGenericCallScratch;
+  Register scratch2 = IonGenericCallScratch2;
+  Register scratch3 = IonGenericCallScratch3;
+
+  masm.branchTestObjClass(Assembler::NotEqual, calleeReg,
+                          &BoundFunctionObject::class_, scratch, calleeReg,
+                          vmCall);
+
+  Address targetSlot(calleeReg, BoundFunctionObject::offsetOfTargetSlot());
+  Address flagsSlot(calleeReg, BoundFunctionObject::offsetOfFlagsSlot());
+  Address thisSlot(calleeReg, BoundFunctionObject::offsetOfBoundThisSlot());
+  Address firstInlineArgSlot(
+      calleeReg, BoundFunctionObject::offsetOfFirstInlineBoundArg());
+
+  // The stack is currently correctly aligned for a jit call. We will
+  // be updating the `this` value and potentially adding additional
+  // arguments. On platforms with 16-byte alignment, if the number of
+  // bound arguments is odd, we have to move the arguments that are
+  // currently on the stack. For example, with one bound argument:
+  //
+  // *BEFORE*                           *AFTER*
+  //  [argN]                             <padding>
+  //  ...                                [argN]   |
+  //  [arg1]                             ...      |  These arguments have been
+  //  [arg0]                             [arg1]   |  shifted down 8 bytes.
+  //  [this] <- top of stack (aligned)   [arg0]   v
+  //                                     [bound0]    <- one bound argument (odd)
+  //                                     [boundThis] <- top of stack (aligned)
+  //
+  Label poppedThis;
+  if (JitStackValueAlignment > 1) {
+    Label alreadyAligned;
+    masm.branchTest32(Assembler::Zero, flagsSlot,
+                      Imm32(1 << BoundFunctionObject::NumBoundArgsShift),
+                      &alreadyAligned);
+
+    // We have an odd number of bound arguments. Shift the existing arguments
+    // down by 8 bytes.
+
+    // Initialize `curr` to the destination of the first copy, and `end` to the
+    // final value of curr.
+    Register curr = scratch;
+    Register end = scratch2;
+    masm.moveStackPtrTo(curr);
+    masm.computeEffectiveAddress(BaseValueIndex(curr, argcReg), end);
+
+    Label loop;
+    masm.bind(&loop);
+    masm.branchPtr(Assembler::Equal, curr, end, &poppedThis);
+    masm.loadPtr(Address(curr, 8), scratch3);
+    masm.storePtr(scratch3, Address(curr, 0));
+    masm.addPtr(Imm32(sizeof(uintptr_t)), curr);
+    masm.jump(&loop);
+    masm.bind(&alreadyAligned);
+  }
+
+  // Pop the current `this`. It will be replaced with the bound `this`.
+  masm.freeStack(sizeof(Value));
+  masm.bind(&poppedThis);
+
+  // Load the number of bound arguments in scratch
+  masm.load32(flagsSlot, scratch);
+  masm.rshift32(Imm32(BoundFunctionObject::NumBoundArgsShift), scratch);
+
+  Label donePushingBoundArguments;
+  masm.branch32(Assembler::Equal, scratch, Imm32(0),
+                &donePushingBoundArguments);
+
+  // Update argc to include bound arguments.
+  masm.add32(scratch, argcReg);
+
+  // Load &boundArgs[0] in scratch2.
+  Label outOfLineBoundArguments, haveBoundArguments;
+  masm.branch32(Assembler::Above, scratch,
+                Imm32(BoundFunctionObject::MaxInlineBoundArgs),
+                &outOfLineBoundArguments);
+  masm.computeEffectiveAddress(firstInlineArgSlot, scratch2);
+  masm.jump(&haveBoundArguments);
+
+  masm.bind(&outOfLineBoundArguments);
+  masm.unboxObject(firstInlineArgSlot, scratch2);
+  masm.loadPtr(Address(scratch2, NativeObject::offsetOfElements()), scratch2);
+
+  masm.bind(&haveBoundArguments);
+
+  // Load &boundArgs[numBoundArgs] in scratch.
+  BaseObjectElementIndex lastBoundArg(scratch2, scratch);
+  masm.computeEffectiveAddress(lastBoundArg, scratch);
+
+  // Push the bound arguments, starting with the last one.
+  // Copying pre-decrements scratch until scratch2 is reached.
+  Label boundArgumentsLoop;
+  masm.bind(&boundArgumentsLoop);
+  masm.subPtr(Imm32(sizeof(Value)), scratch);
+  masm.pushValue(Address(scratch, 0));
+  masm.branchPtr(Assembler::Above, scratch, scratch2, &boundArgumentsLoop);
+  masm.bind(&donePushingBoundArguments);
+
+  // Push the bound `this`.
+  masm.pushValue(thisSlot);
+
+  // Load the target in calleeReg.
+  masm.unboxObject(targetSlot, calleeReg);
+
+  // At this point, all preconditions for entering the trampoline are met:
+  // - calleeReg contains a pointer to the callee object
+  // - argcReg contains the number of actual args (now including bound args)
+  // - the arguments are on the stack with the correct alignment.
+  // Instead of generating more code, we can jump back to the entry point
+  // of the trampoline to call the bound target.
+  masm.jump(entry);
 }
 
 void CodeGenerator::visitCallKnown(LCallKnown* call) {
