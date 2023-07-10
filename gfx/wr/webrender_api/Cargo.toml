@@ -14,7 +14,7 @@ deserialize = []
 display_list_stats = []
 
 [dependencies]
-app_units = "0.7"
+app_units = "0.7.3"
 bitflags = "1.2"
 byteorder = "1.2.1"
 euclid = { version = "0.22.6", features = ["serde"] }

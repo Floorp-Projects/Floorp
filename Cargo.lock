@@ -106,9 +106,9 @@ dependencies = [
 
 [[package]]
 name = "app_units"
-version = "0.7.2"
+version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad05ebc593047433bada8bc1bf31957b6516dad7bfb5def6f425581f5bcc982a"
+checksum = "34655f9657fbb59fdd430438ba907566eb2d90b7fb0410d488d8ddabcd7b2cc9"
 dependencies = [
  "num-traits",
  "serde",
