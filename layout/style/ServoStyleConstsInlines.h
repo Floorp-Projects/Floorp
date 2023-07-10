@@ -718,8 +718,9 @@ bool LengthPercentage::IsDefinitelyZero() const {
   return false;
 }
 
-template <>
-CSSCoord StyleCalcNode::ResolveToCSSPixels(CSSCoord aPercentageBasis) const;
+CSSCoord StyleCalcLengthPercentage::ResolveToCSSPixels(CSSCoord aBasis) const {
+  return Servo_ResolveCalcLengthPercentage(this, aBasis);
+}
 
 template <>
 void StyleCalcNode::ScaleLengthsBy(float);
@@ -731,7 +732,7 @@ CSSCoord LengthPercentage::ResolveToCSSPixels(CSSCoord aPercentageBasis) const {
   if (IsPercentage()) {
     return AsPercentage()._0 * aPercentageBasis;
   }
-  return AsCalc().node.ResolveToCSSPixels(aPercentageBasis);
+  return AsCalc().ResolveToCSSPixels(aPercentageBasis);
 }
 
 template <typename T>
@@ -760,7 +761,7 @@ nscoord LengthPercentage::Resolve(T aPercentageGetter, U aRounder) const {
   if (IsPercentage()) {
     return aRounder(basis * AsPercentage()._0);
   }
-  return AsCalc().node.Resolve(basis, aRounder);
+  return AsCalc().Resolve(basis, aRounder);
 }
 
 // Note: the static_cast<> wrappers below are needed to disambiguate between

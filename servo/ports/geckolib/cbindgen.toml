@@ -342,16 +342,14 @@ renaming_overrides_prefixing = true
   inline StyleCSSPixelLength ScaledBy(float) const;
 """
 
-"GenericCalcNode" = """
- private:
-  CSSCoord ResolveInternal(CSSCoord aPercentageBasis) const;
-
- public:
-  CSSCoord ResolveToCSSPixels(CSSCoord aPercentageBasis) const;
+"CalcLengthPercentage" = """
+  inline CSSCoord ResolveToCSSPixels(CSSCoord aBasis) const;
 
   using CoordRounder = nscoord(*)(float);
   nscoord Resolve(nscoord aBasis, CoordRounder) const;
+"""
 
+"GenericCalcNode" = """
   void ScaleLengthsBy(float);
 """
 
