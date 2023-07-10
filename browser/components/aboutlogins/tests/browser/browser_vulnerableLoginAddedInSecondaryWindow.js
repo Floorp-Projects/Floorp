@@ -120,7 +120,8 @@ add_task(async function test_new_login_marked_vulnerable_in_both_windows() {
         "vulnerable login list item should be marked as such"
       );
       Assert.ok(
-        !loginItem.shadowRoot.querySelector(".vulnerable-alert").hidden,
+        !loginItem.shadowRoot.querySelector("login-vulnerable-password-alert")
+          .hidden,
         "vulnerable alert on login-item should be visible"
       );
 
