@@ -14,6 +14,57 @@ permalink: /changelog/
   * Add `allow-coenrollment` to the `messaging` feature, making it possible to enroll in multiple experiments involving messaging.
     * Modified the mechanism that ties a message back to experiment, to make sure we record exposure events correctly.
 
+* **ui-icons**:
+  * Renamed icons to align with the naming used in the Acorn design system for Firefox. [Bug 1840210](https://bugzilla.mozilla.org/show_bug.cgi?id=1840210)
+    * Rename mozac_ic_storage to mozac_ic_storage_24.
+    * Rename mozac_ic_shield_disabled to mozac_ic_shield_slash_24
+    * Rename mozac_ic_settings to mozac_ic_settings_24
+    * Rename mozac_ic_pin_filled_2 to mozac_ic_pin_fill_24
+    * Rename mozac_ic_warning to mozac_ic_warning_fill_24
+    * Rename mozac_ic_shield to mozac_ic_shield_24
+    * Rename mozac_ic_video to mozac_ic_camera_24
+    * Rename mozac_ic_share to mozac_ic_share_android_24
+    * Rename mozac_ic_search to mozac_ic_search_24
+    * Rename mozac_ic_refresh to mozac_ic_arrow_clockwise_24
+    * Rename mozac_ic_reader_mode to mozac_ic_reader_view_24
+    * Rename mozac_ic_quit to mozac_ic_cross_circle_24
+    * Rename mozac_ic_private_browsing to mozac_ic_private_mode_24
+    * Rename mozac_ic_pin_remove to mozac_ic_pin_slash_24
+    * Rename mozac_ic_pin to mozac_ic_pin_24
+    * Rename mozac_ic_password_reveal to mozac_ic_eye_24
+    * Rename mozac_ic_password_hide to mozac_ic_eye_slash_24
+    * Rename mozac_ic_notification to mozac_ic_notification_24
+    * Rename mozac_ic_new to mozac_ic_plus_24
+    * Rename mozac_ic_microphone to mozac_ic_microphone_24
+    * Rename mozac_ic_menu to mozac_ic_ellipsis_vertical_24
+    * Rename mozac_ic_login to mozac_ic_login_24
+    * Rename mozac_ic_lock to mozac_ic_lock_24
+    * Rename mozac_ic_location to mozac_ic_location_24
+    * Rename mozac_ic_close_20 to mozac_ic_cross_20
+    * Rename mozac_ic_link to mozac_ic_link_24
+    * Rename mozac_ic_information to mozac_ic_information_24
+    * Rename mozac_ic_info to mozac_ic_information_fill_24
+    * Rename mozac_ic_home to mozac_ic_home_24
+    * Rename mozac_ic_help to mozac_ic_help_circle_24
+    * Rename mozac_ic_globe to mozac_ic_globe_24
+    * Rename mozac_ic_forward to mozac_ic_forward_24
+    * Rename mozac_ic_fingerprint to mozac_ic_fingerprinter_24
+    * Rename mozac_ic_extensions to mozac_ic_extension_24
+    * Rename mozac_ic_edit_suggestion to mozac_ic_append_up_24
+    * Rename mozac_ic_download to mozac_ic_download_24
+    * Rename mozac_ic_device_mobile to mozac_ic_device_mobile_24
+    * Rename mozac_ic_device_desktop to mozac_ic_device_desktop_24
+    * Rename mozac_ic_delete to mozac_ic_delete_24
+    * Rename mozac_ic_clear to mozac_ic_cross_circle_fill_24
+    * Rename mozac_ic_back to mozac_ic_back_24
+    * Rename mozac_ic_autoplay_blocked to mozac_ic_autoplay_slash_24
+    * Rename mozac_ic_check to mozac_ic_checkmark_24
+    * Rename mozac_ic_arrowhead_up to mozac_ic_chevron_up_24
+    * Rename mozac_ic_arrowhead_right to mozac_ic_chevron_right_24
+    * Rename mozac_ic_arrowhead_down to mozac_ic_chevron_down_24
+    * Rename mozac_ic_close to mozac_ic_cross_24
+    * Rename mozac_ic_add_to_homescreen to mozac_ic_add_to_homescreen_24
+
 # 116.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v115..releases_v116)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v116/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
@@ -23,7 +74,7 @@ permalink: /changelog/
 * **support-base**
   * Adds `NotificationManangerCompat` extension functions `areNotificationsEnabledSafe()` and  `isNotificationChannelEnabled()`.
   * Removes deprecated `BackHandler`, use `UserInteractionHandler` instead.
-  
+
 * **feature-pwa**
   * Adds `WebAppContentFeature` to set the "display" mode from the web app manifest on the `EngineSession`.
 * **browser-engine-gecko**:
