@@ -3446,7 +3446,6 @@ For the sample commands found below, note that the capitalization used is import
    * reporting: time from *performance.timing.navigationStart* to *pagerendered* event in ms (lower is better)
    * data: load a PDF 20 times
    * pdfpaint: True
-   * preferences: {'pdfjs.eventBusDispatchToDOM': True}
    * timeout: 600
    * tpmanifest: ${talos}/tests/pdfpaint/pdfpaint.manifest
    * tppagecycles: 20

@@ -422,7 +422,6 @@ class pdfpaint(PageloaderTest):
     timeout = 600
     pdfpaint = True
     unit = "ms"
-    preferences = {"pdfjs.eventBusDispatchToDOM": True}
 
 
 @register_test()

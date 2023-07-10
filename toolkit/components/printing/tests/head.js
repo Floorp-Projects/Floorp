@@ -19,12 +19,6 @@ class PrintHelper {
     info("withTestPage: " + pageUrl);
     let isPdf = pageUrl.endsWith(".pdf");
 
-    if (isPdf) {
-      await SpecialPowers.pushPrefEnv({
-        set: [["pdfjs.eventBusDispatchToDOM", true]],
-      });
-    }
-
     let taskReturn = await BrowserTestUtils.withNewTab(
       isPdf ? "about:blank" : pageUrl,
       async function (browser) {
