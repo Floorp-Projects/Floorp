@@ -154,7 +154,6 @@
   SimpleTest.waitForExplicitFinish();
   SimpleTest.registerCleanupFunction(cleanup);
   SpecialPowers.pushPrefEnv({"set": [
-    ["media.webvtt.regions.enabled", true],
     ["urlclassifier.malwareTable", "test-malware-simple"],
   ]}, runTest);
 

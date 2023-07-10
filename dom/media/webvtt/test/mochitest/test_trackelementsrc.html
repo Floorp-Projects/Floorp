@@ -13,40 +13,37 @@
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForExplicitFinish();
 
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
-  function() {
-    var video = document.createElement("video");
-    video.src = "seek.webm";
-    video.preload = "metadata";
-    var trackElement = document.createElement("track");
-    trackElement.src = "basic.vtt";
-    trackElement.default = true;
+  var video = document.createElement("video");
+  video.src = "seek.webm";
+  video.preload = "metadata";
+  var trackElement = document.createElement("track");
+  trackElement.src = "basic.vtt";
+  trackElement.default = true;
 
-    document.getElementById("content").appendChild(video);
-    video.appendChild(trackElement);
+  document.getElementById("content").appendChild(video);
+  video.appendChild(trackElement);
 
-    video.addEventListener("loadedmetadata", function metadata() {
-      if (trackElement.readyState <= 1) {
-        setTimeout(metadata, 0);
-        return;
-      }
-      is(video.textTracks.length, 1, "Length should be 1.");
-      is(video.textTracks[0].cues.length, 6, "Cue length should be 6.");
+  video.addEventListener("loadedmetadata", function metadata() {
+    if (trackElement.readyState <= 1) {
+      setTimeout(metadata, 0);
+      return;
+    }
+    is(video.textTracks.length, 1, "Length should be 1.");
+    is(video.textTracks[0].cues.length, 6, "Cue length should be 6.");
 
-      trackElement.src = "sequential.vtt";
-      trackElement.track.mode = "showing";
-      video.play();
-    });
+    trackElement.src = "sequential.vtt";
+    trackElement.track.mode = "showing";
+    video.play();
+  });
 
-    video.addEventListener("ended", function end() {
-      is(trackElement.readyState, 2, "readyState should be 2.")
-      is(video.textTracks.length, 1, "Length should be 1.");
-      is(video.textTracks[0].cues.length, 3, "Cue length should be 3.");
-      SimpleTest.finish();
-    });
-});
+  video.addEventListener("ended", function end() {
+    is(trackElement.readyState, 2, "readyState should be 2.")
+    is(video.textTracks.length, 1, "Length should be 1.");
+    is(video.textTracks[0].cues.length, 3, "Cue length should be 3.");
+    SimpleTest.finish();
+  });
 </script>
 </pre>
 </body>

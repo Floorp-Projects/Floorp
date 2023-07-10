@@ -24,8 +24,9 @@ async function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
-                            runTest);
+
+runTest();
+
 /**
  * The following are test helper functions.
  */
