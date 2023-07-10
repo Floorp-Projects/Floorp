@@ -13799,12 +13799,6 @@
   value: true
   mirror: always
 
-# Navigate-to CSP 3 directive
-- name: security.csp.enableNavigateTo
-  type: bool
-  value: false
-  mirror: always
-
 # wasm-unsafe-eval source keyword
 - name: security.csp.wasm-unsafe-eval.enabled
   type: bool
