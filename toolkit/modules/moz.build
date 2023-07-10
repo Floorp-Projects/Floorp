@@ -204,7 +204,6 @@ EXTRA_JS_MODULES += [
     "ResponsivenessMonitor.sys.mjs",
     "SelectionUtils.sys.mjs",
     "ServiceRequest.sys.mjs",
-    "Services.jsm",
     "ShortcutUtils.sys.mjs",
     "Sqlite.sys.mjs",
     "SubDialog.sys.mjs",

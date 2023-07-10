@@ -16,7 +16,6 @@ function isString(node) {
 
 function isEagerModule(resourceURI) {
   return [
-    "resource://gre/modules/Services",
     "resource://gre/modules/XPCOMUtils",
     "resource://gre/modules/AppConstants",
   ].includes(resourceURI.replace(/(\.jsm|\.jsm\.js|\.js|\.sys\.mjs)$/, ""));
