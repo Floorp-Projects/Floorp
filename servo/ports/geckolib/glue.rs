@@ -7138,6 +7138,14 @@ pub extern "C" fn Servo_ResolveColor(
 }
 
 #[no_mangle]
+pub extern "C" fn Servo_ResolveCalcLengthPercentage(
+    calc: &computed::length_percentage::CalcLengthPercentage,
+    basis: f32,
+) -> f32 {
+    calc.resolve(computed::Length::new(basis)).px()
+}
+
+#[no_mangle]
 pub extern "C" fn Servo_ConvertColorSpace(
     color: &AbsoluteColor,
     color_space: ColorSpace,
