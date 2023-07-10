@@ -259,12 +259,6 @@ Text Direction
    Values <https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Logical_Properties>`__
    for more information.
 
-Testing
-~~~~~~~
-
-To test for RTL layouts, you can go to ``about:config`` and set
-``intl.uidirection`` to ``-1``.
-
 Writing cross-platform CSS
 --------------------------
 
