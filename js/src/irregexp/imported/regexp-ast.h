@@ -363,8 +363,8 @@ class RegExpClassRanges final : public RegExpTree {
 };
 
 struct CharacterClassStringLess {
-  bool operator()(const base::Vector<const base::uc32>& lhs,
-                  const base::Vector<const base::uc32>& rhs) const {
+  bool operator()(base::Vector<const base::uc32> lhs,
+                  base::Vector<const base::uc32> rhs) const {
     // Longer strings first so we generate matches for the largest string
     // possible.
     if (lhs.length() != rhs.length()) {
@@ -460,7 +460,7 @@ class RegExpClassSetExpression final : public RegExpTree {
       RegExpTree* root, ZoneList<CharacterRange>* temp_ranges, Zone* zone);
 
   const OperationType operation_;
-  const bool is_negated_;
+  bool is_negated_;
   const bool may_contain_strings_;
   ZoneList<RegExpTree*>* operands_ = nullptr;
   int max_match_;

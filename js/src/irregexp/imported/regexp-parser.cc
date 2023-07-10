@@ -39,15 +39,11 @@ enum class ClassSetOperandType {
 
 class RegExpTextBuilder {
  public:
-  using SmallRegExpTreeVector =
-      base::SmallVector<RegExpTree*, 8, ZoneAllocator<RegExpTree*>>;
+  using SmallRegExpTreeVector = SmallZoneVector<RegExpTree*, 8>;
 
   RegExpTextBuilder(Zone* zone, SmallRegExpTreeVector* terms_storage,
                     RegExpFlags flags)
-      : zone_(zone),
-        flags_(flags),
-        terms_(terms_storage),
-        text_(ZoneAllocator<RegExpTree*>{zone}) {}
+      : zone_(zone), flags_(flags), terms_(terms_storage), text_(zone) {}
   void AddCharacter(base::uc16 character);
   void AddUnicodeCharacter(base::uc32 character);
   void AddEscapedUnicodeCharacter(base::uc32 character);
@@ -291,8 +287,8 @@ class RegExpBuilder {
   RegExpBuilder(Zone* zone, RegExpFlags flags)
       : zone_(zone),
         flags_(flags),
-        terms_(ZoneAllocator<RegExpTree*>{zone}),
-        alternatives_(ZoneAllocator<RegExpTree*>{zone}),
+        terms_(zone),
+        alternatives_(zone),
         text_builder_(RegExpTextBuilder{zone, &terms_, flags}) {}
   void AddCharacter(base::uc16 character);
   void AddUnicodeCharacter(base::uc32 character);
@@ -330,8 +326,7 @@ class RegExpBuilder {
   bool pending_empty_ = false;
   const RegExpFlags flags_;
 
-  using SmallRegExpTreeVector =
-      base::SmallVector<RegExpTree*, 8, ZoneAllocator<RegExpTree*>>;
+  using SmallRegExpTreeVector = SmallZoneVector<RegExpTree*, 8>;
   SmallRegExpTreeVector terms_;
   SmallRegExpTreeVector alternatives_;
   RegExpTextBuilder text_builder_;
@@ -1838,8 +1833,7 @@ void ExtractStringsFromUnicodeSet(const icu::UnicodeSet& set,
   DCHECK(IsUnicodeSets(flags));
   DCHECK_NOT_NULL(strings);
 
-  RegExpTextBuilder::SmallRegExpTreeVector string_storage(
-      ZoneAllocator<RegExpTree*>{zone});
+  RegExpTextBuilder::SmallRegExpTreeVector string_storage(zone);
   RegExpTextBuilder string_builder(zone, &string_storage, flags);
   const bool needs_case_folding = IsIgnoreCase(flags);
   icu::UnicodeSetIterator iter(set);
@@ -2498,8 +2492,7 @@ RegExpTree* RegExpParserImpl<CharT>::ParseClassStringDisjunction(
 
   ZoneList<base::uc32>* string =
       zone()->template New<ZoneList<base::uc32>>(4, zone());
-  RegExpTextBuilder::SmallRegExpTreeVector string_storage(
-      ZoneAllocator<RegExpTree*>{zone()});
+  RegExpTextBuilder::SmallRegExpTreeVector string_storage(zone());
   RegExpTextBuilder string_builder(zone(), &string_storage, flags());
 
   while (has_more() && current() != '}') {
