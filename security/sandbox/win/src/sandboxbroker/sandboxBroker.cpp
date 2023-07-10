@@ -1147,7 +1147,7 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
   } else {
     MOZ_RELEASE_ASSERT(aSandboxLevel >= 1,
                        "Should not be called with aSandboxLevel < 1");
-    accessTokenLevel = sandbox::USER_NON_ADMIN;
+    accessTokenLevel = sandbox::USER_RESTRICTED_NON_ADMIN;
     initialIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
     delayedIntegrityLevel = sandbox::INTEGRITY_LEVEL_LOW;
   }
@@ -1163,15 +1163,8 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
                      "Setting job level failed, have you set memory limit when "
                      "jobLevel == JOB_NONE?");
 
-  // If the delayed access token is not restricted we don't want the initial one
-  // to be either, because it can interfere with running from a network drive.
-  sandbox::TokenLevel initialAccessTokenLevel =
-      (accessTokenLevel == sandbox::USER_UNPROTECTED ||
-       accessTokenLevel == sandbox::USER_NON_ADMIN)
-          ? sandbox::USER_UNPROTECTED
-          : sandbox::USER_RESTRICTED_SAME_ACCESS;
-
-  result = mPolicy->SetTokenLevel(initialAccessTokenLevel, accessTokenLevel);
+  result = mPolicy->SetTokenLevel(sandbox::USER_RESTRICTED_SAME_ACCESS,
+                                  accessTokenLevel);
   MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
                      "Lockdown level cannot be USER_UNPROTECTED or USER_LAST "
                      "if initial level was USER_RESTRICTED_SAME_ACCESS");
