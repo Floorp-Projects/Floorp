@@ -1221,8 +1221,10 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
         if (ShouldTraceWeakEdgeInStub<T>(trc)) {
           GCPtr<Shape*>& shapeField =
               stubInfo->getStubField<T, Shape*>(stub, offset);
-          TraceSameZoneCrossCompartmentEdge(trc, &shapeField,
-                                            "cacheir-weak-shape");
+          if (shapeField) {
+            TraceSameZoneCrossCompartmentEdge(trc, &shapeField,
+                                              "cacheir-weak-shape");
+          }
         }
         break;
       case StubField::Type::GetterSetter:
@@ -1236,8 +1238,9 @@ void jit::TraceCacheIRStub(JSTracer* trc, T* stub,
       }
       case StubField::Type::WeakObject:
         if (ShouldTraceWeakEdgeInStub<T>(trc)) {
-          TraceEdge(trc, &stubInfo->getStubField<T, JSObject*>(stub, offset),
-                    "cacheir-weak-object");
+          TraceNullableEdge(trc,
+                            &stubInfo->getStubField<T, JSObject*>(stub, offset),
+                            "cacheir-weak-object");
         }
         break;
       case StubField::Type::Symbol:
