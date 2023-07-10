@@ -230,7 +230,7 @@ export default class FxviewTabList extends MozLitElement {
                 role="listitem"
                 .secondaryL10nId=${tabItem.secondaryL10nId}
                 .secondaryL10nArgs=${ifDefined(tabItem.secondaryL10nArgs)}
-                .tabid=${ifDefined(tabItem.tabid || tabItem.closedId)}
+                .closedId=${ifDefined(tabItem.closedId || tabItem.closedId)}
                 .tabElement=${ifDefined(tabItem.tabElement)}
                 .time=${(tabItem.time || tabItem.closedAt).toString().length ===
                 16
@@ -258,7 +258,7 @@ customElements.define("fxview-tab-list", FxviewTabList);
  * @property {string} currentActiveElementId - ID of currently focused element within each tab item
  * @property {string} dateTimeFormat - Expected format for date and/or time
  * @property {string} hasPopup - The aria-haspopup attribute for the secondary action, if required
- * @property {number} tabid - The tab ID for when the tab item.
+ * @property {number} closedId - The tab ID for when the tab item was closed.
  * @property {string} favicon - The favicon for the tab item.
  * @property {string} primaryL10nId - The l10n id used for the primary action element
  * @property {string} primaryL10nArgs - The l10n args used for the primary action element
@@ -288,7 +288,7 @@ export class FxviewTabRow extends MozLitElement {
     primaryL10nArgs: { type: String },
     secondaryL10nId: { type: String },
     secondaryL10nArgs: { type: String },
-    tabid: { type: Number },
+    closedId: { type: Number },
     tabElement: { type: Object },
     time: { type: Number },
     title: { type: String },

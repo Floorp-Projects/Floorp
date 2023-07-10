@@ -28,6 +28,7 @@ browser.jar:
     content/browser/firefoxview/tab-pickup-container.mjs
     content/browser/firefoxview/tab-pickup-list.mjs
     content/browser/firefoxview/recently-closed-tabs.mjs
+    content/browser/firefoxview/recentlyclosed.mjs
     content/browser/firefoxview/viewpage.mjs
     content/browser/firefoxview/recently-closed-empty.svg (content/recently-closed-empty.svg)
     content/browser/firefoxview/tab-pickup-empty.svg (content/tab-pickup-empty.svg)
