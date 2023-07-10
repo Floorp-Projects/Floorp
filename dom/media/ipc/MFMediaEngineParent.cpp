@@ -592,17 +592,16 @@ void MFMediaEngineParent::EnsureDcompSurfaceHandle() {
     // Update stream size before asking for a handle. If we don't update the
     // size, media engine will create the dcomp surface in a wrong size. If
     // the size isn't changed, then we don't need to recreate the surface.
-    LOG("Update video size [%lux%lu] -> [%lux%lu] ", mDisplayWidth,
-        mDisplayHeight, width, height);
-    ENGINE_MARKER_TEXT("MFMediaEngineParent,UpdateVideoSize",
-                       nsPrintfCString("%lux%lu", width, height));
-    RECT rect = {0, 0, (LONG)width, (LONG)height};
-    RETURN_VOID_IF_FAILED(mediaEngineEx->UpdateVideoStream(
-        nullptr /* pSrc */, &rect, nullptr /* pBorderClr */));
     mDisplayWidth = width;
     mDisplayHeight = height;
-    LOG("Updated video size [%lux%lu] correctly", mDisplayWidth,
+    RECT rect = {0, 0, (LONG)mDisplayWidth, (LONG)mDisplayHeight};
+    RETURN_VOID_IF_FAILED(mediaEngineEx->UpdateVideoStream(
+        nullptr /* pSrc */, &rect, nullptr /* pBorderClr */));
+    LOG("Updated video size for engine=[%lux%lu]", mDisplayWidth,
         mDisplayHeight);
+    ENGINE_MARKER_TEXT(
+        "MFMediaEngineParent,UpdateVideoSize",
+        nsPrintfCString("%lux%lu", mDisplayWidth, mDisplayHeight));
   }
 
   HANDLE surfaceHandle = INVALID_HANDLE_VALUE;
