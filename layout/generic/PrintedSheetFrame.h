@@ -9,6 +9,7 @@
 #ifndef LAYOUT_GENERIC_PRINTEDSHEETFRAME_H_
 #define LAYOUT_GENERIC_PRINTEDSHEETFRAME_H_
 
+#include "mozilla/gfx/Point.h"
 #include "nsContainerFrame.h"
 #include "nsHTMLParts.h"
 
@@ -18,6 +19,8 @@ namespace mozilla {
 
 class PrintedSheetFrame final : public nsContainerFrame {
  public:
+  using IntSize = mozilla::gfx::IntSize;
+
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(PrintedSheetFrame)
 
@@ -70,6 +73,21 @@ class PrintedSheetFrame final : public nsContainerFrame {
    */
   nsSize PrecomputeSheetSize(const nsPresContext* aPresContext);
   nsSize GetPrecomputedSheetSize() const { return mPrecomputedSize; }
+
+  /**
+   * This method returns the dimensions of the physical page that the target
+   * [pseudo-]printer should create. This may be different from our own
+   * dimensions in the case where CSS `page-orientation` causes us to be
+   * rotated, but we only support that if the PrintTarget backend supports
+   * different page sizes/orientations. That's only the case for our Save-to-PDF
+   * backends (possibly other save-to-file outputs in future).
+   *
+   * The dimensions returned are expected to be passed to
+   * nsDeviceContext::BeginPage, which will pass them on to
+   * PrintTarget::BeginPage to use as the physical dimensions of the page.
+   */
+  IntSize GetPrintTargetSizeInPoints(
+      const int32_t aAppUnitsPerPhysicalInch) const;
 
  private:
   // Private construtor & destructor, to avoid accidental (non-FrameArena)

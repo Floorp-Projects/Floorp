@@ -28,7 +28,7 @@ class PrintTargetCG final : public PrintTarget {
                          int32_t aEndPage) final;
   nsresult EndPrinting() final;
   nsresult AbortPrinting() final;
-  nsresult BeginPage() final;
+  nsresult BeginPage(const IntSize& aSizeInPoints) final;
   nsresult EndPage() final;
 
   already_AddRefed<DrawTarget> GetReferenceDrawTarget() final;

@@ -25,7 +25,7 @@ parent:
 
   // Translate the page recording writen into |fd| and play back the events to
   // the real print device.
-  async ProcessPage(uint64_t[] deps);
+  async ProcessPage(int32_t aWidthInPoints, int32_t aHeightInPoints, uint64_t[] aDeps);
 
   // This informs the real print device that we've finished, so it can trigger
   // the actual print.

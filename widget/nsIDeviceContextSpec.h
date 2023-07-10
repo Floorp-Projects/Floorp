@@ -9,6 +9,7 @@
 #include "gfxPoint.h"
 #include "nsISupports.h"
 #include "mozilla/StaticPrefs_print.h"
+#include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/PrintPromise.h"
 #include "mozilla/MoveOnlyFunction.h"
 
@@ -32,6 +33,7 @@ class PrintTarget;
 class nsIDeviceContextSpec : public nsISupports {
  public:
   typedef mozilla::gfx::PrintTarget PrintTarget;
+  using IntSize = mozilla::gfx::IntSize;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_IDEVICE_CONTEXT_SPEC_IID)
 
@@ -79,7 +81,12 @@ class nsIDeviceContextSpec : public nsISupports {
                            int32_t aStartPage, int32_t aEndPage) = 0;
 
   virtual RefPtr<mozilla::gfx::PrintEndDocumentPromise> EndDocument() = 0;
-  NS_IMETHOD BeginPage() = 0;
+  /**
+   * Note: not all print devices implement mixed page sizing. Internally,
+   * aSizeInPoints gets handed off to a PrintTarget, and most PrintTarget
+   * subclasses will ignore `aSizeInPoints`.
+   */
+  NS_IMETHOD BeginPage(const IntSize& aSizeInPoints) = 0;
   NS_IMETHOD EndPage() = 0;
 
  protected:
