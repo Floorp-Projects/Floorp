@@ -379,8 +379,8 @@ class Log final {
     }
     return *this;
   }
-  template <typename T, typename Sub>
-  Log& operator<<(const BaseSize<T, Sub>& aSize) {
+  template <typename T, typename Sub, typename Coord>
+  Log& operator<<(const BaseSize<T, Sub, Coord>& aSize) {
     if (MOZ_UNLIKELY(LogIt())) {
       mMessage << "Size(" << aSize.width << "," << aSize.height << ")";
     }

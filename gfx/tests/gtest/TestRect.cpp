@@ -18,8 +18,17 @@
 #  include <windows.h>
 #endif
 
+using mozilla::CSSIntCoord;
+using mozilla::CSSIntSize;
+using mozilla::ScreenIntCoord;
 using mozilla::gfx::IntRect;
 using mozilla::gfx::IntRectAbsolute;
+
+static_assert(std::is_constructible_v<CSSIntSize, CSSIntCoord, CSSIntCoord>);
+static_assert(
+    !std::is_constructible_v<CSSIntSize, ScreenIntCoord, ScreenIntCoord>);
+static_assert(std::is_constructible_v<CSSIntSize, int, int>);
+static_assert(!std::is_constructible_v<CSSIntSize, float, float>);
 
 template <class RectType>
 static bool TestConstructors() {
