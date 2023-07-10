@@ -13735,7 +13735,7 @@
 
 -   name: security.sandbox.gmp.shadow-stack.enabled
     type: RelaxedAtomicBool
-    value: @IS_NIGHTLY_BUILD@
+    value: true
     mirror: always
 
   # Whether a Low Privilege AppContainer (LPAC) is enabled for the relevant
