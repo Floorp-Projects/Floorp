@@ -992,6 +992,7 @@ CanvasRenderingContext2D::ContextState::ContextState(const ContextState& aOther)
       textBaseline(aOther.textBaseline),
       textDirection(aOther.textDirection),
       fontKerning(aOther.fontKerning),
+      fontStretch(aOther.fontStretch),
       fontVariantCaps(aOther.fontVariantCaps),
       textRendering(aOther.textRendering),
       letterSpacing(aOther.letterSpacing),
@@ -3711,9 +3712,11 @@ void CanvasRenderingContext2D::SetFont(const nsACString& aFont,
     return;
   }
 
-  // Setting the font attribute magically resets fontVariantCaps to normal.
+  // Setting the font attribute magically resets fontVariantCaps and
+  // fontStretch to normal.
   // (spec unclear, cf. https://github.com/whatwg/html/issues/8103)
   SetFontVariantCaps(CanvasFontVariantCaps::Normal);
+  SetFontStretch(CanvasFontStretch::Normal);
 
   // If letterSpacing or wordSpacing is present, recompute to account for
   // changes to font-relative dimensions.
@@ -3773,6 +3776,44 @@ bool CanvasRenderingContext2D::SetFontInternal(const nsACString& aFont,
       QuantizeFontSize(resizedFont.size.ToCSSPixels()));
 
   resizedFont.kerning = CanvasToGfx(CurrentState().fontKerning);
+
+  // fontStretch handling: if fontStretch is not 'normal', apply it;
+  // if it is normal, then use whatever the shorthand set.
+  // XXX(jfkthame) The interaction between the shorthand and the separate attr
+  // here is not clearly spec'd, and we may want to reconsider it (or revise
+  // the available values); see https://github.com/whatwg/html/issues/8103.
+  switch (CurrentState().fontStretch) {
+    case CanvasFontStretch::Normal:
+      // Leave whatever the shorthand set.
+      break;
+    case CanvasFontStretch::Ultra_condensed:
+      resizedFont.stretch = StyleFontStretch::ULTRA_CONDENSED;
+      break;
+    case CanvasFontStretch::Extra_condensed:
+      resizedFont.stretch = StyleFontStretch::EXTRA_CONDENSED;
+      break;
+    case CanvasFontStretch::Condensed:
+      resizedFont.stretch = StyleFontStretch::CONDENSED;
+      break;
+    case CanvasFontStretch::Semi_condensed:
+      resizedFont.stretch = StyleFontStretch::SEMI_CONDENSED;
+      break;
+    case CanvasFontStretch::Semi_expanded:
+      resizedFont.stretch = StyleFontStretch::SEMI_EXPANDED;
+      break;
+    case CanvasFontStretch::Expanded:
+      resizedFont.stretch = StyleFontStretch::EXPANDED;
+      break;
+    case CanvasFontStretch::Extra_expanded:
+      resizedFont.stretch = StyleFontStretch::EXTRA_EXPANDED;
+      break;
+    case CanvasFontStretch::Ultra_expanded:
+      resizedFont.stretch = StyleFontStretch::ULTRA_EXPANDED;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown stretch value");
+      break;
+  }
 
   // fontVariantCaps handling: if fontVariantCaps is not 'normal', apply it;
   // if it is, then use the smallCaps boolean from the shorthand.
@@ -3911,6 +3952,39 @@ bool CanvasRenderingContext2D::SetFontInternalDisconnected(
   }
 
   fontStyle.size = QuantizeFontSize(size);
+
+  switch (CurrentState().fontStretch) {
+    case CanvasFontStretch::Normal:
+      // Leave whatever the shorthand set.
+      break;
+    case CanvasFontStretch::Ultra_condensed:
+      fontStyle.stretch = StyleFontStretch::ULTRA_CONDENSED;
+      break;
+    case CanvasFontStretch::Extra_condensed:
+      fontStyle.stretch = StyleFontStretch::EXTRA_CONDENSED;
+      break;
+    case CanvasFontStretch::Condensed:
+      fontStyle.stretch = StyleFontStretch::CONDENSED;
+      break;
+    case CanvasFontStretch::Semi_condensed:
+      fontStyle.stretch = StyleFontStretch::SEMI_CONDENSED;
+      break;
+    case CanvasFontStretch::Semi_expanded:
+      fontStyle.stretch = StyleFontStretch::SEMI_EXPANDED;
+      break;
+    case CanvasFontStretch::Expanded:
+      fontStyle.stretch = StyleFontStretch::EXPANDED;
+      break;
+    case CanvasFontStretch::Extra_expanded:
+      fontStyle.stretch = StyleFontStretch::EXTRA_EXPANDED;
+      break;
+    case CanvasFontStretch::Ultra_expanded:
+      fontStyle.stretch = StyleFontStretch::ULTRA_EXPANDED;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown stretch value");
+      break;
+  }
 
   // fontVariantCaps handling: if fontVariantCaps is not 'normal', apply it;
   // if it is, then use the smallCaps boolean from the shorthand.
