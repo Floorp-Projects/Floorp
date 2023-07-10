@@ -26,7 +26,10 @@ import kotlin.reflect.KClass
  * Common base class for tests using GeckoSessionTestRule,
  * providing the test rule and other utilities.
  */
-open class BaseSessionTest(noErrorCollector: Boolean = false) {
+open class BaseSessionTest(
+    noErrorCollector: Boolean = false,
+    serverCustomHeaders: Map<String, String>? = null,
+) {
     companion object {
         const val RESUBMIT_CONFIRM = "/assets/www/resubmit.html"
         const val BEFORE_UNLOAD = "/assets/www/beforeunload.html"
@@ -49,7 +52,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val FORMS_ID_VALUE_HTML_PATH = "/assets/www/forms_id_value.html"
         const val CC_FORM_HTML_PATH = "/assets/www/cc_form.html"
         const val FEDCM_RP_HTML_PATH = "/assets/www/fedcm_rp.html"
-        const val FEDCM_IDP_MANIFEST_PATH = "/assets/www/fedcm_ipd_manifest.json"
+        const val FEDCM_IDP_MANIFEST_PATH = "/assets/www/fedcm_idp_manifest.json"
         const val HELLO_HTML_PATH = "/assets/www/hello.html"
         const val HELLO2_HTML_PATH = "/assets/www/hello2.html"
         const val HELLO_IFRAME_HTML_PATH = "/assets/www/iframe_hello.html"
@@ -135,7 +138,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val TEST_PORT = GeckoSessionTestRule.TEST_PORT
     }
 
-    val sessionRule = GeckoSessionTestRule()
+    val sessionRule = GeckoSessionTestRule(serverCustomHeaders)
 
     // Override this to include more `evaluate` rules in the chain
     @get:Rule
