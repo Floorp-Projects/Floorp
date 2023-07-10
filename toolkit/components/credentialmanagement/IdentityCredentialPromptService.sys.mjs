@@ -543,12 +543,6 @@ export class IdentityCredentialPromptService {
       providerURL.host,
       {}
     );
-    let headerMessage = localization.formatValueSync(
-      "identity-credential-header-accounts",
-      {
-        provider: providerName || displayDomain,
-      }
-    );
 
     if (AppConstants.platform === "android") {
       const accounts = [];
@@ -585,6 +579,13 @@ export class IdentityCredentialPromptService {
         );
       });
     }
+
+    let headerMessage = localization.formatValueSync(
+      "identity-credential-header-accounts",
+      {
+        provider: providerName || displayDomain,
+      }
+    );
 
     let [accept, cancel] = localization.formatMessagesSync([
       { id: "identity-credential-sign-in-button" },
