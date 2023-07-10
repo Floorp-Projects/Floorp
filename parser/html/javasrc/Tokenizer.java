@@ -35,8 +35,6 @@
 
 package nu.validator.htmlparser.impl;
 
-import java.util.HashMap;
-
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.Locator;
 import org.xml.sax.ext.Locator2;
@@ -686,15 +684,6 @@ public class Tokenizer implements Locator, Locator2 {
 
     public ErrorHandler getErrorHandler() {
         return this.errorHandler;
-    }
-
-    /**
-     * Gets the errorProfile.
-     *
-     * @param errorProfile
-     */
-    public HashMap getErrorProfile() {
-        return null;
     }
 
     /**
