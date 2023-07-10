@@ -432,6 +432,11 @@ The code is pretty straight-forward, there's no unsafe code at all.
 """
 
 [[audits.app_units]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+version = "0.7.3"
+
+[[audits.app_units]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
 delta = "0.7.1 -> 0.7.2"

@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "app_units"
-version = "0.7.2"
+version = "0.7.3"
 authors = ["The Servo Project Developers"]
 description = "Servo app units type (Au)"
 documentation = "https://docs.rs/app_units/"
@@ -28,6 +28,9 @@ optional = true
 version = "1.0"
 features = ["derive"]
 optional = true
+
+[dev-dependencies.ron]
+version = "0.8.0"
 
 [features]
 default = [

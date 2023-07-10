@@ -21,7 +21,7 @@ pub const MAX_AU: Au = Au((1 << 30) - 1);
 
 #[repr(transparent)]
 #[derive(Clone, Copy, Hash, PartialEq, PartialOrd, Eq, Ord, Default)]
-#[cfg_attr(feature = "serde_serialization", derive(Serialize))]
+#[cfg_attr(feature = "serde_serialization", derive(Serialize), serde(transparent))]
 /// An App Unit, the fundamental unit of length in Servo. Usually
 /// 1/60th of a pixel (see `AU_PER_PX`)
 ///
@@ -382,4 +382,11 @@ fn convert() {
     assert_eq!(Au::from_f64_px(6.), Au(360));
     assert_eq!(Au::from_f64_px(6.12), Au(367));
     assert_eq!(Au::from_f64_px(6.13), Au(368));
+}
+
+#[cfg(feature ="serde_serialization")]
+#[test]
+fn serialize() {
+    let serialized = ron::to_string(&Au(42)).unwrap();
+    assert_eq!(ron::from_str(&serialized), Ok(Au(42)));
 }
