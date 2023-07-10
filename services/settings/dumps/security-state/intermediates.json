@@ -1351,42 +1351,6 @@
       "last_modified": 1675997823490
     },
     {
-      "schema": 1675759682957,
-      "derHash": "zBufnkNw+2gUHSihFeqoY/jq23oE4r0js8YvnZ8XwmM=",
-      "subject": "CN=FIRMAPROFESIONAL ICA A01 QWAC 2022,O=Firmaprofesional SA,C=ES",
-      "subjectDN": "MHIxCzAJBgNVBAYTAkVTMRwwGgYDVQQKDBNGaXJtYXByb2Zlc2lvbmFsIFNBMRgwFgYDVQRhDA9WQVRFUy1BNjI2MzQwNjgxKzApBgNVBAMMIkZJUk1BUFJPRkVTSU9OQUwgSUNBIEEwMSBRV0FDIDIwMjI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d736a3e7ddd478034b9ce53949685d8115e8a539876acfe978db47a7cda1e5c6",
-        "size": 1447,
-        "filename": "bVle95d2TFsMug2xpivw0fPUY7VsTluskvwQa1q1hms=.pem",
-        "location": "security-state-staging/intermediates/126f18a6-e0be-40bf-b1d6-ecffdbb2fc45.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "bVle95d2TFsMug2xpivw0fPUY7VsTluskvwQa1q1hms=",
-      "crlite_enrolled": false,
-      "id": "91718796-e0ed-4a87-9200-dd74ad386169",
-      "last_modified": 1675760222914
-    },
-    {
-      "schema": 1675759682009,
-      "derHash": "Iv1U+TOxf0WJQsNF465iXkBc5AsZGzFriHyj0CzKw7E=",
-      "subject": "CN=FIRMAPROFESIONAL ICA A02 NO QWAC 2022,O=Firmaprofesional SA,C=ES",
-      "subjectDN": "MHUxCzAJBgNVBAYTAkVTMRwwGgYDVQQKDBNGaXJtYXByb2Zlc2lvbmFsIFNBMRgwFgYDVQRhDA9WQVRFUy1BNjI2MzQwNjgxLjAsBgNVBAMMJUZJUk1BUFJPRkVTSU9OQUwgSUNBIEEwMiBOTyBRV0FDIDIwMjI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c1332c5b2b17a40d7e1c836a6cff328b9adb70daa8683b785dd00bc661c36f89",
-        "size": 1451,
-        "filename": "d96AQ4m8-YeSRHUqkGB8vTJPwsoHOcOVl8BS6_lfdXM=.pem",
-        "location": "security-state-staging/intermediates/9cd7eebb-6d48-4abe-94a1-d32e3376bc95.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "d96AQ4m8+YeSRHUqkGB8vTJPwsoHOcOVl8BS6/lfdXM=",
-      "crlite_enrolled": false,
-      "id": "396ad93f-4c3b-43f9-b983-cc9c87e31ba7",
-      "last_modified": 1675760222906
-    },
-    {
       "schema": 1675392490034,
       "derHash": "2h98vzIuVcwIInb4UZFH36HoDLr31Xmf93E1iDLtFxI=",
       "subject": "CN=Encryption Everywhere G3 TLS ECC P384 SHA384 2023 CA1,O=DigiCert\\, Inc.,C=US",
@@ -2609,24 +2573,6 @@
       "crlite_enrolled": false,
       "id": "78793fc6-6e9d-4a6b-88ad-6e8e779862e8",
       "last_modified": 1667530623279
-    },
-    {
-      "schema": 1666878490459,
-      "derHash": "/9AIXGw1afjUErzY5tG4rPCSmkH0/TWU+MD0ttUlODA=",
-      "subject": "CN=FIRMAPROFESIONAL CA ROOT-A WEB,O=Firmaprofesional SA,C=ES",
-      "subjectDN": "MG4xCzAJBgNVBAYTAkVTMRwwGgYDVQQKDBNGaXJtYXByb2Zlc2lvbmFsIFNBMRgwFgYDVQRhDA9WQVRFUy1BNjI2MzQwNjgxJzAlBgNVBAMMHkZJUk1BUFJPRkVTSU9OQUwgQ0EgUk9PVC1BIFdFQg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "da6afa1e6ed36e40f11db7e5601e29dfd02bb7a345bb1fb6b2997dfa73831f6c",
-        "size": 1910,
-        "filename": "LbKuTQ0IpNx7elyRGza0LjBo0uWGV--mGi8vacVTuFg=.pem",
-        "location": "security-state-staging/intermediates/5160802f-75c0-47eb-af34-5ef35d988822.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "LbKuTQ0IpNx7elyRGza0LjBo0uWGV++mGi8vacVTuFg=",
-      "crlite_enrolled": false,
-      "id": "695f31b6-0c5d-4b65-b4d6-3c1068257111",
-      "last_modified": 1666879023366
     },
     {
       "schema": 1666727451807,
@@ -27631,5 +27577,5 @@
       "last_modified": 1559865863642
     }
   ],
-  "timestamp": 1688050623254
+  "timestamp": 1688741823367
 }
