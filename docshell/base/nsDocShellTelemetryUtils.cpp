@@ -59,6 +59,10 @@ static const LoadErrorTelemetryResult sResult[] = {
         ErrorLabel::CSP_FORM_ACTION,
     },
     {
+        NS_ERROR_CSP_NAVIGATE_TO_VIOLATION,
+        ErrorLabel::CSP_NAVIGATE_TO,
+    },
+    {
         NS_ERROR_XFO_VIOLATION,
         ErrorLabel::XFO_VIOLATION,
     },

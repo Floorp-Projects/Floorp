@@ -469,7 +469,8 @@ class nsDocShellLoadState final {
   bool mOriginalFrameSrc;
 
   // If this attribute is true, then the load was initiated by a
-  // form submission.
+  // form submission. This is important to know for the CSP directive
+  // navigate-to.
   bool mIsFormSubmission;
 
   // Contains a load type as specified by the nsDocShellLoadTypes::load*
