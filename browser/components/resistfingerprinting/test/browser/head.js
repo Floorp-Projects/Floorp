@@ -650,9 +650,32 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
       url: uri,
     },
     async function (browser) {
+      /*
+       * We expect that `runTheTest` is going to be able to communicate with the iframe
+       * or tab that it opens, but if it cannot (because we are using noopener), we kind
+       * of hack around and get the data directly.
+       */
+      if ("noopener" in extraData) {
+        var tabPromise = BrowserTestUtils.waitForNewTab(
+          gBrowser,
+          extraData.await_uri
+        );
+      }
+
+      // In SpecialPowers.spawn, extraData goes through a structuredClone, which cannot clone
+      // functions. await_uri is sometimes a function.  This filters out keys that are used by
+      // this function (runActualTest) and not by runTheTest or testFunction. It avoids the
+      // cloning issue, and avoids polluting the object in those called functions.
+      let filterExtraData = function (x) {
+        let banned_keys = ["noopener", "await_uri"];
+        return Object.fromEntries(
+          Object.entries(x).filter(([k, v]) => !banned_keys.includes(k))
+        );
+      };
+
       let result = await SpecialPowers.spawn(
         browser,
-        [IFRAME_DOMAIN, CROSS_ORIGIN_DOMAIN, extraData],
+        [IFRAME_DOMAIN, CROSS_ORIGIN_DOMAIN, filterExtraData(extraData)],
         async function (iframe_domain_, cross_origin_domain_, extraData_) {
           return content.wrappedJSObject.runTheTest(
             iframe_domain_,
@@ -661,6 +684,24 @@ async function runActualTest(uri, testFunction, expectedResults, extraData) {
           );
         }
       );
+
+      if ("noopener" in extraData) {
+        await tabPromise;
+        if (Services.appinfo.OS === "WINNT") {
+          await new Promise(r => setTimeout(r, 1000));
+        }
+
+        let second_tabs_browser = gBrowser.tabs[gBrowser.tabs.length - 1];
+        result = await SpecialPowers.spawn(
+          second_tabs_browser.linkedBrowser,
+          [],
+          async function () {
+            let r = content.wrappedJSObject.give_result();
+            return r;
+          }
+        );
+        BrowserTestUtils.removeTab(second_tabs_browser);
+      }
 
       testFunction(result, expectedResults, extraData);
     }

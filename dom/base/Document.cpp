@@ -16208,17 +16208,26 @@ void Document::SendPageUseCounters() {
 bool Document::RecomputeResistFingerprinting() {
   const bool previous = mShouldResistFingerprinting;
 
-  if (mParentDocument &&
-      (NodePrincipal()->Equals(mParentDocument->NodePrincipal()) ||
-       NodePrincipal()->GetIsNullPrincipal())) {
-    // If we have a parent document, defer to it only when we have a null
-    // principal (e.g. a sandboxed iframe or a data: uri) or when the parent
-    // document's principal matches.  This means we will defer about:blank,
-    // about:srcdoc, blob and same-origin iframes to the parent, but not
-    // cross-origin iframes.
-    mShouldResistFingerprinting = !nsContentUtils::IsChromeDoc(this) &&
-                                  mParentDocument->ShouldResistFingerprinting(
-                                      RFPTarget::IsAlwaysEnabledForPrecompute);
+  RefPtr<BrowsingContext> opener =
+      GetBrowsingContext() ? GetBrowsingContext()->GetOpener() : nullptr;
+  // If we have a parent or opener document, defer to it only when we have a
+  // null principal (e.g. a sandboxed iframe or a data: uri) or when the
+  // document's principal matches.  This means we will defer about:blank,
+  // about:srcdoc, blob and same-origin iframes/popups to the parent/opener,
+  // but not cross-origin ones.  Cross-origin iframes/popups may inherit a
+  // CookieJarSettings.mShouldRFP = false bit however, which will be respected.
+  auto shouldInheritFrom = [this](Document* aDoc) {
+    return aDoc && (this->NodePrincipal()->Equals(aDoc->NodePrincipal()) ||
+                    this->NodePrincipal()->GetIsNullPrincipal());
+  };
+
+  if (shouldInheritFrom(mParentDocument)) {
+    mShouldResistFingerprinting = mParentDocument->ShouldResistFingerprinting(
+        RFPTarget::IsAlwaysEnabledForPrecompute);
+  } else if (opener && shouldInheritFrom(opener->GetDocument())) {
+    mShouldResistFingerprinting =
+        opener->GetDocument()->ShouldResistFingerprinting(
+            RFPTarget::IsAlwaysEnabledForPrecompute);
   } else {
     mShouldResistFingerprinting =
         !nsContentUtils::IsChromeDoc(this) &&
