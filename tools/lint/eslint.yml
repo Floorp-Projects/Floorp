@@ -26,7 +26,6 @@ eslint:
         - 'toolkit/content/contentAreaUtils.js'
         - 'toolkit/content/editMenuOverlay.js'
         - 'toolkit/content/globalOverlay.js'
-        - 'toolkit/modules/Services.jsm'
     type: external
     payload: eslint:lint
     setup: eslint:setup
