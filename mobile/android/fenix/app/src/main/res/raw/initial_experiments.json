@@ -30,23 +30,37 @@
           "slug": "control",
           "ratio": 1,
           "feature": {
-            "featureId": "toolbar",
-            "enabled": true,
-            "value": {
-              "toolbar-position-top": false
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "toolbar",
+              "enabled": true,
+              "value": {
+                "toolbar-position-top": false
+              }
             }
-          }
+          ]
         },
         {
           "slug": "treatment-a",
           "ratio": 1,
           "feature": {
-            "featureId": "toolbar",
-            "enabled": true,
-            "value": {
-              "toolbar-position-top": true
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "toolbar",
+              "enabled": true,
+              "value": {
+                "toolbar-position-top": true
+              }
             }
-          }
+          ]
         }
       ],
       "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('115.!') >= 0)))",
@@ -90,24 +104,38 @@
           "slug": "control-off-branch",
           "ratio": 1,
           "feature": {
-            "featureId": "re-engagement-notification",
-            "enabled": true,
-            "value": {
-              "enabled": false
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "re-engagement-notification",
+              "enabled": true,
+              "value": {
+                "enabled": false
+              }
             }
-          }
+          ]
         },
         {
           "slug": "treatment-privacy-notification",
           "ratio": 1,
           "feature": {
-            "featureId": "re-engagement-notification",
-            "enabled": true,
-            "value": {
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "re-engagement-notification",
               "enabled": true,
-              "type": 0
+              "value": {
+                "enabled": true,
+                "type": 0
+              }
             }
-          }
+          ]
         }
       ],
       "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('115.!') >= 0)))",
@@ -156,37 +184,51 @@
           "slug": "control",
           "ratio": 1,
           "feature": {
-            "featureId": "juno-onboarding",
-            "enabled": true,
-            "value": {
-              "enabled": true
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "juno-onboarding",
+              "enabled": true,
+              "value": {
+                "enabled": true
+              }
             }
-          }
+          ]
         },
         {
           "slug": "treatment-a",
           "ratio": 1,
           "feature": {
-            "featureId": "juno-onboarding",
-            "enabled": true,
-            "value": {
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "juno-onboarding",
               "enabled": true,
-              "cards": {
-                "default-browser": {
-                  "image-res": "onboarding_default_browser",
-                  "image-is-illustration": false
-                },
-                "sync-sign-in": {
-                  "image-res": "onboarding_sync",
-                  "image-is-illustration": false
-                },
-                "notification-permission": {
-                  "image-res": "onboarding_notification",
-                  "image-is-illustration": false
+              "value": {
+                "enabled": true,
+                "cards": {
+                  "default-browser": {
+                    "image-res": "onboarding_default_browser",
+                    "image-is-illustration": false
+                  },
+                  "sync-sign-in": {
+                    "image-res": "onboarding_sync",
+                    "image-is-illustration": false
+                  },
+                  "notification-permission": {
+                    "image-res": "onboarding_notification",
+                    "image-is-illustration": false
+                  }
                 }
               }
             }
-          }
+          ]
         }
       ],
       "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('114.!') >= 0) && (language in ['en'])))",
@@ -235,41 +277,55 @@
           "slug": "control",
           "ratio": 1,
           "feature": {
-            "featureId": "juno-onboarding",
-            "enabled": true,
-            "value": {
-              "enabled": true
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "juno-onboarding",
+              "enabled": true,
+              "value": {
+                "enabled": true
+              }
             }
-          }
+          ]
         },
         {
           "slug": "treatment-a",
           "ratio": 1,
           "feature": {
-            "featureId": "juno-onboarding",
-            "enabled": true,
-            "value": {
+            "featureId": "this-is-included-for-mobile-pre-96-support",
+            "enabled": false,
+            "value": {}
+          },
+          "features": [
+            {
+              "featureId": "juno-onboarding",
               "enabled": true,
-              "cards": {
-                "default-browser": {
-                  "title": "Du entscheidest, was Standard ist",
-                  "body": "Nimm nicht das Erstbeste, sondern das Beste für dich: Firefox schützt deine Privatsphäre.\n\nLies unseren Datenschutzhinweis.",
-                  "link-text": "Datenschutzhinweis",
-                  "image-res": "onboarding_ctd_default_browser"
-                },
-                "sync-sign-in": {
-                  "title": "Alles ist dort, wo du es brauchst",
-                  "body": "Wenn du willst, bringt Firefox deine Tabs und Passwörter auf all deine Geräte.",
-                  "image-res": "onboarding_ctd_sync"
-                },
-                "notification-permission": {
-                  "title": "Du bestimmst, was Firefox kann",
-                  "body": "Benachrichtigungen helfen dabei, Downloads zu managen und Tabs zwischen Geräten zu senden.",
-                  "image-res": "onboarding_ctd_notification"
+              "value": {
+                "enabled": true,
+                "cards": {
+                  "default-browser": {
+                    "title": "Du entscheidest, was Standard ist",
+                    "body": "Nimm nicht das Erstbeste, sondern das Beste für dich: Firefox schützt deine Privatsphäre.\n\nLies unseren Datenschutzhinweis.",
+                    "link-text": "Datenschutzhinweis",
+                    "image-res": "onboarding_ctd_default_browser"
+                  },
+                  "sync-sign-in": {
+                    "title": "Alles ist dort, wo du es brauchst",
+                    "body": "Wenn du willst, bringt Firefox deine Tabs und Passwörter auf all deine Geräte.",
+                    "image-res": "onboarding_ctd_sync"
+                  },
+                  "notification-permission": {
+                    "title": "Du bestimmst, was Firefox kann",
+                    "body": "Benachrichtigungen helfen dabei, Downloads zu managen und Tabs zwischen Geräten zu senden.",
+                    "image-res": "onboarding_ctd_notification"
+                  }
                 }
               }
             }
-          }
+          ]
         }
       ],
       "targeting": "((is_already_enrolled) || ((isFirstRun == 'true') && (app_version|versionCompare('115.!') >= 0) && (language in ['de']) && (region in ['DE'])))",
