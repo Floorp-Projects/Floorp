@@ -206,6 +206,7 @@ void MFMediaEngineParent::InitializeDXGIDeviceManager() {
 void MFMediaEngineParent::HandleMediaEngineEvent(
     MFMediaEngineEventWrapper aEvent) {
   AssertOnManagerThread();
+  LOG("Received media engine event %s", MediaEngineEventToStr(aEvent.mEvent));
   ENGINE_MARKER_TEXT(
       "MFMediaEngineParent::HandleMediaEngineEvent",
       nsPrintfCString("%s", MediaEngineEventToStr(aEvent.mEvent)));

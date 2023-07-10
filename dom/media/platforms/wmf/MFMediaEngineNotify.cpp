@@ -8,14 +8,9 @@
 
 namespace mozilla {
 
-#define LOG(msg, ...)                         \
-  MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug, \
-          ("MFMediaEngineNotify=%p, " msg, this, ##__VA_ARGS__))
-
 IFACEMETHODIMP MFMediaEngineNotify::EventNotify(DWORD aEvent, DWORD_PTR aParam1,
                                                 DWORD aParam2) {
   auto event = static_cast<MF_MEDIA_ENGINE_EVENT>(aEvent);
-  LOG("Received media engine event %s", MediaEngineEventToStr(event));
   MFMediaEngineEventWrapper engineEvent{event};
   if (event == MF_MEDIA_ENGINE_EVENT_ERROR ||
       event == MF_MEDIA_ENGINE_EVENT_FORMATCHANGE ||
@@ -26,7 +21,5 @@ IFACEMETHODIMP MFMediaEngineNotify::EventNotify(DWORD aEvent, DWORD_PTR aParam1,
   mEngineEvents.Notify(engineEvent);
   return S_OK;
 }
-
-#undef LOG
 
 }  // namespace mozilla
