@@ -10,3 +10,9 @@ repositories {
     mavenCentral()
 }
 
+gradlePlugin {
+    plugins.register("mozac.GitHubPlugin") {
+        id = "mozac.GitHubPlugin"
+        implementationClass = "GitHubPlugin"
+    }
+}

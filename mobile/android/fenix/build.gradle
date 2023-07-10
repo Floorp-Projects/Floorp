@@ -1,7 +1,5 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
-import org.mozilla.fenix.gradle.tasks.GithubDetailsTask
-
 buildscript {
     // This logic is duplicated in the allprojects block: I don't know how to fix that.
     repositories {

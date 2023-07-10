@@ -4,7 +4,7 @@
 
 buildCache {
     local {
-        directory = new File(rootDir, '../.build-cache')
+        directory = new File(rootDir, '../../.build-cache')
         removeUnusedEntriesAfterDays = 30
     }
 }

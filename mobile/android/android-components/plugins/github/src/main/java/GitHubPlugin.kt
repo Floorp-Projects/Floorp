@@ -2,12 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.gradle.tasks
-
 import org.gradle.api.DefaultTask
+import org.gradle.api.Plugin
+import org.gradle.api.initialization.Settings
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+
+class GitHubPlugin : Plugin<Settings> {
+    override fun apply(settings: Settings) = Unit
+}
 
 /**
  * Helper to write to the "customCheckRunText.md" file for Taskcluster.
@@ -26,6 +30,9 @@ open class GithubDetailsTask : DefaultTask() {
     private val detailsFile = File("/builds/worker/github/customCheckRunText.md")
     private val suffix = "\n\n_(404 if compilation failed)_"
 
+    /**
+     * Action called by Gradle that writes the "customCheckRunText.md" file.
+     */
     @TaskAction
     fun writeFile() {
         val taskId = System.getenv("TASK_ID")
