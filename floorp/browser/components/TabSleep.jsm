@@ -227,7 +227,7 @@ function enableTabSleep() {
             console.log(`Tab Sleep: event type => ${event.type}`);
         }
         let nativeTab = event.target;
-        let currentTime = (new Date()).getTime();
+        let currentTime = Date.now();
         switch (event.type) {
             case "TabAttrModified":
                 let changed = event.detail.changed;
@@ -292,7 +292,7 @@ function enableTabSleep() {
     });
 
     interval = setInterval(function() {
-        let currentTime = (new Date()).getTime();
+        let currentTime = Date.now();
         for (let nativeTab of tabs) {
             if (nativeTab.selected) continue;
             if (nativeTab.multiselected) continue;
