@@ -12,7 +12,7 @@ varying highp vec2 v_uv;
 #ifdef WR_FEATURE_ALPHA_PASS
 flat varying mediump vec4 v_color;
 flat varying mediump vec2 v_mask_swizzle;
-flat varying mediump vec2 v_tile_repeat;
+flat varying mediump vec2 v_tile_repeat_bounds;
 #endif
 
 // Normalized bounds of the source image in the texture.
@@ -45,6 +45,10 @@ ImageBrushData fetch_image_data(int address) {
         raw_data[2].xy
     );
     return data;
+}
+
+vec2 modf2(vec2 x, vec2 y) {
+    return x - y * floor(x/y);
 }
 
 void brush_vs(
@@ -202,8 +206,49 @@ void brush_vs(
     // Offset and scale v_uv here to avoid doing it in the fragment shader.
     vec2 repeat = rect_size(local_rect) / stretch_size;
     v_uv = mix(uv0, uv1, f) - min_uv;
-    v_uv /= texture_size;
     v_uv *= repeat.xy;
+
+    vec2 normalized_offset = vec2(0.0);
+#ifdef WR_FEATURE_REPETITION
+    // In the case of border-image-repeat: repeat, we must apply an offset so that
+    // the first tile is centered.
+    //
+    // This is derived from:
+    //   uv_size = max_uv - min_uv
+    //   repeat = local_rect.size / stetch_size
+    //   layout_offset = local_rect.size / 2 - strecth_size / 2
+    //   texel_offset = layout_offset * uv_size / stretch_size
+    //   texel_offset = uv_size / 2 * (local_rect.size / stretch_size - stretch_size / stretch_size)
+    //   texel_offset = uv_size / 2 * (repeat - 1)
+    //
+    // The offset is then adjusted so that it loops in the [0, uv_size] range.
+    // In principle this is simply a modulo:
+    //
+    //   adjusted_offset = fact((repeat - 1)/2) * uv_size
+    //
+    // However we don't want fract's behavior with negative numbers which happens when the pattern
+    // is larger than the local rect (repeat is between 0 and 1), so we shift the content by 1 to
+    // remain positive.
+    //
+    //   adjusted_offset = fract(repeat/2 - 1/2 + 1) * uv_size
+    //
+    // `uv - offset` will go through another modulo in the fragment shader for which we again don't
+    // want the behavior for nagative numbers. We rearrange this here in the form
+    // `uv + (uv_size - offset)` to prevent that.
+    //
+    //   adjusted_offset = (1 - fract(repeat/2 - 1/2 + 1)) * uv_size
+    //
+    // We then separate the normalized part of the offset which we also need elsewhere.
+    if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_X_CENTERED) != 0) {
+        normalized_offset.x = 1.0 - fract(repeat.x * 0.5 + 0.5);
+        v_uv.x += normalized_offset.x * (max_uv.x - min_uv.x);
+    }
+    if ((brush_flags & BRUSH_FLAG_SEGMENT_REPEAT_Y_CENTERED) != 0) {
+        normalized_offset.y = 1.0 - fract(repeat.y * 0.5 + 0.5);
+        v_uv.y += normalized_offset.y * (max_uv.y - min_uv.y);
+    }
+#endif
+    v_uv /= texture_size;
     if (perspective_interpolate == 0.0) {
         v_uv *= vi.world_pos.w;
     }
@@ -222,7 +267,7 @@ void brush_vs(
 #endif
 
 #ifdef WR_FEATURE_ALPHA_PASS
-    v_tile_repeat = repeat.xy;
+    v_tile_repeat_bounds = repeat.xy + normalized_offset;
 
     float opacity = float(prim_user_data.z) / 65535.0;
     switch (blend_mode) {
@@ -284,10 +329,11 @@ vec2 compute_repeated_uvs(float perspective_divisor) {
     vec2 uv_size = v_uv_bounds.zw - v_uv_bounds.xy;
 
     #ifdef WR_FEATURE_ALPHA_PASS
+    vec2 local_uv = v_uv * perspective_divisor;
     // This prevents the uv on the top and left parts of the primitive that was inflated
     // for anti-aliasing purposes from going beyound the range covered by the regular
     // (non-inflated) primitive.
-    vec2 local_uv = max(v_uv * perspective_divisor, vec2(0.0));
+    local_uv = max(local_uv, vec2(0.0));
 
     // Handle horizontal and vertical repetitions.
     vec2 repeated_uv = fract(local_uv) * uv_size + v_uv_bounds.xy;
@@ -295,10 +341,10 @@ vec2 compute_repeated_uvs(float perspective_divisor) {
     // This takes care of the bottom and right inflated parts.
     // We do it after the modulo because the latter wraps around the values exactly on
     // the right and bottom edges, which we do not want.
-    if (local_uv.x >= v_tile_repeat.x) {
+    if (local_uv.x >= v_tile_repeat_bounds.x) {
         repeated_uv.x = v_uv_bounds.z;
     }
-    if (local_uv.y >= v_tile_repeat.y) {
+    if (local_uv.y >= v_tile_repeat_bounds.y) {
         repeated_uv.y = v_uv_bounds.w;
     }
     #else
@@ -369,7 +415,7 @@ void swgl_drawSpanRGBA8() {
     #ifdef WR_FEATURE_ALPHA_PASS
     if (v_color != vec4(1.0)) {
         #ifdef WR_FEATURE_REPETITION
-            swgl_commitTextureRepeatColorRGBA8(sColor0, uv, v_tile_repeat, v_uv_bounds, v_uv_sample_bounds, v_color);
+            swgl_commitTextureRepeatColorRGBA8(sColor0, uv, v_tile_repeat_bounds, v_uv_bounds, v_uv_sample_bounds, v_color);
         #else
             swgl_commitTextureColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_color);
         #endif
@@ -380,7 +426,7 @@ void swgl_drawSpanRGBA8() {
 
     #ifdef WR_FEATURE_REPETITION
         #ifdef WR_FEATURE_ALPHA_PASS
-            swgl_commitTextureRepeatRGBA8(sColor0, uv, v_tile_repeat, v_uv_bounds, v_uv_sample_bounds);
+            swgl_commitTextureRepeatRGBA8(sColor0, uv, v_tile_repeat_bounds, v_uv_bounds, v_uv_sample_bounds);
         #else
             swgl_commitTextureRepeatRGBA8(sColor0, uv, vec2(0.0), v_uv_bounds, v_uv_sample_bounds);
         #endif

@@ -1351,13 +1351,13 @@ impl NinePatchDescriptor {
 
             // Enable repeat modes on the segment.
             if repeat_horizontal == RepeatMode::Repeat {
-                brush_flags |= BrushFlags::SEGMENT_REPEAT_X;
+                brush_flags |= BrushFlags::SEGMENT_REPEAT_X | BrushFlags::SEGMENT_REPEAT_X_CENTERED;
             } else if repeat_horizontal == RepeatMode::Round {
                 brush_flags |= BrushFlags::SEGMENT_REPEAT_X | BrushFlags::SEGMENT_REPEAT_X_ROUND;
             }
 
             if repeat_vertical == RepeatMode::Repeat {
-                brush_flags |= BrushFlags::SEGMENT_REPEAT_Y;
+                brush_flags |= BrushFlags::SEGMENT_REPEAT_Y | BrushFlags::SEGMENT_REPEAT_Y_CENTERED;
             } else if repeat_vertical == RepeatMode::Round {
                 brush_flags |= BrushFlags::SEGMENT_REPEAT_Y | BrushFlags::SEGMENT_REPEAT_Y_ROUND;
             }

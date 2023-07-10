@@ -618,13 +618,19 @@ bitflags! {
         const SEGMENT_REPEAT_X_ROUND = 16;
         /// Vertically follow border-image-repeat: round.
         const SEGMENT_REPEAT_Y_ROUND = 32;
+        /// Whether to position the repetitions so that the middle tile
+        /// is horizontally centered.
+        const SEGMENT_REPEAT_X_CENTERED = 64;
+        /// Whether to position the repetitions so that the middle tile
+        /// is vertically centered.
+        const SEGMENT_REPEAT_Y_CENTERED = 128;
         /// Middle (fill) area of a border-image-repeat.
-        const SEGMENT_NINEPATCH_MIDDLE = 64;
+        const SEGMENT_NINEPATCH_MIDDLE = 256;
         /// The extra segment data is a texel rect.
-        const SEGMENT_TEXEL_RECT = 128;
+        const SEGMENT_TEXEL_RECT = 512;
         /// Whether to force the anti-aliasing when the primitive
         /// is axis-aligned.
-        const FORCE_AA = 256;
+        const FORCE_AA = 1024;
     }
 }
 
