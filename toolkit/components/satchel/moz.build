@@ -29,7 +29,6 @@ LOCAL_INCLUDES += [
 EXTRA_JS_MODULES += [
     "FillHelpers.sys.mjs",
     "FormAutoComplete.sys.mjs",
-    "FormAutoCompleteResult.sys.mjs",
     "FormHistory.sys.mjs",
     "FormHistoryStartup.sys.mjs",
 ]
