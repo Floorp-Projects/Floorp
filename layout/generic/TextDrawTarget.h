@@ -268,10 +268,12 @@ class TextDrawTarget : public DrawTarget {
 
     if (aVertical) {
       pos.x -= aThickness / 2;  // adjust from center to corner
-      size = LayoutDeviceSize(aThickness, aEnd.y - aStart.y);
+      size = LayoutDeviceSize(aThickness,
+                              ViewAs<LayoutDevicePixel>(aEnd.y - aStart.y));
     } else {
       pos.y -= aThickness / 2;  // adjust from center to corner
-      size = LayoutDeviceSize(aEnd.x - aStart.x, aThickness);
+      size = LayoutDeviceSize(ViewAs<LayoutDevicePixel>(aEnd.x - aStart.x),
+                              aThickness);
     }
 
     wr::Line decoration;

@@ -52,8 +52,8 @@ struct AspectRatio {
     return AspectRatio(aWidth / aHeight, aUseBoxSizing);
   }
 
-  template <typename T, typename Sub>
-  static AspectRatio FromSize(const gfx::BaseSize<T, Sub>& aSize) {
+  template <typename T, typename Sub, typename Coord>
+  static AspectRatio FromSize(const gfx::BaseSize<T, Sub, Coord>& aSize) {
     return FromSize(aSize.Width(), aSize.Height());
   }
 

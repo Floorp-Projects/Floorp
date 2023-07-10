@@ -269,19 +269,19 @@ typedef Point4DTyped<UnknownUnits, double> PointDouble4D;
 
 template <class Units>
 struct MOZ_EMPTY_BASES IntSizeTyped
-    : public BaseSize<int32_t, IntSizeTyped<Units> >,
+    : public BaseSize<int32_t, IntSizeTyped<Units>, IntCoordTyped<Units> >,
       public Units {
   static_assert(IsPixel<Units>::value,
                 "'Units' must be a coordinate system tag");
 
-  typedef IntParam<int32_t> ToInt;
-  typedef BaseSize<int32_t, IntSizeTyped<Units> > Super;
+  typedef IntCoordTyped<Units> Coord;
+  typedef BaseSize<int32_t, IntSizeTyped<Units>, Coord> Super;
 
   constexpr IntSizeTyped() : Super() {
     static_assert(sizeof(IntSizeTyped) == sizeof(int32_t) * 2,
                   "Would be unfortunate otherwise!");
   }
-  constexpr IntSizeTyped(ToInt aWidth, ToInt aHeight)
+  constexpr IntSizeTyped(Coord aWidth, Coord aHeight)
       : Super(aWidth.value, aHeight.value) {}
 
   static IntSizeTyped Round(float aWidth, float aHeight) {
@@ -337,18 +337,20 @@ typedef IntSizeTyped<UnknownUnits> IntSize;
 typedef Maybe<IntSize> MaybeIntSize;
 
 template <class Units, class F = Float>
-struct MOZ_EMPTY_BASES SizeTyped : public BaseSize<F, SizeTyped<Units, F> >,
-                                   public Units {
+struct MOZ_EMPTY_BASES SizeTyped
+    : public BaseSize<F, SizeTyped<Units, F>, CoordTyped<Units, F> >,
+      public Units {
   static_assert(IsPixel<Units>::value,
                 "'Units' must be a coordinate system tag");
 
-  typedef BaseSize<F, SizeTyped<Units, F> > Super;
+  typedef CoordTyped<Units, F> Coord;
+  typedef BaseSize<F, SizeTyped<Units, F>, Coord> Super;
 
   constexpr SizeTyped() : Super() {
     static_assert(sizeof(SizeTyped) == sizeof(F) * 2,
                   "Would be unfortunate otherwise!");
   }
-  constexpr SizeTyped(F aWidth, F aHeight) : Super(aWidth, aHeight) {}
+  constexpr SizeTyped(Coord aWidth, Coord aHeight) : Super(aWidth, aHeight) {}
   explicit SizeTyped(const IntSizeTyped<Units>& size)
       : Super(F(size.width), F(size.height)) {}
 

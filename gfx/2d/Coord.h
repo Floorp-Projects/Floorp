@@ -103,8 +103,9 @@ struct MOZ_EMPTY_BASES IntCoordTyped
     static_assert(sizeof(IntCoordTyped) == sizeof(Rep),
                   "Would be unfortunate otherwise!");
   }
-  template <class T, typename = typename std::enable_if<
-                         std::is_integral<T>::value>::type>
+  template <class T,
+            typename = typename std::enable_if<std::is_integral<T>::value ||
+                                               std::is_enum<T>::value>::type>
   constexpr MOZ_IMPLICIT IntCoordTyped(T aValue) : Super(aValue) {
     static_assert(sizeof(IntCoordTyped) == sizeof(Rep),
                   "Would be unfortunate otherwise!");

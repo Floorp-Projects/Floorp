@@ -19,7 +19,7 @@ namespace mozilla::gfx {
  * Sub parameter, and only use that subclass. This allows methods to safely
  * cast 'this' to 'Sub*'.
  */
-template <class T, class Sub>
+template <class T, class Sub, class Coord = T>
 struct BaseSize {
   union {
     struct {
@@ -30,7 +30,8 @@ struct BaseSize {
 
   // Constructors
   constexpr BaseSize() : width(0), height(0) {}
-  constexpr BaseSize(T aWidth, T aHeight) : width(aWidth), height(aHeight) {}
+  constexpr BaseSize(Coord aWidth, Coord aHeight)
+      : width(aWidth), height(aHeight) {}
 
   void SizeTo(T aWidth, T aHeight) {
     width = aWidth;
@@ -103,7 +104,7 @@ struct BaseSize {
   }
 
   friend std::ostream& operator<<(std::ostream& aStream,
-                                  const BaseSize<T, Sub>& aSize) {
+                                  const BaseSize<T, Sub, Coord>& aSize) {
     return aStream << '(' << aSize.width << " x " << aSize.height << ')';
   }
 };

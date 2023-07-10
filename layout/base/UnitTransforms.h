@@ -210,6 +210,10 @@ Maybe<gfx::Matrix4x4> ToUnknownMatrix(
 // Using these functions does not require a justification, but once we convert
 // all code to use strongly typed units they should not be needed any longer.
 template <class TargetUnits>
+gfx::CoordTyped<TargetUnits> ViewAs(const gfx::Coord& aCoord) {
+  return gfx::CoordTyped<TargetUnits>(aCoord.value);
+}
+template <class TargetUnits>
 gfx::PointTyped<TargetUnits> ViewAs(const gfxPoint& aPoint) {
   return gfx::PointTyped<TargetUnits>(aPoint.x, aPoint.y);
 }
