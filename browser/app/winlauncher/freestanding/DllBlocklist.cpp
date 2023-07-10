@@ -312,6 +312,52 @@ static BlockAction DetermineBlockAction(
     return BlockAction::Deny;
   }
 
+  mozilla::nt::PEHeaders headers(aBaseAddress);
+  DWORD checksum = 0;
+  DWORD timestamp = 0;
+  DWORD imageSize = 0;
+  uint64_t version = 0;
+
+  // Block some malicious DLLs known for crashing our process (bug 1841751),
+  // based on matching the combination of version number + timestamp + image
+  // size. We further reduce the chances of collision with legit DLLs by
+  // checking for a checksum of 0 and the absence of debug information, both of
+  // which are unusual for production-ready DLLs.
+  if (headers.GetCheckSum(checksum) && checksum == 0 && !headers.GetPdbInfo() &&
+      headers.GetTimeStamp(timestamp)) {
+    struct KnownMaliciousCombination {
+      uint64_t mVersion;
+      uint32_t mTimestamp;
+      uint32_t mImageSize;
+    };
+    const KnownMaliciousCombination instances[]{
+        // 1.0.0.26638
+        {0x000100000000680e, 0x570B8A90, 0x62000},
+        // 1.0.0.26793
+        {0x00010000000068a9, 0x572B4CE4, 0x62000},
+        // 1.0.0.27567
+        {0x0001000000006baf, 0x57A725AC, 0x61000},
+        // 1.0.0.29915
+        {0x00010000000074db, 0x5A115D81, 0x5D000},
+        // 1.0.0.31122
+        {0x0001000000007992, 0x5CFF88B8, 0x5D000}};
+
+    // We iterate over timestamps, because they are unique and it is a quick
+    // field to fetch
+    for (const auto& instance : instances) {
+      if (instance.mTimestamp == timestamp) {
+        // Only fetch other fields in case we have a match. Then, we can exit
+        // the loop.
+        if (headers.GetImageSize(imageSize) &&
+            instance.mImageSize == imageSize &&
+            headers.GetVersionInfo(version) && instance.mVersion == version) {
+          return BlockAction::Deny;
+        }
+        break;
+      }
+    }
+  }
+
   DECLARE_POINTER_TO_FIRST_DLL_BLOCKLIST_ENTRY(info);
   DECLARE_DLL_BLOCKLIST_NUM_ENTRIES(infoNumEntries);
 
@@ -320,8 +366,6 @@ static BlockAction DetermineBlockAction(
   size_t match = LowerBound(info, 0, infoNumEntries, comp);
   bool builtinListHasLowerBound = match != infoNumEntries;
   const DllBlockInfo* entry = nullptr;
-  mozilla::nt::PEHeaders headers(aBaseAddress);
-  uint64_t version;
   BlockAction checkResult = BlockAction::Allow;
   if (builtinListHasLowerBound) {
     // There may be multiple entries on the list. Since LowerBound() returns

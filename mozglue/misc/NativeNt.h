@@ -735,6 +735,15 @@ class MOZ_RAII PEHeaders final {
     return true;
   }
 
+  bool GetCheckSum(DWORD& aResult) const {
+    if (!(*this)) {
+      return false;
+    }
+
+    aResult = mPeHeader->OptionalHeader.CheckSum;
+    return true;
+  }
+
   PIMAGE_IMPORT_DESCRIPTOR
   GetImportDescriptor(const char* aModuleNameASCII) const {
     for (PIMAGE_IMPORT_DESCRIPTOR curImpDesc = GetImportDirectory();
