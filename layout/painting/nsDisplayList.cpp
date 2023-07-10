@@ -2282,6 +2282,10 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   Document* document = presShell->GetDocument();
 
   ScopeExit g([&]() {
+#ifdef DEBUG
+    MOZ_ASSERT(!layerManager || !layerManager->GetTarget());
+#endif
+
     // For layers-free mode, we check the invalidation state bits in the
     // EndTransaction. So we clear the invalidation state bits after
     // EndTransaction.
@@ -2326,6 +2330,7 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
 
     bool sent = false;
     if (aFlags & PAINT_IDENTICAL_DISPLAY_LIST) {
+      MOZ_ASSERT(!aCtx);
       sent = layerManager->EndEmptyTransaction();
     }
 
