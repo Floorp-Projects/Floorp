@@ -5725,6 +5725,12 @@ void JitRuntime::generateIonGenericCallStub(MacroAssembler& masm,
   masm.pop(returnAddrReg);
 #endif
 
+#ifdef JS_CODEGEN_ARM
+  // The default second scratch register on arm is lr, which we need
+  // preserved for tail calls.
+  AutoNonDefaultSecondScratchRegister andssr(masm, IonGenericSecondScratchReg);
+#endif
+
   bool isConstructing = kind == IonGenericCallKind::Construct;
 
   Label entry, notFunction, noJitEntry, vmCall;

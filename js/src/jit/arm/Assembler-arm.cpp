@@ -2675,6 +2675,17 @@ uint32_t Assembler::GetPoolMaxOffset() {
 SecondScratchRegisterScope::SecondScratchRegisterScope(MacroAssembler& masm)
     : AutoRegisterScope(masm, masm.getSecondScratchReg()) {}
 
+AutoNonDefaultSecondScratchRegister::AutoNonDefaultSecondScratchRegister(
+    MacroAssembler& masm, Register reg)
+    : masm_(masm) {
+  prevSecondScratch_ = masm.getSecondScratchReg();
+  masm.setSecondScratchReg(reg);
+}
+
+AutoNonDefaultSecondScratchRegister::~AutoNonDefaultSecondScratchRegister() {
+  masm_.setSecondScratchReg(prevSecondScratch_);
+}
+
 #ifdef JS_DISASM_ARM
 
 /* static */
