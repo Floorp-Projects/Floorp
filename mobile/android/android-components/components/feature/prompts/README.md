@@ -58,6 +58,17 @@ implementation "org.mozilla.components:feature-prompts:{latest-version}"
   }
   ```
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action    | Item         | Description             |
+|-----------|--------------|-------------------------|
+| DISPLAY   | prompt       | A prompt was shown.     |
+| CANCEL    | prompt       | A prompt was canceled.  |
+| CONFIRM   | prompt       | A prompt was confirmed. |
+
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public

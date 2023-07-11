@@ -26,6 +26,8 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.downloads.DownloadDialogFragment.Companion.FRAGMENT_TAG
 import mozilla.components.feature.downloads.dialog.DeniedPermissionDialogFragment
 import mozilla.components.feature.downloads.ext.realFilenameOrGuessed
+import mozilla.components.feature.downloads.facts.emitPromptDismissedFact
+import mozilla.components.feature.downloads.facts.emitPromptDisplayedFact
 import mozilla.components.feature.downloads.manager.AndroidDownloadManager
 import mozilla.components.feature.downloads.manager.DownloadManager
 import mozilla.components.feature.downloads.manager.noop
@@ -322,6 +324,7 @@ class DownloadsFeature(
         }
 
         if (!isAlreadyADownloadDialog() && fragmentManager != null && !fragmentManager.isDestroyed) {
+            emitPromptDisplayedFact()
             dialog.showNow(fragmentManager, FRAGMENT_TAG)
         }
     }
@@ -345,10 +348,12 @@ class DownloadsFeature(
         }
 
         appChooserDialog.onDismiss = {
+            emitPromptDismissedFact()
             useCases.cancelDownloadRequest.invoke(tab.id, download.id)
         }
 
         if (!isAlreadyAppDownloaderDialog() && fragmentManager != null && !fragmentManager.isDestroyed) {
+            emitPromptDisplayedFact()
             appChooserDialog.showNow(fragmentManager, DownloadAppChooserDialog.FRAGMENT_TAG)
         }
     }

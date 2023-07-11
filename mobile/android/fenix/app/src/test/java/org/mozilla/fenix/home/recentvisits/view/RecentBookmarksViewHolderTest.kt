@@ -33,5 +33,5 @@ class RecentBookmarksViewHolderTest {
          verify { interactor.onRemoveGroups(setOf(group)) }
     }
 
-    */
+     */
 }

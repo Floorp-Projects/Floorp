@@ -2638,8 +2638,7 @@ class PromptFeatureTest {
                 session = session,
             )
 
-            assertEquals(1, facts.size)
-            val fact = facts.single()
+            val fact = facts.find { it.item == CreditCardAutofillDialogFacts.Items.AUTOFILL_CREDIT_CARD_SAVE_PROMPT_SHOWN }!!
             assertEquals(Component.FEATURE_PROMPTS, fact.component)
             assertEquals(Action.DISPLAY, fact.action)
             assertEquals(

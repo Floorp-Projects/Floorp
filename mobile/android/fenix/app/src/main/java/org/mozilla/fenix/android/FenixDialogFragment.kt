@@ -19,7 +19,9 @@ import androidx.appcompat.view.ContextThemeWrapper
 import com.google.android.material.R
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import mozilla.components.concept.base.crash.Breadcrumb
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.ext.components
 
 /**
  * Base [AppCompatDialogFragment] that adds behaviour to create a top or bottom dialog.
@@ -36,6 +38,9 @@ abstract class FenixDialogFragment : AppCompatDialogFragment() {
     abstract val layoutId: Int
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        context?.components?.analytics?.crashReporter?.recordCrashBreadcrumb(
+            Breadcrumb("FenixDialogFragment onCreateDialog Gravity $gravity"),
+        )
         return if (gravity == Gravity.BOTTOM) {
             BottomSheetDialog(requireContext(), this.theme).apply {
                 setOnShowListener {

@@ -442,6 +442,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     private fun startMetricsIfEnabled() {
         if (settings().isTelemetryEnabled) {
             components.analytics.metrics.start(MetricServiceType.Data)
+            components.analytics.crashFactCollector.start()
         }
 
         if (settings().isMarketingTelemetryEnabled) {

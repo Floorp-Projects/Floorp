@@ -363,10 +363,12 @@ class TabsTrayFragmentTest {
     @Test
     fun `WHEN dismissTabsTray is called THEN it dismisses the tray`() {
         every { fragment.dismissAllowingStateLoss() } just Runs
+        mockkStatic("org.mozilla.fenix.ext.ContextKt") {
+            every { any<Context>().components } returns mockk(relaxed = true)
+            fragment.dismissTabsTray()
 
-        fragment.dismissTabsTray()
-
-        verify { fragment.dismissAllowingStateLoss() }
+            verify { fragment.dismissAllowingStateLoss() }
+        }
     }
 
     @Test

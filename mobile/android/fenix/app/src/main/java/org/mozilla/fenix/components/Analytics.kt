@@ -30,6 +30,7 @@ import org.mozilla.fenix.components.metrics.GleanMetricsService
 import org.mozilla.fenix.components.metrics.InstallReferrerMetricsService
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsStorage
+import org.mozilla.fenix.crashes.CrashFactCollector
 import org.mozilla.fenix.experiments.createNimbus
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -118,6 +119,10 @@ class Analytics(
             nonFatalCrashIntent = pendingIntent,
             notificationsDelegate = context.components.notificationsDelegate,
         )
+    }
+
+    val crashFactCollector: CrashFactCollector by lazyMonitored {
+        CrashFactCollector(crashReporter)
     }
 
     val metricsStorage: MetricsStorage by lazyMonitored {

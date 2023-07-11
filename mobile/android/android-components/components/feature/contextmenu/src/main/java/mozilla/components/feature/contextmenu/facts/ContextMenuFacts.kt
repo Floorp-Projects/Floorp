@@ -18,6 +18,7 @@ class ContextMenuFacts {
      * Items that specify which portion of the [ContextMenuFeature] was interacted with
      */
     object Items {
+        const val MENU = "menu"
         const val ITEM = "item"
         const val TEXT_SELECTION_OPTION = "textSelectionOption"
     }
@@ -41,6 +42,14 @@ private fun emitContextMenuFact(
 internal fun emitClickFact(candidate: ContextMenuCandidate) {
     val metadata = mapOf("item" to candidate.id)
     emitContextMenuFact(Action.CLICK, ContextMenuFacts.Items.ITEM, metadata = metadata)
+}
+
+internal fun emitDisplayFact(labels: String) {
+    emitContextMenuFact(Action.DISPLAY, ContextMenuFacts.Items.MENU, labels)
+}
+
+internal fun emitCancelMenuFact() {
+    emitContextMenuFact(Action.CANCEL, ContextMenuFacts.Items.MENU)
 }
 
 internal fun emitTextSelectionClickFact(optionId: String) {

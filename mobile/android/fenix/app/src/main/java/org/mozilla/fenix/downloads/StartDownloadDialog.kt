@@ -20,6 +20,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.children
 import androidx.viewbinding.ViewBinding
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.feature.downloads.databinding.MozacDownloaderChooserPromptBinding
 import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
 import mozilla.components.feature.downloads.ui.DownloaderApp
@@ -27,6 +28,7 @@ import mozilla.components.feature.downloads.ui.DownloaderAppAdapter
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.DialogScrimBinding
 import org.mozilla.fenix.databinding.StartDownloadDialogLayoutBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 
 /**
@@ -54,6 +56,9 @@ abstract class StartDownloadDialog(
      * @param container The [ViewGroup] in which the download view will be inflated.
      */
     fun show(container: ViewGroup): StartDownloadDialog {
+        activity.components.analytics.crashReporter.recordCrashBreadcrumb(
+            Breadcrumb("StartDownloadDialog show"),
+        )
         this.container = container
 
         val dialogParent = container.parent as? ViewGroup
@@ -89,6 +94,9 @@ abstract class StartDownloadDialog(
      * @param callback The callback for when the view is dismissed.
      */
     fun onDismiss(callback: () -> Unit): StartDownloadDialog {
+        activity.components.analytics.crashReporter.recordCrashBreadcrumb(
+            Breadcrumb("StartDownloadDialog onDismiss"),
+        )
         this.onDismiss = callback
         return this
     }

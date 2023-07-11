@@ -158,13 +158,15 @@ Customizing SimpleDownloadDialogFragment.
 
 This component emits the following [Facts](../../support/base/README.md#Facts):
 
-| Action     | Item            |  Description                                      |
-|------------|-----------------|---------------------------------------------------|
-| RESUME     | notification    | The user resumes a download.                      |
-| PAUSE      | notification    | The user pauses a download.                       |
-| CANCEL     | notification    | The user cancels a download.                      |
-| TRY_AGAIN  | notification    | The user taps on try again when a download fails. |
-| OPEN       | notification    | The user opens a downloaded file.                 |
+| Action    | Item         | Description                                       |
+|-----------|--------------|---------------------------------------------------|
+| RESUME    | notification | The user resumes a download.                      |
+| PAUSE     | notification | The user pauses a download.                       |
+| CANCEL    | notification | The user cancels a download.                      |
+| TRY_AGAIN | notification | The user taps on try again when a download fails. |
+| OPEN      | notification | The user opens a downloaded file.                 |
+| DISPLAY   | prompt       | A download prompt was shown.                      |
+| CANCEL    | prompt       | A download prompt was canceled.                   |
 
 ## License
 

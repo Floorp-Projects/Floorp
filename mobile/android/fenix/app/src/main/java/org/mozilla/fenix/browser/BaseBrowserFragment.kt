@@ -57,6 +57,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.thumbnails.BrowserThumbnails
+import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.feature.accounts.FxaCapability
@@ -550,6 +551,9 @@ abstract class BaseBrowserFragment :
             customFirstPartyDownloadDialog = { filename, contentSize, positiveAction, negativeAction ->
                 run {
                     if (currentStartDownloadDialog == null) {
+                        context.components.analytics.crashReporter.recordCrashBreadcrumb(
+                            Breadcrumb("FirstPartyDownloadDialog created"),
+                        )
                         FirstPartyDownloadDialog(
                             activity = requireActivity(),
                             filename = filename.value,
@@ -557,6 +561,9 @@ abstract class BaseBrowserFragment :
                             positiveButtonAction = positiveAction.value,
                             negativeButtonAction = negativeAction.value,
                         ).onDismiss {
+                            context.components.analytics.crashReporter.recordCrashBreadcrumb(
+                                Breadcrumb("FirstPartyDownloadDialog onDismiss"),
+                            )
                             currentStartDownloadDialog = null
                         }.show(binding.startDownloadDialogContainer)
                             .also {
@@ -568,12 +575,18 @@ abstract class BaseBrowserFragment :
             customThirdPartyDownloadDialog = { downloaderApps, onAppSelected, negativeActionCallback ->
                 run {
                     if (currentStartDownloadDialog == null) {
+                        context.components.analytics.crashReporter.recordCrashBreadcrumb(
+                            Breadcrumb("ThirdPartyDownloadDialog created"),
+                        )
                         ThirdPartyDownloadDialog(
                             activity = requireActivity(),
                             downloaderApps = downloaderApps.value,
                             onAppSelected = onAppSelected.value,
                             negativeButtonAction = negativeActionCallback.value,
                         ).onDismiss {
+                            context.components.analytics.crashReporter.recordCrashBreadcrumb(
+                                Breadcrumb("ThirdPartyDownloadDialog onDismiss"),
+                            )
                             currentStartDownloadDialog = null
                         }.show(binding.startDownloadDialogContainer).also {
                             currentStartDownloadDialog = it
