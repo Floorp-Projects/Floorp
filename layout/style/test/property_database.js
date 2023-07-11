@@ -13069,16 +13069,16 @@ if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
-    other_values: ["1em", "1px", "auto 1px"],
-    invalid_values: ["auto auto", "auto none", "auto", "-1px"],
+    other_values: ["1em", "1px", "auto 1px", "auto none"],
+    invalid_values: ["auto auto", "auto", "-1px"],
   };
   gCSSProperties["contain-intrinsic-height"] = {
     domProp: "containIntrinsicHeight",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
-    other_values: ["1em", "1px", "auto 1px"],
-    invalid_values: ["auto auto", "auto none", "auto", "-1px"],
+    other_values: ["1em", "1px", "auto 1px", "auto none"],
+    invalid_values: ["auto auto", "auto", "-1px"],
   };
   gCSSProperties["contain-intrinsic-block-size"] = {
     domProp: "containIntrinsicBlockSize",
@@ -13086,8 +13086,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
     logical: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
-    other_values: ["1em", "1px", "auto 1px"],
-    invalid_values: ["auto auto", "auto none", "auto", "-1px"],
+    other_values: ["1em", "1px", "auto 1px", "auto none"],
+    invalid_values: ["auto auto", "auto", "-1px"],
   };
   gCSSProperties["contain-intrinsic-inline-size"] = {
     domProp: "containIntrinsicInlineSize",
@@ -13095,8 +13095,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
     logical: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["none"],
-    other_values: ["1em", "1px", "auto 1px"],
-    invalid_values: ["auto auto", "auto none", "auto", "-1px"],
+    other_values: ["1em", "1px", "auto 1px", "auto none"],
+    invalid_values: ["auto auto", "auto", "-1px"],
   };
 
   gCSSProperties["contain-intrinsic-size"] = {

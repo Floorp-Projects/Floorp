@@ -6259,6 +6259,7 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "auto",
+      "auto-none",
       "inherit",
       "initial",
       "none",
@@ -6275,6 +6276,7 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "auto",
+      "auto-none",
       "inherit",
       "initial",
       "none",
@@ -6291,6 +6293,7 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "auto",
+      "auto-none",
       "inherit",
       "initial",
       "none",
@@ -6308,6 +6311,7 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "auto",
+      "auto-none",
       "inherit",
       "initial",
       "none",
@@ -6324,6 +6328,7 @@ exports.CSS_PROPERTIES = {
     "supports": [],
     "values": [
       "auto",
+      "auto-none",
       "inherit",
       "initial",
       "none",
