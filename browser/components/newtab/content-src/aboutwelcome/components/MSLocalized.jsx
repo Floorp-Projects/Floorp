@@ -44,7 +44,7 @@ export const Localized = ({ text, children }) => {
   const zapRef = React.createRef();
   useEffect(() => {
     const { current } = zapRef;
-    if (current)
+    if (current) {
       requestAnimationFrame(() =>
         current?.classList.replace(
           "short",
@@ -53,6 +53,7 @@ export const Localized = ({ text, children }) => {
             : "short"
         )
       );
+    }
   });
 
   // Skip rendering of children with no text.
@@ -72,7 +73,9 @@ export const Localized = ({ text, children }) => {
     // Set the key so React knows not to reuse when switching to plain text.
     props.key = text.string_id;
     props["data-l10n-id"] = text.string_id;
-    if (text.args) props["data-l10n-args"] = JSON.stringify(text.args);
+    if (text.args) {
+      props["data-l10n-args"] = JSON.stringify(text.args);
+    }
   } else if (text.raw) {
     textNodes.push(text.raw);
   } else if (typeof text === "string") {
@@ -95,7 +98,9 @@ export const Localized = ({ text, children }) => {
 
   // Apply certain configurable styles.
   CONFIGURABLE_STYLES.forEach(style => {
-    if (text[style] !== undefined) props.style[style] = text[style];
+    if (text[style] !== undefined) {
+      props.style[style] = text[style];
+    }
   });
 
   return React.cloneElement(

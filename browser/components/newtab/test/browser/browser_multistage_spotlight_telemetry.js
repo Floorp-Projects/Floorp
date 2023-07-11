@@ -6,9 +6,6 @@ const { Spotlight } = ChromeUtils.import(
 const { PanelTestProvider } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
 );
-const { BrowserWindowTracker } = ChromeUtils.importESModule(
-  "resource:///modules/BrowserWindowTracker.sys.mjs"
-);
 
 const { AboutWelcomeTelemetry } = ChromeUtils.import(
   "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm"

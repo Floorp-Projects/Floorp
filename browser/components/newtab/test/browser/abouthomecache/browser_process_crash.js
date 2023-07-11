@@ -39,6 +39,7 @@ add_task(async function test_process_crash() {
 
   let latestProcManager = AboutHomeStartupCache._procManager;
 
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   await BrowserTestUtils.withNewTab("http://example.com", async browser => {
     await BrowserTestUtils.crashFrame(browser);
     Assert.equal(

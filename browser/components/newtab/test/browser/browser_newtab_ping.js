@@ -3,9 +3,6 @@
 
 "use strict";
 
-const { AboutNewTab } = ChromeUtils.importESModule(
-  "resource:///modules/AboutNewTab.sys.mjs"
-);
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );

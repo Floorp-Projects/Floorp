@@ -73,7 +73,9 @@ export function Colorways(props) {
   const [variationIndex, setVariationIndex] = useState(defaultVariationIndex);
 
   function revertToDefaultTheme() {
-    if (hasReverted) return;
+    if (hasReverted) {
+      return;
+    }
 
     // Spoofing an event with current target value of "navigate_away"
     // helps the handleAction method to read the colorways theme as "revert"

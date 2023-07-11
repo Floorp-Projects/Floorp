@@ -763,7 +763,11 @@ const CopyButton = ({
   const timeout = (0,external_React_namespaceObject.useRef)(null);
   const onClick = (0,external_React_namespaceObject.useCallback)(() => {
     let text = document.querySelector(inputSelector).value;
-    if (transformer) text = transformer(text);
+
+    if (transformer) {
+      text = transformer(text);
+    }
+
     navigator.clipboard.writeText(text);
     clearTimeout(timeout.current);
     setCopied(true);
@@ -7707,7 +7711,10 @@ const READING_WPM = 220;
  */
 
 function readTimeFromWordCount(wordCount) {
-  if (!wordCount) return false;
+  if (!wordCount) {
+    return false;
+  }
+
   return Math.ceil(parseInt(wordCount, 10) / READING_WPM);
 }
 const DSSource = ({

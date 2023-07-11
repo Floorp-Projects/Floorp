@@ -141,7 +141,9 @@ export class ProtonScreen extends React.PureComponent {
   ) {
     const screenClass = `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
 
-    if (isVideoOnboarding) return "with-video";
+    if (isVideoOnboarding) {
+      return "with-video";
+    }
 
     return `${isFirstScreen ? `dialog-initial` : ``} ${
       isLastScreen ? `dialog-last` : ``

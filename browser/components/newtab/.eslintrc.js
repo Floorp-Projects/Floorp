@@ -5,29 +5,25 @@
 module.exports = {
   // When adding items to this file please check for effects on sub-directories.
   parserOptions: {
-    ecmaVersion: 2018,
     ecmaFeatures: {
       jsx: true,
     },
-    sourceType: "module",
   },
-  plugins: [
-    "import", // require("eslint-plugin-import")
-    "react", // require("eslint-plugin-react")
-    "jsx-a11y", // require("eslint-plugin-jsx-a11y")
-  ],
+  plugins: ["import", "react", "jsx-a11y"],
   settings: {
     react: {
       version: "16.2.0",
     },
   },
-  extends: [
-    "eslint:recommended",
-    "plugin:jsx-a11y/recommended", // require("eslint-plugin-jsx-a11y")
-    "plugin:mozilla/recommended", // require("eslint-plugin-mozilla") require("eslint-plugin-fetch-options") require("eslint-plugin-html") require("eslint-plugin-no-unsanitized")
-    "prettier", // require("eslint-config-prettier")
-  ],
+  extends: ["plugin:jsx-a11y/recommended"],
   overrides: [
+    {
+      // Only mark the files as modules which are actually modules.
+      files: ["content-src/**", "test/schemas/**", "test/unit/**"],
+      parserOptions: {
+        sourceType: "module",
+      },
+    },
     {
       // These files use fluent-dom to insert content
       files: [
@@ -67,47 +63,41 @@ module.exports = {
       },
     },
     {
-      // Use a configuration that's more appropriate for JSMs
-      files: "**/*.jsm",
-      parserOptions: {
-        sourceType: "script",
-      },
+      // Use a configuration that's appropriate for modules, workers and
+      // non-production files.
+      files: ["*.jsm", "lib/cache-worker.js", "test/**"],
       rules: {
         "no-implicit-globals": "off",
       },
     },
     {
-      files: "test/xpcshell/**",
-      extends: ["plugin:mozilla/xpcshell-test"],
-    },
-    {
-      files: "test/browser/**",
-      extends: ["plugin:mozilla/browser-test"],
-    },
-    {
-      // Exempt all files without a 'test' string in their path name since no-insecure-url
-      // is focussing on the test base
-      files: "*",
-      excludedFiles: ["**/test**", "**/test*/**", "Test*/**"],
+      files: ["content-src/**", "test/unit/**"],
       rules: {
-        "@microsoft/sdl/no-insecure-url": "off",
+        // Disallow commonjs in these directories.
+        "import/no-commonjs": 2,
+        // Allow JSX with arrow functions.
+        "react/jsx-no-bind": 0,
       },
     },
     {
-      // That are all files in browser/component/newtab/test that produces warnings in the existing test infrastructure.
-      // Since our focus is that new tests won't use http without thinking twice we exempt
-      // these test files for now.
-      // TODO gradually check and remove from here bug 1758951.
-      files: [
-        "browser/components/newtab/test/browser/abouthomecache/browser_process_crash.js",
-        "browser/components/newtab/test/browser/browser_aboutwelcome_observer.js",
-        "browser/components/newtab/test/browser/browser_asrouter_cfr.js",
-        "browser/components/newtab/test/browser/browser_asrouter_group_frequency.js",
-        "browser/components/newtab/test/browser/browser_asrouter_group_userprefs.js",
-        "browser/components/newtab/test/browser/browser_trigger_listeners.js",
-      ],
+      // These tests simulate the browser environment.
+      files: "test/unit/**",
+      env: {
+        browser: true,
+        mocha: true,
+      },
+      globals: {
+        assert: true,
+        chai: true,
+        sinon: true,
+      },
+    },
+    {
+      files: "test/**",
       rules: {
-        "@microsoft/sdl/no-insecure-url": "off",
+        "func-name-matching": 0,
+        "lines-between-class-members": 0,
+        "require-await": 0,
       },
     },
   ],
