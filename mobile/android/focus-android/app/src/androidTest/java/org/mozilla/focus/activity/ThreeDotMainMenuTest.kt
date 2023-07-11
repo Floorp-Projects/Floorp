@@ -71,7 +71,8 @@ class ThreeDotMainMenuTest {
             verifyAddToHomeButtonExists()
             verifyFindInPageExists()
             verifyOpenInButtonExists()
-            verifyRequestDesktopSiteExists()
+            // Disabled step because of https://bugzilla.mozilla.org/show_bug.cgi?id=1842719
+            // verifyRequestDesktopSiteExists()
             verifySettingsButtonExists()
             verifyReportSiteIssueButtonExists()
         }
