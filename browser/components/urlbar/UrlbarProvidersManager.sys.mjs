@@ -476,9 +476,20 @@ class Query {
 
     let queryPromises = [];
     for (let provider of activeProviders) {
-      if (provider.type == lazy.UrlbarUtils.PROVIDER_TYPE.HEURISTIC) {
+      // Track heuristic providers. later we'll use this Set to wait for them
+      // before returning results to the user. We skip the Omnibox provider
+      // because being implemented in an add-on we have no control over its
+      // performance characteristics.
+      if (
+        provider.type == lazy.UrlbarUtils.PROVIDER_TYPE.HEURISTIC &&
+        provider.name != "Omnibox"
+      ) {
         this.context.pendingHeuristicProviders.add(provider.name);
-        queryPromises.push(startQuery(provider));
+        queryPromises.push(
+          startQuery(provider).finally(() => {
+            this.context.pendingHeuristicProviders.delete(provider.name);
+          })
+        );
         continue;
       }
       if (!this._sleepTimer) {
@@ -503,7 +514,13 @@ class Query {
         p => p.name
       )}`
     );
-    await Promise.all(queryPromises);
+
+    // Normally we wait for all the queries, but in case this is canceled we can
+    // return earlier.
+    let cancelPromise = new Promise(resolve => {
+      this._cancelQueries = resolve;
+    });
+    await Promise.race([Promise.all(queryPromises), cancelPromise]);
 
     // All the providers are done returning results, so we can stop chunking.
     if (!this.canceled) {
@@ -533,6 +550,7 @@ class Query {
     }
     this._chunkTimer?.cancel().catch(ex => lazy.logger.error(ex));
     this._sleepTimer?.fire().catch(ex => lazy.logger.error(ex));
+    this._cancelQueries?.();
   }
 
   /**
@@ -605,10 +623,11 @@ class Query {
 
   _notifyResultsFromProvider(provider) {
     // We use a timer to reduce UI flicker, by adding results in chunks.
-    if (!this._chunkTimer) {
-      // This is the first time we see a result, so we start a longer
-      // "heuristic" timeout. This timeout is longer, because we don't want to
-      // surprise the user with an unexpected default action.
+    if (!this._chunkTimer && this.context.pendingHeuristicProviders.size) {
+      // This is the first time we see a result, and some heuristic providers
+      // are still pending. We start a longer "heuristic" timeout, because we
+      // don't want to surprise the user with an unexpected default action (e.g.
+      // searching instead of handling a bookmark keyword).
       // Since heuristic providers return results pretty quickly, this timer
       // will often be skipped early.
       // Note that if the heuristic timer elapses, we may still cause an
@@ -619,9 +638,10 @@ class Query {
         time: UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS,
         logger: provider.logger,
       });
-    } else if (this._chunkTimer.done) {
-      // The previous timer is done, but we're still getting results. Start a
-      // new shorter timer to chunk remaining results.
+    } else if (!this._chunkTimer || this._chunkTimer.done) {
+      // Either there's no heuristic provider pending at all, or the previous
+      // timer is done, but we're still getting results. Start a short timer
+      // to chunk remaining results.
       this._chunkTimer = new lazy.SkippableTimer({
         name: "chunking",
         callback: () => this._notifyResults(),

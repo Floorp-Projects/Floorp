@@ -64,6 +64,9 @@ export var UrlbarUtils = {
   PROVIDER_TYPE: {
     // Should be executed immediately, because it returns heuristic results
     // that must be handed to the user asap.
+    // WARNING: these providers must be extremely fast, because the urlbar will
+    // await for them before returning results to the user. In particular it is
+    // critical to reply quickly to isActive and startQuery.
     HEURISTIC: 1,
     // Can be delayed, contains results coming from the session or the profile.
     PROFILE: 2,
