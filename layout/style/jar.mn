@@ -10,9 +10,11 @@ toolkit.jar:
    res/noframes.css                          (res/noframes.css)
    res/scrollbars.css                        (res/scrollbars.css)
    res/forms.css                             (res/forms.css)
+ #ifdef ANDROID
    res/accessiblecaret-normal.svg            (res/accessiblecaret-normal.svg)
    res/accessiblecaret-tilt-left.svg         (res/accessiblecaret-tilt-left.svg)
    res/accessiblecaret-tilt-right.svg        (res/accessiblecaret-tilt-right.svg)
+ #else
    res/accessiblecaret-normal@1x.png         (res/accessiblecaret-normal@1x.png)
    res/accessiblecaret-normal@1.5x.png       (res/accessiblecaret-normal@1.5x.png)
    res/accessiblecaret-normal@2x.png         (res/accessiblecaret-normal@2x.png)
@@ -25,6 +27,7 @@ toolkit.jar:
    res/accessiblecaret-tilt-right@1.5x.png   (res/accessiblecaret-tilt-right@1.5x.png)
    res/accessiblecaret-tilt-right@2x.png     (res/accessiblecaret-tilt-right@2x.png)
    res/accessiblecaret-tilt-right@2.25x.png  (res/accessiblecaret-tilt-right@2.25x.png)
+ #endif
    res/password.svg                          (res/password.svg)
    res/password-hide.svg                     (res/password-hide.svg)
 
