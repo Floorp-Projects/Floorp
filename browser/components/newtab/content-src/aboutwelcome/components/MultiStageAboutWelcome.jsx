@@ -167,9 +167,13 @@ export const MultiStageAboutWelcome = props => {
     return false;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Save the active multi select state containing array of checkbox ids
-  // used in handleAction to update MULTI_ACTION data
-  const [activeMultiSelect, setActiveMultiSelect] = useState(null);
+  // Save the active multi select state for each screen as an object keyed by
+  // screen id. Each screen id has an array containing checkbox ids used in
+  // handleAction to update MULTI_ACTION data. This allows us to remember the
+  // state of each screen's multi select checkboxes when navigating back and
+  // forth between screens, while also allowing a message to have more than one
+  // multi select screen.
+  const [activeMultiSelects, setActiveMultiSelects] = useState({});
 
   // Get the active theme so the rendering code can make it selected
   // by default.
@@ -207,6 +211,15 @@ export const MultiStageAboutWelcome = props => {
           const totalNumberOfScreens = screens.length;
           const isSingleScreen = totalNumberOfScreens === 1;
 
+          const setActiveMultiSelect = valueOrFn =>
+            setActiveMultiSelects(prevState => ({
+              ...prevState,
+              [screen.id]:
+                typeof valueOrFn === "function"
+                  ? valueOrFn(prevState[screen.id])
+                  : valueOrFn,
+            }));
+
           return index === order ? (
             <WelcomeScreen
               key={screen.id + order}
@@ -226,7 +239,7 @@ export const MultiStageAboutWelcome = props => {
               initialTheme={initialTheme}
               setActiveTheme={setActiveTheme}
               setInitialTheme={setInitialTheme}
-              activeMultiSelect={activeMultiSelect}
+              activeMultiSelect={activeMultiSelects[screen.id]}
               setActiveMultiSelect={setActiveMultiSelect}
               autoAdvance={screen.auto_advance}
               negotiatedLanguage={negotiatedLanguage}
@@ -369,7 +382,7 @@ export class WelcomeScreen extends React.PureComponent {
 
       for (const checkbox of props.content?.tiles?.data ?? []) {
         let checkboxAction;
-        if (this.props.activeMultiSelect.includes(checkbox.id)) {
+        if (this.props.activeMultiSelect?.includes(checkbox.id)) {
           checkboxAction = checkbox.checkedAction ?? checkbox.action;
         } else {
           checkboxAction = checkbox.uncheckedAction;
