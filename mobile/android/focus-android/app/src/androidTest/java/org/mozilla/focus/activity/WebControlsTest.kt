@@ -7,6 +7,7 @@ import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -139,6 +140,7 @@ class WebControlsTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1841006")
     @SmokeTest
     @Test
     fun verifySelectTextTest() {
