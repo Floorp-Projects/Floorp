@@ -1958,14 +1958,15 @@ async function doScrollTest({
 async function nativeScroll(component, offsetX, offsetY, scrollDelta) {
   const utils = SpecialPowers.getDOMWindowUtils(window);
   const x = component.screenX + offsetX;
-  const y = component.screenY + offsetX;
+  const y = component.screenY + offsetY;
 
   // Mouse move event.
   await new Promise(resolve => {
+    info("waiting for mousemove");
     window.addEventListener("mousemove", resolve, { once: true });
     utils.sendNativeMouseEvent(
-      x,
-      y,
+      x * window.devicePixelRatio,
+      y * window.devicePixelRatio,
       utils.NATIVE_MOUSE_MESSAGE_MOVE,
       0,
       {},
@@ -1975,10 +1976,11 @@ async function nativeScroll(component, offsetX, offsetY, scrollDelta) {
 
   // Wheel event.
   await new Promise(resolve => {
+    info("waiting for wheel");
     window.addEventListener("wheel", resolve, { once: true });
     utils.sendNativeMouseScrollEvent(
-      x,
-      y,
+      x * window.devicePixelRatio,
+      y * window.devicePixelRatio,
       // nativeVerticalWheelEventMsg is defined in apz_test_native_event_utils.js
       // eslint-disable-next-line no-undef
       nativeVerticalWheelEventMsg(),
@@ -1993,6 +1995,7 @@ async function nativeScroll(component, offsetX, offsetY, scrollDelta) {
     );
   });
 
+  info("waiting for apz");
   // promiseApzFlushedRepaints is defined in apz_test_utils.js
   // eslint-disable-next-line no-undef
   await promiseApzFlushedRepaints();
