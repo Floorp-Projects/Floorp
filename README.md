@@ -55,6 +55,16 @@ Floorp Browser is available for Windows, macOS and Linux. You can install it by 
 
 - x86_64 CPU architecture. AArch64 are not supported.
 
+- Floorp provides "exe" installer & "Winget" install.
+
+Winget install command: 
+```
+winget install Ablaze.Floorp
+```
+Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
+
+**Floorp get Certum Open Source Code Signing Certificate. Official Floorp installer is signed by "Open Source Developer, Ryosuke Asano". Daylight build installer doesn't signed.**
+
 #### macOS
 
 - macOS 10.12 or later.
@@ -102,7 +112,7 @@ If you are using Linux, please show the [Linux](#linux) section.
 
 - Floorp Browser is based on Mozilla Firefox. Floorp Browser is not affiliated with Mozilla & Mozilla Firefox.
 
-- Floorp uses Mozilla Firefox's source code & other open source projects. See [Floorp License Notices](#floorp-license-notices-📄) section.
+- Floorp uses Mozilla Firefox's source code & other open source projects. See [Floorp License Notices](#📄-Floorp-License-Notices-📄)
 
 ### 📧 Contact
 
