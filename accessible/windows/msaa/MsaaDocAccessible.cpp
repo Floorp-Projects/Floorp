@@ -76,7 +76,7 @@ MsaaDocAccessible::get_accParent(
       HWND hwnd = remoteDoc->GetEmulatedWindowHandle();
       MOZ_ASSERT(hwnd);
       if (hwnd &&
-          SUCCEEDED(::AccessibleObjectFromWindow(
+          SUCCEEDED(::CreateStdAccessibleObject(
               hwnd, OBJID_WINDOW, IID_IAccessible, (void**)ppdispParent))) {
         return S_OK;
       }
@@ -118,7 +118,7 @@ MsaaDocAccessible::get_accParent(
       }
     }
     if (hwnd &&
-        SUCCEEDED(::AccessibleObjectFromWindow(
+        SUCCEEDED(::CreateStdAccessibleObject(
             hwnd, OBJID_WINDOW, IID_IAccessible, (void**)ppdispParent))) {
       return S_OK;
     }

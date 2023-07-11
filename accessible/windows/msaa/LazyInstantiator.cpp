@@ -519,8 +519,8 @@ LazyInstantiator::get_accParent(IDispatch** ppdispParent) {
   if (!mWeakAccessible) {
     // If we'd resolve the root right now this would be the codepath we'd end
     // up in anyway. So we might as well return it here.
-    return ::AccessibleObjectFromWindow(mHwnd, OBJID_WINDOW, IID_IAccessible,
-                                        (void**)ppdispParent);
+    return ::CreateStdAccessibleObject(mHwnd, OBJID_WINDOW, IID_IAccessible,
+                                       (void**)ppdispParent);
   }
   RESOLVE_ROOT;
   return mWeakAccessible->get_accParent(ppdispParent);
