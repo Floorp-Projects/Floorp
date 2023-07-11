@@ -207,28 +207,28 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  * things, all of which are detailed below. All env chain listings below are,
  * from top to bottom, outermost to innermost.
  *
- * A. Component loading
+ * A. JSM loading
  *
- * Components may be loaded in a shared global mode where most JSMs share a
- * single global in order to save on memory and avoid CCWs. To support this, a
- * NonSyntacticVariablesObject is used for each JSM to provide a basic form of
- * isolation. NonSyntacticLexicalEnvironmentObject and
+ * Most JSMs are loaded into a shared system global in order to save the memory
+ * consumption and avoid CCWs. To support this, a NonSyntacticVariablesObject
+ * is used for each JSM to provide a basic form of isolation.
+ * NonSyntacticLexicalEnvironmentObject and
  * NonSyntacticVariablesObject are allocated for each JSM, and
  * NonSyntacticLexicalEnvironmentObject holds lexical variables and
  * NonSyntacticVariablesObject holds qualified variables. JSMs cannot have
  * unqualified names, but if unqualified names are used by subscript, they
- * goes to NonSyntacticVariablesObject.
+ * goes to NonSyntacticVariablesObject (see B.3 and B.4).
  * They have the following env chain:
  *
  *   BackstagePass global
  *       |
  *   GlobalLexicalEnvironmentObject[this=global]
  *       |
- *   NonSyntacticVariablesObject (qualified 'var's and unqualified names)
+ *   NonSyntacticVariablesObject (qualified 'var's (and unqualified names))
  *       |
  *   NonSyntacticLexicalEnvironmentObject[this=nsvo] (lexical vars)
  *
- * B.1 Subscript loading
+ * B.1 Subscript loading into a target object
  *
  * Subscripts may be loaded into a target object and it's associated global.
  * NonSyntacticLexicalEnvironmentObject holds lexical variables and
@@ -244,16 +244,24 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *       |
  *   NonSyntacticLexicalEnvironmentObject[this=target] (lexical vars)
  *
- * B.2 Subscript loading (Shared-global JSM)
+ * B.2 Subscript loading into global this
  *
- * The target object of a subscript load may be in a JSM with a shared global,
- * in which case we will also have the NonSyntacticVariablesObject on the
- * chain.
+ * Subscript may be loaded into global this. In this case no extra environment
+ * object is created.
+ *
+ *   global (qualified 'var's and unqualified names)
+ *       |
+ *   GlobalLexicalEnvironmentObject[this=global] (lexical vars)
+ *
+ * B.3 Subscript loading into a target object in JSM
+ *
+ * The target object of a subscript load may be in a JSM, in which case we will
+ * also have the NonSyntacticVariablesObject on the chain.
  * NonSyntacticLexicalEnvironmentObject for target object holds lexical
  * variables and WithEnvironmentObject holds qualified variables.
  * Unqualified names goes to NonSyntacticVariablesObject.
  *
- *   Target object's global
+ *   BackstagePass global
  *       |
  *   GlobalLexicalEnvironmentObject[this=global]
  *       |
@@ -264,6 +272,19 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *   WithEnvironmentObject wrapping target (qualified 'var's)
  *       |
  *   NonSyntacticLexicalEnvironmentObject[this=target] (lexical vars)
+ *
+ * B.4 Subscript loading into per-JSM this
+ *
+ * Subscript may be loaded into global this.  In this case no extra environment
+ * object is created.
+ *
+ *   BackstagePass global
+ *       |
+ *   GlobalLexicalEnvironmentObject[this=global]
+ *       |
+ *   NonSyntacticVariablesObject (qualified 'var's and unqualified names)
+ *       |
+ *   NonSyntacticLexicalEnvironmentObject[this=nsvo] (lexical vars)
  *
  * C.1. Frame scripts with unique scope
  *
