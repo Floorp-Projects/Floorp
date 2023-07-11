@@ -163,13 +163,6 @@ class nsHTTPSOnlyUtils {
                                            nsIURI* aOtherURI,
                                            nsILoadInfo* aLoadInfo);
 
-  /**
-   * Checks a top-level load, if it is exempt by HTTPS-First/ Only
-   * clear exemption flag.
-   * @param aLoadInfo nsILoadInfo of the request
-   */
-  static void PotentiallyClearExemptFlag(nsILoadInfo* aLoadInfo);
-
  private:
   /**
    * Checks if it can be ruled out that the error has something

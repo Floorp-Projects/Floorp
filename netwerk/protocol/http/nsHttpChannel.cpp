@@ -5138,11 +5138,6 @@ nsresult nsHttpChannel::SetupReplacementChannel(nsIURI* newURI,
   rv = CheckRedirectLimit(redirectFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // clear exempt flag such that a subdomain redirection gets
-  // upgraded even if the initial request was exempted by https-first/ -only
-  nsCOMPtr<nsILoadInfo> newLoadInfo = newChannel->LoadInfo();
-  nsHTTPSOnlyUtils::PotentiallyClearExemptFlag(newLoadInfo);
-
   // pass on the early hint observer to be able to process `103 Early Hints`
   // responses after cross origin redirects
   if (mEarlyHintObserver) {
