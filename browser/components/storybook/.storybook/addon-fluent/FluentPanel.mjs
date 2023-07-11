@@ -41,7 +41,11 @@ export class FluentPanel extends React.Component {
       let strings = [];
       for (let [key, value] of state.strings) {
         if (key == e.target.name) {
-          strings.push([key, e.target.value]);
+          let stringValue = e.target.value;
+          if (stringValue.startsWith(".")) {
+            stringValue = "\n" + stringValue;
+          }
+          strings.push([key, stringValue]);
         } else {
           strings.push([key, value]);
         }
