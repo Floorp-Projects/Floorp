@@ -66,11 +66,17 @@ export class SelectionActionDelegateChild extends GeckoViewActorChild {
     {
       id: "org.mozilla.geckoview.PASTE",
       predicate: e =>
-        e.selectionEditable &&
-        Services.clipboard.hasDataMatchingFlavors(
-          ["text/plain"],
-          Ci.nsIClipboard.kGlobalClipboard
-        ),
+        (this._isContentHtmlEditable(e) &&
+          Services.clipboard.hasDataMatchingFlavors(
+            /* The following image types are considered by editor */
+            ["image/gif", "image/jpeg", "image/png"],
+            Ci.nsIClipboard.kGlobalClipboard
+          )) ||
+        (e.selectionEditable &&
+          Services.clipboard.hasDataMatchingFlavors(
+            ["text/plain"],
+            Ci.nsIClipboard.kGlobalClipboard
+          )),
       perform: _ => this._performPaste(),
     },
     {
