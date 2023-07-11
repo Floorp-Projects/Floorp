@@ -193,6 +193,7 @@ const MENU_BUTTON = "menubutton";
 const TIMEOUT_ENSURE_PROFILE_NOT_SAVED = 1000;
 const TIMEOUT_ENSURE_CC_DIALOG_NOT_CLOSED = 500;
 const TIMEOUT_ENSURE_AUTOCOMPLETE_NOT_SHOWN = 1000;
+const TIMEOUT_ENSURE_DOORHANGER_NOT_SHOWN = 1000;
 
 async function ensureCreditCardDialogNotClosed(win) {
   const unloadHandler = () => {
@@ -229,7 +230,16 @@ async function ensureNoAutocompletePopup(browser) {
     setTimeout(resolve, TIMEOUT_ENSURE_AUTOCOMPLETE_NOT_SHOWN)
   );
   const items = getDisplayedPopupItems(browser);
-  ok(!items.length, "Should not found autocomplete items");
+  ok(!items.length, "Should not find autocomplete items");
+}
+
+async function ensureNoDoorhanger(browser) {
+  await new Promise(resolve =>
+    setTimeout(resolve, TIMEOUT_ENSURE_DOORHANGER_NOT_SHOWN)
+  );
+
+  let notifications = PopupNotifications.panel.childNodes;
+  ok(!notifications.length, "Should not find a doorhanger");
 }
 
 /**

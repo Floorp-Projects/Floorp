@@ -2,7 +2,7 @@
 
 const URL = BASE_URL + "autocomplete_basic.html";
 
-add_task(async function setup_storage() {
+add_setup(async function setup_storage() {
   await setStorage(
     TEST_ADDRESS_2,
     TEST_ADDRESS_3,
@@ -104,13 +104,7 @@ add_task(async function test_phishing_warning_single_category() {
         ".autocomplete-richlistitem:last-child"
       )._warningTextBox;
       ok(warningBox, "Got phishing warning box");
-      await expectWarningText(browser, "Autofills phone");
-      is(
-        warningBox.ownerGlobal.getComputedStyle(warningBox).backgroundColor,
-        "rgba(248, 232, 28, 0.2)",
-        "Check warning text background color"
-      );
-
+      await expectWarningText(browser, "Also autofills address");
       await closePopup(browser);
     }
   );

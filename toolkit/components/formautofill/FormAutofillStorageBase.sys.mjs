@@ -1383,7 +1383,7 @@ class AutofillRecords {
   _normalizeRecord(record, preserveEmptyFields = false) {
     this._normalizeFields(record);
 
-    for (let key in record) {
+    for (const key in record) {
       if (!this.VALID_FIELDS.includes(key)) {
         // Though we allow unknown fields, certain fields are still protected
         // from being changed
@@ -1405,7 +1405,10 @@ class AutofillRecords {
       }
     }
 
-    if (!Object.keys(record).length) {
+    const keys = Object.keys(record);
+    // By default we ensure there is always a country field, so if this record
+    // doesn't contain other fields, this is an empty record
+    if (!keys.length || (keys.length == 1 && keys[0] == "country")) {
       throw new Error("Record contains no valid field.");
     }
   }
@@ -1609,13 +1612,13 @@ export class AddressesBase extends AutofillRecords {
   }
 
   _normalizeFields(address) {
-    this._normalizeName(address);
-    this._normalizeAddress(address);
-    this._normalizeCountry(address);
-    this._normalizeTel(address);
+    this._normalizeCountryFields(address);
+    this._normalizeNameFields(address);
+    this._normalizeAddressFields(address);
+    this._normalizeTelFields(address);
   }
 
-  _normalizeName(address) {
+  _normalizeNameFields(address) {
     if (address.name) {
       let nameParts = lazy.FormAutofillNameUtils.splitName(address.name);
       if (!address["given-name"] && nameParts.given) {
@@ -1631,7 +1634,7 @@ export class AddressesBase extends AutofillRecords {
     delete address.name;
   }
 
-  _normalizeAddress(address) {
+  _normalizeAddressFields(address) {
     if (STREET_ADDRESS_COMPONENTS.some(c => !!address[c])) {
       // Treat "street-address" as "address-line1" if it contains only one line
       // and "address-line1" is omitted.
@@ -1656,16 +1659,13 @@ export class AddressesBase extends AutofillRecords {
     STREET_ADDRESS_COMPONENTS.forEach(c => delete address[c]);
   }
 
-  _normalizeCountry(address) {
-    let country;
-
-    if (address.country) {
-      country = address.country.toUpperCase();
-    } else if (address["country-name"]) {
-      country = lazy.FormAutofillUtils.identifyCountryCode(
-        address["country-name"]
-      );
-    }
+  _normalizeCountryFields(address) {
+    // When we can't identify the country code, it is possible because that the region exists
+    // in regionNames.properties but not in libaddressinput.
+    const country =
+      lazy.FormAutofillUtils.identifyCountryCode(
+        address.country || address["country-name"]
+      ) || address.country;
 
     // Only values included in the region list will be saved.
     let hasLocalizedName = false;
@@ -1681,13 +1681,13 @@ export class AddressesBase extends AutofillRecords {
     if (country && hasLocalizedName) {
       address.country = country;
     } else {
-      delete address.country;
+      address.country = FormAutofill.DEFAULT_REGION;
     }
 
     delete address["country-name"];
   }
 
-  _normalizeTel(address) {
+  _normalizeTelFields(address) {
     if (address.tel || TEL_COMPONENTS.some(c => !!address[c])) {
       lazy.FormAutofillUtils.compressTel(address);
 
@@ -1838,12 +1838,13 @@ export class CreditCardsBase extends AutofillRecords {
   }
 
   _normalizeFields(creditCard) {
-    this._normalizeCCName(creditCard);
-    this._normalizeCCNumber(creditCard);
-    this._normalizeCCExpirationDate(creditCard);
+    this._normalizeCCNameFields(creditCard);
+    this._normalizeCCNumberFields(creditCard);
+    this._normalizeCCExpirationDateFields(creditCard);
+    this._normalizeCCTypeFields(creditCard);
   }
 
-  _normalizeCCName(creditCard) {
+  _normalizeCCNameFields(creditCard) {
     if (
       creditCard["cc-given-name"] ||
       creditCard["cc-additional-name"] ||
@@ -1862,19 +1863,21 @@ export class CreditCardsBase extends AutofillRecords {
     delete creditCard["cc-family-name"];
   }
 
-  _normalizeCCNumber(creditCard) {
+  _normalizeCCNumberFields(creditCard) {
     if (!("cc-number" in creditCard)) {
       return;
     }
+
     if (!lazy.CreditCard.isValidNumber(creditCard["cc-number"])) {
       delete creditCard["cc-number"];
       return;
     }
-    let card = new lazy.CreditCard({ number: creditCard["cc-number"] });
+
+    const card = new lazy.CreditCard({ number: creditCard["cc-number"] });
     creditCard["cc-number"] = card.number;
   }
 
-  _normalizeCCExpirationDate(creditCard) {
+  _normalizeCCExpirationDateFields(creditCard) {
     let normalizedExpiration = lazy.CreditCard.normalizeExpiration({
       expirationMonth: creditCard["cc-exp-month"],
       expirationYear: creditCard["cc-exp-year"],
@@ -1891,6 +1894,12 @@ export class CreditCardsBase extends AutofillRecords {
       delete creditCard["cc-exp-year"];
     }
     delete creditCard["cc-exp"];
+  }
+
+  _normalizeCCTypeFields(creditCard) {
+    // Let's overwrite the credit card type with auto-detect algorithm
+    creditCard["cc-type"] =
+      lazy.CreditCard.getType(creditCard["cc-number"]) ?? "";
   }
 
   _validateFields(creditCard) {
