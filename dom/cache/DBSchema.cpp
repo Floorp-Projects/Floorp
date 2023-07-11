@@ -1011,7 +1011,7 @@ Result<EntryIds, nsresult> QueryCache(mozIStorageConnection& aConn,
   }
 
   nsAutoCString query(
-      "SELECT id, COUNT(response_headers.name) AS vary_count "
+      "SELECT id, COUNT(response_headers.name) AS vary_count, response_type "
       "FROM entries "
       "LEFT OUTER JOIN response_headers ON "
       "entries.id=response_headers.entry_id "
@@ -1073,13 +1073,20 @@ Result<EntryIds, nsresult> QueryCache(mozIStorageConnection& aConn,
         }
         QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER(state, ExecuteStep));
       },
-      [&state, &entryIdList, ignoreVary = aParams.ignoreVary(), &aConn,
+      [&state, &entryIdList, &aParams, &aConn,
        &aRequest]() -> Result<Ok, nsresult> {
         QM_TRY_INSPECT(const EntryId& entryId,
                        MOZ_TO_RESULT_INVOKE_MEMBER(state, GetInt32, 0));
 
         QM_TRY_INSPECT(const int32_t& varyCount,
                        MOZ_TO_RESULT_INVOKE_MEMBER(state, GetInt32, 1));
+
+        QM_TRY_INSPECT(const int32_t& responseType,
+                       MOZ_TO_RESULT_INVOKE_MEMBER(state, GetInt32, 2));
+
+        auto ignoreVary =
+            aParams.ignoreVary() ||
+            responseType == static_cast<int>(ResponseType::Opaque);
 
         if (!ignoreVary && varyCount > 0) {
           QM_TRY_INSPECT(const bool& matchedByVary,
