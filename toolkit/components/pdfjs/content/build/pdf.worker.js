@@ -102,7 +102,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.8.138';
+    const workerVersion = '3.9.24';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -642,6 +642,7 @@ exports.assert = assert;
 exports.bytesToString = bytesToString;
 exports.createValidAbsoluteUrl = createValidAbsoluteUrl;
 exports.getModificationDate = getModificationDate;
+exports.getUuid = getUuid;
 exports.getVerbosityLevel = getVerbosityLevel;
 exports.info = info;
 exports.isArrayBuffer = isArrayBuffer;
@@ -1406,6 +1407,9 @@ function normalizeUnicode(str) {
   return str.replaceAll(NormalizeRegex, (_, p1, p2) => {
     return p1 ? p1.normalize("NFKC") : NormalizationMap.get(p2);
   });
+}
+function getUuid() {
+  return crypto.randomUUID();
 }
 
 /***/ }),
@@ -4270,7 +4274,7 @@ class AnnotationFactory {
       collectFields,
       needAppearances: !collectFields && acroFormDict.get("NeedAppearances") === true,
       pageIndex,
-      isOffscreenCanvasSupported: pdfManager.evaluatorOptions.isOffscreenCanvasSupported
+      evaluatorOptions: pdfManager.evaluatorOptions
     };
     switch (subtype) {
       case "Link":
@@ -4437,7 +4441,9 @@ class AnnotationFactory {
             });
             image.imageStream = image.smaskStream = null;
           }
-          promises.push(StampAnnotation.createNewAnnotation(xref, annotation, dependencies, image));
+          promises.push(StampAnnotation.createNewAnnotation(xref, annotation, dependencies, {
+            image
+          }));
           break;
       }
     }
@@ -4450,10 +4456,10 @@ class AnnotationFactory {
     if (!annotations) {
       return null;
     }
-    const xref = evaluator.xref;
     const {
-      isOffscreenCanvasSupported
-    } = evaluator.options;
+      options,
+      xref
+    } = evaluator;
     const promises = [];
     for (const annotation of annotations) {
       if (annotation.deleted) {
@@ -4464,16 +4470,16 @@ class AnnotationFactory {
           promises.push(FreeTextAnnotation.createNewPrintAnnotation(xref, annotation, {
             evaluator,
             task,
-            isOffscreenCanvasSupported
+            evaluatorOptions: options
           }));
           break;
         case _util.AnnotationEditorType.INK:
           promises.push(InkAnnotation.createNewPrintAnnotation(xref, annotation, {
-            isOffscreenCanvasSupported
+            evaluatorOptions: options
           }));
           break;
         case _util.AnnotationEditorType.STAMP:
-          if (!isOffscreenCanvasSupported) {
+          if (!options.isOffscreenCanvasSupported) {
             break;
           }
           const image = await imagePromises.get(annotation.bitmapId);
@@ -4488,7 +4494,10 @@ class AnnotationFactory {
             image.imageRef = new _jpeg_stream.JpegStream(imageStream, imageStream.length);
             image.imageStream = image.smaskStream = null;
           }
-          promises.push(StampAnnotation.createNewPrintAnnotation(xref, annotation, image));
+          promises.push(StampAnnotation.createNewPrintAnnotation(xref, annotation, {
+            image,
+            evaluatorOptions: options
+          }));
           break;
       }
     }
@@ -4626,7 +4635,7 @@ class Annotation {
       this.data.fieldName = this._constructFieldName(dict);
       this.data.pageIndex = params.pageIndex;
     }
-    this._isOffscreenCanvasSupported = params.isOffscreenCanvasSupported;
+    this._isOffscreenCanvasSupported = params.evaluatorOptions.isOffscreenCanvasSupported;
     this._fallbackFontDict = null;
     this._needAppearances = false;
   }
@@ -5233,7 +5242,7 @@ class MarkupAnnotation extends Annotation {
     const newAnnotation = new this.prototype.constructor({
       dict: annotationDict,
       xref,
-      isOffscreenCanvasSupported: params.isOffscreenCanvasSupported
+      evaluatorOptions: params.evaluatorOptions
     });
     if (annotation.ref) {
       newAnnotation.ref = newAnnotation.refToReplace = annotation.ref;
@@ -6596,6 +6605,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
     super(params);
     this.data.hasOwnCanvas = true;
     const {
+      evaluatorOptions,
       xref
     } = params;
     this.data.annotationType = _util.AnnotationType.FREETEXT;
@@ -6604,7 +6614,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
       const {
         fontColor,
         fontSize
-      } = (0, _default_appearance.parseAppearanceStream)(this.appearance);
+      } = (0, _default_appearance.parseAppearanceStream)(this.appearance, evaluatorOptions, xref);
       this.data.defaultAppearanceData.fontColor = fontColor;
       this.data.defaultAppearanceData.fontSize = fontSize || 10;
     } else if (this._isOffscreenCanvasSupported) {
@@ -6688,7 +6698,7 @@ class FreeTextAnnotation extends MarkupAnnotation {
     }
     resources.set("Font", font);
     const helv = await WidgetAnnotation._getFontData(evaluator, task, {
-      fontName: "Helvetica",
+      fontName: "Helv",
       fontSize
     }, resources);
     const [x1, y1, x2, y2] = rect;
@@ -6721,16 +6731,41 @@ class FreeTextAnnotation extends MarkupAnnotation {
     }
     let vscale = 1;
     const lineHeight = _util.LINE_FACTOR * fontSize;
-    const lineDescent = _util.LINE_DESCENT_FACTOR * fontSize;
+    const lineAscent = (_util.LINE_FACTOR - _util.LINE_DESCENT_FACTOR) * fontSize;
     const totalHeight = lineHeight * lines.length;
     if (totalHeight > h) {
       vscale = h / totalHeight;
     }
     const fscale = Math.min(hscale, vscale);
     const newFontSize = fontSize * fscale;
-    const buffer = ["q", `0 0 ${(0, _core_utils.numberToString)(w)} ${(0, _core_utils.numberToString)(h)} re W n`, `BT`, `1 0 0 1 0 ${(0, _core_utils.numberToString)(h + lineDescent)} Tm 0 Tc ${(0, _default_appearance.getPdfColor)(color, true)}`, `/Helv ${(0, _core_utils.numberToString)(newFontSize)} Tf`];
+    let firstPoint, clipBox, matrix;
+    switch (rotation) {
+      case 0:
+        matrix = [1, 0, 0, 1];
+        clipBox = [rect[0], rect[1], w, h];
+        firstPoint = [rect[0], rect[3] - lineAscent];
+        break;
+      case 90:
+        matrix = [0, 1, -1, 0];
+        clipBox = [rect[1], -rect[2], w, h];
+        firstPoint = [rect[1], -rect[0] - lineAscent];
+        break;
+      case 180:
+        matrix = [-1, 0, 0, -1];
+        clipBox = [-rect[2], -rect[3], w, h];
+        firstPoint = [-rect[2], -rect[1] - lineAscent];
+        break;
+      case 270:
+        matrix = [0, -1, 1, 0];
+        clipBox = [-rect[3], rect[0], w, h];
+        firstPoint = [-rect[3], rect[2] - lineAscent];
+        break;
+    }
+    const buffer = ["q", `${matrix.join(" ")} 0 0 cm`, `${clipBox.join(" ")} re W n`, `BT`, `${(0, _default_appearance.getPdfColor)(color, true)}`, `0 Tc /Helv ${(0, _core_utils.numberToString)(newFontSize)} Tf`];
+    buffer.push(`${firstPoint.join(" ")} Td (${(0, _core_utils.escapeString)(encodedLines[0])}) Tj`);
     const vShift = (0, _core_utils.numberToString)(lineHeight);
-    for (const line of encodedLines) {
+    for (let i = 1, ii = encodedLines.length; i < ii; i++) {
+      const line = encodedLines[i];
       buffer.push(`0 -${vShift} Td (${(0, _core_utils.escapeString)(line)}) Tj`);
     }
     buffer.push("ET", "Q");
@@ -6739,12 +6774,9 @@ class FreeTextAnnotation extends MarkupAnnotation {
     appearanceStreamDict.set("FormType", 1);
     appearanceStreamDict.set("Subtype", _primitives.Name.get("Form"));
     appearanceStreamDict.set("Type", _primitives.Name.get("XObject"));
-    appearanceStreamDict.set("BBox", [0, 0, w, h]);
+    appearanceStreamDict.set("BBox", rect);
     appearanceStreamDict.set("Resources", resources);
-    if (rotation) {
-      const matrix = (0, _core_utils.getRotationMatrix)(rotation, w, h);
-      appearanceStreamDict.set("Matrix", matrix);
-    }
+    appearanceStreamDict.set("Matrix", [1, 0, 0, 1, -rect[0], -rect[1]]);
     const ap = new _stream.StringStream(appearance);
     ap.dict = appearanceStreamDict;
     return ap;
@@ -7324,7 +7356,7 @@ class StampAnnotation extends MarkupAnnotation {
       imageRef,
       width,
       height
-    } = params;
+    } = params.image;
     const resources = new _primitives.Dict(xref);
     const xobject = new _primitives.Dict(xref);
     resources.set("XObject", xobject);
@@ -7380,6 +7412,8 @@ var _core_utils = __w_pdfjs_require__(3);
 var _util = __w_pdfjs_require__(2);
 var _colorspace = __w_pdfjs_require__(12);
 var _evaluator = __w_pdfjs_require__(13);
+var _image_utils = __w_pdfjs_require__(59);
+var _function = __w_pdfjs_require__(57);
 var _stream = __w_pdfjs_require__(8);
 class DefaultAppearanceEvaluator extends _evaluator.EvaluatorPreprocessor {
   constructor(str) {
@@ -7424,7 +7458,7 @@ class DefaultAppearanceEvaluator extends _evaluator.EvaluatorPreprocessor {
           case _util.OPS.setFillGray:
             _colorspace.ColorSpace.singletons.gray.getRgbItem(args, 0, result.fontColor, 0);
             break;
-          case _util.OPS.setFillColorSpace:
+          case _util.OPS.setFillCMYKColor:
             _colorspace.ColorSpace.singletons.cmyk.getRgbItem(args, 0, result.fontColor, 0);
             break;
         }
@@ -7439,9 +7473,12 @@ function parseDefaultAppearance(str) {
   return new DefaultAppearanceEvaluator(str).parse();
 }
 class AppearanceStreamEvaluator extends _evaluator.EvaluatorPreprocessor {
-  constructor(stream) {
+  constructor(stream, evaluatorOptions, xref) {
     super(stream);
     this.stream = stream;
+    this.evaluatorOptions = evaluatorOptions;
+    this.xref = xref;
+    this.resources = stream.dict?.get("Resources");
   }
   parse() {
     const operation = {
@@ -7452,7 +7489,8 @@ class AppearanceStreamEvaluator extends _evaluator.EvaluatorPreprocessor {
       scaleFactor: 1,
       fontSize: 0,
       fontName: "",
-      fontColor: new Uint8ClampedArray(3)
+      fontColor: new Uint8ClampedArray(3),
+      fillColorSpace: _colorspace.ColorSpace.singletons.gray
     };
     let breakLoop = false;
     const stack = [];
@@ -7472,7 +7510,8 @@ class AppearanceStreamEvaluator extends _evaluator.EvaluatorPreprocessor {
               scaleFactor: result.scaleFactor,
               fontSize: result.fontSize,
               fontName: result.fontName,
-              fontColor: result.fontColor.slice()
+              fontColor: result.fontColor.slice(),
+              fillColorSpace: result.fillColorSpace
             });
             break;
           case _util.OPS.restore:
@@ -7490,13 +7529,26 @@ class AppearanceStreamEvaluator extends _evaluator.EvaluatorPreprocessor {
               result.fontSize = fontSize * result.scaleFactor;
             }
             break;
+          case _util.OPS.setFillColorSpace:
+            result.fillColorSpace = _colorspace.ColorSpace.parse({
+              cs: args[0],
+              xref: this.xref,
+              resources: this.resources,
+              pdfFunctionFactory: this._pdfFunctionFactory,
+              localColorSpaceCache: this._localColorSpaceCache
+            });
+            break;
+          case _util.OPS.setFillColor:
+            const cs = result.fillColorSpace;
+            cs.getRgbItem(args, 0, result.fontColor, 0);
+            break;
           case _util.OPS.setFillRGBColor:
             _colorspace.ColorSpace.singletons.rgb.getRgbItem(args, 0, result.fontColor, 0);
             break;
           case _util.OPS.setFillGray:
             _colorspace.ColorSpace.singletons.gray.getRgbItem(args, 0, result.fontColor, 0);
             break;
-          case _util.OPS.setFillColorSpace:
+          case _util.OPS.setFillCMYKColor:
             _colorspace.ColorSpace.singletons.cmyk.getRgbItem(args, 0, result.fontColor, 0);
             break;
           case _util.OPS.showText:
@@ -7512,11 +7564,22 @@ class AppearanceStreamEvaluator extends _evaluator.EvaluatorPreprocessor {
     }
     this.stream.reset();
     delete result.scaleFactor;
+    delete result.fillColorSpace;
     return result;
   }
+  get _localColorSpaceCache() {
+    return (0, _util.shadow)(this, "_localColorSpaceCache", new _image_utils.LocalColorSpaceCache());
+  }
+  get _pdfFunctionFactory() {
+    const pdfFunctionFactory = new _function.PDFFunctionFactory({
+      xref: this.xref,
+      isEvalSupported: this.evaluatorOptions.isEvalSupported
+    });
+    return (0, _util.shadow)(this, "_pdfFunctionFactory", pdfFunctionFactory);
+  }
 }
-function parseAppearanceStream(stream) {
-  return new AppearanceStreamEvaluator(stream).parse();
+function parseAppearanceStream(stream, evaluatorOptions, xref) {
+  return new AppearanceStreamEvaluator(stream, evaluatorOptions, xref).parse();
 }
 function getPdfColor(color, isFill) {
   if (color[0] === color[1] && color[1] === color[2]) {
@@ -57942,8 +58005,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.8.138';
-const pdfjsBuild = '88c7c8b5b';
+const pdfjsVersion = '3.9.24';
+const pdfjsBuild = 'c33e6ceb0';
 })();
 
 /******/ 	return __webpack_exports__;
