@@ -3142,8 +3142,11 @@ void WorkerPrivate::RunLoopNeverRan() {
     }
   }
 
-  // Should not have any WorkerRefs, children workers and Timeouts.
-  MOZ_DIAGNOSTIC_ASSERT(!HasActiveWorkerRefs());
+  // There should be no StrongWorkerRefs, child Workers, and Timeouts, but
+  // WeakWorkerRefs could. WorkerThreadPrimaryRunnable could have created a
+  // PerformanceStorageWorker which holds a WeakWorkerRef.
+  // Notify WeakWorkerRefs with Dead status.
+  NotifyWorkerRefs(Dead);
 
   ScheduleDeletion(WorkerPrivate::WorkerRan);
 }
