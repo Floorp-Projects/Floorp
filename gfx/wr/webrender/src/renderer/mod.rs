@@ -2186,21 +2186,22 @@ impl Renderer {
             return;
         }
 
+        self.device.disable_depth_write();
+
         {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_INDIRECT_PRIM);
 
-            self.device.disable_depth_write();
-            self.set_blend(false, FramebufferKind::Other);
-
-            self.shaders.borrow_mut().ps_quad_textured.bind(
-                &mut self.device,
-                projection,
-                None,
-                &mut self.renderer_errors,
-                &mut self.profile,
-            );
-
             if !prim_instances.is_empty() {
+                self.set_blend(false, FramebufferKind::Other);
+
+                self.shaders.borrow_mut().ps_quad_textured.bind(
+                    &mut self.device,
+                    projection,
+                    None,
+                    &mut self.renderer_errors,
+                    &mut self.profile,
+                );
+
                 self.draw_instanced_batch(
                     prim_instances,
                     VertexArrayKind::Primitive,
@@ -2210,7 +2211,17 @@ impl Renderer {
             }
 
             if !prim_instances_with_scissor.is_empty() {
+                self.set_blend(true, FramebufferKind::Other);
+                self.device.set_blend_mode_premultiplied_alpha();
                 self.device.enable_scissor();
+
+                self.shaders.borrow_mut().ps_quad_textured.bind(
+                    &mut self.device,
+                    projection,
+                    None,
+                    &mut self.renderer_errors,
+                    &mut self.profile,
+                );
 
                 for (scissor_rect, prim_instances) in prim_instances_with_scissor {
                     self.device.set_scissor_rect(draw_target.to_framebuffer_rect(*scissor_rect));

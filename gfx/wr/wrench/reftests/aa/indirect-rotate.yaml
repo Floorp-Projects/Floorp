@@ -1,0 +1,16 @@
+# Verify that we select correct blend mode for indirect rotated primitives with an
+# axis-aligned clip. This allows SWGL to correctly apply the native AA. 
+---
+root:
+  items:
+    - type: clip
+      bounds: 110 100 180 200
+      id: 3
+    - bounds: 100 100 200 100
+      type: stacking-context
+      transform: rotate-y(10) rotate-x(30)
+      clip-chain: [3]
+      items:
+        - type: rect
+          bounds: 0 0 200 100
+          color: blue
