@@ -5,7 +5,7 @@
 -->
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="prefwindow"
-        title="preferences window"
+        title="pw 2"
         windowtype="test:preferences2"
         onload="RunTest(window.arguments)">
 <dialog id="window_preferences2_dialog"
@@ -15,13 +15,11 @@
   <![CDATA[
     function RunTest(aArgs)
     {
-      setTimeout(() => {
-        // open child
-        openDialog("window_preferences3.xhtml", "", "modal,centerscreen,resizable=no", {test: aArgs[0], accept: aArgs[1]});
-        // close dialog
-        let dialog = document.getElementById("window_preferences2_dialog");
-        dialog[aArgs[1] ? "acceptDialog" : "cancelDialog"]();
-      });
+      // open child
+      openDialog("window_preferences3.xhtml", "", "modal,centerscreen,resizable=no", {test: aArgs[0], accept: aArgs[1]});
+      // close dialog
+      let dialog = document.getElementById("window_preferences2_dialog");
+      dialog[aArgs[1] ? "acceptDialog" : "cancelDialog"]();
     }
   ]]>
   </script>
