@@ -1,0 +1,29 @@
+# This is intended to be a really simple imitation of what Gecko's
+# display-list around the content scrolling viewport.  In addition to the
+# scroll-frame's clip (added by clip-to-frame) it also adds equivalent clips
+# to everything inside, including inside the stacking context.  The stacking
+# context with partial opacity acts as a regression test for bug 1836063.
+
+root:
+  items:
+    - type: clip
+      id: 2
+      bounds: [0, 0, 50, 50]
+    - type: clip-chain
+      id: 3
+      clips: [2]
+
+    - type: scroll-frame
+      bounds: [0, 0, 50, 50]
+      scroll-offset: [0, 0]
+      clip-to-frame: true
+      items:
+        - type: stacking-context
+          bounds: [0, 0, 100, 500]
+          filters: [opacity(0.9)]
+          clip-chain: 3
+          items:
+            - type: rect
+              bounds: [0, 0, 100, 500]
+              color: green
+              clip-chain: 3
