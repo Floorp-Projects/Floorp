@@ -117,6 +117,7 @@ class SettingsSearchTest {
         }
     }
 
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1807268")
     @Test
     fun toggleSearchHistoryTest() {
         val page1 = getGenericAsset(mockWebServer, 1)
