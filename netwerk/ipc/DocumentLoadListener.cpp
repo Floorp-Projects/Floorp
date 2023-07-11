@@ -155,7 +155,7 @@ static auto CreateDocumentLoadInfo(CanonicalBrowsingContext* aBrowsingContext,
 
   if (aLoadState->IsExemptFromHTTPSOnlyMode()) {
     uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
-    httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
+    httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT_NEXT_LOAD;
     loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
   }
 

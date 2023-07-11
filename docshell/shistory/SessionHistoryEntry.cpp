@@ -285,8 +285,11 @@ void SessionHistoryInfo::FillLoadInfo(nsDocShellLoadState& aLoadState) const {
 
   // When we create a load state from the history info we already know if
   // https-first was able to upgrade the request from http to https. There is no
-  // point in re-retrying to upgrade.
-  aLoadState.SetIsExemptFromHTTPSOnlyMode(true);
+  // point in re-retrying to upgrade. On a reload we still want to check,
+  // because the exemptions set by the user could have changed.
+  if ((mLoadType & nsIDocShell::LOAD_CMD_RELOAD) == 0) {
+    aLoadState.SetIsExemptFromHTTPSOnlyMode(true);
+  }
 }
 /* static */
 SessionHistoryInfo::SharedState SessionHistoryInfo::SharedState::Create(

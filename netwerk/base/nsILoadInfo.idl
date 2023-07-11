@@ -505,6 +505,12 @@ interface nsILoadInfo : nsISupports
   const unsigned long HTTPS_ONLY_BYPASS_ORB = (1 << 8);
 
   /**
+   * This flag indicates that HTTPS_ONLY_EXEMPT should be
+   * set the next time HTTPS-Only exemptions are checked.
+   */
+  const unsigned long HTTPS_ONLY_EXEMPT_NEXT_LOAD = (1 << 9);
+
+  /**
    * Upgrade state of HTTPS-Only Mode. The flag HTTPS_ONLY_EXEMPT can get
    * set on requests that should be excempt from an upgrade.
    */
