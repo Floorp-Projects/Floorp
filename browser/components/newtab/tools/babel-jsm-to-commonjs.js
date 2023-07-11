@@ -98,10 +98,14 @@ module.exports = function plugin(babel) {
     const results = [];
     let finalResults = [...initFinalResults];
     nodes.forEach(parentPath => {
-      if (!parentPath.isVariableDeclaration()) return;
+      if (!parentPath.isVariableDeclaration()) {
+        return;
+      }
       parentPath.traverse({
         VariableDeclarator(path) {
-          if (!path.get("id").isIdentifier()) return;
+          if (!path.get("id").isIdentifier()) {
+            return;
+          }
           const init = path.get("init");
           if (init.isIdentifier() && init.node.name === id) {
             results.push(path.node.id.name);
@@ -122,7 +126,9 @@ module.exports = function plugin(babel) {
   function checkForUtilsDeclarations(nodes, ids) {
     const results = [];
     nodes.forEach(parentPath => {
-      if (!parentPath.isVariableDeclaration()) return;
+      if (!parentPath.isVariableDeclaration()) {
+        return;
+      }
       parentPath.traverse({
         VariableDeclarator(path) {
           const id = path.get("id");
@@ -167,7 +173,9 @@ module.exports = function plugin(babel) {
     removeOtherImports
   ) {
     nodes.forEach(p => {
-      if (!p.isVariableDeclaration()) return;
+      if (!p.isVariableDeclaration()) {
+        return;
+      }
       p.traverse({
         CallExpression(path) {
           if (
@@ -204,7 +212,9 @@ module.exports = function plugin(babel) {
               !removeOtherImports ||
               (replacePath && filePath.match(basePath))
             ) {
-              if (replacePath) filePath = filePath.replace(basePath, "");
+              if (replacePath) {
+                filePath = filePath.replace(basePath, "");
+              }
               const requireStatement = t.callExpression(
                 t.identifier("require"),
                 [t.stringLiteral(filePath)]
@@ -235,9 +245,13 @@ module.exports = function plugin(babel) {
         const idName = argPaths[1].node.value;
         let filePath = argPaths[2].node.value;
 
-        if (!filePath.match(basePath)) return;
+        if (!filePath.match(basePath)) {
+          return;
+        }
 
-        if (replacePath) filePath = filePath.replace(basePath, "");
+        if (replacePath) {
+          filePath = filePath.replace(basePath, "");
+        }
         const requireStatement = t.callExpression(t.identifier("require"), [
           t.stringLiteral(filePath),
         ]);

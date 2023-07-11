@@ -1,3 +1,4 @@
+/* eslint-disable @microsoft/sdl/no-insecure-url */
 const { ASRouterTriggerListeners } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouterTriggerListeners.jsm"
 );
@@ -197,7 +198,9 @@ function getIdleTriggerMock() {
   sandbox.stub(idleTrigger, "_idleService").value(mockIdleService);
   let restored = false;
   const restore = () => {
-    if (restored) return;
+    if (restored) {
+      return;
+    }
     restored = true;
     idleTrigger.uninit();
     sandbox.restore();

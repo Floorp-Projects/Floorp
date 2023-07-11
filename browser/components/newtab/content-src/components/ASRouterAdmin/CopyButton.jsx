@@ -16,7 +16,9 @@ export const CopyButton = ({
   const timeout = useRef(null);
   const onClick = useCallback(() => {
     let text = document.querySelector(inputSelector).value;
-    if (transformer) text = transformer(text);
+    if (transformer) {
+      text = transformer(text);
+    }
     navigator.clipboard.writeText(text);
 
     clearTimeout(timeout.current);

@@ -7,9 +7,6 @@ const { RemoteSettings } = ChromeUtils.importESModule(
 const { CFRMessageProvider } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/CFRMessageProvider.sys.mjs"
 );
-const { CFRPageActions } = ChromeUtils.import(
-  "resource://activity-stream/lib/CFRPageActions.jsm"
-);
 
 /**
  * Load and modify a message for the test.
@@ -74,6 +71,7 @@ add_setup(async function () {
  * Group is enabled if both user preferences are enabled.
  */
 add_task(async function test_heartbeat_tactic_2() {
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
   const TEST_URL = "http://example.com";
   const msg = ASRouter.state.messages.find(m =>
     m.groups.includes("messaging-experiments")

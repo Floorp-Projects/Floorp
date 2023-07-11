@@ -12,9 +12,6 @@ const { CFRMessageProvider } = ChromeUtils.importESModule(
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
-const { BrowserWindowTracker } = ChromeUtils.importESModule(
-  "resource:///modules/BrowserWindowTracker.sys.mjs"
-);
 
 add_task(async function show_and_send_telemetry() {
   let message = (await CFRMessageProvider.getMessages()).find(

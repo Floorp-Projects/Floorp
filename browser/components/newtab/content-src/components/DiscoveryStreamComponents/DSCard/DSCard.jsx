@@ -27,7 +27,9 @@ const READING_WPM = 220;
  * @returns {int} number of words per minute in minutes
  */
 export function readTimeFromWordCount(wordCount) {
-  if (!wordCount) return false;
+  if (!wordCount) {
+    return false;
+  }
   return Math.ceil(parseInt(wordCount, 10) / READING_WPM);
 }
 

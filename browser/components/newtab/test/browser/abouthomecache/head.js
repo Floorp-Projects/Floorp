@@ -50,7 +50,6 @@ let { AboutHomeStartupCache } = ChromeUtils.importESModule(
  * @return {Promise}
  * @resolves {undefined}
  */
-// eslint-disable-next-line no-unused-vars
 function withFullyLoadedAboutHome(taskFn) {
   return BrowserTestUtils.withNewTab("about:home", async browser => {
     await SpecialPowers.spawn(browser, [], async () => {
@@ -107,7 +106,6 @@ function withFullyLoadedAboutHome(taskFn) {
  *   Resolves once the restart simulation is complete, and the <xul:browser>
  *   pointed at about:home finishes reloading.
  */
-// eslint-disable-next-line no-unused-vars
 async function simulateRestart(
   browser,
   {
@@ -205,7 +203,6 @@ async function simulateRestart(
  * @resolves undefined
  *   When the page and script content has been successfully written.
  */
-// eslint-disable-next-line no-unused-vars
 async function injectIntoCache(page, script) {
   if (!page || !script) {
     throw new Error("Cannot injectIntoCache with falsey values");
@@ -238,7 +235,6 @@ async function injectIntoCache(page, script) {
  * @resolves undefined
  *   Resolves when the cache is cleared.
  */
-// eslint-disable-next-line no-unused-vars
 async function clearCache() {
   info("Test is clearing the cache");
   AboutHomeStartupCache.clearCache();
@@ -281,7 +277,6 @@ function assertCacheResultScalar(cacheResultScalar) {
  * @resolves undefined
  *   Resolves once the cache entry has been destroyed.
  */
-// eslint-disable-next-line no-unused-vars
 async function ensureCachedAboutHome(browser) {
   await SpecialPowers.spawn(browser, [], async () => {
     let scripts = Array.from(content.document.querySelectorAll("script"));
@@ -334,7 +329,6 @@ async function ensureCachedAboutHome(browser) {
  * @resolves undefined
  *   Resolves once the cache entry has been destroyed.
  */
-// eslint-disable-next-line no-unused-vars
 async function ensureDynamicAboutHome(browser, expectedResultScalar) {
   await SpecialPowers.spawn(browser, [], async () => {
     let scripts = Array.from(content.document.querySelectorAll("script"));
