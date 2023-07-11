@@ -333,11 +333,11 @@ IFACEMETHODIMP MFMediaSource::QueueEvent(MediaEventType aType,
                                          REFGUID aExtendedType, HRESULT aStatus,
                                          const PROPVARIANT* aValue) {
   MOZ_ASSERT(mMediaEventQueue);
-  RETURN_IF_FAILED(mMediaEventQueue->QueueEventParamVar(aType, aExtendedType,
-                                                        aStatus, aValue));
   LOG("Queued event %s", MediaEventTypeToStr(aType));
   PROFILER_MARKER_TEXT("MFMediaSource::QueueEvent", MEDIA_PLAYBACK, {},
                        nsPrintfCString("%s", MediaEventTypeToStr(aType)));
+  RETURN_IF_FAILED(mMediaEventQueue->QueueEventParamVar(aType, aExtendedType,
+                                                        aStatus, aValue));
   return S_OK;
 }
 
