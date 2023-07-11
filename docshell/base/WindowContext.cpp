@@ -18,6 +18,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIScriptError.h"
+#include "nsIWebProgressListener.h"
 #include "nsIXULRuntime.h"
 #include "nsRefPtrHashtable.h"
 #include "nsContentUtils.h"
@@ -456,7 +457,8 @@ void WindowContext::AddSecurityState(uint32_t aStateFlags) {
                nsIWebProgressListener::STATE_BLOCKED_MIXED_DISPLAY_CONTENT |
                nsIWebProgressListener::STATE_BLOCKED_MIXED_ACTIVE_CONTENT |
                nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADED |
-               nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED)) ==
+               nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED |
+               nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADED_FIRST)) ==
                  aStateFlags,
              "Invalid flags specified!");
 

@@ -20,10 +20,10 @@ add_task(async function () {
   });
 
   // Site gets upgraded to HTTPS, so the UI should be visible.
-  // Disabling HTTPS-Only Mode through the menulist should reload the page and
+  // Adding a HTTPS-Only exemption through the menulist should reload the page and
   // set the permission accordingly.
   await runTest({
-    name: "Disable HTTPS-Only",
+    name: "Add HTTPS-Only exemption",
     initialScheme: "http",
     initialPermission: 0,
     permissionScheme: "https",
@@ -34,10 +34,10 @@ add_task(async function () {
   });
 
   // HTTPS-Only Mode is disabled for this site, so the UI should be visible.
-  // Disabling HTTPS-Only Mode through the menulist should not reload the page
+  // Switching HTTPS-Only exemption modes through the menulist should not reload the page
   // but set the permission accordingly.
   await runTest({
-    name: "Switch between off states",
+    name: "Switch between HTTPS-Only exemption modes",
     initialScheme: "http",
     initialPermission: 1,
     permissionScheme: "http",
@@ -48,10 +48,66 @@ add_task(async function () {
   });
 
   // HTTPS-Only Mode is disabled for this site, so the UI should be visible.
-  // Enabling HTTPS-Only Mode through the menulist should reload and upgrade the
+  // Disabling HTTPS-Only exemptions through the menulist should reload and upgrade the
   // page and set the permission accordingly.
   await runTest({
-    name: "Enable HTTPS-Only again",
+    name: "Remove HTTPS-Only exemption again",
+    initialScheme: "http",
+    initialPermission: 2,
+    permissionScheme: "http",
+    isUiVisible: true,
+    selectPermission: 0,
+    expectReload: true,
+    finalScheme: "https",
+  });
+
+  await SpecialPowers.flushPrefEnv();
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", true]],
+  });
+
+  // Site is already HTTPS, so the UI should not be visible.
+  await runTest({
+    name: "No HTTPS-Only UI",
+    initialScheme: "https",
+    initialPermission: 0,
+    permissionScheme: "https",
+    isUiVisible: false,
+  });
+
+  // Site gets upgraded to HTTPS, so the UI should be visible.
+  // Adding a HTTPS-Only exemption through the menulist should reload the page and
+  // set the permission accordingly.
+  await runTest({
+    name: "Add HTTPS-Only exemption",
+    initialScheme: "http",
+    initialPermission: 0,
+    permissionScheme: "https",
+    isUiVisible: true,
+    selectPermission: 1,
+    expectReload: true,
+    finalScheme: "https",
+  });
+
+  // HTTPS-First Mode is disabled for this site, so the UI should be visible.
+  // Switching HTTPS-Only exemption modes through the menulist should not reload the page
+  // but set the permission accordingly.
+  await runTest({
+    name: "Switch between HTTPS-Only exemption modes",
+    initialScheme: "http",
+    initialPermission: 1,
+    permissionScheme: "http",
+    isUiVisible: true,
+    selectPermission: 2,
+    expectReload: false,
+    finalScheme: "http",
+  });
+
+  // HTTPS-First Mode is disabled for this site, so the UI should be visible.
+  // Disabling HTTPS-Only exemptions through the menulist should reload and upgrade the
+  // page and set the permission accordingly.
+  await runTest({
+    name: "Remove HTTPS-Only exemption again",
     initialScheme: "http",
     initialPermission: 2,
     permissionScheme: "http",

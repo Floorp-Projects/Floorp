@@ -55,7 +55,7 @@
 #identity-popup[mixedcontent~=active-blocked]:not([mixedcontent~=passive-loaded]) [when-mixedcontent=active-blocked],
 /* Show the right elements when there is mixed passive content loaded and active blocked. */
 #identity-popup[mixedcontent~=active-blocked][mixedcontent~=passive-loaded] [when-mixedcontent~=active-blocked][when-mixedcontent~=passive-loaded],
-/* HTTPS-Only Mode */
+/* HTTPS-Only and HTTPS-First Mode */
 #identity-popup[httpsonlystatus=exception] [when-httpsonlystatus~=exception],
 #identity-popup[httpsonlystatus=upgraded] [when-httpsonlystatus~=upgraded],
 #identity-popup[httpsonlystatus=failed-top] [when-httpsonlystatus~=failed-top],

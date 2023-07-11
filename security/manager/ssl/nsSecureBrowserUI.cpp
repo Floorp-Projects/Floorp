@@ -96,6 +96,13 @@ void nsSecureBrowserUI::RecomputeSecurityFlags() {
         !(httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT)) {
       mState |= nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADED;
     }
+    if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST) {
+      if (win->GetDocumentURI()->SchemeIs("https")) {
+        mState |= nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADED_FIRST;
+      } else {
+        mState |= nsIWebProgressListener::STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED;
+      }
+    }
     // Add the secruity flags from the window
     mState |= win->GetSecurityFlags();
   }

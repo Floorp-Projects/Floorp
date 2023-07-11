@@ -16,6 +16,7 @@
 #include "nsIRequest.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIURI.h"
+#include "nsIWebProgressListener.h"
 #include "nsPrintfCString.h"
 #include "secerr.h"
 #include "sslerr.h"
