@@ -855,7 +855,7 @@ function verifySectionAutofillResult(sections, expectedSectionsInfo) {
 
       Assert.equal(
         field.element.value,
-        expeceted.autofill,
+        expeceted.autofill ?? "",
         `Autofilled value for element(id=${field.element.id}, field name=${field.fieldName}) should be equal`
       );
     });
@@ -1070,6 +1070,10 @@ async function add_heuristic_tests(
 
           if (obj.verifyAutofill) {
             for (const section of sections) {
+              if (!section.isValidSection()) {
+                continue;
+              }
+
               section.focusedInput = section.fieldDetails[0].element;
               await section.autofillFields(
                 section.getAdaptedProfiles([obj.testPattern.profile])[0]
