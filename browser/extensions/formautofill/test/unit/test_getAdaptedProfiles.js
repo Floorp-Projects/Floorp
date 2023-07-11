@@ -1303,7 +1303,7 @@ for (let testcase of TESTCASES) {
           let value = testcase.profileData[i][field];
           let cache =
             handler.activeSection._cacheValue.matchingSelectOption.get(select);
-          let targetOption = cache[value] && cache[value].get();
+          let targetOption = cache[value] && cache[value].deref();
           Assert.notEqual(targetOption, null);
 
           Assert.equal(targetOption, expectedOption);

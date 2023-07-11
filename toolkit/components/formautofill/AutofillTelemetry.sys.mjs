@@ -66,7 +66,7 @@ class AutofillTelemetryBase {
     let extra = this.#initFormEventExtra("unavailable");
 
     for (let fieldDetail of section.fieldDetails) {
-      let element = fieldDetail.elementWeakRef.get();
+      let element = fieldDetail.element;
       let state = profile[fieldDetail.fieldName] ? "filled" : "not_filled";
       if (
         section.handler.getFilledStateByElement(element) ==
@@ -364,7 +364,7 @@ class CreditCardTelemetry extends AutofillTelemetryBase {
     };
 
     for (let fieldDetail of section.fieldDetails) {
-      let element = fieldDetail.elementWeakRef.get();
+      let element = fieldDetail.element;
       let state = profile[fieldDetail.fieldName] ? "filled" : "not_filled";
       if (
         section.handler.getFilledStateByElement(element) ==

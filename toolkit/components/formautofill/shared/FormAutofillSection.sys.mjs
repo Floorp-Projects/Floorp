@@ -164,9 +164,7 @@ export class FormAutofillSection {
   }
 
   getFieldDetailByElement(element) {
-    return this.fieldDetails.find(
-      detail => detail.elementWeakRef.get() == element
-    );
+    return this.fieldDetails.find(detail => detail.element == element);
   }
 
   getFieldDetailByName(fieldName) {
@@ -193,14 +191,14 @@ export class FormAutofillSection {
         continue;
       }
 
-      let element = fieldDetail.elementWeakRef.get();
+      let element = fieldDetail.element;
       if (!HTMLSelectElement.isInstance(element)) {
         continue;
       }
 
       let cache = this._cacheValue.matchingSelectOption.get(element) || {};
       let value = profile[fieldName];
-      if (cache[value] && cache[value].get()) {
+      if (cache[value] && cache[value].deref()) {
         continue;
       }
 
@@ -210,7 +208,7 @@ export class FormAutofillSection {
         fieldName
       );
       if (option) {
-        cache[value] = Cu.getWeakReference(option);
+        cache[value] = new WeakRef(option);
         this._cacheValue.matchingSelectOption.set(element, cache);
       } else {
         if (cache[value]) {
@@ -231,7 +229,7 @@ export class FormAutofillSection {
         continue;
       }
 
-      let element = detail.elementWeakRef.get();
+      let element = detail.element;
       if (!element) {
         continue;
       }
@@ -347,7 +345,7 @@ export class FormAutofillSection {
       // 2. the invalid value set
       // 3. value already chosen in select element
 
-      const element = fieldDetail.elementWeakRef.get();
+      const element = fieldDetail.element;
       // Skip the field if it is null or readonly or disabled
       if (!FormAutofillUtils.isFieldAutofillable(element)) {
         continue;
@@ -379,7 +377,7 @@ export class FormAutofillSection {
         }
       } else if (HTMLSelectElement.isInstance(element)) {
         let cache = this._cacheValue.matchingSelectOption.get(element) || {};
-        let option = cache[value] && cache[value].get();
+        let option = cache[value] && cache[value].deref();
         if (!option) {
           continue;
         }
@@ -412,7 +410,7 @@ export class FormAutofillSection {
     this.preparePreviewProfile(profile);
 
     for (const fieldDetail of this.fieldDetails) {
-      let element = fieldDetail.elementWeakRef.get();
+      let element = fieldDetail.element;
       // Skip the field if it is null or readonly or disabled
       if (!FormAutofillUtils.isFieldAutofillable(element)) {
         continue;
@@ -428,7 +426,7 @@ export class FormAutofillSection {
         if (value) {
           const cache =
             this._cacheValue.matchingSelectOption.get(element) ?? {};
-          const option = cache[value]?.get();
+          const option = cache[value]?.deref();
           value = option?.text ?? "";
         }
       } else if (element.value && element.value != element.defaultValue) {
@@ -454,7 +452,7 @@ export class FormAutofillSection {
     let isAutofilled = false;
     const dimFieldDetails = [];
     for (const fieldDetail of this.fieldDetails) {
-      const element = fieldDetail.elementWeakRef.get();
+      const element = fieldDetail.element;
 
       if (HTMLSelectElement.isInstance(element)) {
         // Dim fields are those we don't attempt to revert their value
@@ -471,7 +469,7 @@ export class FormAutofillSection {
       // that user had intention to clear the filled form manually.
       for (const fieldDetail of dimFieldDetails) {
         // If we can't find a selected option, then we should just reset to the first option's value
-        let element = fieldDetail.elementWeakRef.get();
+        let element = fieldDetail.element;
         this._resetSelectElementValue(element);
         this.handler.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
       }
@@ -486,7 +484,7 @@ export class FormAutofillSection {
     this.log.debug("clear previewed fields");
 
     for (const fieldDetail of this.fieldDetails) {
-      let element = fieldDetail.elementWeakRef.get();
+      let element = fieldDetail.element;
       if (!element) {
         this.log.warn(fieldDetail.fieldName, "is unreachable");
         continue;
@@ -512,7 +510,7 @@ export class FormAutofillSection {
    */
   clearPopulatedForm() {
     for (let fieldDetail of this.fieldDetails) {
-      let element = fieldDetail.elementWeakRef.get();
+      let element = fieldDetail.element;
       if (!element) {
         this.log.warn(fieldDetail.fieldName, "is unreachable");
         continue;
@@ -534,7 +532,7 @@ export class FormAutofillSection {
 
   resetFieldStates() {
     for (const fieldDetail of this.fieldDetails) {
-      const element = fieldDetail.elementWeakRef.get();
+      const element = fieldDetail.element;
       element.removeEventListener("input", this, { mozSystemGroup: true });
       this.handler.changeFieldState(fieldDetail, FIELD_STATES.NORMAL);
     }
@@ -563,10 +561,10 @@ export class FormAutofillSection {
         if (countOfCCNumbers == 4) {
           countOfCCNumbers = 0;
           condensedDetails[i].fieldValue =
-            condensedDetails[i].elementWeakRef.get()?.value +
-            condensedDetails[i + 1].elementWeakRef.get()?.value +
-            condensedDetails[i + 2].elementWeakRef.get()?.value +
-            condensedDetails[i + 3].elementWeakRef.get()?.value;
+            condensedDetails[i].element?.value +
+            condensedDetails[i + 1].element?.value +
+            condensedDetails[i + 2].element?.value +
+            condensedDetails[i + 3].element?.value;
           condensedDetails.splice(i + 1, 3);
         }
       } else {
@@ -606,7 +604,7 @@ export class FormAutofillSection {
     this._condenseMultipleCCNumberFields(condensedDetails);
 
     condensedDetails.forEach(detail => {
-      const element = detail.elementWeakRef.get();
+      const element = detail.element;
       // Remove the unnecessary spaces
       let value = detail.fieldValue ?? (element && element.value.trim());
       value = this.computeFillingValue(value, detail, element);
@@ -748,7 +746,7 @@ export class FormAutofillAddressSection extends FormAutofillSection {
       let streetAddressDetail = this.getFieldDetailByName("street-address");
       if (
         streetAddressDetail &&
-        HTMLInputElement.isInstance(streetAddressDetail.elementWeakRef.get())
+        HTMLInputElement.isInstance(streetAddressDetail.element)
       ) {
         profile["street-address"] = profile["-moz-street-address-one-line"];
       }
@@ -783,7 +781,7 @@ export class FormAutofillAddressSection extends FormAutofillSection {
       return;
     }
 
-    let element = detail.elementWeakRef.get();
+    let element = detail.element;
     let _pattern;
     let testPattern = str => {
       if (!_pattern) {
@@ -985,7 +983,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
       // when determining whether a form has only a high-confidence cc-* field a valid
       // credit card section. We can remove this restriction once we are confident
       // about only using fathom.
-      const element = highConfidenceField.elementWeakRef.get();
+      const element = highConfidenceField.element;
       const root = element.form || element.ownerDocument;
       const inputs = root.querySelectorAll("input:not([type=hidden])");
       if (inputs.length == 1 && inputs[0] == element) {
@@ -1111,7 +1109,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
       if (!detail) {
         return null;
       }
-      let element = detail.elementWeakRef.get();
+      let element = detail.element;
       return element.tagName === "INPUT" ? element : null;
     };
     let month = getInputElementByField("cc-exp-month", this);
@@ -1142,7 +1140,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     // Get the window for the form field.
     let window;
     for (let fieldDetail of this.fieldDetails) {
-      let element = fieldDetail.elementWeakRef.get();
+      let element = fieldDetail.element;
       if (element) {
         window = element.ownerGlobal;
         break;
