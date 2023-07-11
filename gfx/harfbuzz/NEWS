@@ -1,3 +1,45 @@
+Overview of changes leading to 8.0.0
+Sunday, July 9, 2023
+====================================
+- New, experimental, WebAssembly (WASM) shaper, that provides greater
+  flexibility over OpenType/AAT/Graphite shaping, using WebAssembly embedded
+  inside the font file. Currently WASM shaper is disabled by default and needs
+  to be enabled at build time. For details, see:
+
+    https://github.com/harfbuzz/harfbuzz/blob/main/docs/wasm-shaper.md
+
+  For example fonts making use of the WASM shaper, see:
+
+    https://github.com/simoncozens/wasm-examples
+
+- Improvements to Experimental features introduced in earlier releases:
+  - Support for subsetting beyond-64k and VarComposites fonts.
+  - Support for instancing variable fonts with cubic “glyf” table.
+
+- Many big speed optimizations:
+  - Up to 89% speedup loading variable fonts for shaping.
+  - Up to 88% speedup in small subsets of large (eg. CJK) fonts (both TTF and
+    OTF), essential for Incremental Font Transfer (IFT).
+  - Over 50% speedup in loading Roboto font for shaping.
+  - Up to 40% speed up in loading (sanitizing) complex fonts.
+  - 30% speed up in shaping Gulzar font.
+  - Over 25% speedup in glyph loading Roboto font.
+  - 10% speed up loading glyph shapes in VarComposite Hangul font.
+  - hb-hashmap optimizations & hashing improvements.
+
+- New macro HB_ALWAYS_INLINE. HarfBuzz now inlines functions more aggressively,
+  which results in some speedup at the expense of bigger code size. To disable
+  this feature define the macro to just inline.
+
+- New API:
++HB_CODEPOINT_INVALID
++hb_ot_layout_get_baseline2()
++hb_ot_layout_get_baseline_with_fallback2()
++hb_ot_layout_get_font_extents()
++hb_ot_layout_get_font_extents2()
++hb_subset_input_set_axis_range()
+
+
 Overview of changes leading to 7.3.0
 Tuesday, May 9, 2023
 ====================================

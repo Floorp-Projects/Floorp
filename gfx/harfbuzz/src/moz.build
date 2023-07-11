@@ -87,6 +87,8 @@ UNIFIED_SOURCES += [
     'hb-static.cc',
     'hb-style.cc',
     'hb-unicode.cc',
+    'hb-wasm-api.cc',
+    'hb-wasm-shape.cc',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':

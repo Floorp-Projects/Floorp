@@ -106,6 +106,13 @@ HB_BEGIN_DECLS
  */
 #mesondefine HB_HAS_UNISCRIBE
 
+/**
+ * HB_HAS_WASM:
+ *
+ * Defined if Harfbuzz has been built with WebAssembly support.
+ */
+#mesondefine HB_HAS_WASM
+
 
 HB_END_DECLS
 
