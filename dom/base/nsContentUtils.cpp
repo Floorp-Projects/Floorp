@@ -2267,9 +2267,10 @@ inline bool SchemeSaysShouldNotResistFingerprinting(nsIPrincipal* aPrincipal) {
     return true;
   }
 
-  bool isSpecialAboutURI;
-  Unused << aPrincipal->IsContentAccessibleAboutURI(&isSpecialAboutURI);
-  return isSpecialAboutURI;
+  bool isContentAccessibleAboutURI;
+  Unused << aPrincipal->IsContentAccessibleAboutURI(
+      &isContentAccessibleAboutURI);
+  return !isContentAccessibleAboutURI;
 }
 
 const char* kExemptedDomainsPrefName =
