@@ -3134,12 +3134,6 @@
   value: true
   mirror: always
 
-# Whether HTMLMediaElement.mozPreservesPitch is enabled.
-- name: dom.media.mozPreservesPitch.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # WebCodecs API
 - name: dom.media.webcodecs.enabled
   type: RelaxedAtomicBool
