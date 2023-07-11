@@ -72,12 +72,6 @@ const TEST_CREDIT_CARD_WITH_2_DIGITS_YEAR = {
   "cc-exp-year": 12,
 };
 
-const TEST_CREDIT_CARD_WITH_INVALID_FIELD = {
-  "cc-name": "John Doe",
-  "cc-number": "344060747836806",
-  "cc-type": { invalid: "invalid" },
-};
-
 const TEST_CREDIT_CARD_WITH_INVALID_EXPIRY_DATE = {
   "cc-name": "John Doe",
   "cc-number": "5103059495477870",
@@ -256,11 +250,6 @@ add_task(async function test_add() {
   );
 
   await Assert.rejects(
-    profileStorage.creditCards.add(TEST_CREDIT_CARD_WITH_INVALID_FIELD),
-    /"cc-type" contains invalid data type: object/
-  );
-
-  await Assert.rejects(
     profileStorage.creditCards.add({}),
     /Record contains no valid field\./
   );
@@ -392,14 +381,6 @@ add_task(async function test_update() {
   await Assert.rejects(
     profileStorage.creditCards.update("INVALID_GUID", TEST_CREDIT_CARD_3),
     /No matching record\./
-  );
-
-  await Assert.rejects(
-    profileStorage.creditCards.update(
-      guid,
-      TEST_CREDIT_CARD_WITH_INVALID_FIELD
-    ),
-    /"cc-type" contains invalid data type: object/
   );
 
   await Assert.rejects(

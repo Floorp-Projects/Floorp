@@ -98,15 +98,6 @@ export class FormAutofillSection {
     throw new TypeError("isRecordCreatable method must be overridden");
   }
 
-  /*
-   * Override this method if any data for `createRecord` is needed to be
-   * normalized before submitting the record.
-   *
-   * @param {Object} profile
-   *        A record for normalization.
-   */
-  createNormalizedRecord(data) {}
-
   /**
    * Override this method if the profile is needed to apply some transformers.
    *
@@ -636,7 +627,18 @@ export class FormAutofillSection {
       }
     });
 
-    this.createNormalizedRecord(data);
+    const telFields = this.fieldDetails.filter(
+      f => FormAutofillUtils.getCategoryFromFieldName(f.fieldName) == "tel"
+    );
+    if (
+      telFields.length &&
+      telFields.every(f => data.untouchedFields.includes(f.fieldName))
+    ) {
+      // No need to verify it if none of related fields are modified after autofilling.
+      if (!data.untouchedFields.includes("tel")) {
+        data.untouchedFields.push("tel");
+      }
+    }
 
     if (!this.isRecordCreatable(data.record)) {
       return null;
@@ -692,9 +694,12 @@ export class FormAutofillAddressSection extends FormAutofillSection {
   }
 
   isRecordCreatable(record) {
+    const country = FormAutofillUtils.identifyCountryCode(
+      record.country || record["country-name"]
+    );
     if (
-      record.country &&
-      !FormAutofill.isAutofillAddressesAvailableInCountry(record.country)
+      country &&
+      !FormAutofill.isAutofillAddressesAvailableInCountry(country)
     ) {
       // We don't want to save data in the wrong fields due to not having proper
       // heuristic regexes in countries we don't yet support.
@@ -705,19 +710,21 @@ export class FormAutofillAddressSection extends FormAutofillSection {
       return false;
     }
 
-    let hasName = 0;
-    let length = 0;
-    for (let key of Object.keys(record)) {
-      if (!record[key]) {
-        continue;
-      }
-      if (FormAutofillUtils.getCategoryFromFieldName(key) == "name") {
-        hasName = 1;
-        continue;
-      }
-      length++;
-    }
-    return length + hasName >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD;
+    // Multiple name or tel fields are treat as 1 field while countng whether
+    // the number of fields exceed the valid address secton threshold
+    const categories = Object.entries(record)
+      .filter(e => !!e[1])
+      .map(e => FormAutofillUtils.getCategoryFromFieldName(e[0]));
+
+    return (
+      categories.reduce(
+        (acc, category) =>
+          ["name", "tel"].includes(category) && acc.includes(category)
+            ? acc
+            : [...acc, category],
+        []
+      ).length >= FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD
+    );
   }
 
   _getOneLineStreetAddress(address) {
@@ -850,53 +857,6 @@ export class FormAutofillAddressSection extends FormAutofillSection {
       }
     }
     return value;
-  }
-
-  createNormalizedRecord(address) {
-    if (!address) {
-      return;
-    }
-
-    // Normalize Country
-    if (address.record.country) {
-      let detail = this.getFieldDetailByName("country");
-      // Try identifying country field aggressively if it doesn't come from
-      // @autocomplete.
-      if (detail.reason != "autocomplete") {
-        let countryCode = FormAutofillUtils.identifyCountryCode(
-          address.record.country
-        );
-        if (countryCode) {
-          address.record.country = countryCode;
-        }
-      }
-    }
-
-    // Normalize Tel
-    FormAutofillUtils.compressTel(address.record);
-    if (address.record.tel) {
-      let allTelComponentsAreUntouched = Object.keys(address.record)
-        .filter(
-          field => FormAutofillUtils.getCategoryFromFieldName(field) == "tel"
-        )
-        .every(field => address.untouchedFields.includes(field));
-      if (allTelComponentsAreUntouched) {
-        // No need to verify it if none of related fields are modified after autofilling.
-        if (!address.untouchedFields.includes("tel")) {
-          address.untouchedFields.push("tel");
-        }
-      } else {
-        let strippedNumber = address.record.tel.replace(/[\s\(\)-]/g, "");
-
-        // Remove "tel" if it contains invalid characters or the length of its
-        // number part isn't between 5 and 15.
-        // (The maximum length of a valid number in E.164 format is 15 digits
-        //  according to https://en.wikipedia.org/wiki/E.164 )
-        if (!/^(\+?)[\da-zA-Z]{5,15}$/.test(strippedNumber)) {
-          address.record.tel = "";
-        }
-      }
-    }
   }
 }
 
@@ -1308,28 +1268,5 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     }
 
     return true;
-  }
-
-  createNormalizedRecord(creditCard) {
-    if (!creditCard?.record["cc-number"]) {
-      return;
-    }
-    // Normalize cc-number
-    creditCard.record["cc-number"] = lazy.CreditCard.normalizeCardNumber(
-      creditCard.record["cc-number"]
-    );
-
-    // Normalize cc-exp-month and cc-exp-year
-    let { month, year } = lazy.CreditCard.normalizeExpiration({
-      expirationString: creditCard.record["cc-exp"],
-      expirationMonth: creditCard.record["cc-exp-month"],
-      expirationYear: creditCard.record["cc-exp-year"],
-    });
-    if (month) {
-      creditCard.record["cc-exp-month"] = month;
-    }
-    if (year) {
-      creditCard.record["cc-exp-year"] = year;
-    }
   }
 }

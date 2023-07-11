@@ -63,11 +63,6 @@ const TEST_ADDRESS_EMPTY_AFTER_NORMALIZE = {
   country: "XXXXXX",
 };
 
-const TEST_ADDRESS_EMPTY_AFTER_UPDATE_ADDRESS_2 = {
-  "street-address": "",
-  country: "XXXXXX",
-};
-
 ChromeUtils.defineESModuleGetters(this, {
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
 });
@@ -245,7 +240,7 @@ add_task(async function test_update() {
 
   let address = await profileStorage.addresses.get(guid, { rawData: true });
 
-  Assert.equal(address.country, undefined);
+  Assert.equal(address.country, "US");
   Assert.ok(address.timeLastModified > timeLastModified);
   do_check_record_matches(address, TEST_ADDRESS_3);
   Assert.equal(getSyncChangeCounter(profileStorage.addresses, guid), 1);
@@ -317,13 +312,6 @@ add_task(async function test_update() {
   );
 
   profileStorage.addresses.update(guid, TEST_ADDRESS_2);
-  await Assert.rejects(
-    profileStorage.addresses.update(
-      guid,
-      TEST_ADDRESS_EMPTY_AFTER_UPDATE_ADDRESS_2
-    ),
-    /Record contains no valid field\./
-  );
 });
 
 add_task(async function test_notifyUsed() {

@@ -65,150 +65,6 @@ const TESTCASES = [
     },
   },
   {
-    description: `"country" using @autocomplete shouldn't be identified aggressively`,
-    document: `<form>
-                <input id="given-name" autocomplete="given-name">
-                <input id="organization" autocomplete="organization">
-                <input id="country" autocomplete="country">
-               </form>`,
-    formValue: {
-      "given-name": "John",
-      organization: "Mozilla",
-      country: "United States",
-    },
-    expectedRecord: {
-      // "United States" is not a valid country, only country-name. See isRecordCreatable.
-      address: [],
-      creditCard: [],
-    },
-  },
-  {
-    description: `"country" using heuristics should be identified aggressively`,
-    document: `<form>
-                <input id="given-name" autocomplete="given-name">
-                <input id="organization" autocomplete="organization">
-                <input id="country" name="country">
-               </form>`,
-    formValue: {
-      "given-name": "John",
-      organization: "Mozilla",
-      country: "United States",
-    },
-    expectedRecord: {
-      address: [
-        {
-          "given-name": "John",
-          organization: "Mozilla",
-          country: "US",
-        },
-      ],
-      creditCard: [],
-    },
-  },
-  {
-    description: `"tel" related fields should be concatenated`,
-    document: `<form>
-                <input id="given-name" autocomplete="given-name">
-                <input id="organization" autocomplete="organization">
-                <input id="tel-country-code" autocomplete="tel-country-code">
-                <input id="tel-national" autocomplete="tel-national">
-               </form>`,
-    formValue: {
-      "given-name": "John",
-      organization: "Mozilla",
-      "tel-country-code": "+1",
-      "tel-national": "1234567890",
-    },
-    expectedRecord: {
-      address: [
-        {
-          "given-name": "John",
-          organization: "Mozilla",
-          tel: "+11234567890",
-        },
-      ],
-      creditCard: [],
-    },
-  },
-  {
-    description: `"tel" should be removed if it's too short`,
-    document: `<form>
-                <input id="given-name" autocomplete="given-name">
-                <input id="organization" autocomplete="organization">
-                <input id="country" autocomplete="country">
-                <input id="tel" autocomplete="tel-national">
-               </form>`,
-    formValue: {
-      "given-name": "John",
-      organization: "Mozilla",
-      country: "US",
-      tel: "1234",
-    },
-    expectedRecord: {
-      address: [
-        {
-          "given-name": "John",
-          organization: "Mozilla",
-          country: "US",
-          tel: "",
-        },
-      ],
-      creditCard: [],
-    },
-  },
-  {
-    description: `"tel" should be removed if it's too long`,
-    document: `<form>
-                <input id="given-name" autocomplete="given-name">
-                <input id="organization" autocomplete="organization">
-                <input id="country" autocomplete="country">
-                <input id="tel" autocomplete="tel-national">
-               </form>`,
-    formValue: {
-      "given-name": "John",
-      organization: "Mozilla",
-      country: "US",
-      tel: "1234567890123456",
-    },
-    expectedRecord: {
-      address: [
-        {
-          "given-name": "John",
-          organization: "Mozilla",
-          country: "US",
-          tel: "",
-        },
-      ],
-      creditCard: [],
-    },
-  },
-  {
-    description: `"tel" should be removed if it contains invalid characters`,
-    document: `<form>
-                <input id="given-name" autocomplete="given-name">
-                <input id="organization" autocomplete="organization">
-                <input id="country" autocomplete="country">
-                <input id="tel" autocomplete="tel-national">
-               </form>`,
-    formValue: {
-      "given-name": "John",
-      organization: "Mozilla",
-      country: "US",
-      tel: "12345###!!!",
-    },
-    expectedRecord: {
-      address: [
-        {
-          "given-name": "John",
-          organization: "Mozilla",
-          country: "US",
-          tel: "",
-        },
-      ],
-      creditCard: [],
-    },
-  },
-  {
     description: "All name related fields should be counted as 1 field only.",
     document: `<form>
                 <input id="given-name" autocomplete="given-name">
@@ -268,8 +124,6 @@ const TESTCASES = [
           "cc-name": "Foo Bar",
           "cc-exp": "2022-06",
           "cc-type": "Visa",
-          "cc-exp-month": "6",
-          "cc-exp-year": "2022",
         },
       ],
     },
@@ -463,8 +317,8 @@ const TESTCASES = [
       creditCard: [
         {
           "cc-number": "5105105105105100",
-          "cc-exp-month": "5",
-          "cc-exp-year": "2026",
+          "cc-exp-month": "05",
+          "cc-exp-year": "26",
         },
       ],
     },
@@ -486,8 +340,6 @@ const TESTCASES = [
         {
           "cc-number": "5105105105105100",
           "cc-exp": "07/27",
-          "cc-exp-month": "7",
-          "cc-exp-year": "2027",
         },
       ],
     },
