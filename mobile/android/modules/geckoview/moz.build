@@ -5,16 +5,16 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXTRA_JS_MODULES += [
-    "AndroidLog.jsm",
+    "AndroidLog.sys.mjs",
     "BrowserUsageTelemetry.sys.mjs",
     "ChildCrashHandler.sys.mjs",
-    "DelayedInit.jsm",
+    "DelayedInit.sys.mjs",
     "GeckoViewActorChild.sys.mjs",
     "GeckoViewActorManager.sys.mjs",
     "GeckoViewActorParent.sys.mjs",
     "GeckoViewAutocomplete.sys.mjs",
     "GeckoViewAutofill.sys.mjs",
-    "GeckoViewChildModule.jsm",
+    "GeckoViewChildModule.sys.mjs",
     "GeckoViewConsole.sys.mjs",
     "GeckoViewContent.sys.mjs",
     "GeckoViewContentBlocking.sys.mjs",
@@ -31,7 +31,7 @@ EXTRA_JS_MODULES += [
     "GeckoViewSettings.sys.mjs",
     "GeckoViewStorageController.sys.mjs",
     "GeckoViewTab.sys.mjs",
-    "GeckoViewTelemetry.jsm",
+    "GeckoViewTelemetry.sys.mjs",
     "GeckoViewTestUtils.sys.mjs",
     "GeckoViewUtils.sys.mjs",
     "GeckoViewWebExtension.sys.mjs",

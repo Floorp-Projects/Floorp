@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { DelayedInit } from "resource://gre/modules/DelayedInit.sys.mjs";
 import { GeckoViewUtils } from "resource://gre/modules/GeckoViewUtils.sys.mjs";
 
 const lazy = {};
@@ -13,10 +14,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 const { debug, warn } = GeckoViewUtils.initLogging("Startup");
-
-var { DelayedInit } = ChromeUtils.import(
-  "resource://gre/modules/DelayedInit.jsm"
-);
 
 function InitLater(fn, object, name) {
   return DelayedInit.schedule(fn, object, name, 15000 /* 15s max wait */);

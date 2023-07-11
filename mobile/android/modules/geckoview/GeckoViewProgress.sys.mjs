@@ -23,10 +23,7 @@ XPCOMUtils.defineLazyServiceGetter(
 
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserTelemetryUtils: "resource://gre/modules/BrowserTelemetryUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.jsm",
+  HistogramStopwatch: "resource://gre/modules/GeckoViewTelemetry.sys.mjs",
 });
 
 var IdentityHandler = {

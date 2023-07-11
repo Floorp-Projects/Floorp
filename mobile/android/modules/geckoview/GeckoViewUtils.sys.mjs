@@ -8,13 +8,10 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AndroidLog: "resource://gre/modules/AndroidLog.sys.mjs",
   EventDispatcher: "resource://gre/modules/Messaging.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  AndroidLog: "resource://gre/modules/AndroidLog.jsm",
 });
 
 /**
