@@ -289,6 +289,14 @@ namespace ChromeUtils {
   [Throws]
   undefined defineLazyGetter(object aTarget, any aName, object aLambda);
 
+
+#ifdef XP_UNIX
+  /**
+   * Return platform-specific libc constants, such as errno values.
+   */
+  LibcConstants getLibcConstants();
+#endif
+
   /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
@@ -1036,3 +1044,36 @@ enum JSRFPTarget {
   "RoundWindowSize",
   "SiteSpecificZoom",
 };
+
+#ifdef XP_UNIX
+dictionary LibcConstants {
+  long EINTR;
+  long EACCES;
+  long EAGAIN;
+  long EINVAL;
+  long ENOSYS;
+
+  long F_SETFD;
+  long F_SETFL;
+
+  long FD_CLOEXEC;
+
+  long AT_EACCESS;
+
+  long O_CREAT;
+  long O_NONBLOCK;
+  long O_WRONLY;
+
+  long POLLIN;
+  long POLLOUT;
+  long POLLERR;
+  long POLLHUP;
+  long POLLNVAL;
+
+  long WNOHANG;
+
+#ifdef XP_LINUX
+  long PR_CAPBSET_READ;
+#endif
+};
+#endif

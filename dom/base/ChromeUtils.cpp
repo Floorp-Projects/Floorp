@@ -61,6 +61,18 @@
 #include "nsIException.h"
 #include "VsyncSource.h"
 
+#ifdef XP_UNIX
+#  include <errno.h>
+#  include <unistd.h>
+#  include <fcntl.h>
+#  include <poll.h>
+#  include <sys/wait.h>
+
+#  ifdef XP_LINUX
+#    include <sys/prctl.h>
+#  endif
+#endif
+
 namespace mozilla::dom {
 
 /* static */
@@ -972,6 +984,41 @@ void ChromeUtils::DefineESModuleGetters(const GlobalObject& global,
     }
   }
 }
+
+#ifdef XP_UNIX
+/* static */
+void ChromeUtils::GetLibcConstants(const GlobalObject&,
+                                   LibcConstants& aConsts) {
+  aConsts.mEINTR.Construct(EINTR);
+  aConsts.mEACCES.Construct(EACCES);
+  aConsts.mEAGAIN.Construct(EAGAIN);
+  aConsts.mEINVAL.Construct(EINVAL);
+  aConsts.mENOSYS.Construct(ENOSYS);
+
+  aConsts.mF_SETFD.Construct(F_SETFD);
+  aConsts.mF_SETFL.Construct(F_SETFL);
+
+  aConsts.mFD_CLOEXEC.Construct(FD_CLOEXEC);
+
+  aConsts.mAT_EACCESS.Construct(AT_EACCESS);
+
+  aConsts.mO_CREAT.Construct(O_CREAT);
+  aConsts.mO_NONBLOCK.Construct(O_NONBLOCK);
+  aConsts.mO_WRONLY.Construct(O_WRONLY);
+
+  aConsts.mPOLLERR.Construct(POLLERR);
+  aConsts.mPOLLHUP.Construct(POLLHUP);
+  aConsts.mPOLLIN.Construct(POLLIN);
+  aConsts.mPOLLNVAL.Construct(POLLNVAL);
+  aConsts.mPOLLOUT.Construct(POLLOUT);
+
+  aConsts.mWNOHANG.Construct(WNOHANG);
+
+#  ifdef XP_LINUX
+  aConsts.mPR_CAPBSET_READ.Construct(PR_CAPBSET_READ);
+#  endif
+}
+#endif
 
 /* static */
 void ChromeUtils::OriginAttributesToSuffix(
