@@ -428,7 +428,7 @@ fix-stacks:
     fetch:
         type: git
         repo: https://github.com/mozilla/fix-stacks/
-        revision: cfa7048e437c6778b066e7ecb5ce834eb8c3efe7
+        revision: 1fb1bcc8cb4dd65fbe342853954651563a0a88e7
 
 winchecksec:
     description: winchecksec source code
