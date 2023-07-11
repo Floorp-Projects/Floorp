@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
+import androidx.compose.material.LocalContentAlpha
+import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
@@ -178,9 +180,8 @@ private fun SingleSelectBanner(
                     contentColor = selectedColor,
                     divider = {},
                 ) {
-                    val isNormalTabsPageSelected = selectedPage == Page.NormalTabs
                     Tab(
-                        selected = isNormalTabsPageSelected,
+                        selected = selectedPage == Page.NormalTabs,
                         onClick = { onTabPageIndicatorClicked(Page.NormalTabs) },
                         modifier = Modifier
                             .fillMaxHeight()
@@ -188,7 +189,7 @@ private fun SingleSelectBanner(
                         selectedContentColor = selectedColor,
                         unselectedContentColor = inactiveColor,
                     ) {
-                        NormalTabsTabIcon(normalTabCount = normalTabCount, selected = isNormalTabsPageSelected)
+                        NormalTabsTabIcon(normalTabCount = normalTabCount)
                     }
 
                     Tab(
@@ -340,7 +341,7 @@ private const val TWO_DIGITS_SIZE_RATIO = 0.4f
 
 @Composable
 @Suppress("MagicNumber")
-private fun NormalTabsTabIcon(normalTabCount: Int, selected: Boolean) {
+private fun NormalTabsTabIcon(normalTabCount: Int) {
     val normalTabCountText: String
     val tabCountTextRatio: Float
     val needsBottomPaddingForInfiniteTabs: Boolean
@@ -379,12 +380,6 @@ private fun NormalTabsTabIcon(normalTabCount: Int, selected: Boolean) {
     val counterBoxWidthPx = LocalDensity.current.run { counterBoxWidthDp.roundToPx() }
     val counterTabsTextSize = (tabCountTextRatio * counterBoxWidthPx).toInt()
 
-    val normalTabsCountTextColor = if (selected) {
-        FirefoxTheme.colors.iconActive
-    } else {
-        FirefoxTheme.colors.iconPrimaryInactive
-    }
-
     val normalTabsTextModifier = if (needsBottomPaddingForInfiniteTabs) {
         val bottomPadding = with(LocalDensity.current) { counterTabsTextSize.toDp() / 4 }
         Modifier.padding(bottom = bottomPadding)
@@ -409,7 +404,7 @@ private fun NormalTabsTabIcon(normalTabCount: Int, selected: Boolean) {
         Text(
             text = normalTabCountText,
             modifier = normalTabsTextModifier,
-            color = normalTabsCountTextColor,
+            color = LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
             fontSize = with(LocalDensity.current) { counterTabsTextSize.toDp().toSp() },
             fontWeight = FontWeight.W700,
             textAlign = TextAlign.Center,
