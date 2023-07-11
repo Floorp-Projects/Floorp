@@ -670,3 +670,297 @@ add_task(async function test_aboutwelcome_embedded_migration() {
   );
   migrator.flushResourceCache();
 });
+
+add_task(async function test_aboutwelcome_multiselect() {
+  const TEST_SCREENS = [
+    {
+      id: "AW_EASY_SETUP_X",
+      targeting: "true",
+      content: {
+        position: "split",
+        split_narrow_bkg_position: "-60px",
+        progress_bar: true,
+        logo: {},
+        title: { string_id: "mr2022-onboarding-set-default-title" },
+        tiles: {
+          type: "multiselect",
+          style: { flexDirection: "column", alignItems: "flex-start" },
+          data: [
+            {
+              id: "radio-1",
+              type: "radio",
+              group: "radios",
+              defaultValue: true,
+              label: {
+                raw: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+              },
+              action: { type: "OPEN_PROTECTION_REPORT" },
+            },
+            {
+              id: "radio-2",
+              type: "radio",
+              group: "radios",
+              defaultValue: false,
+              label: {
+                raw: "Nulla facilisi nullam vehicula ipsum a arcu cursus vitae.",
+              },
+              action: { type: "OPEN_FIREFOX_VIEW" },
+            },
+            {
+              id: "radio-3",
+              type: "radio",
+              group: "radios",
+              defaultValue: false,
+              label: { raw: "Natoque penatibus et magnis dis." },
+              action: { type: "OPEN_PRIVATE_BROWSER_WINDOW" },
+            },
+          ],
+        },
+        secondary_button: {
+          label: {
+            string_id: "mr2022-onboarding-secondary-skip-button-label",
+          },
+          action: { navigate: true },
+          has_arrow_icon: true,
+        },
+      },
+    },
+    {
+      id: "AW_EASY_SETUP_Y",
+      targeting: "true",
+      content: {
+        position: "split",
+        split_narrow_bkg_position: "-60px",
+        progress_bar: true,
+        logo: {},
+        title: { string_id: "mr2022-onboarding-set-default-title" },
+        tiles: {
+          type: "multiselect",
+          style: { flexDirection: "row", gap: "24px" },
+          data: [
+            {
+              id: "checkbox-1",
+              defaultValue: true,
+              label: { raw: "Test1" },
+              action: { type: "OPEN_PROTECTION_REPORT" },
+            },
+            {
+              id: "checkbox-2",
+              defaultValue: true,
+              label: { raw: "Test2" },
+              action: { type: "OPEN_FIREFOX_VIEW" },
+            },
+            {
+              id: "radio-1",
+              type: "radio",
+              group: "radios",
+              defaultValue: true,
+              label: { raw: "Test3" },
+              action: { type: "OPEN_PROTECTION_REPORT" },
+            },
+            {
+              id: "radio-2",
+              type: "radio",
+              group: "radios",
+              defaultValue: false,
+              label: { raw: "Test4" },
+              action: { type: "OPEN_FIREFOX_VIEW" },
+            },
+            {
+              id: "radio-3",
+              type: "radio",
+              group: "radios",
+              defaultValue: false,
+              label: { raw: "Test5" },
+              action: { type: "OPEN_PRIVATE_BROWSER_WINDOW" },
+            },
+          ],
+        },
+        secondary_button: {
+          label: {
+            string_id: "mr2022-onboarding-secondary-skip-button-label",
+          },
+          action: { navigate: true },
+          has_arrow_icon: true,
+        },
+      },
+    },
+    {
+      id: "AW_EASY_SETUP_Z",
+      targeting: "true",
+      content: {
+        position: "split",
+        split_narrow_bkg_position: "-60px",
+        progress_bar: true,
+        logo: {},
+        title: { string_id: "mr2022-onboarding-set-default-title" },
+        tiles: {
+          type: "multiselect",
+          style: {
+            flexDirection: "column",
+            flexShrink: 1,
+            justifyContent: "flex-start",
+          },
+          data: [
+            {
+              id: "checkbox-1",
+              defaultValue: true,
+              label: { raw: "Test1" },
+              action: { type: "OPEN_PROTECTION_REPORT" },
+            },
+            {
+              id: "checkbox-2",
+              defaultValue: true,
+              label: { raw: "Test2" },
+              action: { type: "OPEN_FIREFOX_VIEW" },
+            },
+            {
+              id: "radio-1",
+              type: "radio",
+              group: "radios",
+              defaultValue: true,
+              label: { raw: "Test3" },
+              action: { type: "OPEN_PROTECTION_REPORT" },
+            },
+            {
+              id: "radio-2",
+              type: "radio",
+              group: "radios",
+              defaultValue: false,
+              label: { raw: "Test4" },
+              action: { type: "OPEN_FIREFOX_VIEW" },
+            },
+            {
+              id: "radio-3",
+              type: "radio",
+              group: "radios",
+              defaultValue: false,
+              label: { raw: "Test5" },
+              action: { type: "OPEN_PRIVATE_BROWSER_WINDOW" },
+            },
+          ],
+        },
+        secondary_button: {
+          label: {
+            string_id: "mr2022-onboarding-secondary-skip-button-label",
+          },
+          action: { navigate: true },
+          has_arrow_icon: true,
+        },
+      },
+    },
+  ];
+  await setAboutWelcomeMultiStage(JSON.stringify(TEST_SCREENS));
+  let { cleanup, browser } = await openMRAboutWelcome();
+
+  await test_screen_content(
+    browser,
+    "renders default screen",
+    ["main.AW_EASY_SETUP_X", "#radio-1:checked"],
+    ["#radio-2:checked", "#radio-3:checked"]
+  );
+
+  await clickVisibleButton(browser, "#radio-3");
+
+  await test_screen_content(
+    browser,
+    "renders radio button selection",
+    ["main.AW_EASY_SETUP_X", "#radio-3:checked"],
+    ["#radio-1:checked", "#radio-2:checked"]
+  );
+
+  await test_element_styles(
+    browser,
+    ".multi-select-container",
+    { flexDirection: "column", alignItems: "flex-start" },
+    {}
+  );
+
+  await clickVisibleButton(browser, ".action-buttons button.secondary");
+
+  await test_screen_content(
+    browser,
+    "renders screen 2",
+    [
+      "main.AW_EASY_SETUP_Y",
+      "#checkbox-1:checked",
+      "#checkbox-2:checked",
+      "#radio-1:checked",
+    ],
+    ["#radio-2:checked", "#radio-3:checked"]
+  );
+
+  await clickVisibleButton(browser, "#checkbox-1");
+  await clickVisibleButton(browser, "#checkbox-2");
+  await clickVisibleButton(browser, "#radio-2");
+
+  await test_screen_content(
+    browser,
+    "renders checkbox and radio button selection",
+    ["main.AW_EASY_SETUP_Y", "#radio-2:checked"],
+    ["#checkbox-1:checked", "#checkbox-2:checked", "#radio-1:checked"]
+  );
+
+  await test_element_styles(
+    browser,
+    ".multi-select-container",
+    { flexDirection: "row", gap: "24px" },
+    {}
+  );
+
+  browser.goBack();
+
+  await test_screen_content(
+    browser,
+    "renders screen 1 and remembers selection",
+    ["main.AW_EASY_SETUP_X", "#radio-3:checked"],
+    ["#radio-1:checked", "#radio-2:checked"]
+  );
+
+  browser.goForward();
+
+  await test_screen_content(
+    browser,
+    "renders screen 2 and remembers selection",
+    ["main.AW_EASY_SETUP_Y", "#radio-2:checked"],
+    ["#checkbox-1:checked", "#checkbox-2:checked", "#radio-1:checked"]
+  );
+
+  await clickVisibleButton(browser, ".action-buttons button.secondary");
+
+  await test_screen_content(
+    browser,
+    "renders screen 3",
+    [
+      "main.AW_EASY_SETUP_Z",
+      "#checkbox-1:checked",
+      "#checkbox-2:checked",
+      "#radio-1:checked",
+    ],
+    ["#radio-2:checked", "#radio-3:checked"]
+  );
+
+  await clickVisibleButton(browser, "#radio-3");
+
+  await test_screen_content(
+    browser,
+    "renders radio button selection without removing checkbox selection",
+    [
+      "main.AW_EASY_SETUP_Z",
+      "#checkbox-1:checked",
+      "#checkbox-2:checked",
+      "#radio-3:checked",
+    ],
+    ["#radio-1:checked", "#radio-2:checked"]
+  );
+
+  await test_element_styles(
+    browser,
+    ".multi-select-container",
+    { flexDirection: "column", flexShrink: 1, justifyContent: "flex-start" },
+    {}
+  );
+
+  await SpecialPowers.popPrefEnv();
+  await cleanup();
+});

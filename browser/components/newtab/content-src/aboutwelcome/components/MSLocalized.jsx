@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import React, { useEffect } from "react";
-const CONFIGURABLE_STYLES = [
+export const CONFIGURABLE_STYLES = [
   "color",
   "fontSize",
   "fontWeight",

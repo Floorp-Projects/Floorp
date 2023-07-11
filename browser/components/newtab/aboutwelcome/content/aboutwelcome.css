@@ -809,6 +809,19 @@ html {
     padding-bottom: unset;
   }
 }
+.onboardingContainer .screen[pos=split] .multi-select-container {
+  margin-inline: 0 10px;
+}
+@media only screen and (max-width: 800px) {
+  .onboardingContainer .screen[pos=split] .multi-select-container {
+    flex-direction: row;
+    align-self: stretch;
+    align-items: center;
+    justify-content: center;
+    padding: 0 30px;
+    margin-inline: 0;
+  }
+}
 .onboardingContainer .screen[pos=split] .tiles-theme-container {
   margin-block: -20px auto;
   align-items: initial;
@@ -1234,27 +1247,25 @@ html {
 .onboardingContainer .multi-select-container {
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
+  flex-shrink: 0;
   align-items: flex-start;
-  margin-block: -1em 1em;
+  gap: 16px;
+  margin-block: -1em 2em;
   color: #5B5B66;
   font-weight: 400;
   font-size: 14px;
   text-align: initial;
   transition: var(--transition);
   z-index: 1;
+  overflow: hidden;
 }
 .onboardingContainer .multi-select-container .checkbox-container {
   display: flex;
-  margin-bottom: 16px;
 }
-@media (prefers-color-scheme: dark) {
+@media (prefers-contrast: no-preference) and (prefers-color-scheme: dark) {
   .onboardingContainer .multi-select-container {
     color: #CFCFD8;
-  }
-}
-@media only screen and (max-width: 800px) {
-  .onboardingContainer .multi-select-container {
-    padding: 0 30px;
   }
 }
 .onboardingContainer .mobile-downloads .qr-code-image {
