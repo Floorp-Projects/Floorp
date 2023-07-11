@@ -203,6 +203,7 @@ Preferences.addAll([
   // HTTPS-Only
   { id: "dom.security.https_only_mode", type: "bool" },
   { id: "dom.security.https_only_mode_pbm", type: "bool" },
+  { id: "dom.security.https_first", type: "bool" },
 
   // Windows SSO
   { id: "network.http.windows-sso.enabled", type: "bool" },
@@ -445,6 +446,9 @@ var gPrivacyPane = {
     let httpsOnlyOnPBMPref = Services.prefs.getBoolPref(
       "dom.security.https_only_mode_pbm"
     );
+    let httpsFirstOnPref = Services.prefs.getBoolPref(
+      "dom.security.https_first"
+    );
     let httpsOnlyRadioGroup = document.getElementById("httpsOnlyRadioGroup");
     let httpsOnlyExceptionButton = document.getElementById(
       "httpsOnlyExceptionButton"
@@ -452,14 +456,13 @@ var gPrivacyPane = {
 
     if (httpsOnlyOnPref) {
       httpsOnlyRadioGroup.value = "enabled";
-      httpsOnlyExceptionButton.disabled = false;
     } else if (httpsOnlyOnPBMPref) {
       httpsOnlyRadioGroup.value = "privateOnly";
-      httpsOnlyExceptionButton.disabled = true;
     } else {
       httpsOnlyRadioGroup.value = "disabled";
-      httpsOnlyExceptionButton.disabled = true;
     }
+
+    httpsOnlyExceptionButton.disabled = !httpsOnlyOnPref && !httpsFirstOnPref;
 
     if (
       Services.prefs.prefIsLocked("dom.security.https_only_mode") ||
@@ -500,6 +503,9 @@ var gPrivacyPane = {
       this.syncFromHttpsOnlyPref()
     );
     Preferences.get("dom.security.https_only_mode_pbm").on("change", () =>
+      this.syncFromHttpsOnlyPref()
+    );
+    Preferences.get("dom.security.https_first").on("change", () =>
       this.syncFromHttpsOnlyPref()
     );
   },
