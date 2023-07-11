@@ -118,6 +118,11 @@ add_task(async function second_screen_filtered_by_targeting() {
  * not set as default and Windows 10 version 1703
  */
 add_task(async function test_aboutwelcome_mr_template_easy_setup() {
+  await pushPrefs([
+    "browser.migrate.content-modal.about-welcome-behavior",
+    "default",
+  ]);
+
   if (!AppConstants.isPlatformAndVersionAtLeast("win", "10")) {
     return;
   }

@@ -46,7 +46,8 @@ async function openAboutWelcome() {
   await pushPrefs(
     // Speed up the tests by disabling transitions.
     ["browser.aboutwelcome.transitions", false],
-    ["intl.multilingual.aboutWelcome.languageMismatchEnabled", true]
+    ["intl.multilingual.aboutWelcome.languageMismatchEnabled", true],
+    ["browser.migrate.content-modal.about-welcome-behavior", "default"]
   );
   await setAboutWelcomePref(true);
 
@@ -61,7 +62,11 @@ async function openAboutWelcome() {
     .stub(AWScreenUtils, "evaluateScreenTargeting")
     .resolves(true)
     .withArgs(
-      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && !useEmbeddedMigrationWizard"
+    )
+    .resolves(false)
+    .withArgs(
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && useEmbeddedMigrationWizard"
     )
     .resolves(false)
     .withArgs("isDeviceMigration")

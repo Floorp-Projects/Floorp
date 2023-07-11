@@ -279,6 +279,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
     it("should have 'pin' button by default", async () => {
       const data = await prepConfig({ needPin: true }, [
         "AW_EASY_SETUP",
+        "AW_EASY_SETUP_EMBEDDED",
         "AW_WELCOME_BACK",
       ]);
       assert.propertyVal(
@@ -293,7 +294,7 @@ describe("MultiStageAboutWelcomeProton module", () => {
           needDefault: true,
           needPin: true,
         },
-        ["AW_EASY_SETUP", "AW_WELCOME_BACK"]
+        ["AW_EASY_SETUP", "AW_EASY_SETUP_EMBEDDED", "AW_WELCOME_BACK"]
       );
 
       assert.propertyVal(
@@ -303,34 +304,40 @@ describe("MultiStageAboutWelcomeProton module", () => {
       );
       assert.propertyVal(data.screens[0], "id", "AW_PIN_FIREFOX");
       assert.propertyVal(data.screens[1], "id", "AW_SET_DEFAULT");
-      assert.lengthOf(data.screens, getData().screens.length - 3);
+      assert.lengthOf(data.screens, getData().screens.length - 4);
     });
     it("should keep 'pin' and remove 'default' if already default", async () => {
       const data = await prepConfig({ needPin: true }, [
         "AW_EASY_SETUP",
+        "AW_EASY_SETUP_EMBEDDED",
         "AW_WELCOME_BACK",
       ]);
 
       assert.propertyVal(data.screens[0], "id", "AW_PIN_FIREFOX");
       assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
-      assert.lengthOf(data.screens, getData().screens.length - 4);
+      assert.lengthOf(data.screens, getData().screens.length - 5);
     });
     it("should switch to 'default' if already pinned", async () => {
       const data = await prepConfig({ needDefault: true }, [
         "AW_EASY_SETUP",
+        "AW_EASY_SETUP_EMBEDDED",
         "AW_WELCOME_BACK",
       ]);
 
       assert.propertyVal(data.screens[0], "id", "AW_ONLY_DEFAULT");
       assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
-      assert.lengthOf(data.screens, getData().screens.length - 4);
+      assert.lengthOf(data.screens, getData().screens.length - 5);
     });
     it("should switch to 'start' if already pinned and default", async () => {
-      const data = await prepConfig({}, ["AW_EASY_SETUP", "AW_WELCOME_BACK"]);
+      const data = await prepConfig({}, [
+        "AW_EASY_SETUP",
+        "AW_EASY_SETUP_EMBEDDED",
+        "AW_WELCOME_BACK",
+      ]);
 
       assert.propertyVal(data.screens[0], "id", "AW_GET_STARTED");
       assert.propertyVal(data.screens[1], "id", "AW_IMPORT_SETTINGS");
-      assert.lengthOf(data.screens, getData().screens.length - 4);
+      assert.lengthOf(data.screens, getData().screens.length - 5);
     });
     it("should have a FxA button", async () => {
       const data = await prepConfig({}, ["AW_WELCOME_BACK"]);
