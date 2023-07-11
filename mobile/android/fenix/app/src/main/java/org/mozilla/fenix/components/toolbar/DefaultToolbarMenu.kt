@@ -40,6 +40,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixAccountManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.theme.ThemeManager
 
 /**
@@ -78,6 +79,7 @@ open class DefaultToolbarMenu(
         get() = store.state.selectedTab
 
     override val menuBuilder by lazy {
+        FxNimbus.features.print.recordExposure()
         WebExtensionBrowserMenuBuilder(
             items = coreMenuItems,
             endOfMenuAlwaysVisible = shouldUseBottomToolbar,
@@ -391,7 +393,7 @@ open class DefaultToolbarMenu(
                 installToHomescreen.apply { visible = ::canInstall },
                 if (shouldShowTopSites) addRemoveTopSitesItem else null,
                 saveToCollectionItem,
-                if (FeatureFlags.print) printPageItem else null,
+                if (FeatureFlags.print && FxNimbus.features.print.value().browserPrintEnabled) printPageItem else null,
                 BrowserMenuDivider(),
                 settingsItem,
                 if (shouldDeleteDataOnQuit) deleteDataOnQuit else null,

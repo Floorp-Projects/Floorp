@@ -563,6 +563,95 @@ events:
     metadata:
       tags:
         - Sharing
+  print_failure:
+    type: event
+    description: |
+      A user tapped the print in the menu or share sheet but an error occurred
+      and the process failed.
+    extra_keys:
+      source:
+        type: string
+        description: |
+          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          The default is unknown.
+      reason:
+        type: string
+        description: |
+          An error occurred while setting up for printing.
+          Default option is unknown, other options are no_settings_service, no_settings, 
+          no_canonical_context, no_activity_context_delegate, no_activity_context, 
+          no_print_delegate, and io_error.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517#c3
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+  print_completed:
+    type: event
+    description: |
+      Printing from the share sheet or menu successfully completed.
+    extra_keys:
+      source:
+        type: string
+        description: |
+          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          The default is unknown.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517#c3
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+  print_tapped:
+    type: event
+    description: |
+      A user tapped the print option in the menu or share sheet.
+    extra_keys:
+      source:
+        type: string
+        description: |
+          A string that indicates the type of document of pdf, non-pdf or unknown. 
+          The default is unknown.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517#c5
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+  share_menu_action:
+    type: event
+    description: |
+      A share menu item was tapped.
+      The name of the item that the user tapped is stored in extras with the
+      key `item`.
+    extra_keys:
+      item:
+        description: |
+          A string containing the name of the item the user tapped. These items
+          currently include: print
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1837517#c5
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 122
+    metadata:
+      tags:
+        - Sharing
   share_to_app:
     type: event
     description: |

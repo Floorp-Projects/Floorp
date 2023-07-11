@@ -47,6 +47,7 @@ import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.nimbus.FxNimbus
 
 /**
  * Implementation of Robot Pattern for the three dot (main) menu.
@@ -110,7 +111,7 @@ class ThreeDotMenuMainRobot {
         assertItemContainingTextExists(
             settingsButton(),
         )
-        if (FeatureFlags.print) {
+        if (FeatureFlags.print && FxNimbus.features.print.value().browserPrintEnabled) {
             assertItemContainingTextExists(printContentButton)
         }
         assertItemWithDescriptionExists(

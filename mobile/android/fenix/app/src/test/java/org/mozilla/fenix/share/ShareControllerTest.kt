@@ -293,7 +293,7 @@ class ShareControllerTest {
     }
 
     @Test
-    fun `WHEN handlePrint close the dialog and print the page`() {
+    fun `WHEN handlePrint close the dialog and print the page AND send tapped telemetry`() {
         val testController = DefaultShareController(
             context = mockk(),
             shareSubject = shareSubject,
@@ -315,6 +315,11 @@ class ShareControllerTest {
             printUseCase.invoke("tabID")
             dismiss(ShareController.Result.DISMISSED)
         }
+
+        assertNotNull(Events.shareMenuAction.testGetValue())
+        val printTapped = Events.shareMenuAction.testGetValue()!!
+        assertEquals(1, printTapped.size)
+        assertEquals("print", printTapped.single().extra?.getValue("item"))
     }
 
     @Test

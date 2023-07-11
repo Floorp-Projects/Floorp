@@ -342,6 +342,18 @@ features:
         value:
           enabled: true
 
+  print:
+    description: A feature for printing from the share or browser menu.
+    variables:
+      share-print-enabled:
+        description: If true, a print button from the share menu is available.
+        type: Boolean
+        default: true
+      browser-print-enabled:
+        description: If true, a print button from the browser menu is available.
+        type: Boolean
+        default: true
+
   search-extra-params:
     description: A feature that provides additional args for search.
     variables:

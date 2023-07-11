@@ -157,6 +157,7 @@ class DefaultShareController(
     }
 
     override fun handlePrint(tabId: String?) {
+        Events.shareMenuAction.record(Events.ShareMenuActionExtra("print"))
         handleShareClosed()
         printUseCase.invoke(tabId)
     }
