@@ -176,6 +176,18 @@ class PhaseIter {
 
 static double t(TimeDuration duration) { return duration.ToMilliseconds(); }
 
+static TimeDuration TimeBetween(TimeStamp start, TimeStamp end) {
+#ifndef XP_WIN
+  MOZ_ASSERT(end >= start);
+#else
+  // Sadly this happens sometimes.
+  if (end < start) {
+    return TimeDuration::Zero();
+  }
+#endif
+  return end - start;
+}
+
 inline JSContext* Statistics::context() {
   return gc->rt->mainContextFromOwnThread();
 }
@@ -621,7 +633,8 @@ void Statistics::log(const char* fmt, ...) {
   va_list args;
   va_start(args, fmt);
   if (gcDebugFile) {
-    TimeDuration sinceStart = TimeStamp::Now() - TimeStamp::FirstTimeStamp();
+    TimeDuration sinceStart =
+        TimeBetween(TimeStamp::FirstTimeStamp(), TimeStamp::Now());
     fprintf(gcDebugFile, "%12.3f: ", sinceStart.ToMicroseconds());
     vfprintf(gcDebugFile, fmt, args);
     fprintf(gcDebugFile, "\n");
@@ -744,7 +757,7 @@ void Statistics::formatJsonSliceDescription(unsigned i, const SliceData& slice,
   if (numFaults != 0) {
     json.property("page_faults", numFaults);
   }
-  json.property("start_timestamp", slice.start - originTime,
+  json.property("start_timestamp", TimeBetween(originTime, slice.start),
                 JSONPrinter::SECONDS);
 }
 
@@ -967,7 +980,8 @@ void Statistics::printStats() {
     UniqueChars msg = formatDetailedMessage();
     if (msg) {
       double secSinceStart =
-          (slices_[0].start - TimeStamp::ProcessCreation()).ToSeconds();
+          TimeBetween(TimeStamp::ProcessCreation(), slices_[0].start)
+              .ToSeconds();
       fprintf(gcTimerFile, "GC(T+%.3fs) %s\n", secSinceStart, msg.get());
     }
   }
@@ -988,7 +1002,7 @@ void Statistics::beginGC(JS::GCOptions options, const TimeStamp& currentTime) {
   startingSliceNumber = gc->gcNumber();
 
   if (gc->lastGCEndTime()) {
-    timeSinceLastGC = currentTime - gc->lastGCEndTime();
+    timeSinceLastGC = TimeBetween(gc->lastGCEndTime(), currentTime);
   }
 
   totalGCTime_ = TimeDuration::Zero();
@@ -1166,6 +1180,10 @@ Statistics::SliceData::SliceData(const SliceBudget& budget,
       start(start),
       startFaults(startFaults) {}
 
+TimeDuration Statistics::SliceData::duration() const {
+  return TimeBetween(start, end);
+}
+
 void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
                             const SliceBudget& budget, JS::GCReason reason,
                             bool budgetWasIncreased) {
@@ -1183,7 +1201,8 @@ void Statistics::beginSlice(const ZoneGCStats& zoneStats, JS::GCOptions options,
 
   JSRuntime* runtime = gc->rt;
   if (!runtime->parentRuntime && !slices_.empty()) {
-    TimeDuration timeSinceLastSlice = currentTime - slices_.back().end;
+    TimeDuration timeSinceLastSlice =
+        TimeBetween(slices_.back().end, currentTime);
     runtime->metrics().GC_TIME_BETWEEN_SLICES_MS(timeSinceLastSlice);
   }
 
@@ -1229,7 +1248,7 @@ void Statistics::endSlice() {
 
     sliceCount_++;
 
-    totalGCTime_ += slice.end - slice.start;
+    totalGCTime_ += slice.duration();
   }
 
   bool last = !gc->isIncrementalGCInProgress();
@@ -1288,7 +1307,7 @@ void Statistics::endSlice() {
 
 void Statistics::sendSliceTelemetry(const SliceData& slice) {
   JSRuntime* runtime = gc->rt;
-  TimeDuration sliceTime = slice.end - slice.start;
+  TimeDuration sliceTime = slice.duration();
   runtime->metrics().GC_SLICE_MS(sliceTime);
 
   if (slice.budget.isTimeBudget()) {
@@ -1395,7 +1414,7 @@ void Statistics::resumePhases() {
          suspendedPhases.back() != Phase::IMPLICIT_SUSPENSION) {
     Phase resumePhase = suspendedPhases.popCopy();
     if (resumePhase == Phase::MUTATOR) {
-      timedGCTime += TimeStamp::Now() - timedGCStart;
+      timedGCTime += TimeBetween(timedGCStart, TimeStamp::Now());
     }
     recordPhaseBegin(resumePhase);
   }
@@ -1464,9 +1483,10 @@ void Statistics::recordPhaseEnd(Phase phase) {
     if (phaseEndTimes[kid] > now) {
       fprintf(stderr,
               "Parent %s ended at %.3fms, before child %s ended at %.3fms?\n",
-              phases[phase].name, t(now - TimeStamp::FirstTimeStamp()),
+              phases[phase].name,
+              t(TimeBetween(TimeStamp::FirstTimeStamp(), now)),
               phases[kid].name,
-              t(phaseEndTimes[kid] - TimeStamp::FirstTimeStamp()));
+              t(TimeBetween(TimeStamp::FirstTimeStamp(), phaseEndTimes[kid])));
     }
     MOZ_ASSERT(phaseEndTimes[kid] <= now,
                "Inconsistent time data; see bug 1400153");
@@ -1484,7 +1504,7 @@ void Statistics::recordPhaseEnd(Phase phase) {
 
   phaseStack.popBack();
 
-  TimeDuration t = now - phaseStartTimes[phase];
+  TimeDuration t = TimeBetween(phaseStartTimes[phase], now);
   if (!slices_.empty()) {
     slices_.back().phaseTimes[phase] += t;
   }
@@ -1535,10 +1555,12 @@ void Statistics::endSCC(unsigned scc, TimeStamp start) {
     return;
   }
 
-  sccTimes[scc] += TimeStamp::Now() - start;
+  sccTimes[scc] += TimeBetween(start, TimeStamp::Now());
 }
 
 /*
+ * Calculate minimum mutator utilization for previous incremental GC.
+ *
  * MMU (minimum mutator utilization) is a measure of how much garbage collection
  * is affecting the responsiveness of the system. MMU measurements are given
  * with respect to a certain window size. If we report MMU(50ms) = 80%, then
@@ -1550,7 +1572,7 @@ void Statistics::endSCC(unsigned scc, TimeStamp start) {
 double Statistics::computeMMU(TimeDuration window) const {
   MOZ_ASSERT(!slices_.empty());
 
-  TimeDuration gc = slices_[0].end - slices_[0].start;
+  TimeDuration gc = slices_[0].duration();
   TimeDuration gcMax = gc;
 
   if (gc >= window) {
@@ -1561,17 +1583,19 @@ double Statistics::computeMMU(TimeDuration window) const {
   for (size_t endIndex = 1; endIndex < slices_.length(); endIndex++) {
     const auto* startSlice = &slices_[startIndex];
     const auto& endSlice = slices_[endIndex];
-    gc += endSlice.end - endSlice.start;
+    gc += endSlice.duration();
 
-    while (endSlice.end - startSlice->end >= window) {
-      gc -= startSlice->end - startSlice->start;
+    while (TimeBetween(startSlice->end, endSlice.end) >= window) {
+      gc -= startSlice->duration();
       startSlice = &slices_[++startIndex];
     }
 
     TimeDuration cur = gc;
-    if (endSlice.end - startSlice->start > window) {
-      cur -= (endSlice.end - startSlice->start - window);
+    TimeDuration sliceRange = TimeBetween(startSlice->start, endSlice.end);
+    if (sliceRange > window) {
+      cur -= (sliceRange - window);
     }
+
     if (cur > gcMax) {
       gcMax = cur;
     }
@@ -1667,7 +1691,7 @@ void Statistics::printSliceProfile() {
 
   size_t pid = getpid();
   JSRuntime* runtime = gc->rt;
-  TimeDuration timestamp = slice.end - creationTime();
+  TimeDuration timestamp = TimeBetween(creationTime(), slice.end);
   const char* reason = ExplainGCReason(slice.reason);
   size_t sizeKB = gc->heapSize.bytes() / 1024;
   size_t zoneCount = zoneStats.zoneCount;

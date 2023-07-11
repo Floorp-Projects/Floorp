@@ -273,7 +273,7 @@ struct Statistics {
     PhaseKindTimes totalParallelTimes;
     PhaseKindTimes maxParallelTimes;
 
-    TimeDuration duration() const { return end - start; }
+    TimeDuration duration() const;
     bool wasReset() const { return resetReason != GCAbortReason::None; }
   };
 
