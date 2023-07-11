@@ -10,8 +10,14 @@ const { Services } = ChromeUtils.import(
 );
 
 const { clearInterval, setInterval } = ChromeUtils.import(
-  "resource://gre/modules/Timer.jsm"
+    "resource://gre/modules/Timer.jsm"
 );
+
+const { ExtensionCommon } = ChromeUtils.importESModule(
+    "resource://gre/modules/ExtensionCommon.sys.mjs"
+);
+
+const L10N = new Localization(["browser/floorp.ftl"]);
 
 const TAB_SLEEP_ENABLED_PREF = "floorp.tabsleep.enabled";
 const TAB_SLEEP_TESTMODE_ENABLED_PREF = "floorp.tabsleep.testmode.enabled";
@@ -298,6 +304,7 @@ function enableTabSleep() {
             .split(",")
             .map(host => host.trim());
         for (let nativeTab of tabs) {
+            if (nativeTab.isTabSleepExcludeTab) continue;
             if (nativeTab.selected) continue;
             if (nativeTab.multiselected) continue;
             if (nativeTab.pinned) continue;
@@ -330,6 +337,10 @@ function enableTabSleep() {
             }
         }
     }, 30 * 1000);
+
+    for (let window_ of Services.wm.getEnumerator("navigator:browser")) {
+        createTabContextElement(window_.document);
+    }
 }
 
 function disableTabSleep() {
@@ -341,7 +352,58 @@ function disableTabSleep() {
         clearInterval(interval);
         interval = null;
     }
+    for (let window_ of Services.wm.getEnumerator("navigator:browser")) {
+        removeTabContextElement(window_.document);
+    }
 }
+
+async function createTabContextElement(document_) {
+    let tabContextMenu = document_.querySelector("#tabContextMenu");
+    let tabSleepExcludeTab = document_.createXULElement("menuitem");
+    tabSleepExcludeTab.setAttribute("type", "checkbox");
+    tabSleepExcludeTab.setAttribute("checked", "false");
+    tabSleepExcludeTab.id = "context_tabSleepExcludeTab";
+    tabSleepExcludeTab.label = await L10N.formatValue("tab-sleep-tab-context-menu-excludetab");
+    tabSleepExcludeTab.addEventListener("command", function(e) {
+        let window_ = e.currentTarget.ownerGlobal;
+        window_.TabContextMenu.contextTab.isTabSleepExcludeTab =
+            !window_.TabContextMenu.contextTab.isTabSleepExcludeTab;
+    });
+    tabSleepExcludeTab.addEventListener("popupshowing", async function(e) {
+        let window_ = e.currentTarget.ownerGlobal;
+        e.currentTarget.querySelector("#context_tabSleepExcludeTab").setAttribute(
+            "checked",
+            Boolean(window_.TabContextMenu.contextTab.isTabSleepExcludeTab)
+        );
+    });
+    tabContextMenu.querySelector("#context_selectAllTabs")
+        .insertAdjacentElement("afterend", tabSleepExcludeTab);
+}
+
+function removeTabContextElement(document_) {
+    document_.querySelector("#context_tabSleepExcludeTab")?.remove();
+}
+
+let seenDocuments = new WeakSet();
+let documentObserver = {
+    observe(doc) {
+        if (
+            ExtensionCommon.instanceOf(doc, "HTMLDocument") &&
+            !seenDocuments.has(doc)
+        ) {
+            seenDocuments.add(doc);
+            if (!isEnabled) return;
+            let window_ = doc.defaultView;
+            let document_ = window_.document;
+            let uriObj = Services.io.newURI(window_.location.href);
+            let uriWithoutQueryRef = uriObj.prePath + uriObj.filePath;
+            if (uriWithoutQueryRef == "chrome://browser/content/browser.xhtml") {
+                createTabContextElement(document_);
+            }
+        }
+    },
+};
+Services.obs.addObserver(documentObserver, "chrome-document-interactive");
 
 {
     isEnabled = Services.prefs.getBoolPref(TAB_SLEEP_ENABLED_PREF, false);

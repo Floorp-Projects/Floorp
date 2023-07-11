@@ -40,6 +40,7 @@ tab-sleep-settings-dialog-title =
  .title = Tab Sleep Settings
 tab-sleep-settings-dialog-excludehosts-label = Exclude hosts
 tab-sleep-settings-dialog-excludehosts-label-2 = Enter one host per line.
+tab-sleep-tab-context-menu-excludetab = Do not put this tab to sleep
 enable-floorp-workspace =
  .label = Enable WorkSpace
 enable-tab-scroll-change =
