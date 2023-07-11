@@ -76,35 +76,45 @@ export var UpdateUtils = {
   async formatUpdateURL(url) {
     const locale = await this.getLocale();
 
-    return url
-      .replace(/%(\w+)%/g, (match, name) => {
-        switch (name) {
-          case "PRODUCT":
-            return Services.appinfo.name;
-          case "VERSION":
-            return Services.appinfo.version;
-          case "BUILD_ID":
-            return Services.appinfo.appBuildID;
-          case "BUILD_TARGET":
-            return Services.appinfo.OS + "_" + this.ABI;
-          case "OS_VERSION":
-            return this.OSVersion;
-          case "LOCALE":
-            return locale;
-          case "CHANNEL":
-            return this.UpdateChannel;
-          case "PLATFORM_VERSION":
-            return Services.appinfo.platformVersion;
-          case "SYSTEM_CAPABILITIES":
-            return getSystemCapabilities();
-          case "DISTRIBUTION":
-            return getDistributionPrefValue(PREF_APP_DISTRIBUTION);
-          case "DISTRIBUTION_VERSION":
-            return getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION);
-        }
-        return match;
-      })
-      .replace(/\+/g, "%2B");
+    return url.replace(/%(\w+)%/g, (match, name) => {
+      let replacement = match;
+      switch (name) {
+        case "PRODUCT":
+          replacement = Services.appinfo.name;
+          break;
+        case "VERSION":
+          replacement = Services.appinfo.version;
+          break;
+        case "BUILD_ID":
+          replacement = Services.appinfo.appBuildID;
+          break;
+        case "BUILD_TARGET":
+          replacement = Services.appinfo.OS + "_" + this.ABI;
+          break;
+        case "OS_VERSION":
+          replacement = this.OSVersion;
+          break;
+        case "LOCALE":
+          replacement = locale;
+          break;
+        case "CHANNEL":
+          replacement = this.UpdateChannel;
+          break;
+        case "PLATFORM_VERSION":
+          replacement = Services.appinfo.platformVersion;
+          break;
+        case "SYSTEM_CAPABILITIES":
+          replacement = getSystemCapabilities();
+          break;
+        case "DISTRIBUTION":
+          replacement = getDistributionPrefValue(PREF_APP_DISTRIBUTION);
+          break;
+        case "DISTRIBUTION_VERSION":
+          replacement = getDistributionPrefValue(PREF_APP_DISTRIBUTION_VERSION);
+          break;
+      }
+      return encodeURIComponent(replacement);
+    });
   },
 
   /**

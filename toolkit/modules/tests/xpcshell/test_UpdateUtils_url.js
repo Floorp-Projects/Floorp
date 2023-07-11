@@ -194,7 +194,19 @@ function getMemoryMB() {
 // interested in
 async function getResult(url) {
   url = await UpdateUtils.formatUpdateURL(url);
-  return url.substr(URL_PREFIX.length).split("/")[0];
+  const component = url.substr(URL_PREFIX.length).split("/")[0];
+  // The docs for encodeURIComponent specify that it will encode everything
+  // except for:
+  //   A-Z a-z 0-9 - _ . ! ~ * ' ( )
+  // We want to ensure that we are passing Update URL components into
+  // encodeURIComponent, so we will make sure that we don't have characters
+  // except for these and `%` (for the escape sequences).
+  const escapedCharRegex = new RegExp("^[A-Za-z0-9_.!~*'()%-]*$");
+  Assert.ok(
+    escapedCharRegex.test(component),
+    `URL component (${component}) should not have unescaped characters`
+  );
+  return decodeURIComponent(component);
 }
 
 // url constructed with %PRODUCT%
