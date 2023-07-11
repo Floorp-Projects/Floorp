@@ -369,16 +369,20 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_LOADED_EMAILTRACKING_LEVEL_2_CONTENT = 0x00000100;
 
   /**
-   * Flag for HTTPS-Only Mode upgrades
+   * Flags for HTTPS-Only and HTTPS-First Mode upgrades
    *
    * STATE_HTTPS_ONLY_MODE_UPGRADED
    *   When a request has been upgraded by HTTPS-Only Mode
    *
    * STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED
    *   When an upgraded request failed.
+   *
+   * STATE_HTTPS_ONLY_MODE_UPGRADED_FIRST
+   *   When a request has been upgraded by HTTPS-First Mode
    */
   const unsigned long STATE_HTTPS_ONLY_MODE_UPGRADED        = 0x00400000;
   const unsigned long STATE_HTTPS_ONLY_MODE_UPGRADE_FAILED  = 0x00800000;
+  const unsigned long STATE_HTTPS_ONLY_MODE_UPGRADED_FIRST  = 0x08000000;
 
   /**
    * Notification indicating the state has changed for one of the requests

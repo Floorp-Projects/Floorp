@@ -122,6 +122,13 @@ var gIdentityHandler = {
     );
   },
 
+  get _isContentHttpsFirstModeUpgraded() {
+    return (
+      this._state &
+      Ci.nsIWebProgressListener.STATE_HTTPS_ONLY_MODE_UPGRADED_FIRST
+    );
+  },
+
   get _isCertUserOverridden() {
     return this._state & Ci.nsIWebProgressListener.STATE_CERT_USER_OVERRIDDEN;
   },
@@ -345,6 +352,38 @@ var gIdentityHandler = {
       "dom.security.https_only_mode_pbm"
     );
     return this._httpsOnlyModeEnabledPBM;
+  },
+  get _httpsFirstModeEnabled() {
+    delete this._httpsFirstModeEnabled;
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_httpsFirstModeEnabled",
+      "dom.security.https_first"
+    );
+    return this._httpsFirstModeEnabled;
+  },
+  get _httpsFirstModeEnabledPBM() {
+    delete this._httpsFirstModeEnabledPBM;
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_httpsFirstModeEnabledPBM",
+      "dom.security.https_first_pbm"
+    );
+    return this._httpsFirstModeEnabledPBM;
+  },
+
+  _isHttpsOnlyModeActive(isWindowPrivate) {
+    return (
+      this._httpsOnlyModeEnabled ||
+      (isWindowPrivate && this._httpsOnlyModeEnabledPBM)
+    );
+  },
+  _isHttpsFirstModeActive(isWindowPrivate) {
+    return (
+      !this._isHttpsOnlyModeActive(isWindowPrivate) &&
+      (this._httpsFirstModeEnabled ||
+        (isWindowPrivate && this._httpsFirstModeEnabledPBM))
+    );
   },
 
   /**
@@ -990,11 +1029,14 @@ var gIdentityHandler = {
 
     // If HTTPS-Only Mode is enabled, check the permission status
     const privateBrowsingWindow = PrivateBrowsingUtils.isWindowPrivate(window);
+    const isHttpsOnlyModeActive = this._isHttpsOnlyModeActive(
+      privateBrowsingWindow
+    );
+    const isHttpsFirstModeActive = this._isHttpsFirstModeActive(
+      privateBrowsingWindow
+    );
     let httpsOnlyStatus = "";
-    if (
-      this._httpsOnlyModeEnabled ||
-      (privateBrowsingWindow && this._httpsOnlyModeEnabledPBM)
-    ) {
+    if (isHttpsFirstModeActive || isHttpsOnlyModeActive) {
       // Note: value and permission association is laid out
       //       in _getHttpsOnlyPermission
       let value = this._getHttpsOnlyPermission();
@@ -1014,11 +1056,17 @@ var gIdentityHandler = {
 
       if (value > 0) {
         httpsOnlyStatus = "exception";
-      } else if (this._isAboutHttpsOnlyErrorPage) {
+      } else if (
+        this._isAboutHttpsOnlyErrorPage ||
+        (isHttpsFirstModeActive && this._isContentHttpsOnlyModeUpgradeFailed)
+      ) {
         httpsOnlyStatus = "failed-top";
       } else if (this._isContentHttpsOnlyModeUpgradeFailed) {
         httpsOnlyStatus = "failed-sub";
-      } else if (this._isContentHttpsOnlyModeUpgraded) {
+      } else if (
+        this._isContentHttpsOnlyModeUpgraded ||
+        this._isContentHttpsFirstModeUpgraded
+      ) {
         httpsOnlyStatus = "upgraded";
       }
     }
