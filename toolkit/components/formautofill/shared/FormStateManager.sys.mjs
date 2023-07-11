@@ -148,6 +148,10 @@ export class FormStateManager {
     }
     return records;
   }
+
+  didDestroy() {
+    this._activeItems = null;
+  }
 }
 
 export default FormStateManager;

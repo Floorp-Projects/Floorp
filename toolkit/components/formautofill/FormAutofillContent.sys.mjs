@@ -411,6 +411,10 @@ export var FormAutofillContent = {
     }
     FormAutofillContent._keyDownEnterForInput = focusedInput;
   },
+
+  didDestroy() {
+    this._fieldDetailsManager.didDestroy();
+  },
 };
 
 FormAutofillContent.init();

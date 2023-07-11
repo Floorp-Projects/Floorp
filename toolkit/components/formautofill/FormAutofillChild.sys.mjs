@@ -30,6 +30,7 @@ export class FormAutofillChild extends JSWindowActorChild {
 
   didDestroy() {
     lazy.AutoCompleteChild.removePopupStateListener(this);
+    lazy.FormAutofillContent.didDestroy();
   }
 
   popupStateChanged(messageName, data, target) {
