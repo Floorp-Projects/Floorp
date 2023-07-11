@@ -272,7 +272,6 @@ already_AddRefed<Response> Response::Redirect(const GlobalObject& aGlobal,
     }
 
     nsCString contentTypeWithCharset;
-    contentTypeWithCharset.SetIsVoid(true);
     nsCOMPtr<nsIInputStream> bodyStream;
     int64_t bodySize = InternalResponse::UNKNOWN_BODY_SIZE;
 
