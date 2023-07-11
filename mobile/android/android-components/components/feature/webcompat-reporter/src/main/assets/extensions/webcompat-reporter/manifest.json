@@ -3,7 +3,7 @@
   "name": "Mozilla Android Components - WebCompat Reporter",
   "description": "Report site compatibility issues on webcompat.com",
   "author": "Thomas Wisniewski <twisniewski@mozilla.com>",
-  "version": "2.0.1",
+  "version": "1.5.1",
   "homepage_url": "https://github.com/mozilla/webcompat-reporter",
   "browser_specific_settings": {
     "gecko": {

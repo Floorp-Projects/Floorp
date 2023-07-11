@@ -4,9 +4,7 @@
 
 "use strict";
 
-/* global ExtensionAPI, ExtensionCommon */
-
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+/* global ExtensionAPI, ExtensionCommon, Services */
 
 this.aboutConfigPrefs = class extends ExtensionAPI {
   getAPI(context) {

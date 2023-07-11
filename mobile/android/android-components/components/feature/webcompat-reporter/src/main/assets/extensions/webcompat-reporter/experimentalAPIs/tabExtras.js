@@ -4,9 +4,7 @@
 
 "use strict";
 
-/* global ExtensionAPI, XPCOMUtils */
-
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+/* global ExtensionAPI, XPCOMUtils, Services */
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -26,7 +24,10 @@ this.tabExtras = class extends ExtensionAPI {
     return {
       tabExtras: {
         async getWebcompatInfo(tabId) {
-          const { browsingContext } = tabManager.get(tabId).browser;
+          const {
+            browser: { browsingContext },
+            incognito,
+          } = tabManager.get(tabId);
           const actors = gatherActors("ReportSiteIssueHelper", browsingContext);
           const promises = actors.map(actor => actor.sendQuery("GetLog"));
           const logs = await Promise.all(promises);
@@ -39,6 +40,7 @@ this.tabExtras = class extends ExtensionAPI {
             browsingContext.secureBrowserUI.state &
             Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT
           );
+          info.isPB = incognito;
           info.log = logs
             .flat()
             .sort((a, b) => a.timeStamp - b.timeStamp)
