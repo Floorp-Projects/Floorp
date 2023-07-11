@@ -135,12 +135,6 @@ async function doAllTests() {
 // constant starting and stopping processes, and opens a new window ~144 times.
 requestLongerTimeout(30);
 
-add_task(async function prepare() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["dom.window.open.noreferrer.enabled", true]],
-  });
-});
-
 add_task(async function newtab_sameproc() {
   await SpecialPowers.pushPrefEnv({
     set: [
