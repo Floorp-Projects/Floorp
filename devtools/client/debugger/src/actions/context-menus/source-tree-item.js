@@ -146,10 +146,10 @@ async function handleLocalOverride(cx, dispatch, source, isOverridden) {
   if (!isOverridden) {
     const localPath = await saveLocalFile(cx, dispatch, source);
     if (localPath) {
-      dispatch(setOverrideSource(cx, source, localPath));
+      dispatch(setOverrideSource(source, localPath));
     }
   } else {
-    dispatch(removeOverrideSource(cx, source));
+    dispatch(removeOverrideSource(source));
   }
 }
 

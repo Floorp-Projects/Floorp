@@ -10,7 +10,7 @@ export * from "./prettyPrint";
 export * from "./select";
 export { setSymbols } from "./symbols";
 
-export function setOverrideSource(cx, source, path) {
+export function setOverrideSource(source, path) {
   return ({ client, dispatch }) => {
     if (!source || !source.url) {
       return;
@@ -19,14 +19,13 @@ export function setOverrideSource(cx, source, path) {
     client.setOverride(url, path);
     dispatch({
       type: "SET_OVERRIDE",
-      cx,
       url,
       path,
     });
   };
 }
 
-export function removeOverrideSource(cx, source) {
+export function removeOverrideSource(source) {
   return ({ client, dispatch }) => {
     if (!source || !source.url) {
       return;
@@ -35,7 +34,6 @@ export function removeOverrideSource(cx, source) {
     client.removeOverride(url);
     dispatch({
       type: "REMOVE_OVERRIDE",
-      cx,
       url,
     });
   };
