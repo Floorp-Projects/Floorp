@@ -14161,6 +14161,12 @@ bool CodeGenerator::link(JSContext* cx, const WarpSnapshot* snapshot) {
   vtune::MarkScript(code, script, "ion");
 #endif
 
+  // Set a Ion counter hint for this script.
+  if (cx->runtime()->jitRuntime()->hasJitHintsMap()) {
+    JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
+    jitHints->recordIonCompilation(script);
+  }
+
   // for marking during GC.
   if (safepointIndices_.length()) {
     ionScript->copySafepointIndices(&safepointIndices_[0]);

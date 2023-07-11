@@ -1655,6 +1655,12 @@ static void InvalidateAfterBailout(JSContext* cx, HandleScript outerScript,
     return;
   }
 
+  // Record a invalidation for this script in the jit hints map
+  if (cx->runtime()->jitRuntime()->hasJitHintsMap()) {
+    JitHintsMap* jitHints = cx->runtime()->jitRuntime()->getJitHintsMap();
+    jitHints->recordInvalidation(outerScript);
+  }
+
   MOZ_ASSERT(!outerScript->ionScript()->invalidated());
 
   JitSpew(JitSpew_BaselineBailouts, "Invalidating due to %s", reason);
