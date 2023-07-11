@@ -60,18 +60,6 @@ window.addEventListener("pageshow", async function() {
   }
 
   {
-    let prefName = "floorp.tabsleep.tabTimeoutMinutes";
-    let elem = document.getElementById("tabSleepTimeoutMinutesValue");
-    elem.value = Services.prefs.getIntPref(prefName, undefined);
-    elem.addEventListener('change', function () {
-      Services.prefs.setIntPref(prefName, Number(elem.value));
-    });
-    Services.prefs.addObserver(prefName, function () {
-      elem.value = Services.prefs.getIntPref(prefName, undefined);
-    });
-  }
-
-  {
     function setOverrideUA(){
       if (document.getElementById("floorpUAs").value == 5) {
         document.getElementById("customUsergent").disabled = false;} else { document.getElementById("customUsergent").disabled = true;

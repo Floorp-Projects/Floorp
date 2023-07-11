@@ -8,6 +8,9 @@ const { Services } = ChromeUtils.import(
 
 let gTabSleepManager = {
   onLoad() {
+    document.getElementById("timeoutMinutes").value =
+      Services.prefs.getIntPref("floorp.tabsleep.tabTimeoutMinutes", undefined);
+
     document.getElementById("excludeHosts").value =
       Services.prefs.getStringPref("floorp.tabsleep.excludeHosts", "")
       .split(",")
@@ -25,7 +28,13 @@ let gTabSleepManager = {
   uninit() {},
 
   onApplyChanges() {
+    let timeoutMinutes = document.getElementById("timeoutMinutes").value;
     let excludeHosts = document.getElementById("excludeHosts").value;
+
+    Services.prefs.setIntPref(
+      "floorp.tabsleep.tabTimeoutMinutes",
+      Number(timeoutMinutes)
+    );
 
     Services.prefs.setStringPref(
       "floorp.tabsleep.excludeHosts",

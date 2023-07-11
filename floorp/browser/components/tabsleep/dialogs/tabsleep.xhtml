@@ -35,21 +35,35 @@
     </keyset>
 
     <vbox class="contentPane" id="tabsleep-content">
-      <label
-        id="excludeHostsLabel"
-        control="excludeHosts"
-        data-l10n-id="tab-sleep-settings-dialog-excludehosts-label"
-      />
-      <label
-        id="excludeHostsLabel-2"
-        control="excludeHosts"
-        data-l10n-id="tab-sleep-settings-dialog-excludehosts-label-2"
-        style="opacity: 0.6;"
-      />
-      <html:textarea
-        id="excludeHosts"
-        style="height: 100px"
-      />
+      <hbox>
+        <label
+          id="timeoutMinutesLabel"
+          control="timeoutMinutes"
+          data-l10n-id="tab-sleep-timeout-minutes-value"
+        />
+        <html:input
+          id="timeoutMinutes"
+          type="number"
+          min="0"
+        />
+      </hbox>
+      <vbox>
+        <label
+          id="excludeHostsLabel"
+          control="excludeHosts"
+          data-l10n-id="tab-sleep-settings-dialog-excludehosts-label"
+        />
+        <label
+          id="excludeHostsLabel-2"
+          control="excludeHosts"
+          data-l10n-id="tab-sleep-settings-dialog-excludehosts-label-2"
+          style="opacity: 0.6;"
+        />
+        <html:textarea
+          id="excludeHosts"
+          style="height: 100px"
+        />
+      </vbox>
     </vbox>
   </dialog>
 </window>
