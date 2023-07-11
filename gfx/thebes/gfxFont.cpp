@@ -4170,16 +4170,28 @@ void gfxFont::SanitizeMetrics(gfxFont::Metrics* aMetrics,
           std::min(aMetrics->underlineOffset,
                    aMetrics->underlineSize - aMetrics->emDescent);
     }
-  }
-  // If underline positioned is too far from the text, descent position is
-  // preferred so that underline will stay within the boundary.
-  else if (aMetrics->underlineSize - aMetrics->underlineOffset >
-           aMetrics->maxDescent) {
-    if (aMetrics->underlineSize > aMetrics->maxDescent)
-      aMetrics->underlineSize = std::max(aMetrics->maxDescent, 1.0);
-    // The max underlineOffset is 1px (the min underlineSize is 1px, and min
-    // maxDescent is 0px.)
-    aMetrics->underlineOffset = aMetrics->underlineSize - aMetrics->maxDescent;
+  } else {
+    // If underline positioned is too far from the text, descent position is
+    // preferred so that underline will stay within the boundary.
+    // This is controlled by the gfx.font_metrics.adjust_distant_underline pref:
+    //   2 : apply adjustment to all fonts
+    //   1 : apply adjustment to locally-installed fonts, not webfonts
+    //   0 (or any unknown value): no adjustment is done
+    // We also do this check for fonts in the explicit "bad underline" list,
+    // regardless of the pref setting.
+    int prefValue = StaticPrefs::gfx_font_metrics_adjust_distant_underline();
+    if (prefValue == 2 || (prefValue == 1 && GetFontEntry()->IsUserFont()) ||
+        aIsBadUnderlineFont) {
+      if (aMetrics->underlineSize - aMetrics->underlineOffset >
+          aMetrics->maxDescent) {
+        if (aMetrics->underlineSize > aMetrics->maxDescent)
+          aMetrics->underlineSize = std::max(aMetrics->maxDescent, 1.0);
+        // The max underlineOffset is 1px (the min underlineSize is 1px, and min
+        // maxDescent is 0px.)
+        aMetrics->underlineOffset =
+            aMetrics->underlineSize - aMetrics->maxDescent;
+      }
+    }
   }
 
   // If strikeout line is overflowed from the ascent, the line should be resized
