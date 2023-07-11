@@ -7,8 +7,8 @@
 
 "use strict";
 
-const { GeckoViewChildModule } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewChildModule.jsm"
+const { GeckoViewChildModule } = ChromeUtils.importESModule(
+  "resource://gre/modules/GeckoViewChildModule.sys.mjs"
 );
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"

@@ -1,11 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["HistogramStopwatch", "InitializationTracker"];
-
-var InitializationTracker = {
+export var InitializationTracker = {
   initialized: false,
   onInitialized(profilerTime) {
     if (!this.initialized) {
@@ -19,7 +16,7 @@ var InitializationTracker = {
 };
 
 // A helper for histogram timer probes.
-class HistogramStopwatch {
+export class HistogramStopwatch {
   constructor(aName, aAssociated) {
     this._name = aName;
     this._obj = aAssociated;

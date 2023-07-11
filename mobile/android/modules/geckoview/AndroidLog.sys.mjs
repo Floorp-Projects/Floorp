@@ -2,16 +2,16 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
 /**
  * Native Android logging for JavaScript.  Lets you specify a priority and tag
  * in addition to the message being logged.  Resembles the android.util.Log API
  * <http://developer.android.com/reference/android/util/Log.html>.
  *
- * // Import it as a JSM:
- * let Log = ChromeUtils.import("resource://gre/modules/AndroidLog.jsm")
- *   .AndroidLog;
+ * // Import it as a ESM:
+ * let Log =
+ *     ChromeUtils.importESModule("resource://gre/modules/AndroidLog.sys.mjs")
+ *     .AndroidLog;
  *
  * // Use Log.i, Log.v, Log.d, Log.w, and Log.e to log verbose, debug, info,
  * // warning, and error messages, respectively.
@@ -36,10 +36,7 @@
  * truncates tags longer than MAX_TAG_LENGTH characters (not including "Gecko").
  */
 
-const EXPORTED_SYMBOLS = ["AndroidLog"];
-const { ctypes } = ChromeUtils.importESModule(
-  "resource://gre/modules/ctypes.sys.mjs"
-);
+import { ctypes } from "resource://gre/modules/ctypes.sys.mjs";
 
 // From <https://android.googlesource.com/platform/system/core/+/master/include/android/log.h>.
 const ANDROID_LOG_VERBOSE = 2;
@@ -64,7 +61,7 @@ var __android_log_write = liblog.declare(
   ctypes.char.ptr
 ); // message
 
-var AndroidLog = {
+export var AndroidLog = {
   MAX_TAG_LENGTH,
   v: (tag, msg) => __android_log_write(ANDROID_LOG_VERBOSE, "Gecko" + tag, msg),
   d: (tag, msg) => __android_log_write(ANDROID_LOG_DEBUG, "Gecko" + tag, msg),
@@ -83,9 +80,3 @@ var AndroidLog = {
     };
   },
 };
-
-if (typeof Components == "undefined") {
-  // Specify exported symbols for require.js module loader.
-  // eslint-disable-next-line no-undef
-  module.exports = AndroidLog;
-}
