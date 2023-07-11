@@ -74,7 +74,7 @@ class MFCDMParent final : public PMFCDMParent {
   void Destroy();
 
  private:
-  ~MFCDMParent();
+  ~MFCDMParent() { Unregister(); }
 
   HRESULT LoadFactory();
 
