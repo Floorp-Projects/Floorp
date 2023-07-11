@@ -27,6 +27,7 @@ export const PdfJsDefaultPreferences = Object.freeze({
  "enablePermissions": false,
  "enablePrintAutoRotate": true,
  "enableScripting": true,
+ "enableStampEditor": true,
  "externalLinkTarget": 0,
  "historyUpdateUrl": false,
  "ignoreDestinationZoom": false,
