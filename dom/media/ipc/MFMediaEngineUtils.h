@@ -60,6 +60,20 @@ using MFMediaEngineError = MF_MEDIA_ENGINE_ERR;
     } while (false)
 #endif
 
+#ifndef SHUTDOWN_IF_POSSIBLE
+#  define SHUTDOWN_IF_POSSIBLE(class)                                        \
+    do {                                                                     \
+      IMFShutdown* pShutdown = nullptr;                                      \
+      HRESULT rv = class->QueryInterface(IID_PPV_ARGS(&pShutdown));          \
+      if (SUCCEEDED(rv)) {                                                   \
+        pShutdown->Shutdown();                                               \
+        pShutdown->Release();                                                \
+      } else {                                                               \
+        LOG_AND_WARNING(#class " doesn't support IMFShutdown?, rv=%lx", rv); \
+      }                                                                      \
+    } while (false)
+#endif
+
 #define ENGINE_MARKER(markerName) \
   PROFILER_MARKER(markerName, MEDIA_PLAYBACK, {}, MediaEngineMarker, Id())
 

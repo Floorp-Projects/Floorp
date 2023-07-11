@@ -112,6 +112,11 @@ void MFMediaEngineParent::DestroyEngineIfExists(
   if (aError) {
     Unused << SendNotifyError(*aError);
   }
+#ifdef MOZ_WMF_CDM
+  if (mContentProtectionManager) {
+    mContentProtectionManager = nullptr;
+  }
+#endif
 }
 
 void MFMediaEngineParent::CreateMediaEngine() {
