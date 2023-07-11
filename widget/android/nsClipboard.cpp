@@ -8,6 +8,8 @@
 #include "nsISupportsPrimitives.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsMemory.h"
+#include "nsStringStream.h"
 #include "nsPrimitiveHelpers.h"
 
 using namespace mozilla;
@@ -90,7 +92,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
   for (auto& flavorStr : flavors) {
     if (flavorStr.EqualsLiteral(kTextMime) ||
         flavorStr.EqualsLiteral(kHTMLMime)) {
-      auto text = java::Clipboard::GetData(
+      auto text = java::Clipboard::GetTextData(
           java::GeckoAppShell::GetApplicationContext(), flavorStr);
       if (!text) {
         continue;
@@ -107,6 +109,27 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
         aTransferable->SetTransferData(flavorStr.get(), wrapper);
         return NS_OK;
       }
+      continue;
+    }
+
+    mozilla::jni::ByteArray::LocalRef bytes;
+    nsresult rv = java::Clipboard::GetRawData(flavorStr, &bytes);
+    if (NS_FAILED(rv) || !bytes) {
+      continue;
+    }
+    nsCOMPtr<nsIInputStream> byteStream;
+    rv = NS_NewByteInputStream(
+        getter_AddRefs(byteStream),
+        mozilla::Span(
+            reinterpret_cast<const char*>(bytes->GetElements().Elements()),
+            bytes->Length()),
+        NS_ASSIGNMENT_COPY);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+    rv = aTransferable->SetTransferData(flavorStr.get(), byteStream);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
     }
   }
 
@@ -131,7 +154,7 @@ nsClipboard::EmptyClipboard(int32_t aWhichClipboard) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  java::Clipboard::ClearText(java::GeckoAppShell::GetApplicationContext());
+  java::Clipboard::Clear(java::GeckoAppShell::GetApplicationContext());
 
   return NS_OK;
 }

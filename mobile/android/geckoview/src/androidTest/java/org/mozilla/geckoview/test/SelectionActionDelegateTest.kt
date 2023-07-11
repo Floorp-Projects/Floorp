@@ -9,7 +9,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Point
 import android.graphics.RectF
+import android.net.Uri
 import android.os.Build
+import android.util.Base64
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.filters.MediumTest
 import androidx.test.filters.SdkSuppress
@@ -260,6 +262,19 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         }
     }
 
+    @Test
+    fun pasteImage() {
+        assumeThat("Unnecessary to run multiple times", id, equalTo("#contenteditable"))
+
+        val bytes = this.getTestBytes("/assets/www/images/test.gif")
+        val base64Utf8String = Base64.encodeToString(bytes, Base64.NO_WRAP)
+        val result = "<img src=\"data:image/gif;base64,${base64Utf8String}\" alt=\"\">"
+
+        withImageClipboard("/assets/www/images/test.gif", "image/gif") {
+            testThat(selectedContent, withResponse(ACTION_PASTE), changesHtmlContentTo(result))
+        }
+    }
+
     @Test fun delete() = assumingEditable(true) {
         testThat(selectedContent, withResponse(ACTION_DELETE), deletesContent())
     }
@@ -498,6 +513,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         fun select() {}
         val initialContent: String
         val content: String
+        val htmlContent: String
         val selectionOffsets: Pair<Int, Int>
     }
 
@@ -642,6 +658,25 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         }
     }
 
+    private fun withImageClipboard(contentPath: String = "", mime: String = "", lambda: () -> Unit) {
+        val oldClip = clipboard.primaryClip
+        try {
+            TestContentProvider.setTestData(this.getTestBytes(contentPath), mime)
+            val clipData = ClipData("image", arrayOf(mime), ClipData.Item(Uri.parse("content://org.mozilla.geckoview.test.provider/gif")))
+            clipboard.setPrimaryClip(clipData)
+
+            sessionRule.addExternalDelegateUntilTestEnd(
+                ClipboardManager.OnPrimaryClipChangedListener::class,
+                clipboard::addPrimaryClipChangedListener,
+                clipboard::removePrimaryClipChangedListener,
+                ClipboardManager.OnPrimaryClipChangedListener {},
+            )
+            lambda()
+        } finally {
+            clipboard.setPrimaryClip(oldClip ?: ClipData.newPlainText("", ""))
+        }
+    }
+
     private fun assumingEditable(editable: Boolean, lambda: (() -> Unit)? = null) {
         assumeThat(
             "Assuming is ${if (editable) "" else "not "}editable",
@@ -669,6 +704,10 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
         override val content: String get() {
             return mainSession.evaluateJS("document.querySelector('$id').textContent") as String
+        }
+
+        override val htmlContent: String get() {
+            return mainSession.evaluateJS("document.querySelector('$id').innerHTML") as String
         }
 
         override val selectionOffsets: Pair<Int, Int> get() {
@@ -709,6 +748,10 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             return mainSession.evaluateJS("document.querySelector('$id').value") as String
         }
 
+        override val htmlContent: String get() {
+            return content
+        }
+
         override val selectionOffsets: Pair<Int, Int> get() {
             val offsets = mainSession.evaluateJS(
                 """[ document.querySelector('$id').selectionStart,
@@ -747,6 +790,10 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
         override val content: String get() {
             return mainSession.evaluateJS("document.querySelector('$id').contentDocument.body.textContent") as String
+        }
+
+        override val htmlContent: String get() {
+            return content
         }
 
         override val selectionOffsets: Pair<Int, Int> get() {
@@ -794,6 +841,10 @@ class SelectionActionDelegateTest : BaseSessionTest() {
             """,
             )
             return promise.value as String
+        }
+
+        override val htmlContent: String get() {
+            return content
         }
 
         override val selectionOffsets: Pair<Int, Int> get() {
@@ -911,5 +962,9 @@ class SelectionActionDelegateTest : BaseSessionTest() {
 
     private fun changesContentTo(content: String) = { it: SelectedContent ->
         assertThat("Changed content should match", it.content, equalTo(content))
+    }
+
+    private fun changesHtmlContentTo(content: String) = { it: SelectedContent ->
+        assertThat("Changed HTML content should match", it.htmlContent, equalTo(content))
     }
 }
