@@ -8198,6 +8198,12 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
     return false;
   }
 
+  // Don't rollup a popup if it has an open file picker
+  nsWindow* window = WinUtils::GetNSWindowPtr(aWnd);
+  if (!window || window->mPickerDisplayCount) {
+    return false;
+  }
+
   static bool sSendingNCACTIVATE = false;
   static bool sPendingNCACTIVATE = false;
   uint32_t popupsToRollup = UINT32_MAX;
@@ -8295,7 +8301,6 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
       // NOTE: Don't handle WA_INACTIVE for preventing popup taking focus
       // because we cannot distinguish it's caused by mouse or not.
       if (LOWORD(aWParam) == WA_ACTIVE && aLParam) {
-        nsWindow* window = WinUtils::GetNSWindowPtr(aWnd);
         if (window && window->IsPopup()) {
           // Cancel notifying widget listeners of deactivating the previous
           // active window (see WM_KILLFOCUS case in ProcessMessage()).
@@ -8437,6 +8442,14 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
 
     default:
       return false;
+  }
+
+  // Only exit if the touchpoint is within the browser window
+  // EventIsInsideWindow handles for Maybe conditions
+  // It does not matter if not a touch because otherwise it justs gets the event
+  // message
+  if (!EventIsInsideWindow(window, touchPoint)) {
+    return false;
   }
 
   // Only need to deal with the last rollup for left mouse down events.
