@@ -345,6 +345,59 @@ A table mapping Rust log levels to `MOZ_LOG` log level is available below:
 |      trace     |     Verbose   |        5        |
 +----------------+---------------+-----------------+
 
+
+Enabling logging on Android, interleaved with system logs (``logcat``)
+----------------------------------------------------------------------
+
+While logging to the Firefox Profiler works it's sometimes useful to have
+system logs (``adb logcat``) interleaved with application logging. With a
+device (or emulator) that ``adb devices`` sees, it's possible to set
+environment variables like so, for e.g. ``GeckoView_example``:
+
+
+.. code-block:: sh
+
+  adb shell am start -n org.mozilla.geckoview_example/.GeckoViewActivity --es env0 MOZ_LOG=MediaDemuxer:4
+
+
+It is then possible to see the logging statements like so, to display all logs,
+including ``MOZ_LOG``:
+
+.. code-block:: sh
+
+  adb logcat
+
+and to only see ``MOZ_LOG`` like so:
+
+.. code-block:: sh
+
+  adb logcat Gecko:V '*:S'
+
+This expression means: print log module ``Gecko`` from log level ``Verbose``
+(lowest level, this means that all levels are printed), and filter out (``S``
+for silence) all other logging (``*``, be careful to quote it or escape it
+appropriately, it so that it's not expanded by the shell).
+
+While interactive with e.g. ``GeckoView`` code, it can be useful to specify
+more logging tags like so:
+
+.. code-block:: sh
+
+  adb logcat GeckoViewActivity:V Gecko:V '*:S'
+
+
+Enabling logging on Android, using the Firefox Profiler
+-------------------------------------------------------
+
+Set the logging modules using `about:config` (this requires a Nightly build)
+using the instructions outlined above, and start the profile using an
+appropriate profiling preset to profile the correct threads using the instructions
+written in Firefox Profiler documentation's `dedicated page
+<https://profiler.firefox.com/docs/#/./guide-profiling-android-directly-on-device>`_.
+
+`Bug 1803607 <https://bugzilla.mozilla.org/show_bug.cgi?id=1803607>`_ tracks
+improving the logging experience on mobile.
+
 Working with ``MOZ_LOG`` in the code
 ++++++++++++++++++++++++++++++++++++
 
