@@ -1221,20 +1221,30 @@ const JSClass AsyncFromSyncIteratorObject::class_ = {
     "AsyncFromSyncIteratorObject",
     JSCLASS_HAS_RESERVED_SLOTS(AsyncFromSyncIteratorObject::Slots)};
 
-// ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
-// 25.1.4.1 CreateAsyncFromSyncIterator
+/*
+ * ES2024 draft rev 53454a9a596d90473d2152ef04656d605162cd4c
+ *
+ * CreateAsyncFromSyncIterator ( syncIteratorRecord )
+ * https://tc39.es/ecma262/#sec-createasyncfromsynciterator
+ */
 JSObject* js::CreateAsyncFromSyncIterator(JSContext* cx, HandleObject iter,
                                           HandleValue nextMethod) {
-  // Steps 1-3.
+  // Steps 1-5.
   return AsyncFromSyncIteratorObject::create(cx, iter, nextMethod);
 }
 
-// ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
-// 25.1.4.1 CreateAsyncFromSyncIterator
+/*
+ * ES2024 draft rev 53454a9a596d90473d2152ef04656d605162cd4c
+ *
+ * CreateAsyncFromSyncIterator ( syncIteratorRecord )
+ * https://tc39.es/ecma262/#sec-createasyncfromsynciterator
+ */
 /* static */
 JSObject* AsyncFromSyncIteratorObject::create(JSContext* cx, HandleObject iter,
                                               HandleValue nextMethod) {
-  // Step 1.
+  // Step 1. Let asyncIterator be
+  //         OrdinaryObjectCreate(%AsyncFromSyncIteratorPrototype%, «
+  //         [[SyncIteratorRecord]] »).
   RootedObject proto(cx,
                      GlobalObject::getOrCreateAsyncFromSyncIteratorPrototype(
                          cx, cx->global()));
@@ -1248,34 +1258,47 @@ JSObject* AsyncFromSyncIteratorObject::create(JSContext* cx, HandleObject iter,
     return nullptr;
   }
 
-  // Step 2.
+  // Step 3. Let nextMethod be ! Get(asyncIterator, "next").
+  // (done in caller)
+
+  // Step 2. Set asyncIterator.[[SyncIteratorRecord]] to syncIteratorRecord.
+  // Step 4. Let iteratorRecord be the Iterator Record { [[Iterator]]:
+  //         asyncIterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
   asyncIter->init(iter, nextMethod);
 
-  // Step 3 (Call to 7.4.1 GetIterator).
-  // 7.4.1 GetIterator, steps 1-5 are a no-op (*).
-  // 7.4.1 GetIterator, steps 6-8 are implemented in bytecode.
-  //
-  // (*) With <https://github.com/tc39/ecma262/issues/1172> fixed.
+  // Step 5. Return iteratorRecord.
   return asyncIter;
 }
 
-// ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
-// 25.1.4.2.1 %AsyncFromSyncIteratorPrototype%.next
+/**
+ * ES2024 draft rev 53454a9a596d90473d2152ef04656d605162cd4c
+ *
+ * %AsyncFromSyncIteratorPrototype%.next ( [ value ] )
+ * https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next
+ */
 static bool AsyncFromSyncIteratorNext(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return AsyncFromSyncIteratorMethod(cx, args, CompletionKind::Normal);
 }
 
-// ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
-// 25.1.4.2.2 %AsyncFromSyncIteratorPrototype%.return
+/**
+ * ES2024 draft rev 53454a9a596d90473d2152ef04656d605162cd4c
+ *
+ * %AsyncFromSyncIteratorPrototype%.return ( [ value ] )
+ * https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return
+ */
 static bool AsyncFromSyncIteratorReturn(JSContext* cx, unsigned argc,
                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return AsyncFromSyncIteratorMethod(cx, args, CompletionKind::Return);
 }
 
-// ES2019 draft rev c012f9c70847559a1d9dc0d35d35b27fec42911e
-// 25.1.4.2.3 %AsyncFromSyncIteratorPrototype%.throw
+/**
+ * ES2024 draft rev 53454a9a596d90473d2152ef04656d605162cd4c
+ *
+ * %AsyncFromSyncIteratorPrototype%.throw ( [ value ] )
+ * https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw
+ */
 static bool AsyncFromSyncIteratorThrow(JSContext* cx, unsigned argc,
                                        Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -1299,7 +1322,10 @@ bool GlobalObject::initAsyncFromSyncIteratorProto(
     return false;
   }
 
-  // 25.1.4.2 The %AsyncFromSyncIteratorPrototype% Object
+  // ES2024 draft rev 53454a9a596d90473d2152ef04656d605162cd4c
+  //
+  // The %AsyncFromSyncIteratorPrototype% Object
+  // https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%-object
   RootedObject asyncFromSyncIterProto(
       cx, GlobalObject::createBlankPrototypeInheriting(cx, &PlainObject::class_,
                                                        asyncIterProto));

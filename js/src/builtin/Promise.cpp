@@ -5494,52 +5494,48 @@ template <typename T>
   return genObj->promise();
 }
 
-// https://tc39.github.io/ecma262/#sec-%asyncfromsynciteratorprototype%.next
-// 25.1.4.2.1 %AsyncFromSyncIteratorPrototype%.next
-// 25.1.4.2.2 %AsyncFromSyncIteratorPrototype%.return
-// 25.1.4.2.3 %AsyncFromSyncIteratorPrototype%.throw
+/**
+ * ES2024 draft rev 53454a9a596d90473d2152ef04656d605162cd4c
+ *
+ * %AsyncFromSyncIteratorPrototype%.next ( [ value ] )
+ * https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next
+ *
+ * %AsyncFromSyncIteratorPrototype%.return ( [ value ] )
+ * https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return
+ *
+ * %AsyncFromSyncIteratorPrototype%.throw ( [ value ] )
+ * https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw
+ *
+ * AsyncFromSyncIteratorContinuation ( result, promiseCapability )
+ * https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation
+ */
 bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
                                      CompletionKind completionKind) {
-  // Step 1: Let O be the this value.
+  // Step 1. Let O be the this value.
   HandleValue thisVal = args.thisv();
 
-  // Step 2: Let promiseCapability be ! NewPromiseCapability(%Promise%).
+  // Step 2. Assert: O is an Object that has a [[SyncIteratorRecord]] internal
+  //         slot.
+  MOZ_ASSERT(thisVal.isObject());
+  MOZ_ASSERT(thisVal.toObject().is<AsyncFromSyncIteratorObject>());
+
+  // Step 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   Rooted<PromiseObject*> resultPromise(
       cx, CreatePromiseObjectWithoutResolutionFunctions(cx));
   if (!resultPromise) {
     return false;
   }
 
-  // Step 3: If Type(O) is not Object, or if O does not have a
-  //         [[SyncIteratorRecord]] internal slot, then
-  if (!thisVal.isObject() ||
-      !thisVal.toObject().is<AsyncFromSyncIteratorObject>()) {
-    // NB: See https://github.com/tc39/proposal-async-iteration/issues/105
-    // for why this check shouldn't be necessary as long as we can ensure
-    // the Async-from-Sync iterator can't be accessed directly by user
-    // code.
-
-    // Step 3.a: Let invalidIteratorError be a newly created TypeError object.
-    RootedValue badGeneratorError(cx);
-    if (!GetTypeError(cx, JSMSG_NOT_AN_ASYNC_ITERATOR, &badGeneratorError)) {
-      return false;
-    }
-
-    // Step 3.b: Perform ! Call(promiseCapability.[[Reject]], undefined,
-    //                          « invalidIteratorError »).
-    if (!RejectPromiseInternal(cx, resultPromise, badGeneratorError)) {
-      return false;
-    }
-
-    // Step 3.c: Return promiseCapability.[[Promise]].
-    args.rval().setObject(*resultPromise);
-    return true;
-  }
-
   Rooted<AsyncFromSyncIteratorObject*> asyncIter(
       cx, &thisVal.toObject().as<AsyncFromSyncIteratorObject>());
 
-  // Step 4: Let syncIteratorRecord be O.[[SyncIteratorRecord]].
+  // next():
+  // Step 4. Let syncIteratorRecord be O.[[SyncIteratorRecord]].
+  //
+  // or
+  //
+  // return() / throw():
+  // Step 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
   RootedObject iter(cx, asyncIter->iterator());
 
   RootedValue func(cx);
@@ -5548,17 +5544,17 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
     func.set(asyncIter->nextMethod());
   } else if (completionKind == CompletionKind::Return) {
     // return() steps 5-7.
-    // Step 5: Let return be GetMethod(syncIterator, "return").
-    // Step 6: IfAbruptRejectPromise(return, promiseCapability).
+    // Step 5. Let return be Completion(GetMethod(syncIterator, "return")).
+    // Step 6. IfAbruptRejectPromise(return, promiseCapability).
     if (!GetProperty(cx, iter, iter, cx->names().return_, &func)) {
       return AbruptRejectPromise(cx, args, resultPromise, nullptr);
     }
 
-    // Step 7: If return is undefined, then
+    // Step 7. If return is undefined, then
     // (Note: GetMethod contains a step that changes `null` to `undefined`;
     // we omit that step above, and check for `null` here instead.)
     if (func.isNullOrUndefined()) {
-      // Step 7.a: Let iterResult be ! CreateIterResultObject(value, true).
+      // Step 7.a. Let iterResult be CreateIterResultObject(value, true).
       PlainObject* resultObj = CreateIterResultObject(cx, args.get(0), true);
       if (!resultObj) {
         return AbruptRejectPromise(cx, args, resultPromise, nullptr);
@@ -5566,50 +5562,64 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
 
       RootedValue resultVal(cx, ObjectValue(*resultObj));
 
-      // Step 7.b: Perform ! Call(promiseCapability.[[Resolve]], undefined,
+      // Step 7.b. Perform ! Call(promiseCapability.[[Resolve]], undefined,
       //                          « iterResult »).
       if (!ResolvePromiseInternal(cx, resultPromise, resultVal)) {
         return AbruptRejectPromise(cx, args, resultPromise, nullptr);
       }
 
-      // Step 7.c: Return promiseCapability.[[Promise]].
+      // Step 7.c. Return promiseCapability.[[Promise]].
       args.rval().setObject(*resultPromise);
       return true;
     }
   } else {
-    // noexcept(true) steps 5-7.
+    // throw() steps 5-7.
     MOZ_ASSERT(completionKind == CompletionKind::Throw);
 
-    // Step 5: Let throw be GetMethod(syncIterator, "throw").
-    // Step 6: IfAbruptRejectPromise(throw, promiseCapability).
+    // Step 5. Let throw be Completion(GetMethod(syncIterator, "throw")).
+    // Step 6. IfAbruptRejectPromise(throw, promiseCapability).
     if (!GetProperty(cx, iter, iter, cx->names().throw_, &func)) {
       return AbruptRejectPromise(cx, args, resultPromise, nullptr);
     }
 
-    // Step 7: If throw is undefined, then
+    // Step 7. If throw is undefined, then
     // (Note: GetMethod contains a step that changes `null` to `undefined`;
     // we omit that step above, and check for `null` here instead.)
     if (func.isNullOrUndefined()) {
-      // Step 7.a: Perform ! Call(promiseCapability.[[Reject]], undefined, «
-      // value »).
+      // Step 7.a. Perform ! Call(promiseCapability.[[Reject]], undefined,
+      //                          « value »).
       if (!RejectPromiseInternal(cx, resultPromise, args.get(0))) {
         return AbruptRejectPromise(cx, args, resultPromise, nullptr);
       }
 
-      // Step 7.b: Return promiseCapability.[[Promise]].
+      // Step 7.b. Return promiseCapability.[[Promise]].
       args.rval().setObject(*resultPromise);
       return true;
     }
   }
 
-  // next() steps 5-6.
-  //     Step 5: Let result be IteratorNext(syncIteratorRecord, value).
-  //     Step 6: IfAbruptRejectPromise(result, promiseCapability).
-  // return/throw() steps 8-9.
-  //     Step 8: Let result be Call(throw, syncIterator, « value »).
-  //     Step 9: IfAbruptRejectPromise(result, promiseCapability).
+  // next():
+  // Step 5. If value is present, then
+  // Step 5.a. Let result be Completion(IteratorNext(syncIteratorRecord,
+  //                                                 value)).
+  // Step 6. Else,
+  // Step 6.a. Let result be Completion(IteratorNext(syncIteratorRecord)).
   //
-  // Including the changes from: https://github.com/tc39/ecma262/pull/1776
+  // or
+  //
+  // return():
+  // Step 8. If value is present, then
+  // Step 8.a. Let result be Completion(Call(return, syncIterator,
+  //                                         « value »)).
+  // Step 9. Else,
+  // Step 9.a. Let result be Completion(Call(return, syncIterator)).
+  //
+  // throw():
+  // Step 8. If value is present, then
+  // Step 8.a. Let result be Completion(Call(throw, syncIterator,
+  //                                         « value »)).
+  // Step 9. Else,
+  // Step 9.a. Let result be Completion(Call(throw, syncIterator)).
   RootedValue iterVal(cx, ObjectValue(*iter));
   RootedValue resultVal(cx);
   bool ok;
@@ -5619,17 +5629,26 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
     ok = Call(cx, func, iterVal, args[0], &resultVal);
   }
   if (!ok) {
+    // next():
+    // Step 7. IfAbruptRejectPromise(result, promiseCapability).
+    //
+    // return() / throw():
+    // Step 10. IfAbruptRejectPromise(result, promiseCapability).
     return AbruptRejectPromise(cx, args, resultPromise, nullptr);
   }
 
-  // next() step 5 -> IteratorNext Step 3:
-  //     If Type(result) is not Object, throw a TypeError exception.
-  // Followed by IfAbruptRejectPromise in step 6.
+  // next() steps 5-6 -> IteratorNext:
+  // Step 3. If result is not an Object, throw a TypeError exception.
+  // next():
+  // Step 7. IfAbruptRejectPromise(result, promiseCapability).
   //
-  // return/throw() Step 10: If Type(result) is not Object, then
-  //     Step 10.a: Perform ! Call(promiseCapability.[[Reject]], undefined,
-  //                               « a newly created TypeError object »).
-  //     Step 10.b: Return promiseCapability.[[Promise]].
+  // or
+  //
+  // return() / throw():
+  // Step 11. If result is not an Object, then
+  // Step 11.a. Perform ! Call(promiseCapability.[[Reject]], undefined,
+  //                           « a newly created TypeError object »).
+  // Step 11.b. Return promiseCapability.[[Promise]].
   if (!resultVal.isObject()) {
     CheckIsObjectKind kind;
     switch (completionKind) {
@@ -5649,54 +5668,61 @@ bool js::AsyncFromSyncIteratorMethod(JSContext* cx, CallArgs& args,
 
   RootedObject resultObj(cx, &resultVal.toObject());
 
-  // next() Step 7, return/throw() Step 11: Return
-  //     ! AsyncFromSyncIteratorContinuation(result, promiseCapability).
+  // next():
+  // Step 8. Return AsyncFromSyncIteratorContinuation(result,
+  //                                                  promiseCapability).
   //
-  // The step numbers below are for
-  // 25.1.4.4 AsyncFromSyncIteratorContinuation ( result, promiseCapability ).
+  // return() / throw():
+  // Step 12. Return AsyncFromSyncIteratorContinuation(result,
+  //                                                   promiseCapability).
 
-  // Step 1: Let done be IteratorComplete(result).
-  // Step 2: IfAbruptRejectPromise(done, promiseCapability).
+  // The step numbers below are for AsyncFromSyncIteratorContinuation().
+  //
+  // Step 1. NOTE: Because promiseCapability is derived from the intrinsic
+  //         %Promise%, the calls to promiseCapability.[[Reject]] entailed by
+  //         the use IfAbruptRejectPromise below are guaranteed not to throw.
+  // Step 2. Let done be Completion(IteratorComplete(result)).
+  // Step 3. IfAbruptRejectPromise(done, promiseCapability).
   RootedValue doneVal(cx);
   if (!GetProperty(cx, resultObj, resultObj, cx->names().done, &doneVal)) {
     return AbruptRejectPromise(cx, args, resultPromise, nullptr);
   }
   bool done = ToBoolean(doneVal);
 
-  // Step 3: Let value be IteratorValue(result).
-  // Step 4: IfAbruptRejectPromise(value, promiseCapability).
+  // Step 4. Let value be Completion(IteratorValue(result)).
+  // Step 5. IfAbruptRejectPromise(value, promiseCapability).
   RootedValue value(cx);
   if (!GetProperty(cx, resultObj, resultObj, cx->names().value, &value)) {
     return AbruptRejectPromise(cx, args, resultPromise, nullptr);
   }
 
-  // Step numbers below include the changes in
-  // <https://github.com/tc39/ecma262/pull/1470>, which inserted a new step 6.
-  //
-  // Steps 7-9 (reordered).
-  // Step 7: Let steps be the algorithm steps defined in Async-from-Sync
-  //         Iterator Value Unwrap Functions.
-  // Step 8: Let onFulfilled be CreateBuiltinFunction(steps, « [[Done]] »).
-  // Step 9: Set onFulfilled.[[Done]] to done.
+  // Step 8. Let unwrap be a new Abstract Closure with parameters (v) that
+  //         captures done and performs the following steps when called:
+  // Step 8.a. Return CreateIterResultObject(v, done).
+  // Step 9. Let onFulfilled be CreateBuiltinFunction(unwrap, 1, "", « »).
+  // Step 10. NOTE: onFulfilled is used when processing the "value" property
+  //          of an IteratorResult object in order to wait for its value if it
+  //          is a promise and re-package the result in a new "unwrapped"
+  //          IteratorResult object.
   PromiseHandler onFulfilled =
       done ? PromiseHandler::AsyncFromSyncIteratorValueUnwrapDone
            : PromiseHandler::AsyncFromSyncIteratorValueUnwrapNotDone;
   PromiseHandler onRejected = PromiseHandler::Thrower;
 
-  // Steps 5 and 10 are identical to some steps in Await; we have a utility
+  // Steps 6-7 and 11 are identical to some steps in Await; we have a utility
   // function InternalAwait() that implements the idiom.
   //
-  // Step 5: Let valueWrapper be PromiseResolve(%Promise%, « value »).
-  // Step 6: IfAbruptRejectPromise(valueWrapper, promiseCapability).
-  // Step 10: Perform ! PerformPromiseThen(valueWrapper, onFulfilled,
-  //                                      undefined, promiseCapability).
+  // Step 6. Let valueWrapper be Completion(PromiseResolve(%Promise%, value)).
+  // Step 7. IfAbruptRejectPromise(valueWrapper, promiseCapability).
+  // Step 11. Perform PerformPromiseThen(valueWrapper, onFulfilled,
+  //                                     undefined, promiseCapability).
   auto extra = [](Handle<PromiseReactionRecord*> reaction) {};
   if (!InternalAwait(cx, value, resultPromise, onFulfilled, onRejected,
                      extra)) {
     return AbruptRejectPromise(cx, args, resultPromise, nullptr);
   }
 
-  // Step 11: Return promiseCapability.[[Promise]].
+  // Step 12. Return promiseCapability.[[Promise]].
   args.rval().setObject(*resultPromise);
   return true;
 }
