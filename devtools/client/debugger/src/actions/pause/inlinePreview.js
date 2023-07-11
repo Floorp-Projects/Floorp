@@ -37,18 +37,9 @@ export function generateInlinePreview(cx, frame) {
       return null;
     }
 
-    const originalFrameScopes = getOriginalFrameScope(
-      getState(),
-      thread,
-      frame.location.source.id,
-      frame.id
-    );
+    const originalFrameScopes = getOriginalFrameScope(getState(), frame);
 
-    const generatedFrameScopes = getGeneratedFrameScope(
-      getState(),
-      thread,
-      frame.id
-    );
+    const generatedFrameScopes = getGeneratedFrameScope(getState(), frame);
 
     let scopes = originalFrameScopes?.scope || generatedFrameScopes?.scope;
 

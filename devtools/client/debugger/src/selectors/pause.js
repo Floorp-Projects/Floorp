@@ -128,25 +128,30 @@ function getGeneratedFrameId(frameId) {
   return frameId;
 }
 
-export function getGeneratedFrameScope(state, thread, frameId) {
-  if (!frameId) {
+export function getGeneratedFrameScope(state, frame) {
+  if (!frame) {
     return null;
   }
-
-  return getFrameScopes(state, thread).generated[getGeneratedFrameId(frameId)];
+  return getFrameScopes(state, frame.thread).generated[
+    getGeneratedFrameId(frame.id)
+  ];
 }
 
-export function getOriginalFrameScope(state, thread, sourceId, frameId) {
-  if (!frameId || !sourceId) {
+export function getOriginalFrameScope(state, frame) {
+  if (!frame) {
+    return null;
+  }
+  // Only compute original scope if we are currently showing an original source.
+  const sourceId = getSelectedSourceId(state);
+  if (!sourceId || isGeneratedId(sourceId)) {
     return null;
   }
 
-  const isGenerated = isGeneratedId(sourceId);
-  const original = getFrameScopes(state, thread).original[
-    getGeneratedFrameId(frameId)
+  const original = getFrameScopes(state, frame.thread).original[
+    getGeneratedFrameId(frame.id)
   ];
 
-  if (!isGenerated && original && (original.pending || original.scope)) {
+  if (original && (original.pending || original.scope)) {
     return original;
   }
 
@@ -189,19 +194,17 @@ export function getSelectedFrameBindings(state, thread) {
   return frameBindings;
 }
 
-function getFrameScope(state, thread, sourceId, frameId) {
+function getFrameScope(state, frame) {
   return (
-    getOriginalFrameScope(state, thread, sourceId, frameId) ||
-    getGeneratedFrameScope(state, thread, frameId)
+    getOriginalFrameScope(state, frame) || getGeneratedFrameScope(state, frame)
   );
 }
 
 // This is only used by tests
 export function getSelectedScope(state, thread) {
-  const sourceId = getSelectedSourceId(state);
-  const frameId = getSelectedFrameId(state, thread);
+  const frame = getSelectedFrame(state, thread);
 
-  const frameScope = getFrameScope(state, thread, sourceId, frameId);
+  const frameScope = getFrameScope(state, frame);
   if (!frameScope) {
     return null;
   }
@@ -210,14 +213,8 @@ export function getSelectedScope(state, thread) {
 }
 
 export function getSelectedOriginalScope(state, thread) {
-  const sourceId = getSelectedSourceId(state);
-  const frameId = getSelectedFrameId(state, thread);
-  return getOriginalFrameScope(state, thread, sourceId, frameId);
-}
-
-export function getSelectedGeneratedScope(state, thread) {
-  const frameId = getSelectedFrameId(state, thread);
-  return getGeneratedFrameScope(state, thread, frameId);
+  const frame = getSelectedFrame(state, thread);
+  return getOriginalFrameScope(state, frame);
 }
 
 export function getSelectedScopeMappings(state, thread) {

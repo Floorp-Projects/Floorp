@@ -7,8 +7,8 @@ import {
   getSettledSourceTextContent,
   isMapScopesEnabled,
   getSelectedFrame,
-  getSelectedGeneratedScope,
-  getSelectedOriginalScope,
+  getGeneratedFrameScope,
+  getOriginalFrameScope,
   getThreadContext,
   getFirstSourceActorForGeneratedSource,
 } from "../../selectors";
@@ -94,13 +94,17 @@ export function toggleMapScopes() {
 
     const cx = getThreadContext(getState());
 
-    if (getSelectedOriginalScope(getState(), cx.thread)) {
+    const frame = getSelectedFrame(getState(), cx.thread);
+    if (!frame) {
       return;
     }
 
-    const scopes = getSelectedGeneratedScope(getState(), cx.thread);
-    const frame = getSelectedFrame(getState(), cx.thread);
-    if (!scopes || !frame) {
+    if (getOriginalFrameScope(getState(), frame)) {
+      return;
+    }
+
+    const scopes = getGeneratedFrameScope(getState(), frame);
+    if (!scopes) {
       return;
     }
 

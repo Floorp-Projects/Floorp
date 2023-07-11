@@ -9,7 +9,6 @@ import { connect } from "../../utils/connect";
 import actions from "../../actions";
 
 import {
-  getSelectedSource,
   getSelectedFrame,
   getGeneratedFrameScope,
   getOriginalFrameScope,
@@ -270,18 +269,15 @@ class Scopes extends PureComponent {
 const mapStateToProps = state => {
   const cx = getThreadContext(state);
   const selectedFrame = getSelectedFrame(state, cx.thread);
-  const selectedSource = getSelectedSource(state);
 
   const { scope: originalFrameScopes, pending: originalPending } =
-    getOriginalFrameScope(
-      state,
-      cx.thread,
-      selectedSource?.id,
-      selectedFrame?.id
-    ) || { scope: null, pending: false };
+    getOriginalFrameScope(state, selectedFrame) || {
+      scope: null,
+      pending: false,
+    };
 
   const { scope: generatedFrameScopes, pending: generatedPending } =
-    getGeneratedFrameScope(state, cx.thread, selectedFrame?.id) || {
+    getGeneratedFrameScope(state, selectedFrame) || {
       scope: null,
       pending: false,
     };
