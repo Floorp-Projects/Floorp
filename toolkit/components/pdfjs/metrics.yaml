@@ -17,6 +17,7 @@ pdfjs:
     labels:
       - ink
       - freetext
+      - stamp
       - save
       - print
     description: >

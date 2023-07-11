@@ -22,7 +22,7 @@ export const PdfJsTelemetry = {
     Glean.pdfjs.timeToView.accumulateSamples([ms]);
   },
   onEditing(type) {
-    if (["ink", "freetext", "print", "save"].includes(type)) {
+    if (["ink", "freetext", "stamp", "print", "save"].includes(type)) {
       Glean.pdfjs.editing[type].add(1);
     }
   },
