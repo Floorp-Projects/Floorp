@@ -1266,13 +1266,13 @@ jobs:
 
     - name: Sign to .app 🖋️
       run: |
-        chmod +x ./floorp/codesign/codesign.bash
+        chmod +x ./floorp/build/codesign/mac/codesign.bash
 
-        ./floorp/codesign/codesign.bash \
+        ./floorp/build/codesign/mac/codesign.bash \
           -a ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app \
           -i "${{ secrets.macOS_AppleDeveloperId }}" \
-          -b ./floorp/codesign/browser.developer.entitlements.xml \
-          -p ./floorp/codesign/plugin-container.developer.entitlements.xml
+          -b ./floorp/build/codesign/mac/browser.developer.entitlements.xml \
+          -p ./floorp/build/codesign/mac/plugin-container.developer.entitlements.xml
 
         echo "Sign Complete ! ****************************************" 
         pkgutil --check-signature ./obj-x86_64-apple-darwin/dist/floorp/Floorp.app
@@ -1303,14 +1303,11 @@ jobs:
     - name: Create MAR artifact 📦
       run: |
         brew install tree
-        wget -P ./martools https://github.com/surapunoyousei/Floorp/releases/download/v11.0.0/mar
-        chmod +x ./martools/mar
+        chmod +x ./floorp/build/bin/mac/mar
         chmod +x ./tools/update-packaging/make_full_update.sh
 
-        tree ./martools
-
         touch "obj-x86_64-apple-darwin/dist/floorp/precomplete"
-        MAR="martools/mar" MOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
+        MAR="floorp/build/bin/mac/mar" MOZ_PRODUCT_VERSION=${{ needs.get-display-version.outputs.display-version }} MAR_CHANNEL_ID=release tools/update-packaging/make_full_update.sh ./output/DARWIN-Universal.mar "obj-x86_64-apple-darwin/dist/floorp/Floorp.app"
 
         export MACOS_MAR_SIZE=`stat -f%z ./output/DARWIN-Universal.mar`
         echo "MACOS_MAR_SIZE=$MACOS_MAR_SIZE" >> $GITHUB_ENV
