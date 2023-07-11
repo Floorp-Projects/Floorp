@@ -107,11 +107,9 @@ const ADDRESS_COMPUTE_TESTCASES = [
     description: 'Has "country"',
     address: {
       country: "US",
-      name: "Timothy John Berners-Lee",
     },
     expectedResult: {
       country: "US",
-      name: "Timothy John Berners-Lee",
       "country-name": "United States",
     },
   },
@@ -324,11 +322,9 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     description: 'Has "country" in lowercase',
     address: {
       country: "us",
-      name: "name",
     },
     expectedResult: {
       country: "US",
-      name: "name",
     },
   },
   {
@@ -338,67 +334,59 @@ const ADDRESS_NORMALIZE_TESTCASES = [
       country: "AA",
     },
     expectedResult: {
-      country: "US",
+      country: undefined,
     },
   },
   {
     description: 'Has "country-name"',
     address: {
       "country-name": "united states",
-      name: "name",
     },
     expectedResult: {
       country: "US",
       "country-name": "United States",
-      name: "name",
     },
   },
   {
     description: 'Has alternative "country-name"',
     address: {
       "country-name": "america",
-      name: "name",
     },
     expectedResult: {
       country: "US",
       "country-name": "United States",
-      name: "name",
     },
   },
   {
     description: 'Has "country-name" as a substring',
     address: {
       "country-name": "test america test",
-      name: "name",
     },
     expectedResult: {
       country: "US",
       "country-name": "United States",
-      name: "name",
     },
   },
   {
     description: 'Has "country-name" as part of a word',
     address: {
+      "given-name": "John", // Make sure it won't be an empty record.
       "country-name": "TRUST",
-      name: "name", // Make sure it won't be an empty record.
     },
     expectedResult: {
-      country: "US",
-      "country-name": "United States",
-      name: "name",
+      country: undefined,
+      "country-name": undefined,
     },
   },
   {
     description: 'Has unknown "country-name"',
     address: {
+      "given-name": "John", // Make sure it won't be an empty record.
       "country-name": "unknown country name",
-      name: "name", // Make sure it won't be an empty record.
     },
     expectedResult: {
-      country: "US",
-      "country-name": "United States",
-      name: "name",
+      country: undefined,
+      "country-name": undefined,
     },
   },
   {
@@ -406,37 +394,33 @@ const ADDRESS_NORMALIZE_TESTCASES = [
     address: {
       country: "us",
       "country-name": "unknown country name",
-      name: "name",
     },
     expectedResult: {
       country: "US",
       "country-name": "United States",
-      name: "name",
     },
   },
   {
     description: 'Has "country-name" and unknown "country"',
     address: {
+      "given-name": "John", // Make sure it won't be an empty record.
       country: "AA",
       "country-name": "united states",
-      name: "name",
     },
     expectedResult: {
-      country: "US",
-      "country-name": "United States",
-      name: "name",
+      country: undefined,
+      "country-name": undefined,
     },
   },
   {
     description: 'Has unsupported "country"',
     address: {
+      "given-name": "John", // Make sure it won't be an empty record.
       country: "XX",
-      name: "name",
     },
     expectedResult: {
-      country: "US",
-      "country-name": "United States",
-      name: "name",
+      country: undefined,
+      "country-name": undefined,
     },
   },
 
