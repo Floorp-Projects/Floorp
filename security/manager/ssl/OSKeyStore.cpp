@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS(OSKeyStore, nsIOSKeyStore)
 using namespace mozilla;
 using dom::Promise;
 
-OSKeyStore::OSKeyStore() : mKs(nullptr), mKsIsNSSKeyStore(false) {
+OSKeyStore::OSKeyStore() : mKs(nullptr) {
   MOZ_ASSERT(NS_IsMainThread());
   if (NS_WARN_IF(!NS_IsMainThread())) {
     return;
@@ -43,11 +43,9 @@ OSKeyStore::OSKeyStore() : mKs(nullptr), mKsIsNSSKeyStore(false) {
     mKs.reset(new LibSecret());
   } else {
     mKs.reset(new NSSKeyStore());
-    mKsIsNSSKeyStore = true;
   }
 #else
   mKs.reset(new NSSKeyStore());
-  mKsIsNSSKeyStore = true;
 #endif
 }
 
@@ -185,23 +183,6 @@ nsresult OSKeyStore::DecryptBytes(const nsACString& aLabel,
   return NS_OK;
 }
 
-nsresult OSKeyStore::Lock() {
-  NS_ENSURE_STATE(mKs);
-  return mKs->Lock();
-}
-
-nsresult OSKeyStore::Unlock() {
-  NS_ENSURE_STATE(mKs);
-  return mKs->Unlock();
-}
-
-NS_IMETHODIMP
-OSKeyStore::GetIsNSSKeyStore(bool* aNSSKeyStore) {
-  NS_ENSURE_ARG_POINTER(aNSSKeyStore);
-  *aNSSKeyStore = mKsIsNSSKeyStore;
-  return NS_OK;
-}
-
 // Async interfaces that return promises because the key store implementation
 // might block, e.g. asking for a password.
 
@@ -216,85 +197,6 @@ nsresult GetPromise(JSContext* aCx, /* out */ RefPtr<Promise>& aPromise) {
     return result.StealNSResult();
   }
   return NS_OK;
-}
-
-void BackgroundUnlock(RefPtr<Promise>& aPromise, RefPtr<OSKeyStore> self) {
-  nsAutoCString recovery;
-  nsresult rv = self->Unlock();
-  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
-      "BackgroundUnlockOSKSResolve", [rv, aPromise = std::move(aPromise)]() {
-        if (NS_FAILED(rv)) {
-          aPromise->MaybeReject(rv);
-        } else {
-          aPromise->MaybeResolveWithUndefined();
-        }
-      }));
-  NS_DispatchToMainThread(runnable.forget());
-}
-
-NS_IMETHODIMP
-OSKeyStore::AsyncUnlock(JSContext* aCx, Promise** promiseOut) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  NS_ENSURE_ARG_POINTER(aCx);
-
-  RefPtr<Promise> promiseHandle;
-  nsresult rv = GetPromise(aCx, promiseHandle);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  RefPtr<OSKeyStore> self = this;
-  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
-      "BackgroundUnlock", [self, promiseHandle]() mutable {
-        BackgroundUnlock(promiseHandle, self);
-      }));
-
-  promiseHandle.forget(promiseOut);
-  return NS_DispatchBackgroundTask(runnable.forget(),
-                                   NS_DISPATCH_EVENT_MAY_BLOCK);
-}
-
-void BackgroundLock(RefPtr<Promise>& aPromise, RefPtr<OSKeyStore> self) {
-  nsresult rv = self->Lock();
-  nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
-      "BackgroundLockOSKSResolve", [rv, aPromise = std::move(aPromise)]() {
-        if (NS_FAILED(rv)) {
-          aPromise->MaybeReject(rv);
-        } else {
-          aPromise->MaybeResolveWithUndefined();
-        }
-      }));
-  NS_DispatchToMainThread(runnable.forget());
-}
-
-NS_IMETHODIMP
-OSKeyStore::AsyncLock(JSContext* aCx, Promise** promiseOut) {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (!NS_IsMainThread()) {
-    return NS_ERROR_NOT_SAME_THREAD;
-  }
-
-  NS_ENSURE_ARG_POINTER(aCx);
-
-  RefPtr<Promise> promiseHandle;
-  nsresult rv = GetPromise(aCx, promiseHandle);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  RefPtr<OSKeyStore> self = this;
-  nsCOMPtr<nsIRunnable> runnable(
-      NS_NewRunnableFunction("BackgroundLock", [self, promiseHandle]() mutable {
-        BackgroundLock(promiseHandle, self);
-      }));
-
-  promiseHandle.forget(promiseOut);
-  return NS_DispatchBackgroundTask(runnable.forget(),
-                                   NS_DISPATCH_EVENT_MAY_BLOCK);
 }
 
 void BackgroundGenerateSecret(const nsACString& aLabel,

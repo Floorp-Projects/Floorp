@@ -21,32 +21,6 @@ KeychainSecret::KeychainSecret() {}
 
 KeychainSecret::~KeychainSecret() {}
 
-nsresult KeychainSecret::Lock() {
-  // https://developer.apple.com/documentation/security/1402180-seckeychainlock
-  // Passing `nullptr` locks the default keychain.
-  OSStatus rv = SecKeychainLock(nullptr);
-  if (rv != errSecSuccess) {
-    MOZ_LOG(gKeychainSecretLog, LogLevel::Debug,
-            ("SecKeychainLock failed: %d", rv));
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
-nsresult KeychainSecret::Unlock() {
-  // https://developer.apple.com/documentation/security/1400341-seckeychainunlock
-  // This attempts to unlock the default keychain. Using `false` indicates we
-  // aren't passing in a password (if the keychain is locked, a dialog will
-  // appear for the user).
-  OSStatus rv = SecKeychainUnlock(nullptr, 0, nullptr, false);
-  if (rv != errSecSuccess) {
-    MOZ_LOG(gKeychainSecretLog, LogLevel::Debug,
-            ("SecKeychainUnlock failed: %d", rv));
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
 ScopedCFType<CFStringRef> MozillaStringToCFString(const nsACString& stringIn) {
   // https://developer.apple.com/documentation/corefoundation/1543419-cfstringcreatewithbytes
   ScopedCFType<CFStringRef> stringOut(CFStringCreateWithBytes(

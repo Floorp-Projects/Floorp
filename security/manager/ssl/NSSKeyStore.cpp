@@ -48,71 +48,9 @@ nsresult NSSKeyStore::InitToken() {
   return NS_OK;
 }
 
-nsresult NSSKeyStoreMainThreadLock(PK11SlotInfo* aSlot) {
-  nsCOMPtr<nsIPK11Token> token = new nsPK11Token(aSlot);
-  return token->LogoutSimple();
-}
-
-nsresult NSSKeyStore::Lock() {
-  NS_ENSURE_STATE(mSlot);
-
-  if (!NS_IsMainThread()) {
-    nsCOMPtr<nsIThread> mainThread;
-    nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Forward to the main thread synchronously.
-    SyncRunnable::DispatchToThread(
-        mainThread, NS_NewRunnableFunction("NSSKeyStoreMainThreadLock",
-                                           [slot = mSlot.get()]() {
-                                             NSSKeyStoreMainThreadLock(slot);
-                                           }));
-
-    return NS_OK;
-  }
-
-  return NSSKeyStoreMainThreadLock(mSlot.get());
-}
-
-nsresult NSSKeyStoreMainThreadUnlock(PK11SlotInfo* aSlot) {
-  nsCOMPtr<nsIPK11Token> token = new nsPK11Token(aSlot);
-  return NS_FAILED(token->Login(false /* force */)) ? NS_ERROR_FAILURE : NS_OK;
-}
-
-nsresult NSSKeyStore::Unlock() {
-  NS_ENSURE_STATE(mSlot);
-
-  if (!NS_IsMainThread()) {
-    nsCOMPtr<nsIThread> mainThread;
-    nsresult rv = NS_GetMainThread(getter_AddRefs(mainThread));
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Forward to the main thread synchronously.
-    nsresult result = NS_ERROR_FAILURE;
-    SyncRunnable::DispatchToThread(
-        mainThread,
-        NS_NewRunnableFunction("NSSKeyStoreMainThreadUnlock",
-                               [slot = mSlot.get(), result = &result]() {
-                                 *result = NSSKeyStoreMainThreadUnlock(slot);
-                               }));
-
-    return result;
-  }
-
-  return NSSKeyStoreMainThreadUnlock(mSlot.get());
-}
-
 nsresult NSSKeyStore::StoreSecret(const nsACString& aSecret,
                                   const nsACString& aLabel) {
   NS_ENSURE_STATE(mSlot);
-  if (NS_FAILED(Unlock())) {
-    MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug, ("Error unlocking NSS key db"));
-    return NS_ERROR_FAILURE;
-  }
 
   // It is possible for multiple keys to have the same nickname in NSS. To
   // prevent the problem of not knowing which key to use in the future, simply
@@ -159,10 +97,6 @@ nsresult NSSKeyStore::StoreSecret(const nsACString& aSecret,
 
 nsresult NSSKeyStore::DeleteSecret(const nsACString& aLabel) {
   NS_ENSURE_STATE(mSlot);
-  if (NS_FAILED(Unlock())) {
-    MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug, ("Error unlocking NSS key db"));
-    return NS_ERROR_FAILURE;
-  }
 
   UniquePK11SymKey symKey(PK11_ListFixedKeysInSlot(
       mSlot.get(), const_cast<char*>(PromiseFlatCString(aLabel).get()),
@@ -185,10 +119,6 @@ bool NSSKeyStore::SecretAvailable(const nsACString& aLabel) {
   if (!mSlot) {
     return false;
   }
-  if (NS_FAILED(Unlock())) {
-    MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug, ("Error unlocking NSS key db"));
-    return false;
-  }
 
   UniquePK11SymKey symKey(PK11_ListFixedKeysInSlot(
       mSlot.get(), const_cast<char*>(PromiseFlatCString(aLabel).get()),
@@ -204,10 +134,6 @@ nsresult NSSKeyStore::EncryptDecrypt(const nsACString& aLabel,
                                      std::vector<uint8_t>& outBytes,
                                      bool encrypt) {
   NS_ENSURE_STATE(mSlot);
-  if (NS_FAILED(Unlock())) {
-    MOZ_LOG(gNSSKeyStoreLog, LogLevel::Debug, ("Error unlocking NSS key db"));
-    return NS_ERROR_FAILURE;
-  }
 
   UniquePK11SymKey symKey(PK11_ListFixedKeysInSlot(
       mSlot.get(), const_cast<char*>(PromiseFlatCString(aLabel).get()),
