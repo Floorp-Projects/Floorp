@@ -898,11 +898,9 @@ AbortReasonOr<Ok> WarpScriptOracle::maybeInlineIC(WarpOpSnapshotList& snapshots,
     }
   }
 
+  // Check GC is not possible between updating stub pointers and creating the
+  // snapshot.
   JS::AutoAssertNoGC nogc;
-  Zone* zone = cx_->zone();
-  if (zone->needsIncrementalBarrier()) {
-    TraceWeakCacheIRStub(zone->barrierTracer(), stub, stub->stubInfo());
-  }
 
   // Copy the ICStub data to protect against the stub being unlinked or mutated.
   // We don't need to copy the CacheIRStubInfo: because we store and trace the
@@ -1144,6 +1142,9 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
   // initial heap to use, because the site's state may be mutated by the main
   // thread while we are compiling.
   //
+  // If the stub data contains weak pointers expose them to active JS. This is
+  // necessary as these will now be strong references in the snapshot.
+  //
   // Also asserts non-object fields don't contain nursery pointers.
 
   uint32_t field = 0;
@@ -1157,10 +1158,17 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
       case StubField::Type::Double:
         break;
       case StubField::Type::Shape:
-      case StubField::Type::WeakShape:
         static_assert(std::is_convertible_v<Shape*, gc::TenuredCell*>,
                       "Code assumes shapes are tenured");
         break;
+      case StubField::Type::WeakShape: {
+        static_assert(std::is_convertible_v<Shape*, gc::TenuredCell*>,
+                      "Code assumes shapes are tenured");
+        Shape* shape =
+            stubInfo->getStubField<ICCacheIRStub, Shape*>(stub, offset);
+        gc::ExposeGCThingToActiveJS(JS::GCCellPtr(shape));
+        break;
+      }
       case StubField::Type::GetterSetter:
         static_assert(std::is_convertible_v<GetterSetter*, gc::TenuredCell*>,
                       "Code assumes GetterSetters are tenured");
@@ -1181,6 +1189,9 @@ bool WarpScriptOracle::replaceNurseryAndAllocSitePointers(
       case StubField::Type::WeakObject: {
         JSObject* obj =
             stubInfo->getStubField<ICCacheIRStub, JSObject*>(stub, offset);
+        if (fieldType == StubField::Type::WeakObject) {
+          gc::ExposeGCThingToActiveJS(JS::GCCellPtr(obj));
+        }
         if (IsInsideNursery(obj)) {
           uint32_t nurseryIndex;
           if (!oracle_->registerNurseryObject(obj, &nurseryIndex)) {
