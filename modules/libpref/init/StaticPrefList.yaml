@@ -4764,12 +4764,6 @@
   value: true
   mirror: always
 
-# Enable the "noreferrer" feature argument for window.open()
-- name: dom.window.open.noreferrer.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: dom.window.content.untrusted.enabled
   type: bool
   value: false
