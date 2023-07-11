@@ -306,6 +306,8 @@ function enableTabSleep() {
             if (!nativeTab.linkedPanel) continue;
             if (nativeTab.getAttribute("busy") === "true") continue;
 
+            if (excludeHosts.includes(nativeTab.linkedBrowser.documentURI.hostPort)) continue;
+
             let target = true;
             for (let EXCLUDE_URL_PATTERN_COMPILED of EXCLUDE_URL_PATTERNS_COMPILED) {
                 if (EXCLUDE_URL_PATTERN_COMPILED.test(nativeTab.linkedBrowser.documentURI.spec)) {
@@ -313,7 +315,6 @@ function enableTabSleep() {
                 }
             }
             if (!target) continue;
-            if (excludeHosts.includes(nativeTab.linkedBrowser.documentURI.hostPort)) continue;
             if (
                 (currentTime - nativeTab.lastAccessed) > (TAB_TIMEOUT_MINUTES * 60 * 1000) &&
                 (
