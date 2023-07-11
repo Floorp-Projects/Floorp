@@ -9,33 +9,10 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-const ERRNO = {
-  EACCES: 13,
-  EINVAL: 22,
-  get ENOSYS() {
-    const os = Services.appinfo.OS;
+const lazy = {};
 
-    if (["Linux", "Android"].includes(os)) {
-      // https://github.com/torvalds/linux/blob/9a48d604672220545d209e9996c2a1edbb5637f6/include/uapi/asm-generic/errno.h#L18
-      return 38;
-    } else if (
-      ["Darwin", "DragonFly", "FreeBSD", "OpenBSD", "NetBSD"].includes(os)
-    ) {
-      /*
-       * Darwin: https://opensource.apple.com/source/xnu/xnu-201/bsd/sys/errno.h.auto.html
-       * DragonFly: https://github.com/DragonFlyBSD/DragonFlyBSD/blob/5e488df32cb01056a5b714a522e51c69ab7b4612/sys/sys/errno.h#L172
-       * FreeBSD: https://github.com/freebsd/freebsd-src/blob/7232e6dcc89b978825b30a537bca2e7d3a9b71bb/sys/sys/errno.h#L157
-       * OpenBSD: https://github.com/openbsd/src/blob/025fffe4c6e0113862ce4e1927e67517a2841502/sys/sys/errno.h#L151
-       * NetBSD: https://github.com/NetBSD/src/blob/ff24f695f5f53540b23b6bb4fa5c0b9d79b369e4/sys/sys/errno.h#L137
-       */
-      return 78;
-    } else if (os === "WINNT") {
-      // https://learn.microsoft.com/en-us/cpp/c-runtime-library/errno-constants?view=msvc-170
-      return 40;
-    }
-    throw new Error("Unsupported OS");
-  },
-};
+/* getLibcConstants is only present on *nix */
+XPCOMUtils.defineLazyGetter(lazy, "LIBC", () => ChromeUtils.getLibcConstants());
 
 /*
  * This test is for executing system calls in content processes to validate
@@ -165,20 +142,6 @@ function callFaccessat2(args) {
   }
   libc.close();
   return rv;
-}
-
-// open syscall flags
-function openWriteCreateFlags() {
-  Assert.ok(isMac() || isLinux());
-  if (isMac()) {
-    let O_WRONLY = 0x001;
-    let O_CREAT = 0x200;
-    return O_WRONLY | O_CREAT;
-  }
-  // Linux
-  let O_WRONLY = 0x01;
-  let O_CREAT = 0x40;
-  return O_WRONLY | O_CREAT;
 }
 
 // Returns the name of the native library needed for native syscalls
@@ -324,7 +287,7 @@ add_task(async function () {
   if (isLinux() || isMac()) {
     // open a file for writing in $HOME, this should fail
     let path = fileInHomeDir().path;
-    let flags = openWriteCreateFlags();
+    let flags = lazy.LIBC.O_CREAT | lazy.LIBC.O_WRONLY;
     let fd = await SpecialPowers.spawn(
       browser,
       [{ lib, path, flags }],
@@ -339,7 +302,7 @@ add_task(async function () {
     // macOS and work on Linux. The open handler in the content process closes
     // the file for us
     let path = fileInTempDir().path;
-    let flags = openWriteCreateFlags();
+    let flags = lazy.LIBC.O_CREAT | lazy.LIBC.O_WRONLY;
     let fd = await SpecialPowers.spawn(
       browser,
       [{ lib, path, flags }],
@@ -390,13 +353,11 @@ add_task(async function () {
 
   if (isLinux()) {
     // These constants are not portable.
-    const AT_EACCESS = 512;
-    const PR_CAPBSET_READ = 23;
 
     // verify we block PR_CAPBSET_READ with EINVAL
-    let option = PR_CAPBSET_READ;
+    let option = lazy.LIBC.PR_CAPBSET_READ;
     let rv = await SpecialPowers.spawn(browser, [{ lib, option }], callPrctl);
-    ok(rv === ERRNO.EINVAL, "prctl(PR_CAPBSET_READ) is blocked");
+    ok(rv === lazy.LIBC.EINVAL, "prctl(PR_CAPBSET_READ) is blocked");
 
     const kernelVersion = await getKernelVersion();
     const glibcVersion = getGlibcVersion();
@@ -412,15 +373,18 @@ add_task(async function () {
         [{ lib, dirfd, path, mode, flag: 0x01 }],
         callFaccessat2
       );
-      ok(rv === ERRNO.ENOSYS, "faccessat2 (flag=0x01) was blocked with ENOSYS");
+      ok(
+        rv === lazy.LIBC.ENOSYS,
+        "faccessat2 (flag=0x01) was blocked with ENOSYS"
+      );
 
       rv = await SpecialPowers.spawn(
         browser,
-        [{ lib, dirfd, path, mode, flag: AT_EACCESS }],
+        [{ lib, dirfd, path, mode, flag: lazy.LIBC.AT_EACCESS }],
         callFaccessat2
       );
       ok(
-        rv === ERRNO.EACCES,
+        rv === lazy.LIBC.EACCES,
         "faccessat2 (flag=0x200) was allowed, errno=EACCES"
       );
     } else {
