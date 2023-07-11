@@ -19,8 +19,6 @@ class NSSKeyStore final : public AbstractOSKeyStore {
   virtual nsresult StoreSecret(const nsACString& secret,
                                const nsACString& label) override;
   virtual nsresult DeleteSecret(const nsACString& label) override;
-  virtual nsresult Lock() override;
-  virtual nsresult Unlock() override;
   virtual nsresult EncryptDecrypt(const nsACString& label,
                                   const std::vector<uint8_t>& inBytes,
                                   std::vector<uint8_t>& outBytes,

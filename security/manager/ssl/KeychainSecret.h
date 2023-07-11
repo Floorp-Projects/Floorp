@@ -40,8 +40,6 @@ class KeychainSecret final : public AbstractOSKeyStore {
   virtual nsresult StoreSecret(const nsACString& secret,
                                const nsACString& label) override;
   virtual nsresult DeleteSecret(const nsACString& label) override;
-  virtual nsresult Lock() override;
-  virtual nsresult Unlock() override;
 
   virtual ~KeychainSecret();
 };

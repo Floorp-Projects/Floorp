@@ -39,17 +39,6 @@ CredentialManagerSecret::CredentialManagerSecret() {}
 
 CredentialManagerSecret::~CredentialManagerSecret() {}
 
-nsresult CredentialManagerSecret::Lock() {
-  // The Windows credential manager can't be locked.
-  return NS_OK;
-}
-
-nsresult CredentialManagerSecret::Unlock() {
-  // The Windows credential manager is always unlocked when the user is logged
-  // in.
-  return NS_OK;
-}
-
 nsresult CredentialManagerSecret::StoreSecret(const nsACString& aSecret,
                                               const nsACString& aLabel) {
   if (aSecret.Length() > CRED_MAX_CREDENTIAL_BLOB_SIZE) {
