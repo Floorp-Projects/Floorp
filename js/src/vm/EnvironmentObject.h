@@ -289,14 +289,14 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  * C.1. Frame scripts with unique scope
  *
  * XUL frame scripts with unique scope are loaded in the same global as
- * components, with a NonSyntacticVariablesObject as a "polluting global" for
+ * JSMs, with a NonSyntacticVariablesObject as a "polluting global" for
  * both qualified 'var' variables and unqualified names, and a with
  * environment wrapping a message manager object, and
  * NonSyntacticLexicalEnvironmentObject holding the message manager as `this`,
  * that holds lexical variables.
  * These environment objects except for globals are created for each run and
  * not shared across multiple runs. This is done exclusively in
- * js::ExecuteInScopeChainAndReturnNewScope.
+ * js::ExecuteInFrameScriptEnvironment.
  *
  *   BackstagePass global
  *       |
@@ -311,7 +311,7 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  * C.2. Frame scripts without unique scope
  *
  * XUL frame scripts without unique scope are loaded in the same global as
- * components, with a with environment wrapping a message manager object for
+ * JSMs, with a with environment wrapping a message manager object for
  * qualified 'var' variables, and NonSyntacticLexicalEnvironmentObject holding
  * the message manager as `this`, that holds lexical variables.
  * The environment chain is associated with the message manager object
@@ -321,7 +321,7 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *       |
  *   GlobalLexicalEnvironmentObject[this=global]
  *       |
- *   WithEnvironmentObject wrapping messageManager (qualified names)
+ *   WithEnvironmentObject wrapping messageManager (qualified 'var's)
  *       |
  *   NonSyntacticLexicalEnvironmentObject[this=messageManager] (lexical vars)
  *
