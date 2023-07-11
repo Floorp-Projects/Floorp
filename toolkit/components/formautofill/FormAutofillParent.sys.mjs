@@ -465,11 +465,7 @@ export class FormAutofillParent extends JSWindowActorParent {
     const storage = lazy.gFormAutofillStorage.addresses;
 
     // Make sure record is normalized before comparing with records in the storage
-    try {
-      storage._normalizeRecord(address.record);
-    } catch (_e) {
-      return false;
-    }
+    storage._normalizeRecord(address.record);
 
     const newAddress = new lazy.AddressComponent(
       address.record,
@@ -528,6 +524,7 @@ export class FormAutofillParent extends JSWindowActorParent {
       return false;
     }
 
+    dump(`[Dimi]Save: ${JSON.stringify(newAddress.record)}\n`);
     return async () => {
       await lazy.FormAutofillPrompter.promptToSaveAddress(
         browser,
@@ -540,14 +537,13 @@ export class FormAutofillParent extends JSWindowActorParent {
   }
 
   async _onCreditCardSubmit(creditCard, browser) {
-    const storage = lazy.gFormAutofillStorage.creditCards;
+    // Let's reset the credit card to empty, and then network auto-detect will
+    // pick it up.
+    delete creditCard.record["cc-type"];
 
+    const storage = lazy.gFormAutofillStorage.creditCards;
     // Make sure record is normalized before comparing with records in the storage
-    try {
-      storage._normalizeRecord(creditCard.record);
-    } catch (_e) {
-      return false;
-    }
+    storage._normalizeRecord(creditCard.record);
 
     // If the record alreay exists in the storage, don't bother showing the prompt
     const matchRecord = (
