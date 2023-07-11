@@ -232,16 +232,19 @@ const ADDRESS_RECONCILE_TESTCASES = [
       "given-name": "Mark",
       "family-name": "Hammond",
       tel: "123456",
+      country: "US",
     },
     local: [
       {
         "given-name": "Skip",
         "family-name": "Hammond",
+        country: "US",
       },
       {
         "given-name": "Skip",
         "family-name": "Hammond",
         organization: "Mozilla",
+        country: "US",
       },
     ],
     remote: {

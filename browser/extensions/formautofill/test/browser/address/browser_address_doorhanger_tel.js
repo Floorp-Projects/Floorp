@@ -65,3 +65,51 @@ add_task(async function test_save_doorhanger_tel_invalid() {
     await removeAllRecords();
   }
 });
+
+add_task(async function test_save_doorhanger_tel_concatenated() {
+  const EXPECTED = [
+    {
+      "given-name": "Test User",
+      organization: "Mozilla",
+      tel: "+15202486621",
+    },
+  ];
+
+  const MARKUP = `<form id="form">
+    <input id="given-name" autocomplete="given-name">
+    <input id="organization" autocomplete="organization">
+    <input id="tel-country-code" autocomplete="tel-country-code">
+    <input id="tel-national" autocomplete="tel-national">
+    <input type="submit">
+   </form>`;
+
+  await expectSavedAddresses([]);
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: EMPTY_URL },
+    async function (browser) {
+      await SpecialPowers.spawn(browser, [MARKUP], doc => {
+        // eslint-disable-next-line no-unsanitized/property
+        content.document.body.innerHTML = doc;
+      });
+
+      let onPopupShown = waitForPopupShown();
+
+      await focusUpdateSubmitForm(browser, {
+        focusSelector: "#given-name",
+        newValues: {
+          "#given-name": "Test User",
+          "#organization": "Mozilla",
+          "#tel-country-code": "+1",
+          "#tel-national": "5202486621",
+        },
+      });
+
+      await onPopupShown;
+      await clickDoorhangerButton(MAIN_BUTTON, 0);
+    }
+  );
+
+  await expectSavedAddresses(EXPECTED);
+  await removeAllRecords();
+});
