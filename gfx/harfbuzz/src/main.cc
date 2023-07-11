@@ -245,7 +245,7 @@ layered_glyph_dump (hb_font_t *font, hb_draw_funcs_t *funcs, unsigned face_index
 	  if (hb_color_get_alpha (color) != 255)
 	    fprintf (f, "fill-opacity=\"%.3f\"", (double) hb_color_get_alpha (color) / 255.);
 	  fprintf (f, "d=\"");
-	  hb_font_get_glyph_shape (font, layers[layer].glyph, funcs, &draw_data);
+	  hb_font_draw_glyph (font, layers[layer].glyph, funcs, &draw_data);
 	  fprintf (f, "\"/>\n");
 	}
 
@@ -284,7 +284,7 @@ dump_glyphs (hb_font_t *font, hb_draw_funcs_t *funcs, unsigned face_index)
     draw_data_t draw_data;
     draw_data.ascender = font_extents.ascender;
     draw_data.f = f;
-    hb_font_get_glyph_shape (font, gid, funcs, &draw_data);
+    hb_font_draw_glyph (font, gid, funcs, &draw_data);
     fprintf (f, "\"/></svg>");
     fclose (f);
   }

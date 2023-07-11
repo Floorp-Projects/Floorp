@@ -338,9 +338,21 @@ HB_GDI_headers = hb-gdi.h
 HB_UNISCRIBE_sources = hb-uniscribe.cc
 HB_UNISCRIBE_headers = hb-uniscribe.h
 
-# Sources for libharfbuzz-gobject and libharfbuzz-icu
 HB_ICU_sources = hb-icu.cc
 HB_ICU_headers = hb-icu.h
+
+HB_WASM_sources = \
+	hb-wasm-api.cc \
+	hb-wasm-api.hh \
+	hb-wasm-api-blob.hh \
+	hb-wasm-api-buffer.hh \
+	hb-wasm-api-common.hh \
+	hb-wasm-api-face.hh \
+	hb-wasm-api-font.hh \
+	hb-wasm-api-shape.hh \
+	hb-wasm-shape.cc \
+	$(NULL)
+HB_WASM_headers = hb-wasm-api.h
 
 # Sources for libharfbuzz-subset
 HB_SUBSET_sources = \
@@ -353,11 +365,10 @@ HB_SUBSET_sources = \
 	hb-subset-cff-common.cc \
 	hb-subset-cff-common.hh \
 	hb-subset-cff1.cc \
-	hb-subset-cff1.hh \
 	hb-subset-cff2.cc \
-	hb-subset-cff2.hh \
 	hb-subset-input.cc \
 	hb-subset-input.hh \
+	hb-subset-instancer-solver.hh \
 	hb-subset-instancer-solver.cc \
 	hb-subset-accelerator.hh \
 	hb-subset-plan.cc \

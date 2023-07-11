@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Adobe Inc.
+ * Copyright © 2023  Behdad Esfahbod
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -20,18 +20,31 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- * Adobe Author(s): Michiharu Ariza
  */
 
-#ifndef HB_SUBSET_CFF2_HH
-#define HB_SUBSET_CFF2_HH
+#ifndef HB_WASM_API_BLOB_HH
+#define HB_WASM_API_BLOB_HH
 
-#include "hb.hh"
+#include "hb-wasm-api.hh"
 
-#include "hb-subset-plan.hh"
+namespace hb {
+namespace wasm {
 
-HB_INTERNAL bool
-hb_subset_cff2 (hb_subset_context_t *c);
 
-#endif /* HB_SUBSET_CFF2_HH */
+HB_WASM_API (void, blob_free) (HB_WASM_EXEC_ENV
+			       ptr_d(blob_t, blob))
+{
+  HB_PTR_PARAM (blob_t, blob);
+  if (unlikely (!blob))
+    return;
+
+  module_free (blob->data);
+
+  blob->data = nullref;
+  blob->length = 0;
+}
+
+
+}}
+
+#endif /* HB_WASM_API_BLOB_HH */
