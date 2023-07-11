@@ -407,8 +407,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   static bool DeviceSensorsEnabled(JSContext*, JSObject*);
 
-  static bool ContentPropertyEnabled(JSContext* aCx, JSObject*);
-
   static bool CachesEnabled(JSContext* aCx, JSObject*);
 
   bool DoResolve(

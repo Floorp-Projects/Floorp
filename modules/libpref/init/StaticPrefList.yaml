@@ -4764,11 +4764,6 @@
   value: true
   mirror: always
 
-- name: dom.window.content.untrusted.enabled
-  type: bool
-  value: false
-  mirror: always
-
 - name: dom.window.clientinformation.enabled
   type: bool
   value: true
