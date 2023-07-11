@@ -68,7 +68,7 @@ class GCSchedulingTunables;
 class TenuringTracer;
 }  // namespace gc
 
-class alignas(TypicalCacheLineSize) Nursery {
+class Nursery {
  public:
   explicit Nursery(gc::GCRuntime* gc);
   ~Nursery();
