@@ -10,7 +10,6 @@ const { BuiltInThemes } = ChromeUtils.importESModule(
   "resource:///modules/BuiltInThemes.sys.mjs"
 );
 
-const featureTourPref = "browser.firefox-view.feature-tour";
 const defaultPrefValue = getPrefValueByScreen(1);
 
 add_setup(async function () {
@@ -30,6 +29,8 @@ add_task(async function feature_callout_renders_in_firefox_view() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
 
       ok(
@@ -43,7 +44,7 @@ add_task(async function feature_callout_renders_in_firefox_view() {
 add_task(async function feature_callout_is_not_shown_twice() {
   // Third comma-separated value of the pref is set to a string value once a user completes the tour
   await SpecialPowers.pushPrefEnv({
-    set: [[featureTourPref, '{"message":"","screen":"","complete":true}']],
+    set: [[featureTourPref, '{"screen":"","complete":true}']],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -53,6 +54,8 @@ add_task(async function feature_callout_is_not_shown_twice() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
 
       ok(
         !document.querySelector(calloutSelector),
@@ -75,6 +78,7 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
     "about:firefoxview"
   );
   let tab1Doc = tab1.linkedBrowser.contentWindow.document;
+  launchFeatureTourIn(tab1.linkedBrowser.contentWindow);
   await waitForCalloutScreen(tab1Doc, "FEATURE_CALLOUT_1");
 
   ok(
@@ -88,6 +92,7 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
     "about:firefoxview"
   );
   let tab2Doc = tab2.linkedBrowser.contentWindow.document;
+  launchFeatureTourIn(tab2.linkedBrowser.contentWindow);
   await waitForCalloutScreen(tab2Doc, "FEATURE_CALLOUT_1");
 
   ok(
@@ -96,6 +101,7 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
   );
 
   await clickPrimaryButton(tab2Doc);
+  await waitForCalloutScreen(tab2Doc, "FEATURE_CALLOUT_2");
 
   gBrowser.selectedTab = tab1;
   tab1.focus();
@@ -129,9 +135,10 @@ add_task(async function feature_callout_syncs_across_visits_and_tabs() {
 });
 
 add_task(async function feature_callout_closes_on_dismiss() {
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_2_NO_CWS"
-  );
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, '{"screen":"FEATURE_CALLOUT_2","complete":false}']],
+  });
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
   const spy = new TelemetrySpy(sandbox);
 
@@ -142,6 +149,8 @@ add_task(async function feature_callout_closes_on_dismiss() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
 
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_2");
 
@@ -185,9 +194,7 @@ add_task(async function feature_callout_closes_on_dismiss() {
 
 add_task(async function feature_callout_not_rendered_when_it_has_no_parent() {
   Services.telemetry.clearEvents();
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-  );
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   testMessage.message.content.screens[0].parent_selector = "#fake-selector";
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
@@ -198,6 +205,8 @@ add_task(async function feature_callout_not_rendered_when_it_has_no_parent() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
 
       const CONTAINER_NOT_CREATED_EVENT = [
         [
@@ -232,9 +241,7 @@ add_task(async function feature_callout_not_rendered_when_it_has_no_parent() {
 });
 
 add_task(async function feature_callout_only_highlights_existing_elements() {
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-  );
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   testMessage.message.content.screens[0].parent_selector = "#fake-selector";
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
@@ -245,6 +252,9 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
+
       ok(
         !document.querySelector(`${calloutSelector}:not(.hidden)`),
         "Feature Callout screen does not render if its parent element does not exist"
@@ -255,9 +265,7 @@ add_task(async function feature_callout_only_highlights_existing_elements() {
 });
 
 add_task(async function feature_callout_arrow_class_exists() {
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-  );
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
   await BrowserTestUtils.withNewTab(
@@ -267,6 +275,9 @@ add_task(async function feature_callout_arrow_class_exists() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
+
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
 
       const arrowParent = document.querySelector(".callout-arrow.arrow-top");
@@ -277,9 +288,7 @@ add_task(async function feature_callout_arrow_class_exists() {
 });
 
 add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-  );
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   testMessage.message.content.screens[0].content.arrow_position = "start";
   testMessage.message.content.screens[0].parent_selector = "span.brand-icon";
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
@@ -290,6 +299,9 @@ add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
+
       await BrowserTestUtils.waitForCondition(() => {
         return document.querySelector(
           `${calloutSelector}.arrow-inline-start:not(.hidden)`
@@ -305,19 +317,22 @@ add_task(async function feature_callout_arrow_is_not_flipped_on_ltr() {
 });
 
 add_task(async function feature_callout_respects_cfr_features_pref() {
-  async function toggleCFRFeaturesPref(value, extraPrefs = []) {
+  async function toggleCFRFeaturesPref(value) {
     await SpecialPowers.pushPrefEnv({
       set: [
         [
           "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
           value,
         ],
-        ...extraPrefs,
       ],
     });
   }
 
-  await toggleCFRFeaturesPref(true, [[featureTourPref, defaultPrefValue]]);
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, defaultPrefValue]],
+  });
+
+  await toggleCFRFeaturesPref(true);
 
   await BrowserTestUtils.withNewTab(
     {
@@ -326,21 +341,19 @@ add_task(async function feature_callout_respects_cfr_features_pref() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
 
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
       ok(
         document.querySelector(calloutSelector),
         "Feature Callout element exists"
       );
-
-      await toggleCFRFeaturesPref(false);
-      await waitForCalloutRemoved(document);
-      ok(
-        !document.querySelector(calloutSelector),
-        "Feature Callout element was removed because CFR pref was disabled"
-      );
     }
   );
+
+  await SpecialPowers.popPrefEnv();
+  await toggleCFRFeaturesPref(false);
 
   await BrowserTestUtils.withNewTab(
     {
@@ -350,19 +363,16 @@ add_task(async function feature_callout_respects_cfr_features_pref() {
     async browser => {
       const { document } = browser.contentWindow;
 
+      launchFeatureTourIn(browser.contentWindow);
+
       ok(
         !document.querySelector(calloutSelector),
         "Feature Callout element was not created because CFR pref was disabled"
       );
-
-      await toggleCFRFeaturesPref(true);
-      await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
-      ok(
-        document.querySelector(calloutSelector),
-        "Feature Callout element was created because CFR pref was enabled"
-      );
     }
   );
+
+  await SpecialPowers.popPrefEnv();
 });
 
 add_task(
@@ -384,6 +394,9 @@ add_task(
       },
       async browser => {
         const { document } = browser.contentWindow;
+
+        launchFeatureTourIn(browser.contentWindow);
+
         let tabOpened = new Promise(resolve => {
           gBrowser.tabContainer.addEventListener(
             "TabOpen",
@@ -423,7 +436,7 @@ add_task(
 
 add_task(async function feature_callout_dismiss_on_page_click() {
   await SpecialPowers.pushPrefEnv({
-    set: [[featureTourPref, `{"message":"","screen":"","complete":true}`]],
+    set: [[featureTourPref, `{"screen":"","complete":true}`]],
   });
   const screenId = "FIREFOX_VIEW_TAB_PICKUP_REMINDER";
   const testClickSelector = "#recently-closed-tabs-container";
@@ -450,6 +463,8 @@ add_task(async function feature_callout_dismiss_on_page_click() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
 
       info("Waiting for callout to render");
       await waitForCalloutScreen(document, screenId);
@@ -491,13 +506,11 @@ add_task(async function feature_callout_dismiss_on_page_click() {
 });
 
 add_task(async function feature_callout_advance_tour_on_page_click() {
-  let sandbox = sinon.createSandbox();
   await SpecialPowers.pushPrefEnv({
     set: [
       [
         featureTourPref,
         JSON.stringify({
-          message: "FIREFOX_VIEW_FEATURE_TOUR",
           screen: "FEATURE_CALLOUT_1",
           complete: false,
         }),
@@ -506,30 +519,19 @@ add_task(async function feature_callout_advance_tour_on_page_click() {
   });
 
   // Add page action listeners to the built-in messages.
-  const TEST_MESSAGES = FeatureCalloutMessages.getMessages().filter(msg =>
-    [
-      "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS",
-      "FIREFOX_VIEW_FEATURE_TOUR_2_NO_CWS",
-    ].includes(msg.id)
-  );
-  TEST_MESSAGES.forEach(msg => {
-    let { content } = msg.content.screens[msg.content.startScreen ?? 0];
-    content.page_event_listeners = [
+  let testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
+  // Configure message with a dismiss action on tab container click
+  testMessage.message.content.screens.forEach(screen => {
+    screen.content.page_event_listeners = [
       {
-        params: {
-          type: "click",
-          selectors: ".brand-logo",
-        },
-        action: JSON.parse(JSON.stringify(content.primary_button.action)),
+        params: { type: "click", selectors: ".brand-logo" },
+        action: JSON.parse(
+          JSON.stringify(screen.content.primary_button.action)
+        ),
       },
     ];
   });
-  const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
-  getMessagesStub.returns(TEST_MESSAGES);
-  await ASRouter._updateMessageProviders();
-  await ASRouter.loadMessagesFromAllProviders(
-    ASRouter.state.providers.filter(p => p.id === "onboarding")
-  );
+  const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
   await BrowserTestUtils.withNewTab(
     {
@@ -538,6 +540,8 @@ add_task(async function feature_callout_advance_tour_on_page_click() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
 
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
       info("Clicking page button");
@@ -559,15 +563,12 @@ add_task(async function feature_callout_advance_tour_on_page_click() {
   );
 
   sandbox.restore();
-  await ASRouter._updateMessageProviders();
-  await ASRouter.loadMessagesFromAllProviders(
-    ASRouter.state.providers.filter(p => p.id === "onboarding")
-  );
+  ASRouter.resetMessageState();
 });
 
 add_task(async function feature_callout_dismiss_on_escape() {
   await SpecialPowers.pushPrefEnv({
-    set: [[featureTourPref, `{"message":"","screen":"","complete":true}`]],
+    set: [[featureTourPref, `{"screen":"","complete":true}`]],
   });
   const screenId = "FIREFOX_VIEW_TAB_PICKUP_REMINDER";
   let testMessage = getCalloutMessageById(screenId);
@@ -581,6 +582,8 @@ add_task(async function feature_callout_dismiss_on_escape() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
 
       info("Waiting for callout to render");
       await waitForCalloutScreen(document, screenId);
@@ -635,6 +638,8 @@ add_task(async function test_firefox_view_spotlight_promo() {
       url: "about:firefoxview",
     },
     async browser => {
+      launchFeatureTourIn(browser.contentWindow);
+
       info("Waiting for the Fx View Spotlight promo to open");
       let dialogBrowser = await dialogOpenPromise;
       let primaryBtnSelector = ".action-buttons button.primary";
@@ -645,13 +650,6 @@ add_task(async function test_firefox_view_spotlight_promo() {
 
       dialogBrowser.document.querySelector(primaryBtnSelector).click();
       info("Fx View Spotlight promo clicked");
-
-      await BrowserTestUtils.waitForCondition(
-        () =>
-          browser.contentWindow.performance.navigation.type ==
-          browser.contentWindow.performance.navigation.TYPE_RELOAD
-      );
-      info("Spotlight modal cleared, entering feature tour");
 
       const { document } = browser.contentWindow;
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
@@ -666,13 +664,15 @@ add_task(async function test_firefox_view_spotlight_promo() {
 
   ok(remoteSettingsStub.called, "Tried to load CFR messages");
   sandbox.restore();
+  await SpecialPowers.popPrefEnv();
   ASRouter.resetMessageState();
 });
 
 add_task(async function feature_callout_returns_default_fxview_focus_to_top() {
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-  );
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, defaultPrefValue]],
+  });
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
   await BrowserTestUtils.withNewTab(
@@ -682,6 +682,9 @@ add_task(async function feature_callout_returns_default_fxview_focus_to_top() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
+
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
 
       ok(
@@ -699,6 +702,8 @@ add_task(async function feature_callout_returns_default_fxview_focus_to_top() {
     }
   );
   sandbox.restore();
+  await SpecialPowers.popPrefEnv();
+  ASRouter.resetMessageState();
 });
 
 add_task(
@@ -715,6 +720,9 @@ add_task(
       },
       async browser => {
         const { document } = browser.contentWindow;
+
+        launchFeatureTourIn(browser.contentWindow);
+
         await waitForCalloutScreen(
           document,
           "FIREFOX_VIEW_TAB_PICKUP_REMINDER"
@@ -742,9 +750,10 @@ add_task(
 );
 
 add_task(async function feature_callout_does_not_display_arrow_if_hidden() {
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-  );
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, defaultPrefValue]],
+  });
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   testMessage.message.content.screens[0].content.hide_arrow = true;
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
   await BrowserTestUtils.withNewTab(
@@ -754,6 +763,11 @@ add_task(async function feature_callout_does_not_display_arrow_if_hidden() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
+
+      await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
+
       ok(
         getComputedStyle(
           document.querySelector(".callout-arrow"),

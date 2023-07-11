@@ -30,6 +30,8 @@ add_task(
       async browser => {
         const { document } = browser.contentWindow;
 
+        launchFeatureTourIn(browser.contentWindow);
+
         await waitForCalloutScreen(
           document,
           "FIREFOX_VIEW_TAB_PICKUP_REMINDER"
@@ -80,6 +82,8 @@ add_task(
       },
       async browser => {
         const { document } = browser.contentWindow;
+
+        launchFeatureTourIn(browser.contentWindow);
 
         await waitForCalloutScreen(
           document,
@@ -132,6 +136,8 @@ add_task(
       async browser => {
         const { document } = browser.contentWindow;
 
+        launchFeatureTourIn(browser.contentWindow);
+
         ok(
           !document.querySelector(".featureCallout"),
           "Tab Pickup reminder should not be displayed when the Spotlight message introducing the tour was viewed less than 24 hours ago."
@@ -152,6 +158,8 @@ add_task(
       },
       async browser => {
         const { document } = browser.contentWindow;
+
+        launchFeatureTourIn(browser.contentWindow);
 
         await waitForCalloutScreen(
           document,

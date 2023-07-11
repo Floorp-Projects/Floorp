@@ -27,71 +27,97 @@ const BUNDLE_SRC =
 export class FeatureCallout {
   /**
    * @typedef {Object} FeatureCalloutOptions
-   * @property {Window} win window in which messages will be rendered
-   * @property {String} prefName name of the pref used to track progress through
-   *   a given feature tour, e.g. "browser.pdfjs.feature-tour"
-   * @property {String} [page] string to pass as the page when requesting
-   *   messages from ASRouter and sending telemetry. for browser chrome, the
-   *   string "chrome" is used
+   * @property {Window} win window in which messages will be rendered.
+   * @property {{name: String, defaultValue?: String}} [pref] optional pref used
+   *   to track progress through a given feature tour. for example:
+   *   {
+   *     name: "browser.pdfjs.feature-tour",
+   *     defaultValue: '{ screen: "FEATURE_CALLOUT_1", complete: false }',
+   *   }
+   *   or { name: "browser.pdfjs.feature-tour" } (defaultValue is optional)
+   * @property {String} [location] string to pass as the page when requesting
+   *   messages from ASRouter and sending telemetry.
+   * @property {String} context either "chrome" or "content". "chrome" is used
+   *   when the callout is shown in the browser chrome, and "content" is used
+   *   when the callout is shown in a content page like Firefox View.
    * @property {MozBrowser} [browser] <browser> element responsible for the
    *   feature callout. for content pages, this is the browser element that the
-   *   callout is being shown in. for chrome, this is the active browser
+   *   callout is being shown in. for chrome, this is the active browser.
+   * @property {Function} [listener] callback to be invoked on various callout
+   *   events to keep the broker informed of the callout's state.
    * @property {FeatureCalloutTheme} [theme] @see FeatureCallout.themePresets
    */
 
   /** @param {FeatureCalloutOptions} options */
-  constructor({ win, prefName, page, browser, theme = {} } = {}) {
+  constructor({
+    win,
+    pref,
+    location,
+    context,
+    browser,
+    listener,
+    theme = {},
+  } = {}) {
     this.win = win;
     this.doc = win.document;
     this.browser = browser || this.win.docShell.chromeEventHandler;
     this.config = null;
     this.loadingConfig = false;
     this.message = null;
+    if (pref?.name) {
+      this.pref = pref;
+    }
+    this._featureTourProgress = null;
     this.currentScreen = null;
     this.renderObserver = null;
     this.savedActiveElement = null;
     this.ready = false;
     this._positionListenersRegistered = false;
     this.AWSetup = false;
-    this.page = page;
+    this.location = location;
+    this.context = context;
+    this.listener = listener;
     this._initTheme(theme);
 
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "featureTourProgress",
-      prefName,
-      '{"screen":"","complete":true}',
-      this._handlePrefChange.bind(this),
-      val => {
-        try {
-          return JSON.parse(val);
-        } catch (error) {
-          return null;
-        }
-      }
-    );
+    this._handlePrefChange = this._handlePrefChange.bind(this);
 
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "cfrFeaturesUserPref",
       "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
-      true,
-      function (pref, previous, latest) {
-        if (latest) {
-          this.showFeatureCallout();
-        } else {
-          this._handlePrefChange();
-        }
-      }.bind(this)
+      true
     );
-    this.featureTourProgress; // Load initial value of progress pref
+    this.setupFeatureTourProgress();
 
     // When the window is focused, ensure tour is synced with tours in any other
     // instances of the parent page. This does not apply when the Callout is
     // shown in the browser chrome.
-    if (this.page !== "chrome") {
+    if (this.context !== "chrome") {
       this.win.addEventListener("visibilitychange", this);
     }
+
+    this.win.addEventListener("unload", this);
+  }
+
+  setupFeatureTourProgress() {
+    if (this.featureTourProgress) {
+      return;
+    }
+    if (this.pref?.name) {
+      this._handlePrefChange(null, null, this.pref.name);
+      Services.prefs.addObserver(this.pref.name, this._handlePrefChange);
+    }
+  }
+
+  teardownFeatureTourProgress() {
+    if (this.pref?.name) {
+      Services.prefs.removeObserver(this.pref.name, this._handlePrefChange);
+    }
+    this._featureTourProgress = null;
+  }
+
+  get featureTourProgress() {
+    return this._featureTourProgress;
   }
 
   /**
@@ -129,25 +155,41 @@ export class FeatureCallout {
     }
   }
 
-  async _handlePrefChange() {
+  _handlePrefChange(subject, topic, prefName) {
+    switch (prefName) {
+      case this.pref?.name:
+        try {
+          this._featureTourProgress = JSON.parse(
+            Services.prefs.getStringPref(
+              this.pref.name,
+              this.pref.defaultValue ?? null
+            )
+          );
+        } catch (error) {
+          this._featureTourProgress = null;
+        }
+        if (topic === "nsPref:changed") {
+          this._maybeAdvanceScreens();
+        }
+        break;
+    }
+  }
+
+  async _maybeAdvanceScreens() {
     if (this.doc.visibilityState === "hidden" || !this.featureTourProgress) {
       return;
     }
 
-    // If we have more than one screen, it means that we're
-    // displaying a feature tour, and transitions are handled
-    // based on the value of a tour progress pref. Otherwise,
-    // just show the feature callout.
-    if (this.config?.screens.length === 1) {
+    // If we have more than one screen, it means that we're displaying a feature
+    // tour, and transitions are handled based on the value of a tour progress
+    // pref. Otherwise, just show the feature callout. If a pref change results
+    // from an event in a Spotlight message, initialize the feature callout with
+    // the next message in the tour.
+    if (
+      this.config?.screens.length === 1 ||
+      this.currentScreen == "spotlight"
+    ) {
       this.showFeatureCallout();
-      return;
-    }
-
-    // If a pref change results from an event in a Spotlight message,
-    // reload the page to clear the Spotlight and initialize the
-    // feature callout with the next message in the tour.
-    if (this.currentScreen == "spotlight") {
-      this.win.location.reload();
       return;
     }
 
@@ -156,17 +198,43 @@ export class FeatureCallout {
     // contextual feature recommendations.
     if (prefVal.complete || !this.cfrFeaturesUserPref) {
       this.endTour();
-      this.currentScreen = null;
     } else if (prefVal.screen !== this.currentScreen?.id) {
+      // Pref changes only matter to us insofar as they let us advance an
+      // ongoing tour. If the tour was closed and the pref changed later, e.g.
+      // by editing the pref directly, we don't want to start up the tour again.
+      // This is more important in the chrome, which is always open.
+      if (this.context === "chrome" && !this.currentScreen) {
+        return;
+      }
       this.ready = false;
       this._container?.classList.add("hidden");
       this._pageEventManager?.clear();
       // wait for fade out transition
       this.win.setTimeout(async () => {
-        await this._loadConfig();
+        // If the initial message was deployed from outside by ASRouter as a
+        // result of a trigger, we can't continue it through _loadConfig, since
+        // that effectively requests a message with a `featureCalloutCheck`
+        // trigger. So we need to load up the same message again, merely
+        // changing the startScreen index. Just check that the next screen and
+        // the current screen are both within the message's screens array.
+        let nextMessage = null;
+        if (
+          this.context === "chrome" &&
+          this.message?.trigger.id !== "featureCalloutCheck"
+        ) {
+          if (
+            this.config?.screens.some(s => s.id === this.currentScreen?.id) &&
+            this.config.screens.some(s => s.id === prefVal.screen)
+          ) {
+            nextMessage = this.message;
+          }
+        }
+        await this._updateConfig(nextMessage);
         this._container?.remove();
         this._removePositionListeners();
         this.doc.querySelector(`[src="${BUNDLE_SRC}"]`)?.remove();
+        this._addCalloutLinkElements();
+        this._setupWindowFunctions();
         await this._renderCallout();
       }, TRANSITION_MS);
     }
@@ -203,7 +271,7 @@ export class FeatureCallout {
           return;
         }
         let focusedElement =
-          this.page === "chrome"
+          this.context === "chrome"
             ? Services.focus.focusedElement
             : this.doc.activeElement;
         // If the window has a focused element, let it handle the ESC key instead.
@@ -217,7 +285,7 @@ export class FeatureCallout {
             event: "DISMISS",
             event_context: {
               source: `KEY_${event.key}`,
-              page: this.page,
+              page: this.location,
             },
             message_id: this.config?.id.toUpperCase(),
           });
@@ -228,12 +296,18 @@ export class FeatureCallout {
       }
 
       case "visibilitychange":
-        this._handlePrefChange();
+        this._maybeAdvanceScreens();
         break;
 
       case "resize":
       case "toggle":
-        this._positionCallout();
+        this.win.requestAnimationFrame(() => this._positionCallout());
+        break;
+
+      case "unload":
+        try {
+          this.teardownFeatureTourProgress();
+        } catch (error) {}
         break;
 
       default:
@@ -305,7 +379,7 @@ export class FeatureCallout {
       );
       this._container.id = CONTAINER_ID;
       // This value is reported as the "page" in about:welcome telemetry
-      this._container.dataset.page = this.page;
+      this._container.dataset.page = this.location;
       this._container.setAttribute(
         "aria-describedby",
         `#${CONTAINER_ID} .welcome-text`
@@ -338,18 +412,17 @@ export class FeatureCallout {
       "start",
       "top-end",
       "top-start",
+      "top-center-arrow-end",
+      "top-center-arrow-start",
     ];
     const arrowPosition = this.currentScreen?.content?.arrow_position || "top";
-    // Callout should overlap the parent element by 17px (so the box, not
-    // including the arrow, will overlap by 5px)
+    // Callout arrow should overlap the parent element by 5px
     const arrowWidth = 12;
-    let overlap = 17;
-    // If we have no overlap, we send the callout the same number of pixels
-    // in the opposite direction
-    overlap = this.currentScreen?.content?.noCalloutOverlap
-      ? overlap * -1
-      : overlap;
-    overlap -= arrowWidth;
+    const arrowHeight = Math.hypot(arrowWidth, arrowWidth);
+    // If the message specifies no overlap, we move the callout away so the
+    // arrow doesn't overlap at all.
+    const overlapAmount = this.currentScreen?.content?.noCalloutOverlap ? 0 : 5;
+    let overlap = overlapAmount - arrowHeight;
     // Is the document layout right to left?
     const RTL = this.doc.dir === "rtl";
     const customPosition =
@@ -398,9 +471,11 @@ export class FeatureCallout {
           className = "arrow-inline-end";
           break;
         case "top-start":
+        case "top-center-arrow-start":
           className = RTL ? "arrow-top-end" : "arrow-top-start";
           break;
         case "top-end":
+        case "top-center-arrow-end":
           className = RTL ? "arrow-top-start" : "arrow-top-end";
           break;
         case "top":
@@ -454,7 +529,8 @@ export class FeatureCallout {
           if (customPosition.right) {
             const rightPosition = subtractPixelValueFromValue(
               customPosition.right,
-              parentEl.getBoundingClientRect().right - container.clientWidth
+              parentEl.getBoundingClientRect().right -
+                container.getBoundingClientRect().width
             );
 
             RTL
@@ -465,30 +541,38 @@ export class FeatureCallout {
           if (customPosition.bottom) {
             container.style.top = subtractPixelValueFromValue(
               customPosition.bottom,
-              parentEl.getBoundingClientRect().bottom - container.clientHeight
+              parentEl.getBoundingClientRect().bottom -
+                container.getBoundingClientRect().height
             );
           }
         };
       }
     };
 
+    // Remember not to use HTML-only properties/methods like offsetHeight. Try
+    // to use getBoundingClientRect() instead, which is available on XUL
+    // elements. This is necessary to support feature callout in chrome, which
+    // is still largely XUL-based.
     const positioners = {
-      // availableSpace should be the space between the edge of the page in the assumed direction
-      // and the edge of the parent (with the callout being intended to fit between those two edges)
-      // while needed space should be the space necessary to fit the callout container
+      // availableSpace should be the space between the edge of the page in the
+      // assumed direction and the edge of the parent (with the callout being
+      // intended to fit between those two edges) while needed space should be
+      // the space necessary to fit the callout container.
       top: {
         availableSpace() {
           return (
             doc.documentElement.clientHeight -
             getOffset(parentEl).top -
-            parentEl.clientHeight
+            parentEl.getBoundingClientRect().height
           );
         },
-        neededSpace: container.clientHeight - overlap,
+        neededSpace: container.getBoundingClientRect().height - overlap,
         position() {
           // Point to an element above the callout
           let containerTop =
-            getOffset(parentEl).top + parentEl.clientHeight - overlap;
+            getOffset(parentEl).top +
+            parentEl.getBoundingClientRect().height -
+            overlap;
           container.style.top = `${Math.max(0, containerTop)}px`;
           alignHorizontally("center");
         },
@@ -497,11 +581,13 @@ export class FeatureCallout {
         availableSpace() {
           return getOffset(parentEl).top;
         },
-        neededSpace: container.clientHeight - overlap,
+        neededSpace: container.getBoundingClientRect().height - overlap,
         position() {
           // Point to an element below the callout
           let containerTop =
-            getOffset(parentEl).top - container.clientHeight + overlap;
+            getOffset(parentEl).top -
+            container.getBoundingClientRect().height +
+            overlap;
           container.style.top = `${Math.max(0, containerTop)}px`;
           alignHorizontally("center");
         },
@@ -510,13 +596,18 @@ export class FeatureCallout {
         availableSpace() {
           return getOffset(parentEl).left;
         },
-        neededSpace: container.clientWidth - overlap,
+        neededSpace: container.getBoundingClientRect().width - overlap,
         position() {
           // Point to an element to the right of the callout
           let containerLeft =
-            getOffset(parentEl).left - container.clientWidth + overlap;
+            getOffset(parentEl).left -
+            container.getBoundingClientRect().width +
+            overlap;
           container.style.left = `${Math.max(0, containerLeft)}px`;
-          if (container.offsetHeight <= parentEl.offsetHeight) {
+          if (
+            container.getBoundingClientRect().height <=
+            parentEl.getBoundingClientRect().height
+          ) {
             container.style.top = `${getOffset(parentEl).top}px`;
           } else {
             centerVertically();
@@ -527,13 +618,18 @@ export class FeatureCallout {
         availableSpace() {
           return doc.documentElement.clientWidth - getOffset(parentEl).right;
         },
-        neededSpace: container.clientWidth - overlap,
+        neededSpace: container.getBoundingClientRect().width - overlap,
         position() {
           // Point to an element to the left of the callout
           let containerLeft =
-            getOffset(parentEl).left + parentEl.clientWidth - overlap;
+            getOffset(parentEl).left +
+            parentEl.getBoundingClientRect().width -
+            overlap;
           container.style.left = `${Math.max(0, containerLeft)}px`;
-          if (container.offsetHeight <= parentEl.offsetHeight) {
+          if (
+            container.getBoundingClientRect().height <=
+            parentEl.getBoundingClientRect().height
+          ) {
             container.style.top = `${getOffset(parentEl).top}px`;
           } else {
             centerVertically();
@@ -542,38 +638,78 @@ export class FeatureCallout {
       },
       "top-start": {
         availableSpace() {
-          doc.documentElement.clientHeight -
+          return (
+            doc.documentElement.clientHeight -
             getOffset(parentEl).top -
-            parentEl.clientHeight;
+            parentEl.getBoundingClientRect().height
+          );
         },
-        neededSpace: container.clientHeight - overlap,
+        neededSpace: container.getBoundingClientRect().height - overlap,
         position() {
           // Point to an element above and at the start of the callout
           let containerTop =
-            getOffset(parentEl).top + parentEl.clientHeight - overlap;
-          container.style.top = `${Math.max(
-            container.clientHeight - overlap,
-            containerTop
-          )}px`;
+            getOffset(parentEl).top +
+            parentEl.getBoundingClientRect().height -
+            overlap;
+          container.style.top = `${Math.max(0, containerTop)}px`;
           alignHorizontally("start");
         },
       },
       "top-end": {
         availableSpace() {
-          doc.documentElement.clientHeight -
+          return (
+            doc.documentElement.clientHeight -
             getOffset(parentEl).top -
-            parentEl.clientHeight;
+            parentEl.getBoundingClientRect().height
+          );
         },
-        neededSpace: container.clientHeight - overlap,
+        neededSpace: container.getBoundingClientRect().height - overlap,
         position() {
           // Point to an element above and at the end of the callout
           let containerTop =
-            getOffset(parentEl).top + parentEl.clientHeight - overlap;
-          container.style.top = `${Math.max(
-            container.clientHeight - overlap,
-            containerTop
-          )}px`;
+            getOffset(parentEl).top +
+            parentEl.getBoundingClientRect().height -
+            overlap;
+          container.style.top = `${Math.max(0, containerTop)}px`;
           alignHorizontally("end");
+        },
+      },
+      "top-center-arrow-start": {
+        availableSpace() {
+          return (
+            doc.documentElement.clientHeight -
+            getOffset(parentEl).top -
+            parentEl.getBoundingClientRect().height
+          );
+        },
+        neededSpace: container.getBoundingClientRect().height - overlap,
+        position() {
+          // Point to an element above and at the start of the callout
+          let containerTop =
+            getOffset(parentEl).top +
+            parentEl.getBoundingClientRect().height -
+            overlap;
+          container.style.top = `${Math.max(0, containerTop)}px`;
+          alignHorizontally("center-arrow-start");
+        },
+      },
+      "top-center-arrow-end": {
+        availableSpace() {
+          return (
+            doc.documentElement.clientHeight -
+            getOffset(parentEl).top -
+            parentEl.getBoundingClientRect().height
+          );
+        },
+        neededSpace: container.getBoundingClientRect().height - overlap,
+        position() {
+          // Point to an element above and at the end of the callout
+          let containerTop =
+            getOffset(parentEl).top +
+            parentEl.getBoundingClientRect().height -
+            overlap;
+          container.style.top = `${Math.max(0, containerTop)}px`;
+          alignHorizontally("center-arrow-end");
         },
       },
     };
@@ -595,20 +731,21 @@ export class FeatureCallout {
       let position = arrowPosition;
       if (!arrowPositions.includes(position)) {
         // Configured arrow position is not valid
-        return false;
+        position = null;
       }
       if (["start", "end"].includes(position)) {
         // position here is referencing the direction that the callout container
-        // is pointing to, and therefore should be the _opposite_ side of the arrow
-        // eg. if arrow is at the "end" in LTR layouts, the container is pointing
-        // at an element to the right of itself, while in RTL layouts it is pointing to the left of itself
+        // is pointing to, and therefore should be the _opposite_ side of the
+        // arrow eg. if arrow is at the "end" in LTR layouts, the container is
+        // pointing at an element to the right of itself, while in RTL layouts
+        // it is pointing to the left of itself
         position = RTL ^ (position === "start") ? "left" : "right";
       }
       // If we're overriding the position, we don't need to sort for available space
-      if (customPosition || calloutFits(position)) {
+      if (customPosition || (position && calloutFits(position))) {
         return position;
       }
-      let sortedPositions = Object.keys(positioners)
+      let sortedPositions = ["top", "bottom", "left", "right"]
         .filter(p => p !== position)
         .filter(calloutFits)
         .sort((a, b) => {
@@ -624,20 +761,36 @@ export class FeatureCallout {
     };
 
     const centerVertically = () => {
-      let topOffset = (container.offsetHeight - parentEl.offsetHeight) / 2;
+      let topOffset =
+        (container.getBoundingClientRect().height -
+          parentEl.getBoundingClientRect().height) /
+        2;
       container.style.top = `${getOffset(parentEl).top - topOffset}px`;
     };
 
     /**
      * Horizontally align a top/bottom-positioned callout according to the
      * passed position.
-     * @param {String} [position = "start"] <"start"|"end"|"center">
+     * @param {String} position one of...
+     *   - "center": for use with top/bottom. arrow is in the center, and the
+     *       center of the callout aligns with the parent center.
+     *   - "center-arrow-start": for use with center-arrow-top-start. arrow is
+     *       on the start (left) side of the callout, and the callout is aligned
+     *       so that the arrow points to the center of the parent element.
+     *   - "center-arrow-end": for use with center-arrow-top-end. arrow is on
+     *       the end, and the arrow points to the center of the parent.
+     *   - "start": currently unused. align the callout's starting edge with the
+     *       parent's starting edge.
+     *   - "end": currently unused. same as start but for the ending edge.
      */
     const alignHorizontally = position => {
       switch (position) {
         case "center": {
-          let sideOffset = (parentEl.clientWidth - container.clientWidth) / 2;
-          let containerSide = RTL
+          const sideOffset =
+            (parentEl.getBoundingClientRect().width -
+              container.getBoundingClientRect().width) /
+            2;
+          const containerSide = RTL
             ? doc.documentElement.clientWidth -
               getOffset(parentEl).right +
               sideOffset
@@ -648,15 +801,34 @@ export class FeatureCallout {
           )}px`;
           break;
         }
-        default: {
-          let containerSide =
+        case "end":
+        case "start": {
+          const containerSide =
             RTL ^ (position === "end")
               ? parentEl.getBoundingClientRect().left +
-                parentEl.clientWidth -
-                container.clientWidth
+                parentEl.getBoundingClientRect().width -
+                container.getBoundingClientRect().width
               : parentEl.getBoundingClientRect().left;
           container.style.left = `${Math.max(containerSide, 0)}px`;
           break;
+        }
+        case "center-arrow-end":
+        case "center-arrow-start": {
+          const parentRect = parentEl.getBoundingClientRect();
+          const containerWidth = container.getBoundingClientRect().width;
+          const containerSide =
+            RTL ^ position.endsWith("end")
+              ? parentRect.left +
+                parentRect.width / 2 +
+                arrowWidth * 2 -
+                containerWidth
+              : parentRect.left + parentRect.width / 2 - arrowWidth * 2;
+          const maxContainerSide =
+            doc.documentElement.clientWidth - containerWidth;
+          container.style.left = `${Math.min(
+            maxContainerSide,
+            Math.max(containerSide, 0)
+          )}px`;
         }
       }
     };
@@ -681,40 +853,48 @@ export class FeatureCallout {
     if (this.AWSetup) {
       return;
     }
+
     const AWParent = new lazy.AboutWelcomeParent();
-    this.win.addEventListener("unload", () => {
-      AWParent.didDestroy();
-    });
+    this.win.addEventListener("unload", () => AWParent.didDestroy());
     const receive = name => data =>
       AWParent.onContentMessage(`AWPage:${name}`, data, this.doc);
-    this.win.AWGetFeatureConfig = () => this.config;
-    this.win.AWGetSelectedTheme = receive("GET_SELECTED_THEME");
-    // Do not send telemetry if message config sets metrics as 'block'.
-    if (this.config?.metrics !== "block") {
-      this.win.AWSendEventTelemetry = receive("TELEMETRY_EVENT");
-    }
-    this.win.AWSendToDeviceEmailsSupported = receive(
-      "SEND_TO_DEVICE_EMAILS_SUPPORTED"
-    );
-    this.win.AWSendToParent = (name, data) => receive(name)(data);
-    this.win.AWFinish = () => {
-      this.endTour();
+
+    this._windowFuncs = {
+      AWGetFeatureConfig: () => this.config,
+      AWGetSelectedTheme: receive("GET_SELECTED_THEME"),
+      // Do not send telemetry if message config sets metrics as 'block'.
+      AWSendEventTelemetry:
+        this.config?.metrics !== "block" ? receive("TELEMETRY_EVENT") : null,
+      AWSendToDeviceEmailsSupported: receive("SEND_TO_DEVICE_EMAILS_SUPPORTED"),
+      AWSendToParent: (name, data) => receive(name)(data),
+      AWFinish: () => this.endTour(),
+      AWEvaluateScreenTargeting: receive("EVALUATE_SCREEN_TARGETING"),
     };
-    this.win.AWEvaluateScreenTargeting = receive("EVALUATE_SCREEN_TARGETING");
+    for (const [name, func] of Object.entries(this._windowFuncs)) {
+      this.win[name] = func;
+    }
+
     this.AWSetup = true;
   }
 
   /** Clean up the functions defined above. */
   _clearWindowFunctions() {
-    const windowFuncs = [
-      "AWGetFeatureConfig",
-      "AWGetSelectedTheme",
-      "AWSendEventTelemetry",
-      "AWSendToDeviceEmailsSupported",
-      "AWSendToParent",
-      "AWFinish",
-    ];
-    windowFuncs.forEach(func => delete this.win[func]);
+    if (this.AWSetup) {
+      this.AWSetup = false;
+
+      for (const name of Object.keys(this._windowFuncs)) {
+        delete this.win[name];
+      }
+    }
+  }
+
+  /**
+   * Emit an event to the broker, if one is present.
+   * @param {String} name
+   * @param {any} data
+   */
+  _emitEvent(name, data) {
+    this.listener?.(this.win, name, data);
   }
 
   endTour(skipFadeOut = false) {
@@ -727,12 +907,13 @@ export class FeatureCallout {
     this.win.removeEventListener("keypress", this, { capture: true });
     this._pageEventManager?.clear();
 
-    // We're deleting featureTourProgress here to ensure that the
-    // reference is freed for garbage collection. This prevents errors
-    // caused by lingering instances when instantiating and removing
-    // multiple feature tour instances in succession.
-    delete this.featureTourProgress;
+    // Delete almost everything to get this ready to show a different message.
+    this.teardownFeatureTourProgress();
+    this.pref = null;
     this.ready = false;
+    this.message = null;
+    this.content = null;
+    this.currentScreen = null;
     // wait for fade out transition
     this._container?.classList.add("hidden");
     this._clearWindowFunctions();
@@ -747,6 +928,7 @@ export class FeatureCallout {
         if (this.savedActiveElement) {
           this.savedActiveElement.focus({ focusVisible: true });
         }
+        this._emitEvent("end");
       },
       skipFadeOut ? 0 : TRANSITION_MS
     );
@@ -756,9 +938,11 @@ export class FeatureCallout {
     let action = this.currentScreen?.content.dismiss_button?.action;
     if (action?.type) {
       this.win.AWSendToParent("SPECIAL_ACTION", action);
-    } else {
-      this.endTour();
+      if (!action.dismiss) {
+        return;
+      }
     }
+    this.endTour();
   }
 
   async _addScriptsAndRender() {
@@ -801,51 +985,90 @@ export class FeatureCallout {
   }
 
   /**
-   * Request a message from ASRouter, targeting the `browser` and `page` values
-   * passed to the constructor. The message content is stored in this.config,
-   * which is returned by AWGetFeatureConfig. The aboutwelcome bundle will use
-   * that function to get the content. It will only be called when the bundle
-   * loads, so the bundle must be reloaded for a new message to be rendered.
+   * Update the internal config with a new message. If a message is not
+   * provided, try requesting one from ASRouter. The message content is stored
+   * in this.config, which is returned by AWGetFeatureConfig. The aboutwelcome
+   * bundle will use that function to get the content when it executes.
+   * @param {Object} [message] ASRouter message. Omit to request a new one.
    * @returns {Promise<boolean>} true if a message is loaded, false if not.
    */
-  async _loadConfig() {
+  async _updateConfig(message) {
     if (this.loadingConfig) {
       return false;
     }
-    this.loadingConfig = true;
-    await lazy.ASRouter.waitForInitialized;
-    let result = await lazy.ASRouter.sendTriggerMessage({
-      browser: this.browser,
-      // triggerId and triggerContext
-      id: "featureCalloutCheck",
-      context: { source: this.page },
-    });
-    this.message = result.message;
-    this.loadingConfig = false;
 
-    if (result.message.template !== "feature_callout") {
-      // If another message type, like a Spotlight modal, is included
-      // in the tour, save the template name as the current screen.
-      this.currentScreen = result.message.template;
-      return false;
+    this.message = message || (await this._loadConfig());
+
+    switch (this.message.template) {
+      case "feature_callout":
+        break;
+      case "spotlight":
+        // Special handling for spotlight messages, which can be configured as a
+        // kind of introduction to a feature tour.
+        this.currentScreen = "spotlight";
+      // fall through
+      default:
+        return false;
     }
 
-    this.config = result.message.content;
+    this.config = this.message.content;
 
+    // Set the default start screen.
     let newScreen = this.config?.screens?.[this.config?.startScreen || 0];
+    // If we have a feature tour in progress, try to set the start screen to
+    // whichever screen is configured in the feature tour pref.
+    if (
+      this.config.screens &&
+      this.config?.tour_pref_name &&
+      this.config.tour_pref_name === this.pref?.name &&
+      this.featureTourProgress
+    ) {
+      const newIndex = this.config.screens.findIndex(
+        screen => screen.id === this.featureTourProgress.screen
+      );
+      if (newIndex !== -1) {
+        newScreen = this.config.screens[newIndex];
+        if (newScreen?.id !== this.currentScreen?.id) {
+          // This is how we tell the bundle to render the correct screen.
+          this.config.startScreen = newIndex;
+        }
+      }
+    }
     if (newScreen?.id === this.currentScreen?.id) {
       return false;
     }
 
     // Only add an impression if we actually have a message to impress
-    if (Object.keys(result.message).length) {
-      lazy.ASRouter.addImpression(result.message);
+    if (Object.keys(this.message).length) {
+      lazy.ASRouter.addImpression(this.message);
     }
 
     this.currentScreen = newScreen;
     return true;
   }
 
+  /**
+   * Request a message from ASRouter, targeting the `browser` and `page` values
+   * passed to the constructor.
+   * @returns {Promise<Object>} the requested message.
+   */
+  async _loadConfig() {
+    this.loadingConfig = true;
+    await lazy.ASRouter.waitForInitialized;
+    let result = await lazy.ASRouter.sendTriggerMessage({
+      browser: this.browser,
+      // triggerId and triggerContext
+      id: "featureCalloutCheck",
+      context: { source: this.location },
+    });
+    this.loadingConfig = false;
+    return result.message;
+  }
+
+  /**
+   * Try to render the callout in the current document.
+   * @returns {Promise<Boolean>} whether the callout was rendered.
+   */
   async _renderCallout() {
     let container = this._createContainer();
     if (container) {
@@ -853,7 +1076,9 @@ export class FeatureCallout {
       await this._addScriptsAndRender();
       this._observeRender(container);
       this._addPositionListeners();
+      return true;
     }
+    return false;
   }
 
   /**
@@ -899,7 +1124,7 @@ export class FeatureCallout {
    * @param {Event} event Triggering event
    */
   _handlePageEventAction(action, event) {
-    const page = this.page;
+    const page = this.location;
     const message_id = this.config?.id.toUpperCase();
     const source = this._getUniqueElementIdentifier(event.target);
     this.win.AWSendEventTelemetry?.({
@@ -958,11 +1183,17 @@ export class FeatureCallout {
     return source;
   }
 
-  async showFeatureCallout() {
-    let updated = await this._loadConfig();
+  /**
+   * Show a feature callout message, either by requesting one from ASRouter or
+   * by showing a message passed as an argument.
+   * @param {Object} [message] optional message to show instead of requesting one
+   * @returns {Promise<Boolean>} true if a message was shown
+   */
+  async showFeatureCallout(message) {
+    let updated = await this._updateConfig(message);
 
     if (!updated || !this.config?.screens?.length) {
-      return;
+      return !!this.currentScreen;
     }
 
     this.renderObserver = new this.win.MutationObserver(() => {
@@ -994,19 +1225,15 @@ export class FeatureCallout {
     this.ready = false;
     this._container?.remove();
 
-    // If user has disabled CFR, don't show any callouts. But make sure we load
-    // the necessary stylesheets first, since re-enabling CFR should allow
-    // callouts to be shown without needing to reload. In the future this could
-    // allow adding a CTA to disable recommendations with a label like "Don't show
-    // these again" (or potentially a toggle to re-enable them).
     if (!this.cfrFeaturesUserPref) {
-      this.currentScreen = null;
-      return;
+      this.endTour();
+      return false;
     }
 
     this._addCalloutLinkElements();
     this._setupWindowFunctions();
-    await this._renderCallout();
+    let rendering = await this._renderCallout();
+    return rendering && !!this.currentScreen;
   }
 
   /**
@@ -1062,7 +1289,7 @@ export class FeatureCallout {
       // part of the content of a page in a browser tab (like PDF.js).
       this._container.classList.toggle(
         "simulateContent",
-        !!(this.page === "chrome" && this.theme.simulateContent)
+        !!this.theme.simulateContent
       );
       for (const type of ["light", "dark", "hcm"]) {
         const scheme = this.theme[type];

@@ -5,14 +5,18 @@
 
 requestLongerTimeout(2);
 
-const featureTourPref = "browser.firefox-view.feature-tour";
 const defaultPrefValue = getPrefValueByScreen(1);
+
+const arrowWidth = 12;
+const arrowHeight = Math.hypot(arrowWidth, arrowWidth);
+let overlap = 5 - arrowHeight;
 
 add_task(
   async function feature_callout_first_screen_positioned_below_element() {
-    const testMessage = getCalloutMessageById(
-      "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-    );
+    await SpecialPowers.pushPrefEnv({
+      set: [[featureTourPref, defaultPrefValue]],
+    });
+    const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
     const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
     await BrowserTestUtils.withNewTab(
@@ -22,6 +26,9 @@ add_task(
       },
       async browser => {
         const { document } = browser.contentWindow;
+
+        launchFeatureTourIn(browser.contentWindow);
+
         await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
         let parentBottom = document
           .querySelector("#tab-pickup-container")
@@ -30,10 +37,11 @@ add_task(
           .querySelector(calloutSelector)
           .getBoundingClientRect().top;
 
-        Assert.lessOrEqual(
-          parentBottom,
-          containerTop + 5 + 1, // Add 5px for overlap and 1px for fuzziness to account for possible subpixel rounding
-          "Feature Callout is positioned below parent element with 5px overlap"
+        isfuzzy(
+          parentBottom - containerTop,
+          overlap,
+          1, // add 1px fuzziness to account for possible subpixel rounding
+          "Feature Callout is positioned below parent element with the arrow overlapping by 5px"
         );
       }
     );
@@ -42,11 +50,13 @@ add_task(
 );
 
 add_task(
-  async function feature_callout_second_screen_positioned_left_of_element() {
-    const testMessage = getCalloutMessageById(
-      "FIREFOX_VIEW_FEATURE_TOUR_2_NO_CWS"
-    );
-    testMessage.message.content.screens[1].content.arrow_position = "end";
+  async function feature_callout_second_screen_positioned_right_of_element() {
+    await SpecialPowers.pushPrefEnv({
+      set: [[featureTourPref, getPrefValueByScreen(2)]],
+    });
+    const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
+    testMessage.message.content.screens[1].content.arrow_position = "start";
+    testMessage.message.content.screens[1].parent_selector = ".brand-logo";
     const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
     await BrowserTestUtils.withNewTab(
@@ -56,20 +66,22 @@ add_task(
       },
       async browser => {
         const { document } = browser.contentWindow;
-        const parent = document.querySelector(
-          "#recently-closed-tabs-container"
-        );
-        parent.style.gridArea = "1/2";
-        await waitForCalloutScreen(document, "FEATURE_CALLOUT_2");
-        let parentLeft = parent.getBoundingClientRect().left;
-        let containerRight = document
-          .querySelector(calloutSelector)
-          .getBoundingClientRect().right;
 
-        Assert.greaterOrEqual(
-          parentLeft,
-          containerRight - 5 - 1, // Subtract 5px for overlap and 1px for fuzziness to account for possible subpixel rounding
-          "Feature Callout is positioned left of parent element with 5px overlap"
+        launchFeatureTourIn(browser.contentWindow);
+
+        await waitForCalloutScreen(document, "FEATURE_CALLOUT_2");
+
+        let parentRight = document
+          .querySelector(".brand-logo")
+          .getBoundingClientRect().right;
+        let containerLeft = document
+          .querySelector(calloutSelector)
+          .getBoundingClientRect().left;
+        isfuzzy(
+          parentRight - containerLeft,
+          overlap,
+          1,
+          "Feature Callout is positioned right of parent element with the arrow overlapping by 5px"
         );
       }
     );
@@ -79,9 +91,10 @@ add_task(
 
 add_task(
   async function feature_callout_second_screen_positioned_above_element() {
-    const testMessage = getCalloutMessageById(
-      "FIREFOX_VIEW_FEATURE_TOUR_2_NO_CWS"
-    );
+    await SpecialPowers.pushPrefEnv({
+      set: [[featureTourPref, getPrefValueByScreen(2)]],
+    });
+    const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
     const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
     await BrowserTestUtils.withNewTab(
@@ -91,6 +104,9 @@ add_task(
       },
       async browser => {
         const { document } = browser.contentWindow;
+
+        launchFeatureTourIn(browser.contentWindow);
+
         await waitForCalloutScreen(document, "FEATURE_CALLOUT_2");
         let parentTop = document
           .querySelector("#recently-closed-tabs-container")
@@ -116,12 +132,11 @@ add_task(
       set: [
         // Set layout direction to right to left
         ["intl.l10n.pseudo", "bidi"],
+        [featureTourPref, getPrefValueByScreen(2)],
       ],
     });
 
-    const testMessage = getCalloutMessageById(
-      "FIREFOX_VIEW_FEATURE_TOUR_2_NO_CWS"
-    );
+    const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
     const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
     await BrowserTestUtils.withNewTab(
@@ -131,6 +146,9 @@ add_task(
       },
       async browser => {
         const { document } = browser.contentWindow;
+
+        launchFeatureTourIn(browser.contentWindow);
+
         const parent = document.querySelector(
           "#recently-closed-tabs-container"
         );
@@ -156,9 +174,10 @@ add_task(
 
 add_task(
   async function feature_callout_is_repositioned_if_parent_container_is_toggled() {
-    const testMessage = getCalloutMessageById(
-      "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-    );
+    await SpecialPowers.pushPrefEnv({
+      set: [[featureTourPref, defaultPrefValue]],
+    });
+    const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
     const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
     await BrowserTestUtils.withNewTab(
@@ -168,6 +187,9 @@ add_task(
       },
       async browser => {
         const { document } = browser.contentWindow;
+
+        launchFeatureTourIn(browser.contentWindow);
+
         await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
         const parentEl = document.querySelector("#tab-pickup-container");
         const calloutStartingTopPosition =
@@ -196,9 +218,10 @@ add_task(
 
 // This test should be moved into a surface agnostic test suite with bug 1793656.
 add_task(async function feature_callout_top_end_positioning() {
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-  );
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, defaultPrefValue]],
+  });
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   testMessage.message.content.screens[0].content.arrow_position = "top-end";
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
@@ -209,6 +232,9 @@ add_task(async function feature_callout_top_end_positioning() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
+
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
       let parent = document.querySelector("#tab-pickup-container");
       let container = document.querySelector(calloutSelector);
@@ -234,9 +260,10 @@ add_task(async function feature_callout_top_end_positioning() {
 
 // This test should be moved into a surface agnostic test suite with bug 1793656.
 add_task(async function feature_callout_top_start_positioning() {
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-  );
+  await SpecialPowers.pushPrefEnv({
+    set: [[featureTourPref, defaultPrefValue]],
+  });
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   testMessage.message.content.screens[0].content.arrow_position = "top-start";
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
@@ -247,6 +274,9 @@ add_task(async function feature_callout_top_start_positioning() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
+
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
       let parent = document.querySelector("#tab-pickup-container");
       let container = document.querySelector(calloutSelector);
@@ -277,12 +307,11 @@ add_task(
       set: [
         // Set layout direction to right to left
         ["intl.l10n.pseudo", "bidi"],
+        [featureTourPref, defaultPrefValue],
       ],
     });
 
-    const testMessage = getCalloutMessageById(
-      "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-    );
+    const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
     testMessage.message.content.screens[0].content.arrow_position = "top-end";
     const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
@@ -293,6 +322,9 @@ add_task(
       },
       async browser => {
         const { document } = browser.contentWindow;
+
+        launchFeatureTourIn(browser.contentWindow);
+
         await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
         let parent = document.querySelector("#tab-pickup-container");
         let container = document.querySelector(calloutSelector);
@@ -321,7 +353,7 @@ add_task(
 add_task(async function feature_callout_is_larger_than_its_parent() {
   let testMessage = {
     message: {
-      id: "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS",
+      id: "FIREFOX_VIEW_FEATURE_TOUR",
       template: "feature_callout",
       content: {
         id: "FIREFOX_VIEW_FEATURE_TOUR",
@@ -359,7 +391,7 @@ add_task(async function feature_callout_is_larger_than_its_parent() {
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
   await SpecialPowers.pushPrefEnv({
-    set: [[featureTourPref, getPrefValueByScreen(1)]],
+    set: [[featureTourPref, defaultPrefValue]],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -369,6 +401,9 @@ add_task(async function feature_callout_is_larger_than_its_parent() {
     },
     async browser => {
       const { document } = browser.contentWindow;
+
+      launchFeatureTourIn(browser.contentWindow);
+
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
       let parent = document.querySelector(".brand-icon");
       let container = document.querySelector(calloutSelector);

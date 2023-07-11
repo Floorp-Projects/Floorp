@@ -345,6 +345,22 @@ async function tearDown(sandbox) {
   Services.prefs.clearUserPref(MOBILE_PROMO_DISMISSED_PREF);
 }
 
+const featureTourPref = "browser.firefox-view.feature-tour";
+const launchFeatureTourIn = win => {
+  const { FeatureCallout } = ChromeUtils.importESModule(
+    "resource:///modules/FeatureCallout.sys.mjs"
+  );
+  let callout = new FeatureCallout({
+    win,
+    pref: { name: featureTourPref },
+    location: "about:firefoxview",
+    context: "content",
+    theme: { preset: "themed-content" },
+  });
+  callout.showFeatureCallout();
+  return callout;
+};
+
 /**
  * Returns a value that can be used to set
  * `browser.firefox-view.feature-tour` to change the feature tour's
