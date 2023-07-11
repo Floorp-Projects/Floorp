@@ -95,7 +95,11 @@ add_task(async function test_aboutwelcome_pin_screen_impression() {
     .stub(AWScreenUtils, "evaluateScreenTargeting")
     .resolves(true)
     .withArgs(
-      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && useEmbeddedMigrationWizard"
+    )
+    .resolves(false)
+    .withArgs(
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && !useEmbeddedMigrationWizard"
     )
     .resolves(false)
     .withArgs("isDeviceMigration")
@@ -157,7 +161,11 @@ add_task(async function test_aboutwelcome_mr_template_content() {
     .stub(AWScreenUtils, "evaluateScreenTargeting")
     .resolves(true)
     .withArgs(
-      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && useEmbeddedMigrationWizard"
+    )
+    .resolves(false)
+    .withArgs(
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && !useEmbeddedMigrationWizard"
     )
     .resolves(false)
     .withArgs("isDeviceMigration")
@@ -214,7 +222,11 @@ add_task(async function test_aboutwelcome_mr_template_content_pin() {
     .stub(AWScreenUtils, "evaluateScreenTargeting")
     .resolves(true)
     .withArgs(
-      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && useEmbeddedMigrationWizard"
+    )
+    .resolves(false)
+    .withArgs(
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && !useEmbeddedMigrationWizard"
     )
     .resolves(false)
     .withArgs("isDeviceMigration")
@@ -258,7 +270,11 @@ add_task(async function test_aboutwelcome_mr_template_only_default() {
     .stub(AWScreenUtils, "evaluateScreenTargeting")
     .resolves(true)
     .withArgs(
-      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && useEmbeddedMigrationWizard"
+    )
+    .resolves(false)
+    .withArgs(
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && !useEmbeddedMigrationWizard"
     )
     .resolves(false)
     .withArgs("isDeviceMigration")
@@ -291,7 +307,11 @@ add_task(async function test_aboutwelcome_mr_template_get_started() {
     .stub(AWScreenUtils, "evaluateScreenTargeting")
     .resolves(true)
     .withArgs(
-      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin"
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && useEmbeddedMigrationWizard"
+    )
+    .resolves(false)
+    .withArgs(
+      "os.windowsBuildNumber >= 15063 && !isDefaultBrowser && !doesAppNeedPin && !useEmbeddedMigrationWizard"
     )
     .resolves(false)
     .withArgs("isDeviceMigration")
