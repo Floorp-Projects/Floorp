@@ -190,7 +190,9 @@ StandaloneTexture::StandaloneTexture(const IntSize& aSize,
                                      const RefPtr<WebGLTextureJS>& aTexture)
     : BackingTexture(aSize, aFormat, aTexture) {}
 
-DrawTargetWebgl::DrawTargetWebgl() = default;
+static Atomic<int64_t> sDrawTargetWebglCount(0);
+
+DrawTargetWebgl::DrawTargetWebgl() { sDrawTargetWebglCount++; }
 
 inline void DrawTargetWebgl::SharedContext::ClearLastTexture() {
   mLastTexture = nullptr;
@@ -224,6 +226,7 @@ void DrawTargetWebgl::ClearSnapshot(bool aCopyOnWrite, bool aNeedHandle) {
 }
 
 DrawTargetWebgl::~DrawTargetWebgl() {
+  sDrawTargetWebglCount--;
   ClearSnapshot(false);
   if (mSharedContext) {
     if (mShmem.IsWritable()) {
@@ -791,6 +794,11 @@ bool DrawTargetWebgl::IsValid() const {
 already_AddRefed<DrawTargetWebgl> DrawTargetWebgl::Create(
     const IntSize& aSize, SurfaceFormat aFormat) {
   if (!gfxVars::UseAcceleratedCanvas2D()) {
+    return nullptr;
+  }
+
+  int64_t count = sDrawTargetWebglCount;
+  if (count > StaticPrefs::gfx_canvas_accelerated_max_draw_target_count()) {
     return nullptr;
   }
 
