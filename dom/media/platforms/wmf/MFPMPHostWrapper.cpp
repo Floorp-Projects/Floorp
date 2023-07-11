@@ -69,6 +69,13 @@ STDMETHODIMP MFPMPHostWrapper::ActivateClassById(LPCWSTR aId, IStream* aStream,
   return S_OK;
 }
 
+void MFPMPHostWrapper::Shutdown() {
+  LOG("Shutdown");
+  if (mPMPHost) {
+    mPMPHost = nullptr;
+  }
+}
+
 #undef LOG
 
 }  // namespace mozilla

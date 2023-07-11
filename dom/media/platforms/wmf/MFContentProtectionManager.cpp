@@ -30,6 +30,10 @@ class ScopedHString final {
   HSTRING mString;
 };
 
+MFContentProtectionManager::~MFContentProtectionManager() {
+  LOG("MFContentProtectionManager destroyed");
+}
+
 HRESULT MFContentProtectionManager::RuntimeClassInitialize() {
   ScopedHString propertyId(
       RuntimeClass_Windows_Foundation_Collections_PropertySet);

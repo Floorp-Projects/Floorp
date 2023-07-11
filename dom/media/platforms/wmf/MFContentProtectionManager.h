@@ -29,7 +29,7 @@ class MFContentProtectionManager
           ABI::Windows::Media::Protection::IMediaProtectionManager> {
  public:
   MFContentProtectionManager() = default;
-  ~MFContentProtectionManager() = default;
+  ~MFContentProtectionManager();
 
   HRESULT RuntimeClassInitialize();
 

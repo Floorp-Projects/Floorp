@@ -18,7 +18,20 @@ MFCDMProxy::MFCDMProxy(IMFContentDecryptionModule* aCDM) : mCDM(aCDM) {
   LOG("MFCDMProxy created");
 }
 
-MFCDMProxy::~MFCDMProxy() { LOG("MFCDMProxy destroyed"); }
+MFCDMProxy::~MFCDMProxy() {
+  if (mTrustedInput) {
+    mTrustedInput = nullptr;
+  }
+  for (auto& inputAuthorities : mInputTrustAuthorities) {
+    SHUTDOWN_IF_POSSIBLE(inputAuthorities.second);
+  }
+  mInputTrustAuthorities.clear();
+  if (mCDM) {
+    SHUTDOWN_IF_POSSIBLE(mCDM);
+    mCDM = nullptr;
+  }
+  LOG("MFCDMProxy destroyed");
+}
 
 HRESULT MFCDMProxy::GetPMPServer(REFIID aRiid, LPVOID* aPMPServerOut) {
   ComPtr<IMFGetService> cdmServices;
