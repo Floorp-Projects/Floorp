@@ -29,11 +29,13 @@ using Microsoft::WRL::ComPtr;
 MFMediaSource::MFMediaSource()
     : mPresentationEnded(false), mIsAudioEnded(false), mIsVideoEnded(false) {
   MOZ_COUNT_CTOR(MFMediaSource);
+  LOG("media source created");
 }
 
 MFMediaSource::~MFMediaSource() {
   // TODO : notify cdm about the last key id?
   MOZ_COUNT_DTOR(MFMediaSource);
+  LOG("media source destroyed");
 }
 
 HRESULT MFMediaSource::RuntimeClassInitialize(

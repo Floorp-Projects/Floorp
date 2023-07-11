@@ -14,6 +14,12 @@ using Microsoft::WRL::ComPtr;
   MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug, \
           ("MFCDMProxy=%p, " msg, this, ##__VA_ARGS__))
 
+MFCDMProxy::MFCDMProxy(IMFContentDecryptionModule* aCDM) : mCDM(aCDM) {
+  LOG("MFCDMProxy created");
+}
+
+MFCDMProxy::~MFCDMProxy() { LOG("MFCDMProxy destroyed"); }
+
 HRESULT MFCDMProxy::GetPMPServer(REFIID aRiid, LPVOID* aPMPServerOut) {
   ComPtr<IMFGetService> cdmServices;
   RETURN_IF_FAILED(mCDM.As(&cdmServices));

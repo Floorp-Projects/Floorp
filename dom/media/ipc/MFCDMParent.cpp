@@ -304,7 +304,7 @@ MFCDMParent::MFCDMParent(const nsAString& aKeySystem,
   MOZ_ASSERT(XRE_IsUtilityProcess());
   MOZ_ASSERT(GetCurrentSandboxingKind() ==
              ipc::SandboxingKind::MF_MEDIA_ENGINE_CDM);
-
+  MFCDM_PARENT_LOG("MFCDMParent created");
   mIPDLSelfRef = this;
   LoadFactory();
   Register();
@@ -326,6 +326,11 @@ void MFCDMParent::Destroy() {
   mKeyChangeListener.DisconnectIfExists();
   mExpirationListener.DisconnectIfExists();
   mIPDLSelfRef = nullptr;
+}
+
+MFCDMParent::~MFCDMParent() {
+  MFCDM_PARENT_LOG("MFCDMParent detroyed");
+  Unregister();
 }
 
 HRESULT MFCDMParent::LoadFactory() {
