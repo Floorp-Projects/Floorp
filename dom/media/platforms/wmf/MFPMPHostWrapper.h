@@ -33,6 +33,8 @@ class MFPMPHostWrapper : public Microsoft::WRL::RuntimeClass<
   STDMETHODIMP ActivateClassById(LPCWSTR aId, IStream* aStream, REFIID aRiid,
                                  void** aActivatedClass) override;
 
+  void Shutdown();
+
  private:
   Microsoft::WRL::ComPtr<IMFPMPHost> mPMPHost;
 };

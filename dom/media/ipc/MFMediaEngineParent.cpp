@@ -112,6 +112,9 @@ void MFMediaEngineParent::DestroyEngineIfExists(
   if (aError) {
     Unused << SendNotifyError(*aError);
   }
+  if (mContentProtectionManager) {
+    mContentProtectionManager = nullptr;
+  }
 }
 
 void MFMediaEngineParent::CreateMediaEngine() {
