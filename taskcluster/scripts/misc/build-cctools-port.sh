@@ -68,6 +68,8 @@ export CXX="$CXX --sysroot=$MOZ_FETCHES_DIR/sysroot"
 
 # Configure crosstools-port
 cd $CROSSTOOLS_CCTOOLS_DIR
+patch -p2 < $GECKO_PATH/taskcluster/scripts/misc/cctools.patch
+
 # Force re-libtoolization to overwrite files with the new libtool bits.
 perl -pi -e 's/(LIBTOOLIZE -c)/\1 -f/' autogen.sh
 ./autogen.sh
