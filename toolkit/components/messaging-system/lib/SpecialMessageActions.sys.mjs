@@ -205,7 +205,10 @@ export const SpecialMessageActions = {
       "cookiebanners.service.detectOnly",
     ];
 
-    if (!allowedPrefs.includes(pref.name)) {
+    if (
+      !allowedPrefs.includes(pref.name) &&
+      !pref.name.startsWith("messaging-system-action.")
+    ) {
       pref.name = `messaging-system-action.${pref.name}`;
     }
     // If pref has no value, reset it, otherwise set it to desired value

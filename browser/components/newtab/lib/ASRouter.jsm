@@ -15,6 +15,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Downloader: "resource://services-settings/Attachments.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
+  FeatureCalloutBroker:
+    "resource://activity-stream/lib/FeatureCalloutBroker.sys.mjs",
   KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs",
   MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -1408,6 +1410,19 @@ class _ASRouter {
           message,
           this.dispatchCFRAction
         );
+        break;
+      case "feature_callout":
+        // featureCalloutCheck only comes from within FeatureCallout, where it
+        // is used to request a matching message. It is not a real trigger.
+        // pdfJsFeatureCalloutCheck is used for PDF.js feature callouts, which
+        // are managed by the trigger listener itself.
+        switch (trigger.id) {
+          case "featureCalloutCheck":
+          case "pdfJsFeatureCalloutCheck":
+            break;
+          default:
+            lazy.FeatureCalloutBroker.showFeatureCallout(browser, message);
+        }
         break;
       case "toast_notification":
         lazy.ToastNotification.showToastNotification(

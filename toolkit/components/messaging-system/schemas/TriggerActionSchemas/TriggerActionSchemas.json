@@ -201,22 +201,23 @@
             "id": {
               "type": "string",
               "enum": ["featureCalloutCheck"]
-            },
-            "context": {
-              "type": "object",
-              "properties": {
-                "source": {
-                  "type": "string",
-                  "enum": ["firefoxview"],
-                  "description": "Which about page is the source of the trigger"
-                }
-              },
-              "additionalProperties": false
             }
           },
           "additionalProperties": false,
           "required": ["id"],
-          "description": "Happens when navigating to about:firefoxview or other about pages with Feature Callout tours enabled"
+          "description": "Used to display Feature Callouts in Firefox View. Can only be used for Feature Callouts."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": ["pdfJsFeatureCalloutCheck"]
+            }
+          },
+          "additionalProperties": false,
+          "required": ["id"],
+          "description": "Used to display Feature Callouts on PDF.js pages. Can only be used for Feature Callouts."
         },
         {
           "type": "object",

@@ -299,10 +299,6 @@
 
     _hoverTabTimer: null,
 
-    _featureCallout: null,
-
-    _featureCalloutPanelId: null,
-
     get tabContainer() {
       delete this.tabContainer;
       return (this.tabContainer = document.getElementById("tabbrowser-tabs"));
@@ -367,37 +363,6 @@
       return this._selectedBrowser;
     },
 
-    get featureCallout() {
-      return this._featureCallout;
-    },
-
-    set featureCallout(val) {
-      this._featureCallout = val;
-    },
-
-    get instantiateFeatureCalloutTour() {
-      return this._instantiateFeatureCalloutTour;
-    },
-
-    get featureCalloutPanelId() {
-      return this._featureCalloutPanelId;
-    },
-
-    _instantiateFeatureCalloutTour(browser, panelId) {
-      this._featureCalloutPanelId = panelId;
-      const { FeatureCallout } = ChromeUtils.importESModule(
-        "resource:///modules/FeatureCallout.sys.mjs"
-      );
-      // Note - once we have additional browser chrome messages,
-      // only use PDF.js pref value when navigating to PDF viewer
-      this._featureCallout = new FeatureCallout({
-        win: window,
-        browser,
-        prefName: "browser.pdfjs.feature-tour",
-        page: "chrome",
-        theme: { preset: "pdfjs", simulateContent: true },
-      });
-    },
     _setupInitialBrowserAndTab() {
       // See browser.js for the meaning of window.arguments.
       // Bug 1485961 covers making this more sane.
@@ -1125,25 +1090,6 @@
       }
 
       let newTab = this.getTabForBrowser(newBrowser);
-
-      if (
-        this._featureCallout &&
-        this._featureCalloutPanelId !== newTab.linkedPanel
-      ) {
-        this._featureCallout.endTour(true);
-        this._featureCallout = null;
-      }
-
-      // For now, only check for Feature Callout messages
-      // when viewing PDFs. Later, we can expand this to check
-      // for callout messages on every change of tab location.
-      if (
-        !this._featureCallout &&
-        newBrowser.contentPrincipal.originNoSuffix === "resource://pdf.js"
-      ) {
-        this._instantiateFeatureCalloutTour(newBrowser, newTab.linkedPanel);
-        window.gBrowser.featureCallout.showFeatureCallout();
-      }
 
       if (!aForceUpdate) {
         TelemetryStopwatch.start("FX_TAB_SWITCH_UPDATE_MS");
@@ -6979,30 +6925,6 @@
           if (tabCacheIndex != -1) {
             gBrowser._tabLayerCache.splice(tabCacheIndex, 1);
             gBrowser._getSwitcher().cleanUpTabAfterEviction(this.mTab);
-          }
-        } else {
-          if (
-            gBrowser.featureCallout &&
-            (gBrowser.featureCalloutPanelId !==
-              gBrowser.selectedTab.linkedPanel ||
-              gBrowser.contentPrincipal.originNoSuffix !== "resource://pdf.js")
-          ) {
-            gBrowser.featureCallout.endTour(true);
-            gBrowser.featureCallout = null;
-          }
-
-          // For now, only check for Feature Callout messages
-          // when viewing PDFs. Later, we can expand this to check
-          // for callout messages on every change of tab location.
-          if (
-            !gBrowser.featureCallout &&
-            gBrowser.contentPrincipal.originNoSuffix === "resource://pdf.js"
-          ) {
-            gBrowser.instantiateFeatureCalloutTour(
-              gBrowser.selectedBrowser,
-              gBrowser.selectedTab.linkedPanel
-            );
-            gBrowser.featureCallout.showFeatureCallout();
           }
         }
       }

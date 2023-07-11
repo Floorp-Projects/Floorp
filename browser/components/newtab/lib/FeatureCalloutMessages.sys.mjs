@@ -9,25 +9,32 @@ const FIREFOX_VIEW_PREF = "browser.firefox-view.feature-tour";
 const PDFJS_PREF = "browser.pdfjs.feature-tour";
 // Empty screens are included as placeholders to ensure step
 // indicator shows the correct number of total steps in the tour
-const EMPTY_SCREEN = { content: {} };
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 
-// Generate a JEXL targeting string based on the current screen
-// id found in a given Feature Callout tour progress preference
-// and the `complete` property being true
-const matchCurrentScreenTargeting = (prefName, screenId) => {
+// Generate a JEXL targeting string based on the `complete` property being true
+// in a given Feature Callout tour progress preference value (which is JSON).
+const matchIncompleteTargeting = (prefName, defaultValue = false) => {
+  // regExpMatch() is a JEXL filter expression. Here we check if 'complete'
+  // exists in the pref's value, and returns true if the tour is incomplete.
   const prefVal = `'${prefName}' | preferenceValue`;
-  //regExpMatch() is a JEXL filter expression. Here we check if 'screen' and 'complete' exist in the pref's value (which is stringified JSON), and return their values. Returns null otherwise
-  const screenRegEx = '(?<=screen":)"(.*)(?=",)';
-  const completeRegEx = '(?<=complete":)(.*)(?=})';
+  // prefVal might be null if the preference doesn't exist. in this case, don't
+  // try to pipe into regExpMatch.
+  const completeMatch = `${prefVal} | regExpMatch('(?<=complete":)(.*)(?=})')`;
+  return `((${prefVal}) ? ((${completeMatch}) ? (${completeMatch}[1] != "true") : ${String(
+    defaultValue
+  )}) : ${String(defaultValue)})`;
+};
 
-  const screenMatch = `${prefVal}  | regExpMatch('${screenRegEx}')`;
-  const completeMatch = `${prefVal}  | regExpMatch('${completeRegEx}')`;
-  //We are checking the return of regExpMatch() here. If it's truthy, we grab the matched string and compare it to the desired value
-  const screenVal = `(${screenMatch}) ? (${screenMatch}[1] == '${screenId}') : false`;
-  const completeVal = `(${completeMatch}) ? (${completeMatch}[1] != "true") : false`;
-
-  return `(${screenVal}) && (${completeVal})`;
+// Generate a JEXL targeting string based on the current screen id found in a
+// given Feature Callout tour progress preference.
+const matchCurrentScreenTargeting = (prefName, screenIdRegEx = ".*") => {
+  // regExpMatch() is a JEXL filter expression. Here we check if 'screen' exists
+  // in the pref's value, and if it matches the screenIdRegEx. Returns
+  // null otherwise.
+  const prefVal = `'${prefName}' | preferenceValue`;
+  const screenMatch = `${prefVal} | regExpMatch('(?<=screen"\s*:)\s*"(${screenIdRegEx})(?="\s*,)')`;
+  const screenValMatches = `(${screenMatch}) ? !!(${screenMatch}[1]) : false`;
+  return `(${screenValMatches})`;
 };
 
 /**
@@ -84,6 +91,7 @@ const MESSAGES = () => {
         id: "FIREFOX_VIEW_PROMO",
         template: "multistage",
         modal: "tab",
+        tour_pref_name: FIREFOX_VIEW_PREF,
         screens: [
           {
             id: "DEFAULT_MODAL_UI",
@@ -155,10 +163,10 @@ const MESSAGES = () => {
        ${matchCurrentScreenTargeting(
          FIREFOX_VIEW_PREF,
          "FIREFOX_VIEW_SPOTLIGHT"
-       )}`,
+       )} && ${matchIncompleteTargeting(FIREFOX_VIEW_PREF)}`,
     },
     {
-      id: "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS",
+      id: "FIREFOX_VIEW_FEATURE_TOUR",
       template: "feature_callout",
       content: {
         id: "FIREFOX_VIEW_FEATURE_TOUR",
@@ -166,6 +174,7 @@ const MESSAGES = () => {
         backdrop: "transparent",
         transitions: false,
         disableHistoryUpdates: true,
+        tour_pref_name: FIREFOX_VIEW_PREF,
         screens: [
           {
             id: "FEATURE_CALLOUT_1",
@@ -218,28 +227,6 @@ const MESSAGES = () => {
               },
             },
           },
-          EMPTY_SCREEN,
-        ],
-      },
-      priority: 3,
-      targeting: `!inMr2022Holdback && source == "about:firefoxview" && ${matchCurrentScreenTargeting(
-        FIREFOX_VIEW_PREF,
-        "FEATURE_CALLOUT_1"
-      )}`,
-      trigger: { id: "featureCalloutCheck" },
-    },
-    {
-      id: "FIREFOX_VIEW_FEATURE_TOUR_2_NO_CWS",
-      template: "feature_callout",
-      content: {
-        id: "FIREFOX_VIEW_FEATURE_TOUR",
-        startScreen: 1,
-        template: "multistage",
-        backdrop: "transparent",
-        transitions: false,
-        disableHistoryUpdates: true,
-        screens: [
-          EMPTY_SCREEN,
           {
             id: "FEATURE_CALLOUT_2",
             parent_selector: "#recently-closed-tabs-container",
@@ -290,8 +277,8 @@ const MESSAGES = () => {
       priority: 3,
       targeting: `!inMr2022Holdback && source == "about:firefoxview" && ${matchCurrentScreenTargeting(
         FIREFOX_VIEW_PREF,
-        "FEATURE_CALLOUT_2"
-      )}`,
+        "FEATURE_CALLOUT_[0-9]"
+      )} && ${matchIncompleteTargeting(FIREFOX_VIEW_PREF)}`,
       trigger: { id: "featureCalloutCheck" },
     },
     {
@@ -355,7 +342,7 @@ const MESSAGES = () => {
       trigger: { id: "featureCalloutCheck" },
     },
     {
-      id: "PDFJS_FEATURE_TOUR_1_A",
+      id: "PDFJS_FEATURE_TOUR_A",
       template: "feature_callout",
       content: {
         id: "PDFJS_FEATURE_TOUR",
@@ -363,6 +350,7 @@ const MESSAGES = () => {
         backdrop: "transparent",
         transitions: false,
         disableHistoryUpdates: true,
+        tour_pref_name: PDFJS_PREF,
         screens: [
           {
             id: "FEATURE_CALLOUT_1_A",
@@ -413,28 +401,6 @@ const MESSAGES = () => {
               },
             },
           },
-          EMPTY_SCREEN,
-        ],
-      },
-      priority: 1,
-      targeting: `source == "chrome" && ${matchCurrentScreenTargeting(
-        PDFJS_PREF,
-        "FEATURE_CALLOUT_1_A"
-      )}`,
-      trigger: { id: "featureCalloutCheck" },
-    },
-    {
-      id: "PDFJS_FEATURE_TOUR_2_A",
-      template: "feature_callout",
-      content: {
-        id: "PDFJS_FEATURE_TOUR",
-        startScreen: 1,
-        template: "multistage",
-        backdrop: "transparent",
-        transitions: false,
-        disableHistoryUpdates: true,
-        screens: [
-          EMPTY_SCREEN,
           {
             id: "FEATURE_CALLOUT_2_A",
             parent_selector: "hbox#browser",
@@ -487,14 +453,14 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `source == "chrome" && ${matchCurrentScreenTargeting(
+      targeting: `source == "open" && ${matchCurrentScreenTargeting(
         PDFJS_PREF,
-        "FEATURE_CALLOUT_2_A"
-      )}`,
-      trigger: { id: "featureCalloutCheck" },
+        "FEATURE_CALLOUT_[0-9]_A"
+      )} && ${matchIncompleteTargeting(PDFJS_PREF)}`,
+      trigger: { id: "pdfJsFeatureCalloutCheck" },
     },
     {
-      id: "PDFJS_FEATURE_TOUR_1_B",
+      id: "PDFJS_FEATURE_TOUR_B",
       template: "feature_callout",
       content: {
         id: "PDFJS_FEATURE_TOUR",
@@ -502,6 +468,7 @@ const MESSAGES = () => {
         backdrop: "transparent",
         transitions: false,
         disableHistoryUpdates: true,
+        tour_pref_name: PDFJS_PREF,
         screens: [
           {
             id: "FEATURE_CALLOUT_1_B",
@@ -552,28 +519,6 @@ const MESSAGES = () => {
               },
             },
           },
-          EMPTY_SCREEN,
-        ],
-      },
-      priority: 1,
-      targeting: `source == "chrome" && ${matchCurrentScreenTargeting(
-        PDFJS_PREF,
-        "FEATURE_CALLOUT_1_B"
-      )}`,
-      trigger: { id: "featureCalloutCheck" },
-    },
-    {
-      id: "PDFJS_FEATURE_TOUR_2_B",
-      template: "feature_callout",
-      content: {
-        id: "PDFJS_FEATURE_TOUR",
-        startScreen: 1,
-        template: "multistage",
-        backdrop: "transparent",
-        transitions: false,
-        disableHistoryUpdates: true,
-        screens: [
-          EMPTY_SCREEN,
           {
             id: "FEATURE_CALLOUT_2_B",
             parent_selector: "hbox#browser",
@@ -626,11 +571,11 @@ const MESSAGES = () => {
         ],
       },
       priority: 1,
-      targeting: `source == "chrome" && ${matchCurrentScreenTargeting(
+      targeting: `source == "open" && ${matchCurrentScreenTargeting(
         PDFJS_PREF,
-        "FEATURE_CALLOUT_2_B"
-      )}`,
-      trigger: { id: "featureCalloutCheck" },
+        "FEATURE_CALLOUT_[0-9]_B"
+      )} && ${matchIncompleteTargeting(PDFJS_PREF)}`,
+      trigger: { id: "pdfJsFeatureCalloutCheck" },
     },
   ];
   messages = add24HourImpressionJEXLTargeting(

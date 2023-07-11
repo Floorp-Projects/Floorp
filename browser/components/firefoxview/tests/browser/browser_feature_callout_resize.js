@@ -3,7 +3,10 @@
 
 "use strict";
 
-const featureTourPref = "browser.firefox-view.feature-tour";
+function getArrowPosition(doc) {
+  let callout = doc.querySelector(calloutSelector);
+  return [...callout.classList].find(c => c.startsWith("arrow"));
+}
 
 add_setup(async function setup() {
   let originalWidth = window.outerWidth;
@@ -25,9 +28,7 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.sessionstore.max_tabs_undo", 1]],
   });
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-  );
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
   await BrowserTestUtils.withNewTab(
@@ -35,24 +36,42 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
     async browser => {
       const { document } = browser.contentWindow;
 
+      launchFeatureTourIn(browser.contentWindow);
+
       browser.contentWindow.resizeTo(1550, 1000);
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
-      ok(
-        document.querySelector(`${calloutSelector}.arrow-top`),
+      await BrowserTestUtils.waitForCondition(() => {
+        if (getArrowPosition(document) === "arrow-top") {
+          return true;
+        }
+        browser.contentWindow.resizeTo(1550, 1000);
+        return false;
+      });
+      is(
+        getArrowPosition(document),
+        "arrow-top",
         "On first screen at 1550x1000, the callout is positioned below the parent element"
       );
 
       let startingTop = document.querySelector(calloutSelector).style.top;
-      browser.contentWindow.resizeTo(1600, 400);
+      browser.contentWindow.resizeTo(1800, 400);
       // Wait for callout to be repositioned
       await BrowserTestUtils.waitForMutationCondition(
         document.querySelector(calloutSelector),
         { attributeFilter: ["style"], attributes: true },
         () => document.querySelector(calloutSelector).style.top != startingTop
       );
-      ok(
-        document.querySelector(`${calloutSelector}.arrow-inline-start`),
-        "On first screen at 1600x400, the callout is positioned to the right of the parent element"
+      await BrowserTestUtils.waitForCondition(() => {
+        if (getArrowPosition(document) === "arrow-inline-start") {
+          return true;
+        }
+        browser.contentWindow.resizeTo(1800, 400);
+        return false;
+      });
+      is(
+        getArrowPosition(document),
+        "arrow-inline-start",
+        "On first screen at 1800x400, the callout is positioned to the right of the parent element"
       );
 
       startingTop = document.querySelector(calloutSelector).style.top;
@@ -62,8 +81,16 @@ add_task(async function feature_callout_is_repositioned_if_it_does_not_fit() {
         { attributeFilter: ["style"], attributes: true },
         () => document.querySelector(calloutSelector).style.top != startingTop
       );
-      ok(
-        document.querySelector(`${calloutSelector}.arrow-top`),
+      await BrowserTestUtils.waitForCondition(() => {
+        if (getArrowPosition(document) === "arrow-top") {
+          return true;
+        }
+        browser.contentWindow.resizeTo(1100, 600);
+        return false;
+      });
+      is(
+        getArrowPosition(document),
+        "arrow-top",
         "On first screen at 1100x600, the callout is positioned below the parent element"
       );
     }
@@ -80,9 +107,7 @@ add_task(async function feature_callout_is_repositioned_rtl() {
     ],
   });
 
-  const testMessage = getCalloutMessageById(
-    "FIREFOX_VIEW_FEATURE_TOUR_1_NO_CWS"
-  );
+  const testMessage = getCalloutMessageById("FIREFOX_VIEW_FEATURE_TOUR");
   const sandbox = createSandboxWithCalloutTriggerStub(testMessage);
 
   await BrowserTestUtils.withNewTab(
@@ -90,24 +115,42 @@ add_task(async function feature_callout_is_repositioned_rtl() {
     async browser => {
       const { document } = browser.contentWindow;
 
+      launchFeatureTourIn(browser.contentWindow);
+
       browser.contentWindow.resizeTo(1550, 1000);
       await waitForCalloutScreen(document, "FEATURE_CALLOUT_1");
-      ok(
-        document.querySelector(`${calloutSelector}.arrow-top`),
+      await BrowserTestUtils.waitForCondition(() => {
+        if (getArrowPosition(document) === "arrow-top") {
+          return true;
+        }
+        browser.contentWindow.resizeTo(1550, 1000);
+        return false;
+      });
+      is(
+        getArrowPosition(document),
+        "arrow-top",
         "On first screen at 1550x1000, the callout is positioned below the parent element"
       );
 
       let startingTop = document.querySelector(calloutSelector).style.top;
-      browser.contentWindow.resizeTo(1600, 400);
+      browser.contentWindow.resizeTo(1800, 400);
       // Wait for callout to be repositioned
       await BrowserTestUtils.waitForMutationCondition(
         document.querySelector(calloutSelector),
         { attributeFilter: ["style"], attributes: true },
         () => document.querySelector(calloutSelector).style.top != startingTop
       );
-      ok(
-        document.querySelector(`${calloutSelector}.arrow-inline-end`),
-        "On first screen at 1600x400, the callout is positioned to the right of the parent element"
+      await BrowserTestUtils.waitForCondition(() => {
+        if (getArrowPosition(document) === "arrow-inline-end") {
+          return true;
+        }
+        browser.contentWindow.resizeTo(1800, 400);
+        return false;
+      });
+      is(
+        getArrowPosition(document),
+        "arrow-inline-end",
+        "On first screen at 1800x400, the callout is positioned to the right of the parent element"
       );
 
       startingTop = document.querySelector(calloutSelector).style.top;
@@ -117,8 +160,16 @@ add_task(async function feature_callout_is_repositioned_rtl() {
         { attributeFilter: ["style"], attributes: true },
         () => document.querySelector(calloutSelector).style.top != startingTop
       );
-      ok(
-        document.querySelector(`${calloutSelector}.arrow-top`),
+      await BrowserTestUtils.waitForCondition(() => {
+        if (getArrowPosition(document) === "arrow-top") {
+          return true;
+        }
+        browser.contentWindow.resizeTo(1100, 600);
+        return false;
+      });
+      is(
+        getArrowPosition(document),
+        "arrow-top",
         "On first screen at 1100x600, the callout is positioned below the parent element"
       );
     }

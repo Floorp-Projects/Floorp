@@ -178,7 +178,11 @@ Watch for changes on any number of preferences. Runs when a pref is added, remov
 
 ### `featureCalloutCheck`
 
-Happens when navigating to about:firefoxview or other about pages with Feature Callout tours enabled
+Used to display Feature Callouts in Firefox View. Can only be used for Feature Callouts.
+
+### `pdfJsFeatureCalloutCheck`
+
+Used to display Feature Callouts on PDF.js pages. Can only be used for Feature Callouts.
 
 ### `nthTabClosed`
 

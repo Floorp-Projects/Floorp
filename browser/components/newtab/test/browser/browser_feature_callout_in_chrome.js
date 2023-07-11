@@ -6,6 +6,14 @@
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );
+const { FeatureCalloutMessages } = ChromeUtils.importESModule(
+  "resource://activity-stream/lib/FeatureCalloutMessages.sys.mjs"
+);
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  FeatureCalloutBroker:
+    "resource://activity-stream/lib/FeatureCalloutBroker.sys.mjs",
+});
 
 const calloutId = "multi-stage-message-root";
 const calloutSelector = `#${calloutId}.featureCallout`;
@@ -35,9 +43,10 @@ async function openURLInNewTab(window, url) {
   return BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
 }
 
-const pdfMatch = sinon.match(val => {
-  return val?.id === "featureCalloutCheck" && val?.context?.source === "chrome";
-});
+const pdfMatch = sinon.match(
+  val =>
+    val?.id === "pdfJsFeatureCalloutCheck" && val?.context?.source === "open"
+);
 
 const validateCalloutCustomPosition = (element, positionOverride, doc) => {
   const browserBox = doc.querySelector("hbox#browser");
@@ -125,7 +134,7 @@ const testMessage = {
     },
     priority: 1,
     targeting: "true",
-    trigger: { id: "featureCalloutCheck" },
+    trigger: { id: "pdfJsFeatureCalloutCheck" },
   },
 };
 
@@ -133,6 +142,317 @@ const testMessageCalloutSelector = testMessage.message.content.screens[0].id;
 
 add_setup(async function () {
   requestLongerTimeout(2);
+});
+
+// Test that a feature callout message can be loaded into ASRouter and displayed
+// via a standard trigger. Also test that the callout can be a feature tour,
+// even if its tour pref doesn't exist in Firefox. The tour pref will be created
+// and cleaned up automatically. This allows a feature callout to be implemented
+// entirely off-train in an experiment, without landing anything in tree.
+add_task(async function triggered_feature_tour_with_custom_pref() {
+  let sandbox = sinon.createSandbox();
+  const TEST_MESSAGES = [
+    {
+      id: "TEST_FEATURE_TOUR",
+      template: "feature_callout",
+      content: {
+        id: "TEST_FEATURE_TOUR",
+        template: "multistage",
+        backdrop: "transparent",
+        transitions: false,
+        disableHistoryUpdates: true,
+        tour_pref_name: "messaging-system-action.browser.test.feature-tour",
+        tour_pref_default_value: JSON.stringify({
+          screen: "FEATURE_CALLOUT_1",
+          complete: false,
+        }),
+        screens: [
+          {
+            id: "FEATURE_CALLOUT_1",
+            parent_selector: "#PanelUI-menu-button",
+            content: {
+              position: "callout",
+              arrow_position: "top-center-arrow-end",
+              title: {
+                string_id: "callout-pdfjs-edit-title",
+              },
+              subtitle: {
+                string_id: "callout-pdfjs-edit-body-b",
+              },
+              primary_button: {
+                label: {
+                  string_id: "callout-pdfjs-edit-button",
+                },
+                action: {
+                  type: "SET_PREF",
+                  data: {
+                    pref: {
+                      name: "messaging-system-action.browser.test.feature-tour",
+                      value: JSON.stringify({
+                        screen: "FEATURE_CALLOUT_2",
+                        complete: false,
+                      }),
+                    },
+                  },
+                },
+              },
+              dismiss_button: {
+                action: {
+                  type: "MULTI_ACTION",
+                  dismiss: true,
+                  data: {
+                    actions: [
+                      {
+                        type: "BLOCK_MESSAGE",
+                        data: { id: "TEST_FEATURE_TOUR" },
+                      },
+                      {
+                        type: "SET_PREF",
+                        data: {
+                          pref: {
+                            name: "messaging-system-action.browser.test.feature-tour",
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          {
+            id: "FEATURE_CALLOUT_2",
+            parent_selector: "#back-button",
+            content: {
+              position: "callout",
+              arrow_position: "top-center-arrow-start",
+              title: {
+                string_id: "callout-pdfjs-draw-title",
+              },
+              subtitle: {
+                string_id: "callout-pdfjs-draw-body-b",
+              },
+              primary_button: {
+                label: {
+                  string_id: "callout-pdfjs-draw-button",
+                },
+                action: {
+                  type: "MULTI_ACTION",
+                  dismiss: true,
+                  data: {
+                    actions: [
+                      {
+                        type: "BLOCK_MESSAGE",
+                        data: { id: "TEST_FEATURE_TOUR" },
+                      },
+                      {
+                        type: "SET_PREF",
+                        data: {
+                          pref: {
+                            name: "messaging-system-action.browser.test.feature-tour",
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+              dismiss_button: {
+                action: {
+                  type: "MULTI_ACTION",
+                  dismiss: true,
+                  data: {
+                    actions: [
+                      {
+                        type: "BLOCK_MESSAGE",
+                        data: { id: "TEST_FEATURE_TOUR" },
+                      },
+                      {
+                        type: "SET_PREF",
+                        data: {
+                          pref: {
+                            name: "messaging-system-action.browser.test.feature-tour",
+                          },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
+      priority: 2,
+      targeting: `(('messaging-system-action.browser.test.feature-tour' | preferenceValue) ? (('messaging-system-action.browser.test.feature-tour' | preferenceValue | regExpMatch('(?<=complete":)(.*)(?=})')) ? ('messaging-system-action.browser.test.feature-tour' | preferenceValue | regExpMatch('(?<=complete":)(.*)(?=})')[1] != "true") : true) : true)`,
+      trigger: { id: "nthTabClosed" },
+    },
+    {
+      id: "TEST_FEATURE_TOUR_2",
+      template: "feature_callout",
+      content: {
+        id: "TEST_FEATURE_TOUR_2",
+        template: "multistage",
+        backdrop: "transparent",
+        transitions: false,
+        disableHistoryUpdates: true,
+        screens: [
+          {
+            id: "FEATURE_CALLOUT_TEST",
+            parent_selector: "#urlbar-container",
+            content: {
+              position: "callout",
+              arrow_position: "top-center-arrow-end",
+              title: {
+                string_id: "callout-pdfjs-edit-title",
+              },
+              subtitle: {
+                string_id: "callout-pdfjs-edit-body-b",
+              },
+              primary_button: {
+                label: {
+                  string_id: "callout-pdfjs-edit-button",
+                },
+                action: {
+                  dismiss: true,
+                },
+              },
+              dismiss_button: {
+                action: {
+                  dismiss: true,
+                },
+              },
+            },
+          },
+        ],
+      },
+      priority: 1,
+      targeting: "true",
+      trigger: { id: "nthTabClosed" },
+    },
+  ];
+  const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
+  getMessagesStub.returns(TEST_MESSAGES);
+  await ASRouter._updateMessageProviders();
+  await ASRouter.loadMessagesFromAllProviders(
+    ASRouter.state.providers.filter(p => p.id === "onboarding")
+  );
+
+  // Test that callout is triggered and shown in browser chrome
+  const win1 = await BrowserTestUtils.openNewBrowserWindow();
+  win1.focus();
+  const tab1 = await BrowserTestUtils.openNewForegroundTab(win1.gBrowser);
+  win1.gBrowser.removeTab(tab1);
+  await waitForCalloutScreen(
+    win1.document,
+    TEST_MESSAGES[0].content.screens[0].id
+  );
+  ok(
+    win1.document.querySelector(calloutSelector),
+    "Feature Callout is rendered in the browser chrome when a message is available"
+  );
+
+  // Test that a callout does NOT appear if another is already shown in any window.
+  const showFeatureCalloutSpy = sandbox.spy(
+    lazy.FeatureCalloutBroker,
+    "showFeatureCallout"
+  );
+  const win2 = await BrowserTestUtils.openNewBrowserWindow();
+  win2.focus();
+  const tab2 = await BrowserTestUtils.openNewForegroundTab(win2.gBrowser);
+  win2.gBrowser.removeTab(tab2);
+  await BrowserTestUtils.waitForCondition(async () => {
+    const rvs = await Promise.all(showFeatureCalloutSpy.returnValues);
+    return (
+      showFeatureCalloutSpy.calledWith(
+        win2.gBrowser.selectedBrowser,
+        sinon.match(TEST_MESSAGES[0])
+      ) && rvs.every(rv => !rv)
+    );
+  }, "Waiting for showFeatureCallout to be called");
+  ok(
+    !win2.document.querySelector(calloutSelector),
+    "Feature Callout is not rendered when a callout is already shown in any window"
+  );
+  await BrowserTestUtils.closeWindow(win2);
+  win1.focus();
+  await BrowserTestUtils.waitForCondition(
+    async () => Services.focus.activeWindow === win1,
+    "Waiting for window 1 to be active"
+  );
+
+  // Test that the tour pref doesn't exist yet
+  ok(
+    !Services.prefs.prefHasUserValue(TEST_MESSAGES[0].content.tour_pref_name),
+    "Tour pref does not exist yet"
+  );
+
+  // Test that the callout advances screen and sets the tour pref
+  win1.document.querySelector(primaryButtonSelector).click();
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      Services.prefs.prefHasUserValue(TEST_MESSAGES[0].content.tour_pref_name),
+    "Waiting for tour pref to be set"
+  );
+  ok(true, "Tour pref is set");
+  await waitForCalloutScreen(
+    win1.document,
+    TEST_MESSAGES[0].content.screens[1].id
+  );
+  ok(
+    win1.document.querySelector(calloutSelector),
+    "Feature Callout screen 2 is rendered"
+  );
+  SimpleTest.isDeeply(
+    JSON.parse(
+      Services.prefs.getStringPref(
+        TEST_MESSAGES[0].content.tour_pref_name,
+        "{}"
+      )
+    ),
+    { screen: "FEATURE_CALLOUT_2", complete: false },
+    "Tour pref is set correctly"
+  );
+
+  // Test that the callout is dismissed and cleans up the tour pref
+  win1.document.querySelector(primaryButtonSelector).click();
+  await waitForRemoved(win1.document);
+  ok(
+    !win1.document.querySelector(calloutSelector),
+    "Feature Callout is not rendered after being dismissed"
+  );
+  ok(
+    !Services.prefs.prefHasUserValue(TEST_MESSAGES[0].content.tour_pref_name),
+    "Tour pref is cleaned up correctly"
+  );
+
+  // Test that the message was blocked so a different callout is shown
+  const tab3 = await BrowserTestUtils.openNewForegroundTab(win1.gBrowser);
+  win1.gBrowser.removeTab(tab3);
+  await waitForCalloutScreen(
+    win1.document,
+    TEST_MESSAGES[1].content.screens[0].id
+  );
+  ok(
+    win1.document.querySelector(calloutSelector),
+    "A different Feature Callout is rendered"
+  );
+  win1.document.querySelector(primaryButtonSelector).click();
+  await waitForRemoved(win1.document);
+  ok(
+    !lazy.FeatureCalloutBroker.isCalloutShowing,
+    "No Feature Callout is shown"
+  );
+
+  BrowserTestUtils.closeWindow(win1);
+
+  sandbox.restore();
+  await ASRouter.unblockMessageById(TEST_MESSAGES[0].id);
+  await ASRouter.resetMessageState();
+  await ASRouter._updateMessageProviders();
+  await ASRouter.loadMessagesFromAllProviders(
+    ASRouter.state.providers.filter(p => p.id === "onboarding")
+  );
 });
 
 add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
