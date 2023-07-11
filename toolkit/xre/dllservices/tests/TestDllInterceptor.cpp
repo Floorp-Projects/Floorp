@@ -979,8 +979,11 @@ decltype(&DetouredCallCode) gDetouredCall =
   }
 
   DWORD oldProtect{};
+  // Because the current function could be located on the same memory page as
+  // DetouredCallJumper, we must preserve the permission to execute the page
+  // while we adjust the detoured call jumper (hence PAGE_EXECUTE_READWRITE).
   if (!VirtualProtect(reinterpret_cast<void*>(DetouredCallJumper), sizeof bytes,
-                      PAGE_READWRITE, &oldProtect)) {
+                      PAGE_EXECUTE_READWRITE, &oldProtect)) {
     return nullptr;
   }
 
