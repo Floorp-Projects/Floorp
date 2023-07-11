@@ -374,10 +374,14 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  * E.1. Debugger.Frame.prototype.evalWithBindings
  *
  * Debugger.Frame.prototype.evalWithBindings uses WithEnvironmentObject for
- * given bindings, and the frame's enclosing scope
+ * given bindings, and the frame's enclosing scope.
+ *
+ * If qualified 'var's or unqualified names conflict with the bindings object's
+ * properties, they go to the WithEnvironmentObject.
  *
  * If the frame is function, it has the following env chain.
- * lexical variables are optimized and uses frame slots:
+ * lexical variables are optimized and uses frame slots, regardless of the name
+ * conflicts with bindings:
  *
  *   global (unqualified names)
  *       |
@@ -385,7 +389,7 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *       |
  *   [DebugProxy] CallObject (qualified 'var's)
  *       |
- *   WithEnvironmentObject wrapping bindings
+ *   WithEnvironmentObject wrapping bindings (conflicting 'var's and names)
  *
  * If the script has direct eval, BlockLexicalEnvironmentObject is created for
  * it:
@@ -396,9 +400,9 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *       |
  *   [DebugProxy] CallObject (qualified 'var's)
  *       |
- *   BlockLexicalEnvironmentObject (lexical)
+ *   WithEnvironmentObject wrapping bindings (conflicting 'var's and names)
  *       |
- *   WithEnvironmentObject wrapping bindings
+ *   BlockLexicalEnvironmentObject (lexical vars, and conflicting lexical vars)
  *
  * NOTE: Debugger.Frame.prototype.eval uses the frame's enclosing scope only,
  *       and it doesn't use any dynamic environment, but still uses
@@ -407,13 +411,30 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  * E.2. Debugger.Object.prototype.executeInGlobalWithBindings
  *
  * Debugger.Object.prototype.executeInGlobalWithBindings uses
- * WithEnvironmentObject for given bindings, and the object's global scope:
+ * WithEnvironmentObject for given bindings, and the object's global scope.
+ *
+ * If qualified 'var's or unqualified names conflict with the bindings object's
+ * properties, they go to the WithEnvironmentObject.
  *
  *   global (qualified 'var's and unqualified names)
  *       |
- *   GlobalLexicalEnvironmentObject[this=global] (lexical)
+ *   GlobalLexicalEnvironmentObject[this=global] (lexical vars and conflicting)
  *       |
- *   WithEnvironmentObject wrapping bindings
+ *   WithEnvironmentObject wrapping bindings (conflicting 'var's and names)
+ *
+ * TODO:
+ * If lexical variable names conflict with the bindings object's
+ * properties, the write on them within declarations is done for the
+ * GlobalLexicalEnvironmentObject,
+ * but the write within assignments and the read on lexicals are done from the
+ * WithEnvironmentObject (bug 1841964).
+ *
+ *   // bindings = { x: 10, y: 20 };
+ *
+ *   let x = 11; // written to GlobalLexicalEnvironmentObject
+ *   x;          // read from WithEnvironmentObject
+ *   y = 21;     // written to WithEnvironmentObject
+ *   y;          // read from WithEnvironmentObject
  *
  * NOTE: Debugger.Object.prototype.executeInGlobal uses the object's global
  *       scope only, and it doesn't use any dynamic environment or
