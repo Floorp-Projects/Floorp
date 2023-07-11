@@ -578,8 +578,7 @@ MFMediaEngineStream* MFMediaSource::GetStreamByIndentifier(
 
 #ifdef MOZ_WMF_CDM
 void MFMediaSource::SetCDMProxy(MFCDMProxy* aCDMProxy) {
-  // TODO : add threading assertion, not sure what thread it would be running on
-  // now.
+  AssertOnManagerThread();
   mCDMProxy = aCDMProxy;
   // TODO : ask cdm proxy to refresh trusted input
 }
