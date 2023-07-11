@@ -1476,7 +1476,7 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
 
   const OptimizationInfo* info =
       IonOptimizations.get(OptimizationLevel::Normal);
-  uint32_t warmUpThreshold = info->compilerWarmUpThreshold(script, pc);
+  uint32_t warmUpThreshold = info->compilerWarmUpThreshold(cx, script, pc);
   masm.branch32(Assembler::LessThan, countReg, Imm32(warmUpThreshold), &done);
 
   // Don't trigger Warp compilations from trial-inlined scripts.
