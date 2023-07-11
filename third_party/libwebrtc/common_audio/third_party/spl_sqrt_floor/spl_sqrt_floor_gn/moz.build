@@ -143,6 +143,24 @@ if CONFIG["CPU_ARCH"] == "arm":
         "/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor_arm.S"
     ]
 
+if CONFIG["CPU_ARCH"] == "mips32":
+
+    DEFINES["MIPS32_LE"] = True
+    DEFINES["MIPS_FPU_LE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor_mips.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    DEFINES["_GNU_SOURCE"] = True
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/third_party/spl_sqrt_floor/spl_sqrt_floor.c"
+    ]
+
 if CONFIG["CPU_ARCH"] == "ppc64":
 
     UNIFIED_SOURCES += [

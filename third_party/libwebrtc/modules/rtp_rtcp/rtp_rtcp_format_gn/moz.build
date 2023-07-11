@@ -192,6 +192,16 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+if CONFIG["CPU_ARCH"] == "mips32":
+
+    DEFINES["MIPS32_LE"] = True
+    DEFINES["MIPS_FPU_LE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    DEFINES["_GNU_SOURCE"] = True
+
 if CONFIG["CPU_ARCH"] == "x86":
 
     DEFINES["WEBRTC_ENABLE_AVX2"] = True
