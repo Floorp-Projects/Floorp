@@ -117,6 +117,24 @@ class NavigationToolbarRobot {
             getStringResource(R.string.search_hint),
         )
 
+    // New unified search UI selector
+    fun verifySearchBarPlaceholder(text: String) {
+        urlBar().waitForExists(waitingTime)
+        assertTrue(
+            urlBar().text == text,
+        )
+    }
+
+    // New unified search UI selector
+    fun verifyDefaultSearchEngine(engineName: String) =
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/search_selector")
+                    .childSelector(UiSelector().description(engineName)),
+            ).waitForExists(waitingTime),
+        )
+
     fun verifyTextSelectionOptions(vararg textSelectionOptions: String) {
         for (textSelectionOption in textSelectionOptions) {
             mDevice.waitNotNull(Until.findObject(textContains(textSelectionOption)), waitingTime)
@@ -257,7 +275,7 @@ class NavigationToolbarRobot {
             return NavigationToolbarRobot.Transition()
         }
 
-        fun openTabFromShortcutsMenu(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+        fun openTabFromShortcutsMenu(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             mDevice.waitForIdle(waitingTime)
 
             onView(withId(R.id.mozac_browser_menu_recyclerView))
@@ -270,11 +288,11 @@ class NavigationToolbarRobot {
                     ),
                 )
 
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
+            SearchRobot().interact()
+            return SearchRobot.Transition()
         }
 
-        fun openNewPrivateTabFromShortcutsMenu(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+        fun openNewPrivateTabFromShortcutsMenu(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             mDevice.waitForIdle(waitingTime)
 
             onView(withId(R.id.mozac_browser_menu_recyclerView))
@@ -287,8 +305,8 @@ class NavigationToolbarRobot {
                     ),
                 )
 
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
+            SearchRobot().interact()
+            return SearchRobot.Transition()
         }
 
         fun clickUrlbar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {

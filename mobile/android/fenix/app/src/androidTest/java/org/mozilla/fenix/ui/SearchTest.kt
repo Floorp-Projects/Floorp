@@ -37,11 +37,14 @@ import org.mozilla.fenix.helpers.TestHelper.grantSystemPermission
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.setCustomSearchEngine
+import org.mozilla.fenix.helpers.TestHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.longClickPageObject
 import org.mozilla.fenix.ui.robots.multipleSelectionToolbar
+import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.searchScreen
 
 /**
  *  Tests for verifying the search fragment
@@ -66,6 +69,8 @@ class SearchTest {
             isRecentTabsFeatureEnabled = false,
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
+            isUnifiedSearchEnabled = true,
+            newSearchSettingsEnabled = true,
         ),
     ) { it.activity }
 
@@ -83,13 +88,37 @@ class SearchTest {
     }
 
     @Test
-    fun searchScreenItemsTest() {
+    fun searchBarItemsTest() {
+        navigationToolbar {
+            verifyDefaultSearchEngine("Google")
+            verifySearchBarPlaceholder("Search or enter address")
+        }.clickUrlbar {
+            verifyKeyboardVisibility(isExpectedToBeVisible = true)
+            verifyScanButtonVisibility(visible = true)
+            verifyVoiceSearchButtonVisibility(enabled = true)
+            verifySearchBarPlaceholder("Search or enter address")
+            typeSearch("mozilla ")
+            verifyScanButtonVisibility(visible = false)
+            verifyVoiceSearchButtonVisibility(enabled = true)
+            clickClearButton()
+            clickSearchSelectorButton()
+            selectTemporarySearchMethod("Amazon.com")
+            verifyScanButtonVisibility(visible = false)
+            verifyVoiceSearchButtonVisibility(enabled = true)
+        }
+    }
+
+    @Test
+    fun searchSelectorMenuItemsTest() {
         homeScreen {
         }.openSearch {
             verifySearchView()
-            verifySearchToolbar(true)
-            verifyScanButton()
-            verifySearchEngineButton()
+            verifySearchToolbar(isDisplayed = true)
+            clickSearchSelectorButton()
+            verifySearchShortcutListContains(
+                "DuckDuckGo", "Google", "Amazon.com", "Wikipedia", "Bing", "eBay",
+                "Bookmarks", "Tabs", "History", "Search settings",
+            )
         }
     }
 
@@ -128,29 +157,41 @@ class SearchTest {
         }
     }
 
+    // Verifies a temporary change of search engine from the Search shortcut menu
+    @SmokeTest
     @Test
-    fun setDefaultSearchEngineFromShortcutsTest() {
+    fun selectSearchEnginesShortcutTest() {
+        val enginesList = listOf("DuckDuckGo", "Google", "Amazon.com", "Wikipedia", "Bing", "eBay")
+
+        enginesList.forEach {
+            homeScreen {
+            }.openSearch {
+                clickSearchSelectorButton()
+                verifySearchShortcutListContains(it)
+                selectTemporarySearchMethod(it)
+                verifySearchEngineIcon(it)
+            }.submitQuery("mozilla ") {
+                verifyUrl("mozilla")
+            }.goToHomescreen {}
+        }
+    }
+
+    @Test
+    fun accessSearchSettingFromSearchSelectorMenuTest() {
         queryString = "firefox"
 
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSearchSubMenu {
-            toggleShowSearchShortcuts()
-        }.goBack {
-        }.goBack {
-        }.openSearch {
-            scrollToSearchEngineSettings(activityTestRule)
-        }.clickSearchEngineSettings(activityTestRule) {
+        searchScreen {
+            clickSearchSelectorButton()
+        }.clickSearchEngineSettings {
+            verifySearchSettingsToolbar()
+            openDefaultSearchEngineMenu()
             changeDefaultSearchEngine("DuckDuckGo")
+            exitMenu()
         }
-
-        exitMenu()
-
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            verifyUrl("duckduckgo.com/?q=firefox")
+            verifyUrl("firefox")
         }
     }
 
@@ -162,7 +203,7 @@ class SearchTest {
         }.openSearch {
             typeSearch(queryString)
             clickClearButton()
-            verifySearchBarEmpty()
+            verifySearchBarPlaceholder("Search or enter address")
         }
     }
 
@@ -197,7 +238,7 @@ class SearchTest {
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
-            verifyRecentlyVisitedSearchGroupDisplayed(true, queryString, 3)
+            verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
         }
     }
 
@@ -245,7 +286,7 @@ class SearchTest {
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
-            verifyRecentlyVisitedSearchGroupDisplayed(true, queryString, 3)
+            verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
         }.openRecentlyVisitedSearchGroupHistoryList(queryString) {
             verifyTestPageUrl(firstPageUrl)
             verifyTestPageUrl(secondPageUrl)
@@ -279,7 +320,7 @@ class SearchTest {
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
-            verifyRecentlyVisitedSearchGroupDisplayed(true, queryString, 3)
+            verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
         }
     }
 
@@ -314,10 +355,10 @@ class SearchTest {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
             togglePrivateBrowsingModeOnOff()
-            verifyRecentlyVisitedSearchGroupDisplayed(false, queryString, 3)
+            verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = false, searchTerm = queryString, groupSize = 3)
         }.openThreeDotMenu {
         }.openHistory {
-            verifyHistoryItemExists(false, "3 sites")
+            verifyHistoryItemExists(shouldExist = false, item = "3 sites")
         }
     }
 
@@ -354,7 +395,7 @@ class SearchTest {
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
-            verifyRecentlyVisitedSearchGroupDisplayed(true, queryString, 3)
+            verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
         }.openRecentlyVisitedSearchGroupHistoryList(queryString) {
             clickDeleteHistoryButton(firstPageUrl.toString())
             longTapSelectItem(secondPageUrl)
@@ -366,7 +407,7 @@ class SearchTest {
         }
         homeScreen {
             // checking that the group is removed when only 1 item is left
-            verifyRecentlyVisitedSearchGroupDisplayed(false, queryString, 1)
+            verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = false, searchTerm = queryString, groupSize = 1)
         }
     }
 
@@ -401,18 +442,18 @@ class SearchTest {
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
-            verifyRecentlyVisitedSearchGroupDisplayed(true, queryString, 3)
+            verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
         }.openRecentlyVisitedSearchGroupHistoryList(queryString) {
             clickDeleteAllHistoryButton()
             confirmDeleteAllHistory()
             verifyDeleteSnackbarText("Group deleted")
-            verifyHistoryItemExists(false, firstPageUrl.toString())
+            verifyHistoryItemExists(shouldExist = false, firstPageUrl.toString())
         }.goBack {}
         homeScreen {
-            verifyRecentlyVisitedSearchGroupDisplayed(false, queryString, 3)
+            verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = false, queryString, groupSize = 3)
         }.openThreeDotMenu {
         }.openHistory {
-            verifySearchGroupDisplayed(false, queryString, 3)
+            verifySearchGroupDisplayed(shouldBeDisplayed = false, queryString, groupSize = 3)
             verifyEmptyHistoryView()
         }
     }
@@ -449,7 +490,7 @@ class SearchTest {
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
-            verifyRecentlyVisitedSearchGroupDisplayed(true, queryString, 3)
+            verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
         }.openRecentlyVisitedSearchGroupHistoryList(queryString) {
         }.openWebsite(firstPageUrl) {
             verifyUrl(firstPageUrl.toString())
@@ -502,7 +543,7 @@ class SearchTest {
         }.openTabDrawer {
         }.openTabsListThreeDotMenu {
         }.closeAllTabs {
-            verifyRecentlyVisitedSearchGroupDisplayed(true, queryString, 3)
+            verifyRecentlyVisitedSearchGroupDisplayed(shouldBeDisplayed = true, searchTerm = queryString, groupSize = 3)
         }.openRecentlyVisitedSearchGroupHistoryList(queryString) {
             longTapSelectItem(firstPageUrl)
         }
@@ -524,7 +565,11 @@ class SearchTest {
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            verifyUrl(searchEngineCodes["Google"]!!)
+            waitForPageToLoad()
+        }.openThreeDotMenu {
+        }.openHistory {
+            // Full URL no longer visible in the nav bar, so we'll check the history record
+            verifyHistoryItemExists(shouldExist = true, searchEngineCodes["Google"]!!)
         }
     }
 
@@ -537,15 +582,19 @@ class SearchTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openSearchSubMenu {
+            openDefaultSearchEngineMenu()
             changeDefaultSearchEngine("Bing")
+            exitMenu()
         }
-
-        exitMenu()
 
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            verifyUrl(searchEngineCodes["Bing"]!!)
+            waitForPageToLoad()
+        }.openThreeDotMenu {
+        }.openHistory {
+            // Full URL no longer visible in the nav bar, so we'll check the history record
+            verifyHistoryItemExists(shouldExist = true, searchEngineCodes["Bing"]!!)
         }
     }
 
@@ -558,28 +607,24 @@ class SearchTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openSearchSubMenu {
+            openDefaultSearchEngineMenu()
             changeDefaultSearchEngine("DuckDuckGo")
+            exitMenu()
         }
-
-        exitMenu()
-
         homeScreen {
         }.openSearch {
         }.submitQuery(queryString) {
-            verifyUrl(searchEngineCodes["DuckDuckGo"]!!)
-        }
-    }
-
-    // Expected for en-us defaults
-    @Test
-    fun changeSearchEnginesBasedOnTextTest() {
-        homeScreen {
-        }.openSearch {
-            typeSearch("D")
-            verifySearchEnginePrompt(activityTestRule, "DuckDuckGo")
-            clickSearchEnginePrompt(activityTestRule, "DuckDuckGo")
-        }.submitQuery("firefox") {
-            verifyUrl("duckduckgo.com/?q=firefox")
+            waitForPageToLoad()
+        }.openThreeDotMenu {
+        }.openHistory {
+            // Full URL no longer visible in the nav bar, so we'll check the history record
+            // A search group is sometimes created when searching with DuckDuckGo
+            try {
+                verifyHistoryItemExists(shouldExist = true, item = searchEngineCodes["DuckDuckGo"]!!)
+            } catch (e: AssertionError) {
+                openSearchGroup(queryString)
+                verifyHistoryItemExists(shouldExist = true, item = searchEngineCodes["DuckDuckGo"]!!)
+            }
         }
     }
 }

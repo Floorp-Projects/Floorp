@@ -162,8 +162,11 @@ class SettingsSubMenuSearchRobot {
         manageSearchShortcutsHeader.click()
     }
 
-    fun changeDefaultSearchEngine(searchEngineName: String) =
-        selectSearchEngine(searchEngineName)
+    fun changeDefaultSearchEngine(searchEngineName: String) {
+        onView(withText(searchEngineName))
+            .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+            .perform(click())
+    }
 
     fun toggleAutocomplete() = autocompleteSwitchButton().click()
 
@@ -409,12 +412,6 @@ private fun showSuggestionsInPrivateModeSwitch(): ViewInteraction {
         ),
     )
     return onView(withText(getStringResource(R.string.preferences_show_search_suggestions_in_private)))
-}
-
-private fun selectSearchEngine(searchEngine: String) {
-    onView(withText(searchEngine))
-        .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-        .perform(click())
 }
 
 private fun goBackButton() =

@@ -129,25 +129,6 @@ class SmokeTest {
         }
     }
 
-    // Verifies changing the default engine from the Search Shortcut menu
-    @Test
-    fun selectSearchEnginesShortcutTest() {
-        val enginesList = listOf("DuckDuckGo", "Google", "Amazon.com", "Wikipedia", "Bing", "eBay")
-
-        for (searchEngine in enginesList) {
-            homeScreen {
-            }.openSearch {
-                verifyKeyboardVisibility()
-                clickSearchEngineShortcutButton()
-                verifySearchEngineList(activityTestRule)
-                changeDefaultSearchEngine(activityTestRule, searchEngine)
-                verifySearchEngineIcon(searchEngine)
-            }.submitQuery("mozilla ") {
-                verifyUrl(searchEngine)
-            }.goToHomescreen { }
-        }
-    }
-
     // Verifies that deleting a Bookmarks folder also removes the item from inside it.
     @Test
     fun deleteNonEmptyBookmarkFolderTest() {

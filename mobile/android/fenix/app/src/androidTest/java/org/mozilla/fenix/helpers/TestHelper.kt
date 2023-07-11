@@ -57,6 +57,7 @@ import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matcher
 import org.junit.Assert
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.Config
@@ -484,5 +485,17 @@ object TestHelper {
     fun bringAppToForeground() {
         mDevice.pressRecentApps()
         mDevice.findObject(UiSelector().resourceId("$packageName:id/container")).waitForExists(waitingTime)
+    }
+
+    fun verifyKeyboardVisibility(isExpectedToBeVisible: Boolean = true) {
+        mDevice.waitForIdle()
+
+        assertEquals(
+            "Keyboard not shown",
+            isExpectedToBeVisible,
+            mDevice
+                .executeShellCommand("dumpsys input_method | grep mInputShown")
+                .contains("mInputShown=true"),
+        )
     }
 }

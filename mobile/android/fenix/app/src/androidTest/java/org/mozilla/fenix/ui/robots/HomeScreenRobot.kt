@@ -35,7 +35,6 @@ import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
-import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
@@ -94,7 +93,7 @@ class HomeScreenRobot {
             " else who uses this device."
 
     fun verifyNavigationToolbar() = assertItemWithResIdExists(navigationToolbar)
-    fun verifyFocusedNavigationToolbar() = assertFocusedNavigationToolbar()
+
     fun verifyHomeScreen() = assertItemWithResIdExists(homeScreen)
 
     fun verifyPrivateBrowsingHomeScreen() {
@@ -918,10 +917,6 @@ private fun assertKeyboardVisibility(isExpectedToBeVisible: Boolean) =
             .executeShellCommand("dumpsys input_method | grep mInputShown")
             .contains("mInputShown=true"),
     )
-
-private fun assertFocusedNavigationToolbar() =
-    onView(allOf(withHint("Search or enter address")))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertTabButton() =
     onView(allOf(withId(R.id.tab_button), isDisplayed()))

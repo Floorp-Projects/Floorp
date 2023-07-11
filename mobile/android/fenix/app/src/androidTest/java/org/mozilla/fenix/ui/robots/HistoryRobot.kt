@@ -24,9 +24,6 @@ import org.hamcrest.Matchers.allOf
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.Constants
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -63,7 +60,13 @@ class HistoryRobot {
         assertVisitedTimeTitle()
     }
 
-    fun verifyHistoryItemExists(shouldExist: Boolean, item: String) = assertHistoryItemExists(shouldExist, item)
+    fun verifyHistoryItemExists(shouldExist: Boolean, item: String) {
+        if (shouldExist) {
+            assertTrue(mDevice.findObject(UiSelector().textContains(item)).waitForExists(waitingTime))
+        } else {
+            assertFalse(mDevice.findObject(UiSelector().textContains(item)).waitForExists(waitingTimeShort))
+        }
+    }
 
     fun verifyFirstTestPageTitle(title: String) = assertTestPageTitle(title)
 
@@ -122,35 +125,10 @@ class HistoryRobot {
         }
     }
 
-    fun dismissHistorySearchBarUsingBackButton() {
-        for (i in 1..Constants.RETRY_COUNT) {
-            try {
-                mDevice.pressBack()
-                assertTrue(
-                    itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view")
-                        .waitUntilGone(waitingTime),
-                )
-                break
-            } catch (e: AssertionError) {
-                if (i == Constants.RETRY_COUNT) {
-                    throw e
-                }
-            }
-        }
+    fun openSearchGroup(searchTerm: String) {
+        mDevice.findObject(UiSelector().text(searchTerm)).waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().text(searchTerm)).click()
     }
-
-    fun searchForHistoryItem(vararg historyItems: String) {
-        for (historyItem in historyItems) {
-            itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view").also {
-                it.waitForExists(waitingTime)
-                it.setText(historyItem)
-            }
-            mDevice.waitForWindowUpdate(packageName, waitingTimeShort)
-        }
-    }
-
-    fun verifySearchedHistoryItemExists(historyItemUrl: String, exists: Boolean = true) =
-        assertItemContainingTextExists(itemContainingText(historyItemUrl), exists = exists)
 
     class Transition {
         fun goBack(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
@@ -219,14 +197,6 @@ private fun assertEmptyHistoryView() =
 
 private fun assertHistoryListExists() =
     mDevice.findObject(UiSelector().resourceId("$packageName:id/history_list")).waitForExists(waitingTime)
-
-private fun assertHistoryItemExists(shouldExist: Boolean, item: String) {
-    if (shouldExist) {
-        assertTrue(mDevice.findObject(UiSelector().textContains(item)).waitForExists(waitingTime))
-    } else {
-        assertFalse(mDevice.findObject(UiSelector().textContains(item)).waitForExists(waitingTimeShort))
-    }
-}
 
 private fun assertVisitedTimeTitle() =
     onView(withId(R.id.header_title)).check(matches(withText("Today")))
