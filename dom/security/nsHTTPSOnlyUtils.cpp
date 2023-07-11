@@ -15,6 +15,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpsOnlyModePermission.h"
+#include "nsILoadInfo.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
 #include "nsIRedirectHistoryEntry.h"
@@ -607,10 +608,13 @@ void nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(
     nsIChannel* aChannel) {
   NS_ENSURE_TRUE_VOID(aChannel);
 
-  // if https-only mode is not enabled, then there is nothing to do here.
+  // If HTTPS-Only or HTTPS-First Mode is not enabled, then there is nothing to
+  // do here.
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   bool isPrivateWin = loadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-  if (!IsHttpsOnlyModeEnabled(isPrivateWin)) {
+  bool isHttpsOnly = IsHttpsOnlyModeEnabled(isPrivateWin);
+  bool isHttpsFirst = IsHttpsFirstModeEnabled(isPrivateWin);
+  if (!isHttpsOnly && !isHttpsFirst) {
     return;
   }
 
@@ -631,13 +635,17 @@ void nsHTTPSOnlyUtils::TestSitePermissionAndPotentiallyAddExemption(
       aChannel, getter_AddRefs(principal));
   NS_ENSURE_SUCCESS_VOID(rv);
 
-  // We explicitly add or also remove the exemption flag, because this
-  // function is also consulted after redirects.
   uint32_t httpsOnlyStatus = loadInfo->GetHttpsOnlyStatus();
-  if (TestIfPrincipalIsExempt(principal)) {
+  bool isPrincipalExempt = TestIfPrincipalIsExempt(principal);
+  if (isPrincipalExempt) {
     httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_EXEMPT;
   } else {
-    httpsOnlyStatus &= ~nsILoadInfo::HTTPS_ONLY_EXEMPT;
+    // For HTTPS-Only, we explicitly remove the exemption flag, because this
+    // function is also consulted after redirects.
+    // For HTTPS-First, this is done in a weaker form through
+    // nsHTTPSOnlyUtils::PotentiallyClearExemptFlag in
+    // nsHttpChannel::SetupReplacementChannel.
+    if (isHttpsOnly) httpsOnlyStatus &= ~nsILoadInfo::HTTPS_ONLY_EXEMPT;
   }
   loadInfo->SetHttpsOnlyStatus(httpsOnlyStatus);
 }
