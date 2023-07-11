@@ -313,7 +313,13 @@ function enableTabSleep() {
             if (!nativeTab.linkedPanel) continue;
             if (nativeTab.getAttribute("busy") === "true") continue;
 
-            if (excludeHosts.includes(nativeTab.linkedBrowser.documentURI.hostPort)) continue;
+            try {
+                if (excludeHosts.includes(nativeTab.linkedBrowser.documentURI.hostPort)) continue;
+            } catch (e) {
+                if (e.result != Cr.NS_ERROR_FAILURE) {
+                    throw e;
+                }
+            }
 
             let target = true;
             for (let EXCLUDE_URL_PATTERN_COMPILED of EXCLUDE_URL_PATTERNS_COMPILED) {
