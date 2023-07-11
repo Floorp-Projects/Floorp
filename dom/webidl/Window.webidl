@@ -509,7 +509,7 @@ partial interface Window {
                                                optional DOMString options = "",
                                                any... extraArguments);
 
-  [Func="nsGlobalWindowInner::ContentPropertyEnabled",
+  [ChromeOnly,
    NonEnumerable, Replaceable, Throws, NeedsCallerType]
   readonly attribute object? content;
 
