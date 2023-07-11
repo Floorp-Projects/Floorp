@@ -181,9 +181,7 @@ function run_tests(testcases) {
       await handler.activeSection.previewFormFields(adaptedProfile);
 
       for (let field of handler.fieldDetails) {
-        let actual = handler.getFilledStateByElement(
-          field.elementWeakRef.get()
-        );
+        let actual = handler.getFilledStateByElement(field.element);
         let expected = testcase.expectedResultState[field.fieldName];
         info(`Checking ${field.fieldName} state`);
         Assert.equal(
