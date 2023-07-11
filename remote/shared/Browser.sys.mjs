@@ -55,7 +55,7 @@ export async function quit(flags = [], safeMode = false, isWindowless = false) {
   let mode = 0;
   if (flags.length) {
     for (let k of flags) {
-      if (!Ci.nsIAppStartup.hasOwnProperty(k)) {
+      if (!(k in Ci.nsIAppStartup)) {
         throw new TypeError(lazy.pprint`Expected ${k} in ${Ci.nsIAppStartup}`);
       }
 
