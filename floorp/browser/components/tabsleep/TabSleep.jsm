@@ -376,7 +376,7 @@ async function createTabContextElement(document_) {
             Boolean(window_.TabContextMenu.contextTab.isTabSleepExcludeTab)
         );
     });
-    tabContextMenu.querySelector("#context_selectAllTabs")
+    tabContextMenu.querySelector("#context_undoCloseTab")
         .insertAdjacentElement("afterend", tabSleepExcludeTab);
 }
 
