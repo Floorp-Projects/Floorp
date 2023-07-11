@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<charset=utf-8>
+<style>
+@font-face {
+  font-family: test;
+  /* This font resource has:
+   *   unitsPerEm = 1000
+   *   underlinePosition = -350
+   *   underlineThickness = 150
+   *   sTypoAscender 730
+   *   sTypoDescender -270
+   */
+  src: url("Bug1841570.woff2");
+}
+.test {
+  font: 100px/2 test;
+}
+u {
+  text-decoration: green underline;
+  text-decoration-skip-ink: none;
+}
+u.a {
+  /* Explicitly place it where the font's metrics would want it: */
+  text-underline-offset: 35px;
+}
+u.b {
+  /* Explicitly center it on the font's descent metric: */
+  text-underline-offset: 19px;
+}
+span.strut {
+  /* Used to force a tall ascent, for consistent baseline positioning. */
+  display: inline-block;
+  height: 200px;
+}
+</style>
+The middle underline will match the left one if using the unmodified font metrics,
+and the right one if clamping to the font's descent:
+<div class=test><u class=a>gpqy</u> <u class=a>gpqy</u> <u class=b>gpqy</u><span class=strut></span></div>
