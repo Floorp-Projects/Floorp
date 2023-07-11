@@ -8,7 +8,7 @@ import { connect } from "../../../utils/connect";
 
 import Popup from "./Popup";
 
-import { getThreadContext, getIsCurrentThreadPaused } from "../../../selectors";
+import { getIsCurrentThreadPaused } from "../../../selectors";
 import actions from "../../../actions";
 
 const EXCEPTION_MARKER = "mark-text-exception";
@@ -22,7 +22,6 @@ class Preview extends PureComponent {
 
   static get propTypes() {
     return {
-      cx: PropTypes.object.isRequired,
       editor: PropTypes.object.isRequired,
       editorRef: PropTypes.object.isRequired,
       isPaused: PropTypes.bool.isRequired,
@@ -60,22 +59,17 @@ class Preview extends PureComponent {
     const tokenId = {};
     this.currentTokenId = tokenId;
 
-    const { cx, editor, getPreview, getExceptionPreview } = this.props;
+    const { editor, getPreview, getExceptionPreview } = this.props;
 
     const isTargetException = target.classList.contains(EXCEPTION_MARKER);
 
     let preview;
     if (isTargetException) {
-      preview = await getExceptionPreview(
-        cx,
-        target,
-        tokenPos,
-        editor.codeMirror
-      );
+      preview = await getExceptionPreview(target, tokenPos, editor.codeMirror);
     }
 
     if (this.props.isPaused && !this.state.selecting) {
-      preview = await getPreview(cx, target, tokenPos, editor.codeMirror);
+      preview = await getPreview(target, tokenPos, editor.codeMirror);
     }
 
     // Prevent modifying state and showing this preview if we started hovering another token
@@ -126,7 +120,6 @@ class Preview extends PureComponent {
 
 const mapStateToProps = state => {
   return {
-    cx: getThreadContext(state),
     isPaused: getIsCurrentThreadPaused(state),
   };
 };

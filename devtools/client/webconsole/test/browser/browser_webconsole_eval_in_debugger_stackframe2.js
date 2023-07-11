@@ -66,7 +66,7 @@ add_task(async function () {
   );
 
   info("Resuming the thread");
-  dbg.actions.resume(dbg.selectors.getThreadContext());
+  dbg.actions.resume();
 
   await onFirstCallMessageReceived;
   ok(

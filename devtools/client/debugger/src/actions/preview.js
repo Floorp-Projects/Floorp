@@ -37,7 +37,7 @@ function findExpressionMatch(state, codeMirror, tokenPos) {
   return match;
 }
 
-export function getPreview(cx, target, tokenPos, codeMirror) {
+export function getPreview(target, tokenPos, codeMirror) {
   return async thunkArgs => {
     const { getState, client } = thunkArgs;
     if (
@@ -125,7 +125,7 @@ export function getPreview(cx, target, tokenPos, codeMirror) {
   };
 }
 
-export function getExceptionPreview(cx, target, tokenPos, codeMirror) {
+export function getExceptionPreview(target, tokenPos, codeMirror) {
   return async ({ dispatch, getState }) => {
     const match = findExpressionMatch(getState(), codeMirror, tokenPos);
     if (!match) {
