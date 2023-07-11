@@ -97,8 +97,16 @@
               preference="browser.taskbar.previews.enable"/>
 #endif
 
-    <checkbox  data-l10n-id="enable-tab-sleep"
+    <hbox align="center">
+      <checkbox data-l10n-id="enable-tab-sleep"
                id="tab-sleep" preference="floorp.tabsleep.enabled"/>
+      <spacer flex="1"/>
+      <button id="TabSleepSettings"
+              is="highlightable-button"
+              class="accessory-button"
+              data-l10n-id="tab-sleep-settings-button"
+              />
+    </hbox>
     <hbox>
       <description flex="1" data-l10n-id="tab-sleep-timeout-minutes-value"/>
       <html:input type="number" min="0" value="0" id="tabSleepTimeoutMinutesValue"/>

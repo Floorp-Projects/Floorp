@@ -103,6 +103,14 @@ window.addEventListener("pageshow", async function() {
     window.location.href = "about:preferences#userjs";
   });
 
+  document.getElementById("TabSleepSettings").addEventListener("click", function() {
+    gSubDialog.open(
+      "chrome://browser/content/preferences/dialogs/tabsleep.xhtml",
+      undefined,
+      undefined
+    );
+  });
+
   const addonStatus = async (addonID, idName) => {
     const addon = await AddonManager.getAddonByID(addonID);
     if (addon !== null) {
