@@ -12,10 +12,18 @@
     <string name="content_description_private_browsing_button">Załōncz prywatne przeglōndanie</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Wyłōncz prywatne przeglōndanie</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Szukej abo wkludź adresa</string>
 
 
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Szukej w internecie</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Szukej w historyji</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Szukej w zokłodkach</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Szukej po kartach</string>
     <!-- Placeholder text shown in the search bar when using application search engines -->
     <string name="application_search_hint">Wkludź szukane słowa</string>
     <!-- No Open Tabs Message Description -->
@@ -59,13 +67,12 @@
        Czynste mity ô prywatnym przeglōndaniu
     </string>
 
+
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string moz:removedIn="109" name="cfr_message" tools:ignore="UnusedResources">Przidej skrōt do ôtwiyranio prywatnych kart z dōmowego ekranu.</string>
-    <!-- Text for the positive button -->
-    <string moz:removedIn="109" name="cfr_pos_button_text" tools:ignore="UnusedResources">Przidej skrōt</string>
-
-
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Ôdewrzij nastympno prywatno karta jednym tykniyńciym.</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Przidej do dōmowego ekranu</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Niy, dziynkuja</string>
 
@@ -77,11 +84,14 @@
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Ôdkoż</string>
 
-    <!-- Content description for close button used in "contextual feature recommendation" (CFR) popups -->
-    <string name="cfr_dismiss_button_default_content_description">Zawrzij</string>
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Nasza nojsiylniyjszo funkcyjo ôchrōny prywatności izoluje elymynty, co śledzōm miyndzy strōnami.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Przewiydz sie wiyncyj ô totalnyj ôchrōnie przed cookies</string>
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
-    <string name="camera_permissions_needed_message">Trza dostympu do kamery. Idź doo sztalōnkōw Androidaa, tyknij &quot;dozwolyństwa&quot; i tyknij &quot;zgoda&quot;.</string>
+    <string name="camera_permissions_needed_message">Trza dostympu do kamery. Idź do sztalōnkōw Androida, tyknij &quot;dozwolyństwa&quot; i tyknij &quot;zgoda&quot;.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Idź do sztalōnkōw</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
@@ -117,6 +127,9 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Nowo prywatno karta</string>
 
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Skrōt do haseł</string>
+
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
     <string name="recent_tabs_header">Idź nazod</string>
@@ -128,6 +141,8 @@
     <string name="recent_tabs_see_all_synced_tabs_button_text">Ôbocz wszyske synchrōnizowane karty</string>
     <!-- Accessibility description for device icon used for recent synced tab -->
     <string name="recent_tabs_synced_device_icon_content_description">Synchrōnizowano maszina</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Skasuj</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">Skasuj</string>
@@ -153,6 +168,8 @@
     <string name="browser_menu_stop">Sztopnij</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Rozszyrzynia</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Infōrmacyje ô kōncie</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Niy ma sam żodnych rozszyrzyń</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -233,13 +250,93 @@
     <string name="search_suggestions_onboarding_title">Pokazować dorady szukanio we prywatnych ôknach?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s bydzie przekazowoł bazowyj wyszukowarce wszysko, co wkludzosz we posku z adresōm.</string>
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Szukej na %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Szukej zaroz na posku z adresōm</string>
 
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">Sztalōnki szukanio</string>
+
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Tyn roz poszukej we:</string>
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Wyszukowarka %s</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Poznej swoja spersōnalizowano dōmowo strōna. Niydowne karty, zokłodki i wyniki wyszukowanio bydōm sie sam pokazować.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Witej we prywatniyjszym internecie</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Wiyncyj farbōw. Lepszo prywatnoś. Te same stowianie ludzi nad profitym.</string>
+
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Przełōnczanie ekranōw jeszcze żodyn roz niy było take leke</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Na swojij dōmowyj strōnie rōb dalij na kartach, co mosz ôtwarte na inkszych maszinach.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Zaczynōmy</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Wloguj sie</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Przeskocz</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Twoje karty sie synchrōnizujōm! Rōb dalij na kartach, co mosz ôtwarte na inkszyj maszinie.</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Zawrzij</string>
+
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">Powiadōmiynia pōmogajōm ci lepij używać aplikacyjo %s</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Synchrōnizuj karty miyndzy maszinami, regyruj pobraniami, zbiyrej dorady ô nojlepszym używaniu ôchrōny prywatności z aplikacyjōm %s, i jeszcze wiyncyj.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Dalij</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">Niy teroz</string>
+
+    <!-- Juno first user onboarding flow experiment -->
+    <!-- Title for set firefox as default browser screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_default_browser_title">Dej rokić aplikacyji %s za twoja nojlepszo przeglōndarka</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Dej robić aplikacyji Firefox za twoja nojlepszo przeglōndarka</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text">ô prywatności</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button">Nastow za bazowo przeglōndarka</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button">Niy teroz</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title">Skokej miyndzy telefōnym a laptopym a nazod</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description">Ôtwiyrej karty i hasła z inkszych maszin, coby robić dalij z tego samego miejsca.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button">Wloguj sie</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button">Niy teroz</string>
+    <!-- Title for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_title">Powiadōmiynia pōmogajōm ci lepij używać aplikacyjo %s</string>
+
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Powiadōmiynia pōmogajōm ci lepij używać aplikacyjo Firefox</string>
+    <!-- Description for enable notification permission screen.
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="juno_onboarding_enable_notifications_description">Posyłej karty miyndzy maszinami, regyruj pobraniami i zbiyrej dorady, jak nojlepij używać aplikacyjo %s.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Posyłej karty miyndzy maszinami, regyruj pobraniami i zbiyrej dorady, jak nojlepij używać aplikacyjo Firefox.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button">Załōncz powiadōmiynia</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_enable_notifications_negative_button">Niy teroz</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -258,6 +355,14 @@
     <string name="preferences_category_general">Ôgōlne</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Ô aplikacyji</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">Ôbier jedna</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts">Regyruj skrōtami wyszukowanio</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">Zmiyniej wyszukowarki pokozane w menu wyszukowanio</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu">Wyszukowarki pokozane w menu wyszukowanio</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Bazowo wyszukowarka</string>
     <!-- Preference for settings related to Search -->
@@ -292,12 +397,53 @@
     <!-- Preference for enabling "HTTPS-Only" mode -->
     <string name="preferences_https_only_title">Tryb &quot;Ino HTTPS&quot;</string>
 
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction">Redukcyjo bannera cookie</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option">Zredukuj banner cookie</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off">Wyłōnczōne</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on">Załōnczōne</string>
+    <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_summary_1">%1$s autōmatycznie prōbuje ôdkozać prośby ô przituplowanie cookies na bannerach cookie.</string>
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">Wyłōnczōne do tyj strōny</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Pociep</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Zażōndej sparcio</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Poślij prośba</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Zarzōndać sparcio do tyj strōny?</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">Prośba posłano</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">Załōnczōne do tyj strōny</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Prośba ô sparcie je posłano</string>
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site">Strōna niy ma teroz ôbsugowano</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Załōnczyć redukcyjo banneru cookie do %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Wyłōnczyć redukcyjo banneru cookie do %1$s?</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button">Niy teroz</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text">Bydziesz widzieć mynij prōśb ô przituplowanie cookies</string>
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button">Przizwōl</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Autōmatycznie prōbuje łōnczyć sie ze strōnami z protokołym kodowanio HTTPS, coby zwiynkszyć bezpieczyństwo.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on">Załōnczōne</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Wyłōnczōne</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">Załōnczōne na wszyskich kartach</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">Załōnczōne na wszyskich prywatnych kartach</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">Przewiydz sie wiyncyj</string>
     <!-- Option for the https only setting -->
@@ -374,6 +520,7 @@
 
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Zewnyntrzny menedżer pobiyranio</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Rozszyrzynia</string>
     <!-- Preference for notifications -->
@@ -403,8 +550,6 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Niydowno nawiedzōne</string>
-    <!-- Title for the customize home screen section with Pocket. -->
-    <string moz:RemovedIn="108" name="customize_toggle_pocket" tools:ignore="UnusedResources">Pocket</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Tapety</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -424,7 +569,6 @@
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Rozszyrzynie je już zainstalowane</string>
 
-    <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synchrōnizuj teroz</string>
     <!-- Preference category for sync -->
@@ -556,13 +700,6 @@
     <string name="settings_title">Sztalōnki</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zawrzij</string>
-
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site">Strōny: %d</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites">Strōny: %d</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Niydowno zawarte karty</string>
@@ -878,8 +1015,6 @@
     <string name="phone_feature_blocked_by_android">Zaszperowane ôd Androida</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Wyjōntki</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Załōnczōne</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Wyłōnczōne</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
@@ -1003,12 +1138,6 @@
     <string name="notification_pbm_delete_text_2">Zawrzij prywatne karty</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
-    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_title">%1$s je gibki i prywatny</string>
-    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
-    %1$s is a placeholder that will be replaced by the app name (Fenix). -->
-    <string name="notification_default_browser_text">Nastow %1$s za bazowo przeglōndarka</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1186,22 +1315,14 @@
     <string name="etp_settings">Sztalōnki ôchrōny</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Polepszōno ôchrōna ôd śledzynio</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Przeglōndej tak, coby żodyn na ciebie niy filowoł</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Trzimej swoje dane ino do sia. %s brōni cie ôd mocki śledzōncych elemyntōw, co filujōm na ciebie, jak żeś je w internecie.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Przewiydz sie wiyncyj</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standardowo (bazowe)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">Zbalansowane podug prywatności i sprowności. Strōny bydōm sie normalnie ladować.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Co je szperowane przi standardowyj ôchrōnie ôd śledzynio</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Surowo</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Szperuje wiyncyj śledzōncych elymyntōw, tōż strōny gibcyj sie ladujō, ale niykere jejich fōnkcyje mogōm niy fungować. </string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Co je szperowane przi surowyj ôchrōnie ôd śledzynio</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->

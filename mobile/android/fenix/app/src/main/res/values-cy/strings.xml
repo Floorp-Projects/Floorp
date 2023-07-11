@@ -545,7 +545,7 @@
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Rheolwr llwytho i lawr allanol</string>
     <!-- Preference for enabling gecko engine logs -->
-    <string name="preferences_enable_gecko_logs">Galluogi logiau Gecko</string>
+    <string name="preferences_enable_gecko_logs">Galluogi cofnodion Gecko</string>
     <!-- Message to indicate users that we are quitting the application to apply the changes -->
     <string name="quit_application">Yn gadael y rhaglen er mwyn gosod y newidiadau…</string>
 

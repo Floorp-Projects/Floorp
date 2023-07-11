@@ -422,17 +422,11 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Invie richieste</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Riduzion strissons pai cookies</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Domandâ il supuart par chest sît?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Richieste di supuart pal sît inviade.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Richieste inviade</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Ative par chest sît</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Richieste par supuartâ il sît inviade</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Richieste di supuart inviade</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -441,8 +435,6 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Ativâ la riduzion strissons dai cookies par %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Disativâ la riduzion strissons dai cookies par %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Chest sît pal moment nol è supuartât de riduzion dai strissons pai cookies. Desideristu che il nestri grup al valuti chest sît web e che in futûr al zonti il supuart?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s nol pues refudâ in automatic lis richiestis dai cookies su chest sît. Tu puedis inviâ une richieste par supuartâ un doman chest sît.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -552,6 +544,11 @@
     <string name="preferences_open_links_in_apps_never">Mai</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Gjestôr esterni dai discjariaments</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Ative i regjistris Gecko</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Daûr a sierâ la aplicazion par aplicâ lis modifichis…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Components adizionâi</string>
     <!-- Preference for notifications -->
@@ -1212,6 +1209,10 @@
     <string name="share_save_to_pdf">Salve come PDF</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">Impussibil gjenerâ il PDF</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Impussibil stampâ</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Stampe</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Invie a dispositîf</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1504,13 +1505,9 @@
     <string name="etp_settings">Impostazions di protezion</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protezion miorade da lis spiis</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Navighe cence vê nissun che ti stâ daûr</string>
 
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Cumò cu la Protezion Totâl dai Cookies, fin cumò la nestre bariere plui potente cuintri lis spiis inter-sît.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Ten i tiei dâts par to cont. %s ti protêç di tantis des plui comuns spiis che ti stan daûr a ce che tu fasis in rêt.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s ti protêç des tantis e plui comunis spiis che a cirin di stâti daûr a ce che tu fasis in rêt.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1518,15 +1515,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (predefinide)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Belançade tra riservatece e prestazions. Lis pagjinis a vignaran cjamadis normalmentri.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Lis pagjinis a vignaran cjariadis in mût normâl, ma a vignaran blocadis mancul spiis.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Elements blocâts de protezion standard da lis spiis</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Restritive</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Al bloche plui spiis, duncje lis pagjinis si cjariaran plui sveltis, ma al è pussibil che cualchi funzionalitât te pagjine no funzioni.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Protezion da lis spiis plui fuarte e prestazions plui sveltis, ma al è pussibil che cualchi sît nol funzioni ben.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
