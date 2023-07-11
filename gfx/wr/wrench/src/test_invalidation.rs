@@ -50,6 +50,7 @@ impl<'a> TestHarness<'a> {
         // List all invalidation tests here
         self.test_basic();
         self.test_composite_nop();
+        self.test_scroll_subpic();
     }
 
     /// Simple validation / proof of concept of invalidation testing
@@ -103,6 +104,29 @@ impl<'a> TestHarness<'a> {
 
         // Main part of this test - ensure WR detects a composite is required in this case
         assert!(results.composite_needed);
+    }
+
+    /// Ensure that tile cache pictures are not invalidated upon scrolling
+    fn test_scroll_subpic(
+        &mut self,
+    ) {
+        // First frame at scroll-offset 0
+        let results = self.render_yaml("scroll_subpic_1");
+
+        // Ensure we actually rendered something
+        assert!(
+            matches!(results.pc_debug.slice(0).tile(0, 0), TileDebugInfo::Dirty(..)),
+            "Ensure the first test frame actually rendered something",
+        );
+
+        // Second frame just scrolls to scroll-offset 50
+        let results = self.render_yaml("scroll_subpic_2");
+
+        // Ensure the cache tile was not invalidated
+        assert!(
+            results.pc_debug.slice(0).tile(0, 0).is_valid(),
+            "Ensure the cache tile was not invalidated after scrolling",
+        );
     }
 
     /// Render a YAML file, and return the picture cache debug info
