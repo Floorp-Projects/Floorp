@@ -85,7 +85,7 @@
   }
 
   :host(.normal) #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-normal.svg");
+    background-image: url("resource://gre-resources/accessiblecaret-normal.svg");
   }
 
   :host(.left) #image,
@@ -94,7 +94,7 @@
   }
 
   :host(.left) #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-left.svg");
+    background-image: url("resource://gre-resources/accessiblecaret-tilt-left.svg");
   }
 
   :host(.right) #image,
@@ -103,6 +103,6 @@
   }
 
   :host(.right) #image {
-    background-image: url("chrome://geckoview/skin/images/accessiblecaret-tilt-right.svg");
+    background-image: url("resource://gre-resources/accessiblecaret-tilt-right.svg");
   }
 }

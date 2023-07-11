@@ -7,9 +7,6 @@ geckoview.jar:
 
 % skin geckoview classic/1.0 %skin/
   skin/config.css                           (config.css)
-  skin/images/accessiblecaret-normal.svg (images/accessiblecaret-normal.svg)
-  skin/images/accessiblecaret-tilt-left.svg (images/accessiblecaret-tilt-left.svg)
-  skin/images/accessiblecaret-tilt-right.svg (images/accessiblecaret-tilt-right.svg)
   skin/images/add.svg                       (images/add.svg)
   skin/images/arrow-down.svg                (images/arrow-down.svg)
   skin/images/arrow-up.svg                  (images/arrow-up.svg)
