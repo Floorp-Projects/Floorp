@@ -6139,18 +6139,6 @@
 #endif
   mirror: once
 
-# Should we apply a heuristic to adjust underline offset specified in the font,
-# so as to bring the line closer to the text if it would otherwise be placed
-# below the font's descent?
-# Values:
-#   2 : apply adjustment to all fonts (legacy behavior from bug 402524)
-#   1 : apply adjustment to locally-installed fonts only, not webfonts
-#   0 (or unknown): no adjustment, respect font's metrics (see bug 1841570)
-- name: gfx.font_metrics.adjust_distant_underline
-  type: RelaxedAtomicInt32
-  value: 0
-  mirror: always
-
 # Disable antialiasing of Ahem, for use in tests.
 - name: gfx.font_rendering.ahem_antialias_none
   type: RelaxedAtomicBool
