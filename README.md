@@ -61,7 +61,7 @@ Floorp Browser is available for Windows, macOS and Linux. You can install it by 
 
 - x86_64 CPU & ARM64 CPU architecture. Floorp provides a Universal build for both architectures.
 
-**Note: Floorp Browser is not signed for macOS. because of this, you will need to allow Floorp to run in your Security & Privacy settings.**
+**After Floorp 11.0.0, Floorp gets Apple Notarization & Certification. You can install Floorp without warning & Has auto-update feature.**
 
 #### Linux
 
