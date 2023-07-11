@@ -1000,3 +1000,7 @@ renaming_overrides_prefixing = true
     return IsCoordBox() || (IsOffsetPath() && AsOffsetPath().path->IsShape());
   }
 """
+
+"GenericContainIntrinsicSize" = """
+  bool HasAuto() const { return IsAutoLength() || IsAutoNone(); }
+"""

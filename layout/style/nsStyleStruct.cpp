@@ -3639,7 +3639,7 @@ static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
   if (aSize.IsLength()) {
     return aSize.AsLength().ToAppUnits();
   }
-  MOZ_ASSERT(aSize.IsAutoLength());
+  MOZ_ASSERT(aSize.HasAuto());
   if (const auto* element = Element::FromNodeOrNull(aFrame.GetContent())) {
     Maybe<float> lastSize = aAxis == eLogicalAxisBlock
                                 ? element->GetLastRememberedBSize()
@@ -3647,6 +3647,9 @@ static nscoord Resolve(const StyleContainIntrinsicSize& aSize,
     if (lastSize && aFrame.HidesContent()) {
       return CSSPixel::ToAppUnits(*lastSize);
     }
+  }
+  if (aSize.IsAutoNone()) {
+    return aNoneValue;
   }
   return aSize.AsAutoLength().ToAppUnits();
 }

@@ -1177,6 +1177,10 @@ impl Parse for ContainIntrinsicSize {
         }
 
         if input.try_parse(|i| i.expect_ident_matching("auto")).is_ok() {
+            if input.try_parse(|i| i.expect_ident_matching("none")).is_ok() {
+                return Ok(Self::AutoNone);
+            }
+
             let l = NonNegativeLength::parse(context, input)?;
             return Ok(Self::AutoLength(l));
         }

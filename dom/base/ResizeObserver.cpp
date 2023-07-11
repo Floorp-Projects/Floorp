@@ -560,8 +560,8 @@ static void LastRememberedSizeCallback(
                "Should have unobserved element skipping its contents.");
     const nsStylePosition* stylePos = frame->StylePosition();
     const WritingMode wm = frame->GetWritingMode();
-    bool canUpdateBSize = stylePos->ContainIntrinsicBSize(wm).IsAutoLength();
-    bool canUpdateISize = stylePos->ContainIntrinsicISize(wm).IsAutoLength();
+    bool canUpdateBSize = stylePos->ContainIntrinsicBSize(wm).HasAuto();
+    bool canUpdateISize = stylePos->ContainIntrinsicISize(wm).HasAuto();
     MOZ_ASSERT(canUpdateBSize || !target->HasLastRememberedBSize(),
                "Should have removed the last remembered block size.");
     MOZ_ASSERT(canUpdateISize || !target->HasLastRememberedISize(),
