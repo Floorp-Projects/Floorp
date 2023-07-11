@@ -103,6 +103,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1830776-blueshieldca.com-unsupported.js",
     "injections/js/bug1831007-nintendo-window-OnetrustActiveGroups.js",
     "injections/js/bug1836157-thai-masszazs-niceScroll-disable.js",
+    "injections/js/bug1842437-www.youtube.com-performance-now-precision.js",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
