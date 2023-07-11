@@ -11,6 +11,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AutofillTelemetry: "resource://autofill/AutofillTelemetry.sys.mjs",
   CreditCard: "resource://gre/modules/CreditCard.sys.mjs",
+  FormAutofillNameUtils:
+    "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
   LabelUtils: "resource://gre/modules/shared/LabelUtils.sys.mjs",
 });
 
@@ -358,7 +360,6 @@ export class FormAutofillSection {
       // the month is less than 10, since the input is expected a zero-padded string.
       // See Bug 1722941 for follow up.
       const value = this.getFilledValueFromProfile(fieldDetail, profile);
-
       if (HTMLInputElement.isInstance(element) && value) {
         // For the focused input element, it will be filled with a valid value
         // anyway.
@@ -1136,6 +1137,36 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     }
   }
 
+  /**
+   * Handles credit card name transformation when the name exists in
+   * the separate cc-given-name, cc-middle-name, and cc-family name fields
+   *
+   * @param {object} profile
+   * @memberof FormAutofillCreditCardSection
+   */
+  creditCardNameTransformer(profile) {
+    const name = profile["cc-name"];
+    if (!name) {
+      return;
+    }
+
+    const given = this.getFieldDetailByName("cc-given-name");
+    const middle = this.getFieldDetailByName("cc-middle-name");
+    const family = this.getFieldDetailByName("cc-family-name");
+    if (given || middle || family) {
+      const nameParts = lazy.FormAutofillNameUtils.splitName(name);
+      if (given && nameParts.given) {
+        profile["cc-given-name"] = nameParts.given;
+      }
+      if (middle && nameParts.middle) {
+        profile["cc-middle-name"] = nameParts.middle;
+      }
+      if (family && nameParts.family) {
+        profile["cc-family-name"] = nameParts.family;
+      }
+    }
+  }
+
   async _decrypt(cipherText, reauth) {
     // Get the window for the form field.
     let window;
@@ -1171,6 +1202,7 @@ export class FormAutofillCreditCardSection extends FormAutofillSection {
     // correctly when dealing with option elements.
     this.creditCardExpiryDateTransformer(profile);
     this.creditCardExpMonthAndYearTransformer(profile);
+    this.creditCardNameTransformer(profile);
     this.matchSelectOptions(profile);
     this.adaptFieldMaxLength(profile);
   }
