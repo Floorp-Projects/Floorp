@@ -112,7 +112,7 @@ class LazyInstantiator final : public IAccessible, public IServiceProvider {
   RefPtr<IUnknown> mRealRootUnk;
   RefPtr<IUnknown> mStdDispatch;
   /**
-   * mWeakRootAccWrap, mWeakAccessible and mWeakDispatch are weak because they
+   * mWeakMsaaRoot, mWeakAccessible and mWeakDispatch are weak because they
    * are interfaces that come from objects that we aggregate. Aggregated object
    * interfaces share refcount methods with ours, so if we were to hold strong
    * references to them, we would be holding strong references to ourselves,

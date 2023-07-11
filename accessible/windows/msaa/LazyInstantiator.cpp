@@ -349,33 +349,7 @@ LazyInstantiator::MaybeResolveRoot() {
     return S_OK;
   }
 
-  // If we don't want a real root, let's resolve a fake one.
-
-  const WPARAM flags = 0xFFFFFFFFUL;
-  // Synthesize a WM_GETOBJECT request to obtain a system-implemented
-  // IAccessible object from DefWindowProc
-  LRESULT lresult = ::DefWindowProc(mHwnd, WM_GETOBJECT, flags,
-                                    static_cast<LPARAM>(OBJID_CLIENT));
-
-  HRESULT hr = ObjectFromLresult(lresult, IID_IAccessible, flags,
-                                 getter_AddRefs(mRealRootUnk));
-  if (FAILED(hr)) {
-    return hr;
-  }
-
-  if (!mRealRootUnk) {
-    return E_NOTIMPL;
-  }
-
-  hr = mRealRootUnk->QueryInterface(IID_IAccessible, (void**)&mWeakAccessible);
-  if (FAILED(hr)) {
-    return hr;
-  }
-
-  // mWeakAccessible is weak, so don't hold a strong ref
-  mWeakAccessible->Release();
-
-  return S_OK;
+  return E_FAIL;
 }
 
 #define RESOLVE_ROOT                 \
