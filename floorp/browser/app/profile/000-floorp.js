@@ -115,7 +115,7 @@ pref("services.sync.prefs.sync.floorp.browser.note.memos", true);
 pref("floorp.browser.note.enabled", false);
 
 //Clock
-pref("floorp.browser.clock.enabled", true);
+pref("floorp.browser.clock.enabled", false);
 
 //新規タブの開く位置
 pref("floorp.browser.tabs.openNewTabPosition", -1);

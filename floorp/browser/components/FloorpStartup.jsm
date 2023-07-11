@@ -146,12 +146,6 @@ NOTE: You can use the userContent.css file without change preferences (about:con
               console.error("Can't find the Firefox (Floorp) View button.");
           }
 
-          let clockButton = CustomizableUI.getWidget("toolbarItemClock");
-          if (clockButton) {
-              CustomizableUI.moveWidgetWithinArea("toolbarItemClock", 1000);
-          } else {
-              console.error("Can't find the Clock button.");
-          }
         }, 2000);
     }
 }
