@@ -29,13 +29,11 @@ using Microsoft::WRL::ComPtr;
 MFMediaSource::MFMediaSource()
     : mPresentationEnded(false), mIsAudioEnded(false), mIsVideoEnded(false) {
   MOZ_COUNT_CTOR(MFMediaSource);
-  LOG("media source created");
 }
 
 MFMediaSource::~MFMediaSource() {
   // TODO : notify cdm about the last key id?
   MOZ_COUNT_DTOR(MFMediaSource);
-  LOG("media source destroyed");
 }
 
 HRESULT MFMediaSource::RuntimeClassInitialize(
@@ -333,11 +331,11 @@ IFACEMETHODIMP MFMediaSource::QueueEvent(MediaEventType aType,
                                          REFGUID aExtendedType, HRESULT aStatus,
                                          const PROPVARIANT* aValue) {
   MOZ_ASSERT(mMediaEventQueue);
+  RETURN_IF_FAILED(mMediaEventQueue->QueueEventParamVar(aType, aExtendedType,
+                                                        aStatus, aValue));
   LOG("Queued event %s", MediaEventTypeToStr(aType));
   PROFILER_MARKER_TEXT("MFMediaSource::QueueEvent", MEDIA_PLAYBACK, {},
                        nsPrintfCString("%s", MediaEventTypeToStr(aType)));
-  RETURN_IF_FAILED(mMediaEventQueue->QueueEventParamVar(aType, aExtendedType,
-                                                        aStatus, aValue));
   return S_OK;
 }
 
@@ -578,7 +576,8 @@ MFMediaEngineStream* MFMediaSource::GetStreamByIndentifier(
 
 #ifdef MOZ_WMF_CDM
 void MFMediaSource::SetCDMProxy(MFCDMProxy* aCDMProxy) {
-  AssertOnManagerThread();
+  // TODO : add threading assertion, not sure what thread it would be running on
+  // now.
   mCDMProxy = aCDMProxy;
   // TODO : ask cdm proxy to refresh trusted input
 }

@@ -23,7 +23,7 @@ namespace mozilla {
 class MFCDMProxy {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MFCDMProxy);
 
-  explicit MFCDMProxy(IMFContentDecryptionModule* aCDM);
+  explicit MFCDMProxy(IMFContentDecryptionModule* aCDM) : mCDM(aCDM) {}
 
  public:
   // Return a IMediaProtectionPMPServer from the existing CDM.
@@ -51,7 +51,7 @@ class MFCDMProxy {
   // perform some optimization.
 
  private:
-  ~MFCDMProxy();
+  ~MFCDMProxy() = default;
 
   Microsoft::WRL::ComPtr<IMFContentDecryptionModule> mCDM;
 
