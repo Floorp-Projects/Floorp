@@ -25,7 +25,7 @@ add_task(async function () {
 
   info("Pause in the main thread");
   assertNotPaused(dbg);
-  await dbg.actions.breakOnNext(getThreadContext(dbg));
+  await dbg.actions.breakOnNext();
   await waitForPaused(dbg, "doc-windowless-workers.html");
   assertPausedAtSourceAndLine(dbg, mainThreadSource.id, 10);
   threadIsSelected(dbg, 1);
@@ -33,7 +33,7 @@ add_task(async function () {
   info("Pause in the first worker");
   await dbg.actions.selectThread(thread1);
   assertNotPaused(dbg);
-  await dbg.actions.breakOnNext(getThreadContext(dbg));
+  await dbg.actions.breakOnNext();
   await waitForPaused(dbg, "simple-worker.js");
   threadIsSelected(dbg, 2);
   const workerSource2 = dbg.selectors.getSelectedSource();

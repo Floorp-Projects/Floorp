@@ -157,7 +157,7 @@ class CommandBar extends Component {
     e.preventDefault();
     e.stopPropagation();
     if (action === "resume") {
-      this.props.isPaused ? this.props.resume() : this.props.breakOnNext(cx);
+      this.props.isPaused ? this.props.resume() : this.props.breakOnNext();
     } else {
       this.props[action](cx);
     }
@@ -256,7 +256,7 @@ class CommandBar extends Component {
   }
 
   renderPauseButton() {
-    const { cx, breakOnNext, isWaitingOnBreak } = this.props;
+    const { breakOnNext, isWaitingOnBreak } = this.props;
 
     if (this.props.isPaused) {
       return debugBtn(
@@ -278,7 +278,7 @@ class CommandBar extends Component {
     }
 
     return debugBtn(
-      () => breakOnNext(cx),
+      () => breakOnNext(),
       "pause",
       "active",
       L10N.getFormatStr("pauseButtonTooltip", formatKey("resume"))
