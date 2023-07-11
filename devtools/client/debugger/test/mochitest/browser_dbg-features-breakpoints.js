@@ -66,7 +66,7 @@ add_task(
 
     // We can't use the `stepIn` helper as this last step will resume
     // and the helper is expecting to pause again
-    await dbg.actions.stepIn(getThreadContext(dbg));
+    await dbg.actions.stepIn();
     await assertNotPaused(dbg);
   }
 );

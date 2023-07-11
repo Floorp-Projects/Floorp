@@ -57,6 +57,6 @@ export function continueToHere(cx, location) {
       );
     }
 
-    dispatch(resume(cx));
+    dispatch(resume());
   };
 }

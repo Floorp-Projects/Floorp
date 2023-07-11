@@ -119,8 +119,7 @@ describe("pause", () => {
 
       await dispatch(actions.newGeneratedSource(makeSource("foo1")));
       await dispatch(actions.paused(mockPauseInfo));
-      const cx = selectors.getThreadContext(getState());
-      const stepped = dispatch(actions.stepIn(cx));
+      const stepped = dispatch(actions.stepIn());
       expect(isStepping(getState(), "FakeThread")).toBeTruthy();
       if (!stepInResolve) {
         throw new Error("no stepInResolve");
@@ -132,9 +131,9 @@ describe("pause", () => {
 
     it("should only step when paused", async () => {
       const client = { stepIn: jest.fn() };
-      const { dispatch, cx } = createStore(client);
+      const { dispatch } = createStore(client);
 
-      dispatch(actions.stepIn(cx));
+      dispatch(actions.stepIn());
       expect(client.stepIn.mock.calls).toHaveLength(0);
     });
 
@@ -144,8 +143,7 @@ describe("pause", () => {
 
       await dispatch(actions.newGeneratedSource(makeSource("foo1")));
       await dispatch(actions.paused(mockPauseInfo));
-      const cx = selectors.getThreadContext(getState());
-      dispatch(actions.stepIn(cx));
+      dispatch(actions.stepIn());
       expect(isStepping(getState(), "FakeThread")).toBeTruthy();
     });
 
