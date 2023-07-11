@@ -18,7 +18,9 @@ from yaml.loader import FullLoader
 
 METRICS_FILENAME = "../app/metrics.yaml"
 NEW_METRICS_FILENAME = "../app/metrics_new.yaml"
-GLEAN_DICTIONARY_PREFIX = "https://dictionary.telemetry.mozilla.org/apps/focus_android/metrics/"
+GLEAN_DICTIONARY_PREFIX = (
+    "https://dictionary.telemetry.mozilla.org/apps/focus_android/metrics/"
+)
 
 # This is to make sure we only write headers for the csv file once
 write_header = True
@@ -65,8 +67,14 @@ def response(last_key, content, expire_version, writer, renewal):
             total_count += 1
 
             # name of the telemtry
-            dictionary_url = GLEAN_DICTIONARY_PREFIX + last_key.lstrip(".").replace(".", "_")
-            result = {"#": total_count, "name": last_key.lstrip("."), "glean dictionary": dictionary_url}
+            dictionary_url = GLEAN_DICTIONARY_PREFIX + last_key.lstrip(".").replace(
+                ".", "_"
+            )
+            result = {
+                "#": total_count,
+                "name": last_key.lstrip("."),
+                "glean dictionary": dictionary_url,
+            }
             result.update(content)
 
             # add columns for product to fille out, these should always be added at the end
@@ -108,7 +116,7 @@ def response(last_key, content, expire_version, writer, renewal):
 with open(METRICS_FILENAME, "r") as f:
     try:
         arg1 = sys.argv[1]
-    except:
+    except Exception:
         print("usage is to include argument of the form `100`")
         quit()
 

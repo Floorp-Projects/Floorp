@@ -9,7 +9,7 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 class GradlewBuild(object):
-    binary = './gradlew'
+    binary = "./gradlew"
     logger = logging.getLogger()
     adbrun = ADBrun()
 
@@ -20,17 +20,19 @@ class GradlewBuild(object):
         self.adbrun.launch()
 
         # Change path accordingly to go to root folder to run gradlew
-        os.chdir('../../../../../../../..')
-        cmd = './gradlew ' + 'app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=org.mozilla.fenix.syncintegration.SyncIntegrationTest#{}'.format(identifier)
+        os.chdir("../../../../../../../..")
+        cmd = (
+            "./gradlew "
+            + "app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=org.mozilla.fenix.syncintegration.SyncIntegrationTest#{}".format(
+                identifier
+            )
+        )
 
-        self.logger.info('Running cmd: {}'.format(cmd))
+        self.logger.info("Running cmd: {}".format(cmd))
 
         out = ""
         try:
-            out = subprocess.check_output(
-                cmd,
-                shell=True,
-                stderr=subprocess.STDOUT)
+            out = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             out = e.output
             raise
@@ -39,5 +41,5 @@ class GradlewBuild(object):
             testsPath = "app/src/androidTest/java/org/mozilla/fenix/syncintegration/"
             os.chdir(testsPath)
 
-            with open(self.log, 'w') as f:
+            with open(self.log, "w") as f:
                 f.write(str(out))

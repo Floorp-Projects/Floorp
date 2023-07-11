@@ -14,7 +14,7 @@ import sys
 
 try:
     version = sys.argv[1]
-except:
+except Exception:
     print("usage is to include arguments of the form <version>")
     quit()
 
