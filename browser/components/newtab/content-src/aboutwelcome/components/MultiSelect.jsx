@@ -40,7 +40,9 @@ const MULTI_SELECT_ICON_STYLES = [
 ];
 
 function getValidStyle(style, validStyles, allowVars) {
-  if (!style) return null;
+  if (!style) {
+    return null;
+  }
   return Object.keys(style)
     .filter(
       key => validStyles.includes(key) || (allowVars && key.startsWith("--"))

@@ -180,7 +180,9 @@ export class _FeatureCalloutBroker {
     switch (event) {
       case "end":
         const item = this.#calloutMap.get(win);
-        if (item) item.showing = false;
+        if (item) {
+          item.showing = false;
+        }
         break;
     }
   }

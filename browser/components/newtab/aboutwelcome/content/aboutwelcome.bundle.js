@@ -1379,7 +1379,10 @@ const MULTI_SELECT_STYLES = [..._MSLocalized__WEBPACK_IMPORTED_MODULE_1__.CONFIG
 const MULTI_SELECT_ICON_STYLES = [..._MSLocalized__WEBPACK_IMPORTED_MODULE_1__.CONFIGURABLE_STYLES, "width", "height", "background", "backgroundColor", "backgroundImage", "backgroundSize", "backgroundPosition", "backgroundRepeat", "backgroundOrigin", "backgroundClip", "border", "borderRadius", "appearance", "fill", "stroke", "outline", "outlineOffset", "boxShadow"];
 
 function getValidStyle(style, validStyles, allowVars) {
-  if (!style) return null;
+  if (!style) {
+    return null;
+  }
+
   return Object.keys(style).filter(key => validStyles.includes(key) || allowVars && key.startsWith("--")).reduce((obj, key) => {
     obj[key] = style[key];
     return obj;
