@@ -41,25 +41,26 @@ static const wchar_t kLazyInstantiatorProp[] =
 
 /* static */
 already_AddRefed<IAccessible> LazyInstantiator::GetRootAccessible(HWND aHwnd) {
-  // There must only be one LazyInstantiator per HWND.
-  // To track this, we set the kLazyInstantiatorProp on the HWND with a pointer
-  // to an existing instance. We only create a new LazyInstatiator if that prop
-  // has not already been set.
-  LazyInstantiator* existingInstantiator = reinterpret_cast<LazyInstantiator*>(
-      ::GetProp(aHwnd, kLazyInstantiatorProp));
-
   RefPtr<IAccessible> result;
-  if (existingInstantiator) {
-    // Temporarily disable blind aggregation until we know that we have been
-    // marshaled. See EnableBlindAggregation for more information.
-    existingInstantiator->mAllowBlindAggregation = false;
-    result = existingInstantiator;
-    return result.forget();
-  }
-
-  // At this time we only want to check whether the acc service is running; We
+  // At this time we only want to check whether the acc service is running. We
   // don't actually want to create the acc service yet.
   if (!GetAccService()) {
+    // There must only be one LazyInstantiator per HWND.
+    // To track this, we set the kLazyInstantiatorProp on the HWND with a
+    // pointer to an existing instance. We only create a new LazyInstatiator if
+    // that prop has not already been set.
+    LazyInstantiator* existingInstantiator =
+        reinterpret_cast<LazyInstantiator*>(
+            ::GetProp(aHwnd, kLazyInstantiatorProp));
+
+    if (existingInstantiator) {
+      // Temporarily disable blind aggregation until we know that we have been
+      // marshaled. See EnableBlindAggregation for more information.
+      existingInstantiator->mAllowBlindAggregation = false;
+      result = existingInstantiator;
+      return result.forget();
+    }
+
     // a11y is not running yet, there are no existing LazyInstantiators for this
     // HWND, so create a new one and return it as a surrogate for the root
     // accessible.
