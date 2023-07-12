@@ -35,12 +35,12 @@ def add_components_optimization(config, tasks):
             skip_unless_changed = optimization.setdefault("skip-unless-changed", [])
             skip_unless_changed.extend(
                 [
-                    "android-components/build.gradle",
-                    "android-components/settings.gradle",
-                    "android-components/buildSrc.*",
-                    "android-components/gradle.properties",
-                    "android-components/gradle/wrapper/gradle-wrapper.properties",
-                    "android-components/plugins/dependencies/**",
+                    "mobile/android/android-components/build.gradle",
+                    "mobile/android/android-components/settings.gradle",
+                    "mobile/android/android-components/buildSrc.*",
+                    "mobile/android/android-components/gradle.properties",
+                    "mobile/android/android-components/gradle/wrapper/gradle-wrapper.properties",
+                    "mobile/android/android-components/plugins/dependencies/**",
                 ]
             )
 
@@ -80,8 +80,8 @@ def extend_optimization_if_one_already_exists(config, tasks):
 
 def _get_path(gradle_project):
     if gradle_project == "focus":
-        return "focus-android/**"
+        return "mobile/android/focus-android/**"
     elif gradle_project == "fenix":
-        return "fenix/**"
+        return "mobile/android/fenix/**"
     else:
-        return f"android-components/{get_path(gradle_project)}/**"
+        return f"mobile/android/android-components/{get_path(gradle_project)}/**"
