@@ -618,7 +618,7 @@ SpeechRecognition::StartRecording(RefPtr<AudioStreamTrack>& aTrack) {
   mTrack = aTrack;
   MOZ_ASSERT(!mTrack->Ended());
 
-  mSpeechListener = new SpeechTrackListener(this);
+  mSpeechListener = SpeechTrackListener::Create(this);
   mTrack->AddListener(mSpeechListener);
 
   nsString blockerName;
