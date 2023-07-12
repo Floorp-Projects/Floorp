@@ -31,11 +31,6 @@ struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 class ScopeBindingCache;
 
-[[nodiscard]] extern bool InstantiateStencils(JSContext* cx,
-                                              CompilationInput& input,
-                                              const CompilationStencil& stencil,
-                                              CompilationGCOutput& gcOutput);
-
 extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<char16_t>& srcBuf,

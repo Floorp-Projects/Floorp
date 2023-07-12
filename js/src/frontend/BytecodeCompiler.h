@@ -145,6 +145,11 @@ CompileGlobalScriptToExtensibleStencil(
     ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     ScopeKind scopeKind);
 
+[[nodiscard]] extern bool InstantiateStencils(JSContext* cx,
+                                              CompilationInput& input,
+                                              const CompilationStencil& stencil,
+                                              CompilationGCOutput& gcOutput);
+
 // Compile a module of the given source using the given options.
 ModuleObject* CompileModule(JSContext* cx, FrontendContext* fc,
                             const JS::ReadOnlyCompileOptions& options,
