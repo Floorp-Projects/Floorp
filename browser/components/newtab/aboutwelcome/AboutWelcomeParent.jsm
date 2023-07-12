@@ -185,6 +185,17 @@ class AboutWelcomeParent extends JSWindowActorParent {
         let attributionData =
           await lazy.AboutWelcomeDefaults.getAttributionContent();
         return attributionData;
+      case "AWPage:GET_ADDON_DETAILS":
+        let addonDetails =
+          await lazy.AboutWelcomeDefaults.getAddonFromRepository(data);
+
+        return {
+          label: addonDetails.name,
+          icon: addonDetails.iconURL,
+          type: addonDetails.type,
+          screenshots: addonDetails.screenshots,
+          url: addonDetails.url,
+        };
       case "AWPage:SELECT_THEME":
         await lazy.BuiltInThemes.ensureBuiltInThemes();
         return lazy.AddonManager.getAddonByID(LIGHT_WEIGHT_THEMES[data]).then(
