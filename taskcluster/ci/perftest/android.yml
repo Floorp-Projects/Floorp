@@ -8,9 +8,15 @@ job-defaults:
         toolchain:
             - linux64-node
             - linux64-geckodriver
+
+    worker:
+        env:
+            PYTHONPATH: "testing/mozbase/mozdevice:third_party/python/six"
+
     run:
         sparse-profile: perftest
         checkout: true
+        cwd: '{checkout}'
         command: >-
             cd $GECKO_PATH &&
             python3 python/mozperftest/mozperftest/runner.py
