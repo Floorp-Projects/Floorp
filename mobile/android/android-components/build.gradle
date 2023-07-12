@@ -352,8 +352,6 @@ tasks.register("ktlint", JavaExec) {
     args "components/**/*.kt" , "samples/**/*.kt", "!**/build/**/*.kt", "buildSrc/**/*.kt", "--baseline=ktlint-baseline.xml"
 }
 
-apply plugin: GitHubPlugin
-
 tasks.register("ktlintFormat", JavaExec) {
     group = "formatting"
     description = "Fix Kotlin code style deviations."
