@@ -13,7 +13,6 @@
 
 #include "debugger/DebugAPI.h"
 #include "ds/LifoAlloc.h"
-#include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/CompilationStencil.h"
 #include "frontend/EitherParser.h"
