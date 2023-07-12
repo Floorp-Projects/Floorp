@@ -37,7 +37,7 @@ class SettingsSearchTest {
 
     @get:Rule
     val activityTestRule = AndroidComposeTestRule(
-        HomeActivityIntentTestRule.withDefaultSettingsOverrides(isUnifiedSearchEnabled = true, newSearchSettingsEnabled = true),
+        HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
     ) { it.activity }
 
     @Before

@@ -132,7 +132,7 @@ class OnboardingTest {
         homeScreen {
             verifyStartBrowsingButton()
         }.openSearch {
-            verifySearchEngineButton()
+            verifySearchView()
             verifyKeyboardVisibility()
         }.dismissSearchBar {
             verifyStartBrowsingButton()

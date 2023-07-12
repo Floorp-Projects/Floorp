@@ -71,7 +71,6 @@ class HomeScreenTest {
             verifyStoriesByTopicItems()
             verifyCustomizeHomepageButton(true)
             verifyNavigationToolbar()
-            verifyDefaultSearchEngine("Google")
             verifyHomeMenuButton()
             verifyTabButton()
             verifyTabCounter("0")

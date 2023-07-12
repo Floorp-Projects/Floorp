@@ -45,7 +45,7 @@ class HistoryTest {
     @get:Rule
     val activityTestRule =
         AndroidComposeTestRule(
-            HomeActivityIntentTestRule.withDefaultSettingsOverrides(isUnifiedSearchEnabled = true),
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
 
     @Before

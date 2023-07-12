@@ -50,7 +50,7 @@ class BookmarksTest {
     @get:Rule(order = 0)
     val activityTestRule =
         AndroidComposeTestRule(
-            HomeActivityIntentTestRule.withDefaultSettingsOverrides(isUnifiedSearchEnabled = true),
+            HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
 
     @Rule(order = 1)

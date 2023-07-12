@@ -69,8 +69,6 @@ class SearchTest {
             isRecentTabsFeatureEnabled = false,
             isTCPCFREnabled = false,
             isWallpaperOnboardingEnabled = false,
-            isUnifiedSearchEnabled = true,
-            newSearchSettingsEnabled = true,
         ),
     ) { it.activity }
 

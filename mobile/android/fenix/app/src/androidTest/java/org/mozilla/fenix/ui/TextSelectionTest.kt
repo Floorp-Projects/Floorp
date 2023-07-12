@@ -118,7 +118,7 @@ class TextSelectionTest {
             clickContextMenuItem("Search")
             mDevice.waitForIdle()
             verifyTabCounter("2")
-            verifyUrl("google")
+            verifyUrl("content")
         }
     }
 
@@ -136,7 +136,7 @@ class TextSelectionTest {
             clickContextMenuItem("Private Search")
             mDevice.waitForIdle()
             verifyTabCounter("2")
-            verifyUrl("google")
+            verifyUrl("content")
         }
     }
 
@@ -214,7 +214,7 @@ class TextSelectionTest {
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Search")
             verifyTabCounter("2")
-            verifyUrl("google")
+            verifyUrl("Crossing")
         }
     }
 
@@ -233,7 +233,7 @@ class TextSelectionTest {
             longClickPageObject(itemContainingText("Crossing"))
             clickContextMenuItem("Private Search")
             verifyTabCounter("2")
-            verifyUrl("google")
+            verifyUrl("Crossing")
         }
     }
 

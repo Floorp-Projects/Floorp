@@ -6,7 +6,6 @@
 
 package org.mozilla.fenix.ui.robots
 
-import android.graphics.Bitmap
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
@@ -78,7 +77,6 @@ import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
-import org.mozilla.fenix.helpers.withBitmapDrawable
 import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.utils.Settings
 
@@ -207,10 +205,9 @@ class HomeScreenRobot {
         assertItemWithResIdExists(homepageWordmark)
     }
     fun verifyHomeComponent() = assertHomeComponent()
-    fun verifyDefaultSearchEngine(searchEngine: String) = verifySearchEngineIcon(searchEngine)
+
     fun verifyTabCounter(numberOfOpenTabs: String) =
         assertItemWithResIdAndTextExists(tabCounter(numberOfOpenTabs))
-    fun verifyKeyboardVisible() = assertKeyboardVisibility(isExpectedToBeVisible = true)
 
     fun verifyWallpaperImageApplied(isEnabled: Boolean) {
         if (isEnabled) {
@@ -942,19 +939,8 @@ private fun assertHomeComponent() =
 
 private fun threeDotButton() = onView(allOf(withId(R.id.menuButton)))
 
-private fun verifySearchEngineIcon(searchEngineIcon: Bitmap, searchEngineName: String) {
-    onView(withId(R.id.search_engine_icon))
-        .check(matches(withBitmapDrawable(searchEngineIcon, searchEngineName)))
-}
-
 private fun getSearchEngine(searchEngineName: String) =
     appContext.components.core.store.state.search.searchEngines.find { it.name == searchEngineName }
-
-private fun verifySearchEngineIcon(searchEngineName: String) {
-    val defaultSearchEngine = getSearchEngine(searchEngineName)
-        ?: throw AssertionError("No search engine with name $searchEngineName")
-    verifySearchEngineIcon(defaultSearchEngine.icon, defaultSearchEngine.name)
-}
 
 private fun collectionTitle(title: String, rule: ComposeTestRule) =
     rule.onNode(hasText(title))

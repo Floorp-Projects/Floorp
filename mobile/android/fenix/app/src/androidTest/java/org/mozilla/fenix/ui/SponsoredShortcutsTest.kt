@@ -17,7 +17,6 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.Constants.defaultTopSitesList
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.getSponsoredShortcutTitle
 import org.mozilla.fenix.ui.robots.homeScreen
 
@@ -117,26 +116,6 @@ class SponsoredShortcutsTest {
 
             verifySponsoredShortcutDetails(sponsoredShortcutTitle, 2)
             verifySponsoredShortcutDetails(sponsoredShortcutTitle2, 3)
-        }
-    }
-
-    // The default search engine should not be displayed as a sponsored shortcut
-    @Test
-    fun defaultSearchEngineIsNotDisplayedAsSponsoredShortcutTest() {
-        val sponsoredShortcutTitle = "Amazon"
-
-        homeScreen {
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openSearchSubMenu {
-            changeDefaultSearchEngine(defaultSearchEngine)
-        }
-
-        exitMenu()
-
-        homeScreen {
-            verifySponsoredShortcutDoesNotExist(sponsoredShortcutTitle, 2)
-            verifySponsoredShortcutDoesNotExist(sponsoredShortcutTitle, 3)
         }
     }
 
