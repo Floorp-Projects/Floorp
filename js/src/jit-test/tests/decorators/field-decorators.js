@@ -52,6 +52,10 @@ class C {
   };
   @dec1 42 = 1;
   @dec2 [43];
+  @dec2 static #x12 = 1;
+  getX12() {
+    return C.#x12;
+  }
 }
 
 
@@ -67,6 +71,7 @@ assertEq(c.getX10(), 2);
 assertEq(c.getX11(), 4);
 assertEq(c[42], 1);
 assertEq(c[43], 2);
+assertEq(c.getX12(), 2);
 
 assertThrowsInstanceOf(() => {
   class D {
