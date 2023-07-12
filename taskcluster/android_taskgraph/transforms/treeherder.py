@@ -19,7 +19,7 @@ def resolve_keys(config, tasks):
 
         resolve_keyed_by(
             task,
-            "treeherder.job-symbol",
+            "treeherder.symbol",
             item_name=task["name"],
             **{
                 "build-type": task["attributes"]["build-type"],
@@ -46,7 +46,7 @@ def build_treeherder_definition(config, tasks):
             inherit_treeherder_from_dep(task, primary_dep)
         )
         task_group = primary_dep.task["extra"]["treeherder"].get("groupSymbol", "?")
-        job_symbol = task["treeherder"].pop("job-symbol")
+        job_symbol = task["treeherder"].pop("symbol")
         full_symbol = join_symbol(task_group, job_symbol)
         task["treeherder"]["symbol"] = full_symbol
 
