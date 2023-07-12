@@ -31,15 +31,6 @@ struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 class ScopeBindingCache;
 
-// Perform some operation to reduce the time taken by instantiation.
-//
-// Part of InstantiateStencils can be done by calling PrepareForInstantiate.
-// PrepareForInstantiate is GC-free operation that can be performed
-// off-main-thread without parse global.
-[[nodiscard]] extern bool PrepareForInstantiate(
-    JSContext* maybeCx, FrontendContext* fc, CompilationInput& input,
-    const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
-
 [[nodiscard]] extern bool InstantiateStencils(JSContext* cx,
                                               CompilationInput& input,
                                               const CompilationStencil& stencil,
