@@ -27,11 +27,9 @@ class JS_PUBLIC_API ContextOptions {
         wasmVerbose_(false),
         wasmBaseline_(true),
         wasmIon_(true),
-#define WASM_DEFAULT_FEATURE(NAME, ...) wasm##NAME##_(true),
-#define WASM_EXPERIMENTAL_FEATURE(NAME, ...) wasm##NAME##_(false),
-        JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE)
-#undef WASM_DEFAULT_FEATURE
-#undef WASM_EXPERIMENTAL_FEATURE
+#define WASM_FEATURE(NAME, LOWER_NAME, STAGE, ...) wasm##NAME##_(STAGE == WasmFeatureStage::Default),
+        JS_FOR_WASM_FEATURES(WASM_FEATURE)
+#undef WASM_FEATURE
         testWasmAwaitTier2_(false),
         throwOnAsmJSValidationFailure_(false),
         disableIon_(false),
@@ -106,7 +104,7 @@ class JS_PUBLIC_API ContextOptions {
     wasm##NAME##_ = flag;                           \
     return *this;                                   \
   }
-  JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
+  JS_FOR_WASM_FEATURES(WASM_FEATURE)
 #undef WASM_FEATURE
 
   bool throwOnAsmJSValidationFailure() const {
@@ -214,7 +212,7 @@ class JS_PUBLIC_API ContextOptions {
   bool wasmBaseline_ : 1;
   bool wasmIon_ : 1;
 #define WASM_FEATURE(NAME, ...) bool wasm##NAME##_ : 1;
-  JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
+  JS_FOR_WASM_FEATURES(WASM_FEATURE)
 #undef WASM_FEATURE
   bool testWasmAwaitTier2_ : 1;
   bool throwOnAsmJSValidationFailure_ : 1;

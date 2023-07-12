@@ -5,6 +5,7 @@
 
 #include "jit/ShuffleAnalysis.h"
 #include "jit/MIR.h"
+#include "wasm/WasmFeatures.h"
 
 using namespace js;
 using namespace jit;

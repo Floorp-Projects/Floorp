@@ -13,7 +13,7 @@
 #include "vm/ArrayBufferObject.h"
 #include "vm/SharedMem.h"
 #include "vm/Uint8Clamped.h"
-#include "wasm/WasmJS.h"
+#include "wasm/WasmFeatures.h"
 
 using namespace js;
 

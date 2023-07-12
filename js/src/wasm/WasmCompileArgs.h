@@ -85,7 +85,7 @@ struct FeatureArgs {
   FeatureArgs()
       :
 #define WASM_FEATURE(NAME, LOWER_NAME, ...) LOWER_NAME(false),
-        JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
+        JS_FOR_WASM_FEATURES(WASM_FEATURE)
 #undef WASM_FEATURE
             sharedMemory(Shareable::False),
         simd(false),
@@ -98,7 +98,7 @@ struct FeatureArgs {
   static FeatureArgs build(JSContext* cx, const FeatureOptions& options);
 
 #define WASM_FEATURE(NAME, LOWER_NAME, ...) bool LOWER_NAME;
-  JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
+  JS_FOR_WASM_FEATURES(WASM_FEATURE)
 #undef WASM_FEATURE
 
   Shareable sharedMemory;

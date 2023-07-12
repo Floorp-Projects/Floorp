@@ -37,6 +37,7 @@
 #include "vm/PlainObject.h"  // js::PlainObject
 #include "vm/Uint8Clamped.h"
 #include "wasm/WasmCode.h"
+#include "wasm/WasmFeatures.h"  // for wasm::ReportSimdAnalysis
 
 #include "vm/JSAtom-inl.h"
 #include "wasm/WasmInstance-inl.h"

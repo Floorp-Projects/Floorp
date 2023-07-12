@@ -666,20 +666,14 @@ option(
 # ===========================
 
 
-@depends(milestone.is_nightly)
-def default_wasm_function_references(is_nightly):
-    if is_nightly:
-        return True
-
-
 option(
-    "--enable-wasm-function-references",
-    default=default_wasm_function_references,
+    "--disable-wasm-function-references",
+    default=True,
     help="{Enable|Disable} WebAssembly function-references",
 )
 
 
-@depends("--enable-wasm-function-references", "--wasm-no-experimental")
+@depends("--disable-wasm-function-references", "--wasm-no-experimental")
 def wasm_function_references(value, no_experimental):
     if no_experimental:
         return
@@ -695,19 +689,19 @@ set_define("ENABLE_WASM_FUNCTION_REFERENCES", wasm_function_references)
 # ===========================
 
 
-@depends(milestone.is_nightly, "--enable-wasm-function-references")
-def default_wasm_gc(is_nightly, function_references):
-    if is_nightly and function_references:
+@depends("--disable-wasm-function-references")
+def default_wasm_gc(function_references):
+    if function_references:
         return True
 
 
 option(
-    "--enable-wasm-gc", default=default_wasm_gc, help="{Enable|Disable} WebAssembly GC"
+    "--disable-wasm-gc", default=default_wasm_gc, help="{Enable|Disable} WebAssembly GC"
 )
 
 
 @depends(
-    "--enable-wasm-gc", "--enable-wasm-function-references", "--wasm-no-experimental"
+    "--disable-wasm-gc", "--disable-wasm-function-references", "--wasm-no-experimental"
 )
 def wasm_gc(value, function_references, no_experimental):
     if no_experimental or not value:
@@ -716,7 +710,7 @@ def wasm_gc(value, function_references, no_experimental):
     if function_references:
         return True
 
-    die("--enable-wasm-gc only possible with --enable-wasm-function-references")
+    die("--disable-wasm-gc only possible with --disable-wasm-function-references")
 
 
 set_config("ENABLE_WASM_GC", wasm_gc)
