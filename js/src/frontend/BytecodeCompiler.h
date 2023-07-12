@@ -14,6 +14,7 @@
 
 #include "ds/LifoAlloc.h"
 #include "frontend/FunctionSyntaxKind.h"
+#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/SourceText.h"
 #include "js/UniquePtr.h"  // js::UniquePtr
 
@@ -95,10 +96,6 @@
  */
 
 class JSLinearString;
-
-namespace JS {
-class JS_PUBLIC_API ReadOnlyCompileOptions;
-}
 
 namespace js {
 
@@ -188,6 +185,12 @@ UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencil(
     JS::SourceText<char16_t>& srcBuf,
     const mozilla::Maybe<uint32_t>& parameterListEnd,
     frontend::FunctionSyntaxKind syntaxKind, Handle<Scope*> enclosingScope);
+
+// Certain compile options will disable the syntax parser entirely.
+inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
+  return !options.discardSource && !options.sourceIsLazy &&
+         !options.forceFullParse();
+}
 
 } /* namespace frontend */
 } /* namespace js */

@@ -15,11 +15,11 @@
 #include "mozilla/ScopeExit.h"              // mozilla::ScopeExit
 #include "mozilla/Sprintf.h"                // SprintfLiteral
 
-#include "ds/LifoAlloc.h"               // LifoAlloc
-#include "frontend/AbstractScopePtr.h"  // ScopeIndex
-#include "frontend/BytecodeCompilation.h"  // CanLazilyParse, CompileGlobalScriptToStencil
-#include "frontend/BytecodeCompiler.h"    // ParseModuleToStencil
-#include "frontend/BytecodeSection.h"     // EmitScriptThingsVector
+#include "ds/LifoAlloc.h"                  // LifoAlloc
+#include "frontend/AbstractScopePtr.h"     // ScopeIndex
+#include "frontend/BytecodeCompilation.h"  // CompileGlobalScriptToStencil
+#include "frontend/BytecodeCompiler.h"  // CanLazilyParse, ParseModuleToStencil
+#include "frontend/BytecodeSection.h"   // EmitScriptThingsVector
 #include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationState, ExtensibleCompilationStencil, CompilationGCOutput, CompilationStencilMerger
 #include "frontend/FrontendContext.h"
 #include "frontend/NameAnalysisTypes.h"  // EnvironmentCoordinate
