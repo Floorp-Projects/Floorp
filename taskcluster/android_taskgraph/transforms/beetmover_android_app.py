@@ -60,7 +60,7 @@ def make_task_description(config, tasks):
         task = {
             "label": label,
             "description": description,
-            "worker-type": "beetmover",
+            "worker-type": "beetmover-android",
             "worker": task["worker"],
             "scopes": [
                 bucket_scope,
