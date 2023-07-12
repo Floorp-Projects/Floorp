@@ -7821,6 +7821,24 @@
   value: false
   mirror: always
 
+# Whether to support parsing '//(#@) source(Mapping)?URL=' pragmas.
+- name: javascript.options.source_pragmas
+  type: bool
+  value: true
+  mirror: always
+
+# asm.js
+- name: javascript.options.asmjs
+  type: bool
+  value: true
+  mirror: always
+
+# Whether to throw a TypeError if asm.js code hits validation failure.
+- name: javascript.options.throw_on_asmjs_validation_failure
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "layers."
 #---------------------------------------------------------------------------
