@@ -18,7 +18,7 @@ def resolve_keys(config, tasks):
             "index",
             "worker-type",
             "worker.signing-type",
-            "treeherder.job-symbol",
+            "treeherder.symbol",
         ):
             resolve_keyed_by(
                 task,

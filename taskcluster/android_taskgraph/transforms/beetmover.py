@@ -18,7 +18,7 @@ transforms = TransformSequence()
 def resolve_keys(config, tasks):
     for task in tasks:
         for key in (
-            "treeherder.job-symbol",
+            "treeherder.symbol",
             "worker.bucket",
             "worker.beetmover-application-name",
         ):
