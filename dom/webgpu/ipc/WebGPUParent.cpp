@@ -37,17 +37,17 @@ class ErrorBuffer {
   // if the message doesn't fit, it will be truncated
   static constexpr unsigned BUFFER_SIZE = 512;
   ffi::WGPUErrorBufferType mType = ffi::WGPUErrorBufferType_None;
-  char mUtf8[BUFFER_SIZE] = {};
+  char mMessageUtf8[BUFFER_SIZE] = {};
   bool mAwaitingGetError = false;
 
  public:
-  ErrorBuffer() { mUtf8[0] = 0; }
+  ErrorBuffer() { mMessageUtf8[0] = 0; }
   ErrorBuffer(const ErrorBuffer&) = delete;
   ~ErrorBuffer() { MOZ_ASSERT(!mAwaitingGetError); }
 
   ffi::WGPUErrorBuffer ToFFI() {
     mAwaitingGetError = true;
-    ffi::WGPUErrorBuffer errorBuf = {&mType, mUtf8, BUFFER_SIZE};
+    ffi::WGPUErrorBuffer errorBuf = {&mType, mMessageUtf8, BUFFER_SIZE};
     return errorBuf;
   }
 
@@ -88,7 +88,7 @@ class ErrorBuffer {
     if (!filterType) {
       return {};
     }
-    return Some(Error{*filterType, nsCString{mUtf8}});
+    return Some(Error{*filterType, nsCString{mMessageUtf8}});
   }
 };
 

@@ -47,8 +47,8 @@ pub struct ErrorBuffer {
     ///
     /// When we convert WGPU errors to this type, we render the error as a string, copying into
     /// `message` up to `capacity - 1`, and null-terminate it.
-    string: *mut c_char,
-    capacity: usize,
+    message: *mut c_char,
+    message_capacity: usize,
 }
 
 impl ErrorBuffer {
@@ -80,20 +80,20 @@ impl ErrorBuffer {
             return;
         }
 
-        assert_ne!(self.capacity, 0);
-        let length = if message.len() >= self.capacity {
+        assert_ne!(self.message_capacity, 0);
+        let length = if message.len() >= self.message_capacity {
             log::warn!(
                 "Error message's length {} reached capacity {}, truncating",
                 message.len(),
-                self.capacity
+                self.message_capacity
             );
-            self.capacity - 1
+            self.message_capacity - 1
         } else {
             message.len()
         };
         unsafe {
-            ptr::copy_nonoverlapping(message.as_ptr(), self.string as *mut u8, length);
-            *self.string.add(length) = 0;
+            ptr::copy_nonoverlapping(message.as_ptr(), self.message as *mut u8, length);
+            *self.message.add(length) = 0;
         }
     }
 }
