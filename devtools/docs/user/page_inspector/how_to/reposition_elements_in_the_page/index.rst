@@ -4,7 +4,7 @@ Reposition elements in the page
 
 Starting in Firefox 48 you can move absolutely positioned elements by dragging them around the page.
 
-If an element has its `position <https://developer.mozilla.org/en-US/docs/Web/CSS/position>`_ property set to ``absolute``, ``relative`` or ``fixed`` and one or more of the `top <https://developer.mozilla.org/en-US/docs/Web/CSS/top>`_, `bottom <https://developer.mozilla.org/en-US/docs/Web/CSS/bottom>`_ , `left <https://developer.mozilla.org/en-US/docs/Web/CSS/left>`_ or `right <https://developer.mozilla.org/en-US/docs/Web/CSS/right>`_ properties, :ref:`Box Model view <page_inspector_ui_tour_computed_view>` displays a button:
+If an element has its `position <https://developer.mozilla.org/en-US/docs/Web/CSS/Position>`_ property set to ``absolute``, ``relative`` or ``fixed`` and one or more of the `top <https://developer.mozilla.org/en-US/docs/Web/CSS/top>`_, `bottom <https://developer.mozilla.org/en-US/docs/Web/CSS/bottom>`_ , `left <https://developer.mozilla.org/en-US/docs/Web/CSS/left>`_ or `right <https://developer.mozilla.org/en-US/docs/Web/CSS/right>`_ properties, :ref:`Box Model view <page_inspector_ui_tour_computed_view>` displays a button:
 
 .. image:: box-model-reposition.png
   :class: center

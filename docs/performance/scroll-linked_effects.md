@@ -12,7 +12,7 @@ techniques.
 Often scrolling effects are implemented by listening for the `scroll`
 event and then updating elements on the page in some way (usually the
 CSS
-[`position`]((https://developer.mozilla.org/en-US/docs/Web/CSS/position "The position CSS property sets how an element is positioned in a document. The top, right, bottom, and left properties determine the final location of positioned elements.")
+[`position`]((https://developer.mozilla.org/en-US/docs/Web/CSS/Position "The position CSS property sets how an element is positioned in a document. The top, right, bottom, and left properties determine the final location of positioned elements.")
 or
 [`transform`](https://developer.mozilla.org/en-US/docs/Web/CSS/transform "The transform CSS property lets you rotate, scale, skew, or translate an element. It modifies the coordinate space of the CSS visual formatting model.")
 property.) You can find a sampling of such effects at [CSS Scroll API:
