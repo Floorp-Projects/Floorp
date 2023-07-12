@@ -6,9 +6,7 @@
 // Copyright (c) 2009 Thomas Robinson <280north.com>
 // MIT license: http://opensource.org/licenses/MIT
 
-const { ObjectUtils } = ChromeUtils.import(
-  "resource://gre/modules/ObjectUtils.jsm"
-);
+import { ObjectUtils } from "resource://gre/modules/ObjectUtils.sys.mjs";
 
 /**
  * This module is based on the

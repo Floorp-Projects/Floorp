@@ -11,6 +11,7 @@ ChromeUtils.defineESModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.sys.mjs",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
   PromptTestUtils: "resource://testing-common/PromptTestUtils.sys.mjs",
   ResetProfile: "resource://gre/modules/ResetProfile.sys.mjs",
@@ -23,10 +24,6 @@ ChromeUtils.defineESModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
   UrlbarView: "resource:///modules/UrlbarView.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "PlacesFrecencyRecalculator", () => {

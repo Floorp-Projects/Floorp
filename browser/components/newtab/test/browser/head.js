@@ -1,11 +1,7 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "ObjectUtils",
-  "resource://gre/modules/ObjectUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
 });
 ChromeUtils.defineModuleGetter(

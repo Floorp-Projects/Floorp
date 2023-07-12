@@ -7,8 +7,8 @@
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-var { ObjectUtils } = ChromeUtils.import(
-  "resource://gre/modules/ObjectUtils.jsm"
+var { ObjectUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/ObjectUtils.sys.mjs"
 );
 var { FormLikeFactory } = ChromeUtils.importESModule(
   "resource://gre/modules/FormLikeFactory.sys.mjs"

@@ -11,13 +11,9 @@ import { PushCrypto } from "resource://gre/modules/PushCrypto.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   pushBroadcastService: "resource://gre/modules/PushBroadcastService.sys.mjs",
 });
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ObjectUtils",
-  "resource://gre/modules/ObjectUtils.jsm"
-);
 
 const kPUSHWSDB_DB_NAME = "pushapi";
 const kPUSHWSDB_DB_VERSION = 5; // Change this if the IndexedDB format changes

@@ -7,12 +7,10 @@
     Only the following listed symbols will exposed on import, and only when
     and where imported. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
 });
 
 export var Logger = {

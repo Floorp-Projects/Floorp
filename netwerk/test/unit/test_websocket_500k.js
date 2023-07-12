@@ -9,8 +9,8 @@
 /* import-globals-from head_channels.js */
 /* import-globals-from head_servers.js */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
+ChromeUtils.defineESModuleGetters(this, {
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
 });
 
 add_setup(async function () {

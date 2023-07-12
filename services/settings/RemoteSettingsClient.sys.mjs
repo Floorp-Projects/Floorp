@@ -15,15 +15,12 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Database: "resource://services-settings/Database.sys.mjs",
   IDBHelpers: "resource://services-settings/IDBHelpers.sys.mjs",
   KintoHttpClient: "resource://services-common/kinto-http-client.sys.mjs",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   RemoteSettingsWorker:
     "resource://services-settings/RemoteSettingsWorker.sys.mjs",
   SharedUtils: "resource://services-settings/SharedUtils.sys.mjs",
   UptakeTelemetry: "resource://services-common/uptake-telemetry.sys.mjs",
   Utils: "resource://services-settings/Utils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
 
 const TELEMETRY_COMPONENT = "remotesettings";

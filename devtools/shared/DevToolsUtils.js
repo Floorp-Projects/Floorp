@@ -20,13 +20,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   NetworkHelper:
     "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
 });
-
-ChromeUtils.defineModuleGetter(
-  lazy,
-  "ObjectUtils",
-  "resource://gre/modules/ObjectUtils.jsm"
-);
 
 // Native getters which are considered to be side effect free.
 ChromeUtils.defineLazyGetter(lazy, "sideEffectFreeGetters", () => {

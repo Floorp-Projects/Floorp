@@ -7,12 +7,9 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   SuggestionsMap:
     "resource:///modules/urlbar/private/QuickSuggestRemoteSettings.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
 
 // This overrides `SuggestionsMap.chunkSize`. Testing the actual value can make
