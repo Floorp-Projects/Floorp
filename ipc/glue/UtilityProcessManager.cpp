@@ -48,6 +48,7 @@ RefPtr<UtilityProcessManager> UtilityProcessManager::GetSingleton() {
 
   if (!sXPCOMShutdown && sSingleton == nullptr) {
     sSingleton = new UtilityProcessManager();
+    sSingleton->Init();
   }
   return sSingleton;
 }
@@ -57,11 +58,14 @@ RefPtr<UtilityProcessManager> UtilityProcessManager::GetIfExists() {
   return sSingleton;
 }
 
-UtilityProcessManager::UtilityProcessManager() : mObserver(new Observer(this)) {
+UtilityProcessManager::UtilityProcessManager() {
   LOGD("[%p] UtilityProcessManager::UtilityProcessManager", this);
+}
 
+void UtilityProcessManager::Init() {
   // Start listening for pref changes so we can
   // forward them to the process once it is running.
+  mObserver = new Observer(this);
   nsContentUtils::RegisterShutdownObserver(mObserver);
   Preferences::AddStrongObserver(mObserver, "");
 }
@@ -75,9 +79,8 @@ UtilityProcessManager::~UtilityProcessManager() {
 
 NS_IMPL_ISUPPORTS(UtilityProcessManager::Observer, nsIObserver);
 
-UtilityProcessManager::Observer::Observer(
-    RefPtr<UtilityProcessManager> aManager)
-    : mManager(std::move(aManager)) {}
+UtilityProcessManager::Observer::Observer(UtilityProcessManager* aManager)
+    : mManager(aManager) {}
 
 NS_IMETHODIMP
 UtilityProcessManager::Observer::Observe(nsISupports* aSubject,

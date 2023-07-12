@@ -41,9 +41,6 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
   using WindowsUtilsPromise =
       MozPromise<RefPtr<dom::WindowsUtilsParent>, nsresult, true>;
 
-  static void Initialize();
-  static void Shutdown();
-
   static RefPtr<UtilityProcessManager> GetSingleton();
 
   static RefPtr<UtilityProcessManager> GetIfExists();
@@ -165,6 +162,8 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
 
   UtilityProcessManager();
 
+  void Init();
+
   void DestroyProcess(SandboxingKind aSandbox);
 
   bool IsShutdown() const;
@@ -173,7 +172,7 @@ class UtilityProcessManager final : public UtilityProcessHost::Listener {
    public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
-    explicit Observer(RefPtr<UtilityProcessManager> aManager);
+    explicit Observer(UtilityProcessManager* aManager);
 
    protected:
     ~Observer() = default;
