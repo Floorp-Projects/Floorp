@@ -184,7 +184,7 @@ var gTests = [
         simulateAudioOutputRequest({ deviceCount, deviceId: "id 2" }),
       ]);
       const selectorList = document.getElementById(
-        `webRTC-selectSpeaker-menulist`
+        `webRTC-selectSpeaker-richlistbox`
       );
       is(selectorList.selectedIndex, 2, "pre-selected index");
       checkDeviceSelectors(["speaker"]);

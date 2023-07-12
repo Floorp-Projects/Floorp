@@ -868,7 +868,10 @@ function checkDeviceSelectors(aExpectedTypes, aWindow = window) {
       continue;
     }
     ok(!selector.hidden, `${type} selector visible`);
-    let selectorList = document.getElementById(`webRTC-select${type}-menulist`);
+    let tagName = type == "Speaker" ? "richlistbox" : "menulist";
+    let selectorList = document.getElementById(
+      `webRTC-select${type}-${tagName}`
+    );
     let label = document.getElementById(
       `webRTC-select${type}-single-device-label`
     );
@@ -877,9 +880,13 @@ function checkDeviceSelectors(aExpectedTypes, aWindow = window) {
     if (selectorList.itemCount == 1) {
       ok(selectorList.hidden, `${type} selector list should be hidden.`);
       ok(!label.hidden, `${type} selector label should not be hidden.`);
+      let itemLabel =
+        tagName == "richlistbox"
+          ? selectorList.selectedItem.firstElementChild.getAttribute("value")
+          : selectorList.selectedItem.getAttribute("label");
       is(
         label.value,
-        selectorList.selectedItem.getAttribute("label"),
+        itemLabel,
         `${type} label should be showing the lone device label.`
       );
       expectedDescribedBy += ` webRTC-select${type}-icon webRTC-select${type}-single-device-label`;

@@ -734,6 +734,17 @@ menupopup::part(drop-indicator) {
   min-width: 0;
 }
 
+#webRTC-selectSpeaker-richlistbox {
+  flex: 1;
+  /* Keep the richlistbox small enough that a large number of devices doesn't
+     push the main and secondary action buttons off the bottom of the
+     popupnotification window when limited by screen size.  Only enough
+     richlistitems need to be shown to indicate that there are options
+     available but give enough space for the common case of only a few
+     devices.  */
+  max-height: 600px;
+}
+
 popupnotificationcontent {
   margin-block-start: 8px;
 }

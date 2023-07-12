@@ -782,36 +782,44 @@ function prompt(aActor, aBrowser, aRequest) {
        *   use in the aria-describedby attribute.
        */
       function listDevices(devices, IDPrefix, describedByIDs) {
-        let menupopup = doc.getElementById(`${IDPrefix}-menupopup`);
         let labelID = `${IDPrefix}-single-device-label`;
-
-        while (menupopup.lastChild) {
-          menupopup.removeChild(menupopup.lastChild);
+        let list;
+        let itemParent;
+        if (IDPrefix == "webRTC-selectSpeaker") {
+          list = doc.getElementById(`${IDPrefix}-richlistbox`);
+          itemParent = list;
+        } else {
+          itemParent = doc.getElementById(`${IDPrefix}-menupopup`);
+          list = itemParent.parentNode; // menulist
         }
-        let menulist = menupopup.parentNode;
-        // Removing the child nodes of the menupopup doesn't clear the value
-        // attribute of the menulist. This can have unfortunate side effects
-        // when the list is rebuilt with a different content, so we remove
-        // the value attribute and unset the selectedItem explicitly.
-        menulist.removeAttribute("value");
-        menulist.selectedItem = null;
+        while (itemParent.lastChild) {
+          itemParent.removeChild(itemParent.lastChild);
+        }
+
+        // Removing the child nodes of a menupopup doesn't clear the value
+        // attribute of its menulist. Similary for richlistbox state. This can
+        // have unfortunate side effects when the list is rebuilt with a
+        // different content, so we set the selectedIndex explicitly to reset
+        // state.
+        let defaultIndex = 0;
 
         for (let device of devices) {
-          let item = addDeviceToList(menulist, device.name, device.deviceIndex);
+          addDeviceToList(list, device.name, device.deviceIndex);
           if (device.id == aRequest.audioOutputId) {
-            menulist.selectedItem = item;
+            defaultIndex = device.deviceIndex;
           }
         }
+        list.selectedIndex = defaultIndex;
 
         let label = doc.getElementById(labelID);
         if (devices.length == 1) {
           describedByIDs.push(`${IDPrefix}-icon`, labelID);
           label.value = devices[0].name;
           label.hidden = false;
-          menulist.hidden = true;
+          list.hidden = true;
         } else {
           label.hidden = true;
-          menulist.hidden = false;
+          list.hidden = false;
         }
       }
 
@@ -1026,18 +1034,18 @@ function prompt(aActor, aBrowser, aRequest) {
         menupopup.addEventListener("command", menupopup._commandEventListener);
       }
 
-      function addDeviceToList(menulist, deviceName, deviceIndex, type) {
-        let menuitem = menulist.appendItem(deviceName, deviceIndex);
-        menuitem.setAttribute("tooltiptext", deviceName);
+      function addDeviceToList(list, deviceName, deviceIndex, type) {
+        let item = list.appendItem(deviceName, deviceIndex);
+        item.setAttribute("tooltiptext", deviceName);
         if (type) {
-          menuitem.setAttribute("devicetype", type);
+          item.setAttribute("devicetype", type);
         }
 
         if (deviceIndex == "-1") {
-          menuitem.setAttribute("disabled", true);
+          item.setAttribute("disabled", true);
         }
 
-        return menuitem;
+        return item;
       }
 
       doc.getElementById("webRTC-selectCamera").hidden =
@@ -1144,7 +1152,7 @@ function prompt(aActor, aBrowser, aRequest) {
 
         if (reqAudioOutput) {
           let audioDeviceIndex = doc.getElementById(
-            "webRTC-selectSpeaker-menulist"
+            "webRTC-selectSpeaker-richlistbox"
           ).value;
           let allowSpeaker = audioDeviceIndex != "-1";
           if (allowSpeaker) {
