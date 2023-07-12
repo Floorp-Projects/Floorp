@@ -13,15 +13,15 @@
 #include <string.h>  // for strlen, size_t
 #include <utility>   // for move
 
-#include "debugger/Debugger.h"          // for Env, Debugger, ValueToIdentifier
-#include "debugger/Object.h"            // for DebuggerObject
-#include "debugger/Script.h"            // for DebuggerScript
-#include "frontend/BytecodeCompiler.h"  // for IsIdentifier
+#include "debugger/Debugger.h"  // for Env, Debugger, ValueToIdentifier
+#include "debugger/Object.h"    // for DebuggerObject
+#include "debugger/Script.h"    // for DebuggerScript
 #include "gc/Tracer.h"    // for TraceManuallyBarrieredCrossCompartmentEdge
 #include "js/CallArgs.h"  // for CallArgs
 #include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_*
 #include "js/HeapAPI.h"               // for IsInsideNursery
 #include "js/RootingAPI.h"            // for Rooted, MutableHandle
+#include "util/Identifier.h"          // for IsIdentifier
 #include "vm/Compartment.h"           // for Compartment
 #include "vm/JSAtom.h"                // for Atomize
 #include "vm/JSContext.h"             // for JSContext
@@ -45,7 +45,6 @@ class GlobalObject;
 
 using namespace js;
 
-using js::frontend::IsIdentifier;
 using mozilla::Maybe;
 using mozilla::Nothing;
 using mozilla::Some;

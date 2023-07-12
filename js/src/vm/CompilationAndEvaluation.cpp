@@ -18,7 +18,7 @@
 
 #include "debugger/DebugAPI.h"
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
-#include "frontend/BytecodeCompiler.h"     // frontend::IsIdentifier
+#include "frontend/BytecodeCompiler.h"  // frontend::{CompileStandaloneFunction, CompileStandaloneFunctionInNonSyntacticScope}
 #include "frontend/CompilationStencil.h"  // for frontened::{CompilationStencil, BorrowingCompilationStencil, CompilationGCOutput}
 #include "frontend/FrontendContext.h"     // js::AutoReportFrontendContext
 #include "frontend/Parser.h"  // frontend::Parser, frontend::ParseGoal
@@ -31,6 +31,7 @@
 #include "js/Utility.h"            // js::MallocArena, JS::UniqueTwoByteChars
 #include "js/Value.h"              // JS::Value
 #include "util/CompleteFile.h"     // js::FileContents, js::ReadCompleteFile
+#include "util/Identifier.h"       // js::IsIdentifier
 #include "util/StringBuffer.h"     // js::StringBuffer
 #include "vm/EnvironmentObject.h"  // js::CreateNonSyntacticEnvironmentChain
 #include "vm/ErrorReporting.h"  // js::ErrorMetadata, js::ReportCompileErrorLatin1
@@ -261,8 +262,8 @@ class FunctionCompiler {
 
       // If the name is an identifier, we can just add it to source text.
       // Otherwise we'll have to set it manually later.
-      nameIsIdentifier_ = js::frontend::IsIdentifier(
-          reinterpret_cast<const Latin1Char*>(name), nameLen);
+      nameIsIdentifier_ =
+          IsIdentifier(reinterpret_cast<const Latin1Char*>(name), nameLen);
       if (nameIsIdentifier_) {
         if (!funStr_.append(nameAtom_)) {
           return false;

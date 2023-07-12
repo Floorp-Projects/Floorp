@@ -28,15 +28,16 @@
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/RecordObject.h"
 #endif
-#include "frontend/BytecodeCompiler.h"
 #include "gc/AllocKind.h"
 #include "gc/MaybeRooted.h"
 #include "gc/Nursery.h"
 #include "js/CharacterEncoding.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyAndElement.h"    // JS_DefineElement
+#include "js/SourceText.h"            // JS::SourceText
 #include "js/StableStringChars.h"
 #include "js/UbiNode.h"
+#include "util/Identifier.h"  // js::IsIdentifierNameOrPrivateName
 #include "util/Unicode.h"
 #include "vm/GeckoProfiler.h"
 #include "vm/StaticStrings.h"
@@ -2185,9 +2186,8 @@ UniqueChars js::IdToPrintableUTF8(JSContext* cx, HandleId id,
                                   IdToPrintableBehavior behavior) {
   // ToString(<symbol>) throws a TypeError, therefore require that callers
   // request source representation when |id| is a property key.
-  MOZ_ASSERT_IF(
-      behavior == IdToPrintableBehavior::IdIsIdentifier,
-      id.isAtom() && frontend::IsIdentifierNameOrPrivateName(id.toAtom()));
+  MOZ_ASSERT_IF(behavior == IdToPrintableBehavior::IdIsIdentifier,
+                id.isAtom() && IsIdentifierNameOrPrivateName(id.toAtom()));
 
   RootedValue v(cx, IdToValue(id));
   JSString* str;
