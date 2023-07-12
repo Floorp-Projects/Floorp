@@ -543,7 +543,8 @@ class FullParseHandler {
       Node name, FunctionNodeType initializer, bool isStatic
 #ifdef ENABLE_DECORATORS
       ,
-      ListNodeType decorators, bool hasAccessor
+      ListNodeType decorators, ClassMethodType accessorGetterNode,
+      ClassMethodType accessorSetterNode
 #endif
   ) {
     MOZ_ASSERT(isUsableAsObjectPropertyName(name));
@@ -551,7 +552,7 @@ class FullParseHandler {
     return new_<ClassField>(name, initializer, isStatic
 #if ENABLE_DECORATORS
                             ,
-                            decorators, hasAccessor
+                            decorators, accessorGetterNode, accessorSetterNode
 #endif
     );
   }
