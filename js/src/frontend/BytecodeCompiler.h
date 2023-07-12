@@ -13,13 +13,14 @@
 
 #include "NamespaceImports.h"
 
-#include "ds/LifoAlloc.h"
+#include "ds/LifoAlloc.h"  // LifoAlloc
 #include "frontend/FunctionSyntaxKind.h"
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "js/CompileOptions.h"     // JS::ReadOnlyCompileOptions
 #include "js/RootingAPI.h"         // JS::Handle
-#include "js/SourceText.h"
-#include "js/UniquePtr.h"  // js::UniquePtr
+#include "js/SourceText.h"         // JS::SourceText
+#include "js/UniquePtr.h"          // js::UniquePtr
+#include "vm/ScopeKind.h"          // js::ScopeKind
 
 /*
  * Structure of all of the support classes.
@@ -119,6 +120,30 @@ class FunctionBox;
 class ParseNode;
 class TaggedParserAtomIndex;
 class ScopeBindingCache;
+
+// Compile a script of the given source using the given options.
+extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
+    JSContext* maybeCx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, ScopeBindingCache* scopeCache,
+    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind);
+
+extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
+    JSContext* maybeCx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
+    CompilationInput& input, ScopeBindingCache* scopeCache,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
+
+extern UniquePtr<ExtensibleCompilationStencil>
+CompileGlobalScriptToExtensibleStencil(JSContext* maybeCx, FrontendContext* fc,
+                                       CompilationInput& input,
+                                       ScopeBindingCache* scopeCache,
+                                       JS::SourceText<char16_t>& srcBuf,
+                                       ScopeKind scopeKind);
+
+extern UniquePtr<ExtensibleCompilationStencil>
+CompileGlobalScriptToExtensibleStencil(
+    JSContext* maybeCx, FrontendContext* fc, CompilationInput& input,
+    ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    ScopeKind scopeKind);
 
 // Compile a module of the given source using the given options.
 ModuleObject* CompileModule(JSContext* cx, FrontendContext* fc,

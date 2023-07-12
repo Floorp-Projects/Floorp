@@ -31,29 +31,6 @@ struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 class ScopeBindingCache;
 
-extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* maybeCx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
-    CompilationInput& input, ScopeBindingCache* scopeCache,
-    JS::SourceText<char16_t>& srcBuf, ScopeKind scopeKind);
-
-extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
-    JSContext* maybeCx, FrontendContext* fc, js::LifoAlloc& tempLifoAlloc,
-    CompilationInput& input, ScopeBindingCache* scopeCache,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
-
-extern UniquePtr<ExtensibleCompilationStencil>
-CompileGlobalScriptToExtensibleStencil(JSContext* maybeCx, FrontendContext* fc,
-                                       CompilationInput& input,
-                                       ScopeBindingCache* scopeCache,
-                                       JS::SourceText<char16_t>& srcBuf,
-                                       ScopeKind scopeKind);
-
-extern UniquePtr<ExtensibleCompilationStencil>
-CompileGlobalScriptToExtensibleStencil(
-    JSContext* maybeCx, FrontendContext* fc, CompilationInput& input,
-    ScopeBindingCache* scopeCache, JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    ScopeKind scopeKind);
-
 // Perform some operation to reduce the time taken by instantiation.
 //
 // Part of InstantiateStencils can be done by calling PrepareForInstantiate.

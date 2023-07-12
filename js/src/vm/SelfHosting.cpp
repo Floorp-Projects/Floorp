@@ -44,9 +44,9 @@
 #ifdef ENABLE_RECORD_TUPLE
 #  include "builtin/TupleObject.h"
 #endif
-#include "frontend/BytecodeCompilation.h"  // CompileGlobalScriptToStencil
-#include "frontend/CompilationStencil.h"   // js::frontend::CompilationStencil
-#include "frontend/FrontendContext.h"      // AutoReportFrontendContext
+#include "frontend/BytecodeCompiler.h"    // CompileGlobalScriptToStencil
+#include "frontend/CompilationStencil.h"  // js::frontend::CompilationStencil
+#include "frontend/FrontendContext.h"     // AutoReportFrontendContext
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "js/CompilationAndEvaluation.h"
