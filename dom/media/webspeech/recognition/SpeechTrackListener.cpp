@@ -17,10 +17,18 @@ SpeechTrackListener::SpeechTrackListener(SpeechRecognition* aRecognition)
       mRemovedPromise(
           mRemovedHolder.Ensure("SpeechTrackListener::mRemovedPromise")) {
   MOZ_ASSERT(NS_IsMainThread());
-  mRemovedPromise->Then(GetCurrentSerialEventTarget(), __func__,
-                        [self = RefPtr<SpeechTrackListener>(this), this] {
-                          mRecognition = nullptr;
-                        });
+}
+
+already_AddRefed<SpeechTrackListener> SpeechTrackListener::Create(
+    SpeechRecognition* aRecognition) {
+  MOZ_ASSERT(NS_IsMainThread());
+  RefPtr<SpeechTrackListener> listener = new SpeechTrackListener(aRecognition);
+
+  listener->mRemovedPromise->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [listener] { listener->mRecognition = nullptr; });
+
+  return listener.forget();
 }
 
 void SpeechTrackListener::NotifyQueuedChanges(

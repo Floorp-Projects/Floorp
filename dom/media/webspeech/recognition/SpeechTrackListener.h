@@ -21,8 +21,13 @@ namespace dom {
 class SpeechRecognition;
 
 class SpeechTrackListener : public MediaTrackListener {
- public:
+ private:
   explicit SpeechTrackListener(SpeechRecognition* aRecognition);
+
+ public:
+  static already_AddRefed<SpeechTrackListener> Create(
+      SpeechRecognition* aRecognition);
+
   ~SpeechTrackListener() = default;
 
   void NotifyQueuedChanges(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
