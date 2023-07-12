@@ -474,6 +474,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       }
 
       wordHasComplexChar = false;
+      mWordContinuation = false;
       ++offset;
       if (offset >= aLength) break;
       wordStart = offset;
