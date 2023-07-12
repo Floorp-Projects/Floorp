@@ -197,6 +197,7 @@ include = [
   "GradientItem",
   "VerticalAlign",
   "BasicShape",
+  "InsetRect",
   "ShapeRadius",
   "ArcSlice",
   "ForgottenArcSlicePtr",

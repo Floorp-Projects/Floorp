@@ -2504,11 +2504,10 @@ nsFloatManager::ShapeInfo::CreateBasicShape(const StyleBasicShape& aBasicShape,
     case StyleBasicShape::Tag::Ellipse:
       return CreateCircleOrEllipse(aBasicShape, aShapeMargin, aFrame,
                                    aShapeBoxRect, aWM, aContainerSize);
-    case StyleBasicShape::Tag::Inset:
+    case StyleBasicShape::Tag::Rect:
       return CreateInset(aBasicShape, aShapeMargin, aFrame, aShapeBoxRect, aWM,
                          aContainerSize);
     case StyleBasicShape::Tag::Path:
-    case StyleBasicShape::Tag::Xywh:
       MOZ_ASSERT_UNREACHABLE("Unsupported basic shape");
   }
   return nullptr;
@@ -2526,12 +2525,12 @@ nsFloatManager::ShapeInfo::CreateInset(const StyleBasicShape& aBasicShape,
   nsRect physicalShapeBoxRect =
       aShapeBoxRect.GetPhysicalRect(aWM, aContainerSize);
   const nsRect insetRect = ShapeUtils::ComputeInsetRect(
-      aBasicShape.AsInset().rect, physicalShapeBoxRect);
+      aBasicShape.AsRect().rect, physicalShapeBoxRect);
 
   nsRect logicalInsetRect = ConvertToFloatLogical(
       LogicalRect(aWM, insetRect, aContainerSize), aWM, aContainerSize);
   nscoord physicalRadii[8];
-  bool hasRadii = ShapeUtils::ComputeRectRadii(aBasicShape.AsInset().round,
+  bool hasRadii = ShapeUtils::ComputeRectRadii(aBasicShape.AsRect().round,
                                                physicalShapeBoxRect, insetRect,
                                                physicalRadii);
 

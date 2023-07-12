@@ -8074,15 +8074,14 @@ static Maybe<wr::WrClipChainId> CreateSimpleClipRegion(
   wr::WrClipId clipId{};
 
   switch (shape.tag) {
-    case StyleBasicShape::Tag::Xywh:
-    case StyleBasicShape::Tag::Inset: {
-      const nsRect rect = ShapeUtils::ComputeRect(shape, refBox) +
-                          aDisplayItem.ToReferenceFrame();
-      const auto& round =
-          shape.IsInset() ? shape.AsInset().round : shape.AsXywh().round;
+    case StyleBasicShape::Tag::Rect: {
+      const nsRect rect =
+          ShapeUtils::ComputeInsetRect(shape.AsRect().rect, refBox) +
+          aDisplayItem.ToReferenceFrame();
 
       nscoord radii[8] = {0};
-      if (ShapeUtils::ComputeRectRadii(round, refBox, rect, radii)) {
+      if (ShapeUtils::ComputeRectRadii(shape.AsRect().round, refBox, rect,
+                                       radii)) {
         clipId = aBuilder.DefineRoundedRectClip(
             Nothing(),
             wr::ToComplexClipRegion(rect, radii, appUnitsPerDevPixel));

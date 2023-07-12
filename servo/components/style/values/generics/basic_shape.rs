@@ -10,7 +10,6 @@ use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use crate::values::generics::border::GenericBorderRadius;
 use crate::values::generics::position::GenericPositionOrAuto;
 use crate::values::generics::rect::Rect;
-use crate::values::generics::size::Size2D;
 use crate::values::specified::SVGPathData;
 use crate::Zero;
 use std::fmt::{self, Write};
@@ -173,13 +172,10 @@ pub use self::GenericShapeOutside as ShapeOutside;
     ToShmem,
 )]
 #[repr(C, u8)]
-pub enum GenericBasicShape<Position, LengthPercentage, NonNegativeLengthPercentage> {
-    /// Defines an inset rectangle via insets from each edge of the reference box.
-    Inset(
-        #[css(field_bound)]
-        #[shmem(field_bound)]
-        InsetRect<LengthPercentage, NonNegativeLengthPercentage>,
-    ),
+pub enum GenericBasicShape<Position, LengthPercentage, NonNegativeLengthPercentage, BasicShapeRect>
+{
+    /// The <basic-shape-rect>.
+    Rect(BasicShapeRect),
     /// Defines a circle with a center and a radius.
     Circle(
         #[css(field_bound)]
@@ -196,13 +192,6 @@ pub enum GenericBasicShape<Position, LengthPercentage, NonNegativeLengthPercenta
     Polygon(GenericPolygon<LengthPercentage>),
     /// Defines a path with SVG path syntax.
     Path(Path),
-    /// Defines a xywh function.
-    Xywh(
-        #[css(field_bound)]
-        #[shmem(field_bound)]
-        Xywh<LengthPercentage, NonNegativeLengthPercentage>,
-    ),
-    // TODO: Bug 1786161. Add rect().
     // TODO: Bug 1823463. Add shape().
     // https://drafts.csswg.org/css-shapes-2/#shape-function
 }
@@ -228,11 +217,13 @@ pub use self::GenericBasicShape as BasicShape;
 )]
 #[css(function = "inset")]
 #[repr(C)]
-pub struct InsetRect<LengthPercentage, NonNegativeLengthPercentage> {
+pub struct GenericInsetRect<LengthPercentage, NonNegativeLengthPercentage> {
     pub rect: Rect<LengthPercentage>,
     #[shmem(field_bound)]
     pub round: GenericBorderRadius<NonNegativeLengthPercentage>,
 }
+
+pub use self::GenericInsetRect as InsetRect;
 
 /// <https://drafts.csswg.org/css-shapes/#funcdef-circle>
 #[allow(missing_docs)]
@@ -426,43 +417,6 @@ pub struct Path {
     pub path: SVGPathData,
 }
 
-/// Defines a rectangle via offsets from the top and left edge of the reference box, and a
-/// specified width and height.
-///
-/// The four <length-percentage>s define, respectively, the inset from the left edge of the
-/// reference box, the inset from the top edge of the reference box, the width of the rectangle,
-/// and the height of the rectangle.
-///
-/// https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-xywh
-#[derive(
-    Animate,
-    Clone,
-    ComputeSquaredDistance,
-    Debug,
-    Deserialize,
-    MallocSizeOf,
-    PartialEq,
-    Serialize,
-    SpecifiedValueInfo,
-    ToAnimatedValue,
-    ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
-)]
-#[repr(C)]
-pub struct Xywh<LengthPercentage, NonNegativeLengthPercentage> {
-    /// The left edge of the reference box.
-    pub x: LengthPercentage,
-    /// The top edge of the reference box.
-    pub y: LengthPercentage,
-    /// The specified width and height.
-    pub size: Size2D<NonNegativeLengthPercentage>,
-    /// The optional <border-radius> argument(s) define rounded corners for the inset rectangle
-    /// using the border-radius shorthand syntax.
-    #[shmem(field_bound)]
-    pub round: GenericBorderRadius<NonNegativeLengthPercentage>,
-}
-
 impl<B, U> ToAnimatedZero for ClipPath<B, U> {
     fn to_animated_zero(&self) -> Result<Self, ()> {
         Err(())
@@ -550,31 +504,6 @@ where
             }
             dest.write_str("at ")?;
             self.position.to_css(dest)?;
-        }
-        dest.write_char(')')
-    }
-}
-
-impl<LP, NonNegativeLP> ToCss for Xywh<LP, NonNegativeLP>
-where
-    LP: ToCss + PartialEq,
-    NonNegativeLP: ToCss + PartialEq + Zero,
-{
-    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
-    where
-        W: Write,
-    {
-        dest.write_str("xywh(")?;
-        self.x.to_css(dest)?;
-        dest.write_char(' ')?;
-        self.y.to_css(dest)?;
-        dest.write_char(' ')?;
-        self.size.width.to_css(dest)?;
-        dest.write_char(' ')?;
-        self.size.height.to_css(dest)?;
-        if !self.round.is_zero() {
-            dest.write_str(" round ")?;
-            self.round.to_css(dest)?;
         }
         dest.write_char(')')
     }

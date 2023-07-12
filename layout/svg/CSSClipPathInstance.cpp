@@ -127,10 +127,8 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
       return CreateClipPathEllipse(aDrawTarget, r);
     case StyleBasicShape::Tag::Polygon:
       return CreateClipPathPolygon(aDrawTarget, r);
-    case StyleBasicShape::Tag::Inset:
+    case StyleBasicShape::Tag::Rect:
       return CreateClipPathInset(aDrawTarget, r);
-    case StyleBasicShape::Tag::Xywh:
-      return CreateClipPathXywh(aDrawTarget, r);
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected shape type");
   }
@@ -192,14 +190,6 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPathPath(
                 mTargetFrame->PresContext()->AppUnitsPerDevPixel();
   return SVGPathData::BuildPath(path.path._0.AsSpan(), builder,
                                 StyleStrokeLinecap::Butt, 0.0, scale);
-}
-
-already_AddRefed<Path> CSSClipPathInstance::CreateClipPathXywh(
-    DrawTarget* aDrawTarget, const nsRect& aRefBox) {
-  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  return ShapeUtils::BuildXywhPath(
-      *mClipPathStyle.AsShape()._0, aRefBox,
-      mTargetFrame->PresContext()->AppUnitsPerDevPixel(), builder);
 }
 
 }  // namespace mozilla

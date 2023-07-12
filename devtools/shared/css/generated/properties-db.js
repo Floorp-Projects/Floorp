@@ -1940,7 +1940,8 @@ exports.CSS_PROPERTIES = {
       "stroke-box",
       "unset",
       "url",
-      "view-box"
+      "view-box",
+      "xywh"
     ]
   },
   "-webkit-filter": {
@@ -5903,7 +5904,8 @@ exports.CSS_PROPERTIES = {
       "stroke-box",
       "unset",
       "url",
-      "view-box"
+      "view-box",
+      "xywh"
     ]
   },
   "clip-rule": {
@@ -9395,7 +9397,8 @@ exports.CSS_PROPERTIES = {
       "stroke-box",
       "top",
       "unset",
-      "view-box"
+      "view-box",
+      "xywh"
     ]
   },
   "offset-anchor": {
@@ -9456,7 +9459,8 @@ exports.CSS_PROPERTIES = {
       "revert-layer",
       "stroke-box",
       "unset",
-      "view-box"
+      "view-box",
+      "xywh"
     ]
   },
   "offset-position": {
@@ -11047,7 +11051,8 @@ exports.CSS_PROPERTIES = {
       "revert",
       "revert-layer",
       "unset",
-      "url"
+      "url",
+      "xywh"
     ]
   },
   "shape-rendering": {
