@@ -5,6 +5,7 @@
 import {
   validateNavigateContext,
   validateContext,
+  validateSelectedFrame,
 } from "../../../utils/context";
 
 function validateActionContext(getState, action) {
@@ -25,6 +26,9 @@ function context({ dispatch, getState }) {
   return next => action => {
     if ("cx" in action) {
       validateActionContext(getState, action);
+    }
+    if ("selectedFrame" in action) {
+      validateSelectedFrame(getState(), action.selectedFrame);
     }
     return next(action);
   };
