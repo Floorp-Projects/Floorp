@@ -464,6 +464,10 @@
   vector-effect: non-scaling-stroke;
 }
 
+.measuring-tool-root circle.highlight {
+  fill: var(--highlighter-guide-color);
+}
+
 .measuring-tool-handler-top,
 .measuring-tool-handler-bottom {
   cursor: ns-resize;

@@ -22,6 +22,8 @@ const LABEL_SIZE_HEIGHT = 52;
 const LABEL_POS_MARGIN = 4;
 const LABEL_POS_WIDTH = 40;
 const LABEL_POS_HEIGHT = 34;
+const LABEL_TYPE_SIZE = "size";
+const LABEL_TYPE_POSITION = "position";
 
 // List of all DOM Events subscribed directly to the document from the
 // Measuring Tool highlighter
@@ -32,11 +34,16 @@ const DOM_EVENTS = [
   "mouseleave",
   "scroll",
   "pagehide",
+  "keydown",
+  "keyup",
 ];
 
 const SIDES = ["top", "right", "bottom", "left"];
 const HANDLERS = [...SIDES, "topleft", "topright", "bottomleft", "bottomright"];
 const HANDLER_SIZE = 6;
+const HIGHLIGHTED_HANDLER_CLASSNAME = "highlight";
+
+const IS_OSX = Services.appinfo.OS === "Darwin";
 
 /**
  * The MeasuringToolHighlighter is used to measure distances in a content page.
@@ -53,10 +60,8 @@ class MeasuringToolHighlighter {
     );
     this.isReady = this.markup.initialize();
 
-    this.coords = {
-      x: 0,
-      y: 0,
-    };
+    this.rect = { x: 0, y: 0, w: 0, h: 0 };
+    this.mouseCoords = { x: 0, y: 0 };
 
     const { pageListenerTarget } = highlighterEnv;
 
@@ -188,21 +193,21 @@ class MeasuringToolHighlighter {
 
     const { width, height } = getWindowDimensions(window);
 
-    const { coords } = this;
+    const { rect } = this;
 
-    const isZoomChanged = zoom !== coords.zoom;
+    const isZoomChanged = zoom !== rect.zoom;
 
     if (isZoomChanged) {
-      coords.zoom = zoom;
+      rect.zoom = zoom;
       this.updateLabel();
     }
 
     const isDocumentSizeChanged =
-      width !== coords.documentWidth || height !== coords.documentHeight;
+      width !== rect.documentWidth || height !== rect.documentHeight;
 
     if (isDocumentSizeChanged) {
-      coords.documentWidth = width;
-      coords.documentHeight = height;
+      rect.documentWidth = width;
+      rect.documentHeight = height;
     }
 
     // If either the document's size or the zoom is changed since the last
@@ -254,8 +259,8 @@ class MeasuringToolHighlighter {
   hide() {
     setIgnoreLayoutChanges(true);
 
-    this.hideLabel("size");
-    this.hideLabel("position");
+    this.hideLabel(LABEL_TYPE_SIZE);
+    this.hideLabel(LABEL_TYPE_POSITION);
 
     this.getElement("root").setAttribute("hidden", "true");
 
@@ -269,26 +274,26 @@ class MeasuringToolHighlighter {
   }
 
   setSize(w, h) {
-    this.setCoords(undefined, undefined, w, h);
+    this.setRect(undefined, undefined, w, h);
   }
 
-  setCoords(x, y, w, h) {
-    const { coords } = this;
+  setRect(x, y, w, h) {
+    const { rect } = this;
 
     if (typeof x !== "undefined") {
-      coords.x = x;
+      rect.x = x;
     }
 
     if (typeof y !== "undefined") {
-      coords.y = y;
+      rect.y = y;
     }
 
     if (typeof w !== "undefined") {
-      coords.w = w;
+      rect.w = w;
     }
 
     if (typeof h !== "undefined") {
-      coords.h = h;
+      rect.h = h;
     }
 
     setIgnoreLayoutChanges(true);
@@ -304,7 +309,7 @@ class MeasuringToolHighlighter {
   }
 
   updatePaths() {
-    const { x, y, w, h } = this.coords;
+    const { x, y, w, h } = this.rect;
     const dir = `M0 0 L${w} 0 L${w} ${h} L0 ${h}z`;
 
     // Adding correction to the line path, otherwise some pixels are drawn
@@ -322,25 +327,29 @@ class MeasuringToolHighlighter {
   }
 
   updateLabel(type) {
-    type = type || (this._dragging ? "size" : "position");
+    type = type || (this._dragging ? LABEL_TYPE_SIZE : LABEL_TYPE_POSITION);
 
-    const isSizeLabel = type === "size";
+    const isSizeLabel = type === LABEL_TYPE_SIZE;
 
     const label = this.getElement(`label-${type}`);
 
     let origin = "top left";
 
     const { innerWidth, innerHeight, scrollX, scrollY } = this.env.window;
-    let { x, y, w, h, zoom } = this.coords;
+    const { x: mouseX, y: mouseY } = this.mouseCoords;
+    let { x, y, w, h, zoom } = this.rect;
     const scale = 1 / zoom;
 
     w = w || 0;
     h = h || 0;
     x = x || 0;
     y = y || 0;
-    if (type === "size") {
+    if (type === LABEL_TYPE_SIZE) {
       x += w;
       y += h;
+    } else {
+      x = mouseX;
+      y = mouseY;
     }
 
     let labelMargin, labelHeight, labelWidth;
@@ -360,8 +369,8 @@ class MeasuringToolHighlighter {
       labelWidth = LABEL_POS_WIDTH;
       labelHeight = LABEL_POS_HEIGHT;
 
-      label.setTextContent(`${x}
-                            ${y}`);
+      label.setTextContent(`${mouseX}
+                            ${mouseY}`);
     }
 
     // Size used to position properly the label
@@ -413,7 +422,7 @@ class MeasuringToolHighlighter {
 
   updateViewport() {
     const { devicePixelRatio } = this.env.window;
-    const { documentWidth, documentHeight, zoom } = this.coords;
+    const { documentWidth, documentHeight, zoom } = this.rect;
 
     // Because `devicePixelRatio` is affected by zoom (see bug 809788),
     // in order to get the "real" device pixel ratio, we need divide by `zoom`
@@ -434,7 +443,7 @@ class MeasuringToolHighlighter {
   }
 
   updateGuides() {
-    const { x, y, w, h } = this.coords;
+    const { x, y, w, h } = this.rect;
 
     let guide = this.getElement("guide-top");
 
@@ -472,7 +481,7 @@ class MeasuringToolHighlighter {
   }
 
   updateHandlers() {
-    const { w, h } = this.coords;
+    const { w, h } = this.rect;
 
     this.setHandlerPosition("top", w / 2, 0);
     this.setHandlerPosition("topright", w, 0);
@@ -530,15 +539,15 @@ class MeasuringToolHighlighter {
   }
 
   hideAll() {
-    this.hideLabel("position");
-    this.hideLabel("size");
+    this.hideLabel(LABEL_TYPE_POSITION);
+    this.hideLabel(LABEL_TYPE_SIZE);
     this.hideGuides();
     this.hideHandlers();
   }
 
   showGuidesAndHandlers() {
     // Shows the guides and handlers only if an actual area is selected
-    if (this.coords.w !== 0 && this.coords.h !== 0) {
+    if (this.rect.w !== 0 && this.rect.h !== 0) {
       this.updateGuides();
       this.showGuides();
       this.updateHandlers();
@@ -588,12 +597,12 @@ class MeasuringToolHighlighter {
         break;
       case "mouseleave": {
         if (!this._dragging) {
-          this.hideLabel("position");
+          this.hideLabel(LABEL_TYPE_POSITION);
         }
         break;
       }
       case "scroll": {
-        this.hideLabel("position");
+        this.hideLabel(LABEL_TYPE_POSITION);
         break;
       }
       case "pagehide": {
@@ -601,6 +610,18 @@ class MeasuringToolHighlighter {
         // highlighter.
         if (target.defaultView === this.env.window) {
           this.destroy();
+        }
+        break;
+      }
+      case "keydown": {
+        this.handleKeyDown(event);
+        break;
+      }
+      case "keyup": {
+        if (MeasuringToolHighlighter.#isResizeModifierPressed(event)) {
+          this.getElement("handler-topleft").classList.remove(
+            HIGHLIGHTED_HANDLER_CLASSNAME
+          );
         }
         break;
       }
@@ -627,26 +648,28 @@ class MeasuringToolHighlighter {
       y: pageY,
     };
 
-    this.setCoords(pageX, pageY, 0, 0);
+    this.setRect(pageX, pageY, 0, 0);
   }
 
   handleMouseMoveEvent(event) {
     const { pageX, pageY } = event;
-    const { coords } = this;
-    let { x, y, w, h } = coords;
+    const { mouseCoords } = this;
+    let { x, y, w, h } = this.rect;
     let labelType;
 
     if (this._dragging) {
-      w = pageX - coords.x;
-      h = pageY - coords.y;
+      w = pageX - x;
+      h = pageY - y;
 
-      this.setCoords(x, y, w, h);
+      this.setRect(x, y, w, h);
 
-      labelType = "size";
+      labelType = LABEL_TYPE_SIZE;
     } else {
-      labelType = "position";
+      mouseCoords.x = pageX;
+      mouseCoords.y = pageY;
+      this.updateLabel(LABEL_TYPE_POSITION);
 
-      this.setCoords(pageX, pageY);
+      labelType = LABEL_TYPE_POSITION;
     }
 
     this.showLabel(labelType);
@@ -680,7 +703,7 @@ class MeasuringToolHighlighter {
     const [, x, y] = this.getElement("tool")
       .getAttribute("transform")
       .match(/(\d+),(\d+)/);
-    this.setCoords(Number(x), Number(y));
+    this.setRect(Number(x), Number(y));
 
     setIgnoreLayoutChanges(false, window.document.documentElement);
 
@@ -694,53 +717,53 @@ class MeasuringToolHighlighter {
 
   handleResizingMouseMoveEvent(event) {
     const { pageX, pageY } = event;
-    const { coords } = this;
-    let { x, y, w, h } = coords;
+    const { rect } = this;
+    let { x, y, w, h } = rect;
 
     const { handler } = this._dragging;
 
     switch (handler) {
       case "top":
         y = pageY;
-        h = coords.y + coords.h - pageY;
+        h = rect.y + rect.h - pageY;
         break;
       case "topright":
         y = pageY;
-        w = pageX - coords.x;
-        h = coords.y + coords.h - pageY;
+        w = pageX - rect.x;
+        h = rect.y + rect.h - pageY;
         break;
       case "right":
-        w = pageX - coords.x;
+        w = pageX - rect.x;
         break;
       case "bottomright":
-        w = pageX - coords.x;
-        h = pageY - coords.y;
+        w = pageX - rect.x;
+        h = pageY - rect.y;
         break;
       case "bottom":
-        h = pageY - coords.y;
+        h = pageY - rect.y;
         break;
       case "bottomleft":
         x = pageX;
-        w = coords.x + coords.w - pageX;
-        h = pageY - coords.y;
+        w = rect.x + rect.w - pageX;
+        h = pageY - rect.y;
         break;
       case "left":
         x = pageX;
-        w = coords.x + coords.w - pageX;
+        w = rect.x + rect.w - pageX;
         break;
       case "topleft":
         x = pageX;
         y = pageY;
-        w = coords.x + coords.w - pageX;
-        h = coords.y + coords.h - pageY;
+        w = rect.x + rect.w - pageX;
+        h = rect.y + rect.h - pageY;
         break;
     }
 
-    this.setCoords(x, y, w, h);
+    this.setRect(x, y, w, h);
 
     // Changes the resizing cursors in case the measuring box is mirrored
     const isMirrored =
-      (coords.w < 0 || coords.h < 0) && !(coords.w < 0 && coords.h < 0);
+      (rect.w < 0 || rect.h < 0) && !(rect.w < 0 && rect.h < 0);
     this.getElement("tool").classList.toggle("mirrored", isMirrored);
 
     this.showLabel("size");
@@ -758,6 +781,73 @@ class MeasuringToolHighlighter {
 
     setIgnoreLayoutChanges(false, this.env.window.document.documentElement);
     this._dragging = null;
+  }
+
+  handleKeyDown(event) {
+    if (MeasuringToolHighlighter.#isResizeModifierPressed(event)) {
+      this.getElement("handler-topleft").classList.add(
+        HIGHLIGHTED_HANDLER_CLASSNAME
+      );
+    }
+
+    if (
+      !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)
+    ) {
+      return;
+    }
+
+    const { x, y, w, h } = this.rect;
+    const modifier = event.shiftKey ? 10 : 1;
+
+    event.preventDefault();
+    if (MeasuringToolHighlighter.#isResizeModifierHeld(event)) {
+      // If Ctrl (or Command on OS X) is held, resize the tool
+      switch (event.key) {
+        case "ArrowUp":
+          this.setSize(undefined, h - modifier);
+          break;
+        case "ArrowDown":
+          this.setSize(undefined, h + modifier);
+          break;
+        case "ArrowLeft":
+          this.setSize(w - modifier, undefined);
+          break;
+        case "ArrowRight":
+          this.setSize(w + modifier, undefined);
+          break;
+      }
+    } else {
+      // Arrow keys with no modifier move the tool
+      switch (event.key) {
+        case "ArrowUp":
+          this.setRect(undefined, y - modifier);
+          break;
+        case "ArrowDown":
+          this.setRect(undefined, y + modifier);
+          break;
+        case "ArrowLeft":
+          this.setRect(x - modifier, undefined);
+          break;
+        case "ArrowRight":
+          this.setRect(x + modifier, undefined);
+          break;
+      }
+    }
+
+    this.updatePaths();
+    this.updateGuides();
+    this.updateHandlers();
+    this.updateLabel(LABEL_TYPE_SIZE);
+  }
+
+  static #isResizeModifierPressed(event) {
+    return (
+      (!IS_OSX && event.key === "Control") || (IS_OSX && event.key === "Meta")
+    );
+  }
+
+  static #isResizeModifierHeld(event) {
+    return (!IS_OSX && event.ctrlKey) || (IS_OSX && event.metaKey);
   }
 }
 exports.MeasuringToolHighlighter = MeasuringToolHighlighter;
