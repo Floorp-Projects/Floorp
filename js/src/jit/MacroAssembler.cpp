@@ -4449,6 +4449,7 @@ void MacroAssembler::branchTestObjShapeList(
 
   Label done;
   Label* onMatch = cond == Assembler::Equal ? label : &done;
+  Label* onNoMatch = cond == Assembler::Equal ? &done : label;
 
   // Load the object's shape pointer into shapeScratch, and prepare to compare
   // it with the shapes in the list. The shapes are stored as private values so
@@ -4459,6 +4460,7 @@ void MacroAssembler::branchTestObjShapeList(
   Address lengthAddr(shapeElements,
                      ObjectElements::offsetOfInitializedLength());
   load32(lengthAddr, endScratch);
+  branch32(Assembler::Equal, endScratch, Imm32(0), onNoMatch);
   BaseObjectElementIndex endPtrAddr(shapeElements, endScratch);
   computeEffectiveAddress(endPtrAddr, endScratch);
 
@@ -4483,8 +4485,8 @@ void MacroAssembler::branchTestObjShapeList(
 
   if (cond == Assembler::NotEqual) {
     jump(label);
-    bind(&done);
   }
+  bind(&done);
 }
 
 void MacroAssembler::branchTestObjCompartment(Condition cond, Register obj,
