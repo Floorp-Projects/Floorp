@@ -31,6 +31,7 @@
 #include "debugger/Object.h"               // for DebuggerObject
 #include "debugger/Script.h"               // for DebuggerScript
 #include "frontend/BytecodeCompilation.h"  // for CompileEvalScript
+#include "frontend/BytecodeCompiler.h"     // for CompileGlobalScript
 #include "frontend/FrontendContext.h"      // for AutoReportFrontendContext
 #include "gc/Barrier.h"                    // for HeapPtr
 #include "gc/GC.h"                         // for MemoryUse

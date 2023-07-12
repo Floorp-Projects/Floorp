@@ -17,8 +17,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "debugger/DebugAPI.h"
-#include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
-#include "frontend/BytecodeCompiler.h"  // frontend::{CompileStandaloneFunction, CompileStandaloneFunctionInNonSyntacticScope}
+#include "frontend/BytecodeCompiler.h"  // frontend::{CompileGlobalScript, CompileStandaloneFunction, CompileStandaloneFunctionInNonSyntacticScope}
 #include "frontend/CompilationStencil.h"  // for frontened::{CompilationStencil, BorrowingCompilationStencil, CompilationGCOutput}
 #include "frontend/FrontendContext.h"     // js::AutoReportFrontendContext
 #include "frontend/Parser.h"  // frontend::Parser, frontend::ParseGoal
