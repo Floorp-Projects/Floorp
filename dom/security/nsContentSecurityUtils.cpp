@@ -1563,6 +1563,10 @@ long nsContentSecurityUtils::ClassifyDownload(
       loadingPrincipal, loadInfo->TriggeringPrincipal(), nullptr,
       nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK,
       nsIContentPolicy::TYPE_FETCH);
+  // Disable HTTPS-Only checks for that loadinfo. This is required because
+  // otherwise nsMixedContentBlocker::ShouldLoad would assume that the request
+  // is safe, because HTTPS-Only is handling it.
+  secCheckLoadInfo->SetHttpsOnlyStatus(nsILoadInfo::HTTPS_ONLY_EXEMPT);
 
   int16_t decission = nsIContentPolicy::ACCEPT;
   nsMixedContentBlocker::ShouldLoad(false,  //  aHadInsecureImageRedirect

@@ -164,12 +164,20 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeRequest(nsIURI* aURI,
   }
 
   // All subresources of an exempt triggering principal are also exempt
-  if (aLoadInfo->GetExternalContentPolicyType() !=
-      ExtContentPolicy::TYPE_DOCUMENT) {
+  ExtContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
+  if (contentType != ExtContentPolicy::TYPE_DOCUMENT) {
     if (!aLoadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
         TestIfPrincipalIsExempt(aLoadInfo->TriggeringPrincipal())) {
       return false;
     }
+  }
+
+  // We can not upgrade "Save-As" downloads, since we have no way of detecting
+  // if the upgrade failed (Bug 1674859). For now we will just allow the
+  // download, since there will still be a visual warning about the download
+  // being insecure.
+  if (contentType == ExtContentPolicyType::TYPE_SAVEAS_DOWNLOAD) {
+    return false;
   }
 
   // We can upgrade the request - let's log it to the console
