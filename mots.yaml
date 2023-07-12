@@ -135,10 +135,10 @@ people:
     bmo_id: 165012
     name: Brian Birtles
     nick: birtles
-  - &bmo
-    bmo_id: 365032
+  - &florian
+    bmo_id: 149052
     name: Florian Quèze
-    nick: bmo
+    nick: florian
   - &bobowen
     bmo_id: 458623
     name: Bob Owen
@@ -1606,7 +1606,7 @@ modules:
       - *mstange
     peers:
       - *canova
-      - *bmo
+      - *florian
       - *jseward
     machine_name: core_gecko_profiler
 
@@ -3222,7 +3222,7 @@ modules:
           - *jaws
         peers:
           - *mconley
-          - *bmo
+          - *florian
         machine_name: desktop_ui
 
       - name: Download Manager
