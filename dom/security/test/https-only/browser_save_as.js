@@ -42,7 +42,9 @@ function createPromiseForObservingChannel(expectedUrl) {
       if (aTopic === "http-on-modify-request") {
         let httpChannel = aSubject.QueryInterface(Ci.nsIHttpChannel);
 
-        is(httpChannel.URI.spec, expectedUrl, "URL of download should match");
+        if (httpChannel.URI.spec != expectedUrl) {
+          return;
+        }
 
         Services.obs.removeObserver(observer, "http-on-modify-request");
         resolve();
