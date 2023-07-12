@@ -254,6 +254,22 @@ impl LengthPercentage {
         Self::new_calc(new_node, clamping_mode)
     }
 
+    /// Given a list of `LengthPercentage` values, construct the value representing
+    /// `calc(100% - the sum of the list)`.
+    pub fn hundred_percent_minus_list(list: &[&Self], clamping_mode: AllowedNumericType) -> Self {
+        let mut new_list = vec![CalcNode::Leaf(CalcLengthPercentageLeaf::Percentage(
+            Percentage::hundred(),
+        ))];
+
+        for lp in list.iter() {
+            let mut node = lp.to_calc_node().into_owned();
+            node.negate();
+            new_list.push(node)
+        }
+
+        Self::new_calc(CalcNode::Sum(new_list.into()), clamping_mode)
+    }
+
     /// Constructs a `calc()` value.
     #[inline]
     pub fn new_calc(mut node: CalcNode, clamping_mode: AllowedNumericType) -> Self {

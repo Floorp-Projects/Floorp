@@ -22,10 +22,10 @@ pub type ShapeOutside = generic::GenericShapeOutside<BasicShape, Image>;
 
 /// A computed basic shape.
 pub type BasicShape =
-    generic::GenericBasicShape<Position, LengthPercentage, NonNegativeLengthPercentage>;
+    generic::GenericBasicShape<Position, LengthPercentage, NonNegativeLengthPercentage, InsetRect>;
 
-/// The computed value of `inset()`
-pub type InsetRect = generic::InsetRect<LengthPercentage, NonNegativeLengthPercentage>;
+/// The computed value of `inset()`.
+pub type InsetRect = generic::GenericInsetRect<LengthPercentage, NonNegativeLengthPercentage>;
 
 /// A computed circle.
 pub type Circle = generic::Circle<Position, NonNegativeLengthPercentage>;
@@ -33,8 +33,5 @@ pub type Circle = generic::Circle<Position, NonNegativeLengthPercentage>;
 /// A computed ellipse.
 pub type Ellipse = generic::Ellipse<Position, NonNegativeLengthPercentage>;
 
-/// The computed value of `xywh()`
-pub type Xywh = generic::Xywh<LengthPercentage, NonNegativeLengthPercentage>;
-
-/// The computed value of `ShapeRadius`
+/// The computed value of `ShapeRadius`.
 pub type ShapeRadius = generic::GenericShapeRadius<NonNegativeLengthPercentage>;

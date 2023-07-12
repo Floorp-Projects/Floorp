@@ -8,6 +8,8 @@
 //! [basic-shape]: https://drafts.csswg.org/css-shapes/#typedef-basic-shape
 
 use crate::parser::{Parse, ParserContext};
+use crate::values::computed::basic_shape::InsetRect as ComputedInsetRect;
+use crate::values::computed::{Context, ToComputedValue};
 use crate::values::generics::basic_shape as generic;
 use crate::values::generics::basic_shape::{Path, PolygonCoord};
 use crate::values::generics::rect::Rect;
@@ -18,7 +20,8 @@ use crate::values::specified::url::SpecifiedUrl;
 use crate::values::specified::{LengthPercentage, NonNegativeLengthPercentage, SVGPathData};
 use crate::Zero;
 use cssparser::Parser;
-use style_traits::{ParseError, StyleParseErrorKind};
+use std::fmt::{self, Write};
+use style_traits::{CssWriter, ParseError, StyleParseErrorKind, ToCss};
 
 /// A specified alias for FillRule.
 pub use crate::values::generics::basic_shape::FillRule;
@@ -30,11 +33,15 @@ pub type ClipPath = generic::GenericClipPath<BasicShape, SpecifiedUrl>;
 pub type ShapeOutside = generic::GenericShapeOutside<BasicShape, Image>;
 
 /// A specified basic shape.
-pub type BasicShape =
-    generic::GenericBasicShape<Position, LengthPercentage, NonNegativeLengthPercentage>;
+pub type BasicShape = generic::GenericBasicShape<
+    Position,
+    LengthPercentage,
+    NonNegativeLengthPercentage,
+    BasicShapeRect,
+>;
 
-/// The specified value of `inset()`
-pub type InsetRect = generic::InsetRect<LengthPercentage, NonNegativeLengthPercentage>;
+/// The specified value of `inset()`.
+pub type InsetRect = generic::GenericInsetRect<LengthPercentage, NonNegativeLengthPercentage>;
 
 /// A specified circle.
 pub type Circle = generic::Circle<Position, NonNegativeLengthPercentage>;
@@ -42,14 +49,49 @@ pub type Circle = generic::Circle<Position, NonNegativeLengthPercentage>;
 /// A specified ellipse.
 pub type Ellipse = generic::Ellipse<Position, NonNegativeLengthPercentage>;
 
-/// The specified value of `ShapeRadius`
+/// The specified value of `ShapeRadius`.
 pub type ShapeRadius = generic::ShapeRadius<NonNegativeLengthPercentage>;
 
-/// The specified value of `Polygon`
+/// The specified value of `Polygon`.
 pub type Polygon = generic::GenericPolygon<LengthPercentage>;
 
-/// The specified value of `xywh()`
-pub type Xywh = generic::Xywh<LengthPercentage, NonNegativeLengthPercentage>;
+/// The specified value of `xywh()`.
+/// Defines a rectangle via offsets from the top and left edge of the reference box, and a
+/// specified width and height.
+///
+/// The four <length-percentage>s define, respectively, the inset from the left edge of the
+/// reference box, the inset from the top edge of the reference box, the width of the rectangle,
+/// and the height of the rectangle.
+///
+/// https://drafts.csswg.org/css-shapes-1/#funcdef-basic-shape-xywh
+#[derive(Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToShmem)]
+pub struct Xywh {
+    /// The left edge of the reference box.
+    pub x: LengthPercentage,
+    /// The top edge of the reference box.
+    pub y: LengthPercentage,
+    /// The specified width.
+    pub width: NonNegativeLengthPercentage,
+    /// The specified height.
+    pub height: NonNegativeLengthPercentage,
+    /// The optional <border-radius> argument(s) define rounded corners for the inset rectangle
+    /// using the border-radius shorthand syntax.
+    pub round: BorderRadius,
+}
+
+/// The specified value of <basic-shape-rect>.
+/// <basic-shape-rect> = <inset()> | <rect()> | <xywh()>
+///
+/// https://drafts.csswg.org/css-shapes-1/#supported-basic-shapes
+#[derive(Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToShmem)]
+pub enum BasicShapeRect {
+    /// Defines an inset rectangle via insets from each edge of the reference box.
+    Inset(InsetRect),
+    /// Defines a xywh function.
+    #[css(function)]
+    Xywh(Xywh),
+    // TODO: Bug 1786161. Add rect().
+}
 
 /// For filled shapes, we use fill-rule, and store it for path() and polygon().
 /// For outline shapes, we should ignore fill-rule.
@@ -253,7 +295,9 @@ impl BasicShape {
         input.parse_nested_block(move |i| {
             match_ignore_ascii_case! { &function,
                 "inset" if flags.contains(AllowedBasicShapes::INSET) => {
-                    InsetRect::parse_function_arguments(context, i).map(BasicShape::Inset)
+                    InsetRect::parse_function_arguments(context, i)
+                        .map(BasicShapeRect::Inset)
+                        .map(BasicShape::Rect)
                 },
                 "circle" if flags.contains(AllowedBasicShapes::CIRCLE) => {
                     Circle::parse_function_arguments(context, i, default_position)
@@ -274,7 +318,9 @@ impl BasicShape {
                     if flags.contains(AllowedBasicShapes::XYWH)
                         && static_prefs::pref!("layout.css.basic-shape-xywh.enabled") =>
                 {
-                    Xywh::parse_function_arguments(context, i).map(BasicShape::Xywh)
+                    Xywh::parse_function_arguments(context, i)
+                        .map(BasicShapeRect::Xywh)
+                        .map(BasicShape::Rect)
                 },
                 _ => Err(location
                     .new_custom_error(StyleParseErrorKind::UnexpectedFunction(function.clone()))),
@@ -463,18 +509,36 @@ impl Path {
     }
 }
 
+impl ToCss for Xywh {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        self.x.to_css(dest)?;
+        dest.write_char(' ')?;
+        self.y.to_css(dest)?;
+        dest.write_char(' ')?;
+        self.width.to_css(dest)?;
+        dest.write_char(' ')?;
+        self.height.to_css(dest)?;
+        if !self.round.is_zero() {
+            dest.write_str(" round ")?;
+            self.round.to_css(dest)?;
+        }
+        Ok(())
+    }
+}
+
 impl Xywh {
     /// Parse the inner function arguments of `xywh()`
     fn parse_function_arguments<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        use crate::values::generics::size::Size2D;
-
         let x = LengthPercentage::parse(context, input)?;
         let y = LengthPercentage::parse(context, input)?;
-        let size =
-            Size2D::parse_all_components_with(context, input, NonNegativeLengthPercentage::parse)?;
+        let width = NonNegativeLengthPercentage::parse(context, input)?;
+        let height = NonNegativeLengthPercentage::parse(context, input)?;
         let round = if input
             .try_parse(|i| i.expect_ident_matching("round"))
             .is_ok()
@@ -484,6 +548,57 @@ impl Xywh {
             BorderRadius::zero()
         };
 
-        Ok(generic::Xywh { x, y, size, round })
+        Ok(Xywh {
+            x,
+            y,
+            width,
+            height,
+            round,
+        })
+    }
+}
+
+impl ToComputedValue for BasicShapeRect {
+    type ComputedValue = ComputedInsetRect;
+
+    #[inline]
+    fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
+        use crate::values::computed::LengthPercentage;
+        use style_traits::values::specified::AllowedNumericType;
+
+        match self {
+            Self::Inset(ref inset) => inset.to_computed_value(context),
+            Self::Xywh(ref xywh) => {
+                // Given `xywh(x y w h)`, construct the equivalent inset() function,
+                // `inset(y calc(100% - x - w) calc(100% - y - h) x)`.
+                //
+                // https://drafts.csswg.org/css-shapes-1/#basic-shape-computed-values
+                // https://github.com/w3c/csswg-drafts/issues/9053
+                let x = xywh.x.to_computed_value(context);
+                let y = xywh.y.to_computed_value(context);
+                let w = xywh.width.to_computed_value(context);
+                let h = xywh.height.to_computed_value(context);
+                // calc(100% - x - w).
+                let right = LengthPercentage::hundred_percent_minus_list(
+                    &[&x, &w.0],
+                    AllowedNumericType::All,
+                );
+                // calc(100% - y - h).
+                let bottom = LengthPercentage::hundred_percent_minus_list(
+                    &[&y, &h.0],
+                    AllowedNumericType::All,
+                );
+
+                ComputedInsetRect {
+                    rect: Rect::new(y, right, bottom, x),
+                    round: xywh.round.to_computed_value(context),
+                }
+            },
+        }
+    }
+
+    #[inline]
+    fn from_computed_value(computed: &Self::ComputedValue) -> Self {
+        Self::Inset(ToComputedValue::from_computed_value(computed))
     }
 }
