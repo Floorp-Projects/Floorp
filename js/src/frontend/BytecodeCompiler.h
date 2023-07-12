@@ -27,7 +27,7 @@
  *
  * Parser: described in Parser.h.
  *
- * BytecodeCompiler.cpp: BytecodeCompiler.h *and* BytecodeCompilation.h.
+ * BytecodeCompiler.cpp: BytecodeCompiler.h
  * This is the "driver", the high-level operations like "compile this source to
  * bytecode". It calls the parser, bytecode emitter, etc.
  *
