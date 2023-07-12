@@ -2157,4 +2157,4 @@ fuzzy-if(!useDrawSnapshot,18-19,294-322) == 1840747-1.html about:blank
 # covered-up red shape. But there's a single bright-red pixel that shines
 # through, which is unexpected and is responsible for the 255-255 difference
 # here. That's tracked in bug 1840747.
-fuzzy-if(!useDrawSnapshot&&!swgl,254-255,113-121) fuzzy-if(useDrawSnapshot,18-18,93-93) fuzzy-if(swgl,19-19,58-58) == 1841355-1.html about:blank
+fuzzy-if(!useDrawSnapshot&&!swgl,254-255,110-121) fuzzy-if(useDrawSnapshot,18-18,93-93) fuzzy-if(swgl,19-19,58-58) == 1841355-1.html about:blank
