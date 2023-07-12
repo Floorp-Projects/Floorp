@@ -4,7 +4,7 @@
 
 use crate::{
     cow_label, wgpu_string, AdapterInformation, ByteBuf, CommandEncoderAction, DeviceAction,
-    DropAction, ImageDataLayout, ImplicitLayout, QueueWriteAction, RawString, TextureAction,
+    DropAction, ImageDataLayout, ImplicitLayout, QueueWriteAction, RawString, TextureAction, error::HasErrorBufferType,
 };
 
 use wgc::{identity::IdentityManager, id};
@@ -659,8 +659,8 @@ pub extern "C" fn wgpu_device_create_render_bundle_encoder(
     match wgc::command::RenderBundleEncoder::new(&descriptor, device_id, None) {
         Ok(encoder) => Box::into_raw(Box::new(encoder)),
         Err(e) => {
-            let message = format!("Error in Device::create_render_bundle_encoder: {}", e);
-            let action = DeviceAction::Error(message);
+            let message = format!("Error in `Device::create_render_bundle_encoder`: {}", e);
+            let action = DeviceAction::Error { message, r#type: e.error_type() };
             *bb = make_byte_buf(&action);
             ptr::null_mut()
         }
