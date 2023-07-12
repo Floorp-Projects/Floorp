@@ -7,13 +7,16 @@ package org.mozilla.fenix.library.history.viewholders
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.HistoryListItemBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.library.history.History
+import org.mozilla.fenix.library.history.HistoryFragmentAction
 import org.mozilla.fenix.library.history.HistoryFragmentState
+import org.mozilla.fenix.library.history.HistoryFragmentStore
 import org.mozilla.fenix.library.history.HistoryInteractor
 import org.mozilla.fenix.library.history.HistoryItemTimeGroup
 import org.mozilla.fenix.selection.SelectionHolder
@@ -22,6 +25,7 @@ class HistoryListItemViewHolder(
     view: View,
     private val historyInteractor: HistoryInteractor,
     private val selectionHolder: SelectionHolder<History>,
+    private val store: HistoryFragmentStore,
 ) : RecyclerView.ViewHolder(view) {
 
     private var item: History? = null
@@ -85,7 +89,18 @@ class HistoryListItemViewHolder(
         val headerText = timeGroup?.humanReadable(itemView.context)
         toggleHeader(headerText)
 
-        binding.historyLayout.setSelectionInteractor(item, selectionHolder, historyInteractor)
+        if (FeatureFlags.historyFragmentLibStateRefactor) {
+            binding.historyLayout.setOnClickListener {
+                store.dispatch(HistoryFragmentAction.HistoryItemClicked(item))
+            }
+            binding.historyLayout.setOnLongClickListener {
+                store.dispatch(HistoryFragmentAction.HistoryItemLongClicked(item))
+                true
+            }
+        } else {
+            binding.historyLayout.setSelectionInteractor(item, selectionHolder, historyInteractor)
+        }
+
         binding.historyLayout.changeSelected(item in selectionHolder.selectedItems)
 
         if (item is History.Regular &&

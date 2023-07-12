@@ -5,6 +5,7 @@
 package org.mozilla.fenix.library.history
 
 import kotlinx.coroutines.test.runTest
+import mozilla.components.support.test.ext.joinBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotSame
@@ -101,6 +102,87 @@ class HistoryFragmentStoreTest {
         store.dispatch(HistoryFragmentAction.UpdatePendingDeletionItems(emptySet())).join()
         assertNotSame(initialState, store.state)
         assertEquals(emptySet<PendingDeletionHistory>(), store.state.pendingDeletionItems)
+    }
+
+    @Test
+    fun `GIVEN items have been selected WHEN selected item is clicked THEN item is unselected`() = runTest {
+        val store = HistoryFragmentStore(twoItemEditState())
+
+        store.dispatch(HistoryFragmentAction.HistoryItemClicked(historyItem)).joinBlocking()
+
+        assertEquals(1, store.state.mode.selectedItems.size)
+        assertEquals(newHistoryItem, store.state.mode.selectedItems.first())
+    }
+
+    @Test
+    fun `GIVEN items have been selected WHEN unselected item is clicked THEN item is selected`() {
+        val initialState = oneItemEditState().copy(items = listOf(newHistoryItem))
+        val store = HistoryFragmentStore(initialState)
+
+        store.dispatch(HistoryFragmentAction.HistoryItemClicked(newHistoryItem)).joinBlocking()
+
+        assertEquals(2, store.state.mode.selectedItems.size)
+        assertTrue(store.state.mode.selectedItems.contains(newHistoryItem))
+    }
+
+    @Test
+    fun `GIVEN items have been selected WHEN last selected item is clicked THEN editing mode is exited`() {
+        val store = HistoryFragmentStore(oneItemEditState())
+
+        store.dispatch(HistoryFragmentAction.HistoryItemClicked(historyItem)).joinBlocking()
+
+        assertEquals(0, store.state.mode.selectedItems.size)
+        assertTrue(store.state.mode is HistoryFragmentState.Mode.Normal)
+    }
+
+    @Test
+    fun `GIVEN items have not been selected WHEN item is clicked THEN state is unchanged`() {
+        val store = HistoryFragmentStore(emptyDefaultState())
+
+        store.dispatch(HistoryFragmentAction.HistoryItemClicked(historyItem)).joinBlocking()
+
+        assertEquals(0, store.state.mode.selectedItems.size)
+        assertTrue(store.state.mode is HistoryFragmentState.Mode.Normal)
+    }
+
+    @Test
+    fun `GIVEN mode is syncing WHEN item is clicked THEN state is unchanged`() {
+        val store = HistoryFragmentStore(emptyDefaultState().copy(mode = HistoryFragmentState.Mode.Syncing))
+
+        store.dispatch(HistoryFragmentAction.HistoryItemClicked(historyItem)).joinBlocking()
+
+        assertEquals(0, store.state.mode.selectedItems.size)
+        assertTrue(store.state.mode is HistoryFragmentState.Mode.Syncing)
+    }
+
+    @Test
+    fun `GIVEN mode is syncing WHEN item is long-clicked THEN state is unchanged`() {
+        val store = HistoryFragmentStore(emptyDefaultState().copy(mode = HistoryFragmentState.Mode.Syncing))
+
+        store.dispatch(HistoryFragmentAction.HistoryItemLongClicked(historyItem)).joinBlocking()
+
+        assertEquals(0, store.state.mode.selectedItems.size)
+        assertTrue(store.state.mode is HistoryFragmentState.Mode.Syncing)
+    }
+
+    @Test
+    fun `GIVEN mode is not syncing WHEN item is long-clicked THEN mode becomes editing`() {
+        val store = HistoryFragmentStore(oneItemEditState())
+
+        store.dispatch(HistoryFragmentAction.HistoryItemLongClicked(newHistoryItem)).joinBlocking()
+
+        assertEquals(2, store.state.mode.selectedItems.size)
+        assertTrue(store.state.mode.selectedItems.contains(newHistoryItem))
+    }
+
+    @Test
+    fun `GIVEN mode is not syncing WHEN item is long-clicked THEN item is selected`() {
+        val store = HistoryFragmentStore(emptyDefaultState())
+
+        store.dispatch(HistoryFragmentAction.HistoryItemLongClicked(historyItem)).joinBlocking()
+
+        assertEquals(1, store.state.mode.selectedItems.size)
+        assertTrue(store.state.mode.selectedItems.contains(historyItem))
     }
 
     private fun emptyDefaultState(): HistoryFragmentState = HistoryFragmentState(

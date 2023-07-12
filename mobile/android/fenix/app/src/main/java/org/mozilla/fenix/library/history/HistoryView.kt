@@ -24,6 +24,7 @@ import org.mozilla.fenix.theme.ThemeManager
 class HistoryView(
     container: ViewGroup,
     val interactor: HistoryInteractor,
+    val store: HistoryFragmentStore,
     val onZeroItemsLoaded: () -> Unit,
     val onEmptyStateChanged: (Boolean) -> Unit,
 ) : LibraryPageView(container), UserInteractionHandler {
@@ -37,7 +38,7 @@ class HistoryView(
     var mode: HistoryFragmentState.Mode = HistoryFragmentState.Mode.Normal
         private set
 
-    val historyAdapter = HistoryAdapter(interactor) { isEmpty ->
+    val historyAdapter = HistoryAdapter(interactor, store) { isEmpty ->
         onEmptyStateChanged(isEmpty)
     }.apply {
         addLoadStateListener {

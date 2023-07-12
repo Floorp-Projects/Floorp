@@ -16,6 +16,7 @@ import org.mozilla.fenix.selection.SelectionHolder
  */
 class HistoryAdapter(
     private val historyInteractor: HistoryInteractor,
+    private val store: HistoryFragmentStore,
     private val onEmptyStateChanged: (Boolean) -> Unit,
 ) : PagingDataAdapter<History, HistoryListItemViewHolder>(historyDiffCallback),
     SelectionHolder<History> {
@@ -38,7 +39,12 @@ class HistoryAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryListItemViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
-        return HistoryListItemViewHolder(view, historyInteractor, this)
+        return HistoryListItemViewHolder(
+            view = view,
+            historyInteractor = historyInteractor,
+            selectionHolder = this,
+            store = store,
+        )
     }
 
     fun updateMode(mode: HistoryFragmentState.Mode) {
