@@ -9100,7 +9100,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
                                   : AccessorType::Setter;
 
   mozilla::Maybe<FunctionNodeType> initializerIfPrivate = Nothing();
-  if (handler_.isPrivateName(propName)) {
+  if (!isStatic && handler_.isPrivateName(propName)) {
     classInitializedMembers.privateAccessors++;
     auto initializerNode =
         synthesizePrivateMethodInitializer(propAtom, accessorType, propNamePos);

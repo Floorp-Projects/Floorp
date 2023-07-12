@@ -9055,6 +9055,7 @@ bool BytecodeEmitter::emitPropertyList(ListNode* obj, PropertyEmitter& pe,
         // The following branches except for the last `else` clause emit the
         // cases handled in NameResolver::resolveFun (see NameFunctions.cpp)
         if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
+            key->isKind(ParseNodeKind::PrivateName) ||
             key->isKind(ParseNodeKind::StringExpr)) {
           auto keyAtom = key->as<NameNode>().atom();
           if (!emitAnonymousFunctionWithName(propVal, keyAtom)) {
