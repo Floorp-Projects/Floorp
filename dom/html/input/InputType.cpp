@@ -286,11 +286,10 @@ nsresult InputType::GetBadInputMessage(nsAString& aMessage) {
   return NS_ERROR_UNEXPECTED;
 }
 
-bool InputType::ConvertStringToNumber(nsAString& aValue,
-                                      Decimal& aResultValue) const {
+auto InputType::ConvertStringToNumber(const nsAString& aValue) const
+    -> StringToNumberResult {
   NS_WARNING("InputType::ConvertStringToNumber called");
-
-  return false;
+  return {};
 }
 
 bool InputType::ConvertNumberToString(Decimal aValue,

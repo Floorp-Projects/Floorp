@@ -99,7 +99,7 @@ bool ICUUtils::LocalizeNumber(double aValue,
 }
 
 /* static */
-double ICUUtils::ParseNumber(nsAString& aValue,
+double ICUUtils::ParseNumber(const nsAString& aValue,
                              LanguageTagIterForContent& aLangTags) {
   MOZ_ASSERT(aLangTags.IsAtStart(), "Don't call Next() before passing");
 
@@ -107,7 +107,7 @@ double ICUUtils::ParseNumber(nsAString& aValue,
     return std::numeric_limits<float>::quiet_NaN();
   }
 
-  uint32_t length = aValue.Length();
+  const Span<const char16_t> value(aValue.BeginReading(), aValue.Length());
 
   nsAutoCString langTag;
   aLangTags.GetNext(langTag);
@@ -122,11 +122,10 @@ double ICUUtils::ParseNumber(nsAString& aValue,
 
     static_assert(sizeof(UChar) == 2 && sizeof(nsAString::char_type) == 2,
                   "Unexpected character size - the following cast is unsafe");
-    auto parseResult = np->ParseDouble(
-        mozilla::Span<const char16_t>(PromiseFlatString(aValue).get(), length));
+    auto parseResult = np->ParseDouble(value);
     if (parseResult.isOk()) {
       std::pair<double, int32_t> parsed = parseResult.unwrap();
-      if (parsed.second == static_cast<int32_t>(length)) {
+      if (parsed.second == static_cast<int32_t>(value.Length())) {
         return parsed.first;
       }
     }

@@ -77,10 +77,9 @@ nsresult NumericInputTypeBase::GetRangeUnderflowMessage(nsAString& aMessage) {
       "FormValidationNumberRangeUnderflow", mInputElement->OwnerDoc(), minStr);
 }
 
-bool NumericInputTypeBase::ConvertStringToNumber(nsAString& aValue,
-                                                 Decimal& aResultValue) const {
-  aResultValue = HTMLInputElement::StringToDecimal(aValue);
-  return aResultValue.isFinite();
+auto NumericInputTypeBase::ConvertStringToNumber(const nsAString& aValue) const
+    -> StringToNumberResult {
+  return {HTMLInputElement::StringToDecimal(aValue)};
 }
 
 bool NumericInputTypeBase::ConvertNumberToString(
@@ -117,15 +116,18 @@ bool NumberInputType::HasBadInput() const {
   return !value.IsEmpty() && mInputElement->GetValueAsDecimal().isNaN();
 }
 
-bool NumberInputType::ConvertStringToNumber(nsAString& aValue,
-                                            Decimal& aResultValue) const {
-  ICUUtils::LanguageTagIterForContent langTagIter(mInputElement);
-  aResultValue =
-      Decimal::fromDouble(ICUUtils::ParseNumber(aValue, langTagIter));
-  if (aResultValue.isFinite()) {
-    return true;
+auto NumberInputType::ConvertStringToNumber(const nsAString& aValue) const
+    -> StringToNumberResult {
+  auto result = NumericInputTypeBase::ConvertStringToNumber(aValue);
+  if (result.mResult.isFinite()) {
+    return result;
   }
-  return NumericInputTypeBase::ConvertStringToNumber(aValue, aResultValue);
+  // Try to read the localized value from the user.
+  ICUUtils::LanguageTagIterForContent langTagIter(mInputElement);
+  result.mLocalized = true;
+  result.mResult =
+      Decimal::fromDouble(ICUUtils::ParseNumber(aValue, langTagIter));
+  return result;
 }
 
 bool NumberInputType::ConvertNumberToString(Decimal aValue,

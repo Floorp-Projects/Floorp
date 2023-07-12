@@ -2532,18 +2532,16 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
     } else {
       mBoundFrame->ClearCachedValue();
     }
+  } else if (!mTextCtrlElement->ValueChanged() || mValue.IsVoid()) {
+    // Use nsString to avoid copying string buffer at setting aValue.
+    nsString value;
+    mTextCtrlElement->GetDefaultValueFromContent(value);
+    // TODO: We should make default value not include \r.
+    nsContentUtils::PlatformToDOMLineBreaks(value);
+    aValue = std::move(value);
   } else {
-    if (!mTextCtrlElement->ValueChanged() || mValue.IsVoid()) {
-      // Use nsString to avoid copying string buffer at setting aValue.
-      nsString value;
-      mTextCtrlElement->GetDefaultValueFromContent(value);
-      // TODO: We should make default value not include \r.
-      nsContentUtils::PlatformToDOMLineBreaks(value);
-      aValue = value;
-    } else {
-      aValue = mValue;
-      MOZ_ASSERT(aValue.FindChar(u'\r') == -1);
-    }
+    aValue = mValue;
+    MOZ_ASSERT(aValue.FindChar(u'\r') == -1);
   }
 }
 

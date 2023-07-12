@@ -62,8 +62,7 @@ class DateInputType : public DateTimeInputTypeBase {
 
   nsresult GetBadInputMessage(nsAString& aMessage) override;
 
-  bool ConvertStringToNumber(nsAString& aValue,
-                             Decimal& aResultValue) const override;
+  StringToNumberResult ConvertStringToNumber(const nsAString&) const override;
   bool ConvertNumberToString(Decimal aValue,
                              nsAString& aResultString) const override;
 
@@ -81,8 +80,7 @@ class TimeInputType : public DateTimeInputTypeBase {
 
   nsresult GetBadInputMessage(nsAString& aMessage) override;
 
-  bool ConvertStringToNumber(nsAString& aValue,
-                             Decimal& aResultValue) const override;
+  StringToNumberResult ConvertStringToNumber(const nsAString&) const override;
   bool ConvertNumberToString(Decimal aValue,
                              nsAString& aResultString) const override;
   bool IsRangeOverflow() const override;
@@ -108,8 +106,7 @@ class WeekInputType : public DateTimeInputTypeBase {
   }
 
   nsresult GetBadInputMessage(nsAString& aMessage) override;
-  bool ConvertStringToNumber(nsAString& aValue,
-                             Decimal& aResultValue) const override;
+  StringToNumberResult ConvertStringToNumber(const nsAString&) const override;
   bool ConvertNumberToString(Decimal aValue,
                              nsAString& aResultString) const override;
 
@@ -126,8 +123,7 @@ class MonthInputType : public DateTimeInputTypeBase {
   }
 
   nsresult GetBadInputMessage(nsAString& aMessage) override;
-  bool ConvertStringToNumber(nsAString& aValue,
-                             Decimal& aResultValue) const override;
+  StringToNumberResult ConvertStringToNumber(const nsAString&) const override;
   bool ConvertNumberToString(Decimal aValue,
                              nsAString& aResultString) const override;
 
@@ -144,8 +140,7 @@ class DateTimeLocalInputType : public DateTimeInputTypeBase {
   }
 
   nsresult GetBadInputMessage(nsAString& aMessage) override;
-  bool ConvertStringToNumber(nsAString& aValue,
-                             Decimal& aResultValue) const override;
+  StringToNumberResult ConvertStringToNumber(const nsAString&) const override;
   bool ConvertNumberToString(Decimal aValue,
                              nsAString& aResultString) const override;
 

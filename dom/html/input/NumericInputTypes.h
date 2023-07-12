@@ -22,8 +22,8 @@ class NumericInputTypeBase : public InputType {
   nsresult GetRangeOverflowMessage(nsAString& aMessage) override;
   nsresult GetRangeUnderflowMessage(nsAString& aMessage) override;
 
-  bool ConvertStringToNumber(nsAString& aValue,
-                             Decimal& aResultValue) const override;
+  StringToNumberResult ConvertStringToNumber(
+      const nsAString& aValue) const override;
   bool ConvertNumberToString(Decimal aValue,
                              nsAString& aResultString) const override;
 
@@ -45,8 +45,7 @@ class NumberInputType final : public NumericInputTypeBase {
   nsresult GetValueMissingMessage(nsAString& aMessage) override;
   nsresult GetBadInputMessage(nsAString& aMessage) override;
 
-  bool ConvertStringToNumber(nsAString& aValue,
-                             Decimal& aResultValue) const override;
+  StringToNumberResult ConvertStringToNumber(const nsAString&) const override;
   bool ConvertNumberToString(Decimal aValue,
                              nsAString& aResultString) const override;
 
