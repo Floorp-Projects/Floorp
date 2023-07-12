@@ -84,7 +84,8 @@ class TextControlElement : public nsGenericHTMLFormControlElementWithState {
   /**
    * Get the default value of the text control
    */
-  virtual void GetDefaultValueFromContent(nsAString& aValue) = 0;
+  virtual void GetDefaultValueFromContent(nsAString& aValue,
+                                          bool aForDisplay) = 0;
 
   /**
    * Return true if the value of the control has been changed.

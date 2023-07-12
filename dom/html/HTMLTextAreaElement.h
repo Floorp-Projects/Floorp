@@ -83,7 +83,7 @@ class HTMLTextAreaElement final : public TextControlElement,
   int32_t GetCols() override;
   int32_t GetWrapCols() override;
   int32_t GetRows() override;
-  void GetDefaultValueFromContent(nsAString& aValue) override;
+  void GetDefaultValueFromContent(nsAString& aValue, bool aForDisplay) override;
   bool ValueChanged() const override;
   void GetTextEditorValue(nsAString& aValue) const override;
   MOZ_CAN_RUN_SCRIPT TextEditor* GetTextEditor() override;
