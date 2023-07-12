@@ -173,7 +173,7 @@ nsresult nsLineBreaker::FlushCurrentWord() {
         if (capitalizationState.Length() == 0) {
           if (!capitalizationState.AppendElements(length, mozilla::fallible)) {
             return NS_ERROR_OUT_OF_MEMORY;
-          };
+          }
           memset(capitalizationState.Elements(), false, length * sizeof(bool));
           SetupCapitalization(mCurrentWord.Elements(), length,
                               capitalizationState.Elements());
@@ -227,11 +227,15 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       mTextItems.AppendElement(TextItem(aSink, 0, offset, aFlags));
     }
 
-    if (offset == aLength) return NS_OK;
+    if (offset == aLength) {
+      return NS_OK;
+    }
 
     // We encountered whitespace, so we're done with this word
     nsresult rv = FlushCurrentWord();
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   AutoTArray<uint8_t, 4000> breakState;
@@ -263,7 +267,9 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     offset = aLength;
     while (offset > start) {
       --offset;
-      if (IsSpace(aText[offset])) break;
+      if (IsSpace(aText[offset])) {
+        break;
+      }
     }
   }
   uint32_t wordStart = offset;
@@ -320,7 +326,9 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       wordHasComplexChar = false;
       mWordContinuation = false;
       ++offset;
-      if (offset >= aLength) break;
+      if (offset >= aLength) {
+        break;
+      }
       wordStart = offset;
     } else {
       if (!wordHasComplexChar && IsComplexChar(ch)) {
@@ -332,7 +340,9 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
         mCurrentWordContainsComplexChar = wordHasComplexChar;
         uint32_t len = offset - wordStart;
         char16_t* elems = mCurrentWord.AppendElements(len);
-        if (!elems) return NS_ERROR_OUT_OF_MEMORY;
+        if (!elems) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
         memcpy(elems, aText + wordStart, sizeof(char16_t) * len);
         mTextItems.AppendElement(TextItem(aSink, wordStart, len, aFlags));
         // Ensure that the break-before for this word is written out
@@ -411,7 +421,9 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
 
     // We encountered whitespace, so we're done with this word
     nsresult rv = FlushCurrentWord();
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
   }
 
   AutoTArray<uint8_t, 4000> breakState;
@@ -433,7 +445,9 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     offset = aLength;
     while (offset > start) {
       --offset;
-      if (IsSpace(aText[offset])) break;
+      if (IsSpace(aText[offset])) {
+        break;
+      }
     }
   }
   uint32_t wordStart = offset;
@@ -476,7 +490,9 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       wordHasComplexChar = false;
       mWordContinuation = false;
       ++offset;
-      if (offset >= aLength) break;
+      if (offset >= aLength) {
+        break;
+      }
       wordStart = offset;
     } else {
       if (!wordHasComplexChar && IsComplexASCIIChar(ch)) {
@@ -488,7 +504,9 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
         mCurrentWordContainsComplexChar = wordHasComplexChar;
         uint32_t len = offset - wordStart;
         char16_t* elems = mCurrentWord.AppendElements(len);
-        if (!elems) return NS_ERROR_OUT_OF_MEMORY;
+        if (!elems) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
         uint32_t i;
         for (i = wordStart; i < offset; ++i) {
           elems[i - wordStart] = aText[i];
@@ -533,7 +551,9 @@ void nsLineBreaker::UpdateCurrentWordLanguage(nsAtom* aHyphenationLanguage) {
 
 nsresult nsLineBreaker::AppendInvisibleWhitespace(uint32_t aFlags) {
   nsresult rv = FlushCurrentWord();
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   bool isBreakableSpace = !(aFlags & BREAK_SUPPRESS_INSIDE);
   if (mAfterBreakableSpace && !isBreakableSpace) {
@@ -546,7 +566,9 @@ nsresult nsLineBreaker::AppendInvisibleWhitespace(uint32_t aFlags) {
 
 nsresult nsLineBreaker::Reset(bool* aTrailingBreak) {
   nsresult rv = FlushCurrentWord();
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   *aTrailingBreak = mBreakHere || mAfterBreakableSpace;
   mBreakHere = false;
