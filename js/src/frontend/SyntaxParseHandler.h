@@ -400,7 +400,8 @@ class SyntaxParseHandler {
 #ifdef ENABLE_DECORATORS
                                              ,
                                              ListNodeType decorators,
-                                             bool hasAccessor
+                                             ClassMethodType accessorGetterNode,
+                                             ClassMethodType accessorSetterNode
 #endif
   ) {
     return NodeGeneric;

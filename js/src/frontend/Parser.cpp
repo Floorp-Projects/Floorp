@@ -7810,6 +7810,8 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     }
 
 #ifdef ENABLE_DECORATORS
+    ClassMethodType accessorGetterNode = null();
+    ClassMethodType accessorSetterNode = null();
     if (propType == PropertyType::FieldWithAccessor) {
       // Decorators Proposal
       // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-runtime-semantics-classfielddefinitionevaluation
@@ -7841,26 +7843,39 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
       // Step 5. Let getter be MakeAutoAccessorGetter(homeObject, name,
       // privateStateName).
-      Node method = synthesizeAccessor(
+      accessorGetterNode = synthesizeAccessor(
           propName, propNamePos, propAtom, privateStateName, isStatic,
-          FunctionSyntaxKind::Getter, decorators, classInitializedMembers);
-      if (!method) {
+          FunctionSyntaxKind::Getter, classInitializedMembers);
+      if (!accessorGetterNode) {
         return false;
       }
-      if (!handler_.addClassMemberDefinition(classMembers, method)) {
-        return false;
+      if (!decorators) {
+        // If the accessor is not decorated, add it to the class here.
+        // Otherwise, we'll handle this when the decorators are called.
+        if (!handler_.addClassMemberDefinition(classMembers,
+                                               accessorGetterNode)) {
+          return false;
+        }
+        accessorGetterNode = null();
       }
 
       // Step 6. Let setter be MakeAutoAccessorSetter(homeObject, name,
       // privateStateName).
-      method = synthesizeAccessor(
+      accessorSetterNode = synthesizeAccessor(
           propName, propNamePos, propAtom, privateStateName, isStatic,
-          FunctionSyntaxKind::Setter, decorators, classInitializedMembers);
-      if (!method) {
+          FunctionSyntaxKind::Setter, classInitializedMembers);
+      if (!accessorSetterNode) {
         return false;
       }
-      if (!handler_.addClassMemberDefinition(classMembers, method)) {
-        return false;
+
+      if (!decorators) {
+        // If the accessor is not decorated, add it to the class here.
+        // Otherwise, we'll handle this when the decorators are called.
+        if (!handler_.addClassMemberDefinition(classMembers,
+                                               accessorSetterNode)) {
+          return false;
+        }
+        accessorSetterNode = null();
       }
 
       // Step 10. Return ClassElementDefinition Record { [[Key]]: name,
@@ -7869,7 +7884,9 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       // initializers, [[Decorators]]: empty }.
       propName = handler_.newPrivateName(privateStateName, pos());
       propAtom = privateStateName;
-      decorators = handler_.newList(ParseNodeKind::DecoratorList, pos());
+      // We maintain `decorators` here to perform this step at the same time:
+      // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-static-semantics-classelementevaluation
+      // 4. Set fieldDefinition.[[Decorators]] to decorators.
     }
 #endif
     if (isStatic) {
@@ -7894,7 +7911,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
         propName, initializer, isStatic
 #ifdef ENABLE_DECORATORS
         ,
-        decorators, propType == PropertyType::FieldWithAccessor
+        decorators, accessorGetterNode, accessorSetterNode
 #endif
     );
     if (!field) {
@@ -9058,11 +9075,11 @@ GeneralParser<ParseHandler, Unit>::synthesizePrivateMethodInitializer(
 #ifdef ENABLE_DECORATORS
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node
+typename ParseHandler::ClassMethodType
 GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
     Node propName, TokenPos propNamePos, TaggedParserAtomIndex propAtom,
     TaggedParserAtomIndex privateStateNameAtom, bool isStatic,
-    FunctionSyntaxKind syntaxKind, ListNodeType decorators,
+    FunctionSyntaxKind syntaxKind,
     ClassInitializedMembers& classInitializedMembers) {
   // Decorators Proposal
   // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorgetter
@@ -9112,9 +9129,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
   // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorsetter
   // 3. Perform MakeMethod(setter, homeObject).
   // 4. Return setter.
-  return handler_.newClassMethodDefinition(propName, funNode, accessorType,
-                                           isStatic, initializerIfPrivate,
-                                           decorators);
+  return handler_.newClassMethodDefinition(
+      propName, funNode, accessorType, isStatic, initializerIfPrivate, null());
 }
 
 template <class ParseHandler, typename Unit>

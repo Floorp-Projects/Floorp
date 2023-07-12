@@ -1323,12 +1323,11 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       TokenPos propNamePos);
 
 #ifdef ENABLE_DECORATORS
-  Node synthesizeAccessor(Node propName, TokenPos propNamePos,
-                          TaggedParserAtomIndex propAtom,
-                          TaggedParserAtomIndex privateStateNameAtom,
-                          bool isStatic, FunctionSyntaxKind syntaxKind,
-                          ListNodeType decorators,
-                          ClassInitializedMembers& classInitializedMembers);
+  ClassMethodType synthesizeAccessor(
+      Node propName, TokenPos propNamePos, TaggedParserAtomIndex propAtom,
+      TaggedParserAtomIndex privateStateNameAtom, bool isStatic,
+      FunctionSyntaxKind syntaxKind,
+      ClassInitializedMembers& classInitializedMembers);
 
   FunctionNodeType synthesizeAccessorBody(TokenPos propNamePos,
                                           TaggedParserAtomIndex atom,
