@@ -7,14 +7,10 @@ const { sinon } = ChromeUtils.importESModule(
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "ObjectUtils",
-  "resource://gre/modules/ObjectUtils.jsm"
-);
 ChromeUtils.defineESModuleGetters(this, {
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.sys.mjs",
   ExperimentTestUtils: "resource://testing-common/NimbusTestUtils.sys.mjs",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
 });
 
 // Sinon does not support Set or Map in spy.calledWith()

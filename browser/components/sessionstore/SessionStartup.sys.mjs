@@ -30,9 +30,8 @@
 /* :::::::: Constants and Helpers ::::::::::::::: */
 
 const lazy = {};
-const { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+
 ChromeUtils.defineESModuleGetters(lazy, {
   CrashMonitor: "resource://gre/modules/CrashMonitor.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",

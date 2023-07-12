@@ -6,9 +6,7 @@ import { Log } from "resource://gre/modules/Log.sys.mjs";
 
 import { TelemetryUtils } from "resource://gre/modules/TelemetryUtils.sys.mjs";
 
-const { ObjectUtils } = ChromeUtils.import(
-  "resource://gre/modules/ObjectUtils.jsm"
-);
+import { ObjectUtils } from "resource://gre/modules/ObjectUtils.sys.mjs";
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { UpdateUtils } from "resource://gre/modules/UpdateUtils.sys.mjs";
 

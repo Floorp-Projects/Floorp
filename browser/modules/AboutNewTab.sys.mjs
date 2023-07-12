@@ -7,9 +7,12 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const lazy = {};
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
+});
+
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   ActivityStream: "resource://activity-stream/lib/ActivityStream.jsm",
-  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
 
 const ABOUT_URL = "about:newtab";

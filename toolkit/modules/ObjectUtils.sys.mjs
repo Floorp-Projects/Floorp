@@ -6,15 +6,11 @@
 // Copyright (c) 2009 Thomas Robinson <280north.com>
 // MIT license: http://opensource.org/licenses/MIT
 
-"use strict";
-
-var EXPORTED_SYMBOLS = ["ObjectUtils"];
-
 // Used only to cause test failures.
 
 var pSlice = Array.prototype.slice;
 
-var ObjectUtils = {
+export var ObjectUtils = {
   /**
    * This tests objects & values for deep equality.
    *

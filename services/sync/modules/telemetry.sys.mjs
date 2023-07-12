@@ -22,6 +22,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Async: "resource://services-common/async.sys.mjs",
   AuthenticationError: "resource://services-sync/sync_auth.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   Observers: "resource://services-common/observers.sys.mjs",
   Resource: "resource://services-sync/resource.sys.mjs",
   Status: "resource://services-sync/status.sys.mjs",
@@ -30,10 +31,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
   Weave: "resource://services-sync/main.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(lazy, "fxAccounts", () => {

@@ -23,8 +23,8 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource:///modules/BrowserUsageTelemetry.sys.mjs",
 });
 
-const { ObjectUtils } = ChromeUtils.import(
-  "resource://gre/modules/ObjectUtils.jsm"
+const { ObjectUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/ObjectUtils.sys.mjs"
 );
 
 BrowserUsageTelemetry._onTabsOpenedTask._timeoutMs = 0;

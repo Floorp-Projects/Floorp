@@ -96,7 +96,7 @@ with Files("NLP.sys.mjs"):
 with Files("NewTabUtils.sys.mjs"):
     BUG_COMPONENT = ("Firefox", "Tabbed Browser")
 
-with Files("ObjectUtils.jsm"):
+with Files("ObjectUtils.sys.mjs"):
     BUG_COMPONENT = ("Toolkit", "Telemetry")
 
 with Files("PermissionsUtils.sys.mjs"):
@@ -188,7 +188,7 @@ EXTRA_JS_MODULES += [
     "Log.sys.mjs",
     "NewTabUtils.sys.mjs",
     "NLP.sys.mjs",
-    "ObjectUtils.jsm",
+    "ObjectUtils.sys.mjs",
     "OsEnvironment.sys.mjs",
     "OSKeyStore.sys.mjs",
     "PermissionsUtils.sys.mjs",
