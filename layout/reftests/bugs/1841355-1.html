@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!-- This a simplified form of the WPT css/css-transforms/skew-test1.html -->
+<style>
+  svg {
+    position: absolute;
+  }
+
+  div {
+    width: 150px;
+    height: 150px;
+    background-color: white;
+  }
+
+  .skew_div {
+    transform: skew(30deg,20deg);
+    transform-origin: 0 0;
+  }
+</style>
+</head>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="300" height="300">
+  <polygon points="1,1 149,56 235,203 88,149" style="fill:red"/>
+</svg>
+
+<div class="skew_div"></div>
