@@ -4276,7 +4276,7 @@ bool Element::IsPopoverOpen() const {
   return htmlElement && htmlElement->PopoverOpen();
 }
 
-Element* Element::GetTopmostPopoverAncestor() const {
+Element* Element::GetTopmostPopoverAncestor(const Element* aInvoker) const {
   const Element* newPopover = this;
 
   nsTHashMap<nsPtrHashKey<const Element>, size_t> popoverPositions;
@@ -4308,10 +4308,7 @@ Element* Element::GetTopmostPopoverAncestor() const {
   };
 
   checkAncestor(newPopover->GetFlattenedTreeParentElement());
-
-  // https://github.com/whatwg/html/issues/9160
-  RefPtr<Element> invoker = newPopover->GetPopoverData()->GetInvoker();
-  checkAncestor(invoker);
+  checkAncestor(aInvoker);
 
   return topmostPopoverAncestor;
 }
