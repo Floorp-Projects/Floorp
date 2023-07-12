@@ -349,6 +349,9 @@ class NetworkEventWatcher {
         resourceUpdates.mimeType = updateResource.mimeType;
         resourceUpdates.waitingTime = updateResource.waitingTime;
         resourceUpdates.isResolvedByTRR = updateResource.isResolvedByTRR;
+        resourceUpdates.proxyHttpVersion = updateResource.proxyHttpVersion;
+        resourceUpdates.proxyStatus = updateResource.proxyStatus;
+        resourceUpdates.proxyStatusText = updateResource.proxyStatusText;
 
         resourceUpdates.responseHeadersAvailable = true;
         resourceUpdates.responseCookiesAvailable = true;

@@ -1491,3 +1491,28 @@ function typeInNetmonitor(string, monitor) {
     EventUtils.synthesizeKey(ch, {}, monitor.panelWin);
   }
 }
+
+/**
+ * Opens/ closes the URL preview in the headers side panel
+ *
+ * @param {Boolean} shouldExpand
+ * @param {NetMonitorPanel} monitor
+ * @returns
+ */
+async function toggleUrlPreview(shouldExpand, monitor) {
+  const { document } = monitor.panelWin;
+  const wait = waitUntil(() => {
+    const rowSize = document.querySelectorAll(
+      "#headers-panel .url-preview tr.treeRow"
+    ).length;
+    return shouldExpand ? rowSize > 1 : rowSize == 1;
+  });
+
+  clickElement(
+    document.querySelector(
+      "#headers-panel .url-preview tr:first-child span.treeIcon.theme-twisty"
+    ),
+    monitor
+  );
+  return wait;
+}
