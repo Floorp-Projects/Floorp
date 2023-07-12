@@ -30,7 +30,7 @@
 
 #include "jsnum.h"
 
-#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeCompiler.h"  // IsKeyword
 #include "frontend/FrontendContext.h"
 #include "frontend/Parser.h"
 #include "frontend/ParserAtom.h"
@@ -145,23 +145,6 @@ static const ReservedWordInfo* FindReservedWord(
   return nullptr;
 }
 
-static char32_t GetSingleCodePoint(const char16_t** p, const char16_t* end) {
-  using namespace js;
-
-  if (MOZ_UNLIKELY(unicode::IsLeadSurrogate(**p)) && *p + 1 < end) {
-    char16_t lead = **p;
-    char16_t maybeTrail = *(*p + 1);
-    if (unicode::IsTrailSurrogate(maybeTrail)) {
-      *p += 2;
-      return unicode::UTF16Decode(lead, maybeTrail);
-    }
-  }
-
-  char32_t codePoint = **p;
-  (*p)++;
-  return codePoint;
-}
-
 template <typename CharT>
 static constexpr bool IsAsciiBinary(CharT c) {
   using UnsignedCharT = std::make_unsigned_t<CharT>;
@@ -186,123 +169,6 @@ static constexpr uint8_t AsciiOctalToNumber(CharT c) {
 namespace js {
 
 namespace frontend {
-
-bool IsIdentifier(JSLinearString* str) {
-  JS::AutoCheckCannotGC nogc;
-  MOZ_ASSERT(str);
-  if (str->hasLatin1Chars()) {
-    return IsIdentifier(str->latin1Chars(nogc), str->length());
-  }
-  return IsIdentifier(str->twoByteChars(nogc), str->length());
-}
-
-bool IsIdentifierNameOrPrivateName(JSLinearString* str) {
-  JS::AutoCheckCannotGC nogc;
-  MOZ_ASSERT(str);
-  if (str->hasLatin1Chars()) {
-    return IsIdentifierNameOrPrivateName(str->latin1Chars(nogc), str->length());
-  }
-  return IsIdentifierNameOrPrivateName(str->twoByteChars(nogc), str->length());
-}
-
-bool IsIdentifier(const Latin1Char* chars, size_t length) {
-  if (length == 0) {
-    return false;
-  }
-
-  if (!unicode::IsIdentifierStart(char16_t(*chars))) {
-    return false;
-  }
-
-  const Latin1Char* end = chars + length;
-  while (++chars != end) {
-    if (!unicode::IsIdentifierPart(char16_t(*chars))) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool IsIdentifierASCII(char c) { return unicode::IsIdentifierStartASCII(c); }
-
-bool IsIdentifierASCII(char c1, char c2) {
-  return unicode::IsIdentifierStartASCII(c1) &&
-         unicode::IsIdentifierPartASCII(c2);
-}
-
-bool IsIdentifierNameOrPrivateName(const Latin1Char* chars, size_t length) {
-  if (length == 0) {
-    return false;
-  }
-
-  // Skip over any private name marker.
-  if (*chars == '#') {
-    ++chars;
-    --length;
-  }
-
-  return IsIdentifier(chars, length);
-}
-
-bool IsIdentifier(const char16_t* chars, size_t length) {
-  if (length == 0) {
-    return false;
-  }
-
-  const char16_t* p = chars;
-  const char16_t* end = chars + length;
-  char32_t codePoint;
-
-  codePoint = GetSingleCodePoint(&p, end);
-  if (!unicode::IsIdentifierStart(codePoint)) {
-    return false;
-  }
-
-  while (p < end) {
-    codePoint = GetSingleCodePoint(&p, end);
-    if (!unicode::IsIdentifierPart(codePoint)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-bool IsIdentifierNameOrPrivateName(const char16_t* chars, size_t length) {
-  if (length == 0) {
-    return false;
-  }
-
-  const char16_t* p = chars;
-  const char16_t* end = chars + length;
-  char32_t codePoint;
-
-  codePoint = GetSingleCodePoint(&p, end);
-
-  // Skip over any private name marker.
-  if (codePoint == '#') {
-    // The identifier part of a private name mustn't be empty.
-    if (length == 1) {
-      return false;
-    }
-
-    codePoint = GetSingleCodePoint(&p, end);
-  }
-
-  if (!unicode::IsIdentifierStart(codePoint)) {
-    return false;
-  }
-
-  while (p < end) {
-    codePoint = GetSingleCodePoint(&p, end);
-    if (!unicode::IsIdentifierPart(codePoint)) {
-      return false;
-    }
-  }
-
-  return true;
-}
 
 bool IsKeyword(TaggedParserAtomIndex atom) {
   if (const ReservedWordInfo* rw = FindReservedWord(atom)) {

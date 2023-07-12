@@ -34,7 +34,6 @@
 #include "builtin/JSON.h"
 #include "builtin/Promise.h"
 #include "builtin/Symbol.h"
-#include "frontend/BytecodeCompiler.h"
 #include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "gc/GC.h"
 #include "gc/GCContext.h"
@@ -71,6 +70,7 @@
 #include "js/Wrapper.h"
 #include "js/WrapperCallbacks.h"
 #include "proxy/DOMProxy.h"
+#include "util/Identifier.h"  // IsIdentifier
 #include "util/StringBuffer.h"
 #include "util/Text.h"
 #include "vm/BoundFunctionObject.h"
@@ -4417,12 +4417,12 @@ JS_PUBLIC_API bool JS_IsIdentifier(JSContext* cx, HandleString str,
     return false;
   }
 
-  *isIdentifier = js::frontend::IsIdentifier(linearStr);
+  *isIdentifier = IsIdentifier(linearStr);
   return true;
 }
 
 JS_PUBLIC_API bool JS_IsIdentifier(const char16_t* chars, size_t length) {
-  return js::frontend::IsIdentifier(chars, length);
+  return IsIdentifier(chars, length);
 }
 
 namespace JS {

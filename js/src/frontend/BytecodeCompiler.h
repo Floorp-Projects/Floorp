@@ -189,34 +189,6 @@ UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencil(
     const mozilla::Maybe<uint32_t>& parameterListEnd,
     frontend::FunctionSyntaxKind syntaxKind, Handle<Scope*> enclosingScope);
 
-/*
- * True if str consists of an IdentifierStart character, followed by one or
- * more IdentifierPart characters, i.e. it matches the IdentifierName production
- * in the language spec.
- *
- * This returns true even if str is a keyword like "if".
- *
- * Defined in TokenStream.cpp.
- */
-bool IsIdentifier(JSLinearString* str);
-
-bool IsIdentifierNameOrPrivateName(JSLinearString* str);
-
-/*
- * As above, but taking chars + length.
- */
-bool IsIdentifier(const Latin1Char* chars, size_t length);
-bool IsIdentifier(const char16_t* chars, size_t length);
-
-/*
- * ASCII variant with known length.
- */
-bool IsIdentifierASCII(char c);
-bool IsIdentifierASCII(char c1, char c2);
-
-bool IsIdentifierNameOrPrivateName(const Latin1Char* chars, size_t length);
-bool IsIdentifierNameOrPrivateName(const char16_t* chars, size_t length);
-
 /* True if str is a keyword. Defined in TokenStream.cpp. */
 bool IsKeyword(TaggedParserAtomIndex atom);
 

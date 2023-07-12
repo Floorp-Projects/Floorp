@@ -39,7 +39,6 @@
 #include "debugger/Object.h"              // for DebuggerObject
 #include "debugger/Script.h"              // for DebuggerScript
 #include "debugger/Source.h"              // for DebuggerSource
-#include "frontend/BytecodeCompiler.h"    // for IsIdentifier
 #include "frontend/CompilationStencil.h"  // for CompilationStencil
 #include "frontend/FrontendContext.h"     // for AutoReportFrontendContext
 #include "frontend/Parser.h"              // for Parser
@@ -77,6 +76,7 @@
 #include "js/UbiNode.h"               // for Node, RootList, Edge
 #include "js/UbiNodeBreadthFirst.h"   // for BreadthFirst
 #include "js/Wrapper.h"               // for CheckedUnwrapStatic
+#include "util/Identifier.h"          // for IsIdentifier
 #include "util/Text.h"                // for DuplicateString, js_strlen
 #include "vm/ArrayObject.h"           // for ArrayObject
 #include "vm/AsyncFunction.h"         // for AsyncFunctionGeneratorObject
@@ -155,7 +155,6 @@ using JS::SourceOwnership;
 using JS::SourceText;
 using JS::dbg::AutoEntryMonitor;
 using JS::dbg::Builder;
-using js::frontend::IsIdentifier;
 using mozilla::AsVariant;
 using mozilla::DebugOnly;
 using mozilla::MakeScopeExit;

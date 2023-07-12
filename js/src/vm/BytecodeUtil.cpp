@@ -23,7 +23,6 @@
 #include "jsapi.h"
 #include "jstypes.h"
 
-#include "frontend/BytecodeCompiler.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "gc/PublicIterators.h"
 #include "jit/IonScript.h"  // IonBlockCounts
@@ -36,6 +35,7 @@
 #include "js/Printf.h"
 #include "js/Symbol.h"
 #include "util/DifferentialTesting.h"
+#include "util/Identifier.h"  // IsIdentifier
 #include "util/Memory.h"
 #include "util/Text.h"
 #include "vm/BuiltinObjectKind.h"
@@ -63,8 +63,6 @@
 #include "vm/Realm-inl.h"
 
 using namespace js;
-
-using js::frontend::IsIdentifier;
 
 /*
  * Index limit must stay within 32 bits.
