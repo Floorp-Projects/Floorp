@@ -9763,7 +9763,7 @@ bool BytecodeEmitter::emitCreateMemberInitializers(ClassEmitter& ce,
       continue;
     }
     ClassField* field = &propdef->as<ClassField>();
-    if (placement == FieldPlacement::Static && !field->isStatic()) {
+    if (field->isStatic() != isStatic) {
       continue;
     }
     if (field->decorators() && !field->decorators()->empty()) {
@@ -10284,6 +10284,116 @@ bool BytecodeEmitter::emitInitializeStaticFields(ListNode* classMembers) {
       return false;
     }
   }
+
+#ifdef ENABLE_DECORATORS
+  // Decorators Proposal
+  // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-initializeinstanceelements
+  // 4. For each element e of elements, do
+  //     4.a. If elementRecord.[[Kind]] is field or accessor, then
+  //         4.a.i. Perform ? InitializeFieldOrAccessor(O, elementRecord).
+  //
+
+  // TODO: (See Bug 1817993) At the moment, we're applying the initialization
+  // logic in two steps. The pre-decorator initialization code runs, stores
+  // the initial value, and then we retrieve it here and apply the
+  // initializers added by decorators. We should unify these two steps.
+  if (!emitGetName(TaggedParserAtomIndex::WellKnown::dotStaticInitializers())) {
+    //          [stack] CTOR ARRAY
+    return false;
+  }
+
+  if (!emit1(JSOp::Dup)) {
+    //          [stack] CTOR ARRAY ARRAY
+    return false;
+  }
+
+  if (!emitAtomOp(JSOp::GetProp, TaggedParserAtomIndex::WellKnown::length())) {
+    //          [stack] CTOR ARRAY LENGTH
+    return false;
+  }
+
+  if (!emitNumberOp(static_cast<double>(numFields))) {
+    //          [stack] CTOR ARRAY LENGTH INDEX
+    return false;
+  }
+
+  WhileEmitter wh(this);
+  // At this point, we have no context to determine offsets in the
+  // code for this while statement. Ideally, it would correspond to
+  // the field we're initializing.
+  if (!wh.emitCond(0, 0, 0)) {
+    //          [stack] CTOR ARRAY LENGTH INDEX
+    return false;
+  }
+
+  if (!emit1(JSOp::Dup)) {
+    //          [stack] CTOR ARRAY LENGTH INDEX INDEX
+    return false;
+  }
+
+  if (!emitDupAt(2)) {
+    //          [stack] CTOR ARRAY LENGTH INDEX INDEX LENGTH
+    return false;
+  }
+
+  if (!emit1(JSOp::Lt)) {
+    //          [stack] CTOR ARRAY LENGTH INDEX BOOL
+    return false;
+  }
+
+  if (!wh.emitBody()) {
+    //          [stack] CTOR ARRAY LENGTH INDEX
+    return false;
+  }
+
+  if (!emitDupAt(2)) {
+    //          [stack] CTOR ARRAY LENGTH INDEX ARRAY
+    return false;
+  }
+
+  if (!emitDupAt(1)) {
+    //          [stack] CTOR ARRAY LENGTH INDEX ARRAY INDEX
+    return false;
+  }
+
+  // Retrieve initializers for this field
+  if (!emit1(JSOp::GetElem)) {
+    //            [stack] CTOR ARRAY LENGTH INDEX INITIALIZERS
+    return false;
+  }
+
+  if (!emitDupAt(4)) {
+    //            [stack] CTOR ARRAY LENGTH INDEX INITIALIZERS CTOR
+    return false;
+  }
+
+  if (!emit1(JSOp::Swap)) {
+    //            [stack] CTOR ARRAY LENGTH INDEX CTOR INITIALIZERS
+    return false;
+  }
+
+  DecoratorEmitter de(this);
+  if (!de.emitInitializeFieldOrAccessor()) {
+    //            [stack] CTOR ARRAY LENGTH INDEX
+    return false;
+  }
+
+  if (!emit1(JSOp::Inc)) {
+    //            [stack] CTOR ARRAY LENGTH INDEX
+    return false;
+  }
+
+  if (!wh.emitEnd()) {
+    //          [stack] CTOR ARRAY LENGTH INDEX
+    return false;
+  }
+
+  if (!emitPopN(3)) {
+    //            [stack] CTOR
+    return false;
+  }
+  // 5. Return unused.
+#endif
 
   // Overwrite |.staticInitializers| and |.staticFieldKeys| with undefined to
   // avoid keeping the arrays alive indefinitely.

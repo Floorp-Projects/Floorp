@@ -401,8 +401,7 @@ bool DecoratorEmitter::emitInitializeFieldOrAccessor() {
     return false;
   }
 
-  // This is guaranteed to run after super(), so we don't need TDZ checks.
-  if (!bce_->emitGetName(TaggedParserAtomIndex::WellKnown::dotThis())) {
+  if (!bce_->emitDupAt(6)) {
     //            [stack] THIS FIELDNAME VALUE INITIALIZERS LENGTH INDEX FUNC
     //            THIS
     return false;

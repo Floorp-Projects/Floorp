@@ -62,7 +62,7 @@ assertEq(dec2Called, true);
 assertEq(c.x6, 2);
 assertEq(c.x7, 2);
 assertEq(c.x8, 4);
-assertEq(c.x9, 2);
+assertEq(C.x9, 2);
 assertEq(c.getX10(), 2);
 assertEq(c.getX11(), 4);
 assertEq(c[42], 1);
