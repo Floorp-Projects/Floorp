@@ -16,7 +16,10 @@ enum class CheckIsObjectKind : uint8_t {
   IteratorReturn,
   IteratorThrow,
   GetIterator,
-  GetAsyncIterator
+  GetAsyncIterator,
+#ifdef ENABLE_DECORATORS
+  DecoratorReturn,
+#endif
 };
 
 }  // namespace js
