@@ -2,11 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import {
-  getThreadContext,
-  getSelectedFrame,
-  getCurrentThread,
-} from "../selectors";
+import { getThreadContext } from "../selectors";
 
 // Context encapsulates the main parameters of the current redux state, which
 // impact most other information tracked by the debugger.
@@ -31,13 +27,7 @@ import {
 // A ThreadContext is invalidated if the target navigates, or if the current
 // thread changes, pauses, or resumes.
 
-export class ContextError extends Error {
-  constructor(msg) {
-    // Use a prefix string to help `PromiseTestUtils.allowMatchingRejectionsGlobally`
-    // ignore all these exceptions as this is based on error strings.
-    super(`DebuggerContextError: ${msg}`);
-  }
-}
+export class ContextError extends Error {}
 
 export function validateNavigateContext(state, cx) {
   const newcx = getThreadContext(state);
@@ -64,19 +54,6 @@ export function validateContext(state, cx) {
 
   if ("thread" in cx) {
     validateThreadContext(state, cx);
-  }
-}
-
-export function validateSelectedFrame(state, selectedFrame) {
-  const newThread = getCurrentThread(state);
-  if (selectedFrame.thread != newThread) {
-    throw new ContextError("Selected thread has changed");
-  }
-
-  const newSelectedFrame = getSelectedFrame(state, newThread);
-  // Compare frame's IDs as frame objects are cloned during mapping
-  if (selectedFrame.id != newSelectedFrame?.id) {
-    throw new ContextError("Selected frame changed");
   }
 }
 
