@@ -97,6 +97,7 @@ void APZEventResult::UpdateHandledResult(
   if (!aConsumableFlags.mAllowedByTouchAction) {
     mHandledResult =
         Some(APZHandledResult{APZHandledPlace::HandledByContent, aTarget});
+    mHandledResult->mOverscrollDirections = ScrollDirections();
     return;
   }
 
@@ -362,7 +363,7 @@ APZHandledResult::APZHandledResult(APZHandledPlace aPlace,
   MOZ_ASSERT(aTarget);
   switch (aPlace) {
     case APZHandledPlace::Unhandled:
-      if (aPopulateDirectionsForUnhandled) {
+      if (aTarget && aPopulateDirectionsForUnhandled) {
         mScrollableDirections = aTarget->ScrollableDirections();
         mOverscrollDirections = aTarget->GetAllowedHandoffDirections();
       }
