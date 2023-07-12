@@ -779,9 +779,6 @@ template <XDRMode mode>
   MOZ_TRY(xdr->codeUint8(&canLazilyParse));
   if (mode == XDR_DECODE) {
     stencil.canLazilyParse = canLazilyParse;
-    // NOTE: stencil.canLazilyParse can be different than
-    //       CanLazilyParse(static_cast<XDRStencilDecoder*>(xdr)->options()).
-    //       See bug 1726498 for removing the redundancy.
   }
 
   MOZ_TRY(xdr->codeUint32(&stencil.functionKey));
