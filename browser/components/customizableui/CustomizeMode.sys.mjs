@@ -357,7 +357,7 @@ CustomizeMode.prototype = {
 
       let customizer = document.getElementById("customization-container");
       let browser = document.getElementById("browser");
-      browser.collapsed = true;
+      browser.hidden = true;
       customizer.hidden = false;
 
       this._wrapToolbarItemSync(CustomizableUI.AREA_TABSTRIP);
@@ -489,7 +489,7 @@ CustomizeMode.prototype = {
     let customizer = document.getElementById("customization-container");
     let browser = document.getElementById("browser");
     customizer.hidden = true;
-    browser.collapsed = false;
+    browser.hidden = false;
 
     window.gNavToolbox.removeEventListener("toolbarvisibilitychange", this);
 
