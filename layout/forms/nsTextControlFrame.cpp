@@ -322,7 +322,7 @@ nsresult nsTextControlFrame::EnsureEditorInitialized() {
       // but only if the contents has changed (bug 1337392).
       if (textControlElement->ValueChanged()) {
         nsAutoString val;
-        textControlElement->GetTextEditorValue(val, true);
+        textControlElement->GetTextEditorValue(val);
         position = val.Length();
       }
 
@@ -1207,7 +1207,7 @@ nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
   if (aValue) {
     value = *aValue;
   } else {
-    textControlElement->GetTextEditorValue(value, true);
+    textControlElement->GetTextEditorValue(value);
   }
 
   return textContent->SetText(value, aNotify);

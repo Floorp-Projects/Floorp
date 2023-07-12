@@ -225,7 +225,7 @@ class HTMLInputElement final : public TextControlElement,
   int32_t GetRows() override;
   void GetDefaultValueFromContent(nsAString& aValue) override;
   bool ValueChanged() const override;
-  void GetTextEditorValue(nsAString& aValue, bool aIgnoreWrap) const override;
+  void GetTextEditorValue(nsAString& aValue) const override;
   MOZ_CAN_RUN_SCRIPT TextEditor* GetTextEditor() override;
   TextEditor* GetTextEditorWithoutCreation() override;
   nsISelectionController* GetSelectionController() override;

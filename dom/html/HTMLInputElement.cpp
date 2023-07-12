@@ -6768,11 +6768,9 @@ void HTMLInputElement::GetDefaultValueFromContent(nsAString& aValue) {
 
 bool HTMLInputElement::ValueChanged() const { return mValueChanged; }
 
-void HTMLInputElement::GetTextEditorValue(nsAString& aValue,
-                                          bool aIgnoreWrap) const {
-  TextControlState* state = GetEditorState();
-  if (state) {
-    state->GetValue(aValue, aIgnoreWrap);
+void HTMLInputElement::GetTextEditorValue(nsAString& aValue) const {
+  if (TextControlState* state = GetEditorState()) {
+    state->GetValue(aValue, /* aIgnoreWrap = */ true);
   }
 }
 
