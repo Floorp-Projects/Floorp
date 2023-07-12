@@ -623,7 +623,9 @@ add_task(async function tlsErrorPageTest() {
 
 add_task(async function netErrorPageTest() {
   // Connect to a server that rejects all requests, to test network error pages:
-  let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+  let { HttpServer } = ChromeUtils.importESModule(
+    "resource://testing-common/httpd.sys.mjs"
+  );
   let server = new HttpServer();
   server.registerPrefixHandler("/", (req, res) =>
     res.abort(new Error("Noooope."))

@@ -4,7 +4,9 @@
 
 requestLongerTimeout(2);
 
-let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+let { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 const NUM_ISOLATION_LOADS = 2;
 const NUM_CACHED_LOADS = 1;

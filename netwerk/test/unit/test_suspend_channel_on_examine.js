@@ -1,7 +1,9 @@
 // This file tests async handling of a channel suspended in http-on-modify-request.
 "use strict";
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 var obs = Services.obs;
 

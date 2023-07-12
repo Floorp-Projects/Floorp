@@ -22,7 +22,9 @@
  * (as something else) in xpcshellUtilsAUS.js.
  */
 
-let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+let { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 // These are from testConstants.js, which cannot be loaded by this file, because
 // some values are already defined at this point. However, we need these some

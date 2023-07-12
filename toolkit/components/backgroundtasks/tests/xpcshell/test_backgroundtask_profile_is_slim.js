@@ -13,7 +13,9 @@
 // (and it is not configured to connect to mochi.test, etc).
 // Therefore we run our own server for it to connect to.
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 let server;
 
 setupProfileService();

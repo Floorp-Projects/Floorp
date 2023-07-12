@@ -7,7 +7,9 @@ const { PromptTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/PromptTestUtils.sys.mjs"
 );
 
-let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+let { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 const TEST_ROOT = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",

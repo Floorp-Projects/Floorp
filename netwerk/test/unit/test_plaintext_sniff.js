@@ -2,7 +2,9 @@
 
 "use strict";
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 // List of Content-Type headers to test.  For each header we have an array.
 // The first element in the array is the Content-Type header string.  The

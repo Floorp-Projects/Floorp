@@ -9,7 +9,9 @@ const { ASRouter, MessageLoaderUtils } = ChromeUtils.import(
 const { PanelTestProvider } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/PanelTestProvider.sys.mjs"
 );
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 const { RemoteL10n } = ChromeUtils.importESModule(
   "resource://activity-stream/lib/RemoteL10n.sys.mjs"
 );

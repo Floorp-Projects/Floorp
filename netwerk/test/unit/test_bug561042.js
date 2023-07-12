@@ -4,7 +4,9 @@
 
 "use strict";
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 const SERVER_PORT = 8080;
 const baseURL = "http://localhost:" + SERVER_PORT + "/";

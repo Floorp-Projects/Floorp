@@ -9,7 +9,9 @@ ChromeUtils.defineESModuleGetters(this, {
   PageDataSchema: "resource:///modules/pagedata/PageDataSchema.sys.mjs",
 });
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 const server = new HttpServer();
 server.start(-1);

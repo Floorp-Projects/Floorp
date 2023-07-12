@@ -35,7 +35,7 @@ var {
   HTTP_505,
   HttpError,
   HttpServer,
-} = ChromeUtils.import("resource://testing-common/httpd.js");
+} = ChromeUtils.importESModule("resource://testing-common/httpd.sys.mjs");
 
 // List types, this should sync with |enum LIST_TYPES| defined in PendingLookup.
 var ALLOW_LIST = 0;

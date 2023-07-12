@@ -29,7 +29,7 @@ var {
   HTTP_505,
   HttpError,
   HttpServer,
-} = ChromeUtils.import("resource://testing-common/httpd.js");
+} = ChromeUtils.importESModule("resource://testing-common/httpd.sys.mjs");
 var { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs"
 );

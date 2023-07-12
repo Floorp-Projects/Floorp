@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 function make_channel(url, callback, ctx) {
   return NetUtil.newChannel({ uri: url, loadUsingSystemPrincipal: true });

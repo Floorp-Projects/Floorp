@@ -19,14 +19,10 @@ const SUGGESTION_ENGINE_NAME =
 ChromeUtils.defineESModuleGetters(this, {
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.sys.mjs",
-
+  HttpServer: "resource://testing-common/httpd.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  HttpServer: "resource://testing-common/httpd.js",
 });
 
 let gCUITestUtils = new CustomizableUITestUtils(window);

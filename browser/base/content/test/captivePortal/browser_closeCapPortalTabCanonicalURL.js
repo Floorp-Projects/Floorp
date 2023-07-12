@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 const LOGIN_LINK = `<html><body><a href="/unlock">login</a></body></html>`;
 const LOGIN_URL = "http://localhost:8080/login";
 const CANONICAL_SUCCESS_URL = "http://localhost:8080/success";

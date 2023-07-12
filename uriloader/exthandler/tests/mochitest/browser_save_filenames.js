@@ -150,8 +150,8 @@ function checkShortenedFilename(actual, expected) {
 }
 
 add_setup(async function () {
-  const { HttpServer } = ChromeUtils.import(
-    "resource://testing-common/httpd.js"
+  const { HttpServer } = ChromeUtils.importESModule(
+    "resource://testing-common/httpd.sys.mjs"
   );
   httpServer = new HttpServer();
   httpServer.start(8000);

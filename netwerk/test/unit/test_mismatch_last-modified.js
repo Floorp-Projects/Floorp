@@ -6,7 +6,9 @@ const BinaryInputStream = Components.Constructor(
   "setInputStream"
 );
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 var httpserver = new HttpServer();
 
 // Test the handling of a cache revalidation with mismatching last-modified

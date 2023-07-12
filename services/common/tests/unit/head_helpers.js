@@ -34,7 +34,7 @@ var {
   HTTP_505,
   HttpError,
   HttpServer,
-} = ChromeUtils.import("resource://testing-common/httpd.js");
+} = ChromeUtils.importESModule("resource://testing-common/httpd.sys.mjs");
 var { getTestLogger, initTestLogging } = ChromeUtils.importESModule(
   "resource://testing-common/services/common/logging.sys.mjs"
 );

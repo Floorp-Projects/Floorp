@@ -8,7 +8,9 @@ const TEST_ORIGIN = getRootDirectory(gTestPath).replace(
   "http://example.com"
 );
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 add_task(async function test_ss_cookie_redirect() {
   // Set the samesite cookie

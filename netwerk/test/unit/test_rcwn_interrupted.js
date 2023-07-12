@@ -15,7 +15,9 @@ This test is using a resumable response.
 
 "use strict";
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 var httpProtocolHandler = Cc[
   "@mozilla.org/network/protocol;1?name=http"

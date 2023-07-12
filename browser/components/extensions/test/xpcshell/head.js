@@ -2,9 +2,6 @@
 
 /* exported createHttpServer, promiseConsoleOutput, assertPersistentListeners  */
 
-var { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
@@ -16,13 +13,10 @@ ChromeUtils.defineESModuleGetters(this, {
   ExtensionTestUtils:
     "resource://testing-common/ExtensionXPCShellUtils.sys.mjs",
   FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
-  Schemas: "resource://gre/modules/Schemas.sys.mjs",
+  HttpServer: "resource://testing-common/httpd.sys.mjs",
   NetUtil: "resource://gre/modules/NetUtil.sys.mjs",
+  Schemas: "resource://gre/modules/Schemas.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  HttpServer: "resource://testing-common/httpd.js",
 });
 
 ExtensionTestUtils.init(this);

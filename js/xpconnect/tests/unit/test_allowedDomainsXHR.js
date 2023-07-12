@@ -1,4 +1,4 @@
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule("resource://testing-common/httpd.sys.mjs");
 
 var httpserver = new HttpServer();
 var httpserver2 = new HttpServer();

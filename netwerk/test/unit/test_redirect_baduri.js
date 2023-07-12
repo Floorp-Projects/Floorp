@@ -1,6 +1,8 @@
 "use strict";
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 /*
  * Test whether we fail bad URIs in HTTP redirect as CORRUPTED_CONTENT.

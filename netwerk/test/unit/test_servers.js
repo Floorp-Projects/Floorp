@@ -9,7 +9,9 @@
 /* import-globals-from head_channels.js */
 /* import-globals-from head_servers.js */
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 function makeChan(uri) {
   let chan = NetUtil.newChannel({

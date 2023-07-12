@@ -596,8 +596,8 @@ add_task(test_basics);
  * Test that TCPSocket works with ipv6 address.
  */
 add_task(async function test_ipv6() {
-  const { HttpServer } = ChromeUtils.import(
-    "resource://testing-common/httpd.js"
+  const { HttpServer } = ChromeUtils.importESModule(
+    "resource://testing-common/httpd.sys.mjs"
   );
   let deferred = defer();
   let httpServer = new HttpServer();

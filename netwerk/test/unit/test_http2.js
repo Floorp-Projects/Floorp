@@ -1,6 +1,8 @@
 /* import-globals-from http2_test_common.js */
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 var concurrent_channels = [];
 var httpserv = null;

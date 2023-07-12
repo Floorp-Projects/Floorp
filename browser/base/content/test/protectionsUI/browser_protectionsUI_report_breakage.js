@@ -20,7 +20,9 @@ const CB_PREF = "network.cookie.cookieBehavior";
 
 const PREF_REPORT_BREAKAGE_URL = "browser.contentblocking.reportBreakage.url";
 
-let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+let { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 let { CommonUtils } = ChromeUtils.importESModule(
   "resource://services-common/utils.sys.mjs"
 );

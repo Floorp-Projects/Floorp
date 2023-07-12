@@ -14,7 +14,9 @@ do_get_profile();
 //   last-pb-context-exit notification
 // - after the completion of the request, no cookies should be set
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 let server;
 

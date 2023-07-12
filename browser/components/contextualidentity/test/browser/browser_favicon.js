@@ -2,7 +2,9 @@
  * Bug 1270678 - A test case to test does the favicon obey originAttributes.
  */
 
-let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+let { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 const USER_CONTEXTS = ["default", "personal", "work"];
 

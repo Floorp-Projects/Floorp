@@ -4,7 +4,9 @@
 
 // Tests for DevToolsUtils.fetch BOM detection.
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 const BinaryOutputStream = Components.Constructor(
   "@mozilla.org/binaryoutputstream;1",
   "nsIBinaryOutputStream",
