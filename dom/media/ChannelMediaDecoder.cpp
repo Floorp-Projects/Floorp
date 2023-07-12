@@ -422,7 +422,8 @@ ChannelMediaDecoder::ComputePlaybackRate(const MediaChannelStatistics& aStats,
   MOZ_ASSERT(!NS_IsMainThread());
 
   int64_t length = aResource->GetLength();
-  if (aDuration.IsInfinite() && aDuration.IsPositive() > 0 && length >= 0 &&
+  if (aDuration.IsValid() && !aDuration.IsInfinite() &&
+      aDuration.IsPositive() && length >= 0 &&
       length / aDuration.ToSeconds() < UINT32_MAX) {
     return {uint32_t(length / aDuration.ToSeconds()), true};
   }
