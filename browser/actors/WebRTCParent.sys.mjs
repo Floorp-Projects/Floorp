@@ -797,11 +797,7 @@ function prompt(aActor, aBrowser, aRequest) {
         menulist.selectedItem = null;
 
         for (let device of devices) {
-          let item = addDeviceToList(
-            menupopup,
-            device.name,
-            device.deviceIndex
-          );
+          let item = addDeviceToList(menulist, device.name, device.deviceIndex);
           if (device.id == aRequest.audioOutputId) {
             menulist.selectedItem = item;
           }
@@ -848,7 +844,7 @@ function prompt(aActor, aBrowser, aRequest) {
         // "Select a Window or Screen" is the default because we can't and don't
         // want to pick a 'default' window to share (Full screen is "scary").
         addDeviceToList(
-          menupopup,
+          menupopup.parentNode,
           localization.formatValueSync("webrtc-pick-window-or-screen"),
           "-1"
         );
@@ -871,7 +867,7 @@ function prompt(aActor, aBrowser, aRequest) {
 
             isPipeWireDetected = true;
             let item = addDeviceToList(
-              menupopup,
+              menupopup.parentNode,
               localization.formatValueSync("webrtc-share-pipe-wire-portal"),
               i,
               type
@@ -906,7 +902,7 @@ function prompt(aActor, aBrowser, aRequest) {
               });
             }
           }
-          let item = addDeviceToList(menupopup, name, i, type);
+          let item = addDeviceToList(menupopup.parentNode, name, i, type);
           item.deviceId = device.rawId;
           item.mediaSource = type;
           if (device.scary) {
@@ -1030,10 +1026,8 @@ function prompt(aActor, aBrowser, aRequest) {
         menupopup.addEventListener("command", menupopup._commandEventListener);
       }
 
-      function addDeviceToList(menupopup, deviceName, deviceIndex, type) {
-        let menuitem = doc.createXULElement("menuitem");
-        menuitem.setAttribute("value", deviceIndex);
-        menuitem.setAttribute("label", deviceName);
+      function addDeviceToList(menulist, deviceName, deviceIndex, type) {
+        let menuitem = menulist.appendItem(deviceName, deviceIndex);
         menuitem.setAttribute("tooltiptext", deviceName);
         if (type) {
           menuitem.setAttribute("devicetype", type);
@@ -1043,7 +1037,6 @@ function prompt(aActor, aBrowser, aRequest) {
           menuitem.setAttribute("disabled", true);
         }
 
-        menupopup.appendChild(menuitem);
         return menuitem;
       }
 
