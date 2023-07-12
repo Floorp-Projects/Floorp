@@ -43,11 +43,16 @@ this.decompressZip = class extends ExtensionAPI {
             return String(entry1).length - String(entry2).length
           });
           for (let entry of entries) {
+            let entryPath = String(entry);
+            if (OS.Path.normalize(entryPath).startsWith("..") ||
+                OS.Path.normalize(entryPath).startsWith("/")) {
+              throw "!!! Zip Slip detected !!!";
+            }
             let path = OS.Path.join(
               targetDirPath,
               AppConstants.platform === "win" ?
-                String(entry).replaceAll("/", "\\") :
-                String(entry)
+                entryPath.replaceAll("/", "\\") :
+                entryPath
             );
             await zipreader.extract(
               entry,
