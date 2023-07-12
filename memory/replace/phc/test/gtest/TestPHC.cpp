@@ -118,11 +118,149 @@ TEST(PHC, TestPHCAllocations)
 #undef ASSERT_ALIGN
 }
 
+static void TestInUseAllocation(uint8_t* aPtr, size_t aSize) {
+  phc::AddrInfo phcInfo;
+  jemalloc_ptr_info_t jeInfo;
+
+  // Test an in-use PHC allocation: first byte within it.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, aPtr, aSize,
+                        true, false));
+  ASSERT_EQ(moz_malloc_usable_size(aPtr), aSize);
+  jemalloc_ptr_info(aPtr, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, aPtr, aSize, 0));
+
+  // Test an in-use PHC allocation: last byte within it.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize - 1, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, aPtr, aSize,
+                        true, false));
+  ASSERT_EQ(moz_malloc_usable_size(aPtr + aSize - 1), aSize);
+  jemalloc_ptr_info(aPtr + aSize - 1, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, aPtr, aSize, 0));
+
+  // Test an in-use PHC allocation: last byte before it.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr - 1, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, aPtr, aSize,
+                        true, false));
+  ASSERT_EQ(moz_malloc_usable_size(aPtr - 1), 0ul);
+  jemalloc_ptr_info(aPtr - 1, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+
+  // Test an in-use PHC allocation: first byte on its allocation page.
+  ASSERT_TRUE(
+      ReplaceMalloc::IsPHCAllocation(aPtr + aSize - kPageSize, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, aPtr, aSize,
+                        true, false));
+  jemalloc_ptr_info(aPtr + aSize - kPageSize, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+
+  // Test an in-use PHC allocation: first byte in the following guard page.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
+                        true, false));
+  jemalloc_ptr_info(aPtr + aSize, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+
+  // Test an in-use PHC allocation: last byte in the lower half of the
+  // following guard page.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize + (kPageSize / 2 - 1),
+                                             &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
+                        true, false));
+  jemalloc_ptr_info(aPtr + aSize + (kPageSize / 2 - 1), &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+
+  // Test an in-use PHC allocation: last byte in the preceding guard page.
+  ASSERT_TRUE(
+      ReplaceMalloc::IsPHCAllocation(aPtr + aSize - 1 - kPageSize, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
+                        true, false));
+  jemalloc_ptr_info(aPtr + aSize - 1 - kPageSize, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+
+  // Test an in-use PHC allocation: first byte in the upper half of the
+  // preceding guard page.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(
+      aPtr + aSize - 1 - kPageSize - (kPageSize / 2 - 1), &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
+                        true, false));
+  jemalloc_ptr_info(aPtr + aSize - 1 - kPageSize - (kPageSize / 2 - 1),
+                    &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+}
+
+static void TestFreedAllocation(uint8_t* aPtr, size_t aSize) {
+  phc::AddrInfo phcInfo;
+  jemalloc_ptr_info_t jeInfo;
+
+  // Test a freed PHC allocation: first byte within it.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, aPtr, aSize,
+                        true, true));
+  jemalloc_ptr_info(aPtr, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagFreedAlloc, aPtr, aSize, 0));
+
+  // Test a freed PHC allocation: last byte within it.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize - 1, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, aPtr, aSize,
+                        true, true));
+  jemalloc_ptr_info(aPtr + aSize - 1, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagFreedAlloc, aPtr, aSize, 0));
+
+  // Test a freed PHC allocation: last byte before it.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr - 1, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, aPtr, aSize,
+                        true, true));
+  jemalloc_ptr_info(aPtr - 1, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+
+  // Test a freed PHC allocation: first byte on its allocation page.
+  ASSERT_TRUE(
+      ReplaceMalloc::IsPHCAllocation(aPtr + aSize - kPageSize, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, aPtr, aSize,
+                        true, true));
+  jemalloc_ptr_info(aPtr + aSize - kPageSize, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+
+  // Test a freed PHC allocation: first byte in the following guard page.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
+                        true, true));
+  jemalloc_ptr_info(aPtr + aSize, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+
+  // Test a freed PHC allocation: last byte in the lower half of the following
+  // guard page.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(aPtr + aSize + (kPageSize / 2 - 1),
+                                             &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
+                        true, true));
+  jemalloc_ptr_info(aPtr + aSize + (kPageSize / 2 - 1), &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+
+  // Test a freed PHC allocation: last byte in the preceding guard page.
+  ASSERT_TRUE(
+      ReplaceMalloc::IsPHCAllocation(aPtr + aSize - 1 - kPageSize, &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
+                        true, true));
+  jemalloc_ptr_info(aPtr + aSize - 1 - kPageSize, &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+
+  // Test a freed PHC allocation: first byte in the upper half of the preceding
+  // guard page.
+  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(
+      aPtr + aSize - 1 - kPageSize - (kPageSize / 2 - 1), &phcInfo));
+  ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, aPtr, aSize,
+                        true, true));
+  jemalloc_ptr_info(aPtr + aSize - 1 - kPageSize - (kPageSize / 2 - 1),
+                    &jeInfo);
+  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+}
+
 TEST(PHC, TestPHCInfo)
 {
   int stackVar;
   phc::AddrInfo phcInfo;
-  jemalloc_ptr_info_t jeInfo;
 
   // Test a default AddrInfo.
   ASSERT_TRUE(PHCInfoEq(phcInfo, phc::AddrInfo::Kind::Unknown, nullptr, 0ul,
@@ -141,130 +279,11 @@ TEST(PHC, TestPHCInfo)
     MOZ_CRASH("failed to get a PHC allocation");
   }
 
-  // Test an in-use PHC allocation: first byte within it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, p, 32ul, true, false));
-  ASSERT_EQ(moz_malloc_usable_size(p), 32ul);
-  jemalloc_ptr_info(p, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, p, 32, 0));
-
-  // Test an in-use PHC allocation: last byte within it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p + 31, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, p, 32ul, true, false));
-  ASSERT_EQ(moz_malloc_usable_size(p + 31), 32ul);
-  jemalloc_ptr_info(p + 31, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, p, 32, 0));
-
-  // Test an in-use PHC allocation: last byte before it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p - 1, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, p, 32ul, true, false));
-  ASSERT_EQ(moz_malloc_usable_size(p - 1), 0ul);
-  jemalloc_ptr_info(p - 1, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
-
-  // Test an in-use PHC allocation: first byte on its allocation page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p + 32 - kPageSize, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, p, 32ul, true, false));
-  jemalloc_ptr_info(p + 32 - kPageSize, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
-
-  // Test an in-use PHC allocation: first byte in the following guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p + 32, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, p, 32ul, true, false));
-  jemalloc_ptr_info(p + 32, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
-
-  // Test an in-use PHC allocation: last byte in the lower half of the
-  // following guard page.
-  ASSERT_TRUE(
-      ReplaceMalloc::IsPHCAllocation(p + 32 + (kPageSize / 2 - 1), &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, p, 32ul, true, false));
-  jemalloc_ptr_info(p + 32 + (kPageSize / 2 - 1), &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
-
-  // Test an in-use PHC allocation: last byte in the preceding guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p + 31 - kPageSize, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, p, 32ul, true, false));
-  jemalloc_ptr_info(p + 31 - kPageSize, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
-
-  // Test an in-use PHC allocation: first byte in the upper half of the
-  // preceding guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(
-      p + 31 - kPageSize - (kPageSize / 2 - 1), &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, p, 32ul, true, false));
-  jemalloc_ptr_info(p + 31 - kPageSize - (kPageSize / 2 - 1), &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+  TestInUseAllocation(p, 32);
 
   free(p);
 
-  // Test a freed PHC allocation: first byte within it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, p, 32ul, true, true));
-  jemalloc_ptr_info(p, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagFreedAlloc, p, 32, 0));
-
-  // Test a freed PHC allocation: last byte within it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p + 31, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, p, 32ul, true, true));
-  jemalloc_ptr_info(p + 31, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagFreedAlloc, p, 32, 0));
-
-  // Test a freed PHC allocation: last byte before it.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p - 1, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, p, 32ul, true, true));
-  jemalloc_ptr_info(p - 1, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
-
-  // Test a freed PHC allocation: first byte on its allocation page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p + 32 - kPageSize, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::FreedPage, p, 32ul, true, true));
-  jemalloc_ptr_info(p + 32 - kPageSize, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
-
-  // Test a freed PHC allocation: first byte in the following guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p + 32, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, p, 32ul, true, true));
-  jemalloc_ptr_info(p + 32, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
-
-  // Test a freed PHC allocation: last byte in the lower half of the following
-  // guard page.
-  ASSERT_TRUE(
-      ReplaceMalloc::IsPHCAllocation(p + 32 + (kPageSize / 2 - 1), &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, p, 32ul, true, true));
-  jemalloc_ptr_info(p + 32 + (kPageSize / 2 - 1), &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
-
-  // Test a freed PHC allocation: last byte in the preceding guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p + 31 - kPageSize, &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, p, 32ul, true, true));
-  jemalloc_ptr_info(p + 31 - kPageSize, &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
-
-  // Test a freed PHC allocation: first byte in the upper half of the preceding
-  // guard page.
-  ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(
-      p + 31 - kPageSize - (kPageSize / 2 - 1), &phcInfo));
-  ASSERT_TRUE(
-      PHCInfoEq(phcInfo, phc::AddrInfo::Kind::GuardPage, p, 32ul, true, true));
-  jemalloc_ptr_info(p + 31 - kPageSize - (kPageSize / 2 - 1), &jeInfo);
-  ASSERT_TRUE(JeInfoEq(jeInfo, TagUnknown, nullptr, 0, 0));
+  TestFreedAllocation(p, 32);
 
   // There are no tests for `mKind == NeverAllocatedPage` because it's not
   // possible to reliably get ahold of such a page.
@@ -308,4 +327,47 @@ TEST(PHC, TestPHCDisabling)
   uint8_t* s = GetPHCAllocation(32);  // This should succeed.
   ASSERT_TRUE(!!s);
   free(s);
+}
+
+TEST(PHC, TestPHCExhaustion)
+{
+  // PHC hardcodes the amount of allocations to track.
+#if defined(XP_MACOSX) && defined(__aarch64__)
+  const unsigned NUM_ALLOCATIONS = 1024;
+#else
+  const unsigned NUM_ALLOCATIONS = 4096;
+#endif
+  uint8_t* allocations[NUM_ALLOCATIONS];
+  const unsigned REQUIRED_ALLOCATIONS = NUM_ALLOCATIONS - 50;
+
+  unsigned last_allocation;
+  for (unsigned i = 0; i < NUM_ALLOCATIONS; i++) {
+    allocations[i] = GetPHCAllocation(128);
+    last_allocation = i;
+    if (i < REQUIRED_ALLOCATIONS) {
+      // Assert that the first REQUIRED_ALLOCATIONS work.  We require only
+      // REQUIRED_ALLOCATIONS rather than NUM_ALLOCATIONS because sometimes
+      // some PHC slots are used before the test begins.
+      ASSERT_TRUE(allocations[i]);
+    } else if (!allocations[i]) {
+      // Break the loop if an allocation fails to move to the next phase.
+      last_allocation--;
+      break;
+    }
+    TestInUseAllocation(allocations[i], 128);
+  }
+
+  // We should now fail to get an allocation.
+  ASSERT_FALSE(GetPHCAllocation(128));
+
+  for (unsigned i = 0; i <= last_allocation; i++) {
+    free(allocations[i]);
+    TestFreedAllocation(allocations[i], 128);
+  }
+
+  // And now that we've released those allocations we should be able to get
+  // new allocations again.
+  uint8_t* r = GetPHCAllocation(128);
+  ASSERT_TRUE(!!r);
+  free(r);
 }
