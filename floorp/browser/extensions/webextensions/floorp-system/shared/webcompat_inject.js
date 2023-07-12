@@ -4,11 +4,11 @@
     const WEBCOMPATS_INJECT = [
         /*
         {
-          "matches": ["*://*.youtube.com/*"],
-          "js": [
-            { file: "webcompat/fix-youtube-comment.js" }
-          ],
-          "platforms": ["win"], // "mac", "win", "android", "cros", "linux", "openbsd", "fuchsia"
+            "matches": ["*://*.youtube.com/*"],
+            "js": [
+                { file: "webcompat/fix-youtube-comment.js" }
+            ],
+            "platforms": ["win"], // "mac", "win", "android", "cros", "linux", "openbsd", "fuchsia"
         }
         */
 

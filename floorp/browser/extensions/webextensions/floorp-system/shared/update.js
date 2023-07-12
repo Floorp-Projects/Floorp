@@ -56,7 +56,7 @@
                 if (!res.ok) throw `${res.status} ${res.statusText}`;
                 return res.json();
             }).then(datas => {
-                let platformKeyName = 
+                let platformKeyName =
                     platformInfo["os"] === "mac" ?
                         "mac" :
                         `${platformInfo["os"]}-${platformInfo["arch"]}`;

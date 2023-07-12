@@ -109,8 +109,8 @@
       "download-notification.js"
     ]
   },
-   "applications": {
-     "gecko": {
+  "applications": {
+    "gecko": {
       "id": "floorp-system@floorp.ablaze.one"
     }
   }

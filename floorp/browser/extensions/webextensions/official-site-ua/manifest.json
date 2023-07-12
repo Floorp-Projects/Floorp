@@ -15,7 +15,6 @@
   "permissions": [
     "webRequest", "webRequestBlocking", "https://ablaze.one/*", "https://floorp.ablaze.one/*", "https://support.ablaze.one/*", "https://ss1.xrea.com/menkuri.s270.xrea.com/*"
   ],
-  
   "background": {
     "scripts": ["background.js"]
   },

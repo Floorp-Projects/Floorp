@@ -13,17 +13,17 @@ this.decompressZip = class extends ExtensionAPI {
     const { AppConstants } = ChromeUtils.import(
       "resource://gre/modules/AppConstants.jsm"
     );
-    
+
     const ZipReader = Components.Constructor(
       "@mozilla.org/libjar/zip-reader;1",
       "nsIZipReader",
       "open"
     );
-    
+
     const { OS } = ChromeUtils.import(
       "resource://gre/modules/osfile.jsm"
     );
-    
+
     const { FileUtils } = ChromeUtils.import(
       "resource://gre/modules/FileUtils.jsm"
     );

@@ -13,7 +13,7 @@ const { AppConstants } = ChromeUtils.import(
 this.BrowserInfo = class extends ExtensionAPI {
   getAPI(context) {
     const EventManager = ExtensionCommon.EventManager;
-    
+
     return {
       BrowserInfo: {
         async getDisplayVersion() {

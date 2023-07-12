@@ -19,7 +19,6 @@ this.sidebar = class extends ExtensionAPI {
           }
           return extensionsArr;
         },
-        
       },
     };
   }

@@ -14,8 +14,8 @@ DIRS += [
 DIRS += ["floorp-system/shared"]
 
 # multirow-tabs = Paxmod
-# fake-gesturefy = Fake Gesturefy 
+# fake-gesturefy = Fake Gesturefy
 # translate = Translate Web Pages (TWP)
-# Removed: treestyletab = Tree Style Tab by Piro (aka:TST) 
+# Removed: treestyletab = Tree Style Tab by Piro (aka:TST)
 # official-site-ua = on Ablaze site UserAgent
 # floorp-system = Floorp System Addon (Webcompat, Notificaiton, etc)

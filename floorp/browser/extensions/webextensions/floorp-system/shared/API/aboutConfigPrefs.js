@@ -9,7 +9,7 @@
 this.aboutConfigPrefs = class extends ExtensionAPI {
   getAPI(context) {
     const EventManager = ExtensionCommon.EventManager;
-    
+
     return {
       aboutConfigPrefs: {
         onPrefChange: new EventManager({
