@@ -169,7 +169,7 @@ def setup_nofis(config, tasks):
 
 @transforms.add
 def fill_email_data(config, tasks):
-    product_name = config.graph_config["taskgraph"]["repositories"]["mobile"]["name"]
+    product_name = config.params["project"]
     format_kwargs = {
         "product_name": product_name.lower(),
         "head_rev": config.params["head_rev"],
