@@ -52,6 +52,7 @@ UNIFIED_SOURCES += [
     "JitcodeMap.cpp",
     "JitContext.cpp",
     "JitFrames.cpp",
+    "JitHints.cpp",
     "JitOptions.cpp",
     "JitScript.cpp",
     "JitSpewer.cpp",

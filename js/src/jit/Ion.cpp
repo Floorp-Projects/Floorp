@@ -1858,7 +1858,7 @@ static MethodStatus Compile(JSContext* cx, HandleScript script,
   }
 
   OptimizationLevel optimizationLevel =
-      IonOptimizations.levelForScript(script, osrPc);
+      IonOptimizations.levelForScript(cx, script, osrPc);
   if (optimizationLevel == OptimizationLevel::DontCompile) {
     return Method_Skipped;
   }
