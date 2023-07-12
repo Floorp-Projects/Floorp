@@ -12,18 +12,17 @@
         }
         */
 
-        /* Test for AMO
-        {
-            "matches": ["*://addons.mozilla.org/*/firefox/*"],
-            "js": [
-                { file: "webcompat/fix-addons-mozilla-org.js" }
-            ],
-            "css": [
-                { file: "webcompat/fix-addons-mozilla-org.css" }
-            ],
-            "platforms": ["win", "mac", "linux", "android"]
-        },
-        */
+        // Test for AMO
+        // {
+        //     "matches": ["*://addons.mozilla.org/*/firefox/*"],
+        //     "js": [
+        //         { file: "webcompat/fix-addons-mozilla-org.js" }
+        //     ],
+        //     "css": [
+        //         { file: "webcompat/fix-addons-mozilla-org.css" }
+        //     ],
+        //     "platforms": ["win", "mac", "linux", "android"]
+        // },
     ]
 
     let REGISTED_CONTENT_SCRIPTS = [];
