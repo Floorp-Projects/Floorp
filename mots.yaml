@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-06-27T10:17:47.907741'
+updated_at: '2023-07-13T01:07:56.446836'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -35,6 +35,10 @@ people:
     bmo_id: 421286
     name: ''
     nick: agi
+  - &aglavic
+    bmo_id: 692423
+    name: Andrej Glavic
+    nick: aglavic
   - &ahal
     bmo_id: 382067
     name: Andrew Halberstadt
@@ -59,10 +63,6 @@ people:
     bmo_id: 555858
     name: Andi
     nick: andi
-  - &andrej
-    bmo_id: 692423
-    name: Andrej Glavic
-    nick: andrej
   - &aoprea
     bmo_id: 509499
     name: Andrei Oprea
@@ -135,10 +135,6 @@ people:
     bmo_id: 165012
     name: Brian Birtles
     nick: birtles
-  - &florian
-    bmo_id: 149052
-    name: Florian Quèze
-    nick: florian
   - &bobowen
     bmo_id: 458623
     name: Bob Owen
@@ -260,6 +256,10 @@ people:
     bmo_id: 278074
     name: Daniel Holbert
     nick: dholbert
+  - &dimi
+    bmo_id: 468232
+    name: Dimi Lee
+    nick: dimi
   - &djackson
     bmo_id: 644159
     name: Dennis Jackson
@@ -268,10 +268,6 @@ people:
     bmo_id: 436087
     name: Kannan Vijayan
     nick: djvj
-  - &dlee
-    bmo_id: 468232
-    name: Dimi Lee
-    nick: dlee
   - &dlrobertson
     bmo_id: 705145
     name: Dan Robertson
@@ -351,6 +347,10 @@ people:
     bmo_id: 130462
     name: Francesco Lodolo
     nick: flod
+  - &florian
+    bmo_id: 149052
+    name: Florian Quèze
+    nick: florian
   - &freddy
     bmo_id: 428608
     name: Frederik Braun
@@ -746,7 +746,7 @@ people:
     nick: niklas
   - &nkulatova
     bmo_id: 697976
-    name: ''
+    name: Anna Weine
     nick: nkulatova
   - &nlapre
     bmo_id: 711793
@@ -764,10 +764,10 @@ people:
     bmo_id: 283262
     name: Alexandre Poirot
     nick: ochameau
-  - &ohall
+  - &olivia
     bmo_id: 694341
     name: Olivia Hall
-    nick: ohall
+    nick: olivia
   - &owlish
     bmo_id: 579431
     name: ''
@@ -1113,7 +1113,7 @@ modules:
       - *timhuang
     peers:
       - *baku
-      - *dlee
+      - *dimi
       - *pbz
       - *johannh
     machine_name: core_antitracking
@@ -1635,7 +1635,7 @@ modules:
       - *calu
       - *jonalmeida
       - *mkato
-      - *ohall
+      - *olivia
     machine_name: core_geckoview
 
   - name: 'Core: Global Key Bindings'
@@ -3296,7 +3296,7 @@ modules:
           - *serg
         peers:
           - *tgiles
-          - *dlee
+          - *dimi
         machine_name: form_autofill
 
       - name: In-product Messaging
@@ -3390,7 +3390,7 @@ modules:
         peers:
           - *jaws
           - *tgiles
-          - *dlee
+          - *dimi
           - *sfoster
         machine_name: password_manager
 
@@ -3936,7 +3936,7 @@ modules:
     owners:
       - *sparky
     peers:
-      - *andrej
+      - *aglavic
       - *davehunt
       - *kimberlythegeek
       - *kshampur
@@ -4102,7 +4102,7 @@ modules:
       - netwerk/url-classifier/**/*
     excludes: []
     owners:
-      - *dlee
+      - *dimi
       - *groovecoder
     peers:
       - *timhuang
@@ -4117,5 +4117,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: c425b73400e197ab85997473116a06e0a5ce0256
-  export: ee9f7bf731f45cb85df9da3b15e6559cfc93668f
+  config: a43e8657b8cdb8f570268f945f2bce90ea4bd259
+  export: c9c19019fb1d2dbbb5df1d3863f5d686ae37fd01
