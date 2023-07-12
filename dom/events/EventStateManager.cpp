@@ -5505,6 +5505,20 @@ nsresult EventStateManager::HandleMiddleClickPaste(
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
     }
+
+    const nsRange* range = selection->GetRangeAt(0);
+    if (range) {
+      nsINode* target = range->GetStartContainer();
+      if (target && target->OwnerDoc()->IsInChromeDocShell()) {
+        // In Chrome document, limit middle-click pasting to only the editor
+        // because it looks odd if pasting works in the focused editor when you
+        // middle-click toolbar or something which are far from the editor.
+        // However, as DevTools especially Web Console module assumes that paste
+        // event will be fired when middle-click even on not editor, don't limit
+        // it.
+        return NS_OK;
+      }
+    }
   }
 
   // Don't modify selection here because we've already set caret to the point
