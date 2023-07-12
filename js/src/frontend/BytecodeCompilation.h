@@ -31,16 +31,6 @@ struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 class ScopeBindingCache;
 
-extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
-                                     const JS::ReadOnlyCompileOptions& options,
-                                     JS::SourceText<char16_t>& srcBuf,
-                                     ScopeKind scopeKind);
-
-extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
-                                     const JS::ReadOnlyCompileOptions& options,
-                                     JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-                                     ScopeKind scopeKind);
-
 extern JSScript* CompileEvalScript(JSContext* cx,
                                    const JS::ReadOnlyCompileOptions& options,
                                    JS::SourceText<char16_t>& srcBuf,
