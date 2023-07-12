@@ -247,11 +247,6 @@ def add_artifacts(config, tasks):
                 )
                 apks[apk["abi"]] = {
                     "name": apk_name,
-                    "github-name": artifact_template["github-name"].format(
-                        version=config.params["version"],
-                        gradle_build=gradle_build,
-                        **apk,
-                    ),
                 }
         elif "aab-artifact-template" in task:
             variant_name = variant_config["name"]
