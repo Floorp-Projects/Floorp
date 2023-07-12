@@ -28,3 +28,7 @@ When you stop holding the mouse down, the rectangle that was displayed on screen
 
 .. image:: resizable_measuring_area.png
   :class: border
+
+.. note::
+
+  **Tip**: Use the arrow keys to move the tool around and :kbd:`Ctrl` + arrow keys (:kbd:`Cmd` + arrow keys on a Mac) to resize it. Hold :kbd:`Shift` to make it move faster.
