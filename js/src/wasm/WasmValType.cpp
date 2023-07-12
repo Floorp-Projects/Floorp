@@ -27,6 +27,7 @@
 #include "vm/JSAtom.h"
 #include "vm/JSObject.h"
 #include "vm/StringType.h"
+#include "wasm/WasmFeatures.h"
 #include "wasm/WasmJS.h"
 
 #include "vm/JSAtom-inl.h"

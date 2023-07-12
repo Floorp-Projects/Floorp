@@ -10,6 +10,7 @@
 
 #include "jit/Lowering.h"
 #include "jit/MIR.h"
+#include "wasm/WasmFeatures.h"  // for wasm::ReportSimdAnalysis
 
 #include "jit/shared/Lowering-shared-inl.h"
 

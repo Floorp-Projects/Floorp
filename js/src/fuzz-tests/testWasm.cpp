@@ -15,6 +15,7 @@
 #include "vm/TypedArrayObject.h"
 
 #include "wasm/WasmCompile.h"
+#include "wasm/WasmFeatures.h"
 #include "wasm/WasmIonCompile.h"
 #include "wasm/WasmJS.h"
 #include "wasm/WasmTable.h"

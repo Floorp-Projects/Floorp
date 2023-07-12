@@ -21,6 +21,7 @@
 #include "util/Text.h"
 #include "vm/GlobalObject.h"
 
+#include "wasm/WasmFeatures.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmIntrinsicGenerated.h"
 #include "wasm/WasmJS.h"

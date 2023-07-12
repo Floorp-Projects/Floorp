@@ -55,11 +55,6 @@
 // 5. [fuzzing] Add the feature to gluesmith/src/lib.rs, if wasm-smith has
 //    support for it.
 
-#ifdef ENABLE_WASM_SIMD
-#  define WASM_SIMD_ENABLED 1
-#else
-#  define WASM_SIMD_ENABLED 0
-#endif
 #ifdef ENABLE_WASM_RELAXED_SIMD
 #  define WASM_RELAXED_SIMD_ENABLED 1
 #else
@@ -101,84 +96,114 @@
 #  define WASM_MULTI_MEMORY_ENABLED 0
 #endif
 
+enum class WasmFeatureStage {
+  Experimental = 0,
+  Tentative,
+  Default,
+};
+
 // clang-format off
-#define JS_FOR_WASM_FEATURES(DEFAULT, TENTATIVE, EXPERIMENTAL)                \
-  TENTATIVE(/* capitalized name   */ ExtendedConst,                           \
-            /* lower case name    */ extendedConst,                           \
-            /* compile predicate  */ WASM_EXTENDED_CONST_ENABLED,             \
-            /* compiler predicate */ true,                                    \
-            /* flag predicate     */ true,                                    \
-            /* shell flag         */ "extended-const",                        \
-            /* preference name    */ "extended_const")                        \
-  TENTATIVE(                                                                  \
-      /* capitalized name   */ Exceptions,                                    \
-      /* lower case name    */ exceptions,                                    \
-      /* compile predicate  */ true,                                          \
-      /* compiler predicate */ BaselineAvailable(cx) || IonAvailable(cx),     \
-      /* flag predicate     */ true,                                          \
-      /* shell flag         */ "exceptions",                                  \
-      /* preference name    */ "exceptions")                                  \
-  EXPERIMENTAL(/* capitalized name   */ FunctionReferences,                   \
-               /* lower case name    */ functionReferences,                   \
-               /* compile predicate  */ WASM_FUNCTION_REFERENCES_ENABLED,     \
-               /* compiler predicate */ BaselineAvailable(cx) ||              \
-                                        IonAvailable(cx),                     \
-               /* flag predicate     */ true,                                 \
-               /* shell flag         */ "function-references",                \
-               /* preference name    */ "function_references")                \
-  EXPERIMENTAL(/* capitalized name   */ Gc,                                   \
-               /* lower case name    */ gc,                                   \
-               /* compile predicate  */ WASM_GC_ENABLED,                      \
-               /* compiler predicate */ AnyCompilerAvailable(cx),             \
-               /* flag predicate     */ WasmFunctionReferencesFlag(cx),       \
-               /* shell flag         */ "gc",                                 \
-               /* preference name    */ "gc")                                 \
-  TENTATIVE(/* capitalized name   */ RelaxedSimd,                             \
-            /* lower case name    */ v128Relaxed,                             \
-            /* compile predicate  */ WASM_RELAXED_SIMD_ENABLED,               \
-            /* compiler predicate */ AnyCompilerAvailable(cx),                \
-            /* flag predicate     */ js::jit::JitSupportsWasmSimd(),          \
-            /* shell flag         */ "relaxed-simd",                          \
-            /* preference name    */ "relaxed_simd")                          \
-  TENTATIVE(                                                                  \
-      /* capitalized name   */ Memory64,                                      \
-      /* lower case name    */ memory64,                                      \
-      /* compile predicate  */ WASM_MEMORY64_ENABLED,                         \
-      /* compiler predicate */ BaselineAvailable(cx) || IonAvailable(cx),     \
-      /* flag predicate     */ true,                                          \
-      /* shell flag         */ "memory64",                                    \
-      /* preference name    */ "memory64")                                    \
-  EXPERIMENTAL(                                                               \
-      /* capitalized name   */ MemoryControl,                                 \
-      /* lower case name    */ memoryControl,                                 \
-      /* compile predicate  */ WASM_MEMORY_CONTROL_ENABLED,                   \
-      /* compiler predicate */ BaselineAvailable(cx) || IonAvailable(cx),     \
-      /* flag predicate     */ true,                                          \
-      /* shell flag         */ "memory-control",                              \
-      /* preference name    */ "memory_control")                              \
-  EXPERIMENTAL(                                                               \
-      /* capitalized name   */ MultiMemory,                                   \
-      /* lower case name    */ multiMemory,                                   \
-      /* compile predicate  */ WASM_MULTI_MEMORY_ENABLED,                     \
-      /* compiler predicate */ BaselineAvailable(cx) || IonAvailable(cx),     \
-      /* flag predicate     */ true,                                          \
-      /* shell flag         */ "multi-memory",                                \
-      /* preference name    */ "multi_memory")                                \
-  EXPERIMENTAL(/* capitalized name   */ MozIntGemm,                           \
-               /* lower case name    */ mozIntGemm,                           \
-               /* compile predicate  */ WASM_MOZ_INTGEMM_ENABLED,             \
-               /* compiler predicate */ BaselineAvailable(cx) ||              \
-                  IonAvailable(cx),                                           \
-               /* flag predicate     */ IsSimdPrivilegedContext(cx),          \
-               /* shell flag         */ "moz-intgemm",                        \
-               /* preference name    */ "moz_intgemm")                        \
-  EXPERIMENTAL(/* capitalized name   */ TestSerialization,                    \
-               /* lower case name    */ testSerialization,                    \
-               /* compile predicate  */ 1,                                    \
-               /* compiler predicate */ IonAvailable(cx),                     \
-               /* flag predicate     */ true,                                 \
-               /* shell flag         */ "test-serialization",                 \
-               /* preference name    */ "test-serialization")
+#define JS_FOR_WASM_FEATURES(FEATURE)                                   \
+  FEATURE(                                                              \
+    /* capitalized name   */ ExtendedConst,                             \
+    /* lower case name    */ extendedConst,                             \
+    /* stage              */ WasmFeatureStage::Tentative,               \
+    /* compile predicate  */ WASM_EXTENDED_CONST_ENABLED,               \
+    /* compiler predicate */ true,                                      \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "extended-const",                          \
+    /* preference name    */ "extended_const")                          \
+  FEATURE(                                                              \
+    /* capitalized name   */ Exceptions,                                \
+    /* lower case name    */ exceptions,                                \
+    /* stage              */ WasmFeatureStage::Tentative,               \
+    /* compile predicate  */ true,                                      \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "exceptions",                              \
+    /* preference name    */ "exceptions")                              \
+  FEATURE(                                                              \
+    /* capitalized name   */ FunctionReferences,                        \
+    /* lower case name    */ functionReferences,                        \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ WASM_FUNCTION_REFERENCES_ENABLED,          \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ WasmGcFlag(cx),                            \
+    /* shell flag         */ "function-references",                     \
+    /* preference name    */ "function_references")                     \
+  FEATURE(                                                              \
+    /* capitalized name   */ Gc,                                        \
+    /* lower case name    */ gc,                                        \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ WASM_GC_ENABLED,                           \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "gc",                                      \
+    /* preference name    */ "gc")                                      \
+  FEATURE(                                                              \
+    /* capitalized name   */ RelaxedSimd,                               \
+    /* lower case name    */ v128Relaxed,                               \
+    /* stage              */ WasmFeatureStage::Tentative,               \
+    /* compile predicate  */ WASM_RELAXED_SIMD_ENABLED,                 \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ js::jit::JitSupportsWasmSimd(),            \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "relaxed-simd",                            \
+    /* preference name    */ "relaxed_simd")                            \
+  FEATURE(                                                              \
+    /* capitalized name   */ Memory64,                                  \
+    /* lower case name    */ memory64,                                  \
+    /* stage              */ WasmFeatureStage::Tentative,               \
+    /* compile predicate  */ WASM_MEMORY64_ENABLED,                     \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "memory64",                                \
+    /* preference name    */ "memory64")                                \
+  FEATURE(                                                              \
+    /* capitalized name   */ MemoryControl,                             \
+    /* lower case name    */ memoryControl,                             \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ WASM_MEMORY_CONTROL_ENABLED,               \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "memory-control",                          \
+    /* preference name    */ "memory_control")                          \
+  FEATURE(                                                              \
+    /* capitalized name   */ MultiMemory,                               \
+    /* lower case name    */ multiMemory,                               \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ WASM_MULTI_MEMORY_ENABLED,                 \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "multi-memory",                            \
+    /* preference name    */ "multi_memory")                            \
+  FEATURE(                                                              \
+    /* capitalized name   */ MozIntGemm,                                \
+    /* lower case name    */ mozIntGemm,                                \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ WASM_MOZ_INTGEMM_ENABLED,                  \
+    /* compiler predicate */ AnyCompilerAvailable(cx),                  \
+    /* flag predicate     */ IsSimdPrivilegedContext(cx),               \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "moz-intgemm",                             \
+    /* preference name    */ "moz_intgemm")                             \
+  FEATURE(                                                              \
+    /* capitalized name   */ TestSerialization,                         \
+    /* lower case name    */ testSerialization,                         \
+    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* compile predicate  */ 1,                                         \
+    /* compiler predicate */ IonAvailable(cx),                          \
+    /* flag predicate     */ true,                                      \
+    /* flag force enable  */ false,                                     \
+    /* shell flag         */ "test-serialization",                      \
+    /* preference name    */ "test-serialization")
 
 // clang-format on
 

@@ -68,6 +68,7 @@
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
 #include "vm/StringObject.h"
+#include "wasm/WasmFeatures.h"
 #include "wasm/WasmJS.h"
 #ifdef ENABLE_RECORD_TUPLE
 #  include "vm/RecordType.h"
