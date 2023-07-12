@@ -342,8 +342,6 @@ tasks:
             gradle-build: focus
         source-project-name: "focus-android"
         apk-artifact-template:
-            # we override this with a generic name to make the signing kind cleaner
-            name: 'public/build/app-focus-androidTest.apk'
             # this path is determined by the gradle build configs
             path: '/builds/worker/checkouts/vcs/focus-android/app/build/outputs/apk/androidTest/focus/debug/app-focus-debug-androidTest.apk'
         treeherder:
@@ -396,7 +394,6 @@ tasks:
             test-build-type: nightly
         source-project-name: "focus-android"
         apk-artifact-template:
-            name: 'public/build/app-focus-androidTest.apk'
             path: '/builds/worker/checkouts/vcs/focus-android/app/build/outputs/apk/androidTest/focus/nightly/app-focus-nightly-androidTest.apk'
         treeherder:
             symbol: focus-nightly(Bat)
@@ -449,7 +446,6 @@ tasks:
             test-build-type: beta
         source-project-name: "focus-android"
         apk-artifact-template:
-            name: 'public/build/app-focus-androidTest.apk'
             path: '/builds/worker/checkouts/vcs/focus-android/app/build/outputs/apk/androidTest/focus/beta/app-focus-beta-androidTest.apk'
         treeherder:
             symbol: focus-beta(Bat)

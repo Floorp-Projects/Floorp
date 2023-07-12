@@ -71,7 +71,7 @@ tasks:
                 - ["cd", "focus-android"]
             commands:
                 - [wget, {artifact-reference: '<signed-apk-debug-apk/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
-                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/app-focus-androidTest.apk>'}, '-O', android-test.apk]
+                - [wget, {artifact-reference: '<signed-apk-android-test/public/build/target.noarch.apk>'}, '-O', android-test.apk]
                 - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app.apk, android-test.apk, '1']
         treeherder:
             symbol: focus-nightly(startup-arm)
