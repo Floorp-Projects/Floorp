@@ -52,7 +52,7 @@
 #include "builtin/MapObject.h"
 #include "builtin/Promise.h"
 #include "builtin/TestingUtility.h"  // js::ParseCompileOptions, js::ParseDebugMetadata
-#include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScriptToExtensibleStencil, frontend::DelazifyCanonicalScriptedFunction
+#include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScriptToExtensibleStencil
 #include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToExtensibleStencil
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "frontend/FrontendContext.h"     // AutoReportFrontendContext

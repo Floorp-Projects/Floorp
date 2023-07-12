@@ -84,14 +84,6 @@ extern JSScript* CompileEvalScript(JSContext* cx,
                                    JS::Handle<js::Scope*> enclosingScope,
                                    JS::Handle<JSObject*> enclosingEnv);
 
-extern bool DelazifyCanonicalScriptedFunction(JSContext* cx,
-                                              FrontendContext* fc,
-                                              JS::Handle<JSFunction*> fun);
-
-extern already_AddRefed<CompilationStencil> DelazifyCanonicalScriptedFunction(
-    JSContext* cx, FrontendContext* fc, ScopeBindingCache* scopeCache,
-    CompilationStencil& context, ScriptIndex scriptIndex);
-
 }  // namespace frontend
 
 }  // namespace js
