@@ -298,6 +298,15 @@ static const size_t kPageSize =
 #endif
     ;
 
+// We align the PHC area to a multiple of the jemalloc and JS GC chunk size
+// (both use 1MB aligned chunks) so that their address computations don't lead
+// from non-PHC memory into PHC memory causing misleading PHC stacks to be
+// attached to a crash report.
+static const size_t kPhcAlign = 1024 * 1024;
+
+static_assert(IsPowerOfTwo(kPhcAlign));
+static_assert((kPhcAlign % kPageSize) == 0);
+
 // There are two kinds of page.
 // - Allocation pages, from which allocations are made.
 // - Guard pages, which are never touched by PHC.
@@ -309,6 +318,10 @@ static const size_t kNumAllPages = kNumAllocPages * 2 + 1;
 
 // The total size of the allocation pages and guard pages.
 static const size_t kAllPagesSize = kNumAllPages * kPageSize;
+
+// jemalloc adds a guard page to the end of our allocation, see the comment in
+// AllocAllPages() for more information.
+static const size_t kAllPagesJemallocSize = kAllPagesSize - kPageSize;
 
 // The junk value used to fill new allocation in debug builds. It's same value
 // as the one used by mozjemalloc. PHC applies it unconditionally in debug
@@ -456,19 +469,31 @@ class GConst {
 
   // Allocates the allocation pages and the guard pages, contiguously.
   uint8_t* AllocAllPages() {
-    // Allocate the pages so that they are inaccessible. They are never freed,
-    // because it would happen at process termination when it would be of little
-    // use.
-    void* pages =
-#ifdef XP_WIN
-        VirtualAlloc(nullptr, kAllPagesSize, MEM_RESERVE, PAGE_NOACCESS);
-#else
-        mmap(nullptr, kAllPagesSize, PROT_NONE, MAP_ANONYMOUS | MAP_PRIVATE, -1,
-             0);
-#endif
+    // The memory allocated here is never freed, because it would happen at
+    // process termination when it would be of little use.
+
+    // We can rely on jemalloc's behaviour that when it allocates memory aligned
+    // with its own chunk size it will over-allocate and guarantee that the
+    // memory after the end of our allocation, but before the next chunk, is
+    // decommitted and inaccessible. Elsewhere in PHC we assume that we own
+    // that page (so that memory errors in it get caught by PHC) but here we
+    // use kAllPagesJemallocSize which subtracts jemalloc's guard page.
+    void* pages = sMallocTable.memalign(kPhcAlign, kAllPagesJemallocSize);
     if (!pages) {
       MOZ_CRASH();
     }
+
+    // Make the pages inaccessible.
+#ifdef XP_WIN
+    if (!VirtualFree(pages, kAllPagesJemallocSize, MEM_DECOMMIT)) {
+      MOZ_CRASH("VirtualFree failed");
+    }
+#else
+    if (mmap(pages, kAllPagesJemallocSize, PROT_NONE,
+             MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0) == MAP_FAILED) {
+      MOZ_CRASH("mmap failed");
+    }
+#endif
 
     return static_cast<uint8_t*>(pages);
   }
@@ -1468,9 +1493,12 @@ void replace_jemalloc_stats(jemalloc_stats_t* aStats,
                             jemalloc_bin_stats_t* aBinStats) {
   sMallocTable.jemalloc_stats_internal(aStats, aBinStats);
 
-  // Add all the pages to `mapped`.
-  size_t mapped = kAllPagesSize;
-  aStats->mapped += mapped;
+  // We allocate our memory from jemalloc so it has already counted our memory
+  // usage within "mapped" and "allocated", we must subtract the memory we
+  // allocated from jemalloc from allocated before adding in only the parts that
+  // we have allocated out to Firefox.
+
+  aStats->allocated -= kAllPagesJemallocSize;
 
   size_t allocated = 0;
   {
