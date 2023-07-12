@@ -9,7 +9,7 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Range.h"
 
-#include "frontend/BytecodeCompilation.h"
+#include "frontend/BytecodeCompiler.h"  // frontend::CompileEvalScript
 #include "gc/HashUtil.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/friend/ErrorMessages.h"   // js::GetErrorMessage, JSMSG_*

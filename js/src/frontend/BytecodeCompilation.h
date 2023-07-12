@@ -31,12 +31,6 @@ struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 class ScopeBindingCache;
 
-extern JSScript* CompileEvalScript(JSContext* cx,
-                                   const JS::ReadOnlyCompileOptions& options,
-                                   JS::SourceText<char16_t>& srcBuf,
-                                   JS::Handle<js::Scope*> enclosingScope,
-                                   JS::Handle<JSObject*> enclosingEnv);
-
 }  // namespace frontend
 
 }  // namespace js
