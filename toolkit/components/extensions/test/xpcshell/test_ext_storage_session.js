@@ -26,10 +26,6 @@ add_task(async function test_storage_session_empty_events() {
 });
 
 add_task(async function test_storage_session_contentscript() {
-  let contentPage = await ExtensionTestUtils.loadContentPage(
-    "http://example.com/data/file_sample.html"
-  );
-
   let extensionData = {
     manifest: {
       content_scripts: [
@@ -40,14 +36,37 @@ add_task(async function test_storage_session_contentscript() {
       ],
       permissions: ["storage"],
     },
+    background() {
+      let events = [];
+      browser.storage.onChanged.addListener((_, area) => {
+        events.push(area);
+      });
+      browser.test.onMessage.addListener(_msg => {
+        browser.test.sendMessage("bg-events", events.join());
+      });
+      browser.runtime.onMessage.addListener(async _msg => {
+        await browser.storage.local.set({ foo: "local" });
+        await browser.storage.session.set({ foo: "session" });
+        await browser.storage.sync.set({ foo: "sync" });
+        browser.test.sendMessage("done");
+      });
+    },
     files: {
       "content_script.js"() {
+        let events = [];
+        browser.storage.onChanged.addListener((_, area) => {
+          events.push(area);
+        });
+        browser.test.onMessage.addListener(_msg => {
+          browser.test.sendMessage("cs-events", events.join());
+        });
+
         browser.test.assertEq(
           typeof browser.storage.session,
           "undefined",
           "Expect storage.session to not be available in content scripts"
         );
-        browser.test.sendMessage("done");
+        browser.runtime.sendMessage("ready");
       },
     },
   };
@@ -55,7 +74,23 @@ add_task(async function test_storage_session_contentscript() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   await extension.startup();
 
+  let contentPage = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/data/file_sample.html"
+  );
+
   await extension.awaitMessage("done");
+  extension.sendMessage("_getEvents");
+
+  equal(
+    "local,sync",
+    await extension.awaitMessage("cs-events"),
+    "Content script doesn't see storage.onChanged events from the session area."
+  );
+  equal(
+    "local,session,sync",
+    await extension.awaitMessage("bg-events"),
+    "Background receives onChanged events from all storage areas."
+  );
 
   await extension.unload();
   await contentPage.close();
