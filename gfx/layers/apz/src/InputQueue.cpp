@@ -1022,7 +1022,7 @@ static APZHandledResult GetHandledResultFor(
     return (aEagerStatus == nsEventStatus_eConsumeDoDefault &&
             aApzc->CanVerticalScrollWithDynamicToolbar())
                ? APZHandledResult{APZHandledPlace::HandledByRoot, aApzc}
-               : APZHandledResult{APZHandledPlace::Unhandled, aApzc};
+               : APZHandledResult{APZHandledPlace::Unhandled, aApzc, true};
   }
 
   bool mayTriggerPullToRefresh =
