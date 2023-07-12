@@ -124,10 +124,11 @@ class OptimizationInfo {
     return inlineNative_ && !JitOptions.disableInlining;
   }
 
-  uint32_t compilerWarmUpThreshold(JSScript* script,
+  uint32_t compilerWarmUpThreshold(JSContext* cx, JSScript* script,
                                    jsbytecode* pc = nullptr) const;
 
-  uint32_t recompileWarmUpThreshold(JSScript* script, jsbytecode* pc) const;
+  uint32_t recompileWarmUpThreshold(JSContext* cx, JSScript* script,
+                                    jsbytecode* pc) const;
 
   bool gvnEnabled() const { return gvn_ && !JitOptions.disableGvn; }
 
@@ -191,7 +192,7 @@ class OptimizationLevelInfo {
     return &infos_[level];
   }
 
-  OptimizationLevel levelForScript(JSScript* script,
+  OptimizationLevel levelForScript(JSContext* cx, JSScript* script,
                                    jsbytecode* pc = nullptr) const;
 };
 
