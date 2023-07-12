@@ -8,19 +8,19 @@
 #define frontend_BytecodeCompiler_h
 
 #include "mozilla/AlreadyAddRefed.h"  // already_AddRefed
-#include "mozilla/Maybe.h"
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+#include "mozilla/Maybe.h"            // mozilla::Maybe
+#include "mozilla/Utf8.h"             // mozilla::Utf8Unit
 
-#include "NamespaceImports.h"
+#include <stdint.h>  // uint32_t
 
-#include "ds/LifoAlloc.h"  // LifoAlloc
-#include "frontend/FunctionSyntaxKind.h"
-#include "frontend/ScriptIndex.h"  // ScriptIndex
-#include "js/CompileOptions.h"     // JS::ReadOnlyCompileOptions
-#include "js/RootingAPI.h"         // JS::Handle
-#include "js/SourceText.h"         // JS::SourceText
-#include "js/UniquePtr.h"          // js::UniquePtr
-#include "vm/ScopeKind.h"          // js::ScopeKind
+#include "ds/LifoAlloc.h"                 // js::LifoAlloc
+#include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
+#include "frontend/ScriptIndex.h"         // ScriptIndex
+#include "js/CompileOptions.h"            // JS::ReadOnlyCompileOptions
+#include "js/RootingAPI.h"                // JS::Handle
+#include "js/SourceText.h"                // JS::SourceText
+#include "js/UniquePtr.h"                 // js::UniquePtr
+#include "vm/ScopeKind.h"                 // js::ScopeKind
 
 /*
  * Structure of all of the support classes.
@@ -100,7 +100,6 @@
  */
 
 class JSFunction;
-class JSLinearString;
 class JSObject;
 class JSScript;
 struct JSContext;
@@ -108,7 +107,6 @@ struct JSContext;
 namespace js {
 
 class ModuleObject;
-class ScriptSourceObject;
 class FrontendContext;
 class Scope;
 
@@ -118,10 +116,6 @@ struct CompilationInput;
 struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 struct CompilationGCOutput;
-class ErrorReporter;
-class FunctionBox;
-class ParseNode;
-class TaggedParserAtomIndex;
 class ScopeBindingCache;
 
 // Compile a script of the given source using the given options.
@@ -242,7 +236,7 @@ UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencil(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf,
     const mozilla::Maybe<uint32_t>& parameterListEnd,
-    frontend::FunctionSyntaxKind syntaxKind, Handle<Scope*> enclosingScope);
+    frontend::FunctionSyntaxKind syntaxKind, JS::Handle<Scope*> enclosingScope);
 
 extern bool DelazifyCanonicalScriptedFunction(JSContext* cx,
                                               FrontendContext* fc,

@@ -1271,9 +1271,12 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
 }
 
 template <typename Unit>
-static bool DelazifyCanonicalScriptedFunctionImpl(
-    JSContext* cx, FrontendContext* fc, ScopeBindingCache* scopeCache,
-    HandleFunction fun, Handle<BaseScript*> lazy, ScriptSource* ss) {
+static bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
+                                                  FrontendContext* fc,
+                                                  ScopeBindingCache* scopeCache,
+                                                  JS::Handle<JSFunction*> fun,
+                                                  JS::Handle<BaseScript*> lazy,
+                                                  ScriptSource* ss) {
   MOZ_ASSERT(!lazy->hasBytecode(), "Script is already compiled!");
   MOZ_ASSERT(lazy->function() == fun);
 
@@ -1317,7 +1320,7 @@ static bool DelazifyCanonicalScriptedFunctionImpl(
 
 bool frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
                                                  FrontendContext* fc,
-                                                 HandleFunction fun) {
+                                                 JS::Handle<JSFunction*> fun) {
   Maybe<AutoGeckoProfilerEntry> pseudoFrame;
   if (cx) {
     pseudoFrame.emplace(cx, "script delazify",
@@ -1426,7 +1429,7 @@ static JSFunction* CompileStandaloneFunction(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf, const Maybe<uint32_t>& parameterListEnd,
     FunctionSyntaxKind syntaxKind, GeneratorKind generatorKind,
-    FunctionAsyncKind asyncKind, Handle<Scope*> enclosingScope = nullptr) {
+    FunctionAsyncKind asyncKind, JS::Handle<Scope*> enclosingScope = nullptr) {
   JS::Rooted<JSFunction*> fun(cx);
   {
     AutoReportFrontendContext fc(cx);
@@ -1541,7 +1544,7 @@ JSFunction* frontend::CompileStandaloneAsyncGenerator(
 JSFunction* frontend::CompileStandaloneFunctionInNonSyntacticScope(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf, const Maybe<uint32_t>& parameterListEnd,
-    FunctionSyntaxKind syntaxKind, Handle<Scope*> enclosingScope) {
+    FunctionSyntaxKind syntaxKind, JS::Handle<Scope*> enclosingScope) {
   MOZ_ASSERT(enclosingScope);
   return CompileStandaloneFunction(cx, options, srcBuf, parameterListEnd,
                                    syntaxKind, GeneratorKind::NotGenerator,
