@@ -2,9 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+use crate::error::ErrorBufferType;
 use wgc::id;
 
 pub use wgc::command::{compute_ffi::*, render_ffi::*};
+
+mod error;
 
 pub mod client;
 pub mod identity;
@@ -155,7 +158,10 @@ enum DeviceAction<'a> {
         id::CommandEncoderId,
         wgt::CommandEncoderDescriptor<wgc::Label<'a>>,
     ),
-    Error(String),
+    Error {
+        message: String,
+        r#type: ErrorBufferType,
+    },
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]

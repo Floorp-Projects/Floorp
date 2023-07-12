@@ -6,6 +6,7 @@
 #include "WebGPUParent.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/dom/WebGPUBinding.h"
 #include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageDataSerializer.h"
@@ -35,31 +36,59 @@ static mozilla::LazyLogModule sLogger("WebGPU");
 class ErrorBuffer {
   // if the message doesn't fit, it will be truncated
   static constexpr unsigned BUFFER_SIZE = 512;
+  ffi::WGPUErrorBufferType mType = ffi::WGPUErrorBufferType_None;
   char mUtf8[BUFFER_SIZE] = {};
-  bool mGuard = false;
+  bool mAwaitingGetError = false;
 
  public:
   ErrorBuffer() { mUtf8[0] = 0; }
   ErrorBuffer(const ErrorBuffer&) = delete;
-  ~ErrorBuffer() { MOZ_ASSERT(!mGuard); }
+  ~ErrorBuffer() { MOZ_ASSERT(!mAwaitingGetError); }
 
   ffi::WGPUErrorBuffer ToFFI() {
-    mGuard = true;
-    ffi::WGPUErrorBuffer errorBuf = {mUtf8, BUFFER_SIZE};
+    mAwaitingGetError = true;
+    ffi::WGPUErrorBuffer errorBuf = {&mType, mUtf8, BUFFER_SIZE};
     return errorBuf;
   }
 
-  // If an error message was stored in this buffer, return Some(m)
-  // where m is the message as a UTF-8 nsCString. Otherwise, return Nothing.
-  //
-  // Mark this ErrorBuffer as having been handled, so its destructor
-  // won't assert.
-  Maybe<nsCString> GetError() {
-    mGuard = false;
-    if (!mUtf8[0]) {
-      return Nothing();
+  ffi::WGPUErrorBufferType GetType() { return mType; }
+
+  static Maybe<dom::GPUErrorFilter> ErrorTypeToFilterType(
+      ffi::WGPUErrorBufferType aType) {
+    switch (aType) {
+      case ffi::WGPUErrorBufferType_None:
+        return {};
+      case ffi::WGPUErrorBufferType_Internal:
+        return Some(dom::GPUErrorFilter::Internal);
+      case ffi::WGPUErrorBufferType_Validation:
+        return Some(dom::GPUErrorFilter::Validation);
+      case ffi::WGPUErrorBufferType_OutOfMemory:
+        return Some(dom::GPUErrorFilter::Out_of_memory);
+      case ffi::WGPUErrorBufferType_Sentinel:
+        break;
     }
-    return Some(nsCString(mUtf8));
+
+    MOZ_CRASH("invalid `ErrorBufferType`");
+  }
+
+  struct Error {
+    dom::GPUErrorFilter type;
+    nsCString message;
+  };
+
+  // Retrieve the error message was stored in this buffer. Asserts that
+  // this instance actually contains an error (viz., that `GetType() !=
+  // ffi::WGPUErrorBufferType_None`).
+  //
+  // Mark this `ErrorBuffer` as having been handled, so its destructor
+  // won't assert.
+  Maybe<Error> GetError() {
+    mAwaitingGetError = false;
+    auto filterType = ErrorTypeToFilterType(mType);
+    if (!filterType) {
+      return {};
+    }
+    return Some(Error{*filterType, nsCString{mUtf8}});
   }
 };
 
@@ -235,15 +264,11 @@ void WebGPUParent::MaintainDevices() {
 
 bool WebGPUParent::ForwardError(const Maybe<RawId> aDeviceId,
                                 ErrorBuffer& aError) {
-  // don't do anything if the error is empty
-  auto cString = aError.GetError();
-  if (!cString) {
-    return false;
+  if (auto error = aError.GetError()) {
+    ReportError(aDeviceId, error->type, error->message);
+    return true;
   }
-
-  // Risky: These are probably not all Validation errors.
-  ReportError(aDeviceId, dom::GPUErrorFilter::Validation, cString.value());
-  return true;
+  return false;
 }
 
 // Generate an error on the Device timeline of aDeviceId.
@@ -840,10 +865,10 @@ static void PresentCallback(ffi::WGPUBufferMapAsyncStatus status,
     }
     ErrorBuffer error;
     wgpu_server_buffer_unmap(req->mContext, bufferId, error.ToFFI());
-    if (auto errorString = error.GetError()) {
-      MOZ_LOG(
-          sLogger, LogLevel::Info,
-          ("WebGPU present: buffer unmap failed: %s\n", errorString->get()));
+    if (auto innerError = error.GetError()) {
+      MOZ_LOG(sLogger, LogLevel::Info,
+              ("WebGPU present: buffer unmap failed: %s\n",
+               innerError->message.get()));
     }
   } else {
     // TODO: better handle errors
