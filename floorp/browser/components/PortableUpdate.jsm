@@ -135,13 +135,25 @@ const portableUpdateUtils = {
             return String(entry1).length - String(entry2).length
         });
         for (let entry of entries) {
-            let path = PathUtils.join(
+            let entryPath =
+                isWin === "win" ?
+                    String(entry).replaceAll("/", "\\") :
+                    String(entry);
+            try {
+                // Example errors
+                // PathUtils.splitRelative: PathUtils.splitRelative: Empty directory components ("") not allowed by options
+                // PathUtils.splitRelative: PathUtils.splitRelative: Parent directory components ("..") not allowed by options
+                // PathUtils.splitRelative: PathUtils.splitRelative requires a relative path
+                PathUtils.splitRelative(
+                    entryPath,
+                    { allowEmpty: false, allowCurrentDir: false, allowParentDir: false }
+                );
+            } catch (e) {
+                throw "!!! Zip Slip detected !!!";
+            }
+            let path = PathUtils.joinRelative(
                 updateTmpDirPath,
-                ...(
-                    isWin === "win" ?
-                        String(entry).split("\\") :
-                        String(entry).split("/")
-                )
+                entryPath
             );
             await zipreader.extract(
                 entry,
