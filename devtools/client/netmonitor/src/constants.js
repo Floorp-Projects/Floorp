@@ -233,6 +233,9 @@ const UPDATE_PROPS = [
   "blockingExtension",
   "channelId",
   "waitingTime",
+  "proxyHttpVersion",
+  "proxyStatus",
+  "proxyStatusText",
 ];
 
 const PANELS = {

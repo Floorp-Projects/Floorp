@@ -66,6 +66,7 @@ class UrlPreview extends Component {
       url: PropTypes.string,
       method: PropTypes.string,
       address: PropTypes.string,
+      proxyStatus: PropTypes.string,
       shouldExpandPreview: PropTypes.bool,
       onTogglePreview: PropTypes.func,
     };
@@ -190,7 +191,7 @@ class UrlPreview extends Component {
   }
 
   parseUrl(url) {
-    const { method, address } = this.props;
+    const { method, address, proxyStatus } = this.props;
     const { host, protocol, pathname, search } = new URL(url);
 
     const urlObject = {
@@ -224,10 +225,14 @@ class UrlPreview extends Component {
     }
 
     if (address) {
-      // makes sure the remote adress section is expanded
+      // makes sure the remote address section is expanded
       expandedNodes.add(`/${method}/remote`);
       urlObject[method].remote = {
-        [L10N.getStr("netmonitor.headers.address")]: address,
+        [L10N.getStr(
+          proxyStatus
+            ? "netmonitor.headers.proxyAddress"
+            : "netmonitor.headers.address"
+        )]: address,
       };
     }
 

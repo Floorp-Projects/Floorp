@@ -432,8 +432,14 @@ class NetworkEventActor extends Actor {
    * @param {nsIChannel} options.channel
    * @param {boolean} options.fromCache
    * @param {string} options.rawHeaders
+   * @param {string} options.proxyResponseRawHeaders
    */
-  addResponseStart({ channel, fromCache, rawHeaders = "" }) {
+  addResponseStart({
+    channel,
+    fromCache,
+    rawHeaders = "",
+    proxyResponseRawHeaders,
+  }) {
     // Ignore calls when this actor is already destroyed
     if (this.isDestroyed()) {
       return;
@@ -479,6 +485,13 @@ class NetworkEventActor extends Actor {
       (timedChannel.responseStartTime - timedChannel.requestStartTime) / 1000
     );
 
+    let proxyInfo = [];
+    if (proxyResponseRawHeaders) {
+      // The typical format for proxy raw headers is `HTTP/2 200 Connected\r\nConnection: keep-alive`
+      // The content is parsed and split into http version (HTTP/2), status(200) and status text (Connected)
+      proxyInfo = proxyResponseRawHeaders.split("\r\n")[0].split(" ");
+    }
+
     this._onEventUpdate("responseStart", {
       httpVersion: lazy.NetworkUtils.getHttpVersion(channel),
       mimeType,
@@ -488,6 +501,9 @@ class NetworkEventActor extends Actor {
       statusText: channel.responseStatusText,
       waitingTime,
       isResolvedByTRR: channel.isResolvedByTRR,
+      proxyHttpVersion: proxyInfo[0],
+      proxyStatus: proxyInfo[1],
+      proxyStatusText: proxyInfo[2],
     });
   }
 
