@@ -37,7 +37,7 @@ formHistoryStartup.observe(null, "profile-after-change", null);
 
 var getEngine, postEngine, unresolvableEngine, alternateJSONEngine;
 
-add_task(async function setup() {
+add_setup(async function () {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
   // These tests intentionally test broken connections.
   consoleAllowList = consoleAllowList.concat([
@@ -53,14 +53,6 @@ add_task(async function setup() {
 
   await AddonTestUtils.promiseStartupManager();
 
-  registerCleanupFunction(async () => {
-    // Remove added form history entries
-    await updateSearchHistory("remove", null);
-    Services.prefs.clearUserPref("browser.search.suggest.enabled");
-  });
-});
-
-add_task(async function add_test_engines() {
   let getEngineData = {
     baseURL: gDataUrl,
     name: "GET suggestion engine",
@@ -99,6 +91,12 @@ add_task(async function add_test_engines() {
     url: `${gDataUrl}engineMaker.sjs?${JSON.stringify(
       alternateJSONSuggestEngineData
     )}`,
+  });
+
+  registerCleanupFunction(async () => {
+    // Remove added form history entries
+    await updateSearchHistory("remove", null);
+    Services.prefs.clearUserPref("browser.search.suggest.enabled");
   });
 });
 
@@ -766,6 +764,27 @@ add_task(async function http_500() {
   Assert.equal(result.remote.length, 0);
 
   assertLatencyHistogram(histogram, true);
+});
+
+add_task(async function invalid_response_does_not_throw() {
+  let controller = new SearchSuggestionController();
+  // Although the server will return invalid json, the error is handled by
+  // the suggestion controller, and so we receive no results.
+  let result = await controller.fetch("invalidJSON", false, getEngine);
+  Assert.equal(result.term, "invalidJSON");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 0);
+});
+
+add_task(async function invalid_content_type_treated_as_json() {
+  let controller = new SearchSuggestionController();
+  // An invalid content type is overridden as we expect all the responses to
+  // be JSON.
+  let result = await controller.fetch("invalidContentType", false, getEngine);
+  Assert.equal(result.term, "invalidContentType");
+  Assert.equal(result.local.length, 0);
+  Assert.equal(result.remote.length, 1);
+  Assert.equal(result.remote[0].value, "invalidContentType response");
 });
 
 add_task(async function unresolvable_server() {
