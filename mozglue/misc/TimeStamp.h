@@ -541,22 +541,22 @@ class TimeStamp {
     return *this;
   }
 
-  bool operator<(const TimeStamp& aOther) const {
+  constexpr bool operator<(const TimeStamp& aOther) const {
     MOZ_ASSERT(!IsNull(), "Cannot compute with a null value");
     MOZ_ASSERT(!aOther.IsNull(), "Cannot compute with aOther null value");
     return mValue < aOther.mValue;
   }
-  bool operator<=(const TimeStamp& aOther) const {
+  constexpr bool operator<=(const TimeStamp& aOther) const {
     MOZ_ASSERT(!IsNull(), "Cannot compute with a null value");
     MOZ_ASSERT(!aOther.IsNull(), "Cannot compute with aOther null value");
     return mValue <= aOther.mValue;
   }
-  bool operator>=(const TimeStamp& aOther) const {
+  constexpr bool operator>=(const TimeStamp& aOther) const {
     MOZ_ASSERT(!IsNull(), "Cannot compute with a null value");
     MOZ_ASSERT(!aOther.IsNull(), "Cannot compute with aOther null value");
     return mValue >= aOther.mValue;
   }
-  bool operator>(const TimeStamp& aOther) const {
+  constexpr bool operator>(const TimeStamp& aOther) const {
     MOZ_ASSERT(!IsNull(), "Cannot compute with a null value");
     MOZ_ASSERT(!aOther.IsNull(), "Cannot compute with aOther null value");
     return mValue > aOther.mValue;

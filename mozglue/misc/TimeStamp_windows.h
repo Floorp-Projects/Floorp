@@ -67,25 +67,29 @@ class TimeStampValue {
   MFBT_API TimeStampValue& operator+=(const int64_t aOther);
   MFBT_API TimeStampValue& operator-=(const int64_t aOther);
 
-  bool operator<(const TimeStampValue& aOther) const {
-    return int64_t(*this - aOther) < 0;
+  constexpr bool operator<(const TimeStampValue& aOther) const {
+    return mHasQPC && aOther.mHasQPC ? mQPC < aOther.mQPC : mGTC < aOther.mGTC;
   }
-  bool operator>(const TimeStampValue& aOther) const {
-    return int64_t(*this - aOther) > 0;
+  constexpr bool operator>(const TimeStampValue& aOther) const {
+    return mHasQPC && aOther.mHasQPC ? mQPC > aOther.mQPC : mGTC > aOther.mGTC;
   }
-  bool operator<=(const TimeStampValue& aOther) const {
-    return int64_t(*this - aOther) <= 0;
+  constexpr bool operator<=(const TimeStampValue& aOther) const {
+    return mHasQPC && aOther.mHasQPC ? mQPC <= aOther.mQPC
+                                     : mGTC <= aOther.mGTC;
   }
-  bool operator>=(const TimeStampValue& aOther) const {
-    return int64_t(*this - aOther) >= 0;
+  constexpr bool operator>=(const TimeStampValue& aOther) const {
+    return mHasQPC && aOther.mHasQPC ? mQPC >= aOther.mQPC
+                                     : mGTC >= aOther.mGTC;
   }
-  bool operator==(const TimeStampValue& aOther) const {
-    return int64_t(*this - aOther) == 0;
+  constexpr bool operator==(const TimeStampValue& aOther) const {
+    return mHasQPC && aOther.mHasQPC ? mQPC == aOther.mQPC
+                                     : mGTC == aOther.mGTC;
   }
-  bool operator!=(const TimeStampValue& aOther) const {
-    return int64_t(*this - aOther) != 0;
+  constexpr bool operator!=(const TimeStampValue& aOther) const {
+    return mHasQPC && aOther.mHasQPC ? mQPC != aOther.mQPC
+                                     : mGTC != aOther.mGTC;
   }
-  bool IsNull() const { return mIsNull; }
+  constexpr bool IsNull() const { return mIsNull; }
 
 #if defined(DEBUG)
   uint64_t GTC() const { return mGTC; }
