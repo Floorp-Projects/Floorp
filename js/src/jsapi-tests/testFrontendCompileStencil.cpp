@@ -32,7 +32,8 @@ BEGIN_FRONTEND_TEST(testFrontendContextCompileGlobalScriptToStencil) {
         JS::GetNativeStackLimit(js::GetNativeStackBase(), stackSize - 1));
 #endif
 
-  JS::CompileOptions options((JS::CompileOptions::ForFrontendContext()));
+  JS::PrefableCompileOptions prefableOptions;
+  JS::CompileOptions options(prefableOptions);
 
   {
     const char source[] = "var a = 10;";
