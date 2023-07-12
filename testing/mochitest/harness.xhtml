@@ -14,6 +14,7 @@
   <script src="chrome://mochikit/content/chrome-harness.js" />
   <script src="chrome://mochikit/content/chunkifyTests.js" />
   <script src="chrome://mochikit/content/manifestLibrary.js" />
+  <script src="chrome://mochikit/content/mochitestListingsUtils.js" />
   <script src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
   <script type="application/javascript"><![CDATA[
 
@@ -24,20 +25,15 @@ function loadTests()
 }
 
 function linkAndHookup(links) {
-  // load server.js in so we can share template functions
-  var srvScope = {};
-  Services.scriptloader.loadSubScript('chrome://mochikit/content/server.js',
-                             srvScope);
-
   // generate our test list
-  srvScope.makeTags();
-  var tableContent = srvScope.linksToTableRows(links, 0);
+  makeTags();
+  var tableContent = linksToTableRows(links, 0);
 
   function populate() {
     // eslint-disable-next-line no-unsanitized/property
     document.getElementById("test-table").innerHTML += tableContent;
   }
-  gTestList = JSON.parse(srvScope.jsonArrayOfTestFiles(links));
+  gTestList = JSON.parse(jsonArrayOfTestFiles(links));
   populate();
 
   hookup();

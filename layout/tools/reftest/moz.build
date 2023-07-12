@@ -19,6 +19,7 @@ FINAL_TARGET_FILES += [
 
 TEST_HARNESS_FILES.reftest += [
     "/build/pgo/server-locations.txt",
+    "/testing/mochitest/mochitestListingsUtils.js",
     "/testing/mochitest/server.js",
     "mach_test_package_commands.py",
     "output.py",
