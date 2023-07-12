@@ -59,9 +59,9 @@ def _get_build_gradle_paths(gradle_project):
         project_subdir = get_path(gradle_project)
 
     file_list = [
-        "android-components/plugins/dependencies/build.gradle",
-        "android-components/plugins/github/build.gradle",
-        "android-components/plugins/publicsuffixlist/build.gradle",
+        "mobile/android/android-components/plugins/dependencies/build.gradle",
+        "mobile/android/android-components/plugins/github/build.gradle",
+        "mobile/android/android-components/plugins/publicsuffixlist/build.gradle",
         f"{project_dir}/build.gradle",
         f"{project_dir}/{project_subdir}/build.gradle",
     ]
@@ -77,11 +77,11 @@ def _get_build_gradle_paths(gradle_project):
 
 def _get_gradle_project_dir(gradle_project):
     if gradle_project == "focus":
-        project_dir = "focus-android"
+        project_dir = "mobile/android/focus-android"
     elif gradle_project == "fenix":
-        project_dir = "fenix"
+        project_dir = "mobile/android/fenix"
     else:
-        project_dir = "android-components"
+        project_dir = "mobile/android/android-components"
     return project_dir
 
 
