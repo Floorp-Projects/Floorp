@@ -64,10 +64,10 @@ impl ErrorBuffer {
     fn init(&mut self, error: impl HasErrorBufferType) {
         use std::fmt::Write;
 
-        let mut string = format!("{}", error);
+        let mut message = format!("{}", error);
         let mut e = error.source();
         while let Some(source) = e {
-            write!(string, ", caused by: {}", source).unwrap();
+            write!(message, ", caused by: {}", source).unwrap();
             e = source.source();
         }
 
@@ -76,14 +76,10 @@ impl ErrorBuffer {
         unsafe { *self.r#type = err_ty };
 
         if matches!(err_ty, ErrorBufferType::None) {
-            log::warn!("{string}");
+            log::warn!("{message}");
             return;
         }
 
-        self.init_str(&string);
-    }
-
-    fn init_str(&mut self, message: &str) {
         assert_ne!(self.capacity, 0);
         let length = if message.len() >= self.capacity {
             log::warn!(
