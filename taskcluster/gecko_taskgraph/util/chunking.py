@@ -59,6 +59,7 @@ def guess_mozinfo_from_task(task, repo=""):
         in setting["runtime"].keys(),
         "nightly_build": repo in ["mozilla-central", "autoland", "try", ""],  # trunk
         "http3": "http3" in setting["runtime"].keys(),
+        "wmfme": "wmf-media-engine" in setting["runtime"].keys(),
     }
     for platform in ("android", "linux", "mac", "win"):
         if p_os["name"].startswith(platform):
