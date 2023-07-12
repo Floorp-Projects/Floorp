@@ -624,7 +624,6 @@ bool ClassEmitter::emitDerivedClass(TaggedParserAtomIndex name,
 }
 
 bool ClassEmitter::emitInitConstructor(bool needsHomeObject) {
-  MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Class ||
              classState_ == ClassState::InstanceMemberInitializersEnd);
 

@@ -2299,6 +2299,16 @@ class ClassMethod : public BinaryNode {
 class ClassField : public BinaryNode {
   bool isStatic_;
 #ifdef ENABLE_DECORATORS
+  // The accessorGetterNode_ and accessorSetterNode_ are used to store the
+  // getter and setter synthesized by the `accessor` keyword when they are
+  // decorated. Otherwise, they are null.
+  //
+  // In most cases, the accessors are not added to the class members, and the
+  // code generation occurs immediately prior to the decorator running. For
+  // non-static private methods, the accessors are added to the class members
+  // which causes them to be stored in lexical variables. The references here
+  // are used to store the names of the accessors to look up the values of these
+  // variables during bytecode generation.
   ClassMethod* accessorGetterNode_;
   ClassMethod* accessorSetterNode_;
   ListNode* decorators_;
@@ -2325,7 +2335,6 @@ class ClassField : public BinaryNode {
 #ifdef ENABLE_DECORATORS
     MOZ_ASSERT((accessorGetterNode_ == nullptr) ==
                (accessorSetterNode_ == nullptr));
-    MOZ_ASSERT_IF(!decorators_, !accessorGetterNode_);
 #endif
   }
 

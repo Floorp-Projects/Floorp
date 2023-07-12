@@ -807,8 +807,12 @@ bool GeneralParser<ParseHandler, Unit>::noteDeclaredPrivateName(
   PrivateNameKind kind;
   switch (propType) {
     case PropertyType::Field:
-    case PropertyType::FieldWithAccessor:
       kind = PrivateNameKind::Field;
+      break;
+    case PropertyType::FieldWithAccessor:
+      // In this case, we create a new private field for the underlying storage,
+      // and use the current name for the getter and setter.
+      kind = PrivateNameKind::GetterSetter;
       break;
     case PropertyType::Method:
     case PropertyType::GeneratorMethod:
@@ -7849,14 +7853,21 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       if (!accessorGetterNode) {
         return false;
       }
-      if (!decorators) {
-        // If the accessor is not decorated, add it to the class here.
-        // Otherwise, we'll handle this when the decorators are called.
+      // If the accessor is not decorated or is a non-static private field,
+      // add it to the class here. Otherwise, we'll handle this when the
+      // decorators are called. We don't need to keep a reference to the node
+      // after this except for non-static private accessors. Please see the
+      // comment in the definition of ClassField for details.
+      bool addAccessorImmediately =
+          !decorators || (!isStatic && handler_.isPrivateName(propName));
+      if (addAccessorImmediately) {
         if (!handler_.addClassMemberDefinition(classMembers,
                                                accessorGetterNode)) {
           return false;
         }
-        accessorGetterNode = null();
+        if (!handler_.isPrivateName(propName)) {
+          accessorGetterNode = null();
+        }
       }
 
       // Step 6. Let setter be MakeAutoAccessorSetter(homeObject, name,
@@ -7868,14 +7879,14 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
         return false;
       }
 
-      if (!decorators) {
-        // If the accessor is not decorated, add it to the class here.
-        // Otherwise, we'll handle this when the decorators are called.
+      if (addAccessorImmediately) {
         if (!handler_.addClassMemberDefinition(classMembers,
                                                accessorSetterNode)) {
           return false;
         }
-        accessorSetterNode = null();
+        if (!handler_.isPrivateName(propName)) {
+          accessorSetterNode = null();
+        }
       }
 
       // Step 10. Return ClassElementDefinition Record { [[Key]]: name,
@@ -9116,8 +9127,16 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
   //
   // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorsetter
   // 2. Let setter be CreateBuiltinFunction(setterClosure, 1, "set", « »).
-  FunctionNodeType funNode =
-      synthesizeAccessorBody(propNamePos, privateStateNameAtom, syntaxKind);
+  StringBuffer storedMethodName(fc_);
+  if (!storedMethodName.append(accessorType == AccessorType::Getter ? "get"
+                                                                    : "set")) {
+    return null();
+  }
+  TaggedParserAtomIndex funNameAtom =
+      storedMethodName.finishParserAtom(this->parserAtoms(), fc_);
+
+  FunctionNodeType funNode = synthesizeAccessorBody(
+      funNameAtom, propNamePos, privateStateNameAtom, syntaxKind);
   if (!funNode) {
     return null();
   }
@@ -9136,8 +9155,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
 template <class ParseHandler, typename Unit>
 typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
-    TokenPos propNamePos, TaggedParserAtomIndex propAtom,
-    FunctionSyntaxKind syntaxKind) {
+    TaggedParserAtomIndex funNameAtom, TokenPos propNamePos,
+    TaggedParserAtomIndex propNameAtom, FunctionSyntaxKind syntaxKind) {
   if (!abortIfSyntaxParser()) {
     return null();
   }
@@ -9157,8 +9176,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
   // Create the FunctionBox and link it to the function object.
   Directives directives(true);
   FunctionBox* funbox =
-      newFunctionBox(funNode, TaggedParserAtomIndex::null(), flags,
-                     propNamePos.begin, directives, generatorKind, asyncKind);
+      newFunctionBox(funNode, funNameAtom, flags, propNamePos.begin, directives,
+                     generatorKind, asyncKind);
   if (!funbox) {
     return null();
   }
@@ -9204,7 +9223,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
     return null();
   }
 
-  NameNodeType privateNameNode = privateNameReference(propAtom);
+  NameNodeType privateNameNode = privateNameReference(propNameAtom);
   if (!privateNameNode) {
     return null();
   }
