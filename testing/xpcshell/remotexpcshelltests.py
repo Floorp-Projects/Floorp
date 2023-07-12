@@ -638,8 +638,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                     file=sys.stderr,
                 )
 
-        local = os.path.join(self.localBin, "components/httpd.js")
-        remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.js")
+        local = os.path.join(self.localBin, "components/httpd.sys.mjs")
+        remoteFile = posixpath.join(self.remoteComponentsDir, "httpd.sys.mjs")
         self.device.push(local, remoteFile)
         self.device.chmod(remoteFile)
 
