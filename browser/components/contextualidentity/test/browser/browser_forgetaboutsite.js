@@ -7,7 +7,9 @@ const CC = Components.Constructor;
 let { ForgetAboutSite } = ChromeUtils.importESModule(
   "resource://gre/modules/ForgetAboutSite.sys.mjs"
 );
-let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+let { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 const USER_CONTEXTS = ["default", "personal"];
 const TEST_HOST = "example.com";

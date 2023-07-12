@@ -49,17 +49,13 @@ var { AddonTestUtils, MockAsyncShutdown } = ChromeUtils.importESModule(
   "resource://testing-common/AddonTestUtils.sys.mjs"
 );
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "HttpServer",
-  "resource://testing-common/httpd.js"
-);
 ChromeUtils.defineESModuleGetters(this, {
   Blocklist: "resource://gre/modules/Blocklist.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
   ExtensionTestCommon: "resource://testing-common/ExtensionTestCommon.sys.mjs",
   ExtensionTestUtils:
     "resource://testing-common/ExtensionXPCShellUtils.sys.mjs",
+  HttpServer: "resource://testing-common/httpd.sys.mjs",
   MockRegistrar: "resource://testing-common/MockRegistrar.sys.mjs",
   MockRegistry: "resource://testing-common/MockRegistry.sys.mjs",
   PromiseTestUtils: "resource://testing-common/PromiseTestUtils.sys.mjs",

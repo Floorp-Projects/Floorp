@@ -10,7 +10,9 @@
 
 /* globals require, __dirname, global, Buffer, process */
 
-const { NodeServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { NodeServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );

@@ -170,8 +170,8 @@ function waitForMutation(target, opts, cb) {
 // a DefinitionServer, then call addDefinition as needed.
 class DefinitionServer {
   constructor(definitionOverrides = []) {
-    let { HttpServer } = ChromeUtils.import(
-      "resource://testing-common/httpd.js"
+    let { HttpServer } = ChromeUtils.importESModule(
+      "resource://testing-common/httpd.sys.mjs"
     );
 
     this.server = new HttpServer();

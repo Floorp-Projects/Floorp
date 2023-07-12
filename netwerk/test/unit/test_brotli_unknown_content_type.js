@@ -17,7 +17,9 @@ function largeEmptyBrotli(metadata, response) {
   response.write("\x01\x03" + "\x06".repeat(600) + "\x03");
 }
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 XPCOMUtils.defineLazyGetter(this, "URL_EMPTY_BROTLI", function () {
   return (

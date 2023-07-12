@@ -3,7 +3,9 @@
 
 "use strict";
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 // This C-L is significantly larger than (U)INT32_MAX, to make sure we do
 // 64-bit properly.

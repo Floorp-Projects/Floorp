@@ -1,10 +1,8 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "HttpServer",
-  "resource://testing-common/httpd.js"
-);
+ChromeUtils.defineESModuleGetters(this, {
+  HttpServer: "resource://testing-common/httpd.sys.mjs",
+});
 
 const { createAppInfo, promiseShutdownManager, promiseStartupManager } =
   AddonTestUtils;

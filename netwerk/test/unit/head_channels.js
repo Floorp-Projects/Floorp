@@ -359,8 +359,8 @@ async function asyncStartTLSTestServer(
   certsPath,
   addDefaultRoot = true
 ) {
-  const { HttpServer } = ChromeUtils.import(
-    "resource://testing-common/httpd.js"
+  const { HttpServer } = ChromeUtils.importESModule(
+    "resource://testing-common/httpd.sys.mjs"
   );
   let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
     Ci.nsIX509CertDB

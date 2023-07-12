@@ -21,12 +21,9 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ContentTask: "resource://testing-common/ContentTask.sys.mjs",
+  HttpServer: "resource://testing-common/httpd.sys.mjs",
   SpecialPowersParent: "resource://testing-common/SpecialPowersParent.sys.mjs",
   TestUtils: "resource://testing-common/TestUtils.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  HttpServer: "resource://testing-common/httpd.js",
 });
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {

@@ -9,7 +9,9 @@ function contentHandler(metadata, response) {
   response.write("\x0b\x02\x80hello\x03");
 }
 
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
 
 XPCOMUtils.defineLazyGetter(this, "URL", function () {
   return "http://localhost:" + httpServer.identity.primaryPort + "/content";

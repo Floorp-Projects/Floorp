@@ -11,7 +11,9 @@ function makeInputStream(aString) {
 }
 
 add_task(async function test_remoteWebNavigation_postdata() {
-  let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
+  let { HttpServer } = ChromeUtils.importESModule(
+    "resource://testing-common/httpd.sys.mjs"
+  );
   let { CommonUtils } = ChromeUtils.importESModule(
     "resource://services-common/utils.sys.mjs"
   );
