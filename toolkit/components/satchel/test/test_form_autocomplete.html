@@ -373,18 +373,11 @@ add_task(async function form3_autocomplete_off() {
   // Sometimes, this will fail if scrollTo(0, 0) is called, so that doesn't
   // happen here. Fortunately, a different input is used from the last test,
   // so a scroll should still occur.
-  const scroll = new Promise(resolve => {
-    addEventListener("scroll", function listener() {
-      if (!window.pageYOffset) {
-        return;
-      }
-
-      removeEventListener("scroll", listener, false);
-      resolve();
-    }, false);
+  const scrollend = new Promise(resolve => {
+    addEventListener("scrollend", resolve);
   });
   const { input } = await openPopupOn("#form3 > input", { expectPopup: false });
-  await scroll;
+  await scrollend;
   // Ensure there's no autocomplete dropdown (autocomplete=off is present)
   assertValueAfterKeys(
     input,
