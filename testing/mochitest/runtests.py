@@ -546,13 +546,13 @@ class MochitestServer(object):
         args = [
             "-g",
             self._xrePath,
-            "-f",
-            os.path.join(self._httpdPath, "httpd.js"),
             "-e",
             "const _PROFILE_PATH = '%(profile)s'; const _SERVER_PORT = '%(port)s'; "
             "const _SERVER_ADDR = '%(server)s'; const _TEST_PREFIX = %(testPrefix)s; "
-            "const _DISPLAY_RESULTS = %(displayResults)s;"
+            "const _DISPLAY_RESULTS = %(displayResults)s; "
+            "const _HTTPD_PATH = '%(httpdPath)s';"
             % {
+                "httpdPath": self._httpdPath.replace("\\", "\\\\"),
                 "profile": self._profileDir.replace("\\", "\\\\"),
                 "port": self.httpPort,
                 "server": self.webServer,

@@ -6,25 +6,48 @@
 
 // We expect these to be defined in the global scope by runtest.py.
 /* global __LOCATION__, _PROFILE_PATH, _SERVER_PORT, _SERVER_ADDR, _DISPLAY_RESULTS,
-          _TEST_PREFIX */
+          _TEST_PREFIX, _HTTPD_PATH */
 // Defined by xpcshell
 /* global quit */
 
-/* import-globals-from ../../netwerk/test/httpserver/httpd.js */
 /* eslint-disable mozilla/use-chromeutils-generateqi */
 
 // Set up a protocol substituion so that we can load the httpd.js file.
 let protocolHandler = Services.io
   .getProtocolHandler("resource")
   .QueryInterface(Ci.nsIResProtocolHandler);
-let httpdJSPath = __LOCATION__.parent;
-let modulesURI = Services.io.newFileURI(httpdJSPath);
-protocolHandler.setSubstitution("mochitest-server", modulesURI);
+let httpdJSPath = PathUtils.toFileURI(_HTTPD_PATH);
+protocolHandler.setSubstitution(
+  "httpd-server",
+  Services.io.newURI(httpdJSPath)
+);
+
+const { HttpServer, dumpn, setDebuggingStatus } = ChromeUtils.import(
+  "resource://httpd-server/httpd.js"
+);
+
+protocolHandler.setSubstitution(
+  "mochitest-server",
+  Services.io.newFileURI(__LOCATION__.parent)
+);
 
 /* import-globals-from mochitestListingsUtils.js */
 Services.scriptloader.loadSubScript(
   "resource://mochitest-server/mochitestListingsUtils.js",
   this
+);
+
+const CC = Components.Constructor;
+
+const FileInputStream = CC(
+  "@mozilla.org/network/file-input-stream;1",
+  "nsIFileInputStream",
+  "init"
+);
+const ConverterInputStream = CC(
+  "@mozilla.org/intl/converter-input-stream;1",
+  "nsIConverterInputStream",
+  "init"
 );
 
 // Disable automatic network detection, so tests work correctly when
@@ -43,23 +66,20 @@ function serverStopped() {
   _quitting = true;
 }
 
-// only run the "main" section if httpd.js was loaded ahead of us
-if (this.nsHttpServer) {
-  //
-  // SCRIPT CODE
-  //
-  runServer();
+//
+// SCRIPT CODE
+//
+runServer();
 
-  // We can only have gotten here if the /server/shutdown path was requested.
-  if (_quitting) {
-    dumpn("HTTP server stopped, all pending requests complete");
-    quit(0);
-  }
-
-  // Impossible as the stop callback should have been called, but to be safe...
-  dumpn("TEST-UNEXPECTED-FAIL | failure to correctly shut down HTTP server");
-  quit(1);
+// We can only have gotten here if the /server/shutdown path was requested.
+if (_quitting) {
+  dumpn("HTTP server stopped, all pending requests complete");
+  quit(0);
 }
+
+// Impossible as the stop callback should have been called, but to be safe...
+dumpn("TEST-UNEXPECTED-FAIL | failure to correctly shut down HTTP server");
+quit(1);
 
 var serverBasePath;
 var displayResults = true;
@@ -170,7 +190,7 @@ function runServer() {
 
 /** Creates and returns an HTTP server configured to serve Mochitests. */
 function createMochitestServer(serverBasePath) {
-  var server = new nsHttpServer();
+  var server = new HttpServer();
 
   server.registerDirectory("/", serverBasePath);
   server.registerPathHandler("/server/shutdown", serverShutdown);
@@ -308,16 +328,13 @@ function serverDebug(metadata, response) {
   if (metadata.queryString === "0") {
     // do this now so it gets logged with the old mode
     dumpn("Server debug logs disabled.");
-    DEBUG = false;
-    DEBUG_TIMESTAMP = false;
+    setDebuggingStatus(false, false);
     mode = "disabled";
   } else if (metadata.queryString === "1") {
-    DEBUG = true;
-    DEBUG_TIMESTAMP = false;
+    setDebuggingStatus(true, false);
     mode = "enabled";
   } else if (metadata.queryString === "2") {
-    DEBUG = true;
-    DEBUG_TIMESTAMP = true;
+    setDebuggingStatus(true, true);
     mode = "enabled, with timestamps";
   } else {
     return;

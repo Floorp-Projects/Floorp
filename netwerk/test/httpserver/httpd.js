@@ -42,6 +42,7 @@ var EXPORTED_SYMBOLS = [
   "nsHttpHeaders",
   "overrideBinaryStreamsForTests",
   "WriteThroughCopier",
+  "setDebuggingStatus",
 ];
 
 const CC = Components.Constructor;
@@ -53,6 +54,19 @@ var DEBUG = false; // non-const *only* so tweakable in server tests
 
 /** True if debugging output should be timestamped. */
 var DEBUG_TIMESTAMP = false; // non-const so tweakable in server tests
+
+/**
+ * Sets the debugging status, intended for tweaking in server tests.
+ *
+ * @param {boolean} debug
+ *   Enables debugging output
+ * @param {boolean} debugTimestamp
+ *   Enables timestamping of the debugging output.
+ */
+function setDebuggingStatus(debug, debugTimestamp) {
+  DEBUG = debug;
+  DEBUG_TIMESTAMP = debugTimestamp;
+}
 
 const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
