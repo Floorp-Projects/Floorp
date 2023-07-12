@@ -30,7 +30,6 @@
 
 #include "jsnum.h"
 
-#include "frontend/BytecodeCompiler.h"  // IsKeyword
 #include "frontend/FrontendContext.h"
 #include "frontend/Parser.h"
 #include "frontend/ParserAtom.h"
