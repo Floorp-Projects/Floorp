@@ -87,7 +87,7 @@ impl ErrorBuffer {
         assert_ne!(self.capacity, 0);
         let length = if message.len() >= self.capacity {
             log::warn!(
-                "Error length {} reached capacity {}",
+                "Error message's length {} reached capacity {}, truncating",
                 message.len(),
                 self.capacity
             );
