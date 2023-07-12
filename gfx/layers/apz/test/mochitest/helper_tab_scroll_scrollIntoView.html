@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+.spacer {
+  height: 200vh;
+  width: 100%;
+  background: green;
+}
+#target {
+  height: 5vh;
+  width: 100%;
+  background: red;
+}
+  </style>
+</head>
+<body>
+  <div class="spacer"></div>
+  <button id="target"></button>
+  <div class="spacer"></div>
+</body>
+<script>
+async function test() {
+  let scrollendPromise = promiseScrollend();
+
+  window.synthesizeKey("KEY_Tab");
+
+  await scrollendPromise;
+
+  let tabScrollPosition = document.scrollingElement.scrollTop;
+
+  target.scrollIntoView({block: "center", inline: "center"});
+
+  let scrollIntoViewPosition = document.scrollingElement.scrollTop;
+
+  // The scroll position after an explicit scrollIntoView call on the target
+  // with block and inline set to "center" should be within +/- 1 of the
+  // scroll position from the tab scroll.
+  ok(tabScrollPosition >= scrollIntoViewPosition - 1 &&
+     tabScrollPosition <= scrollIntoViewPosition + 1,
+     "target element should be centered by tab scroll");
+}
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+</script>
+</html>
