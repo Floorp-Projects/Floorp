@@ -465,20 +465,6 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
   return true;
 }
 
-bool frontend::PrepareForInstantiate(JSContext* maybeCx, FrontendContext* fc,
-                                     CompilationInput& input,
-                                     const CompilationStencil& stencil,
-                                     CompilationGCOutput& gcOutput) {
-  Maybe<AutoGeckoProfilerEntry> pseudoFrame;
-  if (maybeCx) {
-    pseudoFrame.emplace(maybeCx, "stencil instantiate",
-                        JS::ProfilingCategoryPair::JS_Parsing);
-  }
-
-  return CompilationStencil::prepareForInstantiate(fc, input.atomCache, stencil,
-                                                   gcOutput);
-}
-
 template <typename Unit>
 static JSScript* CompileGlobalScriptImpl(
     JSContext* cx, FrontendContext* fc,
