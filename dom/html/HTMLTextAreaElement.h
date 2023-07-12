@@ -243,12 +243,6 @@ class HTMLTextAreaElement final : public TextControlElement,
   void GetDefaultValue(nsAString& aDefaultValue, ErrorResult& aError) const;
   void SetDefaultValue(const nsAString& aDefaultValue, ErrorResult& aError);
   void GetValue(nsAString& aValue);
-  /**
-   * ValueEquals() is designed for internal use so that aValue shouldn't
-   * include \r character.  It should be handled before calling this with
-   * nsContentUtils::PlatformToDOMLineBreaks().
-   */
-  bool ValueEquals(const nsAString& aValue) const;
   MOZ_CAN_RUN_SCRIPT void SetValue(const nsAString&, ErrorResult&);
 
   uint32_t GetTextLength();

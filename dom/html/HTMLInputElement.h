@@ -250,13 +250,6 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT void SetRevealPassword(bool aValue);
   bool RevealPassword() const;
 
-  /**
-   * TextEditorValueEquals() is designed for internal use so that aValue
-   * shouldn't include \r character.  It should be handled before calling this
-   * with nsContentUtils::PlatformToDOMLineBreaks().
-   */
-  bool TextEditorValueEquals(const nsAString& aValue) const;
-
   // Methods for nsFormFillController so it can do selection operations on input
   // types the HTML spec doesn't support them on, like "email".
   uint32_t GetSelectionStartIgnoringType(ErrorResult& aRv);

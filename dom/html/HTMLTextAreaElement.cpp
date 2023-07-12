@@ -169,11 +169,6 @@ void HTMLTextAreaElement::GetValueInternal(nsAString& aValue,
   mState->GetValue(aValue, aIgnoreWrap);
 }
 
-bool HTMLTextAreaElement::ValueEquals(const nsAString& aValue) const {
-  MOZ_ASSERT(mState);
-  return mState->ValueEquals(aValue);
-}
-
 nsIEditor* HTMLTextAreaElement::GetEditorForBindings() {
   if (!GetPrimaryFrame()) {
     GetPrimaryFrame(FlushType::Frames);
