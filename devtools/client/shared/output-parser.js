@@ -316,9 +316,9 @@ class OutputParser {
       const subOptions = Object.assign({}, options);
       subOptions.expectFilter = false;
       const saveParsed = this.#parsed;
-      this.parsed = [];
+      this.#parsed = [];
       const rest = this.#doParse(text, subOptions, tokenStream, true);
-      this.parsed = saveParsed;
+      this.#parsed = saveParsed;
 
       const span = this.#createNode("span", secondOpts);
       span.appendChild(rest);
