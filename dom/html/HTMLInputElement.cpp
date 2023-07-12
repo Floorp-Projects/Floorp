@@ -1507,7 +1507,7 @@ void HTMLInputElement::GetValue(nsAString& aValue, CallerType aCallerType) {
   // For the more general case of input elements displaying text that isn't
   // their current value, see bug 805049.
   if (SanitizesOnValueGetter()) {
-    SanitizeValue(aValue, ForValueGetter::Yes);
+    SanitizeValue(aValue, SanitizationKind::ForValueGetter);
   }
 }
 
@@ -1543,7 +1543,7 @@ void HTMLInputElement::GetNonFileValueInternal(nsAString& aValue) const {
   switch (GetValueMode()) {
     case VALUE_MODE_VALUE:
       if (IsSingleLineTextControl(false)) {
-        mInputData.mState->GetValue(aValue, true);
+        mInputData.mState->GetValue(aValue, true, /* aForDisplay = */ false);
       } else if (!aValue.Assign(mInputData.mValue, fallible)) {
         aValue.Truncate();
       }
@@ -4560,7 +4560,7 @@ void HTMLInputElement::MaybeSnapToTickMark(Decimal& aValue) {
 }
 
 void HTMLInputElement::SanitizeValue(nsAString& aValue,
-                                     ForValueGetter aForGetter) {
+                                     SanitizationKind aKind) {
   NS_ASSERTION(mDoneCreating, "The element creation should be finished!");
 
   switch (mType) {
@@ -4610,7 +4610,7 @@ void HTMLInputElement::SanitizeValue(nsAString& aValue,
         return;
       }
 
-      if (aForGetter == ForValueGetter::Yes) {
+      if (aKind == SanitizationKind::ForValueGetter) {
         // If the default non-localized algorithm parses the value, then we're
         // done, don't un-localize it, to avoid precision loss, and to preserve
         // scientific notation as well for example.
@@ -4624,20 +4624,22 @@ void HTMLInputElement::SanitizeValue(nsAString& aValue,
         DebugOnly<bool> ok = result.mResult.toString(buf, ArrayLength(buf));
         aValue.AssignASCII(buf);
         MOZ_ASSERT(ok, "buf not big enough");
-      } else {
-        // Otherwise this SanitizeValue call is for display. We localize as
-        // needed, but if both the localized and unlocalized version parse with
-        // the generic parser, we just use the unlocalized one, to preserve the
-        // input as much as possible.
+      } else if (aKind == SanitizationKind::ForDisplay) {
+        // If this SanitizeValue call is for display, we localize as needed, but
+        // if both the localized and unlocalized version parse with the generic
+        // parser, we just use the unlocalized one, to preserve the input as
+        // much as possible.
         //
         // FIXME(emilio, bug 1622808): Localization should ideally be more
         // input-preserving.
-        nsAutoString localizedValue;
+        nsString localizedValue;
         mInputType->ConvertNumberToString(result.mResult, localizedValue);
         if (StringToDecimal(localizedValue).isFinite()) {
           return;
         }
-        aValue.Assign(localizedValue);
+        aValue = std::move(localizedValue);
+      } else {
+        // Leave aValue untouched.
       }
     } break;
     case FormControlType::InputRange: {
@@ -6760,17 +6762,18 @@ int32_t HTMLInputElement::GetWrapCols() {
 
 int32_t HTMLInputElement::GetRows() { return DEFAULT_ROWS; }
 
-void HTMLInputElement::GetDefaultValueFromContent(nsAString& aValue) {
+void HTMLInputElement::GetDefaultValueFromContent(nsAString& aValue,
+                                                  bool aForDisplay) {
   if (!GetEditorState()) {
     return;
   }
   GetDefaultValue(aValue);
   // This is called by the frame to show the value.
   // We have to sanitize it when needed.
-  // FIXME: This is also used from GetNonFileValueInternal where we might not
-  // need to sanitize some of the time.
+  // FIXME: Do we want to sanitize even when aForDisplay is false?
   if (mDoneCreating) {
-    SanitizeValue(aValue);
+    SanitizeValue(aValue, aForDisplay ? SanitizationKind::ForDisplay
+                                      : SanitizationKind::Other);
   }
 }
 
@@ -6778,7 +6781,7 @@ bool HTMLInputElement::ValueChanged() const { return mValueChanged; }
 
 void HTMLInputElement::GetTextEditorValue(nsAString& aValue) const {
   if (TextControlState* state = GetEditorState()) {
-    state->GetValue(aValue, /* aIgnoreWrap = */ true);
+    state->GetValue(aValue, /* aIgnoreWrap = */ true, /* aForDisplay = */ true);
   }
 }
 

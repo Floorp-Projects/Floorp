@@ -1609,7 +1609,7 @@ nsresult TextControlState::BindToFrame(nsTextControlFrame* aFrame) {
   // binding to the frame.
   nsAutoString currentValue;
   if (mTextEditor) {
-    GetValue(currentValue, true);
+    GetValue(currentValue, true, /* aForDisplay = */ false);
   }
 
   mBoundFrame = aFrame;
@@ -1776,7 +1776,7 @@ nsresult TextControlState::PrepareEditor(const nsAString* aValue) {
   if (aValue) {
     defaultValue = *aValue;
   } else {
-    GetValue(defaultValue, true);
+    GetValue(defaultValue, true, /* aForDisplay = */ true);
   }
 
   if (!mEditorInitialized) {
@@ -2083,7 +2083,7 @@ void TextControlState::SetSelectionRange(uint32_t aStart, uint32_t aEnd,
   if (!props.HasMaxLength()) {
     // A clone without a dirty value flag may not have a max length yet
     nsAutoString value;
-    GetValue(value, false);
+    GetValue(value, false, /* aForDisplay = */ true);
     props.SetMaxLength(value.Length());
   }
 
@@ -2368,7 +2368,7 @@ void TextControlState::UnbindFromFrame(nsTextControlFrame* aFrame) {
   // We need to start storing the value outside of the editor if we're not
   // going to use it anymore, so retrieve it for now.
   nsAutoString value;
-  GetValue(value, true);
+  GetValue(value, true, /* aForDisplay = */ false);
 
   if (mRestoringSelection) {
     mRestoringSelection->Revoke();
@@ -2468,7 +2468,8 @@ void TextControlState::UnbindFromFrame(nsTextControlFrame* aFrame) {
   }
 }
 
-void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
+void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap,
+                                bool aForDisplay) const {
   // While SetValue() is being called and requesting to commit composition to
   // IME, GetValue() may be called for appending text or something.  Then, we
   // need to return the latest aValue of SetValue() since the value hasn't
@@ -2535,7 +2536,7 @@ void TextControlState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
   } else if (!mTextCtrlElement->ValueChanged() || mValue.IsVoid()) {
     // Use nsString to avoid copying string buffer at setting aValue.
     nsString value;
-    mTextCtrlElement->GetDefaultValueFromContent(value);
+    mTextCtrlElement->GetDefaultValueFromContent(value, aForDisplay);
     // TODO: We should make default value not include \r.
     nsContentUtils::PlatformToDOMLineBreaks(value);
     aValue = std::move(value);
@@ -2549,7 +2550,7 @@ bool TextControlState::ValueEquals(const nsAString& aValue) const {
   // We can avoid copying string buffer in many cases.  Therefore, we should
   // use nsString rather than nsAutoString here.
   nsString value;
-  GetValue(value, true);
+  GetValue(value, true, /* aForDisplay = */ true);
   return aValue.Equals(value);
 }
 
@@ -2612,7 +2613,8 @@ bool TextControlState::SetValue(const nsAString& aValue,
     // away.
     if (auto* input = HTMLInputElement::FromNode(mTextCtrlElement)) {
       if (input->LastValueChangeWasInteractive()) {
-        GetValue(mLastInteractiveValue, /* aIgnoreWrap = */ true);
+        GetValue(mLastInteractiveValue, /* aIgnoreWrap = */ true,
+                 /* aForDisplay = */ true);
       }
     }
   }
