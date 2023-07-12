@@ -44,7 +44,9 @@ const {
 
     g,
 } = ChromeUtils.import("resource://reftest/globals.jsm");
-const { HttpServer } = ChromeUtils.import("resource://reftest/httpd.jsm");
+const { HttpServer } = ChromeUtils.importESModule(
+    "resource://reftest/httpd.sys.mjs"
+);
 const { ReadTopManifest, CreateUrls } = ChromeUtils.import(
     "resource://reftest/manifest.jsm"
 );

@@ -10,41 +10,6 @@
  * httpd.js.
  */
 
-var EXPORTED_SYMBOLS = [
-  "dumpn",
-  "HTTP_400",
-  "HTTP_401",
-  "HTTP_402",
-  "HTTP_403",
-  "HTTP_404",
-  "HTTP_405",
-  "HTTP_406",
-  "HTTP_407",
-  "HTTP_408",
-  "HTTP_409",
-  "HTTP_410",
-  "HTTP_411",
-  "HTTP_412",
-  "HTTP_413",
-  "HTTP_414",
-  "HTTP_415",
-  "HTTP_417",
-  "HTTP_500",
-  "HTTP_501",
-  "HTTP_502",
-  "HTTP_503",
-  "HTTP_504",
-  "HTTP_505",
-  "HttpError",
-  "HttpServer",
-  "LineData",
-  "NodeServer",
-  "nsHttpHeaders",
-  "overrideBinaryStreamsForTests",
-  "WriteThroughCopier",
-  "setDebuggingStatus",
-];
-
 const CC = Components.Constructor;
 
 const PR_UINT32_MAX = Math.pow(2, 32) - 1;
@@ -63,14 +28,12 @@ var DEBUG_TIMESTAMP = false; // non-const so tweakable in server tests
  * @param {boolean} debugTimestamp
  *   Enables timestamping of the debugging output.
  */
-function setDebuggingStatus(debug, debugTimestamp) {
+export function setDebuggingStatus(debug, debugTimestamp) {
   DEBUG = debug;
   DEBUG_TIMESTAMP = debugTimestamp;
 }
 
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 /**
  * Asserts that the given condition holds.  If it doesn't, the given message is
@@ -98,10 +61,11 @@ function NS_ASSERT(cond, msg) {
 }
 
 /** Constructs an HTTP error object. */
-function HttpError(code, description) {
+export function HttpError(code, description) {
   this.code = code;
   this.description = description;
 }
+
 HttpError.prototype = {
   toString() {
     return this.code + " " + this.description;
@@ -111,30 +75,30 @@ HttpError.prototype = {
 /**
  * Errors thrown to trigger specific HTTP server responses.
  */
-var HTTP_400 = new HttpError(400, "Bad Request");
-var HTTP_401 = new HttpError(401, "Unauthorized");
-var HTTP_402 = new HttpError(402, "Payment Required");
-var HTTP_403 = new HttpError(403, "Forbidden");
-var HTTP_404 = new HttpError(404, "Not Found");
-var HTTP_405 = new HttpError(405, "Method Not Allowed");
-var HTTP_406 = new HttpError(406, "Not Acceptable");
-var HTTP_407 = new HttpError(407, "Proxy Authentication Required");
-var HTTP_408 = new HttpError(408, "Request Timeout");
-var HTTP_409 = new HttpError(409, "Conflict");
-var HTTP_410 = new HttpError(410, "Gone");
-var HTTP_411 = new HttpError(411, "Length Required");
-var HTTP_412 = new HttpError(412, "Precondition Failed");
-var HTTP_413 = new HttpError(413, "Request Entity Too Large");
-var HTTP_414 = new HttpError(414, "Request-URI Too Long");
-var HTTP_415 = new HttpError(415, "Unsupported Media Type");
-var HTTP_417 = new HttpError(417, "Expectation Failed");
+export var HTTP_400 = new HttpError(400, "Bad Request");
 
-var HTTP_500 = new HttpError(500, "Internal Server Error");
-var HTTP_501 = new HttpError(501, "Not Implemented");
-var HTTP_502 = new HttpError(502, "Bad Gateway");
-var HTTP_503 = new HttpError(503, "Service Unavailable");
-var HTTP_504 = new HttpError(504, "Gateway Timeout");
-var HTTP_505 = new HttpError(505, "HTTP Version Not Supported");
+export var HTTP_401 = new HttpError(401, "Unauthorized");
+export var HTTP_402 = new HttpError(402, "Payment Required");
+export var HTTP_403 = new HttpError(403, "Forbidden");
+export var HTTP_404 = new HttpError(404, "Not Found");
+export var HTTP_405 = new HttpError(405, "Method Not Allowed");
+export var HTTP_406 = new HttpError(406, "Not Acceptable");
+export var HTTP_407 = new HttpError(407, "Proxy Authentication Required");
+export var HTTP_408 = new HttpError(408, "Request Timeout");
+export var HTTP_409 = new HttpError(409, "Conflict");
+export var HTTP_410 = new HttpError(410, "Gone");
+export var HTTP_411 = new HttpError(411, "Length Required");
+export var HTTP_412 = new HttpError(412, "Precondition Failed");
+export var HTTP_413 = new HttpError(413, "Request Entity Too Large");
+export var HTTP_414 = new HttpError(414, "Request-URI Too Long");
+export var HTTP_415 = new HttpError(415, "Unsupported Media Type");
+export var HTTP_417 = new HttpError(417, "Expectation Failed");
+export var HTTP_500 = new HttpError(500, "Internal Server Error");
+export var HTTP_501 = new HttpError(501, "Not Implemented");
+export var HTTP_502 = new HttpError(502, "Bad Gateway");
+export var HTTP_503 = new HttpError(503, "Service Unavailable");
+export var HTTP_504 = new HttpError(504, "Gateway Timeout");
+export var HTTP_505 = new HttpError(505, "HTTP Version Not Supported");
 
 /** Creates a hash with fields corresponding to the values in arr. */
 function array2obj(arr) {
@@ -183,7 +147,7 @@ const SJS_TYPE = "sjs";
 var firstStamp = 0;
 
 /** dump(str) with a trailing "\n" -- only outputs if DEBUG. */
-function dumpn(str) {
+export function dumpn(str) {
   if (DEBUG) {
     var prefix = "HTTPD-INFO | ";
     if (DEBUG_TIMESTAMP) {
@@ -270,7 +234,7 @@ var BinaryOutputStream = CC(
   "setOutputStream"
 );
 
-function overrideBinaryStreamsForTests(
+export function overrideBinaryStreamsForTests(
   inputStream,
   outputStream,
   responseSegmentSize
@@ -372,27 +336,9 @@ function toDateString(date) {
 }
 
 /**
- * Prints out a human-readable representation of the object o and its fields,
- * omitting those whose names begin with "_" if showMembers != true (to ignore
- * "private" properties exposed via getters/setters).
- */
-function printObj(o, showMembers) {
-  var s = "******************************\n";
-  s += "o = {\n";
-  for (var i in o) {
-    if (typeof i != "string" || showMembers || (!!i.length && i[0] != "_")) {
-      s += "      " + i + ": " + o[i] + ",\n";
-    }
-  }
-  s += "    };\n";
-  s += "******************************";
-  dumpn(s);
-}
-
-/**
  * Instantiates a new HTTP server.
  */
-function nsHttpServer() {
+export function nsHttpServer() {
   /** The port on which this server listens. */
   this._port = undefined;
 
@@ -429,6 +375,7 @@ function nsHttpServer() {
    */
   this._connections = {};
 }
+
 nsHttpServer.prototype = {
   // NSISERVERSOCKETLISTENER
 
@@ -912,9 +859,9 @@ nsHttpServer.prototype = {
   },
 };
 
-var HttpServer = nsHttpServer;
+export var HttpServer = nsHttpServer;
 
-class NodeServer {
+export class NodeServer {
   // Executes command in the context of a node server.
   // See handler in moz-http2.js
   //
@@ -2084,7 +2031,7 @@ function findCRLF(array, start) {
  * A container which provides line-by-line access to the arrays of bytes with
  * which it is seeded.
  */
-function LineData() {
+export function LineData() {
   /** An array of queued bytes from which to get line-based characters. */
   this._data = [];
 
@@ -2928,7 +2875,7 @@ ServerHandler.prototype = {
         // If you update the list of imports, please update the list in
         // tools/lint/eslint/eslint-plugin-mozilla/lib/environments/sjs.js
         // as well.
-        var s = Cu.Sandbox(globalThis);
+        var s = Cu.Sandbox(Cu.getGlobalForObject({}));
         s.importFunction(dump, "dump");
         s.importFunction(atob, "atob");
         s.importFunction(btoa, "btoa");
@@ -4605,7 +4552,7 @@ function wouldBlock(e) {
  * @throws NS_ERROR_NULL_POINTER
  *   if source, sink, or observer are null
  */
-function WriteThroughCopier(source, sink, observer, context) {
+export function WriteThroughCopier(source, sink, observer, context) {
   if (!source || !sink || !observer) {
     throw Components.Exception("", Cr.NS_ERROR_NULL_POINTER);
   }
@@ -5285,7 +5232,7 @@ nsHttpVersion.HTTP_1_1 = new nsHttpVersion("1.1");
  * values returned by .enumerator may not be equal case-sensitively to the
  * values passed to setHeader when adding headers to this.
  */
-function nsHttpHeaders() {
+export function nsHttpHeaders() {
   /**
    * A hash of headers, with header field names as the keys and header field
    * values as the values.  Header field names are case-insensitive, but upon
@@ -5613,60 +5560,3 @@ Request.prototype = {
     }
   },
 };
-
-/**
- * Creates a new HTTP server listening for loopback traffic on the given port,
- * starts it, and runs the server until the server processes a shutdown request,
- * spinning an event loop so that events posted by the server's socket are
- * processed.
- *
- * This method is primarily intended for use in running this script from within
- * xpcshell and running a functional HTTP server without having to deal with
- * non-essential details.
- *
- * Note that running multiple servers using variants of this method probably
- * doesn't work, simply due to how the internal event loop is spun and stopped.
- *
- * @note
- *   This method only works with Mozilla 1.9 (i.e., Firefox 3 or trunk code);
- *   you should use this server as a component in Mozilla 1.8.
- * @param port
- *   the port on which the server will run, or -1 if there exists no preference
- *   for a specific port; note that attempting to use some values for this
- *   parameter (particularly those below 1024) may cause this method to throw or
- *   may result in the server being prematurely shut down
- * @param basePath
- *   a local directory from which requests will be served (i.e., if this is
- *   "/home/jwalden/" then a request to /index.html will load
- *   /home/jwalden/index.html); if this is omitted, only the default URLs in
- *   this server implementation will be functional
- */
-function server(port, basePath) {
-  if (basePath) {
-    var lp = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    lp.initWithPath(basePath);
-  }
-
-  // if you're running this, you probably want to see debugging info
-  DEBUG = true;
-
-  var srv = new nsHttpServer();
-  if (lp) {
-    srv.registerDirectory("/", lp);
-  }
-  srv.registerContentType("sjs", SJS_TYPE);
-  srv.identity.setPrimary("http", "localhost", port);
-  srv.start(port);
-
-  var thread = Services.tm.currentThread;
-  while (!srv.isStopped()) {
-    thread.processNextEvent(true);
-  }
-
-  // get rid of any pending requests
-  while (thread.hasPendingEvents()) {
-    thread.processNextEvent(true);
-  }
-
-  DEBUG = false;
-}

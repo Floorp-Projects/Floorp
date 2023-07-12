@@ -1,9 +1,9 @@
 [
   {
     "filename": "host-utils-116.0a1.en-US.linux-x86_64.tar.gz",
-    "size": 144623521,
+    "size": 144142962,
     "algorithm": "sha512",
-    "digest": "687eaef9a933dea7f127e9e51dbb664744d5605b7f4366e45b46561edcac399f82705ee6bab6be337a6d90d75d54b4d0808299b963d3b5018a871b916d830424",
+    "digest": "b4b98e530deacca3611aa132e4d34a0f52e9719575cdb122af4c8e7568a681910a5661bc6bb1ed82e3c91507a0570fa1dd85527129b2865ef3d212e781b2d851",
     "unpack": true,
     "visibility": "public"
   }

@@ -2,21 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   Log: "chrome://remote/content/shared/Log.sys.mjs",
+  HTTP_404: "chrome://remote/content/server/httpd.sys.mjs",
+  HTTP_405: "chrome://remote/content/server/httpd.sys.mjs",
+  HTTP_500: "chrome://remote/content/server/httpd.sys.mjs",
   Protocol: "chrome://remote/content/cdp/Protocol.sys.mjs",
   RemoteAgentError: "chrome://remote/content/cdp/Error.sys.mjs",
   TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
-});
-
-XPCOMUtils.defineLazyModuleGetters(lazy, {
-  HTTP_404: "chrome://remote/content/server/HTTPD.jsm",
-  HTTP_405: "chrome://remote/content/server/HTTPD.jsm",
-  HTTP_500: "chrome://remote/content/server/HTTPD.jsm",
 });
 
 export class JSONHandler {

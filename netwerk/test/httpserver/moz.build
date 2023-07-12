@@ -13,9 +13,9 @@ XPIDL_MODULE = "test_necko"
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell.ini"]
 
 EXTRA_COMPONENTS += [
-    "httpd.js",
+    "httpd.sys.mjs",
 ]
 
 TESTING_JS_MODULES += [
-    "httpd.js",
+    "httpd.sys.mjs",
 ]
