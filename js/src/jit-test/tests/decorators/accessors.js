@@ -68,3 +68,19 @@ F.x = 2;
 assertEq(F.x, 2, "The value of `F.x` is `2`, after executing `F.x = 2;`");
 
 assertAccessorDescriptor(F, 'x');
+
+class G {
+  static accessor #x = 1;
+
+  getX() {
+    return G.#x;
+  }
+
+  setX(v) {
+    G.#x = v;
+  }
+}
+g = new G();
+assertEq(g.getX(), 1, "The value of `g.getX()` is `1` after construction");
+g.setX(2);
+assertEq(g.getX(), 2, "The value of `g.getX()` is `2`, after executing `g.setX(2)`");
