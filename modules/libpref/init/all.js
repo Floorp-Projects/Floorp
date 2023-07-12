@@ -191,6 +191,13 @@ pref("pdfjs.enableScripting", true);
 // Enable XFA form support in the PDF viewer.
 pref("pdfjs.enableXfa", true);
 
+// Enable adding an image in a pdf.
+#if defined(EARLY_BETA_OR_EARLIER)
+  pref("pdfjs.enableStampEditor", true);
+#else
+  pref("pdfjs.enableStampEditor", false);
+#endif
+
 // Disable support for MathML
 pref("mathml.disabled",    false);
 
