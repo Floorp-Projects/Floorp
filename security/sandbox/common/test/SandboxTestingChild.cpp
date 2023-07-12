@@ -91,16 +91,17 @@ void SandboxTestingChild::Bind(Endpoint<PSandboxTestingChild>&& aEndpoint) {
     switch (s->mSandbox) {
       case ipc::SandboxingKind::GENERIC_UTILITY:
         RunTestsGenericUtility(this);
+        break;
 #ifdef MOZ_APPLEMEDIA
-        [[fallthrough]];
       case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_APPLE_MEDIA:
-#endif
-#ifdef XP_WIN
-        [[fallthrough]];
-      case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF:
-#endif
         RunTestsUtilityAudioDecoder(this, s->mSandbox);
         break;
+#endif
+#ifdef XP_WIN
+      case ipc::SandboxingKind::UTILITY_AUDIO_DECODING_WMF:
+        RunTestsUtilityAudioDecoder(this, s->mSandbox);
+        break;
+#endif
 
       default:
         MOZ_ASSERT(false, "Invalid SandboxingKind");
