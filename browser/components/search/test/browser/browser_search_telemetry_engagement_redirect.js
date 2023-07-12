@@ -25,7 +25,7 @@ const TEST_PROVIDER_INFO = [
     ],
     extraAdServersRegexps: [
       /^https:\/\/example\.com\/ad/,
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_adsLink_redirect.html/,
+      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/redirect_ad/,
     ],
     components: [
       {

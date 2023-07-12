@@ -300,6 +300,8 @@ var tests = [
     function() {SpecialPowers.pushPrefEnv({'set': [['accessibility.browsewithcaret', true]]}, nextTest);} ,
     [ 'bug1529492-1.html' , 'bug1529492-1-ref.html' ] ,
     function() {SpecialPowers.pushPrefEnv({'clear': [['accessibility.browsewithcaret']]}, nextTest);} ,
+    [ 'interlinePosition-after-Selection-addRange.html', 'interlinePosition-after-Selection-addRange-ref.html' ] ,
+    [ 'collapse-selection-into-editing-host-during-blur-of-input.html', 'collapse-selection-into-editing-host-during-blur-of-input-ref.html' ] ,
 ];
 
 if (!navigator.appVersion.includes("Android")) {

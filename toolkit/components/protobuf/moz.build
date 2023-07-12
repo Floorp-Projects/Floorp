@@ -152,3 +152,7 @@ DEFINES['HAVE_ZLIB'] = True
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
     CXXFLAGS += CONFIG['MOZ_GTK3_CFLAGS']
+
+# Work around bug 1841201.
+if CONFIG['CPU_ARCH'] in ('mips32', 'mips64'):
+    DEFINES['musttail'] = 'nomusttail'

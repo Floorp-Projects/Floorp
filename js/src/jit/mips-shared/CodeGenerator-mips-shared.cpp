@@ -455,6 +455,7 @@ void CodeGenerator::visitMulI64(LMulI64* lir) {
   const LInt64Allocation lhs = lir->getInt64Operand(LMulI64::Lhs);
   const LInt64Allocation rhs = lir->getInt64Operand(LMulI64::Rhs);
   const Register64 output = ToOutRegister64(lir);
+  MOZ_ASSERT(ToRegister64(lhs) == output);
 
   if (IsConstant(rhs)) {
     int64_t constant = ToInt64(rhs);
@@ -468,18 +469,25 @@ void CodeGenerator::visitMulI64(LMulI64* lir) {
       case 1:
         // nop
         return;
+      case 2:
+        masm.add64(ToRegister64(lhs), ToRegister64(lhs));
+        return;
       default:
         if (constant > 0) {
-          if (mozilla::IsPowerOfTwo(static_cast<uint32_t>(constant + 1))) {
-            masm.move64(ToRegister64(lhs), output);
+          if (mozilla::IsPowerOfTwo(static_cast<uint64_t>(constant + 1))) {
+            ScratchRegisterScope scratch(masm);
+            Register64 scratch64(scratch);
+            masm.move64(ToRegister64(lhs), scratch64);
             masm.lshift64(Imm32(FloorLog2(constant + 1)), output);
-            masm.sub64(ToRegister64(lhs), output);
+            masm.sub64(scratch64, output);
             return;
           } else if (mozilla::IsPowerOfTwo(
-                         static_cast<uint32_t>(constant - 1))) {
-            masm.move64(ToRegister64(lhs), output);
+                         static_cast<uint64_t>(constant - 1))) {
+            ScratchRegisterScope scratch(masm);
+            Register64 scratch64(scratch);
+            masm.move64(ToRegister64(lhs), scratch64);
             masm.lshift64(Imm32(FloorLog2(constant - 1u)), output);
-            masm.add64(ToRegister64(lhs), output);
+            masm.add64(scratch64, output);
             return;
           }
           // Use shift if constant is power of 2.

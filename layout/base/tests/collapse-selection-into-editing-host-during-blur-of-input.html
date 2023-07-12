@@ -1,0 +1,33 @@
+<!doctype html>
+<html class="reftest-wait">
+<meta charset="utf-8">
+<title>Move Selection into an editing host before TextEditor gets blur event</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<style>
+  div[contenteditable] {
+    outline: none;
+  }
+  input {
+    border: none;
+    outline: none;
+  }
+</style>
+<script>
+SimpleTest.waitForFocus(() => {
+  const input = document.querySelector("input");
+  input.focus();
+  input.addEventListener("blur", () => {
+    const editingHost = document.querySelector("div[contenteditable]");
+    editingHost.addEventListener("focus", () => {
+      requestAnimationFrame(
+        () => document.documentElement.removeAttribute("class")
+      );
+    }, { once: true });
+    getSelection().collapse(editingHost, 0);
+
+  }, { once: true });
+  requestAnimationFrame(() => input.blur());
+});
+</script>
+<input>
+<div contenteditable="true" spellcheck="false"><br></div>

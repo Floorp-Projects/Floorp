@@ -275,7 +275,10 @@ void AudioSink::ReenqueueUnplayedAudioDataIfNeeded() {
         "the audio queue at pts %lf",
         packetFrameCount, 1000 * static_cast<float>(packetFrameCount) / rate,
         time.ToSeconds());
-    mAudioQueue.PushFront(packet);
+    // The audio data's timestamp would be adjusted already if we're in looping,
+    // so we don't want to adjust them again.
+    mAudioQueue.PushFront(packet,
+                          MediaQueue<AudioData>::TimestampAdjustment::Disable);
   }
 }
 

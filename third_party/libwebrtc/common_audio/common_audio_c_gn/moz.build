@@ -39,7 +39,6 @@ UNIFIED_SOURCES += [
     "/third_party/libwebrtc/common_audio/ring_buffer.c",
     "/third_party/libwebrtc/common_audio/signal_processing/auto_corr_to_refl_coef.c",
     "/third_party/libwebrtc/common_audio/signal_processing/auto_correlation.c",
-    "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
     "/third_party/libwebrtc/common_audio/signal_processing/copy_set_operations.c",
     "/third_party/libwebrtc/common_audio/signal_processing/cross_correlation.c",
     "/third_party/libwebrtc/common_audio/signal_processing/division_operations.c",
@@ -89,7 +88,6 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["HAVE_SYS_UIO_H"] = True
     DEFINES["WEBRTC_ANDROID"] = True
     DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
-    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -100,9 +98,12 @@ if CONFIG["OS_TARGET"] == "Android":
         "log"
     ]
 
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c"
+    ]
+
 if CONFIG["OS_TARGET"] == "Darwin":
 
-    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
@@ -112,6 +113,7 @@ if CONFIG["OS_TARGET"] == "Darwin":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
@@ -140,7 +142,6 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
     DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_BSD"] = True
-    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_LARGEFILE64_SOURCE"] = True
@@ -150,6 +151,7 @@ if CONFIG["OS_TARGET"] == "OpenBSD":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
@@ -161,7 +163,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["PSAPI_VERSION"] = "2"
     DEFINES["UNICODE"] = True
     DEFINES["USE_AURA"] = "1"
-    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["WEBRTC_WIN"] = True
     DEFINES["WIN32"] = True
     DEFINES["WIN32_LEAN_AND_MEAN"] = True
@@ -189,6 +190,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
@@ -207,12 +209,58 @@ if CONFIG["CPU_ARCH"] == "arm":
     DEFINES["WEBRTC_ARCH_ARM_V7"] = True
     DEFINES["WEBRTC_HAS_NEON"] = True
 
+if CONFIG["CPU_ARCH"] == "mips32":
+
+    DEFINES["MIPS32_LE"] = True
+    DEFINES["MIPS_FPU_LE"] = True
+    DEFINES["_GNU_SOURCE"] = True
+
+    SOURCES += [
+        "/third_party/libwebrtc/common_audio/signal_processing/resample_by_2_mips.c"
+    ]
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse_mips.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft_mips.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/cross_correlation_mips.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/downsample_fast_mips.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12_mips.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/min_max_operations_mips.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "mips64":
+
+    DEFINES["_GNU_SOURCE"] = True
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
+    ]
+
 if CONFIG["CPU_ARCH"] == "ppc64":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
+
+if CONFIG["CPU_ARCH"] == "riscv64":
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86":
+
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
+
+if CONFIG["CPU_ARCH"] == "x86_64":
+
+    DEFINES["WEBRTC_ENABLE_AVX2"] = True
 
 if CONFIG["MOZ_DEBUG"] == "1" and CONFIG["OS_TARGET"] == "Android":
 
@@ -276,18 +324,21 @@ if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Linux":
 
-    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "arm" and CONFIG["OS_TARGET"] == "Linux":
 
-    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
+
+    UNIFIED_SOURCES += [
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c"
+    ]
 
 if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
 
@@ -295,21 +346,21 @@ if CONFIG["CPU_ARCH"] == "x86" and CONFIG["OS_TARGET"] == "Linux":
         "-msse2"
     ]
 
-    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 
 if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Linux":
 
-    DEFINES["WEBRTC_ENABLE_AVX2"] = True
     DEFINES["_GNU_SOURCE"] = True
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/common_audio/signal_processing/complex_bit_reverse.c",
+        "/third_party/libwebrtc/common_audio/signal_processing/complex_fft.c",
         "/third_party/libwebrtc/common_audio/signal_processing/filter_ar_fast_q12.c"
     ]
 

@@ -233,10 +233,12 @@ _cairo_tag_stack_pop (cairo_tag_stack_t *stack,
     cairo_list_del (&top->link);
     stack->size--;
     if (strcmp (top->name, name) != 0) {
+	cairo_status_t status =
+	    _cairo_tag_error ("cairo_tag_end(\"%s\") does not matching previous begin tag \"%s\"",
+			      name, top->name);
 	stack->type = TAG_TYPE_INVALID;
 	_cairo_tag_stack_free_elem (top);
-	return _cairo_tag_error ("cairo_tag_end(\"%s\") does not matching previous begin tag \"%s\"",
-				 name, top->name);
+	return status;
     }
 
     if (elem)

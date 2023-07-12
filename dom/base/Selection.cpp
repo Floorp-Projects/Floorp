@@ -2164,7 +2164,11 @@ void Selection::AddRangeAndSelectFramesAndNotifyListenersInternal(
   RefPtr<nsRange> range = &aRange;
   if (aRange.IsInAnySelection()) {
     if (aRange.IsInSelection(*this)) {
-      // If we already have the range, we don't need to handle this.
+      // If we already have the range, we don't need to handle this except
+      // setting the interline position.
+      if (mSelectionType == SelectionType::eNormal) {
+        SetInterlinePosition(InterlinePosition::StartOfNextLine);
+      }
       return;
     }
     if (mSelectionType != SelectionType::eNormal &&

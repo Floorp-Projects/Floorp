@@ -255,8 +255,9 @@ void StartupCache::StartPrefetchMemory() {
     MonitorAutoLock lock(mPrefetchComplete);
     mPrefetchInProgress = true;
   }
-  NS_DispatchBackgroundTask(NewRunnableMethod(
-      "StartupCache::ThreadedPrefetch", this, &StartupCache::ThreadedPrefetch));
+  NS_DispatchBackgroundTask(NewRunnableMethod<uint8_t*, size_t>(
+      "StartupCache::ThreadedPrefetch", this, &StartupCache::ThreadedPrefetch,
+      mCacheData.get<uint8_t>().get(), mCacheData.size()));
 }
 
 /**
@@ -706,22 +707,20 @@ void StartupCache::WaitOnPrefetch() {
   }
 }
 
-void StartupCache::ThreadedPrefetch() {
-  uint8_t* buf;
-  size_t size;
-  {
-    MutexAutoLock lock(mTableLock);
-    buf = mCacheData.get<uint8_t>().get();
-    size = mCacheData.size();
-  }
+void StartupCache::ThreadedPrefetch(uint8_t* aStart, size_t aSize) {
+  // Always notify of completion, even if MMAP_FAULT_HANDLER_CATCH()
+  // early-returns.
+  auto notifyPrefetchComplete = MakeScopeExit([&] {
+    MonitorAutoLock lock(mPrefetchComplete);
+    mPrefetchInProgress = false;
+    mPrefetchComplete.NotifyAll();
+  });
+
   // PrefetchMemory does madvise/equivalent, but doesn't access the memory
-  // pointed to by buf
-  MMAP_FAULT_HANDLER_BEGIN_BUFFER(buf, size)
-  PrefetchMemory(buf, size);
+  // pointed to by aStart
+  MMAP_FAULT_HANDLER_BEGIN_BUFFER(aStart, aSize)
+  PrefetchMemory(aStart, aSize);
   MMAP_FAULT_HANDLER_CATCH()
-  MonitorAutoLock lock(mPrefetchComplete);
-  mPrefetchInProgress = false;
-  mPrefetchComplete.NotifyAll();
 }
 
 // mTableLock must be held

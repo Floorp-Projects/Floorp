@@ -52,14 +52,14 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 # We should autogenerate these SSE related flags.
 
 if CONFIG['INTEL_ARCHITECTURE']:
-    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-mssse3']
-    SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-msse4.2']
-    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
-    SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-mavx2', '-mf16c', '-mfma']
+    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-Dskvx=skvx_ssse3', '-mssse3']
+    SOURCES['skia/src/opts/SkOpts_sse42.cpp'].flags += ['-Dskvx=skvx_sse42', '-msse4.2']
+    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-Dskvx=skvx_avx', '-mavx']
+    SOURCES['skia/src/opts/SkOpts_hsw.cpp'].flags += ['-Dskvx=skvx_hsw', '-mavx2', '-mf16c', '-mfma']
     if not CONFIG["MOZ_CODE_COVERAGE"]:
-      SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += ['-mavx512f', '-mavx512dq', '-mavx512cd', '-mavx512bw', '-mavx512vl']
+        SOURCES['skia/src/opts/SkOpts_skx.cpp'].flags += ['-Dskvx=skvx_skx', '-mavx512f', '-mavx512dq', '-mavx512cd', '-mavx512bw', '-mavx512vl']
 elif CONFIG['CPU_ARCH'] == 'aarch64' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-march=armv8-a+crc']
+    SOURCES['skia/src/opts/SkOpts_crc32.cpp'].flags += ['-Dskvx=skvx_crc32', '-march=armv8-a+crc']
 
 DEFINES['MOZ_SKIA'] = True
 
@@ -99,6 +99,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk', 'android'):
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk':
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
+
+if CONFIG['CPU_ARCH'] in ('mips32', 'mips64'):
+    # The skia code uses `mips` as a variable, but it's a builtin preprocessor
+    # macro on mips that expands to `1`.
+    DEFINES['mips'] = False
 """
 
 import json
@@ -184,6 +189,7 @@ def generate_separated_sources(platform_sources):
     'SkXPS',
     'SkCreateCGImageRef',
     'skia/src/ports/SkGlobalInitialization',
+    'SkICC',
   ]
 
   def isignorelisted(value):

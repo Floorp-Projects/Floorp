@@ -230,6 +230,7 @@ class SearchAdImpression {
     let hrefToComponentMap = new Map();
 
     let innerWindowHeight = document.ownerGlobal.innerHeight;
+    let scrollY = document.ownerGlobal.scrollY;
 
     // Iterate over the results:
     // - If it's searchbox add event listeners.
@@ -278,7 +279,8 @@ class SearchAdImpression {
         element,
         data.adsLoaded,
         childElements,
-        innerWindowHeight
+        innerWindowHeight,
+        scrollY
       );
       if (componentToVisibilityMap.has(data.type)) {
         let componentInfo = componentToVisibilityMap.get(data.type);
@@ -642,6 +644,8 @@ class SearchAdImpression {
    *  List of children belonging to element.
    * @param {number} innerWindowHeight
    *  Current height of the window containing the elements.
+   * @param {number} scrollY
+   *  Current distance the window has been scrolled.
    * @returns {object}
    *  Contains adsVisible which is the number of ads shown for the element
    *  and adsHidden, the number of ads not visible to the user.
@@ -650,7 +654,8 @@ class SearchAdImpression {
     element,
     adsLoaded,
     childElements,
-    innerWindowHeight
+    innerWindowHeight,
+    scrollY
   ) {
     let elementRect =
       element.ownerGlobal.windowUtils.getBoundsWithoutFlushing(element);
@@ -658,6 +663,18 @@ class SearchAdImpression {
     // If the element lacks a dimension, assume all ads that
     // were contained within it are hidden.
     if (elementRect.width == 0 || elementRect.height == 0) {
+      return {
+        adsVisible: 0,
+        adsHidden: adsLoaded,
+      };
+    }
+
+    // If an ad is far above the possible visible area of a window, an
+    // adblocker might be doing it as a workaround for blocking the ad.
+    if (
+      elementRect.bottom < 0 &&
+      innerWindowHeight + scrollY + elementRect.bottom < 0
+    ) {
       return {
         adsVisible: 0,
         adsHidden: adsLoaded,
@@ -962,7 +979,9 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
     if (providerInfo.components?.length) {
       searchAdImpression.providerInfo = providerInfo;
       let start = Cu.now();
-      let hasShoppingTab = searchAdImpression.hasShoppingTab(this.document);
+      let shoppingTabDisplayed = searchAdImpression.hasShoppingTab(
+        this.document
+      );
       ChromeUtils.addProfilerMarker(
         "SearchSERPTelemetryChild.#recordImpression",
         start,
@@ -970,7 +989,7 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
       );
       this.sendAsyncMessage("SearchTelemetry:PageImpression", {
         url,
-        hasShoppingTab,
+        shoppingTabDisplayed,
       });
     }
   }

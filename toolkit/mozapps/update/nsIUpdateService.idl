@@ -749,4 +749,25 @@ interface nsIUpdateManager : nsISupports
    */
   void cleanupDownloadingUpdate();
   void cleanupReadyUpdate();
+
+  /**
+   * Runs cleanup that ought to happen on a Firefox paveover install to
+   * prevent a stale update from being processed when Firefox is first
+   * launched.
+   * This is best-effort. It will not throw on cleanup failure.
+   *
+   * The returned promise does not resolve with any particular value. It simply
+   * conveys that the cleanup has completed.
+   */
+  Promise doInstallCleanup();
+
+  /**
+   * Runs cleanup that ought to happen when Firefox is uninstalled to clean up
+   * old update data that is no longer needed.
+   * This is best-effort. It will not throw on cleanup failure.
+   *
+   * The returned promise does not resolve with any particular value. It simply
+   * conveys that the cleanup has completed.
+   */
+  Promise doUninstallCleanup();
 };
