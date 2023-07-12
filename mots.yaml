@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-07-13T01:07:56.446836'
+updated_at: '2023-07-13T01:11:45.977075'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -768,6 +768,10 @@ people:
     bmo_id: 694341
     name: Olivia Hall
     nick: olivia
+  - &overholt
+    bmo_id: 442218
+    name: Andrew Overholt
+    nick: overholt
   - &owlish
     bmo_id: 579431
     name: ''
@@ -1015,16 +1019,19 @@ people:
     nick: zombie
 modules:
   - name: mozilla-toplevel
-    description: The top level directory for the mozilla tree.
+    description: The top level directory for the mozilla tree. Owned by the TLMC
     includes:
       - README.txt
-        # TODO: verify, as this was toolkit/README
     meta:
       owners_emeritus:
         - Brendan Eich
     owners:
-        # - Technical Leadership Module
-        # TODO
+      - *bholley
+      - *overholt
+      - *mossop
+      - *k88hudson
+      - *nalexander
+      - *nika
     peers: []
     machine_name: _mozillatoplevel
 
@@ -4117,5 +4124,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: a43e8657b8cdb8f570268f945f2bce90ea4bd259
-  export: c9c19019fb1d2dbbb5df1d3863f5d686ae37fd01
+  config: afee30625bff7ffdbd2e82b55e7735c32f57ebfd
+  export: a9d656f67b43a0beb5488c9b28abca55f8109106
