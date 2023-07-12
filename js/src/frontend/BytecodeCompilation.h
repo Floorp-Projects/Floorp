@@ -98,9 +98,6 @@ inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
          !options.forceFullParse();
 }
 
-void FireOnNewScript(JSContext* cx, const JS::InstantiateOptions& options,
-                     JS::Handle<JSScript*> script);
-
 }  // namespace frontend
 
 }  // namespace js

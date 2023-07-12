@@ -430,6 +430,14 @@ frontend::CompileGlobalScriptToExtensibleStencil(
                                                     srcBuf, scopeKind);
 }
 
+static void FireOnNewScript(JSContext* cx,
+                            const JS::InstantiateOptions& options,
+                            JS::Handle<JSScript*> script) {
+  if (!options.hideFromNewScriptInitial()) {
+    DebugAPI::onNewScript(cx, script);
+  }
+}
+
 bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
                                    const CompilationStencil& stencil,
                                    CompilationGCOutput& gcOutput) {
@@ -1554,12 +1562,4 @@ JSFunction* frontend::CompileStandaloneFunctionInNonSyntacticScope(
                                    syntaxKind, GeneratorKind::NotGenerator,
                                    FunctionAsyncKind::SyncFunction,
                                    enclosingScope);
-}
-
-void frontend::FireOnNewScript(JSContext* cx,
-                               const JS::InstantiateOptions& options,
-                               JS::Handle<JSScript*> script) {
-  if (!options.hideFromNewScriptInitial()) {
-    DebugAPI::onNewScript(cx, script);
-  }
 }
