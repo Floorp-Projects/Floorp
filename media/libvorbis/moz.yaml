@@ -1,0 +1,167 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "Audio/Video"
+
+origin:
+  name: libvorbis
+  description: software implementation of the Vorbis specification
+
+  url: https://xiph.org/vorbis/
+
+  release: v1.3.7 (2020-07-03T19:38:28-07:00).
+  revision: v1.3.7
+
+
+  license: BSD-3-Clause
+  license-file: COPYING
+
+vendoring:
+  url: https://gitlab.xiph.org/xiph/vorbis
+  source-hosting: gitlab
+  tracking: tag
+
+  exclude:
+    - "*"
+    - "**"
+    - ".*"
+
+  include:
+    - lib/envelope.h
+    - lib/lpc.h
+    - lib/highlevel.h
+    - lib/floor0.c
+    - lib/lookup_data.h
+    - lib/psy.c
+    - lib/window.c
+    - lib/info.c
+    - lib/res0.c
+    - lib/lookup.h
+    - lib/lookup.c
+    - lib/lsp.c
+    - lib/registry.c
+    - lib/smallft.h
+    - lib/synthesis.c
+    - lib/masking.h
+    - lib/window.h
+    - lib/scales.h
+    - lib/lsp.h
+    - lib/analysis.c
+    - lib/misc.h
+    - lib/floor1.c
+    - lib/lpc.c
+    - lib/backends.h
+    - lib/sharedbook.c
+    - lib/mapping0.c
+    - lib/smallft.c
+    - lib/psy.h
+    - lib/bitrate.h
+    - lib/envelope.c
+    - lib/os.h
+    - lib/mdct.c
+    - lib/codec_internal.h
+    - lib/mdct.h
+    - lib/registry.h
+    - lib/codebook.h
+    - lib/codebook.c
+    - lib/bitrate.c
+    - lib/block.c
+    - include/vorbis/codec.h
+    - COPYING
+    - README.md
+    - AUTHORS
+    # Encoder support
+    - lib/vorbisenc.c
+    - include/vorbis/vorbisenc.h
+    - lib/modes/setup_44.h
+    - lib/modes/setup_44u.h
+    - lib/modes/setup_44p51.h
+    - lib/modes/setup_32.h
+    - lib/modes/setup_8.h
+    - lib/modes/setup_11.h
+    - lib/modes/setup_16.h
+    - lib/modes/setup_22.h
+    - lib/modes/setup_X.h
+    - lib/modes/floor_all.h
+    - lib/modes/residue_44.h
+    - lib/modes/residue_44u.h
+    - lib/modes/residue_44p51.h
+    - lib/modes/residue_8.h
+    - lib/modes/residue_16.h
+    - lib/modes/psych_44.h
+    - lib/modes/psych_8.h
+    - lib/modes/psych_11.h
+    - lib/modes/psych_16.h
+    - lib/books/coupled/res_books_stereo.h
+    - lib/books/coupled/res_books_51.h
+    - lib/books/floor/floor_books.h
+    - lib/books/uncoupled/res_books_uncoupled.h
+
+  update-actions:
+    - action: move-file
+      from: '{vendor_dir}/lib/floor0.c'
+      to: '{vendor_dir}/lib/vorbis_floor0.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/psy.c'
+      to: '{vendor_dir}/lib/vorbis_psy.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/window.c'
+      to: '{vendor_dir}/lib/vorbis_window.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/info.c'
+      to: '{vendor_dir}/lib/vorbis_info.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/res0.c'
+      to: '{vendor_dir}/lib/vorbis_res0.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/lookup.c'
+      to: '{vendor_dir}/lib/vorbis_lookup.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/lsp.c'
+      to: '{vendor_dir}/lib/vorbis_lsp.c'
+    - action: replace-in-file
+      pattern: 'lookup.c'
+      with: 'vorbis_lookup.c'
+      file: '{vendor_dir}/lib/vorbis_lsp.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/registry.c'
+      to: '{vendor_dir}/lib/vorbis_registry.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/synthesis.c'
+      to: '{vendor_dir}/lib/vorbis_synthesis.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/analysis.c'
+      to: '{vendor_dir}/lib/vorbis_analysis.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/floor1.c'
+      to: '{vendor_dir}/lib/vorbis_floor1.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/lpc.c'
+      to: '{vendor_dir}/lib/vorbis_lpc.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/sharedbook.c'
+      to: '{vendor_dir}/lib/vorbis_sharedbook.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/mapping0.c'
+      to: '{vendor_dir}/lib/vorbis_mapping0.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/smallft.c'
+      to: '{vendor_dir}/lib/vorbis_smallft.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/envelope.c'
+      to: '{vendor_dir}/lib/vorbis_envelope.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/mdct.c'
+      to: '{vendor_dir}/lib/vorbis_mdct.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/codebook.c'
+      to: '{vendor_dir}/lib/vorbis_codebook.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/bitrate.c'
+      to: '{vendor_dir}/lib/vorbis_bitrate.c'
+    - action: move-file
+      from: '{vendor_dir}/lib/block.c'
+      to: '{vendor_dir}/lib/vorbis_block.c'
+
+
