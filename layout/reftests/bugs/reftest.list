@@ -2153,3 +2153,8 @@ fuzzy-if(!cocoaWidget&&!Android&&!swgl&&!useDrawSnapshot,1-1,142-142) == 1840511
 fuzzy-if(!cocoaWidget&&!Android&&!swgl&&!useDrawSnapshot,1-1,284-284) fuzzy-if(useDrawSnapshot,1-1,4-4) == 1840511-2.html 1840511-1-ref.html
 # This test should render blank, but is reliably fuzzy, per bug 1840747.
 fuzzy-if(!useDrawSnapshot,18-19,294-322) == 1840747-1.html about:blank
+# This test has some fine/expected AA-related fuzziness along the edge of a
+# covered-up red shape. But there's a single bright-red pixel that shines
+# through, which is unexpected and is responsible for the 255-255 difference
+# here. That's tracked in bug 1840747.
+fuzzy-if(!useDrawSnapshot&&!swgl,254-255,113-121) fuzzy-if(useDrawSnapshot,18-18,93-93) fuzzy-if(swgl,19-19,58-58) == 1841355-1.html about:blank
