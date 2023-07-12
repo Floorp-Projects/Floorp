@@ -49,12 +49,12 @@ def resolve_keys(config, tasks):
 @transforms.add
 def set_worker_type(config, tasks):
     for task in tasks:
-        worker_type = "dep-signing"
+        worker_type = "linux-depsigning"
         if (
             str(config.params["level"]) == "3"
             and task["attributes"]["build-type"] in PRODUCTION_SIGNING_BUILD_TYPES
         ):
-            worker_type = "signing"
+            worker_type = "linux-signing"
         task["worker-type"] = worker_type
         yield task
 
