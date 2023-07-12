@@ -9341,7 +9341,7 @@
 # Is support for -webkit-slider* pseudos enabled?
 - name: layout.css.webkit-range-pseudos.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
   rust: true
 
