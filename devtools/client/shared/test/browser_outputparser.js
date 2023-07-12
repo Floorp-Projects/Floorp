@@ -615,6 +615,38 @@ function testParseVariable(doc, parser) {
         colorSwatchClass: COLOR_TEST_CLASS,
       },
     },
+    {
+      text: "1px solid var(--seen, seagreen)",
+      variables: { "--seen": "chartreuse" },
+      expected:
+        // prettier-ignore
+        '1px solid ' +
+        '<span data-color="chartreuse">' +
+          "<span>var(" +
+            '<span data-variable="--seen = chartreuse">--seen</span>,' +
+            '<span class="unmatched-class"> ' +
+              '<span data-color="seagreen">' +
+                "<span>seagreen</span>" +
+              "</span>" +
+            "</span>)" +
+          "</span>" +
+        "</span>",
+    },
+    {
+      text: "1px solid var(--not-seen, seagreen)",
+      variables: {},
+      expected:
+        // prettier-ignore
+        `1px solid ` +
+        `<span>var(` +
+          `<span class="unmatched-class" data-variable="--not-seen is not set">--not-seen</span>,` +
+          `<span> ` +
+            `<span data-color="seagreen">` +
+              `<span>seagreen</span>` +
+            `</span>` +
+          `</span>)` +
+        `</span>`,
+    },
   ];
 
   for (const test of TESTS) {
