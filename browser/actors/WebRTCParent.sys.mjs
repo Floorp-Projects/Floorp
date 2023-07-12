@@ -772,7 +772,19 @@ function prompt(aActor, aBrowser, aRequest) {
         return true;
       }
 
-      function listDevices(menupopup, devices, labelID) {
+      /**
+       * Prepare the device selector for one kind of device.
+       * @param {Object[]} devices - available devices of this kind.
+       * @param {string} IDPrefix - indicating kind of device and so
+       *   associated UI elements.
+       * @param {string[]} describedByIDs - an array to which might be
+       *   appended ids of elements that describe the panel, for the caller to
+       *   use in the aria-describedby attribute.
+       */
+      function listDevices(devices, IDPrefix, describedByIDs) {
+        let menupopup = doc.getElementById(`${IDPrefix}-menupopup`);
+        let labelID = `${IDPrefix}-single-device-label`;
+
         while (menupopup.lastChild) {
           menupopup.removeChild(menupopup.lastChild);
         }
@@ -797,6 +809,7 @@ function prompt(aActor, aBrowser, aRequest) {
 
         let label = doc.getElementById(labelID);
         if (devices.length == 1) {
+          describedByIDs.push(`${IDPrefix}-icon`, labelID);
           label.value = devices[0].name;
           label.hidden = false;
           menulist.hidden = true;
@@ -1042,41 +1055,26 @@ function prompt(aActor, aBrowser, aRequest) {
         reqAudioInput !== "Microphone";
       doc.getElementById("webRTC-selectSpeaker").hidden = !reqAudioOutput;
 
-      let camMenupopup = doc.getElementById("webRTC-selectCamera-menupopup");
-      let windowMenupopup = doc.getElementById("webRTC-selectWindow-menupopup");
-      let micMenupopup = doc.getElementById(
-        "webRTC-selectMicrophone-menupopup"
-      );
-      let speakerMenupopup = doc.getElementById(
-        "webRTC-selectSpeaker-menupopup"
-      );
       let describedByIDs = ["webRTC-shareDevices-notification-description"];
 
       if (sharingScreen) {
+        let windowMenupopup = doc.getElementById(
+          "webRTC-selectWindow-menupopup"
+        );
         listScreenShareDevices(windowMenupopup, videoInputDevices);
         checkDisabledWindowMenuItem();
       } else {
-        let labelID = "webRTC-selectCamera-single-device-label";
-        listDevices(camMenupopup, videoInputDevices, labelID);
+        listDevices(videoInputDevices, "webRTC-selectCamera", describedByIDs);
         notificationElement.removeAttribute("invalidselection");
-        if (videoInputDevices.length == 1) {
-          describedByIDs.push("webRTC-selectCamera-icon", labelID);
-        }
       }
-
       if (!sharingAudio) {
-        let labelID = "webRTC-selectMicrophone-single-device-label";
-        listDevices(micMenupopup, audioInputDevices, labelID);
-        if (audioInputDevices.length == 1) {
-          describedByIDs.push("webRTC-selectMicrophone-icon", labelID);
-        }
+        listDevices(
+          audioInputDevices,
+          "webRTC-selectMicrophone",
+          describedByIDs
+        );
       }
-
-      let labelID = "webRTC-selectSpeaker-single-device-label";
-      listDevices(speakerMenupopup, audioOutputDevices, labelID);
-      if (audioOutputDevices.length == 1) {
-        describedByIDs.push("webRTC-selectSpeaker-icon", labelID);
-      }
+      listDevices(audioOutputDevices, "webRTC-selectSpeaker", describedByIDs);
 
       // PopupNotifications knows to clear the aria-describedby attribute
       // when hiding, so we don't have to worry about cleaning it up ourselves.
