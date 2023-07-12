@@ -24,8 +24,7 @@
 #include "builtin/BigInt.h"
 #include "builtin/Object.h"
 #include "builtin/Symbol.h"
-#include "frontend/BytecodeCompilation.h"
-#include "frontend/BytecodeCompiler.h"
+#include "frontend/BytecodeCompiler.h"  // frontend::{CompileStandaloneFunction, CompileStandaloneGenerator, CompileStandaloneAsyncFunction, CompileStandaloneAsyncGenerator, DelazifyCanonicalScriptedFunction}
 #include "frontend/FrontendContext.h"  // AutoReportFrontendContext, ManualReportFrontendContext
 #include "jit/InlinableNatives.h"
 #include "jit/Ion.h"
