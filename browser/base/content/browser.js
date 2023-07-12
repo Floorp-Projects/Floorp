@@ -9968,7 +9968,9 @@ var ShoppingSidebarManager = {
   },
 
   _updateEnabledState() {
-    this._enabled = NimbusFeatures.shopping2023.getVariable("enabled");
+    this._enabled =
+      NimbusFeatures.shopping2023.getVariable("enabled") &&
+      !PrivateBrowsingUtils.isWindowPrivate(window);
 
     if (!this._enabled) {
       document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
