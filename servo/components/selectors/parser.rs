@@ -19,7 +19,7 @@ use cssparser::{BasicParseError, BasicParseErrorKind, ParseError, ParseErrorKind
 use cssparser::{CowRcStr, Delimiter, SourceLocation};
 use cssparser::{Parser as CssParser, ToCss, Token};
 use precomputed_hash::PrecomputedHash;
-use servo_arc::{HeaderWithLength, ThinArc, UniqueArc};
+use servo_arc::{ThinArc, UniqueArc};
 use smallvec::SmallVec;
 use std::borrow::{Borrow, Cow};
 use std::fmt::{self, Debug};
@@ -640,7 +640,7 @@ pub struct Selector<Impl: SelectorImpl>(
 impl<Impl: SelectorImpl> Selector<Impl> {
     /// See Arc::mark_as_intentionally_leaked
     pub fn mark_as_intentionally_leaked(&self) {
-        self.0.with_arc(|a| a.mark_as_intentionally_leaked())
+        self.0.mark_as_intentionally_leaked()
     }
 
     fn ampersand() -> Self {
@@ -655,32 +655,32 @@ impl<Impl: SelectorImpl> Selector<Impl> {
 
     #[inline]
     pub fn specificity(&self) -> u32 {
-        self.0.header.header.specificity()
+        self.0.header.specificity()
     }
 
     #[inline]
     fn flags(&self) -> SelectorFlags {
-        self.0.header.header.flags
+        self.0.header.flags
     }
 
     #[inline]
     pub fn has_pseudo_element(&self) -> bool {
-        self.0.header.header.has_pseudo_element()
+        self.0.header.has_pseudo_element()
     }
 
     #[inline]
     pub fn has_parent_selector(&self) -> bool {
-        self.0.header.header.has_parent_selector()
+        self.0.header.has_parent_selector()
     }
 
     #[inline]
     pub fn is_slotted(&self) -> bool {
-        self.0.header.header.is_slotted()
+        self.0.header.is_slotted()
     }
 
     #[inline]
     pub fn is_part(&self) -> bool {
-        self.0.header.header.is_part()
+        self.0.header.is_part()
     }
 
     #[inline]
@@ -770,7 +770,7 @@ impl<Impl: SelectorImpl> Selector<Impl> {
         }
 
         SelectorIter {
-            iter: self.0.slice[..self.len() - 2].iter(),
+            iter: self.0.slice()[..self.len() - 2].iter(),
             next_combinator: None,
         }
     }
@@ -802,7 +802,7 @@ impl<Impl: SelectorImpl> Selector<Impl> {
     /// skipping the rightmost |offset| Components.
     #[inline]
     pub fn iter_from(&self, offset: usize) -> SelectorIter<Impl> {
-        let iter = self.0.slice[offset..].iter();
+        let iter = self.0.slice()[offset..].iter();
         SelectorIter {
             iter,
             next_combinator: None,
@@ -813,7 +813,7 @@ impl<Impl: SelectorImpl> Selector<Impl> {
     /// or panics if the component is not a combinator.
     #[inline]
     pub fn combinator_at_match_order(&self, index: usize) -> Combinator {
-        match self.0.slice[index] {
+        match self.0.slice()[index] {
             Component::Combinator(c) => c,
             ref other => panic!(
                 "Not a combinator: {:?}, {:?}, index: {}",
@@ -826,14 +826,14 @@ impl<Impl: SelectorImpl> Selector<Impl> {
     /// combinators, in matching order (from right to left).
     #[inline]
     pub fn iter_raw_match_order(&self) -> slice::Iter<Component<Impl>> {
-        self.0.slice.iter()
+        self.0.slice().iter()
     }
 
     /// Returns the combinator at index `index` (zero-indexed from the left),
     /// or panics if the component is not a combinator.
     #[inline]
     pub fn combinator_at_parse_order(&self, index: usize) -> Combinator {
-        match self.0.slice[self.len() - index - 1] {
+        match self.0.slice()[self.len() - index - 1] {
             Component::Combinator(c) => c,
             ref other => panic!(
                 "Not a combinator: {:?}, {:?}, index: {}",
@@ -847,7 +847,7 @@ impl<Impl: SelectorImpl> Selector<Impl> {
     /// `offset`.
     #[inline]
     pub fn iter_raw_parse_order_from(&self, offset: usize) -> Rev<slice::Iter<Component<Impl>>> {
-        self.0.slice[..self.len() - offset].iter().rev()
+        self.0.slice()[..self.len() - offset].iter().rev()
     }
 
     /// Creates a Selector from a vec of Components, specified in parse order. Used in tests.
@@ -972,8 +972,7 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                 .chain(std::iter::once(Component::Is(
                     parent.to_vec().into_boxed_slice(),
                 )));
-            let header = HeaderWithLength::new(specificity_and_flags, len);
-            UniqueArc::from_header_and_iter_with_size(header, iter, len)
+            UniqueArc::from_header_and_iter_with_size(specificity_and_flags, iter, len)
         } else {
             let iter = self.iter_raw_match_order().map(|component| {
                 use self::Component::*;
@@ -1065,17 +1064,16 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                     )),
                 }
             });
-            let header = HeaderWithLength::new(specificity_and_flags, iter.len());
-            UniqueArc::from_header_and_iter(header, iter)
+            UniqueArc::from_header_and_iter(specificity_and_flags, iter)
         };
         items.header_mut().specificity = specificity.into();
-        Selector(items.shareable_thin())
+        Selector(items.shareable())
     }
 
     /// Returns count of simple selectors and combinators in the Selector.
     #[inline]
     pub fn len(&self) -> usize {
-        self.0.slice.len()
+        self.0.len()
     }
 
     /// Returns the address on the heap of the ThinArc for memory reporting.
@@ -1474,13 +1472,13 @@ impl<Impl: SelectorImpl> NthOfSelectorData<Impl> {
     /// Returns the An+B part of the selector
     #[inline]
     pub fn nth_data(&self) -> &NthSelectorData {
-        &self.0.header.header
+        &self.0.header
     }
 
     /// Returns the selector list part of the selector
     #[inline]
     pub fn selectors(&self) -> &[Selector<Impl>] {
-        &self.0.slice
+        self.0.slice()
     }
 }
 

@@ -638,23 +638,25 @@ renaming_overrides_prefixing = true
   [[nodiscard]] inline bool DecrementRef();
 """
 
+"HeaderSlice" = """
+  StyleHeaderSlice() = delete;
+  StyleHeaderSlice(const StyleHeaderSlice&) = delete;
+
+  inline ~StyleHeaderSlice();
+  inline bool operator==(const StyleHeaderSlice& other) const;
+  inline bool operator!=(const StyleHeaderSlice& other) const;
+
+  inline Span<const T> AsSpan() const;
+  inline size_t Length() const { return len; }
+  inline bool IsEmpty() const { return len == 0; }
+"""
+
 "ArcSlice" = """
   inline StyleArcSlice();
-  inline StyleArcSlice(const StyleArcSlice& aOther);
-
-  inline StyleArcSlice& operator=(const StyleArcSlice&);
-  inline StyleArcSlice& operator=(StyleArcSlice&&);
-
   inline explicit StyleArcSlice(const StyleForgottenArcSlicePtr<T>& aPtr);
- private:
-  inline void Release();
- public:
-  inline ~StyleArcSlice();
   inline Span<const T> AsSpan() const;
   inline size_t Length() const;
   inline bool IsEmpty() const;
-  inline bool operator==(const StyleArcSlice& other) const;
-  inline bool operator!=(const StyleArcSlice& other) const;
 """
 
 "Arc" = """
@@ -663,6 +665,9 @@ renaming_overrides_prefixing = true
  private:
   inline void Release();
  public:
+  explicit StyleArc(decltype(p) aP) : p(aP) {
+    MOZ_DIAGNOSTIC_ASSERT(p, "Arc shouldn't be null");
+  }
   inline ~StyleArc();
 
   inline StyleArc& operator=(const StyleArc&);
