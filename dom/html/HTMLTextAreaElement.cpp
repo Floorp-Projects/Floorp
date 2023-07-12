@@ -1116,10 +1116,9 @@ void HTMLTextAreaElement::GetDefaultValueFromContent(nsAString& aValue) {
 
 bool HTMLTextAreaElement::ValueChanged() const { return mValueChanged; }
 
-void HTMLTextAreaElement::GetTextEditorValue(nsAString& aValue,
-                                             bool aIgnoreWrap) const {
+void HTMLTextAreaElement::GetTextEditorValue(nsAString& aValue) const {
   MOZ_ASSERT(mState);
-  mState->GetValue(aValue, aIgnoreWrap);
+  mState->GetValue(aValue, /* aIgnoreWrap = */ true);
 }
 
 void HTMLTextAreaElement::InitializeKeyboardEventListeners() {
