@@ -3330,16 +3330,14 @@ void nsGenericHTMLElement::RunPopoverToggleEventTask(
 void nsGenericHTMLElement::ShowPopover(ErrorResult& aRv) {
   return ShowPopoverInternal(nullptr, aRv);
 }
-void nsGenericHTMLElement::ShowPopoverInternal(
-    nsGenericHTMLFormControlElementWithState* aInvoker, ErrorResult& aRv) {
-  if (PopoverData* data = GetPopoverData()) {
-    data->SetInvoker(aInvoker);
-  }
-
+void nsGenericHTMLElement::ShowPopoverInternal(Element* aInvoker,
+                                               ErrorResult& aRv) {
   if (!CheckPopoverValidity(PopoverVisibilityState::Hidden, nullptr, aRv)) {
     return;
   }
   RefPtr<Document> document = OwnerDoc();
+
+  MOZ_ASSERT(!GetPopoverData() || !GetPopoverData()->GetInvoker());
   MOZ_ASSERT(!OwnerDoc()->TopLayerContains(*this));
 
   bool wasShowingOrHiding = GetPopoverData()->IsShowingOrHiding();
@@ -3363,7 +3361,7 @@ void nsGenericHTMLElement::ShowPopoverInternal(
   nsWeakPtr originallyFocusedElement;
   if (IsAutoPopover()) {
     auto originalState = GetPopoverAttributeState();
-    RefPtr<nsINode> ancestor = GetTopmostPopoverAncestor();
+    RefPtr<nsINode> ancestor = GetTopmostPopoverAncestor(aInvoker);
     if (!ancestor) {
       ancestor = document;
     }
@@ -3396,7 +3394,12 @@ void nsGenericHTMLElement::ShowPopoverInternal(
   document->AddPopoverToTopLayer(*this);
 
   PopoverPseudoStateUpdate(true, true);
-  GetPopoverData()->SetPopoverVisibilityState(PopoverVisibilityState::Showing);
+
+  {
+    auto* popoverData = GetPopoverData();
+    popoverData->SetPopoverVisibilityState(PopoverVisibilityState::Showing);
+    popoverData->SetInvoker(aInvoker);
+  }
 
   // Run the popover focusing steps given element.
   FocusPopover();
