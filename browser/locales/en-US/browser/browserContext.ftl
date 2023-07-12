@@ -181,6 +181,12 @@ main-context-menu-copy-link-simple =
     .label = Copy Link
     .accesskey = L
 
+# This command copies the link, removing additional
+# query parameters used to track users across sites.
+main-context-menu-strip-on-share-link =
+    .label = Copy Link Without Site Tracking
+    .accesskey = y
+
 ## Media (video/audio) controls
 ##
 ## The accesskey for "Play" and "Pause" are the

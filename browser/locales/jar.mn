@@ -15,7 +15,6 @@
 #ifdef NIGHTLY_BUILD
   preview/shopping.ftl                             (../components/shopping/content/shopping.ftl)
 #endif
-  preview/stripOnShare.ftl                         (../components/urlbar/content/stripOnShare.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:
