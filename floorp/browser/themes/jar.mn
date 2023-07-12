@@ -278,6 +278,8 @@ browser.jar:
 
 
 # fluentUI
+  skin/classic/browser/fluentUI/account-private.svg                  (designs/fluentUI/account-private.svg)
+  skin/classic/browser/fluentUI/account.svg                          (designs/fluentUI/account.svg)
   skin/classic/browser/fluentUI/sidebars-right.svg                   (designs/fluentUI/sidebars-right.svg)
   skin/classic/browser/fluentUI/source-code.svg                      (designs/fluentUI/source-code.svg)
   skin/classic/browser/fluentUI/stop-to-reload.svg                   (designs/fluentUI/stop-to-reload.svg)
