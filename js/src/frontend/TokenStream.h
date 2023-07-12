@@ -232,6 +232,9 @@ namespace frontend {
 //  - WasmFrameIter::computeLine
 static constexpr uint32_t ColumnLimit = std::numeric_limits<int32_t>::max() / 2;
 
+// True if str is a keyword.
+bool IsKeyword(TaggedParserAtomIndex atom);
+
 // If `name` is reserved word, returns the TokenKind of it.
 // TokenKind::Limit otherwise.
 extern TokenKind ReservedWordTokenKind(TaggedParserAtomIndex name);

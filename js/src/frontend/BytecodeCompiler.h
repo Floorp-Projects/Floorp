@@ -189,9 +189,6 @@ UniquePtr<ExtensibleCompilationStencil> ParseModuleToExtensibleStencil(
     const mozilla::Maybe<uint32_t>& parameterListEnd,
     frontend::FunctionSyntaxKind syntaxKind, Handle<Scope*> enclosingScope);
 
-/* True if str is a keyword. Defined in TokenStream.cpp. */
-bool IsKeyword(TaggedParserAtomIndex atom);
-
 } /* namespace frontend */
 } /* namespace js */
 
