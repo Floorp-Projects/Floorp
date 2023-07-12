@@ -89,7 +89,7 @@ TEST_HARNESS_FILES.testing.mochitest += [
     "/build/valgrind/cross-architecture.sup",
     "/build/valgrind/i386-pc-linux-gnu.sup",
     "/build/valgrind/x86_64-pc-linux-gnu.sup",
-    "/netwerk/test/httpserver/httpd.js",
+    "/netwerk/test/httpserver/httpd.sys.mjs",
     "bisection.py",
     "browser-harness.xhtml",
     "browser-test.js",

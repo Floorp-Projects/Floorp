@@ -17,20 +17,19 @@ let protocolHandler = Services.io
   .getProtocolHandler("resource")
   .QueryInterface(Ci.nsIResProtocolHandler);
 let httpdJSPath = PathUtils.toFileURI(_HTTPD_PATH);
+
 protocolHandler.setSubstitution(
   "httpd-server",
   Services.io.newURI(httpdJSPath)
 );
-
-const { HttpServer, dumpn, setDebuggingStatus } = ChromeUtils.import(
-  "resource://httpd-server/httpd.js"
+const { HttpServer, dumpn, setDebuggingStatus } = ChromeUtils.importESModule(
+  "resource://httpd-server/httpd.sys.mjs"
 );
 
 protocolHandler.setSubstitution(
   "mochitest-server",
   Services.io.newFileURI(__LOCATION__.parent)
 );
-
 /* import-globals-from mochitestListingsUtils.js */
 Services.scriptloader.loadSubScript(
   "resource://mochitest-server/mochitestListingsUtils.js",

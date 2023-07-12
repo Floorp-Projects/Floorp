@@ -214,7 +214,7 @@ ARCHIVE_FILES = {
         {
             "source": buildconfig.topobjdir,
             "base": "dist/bin/components",
-            "patterns": ["httpd.js"],
+            "patterns": ["httpd.sys.mjs"],
             "dest": "bin/components",
         },
         {

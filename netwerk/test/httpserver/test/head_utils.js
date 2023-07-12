@@ -7,11 +7,14 @@
 const {
   dumpn,
   LineData,
-  HttpServer,
   nsHttpHeaders,
-  overrideBinaryStreamsForTests,
+  HttpServer,
   WriteThroughCopier,
-} = ChromeUtils.import("resource://testing-common/httpd.js");
+  overrideBinaryStreamsForTests,
+} = ChromeUtils.importESModule("resource://testing-common/httpd.sys.mjs");
+
+// if these tests fail, we'll want the debug output
+var linDEBUG = true;
 
 var { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
@@ -21,19 +24,11 @@ var { NetUtil } = ChromeUtils.importESModule(
 );
 
 const CC = Components.Constructor;
-
-const ScriptableInputStream = CC(
-  "@mozilla.org/scriptableinputstream;1",
-  "nsIScriptableInputStream",
-  "init"
-);
 const FileInputStream = CC(
   "@mozilla.org/network/file-input-stream;1",
   "nsIFileInputStream",
   "init"
 );
-
-/* These two are non-const only so a test can overwrite them. */
 var BinaryInputStream = CC(
   "@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream",
@@ -43,6 +38,11 @@ var BinaryOutputStream = CC(
   "@mozilla.org/binaryoutputstream;1",
   "nsIBinaryOutputStream",
   "setOutputStream"
+);
+const ScriptableInputStream = CC(
+  "@mozilla.org/scriptableinputstream;1",
+  "nsIScriptableInputStream",
+  "init"
 );
 
 /**

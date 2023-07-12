@@ -8,7 +8,7 @@ remote.jar:
   content/components/RemoteAgent.sys.mjs (components/RemoteAgent.sys.mjs)
 
   # transport layer (http / websocket)
-  content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)
+  content/server/httpd.sys.mjs (../netwerk/test/httpserver/httpd.sys.mjs)
   content/server/WebSocketHandshake.sys.mjs (server/WebSocketHandshake.sys.mjs)
   content/server/WebSocketTransport.sys.mjs (server/WebSocketTransport.sys.mjs)
 

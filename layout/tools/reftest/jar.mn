@@ -52,7 +52,7 @@ reftest.jar:
   res/ReftestFissionParent.jsm (ReftestFissionParent.jsm)
   res/ReftestFissionChild.jsm (ReftestFissionChild.jsm)
   res/AsyncSpellCheckTestHelper.sys.mjs (../../../editor/AsyncSpellCheckTestHelper.sys.mjs)
-  res/httpd.jsm (../../../netwerk/test/httpserver/httpd.js)
+  res/httpd.sys.mjs (../../../netwerk/test/httpserver/httpd.sys.mjs)
   res/StructuredLog.sys.mjs (../../../testing/modules/StructuredLog.sys.mjs)
   res/PerTestCoverageUtils.sys.mjs (../../../tools/code-coverage/PerTestCoverageUtils.sys.mjs)
   res/input.css (../../../editor/reftests/xul/input.css)
