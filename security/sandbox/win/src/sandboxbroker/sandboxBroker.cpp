@@ -1500,7 +1500,6 @@ struct GenericUtilitySandboxProps : public UtilitySandboxProps {};
 struct UtilityAudioDecodingWmfSandboxProps : public UtilitySandboxProps {
   UtilityAudioDecodingWmfSandboxProps() {
     mDelayedTokenLevel = sandbox::USER_LIMITED;
-    mUseWin32kLockdown = false;
     mDelayedMitigations = sandbox::MITIGATION_STRICT_HANDLE_CHECKS |
                           sandbox::MITIGATION_DLL_SEARCH_ORDER;
 #ifdef MOZ_WMF
