@@ -356,66 +356,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.backdrop-filter.enabled")) {
   supported_properties["backdrop-filter"] = [ test_filter_transition ];
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
-  supported_properties["offset-path"] = [ test_path_function ];
-  supported_properties["offset-distance"] =
-    [ test_length_transition,
-      test_percent_transition,
-      test_length_unclamped,
-      test_percent_unclamped,
-      test_calc_wrapped_calc_transition ];
-
-  function test_offset_rotate_transition(prop) {
-    [
-      // No transition between a keyword and a fixed angle.
-      { start: "auto", end: "0deg",
-        expected: "0deg" },
-      // "auto 45deg" to "auto 145 deg".
-      { start: "auto 45deg", end: "auto 145deg",
-        expected: "auto 70deg" },
-      // "auto 130deg" to "auto 90deg".
-      { start: "auto 130deg", end: "100grad auto",
-        expected: "auto 120deg" },
-      // "auto 0deg" to "auto 180deg".
-      { start: "auto", end: "reverse",
-        expected: "auto 45deg" },
-      // "auto 45deg" to "auto 225deg".
-      { start: "auto 45deg", end: "45deg reverse",
-        expected: "auto 90deg" },
-      // "auto -60deg" to "auto -360deg".
-      { start: "auto -60deg",
-        end: "auto calc(90deg - 0.5turn - 300grad + 0rad)",
-        expected: "auto -135deg" },
-    ].forEach(test => {
-      div.style.transitionProperty = 'none';
-      div.style[prop] = test.start;
-      is(cs[prop], test.start,
-         `offset-rotate: computed value before transition`);
-      div.style.transitionProperty = prop;
-      div.style[prop] = test.end;
-      is(cs[prop], test.expected,
-         `offset-rotate: interpolation of offset-rotate`);
-      // We check distance only if there is a transition.
-      if (test.end != test.expected) {
-        check_distance(prop, test.start, test.expected, test.end);
-      }
-    });
-  }
-  supported_properties["offset-rotate"] =
-    [ test_angle_transition,
-      test_offset_rotate_transition ];
-
-  // Note: offset-anchor supports "auto | <position>", and the tests for
-  // `auto` are already in wpt, so we don't test it here again.
-  supported_properties["offset-anchor"] =
-    [ test_background_position_transition ];
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.motion-path-offset-position.enabled")) {
-  supported_properties["offset-position"] =
-    [ test_background_position_transition ];
-}
-
 if (IsCSSPropertyPrefEnabled("layout.css.font-variations.enabled")) {
   supported_properties["font-variation-settings"] = [ test_font_variations_transition ];
 }
@@ -444,6 +384,11 @@ var skipped_transitionable_properties = [
   "font-style",  // Tests being added in https://github.com/web-platform-tests/wpt/pull/37570
   "grid-template-columns",
   "grid-template-rows",
+  "offset-path",
+  "offset-distance",
+  "offset-rotate",
+  "offset-anchor",
+  "offset-position",
 ]
 
 // Logical properties.
@@ -1557,7 +1502,7 @@ function test_length_percent_calc_transition(prop) {
 }
 
 // This can deal well with properties for which the computed value
-// is not the used value, e.g. offset-distance, translate.
+// is not the used value, e.g. translate.
 function test_calc_wrapped_calc_transition(prop) {
   // Test interpolation that computes to calc() (transition from % to px)
   div.style.setProperty("transition-property", "none", "");
