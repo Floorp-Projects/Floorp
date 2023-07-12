@@ -61,9 +61,8 @@
       <popupnotificationcontent id="webRTC-selectSpeaker" orient="vertical">
         <html:div class="webRTC-selectDevice-selector-container">
           <xul:image id="webRTC-selectSpeaker-icon" data-l10n-id="popup-select-speaker-icon" class="webRTC-selectDevice-icon"/>
-          <menulist id="webRTC-selectSpeaker-menulist" aria-labelledby="webRTC-selectSpeaker-icon" size="large">
-            <menupopup id="webRTC-selectSpeaker-menupopup"/>
-          </menulist>
+          <richlistbox id="webRTC-selectSpeaker-richlistbox" aria-labelledby="webRTC-selectSpeaker-icon" size="large">
+          </richlistbox>
           <label id="webRTC-selectSpeaker-single-device-label" class="webRTC-selectDevice-label"></label>
         </html:div>
       </popupnotificationcontent>
