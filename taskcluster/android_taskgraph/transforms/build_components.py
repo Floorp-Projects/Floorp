@@ -20,8 +20,8 @@ def resolve_keys(config, tasks):
         for field in (
             "attributes.code-review",
             "include-coverage",
+            "run-on-projects",
             "shipping-phase",
-            "run-on-tasks-for",
             "run.gradlew",
             "treeherder.symbol",
         ):
