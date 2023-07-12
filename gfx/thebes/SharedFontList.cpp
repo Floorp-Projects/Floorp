@@ -603,8 +603,16 @@ void Family::SetupFamilyCharMap(FontList* aList) {
   if (!XRE_IsParentProcess()) {
     // |this| could be a Family record in either the Families() or Aliases()
     // arrays
-    dom::ContentChild::GetSingleton()->SendSetupFamilyCharMap(
-        aList->GetGeneration(), aList->ToSharedPointer(this));
+    if (NS_IsMainThread()) {
+      dom::ContentChild::GetSingleton()->SendSetupFamilyCharMap(
+          aList->GetGeneration(), aList->ToSharedPointer(this));
+      return;
+    }
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        "SetupFamilyCharMap callback",
+        [gen = aList->GetGeneration(), ptr = aList->ToSharedPointer(this)] {
+          dom::ContentChild::GetSingleton()->SendSetupFamilyCharMap(gen, ptr);
+        }));
     return;
   }
   gfxSparseBitSet familyMap;
