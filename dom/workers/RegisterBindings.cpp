@@ -11,7 +11,6 @@
 #include "mozilla/dom/DebuggerNotificationObserverBinding.h"
 #include "mozilla/dom/RegisterWorkerBindings.h"
 #include "mozilla/dom/RegisterWorkerDebuggerBindings.h"
-#include "mozilla/OSFileConstants.h"
 
 using namespace mozilla::dom;
 
@@ -24,12 +23,6 @@ bool WorkerPrivate::RegisterBindings(JSContext* aCx,
 
   if (IsChromeWorker()) {
     if (!DefineChromeWorkerFunctions(aCx, aGlobal)) {
-      return false;
-    }
-
-    RefPtr<OSFileConstantsService> service =
-        OSFileConstantsService::GetOrCreate();
-    if (!service->DefineOSFileConstants(aCx, aGlobal)) {
       return false;
     }
   }

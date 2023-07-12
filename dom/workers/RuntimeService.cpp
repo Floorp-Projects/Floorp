@@ -63,7 +63,6 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMPrivate.h"
-#include "OSFileConstants.h"
 #include "xpcpublic.h"
 #include "XPCSelfHostedShmem.h"
 
@@ -1424,12 +1423,6 @@ nsresult RuntimeService::Init() {
   int32_t maxPerDomain =
       Preferences::GetInt(PREF_WORKERS_MAX_PER_DOMAIN, MAX_WORKERS_PER_DOMAIN);
   gMaxWorkersPerDomain = std::max(0, maxPerDomain);
-
-  RefPtr<OSFileConstantsService> osFileConstantsService =
-      OSFileConstantsService::GetOrCreate();
-  if (NS_WARN_IF(!osFileConstantsService)) {
-    return NS_ERROR_FAILURE;
-  }
 
   if (NS_WARN_IF(!IndexedDatabaseManager::GetOrCreate())) {
     return NS_ERROR_UNEXPECTED;
