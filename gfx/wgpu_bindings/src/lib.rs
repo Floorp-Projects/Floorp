@@ -7,9 +7,8 @@ use wgc::id;
 
 pub use wgc::command::{compute_ffi::*, render_ffi::*};
 
-mod error;
-
 pub mod client;
+pub mod error;
 pub mod identity;
 pub mod server;
 

@@ -8,9 +8,82 @@
 use std::{
     error::Error,
     fmt::{self, Display, Formatter},
+    os::raw::c_char,
+    ptr,
 };
 
 use serde::{Deserialize, Serialize};
+
+/// A non-owning representation of `mozilla::webgpu::ErrorBuffer` in C++, passed as an argument to
+/// other functions in [this module](self).
+///
+/// C++ callers of Rust functions (presumably in `WebGPUParent.cpp`) that expect one of these
+/// structs can create a `mozilla::webgpu::ErrorBuffer` object, and call its `ToFFI` method to
+/// construct a value of this type, available to C++ as `mozilla::webgpu::ffi::WGPUErrorBuffer`. If
+/// we catch a `Result::Err` in other functions of [this module](self), the error is converted to
+/// this type.
+#[repr(C)]
+pub struct ErrorBuffer {
+    /// The type of error that `string` is associated with. If this location is set to
+    /// [`ErrorBufferType::None`] after being passed as an argument to a function in [this module](self),
+    /// then the remaining fields are guaranteed to not have been altered by that function from
+    /// their original state.
+    r#type: *mut ErrorBufferType,
+    /// The (potentially truncated) message associated with this error. A fixed-capacity,
+    /// null-terminated UTF-8 string buffer owned by C++.
+    ///
+    /// When we convert WGPU errors to this type, we render the error as a string, copying into
+    /// `message` up to `capacity - 1`, and null-terminate it.
+    message: *mut c_char,
+    message_capacity: usize,
+}
+
+impl ErrorBuffer {
+    /// Fill this buffer with the textual representation of `error`.
+    ///
+    /// If the error message is too long, truncate it to `self.capacity`. In either case, the error
+    /// message is always terminated by a zero byte.
+    ///
+    /// Note that there is no explicit indication of the message's length, only the terminating zero
+    /// byte. If the textual form of `error` itself includes a zero byte (as Rust strings can), then
+    /// the C++ code receiving this error message has no way to distinguish that from the
+    /// terminating zero byte, and will see the message as shorter than it is.
+    pub(crate) fn init(&mut self, error: impl HasErrorBufferType) {
+        use std::fmt::Write;
+
+        let mut message = format!("{}", error);
+        let mut e = error.source();
+        while let Some(source) = e {
+            write!(message, ", caused by: {}", source).unwrap();
+            e = source.source();
+        }
+
+        let err_ty = error.error_type();
+        // SAFETY: We presume the pointer provided by the caller is safe to write to.
+        unsafe { *self.r#type = err_ty };
+
+        if matches!(err_ty, ErrorBufferType::None) {
+            log::warn!("{message}");
+            return;
+        }
+
+        assert_ne!(self.message_capacity, 0);
+        let length = if message.len() >= self.message_capacity {
+            log::warn!(
+                "Error message's length {} reached capacity {}, truncating",
+                message.len(),
+                self.message_capacity
+            );
+            self.message_capacity - 1
+        } else {
+            message.len()
+        };
+        unsafe {
+            ptr::copy_nonoverlapping(message.as_ptr(), self.message as *mut u8, length);
+            *self.message.add(length) = 0;
+        }
+    }
+}
 
 /// Corresponds to an optional discriminant of [`GPUError`] type in the WebGPU API. Strongly
 /// correlates to [`GPUErrorFilter`]s.
