@@ -285,6 +285,7 @@
   MACRO_(infinity, infinity, "infinity")                                       \
   MACRO_(intersection, intersection, "intersection")                           \
   MACRO_(Infinity, Infinity, "Infinity")                                       \
+  IF_DECORATORS(MACRO_(init, init, "init"))                                    \
   MACRO_(initial, initial, "initial")                                          \
   MACRO_(InitializeCollator, InitializeCollator, "InitializeCollator")         \
   MACRO_(InitializeDateTimeFormat, InitializeDateTimeFormat,                   \

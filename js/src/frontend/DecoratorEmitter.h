@@ -29,6 +29,9 @@ class MOZ_STACK_CLASS DecoratorEmitter {
                                                           ListNode* decorators,
                                                           bool isStatic);
 
+  [[nodiscard]] bool emitApplyDecoratorsToAccessorDefinition(
+      ParseNode* key, ListNode* decorators, bool isStatic);
+
   [[nodiscard]] bool emitInitializeFieldOrAccessor();
 
  private:
@@ -52,6 +55,9 @@ class MOZ_STACK_CLASS DecoratorEmitter {
   [[nodiscard]] bool emitCreateDecoratorContextObject(Kind kind, ParseNode* key,
                                                       bool isStatic,
                                                       TokenPos pos);
+
+  [[nodiscard]] bool emitHandleNewValueField(TaggedParserAtomIndex atom,
+                                             int8_t offset);
 };
 
 } /* namespace js::frontend */

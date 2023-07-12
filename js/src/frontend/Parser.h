@@ -1329,8 +1329,9 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       FunctionSyntaxKind syntaxKind,
       ClassInitializedMembers& classInitializedMembers);
 
-  FunctionNodeType synthesizeAccessorBody(TokenPos propNamePos,
-                                          TaggedParserAtomIndex atom,
+  FunctionNodeType synthesizeAccessorBody(TaggedParserAtomIndex funNameAtom,
+                                          TokenPos propNamePos,
+                                          TaggedParserAtomIndex propNameAtom,
                                           FunctionSyntaxKind syntaxKind);
 #endif
 
