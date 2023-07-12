@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Vicipéid (ga)"
+  },
+  "extensionDescription": {
+    "message": "Vicipéid, an Chiclipéid Shaor"
+  },
+  "searchUrl": {
+    "message": "https://ga.wikipedia.org/wiki/Speisialta:Search"
+  },
+  "searchForm": {
+    "message": "https://ga.wikipedia.org/wiki/Speisialta:Search?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://ga.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

@@ -132,7 +132,7 @@
 ; [Base Browser Files]
 #ifndef XP_UNIX
 @BINPATH@/@MOZ_APP_NAME@.exe
-@BINPATH@/firefox.VisualElementsManifest.xml
+@BINPATH@/floorp.VisualElementsManifest.xml
 @BINPATH@/browser/VisualElements/VisualElements_150.png
 @BINPATH@/browser/VisualElements/VisualElements_70.png
 @BINPATH@/private_browsing.exe
@@ -256,9 +256,11 @@
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
 @RESPATH@/browser/@PREF_DIR@/firefox.js
+@RESPATH@/browser/@PREF_DIR@/000-floorp.js
 @RESPATH@/browser/@PREF_DIR@/firefox-branding.js
 @RESPATH@/greprefs.js
 @RESPATH@/defaults/autoconfig/prefcalls.js
+@RESPATH@/defaults/autoconfig/legacy_component.js
 @RESPATH@/browser/defaults/permissions
 ; Remote Settings JSON dumps
 @RESPATH@/browser/defaults/settings/last_modified.json

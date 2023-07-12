@@ -1,0 +1,140 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="chrome://browser/content/calendar/toastui-calendar.css" />
+    <link rel="stylesheet" href="chrome://browser/content/calendar/tui-time-picker.css" />
+    <link rel="stylesheet" href="chrome://browser/content/calendar/tui-date-picker.css" />
+</head>
+
+<body>
+    <div id="calendar" style="height: 600px;"></div>
+    <script src="chrome://browser/content/calendar/chance.js"></script>
+    <script src="chrome://browser/content/calendar/tui-time-picker.js"></script>
+    <script src="chrome://browser/content/calendar/tui-date-picker.js"></script>
+    <script src="chrome://browser/content/calendar/toastui-calendar.js"></script>
+    <script src="chrome://browser/content/calendar/prefsManage.js"></script>
+    <script>
+        const Calendar = tui.Calendar;
+        const DatePicker = tui.DatePicker;
+        const TimePicker = tui.TimePicker;
+    </script>
+    <script>
+        const container = document.getElementById('calendar');
+        const options = {
+            usageStatistics: false,
+            useFormPopup: true,
+            useDetailPopup: true,
+            defaultView: 'month',
+            timezone: {
+                zones: [
+                    {
+                        timezoneName: 'Asia/Seoul',
+                        displayLabel: 'Seoul',
+                    },
+                    {
+                        timezoneName: 'Europe/London',
+                        displayLabel: 'London',
+                    },
+                ],
+            },
+            calendars: [
+                {
+                    id: 'cal1',
+                    name: 'Personal',
+                    backgroundColor: '#03bd9e',
+                },
+                {
+                    id: 'cal2',
+                    name: 'Work',
+                    backgroundColor: '#00a9ff',
+                },
+            ],
+        };
+
+        const calendar = new Calendar(container, options);
+
+        calendar.on({
+            clickMoreEventsBtn: function (btnInfo) {
+                console.log('clickMoreEventsBtn', btnInfo);
+            },
+            clickEvent: function (eventInfo) {
+                console.log('clickEvent', eventInfo);
+            },
+            clickDayName: function (dayNameInfo) {
+                console.log('clickDayName', dayNameInfo);
+            },
+            selectDateTime: function (dateTimeInfo) {
+                console.log('selectDateTime', dateTimeInfo);
+            },
+            beforeCreateEvent: function (event) {
+                console.log('beforeCreateEvent', event);
+                event.id = chance.guid();
+
+                calendar.createEvents([event]);
+                calendar.clearGridSelections();
+
+
+                let prefData = JSON.parse(PrefCalendar("get"));
+                prefData.push({
+                    id: event.id,
+                    calendarId: event.calendarId,
+                    title: event.title,
+                    location: event.location,
+                    state: event.state,
+                    start: event.start.d.toString(),
+                    end: event.end.d.toString(),
+                    isAllday: event.isAllday,
+                    isPrivate: event.isPrivate,
+                });
+                PrefCalendar("set", JSON.stringify(prefData));
+            },
+            beforeUpdateEvent: function (eventInfo) {
+                var event, changes;
+
+                console.log('beforeUpdateEvent', eventInfo);
+
+                event = eventInfo.event;
+                changes = eventInfo.changes;
+
+                calendar.updateEvent(event.id, event.calendarId, changes);
+
+
+                let cloned = Object.assign(Object.assign({}, event), changes);
+                let prefData = JSON.parse(PrefCalendar("get"));
+                let targetEvent = prefData.filter(prefEvent => (
+                    prefEvent.id === event.id &&
+                    prefEvent.calendarId === event.calendarId
+                ))[0];
+                Object.assign(targetEvent, {
+                    id: cloned.id,
+                    calendarId: cloned.calendarId,
+                    title: cloned.title,
+                    location: cloned.location,
+                    state: cloned.state,
+                    start: cloned.start.d.toString(),
+                    end: cloned.end.d.toString(),
+                    isAllday: cloned.isAllday,
+                    isPrivate: cloned.isPrivate,
+                });
+                PrefCalendar("set", JSON.stringify(prefData));
+            },
+            beforeDeleteEvent: function (eventInfo) {
+                console.log('beforeDeleteEvent', eventInfo);
+
+                calendar.deleteEvent(eventInfo.id, eventInfo.calendarId);
+
+
+                let prefData = JSON.parse(PrefCalendar("get"));
+                prefData = prefData.filter(prefEvent => !(
+                    prefEvent.id == eventInfo.id &&
+                    prefEvent.calendarId == eventInfo.calendarId
+                ));
+                PrefCalendar("set", JSON.stringify(prefData));
+            },
+        });
+
+        calendar.createEvents(JSON.parse(PrefCalendar("get")));
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,14 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+browser.jar:
+  content/browser/calendar/calendar.html        (content/calendar.html)
+  content/browser/calendar/chance.js            (content/chance.js)
+  content/browser/calendar/toastui-calendar.css (content/toastui-calendar.css)
+  content/browser/calendar/toastui-calendar.js  (content/toastui-calendar.js)
+  content/browser/calendar/tui-date-picker.css  (content/tui-date-picker.css)
+  content/browser/calendar/tui-date-picker.js   (content/tui-date-picker.js)
+  content/browser/calendar/tui-time-picker.css  (content/tui-time-picker.css)
+  content/browser/calendar/tui-time-picker.js   (content/tui-time-picker.js)
+  content/browser/calendar/prefsManage.js       (content/prefsManage.js)

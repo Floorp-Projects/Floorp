@@ -30,6 +30,7 @@
   <linkset>
     <html:link rel="localization" href="branding/brand.ftl"/>
     <html:link rel="localization" href="browser/aboutDialog.ftl"/>
+    <html:link rel="localization" href="browser/floorp.ftl"/>
   </linkset>
 
   <html:div id="aboutDialogContainer">
@@ -112,28 +113,17 @@
             </vbox>
 #endif
           </hbox>
-
-#ifdef MOZ_UPDATER
-          <description class="text-blurb" id="currentChannelText"
-                       data-l10n-id="aboutdialog-channel-description"
-                       data-l10n-attrs="{&quot;channel&quot;: &quot;&quot;}">
-            <label id="currentChannel" data-l10n-name="current-channel"/>
+          <description class="text-blurb" id="communityDesc" data-l10n-id="about-floorp">
+            <label is="text-link" href="https://floorp.app" data-l10n-name="floorp-browser-link"/>
+            <label is="text-link" href="https://ablaze.one" data-l10n-name="ablaze-Link"/>
+            <label is="text-link" href="https://github.com/sponsors/Ablaze-MIRAI" data-l10n-name="helpus-donateLink"/>
           </description>
-#endif
-          <vbox id="experimental" hidden="true">
-            <description class="text-blurb" id="warningDesc" data-l10n-id="warningDesc-version"></description>
-            <description class="text-blurb" id="communityExperimentalDesc" data-l10n-id="community-exp">
-              <label is="text-link" href="https://www.mozilla.org/?utm_source=firefox-browser&#38;utm_medium=firefox-desktop&#38;utm_campaign=about-dialog" data-l10n-name="community-exp-mozillaLink"/>
-              <label is="text-link" useoriginprincipal="true" href="about:credits" data-l10n-name="community-exp-creditsLink"/>
-            </description>
-          </vbox>
-          <description class="text-blurb" id="communityDesc" data-l10n-id="community-2">
-            <label is="text-link" href="https://www.mozilla.org/?utm_source=firefox-browser&#38;utm_medium=firefox-desktop&#38;utm_campaign=about-dialog" data-l10n-name="community-mozillaLink"/>
-            <label is="text-link" useoriginprincipal="true" href="about:credits" data-l10n-name="community-creditsLink"/>
+          <description class="text-blurb" id="floorp-contributor" data-l10n-id="icon-creator">
+            <label is="text-link" href="https://twitter.com/mwxdxx" data-l10n-name="brand-logo-twitter"/>
+            <label is="text-link" href="https://twitter.com/CutterKnife_" data-l10n-name="browser-logo-twitter"/>
           </description>
-          <description class="text-blurb" id="contributeDesc" data-l10n-id="helpus">
-            <label is="text-link" href="https://donate.mozilla.org/?utm_source=firefox&#38;utm_medium=referral&#38;utm_campaign=firefox_about&#38;utm_content=firefox_about" data-l10n-name="helpus-donateLink"/>
-            <label is="text-link" href="https://www.mozilla.org/contribute/?utm_source=firefox-browser&#38;utm_medium=firefox-desktop&#38;utm_campaign=about-dialog" data-l10n-name="helpus-getInvolvedLink"/>
+            <description class="text-blurb" id="floorp-contributor" data-l10n-id="contributors">
+            <label is="text-link" useoriginprincipal="true" href="about:contributors" data-l10n-name="about-contributor"/>
           </description>
         </vbox>
       </vbox>
@@ -141,8 +131,8 @@
     <vbox id="bottomBox">
       <hbox pack="center">
         <label is="text-link" class="bottom-link" useoriginprincipal="true" href="about:license" data-l10n-id="bottomLinks-license"/>
-        <label is="text-link" class="bottom-link" useoriginprincipal="true" href="about:rights" data-l10n-id="bottomLinks-rights"/>
-        <label is="text-link" class="bottom-link" href="https://www.mozilla.org/privacy/?utm_source=firefox-browser&#38;utm_medium=firefox-desktop&#38;utm_campaign=about-dialog" data-l10n-id="bottomLinks-privacy"/>
+        <label is="text-link" class="bottom-link" useoriginprincipal="true" href="https://github.com/Floorp-Projects/About-Floorp-Projects/blob/main/UserLicense.md" data-l10n-id="bottomLinks-rights"/>
+        <label is="text-link" class="bottom-link" href="https://docs.ablaze.one/floorp_privacy_policy/" data-l10n-id="bottomLinks-privacy"/>
       </hbox>
       <description id="trademark" data-l10n-id="trademarkInfo"></description>
     </vbox>

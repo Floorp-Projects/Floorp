@@ -1,0 +1,75 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+DEFINES["MOZ_APP_VERSION"] = CONFIG["MOZ_APP_VERSION"]
+DEFINES["MOZ_APP_MAXVERSION"] = CONFIG["MOZ_APP_MAXVERSION"]
+
+
+
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
+    "manifest.json",
+]
+
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"] += [
+    "download-notification.js",
+    "ua_data.js",
+    "update.js",
+    "webcompat_inject.js",
+    "webcompat_useragent.js",
+]
+
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["ja"] += [
+    "_locales/ja/messages.json",
+]
+
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["_locales"]["en"] += [
+    "_locales/en/messages.json",
+]
+
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["API"] += [
+    "API/aboutConfigPrefs.js",
+    "API/aboutConfigPrefs.json",
+    "API/BrowserInfo.js",
+    "API/BrowserInfo.json",
+    "API/browserL10n.js",
+    "API/browserL10n.json",
+    "API/decompressZip.js",
+    "API/decompressZip.json",
+    "API/downloadFile.js",
+    "API/downloadFile.json",
+    "API/IOFile.js",
+    "API/IOFile.json",
+    "API/sidebar.js",
+    "API/sidebar.json",
+]
+
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["icons"] += [
+    "icons/failed.png",
+    "icons/floorp.png",
+    "icons/icon.png",
+    "icons/LICENSE",
+    "icons/link-48-last.png",
+    "icons/link-48.png",
+]
+
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["qr-code"] += [
+    "qr-code/popup.html",
+    "qr-code/popup.js",
+    "qr-code/qrcode.js",
+]
+
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["gesturefy"] += [
+    "gesturefy/background.js",
+    "gesturefy/gesturefy.js",
+]
+
+FINAL_TARGET_FILES.features["floorp-system@floorp.ablaze.one"]["webcompat"] += [
+    "webcompat/fix-addons-mozilla-org.css",
+    "webcompat/fix-addons-mozilla-org.js",
+]
+
+with Files("**"):
+    BUG_COMPONENT = ("Firefox", "floorp-system")

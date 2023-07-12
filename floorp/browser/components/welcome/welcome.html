@@ -1,0 +1,121 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common-shared.css">
+    <link rel="stylesheet" href="chrome://browser/content/welcome/welcome.css">
+    <link rel="localization" href="browser/floorp.ftl" />
+    <script src="chrome://browser/content/welcome/welcome.js"></script>
+    <meta charset="UTF-8">
+    <title data-l10n-id="welcome-to-floorp">Welcome to Floorp</title>
+  </head>
+  <body>
+    <div id="main">
+      <div id="content">
+        <a id="login-to-fx-account-link" href="https://accounts.firefox.com/signin?context=fx_desktop_v3&entrypoint=preferences&action=email&service=sync">
+          Firefox アカウントにログイン
+        </a>
+        <div id="welcome-main">
+          <div id="welcome-content">
+            <div id="welcome-text">
+              <div id="welcome-text-content" class="welcome-setups">
+                <img id="floorp-welcome-logo" src="chrome://branding/content/about-logo.svg">
+                <h1 id="floorp-welcome-big-text"> Floorp ブラウザーへようこそ </h1>
+                <div id="discribe-text">
+                  最も高機能な Firefox 派生ブラウザーへようこそ。少しのカスタマイズであなただけのウェブブラウザーを作成できます。後から設定を変更することも可能です。 
+                </div>
+                <button id="floorp-welcome-button" class="welcome-button primary">
+                  始めましょう！
+                </button> 
+                <a href="about:home" style="text-align: center;margin-top: 30px;">
+                  スキップしてウェブの閲覧を開始する
+                </a>
+              </div>
+              <div id="welcome-first-setup" class="welcome-setups">
+                <!-- select template from 3 options -->
+                <h1 class="floorp-welcome-big-text"> テンプレートを選択 </h1>
+                <div id="template-options">
+                  <div class="template-option">
+                    <img class="option-icons" src="chrome://branding/content/about-logo.svg">
+                    <div class="template-option-text">
+                      <h2 class="template-option-title">梅</h2>
+                      <p class="template-option-description">基本的な機能のみを有効にして Floorp を開始します。</p>
+                    </div>
+                    <button class="template-option-button primary">選択</button>
+                  </div>
+                  <div class="template-option">
+                    <img class="option-icons" src="chrome://branding/content/about-logo.svg">
+                    <div class="template-option-text">
+                      <h2 class="template-option-title">竹</h2>
+                      <p class="template-option-description">いくつかのカスタマイズを有効にして Floorp を開始します。</p>
+                    </div>
+                    <button class="template-option-button primary">選択</button>
+                  </div>
+                  <div class="template-option">
+                    <img class="option-icons" src="chrome://branding/content/about-logo.svg">
+                    <div class="template-option-text">
+                      <h2 class="template-option-title">松</h2>
+                      <p class="template-option-description">すべてのカスタマイズ機能を有効にして Floorp を開始します。</p>
+                    </div>
+                    <button class="template-option-button primary">選択</button>
+                  </div>
+                </div>
+              </div>
+              <div id="welcome-design-setup" class="welcome-setups">
+                <h1 id="floorp-desgin-text" class="floorp-welcome-big-text"> ブラウザーのデザインを選択 </h1>
+                <p id="floorp-desgin-description" class="floorp-welcome-big-text">ブラウザーのデザインを指先１つで変えましょう。Floorp は Lepton で最も最適に動作します。</p>
+                <div id="design-cars-options">
+                  <ul id="design-cards">
+                    <li class="design-card-item">
+                      <div class="c0144">
+                        <button class="c01765 c01766 c0157">
+                          <span class="c01757">
+                            <div aria-hidden="true" style="border-radius: 6px; overflow: hidden;">
+                              <img xmlns="http://www.w3.org/2000/svg" src="chrome://mozapps/content/extensions/default-theme/preview.svg" width="114" height="42">
+                            </div>
+                            <span aria-hidden="true" class="c01745 c01754" style="font-size: 10px; line-height: 14px; display: flex;">既定</span>
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                    <li class="design-card-item">
+                      <div class="c0144">
+                        <button class="c01765 c01766 c0157">
+                          <span class="c01757">
+                            <div aria-hidden="true" style="border-radius: 6px; overflow: hidden;">
+                              <img xmlns="http://www.w3.org/2000/svg" src="chrome://mozapps/content/extensions/default-theme/preview.svg" width="114" height="42">
+                            </div>
+                            <span aria-hidden="true" class="c01745 c01754" style="font-size: 10px; line-height: 14px; display: flex;">既定</span>
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                    <li class="design-card-item">
+                      <div class="c0144">
+                        <button class="c01765 c01766 c0157" role="radio" aria-checked="false">
+                          <span class="c01757">
+                            <div aria-hidden="true" style="border-radius: 6px; overflow: hidden;">
+                              <img xmlns="http://www.w3.org/2000/svg" src="chrome://mozapps/content/extensions/default-theme/preview.svg" width="114" height="42">
+                            </div>
+                            <span aria-hidden="true" class="c01745 c01754" style="font-size: 10px; line-height: 14px; display: flex;">既定</span>
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <button class="go-next-page-button primary" style="margin-left: auto;">選択</button>
+              </div>
+
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+

@@ -388,6 +388,7 @@
     "toolkit/components/certviewer/tests/chrome/chrome.ini": 2.35,
     "toolkit/components/ctypes/tests/chrome/chrome.ini": 1.38,
     "toolkit/components/extensions/test/mochitest/chrome.ini": 8.63,
+    "toolkit/components/osfile/tests/mochi/chrome.ini": 7.73,
     "toolkit/components/places/tests/chrome/chrome.ini": 1.89,
     "toolkit/components/prompts/test/chrome.ini": 41.2,
     "toolkit/components/resistfingerprinting/tests/chrome.ini": 3.59,

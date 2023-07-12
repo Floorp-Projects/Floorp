@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- Created with Vectornator (http://vectornator.io/) -->
+<svg height="100%" stroke-miterlimit="10" style="fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;" version="1.1" viewBox="0 0 1024 1024" width="100%" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:vectornator="http://vectornator.io" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs/>
+<g id="レイヤー-1-コピー" vectornator:layerName="レイヤー 1 コピー">
+<path d="M330.875 68C289.329 68 238.836 97.1762 218.063 133.156L36.9375 446.844C16.1644 482.824 16.1643 541.176 36.9375 577.156L116.969 715.781L442.625 715.781L466.063 486.781L709.031 627.062L492.125 783.75C480.303 792.29 469.738 796.052 461.125 795.656C461.104 795.655 461.084 795.658 461.063 795.656C460.617 795.672 460.2 795.781 459.75 795.781L163.188 795.781L218.063 890.844C238.836 926.824 289.329 955.999 330.875 956L693.125 956C734.671 956 785.164 926.825 805.938 890.844L987.063 577.156C1007.84 541.176 1007.84 482.824 987.063 446.844L907.938 309.812L750.844 581.906L484.281 428L692.125 68L330.875 68Z" fill="#ffffff" fill-rule="nonzero" opacity="1" stroke="none"/>
+</g>
+</svg>
