@@ -24,7 +24,6 @@ beetmover_description_schema = Schema(
         Optional("treeherder"): task_description_schema["treeherder"],
         Optional("attributes"): task_description_schema["attributes"],
         Optional("dependencies"): task_description_schema["dependencies"],
-        Optional("run-on-tasks-for"): [str],
         Optional("bucket-scope"): optionally_keyed_by("level", "build-type", str),
     },
     extra=ALLOW_EXTRA
