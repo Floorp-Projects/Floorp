@@ -479,3 +479,16 @@ fun WebExtension.isUnsupported(): Boolean {
  * (but not exclusively) installing/uninstalling, removing or updating.
  */
 open class WebExtensionException(throwable: Throwable, open val isRecoverable: Boolean = true) : Exception(throwable)
+
+/**
+ * An unexpected event that occurs when installing an extension.
+ */
+sealed class WebExtensionInstallException(
+    throwable: Throwable,
+    override val isRecoverable: Boolean = true,
+) : WebExtensionException(throwable) {
+    /**
+     * The extension install was canceled by the user.
+     */
+    class UserCancelled(throwable: Throwable) : WebExtensionInstallException(throwable)
+}

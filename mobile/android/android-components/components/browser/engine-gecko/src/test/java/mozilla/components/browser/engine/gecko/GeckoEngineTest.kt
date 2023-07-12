@@ -14,6 +14,7 @@ import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.browser.engine.gecko.serviceworker.GeckoServiceWorkerDelegate
 import mozilla.components.browser.engine.gecko.util.SpeculativeEngineSession
 import mozilla.components.browser.engine.gecko.util.SpeculativeSessionObserver
+import mozilla.components.browser.engine.gecko.webextension.GeckoWebExtensionException
 import mozilla.components.browser.engine.gecko.webextension.mockNativeWebExtension
 import mozilla.components.browser.engine.gecko.webextension.mockNativeWebExtensionMetaData
 import mozilla.components.concept.engine.DefaultSettings
@@ -855,7 +856,7 @@ class GeckoEngineTest {
         shadowOf(getMainLooper()).idle()
 
         assertTrue(onErrorCalled)
-        assertEquals(expected, throwable)
+        assertTrue(throwable is GeckoWebExtensionException)
     }
 
     @Test
@@ -883,7 +884,7 @@ class GeckoEngineTest {
         shadowOf(getMainLooper()).idle()
 
         assertTrue(onErrorCalled)
-        assertEquals(expected, throwable)
+        assertTrue(throwable is GeckoWebExtensionException)
     }
 
     @Test

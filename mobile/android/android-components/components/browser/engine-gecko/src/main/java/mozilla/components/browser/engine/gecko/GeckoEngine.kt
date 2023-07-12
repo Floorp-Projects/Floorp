@@ -242,7 +242,7 @@ class GeckoEngine(
                         GeckoResult<Void>()
                     },
                     { throwable ->
-                        onError(id, throwable)
+                        onError(id, GeckoWebExtensionException.createWebExtensionException(throwable))
                         GeckoResult<Void>()
                     },
                 )
@@ -255,7 +255,7 @@ class GeckoEngine(
                         GeckoResult<Void>()
                     },
                     { throwable ->
-                        onError(id, throwable)
+                        onError(id, GeckoWebExtensionException.createWebExtensionException(throwable))
                         GeckoResult<Void>()
                     },
                 )

@@ -5,6 +5,7 @@
 package mozilla.components.browser.engine.gecko.webextension
 
 import mozilla.components.concept.engine.webextension.WebExtensionException
+import mozilla.components.concept.engine.webextension.WebExtensionInstallException
 import org.mozilla.geckoview.WebExtension.InstallException
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER_CANCELED
 
@@ -15,4 +16,14 @@ import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_USER
 class GeckoWebExtensionException(throwable: Throwable) : WebExtensionException(throwable) {
     override val isRecoverable: Boolean = throwable is InstallException &&
         throwable.code == ERROR_USER_CANCELED
+
+    companion object {
+        internal fun createWebExtensionException(throwable: Throwable): WebExtensionException {
+            return if (throwable is InstallException && throwable.code == ERROR_USER_CANCELED) {
+                WebExtensionInstallException.UserCancelled(throwable)
+            } else {
+                GeckoWebExtensionException(throwable)
+            }
+        }
+    }
 }
