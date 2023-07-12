@@ -84,11 +84,16 @@ class InputType {
    * ie parse a date string to a timestamp if type=date,
    * or parse a number string to its value if type=number.
    * @param aValue the string to be parsed.
-   * @param aResultValue the number as a Decimal.
-   * @result whether the parsing was successful.
    */
-  virtual bool ConvertStringToNumber(nsAString& aValue,
-                                     Decimal& aResultValue) const;
+  struct StringToNumberResult {
+    // The result decimal. Successfully parsed if it's finite.
+    Decimal mResult = Decimal::nan();
+    // Whether the result required reading locale-dependent data (for input
+    // type=number), or the value parses using the regular HTML rules.
+    bool mLocalized = false;
+  };
+  virtual StringToNumberResult ConvertStringToNumber(
+      const nsAString& aValue) const;
 
   /**
    * Convert a Decimal to a string in a type specific way, ie convert a

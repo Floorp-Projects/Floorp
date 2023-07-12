@@ -63,7 +63,7 @@ class ICUUtils {
    * Parses the localized number that is serialized in aValue using aLangTags
    * and returns the result as a double. Returns NaN on failure.
    */
-  static double ParseNumber(nsAString& aValue,
+  static double ParseNumber(const nsAString& aValue,
                             LanguageTagIterForContent& aLangTags);
 
   static void AssignUCharArrayToString(UChar* aICUString, int32_t aLength,
