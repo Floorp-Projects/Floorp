@@ -55,7 +55,7 @@ elif CONFIG['CPU_ARCH'] == 'arm':
 
     for f in SOURCES:
         if f.endswith('neon.c'):
-            SOURCES[f].flags += CONFIG['VPX_ASFLAGS']
+            SOURCES[f].flags += CONFIG['NEON_FLAGS']
 
     if CONFIG['OS_TARGET'] == 'Android':
         # For cpu-features.h
