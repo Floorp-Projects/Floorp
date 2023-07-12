@@ -9,6 +9,7 @@ build-apk and build-bundle kinds.
 
 from android_taskgraph.build_config import get_variant
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util import path
 
 transforms = TransformSequence()
 
@@ -137,7 +138,7 @@ def build_pre_gradle_command(config, tasks):
     for task in tasks:
         source_project_name = task["source-project-name"]
         pre_gradlew = task["run"].setdefault("pre-gradlew", [])
-        pre_gradlew.append(["cd", source_project_name])
+        pre_gradlew.append(["cd", path.join("mobile", "android", source_project_name)])
 
         yield task
 
