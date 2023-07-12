@@ -3,11 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+from glob import glob
+from html.parser import HTMLParser
 
 from mozlint import result
 from mozlint.pathutils import expand_exclusions
 
 here = os.path.abspath(os.path.dirname(__file__))
+topsrcdir = os.path.join(here, "..", "..", "..")
 
 results = []
 
@@ -162,12 +165,56 @@ def fix_me(log, filename):
                 # Last line, we end by -->
                 end = " -->"
             license.append(start + l.strip() + end)
-            if ext != ".svg" or end == "":
+            if ext != ".svg" or not end:
                 # When dealing with an svg, we should not have a space between
                 # the license and the content
                 license.append("\n")
         add_header(log, filename, license)
         return
+
+
+class HTMLParseError(Exception):
+    def __init__(self, msg, pos):
+        super().__init__(msg, *pos)
+
+
+class LicenseHTMLParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.in_code = False
+        self.invalid_paths = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "code":
+            if self.in_code:
+                raise HTMLParseError("nested code tag", self.getpos())
+            self.in_code = True
+
+    def handle_endtag(self, tag):
+        if tag == "code":
+            if not self.in_code:
+                raise HTMLParseError("not started code tag", self.getpos())
+            self.in_code = False
+
+    def handle_data(self, data):
+        if self.in_code:
+            path = data.strip()
+            abspath = os.path.join(topsrcdir, path)
+            if not glob(abspath):
+                self.invalid_paths.append((path, self.getpos()))
+
+
+def lint_license_html(path):
+    parser = LicenseHTMLParser()
+    with open(path) as fd:
+        content = fd.read()
+        parser.feed(content)
+    return parser.invalid_paths
+
+
+def is_html_licence_summary(path):
+    license_html = os.path.join(topsrcdir, "toolkit", "content", "license.html")
+    return os.path.samefile(path, license_html)
 
 
 def lint(paths, config, fix=None, **lintargs):
@@ -191,5 +238,26 @@ def lint(paths, config, fix=None, **lintargs):
             if fix:
                 fix_me(log, f)
                 fixed += 1
+
+        if is_html_licence_summary(f):
+            try:
+                for invalid_path, (lineno, column) in lint_license_html(f):
+                    res = {
+                        "path": f,
+                        "message": "references unknown path {}".format(invalid_path),
+                        "level": "error",
+                        "lineno": lineno,
+                        "column": column,
+                    }
+                    results.append(result.from_config(config, **res))
+            except HTMLParseError as err:
+                res = {
+                    "path": f,
+                    "message": err.args[0],
+                    "level": "error",
+                    "lineno": err.args[1],
+                    "column": err.args[2],
+                }
+                results.append(result.from_config(config, **res))
 
     return {"results": results, "fixed": fixed}
