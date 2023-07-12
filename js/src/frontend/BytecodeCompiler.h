@@ -101,6 +101,7 @@
 
 class JSFunction;
 class JSLinearString;
+class JSObject;
 class JSScript;
 struct JSContext;
 
@@ -109,6 +110,7 @@ namespace js {
 class ModuleObject;
 class ScriptSourceObject;
 class FrontendContext;
+class Scope;
 
 namespace frontend {
 
@@ -162,6 +164,14 @@ extern JSScript* CompileGlobalScript(JSContext* cx, FrontendContext* fc,
                                      const JS::ReadOnlyCompileOptions& options,
                                      JS::SourceText<mozilla::Utf8Unit>& srcBuf,
                                      ScopeKind scopeKind);
+
+// Compile a script for eval of the given source using the given options and
+// enclosing scope/environment.
+extern JSScript* CompileEvalScript(JSContext* cx,
+                                   const JS::ReadOnlyCompileOptions& options,
+                                   JS::SourceText<char16_t>& srcBuf,
+                                   JS::Handle<js::Scope*> enclosingScope,
+                                   JS::Handle<JSObject*> enclosingEnv);
 
 // Compile a module of the given source using the given options.
 ModuleObject* CompileModule(JSContext* cx, FrontendContext* fc,
