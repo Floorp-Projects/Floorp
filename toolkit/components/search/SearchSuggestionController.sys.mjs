@@ -461,6 +461,11 @@ export class SearchSuggestionController {
   #fetchRemote(context) {
     let deferredResponse = lazy.PromiseUtils.defer();
     let request = (context.request = new XMLHttpRequest());
+    // Expect the response type to be JSON, so that the network layer will
+    // decode it for us. This will also ignore incorrect Mime Types, as we are
+    // dictating how we process it.
+    request.responseType = "json";
+
     let submission = context.engine.getSubmission(
       context.searchString,
       context.searchString
@@ -560,7 +565,7 @@ export class SearchSuggestionController {
    * @private
    */
   #onRemoteLoaded(context, deferredResponse) {
-    let status, serverResults;
+    let status;
     try {
       status = context.request.status;
     } catch (e) {
@@ -569,19 +574,14 @@ export class SearchSuggestionController {
       return;
     }
 
-    if (status != HTTP_OK || context.request.responseText == "") {
+    if (status != HTTP_OK) {
       deferredResponse.resolve(
         "Non-200 status or empty HTTP response: " + status
       );
       return;
     }
 
-    try {
-      serverResults = JSON.parse(context.request.responseText);
-    } catch (ex) {
-      deferredResponse.resolve("Failed to parse suggestion JSON: " + ex);
-      return;
-    }
+    let serverResults = context.request.response;
 
     try {
       if (

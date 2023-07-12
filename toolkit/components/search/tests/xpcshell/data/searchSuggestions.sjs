@@ -145,6 +145,12 @@ function handleRequest(request, response) {
   } else if (q?.startsWith("HTTP ")) {
     response.setStatusLine(request.httpVersion, q.replace("HTTP ", ""), q);
     writeSuggestions(q, [q]);
+  } else if (q == "invalidJSON") {
+    response.setHeader("Content-Type", "application/json", false);
+    response.write('["invalid"]');
+  } else if (q == "invalidContentType") {
+    response.setHeader("Content-Type", "text/xml", false);
+    writeSuggestions(q, ["invalidContentType response"]);
   } else if (q?.startsWith("delay")) {
     // Delay the response by delayMs milliseconds. 200ms is the default, less
     // than the timeout but hopefully enough to abort before completion.
