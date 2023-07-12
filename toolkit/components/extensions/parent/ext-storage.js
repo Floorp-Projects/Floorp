@@ -73,16 +73,27 @@ this.storage = class extends ExtensionAPIPersistent {
   }
 
   PERSISTENT_EVENTS = {
-    onChanged({ fire }) {
+    onChanged({ context, fire }) {
       let unregisterLocal = this.registerLocalChangedListener(changes => {
         // |changes| is already serialized. Send the raw value, so that it can
         // be deserialized by the onChanged handler in child/ext-storage.js.
         fire.raw(changes, "local");
       });
-      let unregisterSession = extensionStorageSession.registerListener(
-        this.extension,
-        changes => fire.async(changes, "session")
-      );
+
+      // Session storage is not exposed to content scripts, and `context` does
+      // not exist while setting up persistent listeners for an event page.
+      let unregisterSession;
+      if (
+        !context ||
+        context.envType === "addon_parent" ||
+        context.envType === "devtools_parent"
+      ) {
+        unregisterSession = extensionStorageSession.registerListener(
+          this.extension,
+          changes => fire.async(changes, "session")
+        );
+      }
+
       let unregisterSync = this.registerSyncChangedListener(changes => {
         fire.async(changes, "sync");
       });
@@ -90,7 +101,7 @@ this.storage = class extends ExtensionAPIPersistent {
       return {
         unregister() {
           unregisterLocal();
-          unregisterSession();
+          unregisterSession?.();
           unregisterSync();
         },
         convert(_fire) {
