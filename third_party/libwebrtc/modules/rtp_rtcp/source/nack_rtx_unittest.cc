@@ -15,7 +15,6 @@
 
 #include "absl/algorithm/container.h"
 #include "api/call/transport.h"
-#include "api/transport/field_trial_based_config.h"
 #include "call/rtp_stream_receiver_controller.h"
 #include "call/rtx_receive_stream.h"
 #include "modules/rtp_rtcp/include/receive_statistics.h"
@@ -25,6 +24,7 @@
 #include "modules/rtp_rtcp/source/rtp_sender_video.h"
 #include "rtc_base/rate_limiter.h"
 #include "rtc_base/thread.h"
+#include "test/explicit_key_value_config.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -138,7 +138,7 @@ class RtpRtcpRtxNackTest : public ::testing::Test {
     configuration.local_media_ssrc = kTestSsrc;
     configuration.rtx_send_ssrc = kTestRtxSsrc;
     rtp_rtcp_module_ = ModuleRtpRtcpImpl2::Create(configuration);
-    FieldTrialBasedConfig field_trials;
+    test::ExplicitKeyValueConfig field_trials("");
     RTPSenderVideo::Config video_config;
     video_config.clock = &fake_clock;
     video_config.rtp_sender = rtp_rtcp_module_->RtpSender();

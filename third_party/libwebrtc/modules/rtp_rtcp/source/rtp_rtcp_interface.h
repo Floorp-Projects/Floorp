@@ -125,8 +125,7 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
     // done by RTCP RR acking.
     bool always_send_mid_and_rid = false;
 
-    // If set, field trials are read from `field_trials`, otherwise
-    // defaults to  webrtc::FieldTrialBasedConfig.
+    // If set, field trials are read from `field_trials`.
     const FieldTrialsView* field_trials = nullptr;
 
     // SSRCs for media and retransmission, respectively.

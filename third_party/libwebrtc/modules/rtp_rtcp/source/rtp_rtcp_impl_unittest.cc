@@ -14,13 +14,13 @@
 #include <memory>
 #include <set>
 
-#include "api/transport/field_trial_based_config.h"
 #include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
 #include "modules/rtp_rtcp/source/rtcp_packet.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/nack.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_sender_video.h"
 #include "rtc_base/rate_limiter.h"
+#include "test/explicit_key_value_config.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/rtcp_packet_parser.h"
@@ -187,7 +187,7 @@ class RtpRtcpImplTest : public ::testing::Test {
     sender_.impl_->SetSequenceNumber(kSequenceNumber);
     sender_.impl_->SetStorePacketsStatus(true, 100);
 
-    FieldTrialBasedConfig field_trials;
+    test::ExplicitKeyValueConfig field_trials("");
     RTPSenderVideo::Config video_config;
     video_config.clock = &clock_;
     video_config.rtp_sender = sender_.impl_->RtpSender();
