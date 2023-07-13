@@ -20,8 +20,16 @@
 #include "api/peer_connection_interface.h"
 #include "api/rtp_transceiver_interface.h"
 #include "api/scoped_refptr.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "api/video_codecs/video_decoder_factory_template.h"
+#include "api/video_codecs/video_decoder_factory_template_dav1d_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_open_h264_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template.h"
+#include "api/video_codecs/video_encoder_factory_template_libaom_av1_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_encoder_factory_template_open_h264_adapter.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "p2p/base/port_allocator.h"
@@ -59,17 +67,25 @@ class SdpOfferAnswerTest : public ::testing::Test {
       // Note: We use a PeerConnectionFactory with a distinct
       // signaling thread, so that thread handling can be tested.
       : signaling_thread_(CreateAndStartThread()),
-        pc_factory_(
-            CreatePeerConnectionFactory(nullptr,
-                                        nullptr,
-                                        signaling_thread_.get(),
-                                        FakeAudioCaptureModule::Create(),
-                                        CreateBuiltinAudioEncoderFactory(),
-                                        CreateBuiltinAudioDecoderFactory(),
-                                        CreateBuiltinVideoEncoderFactory(),
-                                        CreateBuiltinVideoDecoderFactory(),
-                                        nullptr /* audio_mixer */,
-                                        nullptr /* audio_processing */)) {
+        pc_factory_(CreatePeerConnectionFactory(
+            nullptr,
+            nullptr,
+            signaling_thread_.get(),
+            FakeAudioCaptureModule::Create(),
+            CreateBuiltinAudioEncoderFactory(),
+            CreateBuiltinAudioDecoderFactory(),
+            std::make_unique<
+                VideoEncoderFactoryTemplate<LibvpxVp8EncoderTemplateAdapter,
+                                            LibvpxVp9EncoderTemplateAdapter,
+                                            OpenH264EncoderTemplateAdapter,
+                                            LibaomAv1EncoderTemplateAdapter>>(),
+            std::make_unique<
+                VideoDecoderFactoryTemplate<LibvpxVp8DecoderTemplateAdapter,
+                                            LibvpxVp9DecoderTemplateAdapter,
+                                            OpenH264DecoderTemplateAdapter,
+                                            Dav1dDecoderTemplateAdapter>>(),
+            nullptr /* audio_mixer */,
+            nullptr /* audio_processing */)) {
     webrtc::metrics::Reset();
   }
 
