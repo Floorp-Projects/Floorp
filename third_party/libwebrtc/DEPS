@@ -349,17 +349,6 @@ deps = {
       'dep_type': 'cipd',
   },
 
-  'src/third_party/android_support_test_runner': {
-      'packages': [
-          {
-              'package': 'chromium/third_party/android_support_test_runner',
-              'version': '96d4bf848cd210fdcbca6bcc8c1b4b39cbd93141',
-          },
-      ],
-      'condition': 'checkout_android',
-      'dep_type': 'cipd',
-  },
-
  'src/third_party/byte_buddy': {
       'packages': [
           {
