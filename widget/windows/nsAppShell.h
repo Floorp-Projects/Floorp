@@ -39,6 +39,7 @@ class nsAppShell : public nsBaseAppShell {
 
  protected:
   NS_IMETHOD Run() override;
+  NS_IMETHOD Exit() override;
   NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                      const char16_t* aData) override;
 

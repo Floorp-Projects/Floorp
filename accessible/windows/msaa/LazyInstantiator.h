@@ -8,7 +8,6 @@
 #define mozilla_a11y_LazyInstantiator_h
 
 #include "IUnknownImpl.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
 #include "nsString.h"
 
@@ -83,25 +82,14 @@ class LazyInstantiator final : public IAccessible, public IServiceProvider {
   STDMETHODIMP QueryService(REFGUID aServiceId, REFIID aServiceIid,
                             void** aOutInterface) override;
 
-  /**
-   * We cache the result of UIA detection because it could be expensive if a
-   * client repeatedly queries us. This function is called to reset that cache
-   * when one of our windows comes to the foreground. If there is a new UIA
-   * client that isn't blocked, instantiation will subsequently be allowed. The
-   * hope is that a user will probably need to switch apps in order to start a
-   * new client.
-   */
-  static void ResetUiaDetectionCache() { sShouldBlockUia = Nothing(); }
-
  private:
   explicit LazyInstantiator(HWND aHwnd);
   ~LazyInstantiator();
 
   bool IsBlockedInjection();
-  bool ShouldInstantiate(const DWORD aClientPid);
-  bool ShouldInstantiate();
+  bool ShouldInstantiate(const DWORD aClientTid);
 
-  DWORD GetRemoteMsaaClientPid();
+  DWORD GetClientPid(const DWORD aClientTid);
 
   /**
    * @return S_OK if we have a valid mRealRoot to invoke methods on
@@ -133,7 +121,6 @@ class LazyInstantiator final : public IAccessible, public IServiceProvider {
   MsaaRootAccessible* mWeakMsaaRoot;
   IAccessible* mWeakAccessible;
   IDispatch* mWeakDispatch;
-  static Maybe<bool> sShouldBlockUia;
 };
 
 }  // namespace a11y
