@@ -95,6 +95,7 @@ UNIFIED_SOURCES += [
     "NSSCipherStrategy.cpp",
     "OriginInfo.cpp",
     "OriginOperationBase.cpp",
+    "OriginOperations.cpp",
     "PersistenceType.cpp",
     "QMResult.cpp",
     "QuotaCommon.cpp",
