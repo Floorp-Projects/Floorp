@@ -25,7 +25,8 @@ async def test_strict_mode(bidi_session, top_context):
     )
     assert result == {
         "type": "number",
-        "value": 1}
+        "value": 1,
+    }
 
     # Access created by the previous command `SOME_VARIABLE`.
     result = await bidi_session.script.call_function(
@@ -35,4 +36,5 @@ async def test_strict_mode(bidi_session, top_context):
     )
     assert result == {
         "type": "number",
-        "value": 1}
+        "value": 1,
+    }
