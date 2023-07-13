@@ -99,7 +99,7 @@ class ThreeDotMenuMainRobot {
             syncAndSaveDataButton,
             findInPageButton,
             desktopSiteButton,
-            // reportSiteIssueButton,
+            reportSiteIssueButton,
             addToHomeScreenButton,
             addToShortcutsButton,
             saveToCollectionButton,
