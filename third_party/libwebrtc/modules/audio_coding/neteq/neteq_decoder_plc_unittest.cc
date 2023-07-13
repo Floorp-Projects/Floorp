@@ -119,26 +119,34 @@ class LossyInput : public NetEqInput {
         burst_length_(burst_length),
         input_(std::move(input)) {}
 
-  absl::optional<int64_t> NextEventTime() const {
-    return input_->NextEventTime();
+  absl::optional<int64_t> NextPacketTime() const override {
+    return input_->NextPacketTime();
   }
 
-  std::unique_ptr<Event> PopEvent() override {
-    std::unique_ptr<Event> event = input_->PopEvent();
-    if (event == nullptr || event->type() != Event::Type::kPacketData) {
-      return event;
-    }
-    if (loss_cadence_ != 0 && remaining_losses_ == 0 &&
-        (++count_ % loss_cadence_) == 0) {
+  absl::optional<int64_t> NextOutputEventTime() const override {
+    return input_->NextOutputEventTime();
+  }
+
+  absl::optional<SetMinimumDelayInfo> NextSetMinimumDelayInfo() const override {
+    return input_->NextSetMinimumDelayInfo();
+  }
+
+  std::unique_ptr<PacketData> PopPacket() override {
+    if (loss_cadence_ != 0 && (++count_ % loss_cadence_) == 0) {
       // Pop `burst_length_` packets to create the loss.
-      remaining_losses_ = burst_length_;
-    } else {
-      if (remaining_losses_ != 0) {
-        remaining_losses_--;
-        return PopEvent();
+      auto packet_to_return = input_->PopPacket();
+      for (int i = 0; i < burst_length_; i++) {
+        input_->PopPacket();
       }
+      return packet_to_return;
     }
-    return event;
+    return input_->PopPacket();
+  }
+
+  void AdvanceOutputEvent() override { return input_->AdvanceOutputEvent(); }
+
+  void AdvanceSetMinimumDelay() override {
+    return input_->AdvanceSetMinimumDelay();
   }
 
   bool ended() const override { return input_->ended(); }
@@ -150,7 +158,6 @@ class LossyInput : public NetEqInput {
  private:
   const int loss_cadence_;
   const int burst_length_;
-  int remaining_losses_ = 0;
   int count_ = 0;
   const std::unique_ptr<NetEqInput> input_;
 };

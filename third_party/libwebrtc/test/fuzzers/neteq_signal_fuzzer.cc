@@ -80,10 +80,8 @@ class FuzzSignalInput : public NetEqInput {
         new SineAndNoiseGenerator(config.sample_rate_hz, fuzz_data));
     input_.reset(new EncodeNetEqInput(std::move(generator), std::move(encoder),
                                       std::numeric_limits<int64_t>::max()));
-    // We pop the first event so we have information about the timing of such
-    // first event.
-    PopPacket();
-    PopEvent();
+    packet_ = input_->PopPacket();
+
     // Select an output event period. This is how long time we wait between each
     // call to NetEq::GetAudio. 10 ms is nominal, 9 and 11 ms will both lead to
     // clock drift (in different directions).
@@ -91,45 +89,32 @@ class FuzzSignalInput : public NetEqInput {
     output_event_period_ms_ = fuzz_data_.SelectOneOf(output_event_periods);
   }
 
-  std::unique_ptr<Event> PopEvent() override {
-    std::unique_ptr<Event> event_to_return = std::move(event_);
-    if (packet_ && packet_->timestamp_ms() <= next_output_event_ms_) {
-      event_ = PopPacket();
-    } else {
-      event_ = std::make_unique<GetAudio>(next_output_event_ms_);
-      next_output_event_ms_ += output_event_period_ms_;
-    }
-    return event_to_return;
+  absl::optional<int64_t> NextPacketTime() const override {
+    return packet_->time_ms;
   }
 
-  absl::optional<int64_t> NextEventTime() const override {
-    if (event_) {
-      return event_->timestamp_ms();
-    }
-    return absl::nullopt;
+  absl::optional<int64_t> NextOutputEventTime() const override {
+    return next_output_event_ms_;
   }
 
-  std::unique_ptr<Event> PopPacket() {
-    std::unique_ptr<Event> packet_to_return = std::move(packet_);
-    int64_t packet_to_return_time_ms =
-        packet_to_return ? packet_to_return->timestamp_ms() : 0;
-    PacketData* packet_data = nullptr;
+  absl::optional<SetMinimumDelayInfo> NextSetMinimumDelayInfo() const override {
+    return input_->NextSetMinimumDelayInfo();
+  }
+
+  std::unique_ptr<PacketData> PopPacket() override {
+    RTC_DCHECK(packet_);
+    std::unique_ptr<PacketData> packet_to_return = std::move(packet_);
     do {
-      std::unique_ptr<Event> event = input_->PopEvent();
-      while (event && event->type() != Event::Type::kPacketData) {
-        event = input_->PopEvent();
-      }
-      packet_data = static_cast<PacketData*>(event.get());
+      packet_ = input_->PopPacket();
       // If the next value from the fuzzer input is 0, the packet is discarded
       // and the next one is pulled from the source.
     } while (fuzz_data_.CanReadBytes(1) && fuzz_data_.Read<uint8_t>() == 0);
-    if (fuzz_data_.CanReadBytes(1) && packet_data) {
+    if (fuzz_data_.CanReadBytes(1)) {
       // Generate jitter by setting an offset for the arrival time.
       const int8_t arrival_time_offset_ms = fuzz_data_.Read<int8_t>();
       // The arrival time can not be before the previous packets.
-      packet_data->timestamp_ms_ =
-          std::max(packet_to_return_time_ms,
-                   packet_data->timestamp_ms_ + arrival_time_offset_ms);
+      packet_->time_ms = std::max(packet_to_return->time_ms,
+                                  packet_->time_ms + arrival_time_offset_ms);
     } else {
       // Mark that we are at the end of the test. However, the current packet is
       // still valid (but it may not have been fuzzed as expected).
@@ -138,21 +123,28 @@ class FuzzSignalInput : public NetEqInput {
     return packet_to_return;
   }
 
+  void AdvanceOutputEvent() override {
+    next_output_event_ms_ += output_event_period_ms_;
+  }
+
+  void AdvanceSetMinimumDelay() override {
+    return input_->AdvanceSetMinimumDelay();
+  }
+
   bool ended() const override { return ended_; }
 
   absl::optional<RTPHeader> NextHeader() const override {
     RTC_DCHECK(packet_);
-    return static_cast<PacketData&>(*packet_).header;
+    return packet_->header;
   }
 
  private:
   bool ended_ = false;
   FuzzDataHelper& fuzz_data_;
   std::unique_ptr<EncodeNetEqInput> input_;
-  std::unique_ptr<Event> packet_;
+  std::unique_ptr<PacketData> packet_;
   int64_t next_output_event_ms_ = 0;
-  int64_t output_event_period_ms_;
-  std::unique_ptr<Event> event_;
+  int64_t output_event_period_ms_ = 10;
 };
 
 template <class T>

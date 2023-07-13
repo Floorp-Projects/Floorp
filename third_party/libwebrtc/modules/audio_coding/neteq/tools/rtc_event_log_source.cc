@@ -95,7 +95,7 @@ int64_t RtcEventLogSource::NextAudioOutputEventMs() {
   return output_time_ms;
 }
 
-absl::optional<NetEqInput::SetMinimumDelay>
+absl::optional<NetEqInput::SetMinimumDelayInfo>
 RtcEventLogSource::NextSetMinimumDelayEvent() {
   if (minimum_delay_index_ >= minimum_delay_.size()) {
     return absl::nullopt;

@@ -107,27 +107,25 @@ NetEqTest::SimulationStepResult NetEqTest::RunToNextGetAudio() {
     RTC_DCHECK(input_->NextEventTime());
     clock_.AdvanceTimeMilliseconds(*input_->NextEventTime() - time_now_ms);
     time_now_ms = *input_->NextEventTime();
-    std::unique_ptr<NetEqInput::Event> event = input_->PopEvent();
     // Check if it is time to insert packet.
-    RTC_CHECK(event);
-    if (event->type() == NetEqInput::Event::Type::kPacketData) {
-      NetEqInput::PacketData& packet_data =
-          static_cast<NetEqInput::PacketData&>(*event);
+    if (input_->NextPacketTime() && time_now_ms >= *input_->NextPacketTime()) {
+      std::unique_ptr<NetEqInput::PacketData> packet_data = input_->PopPacket();
+      RTC_CHECK(packet_data);
       const size_t payload_data_length =
-          packet_data.payload.size() - packet_data.header.paddingLength;
+          packet_data->payload.size() - packet_data->header.paddingLength;
       if (payload_data_length != 0) {
         int error = neteq_->InsertPacket(
-            packet_data.header,
-            rtc::ArrayView<const uint8_t>(packet_data.payload));
+            packet_data->header,
+            rtc::ArrayView<const uint8_t>(packet_data->payload));
         if (error != NetEq::kOK && callbacks_.error_callback) {
-          callbacks_.error_callback->OnInsertPacketError(packet_data);
+          callbacks_.error_callback->OnInsertPacketError(*packet_data);
         }
         if (callbacks_.post_insert_packet) {
-          callbacks_.post_insert_packet->AfterInsertPacket(packet_data,
+          callbacks_.post_insert_packet->AfterInsertPacket(*packet_data,
                                                            neteq_.get());
         }
       } else {
-        neteq_->InsertEmptyPacket(packet_data.header);
+        neteq_->InsertEmptyPacket(packet_data->header);
       }
       if (last_packet_time_ms_) {
         current_state_.packet_iat_ms.push_back(time_now_ms -
@@ -139,20 +137,20 @@ NetEqTest::SimulationStepResult NetEqTest::RunToNextGetAudio() {
             last_packet_time_ms_ ? (time_now_ms - *last_packet_time_ms_) : -1;
         const auto delta_timestamp =
             last_packet_timestamp_
-                ? (static_cast<int64_t>(packet_data.header.timestamp) -
+                ? (static_cast<int64_t>(packet_data->header.timestamp) -
                    *last_packet_timestamp_) *
                       1000 / sample_rate_hz_
                 : -1;
         const auto packet_size_bytes =
-            packet_data.payload.size() == 12
+            packet_data->payload.size() == 12
                 ? ByteReader<uint32_t>::ReadLittleEndian(
-                      &packet_data.payload[8])
+                      &packet_data->payload[8])
                 : -1;
         *text_log_ << "Packet   - wallclock: " << std::setw(5) << time_now_ms
                    << ", delta wc: " << std::setw(4) << delta_wallclock
-                   << ", seq_no: " << packet_data.header.sequenceNumber
+                   << ", seq_no: " << packet_data->header.sequenceNumber
                    << ", timestamp: " << std::setw(10)
-                   << packet_data.header.timestamp
+                   << packet_data->header.timestamp
                    << ", delta ts: " << std::setw(4) << delta_timestamp
                    << ", size: " << std::setw(5) << packet_size_bytes
                    << ", frame size: " << std::setw(3)
@@ -162,16 +160,19 @@ NetEqTest::SimulationStepResult NetEqTest::RunToNextGetAudio() {
       }
       last_packet_time_ms_ = absl::make_optional<int>(time_now_ms);
       last_packet_timestamp_ =
-          absl::make_optional<uint32_t>(packet_data.header.timestamp);
+          absl::make_optional<uint32_t>(packet_data->header.timestamp);
     }
 
-    if (event->type() == NetEqInput::Event::Type::kSetMinimumDelay) {
+    if (input_->NextSetMinimumDelayInfo().has_value() &&
+        time_now_ms >= input_->NextSetMinimumDelayInfo().value().timestamp_ms) {
       neteq_->SetBaseMinimumDelayMs(
-          static_cast<NetEqInput::SetMinimumDelay&>(*event).delay_ms());
+          input_->NextSetMinimumDelayInfo().value().delay_ms);
+      input_->AdvanceSetMinimumDelay();
     }
 
     // Check if it is time to get output audio.
-    if (event->type() == NetEqInput::Event::Type::kGetAudio) {
+    if (input_->NextOutputEventTime() &&
+        time_now_ms >= *input_->NextOutputEventTime()) {
       if (callbacks_.get_audio_callback) {
         callbacks_.get_audio_callback->BeforeGetAudio(neteq_.get());
       }
@@ -199,6 +200,7 @@ NetEqTest::SimulationStepResult NetEqTest::RunToNextGetAudio() {
             out_frame.samples_per_channel_ * out_frame.num_channels_));
       }
 
+      input_->AdvanceOutputEvent();
       result.simulation_step_ms =
           input_->NextEventTime().value_or(time_now_ms) - start_time_ms;
       const auto operations_state = neteq_->GetOperationsAndState();
@@ -269,8 +271,8 @@ NetEqTest::SimulationStepResult NetEqTest::RunToNextGetAudio() {
         }
       }
       prev_lifetime_stats_ = lifetime_stats;
-      const bool no_more_events =
-          !input_->NextEventTime() && !operations_state.next_packet_available;
+      const bool no_more_packets_to_decode =
+          !input_->NextPacketTime() && !operations_state.next_packet_available;
       // End the simulation if the gap is too large. This indicates an issue
       // with the event log file.
       const bool simulation_step_too_large = result.simulation_step_ms > 1000;
@@ -279,8 +281,9 @@ NetEqTest::SimulationStepResult NetEqTest::RunToNextGetAudio() {
         // the simulation time, which can be a large distortion.
         result.simulation_step_ms = 10;
       }
-      result.is_simulation_finished =
-          simulation_step_too_large || no_more_events || input_->ended();
+      result.is_simulation_finished = simulation_step_too_large ||
+                                      no_more_packets_to_decode ||
+                                      input_->ended();
       prev_ops_state_ = operations_state;
       return result;
     }

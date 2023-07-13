@@ -136,8 +136,8 @@ std::unique_ptr<NetEqTest> NetEqTestFactory::InitializeTestFromFile(
   std::unique_ptr<NetEqInput> input;
   if (RtpFileSource::ValidRtpDump(input_file_name) ||
       RtpFileSource::ValidPcap(input_file_name)) {
-    input = std::make_unique<NetEqPacketSourceInput>(
-        input_file_name, rtp_ext_map, config.ssrc_filter);
+    input.reset(new NetEqRtpDumpInput(input_file_name, rtp_ext_map,
+                                      config.ssrc_filter));
   } else {
     input.reset(NetEqEventLogInput::CreateFromFile(input_file_name,
                                                    config.ssrc_filter));
@@ -169,17 +169,21 @@ std::unique_ptr<NetEqTest> NetEqTestFactory::InitializeTest(
   if (config.skip_get_audio_events > 0) {
     std::cout << "Skipping " << config.skip_get_audio_events
               << " get_audio events" << std::endl;
-    if (!input->NextEventTime()) {
+    if (!input->NextPacketTime() || !input->NextOutputEventTime()) {
       std::cerr << "No events found" << std::endl;
       return nullptr;
     }
     for (int i = 0; i < config.skip_get_audio_events; i++) {
-      std::unique_ptr<NetEqInput::Event> event = input->PopEvent();
-      while (event && event->type() != NetEqInput::Event::Type::kGetAudio) {
-        event = input->PopEvent();
+      input->AdvanceOutputEvent();
+      if (!input->NextOutputEventTime()) {
+        std::cerr << "Not enough get_audio events found" << std::endl;
+        return nullptr;
       }
-      if (event == nullptr) {
-        std::cerr << "Not enough events found" << std::endl;
+    }
+    while (*input->NextPacketTime() < *input->NextOutputEventTime()) {
+      input->PopPacket();
+      if (!input->NextPacketTime()) {
+        std::cerr << "Not enough incoming packets found" << std::endl;
         return nullptr;
       }
     }
@@ -208,10 +212,7 @@ std::unique_ptr<NetEqTest> NetEqTestFactory::InitializeTest(
     // types and SSRCs.
     discarded_pt_and_ssrc.emplace(first_rtp_header->payloadType,
                                   first_rtp_header->ssrc);
-    std::unique_ptr<NetEqInput::Event> event = input->PopEvent();
-    while (event && event->type() != NetEqInput::Event::Type::kPacketData) {
-      event = input->PopEvent();
-    }
+    input->PopPacket();
   }
   if (!discarded_pt_and_ssrc.empty()) {
     std::cout << "Discarded initial packets with the following payload types "
