@@ -140,7 +140,7 @@ class WasmArrayObject : public WasmGcObject {
   // is too large, or if there is an out of memory error.  The element type,
   // shape, class pointer, alloc site and alloc kind are taken from
   // `typeDefData`; the initial heap must be specified separately.
-  template <bool ZeroFields = true>
+  template <bool ZeroFields>
   static WasmArrayObject* createArray(JSContext* cx,
                                       wasm::TypeDefInstanceData* typeDefData,
                                       js::gc::Heap initialHeap,
@@ -213,24 +213,30 @@ class WasmStructObject : public WasmGcObject {
   // Creates a new struct typed object, optionally initialized to zero.
   // Reports if there is an out of memory error.  The structure's type, shape,
   // class pointer, alloc site and alloc kind are taken from `typeDefData`;
-  // the initial heap must be specified separately.
+  // the initial heap must be specified separately.  It is assumed and debug-
+  // asserted that `typeDefData` refers to a type that does not need OOL
+  // storage.
   template <bool ZeroFields>
-  static WasmStructObject* createStruct(JSContext* cx,
-                                        wasm::TypeDefInstanceData* typeDefData,
-                                        js::gc::Heap initialHeap);
-
-  // This is a helper function called by ::createStruct when it determines
-  // that OOL storage is required.  Do not call it directly.
-  template <bool ZeroFields>
-  static MOZ_NEVER_INLINE WasmStructObject* createStructOOL(
+  static WasmStructObject* createStructIL(
       JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-      js::gc::Heap initialHeap, uint32_t outlineBytes);
+      js::gc::Heap initialHeap);
+
+  // Same as ::createStructIL, except it is assumed and debug-asserted that
+  // `typeDefData` refers to a type that does need OOL storage.
+  template <bool ZeroFields>
+  static WasmStructObject* createStructOOL(
+      JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+      js::gc::Heap initialHeap);
 
   // Given the total number of data bytes required (including alignment
   // holes), return the number of inline and outline bytes required.
   static inline void getDataByteSizes(uint32_t totalBytes,
                                       uint32_t* inlineBytes,
                                       uint32_t* outlineBytes);
+
+  // Convenience function; returns true iff ::getDataByteSizes would set
+  // *outlineBytes to a non-zero value.
+  static inline bool requiresOutlineBytes(uint32_t totalBytes);
 
   // Given the offset of a field, produce the offset in `inlineData_` or
   // `*outlineData_` to use, plus a bool indicating which area it is.
@@ -284,6 +290,13 @@ inline void WasmStructObject::getDataByteSizes(uint32_t totalBytes,
     *inlineBytes = totalBytes;
     *outlineBytes = 0;
   }
+}
+
+/* static */
+inline bool WasmStructObject::requiresOutlineBytes(uint32_t totalBytes) {
+  uint32_t inlineBytes, outlineBytes;
+  WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
+  return outlineBytes > 0;
 }
 
 /*static*/

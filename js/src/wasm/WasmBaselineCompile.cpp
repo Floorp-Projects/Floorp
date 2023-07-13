@@ -6752,10 +6752,17 @@ bool BaseCompiler::emitStructNew() {
 
   const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
 
+  // Figure out whether we need an OOL storage area, and hence which routine
+  // to call.
+  SymbolicAddressSignature calleeSASig =
+      WasmStructObject::requiresOutlineBytes(structType.size_)
+          ? SASigStructNewOOL_false
+          : SASigStructNewIL_false;
+
   // Allocate an uninitialized struct. This requires the type definition
   // for the struct to be pushed on the stack. This will trap on OOM.
   pushPtr(loadTypeDefInstanceData(typeIndex));
-  if (!emitInstanceCall(SASigStructNewUninit)) {
+  if (!emitInstanceCall(calleeSASig)) {
     return false;
   }
 
@@ -6848,10 +6855,19 @@ bool BaseCompiler::emitStructNewDefault() {
     return true;
   }
 
+  const StructType& structType = (*moduleEnv_.types)[typeIndex].structType();
+
+  // Figure out whether we need an OOL storage area, and hence which routine
+  // to call.
+  SymbolicAddressSignature calleeSASig =
+      WasmStructObject::requiresOutlineBytes(structType.size_)
+          ? SASigStructNewOOL_true
+          : SASigStructNewIL_true;
+
   // Allocate a default initialized struct. This requires the type definition
   // for the struct to be pushed on the stack. This will trap on OOM.
   pushPtr(loadTypeDefInstanceData(typeIndex));
-  return emitInstanceCall(SASigStructNew);
+  return emitInstanceCall(calleeSASig);
 }
 
 bool BaseCompiler::emitStructGet(FieldWideningOp wideningOp) {
@@ -6981,7 +6997,7 @@ bool BaseCompiler::emitArrayNew() {
   // Allocate an uninitialized array. This requires the type definition
   // for the array to be pushed on the stack. This will trap on OOM.
   pushPtr(loadTypeDefInstanceData(typeIndex));
-  if (!emitInstanceCall(SASigArrayNewUninit)) {
+  if (!emitInstanceCall(SASigArrayNew_false)) {
     return false;
   }
 
@@ -7050,10 +7066,10 @@ bool BaseCompiler::emitArrayNewFixed() {
   // At this point, the top section of the value stack contains the values to
   // be used to initialise the array, with index 0 as the topmost value.  Push
   // the required number of elements and the required type on, since the call
-  // to SASigArrayNew will use them.
+  // to SASigArrayNew_true will use them.
   pushI32(numElements);
   pushPtr(loadTypeDefInstanceData(typeIndex));
-  if (!emitInstanceCall(SASigArrayNew)) {
+  if (!emitInstanceCall(SASigArrayNew_true)) {
     return false;
   }
 
@@ -7064,7 +7080,7 @@ bool BaseCompiler::emitArrayNewFixed() {
     needPtr(RegPtr(PreBarrierReg));
   }
 
-  // Get hold of the pointer to the array, as created by SASigArrayNew.
+  // Get hold of the pointer to the array, as created by SASigArrayNew_true.
   RegRef rp = popRef();
 
   // Acquire the data pointer from the object
@@ -7124,7 +7140,7 @@ bool BaseCompiler::emitArrayNewDefault() {
   // Allocate a default initialized array. This requires the type definition
   // for the array to be pushed on the stack. This will trap on OOM.
   pushPtr(loadTypeDefInstanceData(typeIndex));
-  return emitInstanceCall(SASigArrayNew);
+  return emitInstanceCall(SASigArrayNew_true);
 }
 
 bool BaseCompiler::emitArrayNewData() {

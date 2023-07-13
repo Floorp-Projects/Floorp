@@ -1676,11 +1676,13 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native exception new (in wasm)";
     case SymbolicAddress::ThrowException:
       return "call to native throw exception (in wasm)";
-    case SymbolicAddress::StructNew:
-    case SymbolicAddress::StructNewUninit:
+    case SymbolicAddress::StructNewIL_true:
+    case SymbolicAddress::StructNewIL_false:
+    case SymbolicAddress::StructNewOOL_true:
+    case SymbolicAddress::StructNewOOL_false:
       return "call to native struct.new (in wasm)";
-    case SymbolicAddress::ArrayNew:
-    case SymbolicAddress::ArrayNewUninit:
+    case SymbolicAddress::ArrayNew_true:
+    case SymbolicAddress::ArrayNew_false:
       return "call to native array.new (in wasm)";
     case SymbolicAddress::ArrayNewData:
       return "call to native array.new_data function";

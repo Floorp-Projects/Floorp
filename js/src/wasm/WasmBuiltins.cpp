@@ -326,21 +326,39 @@ const SymbolicAddressSignature SASigThrowException = {
     _FailOnNegI32,
     2,
     {_PTR, _RoN, _END}};
-const SymbolicAddressSignature SASigStructNew = {
-    SymbolicAddress::StructNew, _RoN, _FailOnNullPtr, 2, {_PTR, _PTR, _END}};
-const SymbolicAddressSignature SASigStructNewUninit = {
-    SymbolicAddress::StructNewUninit,
+const SymbolicAddressSignature SASigStructNewIL_true = {
+    SymbolicAddress::StructNewIL_true,
     _RoN,
     _FailOnNullPtr,
     2,
     {_PTR, _PTR, _END}};
-const SymbolicAddressSignature SASigArrayNew = {SymbolicAddress::ArrayNew,
-                                                _RoN,
-                                                _FailOnNullPtr,
-                                                3,
-                                                {_PTR, _I32, _PTR, _END}};
-const SymbolicAddressSignature SASigArrayNewUninit = {
-    SymbolicAddress::ArrayNewUninit,
+const SymbolicAddressSignature SASigStructNewIL_false = {
+    SymbolicAddress::StructNewIL_false,
+    _RoN,
+    _FailOnNullPtr,
+    2,
+    {_PTR, _PTR, _END}};
+const SymbolicAddressSignature SASigStructNewOOL_true = {
+    SymbolicAddress::StructNewOOL_true,
+    _RoN,
+    _FailOnNullPtr,
+    2,
+    {_PTR, _PTR, _END}};
+const SymbolicAddressSignature SASigStructNewOOL_false = {
+    SymbolicAddress::StructNewOOL_false,
+    _RoN,
+    _FailOnNullPtr,
+    2,
+    {_PTR, _PTR, _END}};
+
+const SymbolicAddressSignature SASigArrayNew_true = {
+    SymbolicAddress::ArrayNew_true,
+    _RoN,
+    _FailOnNullPtr,
+    3,
+    {_PTR, _I32, _PTR, _END}};
+const SymbolicAddressSignature SASigArrayNew_false = {
+    SymbolicAddress::ArrayNew_false,
     _RoN,
     _FailOnNullPtr,
     3,
@@ -1347,22 +1365,30 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Int32_GeneralGeneralInt32General;
       MOZ_ASSERT(*abiType == ToABIType(SASigPostBarrierPreciseWithOffset));
       return FuncCast(Instance::postBarrierPreciseWithOffset, *abiType);
-    case SymbolicAddress::StructNew:
+    case SymbolicAddress::StructNewIL_true:
       *abiType = Args_General2;
-      MOZ_ASSERT(*abiType == ToABIType(SASigStructNew));
-      return FuncCast(Instance::structNew, *abiType);
-    case SymbolicAddress::StructNewUninit:
+      MOZ_ASSERT(*abiType == ToABIType(SASigStructNewIL_true));
+      return FuncCast(Instance::structNewIL<true>, *abiType);
+    case SymbolicAddress::StructNewIL_false:
       *abiType = Args_General2;
-      MOZ_ASSERT(*abiType == ToABIType(SASigStructNewUninit));
-      return FuncCast(Instance::structNewUninit, *abiType);
-    case SymbolicAddress::ArrayNew:
+      MOZ_ASSERT(*abiType == ToABIType(SASigStructNewIL_false));
+      return FuncCast(Instance::structNewIL<false>, *abiType);
+    case SymbolicAddress::StructNewOOL_true:
+      *abiType = Args_General2;
+      MOZ_ASSERT(*abiType == ToABIType(SASigStructNewOOL_true));
+      return FuncCast(Instance::structNewOOL<true>, *abiType);
+    case SymbolicAddress::StructNewOOL_false:
+      *abiType = Args_General2;
+      MOZ_ASSERT(*abiType == ToABIType(SASigStructNewOOL_false));
+      return FuncCast(Instance::structNewOOL<false>, *abiType);
+    case SymbolicAddress::ArrayNew_true:
       *abiType = Args_General_GeneralInt32General;
-      MOZ_ASSERT(*abiType == ToABIType(SASigArrayNew));
-      return FuncCast(Instance::arrayNew, *abiType);
-    case SymbolicAddress::ArrayNewUninit:
+      MOZ_ASSERT(*abiType == ToABIType(SASigArrayNew_true));
+      return FuncCast(Instance::arrayNew<true>, *abiType);
+    case SymbolicAddress::ArrayNew_false:
       *abiType = Args_General_GeneralInt32General;
-      MOZ_ASSERT(*abiType == ToABIType(SASigArrayNewUninit));
-      return FuncCast(Instance::arrayNewUninit, *abiType);
+      MOZ_ASSERT(*abiType == ToABIType(SASigArrayNew_false));
+      return FuncCast(Instance::arrayNew<false>, *abiType);
     case SymbolicAddress::ArrayNewData:
       *abiType = Args_General_GeneralInt32Int32GeneralInt32;
       MOZ_ASSERT(*abiType == ToABIType(SASigArrayNewData));
@@ -1553,10 +1579,12 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::PostBarrierPreciseWithOffset:
     case SymbolicAddress::ExceptionNew:
     case SymbolicAddress::ThrowException:
-    case SymbolicAddress::StructNew:
-    case SymbolicAddress::StructNewUninit:
-    case SymbolicAddress::ArrayNew:
-    case SymbolicAddress::ArrayNewUninit:
+    case SymbolicAddress::StructNewIL_true:
+    case SymbolicAddress::StructNewIL_false:
+    case SymbolicAddress::StructNewOOL_true:
+    case SymbolicAddress::StructNewOOL_false:
+    case SymbolicAddress::ArrayNew_true:
+    case SymbolicAddress::ArrayNew_false:
     case SymbolicAddress::ArrayNewData:
     case SymbolicAddress::ArrayNewElem:
     case SymbolicAddress::ArrayCopy:
