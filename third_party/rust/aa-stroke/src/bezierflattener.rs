@@ -826,3 +826,5 @@ fn GetLastTangent(&self) -> GpPointR
     return vecTangent;
 }
 }
+
+
