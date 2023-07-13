@@ -393,6 +393,135 @@ add_task(async function test_aboutwelcome_gratitude() {
   await cleanup();
 });
 
+add_task(async function test_aboutwelcome_addonspicker() {
+  const TEST_CONTENT = [
+    {
+      id: "AW_ADDONS_PICKER",
+      content: {
+        position: "center",
+        tiles: {
+          type: "addons-picker",
+          data: [
+            {
+              id: "addon-one-id",
+              label: "uBlock Origin",
+              icon: "",
+              type: "extension",
+              description: "An efficient wide-spectrum content blocker.",
+              source_id: "ADD_EXTENSION_BUTTON",
+              action: {
+                type: "INSTALL_ADDON_FROM_URL",
+                data: {
+                  url: "https://test.xpi",
+                  telemetrySource: "aboutwelcome-addon",
+                },
+              },
+            },
+            {
+              id: "addon-two-id",
+              label: "Tree-Style Tabs",
+              icon: "",
+              type: "extension",
+              description: "Show tabs like a tree.",
+              source_id: "ADD_EXTENSION_BUTTON",
+              action: {
+                type: "INSTALL_ADDON_FROM_URL",
+                data: {
+                  url: "https://test.xpi",
+                  telemetrySource: "aboutwelcome-addon",
+                },
+              },
+            },
+          ],
+        },
+        progress_bar: true,
+        logo: {},
+        title: {
+          raw: "Customize your Firefox",
+        },
+        subtitle: {
+          raw: "Extensions and themes are like apps for your browser, and they let you protect passwords, download videos, find deals, block annoying ads, change how your browser looks, and much more.",
+        },
+        additional_button: {
+          label: {
+            raw: "Explore more add-ons",
+          },
+          style: "link",
+          action: {
+            type: "OPEN_URL",
+            data: {
+              args: "https://test.xpi",
+              where: "tab",
+            },
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id: "mr2-onboarding-start-browsing-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+  ];
+
+  await setAboutWelcomeMultiStage(JSON.stringify(TEST_CONTENT)); // NB: calls SpecialPowers.pushPrefEnv
+  let { cleanup, browser } = await openMRAboutWelcome();
+  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+  const messageSandbox = sinon.createSandbox();
+  registerCleanupFunction(() => {
+    messageSandbox.restore();
+  });
+  // Stub AboutWelcomeParent's Content Message Handler
+  const messageStub = messageSandbox.stub(
+    aboutWelcomeActor,
+    "onContentMessage"
+  );
+
+  // execution
+  await test_screen_content(
+    browser,
+    "renders the addons-picker screen and tiles",
+    //Expected selectors
+    [
+      "main.AW_ADDONS_PICKER",
+      "div.addons-picker-container",
+      "button[value='secondary_button']",
+      "button[value='additional_button']",
+    ],
+
+    //Unexpected selectors:
+    ["button[value='primary_button']"]
+  );
+  await clickVisibleButton(browser, ".addon-container button[value='0']"); //click the first install button
+
+  const { callCount } = messageStub;
+
+  ok(
+    callCount === 2,
+    `${callCount} Stub called twice to install extension and send telemetry`
+  );
+
+  const installExtensionCall = messageStub.getCall(0);
+  Assert.equal(
+    installExtensionCall.args[0],
+    "AWPage:SPECIAL_ACTION",
+    "send special action to install add on"
+  );
+  Assert.equal(
+    installExtensionCall.args[1].type,
+    "INSTALL_ADDON_FROM_URL",
+    "Special action type is INSTALL_ADDON_FROM_URL"
+  );
+
+  // cleanup
+  await SpecialPowers.popPrefEnv(); // for setAboutWelcomeMultiStage
+  await cleanup();
+  messageSandbox.restore();
+});
+
 add_task(async function test_aboutwelcome_embedded_migration() {
   // Let's make sure at least one migrator is available and enabled - the
   // InternalTestingProfileMigrator.
