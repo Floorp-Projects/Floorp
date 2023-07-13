@@ -103,16 +103,8 @@ class AimdRateControl {
   // Allow the delay based estimate to only increase as long as application
   // limited region (alr) is not detected.
   const bool no_bitrate_increase_in_alr_;
-  // If false, uses estimated link capacity upper bound *
-  // `estimate_bounded_increase_ratio_` as upper limit for the estimate.
+  // If "Disabled",  estimated link capacity is not used as upper bound.
   FieldTrialFlag disable_estimate_bounded_increase_{"Disabled"};
-  FieldTrialParameter<double> estimate_bounded_increase_ratio_{"ratio", 1.0};
-  FieldTrialParameter<bool> ignore_throughput_limit_if_network_estimate_{
-      "ignore_acked", false};
-  FieldTrialParameter<bool> increase_to_network_estimate_{"immediate_incr",
-                                                          false};
-  FieldTrialParameter<bool> ignore_network_estimate_decrease_{"ignore_decr",
-                                                              false};
   absl::optional<DataRate> last_decrease_;
   FieldTrialOptional<TimeDelta> initial_backoff_interval_;
   FieldTrialFlag link_capacity_fix_;
