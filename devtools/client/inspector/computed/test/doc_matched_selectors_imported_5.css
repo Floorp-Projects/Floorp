@@ -1,0 +1,10 @@
+@import url(./doc_matched_selectors_imported_6.css) layer(importedSecond);
+
+#imported-layers {
+  --imported-layers_in-anonymous-second: var(--winning-color);
+  background-color: var(--imported-layers_in-anonymous-second);
+}
+
+#all-important-imported-layers {
+  background-color: var(--all-important-imported-layers_in-anonymous-second-important) !important;
+}
