@@ -51,11 +51,6 @@
 #  include <windows.h>
 #endif
 
-#ifdef XP_MACOSX
-// for qos controls
-#  include <sys/qos.h>
-#endif
-
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -135,9 +130,6 @@ class HangMonitorChild : public PProcessHangMonitorChild,
       const mozilla::Maybe<nsCString>& aNavigationURI,
       const int32_t& aEpoch) override;
 
-  mozilla::ipc::IPCResult RecvSetMainThreadQoSPriority(
-      const nsIThread::QoSPriority& aQoSPriority) override;
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   bool InterruptCallback();
@@ -170,14 +162,6 @@ class HangMonitorChild : public PProcessHangMonitorChild,
       MOZ_GUARDED_BY(sMainThreadCapability);
 
   const RefPtr<ProcessHangMonitor> mHangMonitor;
-
-#ifdef XP_MACOSX
-  // On macOS, the pthread_t is required to start a QoS class override. As we
-  // can't recover this from a PRThread*, we need to record it when the
-  // HangMonitorChild is initially created on the main thread.
-  const pthread_t mMainPThread;
-#endif
-
   Monitor mMonitor;
 
   // Main thread-only.
@@ -292,8 +276,6 @@ class HangMonitorParent : public PProcessHangMonitorParent {
       nsIRemoteTab::NavigationType aNavigationType,
       const dom::CancelContentJSOptions& aCancelContentJSOptions);
 
-  void SetMainThreadQoSPriority(nsIThread::QoSPriority aQoSPriority);
-
   void TerminateScript();
   void BeginStartingDebugger();
   void EndStartingDebugger();
@@ -316,8 +298,6 @@ class HangMonitorParent : public PProcessHangMonitorParent {
   void CancelContentJSExecutionIfRunningOnThread(
       TabId aTabId, nsIRemoteTab::NavigationType aNavigationType,
       int32_t aNavigationIndex, nsIURI* aNavigationURI, int32_t aEpoch);
-
-  void SetMainThreadQoSPriorityOnThread(nsIThread::QoSPriority aQoSPriority);
 
   void ShutdownOnThread();
 
@@ -348,9 +328,6 @@ class HangMonitorParent : public PProcessHangMonitorParent {
 
 HangMonitorChild::HangMonitorChild(ProcessHangMonitor* aMonitor)
     : mHangMonitor(aMonitor),
-#ifdef XP_MACOSX
-      mMainPThread(pthread_self()),
-#endif
       mMonitor("HangMonitorChild lock"),
       mSentReport(false),
       mTerminateScript(false),
@@ -665,41 +642,6 @@ mozilla::ipc::IPCResult HangMonitorChild::RecvCancelContentJSExecutionIfRunning(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult HangMonitorChild::RecvSetMainThreadQoSPriority(
-    const nsIThread::QoSPriority& aQoSPriority) {
-  MOZ_RELEASE_ASSERT(IsOnThread());
-
-#ifdef XP_MACOSX
-  // If the new priority is the background (low) priority, we can tell the OS to
-  // put the main thread on low-power cores. Alternately, if we are changing
-  // from the background to a higher priority, we change the main thread back to
-  // the |user-interactive| state, defined in MacOS's QoS documentation as
-  // reserved for main threads.
-  qos_class_t qosClass = aQoSPriority == nsIThread::QOS_PRIORITY_LOW
-                             ? QOS_CLASS_BACKGROUND
-                             : QOS_CLASS_USER_INTERACTIVE;
-
-  // We can't directly set the main thread's QoS class from off-main-thread.
-  // However, we can start a QoS class override to raise the QoS, then dispatch
-  // a runnable to set the QoS class and clear the override once complete.
-  pthread_override_t qosOverride =
-      pthread_override_qos_class_start_np(mMainPThread, qosClass, 0);
-  if (NS_FAILED(NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "HangMonitorChild::RecvSetMainThreadQoSPriority",
-          [qosClass, qosOverride] {
-            pthread_set_qos_class_self_np(qosClass, 0);
-            if (qosOverride) {
-              pthread_override_qos_class_end_np(qosOverride);
-            }
-          })))) {
-    // If we fail to dispatch, go ahead and end the override anyway.
-    pthread_override_qos_class_end_np(qosOverride);
-  }
-#endif
-
-  return IPC_OK();
-}
-
 void HangMonitorChild::Bind(Endpoint<PProcessHangMonitorChild>&& aEndpoint) {
   MOZ_RELEASE_ASSERT(IsOnThread());
 
@@ -926,27 +868,6 @@ void HangMonitorParent::CancelContentJSExecutionIfRunningOnThread(
     Unused << SendCancelContentJSExecutionIfRunning(
         aTabId, aNavigationType, aNavigationIndex, spec, aEpoch);
   }
-}
-
-void HangMonitorParent::SetMainThreadQoSPriority(
-    nsIThread::QoSPriority aQoSPriority) {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-#ifdef XP_MACOSX  // Should not be using outside of MacOS.
-
-  Dispatch(NewNonOwningRunnableMethod<nsIThread::QoSPriority>(
-      "HangMonitorParent::SetMainThreadQoSPriorityOnThread", this,
-      &HangMonitorParent::SetMainThreadQoSPriorityOnThread, aQoSPriority));
-#endif
-}
-
-void HangMonitorParent::SetMainThreadQoSPriorityOnThread(
-    nsIThread::QoSPriority aQoSPriority) {
-  MOZ_RELEASE_ASSERT(IsOnThread());
-#ifdef XP_MACOSX
-  if (mIPCOpen) {
-    Unused << SendSetMainThreadQoSPriority(aQoSPriority);
-  }
-#endif
 }
 
 void HangMonitorParent::ActorDestroy(ActorDestroyReason aWhy) {
@@ -1215,14 +1136,6 @@ ProcessHangMonitor::ProcessHangMonitor() : mCPOWTimeout(false) {
   if (NS_FAILED(NS_NewNamedThread("ProcessHangMon", getter_AddRefs(mThread)))) {
     mThread = nullptr;
   }
-#ifdef XP_MACOSX
-  // On MacOS, ensure the priority is high enough to handle dispatches at
-  // high cpu load. USER_INITIATED class threads are prioritized just below
-  // the main thread.
-  mThread->Dispatch(NS_NewRunnableFunction(
-      "ProcessHangMonitor::SetPriority",
-      [] { pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0); }));
-#endif
 }
 
 ProcessHangMonitor::~ProcessHangMonitor() {
@@ -1417,12 +1330,4 @@ void ProcessHangMonitor::CancelContentJSExecutionIfRunning(
   auto* parent = static_cast<HangMonitorParent*>(aParent);
   parent->CancelContentJSExecutionIfRunning(aBrowserParent, aNavigationType,
                                             aCancelContentJSOptions);
-}
-
-/* static */
-void ProcessHangMonitor::SetMainThreadQoSPriority(
-    PProcessHangMonitorParent* aParent, nsIThread::QoSPriority aQoSPriority) {
-  ReleaseAssertIsOnMainThread();
-  auto* parent = static_cast<HangMonitorParent*>(aParent);
-  parent->SetMainThreadQoSPriority(aQoSPriority);
 }
