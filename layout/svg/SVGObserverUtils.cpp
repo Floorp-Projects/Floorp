@@ -12,6 +12,7 @@
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/SVGGeometryElement.h"
+#include "mozilla/dom/SVGMPathElement.h"
 #include "mozilla/dom/SVGTextPathElement.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "mozilla/PresShell.h"
@@ -117,11 +118,8 @@ static already_AddRefed<URLAndReferrerInfo> ResolveURLUsingLocalRef(
 }
 
 static already_AddRefed<URLAndReferrerInfo> ResolveURLUsingLocalRef(
-    nsIFrame* aFrame, const nsAString& aURL, nsIReferrerInfo* aReferrerInfo) {
-  MOZ_ASSERT(aFrame);
-
-  nsIContent* content = aFrame->GetContent();
-
+    nsIContent* aContent, const nsAString& aURL,
+    nsIReferrerInfo* aReferrerInfo) {
   // Like SVGObserverUtils::GetBaseURLForLocalRef, we want to resolve the
   // URL against any <use> element shadow tree's source document.
   //
@@ -132,14 +130,14 @@ static already_AddRefed<URLAndReferrerInfo> ResolveURLUsingLocalRef(
   // outside the shadow tree.
   nsIURI* base = nullptr;
   const Encoding* encoding = nullptr;
-  if (SVGUseElement* use = content->GetContainingSVGUseShadowHost()) {
+  if (SVGUseElement* use = aContent->GetContainingSVGUseShadowHost()) {
     base = use->GetSourceDocURI();
     encoding = use->GetSourceDocCharacterSet();
   }
 
   if (!base) {
-    base = content->OwnerDoc()->GetDocumentURI();
-    encoding = content->OwnerDoc()->GetDocumentCharacterSet();
+    base = aContent->OwnerDoc()->GetDocumentURI();
+    encoding = aContent->OwnerDoc()->GetDocumentCharacterSet();
   }
 
   nsCOMPtr<nsIURI> uri;
@@ -151,6 +149,13 @@ static already_AddRefed<URLAndReferrerInfo> ResolveURLUsingLocalRef(
 
   RefPtr<URLAndReferrerInfo> info = new URLAndReferrerInfo(uri, aReferrerInfo);
   return info.forget();
+}
+
+static already_AddRefed<URLAndReferrerInfo> ResolveURLUsingLocalRef(
+    nsIFrame* aFrame, const nsAString& aURL, nsIReferrerInfo* aReferrerInfo) {
+  MOZ_ASSERT(aFrame);
+
+  return ResolveURLUsingLocalRef(aFrame->GetContent(), aURL, aReferrerInfo);
 }
 
 class SVGFilterObserverList;
@@ -314,6 +319,8 @@ class SVGIDRenderingObserver : public SVGRenderingObserver {
       bool aReferenceImage,
       TargetIsValidCallback aTargetIsValidCallback = nullptr);
 
+  void Traverse(nsCycleCollectionTraversalCallback* aCB);
+
  protected:
   virtual ~SVGIDRenderingObserver() {
     // This needs to call our GetReferencedElementWithoutObserving override,
@@ -424,6 +431,12 @@ SVGIDRenderingObserver::SVGIDRenderingObserver(
   StartObserving();
 }
 
+void SVGIDRenderingObserver::Traverse(nsCycleCollectionTraversalCallback* aCB) {
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCB, "mObservingContent");
+  aCB->NoteXPCOMChild(mObservingContent);
+  mObservedElementTracker.Traverse(aCB);
+}
+
 void SVGIDRenderingObserver::OnRenderingChange() {
   if (mObservedElementTracker.get() && mInObserverSet) {
     SVGObserverUtils::RemoveRenderingObserver(mObservedElementTracker.get(),
@@ -518,6 +531,32 @@ void SVGTextPathObserver::OnRenderingChange() {
       text->ScheduleReflowSVG();
     }
   }
+}
+
+class SVGMPathObserver final : public SVGIDRenderingObserver {
+ public:
+  NS_DECL_ISUPPORTS
+
+  SVGMPathObserver(URLAndReferrerInfo* aURI, SVGMPathElement* aElement)
+      : SVGIDRenderingObserver(aURI, aElement, /* aReferenceImage = */ false) {}
+
+ protected:
+  virtual ~SVGMPathObserver() = default;  // non-public
+
+  void OnRenderingChange() override;
+};
+
+NS_IMPL_ISUPPORTS(SVGMPathObserver, nsIMutationObserver)
+
+void SVGMPathObserver::OnRenderingChange() {
+  SVGIDRenderingObserver::OnRenderingChange();
+
+  if (!mTargetIsValid) {
+    return;
+  }
+
+  auto* element = static_cast<SVGMPathElement*>(mObservingContent.get());
+  element->NotifyParentOfMpathChange();
 }
 
 class SVGMarkerObserver final : public SVGRenderingObserverProperty {
@@ -1454,6 +1493,40 @@ SVGGeometryElement* SVGObserverUtils::GetAndObserveTextPathsPath(
 
   return SVGGeometryElement::FromNodeOrNull(
       property->GetAndObserveReferencedElement());
+}
+
+SVGGeometryElement* SVGObserverUtils::GetAndObserveMPathsPath(
+    SVGMPathElement* aSVGMPathElement) {
+  if (!aSVGMPathElement->mMPathObserver) {
+    nsAutoString href;
+    aSVGMPathElement->HrefAsString(href);
+    if (href.IsEmpty()) {
+      return nullptr;  // no URL
+    }
+
+    nsIReferrerInfo* referrerInfo =
+        aSVGMPathElement->OwnerDoc()
+            ->ReferrerInfoForInternalCSSAndSVGResources();
+
+    RefPtr<URLAndReferrerInfo> target =
+        ResolveURLUsingLocalRef(aSVGMPathElement, href, referrerInfo);
+
+    aSVGMPathElement->mMPathObserver =
+        new SVGMPathObserver(target, aSVGMPathElement);
+  }
+
+  return SVGGeometryElement::FromNodeOrNull(
+      static_cast<SVGMPathObserver*>(aSVGMPathElement->mMPathObserver.get())
+          ->GetAndObserveReferencedElement());
+}
+
+void SVGObserverUtils::TraverseMPathObserver(
+    SVGMPathElement* aSVGMPathElement,
+    nsCycleCollectionTraversalCallback* aCB) {
+  if (aSVGMPathElement->mMPathObserver) {
+    static_cast<SVGMPathObserver*>(aSVGMPathElement->mMPathObserver.get())
+        ->Traverse(aCB);
+  }
 }
 
 void SVGObserverUtils::InitiateResourceDocLoads(nsIFrame* aFrame) {
