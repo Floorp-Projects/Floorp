@@ -41,11 +41,9 @@ enum { kTimestampGroupLengthMs = 5 };
 static const double kTimestampToMs = 1.0 / 90.0;
 
 struct RemoteBitrateEstimatorSingleStream::Detector {
-  explicit Detector(int64_t last_packet_time_ms,
-                    const FieldTrialsView* key_value_config)
+  explicit Detector(int64_t last_packet_time_ms)
       : last_packet_time_ms(last_packet_time_ms),
-        inter_arrival(90 * kTimestampGroupLengthMs, kTimestampToMs),
-        detector(key_value_config) {}
+        inter_arrival(90 * kTimestampGroupLengthMs, kTimestampToMs) {}
 
   int64_t last_packet_time_ms;
   InterArrival inter_arrival;
@@ -99,8 +97,7 @@ void RemoteBitrateEstimatorSingleStream::IncomingPacket(
     // automatically cleaned up when we have one RemoteBitrateEstimator per REMB
     // group.
     std::pair<SsrcOveruseEstimatorMap::iterator, bool> insert_result =
-        overuse_detectors_.insert(
-            std::make_pair(ssrc, new Detector(now_ms, &field_trials_)));
+        overuse_detectors_.insert(std::make_pair(ssrc, new Detector(now_ms)));
     it = insert_result.first;
   }
   Detector* estimator = it->second;

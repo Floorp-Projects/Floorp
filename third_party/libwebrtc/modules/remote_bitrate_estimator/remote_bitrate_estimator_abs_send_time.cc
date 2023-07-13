@@ -97,10 +97,7 @@ void RemoteBitrateEstimatorAbsSendTime::MaybeAddCluster(
 RemoteBitrateEstimatorAbsSendTime::RemoteBitrateEstimatorAbsSendTime(
     RemoteBitrateObserver* observer,
     Clock* clock)
-    : clock_(clock),
-      observer_(observer),
-      detector_(&field_trials_),
-      remote_rate_(&field_trials_) {
+    : clock_(clock), observer_(observer), remote_rate_(&field_trials_) {
   RTC_DCHECK(clock_);
   RTC_DCHECK(observer_);
   RTC_LOG(LS_INFO) << "RemoteBitrateEstimatorAbsSendTime: Instantiating.";
