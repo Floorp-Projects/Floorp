@@ -26,9 +26,11 @@
 #include "pc/test/fake_data_channel_controller.h"
 #include "rtc_base/copy_on_write_buffer.h"
 #include "rtc_base/gunit.h"
+#include "rtc_base/null_socket_server.h"
 #include "rtc_base/ssl_stream_adapter.h"
 #include "rtc_base/thread.h"
 #include "test/gtest.h"
+#include "test/run_loop.h"
 
 namespace webrtc {
 
@@ -71,12 +73,18 @@ class FakeDataChannelObserver : public DataChannelObserver {
   size_t on_buffered_amount_change_count_;
 };
 
-// TODO(bugs.webrtc.org/11547): Incorporate a dedicated network thread.
 class SctpDataChannelTest : public ::testing::Test {
  protected:
   SctpDataChannelTest()
-      : controller_(new FakeDataChannelController()),
-        webrtc_data_channel_(controller_->CreateDataChannel("test", init_)) {}
+      : network_thread_(std::make_unique<rtc::NullSocketServer>()),
+        controller_(new FakeDataChannelController(&network_thread_)),
+        webrtc_data_channel_(controller_->CreateDataChannel("test", init_)) {
+    network_thread_.Start();
+  }
+  ~SctpDataChannelTest() override {
+    run_loop_.Flush();
+    network_thread_.Stop();
+  }
 
   void SetChannelReady() {
     controller_->set_transport_available(true);
@@ -92,7 +100,8 @@ class SctpDataChannelTest : public ::testing::Test {
     webrtc_data_channel_->RegisterObserver(observer_.get());
   }
 
-  rtc::AutoThread main_thread_;
+  test::RunLoop run_loop_;
+  rtc::Thread network_thread_;
   InternalDataChannelInit init_;
   std::unique_ptr<FakeDataChannelController> controller_;
   std::unique_ptr<FakeDataChannelObserver> observer_;
@@ -154,6 +163,10 @@ TEST_F(SctpDataChannelTest, StateTransition) {
   // `Close()` should trigger two state changes, first `kClosing`, then
   // `kClose`.
   webrtc_data_channel_->Close();
+  // The (simulated) transport close notifications runs on the network thread
+  // and posts a completion notification to the signaling (current) thread.
+  // Allow that ooperation to complete before checking the state.
+  run_loop_.Flush();
   EXPECT_EQ(DataChannelInterface::kClosed, webrtc_data_channel_->state());
   EXPECT_EQ(observer_->on_state_change_count(), 3u);
   EXPECT_TRUE(webrtc_data_channel_->error().ok());

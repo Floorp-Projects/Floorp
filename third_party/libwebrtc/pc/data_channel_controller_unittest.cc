@@ -15,6 +15,7 @@
 #include "pc/peer_connection_internal.h"
 #include "pc/sctp_data_channel.h"
 #include "pc/test/mock_peer_connection_internal.h"
+#include "rtc_base/null_socket_server.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/run_loop.h"
@@ -44,17 +45,22 @@ class MockDataChannelTransport : public webrtc::DataChannelTransportInterface {
 
 class DataChannelControllerTest : public ::testing::Test {
  protected:
-  DataChannelControllerTest() {
+  DataChannelControllerTest()
+      : network_thread_(std::make_unique<rtc::NullSocketServer>()) {
+    network_thread_.Start();
     pc_ = rtc::make_ref_counted<NiceMock<MockPeerConnectionInternal>>();
     ON_CALL(*pc_, signaling_thread)
         .WillByDefault(Return(rtc::Thread::Current()));
-    // TODO(tommi): Return a dedicated thread.
-    ON_CALL(*pc_, network_thread).WillByDefault(Return(rtc::Thread::Current()));
+    ON_CALL(*pc_, network_thread).WillByDefault(Return(&network_thread_));
   }
 
-  ~DataChannelControllerTest() override { run_loop_.Flush(); }
+  ~DataChannelControllerTest() override {
+    run_loop_.Flush();
+    network_thread_.Stop();
+  }
 
   test::RunLoop run_loop_;
+  rtc::Thread network_thread_;
   rtc::scoped_refptr<NiceMock<MockPeerConnectionInternal>> pc_;
 };
 

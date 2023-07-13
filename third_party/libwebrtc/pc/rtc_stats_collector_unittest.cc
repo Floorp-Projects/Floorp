@@ -670,7 +670,8 @@ class RTCStatsCollectorTest : public ::testing::Test {
   RTCStatsCollectorTest()
       : pc_(rtc::make_ref_counted<FakePeerConnectionForStats>()),
         stats_(new RTCStatsCollectorWrapper(pc_)),
-        data_channel_controller_(new FakeDataChannelController()) {}
+        data_channel_controller_(
+            new FakeDataChannelController(pc_->network_thread())) {}
 
   void ExpectReportContainsCertificateInfo(
       const rtc::scoped_refptr<const RTCStatsReport>& report,
@@ -2122,8 +2123,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCPeerConnectionStats) {
     EXPECT_EQ(expected, report->Get("P")->cast_to<RTCPeerConnectionStats>());
   }
 
-  // TODO(bugs.webrtc.org/11547): Supply a separate network thread.
-  FakeDataChannelController controller;
+  FakeDataChannelController controller(pc_->network_thread());
   rtc::scoped_refptr<SctpDataChannel> dummy_channel_a = SctpDataChannel::Create(
       controller.weak_ptr(), "DummyChannelA", false, InternalDataChannelInit(),
       rtc::Thread::Current(), rtc::Thread::Current());

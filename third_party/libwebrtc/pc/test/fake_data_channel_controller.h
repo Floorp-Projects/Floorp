@@ -21,8 +21,10 @@
 class FakeDataChannelController
     : public webrtc::SctpDataChannelControllerInterface {
  public:
-  FakeDataChannelController()
-      : send_blocked_(false),
+  explicit FakeDataChannelController(rtc::Thread* network_thread)
+      : signaling_thread_(rtc::Thread::Current()),
+        network_thread_(network_thread),
+        send_blocked_(false),
         transport_available_(false),
         ready_to_send_(false),
         transport_error_(false) {}
@@ -34,15 +36,13 @@ class FakeDataChannelController
 
   rtc::scoped_refptr<webrtc::SctpDataChannel> CreateDataChannel(
       absl::string_view label,
-      webrtc::InternalDataChannelInit init,
-      rtc::Thread* network_thread = rtc::Thread::Current()) {
-    rtc::Thread* signaling_thread = rtc::Thread::Current();
+      webrtc::InternalDataChannelInit init) {
     rtc::scoped_refptr<webrtc::SctpDataChannel> channel =
         webrtc::SctpDataChannel::Create(weak_ptr(), std::string(label),
                                         transport_available_, init,
-                                        signaling_thread, network_thread);
+                                        signaling_thread_, network_thread_);
     if (ReadyToSendData()) {
-      signaling_thread->PostTask(
+      signaling_thread_->PostTask(
           SafeTask(signaling_safety_.flag(), [channel = channel] {
             if (channel->state() !=
                 webrtc::DataChannelInterface::DataState::kClosed) {
@@ -73,6 +73,7 @@ class FakeDataChannelController
   }
 
   void AddSctpDataStream(webrtc::StreamId sid) override {
+    RTC_DCHECK_RUN_ON(network_thread_);
     RTC_CHECK(sid.HasValue());
     if (!transport_available_) {
       return;
@@ -81,16 +82,19 @@ class FakeDataChannelController
   }
 
   void RemoveSctpDataStream(webrtc::StreamId sid) override {
+    RTC_DCHECK_RUN_ON(network_thread_);
     RTC_CHECK(sid.HasValue());
     known_stream_ids_.erase(sid);
-    // Unlike the real SCTP transport, act like the closing procedure finished
-    // instantly, doing the same snapshot thing as below.
-    auto it = absl::c_find_if(connected_channels_,
-                              [&](const auto* c) { return c->sid() == sid; });
-    // This path mimics the DCC's OnChannelClosed handler since the FDCC
-    // (this class) doesn't have a transport that would do that.
-    if (it != connected_channels_.end())
-      (*it)->OnClosingProcedureComplete();
+    signaling_thread_->PostTask(SafeTask(signaling_safety_.flag(), [this, sid] {
+      // Unlike the real SCTP transport, act like the closing procedure finished
+      // instantly.
+      auto it = absl::c_find_if(connected_channels_,
+                                [&](const auto* c) { return c->sid() == sid; });
+      // This path mimics the DCC's OnChannelClosed handler since the FDCC
+      // (this class) doesn't have a transport that would do that.
+      if (it != connected_channels_.end())
+        (*it)->OnClosingProcedureComplete();
+    }));
   }
 
   bool ReadyToSendData() const override { return ready_to_send_; }
@@ -159,6 +163,8 @@ class FakeDataChannelController
   int channels_closed() const { return channels_closed_; }
 
  private:
+  rtc::Thread* const signaling_thread_;
+  rtc::Thread* const network_thread_;
   int last_sid_;
   webrtc::SendDataParams last_send_data_params_;
   bool send_blocked_;

@@ -38,6 +38,10 @@ namespace webrtc {
 
 class SctpDataChannel;
 
+// Interface that acts as a bridge from the data channel to the transport.
+// TODO(bugs.webrtc.org/11547): The transport operates on the network thread
+// and ultimately all the methods in this interface need to be invoked on the
+// network thread. Currently, some are called on the signaling thread.
 class SctpDataChannelControllerInterface {
  public:
   // Sends the data to the transport.
@@ -45,9 +49,11 @@ class SctpDataChannelControllerInterface {
                             const SendDataParams& params,
                             const rtc::CopyOnWriteBuffer& payload) = 0;
   // Adds the data channel SID to the transport for SCTP.
+  // Note: Must be called on the network thread.
   virtual void AddSctpDataStream(StreamId sid) = 0;
   // Begins the closing procedure by sending an outgoing stream reset. Still
   // need to wait for callbacks to tell when this completes.
+  // Note: Must be called on the network thread.
   virtual void RemoveSctpDataStream(StreamId sid) = 0;
   // Returns true if the transport channel is ready to send data.
   virtual bool ReadyToSendData() const = 0;
