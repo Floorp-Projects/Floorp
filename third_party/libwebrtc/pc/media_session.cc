@@ -685,7 +685,9 @@ static bool CreateContentOffer(
         // TODO(crbug.com/1051821): Configure the extension direction from
         // the information in the media_description_options extension
         // capability.
-        extensions.push_back(extension_with_id);
+        if (extension.direction != RtpTransceiverDirection::kStopped) {
+          extensions.push_back(extension_with_id);
+        }
       }
     }
   }

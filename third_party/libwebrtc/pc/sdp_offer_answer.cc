@@ -815,8 +815,37 @@ bool ContentHasHeaderExtension(const cricket::ContentInfo& content_info,
 
 }  // namespace
 
+void UpdateRtpHeaderExtensionPreferencesFromSdpMunging(
+    const cricket::SessionDescription* description,
+    TransceiverList* transceivers) {
+  // This integrates the RTP Header Extension Control API and local SDP munging
+  // for backward compability reasons. If something was enabled in the local
+  // description via SDP munging, consider it non-stopped in the API as well
+  // so that is shows up in subsequent offers/answers.
+  RTC_DCHECK(description);
+  RTC_DCHECK(transceivers);
+  for (const auto& content : description->contents()) {
+    auto transceiver = transceivers->FindByMid(content.name);
+    if (!transceiver) {
+      continue;
+    }
+    auto extension_capabilities = transceiver->GetHeaderExtensionsToNegotiate();
+    // Set the capability of every extension we see here to "sendrecv".
+    for (auto& ext : content.media_description()->rtp_header_extensions()) {
+      auto it = absl::c_find_if(extension_capabilities,
+                                [&ext](const RtpHeaderExtensionCapability c) {
+                                  return ext.uri == c.uri;
+                                });
+      if (it != extension_capabilities.end()) {
+        it->direction = RtpTransceiverDirection::kSendRecv;
+      }
+    }
+    transceiver->SetHeaderExtensionsToNegotiate(extension_capabilities);
+  }
+}
+
 // This class stores state related to a SetRemoteDescription operation, captures
-// and reports potential errors that migth occur and makes sure to notify the
+// and reports potential errors that might occur and makes sure to notify the
 // observer of the operation and the operations chain of completion.
 class SdpOfferAnswerHandler::RemoteDescriptionOperation {
  public:
@@ -1814,6 +1843,11 @@ RTCError SdpOfferAnswerHandler::ApplyLocalDescription(
       local_ice_credentials_to_replace_->SatisfiesIceRestart(
           *current_local_description_)) {
     local_ice_credentials_to_replace_->ClearIceCredentials();
+  }
+
+  if (IsUnifiedPlan()) {
+    UpdateRtpHeaderExtensionPreferencesFromSdpMunging(
+        local_description()->description(), transceivers());
   }
 
   return RTCError::OK();
