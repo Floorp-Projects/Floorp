@@ -72,7 +72,7 @@ class SourceVideoTrackListener : public MediaTrackListener {
 
 class DecodedStreamGraphListener {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecodedStreamGraphListener)
- public:
+ private:
   DecodedStreamGraphListener(
       nsISerialEventTarget* aDecoderThread, AudioDecoderInputTrack* aAudioTrack,
       MozPromiseHolder<DecodedStream::EndedPromise>&& aAudioEndedHolder,
@@ -90,6 +90,18 @@ class DecodedStreamGraphListener {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(mDecoderThread);
 
+    if (!mAudioTrack) {
+      mAudioEnded = true;
+      mAudioEndedHolder.ResolveIfExists(true, __func__);
+    }
+
+    if (!mVideoTrackListener) {
+      mVideoEnded = true;
+      mVideoEndedHolder.ResolveIfExists(true, __func__);
+    }
+  }
+
+  void RegisterListeners() {
     if (mAudioTrack) {
       mOnAudioOutput = mAudioTrack->OnOutput().Connect(
           mDecoderThread,
@@ -100,17 +112,25 @@ class DecodedStreamGraphListener {
           mDecoderThread, [self = RefPtr<DecodedStreamGraphListener>(this)]() {
             self->NotifyEnded(MediaSegment::AUDIO);
           });
-    } else {
-      mAudioEnded = true;
-      mAudioEndedHolder.ResolveIfExists(true, __func__);
     }
 
     if (mVideoTrackListener) {
       mVideoTrack->AddListener(mVideoTrackListener);
-    } else {
-      mVideoEnded = true;
-      mVideoEndedHolder.ResolveIfExists(true, __func__);
     }
+  }
+
+ public:
+  static already_AddRefed<DecodedStreamGraphListener> Create(
+      nsISerialEventTarget* aDecoderThread, AudioDecoderInputTrack* aAudioTrack,
+      MozPromiseHolder<DecodedStream::EndedPromise>&& aAudioEndedHolder,
+      SourceMediaTrack* aVideoTrack,
+      MozPromiseHolder<DecodedStream::EndedPromise>&& aVideoEndedHolder) {
+    RefPtr<DecodedStreamGraphListener> listener =
+        new DecodedStreamGraphListener(
+            aDecoderThread, aAudioTrack, std::move(aAudioEndedHolder),
+            aVideoTrack, std::move(aVideoEndedHolder));
+    listener->RegisterListeners();
+    return listener.forget();
   }
 
   void Close() {
@@ -401,7 +421,7 @@ DecodedStreamData::DecodedStreamData(
       mAudioEndedPromise(aAudioEndedPromise.Ensure(__func__)),
       mVideoEndedPromise(aVideoEndedPromise.Ensure(__func__)),
       // DecodedStreamGraphListener will resolve these promises.
-      mListener(MakeRefPtr<DecodedStreamGraphListener>(
+      mListener(DecodedStreamGraphListener::Create(
           aDecoderThread, mAudioTrack, std::move(aAudioEndedPromise),
           mVideoTrack, std::move(aVideoEndedPromise))) {
   MOZ_ASSERT(NS_IsMainThread());
