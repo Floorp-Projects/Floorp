@@ -150,13 +150,15 @@ class VideoQualityAnalyzerInterface
   // call.
   virtual void UnregisterParticipantInCall(absl::string_view peer_name) {}
 
-  // Informs analyzer that peer `receiver_peer_name` shouldn't receive all
-  // streams from sender `sender_peer_name`.
+  // Informs analyzer that peer `receiver_peer_name` should not receive any
+  // stream from sender `sender_peer_name`.
+  // This method is a no-op if the sender or the receiver does not exist.
   virtual void OnPauseAllStreamsFrom(absl::string_view sender_peer_name,
                                      absl::string_view receiver_peer_name) {}
 
   // Informs analyzer that peer `receiver_peer_name` is expected to receive all
   // streams from `sender_peer_name`.
+  // This method is a no-op if the sender or the receiver does not exist.
   virtual void OnResumeAllStreamsFrom(absl::string_view sender_peer_name,
                                       absl::string_view receiver_peer_name) {}
 

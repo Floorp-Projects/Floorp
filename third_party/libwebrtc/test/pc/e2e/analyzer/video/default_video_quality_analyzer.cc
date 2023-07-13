@@ -723,14 +723,14 @@ void DefaultVideoQualityAnalyzer::OnPauseAllStreamsFrom(
     absl::string_view sender_peer_name,
     absl::string_view receiver_peer_name) {
   MutexLock lock(&mutex_);
-  RTC_CHECK(peers_->HasName(sender_peer_name));
-  size_t sender_peer_index = peers_->index(sender_peer_name);
-  RTC_CHECK(peers_->HasName(receiver_peer_name));
-  size_t receiver_peer_index = peers_->index(receiver_peer_name);
-
-  for (auto& [unused, stream_state] : stream_states_) {
-    if (stream_state.sender() == sender_peer_index) {
-      stream_state.GetPausableState(receiver_peer_index)->Pause();
+  if (peers_->HasName(sender_peer_name) &&
+      peers_->HasName(receiver_peer_name)) {
+    size_t sender_peer_index = peers_->index(sender_peer_name);
+    size_t receiver_peer_index = peers_->index(receiver_peer_name);
+    for (auto& [unused, stream_state] : stream_states_) {
+      if (stream_state.sender() == sender_peer_index) {
+        stream_state.GetPausableState(receiver_peer_index)->Pause();
+      }
     }
   }
 }
@@ -739,14 +739,14 @@ void DefaultVideoQualityAnalyzer::OnResumeAllStreamsFrom(
     absl::string_view sender_peer_name,
     absl::string_view receiver_peer_name) {
   MutexLock lock(&mutex_);
-  RTC_CHECK(peers_->HasName(sender_peer_name));
-  size_t sender_peer_index = peers_->index(sender_peer_name);
-  RTC_CHECK(peers_->HasName(receiver_peer_name));
-  size_t receiver_peer_index = peers_->index(receiver_peer_name);
-
-  for (auto& [unused, stream_state] : stream_states_) {
-    if (stream_state.sender() == sender_peer_index) {
-      stream_state.GetPausableState(receiver_peer_index)->Resume();
+  if (peers_->HasName(sender_peer_name) &&
+      peers_->HasName(receiver_peer_name)) {
+    size_t sender_peer_index = peers_->index(sender_peer_name);
+    size_t receiver_peer_index = peers_->index(receiver_peer_name);
+    for (auto& [unused, stream_state] : stream_states_) {
+      if (stream_state.sender() == sender_peer_index) {
+        stream_state.GetPausableState(receiver_peer_index)->Resume();
+      }
     }
   }
 }
