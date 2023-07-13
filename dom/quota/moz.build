@@ -100,6 +100,7 @@ UNIFIED_SOURCES += [
     "QuotaCommon.cpp",
     "QuotaManagerService.cpp",
     "QuotaObject.cpp",
+    "QuotaRequestBase.cpp",
     "QuotaRequests.cpp",
     "QuotaResults.cpp",
     "QuotaUsageRequestBase.cpp",
