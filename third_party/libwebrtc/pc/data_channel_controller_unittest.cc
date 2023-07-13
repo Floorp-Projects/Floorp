@@ -80,16 +80,16 @@ TEST_F(DataChannelControllerTest, CreateDataChannelEarlyRelease) {
 
 TEST_F(DataChannelControllerTest, CreateDataChannelEarlyClose) {
   DataChannelController dcc(pc_.get());
-  EXPECT_FALSE(dcc.HasDataChannels());
+  EXPECT_FALSE(dcc.HasDataChannelsForTest());
   EXPECT_FALSE(dcc.HasUsedDataChannels());
   auto ret = dcc.InternalCreateDataChannelWithProxy(
       "label", InternalDataChannelInit(DataChannelInit()));
   ASSERT_TRUE(ret.ok());
   auto channel = ret.MoveValue();
-  EXPECT_TRUE(dcc.HasDataChannels());
+  EXPECT_TRUE(dcc.HasDataChannelsForTest());
   EXPECT_TRUE(dcc.HasUsedDataChannels());
   channel->Close();
-  EXPECT_FALSE(dcc.HasDataChannels());
+  EXPECT_FALSE(dcc.HasDataChannelsForTest());
   EXPECT_TRUE(dcc.HasUsedDataChannels());
 }
 
@@ -126,7 +126,7 @@ TEST_F(DataChannelControllerTest, AsyncChannelCloseTeardown) {
   inner_channel->AddRef();
 
   channel = nullptr;  // dcc still holds a reference to `channel`.
-  EXPECT_TRUE(dcc.HasDataChannels());
+  EXPECT_TRUE(dcc.HasDataChannelsForTest());
 
   // Trigger a Close() for the channel. This will send events back to dcc,
   // eventually reaching `OnSctpDataChannelClosed` where dcc removes
@@ -134,7 +134,7 @@ TEST_F(DataChannelControllerTest, AsyncChannelCloseTeardown) {
   // the reference synchronously since that reference might be the last one.
   inner_channel->Close();
   // Now there should be no tracked data channels.
-  EXPECT_FALSE(dcc.HasDataChannels());
+  EXPECT_FALSE(dcc.HasDataChannelsForTest());
   // But there should be an async operation queued that still holds a reference.
   // That means that the test reference, must not be the last one.
   ASSERT_NE(inner_channel->Release(),

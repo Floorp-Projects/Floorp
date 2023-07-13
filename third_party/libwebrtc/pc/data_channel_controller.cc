@@ -35,7 +35,7 @@ DataChannelController::~DataChannelController() {
 #endif
 }
 
-bool DataChannelController::HasDataChannels() const {
+bool DataChannelController::HasDataChannelsForTest() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
   return !sctp_data_channels_.empty();
 }
