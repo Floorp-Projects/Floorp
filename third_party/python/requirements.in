@@ -9,7 +9,7 @@ colorama==0.4.5
 compare-locales==9.0.1
 cookies==2.2.1
 cram==0.7
-distro==1.4.0
+distro==1.8.0
 ecdsa==0.15
 esprima==4.0.1
 fluent.migrate==0.12.0
