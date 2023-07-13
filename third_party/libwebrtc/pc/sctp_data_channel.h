@@ -70,6 +70,11 @@ struct InternalDataChannelInit : public DataChannelInit {
   bool IsValid() const;
 
   OpenHandshakeRole open_handshake_role;
+  // Optional fallback or backup flag from PC that's used for non-prenegotiated
+  // stream ids in situations where we cannot determine the SSL role from the
+  // transport for purposes of generating a stream ID.
+  // See: https://www.rfc-editor.org/rfc/rfc8832.html#name-protocol-overview
+  absl::optional<rtc::SSLRole> fallback_ssl_role;
 };
 
 // Helper class to allocate unique IDs for SCTP DataChannels.

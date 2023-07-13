@@ -1394,14 +1394,17 @@ PeerConnection::CreateDataChannelOrError(const std::string& label,
 
   bool first_datachannel = !data_channel_controller_.HasUsedDataChannels();
 
-  std::unique_ptr<InternalDataChannelInit> internal_config;
+  InternalDataChannelInit internal_config;
   if (config) {
-    internal_config.reset(new InternalDataChannelInit(*config));
+    internal_config = InternalDataChannelInit(*config);
   }
+
+  internal_config.fallback_ssl_role = sdp_handler_->GuessSslRole();
+
   // TODO(bugs.webrtc.org/12796): Return a more specific error.
   rtc::scoped_refptr<DataChannelInterface> channel(
       data_channel_controller_.InternalCreateDataChannelWithProxy(
-          label, internal_config.get()));
+          label, internal_config));
   if (!channel.get()) {
     return RTCError(RTCErrorType::INTERNAL_ERROR,
                     "Data channel creation failed");
@@ -2229,50 +2232,10 @@ void PeerConnection::StopRtcEventLog_w() {
   }
 }
 
-bool PeerConnection::GetSctpSslRole(rtc::SSLRole* role) {
-  RTC_DCHECK_RUN_ON(signaling_thread());
-  if (!sctp_mid_s_ || !data_channel_controller_.data_channel_transport()) {
-    RTC_LOG(LS_INFO) << "Non-rejected SCTP m= section is needed to get the "
-                        "SSL Role of the SCTP transport.";
-    return false;
-  }
-
-  absl::optional<rtc::SSLRole> dtls_role = network_thread()->BlockingCall(
-      [this, is_caller = sdp_handler_->is_caller()] {
-        RTC_DCHECK_RUN_ON(network_thread());
-        return GetSctpSslRole_n(is_caller);
-      });
-  if (!dtls_role) {
-    return false;
-  }
-
-  *role = *dtls_role;
-  return true;
-}
-
-absl::optional<rtc::SSLRole> PeerConnection::GetSctpSslRole_n(
-    absl::optional<bool> is_caller) {
+absl::optional<rtc::SSLRole> PeerConnection::GetSctpSslRole_n() {
   RTC_DCHECK_RUN_ON(network_thread());
-  if (!sctp_mid_n_)
-    return absl::nullopt;
-
-  absl::optional<rtc::SSLRole> dtls_role =
-      transport_controller_->GetDtlsRole(*sctp_mid_n_);
-  if (!dtls_role) {
-    if (!is_caller.has_value())
-      return absl::nullopt;
-
-    // This works fine if we are the offerer, but can be a mistake if
-    // we are the answerer and the remote offer is ACTIVE. In that
-    // case, we will guess the role wrong.
-    // TODO(bugs.webrtc.org/13668): Check if this actually happens.
-    RTC_LOG(LS_ERROR)
-        << "Possible risk: DTLS role guesser is active, is_caller is "
-        << *is_caller;
-    dtls_role = *is_caller ? rtc::SSL_SERVER : rtc::SSL_CLIENT;
-  }
-
-  return dtls_role;
+  return sctp_mid_n_ ? transport_controller_->GetDtlsRole(*sctp_mid_n_)
+                     : absl::nullopt;
 }
 
 bool PeerConnection::GetSslRole(const std::string& content_name,
