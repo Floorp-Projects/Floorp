@@ -40,6 +40,7 @@
 #include "rtc_base/fake_ssl_identity.h"
 #include "rtc_base/message_digest.h"
 #include "rtc_base/net_helper.h"
+#include "rtc_base/null_socket_server.h"
 #include "rtc_base/rtc_certificate.h"
 #include "rtc_base/socket_address.h"
 #include "rtc_base/ssl_identity.h"
@@ -846,6 +847,58 @@ class StatsCollectorTrackTest : public LegacyStatsCollectorTest,
   rtc::scoped_refptr<FakeAudioTrack> audio_track_;
 };
 
+TEST(StatsCollectionTest, DetachAndMerge) {
+  StatsCollection collection;
+  ASSERT_EQ(collection.size(), 0u);
+
+  // Create a new report with some information.
+  StatsReport::Id id(
+      StatsReport::NewTypedId(StatsReport::kStatsReportTypeTrack, "track_id"));
+  StatsReport* report = collection.ReplaceOrAddNew(id);
+  report->AddString(StatsReport::kStatsValueNameTrackId, "track_id");
+  ASSERT_TRUE(report);
+  // Check that looking it up, yields the same report.
+  ASSERT_EQ(report, collection.FindOrAddNew(id));
+  // There should be one report now.
+  ASSERT_EQ(collection.size(), 1u);
+
+  // Detach the internal container from the StatsCollection.
+  StatsCollection::Container container = collection.DetachCollection();
+  EXPECT_EQ(container.size(), 1u);
+  EXPECT_EQ(collection.size(), 0u);
+  EXPECT_EQ(nullptr, collection.Find(id));
+
+  // Merge it back and test if we find the same report.
+  collection.MergeCollection(std::move(container));
+  EXPECT_EQ(collection.size(), 1u);
+  EXPECT_EQ(report, collection.Find(id));
+}
+
+// Similar to `DetachAndMerge` above but detaches on one thread, merges on
+// another to test that we don't trigger sequence checker.
+TEST(StatsCollectionTest, DetachAndMergeThreaded) {
+  rtc::Thread new_thread(std::make_unique<rtc::NullSocketServer>());
+  new_thread.Start();
+
+  StatsReport::Id id(
+      StatsReport::NewTypedId(StatsReport::kStatsReportTypeTrack, "track_id"));
+
+  StatsReport* expected_report = nullptr;
+
+  StatsCollection::Container container = new_thread.BlockingCall([&] {
+    StatsCollection collection;
+    expected_report = collection.ReplaceOrAddNew(id);
+    expected_report->AddString(StatsReport::kStatsValueNameTrackId, "track_id");
+    return collection.DetachCollection();
+  });
+
+  StatsCollection collection;
+  collection.MergeCollection(std::move(container));
+  EXPECT_EQ(collection.size(), 1u);
+  EXPECT_EQ(expected_report, collection.Find(id));
+
+  new_thread.Stop();
+}
 TEST_F(LegacyStatsCollectorTest, FilterOutNegativeDataChannelId) {
   auto pc = CreatePeerConnection();
   auto stats = CreateStatsCollector(pc.get());
