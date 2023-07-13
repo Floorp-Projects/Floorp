@@ -31,13 +31,13 @@ class BaseNodeHTTPServerCode {
 
 class ADB {
   static async stopForwarding(port) {
-    // return this.forwardPort(port, true);
+    return this.forwardPort(port, true);
   }
 
   static async forwardPort(port, remove = false) {
     if (!process.env.MOZ_ANDROID_DATA_DIR) {
       // Not android, or we don't know how to do the forwarding
-      return;
+      return true;
     }
     // When creating a server on Android we must make sure that the port
     // is forwarded from the host machine to the emulator.
@@ -49,22 +49,56 @@ class ADB {
     let command = `${adb_path} reverse tcp:${port} tcp:${port}`;
     if (remove) {
       command = `${adb_path} reverse --remove tcp:${port}`;
+      return true;
     }
 
-    await new Promise(resolve => {
-      const { exec } = require("child_process");
-      exec(command, (error, stdout, stderr) => {
-        if (error) {
-          console.log(`error: ${error.message}`);
-          return;
-        }
-        if (stderr) {
-          console.log(`stderr: ${stderr}`);
-        }
-        // console.log(`stdout: ${stdout}`);
-        resolve();
+    try {
+      await new Promise((resolve, reject) => {
+        const { exec } = require("child_process");
+        exec(command, (error, stdout, stderr) => {
+          if (error) {
+            console.log(`error: ${error.message}`);
+            reject(error);
+          } else if (stderr) {
+            console.log(`stderr: ${stderr}`);
+            reject(stderr);
+          } else {
+            // console.log(`stdout: ${stdout}`);
+            resolve();
+          }
+        });
       });
-    });
+    } catch (error) {
+      console.log(`Command failed: ${error}`);
+      return false;
+    }
+
+    return true;
+  }
+
+  static async listenAndForwardPort(server, port) {
+    let retryCount = 0;
+    const maxRetries = 10;
+
+    while (retryCount < maxRetries) {
+      await server.listen(port);
+      let serverPort = server.address().port;
+      let res = await ADB.forwardPort(serverPort);
+
+      if (res) {
+        return serverPort;
+      }
+
+      retryCount++;
+      console.log(
+        `Port forwarding failed. Retrying (${retryCount}/${maxRetries})...`
+      );
+      server.close();
+      // eslint-disable-next-line no-undef
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    return -1;
   }
 }
 
@@ -116,9 +150,7 @@ class NodeHTTPServerCode extends BaseNodeHTTPServerCode {
     const http = require("http");
     global.server = http.createServer(BaseNodeHTTPServerCode.globalHandler);
 
-    await global.server.listen(port);
-    let serverPort = global.server.address().port;
-    await ADB.forwardPort(serverPort);
+    let serverPort = await ADB.listenAndForwardPort(global.server, port);
     return serverPort;
   }
 }
@@ -155,9 +187,7 @@ class NodeHTTPSServerCode extends BaseNodeHTTPServerCode {
       BaseNodeHTTPServerCode.globalHandler
     );
 
-    await global.server.listen(port);
-    let serverPort = global.server.address().port;
-    await ADB.forwardPort(serverPort);
+    let serverPort = await ADB.listenAndForwardPort(global.server, port);
     return serverPort;
   }
 }
@@ -194,9 +224,7 @@ class NodeHTTP2ServerCode extends BaseNodeHTTPServerCode {
       BaseNodeHTTPServerCode.globalHandler
     );
 
-    await global.server.listen(port);
-    let serverPort = global.server.address().port;
-    await ADB.forwardPort(serverPort);
+    let serverPort = await ADB.listenAndForwardPort(global.server, port);
     return serverPort;
   }
 }
@@ -370,9 +398,7 @@ class HTTPProxyCode {
     global.proxy = http.createServer(BaseProxyCode.proxyHandler);
     global.proxy.on("connect", BaseProxyCode.onConnect);
 
-    await global.proxy.listen(port);
-    let proxyPort = global.proxy.address().port;
-    await ADB.forwardPort(proxyPort);
+    let proxyPort = await ADB.listenAndForwardPort(global.proxy, port);
     return proxyPort;
   }
 }
@@ -408,9 +434,7 @@ class HTTPSProxyCode {
     global.proxy = https.createServer(options, BaseProxyCode.proxyHandler);
     global.proxy.on("connect", BaseProxyCode.onConnect);
 
-    await global.proxy.listen(port);
-    let proxyPort = global.proxy.address().port;
-    await ADB.forwardPort(proxyPort);
+    let proxyPort = await ADB.listenAndForwardPort(global.proxy, port);
     return proxyPort;
   }
 }
@@ -447,9 +471,7 @@ class HTTP2ProxyCode {
     global.socketCounts = {};
     this.setupProxy(auth);
 
-    await global.proxy.listen(port);
-    let proxyPort = global.proxy.address().port;
-    await ADB.forwardPort(proxyPort);
+    let proxyPort = await ADB.listenAndForwardPort(global.proxy, port);
     return proxyPort;
   }
 
@@ -648,10 +670,7 @@ class NodeWebSocketServerCode extends BaseNodeHTTPServerCode {
       );
     });
 
-    await global.server.listen(port);
-    let serverPort = global.server.address().port;
-    await ADB.forwardPort(serverPort);
-
+    let serverPort = await ADB.listenAndForwardPort(global.server, port);
     return serverPort;
   }
 }
@@ -720,10 +739,7 @@ class NodeWebSocketHttp2ServerCode extends BaseNodeHTTPServerCode {
       }
     });
 
-    await global.h2Server.listen(port);
-    let serverPort = global.h2Server.address().port;
-    await ADB.forwardPort(serverPort);
-
+    let serverPort = await ADB.listenAndForwardPort(global.h2Server, port);
     return serverPort;
   }
 }
