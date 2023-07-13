@@ -16,13 +16,11 @@
 #include <vector>
 
 #include "absl/memory/memory.h"
-#include "api/field_trials_registry.h"
 #include "api/frame_transformer_factory.h"
 #include "api/rtp_headers.h"
 #include "api/task_queue/task_queue_base.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/test/mock_frame_encryptor.h"
-#include "api/transport/field_trial_based_config.h"
 #include "api/transport/rtp/dependency_descriptor.h"
 #include "api/units/timestamp.h"
 #include "api/video/video_codec_constants.h"
@@ -45,6 +43,7 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/rate_limiter.h"
 #include "rtc_base/thread.h"
+#include "test/explicit_key_value_config.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_frame_transformer.h"
@@ -156,25 +155,6 @@ class TestRtpSenderVideo : public RTPSenderVideo {
   }
 };
 
-class FieldTrials : public FieldTrialsRegistry {
- public:
-  FieldTrials() : include_capture_clock_offset_(false) {}
-
-  void set_include_capture_clock_offset(bool include_capture_clock_offset) {
-    include_capture_clock_offset_ = include_capture_clock_offset;
-  }
-
- private:
-  std::string GetValue(absl::string_view key) const override {
-    if (key == "WebRTC-IncludeCaptureClockOffset") {
-      return include_capture_clock_offset_ ? "" : "Disabled";
-    }
-    return "";
-  }
-
-  bool include_capture_clock_offset_;
-};
-
 class RtpSenderVideoTest : public ::testing::Test {
  public:
   RtpSenderVideoTest()
@@ -205,7 +185,7 @@ class RtpSenderVideoTest : public ::testing::Test {
  protected:
   rtc::AutoThread main_thread_;
   const RtpRtcpInterface::Configuration config_;
-  FieldTrials field_trials_;
+  test::ExplicitKeyValueConfig field_trials_{""};
   SimulatedClock fake_clock_;
   LoopbackTransportTest transport_;
   RateLimiter retransmission_rate_limiter_;
@@ -1236,41 +1216,6 @@ TEST_F(RtpSenderVideoTest, VideoLayersAllocationNotSentOnHigherTemporalLayers) {
                   .HasExtension<RtpVideoLayersAllocationExtension>());
 }
 
-TEST_F(RtpSenderVideoTest, AbsoluteCaptureTime) {
-  constexpr int64_t kAbsoluteCaptureTimestampMs = 12345678;
-  uint8_t kFrame[kMaxPacketLength];
-  rtp_module_->RegisterRtpHeaderExtension(AbsoluteCaptureTimeExtension::Uri(),
-                                          kAbsoluteCaptureTimeExtensionId);
-
-  RTPVideoHeader hdr;
-  hdr.frame_type = VideoFrameType::kVideoFrameKey;
-  rtp_sender_video_->SendVideo(kPayload, kType, kTimestamp,
-                               kAbsoluteCaptureTimestampMs, kFrame, hdr,
-                               kDefaultExpectedRetransmissionTimeMs, {});
-
-  absl::optional<AbsoluteCaptureTime> absolute_capture_time;
-
-  // It is expected that one and only one of the packets sent on this video
-  // frame has absolute capture time header extension.
-  for (const RtpPacketReceived& packet : transport_.sent_packets()) {
-    if (absolute_capture_time.has_value()) {
-      EXPECT_FALSE(packet.HasExtension<AbsoluteCaptureTimeExtension>());
-    } else {
-      absolute_capture_time =
-          packet.GetExtension<AbsoluteCaptureTimeExtension>();
-    }
-  }
-
-  // Verify the capture timestamp and that the clock offset is not set.
-  ASSERT_TRUE(absolute_capture_time.has_value());
-  EXPECT_EQ(
-      absolute_capture_time->absolute_capture_timestamp,
-      Int64MsToUQ32x32(fake_clock_.ConvertTimestampToNtpTimeInMilliseconds(
-          kAbsoluteCaptureTimestampMs)));
-  EXPECT_FALSE(
-      absolute_capture_time->estimated_capture_clock_offset.has_value());
-}
-
 TEST_F(RtpSenderVideoTest,
        AbsoluteCaptureTimeNotForwardedWhenImageHasNoCaptureTime) {
   uint8_t kFrame[kMaxPacketLength];
@@ -1289,10 +1234,7 @@ TEST_F(RtpSenderVideoTest,
   }
 }
 
-// Essentially the same test as AbsoluteCaptureTime but with a field trial.
-// After the field trial is experimented, we will remove AbsoluteCaptureTime.
-TEST_F(RtpSenderVideoTest, AbsoluteCaptureTimeWithCaptureClockOffset) {
-  field_trials_.set_include_capture_clock_offset(true);
+TEST_F(RtpSenderVideoTest, AbsoluteCaptureTime) {
   rtp_sender_video_ = std::make_unique<TestRtpSenderVideo>(
       &fake_clock_, rtp_module_->RtpSender(), field_trials_);
 
@@ -1499,7 +1441,7 @@ class RtpSenderVideoWithFrameTransformerTest : public ::testing::Test {
 
  protected:
   GlobalSimulatedTimeController time_controller_;
-  FieldTrialBasedConfig field_trials_;
+  test::ExplicitKeyValueConfig field_trials_{""};
   LoopbackTransportTest transport_;
   RateLimiter retransmission_rate_limiter_;
   std::unique_ptr<ModuleRtpRtcpImpl2> rtp_module_;

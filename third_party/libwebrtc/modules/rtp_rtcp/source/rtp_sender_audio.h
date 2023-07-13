@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "absl/strings/string_view.h"
-#include "api/transport/field_trial_based_config.h"
 #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
 #include "modules/rtp_rtcp/source/absolute_capture_time_sender.h"
 #include "modules/rtp_rtcp/source/dtmf_queue.h"
@@ -112,9 +111,6 @@ class RTPSenderAudio {
       RTC_GUARDED_BY(send_audio_mutex_);
 
   AbsoluteCaptureTimeSender absolute_capture_time_sender_;
-
-  const FieldTrialBasedConfig field_trials_;
-  const bool include_capture_clock_offset_;
 };
 
 }  // namespace webrtc

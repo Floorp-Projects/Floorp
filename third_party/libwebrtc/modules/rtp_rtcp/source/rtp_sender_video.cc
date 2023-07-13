@@ -46,8 +46,6 @@ namespace webrtc {
 namespace {
 constexpr size_t kRedForFecHeaderLength = 1;
 constexpr int64_t kMaxUnretransmittableFrameIntervalMs = 33 * 4;
-constexpr char kIncludeCaptureClockOffset[] =
-    "WebRTC-IncludeCaptureClockOffset";
 
 void BuildRedPayload(const RtpPacketToSend& media_packet,
                      RtpPacketToSend* red_packet) {
@@ -173,10 +171,7 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
                     rtp_sender_->Csrcs(),
                     rtp_sender_->Rid(),
                     config.task_queue_factory)
-              : nullptr),
-      include_capture_clock_offset_(!absl::StartsWith(
-          config.field_trials->Lookup(kIncludeCaptureClockOffset),
-          "Disabled")) {
+              : nullptr) {
   if (frame_transformer_delegate_)
     frame_transformer_delegate_->Init();
 }
@@ -573,9 +568,7 @@ bool RTPSenderVideo::SendVideo(
     video_header.absolute_capture_time->absolute_capture_timestamp =
         Int64MsToUQ32x32(
             clock_->ConvertTimestampToNtpTime(*capture_time).ToMs());
-    if (include_capture_clock_offset_) {
-      video_header.absolute_capture_time->estimated_capture_clock_offset = 0;
-    }
+    video_header.absolute_capture_time->estimated_capture_clock_offset = 0;
   }
 
   // Let `absolute_capture_time_sender_` decide if the extension should be sent.
