@@ -188,7 +188,7 @@ async function openWebCompatTab(compatInfo) {
   }
   delete details.frameworks;
 
-  if (details["gfx.webrender.all"] || details["gfx.webrender.enabled"]) {
+  if (details["gfx.webrender.all"]) {
     params.extra_labels.push("type-webrender-enabled");
   }
   if (compatInfo.hasTrackingContentBlocked) {

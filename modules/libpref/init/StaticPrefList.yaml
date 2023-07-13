@@ -6382,20 +6382,11 @@
   value: false
   mirror: once
 
-# We expose two prefs: gfx.webrender.all and gfx.webrender.enabled.
-# The first enables WR+additional features, and the second just enables WR.
-# For developer convenience, building with --enable-webrender=true or just
-# --enable-webrender will set gfx.webrender.enabled to true by default.
+# Whether to use the WebRender hardware backend
 - name: gfx.webrender.all
   type: bool
   value: false
   mirror: once
-
-- name: gfx.webrender.enabled
-  type: bool
-  value: false
-  mirror: once
-  do_not_use_directly: true
 
 #ifdef XP_WIN
 - name: gfx.webrender.force-angle
