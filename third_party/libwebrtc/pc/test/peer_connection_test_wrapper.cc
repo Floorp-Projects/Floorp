@@ -39,7 +39,6 @@
 #include "p2p/base/fake_port_allocator.h"
 #include "p2p/base/port_allocator.h"
 #include "pc/test/fake_periodic_video_source.h"
-#include "pc/test/fake_periodic_video_track_source.h"
 #include "pc/test/fake_rtc_certificate_generator.h"
 #include "pc/test/mock_peer_connection_observers.h"
 #include "rtc_base/gunit.h"
@@ -129,6 +128,9 @@ PeerConnectionTestWrapper::PeerConnectionTestWrapper(
 
 PeerConnectionTestWrapper::~PeerConnectionTestWrapper() {
   RTC_DCHECK_RUN_ON(&pc_thread_checker_);
+  // To avoid flaky bot failures, make sure fake sources are stopped prior to
+  // closing the peer connections. See https://crbug.com/webrtc/15018.
+  StopFakeVideoSources();
   // Either network_thread or worker_thread might be active at this point.
   // Relying on ~PeerConnection to properly wait for them doesn't work,
   // as a vptr race might occur (before we enter the destruction body).
@@ -392,6 +394,7 @@ PeerConnectionTestWrapper::GetUserMedia(
 
     auto source = rtc::make_ref_counted<webrtc::FakePeriodicVideoTrackSource>(
         config, /* remote */ false);
+    fake_video_sources_.push_back(source);
 
     std::string videotrack_label = stream_id + kVideoTrackLabelBase;
     rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(
@@ -400,4 +403,11 @@ PeerConnectionTestWrapper::GetUserMedia(
     stream->AddTrack(video_track);
   }
   return stream;
+}
+
+void PeerConnectionTestWrapper::StopFakeVideoSources() {
+  for (const auto& fake_video_source : fake_video_sources_) {
+    fake_video_source->fake_periodic_source().Stop();
+  }
+  fake_video_sources_.clear();
 }
