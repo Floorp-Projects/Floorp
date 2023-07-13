@@ -160,19 +160,30 @@ abstract class AbstractPrivateNotificationService(
      *
      * @param channelId The channel id for the [Notification]
      */
-    fun createNotification(channelId: String): Notification {
+    private fun createNotification(channelId: String): Notification {
+        val eraseIntent = Intent(ACTION_ERASE).let { intent ->
+            intent.setClass(this, this::class.java)
+            PendingIntent.getService(
+                this,
+                0,
+                intent,
+                PendingIntentUtils.defaultFlags or FLAG_ONE_SHOT,
+            )
+        }
+
         return NotificationCompat.Builder(this, channelId)
             .setOngoing(true)
             .setVisibility(VISIBILITY_SECRET)
             .setShowWhen(false)
             .setLocalOnly(true)
-            .setContentIntent(
-                Intent(ACTION_ERASE).let {
-                    it.setClass(this, this::class.java)
-                    PendingIntent.getService(this, 0, it, PendingIntentUtils.defaultFlags or FLAG_ONE_SHOT)
-                },
-            )
-            .apply { buildNotification() }
+            .setContentIntent(eraseIntent)
+            .apply {
+                if (SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    setDeleteIntent(eraseIntent)
+                }
+
+                buildNotification()
+            }
             .build()
     }
 
