@@ -847,39 +847,62 @@ void nsContentSecurityUtils::DetectJsHacks() {
     return;
   }
 
-  // This preference is a file used for autoconfiguration of Firefox
-  // by administrators. It has also been (ab)used by the userChromeJS
-  // project to run legacy-style 'extensions', some of which use eval,
-  // all of which run in the System Principal context.
-  nsAutoString jsConfigPref;
-  rv = Preferences::GetString("general.config.filename", jsConfigPref,
-                              PrefValueKind::Default);
-  if (!NS_FAILED(rv) && !jsConfigPref.IsEmpty()) {
-    sJSHacksPresent = true;
-    return;
-  }
-  rv = Preferences::GetString("general.config.filename", jsConfigPref,
-                              PrefValueKind::User);
-  if (!NS_FAILED(rv) && !jsConfigPref.IsEmpty()) {
-    sJSHacksPresent = true;
-    return;
-  }
+  // The content process code is probably safe to use for both, but
+  // this hack detection and related efforts has been very fragile so
+  // I'm being extra conservative.
+  if (XRE_IsParentProcess()) {
+    // This preference is a file used for autoconfiguration of Firefox
+    // by administrators. It has also been (ab)used by the userChromeJS
+    // project to run legacy-style 'extensions', some of which use eval,
+    // all of which run in the System Principal context.
+    nsAutoString jsConfigPref;
+    rv = Preferences::GetString("general.config.filename", jsConfigPref,
+                                PrefValueKind::Default);
+    if (!NS_FAILED(rv) && !jsConfigPref.IsEmpty()) {
+      sJSHacksPresent = true;
+      return;
+    }
+    rv = Preferences::GetString("general.config.filename", jsConfigPref,
+                                PrefValueKind::User);
+    if (!NS_FAILED(rv) && !jsConfigPref.IsEmpty()) {
+      sJSHacksPresent = true;
+      return;
+    }
 
-  // These preferences are for autoconfiguration of Firefox by admins.
-  // The first will load a file over the network; the second will
-  // fall back to a local file if the network is unavailable
-  nsAutoString configUrlPref;
-  rv = Preferences::GetString("autoadmin.global_config_url", configUrlPref,
-                              PrefValueKind::Default);
-  if (!NS_FAILED(rv) && !configUrlPref.IsEmpty()) {
-    sJSHacksPresent = true;
-    return;
-  }
-  rv = Preferences::GetString("autoadmin.global_config_url", configUrlPref,
-                              PrefValueKind::User);
-  if (!NS_FAILED(rv) && !configUrlPref.IsEmpty()) {
-    sJSHacksPresent = true;
-    return;
+    // These preferences are for autoconfiguration of Firefox by admins.
+    // The first will load a file over the network; the second will
+    // fall back to a local file if the network is unavailable
+    nsAutoString configUrlPref;
+    rv = Preferences::GetString("autoadmin.global_config_url", configUrlPref,
+                                PrefValueKind::Default);
+    if (!NS_FAILED(rv) && !configUrlPref.IsEmpty()) {
+      sJSHacksPresent = true;
+      return;
+    }
+    rv = Preferences::GetString("autoadmin.global_config_url", configUrlPref,
+                                PrefValueKind::User);
+    if (!NS_FAILED(rv) && !configUrlPref.IsEmpty()) {
+      sJSHacksPresent = true;
+      return;
+    }
+
+  } else {
+    if (Preferences::HasDefaultValue("general.config.filename")) {
+      sJSHacksPresent = true;
+      return;
+    }
+    if (Preferences::HasUserValue("general.config.filename")) {
+      sJSHacksPresent = true;
+      return;
+    }
+    if (Preferences::HasDefaultValue("autoadmin.global_config_url")) {
+      sJSHacksPresent = true;
+      return;
+    }
+    if (Preferences::HasUserValue("autoadmin.global_config_url")) {
+      sJSHacksPresent = true;
+      return;
+    }
   }
 
   bool failOverToCache;
