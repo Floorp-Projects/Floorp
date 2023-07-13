@@ -13,28 +13,24 @@
         android:id="@+id/crashButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/crash_nonfatal"
-        android:textAlignment="center" />
+        android:text="@string/crash_nonfatal" />
 
     <Button
         android:id="@+id/fatalCrashButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/crash_fatal"
-        android:textAlignment="center" />
+        android:text="@string/crash_fatal"/>
 
     <Button
         android:id="@+id/fatalServiceCrashButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/crash_fatal_service"
-        android:textAlignment="center" />
+        android:text="@string/crash_fatal_service"/>
 
     <Button
         android:id="@+id/crashList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/list_of_crashes"
-        android:textAlignment="center" />
+        android:text="@string/list_of_crashes" />
 
 </LinearLayout>

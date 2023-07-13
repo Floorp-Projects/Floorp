@@ -107,7 +107,6 @@
         android:layout_marginTop="2dp"
         android:layout_toStartOf="@id/allow_button"
         android:text="@string/mozac_feature_sitepermissions_not_allow"
-        android:textAlignment="center"
         android:textAllCaps="false" />
 
     <Button
@@ -121,7 +120,6 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
         android:text="@string/mozac_feature_sitepermissions_allow"
-        android:textAlignment="center"
         android:textAllCaps="false" />
 
 </RelativeLayout>

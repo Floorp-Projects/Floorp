@@ -21,9 +21,9 @@
         android:layout_height="match_parent"
         android:focusable="true"
         android:focusableInTouchMode="true"
+        android:gravity="center_horizontal"
         android:paddingTop="80dp"
         android:text="@string/no_open_tabs_description"
-        android:textAlignment="center"
         android:textColor="?attr/textSecondary"
         android:textSize="16sp"
         android:visibility="visible" />

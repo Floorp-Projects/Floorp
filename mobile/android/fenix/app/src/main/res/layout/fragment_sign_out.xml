@@ -32,7 +32,6 @@
         android:padding="10dp"
         android:scrollbars="none"
         android:text="@string/sign_out_cancel"
-        android:textAlignment="center"
         android:textAllCaps="false"
         android:textColor="?attr/textPrimary"
         android:textStyle="bold"

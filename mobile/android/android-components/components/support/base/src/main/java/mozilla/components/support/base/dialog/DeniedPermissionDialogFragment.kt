@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.downloads.dialog
+package mozilla.components.support.base.dialog
 
 import android.app.Dialog
 import android.content.Intent
@@ -14,7 +14,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import mozilla.components.support.base.R
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 internal const val KEY_MESSAGE = "KEY_MESSAGE"
 
@@ -37,7 +36,7 @@ class DeniedPermissionDialogFragment : DialogFragment() {
             .setPositiveButton(R.string.mozac_support_base_permissions_needed_positive_button) { _, _ ->
                 openSettingsPage()
             }
-        return builder.create().withCenterAlignedButtons()
+        return builder.create()
     }
 
     @VisibleForTesting

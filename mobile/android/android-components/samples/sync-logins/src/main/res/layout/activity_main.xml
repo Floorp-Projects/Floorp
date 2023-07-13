@@ -31,8 +31,7 @@
             android:id="@+id/buttonWebView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/sign_in_webview"
-            android:textAlignment="center" />
+            android:text="@string/sign_in_webview" />
 
     </LinearLayout>
 </RelativeLayout>

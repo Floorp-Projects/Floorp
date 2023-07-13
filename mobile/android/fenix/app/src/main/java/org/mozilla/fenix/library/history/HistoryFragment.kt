@@ -39,7 +39,6 @@ import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.kotlin.toShortUrl
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -421,7 +420,7 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler, 
                 }
 
                 GleanHistory.removePromptOpened.record(NoExtras())
-            }.create().withCenterAlignedButtons()
+            }.create()
     }
 
     @Suppress("UnusedPrivateMember")

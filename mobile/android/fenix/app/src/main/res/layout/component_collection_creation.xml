@@ -179,7 +179,6 @@
             android:layout_height="wrap_content"
             android:background="?android:attr/selectableItemBackground"
             android:text="@string/create_collection_save"
-            android:textAlignment="center"
             android:textColor="?textActionPrimary"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="parent"

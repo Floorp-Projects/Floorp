@@ -17,7 +17,6 @@
         android:layout_height="match_parent"
         android:gravity="center"
         android:text="@string/mozac_lib_crash_no_crashes"
-        android:textAlignment="center"
         android:visibility="gone" />
 
 </FrameLayout>

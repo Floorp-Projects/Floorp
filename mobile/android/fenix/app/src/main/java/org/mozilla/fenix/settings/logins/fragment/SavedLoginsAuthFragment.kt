@@ -26,7 +26,6 @@ import mozilla.components.feature.autofill.preference.AutofillPreference
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.GleanMetrics.Logins
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
@@ -216,7 +215,7 @@ class SavedLoginsAuthFragment : PreferenceFragmentCompat() {
                 val intent = Intent(ACTION_SECURITY_SETTINGS)
                 startActivity(intent)
             }
-            create().withCenterAlignedButtons()
+            create()
         }.show().secure(activity)
         context.settings().incrementSecureWarningCount()
     }

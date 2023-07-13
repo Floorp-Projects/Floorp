@@ -28,7 +28,6 @@ import mozilla.components.feature.autofill.handler.EXTRA_LOGIN_ID
 import mozilla.components.feature.autofill.handler.FillRequestHandler
 import mozilla.components.feature.autofill.structure.toRawStructure
 import mozilla.components.support.utils.ext.getParcelableExtraCompat
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 /**
  * Activity responsible for asking the user to confirm before autofilling a third-party app. It is
@@ -115,7 +114,6 @@ internal class AutofillConfirmFragment : DialogFragment() {
             .setPositiveButton(R.string.mozac_feature_autofill_confirmation_yes) { _, _ -> confirmRequest() }
             .setNegativeButton(R.string.mozac_feature_autofill_confirmation_no) { _, _ -> cancelRequest() }
             .create()
-            .withCenterAlignedButtons()
     }
 
     override fun onDismiss(dialog: DialogInterface) {

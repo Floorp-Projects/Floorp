@@ -36,7 +36,6 @@ import mozilla.components.feature.prompts.widget.MonthAndYearPicker
 import mozilla.components.feature.prompts.widget.TimePrecisionPicker
 import mozilla.components.support.utils.TimePicker.shouldShowSecondsPicker
 import mozilla.components.support.utils.ext.getSerializableCompat
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import java.util.Calendar
 import java.util.Date
 
@@ -115,7 +114,7 @@ internal class TimePickerDialogFragment :
             it.setButton(BUTTON_NEUTRAL, context.getString(R.string.mozac_feature_prompts_clear), this)
         }
 
-        return dialog.withCenterAlignedButtons()
+        return dialog
     }
 
     /**
@@ -137,7 +136,7 @@ internal class TimePickerDialogFragment :
                     cal.hour,
                     cal.minute,
                     DateFormat.is24HourFormat(context),
-                ).withCenterAlignedButtons()
+                )
             }
         }
 
@@ -170,7 +169,6 @@ internal class TimePickerDialogFragment :
                         this,
                     )
                 }
-                .withCenterAlignedButtons()
         }
 
         return if (!shouldShowSecondsPicker(stepSize?.toFloat())) {

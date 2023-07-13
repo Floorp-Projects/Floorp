@@ -16,7 +16,6 @@ import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.GleanMetrics.Addresses
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentAddressEditorBinding
@@ -121,7 +120,7 @@ class AddressEditorView(
                 interactor.onDeleteAddress(guid)
                 Addresses.deleted.add()
             }
-            create().withCenterAlignedButtons()
+            create()
         }.show()
     }
 

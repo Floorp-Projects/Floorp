@@ -4,7 +4,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <application android:supportsRtl="true">
+    <application>
         <service android:name=".update.DefaultAddonUpdater$NotificationHandlerService"
              android:exported="false" />
     </application>

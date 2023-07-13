@@ -84,7 +84,6 @@
             android:layout_height="wrap_content"
             android:letterSpacing="0"
             android:text="@string/add_to_homescreen_continue"
-            android:textAlignment="center"
             android:textAllCaps="false"
             android:textColor="?attr/textPrimary"
             android:textSize="16sp"

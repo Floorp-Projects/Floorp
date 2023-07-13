@@ -51,7 +51,7 @@
             android:minHeight="48dp"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
-            android:textAlignment="center"
+            android:textAlignment="textEnd"
             android:textAllCaps="true"
             android:textColor="@color/photonWhite"
             android:textSize="14sp"

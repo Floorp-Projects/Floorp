@@ -11,7 +11,6 @@ import androidx.annotation.StringRes
 import androidx.annotation.StyleRes
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 /**
  * This is the default implementation of the [RedirectDialogFragment].
@@ -51,7 +50,6 @@ class SimpleRedirectDialogFragment : RedirectDialogFragment() {
                 }
                 .setCancelable(cancelable)
                 .create()
-                .withCenterAlignedButtons()
         }
     }
 

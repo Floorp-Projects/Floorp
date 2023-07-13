@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.ktx.android.view.showKeyboard
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.ext.getDefaultCollectionNumber
@@ -80,7 +79,7 @@ fun CollectionsDialog.show(
             dialog.cancel()
         }
 
-    val dialog = builder.create().withCenterAlignedButtons()
+    val dialog = builder.create()
     val collectionNames =
         arrayOf(context.getString(R.string.tab_tray_add_new_collection)) + collections
     val collectionsListAdapter = CollectionsListAdapter(collectionNames) {
@@ -127,7 +126,7 @@ internal fun CollectionsDialog.showAddNewDialog(
             onNegativeButtonClick.invoke()
             dialog.cancel()
         }
-        .create().withCenterAlignedButtons()
+        .create()
         .show()
 
     collectionNameEditText.setSelection(0, collectionNameEditText.text.length)

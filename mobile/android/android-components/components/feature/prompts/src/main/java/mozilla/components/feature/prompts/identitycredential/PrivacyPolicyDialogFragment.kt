@@ -25,7 +25,6 @@ import mozilla.components.feature.prompts.dialog.KEY_PROMPT_UID
 import mozilla.components.feature.prompts.dialog.KEY_SESSION_ID
 import mozilla.components.feature.prompts.dialog.KEY_SHOULD_DISMISS_ON_LOAD
 import mozilla.components.feature.prompts.dialog.KEY_TITLE
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 
 internal const val KEY_ICON = "KEY_ICON"
 
@@ -47,7 +46,6 @@ internal class PrivacyPolicyDialogFragment : AbstractPromptTextDialogFragment() 
 
         return setMessage(builder)
             .create()
-            .withCenterAlignedButtons()
     }
 
     internal fun setMessage(builder: AlertDialog.Builder): AlertDialog.Builder {

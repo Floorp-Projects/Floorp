@@ -18,7 +18,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.SearchShortcuts
@@ -319,7 +318,7 @@ class SearchDialogController(
                 dialog.cancel()
                 activity.startActivity(intent)
             }
-            create().withCenterAlignedButtons()
+            create()
         }
     }
 }

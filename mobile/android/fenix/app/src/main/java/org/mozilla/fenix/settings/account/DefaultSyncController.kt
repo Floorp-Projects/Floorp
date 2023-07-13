@@ -12,7 +12,6 @@ import android.provider.Settings
 import android.text.SpannableString
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.settings.SupportUtils
@@ -69,7 +68,7 @@ class DefaultSyncController(
                 dialog.cancel()
                 activity.startActivity(intent)
             }
-            create().withCenterAlignedButtons()
+            create()
         }
     }
 }

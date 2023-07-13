@@ -28,7 +28,6 @@ import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.ktx.kotlin.toShortUrl
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.addons.showSnackBar
@@ -276,7 +275,7 @@ class HistoryMetadataGroupFragment :
                     interactor.onDeleteAllConfirmed()
                     dialog.dismiss()
                 }
-                .create().withCenterAlignedButtons()
+                .create()
 
         companion object {
             const val TAG = "DELETE_CONFIRMATION_DIALOG_FRAGMENT"

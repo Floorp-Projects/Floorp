@@ -29,7 +29,6 @@ import mozilla.components.feature.top.sites.PinnedSiteStorage
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.GleanMetrics.AppMenu
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
@@ -267,7 +266,7 @@ class DefaultBrowserToolbarMenuController(
                             setPositiveButton(R.string.top_sites_max_limit_confirmation_button) { dialog, _ ->
                                 dialog.dismiss()
                             }
-                            create().withCenterAlignedButtons()
+                            create()
                         }.show()
                     } else {
                         ioScope.launch {

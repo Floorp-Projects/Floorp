@@ -19,7 +19,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.support.ktx.kotlin.stripDefaultPort
-import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
@@ -146,7 +145,7 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
                 setNegativeButton(R.string.clear_permissions_negative) { dialog: DialogInterface, _ ->
                     dialog.cancel()
                 }
-            }.show().withCenterAlignedButtons()
+            }.show()
 
             true
         }
