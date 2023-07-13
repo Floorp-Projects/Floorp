@@ -19,6 +19,7 @@
 #include "OriginInfo.h"
 #include "QuotaCommon.h"
 #include "QuotaManager.h"
+#include "ResolvableOriginOp.h"
 #include "SanitizationUtils.h"
 #include "ScopedLogExtraInfo.h"
 #include "UsageInfo.h"
@@ -831,23 +832,14 @@ class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
 // very clean. It would be better to refactor the classes to have operations
 // which can be used independently from IPC and then have wrappers (actors)
 // around them for IPC.
-class ClearPrivateRepositoryOp : public NormalOriginOperationBase {
-  MozPromiseHolder<BoolPromise> mPromiseHolder;
-
+class ClearPrivateRepositoryOp : public ResolvableOriginOp<bool> {
  public:
   ClearPrivateRepositoryOp()
-      : NormalOriginOperationBase(
-            "dom::quota::ClearPrivateRepositoryOp",
-            Nullable<PersistenceType>(PERSISTENCE_TYPE_PRIVATE),
-            OriginScope::FromNull(), Nullable<Client::Type>(),
-            /* aExclusive */ true) {
+      : ResolvableOriginOp("dom::quota::ClearPrivateRepositoryOp",
+                           Nullable<PersistenceType>(PERSISTENCE_TYPE_PRIVATE),
+                           OriginScope::FromNull(), Nullable<Client::Type>(),
+                           /* aExclusive */ true) {
     AssertIsOnOwningThread();
-  }
-
-  RefPtr<BoolPromise> OnResults() {
-    AssertIsOnOwningThread();
-
-    return mPromiseHolder.Ensure(__func__);
   }
 
  private:
@@ -855,25 +847,17 @@ class ClearPrivateRepositoryOp : public NormalOriginOperationBase {
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
-  void SendResults() override;
+  bool GetResolveValue() override { return true; }
 };
 
-class ShutdownStorageOp : public NormalOriginOperationBase {
-  MozPromiseHolder<BoolPromise> mPromiseHolder;
-
+class ShutdownStorageOp : public ResolvableOriginOp<bool> {
  public:
   ShutdownStorageOp()
-      : NormalOriginOperationBase(
-            "dom::quota::ShutdownStorageOp", Nullable<PersistenceType>(),
-            OriginScope::FromNull(), Nullable<Client::Type>(),
-            /* aExclusive */ true) {
+      : ResolvableOriginOp("dom::quota::ShutdownStorageOp",
+                           Nullable<PersistenceType>(), OriginScope::FromNull(),
+                           Nullable<Client::Type>(),
+                           /* aExclusive */ true) {
     AssertIsOnOwningThread();
-  }
-
-  RefPtr<BoolPromise> OnResults() {
-    AssertIsOnOwningThread();
-
-    return mPromiseHolder.Ensure(__func__);
   }
 
  private:
@@ -885,7 +869,7 @@ class ShutdownStorageOp : public NormalOriginOperationBase {
 
   nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
-  void SendResults() override;
+  bool GetResolveValue() override { return true; }
 };
 
 /*******************************************************************************
@@ -7101,18 +7085,6 @@ nsresult ClearPrivateRepositoryOp::DoDirectoryWork(
   return NS_OK;
 }
 
-void ClearPrivateRepositoryOp::SendResults() {
-#ifdef DEBUG
-  NoteActorDestroyed();
-#endif
-
-  if (NS_SUCCEEDED(mResultCode)) {
-    mPromiseHolder.ResolveIfExists(true, __func__);
-  } else {
-    mPromiseHolder.RejectIfExists(mResultCode, __func__);
-  }
-}
-
 #ifdef DEBUG
 nsresult ShutdownStorageOp::DirectoryOpen() {
   AssertIsOnBackgroundThread();
@@ -7131,18 +7103,6 @@ nsresult ShutdownStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   aQuotaManager.ShutdownStorageInternal();
 
   return NS_OK;
-}
-
-void ShutdownStorageOp::SendResults() {
-#ifdef DEBUG
-  NoteActorDestroyed();
-#endif
-
-  if (NS_SUCCEEDED(mResultCode)) {
-    mPromiseHolder.ResolveIfExists(true, __func__);
-  } else {
-    mPromiseHolder.RejectIfExists(mResultCode, __func__);
-  }
 }
 
 NS_IMETHODIMP
