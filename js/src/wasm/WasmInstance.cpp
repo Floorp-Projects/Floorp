@@ -1322,46 +1322,62 @@ static int32_t MemDiscardShared(Instance* instance, I byteOffset, I byteLen,
 //
 // GC and exception handling support.
 
-/* static */ void* Instance::structNew(Instance* instance,
-                                       TypeDefInstanceData* typeDefData) {
-  MOZ_ASSERT(SASigStructNew.failureMode == FailureMode::FailOnNullPtr);
+/* static */
+template <bool ZeroFields>
+void* Instance::structNewIL(Instance* instance,
+                            TypeDefInstanceData* typeDefData) {
+  MOZ_ASSERT((ZeroFields ? SASigStructNewIL_true : SASigStructNewIL_false)
+                 .failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
   // The new struct will be allocated in an initial heap as determined by
   // pretenuring logic as set up in `Instance::init`.
-  return WasmStructObject::createStruct<true>(
+  return WasmStructObject::createStructIL<ZeroFields>(
       cx, typeDefData, typeDefData->allocSite.initialHeap());
 }
 
-/* static */ void* Instance::structNewUninit(Instance* instance,
-                                             TypeDefInstanceData* typeDefData) {
-  MOZ_ASSERT(SASigStructNew.failureMode == FailureMode::FailOnNullPtr);
+template void* Instance::structNewIL<true>(Instance* instance,
+                                           TypeDefInstanceData* typeDefData);
+template void* Instance::structNewIL<false>(Instance* instance,
+                                            TypeDefInstanceData* typeDefData);
+
+/* static */
+template <bool ZeroFields>
+void* Instance::structNewOOL(Instance* instance,
+                             TypeDefInstanceData* typeDefData) {
+  MOZ_ASSERT((ZeroFields ? SASigStructNewOOL_true : SASigStructNewOOL_false)
+                 .failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
   // The new struct will be allocated in an initial heap as determined by
   // pretenuring logic as set up in `Instance::init`.
-  return WasmStructObject::createStruct<false>(
+  return WasmStructObject::createStructOOL<ZeroFields>(
       cx, typeDefData, typeDefData->allocSite.initialHeap());
 }
 
-/* static */ void* Instance::arrayNew(Instance* instance, uint32_t numElements,
-                                      TypeDefInstanceData* typeDefData) {
-  MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
+template void* Instance::structNewOOL<true>(Instance* instance,
+                                            TypeDefInstanceData* typeDefData);
+template void* Instance::structNewOOL<false>(Instance* instance,
+                                             TypeDefInstanceData* typeDefData);
+
+/* static */
+template <bool ZeroFields>
+void* Instance::arrayNew(Instance* instance, uint32_t numElements,
+                         TypeDefInstanceData* typeDefData) {
+  MOZ_ASSERT(
+      (ZeroFields ? SASigArrayNew_true : SASigArrayNew_false).failureMode ==
+      FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
   // The new array will be allocated in an initial heap as determined by
   // pretenuring logic as set up in `Instance::init`.
-  return WasmArrayObject::createArray<true>(
+  return WasmArrayObject::createArray<ZeroFields>(
       cx, typeDefData, typeDefData->allocSite.initialHeap(), numElements);
 }
 
-/* static */ void* Instance::arrayNewUninit(Instance* instance,
-                                            uint32_t numElements,
-                                            TypeDefInstanceData* typeDefData) {
-  MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
-  JSContext* cx = instance->cx();
-  // The new array will be allocated in an initial heap as determined by
-  // pretenuring logic as set up in `Instance::init`.
-  return WasmArrayObject::createArray<false>(
-      cx, typeDefData, typeDefData->allocSite.initialHeap(), numElements);
-}
+template void* Instance::arrayNew<true>(Instance* instance,
+                                        uint32_t numElements,
+                                        TypeDefInstanceData* typeDefData);
+template void* Instance::arrayNew<false>(Instance* instance,
+                                         uint32_t numElements,
+                                         TypeDefInstanceData* typeDefData);
 
 // Creates an array (WasmArrayObject) containing `numElements` of type
 // described by `typeDef`.  Initialises it with data copied from the data
@@ -1395,7 +1411,7 @@ static int32_t MemDiscardShared(Instance* instance, I byteOffset, I byteLen,
   const TypeDef* typeDef = typeDefData->typeDef;
   Rooted<WasmArrayObject*> arrayObj(
       cx,
-      WasmArrayObject::createArray(
+      WasmArrayObject::createArray<true>(
           cx, typeDefData, typeDefData->allocSite.initialHeap(), numElements));
   if (!arrayObj) {
     // WasmArrayObject::createArray will have reported OOM.
@@ -1479,7 +1495,7 @@ static int32_t MemDiscardShared(Instance* instance, I byteOffset, I byteLen,
 
   Rooted<WasmArrayObject*> arrayObj(
       cx,
-      WasmArrayObject::createArray(
+      WasmArrayObject::createArray<true>(
           cx, typeDefData, typeDefData->allocSite.initialHeap(), numElements));
   if (!arrayObj) {
     // WasmArrayObject::createArray will have reported OOM.
@@ -2690,11 +2706,20 @@ bool Instance::constantRefFunc(uint32_t funcIndex,
 
 WasmStructObject* Instance::constantStructNewDefault(JSContext* cx,
                                                      uint32_t typeIndex) {
-  TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
   // We assume that constant structs will have a long lifetime and hence
-  // allocate them directly in the tenured heap.
-  return WasmStructObject::createStruct<true>(cx, typeDefData,
-                                              gc::Heap::Tenured);
+  // allocate them directly in the tenured heap.  Also, we have to dynamically
+  // decide whether an OOL storage area is required.  This is slow(er); do not
+  // call here from generated code.
+  TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
+  const wasm::TypeDef* typeDef = typeDefData->typeDef;
+  MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
+  uint32_t totalBytes = typeDef->structType().size_;
+
+  bool needsOOL = WasmStructObject::requiresOutlineBytes(totalBytes);
+  return needsOOL ? WasmStructObject::createStructOOL<true>(cx, typeDefData,
+                                                            gc::Heap::Tenured)
+                  : WasmStructObject::createStructIL<true>(cx, typeDefData,
+                                                           gc::Heap::Tenured);
 }
 
 WasmArrayObject* Instance::constantArrayNewDefault(JSContext* cx,
@@ -2703,8 +2728,8 @@ WasmArrayObject* Instance::constantArrayNewDefault(JSContext* cx,
   TypeDefInstanceData* typeDefData = typeDefInstanceData(typeIndex);
   // We assume that constant arrays will have a long lifetime and hence
   // allocate them directly in the tenured heap.
-  return WasmArrayObject::createArray(cx, typeDefData, gc::Heap::Tenured,
-                                      numElements);
+  return WasmArrayObject::createArray<true>(cx, typeDefData, gc::Heap::Tenured,
+                                            numElements);
 }
 
 JSAtom* Instance::getFuncDisplayAtom(JSContext* cx, uint32_t funcIndex) const {

@@ -576,7 +576,7 @@ js::gc::AllocKind js::WasmStructObject::allocKindForTypeDef(
 
 /* static */
 template <bool ZeroFields>
-WasmStructObject* WasmStructObject::createStruct(
+WasmStructObject* WasmStructObject::createStructIL(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
     js::gc::Heap initialHeap) {
   MOZ_ASSERT(IsWasmGcObjectClass(typeDefData->clasp));
@@ -586,50 +586,54 @@ WasmStructObject* WasmStructObject::createStruct(
   const wasm::TypeDef* typeDef = typeDefData->typeDef;
   MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
 
+  // It is up to our caller to ensure that `typeDefData` refers to a type that
+  // doesn't need OOL storage.
   uint32_t totalBytes = typeDef->structType().size_;
-  uint32_t inlineBytes, outlineBytes;
-  WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
+  MOZ_ASSERT(totalBytes <= WasmStructObject_MaxInlineBytes);
 
-  // Fast-track the inline-storage-only case.
-  if (MOZ_LIKELY(outlineBytes == 0)) {
-    // This doesn't need to be rooted, since all we do with it prior to
-    // return is to zero out the fields (and then only if ZeroFields is true).
-    WasmStructObject* structObj = (WasmStructObject*)cx->newCell<WasmGcObject>(
-        typeDefData->allocKind, initialHeap, typeDefData->clasp,
-        &typeDefData->allocSite);
-    if (MOZ_UNLIKELY(!structObj)) {
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-
-    structObj->initShape(typeDefData->shape);
-    structObj->superTypeVector_ = typeDefData->superTypeVector;
-
-    js::gc::gcprobes::CreateObject(structObj);
-    probes::CreateObject(cx, structObj);
-
-    structObj->outlineData_ = nullptr;
-    if constexpr (ZeroFields) {
-      memset(&(structObj->inlineData_[0]), 0, inlineBytes);
-    }
-
-    return structObj;
+  // This doesn't need to be rooted, since all we do with it prior to
+  // return is to zero out the fields (and then only if ZeroFields is true).
+  WasmStructObject* structObj = (WasmStructObject*)cx->newCell<WasmGcObject>(
+      typeDefData->allocKind, initialHeap, typeDefData->clasp,
+      &typeDefData->allocSite);
+  if (MOZ_UNLIKELY(!structObj)) {
+    ReportOutOfMemory(cx);
+    return nullptr;
   }
 
-  // This follows from the definition of WasmStructObject::getDataByteSizes.
-  MOZ_ASSERT(inlineBytes == WasmStructObject_MaxInlineBytes);
+  structObj->initShape(typeDefData->shape);
+  structObj->superTypeVector_ = typeDefData->superTypeVector;
 
-  return WasmStructObject::createStructOOL<ZeroFields>(
-      cx, typeDefData, initialHeap, outlineBytes);
+  js::gc::gcprobes::CreateObject(structObj);
+  probes::CreateObject(cx, structObj);
+
+  structObj->outlineData_ = nullptr;
+  if constexpr (ZeroFields) {
+    memset(&(structObj->inlineData_[0]), 0, totalBytes);
+  }
+
+  return structObj;
 }
 
+/* static */
 template <bool ZeroFields>
-/* static */ MOZ_NEVER_INLINE WasmStructObject*
-WasmStructObject::createStructOOL(JSContext* cx,
-                                  wasm::TypeDefInstanceData* typeDefData,
-                                  js::gc::Heap initialHeap,
-                                  uint32_t outlineBytes) {
-  const uint32_t inlineBytes = WasmStructObject_MaxInlineBytes;
+WasmStructObject* WasmStructObject::createStructOOL(
+    JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+    js::gc::Heap initialHeap) {
+  MOZ_ASSERT(IsWasmGcObjectClass(typeDefData->clasp));
+  MOZ_ASSERT(!typeDefData->clasp->isNativeObject());
+  debugCheckNewObject(typeDefData->shape, typeDefData->allocKind, initialHeap);
+
+  const wasm::TypeDef* typeDef = typeDefData->typeDef;
+  MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
+
+  // It is up to our caller to ensure that `typeDefData` refers to a type that
+  // needs OOL storage.
+  uint32_t inlineBytes, outlineBytes;
+  WasmStructObject::getDataByteSizes(typeDef->structType().size_, &inlineBytes,
+                                     &outlineBytes);
+  MOZ_ASSERT(inlineBytes == WasmStructObject_MaxInlineBytes);
+  MOZ_ASSERT(outlineBytes > 0);
 
   // Allocate the outline data area before allocating the object so that we can
   // infallibly initialize the outline data area.
@@ -678,10 +682,17 @@ WasmStructObject::createStructOOL(JSContext* cx,
   return structObj;
 }
 
-template WasmStructObject* WasmStructObject::createStruct<true>(
+template WasmStructObject* WasmStructObject::createStructIL<true>(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
     js::gc::Heap initialHeap);
-template WasmStructObject* WasmStructObject::createStruct<false>(
+template WasmStructObject* WasmStructObject::createStructIL<false>(
+    JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+    js::gc::Heap initialHeap);
+
+template WasmStructObject* WasmStructObject::createStructOOL<true>(
+    JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+    js::gc::Heap initialHeap);
+template WasmStructObject* WasmStructObject::createStructOOL<false>(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
     js::gc::Heap initialHeap);
 
