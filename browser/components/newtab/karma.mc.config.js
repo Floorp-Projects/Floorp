@@ -211,13 +211,6 @@ module.exports = function (config) {
               functions: 0,
               branches: 0,
             },
-            "content-src/aboutwelcome/components/AddonsPicker.jsx": {
-              // This file is covered by the mochitest: browser_aboutwelcome_multistage_mr.js
-              statements: 0,
-              lines: 0,
-              functions: 0,
-              branches: 0,
-            },
             "content-src/aboutwelcome/**/*.jsx": {
               statements: 62,
               lines: 60,
