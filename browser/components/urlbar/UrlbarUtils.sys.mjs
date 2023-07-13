@@ -2479,6 +2479,7 @@ export class SkippableTimer {
       this._timer.initWithCallback(
         () => {
           this._log(`Timed out!`, reportErrorOnTimeout);
+          this.done = true;
           this._timer = null;
           resolve();
         },
@@ -2490,6 +2491,7 @@ export class SkippableTimer {
 
     let firePromise = new Promise(resolve => {
       this.fire = async () => {
+        this.done = true;
         if (this._timer) {
           if (!this._canceled) {
             this._log(`Skipped`);
@@ -2503,7 +2505,6 @@ export class SkippableTimer {
     });
 
     this.promise = Promise.race([timerPromise, firePromise]).then(() => {
-      this.done = true;
       // If we've been canceled, don't call back.
       if (callback && !this._canceled) {
         callback();
