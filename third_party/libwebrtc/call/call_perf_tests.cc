@@ -31,6 +31,7 @@
 #include "media/engine/internal_encoder_factory.h"
 #include "media/engine/simulcast_encoder_adapter.h"
 #include "modules/audio_coding/include/audio_coding_module.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_device/include/test_audio_device.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "modules/rtp_rtcp/source/rtp_packet.h"
@@ -206,7 +207,7 @@ void CallPerfTest::TestAudioVideoSync(FecMode fec,
 
   SendTask(task_queue(), [&]() {
     metrics::Reset();
-    rtc::scoped_refptr<TestAudioDeviceModule> fake_audio_device =
+    rtc::scoped_refptr<AudioDeviceModule> fake_audio_device =
         TestAudioDeviceModule::Create(
             task_queue_factory_.get(),
             TestAudioDeviceModule::CreatePulsedNoiseCapturer(256, 48000),

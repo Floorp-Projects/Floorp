@@ -19,6 +19,7 @@
 #include "api/transport/network_types.h"
 #include "call/call.h"
 #include "call/rtp_transport_controller_send_factory.h"
+#include "modules/audio_device/include/test_audio_device.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"

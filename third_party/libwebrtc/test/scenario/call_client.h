@@ -22,7 +22,7 @@
 #include "api/test/time_controller.h"
 #include "api/units/data_rate.h"
 #include "call/call.h"
-#include "modules/audio_device/include/test_audio_device.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "modules/congestion_controller/goog_cc/test/goog_cc_printer.h"
 #include "modules/rtp_rtcp/include/rtp_header_extension_map.h"
 #include "rtc_base/task_queue_for_test.h"
@@ -96,7 +96,7 @@ class LoggingNetworkControllerFactory
 
 struct CallClientFakeAudio {
   rtc::scoped_refptr<AudioProcessing> apm;
-  rtc::scoped_refptr<TestAudioDeviceModule> fake_audio_device;
+  rtc::scoped_refptr<AudioDeviceModule> fake_audio_device;
   rtc::scoped_refptr<AudioState> audio_state;
 };
 // CallClient represents a participant in a call scenario. It is created by the
