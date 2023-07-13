@@ -986,10 +986,7 @@ class PeerConnectionSimulcastWithMediaFlowTests
       rtc::scoped_refptr<PeerConnectionTestWrapper> pc_wrapper) {
     auto callback = rtc::make_ref_counted<MockRTCStatsCollectorCallback>();
     pc_wrapper->pc()->GetStats(callback.get());
-    while (!callback->called()) {
-      rtc::Thread::Current()->ProcessMessages(0);
-      rtc::Thread::Current()->SleepMs(1);
-    }
+    EXPECT_TRUE_WAIT(callback->called(), kDefaultTimeout.ms());
     return callback->report();
   }
 
