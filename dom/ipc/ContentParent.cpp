@@ -6347,15 +6347,6 @@ void ContentParent::CancelContentJSExecutionIfRunning(
       aCancelContentJSOptions);
 }
 
-void ContentParent::SetMainThreadQoSPriority(
-    nsIThread::QoSPriority aQoSPriority) {
-  if (!mHangMonitorActor) {
-    return;
-  }
-
-  ProcessHangMonitor::SetMainThreadQoSPriority(mHangMonitorActor, aQoSPriority);
-}
-
 void ContentParent::UpdateCookieStatus(nsIChannel* aChannel) {
   PNeckoParent* neckoParent = LoneManagedOrNullAsserts(ManagedPNeckoParent());
   PCookieServiceParent* csParent =
