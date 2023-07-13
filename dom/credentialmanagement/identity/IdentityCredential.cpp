@@ -9,6 +9,8 @@
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/IdentityCredential.h"
 #include "mozilla/dom/IdentityNetworkHelpers.h"
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/Promise-inl.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/Components.h"
@@ -782,9 +784,9 @@ IdentityCredential::PromptUserToSelectProvider(
                                       manifestsJS,
                                       getter_AddRefs(showPromptPromise));
 
-  RefPtr<DomPromiseListener> listener = new DomPromiseListener(
-      [aProviders, aManifests, resultPromise](JSContext* aCx,
-                                              JS::Handle<JS::Value> aValue) {
+  showPromptPromise->AddCallbacksWithCycleCollectedArgs(
+      [aProviders, aManifests, resultPromise](
+          JSContext*, JS::Handle<JS::Value> aValue, ErrorResult&) {
         int32_t result = aValue.toInt32();
         if (result < 0 || (uint32_t)result > aProviders.Length() ||
             (uint32_t)result > aManifests.Length()) {
@@ -802,8 +804,10 @@ IdentityCredential::PromptUserToSelectProvider(
         resultPromise->Resolve(
             std::make_tuple(resolvedProvider, resolvedManifest), __func__);
       },
-      [resultPromise](nsresult aRv) { resultPromise->Reject(aRv, __func__); });
-  showPromptPromise->AppendNativeHandler(listener);
+      [resultPromise](JSContext*, JS::Handle<JS::Value> aValue, ErrorResult&) {
+        resultPromise->Reject(
+            Promise::TryExtractNSResultFromRejectionValue(aValue), __func__);
+      });
 
   return resultPromise;
 }
@@ -865,9 +869,9 @@ IdentityCredential::PromptUserToSelectAccount(
                                          providerJS, manifestJS,
                                          getter_AddRefs(showPromptPromise));
 
-  RefPtr<DomPromiseListener> listener = new DomPromiseListener(
-      [aAccounts, resultPromise, aManifest](JSContext* aCx,
-                                            JS::Handle<JS::Value> aValue) {
+  showPromptPromise->AddCallbacksWithCycleCollectedArgs(
+      [aAccounts, resultPromise, aManifest](
+          JSContext*, JS::Handle<JS::Value> aValue, ErrorResult&) {
         int32_t result = aValue.toInt32();
         if (!aAccounts.mAccounts.WasPassed() || result < 0 ||
             (uint32_t)result > aAccounts.mAccounts.Value().Length()) {
@@ -878,8 +882,10 @@ IdentityCredential::PromptUserToSelectAccount(
             aAccounts.mAccounts.Value().ElementAt(result);
         resultPromise->Resolve(std::make_tuple(aManifest, resolved), __func__);
       },
-      [resultPromise](nsresult aRv) { resultPromise->Reject(aRv, __func__); });
-  showPromptPromise->AppendNativeHandler(listener);
+      [resultPromise](JSContext*, JS::Handle<JS::Value> aValue, ErrorResult&) {
+        resultPromise->Reject(
+            Promise::TryExtractNSResultFromRejectionValue(aValue), __func__);
+      });
 
   return resultPromise;
 }
@@ -981,10 +987,10 @@ IdentityCredential::PromptUserWithPolicy(
 
             RefPtr<GenericPromise::Private> resultPromise =
                 new GenericPromise::Private(__func__);
-            RefPtr<DomPromiseListener> listener = new DomPromiseListener(
+            showPromptPromise->AddCallbacksWithCycleCollectedArgs(
                 [aAccount, argumentPrincipal, idpPrincipal, resultPromise,
-                 icStorageService](JSContext* aCx,
-                                   JS::Handle<JS::Value> aValue) {
+                 icStorageService](JSContext* aCx, JS::Handle<JS::Value> aValue,
+                                   ErrorResult&) {
                   bool isBool = aValue.isBoolean();
                   if (!isBool) {
                     resultPromise->Reject(NS_ERROR_FAILURE, __func__);
@@ -995,10 +1001,12 @@ IdentityCredential::PromptUserWithPolicy(
                       NS_ConvertUTF16toUTF8(aAccount.mId), true, true);
                   resultPromise->Resolve(aValue.toBoolean(), __func__);
                 },
-                [resultPromise](nsresult aRv) {
-                  resultPromise->Reject(aRv, __func__);
+                [resultPromise](JSContext*, JS::Handle<JS::Value> aValue,
+                                ErrorResult&) {
+                  resultPromise->Reject(
+                      Promise::TryExtractNSResultFromRejectionValue(aValue),
+                      __func__);
                 });
-            showPromptPromise->AppendNativeHandler(listener);
             return resultPromise;
           },
           [](nsresult error) {
