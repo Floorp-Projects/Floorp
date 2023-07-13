@@ -173,12 +173,6 @@ class SctpDataChannel::ObserverAdapter : public DataChannelObserver {
     return cached_state_;
   }
 
-  void SetDelegate(DataChannelObserver* delegate) {
-    RTC_DCHECK_RUN_ON(signaling_thread());
-    delegate_ = delegate;
-    safety_.reset(webrtc::PendingTaskSafetyFlag::CreateDetached());
-  }
-
  private:
   void OnStateChange() override {
     RTC_DCHECK_RUN_ON(network_thread());
@@ -187,8 +181,7 @@ class SctpDataChannel::ObserverAdapter : public DataChannelObserver {
           RTC_DCHECK_RUN_ON(signaling_thread());
           cached_state_ = new_state;
           inside_state_change_ = true;
-          if (delegate_)
-            delegate_->OnStateChange();
+          delegate_->OnStateChange();
           inside_state_change_ = false;
         }));
   }
@@ -196,27 +189,22 @@ class SctpDataChannel::ObserverAdapter : public DataChannelObserver {
   void OnMessage(const DataBuffer& buffer) override {
     RTC_DCHECK_RUN_ON(network_thread());
     signaling_thread()->PostTask(
-        SafeTask(safety_.flag(), [this, buffer = buffer] {
-          RTC_DCHECK_RUN_ON(signaling_thread());
-          if (delegate_)
-            delegate_->OnMessage(buffer);
-        }));
+        SafeTask(safety_.flag(),
+                 [this, buffer = buffer] { delegate_->OnMessage(buffer); }));
   }
 
   void OnBufferedAmountChange(uint64_t sent_data_size) override {
     RTC_DCHECK_RUN_ON(network_thread());
     signaling_thread()->PostTask(
         SafeTask(safety_.flag(), [this, sent_data_size] {
-          RTC_DCHECK_RUN_ON(signaling_thread());
-          if (delegate_)
-            delegate_->OnBufferedAmountChange(sent_data_size);
+          delegate_->OnBufferedAmountChange(sent_data_size);
         }));
   }
 
   rtc::Thread* signaling_thread() const { return channel_->signaling_thread_; }
   rtc::Thread* network_thread() const { return channel_->network_thread_; }
 
-  DataChannelObserver* delegate_ RTC_GUARDED_BY(signaling_thread());
+  DataChannelObserver* const delegate_;
   SctpDataChannel* const channel_;
   ScopedTaskSafety safety_;
   bool inside_state_change_ RTC_GUARDED_BY(signaling_thread()) = false;
@@ -303,11 +291,8 @@ void SctpDataChannel::RegisterObserver(DataChannelObserver* observer) {
   // should be called on the network thread and IsOkToCallOnTheNetworkThread().
   if (!observer->IsOkToCallOnTheNetworkThread()) {
     auto prepare_observer = [&]() {
-      if (observer_adapter_) {
-        observer_adapter_->SetDelegate(observer);
-      } else {
-        observer_adapter_ = std::make_unique<ObserverAdapter>(observer, this);
-      }
+      RTC_DCHECK(!observer_adapter_);
+      observer_adapter_ = std::make_unique<ObserverAdapter>(observer, this);
       return observer_adapter_.get();
     };
     // Instantiate the adapter in the right context and then substitute the
@@ -359,18 +344,12 @@ void SctpDataChannel::UnregisterObserver() {
     network_thread_->BlockingCall(std::move(unregister_observer));
   }
 
-  auto clear_delegate = [&]() {
-    // In case an implementation decides to unregister an observer while
-    // in a callback from the observer adapter, we can't delete the adapter.
-    // Instead we'll just clear the delegate pointer.
-    if (observer_adapter_)
-      observer_adapter_->SetDelegate(nullptr);
-  };
+  auto clear_observer = [&]() { observer_adapter_.reset(); };
 
   if (current_thread != signaling_thread_) {
-    signaling_thread_->BlockingCall(std::move(clear_delegate));
+    signaling_thread_->BlockingCall(std::move(clear_observer));
   } else {
-    clear_delegate();
+    clear_observer();
   }
 }
 
