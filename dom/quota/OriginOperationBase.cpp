@@ -13,6 +13,13 @@
 
 namespace mozilla::dom::quota {
 
+void OriginOperationBase::Dispatch() {
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(GetState() == State_Initial);
+
+  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+}
+
 NS_IMETHODIMP
 OriginOperationBase::Run() {
   nsresult rv;

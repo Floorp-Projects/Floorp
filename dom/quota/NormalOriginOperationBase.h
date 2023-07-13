@@ -31,14 +31,6 @@ class NormalOriginOperationBase
   mozilla::Atomic<bool> mCanceled;
   const bool mExclusive;
 
- public:
-  void RunImmediately() {
-    MOZ_ASSERT(GetState() == State_Initial);
-
-    MOZ_ALWAYS_SUCCEEDS(this->Run());
-  }
-
- protected:
   NormalOriginOperationBase(const char* aRunnableName,
                             const Nullable<PersistenceType>& aPersistenceType,
                             const OriginScope& aOriginScope,
