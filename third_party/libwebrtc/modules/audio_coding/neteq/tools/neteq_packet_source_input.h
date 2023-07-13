@@ -30,29 +30,43 @@ class NetEqPacketSourceInput : public NetEqInput {
  public:
   using RtpHeaderExtensionMap = std::map<int, webrtc::RTPExtensionType>;
 
-  NetEqPacketSourceInput(
-      absl::string_view file_name,
-      const NetEqPacketSourceInput::RtpHeaderExtensionMap& hdr_ext_map,
-      absl::optional<uint32_t> ssrc_filter);
+  NetEqPacketSourceInput();
+  absl::optional<int64_t> NextPacketTime() const override;
+  std::unique_ptr<PacketData> PopPacket() override;
+  absl::optional<RTPHeader> NextHeader() const override;
+  bool ended() const override { return !next_output_event_ms_; }
 
-  absl::optional<int64_t> NextEventTime() const override {
-    if (event_) {
-      return event_->timestamp_ms();
-    }
+ protected:
+  virtual PacketSource* source() = 0;
+  void LoadNextPacket();
+
+  absl::optional<int64_t> next_output_event_ms_;
+
+ private:
+  std::unique_ptr<Packet> packet_;
+};
+
+// Implementation of NetEqPacketSourceInput to be used with an RtpFileSource.
+class NetEqRtpDumpInput final : public NetEqPacketSourceInput {
+ public:
+  NetEqRtpDumpInput(absl::string_view file_name,
+                    const RtpHeaderExtensionMap& hdr_ext_map,
+                    absl::optional<uint32_t> ssrc_filter);
+
+  absl::optional<int64_t> NextOutputEventTime() const override;
+  absl::optional<SetMinimumDelayInfo> NextSetMinimumDelayInfo() const override {
     return absl::nullopt;
   }
-  std::unique_ptr<Event> PopEvent() override;
-  absl::optional<RTPHeader> NextHeader() const override;
-  bool ended() const override { return event_ == nullptr; }
+  void AdvanceOutputEvent() override;
+  void AdvanceSetMinimumDelay() override {}
+
+ protected:
+  PacketSource* source() override;
 
  private:
   static constexpr int64_t kOutputPeriodMs = 10;
-  std::unique_ptr<Event> GetNextEvent();
 
-  std::unique_ptr<Packet> packet_;
-  std::unique_ptr<PacketSource> packet_source_;
-  int64_t next_output_event_ms_;
-  std::unique_ptr<Event> event_;
+  std::unique_ptr<RtpFileSource> source_;
 };
 
 }  // namespace test

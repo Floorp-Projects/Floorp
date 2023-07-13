@@ -87,8 +87,8 @@ void PrintDelays(const NetEqDelayAnalyzer::Delays& delays,
 void NetEqDelayAnalyzer::AfterInsertPacket(
     const test::NetEqInput::PacketData& packet,
     NetEq* neteq) {
-  data_.insert(std::make_pair(packet.header.timestamp,
-                              TimingData(packet.timestamp_ms())));
+  data_.insert(
+      std::make_pair(packet.header.timestamp, TimingData(packet.time_ms)));
   ssrcs_.insert(packet.header.ssrc);
   payload_types_.insert(packet.header.payloadType);
 }
