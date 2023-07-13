@@ -3,6 +3,82 @@
     {
       "stash": {
         "blocked": [
+          "{3450da05-aaf5-4162-90af-b668434b81c3}:1.1",
+          "{3450da05-aaf5-4162-90af-b668434b81c3}:1.2",
+          "{3450da05-aaf5-4162-90af-b668434b81c3}:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1689076432720,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1689165309946,
+      "id": "9e513e31-c192-4741-908a-18184a490ce9",
+      "last_modified": 1689165377444
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{00da8d9f-2937-4d83-a0a3-e6c910be8a22}:3.3.18",
+          "{00da8d9f-2937-4d83-a0a3-e6c910be8a22}:3.3.17",
+          "{00da8d9f-2937-4d83-a0a3-e6c910be8a22}:3.3.19"
+        ],
+        "unblocked": []
+      },
+      "schema": 1688992573562,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1689014109360,
+      "id": "825d3714-3de7-452e-b8f3-6997f2d3b550",
+      "last_modified": 1689014169397
+    },
+    {
+      "stash": {
+        "blocked": [
+          "dgnria_pro.firefox@nuance.com:1.40.0.5",
+          "qq942731084@gmail.com:0.1.11",
+          "dgnria_pro.firefox@nuance.com:1.20.0.20",
+          "dgnria_pro.firefox@nuance.com:1.20.0.31",
+          "dgnria_pro.firefox@nuance.com:1.20.0.28",
+          "@react-devtools-nasimov:4.27.8",
+          "dgnria_pro.firefox@nuance.com:1.20.500.38",
+          "{4444aecb-5dac-4f76-9378-0ac4f2bedc9c}:0.1.11",
+          "dgnria_pro.firefox@nuance.com:1.30.0.4",
+          "@windscribeff:3.0.34",
+          "dgnria_pro.firefox@nuance.com:1.20.500.34",
+          "{732216ec-0dab-43bb-ac85-4b5e1977599d}:3.0.0",
+          "dgnria_pro.firefox@nuance.com:1.20.500.42",
+          "dgnria_pro.firefox@nuance.com:1.20.0.32",
+          "dgnria_pro.firefox@nuance.com:1.20.0.30",
+          "lsiwebhook@lakesidesoftware.com:2.1.1",
+          "dgnria_pro.firefox@nuance.com:1.20.500.41",
+          "{31278b06-912f-4997-b2c4-ac8c828869cf}:3.17.1",
+          "dgnria_pro.firefox@nuance.com:1.20.0.19",
+          "lsiwebhook@lakesidesoftware.com:2.0.1",
+          "dgnria_pro.firefox@nuance.com:1.20.0.26",
+          "@windscribeff:3.0.27",
+          "dgnria_pro.firefox@nuance.com:1.20.500.13",
+          "@windscribeff:3.0.31",
+          "dgnria_pro.firefox@nuance.com:1.20.500.40",
+          "dgnria_pro.firefox@nuance.com:1.20.500.37",
+          "@windscribeff:3.0.28",
+          "dgnria_pro.firefox@nuance.com:1.20.0.17",
+          "@windscribeff:3.0.26",
+          "@windscribeff:3.0.32",
+          "lsiwebhook@lakesidesoftware.com:2.1.0",
+          "@windscribeff:3.0.36",
+          "@windscribeff:3.0.30",
+          "dgnria_pro.firefox@nuance.com:1.20.500.39"
+        ],
+        "unblocked": []
+      },
+      "schema": 1688561646209,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1688992510959,
+      "id": "0aad4fd8-2512-4f37-8c6f-ffbe3e831f64",
+      "last_modified": 1688992573422
+    },
+    {
+      "stash": {
+        "blocked": [
           "{2da54166-2371-4372-8ca7-3f905577486e}:1.1.1",
           "{2da54166-2371-4372-8ca7-3f905577486e}:1.3.3",
           "{8994ac5a-ea54-4c11-a571-3ab33ba96f67}:1.1.1",
@@ -1991,5 +2067,5 @@
       "last_modified": 1673354326131
     }
   ],
-  "timestamp": 1688560667921
+  "timestamp": 1689165377444
 }
