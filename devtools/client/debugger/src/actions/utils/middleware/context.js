@@ -27,7 +27,9 @@ function context({ dispatch, getState }) {
     if ("cx" in action) {
       validateActionContext(getState, action);
     }
-    if ("selectedFrame" in action) {
+    // Ignore falsy selectedFrame as sometimes it can be null
+    // for expression actions.
+    if (action.selectedFrame) {
       validateSelectedFrame(getState(), action.selectedFrame);
     }
     return next(action);
