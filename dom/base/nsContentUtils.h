@@ -2466,14 +2466,6 @@ class nsContentUtils {
                                                  int32_t aOldChildCount);
 
   /**
-   * Returns true if the content is in a document and contains a plugin
-   * which we don't control event dispatch for, i.e. do any plugins in this
-   * doc tree receive key events outside of our control? This always returns
-   * false on MacOSX.
-   */
-  static bool HasPluginWithUncontrolledEventDispatch(nsIContent* aContent);
-
-  /**
    * Returns the in-process subtree root document in a document hierarchy.
    * This could be a chrome document.
    */
