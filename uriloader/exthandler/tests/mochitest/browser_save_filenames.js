@@ -116,19 +116,6 @@ function handleRedirect(aRequest, aResponse) {
   aResponse.setHeader("Location", "/bell" + filename[0] + "?" + queryString);
 }
 
-function promiseDownloadFinished(list) {
-  return new Promise(resolve => {
-    list.addView({
-      onDownloadChanged(download) {
-        if (download.stopped) {
-          list.removeView(this);
-          resolve(download);
-        }
-      },
-    });
-  });
-}
-
 // nsIFile::CreateUnique crops long filenames if the path is too long, but
 // we don't know exactly how long depending on the full path length, so
 // for those save methods that use CreateUnique, instead just verify that
@@ -202,12 +189,13 @@ function getItems(parentid) {
       while (elem) {
         let filename =
           elem.dataset["filenamePlatform" + platform] || elem.dataset.filename;
-        let url = elem.getAttribute("src");
+        let url = elem.getAttribute("src") || elem.getAttribute("href");
         let draggable =
           elem.localName == "img" && elem.dataset.nodrag != "true";
         let unknown = elem.dataset.unknown;
         let noattach = elem.dataset.noattach;
         let savepagename = elem.dataset.savepagename;
+        let pickedfilename = elem.dataset.pickedfilename;
         elements.push({
           draggable,
           unknown,
@@ -215,6 +203,7 @@ function getItems(parentid) {
           url,
           noattach,
           savepagename,
+          pickedfilename,
         });
         elem = elem.nextElementSibling;
       }
@@ -257,17 +246,7 @@ add_task(async function save_document() {
   };
 
   let downloadsList = await Downloads.getList(Downloads.PUBLIC);
-  let savePromise = new Promise((resolve, reject) => {
-    downloadsList.addView({
-      onDownloadChanged(download) {
-        if (download.succeeded) {
-          downloadsList.removeView(this);
-          downloadsList.removeFinished();
-          resolve();
-        }
-      },
-    });
-  });
+  let savePromise = promiseDownloadFinished(downloadsList);
   saveBrowser(browser);
   await savePromise;
 
@@ -319,6 +298,7 @@ add_task(async function save_document() {
   is(filesSaved.length, 0, "all files accounted for");
   tmpDir.remove(true);
   tmpFile.remove(false);
+  downloadsList.removeFinished();
 });
 
 // This test simulates dragging the images in the document and ensuring that
@@ -555,6 +535,59 @@ add_task(async function saveas_files() {
         await BrowserTestUtils.removeTab(gBrowser.selectedTab);
       }
     }
+  }
+});
+
+// This test checks that the filename is saved correctly when it
+// has been modified within the file picker.
+add_task(async function saveas_files_modified_in_filepicker() {
+  let items = await getItems("modifieditems");
+  for (let idx = 0; idx < items.length; idx++) {
+    await BrowserTestUtils.openNewForegroundTab({
+      gBrowser,
+      opening: items[idx].url,
+      waitForLoad: false,
+      waitForStateStop: true,
+    });
+
+    let savedFile = SpecialPowers.Services.dirsvc.get("TmpD", Ci.nsIFile);
+
+    let downloadsList = await Downloads.getList(Downloads.PUBLIC);
+    let savePromise = promiseDownloadFinished(downloadsList);
+
+    await new Promise(resolve => {
+      MockFilePicker.displayDirectory = savedFile;
+
+      MockFilePicker.showCallback = function (fp) {
+        MockFilePicker.filterIndex = 0; // kSaveAsType_Complete
+        savedFile.append(items[idx].pickedfilename);
+        MockFilePicker.setFiles([savedFile]);
+        setTimeout(() => {
+          resolve(items[idx].pickedfilename);
+        }, 0);
+
+        return Ci.nsIFilePicker.returnOK;
+      };
+
+      document.getElementById("Browser:SavePage").doCommand();
+    });
+
+    await savePromise;
+
+    savedFile.leafName = items[idx].filename;
+    ok(
+      savedFile.exists(),
+      "i" +
+        idx +
+        " '" +
+        savedFile.leafName +
+        "' was saved when modified with the correct name "
+    );
+    if (savedFile.exists()) {
+      savedFile.remove(false);
+    }
+
+    await BrowserTestUtils.removeTab(gBrowser.selectedTab);
   }
 });
 

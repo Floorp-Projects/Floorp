@@ -728,11 +728,9 @@ function promiseTargetFile(
     // Do not store the last save directory as a pref inside the private browsing mode
     downloadLastDir.setFile(aRelatedURI, fp.file.parent);
 
-    fp.file.leafName = validateFileName(fp.file.leafName);
-
     aFpP.saveAsType = fp.filterIndex;
     aFpP.file = fp.file;
-    aFpP.fileURL = fp.fileURL;
+    aFpP.file.leafName = validateFileName(aFpP.file.leafName);
 
     return true;
   })();
