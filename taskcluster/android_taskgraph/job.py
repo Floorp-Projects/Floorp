@@ -5,7 +5,7 @@
 
 from pipes import quote as shell_quote
 
-from taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
+from gecko_taskgraph.transforms.job import configure_taskdesc_for_run, run_job_using
 from taskgraph.util import path
 from taskgraph.util.schema import Schema, taskref_or_string
 from voluptuous import Optional, Required
