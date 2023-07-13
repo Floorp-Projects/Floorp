@@ -89,66 +89,59 @@ export var NativeManifests = {
     return manifest ? { path, manifest } : null;
   },
 
-  _tryPath(type, path, name, context, logIfNotFound) {
-    return Promise.resolve()
-      .then(() => IOUtils.readUTF8(path))
-      .then(data => {
-        let manifest;
-        try {
-          manifest = JSON.parse(data);
-        } catch (ex) {
+  async _tryPath(type, path, name, context, logIfNotFound) {
+    let manifest;
+    try {
+      manifest = await IOUtils.readJSON(path);
+    } catch (ex) {
+      if (ex instanceof SyntaxError && ex.message.startsWith("JSON.parse:")) {
+        Cu.reportError(`Error parsing native manifest ${path}: ${ex.message}`);
+        return null;
+      }
+      if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
+        if (logIfNotFound) {
           Cu.reportError(
-            `Error parsing native manifest ${path}: ${ex.message}`
+            `Error reading native manifest file ${path}: file is referenced in the registry but does not exist`
           );
-          return null;
         }
+        return null;
+      }
+      throw ex;
+    }
+    let normalized = lazy.Schemas.normalize(
+      manifest,
+      "manifest.NativeManifest",
+      context
+    );
+    if (normalized.error) {
+      Cu.reportError(normalized.error);
+      return null;
+    }
+    manifest = normalized.value;
 
-        let normalized = lazy.Schemas.normalize(
-          manifest,
-          "manifest.NativeManifest",
-          context
-        );
-        if (normalized.error) {
-          Cu.reportError(normalized.error);
-          return null;
-        }
-        manifest = normalized.value;
+    if (manifest.type !== type) {
+      Cu.reportError(
+        `Native manifest ${path} has type property ${manifest.type} (expected ${type})`
+      );
+      return null;
+    }
+    if (manifest.name !== name) {
+      Cu.reportError(
+        `Native manifest ${path} has name property ${manifest.name} (expected ${name})`
+      );
+      return null;
+    }
+    if (
+      manifest.allowed_extensions &&
+      !manifest.allowed_extensions.includes(context.extension.id)
+    ) {
+      Cu.reportError(
+        `This extension does not have permission to use native manifest ${path}`
+      );
+      return null;
+    }
 
-        if (manifest.type !== type) {
-          Cu.reportError(
-            `Native manifest ${path} has type property ${manifest.type} (expected ${type})`
-          );
-          return null;
-        }
-        if (manifest.name !== name) {
-          Cu.reportError(
-            `Native manifest ${path} has name property ${manifest.name} (expected ${name})`
-          );
-          return null;
-        }
-        if (
-          manifest.allowed_extensions &&
-          !manifest.allowed_extensions.includes(context.extension.id)
-        ) {
-          Cu.reportError(
-            `This extension does not have permission to use native manifest ${path}`
-          );
-          return null;
-        }
-
-        return manifest;
-      })
-      .catch(ex => {
-        if (DOMException.isInstance(ex) && ex.name == "NotFoundError") {
-          if (logIfNotFound) {
-            Cu.reportError(
-              `Error reading native manifest file ${path}: file is referenced in the registry but does not exist`
-            );
-          }
-          return null;
-        }
-        throw ex;
-      });
+    return manifest;
   },
 
   async _tryPaths(type, name, dirs, context) {
