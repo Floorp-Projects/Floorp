@@ -48,7 +48,7 @@ struct SYSTEM_HANDLE_INFORMATION_EX {
 enum UndocObjectInformationClass { ObjectNameInformation = 1 };
 
 struct OBJECT_NAME_INFORMATION {
-  UNICODE_STRING mName;
+  UNICODE_STRING Name;
 };
 #endif
 

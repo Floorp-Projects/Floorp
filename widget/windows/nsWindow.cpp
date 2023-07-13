@@ -6132,6 +6132,10 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
           DispatchInputEvent(&event);
           if (sSwitchKeyboardLayout && mLastKeyboardLayout)
             ActivateKeyboardLayout(mLastKeyboardLayout, 0);
+
+#ifdef ACCESSIBILITY
+          a11y::LazyInstantiator::ResetUiaDetectionCache();
+#endif
         }
       }
     } break;
