@@ -1965,6 +1965,8 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
       // don't have to chase back through `typeDef` to determine that.
       if (typeDef.kind() == TypeDefKind::Struct) {
         typeDefData->structTypeSize = typeDef.structType().size_;
+        // StructLayout::close ensures this is an integral number of words.
+        MOZ_ASSERT((typeDefData->structTypeSize % sizeof(uintptr_t)) == 0);
       } else {
         MOZ_ASSERT(typeDefData->structTypeSize == 0);
       }
