@@ -40,7 +40,7 @@ class ScreenCapturerTest : public ::testing::Test {
  protected:
 #if defined(WEBRTC_WIN)
   // Enable allow_directx_capturer in DesktopCaptureOptions, but let
-  // DesktopCapturer::CreateScreenCapturer to decide whether a DirectX capturer
+  // DesktopCapturer::CreateScreenCapturer decide whether a DirectX capturer
   // should be used.
   void MaybeCreateDirectxCapturer() {
     DesktopCaptureOptions options(DesktopCaptureOptions::CreateDefault());
@@ -173,6 +173,18 @@ TEST_F(ScreenCapturerTest, UseSharedBuffers) {
   EXPECT_EQ(frame->shared_memory()->id(), kTestSharedMemoryId);
 }
 
+TEST_F(ScreenCapturerTest, GdiIsDefault) {
+  std::unique_ptr<DesktopFrame> frame;
+  EXPECT_CALL(callback_,
+              OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS, _))
+      .WillOnce(SaveUniquePtrArg(&frame));
+
+  capturer_->Start(&callback_);
+  capturer_->CaptureFrame();
+  ASSERT_TRUE(frame);
+  EXPECT_EQ(frame->capturer_id(), DesktopCapturerId::kScreenCapturerWinGdi);
+}
+
 TEST_F(ScreenCapturerTest, UseMagnifier) {
   CreateMagnifierCapturer();
   std::unique_ptr<DesktopFrame> frame;
@@ -183,6 +195,11 @@ TEST_F(ScreenCapturerTest, UseMagnifier) {
   capturer_->Start(&callback_);
   capturer_->CaptureFrame();
   ASSERT_TRUE(frame);
+  // Verify Magnifier API or GDI has fallback since the Magnifier API can fail
+  // to capture a frame on some bots.
+  EXPECT_TRUE(frame->capturer_id() ==
+                  DesktopCapturerId::kScreenCapturerWinMagnifier ||
+              frame->capturer_id() == DesktopCapturerId::kScreenCapturerWinGdi);
 }
 
 TEST_F(ScreenCapturerTest, UseDirectxCapturer) {
@@ -198,6 +215,33 @@ TEST_F(ScreenCapturerTest, UseDirectxCapturer) {
   capturer_->Start(&callback_);
   capturer_->CaptureFrame();
   ASSERT_TRUE(frame);
+  EXPECT_EQ(frame->capturer_id(), DesktopCapturerId::kScreenCapturerWinDirectx);
+}
+
+TEST_F(ScreenCapturerTest, DirectxPrecedesMagnifier) {
+  // Ensure that both DirecX and Magnifier API are supported.
+  if (!CreateDirectxCapturer()) {
+    return;
+  }
+  CreateMagnifierCapturer();
+  EXPECT_TRUE(capturer_);
+
+  // Enable both DirectX and the Magnifier API and ensure that DirectX is
+  // selected.
+  DesktopCaptureOptions options(DesktopCaptureOptions::CreateDefault());
+  options.set_allow_directx_capturer(true);
+  options.set_allow_use_magnification_api(true);
+  capturer_ = DesktopCapturer::CreateScreenCapturer(options);
+
+  std::unique_ptr<DesktopFrame> frame;
+  EXPECT_CALL(callback_,
+              OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS, _))
+      .WillOnce(SaveUniquePtrArg(&frame));
+
+  capturer_->Start(&callback_);
+  capturer_->CaptureFrame();
+  ASSERT_TRUE(frame);
+  EXPECT_EQ(frame->capturer_id(), DesktopCapturerId::kScreenCapturerWinDirectx);
 }
 
 TEST_F(ScreenCapturerTest, UseDirectxCapturerWithSharedBuffers) {
@@ -217,6 +261,7 @@ TEST_F(ScreenCapturerTest, UseDirectxCapturerWithSharedBuffers) {
   ASSERT_TRUE(frame);
   ASSERT_TRUE(frame->shared_memory());
   EXPECT_EQ(frame->shared_memory()->id(), kTestSharedMemoryId);
+  EXPECT_EQ(frame->capturer_id(), DesktopCapturerId::kScreenCapturerWinDirectx);
 }
 
 #endif  // defined(WEBRTC_WIN)
