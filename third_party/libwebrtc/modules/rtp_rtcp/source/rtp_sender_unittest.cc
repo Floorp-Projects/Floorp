@@ -15,7 +15,6 @@
 
 #include "absl/strings/string_view.h"
 #include "api/rtc_event_log/rtc_event.h"
-#include "api/transport/field_trial_based_config.h"
 #include "api/video/video_codec_constants.h"
 #include "api/video/video_timing.h"
 #include "logging/rtc_event_log/mock/mock_rtc_event_log.h"
@@ -36,11 +35,10 @@
 #include "rtc_base/logging.h"
 #include "rtc_base/rate_limiter.h"
 #include "rtc_base/strings/string_builder.h"
-#include "test/field_trial.h"
+#include "test/explicit_key_value_config.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 #include "test/mock_transport.h"
-#include "test/scoped_key_value_config.h"
 #include "test/time_controller/simulated_time_controller.h"
 
 namespace webrtc {
@@ -172,7 +170,7 @@ class RtpSenderTest : public ::testing::Test {
   std::unique_ptr<RtpPacketHistory> packet_history_;
   std::unique_ptr<RTPSender> rtp_sender_;
 
-  const test::ScopedKeyValueConfig field_trials_;
+  const test::ExplicitKeyValueConfig field_trials_{""};
 
   std::unique_ptr<RtpPacketToSend> BuildRtpPacket(int payload_type,
                                                   bool marker_bit,
