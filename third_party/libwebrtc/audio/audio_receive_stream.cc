@@ -115,8 +115,6 @@ AudioReceiveStreamImpl::AudioReceiveStreamImpl(
   RTC_DCHECK(audio_state_);
   RTC_DCHECK(channel_receive_);
 
-  packet_sequence_checker_.Detach();
-
   RTC_DCHECK(packet_router);
   // Configure bandwidth estimation.
   channel_receive_->RegisterReceiverCongestionControlObjects(packet_router);

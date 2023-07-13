@@ -24,10 +24,6 @@ PacketOptions::PacketOptions(DiffServCodePoint dscp) : dscp(dscp) {}
 PacketOptions::PacketOptions(const PacketOptions& other) = default;
 PacketOptions::~PacketOptions() = default;
 
-AsyncPacketSocket::AsyncPacketSocket() {
-  network_checker_.Detach();
-}
-
 AsyncPacketSocket::~AsyncPacketSocket() = default;
 
 void AsyncPacketSocket::SubscribeClose(

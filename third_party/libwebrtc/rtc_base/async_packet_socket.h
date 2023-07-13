@@ -68,7 +68,7 @@ class RTC_EXPORT AsyncPacketSocket : public sigslot::has_slots<> {
     STATE_CONNECTED
   };
 
-  AsyncPacketSocket();
+  AsyncPacketSocket() = default;
   ~AsyncPacketSocket() override;
 
   AsyncPacketSocket(const AsyncPacketSocket&) = delete;
@@ -148,7 +148,8 @@ class RTC_EXPORT AsyncPacketSocket : public sigslot::has_slots<> {
     on_close_.Send(this, err);
   }
 
-  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker network_checker_;
+  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker network_checker_{
+      webrtc::SequenceChecker::kDetached};
 
  private:
   webrtc::CallbackList<AsyncPacketSocket*, int> on_close_

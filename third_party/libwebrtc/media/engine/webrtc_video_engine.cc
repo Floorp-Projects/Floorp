@@ -695,8 +695,6 @@ WebRtcVideoChannel::WebRtcVideoChannel(
                     "WebRTC-Video-DiscardPacketsWithUnknownSsrc")),
       crypto_options_(crypto_options) {
   RTC_DCHECK_RUN_ON(&thread_checker_);
-  network_thread_checker_.Detach();
-
   rtcp_receiver_report_ssrc_ = kDefaultRtcpReceiverReportSsrc;
   sending_ = false;
   recv_codecs_ = MapCodecs(GetPayloadTypesAndDefaultCodecs(
