@@ -177,8 +177,11 @@ class PeerConnectionInternal : public PeerConnectionInterface,
   // Functions needed by DataChannelController
   virtual void NoteDataAddedEvent() {}
   // Handler for sctp data channel state changes.
+  // The `channel_id` is the same unique identifier as used in
+  // `DataChannelStats::internal_id and
+  // `RTCDataChannelStats::data_channel_identifier`.
   virtual void OnSctpDataChannelStateChanged(
-      DataChannelInterface* channel,
+      int channel_id,
       DataChannelInterface::DataState state) {}
 };
 

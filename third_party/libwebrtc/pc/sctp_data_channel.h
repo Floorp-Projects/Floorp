@@ -211,6 +211,11 @@ class SctpDataChannel : public DataChannelInterface {
 
   DataChannelStats GetStats() const;
 
+  // Returns a unique identifier that's guaranteed to always be available,
+  // doesn't change throughout SctpDataChannel's lifetime and is used for
+  // stats purposes (see also `GetStats()`).
+  int internal_id() const { return internal_id_; }
+
   const StreamId& sid() const { return id_; }
 
   // Reset the allocator for internal ID values for testing, so that

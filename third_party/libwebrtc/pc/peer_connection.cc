@@ -2115,11 +2115,11 @@ void PeerConnection::ResetSctpDataMid() {
 }
 
 void PeerConnection::OnSctpDataChannelStateChanged(
-    DataChannelInterface* channel,
+    int channel_id,
     DataChannelInterface::DataState state) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   if (stats_collector_)
-    stats_collector_->OnSctpDataChannelStateChanged(channel, state);
+    stats_collector_->OnSctpDataChannelStateChanged(channel_id, state);
 }
 
 PeerConnection::InitializePortAllocatorResult

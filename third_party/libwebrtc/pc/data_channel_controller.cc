@@ -69,7 +69,7 @@ void DataChannelController::OnChannelStateChanged(
   if (state == DataChannelInterface::DataState::kClosed)
     OnSctpDataChannelClosed(channel);
 
-  pc_->OnSctpDataChannelStateChanged(channel, state);
+  pc_->OnSctpDataChannelStateChanged(channel->internal_id(), state);
 }
 
 void DataChannelController::OnDataReceived(
