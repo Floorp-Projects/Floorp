@@ -17,8 +17,8 @@ import {
 import { getSource } from "../../selectors";
 import { addBreakpoint, removeBreakpointAtGeneratedLocation } from ".";
 
-async function findBreakpointPosition(cx, { getState, dispatch }, location) {
-  const positions = await dispatch(setBreakpointPositions({ cx, location }));
+async function findBreakpointPosition({ getState, dispatch }, location) {
+  const positions = await dispatch(setBreakpointPositions(location));
 
   const position = findPosition(positions, location);
   return position;
@@ -93,7 +93,6 @@ export function syncPendingBreakpoint(cx, sourceId, pendingBreakpoint) {
     });
 
     const newPosition = await findBreakpointPosition(
-      cx,
       thunkArgs,
       originalLocation
     );

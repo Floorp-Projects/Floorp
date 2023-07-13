@@ -31,7 +31,7 @@ export function continueToHere(cx, location) {
       return;
     }
 
-    await dispatch(setBreakpointPositions({ cx, location }));
+    await dispatch(setBreakpointPositions(location));
     const position = getClosestBreakpointPosition(getState(), location);
 
     // If the user selects a location in the editor,

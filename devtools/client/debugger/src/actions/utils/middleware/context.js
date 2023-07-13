@@ -7,6 +7,7 @@ import {
   validateContext,
   validateSelectedFrame,
   validateBreakpoint,
+  validateSource,
 } from "../../../utils/context";
 
 function validateActionContext(getState, action) {
@@ -35,6 +36,9 @@ function context({ dispatch, getState }) {
     }
     if ("breakpoint" in action) {
       validateBreakpoint(getState(), action.breakpoint);
+    }
+    if ("source" in action) {
+      validateSource(getState(), action.source);
     }
     return next(action);
   };
