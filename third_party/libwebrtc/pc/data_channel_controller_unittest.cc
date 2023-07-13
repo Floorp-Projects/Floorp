@@ -70,17 +70,22 @@ TEST_F(DataChannelControllerTest, CreateAndDestroy) {
 
 TEST_F(DataChannelControllerTest, CreateDataChannelEarlyRelease) {
   DataChannelController dcc(pc_.get());
-  auto channel = dcc.InternalCreateDataChannelWithProxy(
+  auto ret = dcc.InternalCreateDataChannelWithProxy(
       "label", InternalDataChannelInit(DataChannelInit()));
-  channel = nullptr;  // dcc holds a reference to channel, so not destroyed yet
+  ASSERT_TRUE(ret.ok());
+  auto channel = ret.MoveValue();
+  // DCC still holds a reference to the channel. Release this reference early.
+  channel = nullptr;
 }
 
 TEST_F(DataChannelControllerTest, CreateDataChannelEarlyClose) {
   DataChannelController dcc(pc_.get());
   EXPECT_FALSE(dcc.HasDataChannels());
   EXPECT_FALSE(dcc.HasUsedDataChannels());
-  auto channel = dcc.InternalCreateDataChannelWithProxy(
+  auto ret = dcc.InternalCreateDataChannelWithProxy(
       "label", InternalDataChannelInit(DataChannelInit()));
+  ASSERT_TRUE(ret.ok());
+  auto channel = ret.MoveValue();
   EXPECT_TRUE(dcc.HasDataChannels());
   EXPECT_TRUE(dcc.HasUsedDataChannels());
   channel->Close();
@@ -90,25 +95,30 @@ TEST_F(DataChannelControllerTest, CreateDataChannelEarlyClose) {
 
 TEST_F(DataChannelControllerTest, CreateDataChannelLateRelease) {
   auto dcc = std::make_unique<DataChannelController>(pc_.get());
-  auto channel = dcc->InternalCreateDataChannelWithProxy(
+  auto ret = dcc->InternalCreateDataChannelWithProxy(
       "label", InternalDataChannelInit(DataChannelInit()));
+  ASSERT_TRUE(ret.ok());
+  auto channel = ret.MoveValue();
   dcc.reset();
   channel = nullptr;
 }
 
 TEST_F(DataChannelControllerTest, CloseAfterControllerDestroyed) {
   auto dcc = std::make_unique<DataChannelController>(pc_.get());
-  auto channel = dcc->InternalCreateDataChannelWithProxy(
+  auto ret = dcc->InternalCreateDataChannelWithProxy(
       "label", InternalDataChannelInit(DataChannelInit()));
+  ASSERT_TRUE(ret.ok());
+  auto channel = ret.MoveValue();
   dcc.reset();
   channel->Close();
 }
 
 TEST_F(DataChannelControllerTest, AsyncChannelCloseTeardown) {
   DataChannelController dcc(pc_.get());
-  rtc::scoped_refptr<DataChannelInterface> channel =
-      dcc.InternalCreateDataChannelWithProxy(
-          "label", InternalDataChannelInit(DataChannelInit()));
+  auto ret = dcc.InternalCreateDataChannelWithProxy(
+      "label", InternalDataChannelInit(DataChannelInit()));
+  ASSERT_TRUE(ret.ok());
+  auto channel = ret.MoveValue();
   SctpDataChannel* inner_channel =
       DowncastProxiedDataChannelInterfaceToSctpDataChannelForTesting(
           channel.get());
@@ -159,18 +169,61 @@ TEST_F(DataChannelControllerTest, MaxChannels) {
   // Allocate the maximum number of channels + 1. Inside the loop, the creation
   // process will allocate a stream id for each channel.
   for (channel_id = 0; channel_id <= cricket::kMaxSctpStreams; ++channel_id) {
-    rtc::scoped_refptr<DataChannelInterface> channel =
-        dcc.InternalCreateDataChannelWithProxy(
-            "label", InternalDataChannelInit(DataChannelInit()));
-
+    auto ret = dcc.InternalCreateDataChannelWithProxy(
+        "label", InternalDataChannelInit(DataChannelInit()));
     if (channel_id == cricket::kMaxSctpStreams) {
       // We've reached the maximum and the previous call should have failed.
-      EXPECT_FALSE(channel.get());
+      EXPECT_FALSE(ret.ok());
     } else {
       // We're still working on saturating the pool. Things should be working.
-      EXPECT_TRUE(channel.get());
+      EXPECT_TRUE(ret.ok());
     }
   }
+}
+
+// Test that while a data channel is in the `kClosing` state, its StreamId does
+// not get re-used for new channels. Only once the state reaches `kClosed`
+// should a StreamId be available again for allocation.
+TEST_F(DataChannelControllerTest, NoStreamIdReuseWhileClosing) {
+  ON_CALL(*pc_, GetSctpSslRole_n).WillByDefault([&]() {
+    return rtc::SSL_CLIENT;
+  });
+
+  DataChannelController dcc(pc_.get());
+  NiceMock<MockDataChannelTransport> transport;
+  pc_->network_thread()->BlockingCall(
+      [&] { dcc.set_data_channel_transport(&transport); });
+
+  // Create the first channel and check that we got the expected, first sid.
+  auto channel1 = dcc.InternalCreateDataChannelWithProxy(
+                         "label", InternalDataChannelInit(DataChannelInit()))
+                      .MoveValue();
+  ASSERT_EQ(channel1->id(), 0);
+
+  // Start closing the channel and make sure its state is `kClosing`
+  channel1->Close();
+  ASSERT_EQ(channel1->state(), DataChannelInterface::DataState::kClosing);
+
+  // Create a second channel and make sure we get a new StreamId, not the same
+  // as that of channel1.
+  auto channel2 = dcc.InternalCreateDataChannelWithProxy(
+                         "label2", InternalDataChannelInit(DataChannelInit()))
+                      .MoveValue();
+  ASSERT_NE(channel2->id(), channel1->id());  // In practice the id will be 2.
+
+  // Simulate the acknowledgement of the channel closing from the transport.
+  // This completes the closing operation of channel1.
+  pc_->network_thread()->BlockingCall([&] { dcc.OnChannelClosed(0); });
+  run_loop_.Flush();
+  ASSERT_EQ(channel1->state(), DataChannelInterface::DataState::kClosed);
+
+  // Now create a third channel. This time, the id of the first channel should
+  // be available again and therefore the ids of the first and third channels
+  // should be the same.
+  auto channel3 = dcc.InternalCreateDataChannelWithProxy(
+                         "label3", InternalDataChannelInit(DataChannelInit()))
+                      .MoveValue();
+  EXPECT_EQ(channel3->id(), channel1->id());
 }
 
 }  // namespace

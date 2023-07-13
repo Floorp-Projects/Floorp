@@ -52,7 +52,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
                     const rtc::CopyOnWriteBuffer& payload) override;
   void AddSctpDataStream(StreamId sid) override;
   void RemoveSctpDataStream(StreamId sid) override;
-  bool ReadyToSendData() const override;
   void OnChannelStateChanged(SctpDataChannel* channel,
                              DataChannelInterface::DataState state) override;
 
@@ -80,9 +79,9 @@ class DataChannelController : public SctpDataChannelControllerInterface,
 
   // Creates channel and adds it to the collection of DataChannels that will
   // be offered in a SessionDescription, and wraps it in a proxy object.
-  rtc::scoped_refptr<DataChannelInterface> InternalCreateDataChannelWithProxy(
-      const std::string& label,
-      const InternalDataChannelInit& config);
+  RTCErrorOr<rtc::scoped_refptr<DataChannelInterface>>
+  InternalCreateDataChannelWithProxy(const std::string& label,
+                                     const InternalDataChannelInit& config);
   void AllocateSctpSids(rtc::SSLRole role);
 
   // Checks if any data channel has been added.
@@ -101,10 +100,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   void OnSctpDataChannelClosed(SctpDataChannel* channel);
 
  private:
-  rtc::scoped_refptr<SctpDataChannel> InternalCreateSctpDataChannel(
-      const std::string& label,
-      const InternalDataChannelInit& config);
-
   // Parses and handles open messages.  Returns true if the message is an open
   // message and should be considered to be handled, false otherwise.
   bool HandleOpenMessage_n(int channel_id,
@@ -115,6 +110,18 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   void OnDataChannelOpenMessage(const std::string& label,
                                 const InternalDataChannelInit& config)
       RTC_RUN_ON(signaling_thread());
+
+  // Accepts a `StreamId` which may be pre-negotiated or unassigned. For
+  // pre-negotiated sids, attempts to reserve the sid in the allocation pool,
+  // for unassigned sids attempts to generate a new sid if possible. Returns
+  // RTCError::OK() if the sid is reserved (and may have been generated) or
+  // if not enough information exists to generate a sid, in which case the sid
+  // will still be unassigned upon return, but will be assigned later.
+  // If the pool has been exhausted or a sid has already been reserved, an
+  // error will be returned.
+  RTCError ReserveOrAllocateSid(StreamId& sid,
+                                absl::optional<rtc::SSLRole> fallback_ssl_role)
+      RTC_RUN_ON(network_thread());
 
   // Called from SendData when data_channel_transport() is true.
   RTCError DataChannelSendData(StreamId sid,
@@ -137,14 +144,15 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   // TODO(bugs.webrtc.org/9987): Accessed on both signaling and network
   // thread.
   DataChannelTransportInterface* data_channel_transport_ = nullptr;
-
-  // Cached value of whether the data channel transport is ready to send.
-  bool data_channel_transport_ready_to_send_
-      RTC_GUARDED_BY(signaling_thread()) = false;
-
-  SctpSidAllocator sid_allocator_;
+  SctpSidAllocator sid_allocator_ RTC_GUARDED_BY(network_thread());
   std::vector<rtc::scoped_refptr<SctpDataChannel>> sctp_data_channels_
       RTC_GUARDED_BY(signaling_thread());
+  // TODO(bugs.webrtc.org/11547): This vector will eventually take over from
+  // `sctp_data_channels_`. While we're migrating away from thread hops
+  // between the signaling and network threads, we need both, so this is
+  // a temporary situation.
+  std::vector<rtc::scoped_refptr<SctpDataChannel>> sctp_data_channels_n_
+      RTC_GUARDED_BY(network_thread());
   bool has_used_data_channels_ RTC_GUARDED_BY(signaling_thread()) = false;
 
   // Owning PeerConnection.

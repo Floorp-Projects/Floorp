@@ -150,7 +150,6 @@ rtc::scoped_refptr<SctpDataChannel> SctpDataChannel::Create(
     const InternalDataChannelInit& config,
     rtc::Thread* signaling_thread,
     rtc::Thread* network_thread) {
-  RTC_DCHECK(controller);
   RTC_DCHECK(config.IsValid());
   return rtc::make_ref_counted<SctpDataChannel>(
       config, std::move(controller), label, connected_to_transport,
@@ -188,10 +187,11 @@ SctpDataChannel::SctpDataChannel(
       observer_(nullptr),
       controller_(std::move(controller)),
       connected_to_transport_(connected_to_transport) {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK_RUN_ON(network_thread_);
+  // Since we constructed on the network thread we can't (yet) check the
+  // `controller_` pointer since doing so will trigger a thread check.
   RTC_UNUSED(network_thread_);
   RTC_DCHECK(config.IsValid());
-  RTC_DCHECK(controller_);
 
   switch (config.open_handshake_role) {
     case InternalDataChannelInit::kNone:  // pre-negotiated
@@ -203,13 +203,6 @@ SctpDataChannel::SctpDataChannel(
     case InternalDataChannelInit::kAcker:
       handshake_state_ = kHandshakeShouldSendAck;
       break;
-  }
-
-  // Try to connect to the transport in case the transport channel already
-  // exists.
-  if (id_.HasValue() && connected_to_transport_) {
-    network_thread_->BlockingCall(
-        [c = controller_.get(), sid = id_] { c->AddSctpDataStream(sid); });
   }
 }
 
@@ -348,10 +341,6 @@ void SctpDataChannel::SetSctpSid(const StreamId& sid) {
   RTC_DCHECK_EQ(state_, kConnecting);
 
   id_ = sid;
-  if (connected_to_transport_) {
-    network_thread_->BlockingCall(
-        [c = controller_.get(), sid] { c->AddSctpDataStream(sid); });
-  }
 }
 
 void SctpDataChannel::OnClosingProcedureStartedRemotely() {
@@ -386,6 +375,8 @@ void SctpDataChannel::OnTransportChannelCreated() {
   connected_to_transport_ = true;
 
   if (id_.HasValue()) {
+    // TODO(bugs.webrtc.org/11547): Move this call over to DCC and do it when we
+    // get the initial notification from the transport, on the network thread.
     network_thread_->BlockingCall(
         [c = controller_.get(), sid = id_] { c->AddSctpDataStream(sid); });
   }

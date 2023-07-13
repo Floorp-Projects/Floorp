@@ -77,9 +77,9 @@ class SctpDataChannelTest : public ::testing::Test {
  protected:
   SctpDataChannelTest()
       : network_thread_(std::make_unique<rtc::NullSocketServer>()),
-        controller_(new FakeDataChannelController(&network_thread_)),
-        webrtc_data_channel_(controller_->CreateDataChannel("test", init_)) {
+        controller_(new FakeDataChannelController(&network_thread_)) {
     network_thread_.Start();
+    webrtc_data_channel_ = controller_->CreateDataChannel("test", init_);
   }
   ~SctpDataChannelTest() override {
     run_loop_.Flush();
@@ -90,9 +90,22 @@ class SctpDataChannelTest : public ::testing::Test {
     controller_->set_transport_available(true);
     webrtc_data_channel_->OnTransportChannelCreated();
     if (!webrtc_data_channel_->sid().HasValue()) {
-      webrtc_data_channel_->SetSctpSid(StreamId(0));
+      SetChannelSid(webrtc_data_channel_, StreamId(0));
     }
     controller_->set_ready_to_send(true);
+  }
+
+  // TODO(bugs.webrtc.org/11547): This mirrors what the DataChannelController
+  // currently does when assigning stream ids to a channel. Right now the sid
+  // in the SctpDataChannel code is (still) tied to the signaling thread, but
+  // the `AddSctpDataStream` operation is a bridge to the transport and needs
+  // to run on the network thread.
+  void SetChannelSid(const rtc::scoped_refptr<SctpDataChannel>& channel,
+                     StreamId sid) {
+    RTC_DCHECK(sid.HasValue());
+    network_thread_.BlockingCall(
+        [&]() { controller_->AddSctpDataStream(sid); });
+    channel->SetSctpSid(sid);
   }
 
   void AddObserver() {
@@ -145,7 +158,7 @@ TEST_F(SctpDataChannelTest, ConnectedToTransportOnCreated) {
   // The sid is not set yet, so it should not have added the streams.
   EXPECT_FALSE(controller_->IsStreamAdded(dc->sid()));
 
-  dc->SetSctpSid(StreamId(0));
+  SetChannelSid(dc, StreamId(0));
   EXPECT_TRUE(controller_->IsStreamAdded(dc->sid()));
 }
 
@@ -410,7 +423,7 @@ TEST_F(SctpDataChannelTest, QueuedCloseFlushes) {
 
 // Tests that messages are sent with the right id.
 TEST_F(SctpDataChannelTest, SendDataId) {
-  webrtc_data_channel_->SetSctpSid(StreamId(1));
+  SetChannelSid(webrtc_data_channel_, StreamId(1));
   SetChannelReady();
   DataBuffer buffer("data");
   EXPECT_TRUE(webrtc_data_channel_->Send(buffer));
@@ -419,7 +432,7 @@ TEST_F(SctpDataChannelTest, SendDataId) {
 
 // Tests that the incoming messages with right ids are accepted.
 TEST_F(SctpDataChannelTest, ReceiveDataWithValidId) {
-  webrtc_data_channel_->SetSctpSid(StreamId(1));
+  SetChannelSid(webrtc_data_channel_, StreamId(1));
   SetChannelReady();
 
   AddObserver();
@@ -458,7 +471,7 @@ TEST_F(SctpDataChannelTest, VerifyMessagesAndBytesReceived) {
       DataBuffer("message of the beast"),
   });
 
-  webrtc_data_channel_->SetSctpSid(StreamId(1));
+  SetChannelSid(webrtc_data_channel_, StreamId(1));
 
   // Default values.
   EXPECT_EQ(0U, webrtc_data_channel_->messages_received());
@@ -580,7 +593,7 @@ TEST_F(SctpDataChannelTest, ClosedWhenReceivedBufferFull) {
 
 // Tests that sending empty data returns no error and keeps the channel open.
 TEST_F(SctpDataChannelTest, SendEmptyData) {
-  webrtc_data_channel_->SetSctpSid(StreamId(1));
+  SetChannelSid(webrtc_data_channel_, StreamId(1));
   SetChannelReady();
   EXPECT_EQ(DataChannelInterface::kOpen, webrtc_data_channel_->state());
 
