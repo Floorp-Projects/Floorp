@@ -1,0 +1,26 @@
+# This file should be identical to scroll_subpic_1.yaml except for the
+# scroll-offset on the scroll-frame.
+
+root:
+  items:
+    - type: clip
+      id: 2
+      bounds: [0, 0, 50, 50]
+    - type: clip-chain
+      id: 3
+      clips: [2]
+
+    - type: scroll-frame
+      bounds: [0, 0, 50, 50]
+      scroll-offset: [0, 10]
+      clip-to-frame: true
+      items:
+        - type: stacking-context
+          bounds: [0, 0, 100, 500]
+          filters: [opacity(0.9)]
+          clip-chain: 3
+          items:
+            - type: rect
+              bounds: [0, 0, 100, 500]
+              color: green
+              clip-chain: 3
