@@ -1,0 +1,7 @@
+#imported-layers {
+  background-color: var(--imported-layers_in-nested-importedSecond);
+}
+
+#all-important-imported-layers {
+  background-color: var(--all-important-imported-layers_in-nested-importedSecond-important) !important;
+}
