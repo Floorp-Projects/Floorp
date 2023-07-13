@@ -1167,10 +1167,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
               StrCaseEq("video/VP8"));
   EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T1"));
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
@@ -1212,10 +1208,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
@@ -1264,10 +1256,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   parameters = sender->GetParameters();
   ASSERT_EQ(parameters.encodings.size(), 1u);
   EXPECT_THAT(parameters.encodings[0].scalability_mode, Eq(absl::nullopt));
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
@@ -1325,10 +1313,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_THAT(GetCurrentCodecMimeType(report, *outbound_rtps[0]),
               StrCaseEq("video/VP8"));
   EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T2"));
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 #if defined(WEBRTC_USE_H264)
@@ -1372,10 +1356,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 #endif  // defined(WEBRTC_USE_H264)
@@ -1425,10 +1405,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_FALSE(encodings[0].scalability_mode.has_value());
   EXPECT_FALSE(encodings[1].scalability_mode.has_value());
   EXPECT_FALSE(encodings[2].scalability_mode.has_value());
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 // The spec-compliant way to configure SVC for a single stream. The expected
@@ -1479,10 +1455,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   ASSERT_EQ(parameters.encodings.size(), 1u);
   EXPECT_THAT(parameters.encodings[0].scalability_mode,
               Optional(std::string("L3T3_KEY")));
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 // The {active,inactive,inactive} case is technically simulcast but since we
@@ -1535,10 +1507,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
               Optional(std::string("L3T3_KEY")));
   EXPECT_FALSE(parameters.encodings[1].scalability_mode.has_value());
   EXPECT_FALSE(parameters.encodings[2].scalability_mode.has_value());
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
@@ -1603,10 +1571,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 // Exercise common path where `scalability_mode` is not specified until after
@@ -1665,10 +1629,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
               Optional(std::string("L2T2_KEY")));
   EXPECT_FALSE(parameters.encodings[1].scalability_mode.has_value());
   EXPECT_FALSE(parameters.encodings[2].scalability_mode.has_value());
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
@@ -1710,10 +1670,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_EQ(*outbound_rtps[0]->bytes_sent, 0u);
   EXPECT_EQ(*outbound_rtps[1]->bytes_sent, 0u);
   EXPECT_EQ(*outbound_rtps[2]->bytes_sent, 0u);
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
@@ -1789,10 +1745,6 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   EXPECT_THAT(*outbound_rtps[0]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[1]->scalability_mode, StrEq("L1T3"));
   EXPECT_THAT(*outbound_rtps[2]->scalability_mode, StrEq("L1T3"));
-
-  // Cleanup that may be needed due to webrtc:15018.
-  RTC_LOG(LS_INFO) << "Closing local PC.";
-  local_pc_wrapper->pc()->Close();
 }
 
 }  // namespace webrtc
