@@ -7,7 +7,7 @@
 /**
  * Observer for query stripping list updates.
  */
-[scriptable, function, uuid(ef56ae12-b1bb-43e6-b1d8-16459cb98dfd)]
+[scriptable, uuid(ef56ae12-b1bb-43e6-b1d8-16459cb98dfd)]
 interface nsIURLQueryStrippingListObserver : nsISupports
 {
   /**
@@ -23,6 +23,18 @@ interface nsIURLQueryStrippingListObserver : nsISupports
    *        stripping.
    */
   void onQueryStrippingListUpdate(in AString aStripList, in ACString aAllowList);
+
+  /**
+   * Called by nsIQueryStrippingListService when the list of query stripping
+   * parameters for strip-on-share feature is updated and when the observer is first registered.
+   *
+   * @param aStripRules
+   *        An Array of stringified strip rules.
+   *        A stringified rule has the form of:
+   *        "'queryParams': ['param1', 'param2', ...], 'topLevelSites': ['www.site.com', 'www.site.de', ...]"
+   */
+  [implicit_jscontext]
+  void onStripOnShareUpdate(in Array<AString> aStripRules);
 };
 
 /**
@@ -45,6 +57,20 @@ interface nsIURLQueryStrippingListService : nsISupports
    */
   void registerAndRunObserver(in nsIURLQueryStrippingListObserver aObserver);
 
+
+  /**
+   * Register a new observer to strip-on-share stripping list updates
+   * (this is the strip-on-share list combined with the QPS list).
+   * When the observer is registered it is called immediately once. Afterwards it will be called
+   * when there is an remote settings update to the QPS strip list.
+   *
+   * @param aObserver
+   *        An nsIURLQueryStrippingListObserver object or function that
+   *        will receive updates to the strip list and the allow list. Will be
+   *        called immediately with the current list value.
+   */
+  void registerAndRunObserverStripOnShare(in nsIURLQueryStrippingListObserver aObserver);
+
   /**
    * Unregister an observer.
    *
@@ -52,6 +78,14 @@ interface nsIURLQueryStrippingListService : nsISupports
    *        The nsIURLQueryStrippingListObserver object to unregister.
    */
   void unregisterObserver(in nsIURLQueryStrippingListObserver aObserver);
+
+  /**
+   * Unregister an observer for strip-on-share.
+   *
+   * @param aObserver
+   *        The nsIURLQueryStrippingListObserver object to unregister.
+   */
+  void unregisterStripOnShareObserver(in nsIURLQueryStrippingListObserver aObserver);
 
   /**
    * Clear all Lists.

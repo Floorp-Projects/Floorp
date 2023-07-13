@@ -25,6 +25,18 @@ const TEST_THIRD_PARTY_URI = TEST_DOMAIN_2 + TEST_PATH + "empty.html";
 // URLQueryStrippingListService. We need to use the event here so that the same
 // observer can be called multiple times.
 class UpdateEvent extends EventTarget {}
+
+// The Observer that is registered needs to implement onQueryStrippingListUpdate
+// like a nsIURLQueryStrippingListObserver does
+class ListObserver {
+  updateEvent = new UpdateEvent();
+
+  onQueryStrippingListUpdate(stripList, allowList) {
+    let event = new CustomEvent("update", { detail: { stripList, allowList } });
+    this.updateEvent.dispatchEvent(event);
+  }
+}
+
 function waitForEvent(element, eventName) {
   return BrowserTestUtils.waitForEvent(element, eventName).then(e => e.detail);
 }
@@ -100,12 +112,8 @@ add_task(async function testPrefSettings() {
   });
 
   // Test if the observer been called when adding to the service.
-  let updateEvent = new UpdateEvent();
-  let obs = (stripList, allowList) => {
-    let event = new CustomEvent("update", { detail: { stripList, allowList } });
-    updateEvent.dispatchEvent(event);
-  };
-  let promise = waitForEvent(updateEvent, "update");
+  let obs = new ListObserver();
+  let promise = waitForEvent(obs.updateEvent, "update");
   urlQueryStrippingListService.registerAndRunObserver(obs);
   let lists = await promise;
   is(lists.stripList, "", "No strip list at the beginning.");
@@ -116,7 +124,7 @@ add_task(async function testPrefSettings() {
   await check("pref_query2=456", "pref_query2=456");
 
   // Set pref for strip list
-  promise = waitForEvent(updateEvent, "update");
+  promise = waitForEvent(obs.updateEvent, "update");
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.query_stripping.strip_list", "pref_query1 pref_query2"]],
   });
@@ -134,7 +142,7 @@ add_task(async function testPrefSettings() {
   await check("pref_query2=456", "");
 
   // Set the pref for allow list.
-  promise = waitForEvent(updateEvent, "update");
+  promise = waitForEvent(obs.updateEvent, "update");
   await SpecialPowers.pushPrefEnv({
     set: [["privacy.query_stripping.allow_list", "example.net"]],
   });
@@ -173,12 +181,8 @@ add_task(async function testRemoteSettings() {
   await db.importChanges({}, Date.now(), []);
 
   // Test if the observer been called when adding to the service.
-  let updateEvent = new UpdateEvent();
-  let obs = (stripList, allowList) => {
-    let event = new CustomEvent("update", { detail: { stripList, allowList } });
-    updateEvent.dispatchEvent(event);
-  };
-  let promise = waitForEvent(updateEvent, "update");
+  let obs = new ListObserver();
+  let promise = waitForEvent(obs.updateEvent, "update");
   urlQueryStrippingListService.registerAndRunObserver(obs);
   let lists = await promise;
   is(lists.stripList, "", "No strip list at the beginning.");
@@ -189,7 +193,7 @@ add_task(async function testRemoteSettings() {
   await check("remote_query2=456", "remote_query2=456");
 
   // Set record for strip list.
-  promise = waitForEvent(updateEvent, "update");
+  promise = waitForEvent(obs.updateEvent, "update");
   await RemoteSettings(COLLECTION_NAME).emit("sync", {
     data: {
       current: [
@@ -216,7 +220,7 @@ add_task(async function testRemoteSettings() {
   await check("remote_query2=456", "");
 
   // Set record for strip list and allow list.
-  promise = waitForEvent(updateEvent, "update");
+  promise = waitForEvent(obs.updateEvent, "update");
   await RemoteSettings(COLLECTION_NAME).emit("sync", {
     data: {
       current: [

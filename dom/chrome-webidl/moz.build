@@ -79,6 +79,7 @@ WEBIDL_FILES = [
     "PrecompiledScript.webidl",
     "PromiseDebugging.webidl",
     "SessionStoreUtils.webidl",
+    "StripOnShareRule.webidl",
     "StructuredCloneHolder.webidl",
     "TelemetryStopwatch.webidl",
     "UserInteraction.webidl",

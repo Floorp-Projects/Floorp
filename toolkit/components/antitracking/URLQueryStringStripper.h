@@ -10,9 +10,10 @@
 #include "nsIURLQueryStringStripper.h"
 #include "nsIURLQueryStrippingListService.h"
 #include "nsIObserver.h"
-
+#include "mozilla/dom/StripOnShareRuleBinding.h"
 #include "nsStringFwd.h"
 #include "nsTHashSet.h"
+#include "nsTHashMap.h"
 
 class nsIURI;
 
@@ -35,6 +36,7 @@ class URLQueryStringStripper final : public nsIObserver,
   ~URLQueryStringStripper() = default;
 
   static void OnPrefChange(const char* aPref, void* aData);
+  nsresult ManageObservers();
 
   [[nodiscard]] nsresult Init();
   [[nodiscard]] nsresult Shutdown();
@@ -50,7 +52,12 @@ class URLQueryStringStripper final : public nsIObserver,
   nsTHashSet<nsString> mList;
   nsTHashSet<nsCString> mAllowList;
   nsCOMPtr<nsIURLQueryStrippingListService> mListService;
+  nsTHashMap<nsCString, dom::StripRule> mStripOnShareMap;
   bool mIsInitialized;
+  // Indicates whether or not we currently have registered an observer
+  // for the QPS/strip-on-share list updates
+  bool mObservingQPS = false;
+  bool mObservingStripOnShare = false;
 };
 
 }  // namespace mozilla
