@@ -67,8 +67,6 @@
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
-    <string name="private_mode_cfr_message" moz:removedIn="111" tools:ignore="UnusedResources">Skedën pasuese private hape me një prekje.</string>
-    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
     <string name="private_mode_cfr_message_2">Skedën tuaj pasuese private hape me një prekje.</string>
     <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
     <string name="private_mode_cfr_pos_button_text">Shtoje te skena e Kreut</string>
@@ -124,6 +122,9 @@
     <string name="home_screen_shortcut_open_new_tab_2">Skedë e re</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Skedë e re private</string>
+
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Shkurtore fjalëkalimesh</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -248,7 +249,7 @@
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s do të ndajë gjithçka shtypni te shtylla e adresave me motorin tuaj parazgjedhje të kërkimeve.</string>
 
-    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">Kërko me %s</string>
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Kërkoni drejt e nga shtylla e adresave</string>
@@ -257,10 +258,10 @@
     <string name="search_settings_menu_item">Rregullime mbi kërkimin</string>
 
     <!-- Header text for the search selector menu -->
-    <string name="search_header_menu_item" moz:RemovedIn="109" tools:ignore="UnusedResources">Kërkimi këtë herë:</string>
-
-    <!-- Header text for the search selector menu -->
     <string name="search_header_menu_item_2">Këtë herë kërko te:</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">Motor kërkimesh %s</string>
 
     <!-- Home onboarding -->
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
@@ -299,37 +300,49 @@
     <!-- Juno first user onboarding flow experiment -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title" tools:ignore="UnusedResources">Bëjeni %s shfletuesin tuaj të zemrës</string>
+    <string name="juno_onboarding_default_browser_title">Bëjeni %s shfletuesin tuaj të zemrës</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">Bëjeni Firefox-in shfletuesin tuaj të zemrës</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description" tools:ignore="UnusedResources">%1$s vë njerëzit mbi fitimet dhe mbron privatësinë tuaj duke bllokuar gjurmues nga sajti në sajt.\n\nMësoni më tepër te %2$s ynë.</string>
+    <string name="juno_onboarding_default_browser_description">%1$s vë njerëzit mbi fitimet dhe mbron privatësinë tuaj duke bllokuar gjurmues nga sajti në sajt.\n\nMësoni më tepër te %2$s ynë.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">Firefox-i vë njerëzit mbi fitimet dhe mbron privatësinë tuaj duke bllokuar gjurmues nga sajti në sajt.\n\nMësoni më tepër te shënimi ynë mbi privatësinë.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">shënim mbi privatësinë</string>
+    <string name="juno_onboarding_default_browser_description_link_text">shënim mbi privatësinë</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Vëre si shfletuesin parazgjedhje</string>
+    <string name="juno_onboarding_default_browser_positive_button">Vëre si shfletuesin parazgjedhje</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Jo tani</string>
+    <string name="juno_onboarding_default_browser_negative_button">Jo tani</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">Kaloni nga telefoni në portativ, ose anasjelltas</string>
+    <string name="juno_onboarding_sign_in_title">Kaloni nga telefoni në portativ, ose anasjelltas</string>
 
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">Merrni skeda dhe fjalëkalim nga pajisjet tuaja të tjera, për të vazhduar atje ku e latë.</string>
+    <string name="juno_onboarding_sign_in_description">Merrni skeda dhe fjalëkalim nga pajisjet tuaja të tjera, për të vazhduar atje ku e latë.</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Hyni</string>
+    <string name="juno_onboarding_sign_in_positive_button">Hyni</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Jo tani</string>
+    <string name="juno_onboarding_sign_in_negative_button">Jo tani</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title" tools:ignore="UnusedResources">Njoftimet ju ndihmojnë të arrini më tepër gjëra me %s</string>
+    <string name="juno_onboarding_enable_notifications_title">Njoftimet ju ndihmojnë të arrini më tepër gjëra me %s</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">Njoftimet ju ndihmojnë të arrini më tepër gjëra me Firefox-in</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description" tools:ignore="UnusedResources">Dërgoni skeda nga pajisje në pajisje, administroni shkarkime dhe merrni ndihmëza se si të përfitoni maksimumin nga %s.</string>
+    <string name="juno_onboarding_enable_notifications_description">Dërgoni skeda nga pajisje në pajisje, administroni shkarkime dhe merrni ndihmëza se si të përfitoni maksimumin nga %s.</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated   -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">Dërgoni skeda nga pajisje në pajisje, administroni shkarkime dhe merrni ndihmëza se si të përfitoni maksimumin nga Firefox-i.</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">Aktivizoni njoftimet</string>
+    <string name="juno_onboarding_enable_notifications_positive_button">Aktivizoni njoftimet</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">Jo tani</string>
+    <string name="juno_onboarding_enable_notifications_negative_button">Jo tani</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -350,6 +363,14 @@
     <string name="preferences_category_general">Të përgjithshme</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">Mbi</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">Përzgjidhni një</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts">Administroni shkurtore kërkimi</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">Përpunoni dukshmëri motorësh te menuja e kërkimeve</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu">Motorë të dukshëm te menuja e kërkimeve</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_default_search_engine">Motor parazgjedhje kërkimesh</string>
     <!-- Preference for settings related to Search -->
@@ -395,11 +416,23 @@
     <string name="reduce_cookie_banner_summary_1">%1$s provon vetvetiu të hedhë oshtë kërkesa depozitimi cookie -sh nga banderola cookie-sh.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Çaktivizuar për këtë sajt</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">Anuloje</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button" moz:RemovedIn="115" tools:ignore="UnusedResources">Kërkoni asistencë</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Dërgo kërkesë</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Të kërkohet asistencë për këtë sajt?</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">Kërkesa u dërgua</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Aktivizuar për këtë sajt</string>
 
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Kërkesa për asistencë u dërgua</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site" tools:ignore="UnusedResources">Sajt aktualisht i pambuluar</string>
+    <string name="reduce_cookie_banner_unsupported_site">Sajt aktualisht i pambuluar</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Të aktivizohet Reduktim Banderolash Cookie-sh për %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
@@ -407,46 +440,22 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s do të spastrojë cookie-t për këtë sajt dhe do të rifreskojë faqen. Spastrimi i krejt cookie-ve mund të sjellë nxjerrjen tuaj nga llogaria, ose zbrazje shportash blerjesh.</string>
 
-    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter are the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_1" moz:RemovedIn="111" tools:ignore="UnusedResources">%1$s mund të provojë vetvetiu të hedhë poshtë kërkesa depozitimi cookie-sh.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s provon të hedhë poshtë automatikisht krejt kërkesat për cookies, në sajtet që e mbulojnë.</string>
-    <!-- Title text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Lamtumirë banderola cookie-sh!</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title">Të lejohet %1$s të hedhë poshtë banderola cookie-sh?</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_1" moz:RemovedIn="111" tools:ignore="UnusedResources">Hidh vetvetiu tej kërkesa për depozitim cookie-sh, kur është e mundur.</string>
-    <!-- Body text for the dialog use on the control branch of the experiment to determine which context users engaged the most.The first parameter is the application name -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_body_2" moz:RemovedIn="112" tools:ignore="UnusedResources">Të lejohet %1$s të hedhë tej vetvetiu kërkesa për depozitim cookie-sh, kur është e mundur?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_body">%1$s mund të hedhë vetvetiu poshtë mjaft kërkesa banderolash cookie-sh.</string>
     <!-- Remind me later text button for the onboarding dialog -->
     <string name="reduce_cookie_banner_dialog_not_now_button">Jo Tani</string>
-    <!-- Change setting text button, for the dialog use on the control branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_control_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Hidh tej banderola</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
     <string name="reduce_cookie_banner_dialog_snackbar_text">Do të shihni më pak kërkesa depozitimi cookie-sh</string>
-    <!-- Title text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Shihni më pak flluska cookie-sh</string>
-    <!-- Body text for the dialog use on the variant 1 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Përgjigju vetvetiu flluskave për cookie, për shfletim pa bezdisje. %1$s do të hedhë poshtë krejt kërkesat, në qoftë e mundur.</string>
-    <!-- Change setting text button, for the onboarding dialog use on the variant 1 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_1_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Hidh tej Flluska</string>
-    <!-- Title text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_title" moz:RemovedIn="112" tools:ignore="UnusedResources">Reduktim Banderolash Për Cookie-t</string>
-    <!-- Body text for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_body_1" moz:RemovedIn="112" tools:ignore="UnusedResources">Të lejohet %1$s të hedhë poshtë kërkesa pranimi cookie-sh nëse është e mundur?</string>
-    <!-- Change setting text button, for the dialog use on the variant 2 branch of the experiment to determine which context users engaged the most -->
-    <string name="reduce_cookie_banner_variant_2_experiment_dialog_change_setting_button" moz:RemovedIn="112" tools:ignore="UnusedResources">Lejoje</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button">Lejoje</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Përpiqet automatikisht të lidhet me sajtet duke përdorur protokollin HTTPS të fshehtëzimit, për më tepër siguri.</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="preferences_https_only_on" moz:removedIn="111" tools:ignore="UnusedResources">On</string>
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">Off</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -530,6 +539,7 @@
     <string name="preferences_open_links_in_apps_never">Kurrë</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Përgjegjës i jashtëm shkarkimesh</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Shtesa</string>
 
@@ -613,6 +623,8 @@
     <string name="addon_already_installed">Shtesa është tashmë e instaluar</string>
 
     <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Administroni llogarinë</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Njëkohësoje tani</string>
     <!-- Preference category for sync -->
@@ -757,15 +769,9 @@
     <!-- Dialog button text for canceling open all tabs -->
     <string name="open_all_warning_cancel">Anuloje</string>
 
-    <!-- Text to show users they have one site in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_site" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sajt</string>
     <!-- Text to show users they have one page in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
     <string name="history_search_group_site_1">%d faqe</string>
-    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
-    %d is a placeholder for the number of sites in the group. -->
-    <string name="history_search_group_sites" moz:RemovedIn="111" tools:ignore="UnusedResources">%d sajte</string>
 
     <!-- Text to show users they have multiple pages in the history group section of the History fragment.
     %d is a placeholder for the number of pages in the group. -->
@@ -1095,8 +1101,6 @@
     <string name="phone_feature_blocked_by_android">E bllokuar nga Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Përjashtime</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on" moz:removedIn="111" tools:ignore="UnusedResources">On</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Off</string>
     <!-- Summary of tracking protection preference if tracking protection is set to standard -->
@@ -1190,6 +1194,10 @@
     <string name="share_save_to_pdf">Ruaje si PDF</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">S’arrihet të prodhohet PDF</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">S’arrihet të shtypet</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Shtypni</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Dërgojeni në pajisje</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1259,11 +1267,11 @@
     <!-- Survey -->
     <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
     The app name is in the text, due to limitations with localizing Nimbus experiments -->
-    <string name="nimbus_survey_message_text" tools:ignore="UnusedResources">Ju lutemi, ndihmoni të bëhet Firefox-i më i mirë, duke plotësuar këtë pyetësor të shkurtër.</string>
+    <string name="nimbus_survey_message_text">Ju lutemi, ndihmoni të bëhet Firefox-i më i mirë, duke plotësuar këtë pyetësor të shkurtër.</string>
     <!-- Preference for taking the short survey. -->
-    <string name="preferences_take_survey" tools:ignore="UnusedResources">Plotësoni Pyetësorin</string>
+    <string name="preferences_take_survey">Plotësoni Pyetësorin</string>
     <!-- Preference for not taking the short survey. -->
-    <string name="preferences_not_take_survey" tools:ignore="UnusedResources">Jo, Faleminderit</string>
+    <string name="preferences_not_take_survey">Jo, Faleminderit</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
@@ -1358,7 +1366,9 @@
     <!-- Title text of a delete browsing data dialog. -->
     <string name="delete_history_prompt_title">Interval kohor për t’u fshirë</string>
     <!-- Body text of a delete browsing data dialog. -->
-    <string name="delete_history_prompt_body">Heq historikun (përfshi historik të njëkohësuar prej pajisjesh të tjera), cookie-t dhe të tjera të dhëna shfletimi.</string>
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">Heq historikun (përfshi historik të njëkohësuar prej pajisjesh të tjera), cookie-t dhe të tjera të dhëna shfletimi.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">Heq historikun (përfshi historik të njëkohësuar prej pajisjesh të tjera)</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
     <string name="delete_history_prompt_button_last_hour">Orën e fundit</string>
     <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
@@ -1480,30 +1490,22 @@
     <string name="etp_settings">Rregullime për Mbrojtje</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Mbrojtje e Thelluar Nga Gjurmimi</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Shfletoni pa qenë i ndjekur</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary" tools:ignore="UnusedResources">Tashmë me Mbrojtje Totale Nga Cookie-t, barriera jonë më e fuqishme deri më sot kundër gjurmuesve nga sajti në sajt.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Mbajini për vete të dhënat tuaja. %s ju mbron nga shumë prej gjurmuesve më të rëndomtë që ndjekin ç’bëni në internet.</string>
+    <string name="preference_enhanced_tracking_protection_summary">Tashmë me Mbrojtje Totale Nga Cookie-t, barriera jonë më e fuqishme deri më sot kundër gjurmuesve nga sajti në sajt.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2" tools:ignore="UnusedResources">%s ju mbron nga shumë prej gjurmuesve më të rëndomtë që ndjekin ç’bëni në internet.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">%s ju mbron nga shumë prej gjurmuesve më të rëndomtë që ndjekin ç’bëni në internet.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Mësoni më tepër</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standarde (parazgjedhje)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4">I baraspeshuar për privatësi dhe funksionim. Faqet do të ngarkohen normalisht.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_5" tools:ignore="UnusedResources">Faqet do të ngarkohen normalisht, por blloko më pak gjurmues.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_5">Faqet do të ngarkohen normalisht, por blloko më pak gjurmues.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Ç’bllokohet nga mbrojtje standarde kundër gjurmimit</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strikte</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3">Bllokon më shumë gjurmues, ndaj faqet ngarkohen më shpejt, por disa anë, pjesë e faqes, mund të mos punojnë.</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_4" tools:ignore="UnusedResources">Mbrojtje më e fortë kundër gjurmimit dhe punim më i shpejtë, por disa sajte mund të mos funksionojnë siç duhet.</string>
+    <string name="preference_enhanced_tracking_protection_strict_description_4">Mbrojtje më e fortë kundër gjurmimit dhe punim më i shpejtë, por disa sajte mund të mos funksionojnë siç duhet.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Ç’bllokohet nga mbrojtje strikte kundër gjurmimit</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1854,6 +1856,8 @@
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Shtoni motor kërkimesh</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description">Shtoni motor të ri kërkimesh</string>
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Përpunoni motor kërkimesh</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
@@ -1867,15 +1871,26 @@
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">Tjetër</string>
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label">Emër</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
     <string name="search_add_custom_engine_name_hint">Emër</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2">Emër motori kërkimesh</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label">URL vargu kërkimi</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">Varg kërkimi për t’u përdorur</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2">URL për t’u përdorur për kërkim</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Zëvendësoni kërkesën me “%s”. Shembull:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Hollësi motori vetjak kërkimesh</string>
+
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button">Ruaje</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Jepni emër motori kërkimesh</string>

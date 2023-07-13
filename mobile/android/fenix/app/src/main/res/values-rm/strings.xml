@@ -420,17 +420,11 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Trametter la dumonda</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Reducziun da bandieras da cookies</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Dumandar da sustegnair era questa website?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">La dumonda da sustegnair la website è tramessa.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Tramess la dumonda</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Activà per questa website</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Tramess la dumonda da sustegnair la website</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Tramess la dumonda da sustegnair</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -440,8 +434,6 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Activar la reducziun da bandieras da cookies per %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Deactivar la reducziun da bandieras da cookies per %1$s?</string>
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Questa website na vegn actualmain betg sustegnida da la reducziun da bandieras da cookies. Vuls ti che noss team intercureschia questa website per la sustegnair en l\'avegnir?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s na po betg refusar automaticamain dumondas da deponer cookies da questa website. Ti pos trametter ina dumonda da sustegnair questa website en avegnir.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -544,6 +536,11 @@
     <string name="preferences_open_links_in_apps_never">Mai</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Administraziun da telechargiadas externa</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Activar la protocollaziun da Gecko</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Serrar l\'applicaziun per applitgar las midadas…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Supplements</string>
 
@@ -1195,6 +1192,10 @@
     <string name="share_save_to_pdf">Memorisar sco PDF</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">Impussibel da generar il PDF</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Impussibel da stampar</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Stampar</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Trametter a l\'apparat</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1490,13 +1491,9 @@
     <string name="etp_settings">Parameters da protecziun</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Protecziun avanzada cunter il fastizar</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Navighescha senza persequitaders</string>
 
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Ussa cun la protecziun totala cunter cookies, enfin ussa nossa bloccada la pli effectiva da cookies che vulan ta persequitar sur pliras websites.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Tegna per tai tias datas. %s ta protegia da blers dals fastizaders ils pli frequents che registreschan tias activitads online.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s ta protegia da blers dals fastizaders ils pli frequents che registreschan tias activitads online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1505,15 +1502,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (predefinì)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Equiliber tranter protecziun da datas e prestaziun. Paginas chargian normal.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Paginas vegnan chargiadas normal, ma damain fastizaders vegnan bloccads.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Quai che vegn bloccà da la protecziun normala cunter il fastizar</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Restrictiv</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Blochescha ulteriurs fastizaders, uschia che paginas chargian pli svelt, ma tschertas paginas na funcziunan eventualmain betg pli endretg.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Ina protecziun pli severa cunter il fastizar e meglra prestaziun, ma tschertas paginas na funcziunan eventualmain betg endretg.</string>
     <!--  Accessibility text for the Strict protection information icon  -->

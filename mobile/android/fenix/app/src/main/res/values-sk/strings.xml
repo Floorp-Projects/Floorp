@@ -1943,7 +1943,7 @@
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Pripojenie nie je zabezpečené</string>
     <!-- Label to clear site data -->
-    <string name="clear_site_data">Vymazať cookies a údaje stránok</string>
+    <string name="clear_site_data">Vymazať cookies a údaje stránky</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
     <string name="confirm_clear_site_data"><![CDATA[Naozaj chcete vymazať všetky súbory cookie a údaje pre stránku <b>%s</b>?]]></string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->

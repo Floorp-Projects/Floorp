@@ -424,17 +424,11 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">ສົ່ງ​ຄໍາ​ຂໍ</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">ຮ້ອງຂໍການສະຫນັບສະຫນູນສໍາລັບເວັບໄຊທ໌ນີ້ບໍ?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">ສົ່ງຄຳຮ້ອງຂໍແລ້ວ</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">ເປິດສຳລັບເວັບໄຊນີ້</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">ຮ້ອງຂໍໃຫ້ສະຫນັບສະຫນູນເວັບໄຊທີ່ສົ່ງ</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">ສົ່ງຄຳຮ້ອງຂໍການຊ່ວຍເຫຼືອແລ້ວ</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -443,8 +437,6 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">ເປີດໃຊ້ການຫຼຸດປ້າຍໂຄສະນາຄຸກກີສຳລັບ %1$s ບໍ?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">ປິດການຫຼຸດປ້າຍໂຄສະນາຄຸກກີສຳລັບ %1$s ບໍ?</string>
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">ຕອນນີ້ເວັບໄຊນີ້ບໍ່ຮອງຮັບການຫຼຸດປ້າຍໂຄສະນາຄຸກກີ. ທ່ານຕ້ອງການໃຫ້ທີມງານຂອງພວກເຮົາທົບທວນຄືນເວັບໄຊທ໌ນີ້ແລະເພີ່ມການສະຫນັບສະຫນູນໃນອະນາຄົດບໍ?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ບໍ່ສາມາດປະຕິເສດຄຳຮ້ອງຂໍຄຸກກີໃນເວັບໄຊນີ້ໄດ້ໂດຍອັດຕະໂນມັດ. ທ່ານສາມາດສົ່ງຄໍາຮ້ອງຂໍເພື່ອສະຫນັບສະຫນູນເວັບໄຊທ໌ນີ້ໃນອະນາຄົດ.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -550,6 +542,11 @@
     <string name="preferences_open_links_in_apps_never">ບໍ່ເຄີຍ</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">ຕົວຈັດການດາວໂຫລດພາຍນອກ</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">ເປີດໃຊ້ບັນທຶກ Gecko</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">ກຳລັງອອກຈາກແອັບພລິເຄຊັນເພື່ອນຳໃຊ້ການປ່ຽນແປງ…</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Add-ons</string>
 
@@ -1219,6 +1216,10 @@
     <string name="share_save_to_pdf">ບັກທຶກເປັນ PDF</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">ບໍ່ສາມາດສ້າງ PDF ໄດ້</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">ບໍ່ສາມາດພິມໄດ້</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">ພິມ</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">ສົ່ງໄປຫາອຸປະກອນ</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1518,12 +1519,8 @@
     <string name="etp_settings">ຕັ້ງຄ່າການປ້ອງກັນ</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">ເພີ່ມການປ້ອງກັນການຕິດຕາມ</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">ທ່ອງເວັບໂດຍບໍ່ມີການຕິດຕາມ</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">ຕອນນີ້ມີການປົກປ້ອງຄຸກກີ້ທັງໝົດ, ເປັນອຸປະສັກທີ່ມີປະສິດທິພາບທີ່ສຸດຂອງພວກເຮົາຕໍ່ກັບຕົວຕິດຕາມຂ້າມເວັບໄຊ.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">ຮັກສາຂໍ້ມູນຂອງທ່ານໃຫ້ກັບຕົວທ່ານເອງ. %s ປົກປ້ອງທ່ານຈາກຫຼາຍຕົວຕິດຕາມທົ່ວໄປທີ່ສຸດທີ່ຕິດຕາມສິ່ງທີ່ທ່ານເຮັດອອນໄລນ໌.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s ປົກປ້ອງທ່ານຈາກຫຼາຍຕົວຕິດຕາມທົ່ວໄປທີ່ສຸດທີ່ຕິດຕາມສິ່ງທີ່ທ່ານເຮັດອອນໄລນ໌.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1531,15 +1528,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">ມາດຕະຖານ (ຄ່າພື້ນຖານ)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">ຄວາມເປັນສ່ວນຕົວ ແລະ ປະສິດທິພາບແບບສົມດຸ່ນ. ໜ້າເວັບຈະໂຫຼດເປັນປົກະຕິ.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">ຫນ້າຕ່າງໆຈະໂຫລດຕາມປົກກະຕິ, ແຕ່ບລັອກຕົວຕິດຕາມຫນ້ອຍລົງ.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">ສິ່ງທີ່ຈະຖືກບັອກໂດຍການປ້ອງກັນການຕິດຕາມແບບມາດຕະຖານ</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">ເຂັ້ມງວດ</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">ປິດກັ້ນຕົວຕິດຕາມຫຼາຍຂຶ້ນເພື່ອໃຫ້ຫນ້າໂຫລດໄວຂຶ້ນ, ແຕ່ບາງຫນ້າທີ່ຢູ່ໃນຫນ້າອາດຈະພັງ.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">ການປ້ອງກັນການຕິດຕາມທີ່ເຂັ້ມແຂງແລະປະສິດທິພາບໄວຂຶ້ນ, ແຕ່ບາງສະຖານທີ່ອາດຈະເຮັດວຽກບໍ່ຖືກຕ້ອງ.</string>
     <!--  Accessibility text for the Strict protection information icon  -->

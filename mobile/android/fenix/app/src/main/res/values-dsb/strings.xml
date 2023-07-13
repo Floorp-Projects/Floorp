@@ -424,17 +424,11 @@
     <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">Napšašowanje pósłaś</string>
     <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
-    <string name="cookie_banner_handling_details_site_is_not_supported_title" moz:RemovedIn="114" tools:ignore="UnusedResources">Reducěrowanje cookiejowych chórgojow</string>
-    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
     <string name="cookie_banner_handling_details_site_is_not_supported_title_2">Wó pódpěru za toś to sedło pšosyś?</string>
-    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
-    <string name="cookie_banner_handling_report_site_snack_bar_text" moz:RemovedIn="114" tools:ignore="UnusedResources">Napšašowanje na sedło pomocy jo se wótpósłało.</string>
     <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
     <string name="cookie_banner_handling_report_site_snack_bar_text_2">Napšašowanje pósłane</string>
     <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_on_for_site">Za toś to sedło zmóžnjony</string>
-    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
-    <string name="reduce_cookie_banner_unsupported_site_request_submitted" moz:RemovedIn="114" tools:ignore="UnusedResources">Napšašowanje na sedło pomocy jo se wótpósłało</string>
     <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">Pšosba wó pódpěru pósłana</string>
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
@@ -443,8 +437,6 @@
     <string name="reduce_cookie_banner_details_panel_title_on_for_site">Reducěrowanje cookiejowych chórgojow za %1$s zmóžniś?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
     <string name="reduce_cookie_banner_details_panel_title_off_for_site">Reducěrowanje cookiejowych chórgojow za %1$s znjemóžniś?</string>
-    <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar.-->
-    <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request" moz:RemovedIn="114" tools:ignore="UnusedResources">Toś to sedło se tuchylu pśez redukciju cookiejowych chórgojow. Cośo, až naš team toś to websedło pśeglědujo a pomoc w pśichoźe pśidawa?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s njamóžo cookiejowe napšašowanja na toś tom sedle awtomatiski wótpokazaś. Móžośo pšosbu wó pódpěru toś togo sedła w pśichoźe pósłaś.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
@@ -548,6 +540,11 @@
     <string name="preferences_open_links_in_apps_never">Nigda</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Eksterny zastojnik ześěgnjenjow</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Protokole Gecko zmóžniś</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Nałoženje se kóńcy, aby se změny wustatkowali …</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Dodanki</string>
 
@@ -1207,6 +1204,10 @@
     <string name="share_save_to_pdf">Ako PDF składowaś</string>
     <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
     <string name="unable_to_save_to_pdf_error">PDF njedajo se napóraś</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Njedajo se śišćaś</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Śišćaś</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Rědoju pósłaś</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1495,12 +1496,8 @@
     <string name="etp_settings">Šćitowe nastajenja</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Pólěpšony slědowański šćit</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title" moz:removedIn="114" tools:ignore="UnusedResources">Pśeglědujśo bźez togo, aby wam slědowało</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Něnto z dospołnm šćitom pśeśiwo cookiejam, našeju nejmócnjejšeju barieru pśeśiwo sedła pśesegajucym slědowakam.</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation" moz:removedIn="114" tools:ignore="UnusedResources">Wobchowajśo swóje daty za sebje. %s was pśed wjele z nejcesćejych pśeslědowakow šćita, kótarež slěduju, což online gótujośo.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s was pśed wjele z nejcesćejych pśeslědowakow šćita, kótarež slěduju, což online gótujośo.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1508,15 +1505,11 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_4" moz:removedIn="114" tools:ignore="UnusedResources">Wuwažony za priwatnosć a wugbaśe. Boki se normalnje zacytaju.</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_description_5">Boki se normalnje zacytaju, ale blokěrujo se mjenjej pśeslědowakow.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Co se pśez standardny slědowański šćit blokěrujo?</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Striktny</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_3" moz:removedIn="114" tools:ignore="UnusedResources">Blokěrujo dalšne pśeslědowaki, aby se boki malsnjej zacytali, ale někotare boki snaź korektnje njefunkcioněruju.</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict_description_4">Mócnjejšy slědowański šćit a malsnjejše wugbaśe, ale někotare sedła snaź pórědnje njefunlcioněruju.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
