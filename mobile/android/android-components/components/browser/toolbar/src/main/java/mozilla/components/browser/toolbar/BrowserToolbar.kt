@@ -605,7 +605,7 @@ private class AsyncAutocompleteDelegate(
         // Process results on the UI dispatcher.
         CoroutineScope(coroutineContext).launch {
             // Ignore this result if the query is stale.
-            if (result.input == urlView.originalText) {
+            if (result.input == urlView.originalText.lowercase()) {
                 urlView.applyAutocompleteResult(
                     InlineAutocompleteEditText.AutocompleteResult(
                         text = result.text,
