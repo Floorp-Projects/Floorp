@@ -450,16 +450,16 @@ bool frontend::InstantiateStencils(JSContext* cx, CompilationInput& input,
     }
   }
 
-  // Enqueue an off-thread source compression task after finishing parsing.
-  if (!cx->isHelperThreadContext()) {
-    if (!stencil.source->tryCompressOffThread(cx)) {
-      return false;
-    }
+  MOZ_ASSERT(!cx->isHelperThreadContext());
 
-    Rooted<JSScript*> script(cx, gcOutput.script);
-    const JS::InstantiateOptions instantiateOptions(input.options);
-    FireOnNewScript(cx, instantiateOptions, script);
+  // Enqueue an off-thread source compression task after finishing parsing.
+  if (!stencil.source->tryCompressOffThread(cx)) {
+    return false;
   }
+
+  Rooted<JSScript*> script(cx, gcOutput.script);
+  const JS::InstantiateOptions instantiateOptions(input.options);
+  FireOnNewScript(cx, instantiateOptions, script);
 
   return true;
 }
@@ -1478,11 +1478,11 @@ static JSFunction* CompileStandaloneFunction(
         CompilationStencil::TopLevelIndex);
     MOZ_ASSERT(fun->hasBytecode() || IsAsmJSModule(fun));
 
+    MOZ_ASSERT(!cx->isHelperThreadContext());
+
     // Enqueue an off-thread source compression task after finishing parsing.
-    if (!cx->isHelperThreadContext()) {
-      if (!source->tryCompressOffThread(cx)) {
-        return nullptr;
-      }
+    if (!source->tryCompressOffThread(cx)) {
+      return nullptr;
     }
 
     // Note: If AsmJS successfully compiles, the into.script will still be
@@ -1492,8 +1492,6 @@ static JSFunction* CompileStandaloneFunction(
       if (parameterListEnd) {
         source->setParameterListEnd(*parameterListEnd);
       }
-
-      MOZ_ASSERT(!cx->isHelperThreadContext());
 
       const JS::InstantiateOptions instantiateOptions(options);
       Rooted<JSScript*> script(cx, gcOutput.get().script);
