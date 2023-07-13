@@ -768,6 +768,10 @@ std::vector<const rtc::Network*> BasicPortAllocatorSession::GetNetworks() {
       networks.insert(networks.end(), any_address_networks.begin(),
                       any_address_networks.end());
     }
+    RTC_LOG(LS_INFO) << "Count of networks: " << networks.size();
+    for (const rtc::Network* network : networks) {
+      RTC_LOG(LS_INFO) << network->ToString();
+    }
   }
   // Filter out link-local networks if needed.
   if (flags() & PORTALLOCATOR_DISABLE_LINK_LOCAL_NETWORKS) {

@@ -154,16 +154,19 @@ bool IsIgnoredIPv6(bool allow_mac_based_ipv6, const InterfaceAddress& ip) {
   // However, our IPAddress structure doesn't carry that so the
   // information is lost and causes binding failure.
   if (IPIsLinkLocal(ip)) {
+    RTC_LOG(LS_INFO) << "Ignore link local IP:" << ip.ToSensitiveString();
     return true;
   }
 
   // Any MAC based IPv6 should be avoided to prevent the MAC tracking.
   if (IPIsMacBased(ip) && !allow_mac_based_ipv6) {
+    RTC_LOG(LS_INFO) << "Ignore Mac based IP:" << ip.ToSensitiveString();
     return true;
   }
 
   // Ignore deprecated IPv6.
   if (ip.ipv6_flags() & IPV6_ADDRESS_FLAG_DEPRECATED) {
+    RTC_LOG(LS_INFO) << "Ignore deprecated IP:" << ip.ToSensitiveString();
     return true;
   }
 
