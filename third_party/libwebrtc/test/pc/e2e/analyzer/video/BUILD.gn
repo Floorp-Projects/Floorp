@@ -382,6 +382,7 @@ rtc_library("video_quality_analyzer_injection_helper") {
     ":video_dumping",
     "../../../..:fixed_fps_video_frame_writer_adapter",
     "../../../..:test_renderer",
+    "../../../..:test_video_capturer",
     "../../../..:video_test_common",
     "../../../..:video_test_support",
     "../../../../../api:array_view",

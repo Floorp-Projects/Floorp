@@ -137,10 +137,10 @@ if (!build_with_chromium) {
       sources = [
         "media/media_helper.cc",
         "media/media_helper.h",
-        "media/test_video_capturer_video_track_source.h",
       ]
       deps = [
         ":test_peer",
+        ":test_video_capturer_video_track_source",
         "../..:fileutils",
         "../..:platform_video_capturer",
         "../..:video_test_common",
