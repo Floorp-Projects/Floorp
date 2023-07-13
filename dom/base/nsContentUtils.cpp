@@ -2170,12 +2170,13 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIGlobalObject* aGlobalObject,
 // Newer Should RFP Functions ----------------------------------
 // Utilities ---------------------------------------------------
 
-inline void LogDomainAndPrefList(const char* exemptedDomainsPrefName,
+inline void LogDomainAndPrefList(const char* urlType,
+                                 const char* exemptedDomainsPrefName,
                                  nsAutoCString& url, bool isExemptDomain) {
   nsAutoCString list;
   Preferences::GetCString(exemptedDomainsPrefName, list);
   MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
-          ("Domain \"%s\" is %s the exempt list \"%s\"",
+          ("%s \"%s\" is %s the exempt list \"%s\"", urlType,
            PromiseFlatCString(url).get(), isExemptDomain ? "in" : "NOT in",
            PromiseFlatCString(list).get()));
 }
@@ -2272,6 +2273,42 @@ inline bool SchemeSaysShouldNotResistFingerprinting(nsIPrincipal* aPrincipal) {
 
 const char* kExemptedDomainsPrefName =
     "privacy.resistFingerprinting.exemptedDomains";
+
+inline bool PartionKeyIsAlsoExempted(
+    const mozilla::OriginAttributes& aOriginAttributes) {
+  // If we've gotten here we have (probably) passed the CookieJarSettings
+  // check that would tell us that if we _are_ a subdocument, then we are on
+  // an exempted top-level domain and we should see if we ourselves are
+  // exempted. But we may have gotten here because we directly called the
+  // _dangerous function and we haven't done that check, but we _were_
+  // instatiated from a state where we could have been partitioned.
+  // So perform this last-ditch check for that scenario.
+  // We arbitrarily use https as the scheme, but it doesn't matter.
+  nsresult rv = NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIURI> uri;
+  if (StaticPrefs::privacy_firstparty_isolate() &&
+      !aOriginAttributes.mFirstPartyDomain.IsEmpty()) {
+    rv = NS_NewURI(getter_AddRefs(uri),
+                   u"https://"_ns + aOriginAttributes.mFirstPartyDomain);
+  } else if (!aOriginAttributes.mPartitionKey.IsEmpty()) {
+    rv = NS_NewURI(getter_AddRefs(uri),
+                   u"https://"_ns + aOriginAttributes.mPartitionKey);
+  }
+
+  if (!NS_FAILED(rv)) {
+    bool isExemptPartitionKey =
+        nsContentUtils::IsURIInPrefList(uri, kExemptedDomainsPrefName);
+    if (MOZ_LOG_TEST(nsContentUtils::ResistFingerprintingLog(),
+                     mozilla::LogLevel::Debug)) {
+      nsAutoCString url;
+      uri->GetHost(url);
+      LogDomainAndPrefList("Partition Key", kExemptedDomainsPrefName, url,
+                           isExemptPartitionKey);
+    }
+    return isExemptPartitionKey;
+  }
+  return true;
+}
 
 // Functions ---------------------------------------------------
 
@@ -2439,7 +2476,11 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
                    mozilla::LogLevel::Debug)) {
     nsAutoCString url;
     aURI->GetHost(url);
-    LogDomainAndPrefList(kExemptedDomainsPrefName, url, isExemptDomain);
+    LogDomainAndPrefList("URI", kExemptedDomainsPrefName, url, isExemptDomain);
+  }
+
+  if (isExemptDomain) {
+    isExemptDomain &= PartionKeyIsAlsoExempted(aOriginAttributes);
   }
 
   return !isExemptDomain;
@@ -2495,7 +2536,12 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
                    mozilla::LogLevel::Debug)) {
     nsAutoCString origin;
     aPrincipal->GetAsciiOrigin(origin);
-    LogDomainAndPrefList(kExemptedDomainsPrefName, origin, isExemptDomain);
+    LogDomainAndPrefList("URI", kExemptedDomainsPrefName, origin,
+                         isExemptDomain);
+  }
+
+  if (isExemptDomain) {
+    isExemptDomain &= PartionKeyIsAlsoExempted(originAttributes);
   }
 
   // If we've gotten here we have (probably) passed the CookieJarSettings
