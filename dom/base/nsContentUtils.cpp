@@ -74,6 +74,7 @@
 #include "mozilla/CallState.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Components.h"
+#include "mozilla/ContentBlockingAllowList.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/DebugOnly.h"
@@ -2179,11 +2180,8 @@ inline void LogDomainAndPrefList(const char* exemptedDomainsPrefName,
            PromiseFlatCString(list).get()));
 }
 
-inline bool CookieJarSettingsSaysShouldResistFingerprinting(
+inline already_AddRefed<nsICookieJarSettings> GetCookieJarSettings(
     nsILoadInfo* aLoadInfo) {
-  // If the loadinfo's CookieJarSettings says that we _should_ resist
-  // fingerprinting we can always believe it. (This is the (*) rule from
-  // CookieJarSettings.h)
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   nsresult rv =
       aLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
@@ -2191,12 +2189,64 @@ inline bool CookieJarSettingsSaysShouldResistFingerprinting(
     // The TRRLoadInfo in particular does not implement this method
     // In that instance.  We will return false and let other code decide if
     // we shouldRFP for this connection
-    return false;
+    return nullptr;
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
             ("Called CookieJarSettingsSaysShouldResistFingerprinting but the "
              "loadinfo's CookieJarSettings couldn't be retrieved"));
+    return nullptr;
+  }
+
+  MOZ_ASSERT(cookieJarSettings);
+  return cookieJarSettings.forget();
+}
+
+bool ETPSaysShouldNotResistFingerprinting(nsIChannel* aChannel,
+                                          nsILoadInfo* aLoadInfo) {
+  // A positive return from this function should always be obeyed.
+  // A negative return means we should keep checking things.
+
+  // We do not want this check to apply to RFP, only to FPP
+  // There is one problematic combination of prefs; however:
+  // If RFP is enabled in PBMode only and FPP is enabled globally
+  // (so, in non-PBM mode) - we need to know if we're in PBMode or not.
+  // But that's kind of expensive and we'd like to avoid it if we
+  // don't have to, so special-case that scenario
+  if (StaticPrefs::privacy_fingerprintingProtection_DoNotUseDirectly() &&
+      !StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() &&
+      StaticPrefs::privacy_resistFingerprinting_pbmode_DoNotUseDirectly()) {
+    if (NS_UsePrivateBrowsing(aChannel)) {
+      // In PBM (where RFP is enabled) do not exempt based on the ETP toggle
+      return false;
+    }
+  } else if (StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() ||
+             StaticPrefs::
+                 privacy_resistFingerprinting_pbmode_DoNotUseDirectly()) {
+    // In RFP, never use the ETP toggle to exempt.
+    // We can safely return false here even if we are not in PBM mode
+    // and RFP_pbmode is enabled because we will later see that and
+    // return false from the ShouldRFP function entirely.
+    return false;
+  }
+
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      GetCookieJarSettings(aLoadInfo);
+  if (!cookieJarSettings) {
+    return false;
+  }
+
+  return ContentBlockingAllowList::Check(cookieJarSettings);
+}
+
+inline bool CookieJarSettingsSaysShouldResistFingerprinting(
+    nsILoadInfo* aLoadInfo) {
+  // A positive return from this function should always be obeyed.
+  // A negative return means we should keep checking things.
+
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
+      GetCookieJarSettings(aLoadInfo);
+  if (!cookieJarSettings) {
     return false;
   }
   return cookieJarSettings->GetShouldResistFingerprinting();
@@ -2284,20 +2334,24 @@ bool nsContentUtils::ShouldResistFingerprinting(
     return false;
   }
 
+  if (ETPSaysShouldNotResistFingerprinting(aChannel, loadInfo)) {
+    MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Debug,
+            ("Inside ShouldResistFingerprinting(nsIChannel*)"
+             " ETPSaysShouldNotResistFingerprinting said false"));
+    return false;
+  }
+
+  if (CookieJarSettingsSaysShouldResistFingerprinting(loadInfo)) {
+    return true;
+  }
+
   // Document types have no loading principal.  Subdocument types do have a
-  // loading principal, but it is the loading principal of the parent document;
-  // not the subdocument.
+  // loading principal, but it is the loading principal of the parent
+  // document; not the subdocument.
   auto contentType = loadInfo->GetExternalContentPolicyType();
+  // Case 1: Document or Subdocument load
   if (contentType == ExtContentPolicy::TYPE_DOCUMENT ||
       contentType == ExtContentPolicy::TYPE_SUBDOCUMENT) {
-    // This cookie jar check is relevant to both document and non-document
-    // cases. but it will be performed inside the ShouldRFP(nsILoadInfo) as
-    // well, so we put into this conditional to avoid doing it twice in that
-    // case.
-    if (CookieJarSettingsSaysShouldResistFingerprinting(loadInfo)) {
-      return true;
-    }
-
     nsCOMPtr<nsIURI> channelURI;
     nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(channelURI));
     MOZ_ASSERT(
@@ -2338,7 +2392,16 @@ bool nsContentUtils::ShouldResistFingerprinting(
   }
 
   // Case 2: Subresource Load
-  return ShouldResistFingerprinting(loadInfo, aTarget);
+  // Because this code is only used for subresource loads, this
+  // will check the parent's principal
+  nsIPrincipal* principal = loadInfo->GetLoadingPrincipal();
+
+  MOZ_ASSERT_IF(principal && !principal->IsSystemPrincipal() &&
+                    !principal->GetIsAddonOrExpandedAddonPrincipal(),
+                BasePrincipal::Cast(principal)->OriginAttributesRef() ==
+                    loadInfo->GetOriginAttributes());
+  return ShouldResistFingerprinting_dangerous(principal, "Internal Call",
+                                              aTarget);
 }
 
 /* static */
@@ -2380,35 +2443,6 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
   }
 
   return !isExemptDomain;
-}
-
-/* static */
-bool nsContentUtils::ShouldResistFingerprinting(
-    nsILoadInfo* aLoadInfo, RFPTarget aTarget /* = RFPTarget::Unknown */) {
-  MOZ_ASSERT(aLoadInfo->GetExternalContentPolicyType() !=
-                 ExtContentPolicy::TYPE_DOCUMENT &&
-             aLoadInfo->GetExternalContentPolicyType() !=
-                 ExtContentPolicy::TYPE_SUBDOCUMENT);
-
-  // With this check, we can ensure that the prefs and target say yes, so only
-  // an exemption would cause us to return false.
-  if (!ShouldResistFingerprinting("Positive return check", aTarget)) {
-    return false;
-  }
-
-  if (CookieJarSettingsSaysShouldResistFingerprinting(aLoadInfo)) {
-    return true;
-  }
-
-  // Because this function is only used for subresource loads, this
-  // will check the parent's principal
-  nsIPrincipal* principal = aLoadInfo->GetLoadingPrincipal();
-
-  MOZ_ASSERT_IF(principal && !principal->IsSystemPrincipal(),
-                BasePrincipal::Cast(principal)->OriginAttributesRef() ==
-                    aLoadInfo->GetOriginAttributes());
-  return ShouldResistFingerprinting_dangerous(principal, "Internal Call",
-                                              aTarget);
 }
 
 /* static */

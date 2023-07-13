@@ -4,6 +4,8 @@
  * Covers the following cases:
  *  - RFP is disabled entirely
  *  - RFP is enabled entirely
+ *  - FPP is enabled entirely
+
  *
  *  - (A) RFP is exempted on the maker and popup
  *  - (C) RFP is exempted on the maker but not the popup
@@ -53,6 +55,9 @@ add_task(defaultsTest.bind(null, uri, testHWConcurrency, expectedResults));
 
 expectedResults = structuredClone(allSpoofed);
 add_task(simpleRFPTest.bind(null, uri, testHWConcurrency, expectedResults));
+
+expectedResults = structuredClone(allSpoofed);
+add_task(simpleFPPTest.bind(null, uri, testHWConcurrency, expectedResults));
 
 // (A) RFP is exempted on the maker and popup
 expectedResults = structuredClone(allNotSpoofed);
