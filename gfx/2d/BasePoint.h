@@ -103,7 +103,6 @@ struct BasePoint {
     using FloatType =
         std::conditional_t<std::is_same_v<T, float>, float, double>;
     return (std::isfinite(FloatType(x)) && std::isfinite(FloatType(y)));
-    return true;
   }
 
   void Clamp(Coord aMaxAbsValue) {
