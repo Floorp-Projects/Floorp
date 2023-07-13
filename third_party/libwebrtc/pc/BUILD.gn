@@ -2461,6 +2461,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:net_helper",
       "../rtc_base:network",
       "../rtc_base:network_constants",
+      "../rtc_base:null_socket_server",
       "../rtc_base:refcount",
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:rtc_certificate_generator",
@@ -2562,6 +2563,7 @@ if (rtc_include_tests && !build_with_chromium) {
       ":pc_test_utils",
       ":peer_connection_internal",
       ":sctp_data_channel",
+      "../rtc_base:null_socket_server",
       "../test:run_loop",
       "../test:test_support",
     ]

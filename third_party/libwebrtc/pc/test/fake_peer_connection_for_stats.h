@@ -205,7 +205,8 @@ class FakePeerConnectionForStats : public FakePeerConnectionBase {
         dependencies_(MakeDependencies()),
         context_(ConnectionContext::Create(&dependencies_)),
         local_streams_(StreamCollection::Create()),
-        remote_streams_(StreamCollection::Create()) {}
+        remote_streams_(StreamCollection::Create()),
+        data_channel_controller_(network_thread_) {}
 
   ~FakePeerConnectionForStats() {
     for (auto transceiver : transceivers_) {
