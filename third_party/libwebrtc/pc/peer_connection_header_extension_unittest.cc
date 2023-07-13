@@ -321,11 +321,11 @@ TEST_P(PeerConnectionHeaderExtensionTest,
   }
 }
 
-// This test is a regression test for behavior that the API
+// These tests are regression tests for behavior that the API
 // enables in a proper way. It conflicts with the behavior
 // of the API to only offer non-stopped extensions.
 TEST_P(PeerConnectionHeaderExtensionTest,
-       SdpMungingWithoutApiUsageEnablesExtensions) {
+       SdpMungingAnswerWithoutApiUsageEnablesExtensions) {
   cricket::MediaType media_type;
   SdpSemantics semantics;
   std::tie(media_type, semantics) = GetParam();
@@ -371,7 +371,6 @@ TEST_P(PeerConnectionHeaderExtensionTest,
   ASSERT_TRUE(pc->SetLocalDescription(std::move(modified_answer)));
 
   auto session_description = pc->CreateOffer();
-  ASSERT_TRUE(session_description->ToString(&sdp));
   EXPECT_THAT(session_description->description()
                   ->contents()[0]
                   .media_description()
@@ -380,6 +379,37 @@ TEST_P(PeerConnectionHeaderExtensionTest,
                           Field(&RtpExtension::uri, "uri2"),
                           Field(&RtpExtension::uri, "uri3"),
                           Field(&RtpExtension::uri, "uri4")));
+}
+
+TEST_P(PeerConnectionHeaderExtensionTest,
+       SdpMungingOfferWithoutApiUsageEnablesExtensions) {
+  cricket::MediaType media_type;
+  SdpSemantics semantics;
+  std::tie(media_type, semantics) = GetParam();
+  if (semantics != SdpSemantics::kUnifiedPlan)
+    return;
+  std::unique_ptr<PeerConnectionWrapper> pc =
+      CreatePeerConnection(media_type, semantics);
+  pc->AddTransceiver(media_type);
+
+  auto offer =
+      pc->CreateOffer(PeerConnectionInterface::RTCOfferAnswerOptions());
+  std::string modified_sdp;
+  ASSERT_TRUE(offer->ToString(&modified_sdp));
+  modified_sdp += "a=extmap:1 uri1\r\n";
+  auto modified_offer = CreateSessionDescription(SdpType::kOffer, modified_sdp);
+  ASSERT_TRUE(pc->SetLocalDescription(std::move(modified_offer)));
+
+  auto offer2 =
+      pc->CreateOffer(PeerConnectionInterface::RTCOfferAnswerOptions());
+  EXPECT_THAT(offer2->description()
+                  ->contents()[0]
+                  .media_description()
+                  ->rtp_header_extensions(),
+              ElementsAre(Field(&RtpExtension::uri, "uri2"),
+                          Field(&RtpExtension::uri, "uri3"),
+                          Field(&RtpExtension::uri, "uri4"),
+                          Field(&RtpExtension::uri, "uri1")));
 }
 
 TEST_P(PeerConnectionHeaderExtensionTest, EnablingExtensionsAfterRemoteOffer) {
