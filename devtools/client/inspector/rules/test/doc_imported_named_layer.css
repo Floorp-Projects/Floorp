@@ -1,3 +1,4 @@
+@import url(./doc_imported_nested_named_layer.css) layer(importedNestedLayer);
 @media screen {
     h1, [test-hint=imported-named-layer--no-rule-layer] {
         color:tomato;
