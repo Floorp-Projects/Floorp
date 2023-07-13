@@ -22,6 +22,7 @@ namespace test {
 TestVideoTrackSource::TestVideoTrackSource(bool remote)
     : state_(kInitializing), remote_(remote) {
   worker_thread_checker_.Detach();
+  signaling_thread_checker_.Detach();
 }
 
 VideoTrackSourceInterface::SourceState TestVideoTrackSource::state() const {
