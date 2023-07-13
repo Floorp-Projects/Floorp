@@ -1067,6 +1067,23 @@ already_AddRefed<Promise> Promise::CreateRejectedWithErrorResult(
   return returnPromise.forget();
 }
 
+nsresult Promise::TryExtractNSResultFromRejectionValue(
+    JS::Handle<JS::Value> aValue) {
+  if (aValue.isInt32()) {
+    return nsresult(aValue.toInt32());
+  }
+
+  if (aValue.isObject()) {
+    RefPtr<DOMException> domException;
+    UNWRAP_OBJECT(DOMException, aValue, domException);
+    if (domException) {
+      return domException->GetResult();
+    }
+  }
+
+  return NS_ERROR_DOM_NOT_NUMBER_ERR;
+}
+
 }  // namespace mozilla::dom
 
 extern "C" {
