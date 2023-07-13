@@ -338,7 +338,7 @@ partial interface Navigator {
   readonly attribute MediaSession mediaSession;
 };
 
-// https://wicg.github.io/web-locks/#navigator-mixins
+// https://w3c.github.io/web-locks/#navigator-mixins
 [SecureContext]
 interface mixin NavigatorLocks {
   [Pref="dom.weblocks.enabled"]

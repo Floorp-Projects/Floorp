@@ -36,7 +36,11 @@ class LockManager final : public nsISupports, public nsWrapperCache {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(LockManager)
 
+ private:
   explicit LockManager(nsIGlobalObject* aGlobal);
+
+ public:
+  static already_AddRefed<LockManager> Create(nsIGlobalObject& aGlobal);
 
   nsIGlobalObject* GetParentObject() const { return mOwner; }
 
