@@ -17,8 +17,8 @@ import {
 import { getSource } from "../../selectors";
 import { addBreakpoint, removeBreakpointAtGeneratedLocation } from ".";
 
-async function findBreakpointPosition({ getState, dispatch }, location) {
-  const positions = await dispatch(setBreakpointPositions(location));
+async function findBreakpointPosition(cx, { getState, dispatch }, location) {
+  const positions = await dispatch(setBreakpointPositions({ cx, location }));
 
   const position = findPosition(positions, location);
   return position;
@@ -93,6 +93,7 @@ export function syncPendingBreakpoint(cx, sourceId, pendingBreakpoint) {
     });
 
     const newPosition = await findBreakpointPosition(
+      cx,
       thunkArgs,
       originalLocation
     );
@@ -104,7 +105,9 @@ export function syncPendingBreakpoint(cx, sourceId, pendingBreakpoint) {
       // breakpoint moved. If the old generated location still maps to an
       // original location then we don't want to add a breakpoint for it.
       if (isPendingBreakpointWithSourceMap) {
-        dispatch(removeBreakpointAtGeneratedLocation(sourceGeneratedLocation));
+        dispatch(
+          removeBreakpointAtGeneratedLocation(cx, sourceGeneratedLocation)
+        );
       }
       return null;
     }
@@ -118,7 +121,9 @@ export function syncPendingBreakpoint(cx, sourceId, pendingBreakpoint) {
     // breakpoint, remove any breakpoint associated with the old generated
     // location.
     if (!isSameLocation) {
-      dispatch(removeBreakpointAtGeneratedLocation(sourceGeneratedLocation));
+      dispatch(
+        removeBreakpointAtGeneratedLocation(cx, sourceGeneratedLocation)
+      );
     }
 
     return dispatch(

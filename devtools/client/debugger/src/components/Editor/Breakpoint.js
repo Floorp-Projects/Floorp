@@ -80,7 +80,11 @@ class Breakpoint extends PureComponent {
       return;
     }
 
-    removeBreakpointsAtLine(selectedLocation.source.id, selectedLocation.line);
+    removeBreakpointsAtLine(
+      cx,
+      selectedLocation.source.id,
+      selectedLocation.line
+    );
   };
 
   onContextMenu = event => {
