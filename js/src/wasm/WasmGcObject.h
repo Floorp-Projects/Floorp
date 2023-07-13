@@ -113,14 +113,6 @@ class WasmGcObject : public JSObject {
   [[nodiscard]] static bool obj_newEnumerate(JSContext* cx, HandleObject obj,
                                              MutableHandleIdVector properties,
                                              bool enumerableOnly);
-
- protected:
-  // Create the GcObject (struct/array-specific fields are uninitialised).
-  // The type, shape, class pointer, alloc site and alloc kind are taken
-  // from `typeDefData`; the initial heap must be specified separately.
-  static WasmGcObject* create(JSContext* cx,
-                              wasm::TypeDefInstanceData* typeDefData,
-                              js::gc::Heap initialHeap);
 };
 
 //=========================================================================
@@ -226,6 +218,13 @@ class WasmStructObject : public WasmGcObject {
   static WasmStructObject* createStruct(JSContext* cx,
                                         wasm::TypeDefInstanceData* typeDefData,
                                         js::gc::Heap initialHeap);
+
+  // This is a helper function called by ::createStruct when it determines
+  // that OOL storage is required.  Do not call it directly.
+  template <bool ZeroFields>
+  static MOZ_NEVER_INLINE WasmStructObject* createStructOOL(
+      JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
+      js::gc::Heap initialHeap, uint32_t outlineBytes);
 
   // Given the total number of data bytes required (including alignment
   // holes), return the number of inline and outline bytes required.
