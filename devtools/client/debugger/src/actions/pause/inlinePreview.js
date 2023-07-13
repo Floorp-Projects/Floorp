@@ -9,7 +9,7 @@ import {
   getSelectedLocation,
 } from "../../selectors";
 import { features } from "../../utils/prefs";
-import { validateThreadContext } from "../../utils/context";
+import { validateSelectedFrame } from "../../utils/context";
 
 // We need to display all variables in the current functional scope so
 // include all data for block scopes until the first functional scope
@@ -24,22 +24,26 @@ function getLocalScopeLevels(originalAstScopes) {
   return levels;
 }
 
-export function generateInlinePreview(cx, frame) {
+export function generateInlinePreview(selectedFrame) {
   return async function ({ dispatch, getState, parserWorker, client }) {
-    if (!frame || !features.inlinePreview) {
+    if (!features.inlinePreview) {
       return null;
     }
-
-    const { thread } = cx;
 
     // Avoid regenerating inline previews when we already have preview data
-    if (getInlinePreviews(getState(), thread, frame.id)) {
+    if (getInlinePreviews(getState(), selectedFrame.thread, selectedFrame.id)) {
       return null;
     }
 
-    const originalFrameScopes = getOriginalFrameScope(getState(), frame);
+    const originalFrameScopes = getOriginalFrameScope(
+      getState(),
+      selectedFrame
+    );
 
-    const generatedFrameScopes = getGeneratedFrameScope(getState(), frame);
+    const generatedFrameScopes = getGeneratedFrameScope(
+      getState(),
+      selectedFrame
+    );
 
     let scopes = originalFrameScopes?.scope || generatedFrameScopes?.scope;
 
@@ -59,7 +63,8 @@ export function generateInlinePreview(cx, frame) {
     }
 
     const originalAstScopes = await parserWorker.getScopes(selectedLocation);
-    validateThreadContext(getState(), cx);
+    validateSelectedFrame(getState(), selectedFrame);
+
     if (!originalAstScopes) {
       return null;
     }
@@ -92,7 +97,7 @@ export function generateInlinePreview(cx, frame) {
               path: name,
               contents: { value: objectGrip },
             },
-            cx.thread
+            selectedFrame.thread
           );
         }
 
@@ -135,8 +140,7 @@ export function generateInlinePreview(cx, frame) {
 
     return dispatch({
       type: "ADD_INLINE_PREVIEW",
-      thread,
-      frame,
+      selectedFrame,
       previews,
     });
   };

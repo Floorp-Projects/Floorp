@@ -110,7 +110,7 @@ export const getCurrentThreadFrames = createSelector(
       getCurrentThread(state)
     );
     if (framesLoading) {
-      return null;
+      return [];
     }
     return frames;
   },
