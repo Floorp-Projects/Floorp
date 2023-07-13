@@ -21,8 +21,10 @@
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTests);
-
-const kLF = !navigator.platform.indexOf("Win") ? "\r\n" : "\n";
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+const kLF = !navigator.platform.indexOf("Win") && !AppConstants.NIGHTLY_BUILD ? "\r\n" : "\n";
 
 function runTests() {
   var fm = Services.focus;

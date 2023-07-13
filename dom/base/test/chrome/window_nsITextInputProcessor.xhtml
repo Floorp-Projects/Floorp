@@ -92,8 +92,10 @@ const otherWindow = window.arguments[0];
 const otherDocument = otherWindow.document;
 const inputInChildWindow = otherDocument.getElementById("input");
 const contenteditable = document.querySelector("div[contenteditable]");
-
-const kLF = navigator.platform.startsWith("Win") ? "\r\n" : "\n";
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+const kLF = navigator.platform.startsWith("Win") && !AppConstants.NIGHTLY_BUILD ? "\r\n" : "\n";
 function getNativeText(aXPText)
 {
   if (kLF == "\n") {
