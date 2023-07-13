@@ -80,6 +80,9 @@ async def test_invalid_script(bidi_session, top_context):
         ("(function(){})", {"type": "function", },),
         ("(async ()=>{})", {"type": "function", },),
         ("(async function(){})", {"type": "function", },),
+        ("(function*() { yield 'a'; })", {
+            "type": "function"
+        }),
         (
             "new RegExp(/foo/g)",
             {
@@ -137,8 +140,7 @@ async def test_invalid_script(bidi_session, top_context):
         ("new Proxy({}, {})", {
             "type": "proxy"
         }),
-        # generator
-        ("(function*() { yield 'a'; })", {
+        ("(function*() { yield 'a'; })()", {
             "type": "generator"
         }),
         ("Promise.resolve()", {"type": "promise", },),

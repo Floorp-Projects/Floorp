@@ -81,6 +81,9 @@ async def test_primitive_values(bidi_session, top_context, expression, expected)
                 },
             },
         ),
+        ("(function*() { yield 'a'; })", {
+            "type": "function"
+        }),
         (
             "new Date(1654004849000)",
             {
@@ -128,8 +131,7 @@ async def test_primitive_values(bidi_session, top_context, expression, expected)
         ("new Proxy({}, {})", {
             "type": "proxy"
         }),
-        # generator
-        ("(function*() { yield 'a'; })", {
+        ("(function*() { yield 'a'; })()", {
             "type": "generator"
         }),
         ("Promise.resolve()", {"type": "promise", },),
