@@ -323,8 +323,13 @@ add_task(async function test_manifest_with_invalid_utf_8() {
 
 add_task(async function test_invalid_json() {
   await writeManifest(USER_TEST_JSON, "this is not valid json");
-  let result = await lookupApplication("test", context);
+  let { messages, result } = await promiseConsoleOutput(() =>
+    lookupApplication("test", context)
+  );
   equal(result, null, "lookupApplication ignores bad json");
+  let errorPattern = /Error parsing native manifest .*test.json: JSON\.parse:/;
+  let jsonErrors = messages.filter(({ message }) => errorPattern.test(message));
+  equal(jsonErrors.length, 1, "lookupApplication logs JSON error");
 });
 
 add_task(async function test_invalid_name() {
