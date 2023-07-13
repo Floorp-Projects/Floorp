@@ -40,7 +40,7 @@ NetEqController::NetEqStatus CreateNetEqStatus(NetEq::Mode last_mode,
   status.expand_mutefactor = 0;
   status.packet_buffer_info.num_samples = current_delay_ms * kSamplesPerMs;
   status.packet_buffer_info.span_samples = current_delay_ms * kSamplesPerMs;
-  status.packet_buffer_info.span_samples_no_dtx =
+  status.packet_buffer_info.span_samples_wait_time =
       current_delay_ms * kSamplesPerMs;
   status.packet_buffer_info.dtx_or_cng = false;
   status.next_packet = {status.target_timestamp, false, false};

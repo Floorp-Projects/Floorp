@@ -357,8 +357,11 @@ NetEq::Operation DecisionLogic::FuturePacketAvailable(
   // Check if we should continue with an ongoing concealment because the new
   // packet is too far into the future.
   if (config_.combine_concealment_decision || IsCng(status.last_mode)) {
-    const int buffer_delay_ms =
-        status.packet_buffer_info.span_samples / sample_rate_khz_;
+    const int buffer_delay_samples =
+        config_.combine_concealment_decision
+            ? status.packet_buffer_info.span_samples_wait_time
+            : status.packet_buffer_info.span_samples;
+    const int buffer_delay_ms = buffer_delay_samples / sample_rate_khz_;
     const bool above_target_delay = buffer_delay_ms > HighThresholdCng();
     const bool below_target_delay = buffer_delay_ms < LowThresholdCng();
     if ((PacketTooEarly(status) && !above_target_delay) ||
@@ -370,8 +373,7 @@ NetEq::Operation DecisionLogic::FuturePacketAvailable(
     if (config_.combine_concealment_decision) {
       if (timestamp_leap != status.generated_noise_samples) {
         // The delay was adjusted, reinitialize the buffer level filter.
-        buffer_level_filter_->SetFilteredBufferLevel(
-            status.packet_buffer_info.span_samples);
+        buffer_level_filter_->SetFilteredBufferLevel(buffer_delay_samples);
       }
     } else {
       time_stretched_cn_samples_ =
@@ -405,7 +407,11 @@ bool DecisionLogic::PostponeDecode(NetEqController::NetEqStatus status) const {
   // running out of data right away again.
   const size_t min_buffer_level_samples =
       TargetLevelMs() * sample_rate_khz_ * kPostponeDecodingLevel / 100;
-  if (status.packet_buffer_info.span_samples >= min_buffer_level_samples) {
+  const size_t buffer_level_samples =
+      config_.combine_concealment_decision
+          ? status.packet_buffer_info.span_samples_wait_time
+          : status.packet_buffer_info.span_samples;
+  if (buffer_level_samples >= min_buffer_level_samples) {
     return false;
   }
   // Don't postpone decoding if there is a future DTX packet in the packet
