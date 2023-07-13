@@ -31,7 +31,6 @@ add_task(async function () {
     result: "secondCall()",
     expression: "secondCall",
   });
-  await new Promise(res => {});
   is(
     dbg.selectors.getInScopeLines(frame.location),
     inScopeLines,

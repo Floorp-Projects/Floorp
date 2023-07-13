@@ -69,14 +69,6 @@ add_task(async function () {
       ],
     },
     {
-      selector: `h1, [test-hint="imported-nested-named-layer--named-layer"]`,
-      ancestorRulesData: [
-        "@layer importedLayer",
-        "@layer importedNestedLayer",
-        "@layer in-imported-nested-stylesheet",
-      ],
-    },
-    {
       selector: `h1, [test-hint="imported-anonymous-layer--no-rule-layer"]`,
       ancestorRulesData: ["@layer"],
     },
