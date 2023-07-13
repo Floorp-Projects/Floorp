@@ -561,38 +561,45 @@ class CssLogic {
         continue;
       }
 
-      // getCSSStyleRules can return null with a shadow DOM element.
-      for (const domRule of domRules || []) {
-        if (domRule.type !== CSSRule.STYLE_RULE) {
-          continue;
-        }
-
-        const sheet = this.getSheet(domRule.parentStyleSheet, -1);
-        if (sheet._passId !== this._passId) {
-          sheet.index = sheetIndex++;
-          sheet._passId = this._passId;
-        }
-
-        if (filter === FILTER.USER && !sheet.authorSheet) {
-          continue;
-        }
-
-        const rule = sheet.getRule(domRule);
-        if (rule._passId === this._passId) {
-          continue;
-        }
-
-        rule._matchId = this._matchId;
-        rule._passId = this._passId;
-        this._matchedRules.push([rule, status, distance]);
-      }
-
-      // Add element.style information.
+      // Add element.style information. Order matters here, and style attribute wins over
+      // other rules, so we need to add it in `this._matchesRules` before the regular rules.
       if (element.style && element.style.length) {
         const rule = new CssRule(null, { style: element.style }, element);
         rule._matchId = this._matchId;
         rule._passId = this._passId;
         this._matchedRules.push([rule, status, distance]);
+      }
+
+      // getCSSStyleRules can return null with a shadow DOM element.
+      if (domRules !== null) {
+        // getCSSStyleRules returns ordered from least-specific to most-specific,
+        // but we do want them from most-specific to least specific, so we need to loop
+        // through the rules backward.
+        for (let i = domRules.length - 1; i >= 0; i--) {
+          const domRule = domRules[i];
+          if (domRule.type !== CSSRule.STYLE_RULE) {
+            continue;
+          }
+
+          const sheet = this.getSheet(domRule.parentStyleSheet, -1);
+          if (sheet._passId !== this._passId) {
+            sheet.index = sheetIndex++;
+            sheet._passId = this._passId;
+          }
+
+          if (filter === FILTER.USER && !sheet.authorSheet) {
+            continue;
+          }
+
+          const rule = sheet.getRule(domRule);
+          if (rule._passId === this._passId) {
+            continue;
+          }
+
+          rule._matchId = this._matchId;
+          rule._passId = this._passId;
+          this._matchedRules.push([rule, status, distance]);
+        }
       }
 
       distance--;
@@ -1293,9 +1300,9 @@ class CssPropertyInfo {
     this._cssLogic.processMatchedSelectors(this._processMatchedSelector, this);
 
     // Sort the selectors by how well they match the given element.
-    this._matchedSelectors.sort(function (selectorInfo1, selectorInfo2) {
-      return selectorInfo1.compareTo(selectorInfo2);
-    });
+    this._matchedSelectors.sort((selectorInfo1, selectorInfo2) =>
+      selectorInfo1.compareTo(selectorInfo2, this._matchedSelectors)
+    );
 
     // Now we know which of the matches is best, we can mark it BEST_MATCH.
     if (
@@ -1387,6 +1394,28 @@ class CssSelectorInfo {
     this.value = value;
     const priority = this.selector.cssRule.getPropertyPriority(this.property);
     this.important = priority === "important";
+
+    // Array<string|CSSLayerBlockRule>
+    this.parentLayers = [];
+
+    // Go through all parent rules to populate this.parentLayers
+    let rule = selector.cssRule.domRule;
+    while (rule) {
+      const className = ChromeUtils.getClassName(rule);
+      if (className == "CSSLayerBlockRule") {
+        // If the layer has a name, it's enough to uniquely identify it
+        // If the layer does not have a name. We put the actual rule here, so we'll
+        // be able to compare actual rule instances in `compareTo`
+        this.parentLayers.push(rule.name || rule);
+      } else if (className == "CSSImportRule" && rule.layerName !== null) {
+        // Same reasoning for @import rule + layer
+        this.parentLayers.push(rule.layerName || rule);
+      }
+
+      // Get the parent rule (could be the parent stylesheet owner rule
+      // for `@import url(path/to/file.css) layer`)
+      rule = rule.parentRule || rule.parentStyleSheet?.ownerRule;
+    }
   }
 
   /**
@@ -1512,110 +1541,65 @@ class CssSelectorInfo {
   }
 
   /**
-   * Compare the current CssSelectorInfo instance to another instance, based on
-   * the CSS cascade (see https://www.w3.org/TR/css-cascade-4/#cascading):
-   *
-   * The cascade sorts declarations according to the following criteria, in
-   * descending order of priority:
-   *
-   * - Rules targetting a node directly must always win over rules targetting an
-   *   ancestor.
-   *
-   * - Origin and Importance
-   *   The origin of a declaration is based on where it comes from and its
-   *   importance is whether or not it is declared !important (see below). For
-   *   our purposes here we can safely ignore Transition declarations and
-   *   Animation declarations.
-   *   The precedence of the various origins is, in descending order:
-   *   - Transition declarations (ignored)
-   *   - Important user agent declarations (User-Agent & !important)
-   *   - Important user declarations (User & !important)
-   *   - Important author declarations (Author & !important)
-   *   - Animation declarations (ignored)
-   *   - Normal author declarations (Author, normal weight)
-   *   - Normal user declarations (User, normal weight)
-   *   - Normal user agent declarations (User-Agent, normal weight)
-   *
-   * - Specificity (see https://www.w3.org/TR/selectors/#specificity)
-   *   - A selector’s specificity is calculated for a given element as follows:
-   *     - count the number of ID selectors in the selector (= A)
-   *     - count the number of class selectors, attributes selectors, and
-   *       pseudo-classes in the selector (= B)
-   *     - count the number of type selectors and pseudo-elements in the
-   *       selector (= C)
-   *     - ignore the universal selector
-   *   - So "UL OL LI.red" has a specificity of a=0 b=1 c=3.
-   *
-   * - Order of Appearance
-   *   - The last declaration in document order wins. For this purpose:
-   *     - Declarations from imported style sheets are ordered as if their style
-   *       sheets were substituted in place of the @import rule.
-   *     - Declarations from style sheets independently linked by the
-   *       originating document are treated as if they were concatenated in
-   *       linking order, as determined by the host document language.
-   *     - Declarations from style attributes are ordered according to the
-   *       document order of the element the style attribute appears on, and are
-   *       all placed after any style sheets.
-   *   - We use three methods to calculate this:
-   *     - Sheet index
-   *     - Rule line
-   *     - Rule column
+   * Compare the current CssSelectorInfo instance to another instance.
+   * Since selectorInfos is computed from `InspectorUtils.getCSSStyleRules`,
+   * it's already sorted for regular cases. We only need to handle important values.
    *
    * @param  {CssSelectorInfo} that
    *         The instance to compare ourselves against.
+   * @param  {Array<CssSelectorInfo>} selectorInfos
+   *         The list of CssSelectorInfo we are currently ordering
    * @return {Number}
    *         -1, 0, 1 depending on how that compares with this.
    */
-  compareTo(that) {
-    let current = null;
+  compareTo(that, selectorInfos) {
+    const originalOrder =
+      selectorInfos.indexOf(this) < selectorInfos.indexOf(that) ? -1 : 1;
 
-    // Rules targetting the node must always win over rules targetting a node's
-    // ancestor.
-    current = this.compare(that, "distance", COMPAREMODE.INTEGER);
-    if (current) {
-      return current;
+    // If both properties are not important, we can keep the original order
+    if (!this.important && !that.important) {
+      return originalOrder;
     }
 
-    if (this.important) {
-      // User-Agent & !important
-      // User & !important
-      // Author & !important
-      for (const propName of ["agentRule", "userRule", "authorRule"]) {
-        current = this.compare(that, propName, COMPAREMODE.BOOLEAN);
-        if (current) {
-          return current;
-        }
-      }
+    // If one of the property is important and the other is not, the important one wins
+    if (this.important !== that.important) {
+      return this.important ? -1 : 1;
     }
 
-    // Author, normal weight
-    // User, normal weight
-    // User-Agent, normal weight
-    for (const propName of ["authorRule", "userRule", "agentRule"]) {
-      current = this.compare(that, propName, COMPAREMODE.BOOLEAN);
-      if (current) {
-        return current;
-      }
+    // At this point, this and that are both important
+
+    const thisIsInLayer = !!this.parentLayers.length;
+    const thatIsInLayer = !!that.parentLayers.length;
+
+    // If they're not in layers, we can keep the original rule order
+    if (!thisIsInLayer && !thatIsInLayer) {
+      return originalOrder;
     }
 
-    // Specificity
-    // Sheet index
-    // Rule line
-    // Rule column
-    for (const propName of [
-      "specificity",
-      "sheetIndex",
-      "ruleLine",
-      "ruleColumn",
-    ]) {
-      current = this.compare(that, propName, COMPAREMODE.INTEGER);
-      if (current) {
-        return current;
-      }
+    // If one of the rule is the style attribute, it wins
+    if (this.selector.inlineStyle || that.selector.inlineStyle) {
+      return this.selector.inlineStyle ? -1 : 1;
     }
 
-    // A rule has been compared against itself so return 0.
-    return 0;
+    // If one of the rule is not in a layer, then the rule in a layer wins.
+    if (!thisIsInLayer || !thatIsInLayer) {
+      return thisIsInLayer ? -1 : 1;
+    }
+
+    const inSameLayers =
+      this.parentLayers.length === that.parentLayers.length &&
+      this.parentLayers.every((layer, i) => layer === that.parentLayers[i]);
+    // If both rules are in the same layer, we keep the original order
+    if (inSameLayers) {
+      return originalOrder;
+    }
+
+    // When comparing declarations that belong to different layers, then for
+    // important rules the declaration whose cascade layer is first wins.
+    // We get the rules in the most-specific to least-specific order, meaning we'll have
+    // rules in layers in the reverse order of the order of declarations of layers.
+    // We can reverse that again to get the order of declarations of layers.
+    return originalOrder * -1;
   }
 
   compare(that, propertyName, type) {

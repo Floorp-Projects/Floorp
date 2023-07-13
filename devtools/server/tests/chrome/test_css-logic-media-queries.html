@@ -43,8 +43,8 @@ Test that css-logic handles media-queries correctly
 
     const inline = _strings.GetStringFromName("rule.sourceInline");
 
-    const source1 = inline + ":2";
-    const source2 = inline + ":9 @media screen and (min-width: 1px)";
+    const source1 = inline + ":9 @media screen and (min-width: 1px)";
+    const source2 = inline + ":2";
     is(cssLogic._matchedRules[0][0].source, source1,
       "rule.source gives correct output for rule 1");
     is(cssLogic._matchedRules[1][0].source, source2,
