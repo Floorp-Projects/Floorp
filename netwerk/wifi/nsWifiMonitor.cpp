@@ -292,17 +292,10 @@ void nsWifiMonitor::Scan(uint64_t aPollingId) {
        static_cast<uint32_t>(rv)));
 
   if (NS_FAILED(rv)) {
-    auto* mainThread = GetMainThreadSerialEventTarget();
-    if (!mainThread) {
-      LOG(("nsWifiMonitor::Scan cannot find main thread"));
-      return;
-    }
-
-    NS_DispatchAndSpinEventLoopUntilComplete(
-        "WaitForPassErrorToWifiListeners"_ns, mainThread,
-        NewRunnableMethod<nsresult>("PassErrorToWifiListeners", this,
-                                    &nsWifiMonitor::PassErrorToWifiListeners,
-                                    rv));
+    rv = NS_DispatchToMainThread(NewRunnableMethod<nsresult>(
+        "PassErrorToWifiListeners", this,
+        &nsWifiMonitor::PassErrorToWifiListeners, rv));
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
   // If we are polling then we re-issue Scan after a delay.
@@ -374,8 +367,7 @@ nsresult nsWifiMonitor::DoScan() {
     return NS_ERROR_UNEXPECTED;
   }
 
-  return NS_DispatchAndSpinEventLoopUntilComplete(
-      "WaitForCallWifiListeners"_ns, mainThread,
+  return NS_DispatchToMainThread(
       NewRunnableMethod<const nsTArray<RefPtr<nsIWifiAccessPoint>>&&, bool>(
           "CallWifiListeners", this, &nsWifiMonitor::CallWifiListeners,
           mLastAccessPoints.Clone(), accessPointsChanged));
