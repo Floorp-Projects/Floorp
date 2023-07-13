@@ -586,14 +586,35 @@ js::gc::AllocKind js::WasmStructObject::allocKindForTypeDef(
   return gc::GetGCObjectKindForBytes(nbytes);
 }
 
-/* static MOZ_NEVER_INLINE */
+/* static */
 template <bool ZeroFields>
-WasmStructObject* WasmStructObject::createStructOOL(
+WasmStructObject* WasmStructObject::createStruct(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
-    js::gc::Heap initialHeap, uint32_t inlineBytes, uint32_t outlineBytes) {
-  // This method is called as the slow path from the (inlineable)
-  // WasmStructObject::createStruct.  It handles the case where an object
-  // needs OOL storage.  It doesn't handle the non-OOL case at all.
+    js::gc::Heap initialHeap) {
+  const wasm::TypeDef* typeDef = typeDefData->typeDef;
+  MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
+
+  uint32_t totalBytes = typeDef->structType().size_;
+  uint32_t inlineBytes, outlineBytes;
+  WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
+
+  // Fast-track the inline-storage-only case.
+  if (MOZ_LIKELY(outlineBytes == 0)) {
+    // This doesn't need to be rooted, since all we do with it prior to
+    // return is to zero out the fields (and then only if ZeroFields is true).
+    WasmStructObject* structObj =
+        (WasmStructObject*)WasmGcObject::create(cx, typeDefData, initialHeap);
+    if (MOZ_UNLIKELY(!structObj)) {
+      ReportOutOfMemory(cx);
+      return nullptr;
+    }
+
+    structObj->outlineData_ = nullptr;
+    if constexpr (ZeroFields) {
+      memset(&(structObj->inlineData_[0]), 0, inlineBytes);
+    }
+    return structObj;
+  }
 
   // Allocate the outline data area before allocating the object so that we can
   // infallibly initialize the outline data area.
