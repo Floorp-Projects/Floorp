@@ -213,7 +213,7 @@ VideoCodec VideoCodecInitializer::VideoEncoderConfigToVideoCodec(
     case kVideoCodecVP9: {
       // When the SvcRateAllocator is used, "active" is controlled by
       // `SpatialLayer::active` instead.
-      if (video_codec.IsSinglecastOrAllNonFirstLayersInactive()) {
+      if (video_codec.numberOfSimulcastStreams <= 1) {
         video_codec.simulcastStream[0].active = codec_active;
       }
 
