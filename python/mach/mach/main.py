@@ -16,7 +16,7 @@ import traceback
 import uuid
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from .base import (
     CommandContext,
@@ -180,8 +180,13 @@ class MachCommandReference:
 
     module: Path
 
-    def __init__(self, module: Union[str, Path]):
+    def __init__(
+        self,
+        module: Union[str, Path],
+        command_site_name: Optional[str] = None,
+    ):
         self.module = Path(module)
+        self.site_name = command_site_name if command_site_name else None
 
 
 class Mach(object):
