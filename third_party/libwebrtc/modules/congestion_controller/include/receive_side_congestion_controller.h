@@ -44,11 +44,6 @@ class ReceiveSideCongestionController : public CallStatsObserver {
 
   void OnReceivedPacket(const RtpPacketReceived& packet, MediaType media_type);
 
-  // TODO(perkj, bugs.webrtc.org/14859): Remove all usage. This method is
-  // currently not used by PeerConnections.
-  virtual void OnReceivedPacket(int64_t arrival_time_ms,
-                                size_t payload_size,
-                                const RTPHeader& header);
   // Implements CallStatsObserver.
   void OnRttUpdate(int64_t avg_rtt_ms, int64_t max_rtt_ms) override;
 
