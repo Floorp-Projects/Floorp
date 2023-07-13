@@ -93,25 +93,23 @@ in explicitly:
     ERROR_HELP=""
   fi
 
-  ERROR_HELP=$"
-An error here is likely because no revision for central is found.
-One possible reason for this is this is your first rebase operation.
-To 'bootstrap' the first rebase operation, please find the
-moz-central commit that the vendoring commits is based on, and
-rerun the command:
-  MOZ_CURRENT_CENTRAL={central-sha} bash $0
+  hg pull central
 
+  ERROR_HELP=$"
 You may also need to provide the bottom commit of the fast-forward
 stack.  The bottom commit means the commit following central.  This
 could be the sha of the .arcconfig commit if it is the bottom commit.
 That command looks like:
   MOZ_BOTTOM_FF={base-sha} MOZ_CURRENT_CENTRAL={central-sha} bash $0
 "
-  if [ "x" == "x$MOZ_CURRENT_CENTRAL" ]; then
-    MOZ_CURRENT_CENTRAL=`hg log -r central -T"{node|short}"`
-  fi
   if [ "x" == "x$MOZ_BOTTOM_FF" ]; then
-    MOZ_BOTTOM_FF=`hg log -r $MOZ_CURRENT_CENTRAL~-1 -T"{node|short}"`
+    # Finds the common ancestor between our top fast-forward commit and
+    # mozilla-central using:
+    #    ancestor($MOZ_TOP_FF, central)
+    # Using that ancestor and $MOZ_TOP_FF as a range, find the commit _after_
+    # the the common commit using limit(range, 1, 1) which gives the first
+    # commit of the range, offset by one commit.
+    MOZ_BOTTOM_FF=`hg id --id --rev "limit(ancestor($MOZ_TOP_FF, central)::$MOZ_TOP_FF, 1, 1)"`
   fi
   ERROR_HELP=""
 
@@ -126,10 +124,8 @@ That command looks like:
   # * o pipefail: All stages of all pipes should succeed.
   set -eEuo pipefail
 
-  hg pull central
   MOZ_NEW_CENTRAL=`hg log -r central -T"{node|short}"`
 
-  echo "moz-central in elm is currently $MOZ_CURRENT_CENTRAL"
   echo "bottom of fast-foward tree is $MOZ_BOTTOM_FF"
   echo "top of fast-forward tree (webrtc-fast-forward) is $MOZ_TOP_FF"
   echo "new target for elm rebase $MOZ_NEW_CENTRAL (tip of moz-central)"
@@ -148,8 +144,7 @@ That command looks like:
 
   # pre-work is complete, let's write out a temporary config file that allows
   # us to resume
-  echo $"export MOZ_CURRENT_CENTRAL=$MOZ_CURRENT_CENTRAL
-export MOZ_BOTTOM_FF=$MOZ_BOTTOM_FF
+  echo $"export MOZ_BOTTOM_FF=$MOZ_BOTTOM_FF
 export MOZ_TOP_FF=$MOZ_TOP_FF
 export MOZ_NEW_CENTRAL=$MOZ_NEW_CENTRAL
 export MOZ_BOOKMARK=$MOZ_BOOKMARK
