@@ -1362,13 +1362,15 @@ def webrtc_default(target):
     os_match = target.kernel in (
         "Linux",
         "WINNT",
-        "Darwin",
         "DragonFly",
         "FreeBSD",
         "kFreeBSD",
         "NetBSD",
         "OpenBSD",
     )
+
+    if not os_match:
+        os_match = target.os in ("OSX",)
 
     cpu_match = target.cpu in (
         "x86_64",
