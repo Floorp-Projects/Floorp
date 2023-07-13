@@ -1100,10 +1100,10 @@ int NetEqImpl::GetDecision(Operation* operation,
   status.packet_buffer_info.num_samples =
       packet_buffer_->NumSamplesInBuffer(decoder_frame_length_);
   status.packet_buffer_info.span_samples = packet_buffer_->GetSpanSamples(
-      decoder_frame_length_, last_output_sample_rate_hz_, true);
-  status.packet_buffer_info.span_samples_no_dtx =
+      decoder_frame_length_, last_output_sample_rate_hz_, false);
+  status.packet_buffer_info.span_samples_wait_time =
       packet_buffer_->GetSpanSamples(decoder_frame_length_,
-                                     last_output_sample_rate_hz_, false);
+                                     last_output_sample_rate_hz_, true);
   status.packet_buffer_info.num_packets = packet_buffer_->NumPacketsInBuffer();
   status.target_timestamp = sync_buffer_->end_timestamp();
   status.expand_mutefactor = expand_->MuteFactor(0);
