@@ -9,14 +9,14 @@
 <base href="chrome://mochitests/content/chrome/dom/base/test/jsmodules/importmaps/scope1/">
 
 <!--
-With the <base> element, the correct "module_simpleExport.js" should be mapped
-to "scope1/module_simpleExport.js", instead of "./module_simpleExport.js".
+With the <base> element, the correct "module_simpleExport.mjs" should be mapped
+to "scope1/module_simpleExport.mjs", instead of "./module_simpleExport.mjs".
 -->
 
 <script type="importmap">
 {
   "imports": {
-    "simple": "./module_simpleExport.js"
+    "simple": "./module_simpleExport.mjs"
   }
 }
 </script>
@@ -28,7 +28,7 @@ to "scope1/module_simpleExport.js", instead of "./module_simpleExport.js".
   result2 = x;
 </script>
 
-<script type="module" src="module_simpleImportMap.js"></script>
+<script type="module" src="module_simpleImportMap.mjs"></script>
 
 <script>
   var result_scope1, result2;

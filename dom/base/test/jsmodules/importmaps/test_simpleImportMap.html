@@ -4,17 +4,17 @@
 <script type="importmap">
 {
   "imports": {
-    "simple": "./module_simpleExport.js",
+    "simple": "./module_simpleExport.mjs",
     "dir/": "/content/chrome/dom/base/test/jsmodules/importmaps/",
-    "./module.js": "/content/chrome/dom/base/test/jsmodules/importmaps/module_simpleExport.js",
-    "https://example.com/module.js": "./module_simpleExport.js"
+    "./module.mjs": "/content/chrome/dom/base/test/jsmodules/importmaps/module_simpleExport.mjs",
+    "https://example.com/module.mjs": "./module_simpleExport.mjs"
   },
   "scopes": {
     "chrome://mochitests/content/chrome/dom/base/test/jsmodules/importmaps/scope1/": {
-      "simple": "/content/chrome/dom/base/test/jsmodules/importmaps/scope1/module_simpleExport.js"
+      "simple": "/content/chrome/dom/base/test/jsmodules/importmaps/scope1/module_simpleExport.mjs"
     },
     "chrome://mochitests/content/chrome/dom/base/test/jsmodules/importmaps/scope1/scope2/": {
-      "simple": "/content/chrome/dom/base/test/jsmodules/importmaps/scope1/scope2/module_simpleExport.js"
+      "simple": "/content/chrome/dom/base/test/jsmodules/importmaps/scope1/scope2/module_simpleExport.mjs"
     }
   }
 }
@@ -39,24 +39,24 @@
 
     import("simple").then((ns) => {
       ok(ns.x == 42, 'Check simple imported value result: ' + ns.x);
-      return import("dir/module_simpleExport.js");
+      return import("dir/module_simpleExport.mjs");
     }).then((ns) => {
       ok(ns.x == 42, 'Check dir imported value result: ' + ns.x);
-      return import("./module.js");
+      return import("./module.mjs");
     }).then((ns) => {
       ok(ns.x == 42, 'Check remap imported value result: ' + ns.x);
-      return import("https://example.com/module.js");
+      return import("https://example.com/module.mjs");
     }).then((ns) => {
       ok(ns.x == 42, 'Check remap https imported value result: ' + ns.x);
       SimpleTest.finish();
     });
   }
 </script>
-<script type="module" src="module_simpleImportMap.js"></script>
-<script type="module" src="module_simpleImportMap_dir.js"></script>
-<script type="module" src="module_simpleImportMap_remap.js"></script>
-<script type="module" src="module_simpleImportMap_remap_https.js"></script>
-<script type="module" src="module_simpleImportMap_remap_https.js"></script>
-<script type="module" src="scope1/module_simpleImportMap.js"></script>
-<script type="module" src="scope1/scope2/module_simpleImportMap.js"></script>
+<script type="module" src="module_simpleImportMap.mjs"></script>
+<script type="module" src="module_simpleImportMap_dir.mjs"></script>
+<script type="module" src="module_simpleImportMap_remap.mjs"></script>
+<script type="module" src="module_simpleImportMap_remap_https.mjs"></script>
+<script type="module" src="module_simpleImportMap_remap_https.mjs"></script>
+<script type="module" src="scope1/module_simpleImportMap.mjs"></script>
+<script type="module" src="scope1/scope2/module_simpleImportMap.mjs"></script>
 <body onload='testLoaded()'></body>
