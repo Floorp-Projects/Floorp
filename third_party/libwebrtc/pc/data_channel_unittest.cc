@@ -179,6 +179,33 @@ TEST_F(SctpDataChannelTest, ConnectedToTransportOnCreated) {
   EXPECT_TRUE(controller_->IsStreamAdded(sid));
 }
 
+// Tests that calling `UnregisterObserver()` from within the `OnStateChange`
+// is safe.
+TEST_F(SctpDataChannelTest, UnregisterObserverFromOnStateChange) {
+  class TrickyObserver : public DataChannelObserver {
+   public:
+    explicit TrickyObserver(DataChannelInterface* channel)
+        : channel_(channel) {}
+    void OnStateChange() override { channel_->UnregisterObserver(); }
+    void OnBufferedAmountChange(uint64_t previous_amount) override {}
+    void OnMessage(const DataBuffer& buffer) override {}
+
+    // This test is specifically for the observer adapter inside SctpDataChannel
+    // that kicks in when the return value from `IsOkToCallOnTheNetworkThread()`
+    // is false.
+    bool IsOkToCallOnTheNetworkThread() override { return false; }
+
+   private:
+    DataChannelInterface* channel_;
+  };
+
+  EXPECT_EQ(DataChannelInterface::kConnecting, channel_->state());
+  TrickyObserver observer(channel_.get());
+  channel_->RegisterObserver(&observer);
+  SetChannelReady();
+  EXPECT_EQ(DataChannelInterface::kOpen, channel_->state());
+}
+
 // Tests the state of the data channel.
 TEST_F(SctpDataChannelTest, StateTransition) {
   AddObserver();
