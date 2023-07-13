@@ -449,7 +449,6 @@ class ConstMethodCall {
     TRACE_BOILERPLATE(method);               \
     return c_->method();                     \
   }
-
 // Allows a custom implementation of a method where the otherwise proxied
 // implementation can do a more efficient, yet thread-safe, job than the proxy
 // can do by default or when more flexibility is needed than can be provided

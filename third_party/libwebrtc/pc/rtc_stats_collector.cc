@@ -1499,7 +1499,6 @@ void RTCStatsCollector::ProducePartialResultsOnSignalingThreadImpl(
   RTC_DCHECK_RUN_ON(signaling_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
-  ProduceDataChannelStats_s(timestamp, partial_report);
   ProduceMediaStreamStats_s(timestamp, partial_report);
   ProduceMediaStreamTrackStats_s(timestamp, partial_report);
   ProduceMediaSourceStats_s(timestamp, partial_report);
@@ -1518,6 +1517,8 @@ void RTCStatsCollector::ProducePartialResultsOnNetworkThread(
   // Touching `network_report_` on this thread is safe by this method because
   // `network_report_event_` is reset before this method is invoked.
   network_report_ = RTCStatsReport::Create(timestamp);
+
+  ProduceDataChannelStats_n(timestamp, network_report_.get());
 
   std::set<std::string> transport_names;
   if (sctp_transport_name) {
@@ -1653,10 +1654,10 @@ void RTCStatsCollector::ProduceCertificateStats_n(
   }
 }
 
-void RTCStatsCollector::ProduceDataChannelStats_s(
+void RTCStatsCollector::ProduceDataChannelStats_n(
     Timestamp timestamp,
     RTCStatsReport* report) const {
-  RTC_DCHECK_RUN_ON(signaling_thread_);
+  RTC_DCHECK_RUN_ON(network_thread_);
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
   std::vector<DataChannelStats> data_stats = pc_->GetDataChannelStats();
   for (const auto& stats : data_stats) {
