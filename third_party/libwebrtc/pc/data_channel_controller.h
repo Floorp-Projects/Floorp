@@ -64,6 +64,9 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   void OnReadyToSend() override;
   void OnTransportClosed(RTCError error) override;
 
+  // Called as part of destroying the owning PeerConnection.
+  void PrepareForShutdown();
+
   // Called from PeerConnection::SetupDataChannelTransport_n
   void SetupDataChannelTransport_n();
   // Called from PeerConnection::TeardownDataChannelTransport_n

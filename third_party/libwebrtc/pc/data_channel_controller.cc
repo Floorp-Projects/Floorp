@@ -165,6 +165,11 @@ void DataChannelController::SetupDataChannelTransport_n() {
   NotifyDataChannelsOfTransportCreated();
 }
 
+void DataChannelController::PrepareForShutdown() {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  signaling_safety_.reset();
+}
+
 void DataChannelController::TeardownDataChannelTransport_n() {
   RTC_DCHECK_RUN_ON(network_thread());
   if (data_channel_transport()) {
