@@ -34,6 +34,8 @@ bool mPreventScriptExecution;
  * information even in the XHR/plain text/View Source cases.
  */
 bool mGenerateSpeculativeLoads;
+
+bool mHasSeenImportMap;
 #ifdef DEBUG
 bool mActive;
 #endif
