@@ -147,20 +147,14 @@ class DecisionLogic : public NetEqController {
   bool PacketTooEarly(NetEqController::NetEqStatus status) const;
   bool MaxWaitForPacket(NetEqController::NetEqStatus status) const;
   bool ShouldContinueExpand(NetEqController::NetEqStatus status) const;
-  int GetNextPacketDelayMs(NetEqController::NetEqStatus status) const;
   int GetPlayoutDelayMs(NetEqController::NetEqStatus status) const;
-
-  int LowThreshold() const;
-  int HighThreshold() const;
-  int LowThresholdCng() const;
-  int HighThresholdCng() const;
 
   // Runtime configurable options through field trial
   // WebRTC-Audio-NetEqDecisionLogicConfig.
   struct Config {
     Config();
 
-    bool enable_stable_playout_delay = false;
+    bool enable_stable_delay_mode = false;
     bool combine_concealment_decision = false;
     int deceleration_target_level_offset_ms = 85;
     int packet_history_size_ms = 2000;
@@ -181,7 +175,6 @@ class DecisionLogic : public NetEqController {
   std::unique_ptr<TickTimer::Countdown> timescale_countdown_;
   int time_stretched_cn_samples_ = 0;
   bool buffer_flush_ = false;
-  int last_playout_delay_ms_ = 0;
 };
 
 }  // namespace webrtc
