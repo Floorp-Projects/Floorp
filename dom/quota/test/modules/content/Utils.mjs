@@ -3,7 +3,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-import { getUsageForOrigin } from "/tests/dom/quota/test/modules/StorageUtils.js";
+// This file expectes the SpecialPowers to be available in the scope
+// it is loaded into.
+/* global SpecialPowers */
+
+import { getUsageForOrigin } from "./StorageUtils.mjs";
 
 export const Utils = {
   async getCachedOriginUsage() {

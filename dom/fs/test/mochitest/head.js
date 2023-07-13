@@ -6,16 +6,16 @@
 async function require_module(id) {
   if (!require_module.moduleLoader) {
     const { ModuleLoader } = await import(
-      "/tests/dom/quota/test/modules/ModuleLoader.js"
+      "/tests/dom/quota/test/modules/ModuleLoader.mjs"
     );
 
     const base = window.location.href;
 
     const depth = "../../../../";
 
-    const { Assert } = await import("/tests/dom/quota/test/modules/Assert.js");
+    const { Assert } = await import("/tests/dom/quota/test/modules/Assert.mjs");
 
-    const { Utils } = await import("/tests/dom/quota/test/modules/Utils.js");
+    const { Utils } = await import("/tests/dom/quota/test/modules/Utils.mjs");
 
     const proto = {
       Assert,
@@ -33,7 +33,7 @@ async function require_module(id) {
 
 async function run_test_in_worker(script) {
   const { runTestInWorker } = await import(
-    "/tests/dom/quota/test/modules/WorkerDriver.js"
+    "/tests/dom/quota/test/modules/WorkerDriver.mjs"
   );
 
   const base = window.location.href;
@@ -63,7 +63,7 @@ async function removeAllEntries() {
 
 add_setup(async function () {
   const { setStoragePrefs, clearStoragesForOrigin } = await import(
-    "/tests/dom/quota/test/modules/StorageUtils.js"
+    "/tests/dom/quota/test/modules/StorageUtils.mjs"
   );
 
   const optionalPrefsToSet = [

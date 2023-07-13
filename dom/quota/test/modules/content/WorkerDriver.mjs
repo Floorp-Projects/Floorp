@@ -23,7 +23,7 @@ export async function runTestInWorker(script, base, listener) {
         if (!modules[moduleName]) {
           // eslint-disable-next-line no-unsanitized/method
           modules[moduleName] = await import(
-            "/tests/dom/quota/test/modules/" + moduleName + ".js"
+            "/tests/dom/quota/test/modules/" + moduleName + ".mjs"
           );
         }
         await modules[moduleName][objectName].OnMessageReceived(worker, data);

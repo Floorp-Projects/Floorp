@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+/* eslint-env worker */
+
 const Cr = {
   NS_ERROR_NOT_IMPLEMENTED: 2147500033,
 };
