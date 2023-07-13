@@ -38,12 +38,12 @@ TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.common += [
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.modules += [
-    "modules/content/Assert.js",
-    "modules/content/ModuleLoader.js",
-    "modules/content/StorageUtils.js",
-    "modules/content/Utils.js",
-    "modules/content/UtilsParent.js",
-    "modules/content/WorkerDriver.js",
+    "modules/content/Assert.mjs",
+    "modules/content/ModuleLoader.mjs",
+    "modules/content/StorageUtils.mjs",
+    "modules/content/Utils.mjs",
+    "modules/content/UtilsParent.mjs",
+    "modules/content/WorkerDriver.mjs",
 ]
 
 TEST_HARNESS_FILES.testing.mochitest.tests.dom.quota.test.modules.worker += [

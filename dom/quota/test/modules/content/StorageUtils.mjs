@@ -3,6 +3,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+// This file expectes the SpecialPowers to be available in the scope
+// it is loaded into.
+/* global SpecialPowers */
+
 class RequestError extends Error {
   constructor(resultCode, resultName) {
     super(`Request failed (code: ${resultCode}, name: ${resultName})`);
