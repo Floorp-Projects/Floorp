@@ -131,6 +131,44 @@ TEST_F(DataChannelControllerTest, CloseAfterControllerDestroyed) {
   channel->Close();
 }
 
+TEST_F(DataChannelControllerTest, AsyncChannelCloseTeardown) {
+  DataChannelControllerForTest dcc(pc_.get());
+  auto ret = dcc.InternalCreateDataChannelWithProxy(
+      "label", InternalDataChannelInit(DataChannelInit()));
+  ASSERT_TRUE(ret.ok());
+  auto channel = ret.MoveValue();
+  SctpDataChannel* inner_channel =
+      DowncastProxiedDataChannelInterfaceToSctpDataChannelForTesting(
+          channel.get());
+  // Grab a reference for testing purposes.
+  inner_channel->AddRef();
+
+  channel = nullptr;  // dcc still holds a reference to `channel`.
+  EXPECT_TRUE(dcc.HasDataChannelsForTest());
+
+  // Trigger a Close() for the channel. This will send events back to dcc,
+  // eventually reaching `OnSctpDataChannelClosed` where dcc removes
+  // the channel from the internal list of data channels, but does not release
+  // the reference synchronously since that reference might be the last one.
+  inner_channel->Close();
+  // Now there should be no tracked data channels.
+  EXPECT_FALSE(dcc.HasDataChannelsForTest());
+  // But there should be an async operation queued that still holds a reference.
+  // That means that the test reference, must not be the last one.
+  ASSERT_NE(inner_channel->Release(),
+            rtc::RefCountReleaseStatus::kDroppedLastRef);
+  // Grab a reference again (using the pointer is safe since the object still
+  // exists and we control the single-threaded environment manually).
+  inner_channel->AddRef();
+  // Now run the queued up async operations on the signaling (current) thread.
+  // This time, the reference formerly owned by dcc, should be release and the
+  // truly last reference is now held by the test.
+  run_loop_.Flush();
+  // Check that this is the last reference.
+  EXPECT_EQ(inner_channel->Release(),
+            rtc::RefCountReleaseStatus::kDroppedLastRef);
+}
+
 // Allocate the maximum number of data channels and then one more.
 // The last allocation should fail.
 TEST_F(DataChannelControllerTest, MaxChannels) {
