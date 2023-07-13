@@ -40,18 +40,15 @@ static constexpr int kDefaultTimeout = 10000;
 
 class FakeDataChannelObserver : public DataChannelObserver {
  public:
-  FakeDataChannelObserver()
-      : messages_received_(0),
-        on_state_change_count_(0),
-        on_buffered_amount_change_count_(0) {}
+  FakeDataChannelObserver() { RTC_DCHECK(!IsOkToCallOnTheNetworkThread()); }
 
-  void OnStateChange() { ++on_state_change_count_; }
+  void OnStateChange() override { ++on_state_change_count_; }
 
-  void OnBufferedAmountChange(uint64_t previous_amount) {
+  void OnBufferedAmountChange(uint64_t previous_amount) override {
     ++on_buffered_amount_change_count_;
   }
 
-  void OnMessage(const DataBuffer& buffer) { ++messages_received_; }
+  void OnMessage(const DataBuffer& buffer) override { ++messages_received_; }
 
   size_t messages_received() const { return messages_received_; }
 
@@ -68,9 +65,9 @@ class FakeDataChannelObserver : public DataChannelObserver {
   }
 
  private:
-  size_t messages_received_;
-  size_t on_state_change_count_;
-  size_t on_buffered_amount_change_count_;
+  size_t messages_received_ = 0u;
+  size_t on_state_change_count_ = 0u;
+  size_t on_buffered_amount_change_count_ = 0u;
 };
 
 class SctpDataChannelTest : public ::testing::Test {
