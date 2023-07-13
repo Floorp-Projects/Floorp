@@ -87,7 +87,6 @@ load 331679-3.xml
 load 331883-1.html
 load 335140-1.html
 load 336291-1.html
-skip-if(Android) load chrome://reftest/content/crashtests/layout/base/crashtests/336999-1.xhtml
 load 337066-1.xhtml
 load 337268-1.html
 load 337419-1.html
