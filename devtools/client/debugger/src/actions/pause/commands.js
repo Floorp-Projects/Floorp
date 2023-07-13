@@ -38,11 +38,14 @@ export function selectThread(thread) {
     // - fetching the paused scope, so that variable preview are working on the selected source.
     // (frames and scopes is supposed to be fetched on pause,
     // but if two threads pause concurrently, it might be cancelled)
-    const frame = getSelectedFrame(getState(), thread);
-    if (frame) {
-      serverRequests.push(dispatch(selectLocation(threadcx, frame.location)));
+    const selectedFrame = getSelectedFrame(getState(), thread);
+    if (selectedFrame) {
+      serverRequests.push(
+        dispatch(selectLocation(threadcx, selectedFrame.location))
+      );
       serverRequests.push(dispatch(fetchFrames(threadcx)));
-      serverRequests.push(dispatch(fetchScopes(threadcx)));
+
+      serverRequests.push(dispatch(fetchScopes(selectedFrame)));
     }
 
     await Promise.all(serverRequests);
