@@ -16,13 +16,11 @@
 # disabled for that commit.  The script outputs instructions for handling
 # this situation.
 #
-# Note: the very first rebase operation will require some manual
-# intervention. The user will need to provide, at minimum, the commit that
-# corresponds to moz-central upon which the fast-forward stack is based.
-# It may also be necessary to provide the first commit of the
-# fast-forward stack.  Example:
+# Note: the very first rebase operation may require some manual
+# intervention. The user will need to provide, at minimum, the first
+# commit of the fast-forward stack if the script is unable to determine
+# it automatically.  Example:
 #   MOZ_BOTTOM_FF=30f0afb7e4c5 \
-#   MOZ_CURRENT_CENTRAL=cad1bd47c273 \
 #   bash dom/media/webrtc/third_party_build/elm_rebase.sh
 #
 # Assumes the top of the fast-forward stack to rebase is the current revision,
@@ -96,11 +94,13 @@ in explicitly:
   hg pull central
 
   ERROR_HELP=$"
-You may also need to provide the bottom commit of the fast-forward
-stack.  The bottom commit means the commit following central.  This
-could be the sha of the .arcconfig commit if it is the bottom commit.
+Automatically determining the bottom (earliest) commit of the fast-forward
+stack has failed.  Please provide the bottom commit of the fast-forward
+stack.  The bottom commit means the commit following the most recent
+mozilla-central commit.  This could be the sha of the .arcconfig commit
+if it is the bottom commit.
 That command looks like:
-  MOZ_BOTTOM_FF={base-sha} MOZ_CURRENT_CENTRAL={central-sha} bash $0
+  MOZ_BOTTOM_FF={base-sha} bash $0
 "
   if [ "x" == "x$MOZ_BOTTOM_FF" ]; then
     # Finds the common ancestor between our top fast-forward commit and
@@ -111,12 +111,12 @@ That command looks like:
     # commit of the range, offset by one commit.
     MOZ_BOTTOM_FF=`hg id --id --rev "limit(ancestor($MOZ_TOP_FF, central)::$MOZ_TOP_FF, 1, 1)"`
   fi
-  ERROR_HELP=""
-
   if [ "x" == "x$MOZ_BOTTOM_FF" ]; then
     echo "No value found for the bottom commit of the fast-forward commit stack."
+    echo "$ERROR_HELP"
     exit 1
   fi
+  ERROR_HELP=""
 
   # After this point:
   # * eE: All commands should succeed.
