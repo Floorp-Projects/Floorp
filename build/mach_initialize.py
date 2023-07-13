@@ -119,7 +119,7 @@ def _maybe_activate_mozillabuild_environment():
             os.environ["PATH"] += f"{os.pathsep}{new_path}"
 
 
-def initialize(topsrcdir):
+def initialize(topsrcdir, args=()):
     # This directory was deleted in bug 1666345, but there may be some ignored
     # files here. We can safely just delete it for the user so they don't have
     # to clean the repo themselves.
@@ -139,7 +139,7 @@ def initialize(topsrcdir):
         )
     ]
 
-    from mach.util import get_state_dir, setenv
+    from mach.util import get_state_dir, get_virtualenv_base_dir, setenv
 
     state_dir = _create_state_dir()
 
@@ -399,6 +399,25 @@ def initialize(topsrcdir):
         "xpcshell-test": MachCommandReference("testing/xpcshell/mach_commands.py"),
     }
 
+    command_name = next((x for x in args if not x.startswith("-")), None)
+    command_site_manager = None
+
+    # the 'clobber' command needs to run in the 'mach' venv, so we
+    # don't want to activate any other virtualenv for it.
+    if command_name != "clobber":
+        site_name = getattr(MACH_COMMANDS.get(command_name), "site_name", "common")
+
+        from mach.site import CommandSiteManager
+
+        command_site_manager = CommandSiteManager.from_environment(
+            topsrcdir,
+            lambda: os.path.normpath(get_state_dir(True, topsrcdir=topsrcdir)),
+            site_name,
+            get_virtualenv_base_dir(topsrcdir),
+        )
+
+        command_site_manager.activate()
+
     # Set a reasonable limit to the number of open files.
     #
     # Some linux systems set `ulimit -n` to a very high number, which works
@@ -522,7 +541,7 @@ def initialize(topsrcdir):
     if "MACH_MAIN_PID" not in os.environ:
         setenv("MACH_MAIN_PID", str(os.getpid()))
 
-    driver = mach.main.Mach(os.getcwd())
+    driver = mach.main.Mach(os.getcwd(), command_site_manager)
     driver.populate_context_handler = populate_context
 
     if not driver.settings_paths:
