@@ -43,6 +43,23 @@ class MockDataChannelTransport : public webrtc::DataChannelTransportInterface {
   MOCK_METHOD(bool, IsReadyToSend, (), (const, override));
 };
 
+// Convenience class for tests to ensure that shutdown methods for DCC
+// are consistently called. In practice SdpOfferAnswerHandler will call
+// TeardownDataChannelTransport_n on the network thread when destroying the
+// data channel transport and PeerConnection calls PrepareForShutdown() from
+// within PeerConnection::Close(). The DataChannelControllerForTest class mimics
+// behavior by calling those methods from within its destructor.
+class DataChannelControllerForTest : public DataChannelController {
+ public:
+  explicit DataChannelControllerForTest(PeerConnectionInternal* pc)
+      : DataChannelController(pc) {}
+
+  ~DataChannelControllerForTest() override {
+    network_thread()->BlockingCall([&] { TeardownDataChannelTransport_n(); });
+    PrepareForShutdown();
+  }
+};
+
 class DataChannelControllerTest : public ::testing::Test {
  protected:
   DataChannelControllerTest()
@@ -65,11 +82,11 @@ class DataChannelControllerTest : public ::testing::Test {
 };
 
 TEST_F(DataChannelControllerTest, CreateAndDestroy) {
-  DataChannelController dcc(pc_.get());
+  DataChannelControllerForTest dcc(pc_.get());
 }
 
 TEST_F(DataChannelControllerTest, CreateDataChannelEarlyRelease) {
-  DataChannelController dcc(pc_.get());
+  DataChannelControllerForTest dcc(pc_.get());
   auto ret = dcc.InternalCreateDataChannelWithProxy(
       "label", InternalDataChannelInit(DataChannelInit()));
   ASSERT_TRUE(ret.ok());
@@ -79,7 +96,7 @@ TEST_F(DataChannelControllerTest, CreateDataChannelEarlyRelease) {
 }
 
 TEST_F(DataChannelControllerTest, CreateDataChannelEarlyClose) {
-  DataChannelController dcc(pc_.get());
+  DataChannelControllerForTest dcc(pc_.get());
   EXPECT_FALSE(dcc.HasDataChannelsForTest());
   EXPECT_FALSE(dcc.HasUsedDataChannels());
   auto ret = dcc.InternalCreateDataChannelWithProxy(
@@ -89,12 +106,13 @@ TEST_F(DataChannelControllerTest, CreateDataChannelEarlyClose) {
   EXPECT_TRUE(dcc.HasDataChannelsForTest());
   EXPECT_TRUE(dcc.HasUsedDataChannels());
   channel->Close();
+  run_loop_.Flush();
   EXPECT_FALSE(dcc.HasDataChannelsForTest());
   EXPECT_TRUE(dcc.HasUsedDataChannels());
 }
 
 TEST_F(DataChannelControllerTest, CreateDataChannelLateRelease) {
-  auto dcc = std::make_unique<DataChannelController>(pc_.get());
+  auto dcc = std::make_unique<DataChannelControllerForTest>(pc_.get());
   auto ret = dcc->InternalCreateDataChannelWithProxy(
       "label", InternalDataChannelInit(DataChannelInit()));
   ASSERT_TRUE(ret.ok());
@@ -104,7 +122,7 @@ TEST_F(DataChannelControllerTest, CreateDataChannelLateRelease) {
 }
 
 TEST_F(DataChannelControllerTest, CloseAfterControllerDestroyed) {
-  auto dcc = std::make_unique<DataChannelController>(pc_.get());
+  auto dcc = std::make_unique<DataChannelControllerForTest>(pc_.get());
   auto ret = dcc->InternalCreateDataChannelWithProxy(
       "label", InternalDataChannelInit(DataChannelInit()));
   ASSERT_TRUE(ret.ok());
@@ -114,7 +132,7 @@ TEST_F(DataChannelControllerTest, CloseAfterControllerDestroyed) {
 }
 
 TEST_F(DataChannelControllerTest, AsyncChannelCloseTeardown) {
-  DataChannelController dcc(pc_.get());
+  DataChannelControllerForTest dcc(pc_.get());
   auto ret = dcc.InternalCreateDataChannelWithProxy(
       "label", InternalDataChannelInit(DataChannelInit()));
   ASSERT_TRUE(ret.ok());
@@ -162,7 +180,7 @@ TEST_F(DataChannelControllerTest, MaxChannels) {
                                                          : rtc::SSL_CLIENT);
   });
 
-  DataChannelController dcc(pc_.get());
+  DataChannelControllerForTest dcc(pc_.get());
   pc_->network_thread()->BlockingCall(
       [&] { dcc.set_data_channel_transport(&transport); });
 
@@ -189,8 +207,8 @@ TEST_F(DataChannelControllerTest, NoStreamIdReuseWhileClosing) {
     return rtc::SSL_CLIENT;
   });
 
-  DataChannelController dcc(pc_.get());
-  NiceMock<MockDataChannelTransport> transport;
+  NiceMock<MockDataChannelTransport> transport;  // Wider scope than `dcc`.
+  DataChannelControllerForTest dcc(pc_.get());
   pc_->network_thread()->BlockingCall(
       [&] { dcc.set_data_channel_transport(&transport); });
 

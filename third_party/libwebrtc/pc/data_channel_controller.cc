@@ -22,17 +22,10 @@
 namespace webrtc {
 
 DataChannelController::~DataChannelController() {
-#if RTC_DCHECK_IS_ON
-  // `sctp_data_channels_n_` might be empty while `sctp_data_channels_` is
-  // not. An example of that is when the `DataChannelController` goes out of
-  // scope with outstanding channels that have been properly terminated on the
-  // network thread but not yet cleared from `sctp_data_channels_`. However,
-  // if `sctp_data_channels_n_` is not empty, then `sctp_data_channels_n_` and
-  // sctp_data_channels_ should hold the same contents.
-  if (!sctp_data_channels_n_.empty()) {
-    RTC_DCHECK_EQ(sctp_data_channels_n_.size(), sctp_data_channels_.size());
-  }
-#endif
+  RTC_DCHECK(sctp_data_channels_n_.empty())
+      << "Missing call to TeardownDataChannelTransport_n?";
+  RTC_DCHECK(!signaling_safety_.flag()->alive())
+      << "Missing call to PrepareForShutdown?";
 }
 
 bool DataChannelController::HasDataChannelsForTest() const {
@@ -167,7 +160,7 @@ void DataChannelController::SetupDataChannelTransport_n() {
 
 void DataChannelController::PrepareForShutdown() {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  signaling_safety_.reset();
+  signaling_safety_.reset(PendingTaskSafetyFlag::CreateDetachedInactive());
 }
 
 void DataChannelController::TeardownDataChannelTransport_n() {
