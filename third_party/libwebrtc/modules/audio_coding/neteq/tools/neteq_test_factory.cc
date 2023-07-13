@@ -112,8 +112,14 @@ std::unique_ptr<NetEqTest> NetEqTestFactory::InitializeTestFromString(
     absl::string_view input_string,
     NetEqFactory* factory,
     const Config& config) {
-  std::unique_ptr<NetEqInput> input(
-      NetEqEventLogInput::CreateFromString(input_string, config.ssrc_filter));
+  ParsedRtcEventLog parsed_log;
+  auto status = parsed_log.ParseString(input_string);
+  if (!status.ok()) {
+    std::cerr << "Failed to parse event log: " << status.message() << std::endl;
+    return nullptr;
+  }
+  std::unique_ptr<NetEqInput> input =
+      CreateNetEqEventLogInput(parsed_log, config.ssrc_filter);
   if (!input) {
     std::cerr << "Error: Cannot parse input string" << std::endl;
     return nullptr;
@@ -139,8 +145,14 @@ std::unique_ptr<NetEqTest> NetEqTestFactory::InitializeTestFromFile(
     input.reset(new NetEqRtpDumpInput(input_file_name, rtp_ext_map,
                                       config.ssrc_filter));
   } else {
-    input.reset(NetEqEventLogInput::CreateFromFile(input_file_name,
-                                                   config.ssrc_filter));
+    ParsedRtcEventLog parsed_log;
+    auto status = parsed_log.ParseFile(input_file_name);
+    if (!status.ok()) {
+      std::cerr << "Failed to parse event log: " << status.message()
+                << std::endl;
+      return nullptr;
+    }
+    input = CreateNetEqEventLogInput(parsed_log, config.ssrc_filter);
   }
 
   std::cout << "Input file: " << input_file_name << std::endl;
