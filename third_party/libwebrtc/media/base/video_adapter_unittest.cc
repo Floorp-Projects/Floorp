@@ -839,6 +839,16 @@ TEST_P(VideoAdapterTest, RequestAspectRatio) {
   EXPECT_EQ(360, cropped_height_);
   EXPECT_EQ(640, out_width_);
   EXPECT_EQ(360, out_height_);
+
+  adapter_.OnOutputFormatRequest(std::make_pair(1280, 720), 1280 * 720 - 1,
+                                 absl::nullopt);
+  EXPECT_TRUE(adapter_.AdaptFrameResolution(2592, 1944, 0, &cropped_width_,
+                                            &cropped_height_, &out_width_,
+                                            &out_height_));
+  EXPECT_EQ(2592, cropped_width_);
+  EXPECT_EQ(1458, cropped_height_);
+  EXPECT_EQ(1152, out_width_);
+  EXPECT_EQ(648, out_height_);
 }
 
 TEST_P(VideoAdapterTest, RequestAspectRatioWithDifferentOrientation) {
