@@ -147,12 +147,18 @@ bool DxgiOutputDuplicator::ReleaseFrame() {
   return true;
 }
 
-void DxgiOutputDuplicator::LogMouseCursor(
+bool DxgiOutputDuplicator::ContainsMouseCursor(
     const DXGI_OUTDUPL_FRAME_INFO& frame_info) {
+  // The DXGI_OUTDUPL_POINTER_POSITION structure that describes the most recent
+  // mouse position is only valid if the LastMouseUpdateTime member is a non-
+  // zero value.
+  if (frame_info.LastMouseUpdateTime.QuadPart == 0)
+    return false;
+
   // Ignore cases when the mouse shape has changed and not the position.
   const bool new_pointer_shape = (frame_info.PointerShapeBufferSize != 0);
   if (new_pointer_shape)
-    return;
+    return false;
 
   // The mouse cursor has moved and we can now query if the mouse pointer is
   // drawn onto the desktop image or not to decide if we must draw the mouse
@@ -163,12 +169,10 @@ void DxgiOutputDuplicator::LogMouseCursor(
   // desktop image, the pointer position data that is reported by
   // AcquireNextFrame indicates that a separate pointer isn’t visible, hence
   // `frame_info.PointerPosition.Visible` is false.
-  // TODO(http://crbug.com/1421656): evaluate this UMA and possibly call
-  // set_may_contain_cursor(cursor_embedded_in_frame) on the captured frame to
-  // avoid rendering the cursor twice.
   const bool cursor_embedded_in_frame = !frame_info.PointerPosition.Visible;
   RTC_HISTOGRAM_BOOLEAN("WebRTC.DesktopCapture.Win.DirectXCursorEmbedded",
                         cursor_embedded_in_frame);
+  return cursor_embedded_in_frame;
 }
 
 bool DxgiOutputDuplicator::Duplicate(Context* context,
@@ -194,12 +198,7 @@ bool DxgiOutputDuplicator::Duplicate(Context* context,
     return false;
   }
 
-  // The DXGI_OUTDUPL_POINTER_POSITION structure that describes the most recent
-  // mouse position is only valid if the LastMouseUpdateTime member is a non-
-  // zero value.
-  if (frame_info.LastMouseUpdateTime.QuadPart != 0) {
-    LogMouseCursor(frame_info);
-  }
+  const bool cursor_embedded_in_frame = ContainsMouseCursor(frame_info);
 
   // We need to merge updated region with the one from context, but only spread
   // updated region from current frame. So keeps a copy of updated region from
@@ -239,6 +238,7 @@ bool DxgiOutputDuplicator::Duplicate(Context* context,
     last_frame_offset_ = offset;
     updated_region.Translate(offset.x(), offset.y());
     target->mutable_updated_region()->AddRegion(updated_region);
+    target->set_may_contain_cursor(cursor_embedded_in_frame);
     num_frames_captured_++;
     return texture_->Release() && ReleaseFrame();
   }
@@ -258,6 +258,7 @@ bool DxgiOutputDuplicator::Duplicate(Context* context,
     }
     updated_region.Translate(offset.x(), offset.y());
     target->mutable_updated_region()->AddRegion(updated_region);
+    target->set_may_contain_cursor(cursor_embedded_in_frame);
   } else {
     // If we were at the very first frame, and capturing failed, the
     // context->updated_region should be kept unchanged for next attempt.
