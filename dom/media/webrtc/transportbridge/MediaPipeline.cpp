@@ -776,7 +776,7 @@ MediaPipelineTransmit::MediaPipelineTransmit(
         MakeAndAddRef<AudioProxyThread>(*mConduit->AsAudioSessionConduit());
     mListener->SetAudioProxy(mAudioProcessing);
   } else {  // Video
-    mConverter = MakeAndAddRef<VideoFrameConverter>(GetTimestampMaker());
+    mConverter = VideoFrameConverter::Create(GetTimestampMaker());
     mFrameListener = mConverter->VideoFrameConvertedEvent().Connect(
         mConverter->mTaskQueue,
         [listener = mListener](webrtc::VideoFrame aFrame) {

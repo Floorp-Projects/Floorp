@@ -45,6 +45,8 @@ class DebugVideoFrameConverter : public VideoFrameConverter {
   explicit DebugVideoFrameConverter(
       const dom::RTCStatsTimestampMaker& aTimestampMaker)
       : VideoFrameConverter(aTimestampMaker) {}
+
+  using VideoFrameConverter::RegisterListener;
   using VideoFrameConverter::QueueForProcessing;
 };
 
@@ -58,7 +60,9 @@ class VideoFrameConverterTest : public ::testing::Test {
       : mTimestampMaker(dom::RTCStatsTimestampMaker::Create()),
         mConverter(MakeAndAddRef<DebugVideoFrameConverter>(mTimestampMaker)),
         mListener(MakeAndAddRef<FrameListener>(
-            mConverter->VideoFrameConvertedEvent())) {}
+            mConverter->VideoFrameConvertedEvent())) {
+    mConverter->RegisterListener();
+  }
 
   void TearDown() override { mConverter->Shutdown(); }
 

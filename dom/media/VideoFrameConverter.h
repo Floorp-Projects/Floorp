@@ -44,6 +44,7 @@ class VideoFrameConverter {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameConverter)
 
+ protected:
   explicit VideoFrameConverter(
       const dom::RTCStatsTimestampMaker& aTimestampMaker)
       : mTimestampMaker(aTimestampMaker),
@@ -54,13 +55,24 @@ class VideoFrameConverter {
             mTaskQueue, TimeDuration::FromSeconds(1))),
         mBufferPool(false, CONVERTER_BUFFER_POOL_SIZE) {
     MOZ_COUNT_CTOR(VideoFrameConverter);
+  }
 
+  void RegisterListener() {
     mPacingListener = mPacer->PacedItemEvent().Connect(
-        mTaskQueue, [self = RefPtr<VideoFrameConverter>(this), this](
-                        FrameToProcess aFrame, TimeStamp aTime) {
-          QueueForProcessing(std::move(aFrame.mImage), aTime, aFrame.mSize,
-                             aFrame.mForceBlack);
+        mTaskQueue,
+        [self = RefPtr(this)](FrameToProcess aFrame, TimeStamp aTime) {
+          self->QueueForProcessing(std::move(aFrame.mImage), aTime,
+                                   aFrame.mSize, aFrame.mForceBlack);
         });
+  }
+
+ public:
+  static already_AddRefed<VideoFrameConverter> Create(
+      const dom::RTCStatsTimestampMaker& aTimestampMaker) {
+    RefPtr<VideoFrameConverter> converter =
+        new VideoFrameConverter(aTimestampMaker);
+    converter->RegisterListener();
+    return converter.forget();
   }
 
   void QueueVideoChunk(const VideoChunk& aChunk, bool aForceBlack) {
