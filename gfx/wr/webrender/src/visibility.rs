@@ -229,9 +229,18 @@ pub fn update_prim_visibility(
                 };
 
                 if !is_passthrough {
-                    frame_state.clip_tree.push_clip_root_leaf(
-                        prim_instances[prim_instance_index].clip_leaf_id,
+                    let clip_root = store
+                        .pictures[pic_index.0]
+                        .clip_root
+                        .unwrap_or_else(|| {
+                            // If we couldn't find a common ancestor then just use the
+                            // clip node of the picture primitive itself
+                            let leaf_id = prim_instances[prim_instance_index].clip_leaf_id;
+                            frame_state.clip_tree.get_leaf(leaf_id).node_id
+                        }
                     );
+
+                    frame_state.clip_tree.push_clip_root_node(clip_root);
                 }
 
                 update_prim_visibility(
