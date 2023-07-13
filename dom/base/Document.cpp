@@ -15347,18 +15347,6 @@ bool Document::FullscreenElementReadyCheck(FullscreenRequest& aRequest) {
     aRequest.Reject("FullscreenDeniedNotFocusedTab");
     return false;
   }
-  // Deny requests when a windowed plugin is focused.
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (!fm) {
-    NS_WARNING("Failed to retrieve focus manager in fullscreen request.");
-    aRequest.MayRejectPromise("An unexpected error occurred");
-    return false;
-  }
-  if (nsContentUtils::HasPluginWithUncontrolledEventDispatch(
-          fm->GetFocusedElement())) {
-    aRequest.Reject("FullscreenDeniedFocusedPlugin");
-    return false;
-  }
   return true;
 }
 

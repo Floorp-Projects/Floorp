@@ -7247,12 +7247,6 @@ bool nsContentUtils::HaveEqualPrincipals(Document* aDoc1, Document* aDoc2) {
 }
 
 /* static */
-bool nsContentUtils::HasPluginWithUncontrolledEventDispatch(
-    nsIContent* aContent) {
-  return false;
-}
-
-/* static */
 void nsContentUtils::FireMutationEventsForDirectParsing(
     Document* aDoc, nsIContent* aDest, int32_t aOldChildCount) {
   // Fire mutation events. Optimize for the case when there are no listeners
