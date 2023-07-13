@@ -28,9 +28,12 @@ export function selectThread(thread) {
     // The following assertion may fail if thread doesn't exists and SELECT_THREAD did not update the thread.
     assert(threadcx.thread == thread, "Thread mismatch");
 
+    const selectedFrame = getSelectedFrame(getState(), thread);
+
     const serverRequests = [];
     // Update the watched expressions as we may never have evaluated them against this thread
-    serverRequests.push(dispatch(evaluateExpressions(threadcx)));
+    // Note that selectedFrame may be null if the thread isn't paused.
+    serverRequests.push(dispatch(evaluateExpressions(selectedFrame)));
 
     // If we were paused on the newly selected thread, ensure:
     // - select the source where we are paused,
@@ -38,7 +41,6 @@ export function selectThread(thread) {
     // - fetching the paused scope, so that variable preview are working on the selected source.
     // (frames and scopes is supposed to be fetched on pause,
     // but if two threads pause concurrently, it might be cancelled)
-    const selectedFrame = getSelectedFrame(getState(), thread);
     if (selectedFrame) {
       serverRequests.push(
         dispatch(selectLocation(threadcx, selectedFrame.location))

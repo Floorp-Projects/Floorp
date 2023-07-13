@@ -113,7 +113,7 @@ describe("expressions", () => {
   });
 
   it("should evaluate expressions global scope", async () => {
-    const { dispatch, getState, cx } = createStore(mockThreadFront);
+    const { dispatch, getState } = createStore(mockThreadFront);
     await dispatch(actions.addExpression("foo"));
     await dispatch(actions.addExpression("bar"));
 
@@ -122,7 +122,7 @@ describe("expressions", () => {
     expect(foo && foo.value).toBe("bla");
     expect(bar && bar.value).toBe("bla");
 
-    await dispatch(actions.evaluateExpressions(cx));
+    await dispatch(actions.evaluateExpressions(null));
     foo = selectors.getExpression(getState(), "foo");
     bar = selectors.getExpression(getState(), "bar");
     expect(foo && foo.value).toBe("bla");
@@ -130,8 +130,8 @@ describe("expressions", () => {
   });
 
   it("should get the autocomplete matches for the input", async () => {
-    const { cx, dispatch, getState } = createStore(mockThreadFront);
-    await dispatch(actions.autocomplete(cx, "to", 2));
+    const { dispatch, getState } = createStore(mockThreadFront);
+    await dispatch(actions.autocomplete("to", 2));
     expect(selectors.getAutocompleteMatchset(getState())).toMatchSnapshot();
   });
 });

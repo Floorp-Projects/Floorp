@@ -6,6 +6,7 @@ import { selectLocation } from "../sources";
 import { evaluateExpressions } from "../expressions";
 import { fetchScopes } from "./fetchScopes";
 import assert from "../../utils/assert";
+import { validateSelectedFrame } from "../../utils/context";
 
 /**
  * @memberof actions/pause
@@ -32,8 +33,9 @@ export function selectFrame(cx, frame) {
     // It's important that we wait for selectLocation to finish because
     // we rely on the source being loaded and symbols fetched below.
     await dispatch(selectLocation(cx, frame.location));
+    validateSelectedFrame(getState(), frame);
 
-    await dispatch(evaluateExpressions(cx));
+    await dispatch(evaluateExpressions(frame));
 
     await dispatch(fetchScopes(frame));
   };
