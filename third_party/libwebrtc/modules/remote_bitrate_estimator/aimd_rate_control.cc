@@ -83,9 +83,7 @@ AimdRateControl::AimdRateControl(const FieldTrialsView& key_value_config,
       initial_backoff_interval_("initial_backoff_interval"),
       link_capacity_fix_("link_capacity_fix") {
   ParseFieldTrial(
-      {&disable_estimate_bounded_increase_, &estimate_bounded_increase_ratio_,
-       &ignore_throughput_limit_if_network_estimate_,
-       &ignore_network_estimate_decrease_, &increase_to_network_estimate_},
+      {&disable_estimate_bounded_increase_},
       key_value_config.Lookup("WebRTC-Bwe-EstimateBoundedIncrease"));
   // E.g
   // WebRTC-BweAimdRateControlConfig/initial_backoff_interval:100ms/
@@ -270,12 +268,7 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
       // easily get stuck if the encoder produces uneven outputs.
       DataRate increase_limit =
           1.5 * estimated_throughput + DataRate::KilobitsPerSec(10);
-      if (ignore_throughput_limit_if_network_estimate_ && network_estimate_ &&
-          network_estimate_->link_capacity_upper.IsFinite()) {
-        // If we have a Network estimate, we do allow the estimate to increase.
-        increase_limit = network_estimate_->link_capacity_upper *
-                         estimate_bounded_increase_ratio_.Get();
-      } else if (send_side_ && in_alr_ && no_bitrate_increase_in_alr_) {
+      if (send_side_ && in_alr_ && no_bitrate_increase_in_alr_) {
         // Do not increase the delay based estimate in alr since the estimator
         // will not be able to get transport feedback necessary to detect if
         // the new estimate is correct.
@@ -286,10 +279,7 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
 
       if (current_bitrate_ < increase_limit) {
         DataRate increased_bitrate = DataRate::MinusInfinity();
-        if (increase_to_network_estimate_ && network_estimate_ &&
-            network_estimate_->link_capacity_upper.IsFinite()) {
-          increased_bitrate = increase_limit;
-        } else if (link_capacity_.has_estimate()) {
+        if (link_capacity_.has_estimate()) {
           // The link_capacity estimate is reset if the measured throughput
           // is too far from the estimate. We can therefore assume that our
           // target rate is reasonably close to link capacity and use additive
@@ -360,11 +350,7 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
 DataRate AimdRateControl::ClampBitrate(DataRate new_bitrate) const {
   if (!disable_estimate_bounded_increase_ && network_estimate_ &&
       network_estimate_->link_capacity_upper.IsFinite()) {
-    DataRate upper_bound = network_estimate_->link_capacity_upper *
-                           estimate_bounded_increase_ratio_.Get();
-    if (ignore_network_estimate_decrease_) {
-      upper_bound = std::max(upper_bound, current_bitrate_);
-    }
+    DataRate upper_bound = network_estimate_->link_capacity_upper;
     new_bitrate = std::min(upper_bound, new_bitrate);
   }
   if (network_estimate_ && network_estimate_->link_capacity_lower.IsFinite() &&
