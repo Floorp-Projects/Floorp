@@ -14,9 +14,14 @@ SimpleTest.waitForExplicitFinish();
   const { isPropertyUsed } = require("devtools/server/actors/utils/inactive-property-helper");
 
   const INACTIVE_CSS_PREF = "devtools.inspector.inactive.css.enabled";
+  const CUSTOM_HIGHLIGHT_API = "dom.customHighlightAPI.enabled";
+
   Services.prefs.setBoolPref(INACTIVE_CSS_PREF, true);
+  Services.prefs.setBoolPref(CUSTOM_HIGHLIGHT_API, true);
+
   SimpleTest.registerCleanupFunction(() => {
     Services.prefs.clearUserPref(INACTIVE_CSS_PREF);
+    Services.prefs.clearUserPref(CUSTOM_HIGHLIGHT_API);
   });
 
   const FOLDER = "./inactive-property-helper";
@@ -46,6 +51,7 @@ SimpleTest.waitForExplicitFinish();
     "gap.mjs",
     "grid-container-properties.mjs",
     "grid-with-absolute-properties.mjs",
+    "highlight-pseudo-elements.mjs",
     "margin-padding.mjs",
     "max-min-width-height.mjs",
     "place-items-content.mjs",
@@ -69,7 +75,8 @@ SimpleTest.waitForExplicitFinish();
     createTestElement,
     rules,
     ruleIndex,
-    isActive
+    isActive,
+    expectedMsgId,
   } of tests) {
     // Create an element which will contain the test elements.
     const main = document.createElement("main");
@@ -92,8 +99,11 @@ SimpleTest.waitForExplicitFinish();
       main.append(el);
     }
 
-    const { used } = isPropertyUsed(el, getComputedStyle(el), rule, property);
+    const { used, msgId } = isPropertyUsed(el, getComputedStyle(el), rule, property);
     ok(used === isActive, summary);
+    if (expectedMsgId) {
+      is(msgId, expectedMsgId, `${summary} - returned expected msgId`);
+    }
 
     main.remove();
   }
