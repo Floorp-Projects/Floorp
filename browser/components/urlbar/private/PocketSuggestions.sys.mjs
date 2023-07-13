@@ -171,12 +171,22 @@ export class PocketSuggestions extends BaseFeature {
       lazy.UrlbarPrefs.get("bestMatchEnabled") &&
       lazy.UrlbarPrefs.get("suggest.bestmatch");
 
+    let url = new URL(suggestion.url);
+    url.searchParams.set("utm_medium", "firefox-desktop");
+    url.searchParams.set("utm_source", "firefox-suggest");
+    url.searchParams.set(
+      "utm_campaign",
+      "pocket-collections-in-the-address-bar"
+    );
+    url.searchParams.set("utm_content", "treatment");
+
     return Object.assign(
       new lazy.UrlbarResult(
         lazy.UrlbarUtils.RESULT_TYPE.URL,
         lazy.UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
         ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-          url: suggestion.url,
+          url: url.href,
+          originalUrl: suggestion.url,
           title: [suggestion.title, lazy.UrlbarUtils.HIGHLIGHT.TYPED],
           description: isBestMatch ? suggestion.description : "",
           icon: "chrome://global/skin/icons/pocket.svg",
@@ -209,7 +219,12 @@ export class PocketSuggestions extends BaseFeature {
       // selType == "dismiss" when the user presses the dismiss key shortcut.
       case "dismiss":
       case RESULT_MENU_COMMAND.NOT_RELEVANT:
-        lazy.QuickSuggest.blockedSuggestions.add(result.payload.url);
+        // PocketSuggestions adds the UTM parameters to the original URL and
+        // returns it as payload.url in the result. However, as
+        // UrlbarProviderQuickSuggest filters suggestions with original URL of
+        // provided suggestions, need to use the original URL when adding to the
+        // block list.
+        lazy.QuickSuggest.blockedSuggestions.add(result.payload.originalUrl);
         view.acknowledgeDismissal(result, false);
         break;
       case RESULT_MENU_COMMAND.NOT_INTERESTED:

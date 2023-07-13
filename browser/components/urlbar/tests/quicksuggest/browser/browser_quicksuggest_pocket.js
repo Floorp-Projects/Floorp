@@ -73,15 +73,20 @@ add_task(async function basic() {
     );
 
     // Click it.
-    let url = REMOTE_SETTINGS_DATA[0].attachment[0].url;
-    const onLoad = BrowserTestUtils.browserLoaded(
-      gBrowser.selectedBrowser,
-      false,
-      url
-    );
+    const onLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
     EventUtils.synthesizeMouseAtCenter(element.row, {});
     await onLoad;
-    Assert.equal(gBrowser.currentURI.spec, url, "Expected page loaded");
+    // Append utm parameters.
+    let url = new URL(REMOTE_SETTINGS_DATA[0].attachment[0].url);
+    url.searchParams.set("utm_medium", "firefox-desktop");
+    url.searchParams.set("utm_source", "firefox-suggest");
+    url.searchParams.set(
+      "utm_campaign",
+      "pocket-collections-in-the-address-bar"
+    );
+    url.searchParams.set("utm_content", "treatment");
+
+    Assert.equal(gBrowser.currentURI.spec, url.href, "Expected page loaded");
   });
 });
 
