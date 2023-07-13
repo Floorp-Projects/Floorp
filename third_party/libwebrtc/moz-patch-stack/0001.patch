@@ -49,7 +49,7 @@ Cr-Branched-From: d3e765e4eb4af8eba0c63b6bfe2e17a12dc670dc-refs/heads/main@{#396
  2 files changed, 106 insertions(+), 25 deletions(-)
 
 diff --git a/pc/peer_connection_simulcast_unittest.cc b/pc/peer_connection_simulcast_unittest.cc
-index f47ed3808b..d2517794e1 100644
+index ff40407884..4efdb9346b 100644
 --- a/pc/peer_connection_simulcast_unittest.cc
 +++ b/pc/peer_connection_simulcast_unittest.cc
 @@ -1007,15 +1007,31 @@ class PeerConnectionSimulcastWithMediaFlowTests
@@ -87,7 +87,7 @@ index f47ed3808b..d2517794e1 100644
    }
  
    bool OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
-@@ -1364,16 +1380,11 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+@@ -1366,16 +1382,11 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
    // We expect to see bytes flowing almost immediately on the lowest layer.
    EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
                     kDefaultTimeout.ms());
@@ -109,7 +109,7 @@ index f47ed3808b..d2517794e1 100644
  
    // Despite SVC being used on a single RTP stream, GetParameters() returns the
    // three encodings that we configured earlier (this is not spec-compliant but
-@@ -1388,8 +1399,9 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+@@ -1390,8 +1401,9 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
    EXPECT_FALSE(encodings[2].scalability_mode.has_value());
  }
  
@@ -121,7 +121,7 @@ index f47ed3808b..d2517794e1 100644
  TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
         SendingOneEncoding_VP9_StandardSVC) {
    rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
-@@ -1436,6 +1448,58 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+@@ -1439,6 +1451,58 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
                Optional(std::string("L3T3_KEY")));
  }
  
@@ -180,7 +180,7 @@ index f47ed3808b..d2517794e1 100644
  TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
         SendingThreeEncodings_VP9_Simulcast) {
    rtc::scoped_refptr<PeerConnectionTestWrapper> local_pc_wrapper = CreatePc();
-@@ -1532,7 +1596,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+@@ -1535,7 +1599,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
    ASSERT_EQ(parameters.encodings.size(), 3u);
    parameters.encodings[0].active = true;
    parameters.encodings[0].scalability_mode = "L2T2_KEY";
@@ -189,7 +189,7 @@ index f47ed3808b..d2517794e1 100644
    parameters.encodings[1].active = false;
    parameters.encodings[1].scalability_mode = absl::nullopt;
    parameters.encodings[2].active = false;
-@@ -1542,11 +1606,12 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
+@@ -1545,11 +1609,12 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
    // Since the standard API is configuring simulcast we get three outbound-rtps,
    // but only one is active.
    EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u, 1u),

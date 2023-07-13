@@ -1224,6 +1224,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   RtpParameters parameters = sender->GetParameters();
   ASSERT_EQ(parameters.encodings.size(), 1u);
   parameters.encodings[0].scalability_mode = "L3T3_KEY";
+  parameters.encodings[0].scale_resolution_down_by = 1;
   EXPECT_FALSE(sender->SetParameters(parameters).ok());
   // `scalability_mode` remains unset because SetParameters() failed.
   parameters = sender->GetParameters();
@@ -1274,6 +1275,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   RtpParameters parameters = sender->GetParameters();
   ASSERT_EQ(parameters.encodings.size(), 1u);
   parameters.encodings[0].scalability_mode = "L3T3_KEY";
+  parameters.encodings[0].scale_resolution_down_by = 1;
   EXPECT_TRUE(sender->SetParameters(parameters).ok());
   // Verify fallback has not happened yet.
   parameters = sender->GetParameters();
@@ -1420,6 +1422,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   RtpParameters parameters = sender->GetParameters();
   ASSERT_EQ(parameters.encodings.size(), 1u);
   parameters.encodings[0].scalability_mode = "L3T3_KEY";
+  parameters.encodings[0].scale_resolution_down_by = 1;
   EXPECT_TRUE(sender->SetParameters(parameters).ok());
 
   NegotiateWithSimulcastTweaks(local_pc_wrapper, remote_pc_wrapper, layers);
