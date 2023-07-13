@@ -165,7 +165,6 @@ async def test_iframe(
         ("", "#foo"),
         ("#foo", "#bar"),
         ("#foo", "#foo"),
-        ("#bar", ""),
     ]
 )
 async def test_document_location(
@@ -211,7 +210,6 @@ async def test_document_location(
         ("", "#foo"),
         ("#foo", "#bar"),
         ("#foo", "#foo"),
-        ("#bar", ""),
     ]
 )
 async def test_browsing_context_navigate(
@@ -285,8 +283,15 @@ async def test_document_write(bidi_session, subscribe_events, top_context):
     remove_listener()
 
 
-async def test_regular_navigation(bidi_session, subscribe_events, url, new_tab):
-    await bidi_session.browsing_context.navigate(context=new_tab["context"], url=url(EMPTY_PAGE), wait="complete")
+@pytest.mark.parametrize(
+    "before, after",
+    [
+        ("", "?foo"),
+        ("#foo", ""),
+    ]
+)
+async def test_regular_navigation(bidi_session, subscribe_events, url, new_tab, before, after):
+    await bidi_session.browsing_context.navigate(context=new_tab["context"], url=url(EMPTY_PAGE) + before, wait="complete")
 
     await subscribe_events(events=[FRAGMENT_NAVIGATED_EVENT])
 
@@ -297,7 +302,7 @@ async def test_regular_navigation(bidi_session, subscribe_events, url, new_tab):
 
     remove_listener = bidi_session.add_event_listener(FRAGMENT_NAVIGATED_EVENT, on_event)
 
-    await bidi_session.browsing_context.navigate(context=new_tab["context"], url=url(EMPTY_PAGE + '?foo'), wait="complete")
+    await bidi_session.browsing_context.navigate(context=new_tab["context"], url=url(EMPTY_PAGE + after), wait="complete")
 
     wait = AsyncPoll(bidi_session, timeout=0.5)
     with pytest.raises(TimeoutException):
