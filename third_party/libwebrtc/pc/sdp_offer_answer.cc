@@ -3268,16 +3268,20 @@ void SdpOfferAnswerHandler::AllocateSctpSids() {
     return;
   }
 
-  absl::optional<rtc::SSLRole> guessed_role = GuessSslRole();
-  network_thread()->BlockingCall(
-      [&, data_channel_controller = data_channel_controller()] {
-        RTC_DCHECK_RUN_ON(network_thread());
-        absl::optional<rtc::SSLRole> role = pc_->GetSctpSslRole_n();
-        if (!role)
-          role = guessed_role;
-        if (role)
-          data_channel_controller->AllocateSctpSids(*role);
-      });
+  absl::optional<rtc::SSLRole> role = network_thread()->BlockingCall([this] {
+    RTC_DCHECK_RUN_ON(network_thread());
+    return pc_->GetSctpSslRole_n();
+  });
+
+  if (!role) {
+    role = GuessSslRole();
+  }
+
+  if (role) {
+    // TODO(webrtc:11547): Make this call on the network thread too once
+    // `AllocateSctpSids` has been updated.
+    data_channel_controller()->AllocateSctpSids(*role);
+  }
 }
 
 absl::optional<rtc::SSLRole> SdpOfferAnswerHandler::GuessSslRole() const {
@@ -5113,13 +5117,13 @@ void SdpOfferAnswerHandler::DestroyDataChannelTransport(RTCError error) {
   RTC_DCHECK_RUN_ON(signaling_thread());
   const bool has_sctp = pc_->sctp_mid().has_value();
 
-  context_->network_thread()->BlockingCall(
-      [&, data_channel_controller = data_channel_controller()] {
-        RTC_DCHECK_RUN_ON(context_->network_thread());
-        if (has_sctp)
-          data_channel_controller->OnTransportChannelClosed(error);
-        pc_->TeardownDataChannelTransport_n();
-      });
+  if (has_sctp)
+    data_channel_controller()->OnTransportChannelClosed(error);
+
+  context_->network_thread()->BlockingCall([this] {
+    RTC_DCHECK_RUN_ON(context_->network_thread());
+    pc_->TeardownDataChannelTransport_n();
+  });
 
   if (has_sctp)
     pc_->ResetSctpDataMid();

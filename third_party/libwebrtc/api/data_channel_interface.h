@@ -100,17 +100,6 @@ class DataChannelObserver {
   // The data channel's buffered_amount has changed.
   virtual void OnBufferedAmountChange(uint64_t sent_data_size) {}
 
-  // Override this to get callbacks directly on the network thread.
-  // An implementation that does that must not block the network thread
-  // but rather only use the callback to trigger asynchronous processing
-  // elsewhere as a result of the notification.
-  // The default return value, `false`, means that notifications will be
-  // delivered on the signaling thread associated with the peerconnection
-  // instance.
-  // TODO(webrtc:11547): Eventually all DataChannelObserver implementations
-  // should be called on the network thread and this method removed.
-  virtual bool IsOkToCallOnTheNetworkThread() { return false; }
-
  protected:
   virtual ~DataChannelObserver() = default;
 };

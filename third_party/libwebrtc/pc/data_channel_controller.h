@@ -107,11 +107,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   rtc::Thread* signaling_thread() const;
 
  private:
-  // Creates a new SctpDataChannel object on the network thread.
-  RTCErrorOr<rtc::scoped_refptr<SctpDataChannel>> CreateDataChannel(
-      const std::string& label,
-      InternalDataChannelInit& config) RTC_RUN_ON(network_thread());
-
   // Parses and handles open messages.  Returns true if the message is an open
   // message and should be considered to be handled, false otherwise.
   bool HandleOpenMessage_n(int channel_id,
@@ -119,8 +114,8 @@ class DataChannelController : public SctpDataChannelControllerInterface,
                            const rtc::CopyOnWriteBuffer& buffer)
       RTC_RUN_ON(network_thread());
   // Called when a valid data channel OPEN message is received.
-  void OnDataChannelOpenMessage(rtc::scoped_refptr<SctpDataChannel> channel,
-                                bool ready_to_send)
+  void OnDataChannelOpenMessage(const std::string& label,
+                                const InternalDataChannelInit& config)
       RTC_RUN_ON(signaling_thread());
 
   // Accepts a `StreamId` which may be pre-negotiated or unassigned. For
@@ -144,6 +139,9 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   // (calls OnTransportChannelCreated on the signaling thread).
   void NotifyDataChannelsOfTransportCreated();
 
+  std::vector<rtc::scoped_refptr<SctpDataChannel>>::iterator FindChannel(
+      StreamId stream_id);
+
   // Plugin transport used for data channels.  Pointer may be accessed and
   // checked from any thread, but the object may only be touched on the
   // network thread.
@@ -151,16 +149,21 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   // thread.
   DataChannelTransportInterface* data_channel_transport_ = nullptr;
   SctpSidAllocator sid_allocator_ RTC_GUARDED_BY(network_thread());
+  std::vector<rtc::scoped_refptr<SctpDataChannel>> sctp_data_channels_
+      RTC_GUARDED_BY(signaling_thread());
+  // TODO(bugs.webrtc.org/11547): This vector will eventually take over from
+  // `sctp_data_channels_`. While we're migrating away from thread hops
+  // between the signaling and network threads, we need both, so this is
+  // a temporary situation.
   std::vector<rtc::scoped_refptr<SctpDataChannel>> sctp_data_channels_n_
       RTC_GUARDED_BY(network_thread());
   bool has_used_data_channels_ RTC_GUARDED_BY(signaling_thread()) = false;
 
   // Owning PeerConnection.
   PeerConnectionInternal* const pc_;
-  // The weak pointers must be dereferenced and invalidated on the network
+  // The weak pointers must be dereferenced and invalidated on the signalling
   // thread only.
-  rtc::WeakPtrFactory<DataChannelController> weak_factory_
-      RTC_GUARDED_BY(network_thread()){this};
+  rtc::WeakPtrFactory<DataChannelController> weak_factory_{this};
   ScopedTaskSafety signaling_safety_;
 };
 
