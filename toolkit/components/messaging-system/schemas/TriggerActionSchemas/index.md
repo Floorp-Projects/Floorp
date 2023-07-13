@@ -184,6 +184,10 @@ Used to display Feature Callouts in Firefox View. Can only be used for Feature C
 
 Used to display Feature Callouts on PDF.js pages. Can only be used for Feature Callouts.
 
+### `newtabFeatureCalloutCheck`
+
+Used to display Feature Callouts on about:newtab. Can only be used for Feature Callouts.
+
 ### `nthTabClosed`
 
 Happens when the user closes n or more tabs in a session

@@ -1419,6 +1419,7 @@ class _ASRouter {
         switch (trigger.id) {
           case "featureCalloutCheck":
           case "pdfJsFeatureCalloutCheck":
+          case "newtabFeatureCalloutCheck":
             break;
           default:
             lazy.FeatureCalloutBroker.showFeatureCallout(browser, message);
