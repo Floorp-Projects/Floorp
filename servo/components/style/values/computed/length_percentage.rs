@@ -27,6 +27,7 @@
 use super::{Context, Length, Percentage, ToComputedValue};
 use crate::values::animated::{Animate, Procedure, ToAnimatedValue, ToAnimatedZero};
 use crate::values::distance::{ComputeSquaredDistance, SquaredDistance};
+use crate::values::generics::calc::CalcUnits;
 use crate::values::generics::{calc, NonNegative};
 use crate::values::specified::length::FontBaseSize;
 use crate::values::{specified, CSSFloat};
@@ -241,7 +242,7 @@ impl LengthPercentage {
         // TODO: This could in theory take ownership of the calc node in `v` if
         // possible instead of cloning.
         let mut node = v.to_calc_node().into_owned();
-        node.map(std::ops::Neg::neg);
+        node.negate();
 
         let new_node = CalcNode::Sum(
             vec![
@@ -284,7 +285,14 @@ impl LengthPercentage {
                     CalcLengthPercentageLeaf::Percentage(p) => Self::new_percent(Percentage(
                         clamping_mode.clamp(crate::values::normalize(p.0)),
                     )),
-                }
+                    CalcLengthPercentageLeaf::Number(number) => {
+                        debug_assert!(
+                            false,
+                            "The final result of a <length-percentage> should never be a number"
+                        );
+                        Self::new_length(Length::new(number))
+                    },
+                };
             },
             _ => Self::new_calc_unchecked(Box::new(CalcLengthPercentage {
                 clamping_mode,
@@ -616,6 +624,7 @@ impl<'de> Deserialize<'de> for LengthPercentage {
 pub enum CalcLengthPercentageLeaf {
     Length(Length),
     Percentage(Percentage),
+    Number(f32),
 }
 
 impl CalcLengthPercentageLeaf {
@@ -623,6 +632,7 @@ impl CalcLengthPercentageLeaf {
         match *self {
             Self::Length(ref l) => l.is_zero(),
             Self::Percentage(..) => false,
+            Self::Number(..) => false,
         }
     }
 }
@@ -640,10 +650,26 @@ impl PartialOrd for CalcLengthPercentageLeaf {
 }
 
 impl calc::CalcNodeLeaf for CalcLengthPercentageLeaf {
+    fn unit(&self) -> CalcUnits {
+        match self {
+            Self::Length(_) => CalcUnits::LENGTH,
+            Self::Percentage(_) => CalcUnits::PERCENTAGE,
+            Self::Number(_) => CalcUnits::empty(),
+        }
+    }
+
     fn unitless_value(&self) -> f32 {
         match *self {
             Self::Length(ref l) => l.px(),
             Self::Percentage(ref p) => p.0,
+            Self::Number(n) => n,
+        }
+    }
+
+    fn as_number(&self) -> Option<f32> {
+        match *self {
+            Self::Length(_) | Self::Percentage(_) => None,
+            Self::Number(value) => Some(value),
         }
     }
 
@@ -671,6 +697,30 @@ impl calc::CalcNodeLeaf for CalcLengthPercentageLeaf {
         }
 
         Ok(())
+    }
+
+    fn try_product_in_place(&mut self, other: &mut Self) -> bool {
+        if let Self::Number(ref mut left) = *self {
+            if let Self::Number(ref right) = *other {
+                // Both sides are numbers, so we can just modify the left side.
+                *left *= *right;
+                true
+            } else {
+                // The right side is not a number, so the result should be in the units of the right
+                // side.
+                other.map(|v| v * *left);
+                std::mem::swap(self, other);
+                true
+            }
+        } else if let Self::Number(ref right) = *other {
+            // The left side is not a number, but the right side is, so the result is the left
+            // side unit.
+            self.map(|v| v * *right);
+            true
+        } else {
+            // Neither side is a number, so a product is not possible.
+            false
+        }
     }
 
     fn try_op<O>(&self, other: &Self, op: O) -> Result<Self, ()>
@@ -703,6 +753,9 @@ impl calc::CalcNodeLeaf for CalcLengthPercentageLeaf {
             CalcLengthPercentageLeaf::Percentage(value) => {
                 *value = Percentage(op(value.0));
             },
+            CalcLengthPercentageLeaf::Number(value) => {
+                *value = op(*value);
+            },
         }
     }
 
@@ -712,6 +765,7 @@ impl calc::CalcNodeLeaf for CalcLengthPercentageLeaf {
         match *self {
             Self::Length(..) => calc::SortKey::Px,
             Self::Percentage(..) => calc::SortKey::Percentage,
+            Self::Number(..) => calc::SortKey::Number,
         }
     }
 }
@@ -736,16 +790,21 @@ impl CalcLengthPercentage {
     #[inline]
     pub fn resolve(&self, basis: Length) -> Length {
         // unwrap() is fine because the conversion below is infallible.
-        let px = self
+        if let CalcLengthPercentageLeaf::Length(px) = self
             .node
-            .resolve(|l| {
-                Ok(match *l {
-                    CalcLengthPercentageLeaf::Length(l) => l.px(),
-                    CalcLengthPercentageLeaf::Percentage(ref p) => basis.px() * p.0,
+            .resolve_map(|leaf| {
+                Ok(if let CalcLengthPercentageLeaf::Percentage(p) = leaf {
+                    CalcLengthPercentageLeaf::Length(Length::new(basis.px() * p.0))
+                } else {
+                    leaf.clone()
                 })
             })
-            .unwrap();
-        Length::new(self.clamping_mode.clamp(px)).normalized()
+            .unwrap()
+        {
+            Length::new(self.clamping_mode.clamp(px.px())).normalized()
+        } else {
+            unreachable!("resolve_map should turn percentages to lengths, and parsing should ensure that we don't end up with a number");
+        }
     }
 }
 
@@ -790,7 +849,8 @@ impl specified::CalcLengthPercentage {
                     result
                 }
             }),
-            Leaf::Number(..) | Leaf::Angle(..) | Leaf::Time(..) | Leaf::Resolution(..) => {
+            Leaf::Number(n) => CalcLengthPercentageLeaf::Number(n),
+            Leaf::Angle(..) | Leaf::Time(..) | Leaf::Resolution(..) => {
                 unreachable!("Shouldn't have parsed")
             },
         });
@@ -838,6 +898,7 @@ impl specified::CalcLengthPercentage {
                     Leaf::Length(NoCalcLength::from_px(l.px()))
                 },
                 CalcLengthPercentageLeaf::Percentage(ref p) => Leaf::Percentage(p.0),
+                CalcLengthPercentageLeaf::Number(n) => Leaf::Number(*n),
             }),
         }
     }
