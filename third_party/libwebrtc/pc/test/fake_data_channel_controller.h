@@ -13,6 +13,7 @@
 
 #include <set>
 #include <string>
+#include <utility>
 
 #include "pc/sctp_data_channel.h"
 #include "rtc_base/checks.h"
@@ -37,11 +38,25 @@ class FakeDataChannelController
   rtc::scoped_refptr<webrtc::SctpDataChannel> CreateDataChannel(
       absl::string_view label,
       webrtc::InternalDataChannelInit init) {
+    rtc::WeakPtr<FakeDataChannelController> my_weak_ptr = weak_ptr();
+    // Explicitly associate the weak ptr instance with the current thread to
+    // catch early any inappropriate referencing of it on the network thread.
+    RTC_CHECK(my_weak_ptr);
+
     rtc::scoped_refptr<webrtc::SctpDataChannel> channel =
-        webrtc::SctpDataChannel::Create(weak_ptr(), std::string(label),
-                                        transport_available_, init,
-                                        signaling_thread_, network_thread_);
-    if (ReadyToSendData()) {
+        network_thread_->BlockingCall([&]() {
+          RTC_DCHECK_RUN_ON(network_thread_);
+          rtc::scoped_refptr<webrtc::SctpDataChannel> channel =
+              webrtc::SctpDataChannel::Create(
+                  std::move(my_weak_ptr), std::string(label),
+                  transport_available_, init, signaling_thread_,
+                  network_thread_);
+          if (transport_available_ && channel->sid().HasValue()) {
+            AddSctpDataStream(channel->sid());
+          }
+          return channel;
+        });
+    if (ready_to_send_) {
       signaling_thread_->PostTask(
           SafeTask(signaling_safety_.flag(), [channel = channel] {
             if (channel->state() !=
@@ -97,8 +112,6 @@ class FakeDataChannelController
     }));
   }
 
-  bool ReadyToSendData() const override { return ready_to_send_; }
-
   void OnChannelStateChanged(
       webrtc::SctpDataChannel* data_channel,
       webrtc::DataChannelInterface::DataState state) override {
@@ -130,8 +143,8 @@ class FakeDataChannelController
     transport_available_ = available;
   }
 
-  // Set true to emulate the transport ReadyToSendData signal when the transport
-  // becomes writable for the first time.
+  // Set true to emulate the transport OnTransportReady signal when the
+  // transport becomes writable for the first time.
   void set_ready_to_send(bool ready) {
     RTC_CHECK(transport_available_);
     ready_to_send_ = ready;

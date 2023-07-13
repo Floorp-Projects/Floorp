@@ -1989,6 +1989,16 @@ TEST_P(PeerConnectionInterfaceTest, CreateSctpDataChannel) {
   EXPECT_FALSE(observer_.renegotiation_needed_);
 }
 
+TEST_P(PeerConnectionInterfaceTest, CreateSctpDataChannelWhenClosed) {
+  RTCConfiguration rtc_config;
+  CreatePeerConnection(rtc_config);
+  pc_->Close();
+  webrtc::DataChannelInit config;
+  auto ret = pc_->CreateDataChannelOrError("1", &config);
+  ASSERT_FALSE(ret.ok());
+  EXPECT_EQ(ret.error().type(), RTCErrorType::INVALID_STATE);
+}
+
 // For backwards compatibility, we want people who "unset" maxRetransmits
 // and maxRetransmitTime by setting them to -1 to get what they want.
 TEST_P(PeerConnectionInterfaceTest, CreateSctpDataChannelWithMinusOne) {

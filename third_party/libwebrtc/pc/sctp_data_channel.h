@@ -55,8 +55,6 @@ class SctpDataChannelControllerInterface {
   // need to wait for callbacks to tell when this completes.
   // Note: Must be called on the network thread.
   virtual void RemoveSctpDataStream(StreamId sid) = 0;
-  // Returns true if the transport channel is ready to send data.
-  virtual bool ReadyToSendData() const = 0;
   // Notifies the controller of state changes.
   virtual void OnChannelStateChanged(SctpDataChannel* data_channel,
                                      DataChannelInterface::DataState state) = 0;

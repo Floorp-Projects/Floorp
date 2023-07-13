@@ -1392,6 +1392,11 @@ PeerConnection::CreateDataChannelOrError(const std::string& label,
   RTC_DCHECK_RUN_ON(signaling_thread());
   TRACE_EVENT0("webrtc", "PeerConnection::CreateDataChannel");
 
+  if (IsClosed()) {
+    LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_STATE,
+                         "CreateDataChannelOrError: PeerConnection is closed.");
+  }
+
   bool first_datachannel = !data_channel_controller_.HasUsedDataChannels();
 
   InternalDataChannelInit internal_config;
@@ -1400,15 +1405,14 @@ PeerConnection::CreateDataChannelOrError(const std::string& label,
   }
 
   internal_config.fallback_ssl_role = sdp_handler_->GuessSslRole();
-
-  // TODO(bugs.webrtc.org/12796): Return a more specific error.
-  rtc::scoped_refptr<DataChannelInterface> channel(
+  RTCErrorOr<rtc::scoped_refptr<DataChannelInterface>> ret =
       data_channel_controller_.InternalCreateDataChannelWithProxy(
-          label, internal_config));
-  if (!channel.get()) {
-    return RTCError(RTCErrorType::INTERNAL_ERROR,
-                    "Data channel creation failed");
+          label, internal_config);
+  if (!ret.ok()) {
+    return ret.MoveError();
   }
+
+  rtc::scoped_refptr<DataChannelInterface> channel = ret.MoveValue();
 
   // Trigger the onRenegotiationNeeded event for
   // the first SCTP DataChannel.
