@@ -928,7 +928,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '3.9.24',
+    apiVersion: '3.9.62',
     data,
     password,
     disableAutoFetch,
@@ -2584,9 +2584,9 @@ class InternalRenderTask {
     }
   }
 }
-const version = '3.9.24';
+const version = '3.9.62';
 exports.version = version;
-const build = 'c33e6ceb0';
+const build = '762d86a59';
 exports.build = build;
 
 /***/ }),
@@ -2916,6 +2916,18 @@ class AnnotationEditor {
         return [x, y];
     }
   }
+  pageTranslationToScreen(x, y) {
+    switch (this.parentRotation) {
+      case 90:
+        return [-y, x];
+      case 180:
+        return [-x, -y];
+      case 270:
+        return [y, -x];
+      default:
+        return [x, y];
+    }
+  }
   get parentScale() {
     return this._uiManager.viewParameters.realScale;
   }
@@ -3091,6 +3103,7 @@ class AnnotationEditor {
   updateParams(type, value) {}
   disableEditing() {}
   enableEditing() {}
+  enterInEditMode() {}
   get contentDiv() {
     return this.div;
   }
@@ -3727,16 +3740,26 @@ class AnnotationEditorUIManager {
   removeLayer(layer) {
     this.#allLayers.delete(layer.pageIndex);
   }
-  updateMode(mode) {
+  updateMode(mode, editId = null) {
     this.#mode = mode;
     if (mode === _util.AnnotationEditorType.NONE) {
       this.setEditingState(false);
       this.#disableAll();
-    } else {
-      this.setEditingState(true);
-      this.#enableAll();
-      for (const layer of this.#allLayers.values()) {
-        layer.updateMode(mode);
+      return;
+    }
+    this.setEditingState(true);
+    this.#enableAll();
+    for (const layer of this.#allLayers.values()) {
+      layer.updateMode(mode);
+    }
+    if (!editId) {
+      return;
+    }
+    for (const editor of this.#allEditors.values()) {
+      if (editor.annotationElementId === editId) {
+        this.setSelected(editor);
+        editor.enterInEditMode();
+        break;
       }
     }
   }
@@ -9929,14 +9952,16 @@ class FreeTextEditor extends _editor.AnnotationEditor {
   shouldGetKeyboardEvents() {
     return this.isInEditMode();
   }
-  dblclick(event) {
+  enterInEditMode() {
     this.enableEditMode();
     this.editorDiv.focus();
   }
+  dblclick(event) {
+    this.enterInEditMode();
+  }
   keydown(event) {
     if (event.target === this.div && event.key === "Enter") {
-      this.enableEditMode();
-      this.editorDiv.focus();
+      this.enterInEditMode();
     }
   }
   editorDivKeydown(event) {
@@ -9989,8 +10014,36 @@ class FreeTextEditor extends _editor.AnnotationEditor {
     if (this.width) {
       const [parentWidth, parentHeight] = this.parentDimensions;
       if (this.annotationElementId) {
-        const [tx] = this.getInitialTranslation();
-        this.setAt(baseX * parentWidth, baseY * parentHeight, tx, tx);
+        const {
+          position
+        } = this.#initialData;
+        let [tx, ty] = this.getInitialTranslation();
+        [tx, ty] = this.pageTranslationToScreen(tx, ty);
+        const [pageWidth, pageHeight] = this.pageDimensions;
+        const [pageX, pageY] = this.pageTranslation;
+        let posX, posY;
+        switch (this.rotation) {
+          case 0:
+            posX = baseX + (position[0] - pageX) / pageWidth;
+            posY = baseY + this.height - (position[1] - pageY) / pageHeight;
+            break;
+          case 90:
+            posX = baseX + (position[0] - pageX) / pageWidth;
+            posY = baseY - (position[1] - pageY) / pageHeight;
+            [tx, ty] = [ty, -tx];
+            break;
+          case 180:
+            posX = baseX - this.width + (position[0] - pageX) / pageWidth;
+            posY = baseY - (position[1] - pageY) / pageHeight;
+            [tx, ty] = [-tx, -ty];
+            break;
+          case 270:
+            posX = baseX + (position[0] - pageX - this.height * pageHeight) / pageWidth;
+            posY = baseY + (position[1] - pageY - this.width * pageWidth) / pageHeight;
+            [tx, ty] = [-ty, tx];
+            break;
+        }
+        this.setAt(posX * parentWidth, posY * parentHeight, tx, ty);
       } else {
         this.setAt(baseX * parentWidth, baseY * parentHeight, this.width * parentWidth, this.height * parentHeight);
       }
@@ -10031,6 +10084,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
           id
         },
         textContent,
+        textPosition,
         parent: {
           page: {
             pageNumber
@@ -10045,6 +10099,7 @@ class FreeTextEditor extends _editor.AnnotationEditor {
         color: Array.from(fontColor),
         fontSize,
         value: textContent.join("\n"),
+        position: textPosition,
         pageIndex: pageNumber - 1,
         rect,
         rotation,
@@ -10316,6 +10371,9 @@ class AnnotationElement {
     return container;
   }
   setRotation(angle, container = this.container) {
+    if (!this.data.rect) {
+      return;
+    }
     const {
       pageWidth,
       pageHeight
@@ -10558,6 +10616,21 @@ class AnnotationElement {
     } else {
       triggers.classList.add("highlightArea");
     }
+  }
+  _editOnDoubleClick() {
+    const {
+      annotationEditorType: mode,
+      data: {
+        id: editId
+      }
+    } = this;
+    this.container.addEventListener("dblclick", () => {
+      this.linkService.eventBus?.dispatch("switchannotationeditormode", {
+        source: this,
+        mode,
+        editId
+      });
+    });
   }
 }
 class LinkAnnotationElement extends AnnotationElement {
@@ -11815,7 +11888,7 @@ class PopupElement {
   }
   #hide() {
     this.#container.classList.remove("focused");
-    if (this.#pinned) {
+    if (this.#pinned || !this.isVisible) {
       return;
     }
     this.#container.hidden = true;
@@ -11847,6 +11920,7 @@ class FreeTextAnnotationElement extends AnnotationElement {
       ignoreBorder: true
     });
     this.textContent = parameters.data.textContent;
+    this.textPosition = parameters.data.textPosition;
     this.annotationEditorType = _util.AnnotationEditorType.FREETEXT;
   }
   render() {
@@ -11865,6 +11939,7 @@ class FreeTextAnnotationElement extends AnnotationElement {
     if (!this.data.popupRef) {
       this._createPopup();
     }
+    this._editOnDoubleClick();
     return this.container;
   }
 }
@@ -14059,8 +14134,8 @@ var _tools = __w_pdfjs_require__(5);
 var _annotation_layer = __w_pdfjs_require__(23);
 var _worker_options = __w_pdfjs_require__(14);
 var _xfa_layer = __w_pdfjs_require__(25);
-const pdfjsVersion = '3.9.24';
-const pdfjsBuild = 'c33e6ceb0';
+const pdfjsVersion = '3.9.62';
+const pdfjsBuild = '762d86a59';
 const SVGGraphics = null;
 exports.SVGGraphics = SVGGraphics;
 })();

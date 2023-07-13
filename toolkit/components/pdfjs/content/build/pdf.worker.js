@@ -102,7 +102,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = '3.9.24';
+    const workerVersion = '3.9.62';
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
@@ -4593,7 +4593,7 @@ class Annotation {
     this.setOptionalContent(dict);
     const MK = dict.get("MK");
     this.setBorderAndBackgroundColors(MK);
-    this.setRotation(MK);
+    this.setRotation(MK, dict);
     this.ref = params.ref instanceof _primitives.Ref ? params.ref : null;
     this._streams = [];
     if (this.appearance) {
@@ -4747,18 +4747,21 @@ class Annotation {
       }
     }
   }
-  setRotation(mk) {
+  setRotation(mk, dict) {
     this.rotation = 0;
+    let angle;
     if (mk instanceof _primitives.Dict) {
-      let angle = mk.get("R") || 0;
-      if (Number.isInteger(angle) && angle !== 0) {
-        angle %= 360;
-        if (angle < 0) {
-          angle += 360;
-        }
-        if (angle % 90 === 0) {
-          this.rotation = angle;
-        }
+      angle = mk.get("R") || 0;
+    } else {
+      angle = dict.get("Rotate") || 0;
+    }
+    if (Number.isInteger(angle) && angle !== 0) {
+      angle %= 360;
+      if (angle < 0) {
+        angle += 360;
+      }
+      if (angle % 90 === 0) {
+        this.rotation = angle;
       }
     }
   }
@@ -4900,6 +4903,7 @@ class Annotation {
     const resources = await this.loadResources(["ExtGState", "Font", "Properties", "XObject"], this.appearance);
     const text = [];
     const buffer = [];
+    let firstPosition = null;
     const sink = {
       desiredSize: Math.Infinity,
       ready: true,
@@ -4908,6 +4912,7 @@ class Annotation {
           if (item.str === undefined) {
             continue;
           }
+          firstPosition ||= item.transform.slice(-2);
           buffer.push(item.str);
           if (item.hasEOL) {
             text.push(buffer.join(""));
@@ -4929,6 +4934,16 @@ class Annotation {
       text.push(buffer.join(""));
     }
     if (text.length > 1 || text[0]) {
+      const appearanceDict = this.appearance.dict;
+      const bbox = appearanceDict.getArray("BBox") || [0, 0, 1, 1];
+      const matrix = appearanceDict.getArray("Matrix") || [1, 0, 0, 1, 0, 0];
+      const rect = this.data.rect;
+      const transform = getTransformMatrix(rect, bbox, matrix);
+      transform[4] -= rect[0];
+      transform[5] -= rect[1];
+      firstPosition = _util.Util.applyTransform(firstPosition, transform);
+      firstPosition = _util.Util.applyTransform(firstPosition, matrix);
+      this.data.textPosition = firstPosition;
       this.data.textContent = text;
     }
   }
@@ -41349,18 +41364,11 @@ async function writeStream(stream, buffer, transform) {
   const {
     dict
   } = stream;
-  if (typeof CompressionStream === "undefined") {
-    dict.set("Length", string.length);
-    await writeDict(dict, buffer, transform);
-    buffer.push(" stream\n", string, "\nendstream");
-    return;
-  }
-  const filter = await dict.getAsync("Filter");
-  const params = await dict.getAsync("DecodeParms");
+  const [filter, params] = await Promise.all([dict.getAsync("Filter"), dict.getAsync("DecodeParms")]);
   const filterZero = Array.isArray(filter) ? await dict.xref.fetchIfRefAsync(filter[0]) : filter;
   const isFilterZeroFlateDecode = (0, _primitives.isName)(filterZero, "FlateDecode");
   const MIN_LENGTH_FOR_COMPRESSING = 256;
-  if (string.length >= MIN_LENGTH_FOR_COMPRESSING || isFilterZeroFlateDecode) {
+  if (typeof CompressionStream !== "undefined" && (string.length >= MIN_LENGTH_FOR_COMPRESSING || isFilterZeroFlateDecode)) {
     try {
       const byteArray = (0, _util.stringToBytes)(string);
       const cs = new CompressionStream("deflate");
@@ -58005,8 +58013,8 @@ Object.defineProperty(exports, "WorkerMessageHandler", ({
   }
 }));
 var _worker = __w_pdfjs_require__(1);
-const pdfjsVersion = '3.9.24';
-const pdfjsBuild = 'c33e6ceb0';
+const pdfjsVersion = '3.9.62';
+const pdfjsBuild = '762d86a59';
 })();
 
 /******/ 	return __webpack_exports__;
