@@ -1937,10 +1937,10 @@ index 60afb986de..0e10a8fa3a 100644
    }
  
 diff --git a/test/vcm_capturer.cc b/test/vcm_capturer.cc
-index a037f9eff6..e02fc722b2 100644
+index 0a9226ef6f..620c1c02f3 100644
 --- a/test/vcm_capturer.cc
 +++ b/test/vcm_capturer.cc
-@@ -81,7 +81,7 @@ void VcmCapturer::Destroy() {
+@@ -83,7 +83,7 @@ void VcmCapturer::Destroy() {
      return;
  
    vcm_->StopCapture();
