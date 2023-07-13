@@ -9,12 +9,14 @@
  */
 #include "media/engine/webrtc_media_engine_defaults.h"
 
+#include <memory>
+
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
-#include "api/video_codecs/builtin_video_encoder_factory.h"
+#include "media/engine/internal_decoder_factory.h"
+#include "media/engine/internal_encoder_factory.h"
 #include "modules/audio_processing/include/audio_processing.h"
 #include "rtc_base/checks.h"
 
@@ -35,9 +37,9 @@ void SetMediaEngineDefaults(cricket::MediaEngineDependencies* deps) {
     deps->audio_processing = AudioProcessingBuilder().Create();
 
   if (deps->video_encoder_factory == nullptr)
-    deps->video_encoder_factory = CreateBuiltinVideoEncoderFactory();
+    deps->video_encoder_factory = std::make_unique<InternalEncoderFactory>();
   if (deps->video_decoder_factory == nullptr)
-    deps->video_decoder_factory = CreateBuiltinVideoDecoderFactory();
+    deps->video_decoder_factory = std::make_unique<InternalDecoderFactory>();
 }
 
 }  // namespace webrtc
