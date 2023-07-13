@@ -46,7 +46,6 @@ class FakePeriodicVideoSource final
             config.timestamp_offset_ms * rtc::kNumMicrosecsPerMillisec),
         task_queue_(std::make_unique<TaskQueueForTest>(
             "FakePeriodicVideoTrackSource")) {
-    thread_checker_.Detach();
     frame_source_.SetRotation(config.rotation);
 
     TimeDelta frame_interval = TimeDelta::Millis(config.frame_interval_ms);
@@ -86,7 +85,7 @@ class FakePeriodicVideoSource final
   }
 
  private:
-  SequenceChecker thread_checker_;
+  SequenceChecker thread_checker_{SequenceChecker::kDetached};
 
   rtc::VideoBroadcaster broadcaster_;
   cricket::FakeFrameSource frame_source_;

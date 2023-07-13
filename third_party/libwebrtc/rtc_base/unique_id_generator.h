@@ -53,7 +53,8 @@ class UniqueNumberGenerator {
   bool AddKnownId(TIntegral value);
 
  private:
-  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker sequence_checker_;
+  RTC_NO_UNIQUE_ADDRESS webrtc::SequenceChecker sequence_checker_{
+      webrtc::SequenceChecker::kDetached};
   static_assert(std::is_integral<TIntegral>::value, "Must be integral type.");
   TIntegral counter_ RTC_GUARDED_BY(sequence_checker_);
   std::set<TIntegral> known_ids_ RTC_GUARDED_BY(sequence_checker_);
@@ -117,16 +118,12 @@ class UniqueStringGenerator {
 };
 
 template <typename TIntegral>
-UniqueNumberGenerator<TIntegral>::UniqueNumberGenerator() : counter_(0) {
-  sequence_checker_.Detach();
-}
+UniqueNumberGenerator<TIntegral>::UniqueNumberGenerator() : counter_(0) {}
 
 template <typename TIntegral>
 UniqueNumberGenerator<TIntegral>::UniqueNumberGenerator(
     ArrayView<TIntegral> known_ids)
-    : counter_(0), known_ids_(known_ids.begin(), known_ids.end()) {
-  sequence_checker_.Detach();
-}
+    : counter_(0), known_ids_(known_ids.begin(), known_ids.end()) {}
 
 template <typename TIntegral>
 UniqueNumberGenerator<TIntegral>::~UniqueNumberGenerator() {}

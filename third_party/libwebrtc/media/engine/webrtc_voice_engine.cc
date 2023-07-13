@@ -305,9 +305,6 @@ WebRtcVoiceEngine::WebRtcVoiceEngine(
       audio_frame_processor_(audio_frame_processor),
       minimized_remsampling_on_mobile_trial_enabled_(
           IsEnabled(trials, "WebRTC-Audio-MinimizeResamplingOnMobile")) {
-  // This may be called from any thread, so detach thread checkers.
-  worker_thread_checker_.Detach();
-  signal_thread_checker_.Detach();
   RTC_LOG(LS_INFO) << "WebRtcVoiceEngine::WebRtcVoiceEngine";
   RTC_DCHECK(decoder_factory);
   RTC_DCHECK(encoder_factory);
@@ -1265,7 +1262,6 @@ WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel(
       audio_config_(config.audio),
       codec_pair_id_(codec_pair_id),
       crypto_options_(crypto_options) {
-  network_thread_checker_.Detach();
   RTC_LOG(LS_VERBOSE) << "WebRtcVoiceMediaChannel::WebRtcVoiceMediaChannel";
   RTC_DCHECK(call);
   SetOptions(options);

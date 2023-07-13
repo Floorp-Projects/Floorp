@@ -154,7 +154,8 @@ class AudioReceiveStreamImpl final : public webrtc::AudioReceiveStreamInterface,
   // thread, but still serves as a mechanism of grouping together concepts
   // that belong to the network thread. Once the packets are fully delivered
   // on the network thread, this comment will be deleted.
-  RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_;
+  RTC_NO_UNIQUE_ADDRESS SequenceChecker packet_sequence_checker_{
+      SequenceChecker::kDetached};
   webrtc::AudioReceiveStreamInterface::Config config_;
   rtc::scoped_refptr<webrtc::AudioState> audio_state_;
   SourceTracker source_tracker_;
