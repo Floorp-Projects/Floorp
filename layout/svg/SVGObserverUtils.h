@@ -19,9 +19,9 @@
 #include "nsStringFwd.h"
 #include "nsStubMutationObserver.h"
 #include "nsStyleStruct.h"
-#include "nsCycleCollectionParticipant.h"
 
 class nsAtom;
+class nsCycleCollectionTraversalCallback;
 class nsIFrame;
 class nsIURI;
 
@@ -36,6 +36,7 @@ namespace dom {
 class CanvasRenderingContext2D;
 class Element;
 class SVGGeometryElement;
+class SVGMPathElement;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -361,6 +362,16 @@ class SVGObserverUtils {
    * SVGGeometryElement that it references, if any.
    */
   static void RemoveTextPathObserver(nsIFrame* aTextPathFrame);
+
+  /**
+   * Get the SVGGeometryElement that is referenced by aSVGMPathElement, and
+   * make aSVGMPathElement start observing rendering changes to that element.
+   */
+  static SVGGeometryElement* GetAndObserveMPathsPath(
+      dom::SVGMPathElement* aSVGMPathElement);
+
+  static void TraverseMPathObserver(dom::SVGMPathElement* aSVGMPathElement,
+                                    nsCycleCollectionTraversalCallback* aCB);
 
   /**
    * Gets the nsIFrame of a referenced SVG "template" element, if any, and
