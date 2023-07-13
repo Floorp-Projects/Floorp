@@ -39,6 +39,8 @@ namespace a11y {
 static const wchar_t kLazyInstantiatorProp[] =
     L"mozilla::a11y::LazyInstantiator";
 
+Maybe<bool> LazyInstantiator::sShouldBlockUia;
+
 /* static */
 already_AddRefed<IAccessible> LazyInstantiator::GetRootAccessible(HWND aHwnd) {
   RefPtr<IAccessible> result;
@@ -150,16 +152,15 @@ void LazyInstantiator::ClearProp() {
 }
 
 /**
- * Given the remote client's thread ID, resolve its process ID.
+ * Get the process id of a remote (out-of-process) MSAA/IA2 client.
  */
-DWORD
-LazyInstantiator::GetClientPid(const DWORD aClientTid) {
+DWORD LazyInstantiator::GetRemoteMsaaClientPid() {
   nsAutoHandle callingThread(
-      ::OpenThread(THREAD_QUERY_LIMITED_INFORMATION, FALSE, aClientTid));
+      ::OpenThread(THREAD_QUERY_LIMITED_INFORMATION, FALSE,
+                   mscom::ProcessRuntime::GetClientThreadId()));
   if (!callingThread) {
     return 0;
   }
-
   return ::GetProcessIdOfThread(callingThread);
 }
 
@@ -170,6 +171,7 @@ static const char* gBlockedRemoteClients[] = {
     "tbnotifier.exe",  // Ask.com Toolbar, bug 1453876
     "flow.exe",        // Conexant Flow causes performance issues, bug 1569712
     "rtop_bg.exe",     // ByteFence Anti-Malware, bug 1713383
+    "osk.exe",         // Windows On-Screen Keyboard, bug 1424505
 };
 
 /**
@@ -181,11 +183,6 @@ static const char* gBlockedRemoteClients[] = {
 bool LazyInstantiator::IsBlockedInjection() {
   // Check debugging options see if we should disable the blocklist.
   if (PR_GetEnv("MOZ_DISABLE_ACCESSIBLE_BLOCKLIST")) {
-    return false;
-  }
-
-  if (Compatibility::HasKnownNonUiaConsumer()) {
-    // If we already see a known AT, don't block a11y instantiation
     return false;
   }
 
@@ -206,30 +203,14 @@ bool LazyInstantiator::IsBlockedInjection() {
 }
 
 /**
- * Given a remote client's thread ID, determine whether we should proceed with
+ * Given a remote client's process ID, determine whether we should proceed with
  * a11y instantiation. This is where telemetry should be gathered and any
  * potential blocking of unwanted a11y clients should occur.
  *
  * @return true if we should instantiate a11y
  */
-bool LazyInstantiator::ShouldInstantiate(const DWORD aClientTid) {
-  if (Compatibility::IsA11ySuppressedForClipboardCopy()) {
-    // Bug 1774285: Windows Suggested Actions (introduced in Windows 11 22H2)
-    // walks the entire a11y tree using UIA whenever anything is copied to the
-    // clipboard. This causes an unacceptable hang, particularly when the cache
-    // is disabled. Don't allow a11y to be instantiated by this.
-    return false;
-  }
-
-  if (!aClientTid) {
-    // aClientTid == 0 implies that this is either an in-process call, or else
-    // we failed to retrieve information about the remote caller.
-    // We should always default to instantiating a11y in this case, provided
-    // that we don't see any known bad injected DLLs.
-    return !IsBlockedInjection();
-  }
-
-  a11y::SetInstantiator(GetClientPid(aClientTid));
+bool LazyInstantiator::ShouldInstantiate(const DWORD aClientPid) {
+  a11y::SetInstantiator(aClientPid);
 
   nsCOMPtr<nsIFile> clientExe;
   if (!a11y::GetInstantiator(getter_AddRefs(clientExe))) {
@@ -252,6 +233,57 @@ bool LazyInstantiator::ShouldInstantiate(const DWORD aClientTid) {
     }
   }
 
+  return true;
+}
+
+/**
+ * Determine whether we should proceed with a11y instantiation, considering the
+ * various different types of clients.
+ */
+bool LazyInstantiator::ShouldInstantiate() {
+  if (Compatibility::IsA11ySuppressedForClipboardCopy()) {
+    // Bug 1774285: Windows Suggested Actions (introduced in Windows 11 22H2)
+    // walks the entire a11y tree using UIA whenever anything is copied to the
+    // clipboard. This causes an unacceptable hang, particularly when the cache
+    // is disabled. Don't allow a11y to be instantiated by this.
+    return false;
+  }
+  if (DWORD pid = GetRemoteMsaaClientPid()) {
+    return ShouldInstantiate(pid);
+  }
+  if (Compatibility::HasKnownNonUiaConsumer()) {
+    // We detected a known in-process client.
+    return true;
+  }
+  // UIA client detection can be expensive, so we cache the result. See the
+  // header comment for ResetUiaDetectionCache() for details.
+  if (sShouldBlockUia.isNothing()) {
+    // Unlike MSAA, we can't tell which specific UIA client is querying us right
+    // now. We can only determine which clients have tried querying us.
+    // Therefore, we must check all of them.
+    AutoTArray<DWORD, 1> uiaPids;
+    Compatibility::GetUiaClientPids(uiaPids);
+    if (uiaPids.IsEmpty()) {
+      // No UIA clients, so don't block UIA. However, we might block for
+      // non-UIA clients below.
+      sShouldBlockUia = Some(false);
+    } else {
+      for (const DWORD pid : uiaPids) {
+        if (ShouldInstantiate(pid)) {
+          return true;
+        }
+      }
+      // We didn't return in the loop above, so there are only blocked UIA
+      // clients.
+      sShouldBlockUia = Some(true);
+    }
+  }
+  if (*sShouldBlockUia) {
+    return false;
+  }
+  if (IsBlockedInjection()) {
+    return false;
+  }
   return true;
 }
 
@@ -314,8 +346,7 @@ LazyInstantiator::MaybeResolveRoot() {
     return S_OK;
   }
 
-  if (GetAccService() ||
-      ShouldInstantiate(mscom::ProcessRuntime::GetClientThreadId())) {
+  if (GetAccService() || ShouldInstantiate()) {
     mWeakMsaaRoot = ResolveMsaaRoot();
     if (!mWeakMsaaRoot) {
       return E_POINTER;
