@@ -46,8 +46,8 @@ class DebugVideoFrameConverter : public VideoFrameConverter {
       const dom::RTCStatsTimestampMaker& aTimestampMaker)
       : VideoFrameConverter(aTimestampMaker) {}
 
-  using VideoFrameConverter::RegisterListener;
   using VideoFrameConverter::QueueForProcessing;
+  using VideoFrameConverter::RegisterListener;
 };
 
 class VideoFrameConverterTest : public ::testing::Test {
