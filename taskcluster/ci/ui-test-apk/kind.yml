@@ -5,6 +5,7 @@
 loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
+    - gecko_taskgraph.transforms.test_apk:transforms
     - android_taskgraph.transforms.gradle_optimization:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
@@ -44,60 +45,69 @@ job-defaults:
         dummy-secrets:
             - content: "faketoken"
               path: .adjust_token
-    # routes:
-    #     - notify.slack-channel.G016BC5FUHJ.on-failed
-    # scopes:
-    #     - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
-    #         - notify:slack-channel:G016BC5FUHJ
-    # extra:
-    #     notify:
-    #         # slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
-    #         slackBlocks: |
-    #             [
-    #               {
-    #                 "type": "header",
-    #                 "text": {
-    #                   "type": "plain_text",
-    #                   "text": "firefox-android :firefox: ${task.metadata.name} :x:\n "
-    #                 }
-    #               },
-    #               {
-    #                 "type": "divider"
-    #               },
-    #               {
-    #                  "type": "section",
-    #                  "text": {
-    #                      "type": "mrkdwn",
-    #                      "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
-    #                 }
-    #               },
-    #               {
-    #                 "type": "section",
-    #                 "text": {
-    #                   "type": "mrkdwn",
-    #                   "text": "*Owner*: ${task.metadata.owner}"
-    #                 }
-    #               },
-    #               {
-    #                 "type": "section",
-    #                 "text": {
-    #                   "type": "mrkdwn",
-    #                   "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
-    #                 }
-    #               },
-    #               {
-    #                 "type": "divider"
-    #               },
-    #               {
-    #                 "type": "context",
-    #                 "elements": [
-    #                     {
-    #                         "type": "mrkdwn",
-    #                         "text": ":testops-notify: created by <https://mozilla-hub.atlassian.net/wiki/spaces/MTE/overview|Mobile Test Engineering>"
-    #                     }
-    #                 ]
-    #               }
-    #             ]
+    routes:
+        by-level:
+            '3':
+                - notify.slack-channel.G016BC5FUHJ.on-failed
+            'default': []
+    scopes:
+        by-level:
+            '3':
+                - queue:route:notify.slack-channel.G016BC5FUHJ.on-failed
+                - notify:slack-channel:G016BC5FUHJ
+            'default': []
+    extra:
+        notify:
+            by-level:
+                '3':
+                    slackText: 'https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId} | ${task.metadata.name} | ${task.metadata.source}'
+                    slackBlocks: |
+                        [
+                          {
+                            "type": "header",
+                            "text": {
+                              "type": "plain_text",
+                              "text": "firefox-android :firefox: ${task.metadata.name} :x:\n "
+                            }
+                          },
+                          {
+                            "type": "divider"
+                          },
+                          {
+                             "type": "section",
+                             "text": {
+                                 "type": "mrkdwn",
+                                 "text": "*Task*: <https://firefox-ci-tc.services.mozilla.com/tasks/${status.taskId}|Taskcluster>"
+                            }
+                          },
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "*Owner*: ${task.metadata.owner}"
+                            }
+                          },
+                          {
+                            "type": "section",
+                            "text": {
+                              "type": "mrkdwn",
+                              "text": "*Source*: <${task.payload.env.MOBILE_BASE_REPOSITORY}/commit/${task.payload.env.MOBILE_HEAD_REV}|Commit> :github:"
+                            }
+                          },
+                          {
+                            "type": "divider"
+                          },
+                          {
+                            "type": "context",
+                            "elements": [
+                                {
+                                    "type": "mrkdwn",
+                                    "text": ":testops-notify: created by <https://mozilla-hub.atlassian.net/wiki/spaces/MTE/overview|Mobile Test Engineering>"
+                                }
+                            ]
+                          }
+                        ]
+                'default': {}
 
 jobs:
     focus-arm-debug:
