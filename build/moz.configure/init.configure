@@ -172,7 +172,7 @@ def virtualenv_python3():
     return namespace(
         # sys.executable is currently not updated for in-process activations. However,
         # sys.prefix is, so we can calculate the python executable's path from there.
-        path=normsep(PythonVirtualenv(realpath(sys.prefix)).python_path),
+        path=normalize_path(PythonVirtualenv(realpath(sys.prefix)).python_path),
         str_version=".".join(str(i) for i in sys.version_info[0:3]),
     )
 
