@@ -983,10 +983,10 @@ export function setDefaultAndAssertSerializationOptions(options = {}) {
     serializationOptions;
 
   if (maxDomDepth !== null) {
-    lazy.assert.positiveNumber(maxDomDepth);
+    lazy.assert.positiveInteger(maxDomDepth);
   }
   if (maxObjectDepth !== null) {
-    lazy.assert.positiveNumber(maxObjectDepth);
+    lazy.assert.positiveInteger(maxObjectDepth);
   }
   const includeShadowTreeModesValues = Object.values(IncludeShadowTreeMode);
   lazy.assert.that(

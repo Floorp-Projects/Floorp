@@ -7,6 +7,7 @@ import { WindowGlobalBiDiModule } from "chrome://remote/content/webdriver-bidi/m
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AnimationFramePromise: "chrome://remote/content/shared/Sync.sys.mjs",
   LoadListener: "chrome://remote/content/shared/listeners/LoadListener.sys.mjs",
 });
 
@@ -141,12 +142,54 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
     }
   }
 
+  /**
+   * Waits until the viewport has reached the new dimensions.
+   *
+   * @param {object} options
+   * @param {number} options.height
+   *     Expected height the viewport will resize to.
+   * @param {number} options.width
+   *     Expected width the viewport will resize to.
+   *
+   * @returns {Promise}
+   *     Promise that resolves when the viewport has been resized.
+   */
+  async _awaitViewportDimensions(options) {
+    const { height, width } = options;
+
+    const win = this.messageHandler.window;
+    let resized;
+
+    // Updates for background tabs are throttled, and we also have to make
+    // sure that the new browser dimensions have been received by the content
+    // process. As such wait for the next animation frame.
+    await lazy.AnimationFramePromise(win);
+
+    const checkBrowserSize = () => {
+      if (win.innerWidth === width && win.innerHeight === height) {
+        resized();
+      }
+    };
+
+    return new Promise(resolve => {
+      resized = resolve;
+
+      win.addEventListener("resize", checkBrowserSize);
+
+      // Trigger a layout flush in case none happened yet.
+      checkBrowserSize();
+    }).finally(() => {
+      win.removeEventListener("resize", checkBrowserSize);
+    });
+  }
+
   _getBaseURL() {
     return this.messageHandler.window.document.baseURI;
   }
 
   _getScreenshotRect() {
     const win = this.messageHandler.window;
+
     return new DOMRect(
       win.pageXOffset,
       win.pageYOffset,

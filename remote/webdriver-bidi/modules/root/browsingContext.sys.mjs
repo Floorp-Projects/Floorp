@@ -33,6 +33,9 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () =>
   lazy.Log.get(lazy.Log.TYPES.WEBDRIVER_BIDI)
 );
 
+// Maximal window dimension allowed when emulating a viewport.
+const MAX_WINDOW_SIZE = 10000000;
+
 /**
  * @typedef {object} CreateType
  */
@@ -47,6 +50,17 @@ const CreateType = {
   tab: "tab",
   window: "window",
 };
+
+/**
+ * An object that contains details of a viewport.
+ *
+ * @typedef {object} Viewport
+ *
+ * @property {number} height
+ *     The height of the viewport.
+ * @property {number} width
+ *     The width of the viewport.
+ */
 
 /**
  * @typedef {string} WaitCondition
@@ -559,6 +573,95 @@ class BrowsingContextModule extends Module {
     return {
       data: btoa(binaryString),
     };
+  }
+
+  /**
+   * Set the top-level browsing context's viewport to a given dimension.
+   *
+   * @param {object=} options
+   * @param {string} options.context
+   *     Id of the browsing context.
+   * @param {Viewport|null} options.viewport
+   *     Dimensions to set the viewport to, or `null` to reset it
+   *     to the original dimensions.
+   *
+   * @throws {InvalidArgumentError}
+   *     Raised if an argument is of an invalid type or value.
+   * @throws UnsupportedOperationError
+   *     Raised when the command is called on Android.
+   */
+  async setViewport(options = {}) {
+    const { context: contextId, viewport } = options;
+
+    if (lazy.AppInfo.isAndroid) {
+      // Bug 1840084: Add Android support for modifying the viewport.
+      throw new lazy.error.UnsupportedOperationError(
+        `Command not yet supported for ${lazy.AppInfo.name}`
+      );
+    }
+
+    lazy.assert.string(
+      contextId,
+      `Expected "context" to be a string, got ${contextId}`
+    );
+
+    const context = this.#getBrowsingContext(contextId);
+    if (context.parent) {
+      throw new lazy.error.InvalidArgumentError(
+        `Browsing Context with id ${contextId} is not top-level`
+      );
+    }
+    const browser = context.embedderElement;
+
+    if (typeof viewport !== "object") {
+      throw new lazy.error.InvalidArgumentError(
+        `Expected "viewport" to be an object or null, got ${viewport}`
+      );
+    }
+
+    let targetHeight, targetWidth;
+    if (viewport !== null) {
+      const { height, width } = viewport;
+
+      targetHeight = lazy.assert.positiveInteger(
+        height,
+        `Expected "height" to be a positive integer, got ${height}`
+      );
+      targetWidth = lazy.assert.positiveInteger(
+        width,
+        `Expected "width" to be a positive integer, got ${width}`
+      );
+
+      if (targetHeight > MAX_WINDOW_SIZE || targetWidth > MAX_WINDOW_SIZE) {
+        throw new lazy.error.UnsupportedOperationError(
+          `"width" or "height" cannot be larger than ${MAX_WINDOW_SIZE} px`
+        );
+      }
+
+      browser.style.setProperty("height", targetHeight + "px");
+      browser.style.setProperty("width", targetWidth + "px");
+    } else {
+      // Reset viewport to the original dimensions
+      targetHeight = browser.parentElement.clientHeight;
+      targetWidth = browser.parentElement.clientWidth;
+
+      browser.style.removeProperty("height");
+      browser.style.removeProperty("width");
+    }
+
+    // Wait until the viewport has been resized
+    await this.messageHandler.forwardCommand({
+      moduleName: "browsingContext",
+      commandName: "_awaitViewportDimensions",
+      destination: {
+        type: lazy.WindowGlobalMessageHandler.type,
+        id: context.id,
+      },
+      params: {
+        height: targetHeight,
+        width: targetWidth,
+      },
+    });
   }
 
   /**
