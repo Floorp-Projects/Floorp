@@ -205,6 +205,8 @@ pub enum GenericCalcNode<L> {
     Hypot(crate::OwnedSlice<GenericCalcNode<L>>),
     /// An `abs()` function.
     Abs(Box<GenericCalcNode<L>>),
+    /// A `sign()` function.
+    Sign(Box<GenericCalcNode<L>>),
 }
 
 pub use self::GenericCalcNode as CalcNode;
@@ -270,6 +272,9 @@ pub trait CalcNodeLeaf: Clone + Sized + PartialOrd + PartialEq + ToCss {
         std::mem::discriminant(self) == std::mem::discriminant(other)
     }
 
+    /// Create a new leaf with a number value.
+    fn new_number(value: f32) -> Self;
+
     /// Returns a float value if the leaf is a number.
     fn as_number(&self) -> Option<f32>;
 
@@ -318,6 +323,19 @@ pub trait CalcNodeLeaf: Clone + Sized + PartialOrd + PartialEq + ToCss {
 
     /// Returns the sort key for simplification.
     fn sort_key(&self) -> SortKey;
+
+    /// Create a new leaf containing the sign() result of the given leaf.
+    fn sign_from(leaf: &impl CalcNodeLeaf) -> Self {
+        Self::new_number(if leaf.is_nan() {
+            f32::NAN
+        } else if leaf.is_zero() {
+            leaf.unitless_value()
+        } else if leaf.is_negative() {
+            -1.0
+        } else {
+            1.0
+        })
+    }
 }
 
 /// The level of any argument being serialized in `to_css_impl`.
@@ -335,6 +353,13 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
     /// Create a dummy CalcNode that can be used to do replacements of other nodes.
     fn dummy() -> Self {
         Self::MinMax(Default::default(), MinMaxOp::Max)
+    }
+
+    /// Change all the leaf nodes to have the given value. This is useful when
+    /// you have `calc(1px * nan)` and you want to replace the product node with
+    /// `calc(nan)`, in which case the unit will be retained.
+    fn coerce_to_value(&mut self, value: f32) {
+        self.map(|_| value);
     }
 
     /// Return true if a product is distributive over this node.
@@ -434,6 +459,10 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 }
                 dividend_unit | divisor_unit
             },
+            CalcNode::Sign(_) => {
+                // Result of a sign() is always a number.
+                CalcUnits::empty()
+            },
         })
     }
 
@@ -509,7 +538,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                     child.negate();
                 }
             },
-            CalcNode::Abs(ref mut child) => {
+            CalcNode::Abs(ref mut child) | CalcNode::Sign(ref mut child) => {
                 child.negate();
             },
         }
@@ -541,7 +570,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
     }
 
     /// Tries to merge one node into another using the product, that is, perform `x` * `y`.
-    fn try_product_in_place(&mut self, other: &mut Self) -> bool {
+    pub fn try_product_in_place(&mut self, other: &mut Self) -> bool {
         if let CalcNode::Leaf(left) = self {
             if let CalcNode::Leaf(right) = other {
                 return left.try_product_in_place(right);
@@ -619,7 +648,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                         map_internal(node, op);
                     }
                 },
-                CalcNode::Abs(child) => {
+                CalcNode::Abs(child) | CalcNode::Sign(child) => {
                     map_internal(child, op);
                 },
             }
@@ -702,6 +731,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
             },
             Self::Hypot(ref c) => CalcNode::Hypot(map_children(c, map)),
             Self::Abs(ref c) => CalcNode::Abs(Box::new(c.map_leaves_internal(map))),
+            Self::Sign(ref c) => CalcNode::Sign(Box::new(c.map_leaves_internal(map))),
         }
     }
 
@@ -979,6 +1009,10 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
 
                 Ok(result)
             },
+            Self::Sign(ref c) => {
+                let result = c.resolve_internal(leaf_to_output_fn)?;
+                Ok(L::sign_from(&result))
+            },
         }
     }
 
@@ -1000,73 +1034,6 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
         match *self {
             Self::Leaf(ref l) => l.is_infinite(),
             _ => false,
-        }
-    }
-
-    /// Multiplies the node by a scalar.
-    pub fn mul_by(&mut self, scalar: f32) {
-        match *self {
-            Self::Leaf(ref mut l) => l.map(|v| v * scalar),
-            Self::Negate(ref mut value) | Self::Invert(ref mut value) => value.mul_by(scalar),
-            // Multiplication is distributive across this.
-            Self::Sum(ref mut children) | Self::Product(ref mut children) => {
-                for node in &mut **children {
-                    node.mul_by(scalar);
-                }
-            },
-            // This one is a bit trickier.
-            Self::MinMax(ref mut children, ref mut op) => {
-                for node in &mut **children {
-                    node.mul_by(scalar);
-                }
-
-                // For negatives we need to invert the operation.
-                if scalar < 0. {
-                    *op = match *op {
-                        MinMaxOp::Min => MinMaxOp::Max,
-                        MinMaxOp::Max => MinMaxOp::Min,
-                    }
-                }
-            },
-            // This one is slightly tricky too.
-            Self::Clamp {
-                ref mut min,
-                ref mut center,
-                ref mut max,
-            } => {
-                min.mul_by(scalar);
-                center.mul_by(scalar);
-                max.mul_by(scalar);
-                // For negatives we need to swap min / max.
-                if scalar < 0. {
-                    mem::swap(min, max);
-                }
-            },
-            Self::Round {
-                ref mut value,
-                ref mut step,
-                ..
-            } => {
-                value.mul_by(scalar);
-                step.mul_by(scalar);
-            },
-            Self::ModRem {
-                ref mut dividend,
-                ref mut divisor,
-                ..
-            } => {
-                dividend.mul_by(scalar);
-                divisor.mul_by(scalar);
-            },
-            // Not possible to handle negatives in this case, see: https://bugzil.la/1815448
-            Self::Hypot(ref mut children) => {
-                for node in &mut **children {
-                    node.mul_by(scalar);
-                }
-            },
-            Self::Abs(ref mut child) => {
-                child.mul_by(scalar);
-            },
         }
     }
 
@@ -1117,7 +1084,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
             Self::Negate(ref mut value) | Self::Invert(ref mut value) => {
                 value.visit_depth_first_internal(f);
             },
-            Self::Abs(ref mut value) => {
+            Self::Abs(ref mut value) | Self::Sign(ref mut value) => {
                 value.visit_depth_first_internal(f);
             },
             Self::Leaf(..) => {},
@@ -1210,13 +1177,13 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 ref mut step,
             } => {
                 if step.is_zero_leaf() {
-                    value.mul_by(f32::NAN);
+                    value.coerce_to_value(f32::NAN);
                     replace_self_with!(&mut **value);
                     return;
                 }
 
                 if value.is_infinite_leaf() && step.is_infinite_leaf() {
-                    value.mul_by(f32::NAN);
+                    value.coerce_to_value(f32::NAN);
                     replace_self_with!(&mut **value);
                     return;
                 }
@@ -1229,34 +1196,34 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 if step.is_infinite_leaf() {
                     match strategy {
                         RoundingStrategy::Nearest | RoundingStrategy::ToZero => {
-                            value.mul_by(0.);
+                            value.coerce_to_value(0.0);
                             replace_self_with!(&mut **value);
                             return;
                         },
                         RoundingStrategy::Up => {
                             if !value.is_negative_leaf() && !value.is_zero_leaf() {
-                                value.mul_by(f32::INFINITY);
+                                value.coerce_to_value(f32::INFINITY);
                                 replace_self_with!(&mut **value);
                                 return;
                             } else if !value.is_negative_leaf() && value.is_zero_leaf() {
                                 replace_self_with!(&mut **value);
                                 return;
                             } else {
-                                value.mul_by(0.);
+                                value.coerce_to_value(0.0);
                                 replace_self_with!(&mut **value);
                                 return;
                             }
                         },
                         RoundingStrategy::Down => {
                             if value.is_negative_leaf() && !value.is_zero_leaf() {
-                                value.mul_by(f32::INFINITY);
+                                value.coerce_to_value(f32::INFINITY);
                                 replace_self_with!(&mut **value);
                                 return;
                             } else if value.is_negative_leaf() && value.is_zero_leaf() {
                                 replace_self_with!(&mut **value);
                                 return;
                             } else {
-                                value.mul_by(0.);
+                                value.coerce_to_value(0.0);
                                 replace_self_with!(&mut **value);
                                 return;
                             }
@@ -1334,7 +1301,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                     divisor.is_infinite_leaf() &&
                     dividend.is_negative_leaf() != divisor.is_negative_leaf()
                 {
-                    result.mul_by(f32::NAN);
+                    result.coerce_to_value(f32::NAN);
                     replace_self_with!(&mut *result);
                     return;
                 }
@@ -1496,6 +1463,12 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                     leaf.map(|v| if v.is_zero() { v } else { v.abs() })
                 }
             },
+            Self::Sign(ref mut child) => {
+                if let CalcNode::Leaf(leaf) = child.as_mut() {
+                    let mut result = Self::Leaf(L::sign_from(leaf));
+                    replace_self_with!(&mut result);
+                }
+            },
             Self::Negate(ref mut child) => {
                 // Step 6.
                 match &mut **child {
@@ -1585,6 +1558,10 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
             },
             Self::Abs(_) => {
                 dest.write_str("abs(")?;
+                true
+            },
+            Self::Sign(_) => {
+                dest.write_str("sign(")?;
                 true
             },
             Self::Negate(_) => {
@@ -1716,7 +1693,9 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 dest.write_str(", ")?;
                 divisor.to_css_impl(dest, ArgumentLevel::ArgumentRoot)?;
             },
-            Self::Abs(ref v) => v.to_css_impl(dest, ArgumentLevel::ArgumentRoot)?,
+            Self::Abs(ref v) | Self::Sign(ref v) => {
+                v.to_css_impl(dest, ArgumentLevel::ArgumentRoot)?
+            },
             Self::Leaf(ref l) => l.to_css(dest)?,
         }
 

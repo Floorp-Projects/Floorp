@@ -666,6 +666,10 @@ impl calc::CalcNodeLeaf for CalcLengthPercentageLeaf {
         }
     }
 
+    fn new_number(value: f32) -> Self {
+        Self::Number(value)
+    }
+
     fn as_number(&self) -> Option<f32> {
         match *self {
             Self::Length(_) | Self::Percentage(_) => None,
@@ -918,12 +922,20 @@ impl Animate for LengthPercentage {
                 Self::new_percent(one.animate(&other, procedure)?)
             },
             _ => {
-                let mut one = self.to_calc_node().into_owned();
-                let mut other = other.to_calc_node().into_owned();
-                let (l, r) = procedure.weights();
+                use calc::CalcNodeLeaf;
 
-                one.mul_by(l as f32);
-                other.mul_by(r as f32);
+                fn product_with(mut node: CalcNode, product: f32) -> CalcNode {
+                    let mut number = CalcNode::Leaf(CalcLengthPercentageLeaf::new_number(product));
+                    if !node.try_product_in_place(&mut number) {
+                        CalcNode::Product(vec![node, number].into())
+                    } else {
+                        node
+                    }
+                }
+
+                let (l, r) = procedure.weights();
+                let one = product_with(self.to_calc_node().into_owned(), l as f32);
+                let other = product_with(other.to_calc_node().into_owned(), r as f32);
 
                 Self::new_calc(
                     CalcNode::Sum(vec![one, other].into()),
