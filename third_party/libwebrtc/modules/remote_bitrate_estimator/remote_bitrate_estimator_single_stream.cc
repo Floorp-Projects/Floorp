@@ -57,7 +57,7 @@ RemoteBitrateEstimatorSingleStream::RemoteBitrateEstimatorSingleStream(
     : clock_(clock),
       incoming_bitrate_(kBitrateWindowMs, 8000),
       last_valid_incoming_bitrate_(0),
-      remote_rate_(&field_trials_),
+      remote_rate_(field_trials_),
       observer_(observer),
       last_process_time_(-1),
       process_interval_ms_(kProcessIntervalMs),
@@ -187,7 +187,7 @@ void RemoteBitrateEstimatorSingleStream::UpdateEstimate(int64_t now_ms) {
   const RateControlInput input(
       bw_state, OptionalRateFromOptionalBps(incoming_bitrate_.Rate(now_ms)));
   uint32_t target_bitrate =
-      remote_rate_.Update(&input, Timestamp::Millis(now_ms)).bps<uint32_t>();
+      remote_rate_.Update(input, Timestamp::Millis(now_ms)).bps<uint32_t>();
   if (remote_rate_.ValidEstimate()) {
     process_interval_ms_ = remote_rate_.GetFeedbackInterval().ms();
     RTC_DCHECK_GT(process_interval_ms_, 0);
