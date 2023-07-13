@@ -13,7 +13,7 @@ function get_abs_path {
 
 CURRENT_DIR="$(get_abs_path $0)"
 REPO_ROOT_DIR="$(get_abs_path $CURRENT_DIR/../../../..)"
-ANDROID_COMPONENTS_DIR="$REPO_ROOT_DIR/android-components"
+ANDROID_COMPONENTS_DIR="$REPO_ROOT_DIR/mobile/android/android-components"
 WORKING_DIR="$REPO_ROOT_DIR/$1"
 shift
 GRADLE_COMMANDS="$@"
@@ -31,7 +31,7 @@ echo "org.gradle.jvmargs=-Xmx16g -Xms2g -XX:MaxMetaspaceSize=6g -XX:+HeapDumpOnO
 
 pushd "$WORKING_DIR"
 
-. "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/external-gradle-dependencies/before.sh"
+. "$REPO_ROOT_DIR/taskcluster/scripts/misc/external-gradle-dependencies/before.sh"
 
 # Before building anything we explicitly build one component that contains Glean and initializes
 # the Miniconda Python environment and doesn't have (almost) any other transitive dependencies.
@@ -50,6 +50,6 @@ fi
 
 ./gradlew $GRADLE_ARGS $GRADLE_COMMANDS
 
-. "$REPO_ROOT_DIR/taskcluster/scripts/toolchain/external-gradle-dependencies/after.sh"
+. "$REPO_ROOT_DIR/taskcluster/scripts/misc/external-gradle-dependencies/after.sh"
 
 popd
