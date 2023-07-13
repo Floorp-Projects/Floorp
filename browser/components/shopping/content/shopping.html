@@ -22,7 +22,7 @@
     <script src="chrome://global/content/customElements.js"></script>
     <script
       type="module"
-      src="chrome://browser/content/shopping/shopping.mjs"
+      src="chrome://browser/content/shopping/shopping-container.mjs"
     ></script>
     <script
       type="module"
@@ -35,9 +35,8 @@
     <title data-l10n-id="shopping-page-title"></title>
   </head>
   <body>
-    <div id="content">
-      <review-highlights hidden></review-highlights>
-      <shopping-settings></shopping-settings>
-    </div>
+    <review-highlights hidden></review-highlights>
+    <shopping-settings></shopping-settings>
+    <shopping-container></shopping-container>
   </body>
 </html>
