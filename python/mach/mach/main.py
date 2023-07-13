@@ -18,6 +18,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+from mach.site import CommandSiteManager
+
 from .base import (
     CommandContext,
     FailedCommandError,
@@ -186,7 +188,7 @@ class MachCommandReference:
         command_site_name: Optional[str] = None,
     ):
         self.module = Path(module)
-        self.site_name = command_site_name if command_site_name else None
+        self.site_name = command_site_name if command_site_name else "common"
 
 
 class Mach(object):
@@ -231,7 +233,9 @@ To see more help for a specific command, run:
   %(prog)s help <command>
 """
 
-    def __init__(self, cwd: str):
+    def __init__(
+        self, cwd: str, command_site_manager: Optional[CommandSiteManager] = None
+    ):
         assert Path(cwd).is_dir()
 
         self.cwd = cwd
@@ -239,6 +243,7 @@ To see more help for a specific command, run:
         self.logger = logging.getLogger(__name__)
         self.settings = ConfigSettings()
         self.settings_paths = []
+        self.command_site_manager = command_site_manager
 
         if "MACHRC" in os.environ:
             self.settings_paths.append(os.environ["MACHRC"])
@@ -524,6 +529,7 @@ To see more help for a specific command, run:
             return Registrar._run_command_handler(
                 handler,
                 context,
+                self.command_site_manager,
                 debug_command=args.debug_command,
                 profile_command=args.profile_command,
                 **vars(args.command_args),
