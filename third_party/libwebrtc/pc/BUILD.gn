@@ -2309,6 +2309,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "peer_connection_bundle_unittest.cc",
       "peer_connection_crypto_unittest.cc",
       "peer_connection_data_channel_unittest.cc",
+      "peer_connection_encodings_integrationtest.cc",
       "peer_connection_end_to_end_unittest.cc",
       "peer_connection_factory_unittest.cc",
       "peer_connection_field_trial_tests.cc",
@@ -2750,6 +2751,8 @@ if (rtc_include_tests && !build_with_chromium) {
       "test/peer_connection_test_wrapper.cc",
       "test/peer_connection_test_wrapper.h",
       "test/rtc_stats_obtainer.h",
+      "test/simulcast_layer_util.cc",
+      "test/simulcast_layer_util.h",
       "test/test_sdp_strings.h",
     ]
 
@@ -2763,6 +2766,8 @@ if (rtc_include_tests && !build_with_chromium) {
       ":rtp_receiver",
       ":rtp_sender",
       ":sctp_data_channel",
+      ":session_description",
+      ":simulcast_description",
       ":stream_collection",
       ":video_track_source",
       "../api:audio_options_api",
@@ -2831,7 +2836,10 @@ if (rtc_include_tests && !build_with_chromium) {
       "../test:test_support",
       "../test:video_test_common",
     ]
-    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+    absl_deps = [
+      "//third_party/abseil-cpp/absl/algorithm:container",
+      "//third_party/abseil-cpp/absl/types:optional",
+    ]
   }
 
   svc_tests_resources = [
