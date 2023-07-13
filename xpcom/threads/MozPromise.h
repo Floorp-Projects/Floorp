@@ -1123,12 +1123,6 @@ class MozPromise : public MozPromiseBase {
   }
 #  endif
 
-  // Creates a C++ MozPromise from its JS counterpart, dom::Promise.
-  // FromDomPromise currently only supports primitive types (int8/16/32, float,
-  // double) And the reject value type must be a nsresult.
-  // To use, please include MozPromiseInlines.h
-  static RefPtr<MozPromise> FromDomPromise(dom::Promise* aDOMPromise);
-
   // Note we expose the function AssertIsDead() instead of IsDead() since
   // checking IsDead() is a data race in the situation where the request is not
   // dead. Therefore we enforce the form |Assert(IsDead())| by exposing
