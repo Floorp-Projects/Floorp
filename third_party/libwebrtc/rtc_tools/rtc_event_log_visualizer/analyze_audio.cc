@@ -222,6 +222,9 @@ std::unique_ptr<test::NetEqStatsGetter> CreateNetEqTestAndRun(
     int file_sample_rate_hz) {
   std::unique_ptr<test::NetEqInput> input =
       test::CreateNetEqEventLogInput(parsed_log, ssrc);
+  if (!input) {
+    return nullptr;
+  }
 
   constexpr int kReplacementPt = 127;
   std::set<uint8_t> cn_types;
@@ -263,8 +266,11 @@ NetEqStatsGetterMap SimulateNetEq(const ParsedRtcEventLog& parsed_log,
                                   int file_sample_rate_hz) {
   NetEqStatsGetterMap neteq_stats;
   for (uint32_t ssrc : parsed_log.incoming_audio_ssrcs()) {
-    neteq_stats[ssrc] = CreateNetEqTestAndRun(
+    std::unique_ptr<test::NetEqStatsGetter> stats = CreateNetEqTestAndRun(
         parsed_log, ssrc, replacement_file_name, file_sample_rate_hz);
+    if (stats) {
+      neteq_stats[ssrc] = std::move(stats);
+    }
   }
   return neteq_stats;
 }
