@@ -3579,6 +3579,11 @@ void StyleCalcNode::ScaleLengthsBy(float aScale) {
       ScaleNode(*abs);
       break;
     }
+    case Tag::Sign: {
+      const auto& sign = AsSign();
+      ScaleNode(*sign);
+      break;
+    }
   }
 }
 
