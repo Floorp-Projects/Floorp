@@ -18,6 +18,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/SchedulerGroup.h"
+#include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -995,7 +997,12 @@ void PuppetWidget::OnMemoryPressure(layers::MemoryPressureReason aWhy) {
 bool PuppetWidget::NeedsPaint() {
   // e10s popups are handled by the parent process, so never should be painted
   // here
-  MOZ_ASSERT(mWindowType != WindowType::Popup);
+  if (XRE_IsContentProcess() &&
+      StaticPrefs::browser_tabs_remote_desktopbehavior() &&
+      mWindowType == WindowType::Popup) {
+    NS_WARNING("Trying to paint an e10s popup in the child process!");
+    return false;
+  }
 
   return mVisible;
 }
