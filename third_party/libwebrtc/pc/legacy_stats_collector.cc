@@ -34,7 +34,6 @@
 #include "api/video/video_timing.h"
 #include "call/call.h"
 #include "media/base/media_channel.h"
-#include "media/base/media_channel_impl.h"
 #include "modules/audio_processing/include/audio_processing_statistics.h"
 #include "p2p/base/ice_transport_internal.h"
 #include "p2p/base/p2p_constants.h"
@@ -670,7 +669,7 @@ void LegacyStatsCollector::UpdateStats(
   // to fetch stats, then applies them on the signaling thread. See if we need
   // to do this synchronously or if updating the stats without blocking is safe.
   std::map<std::string, std::string> transport_names_by_mid =
-      ExtractSessionInfo();
+      ExtractSessionAndDataInfo();
 
   // TODO(tommi): All of these hop over to the worker thread to fetch
   // information.  We could post a task to run all of these and post
@@ -681,7 +680,6 @@ void LegacyStatsCollector::UpdateStats(
   ExtractBweInfo();
   ExtractMediaInfo(transport_names_by_mid);
   ExtractSenderInfo();
-  ExtractDataInfo();
   UpdateTrackReports();
 }
 
@@ -856,18 +854,25 @@ StatsReport* LegacyStatsCollector::AddCandidateReport(
   return report;
 }
 
-std::map<std::string, std::string> LegacyStatsCollector::ExtractSessionInfo() {
-  TRACE_EVENT0("webrtc", "LegacyStatsCollector::ExtractSessionInfo");
+std::map<std::string, std::string>
+LegacyStatsCollector::ExtractSessionAndDataInfo() {
+  TRACE_EVENT0("webrtc", "LegacyStatsCollector::ExtractSessionAndDataInfo");
   RTC_DCHECK_RUN_ON(pc_->signaling_thread());
 
   SessionStats stats;
+  StatsCollection::Container data_report_collection;
   auto transceivers = pc_->GetTransceiversInternal();
   pc_->network_thread()->BlockingCall(
       [&, sctp_transport_name = pc_->sctp_transport_name(),
        sctp_mid = pc_->sctp_mid()]() mutable {
         stats = ExtractSessionInfo_n(
             transceivers, std::move(sctp_transport_name), std::move(sctp_mid));
+        StatsCollection data_reports;
+        ExtractDataInfo_n(&data_reports);
+        data_report_collection = data_reports.DetachCollection();
       });
+
+  reports_.MergeCollection(std::move(data_report_collection));
 
   ExtractSessionInfo_s(stats);
 
@@ -1292,8 +1297,8 @@ void LegacyStatsCollector::ExtractSenderInfo() {
   }
 }
 
-void LegacyStatsCollector::ExtractDataInfo() {
-  RTC_DCHECK_RUN_ON(pc_->signaling_thread());
+void LegacyStatsCollector::ExtractDataInfo_n(StatsCollection* reports) {
+  RTC_DCHECK_RUN_ON(pc_->network_thread());
 
   rtc::Thread::ScopedDisallowBlockingCalls no_blocking_calls;
 
@@ -1301,7 +1306,7 @@ void LegacyStatsCollector::ExtractDataInfo() {
   for (const auto& stats : data_stats) {
     StatsReport::Id id(StatsReport::NewTypedIntId(
         StatsReport::kStatsReportTypeDataChannel, stats.id));
-    StatsReport* report = reports_.ReplaceOrAddNew(id);
+    StatsReport* report = reports->ReplaceOrAddNew(id);
     report->set_timestamp(stats_gathering_started_);
     report->AddString(StatsReport::kStatsValueNameLabel, stats.label);
     // Filter out the initial id (-1).

@@ -892,10 +892,7 @@ rtc_library("sctp_data_channel") {
     "../rtc_base/system:no_unique_address",
     "../rtc_base/system:unused",
   ]
-  absl_deps = [
-    "//third_party/abseil-cpp/absl/cleanup",
-    "//third_party/abseil-cpp/absl/types:optional",
-  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
 
 rtc_library("data_channel_utils") {
@@ -1326,7 +1323,6 @@ rtc_source_set("legacy_stats_collector") {
     "../api/video:video_rtp_headers",
     "../call:call_interfaces",
     "../media:media_channel",
-    "../media:media_channel_impl",
     "../media:rtc_media_base",
     "../modules/audio_processing:audio_processing_statistics",
     "../p2p:rtc_p2p",
