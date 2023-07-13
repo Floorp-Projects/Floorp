@@ -369,6 +369,13 @@ class Promise : public SupportsWeakPtr {
   static already_AddRefed<Promise> CreateRejectedWithErrorResult(
       nsIGlobalObject* aGlobal, ErrorResult& aRejectionError);
 
+  // Converts an integer or DOMException to nsresult, or otherwise returns
+  // NS_ERROR_DOM_NOT_NUMBER_ERR (which is exclusive for this function).
+  // Can be used to convert JS::Value passed to rejection handler so that native
+  // error handlers e.g. MozPromise can consume it.
+  static nsresult TryExtractNSResultFromRejectionValue(
+      JS::Handle<JS::Value> aValue);
+
  protected:
   template <typename ResolveCallback, typename RejectCallback, typename... Args,
             typename... JSArgs>
