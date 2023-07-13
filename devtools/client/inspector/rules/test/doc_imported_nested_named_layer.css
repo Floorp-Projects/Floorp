@@ -1,0 +1,5 @@
+@layer in-imported-nested-stylesheet {
+    h1, [test-hint=imported-nested-named-layer--named-layer] {
+        color: lime;
+    }
+}
