@@ -1755,6 +1755,11 @@ static bool commitRadialGradient(sampler2D sampler, int address, float size,
       if (b > 0) {
         b = fastSqrt<false>(b);
         endT = min(endT, t >= middleT ? middleT + b : middleT - b);
+      } else {
+        // Due to the imprecision of fastSqrt in offset calculations, solving
+        // the quadratic may fail. However, if the discriminant is still close
+        // to 0, then just assume it is 0.
+        endT = min(endT, middleT);
       }
     }
     // Figure out how many chunks are actually inside the merged gradient.
