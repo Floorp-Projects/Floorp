@@ -1960,6 +1960,14 @@ bool Instance::init(JSContext* cx, const JSObjectVector& funcImports,
 
       // Initialize the allocation site for pre-tenuring.
       typeDefData->allocSite.initWasm(zone);
+
+      // If `typeDef` is a struct, cache its size here, so that allocators
+      // don't have to chase back through `typeDef` to determine that.
+      if (typeDef.kind() == TypeDefKind::Struct) {
+        typeDefData->structTypeSize = typeDef.structType().size_;
+      } else {
+        MOZ_ASSERT(typeDefData->structTypeSize == 0);
+      }
     } else if (typeDef.kind() == TypeDefKind::Func) {
       // Nothing to do; the default values are OK.
     } else {

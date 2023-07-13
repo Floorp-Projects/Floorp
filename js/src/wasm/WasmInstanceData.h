@@ -53,7 +53,8 @@ struct TypeDefInstanceData {
         superTypeVector(nullptr),
         shape(nullptr),
         clasp(nullptr),
-        allocKind(gc::AllocKind::LIMIT) {}
+        allocKind(gc::AllocKind::LIMIT),
+        structTypeSize(0) {}
 
   // The canonicalized pointer to this type definition. This is kept alive by
   // the type context associated with the instance.
@@ -64,13 +65,19 @@ struct TypeDefInstanceData {
   //
   const wasm::SuperTypeVector* superTypeVector;
 
-  // The remaining fields are only meaningful for, and used by, structs and
+  // The next four fields are only meaningful for, and used by, structs and
   // arrays.
   GCPtr<Shape*> shape;
   const JSClass* clasp;
   // The allocation site for GC types. This is used for pre-tenuring.
   gc::AllocSite allocSite;
   gc::AllocKind allocKind;
+
+  // This field is only meaningful for structs and should otherwise be zero.
+  // It caches the value of `typeDef->structType().size_` (a size in bytes),
+  // so that allocators of structs don't need to chase from this struct
+  // through `typeDef` to find the value.
+  uint32_t structTypeSize;
 };
 
 // FuncImportInstanceData describes the region of wasm global memory allocated

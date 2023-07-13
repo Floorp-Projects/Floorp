@@ -9,6 +9,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/DebugOnly.h"
 
 #include <algorithm>
 
@@ -579,17 +580,15 @@ template <bool ZeroFields>
 WasmStructObject* WasmStructObject::createStructIL(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
     js::gc::Heap initialHeap) {
+  // It is up to our caller to ensure that `typeDefData` refers to a type that
+  // doesn't need OOL storage.
+
   MOZ_ASSERT(IsWasmGcObjectClass(typeDefData->clasp));
   MOZ_ASSERT(!typeDefData->clasp->isNativeObject());
   debugCheckNewObject(typeDefData->shape, typeDefData->allocKind, initialHeap);
 
-  const wasm::TypeDef* typeDef = typeDefData->typeDef;
+  mozilla::DebugOnly<const wasm::TypeDef*> typeDef = typeDefData->typeDef;
   MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
-
-  // It is up to our caller to ensure that `typeDefData` refers to a type that
-  // doesn't need OOL storage.
-  uint32_t totalBytes = typeDef->structType().size_;
-  MOZ_ASSERT(totalBytes <= WasmStructObject_MaxInlineBytes);
 
   // This doesn't need to be rooted, since all we do with it prior to
   // return is to zero out the fields (and then only if ZeroFields is true).
@@ -603,14 +602,16 @@ WasmStructObject* WasmStructObject::createStructIL(
 
   structObj->initShape(typeDefData->shape);
   structObj->superTypeVector_ = typeDefData->superTypeVector;
+  structObj->outlineData_ = nullptr;
+  if constexpr (ZeroFields) {
+    uint32_t totalBytes = typeDefData->structTypeSize;
+    MOZ_ASSERT(totalBytes == typeDef->structType().size_);
+    MOZ_ASSERT(totalBytes <= WasmStructObject_MaxInlineBytes);
+    memset(&(structObj->inlineData_[0]), 0, totalBytes);
+  }
 
   js::gc::gcprobes::CreateObject(structObj);
   probes::CreateObject(cx, structObj);
-
-  structObj->outlineData_ = nullptr;
-  if constexpr (ZeroFields) {
-    memset(&(structObj->inlineData_[0]), 0, totalBytes);
-  }
 
   return structObj;
 }
@@ -620,18 +621,22 @@ template <bool ZeroFields>
 WasmStructObject* WasmStructObject::createStructOOL(
     JSContext* cx, wasm::TypeDefInstanceData* typeDefData,
     js::gc::Heap initialHeap) {
+  // It is up to our caller to ensure that `typeDefData` refers to a type that
+  // needs OOL storage.
+
   MOZ_ASSERT(IsWasmGcObjectClass(typeDefData->clasp));
   MOZ_ASSERT(!typeDefData->clasp->isNativeObject());
   debugCheckNewObject(typeDefData->shape, typeDefData->allocKind, initialHeap);
 
-  const wasm::TypeDef* typeDef = typeDefData->typeDef;
+  mozilla::DebugOnly<const wasm::TypeDef*> typeDef = typeDefData->typeDef;
   MOZ_ASSERT(typeDef->kind() == wasm::TypeDefKind::Struct);
 
-  // It is up to our caller to ensure that `typeDefData` refers to a type that
-  // needs OOL storage.
+  uint32_t totalBytes = typeDefData->structTypeSize;
+  MOZ_ASSERT(totalBytes == typeDef->structType().size_);
+  MOZ_ASSERT(totalBytes > WasmStructObject_MaxInlineBytes);
+
   uint32_t inlineBytes, outlineBytes;
-  WasmStructObject::getDataByteSizes(typeDef->structType().size_, &inlineBytes,
-                                     &outlineBytes);
+  WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
   MOZ_ASSERT(inlineBytes == WasmStructObject_MaxInlineBytes);
   MOZ_ASSERT(outlineBytes > 0);
 
@@ -661,9 +666,6 @@ WasmStructObject* WasmStructObject::createStructOOL(
   structObj->initShape(typeDefData->shape);
   structObj->superTypeVector_ = typeDefData->superTypeVector;
 
-  js::gc::gcprobes::CreateObject(structObj);
-  probes::CreateObject(cx, structObj);
-
   // Initialize the outline data fields
   structObj->outlineData_ = (uint8_t*)outlineData.pointer();
   if constexpr (ZeroFields) {
@@ -678,6 +680,9 @@ WasmStructObject* WasmStructObject::createStructOOL(
       return nullptr;
     }
   }
+
+  js::gc::gcprobes::CreateObject(structObj);
+  probes::CreateObject(cx, structObj);
 
   return structObj;
 }
