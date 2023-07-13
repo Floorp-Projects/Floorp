@@ -319,7 +319,7 @@ class MockPeerConnectionInternal : public PeerConnectionInternal {
   MOCK_METHOD(void, NoteDataAddedEvent, (), (override));
   MOCK_METHOD(void,
               OnSctpDataChannelStateChanged,
-              (DataChannelInterface * channel, DataChannelInterface::DataState),
+              (int channel_id, DataChannelInterface::DataState),
               (override));
 };
 

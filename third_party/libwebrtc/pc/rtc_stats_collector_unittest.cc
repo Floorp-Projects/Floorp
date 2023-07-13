@@ -2132,10 +2132,10 @@ TEST_F(RTCStatsCollectorTest, CollectRTCPeerConnectionStats) {
       rtc::Thread::Current(), rtc::Thread::Current());
 
   stats_->stats_collector()->OnSctpDataChannelStateChanged(
-      dummy_channel_a.get(), DataChannelInterface::DataState::kOpen);
+      dummy_channel_a->internal_id(), DataChannelInterface::DataState::kOpen);
   // Closing a channel that is not opened should not affect the counts.
   stats_->stats_collector()->OnSctpDataChannelStateChanged(
-      dummy_channel_b.get(), DataChannelInterface::DataState::kClosed);
+      dummy_channel_b->internal_id(), DataChannelInterface::DataState::kClosed);
 
   {
     rtc::scoped_refptr<const RTCStatsReport> report =
@@ -2148,9 +2148,9 @@ TEST_F(RTCStatsCollectorTest, CollectRTCPeerConnectionStats) {
   }
 
   stats_->stats_collector()->OnSctpDataChannelStateChanged(
-      dummy_channel_b.get(), DataChannelInterface::DataState::kOpen);
+      dummy_channel_b->internal_id(), DataChannelInterface::DataState::kOpen);
   stats_->stats_collector()->OnSctpDataChannelStateChanged(
-      dummy_channel_b.get(), DataChannelInterface::DataState::kClosed);
+      dummy_channel_b->internal_id(), DataChannelInterface::DataState::kClosed);
 
   {
     rtc::scoped_refptr<const RTCStatsReport> report =
@@ -2165,7 +2165,7 @@ TEST_F(RTCStatsCollectorTest, CollectRTCPeerConnectionStats) {
   // Re-opening a data channel (or opening a new data channel that is re-using
   // the same address in memory) should increase the opened count.
   stats_->stats_collector()->OnSctpDataChannelStateChanged(
-      dummy_channel_b.get(), DataChannelInterface::DataState::kOpen);
+      dummy_channel_b->internal_id(), DataChannelInterface::DataState::kOpen);
 
   {
     rtc::scoped_refptr<const RTCStatsReport> report =
@@ -2178,9 +2178,9 @@ TEST_F(RTCStatsCollectorTest, CollectRTCPeerConnectionStats) {
   }
 
   stats_->stats_collector()->OnSctpDataChannelStateChanged(
-      dummy_channel_a.get(), DataChannelInterface::DataState::kClosed);
+      dummy_channel_a->internal_id(), DataChannelInterface::DataState::kClosed);
   stats_->stats_collector()->OnSctpDataChannelStateChanged(
-      dummy_channel_b.get(), DataChannelInterface::DataState::kClosed);
+      dummy_channel_b->internal_id(), DataChannelInterface::DataState::kClosed);
 
   {
     rtc::scoped_refptr<const RTCStatsReport> report =

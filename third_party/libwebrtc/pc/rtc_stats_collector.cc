@@ -2493,17 +2493,18 @@ void RTCStatsCollector::PrepareTransceiverStatsInfosAndCallStats_s_w_n() {
 }
 
 void RTCStatsCollector::OnSctpDataChannelStateChanged(
-    DataChannelInterface* channel,
+    int channel_id,
     DataChannelInterface::DataState state) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   if (state == DataChannelInterface::DataState::kOpen) {
-    bool result = internal_record_.opened_data_channels.insert(channel).second;
+    bool result =
+        internal_record_.opened_data_channels.insert(channel_id).second;
     RTC_DCHECK(result);
     ++internal_record_.data_channels_opened;
   } else if (state == DataChannelInterface::DataState::kClosed) {
     // Only channels that have been fully opened (and have increased the
     // `data_channels_opened_` counter) increase the closed counter.
-    if (internal_record_.opened_data_channels.erase(channel)) {
+    if (internal_record_.opened_data_channels.erase(channel_id)) {
       ++internal_record_.data_channels_closed;
     }
   }

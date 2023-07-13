@@ -317,7 +317,7 @@ class PeerConnection : public PeerConnectionInternal,
   absl::optional<rtc::SSLRole> GetSctpSslRole_n() override;
 
   void OnSctpDataChannelStateChanged(
-      DataChannelInterface* channel,
+      int channel_id,
       DataChannelInterface::DataState state) override;
 
   bool ShouldFireNegotiationNeededEvent(uint32_t event_id) override;
