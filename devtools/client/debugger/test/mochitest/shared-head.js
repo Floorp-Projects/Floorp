@@ -1083,7 +1083,7 @@ function disableBreakpoint(dbg, source, line, column) {
     column,
   });
   const bp = getBreakpointForLocation(dbg, location);
-  return dbg.actions.disableBreakpoint(getContext(dbg), bp);
+  return dbg.actions.disableBreakpoint(bp);
 }
 
 function findBreakpoint(dbg, url, line) {

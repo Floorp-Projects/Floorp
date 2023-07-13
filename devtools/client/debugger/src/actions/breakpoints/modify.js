@@ -28,7 +28,7 @@ import { recordEvent } from "../../utils/telemetry";
 import { comparePosition } from "../../utils/location";
 import { getTextAtPosition, isLineBlackboxed } from "../../utils/source";
 import { getMappedScopesForLocation } from "../pause/mapScopes";
-import { validateNavigateContext } from "../../utils/context";
+import { validateBreakpoint } from "../../utils/context";
 
 // This file has the primitive operations used to modify individual breakpoints
 // and keep them in sync with the breakpoints installed on server threads. These
@@ -54,12 +54,7 @@ import { validateNavigateContext } from "../../utils/context";
 // breakpoint will be added to the reducer, to restore the above invariant.
 // See syncBreakpoint.js for more.
 
-async function clientSetBreakpoint(
-  client,
-  cx,
-  { getState, dispatch },
-  breakpoint
-) {
+async function clientSetBreakpoint(client, { getState, dispatch }, breakpoint) {
   const breakpointServerLocation = makeBreakpointServerLocation(
     getState(),
     breakpoint.generatedLocation
@@ -70,7 +65,7 @@ async function clientSetBreakpoint(
     (breakpoint.options.logValue || breakpoint.options.condition);
 
   if (shouldMapBreakpointExpressions) {
-    breakpoint = await dispatch(updateBreakpointSourceMapping(cx, breakpoint));
+    breakpoint = await dispatch(updateBreakpointSourceMapping(breakpoint));
   }
   return client.setBreakpoint(breakpointServerLocation, breakpoint.options);
 }
@@ -83,7 +78,7 @@ function clientRemoveBreakpoint(client, state, generatedLocation) {
   return client.removeBreakpoint(breakpointServerLocation);
 }
 
-export function enableBreakpoint(cx, initialBreakpoint) {
+export function enableBreakpoint(initialBreakpoint) {
   return thunkArgs => {
     const { dispatch, getState, client } = thunkArgs;
     const state = getState();
@@ -107,9 +102,8 @@ export function enableBreakpoint(cx, initialBreakpoint) {
     dispatch(setSkipPausing(false));
     return dispatch({
       type: "SET_BREAKPOINT",
-      cx,
       breakpoint: createBreakpoint({ ...breakpoint, disabled: false }),
-      [PROMISE]: clientSetBreakpoint(client, cx, thunkArgs, breakpoint),
+      [PROMISE]: clientSetBreakpoint(client, thunkArgs, breakpoint),
     });
   };
 }
@@ -180,13 +174,12 @@ export function addBreakpoint(
     dispatch(setSkipPausing(false));
     return dispatch({
       type: "SET_BREAKPOINT",
-      cx,
       breakpoint,
       // If we just clobbered an enabled breakpoint with a disabled one, we need
       // to remove any installed breakpoint in the server.
       [PROMISE]: disabled
         ? clientRemoveBreakpoint(client, getState(), generatedLocation)
-        : clientSetBreakpoint(client, cx, thunkArgs, breakpoint),
+        : clientSetBreakpoint(client, thunkArgs, breakpoint),
     });
   };
 }
@@ -280,7 +273,7 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
  * @memberof actions/breakpoints
  * @static
  */
-export function disableBreakpoint(cx, initialBreakpoint) {
+export function disableBreakpoint(initialBreakpoint) {
   return ({ dispatch, getState, client }) => {
     const breakpoint = getBreakpoint(getState(), initialBreakpoint.location);
     if (!breakpoint || breakpoint.disabled) {
@@ -290,7 +283,6 @@ export function disableBreakpoint(cx, initialBreakpoint) {
     dispatch(setSkipPausing(false));
     return dispatch({
       type: "SET_BREAKPOINT",
-      cx,
       breakpoint: createBreakpoint({ ...breakpoint, disabled: true }),
       [PROMISE]: clientRemoveBreakpoint(
         client,
@@ -325,9 +317,8 @@ export function setBreakpointOptions(cx, location, options = {}) {
 
     return dispatch({
       type: "SET_BREAKPOINT",
-      cx,
       breakpoint,
-      [PROMISE]: clientSetBreakpoint(client, cx, thunkArgs, breakpoint),
+      [PROMISE]: clientSetBreakpoint(client, thunkArgs, breakpoint),
     });
   };
 }
@@ -349,7 +340,7 @@ async function updateExpression(parserWorker, mappings, originalExpression) {
   return mapped.expression;
 }
 
-function updateBreakpointSourceMapping(cx, breakpoint) {
+function updateBreakpointSourceMapping(breakpoint) {
   return async ({ getState, dispatch, parserWorker }) => {
     const options = { ...breakpoint.options };
 
@@ -376,7 +367,11 @@ function updateBreakpointSourceMapping(cx, breakpoint) {
       );
     }
 
-    validateNavigateContext(getState(), cx);
+    // As we waited for lots of asynchronous operations,
+    // verify that the breakpoint is still valid before
+    // trying to set/update it on the server.
+    validateBreakpoint(getState(), breakpoint);
+
     return { ...breakpoint, options };
   };
 }

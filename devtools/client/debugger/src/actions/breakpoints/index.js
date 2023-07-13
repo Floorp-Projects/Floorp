@@ -47,12 +47,12 @@ export function addHiddenBreakpoint(cx, location) {
  * @memberof actions/breakpoints
  * @static
  */
-export function disableBreakpointsInSource(cx, source) {
+export function disableBreakpointsInSource(source) {
   return async ({ dispatch, getState, client }) => {
     const breakpoints = getBreakpointsForSource(getState(), source.id);
     for (const breakpoint of breakpoints) {
       if (!breakpoint.disabled) {
-        dispatch(disableBreakpoint(cx, breakpoint));
+        dispatch(disableBreakpoint(breakpoint));
       }
     }
   };
@@ -64,12 +64,12 @@ export function disableBreakpointsInSource(cx, source) {
  * @memberof actions/breakpoints
  * @static
  */
-export function enableBreakpointsInSource(cx, source) {
+export function enableBreakpointsInSource(source) {
   return async ({ dispatch, getState, client }) => {
     const breakpoints = getBreakpointsForSource(getState(), source.id);
     for (const breakpoint of breakpoints) {
       if (breakpoint.disabled) {
-        dispatch(enableBreakpoint(cx, breakpoint));
+        dispatch(enableBreakpoint(breakpoint));
       }
     }
   };
@@ -81,15 +81,15 @@ export function enableBreakpointsInSource(cx, source) {
  * @memberof actions/breakpoints
  * @static
  */
-export function toggleAllBreakpoints(cx, shouldDisableBreakpoints) {
+export function toggleAllBreakpoints(shouldDisableBreakpoints) {
   return async ({ dispatch, getState, client }) => {
     const breakpoints = getBreakpointsList(getState());
 
     for (const breakpoint of breakpoints) {
       if (shouldDisableBreakpoints) {
-        dispatch(disableBreakpoint(cx, breakpoint));
+        dispatch(disableBreakpoint(breakpoint));
       } else {
-        dispatch(enableBreakpoint(cx, breakpoint));
+        dispatch(enableBreakpoint(breakpoint));
       }
     }
   };
@@ -101,24 +101,22 @@ export function toggleAllBreakpoints(cx, shouldDisableBreakpoints) {
  * @memberof actions/breakpoints
  * @static
  */
-export function toggleBreakpoints(cx, shouldDisableBreakpoints, breakpoints) {
+export function toggleBreakpoints(shouldDisableBreakpoints, breakpoints) {
   return async ({ dispatch }) => {
     const promises = breakpoints.map(breakpoint =>
       shouldDisableBreakpoints
-        ? dispatch(disableBreakpoint(cx, breakpoint))
-        : dispatch(enableBreakpoint(cx, breakpoint))
+        ? dispatch(disableBreakpoint(breakpoint))
+        : dispatch(enableBreakpoint(breakpoint))
     );
 
     await Promise.all(promises);
   };
 }
 
-export function toggleBreakpointsAtLine(cx, shouldDisableBreakpoints, line) {
+export function toggleBreakpointsAtLine(shouldDisableBreakpoints, line) {
   return async ({ dispatch, getState }) => {
     const breakpoints = getBreakpointsAtLine(getState(), line);
-    return dispatch(
-      toggleBreakpoints(cx, shouldDisableBreakpoints, breakpoints)
-    );
+    return dispatch(toggleBreakpoints(shouldDisableBreakpoints, breakpoints));
   };
 }
 
@@ -278,34 +276,34 @@ export function removeBreakpointsAtLine(cx, sourceId, line) {
   };
 }
 
-export function disableBreakpointsAtLine(cx, sourceId, line) {
+export function disableBreakpointsAtLine(sourceId, line) {
   return ({ dispatch, getState }) => {
     const breakpointsAtLine = getBreakpointsForSource(
       getState(),
       sourceId,
       line
     );
-    return dispatch(toggleBreakpoints(cx, true, breakpointsAtLine));
+    return dispatch(toggleBreakpoints(true, breakpointsAtLine));
   };
 }
 
-export function enableBreakpointsAtLine(cx, sourceId, line) {
+export function enableBreakpointsAtLine(sourceId, line) {
   return ({ dispatch, getState }) => {
     const breakpointsAtLine = getBreakpointsForSource(
       getState(),
       sourceId,
       line
     );
-    return dispatch(toggleBreakpoints(cx, false, breakpointsAtLine));
+    return dispatch(toggleBreakpoints(false, breakpointsAtLine));
   };
 }
 
-export function toggleDisabledBreakpoint(cx, breakpoint) {
+export function toggleDisabledBreakpoint(breakpoint) {
   return ({ dispatch, getState }) => {
     if (!breakpoint.disabled) {
-      return dispatch(disableBreakpoint(cx, breakpoint));
+      return dispatch(disableBreakpoint(breakpoint));
     }
-    return dispatch(enableBreakpoint(cx, breakpoint));
+    return dispatch(enableBreakpoint(breakpoint));
   };
 }
 
