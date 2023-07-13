@@ -49,7 +49,7 @@ Cr-Branched-From: d3e765e4eb4af8eba0c63b6bfe2e17a12dc670dc-refs/heads/main@{#396
  2 files changed, 106 insertions(+), 25 deletions(-)
 
 diff --git a/pc/peer_connection_simulcast_unittest.cc b/pc/peer_connection_simulcast_unittest.cc
-index ff40407884..4efdb9346b 100644
+index 23d598cc0a..05bf78f3cc 100644
 --- a/pc/peer_connection_simulcast_unittest.cc
 +++ b/pc/peer_connection_simulcast_unittest.cc
 @@ -1007,15 +1007,31 @@ class PeerConnectionSimulcastWithMediaFlowTests
