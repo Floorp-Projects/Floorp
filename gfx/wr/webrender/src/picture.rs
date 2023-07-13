@@ -3211,7 +3211,7 @@ impl TileCacheInstance {
                     opaque_rect: pic_coverage_rect,
                     spanning_opaque_color: None,
                     kind: Some(BackdropKind::Clear),
-                    backdrop_rect: pic_coverage_rect,        
+                    backdrop_rect: pic_coverage_rect,
                 });
             }
             PrimitiveInstanceKind::LinearGradient { data_handle, .. }
@@ -4423,6 +4423,11 @@ pub struct PicturePrimitive {
 
     /// Flags for this picture primitive
     pub flags: PictureFlags,
+
+    /// The lowest common ancestor clip of all of the primitives in this
+    /// picture, to be ignored when clipping those primitives and applied
+    /// later when compositing the picture.
+    pub clip_root: Option<ClipNodeId>,
 }
 
 impl PicturePrimitive {
@@ -4531,6 +4536,7 @@ impl PicturePrimitive {
             is_opaque: false,
             raster_space,
             flags,
+            clip_root: None,
         }
     }
 
