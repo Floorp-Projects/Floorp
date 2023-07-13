@@ -6318,6 +6318,27 @@
     "bug_numbers": [1330255],
     "description": "Number of the use of navigator.connection."
   },
+  "NETWORK_SESSION_AT_900FD": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "session reached 900 fd limit sockets",
+    "bug_numbers": [1260218],
+    "alert_emails": ["necko@mozilla.com"]
+  },
+  "NETWORK_PROBE_MAXCOUNT": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 50,
+    "high": 1000,
+    "n_buckets": 10,
+    "description": "Result of nsSocketTransportService::ProbeMaxCount()",
+    "bug_numbers": [1260218],
+    "alert_emails": ["necko@mozilla.com"]
+  },
   "FIND_PLUGINS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
