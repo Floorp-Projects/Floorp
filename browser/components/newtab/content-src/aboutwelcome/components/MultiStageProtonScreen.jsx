@@ -19,7 +19,6 @@ import { HeroImage } from "./HeroImage";
 import { OnboardingVideo } from "./OnboardingVideo";
 import { AdditionalCTA } from "./AdditionalCTA";
 import { EmbeddedMigrationWizard } from "./EmbeddedMigrationWizard";
-import { AddonsPicker } from "./AddonsPicker";
 
 export const MultiStageProtonScreen = props => {
   const { autoAdvance, handleAction, order } = props;
@@ -138,17 +137,12 @@ export class ProtonScreen extends React.PureComponent {
     isFirstScreen,
     isLastScreen,
     includeNoodles,
-    isVideoOnboarding,
-    isAddonsPicker
+    isVideoOnboarding
   ) {
     const screenClass = `screen-${this.props.order % 2 !== 0 ? 1 : 2}`;
 
     if (isVideoOnboarding) {
       return "with-video";
-    }
-
-    if (isAddonsPicker) {
-      return "addons-picker";
     }
 
     return `${isFirstScreen ? `dialog-initial` : ``} ${
@@ -199,15 +193,6 @@ export class ProtonScreen extends React.PureComponent {
     const { content } = this.props;
     return (
       <React.Fragment>
-        {content.tiles &&
-        content.tiles.type === "addons-picker" &&
-        content.tiles.data ? (
-          <AddonsPicker
-            content={content}
-            message_id={this.props.messageId}
-            handleAction={this.props.handleAction}
-          />
-        ) : null}
         {content.tiles &&
         content.tiles.type === "colorway" &&
         content.tiles.colorways ? (
@@ -383,8 +368,7 @@ export class ProtonScreen extends React.PureComponent {
           isFirstScreen,
           isLastScreen,
           includeNoodles,
-          content?.video_container,
-          content.tiles?.type === "addons-picker"
+          content?.video_container
         )
       : "";
     const isEmbeddedMigration = content.tiles?.type === "migration-wizard";
