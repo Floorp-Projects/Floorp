@@ -120,7 +120,7 @@ describe("breakpoints", () => {
       throw new Error("no breakpoint");
     }
 
-    await dispatch(actions.disableBreakpoint(breakpoint));
+    await dispatch(actions.disableBreakpoint(cx, breakpoint));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
@@ -209,7 +209,7 @@ describe("breakpoints", () => {
     if (!bp) {
       throw new Error("no bp");
     }
-    await dispatch(actions.removeBreakpoint(bp));
+    await dispatch(actions.removeBreakpoint(cx, bp));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
   });
@@ -264,7 +264,7 @@ describe("breakpoints", () => {
       throw new Error("no breakpoint");
     }
 
-    await dispatch(actions.disableBreakpoint(breakpoint));
+    await dispatch(actions.disableBreakpoint(cx, breakpoint));
 
     const bp = selectors.getBreakpoint(getState(), loc1);
     expect(bp && bp.disabled).toBe(true);
@@ -299,7 +299,7 @@ describe("breakpoints", () => {
       throw new Error("no breakpoint");
     }
 
-    await dispatch(actions.disableBreakpoint(bp));
+    await dispatch(actions.disableBreakpoint(cx, bp));
 
     bp = selectors.getBreakpoint(getState(), loc);
     if (!bp) {
@@ -308,7 +308,7 @@ describe("breakpoints", () => {
 
     expect(bp && bp.disabled).toBe(true);
 
-    await dispatch(actions.enableBreakpoint(bp));
+    await dispatch(actions.enableBreakpoint(cx, bp));
 
     bp = selectors.getBreakpoint(getState(), loc);
     expect(bp && !bp.disabled).toBe(true);
@@ -360,7 +360,7 @@ describe("breakpoints", () => {
     await dispatch(actions.addBreakpoint(cx, loc1));
     await dispatch(actions.addBreakpoint(cx, loc2));
 
-    await dispatch(actions.toggleAllBreakpoints(true));
+    await dispatch(actions.toggleAllBreakpoints(cx, true));
 
     let bp1 = selectors.getBreakpoint(getState(), loc1);
     let bp2 = selectors.getBreakpoint(getState(), loc2);
@@ -368,7 +368,7 @@ describe("breakpoints", () => {
     expect(bp1 && bp1.disabled).toBe(true);
     expect(bp2 && bp2.disabled).toBe(true);
 
-    await dispatch(actions.toggleAllBreakpoints(false));
+    await dispatch(actions.toggleAllBreakpoints(cx, false));
 
     bp1 = selectors.getBreakpoint(getState(), loc1);
     bp2 = selectors.getBreakpoint(getState(), loc2);
@@ -413,7 +413,7 @@ describe("breakpoints", () => {
     if (!bp) {
       throw new Error("no bp");
     }
-    await dispatch(actions.toggleDisabledBreakpoint(bp));
+    await dispatch(actions.toggleDisabledBreakpoint(cx, bp));
     bp = getBp();
     expect(bp && bp.disabled).toBe(true);
   });
@@ -472,7 +472,7 @@ describe("breakpoints", () => {
       throw new Error("no breakpoint");
     }
 
-    await dispatch(actions.disableBreakpoint(bp));
+    await dispatch(actions.disableBreakpoint(cx, bp));
 
     bp = selectors.getBreakpoint(getState(), loc);
     expect(bp && bp.options.condition).toBe(undefined);
@@ -513,7 +513,7 @@ describe("breakpoints", () => {
 
     const breakpoint = selectors.getBreakpointsList(getState())[0];
 
-    await dispatch(actions.removeBreakpoint(breakpoint));
+    await dispatch(actions.removeBreakpoint(cx, breakpoint));
 
     const breakpointList = selectors.getPendingBreakpointList(getState());
     expect(breakpointList.length).toBe(0);

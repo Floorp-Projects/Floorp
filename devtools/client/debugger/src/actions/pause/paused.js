@@ -39,7 +39,7 @@ export function paused(pauseInfo) {
     // paused for any other reason.
     const hiddenBreakpoint = getHiddenBreakpoint(getState());
     if (hiddenBreakpoint) {
-      dispatch(removeBreakpoint(hiddenBreakpoint));
+      dispatch(removeBreakpoint(cx, hiddenBreakpoint));
     }
 
     // The THREAD_STATE's "paused" resource only passes the top level stack frame,
@@ -57,16 +57,16 @@ export function paused(pauseInfo) {
     const selectedFrame = getSelectedFrame(getState(), thread);
     if (selectedFrame) {
       await dispatch(selectLocation(cx, selectedFrame.location));
+    }
 
-      // Fetch the previews for variables visible in the currently selected paused stackframe
-      await dispatch(fetchScopes(selectedFrame));
+    // Fetch the previews for variables visible in the currently selected paused stackframe
+    await dispatch(fetchScopes(cx));
 
-      // Run after fetching scoping data so that it may make use of the sourcemap
-      // expression mappings for local variables.
-      const atException = why.type == "exception";
-      if (!atException || !isEvaluatingExpression(getState(), thread)) {
-        await dispatch(evaluateExpressions(selectedFrame));
-      }
+    // Run after fetching scoping data so that it may make use of the sourcemap
+    // expression mappings for local variables.
+    const atException = why.type == "exception";
+    if (!atException || !isEvaluatingExpression(getState(), thread)) {
+      await dispatch(evaluateExpressions(cx));
     }
   };
 }
