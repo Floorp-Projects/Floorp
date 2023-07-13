@@ -1149,8 +1149,10 @@ const ASRouterTriggerListeners = new Map([
             },
             result.message
           );
-          callout.panelId = panelId;
-          this._callouts.set(win, callout);
+          if (callout) {
+            callout.panelId = panelId;
+            this._callouts.set(win, callout);
+          }
         }
       },
 
@@ -1204,6 +1206,160 @@ const ASRouterTriggerListeners = new Map([
               existingCallout.cleanup();
             }
             if (!this._callouts.has(win) && isPDFJS) {
+              this.showFeatureCalloutTour(win, browser, tab.linkedPanel, {
+                source: "open",
+              });
+            }
+            break;
+          }
+          case "TabClose": {
+            const existingCallout = this._callouts.get(win);
+            if (
+              existingCallout &&
+              existingCallout.panelId === tab.linkedPanel
+            ) {
+              existingCallout.callout.endTour(true);
+              existingCallout.cleanup();
+            }
+            break;
+          }
+        }
+      },
+
+      onBrowserWindow(win) {
+        this.onLocationChange(win.gBrowser.selectedBrowser);
+      },
+    },
+  ],
+  [
+    "newtabFeatureCalloutCheck",
+    {
+      id: "newtabFeatureCalloutCheck",
+      _initialized: false,
+      _triggerHandler: null,
+      _callouts: new WeakMap(),
+
+      init(triggerHandler) {
+        if (!this._initialized) {
+          this.onLocationChange = this.onLocationChange.bind(this);
+          this.onStateChange = this.onLocationChange;
+          lazy.EveryWindow.registerCallback(
+            this.id,
+            win => {
+              this.onBrowserWindow(win);
+              win.addEventListener("TabSelect", this);
+              win.addEventListener("TabClose", this);
+              win.addEventListener("SSTabRestored", this);
+              win.gBrowser.addTabsProgressListener(this);
+            },
+            win => {
+              win.removeEventListener("TabSelect", this);
+              win.removeEventListener("TabClose", this);
+              win.removeEventListener("SSTabRestored", this);
+              win.gBrowser.removeTabsProgressListener(this);
+            }
+          );
+          this._initialized = true;
+        }
+        this._triggerHandler = triggerHandler;
+      },
+
+      uninit() {
+        if (this._initialized) {
+          lazy.EveryWindow.unregisterCallback(this.id);
+          this._initialized = false;
+          this._triggerHandler = null;
+          for (let key of ChromeUtils.nondeterministicGetWeakMapKeys(
+            this._callouts
+          )) {
+            const item = this._callouts.get(key);
+            if (item) {
+              item.callout.endTour(true);
+              item.cleanup();
+              this._callouts.delete(key);
+            }
+          }
+        }
+      },
+
+      async showFeatureCalloutTour(win, browser, panelId, context) {
+        const result = await this._triggerHandler(browser, {
+          id: "newtabFeatureCalloutCheck",
+          context,
+        });
+        if (result.message.trigger) {
+          const callout = lazy.FeatureCalloutBroker.showCustomFeatureCallout(
+            {
+              win,
+              browser,
+              pref: { name: "browser.newtab.feature-tour" },
+              location: "newtab",
+              theme: { preset: "newtab", simulateContent: true },
+              cleanup: () => {
+                this._callouts.delete(win);
+              },
+            },
+            result.message
+          );
+          if (callout) {
+            callout.panelId = panelId;
+            this._callouts.set(win, callout);
+          }
+        }
+      },
+
+      onLocationChange(browser) {
+        const tabbrowser = browser.getTabBrowser();
+        if (browser !== tabbrowser.selectedBrowser) {
+          return;
+        }
+        const win = tabbrowser.ownerGlobal;
+        const tab = tabbrowser.selectedTab;
+        const existingCallout = this._callouts.get(win);
+        const isNewtabOrHome =
+          browser.currentURI.spec.startsWith("about:home") ||
+          browser.currentURI.spec.startsWith("about:newtab");
+        if (
+          existingCallout &&
+          (existingCallout.panelId !== tab.linkedPanel || !isNewtabOrHome)
+        ) {
+          existingCallout.callout.endTour(true);
+          existingCallout.cleanup();
+        }
+        if (!this._callouts.has(win) && isNewtabOrHome && tab.linkedPanel) {
+          this.showFeatureCalloutTour(win, browser, tab.linkedPanel, {
+            source: "open",
+          });
+        }
+      },
+
+      handleEvent(event) {
+        const tab = event.target;
+        const win = tab.ownerGlobal;
+        const { gBrowser } = win;
+        if (!gBrowser) {
+          return;
+        }
+        switch (event.type) {
+          case "SSTabRestored":
+            if (tab !== gBrowser.selectedTab) {
+              return;
+            }
+          // fall through
+          case "TabSelect": {
+            const browser = gBrowser.getBrowserForTab(tab);
+            const existingCallout = this._callouts.get(win);
+            const isNewtabOrHome =
+              browser.currentURI.spec.startsWith("about:home") ||
+              browser.currentURI.spec.startsWith("about:newtab");
+            if (
+              existingCallout &&
+              (existingCallout.panelId !== tab.linkedPanel || !isNewtabOrHome)
+            ) {
+              existingCallout.callout.endTour(true);
+              existingCallout.cleanup();
+            }
+            if (!this._callouts.has(win) && isNewtabOrHome) {
               this.showFeatureCalloutTour(win, browser, tab.linkedPanel, {
                 source: "open",
               });

@@ -1424,6 +1424,47 @@ export class FeatureCallout {
         "button-border-active": "Highlight",
       },
     },
+    newtab: {
+      all: {
+        background: "var(--newtab-background-color-secondary, #FFF)",
+        color: "var(--newtab-text-primary-color, WindowText)",
+        border:
+          "color-mix(in srgb, var(--newtab-background-color-secondary, #FFF) 80%, #000)",
+        "accent-color": "SelectedItem",
+        "button-background": "color-mix(in srgb, transparent 93%, #000)",
+        "button-color": "var(--newtab-text-primary-color, WindowText)",
+        "button-border": "transparent",
+        "button-background-hover": "color-mix(in srgb, transparent 88%, #000)",
+        "button-color-hover": "var(--newtab-text-primary-color, WindowText)",
+        "button-border-hover": "transparent",
+        "button-background-active": "color-mix(in srgb, transparent 80%, #000)",
+        "button-color-active": "var(--newtab-text-primary-color, WindowText)",
+        "button-border-active": "transparent",
+      },
+      dark: {
+        background: "var(--newtab-background-color-secondary, #42414D)",
+        border:
+          "color-mix(in srgb, var(--newtab-background-color-secondary, #42414D) 80%, #FFF)",
+        "button-background": "color-mix(in srgb, transparent 80%, #000)",
+        "button-background-hover": "color-mix(in srgb, transparent 65%, #000)",
+        "button-background-active": "color-mix(in srgb, transparent 55%, #000)",
+      },
+      hcm: {
+        background: "-moz-dialog",
+        color: "-moz-dialogtext",
+        border: "-moz-dialogtext",
+        "accent-color": "LinkText",
+        "button-background": "ButtonFace",
+        "button-color": "ButtonText",
+        "button-border": "ButtonText",
+        "button-background-hover": "ButtonText",
+        "button-color-hover": "ButtonFace",
+        "button-border-hover": "ButtonText",
+        "button-background-active": "ButtonText",
+        "button-color-active": "ButtonFace",
+        "button-border-active": "ButtonText",
+      },
+    },
     // These colors are intended to inherit the user's theme properties from the
     // main chrome window, for callouts to be anchored to chrome elements.
     // Specific schemes aren't necessary since the theme and frontend

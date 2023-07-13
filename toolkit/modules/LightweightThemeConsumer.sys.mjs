@@ -151,6 +151,28 @@ const toolkitVariableMap = [
       lwtProperty: "toolbar_field_highlight_text",
     },
   ],
+  // The following 3 are given to the new tab page by contentTheme.js. They are
+  // also exposed here, in the browser chrome, so popups anchored on top of the
+  // new tab page can use them to avoid clashing with the new tab page content.
+  [
+    "--newtab-background-color",
+    {
+      lwtProperty: "ntp_background",
+      processColor(rgbaChannels) {
+        if (!rgbaChannels) {
+          return null;
+        }
+        const { r, g, b } = rgbaChannels;
+        // Drop alpha channel
+        return `rgb(${r}, ${g}, ${b})`;
+      },
+    },
+  ],
+  [
+    "--newtab-background-color-secondary",
+    { lwtProperty: "ntp_card_background" },
+  ],
+  ["--newtab-text-primary-color", { lwtProperty: "ntp_text" }],
 ];
 
 export function LightweightThemeConsumer(aDocument) {

@@ -43,10 +43,11 @@ async function openURLInNewTab(window, url) {
   return BrowserTestUtils.openNewForegroundTab(window.gBrowser, url);
 }
 
-const pdfMatch = sinon.match(
-  val =>
+const pdfMatch = sinon.match(val => {
+  return (
     val?.id === "pdfJsFeatureCalloutCheck" && val?.context?.source === "open"
-);
+  );
+});
 
 const validateCalloutCustomPosition = (element, positionOverride, doc) => {
   const browserBox = doc.querySelector("hbox#browser");
@@ -138,10 +139,51 @@ const testMessage = {
   },
 };
 
+const newtabTestMessage = {
+  id: "TEST_MESSAGE",
+  template: "feature_callout",
+  content: {
+    id: "TEST_MESSAGE",
+    template: "multistage",
+    backdrop: "transparent",
+    transitions: false,
+    disableHistoryUpdates: true,
+    tour_pref_name: "browser.newtab.feature-tour",
+    tour_pref_default_value: JSON.stringify({
+      screen: "TEST_MESSAGE_1",
+      complete: false,
+    }),
+    screens: [
+      {
+        id: "TEST_MESSAGE_1",
+        parent_selector: "hbox#browser",
+        content: {
+          position: "callout",
+          callout_position_override: {
+            top: "45px",
+            right: "55px",
+          },
+          arrow_position: "top-end",
+          title: "Test callout title",
+          subtitle: "Test callout subtitle",
+          primary_button: {
+            label: "Test callout button",
+          },
+        },
+      },
+    ],
+  },
+  priority: 1,
+  targeting: "true",
+  trigger: { id: "newtabFeatureCalloutCheck" },
+};
+
 const testMessageCalloutSelector = testMessage.message.content.screens[0].id;
+const newtabTestMessageCalloutSelector =
+  newtabTestMessage.content.screens[0].id;
 
 add_setup(async function () {
-  requestLongerTimeout(2);
+  requestLongerTimeout(3);
 });
 
 // Test that a feature callout message can be loaded into ASRouter and displayed
@@ -612,9 +654,13 @@ add_task(
 add_task(
   async function feature_callout_does_not_appear_when_opening_background_pdf_tab() {
     const sandbox = sinon.createSandbox();
-    const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
-    sendTriggerStub.withArgs(pdfMatch).resolves(testMessage);
-    sendTriggerStub.callThrough();
+    const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
+    const TEST_MESSAGES = [newtabTestMessage];
+    getMessagesStub.returns(TEST_MESSAGES);
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders(
+      ASRouter.state.providers.filter(p => p.id === "onboarding")
+    );
 
     const win = await BrowserTestUtils.openNewBrowserWindow();
     const doc = win.document;
@@ -634,6 +680,196 @@ add_task(
 
     await BrowserTestUtils.closeWindow(win);
     sandbox.restore();
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+  }
+);
+
+add_task(
+  async function newtab_feature_callout_appears_in_browser_chrome_on_newtab() {
+    const sandbox = sinon.createSandbox();
+    const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
+    const TEST_MESSAGES = [newtabTestMessage];
+    getMessagesStub.returns(TEST_MESSAGES);
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+
+    const win = await BrowserTestUtils.openNewBrowserWindow();
+    const doc = win.document;
+    const tab1 = await BrowserTestUtils.openNewForegroundTab(
+      win.gBrowser,
+      "about:newtab"
+    );
+    tab1.focus();
+    await waitForCalloutScreen(doc, newtabTestMessageCalloutSelector);
+    ok(
+      doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
+      "Newtab feature callout rendered when opening a focused newtab"
+    );
+
+    BrowserTestUtils.removeTab(tab1);
+    await waitForRemoved(tab1);
+    ok(
+      !doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
+      "Feature callout disappears after closing new tab"
+    );
+
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+  }
+);
+
+add_task(
+  async function newtab_feature_callout_does_not_appear_when_opening_background_newtab_tab() {
+    const sandbox = sinon.createSandbox();
+    const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
+    const TEST_MESSAGES = [newtabTestMessage];
+    getMessagesStub.returns(TEST_MESSAGES);
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+
+    const win = await BrowserTestUtils.openNewBrowserWindow();
+    const doc = win.document;
+
+    await BrowserTestUtils.openNewForegroundTab(
+      win.gBrowser,
+      "about:preferences"
+    );
+    const tab2 = await BrowserTestUtils.addTab(win.gBrowser, "about:newtab");
+    ok(
+      !doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
+      "Newtab feature callout not rendered when opening a background newtab"
+    );
+
+    BrowserTestUtils.removeTab(tab2);
+    await waitForRemoved(tab2);
+    ok(
+      !doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
+      "Feature callout still not rendered after closing background tab"
+    );
+
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+  }
+);
+
+add_task(
+  async function newtab_feature_callout_does_not_appear_in_browser_chrome_on_new_window() {
+    const sandbox = sinon.createSandbox();
+    const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
+    const TEST_MESSAGES = [newtabTestMessage];
+    getMessagesStub.returns(TEST_MESSAGES);
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+
+    const win = await BrowserTestUtils.openNewBrowserWindow();
+    await openURLInWindow(win, "about:newtab");
+    const doc = win.document;
+
+    await waitForCalloutScreen(doc, newtabTestMessageCalloutSelector);
+    ok(
+      doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
+      "Newtab Feature Callout is in the browser chrome of first window when a message is available"
+    );
+
+    const win2 = await BrowserTestUtils.openNewBrowserWindow();
+    await openURLInWindow(win2, "about:newtab");
+    const doc2 = win2.document;
+    ok(
+      !doc2.querySelector(`.${newtabTestMessageCalloutSelector}`),
+      "Newtab Feature Callout is not in the browser chrome new window when a message is available"
+    );
+
+    await BrowserTestUtils.closeWindow(win);
+    await BrowserTestUtils.closeWindow(win2);
+    sandbox.restore();
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+  }
+);
+
+add_task(
+  async function feature_callout_disappears_when_navigating_from_newtab_to_pdf_url_in_same_tab() {
+    const sandbox = sinon.createSandbox();
+    const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
+    const TEST_MESSAGES = [newtabTestMessage];
+    getMessagesStub.returns(TEST_MESSAGES);
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+
+    const win = await BrowserTestUtils.openNewBrowserWindow();
+
+    const doc = win.document;
+    const tab1 = await BrowserTestUtils.openNewForegroundTab(
+      win.gBrowser,
+      "about:newtab"
+    );
+    tab1.focus();
+    await waitForCalloutScreen(doc, newtabTestMessageCalloutSelector);
+    ok(
+      doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
+      "Feature callout rendered when opening a newtab"
+    );
+
+    BrowserTestUtils.loadURIString(win.gBrowser, PDF_TEST_URL);
+    await BrowserTestUtils.waitForLocationChange(win.gBrowser, PDF_TEST_URL);
+    await waitForRemoved(doc);
+
+    ok(
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
+      "Feature callout not rendered on original tab after navigating to PDF"
+    );
+
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+  }
+);
+
+add_task(
+  async function feature_callout_disappears_when_navigating_from_newtab_to_pdf_url_in_different_tab() {
+    const sandbox = sinon.createSandbox();
+    const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
+    const TEST_MESSAGES = [newtabTestMessage];
+    getMessagesStub.returns(TEST_MESSAGES);
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
+
+    const win = await BrowserTestUtils.openNewBrowserWindow();
+
+    const doc = win.document;
+    const tab1 = await BrowserTestUtils.openNewForegroundTab(
+      win.gBrowser,
+      "about:newtab"
+    );
+    tab1.focus();
+    await waitForCalloutScreen(doc, newtabTestMessageCalloutSelector);
+    ok(
+      doc.querySelector(`.${newtabTestMessageCalloutSelector}`),
+      "Feature callout rendered when opening a newtab"
+    );
+
+    const tab2 = await BrowserTestUtils.openNewForegroundTab(
+      win.gBrowser,
+      PDF_TEST_URL
+    );
+    tab2.focus();
+    await waitForRemoved(doc);
+
+    ok(
+      !doc.querySelector(`.${testMessageCalloutSelector}`),
+      "Newtab feature callout not rendered after navigating to PDF"
+    );
+
+    await BrowserTestUtils.closeWindow(win);
+    sandbox.restore();
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
   }
 );
 
@@ -652,9 +888,11 @@ add_task(
       };
 
     const sandbox = sinon.createSandbox();
-    const sendTriggerStub = sandbox.stub(ASRouter, "sendTriggerMessage");
-    sendTriggerStub.withArgs(pdfMatch).resolves(pdfTestMessage);
-    sendTriggerStub.callThrough();
+    const getMessagesStub = sandbox.stub(FeatureCalloutMessages, "getMessages");
+    const TEST_MESSAGES = [pdfTestMessage.message];
+    getMessagesStub.returns(TEST_MESSAGES);
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
 
     const win = await BrowserTestUtils.openNewBrowserWindow();
     await openURLInWindow(win, PDF_TEST_URL);
@@ -693,6 +931,8 @@ add_task(
     BrowserTestUtils.removeTab(tab);
     await BrowserTestUtils.closeWindow(win);
     sandbox.restore();
+    await ASRouter._updateMessageProviders();
+    await ASRouter.loadMessagesFromAllProviders();
   }
 );
 
