@@ -221,6 +221,8 @@ add_setup(async function () {
       // Disable the telemetry client ID (and its associated UI warning).
       // browser_html_discover_view_clientid.js covers this functionality.
       ["browser.discovery.enabled", false],
+      // Disable mixed-content upgrading as this test is expecting an HTTP load
+      ["security.mixed_content.upgrade_display_content", false],
     ],
   });
 });
@@ -641,6 +643,8 @@ add_task(async function checkDiscopaneNotice() {
       ["datareporting.healthreport.uploadEnabled", true],
       ["extensions.htmlaboutaddons.recommendations.enabled", true],
       ["extensions.recommendations.hideNotice", false],
+      // Disable mixed-content upgrading as this test is expecting an HTTP load
+      ["security.mixed_content.upgrade_display_content", false],
     ],
   });
 
