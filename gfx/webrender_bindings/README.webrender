@@ -7,7 +7,7 @@ To build and run WebRender in Gecko:
 2. Build using |mach build|.
    You don't need anything special in your mozconfig for local builds; webrender will be built by default.
 3. Run with |MOZ_WEBRENDER=1| in your environment. e.g. |MOZ_WEBRENDER=1 ./mach run|.
-   Alternatively, you can set the gfx.webrender.enabled pref to true (browser restart required).
+   Alternatively, you can set the gfx.webrender.all pref to true (browser restart required).
    Note that on Linux, acceleration is disabled by default and it needs to be enabled for WebRender to work.
    On Linux you can enable acceleration by putting |MOZ_ACCELERATED=1| in your environment, or setting layers.acceleration.force-enabled to true in about:config.
 4. Verify WebRender is enabled. You can do this by going to about:support and checking the "Compositing" line in the Graphics section. It should say "WebRender".
