@@ -24,36 +24,19 @@ EncodeNetEqInput::EncodeNetEqInput(std::unique_ptr<Generator> generator,
     : generator_(std::move(generator)),
       encoder_(std::move(encoder)),
       input_duration_ms_(input_duration_ms) {
-  CreatePacket();
+  event_ = GetNextEvent();
 }
 
 EncodeNetEqInput::~EncodeNetEqInput() = default;
 
-absl::optional<int64_t> EncodeNetEqInput::NextPacketTime() const {
-  RTC_DCHECK(packet_data_);
-  return static_cast<int64_t>(packet_data_->time_ms);
-}
-
-absl::optional<int64_t> EncodeNetEqInput::NextOutputEventTime() const {
-  return next_output_event_ms_;
-}
-
-std::unique_ptr<NetEqInput::PacketData> EncodeNetEqInput::PopPacket() {
-  RTC_DCHECK(packet_data_);
-  // Grab the packet to return...
-  std::unique_ptr<PacketData> packet_to_return = std::move(packet_data_);
-  // ... and line up the next packet for future use.
-  CreatePacket();
-
-  return packet_to_return;
-}
-
-void EncodeNetEqInput::AdvanceOutputEvent() {
-  next_output_event_ms_ += kOutputPeriodMs;
+std::unique_ptr<NetEqInput::Event> EncodeNetEqInput::PopEvent() {
+  std::unique_ptr<NetEqInput::Event> event_to_return = std::move(event_);
+  event_ = GetNextEvent();
+  return event_to_return;
 }
 
 bool EncodeNetEqInput::ended() const {
-  return next_output_event_ms_ > input_duration_ms_;
+  return next_output_event_ms_ > input_duration_ms_ + kOutputPeriodMs;
 }
 
 absl::optional<RTPHeader> EncodeNetEqInput::NextHeader() const {
@@ -61,9 +44,23 @@ absl::optional<RTPHeader> EncodeNetEqInput::NextHeader() const {
   return packet_data_->header;
 }
 
+std::unique_ptr<NetEqInput::Event> EncodeNetEqInput::GetNextEvent() {
+  std::unique_ptr<NetEqInput::Event> event;
+  if (packet_data_ == nullptr) {
+    CreatePacket();
+  }
+  if (next_output_event_ms_ < packet_data_->timestamp_ms_) {
+    event = std::make_unique<GetAudio>(next_output_event_ms_);
+    next_output_event_ms_ += kOutputPeriodMs;
+    return event;
+  }
+  event = std::move(packet_data_);
+  CreatePacket();
+  return event;
+}
+
 void EncodeNetEqInput::CreatePacket() {
   // Create a new PacketData object.
-  RTC_DCHECK(!packet_data_);
   packet_data_.reset(new NetEqInput::PacketData);
   RTC_DCHECK_EQ(packet_data_->payload.size(), 0);
 
@@ -86,7 +83,7 @@ void EncodeNetEqInput::CreatePacket() {
   packet_data_->header.timestamp = info.encoded_timestamp;
   packet_data_->header.payloadType = info.payload_type;
   packet_data_->header.sequenceNumber = sequence_number_++;
-  packet_data_->time_ms = next_packet_time_ms_;
+  packet_data_->timestamp_ms_ = next_packet_time_ms_;
   next_packet_time_ms_ += num_blocks * kOutputPeriodMs;
 }
 

@@ -27,37 +27,27 @@ InitialPacketInserterNetEqInput::InitialPacketInserterNetEqInput(
       packets_to_insert_(number_of_initial_packets),
       sample_rate_hz_(sample_rate_hz) {}
 
-absl::optional<int64_t> InitialPacketInserterNetEqInput::NextPacketTime()
-    const {
-  return source_->NextPacketTime();
+absl::optional<int64_t> InitialPacketInserterNetEqInput::NextEventTime() const {
+  return source_->NextEventTime();
 }
 
-absl::optional<int64_t> InitialPacketInserterNetEqInput::NextOutputEventTime()
-    const {
-  return source_->NextOutputEventTime();
-}
-
-absl::optional<NetEqInput::SetMinimumDelayInfo>
-InitialPacketInserterNetEqInput::NextSetMinimumDelayInfo() const {
-  return source_->NextSetMinimumDelayInfo();
-}
-
-std::unique_ptr<InitialPacketInserterNetEqInput::PacketData>
-InitialPacketInserterNetEqInput::PopPacket() {
+std::unique_ptr<NetEqInput::Event> InitialPacketInserterNetEqInput::PopEvent() {
+  std::unique_ptr<NetEqInput::Event> event;
   if (!first_packet_) {
-    first_packet_ = source_->PopPacket();
-    if (!first_packet_) {
-      // The source has no packets, so we should not insert any dummy packets.
-      packets_to_insert_ = 0;
+    event = source_->PopEvent();
+    if (event == nullptr || event->type() != Event::Type::kPacketData) {
+      return event;
     }
+    first_packet_ = std::move(event);
   }
   if (packets_to_insert_ > 0) {
     RTC_CHECK(first_packet_);
-    auto dummy_packet = std::unique_ptr<PacketData>(new PacketData());
-    dummy_packet->header = first_packet_->header;
-    dummy_packet->payload = rtc::Buffer(first_packet_->payload.data(),
-                                        first_packet_->payload.size());
-    dummy_packet->time_ms = first_packet_->time_ms;
+    std::unique_ptr<PacketData> dummy_packet = std::make_unique<PacketData>();
+    PacketData& first_packet = static_cast<PacketData&>(*first_packet_);
+    dummy_packet->header = first_packet.header;
+    dummy_packet->payload =
+        rtc::Buffer(first_packet.payload.data(), first_packet.payload.size());
+    dummy_packet->timestamp_ms_ = first_packet.timestamp_ms_;
     dummy_packet->header.sequenceNumber -= packets_to_insert_;
     // This assumes 20ms per packet.
     dummy_packet->header.timestamp -=
@@ -65,15 +55,7 @@ InitialPacketInserterNetEqInput::PopPacket() {
     packets_to_insert_--;
     return dummy_packet;
   }
-  return source_->PopPacket();
-}
-
-void InitialPacketInserterNetEqInput::AdvanceSetMinimumDelay() {
-  source_->AdvanceSetMinimumDelay();
-}
-
-void InitialPacketInserterNetEqInput::AdvanceOutputEvent() {
-  source_->AdvanceOutputEvent();
+  return source_->PopEvent();
 }
 
 bool InitialPacketInserterNetEqInput::ended() const {
