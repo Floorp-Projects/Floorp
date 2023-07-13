@@ -321,7 +321,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "04d4e7291e5515f3f88369a9ddb5ecce49fd4512"
+        "revision": "9e827631c857ac8d8d64eac3a6999c5643d463d4"
     },
     "cy": {
         "pin": false,
@@ -951,7 +951,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "8abd6b7a73993ea07fe90ddffefa20bd46507967"
+        "revision": "d465499a6600ccc2c8e768134cfb0966687cbff1"
     },
     "it": {
         "pin": false,
@@ -1461,7 +1461,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "947ac3f91c991e33df2d8ade93ab0babae003ada"
+        "revision": "92110fd6e211ab7ec84ef64b47a55969d890fba1"
     },
     "ro": {
         "pin": false,
