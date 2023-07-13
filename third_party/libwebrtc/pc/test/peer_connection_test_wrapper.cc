@@ -21,9 +21,13 @@
 #include "api/audio/audio_mixer.h"
 #include "api/create_peerconnection_factory.h"
 #include "api/sequence_checker.h"
-#include "api/video_codecs/builtin_video_decoder_factory.h"
 #include "api/video_codecs/builtin_video_encoder_factory.h"
 #include "api/video_codecs/video_decoder_factory.h"
+#include "api/video_codecs/video_decoder_factory_template.h"
+#include "api/video_codecs/video_decoder_factory_template_dav1d_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp8_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_libvpx_vp9_adapter.h"
+#include "api/video_codecs/video_decoder_factory_template_open_h264_adapter.h"
 #include "api/video_codecs/video_encoder_factory.h"
 #include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -119,8 +123,12 @@ bool PeerConnectionTestWrapper::CreatePc(
       rtc::scoped_refptr<webrtc::AudioDeviceModule>(fake_audio_capture_module_),
       audio_encoder_factory, audio_decoder_factory,
       webrtc::CreateBuiltinVideoEncoderFactory(),
-      webrtc::CreateBuiltinVideoDecoderFactory(), nullptr /* audio_mixer */,
-      nullptr /* audio_processing */);
+      std::make_unique<webrtc::VideoDecoderFactoryTemplate<
+          webrtc::LibvpxVp8DecoderTemplateAdapter,
+          webrtc::LibvpxVp9DecoderTemplateAdapter,
+          webrtc::OpenH264DecoderTemplateAdapter,
+          webrtc::Dav1dDecoderTemplateAdapter>>(),
+      nullptr /* audio_mixer */, nullptr /* audio_processing */);
   if (!peer_connection_factory_) {
     return false;
   }
