@@ -27,12 +27,17 @@ async def assert_pointer_events(
         assert e["pointerType"] == pointer_type
 
 
+
 async def get_inview_center_bidi(bidi_session, context, element):
-    elem_rect = await get_element_rect(bidi_session, context=context, element=element)
-    viewport_rect = await get_viewport_rect(bidi_session, context=context)
+    elem_rect = await get_element_rect(bidi_session,
+                                       context=context,
+                                       element=element)
+    viewport_rect = await get_viewport_rect(bidi_session,
+                                            context=context)
 
     x = {
-        "left": max(0, min(elem_rect["x"], elem_rect["x"] + elem_rect["width"])),
+        "left": max(0, min(elem_rect["x"],
+                           elem_rect["x"] + elem_rect["width"])),
         "right": min(
             viewport_rect["width"],
             max(elem_rect["x"], elem_rect["x"] + elem_rect["width"]),
@@ -40,7 +45,8 @@ async def get_inview_center_bidi(bidi_session, context, element):
     }
 
     y = {
-        "top": max(0, min(elem_rect["y"], elem_rect["y"] + elem_rect["height"])),
+        "top": max(0, min(elem_rect["y"],
+                          elem_rect["y"] + elem_rect["height"])),
         "bottom": min(
             viewport_rect["height"],
             max(elem_rect["y"], elem_rect["y"] + elem_rect["height"]),
