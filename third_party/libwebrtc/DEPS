@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '585120d7ba22cd3befbb08f3d7b76f6289b22fd7',
+  'chromium_revision': '58bc6477fc20004c18e6ac8717a87cd8f5f44b13',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -25,7 +25,7 @@ vars = {
 
   # By default, download the fuchsia sdk from the public sdk directory.
   'fuchsia_sdk_cipd_prefix': 'fuchsia/sdk/gn/',
-  'fuchsia_version': 'version:12.20230326.1.1',
+  'fuchsia_version': 'version:12.20230327.0.1',
   # By default, download the fuchsia images from the fuchsia GCS bucket.
   'fuchsia_images_bucket': 'fuchsia',
   'checkout_fuchsia': False,
@@ -46,24 +46,24 @@ vars = {
 deps = {
   # TODO(kjellander): Move this to be Android-only.
   'src/base':
-    'https://chromium.googlesource.com/chromium/src/base@19525d9e2819c52df0212059d9fcae6c97540cb9',
+    'https://chromium.googlesource.com/chromium/src/base@ab3a012e5b2e22f2181d5f19d79dd7430fd35637',
   'src/build':
-    'https://chromium.googlesource.com/chromium/src/build@8bcb1a9ad0b6a57d0923267f9b4b085731b46715',
+    'https://chromium.googlesource.com/chromium/src/build@deb9d19209591465b3eb7613e795d3ce2c32dc0b',
   'src/buildtools':
-    'https://chromium.googlesource.com/chromium/src/buildtools@e376206129b67c1eac1fece21285fb2e8cbb4920',
+    'https://chromium.googlesource.com/chromium/src/buildtools@27356dca4bb789ec6262625fd9f3d16666f6e405',
   # Gradle 6.6.1. Used for testing Android Studio project generation for WebRTC.
   'src/examples/androidtests/third_party/gradle': {
     'url': 'https://chromium.googlesource.com/external/github.com/gradle/gradle.git@f2d1fb54a951d8b11d25748e4711bec8d128d7e3',
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@556c98af3cd183350ef0f344a057e545913a8eab',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@d6311c15db190e263c12da8b217a5ab6140e4a49',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@108119e25b0c2e3330625c75ca6a0b076938b6c5',
+    'https://chromium.googlesource.com/chromium/src/testing@5387be0979ad18ff80b53233be5329b838b1cfa7',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@397cae1c05b3967aa6521ba9184a2229dad44ae2',
+    'https://chromium.googlesource.com/chromium/src/third_party@2ecfa565842a8f9cf59c74d5bd6e4fdea5923bb1',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -111,7 +111,7 @@ deps = {
   'src/buildtools/clang_format/script':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/clang/tools/clang-format.git@f97059df7f8b205064625cdb5f97b56668a125ef',
   'src/buildtools/third_party/libc++/trunk':
-    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@962f2bdb7daf4af943dfd871442271f4ffbaf766',
+    'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxx.git@79a510511b03dc9a9f378ebe07c18c622b5bf349',
   'src/buildtools/third_party/libc++abi/trunk':
     'https://chromium.googlesource.com/external/github.com/llvm/llvm-project/libcxxabi.git@9643f2cf13d6935a84a30b7da7de53327733e190',
   'src/buildtools/third_party/libunwind/trunk':
@@ -336,7 +336,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@e1a389e39c0848430a99770b44841992cb24d6dc',
+    'https://chromium.googlesource.com/chromium/src/tools@5267ed3a212d53e4c0907c6442c0dcc84887752c',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -413,7 +413,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 'YDo5kiQXGCUoqcjPe5FIcd2C5dcSGRIAS__UEraSg18C',
+          'version': 'QPqCY3deY_Lq8R2HBZPqbHd4iApiVuEsI2VBdGzi3VUC',
       },
     ],
     'condition': 'checkout_android',
