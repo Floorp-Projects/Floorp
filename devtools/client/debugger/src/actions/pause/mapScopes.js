@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import {
+  getSelectedFrameId,
   getSettledSourceTextContent,
   isMapScopesEnabled,
   getSelectedFrame,
@@ -10,14 +11,13 @@ import {
   getOriginalFrameScope,
   getThreadContext,
   getFirstSourceActorForGeneratedSource,
-  getCurrentThread,
 } from "../../selectors";
 import {
   loadOriginalSourceText,
   loadGeneratedSourceText,
 } from "../sources/loadSourceText";
-import { validateSelectedFrame } from "../../utils/context";
 import { PROMISE } from "../utils/middleware/promise";
+import assert from "../../utils/assert";
 
 import { log } from "../../utils/log";
 import { isGenerated } from "../../utils/source";
@@ -30,14 +30,16 @@ import { getMappedLocation } from "../../utils/source-maps";
 const expressionRegex = /\bfp\(\)/g;
 
 export async function buildOriginalScopes(
-  selectedFrame,
+  frame,
   client,
+  cx,
+  frameId,
   generatedScopes
 ) {
-  if (!selectedFrame.originalVariables) {
+  if (!frame.originalVariables) {
     throw new TypeError("(frame.originalVariables: XScopeVariables)");
   }
-  const originalVariables = selectedFrame.originalVariables;
+  const originalVariables = frame.originalVariables;
   const frameBase = originalVariables.frameBase || "";
 
   const inputs = [];
@@ -51,7 +53,7 @@ export async function buildOriginalScopes(
   }
 
   const results = await client.evaluateExpressions(inputs, {
-    frameId: selectedFrame.id,
+    frameId,
   });
 
   const variables = {};
@@ -90,67 +92,54 @@ export function toggleMapScopes() {
 
     dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: true });
 
-    const currentThread = getCurrentThread(getState());
+    const cx = getThreadContext(getState());
 
-    // Ignore the call if there is no selected frame (we are not paused?)
-    const selectedFrame = getSelectedFrame(getState(), currentThread);
-    if (!selectedFrame) {
+    const frame = getSelectedFrame(getState(), cx.thread);
+    if (!frame) {
       return;
     }
 
-    if (getOriginalFrameScope(getState(), selectedFrame)) {
+    if (getOriginalFrameScope(getState(), frame)) {
       return;
     }
 
-    // Also ignore the call if we didn't fetch the scopes for the selected frame
-    const scopes = getGeneratedFrameScope(getState(), currentThread);
+    const scopes = getGeneratedFrameScope(getState(), frame);
     if (!scopes) {
       return;
     }
 
-    dispatch(mapScopes(selectedFrame, Promise.resolve(scopes.scope)));
+    dispatch(mapScopes(cx, Promise.resolve(scopes.scope), frame));
   };
 }
 
-export function mapScopes(selectedFrame, scopes) {
+export function mapScopes(cx, scopes, frame) {
   return async function (thunkArgs) {
-    const { getState, dispatch, client } = thunkArgs;
+    const { dispatch, client, getState } = thunkArgs;
+    assert(cx.thread == frame.thread, "Thread mismatch");
 
     await dispatch({
       type: "MAP_SCOPES",
-      selectedFrame,
+      cx,
+      thread: cx.thread,
+      frame,
       [PROMISE]: (async function () {
-        if (selectedFrame.isOriginal && selectedFrame.originalVariables) {
-          return buildOriginalScopes(selectedFrame, client, scopes);
+        if (frame.isOriginal && frame.originalVariables) {
+          const frameId = getSelectedFrameId(getState(), cx.thread);
+          return buildOriginalScopes(frame, client, cx, frameId, scopes);
         }
 
-        // getMappedScopes is only specific to the sources where we map the variables
-        // in scope and so only need a thread context. Assert that we are on the same thread
-        // before retrieving a thread context.
-        validateSelectedFrame(getState(), selectedFrame);
-        const threadCx = getThreadContext(getState());
-
-        return dispatch(getMappedScopes(threadCx, scopes, selectedFrame));
+        return dispatch(getMappedScopes(cx, scopes, frame));
       })(),
     });
   };
 }
 
-/**
- * Get scopes mapped for a precise location.
- *
- * @param {Object} threadCx
- *        Context specific to a given thread.
- * @param {Promise} scopes
- *        Can be null. Result of Commands.js's client.getFrameScopes
- * @param {Objects locations
- *        Frame object, or custom object with 'location' and 'generatedLocation' attributes.
- */
-export function getMappedScopes(threadCx, scopes, locations) {
+export function getMappedScopes(cx, scopes, frame) {
   return async function (thunkArgs) {
     const { getState, dispatch } = thunkArgs;
-    const generatedSource = locations.generatedLocation.source;
-    const source = locations.location.source;
+    const generatedSource = frame.generatedLocation.source;
+
+    const source = frame.location.source;
 
     if (
       !isMapScopesEnabled(getState()) ||
@@ -164,7 +153,7 @@ export function getMappedScopes(threadCx, scopes, locations) {
     }
 
     // Load source text for the original source
-    await dispatch(loadOriginalSourceText({ cx: threadCx, source }));
+    await dispatch(loadOriginalSourceText({ cx, source }));
 
     const generatedSourceActor = getFirstSourceActorForGeneratedSource(
       getState(),
@@ -174,22 +163,21 @@ export function getMappedScopes(threadCx, scopes, locations) {
     // Also load source text for its corresponding generated source
     await dispatch(
       loadGeneratedSourceText({
-        cx: threadCx,
+        cx,
         sourceActor: generatedSourceActor,
       })
     );
 
     try {
-      const content =
-        // load original source text content
-        getSettledSourceTextContent(getState(), locations.location);
+      // load original source text content
+      const content = getSettledSourceTextContent(getState(), frame.location);
 
       return await buildMappedScopes(
         source,
         content && isFulfilled(content)
           ? content.value
           : { type: "text", value: "", contentType: undefined },
-        locations,
+        frame,
         await scopes,
         thunkArgs
       );
@@ -200,14 +188,11 @@ export function getMappedScopes(threadCx, scopes, locations) {
   };
 }
 
-/**
- * Used to map variables used within conditional and log breakpoints.
- */
 export function getMappedScopesForLocation(location) {
   return async function (thunkArgs) {
     const { dispatch, getState } = thunkArgs;
-    const threadCx = getThreadContext(getState());
+    const cx = getThreadContext(getState());
     const mappedLocation = await getMappedLocation(location, thunkArgs);
-    return dispatch(getMappedScopes(threadCx, null, mappedLocation));
+    return dispatch(getMappedScopes(cx, null, mappedLocation));
   };
 }

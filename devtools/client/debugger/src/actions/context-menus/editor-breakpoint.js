@@ -43,7 +43,7 @@ export function showEditorEditBreakpointContextMenu(event, breakpoint) {
       isSourceOnSourceMapIgnoreList(state, selectedSource);
 
     const items = [
-      removeBreakpointItem(breakpoint, dispatch),
+      removeBreakpointItem(cx, breakpoint, dispatch),
       toggleDisabledBreakpointItem(
         cx,
         breakpoint,
@@ -62,7 +62,7 @@ export function showEditorEditBreakpointContextMenu(event, breakpoint) {
 
     items.push(
       { type: "separator" },
-      removeBreakpointsOnLineItem(selectedLocation, dispatch),
+      removeBreakpointsOnLineItem(cx, selectedLocation, dispatch),
       breakpoint.disabled
         ? enableBreakpointsOnLineItem(
             cx,
@@ -123,12 +123,12 @@ const addBreakpointItem = (cx, location, dispatch) => ({
   accelerator: formatKeyShortcut(L10N.getStr("toggleBreakpoint.key")),
 });
 
-const removeBreakpointItem = (breakpoint, dispatch) => ({
+const removeBreakpointItem = (cx, breakpoint, dispatch) => ({
   id: "node-menu-remove-breakpoint",
   label: L10N.getStr("editor.removeBreakpoint"),
   accesskey: L10N.getStr("shortcuts.toggleBreakpoint.accesskey"),
   disabled: false,
-  click: () => dispatch(removeBreakpoint(breakpoint)),
+  click: () => dispatch(removeBreakpoint(cx, breakpoint)),
   accelerator: formatKeyShortcut(L10N.getStr("toggleBreakpoint.key")),
 });
 
@@ -200,7 +200,7 @@ const toggleDisabledBreakpointItem = (
       breakpoint.location.line,
       isSelectedSourceOnIgnoreList
     ),
-    click: () => dispatch(toggleDisabledBreakpoint(breakpoint)),
+    click: () => dispatch(toggleDisabledBreakpoint(cx, breakpoint)),
     ...(breakpoint.disabled
       ? {
           id: "node-menu-enable-breakpoint",
@@ -249,7 +249,7 @@ const removeBreakpointsOnLineItem = (cx, location, dispatch) => ({
   accesskey: L10N.getStr("breakpointMenuItem.removeAllAtLine.accesskey"),
   disabled: false,
   click: () =>
-    dispatch(removeBreakpointsAtLine(location.source.id, location.line)),
+    dispatch(removeBreakpointsAtLine(cx, location.source.id, location.line)),
 });
 
 const enableBreakpointsOnLineItem = (
@@ -268,7 +268,7 @@ const enableBreakpointsOnLineItem = (
     isSelectedSourceOnIgnoreList
   ),
   click: () =>
-    dispatch(enableBreakpointsAtLine(location.source.id, location.line)),
+    dispatch(enableBreakpointsAtLine(cx, location.source.id, location.line)),
 });
 
 const disableBreakpointsOnLineItem = (cx, location, dispatch) => ({
@@ -277,5 +277,5 @@ const disableBreakpointsOnLineItem = (cx, location, dispatch) => ({
   accesskey: L10N.getStr("breakpointMenuItem.disableAllAtLine.accesskey"),
   disabled: false,
   click: () =>
-    dispatch(disableBreakpointsAtLine(location.source.id, location.line)),
+    dispatch(disableBreakpointsAtLine(cx, location.source.id, location.line)),
 });

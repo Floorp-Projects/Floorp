@@ -126,7 +126,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       accesskey: deleteSelfKey,
       disabled: false,
       click: () => {
-        dispatch(removeBreakpoint(breakpoint));
+        dispatch(removeBreakpoint(cx, breakpoint));
       },
     };
 
@@ -143,7 +143,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       label: deleteOthersLabel,
       accesskey: deleteOthersKey,
       disabled: false,
-      click: () => dispatch(removeBreakpoints(otherBreakpoints)),
+      click: () => dispatch(removeBreakpoints(cx, otherBreakpoints)),
     };
 
     const enableSelfItem = {
@@ -156,7 +156,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
         checkSourceOnIgnoreList(breakpoint.location.source)
       ),
       click: () => {
-        dispatch(toggleDisabledBreakpoint(breakpoint));
+        dispatch(toggleDisabledBreakpoint(cx, breakpoint));
       },
     };
 
@@ -169,7 +169,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
         breakpoint.location.line,
         checkSourceOnIgnoreList(breakpoint.location.source)
       ),
-      click: () => dispatch(toggleAllBreakpoints(false)),
+      click: () => dispatch(toggleAllBreakpoints(cx, false)),
     };
 
     const enableOthersItem = {
@@ -181,7 +181,8 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
         breakpoint.location.line,
         checkSourceOnIgnoreList(breakpoint.location.source)
       ),
-      click: () => dispatch(toggleBreakpoints(false, otherDisabledBreakpoints)),
+      click: () =>
+        dispatch(toggleBreakpoints(cx, false, otherDisabledBreakpoints)),
     };
 
     const disableSelfItem = {
@@ -190,7 +191,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       accesskey: disableSelfKey,
       disabled: false,
       click: () => {
-        dispatch(toggleDisabledBreakpoint(breakpoint));
+        dispatch(toggleDisabledBreakpoint(cx, breakpoint));
       },
     };
 
@@ -199,14 +200,15 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       label: disableAllLabel,
       accesskey: disableAllKey,
       disabled: false,
-      click: () => dispatch(toggleAllBreakpoints(true)),
+      click: () => dispatch(toggleAllBreakpoints(cx, true)),
     };
 
     const disableOthersItem = {
       id: "node-menu-disable-others",
       label: disableOthersLabel,
       accesskey: disableOthersKey,
-      click: () => dispatch(toggleBreakpoints(true, otherEnabledBreakpoints)),
+      click: () =>
+        dispatch(toggleBreakpoints(cx, true, otherEnabledBreakpoints)),
     };
 
     const enableDbgStatementItem = {
