@@ -51,8 +51,8 @@ class FakeDataChannelController
                   std::move(my_weak_ptr), std::string(label),
                   transport_available_, init, signaling_thread_,
                   network_thread_);
-          if (transport_available_ && channel->sid().HasValue()) {
-            AddSctpDataStream(channel->sid());
+          if (transport_available_ && channel->sid_n().HasValue()) {
+            AddSctpDataStream(channel->sid_n());
           }
           return channel;
         });
@@ -103,8 +103,9 @@ class FakeDataChannelController
     signaling_thread_->PostTask(SafeTask(signaling_safety_.flag(), [this, sid] {
       // Unlike the real SCTP transport, act like the closing procedure finished
       // instantly.
-      auto it = absl::c_find_if(connected_channels_,
-                                [&](const auto* c) { return c->sid() == sid; });
+      auto it = absl::c_find_if(connected_channels_, [&](const auto* c) {
+        return c->sid_s() == sid;
+      });
       // This path mimics the DCC's OnChannelClosed handler since the FDCC
       // (this class) doesn't have a transport that would do that.
       if (it != connected_channels_.end())

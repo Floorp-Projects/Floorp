@@ -192,7 +192,8 @@ class SctpDataChannel : public DataChannelInterface {
 
   // Sets the SCTP sid and adds to transport layer if not set yet. Should only
   // be called once.
-  void SetSctpSid(const StreamId& sid);
+  void SetSctpSid_s(StreamId sid);
+  void SetSctpSid_n(StreamId sid);
 
   // The remote side started the closing procedure by resetting its outgoing
   // stream (our incoming stream). Sets state to kClosing.
@@ -215,7 +216,14 @@ class SctpDataChannel : public DataChannelInterface {
   // stats purposes (see also `GetStats()`).
   int internal_id() const { return internal_id_; }
 
-  const StreamId& sid() const { return id_; }
+  StreamId sid_s() const {
+    RTC_DCHECK_RUN_ON(signaling_thread_);
+    return id_s_;
+  }
+  StreamId sid_n() const {
+    RTC_DCHECK_RUN_ON(network_thread_);
+    return id_n_;
+  }
 
   // Reset the allocator for internal ID values for testing, so that
   // the internal IDs generated are predictable. Test only.
@@ -250,12 +258,12 @@ class SctpDataChannel : public DataChannelInterface {
   bool QueueSendDataMessage(const DataBuffer& buffer);
 
   void SendQueuedControlMessages();
-  void QueueControlMessage(const rtc::CopyOnWriteBuffer& buffer);
   bool SendControlMessage(const rtc::CopyOnWriteBuffer& buffer);
 
   rtc::Thread* const signaling_thread_;
   rtc::Thread* const network_thread_;
-  StreamId id_;
+  StreamId id_s_ RTC_GUARDED_BY(signaling_thread_);
+  StreamId id_n_ RTC_GUARDED_BY(network_thread_);
   const int internal_id_;
   const std::string label_;
   const std::string protocol_;
