@@ -71,31 +71,32 @@ const DesktopFileParser = {
                     }
                 }
             }
+            let desktopEntry = desktopFileInfo["fileInfo"]["Desktop Entry"];
             if (lang_env_without_codeset) {
-                let name_value = desktopFileInfo["fileInfo"]["Desktop Entry"][`Name[${lang_env_without_codeset}]`];
+                let name_value = desktopEntry[`Name[${lang_env_without_codeset}]`];
                 if (name_value) {
                     return name_value;
                 }
             }
             if (lang_env_without_codeset_and_modifier) {
-                let name_value = desktopFileInfo["fileInfo"]["Desktop Entry"][`Name[${lang_env_without_codeset_and_modifier}]`];
+                let name_value = desktopEntry[`Name[${lang_env_without_codeset_and_modifier}]`];
                 if (name_value) {
                     return name_value;
                 }
             }
             if (lang_env_without_country_and_codeset) {
-                let name_value = desktopFileInfo["fileInfo"]["Desktop Entry"][`Name[${lang_env_without_country_and_codeset}]`];
+                let name_value = desktopEntry[`Name[${lang_env_without_country_and_codeset}]`];
                 if (name_value) {
                     return name_value;
                 }
             }
             if (lang_env_without_country_and_codeset_and_modifier) {
-                let name_value = desktopFileInfo["fileInfo"]["Desktop Entry"][`Name[${lang_env_without_country_and_codeset_and_modifier}]`];
+                let name_value = desktopEntry[`Name[${lang_env_without_country_and_codeset_and_modifier}]`];
                 if (name_value) {
                     return name_value;
                 }
             }
         }
-        return desktopFileInfo["fileInfo"]["Desktop Entry"]["Name"];
+        return desktopEntry["Name"];
     }
 };

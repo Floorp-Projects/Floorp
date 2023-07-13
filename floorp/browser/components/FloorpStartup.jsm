@@ -109,7 +109,7 @@ Quote: https://userChrome.org | https://github.com/topics/userchrome
             let ucconpth = OS.Path.join(userChromecssPath, 'userContent.css')
             IOUtils.writeUTF8(ucconpth, `
 /*************************************************************************************************************************************************************************************************************************************************************
- 
+
 "userContent.css" is a custom CSS file that can be used to specify CSS style rules for Floorp's intenal site using "chrome" privileges.
 For instance, if you want to apply CSS at "about:newtab" and "about:home", you can use the following CSS rule:
 
@@ -131,21 +131,20 @@ NOTE: You can use the userContent.css file without change preferences (about:con
 
         }
     });
-    
+
     if(isUpdated && Services.prefs.getBoolPref("floorp.enable.multitab")){
         Services.prefs.setBoolPref("floorp.tabbar.style",1)
         Services.prefs.deleteBranch("floorp.tabbar.style")
-    } 
+    }
 
     if(isFirstRun){
         setTimeout(() => {
-          let fxViewButton = CustomizableUI.getWidget("firefox-view-button");
-          if (fxViewButton) {
-              CustomizableUI.moveWidgetWithinArea("firefox-view-button", 1000);
-          } else {
-              console.error("Can't find the Firefox (Floorp) View button.");
-          }
-
+            let fxViewButton = CustomizableUI.getWidget("firefox-view-button");
+            if (fxViewButton) {
+                CustomizableUI.moveWidgetWithinArea("firefox-view-button", 1000);
+            } else {
+                console.error("Can't find the Firefox (Floorp) View button.");
+            }
         }, 2000);
     }
 }
