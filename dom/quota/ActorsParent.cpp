@@ -788,10 +788,6 @@ class FinalizeOriginEvictionOp : public OriginOperationBase {
     MOZ_ASSERT(!NS_IsMainThread());
   }
 
-  void Dispatch();
-
-  void RunOnIOThreadImmediately();
-
  private:
   ~FinalizeOriginEvictionOp() = default;
 
@@ -6739,8 +6735,8 @@ void QuotaManager::FinalizeOriginEviction(
   RefPtr<FinalizeOriginEvictionOp> op =
       new FinalizeOriginEvictionOp(mOwningThread, std::move(aLocks));
 
-  if (IsOnIOThread()) {
-    op->RunOnIOThreadImmediately();
+  if (IsOnBackgroundThread()) {
+    op->RunImmediately();
   } else {
     op->Dispatch();
   }
@@ -7007,25 +7003,15 @@ CollectOriginsHelper::Run() {
   return NS_OK;
 }
 
-void FinalizeOriginEvictionOp::Dispatch() {
-  MOZ_ASSERT(!NS_IsMainThread());
+void FinalizeOriginEvictionOp::Open() {
+  AssertIsOnOwningThread();
   MOZ_ASSERT(GetState() == State_Initial);
 
-  SetState(State_DirectoryOpenPending);
+  AdvanceState();
 
-  MOZ_ALWAYS_SUCCEEDS(mOwningThread->Dispatch(this, NS_DISPATCH_NORMAL));
+  QM_TRY(MOZ_TO_RESULT(DirectoryOpen()), QM_VOID,
+         [this](const nsresult rv) { Finish(rv); });
 }
-
-void FinalizeOriginEvictionOp::RunOnIOThreadImmediately() {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(GetState() == State_Initial);
-
-  SetState(State_DirectoryWorkOpen);
-
-  MOZ_ALWAYS_SUCCEEDS(this->Run());
-}
-
-void FinalizeOriginEvictionOp::Open() { MOZ_CRASH("Shouldn't get here!"); }
 
 nsresult FinalizeOriginEvictionOp::DoDirectoryWork(
     QuotaManager& aQuotaManager) {
