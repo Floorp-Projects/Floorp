@@ -1555,9 +1555,7 @@ class RTC_EXPORT PeerConnectionFactoryInterface
   virtual rtc::scoped_refptr<VideoTrackInterface> CreateVideoTrack(
       rtc::scoped_refptr<VideoTrackSourceInterface> source,
       absl::string_view label) = 0;
-  // TODO(bugs.webrtc.org/15017): Deprecate this function once Chrome
-  // has been updated - it can't land as deprecated.
-  // ABSL_DEPRECATED("Use version with scoped_refptr")
+  ABSL_DEPRECATED("Use version with scoped_refptr")
   virtual rtc::scoped_refptr<VideoTrackInterface> CreateVideoTrack(
       const std::string& label,
       VideoTrackSourceInterface* source) {
