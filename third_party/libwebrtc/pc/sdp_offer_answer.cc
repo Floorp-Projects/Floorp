@@ -3134,7 +3134,7 @@ void SdpOfferAnswerHandler::OnOperationsChainEmpty() {
   }
 }
 
-absl::optional<bool> SdpOfferAnswerHandler::is_caller() {
+absl::optional<bool> SdpOfferAnswerHandler::is_caller() const {
   RTC_DCHECK_RUN_ON(signaling_thread());
   return is_caller_;
 }
@@ -3234,17 +3234,63 @@ void SdpOfferAnswerHandler::AllocateSctpSids() {
     return;
   }
 
-  absl::optional<rtc::SSLRole> role =
-      network_thread()->BlockingCall([this, is_caller = is_caller()] {
-        RTC_DCHECK_RUN_ON(network_thread());
-        return pc_->GetSctpSslRole_n(is_caller);
-      });
+  absl::optional<rtc::SSLRole> role = network_thread()->BlockingCall([this] {
+    RTC_DCHECK_RUN_ON(network_thread());
+    return pc_->GetSctpSslRole_n();
+  });
+
+  if (!role) {
+    role = GuessSslRole();
+  }
 
   if (role) {
     // TODO(webrtc:11547): Make this call on the network thread too once
     // `AllocateSctpSids` has been updated.
     data_channel_controller()->AllocateSctpSids(*role);
   }
+}
+
+absl::optional<rtc::SSLRole> SdpOfferAnswerHandler::GuessSslRole() const {
+  RTC_DCHECK_RUN_ON(signaling_thread());
+  if (!pc_->sctp_mid())
+    return absl::nullopt;
+
+  // TODO(bugs.webrtc.org/13668): This guesswork is guessing wrong (returning
+  // SSL_CLIENT = ACTIVE) if remote offer has role ACTIVE, but we'll be able
+  // to detect that by looking at the SDP.
+  //
+  // The phases of establishing an SCTP session are:
+  //
+  // Offerer:
+  //
+  // * Before negotiation: Neither is_caller nor sctp_mid exists.
+  // * After setting an offer as local description: is_caller is known (true),
+  //   sctp_mid is known, but we don't know the SSL role for sure (or if we'll
+  //   eventually get an SCTP session).
+  // * After setting an answer as the remote description: We know is_caller,
+  //   sctp_mid and that we'll get the SCTP channel established (m-section
+  //   wasn't rejected).
+  // * Special case: The SCTP  m-section was rejected: Close datachannels.
+  // * We MAY know the SSL role if we offered actpass and got back active or
+  //   passive; if the other end is a webrtc implementation, it will be active.
+  // * After the TLS handshake: We have a definitive answer on the SSL role.
+  //
+  // Answerer:
+  //
+  // * After setting an offer as remote description: We know is_caller (false).
+  // * If there was an SCTP session, we know the SCTP mid. We also know the
+  //   SSL role, since if the remote offer was actpass or passive, we'll answer
+  //   active, and if the remote offer was active, we're passive.
+  // * Special case: No SCTP m= line. We don't know for sure if the remote
+  //   doesn't support it or just didn't offer it. Not sure what we do in this
+  //   case (logic would suggest fire a `negotiationneeded` event and generate a
+  //   subsequent offer, but this needs to be tested).
+  // * After the TLS handshake: We know that TLS obeyed the protocol. There
+  //   should be an error surfaced somewhere if it didn't.
+  // * "Guessing" should always be correct if we get an SCTP session and are not
+  //   the offerer.
+
+  return is_caller() ? rtc::SSL_SERVER : rtc::SSL_CLIENT;
 }
 
 bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {
