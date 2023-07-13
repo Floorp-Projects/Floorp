@@ -117,10 +117,6 @@ bool InternalDataChannelInit::IsValid() const {
   return true;
 }
 
-SctpSidAllocator::SctpSidAllocator() {
-  sequence_checker_.Detach();
-}
-
 StreamId SctpSidAllocator::AllocateSid(rtc::SSLRole role) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
   int potential_sid = (role == rtc::SSL_CLIENT) ? 0 : 1;
@@ -389,9 +385,7 @@ void SctpDataChannel::OnTransportChannelCreated() {
 
   connected_to_transport_ = true;
 
-  // The sid may have been unassigned when controller_->ConnectDataChannel was
-  // done. So always add the streams even if connected_to_transport_ is true.
-  if (id_.HasValue() && connected_to_transport_) {
+  if (id_.HasValue()) {
     network_thread_->BlockingCall(
         [c = controller_.get(), sid = id_] { c->AddSctpDataStream(sid); });
   }
@@ -475,9 +469,7 @@ void SctpDataChannel::OnDataReceived(DataMessageType type,
 void SctpDataChannel::OnTransportReady() {
   RTC_DCHECK_RUN_ON(signaling_thread_);
 
-  // TODO(tommi, hta): We don't need the `writable_` flag for SCTP datachannels.
-  // Remove it and just rely on `connected_to_transport_` instead.
-  // In practice the transport is configured inside
+  // TODO(bugs.webrtc.org/11547): The transport is configured inside
   // `PeerConnection::SetupDataChannelTransport_n`, which results in
   // `SctpDataChannel` getting the OnTransportChannelCreated callback, and then
   // that's immediately followed by calling `transport->SetDataSink` which is
@@ -488,7 +480,6 @@ void SctpDataChannel::OnTransportReady() {
   // be on for the below `Send*` calls, which currently do a BlockingCall
   // from the signaling thread to the network thread.
   RTC_DCHECK(connected_to_transport_);
-  writable_ = true;
 
   SendQueuedControlMessages();
   SendQueuedDataMessages();
@@ -544,8 +535,8 @@ void SctpDataChannel::UpdateState() {
           WriteDataChannelOpenAckMessage(&payload);
           SendControlMessage(payload);
         }
-        if (writable_ && (handshake_state_ == kHandshakeReady ||
-                          handshake_state_ == kHandshakeWaitingForAck)) {
+        if (handshake_state_ == kHandshakeReady ||
+            handshake_state_ == kHandshakeWaitingForAck) {
           SetState(kOpen);
           // If we have received buffers before the channel got writable.
           // Deliver them now.
@@ -717,7 +708,6 @@ void SctpDataChannel::QueueControlMessage(
 
 bool SctpDataChannel::SendControlMessage(const rtc::CopyOnWriteBuffer& buffer) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
-  RTC_DCHECK(writable_);
   RTC_DCHECK(connected_to_transport_);
   RTC_DCHECK(id_.HasValue());
 
