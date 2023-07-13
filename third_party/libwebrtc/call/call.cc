@@ -1402,16 +1402,10 @@ void Call::DeliverRtpPacket(
     packet.set_arrival_time(Timestamp::Micros(packet_time_us));
   }
 
-  // We might get RTP keep-alive packets in accordance with RFC6263 section 4.6.
-  // These are empty (zero length payload) RTP packets with an unsignaled
-  // payload type.
-  const bool is_keep_alive_packet = packet.payload_size() == 0;
-  RTC_DCHECK(media_type == MediaType::AUDIO || media_type == MediaType::VIDEO ||
-             is_keep_alive_packet);
   NotifyBweOfReceivedPacket(packet, media_type);
 
+  event_log_->Log(std::make_unique<RtcEventRtpPacketIncoming>(packet));
   if (media_type != MediaType::AUDIO && media_type != MediaType::VIDEO) {
-    RTC_DCHECK(is_keep_alive_packet);
     return;
   }
 
@@ -1432,7 +1426,6 @@ void Call::DeliverRtpPacket(
       return;
     }
   }
-  event_log_->Log(std::make_unique<RtcEventRtpPacketIncoming>(packet));
 
   // RateCounters expect input parameter as int, save it as int,
   // instead of converting each time it is passed to RateCounter::Add below.

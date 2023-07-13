@@ -18,11 +18,13 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
+#include "api/media_types.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/test/mock_audio_mixer.h"
 #include "api/test/video/function_video_encoder_factory.h"
 #include "api/transport/field_trial_based_config.h"
+#include "api/units/timestamp.h"
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
 #include "audio/audio_receive_stream.h"
 #include "audio/audio_send_stream.h"
@@ -42,6 +44,7 @@ namespace {
 
 using ::testing::_;
 using ::testing::Contains;
+using ::testing::MockFunction;
 using ::testing::NiceMock;
 using ::testing::StrictMock;
 
@@ -321,6 +324,45 @@ TEST(CallTest, MultipleFlexfecReceiveStreamsProtectingSingleVideoStream) {
       call->DestroyFlexfecReceiveStream(s);
     }
   }
+}
+
+TEST(CallTest,
+     DeliverRtpPacketOfTypeAudioTriggerOnUndemuxablePacketHandlerIfNotDemuxed) {
+  CallHelper call(/*use_null_audio_processing=*/false);
+  MockFunction<bool(const RtpPacketReceived& parsed_packet)>
+      un_demuxable_packet_handler;
+
+  RtpPacketReceived packet;
+  packet.set_arrival_time(Timestamp::Millis(1));
+  EXPECT_CALL(un_demuxable_packet_handler, Call);
+  call->Receiver()->DeliverRtpPacket(
+      MediaType::AUDIO, packet, un_demuxable_packet_handler.AsStdFunction());
+}
+
+TEST(CallTest,
+     DeliverRtpPacketOfTypeVideoTriggerOnUndemuxablePacketHandlerIfNotDemuxed) {
+  CallHelper call(/*use_null_audio_processing=*/false);
+  MockFunction<bool(const RtpPacketReceived& parsed_packet)>
+      un_demuxable_packet_handler;
+
+  RtpPacketReceived packet;
+  packet.set_arrival_time(Timestamp::Millis(1));
+  EXPECT_CALL(un_demuxable_packet_handler, Call);
+  call->Receiver()->DeliverRtpPacket(
+      MediaType::VIDEO, packet, un_demuxable_packet_handler.AsStdFunction());
+}
+
+TEST(CallTest,
+     DeliverRtpPacketOfTypeAnyDoesNotTriggerOnUndemuxablePacketHandler) {
+  CallHelper call(/*use_null_audio_processing=*/false);
+  MockFunction<bool(const RtpPacketReceived& parsed_packet)>
+      un_demuxable_packet_handler;
+
+  RtpPacketReceived packet;
+  packet.set_arrival_time(Timestamp::Millis(1));
+  EXPECT_CALL(un_demuxable_packet_handler, Call).Times(0);
+  call->Receiver()->DeliverRtpPacket(
+      MediaType::ANY, packet, un_demuxable_packet_handler.AsStdFunction());
 }
 
 TEST(CallTest, RecreatingAudioStreamWithSameSsrcReusesRtpState) {

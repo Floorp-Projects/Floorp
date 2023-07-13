@@ -37,7 +37,7 @@ index 13248a482a..d6e1d1cea1 100644
    configuration.outgoing_transport = rtp_transport;
  
 diff --git a/call/call.cc b/call/call.cc
-index ccfed35785..02f8e71d80 100644
+index b55492e53f..46c1dd3b9e 100644
 --- a/call/call.cc
 +++ b/call/call.cc
 @@ -478,12 +478,14 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
