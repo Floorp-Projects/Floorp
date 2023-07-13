@@ -149,7 +149,7 @@ class StreamResetHandlerTest : public testing::Test {
     }
 
     std::vector<ReconfigurationResponseParameter> responses;
-    absl::optional<SctpPacket> p = SctpPacket::Parse(payload);
+    absl::optional<SctpPacket> p = SctpPacket::Parse(payload, DcSctpOptions());
     if (!p.has_value()) {
       EXPECT_TRUE(false);
       return {};
@@ -504,7 +504,8 @@ TEST_F(StreamResetHandlerTest, SendOutgoingResetRetransmitOnInProgress) {
   std::vector<uint8_t> payload = callbacks_.ConsumeSentPacket();
   ASSERT_FALSE(payload.empty());
 
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet, SctpPacket::Parse(payload));
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet,
+                              SctpPacket::Parse(payload, DcSctpOptions()));
   ASSERT_THAT(packet.descriptors(), SizeIs(1));
   ASSERT_HAS_VALUE_AND_ASSIGN(
       ReConfigChunk reconfig2,
