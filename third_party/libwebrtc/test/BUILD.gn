@@ -139,8 +139,6 @@ rtc_library("video_test_common") {
     "frame_generator_capturer.h",
     "mappable_native_buffer.cc",
     "mappable_native_buffer.h",
-    "test_video_capturer.cc",
-    "test_video_capturer.h",
     "video_codec_settings.h",
     "video_decoder_proxy_factory.h",
     "video_encoder_nullable_proxy_factory.h",
@@ -151,6 +149,7 @@ rtc_library("video_test_common") {
     ":fileutils",
     ":frame_utils",
     ":scoped_key_value_config",
+    ":test_video_capturer",
     "../api:array_view",
     "../api:create_frame_generator",
     "../api:frame_generator_api",
@@ -201,6 +200,7 @@ if (!build_with_chromium) {
         "mac_capturer.mm",
       ]
       deps = [
+        ":test_video_capturer",
         ":video_test_common",
         "../api:libjingle_peerconnection_api",
         "../api:media_stream_interface",
@@ -221,7 +221,10 @@ if (!build_with_chromium) {
       "platform_video_capturer.cc",
       "platform_video_capturer.h",
     ]
-    deps = [ ":video_test_common" ]
+    deps = [
+      ":test_video_capturer",
+      ":video_test_common",
+    ]
     absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
     if (is_mac || is_ios) {
       deps += [ ":video_test_mac" ]
