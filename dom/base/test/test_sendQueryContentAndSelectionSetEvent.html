@@ -14,9 +14,13 @@
 <pre id="test">
 <script type="application/javascript">
 
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+
 SimpleTest.waitForExplicitFinish();
 
-const kLineBreak = navigator.platform.indexOf("Win") == 0 ? "\r\n" : "\n";
+const kLineBreak = navigator.platform.indexOf("Win") == 0 && !AppConstants.NIGHTLY_BUILD ? "\r\n" : "\n";
 
 SimpleTest.waitForFocus(async () => {
   const gUtils = window.windowUtils;

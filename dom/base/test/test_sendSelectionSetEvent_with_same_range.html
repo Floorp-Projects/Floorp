@@ -7,8 +7,10 @@
 <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
 <script>
 "use strict";
-
-const kLineBreak = navigator.platform.indexOf("Win") == 0 ? "\r\n" : "\n";
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
+const kLineBreak = navigator.platform.indexOf("Win") == 0 && !AppConstants.NIGHTLY_BUILD ? "\r\n" : "\n";
 
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async () => {

@@ -158,6 +158,9 @@ const nsITextInputProcessorCallback = Ci.nsITextInputProcessorCallback;
 const nsIInterfaceRequestor = Ci.nsIInterfaceRequestor;
 const nsIWebNavigation = Ci.nsIWebNavigation;
 const nsIDocShell = Ci.nsIDocShell;
+const { AppConstants } = ChromeUtils.importESModule(
+  "resource://gre/modules/AppConstants.sys.mjs"
+);
 
 function waitForTick() {
   return new Promise(resolve => { SimpleTest.executeSoon(resolve); });
@@ -184,8 +187,8 @@ function getHTMLEditorIMESupport(aWindow)
 const kIsWin = (navigator.platform.indexOf("Win") == 0);
 const kIsMac = (navigator.platform.indexOf("Mac") == 0);
 
-const kLFLen = kIsWin ? 2 : 1;
-const kLF = kIsWin ? "\r\n" : "\n";
+const kLFLen = (kIsWin && !AppConstants.NIGHTLY_BUILD) ? 2 : 1;
+const kLF = (kIsWin && !AppConstants.NIGHTLY_BUILD) ? "\r\n" : "\n";
 
 function checkQueryContentResult(aResult, aMessage)
 {
