@@ -303,7 +303,7 @@
 
   class MozTreecol extends MozElements.BaseControl {
     static get observedAttributes() {
-      return ["primary"];
+      return ["primary", ...super.observedAttributes];
     }
 
     static get inheritedAttributes() {
@@ -411,7 +411,8 @@
       this._resizeObserver = null;
     }
 
-    attributeChangedCallback() {
+    attributeChangedCallback(name, oldValue, newValue) {
+      super.attributeChangedCallback(name, oldValue, newValue);
       this._invalidate();
     }
 
