@@ -9,17 +9,17 @@
 <!--There is a dynamic import before the import map tag, so the import map-->
 <!--cannot be accepted according to the spec.-->
 <!--And because the import map is rejected, so the module specifier-->
-<!--"./module_simpleExport.js" won't be remapped to-->
-<!--"./scope1/module_simpleExport.js".-->
+<!--"./module_simpleExport.mjs" won't be remapped to-->
+<!--"./scope1/module_simpleExport.mjs".-->
 
 <script>
-  import("./module_simpleExport.js");
+  import("./module_simpleExport.mjs");
 </script>
 
 <script type="importmap" onerror='importMapError()'>
 {
   "imports": {
-    "./module_simpleExport.js": "./scope1/module_simpleExport.js"
+    "./module_simpleExport.mjs": "./scope1/module_simpleExport.mjs"
   }
 }
 </script>
@@ -33,7 +33,7 @@
   }
 
   function testLoaded() {
-    import("./module_simpleExport.js").then((ns) => {
+    import("./module_simpleExport.mjs").then((ns) => {
       ok(ns.x == 42, 'Check simple imported value result: ' + ns.x);
       ok(hasError, "onerror of the import map should be called.");
     }).catch((e) => {

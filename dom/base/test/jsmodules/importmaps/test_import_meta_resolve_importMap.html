@@ -8,7 +8,7 @@
 <script type="importmap">
 {
   "imports": {
-    "simple": "./module_simpleExport.js"
+    "simple": "./module_simpleExport.mjs"
   }
 }
 </script>
@@ -27,7 +27,7 @@
 
 <script type="module">
   ok(import.meta.resolve("simple") ==
-     "chrome://mochitests/content/chrome/dom/base/test/jsmodules/importmaps/module_simpleExport.js",
+     "chrome://mochitests/content/chrome/dom/base/test/jsmodules/importmaps/module_simpleExport.mjs",
      "calling import.meta.resolve with a specifier from import map.");
   wasRun = true;
 </script>

@@ -14,12 +14,12 @@
 <script type="importmap">
   {
     "imports": {
-      "bare": "./good/module_0.js",
-      "./bad/module_1.js": "./good/module_1.js",
-      "./bad/module_2.js": "./good/module_2.js",
-      "./bad/module_3.js": "./good/module_3.js",
-      "./bad/module_4.js": "./good/module_4.js",
-      "./bad/module_7.js": "./good/module_7.js"
+      "bare": "./good/module_0.mjs",
+      "./bad/module_1.mjs": "./good/module_1.mjs",
+      "./bad/module_2.mjs": "./good/module_2.mjs",
+      "./bad/module_3.mjs": "./good/module_3.mjs",
+      "./bad/module_4.mjs": "./good/module_4.mjs",
+      "./bad/module_7.mjs": "./good/module_7.mjs"
     }
   }
 </script>
@@ -27,36 +27,36 @@
 <!--
 Test bareword import (not supported before import map installed).
 -->
-<script type="module" src="module_importMap_with_external_script_0.js"></script>
+<script type="module" src="module_importMap_with_external_script_0.mjs"></script>
 
 <!--
 Test mapping from missing resource to existing resource (not found before
 import map installed).
 -->
-<script type="module" src="module_importMap_with_external_script_1.js"></script>
+<script type="module" src="module_importMap_with_external_script_1.mjs"></script>
 
 <!--
 Test mapping from one existing resource to another (would load wrong resource before
 import map installed).
 -->
-<script type="module" src="module_importMap_with_external_script_2.js"></script>
+<script type="module" src="module_importMap_with_external_script_2.mjs"></script>
 
 <!--
 Test mapping from one existing resource to another with circular dependency.
 -->
-<script type="module" src="module_importMap_with_external_script_3.js"></script>
+<script type="module" src="module_importMap_with_external_script_3.mjs"></script>
 
 <!--
-Test with redirect, script_6.js -> script_5.js -> script_4.js.
+Test with redirect, script_6.mjs -> script_5.mjs -> script_4.mjs.
 We redirect twice here, as sometimes one redirect can't reproduce the crash
 from bug 1835468.
 -->
-<script type="module" src="module_importMap_with_external_script_6.js"></script>
+<script type="module" src="module_importMap_with_external_script_6.mjs"></script>
 
 <!--
 Test with async attribute
 -->
-<script type="module" async src="module_importMap_with_external_script_7.js"></script>
+<script type="module" async src="module_importMap_with_external_script_7.mjs"></script>
 
 <script>
   SimpleTest.waitForExplicitFinish();
