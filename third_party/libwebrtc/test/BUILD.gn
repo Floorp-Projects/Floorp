@@ -22,6 +22,7 @@ if (!build_with_chromium) {
       ":test_common",
       ":test_renderer",
       ":test_support",
+      ":test_video_capturer",
       ":video_test_common",
     ]
 
@@ -107,6 +108,21 @@ rtc_library("frame_utils") {
   deps = [
     "../api:scoped_refptr",
     "../api/video:video_frame",
+  ]
+}
+
+rtc_library("test_video_capturer") {
+  testonly = true
+  sources = [
+    "test_video_capturer.cc",
+    "test_video_capturer.h",
+  ]
+  deps = [
+    "../api:scoped_refptr",
+    "../api/video:video_frame",
+    "../api/video:video_rtp_headers",
+    "../media:rtc_media_base",
+    "../rtc_base/synchronization:mutex",
   ]
 }
 

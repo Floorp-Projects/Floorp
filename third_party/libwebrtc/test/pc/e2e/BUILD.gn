@@ -121,6 +121,17 @@ if (!build_with_chromium) {
       ]
     }
 
+    rtc_library("test_video_capturer_video_track_source") {
+      testonly = true
+      sources = [ "media/test_video_capturer_video_track_source.h" ]
+      deps = [
+        "../..:test_video_capturer",
+        "../../../api:sequence_checker",
+        "../../../api/test/video:test_video_track_source",
+        "../../../api/video:video_frame",
+      ]
+    }
+
     rtc_library("media_helper") {
       testonly = true
       sources = [
