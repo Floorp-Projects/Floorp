@@ -132,11 +132,14 @@ class FrameGeneratorCapturer : public TestVideoCapturer {
   void ChangeResolution(size_t width, size_t height);
   void ChangeFramerate(int target_framerate);
 
+  int GetFrameWidth() const override;
+  int GetFrameHeight() const override;
+
   struct Resolution {
     int width;
     int height;
   };
-  absl::optional<Resolution> GetResolution();
+  absl::optional<Resolution> GetResolution() const;
 
   void OnOutputFormatRequest(int width,
                              int height,
@@ -177,9 +180,6 @@ class FrameGeneratorCapturer : public TestVideoCapturer {
   absl::optional<ColorSpace> fake_color_space_ RTC_GUARDED_BY(&lock_);
 
   int64_t first_frame_capture_time_;
-
-  Mutex stats_lock_;
-  absl::optional<Resolution> source_resolution_ RTC_GUARDED_BY(&stats_lock_);
 
   // Must be the last field, so it will be deconstructed first as tasks
   // in the TaskQueue access other fields of the instance of this class.

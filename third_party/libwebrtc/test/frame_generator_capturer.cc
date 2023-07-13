@@ -29,6 +29,7 @@
 namespace webrtc {
 namespace test {
 namespace {
+
 std::string TransformFilePath(std::string path) {
   static const std::string resource_prefix = "res://";
   int ext_pos = path.rfind('.');
@@ -41,6 +42,7 @@ std::string TransformFilePath(std::string path) {
   }
   return path;
 }
+
 }  // namespace
 
 FrameGeneratorCapturer::FrameGeneratorCapturer(
@@ -177,49 +179,39 @@ bool FrameGeneratorCapturer::Init() {
 }
 
 void FrameGeneratorCapturer::InsertFrame() {
-  absl::optional<Resolution> resolution;
+  MutexLock lock(&lock_);
+  if (sending_) {
+    FrameGeneratorInterface::VideoFrameData frame_data =
+        frame_generator_->NextFrame();
+    // TODO(srte): Use more advanced frame rate control to allow arbritrary
+    // fractions.
+    int decimation =
+        std::round(static_cast<double>(source_fps_) / target_capture_fps_);
+    for (int i = 1; i < decimation; ++i)
+      frame_data = frame_generator_->NextFrame();
 
-  {
-    MutexLock lock(&lock_);
-    if (sending_) {
-      FrameGeneratorInterface::VideoFrameData frame_data =
-          frame_generator_->NextFrame();
-      // TODO(srte): Use more advanced frame rate control to allow arbritrary
-      // fractions.
-      int decimation =
-          std::round(static_cast<double>(source_fps_) / target_capture_fps_);
-      for (int i = 1; i < decimation; ++i)
-        frame_data = frame_generator_->NextFrame();
-
-      VideoFrame frame =
-          VideoFrame::Builder()
-              .set_video_frame_buffer(frame_data.buffer)
-              .set_rotation(fake_rotation_)
-              .set_timestamp_us(clock_->TimeInMicroseconds())
-              .set_ntp_time_ms(clock_->CurrentNtpInMilliseconds())
-              .set_update_rect(frame_data.update_rect)
-              .set_color_space(fake_color_space_)
-              .build();
-      if (first_frame_capture_time_ == -1) {
-        first_frame_capture_time_ = frame.ntp_time_ms();
-      }
-
-      resolution = Resolution{frame.width(), frame.height()};
-
-      TestVideoCapturer::OnFrame(frame);
+    VideoFrame frame = VideoFrame::Builder()
+                           .set_video_frame_buffer(frame_data.buffer)
+                           .set_rotation(fake_rotation_)
+                           .set_timestamp_us(clock_->TimeInMicroseconds())
+                           .set_ntp_time_ms(clock_->CurrentNtpInMilliseconds())
+                           .set_update_rect(frame_data.update_rect)
+                           .set_color_space(fake_color_space_)
+                           .build();
+    if (first_frame_capture_time_ == -1) {
+      first_frame_capture_time_ = frame.ntp_time_ms();
     }
-  }
 
-  if (resolution) {
-    MutexLock lock(&stats_lock_);
-    source_resolution_ = resolution;
+    TestVideoCapturer::OnFrame(frame);
   }
 }
 
 absl::optional<FrameGeneratorCapturer::Resolution>
-FrameGeneratorCapturer::GetResolution() {
-  MutexLock lock(&stats_lock_);
-  return source_resolution_;
+FrameGeneratorCapturer::GetResolution() const {
+  FrameGeneratorInterface::Resolution resolution =
+      frame_generator_->GetResolution();
+  return Resolution{.width = static_cast<int>(resolution.width),
+                    .height = static_cast<int>(resolution.height)};
 }
 
 void FrameGeneratorCapturer::Start() {
@@ -264,6 +256,14 @@ void FrameGeneratorCapturer::ChangeFramerate(int target_framerate) {
                         << ". The framerate will be :" << effective_rate;
   }
   target_capture_fps_ = std::min(source_fps_, target_framerate);
+}
+
+int FrameGeneratorCapturer::GetFrameWidth() const {
+  return static_cast<int>(frame_generator_->GetResolution().width);
+}
+
+int FrameGeneratorCapturer::GetFrameHeight() const {
+  return static_cast<int>(frame_generator_->GetResolution().height);
 }
 
 void FrameGeneratorCapturer::OnOutputFormatRequest(

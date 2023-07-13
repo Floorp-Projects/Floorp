@@ -19,6 +19,7 @@
 
 namespace webrtc {
 namespace test {
+
 TestVideoCapturer::~TestVideoCapturer() = default;
 
 void TestVideoCapturer::OnOutputFormatRequest(
@@ -40,12 +41,12 @@ void TestVideoCapturer::OnFrame(const VideoFrame& original_frame) {
 
   VideoFrame frame = MaybePreprocess(original_frame);
 
-  bool disable_adaptation;
+  bool enable_adaptation;
   {
     MutexLock lock(&lock_);
-    disable_adaptation = disable_adaptation_;
+    enable_adaptation = enable_adaptation_;
   }
-  if (disable_adaptation) {
+  if (enable_adaptation) {
     broadcaster_.OnFrame(frame);
   }
 

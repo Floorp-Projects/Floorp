@@ -62,6 +62,16 @@ class TestVideoTrackSource : public Notifier<VideoTrackSourceInterface> {
 
   virtual void SetScreencast(bool is_screencast) = 0;
 
+  // TODO(titovartem): make next 4 methods pure virtual.
+  virtual void SetEnableAdaptation(bool enable_adaptation) {}
+
+  virtual int GetFrameWidth() const { return 0; }
+  virtual int GetFrameHeight() const { return 0; }
+
+  virtual void OnOutputFormatRequest(int width,
+                                     int height,
+                                     const absl::optional<int>& max_fps) {}
+
  protected:
   virtual rtc::VideoSourceInterface<VideoFrame>* source() = 0;
 

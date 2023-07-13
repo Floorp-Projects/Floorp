@@ -71,7 +71,9 @@ TEST(FrameGeneratorCapturerTest, ChangeResolution) {
   config.squares_video->framerate = 20;
   auto capturer = FrameGeneratorCapturer::Create(
       time.GetClock(), *time.GetTaskQueueFactory(), config);
-  EXPECT_FALSE(capturer->GetResolution());
+  EXPECT_TRUE(capturer->GetResolution());
+  EXPECT_EQ(kWidth, capturer->GetResolution()->width);
+  EXPECT_EQ(kHeight, capturer->GetResolution()->height);
   capturer->Start();
   time.AdvanceTime(TimeDelta::Seconds(1));
   ASSERT_TRUE(capturer->GetResolution());
