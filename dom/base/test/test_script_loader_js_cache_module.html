@@ -29,7 +29,7 @@ const tests = [
   {
     src: "file_script_module_single.html",
     encodeEvents: [
-      // file_script_module_single.js
+      // file_script_module_single.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module",
       "scriptloader_encode",
@@ -37,7 +37,7 @@ const tests = [
       "test_evaluated",
     ],
     decodeEvents: [
-      // file_script_module_single.js
+      // file_script_module_single.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module",
       "test_evaluated",
@@ -48,24 +48,24 @@ const tests = [
   {
     src: "file_script_module_import.html",
     encodeEvents: [
-      // file_script_module_import.js
+      // file_script_module_import.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_import_imported.js
+      // file_script_module_import_imported.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
     ],
     decodeEvents: [
-      // file_script_module_import.js
+      // file_script_module_import.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "test_evaluated",
 
-      // file_script_module_import_imported.js
+      // file_script_module_import_imported.mjs
       "scriptloader_load_bytecode",
     ],
   },
@@ -74,33 +74,33 @@ const tests = [
   {
     src: "file_script_module_import_multi.html",
     encodeEvents: [
-      // file_script_module_import_multi.js
+      // file_script_module_import_multi.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_import_multi_imported_once.js
+      // file_script_module_import_multi_imported_once.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_import_multi_imported_twice.js
+      // file_script_module_import_multi_imported_twice.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     decodeEvents: [
-      // file_script_module_import_multi.js
+      // file_script_module_import_multi.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "test_evaluated",
 
-      // file_script_module_import_multi_imported_once.js
+      // file_script_module_import_multi_imported_once.mjs
       "scriptloader_load_bytecode",
 
-      // file_script_module_import_multi_imported_twice.js
+      // file_script_module_import_multi_imported_twice.mjs
       "scriptloader_load_bytecode",
     ],
   },
@@ -109,61 +109,61 @@ const tests = [
   {
     src: "file_script_module_import_multi_elems.html",
     encodeEvents: [
-      // file_script_module_import_multi_elems_1.js
+      // file_script_module_import_multi_elems_1.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_import_multi_elems_2.js
+      // file_script_module_import_multi_elems_2.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_import_multi_elems_imported_once_1.js
+      // file_script_module_import_multi_elems_imported_once_1.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_import_multi_elems_imported_once_2.js
+      // file_script_module_import_multi_elems_imported_once_2.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_import_multi_elems_imported_once_3.js
+      // file_script_module_import_multi_elems_imported_once_3.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_import_multi_elems_imported_twice.js
+      // file_script_module_import_multi_elems_imported_twice.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     decodeEvents: [
-      // file_script_module_import_multi_elems_1.js
+      // file_script_module_import_multi_elems_1.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "test_evaluated",
 
-      // file_script_module_import_multi_elems_2.js
+      // file_script_module_import_multi_elems_2.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "test_evaluated",
 
-      // file_script_module_import_multi_elems_imported_once_1.js
+      // file_script_module_import_multi_elems_imported_once_1.mjs
       "scriptloader_load_bytecode",
 
-      // file_script_module_import_multi_elems_imported_once_2.js
+      // file_script_module_import_multi_elems_imported_once_2.mjs
       "scriptloader_load_bytecode",
 
-      // file_script_module_import_multi_elems_imported_once_3.js
+      // file_script_module_import_multi_elems_imported_once_3.mjs
       "scriptloader_load_bytecode",
 
-      // file_script_module_import_multi_elems_imported_twice.js
+      // file_script_module_import_multi_elems_imported_twice.mjs
       "scriptloader_load_bytecode",
     ],
   },
@@ -172,43 +172,43 @@ const tests = [
   {
     src: "file_script_module_import_and_element.html",
     encodeEvents: [
-      // file_script_module_import_and_element.js
+      // file_script_module_import_and_element.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_import_and_element_imported_1.js
+      // file_script_module_import_and_element_imported_1.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_import_and_element_imported_2.js
+      // file_script_module_import_and_element_imported_2.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_import_and_element_imported_3.js
+      // file_script_module_import_and_element_imported_3.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     decodeEvents: [
-      // file_script_module_import_and_element.js
+      // file_script_module_import_and_element.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "test_evaluated",
 
-      // file_script_module_import_and_element_imported_1.js
+      // file_script_module_import_and_element_imported_1.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level
 
-      // file_script_module_import_and_element_imported_2.js
+      // file_script_module_import_and_element_imported_2.mjs
       "scriptloader_load_bytecode",
 
-      // file_script_module_import_and_element_imported_3.js
+      // file_script_module_import_and_element_imported_3.mjs
       "scriptloader_load_bytecode",
     ],
   },
@@ -217,43 +217,43 @@ const tests = [
   {
     src: "file_script_module_element_and_import.html",
     encodeEvents: [
-      // file_script_module_element_and_import.js
+      // file_script_module_element_and_import.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_element_and_import_imported_1.js
+      // file_script_module_element_and_import_imported_1.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_element_and_import_imported_2.js
+      // file_script_module_element_and_import_imported_2.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_element_and_import_imported_3.js
+      // file_script_module_element_and_import_imported_3.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     decodeEvents: [
-      // file_script_module_element_and_import.js
+      // file_script_module_element_and_import.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level
       "test_evaluated",
 
-      // file_script_module_element_and_import_imported_1.js
+      // file_script_module_element_and_import_imported_1.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level
 
-      // file_script_module_element_and_import_imported_2.js
+      // file_script_module_element_and_import_imported_2.mjs
       "scriptloader_load_bytecode",
 
-      // file_script_module_element_and_import_imported_3.js
+      // file_script_module_element_and_import_imported_3.mjs
       "scriptloader_load_bytecode",
     ],
   },
@@ -262,26 +262,26 @@ const tests = [
   {
     src: "file_script_module_dynamic_import.html",
     encodeEvents: [
-      // file_script_module_dynamic_import.js
+      // file_script_module_dynamic_import.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_dynamic_import_imported.js
+      // file_script_module_dynamic_import_imported.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     decodeEvents: [
-      // file_script_module_dynamic_import.js
+      // file_script_module_dynamic_import.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "test_evaluated",
 
-      // file_script_module_dynamic_import_imported.js
+      // file_script_module_dynamic_import_imported.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
     ],
@@ -291,42 +291,42 @@ const tests = [
   {
     src: "file_script_module_dynamic_and_element.html",
     encodeEvents: [
-      // file_script_module_dynamic_and_element.js
+      // file_script_module_dynamic_and_element.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_dynamic_and_element_imported_1.js
+      // file_script_module_dynamic_and_element_imported_1.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_dynamic_and_element_imported_2.js
+      // file_script_module_dynamic_and_element_imported_2.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_dynamic_and_element_imported_3.js
+      // file_script_module_dynamic_and_element_imported_3.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     decodeEvents: [
-      // file_script_module_dynamic_and_element.js
+      // file_script_module_dynamic_and_element.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "test_evaluated",
 
-      // file_script_module_dynamic_and_element_imported_1.js
+      // file_script_module_dynamic_and_element_imported_1.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
 
-      // file_script_module_dynamic_and_element_imported_2.js
+      // file_script_module_dynamic_and_element_imported_2.mjs
       "scriptloader_load_bytecode",
 
       // file_script_module_dynamic_and_element_imported_3.js
@@ -338,45 +338,45 @@ const tests = [
   {
     src: "file_script_module_element_and_dynamic.html",
     encodeEvents: [
-      // file_script_module_element_and_dynamic.js
+      // file_script_module_element_and_dynamic.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_element_and_dynamic_imported_1.js
+      // file_script_module_element_and_dynamic_imported_1.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_element_and_dynamic_imported_2.js
+      // file_script_module_element_and_dynamic_imported_2.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_element_and_dynamic_imported_3.js
+      // file_script_module_element_and_dynamic_imported_3.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     decodeEvents: [
-      // file_script_module_element_and_dynamic.js
+      // file_script_module_element_and_dynamic.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "test_evaluated",
 
-      // file_script_module_element_and_dynamic_imported_1.js
+      // file_script_module_element_and_dynamic_imported_1.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
 
-      // file_script_module_element_and_dynamic_imported_2.js
+      // file_script_module_element_and_dynamic_imported_2.mjs
       "scriptloader_load_bytecode",
 
-      // file_script_module_element_and_dynamic_imported_3.js
+      // file_script_module_element_and_dynamic_imported_3.mjs
       "scriptloader_load_bytecode",
     ],
   },
@@ -385,43 +385,43 @@ const tests = [
   {
     src: "file_script_module_dynamic_and_static.html",
     encodeEvents: [
-      // file_script_module_dynamic_and_static.js
+      // file_script_module_dynamic_and_static.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_dynamic_and_static_imported_1.js
+      // file_script_module_dynamic_and_static_imported_1.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_dynamic_and_static_imported_2.js
+      // file_script_module_dynamic_and_static_imported_2.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_dynamic_and_static_imported_3.js
+      // file_script_module_dynamic_and_static_imported_3.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     decodeEvents: [
-      // file_script_module_dynamic_and_static.js
+      // file_script_module_dynamic_and_static.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "test_evaluated",
 
-      // file_script_module_dynamic_and_static_imported_1.js
+      // file_script_module_dynamic_and_static_imported_1.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
 
-      // file_script_module_dynamic_and_static_imported_2.js
+      // file_script_module_dynamic_and_static_imported_2.mjs
       "scriptloader_load_bytecode",
 
-      // file_script_module_dynamic_and_static_imported_3.js
+      // file_script_module_dynamic_and_static_imported_3.mjs
       "scriptloader_load_bytecode",
     ],
   },
@@ -430,43 +430,43 @@ const tests = [
   {
     src: "file_script_module_static_and_dynamic.html",
     encodeEvents: [
-      // file_script_module_static_and_dynamic.js
+      // file_script_module_static_and_dynamic.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_static_and_dynamic_imported_1.js
+      // file_script_module_static_and_dynamic_imported_1.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_static_and_dynamic_imported_2.js
+      // file_script_module_static_and_dynamic_imported_2.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
 
-      // file_script_module_static_and_dynamic_imported_3.js
+      // file_script_module_static_and_dynamic_imported_3.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     decodeEvents: [
-      // file_script_module_static_and_dynamic.js
+      // file_script_module_static_and_dynamic.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level (element)
       "test_evaluated",
 
-      // file_script_module_static_and_dynamic_imported_1.js
+      // file_script_module_static_and_dynamic_imported_1.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module", // dispatched only for top-level (dynamic)
 
-      // file_script_module_static_and_dynamic_imported_2.js
+      // file_script_module_static_and_dynamic_imported_2.mjs
       "scriptloader_load_bytecode",
 
-      // file_script_module_static_and_dynamic_imported_3.js
+      // file_script_module_static_and_dynamic_imported_3.mjs
       "scriptloader_load_bytecode",
     ],
   },
