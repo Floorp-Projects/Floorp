@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef DOM_QUOTA_RESOLVABLEORIGINOP_H_
-#define DOM_QUOTA_RESOLVABLEORIGINOP_H_
+#ifndef DOM_QUOTA_RESOLVABLENORMALORIGINOP_H_
+#define DOM_QUOTA_RESOLVABLENORMALORIGINOP_H_
 
 #include "NormalOriginOperationBase.h"
 
@@ -14,7 +14,7 @@
 namespace mozilla::dom::quota {
 
 template <typename T>
-class ResolvableOriginOp : public NormalOriginOperationBase {
+class ResolvableNormalOriginOp : public NormalOriginOperationBase {
  public:
   using PromiseType = MozPromise<T, nsresult, false>;
 
@@ -25,16 +25,17 @@ class ResolvableOriginOp : public NormalOriginOperationBase {
   }
 
  protected:
-  ResolvableOriginOp(const char* aRunnableName,
-                     const Nullable<PersistenceType>& aPersistenceType,
-                     const OriginScope& aOriginScope,
-                     const Nullable<Client::Type> aClientType, bool aExclusive)
+  ResolvableNormalOriginOp(const char* aRunnableName,
+                           const Nullable<PersistenceType>& aPersistenceType,
+                           const OriginScope& aOriginScope,
+                           const Nullable<Client::Type> aClientType,
+                           bool aExclusive)
       : NormalOriginOperationBase(aRunnableName, aPersistenceType, aOriginScope,
                                   aClientType, aExclusive) {
     AssertIsOnOwningThread();
   }
 
-  virtual ~ResolvableOriginOp() = default;
+  virtual ~ResolvableNormalOriginOp() = default;
 
   virtual T GetResolveValue() = 0;
 
@@ -56,4 +57,4 @@ class ResolvableOriginOp : public NormalOriginOperationBase {
 
 }  // namespace mozilla::dom::quota
 
-#endif  // DOM_QUOTA_RESOLVABLEORIGINOP_H_
+#endif  // DOM_QUOTA_RESOLVABLENORMALORIGINOP_H_

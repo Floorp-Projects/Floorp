@@ -59,7 +59,7 @@
 #include "OriginOperationBase.h"
 #include "QuotaRequestBase.h"
 #include "QuotaUsageRequestBase.h"
-#include "ResolvableOriginOp.h"
+#include "ResolvableNormalOriginOp.h"
 #include "prthread.h"
 #include "prtime.h"
 
@@ -124,13 +124,14 @@ class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
 // very clean. It would be better to refactor the classes to have operations
 // which can be used independently from IPC and then have wrappers (actors)
 // around them for IPC.
-class ClearPrivateRepositoryOp : public ResolvableOriginOp<bool> {
+class ClearPrivateRepositoryOp : public ResolvableNormalOriginOp<bool> {
  public:
   ClearPrivateRepositoryOp()
-      : ResolvableOriginOp("dom::quota::ClearPrivateRepositoryOp",
-                           Nullable<PersistenceType>(PERSISTENCE_TYPE_PRIVATE),
-                           OriginScope::FromNull(), Nullable<Client::Type>(),
-                           /* aExclusive */ true) {
+      : ResolvableNormalOriginOp(
+            "dom::quota::ClearPrivateRepositoryOp",
+            Nullable<PersistenceType>(PERSISTENCE_TYPE_PRIVATE),
+            OriginScope::FromNull(), Nullable<Client::Type>(),
+            /* aExclusive */ true) {
     AssertIsOnOwningThread();
   }
 
@@ -142,13 +143,13 @@ class ClearPrivateRepositoryOp : public ResolvableOriginOp<bool> {
   bool GetResolveValue() override { return true; }
 };
 
-class ShutdownStorageOp : public ResolvableOriginOp<bool> {
+class ShutdownStorageOp : public ResolvableNormalOriginOp<bool> {
  public:
   ShutdownStorageOp()
-      : ResolvableOriginOp("dom::quota::ShutdownStorageOp",
-                           Nullable<PersistenceType>(), OriginScope::FromNull(),
-                           Nullable<Client::Type>(),
-                           /* aExclusive */ true) {
+      : ResolvableNormalOriginOp(
+            "dom::quota::ShutdownStorageOp", Nullable<PersistenceType>(),
+            OriginScope::FromNull(), Nullable<Client::Type>(),
+            /* aExclusive */ true) {
     AssertIsOnOwningThread();
   }
 
@@ -561,11 +562,11 @@ RefPtr<NormalOriginOperationBase> CreateSaveOriginAccessTimeOp(
   return MakeRefPtr<SaveOriginAccessTimeOp>(aOriginMetadata, aTimestamp);
 }
 
-RefPtr<ResolvableOriginOp<bool>> CreateClearPrivateRepositoryOp() {
+RefPtr<ResolvableNormalOriginOp<bool>> CreateClearPrivateRepositoryOp() {
   return MakeRefPtr<ClearPrivateRepositoryOp>();
 }
 
-RefPtr<ResolvableOriginOp<bool>> CreateShutdownStorageOp() {
+RefPtr<ResolvableNormalOriginOp<bool>> CreateShutdownStorageOp() {
   return MakeRefPtr<ShutdownStorageOp>();
 }
 
