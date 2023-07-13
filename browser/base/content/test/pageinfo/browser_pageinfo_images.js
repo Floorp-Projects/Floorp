@@ -91,3 +91,22 @@ add_task(async function test_view_image_info() {
     }
   );
 });
+
+add_task(async function test_image_size() {
+  await BrowserTestUtils.withNewTab(
+    TEST_PATH + "all_images.html",
+    async function () {
+      let pageInfo = BrowserPageInfo(
+        gBrowser.selectedBrowser.currentURI.spec,
+        "mediaTab"
+      );
+      await BrowserTestUtils.waitForEvent(pageInfo, "page-info-init");
+
+      let imageSize = pageInfo.document.getElementById("imagesizetext");
+
+      Assert.notEqual("media-unknown-not-cached", imageSize.value);
+
+      pageInfo.close();
+    }
+  );
+});

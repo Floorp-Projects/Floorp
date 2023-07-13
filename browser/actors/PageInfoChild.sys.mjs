@@ -30,9 +30,19 @@ export class PageInfoChild extends JSWindowActorChild {
           mediaItems: await this.getDocumentMedia(document),
         });
       }
+      case "PageInfo:getPartitionKey": {
+        return Promise.resolve({
+          partitionKey: await this.getPartitionKey(document),
+        });
+      }
     }
 
     return undefined;
+  }
+
+  getPartitionKey(document) {
+    let partitionKey = document.cookieJarSettings.partitionKey;
+    return partitionKey;
   }
 
   getMetaInfo(document) {

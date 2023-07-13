@@ -271,11 +271,7 @@ const cacheService = Cc[
   "@mozilla.org/netwerk/cache-storage-service;1"
 ].getService(nsICacheStorageService);
 
-var loadContextInfo = Services.loadContextInfo.fromLoadContext(
-  window.docShell.QueryInterface(Ci.nsILoadContext),
-  false
-);
-var diskStorage = cacheService.diskCacheStorage(loadContextInfo);
+var diskStorage = null;
 
 const nsICookiePermission = Ci.nsICookiePermission;
 
@@ -463,6 +459,20 @@ async function loadTab(args) {
   let imageElement = args?.imageElement;
   let browsingContext = args?.browsingContext;
   let browser = args?.browser;
+
+  // Check if diskStorage has not be created yet if it has not been, get
+  // partitionKey from content process and create diskStorage with said partitionKey
+  if (!diskStorage) {
+    let oaWithPartitionKey = await getOaWithPartitionKey(
+      browsingContext,
+      browser
+    );
+    let loadContextInfo = Services.loadContextInfo.custom(
+      false,
+      oaWithPartitionKey
+    );
+    diskStorage = cacheService.diskCacheStorage(loadContextInfo);
+  }
 
   /* Load the page info */
   await loadPageInfo(browsingContext, imageElement, browser);
@@ -1169,4 +1179,17 @@ function checkProtocol(img) {
     /^data:image\//i.test(url) ||
     /^(https?|file|about|chrome|resource):/.test(url)
   );
+}
+
+async function getOaWithPartitionKey(browsingContext, browser) {
+  browser = browser || window.opener.gBrowser.selectedBrowser;
+  browsingContext = browsingContext || browser.browsingContext;
+
+  let actor = browsingContext.currentWindowGlobal.getActor("PageInfo");
+  let partitionKeyFromChild = await actor.sendQuery("PageInfo:getPartitionKey");
+
+  let oa = browser.contentPrincipal.originAttributes;
+  oa.partitionKey = partitionKeyFromChild.partitionKey;
+
+  return oa;
 }
