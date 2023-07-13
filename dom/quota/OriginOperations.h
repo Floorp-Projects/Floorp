@@ -27,7 +27,7 @@ class QuotaRequestBase;
 class QuotaUsageRequestBase;
 class RequestParams;
 template <typename T>
-class ResolvableOriginOp;
+class ResolvableNormalOriginOp;
 class UsageRequestParams;
 
 RefPtr<OriginOperationBase> CreateFinalizeOriginEvictionOp(
@@ -37,9 +37,9 @@ RefPtr<OriginOperationBase> CreateFinalizeOriginEvictionOp(
 RefPtr<NormalOriginOperationBase> CreateSaveOriginAccessTimeOp(
     const OriginMetadata& aOriginMetadata, int64_t aTimestamp);
 
-RefPtr<ResolvableOriginOp<bool>> CreateClearPrivateRepositoryOp();
+RefPtr<ResolvableNormalOriginOp<bool>> CreateClearPrivateRepositoryOp();
 
-RefPtr<ResolvableOriginOp<bool>> CreateShutdownStorageOp();
+RefPtr<ResolvableNormalOriginOp<bool>> CreateShutdownStorageOp();
 
 RefPtr<QuotaUsageRequestBase> CreateGetUsageOp(
     const UsageRequestParams& aParams);

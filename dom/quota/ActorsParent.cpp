@@ -22,7 +22,7 @@
 #include "QuotaManager.h"
 #include "QuotaRequestBase.h"
 #include "QuotaUsageRequestBase.h"
-#include "ResolvableOriginOp.h"
+#include "ResolvableNormalOriginOp.h"
 #include "SanitizationUtils.h"
 #include "ScopedLogExtraInfo.h"
 #include "UsageInfo.h"
