@@ -28,7 +28,7 @@ partial interface WorkerNavigator {
   readonly attribute MediaCapabilities mediaCapabilities;
 };
 
-// https://wicg.github.io/web-locks/#navigator-mixins
+// https://w3c.github.io/web-locks/#navigator-mixins
 WorkerNavigator includes NavigatorLocks;
 
 // https://gpuweb.github.io/gpuweb/#navigator-gpu

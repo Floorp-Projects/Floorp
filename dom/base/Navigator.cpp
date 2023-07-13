@@ -2258,7 +2258,7 @@ webgpu::Instance* Navigator::Gpu() {
 
 dom::LockManager* Navigator::Locks() {
   if (!mLocks) {
-    mLocks = new dom::LockManager(GetWindow()->AsGlobal());
+    mLocks = dom::LockManager::Create(*GetWindow()->AsGlobal());
   }
   return mLocks;
 }
