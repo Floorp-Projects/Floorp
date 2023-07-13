@@ -173,7 +173,17 @@ migration-list-payment-methods-label = payment methods
 ##
 
 migration-wizard-progress-header = Importing Data
+
+# This header appears in the final page of the migration wizard only if
+# all resources were imported successfully.
 migration-wizard-progress-done-header = Data Imported Successfully
+
+# This header appears in the final page of the migration wizard if only
+# some of the resources were imported successfully. This is meant to be
+# distinct from migration-wizard-progress-done-header, which is only shown
+# if all resources were imported successfully.
+migration-wizard-progress-done-with-warnings-header = Data Import Complete
+
 migration-wizard-progress-icon-in-progress =
   .aria-label = Importing…
 migration-wizard-progress-icon-completed =
