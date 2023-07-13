@@ -130,34 +130,6 @@ constexpr size_t kNumSimulcastStreams = 3;
 static const char kUnsupportedExtensionName[] =
     "urn:ietf:params:rtp-hdrext:unsupported";
 
-class FuzzyMatchedVideoEncoderFactory : public webrtc::VideoEncoderFactory {
- public:
-  std::vector<webrtc::SdpVideoFormat> GetSupportedFormats() const override {
-    return factory_.GetSupportedFormats();
-  }
-
-  std::unique_ptr<webrtc::VideoEncoder> CreateVideoEncoder(
-      const webrtc::SdpVideoFormat& format) override {
-    absl::optional<webrtc::SdpVideoFormat> matched_format =
-        webrtc::FuzzyMatchSdpVideoFormat(factory_.GetSupportedFormats(),
-                                         format);
-    return factory_.CreateVideoEncoder(matched_format.value_or(format));
-  }
-
-  CodecSupport QueryCodecSupport(
-      const webrtc::SdpVideoFormat& format,
-      absl::optional<std::string> scalability_mode) const override {
-    return factory_.QueryCodecSupport(format, scalability_mode);
-  }
-
- private:
-  webrtc::VideoEncoderFactoryTemplate<webrtc::LibvpxVp8EncoderTemplateAdapter,
-                                      webrtc::LibvpxVp9EncoderTemplateAdapter,
-                                      webrtc::OpenH264EncoderTemplateAdapter,
-                                      webrtc::LibaomAv1EncoderTemplateAdapter>
-      factory_;
-};
-
 cricket::VideoCodec RemoveFeedbackParams(cricket::VideoCodec&& codec) {
   codec.feedback_params = cricket::FeedbackParams();
   return std::move(codec);
@@ -1629,7 +1601,11 @@ class WebRtcVideoChannelEncodedFrameCallbackTest : public ::testing::Test {
         video_bitrate_allocator_factory_(
             webrtc::CreateBuiltinVideoBitrateAllocatorFactory()),
         engine_(
-            std::make_unique<FuzzyMatchedVideoEncoderFactory>(),
+            std::make_unique<webrtc::VideoEncoderFactoryTemplate<
+                webrtc::LibvpxVp8EncoderTemplateAdapter,
+                webrtc::LibvpxVp9EncoderTemplateAdapter,
+                webrtc::OpenH264EncoderTemplateAdapter,
+                webrtc::LibaomAv1EncoderTemplateAdapter>>(),
             std::make_unique<webrtc::test::FunctionVideoDecoderFactory>(
                 []() { return std::make_unique<webrtc::test::FakeDecoder>(); },
                 kSdpVideoFormats),
@@ -1763,7 +1739,11 @@ class WebRtcVideoChannelBaseTest : public ::testing::Test {
       : task_queue_factory_(webrtc::CreateDefaultTaskQueueFactory()),
         video_bitrate_allocator_factory_(
             webrtc::CreateBuiltinVideoBitrateAllocatorFactory()),
-        engine_(std::make_unique<FuzzyMatchedVideoEncoderFactory>(),
+        engine_(std::make_unique<webrtc::VideoEncoderFactoryTemplate<
+                    webrtc::LibvpxVp8EncoderTemplateAdapter,
+                    webrtc::LibvpxVp9EncoderTemplateAdapter,
+                    webrtc::OpenH264EncoderTemplateAdapter,
+                    webrtc::LibaomAv1EncoderTemplateAdapter>>(),
                 std::make_unique<webrtc::VideoDecoderFactoryTemplate<
                     webrtc::LibvpxVp8DecoderTemplateAdapter,
                     webrtc::LibvpxVp9DecoderTemplateAdapter,
