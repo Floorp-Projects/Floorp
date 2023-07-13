@@ -306,7 +306,7 @@ class MockCall : public webrtc::Call {
         width, height, *mVideoSendEncoderConfig);
   }
 
-  virtual const webrtc::WebRtcKeyValueConfig& trials() const override {
+  virtual const webrtc::FieldTrialsView& trials() const override {
     return mUnusedConfig;
   }
 
