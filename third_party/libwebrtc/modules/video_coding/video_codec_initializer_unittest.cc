@@ -589,11 +589,17 @@ TEST_F(VideoCodecInitializerTest, Vp9SingleSpatialLayerBitratesAreConsistent) {
   EXPECT_TRUE(VideoCodecInitializer::SetupCodec(config, streams, &codec));
 
   EXPECT_EQ(1u, codec.VP9()->numberOfSpatialLayers);
+  // Target is consistent with min and max (min <= target <= max).
   EXPECT_GE(codec.spatialLayers[0].targetBitrate,
             codec.spatialLayers[0].minBitrate);
   EXPECT_LE(codec.spatialLayers[0].targetBitrate,
             codec.spatialLayers[0].maxBitrate);
-  EXPECT_LT(codec.spatialLayers[0].minBitrate, kDefaultMinBitrateBps / 1000);
+  // In the single spatial layer case, the spatial layer bitrates are copied
+  // from the codec's bitrate which is the sum if VideoStream bitrates. In this
+  // case we only have a single VideoStream using default values.
+  EXPECT_EQ(codec.spatialLayers[0].minBitrate, kDefaultMinBitrateBps / 1000);
+  EXPECT_EQ(codec.spatialLayers[0].targetBitrate, kDefaultMaxBitrateBps / 1000);
+  EXPECT_EQ(codec.spatialLayers[0].maxBitrate, kDefaultMaxBitrateBps / 1000);
 }
 
 TEST_F(VideoCodecInitializerTest, Vp9TwoSpatialLayersBitratesAreConsistent) {
