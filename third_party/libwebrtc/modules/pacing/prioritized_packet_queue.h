@@ -85,6 +85,10 @@ class PrioritizedPacketQueue {
   // Remove any packets matching the given SSRC.
   void RemovePacketsForSsrc(uint32_t ssrc);
 
+  // Checks if the queue for the given SSRC has original (retransmissions not
+  // counted) video packets containing keyframe data.
+  bool HasKeyframePackets(uint32_t ssrc) const;
+
  private:
   static constexpr int kNumPriorityLevels = 4;
 
@@ -118,12 +122,14 @@ class PrioritizedPacketQueue {
     bool IsEmpty() const;
     Timestamp LeadingPacketEnqueueTime(int priority_level) const;
     Timestamp LastEnqueueTime() const;
+    bool has_keyframe_packets() const { return num_keyframe_packets_ > 0; }
 
     std::array<std::deque<QueuedPacket>, kNumPriorityLevels> DequeueAll();
 
    private:
     std::deque<QueuedPacket> packets_[kNumPriorityLevels];
     Timestamp last_enqueue_time_;
+    int num_keyframe_packets_;
   };
 
   // Remove the packet from the internal state, e.g. queue time / size etc.

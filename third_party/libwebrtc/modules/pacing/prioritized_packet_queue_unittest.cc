@@ -27,12 +27,14 @@ constexpr int kDefaultPayloadSize = 789;
 
 std::unique_ptr<RtpPacketToSend> CreatePacket(RtpPacketMediaType type,
                                               uint16_t sequence_number,
-                                              uint32_t ssrc = kDefaultSsrc) {
+                                              uint32_t ssrc = kDefaultSsrc,
+                                              bool is_key_frame = false) {
   auto packet = std::make_unique<RtpPacketToSend>(/*extensions=*/nullptr);
   packet->set_packet_type(type);
   packet->SetSsrc(ssrc);
   packet->SetSequenceNumber(sequence_number);
   packet->SetPayloadSize(kDefaultPayloadSize);
+  packet->set_is_key_frame(is_key_frame);
   return packet;
 }
 
@@ -358,6 +360,57 @@ TEST(PrioritizedPacketQueue, ClearPacketsAffectsOnlySpecifiedSsrc) {
   EXPECT_EQ(queue.Pop()->SequenceNumber(), 4);
   EXPECT_EQ(queue.Pop()->SequenceNumber(), 3);
   EXPECT_TRUE(queue.Empty());
+}
+
+TEST(PrioritizedPacketQueue, ReportsKeyframePackets) {
+  Timestamp now = Timestamp::Zero();
+  PrioritizedPacketQueue queue(now);
+  const uint32_t kVideoSsrc1 = 1234;
+  const uint32_t kVideoSsrc2 = 2345;
+
+  EXPECT_FALSE(queue.HasKeyframePackets(kVideoSsrc1));
+  EXPECT_FALSE(queue.HasKeyframePackets(kVideoSsrc2));
+
+  queue.Push(now, CreatePacket(RtpPacketMediaType::kVideo, /*seq=*/1,
+                               kVideoSsrc1, /*is_key_frame=*/true));
+  queue.Push(now, CreatePacket(RtpPacketMediaType::kVideo, /*seq=*/11,
+                               kVideoSsrc2, /*is_key_frame=*/false));
+
+  EXPECT_TRUE(queue.HasKeyframePackets(kVideoSsrc1));
+  EXPECT_FALSE(queue.HasKeyframePackets(kVideoSsrc2));
+
+  queue.Push(now, CreatePacket(RtpPacketMediaType::kVideo, /*seq=*/2,
+                               kVideoSsrc1, /*is_key_frame=*/true));
+  queue.Push(now, CreatePacket(RtpPacketMediaType::kVideo, /*seq=*/12,
+                               kVideoSsrc2, /*is_key_frame=*/true));
+
+  EXPECT_TRUE(queue.HasKeyframePackets(kVideoSsrc1));
+  EXPECT_TRUE(queue.HasKeyframePackets(kVideoSsrc2));
+
+  queue.Push(now, CreatePacket(RtpPacketMediaType::kVideo, /*seq=*/3,
+                               kVideoSsrc1, /*is_key_frame=*/false));
+  queue.Push(now, CreatePacket(RtpPacketMediaType::kVideo, /*seq=*/13,
+                               kVideoSsrc2, /*is_key_frame=*/true));
+
+  EXPECT_TRUE(queue.HasKeyframePackets(kVideoSsrc1));
+  EXPECT_TRUE(queue.HasKeyframePackets(kVideoSsrc2));
+
+  EXPECT_EQ(queue.Pop()->SequenceNumber(), 1);
+  EXPECT_EQ(queue.Pop()->SequenceNumber(), 11);
+
+  EXPECT_TRUE(queue.HasKeyframePackets(kVideoSsrc1));
+  EXPECT_TRUE(queue.HasKeyframePackets(kVideoSsrc2));
+
+  EXPECT_EQ(queue.Pop()->SequenceNumber(), 2);
+  EXPECT_EQ(queue.Pop()->SequenceNumber(), 12);
+
+  EXPECT_FALSE(queue.HasKeyframePackets(kVideoSsrc1));
+  EXPECT_TRUE(queue.HasKeyframePackets(kVideoSsrc2));
+
+  queue.RemovePacketsForSsrc(kVideoSsrc2);
+
+  EXPECT_FALSE(queue.HasKeyframePackets(kVideoSsrc1));
+  EXPECT_FALSE(queue.HasKeyframePackets(kVideoSsrc2));
 }
 
 }  // namespace webrtc

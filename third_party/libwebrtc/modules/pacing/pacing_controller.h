@@ -205,6 +205,7 @@ class PacingController {
   const bool pace_audio_;
   const bool ignore_transport_overhead_;
   const bool fast_retransmissions_;
+  const bool keyframe_flushing_;
 
   DataSize transport_overhead_per_packet_;
   TimeDelta send_burst_interval_;

@@ -2255,5 +2255,44 @@ TEST_F(PacingControllerTest, DoesNotPadIfProcessThreadIsBorked) {
   EXPECT_LE(callback.padding_sent(), kMaxPadding.bytes<size_t>());
 }
 
+TEST_F(PacingControllerTest, FlushesPacketsOnKeyFrames) {
+  const uint32_t kSsrc = 12345;
+  const uint32_t kRtxSsrc = 12346;
+
+  const test::ExplicitKeyValueConfig trials(
+      "WebRTC-Pacer-KeyframeFlushing/Enabled/");
+  auto pacer = std::make_unique<PacingController>(&clock_, &callback_, trials);
+  EXPECT_CALL(callback_, GetRtxSsrcForMedia(kSsrc))
+      .WillRepeatedly(Return(kRtxSsrc));
+  pacer->SetPacingRates(kTargetRate, DataRate::Zero());
+
+  // Enqueue a video packet and a retransmission of that video stream.
+  pacer->EnqueuePacket(BuildPacket(RtpPacketMediaType::kVideo, kSsrc,
+                                   /*sequence_number=*/1, /*capture_time=*/1,
+                                   /*size_bytes=*/100));
+  pacer->EnqueuePacket(BuildPacket(RtpPacketMediaType::kRetransmission,
+                                   kRtxSsrc,
+                                   /*sequence_number=*/10, /*capture_time=*/1,
+                                   /*size_bytes=*/100));
+  EXPECT_EQ(pacer->QueueSizePackets(), 2u);
+
+  // Enqueue the first packet of a keyframe for said stream.
+  auto packet = BuildPacket(RtpPacketMediaType::kVideo, kSsrc,
+                            /*sequence_number=*/2, /*capture_time=*/2,
+                            /*size_bytes=*/1000);
+  packet->set_is_key_frame(true);
+  packet->set_first_packet_of_frame(true);
+  pacer->EnqueuePacket(std::move(packet));
+
+  // Only they new keyframe packet should be left in the queue.
+  EXPECT_EQ(pacer->QueueSizePackets(), 1u);
+
+  EXPECT_CALL(callback_, SendPacket(kSsrc, /*sequence_number=*/2,
+                                    /*timestamp=*/2, /*is_retrnamission=*/false,
+                                    /*is_padding=*/false));
+  AdvanceTimeUntil(pacer->NextSendTime());
+  pacer->ProcessPackets();
+}
+
 }  // namespace
 }  // namespace webrtc
