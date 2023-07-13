@@ -339,7 +339,9 @@ def initialize(topsrcdir):
         "compare-locales": MachCommandReference(
             "tools/compare-locales/mach_commands.py"
         ),
-        "l10n-cross-channel": MachCommandReference("tools/lint/mach_commands.py"),
+        "l10n-cross-channel": MachCommandReference(
+            "tools/compare-locales/mach_commands.py"
+        ),
         "busted": MachCommandReference("tools/mach_commands.py"),
         "pastebin": MachCommandReference("tools/mach_commands.py"),
         "mozregression": MachCommandReference("tools/mach_commands.py"),
