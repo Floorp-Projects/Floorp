@@ -24,6 +24,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "api/jsep_ice_candidate.h"
+#include "api/media_types.h"
 #include "api/rtp_parameters.h"
 #include "api/rtp_transceiver_direction.h"
 #include "api/uma_metrics.h"
@@ -699,6 +700,7 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
                               : options_.crypto_options;
   config.transport_observer = this;
   config.rtcp_handler = InitializeRtcpCallback();
+  config.un_demuxable_packet_handler = InitializeUnDemuxablePacketHandler();
   config.event_log = event_log_ptr_;
 #if defined(ENABLE_EXTERNAL_AUTH)
   config.enable_external_auth = true;
@@ -720,9 +722,9 @@ JsepTransportController* PeerConnection::InitializeTransportController_n(
 
   config.field_trials = trials_.get();
 
-  transport_controller_.reset(
-      new JsepTransportController(network_thread(), port_allocator_.get(),
-                                  async_dns_resolver_factory_.get(), config));
+  transport_controller_.reset(new JsepTransportController(
+      network_thread(), port_allocator_.get(),
+      async_dns_resolver_factory_.get(), std::move(config)));
 
   transport_controller_->SubscribeIceConnectionState(
       [this](cricket::IceConnectionState s) {
@@ -2988,6 +2990,23 @@ PeerConnection::InitializeRtcpCallback() {
     worker_thread()->PostTask(SafeTask(worker_thread_safety_, [this, packet]() {
       call_ptr_->Receiver()->DeliverRtcpPacket(packet);
     }));
+  };
+}
+
+std::function<void(const RtpPacketReceived& parsed_packet)>
+PeerConnection::InitializeUnDemuxablePacketHandler() {
+  RTC_DCHECK_RUN_ON(network_thread());
+  return [this](const RtpPacketReceived& parsed_packet) {
+    worker_thread()->PostTask(
+        SafeTask(worker_thread_safety_, [this, parsed_packet]() {
+          // Deliver the packet anyway to Call to allow Call to do BWE.
+          // Even if there is no media receiver, the packet has still
+          // been received on the network and has been correcly parsed.
+          call_ptr_->Receiver()->DeliverRtpPacket(
+              MediaType::ANY, parsed_packet,
+              /*undemuxable_packet_handler=*/
+              [](const RtpPacketReceived& packet) { return false; });
+        }));
   };
 }
 
