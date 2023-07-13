@@ -253,7 +253,7 @@ void RemoteEstimatorProxy::SendPeriodicFeedbacks() {
       packet_arrival_times_.end_sequence_number();
   while (periodic_window_start_seq_ < packet_arrival_times_end_seq) {
     auto feedback_packet = MaybeBuildFeedbackPacket(
-        /*include_timestamps=*/true, periodic_window_start_seq_.value(),
+        /*include_timestamps=*/true, *periodic_window_start_seq_,
         packet_arrival_times_end_seq,
         /*is_periodic_update=*/true);
 
@@ -317,7 +317,7 @@ RemoteEstimatorProxy::MaybeBuildFeedbackPacket(
 
   // Create the packet on demand, as it's not certain that there are packets
   // in the range that have been received.
-  std::unique_ptr<rtcp::TransportFeedback> feedback_packet = nullptr;
+  std::unique_ptr<rtcp::TransportFeedback> feedback_packet;
 
   int64_t next_sequence_number = begin_sequence_number_inclusive;
 
@@ -333,20 +333,38 @@ RemoteEstimatorProxy::MaybeBuildFeedbackPacket(
       feedback_packet =
           std::make_unique<rtcp::TransportFeedback>(include_timestamps);
       feedback_packet->SetMediaSsrc(media_ssrc_);
+
+      // It should be possible to add `seq` to this new `feedback_packet`,
+      // If difference between `seq` and `begin_sequence_number_inclusive`,
+      // is too large, discard reporting too old missing packets.
+      static constexpr int kMaxMissingSequenceNumbers = 0x7FFE;
+      int64_t base_sequence_number = std::max(begin_sequence_number_inclusive,
+                                              seq - kMaxMissingSequenceNumbers);
+
       // Base sequence number is the expected first sequence number. This is
       // known, but we might not have actually received it, so the base time
       // shall be the time of the first received packet in the feedback.
-      feedback_packet->SetBase(
-          static_cast<uint16_t>(begin_sequence_number_inclusive & 0xFFFF),
-          packet.arrival_time);
+      feedback_packet->SetBase(static_cast<uint16_t>(base_sequence_number),
+                               packet.arrival_time);
       feedback_packet->SetFeedbackSequenceNumber(feedback_packet_count_++);
-    }
 
-    if (!feedback_packet->AddReceivedPacket(static_cast<uint16_t>(seq & 0xFFFF),
-                                            packet.arrival_time)) {
-      // Could not add timestamp, feedback packet might be full. Return and
-      // try again with a fresh packet.
-      break;
+      if (!feedback_packet->AddReceivedPacket(static_cast<uint16_t>(seq),
+                                              packet.arrival_time)) {
+        // Could not add a single received packet to the feedback.
+        RTC_DCHECK_NOTREACHED()
+            << "Failed to create an RTCP transport feedback with base sequence "
+               "number "
+            << base_sequence_number << " and 1st received " << seq;
+        periodic_window_start_seq_ = seq;
+        return nullptr;
+      }
+    } else {
+      if (!feedback_packet->AddReceivedPacket(static_cast<uint16_t>(seq),
+                                              packet.arrival_time)) {
+        // Could not add timestamp, feedback packet might be full. Return and
+        // try again with a fresh packet.
+        break;
+      }
     }
 
     next_sequence_number = seq + 1;
