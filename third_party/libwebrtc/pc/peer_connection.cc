@@ -588,6 +588,8 @@ PeerConnection::~PeerConnection() {
     // The event log must outlive call (and any other object that uses it).
     event_log_.reset();
   });
+
+  data_channel_controller_.PrepareForShutdown();
 }
 
 RTCError PeerConnection::Initialize(

@@ -102,6 +102,10 @@ class DataChannelController : public SctpDataChannelControllerInterface,
 
   void OnSctpDataChannelClosed(SctpDataChannel* channel);
 
+ protected:
+  rtc::Thread* network_thread() const;
+  rtc::Thread* signaling_thread() const;
+
  private:
   // Parses and handles open messages.  Returns true if the message is an open
   // message and should be considered to be handled, false otherwise.
@@ -137,9 +141,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
 
   std::vector<rtc::scoped_refptr<SctpDataChannel>>::iterator FindChannel(
       StreamId stream_id);
-
-  rtc::Thread* network_thread() const;
-  rtc::Thread* signaling_thread() const;
 
   // Plugin transport used for data channels.  Pointer may be accessed and
   // checked from any thread, but the object may only be touched on the
