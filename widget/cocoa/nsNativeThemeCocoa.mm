@@ -2985,8 +2985,9 @@ bool nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* 
     case StyleAppearance::Checkbox:
     case StyleAppearance::Radio:
     case StyleAppearance::Tab: {
-      overflow.SizeTo(kMaxFocusRingWidth, kMaxFocusRingWidth, kMaxFocusRingWidth,
-                      kMaxFocusRingWidth);
+      overflow.SizeTo(
+          static_cast<int32_t>(kMaxFocusRingWidth), static_cast<int32_t>(kMaxFocusRingWidth),
+          static_cast<int32_t>(kMaxFocusRingWidth), static_cast<int32_t>(kMaxFocusRingWidth));
       break;
     }
     case StyleAppearance::ProgressBar: {

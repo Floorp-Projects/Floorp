@@ -69,7 +69,7 @@ struct BaseMargin {
   BaseMargin(Coord aTop, Coord aRight, Coord aBottom, Coord aLeft)
       : top(aTop), right(aRight), bottom(aBottom), left(aLeft) {}
 
-  void SizeTo(T aTop, T aRight, T aBottom, T aLeft) {
+  void SizeTo(Coord aTop, Coord aRight, Coord aBottom, Coord aLeft) {
     top = aTop;
     right = aRight;
     bottom = aBottom;
