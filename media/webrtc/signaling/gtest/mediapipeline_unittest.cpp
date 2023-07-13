@@ -356,7 +356,7 @@ class TestAgentSend : public TestAgent {
   virtual void CreatePipeline(const std::string& aTransportId) {
     std::string test_pc;
 
-    auto audio_pipeline = MakeRefPtr<MediaPipelineTransmit>(
+    RefPtr<MediaPipelineTransmit> audio_pipeline = MediaPipelineTransmit::Create(
         test_pc, transport_, AbstractThread::MainThread(),
         test_utils->sts_target(), false, audio_conduit_);
     Unused << WaitFor(InvokeAsync(call_->mCallThread, __func__, [&] {

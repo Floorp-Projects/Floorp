@@ -264,13 +264,22 @@ class MediaPipeline : public sigslot::has_slots<> {
 class MediaPipelineTransmit
     : public MediaPipeline,
       public dom::PrincipalChangeObserver<dom::MediaStreamTrack> {
- public:
+ private:
   // Set aRtcpTransport to nullptr to use rtcp-mux
   MediaPipelineTransmit(const std::string& aPc,
                         RefPtr<MediaTransportHandler> aTransportHandler,
                         RefPtr<AbstractThread> aCallThread,
                         RefPtr<nsISerialEventTarget> aStsThread, bool aIsVideo,
                         RefPtr<MediaSessionConduit> aConduit);
+
+  void RegisterListener();
+
+ public:
+  static already_AddRefed<MediaPipelineTransmit> Create(
+      const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
+      RefPtr<AbstractThread> aCallThread,
+      RefPtr<nsISerialEventTarget> aStsThread, bool aIsVideo,
+      RefPtr<MediaSessionConduit> aConduit);
 
   void InitControl(MediaPipelineTransmitControlInterface* aControl);
 

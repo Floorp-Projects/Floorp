@@ -67,7 +67,7 @@ RTCRtpSender::RTCRtpSender(nsPIDOMWindowInner* aWindow, PeerConnectionImpl* aPc,
       INIT_CANONICAL(mVideoCodecMode, webrtc::VideoCodecMode::kRealtimeVideo),
       INIT_CANONICAL(mCname, std::string()),
       INIT_CANONICAL(mTransmitting, false) {
-  mPipeline = new MediaPipelineTransmit(
+  mPipeline = MediaPipelineTransmit::Create(
       mPc->GetHandle(), aTransportHandler, aCallThread, aStsThread,
       aConduit->type() == MediaSessionConduit::VIDEO, aConduit);
   mPipeline->InitControl(this);

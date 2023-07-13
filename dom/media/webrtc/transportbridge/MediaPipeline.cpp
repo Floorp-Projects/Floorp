@@ -10,6 +10,7 @@
 #include <inttypes.h>
 #include <math.h>
 #include <sstream>
+#include <utility>
 
 #include "AudioSegment.h"
 #include "AudioConverter.h"
@@ -775,14 +776,6 @@ MediaPipelineTransmit::MediaPipelineTransmit(
     mAudioProcessing =
         MakeAndAddRef<AudioProxyThread>(*mConduit->AsAudioSessionConduit());
     mListener->SetAudioProxy(mAudioProcessing);
-  } else {  // Video
-    mConverter = VideoFrameConverter::Create(GetTimestampMaker());
-    mFrameListener = mConverter->VideoFrameConvertedEvent().Connect(
-        mConverter->mTaskQueue,
-        [listener = mListener](webrtc::VideoFrame aFrame) {
-          listener->OnVideoFrameConverted(std::move(aFrame));
-        });
-    mListener->SetVideoFrameConverter(mConverter);
   }
 
   mWatchManager.Watch(mActive, &MediaPipelineTransmit::UpdateSendState);
@@ -791,6 +784,32 @@ MediaPipelineTransmit::MediaPipelineTransmit(
                       &MediaPipelineTransmit::UpdateSendState);
 
   mDescription = GenerateDescription();
+}
+
+void MediaPipelineTransmit::RegisterListener() {
+  if (!IsVideo()) {
+    return;
+  }
+  mConverter = VideoFrameConverter::Create(GetTimestampMaker());
+  mFrameListener = mConverter->VideoFrameConvertedEvent().Connect(
+      mConverter->mTaskQueue,
+      [listener = mListener](webrtc::VideoFrame aFrame) {
+        listener->OnVideoFrameConverted(std::move(aFrame));
+      });
+  mListener->SetVideoFrameConverter(mConverter);
+}
+
+already_AddRefed<MediaPipelineTransmit> MediaPipelineTransmit::Create(
+    const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
+    RefPtr<AbstractThread> aCallThread, RefPtr<nsISerialEventTarget> aStsThread,
+    bool aIsVideo, RefPtr<MediaSessionConduit> aConduit) {
+  RefPtr<MediaPipelineTransmit> transmit = new MediaPipelineTransmit(
+      aPc, std::move(aTransportHandler), std::move(aCallThread),
+      std::move(aStsThread), aIsVideo, std::move(aConduit));
+
+  transmit->RegisterListener();
+
+  return transmit.forget();
 }
 
 MediaPipelineTransmit::~MediaPipelineTransmit() {
