@@ -120,7 +120,6 @@ if (rtc_include_tests) {
     deps = [
       ":remote_bitrate_estimator",
       "..:module_api_public",
-      "../../api/transport:field_trial_based_config",
       "../../api/transport:mock_network_control",
       "../../api/transport:network_control",
       "../../api/units:data_rate",
@@ -130,7 +129,7 @@ if (rtc_include_tests) {
       "../../rtc_base:checks",
       "../../rtc_base:random",
       "../../system_wrappers",
-      "../../test:field_trial",
+      "../../test:explicit_key_value_config",
       "../../test:fileutils",
       "../../test:test_support",
       "../pacing",

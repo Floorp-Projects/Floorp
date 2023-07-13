@@ -30,8 +30,8 @@ namespace webrtc {
 // multiplicatively.
 class AimdRateControl {
  public:
-  explicit AimdRateControl(const FieldTrialsView* key_value_config);
-  AimdRateControl(const FieldTrialsView* key_value_config, bool send_side);
+  explicit AimdRateControl(const FieldTrialsView& key_value_config);
+  AimdRateControl(const FieldTrialsView& key_value_config, bool send_side);
   ~AimdRateControl();
 
   // Returns true if the target bitrate has been initialized. This happens
@@ -53,7 +53,7 @@ class AimdRateControl {
 
   DataRate LatestEstimate() const;
   void SetRtt(TimeDelta rtt);
-  DataRate Update(const RateControlInput* input, Timestamp at_time);
+  DataRate Update(const RateControlInput& input, Timestamp at_time);
   void SetInApplicationLimitedRegion(bool in_alr);
   void SetEstimate(DataRate bitrate, Timestamp at_time);
   void SetNetworkStateEstimate(
