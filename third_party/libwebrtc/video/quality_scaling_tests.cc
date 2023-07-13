@@ -155,6 +155,15 @@ class ScalingObserver : public test::SendTest {
                        test_params_.size());
   }
 
+  Action OnSendRtp(const uint8_t* packet, size_t length) override {
+    // The tests are expected to send at the configured start bitrate. Do not
+    // send any packets to avoid receiving REMB and possibly go down in target
+    // bitrate. A low bitrate estimate could result in downgrading due to other
+    // reasons than low/high QP-value (e.g. high frame drop percent) or not
+    // upgrading due to bitrate constraint.
+    return DROP_PACKET;
+  }
+
   void PerformTest() override { EXPECT_EQ(expect_scaling_, Wait()); }
 
   test::FunctionVideoEncoderFactory encoder_factory_;
