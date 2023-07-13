@@ -261,11 +261,14 @@ class SctpDataChannel::ObserverAdapter : public DataChannelObserver {
         }));
   }
 
-  rtc::Thread* signaling_thread() const { return channel_->signaling_thread_; }
+  rtc::Thread* signaling_thread() const { return signaling_thread_; }
   rtc::Thread* network_thread() const { return channel_->network_thread_; }
 
   DataChannelObserver* delegate_ RTC_GUARDED_BY(signaling_thread()) = nullptr;
   SctpDataChannel* const channel_;
+  // Make sure to keep our own signaling_thread_ pointer to avoid dereferencing
+  // `channel_` in the `RTC_DCHECK_RUN_ON` checks on the signaling thread.
+  rtc::Thread* const signaling_thread_{channel_->signaling_thread_};
   ScopedTaskSafety safety_;
   rtc::scoped_refptr<PendingTaskSafetyFlag> signaling_safety_;
   CachedGetters* cached_getters_ RTC_GUARDED_BY(signaling_thread()) = nullptr;
