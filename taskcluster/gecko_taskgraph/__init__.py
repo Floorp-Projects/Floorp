@@ -51,12 +51,16 @@ def register(graph_config):
     Args:
         graph_config: The graph configuration object.
     """
+    import android_taskgraph
     from taskgraph import generator
 
     from gecko_taskgraph import (  # noqa: trigger target task method registration
         morph,  # noqa: trigger morph registration
         target_tasks,
     )
+
+    android_taskgraph.register(graph_config)
+
     from gecko_taskgraph.parameters import register_parameters
     from gecko_taskgraph.util import dependencies  # noqa: trigger group_by registration
     from gecko_taskgraph.util.verify import verifications
