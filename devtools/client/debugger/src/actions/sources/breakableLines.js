@@ -30,7 +30,9 @@ export function setBreakableLines(cx, location) {
   return async ({ getState, dispatch, client }) => {
     let breakableLines;
     if (isOriginalId(location.source.id)) {
-      const positions = await dispatch(setBreakpointPositions(location));
+      const positions = await dispatch(
+        setBreakpointPositions({ cx, location })
+      );
       breakableLines = calculateBreakableLines(positions);
 
       const existingBreakableLines = getBreakableLines(

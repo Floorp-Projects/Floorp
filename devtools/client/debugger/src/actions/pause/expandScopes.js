@@ -4,11 +4,12 @@
 
 import { getScopeItemPath } from "../../utils/pause/scopes/utils";
 
-export function setExpandedScope(selectedFrame, item, expanded) {
+export function setExpandedScope(cx, item, expanded) {
   return function ({ dispatch, getState }) {
     return dispatch({
       type: "SET_EXPANDED_SCOPE",
-      selectedFrame,
+      cx,
+      thread: cx.thread,
       path: getScopeItemPath(item),
       expanded,
     });
