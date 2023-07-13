@@ -60,7 +60,6 @@ EXPORTS.mozilla += [
     "MainThreadIdlePeriod.h",
     "Monitor.h",
     "MozPromise.h",
-    "MozPromiseInlines.h",
     "Mutex.h",
     "Queue.h",
     "RecursiveMutex.h",

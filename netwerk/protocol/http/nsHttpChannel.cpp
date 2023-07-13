@@ -10,7 +10,6 @@
 #include <inttypes.h>
 
 #include "DocumentChannelParent.h"
-#include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/dom/nsCSPContext.h"

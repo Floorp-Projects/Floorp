@@ -11,7 +11,6 @@
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/LoadInfo.h"
-#include "mozilla/MozPromiseInlines.h"  // For MozPromise::FromDomPromise
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
