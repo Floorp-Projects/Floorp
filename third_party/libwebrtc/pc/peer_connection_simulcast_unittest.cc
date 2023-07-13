@@ -1039,7 +1039,7 @@ class PeerConnectionSimulcastWithMediaFlowTests
     }
     if (!outbound_rtp->frame_height.is_defined() ||
         *outbound_rtp->frame_height != frame_height) {
-      // Sleep to avoid log spam when this is used in EXPECT_TRUE_WAIT().
+      // Sleep to avoid log spam when this is used in ASSERT_TRUE_WAIT().
       rtc::Thread::Current()->SleepMs(1000);
       return false;
     }
@@ -1155,7 +1155,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   remote_pc_wrapper->WaitForConnection();
 
   // Wait until media is flowing.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
                    kDefaultTimeout.ms());
   EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
       local_pc_wrapper, {{"", 1280, 720}}));
@@ -1190,7 +1190,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
 
   // Wait until media is flowing on all three layers.
   // Ramp up time is needed before all three layers are sending.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
                    kLongTimeoutForRampingUp.ms());
   EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
       local_pc_wrapper, {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}}));
@@ -1242,7 +1242,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   remote_pc_wrapper->WaitForConnection();
 
   // Wait until media is flowing.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
                    kDefaultTimeout.ms());
   // When `scalability_mode` is not set, VP8 defaults to L1T1.
   rtc::scoped_refptr<const RTCStatsReport> report = GetStats(local_pc_wrapper);
@@ -1302,7 +1302,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
 
   // Wait until media is flowing, no significant time needed because we only
   // have one layer.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
                    kDefaultTimeout.ms());
   // GetStats() confirms "L1T2" is used which is different than the "L1T1"
   // default or the "L3T3_KEY" that was attempted.
@@ -1338,7 +1338,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
 
   // Wait until media is flowing on all three layers.
   // Ramp up time is needed before all three layers are sending.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
                    kLongTimeoutForRampingUp.ms());
   EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
       local_pc_wrapper, {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}}));
@@ -1386,11 +1386,11 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
 
   // Wait until media is flowing. We only expect a single RTP stream.
   // We expect to see bytes flowing almost immediately on the lowest layer.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
                    kDefaultTimeout.ms());
   // Wait until scalability mode is reported and expected resolution reached.
   // Ramp up time may be significant.
-  EXPECT_TRUE_WAIT(HasOutboundRtpWithRidAndScalabilityMode(
+  ASSERT_TRUE_WAIT(HasOutboundRtpWithRidAndScalabilityMode(
                        local_pc_wrapper, "f", "L3T3_KEY", 720),
                    (2 * kLongTimeoutForRampingUp).ms());
 
@@ -1437,7 +1437,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
 
   // Wait until media is flowing. We only expect a single RTP stream.
   // We expect to see bytes flowing almost immediately on the lowest layer.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 1u),
                    kDefaultTimeout.ms());
   EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
       local_pc_wrapper, {{"", 1280, 720}}));
@@ -1492,11 +1492,11 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
 
   // Since the standard API is configuring simulcast we get three outbound-rtps,
   // but only one is active.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u, 1u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u, 1u),
                    kDefaultTimeout.ms());
   // Wait until scalability mode is reported and expected resolution reached.
   // Ramp up time is significant.
-  EXPECT_TRUE_WAIT(HasOutboundRtpWithRidAndScalabilityMode(
+  ASSERT_TRUE_WAIT(HasOutboundRtpWithRidAndScalabilityMode(
                        local_pc_wrapper, "f", "L3T3_KEY", 720),
                    (2 * kLongTimeoutForRampingUp).ms());
 
@@ -1553,7 +1553,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
 
   // Wait until media is flowing on all three layers.
   // Ramp up time is needed before all three layers are sending.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
                    kLongTimeoutForRampingUp.ms());
   EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
       local_pc_wrapper, {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}}));
@@ -1614,11 +1614,11 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
 
   // Since the standard API is configuring simulcast we get three outbound-rtps,
   // but only one is active.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u, 1u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u, 1u),
                    kDefaultTimeout.ms());
   // Wait until scalability mode is reported and expected resolution reached.
   // Ramp up time may be significant.
-  EXPECT_TRUE_WAIT(HasOutboundRtpWithRidAndScalabilityMode(
+  ASSERT_TRUE_WAIT(HasOutboundRtpWithRidAndScalabilityMode(
                        local_pc_wrapper, "f", "L2T2_KEY", 720 / 2),
                    (2 * kLongTimeoutForRampingUp).ms());
 
@@ -1727,7 +1727,7 @@ TEST_F(PeerConnectionSimulcastWithMediaFlowTests,
   // terrible compared to other codecs.
   // TODO(https://crbug.com/webrtc/15006): Improve the ramp-up time and stop
   // giving this test extra long timeout.
-  EXPECT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
+  ASSERT_TRUE_WAIT(HasOutboundRtpBytesSent(local_pc_wrapper, 3u),
                    (2 * kLongTimeoutForRampingUp).ms());
   EXPECT_TRUE(OutboundRtpResolutionsAreLessThanOrEqualToExpectations(
       local_pc_wrapper, {{"f", 320, 180}, {"h", 640, 360}, {"q", 1280, 720}}));
