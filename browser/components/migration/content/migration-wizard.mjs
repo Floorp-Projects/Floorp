@@ -650,6 +650,7 @@ export class MigrationWizard extends HTMLElement {
     );
     let totalProgressGroups = Object.keys(state.progress).length;
     let remainingProgressGroups = totalProgressGroups;
+    let totalWarnings = 0;
 
     for (let group of resourceGroups) {
       let resourceType = group.dataset.resourceType;
@@ -736,6 +737,7 @@ export class MigrationWizard extends HTMLElement {
           supportLink.textContent = state.progress[resourceType].linkText;
           supportLink.href = state.progress[resourceType].linkURL;
           remainingProgressGroups--;
+          totalWarnings++;
           break;
         }
         case MigrationWizardConstants.PROGRESS_VALUE.INFO: {
@@ -763,9 +765,16 @@ export class MigrationWizard extends HTMLElement {
     }
 
     let migrationDone = remainingProgressGroups == 0;
-    let headerL10nID = migrationDone
-      ? "migration-wizard-progress-done-header"
-      : "migration-wizard-progress-header";
+    let headerL10nID = "migration-wizard-progress-header";
+
+    if (migrationDone) {
+      if (totalWarnings) {
+        headerL10nID = "migration-wizard-progress-done-with-warnings-header";
+      } else {
+        headerL10nID = "migration-wizard-progress-done-header";
+      }
+    }
+
     let header = this.#shadowRoot.getElementById("progress-header");
     document.l10n.setAttributes(header, headerL10nID);
 

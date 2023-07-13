@@ -50,6 +50,8 @@ add_setup(async function () {
  * @param {boolean} migrateBookmarks
  *   True if bookmarks should be migrated alongside passwords. If not, only
  *   passwords will be migrated.
+ * @param {boolean} shouldPasswordImportFail
+ *   True if importing from the CSV file should fail.
  * @param {Function} taskFn
  *   An asynchronous function that takes the following parameters in this
  *   order:
@@ -72,6 +74,7 @@ add_setup(async function () {
 async function testSafariPasswordHelper(
   expectsFilePicker,
   migrateBookmarks,
+  shouldPasswordImportFail,
   taskFn
 ) {
   let sandbox = sinon.createSandbox();
@@ -118,7 +121,7 @@ async function testSafariPasswordHelper(
           "Should not have requested to migrate the PASSWORDS resource."
         );
 
-        aProgressCallback(MigrationUtils.resourceTypes.BOOKMARKS);
+        aProgressCallback(MigrationUtils.resourceTypes.BOOKMARKS, true);
         Services.obs.notifyObservers(null, "Migration:Ended");
         resolve();
       });
@@ -130,9 +133,13 @@ async function testSafariPasswordHelper(
   for (let i = 0; i < EXPECTED_QUANTITY; ++i) {
     results.push({ result: "added" });
   }
-  let importFromCSVStub = sandbox
-    .stub(LoginCSVImport, "importFromCSV")
-    .resolves(results);
+  let importFromCSVStub = sandbox.stub(LoginCSVImport, "importFromCSV");
+
+  if (shouldPasswordImportFail) {
+    importFromCSVStub.rejects(new Error("Some error message"));
+  } else {
+    importFromCSVStub.resolves(results);
+  }
 
   sandbox.stub(MigrationUtils, "_importQuantities").value({
     bookmarks: EXPECTED_QUANTITY,
@@ -239,6 +246,7 @@ add_task(async function test_safari_password_do_import() {
   await testSafariPasswordHelper(
     true,
     true,
+    false,
     async (
       wizard,
       filePickerShownPromise,
@@ -276,6 +284,7 @@ add_task(async function test_safari_password_only_do_import() {
   await testSafariPasswordHelper(
     true,
     false,
+    false,
     async (
       wizard,
       filePickerShownPromise,
@@ -308,12 +317,70 @@ add_task(async function test_safari_password_only_do_import() {
 });
 
 /**
+ * Tests the flow of importing passwords from Safari when the file
+ * import fails.
+ */
+add_task(async function test_safari_password_empty_csv_file() {
+  await testSafariPasswordHelper(
+    true,
+    true,
+    true,
+    async (
+      wizard,
+      filePickerShownPromise,
+      importFromCSVStub,
+      didMigration,
+      migrateStub,
+      wizardDone
+    ) => {
+      let shadow = wizard.openOrClosedShadowRoot;
+      let safariPasswordImportSelect = shadow.querySelector(
+        "#safari-password-import-select"
+      );
+      safariPasswordImportSelect.click();
+      await filePickerShownPromise;
+      Assert.ok(true, "File picker was shown.");
+
+      await didMigration;
+      Assert.ok(importFromCSVStub.called, "Importing from CSV was called.");
+
+      await wizardDone;
+
+      let headerL10nID =
+        shadow.querySelector("#progress-header").dataset.l10nId;
+      Assert.equal(
+        headerL10nID,
+        "migration-wizard-progress-done-with-warnings-header"
+      );
+
+      let progressGroup = shadow.querySelector(
+        `.resource-progress-group[data-resource-type="${MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS}"`
+      );
+      let progressIcon = progressGroup.querySelector(".progress-icon");
+      let messageText =
+        progressGroup.querySelector(".message-text").textContent;
+
+      Assert.equal(
+        progressIcon.getAttribute("state"),
+        "warning",
+        "Icon should be in the warning state."
+      );
+      Assert.stringMatches(
+        messageText,
+        /file doesn’t include any valid password data/
+      );
+    }
+  );
+});
+
+/**
  * Tests that the user can skip importing passwords from Safari.
  */
 add_task(async function test_safari_password_skip() {
   await testSafariPasswordHelper(
     false,
     true,
+    false,
     async (
       wizard,
       filePickerShownPromise,

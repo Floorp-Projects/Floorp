@@ -378,22 +378,33 @@ export class MigrationWizardParent extends JSWindowActorParent {
         progress,
       });
 
-      let summary = await lazy.LoginCSVImport.importFromCSV(
-        migrationDetails.safariPasswordFilePath
-      );
-      let quantity = summary.filter(entry => entry.result == "added").length;
+      try {
+        let summary = await lazy.LoginCSVImport.importFromCSV(
+          migrationDetails.safariPasswordFilePath
+        );
+        let quantity = summary.filter(entry => entry.result == "added").length;
 
-      progress[
-        lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS
-      ] = {
-        value: lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
-        message: await lazy.gFluentStrings.formatValue(
-          "migration-wizard-progress-success-passwords",
-          {
-            quantity,
-          }
-        ),
-      };
+        progress[
+          lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS
+        ] = {
+          value: lazy.MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
+          message: await lazy.gFluentStrings.formatValue(
+            "migration-wizard-progress-success-passwords",
+            {
+              quantity,
+            }
+          ),
+        };
+      } catch (e) {
+        progress[
+          lazy.MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS
+        ] = {
+          value: lazy.MigrationWizardConstants.PROGRESS_VALUE.WARNING,
+          message: await lazy.gFluentStrings.formatValue(
+            "migration-passwords-from-file-no-valid-data"
+          ),
+        };
+      }
     }
 
     this.sendAsyncMessage("UpdateProgress", {

@@ -300,6 +300,41 @@ Success.args = {
   },
 };
 
+export const SuccessWithWarnings = Template.bind({});
+SuccessWithWarnings.args = {
+  dialogMode: true,
+  state: {
+    page: MigrationWizardConstants.PAGES.PROGRESS,
+    key: "chrome",
+    progress: {
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.BOOKMARKS]: {
+        value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
+        message: "14 bookmarks",
+      },
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PASSWORDS]: {
+        value: MigrationWizardConstants.PROGRESS_VALUE.WARNING,
+        message: "Something didn't work correctly.",
+      },
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.HISTORY]: {
+        value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
+        message: "From the last 180 days",
+      },
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.EXTENSIONS]: {
+        value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
+        message: "1 extension",
+      },
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.FORMDATA]: {
+        value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
+        message: "Addresses, credit cards, form history",
+      },
+      [MigrationWizardConstants.DISPLAYED_RESOURCE_TYPES.PAYMENT_METHODS]: {
+        value: MigrationWizardConstants.PROGRESS_VALUE.SUCCESS,
+        message: "6 payment methods",
+      },
+    },
+  },
+};
+
 export const ExtensionsPartialSuccess = Template.bind({});
 ExtensionsPartialSuccess.args = {
   dialogMode: true,
