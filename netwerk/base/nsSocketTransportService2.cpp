@@ -402,17 +402,10 @@ nsSocketTransportService::AttachSocket(PRFileDesc* fd,
 // call CanAttachSocket and check the result before creating a socket.
 
 bool nsSocketTransportService::CanAttachSocket() {
-  static bool reported900FDLimit = false;
-
   MOZ_ASSERT(!mShuttingDown);
   uint32_t total = mActiveList.Length() + mIdleList.Length();
   bool rv = total < gMaxCount;
 
-  if (Telemetry::CanRecordPrereleaseData() &&
-      (((total >= 900) || !rv) && !reported900FDLimit)) {
-    reported900FDLimit = true;
-    Telemetry::Accumulate(Telemetry::NETWORK_SESSION_AT_900FD, true);
-  }
   MOZ_ASSERT(mInitialized);
   return rv;
 }
@@ -1352,13 +1345,6 @@ nsresult nsSocketTransportService::DoPollIteration(TimeDuration* pollDuration) {
   SOCKET_LOG(("  calling PR_Poll [active=%zu idle=%zu]\n", mActiveList.Length(),
               mIdleList.Length()));
 
-#if defined(XP_WIN)
-  // 30 active connections is the historic limit before firefox 7's 256. A few
-  //  windows systems have troubles with the higher limit, so actively probe a
-  // limit the first time we exceed 30.
-  if ((mActiveList.Length() > 30) && !mProbedMaxCount) ProbeMaxCount();
-#endif
-
   // Measures seconds spent while blocked on PR_Poll
   int32_t n = 0;
   *pollDuration = nullptr;
@@ -1655,68 +1641,6 @@ nsSocketTransportService::GetSendBufferSize(int32_t* value) {
 #elif defined(XP_UNIX) && !defined(AIX) && !defined(NEXTSTEP) && !defined(QNX)
 #  include <sys/resource.h>
 #endif
-
-// Right now the only need to do this is on windows.
-#if defined(XP_WIN)
-void nsSocketTransportService::ProbeMaxCount() {
-  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  if (mProbedMaxCount) {
-    return;
-  }
-  mProbedMaxCount = true;
-
-  // Allocate and test a PR_Poll up to the gMaxCount number of unconnected
-  // sockets. See bug 692260 - windows should be able to handle 1000 sockets
-  // in select() without a problem, but LSPs have been known to balk at lower
-  // numbers. (64 in the bug).
-
-  // Allocate
-  struct PRPollDesc pfd[SOCKET_LIMIT_TARGET];
-  uint32_t numAllocated = 0;
-
-  for (uint32_t index = 0; index < gMaxCount; ++index) {
-    pfd[index].in_flags = PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT;
-    pfd[index].out_flags = 0;
-    pfd[index].fd = PR_OpenTCPSocket(PR_AF_INET);
-    if (!pfd[index].fd) {
-      SOCKET_LOG(("Socket Limit Test index %d failed\n", index));
-      if (index < SOCKET_LIMIT_MIN)
-        gMaxCount = SOCKET_LIMIT_MIN;
-      else
-        gMaxCount = index;
-      break;
-    }
-    ++numAllocated;
-  }
-
-  // Test
-  static_assert(SOCKET_LIMIT_MIN >= 32U, "Minimum Socket Limit is >= 32");
-  while (gMaxCount <= numAllocated) {
-    int32_t rv = PR_Poll(pfd, gMaxCount, PR_MillisecondsToInterval(0));
-
-    SOCKET_LOG(("Socket Limit Test poll() size=%d rv=%d\n", gMaxCount, rv));
-
-    if (rv >= 0) break;
-
-    SOCKET_LOG(("Socket Limit Test poll confirmationSize=%d rv=%d error=%d\n",
-                gMaxCount, rv, PR_GetError()));
-
-    gMaxCount -= 32;
-    if (gMaxCount <= SOCKET_LIMIT_MIN) {
-      gMaxCount = SOCKET_LIMIT_MIN;
-      break;
-    }
-  }
-
-  // Free
-  for (uint32_t index = 0; index < numAllocated; ++index)
-    if (pfd[index].fd) PR_Close(pfd[index].fd);
-
-  Telemetry::Accumulate(Telemetry::NETWORK_PROBE_MAXCOUNT, gMaxCount);
-  SOCKET_LOG(("Socket Limit Test max was confirmed at %d\n", gMaxCount));
-}
-#endif  // windows
 
 PRStatus nsSocketTransportService::DiscoverMaxCount() {
   gMaxCount = SOCKET_LIMIT_MIN;
