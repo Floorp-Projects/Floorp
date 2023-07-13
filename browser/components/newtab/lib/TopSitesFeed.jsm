@@ -212,8 +212,8 @@ class ContileIntegration {
    *   string value of the Contile resposne cache-control header
    */
   _extractCacheValidFor(cacheHeader) {
-    if (cacheHeader === undefined) {
-      lazy.log.warn("Contile response cache control header is undefined");
+    if (!cacheHeader) {
+      lazy.log.warn("Contile response cache control header is empty");
       return 0;
     }
     const [, staleIfError] = cacheHeader.match(/stale-if-error=\s*([0-9]+)/i);
