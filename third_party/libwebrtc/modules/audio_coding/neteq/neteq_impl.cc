@@ -821,6 +821,9 @@ int NetEqImpl::GetAudioInternal(AudioFrame* audio_frame,
   const size_t start_num_packets = packet_list.size();
   int decode_return_value =
       Decode(&packet_list, &operation, &length, &speech_type);
+  if (length > 0) {
+    last_decoded_type_ = speech_type;
+  }
 
   RTC_DCHECK(vad_.get());
   bool sid_frame_available =
@@ -1545,7 +1548,7 @@ void NetEqImpl::DoMerge(int16_t* decoded_buffer,
       rtc::dchecked_cast<int>(decoded_length / algorithm_buffer_->Channels());
 
   // Update in-call and post-call statistics.
-  if (expand_->MuteFactor(0) == 0) {
+  if (expand_->Muted() || last_decoded_type_ == AudioDecoder::kComfortNoise) {
     // Expand generates only noise.
     stats_->ExpandedNoiseSamplesCorrection(expand_length_correction);
   } else {
@@ -1615,7 +1618,7 @@ int NetEqImpl::DoExpand(bool play_dtmf) {
     bool is_new_concealment_event = (last_mode_ != Mode::kExpand);
 
     // Update in-call and post-call statistics.
-    if (expand_->MuteFactor(0) == 0) {
+    if (expand_->Muted() || last_decoded_type_ == AudioDecoder::kComfortNoise) {
       // Expand operation generates only noise.
       stats_->ExpandedNoiseSamples(length, is_new_concealment_event);
     } else {
