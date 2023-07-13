@@ -10,6 +10,10 @@
 
 package org.webrtc;
 
+import static android.media.MediaCodecInfo.CodecProfileLevel.AVCLevel3;
+import static android.media.MediaCodecInfo.CodecProfileLevel.AVCProfileHigh;
+import static android.media.MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR;
+
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
@@ -31,16 +35,6 @@ import org.webrtc.ThreadUtils.ThreadChecker;
  */
 class HardwareVideoEncoder implements VideoEncoder {
   private static final String TAG = "HardwareVideoEncoder";
-
-  // Bitrate modes - should be in sync with OMX_VIDEO_CONTROLRATETYPE defined
-  // in OMX_Video.h
-  private static final int VIDEO_ControlRateConstant = 2;
-  // Key associated with the bitrate control mode value (above). Not present as a MediaFormat
-  // constant until API level 21.
-  private static final String KEY_BITRATE_MODE = "bitrate-mode";
-
-  private static final int VIDEO_AVC_PROFILE_HIGH = 8;
-  private static final int VIDEO_AVC_LEVEL_3 = 0x100;
 
   private static final int MAX_VIDEO_FRAMERATE = 30;
 
@@ -220,8 +214,9 @@ class HardwareVideoEncoder implements VideoEncoder {
     adjustedBitrate = bitrateAdjuster.getAdjustedBitrateBps();
 
     Logging.d(TAG,
-        "initEncode: " + width + " x " + height + ". @ " + settings.startBitrate
-            + "kbps. Fps: " + settings.maxFramerate + " Use surface mode: " + useSurfaceMode);
+        "initEncode name: " + codecName + " type: " + codecType + " width: " + width
+            + " height: " + height + " framerate_fps: " + settings.maxFramerate
+            + " bitrate_kbps: " + settings.startBitrate + " surface mode: " + useSurfaceMode);
     return initEncodeInternal();
   }
 
@@ -242,7 +237,7 @@ class HardwareVideoEncoder implements VideoEncoder {
     try {
       MediaFormat format = MediaFormat.createVideoFormat(codecType.mimeType(), width, height);
       format.setInteger(MediaFormat.KEY_BIT_RATE, adjustedBitrate);
-      format.setInteger(KEY_BITRATE_MODE, VIDEO_ControlRateConstant);
+      format.setInteger(MediaFormat.KEY_BITRATE_MODE, BITRATE_MODE_CBR);
       format.setInteger(MediaFormat.KEY_COLOR_FORMAT, colorFormat);
       format.setFloat(
           MediaFormat.KEY_FRAME_RATE, (float) bitrateAdjuster.getAdjustedFramerateFps());
@@ -254,8 +249,8 @@ class HardwareVideoEncoder implements VideoEncoder {
         }
         switch (profileLevelId) {
           case VideoCodecInfo.H264_CONSTRAINED_HIGH_3_1:
-            format.setInteger("profile", VIDEO_AVC_PROFILE_HIGH);
-            format.setInteger("level", VIDEO_AVC_LEVEL_3);
+            format.setInteger("profile", AVCProfileHigh);
+            format.setInteger("level", AVCLevel3);
             break;
           case VideoCodecInfo.H264_CONSTRAINED_BASELINE_3_1:
             break;
