@@ -320,6 +320,23 @@
 
 </span>
 
+<!-- This set is used to test filenames that are changed within the file picker. -->
+<span id="modifieditems">
+
+<!-- filename which is changed within the file picker -->
+<a id="mod0" href="http://localhost:8000/save_filename.sjs?type=png&filename=teal.png"
+     data-pickedfilename='cyan.png' data-filename='cyan.png'>
+
+<!-- filename which is changed to an invalid filename within the file picker -->
+<a id="mod1" href="http://localhost:8000/save_filename.sjs?type=png&filename=orange.png"
+     data-pickedfilename='"peach".png' data-filename='peach .png'>
+
+<!-- an invalid filename which is changed to another invalid filename within the file picker -->
+<a id="mod2" href="http://localhost:8000/save_filename.sjs?type=png&filename=%maroon%34.png"
+     data-pickedfilename='"violet".png' data-filename="violet .png">
+
+</span>
+
 <!-- This set is used to test the filename specified by the download attribute is validated correctly. -->
 <span id="downloads">
   <a id="download0" href="http://localhost:8000/base" download="pearl.png" data-filename="pearl.png">Link</a>

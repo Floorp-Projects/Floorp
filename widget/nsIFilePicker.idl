@@ -145,7 +145,8 @@ interface nsIFilePicker : nsISupports
 
 
  /**
-  * Get the nsIFile for the file or directory.
+  * Get the nsIFile for the file or directory. A different file object
+  * may be returned by each invocation.
   *
   * @return Returns the file currently selected
   */
