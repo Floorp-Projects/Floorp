@@ -106,7 +106,8 @@ export var NativeManifests = {
         }
         return null;
       }
-      throw ex;
+      Cu.reportError(ex);
+      return null;
     }
     let normalized = lazy.Schemas.normalize(
       manifest,
