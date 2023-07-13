@@ -55,6 +55,7 @@
 #include "mozilla/dom/localstorage/ActorsParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/dom/quota/ActorsParent.h"
+#include "mozilla/dom/quota/QuotaParent.h"
 #include "mozilla/dom/simpledb/ActorsParent.h"
 #include "mozilla/dom/VsyncParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
