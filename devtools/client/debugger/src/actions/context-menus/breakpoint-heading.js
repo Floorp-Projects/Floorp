@@ -42,7 +42,7 @@ export function showBreakpointHeadingContextMenu(event, source) {
       label: disableInSourceLabel,
       accesskey: disableInSourceKey,
       disabled: false,
-      click: () => dispatch(disableBreakpointsInSource(cx, source)),
+      click: () => dispatch(disableBreakpointsInSource(source)),
     };
 
     const enableInSourceItem = {
@@ -50,7 +50,7 @@ export function showBreakpointHeadingContextMenu(event, source) {
       label: enableInSourceLabel,
       accesskey: enableInSourceKey,
       disabled: false,
-      click: () => dispatch(enableBreakpointsInSource(cx, source)),
+      click: () => dispatch(enableBreakpointsInSource(source)),
     };
 
     const removeInSourceItem = {

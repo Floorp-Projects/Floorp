@@ -6,6 +6,7 @@ import {
   getThreadContext,
   getSelectedFrame,
   getCurrentThread,
+  hasSource,
 } from "../selectors";
 
 // Context encapsulates the main parameters of the current redux state, which
@@ -77,6 +78,24 @@ export function validateSelectedFrame(state, selectedFrame) {
   // Compare frame's IDs as frame objects are cloned during mapping
   if (selectedFrame.id != newSelectedFrame?.id) {
     throw new ContextError("Selected frame changed");
+  }
+}
+
+export function validateBreakpoint(state, breakpoint) {
+  // XHR breakpoint don't use any location and are always valid
+  if (!breakpoint.location) {
+    return;
+  }
+
+  if (!hasSource(state, breakpoint.location.source.id)) {
+    throw new ContextError(
+      `Breakpoint's location is obsolete (source '${breakpoint.location.source.id}' no longer exists)`
+    );
+  }
+  if (!hasSource(state, breakpoint.generatedLocation.source.id)) {
+    throw new ContextError(
+      `Breakpoint's generated location is obsolete (source '${breakpoint.generatedLocation.source.id}' no longer exists)`
+    );
   }
 }
 

@@ -6,6 +6,7 @@ import {
   validateNavigateContext,
   validateContext,
   validateSelectedFrame,
+  validateBreakpoint,
 } from "../../../utils/context";
 
 function validateActionContext(getState, action) {
@@ -31,6 +32,9 @@ function context({ dispatch, getState }) {
     // for expression actions.
     if (action.selectedFrame) {
       validateSelectedFrame(getState(), action.selectedFrame);
+    }
+    if ("breakpoint" in action) {
+      validateBreakpoint(getState(), action.breakpoint);
     }
     return next(action);
   };
