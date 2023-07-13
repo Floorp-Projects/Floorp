@@ -23,6 +23,22 @@ XPCOMUtils.defineLazyGetter(lazy, "logger", () => {
   });
 });
 
+// Lazy getter for the strip-on-share strip list.
+XPCOMUtils.defineLazyGetter(lazy, "StripOnShareList", async () => {
+  let response = await fetch(
+    "chrome://global/content/antitracking/StripOnShare.json"
+  );
+  if (!response.ok) {
+    lazy.logger.error(
+      "Error fetching strip-on-share strip list" + response.status
+    );
+    throw new Error(
+      "Error fetching strip-on-share strip list" + response.status
+    );
+  }
+  return response.json();
+});
+
 export class URLQueryStrippingListService {
   classId = Components.ID("{afff16f0-3fd2-4153-9ccd-c6d9abd879e4}");
   QueryInterface = ChromeUtils.generateQI(["nsIURLQueryStrippingListService"]);
@@ -37,6 +53,8 @@ export class URLQueryStrippingListService {
   constructor() {
     lazy.logger.debug("constructor");
     this.observers = new Set();
+    this.stripOnShareObservers = new Set();
+    this.stripOnShareParams = null;
     this.prefStripList = new Set();
     this.prefAllowList = new Set();
     this.remoteStripList = new Set();
@@ -145,6 +163,9 @@ export class URLQueryStrippingListService {
     Services.prefs.removeObserver(PREF_ALLOW_LIST_NAME, this);
   }
 
+  get hasObservers() {
+    return !this.observers.size && !this.stripOnShareObservers.size;
+  }
   _onRemoteSettingsUpdate(entries) {
     this.remoteStripList.clear();
     this.remoteAllowList.clear();
@@ -192,6 +213,7 @@ export class URLQueryStrippingListService {
     }
 
     this._notifyObservers();
+    this._notifyStripOnShareObservers();
   }
 
   _getListFromSharedData() {
@@ -231,6 +253,44 @@ export class URLQueryStrippingListService {
     }
   }
 
+  async _notifyStripOnShareObservers(observer) {
+    this.stripOnShareParams = await lazy.StripOnShareList;
+    if (!this.stripOnShareParams) {
+      lazy.logger.error("StripOnShare list is undefined");
+      return;
+    }
+    // Add the qps params to the global rules of the strip-on-share list.
+    let qpsParams = [...this.prefStripList, ...this.remoteStripList].map(
+      param => param.toLowerCase()
+    );
+    this.stripOnShareParams.global.queryParams.push(...qpsParams);
+    // Getting rid of duplicates.
+    this.stripOnShareParams.global.queryParams = [
+      ...new Set(this.stripOnShareParams.global.queryParams),
+    ];
+    // Build an array of StripOnShareRules.
+    let rules = Object.values(this.stripOnShareParams);
+    let stringifiedRules = [];
+    // We need to stringify the rules so later we can initialise WebIDL dictionaries from them.
+    // The dictionaries init call needs stringified json.
+    rules.forEach(rule => {
+      stringifiedRules.push(JSON.stringify(rule));
+    });
+
+    let observers = observer ? new Set([observer]) : this.stripOnShareObservers;
+
+    if (observers.size) {
+      lazy.logger.debug("_notifyStripOnShareObservers", {
+        observerCount: observers.size,
+        runObserverAfterRegister: observer != null,
+        stringifiedRules,
+      });
+    }
+    for (let obs of observers) {
+      obs.onStripOnShareUpdate(stringifiedRules);
+    }
+  }
+
   async registerAndRunObserver(observer) {
     lazy.logger.debug("registerAndRunObserver", {
       isInitialized: this.#isInitialized,
@@ -242,10 +302,30 @@ export class URLQueryStrippingListService {
     this._notifyObservers(observer);
   }
 
+  async registerAndRunObserverStripOnShare(observer) {
+    lazy.logger.debug("registerAndRunObserverStripOnShare", {
+      isInitialized: this.#isInitialized,
+      pendingInit: this.#pendingInit,
+    });
+
+    await this.#init();
+    this.stripOnShareObservers.add(observer);
+    await this._notifyStripOnShareObservers(observer);
+  }
+
   async unregisterObserver(observer) {
     this.observers.delete(observer);
 
-    if (!this.observers.size) {
+    if (this.hasObservers) {
+      lazy.logger.debug("Last observer unregistered, shutting down...");
+      await this.#shutdown();
+    }
+  }
+
+  async unregisterStripOnShareObserver(observer) {
+    this.stripOnShareObservers.delete(observer);
+
+    if (this.hasObservers) {
       lazy.logger.debug("Last observer unregistered, shutting down...");
       await this.#shutdown();
     }
