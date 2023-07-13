@@ -21,25 +21,17 @@
 #include "rtc_base/numerics/safe_minmax.h"
 
 namespace webrtc {
+namespace {
 
-const double kMaxAdaptOffsetMs = 15.0;
-const double kOverUsingTimeThreshold = 10;
-const int kMaxNumDeltas = 60;
+constexpr double kMaxAdaptOffsetMs = 15.0;
+constexpr double kOverUsingTimeThreshold = 10;
+constexpr int kMaxNumDeltas = 60;
+constexpr double kUp = 0.0087;
+constexpr double kDown = 0.039;
 
-OveruseDetector::OveruseDetector(const FieldTrialsView* key_value_config)
-    // Experiment is on by default, but can be disabled with finch by setting
-    // the field trial string to "WebRTC-AdaptiveBweThreshold/Disabled/".
-    : k_up_(0.0087),
-      k_down_(0.039),
-      overusing_time_threshold_(kOverUsingTimeThreshold),
-      threshold_(12.5),
-      last_update_ms_(-1),
-      prev_offset_(0.0),
-      time_over_using_(-1),
-      overuse_counter_(0),
-      hypothesis_(BandwidthUsage::kBwNormal) {}
+}  // namespace
 
-OveruseDetector::~OveruseDetector() {}
+OveruseDetector::OveruseDetector() = default;
 
 BandwidthUsage OveruseDetector::State() const {
   return hypothesis_;
@@ -66,7 +58,7 @@ BandwidthUsage OveruseDetector::Detect(double offset,
       time_over_using_ += ts_delta;
     }
     overuse_counter_++;
-    if (time_over_using_ > overusing_time_threshold_ && overuse_counter_ > 1) {
+    if (time_over_using_ > kOverUsingTimeThreshold && overuse_counter_ > 1) {
       if (offset >= prev_offset_) {
         time_over_using_ = 0;
         overuse_counter_ = 0;
@@ -100,7 +92,7 @@ void OveruseDetector::UpdateThreshold(double modified_offset, int64_t now_ms) {
     return;
   }
 
-  const double k = fabs(modified_offset) < threshold_ ? k_down_ : k_up_;
+  const double k = fabs(modified_offset) < threshold_ ? kDown : kUp;
   const int64_t kMaxTimeDeltaMs = 100;
   int64_t time_delta_ms = std::min(now_ms - last_update_ms_, kMaxTimeDeltaMs);
   threshold_ += k * (fabs(modified_offset) - threshold_) * time_delta_ms;
