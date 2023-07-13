@@ -165,7 +165,7 @@ SharedWebrtcState::SharedWebrtcState(
     RefPtr<AbstractThread> aCallWorkerThread,
     webrtc::AudioState::Config&& aAudioStateConfig,
     RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
-    UniquePtr<webrtc::WebRtcKeyValueConfig> aTrials)
+    UniquePtr<webrtc::FieldTrialsView> aTrials)
     : mCallWorkerThread(std::move(aCallWorkerThread)),
       mAudioStateConfig(std::move(aAudioStateConfig)),
       mAudioDecoderFactory(std::move(aAudioDecoderFactory)),
@@ -486,7 +486,7 @@ void PeerConnectionCtx::AddPeerConnection(const std::string& aKey,
                            MediaThreadType::WEBRTC_CALL_THREAD)
                        .release());
 
-    UniquePtr<webrtc::WebRtcKeyValueConfig> trials =
+    UniquePtr<webrtc::FieldTrialsView> trials =
         WrapUnique(new NoTrialsConfig());
 
     mSharedWebrtcState = MakeAndAddRef<SharedWebrtcState>(
