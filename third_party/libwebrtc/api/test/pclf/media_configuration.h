@@ -375,19 +375,13 @@ struct VideoConfig {
 
 // Contains properties for audio in the call.
 struct AudioConfig {
-  enum Mode {
-    kGenerated,
-    kFile,
-  };
-
   AudioConfig() = default;
   explicit AudioConfig(absl::string_view stream_label);
 
   // Have to be unique among all specified configs for all peers in the call.
   // Will be auto generated if omitted.
   absl::optional<std::string> stream_label;
-  Mode mode = kGenerated;
-  // Have to be specified only if mode = kFile
+  // If no file is specified an audio will be generated.
   absl::optional<std::string> input_file_name;
   // If specified the input stream will be also copied to specified file.
   absl::optional<std::string> input_dump_file_name;
