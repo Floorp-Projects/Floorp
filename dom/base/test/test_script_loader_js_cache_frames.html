@@ -29,7 +29,7 @@ const tests = [
   {
     src: "file_script_module_frames_element.html",
     saveEvents: [
-      // file_script_module_frames_element_shared.js
+      // file_script_module_frames_element_shared.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module",
       "scriptloader_encode",
@@ -37,7 +37,7 @@ const tests = [
       "test_evaluated",
     ],
     loadEvents: [
-      // file_script_module_frames_element_shared.js
+      // file_script_module_frames_element_shared.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module",
       "test_evaluated",
@@ -48,27 +48,27 @@ const tests = [
   {
     src: "file_script_module_frames_import.html",
     saveEvents: [
-      // file_script_module_frames_import_save.js
+      // file_script_module_frames_import_save.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_frames_import_shared.js
+      // file_script_module_frames_import_shared.mjs
       "scriptloader_load_source",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     loadEvents: [
-      // file_script_module_frames_import_load.js
+      // file_script_module_frames_import_load.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_frames_import_shared.js
+      // file_script_module_frames_import_shared.mjs
       "scriptloader_load_bytecode",
     ],
   },
@@ -77,28 +77,28 @@ const tests = [
   {
     src: "file_script_module_frames_dynamic.html",
     saveEvents: [
-      // file_script_module_frames_dynamic_save.js
+      // file_script_module_frames_dynamic_save.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_frames_dynamic_shared.js
+      // file_script_module_frames_dynamic_shared.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
     ],
     loadEvents: [
-      // file_script_module_frames_dynamic_load.js
+      // file_script_module_frames_dynamic_load.mjs
       "scriptloader_load_source",
       "scriptloader_evaluate_module",
       "scriptloader_encode",
       "scriptloader_bytecode_saved",
       "test_evaluated",
 
-      // file_script_module_frames_dynamic_shared.js
+      // file_script_module_frames_dynamic_shared.mjs
       "scriptloader_load_bytecode",
       "scriptloader_evaluate_module",
     ],

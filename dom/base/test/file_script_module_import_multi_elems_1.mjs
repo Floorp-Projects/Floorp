@@ -1,5 +1,6 @@
-import { f } from "./file_script_module_import_multi_elems_imported_once_1.js";
-import { h } from "./file_script_module_import_multi_elems_imported_twice.js";
+import { f } from "./file_script_module_import_multi_elems_imported_once_1.mjs";
+import { h } from "./file_script_module_import_multi_elems_imported_twice.mjs";
+
 f();
 h();
 
@@ -8,7 +9,7 @@ h();
 const script = document.createElement("script");
 script.id = "watchme2";
 script.setAttribute("type", "module");
-script.setAttribute("src", "file_script_module_import_multi_elems_2.js");
+script.setAttribute("src", "file_script_module_import_multi_elems_2.mjs");
 document.body.appendChild(script);
 
 window.dispatchEvent(new Event("test_evaluated"));
