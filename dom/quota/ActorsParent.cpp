@@ -19,6 +19,7 @@
 #include "OriginInfo.h"
 #include "QuotaCommon.h"
 #include "QuotaManager.h"
+#include "QuotaRequestBase.h"
 #include "QuotaUsageRequestBase.h"
 #include "ResolvableOriginOp.h"
 #include "SanitizationUtils.h"
@@ -1000,31 +1001,6 @@ class GetOriginUsageOp final : public QuotaUsageRequestBase {
   virtual nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
 
   void GetResponse(UsageRequestResponse& aResponse) override;
-};
-
-class QuotaRequestBase : public NormalOriginOperationBase,
-                         public PQuotaRequestParent {
- protected:
-  explicit QuotaRequestBase(const char* aRunnableName, bool aExclusive)
-      : NormalOriginOperationBase(aRunnableName, Nullable<PersistenceType>(),
-                                  OriginScope::FromNull(),
-                                  Nullable<Client::Type>(), aExclusive) {}
-
-  QuotaRequestBase(const char* aRunnableName,
-                   const Nullable<PersistenceType>& aPersistenceType,
-                   const OriginScope& aOriginScope,
-                   const Nullable<Client::Type>& aClientType, bool aExclusive)
-      : NormalOriginOperationBase(aRunnableName, aPersistenceType, aOriginScope,
-                                  aClientType, aExclusive) {}
-
-  // Subclasses use this override to set the IPDL response value.
-  virtual void GetResponse(RequestResponse& aResponse) = 0;
-
- private:
-  virtual void SendResults() override;
-
-  // IPDL methods.
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
 class StorageNameOp final : public QuotaRequestBase {
@@ -7929,32 +7905,6 @@ void GetOriginUsageOp::GetResponse(UsageRequestResponse& aResponse) {
   usageResponse.fileUsage() = mFileUsage;
 
   aResponse = usageResponse;
-}
-
-void QuotaRequestBase::SendResults() {
-  AssertIsOnOwningThread();
-
-  if (IsActorDestroyed()) {
-    if (NS_SUCCEEDED(mResultCode)) {
-      mResultCode = NS_ERROR_FAILURE;
-    }
-  } else {
-    RequestResponse response;
-
-    if (NS_SUCCEEDED(mResultCode)) {
-      GetResponse(response);
-    } else {
-      response = mResultCode;
-    }
-
-    Unused << PQuotaRequestParent::Send__delete__(this, response);
-  }
-}
-
-void QuotaRequestBase::ActorDestroy(ActorDestroyReason aWhy) {
-  AssertIsOnOwningThread();
-
-  NoteActorDestroyed();
 }
 
 StorageNameOp::StorageNameOp()
