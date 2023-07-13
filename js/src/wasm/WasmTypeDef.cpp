@@ -293,7 +293,17 @@ CheckedInt32 StructLayout::addField(FieldType type) {
 }
 
 CheckedInt32 StructLayout::close() {
-  return RoundUpToAlignment(sizeSoFar, structAlignment);
+  CheckedInt32 size = RoundUpToAlignment(sizeSoFar, structAlignment);
+  // What we are computing into `size` is the size of
+  // WasmGcObject::inlineData_, or the size of the outline data area.  Either
+  // way, it is helpful if the area size is an integral number of machine
+  // words, since this would make any initialisation loop for inline
+  // allocation able to operate on machine word sized units, should we decide
+  // to do inline allocation.
+  if (structAlignment < sizeof(uintptr_t)) {
+    size = RoundUpToAlignment(size, sizeof(uintptr_t));
+  }
+  return size;
 }
 
 bool StructType::init() {

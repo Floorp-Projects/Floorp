@@ -350,7 +350,6 @@ const SymbolicAddressSignature SASigStructNewOOL_false = {
     _FailOnNullPtr,
     2,
     {_PTR, _PTR, _END}};
-
 const SymbolicAddressSignature SASigArrayNew_true = {
     SymbolicAddress::ArrayNew_true,
     _RoN,
