@@ -357,7 +357,7 @@ add_task(async function notRelevant() {
   await QuickSuggest.blockedSuggestions._test_readyPromise;
 
   Assert.ok(
-    await QuickSuggest.blockedSuggestions.has(result.payload.url),
+    await QuickSuggest.blockedSuggestions.has(result.payload.originalUrl),
     "The result's URL should be blocked"
   );
 
@@ -466,6 +466,12 @@ function makeExpectedResult({
   source = "remote-settings",
   isTopPick = false,
 } = {}) {
+  let url = new URL(suggestion.url);
+  url.searchParams.set("utm_medium", "firefox-desktop");
+  url.searchParams.set("utm_source", "firefox-suggest");
+  url.searchParams.set("utm_campaign", "pocket-collections-in-the-address-bar");
+  url.searchParams.set("utm_content", "treatment");
+
   return {
     isBestMatch: isTopPick,
     suggestedIndex: isTopPick ? 1 : -1,
@@ -477,8 +483,9 @@ function makeExpectedResult({
       provider: source == "remote-settings" ? "PocketSuggestions" : "pocket",
       telemetryType: "pocket",
       title: suggestion.title,
-      url: suggestion.url,
-      displayUrl: suggestion.url.replace(/^https:\/\//, ""),
+      url: url.href,
+      displayUrl: url.href.replace(/^https:\/\//, ""),
+      originalUrl: suggestion.url,
       description: isTopPick ? suggestion.description : "",
       icon: "chrome://global/skin/icons/pocket.svg",
       helpUrl: QuickSuggest.HELP_URL,
