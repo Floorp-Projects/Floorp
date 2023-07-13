@@ -18,6 +18,12 @@
           src="../states.js"></script>
 
   <script type="application/javascript">
+    // Disable mixed-content upgrading as this test is expecting an HTTP load
+    Services.prefs.setBoolPref(
+      "security.mixed_content.upgrade_display_content",
+      false
+    );
+
     async function openNode(aIDDetails, aIDSummary, aIsOpen) {
       let p = waitForStateChange(aIDSummary, STATE_EXPANDED, aIsOpen, false);
       if (aIsOpen) {
@@ -264,7 +270,7 @@
         STATE_INVISIBLE, 0,
         "image should be invisible");
     }
-    
+
     async function testMultiSelectable(aID, aAttribute) {
       testStates(aID,
         0, 0,

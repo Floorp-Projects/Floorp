@@ -31,6 +31,12 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
+// Disable mixed-content upgrading as this test is expecting an HTTP load
+Services.prefs.setBoolPref(
+  "security.mixed_content.upgrade_display_content",
+  false
+);
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTest);
 
