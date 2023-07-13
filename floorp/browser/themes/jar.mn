@@ -44,6 +44,16 @@ browser.jar:
 # Undo Closed Tab
   skin/classic/browser/undo-closed-tab.svg                                (icons/undo-closed-tab.svg)
 
+# desgin images
+  skin/classic/browser/design-images/firefox-lepton-dark.jpg                (design-images/firefox-lepton-dark.jpg)
+  skin/classic/browser/design-images/firefox-lepton-white.jpg               (design-images/firefox-lepton-white.jpg)
+  skin/classic/browser/design-images/firefox-photon-dark.jpg                (design-images/firefox-photon-dark.jpg)
+  skin/classic/browser/design-images/firefox-photon-white.jpg               (design-images/firefox-photon-white.jpg)
+  skin/classic/browser/design-images/firefox-proton-dark.jpg                (design-images/firefox-proton-dark.jpg)
+  skin/classic/browser/design-images/firefox-proton-white.jpg               (design-images/firefox-proton-white.jpg)
+  skin/classic/browser/design-images/floorp-fluerial-dark.jpg               (design-images/floorp-fluerial-dark.jpg)
+  skin/classic/browser/design-images/floorp-fluerial-white.jpg              (design-images/floorp-fluerial-white.jpg)
+
 # Lepton
   skin/classic/browser/lepton/photonChrome-multitab.css                     (designs/lepton/photonChrome-multitab.css)
   skin/classic/browser/lepton/photonContent-multitab.css                    (designs/lepton/photonContent-multitab.css)

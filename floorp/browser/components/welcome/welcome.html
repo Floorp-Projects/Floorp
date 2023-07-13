@@ -13,103 +13,128 @@
     <title data-l10n-id="welcome-to-floorp">Welcome to Floorp</title>
   </head>
   <body>
-    <div id="main">
-      <div id="content">
-        <a id="login-to-fx-account-link" href="https://accounts.firefox.com/signin?context=fx_desktop_v3&entrypoint=preferences&action=email&service=sync">
+    <div id="main-wrapper">
+      <div id="welcome-contents-wrapper">
+        <a data-l10n-id="welcome-login-to-firefox-account" id="link-login-to-fx-account-link" href="https://accounts.firefox.com/signin?context=fx_desktop_v3&entrypoint=preferences&action=email&service=sync">
           Firefox アカウントにログイン
         </a>
-        <div id="welcome-main">
-          <div id="welcome-content">
-            <div id="welcome-text">
-              <div id="welcome-text-content" class="welcome-setups">
-                <img id="floorp-welcome-logo" src="chrome://branding/content/about-logo.svg">
-                <h1 id="floorp-welcome-big-text"> Floorp ブラウザーへようこそ </h1>
-                <div id="discribe-text">
+        <div id="wrapper-welcome-contents">
+          <div id="welcome-contents-box">
+            <div id="welcome-flex-box">
+            
+              <div id="first-welcome-box" class="welcome-setups">
+                <img id="first-floorp-welcome-logo" src="chrome://branding/content/about-logo.svg">
+                <h1 data-l10n-id="welcome-to-floorp" id="first-floorp-welcome-big-text" class="welcome-big-text">Floorp ブラウザーへようこそ</h1>
+                <div data-l10n-id="welcome-discribe-floorp" id="first-discribe-floorp-text">
                   最も高機能な Firefox 派生ブラウザーへようこそ。少しのカスタマイズであなただけのウェブブラウザーを作成できます。後から設定を変更することも可能です。 
                 </div>
-                <button id="floorp-welcome-button" class="welcome-button primary">
+                <button data-l10n-id="welcome-start-setup" id="first-floorp-welcome-button" class="welcome-button primary">
                   始めましょう！
                 </button> 
-                <a href="about:home" style="text-align: center;margin-top: 30px;">
+                <a data-l10n-id="welcome-skip-to-start-browsing" id="first-skip-setup-process" href="about:home">
                   スキップしてウェブの閲覧を開始する
                 </a>
               </div>
-              <div id="welcome-first-setup" class="welcome-setups">
-                <!-- select template from 3 options -->
-                <h1 class="floorp-welcome-big-text"> テンプレートを選択 </h1>
-                <div id="template-options">
-                  <div class="template-option">
-                    <img class="option-icons" src="chrome://branding/content/about-logo.svg">
-                    <div class="template-option-text">
-                      <h2 class="template-option-title">梅</h2>
-                      <p class="template-option-description">基本的な機能のみを有効にして Floorp を開始します。</p>
+
+              <div id="second-select-template-box" class="welcome-setups">
+                <h1 data-l10n-id="welcome-select-preferences-template" class="welcome-big-text"> テンプレートを選択 </h1>
+                <div id="second-template-options-flex-box">
+                  <div class="second-template-option">
+                    <img class="second-option-icons" src="chrome://branding/content/about-logo.svg">
+                    <div class="second-template-option-text">
+                      <h2 data-l10n-id="welcome-minimum-template" class="second-template-option-title">梅</h2>
+                      <p data-l10n-id="welcome-enable-basic-features" class="second-template-option-description">基本的な機能のみを有効にして Floorp を開始します。</p>
                     </div>
-                    <button class="template-option-button primary">選択</button>
+                    <button data-l10n-id="welcome-select-button" class="template-option-button primary">選択</button>
                   </div>
-                  <div class="template-option">
-                    <img class="option-icons" src="chrome://branding/content/about-logo.svg">
-                    <div class="template-option-text">
-                      <h2 class="template-option-title">竹</h2>
-                      <p class="template-option-description">いくつかのカスタマイズを有効にして Floorp を開始します。</p>
+                  <div class="second-template-option">
+                    <img class="second-option-icons" src="chrome://branding/content/about-logo.svg">
+                    <div class="second-template-option-text">
+                      <h2 data-l10n-id="second-welcome-medium-template" class="second-template-option-title">竹</h2>
+                      <p data-l10n-id="welcome-enable-some-features" class="second-template-option-description">いくつかのカスタマイズを有効にして Floorp を開始します。</p>
                     </div>
-                    <button class="template-option-button primary">選択</button>
+                    <button data-l10n-id="welcome-select-button" class="template-option-button primary">選択</button>
                   </div>
-                  <div class="template-option">
-                    <img class="option-icons" src="chrome://branding/content/about-logo.svg">
-                    <div class="template-option-text">
-                      <h2 class="template-option-title">松</h2>
-                      <p class="template-option-description">すべてのカスタマイズ機能を有効にして Floorp を開始します。</p>
+                  <div class="second-template-option">
+                    <img class="second-option-icons" src="chrome://branding/content/about-logo.svg">
+                    <div class="second-template-option-text">
+                      <h2 data-l10n-id="welcome-maximum-template" class="second-template-option-title">松</h2>
+                      <p data-l10n-id="welcome-enable-most-of-features" class="second-template-option-description">すべてのカスタマイズ機能を有効にして Floorp を開始します。</p>
                     </div>
-                    <button class="template-option-button primary">選択</button>
+                    <button data-l10n-id="welcome-select-button" class="template-option-button primary">選択</button>
                   </div>
                 </div>
               </div>
-              <div id="welcome-design-setup" class="welcome-setups">
-                <h1 id="floorp-desgin-text" class="floorp-welcome-big-text"> ブラウザーのデザインを選択 </h1>
-                <p id="floorp-desgin-description" class="floorp-welcome-big-text">ブラウザーのデザインを指先１つで変えましょう。Floorp は Lepton で最も最適に動作します。</p>
-                <div id="design-cars-options">
-                  <ul id="design-cards">
-                    <li class="design-card-item">
-                      <div class="c0144">
-                        <button class="c01765 c01766 c0157">
-                          <span class="c01757">
-                            <div aria-hidden="true" style="border-radius: 6px; overflow: hidden;">
-                              <img xmlns="http://www.w3.org/2000/svg" src="chrome://mozapps/content/extensions/default-theme/preview.svg" width="114" height="42">
+
+              <div id="third-design-setup-box" class="welcome-setups">
+                <h1 id="third-floorp-desgin-text" class="welcome-big-text" data-l10n-id="welcome-select-browser-design">ブラウザーのデザインを選択</h1>
+                <p id="floorp-desgin-description" data-l10n-id="welcome-discribe-browser-design">ブラウザーのデザインを指先１つで変えましょう。設定から、OS 固有のデザインを有効にすることもできます。</p>
+                <div id="third-design-cars-options">
+                  <ul id="third-design-cards">
+                    <li class="third-design-card-item">
+                      <div class="third-design-card-box">
+                        <button class="third-design-card-content">
+                          <span class="third-card-flex-box">
+                            <div class="third-img-design-box">
+                              <img src="chrome://browser/skin/design-images/firefox-lepton-dark.jpg" width="114" height="42">
                             </div>
-                            <span aria-hidden="true" class="c01745 c01754" style="font-size: 10px; line-height: 14px; display: flex;">既定</span>
+                            <span class="third-design-name" data-l10n-id="welcome-design-lepton-name">Lepton Original デザイン</span>
                           </span>
                         </button>
                       </div>
                     </li>
-                    <li class="design-card-item">
-                      <div class="c0144">
-                        <button class="c01765 c01766 c0157">
-                          <span class="c01757">
-                            <div aria-hidden="true" style="border-radius: 6px; overflow: hidden;">
-                              <img xmlns="http://www.w3.org/2000/svg" src="chrome://mozapps/content/extensions/default-theme/preview.svg" width="114" height="42">
+                    <li class="third-design-card-item">
+                      <div class="third-design-card-box">
+                        <button class="third-design-card-content">
+                          <span class="third-card-flex-box">
+                            <div class="third-img-design-box">
+                              <img src="chrome://browser/skin/design-images/firefox-photon-dark.jpg" width="114" height="42">
                             </div>
-                            <span aria-hidden="true" class="c01745 c01754" style="font-size: 10px; line-height: 14px; display: flex;">既定</span>
+                            <span class="third-design-name" data-l10n-id="welcome-design-photon-name">Lepton Photon デザイン</span>
                           </span>
                         </button>
                       </div>
                     </li>
-                    <li class="design-card-item">
-                      <div class="c0144">
-                        <button class="c01765 c01766 c0157" role="radio" aria-checked="false">
-                          <span class="c01757">
-                            <div aria-hidden="true" style="border-radius: 6px; overflow: hidden;">
-                              <img xmlns="http://www.w3.org/2000/svg" src="chrome://mozapps/content/extensions/default-theme/preview.svg" width="114" height="42">
+                    <li class="third-design-card-item">
+                      <div class="third-design-card-box">
+                        <button class="third-design-card-content">
+                          <span class="third-card-flex-box">
+                            <div class="third-img-design-box">
+                              <img src="chrome://browser/skin/design-images/firefox-proton-dark.jpg" width="114" height="42">
                             </div>
-                            <span aria-hidden="true" class="c01745 c01754" style="font-size: 10px; line-height: 14px; display: flex;">既定</span>
+                            <span class="third-design-name" data-l10n-id="welcome-design-ProtonFix-name">Lepton Proton Fix デザイン</span>
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                    <li class="third-design-card-item">
+                      <div class="third-design-card-box">
+                        <button class="third-design-card-content">
+                          <span class="third-card-flex-box">
+                            <div class="third-img-design-box">
+                              <img src="chrome://browser/skin/design-images/floorp-fluerial-dark.jpg" width="114" height="42">
+                            </div>
+                            <span class="third-design-name" data-l10n-id="welcome-design-floorp-fluerial-name">Floorp Fluerial デザイン</span>
+                          </span>
+                        </button>
+                      </div>
+                    </li>
+                    <li class="third-design-card-item">
+                      <div class="third-design-card-box">
+                        <button class="third-design-card-content">
+                          <span class="third-card-flex-box">
+                            <div class="third-img-design-box">
+                              <img src="chrome://browser/skin/design-images/firefox-proton-dark.jpg" width="114" height="42">
+                            </div>
+                            <span class="third-design-name" data-l10n-id="welcome-design-floorp-fluerial-name">Firefox Proton デザイン</span>
                           </span>
                         </button>
                       </div>
                     </li>
                   </ul>
                 </div>
-                <button class="go-next-page-button primary" style="margin-left: auto;">選択</button>
+                <button data-l10n-id="welcome-select-button" id="third-design-select-button" class="go-next-page-button primary">選択</button>
               </div>
-
 
             </div>
           </div>
