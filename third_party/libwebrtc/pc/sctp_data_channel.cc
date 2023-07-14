@@ -556,6 +556,7 @@ bool SctpDataChannel::Send(const DataBuffer& buffer) {
   RTC_DCHECK_RUN_ON(network_thread_);
 
   if (state_ != kOpen) {
+    error_ = RTCError(RTCErrorType::INVALID_STATE);
     return false;
   }
 
@@ -852,6 +853,7 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
                                       bool queue_if_blocked) {
   SendDataParams send_params;
   if (!controller_) {
+    error_ = RTCError(RTCErrorType::INVALID_STATE);
     return false;
   }
 
@@ -869,9 +871,8 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
   send_params.type =
       buffer.binary ? DataMessageType::kBinary : DataMessageType::kText;
 
-  RTCError error = controller_->SendData(id_n_, send_params, buffer.data);
-
-  if (error.ok()) {
+  error_ = controller_->SendData(id_n_, send_params, buffer.data);
+  if (error_.ok()) {
     ++messages_sent_;
     bytes_sent_ += buffer.size();
 
@@ -881,7 +882,7 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
     return true;
   }
 
-  if (error.type() == RTCErrorType::RESOURCE_EXHAUSTED) {
+  if (error_.type() == RTCErrorType::RESOURCE_EXHAUSTED) {
     if (!queue_if_blocked || QueueSendDataMessage(buffer)) {
       return false;
     }
@@ -890,7 +891,7 @@ bool SctpDataChannel::SendDataMessage(const DataBuffer& buffer,
   // message failed.
   RTC_LOG(LS_ERROR) << "Closing the DataChannel due to a failure to send data, "
                        "send_result = "
-                    << ToString(error.type()) << ":" << error.message();
+                    << ToString(error_.type()) << ":" << error_.message();
   CloseAbruptlyWithError(
       RTCError(RTCErrorType::NETWORK_ERROR, "Failure to send data"));
 
@@ -903,6 +904,7 @@ bool SctpDataChannel::QueueSendDataMessage(const DataBuffer& buffer) {
   if (start_buffered_amount + buffer.size() >
       DataChannelInterface::MaxSendQueueSize()) {
     RTC_LOG(LS_ERROR) << "Can't buffer any more data for the data channel.";
+    error_ = RTCError(RTCErrorType::RESOURCE_EXHAUSTED);
     return false;
   }
   queued_send_data_.PushBack(std::make_unique<DataBuffer>(buffer));
