@@ -34,10 +34,9 @@ struct ReceiverFrameStats {
   Timestamp decode_start_time = Timestamp::MinusInfinity();
   Timestamp decode_end_time = Timestamp::MinusInfinity();
   Timestamp rendered_time = Timestamp::MinusInfinity();
-  // Will be finite if there is frame rendered before this one.
-  Timestamp prev_frame_rendered_time = Timestamp::MinusInfinity();
 
   // Will be set if there is frame rendered before this one.
+  absl::optional<Timestamp> prev_frame_rendered_time = absl::nullopt;
   absl::optional<TimeDelta> time_between_rendered_frames = absl::nullopt;
 
   // Type and encoded size of received frame.
