@@ -22,6 +22,7 @@ if (rtc_include_tests) {
       "signaling_route.h",
     ]
     deps = [
+      "..:create_frame_generator_capturer",
       "..:fake_video_codecs",
       "..:fileutils",
       "..:frame_generator_capturer",

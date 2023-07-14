@@ -33,6 +33,7 @@
 #include "media/engine/webrtc_media_engine.h"
 #include "modules/audio_device/include/test_audio_device.h"
 #include "p2p/client/basic_port_allocator.h"
+#include "test/create_frame_generator_capturer.h"
 #include "test/fake_decoder.h"
 #include "test/fake_vp8_encoder.h"
 #include "test/frame_generator_capturer.h"
@@ -331,8 +332,8 @@ PeerScenarioClient::VideoSendTrack PeerScenarioClient::CreateVideo(
     VideoSendTrackConfig config) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   VideoSendTrack res;
-  auto capturer = FrameGeneratorCapturer::Create(clock(), *task_queue_factory_,
-                                                 config.generator);
+  auto capturer = CreateFrameGeneratorCapturer(clock(), *task_queue_factory_,
+                                               config.generator);
   res.capturer = capturer.get();
   capturer->Init();
   res.source = rtc::make_ref_counted<FrameGeneratorCapturerVideoTrackSource>(

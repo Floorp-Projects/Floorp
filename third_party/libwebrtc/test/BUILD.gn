@@ -126,6 +126,20 @@ rtc_library("test_video_capturer") {
   ]
 }
 
+rtc_library("create_frame_generator_capturer") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [ "create_frame_generator_capturer.h" ]
+  deps = [
+    ":frame_generator_capturer",
+    "../api:frame_generator_api",
+    "../api/task_queue",
+    "../api/units:time_delta",
+    "../system_wrappers",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+}
+
 rtc_library("frame_generator_capturer") {
   visibility = [ "*" ]
   testonly = true
@@ -169,6 +183,7 @@ rtc_library("video_test_common") {
   ]
 
   deps = [
+    ":create_frame_generator_capturer",
     ":fileutils",
     ":frame_utils",
     ":scoped_key_value_config",
