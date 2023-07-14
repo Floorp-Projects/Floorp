@@ -1,37 +1,27 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Mon, 26 Jul 2021 22:51:00 -0700
-Subject: Bug 1654112 - fix timestamp issues with RTP sources; r=mjf
+From: Michael Froman <mfroman@mozilla.com>
+Date: Thu, 2 Sep 2021 13:22:00 -0500
+Subject: Bug 1654112 - fixes for hybrid build. r=ng
 
-Differential Revision: https://phabricator.services.mozilla.com/D120930
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/de8c14e4972f717bf937b6f2fffcd08c35e21ced
+- adds missing includes in several places
+- makes dom/media/webrtc/jsapi unified-only
+
+Differential Revision: https://phabricator.services.mozilla.com/D124499
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1965757ee924d49c32eab76d1a3dfa77f9eadcf4
 ---
- modules/rtp_rtcp/source/source_tracker.cc | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ audio/channel_receive.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/modules/rtp_rtcp/source/source_tracker.cc b/modules/rtp_rtcp/source/source_tracker.cc
-index 13d848dce0..46a46ef51d 100644
---- a/modules/rtp_rtcp/source/source_tracker.cc
-+++ b/modules/rtp_rtcp/source/source_tracker.cc
-@@ -47,7 +47,8 @@ void SourceTracker::OnFrameDeliveredInternal(
-       SourceKey key(RtpSourceType::CSRC, csrc);
-       SourceEntry& entry = UpdateEntry(key);
- 
--      entry.timestamp = now;
-+      const auto packet_time = packet_info.receive_time();
-+      entry.timestamp = packet_time.ms() ? packet_time : now;
-       entry.audio_level = packet_info.audio_level();
-       entry.absolute_capture_time = packet_info.absolute_capture_time();
-       entry.local_capture_clock_offset =
-@@ -86,6 +87,10 @@ std::vector<RtpSource> SourceTracker::GetSources() const {
-             .local_capture_clock_offset = entry.local_capture_clock_offset});
-   }
- 
-+  std::sort(sources.begin(), sources.end(), [](const auto &a, const auto &b){
-+    return a.timestamp_ms() > b.timestamp_ms();
-+  });
-+
-   return sources;
- }
+diff --git a/audio/channel_receive.h b/audio/channel_receive.h
+index c192039894..37bf903394 100644
+--- a/audio/channel_receive.h
++++ b/audio/channel_receive.h
+@@ -28,6 +28,7 @@
+ #include "call/rtp_packet_sink_interface.h"
+ #include "call/syncable.h"
+ #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
++#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
+ #include "modules/rtp_rtcp/source/source_tracker.h"
+ #include "system_wrappers/include/clock.h"
  
 -- 
 2.34.1

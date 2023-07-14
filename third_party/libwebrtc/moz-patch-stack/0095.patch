@@ -1,71 +1,52 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
 Date: Wed, 10 May 2023 08:01:00 +0000
-Subject: Bug 1828065 - cherry-pick upstream libwebrtc commit 6fc1ae58be.
+Subject: Bug 1828065 - cherry-pick upstream libwebrtc commit adf55790b6.
  r=webrtc-reviewers,mjf
 
-Upstream commit: https://webrtc.googlesource.com/src/+/6fc1ae58be7cbb61ad0431d90eb7a7dc333de2f2
-    In DeviceInfoDS check that out vars were set
+Upstream commit: https://webrtc.googlesource.com/src/+/adf55790b6ecf50c4bb2b2cf7d58441303b9d946
+    In DeviceInfoDS free the frame duration list after use
+
+    Per the docs, the caller is responsible for freeing the memory.
 
     Bug: chromium:1441804
-    Change-Id: Id07cb61519315d77c2d7cdab1053efaaf7473e1a
-    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304060
-    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Change-Id: I9aaae493a1a86d8ab4f03930715a643a3c9fb61b
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/304061
     Reviewed-by: Per Kjellander <perkj@webrtc.org>
     Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-    Cr-Commit-Position: refs/heads/main@{#39982}
+    Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#39983}
 
-Differential Revision: https://phabricator.services.mozilla.com/D177236
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/60d381b6016ae5af0181b44c6a31b41eab094793
+Differential Revision: https://phabricator.services.mozilla.com/D177237
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/854cc79e99130e6537eebe8433a6a7adf5e1578d
 ---
- modules/video_capture/windows/device_info_ds.cc    | 13 +++++++------
- modules/video_capture/windows/help_functions_ds.cc |  3 +++
- 2 files changed, 10 insertions(+), 6 deletions(-)
+ modules/video_capture/windows/device_info_ds.cc | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 299be99502..b5867923d1 100644
+index b5867923d1..f6927281f3 100644
 --- a/modules/video_capture/windows/device_info_ds.cc
 +++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -504,9 +504,9 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
-       }
- 
-       if (hrVC == S_OK) {
--        LONGLONG* frameDurationList;
--        LONGLONG maxFPS;
--        long listSize;
-+        LONGLONG* frameDurationList = NULL;
-+        LONGLONG maxFPS = 0;
-+        long listSize = 0;
-         SIZE size;
-         size.cx = capability.width;
-         size.cy = capability.height;
-@@ -519,9 +519,10 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
+@@ -519,11 +519,18 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
          hrVC = videoControlConfig->GetFrameRateList(
              outputCapturePin, tmp, size, &listSize, &frameDurationList);
  
--        // On some odd cameras, you may get a 0 for duration.
--        // GetMaxOfFrameArray returns the lowest duration (highest FPS)
--        if (hrVC == S_OK && listSize > 0 &&
-+        // On some odd cameras, you may get a 0 for duration. Some others may
-+        // not update the out vars. GetMaxOfFrameArray returns the lowest
-+        // duration (highest FPS), or 0 if there was no list with elements.
-+        if (hrVC == S_OK &&
-             0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
++        if (hrVC == S_OK) {
++          maxFPS = GetMaxOfFrameArray(frameDurationList, listSize);
++        }
++
++        CoTaskMemFree(frameDurationList);
++        frameDurationList = NULL;
++        listSize = 0;
++
+         // On some odd cameras, you may get a 0 for duration. Some others may
+         // not update the out vars. GetMaxOfFrameArray returns the lowest
+         // duration (highest FPS), or 0 if there was no list with elements.
+-        if (hrVC == S_OK &&
+-            0 != (maxFPS = GetMaxOfFrameArray(frameDurationList, listSize))) {
++        if (0 != maxFPS) {
            capability.maxFPS = static_cast<int>(10000000 / maxFPS);
            capability.supportFrameRateControl = true;
-diff --git a/modules/video_capture/windows/help_functions_ds.cc b/modules/video_capture/windows/help_functions_ds.cc
-index b767726107..47fecfe4a1 100644
---- a/modules/video_capture/windows/help_functions_ds.cc
-+++ b/modules/video_capture/windows/help_functions_ds.cc
-@@ -21,6 +21,9 @@ namespace webrtc {
- namespace videocapturemodule {
- // This returns minimum :), which will give max frame rate...
- LONGLONG GetMaxOfFrameArray(LONGLONG* maxFps, long size) {
-+  if (!maxFps || size <= 0) {
-+    return 0;
-+  }
-   LONGLONG maxFPS = maxFps[0];
-   for (int i = 0; i < size; i++) {
-     if (maxFPS > maxFps[i])
+         } else  // use existing method
 -- 
 2.34.1
 
