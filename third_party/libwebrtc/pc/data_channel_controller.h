@@ -70,7 +70,7 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   // Called from PeerConnection::SetupDataChannelTransport_n
   void SetupDataChannelTransport_n();
   // Called from PeerConnection::TeardownDataChannelTransport_n
-  void TeardownDataChannelTransport_n();
+  void TeardownDataChannelTransport_n(RTCError error);
 
   // Called from PeerConnection::OnTransportChanged
   // to make required changes to datachannels' transports.
@@ -95,9 +95,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
 
   // Accessors
   void set_data_channel_transport(DataChannelTransportInterface* transport);
-
-  // Called when the transport for the data channels is closed or destroyed.
-  void OnTransportChannelClosed(RTCError error);
 
   void OnSctpDataChannelClosed(SctpDataChannel* channel);
 

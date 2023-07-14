@@ -361,7 +361,7 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
   bool SetupDataChannelTransport_n(const std::string& mid) override {
     return false;
   }
-  void TeardownDataChannelTransport_n() override {}
+  void TeardownDataChannelTransport_n(RTCError error) override {}
   void SetSctpDataMid(const std::string& mid) override {}
   void ResetSctpDataMid() override {}
 

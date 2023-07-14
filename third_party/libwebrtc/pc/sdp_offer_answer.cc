@@ -5110,18 +5110,12 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
 
 void SdpOfferAnswerHandler::DestroyDataChannelTransport(RTCError error) {
   RTC_DCHECK_RUN_ON(signaling_thread());
-  const bool has_sctp = pc_->sctp_mid().has_value();
-
   context_->network_thread()->BlockingCall(
       [&, data_channel_controller = data_channel_controller()] {
         RTC_DCHECK_RUN_ON(context_->network_thread());
-        if (has_sctp)
-          data_channel_controller->OnTransportChannelClosed(error);
-        pc_->TeardownDataChannelTransport_n();
+        pc_->TeardownDataChannelTransport_n(error);
       });
-
-  if (has_sctp)
-    pc_->ResetSctpDataMid();
+  pc_->ResetSctpDataMid();
 }
 
 void SdpOfferAnswerHandler::DestroyAllChannels() {

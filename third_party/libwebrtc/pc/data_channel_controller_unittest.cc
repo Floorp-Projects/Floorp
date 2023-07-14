@@ -55,7 +55,8 @@ class DataChannelControllerForTest : public DataChannelController {
       : DataChannelController(pc) {}
 
   ~DataChannelControllerForTest() override {
-    network_thread()->BlockingCall([&] { TeardownDataChannelTransport_n(); });
+    network_thread()->BlockingCall(
+        [&] { TeardownDataChannelTransport_n(RTCError::OK()); });
     PrepareForShutdown();
   }
 };

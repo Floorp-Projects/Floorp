@@ -267,7 +267,7 @@ class MockPeerConnectionInternal : public PeerConnectionInternal {
               SetupDataChannelTransport_n,
               (const std::string&),
               (override));
-  MOCK_METHOD(void, TeardownDataChannelTransport_n, (), (override));
+  MOCK_METHOD(void, TeardownDataChannelTransport_n, (RTCError), (override));
   MOCK_METHOD(void, SetSctpDataMid, (const std::string&), (override));
   MOCK_METHOD(void, ResetSctpDataMid, (), (override));
   MOCK_METHOD(const FieldTrialsView&, trials, (), (const, override));

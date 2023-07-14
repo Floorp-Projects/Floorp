@@ -434,7 +434,8 @@ class PeerConnection : public PeerConnectionInternal,
 
   bool SetupDataChannelTransport_n(const std::string& mid) override
       RTC_RUN_ON(network_thread());
-  void TeardownDataChannelTransport_n() override RTC_RUN_ON(network_thread());
+  void TeardownDataChannelTransport_n(RTCError error) override
+      RTC_RUN_ON(network_thread());
 
   const FieldTrialsView& trials() const override { return *trials_; }
 
