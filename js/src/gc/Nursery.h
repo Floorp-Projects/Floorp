@@ -149,7 +149,7 @@ class Nursery {
     // Update the allocation site. This code is also inlined in
     // MacroAssembler::updateAllocSite.
     uint32_t allocCount = site->incAllocCount();
-    if (MOZ_UNLIKELY(allocCount == 1)) {
+    if (allocCount == 1) {
       pretenuringNursery.insertIntoAllocatedList(site);
     }
     MOZ_ASSERT_IF(site->isNormal(), site->isInAllocatedList());
