@@ -234,7 +234,7 @@ void WgcCaptureSession::EnsureFrame() {
       RTC_DLOG(LS_WARNING) << "ProcessFrame failed during startup: " << hr;
     }
   }
-  RTC_LOG_IF(LS_ERROR, !is_frame_captured_)
+  RTC_LOG_IF(LS_ERROR, !queue_.current_frame())
       << "Unable to process a valid frame even after trying 10 times.";
 }
 
@@ -242,7 +242,6 @@ bool WgcCaptureSession::GetFrame(std::unique_ptr<DesktopFrame>* output_frame) {
   RTC_DCHECK_RUN_ON(&sequence_checker_);
 
   EnsureFrame();
-  RTC_DCHECK(is_frame_captured_);
 
   // Return a NULL frame and false as `result` if we still don't have a valid
   // frame. This will lead to a DesktopCapturer::Result::ERROR_PERMANENT being
@@ -310,14 +309,12 @@ HRESULT WgcCaptureSession::ProcessFrame() {
 
   if (!capture_frame) {
     // Avoid logging errors until at least one valid frame has been captured.
-    if (is_frame_captured_) {
+    if (queue_.current_frame()) {
       RTC_DLOG(LS_WARNING) << "Frame pool was empty => kFrameDropped.";
       RecordGetFrameResult(GetFrameResult::kFrameDropped);
     }
     return E_FAIL;
   }
-
-  is_frame_captured_ = true;
 
   queue_.MoveToNextFrame();
   if (queue_.current_frame() && queue_.current_frame()->IsShared()) {
