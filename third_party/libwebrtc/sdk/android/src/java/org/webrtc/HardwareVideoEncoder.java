@@ -267,6 +267,11 @@ class HardwareVideoEncoder implements VideoEncoder {
         }
       }
 
+      if (codecName.equals("c2.google.av1.encoder")) {
+        // Enable RTC mode in AV1 HW encoder.
+        format.setInteger("vendor.google-av1enc.encoding-preset.int32.value", 1);
+      }
+
       if (isEncodingStatisticsSupported()) {
         format.setInteger(MediaFormat.KEY_VIDEO_ENCODING_STATISTICS_LEVEL,
             MediaFormat.VIDEO_ENCODING_STATISTICS_LEVEL_1);
