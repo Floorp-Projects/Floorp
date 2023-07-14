@@ -122,6 +122,7 @@ if (rtc_include_tests) {
       "../../rtc_base:checks",
       "../../rtc_base:stringutils",
       "../../rtc_base:task_queue_for_test",
+      "../../system_wrappers:metrics",
       "../../test:test_support",
     ]
   }
