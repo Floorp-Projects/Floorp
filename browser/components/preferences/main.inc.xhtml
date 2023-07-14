@@ -724,6 +724,11 @@
   <checkbox id="useCursorNavigation"
             data-l10n-id="browsing-use-cursor-navigation"
             preference="accessibility.browsewithcaret"/>
+#ifdef XP_MACOSX
+  <checkbox id="useFullKeyboardNavigation"
+            data-l10n-id="browsing-use-full-keyboard-navigation"
+            preference="accessibility.tabfocus" />
+#endif
   <checkbox id="searchStartTyping"
             data-l10n-id="browsing-search-on-start-typing"
             preference="accessibility.typeaheadfind"/>
