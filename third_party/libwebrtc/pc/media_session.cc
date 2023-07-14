@@ -948,8 +948,10 @@ static const C* GetAssociatedCodecForRed(const std::vector<C>& codec_list,
   std::string fmtp;
   if (!red_codec.GetParam(kCodecParamNotInNameValueFormat, &fmtp)) {
     // Normal for video/RED.
-    RTC_LOG(LS_WARNING) << "RED codec " << red_codec.name
-                        << " is missing an associated payload type.";
+    if constexpr (std::is_same_v<C, AudioCodec>) {
+      RTC_LOG(LS_WARNING) << "RED codec " << red_codec.name
+                          << " is missing an associated payload type.";
+    }
     return nullptr;
   }
 
