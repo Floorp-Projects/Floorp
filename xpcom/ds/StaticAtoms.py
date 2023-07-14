@@ -2406,6 +2406,8 @@ STATIC_ATOMS = [
     # media query for MathML Core's implementation of ms
     Atom("_moz_mathml_core_ms", "-moz-mathml-core-ms"),
     Atom("_moz_popover_enabled", "-moz-popover-enabled"),
+    # media query for MathML Core's implementation of mi
+    Atom("_moz_mathml_core_mi", "-moz-mathml-core-mi"),
     # Contextual Identity / Containers
     Atom("usercontextid", "usercontextid"),
     Atom("geckoViewSessionContextId", "geckoViewSessionContextId"),

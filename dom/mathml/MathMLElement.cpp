@@ -126,10 +126,13 @@ bool MathMLElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 
 // https://mathml-refresh.github.io/mathml-core/#global-attributes
 static Element::MappedAttributeEntry sGlobalAttributes[] = {
-    {nsGkAtoms::dir},           {nsGkAtoms::mathbackground_},
-    {nsGkAtoms::mathcolor_},    {nsGkAtoms::mathsize_},
-    {nsGkAtoms::mathvariant_},  {nsGkAtoms::scriptlevel_},
-    {nsGkAtoms::displaystyle_}, {nullptr}};
+    {nsGkAtoms::dir},
+    {nsGkAtoms::mathbackground_},
+    {nsGkAtoms::mathcolor_},
+    {nsGkAtoms::mathsize_},
+    {nsGkAtoms::scriptlevel_},
+    {nsGkAtoms::displaystyle_},
+    {nullptr}};
 
 bool MathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
   MOZ_ASSERT(IsMathMLElement());
@@ -141,6 +144,9 @@ bool MathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
           aAttribute == nsGkAtoms::scriptminsize_) ||
          (!StaticPrefs::mathml_scriptsizemultiplier_attribute_disabled() &&
           aAttribute == nsGkAtoms::scriptsizemultiplier_) ||
+         ((!StaticPrefs::mathml_legacy_mathvariant_attribute_disabled() ||
+           mNodeInfo->Equals(nsGkAtoms::mi_)) &&
+          aAttribute == nsGkAtoms::mathvariant_) ||
          (mNodeInfo->Equals(nsGkAtoms::mtable_) &&
           aAttribute == nsGkAtoms::width);
 }
@@ -148,6 +154,10 @@ bool MathMLElement::IsAttributeMapped(const nsAtom* aAttribute) const {
 nsMapRuleToAttributesFunc MathMLElement::GetAttributeMappingFunction() const {
   if (mNodeInfo->Equals(nsGkAtoms::mtable_)) {
     return &MapMTableAttributesInto;
+  }
+  if (StaticPrefs::mathml_legacy_mathvariant_attribute_disabled() &&
+      mNodeInfo->Equals(nsGkAtoms::mi_)) {
+    return &MapMiAttributesInto;
   }
   return &MapGlobalMathMLAttributesInto;
 }
@@ -386,6 +396,24 @@ void MathMLElement::MapMTableAttributesInto(
   MapGlobalMathMLAttributesInto(aBuilder);
 }
 
+void MathMLElement::MapMiAttributesInto(MappedDeclarationsBuilder& aBuilder) {
+  MOZ_ASSERT(StaticPrefs::mathml_scriptminsize_attribute_disabled());
+  // mathvariant
+  // https://w3c.github.io/mathml-core/#dfn-mathvariant
+  if (!aBuilder.PropertyIsSet(eCSSProperty_text_transform)) {
+    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::mathvariant_);
+    if (value && value->Type() == nsAttrValue::eString) {
+      auto str = value->GetStringValue();
+      str.CompressWhitespace();
+      if (value->GetStringValue().LowerCaseEqualsASCII("normal")) {
+        aBuilder.SetKeywordValue(eCSSProperty_text_transform,
+                                 StyleTextTransformCase::None);
+      }
+    }
+  }
+  MapGlobalMathMLAttributesInto(aBuilder);
+}
+
 void MathMLElement::MapGlobalMathMLAttributesInto(
     MappedDeclarationsBuilder& aBuilder) {
   // scriptsizemultiplier
@@ -500,63 +528,65 @@ void MathMLElement::MapGlobalMathMLAttributesInto(
     }
   }
 
-  // mathvariant
-  //
-  // "Specifies the logical class of the token. Note that this class is more
-  // than styling, it typically conveys semantic intent;"
-  //
-  // values: "normal" | "bold" | "italic" | "bold-italic" | "double-struck" |
-  // "bold-fraktur" | "script" | "bold-script" | "fraktur" | "sans-serif" |
-  // "bold-sans-serif" | "sans-serif-italic" | "sans-serif-bold-italic" |
-  // "monospace" | "initial" | "tailed" | "looped" | "stretched"
-  // default: normal (except on <mi>)
-  //
-  value = aBuilder.GetAttr(nsGkAtoms::mathvariant_);
-  if (value && value->Type() == nsAttrValue::eString &&
-      !aBuilder.PropertyIsSet(eCSSProperty__moz_math_variant)) {
-    auto str = value->GetStringValue();
-    str.CompressWhitespace();
-    static const char sizes[19][23] = {"normal",
-                                       "bold",
-                                       "italic",
-                                       "bold-italic",
-                                       "script",
-                                       "bold-script",
-                                       "fraktur",
-                                       "double-struck",
-                                       "bold-fraktur",
-                                       "sans-serif",
-                                       "bold-sans-serif",
-                                       "sans-serif-italic",
-                                       "sans-serif-bold-italic",
-                                       "monospace",
-                                       "initial",
-                                       "tailed",
-                                       "looped",
-                                       "stretched"};
-    static const StyleMathVariant values[MOZ_ARRAY_LENGTH(sizes)] = {
-        StyleMathVariant::Normal,
-        StyleMathVariant::Bold,
-        StyleMathVariant::Italic,
-        StyleMathVariant::BoldItalic,
-        StyleMathVariant::Script,
-        StyleMathVariant::BoldScript,
-        StyleMathVariant::Fraktur,
-        StyleMathVariant::DoubleStruck,
-        StyleMathVariant::BoldFraktur,
-        StyleMathVariant::SansSerif,
-        StyleMathVariant::BoldSansSerif,
-        StyleMathVariant::SansSerifItalic,
-        StyleMathVariant::SansSerifBoldItalic,
-        StyleMathVariant::Monospace,
-        StyleMathVariant::Initial,
-        StyleMathVariant::Tailed,
-        StyleMathVariant::Looped,
-        StyleMathVariant::Stretched};
-    for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
-      if (str.LowerCaseEqualsASCII(sizes[i])) {
-        aBuilder.SetKeywordValue(eCSSProperty__moz_math_variant, values[i]);
-        break;
+  if (!StaticPrefs::mathml_legacy_mathvariant_attribute_disabled()) {
+    // mathvariant
+    //
+    // "Specifies the logical class of the token. Note that this class is more
+    // than styling, it typically conveys semantic intent;"
+    //
+    // values: "normal" | "bold" | "italic" | "bold-italic" | "double-struck" |
+    // "bold-fraktur" | "script" | "bold-script" | "fraktur" | "sans-serif" |
+    // "bold-sans-serif" | "sans-serif-italic" | "sans-serif-bold-italic" |
+    // "monospace" | "initial" | "tailed" | "looped" | "stretched"
+    // default: normal (except on <mi>)
+    //
+    value = aBuilder.GetAttr(nsGkAtoms::mathvariant_);
+    if (value && value->Type() == nsAttrValue::eString &&
+        !aBuilder.PropertyIsSet(eCSSProperty__moz_math_variant)) {
+      auto str = value->GetStringValue();
+      str.CompressWhitespace();
+      static const char sizes[19][23] = {"normal",
+                                         "bold",
+                                         "italic",
+                                         "bold-italic",
+                                         "script",
+                                         "bold-script",
+                                         "fraktur",
+                                         "double-struck",
+                                         "bold-fraktur",
+                                         "sans-serif",
+                                         "bold-sans-serif",
+                                         "sans-serif-italic",
+                                         "sans-serif-bold-italic",
+                                         "monospace",
+                                         "initial",
+                                         "tailed",
+                                         "looped",
+                                         "stretched"};
+      static const StyleMathVariant values[MOZ_ARRAY_LENGTH(sizes)] = {
+          StyleMathVariant::Normal,
+          StyleMathVariant::Bold,
+          StyleMathVariant::Italic,
+          StyleMathVariant::BoldItalic,
+          StyleMathVariant::Script,
+          StyleMathVariant::BoldScript,
+          StyleMathVariant::Fraktur,
+          StyleMathVariant::DoubleStruck,
+          StyleMathVariant::BoldFraktur,
+          StyleMathVariant::SansSerif,
+          StyleMathVariant::BoldSansSerif,
+          StyleMathVariant::SansSerifItalic,
+          StyleMathVariant::SansSerifBoldItalic,
+          StyleMathVariant::Monospace,
+          StyleMathVariant::Initial,
+          StyleMathVariant::Tailed,
+          StyleMathVariant::Looped,
+          StyleMathVariant::Stretched};
+      for (uint32_t i = 0; i < ArrayLength(sizes); ++i) {
+        if (str.LowerCaseEqualsASCII(sizes[i])) {
+          aBuilder.SetKeywordValue(eCSSProperty__moz_math_variant, values[i]);
+          break;
+        }
       }
     }
   }
