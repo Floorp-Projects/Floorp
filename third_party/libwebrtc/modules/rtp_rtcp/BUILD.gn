@@ -638,6 +638,7 @@ if (rtc_include_tests) {
       "../../api:frame_transformer_factory",
       "../../api:libjingle_peerconnection_api",
       "../../api:mock_frame_encryptor",
+      "../../api:mock_transformable_video_frame",
       "../../api:rtp_headers",
       "../../api:rtp_packet_info",
       "../../api:rtp_parameters",
