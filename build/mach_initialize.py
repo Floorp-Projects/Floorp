@@ -119,6 +119,24 @@ def _maybe_activate_mozillabuild_environment():
             os.environ["PATH"] += f"{os.pathsep}{new_path}"
 
 
+def check_for_spaces(topsrcdir):
+    if " " in topsrcdir:
+        raise Exception(
+            f"Your checkout at path '{topsrcdir}' contains a space, which "
+            f"is not supported. Please move it to somewhere that does not "
+            f"have a space in the path before rerunning mach."
+        )
+
+    mozillabuild_dir = os.environ.get("MOZILLABUILD", "")
+    if sys.platform == "win32" and " " in mozillabuild_dir:
+        raise Exception(
+            f"Your installation of MozillaBuild appears to be installed on a path that "
+            f"contains a space ('{mozillabuild_dir}') which is not supported. Please "
+            f"reinstall MozillaBuild on a path without a space and restart your shell"
+            f"from the new installation."
+        )
+
+
 def initialize(topsrcdir):
     # This directory was deleted in bug 1666345, but there may be some ignored
     # files here. We can safely just delete it for the user so they don't have
@@ -142,6 +160,8 @@ def initialize(topsrcdir):
     from mach.util import get_state_dir, setenv
 
     state_dir = _create_state_dir()
+
+    check_for_spaces(topsrcdir)
 
     # normpath state_dir to normalize msys-style slashes.
     _activate_python_environment(
