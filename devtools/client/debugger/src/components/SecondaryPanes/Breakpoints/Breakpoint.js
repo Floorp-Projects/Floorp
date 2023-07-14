@@ -84,11 +84,11 @@ class Breakpoint extends PureComponent {
   };
 
   handleBreakpointCheckbox = () => {
-    const { cx, breakpoint, enableBreakpoint, disableBreakpoint } = this.props;
+    const { breakpoint, enableBreakpoint, disableBreakpoint } = this.props;
     if (breakpoint.disabled) {
-      enableBreakpoint(cx, breakpoint);
+      enableBreakpoint(breakpoint);
     } else {
-      disableBreakpoint(cx, breakpoint);
+      disableBreakpoint(breakpoint);
     }
   };
 

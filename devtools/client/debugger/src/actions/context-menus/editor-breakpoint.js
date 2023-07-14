@@ -200,7 +200,7 @@ const toggleDisabledBreakpointItem = (
       breakpoint.location.line,
       isSelectedSourceOnIgnoreList
     ),
-    click: () => dispatch(toggleDisabledBreakpoint(cx, breakpoint)),
+    click: () => dispatch(toggleDisabledBreakpoint(breakpoint)),
     ...(breakpoint.disabled
       ? {
           id: "node-menu-enable-breakpoint",
@@ -268,7 +268,7 @@ const enableBreakpointsOnLineItem = (
     isSelectedSourceOnIgnoreList
   ),
   click: () =>
-    dispatch(enableBreakpointsAtLine(cx, location.source.id, location.line)),
+    dispatch(enableBreakpointsAtLine(location.source.id, location.line)),
 });
 
 const disableBreakpointsOnLineItem = (cx, location, dispatch) => ({
@@ -277,5 +277,5 @@ const disableBreakpointsOnLineItem = (cx, location, dispatch) => ({
   accesskey: L10N.getStr("breakpointMenuItem.disableAllAtLine.accesskey"),
   disabled: false,
   click: () =>
-    dispatch(disableBreakpointsAtLine(cx, location.source.id, location.line)),
+    dispatch(disableBreakpointsAtLine(location.source.id, location.line)),
 });

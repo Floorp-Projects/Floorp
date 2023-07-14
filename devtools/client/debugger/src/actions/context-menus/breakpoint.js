@@ -156,7 +156,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
         checkSourceOnIgnoreList(breakpoint.location.source)
       ),
       click: () => {
-        dispatch(toggleDisabledBreakpoint(cx, breakpoint));
+        dispatch(toggleDisabledBreakpoint(breakpoint));
       },
     };
 
@@ -169,7 +169,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
         breakpoint.location.line,
         checkSourceOnIgnoreList(breakpoint.location.source)
       ),
-      click: () => dispatch(toggleAllBreakpoints(cx, false)),
+      click: () => dispatch(toggleAllBreakpoints(false)),
     };
 
     const enableOthersItem = {
@@ -181,8 +181,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
         breakpoint.location.line,
         checkSourceOnIgnoreList(breakpoint.location.source)
       ),
-      click: () =>
-        dispatch(toggleBreakpoints(cx, false, otherDisabledBreakpoints)),
+      click: () => dispatch(toggleBreakpoints(false, otherDisabledBreakpoints)),
     };
 
     const disableSelfItem = {
@@ -191,7 +190,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       accesskey: disableSelfKey,
       disabled: false,
       click: () => {
-        dispatch(toggleDisabledBreakpoint(cx, breakpoint));
+        dispatch(toggleDisabledBreakpoint(breakpoint));
       },
     };
 
@@ -200,15 +199,14 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       label: disableAllLabel,
       accesskey: disableAllKey,
       disabled: false,
-      click: () => dispatch(toggleAllBreakpoints(cx, true)),
+      click: () => dispatch(toggleAllBreakpoints(true)),
     };
 
     const disableOthersItem = {
       id: "node-menu-disable-others",
       label: disableOthersLabel,
       accesskey: disableOthersKey,
-      click: () =>
-        dispatch(toggleBreakpoints(cx, true, otherEnabledBreakpoints)),
+      click: () => dispatch(toggleBreakpoints(true, otherEnabledBreakpoints)),
     };
 
     const enableDbgStatementItem = {
