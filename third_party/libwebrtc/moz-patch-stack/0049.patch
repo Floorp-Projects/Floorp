@@ -20,7 +20,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0b311007c033e838
  11 files changed, 56 insertions(+), 10 deletions(-)
 
 diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 6d38b26e86..64b46714e8 100644
+index bde48aacde..0a78e2641d 100644
 --- a/audio/audio_receive_stream.cc
 +++ b/audio/audio_receive_stream.cc
 @@ -39,6 +39,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {

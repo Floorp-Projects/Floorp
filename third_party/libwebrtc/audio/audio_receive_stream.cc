@@ -375,7 +375,8 @@ AudioReceiveStreamImpl::GetAudioFrameWithInfo(int sample_rate_hz,
                                               AudioFrame* audio_frame) {
   AudioMixer::Source::AudioFrameInfo audio_frame_info =
       channel_receive_->GetAudioFrameWithInfo(sample_rate_hz, audio_frame);
-  if (audio_frame_info != AudioMixer::Source::AudioFrameInfo::kError) {
+  if (audio_frame_info != AudioMixer::Source::AudioFrameInfo::kError &&
+      !audio_frame->packet_infos_.empty()) {
     source_tracker_.OnFrameDelivered(audio_frame->packet_infos_);
   }
   return audio_frame_info;

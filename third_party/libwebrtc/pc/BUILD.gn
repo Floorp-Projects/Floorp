@@ -2288,6 +2288,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:ssl",
       "../test:test_main",
       "../test:test_support",
+      "../test/time_controller:time_controller",
       "//third_party/abseil-cpp/absl/algorithm:container",
       "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
@@ -2699,6 +2700,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base:logging",
       "../rtc_base:macromagic",
       "../rtc_base:mdns_responder_interface",
+      "../rtc_base:null_socket_server",
       "../rtc_base:rtc_base_tests_utils",
       "../rtc_base:rtc_certificate_generator",
       "../rtc_base:rtc_event",
@@ -2720,6 +2722,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../test:scoped_key_value_config",
       "../test:test_support",
       "../test/pc/sctp:fake_sctp_transport",
+      "../test/time_controller",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
