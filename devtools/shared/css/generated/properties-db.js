@@ -11783,6 +11783,7 @@ exports.CSS_PROPERTIES = {
       "inherit",
       "initial",
       "lowercase",
+      "math-auto",
       "none",
       "revert",
       "revert-layer",
