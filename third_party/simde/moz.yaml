@@ -1,0 +1,48 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: "General"
+
+origin:
+  name: simd-everywhere
+  description:  Implementations of SIMD instruction sets for systems which don't natively support them.
+  url: https://github.com/simd-everywhere/simde
+
+  release: fefc7857ff3e785b988a61a8f5f3c5bd5eb24342 (2023-05-13T16:15:11Z).
+  revision: fefc7857ff3e785b988a61a8f5f3c5bd5eb24342
+
+  license: MIT
+  license-file: COPYING
+
+vendoring:
+  url: https://github.com/simd-everywhere/simde
+  source-hosting: github
+  vendor-directory: third_party/simde
+  exclude:
+    - .circleci
+    - .github
+    - .no-test
+    - .semaphore
+    - docker
+    - test/
+    - test
+    - test/*
+    - test/.gitignore
+    - .all-contributorsrc
+    - .appveyor.yml
+    - .azure-pipelines.yml
+    - .cirrus.yml
+    - .drone.star
+    - .editorconfig
+    - .gitignore
+    - .gitmodules
+    - .travis.yml
+    - codecov.yml
+    - meson.build
+    - meson_options.txt
+    - netlify.toml
+    - CONTRIBUTING.md
+    - amalgamate.py
+    - netlify-disable.toml
+    - .drone.star.disabled
