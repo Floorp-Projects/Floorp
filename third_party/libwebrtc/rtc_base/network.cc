@@ -201,6 +201,22 @@ bool PreferGlobalIPv6Address(const webrtc::FieldTrialsView* field_trials) {
   return false;
 }
 
+#if defined(WEBRTC_WIN)
+bool IpAddressAttributesEnabled(const webrtc::FieldTrialsView* field_trials) {
+  // Field trial key reserved in bugs.webrtc.org/14334
+  if (field_trials &&
+      field_trials->IsEnabled("WebRTC-IPv6NetworkResolutionFixes")) {
+    webrtc::FieldTrialParameter<bool> ip_address_attributes_enabled(
+        "IpAddressAttributesEnabled", false);
+    webrtc::ParseFieldTrial(
+        {&ip_address_attributes_enabled},
+        field_trials->Lookup("WebRTC-IPv6NetworkResolutionFixes"));
+    return ip_address_attributes_enabled;
+  }
+  return false;
+}
+#endif  // WEBRTC_WIN
+
 }  // namespace
 
 // These addresses are used as the targets to find out the default local address
@@ -548,6 +564,7 @@ BasicNetworkManager::BasicNetworkManager(
     SocketFactory* socket_factory,
     const webrtc::FieldTrialsView* field_trials_view)
     : NetworkManagerBase(field_trials_view),
+      field_trials_(field_trials_view),
       network_monitor_factory_(network_monitor_factory),
       socket_factory_(socket_factory),
       allow_mac_based_ipv6_(
@@ -815,12 +832,27 @@ bool BasicNetworkManager::CreateNetworks(
             sockaddr_in6* v6_addr =
                 reinterpret_cast<sockaddr_in6*>(address->Address.lpSockaddr);
             scope_id = v6_addr->sin6_scope_id;
-            ip = IPAddress(v6_addr->sin6_addr);
 
-            if (IsIgnoredIPv6(allow_mac_based_ipv6_, InterfaceAddress(ip))) {
+            // From http://technet.microsoft.com/en-us/ff568768(v=vs.60).aspx,
+            // the way to identify a temporary IPv6 Address is to check if
+            // PrefixOrigin is equal to IpPrefixOriginRouterAdvertisement and
+            // SuffixOrigin equal to IpSuffixOriginRandom.
+            int ip_address_attributes = IPV6_ADDRESS_FLAG_NONE;
+            if (IpAddressAttributesEnabled(field_trials_.get())) {
+              if (address->PrefixOrigin == IpPrefixOriginRouterAdvertisement &&
+                  address->SuffixOrigin == IpSuffixOriginRandom) {
+                ip_address_attributes |= IPV6_ADDRESS_FLAG_TEMPORARY;
+              }
+              if (address->PreferredLifetime == 0) {
+                ip_address_attributes |= IPV6_ADDRESS_FLAG_DEPRECATED;
+              }
+            }
+            if (IsIgnoredIPv6(allow_mac_based_ipv6_,
+                              InterfaceAddress(v6_addr->sin6_addr,
+                                               ip_address_attributes))) {
               continue;
             }
-
+            ip = InterfaceAddress(v6_addr->sin6_addr, ip_address_attributes);
             break;
           }
           default: {
