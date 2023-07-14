@@ -25,7 +25,6 @@ class MathMLTextRunFactory : public nsTransformingTextRunFactory {
         mFontInflation(aFontInflation),
         mSSTYScriptLevel(aSSTYScriptLevel) {}
 
-  static uint32_t MathVariant(uint32_t aCh, mozilla::StyleMathVariant aMathVar);
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
                               mozilla::gfx::DrawTarget* aRefDrawTarget,
                               gfxMissingFontRecorder* aMFR) override;
