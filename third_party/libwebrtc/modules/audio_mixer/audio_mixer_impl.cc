@@ -22,6 +22,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 #include "rtc_base/trace_event.h"
+#include "system_wrappers/include/metrics.h"
 
 namespace webrtc {
 
@@ -186,6 +187,7 @@ bool AudioMixerImpl::AddSource(Source* audio_source) {
       << "Source already added to mixer";
   audio_source_list_.emplace_back(new SourceStatus(audio_source, false, 0));
   helper_containers_->resize(audio_source_list_.size());
+  UpdateSourceCountStats();
   return true;
 }
 
@@ -262,5 +264,15 @@ bool AudioMixerImpl::GetAudioSourceMixabilityStatusForTest(
 
   RTC_LOG(LS_ERROR) << "Audio source unknown";
   return false;
+}
+
+void AudioMixerImpl::UpdateSourceCountStats() {
+  size_t current_source_count = audio_source_list_.size();
+  // Log to the histogram whenever the maximum number of sources increases.
+  if (current_source_count > max_source_count_ever_) {
+    RTC_HISTOGRAM_COUNTS_LINEAR("WebRTC.Audio.AudioMixer.NewHighestSourceCount",
+                                current_source_count, 1, 20, 20);
+    max_source_count_ever_ = current_source_count;
+  }
 }
 }  // namespace webrtc

@@ -28,6 +28,7 @@
 #include "rtc_base/checks.h"
 #include "rtc_base/strings/string_builder.h"
 #include "rtc_base/task_queue_for_test.h"
+#include "system_wrappers/include/metrics.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
 
@@ -42,6 +43,8 @@ namespace webrtc {
 namespace {
 
 constexpr int kDefaultSampleRateHz = 48000;
+const char kSourceCountHistogramName[] =
+    "WebRTC.Audio.AudioMixer.NewHighestSourceCount";
 
 // Utility function that resets the frame member variables with
 // sensible defaults.
@@ -211,6 +214,41 @@ TEST(AudioMixer, LargestEnergyVadActiveMixed) {
       EXPECT_TRUE(is_mixed)
           << "Mixing status of AudioSource #" << i << " wrong.";
     }
+  }
+}
+
+TEST(AudioMixer, UpdatesSourceCountHistogram) {
+  constexpr int kAudioSourcesGroup1 = 5;
+  constexpr int kAudioSourcesGroup2 = 3;
+
+  const auto mixer = AudioMixerImpl::Create();
+
+  MockMixerAudioSource participants[kAudioSourcesGroup1 + kAudioSourcesGroup2];
+
+  // Add the sources in group 1.
+  for (int i = 0; i < kAudioSourcesGroup1; ++i) {
+    EXPECT_TRUE(mixer->AddSource(&participants[i]));
+    EXPECT_EQ(i + 1, metrics::NumSamples(kSourceCountHistogramName));
+    EXPECT_EQ(1, metrics::NumEvents(kSourceCountHistogramName, i + 1));
+  }
+  // Remove the sources again.
+  for (int i = 0; i < kAudioSourcesGroup1; ++i) {
+    mixer->RemoveSource(&participants[i]);
+  }
+  // Add the first group again. This should not add anything new to the
+  // histogram.
+  for (int i = 0; i < kAudioSourcesGroup1; ++i) {
+    EXPECT_TRUE(mixer->AddSource(&participants[i]));
+    EXPECT_EQ(kAudioSourcesGroup1,
+              metrics::NumSamples(kSourceCountHistogramName));
+    EXPECT_EQ(1, metrics::NumEvents(kSourceCountHistogramName, i + 1));
+  }
+  // Add the second group. This adds to the histogram again.
+  for (int i = kAudioSourcesGroup1;
+       i < kAudioSourcesGroup1 + kAudioSourcesGroup2; ++i) {
+    EXPECT_TRUE(mixer->AddSource(&participants[i]));
+    EXPECT_EQ(i + 1, metrics::NumSamples(kSourceCountHistogramName));
+    EXPECT_EQ(1, metrics::NumEvents(kSourceCountHistogramName, i + 1));
   }
 }
 
