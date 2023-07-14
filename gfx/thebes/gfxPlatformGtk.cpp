@@ -991,7 +991,8 @@ gfxPlatformGtk::CreateGlobalHardwareVsyncSource() {
   // gl::sGLXLibrary.SupportsVideoSync() when EGL is used as NVIDIA drivers
   // refuse to use EGL GL context when GLX was initialized first and fail
   // silently.
-  if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING) && !isXwayland &&
+  if (StaticPrefs::gfx_x11_glx_sgi_video_sync_AtStartup() &&
+      gfxConfig::IsEnabled(Feature::HW_COMPOSITING) && !isXwayland &&
       (!gfxVars::UseEGL() || isMesa) &&
       gl::sGLXLibrary.SupportsVideoSync(DefaultXDisplay())) {
     RefPtr<GtkVsyncSource> vsyncSource = new GtkVsyncSource();

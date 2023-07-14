@@ -6306,6 +6306,11 @@
   type: bool
   value: false
   mirror: once
+
+- name: gfx.x11.glx_sgi_video_sync
+  type: bool
+  value: false
+  mirror: once
 #endif
 
 - name: gfx.testing.device-fail
