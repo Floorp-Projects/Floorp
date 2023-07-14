@@ -37,7 +37,6 @@ DcSctpOptions MakeOptions(DurationMs heartbeat_interval) {
   DcSctpOptions options;
   options.heartbeat_interval_include_rtt = false;
   options.heartbeat_interval = heartbeat_interval;
-  options.enable_zero_checksum = false;
   return options;
 }
 
@@ -84,8 +83,7 @@ TEST_F(HeartbeatHandlerTest, HasRunningHeartbeatIntervalTimer) {
 
   // Validate that a heartbeat request was sent.
   std::vector<uint8_t> payload = callbacks_.ConsumeSentPacket();
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet,
-                              SctpPacket::Parse(payload, options_));
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet, SctpPacket::Parse(payload));
   ASSERT_THAT(packet.descriptors(), SizeIs(1));
 
   ASSERT_HAS_VALUE_AND_ASSIGN(
@@ -103,8 +101,7 @@ TEST_F(HeartbeatHandlerTest, RepliesToHeartbeatRequests) {
   handler_.HandleHeartbeatRequest(std::move(request));
 
   std::vector<uint8_t> payload = callbacks_.ConsumeSentPacket();
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet,
-                              SctpPacket::Parse(payload, options_));
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet, SctpPacket::Parse(payload));
   ASSERT_THAT(packet.descriptors(), SizeIs(1));
 
   ASSERT_HAS_VALUE_AND_ASSIGN(
@@ -123,8 +120,7 @@ TEST_F(HeartbeatHandlerTest, SendsHeartbeatRequestsOnIdleChannel) {
 
   // Grab the request, and make a response.
   std::vector<uint8_t> payload = callbacks_.ConsumeSentPacket();
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet,
-                              SctpPacket::Parse(payload, options_));
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet, SctpPacket::Parse(payload));
   ASSERT_THAT(packet.descriptors(), SizeIs(1));
 
   ASSERT_HAS_VALUE_AND_ASSIGN(
@@ -147,8 +143,7 @@ TEST_F(HeartbeatHandlerTest, DoesntObserveInvalidHeartbeats) {
 
   // Grab the request, and make a response.
   std::vector<uint8_t> payload = callbacks_.ConsumeSentPacket();
-  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet,
-                              SctpPacket::Parse(payload, options_));
+  ASSERT_HAS_VALUE_AND_ASSIGN(SctpPacket packet, SctpPacket::Parse(payload));
   ASSERT_THAT(packet.descriptors(), SizeIs(1));
 
   ASSERT_HAS_VALUE_AND_ASSIGN(
