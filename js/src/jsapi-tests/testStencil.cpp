@@ -411,15 +411,13 @@ BEGIN_TEST(testStencil_OffThreadWithInstantiationStorage) {
     lock.wait();
   }
 
-  JS::Rooted<JS::InstantiationStorage> storage(cx);
-  RefPtr<JS::Stencil> stencil =
-      JS::FinishOffThreadStencil(cx, token, storage.address());
+  JS::InstantiationStorage storage;
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token, &storage);
   CHECK(stencil);
 
   JS::InstantiateOptions instantiateOptions(options);
-  JS::RootedScript script(
-      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil,
-                                       storage.address()));
+  JS::RootedScript script(cx, JS::InstantiateGlobalStencil(
+                                  cx, instantiateOptions, stencil, &storage));
   CHECK(script);
 
   JS::RootedValue rval(cx);
@@ -514,15 +512,14 @@ BEGIN_TEST(testStencil_OffThreadModuleWithInstantiationStorage) {
     lock.wait();
   }
 
-  JS::Rooted<JS::InstantiationStorage> storage(cx);
-  RefPtr<JS::Stencil> stencil =
-      JS::FinishOffThreadStencil(cx, token, storage.address());
+  JS::InstantiationStorage storage;
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token, &storage);
   CHECK(stencil);
 
   JS::InstantiateOptions instantiateOptions(options);
   JS::RootedObject moduleObject(
-      cx, JS::InstantiateModuleStencil(cx, instantiateOptions, stencil,
-                                       storage.address()));
+      cx,
+      JS::InstantiateModuleStencil(cx, instantiateOptions, stencil, &storage));
   CHECK(moduleObject);
 
   JS::RootedValue rval(cx);
@@ -677,17 +674,15 @@ BEGIN_TEST(testStencil_OffThreadDecodeWithInstantiationStorage) {
     }
   }
 
-  JS::Rooted<JS::InstantiationStorage> storage(cx);
-  RefPtr<JS::Stencil> stencil =
-      JS::FinishOffThreadStencil(cx, token, storage.address());
+  JS::InstantiationStorage storage;
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token, &storage);
   CHECK(stencil);
 
   CHECK(!JS::StencilIsBorrowed(stencil));
 
   JS::InstantiateOptions instantiateOptions;
-  JS::RootedScript script(
-      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil,
-                                       storage.address()));
+  JS::RootedScript script(cx, JS::InstantiateGlobalStencil(
+                                  cx, instantiateOptions, stencil, &storage));
   CHECK(script);
 
   JS::RootedValue rval(cx);

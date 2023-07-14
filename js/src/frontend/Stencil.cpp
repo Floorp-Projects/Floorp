@@ -1814,12 +1814,6 @@ void CompilationGCOutput::trace(JSTracer* trc) {
   scopes.trace(trc);
 }
 
-void JS::InstantiationStorage::trace(JSTracer* trc) {
-  if (gcOutput_) {
-    gcOutput_->trace(trc);
-  }
-}
-
 RegExpObject* RegExpStencil::createRegExp(
     JSContext* cx, const CompilationAtomCache& atomCache) const {
   Rooted<JSAtom*> atom(cx, atomCache.getExistingAtomAt(cx, atom_));
@@ -2886,6 +2880,19 @@ bool CompilationStencil::prepareForInstantiate(
   // Allocate the `gcOutput` arrays.
   if (!gcOutput.ensureAllocated(fc, stencil.scriptData.size(),
                                 stencil.scopeData.size())) {
+    return false;
+  }
+
+  return atomCache.allocate(fc, stencil.parserAtomData.size());
+}
+
+/* static */
+bool CompilationStencil::prepareForInstantiate(
+    FrontendContext* fc, CompilationAtomCache& atomCache,
+    const CompilationStencil& stencil,
+    PreallocatedCompilationGCOutput& gcOutput) {
+  if (!gcOutput.allocate(fc, stencil.scriptData.size(),
+                         stencil.scopeData.size())) {
     return false;
   }
 
@@ -5467,12 +5474,14 @@ JS_PUBLIC_API JSScript* JS::InstantiateGlobalStencil(
   options.copyTo(compileOptions);
   Rooted<CompilationInput> input(cx, CompilationInput(compileOptions));
   Rooted<CompilationGCOutput> gcOutput(cx);
-  CompilationGCOutput& output = storage ? *storage->gcOutput_ : gcOutput.get();
+  if (storage) {
+    gcOutput.get().steal(std::move(*storage->gcOutput_));
+  }
 
-  if (!InstantiateStencils(cx, input.get(), *stencil, output)) {
+  if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
     return nullptr;
   }
-  return output.script;
+  return gcOutput.get().script;
 }
 
 JS_PUBLIC_API bool JS::StencilIsBorrowed(Stencil* stencil) {
@@ -5489,12 +5498,14 @@ JS_PUBLIC_API JSObject* JS::InstantiateModuleStencil(
   compileOptions.setModule();
   Rooted<CompilationInput> input(cx, CompilationInput(compileOptions));
   Rooted<CompilationGCOutput> gcOutput(cx);
-  CompilationGCOutput& output = storage ? *storage->gcOutput_ : gcOutput.get();
+  if (storage) {
+    gcOutput.get().steal(std::move(*storage->gcOutput_));
+  }
 
-  if (!InstantiateStencils(cx, input.get(), *stencil, output)) {
+  if (!InstantiateStencils(cx, input.get(), *stencil, gcOutput.get())) {
     return nullptr;
   }
-  return output.module;
+  return gcOutput.get().module;
 }
 
 JS::TranscodeResult JS::EncodeStencil(JSContext* cx, JS::Stencil* stencil,

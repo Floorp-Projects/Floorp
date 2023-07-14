@@ -561,7 +561,6 @@ void ParseTask::trace(JSTracer* trc) {
   }
 
   compileStorage_.trace(trc);
-  instantiationStorage_.trace(trc);
 }
 
 size_t ParseTask::sizeOfExcludingThis(

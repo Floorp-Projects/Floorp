@@ -95,9 +95,9 @@ nsresult JSExecutionContext::JoinOffThread(
 
   MOZ_ASSERT(!mWantsReturnValue);
 
-  JS::Rooted<JS::InstantiationStorage> storage(mCx);
+  JS::InstantiationStorage storage;
   RefPtr<JS::Stencil> stencil =
-      JS::FinishOffThreadStencil(mCx, *aOffThreadToken, storage.address());
+      JS::FinishOffThreadStencil(mCx, *aOffThreadToken, &storage);
   *aOffThreadToken = nullptr;  // Mark the token as having been finished.
   if (!stencil) {
     mSkip = true;
@@ -105,7 +105,7 @@ nsresult JSExecutionContext::JoinOffThread(
     return mRv;
   }
 
-  return InstantiateStencil(std::move(stencil), storage.address());
+  return InstantiateStencil(std::move(stencil), &storage);
 }
 
 template <typename Unit>
