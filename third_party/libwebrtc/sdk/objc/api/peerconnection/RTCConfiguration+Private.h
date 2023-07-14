@@ -21,39 +21,39 @@ NS_ASSUME_NONNULL_BEGIN
     : (RTCIceTransportPolicy)policy;
 
 + (RTCIceTransportPolicy)transportPolicyForTransportsType:
-        (webrtc::PeerConnectionInterface::IceTransportsType)nativeType;
+    (webrtc::PeerConnectionInterface::IceTransportsType)nativeType;
 
 + (NSString *)stringForTransportPolicy:(RTCIceTransportPolicy)policy;
 
 + (webrtc::PeerConnectionInterface::BundlePolicy)nativeBundlePolicyForPolicy:
-        (RTCBundlePolicy)policy;
+    (RTCBundlePolicy)policy;
 
 + (RTCBundlePolicy)bundlePolicyForNativePolicy:
-        (webrtc::PeerConnectionInterface::BundlePolicy)nativePolicy;
+    (webrtc::PeerConnectionInterface::BundlePolicy)nativePolicy;
 
 + (NSString *)stringForBundlePolicy:(RTCBundlePolicy)policy;
 
 + (webrtc::PeerConnectionInterface::RtcpMuxPolicy)nativeRtcpMuxPolicyForPolicy:
-        (RTCRtcpMuxPolicy)policy;
+    (RTCRtcpMuxPolicy)policy;
 
 + (RTCRtcpMuxPolicy)rtcpMuxPolicyForNativePolicy:
-        (webrtc::PeerConnectionInterface::RtcpMuxPolicy)nativePolicy;
+    (webrtc::PeerConnectionInterface::RtcpMuxPolicy)nativePolicy;
 
 + (NSString *)stringForRtcpMuxPolicy:(RTCRtcpMuxPolicy)policy;
 
 + (webrtc::PeerConnectionInterface::TcpCandidatePolicy)nativeTcpCandidatePolicyForPolicy:
-        (RTCTcpCandidatePolicy)policy;
+    (RTCTcpCandidatePolicy)policy;
 
 + (RTCTcpCandidatePolicy)tcpCandidatePolicyForNativePolicy:
-        (webrtc::PeerConnectionInterface::TcpCandidatePolicy)nativePolicy;
+    (webrtc::PeerConnectionInterface::TcpCandidatePolicy)nativePolicy;
 
 + (NSString *)stringForTcpCandidatePolicy:(RTCTcpCandidatePolicy)policy;
 
 + (webrtc::PeerConnectionInterface::CandidateNetworkPolicy)nativeCandidateNetworkPolicyForPolicy:
-        (RTCCandidateNetworkPolicy)policy;
+    (RTCCandidateNetworkPolicy)policy;
 
 + (RTCCandidateNetworkPolicy)candidateNetworkPolicyForNativePolicy:
-        (webrtc::PeerConnectionInterface::CandidateNetworkPolicy)nativePolicy;
+    (webrtc::PeerConnectionInterface::CandidateNetworkPolicy)nativePolicy;
 
 + (NSString *)stringForCandidateNetworkPolicy:(RTCCandidateNetworkPolicy)policy;
 
@@ -72,7 +72,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable webrtc::PeerConnectionInterface::RTCConfiguration *)createNativeConfiguration;
 
 - (instancetype)initWithNativeConfiguration:
-        (const webrtc::PeerConnectionInterface::RTCConfiguration &)config NS_DESIGNATED_INITIALIZER;
+    (const webrtc::PeerConnectionInterface::RTCConfiguration &)config NS_DESIGNATED_INITIALIZER;
 
 @end
 

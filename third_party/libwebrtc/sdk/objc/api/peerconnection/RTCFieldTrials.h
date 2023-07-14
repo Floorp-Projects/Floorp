@@ -14,14 +14,14 @@
 
 /** The only valid value for the following if set is kRTCFieldTrialEnabledValue. */
 RTC_EXTERN NSString *const kRTCFieldTrialAudioForceABWENoTWCCKey;
-RTC_EXTERN NSString * const kRTCFieldTrialFlexFec03AdvertisedKey;
-RTC_EXTERN NSString * const kRTCFieldTrialFlexFec03Key;
-RTC_EXTERN NSString * const kRTCFieldTrialH264HighProfileKey;
-RTC_EXTERN NSString * const kRTCFieldTrialMinimizeResamplingOnMobileKey;
+RTC_EXTERN NSString *const kRTCFieldTrialFlexFec03AdvertisedKey;
+RTC_EXTERN NSString *const kRTCFieldTrialFlexFec03Key;
+RTC_EXTERN NSString *const kRTCFieldTrialH264HighProfileKey;
+RTC_EXTERN NSString *const kRTCFieldTrialMinimizeResamplingOnMobileKey;
 RTC_EXTERN NSString *const kRTCFieldTrialUseNWPathMonitor;
 
 /** The valid value for field trials above. */
-RTC_EXTERN NSString * const kRTCFieldTrialEnabledValue;
+RTC_EXTERN NSString *const kRTCFieldTrialEnabledValue;
 
 /** Initialize field trials using a dictionary mapping field trial keys to their
  * values. See above for valid keys and values. Must be called before any other

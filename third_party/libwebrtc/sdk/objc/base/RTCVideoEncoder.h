@@ -28,7 +28,7 @@ RTC_OBJC_EXPORT
 @protocol RTC_OBJC_TYPE
 (RTCVideoEncoder)<NSObject>
 
-- (void)setCallback:(nullable RTCVideoEncoderCallback)callback;
+    - (void)setCallback : (nullable RTCVideoEncoderCallback)callback;
 - (NSInteger)startEncodeWithSettings:(RTC_OBJC_TYPE(RTCVideoEncoderSettings) *)settings
                        numberOfCores:(int)numberOfCores;
 - (NSInteger)releaseEncoder;

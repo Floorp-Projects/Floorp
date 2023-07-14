@@ -32,7 +32,7 @@ RTC_OBJC_EXPORT
 // to implement dispatching to some other queue.
 - (void)start:(nullable RTCCallbackLoggerMessageHandler)handler;
 - (void)startWithMessageAndSeverityHandler:
-        (nullable RTCCallbackLoggerMessageAndSeverityHandler)handler;
+    (nullable RTCCallbackLoggerMessageAndSeverityHandler)handler;
 
 - (void)stop;
 

@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
  * description.
  */
 - (instancetype)initWithNativeDescription:
-        (const webrtc::SessionDescriptionInterface *)nativeDescription;
+    (const webrtc::SessionDescriptionInterface *)nativeDescription;
 
 + (std::string)stdStringForType:(RTCSdpType)type;
 
