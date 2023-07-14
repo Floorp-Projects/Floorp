@@ -817,7 +817,7 @@ CallSendStatistics ChannelSend::GetRTCPStatistics() const {
 
   {
     MutexLock lock(&rtcp_counter_mutex_);
-    stats.nacks_rcvd = rtcp_packet_type_counter_.nack_packets;
+    stats.nacks_received = rtcp_packet_type_counter_.nack_packets;
   }
 
   return stats;

@@ -12,7 +12,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1965757ee924d49c3
  1 file changed, 1 insertion(+)
 
 diff --git a/audio/channel_receive.h b/audio/channel_receive.h
-index 60cfaa3355..5fbfb8a240 100644
+index c192039894..37bf903394 100644
 --- a/audio/channel_receive.h
 +++ b/audio/channel_receive.h
 @@ -28,6 +28,7 @@

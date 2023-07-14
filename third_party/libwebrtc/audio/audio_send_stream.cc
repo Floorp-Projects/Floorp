@@ -486,7 +486,7 @@ webrtc::AudioSendStream::Stats AudioSendStream::GetStats(
 
   stats.report_block_datas = std::move(call_stats.report_block_datas);
 
-  stats.nacks_rcvd = call_stats.nacks_rcvd;
+  stats.nacks_received = call_stats.nacks_received;
 
   return stats;
 }
