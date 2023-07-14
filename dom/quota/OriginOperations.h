@@ -68,8 +68,6 @@ RefPtr<QuotaRequestBase> CreateGetFullOriginMetadataOp(
 
 RefPtr<QuotaRequestBase> CreateResetOrClearOp(bool aClear);
 
-RefPtr<QuotaRequestBase> CreateClearPrivateBrowsingOp();
-
 RefPtr<QuotaRequestBase> CreateClearOriginOp(const RequestParams& aParams);
 
 RefPtr<QuotaRequestBase> CreateClearDataOp(const RequestParams& aParams);
