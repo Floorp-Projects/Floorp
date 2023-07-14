@@ -80,55 +80,59 @@ class VCMJitterBuffer {
   VCMJitterBuffer& operator=(const VCMJitterBuffer&) = delete;
 
   // Initializes and starts jitter buffer.
-  void Start();
+  void Start() RTC_LOCKS_EXCLUDED(mutex_);
 
   // Signals all internal events and stops the jitter buffer.
-  void Stop();
+  void Stop() RTC_LOCKS_EXCLUDED(mutex_);
 
   // Returns true if the jitter buffer is running.
-  bool Running() const;
+  bool Running() const RTC_LOCKS_EXCLUDED(mutex_);
 
   // Empty the jitter buffer of all its data.
-  void Flush();
+  void Flush() RTC_LOCKS_EXCLUDED(mutex_);
 
   // Gets number of packets received.
-  int num_packets() const;
+  int num_packets() const RTC_LOCKS_EXCLUDED(mutex_);
 
   // Gets number of duplicated packets received.
-  int num_duplicated_packets() const;
+  int num_duplicated_packets() const RTC_LOCKS_EXCLUDED(mutex_);
 
   // Wait `max_wait_time_ms` for a complete frame to arrive.
   // If found, a pointer to the frame is returned. Returns nullptr otherwise.
-  VCMEncodedFrame* NextCompleteFrame(uint32_t max_wait_time_ms);
+  VCMEncodedFrame* NextCompleteFrame(uint32_t max_wait_time_ms)
+      RTC_LOCKS_EXCLUDED(mutex_);
 
   // Extract frame corresponding to input timestamp.
   // Frame will be set to a decoding state.
-  VCMEncodedFrame* ExtractAndSetDecode(uint32_t timestamp);
+  VCMEncodedFrame* ExtractAndSetDecode(uint32_t timestamp)
+      RTC_LOCKS_EXCLUDED(mutex_);
 
   // Releases a frame returned from the jitter buffer, should be called when
   // done with decoding.
-  void ReleaseFrame(VCMEncodedFrame* frame);
+  void ReleaseFrame(VCMEncodedFrame* frame) RTC_LOCKS_EXCLUDED(mutex_);
 
   // Returns the time in ms when the latest packet was inserted into the frame.
   // Retransmitted is set to true if any of the packets belonging to the frame
   // has been retransmitted.
   int64_t LastPacketTime(const VCMEncodedFrame* frame,
-                         bool* retransmitted) const;
+                         bool* retransmitted) const RTC_LOCKS_EXCLUDED(mutex_);
 
   // Inserts a packet into a frame returned from GetFrame().
   // If the return value is <= 0, `frame` is invalidated and the pointer must
   // be dropped after this function returns.
-  VCMFrameBufferEnum InsertPacket(const VCMPacket& packet, bool* retransmitted);
+  VCMFrameBufferEnum InsertPacket(const VCMPacket& packet, bool* retransmitted)
+      RTC_LOCKS_EXCLUDED(mutex_);
 
   // Returns the estimated jitter in milliseconds.
-  uint32_t EstimatedJitterMs();
+  uint32_t EstimatedJitterMs() RTC_LOCKS_EXCLUDED(mutex_);
 
   void SetNackSettings(size_t max_nack_list_size,
                        int max_packet_age_to_nack,
-                       int max_incomplete_time_ms);
+                       int max_incomplete_time_ms) RTC_LOCKS_EXCLUDED(mutex_);
 
   // Returns a list of the sequence numbers currently missing.
-  std::vector<uint16_t> GetNackList(bool* request_key_frame);
+  std::vector<uint16_t> GetNackList(bool* request_key_frame)
+      RTC_LOCKS_EXCLUDED(mutex_);
 
  private:
   class SequenceNumberLessThan {
@@ -202,7 +206,8 @@ class VCMJitterBuffer {
   bool RecycleFramesUntilKeyFrame() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Update rolling average of packets per frame.
-  void UpdateAveragePacketsPerFrame(int current_number_packets_);
+  void UpdateAveragePacketsPerFrame(int current_number_packets_)
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Cleans the frame list in the JB from old/empty frames.
   // Should only be called prior to actual use.
@@ -228,6 +233,9 @@ class VCMJitterBuffer {
   // Reset frame buffer and return it to free_frames_.
   void RecycleFrameBuffer(VCMFrameBuffer* frame)
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  // Empty the jitter buffer of all its data.
+  void FlushInternal() RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   Clock* clock_;
   // If we are running (have started) or not.

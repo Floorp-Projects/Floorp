@@ -186,6 +186,10 @@ bool VCMJitterBuffer::Running() const {
 
 void VCMJitterBuffer::Flush() {
   MutexLock lock(&mutex_);
+  FlushInternal();
+}
+
+void VCMJitterBuffer::FlushInternal() {
   decodable_frames_.Reset(&free_frames_);
   incomplete_frames_.Reset(&free_frames_);
   last_decoded_state_.Reset();  // TODO(mikhal): sync reset.
@@ -378,7 +382,7 @@ VCMFrameBufferEnum VCMJitterBuffer::InsertPacket(const VCMPacket& packet,
       RTC_LOG(LS_WARNING)
           << num_consecutive_old_packets_
           << " consecutive old packets received. Flushing the jitter buffer.";
-      Flush();
+      FlushInternal();
       return kFlushIndicator;
     }
     return kOldPacket;
