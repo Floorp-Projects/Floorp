@@ -34,6 +34,7 @@
 #include "test/testsupport/file_utils.h"
 #include "test/testsupport/frame_writer.h"
 #include "test/testsupport/test_artifacts.h"
+#include "test/video_test_constants.h"
 
 ABSL_FLAG(bool,
           save_worst_frame,
@@ -59,7 +60,7 @@ constexpr int kKeepAliveIntervalIterations =
     kKeepAliveInterval.ms() / kProbingInterval.ms();
 
 bool IsFlexfec(int payload_type) {
-  return payload_type == test::CallTest::kFlexfecPayloadType;
+  return payload_type == test::VideoTestConstants::kFlexfecPayloadType;
 }
 
 }  // namespace
@@ -437,7 +438,7 @@ double VideoAnalyzer::GetCpuUsagePercent() {
 
 bool VideoAnalyzer::IsInSelectedSpatialAndTemporalLayer(
     const RtpPacket& rtp_packet) {
-  if (rtp_packet.PayloadType() == test::CallTest::kPayloadTypeVP8) {
+  if (rtp_packet.PayloadType() == test::VideoTestConstants::kPayloadTypeVP8) {
     auto parsed_payload = vp8_depacketizer_->Parse(rtp_packet.PayloadBuffer());
     RTC_DCHECK(parsed_payload);
     const auto& vp8_header = absl::get<RTPVideoHeaderVP8>(
@@ -447,7 +448,7 @@ bool VideoAnalyzer::IsInSelectedSpatialAndTemporalLayer(
            temporal_idx <= selected_tl_;
   }
 
-  if (rtp_packet.PayloadType() == test::CallTest::kPayloadTypeVP9) {
+  if (rtp_packet.PayloadType() == test::VideoTestConstants::kPayloadTypeVP9) {
     auto parsed_payload = vp9_depacketizer_->Parse(rtp_packet.PayloadBuffer());
     RTC_DCHECK(parsed_payload);
     const auto& vp9_header = absl::get<RTPVideoHeaderVP9>(
