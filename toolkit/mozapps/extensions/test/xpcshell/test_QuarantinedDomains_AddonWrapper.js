@@ -15,6 +15,18 @@ add_setup(async () => {
   await AddonTestUtils.promiseStartupManager();
 });
 
+function assertQuarantineIgnoredByUserPrefsRemoved() {
+  const { PREF_ADDONS_BRANCH_NAME } = QuarantinedDomains;
+  const prefBranch = Services.prefs.getBranch(PREF_ADDONS_BRANCH_NAME);
+  for (const prefSuffix of prefBranch.getChildList("")) {
+    Assert.equal(
+      prefBranch.getPrefType(prefSuffix),
+      prefBranch.PREF_INVALID,
+      `${PREF_ADDONS_BRANCH_NAME}${prefSuffix} pref should have been removed`
+    );
+  }
+}
+
 async function testQuarantineDomainsAddonWrapperProperties() {
   // Make sure no extension is initially user exempted.
   const prefBranch = Services.prefs.getBranch(
@@ -162,9 +174,26 @@ async function testQuarantineDomainsAddonWrapperProperties() {
   Services.prefs.clearUserPref("extensions.quarantinedDomains.uiDisabled");
   assertAddonWrapperProps(regularExt.addon, EXPECTED_PROPS_REGULAR_EXT);
 
+  info(
+    "Verify that the per-addon quarantineIgnoredByUser pref is removed on addon uninstall"
+  );
+
+  promisePropChanged = AddonTestUtils.promiseAddonEvent("onPropertyChanged");
+  regularExt.addon.quarantineIgnoredByUser = true;
+  await promisePropChanged;
+  Assert.equal(
+    Services.prefs.getBoolPref(
+      QuarantinedDomains.getUserAllowedAddonIdPrefName(regularExt.id)
+    ),
+    true,
+    "Expect the per-addon quarantineIgnoredByUser to be set"
+  );
+
   await recommendedExt.unload();
   await privilegedExt.unload();
   await regularExt.unload();
+
+  assertQuarantineIgnoredByUserPrefsRemoved();
 }
 
 add_task(

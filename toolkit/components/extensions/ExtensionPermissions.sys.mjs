@@ -696,6 +696,9 @@ export var QuarantinedDomains = {
       userAllowed
     );
   },
+  clearUserPref(addonId) {
+    Services.prefs.clearUserPref(this.getUserAllowedAddonIdPrefName(addonId));
+  },
 
   // Implementation internals.
 
