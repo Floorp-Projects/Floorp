@@ -133,19 +133,24 @@ absl::optional<Timestamp> TimestampExtrapolator::ExtrapolateLocalTime(
     constexpr double kRtpTicksPerMs = 90;
     TimeDelta diff = TimeDelta::Millis(
         (unwrapped_ts90khz - *prev_unwrapped_timestamp_) / kRtpTicksPerMs);
-    if (diff.ms() < 0) {
-      RTC_DCHECK_GE(prev_.ms(), -diff.ms());
+    if (prev_.us() + diff.us() < 0) {
+      // Prevent the construction of a negative Timestamp.
+      // This scenario can occur when the RTP timestamp wraps around.
+      return absl::nullopt;
     }
     return prev_ + diff;
   } else if (w_[0] < 1e-3) {
     return start_;
   } else {
     double timestampDiff = unwrapped_ts90khz - *first_unwrapped_timestamp_;
-    auto diff_ms = static_cast<int64_t>((timestampDiff - w_[1]) / w_[0] + 0.5);
-    if (diff_ms < 0) {
-      RTC_DCHECK_GE(start_.ms(), -diff_ms);
+    TimeDelta diff = TimeDelta::Millis(
+        static_cast<int64_t>((timestampDiff - w_[1]) / w_[0] + 0.5));
+    if (start_.us() + diff.us() < 0) {
+      // Prevent the construction of a negative Timestamp.
+      // This scenario can occur when the RTP timestamp wraps around.
+      return absl::nullopt;
     }
-    return start_ + TimeDelta::Millis(diff_ms);
+    return start_ + diff;
   }
 }
 
