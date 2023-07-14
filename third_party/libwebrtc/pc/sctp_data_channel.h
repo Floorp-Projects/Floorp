@@ -182,11 +182,6 @@ class SctpDataChannel : public DataChannelInterface {
   // Specializations of CloseAbruptlyWithError
   void CloseAbruptlyWithDataChannelFailure(const std::string& message);
 
-  // Slots for controller to connect signals to.
-  //
-  // TODO(deadbeef): Make these private once we're hooking up signals ourselves,
-  // instead of relying on SctpDataChannelControllerInterface.
-
   // Called when the SctpTransport's ready to use. That can happen when we've
   // finished negotiation, or if the channel was created after negotiation has
   // already finished.
