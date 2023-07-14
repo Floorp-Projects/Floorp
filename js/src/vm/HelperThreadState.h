@@ -13,25 +13,46 @@
 #ifndef vm_HelperThreadState_h
 #define vm_HelperThreadState_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/EnumeratedArray.h"
-#include "mozilla/RefPtr.h"  // RefPtr
-#include "mozilla/TimeStamp.h"
-#include "mozilla/Vector.h"  // mozilla::Vector
+#include "mozilla/AlreadyAddRefed.h"  // already_AddRefed
+#include "mozilla/Assertions.h"       // MOZ_ASSERT, MOZ_CRASH
+#include "mozilla/Attributes.h"       // MOZ_RAII
+#include "mozilla/EnumeratedArray.h"  // mozilla::EnumeratedArray
+#include "mozilla/LinkedList.h"  // mozilla::LinkedList, mozilla::LinkedListElement
+#include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
+#include "mozilla/RefPtr.h"           // RefPtr
+#include "mozilla/TimeStamp.h"        // mozilla::TimeDuration
 
-#include "ds/Fifo.h"
-#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
-#include "frontend/FrontendContext.h"
-#include "js/CompileOptions.h"
+#include <stddef.h>  // size_t
+#include <stdint.h>  // uint32_t, uint64_t
+#include <utility>   // std::move, std::pair
+
+#include "ds/Fifo.h"                      // Fifo
+#include "frontend/CompilationStencil.h"  // frontend::{CompilationStencil, ExtensibleCompilationStencil, CompilationStencilMerger, ScriptStencilRef}
+#include "frontend/FrontendContext.h"     // FrontendContext
+#include "frontend/ScriptIndex.h"         // frontend::ScriptIndex
+#include "gc/GCRuntime.h"                 // gc::GCRuntime
+#include "js/AllocPolicy.h"               // SystemAllocPolicy
+#include "js/CompileOptions.h"  // JS::OwningCompileOptions, JS::ReadOnlyCompileOptions
+#include "js/ContextOptions.h"              // JS::ContextOptions
 #include "js/experimental/CompileScript.h"  // JS::CompilationStorage
 #include "js/experimental/JSStencil.h"      // JS::InstantiationStorage
-#include "js/HelperThreadAPI.h"
-#include "js/TypeDecls.h"
-#include "threading/ConditionVariable.h"
-#include "vm/HelperThreads.h"
-#include "vm/HelperThreadTask.h"
-#include "vm/JSContext.h"
-#include "vm/OffThreadPromiseRuntimeState.h"  // js::OffThreadPromiseTask
+#include "js/HelperThreadAPI.h"  // JS::HelperThreadTaskCallback, JS::DispatchReason
+#include "js/MemoryMetrics.h"  // JS::GlobalStats
+#include "js/ProfilingStack.h"  // JS::RegisterThreadCallback, JS::UnregisterThreadCallback
+#include "js/RootingAPI.h"                // JS::Handle
+#include "js/UniquePtr.h"                 // UniquePtr
+#include "js/Utility.h"                   // ThreadType
+#include "threading/ConditionVariable.h"  // ConditionVariable
+#include "threading/ProtectedData.h"      // WriteOnceData
+#include "vm/HelperThreads.h"  // AutoLockHelperThreadState, AutoUnlockHelperThreadState
+#include "vm/HelperThreadTask.h"             // HelperThreadTask
+#include "vm/JSContext.h"                    // JSContext, TlsContext
+#include "vm/JSScript.h"                     // ScriptSource
+#include "vm/Runtime.h"                      // JSRuntime
+#include "vm/SharedImmutableStringsCache.h"  // SharedImmutableString
+#include "wasm/WasmConstants.h"              // wasm::CompileMode
+
+class JSTracer;
 
 namespace js {
 
@@ -787,7 +808,7 @@ class SourceCompressionTask : public HelperThreadTask {
 // of the JSContext used to create the PromiseHelperTask will call resolve() to
 // resolve promise according to those results.
 struct PromiseHelperTask : OffThreadPromiseTask, public HelperThreadTask {
-  PromiseHelperTask(JSContext* cx, Handle<PromiseObject*> promise)
+  PromiseHelperTask(JSContext* cx, JS::Handle<PromiseObject*> promise)
       : OffThreadPromiseTask(cx, promise) {}
 
   // To be called on a helper thread and implemented by the derived class.
