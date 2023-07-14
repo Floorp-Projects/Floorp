@@ -21,6 +21,7 @@
 #include "api/video/encoded_image.h"
 #include "api/video/video_frame.h"
 #include "api/video_codecs/video_encoder.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
@@ -170,6 +171,13 @@ class VideoQualityAnalyzerInterface
   // frame ids space wraps around, then stream label for frame id may change.
   // It will crash, if the specified `frame_id` wasn't captured.
   virtual std::string GetStreamLabel(uint16_t frame_id) = 0;
+
+  // Returns the sender peer name of the last stream where this frame was
+  // captured. The sender for this frame id may change when the frame ids wrap
+  // around. Also it will crash, if the specified `frame_id` wasn't captured.
+  virtual std::string GetSenderPeerName(uint16_t frame_id) const {
+    RTC_CHECK(false) << "Not implemented.";
+  }
 };
 
 }  // namespace webrtc

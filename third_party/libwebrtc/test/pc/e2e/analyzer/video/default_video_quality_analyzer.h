@@ -89,6 +89,7 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
 
   void Stop() override;
   std::string GetStreamLabel(uint16_t frame_id) override;
+  std::string GetSenderPeerName(uint16_t frame_id) const override;
   void OnStatsReports(
       absl::string_view pc_label,
       const rtc::scoped_refptr<const RTCStatsReport>& report) override {}
@@ -149,6 +150,8 @@ class DefaultVideoQualityAnalyzer : public VideoQualityAnalyzerInterface {
   // Returns string representation of stats key for metrics naming. Used for
   // backward compatibility by metrics naming for 2 peers cases.
   std::string ToMetricName(const InternalStatsKey& key) const
+      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  std::string GetStreamLabelInternal(uint16_t frame_id) const
       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   static const uint16_t kStartingFrameId = 1;

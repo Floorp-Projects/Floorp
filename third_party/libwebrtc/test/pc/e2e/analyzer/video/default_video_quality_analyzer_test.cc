@@ -2375,5 +2375,38 @@ TEST_F(DefaultVideoQualityAnalyzerSimulatedTimeTest,
   EXPECT_EQ(frame_counters.dropped, 0);
 }
 
+TEST(DefaultVideoQualityAnalyzerTest, CheckFrameSenderPeerName) {
+  constexpr char kAlice[] = "alice";
+  constexpr char kBob[] = "bob";
+  constexpr char kAliceStreamLabel[] = "alice-video";
+  constexpr char kBobStreamLabel[] = "bob-video";
+  std::unique_ptr<test::FrameGeneratorInterface> frame_generator =
+      test::CreateSquareFrameGenerator(kFrameWidth, kFrameHeight,
+                                       /*type=*/absl::nullopt,
+                                       /*num_squares=*/absl::nullopt);
+  DefaultVideoQualityAnalyzer analyzer(Clock::GetRealTimeClock(),
+                                       test::GetGlobalMetricsLogger(),
+                                       AnalyzerOptionsForTest());
+  analyzer.Start("test_case", std::vector<std::string>{kAlice, kBob},
+                 kAnalyzerMaxThreadsCount);
+
+  VideoFrame frame_alice = NextFrame(frame_generator.get(), /*timestamp_us=*/1);
+  VideoFrame frame_bob = NextFrame(frame_generator.get(), /*timestamp_us=*/2);
+  frame_alice.set_id(
+      analyzer.OnFrameCaptured(kAlice, kAliceStreamLabel, frame_alice));
+  frame_bob.set_id(analyzer.OnFrameCaptured(kBob, kBobStreamLabel, frame_bob));
+  std::string sender_alice = analyzer.GetSenderPeerName(frame_alice.id());
+  std::string sender_bob = analyzer.GetSenderPeerName(frame_bob.id());
+
+  // Give analyzer some time to process frames on async thread. The computations
+  // have to be fast (heavy metrics are disabled!), so if doesn't fit 100ms it
+  // means we have an issue!
+  SleepMs(100);
+  analyzer.Stop();
+
+  EXPECT_EQ(sender_alice, kAlice);
+  EXPECT_EQ(sender_bob, kBob);
+}
+
 }  // namespace
 }  // namespace webrtc

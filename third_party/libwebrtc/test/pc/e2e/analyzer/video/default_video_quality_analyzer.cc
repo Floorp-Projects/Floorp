@@ -843,19 +843,17 @@ void DefaultVideoQualityAnalyzer::Stop() {
 }
 
 std::string DefaultVideoQualityAnalyzer::GetStreamLabel(uint16_t frame_id) {
-  MutexLock lock1(&mutex_);
-  auto it = captured_frames_in_flight_.find(frame_id);
-  if (it != captured_frames_in_flight_.end()) {
-    return streams_.name(it->second.stream());
-  }
-  for (auto hist_it = stream_to_frame_id_history_.begin();
-       hist_it != stream_to_frame_id_history_.end(); ++hist_it) {
-    auto hist_set_it = hist_it->second.find(frame_id);
-    if (hist_set_it != hist_it->second.end()) {
-      return streams_.name(hist_it->first);
-    }
-  }
-  RTC_CHECK(false) << "Unknown frame_id=" << frame_id;
+  MutexLock lock(&mutex_);
+  return GetStreamLabelInternal(frame_id);
+}
+
+std::string DefaultVideoQualityAnalyzer::GetSenderPeerName(
+    uint16_t frame_id) const {
+  MutexLock lock(&mutex_);
+  std::string stream_label = GetStreamLabelInternal(frame_id);
+  size_t stream_index = streams_.index(stream_label);
+  size_t sender_peer_index = stream_states_.at(stream_index).sender();
+  return peers_->name(sender_peer_index);
 }
 
 std::set<StatsKey> DefaultVideoQualityAnalyzer::GetKnownVideoStreams() const {
@@ -1319,6 +1317,22 @@ std::string DefaultVideoQualityAnalyzer::ToMetricName(
   out << stream_label << "_" << peers_->name(key.sender) << "_"
       << peers_->name(key.receiver);
   return out.str();
+}
+
+std::string DefaultVideoQualityAnalyzer::GetStreamLabelInternal(
+    uint16_t frame_id) const {
+  auto it = captured_frames_in_flight_.find(frame_id);
+  if (it != captured_frames_in_flight_.end()) {
+    return streams_.name(it->second.stream());
+  }
+  for (auto hist_it = stream_to_frame_id_history_.begin();
+       hist_it != stream_to_frame_id_history_.end(); ++hist_it) {
+    auto hist_set_it = hist_it->second.find(frame_id);
+    if (hist_set_it != hist_it->second.end()) {
+      return streams_.name(hist_it->first);
+    }
+  }
+  RTC_CHECK(false) << "Unknown frame_id=" << frame_id;
 }
 
 double DefaultVideoQualityAnalyzer::GetCpuUsagePercent() {
