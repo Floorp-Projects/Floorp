@@ -18,8 +18,8 @@
 
 #include "modules/video_coding/deprecated/jitter_buffer_common.h"
 #include "modules/video_coding/deprecated/packet.h"
+#include "modules/video_coding/deprecated/stream_generator.h"
 #include "modules/video_coding/encoded_frame.h"
-#include "modules/video_coding/test/stream_generator.h"
 #include "modules/video_coding/timing/timing.h"
 #include "rtc_base/checks.h"
 #include "system_wrappers/include/clock.h"
