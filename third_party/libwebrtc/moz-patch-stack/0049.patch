@@ -20,7 +20,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0b311007c033e838
  11 files changed, 56 insertions(+), 10 deletions(-)
 
 diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
-index 254ae5f3b6..eb3bcd9628 100644
+index 6d38b26e86..64b46714e8 100644
 --- a/audio/audio_receive_stream.cc
 +++ b/audio/audio_receive_stream.cc
 @@ -39,6 +39,8 @@ std::string AudioReceiveStreamInterface::Config::Rtp::ToString() const {
@@ -43,7 +43,7 @@ index 254ae5f3b6..eb3bcd9628 100644
  }  // namespace
  
 diff --git a/audio/channel_receive.cc b/audio/channel_receive.cc
-index 9c3f52a651..9697ed0d1a 100644
+index e6435ad1b1..9a1abd5bfa 100644
 --- a/audio/channel_receive.cc
 +++ b/audio/channel_receive.cc
 @@ -102,7 +102,8 @@ class ChannelReceive : public ChannelReceiveInterface,
@@ -93,7 +93,7 @@ index 9c3f52a651..9697ed0d1a 100644
  
  }  // namespace voe
 diff --git a/audio/channel_receive.h b/audio/channel_receive.h
-index d1d24e540f..60cfaa3355 100644
+index 13edf04053..c192039894 100644
 --- a/audio/channel_receive.h
 +++ b/audio/channel_receive.h
 @@ -186,7 +186,8 @@ std::unique_ptr<ChannelReceiveInterface> CreateChannelReceive(
@@ -107,7 +107,7 @@ index d1d24e540f..60cfaa3355 100644
  }  // namespace voe
  }  // namespace webrtc
 diff --git a/call/audio_receive_stream.h b/call/audio_receive_stream.h
-index 64fdf66925..c21a6b3f1f 100644
+index b0e94fee2a..acafff9e32 100644
 --- a/call/audio_receive_stream.h
 +++ b/call/audio_receive_stream.h
 @@ -19,6 +19,7 @@

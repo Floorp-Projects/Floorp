@@ -444,7 +444,7 @@ index 63a3a2d53d..a85ad0c0d4 100644
      "../api:transport_api",
      "../api/adaptation:resource_adaptation_api",
 diff --git a/call/audio_send_stream.h b/call/audio_send_stream.h
-index 0f42d0fb82..369d065f66 100644
+index 9c2fad652f..f9e49db574 100644
 --- a/call/audio_send_stream.h
 +++ b/call/audio_send_stream.h
 @@ -25,7 +25,7 @@
@@ -638,7 +638,7 @@ index cf0f3d3bd8..a3d03da735 100644
  
  rtc_library("rtc_audio_video") {
 diff --git a/media/base/media_channel.h b/media/base/media_channel.h
-index cf52244ba0..ab4eb79508 100644
+index 378042f1b2..3ce7327fea 100644
 --- a/media/base/media_channel.h
 +++ b/media/base/media_channel.h
 @@ -64,10 +64,6 @@ class Timing;

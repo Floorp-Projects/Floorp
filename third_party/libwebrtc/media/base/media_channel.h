@@ -378,7 +378,7 @@ struct MediaSenderInfo {
   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-retransmittedpacketssent
   uint64_t retransmitted_packets_sent = 0;
   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-nackcount
-  uint32_t nacks_rcvd = 0;
+  uint32_t nacks_received = 0;
   // https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-targetbitrate
   absl::optional<double> target_bitrate;
   int packets_lost = 0;
@@ -434,10 +434,10 @@ struct MediaReceiverInfo {
   }
 
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-bytesreceived
-  int64_t payload_bytes_rcvd = 0;
+  int64_t payload_bytes_received = 0;
   // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-headerbytesreceived
-  int64_t header_and_padding_bytes_rcvd = 0;
-  int packets_rcvd = 0;
+  int64_t header_and_padding_bytes_received = 0;
+  int packets_received = 0;
   int packets_lost = 0;
   absl::optional<uint32_t> nacks_sent;
   // Jitter (network-related) latency (cumulative).
@@ -560,8 +560,8 @@ struct VideoSenderInfo : public MediaSenderInfo {
   ~VideoSenderInfo();
   std::vector<SsrcGroup> ssrc_groups;
   std::string encoder_implementation_name;
-  int firs_rcvd = 0;
-  int plis_rcvd = 0;
+  int firs_received = 0;
+  int plis_received = 0;
   int send_frame_width = 0;
   int send_frame_height = 0;
   int frames = 0;
@@ -610,7 +610,7 @@ struct VideoReceiverInfo : public MediaReceiverInfo {
   int plis_sent = 0;
   int frame_width = 0;
   int frame_height = 0;
-  int framerate_rcvd = 0;
+  int framerate_received = 0;
   int framerate_decoded = 0;
   int framerate_output = 0;
   // Framerate as sent to the renderer.

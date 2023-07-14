@@ -206,7 +206,7 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info,
       {StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms},
       {StatsReport::kStatsValueNameJitterReceived, info.jitter_ms},
       {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
-      {StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd},
+      {StatsReport::kStatsValueNamePacketsReceived, info.packets_received},
       {StatsReport::kStatsValueNamePreferredJitterBufferMs,
        info.jitter_buffer_preferred_ms},
   };
@@ -224,11 +224,11 @@ void ExtractStats(const cricket::VoiceReceiverInfo& info,
     report->AddInt(StatsReport::kStatsValueNameDecodingCodecPLC,
                    info.decoding_codec_plc);
 
-  int64_t bytes_rcvd = info.payload_bytes_rcvd;
+  int64_t bytes_received = info.payload_bytes_received;
   if (!use_standard_bytes_stats) {
-    bytes_rcvd += info.header_and_padding_bytes_rcvd;
+    bytes_received += info.header_and_padding_bytes_received;
   }
-  report->AddInt64(StatsReport::kStatsValueNameBytesReceived, bytes_rcvd);
+  report->AddInt64(StatsReport::kStatsValueNameBytesReceived, bytes_received);
   if (info.capture_start_ntp_time_ms >= 0) {
     report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
                      info.capture_start_ntp_time_ms);
@@ -302,11 +302,11 @@ void ExtractStats(const cricket::VideoReceiverInfo& info,
   ExtractCommonReceiveProperties(info, report);
   report->AddString(StatsReport::kStatsValueNameCodecImplementationName,
                     info.decoder_implementation_name);
-  int64_t bytes_rcvd = info.payload_bytes_rcvd;
+  int64_t bytes_received = info.payload_bytes_received;
   if (!use_standard_bytes_stats) {
-    bytes_rcvd += info.header_and_padding_bytes_rcvd;
+    bytes_received += info.header_and_padding_bytes_received;
   }
-  report->AddInt64(StatsReport::kStatsValueNameBytesReceived, bytes_rcvd);
+  report->AddInt64(StatsReport::kStatsValueNameBytesReceived, bytes_received);
   if (info.capture_start_ntp_time_ms >= 0) {
     report->AddInt64(StatsReport::kStatsValueNameCaptureStartNtpTimeMs,
                      info.capture_start_ntp_time_ms);
@@ -329,14 +329,14 @@ void ExtractStats(const cricket::VideoReceiverInfo& info,
       {StatsReport::kStatsValueNameFrameHeightReceived, info.frame_height},
       {StatsReport::kStatsValueNameFrameRateDecoded, info.framerate_decoded},
       {StatsReport::kStatsValueNameFrameRateOutput, info.framerate_output},
-      {StatsReport::kStatsValueNameFrameRateReceived, info.framerate_rcvd},
+      {StatsReport::kStatsValueNameFrameRateReceived, info.framerate_received},
       {StatsReport::kStatsValueNameFrameWidthReceived, info.frame_width},
       {StatsReport::kStatsValueNameJitterBufferMs, info.jitter_buffer_ms},
       {StatsReport::kStatsValueNameMaxDecodeMs, info.max_decode_ms},
       {StatsReport::kStatsValueNameMinPlayoutDelayMs,
        info.min_playout_delay_ms},
       {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
-      {StatsReport::kStatsValueNamePacketsReceived, info.packets_rcvd},
+      {StatsReport::kStatsValueNamePacketsReceived, info.packets_received},
       {StatsReport::kStatsValueNamePlisSent, info.plis_sent},
       {StatsReport::kStatsValueNameRenderDelayMs, info.render_delay_ms},
       {StatsReport::kStatsValueNameTargetDelayMs, info.target_delay_ms},
@@ -382,15 +382,15 @@ void ExtractStats(const cricket::VideoSenderInfo& info,
       {StatsReport::kStatsValueNameAvgEncodeMs, info.avg_encode_ms},
       {StatsReport::kStatsValueNameEncodeUsagePercent,
        info.encode_usage_percent},
-      {StatsReport::kStatsValueNameFirsReceived, info.firs_rcvd},
+      {StatsReport::kStatsValueNameFirsReceived, info.firs_received},
       {StatsReport::kStatsValueNameFrameHeightSent, info.send_frame_height},
       {StatsReport::kStatsValueNameFrameRateInput, round(info.framerate_input)},
       {StatsReport::kStatsValueNameFrameRateSent, info.framerate_sent},
       {StatsReport::kStatsValueNameFrameWidthSent, info.send_frame_width},
-      {StatsReport::kStatsValueNameNacksReceived, info.nacks_rcvd},
+      {StatsReport::kStatsValueNameNacksReceived, info.nacks_received},
       {StatsReport::kStatsValueNamePacketsLost, info.packets_lost},
       {StatsReport::kStatsValueNamePacketsSent, info.packets_sent},
-      {StatsReport::kStatsValueNamePlisReceived, info.plis_rcvd},
+      {StatsReport::kStatsValueNamePlisReceived, info.plis_received},
       {StatsReport::kStatsValueNameFramesEncoded, info.frames_encoded},
       {StatsReport::kStatsValueNameHugeFramesSent, info.huge_frames_sent},
   };

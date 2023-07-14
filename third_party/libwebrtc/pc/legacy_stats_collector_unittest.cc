@@ -329,8 +329,8 @@ void VerifyVoiceReceiverInfoReport(const StatsReport* report,
   EXPECT_EQ(rtc::ToString(info.audio_level), value_in_report);
   EXPECT_TRUE(GetValue(report, StatsReport::kStatsValueNameBytesReceived,
                        &value_in_report));
-  EXPECT_EQ(rtc::ToString(info.payload_bytes_rcvd +
-                          info.header_and_padding_bytes_rcvd),
+  EXPECT_EQ(rtc::ToString(info.payload_bytes_received +
+                          info.header_and_padding_bytes_received),
             value_in_report);
   EXPECT_TRUE(GetValue(report, StatsReport::kStatsValueNameJitterReceived,
                        &value_in_report));
@@ -366,7 +366,7 @@ void VerifyVoiceReceiverInfoReport(const StatsReport* report,
   EXPECT_EQ(rtc::ToString(info.secondary_discarded_rate), value_in_report);
   EXPECT_TRUE(GetValue(report, StatsReport::kStatsValueNamePacketsReceived,
                        &value_in_report));
-  EXPECT_EQ(rtc::ToString(info.packets_rcvd), value_in_report);
+  EXPECT_EQ(rtc::ToString(info.packets_received), value_in_report);
   EXPECT_TRUE(GetValue(report, StatsReport::kStatsValueNameDecodingCTSG,
                        &value_in_report));
   EXPECT_EQ(rtc::ToString(info.decoding_calls_to_silence_generator),
@@ -566,9 +566,9 @@ void UpdateVoiceSenderInfoFromAudioTrack(
 
 void InitVoiceReceiverInfo(cricket::VoiceReceiverInfo* voice_receiver_info) {
   voice_receiver_info->add_ssrc(kSsrcOfTrack);
-  voice_receiver_info->payload_bytes_rcvd = 98;
-  voice_receiver_info->header_and_padding_bytes_rcvd = 12;
-  voice_receiver_info->packets_rcvd = 111;
+  voice_receiver_info->payload_bytes_received = 98;
+  voice_receiver_info->header_and_padding_bytes_received = 12;
+  voice_receiver_info->packets_received = 111;
   voice_receiver_info->packets_lost = 114;
   voice_receiver_info->jitter_ms = 116;
   voice_receiver_info->jitter_buffer_ms = 117;

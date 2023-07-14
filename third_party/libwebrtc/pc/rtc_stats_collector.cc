@@ -416,11 +416,11 @@ void SetInboundRTPStreamStatsFromMediaReceiverInfo(
   RTC_DCHECK(inbound_stats);
   inbound_stats->ssrc = media_receiver_info.ssrc();
   inbound_stats->packets_received =
-      static_cast<uint32_t>(media_receiver_info.packets_rcvd);
+      static_cast<uint32_t>(media_receiver_info.packets_received);
   inbound_stats->bytes_received =
-      static_cast<uint64_t>(media_receiver_info.payload_bytes_rcvd);
-  inbound_stats->header_bytes_received =
-      static_cast<uint64_t>(media_receiver_info.header_and_padding_bytes_rcvd);
+      static_cast<uint64_t>(media_receiver_info.payload_bytes_received);
+  inbound_stats->header_bytes_received = static_cast<uint64_t>(
+      media_receiver_info.header_and_padding_bytes_received);
   inbound_stats->packets_lost =
       static_cast<int32_t>(media_receiver_info.packets_lost);
   inbound_stats->jitter_buffer_delay =
@@ -707,7 +707,7 @@ void SetOutboundRTPStreamStatsFromMediaSenderInfo(
       static_cast<uint64_t>(media_sender_info.header_and_padding_bytes_sent);
   outbound_stats->retransmitted_bytes_sent =
       media_sender_info.retransmitted_bytes_sent;
-  outbound_stats->nack_count = media_sender_info.nacks_rcvd;
+  outbound_stats->nack_count = media_sender_info.nacks_received;
   if (media_sender_info.active.has_value()) {
     outbound_stats->active = *media_sender_info.active;
   }
@@ -779,9 +779,9 @@ CreateOutboundRTPStreamStatsFromVideoSenderInfo(
     }
   }
   outbound_video->fir_count =
-      static_cast<uint32_t>(video_sender_info.firs_rcvd);
+      static_cast<uint32_t>(video_sender_info.firs_received);
   outbound_video->pli_count =
-      static_cast<uint32_t>(video_sender_info.plis_rcvd);
+      static_cast<uint32_t>(video_sender_info.plis_received);
   if (video_sender_info.qp_sum.has_value())
     outbound_video->qp_sum = *video_sender_info.qp_sum;
   if (video_sender_info.target_bitrate.has_value() &&

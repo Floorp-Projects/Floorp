@@ -48,7 +48,7 @@ TEST_F(NackTest, ShouldNackInLossyNetwork) {
       EXPECT_GT(recv_stats.nacks_sent, 0U);
       AudioSendStream::Stats send_stats = send_stream()->GetStats();
       EXPECT_GT(send_stats.retransmitted_packets_sent, 0U);
-      EXPECT_GT(send_stats.nacks_rcvd, 0U);
+      EXPECT_GT(send_stats.nacks_received, 0U);
     }
   } test;
 

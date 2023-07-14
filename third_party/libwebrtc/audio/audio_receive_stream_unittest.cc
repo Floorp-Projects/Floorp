@@ -243,11 +243,11 @@ TEST(AudioReceiveStreamTest, GetStats) {
     AudioReceiveStreamInterface::Stats stats =
         recv_stream->GetStats(/*get_and_clear_legacy_stats=*/true);
     EXPECT_EQ(kRemoteSsrc, stats.remote_ssrc);
-    EXPECT_EQ(kCallStats.payload_bytes_rcvd, stats.payload_bytes_rcvd);
-    EXPECT_EQ(kCallStats.header_and_padding_bytes_rcvd,
-              stats.header_and_padding_bytes_rcvd);
+    EXPECT_EQ(kCallStats.payload_bytes_received, stats.payload_bytes_received);
+    EXPECT_EQ(kCallStats.header_and_padding_bytes_received,
+              stats.header_and_padding_bytes_received);
     EXPECT_EQ(static_cast<uint32_t>(kCallStats.packetsReceived),
-              stats.packets_rcvd);
+              stats.packets_received);
     EXPECT_EQ(kCallStats.cumulativeLost, stats.packets_lost);
     EXPECT_EQ(kReceiveCodec.second.name, stats.codec_name);
     EXPECT_EQ(
