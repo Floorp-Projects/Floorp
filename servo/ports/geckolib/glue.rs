@@ -5204,7 +5204,7 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use style::values::generics::box_::{VerticalAlign, VerticalAlignKeyword};
     use style::values::generics::font::FontStyle;
     use style::values::specified::{
-        table::CaptionSide, BorderStyle, Clear, Display, Float, TextAlign, TextEmphasisPosition, TextTransform
+        table::CaptionSide, BorderStyle, Clear, Display, Float, TextAlign, TextEmphasisPosition,
     };
 
     fn get_from_computed<T>(value: u32) -> T
@@ -5249,10 +5249,6 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
         BorderRightStyle => get_from_computed::<BorderStyle>(value),
         BorderBottomStyle => get_from_computed::<BorderStyle>(value),
         BorderLeftStyle => get_from_computed::<BorderStyle>(value),
-        TextTransform => {
-            debug_assert_eq!(value, structs::StyleTextTransformCase_None as u32);
-            TextTransform::none()
-        },
     };
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);

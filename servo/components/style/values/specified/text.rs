@@ -341,11 +341,6 @@ impl Parse for TextTransform {
                 "capitalize" if result.case_ == TextTransformCase::None => {
                     result.case_ = TextTransformCase::Capitalize
                 },
-                "math-auto" if result.case_ == TextTransformCase::None &&
-                    result.other_.is_empty() => {
-                    result.case_ = TextTransformCase::MathAuto;
-                    return Ok(result);
-                },
                 "full-width" if !result.other_.intersects(TextTransformOther::FULL_WIDTH) => {
                     result.other_.insert(TextTransformOther::FULL_WIDTH)
                 },
@@ -410,8 +405,6 @@ pub enum TextTransformCase {
     Lowercase,
     /// Capitalize each word.
     Capitalize,
-    /// Automatic italicization of math variables.
-    MathAuto,
 }
 
 bitflags! {
