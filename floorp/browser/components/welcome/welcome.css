@@ -84,7 +84,7 @@ body {
 #first-floorp-welcome-logo {
     width: 150px;
     position: relative;
-    top: calc(-75px);
+    top: calc(-50px);
     left: calc(50% - 75px);
     z-index: 2;
 }
@@ -123,6 +123,7 @@ body {
     font-size: 20px;
     margin-bottom: 40px;
     margin-top: 10px;
+    text-align: center;
 }
 
 .second-option-icons {

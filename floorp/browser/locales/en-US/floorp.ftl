@@ -799,3 +799,27 @@ workspace-rename =
 sharemode-menuitem =
   .label = Share Mode
   .accesskey = S
+
+
+############################################################################## Welcome page ###############################################################
+
+welcome-login-to-firefox-account = Login to Firefox Account
+welcome-to-floorp = Welcome to Floorp !
+welcome-discribe-floorp = Floorp is a browser that flexibly supports various environments and is based on Firefox. It is a browser that is easy to use and has a lot of features.
+welcome-start-setup = Setup to create your own "Browser" !
+welcome-skip-to-start-browsing = Skip to Start Browsing
+welcome-select-preferences-template = Select a template
+welcome-minimum-template = Basic
+welcome-enable-basic-features = Enable basic features & settings for a simple experience.
+welcome-medium-template = Medium
+welcome-enable-some-features = Enable some features & settings for a better experience.
+welcome-maximum-template = Advanced
+welcome-enable-most-of-features = Most flexible features & settings. Recommended for advanced users.
+welcome-select-browser-design = Select a Browser Design
+welcome-discribe-browser-design = You can choose from a variety of great third-party or Floorp's designs. OS specific designs are also available at Preferences.
+welcome-design-lepton-name = Lepton Original Design
+welcome-design-photon-name = Lepton Photon Design
+welcome-design-ProtonFix-name = Lepton ProtonFix Design
+welcome-design-floorp-fluerial-name = Floorp Fluerial Design
+
+welcome-select-button = Select
