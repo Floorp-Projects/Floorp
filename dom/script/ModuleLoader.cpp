@@ -149,10 +149,9 @@ nsresult ModuleLoader::CompileFetchedModule(
     JSContext* aCx, JS::Handle<JSObject*> aGlobal, JS::CompileOptions& aOptions,
     ModuleLoadRequest* aRequest, JS::MutableHandle<JSObject*> aModuleOut) {
   if (aRequest->GetScriptLoadContext()->mWasCompiledOMT) {
-    JS::Rooted<JS::InstantiationStorage> storage(aCx);
+    JS::InstantiationStorage storage;
     RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(
-        aCx, aRequest->GetScriptLoadContext()->mOffThreadToken,
-        storage.address());
+        aCx, aRequest->GetScriptLoadContext()->mOffThreadToken, &storage);
 
     aRequest->GetScriptLoadContext()->mOffThreadToken = nullptr;
 
@@ -162,7 +161,7 @@ nsresult ModuleLoader::CompileFetchedModule(
 
     JS::InstantiateOptions instantiateOptions(aOptions);
     aModuleOut.set(JS::InstantiateModuleStencil(aCx, instantiateOptions,
-                                                stencil, storage.address()));
+                                                stencil, &storage));
     if (!aModuleOut) {
       return NS_ERROR_FAILURE;
     }
