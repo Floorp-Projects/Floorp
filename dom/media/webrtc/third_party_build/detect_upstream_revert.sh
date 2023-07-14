@@ -53,12 +53,32 @@ git log --oneline -r $MOZ_LIBWEBRTC_BASE..$MOZ_TARGET_UPSTREAM_BRANCH_HEAD \
  | grep -F "Revert \"$MOZ_LIBWEBRTC_COMMIT_MSG" \
  | tail -1 | awk '{print $1;}' || true`
 
-echo "MOZ_LIBWEBRTC_REVERT_SHA: $MOZ_LIBWEBRTC_REVERT_SHA"
-
 if [ "x$MOZ_LIBWEBRTC_REVERT_SHA" == "x" ]; then
-  echo "no revert commit detected"
+  echo "no revert commit summary detected in newer commits matching $MOZ_LIBWEBRTC_COMMIT_MSG"
   exit
 fi
+
+echo "found potential MOZ_LIBWEBRTC_REVERT_SHA: $MOZ_LIBWEBRTC_REVERT_SHA"
+echo "checking commit message for 'This reverts commit' to confirm"
+CONFIRM_SHA=`cd $MOZ_LIBWEBRTC_SRC ; \
+git show $MOZ_LIBWEBRTC_REVERT_SHA \
+ | awk '/This reverts commit/ { print $NF; }' \
+ | tr -d '[:punct:]'`
+
+if [ "x$CONFIRM_SHA" == "x" ]; then
+  echo "no revert commit listed in commit message for $MOZ_LIBWEBRTC_REVERT_SHA"
+  exit
+fi
+
+# convert to short sha
+CONFIRM_SHA=`cd $MOZ_LIBWEBRTC_SRC ; \
+git show --format='%h' --no-patch $CONFIRM_SHA`
+
+if [ $MOZ_LIBWEBRTC_REVERT_SHA != $CONFIRM_SHA ]; then
+  echo "revert sha ($MOZ_LIBWEBRTC_REVERT_SHA) does not match commit listed in commit summary ($CONFIRM_SHA)"
+  exit
+fi
+
 
 if [ "x$AUTO_FIX_REVERT_AS_NOOP" = "x1" ]; then
   echo "AUTO_FIX_REVERT_AS_NOOP detected, fixing land/revert pair automatically"
