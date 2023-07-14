@@ -577,6 +577,45 @@ class NimbusMessagingStorageTest {
     }
 
     @Test
+    fun `GIVEN a malformed control message WHEN calling getNextMessage THEN return the next eligible message`() {
+        val spiedStorage = spy(storage)
+        val messageData: MessageData = createMessageData()
+        // the message isControl, but has no experiment property.
+        val controlMessageData: MessageData = createMessageData(isControl = true)
+
+        doReturn(SHOW_NEXT_MESSAGE).`when`(spiedStorage).getOnControlBehavior()
+
+        val message = Message(
+            "id",
+            messageData,
+            action = "action",
+            mock(),
+            listOf("trigger"),
+            Message.Metadata("same-id"),
+        )
+
+        val controlMessage = Message(
+            "control-id",
+            controlMessageData,
+            action = "action",
+            mock(),
+            listOf("trigger"),
+            Message.Metadata("same-id"),
+        )
+
+        doReturn(true).`when`(spiedStorage).isMessageEligible(any(), any(), any())
+
+        val result = spiedStorage.getNextMessage(
+            HOMESCREEN,
+            listOf(controlMessage, message),
+        )
+
+        verify(messagingFeature).recordMalformedConfiguration("control-id")
+
+        assertEquals(message.id, result!!.id)
+    }
+
+    @Test
     fun `GIVEN a control message WHEN calling getNextMessage THEN return the next eligible message with the correct surface`() {
         val spiedStorage = spy(storage)
         val experiment = "my-experiment"
