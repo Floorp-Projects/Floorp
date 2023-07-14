@@ -44,7 +44,12 @@ function getCandidateScriptLocations(source, index) {
       // type is invalid (= not JS), skip this tag and continue
       const tag = source.substring(i + startMatch.index, endIndex);
       const type = getType(tag);
-      if (type && type !== "javascript" && type !== "text/javascript") {
+      if (
+        type &&
+        type !== "javascript" &&
+        type !== "text/javascript" &&
+        type !== "module"
+      ) {
         return getCandidateScriptLocations(source, endIndex);
       }
 

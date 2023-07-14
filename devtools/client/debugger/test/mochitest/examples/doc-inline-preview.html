@@ -12,5 +12,14 @@
     <button onclick="onBtnClick(event)">Click me!</button>
 
     <script src="inline-preview.js"></script>
+    <script type="module">
+      window.runInModule = function() {
+        bar(4);
+      }
+      function bar(val) {
+        console.log(val);
+        debugger;
+      }
+    </script>
   </body>
 </html>
