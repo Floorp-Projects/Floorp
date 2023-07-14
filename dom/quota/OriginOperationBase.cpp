@@ -116,10 +116,6 @@ nsresult OriginOperationBase::DirectoryWork() {
   QuotaManager* const quotaManager = QuotaManager::Get();
   QM_TRY(OkIf(quotaManager), NS_ERROR_FAILURE);
 
-  if (mNeedsStorageInit) {
-    QM_TRY(MOZ_TO_RESULT(quotaManager->EnsureStorageIsInitialized()));
-  }
-
   QM_TRY(MOZ_TO_RESULT(DoDirectoryWork(*quotaManager)));
 
   // Must set mState before dispatching otherwise we will race with the owning
