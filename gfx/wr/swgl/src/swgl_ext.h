@@ -1516,7 +1516,7 @@ static bool commitLinearGradient(sampler2D sampler, int address, float size,
           (maxColorF - minColorF) * (1.0f / (maxIndex + 1 - minIndex));
       // Compute the actual starting color of the current start offset within
       // the merged gradient. The value 0.5 is added to the low bits (0x80) so
-      // that the color will effective round to the nearest increment below.
+      // that the color will effectively round to the nearest increment below.
       auto colorF =
           minColorF + colorRangeF * (startEntry - minIndex) + float(0x80);
       // Compute the portion of the color range that we advance on each chunk.
@@ -1524,16 +1524,26 @@ static bool commitLinearGradient(sampler2D sampler, int address, float size,
       // Quantize the color delta and current color. These have already been
       // scaled to the 0..0xFF00 range, so we just need to round them to U16.
       auto deltaColor = repeat4(CONVERT(round_pixel(deltaColorF, 1), U16));
-      auto color =
-          combine(CONVERT(round_pixel(colorF, 1), U16),
-                  CONVERT(round_pixel(colorF + deltaColorF * 0.25f, 1), U16),
-                  CONVERT(round_pixel(colorF + deltaColorF * 0.5f, 1), U16),
-                  CONVERT(round_pixel(colorF + deltaColorF * 0.75f, 1), U16));
-      // Finally, step the current color through the output chunks, shifting
-      // it into 8 bit range and outputting as we go.
-      for (auto* end = buf + inside * 4; buf < end; buf += 4) {
-        commit_blend_span<BLEND>(buf, bit_cast<WideRGBA8>(color >> 8));
-        color += deltaColor;
+      for (int remaining = inside;;) {
+        auto color =
+            combine(CONVERT(round_pixel(colorF, 1), U16),
+                    CONVERT(round_pixel(colorF + deltaColorF * 0.25f, 1), U16),
+                    CONVERT(round_pixel(colorF + deltaColorF * 0.5f, 1), U16),
+                    CONVERT(round_pixel(colorF + deltaColorF * 0.75f, 1), U16));
+        // Finally, step the current color through the output chunks, shifting
+        // it into 8 bit range and outputting as we go. Only process a segment
+        // at a time to avoid overflowing 8-bit precision due to rounding of
+        // deltas.
+        int segment = min(remaining, 256 / 4);
+        for (auto* end = buf + segment * 4; buf < end; buf += 4) {
+          commit_blend_span<BLEND>(buf, bit_cast<WideRGBA8>(color >> 8));
+          color += deltaColor;
+        }
+        remaining -= segment;
+        if (remaining <= 0) {
+          break;
+        }
+        colorF += deltaColorF * segment;
       }
       // Deduct the number of chunks inside the gradient from the remaining
       // overall span. If we exhausted the span, bail out.

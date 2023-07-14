@@ -1151,6 +1151,17 @@ static ALWAYS_INLINE VectorType<uint16_t, N> addsat(VectorType<uint16_t, N> x,
   return r | (r < x);
 }
 
+static inline V8<uint16_t> addsat(V8<uint16_t> x, V8<uint16_t> y) {
+#if USE_SSE2
+  return _mm_adds_epu16(x, y);
+#elif USE_NEON
+  return vqaddq_u16(x, y);
+#else
+  auto r = x + y;
+  return r | (r < x);
+#endif
+}
+
 template <typename P, typename S>
 static VectorType<uint16_t, 4 * sizeof(P)> gaussianBlurHorizontal(
     S sampler, const ivec2_scalar& i, int minX, int maxX, int radius,
