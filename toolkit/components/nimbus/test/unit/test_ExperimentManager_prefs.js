@@ -1657,6 +1657,14 @@ add_task(async function test_restorePrefs_experimentAndRollout() {
 });
 
 add_task(async function test_prefChange() {
+  TelemetryEvents.init();
+
+  const LEGACY_FILTER = {
+    category: "normandy",
+    method: "unenroll",
+    object: "nimbus_experiment",
+  };
+
   /**
    * Test that pref tampering causes unenrollment.
    *
@@ -1711,6 +1719,12 @@ add_task(async function test_prefChange() {
     expectedDefault = null,
     expectedUser = null,
   }) {
+    Services.fog.testResetFOG();
+    Services.telemetry.snapshotEvents(
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+      /* clear = */ true
+    );
+
     const store = ExperimentFakes.store();
     const manager = ExperimentFakes.manager(store);
 
@@ -1798,9 +1812,52 @@ add_task(async function test_prefChange() {
           `An enrollment of kind ${enrollmentKind} should exist`
         );
         Assert.ok(!enrollment.active, "It should not be active");
+        Assert.equal(
+          enrollment.unenrollReason,
+          "changed-pref",
+          "The unenrollment reason should be changed-pref"
+        );
 
         store._deleteForTests(slug);
       }
+    }
+
+    const gleanEvents = Glean.nimbusEvents.unenrollment.testGetValue();
+    const expectedLegacyEvents = Object.keys(configs)
+      .filter(enrollmentKind => !expectedEnrollments.includes(enrollmentKind))
+      .map(enrollmentKind => ({
+        value: slugs[enrollmentKind],
+        extra: {
+          reason: "changed-pref",
+          changedPref: pref,
+        },
+      }));
+
+    TelemetryTestUtils.assertEvents(expectedLegacyEvents, LEGACY_FILTER);
+
+    if (expectedLegacyEvents.length) {
+      const processedGleanEvents = gleanEvents.map(event => ({
+        reason: event.extra.reason,
+        experiment: event.extra.experiment,
+        changed_pref: event.extra.changed_pref,
+      }));
+      const expectedGleanEvents = expectedLegacyEvents.map(event => ({
+        experiment: event.value,
+        reason: event.extra.reason,
+        changed_pref: event.extra.changedPref,
+      }));
+
+      Assert.deepEqual(
+        processedGleanEvents,
+        expectedGleanEvents,
+        "Glean should have the expected unenrollment events"
+      );
+    } else {
+      Assert.equal(
+        gleanEvents,
+        undefined,
+        "Glean should have no unenrollment events"
+      );
     }
 
     for (const enrollmentKind of expectedEnrollments) {
