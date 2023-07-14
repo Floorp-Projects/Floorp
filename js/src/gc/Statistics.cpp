@@ -1601,7 +1601,7 @@ double Statistics::computeMMU(TimeDuration window) const {
     }
   }
 
-  MOZ_ASSERT(gcMax > TimeDuration::Zero());
+  MOZ_ASSERT(gcMax >= TimeDuration::Zero());
   MOZ_ASSERT(gcMax <= window);
   return (window - gcMax) / window;
 }
