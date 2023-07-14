@@ -810,15 +810,13 @@ void Event::SetOwner(EventTarget* aOwner) {
     return;
   }
 
-  nsCOMPtr<nsINode> n = do_QueryInterface(aOwner);
-  if (n) {
+  if (nsINode* n = aOwner->GetAsNode()) {
     mOwner = n->OwnerDoc()->GetScopeObject();
     return;
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> w = do_QueryInterface(aOwner);
-  if (w) {
-    mOwner = do_QueryInterface(w);
+  if (nsPIDOMWindowInner* w = aOwner->GetAsWindowInner()) {
+    mOwner = w->AsGlobal();
     return;
   }
 
