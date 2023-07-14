@@ -158,19 +158,23 @@ rtc_library("frame_generator_capturer") {
   ]
   deps = [
     ":test_video_capturer",
-    "../api:create_frame_generator",
     "../api:frame_generator_api",
     "../api/task_queue",
+    "../api/units:time_delta",
     "../api/video:video_frame",
+    "../api/video:video_rtp_headers",
     "../rtc_base:checks",
     "../rtc_base:logging",
+    "../rtc_base:macromagic",
     "../rtc_base:rtc_task_queue",
-    "../rtc_base:timeutils",
     "../rtc_base/synchronization:mutex",
     "../rtc_base/task_utils:repeating_task",
     "../system_wrappers",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("video_test_common") {
