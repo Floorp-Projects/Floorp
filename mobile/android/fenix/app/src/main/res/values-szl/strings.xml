@@ -478,6 +478,8 @@
     <string name="preferences_gestures">Gesty</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Przipasuj</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">Wluguj sie, coby synchrōnizować karty, zokłodki, hasła i inksze.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name">Kōnto Firefox</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
@@ -518,13 +520,29 @@
     <string name="preferences_open_links_in_apps">Ôtwiyrej linki w aplikacyjach</string>
 
 
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">Dycki</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">Pytej przed ôtwarciym</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">Żodyn roz</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Zewnyntrzny menedżer pobiyranio</string>
+
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Załōncz protokōł Gecko</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">Zawiyranie aplikacyje, coby przidać zmiany…</string>
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Rozszyrzynia</string>
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Powiadōmiynia</string>
+
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">Przizwōlōne</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">Niyprzizwolōne</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -550,6 +568,12 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">Niydowno nawiedzōne</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">Historyje do pōmedykowanio</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">Historyje z usugi %s</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">Spōnsorowane nowiny</string>
     <!-- Title for the opening wallpaper settings screen -->
     <string name="customize_wallpapers">Tapety</string>
     <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -563,12 +587,39 @@
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">Pokoż</string>
 
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">Niy szło pobrać tapety</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">Sprōbuj jeszcze roz</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">Niy szło zmiynić tapety</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">Przewiydz sie wiyncyj</string>
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">Klasyczny %s</string>
+
+    <!-- Text for limited edition wallpapers title. -->
+    <string name="wallpaper_limited_edition_title">Limitowano edycyjo</string>
+    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
+    <string name="wallpaper_limited_edition_description_with_learn_more">Nowo kolekcyjo niyznoleżnych głosōw. %s</string>
+    <!-- Description text for the limited edition wallpapers. -->
+    <string name="wallpaper_limited_edition_description">Nowo kolekcyjo niyznoleżnych głosōw.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">Sprōbuj kapki farby</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">Ôbier se tapeta, co ci pasuje.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">Wezdrzij na inksze tapety</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error">Rozszyrzynie niy ma ôbsugowane</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed">Rozszyrzynie je już zainstalowane</string>
 
+    <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">Regiyruj kōntym</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Synchrōnizuj teroz</string>
     <!-- Preference category for sync -->
@@ -701,6 +752,24 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zawrzij</string>
 
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">Ôdwrzić %d kart?</string>
+    <!-- Message to warn users that a large number of tabs will be opened
+    %s will be replaced by app name. -->
+    <string name="open_all_warning_message">Jak ôdewrzisz tela kart, to aplikacyjo %s sie spōmali przi ladowaniu tych strōn. Na zicher ôdewrzić tela kart?</string>
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">Ôdewrzij karty</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">Pociep</string>
+
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">Strōny: %d</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">Strōny: %d</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Niydowno zawarte karty</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -754,6 +823,13 @@
     <string name="close_tabs_after_one_week_summary">Zawiyrej po tydniu</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Zawiyrej po miesiōncu</string>
+
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">Ôdewrzij na dōmowyj strōnie</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">Ôdewrzij na ôstatnij karcie</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">Ôdewrzij na dōmowyj strōnie po sztyrech godzinach</string>
 
     <!-- Inactive tabs -->
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
@@ -923,6 +999,10 @@
     <string name="bookmark_menu_open_in_new_tab_button">Ôdewrzij w nowyj karcie</string>
     <!-- Bookmark overflow menu open in private tab button -->
     <string name="bookmark_menu_open_in_private_tab_button">Ôdewrzij we prywatnyj karcie</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">Ôdwerzij wszyske w nowych kartach</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">Ôdewrzij wszyske we prywatnych kartach</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Skasuj</string>
     <!--Bookmark overflow menu save button -->
@@ -1017,6 +1097,12 @@
     <string name="preference_exceptions">Wyjōntki</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Wyłōnczōne</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">Sztandardowe</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">Surowe</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">Włosne</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Zgoda na klang i video</string>
     <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
@@ -1097,6 +1183,14 @@
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Udostympnij</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">Spamiyntej za PDF</string>
+    <!-- Text for error message when generating a PDF file Text for error message when generating a PDF file. -->
+    <string name="unable_to_save_to_pdf_error">Niy szło wygynerować PDFa</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error">Niy idzie wydurkować</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">Durkuj</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Poślij na maszina</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1109,7 +1203,9 @@
     <string name="toast_copy_link_to_clipboard">Skopiowane do skrytki</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Wloguj sie do synchrōnizacyje</string>
-     <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data">Synchrōnizuj i spamiyntej dane</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Poślij na wszyske masziny</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Połōncz zaś ze synchrōnizacyjōm</string>
@@ -1138,6 +1234,16 @@
     <string name="notification_pbm_delete_text_2">Zawrzij prywatne karty</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
+
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Firefox je gibki i prywatny</string>
+
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Nastow Firefox za bazowo przeglōndarka</string>
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">Sprōbuj prywatnego przeglōndanio</string>
 
     <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
