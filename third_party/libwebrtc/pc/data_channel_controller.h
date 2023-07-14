@@ -94,7 +94,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   bool HasUsedDataChannels() const;
 
   // Accessors
-  DataChannelTransportInterface* data_channel_transport() const;
   void set_data_channel_transport(DataChannelTransportInterface* transport);
 
   // Called when the transport for the data channels is closed or destroyed.
@@ -135,11 +134,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
                                 absl::optional<rtc::SSLRole> fallback_ssl_role)
       RTC_RUN_ON(network_thread());
 
-  // Called from SendData when data_channel_transport() is true.
-  RTCError DataChannelSendData(StreamId sid,
-                               const SendDataParams& params,
-                               const rtc::CopyOnWriteBuffer& payload);
-
   // Called when all data channels need to be notified of a transport channel
   // (calls OnTransportChannelCreated on the signaling thread).
   void NotifyDataChannelsOfTransportCreated();
@@ -147,9 +141,8 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   // Plugin transport used for data channels.  Pointer may be accessed and
   // checked from any thread, but the object may only be touched on the
   // network thread.
-  // TODO(bugs.webrtc.org/9987): Accessed on both signaling and network
-  // thread.
-  DataChannelTransportInterface* data_channel_transport_ = nullptr;
+  DataChannelTransportInterface* data_channel_transport_
+      RTC_GUARDED_BY(network_thread()) = nullptr;
   SctpSidAllocator sid_allocator_ RTC_GUARDED_BY(network_thread());
   std::vector<rtc::scoped_refptr<SctpDataChannel>> sctp_data_channels_n_
       RTC_GUARDED_BY(network_thread());
