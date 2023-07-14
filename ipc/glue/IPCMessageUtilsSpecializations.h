@@ -658,6 +658,12 @@ struct ParamTraits<nsILoadInfo::CrossOriginEmbedderPolicy>
     : EnumSerializer<nsILoadInfo::CrossOriginEmbedderPolicy,
                      CrossOriginEmbedderPolicyValidator> {};
 
+template <>
+struct ParamTraits<nsIThread::QoSPriority>
+    : public ContiguousEnumSerializerInclusive<nsIThread::QoSPriority,
+                                               nsIThread::QOS_PRIORITY_NORMAL,
+                                               nsIThread::QOS_PRIORITY_LOW> {};
+
 template <size_t N, typename Word>
 struct ParamTraits<mozilla::BitSet<N, Word>> {
   typedef mozilla::BitSet<N, Word> paramType;

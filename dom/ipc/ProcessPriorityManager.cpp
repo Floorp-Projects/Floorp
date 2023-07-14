@@ -18,6 +18,7 @@
 #include "mozilla/ProfilerState.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_threads.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Logging.h"
@@ -771,6 +772,21 @@ ProcessPriority ParticularProcessPriorityManager::ComputePriority() {
   return PROCESS_PRIORITY_BACKGROUND;
 }
 
+#ifdef XP_MACOSX
+// Method used for setting QoS levels on background main threads.
+static bool PriorityUsesLowPowerMainThread(
+    const hal::ProcessPriority& aPriority) {
+  return aPriority == hal::PROCESS_PRIORITY_BACKGROUND ||
+         aPriority == hal::PROCESS_PRIORITY_PREALLOC;
+}
+// Method reduces redundancy in pref check while addressing the edge case
+// where a pref is flipped to false during active browser use.
+static bool PrefsUseLowPriorityThreads() {
+  return StaticPrefs::threads_use_low_power_enabled() &&
+         StaticPrefs::threads_lower_mainthread_priority_in_background_enabled();
+}
+#endif
+
 void ParticularProcessPriorityManager::SetPriorityNow(
     ProcessPriority aPriority) {
   if (aPriority == PROCESS_PRIORITY_UNKNOWN) {
@@ -815,6 +831,32 @@ void ParticularProcessPriorityManager::SetPriorityNow(
   if (oldPriority != mPriority) {
     ProcessPriorityManagerImpl::GetSingleton()->NotifyProcessPriorityChanged(
         this, oldPriority);
+
+#ifdef XP_MACOSX
+    // In cases where we have low-power threads enabled (such as on MacOS) we
+    // can go ahead and put the main thread in the background here. If the new
+    // priority is the background priority, we can tell the OS to put the main
+    // thread on low-power cores. Alternately, if we are changing from the
+    // background to a higher priority, we change the main thread back to its
+    // normal state.
+    //
+    // The messages for this will be relayed using the ProcessHangMonitor such
+    // that the priority can be raised even if the main thread is unresponsive.
+    if (PriorityUsesLowPowerMainThread(mPriority) !=
+        (PriorityUsesLowPowerMainThread(oldPriority))) {
+      if (PriorityUsesLowPowerMainThread(mPriority) &&
+          PrefsUseLowPriorityThreads()) {
+        mContentParent->SetMainThreadQoSPriority(nsIThread::QOS_PRIORITY_LOW);
+      } else if (PriorityUsesLowPowerMainThread(oldPriority)) {
+        // In the event that the user changes prefs while tabs are in the
+        // background, we still want to have the ability to put the main thread
+        // back in the foreground to keep tabs from being stuck in the
+        // background priority.
+        mContentParent->SetMainThreadQoSPriority(
+            nsIThread::QOS_PRIORITY_NORMAL);
+      }
+    }
+#endif
 
     Unused << mContentParent->SendNotifyProcessPriorityChanged(mPriority);
   }
