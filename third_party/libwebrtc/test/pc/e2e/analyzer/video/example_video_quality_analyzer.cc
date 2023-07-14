@@ -32,6 +32,7 @@ uint16_t ExampleVideoQualityAnalyzer::OnFrameCaptured(
   if (frame_id == VideoFrame::kNotSetId) {
     frame_id = next_frame_id_++;
   }
+  stream_label_to_peer_name_[stream_label] = std::string(peer_name);
   auto it = frames_in_flight_.find(frame_id);
   if (it == frames_in_flight_.end()) {
     frames_in_flight_.insert(frame_id);
@@ -128,6 +129,15 @@ std::string ExampleVideoQualityAnalyzer::GetStreamLabel(uint16_t frame_id) {
   RTC_DCHECK(it != frames_to_stream_label_.end())
       << "Unknown frame_id=" << frame_id;
   return it->second;
+}
+
+std::string ExampleVideoQualityAnalyzer::GetSenderPeerName(
+    uint16_t frame_id) const {
+  MutexLock lock(&lock_);
+  auto it = frames_to_stream_label_.find(frame_id);
+  RTC_DCHECK(it != frames_to_stream_label_.end())
+      << "Unknown frame_id=" << frame_id;
+  return stream_label_to_peer_name_.at(it->second);
 }
 
 uint64_t ExampleVideoQualityAnalyzer::frames_captured() const {

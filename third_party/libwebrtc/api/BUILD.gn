@@ -498,6 +498,7 @@ rtc_source_set("video_quality_analyzer_api") {
   deps = [
     ":array_view",
     ":stats_observer_interface",
+    "../rtc_base:checks",
     "video:encoded_image",
     "video:video_frame",
     "video:video_rtp_headers",
