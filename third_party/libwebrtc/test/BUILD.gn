@@ -129,15 +129,24 @@ rtc_library("test_video_capturer") {
 rtc_library("create_frame_generator_capturer") {
   visibility = [ "*" ]
   testonly = true
-  sources = [ "create_frame_generator_capturer.h" ]
+  sources = [
+    "create_frame_generator_capturer.cc",
+    "create_frame_generator_capturer.h",
+  ]
   deps = [
+    ":fileutils",
     ":frame_generator_capturer",
+    "../api:create_frame_generator",
     "../api:frame_generator_api",
     "../api/task_queue",
     "../api/units:time_delta",
+    "../rtc_base:checks",
     "../system_wrappers",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("frame_generator_capturer") {
@@ -148,7 +157,6 @@ rtc_library("frame_generator_capturer") {
     "frame_generator_capturer.h",
   ]
   deps = [
-    ":fileutils",
     ":test_video_capturer",
     "../api:create_frame_generator",
     "../api:frame_generator_api",
@@ -701,6 +709,7 @@ if (rtc_include_tests) {
       deps = [
         ":call_config_utils",
         ":copy_to_file_audio_capturer_unittest",
+        ":create_frame_generator_capturer",
         ":direct_transport",
         ":fake_video_codecs",
         ":fileutils",

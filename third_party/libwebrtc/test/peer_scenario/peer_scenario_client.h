@@ -22,6 +22,7 @@
 #include "api/test/network_emulation_manager.h"
 #include "api/test/time_controller.h"
 #include "pc/test/frame_generator_capturer_video_track_source.h"
+#include "test/create_frame_generator_capturer.h"
 #include "test/logging/log_writer.h"
 
 namespace webrtc {
