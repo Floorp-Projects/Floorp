@@ -1072,6 +1072,12 @@ rtc_library("run_loop") {
   absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
 }
 
+rtc_library("video_test_constants") {
+  testonly = true
+  sources = [ "video_test_constants.h" ]
+  deps = [ "../api/units:time_delta" ]
+}
+
 rtc_library("test_common") {
   testonly = true
   sources = [
@@ -1095,6 +1101,7 @@ rtc_library("test_common") {
     ":scoped_key_value_config",
     ":test_support",
     ":video_test_common",
+    ":video_test_constants",
     "../api:array_view",
     "../api:create_frame_generator",
     "../api:frame_generator_api",

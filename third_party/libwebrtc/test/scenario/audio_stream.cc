@@ -11,6 +11,7 @@
 
 #include "absl/memory/memory.h"
 #include "test/call_test.h"
+#include "test/video_test_constants.h"
 
 #if WEBRTC_ENABLE_PROTOBUF
 RTC_PUSH_IGNORING_WUNDEF()
@@ -103,7 +104,8 @@ SendAudioStream::SendAudioStream(
   // stereo, but the actual channel count used is based on the "stereo"
   // parameter.
   send_config.send_codec_spec = AudioSendStream::Config::SendCodecSpec(
-      CallTest::kAudioSendPayloadType, {"opus", 48000, 2, sdp_params});
+      VideoTestConstants::kAudioSendPayloadType,
+      {"opus", 48000, 2, sdp_params});
   RTC_DCHECK_LE(config.source.channels, 2);
   send_config.encoder_factory = encoder_factory;
 
@@ -190,7 +192,7 @@ ReceiveAudioStream::ReceiveAudioStream(
   receiver->ssrc_media_types_[recv_config.rtp.remote_ssrc] = MediaType::AUDIO;
   recv_config.decoder_factory = decoder_factory;
   recv_config.decoder_map = {
-      {CallTest::kAudioSendPayloadType, {"opus", 48000, 2}}};
+      {VideoTestConstants::kAudioSendPayloadType, {"opus", 48000, 2}}};
   recv_config.sync_group = config.render.sync_group;
   receiver_->SendTask([&] {
     receive_stream_ = receiver_->call_->CreateAudioReceiveStream(recv_config);
