@@ -15,6 +15,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
   TaskScheduler: "resource://gre/modules/TaskScheduler.sys.mjs",
   UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
 XPCOMUtils.defineLazyModuleGetters(lazy, {
@@ -174,12 +175,70 @@ export var BackgroundUpdate = {
       reasons.push(this.REASON.CANNOT_USUALLY_STAGE_AND_CANNOT_USUALLY_APPLY);
     }
 
+    lazy.log.debug(
+      `${SLUG}: checking that we are on a supported OS (currently only Windows)`
+    );
+    if (AppConstants.platform != "win") {
+      reasons.push(this.REASON.UNSUPPORTED_OS);
+    }
+
     if (AppConstants.platform == "win") {
+      lazy.log.debug(`${SLUG}: checking that we can usually use Windows BITS`);
       if (!updateService.canUsuallyUseBits) {
         // There's no technical reason to require BITS, but the experience
         // without BITS will be worse because the background tasks will run
         // while downloading, consuming valuable resources.
         reasons.push(this.REASON.WINDOWS_CANNOT_USUALLY_USE_BITS);
+      }
+
+      // Historically the background update process assumed the Mozilla
+      // Maintenance Service was available and could update this installation.
+      // We want to handle unelevated installations where this is not the case,
+      // and for flexibility we are rolling this out behind a Nimbus feature.
+      lazy.log.debug(
+        `${SLUG}: checking that the Mozilla Maintenance Service Registry key exists, ` +
+          `or that the unelevated installs are permitted`
+      );
+      let serviceRegKeyExists = false;
+      try {
+        serviceRegKeyExists = Cc["@mozilla.org/updates/update-processor;1"]
+          .createInstance(Ci.nsIUpdateProcessor)
+          .getServiceRegKeyExists();
+      } catch (ex) {
+        lazy.log.error(
+          `${SLUG}: Failed to check for Maintenance Service Registry Key: ${ex}`
+        );
+      }
+
+      if (!serviceRegKeyExists) {
+        // The nimbus experiment allows users with unelevated installations
+        // to update in the background.
+        let allowUnelevated = lazy.NimbusFeatures.backgroundUpdate.getVariable(
+          "allowUpdatesForUnelevatedInstallions"
+        );
+
+        if (!allowUnelevated) {
+          // With the nimbus feature disabled and without the registry key we
+          // do not want to attempt an update for unelevated installations.
+          reasons.push(this.REASON.SERVICE_REGISTRY_KEY_MISSING);
+        } else {
+          // We record in telemetry, that the service registry key is missing
+          // and the experiment is enabled. This is the first time that the
+          // Nimbus feature could impact Firefox behaviour.
+          lazy.NimbusFeatures.backgroundUpdate.recordExposureEvent();
+          lazy.log.debug(
+            `${SLUG}: ` +
+              "expermiment active: trying to update unelevated installations."
+          );
+
+          // Now check if the path is writable. If not we are dealing with an
+          // elevated installation and cannot update it without the service for
+          // which the registry key is missing at this point.
+          if (!updateService.isAppBaseDirWritable) {
+            reasons.push(this.REASON.SERVICE_REGISTRY_KEY_MISSING);
+            reasons.push(this.REASON.APPBASEDIR_NOT_WRITABLE);
+          }
+        }
       }
     }
 
@@ -246,25 +305,6 @@ export var BackgroundUpdate = {
       if (langpacks.length) {
         reasons.push(this.REASON.LANGPACK_INSTALLED);
       }
-    }
-
-    if (AppConstants.platform == "win") {
-      let serviceRegKeyExists;
-      try {
-        serviceRegKeyExists = Cc["@mozilla.org/updates/update-processor;1"]
-          .createInstance(Ci.nsIUpdateProcessor)
-          .getServiceRegKeyExists();
-      } catch (ex) {
-        lazy.log.error(
-          `${SLUG}: Failed to check for Maintenance Service Registry Key: ${ex}`
-        );
-        serviceRegKeyExists = false;
-      }
-      if (!serviceRegKeyExists) {
-        reasons.push(this.REASON.SERVICE_REGISTRY_KEY_MISSING);
-      }
-    } else {
-      reasons.push(this.REASON.UNSUPPORTED_OS);
     }
 
     this._recordGleanMetrics(reasons);
@@ -391,6 +431,10 @@ export var BackgroundUpdate = {
       case "background-update-config-change":
         whatChanged = `per-installation pref app.update.background.enabled`;
         break;
+
+      case "nimbus-update":
+        whatChanged = `Nimbus ${data}`;
+        break;
     }
 
     lazy.log.debug(
@@ -437,6 +481,9 @@ export var BackgroundUpdate = {
       // Witness when our own prefs change.
       Services.prefs.addObserver("app.update.background.force", this);
       Services.prefs.addObserver("app.update.background.interval", this);
+      lazy.NimbusFeatures.backgroundUpdate.onUpdate((event, reason) => {
+        this.observe(null, "nimbus-update", reason);
+      });
 
       // Witness when the langpack updating feature is changed.
       Services.prefs.addObserver("app.update.langpack.enabled", this);
@@ -889,6 +936,7 @@ BackgroundUpdate.REASON = {
     "the maintenance service registry key is not present",
   UNSUPPORTED_OS: "unsupported OS",
   WINDOWS_CANNOT_USUALLY_USE_BITS: "on Windows but cannot usually use BITS",
+  APPBASEDIR_NOT_WRITABLE: "the base directory is not writable",
 };
 
 /**

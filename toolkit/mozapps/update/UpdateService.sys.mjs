@@ -815,19 +815,11 @@ function getCanApplyUpdates() {
         );
         userCanElevate = false;
       }
-      if (!userCanElevate) {
-        // if we're unable to create the test file this will throw an exception.
-        let appDirTestFile = getAppBaseDir();
-        appDirTestFile.append(FILE_UPDATE_TEST);
-        LOG("getCanApplyUpdates - testing write access " + appDirTestFile.path);
-        if (appDirTestFile.exists()) {
-          appDirTestFile.remove(false);
-        }
-        appDirTestFile.create(
-          Ci.nsIFile.NORMAL_FILE_TYPE,
-          FileUtils.PERMS_FILE
+      if (!userCanElevate && !lazy.AUS.isAppBaseDirWritable) {
+        LOG(
+          "getCanApplyUpdates - unable to apply updates, because the base " +
+            "directory is not writable."
         );
-        appDirTestFile.remove(false);
       }
     }
   } catch (e) {
@@ -3886,6 +3878,46 @@ UpdateService.prototype = {
     return (
       Services.policies && !Services.policies.isAllowed("autoAppUpdateChecking")
     );
+  },
+
+  /*
+   * See nsIUpdateService.idl
+   */
+  get isAppBaseDirWritable() {
+    let appDirTestFile = "";
+
+    try {
+      appDirTestFile = getAppBaseDir();
+      appDirTestFile.append(FILE_UPDATE_TEST);
+    } catch (e) {
+      LOG(
+        "isAppBaseDirWritable - Base directory or test path could not be " +
+          `determined: ${e}`
+      );
+      return false;
+    }
+
+    try {
+      LOG(
+        `isAppBaseDirWritable - testing write access for ${appDirTestFile.path}`
+      );
+
+      if (appDirTestFile.exists()) {
+        appDirTestFile.remove(false);
+      }
+      // if we're unable to create the test file this will throw an exception:
+      appDirTestFile.create(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+      appDirTestFile.remove(false);
+      LOG(`isAppBaseDirWritable - Path is writable: ${appDirTestFile.path}`);
+      return true;
+    } catch (e) {
+      LOG(
+        `isAppBaseDirWritable - Path '${appDirTestFile.path}' ` +
+          `is not writable: ${e}`
+      );
+    }
+    // No write access to the installation directory
+    return false;
   },
 
   /**
