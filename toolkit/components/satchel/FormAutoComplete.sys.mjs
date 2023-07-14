@@ -3,6 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// This is ugly: there are two FormAutoCompleteResult classes in the
+// tree, one in a module and one in this file. Datalist results need to
+// use the one defined in the module but the rest of this file assumes
+// that we use the one defined here. To get around that, we explicitly
+// import the module here, out of the way of the other uses of
+// FormAutoCompleteResult.
+import { FormAutoCompleteResult as DataListAutoCompleteResult } from "resource://gre/modules/FormAutoCompleteResult.sys.mjs";
+
 function isAutocompleteDisabled(aField) {
   if (!aField) {
     return false;
@@ -165,16 +173,7 @@ export class FormHistoryClient {
   }
 }
 
-/**
- * This autocomplete result combines 2 arrays of entries and fixedEntries.
- * Entries are Form History entries, they can be removed.
- * Fixed entries are "appended" to entries, they are used for datalist items,
- * search suggestions and extra items from integrations.
- * Internally entries and fixed entries are kept separated so we can
- * reuse and filter them.
- *
- * @implements {nsIAutoCompleteResult}
- */
+// nsIAutoCompleteResult implementation
 export class FormAutoCompleteResult {
   constructor(client, entries, fieldName, searchString) {
     this.client = client;
@@ -192,98 +191,10 @@ export class FormAutoCompleteResult {
   client = null;
   entries = null;
   fieldName = null;
-  #fixedEntries = [];
-
-  set fixedEntries(value) {
-    this.#fixedEntries = value;
-    this.removeDuplicateHistoryEntries();
-  }
-
-  canSearchIncrementally(searchString) {
-    const prevSearchString = this.searchString.trim();
-    return (
-      prevSearchString.length > 1 &&
-      searchString.includes(prevSearchString.toLowerCase())
-    );
-  }
-
-  incrementalSearch(searchString) {
-    this.searchString = searchString;
-    searchString = searchString.trim().toLowerCase();
-    this.#fixedEntries = this.#fixedEntries.filter(item =>
-      item.label.toLowerCase().includes(searchString)
-    );
-
-    const searchTokens = searchString.split(/\s+/);
-    // We have a list of results for a shorter search string, so just
-    // filter them further based on the new search string and add to a new array.
-    let filteredEntries = [];
-    for (const entry of this.entries) {
-      // Remove results that do not contain the token
-      // XXX bug 394604 -- .toLowerCase can be wrong for some intl chars
-      if (searchTokens.some(tok => !entry.textLowerCase.includes(tok))) {
-        continue;
-      }
-      this.#calculateScore(entry, searchString, searchTokens);
-      filteredEntries.push(entry);
-    }
-    filteredEntries.sort((a, b) => b.totalScore - a.totalScore);
-    this.entries = filteredEntries;
-    this.removeDuplicateHistoryEntries();
-  }
-
-  /*
-   * #calculateScore
-   *
-   * entry    -- an nsIAutoCompleteResult entry
-   * aSearchString -- current value of the input (lowercase)
-   * searchTokens -- array of tokens of the search string
-   *
-   * Returns: an int
-   */
-  #calculateScore(entry, aSearchString, searchTokens) {
-    let boundaryCalc = 0;
-    // for each word, calculate word boundary weights
-    for (const token of searchTokens) {
-      if (entry.textLowerCase.startsWith(token)) {
-        boundaryCalc++;
-      }
-      if (entry.textLowerCase.includes(" " + token)) {
-        boundaryCalc++;
-      }
-    }
-    boundaryCalc = boundaryCalc * this._boundaryWeight;
-    // now add more weight if we have a traditional prefix match and
-    // multiply boundary bonuses by boundary weight
-    if (entry.textLowerCase.startsWith(aSearchString)) {
-      boundaryCalc += this._prefixWeight;
-    }
-    entry.totalScore = Math.round(entry.frecency * Math.max(1, boundaryCalc));
-  }
-
-  /**
-   * Remove items from history list that are already present in fixed list.
-   * We do this rather than the opposite ( i.e. remove items from fixed list)
-   * to reflect the order that is specified in the fixed list.
-   */
-  removeDuplicateHistoryEntries() {
-    this.entries = this.entries.filter(entry =>
-      this.#fixedEntries.every(
-        fixed => entry.text != (fixed.label || fixed.value)
-      )
-    );
-  }
 
   getAt(index) {
-    if (index >= 0) {
-      if (index < this.entries.length) {
-        return this.entries[index];
-      }
-
-      index -= this.entries.length;
-      if (index < this.#fixedEntries.length) {
-        return this.#fixedEntries[index];
-      }
+    if (index >= 0 && index < this.entries.length) {
+      return this.entries[index];
     }
 
     throw Components.Exception(
@@ -303,43 +214,32 @@ export class FormAutoCompleteResult {
   errorDescription = "";
 
   get defaultIndex() {
-    return this.matchCount ? 0 : -1;
+    return this.entries.length ? 0 : -1;
   }
 
   get searchResult() {
-    return this.matchCount
+    return this.entries.length
       ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
       : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
   }
 
   get matchCount() {
-    return this.entries.length + this.#fixedEntries.length;
+    return this.entries.length;
   }
 
   getValueAt(index) {
-    const item = this.getAt(index);
-    return item.text || item.value;
+    return this.getAt(index).text;
   }
 
   getLabelAt(index) {
-    const item = this.getAt(index);
-    return item.text || item.label || item.value;
+    return this.getValueAt(index);
   }
 
-  getCommentAt(index) {
-    return this.getAt(index).comment ?? "";
+  getCommentAt(_index) {
+    return "";
   }
 
-  getStyleAt(index) {
-    if (index >= 0) {
-      if (index < this.entries.length) {
-        return "fromhistory";
-      }
-
-      if (index > 0 && index == this.entries.length) {
-        return "datalist-first";
-      }
-    }
+  getStyleAt(_index) {
     return "";
   }
 
@@ -352,18 +252,15 @@ export class FormAutoCompleteResult {
   }
 
   isRemovableAt(index) {
-    return this.#isFormHistoryEntry(index) || this.getAt(index).removable;
+    this.getAt(index);
+    return true;
   }
 
   removeValueAt(index) {
-    if (this.#isFormHistoryEntry(index)) {
-      const [removedEntry] = this.entries.splice(index, 1);
-      this.client.remove(removedEntry.text, removedEntry.guid);
-    }
-  }
+    this.getAt(index);
 
-  #isFormHistoryEntry(index) {
-    return index >= 0 && index < this.entries.length;
+    const [removedEntry] = this.entries.splice(index, 1);
+    this.client.remove(removedEntry.text, removedEntry.guid);
   }
 }
 
@@ -475,20 +372,22 @@ export class FormAutoComplete {
       aListener?.onSearchCompletion(result);
     }
 
-    // If we have datalist results, they become our "empty" result.
-    const result = new FormAutoCompleteResult(
-      client,
-      [],
-      aInputName,
-      aUntrimmedSearchString
-    );
+    const dataListResult = aAddDataList
+      ? this.getDataListResult(aField, aUntrimmedSearchString)
+      : null;
 
-    if (aAddDataList) {
-      result.fixedEntries = this.getDataListSuggestions(aField);
-    }
+    // If we have datalist results, they become our "empty" result.
+    const emptyResult =
+      dataListResult ||
+      new FormAutoCompleteResult(
+        client,
+        [],
+        aInputName,
+        aUntrimmedSearchString
+      );
 
     if (!this._enabled) {
-      reportSearchResult(result);
+      reportSearchResult(emptyResult);
       return;
     }
 
@@ -496,25 +395,110 @@ export class FormAutoComplete {
     // search bar history.
     if (aInputName == "searchbar-history" && aField) {
       this.log(`autoCompleteSearch for input name "${aInputName}" is denied`);
-      reportSearchResult(result);
+      reportSearchResult(emptyResult);
       return;
     }
 
     if (isAutocompleteDisabled(aField)) {
       this.log("autoCompleteSearch not allowed due to autcomplete=off");
-      reportSearchResult(result);
+      reportSearchResult(emptyResult);
       return;
     }
 
-    this.log(`autoCompleteSearch(${aUntrimmedSearchString})`);
+    this.log(
+      "AutoCompleteSearch invoked. Search is: " + aUntrimmedSearchString
+    );
     const searchString = aUntrimmedSearchString.trim().toLowerCase();
-    const prevResult = aPreviousResult?.wrappedJSObject;
-    if (prevResult?.canSearchIncrementally(searchString)) {
+
+    const prevSearchString = aPreviousResult?.searchString.trim();
+    const reuseResult =
+      prevSearchString?.length > 1 &&
+      searchString.includes(prevSearchString.toLowerCase());
+    if (reuseResult) {
       this.log("Using previous autocomplete result");
-      prevResult.incrementalSearch(aUntrimmedSearchString);
-      reportSearchResult(prevResult);
+      const result = aPreviousResult;
+      const wrappedResult = result.wrappedJSObject;
+      wrappedResult.searchString = aUntrimmedSearchString;
+
+      // Leaky abstraction alert: it would be great to be able to split
+      // this code between nsInputListAutoComplete and here but because of
+      // the way we abuse the formfill autocomplete API in e10s, we have
+      // to deal with the <datalist> results here as well (and down below
+      // in mergeResults).
+      // If there were datalist results result is a FormAutoCompleteResult
+      // as defined in FormAutoCompleteResult.jsm with the entire list
+      // of results in wrappedResult._items and only the results from
+      // form history in wrappedResult.entries.
+      // First, grab the entire list of old results.
+      const allResults = wrappedResult._items;
+      const datalistItems = [];
+      if (allResults) {
+        // We have datalist results, extract them from the values array.
+        // Both allResults and values arrays are in the form of:
+        // |--wR.entries--|
+        // <history entries><datalist entries>
+        for (const oldItem of allResults.slice(wrappedResult.entries.length)) {
+          if (oldItem.label.toLowerCase().includes(searchString)) {
+            datalistItems.push({
+              value: oldItem.value,
+              label: oldItem.label,
+              comment: "",
+              removable: oldItem.removable,
+            });
+          }
+        }
+      }
+
+      const searchTokens = searchString.split(/\s+/);
+      // We have a list of results for a shorter search string, so just
+      // filter them further based on the new search string and add to a new array.
+      let filteredEntries = [];
+      for (const entry of wrappedResult.entries) {
+        // Remove results that do not contain the token
+        // XXX bug 394604 -- .toLowerCase can be wrong for some intl chars
+        if (searchTokens.some(tok => !entry.textLowerCase.includes(tok))) {
+          continue;
+        }
+        this._calculateScore(entry, searchString, searchTokens);
+        this.log(
+          `Reusing autocomplete entry '${entry.text}' (${entry.frecency} / ${entry.totalScore})`
+        );
+        filteredEntries.push(entry);
+      }
+      filteredEntries.sort((a, b) => b.totalScore - a.totalScore);
+      wrappedResult.entries = filteredEntries;
+
+      // If we had datalistResults, re-merge them back into the filtered
+      // entries.
+      if (datalistItems.length) {
+        filteredEntries = filteredEntries.map(elt => ({
+          value: elt.text,
+          // History entries don't have labels (their labels would be read
+          // from their values).
+          label: "",
+          comment: "",
+          removable: true,
+        }));
+
+        datalistItems[0].comment = "separator";
+
+        wrappedResult._items = filteredEntries.concat(datalistItems);
+      }
+
+      reportSearchResult(result);
     } else {
       this.log("Creating new autocomplete search result.");
+
+      // Start with an empty list.
+      let result = dataListResult
+        ? new FormAutoCompleteResult(
+            client,
+            [],
+            aInputName,
+            aUntrimmedSearchString
+          )
+        : emptyResult;
+
       this.getAutoCompleteValues(client, aInputName, searchString, aEntries => {
         if (aField?.maxLength > -1) {
           result.entries = aEntries.filter(
@@ -524,10 +508,19 @@ export class FormAutoComplete {
           result.entries = aEntries;
         }
 
-        result.removeDuplicateHistoryEntries();
+        if (dataListResult?.matchCount > 0) {
+          result = this.mergeResults(result, dataListResult);
+        }
+
         reportSearchResult(result);
       });
     }
+  }
+
+  getDataListResult(aField, aUntrimmedSearchString) {
+    const items = this.getDataListSuggestions(aField);
+
+    return new DataListAutoCompleteResult(aUntrimmedSearchString, items, null);
   }
 
   getDataListSuggestions(aField) {
@@ -549,10 +542,52 @@ export class FormAutoComplete {
       items.push({
         label,
         value: option.value,
+        comment: "",
+        removable: false,
       });
     }
 
     return items;
+  }
+
+  mergeResults(historyResult, datalistResult) {
+    const items = datalistResult.wrappedJSObject._items;
+
+    // historyResult will be null if form autocomplete is disabled. We
+    // still want the list values to display.
+    const entries = historyResult.wrappedJSObject.entries;
+    const historyResults = entries.map(entry => ({
+      value: entry.text,
+      label: entry.text,
+      comment: "",
+      removable: true,
+    }));
+
+    const isInArray = (value, arr, key) =>
+      arr.find(item => item[key].toUpperCase() === value.toUpperCase());
+
+    // Remove items from history list that are already present in data list.
+    // We do this rather than the opposite ( i.e. remove items from data list)
+    // to reflect the order that is specified in the data list.
+    const dedupedHistoryResults = historyResults.filter(
+      historyRes => !isInArray(historyRes.value, items, "value")
+    );
+
+    // Now put the history results above the datalist suggestions.
+    // Note that we don't need to worry about deduplication of elements inside
+    // the datalist suggestions because the datalist is user-provided.
+    const finalItems = dedupedHistoryResults.concat(items);
+
+    historyResult.wrappedJSObject.entries =
+      historyResult.wrappedJSObject.entries.filter(
+        entry => !isInArray(entry.text, items, "value")
+      );
+
+    return new DataListAutoCompleteResult(
+      datalistResult.searchString,
+      finalItems,
+      historyResult
+    );
   }
 
   stopAutoCompleteSearch() {
@@ -579,5 +614,34 @@ export class FormAutoComplete {
       callback(entries);
     });
     this.#pendingClient = client;
+  }
+
+  /*
+   * _calculateScore
+   *
+   * entry    -- an nsIAutoCompleteResult entry
+   * aSearchString -- current value of the input (lowercase)
+   * searchTokens -- array of tokens of the search string
+   *
+   * Returns: an int
+   */
+  _calculateScore(entry, aSearchString, searchTokens) {
+    let boundaryCalc = 0;
+    // for each word, calculate word boundary weights
+    for (const token of searchTokens) {
+      if (entry.textLowerCase.startsWith(token)) {
+        boundaryCalc++;
+      }
+      if (entry.textLowerCase.includes(" " + token)) {
+        boundaryCalc++;
+      }
+    }
+    boundaryCalc = boundaryCalc * this._boundaryWeight;
+    // now add more weight if we have a traditional prefix match and
+    // multiply boundary bonuses by boundary weight
+    if (entry.textLowerCase.startsWith(aSearchString)) {
+      boundaryCalc += this._prefixWeight;
+    }
+    entry.totalScore = Math.round(entry.frecency * Math.max(1, boundaryCalc));
   }
 }
