@@ -29,8 +29,6 @@ class Stream;
 
 struct WriteCOptions {
   std::string_view module_name;
-  /* Set of wasm features enabled for wasm2c */
-  Features* features;
   /*
    * name_to_output_file_index takes const iterators to begin and end of a list
    * of all functions in the module, number of imported functions, and number of
