@@ -1,27 +1,31 @@
-From: Michael Froman <mfroman@mozilla.com>
-Date: Thu, 2 Sep 2021 13:22:00 -0500
-Subject: Bug 1654112 - fixes for hybrid build. r=ng
+From: Andreas Pehrson <apehrson@mozilla.com>
+Date: Fri, 20 Aug 2021 13:52:00 +0200
+Subject: Bug 1654112 - Don't check the calling thread in
+ webrtc::AudioReceiveStream::GetSources. r=ng
 
-- adds missing includes in several places
-- makes dom/media/webrtc/jsapi unified-only
+source_tracker_ is thread safe with its own internal mutex, so this call is safe
+as long as the caller has a guarantee for the lifetime of the
+AudioReceiveStream. This is similar to webrtc::VideoReceiveStream.
 
-Differential Revision: https://phabricator.services.mozilla.com/D124499
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/1965757ee924d49c32eab76d1a3dfa77f9eadcf4
+Upliftable.
+
+Differential Revision: https://phabricator.services.mozilla.com/D123226
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c186df8a088e46285a15e40149182daa34cc6805
 ---
- audio/channel_receive.h | 1 +
- 1 file changed, 1 insertion(+)
+ audio/audio_receive_stream.cc | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/audio/channel_receive.h b/audio/channel_receive.h
-index c192039894..37bf903394 100644
---- a/audio/channel_receive.h
-+++ b/audio/channel_receive.h
-@@ -28,6 +28,7 @@
- #include "call/rtp_packet_sink_interface.h"
- #include "call/syncable.h"
- #include "modules/audio_coding/include/audio_coding_module_typedefs.h"
-+#include "modules/rtp_rtcp/include/rtp_rtcp_defines.h"
- #include "modules/rtp_rtcp/source/source_tracker.h"
- #include "system_wrappers/include/clock.h"
+diff --git a/audio/audio_receive_stream.cc b/audio/audio_receive_stream.cc
+index 0a78e2641d..8a3ac93a36 100644
+--- a/audio/audio_receive_stream.cc
++++ b/audio/audio_receive_stream.cc
+@@ -367,7 +367,6 @@ int AudioReceiveStreamImpl::GetBaseMinimumPlayoutDelayMs() const {
+ }
+ 
+ std::vector<RtpSource> AudioReceiveStreamImpl::GetSources() const {
+-  RTC_DCHECK_RUN_ON(&worker_thread_checker_);
+   return source_tracker_.GetSources();
+ }
  
 -- 
 2.34.1
