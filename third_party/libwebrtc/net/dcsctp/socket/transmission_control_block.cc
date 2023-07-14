@@ -163,7 +163,7 @@ void TransmissionControlBlock::MaybeSendForwardTsn(SctpPacket::Builder& builder,
     } else {
       builder.Add(retransmission_queue_.CreateForwardTsn());
     }
-    Send(builder);
+    packet_sender_.Send(builder);
     // https://datatracker.ietf.org/doc/html/rfc3758
     // "IMPLEMENTATION NOTE: An implementation may wish to limit the number of
     // duplicate FORWARD TSN chunks it sends by ... waiting a full RTT before
@@ -198,7 +198,7 @@ void TransmissionControlBlock::MaybeSendFastRetransmit() {
       builder.Add(DataChunk(tsn, std::move(data), false));
     }
   }
-  Send(builder);
+  packet_sender_.Send(builder);
 }
 
 void TransmissionControlBlock::SendBufferedPackets(SctpPacket::Builder& builder,
@@ -245,13 +245,7 @@ void TransmissionControlBlock::SendBufferedPackets(SctpPacket::Builder& builder,
       }
     }
 
-    // https://www.ietf.org/archive/id/draft-tuexen-tsvwg-sctp-zero-checksum-02.html#section-4.2
-    // "When an end point sends a packet containing a COOKIE ECHO chunk, it MUST
-    // include a correct CRC32c checksum in the packet containing the COOKIE
-    // ECHO chunk."
-    bool write_checksum =
-        !capabilities_.zero_checksum || cookie_echo_chunk_.has_value();
-    if (!packet_sender_.Send(builder, write_checksum)) {
+    if (!packet_sender_.Send(builder)) {
       break;
     }
 
@@ -280,9 +274,6 @@ std::string TransmissionControlBlock::ToString() const {
   if (capabilities_.reconfig) {
     sb << "Reconfig,";
   }
-  if (capabilities_.zero_checksum) {
-    sb << "ZeroChecksum,";
-  }
   sb << " max_in=" << capabilities_.negotiated_maximum_incoming_streams;
   sb << " max_out=" << capabilities_.negotiated_maximum_outgoing_streams;
 
@@ -303,7 +294,6 @@ void TransmissionControlBlock::AddHandoverState(
   state.capabilities.partial_reliability = capabilities_.partial_reliability;
   state.capabilities.message_interleaving = capabilities_.message_interleaving;
   state.capabilities.reconfig = capabilities_.reconfig;
-  state.capabilities.zero_checksum = capabilities_.zero_checksum;
   state.capabilities.negotiated_maximum_incoming_streams =
       capabilities_.negotiated_maximum_incoming_streams;
   state.capabilities.negotiated_maximum_outgoing_streams =

@@ -21,7 +21,6 @@ TEST(StateCookieTest, SerializeAndDeserialize) {
   Capabilities capabilities = {.partial_reliability = true,
                                .message_interleaving = false,
                                .reconfig = true,
-                               .zero_checksum = true,
                                .negotiated_maximum_incoming_streams = 123,
                                .negotiated_maximum_outgoing_streams = 234};
   StateCookie cookie(VerificationTag(123), TSN(456),
@@ -37,7 +36,6 @@ TEST(StateCookieTest, SerializeAndDeserialize) {
   EXPECT_TRUE(deserialized.capabilities().partial_reliability);
   EXPECT_FALSE(deserialized.capabilities().message_interleaving);
   EXPECT_TRUE(deserialized.capabilities().reconfig);
-  EXPECT_TRUE(deserialized.capabilities().zero_checksum);
   EXPECT_EQ(deserialized.capabilities().negotiated_maximum_incoming_streams,
             123);
   EXPECT_EQ(deserialized.capabilities().negotiated_maximum_outgoing_streams,
