@@ -29,15 +29,6 @@
 
 namespace cricket {
 
-namespace {
-
-bool ResolveStunHostnameForFamily(const webrtc::FieldTrialsView& field_trials) {
-  // TODO(bugs.webrtc.org/14334) cleanup
-  return true;
-}
-
-}  // namespace
-
 // TODO(?): Move these to a common place (used in relayport too)
 const int RETRY_TIMEOUT = 50 * 1000;  // 50 seconds
 
@@ -152,11 +143,7 @@ void UDPPort::AddressResolver::Resolve(
       done_(it->first, it->second->result().GetError());
     }
   };
-  if (ResolveStunHostnameForFamily(field_trials)) {
-    resolver_ptr->Start(address, family, std::move(callback));
-  } else {
-    resolver_ptr->Start(address, std::move(callback));
-  }
+  resolver_ptr->Start(address, family, std::move(callback));
 }
 
 bool UDPPort::AddressResolver::GetResolvedAddress(

@@ -186,11 +186,6 @@ bool ShouldAdapterChangeTriggerNetworkChange(rtc::AdapterType old_type,
   return true;
 }
 
-bool PreferGlobalIPv6Address(const webrtc::FieldTrialsView* field_trials) {
-  // TODO(bugs.webrtc.org/14334) cleanup
-  return true;
-}
-
 #if defined(WEBRTC_WIN)
 bool IpAddressAttributesEnabled(const webrtc::FieldTrialsView* field_trials) {
   // Field trial key reserved in bugs.webrtc.org/14334
@@ -334,7 +329,7 @@ std::unique_ptr<Network> NetworkManagerBase::CreateNetwork(
     int prefix_length,
     AdapterType type) const {
   return std::make_unique<Network>(name, description, prefix, prefix_length,
-                                   type, field_trials_.get());
+                                   type);
 }
 
 std::vector<const Network*> NetworkManagerBase::GetAnyAddressNetworks() {
@@ -1119,10 +1114,8 @@ Network::Network(absl::string_view name,
                  absl::string_view desc,
                  const IPAddress& prefix,
                  int prefix_length,
-                 AdapterType type,
-                 const webrtc::FieldTrialsView* field_trials)
-    : field_trials_(field_trials),
-      name_(name),
+                 AdapterType type)
+    : name_(name),
       description_(desc),
       prefix_(prefix),
       prefix_length_(prefix_length),
@@ -1166,15 +1159,13 @@ IPAddress Network::GetBestIP() const {
   }
 
   InterfaceAddress selected_ip, link_local_ip, ula_ip;
-  const bool prefer_global_ipv6_to_link_local =
-      PreferGlobalIPv6Address(field_trials_);
 
   for (const InterfaceAddress& ip : ips_) {
     // Ignore any address which has been deprecated already.
     if (ip.ipv6_flags() & IPV6_ADDRESS_FLAG_DEPRECATED)
       continue;
 
-    if (prefer_global_ipv6_to_link_local && IPIsLinkLocal(ip)) {
+    if (IPIsLinkLocal(ip)) {
       link_local_ip = ip;
       continue;
     }
@@ -1193,7 +1184,7 @@ IPAddress Network::GetBestIP() const {
   }
 
   if (IPIsUnspec(selected_ip)) {
-    if (prefer_global_ipv6_to_link_local && !IPIsUnspec(link_local_ip)) {
+    if (!IPIsUnspec(link_local_ip)) {
       // No proper global IPv6 address found, use link local address instead.
       selected_ip = link_local_ip;
     } else if (!IPIsUnspec(ula_ip)) {

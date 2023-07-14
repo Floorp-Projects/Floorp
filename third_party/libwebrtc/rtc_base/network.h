@@ -382,21 +382,18 @@ class RTC_EXPORT Network {
   Network(absl::string_view name,
           absl::string_view description,
           const IPAddress& prefix,
-          int prefix_length,
-          const webrtc::FieldTrialsView* field_trials = nullptr)
+          int prefix_length)
       : Network(name,
                 description,
                 prefix,
                 prefix_length,
-                rtc::ADAPTER_TYPE_UNKNOWN,
-                field_trials) {}
+                rtc::ADAPTER_TYPE_UNKNOWN) {}
 
   Network(absl::string_view name,
           absl::string_view description,
           const IPAddress& prefix,
           int prefix_length,
-          AdapterType type,
-          const webrtc::FieldTrialsView* field_trials = nullptr);
+          AdapterType type);
 
   Network(const Network&);
   ~Network();
@@ -579,7 +576,6 @@ class RTC_EXPORT Network {
   std::string ToString() const;
 
  private:
-  const webrtc::FieldTrialsView* field_trials_ = nullptr;
   const DefaultLocalAddressProvider* default_local_address_provider_ = nullptr;
   const MdnsResponderProvider* mdns_responder_provider_ = nullptr;
   std::string name_;
