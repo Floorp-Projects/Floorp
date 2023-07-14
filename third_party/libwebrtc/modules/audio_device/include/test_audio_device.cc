@@ -439,7 +439,7 @@ size_t TestAudioDeviceModule::SamplesPerFrame(int sampling_frequency_in_hz) {
   return rtc::CheckedDivExact(sampling_frequency_in_hz, kFramesPerSecond);
 }
 
-rtc::scoped_refptr<TestAudioDeviceModule> TestAudioDeviceModule::Create(
+rtc::scoped_refptr<AudioDeviceModule> TestAudioDeviceModule::Create(
     TaskQueueFactory* task_queue_factory,
     std::unique_ptr<TestAudioDeviceModule::Capturer> capturer,
     std::unique_ptr<TestAudioDeviceModule::Renderer> renderer,

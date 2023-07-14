@@ -17,6 +17,9 @@ namespace webrtc {
 namespace test {
 namespace {
 
+// Wait half a second between stopping sending and stopping receiving audio.
+constexpr int kExtraRecordTimeMs = 500;
+
 bool IsNear(int reference, int v) {
   // Margin is 10%.
   const int error = reference / 10 + 1;
@@ -41,7 +44,8 @@ class NoLossTest : public AudioEndToEndTest {
   void PerformTest() override {
     SleepMs(kTestDurationMs);
     send_audio_device()->StopRecording();
-    AudioEndToEndTest::PerformTest();
+    // and some extra time to account for network delay.
+    SleepMs(GetSendTransportConfig().queue_delay_ms + kExtraRecordTimeMs);
   }
 
   void OnStreamsStopped() override {
