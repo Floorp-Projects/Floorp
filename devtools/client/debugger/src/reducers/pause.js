@@ -66,24 +66,27 @@ export function getThreadPauseState(state, thread) {
 }
 
 function update(state = initialPauseState(), action) {
-  // Actions need to specify any thread they are operating on. These helpers
-  // manage updating the pause state for that thread.
-  const threadState = () => {
-    if (!action.thread) {
+  // All the actions updating pause state must pass an object which designate
+  // the related thread.
+  const getActionThread = () => {
+    const thread = action.thread || action.selectedFrame?.thread;
+    if (!thread) {
       throw new Error(`Missing thread in action ${action.type}`);
     }
-    return getThreadPauseState(state, action.thread);
+    return thread;
   };
 
+  // `threadState` and `updateThreadState` help easily get and update
+  // the pause state for a given thread.
+  const threadState = () => {
+    return getThreadPauseState(state, getActionThread());
+  };
   const updateThreadState = newThreadState => {
-    if (!action.thread) {
-      throw new Error(`Missing thread in action ${action.type}`);
-    }
     return {
       ...state,
       threads: {
         ...state.threads,
-        [action.thread]: { ...threadState(), ...newThreadState },
+        [getActionThread()]: { ...threadState(), ...newThreadState },
       },
     };
   };
@@ -223,8 +226,8 @@ function update(state = initialPauseState(), action) {
     }
 
     case "ADD_SCOPES": {
-      const { frame, status, value } = action;
-      const selectedFrameId = frame.id;
+      const { status, value } = action;
+      const selectedFrameId = action.selectedFrame.id;
 
       const generated = {
         ...threadState().frameScopes.generated,
@@ -243,8 +246,8 @@ function update(state = initialPauseState(), action) {
     }
 
     case "MAP_SCOPES": {
-      const { frame, status, value } = action;
-      const selectedFrameId = frame.id;
+      const { status, value } = action;
+      const selectedFrameId = action.selectedFrame.id;
 
       const original = {
         ...threadState().frameScopes.original,
@@ -371,8 +374,8 @@ function update(state = initialPauseState(), action) {
     }
 
     case "ADD_INLINE_PREVIEW": {
-      const { frame, previews } = action;
-      const selectedFrameId = frame.id;
+      const { selectedFrame, previews } = action;
+      const selectedFrameId = selectedFrame.id;
 
       return updateThreadState({
         inlinePreview: {
