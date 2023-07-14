@@ -517,12 +517,10 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
     return &networks_.back();
   }
 
-  rtc::Network* MakeNetworkMultipleAddrs(
-      const SocketAddress& global_addr,
-      const SocketAddress& link_local_addr,
-      const webrtc::FieldTrialsView* field_trials) {
+  rtc::Network* MakeNetworkMultipleAddrs(const SocketAddress& global_addr,
+                                         const SocketAddress& link_local_addr) {
     networks_.emplace_back("unittest", "unittest", global_addr.ipaddr(), 32,
-                           rtc::ADAPTER_TYPE_UNKNOWN, field_trials);
+                           rtc::ADAPTER_TYPE_UNKNOWN);
     networks_.back().AddIP(link_local_addr.ipaddr());
     networks_.back().AddIP(global_addr.ipaddr());
     networks_.back().AddIP(link_local_addr.ipaddr());
@@ -548,8 +546,8 @@ class PortTest : public ::testing::Test, public sigslot::has_slots<> {
       PacketSocketFactory* socket_factory) {
     auto port = UDPPort::Create(
         &main_, socket_factory,
-        MakeNetworkMultipleAddrs(global_addr, link_local_addr, &field_trials_),
-        0, 0, username_, password_, true, absl::nullopt, &field_trials_);
+        MakeNetworkMultipleAddrs(global_addr, link_local_addr), 0, 0, username_,
+        password_, true, absl::nullopt, &field_trials_);
     port->SetIceTiebreaker(kTiebreakerDefault);
     return port;
   }

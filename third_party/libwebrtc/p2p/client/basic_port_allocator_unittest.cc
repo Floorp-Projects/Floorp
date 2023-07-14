@@ -2649,8 +2649,7 @@ TEST_F(BasicPortAllocatorTest, IPv6EtherAndWifiHaveHigherPriorityThanOthers) {
   EXPECT_TRUE(HasNetwork(networks, ethe1));
 }
 
-TEST_F(BasicPortAllocatorTest,
-       Select2DifferentIntefacesIfDiversifyIpv6InterfacesEnabled) {
+TEST_F(BasicPortAllocatorTest, Select2DifferentIntefaces) {
   allocator().set_max_ipv6_networks(2);
   AddInterface(kClientIPv6Addr, "ethe1", rtc::ADAPTER_TYPE_ETHERNET);
   AddInterface(kClientIPv6Addr2, "ethe2", rtc::ADAPTER_TYPE_ETHERNET);
@@ -2675,8 +2674,7 @@ TEST_F(BasicPortAllocatorTest,
   EXPECT_TRUE(HasCandidate(candidates_, "local", "udp", kClientIPv6Addr3));
 }
 
-TEST_F(BasicPortAllocatorTest,
-       Select3DifferentIntefacesIfDiversifyIpv6InterfacesEnabled) {
+TEST_F(BasicPortAllocatorTest, Select3DifferentIntefaces) {
   allocator().set_max_ipv6_networks(3);
   AddInterface(kClientIPv6Addr, "ethe1", rtc::ADAPTER_TYPE_ETHERNET);
   AddInterface(kClientIPv6Addr2, "ethe2", rtc::ADAPTER_TYPE_ETHERNET);
@@ -2702,8 +2700,7 @@ TEST_F(BasicPortAllocatorTest,
   EXPECT_TRUE(HasCandidate(candidates_, "local", "udp", kClientIPv6Addr5));
 }
 
-TEST_F(BasicPortAllocatorTest,
-       Select4DifferentIntefacesIfDiversifyIpv6InterfacesEnabled) {
+TEST_F(BasicPortAllocatorTest, Select4DifferentIntefaces) {
   allocator().set_max_ipv6_networks(4);
   AddInterface(kClientIPv6Addr, "ethe1", rtc::ADAPTER_TYPE_ETHERNET);
   AddInterface(kClientIPv6Addr2, "ethe2", rtc::ADAPTER_TYPE_ETHERNET);

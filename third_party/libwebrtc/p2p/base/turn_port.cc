@@ -34,15 +34,6 @@
 
 namespace cricket {
 
-namespace {
-
-bool ResolveTurnHostnameForFamily(const webrtc::FieldTrialsView& field_trials) {
-  // TODO(bugs.webrtc.org/14334) cleanup
-  return true;
-}
-
-}  // namespace
-
 using ::webrtc::SafeTask;
 using ::webrtc::TaskQueueBase;
 using ::webrtc::TimeDelta;
@@ -850,12 +841,7 @@ void TurnPort::ResolveTurnAddress(const rtc::SocketAddress& address) {
     server_address_.address = resolved_address;
     PrepareAddress();
   };
-  // TODO(bugs.webrtc.org/14733): remove duplicate resolution with STUN port.
-  if (ResolveTurnHostnameForFamily(field_trials())) {
-    resolver_->Start(address, Network()->family(), std::move(callback));
-  } else {
-    resolver_->Start(address, std::move(callback));
-  }
+  resolver_->Start(address, Network()->family(), std::move(callback));
 }
 
 void TurnPort::OnSendStunPacket(const void* data,
