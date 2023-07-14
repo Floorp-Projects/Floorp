@@ -80,8 +80,7 @@ class TransmissionControlBlock : public Context {
     return tx_error_counter_.IsExhausted();
   }
   void Send(SctpPacket::Builder& builder) override {
-    packet_sender_.Send(builder,
-                        /*write_checksum=*/!capabilities_.zero_checksum);
+    packet_sender_.Send(builder);
   }
 
   // Other accessors
