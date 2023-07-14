@@ -7359,6 +7359,27 @@ play_store_attribution:
       tags:
         - Attribution
         - Performance
+  deferred_deeplink_time:
+    type: timespan
+    time_unit: millisecond
+    send_in_pings:
+      - metrics
+    description: |
+      The time that it takes to receive deferred deeplink from the Google Play Store.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1843610
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/2851
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: 128
+    metadata:
+      tags:
+        - Attribution
+        - Performance
+
 browser.search:
   with_ads:
     type: labeled_counter

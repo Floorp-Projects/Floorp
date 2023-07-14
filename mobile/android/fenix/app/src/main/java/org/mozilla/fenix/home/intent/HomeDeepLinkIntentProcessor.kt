@@ -15,6 +15,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.GleanMetrics.PlayStoreAttribution
 import org.mozilla.fenix.GlobalDirections
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -61,6 +62,10 @@ class HomeDeepLinkIntentProcessor(
             "settings_privacy" -> GlobalDirections.Settings
             "settings_wallpapers" -> GlobalDirections.WallpaperSettings
             "home_collections" -> GlobalDirections.Home
+            "test_deferred_deep_link" -> {
+                PlayStoreAttribution.deferredDeeplinkTime.stop()
+                return
+            }
 
             else -> return
         }
