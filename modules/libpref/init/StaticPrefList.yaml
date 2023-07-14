@@ -9546,16 +9546,6 @@
 #endif
   mirror: always
 
-# Whether to disable the MathML3 support for the mathvariant attribute. For
-# MathML Core, support is restricted to the <mi> element and to value "normal".
-# Corresponding automatic italicization on single-char <mi> element is also
-# implemented via text-transform: auto when that flag is enabled.
-- name: mathml.legacy_mathvariant_attribute.disabled
-  type: bool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-  rust: true
-
 #---------------------------------------------------------------------------
 # Prefs starting with "media."
 #---------------------------------------------------------------------------
