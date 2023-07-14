@@ -33,7 +33,7 @@ function testMathAttr(iface, attr, subrole, textLeafValue) {
 addAccessibleTask(
   `<math id="math">
      <msqrt id="sqrt">
-      <mi>-1</mi>
+      <mn>2</mn>
     </msqrt>
     </math>`,
   async (browser, accDoc) => {
@@ -51,14 +51,14 @@ addAccessibleTask(
       "msqrt has correct subrole"
     );
 
-    testMathAttr(sqrt, "AXMathRootRadicand", "AXMathIdentifier", "-1");
+    testMathAttr(sqrt, "AXMathRootRadicand", "AXMathNumber", "2");
   }
 );
 
 addAccessibleTask(
   `<math>
     <mroot id="root">
-      <mi>x</mi>
+      <mi>sin</mi>
       <mn>3</mn>
     </mroot>
   </math>`,
@@ -70,7 +70,7 @@ addAccessibleTask(
       "mroot has correct subrole"
     );
 
-    testMathAttr(root, "AXMathRootRadicand", "AXMathIdentifier", "x");
+    testMathAttr(root, "AXMathRootRadicand", "AXMathIdentifier", "sin");
     testMathAttr(root, "AXMathRootIndex", "AXMathNumber", "3");
   }
 );
@@ -78,8 +78,8 @@ addAccessibleTask(
 addAccessibleTask(
   `<math>
     <mfrac id="fraction">
-      <mi>a</mi>
-      <mi>b</mi>
+      <mn>2</mn>
+      <mn>3</mn>
      </mfrac>
   </math>`,
   async (browser, accDoc) => {
@@ -96,13 +96,8 @@ addAccessibleTask(
     // Bug 1639745
     todo_is(fraction.getAttributeValue("AXMathLineThickness"), 1);
 
-    testMathAttr(fraction, "AXMathFractionNumerator", "AXMathIdentifier", "a");
-    testMathAttr(
-      fraction,
-      "AXMathFractionDenominator",
-      "AXMathIdentifier",
-      "b"
-    );
+    testMathAttr(fraction, "AXMathFractionNumerator", "AXMathNumber", "2");
+    testMathAttr(fraction, "AXMathFractionDenominator", "AXMathNumber", "3");
   }
 );
 

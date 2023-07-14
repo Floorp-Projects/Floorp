@@ -533,6 +533,7 @@ static constexpr struct {
     {"mathml.legacy_maction_and_semantics_implementations.disabled"_ns},
     {"mathml.ms_lquote_rquote_attributes.disabled"_ns},
     {"dom.element.popover.enabled"_ns},
+    {"mathml.legacy_mathvariant_attribute.disabled"_ns},
 };
 
 // Read values from the user's preferences.
