@@ -7,31 +7,10 @@
  * listed symbols will exposed on import, and only when and where imported.
  */
 
-var EXPORTED_SYMBOLS = [
-  "ACTIONS",
-  "Addons",
-  "Addresses",
-  "Bookmarks",
-  "CreditCards",
-  "ExtensionStorage",
-  "Formdata",
-  "History",
-  "Passwords",
-  "Prefs",
-  "Tabs",
-  "TPS",
-  "Windows",
-];
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
-const { PromiseUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/PromiseUtils.sys.mjs"
-);
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { PromiseUtils } from "resource://gre/modules/PromiseUtils.sys.mjs";
 
 const lazy = {};
 
@@ -102,19 +81,6 @@ const ACTION_SYNC_WIPE_REMOTE = SYNC_WIPE_REMOTE;
 const ACTION_VERIFY = "verify";
 const ACTION_VERIFY_NOT = "verify-not";
 
-const ACTIONS = [
-  ACTION_ADD,
-  ACTION_DELETE,
-  ACTION_MODIFY,
-  ACTION_SET_ENABLED,
-  ACTION_SYNC,
-  ACTION_SYNC_RESET_CLIENT,
-  ACTION_SYNC_WIPE_CLIENT,
-  ACTION_SYNC_WIPE_REMOTE,
-  ACTION_VERIFY,
-  ACTION_VERIFY_NOT,
-];
-
 const OBSERVER_TOPICS = [
   "fxaccounts:onlogin",
   "fxaccounts:onlogout",
@@ -131,7 +97,7 @@ const OBSERVER_TOPICS = [
   "places-browser-init-complete",
 ];
 
-var TPS = {
+export var TPS = {
   _currentAction: -1,
   _currentPhase: -1,
   _enabledEngines: null,
@@ -156,6 +122,18 @@ var TPS = {
   shouldValidatePasswords: false,
   shouldValidateForms: false,
   _placesInitDeferred: PromiseUtils.defer(),
+  ACTIONS: [
+    ACTION_ADD,
+    ACTION_DELETE,
+    ACTION_MODIFY,
+    ACTION_SET_ENABLED,
+    ACTION_SYNC,
+    ACTION_SYNC_RESET_CLIENT,
+    ACTION_SYNC_WIPE_CLIENT,
+    ACTION_SYNC_WIPE_REMOTE,
+    ACTION_VERIFY,
+    ACTION_VERIFY_NOT,
+  ],
 
   _init: function TPS__init() {
     this.delayAutoSync();
@@ -1439,175 +1417,169 @@ var TPS = {
     await this.Login();
     await this.waitForTracking();
   },
-};
 
-var Addons = {
-  async install(addons) {
-    await TPS.HandleAddons(addons, ACTION_ADD);
+  Addons: {
+    async install(addons) {
+      await TPS.HandleAddons(addons, ACTION_ADD);
+    },
+    async setEnabled(addons, state) {
+      await TPS.HandleAddons(addons, ACTION_SET_ENABLED, state);
+    },
+    async uninstall(addons) {
+      await TPS.HandleAddons(addons, ACTION_DELETE);
+    },
+    async verify(addons, state) {
+      await TPS.HandleAddons(addons, ACTION_VERIFY, state);
+    },
+    async verifyNot(addons) {
+      await TPS.HandleAddons(addons, ACTION_VERIFY_NOT);
+    },
+    skipValidation() {
+      TPS.shouldValidateAddons = false;
+    },
   },
-  async setEnabled(addons, state) {
-    await TPS.HandleAddons(addons, ACTION_SET_ENABLED, state);
-  },
-  async uninstall(addons) {
-    await TPS.HandleAddons(addons, ACTION_DELETE);
-  },
-  async verify(addons, state) {
-    await TPS.HandleAddons(addons, ACTION_VERIFY, state);
-  },
-  async verifyNot(addons) {
-    await TPS.HandleAddons(addons, ACTION_VERIFY_NOT);
-  },
-  skipValidation() {
-    TPS.shouldValidateAddons = false;
-  },
-};
 
-var Addresses = {
-  async add(addresses) {
-    await this.HandleAddresses(addresses, ACTION_ADD);
+  Addresses: {
+    async add(addresses) {
+      await this.HandleAddresses(addresses, ACTION_ADD);
+    },
+    async modify(addresses) {
+      await this.HandleAddresses(addresses, ACTION_MODIFY);
+    },
+    async delete(addresses) {
+      await this.HandleAddresses(addresses, ACTION_DELETE);
+    },
+    async verify(addresses) {
+      await this.HandleAddresses(addresses, ACTION_VERIFY);
+    },
+    async verifyNot(addresses) {
+      await this.HandleAddresses(addresses, ACTION_VERIFY_NOT);
+    },
   },
-  async modify(addresses) {
-    await this.HandleAddresses(addresses, ACTION_MODIFY);
-  },
-  async delete(addresses) {
-    await this.HandleAddresses(addresses, ACTION_DELETE);
-  },
-  async verify(addresses) {
-    await this.HandleAddresses(addresses, ACTION_VERIFY);
-  },
-  async verifyNot(addresses) {
-    await this.HandleAddresses(addresses, ACTION_VERIFY_NOT);
-  },
-};
 
-var Bookmarks = {
-  async add(bookmarks) {
-    await TPS.HandleBookmarks(bookmarks, ACTION_ADD);
+  Bookmarks: {
+    async add(bookmarks) {
+      await TPS.HandleBookmarks(bookmarks, ACTION_ADD);
+    },
+    async modify(bookmarks) {
+      await TPS.HandleBookmarks(bookmarks, ACTION_MODIFY);
+    },
+    async delete(bookmarks) {
+      await TPS.HandleBookmarks(bookmarks, ACTION_DELETE);
+    },
+    async verify(bookmarks) {
+      await TPS.HandleBookmarks(bookmarks, ACTION_VERIFY);
+    },
+    async verifyNot(bookmarks) {
+      await TPS.HandleBookmarks(bookmarks, ACTION_VERIFY_NOT);
+    },
+    skipValidation() {
+      TPS.shouldValidateBookmarks = false;
+    },
   },
-  async modify(bookmarks) {
-    await TPS.HandleBookmarks(bookmarks, ACTION_MODIFY);
+  CreditCards: {
+    async add(creditCards) {
+      await this.HandleCreditCards(creditCards, ACTION_ADD);
+    },
+    async modify(creditCards) {
+      await this.HandleCreditCards(creditCards, ACTION_MODIFY);
+    },
+    async delete(creditCards) {
+      await this.HandleCreditCards(creditCards, ACTION_DELETE);
+    },
+    async verify(creditCards) {
+      await this.HandleCreditCards(creditCards, ACTION_VERIFY);
+    },
+    async verifyNot(creditCards) {
+      await this.HandleCreditCards(creditCards, ACTION_VERIFY_NOT);
+    },
   },
-  async delete(bookmarks) {
-    await TPS.HandleBookmarks(bookmarks, ACTION_DELETE);
-  },
-  async verify(bookmarks) {
-    await TPS.HandleBookmarks(bookmarks, ACTION_VERIFY);
-  },
-  async verifyNot(bookmarks) {
-    await TPS.HandleBookmarks(bookmarks, ACTION_VERIFY_NOT);
-  },
-  skipValidation() {
-    TPS.shouldValidateBookmarks = false;
-  },
-};
 
-var CreditCards = {
-  async add(creditCards) {
-    await this.HandleCreditCards(creditCards, ACTION_ADD);
+  Formdata: {
+    async add(formdata) {
+      await this.HandleForms(formdata, ACTION_ADD);
+    },
+    async delete(formdata) {
+      await this.HandleForms(formdata, ACTION_DELETE);
+    },
+    async verify(formdata) {
+      await this.HandleForms(formdata, ACTION_VERIFY);
+    },
+    async verifyNot(formdata) {
+      await this.HandleForms(formdata, ACTION_VERIFY_NOT);
+    },
   },
-  async modify(creditCards) {
-    await this.HandleCreditCards(creditCards, ACTION_MODIFY);
+  History: {
+    async add(history) {
+      await this.HandleHistory(history, ACTION_ADD);
+    },
+    async delete(history) {
+      await this.HandleHistory(history, ACTION_DELETE);
+    },
+    async verify(history) {
+      await this.HandleHistory(history, ACTION_VERIFY);
+    },
+    async verifyNot(history) {
+      await this.HandleHistory(history, ACTION_VERIFY_NOT);
+    },
   },
-  async delete(creditCards) {
-    await this.HandleCreditCards(creditCards, ACTION_DELETE);
+  Passwords: {
+    async add(passwords) {
+      await this.HandlePasswords(passwords, ACTION_ADD);
+    },
+    async modify(passwords) {
+      await this.HandlePasswords(passwords, ACTION_MODIFY);
+    },
+    async delete(passwords) {
+      await this.HandlePasswords(passwords, ACTION_DELETE);
+    },
+    async verify(passwords) {
+      await this.HandlePasswords(passwords, ACTION_VERIFY);
+    },
+    async verifyNot(passwords) {
+      await this.HandlePasswords(passwords, ACTION_VERIFY_NOT);
+    },
+    skipValidation() {
+      TPS.shouldValidatePasswords = false;
+    },
   },
-  async verify(creditCards) {
-    await this.HandleCreditCards(creditCards, ACTION_VERIFY);
+  Prefs: {
+    async modify(prefs) {
+      await TPS.HandlePrefs(prefs, ACTION_MODIFY);
+    },
+    async verify(prefs) {
+      await TPS.HandlePrefs(prefs, ACTION_VERIFY);
+    },
   },
-  async verifyNot(creditCards) {
-    await this.HandleCreditCards(creditCards, ACTION_VERIFY_NOT);
+  Tabs: {
+    async add(tabs) {
+      await TPS.HandleTabs(tabs, ACTION_ADD);
+    },
+    async verify(tabs) {
+      await TPS.HandleTabs(tabs, ACTION_VERIFY);
+    },
+    async verifyNot(tabs) {
+      await TPS.HandleTabs(tabs, ACTION_VERIFY_NOT);
+    },
   },
-};
+  Windows: {
+    async add(aWindow) {
+      await TPS.HandleWindows(aWindow, ACTION_ADD);
+    },
+  },
 
-var Formdata = {
-  async add(formdata) {
-    await this.HandleForms(formdata, ACTION_ADD);
-  },
-  async delete(formdata) {
-    await this.HandleForms(formdata, ACTION_DELETE);
-  },
-  async verify(formdata) {
-    await this.HandleForms(formdata, ACTION_VERIFY);
-  },
-  async verifyNot(formdata) {
-    await this.HandleForms(formdata, ACTION_VERIFY_NOT);
-  },
-};
-
-var History = {
-  async add(history) {
-    await this.HandleHistory(history, ACTION_ADD);
-  },
-  async delete(history) {
-    await this.HandleHistory(history, ACTION_DELETE);
-  },
-  async verify(history) {
-    await this.HandleHistory(history, ACTION_VERIFY);
-  },
-  async verifyNot(history) {
-    await this.HandleHistory(history, ACTION_VERIFY_NOT);
-  },
-};
-
-var Passwords = {
-  async add(passwords) {
-    await this.HandlePasswords(passwords, ACTION_ADD);
-  },
-  async modify(passwords) {
-    await this.HandlePasswords(passwords, ACTION_MODIFY);
-  },
-  async delete(passwords) {
-    await this.HandlePasswords(passwords, ACTION_DELETE);
-  },
-  async verify(passwords) {
-    await this.HandlePasswords(passwords, ACTION_VERIFY);
-  },
-  async verifyNot(passwords) {
-    await this.HandlePasswords(passwords, ACTION_VERIFY_NOT);
-  },
-  skipValidation() {
-    TPS.shouldValidatePasswords = false;
-  },
-};
-
-var Prefs = {
-  async modify(prefs) {
-    await TPS.HandlePrefs(prefs, ACTION_MODIFY);
-  },
-  async verify(prefs) {
-    await TPS.HandlePrefs(prefs, ACTION_VERIFY);
-  },
-};
-
-var Tabs = {
-  async add(tabs) {
-    await TPS.HandleTabs(tabs, ACTION_ADD);
-  },
-  async verify(tabs) {
-    await TPS.HandleTabs(tabs, ACTION_VERIFY);
-  },
-  async verifyNot(tabs) {
-    await TPS.HandleTabs(tabs, ACTION_VERIFY_NOT);
-  },
-};
-
-var Windows = {
-  async add(aWindow) {
-    await TPS.HandleWindows(aWindow, ACTION_ADD);
-  },
-};
-
-// Jumping through loads of hoops via calling back into a "HandleXXX" method
-// and adding an ACTION_XXX indirection adds no value - let's KISS!
-// eslint-disable-next-line no-unused-vars
-var ExtStorage = {
-  async set(id, data) {
-    lazy.Logger.logInfo(`setting data for '${id}': ${data}`);
-    await lazy.extensionStorageSync.set({ id }, data);
-  },
-  async verify(id, keys, data) {
-    let got = await lazy.extensionStorageSync.get({ id }, keys);
-    lazy.Logger.AssertEqual(got, data, `data for '${id}'/${keys}`);
+  // Jumping through loads of hoops via calling back into a "HandleXXX" method
+  // and adding an ACTION_XXX indirection adds no value - let's KISS!
+  // eslint-disable-next-line no-unused-vars
+  ExtStorage: {
+    async set(id, data) {
+      lazy.Logger.logInfo(`setting data for '${id}': ${data}`);
+      await lazy.extensionStorageSync.set({ id }, data);
+    },
+    async verify(id, keys, data) {
+      let got = await lazy.extensionStorageSync.get({ id }, keys);
+      lazy.Logger.AssertEqual(got, data, `data for '${id}'/${keys}`);
+    },
   },
 };
 
