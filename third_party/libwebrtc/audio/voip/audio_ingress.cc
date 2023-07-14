@@ -275,13 +275,10 @@ ChannelStatistics AudioIngress::GetChannelStatistics() {
           static_cast<double>(rtcp_report.jitter) / clockrate_hz;
     }
     if (block_data.has_rtt()) {
-      remote_stat.round_trip_time =
-          static_cast<double>(block_data.last_rtt_ms()) /
-          rtc::kNumMillisecsPerSec;
+      remote_stat.round_trip_time = block_data.last_rtt().seconds<double>();
     }
     remote_stat.last_report_received_timestamp_ms =
-        block_data.report_block_timestamp_utc_us() /
-        rtc::kNumMicrosecsPerMillisec;
+        block_data.report_block_timestamp_utc().ms();
     channel_stats.remote_rtcp = remote_stat;
 
     // Receive only channel won't send any RTP packets.
