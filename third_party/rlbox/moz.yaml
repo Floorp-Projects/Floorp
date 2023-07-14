@@ -10,8 +10,8 @@ origin:
 
   url: https://github.com/PLSysSec/rlbox_sandboxing_api
 
-  release: 358fb5bb02a326c631efaebdfb59b0df2ab9c602 (2022-12-28T21:29:59Z).
-  revision: 358fb5bb02a326c631efaebdfb59b0df2ab9c602
+  release: 936e54137728cb4cb33dcd525305d9605d250f9a (2023-07-08T12:30:02Z).
+  revision: 936e54137728cb4cb33dcd525305d9605d250f9a
 
   license: MIT
 

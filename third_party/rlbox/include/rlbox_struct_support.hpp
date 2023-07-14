@@ -137,7 +137,8 @@ struct markerStruct
       helper_no_op,                                                            \
       MaybeConst)                                                              \
                                                                                \
-    inline tainted<MaybeConst T*, T_Sbx> operator&() const noexcept            \
+      inline tainted<MaybeConst T*, T_Sbx>                                     \
+      operator&() const noexcept                                               \
     {                                                                          \
       auto ref_cast =                                                          \
         reinterpret_cast<MaybeConst T*>(&get_sandbox_value_ref());             \
@@ -223,7 +224,7 @@ struct markerStruct
                                                   helper_no_op,                \
                                                   MaybeConst)                  \
                                                                                \
-    tainted() = default;                                                       \
+      tainted() = default;                                                     \
     tainted(const tainted<MaybeConst T, T_Sbx>& p) = default;                  \
                                                                                \
     tainted(const tainted_volatile<T, T_Sbx>& p)                               \
@@ -287,8 +288,8 @@ struct markerStruct
   }
 
 #define tainted_data_specialization(T, libId)                                  \
-  tainted_data_specialization_helper(     , T, libId)                          \
-  tainted_data_specialization_helper(const, T, libId)
+  tainted_data_specialization_helper(, T, libId)                               \
+    tainted_data_specialization_helper(const, T, libId)
 
 #define convert_type_specialization(T, libId)                                  \
   namespace detail {                                                           \

@@ -130,6 +130,17 @@ inline T_Wrap<T_Rhs*, T_Sbx> memset(rlbox_sandbox<T_Sbx>& sandbox,
 }
 
 /**
+ * @brief types that do not need to be adjusted to fix ABI differences.
+ * Currently these are only char, wchar, float, and double
+ */
+
+template<typename T>
+static constexpr bool can_type_be_memcopied =
+  std::is_same_v<char, std::remove_cv_t<T>> || std::is_same_v<wchar_t, std::remove_cv_t<T>> ||
+  std::is_same_v<float, std::remove_cv_t<T>> || std::is_same_v<double, std::remove_cv_t<T>> ||
+  std::is_same_v<char16_t, std::remove_cv_t<T>>;
+
+/**
  * @brief Copy to sandbox memory area. Note that memcpy is meant to be called on
  * byte arrays does not adjust data according to ABI differences. If the
  * programmer does accidentally call memcpy on buffers that needs ABI
@@ -227,8 +238,10 @@ tainted<T*, T_Sbx> copy_memory_or_grant_access(rlbox_sandbox<T_Sbx>& sandbox,
 {
   copied = false;
 
-  // This function is meant for byte buffers only - so char and char16
-  static_assert(sizeof(T) <= 2);
+  // This function is meant for byte buffers only
+  static_assert(can_type_be_memcopied<std::remove_pointer_t<T>>,
+                "copy_memory_or_grant_access not supported on this type as "
+                "there may be ABI differences");
 
   // overflow ok
   size_t source_size = num * sizeof(T);
@@ -291,7 +304,9 @@ T* copy_memory_or_deny_access(rlbox_sandbox<T_Sbx>& sandbox,
   copied = false;
 
   // This function is meant for byte buffers only - so char and char16
-  static_assert(sizeof(T) <= 2);
+  static_assert(can_type_be_memcopied<std::remove_pointer_t<T>>,
+                "copy_memory_or_deny_access not supported on this type as "
+                "there may be ABI differences");
 
   // overflow ok
   size_t source_size = num * sizeof(T);

@@ -134,9 +134,9 @@ private:
   void* transition_state = nullptr;
 
   template<typename T>
-  using convert_fn_ptr_to_sandbox_equivalent_t =
-    decltype(::rlbox::convert_fn_ptr_to_sandbox_equivalent_detail::helper<
-             T_Sbx>(std::declval<T>()));
+  using convert_fn_ptr_to_sandbox_equivalent_t = decltype(
+    ::rlbox::convert_fn_ptr_to_sandbox_equivalent_detail::helper<T_Sbx>(
+      std::declval<T>()));
 
   template<typename T>
   inline constexpr void check_invoke_param_type_is_ok()

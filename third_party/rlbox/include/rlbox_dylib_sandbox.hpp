@@ -242,9 +242,8 @@ protected:
 #endif
     auto old_sandbox = thread_data.sandbox;
     thread_data.sandbox = this;
-    auto on_exit = detail::make_scope_exit([&] {
-      thread_data.sandbox = old_sandbox;
-    });
+    auto on_exit =
+      detail::make_scope_exit([&] { thread_data.sandbox = old_sandbox; });
     return (*func_ptr)(params...);
   }
 
