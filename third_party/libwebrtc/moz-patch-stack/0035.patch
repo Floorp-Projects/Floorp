@@ -405,7 +405,7 @@ index 12a1f57066..d8f095c700 100644
  if (rtc_include_tests) {
    rtc_source_set("test_feedback_generator_interface") {
 diff --git a/call/BUILD.gn b/call/BUILD.gn
-index 724bc6940e..55e13aa415 100644
+index 38c3aa8321..ab58a2d0f8 100644
 --- a/call/BUILD.gn
 +++ b/call/BUILD.gn
 @@ -46,7 +46,7 @@ rtc_library("call_interfaces") {
@@ -1015,10 +1015,10 @@ index 77f5139a2f..486b37590c 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index f3be88a1da..cc38636101 100644
+index 6e04015619..34f05627b6 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
-@@ -197,6 +197,7 @@ rtc_library("audio_test_common") {
+@@ -214,6 +214,7 @@ rtc_library("audio_test_common") {
    absl_deps = [ "//third_party/abseil-cpp/absl/memory" ]
  }
  
@@ -1026,7 +1026,7 @@ index f3be88a1da..cc38636101 100644
  if (!build_with_chromium) {
    if (is_mac || is_ios) {
      rtc_library("video_test_mac") {
-@@ -249,8 +250,12 @@ if (!build_with_chromium) {
+@@ -266,8 +267,12 @@ if (!build_with_chromium) {
      }
    }
  }
@@ -1039,7 +1039,7 @@ index f3be88a1da..cc38636101 100644
    testonly = true
    sources = [
      "rtcp_packet_parser.cc",
-@@ -260,6 +265,7 @@ rtc_library("rtp_test_utils") {
+@@ -277,6 +282,7 @@ rtc_library("rtp_test_utils") {
      "rtp_file_writer.cc",
      "rtp_file_writer.h",
    ]
@@ -1047,7 +1047,7 @@ index f3be88a1da..cc38636101 100644
  
    deps = [
      "../api:array_view",
-@@ -512,7 +518,9 @@ rtc_library("video_test_support") {
+@@ -529,7 +535,9 @@ rtc_library("video_test_support") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  
    if (!is_ios) {
@@ -1057,7 +1057,7 @@ index f3be88a1da..cc38636101 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1086,6 +1094,10 @@ rtc_library("test_common") {
+@@ -1105,6 +1113,10 @@ rtc_library("test_common") {
    if (!is_android && !build_with_chromium) {
      deps += [ "../modules/video_capture:video_capture_internal_impl" ]
    }
@@ -1068,7 +1068,7 @@ index f3be88a1da..cc38636101 100644
  }
  
  rtc_library("mock_transport") {
-@@ -1253,6 +1265,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
+@@ -1272,6 +1284,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
    ]
  }
  
@@ -1076,7 +1076,7 @@ index f3be88a1da..cc38636101 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1266,6 +1279,7 @@ if (!build_with_chromium && is_android) {
+@@ -1285,6 +1298,7 @@ if (!build_with_chromium && is_android) {
      ]
    }
  }
@@ -1085,7 +1085,7 @@ index f3be88a1da..cc38636101 100644
  rtc_library("call_config_utils") {
    # TODO(bugs.webrtc.org/10814): Remove rtc_json_suppressions as soon as it
 diff --git a/video/BUILD.gn b/video/BUILD.gn
-index 4f5490d6f1..2ff1a2cc19 100644
+index 544f2c5a1c..a42d98bce5 100644
 --- a/video/BUILD.gn
 +++ b/video/BUILD.gn
 @@ -17,7 +17,7 @@ rtc_library("video_stream_encoder_interface") {

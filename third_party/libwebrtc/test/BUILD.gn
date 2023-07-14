@@ -129,8 +129,27 @@ rtc_library("test_video_capturer") {
 rtc_library("frame_generator_capturer") {
   visibility = [ "*" ]
   testonly = true
-  sources = [ "frame_generator_capturer_tmp.h" ]
-  deps = [ ":video_test_common" ]
+  sources = [
+    "frame_generator_capturer.cc",
+    "frame_generator_capturer.h",
+    "frame_generator_capturer_tmp.h",
+  ]
+  deps = [
+    ":fileutils",
+    ":test_video_capturer",
+    "../api:create_frame_generator",
+    "../api:frame_generator_api",
+    "../api/task_queue",
+    "../api/video:video_frame",
+    "../rtc_base:checks",
+    "../rtc_base:logging",
+    "../rtc_base:rtc_task_queue",
+    "../rtc_base:timeutils",
+    "../rtc_base/synchronization:mutex",
+    "../rtc_base/task_utils:repeating_task",
+    "../system_wrappers",
+  ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/strings" ]
 }
 
 rtc_library("video_test_common") {
@@ -142,8 +161,6 @@ rtc_library("video_test_common") {
     "fake_videorenderer.h",
     "frame_forwarder.cc",
     "frame_forwarder.h",
-    "frame_generator_capturer.cc",
-    "frame_generator_capturer.h",
     "mappable_native_buffer.cc",
     "mappable_native_buffer.h",
     "video_codec_settings.h",
@@ -675,6 +692,7 @@ if (rtc_include_tests) {
         ":fileutils",
         ":fileutils_unittests",
         ":fixed_fps_video_frame_writer_adapter_test",
+        ":frame_generator_capturer",
         ":frame_generator_impl",
         ":perf_test",
         ":rtc_expect_death",
@@ -1044,6 +1062,7 @@ rtc_library("test_common") {
     ":encoder_settings",
     ":fake_video_codecs",
     ":fileutils",
+    ":frame_generator_capturer",
     ":mock_transport",
     ":run_loop",
     ":scoped_key_value_config",

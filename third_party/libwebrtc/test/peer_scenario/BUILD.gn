@@ -24,8 +24,8 @@ if (rtc_include_tests) {
     deps = [
       "..:fake_video_codecs",
       "..:fileutils",
+      "..:frame_generator_capturer",
       "..:test_support",
-      "../:video_test_common",
       "../../api:candidate",
       "../../api:create_time_controller",
       "../../api:libjingle_peerconnection_api",
