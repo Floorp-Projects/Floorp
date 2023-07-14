@@ -1,58 +1,71 @@
 From: Nico Grunbaum <na-g@nostrum.com>
-Date: Tue, 6 Jun 2023 16:37:00 -0700
-Subject: Bug 1833237 - (fix-f0be3bee1f) remove reference to
- portal:pipewire_base;r?pehrsons
+Date: Fri, 9 Jun 2023 19:59:00 +0000
+Subject: Bug 1837667 - avoid calling GetDpiForMonitor on Win32 or
+ Win<8.1;r=mjf,webrtc-reviewers,pehrsons
 
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8ff886a4d366b4be35b329d1ef733a6df542067c
+Differential Revision: https://phabricator.services.mozilla.com/D180763
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/efb1631077da0ef473b1fe37d64cd6f652c34f37
 ---
- modules/video_capture/BUILD.gn                      | 4 ++++
- modules/video_capture/linux/device_info_pipewire.cc | 3 ++-
- modules/video_capture/linux/device_info_pipewire.h  | 3 ++-
- 3 files changed, 8 insertions(+), 2 deletions(-)
+ .../win/screen_capture_utils.cc               | 28 ++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
-diff --git a/modules/video_capture/BUILD.gn b/modules/video_capture/BUILD.gn
-index f675143451..65468cecd7 100644
---- a/modules/video_capture/BUILD.gn
-+++ b/modules/video_capture/BUILD.gn
-@@ -100,6 +100,10 @@ if (!build_with_chromium || is_linux || is_chromeos) {
-           "../../media:rtc_media_base",
-           "../portal",
-         ]
-+        if (build_with_mozilla) {
-+          configs -= [ "../portal:pipewire_base" ]
-+          public_deps = [ "//third_party/pipewire" ]
-+        }
-       }
-     }
-     if (is_win) {
-diff --git a/modules/video_capture/linux/device_info_pipewire.cc b/modules/video_capture/linux/device_info_pipewire.cc
-index 1dee78f5ee..2cb6161514 100644
---- a/modules/video_capture/linux/device_info_pipewire.cc
-+++ b/modules/video_capture/linux/device_info_pipewire.cc
-@@ -47,7 +47,8 @@ int32_t DeviceInfoPipeWire::GetDeviceName(uint32_t deviceNumber,
-                                           char* deviceUniqueIdUTF8,
-                                           uint32_t deviceUniqueIdUTF8Length,
-                                           char* productUniqueIdUTF8,
--                                          uint32_t productUniqueIdUTF8Length) {
-+                                          uint32_t productUniqueIdUTF8Length,
-+                                          pid_t* pid) {
-   if (deviceNumber >= NumberOfDevices())
-     return -1;
+diff --git a/modules/desktop_capture/win/screen_capture_utils.cc b/modules/desktop_capture/win/screen_capture_utils.cc
+index 5409417a88..0a210dc48e 100644
+--- a/modules/desktop_capture/win/screen_capture_utils.cc
++++ b/modules/desktop_capture/win/screen_capture_utils.cc
+@@ -10,8 +10,10 @@
  
-diff --git a/modules/video_capture/linux/device_info_pipewire.h b/modules/video_capture/linux/device_info_pipewire.h
-index a006c85d1b..724717be5e 100644
---- a/modules/video_capture/linux/device_info_pipewire.h
-+++ b/modules/video_capture/linux/device_info_pipewire.h
-@@ -29,7 +29,8 @@ class DeviceInfoPipeWire : public DeviceInfoImpl {
-                         char* deviceUniqueIdUTF8,
-                         uint32_t deviceUniqueIdUTF8Length,
-                         char* productUniqueIdUTF8 = nullptr,
--                        uint32_t productUniqueIdUTF8Length = 0) override;
-+                        uint32_t productUniqueIdUTF8Length = 0,
-+                        pid_t* pid = 0) override;
-   /*
-    * Fills the membervariable _captureCapabilities with capabilites for the
-    * given device name.
+ #include "modules/desktop_capture/win/screen_capture_utils.h"
+ 
++#include <libloaderapi.h>
+ #include <shellscalingapi.h>
+ #include <windows.h>
++#include <winnt.h>
+ 
+ #include <string>
+ #include <vector>
+@@ -23,8 +25,32 @@
+ #include "rtc_base/string_utils.h"
+ #include "rtc_base/win32.h"
+ 
++#include "mozilla/WindowsVersion.h" // See Bug 1837647
++
+ namespace webrtc {
+ 
++// See Bug 1837647 - upstream commit 60795e8c7a added a method using
++// ::GetDpiForMonitor which is not available on Win7 machines.  For Win7,
++// fail as to provoke it to get the system DPI.
++HRESULT TryGetDpiForMonitor(HMONITOR hmonitor, MONITOR_DPI_TYPE dpiType, UINT *dpiX, UINT *dpiY) {
++  static HRESULT (*plat_fn)(HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);
++#ifdef _WIN64
++  // Grab a pointer to ::GetDpiForMonitor if that has been loaded.
++  // It is available in Windows 8.1 and up. Can we drop the version check? It would make upstreaming easier.
++  if (!plat_fn) {
++      if(auto *module = ::GetModuleHandle(L"Shcore.dll"); module) {
++        plat_fn = reinterpret_cast<decltype(plat_fn)>(
++            ::GetProcAddress(module, "GetDpiForMonitor"));
++      }
++  }
++#endif
++  // Call the function we got or return a failure value in the case that
++  // we didn't manage to get a pointer to ::GetDpiForMonitor
++  return plat_fn
++          ? ((*plat_fn)(hmonitor, dpiType, dpiX, dpiY))
++          : -1;
++}
++
+ bool HasActiveDisplay() {
+   DesktopCapturer::SourceList screens;
+ 
+@@ -149,7 +175,7 @@ DesktopRect GetFullscreenRect() {
+ DesktopVector GetDpiForMonitor(HMONITOR monitor) {
+   UINT dpi_x, dpi_y;
+   // MDT_EFFECTIVE_DPI includes the scale factor as well as the system DPI.
+-  HRESULT hr = ::GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
++  HRESULT hr = TryGetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpi_x, &dpi_y);
+   if (SUCCEEDED(hr)) {
+     return {static_cast<INT>(dpi_x), static_cast<INT>(dpi_y)};
+   }
 -- 
 2.34.1
 

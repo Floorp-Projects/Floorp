@@ -3,20 +3,18 @@ Date: Thu, 28 Apr 2022 10:53:43 -0500
 Subject: Bug 1766646 - (fix-a0bb2ef2dc) add back VideoType enum values
 
 ---
- common_video/libyuv/include/webrtc_libyuv.h |  4 ++++
- common_video/libyuv/webrtc_libyuv.cc        | 11 +++++++++++
- 2 files changed, 15 insertions(+)
+ common_video/libyuv/include/webrtc_libyuv.h | 3 +++
+ common_video/libyuv/webrtc_libyuv.cc        | 9 +++++++++
+ 2 files changed, 12 insertions(+)
 
 diff --git a/common_video/libyuv/include/webrtc_libyuv.h b/common_video/libyuv/include/webrtc_libyuv.h
-index 08a035a8d7..6d9071bcd5 100644
+index 68831c70ab..253a33294d 100644
 --- a/common_video/libyuv/include/webrtc_libyuv.h
 +++ b/common_video/libyuv/include/webrtc_libyuv.h
-@@ -32,12 +32,16 @@ enum class VideoType {
-   kI420,
-   kIYUV,
-   kRGB24,
-+  kABGR,
+@@ -35,11 +35,14 @@ enum class VideoType {
+   kBGR24,
    kARGB,
+   kABGR,
 +  kARGB4444,
    kRGB565,
 +  kARGB1555,
@@ -29,7 +27,7 @@ index 08a035a8d7..6d9071bcd5 100644
    kNV12,
  };
 diff --git a/common_video/libyuv/webrtc_libyuv.cc b/common_video/libyuv/webrtc_libyuv.cc
-index 46322501ad..4c6911b4a3 100644
+index 31ba1feca3..05a4b184c2 100644
 --- a/common_video/libyuv/webrtc_libyuv.cc
 +++ b/common_video/libyuv/webrtc_libyuv.cc
 @@ -24,6 +24,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
@@ -50,16 +48,7 @@ index 46322501ad..4c6911b4a3 100644
      case VideoType::kYUY2:
      case VideoType::kUYVY:
        return width * height * 2;
-@@ -90,6 +93,8 @@ int ConvertVideoType(VideoType video_type) {
-       return libyuv::FOURCC_YV12;
-     case VideoType::kRGB24:
-       return libyuv::FOURCC_24BG;
-+    case VideoType::kABGR:
-+      return libyuv::FOURCC_ABGR;
-     case VideoType::kRGB565:
-       return libyuv::FOURCC_RGBP;
-     case VideoType::kYUY2:
-@@ -98,10 +103,16 @@ int ConvertVideoType(VideoType video_type) {
+@@ -104,10 +107,16 @@ int ConvertVideoType(VideoType video_type) {
        return libyuv::FOURCC_UYVY;
      case VideoType::kMJPEG:
        return libyuv::FOURCC_MJPG;
