@@ -84,17 +84,17 @@ struct EncodingSettings {
 
   bool IsSameSettings(const EncodingSettings& other) const {
     if (scalability_mode != other.scalability_mode) {
-      return true;
+      return false;
     }
 
     for (auto [layer_id, layer] : layer_settings) {
       const auto& other_layer = other.layer_settings.at(layer_id);
       if (layer.resolution != other_layer.resolution) {
-        return true;
+        return false;
       }
     }
 
-    return false;
+    return true;
   }
 
   bool IsSameRate(const EncodingSettings& other) const {
@@ -102,11 +102,11 @@ struct EncodingSettings {
       const auto& other_layer = other.layer_settings.at(layer_id);
       if (layer.bitrate != other_layer.bitrate ||
           layer.framerate != other_layer.framerate) {
-        return true;
+        return false;
       }
     }
 
-    return false;
+    return true;
   }
 };
 
