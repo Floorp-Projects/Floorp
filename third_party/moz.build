@@ -49,6 +49,9 @@ with Files('xsimd/**'):
 with Files('msgpack/**'):
     BUG_COMPONENT = ('Firefox Build System', 'General')
 
+with Files('simde/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
+
 with Files('sipcc/**'):
     BUG_COMPONENT = ('Core', 'WebRTC: Signaling')
 
