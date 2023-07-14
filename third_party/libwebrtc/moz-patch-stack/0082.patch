@@ -15,10 +15,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/dca1b97525487ae57
  1 file changed, 4 insertions(+)
 
 diff --git a/modules/utility/BUILD.gn b/modules/utility/BUILD.gn
-index 3fe4ca8c92..46bca17f02 100644
+index 8cefe5653c..b8d75865f7 100644
 --- a/modules/utility/BUILD.gn
 +++ b/modules/utility/BUILD.gn
-@@ -47,6 +47,10 @@ rtc_source_set("utility") {
+@@ -25,5 +25,9 @@ rtc_source_set("utility") {
        "../../rtc_base:platform_thread",
        "../../rtc_base/system:arch",
      ]
@@ -28,7 +28,6 @@ index 3fe4ca8c92..46bca17f02 100644
 +    }
    }
  }
- 
 -- 
 2.34.1
 
