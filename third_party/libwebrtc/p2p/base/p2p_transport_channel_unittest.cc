@@ -412,7 +412,8 @@ class P2PTransportChannelTestBase : public ::testing::Test,
 
     rtc::FakeNetworkManager network_manager_;
     std::unique_ptr<BasicPortAllocator> allocator_;
-    webrtc::AsyncDnsResolverFactoryInterface* async_dns_resolver_factory_;
+    webrtc::AsyncDnsResolverFactoryInterface* async_dns_resolver_factory_ =
+        nullptr;
     ChannelData cd1_;
     ChannelData cd2_;
     IceRole role_;
