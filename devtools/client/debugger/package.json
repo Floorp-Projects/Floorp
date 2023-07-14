@@ -25,7 +25,6 @@
     "acorn": "~8.8.2",
     "codemirror": "^5.28.0",
     "fuzzaldrin-plus": "^0.6.0",
-    "parse-script-tags": "github:loganfsmyth/parse-script-tags#d771732ca47e1b3554fe67d609fd18cc785c5f26",
     "react": "16.8.6",
     "react-aria-components": "^0.0.4",
     "react-dom": "16.8.6",
