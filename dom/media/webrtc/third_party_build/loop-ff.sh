@@ -215,9 +215,11 @@ if [ "x$MODIFIED_BUILD_RELATED_FILE_CNT" != "x0" ]; then
       --include 'third_party/libwebrtc/**moz.build' | wc -l | tr -d " "`
   if [ "x$MOZ_BUILD_CHANGE_CNT" != "x0" ]; then
     echo_log "Detected modified moz.build files, commiting"
+    bash $SCRIPT_DIR/commit-build-file-changes.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
+    TRY_FUZZY_QUERY_STRING="^build-"
+    echo_log "Starting try builds with '$TRY_FUZZY_QUERY_STRING'"
+    ./mach try fuzzy --full -q $TRY_FUZZY_QUERY_STRING 2>&1| tee -a $LOOP_OUTPUT_LOG
   fi
-
-  bash $SCRIPT_DIR/commit-build-file-changes.sh 2>&1| tee -a $LOOP_OUTPUT_LOG
 fi
 ERROR_HELP=""
 
