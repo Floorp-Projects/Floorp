@@ -427,7 +427,7 @@ win64-clang-16-raw:
     description: "Clang-cl 16 toolchain build"
     treeherder:
         symbol: TW64(clang-16-raw)
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         max-run-time: 9000
     run:
@@ -839,7 +839,7 @@ win64-clang-trunk-raw:
         cached_task: false
     treeherder:
         symbol: TW64(clang-trunk-raw)
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         max-run-time: 9000
     run:

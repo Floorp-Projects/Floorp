@@ -505,6 +505,11 @@ workers:
             implementation: generic-worker
             os: windows
             worker-type: '{alias}-azure'
+        b-win2022:
+            provisioner: '{trust-domain}-{level}'
+            implementation: generic-worker
+            os: windows
+            worker-type: '{alias}'
         image:
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
