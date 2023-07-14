@@ -36,6 +36,7 @@
 #include "test/rtp_rtcp_observer.h"
 #include "test/run_loop.h"
 #include "test/scoped_key_value_config.h"
+#include "test/video_test_constants.h"
 
 namespace webrtc {
 namespace test {
@@ -47,34 +48,6 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   CallTest();
   virtual ~CallTest();
 
-  static constexpr size_t kNumSsrcs = 6;
-  static const int kNumSimulcastStreams = 3;
-  static const int kDefaultWidth = 320;
-  static const int kDefaultHeight = 180;
-  static const int kDefaultFramerate = 30;
-  static constexpr TimeDelta kDefaultTimeout = TimeDelta::Seconds(30);
-  static constexpr TimeDelta kLongTimeout = TimeDelta::Seconds(120);
-  enum classPayloadTypes : uint8_t {
-    kSendRtxPayloadType = 98,
-    kRtxRedPayloadType = 99,
-    kVideoSendPayloadType = 100,
-    kAudioSendPayloadType = 103,
-    kRedPayloadType = 118,
-    kUlpfecPayloadType = 119,
-    kFlexfecPayloadType = 120,
-    kPayloadTypeH264 = 122,
-    kPayloadTypeVP8 = 123,
-    kPayloadTypeVP9 = 124,
-    kPayloadTypeGeneric = 125,
-    kFakeVideoSendPayloadType = 126,
-  };
-  static const uint32_t kSendRtxSsrcs[kNumSsrcs];
-  static const uint32_t kVideoSendSsrcs[kNumSsrcs];
-  static const uint32_t kAudioSendSsrc;
-  static const uint32_t kFlexfecSendSsrc;
-  static const uint32_t kReceiverLocalVideoSsrc;
-  static const uint32_t kReceiverLocalAudioSsrc;
-  static const int kNackRtpHistoryMs;
   static const std::map<uint8_t, MediaType> payload_type_map_;
 
  protected:
