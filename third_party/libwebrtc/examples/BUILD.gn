@@ -28,7 +28,9 @@ group("examples") {
     deps += [
       ":AppRTCMobile",
       ":AppRTCMobile_test_apk",
-      ":libwebrtc_unity",
+
+      #TODO(https://bugs.webrtc.org/15095) - Fix or remove this target.
+      #":libwebrtc_unity",
       "androidvoip",
     ]
 
@@ -901,21 +903,22 @@ if (is_android) {
     ]
   }
 
-  dist_jar("libwebrtc_unity") {
-    _target_dir_name = get_label_info(":$target_name", "dir")
-    output = "${root_out_dir}/lib.java${_target_dir_name}/${target_name}.jar"
-    direct_deps_only = false
-    use_interface_jars = false
-    use_unprocessed_jars = false
-    requires_android = true
-    deps = [
-      ":webrtc_unity_java",
-      "../rtc_base:base_java",
-      "../sdk/android:libjingle_peerconnection_java",
-      "../sdk/android:libjingle_peerconnection_metrics_default_java",
-      "//third_party/androidx:androidx_annotation_annotation_java",
-    ]
-  }
+  # TODO(https://bugs.webrtc.org/15095) - Fix or remove this target.
+  #dist_jar("libwebrtc_unity") {
+  #  _target_dir_name = get_label_info(":$target_name", "dir")
+  #  output = "${root_out_dir}/lib.java${_target_dir_name}/${target_name}.jar"
+  #  direct_deps_only = false
+  #  use_interface_jars = false
+  #  use_unprocessed_jars = false
+  #  requires_android = true
+  #  deps = [
+  #    ":webrtc_unity_java",
+  #    "../rtc_base:base_java",
+  #    "../sdk/android:libjingle_peerconnection_java",
+  #    "../sdk/android:libjingle_peerconnection_metrics_default_java",
+  #    "//third_party/androidx:androidx_annotation_annotation_java",
+  #  ]
+  #}
 
   robolectric_binary("android_examples_junit_tests") {
     sources = [
