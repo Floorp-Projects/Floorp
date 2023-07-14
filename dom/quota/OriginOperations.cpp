@@ -117,13 +117,6 @@ class SaveOriginAccessTimeOp : public NormalOriginOperationBase {
   virtual void SendResults() override;
 };
 
-// XXX This class is a copy of ClearPrivateBrowsingOp because
-// ClearPrivateBrowsingOp is supposed to work as a parent actor. We could maybe
-// still inherit from ClearPrivateBrowsingOp instead of inheriting
-// NormalOriginOperationBase and override SendResults, but that's still not
-// very clean. It would be better to refactor the classes to have operations
-// which can be used independently from IPC and then have wrappers (actors)
-// around them for IPC.
 class ClearPrivateRepositoryOp : public ResolvableNormalOriginOp<bool> {
  public:
   ClearPrivateRepositoryOp()
@@ -397,18 +390,6 @@ class ResetOrClearOp final : public QuotaRequestBase {
   virtual void GetResponse(RequestResponse& aResponse) override;
 };
 
-class ClearPrivateBrowsingOp final : public QuotaRequestBase {
- public:
-  ClearPrivateBrowsingOp();
-
- private:
-  ~ClearPrivateBrowsingOp() = default;
-
-  nsresult DoDirectoryWork(QuotaManager& aQuotaManager) override;
-
-  void GetResponse(RequestResponse& aResponse) override;
-};
-
 class ClearRequestBase : public QuotaRequestBase {
  protected:
   explicit ClearRequestBase(const char* aRunnableName, bool aExclusive)
@@ -615,10 +596,6 @@ RefPtr<QuotaRequestBase> CreateGetFullOriginMetadataOp(
 
 RefPtr<QuotaRequestBase> CreateResetOrClearOp(bool aClear) {
   return MakeRefPtr<ResetOrClearOp>(aClear);
-}
-
-RefPtr<QuotaRequestBase> CreateClearPrivateBrowsingOp() {
-  return MakeRefPtr<ClearPrivateBrowsingOp>();
 }
 
 RefPtr<QuotaRequestBase> CreateClearOriginOp(const RequestParams& aParams) {
@@ -1431,47 +1408,6 @@ void ResetOrClearOp::GetResponse(RequestResponse& aResponse) {
   } else {
     aResponse = ResetAllResponse();
   }
-}
-
-ClearPrivateBrowsingOp::ClearPrivateBrowsingOp()
-    : QuotaRequestBase("dom::quota::ClearPrivateBrowsingOp",
-                       Nullable<PersistenceType>(PERSISTENCE_TYPE_PRIVATE),
-                       OriginScope::FromNull(), Nullable<Client::Type>(),
-                       /* aExclusive */ true) {
-  AssertIsOnOwningThread();
-}
-
-nsresult ClearPrivateBrowsingOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(!mPersistenceType.IsNull());
-  MOZ_ASSERT(mPersistenceType.Value() == PERSISTENCE_TYPE_PRIVATE);
-
-  AUTO_PROFILER_LABEL("ClearPrivateBrowsingOp::DoDirectoryWork", OTHER);
-
-  QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureStorageIsInitialized()));
-
-  QM_TRY_INSPECT(
-      const auto& directory,
-      QM_NewLocalFile(aQuotaManager.GetStoragePath(mPersistenceType.Value())));
-
-  nsresult rv = directory->Remove(true);
-  if (rv != NS_ERROR_FILE_NOT_FOUND && NS_FAILED(rv)) {
-    // This should never fail if we've closed all storage connections
-    // correctly...
-    MOZ_ASSERT(false, "Failed to remove directory!");
-  }
-
-  aQuotaManager.RemoveQuotaForRepository(mPersistenceType.Value());
-
-  aQuotaManager.RepositoryClearCompleted(mPersistenceType.Value());
-
-  return NS_OK;
-}
-
-void ClearPrivateBrowsingOp::GetResponse(RequestResponse& aResponse) {
-  AssertIsOnOwningThread();
-
-  aResponse = ClearPrivateBrowsingResponse();
 }
 
 static Result<nsCOMPtr<nsIFile>, QMResult> OpenToBeRemovedDirectory(

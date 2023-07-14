@@ -202,7 +202,6 @@ bool Quota::VerifyRequestParams(const RequestParams& aParams) const {
       break;
     }
 
-    case RequestParams::TClearPrivateBrowsingParams:
     case RequestParams::TClearAllParams:
     case RequestParams::TResetAllParams:
     case RequestParams::TListOriginsParams:
@@ -389,9 +388,6 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
       case RequestParams::TClearDataParams:
         return CreateClearDataOp(aParams);
 
-      case RequestParams::TClearPrivateBrowsingParams:
-        return CreateClearPrivateBrowsingOp();
-
       case RequestParams::TClearAllParams:
         return CreateResetOrClearOp(/* aClear */ true);
 
@@ -444,6 +440,42 @@ bool Quota::DeallocPQuotaRequestParent(PQuotaRequestParent* aActor) {
   RefPtr<QuotaRequestBase> actor =
       dont_AddRef(static_cast<QuotaRequestBase*>(aActor));
   return true;
+}
+
+mozilla::ipc::IPCResult Quota::RecvClearStoragesForPrivateBrowsing(
+    ClearStoragesForPrivateBrowsingResolver&& aResolver) {
+  AssertIsOnBackgroundThread();
+
+  PBackgroundParent* actor = Manager();
+  MOZ_ASSERT(actor);
+
+  if (BackgroundParent::IsOtherProcessActor(actor)) {
+    MOZ_CRASH_UNLESS_FUZZING();
+    return IPC_FAIL(this, "Wrong actor");
+  }
+
+  QM_TRY_UNWRAP(const NotNull<RefPtr<QuotaManager>> quotaManager,
+                QuotaManager::GetOrCreate(), ([&aResolver](const auto rv) {
+                  aResolver(rv);
+                  return IPC_OK();
+                }));
+
+  quotaManager->ClearPrivateRepository()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [self = RefPtr{this}, resolver = std::move(aResolver)](
+          const BoolPromise::ResolveOrRejectValue& aValue) {
+        if (!self->CanSend()) {
+          return;
+        }
+
+        if (aValue.IsResolve()) {
+          resolver(aValue.ResolveValue());
+        } else {
+          resolver(aValue.RejectValue());
+        }
+      });
+
+  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult Quota::RecvStartIdleMaintenance() {

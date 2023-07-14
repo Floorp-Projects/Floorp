@@ -105,10 +105,6 @@ struct ClearDataParams
   OriginAttributesPattern pattern;
 };
 
-struct ClearPrivateBrowsingParams
-{
-};
-
 struct ClearAllParams
 {
 };
@@ -149,13 +145,18 @@ union RequestParams
   ClearOriginParams;
   ResetOriginParams;
   ClearDataParams;
-  ClearPrivateBrowsingParams;
   ClearAllParams;
   ResetAllParams;
   PersistedParams;
   PersistParams;
   EstimateParams;
   ListOriginsParams;
+};
+
+union BoolResponse
+{
+  nsresult;
+  bool;
 };
 
 [ManualDealloc, ChildImpl=virtual, ParentImpl=virtual]
@@ -172,6 +173,9 @@ parent:
   async PQuotaUsageRequest(UsageRequestParams params);
 
   async PQuotaRequest(RequestParams params);
+
+  async ClearStoragesForPrivateBrowsing()
+      returns(BoolResponse response);
 
   async StartIdleMaintenance();
 
