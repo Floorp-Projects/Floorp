@@ -57,6 +57,7 @@ class MathMLElement final : public MathMLElementBase, public Link {
 
   static void MapGlobalMathMLAttributesInto(
       mozilla::MappedDeclarationsBuilder&);
+  static void MapMiAttributesInto(mozilla::MappedDeclarationsBuilder&);
   static void MapMTableAttributesInto(mozilla::MappedDeclarationsBuilder&);
 
   void GetEventTargetParent(mozilla::EventChainPreVisitor& aVisitor) override;
