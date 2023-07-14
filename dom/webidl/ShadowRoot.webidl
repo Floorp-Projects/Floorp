@@ -24,7 +24,6 @@ interface ShadowRoot : DocumentFragment
 {
   // Shadow DOM v1
   readonly attribute ShadowRootMode mode;
-  [Pref="dom.shadowdom.delegatesFocus.enabled"]
   readonly attribute boolean delegatesFocus;
   [Pref="dom.shadowdom.slot.assign.enabled"]
   readonly attribute SlotAssignmentMode slotAssignment;
