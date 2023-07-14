@@ -193,24 +193,10 @@ class RtpVideoSenderTestFixture {
   MockTransport& transport() { return transport_; }
   void AdvanceTime(TimeDelta delta) { time_controller_.AdvanceTime(delta); }
 
-  void Stop() {
-    RunOnTransportQueue([&]() { router_->Stop(); });
-  }
+  void Stop() { router_->Stop(); }
 
   void SetActiveModules(const std::vector<bool>& active_modules) {
-    RunOnTransportQueue([&]() { router_->SetActiveModules(active_modules); });
-  }
-
-  // Several RtpVideoSender methods expect to be called on the task queue as
-  // owned by the send transport. While the SequenceChecker may pick up the
-  // default thread as the transport queue, explicit checks for the transport
-  // queue (not just using a SequenceChecker) aren't possible unless such a
-  // queue is actually active. So RunOnTransportQueue is a convenience function
-  // that allow for running a `task` on the transport queue, similar to
-  // SendTask().
-  void RunOnTransportQueue(absl::AnyInvocable<void() &&> task) {
-    transport_controller_.GetWorkerQueue()->RunOrPost(std::move(task));
-    AdvanceTime(TimeDelta::Zero());
+    router_->SetActiveModules(active_modules);
   }
 
  private:

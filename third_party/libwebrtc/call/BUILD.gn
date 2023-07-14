@@ -210,7 +210,6 @@ rtc_library("rtp_sender") {
     "../modules/rtp_rtcp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
     "../modules/rtp_rtcp:rtp_video_header",
-    "../modules/utility:utility",
     "../modules/video_coding:chain_diff_calculator",
     "../modules/video_coding:codec_globals_headers",
     "../modules/video_coding:frame_dependencies_calculator",
