@@ -14012,7 +14012,21 @@
       "param_vero_id",
       "param__hsenc",
       "param_mkt_tok",
-      "param_fbclid"
+      "param_fbclid",
+      "param_gclid",
+      "param_dclid",
+      "param_msclkid",
+      "param__openstat",
+      "param_yclid",
+      "param_wickedid",
+      "param_twclid",
+      "param___hssc",
+      "param___hstc",
+      "param___hsfp",
+      "param_hsctatracking",
+      "param_wbraid",
+      "param_gbraid",
+      "param_ysclid"
     ],
     "description": "Counts how often specific query parameters are stripped.",
     "alert_emails": [
@@ -14020,7 +14034,7 @@
       "pbz@mozilla.com",
       "seceng-telemetry@mozilla.com"
     ],
-    "bug_numbers": [1762374]
+    "bug_numbers": [1762374, 1830058]
   },
   "EMAIL_TRACKER_COUNT": {
     "record_in_processes": ["main"],
