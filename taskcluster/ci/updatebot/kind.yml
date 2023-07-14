@@ -58,7 +58,7 @@ jobs:
             platform: updatebot/all
             symbol: w-cron
             tier: 1
-        worker-type: b-win2012
+        worker-type: b-win2022
         worker:
             max-run-time: 3600
             taskcluster-proxy: true

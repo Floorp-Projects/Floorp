@@ -22,7 +22,7 @@ only-for-build-platforms:
     - win64-devedition/opt
 
 job-template:
-    worker-type: 'b-win2012'
+    worker-type: 'b-win2022'
     mozharness:
         use-magic-mh-args: false
         config:

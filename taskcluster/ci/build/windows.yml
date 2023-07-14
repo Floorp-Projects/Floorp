@@ -311,7 +311,7 @@ win64-plain/debug:
         platform: windows2012-64/debug
         symbol: Bp
         tier: 1
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         max-run-time: 7200
         env:
@@ -403,7 +403,7 @@ win64-plain/opt:
         platform: windows2012-64/opt
         symbol: Bp
         tier: 1
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         max-run-time: 7200
         env:
@@ -792,7 +792,7 @@ win32-rusttests/opt:
         platform: windows2012-32/opt
         symbol: BR
         tier: 1
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         max-run-time: 5400
         env:
@@ -837,7 +837,7 @@ win32-rusttests/debug:
         platform: windows2012-32/debug
         symbol: BR
         tier: 1
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         max-run-time: 5400
         env:
@@ -882,7 +882,7 @@ win64-rusttests/opt:
         platform: windows2012-64/opt
         symbol: BR
         tier: 1
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         max-run-time: 5400
         env:
@@ -924,7 +924,7 @@ win64-rusttests/debug:
         platform: windows2012-64/debug
         symbol: BR
         tier: 1
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         max-run-time: 5400
         env:
@@ -968,7 +968,7 @@ win64-ccov/opt:
         platform: windows2012-64/ccov
         symbol: B
         tier: 2
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         artifacts:
             - name: public/code-coverage-grcov.zip
@@ -1015,7 +1015,7 @@ win64-fuzzing-ccov/opt:
     treeherder:
         platform: windows2012-64/ccov
         symbol: Bocf
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         artifacts:
             - name: public/code-coverage-grcov.zip

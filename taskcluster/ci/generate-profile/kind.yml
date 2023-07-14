@@ -173,7 +173,7 @@ jobs:
             job-name: win32-profile
         treeherder:
             platform: windows2012-32-shippable/opt
-        worker-type: b-win2012
+        worker-type: b-win2022
         worker:
             chain-of-trust: true
             max-run-time: 2400
@@ -202,7 +202,7 @@ jobs:
             job-name: win64-profile
         treeherder:
             platform: windows2012-64-shippable/opt
-        worker-type: b-win2012
+        worker-type: b-win2022
         worker:
             chain-of-trust: true
             max-run-time: 2400
