@@ -725,15 +725,6 @@ void SctpDataChannel::OnDataReceived(DataMessageType type,
 
 void SctpDataChannel::OnTransportReady() {
   RTC_DCHECK_RUN_ON(network_thread_);
-
-  // TODO(bugs.webrtc.org/11547): The transport is configured inside
-  // `PeerConnection::SetupDataChannelTransport_n`, which results in
-  // `SctpDataChannel` getting the OnTransportChannelCreated callback, and then
-  // that's immediately followed by calling `transport->SetDataSink` which is
-  // what triggers the callback to `OnTransportReady()`.
-  // These steps are currently accomplished via two separate PostTask calls to
-  // the signaling thread, but could simply be done in single method call on
-  // the network thread.
   RTC_DCHECK(connected_to_transport());
   RTC_DCHECK(id_n_.HasValue());
 
