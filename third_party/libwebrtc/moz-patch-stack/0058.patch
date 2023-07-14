@@ -78,7 +78,7 @@ index 380e80ce12..253f8cd7de 100644
  
  std::unique_ptr<CallFactoryInterface> CreateCallFactory() {
 diff --git a/call/degraded_call.cc b/call/degraded_call.cc
-index fc76c7be5c..99c32296c3 100644
+index 3f47fcded0..114be134ab 100644
 --- a/call/degraded_call.cc
 +++ b/call/degraded_call.cc
 @@ -129,6 +129,7 @@ bool DegradedCall::FakeNetworkPipeTransportAdapter::SendRtcp(
