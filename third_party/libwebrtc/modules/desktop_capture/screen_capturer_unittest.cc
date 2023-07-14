@@ -57,12 +57,6 @@ class ScreenCapturerTest : public ::testing::Test {
     MaybeCreateDirectxCapturer();
     return true;
   }
-
-  void CreateMagnifierCapturer() {
-    DesktopCaptureOptions options(DesktopCaptureOptions::CreateDefault());
-    options.set_allow_use_magnification_api(true);
-    capturer_ = DesktopCapturer::CreateScreenCapturer(options);
-  }
 #endif  // defined(WEBRTC_WIN)
 
   std::unique_ptr<DesktopCapturer> capturer_;
@@ -185,53 +179,10 @@ TEST_F(ScreenCapturerTest, GdiIsDefault) {
   EXPECT_EQ(frame->capturer_id(), DesktopCapturerId::kScreenCapturerWinGdi);
 }
 
-TEST_F(ScreenCapturerTest, UseMagnifier) {
-  CreateMagnifierCapturer();
-  std::unique_ptr<DesktopFrame> frame;
-  EXPECT_CALL(callback_,
-              OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS, _))
-      .WillOnce(SaveUniquePtrArg(&frame));
-
-  capturer_->Start(&callback_);
-  capturer_->CaptureFrame();
-  ASSERT_TRUE(frame);
-  // Verify Magnifier API or GDI has fallback since the Magnifier API can fail
-  // to capture a frame on some bots.
-  EXPECT_TRUE(frame->capturer_id() ==
-                  DesktopCapturerId::kScreenCapturerWinMagnifier ||
-              frame->capturer_id() == DesktopCapturerId::kScreenCapturerWinGdi);
-}
-
 TEST_F(ScreenCapturerTest, UseDirectxCapturer) {
   if (!CreateDirectxCapturer()) {
     return;
   }
-
-  std::unique_ptr<DesktopFrame> frame;
-  EXPECT_CALL(callback_,
-              OnCaptureResultPtr(DesktopCapturer::Result::SUCCESS, _))
-      .WillOnce(SaveUniquePtrArg(&frame));
-
-  capturer_->Start(&callback_);
-  capturer_->CaptureFrame();
-  ASSERT_TRUE(frame);
-  EXPECT_EQ(frame->capturer_id(), DesktopCapturerId::kScreenCapturerWinDirectx);
-}
-
-TEST_F(ScreenCapturerTest, DirectxPrecedesMagnifier) {
-  // Ensure that both DirecX and Magnifier API are supported.
-  if (!CreateDirectxCapturer()) {
-    return;
-  }
-  CreateMagnifierCapturer();
-  EXPECT_TRUE(capturer_);
-
-  // Enable both DirectX and the Magnifier API and ensure that DirectX is
-  // selected.
-  DesktopCaptureOptions options(DesktopCaptureOptions::CreateDefault());
-  options.set_allow_directx_capturer(true);
-  options.set_allow_use_magnification_api(true);
-  capturer_ = DesktopCapturer::CreateScreenCapturer(options);
 
   std::unique_ptr<DesktopFrame> frame;
   EXPECT_CALL(callback_,
