@@ -526,6 +526,9 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         HomeScreen.homeScreenDisplayed.record(NoExtras())
         HomeScreen.homeScreenViewCount.add()
+        if (!browsingModeManager.mode.isPrivate) {
+            HomeScreen.standardHomepageViewCount.add()
+        }
 
         observeSearchEngineNameChanges()
         observeWallpaperUpdates()
