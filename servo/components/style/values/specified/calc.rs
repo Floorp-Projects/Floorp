@@ -914,6 +914,8 @@ impl CalcNode {
             static_prefs::pref!("layout.css.mod-rem.enabled")
         } else if matches!(function, Pow | Sqrt | Hypot | Log | Exp) {
             static_prefs::pref!("layout.css.exp.enabled")
+        } else if matches!(function, Abs) {
+            static_prefs::pref!("layout.css.abs-sign.enabled")
         } else {
             true
         };
