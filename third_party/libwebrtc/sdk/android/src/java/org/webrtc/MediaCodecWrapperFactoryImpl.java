@@ -89,6 +89,11 @@ class MediaCodecWrapperFactoryImpl implements MediaCodecWrapperFactory {
     }
 
     @Override
+    public MediaFormat getOutputFormat(int index) {
+      return mediaCodec.getOutputFormat(index);
+    }
+
+    @Override
     public ByteBuffer getInputBuffer(int index) {
       return mediaCodec.getInputBuffer(index);
     }
@@ -111,11 +116,6 @@ class MediaCodecWrapperFactoryImpl implements MediaCodecWrapperFactory {
     @Override
     public MediaCodecInfo getCodecInfo() {
       return mediaCodec.getCodecInfo();
-    }
-
-    @Override
-    public MediaFormat getOutputFormat(int index) {
-      return mediaCodec.getOutputFormat(index);
     }
   }
 

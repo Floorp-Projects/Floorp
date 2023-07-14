@@ -46,6 +46,8 @@ interface MediaCodecWrapper {
 
   MediaFormat getOutputFormat();
 
+  MediaFormat getOutputFormat(int index);
+
   ByteBuffer getInputBuffer(int index);
 
   ByteBuffer getOutputBuffer(int index);
@@ -55,6 +57,4 @@ interface MediaCodecWrapper {
   void setParameters(Bundle params);
 
   MediaCodecInfo getCodecInfo();
-
-  MediaFormat getOutputFormat(int index);
 }

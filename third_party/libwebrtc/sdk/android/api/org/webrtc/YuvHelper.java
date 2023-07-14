@@ -36,8 +36,8 @@ public class YuvHelper {
     final int dstStartU = dstStartY + dstStrideY * dstSliceHeightY;
     final int dstEndU = dstStartU + dstStrideU * chromaHeight;
     final int dstStartV = dstStartU + dstStrideU * dstSliceHeightU;
-    // The last line doesn't need any padding, so  use chromaWidth
-    // to calculate the exact end position.
+    // The last line doesn't need any padding, so  use chromaWidth to calculate the exact end
+    // position.
     final int dstEndV = dstStartV + dstStrideU * (chromaHeight - 1) + chromaWidth;
     if (dst.capacity() < dstEndV) {
       throw new IllegalArgumentException("Expected destination buffer capacity to be at least "
@@ -63,6 +63,14 @@ public class YuvHelper {
       ByteBuffer srcV, int srcStrideV, ByteBuffer dst, int dstWidth, int dstHeight) {
     I420Copy(srcY, srcStrideY, srcU, srcStrideU, srcV, srcStrideV, dst, dstWidth, dstHeight,
         dstWidth, dstHeight, (dstWidth + 1) / 2, (dstHeight + 1) / 2);
+  }
+
+  /** Helper method for copying I420 to buffer with the given stride and slice height. */
+  public static void I420Copy(ByteBuffer srcY, int srcStrideY, ByteBuffer srcU, int srcStrideU,
+      ByteBuffer srcV, int srcStrideV, ByteBuffer dst, int dstWidth, int dstHeight, int dstStride,
+      int dstSliceHeight) {
+    I420Copy(srcY, srcStrideY, srcU, srcStrideU, srcV, srcStrideV, dst, dstWidth, dstHeight,
+        dstStride, dstSliceHeight, (dstStride + 1) / 2, (dstSliceHeight + 1) / 2);
   }
 
   /**
