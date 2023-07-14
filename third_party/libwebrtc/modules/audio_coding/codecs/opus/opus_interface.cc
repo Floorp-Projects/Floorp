@@ -11,7 +11,6 @@
 #include "modules/audio_coding/codecs/opus/opus_interface.h"
 
 #include <cstdlib>
-
 #include <numeric>
 
 #include "api/array_view.h"

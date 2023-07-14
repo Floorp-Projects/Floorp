@@ -51,12 +51,11 @@ class VideoProcessorTest : public ::testing::Test {
     decoders_.push_back(std::unique_ptr<VideoDecoder>(decoder_mock_));
 
     ExpectInit();
-    q_.SendTask(
-        [this] {
-          video_processor_ = std::make_unique<VideoProcessor>(
-              &encoder_mock_, &decoders_, &frame_reader_mock_, config_, &stats_,
-              &encoded_frame_writers_, /*decoded_frame_writers=*/nullptr);
-        });
+    q_.SendTask([this] {
+      video_processor_ = std::make_unique<VideoProcessor>(
+          &encoder_mock_, &decoders_, &frame_reader_mock_, config_, &stats_,
+          &encoded_frame_writers_, /*decoded_frame_writers=*/nullptr);
+    });
   }
 
   ~VideoProcessorTest() {

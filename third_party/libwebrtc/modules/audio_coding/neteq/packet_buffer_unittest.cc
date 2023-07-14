@@ -134,7 +134,7 @@ TEST(PacketBuffer, InsertPacket) {
   EXPECT_FALSE(buffer.Empty());
   EXPECT_EQ(1u, buffer.NumPacketsInBuffer());
   const Packet* next_packet = buffer.PeekNextPacket();
-  EXPECT_EQ(packet, *next_packet);  // Compare contents.
+  EXPECT_EQ(packet, *next_packet);       // Compare contents.
   EXPECT_CALL(decoder_database, Die());  // Called when object is deleted.
 
   // Do not explicitly flush buffer or delete packet to test that it is deleted

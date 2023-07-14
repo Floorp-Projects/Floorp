@@ -229,8 +229,8 @@ EncodeDecodeTest::EncodeDecodeTest() = default;
 
 void EncodeDecodeTest::Perform() {
   const std::map<int, SdpAudioFormat> send_codecs = {
-      {107, {"L16", 8000, 1}},   {108, {"L16", 16000, 1}},
-      {109, {"L16", 32000, 1}},  {0, {"PCMU", 8000, 1}},
+      {107, {"L16", 8000, 1}},  {108, {"L16", 16000, 1}},
+      {109, {"L16", 32000, 1}}, {0, {"PCMU", 8000, 1}},
       {8, {"PCMA", 8000, 1}},
 #ifdef WEBRTC_CODEC_ILBC
       {102, {"ILBC", 8000, 1}},
