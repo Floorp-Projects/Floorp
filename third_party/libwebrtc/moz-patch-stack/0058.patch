@@ -111,10 +111,10 @@ index a77e472ec1..a5bf88e547 100644
    // Conference Mixer relies on VAD decisions and fails without them.
    neteq_config.enable_post_decode_vad = true;
 diff --git a/modules/rtp_rtcp/include/flexfec_receiver.h b/modules/rtp_rtcp/include/flexfec_receiver.h
-index 3cf4c3845e..29d9e72786 100644
+index a869c8ad41..b6a33882d1 100644
 --- a/modules/rtp_rtcp/include/flexfec_receiver.h
 +++ b/modules/rtp_rtcp/include/flexfec_receiver.h
-@@ -29,9 +29,11 @@ class Clock;
+@@ -30,9 +30,11 @@ class Clock;
  
  class FlexfecReceiver {
   public:
@@ -127,10 +127,10 @@ index 3cf4c3845e..29d9e72786 100644
                    uint32_t ssrc,
                    uint32_t protected_media_ssrc,
 diff --git a/modules/rtp_rtcp/source/flexfec_receiver.cc b/modules/rtp_rtcp/source/flexfec_receiver.cc
-index 3f345cd6d2..bd67de1f83 100644
+index 132ed164f9..d852c32e3c 100644
 --- a/modules/rtp_rtcp/source/flexfec_receiver.cc
 +++ b/modules/rtp_rtcp/source/flexfec_receiver.cc
-@@ -29,6 +29,7 @@ constexpr int kPacketLogIntervalMs = 10000;
+@@ -31,6 +31,7 @@ constexpr TimeDelta kPacketLogInterval = TimeDelta::Seconds(10);
  
  }  // namespace
  
@@ -138,7 +138,7 @@ index 3f345cd6d2..bd67de1f83 100644
  FlexfecReceiver::FlexfecReceiver(
      uint32_t ssrc,
      uint32_t protected_media_ssrc,
-@@ -37,6 +38,7 @@ FlexfecReceiver::FlexfecReceiver(
+@@ -39,6 +40,7 @@ FlexfecReceiver::FlexfecReceiver(
                        ssrc,
                        protected_media_ssrc,
                        recovered_packet_receiver) {}
