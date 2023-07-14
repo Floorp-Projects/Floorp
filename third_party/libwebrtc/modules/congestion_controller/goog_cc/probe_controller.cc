@@ -157,7 +157,8 @@ ProbeControllerConfig::~ProbeControllerConfig() = default;
 
 ProbeController::ProbeController(const FieldTrialsView* key_value_config,
                                  RtcEventLog* event_log)
-    : enable_periodic_alr_probing_(false),
+    : network_available_(true),
+      enable_periodic_alr_probing_(false),
       in_rapid_recovery_experiment_(absl::StartsWith(
           key_value_config->Lookup(kBweRapidRecoveryExperiment),
           "Enabled")),
@@ -368,7 +369,6 @@ void ProbeController::SetNetworkStateEstimate(
 }
 
 void ProbeController::Reset(Timestamp at_time) {
-  network_available_ = true;
   bandwidth_limited_cause_ = BandwidthLimitedCause::kDelayBasedLimited;
   state_ = State::kInit;
   min_bitrate_to_probe_further_ = DataRate::PlusInfinity();
