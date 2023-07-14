@@ -26,6 +26,9 @@
 
 namespace webrtc {
 
+// This is test API and is in development, so it can be changed/removed without
+// notice.
+
 // TestAudioDeviceModule implements an AudioDevice module that can act both as a
 // capturer and a renderer. It will use 10ms audio frames.
 class TestAudioDeviceModule : public AudioDeviceModule {
