@@ -593,7 +593,7 @@ if (rtc_include_tests) {
         "../media:rtc_simulcast_encoder_adapter",
         "../modules/audio_coding",
         "../modules/audio_device",
-        "../modules/audio_device:audio_device_impl",
+        "../modules/audio_device:test_audio_device_module",
         "../modules/audio_mixer:audio_mixer_impl",
         "../modules/rtp_rtcp",
         "../modules/rtp_rtcp:rtp_rtcp_format",

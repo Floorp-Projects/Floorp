@@ -126,7 +126,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../../call:simulated_network",
       "../../media:rtc_audio_video",
       "../../media:rtc_media_engine_defaults",
-      "../../modules/audio_device:audio_device_impl",
+      "../../modules/audio_device:test_audio_device_module",
       "../../p2p:rtc_p2p",
       "../../pc:pc_test_utils",
       "../../pc:peerconnection_wrapper",
