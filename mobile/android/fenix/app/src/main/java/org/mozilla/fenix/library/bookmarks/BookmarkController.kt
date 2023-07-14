@@ -84,7 +84,7 @@ class DefaultBookmarkController(
     private val showSnackbar: (String) -> Unit,
     private val deleteBookmarkNodes: (Set<BookmarkNode>, BookmarkRemoveType) -> Unit,
     private val deleteBookmarkFolder: (Set<BookmarkNode>) -> Unit,
-    private val showTabTray: () -> Unit,
+    private val showTabTray: (Boolean) -> Unit,
     private val warnLargeOpenAll: (Int, () -> Unit) -> Unit,
     private val settings: Settings,
 ) : BookmarkController {
@@ -163,7 +163,7 @@ class DefaultBookmarkController(
 
     override fun handleOpeningBookmark(item: BookmarkNode, mode: BrowsingMode) {
         openInNewTab(item.url!!, mode)
-        showTabTray()
+        showTabTray(mode.isPrivate)
     }
 
     private fun extractURLsFromTree(node: BookmarkNode): MutableList<String> {
@@ -199,7 +199,7 @@ class DefaultBookmarkController(
                 }
                 activity.browsingModeManager.mode =
                     BrowsingMode.fromBoolean(mode == BrowsingMode.Private)
-                showTabTray()
+                showTabTray(mode.isPrivate)
             }
 
             // Warn user if more than maximum number of bookmarks are being opened
