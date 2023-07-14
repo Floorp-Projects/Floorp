@@ -843,7 +843,7 @@ void SctpDataChannel::SetState(DataState state) {
 
 // RTC_RUN_ON(network_thread_).
 void SctpDataChannel::DeliverQueuedReceivedData() {
-  if (!observer_) {
+  if (!observer_ || state_ != kOpen) {
     return;
   }
 
