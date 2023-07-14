@@ -187,18 +187,8 @@ bool ShouldAdapterChangeTriggerNetworkChange(rtc::AdapterType old_type,
 }
 
 bool PreferGlobalIPv6Address(const webrtc::FieldTrialsView* field_trials) {
-  // Bug fix to prefer global IPv6 address over link local.
-  // Field trial key reserved in bugs.webrtc.org/14334
-  if (field_trials &&
-      field_trials->IsEnabled("WebRTC-IPv6NetworkResolutionFixes")) {
-    webrtc::FieldTrialParameter<bool> prefer_global_ipv6_address_enabled(
-        "PreferGlobalIPv6Address", false);
-    webrtc::ParseFieldTrial(
-        {&prefer_global_ipv6_address_enabled},
-        field_trials->Lookup("WebRTC-IPv6NetworkResolutionFixes"));
-    return prefer_global_ipv6_address_enabled;
-  }
-  return false;
+  // TODO(bugs.webrtc.org/14334) cleanup
+  return true;
 }
 
 #if defined(WEBRTC_WIN)

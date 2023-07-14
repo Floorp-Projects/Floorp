@@ -32,19 +32,8 @@ namespace cricket {
 namespace {
 
 bool ResolveStunHostnameForFamily(const webrtc::FieldTrialsView& field_trials) {
-  // Bug fix for STUN hostname resolution on IPv6.
-  // Field trial key reserved in bugs.webrtc.org/14334
-  static constexpr char field_trial_name[] =
-      "WebRTC-IPv6NetworkResolutionFixes";
-  if (!field_trials.IsEnabled(field_trial_name)) {
-    return false;
-  }
-
-  webrtc::FieldTrialParameter<bool> resolve_stun_hostname_for_family(
-      "ResolveStunHostnameForFamily", /*default_value=*/false);
-  webrtc::ParseFieldTrial({&resolve_stun_hostname_for_family},
-                          field_trials.Lookup(field_trial_name));
-  return resolve_stun_hostname_for_family;
+  // TODO(bugs.webrtc.org/14334) cleanup
+  return true;
 }
 
 }  // namespace
