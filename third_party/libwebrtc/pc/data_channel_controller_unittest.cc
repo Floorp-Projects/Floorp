@@ -51,15 +51,8 @@ class MockDataChannelTransport : public webrtc::DataChannelTransportInterface {
 // behavior by calling those methods from within its destructor.
 class DataChannelControllerForTest : public DataChannelController {
  public:
-  explicit DataChannelControllerForTest(
-      PeerConnectionInternal* pc,
-      DataChannelTransportInterface* transport = nullptr)
-      : DataChannelController(pc) {
-    if (transport) {
-      network_thread()->BlockingCall(
-          [&] { SetupDataChannelTransport_n(transport); });
-    }
-  }
+  explicit DataChannelControllerForTest(PeerConnectionInternal* pc)
+      : DataChannelController(pc) {}
 
   ~DataChannelControllerForTest() override {
     network_thread()->BlockingCall(
@@ -150,7 +143,9 @@ TEST_F(DataChannelControllerTest, MaxChannels) {
                                                          : rtc::SSL_CLIENT);
   });
 
-  DataChannelControllerForTest dcc(pc_.get(), &transport);
+  DataChannelControllerForTest dcc(pc_.get());
+  pc_->network_thread()->BlockingCall(
+      [&] { dcc.set_data_channel_transport(&transport); });
 
   // Allocate the maximum number of channels + 1. Inside the loop, the creation
   // process will allocate a stream id for each channel.
@@ -176,7 +171,9 @@ TEST_F(DataChannelControllerTest, NoStreamIdReuseWhileClosing) {
   });
 
   NiceMock<MockDataChannelTransport> transport;  // Wider scope than `dcc`.
-  DataChannelControllerForTest dcc(pc_.get(), &transport);
+  DataChannelControllerForTest dcc(pc_.get());
+  pc_->network_thread()->BlockingCall(
+      [&] { dcc.set_data_channel_transport(&transport); });
 
   // Create the first channel and check that we got the expected, first sid.
   auto channel1 = dcc.InternalCreateDataChannelWithProxy(
