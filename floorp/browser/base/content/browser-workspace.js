@@ -9,9 +9,9 @@ const WORKSPACE_CURRENT_PREF = "floorp.browser.workspace.current";
 const WORKSPACE_ALL_PREF = "floorp.browser.workspace.all";
 const WORKSPACE_TABS_PREF = "floorp.browser.workspace.tabs.state";
 const l10n = new Localization(["browser/floorp.ftl"], true);
-const defaultWorkspaceName = Services.prefs.getStringPref(
-  WORKSPACE_ALL_PREF
-).split(",")[0];
+const defaultWorkspaceName = Services.prefs
+  .getStringPref(WORKSPACE_ALL_PREF)
+  .split(",")[0];
 
 const workspaceFunctions = {
   eventListeners: {
@@ -68,10 +68,17 @@ const workspaceFunctions = {
           elems[elems.length - 1].setAttribute("floorp-lastVisibleTab", "true");
           workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
 
-          let currentWorkspace = Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF);
-          let count = workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceTabLength(currentWorkspace);
-          if(count == 0) {
-            workspaceFunctions.manageWorkspaceFunctions.deleteworkspace(currentWorkspace);
+          let currentWorkspace = Services.prefs.getStringPref(
+            WORKSPACE_CURRENT_PREF
+          );
+          let count =
+            workspaceFunctions.manageWorkspaceFunctions.checkWorkspaceTabLength(
+              currentWorkspace
+            );
+          if (count == 0) {
+            workspaceFunctions.manageWorkspaceFunctions.deleteworkspace(
+              currentWorkspace
+            );
             workspaceFunctions.manageWorkspaceFunctions.changeWorkspaceToBeforeNext();
           }
         }, 400);
@@ -105,11 +112,8 @@ const workspaceFunctions = {
       },
 
       handleWorkspaceTabPrefChange() {
-        document.querySelector(
-          "#workspace-button"
-        ).style.display = Services.prefs.getBoolPref(WORKSPACE_TAB_ENABLED_PREF)
-          ? ""
-          : "none";
+        document.querySelector("#workspace-button").style.display =
+          Services.prefs.getBoolPref(WORKSPACE_TAB_ENABLED_PREF) ? "" : "none";
         if (!Services.prefs.getBoolPref(WORKSPACE_TAB_ENABLED_PREF)) {
           document
             .querySelector(`[floorp-firstVisibleTab]`)
@@ -140,7 +144,10 @@ const workspaceFunctions = {
           WORKSPACE_CURRENT_PREF,
           l10n.formatValueSync("workspace-default")
         );
-        Services.prefs.setStringPref(WORKSPACE_ALL_PREF, l10n.formatValueSync("workspace-default"));
+        Services.prefs.setStringPref(
+          WORKSPACE_ALL_PREF,
+          l10n.formatValueSync("workspace-default")
+        );
       }
 
       let tabs = gBrowser.tabs;
@@ -331,7 +338,6 @@ const workspaceFunctions = {
         input.value != l10n.formatValueSync("workspace-default") &&
         pattern.test(input.value)
       ) {
-
         input.value = input.value.replace(/\s+/g, "-");
         let workspaceAll = Services.prefs
           .getStringPref(WORKSPACE_ALL_PREF)
@@ -589,28 +595,31 @@ const workspaceFunctions = {
           gBrowser.addTab(newtabURL, {
             skipAnimation: true,
             inBackground: false,
-            triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal(),
           });
         }
       }
       workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace();
       workspaceFunctions.manageWorkspaceFunctions.saveWorkspaceState();
     },
-    
-    checkWorkspaceTabLength(name) { 
-      const data = JSON.parse(Services.prefs.getStringPref(WORKSPACE_TABS_PREF));
+
+    checkWorkspaceTabLength(name) {
+      const data = JSON.parse(
+        Services.prefs.getStringPref(WORKSPACE_TABS_PREF)
+      );
       let count = 0;
       for (let i = 0; i < data.length; i++) {
         const obj = data[i];
         const keys = Object.keys(obj);
         const workspaceValue = obj[keys[0]].workspace;
-        
+
         if (workspaceValue == name) {
-          count ++;
+          count++;
         }
       }
       return count;
-    }
+    },
   },
 
   tabFunctions: {
@@ -620,7 +629,8 @@ const workspaceFunctions = {
         tab == gBrowser.selectedTab &&
         workspaceFunctions.tabFunctions.getNextToWorkspaceTab() != null
       ) {
-        gBrowser.selectedTab = workspaceFunctions.tabFunctions.getNextToWorkspaceTab();
+        gBrowser.selectedTab =
+          workspaceFunctions.tabFunctions.getNextToWorkspaceTab();
       }
 
       let willMoveWorkspace = workspace;
@@ -826,38 +836,49 @@ const workspaceFunctions = {
       let tabsURLString = tabsURL.join(",");
       let workspaceState = Services.prefs.getStringPref(WORKSPACE_TABS_PREF);
       let workspaceAll = Services.prefs.getStringPref(WORKSPACE_ALL_PREF);
-      let currentWorkspace = Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF);
+      let currentWorkspace = Services.prefs.getStringPref(
+        WORKSPACE_CURRENT_PREF
+      );
 
       let backupDataObject = {
         [timeStamps]: {
           tabsURL: tabsURLString,
-          workspaceState: workspaceState,
-          workspaceAll: workspaceAll,
-          currentWorkspace: currentWorkspace,
+          workspaceState,
+          workspaceAll,
+          currentWorkspace,
         },
       };
 
       let backupDataString = JSON.stringify(backupDataObject);
       const file = FileUtils.getFile("ProfD", ["floorp-workspace-backup.json"]);
-      const converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
-                        createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+      const converter = Cc[
+        "@mozilla.org/intl/scriptableunicodeconverter"
+      ].createInstance(Ci.nsIScriptableUnicodeConverter);
       converter.charset = "UTF-8";
 
       if (file.exists()) {
         backupDataString = "\r" + backupDataString;
-        const fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
-          Ci.nsIFileInputStream
-        );
+        const fstream = Cc[
+          "@mozilla.org/network/file-input-stream;1"
+        ].createInstance(Ci.nsIFileInputStream);
         fstream.init(file, -1, 0, 0);
-        const inputStream = NetUtil.readInputStreamToString(fstream, fstream.available());
+        const inputStream = NetUtil.readInputStreamToString(
+          fstream,
+          fstream.available()
+        );
         fstream.close();
         let lines = inputStream.split("\r");
-        
+
         //if backup data is more than 10, delete old data
         if (lines.length > 9) {
           lines.splice(0, 1);
           let newBackupDataString = lines.join("\r");
-          const outputStream = FileUtils.openFileOutputStream(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND);
+          const outputStream = FileUtils.openFileOutputStream(
+            file,
+            FileUtils.MODE_WRONLY |
+              FileUtils.MODE_CREATE |
+              FileUtils.MODE_APPEND
+          );
           const data = converter.convertToByteArray(newBackupDataString);
           file.remove(false);
           outputStream.write(newBackupDataString, data.length);
@@ -866,7 +887,10 @@ const workspaceFunctions = {
       }
 
       //save backup data
-      const outputStream = FileUtils.openFileOutputStream(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND);
+      const outputStream = FileUtils.openFileOutputStream(
+        file,
+        FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND
+      );
       const data = converter.convertToByteArray(backupDataString);
       outputStream.write(backupDataString, data.length);
       outputStream.close();
@@ -875,11 +899,14 @@ const workspaceFunctions = {
     restoreWorkspace(lineNum) {
       const file = FileUtils.getFile("ProfD", ["floorp-workspace-backup.json"]);
       //get backup data via NetUtil.jsm
-      const fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
-        Ci.nsIFileInputStream
-      );
+      const fstream = Cc[
+        "@mozilla.org/network/file-input-stream;1"
+      ].createInstance(Ci.nsIFileInputStream);
       fstream.init(file, -1, 0, 0);
-      const inputStream = NetUtil.readInputStreamToString(fstream, fstream.available());
+      const inputStream = NetUtil.readInputStreamToString(
+        fstream,
+        fstream.available()
+      );
       fstream.close();
 
       //read backup data line by line
@@ -888,23 +915,28 @@ const workspaceFunctions = {
 
       //parse backup data
       let backupDataObject = JSON.parse(targetLine);
-      let tabsURL = backupDataObject[Object.keys(backupDataObject)[0]].tabsURL.split(",");
-      let workspaceState = backupDataObject[Object.keys(backupDataObject)[0]].workspaceState;
-      let workspaceAll = backupDataObject[Object.keys(backupDataObject)[0]].workspaceAll;
-      let currentWorkspace = backupDataObject[Object.keys(backupDataObject)[0]].currentWorkspace;
+      let tabsURL =
+        backupDataObject[Object.keys(backupDataObject)[0]].tabsURL.split(",");
+      let workspaceState =
+        backupDataObject[Object.keys(backupDataObject)[0]].workspaceState;
+      let workspaceAll =
+        backupDataObject[Object.keys(backupDataObject)[0]].workspaceAll;
+      let currentWorkspace =
+        backupDataObject[Object.keys(backupDataObject)[0]].currentWorkspace;
 
       //restore tabs
       let tabs = gBrowser.tabs;
-      for(let i = 0; i < tabs.length; i++) {
+      for (let i = 0; i < tabs.length; i++) {
         gBrowser.tabs[i].remove();
       }
 
-      for(let i = 0; i < tabsURL.length; i++) {
+      for (let i = 0; i < tabsURL.length; i++) {
         gBrowser.addTab(tabsURL[i], {
           skipAnimation: true,
           inBackground: true,
           skipLoad: false,
-          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+          triggeringPrincipal:
+            Services.scriptSecurityManager.getSystemPrincipal(),
         });
       }
 
@@ -912,11 +944,11 @@ const workspaceFunctions = {
       Services.prefs.setStringPref(WORKSPACE_TABS_PREF, workspaceState);
       Services.prefs.setStringPref(WORKSPACE_ALL_PREF, workspaceAll);
       Services.prefs.setStringPref(WORKSPACE_CURRENT_PREF, currentWorkspace);
-    }
-  }
+    },
+  },
 };
 
-const setEvenyListeners = function() {
+const setEvenyListeners = function () {
   gBrowser.tabContainer.addEventListener(
     "TabOpen",
     workspaceFunctions.eventListeners.tabAddEventListeners.handleTabOpen
@@ -951,7 +983,7 @@ const setEvenyListeners = function() {
   );
 };
 
-startWorkspace = function() {
+startWorkspace = function () {
   let list = Services.wm.getEnumerator("navigator:browser");
   while (list.hasMoreElements()) {
     if (list.getNext() != window) {
@@ -959,14 +991,19 @@ startWorkspace = function() {
     }
   }
 
-  //run codes 
-  if (typeof gBrowser !== 'undefined') {
-    window.setTimeout(workspaceFunctions.manageWorkspaceFunctions.initWorkspace, 700);
-    window.setTimeout(workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace, 1100);
+  //run codes
+  if (typeof gBrowser !== "undefined") {
+    window.setTimeout(
+      workspaceFunctions.manageWorkspaceFunctions.initWorkspace,
+      700
+    );
+    window.setTimeout(
+      workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace,
+      1100
+    );
     window.setTimeout(setEvenyListeners, 1300);
   } else {
     window.setTimeout(startWorkspace, 100);
-    return;
   }
 };
 
