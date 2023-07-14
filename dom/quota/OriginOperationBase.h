@@ -45,9 +45,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
   State mState;
   bool mActorDestroyed;
 
- protected:
-  bool mNeedsStorageInit;
-
  public:
   void NoteActorDestroyed() {
     AssertIsOnOwningThread();
@@ -77,8 +74,7 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
         Runnable(aRunnableName),
         mResultCode(NS_OK),
         mState(State_Initial),
-        mActorDestroyed(false),
-        mNeedsStorageInit(false) {}
+        mActorDestroyed(false) {}
 
   // Reference counted.
   virtual ~OriginOperationBase() {

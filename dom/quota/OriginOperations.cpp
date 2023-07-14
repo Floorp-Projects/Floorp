@@ -935,9 +935,6 @@ GetOriginUsageOp::GetOriginUsageOp(const UsageRequestParams& aParams)
   AssertIsOnOwningThread();
   MOZ_ASSERT(aParams.type() == UsageRequestParams::TOriginUsageParams);
 
-  // Overwrite OriginOperationBase default values.
-  mNeedsStorageInit = true;
-
   // Overwrite GetOriginUsageOp default values.
   mFromMemory = mParams.fromMemory();
 }
@@ -1031,9 +1028,6 @@ void GetOriginUsageOp::GetResponse(UsageRequestResponse& aResponse) {
 StorageNameOp::StorageNameOp()
     : QuotaRequestBase("dom::quota::StorageNameOp", /* aExclusive */ false) {
   AssertIsOnOwningThread();
-
-  // Overwrite OriginOperationBase default values.
-  mNeedsStorageInit = false;
 }
 
 RefPtr<DirectoryLock> StorageNameOp::CreateDirectoryLock() { return nullptr; }
@@ -1062,9 +1056,6 @@ InitializedRequestBase::InitializedRequestBase(const char* aRunnableName)
     : QuotaRequestBase(aRunnableName, /* aExclusive */ false),
       mInitialized(false) {
   AssertIsOnOwningThread();
-
-  // Overwrite OriginOperationBase default values.
-  mNeedsStorageInit = false;
 }
 
 RefPtr<DirectoryLock> InitializedRequestBase::CreateDirectoryLock() {
@@ -1115,9 +1106,6 @@ void TemporaryStorageInitializedOp::GetResponse(RequestResponse& aResponse) {
 InitOp::InitOp()
     : QuotaRequestBase("dom::quota::InitOp", /* aExclusive */ false) {
   AssertIsOnOwningThread();
-
-  // Overwrite OriginOperationBase default values.
-  mNeedsStorageInit = false;
 }
 
 nsresult InitOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
@@ -1140,9 +1128,6 @@ InitTemporaryStorageOp::InitTemporaryStorageOp()
     : QuotaRequestBase("dom::quota::InitTemporaryStorageOp",
                        /* aExclusive */ false) {
   AssertIsOnOwningThread();
-
-  // Overwrite OriginOperationBase default values.
-  mNeedsStorageInit = false;
 }
 
 nsresult InitTemporaryStorageOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
@@ -1171,9 +1156,6 @@ InitializeOriginRequestBase::InitializeOriginRequestBase(
       mPrincipalInfo(aPrincipalInfo),
       mCreated(false) {
   AssertIsOnOwningThread();
-
-  // Overwrite OriginOperationBase default values.
-  mNeedsStorageInit = false;
 
   // Overwrite NormalOriginOperationBase default values.
   mPersistenceType.SetValue(aPersistenceType);
@@ -1333,9 +1315,6 @@ ResetOrClearOp::ResetOrClearOp(bool aClear)
     : QuotaRequestBase("dom::quota::ResetOrClearOp", /* aExclusive */ true),
       mClear(aClear) {
   AssertIsOnOwningThread();
-
-  // Overwrite OriginOperationBase default values.
-  mNeedsStorageInit = false;
 }
 
 void ResetOrClearOp::DeleteFiles(QuotaManager& aQuotaManager) {
@@ -1701,9 +1680,6 @@ ResetOriginOp::ResetOriginOp(const RequestParams& aParams)
   const auto origin =
       QuotaManager::GetOriginFromValidatedPrincipalInfo(params.principalInfo());
 
-  // Overwrite OriginOperationBase default values.
-  mNeedsStorageInit = false;
-
   // Overwrite NormalOriginOperationBase default values.
   if (params.persistenceTypeIsExplicit()) {
     mPersistenceType.SetValue(params.persistenceType());
@@ -1906,9 +1882,6 @@ EstimateOp::EstimateOp(const EstimateParams& aParams)
     : QuotaRequestBase("dom::quota::EstimateOp", /* aExclusive */ false),
       mParams(aParams) {
   AssertIsOnOwningThread();
-
-  // Overwrite OriginOperationBase default values.
-  mNeedsStorageInit = true;
 }
 
 nsresult EstimateOp::DoInit(QuotaManager& aQuotaManager) {
