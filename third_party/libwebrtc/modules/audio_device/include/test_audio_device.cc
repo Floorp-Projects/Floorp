@@ -22,7 +22,9 @@
 #include "api/array_view.h"
 #include "api/make_ref_counted.h"
 #include "common_audio/wav_file.h"
+#include "modules/audio_device/audio_device_impl.h"
 #include "modules/audio_device/include/audio_device_default.h"
+#include "modules/audio_device/test_audio_device_impl.h"
 #include "rtc_base/buffer.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
@@ -43,164 +45,23 @@ namespace {
 constexpr int kFrameLengthUs = 10000;
 constexpr int kFramesPerSecond = rtc::kNumMicrosecsPerSec / kFrameLengthUs;
 
-// TestAudioDeviceModule implements an AudioDevice module that can act both as a
-// capturer and a renderer. It will use 10ms audio frames.
-class TestAudioDeviceModuleImpl
-    : public webrtc_impl::AudioDeviceModuleDefault<TestAudioDeviceModule> {
+class TestAudioDeviceModuleImpl : public AudioDeviceModuleImpl {
  public:
-  // Creates a new TestAudioDeviceModule. When capturing or playing, 10 ms audio
-  // frames will be processed every 10ms / `speed`.
-  // `capturer` is an object that produces audio data. Can be nullptr if this
-  // device is never used for recording.
-  // `renderer` is an object that receives audio data that would have been
-  // played out. Can be nullptr if this device is never used for playing.
-  // Use one of the Create... functions to get these instances.
-  TestAudioDeviceModuleImpl(TaskQueueFactory* task_queue_factory,
-                            std::unique_ptr<Capturer> capturer,
-                            std::unique_ptr<Renderer> renderer,
-                            float speed = 1)
-      : task_queue_factory_(task_queue_factory),
-        capturer_(std::move(capturer)),
-        renderer_(std::move(renderer)),
-        process_interval_us_(kFrameLengthUs / speed),
-        audio_callback_(nullptr),
-        rendering_(false),
-        capturing_(false) {
-    auto good_sample_rate = [](int sr) {
-      return sr == 8000 || sr == 16000 || sr == 32000 || sr == 44100 ||
-             sr == 48000;
-    };
+  TestAudioDeviceModuleImpl(
+      TaskQueueFactory* task_queue_factory,
+      std::unique_ptr<TestAudioDeviceModule::Capturer> capturer,
+      std::unique_ptr<TestAudioDeviceModule::Renderer> renderer,
+      float speed = 1)
+      : AudioDeviceModuleImpl(
+            AudioLayer::kDummyAudio,
+            std::make_unique<TestAudioDevice>(task_queue_factory,
+                                              std::move(capturer),
+                                              std::move(renderer),
+                                              speed),
+            task_queue_factory,
+            /*create_detached=*/true) {}
 
-    if (renderer_) {
-      const int sample_rate = renderer_->SamplingFrequency();
-      playout_buffer_.resize(
-          SamplesPerFrame(sample_rate) * renderer_->NumChannels(), 0);
-      RTC_CHECK(good_sample_rate(sample_rate));
-    }
-    if (capturer_) {
-      RTC_CHECK(good_sample_rate(capturer_->SamplingFrequency()));
-    }
-  }
-
-  ~TestAudioDeviceModuleImpl() override {
-    StopPlayout();
-    StopRecording();
-  }
-
-  int32_t Init() override {
-    task_queue_ =
-        std::make_unique<rtc::TaskQueue>(task_queue_factory_->CreateTaskQueue(
-            "TestAudioDeviceModuleImpl", TaskQueueFactory::Priority::NORMAL));
-
-    RepeatingTaskHandle::Start(task_queue_->Get(), [this]() {
-      ProcessAudio();
-      return TimeDelta::Micros(process_interval_us_);
-    });
-    return 0;
-  }
-
-  int32_t RegisterAudioCallback(AudioTransport* callback) override {
-    MutexLock lock(&lock_);
-    RTC_DCHECK(callback || audio_callback_);
-    audio_callback_ = callback;
-    return 0;
-  }
-
-  int32_t StartPlayout() override {
-    MutexLock lock(&lock_);
-    RTC_CHECK(renderer_);
-    rendering_ = true;
-    return 0;
-  }
-
-  int32_t StopPlayout() override {
-    MutexLock lock(&lock_);
-    rendering_ = false;
-    return 0;
-  }
-
-  int32_t StartRecording() override {
-    MutexLock lock(&lock_);
-    RTC_CHECK(capturer_);
-    capturing_ = true;
-    return 0;
-  }
-
-  int32_t StopRecording() override {
-    MutexLock lock(&lock_);
-    capturing_ = false;
-    return 0;
-  }
-
-  bool Playing() const override {
-    MutexLock lock(&lock_);
-    return rendering_;
-  }
-
-  bool Recording() const override {
-    MutexLock lock(&lock_);
-    return capturing_;
-  }
-
-  // Blocks forever until the Recorder stops producing data.
-  void WaitForRecordingEnd() override {
-    done_capturing_.Wait(rtc::Event::kForever);
-  }
-
- private:
-  void ProcessAudio() {
-    MutexLock lock(&lock_);
-    if (capturing_) {
-      // Capture 10ms of audio. 2 bytes per sample.
-      const bool keep_capturing = capturer_->Capture(&recording_buffer_);
-      uint32_t new_mic_level = 0;
-      if (recording_buffer_.size() > 0) {
-        audio_callback_->RecordedDataIsAvailable(
-            recording_buffer_.data(),
-            recording_buffer_.size() / capturer_->NumChannels(),
-            2 * capturer_->NumChannels(), capturer_->NumChannels(),
-            capturer_->SamplingFrequency(), /*totalDelayMS=*/0,
-            /*clockDrift=*/0,
-            /*currentMicLevel=*/0, /*keyPressed=*/false, new_mic_level,
-            absl::make_optional(rtc::TimeNanos()));
-      }
-      if (!keep_capturing) {
-        capturing_ = false;
-        done_capturing_.Set();
-      }
-    }
-    if (rendering_) {
-      size_t samples_out = 0;
-      int64_t elapsed_time_ms = -1;
-      int64_t ntp_time_ms = -1;
-      const int sampling_frequency = renderer_->SamplingFrequency();
-      audio_callback_->NeedMorePlayData(
-          SamplesPerFrame(sampling_frequency), 2 * renderer_->NumChannels(),
-          renderer_->NumChannels(), sampling_frequency, playout_buffer_.data(),
-          samples_out, &elapsed_time_ms, &ntp_time_ms);
-      const bool keep_rendering = renderer_->Render(
-          rtc::ArrayView<const int16_t>(playout_buffer_.data(), samples_out));
-      if (!keep_rendering) {
-        rendering_ = false;
-        done_rendering_.Set();
-      }
-    }
-  }
-  TaskQueueFactory* const task_queue_factory_;
-  const std::unique_ptr<Capturer> capturer_ RTC_GUARDED_BY(lock_);
-  const std::unique_ptr<Renderer> renderer_ RTC_GUARDED_BY(lock_);
-  const int64_t process_interval_us_;
-
-  mutable Mutex lock_;
-  AudioTransport* audio_callback_ RTC_GUARDED_BY(lock_);
-  bool rendering_ RTC_GUARDED_BY(lock_);
-  bool capturing_ RTC_GUARDED_BY(lock_);
-  rtc::Event done_rendering_;
-  rtc::Event done_capturing_;
-
-  std::vector<int16_t> playout_buffer_ RTC_GUARDED_BY(lock_);
-  rtc::BufferT<int16_t> recording_buffer_ RTC_GUARDED_BY(lock_);
-  std::unique_ptr<rtc::TaskQueue> task_queue_;
+  ~TestAudioDeviceModuleImpl() override = default;
 };
 
 // A fake capturer that generates pulses with random samples between
@@ -444,8 +305,26 @@ rtc::scoped_refptr<AudioDeviceModule> TestAudioDeviceModule::Create(
     std::unique_ptr<TestAudioDeviceModule::Capturer> capturer,
     std::unique_ptr<TestAudioDeviceModule::Renderer> renderer,
     float speed) {
-  return rtc::make_ref_counted<TestAudioDeviceModuleImpl>(
+  auto audio_device = rtc::make_ref_counted<TestAudioDeviceModuleImpl>(
       task_queue_factory, std::move(capturer), std::move(renderer), speed);
+
+  // Ensure that the current platform is supported.
+  if (audio_device->CheckPlatform() == -1) {
+    return nullptr;
+  }
+
+  // Create the platform-dependent implementation.
+  if (audio_device->CreatePlatformSpecificObjects() == -1) {
+    return nullptr;
+  }
+
+  // Ensure that the generic audio buffer can communicate with the platform
+  // specific parts.
+  if (audio_device->AttachAudioBuffer() == -1) {
+    return nullptr;
+  }
+
+  return audio_device;
 }
 
 std::unique_ptr<TestAudioDeviceModule::PulsedNoiseCapturer>
