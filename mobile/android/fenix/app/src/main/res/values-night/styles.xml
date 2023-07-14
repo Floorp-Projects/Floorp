@@ -4,8 +4,10 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <style name="SplashScreen" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/fx_mobile_layer_color_1</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_screen</item>
+        <item name="windowSplashScreenBackground">@android:color/transparent</item>
+        <item name="windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/animated_splash_screen</item>
+        <item name="windowSplashScreenAnimationDuration">@dimen/splash_screen_animation_duration</item>
         <item name="postSplashScreenTheme">@style/NormalTheme</item>
     </style>
 

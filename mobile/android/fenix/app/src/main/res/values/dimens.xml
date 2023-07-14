@@ -186,6 +186,10 @@
     <dimen name="credit_cards_saved_cards_item_margin_start">16dp</dimen>
     <dimen name="credit_cards_saved_cards_item_margin_end">48dp</dimen>
 
+    <!-- Splash Screen -->
+    <!-- Splash screen is animated to maximum 12 seconds -->
+    <dimen name="splash_screen_animation_duration">12000</dimen>
+
     <!-- a11y -->
     <dimen name="accessibility_min_height">48dp</dimen>
 
