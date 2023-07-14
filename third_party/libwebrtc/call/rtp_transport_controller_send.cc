@@ -81,7 +81,6 @@ RtpTransportControllerSend::RtpTransportControllerSend(
       pacer_(clock,
              &packet_router_,
              *config.trials,
-             config.task_queue_factory,
              TimeDelta::Millis(5),
              3,
              config.pacer_burst_interval),
