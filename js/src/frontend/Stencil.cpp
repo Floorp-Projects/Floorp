@@ -15,6 +15,8 @@
 #include "mozilla/ScopeExit.h"              // mozilla::ScopeExit
 #include "mozilla/Sprintf.h"                // SprintfLiteral
 
+#include <algorithm>  // std::fill
+
 #include "ds/LifoAlloc.h"               // LifoAlloc
 #include "frontend/AbstractScopePtr.h"  // ScopeIndex
 #include "frontend/BytecodeCompiler.h"  // CompileGlobalScriptToStencil, InstantiateStencils, CanLazilyParse, ParseModuleToStencil
@@ -34,6 +36,7 @@
 #include "js/Printer.h"                 // js::Fprinter
 #include "js/RootingAPI.h"              // Rooted
 #include "js/Transcoding.h"             // JS::TranscodeBuffer
+#include "js/Utility.h"                 // js_malloc, js_calloc, js_free
 #include "js/Value.h"                   // ObjectValue
 #include "js/WasmModule.h"              // JS::WasmModule
 #include "vm/BigIntType.h"   // ParseBigIntLiteral, BigIntLiteralIsZero
@@ -1687,6 +1690,120 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
   return true;
 }
 
+template <typename T>
+PreAllocateableGCArray<T>::~PreAllocateableGCArray() {
+  if (elems_) {
+    js_free(elems_);
+    elems_ = nullptr;
+  }
+}
+
+template <typename T>
+bool PreAllocateableGCArray<T>::allocate(size_t length) {
+  MOZ_ASSERT(empty());
+
+  length_ = length;
+
+  if (isInline()) {
+    inlineElem_ = nullptr;
+    return true;
+  }
+
+  elems_ = reinterpret_cast<T*>(js_calloc(sizeof(T) * length_));
+  if (!elems_) {
+    return false;
+  }
+
+  return true;
+}
+
+template <typename T>
+bool PreAllocateableGCArray<T>::allocateWith(T init, size_t length) {
+  MOZ_ASSERT(empty());
+
+  length_ = length;
+
+  if (isInline()) {
+    inlineElem_ = init;
+    return true;
+  }
+
+  elems_ = reinterpret_cast<T*>(js_malloc(sizeof(T) * length_));
+  if (!elems_) {
+    return false;
+  }
+
+  std::fill(elems_, elems_ + length_, init);
+  return true;
+}
+
+template <typename T>
+void PreAllocateableGCArray<T>::steal(Preallocated&& buffer) {
+  MOZ_ASSERT(empty());
+
+  length_ = buffer.length_;
+  buffer.length_ = 0;
+
+  if (isInline()) {
+    inlineElem_ = nullptr;
+    return;
+  }
+
+  elems_ = reinterpret_cast<T*>(buffer.elems_);
+  buffer.elems_ = nullptr;
+
+#ifdef DEBUG
+  for (size_t i = 0; i < length_; i++) {
+    MOZ_ASSERT(elems_[i] == nullptr);
+  }
+#endif
+}
+
+template <typename T>
+void PreAllocateableGCArray<T>::trace(JSTracer* trc) {
+  if (empty()) {
+    return;
+  }
+
+  if (isInline()) {
+    TraceNullableRoot(trc, &inlineElem_, "PreAllocateableGCArray::inlineElem_");
+    return;
+  }
+
+  for (size_t i = 0; i < length_; i++) {
+    TraceNullableRoot(trc, &elems_[i], "PreAllocateableGCArray::elems_");
+  }
+}
+
+template <typename T>
+PreAllocateableGCArray<T>::Preallocated::~Preallocated() {
+  if (elems_) {
+    js_free(elems_);
+    elems_ = nullptr;
+  }
+}
+
+template <typename T>
+bool PreAllocateableGCArray<T>::Preallocated::allocate(size_t length) {
+  MOZ_ASSERT(empty());
+
+  length_ = length;
+
+  if (isInline()) {
+    return true;
+  }
+
+  elems_ = reinterpret_cast<uintptr_t*>(js_calloc(sizeof(uintptr_t) * length_));
+  if (!elems_) {
+    return false;
+  }
+
+  return true;
+}
+
+template struct js::frontend::PreAllocateableGCArray<JSFunction*>;
+template struct js::frontend::PreAllocateableGCArray<js::Scope*>;
+
 void CompilationAtomCache::trace(JSTracer* trc) { atoms_.trace(trc); }
 
 void CompilationGCOutput::trace(JSTracer* trc) {
@@ -2016,10 +2133,7 @@ static bool InstantiateFunctions(JSContext* cx, FrontendContext* fc,
                                  CompilationGCOutput& gcOutput) {
   using ImmutableFlags = ImmutableScriptFlagsEnum;
 
-  if (!gcOutput.functions.resize(stencil.scriptData.size())) {
-    ReportOutOfMemory(fc);
-    return false;
-  }
+  MOZ_ASSERT(gcOutput.functions.length() == stencil.scriptData.size());
 
   // Most JSFunctions will be have the same Shape so we can compute it now to
   // allow fast object creation. Generators / Async will use the slow path
@@ -2098,7 +2212,7 @@ static bool InstantiateScopes(JSContext* cx, CompilationInput& input,
   //
   // If the enclosing scope is ScopeStencil, it's guaranteed to be earlier
   // element in stencil.scopeData, because enclosing_ field holds
-  // index into it, and newly created ScopeStencil is pushed back to the vector.
+  // index into it, and newly created ScopeStencil is pushed back to the array.
   //
   // If the enclosing scope is Scope*, it's CompilationInput.enclosingScope.
 
@@ -2110,7 +2224,7 @@ static bool InstantiateScopes(JSContext* cx, CompilationInput& input,
     if (!scope) {
       return false;
     }
-    gcOutput.scopes.infallibleAppend(scope);
+    gcOutput.scopes[i] = scope;
   }
 
   return true;
@@ -2376,15 +2490,17 @@ static void AssertDelazificationFieldsMatch(const CompilationStencil& stencil,
 // parsing to work at all.
 static void FunctionsFromExistingLazy(CompilationInput& input,
                                       CompilationGCOutput& gcOutput) {
-  MOZ_ASSERT(gcOutput.functions.empty());
-  gcOutput.functions.infallibleAppend(input.function());
+  MOZ_ASSERT(!gcOutput.functions[0]);
+
+  size_t instantiatedFunIndex = 0;
+  gcOutput.functions[instantiatedFunIndex++] = input.function();
 
   for (JS::GCCellPtr elem : input.lazyOuterBaseScript()->gcthings()) {
     if (!elem.is<JSObject>()) {
       continue;
     }
     JSFunction* fun = &elem.as<JSObject>().as<JSFunction>();
-    gcOutput.functions.infallibleAppend(fun);
+    gcOutput.functions[instantiatedFunIndex++] = fun;
   }
 }
 
@@ -2602,7 +2718,8 @@ JSScript* CompilationStencil::instantiateSelfHostedTopLevelForRealm(
   if (!dummy) {
     return nullptr;
   }
-  if (!gcOutput.get().functions.appendN(dummy, scriptData.size())) {
+
+  if (!gcOutput.get().functions.allocateWith(dummy, scriptData.size())) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -2680,12 +2797,12 @@ bool CompilationStencil::delazifySelfHostedFunction(
                               ? getOutermostScope(range.limit)
                               : ScopeIndex(scopeData.size());
 
-  // Prepare to instantiate by reserving the output vectors. We also set a base
+  // Prepare to instantiate by allocating the output arrays. We also set a base
   // index to avoid allocations in most cases.
   AutoReportFrontendContext fc(cx);
   Rooted<CompilationGCOutput> gcOutput(cx);
-  if (!gcOutput.get().ensureReservedWithBaseIndex(&fc, range.start, range.limit,
-                                                  scopeIndex, scopeLimit)) {
+  if (!gcOutput.get().ensureAllocatedWithBaseIndex(
+          &fc, range.start, range.limit, scopeIndex, scopeLimit)) {
     return false;
   }
 
@@ -2701,8 +2818,10 @@ bool CompilationStencil::delazifySelfHostedFunction(
     return false;
   }
 
+  size_t instantiatedFunIndex = 0;
+
   // Delazification target function.
-  gcOutput.get().functions.infallibleAppend(fun);
+  gcOutput.get().functions[instantiatedFunIndex++] = fun;
 
   // Allocate inner functions. Self-hosted functions do not allocate these with
   // the initial function.
@@ -2712,7 +2831,7 @@ bool CompilationStencil::delazifySelfHostedFunction(
     if (!innerFun) {
       return false;
     }
-    gcOutput.get().functions.infallibleAppend(innerFun);
+    gcOutput.get().functions[instantiatedFunIndex++] = innerFun;
   }
 
   // Phase 3: Instantiate js::Scopes.
@@ -2720,6 +2839,7 @@ bool CompilationStencil::delazifySelfHostedFunction(
   //       `emptyGlobalScope` instead of reading from CompilationInput. This is
   //       a special case for self-hosted delazification that allows us to reuse
   //       the CompilationInput between different realms.
+  size_t instantiatedScopeIndex = 0;
   for (size_t i = scopeIndex; i < scopeLimit; i++) {
     ScopeStencil& data = scopeData[i];
     Rooted<Scope*> enclosingScope(
@@ -2731,7 +2851,7 @@ bool CompilationStencil::delazifySelfHostedFunction(
     if (!scope) {
       return false;
     }
-    gcOutput.get().scopes.infallibleAppend(scope);
+    gcOutput.get().scopes[instantiatedScopeIndex++] = scope;
   }
 
   // Phase 4: Instantiate (inner) BaseScripts.
@@ -2763,9 +2883,9 @@ bool CompilationStencil::delazifySelfHostedFunction(
 bool CompilationStencil::prepareForInstantiate(
     FrontendContext* fc, CompilationAtomCache& atomCache,
     const CompilationStencil& stencil, CompilationGCOutput& gcOutput) {
-  // Reserve the `gcOutput` vectors.
-  if (!gcOutput.ensureReserved(fc, stencil.scriptData.size(),
-                               stencil.scopeData.size())) {
+  // Allocate the `gcOutput` arrays.
+  if (!gcOutput.ensureAllocated(fc, stencil.scriptData.size(),
+                                stencil.scopeData.size())) {
     return false;
   }
 

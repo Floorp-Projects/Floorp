@@ -18,10 +18,11 @@
 #include "mozilla/Span.h"             // mozilla::Span
 #include "mozilla/Variant.h"          // mozilla::Variant
 
-#include <algorithm>  // std::swap
-#include <stddef.h>   // size_t
-#include <stdint.h>   // uint32_t, uintptr_t
-#include <utility>    // std::forward, std::move
+#include <algorithm>    // std::swap
+#include <stddef.h>     // size_t
+#include <stdint.h>     // uint32_t, uintptr_t
+#include <type_traits>  // std::is_pointer_v
+#include <utility>      // std::forward, std::move
 
 #include "ds/LifoAlloc.h"                 // LifoAlloc, LifoAllocScope
 #include "frontend/FrontendContext.h"     // FrontendContext
@@ -1568,6 +1569,98 @@ inline size_t ExtensibleCompilationStencil::sizeOfExcludingThis(
          asmJSSize;
 }
 
+// A PreAllocateableGCArray is an array of GC thing pointers.
+//
+// The array's internal buffer can be allocated ahead of time, possibly off
+// main thread.
+template <typename T>
+struct PreAllocateableGCArray {
+ private:
+  size_t length_ = 0;
+
+  // Inline element for the case when length_ == 1.
+  T inlineElem_;
+
+  // Heap-allocated elements for the case when length_ > 1;
+  T* elems_ = nullptr;
+
+ public:
+  struct Preallocated {
+   private:
+    size_t length_ = 0;
+    uintptr_t* elems_ = nullptr;
+
+    friend struct PreAllocateableGCArray<T>;
+
+   public:
+    Preallocated() = default;
+    ~Preallocated();
+
+    bool empty() const { return length_ == 0; }
+
+    size_t length() const { return length_; }
+
+   private:
+    bool isInline() const { return length_ == 1; }
+
+   public:
+    bool allocate(size_t length);
+
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+      return sizeof(uintptr_t) * length_;
+    }
+  };
+
+  PreAllocateableGCArray() {
+    static_assert(std::is_pointer_v<T>,
+                  "PreAllocateableGCArray element must be a pointer");
+  }
+  ~PreAllocateableGCArray();
+
+  bool empty() const { return length_ == 0; }
+
+  size_t length() const { return length_; }
+
+ private:
+  bool isInline() const { return length_ == 1; }
+
+ public:
+  bool allocate(size_t length);
+  bool allocateWith(T init, size_t length);
+
+  // Steal pre-allocated buffer.
+  void steal(Preallocated&& buffer);
+
+  T& operator[](size_t index) {
+    MOZ_ASSERT(index < length_);
+
+    if (isInline()) {
+      return inlineElem_;
+    }
+
+    return elems_[index];
+  }
+  const T& operator[](size_t index) const {
+    MOZ_ASSERT(index < length_);
+
+    if (isInline()) {
+      return inlineElem_;
+    }
+
+    return elems_[index];
+  }
+
+  size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
+    if (!elems_) {
+      return 0;
+    }
+
+    return sizeof(T) * length_;
+  }
+
+  void trace(JSTracer* trc);
+};
+
 // The output of GC allocation from stencil.
 struct CompilationGCOutput {
   // The resulting outermost script for the compilation powered
@@ -1577,25 +1670,25 @@ struct CompilationGCOutput {
   // The resulting module object if there is one.
   ModuleObject* module = nullptr;
 
-  // A Rooted vector to handle tracing of JSFunction* and Atoms within.
+  // An array to handle tracing of JSFunction* and Atoms within.
   //
   // If the top level script isn't a function, the item at TopLevelIndex is
   // nullptr.
-  JS::GCVector<JSFunction*, 1, js::SystemAllocPolicy> functions;
+  PreAllocateableGCArray<JSFunction*> functions;
 
   // References to scopes are controlled via AbstractScopePtr, which holds onto
   // an index (and CompilationStencil reference).
-  JS::GCVector<js::Scope*, 1, js::SystemAllocPolicy> scopes;
+  PreAllocateableGCArray<js::Scope*> scopes;
 
   // The result ScriptSourceObject. This is unused in delazifying parses.
   ScriptSourceObject* sourceObject = nullptr;
 
  private:
   // If we are only instantiating part of a stencil, we can reduce allocations
-  // by setting a base index and reserving only the vector capacity we need.
+  // by setting a base index and allocating only the array elements we need.
   // This applies to both the `functions` and `scopes` arrays. These fields are
-  // initialized by `ensureReservedWithBaseIndex` which also reserves the vector
-  // sizes appropriately.
+  // initialized by `ensureAllocatedWithBaseIndex` which also allocates the
+  // array appropriately.
   //
   // Note: These are only used for self-hosted delazification currently.
   ScriptIndex functionsBaseIndex{};
@@ -1606,7 +1699,7 @@ struct CompilationGCOutput {
  public:
   CompilationGCOutput() = default;
 
-  // Helper to access the `functions` vector. The NoBaseIndex version is used if
+  // Helper to access the `functions` array. The NoBaseIndex version is used if
   // the caller never uses a base index.
   JSFunction*& getFunction(ScriptIndex index) {
     return functions[index - functionsBaseIndex];
@@ -1616,7 +1709,7 @@ struct CompilationGCOutput {
     return functions[index];
   }
 
-  // Helper accessors for the `scopes` vector.
+  // Helper accessors for the `scopes` array.
   js::Scope*& getScope(ScopeIndex index) {
     return scopes[index - scopesBaseIndex];
   }
@@ -1629,37 +1722,41 @@ struct CompilationGCOutput {
     return scopes[index];
   }
 
-  // Reserve output vector capacity. This may be called before instantiate to do
+  // Allocate output arrays. This may be called before instantiate to do
   // allocations ahead of time (off thread). The stencil instantiation code will
-  // also run this to ensure the vectors are ready.
-  [[nodiscard]] bool ensureReserved(FrontendContext* fc,
-                                    size_t scriptDataLength,
-                                    size_t scopeDataLength) {
-    if (!functions.reserve(scriptDataLength)) {
-      ReportOutOfMemory(fc);
-      return false;
+  // also run this to ensure the arrays are ready.
+  [[nodiscard]] bool ensureAllocated(FrontendContext* fc,
+                                     size_t scriptDataLength,
+                                     size_t scopeDataLength) {
+    if (functions.empty()) {
+      if (!functions.allocate(scriptDataLength)) {
+        ReportOutOfMemory(fc);
+        return false;
+      }
     }
-    if (!scopes.reserve(scopeDataLength)) {
-      ReportOutOfMemory(fc);
-      return false;
+    if (scopes.empty()) {
+      if (!scopes.allocate(scopeDataLength)) {
+        ReportOutOfMemory(fc);
+        return false;
+      }
     }
     return true;
   }
 
-  // A variant of `ensureReserved` that sets a base index for the function and
+  // A variant of `ensureAllocated` that sets a base index for the function and
   // scope arrays. This is used when instantiating only a subset of the stencil.
   // Currently this only applies to self-hosted delazification. The ranges
   // include the start index and exclude the limit index.
-  [[nodiscard]] bool ensureReservedWithBaseIndex(FrontendContext* fc,
-                                                 ScriptIndex scriptStart,
-                                                 ScriptIndex scriptLimit,
-                                                 ScopeIndex scopeStart,
-                                                 ScopeIndex scopeLimit) {
+  [[nodiscard]] bool ensureAllocatedWithBaseIndex(FrontendContext* fc,
+                                                  ScriptIndex scriptStart,
+                                                  ScriptIndex scriptLimit,
+                                                  ScopeIndex scopeStart,
+                                                  ScopeIndex scopeLimit) {
     this->functionsBaseIndex = scriptStart;
     this->scopesBaseIndex = scopeStart;
 
-    return ensureReserved(fc, scriptLimit - scriptStart,
-                          scopeLimit - scopeStart);
+    return ensureAllocated(fc, scriptLimit - scriptStart,
+                           scopeLimit - scopeStart);
   }
 
   // Size of dynamic data. Note that GC data is counted by GC and not here.
