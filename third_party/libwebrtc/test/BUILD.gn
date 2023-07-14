@@ -132,7 +132,6 @@ rtc_library("frame_generator_capturer") {
   sources = [
     "frame_generator_capturer.cc",
     "frame_generator_capturer.h",
-    "frame_generator_capturer_tmp.h",
   ]
   deps = [
     ":fileutils",
