@@ -29,7 +29,6 @@
 #include "test/rtcp_packet_parser.h"
 #include "test/rtp_rtcp_observer.h"
 #include "test/video_encoder_proxy_factory.h"
-#include "test/video_test_constants.h"
 
 namespace webrtc {
 namespace {
@@ -47,7 +46,7 @@ class BandwidthEndToEndTest : public test::CallTest {
 TEST_F(BandwidthEndToEndTest, ReceiveStreamSendsRemb) {
   class RembObserver : public test::EndToEndTest {
    public:
-    RembObserver() : EndToEndTest(test::VideoTestConstants::kDefaultTimeout) {}
+    RembObserver() : EndToEndTest(kDefaultTimeout) {}
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
@@ -63,12 +62,10 @@ TEST_F(BandwidthEndToEndTest, ReceiveStreamSendsRemb) {
       EXPECT_TRUE(parser.Parse(packet, length));
 
       if (parser.remb()->num_packets() > 0) {
-        EXPECT_EQ(test::VideoTestConstants::kReceiverLocalVideoSsrc,
-                  parser.remb()->sender_ssrc());
+        EXPECT_EQ(kReceiverLocalVideoSsrc, parser.remb()->sender_ssrc());
         EXPECT_LT(0U, parser.remb()->bitrate_bps());
         EXPECT_EQ(1U, parser.remb()->ssrcs().size());
-        EXPECT_EQ(test::VideoTestConstants::kVideoSendSsrcs[0],
-                  parser.remb()->ssrcs()[0]);
+        EXPECT_EQ(kVideoSendSsrcs[0], parser.remb()->ssrcs()[0]);
         observation_complete_.Set();
       }
 
@@ -87,7 +84,7 @@ TEST_F(BandwidthEndToEndTest, ReceiveStreamSendsRemb) {
 class BandwidthStatsTest : public test::EndToEndTest {
  public:
   BandwidthStatsTest(bool send_side_bwe, TaskQueueBase* task_queue)
-      : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+      : EndToEndTest(test::CallTest::kDefaultTimeout),
         sender_call_(nullptr),
         receiver_call_(nullptr),
         has_seen_pacer_delay_(false),
@@ -194,7 +191,7 @@ TEST_F(BandwidthEndToEndTest, RembWithSendSideBwe) {
   class BweObserver : public test::EndToEndTest {
    public:
     explicit BweObserver(TaskQueueBase* task_queue)
-        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+        : EndToEndTest(kDefaultTimeout),
           sender_call_(nullptr),
           clock_(Clock::GetRealTimeClock()),
           sender_ssrc_(0),
@@ -318,7 +315,7 @@ TEST_F(BandwidthEndToEndTest, ReportsSetEncoderRates) {
                                public test::FakeEncoder {
    public:
     explicit EncoderRateStatsTest(TaskQueueBase* task_queue)
-        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+        : EndToEndTest(kDefaultTimeout),
           FakeEncoder(Clock::GetRealTimeClock()),
           task_queue_(task_queue),
           send_stream_(nullptr),
@@ -366,7 +363,7 @@ TEST_F(BandwidthEndToEndTest, ReportsSetEncoderRates) {
     }
 
     void WaitForEncoderTargetBitrateMatchStats() {
-      for (int i = 0; i < test::VideoTestConstants::kDefaultTimeout.ms(); ++i) {
+      for (int i = 0; i < kDefaultTimeout.ms(); ++i) {
         VideoSendStream::Stats stats = send_stream_->GetStats();
         {
           MutexLock lock(&mutex_);
@@ -382,7 +379,7 @@ TEST_F(BandwidthEndToEndTest, ReportsSetEncoderRates) {
     }
 
     void WaitForStatsReportZeroTargetBitrate() {
-      for (int i = 0; i < test::VideoTestConstants::kDefaultTimeout.ms(); ++i) {
+      for (int i = 0; i < kDefaultTimeout.ms(); ++i) {
         if (send_stream_->GetStats().target_media_bitrate_bps == 0) {
           return;
         }

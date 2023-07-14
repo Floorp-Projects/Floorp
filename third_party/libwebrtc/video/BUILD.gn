@@ -539,7 +539,6 @@ if (rtc_include_tests) {
         "../test:test_support",
         "../test:test_support_test_artifacts",
         "../test:video_test_common",
-        "../test:video_test_constants",
         "../test:video_test_support",
         "config:streams_config",
       ]
@@ -916,7 +915,6 @@ if (rtc_include_tests) {
       "../test:test_common",
       "../test:test_support",
       "../test:video_test_common",
-      "../test:video_test_constants",
       "../test/time_controller",
       "adaptation:video_adaptation",
       "config:encoder_config",

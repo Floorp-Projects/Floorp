@@ -22,7 +22,6 @@
 #include "test/frame_forwarder.h"
 #include "test/gtest.h"
 #include "test/null_transport.h"
-#include "test/video_test_constants.h"
 
 namespace webrtc {
 
@@ -89,9 +88,7 @@ TEST_F(CallOperationEndToEndTest, RendersSingleDelayedFrame) {
       event_.Set();
     }
 
-    bool Wait() {
-      return event_.Wait(test::VideoTestConstants::kDefaultTimeout);
-    }
+    bool Wait() { return event_.Wait(kDefaultTimeout); }
 
     rtc::Event event_;
   } renderer;
@@ -146,9 +143,7 @@ TEST_F(CallOperationEndToEndTest, TransmitsFirstFrame) {
    public:
     void OnFrame(const VideoFrame& video_frame) override { event_.Set(); }
 
-    bool Wait() {
-      return event_.Wait(test::VideoTestConstants::kDefaultTimeout);
-    }
+    bool Wait() { return event_.Wait(kDefaultTimeout); }
 
     rtc::Event event_;
   } renderer;
@@ -175,9 +170,7 @@ TEST_F(CallOperationEndToEndTest, TransmitsFirstFrame) {
         Start();
 
         frame_generator = test::CreateSquareFrameGenerator(
-            test::VideoTestConstants::kDefaultWidth,
-            test::VideoTestConstants::kDefaultHeight, absl::nullopt,
-            absl::nullopt);
+            kDefaultWidth, kDefaultHeight, absl::nullopt, absl::nullopt);
         GetVideoSendStream()->SetSource(
             &frame_forwarder, DegradationPreference::MAINTAIN_FRAMERATE);
         test::FrameGeneratorInterface::VideoFrameData frame_data =

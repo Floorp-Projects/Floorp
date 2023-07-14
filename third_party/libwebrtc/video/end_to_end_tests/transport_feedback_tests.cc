@@ -26,7 +26,6 @@
 #include "test/field_trial.h"
 #include "test/gtest.h"
 #include "test/rtcp_packet_parser.h"
-#include "test/video_test_constants.h"
 #include "video/end_to_end_tests/multi_stream_tester.h"
 
 namespace webrtc {
@@ -252,7 +251,7 @@ class TransportFeedbackEndToEndTest : public test::CallTest {
 class TransportFeedbackTester : public test::EndToEndTest {
  public:
   TransportFeedbackTester(size_t num_video_streams, size_t num_audio_streams)
-      : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+      : EndToEndTest(::webrtc::TransportFeedbackEndToEndTest::kDefaultTimeout),
         num_video_streams_(num_video_streams),
         num_audio_streams_(num_audio_streams),
         receiver_call_(nullptr) {
@@ -280,8 +279,7 @@ class TransportFeedbackTester : public test::EndToEndTest {
   }
 
   void PerformTest() override {
-    EXPECT_TRUE(
-        observation_complete_.Wait(test::VideoTestConstants::kDefaultTimeout));
+    EXPECT_TRUE(observation_complete_.Wait(test::CallTest::kDefaultTimeout));
   }
 
   void OnCallsCreated(Call* sender_call, Call* receiver_call) override {
@@ -328,7 +326,8 @@ TEST_F(TransportFeedbackEndToEndTest,
   class TransportFeedbackTester : public test::EndToEndTest {
    public:
     TransportFeedbackTester(size_t num_video_streams, size_t num_audio_streams)
-        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+        : EndToEndTest(
+              ::webrtc::TransportFeedbackEndToEndTest::kDefaultTimeout),
           num_video_streams_(num_video_streams),
           num_audio_streams_(num_audio_streams),
           media_sent_(0),
@@ -416,7 +415,7 @@ TEST_F(TransportFeedbackEndToEndTest, TransportSeqNumOnAudioAndVideo) {
   class TransportSequenceNumberTest : public test::EndToEndTest {
    public:
     TransportSequenceNumberTest()
-        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+        : EndToEndTest(kDefaultTimeout),
           video_observed_(false),
           audio_observed_(false) {
       extensions_.Register<TransportSequenceNumber>(
@@ -445,9 +444,9 @@ TEST_F(TransportFeedbackEndToEndTest, TransportSeqNumOnAudioAndVideo) {
       int64_t packet_id = unwrapper_.Unwrap(transport_sequence_number);
       EXPECT_TRUE(received_packet_ids_.insert(packet_id).second);
 
-      if (rtp_packet.Ssrc() == test::VideoTestConstants::kVideoSendSsrcs[0])
+      if (rtp_packet.Ssrc() == kVideoSendSsrcs[0])
         video_observed_ = true;
-      if (rtp_packet.Ssrc() == test::VideoTestConstants::kAudioSendSsrc)
+      if (rtp_packet.Ssrc() == kAudioSendSsrc)
         audio_observed_ = true;
       if (audio_observed_ && video_observed_ &&
           received_packet_ids_.size() >= kMinPacketsToWaitFor) {

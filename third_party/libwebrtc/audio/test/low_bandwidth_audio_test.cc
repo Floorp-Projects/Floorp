@@ -14,7 +14,6 @@
 #include "audio/test/audio_end_to_end_test.h"
 #include "system_wrappers/include/sleep.h"
 #include "test/testsupport/file_utils.h"
-#include "test/video_test_constants.h"
 
 ABSL_DECLARE_FLAG(int, sample_rate_hz);
 ABSL_DECLARE_FLAG(bool, quick);
@@ -79,7 +78,7 @@ class Mobile2GNetworkTest : public AudioQualityTest {
                           std::vector<AudioReceiveStreamInterface::Config>*
                               receive_configs) override {
     send_config->send_codec_spec = AudioSendStream::Config::SendCodecSpec(
-        test::VideoTestConstants::kAudioSendPayloadType,
+        test::CallTest::kAudioSendPayloadType,
         {"OPUS",
          48000,
          2,
