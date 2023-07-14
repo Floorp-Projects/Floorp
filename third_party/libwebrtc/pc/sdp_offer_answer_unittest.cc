@@ -34,6 +34,7 @@
 #include "modules/audio_processing/include/audio_processing.h"
 #include "p2p/base/port_allocator.h"
 #include "pc/peer_connection_wrapper.h"
+#include "pc/session_description.h"
 #include "pc/test/fake_audio_capture_module.h"
 #include "pc/test/mock_peer_connection_observers.h"
 #include "rtc_base/rtc_certificate_generator.h"
@@ -466,5 +467,84 @@ TEST_F(SdpOfferAnswerTest, RollbackPreservesAddTrackMid) {
   ASSERT_NE(offer2, nullptr);
   EXPECT_EQ(saved_mid, first_transceiver->mid());
 }
+
+#ifdef WEBRTC_HAVE_SCTP
+
+TEST_F(SdpOfferAnswerTest, RejectedDataChannelsDoNotGetReoffered) {
+  auto pc = CreatePeerConnection();
+  EXPECT_TRUE(pc->pc()->CreateDataChannelOrError("dc", nullptr).ok());
+  EXPECT_TRUE(pc->CreateOfferAndSetAsLocal());
+  auto mid = pc->pc()->local_description()->description()->contents()[0].mid();
+
+  // An answer that rejects the datachannel content.
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 4131505339648218884 3 IN IP4 **-----**\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=ice-ufrag:zGWFZ+fVXDeN6UoI/136\r\n"
+      "a=ice-pwd:9AUNgUqRNI5LSIrC1qFD2iTR\r\n"
+      "a=fingerprint:sha-256 "
+      "AD:52:52:E0:B1:37:34:21:0E:15:8E:B7:56:56:7B:B4:39:0E:6D:1C:F5:84:A7:EE:"
+      "B5:27:3E:30:B1:7D:69:42\r\n"
+      "a=setup:passive\r\n"
+      "m=application 0 UDP/DTLS/SCTP webrtc-datachannel\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=sctp-port:5000\r\n"
+      "a=max-message-size:262144\r\n"
+      "a=mid:" +
+      mid + "\r\n";
+  auto answer = CreateSessionDescription(SdpType::kAnswer, sdp);
+  ASSERT_TRUE(pc->SetRemoteDescription(std::move(answer)));
+  // The subsequent offer should not recycle the m-line since the existing data
+  // channel is closed.
+  auto offer = pc->CreateOffer();
+  const auto& offer_contents = offer->description()->contents();
+  ASSERT_EQ(offer_contents.size(), 1u);
+  EXPECT_EQ(offer_contents[0].mid(), mid);
+  EXPECT_EQ(offer_contents[0].rejected, true);
+}
+
+TEST_F(SdpOfferAnswerTest, RejectedDataChannelsDoGetReofferedWhenActive) {
+  auto pc = CreatePeerConnection();
+  EXPECT_TRUE(pc->pc()->CreateDataChannelOrError("dc", nullptr).ok());
+  EXPECT_TRUE(pc->CreateOfferAndSetAsLocal());
+  auto mid = pc->pc()->local_description()->description()->contents()[0].mid();
+
+  // An answer that rejects the datachannel content.
+  std::string sdp =
+      "v=0\r\n"
+      "o=- 4131505339648218884 3 IN IP4 **-----**\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=ice-ufrag:zGWFZ+fVXDeN6UoI/136\r\n"
+      "a=ice-pwd:9AUNgUqRNI5LSIrC1qFD2iTR\r\n"
+      "a=fingerprint:sha-256 "
+      "AD:52:52:E0:B1:37:34:21:0E:15:8E:B7:56:56:7B:B4:39:0E:6D:1C:F5:84:A7:EE:"
+      "B5:27:3E:30:B1:7D:69:42\r\n"
+      "a=setup:passive\r\n"
+      "m=application 0 UDP/DTLS/SCTP webrtc-datachannel\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=sctp-port:5000\r\n"
+      "a=max-message-size:262144\r\n"
+      "a=mid:" +
+      mid + "\r\n";
+  auto answer = CreateSessionDescription(SdpType::kAnswer, sdp);
+  ASSERT_TRUE(pc->SetRemoteDescription(std::move(answer)));
+
+  // The subsequent offer should recycle the m-line when there is a new data
+  // channel.
+  EXPECT_TRUE(pc->pc()->CreateDataChannelOrError("dc2", nullptr).ok());
+  EXPECT_TRUE(pc->pc()->ShouldFireNegotiationNeededEvent(
+      pc->observer()->latest_negotiation_needed_event()));
+
+  auto offer = pc->CreateOffer();
+  const auto& offer_contents = offer->description()->contents();
+  ASSERT_EQ(offer_contents.size(), 1u);
+  EXPECT_EQ(offer_contents[0].mid(), mid);
+  EXPECT_EQ(offer_contents[0].rejected, false);
+}
+
+#endif  // WEBRTC_HAVE_SCTP
 
 }  // namespace webrtc

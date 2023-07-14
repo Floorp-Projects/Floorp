@@ -105,17 +105,17 @@ TEST_F(DataChannelControllerTest, CreateDataChannelEarlyRelease) {
 
 TEST_F(DataChannelControllerTest, CreateDataChannelEarlyClose) {
   DataChannelControllerForTest dcc(pc_.get());
-  EXPECT_FALSE(dcc.HasDataChannelsForTest());
+  EXPECT_FALSE(dcc.HasDataChannels());
   EXPECT_FALSE(dcc.HasUsedDataChannels());
   auto ret = dcc.InternalCreateDataChannelWithProxy(
       "label", InternalDataChannelInit(DataChannelInit()));
   ASSERT_TRUE(ret.ok());
   auto channel = ret.MoveValue();
-  EXPECT_TRUE(dcc.HasDataChannelsForTest());
+  EXPECT_TRUE(dcc.HasDataChannels());
   EXPECT_TRUE(dcc.HasUsedDataChannels());
   channel->Close();
   run_loop_.Flush();
-  EXPECT_FALSE(dcc.HasDataChannelsForTest());
+  EXPECT_FALSE(dcc.HasDataChannels());
   EXPECT_TRUE(dcc.HasUsedDataChannels());
 }
 

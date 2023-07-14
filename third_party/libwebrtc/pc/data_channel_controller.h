@@ -87,8 +87,9 @@ class DataChannelController : public SctpDataChannelControllerInterface,
                                      const InternalDataChannelInit& config);
   void AllocateSctpSids(rtc::SSLRole role);
 
-  // Used by tests to check if data channels are currently tracked.
-  bool HasDataChannelsForTest() const;
+  // Check if data channels are currently tracked. Used to decide whether a
+  // rejected m=application section should be reoffered.
+  bool HasDataChannels() const;
 
   // At some point in time, a data channel has existed.
   bool HasUsedDataChannels() const;

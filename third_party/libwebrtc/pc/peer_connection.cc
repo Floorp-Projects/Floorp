@@ -1422,9 +1422,10 @@ PeerConnection::CreateDataChannelOrError(const std::string& label,
 
   rtc::scoped_refptr<DataChannelInterface> channel = ret.MoveValue();
 
-  // Trigger the onRenegotiationNeeded event for
-  // the first SCTP DataChannel.
-  if (first_datachannel) {
+  // Check the onRenegotiationNeeded event (with plan-b backward compat)
+  if (configuration_.sdp_semantics == SdpSemantics::kUnifiedPlan ||
+      (configuration_.sdp_semantics == SdpSemantics::kPlanB_DEPRECATED &&
+       first_datachannel)) {
     sdp_handler_->UpdateNegotiationNeeded();
   }
   NoteUsageEvent(UsageEvent::DATA_ADDED);

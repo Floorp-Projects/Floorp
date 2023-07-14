@@ -28,7 +28,7 @@ DataChannelController::~DataChannelController() {
       << "Missing call to PrepareForShutdown?";
 }
 
-bool DataChannelController::HasDataChannelsForTest() const {
+bool DataChannelController::HasDataChannels() const {
   auto has_channels = [&] {
     RTC_DCHECK_RUN_ON(network_thread());
     return !sctp_data_channels_n_.empty();
