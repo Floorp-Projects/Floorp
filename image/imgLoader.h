@@ -42,30 +42,10 @@ class Document;
 
 class imgCacheEntry {
  public:
+  NS_INLINE_DECL_REFCOUNTING(imgCacheEntry)
+
   imgCacheEntry(imgLoader* loader, imgRequest* request,
                 bool aForcePrincipalCheck);
-  ~imgCacheEntry();
-
-  nsrefcnt AddRef() {
-    MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
-    NS_ASSERT_OWNINGTHREAD(imgCacheEntry);
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "imgCacheEntry", sizeof(*this));
-    return mRefCnt;
-  }
-
-  nsrefcnt Release() {
-    MOZ_ASSERT(0 != mRefCnt, "dup release");
-    NS_ASSERT_OWNINGTHREAD(imgCacheEntry);
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "imgCacheEntry");
-    if (mRefCnt == 0) {
-      mRefCnt = 1; /* stabilize */
-      delete this;
-      return 0;
-    }
-    return mRefCnt;
-  }
 
   uint32_t GetDataSize() const { return mDataSize; }
   void SetDataSize(uint32_t aDataSize) {
@@ -127,11 +107,9 @@ class imgCacheEntry {
 
   // Private, unimplemented copy constructor.
   imgCacheEntry(const imgCacheEntry&);
+  ~imgCacheEntry();
 
  private:  // data
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
-
   imgLoader* mLoader;
   RefPtr<imgRequest> mRequest;
   uint32_t mDataSize;
