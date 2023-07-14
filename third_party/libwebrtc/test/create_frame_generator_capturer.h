@@ -24,40 +24,92 @@
 namespace webrtc {
 namespace test {
 
-std::unique_ptr<FrameGeneratorCapturer> CreateFrameGeneratorCapturer(
-    Clock* clock,
-    TaskQueueFactory& task_queue_factory,
-    FrameGeneratorCapturerConfig::SquaresVideo config) {
-  return FrameGeneratorCapturer::Create(clock, task_queue_factory, config);
-}
+namespace frame_gen_cap_impl {
+template <typename T>
+class AutoOpt : public absl::optional<T> {
+ public:
+  using absl::optional<T>::optional;
+  T* operator->() {
+    if (!absl::optional<T>::has_value())
+      this->emplace(T());
+    return absl::optional<T>::operator->();
+  }
+};
+}  // namespace frame_gen_cap_impl
+
+struct FrameGeneratorCapturerConfig {
+  struct SquaresVideo {
+    int framerate = 30;
+    FrameGeneratorInterface::OutputType pixel_format =
+        FrameGeneratorInterface::OutputType::kI420;
+    int width = 320;
+    int height = 180;
+    int num_squares = 10;
+  };
+
+  struct SquareSlides {
+    int framerate = 30;
+    TimeDelta change_interval = TimeDelta::Seconds(10);
+    int width = 1600;
+    int height = 1200;
+  };
+
+  struct VideoFile {
+    int framerate = 30;
+    std::string name;
+    // Must be set to width and height of the source video file.
+    int width = 0;
+    int height = 0;
+  };
+
+  struct ImageSlides {
+    int framerate = 30;
+    TimeDelta change_interval = TimeDelta::Seconds(10);
+    struct Crop {
+      TimeDelta scroll_duration = TimeDelta::Seconds(0);
+      absl::optional<int> width;
+      absl::optional<int> height;
+    } crop;
+    int width = 1850;
+    int height = 1110;
+    std::vector<std::string> paths = {
+        "web_screenshot_1850_1110",
+        "presentation_1850_1110",
+        "photo_1850_1110",
+        "difficult_photo_1850_1110",
+    };
+  };
+
+  frame_gen_cap_impl::AutoOpt<SquaresVideo> squares_video;
+  frame_gen_cap_impl::AutoOpt<SquareSlides> squares_slides;
+  frame_gen_cap_impl::AutoOpt<VideoFile> video_file;
+  frame_gen_cap_impl::AutoOpt<ImageSlides> image_slides;
+};
 
 std::unique_ptr<FrameGeneratorCapturer> CreateFrameGeneratorCapturer(
     Clock* clock,
     TaskQueueFactory& task_queue_factory,
-    FrameGeneratorCapturerConfig::SquareSlides config) {
-  return FrameGeneratorCapturer::Create(clock, task_queue_factory, config);
-}
+    FrameGeneratorCapturerConfig::SquaresVideo config);
 
 std::unique_ptr<FrameGeneratorCapturer> CreateFrameGeneratorCapturer(
     Clock* clock,
     TaskQueueFactory& task_queue_factory,
-    FrameGeneratorCapturerConfig::VideoFile config) {
-  return FrameGeneratorCapturer::Create(clock, task_queue_factory, config);
-}
+    FrameGeneratorCapturerConfig::SquareSlides config);
 
 std::unique_ptr<FrameGeneratorCapturer> CreateFrameGeneratorCapturer(
     Clock* clock,
     TaskQueueFactory& task_queue_factory,
-    FrameGeneratorCapturerConfig::ImageSlides config) {
-  return FrameGeneratorCapturer::Create(clock, task_queue_factory, config);
-}
+    FrameGeneratorCapturerConfig::VideoFile config);
 
 std::unique_ptr<FrameGeneratorCapturer> CreateFrameGeneratorCapturer(
     Clock* clock,
     TaskQueueFactory& task_queue_factory,
-    const FrameGeneratorCapturerConfig& config) {
-  return FrameGeneratorCapturer::Create(clock, task_queue_factory, config);
-}
+    FrameGeneratorCapturerConfig::ImageSlides config);
+
+std::unique_ptr<FrameGeneratorCapturer> CreateFrameGeneratorCapturer(
+    Clock* clock,
+    TaskQueueFactory& task_queue_factory,
+    const FrameGeneratorCapturerConfig& config);
 
 }  // namespace test
 }  // namespace webrtc
