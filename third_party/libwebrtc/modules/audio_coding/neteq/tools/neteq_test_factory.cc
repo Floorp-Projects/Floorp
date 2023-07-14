@@ -31,8 +31,8 @@
 #include "modules/audio_coding/neteq/tools/input_audio_file.h"
 #include "modules/audio_coding/neteq/tools/neteq_delay_analyzer.h"
 #include "modules/audio_coding/neteq/tools/neteq_event_log_input.h"
-#include "modules/audio_coding/neteq/tools/neteq_packet_source_input.h"
 #include "modules/audio_coding/neteq/tools/neteq_replacement_input.h"
+#include "modules/audio_coding/neteq/tools/neteq_rtp_dump_input.h"
 #include "modules/audio_coding/neteq/tools/neteq_stats_getter.h"
 #include "modules/audio_coding/neteq/tools/neteq_stats_plotter.h"
 #include "modules/audio_coding/neteq/tools/neteq_test.h"
@@ -132,7 +132,7 @@ std::unique_ptr<NetEqTest> NetEqTestFactory::InitializeTestFromFile(
     NetEqFactory* factory,
     const Config& config) {
   // Gather RTP header extensions in a map.
-  NetEqPacketSourceInput::RtpHeaderExtensionMap rtp_ext_map = {
+  std::map<int, RTPExtensionType> rtp_ext_map = {
       {config.audio_level, kRtpExtensionAudioLevel},
       {config.abs_send_time, kRtpExtensionAbsoluteSendTime},
       {config.transport_seq_no, kRtpExtensionTransportSequenceNumber},
@@ -142,8 +142,8 @@ std::unique_ptr<NetEqTest> NetEqTestFactory::InitializeTestFromFile(
   std::unique_ptr<NetEqInput> input;
   if (RtpFileSource::ValidRtpDump(input_file_name) ||
       RtpFileSource::ValidPcap(input_file_name)) {
-    input.reset(new NetEqRtpDumpInput(input_file_name, rtp_ext_map,
-                                      config.ssrc_filter));
+    input = CreateNetEqRtpDumpInput(input_file_name, rtp_ext_map,
+                                    config.ssrc_filter);
   } else {
     ParsedRtcEventLog parsed_log;
     auto status = parsed_log.ParseFile(input_file_name);
