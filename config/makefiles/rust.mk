@@ -275,6 +275,14 @@ rust_pgo_flags := -C profile-use=$(PGO_PROFILE_PATH)
 endif
 endif
 
+# Work around https://github.com/rust-lang/rust/issues/112480
+ifdef MOZ_DEBUG_RUST
+ifeq (i686-pc-windows-msvc,$(RUST_TARGET))
+RUSTFLAGS += -Zmir-enable-passes=-CheckAlignment
+RUSTC_BOOTSTRAP := 1
+endif
+endif
+
 $(target_rust_ltoable): RUSTFLAGS:=$(rustflags_override) $(rustflags_sancov) $(RUSTFLAGS) $(rust_pgo_flags) \
 								$(if $(MOZ_LTO_RUST_CROSS),\
 								    -Clinker-plugin-lto \
