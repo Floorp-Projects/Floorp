@@ -543,6 +543,10 @@ PeerConnection::~PeerConnection() {
     sdp_handler_->PrepareForShutdown();
   }
 
+  // In case `Close()` wasn't called, always make sure the controller cancels
+  // potentially pending operations.
+  data_channel_controller_.PrepareForShutdown();
+
   // Need to stop transceivers before destroying the stats collector because
   // AudioRtpSender has a reference to the LegacyStatsCollector it will update
   // when stopping.
