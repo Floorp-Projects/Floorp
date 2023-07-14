@@ -39,7 +39,7 @@ VideoCodec DefaultCodecSettings() {
   codec_settings.width = 320;
   codec_settings.height = 180;
   codec_settings.maxFramerate = 30;
-  codec_settings.maxBitrate = 1000;
+  codec_settings.startBitrate = 1000;
   codec_settings.qpMax = 63;
   return codec_settings;
 }
@@ -145,7 +145,7 @@ TEST(LibaomAv1EncoderTest, SetsEndOfPictureForLastFrameInTemporalUnit) {
   VideoCodec codec_settings = DefaultCodecSettings();
   // Configure encoder with 3 spatial layers.
   codec_settings.SetScalabilityMode(ScalabilityMode::kL3T1);
-  codec_settings.maxBitrate = allocation.get_sum_kbps();
+  codec_settings.startBitrate = allocation.get_sum_kbps();
   ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
             WEBRTC_VIDEO_CODEC_OK);
 
@@ -175,7 +175,7 @@ TEST(LibaomAv1EncoderTest, CheckOddDimensionsWithSpatialLayers) {
   // Odd width and height values should not make encoder crash.
   codec_settings.width = 623;
   codec_settings.height = 405;
-  codec_settings.maxBitrate = allocation.get_sum_kbps();
+  codec_settings.startBitrate = allocation.get_sum_kbps();
   ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
             WEBRTC_VIDEO_CODEC_OK);
   encoder->SetRates(VideoEncoder::RateControlParameters(
@@ -234,7 +234,7 @@ TEST(LibaomAv1EncoderTest, PopulatesEncodedFrameSize) {
   allocation.SetBitrate(2, 0, 30000);
   std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   VideoCodec codec_settings = DefaultCodecSettings();
-  codec_settings.maxBitrate = allocation.get_sum_kbps();
+  codec_settings.startBitrate = allocation.get_sum_kbps();
   ASSERT_GT(codec_settings.width, 4);
   // Configure encoder with 3 spatial layers.
   codec_settings.SetScalabilityMode(ScalabilityMode::kL3T1);
@@ -324,14 +324,14 @@ TEST(LibaomAv1EncoderTest, AdheresToTargetBitrateDespiteUnevenFrameTiming) {
   std::unique_ptr<VideoEncoder> encoder = CreateLibaomAv1Encoder();
   VideoCodec codec_settings = DefaultCodecSettings();
   codec_settings.SetScalabilityMode(ScalabilityMode::kL1T1);
-  codec_settings.maxBitrate = 300;  // kbps
+  codec_settings.startBitrate = 300;  // kbps
   codec_settings.width = 320;
   codec_settings.height = 180;
   ASSERT_EQ(encoder->InitEncode(&codec_settings, DefaultEncoderSettings()),
             WEBRTC_VIDEO_CODEC_OK);
 
   const int kFps = 30;
-  const int kTargetBitrateBps = codec_settings.maxBitrate * 1000;
+  const int kTargetBitrateBps = codec_settings.startBitrate * 1000;
   VideoEncoder::RateControlParameters rate_parameters;
   rate_parameters.framerate_fps = kFps;
   rate_parameters.bitrate.SetBitrate(/*spatial_index=*/0, 0, kTargetBitrateBps);
