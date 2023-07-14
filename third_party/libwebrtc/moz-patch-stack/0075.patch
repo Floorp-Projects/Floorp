@@ -141,7 +141,7 @@ index 8f70e0298d..bf98d5e668 100644
                                             int current_delay_ms,
                                             int target_delay_ms,
 diff --git a/modules/video_coding/packet_buffer.cc b/modules/video_coding/packet_buffer.cc
-index 9a599cd4bd..9f1bb211c5 100644
+index 52ef5c2d85..be45db6ef0 100644
 --- a/modules/video_coding/packet_buffer.cc
 +++ b/modules/video_coding/packet_buffer.cc
 @@ -115,25 +115,27 @@ PacketBuffer::InsertResult PacketBuffer::InsertPacket(
