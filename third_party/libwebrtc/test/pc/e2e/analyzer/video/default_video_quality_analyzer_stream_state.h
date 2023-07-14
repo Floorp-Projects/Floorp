@@ -70,6 +70,20 @@ class StreamState {
     return frame_ids_.size(kAliveFramesQueueIndex);
   }
 
+  void SetLastCapturedFrameTime(Timestamp time) {
+    last_captured_frame_time_ = time;
+  }
+  absl::optional<Timestamp> last_captured_frame_time() const {
+    return last_captured_frame_time_;
+  }
+
+  void SetLastEncodedFrameTime(Timestamp time) {
+    last_encoded_frame_time_ = time;
+  }
+  absl::optional<Timestamp> last_encoded_frame_time() const {
+    return last_encoded_frame_time_;
+  }
+
   void SetLastRenderedFrameTime(size_t peer, Timestamp time);
   absl::optional<Timestamp> last_rendered_frame_time(size_t peer) const;
 
@@ -99,6 +113,8 @@ class StreamState {
   // frame_id2 and consider those frames as dropped and then compare received
   // frame with the one from `FrameInFlight` with id frame_id3.
   MultiReaderQueue<uint16_t> frame_ids_;
+  absl::optional<Timestamp> last_captured_frame_time_ = absl::nullopt;
+  absl::optional<Timestamp> last_encoded_frame_time_ = absl::nullopt;
   std::unordered_map<size_t, Timestamp> last_rendered_frame_time_;
   // Mapping from peer's index to pausable state for this receiver.
   std::unordered_map<size_t, PausableState> pausable_state_;

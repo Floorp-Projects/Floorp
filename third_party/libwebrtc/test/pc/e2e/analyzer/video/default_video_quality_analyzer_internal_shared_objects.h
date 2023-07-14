@@ -59,9 +59,10 @@ struct FrameStats {
   Timestamp rendered_time = Timestamp::MinusInfinity();
   Timestamp prev_frame_rendered_time = Timestamp::MinusInfinity();
 
-  // Time between this and previous rendered frame excluding time when related
-  // stream was paused for related receiver.
-  TimeDelta time_between_rendered_frames = TimeDelta::Zero();
+  // Next timings are set if and only if previous frame exist.
+  absl::optional<TimeDelta> time_between_captured_frames = absl::nullopt;
+  absl::optional<TimeDelta> time_between_encoded_frames = absl::nullopt;
+  absl::optional<TimeDelta> time_between_rendered_frames = absl::nullopt;
 
   VideoFrameType encoded_frame_type = VideoFrameType::kEmptyFrame;
   DataSize encoded_image_size = DataSize::Bytes(0);

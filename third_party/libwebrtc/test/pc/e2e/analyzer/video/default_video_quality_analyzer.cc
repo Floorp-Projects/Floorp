@@ -211,6 +211,12 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     }
     StreamState* state = &stream_states_.at(stream_index);
     state->PushBack(frame_id);
+    absl::optional<TimeDelta> time_between_captured_frames = absl::nullopt;
+    if (state->last_captured_frame_time().has_value()) {
+      time_between_captured_frames =
+          captured_time - *state->last_captured_frame_time();
+    }
+    state->SetLastCapturedFrameTime(captured_time);
     // Update frames in flight info.
     auto it = captured_frames_in_flight_.find(frame_id);
     if (it != captured_frames_in_flight_.end()) {
@@ -247,6 +253,7 @@ uint16_t DefaultVideoQualityAnalyzer::OnFrameCaptured(
     }
     captured_frames_in_flight_.emplace(
         frame_id, FrameInFlight(stream_index, frame_id, captured_time,
+                                time_between_captured_frames,
                                 std::move(frame_receivers_indexes)));
     // Store local copy of the frame with frame_id set.
     VideoFrame local_frame(frame);
@@ -337,6 +344,13 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
     }
   }
   Timestamp now = Now();
+  StreamState& state = stream_states_.at(frame_in_flight.stream());
+  absl::optional<TimeDelta> time_between_encoded_frames = absl::nullopt;
+  if (state.last_encoded_frame_time().has_value()) {
+    time_between_encoded_frames = now - *state.last_encoded_frame_time();
+  }
+  state.SetLastEncodedFrameTime(now);
+
   StreamCodecInfo used_encoder;
   used_encoder.codec_name = stats.encoder_name;
   used_encoder.first_frame_id = frame_id;
@@ -350,8 +364,9 @@ void DefaultVideoQualityAnalyzer::OnFrameEncoded(
   size_t stream_index = encoded_image.SpatialIndex().value_or(
       encoded_image.SimulcastIndex().value_or(0));
   frame_in_flight.OnFrameEncoded(
-      now, encoded_image._frameType, DataSize::Bytes(encoded_image.size()),
-      stats.target_encode_bitrate, stream_index, stats.qp, used_encoder);
+      now, time_between_encoded_frames, encoded_image._frameType,
+      DataSize::Bytes(encoded_image.size()), stats.target_encode_bitrate,
+      stream_index, stats.qp, used_encoder);
 
   if (options_.report_infra_metrics) {
     analyzer_stats_.on_frame_encoded_processing_time_ms.AddSample(
