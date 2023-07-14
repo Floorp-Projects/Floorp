@@ -1579,8 +1579,7 @@ TEST(RtcpReceiverTest,
         EXPECT_EQ(rtcp_block.source_ssrc(), report_block.source_ssrc);
         EXPECT_EQ(kSenderSsrc, report_block.sender_ssrc);
         EXPECT_EQ(rtcp_block.fraction_lost(), report_block.fraction_lost);
-        EXPECT_EQ(rtcp_block.cumulative_lost_signed(),
-                  report_block.packets_lost);
+        EXPECT_EQ(rtcp_block.cumulative_lost(), report_block.packets_lost);
         EXPECT_EQ(rtcp_block.extended_high_seq_num(),
                   report_block.extended_highest_sequence_number);
         EXPECT_EQ(rtcp_block.jitter(), report_block.jitter);
