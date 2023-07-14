@@ -40,6 +40,7 @@
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "rtc_base/fake_clock.h"
 #include "rtc_base/random.h"
+#include "test/field_trial.h"
 #include "test/gtest.h"
 
 namespace webrtc {
@@ -1288,6 +1289,20 @@ TEST_P(RtcEventLogEncoderTest, RtcEventRtpPacketIncoming) {
 }
 
 TEST_P(RtcEventLogEncoderTest, RtcEventRtpPacketOutgoing) {
+  TestRtpPackets<RtcEventRtpPacketOutgoing, LoggedRtpPacketOutgoing>();
+}
+
+TEST_P(RtcEventLogEncoderTest,
+       RtcEventRtpPacketIncomingNoDependencyDescriptor) {
+  test::ScopedFieldTrials no_dd(
+      "WebRTC-RtcEventLogEncodeDependencyDescriptor/Disabled/");
+  TestRtpPackets<RtcEventRtpPacketIncoming, LoggedRtpPacketIncoming>();
+}
+
+TEST_P(RtcEventLogEncoderTest,
+       RtcEventRtpPacketOutgoingNoDependencyDescriptor) {
+  test::ScopedFieldTrials no_dd(
+      "WebRTC-RtcEventLogEncodeDependencyDescriptor/Disabled/");
   TestRtpPackets<RtcEventRtpPacketOutgoing, LoggedRtpPacketOutgoing>();
 }
 
