@@ -49,9 +49,6 @@ class ReportBlock {
 
   uint32_t source_ssrc() const { return source_ssrc_; }
   uint8_t fraction_lost() const { return fraction_lost_; }
-  [[deprecated]] int32_t cumulative_lost_signed() const {
-    return cumulative_lost_;
-  }
   int32_t cumulative_lost() const { return cumulative_lost_; }
   uint32_t extended_high_seq_num() const { return extended_high_seq_num_; }
   uint32_t jitter() const { return jitter_; }
