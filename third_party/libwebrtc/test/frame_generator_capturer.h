@@ -10,15 +10,22 @@
 #ifndef TEST_FRAME_GENERATOR_CAPTURER_H_
 #define TEST_FRAME_GENERATOR_CAPTURER_H_
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
-#include <string>
 
+#include "absl/types/optional.h"
 #include "api/task_queue/task_queue_factory.h"
 #include "api/test/frame_generator_interface.h"
+#include "api/video/color_space.h"
 #include "api/video/video_frame.h"
+#include "api/video/video_rotation.h"
+#include "api/video/video_sink_interface.h"
+#include "api/video/video_source_interface.h"
 #include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue.h"
 #include "rtc_base/task_utils/repeating_task.h"
+#include "rtc_base/thread_annotations.h"
 #include "system_wrappers/include/clock.h"
 #include "test/test_video_capturer.h"
 

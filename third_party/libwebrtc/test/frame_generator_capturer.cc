@@ -12,17 +12,27 @@
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
+#include <cstddef>
 #include <memory>
 #include <utility>
-#include <vector>
 
-#include "api/test/create_frame_generator.h"
+#include "absl/types/optional.h"
+#include "api/task_queue/task_queue_base.h"
+#include "api/task_queue/task_queue_factory.h"
+#include "api/test/frame_generator_interface.h"
+#include "api/units/time_delta.h"
+#include "api/video/color_space.h"
+#include "api/video/video_frame.h"
+#include "api/video/video_rotation.h"
+#include "api/video/video_sink_interface.h"
+#include "api/video/video_source_interface.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
+#include "rtc_base/synchronization/mutex.h"
 #include "rtc_base/task_queue.h"
-#include "rtc_base/time_utils.h"
+#include "rtc_base/task_utils/repeating_task.h"
 #include "system_wrappers/include/clock.h"
+#include "test/test_video_capturer.h"
 
 namespace webrtc {
 namespace test {
