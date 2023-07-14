@@ -1584,8 +1584,8 @@ TEST(RtcpReceiverTest,
         EXPECT_EQ(rtcp_block.extended_high_seq_num(),
                   report_block.extended_highest_sequence_number);
         EXPECT_EQ(rtcp_block.jitter(), report_block.jitter);
-        EXPECT_EQ(kNtpNowMs * rtc::kNumMicrosecsPerMillisec,
-                  report_block_data.report_block_timestamp_utc_us());
+        EXPECT_EQ(report_block_data.report_block_timestamp_utc(),
+                  Timestamp::Millis(kNtpNowMs));
         // No RTT is calculated in this test.
         EXPECT_EQ(0u, report_block_data.num_rtts());
       });
@@ -1602,8 +1602,12 @@ TEST(RtcpReceiverTest, VerifyRttObtainedFromReportBlockDataObserver) {
   RTCPReceiver receiver(config, &mocks.rtp_rtcp_impl);
   receiver.SetRemoteSSRC(kSenderSsrc);
 
-  const TimeDelta kRtt = TimeDelta::Millis(120);
-  const uint32_t kDelayNtp = 123000;
+  // To avoid issues with rounding due to different way to represent time units,
+  // use RTT that can be precisly represented both with
+  // TimeDelta units (i.e. integer number of microseconds), and
+  // ntp units (i.e. integer number of 2^(-32) seconds)
+  const TimeDelta kRtt = TimeDelta::Millis(125);
+  const uint32_t kDelayNtp = 123'000;
   const TimeDelta kDelay = CompactNtpRttToTimeDelta(kDelayNtp);
 
   uint32_t sent_ntp = CompactNtp(mocks.clock.CurrentNtpTime());
@@ -1628,10 +1632,10 @@ TEST(RtcpReceiverTest, VerifyRttObtainedFromReportBlockDataObserver) {
         EXPECT_EQ(kReceiverMainSsrc,
                   report_block_data.report_block().source_ssrc);
         EXPECT_EQ(1u, report_block_data.num_rtts());
-        EXPECT_EQ(kRtt.ms(), report_block_data.min_rtt_ms());
-        EXPECT_EQ(kRtt.ms(), report_block_data.max_rtt_ms());
-        EXPECT_EQ(kRtt.ms(), report_block_data.sum_rtt_ms());
-        EXPECT_EQ(kRtt.ms(), report_block_data.last_rtt_ms());
+        EXPECT_EQ(kRtt, report_block_data.min_rtt());
+        EXPECT_EQ(kRtt, report_block_data.max_rtt());
+        EXPECT_EQ(kRtt, report_block_data.sum_rtts());
+        EXPECT_EQ(kRtt, report_block_data.last_rtt());
       });
   EXPECT_CALL(observer, OnReportBlockDataUpdated)
       .WillOnce([](ReportBlockData report_block_data) {

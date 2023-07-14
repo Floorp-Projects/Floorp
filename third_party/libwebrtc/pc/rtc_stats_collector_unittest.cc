@@ -3599,31 +3599,29 @@ class RTCStatsCollectorTestWithParamKind
 // RTCCodecStats (codecId, jitter) and without setting up an RTCP transport.
 TEST_P(RTCStatsCollectorTestWithParamKind,
        RTCRemoteInboundRtpStreamStatsCollectedFromReportBlock) {
-  const int64_t kReportBlockTimestampUtcUs = 123456789;
+  const Timestamp kReportBlockTimestampUtc = Timestamp::Micros(123456789);
   const uint8_t kFractionLost = 12;
-  const int64_t kRoundTripTimeSample1Ms = 1234;
-  const double kRoundTripTimeSample1Seconds = 1.234;
-  const int64_t kRoundTripTimeSample2Ms = 13000;
-  const double kRoundTripTimeSample2Seconds = 13;
+  const TimeDelta kRoundTripTimeSample1 = TimeDelta::Millis(1'234);
+  const TimeDelta kRoundTripTimeSample2 = TimeDelta::Seconds(13);
 
   // The report block's timestamp cannot be from the future, set the fake clock
   // to match.
-  fake_clock_.SetTime(Timestamp::Micros(kReportBlockTimestampUtcUs));
+  fake_clock_.SetTime(kReportBlockTimestampUtc);
   auto ssrcs = {12, 13};
   std::vector<ReportBlockData> report_block_datas;
   for (auto ssrc : ssrcs) {
-    RTCPReportBlock report_block;
+    rtcp::ReportBlock report_block;
     // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
     // `source_ssrc`, "SSRC of the RTP packet sender".
-    report_block.source_ssrc = ssrc;
-    report_block.packets_lost = 7;
-    report_block.fraction_lost = kFractionLost;
+    report_block.SetMediaSsrc(ssrc);
+    report_block.SetCumulativeLost(7);
+    report_block.SetFractionLost(kFractionLost);
     ReportBlockData report_block_data;
-    report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
-    report_block_data.AddRoundTripTimeSample(kRoundTripTimeSample1Ms);
+    report_block_data.SetReportBlock(0, report_block, kReportBlockTimestampUtc);
+    report_block_data.AddRoundTripTimeSample(kRoundTripTimeSample1);
     // Only the last sample should be exposed as the
     // `RTCRemoteInboundRtpStreamStats::round_trip_time`.
-    report_block_data.AddRoundTripTimeSample(kRoundTripTimeSample2Ms);
+    report_block_data.AddRoundTripTimeSample(kRoundTripTimeSample2);
     report_block_datas.push_back(report_block_data);
   }
   AddSenderInfoAndMediaChannel("TransportName", report_block_datas,
@@ -3633,8 +3631,7 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
   for (auto ssrc : ssrcs) {
     std::string stream_id = "" + std::to_string(ssrc);
     RTCRemoteInboundRtpStreamStats expected_remote_inbound_rtp(
-        "RI" + MediaTypeCharStr() + stream_id,
-        Timestamp::Micros(kReportBlockTimestampUtcUs));
+        "RI" + MediaTypeCharStr() + stream_id, kReportBlockTimestampUtc);
     expected_remote_inbound_rtp.ssrc = ssrc;
     expected_remote_inbound_rtp.fraction_lost =
         static_cast<double>(kFractionLost) / (1 << 8);
@@ -3645,9 +3642,10 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
     expected_remote_inbound_rtp.packets_lost = 7;
     expected_remote_inbound_rtp.local_id =
         "OTTransportName1" + MediaTypeCharStr() + stream_id;
-    expected_remote_inbound_rtp.round_trip_time = kRoundTripTimeSample2Seconds;
+    expected_remote_inbound_rtp.round_trip_time =
+        kRoundTripTimeSample2.seconds<double>();
     expected_remote_inbound_rtp.total_round_trip_time =
-        kRoundTripTimeSample1Seconds + kRoundTripTimeSample2Seconds;
+        (kRoundTripTimeSample1 + kRoundTripTimeSample2).seconds<double>();
     expected_remote_inbound_rtp.round_trip_time_measurements = 2;
     // This test does not set up RTCCodecStats, so `codec_id` and `jitter` are
     // expected to be missing. These are tested separately.
@@ -3668,14 +3666,14 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
 
 TEST_P(RTCStatsCollectorTestWithParamKind,
        RTCRemoteInboundRtpStreamStatsRttMissingBeforeMeasurement) {
-  constexpr int64_t kReportBlockTimestampUtcUs = 123456789;
+  constexpr Timestamp kReportBlockTimestampUtc = Timestamp::Micros(123456789);
 
-  RTCPReportBlock report_block;
+  rtcp::ReportBlock report_block;
   // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
   // `source_ssrc`, "SSRC of the RTP packet sender".
-  report_block.source_ssrc = 12;
+  report_block.SetMediaSsrc(12);
   ReportBlockData report_block_data;  // AddRoundTripTimeSample() not called.
-  report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
+  report_block_data.SetReportBlock(0, report_block, kReportBlockTimestampUtc);
 
   AddSenderInfoAndMediaChannel("TransportName", {report_block_data},
                                absl::nullopt);
@@ -3694,15 +3692,15 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
 
 TEST_P(RTCStatsCollectorTestWithParamKind,
        RTCRemoteInboundRtpStreamStatsWithTimestampFromReportBlock) {
-  const int64_t kReportBlockTimestampUtcUs = 123456789;
-  fake_clock_.SetTime(Timestamp::Micros(kReportBlockTimestampUtcUs));
+  const Timestamp kReportBlockTimestampUtc = Timestamp::Micros(123456789);
+  fake_clock_.SetTime(kReportBlockTimestampUtc);
 
-  RTCPReportBlock report_block;
+  rtcp::ReportBlock report_block;
   // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
   // `source_ssrc`, "SSRC of the RTP packet sender".
-  report_block.source_ssrc = 12;
+  report_block.SetMediaSsrc(12);
   ReportBlockData report_block_data;
-  report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
+  report_block_data.SetReportBlock(0, report_block, kReportBlockTimestampUtc);
 
   AddSenderInfoAndMediaChannel("TransportName", {report_block_data},
                                absl::nullopt);
@@ -3719,24 +3717,23 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
 
   // Even though the report time is different, the remote-inbound-rtp timestamp
   // is of the time that the report block was received.
-  EXPECT_EQ(Timestamp::Micros(kReportBlockTimestampUtcUs + 1234),
-            report->timestamp());
-  EXPECT_EQ(Timestamp::Micros(kReportBlockTimestampUtcUs),
-            remote_inbound_rtp.timestamp());
+  EXPECT_EQ(report->timestamp(),
+            kReportBlockTimestampUtc + TimeDelta::Micros(1234));
+  EXPECT_EQ(remote_inbound_rtp.timestamp(), kReportBlockTimestampUtc);
 }
 
 TEST_P(RTCStatsCollectorTestWithParamKind,
        RTCRemoteInboundRtpStreamStatsWithCodecBasedMembers) {
-  const int64_t kReportBlockTimestampUtcUs = 123456789;
-  fake_clock_.SetTime(Timestamp::Micros(kReportBlockTimestampUtcUs));
+  const Timestamp kReportBlockTimestampUtc = Timestamp::Micros(123456789);
+  fake_clock_.SetTime(kReportBlockTimestampUtc);
 
-  RTCPReportBlock report_block;
+  rtcp::ReportBlock report_block;
   // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
   // `source_ssrc`, "SSRC of the RTP packet sender".
-  report_block.source_ssrc = 12;
-  report_block.jitter = 5000;
+  report_block.SetMediaSsrc(12);
+  report_block.SetJitter(5000);
   ReportBlockData report_block_data;
-  report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
+  report_block_data.SetReportBlock(0, report_block, kReportBlockTimestampUtc);
 
   RtpCodecParameters codec;
   codec.payload_type = 3;
@@ -3763,15 +3760,15 @@ TEST_P(RTCStatsCollectorTestWithParamKind,
 
 TEST_P(RTCStatsCollectorTestWithParamKind,
        RTCRemoteInboundRtpStreamStatsWithRtcpTransport) {
-  const int64_t kReportBlockTimestampUtcUs = 123456789;
-  fake_clock_.SetTime(Timestamp::Micros(kReportBlockTimestampUtcUs));
+  const Timestamp kReportBlockTimestampUtc = Timestamp::Micros(123456789);
+  fake_clock_.SetTime(kReportBlockTimestampUtc);
 
-  RTCPReportBlock report_block;
+  rtcp::ReportBlock report_block;
   // The remote-inbound-rtp SSRC and the outbound-rtp SSRC is the same as the
   // `source_ssrc`, "SSRC of the RTP packet sender".
-  report_block.source_ssrc = 12;
+  report_block.SetMediaSsrc(12);
   ReportBlockData report_block_data;
-  report_block_data.SetReportBlock(report_block, kReportBlockTimestampUtcUs);
+  report_block_data.SetReportBlock(0, report_block, kReportBlockTimestampUtc);
 
   cricket::TransportChannelStats rtp_transport_channel_stats;
   rtp_transport_channel_stats.component = cricket::ICE_CANDIDATE_COMPONENT_RTP;

@@ -851,7 +851,7 @@ ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
   auto remote_inbound = std::make_unique<RTCRemoteInboundRtpStreamStats>(
       RTCRemoteInboundRtpStreamStatsIdFromSourceSsrc(media_type,
                                                      report_block.source_ssrc),
-      Timestamp::Micros(report_block_data.report_block_timestamp_utc_us()));
+      report_block_data.report_block_timestamp_utc());
   remote_inbound->ssrc = report_block.source_ssrc;
   remote_inbound->kind =
       media_type == cricket::MEDIA_TYPE_AUDIO ? "audio" : "video";
@@ -860,12 +860,10 @@ ProduceRemoteInboundRtpStreamStatsFromReportBlockData(
       static_cast<double>(report_block.fraction_lost) / (1 << 8);
   if (report_block_data.num_rtts() > 0) {
     remote_inbound->round_trip_time =
-        static_cast<double>(report_block_data.last_rtt_ms()) /
-        rtc::kNumMillisecsPerSec;
+        report_block_data.last_rtt().seconds<double>();
   }
   remote_inbound->total_round_trip_time =
-      static_cast<double>(report_block_data.sum_rtt_ms()) /
-      rtc::kNumMillisecsPerSec;
+      report_block_data.sum_rtts().seconds<double>();
   remote_inbound->round_trip_time_measurements =
       report_block_data.num_rtts();
 
