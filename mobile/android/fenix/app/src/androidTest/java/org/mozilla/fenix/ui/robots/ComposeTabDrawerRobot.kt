@@ -18,6 +18,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -271,6 +272,24 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
         fun openTab(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             composeTestRule.tabItem(title)
                 .performScrollTo()
+                .performClick()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openPrivateTab(position: Int, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            composeTestRule.privateTabsList()
+                .onChildren()[position]
+                .performClick()
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+
+        fun openNormalTab(position: Int, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            composeTestRule.normalTabsList()
+                .onChildren()[position]
                 .performClick()
 
             BrowserRobot().interact()
