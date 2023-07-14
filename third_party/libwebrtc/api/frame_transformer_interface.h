@@ -61,9 +61,7 @@ class TransformableVideoFrameInterface : public TransformableFrameInterface {
 
   virtual VideoFrameMetadata Metadata() const = 0;
 
-  // TODO(https://crbug.com/webrtc/14709): Make pure virtual when Chromium MOCK
-  // has implemented this.
-  virtual void SetMetadata(const VideoFrameMetadata&) {}
+  virtual void SetMetadata(const VideoFrameMetadata&) = 0;
 };
 
 // Extends the TransformableFrameInterface to expose audio-specific information.
