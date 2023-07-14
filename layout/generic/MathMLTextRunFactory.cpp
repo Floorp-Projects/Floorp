@@ -171,8 +171,7 @@ static uint32_t MathvarMappingSearch(uint32_t aKey,
   http://lists.w3.org/Archives/Public/www-math/2013Sep/0012.html and
   https://en.wikipedia.org/wiki/Mathematical_Alphanumeric_Symbols
 */
-/*static */ uint32_t MathMLTextRunFactory::MathVariant(
-    uint32_t aCh, StyleMathVariant aMathVar) {
+static uint32_t MathVariant(uint32_t aCh, StyleMathVariant aMathVar) {
   uint32_t baseChar;
   enum CharacterType {
     kIsLatin,
@@ -525,9 +524,7 @@ void MathMLTextRunFactory::RebuildTextRun(
     int extraChars = 0;
     mathVar = styles[i]->mMathVariant;
 
-    if (singleCharMI && mathVar == StyleMathVariant::None &&
-        (!StaticPrefs::mathml_legacy_mathvariant_attribute_disabled() ||
-         styles[i]->mTextTransform.case_ == StyleTextTransformCase::MathAuto)) {
+    if (singleCharMI && mathVar == StyleMathVariant::None) {
       mathVar = StyleMathVariant::Italic;
     }
 
