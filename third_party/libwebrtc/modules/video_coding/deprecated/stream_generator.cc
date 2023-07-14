@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/video_coding/test/stream_generator.h"
+#include "modules/video_coding/deprecated/stream_generator.h"
 
 #include <string.h>
 
 #include <list>
 
 #include "modules/video_coding/deprecated/packet.h"
-#include "test/gtest.h"
+#include "rtc_base/checks.h"
 
 namespace webrtc {
 
@@ -55,7 +55,7 @@ VCMPacket StreamGenerator::GeneratePacket(uint16_t sequence_number,
                                           bool first_packet,
                                           bool marker_bit,
                                           VideoFrameType type) {
-  EXPECT_LT(size, kMaxPacketSize);
+  RTC_CHECK_LT(size, kMaxPacketSize);
   VCMPacket packet;
   packet.seqNum = sequence_number;
   packet.timestamp = timestamp;
