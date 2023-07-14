@@ -155,8 +155,8 @@ public:
                                                                                \
     auto raw = impl().get_raw_value();                                         \
     auto raw_rhs = detail::unwrap_value(rhs);                                  \
-    static_assert(std::is_integral_v<decltype(raw_rhs)>                        \
-                  || std::is_floating_point_v<decltype(raw_rhs)>,              \
+    static_assert(std::is_integral_v<decltype(raw_rhs)> ||                     \
+                    std::is_floating_point_v<decltype(raw_rhs)>,               \
                   "Can only operate on numeric types");                        \
                                                                                \
     auto ret = raw opSymbol raw_rhs;                                           \
