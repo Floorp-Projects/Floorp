@@ -796,11 +796,11 @@ NS_IMETHODIMP AboutThirdParty::LookupApplication(
 
   // If more than one application includes the module, we return null
   // because there is no way to know which is the real owner.
-  if (bounds.second() - bounds.first() != 1) {
+  if (bounds.second - bounds.first != 1) {
     return NS_OK;
   }
 
-  app = mLocations[bounds.first()].second();
+  app = mLocations[bounds.first].second();
   app.forget(aResult);
   return NS_OK;
 }

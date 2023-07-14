@@ -115,11 +115,11 @@ TEST(AboutThirdParty, InstallLocations)
   for (const auto& testCase : kTestCases) {
     auto bounds = EqualRange(locations, 0, locations.Length(),
                              InstallLocationComparator(testCase.mFile));
-    if (bounds.second() - bounds.first() != 1) {
+    if (bounds.second - bounds.first != 1) {
       EXPECT_TRUE(testCase.mInstallPath.IsEmpty());
       continue;
     }
 
-    EXPECT_EQ(locations[bounds.first()].first(), testCase.mInstallPath);
+    EXPECT_EQ(locations[bounds.first].first(), testCase.mInstallPath);
   }
 }
