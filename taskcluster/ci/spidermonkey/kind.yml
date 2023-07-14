@@ -59,7 +59,7 @@ job-defaults:
     fetches:
         toolchain:
             by-worker-type:
-                .*-b-win2012:
+                .*-b-win2022:
                     - win64-clang
                     - win64-rust
                 default:

@@ -379,7 +379,7 @@ def make_job_description(config, jobs):
             "max-run-time": job["run-time"],
             "chain-of-trust": True,
         }
-        if job["worker-type"] == "b-win2012":
+        if job["worker-type"] in ["b-win2012", "b-win2022"]:
             job_description["worker"]["os"] = "windows"
             job_description["run"]["use-simple-package"] = False
             job_description["run"]["use-magic-mh-args"] = False

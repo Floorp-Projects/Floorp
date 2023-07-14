@@ -76,7 +76,7 @@ jobs:
         treeherder:
             platform: windows2012-64/debug
             tier: 2
-        worker-type: b-win2012
+        worker-type: b-win2022
         run:
             config:
                 - builds/releng_base_firefox.py
