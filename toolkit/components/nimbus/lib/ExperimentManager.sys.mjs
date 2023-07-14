@@ -632,20 +632,39 @@ export class _ExperimentManager {
       unenrollReason: reason,
     });
 
-    lazy.TelemetryEvents.sendEvent("unenroll", TELEMETRY_EVENT_OBJECT, slug, {
-      reason,
-      branch: enrollment.branch.slug,
-      enrollmentId:
-        enrollment.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
-    });
+    lazy.TelemetryEvents.sendEvent(
+      "unenroll",
+      TELEMETRY_EVENT_OBJECT,
+      slug,
+      Object.assign(
+        {
+          reason,
+          branch: enrollment.branch.slug,
+          enrollmentId:
+            enrollment.enrollmentId ||
+            lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+        },
+        typeof changedPref !== "undefined"
+          ? { changedPref: changedPref.name }
+          : {}
+      )
+    );
     // Sent Glean event equivalent
-    Glean.nimbusEvents.unenrollment.record({
-      experiment: slug,
-      branch: enrollment.branch.slug,
-      enrollment_id:
-        enrollment.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
-      reason,
-    });
+    Glean.nimbusEvents.unenrollment.record(
+      Object.assign(
+        {
+          experiment: slug,
+          branch: enrollment.branch.slug,
+          enrollment_id:
+            enrollment.enrollmentId ||
+            lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
+          reason,
+        },
+        typeof changedPref !== "undefined"
+          ? { changed_pref: changedPref.name }
+          : {}
+      )
+    );
 
     this._unsetEnrollmentPrefs(enrollment, { changedPref, duringRestore });
 
