@@ -358,12 +358,14 @@ class FakePeerConnectionBase : public PeerConnectionInternal {
 
   Call* call_ptr() override { return nullptr; }
   bool SrtpRequired() const override { return false; }
-  bool SetupDataChannelTransport_n(const std::string& mid) override {
-    return false;
+  absl::optional<std::string> SetupDataChannelTransport_n(
+      absl::string_view mid) override {
+    return absl::nullopt;
   }
   void TeardownDataChannelTransport_n(RTCError error) override {}
-  void SetSctpDataMid(const std::string& mid) override {}
-  void ResetSctpDataMid() override {}
+  void SetSctpDataInfo(absl::string_view mid,
+                       absl::string_view transport_name) override {}
+  void ResetSctpDataInfo() override {}
 
   const FieldTrialsView& trials() const override { return field_trials_; }
 
