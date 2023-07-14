@@ -3342,8 +3342,20 @@ bool SdpOfferAnswerHandler::CheckIfNegotiationIsNeeded() {
   // 4. If connection has created any RTCDataChannels, and no m= section in
   // description has been negotiated yet for data, return true.
   if (data_channel_controller()->HasUsedDataChannels()) {
-    if (!cricket::GetFirstDataContent(description->description()->contents()))
+    const cricket::ContentInfo* data_content =
+        cricket::GetFirstDataContent(description->description()->contents());
+    if (!data_content) {
       return true;
+    }
+    // The remote end might have rejected the data content.
+    const cricket::ContentInfo* remote_data_content =
+        current_remote_description()
+            ? current_remote_description()->description()->GetContentByName(
+                  data_content->name)
+            : nullptr;
+    if (remote_data_content && remote_data_content->rejected) {
+      return true;
+    }
   }
   if (!ConfiguredForMedia()) {
     return false;
@@ -4263,10 +4275,28 @@ void SdpOfferAnswerHandler::GetOptionsForUnifiedPlanOffer(
   }
   // Lastly, add a m-section if we have requested local data channels and an
   // m section does not already exist.
-  if (!pc_->GetDataMid() && data_channel_controller()->HasUsedDataChannels()) {
-    session_options->media_description_options.push_back(
-        GetMediaDescriptionOptionsForActiveData(
-            mid_generator_.GenerateString()));
+  if (!pc_->GetDataMid() && data_channel_controller()->HasUsedDataChannels() &&
+      data_channel_controller()->HasDataChannels()) {
+    // Attempt to recycle a stopped m-line.
+    // TODO(crbug.com/1442604): GetDataMid() should return the mid if one was
+    // ever created but rejected.
+    bool recycled = false;
+    for (size_t i = 0; i < session_options->media_description_options.size();
+         i++) {
+      auto media_description = session_options->media_description_options[i];
+      if (media_description.type == cricket::MEDIA_TYPE_DATA &&
+          media_description.stopped) {
+        session_options->media_description_options[i] =
+            GetMediaDescriptionOptionsForActiveData(media_description.mid);
+        recycled = true;
+        break;
+      }
+    }
+    if (!recycled) {
+      session_options->media_description_options.push_back(
+          GetMediaDescriptionOptionsForActiveData(
+              mid_generator_.GenerateString()));
+    }
   }
 }
 
