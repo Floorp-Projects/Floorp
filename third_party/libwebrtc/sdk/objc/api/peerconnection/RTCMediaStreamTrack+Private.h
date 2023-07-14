@@ -46,10 +46,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (BOOL)isEqualToTrack:(RTC_OBJC_TYPE(RTCMediaStreamTrack) *)track;
 
 + (webrtc::MediaStreamTrackInterface::TrackState)nativeTrackStateForState:
-        (RTCMediaStreamTrackState)state;
+    (RTCMediaStreamTrackState)state;
 
 + (RTCMediaStreamTrackState)trackStateForNativeState:
-        (webrtc::MediaStreamTrackInterface::TrackState)nativeState;
+    (webrtc::MediaStreamTrackInterface::TrackState)nativeState;
 
 + (NSString *)stringForState:(RTCMediaStreamTrackState)state;
 
