@@ -207,7 +207,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9
  .../linux/x11/screen_capturer_x11.cc          |   2 +-
  .../linux/x11/window_capturer_x11.cc          |  12 +-
  .../linux/x11/window_capturer_x11.h           |   4 +
- .../desktop_capture/linux/x11/x_error_trap.cc |  70 ++++---
+ .../desktop_capture/linux/x11/x_error_trap.cc |  68 +++---
  .../desktop_capture/linux/x11/x_error_trap.h  |  29 ++-
  .../mouse_cursor_monitor_win.cc               |   7 +-
  .../win/screen_capture_utils.cc               |   3 +-
@@ -236,7 +236,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/26eee332d844bd3f9
  modules/video_coding/generic_decoder.cc       |   5 +-
  test/fuzzers/rtp_packet_fuzzer.cc             |   5 +
  test/vcm_capturer.cc                          |   2 +-
- 45 files changed, 652 insertions(+), 134 deletions(-)
+ 45 files changed, 651 insertions(+), 133 deletions(-)
 
 diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
 index 0573e54684..40d4690397 100644
@@ -757,25 +757,22 @@ index ac591c272e..cfd29eca66 100644
  
    rtc::scoped_refptr<SharedXDisplay> x_display_;
 diff --git a/modules/desktop_capture/linux/x11/x_error_trap.cc b/modules/desktop_capture/linux/x11/x_error_trap.cc
-index 94e3a03c73..3314dd286c 100644
+index 24c2065111..3314dd286c 100644
 --- a/modules/desktop_capture/linux/x11/x_error_trap.cc
 +++ b/modules/desktop_capture/linux/x11/x_error_trap.cc
-@@ -10,50 +10,60 @@
+@@ -12,48 +12,58 @@
  
- #include "modules/desktop_capture/linux/x11/x_error_trap.h"
- 
--#include <atomic>
--
  #include <stddef.h>
  
--#include "rtc_base/checks.h"
--
--namespace webrtc {
+-#include <atomic>
 +#include <limits>
  
--namespace {
-+#include "rtc_base/checks.h"
+ #include "rtc_base/checks.h"
  
+-namespace webrtc {
+-
+-namespace {
+-
 -static int g_last_xserver_error_code = 0;
 -static std::atomic<Display*> g_display_for_error_handler = nullptr;
  

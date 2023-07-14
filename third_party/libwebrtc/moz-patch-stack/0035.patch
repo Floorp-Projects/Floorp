@@ -48,7 +48,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0f4d1733cb1a2d81
  modules/audio_coding/BUILD.gn                 |  2 +-
  modules/audio_device/BUILD.gn                 | 19 +++++---
  modules/audio_processing/aec3/BUILD.gn        | 13 +++---
- .../aec3/adaptive_fir_filter_avx2.cc          |  3 +-
+ .../aec3/adaptive_fir_filter_avx2.cc          |  2 +-
  .../audio_processing/agc2/rnn_vad/BUILD.gn    |  2 +-
  modules/desktop_capture/BUILD.gn              | 29 +-----------
  modules/portal/BUILD.gn                       | 24 ++++++++++
@@ -58,7 +58,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/d0f4d1733cb1a2d81
  test/BUILD.gn                                 | 14 ++++++
  video/BUILD.gn                                |  4 +-
  webrtc.gni                                    | 34 +++++++++-----
- 30 files changed, 287 insertions(+), 102 deletions(-)
+ 30 files changed, 287 insertions(+), 101 deletions(-)
  create mode 100644 api/rtp_sender_setparameters_callback.cc
  create mode 100644 api/rtp_sender_setparameters_callback.h
  create mode 100644 common_audio/intrin.h
@@ -808,19 +808,18 @@ index f5eb5d5951..3e11a245a1 100644
      deps = [
        ":adaptive_fir_filter",
 diff --git a/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc b/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
-index 6c8c948026..44d4514275 100644
+index b6eda9f117..8d6e1cf3d7 100644
 --- a/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
 +++ b/modules/audio_processing/aec3/adaptive_fir_filter_avx2.cc
-@@ -10,8 +10,7 @@
- 
- #include "modules/audio_processing/aec3/adaptive_fir_filter.h"
+@@ -8,7 +8,7 @@
+  *  be found in the AUTHORS file in the root of the source tree.
+  */
  
 -#include <immintrin.h>
--
 +#include "common_audio/intrin.h"
- #include "rtc_base/checks.h"
  
- namespace webrtc {
+ #include "modules/audio_processing/aec3/adaptive_fir_filter.h"
+ #include "rtc_base/checks.h"
 diff --git a/modules/audio_processing/agc2/rnn_vad/BUILD.gn b/modules/audio_processing/agc2/rnn_vad/BUILD.gn
 index 9093a68cf3..3003a585bd 100644
 --- a/modules/audio_processing/agc2/rnn_vad/BUILD.gn

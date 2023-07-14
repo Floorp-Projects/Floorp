@@ -152,7 +152,7 @@ index 1ae0a4c794..4ef00e68ab 100644
  
  DelegatedSourceListController*
 diff --git a/modules/desktop_capture/linux/wayland/screencast_portal.cc b/modules/desktop_capture/linux/wayland/screencast_portal.cc
-index 52788524c8..8d9e956779 100644
+index 3d28d42ba6..ebe6779e31 100644
 --- a/modules/desktop_capture/linux/wayland/screencast_portal.cc
 +++ b/modules/desktop_capture/linux/wayland/screencast_portal.cc
 @@ -41,6 +41,8 @@ ScreenCastPortal::CaptureSourceType ScreenCastPortal::ToCaptureSourceType(

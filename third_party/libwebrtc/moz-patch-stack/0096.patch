@@ -23,10 +23,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/854cc79e99130e653
  1 file changed, 9 insertions(+), 2 deletions(-)
 
 diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
-index 2c192fe4f6..2b01fc6930 100644
+index b5867923d1..f6927281f3 100644
 --- a/modules/video_capture/windows/device_info_ds.cc
 +++ b/modules/video_capture/windows/device_info_ds.cc
-@@ -520,11 +520,18 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
+@@ -519,11 +519,18 @@ int32_t DeviceInfoDS::CreateCapabilityMap(const char* deviceUniqueIdUTF8)
          hrVC = videoControlConfig->GetFrameRateList(
              outputCapturePin, tmp, size, &listSize, &frameDurationList);
  
