@@ -263,16 +263,13 @@ class MockPeerConnectionInternal : public PeerConnectionInternal {
               (override));
   MOCK_METHOD(Call*, call_ptr, (), (override));
   MOCK_METHOD(bool, SrtpRequired, (), (const, override));
-  MOCK_METHOD(absl::optional<std::string>,
+  MOCK_METHOD(bool,
               SetupDataChannelTransport_n,
-              (absl::string_view mid),
+              (const std::string&),
               (override));
   MOCK_METHOD(void, TeardownDataChannelTransport_n, (RTCError), (override));
-  MOCK_METHOD(void,
-              SetSctpDataInfo,
-              (absl::string_view, absl::string_view),
-              (override));
-  MOCK_METHOD(void, ResetSctpDataInfo, (), (override));
+  MOCK_METHOD(void, SetSctpDataMid, (const std::string&), (override));
+  MOCK_METHOD(void, ResetSctpDataMid, (), (override));
   MOCK_METHOD(const FieldTrialsView&, trials, (), (const, override));
 
   // PeerConnectionInternal

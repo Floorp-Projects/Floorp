@@ -5093,15 +5093,18 @@ bool SdpOfferAnswerHandler::CreateDataChannel(const std::string& mid) {
 
   RTC_LOG(LS_INFO) << "Creating data channel, mid=" << mid;
 
-  absl::optional<std::string> transport_name =
-      context_->network_thread()->BlockingCall([&] {
+  if (!context_->network_thread()->BlockingCall([this, &mid] {
         RTC_DCHECK_RUN_ON(context_->network_thread());
         return pc_->SetupDataChannelTransport_n(mid);
-      });
-  if (!transport_name)
+      })) {
     return false;
-
-  pc_->SetSctpDataInfo(mid, *transport_name);
+  }
+  // TODO(tommi): Is this necessary? SetupDataChannelTransport_n() above
+  // will have queued up updating the transport name on the signaling thread
+  // and could update the mid at the same time. This here is synchronous
+  // though, but it changes the state of PeerConnection and makes it be
+  // out of sync (transport name not set while the mid is set).
+  pc_->SetSctpDataMid(mid);
   return true;
 }
 
@@ -5112,7 +5115,7 @@ void SdpOfferAnswerHandler::DestroyDataChannelTransport(RTCError error) {
         RTC_DCHECK_RUN_ON(context_->network_thread());
         pc_->TeardownDataChannelTransport_n(error);
       });
-  pc_->ResetSctpDataInfo();
+  pc_->ResetSctpDataMid();
 }
 
 void SdpOfferAnswerHandler::DestroyAllChannels() {

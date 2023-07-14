@@ -68,7 +68,7 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   void PrepareForShutdown();
 
   // Called from PeerConnection::SetupDataChannelTransport_n
-  void SetupDataChannelTransport_n(DataChannelTransportInterface* transport);
+  void SetupDataChannelTransport_n();
   // Called from PeerConnection::TeardownDataChannelTransport_n
   void TeardownDataChannelTransport_n(RTCError error);
 
@@ -92,6 +92,9 @@ class DataChannelController : public SctpDataChannelControllerInterface,
 
   // At some point in time, a data channel has existed.
   bool HasUsedDataChannels() const;
+
+  // Accessors
+  void set_data_channel_transport(DataChannelTransportInterface* transport);
 
   void OnSctpDataChannelClosed(SctpDataChannel* channel);
 
@@ -131,8 +134,6 @@ class DataChannelController : public SctpDataChannelControllerInterface,
   // Called when all data channels need to be notified of a transport channel
   // (calls OnTransportChannelCreated on the signaling thread).
   void NotifyDataChannelsOfTransportCreated();
-
-  void set_data_channel_transport(DataChannelTransportInterface* transport);
 
   // Plugin transport used for data channels.  Pointer may be accessed and
   // checked from any thread, but the object may only be touched on the
