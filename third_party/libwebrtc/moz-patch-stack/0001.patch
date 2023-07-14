@@ -289,10 +289,10 @@ index 5d4d4190d5..9868365f24 100644
  struct RTC_EXPORT RTPHeader {
    RTPHeader();
 diff --git a/api/rtp_parameters.cc b/api/rtp_parameters.cc
-index c48b8da02c..c1d12e5d8d 100644
+index 54132bcdbb..cf8b3ad3dc 100644
 --- a/api/rtp_parameters.cc
 +++ b/api/rtp_parameters.cc
-@@ -148,7 +148,8 @@ bool RtpExtension::IsSupportedForAudio(absl::string_view uri) {
+@@ -151,7 +151,8 @@ bool RtpExtension::IsSupportedForAudio(absl::string_view uri) {
           uri == webrtc::RtpExtension::kTransportSequenceNumberV2Uri ||
           uri == webrtc::RtpExtension::kMidUri ||
           uri == webrtc::RtpExtension::kRidUri ||
