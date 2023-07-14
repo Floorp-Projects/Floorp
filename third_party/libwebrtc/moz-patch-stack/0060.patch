@@ -147,7 +147,7 @@ index 0000000000..98febe9405
 +
 +#endif  // CALL_CALL_BASIC_STATS_H_
 diff --git a/video/video_send_stream.h b/video/video_send_stream.h
-index a7ce112b21..404873fd39 100644
+index 7a3454a3a0..54885728f2 100644
 --- a/video/video_send_stream.h
 +++ b/video/video_send_stream.h
 @@ -37,7 +37,6 @@ namespace test {

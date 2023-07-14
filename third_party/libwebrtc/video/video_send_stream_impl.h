@@ -121,14 +121,14 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   void StartupVideoSendStream();
   // Removes the bitrate observer, stops monitoring and notifies the video
   // encoder of the bitrate update.
-  void StopVideoSendStream() RTC_RUN_ON(rtp_transport_queue_);
+  void StopVideoSendStream() RTC_RUN_ON(thread_checker_);
 
   void ConfigureProtection();
   void ConfigureSsrcs();
   void SignalEncoderTimedOut();
   void SignalEncoderActive();
   MediaStreamAllocationConfig GetAllocationConfig() const
-      RTC_RUN_ON(rtp_transport_queue_);
+      RTC_RUN_ON(thread_checker_);
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker thread_checker_;
   Clock* const clock_;
@@ -138,31 +138,30 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
   SendStatisticsProxy* const stats_proxy_;
   const VideoSendStream::Config* const config_;
 
-  MaybeWorkerThread* const rtp_transport_queue_;
+  TaskQueueBase* const worker_queue_;
 
   RepeatingTaskHandle check_encoder_activity_task_
-      RTC_GUARDED_BY(rtp_transport_queue_);
+      RTC_GUARDED_BY(thread_checker_);
 
   std::atomic_bool activity_;
-  bool timed_out_ RTC_GUARDED_BY(rtp_transport_queue_);
+  bool timed_out_ RTC_GUARDED_BY(thread_checker_);
 
   RtpTransportControllerSendInterface* const transport_;
   BitrateAllocatorInterface* const bitrate_allocator_;
 
-  bool disable_padding_;
-  int max_padding_bitrate_;
-  int encoder_min_bitrate_bps_;
-  uint32_t encoder_max_bitrate_bps_;
-  uint32_t encoder_target_rate_bps_;
-  double encoder_bitrate_priority_;
+  bool disable_padding_ RTC_GUARDED_BY(thread_checker_);
+  int max_padding_bitrate_ RTC_GUARDED_BY(thread_checker_);
+  int encoder_min_bitrate_bps_ RTC_GUARDED_BY(thread_checker_);
+  uint32_t encoder_max_bitrate_bps_ RTC_GUARDED_BY(thread_checker_);
+  uint32_t encoder_target_rate_bps_ RTC_GUARDED_BY(thread_checker_);
+  double encoder_bitrate_priority_ RTC_GUARDED_BY(thread_checker_);
 
   VideoStreamEncoderInterface* const video_stream_encoder_;
 
   RtcpBandwidthObserver* const bandwidth_observer_;
   RtpVideoSenderInterface* const rtp_video_sender_;
 
-  rtc::scoped_refptr<PendingTaskSafetyFlag> transport_queue_safety_ =
-      PendingTaskSafetyFlag::CreateDetached();
+  ScopedTaskSafety worker_queue_safety_;
 
   // Context for the most recent and last sent video bitrate allocation. Used to
   // throttle sending of similar bitrate allocations.
@@ -172,7 +171,7 @@ class VideoSendStreamImpl : public webrtc::BitrateAllocatorObserver,
     int64_t last_send_time_ms;
   };
   absl::optional<VbaSendContext> video_bitrate_allocation_context_
-      RTC_GUARDED_BY(rtp_transport_queue_);
+      RTC_GUARDED_BY(thread_checker_);
   const absl::optional<float> configured_pacing_factor_;
 };
 }  // namespace internal

@@ -103,11 +103,7 @@ class VideoSendStream : public webrtc::VideoSendStream {
   absl::optional<float> GetPacingFactorOverride() const;
 
   RTC_NO_UNIQUE_ADDRESS SequenceChecker thread_checker_;
-  MaybeWorkerThread* const rtp_transport_queue_;
   RtpTransportControllerSendInterface* const transport_;
-  rtc::Event thread_sync_event_;
-  rtc::scoped_refptr<PendingTaskSafetyFlag> transport_queue_safety_ =
-      PendingTaskSafetyFlag::CreateDetached();
 
   SendStatisticsProxy stats_proxy_;
   const VideoSendStream::Config config_;
