@@ -78,9 +78,9 @@ cram==0.7 ; python_version >= "3.7" and python_version < "4.0" \
 diskcache==4.1.0 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:69b253a6ffe95bb4bafb483b97c24fca3c2c6c47b82e92b36486969a7e80d47d \
     --hash=sha256:bcee5a59f9c264e2809e58d01be6569a3bbb1e36a1e0fb83f7ef9b2075f95ce0
-distro==1.4.0 ; python_version >= "3.7" and python_version < "4.0" \
-    --hash=sha256:362dde65d846d23baee4b5c058c8586f219b5a54be1cf5fc6ff55c4578392f57 \
-    --hash=sha256:eedf82a470ebe7d010f1872c17237c79ab04097948800029994fa458e52fb4b4
+distro==1.8.0 ; python_version >= "3.7" and python_version < "4.0" \
+    --hash=sha256:02e111d1dc6a50abb8eed6bf31c3e48ed8b0830d1ea2a1b78c61765c2513fdd8 \
+    --hash=sha256:99522ca3e365cac527b44bde033f64c6945d90eb9f769703caaec52b09bbd3ff
 ecdsa==0.15 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:867ec9cf6df0b03addc8ef66b56359643cb5d0c1dc329df76ba7ecfe256c8061 \
     --hash=sha256:8f12ac317f8a1318efa75757ef0a651abe12e51fc1af8838fb91079445227277
