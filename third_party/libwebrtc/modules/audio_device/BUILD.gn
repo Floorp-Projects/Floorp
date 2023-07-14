@@ -221,7 +221,6 @@ if (!build_with_mozilla) { # See Bug 1820869.
     ":audio_device_buffer",
     ":audio_device_default",
     ":audio_device_generic",
-    ":test_audio_device_module",
     "../../api:array_view",
     "../../api:make_ref_counted",
     "../../api:refcountedbase",
@@ -264,9 +263,6 @@ if (!build_with_mozilla) { # See Bug 1820869.
     "dummy/file_audio_device.cc",
     "dummy/file_audio_device.h",
     "include/fake_audio_device.h",
-
-    # TODO(crbug.com/webrtc/1510): remove when migrated on the new target
-    "include/test_audio_device.h",
   ]
 
   if (build_with_mozilla) {
