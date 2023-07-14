@@ -37,8 +37,8 @@ Note: Most marker-related identifiers are in the ``mozilla`` namespace, to be ad
       // Unique marker type name.
       static constexpr Span<const char> MarkerTypeName() { return MakeStringSpan("number"); }
       // Data specific to this marker type, serialized to JSON for profiler.firefox.com.
-      static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter, int aNumber) {
-        aWriter.IntProperty("number", aNumber);
+      static void StreamJSONMarkerData(SpliceableJSONWriter& aWriter, int a number) {
+        aWriter.IntProperty("number", a number);
       }
       // Where and how to display the marker and its data.
       static MarkerSchema MarkerTypeDisplay() {
@@ -111,8 +111,8 @@ Name, category, options.
 1. Marker name
     The first argument is the name of this marker. This will be displayed in most places
     the marker is shown. It can be a literal C string, or any dynamic string object.
-2. `Category pair name <https://searchfox.org/mozilla-central/define?q=M_174bb0de187ee7d9>`_
-    Choose a category + subcategory from the `the list of categories <https://searchfox.org/mozilla-central/define?q=M_174bb0de187ee7d9>`_.
+2. `Category pair name <https://searchfox.org/mozilla-central/source/__GENERATED__/mozglue/baseprofiler/public/ProfilingCategoryList.h>`_
+    Choose a category + subcategory from the `the list of categories <https://searchfox.org/mozilla-central/source/mozglue/baseprofiler/build/profiling_categories.yaml>`_.
     This is the second parameter of each ``SUBCATEGORY`` line, for instance ``LAYOUT_Reflow``.
     (Internally, this is really a `MarkerCategory <https://searchfox.org/mozilla-central/define?q=T_mozilla%3A%3AMarkerCategory>`_
     object, in case you need to construct it elsewhere.)
@@ -206,7 +206,7 @@ when the object is constructed, and later recording the marker when the object i
 of its C++ scope.
 This is especially useful if there are multiple scope exit points.
 
-``AUTO_PROFILER_MARKER_TEXT`` is `the only one implemented <https://searchfox.org/mozilla-central/define?q=M_ac7b392646edf5a5>`_ at this time.
+``AUTO_PROFILER_MARKER_TEXT`` is `the only one implemented <https://searchfox.org/mozilla-central/search?q=id%3AAUTO_PROFILER_MARKER_TEXT`_ at this time.
 
 .. code-block:: c++
 
@@ -389,7 +389,7 @@ locations: ``SetChartLabel``, ``SetTooltipLabel``, and ``SetTableLabel``; or
 The arguments is a string that may refer to marker data within braces:
 
 * ``{marker.name}``: Marker name.
-* ``{marker.data.X}``: Type-specific data, as streamed with property name "X" from ``StreamJSONMarkerData`` (e.g., ``aWriter.IntProperty("X", aNumber);``
+* ``{marker.data.X}``: Type-specific data, as streamed with property name "X" from ``StreamJSONMarkerData`` (e.g., ``aWriter.IntProperty("X", a number);``
 
 For example, here's how to set the Marker Chart label to show the marker name and the
 ``myBytes`` number of bytes:

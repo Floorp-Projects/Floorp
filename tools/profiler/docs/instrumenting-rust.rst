@@ -422,12 +422,12 @@ needs to be implemented:
     :ref:`See the C++ markers guide for more details about it <marker-type-display-schema>`.
 
 .. _profiling_categories.yaml: https://searchfox.org/mozilla-central/source/mozglue/baseprofiler/build/profiling_categories.yaml
-.. _Profiling category pair: https://searchfox.org/mozilla-central/define?q=gecko_profiler::gecko_bindings::profiling_categories::ProfilingCategoryPair
+.. _Profiling category pair: https://searchfox.org/mozilla-central/source/__GENERATED__/tools/profiler/rust-api/src/gecko_bindings/profiling_categories.rs
 .. _the list of categories: https://searchfox.org/mozilla-central/source/mozglue/baseprofiler/build/profiling_categories.yaml
-.. _MarkerOptions: https://searchfox.org/mozilla-central/define?q=gecko_profiler::marker::options::MarkerOptions
-.. _MarkerTiming: https://searchfox.org/mozilla-central/define?q=gecko_profiler::marker::options::MarkerTiming
-.. _MarkerStack: https://searchfox.org/mozilla-central/define?q=gecko_profiler::marker::options::MarkerStack
-.. _ProfilerMarker: https://searchfox.org/mozilla-central/define?q=gecko_profiler::marker::ProfilerMarker
+.. _MarkerOptions: https://searchfox.org/mozilla-central/define?q=rust_analyzer::cargo::gecko_profiler::0_1_0::options::marker::MarkerOptions
+.. _MarkerTiming: https://searchfox.org/mozilla-central/define?q=rust_analyzer::cargo::gecko_profiler::0_1_0::options::marker::MarkerTiming
+.. _MarkerStack: https://searchfox.org/mozilla-central/define?q=rust_analyzer::cargo::gecko_profiler::0_1_0::options::marker::[MarkerStack]
+.. _ProfilerMarker: https://searchfox.org/mozilla-central/define?q=rust_analyzer::cargo::gecko_profiler::0_1_0::marker::ProfilerMarker
 .. _MarkerSchema::Location enumeration for the full list: https://searchfox.org/mozilla-central/define?q=T_mozilla%3A%3AMarkerSchema%3A%3ALocation
-.. _JSONWriter object and its methods: https://searchfox.org/mozilla-central/define?q=gecko_profiler::json_writer::JSONWriter
-.. _MarkerSchema struct for its possible methods: https://searchfox.org/mozilla-central/define?q=gecko_profiler::marker::schema::MarkerSchema
+.. _JSONWriter object and its methods: https://searchfox.org/mozilla-central/define?q=rust_analyzer::cargo::gecko_profiler::0_1_0::json_writer::JSONWriter
+.. _MarkerSchema struct for its possible methods: https://searchfox.org/mozilla-central/define?q=rust_analyzer::cargo::gecko_profiler::0_1_0::schema::marker::MarkerSchema
