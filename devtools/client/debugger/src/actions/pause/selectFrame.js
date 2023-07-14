@@ -33,7 +33,8 @@ export function selectFrame(cx, frame) {
     // we rely on the source being loaded and symbols fetched below.
     await dispatch(selectLocation(cx, frame.location));
 
-    dispatch(evaluateExpressions(cx));
-    dispatch(fetchScopes(cx));
+    await dispatch(evaluateExpressions(cx));
+
+    await dispatch(fetchScopes(frame));
   };
 }
