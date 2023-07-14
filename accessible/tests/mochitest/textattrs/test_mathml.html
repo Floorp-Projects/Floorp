@@ -21,11 +21,20 @@
         testTextAttrs(id, 0, {}, defAttrs, 0, 1);
       }
 
+      // These elements contain a surrogate pair, so the end offset is 2.
+      for (const id of ["mn_double_struck", "mi_italic"]) {
+        testTextAttrs(id, 0, {}, defAttrs, 0, 2);
+      }
+
       SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
-    addA11yLoadEvent(doTest);
+    SpecialPowers.pushPrefEnv({
+      set: [["mathml.legacy_mathvariant_attribute.disabled", true]],
+    }).then(() => {
+      addA11yLoadEvent(doTest);
+    });
   </script>
 </head>
 <body style="font-size: 12pt">
@@ -37,7 +46,9 @@
 
   <math id="math" style="font-size: smaller">
     <mn id="mn">1</mn>
-    <mi id="mi">x</mi>
+    <mi id="mi" mathvariant="normal">x</mi>
+    <mn id="mn_double_struck">𝟙</mn>
+    <mi id="mi_italic">x</mi>
     <!-- tabindex forces creation of an Accessible -->
     <annotation id="annotation" tabindex="0">a</annotation>
     <annotation-xml id="annotationXml" tabindex="0">a</annotation-xml>
