@@ -146,12 +146,17 @@ void DataChannelController::OnReadyToSend() {
 
 void DataChannelController::OnTransportClosed(RTCError error) {
   RTC_DCHECK_RUN_ON(network_thread());
+
   // This loop will close all data channels and trigger a callback to
-  // `OnSctpDataChannelClosed` which will modify `sctp_data_channels_n_`, so
-  // we create a local copy while we do the fan-out.
-  auto copy = sctp_data_channels_n_;
-  for (const auto& channel : copy)
+  // `OnSctpDataChannelClosed`. We'll empty `sctp_data_channels_n_`, first
+  // and `OnSctpDataChannelClosed` will become a noop but we'll release the
+  // StreamId here.
+  std::vector<rtc::scoped_refptr<SctpDataChannel>> temp_sctp_dcs;
+  temp_sctp_dcs.swap(sctp_data_channels_n_);
+  for (const auto& channel : temp_sctp_dcs) {
     channel->OnTransportChannelClosed(error);
+    sid_allocator_.ReleaseSid(channel->sid_n());
+  }
 }
 
 void DataChannelController::SetupDataChannelTransport_n() {
@@ -168,13 +173,17 @@ void DataChannelController::PrepareForShutdown() {
   signaling_safety_.reset(PendingTaskSafetyFlag::CreateDetachedInactive());
 }
 
-void DataChannelController::TeardownDataChannelTransport_n() {
+void DataChannelController::TeardownDataChannelTransport_n(RTCError error) {
   RTC_DCHECK_RUN_ON(network_thread());
+
+  OnTransportClosed(error);
+
   if (data_channel_transport_) {
     data_channel_transport_->SetDataSink(nullptr);
     set_data_channel_transport(nullptr);
   }
-  sctp_data_channels_n_.clear();
+
+  RTC_DCHECK(sctp_data_channels_n_.empty());
   weak_factory_.InvalidateWeakPtrs();
 }
 
@@ -402,23 +411,6 @@ void DataChannelController::OnSctpDataChannelClosed(SctpDataChannel* channel) {
                             [&](const auto& c) { return c.get() == channel; });
   if (it != sctp_data_channels_n_.end())
     sctp_data_channels_n_.erase(it);
-}
-
-void DataChannelController::OnTransportChannelClosed(RTCError error) {
-  RTC_DCHECK_RUN_ON(network_thread());
-  // Use a temporary copy of the SCTP DataChannel list because the
-  // DataChannel may callback to us and try to modify the list.
-  // TODO(tommi): `OnTransportChannelClosed` is called from
-  // `SdpOfferAnswerHandler::DestroyDataChannelTransport` just before
-  // `TeardownDataChannelTransport_n` is called (but on the network thread) from
-  // the same function. We can now get rid of this function
-  // (OnTransportChannelClosed) and run this loop from within the
-  // TeardownDataChannelTransport_n callback.
-  std::vector<rtc::scoped_refptr<SctpDataChannel>> temp_sctp_dcs;
-  temp_sctp_dcs.swap(sctp_data_channels_n_);
-  for (const auto& channel : temp_sctp_dcs) {
-    channel->OnTransportChannelClosed(error);
-  }
 }
 
 void DataChannelController::set_data_channel_transport(

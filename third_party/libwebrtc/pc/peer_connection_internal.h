@@ -118,7 +118,7 @@ class PeerConnectionSdpMethods {
   // this session.
   virtual bool SrtpRequired() const = 0;
   virtual bool SetupDataChannelTransport_n(const std::string& mid) = 0;
-  virtual void TeardownDataChannelTransport_n() = 0;
+  virtual void TeardownDataChannelTransport_n(RTCError error) = 0;
   virtual void SetSctpDataMid(const std::string& mid) = 0;
   virtual void ResetSctpDataMid() = 0;
 
