@@ -243,3 +243,51 @@ addAccessibleTask(
     topLevel: true,
   }
 );
+
+/**
+ * Test label relations on HTML figure/figcaption.
+ */
+addAccessibleTask(
+  `
+<figure id="figure1">
+  before
+  <figcaption id="caption1">caption1</figcaption>
+  after
+</figure>
+<figure id="figure2" aria-labelledby="label">
+  <figcaption id="caption2">caption2</figure>
+</figure>
+<div id="label">label</div>
+  `,
+  async function (browser, docAcc) {
+    const figure1 = findAccessibleChildByID(docAcc, "figure1");
+    let caption1 = findAccessibleChildByID(docAcc, "caption1");
+    await testCachedRelation(figure1, RELATION_LABELLED_BY, caption1);
+    await testCachedRelation(caption1, RELATION_LABEL_FOR, figure1);
+
+    info("Hiding caption1");
+    let mutated = waitForEvent(EVENT_HIDE, caption1);
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("caption1").hidden = true;
+    });
+    await mutated;
+    await testCachedRelation(figure1, RELATION_LABELLED_BY, null);
+
+    info("Showing caption1");
+    mutated = waitForEvent(EVENT_SHOW, "caption1");
+    await invokeContentTask(browser, [], () => {
+      content.document.getElementById("caption1").hidden = false;
+    });
+    caption1 = (await mutated).accessible;
+    await testCachedRelation(figure1, RELATION_LABELLED_BY, caption1);
+    await testCachedRelation(caption1, RELATION_LABEL_FOR, figure1);
+
+    const figure2 = findAccessibleChildByID(docAcc, "figure2");
+    const caption2 = findAccessibleChildByID(docAcc, "caption2");
+    const label = findAccessibleChildByID(docAcc, "label");
+    await testCachedRelation(figure2, RELATION_LABELLED_BY, [label, caption2]);
+    await testCachedRelation(caption2, RELATION_LABEL_FOR, figure2);
+    await testCachedRelation(label, RELATION_LABEL_FOR, figure2);
+  },
+  { chrome: true, topLevel: true }
+);
