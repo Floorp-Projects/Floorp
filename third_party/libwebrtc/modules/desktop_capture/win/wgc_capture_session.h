@@ -130,9 +130,6 @@ class WgcCaptureSession final {
   bool item_closed_ = false;
   bool is_capture_started_ = false;
 
-  // Set to true when at least one frame has been captured.
-  bool is_frame_captured_ = false;
-
   // Caches the value of DesktopCaptureOptions.allow_wgc_zero_hertz() in
   // StartCapture(). Adds 0Hz detection in ProcessFrame() when enabled which
   // adds complexity since memcmp() is performed on two successive frames.
