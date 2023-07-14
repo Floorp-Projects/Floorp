@@ -20,63 +20,133 @@
     support-page="support-test"
     >testElement</a>
 
-    <a
+  <a
     id="testElement2"
     is="moz-support-link"
     data-l10n-id="test2"
     support-page="support-test"
     utm-content="utmcontent-test"
     >testElement2</a>
+
+  <a
+    id="testElement3"
+    is="moz-support-link"
+    data-l10n-name="name"
+    support-page="support-test"
+  ></a>
+
+  <a
+  id="testElement4"
+  is="moz-support-link"
+  data-l10n-id="test4"
+  data-l10n-name="name"
+  support-page="support-test"
+></a>
+
+  <a
+  id="testElement5"
+  is="moz-support-link"
+  support-page="support-test"
+  ></a>
+
 </div>
 <pre id="test"></pre>
 <script>
   const { Assert } = ChromeUtils.import("resource://testing-common/Assert.jsm");
+
+  function assertBasicProperties(link, { l10nId, l10nName, supportPage, supportUrl, utmContent }) {
+    is(link.localName, "a", "Check that it is an anchor");
+    is(link.constructor.name, "MozSupportLink", "Element should be a 'moz-support-link'");
+    if (l10nId) {
+      is(link.getAttribute("data-l10n-id"), l10nId, "Check data-l10n-id is correct");
+    }
+    if (l10nName) {
+      is(link.getAttribute("data-l10n-name"), l10nName, "Check data-l10n-name is correct");
+    }
+    if (supportPage && utmContent) {
+      is(link.getAttribute("utm-content"), utmContent, "Check utm-correct is correct");
+      is(link.getAttribute("support-page"), supportPage, "Check support-page is correct");
+      is(link.target, "_blank", "support link should open a new window");
+      let expectedHref = `${supportUrl}${supportPage}?utm_source=firefox-browser&utm_medium=firefox-browser&utm_content=${utmContent}`;
+      is(link.href, expectedHref, "href should be generated correctly when using utm-content");
+    } else if (supportPage) {
+      is(link.getAttribute("support-page"), supportPage, "Check support-page is correct");
+      is(link.target, "_blank", "support link should open a new window");
+      is(link.href, `${supportUrl}${supportPage}`, `href should be generated SUPPORT_URL plus ${supportPage}`);
+    }
+  }
   add_task(async function test_component_declaration() {
     let mozSupportLink = customElements.get("moz-support-link");
     let supportUrl = mozSupportLink.SUPPORT_URL;
+    let supportPage = "support-test";
 
     // Ensure all the semantics of the primary link are present
     let supportLink = document.getElementById("testElement");
-    is(supportLink.tagName, "A", "tagName should be 'A'");
-    is(supportLink.getAttribute("is"), "moz-support-link", "Generated anchor should be a 'moz-support-link'");
-    is(supportLink.getAttribute("data-l10n-id"), "test", "data-l10n-id should be 'test'");
-    is(supportLink.getAttribute("support-page"), "support-test", "support-page should be 'support-test");
-    is(supportLink.target, "_blank", "support link should open a new window");
-    is(supportLink.href, `${supportUrl}support-test`, "href should be generated SUPPORT_URL plus support-test");
+    assertBasicProperties(supportLink, {l10nId: "test", supportPage, supportUrl});
 
     // Ensure AMO support link has the correct values
     let supportLinkAMO = document.getElementById("testElement2");
-    is(supportLinkAMO.getAttribute("data-l10n-id"), "test2", "data-l10n-id should be 'test2'");
-    is(supportLinkAMO.getAttribute("support-page"), "support-test", "support-page should be 'support-test");
-    is(supportLinkAMO.getAttribute("utm-content"), "utmcontent-test", "utm-content should be 'utmcontent-test");
-    is(supportLinkAMO.target, "_blank", "support link should open a new window");
-    let expectedHref = `${supportUrl}support-test?utm_source=firefox-browser&utm_medium=firefox-browser&utm_content=utmcontent-test`;
-    is(supportLinkAMO.href, expectedHref, "href should be generated SUPPORT_URL");
+    assertBasicProperties(supportLinkAMO, {
+      l10nId: "test2",
+      supportPage,
+      supportUrl,
+      utmContent:"utmcontent-test"
+    });
+
+    // Ensure data-l10n-name is not overwritten by the component
+    let supportLinkL10nName = document.getElementById("testElement3");
+    assertBasicProperties(supportLinkL10nName, {
+      l10nId: null,
+      l10nName: "name",
+      supportPage,
+      supportUrl
+    });
+
+    // Ensure data-l10n-id and data-l10n-name are not overwritten by the component
+    let linkWithNameAndId = document.getElementById("testElement4");
+    assertBasicProperties(linkWithNameAndId, {
+      l10nId: "test4",
+      l10nName: "name",
+      supportPage,
+      supportUrl
+    });
+
+    // Ensure moz-support-link without assigned data-l10n-id gets the default id
+    let defaultLink = document.getElementById("testElement5");
+    assertBasicProperties(defaultLink, {
+      l10nId: "moz-support-link-text",
+      supportPage,
+      supportUrl
+    });
   });
 
   add_task(async function test_creating_component() {
     // Ensure created support link behaves as expected
     let mozSupportLink = customElements.get("moz-support-link");
     let supportUrl = mozSupportLink.SUPPORT_URL;
+    let l10nId = "constructedElement";
     let content = document.getElementById("content");
-    let utmSupportLink = document.createElement("a", {is: "moz-support-link"});
-    utmSupportLink.id = "testElement3";
-    utmSupportLink.innerText = "testElement3";
-    document.l10n.setAttributes(utmSupportLink, "testElement3");
+    let utmSupportLink = document.createElement("a", { is: "moz-support-link" });
+    utmSupportLink.id = l10nId;
+    utmSupportLink.innerText = l10nId;
+    document.l10n.setAttributes(utmSupportLink, l10nId);
     content.appendChild(utmSupportLink);
-
-    is(utmSupportLink.target, "_blank", "support link should open a new window");
-    is(utmSupportLink.href, supportUrl, "href should be the base SUPPORT_URL");
-    is(utmSupportLink.getAttribute("data-l10n-id"), "testElement3", "data-l10n-id should be 'testElement3'");
+    assertBasicProperties(utmSupportLink, { supportUrl, l10nId });
 
     // Set href via "support-page" after creating the element
     utmSupportLink.setAttribute("support-page", "created-page");
-    is(utmSupportLink.href, `${supportUrl}created-page`, "href should be updated after setting the 'support-page' attribute");
+    assertBasicProperties(utmSupportLink, {
+      supportUrl,
+      supportPage: "created-page"
+    });
 
     // Set href via "utm-content"
-    utmSupportLink.href = "";
     utmSupportLink.setAttribute("utm-content", "created-content");
-    is(utmSupportLink.href, `${supportUrl}created-page?utm_source=firefox-browser&utm_medium=firefox-browser&utm_content=created-content`, "href should be updated after setting the 'utm-content' attribute");
+    assertBasicProperties(utmSupportLink, {
+      supportUrl,
+      supportPage: "created-page",
+      utmContent: "created-content"
+    });
   });
 </script>
 </body>
