@@ -123,6 +123,7 @@
 #include "nsString.h"
 #include "mozilla/Components.h"
 #include "nsNativeThemeWin.h"
+#include "nsXULPopupManager.h"
 #include "nsWindowsDllInterceptor.h"
 #include "nsLayoutUtils.h"
 #include "nsView.h"
@@ -8192,6 +8193,15 @@ bool nsWindow::DealWithPopups(HWND aWnd, UINT aMessage, WPARAM aWParam,
 
   if (!::IsWindowVisible(aWnd)) {
     return false;
+  }
+
+  if (MOZ_UNLIKELY(aMessage == WM_KILLFOCUS)) {
+    // NOTE: We deal with this here rather than on the switch below because we
+    // want to do this even if there are no menus to rollup (tooltips don't set
+    // the rollup listener etc).
+    if (RefPtr pm = nsXULPopupManager::GetInstance()) {
+      pm->RollupTooltips();
+    }
   }
 
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
