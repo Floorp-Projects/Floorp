@@ -10,11 +10,11 @@ import actions from "../../actions";
 
 import {
   getSelectedFrame,
+  getCurrentThread,
   getGeneratedFrameScope,
   getOriginalFrameScope,
   getPauseReason,
   isMapScopesEnabled,
-  getThreadContext,
   getLastExpandedScopes,
   getIsCurrentThreadPaused,
 } from "../../selectors";
@@ -45,7 +45,6 @@ class Scopes extends PureComponent {
   static get propTypes() {
     return {
       addWatchpoint: PropTypes.func.isRequired,
-      cx: PropTypes.object.isRequired,
       expandedScopes: PropTypes.array.isRequired,
       generatedFrameScopes: PropTypes.object,
       highlightDomElement: PropTypes.func.isRequired,
@@ -56,7 +55,6 @@ class Scopes extends PureComponent {
       openLink: PropTypes.func.isRequired,
       originalFrameScopes: PropTypes.object,
       removeWatchpoint: PropTypes.func.isRequired,
-      selectedFrame: PropTypes.object.isRequired,
       setExpandedScope: PropTypes.func.isRequired,
       toggleMapScopes: PropTypes.func.isRequired,
       unHighlightDomElement: PropTypes.func.isRequired,
@@ -197,7 +195,6 @@ class Scopes extends PureComponent {
 
   renderScopesList() {
     const {
-      cx,
       isLoading,
       openLink,
       openElementInInspector,
@@ -236,7 +233,9 @@ class Scopes extends PureComponent {
             onDOMNodeMouseOver={grip => highlightDomElement(grip)}
             onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
             onContextMenu={this.onContextMenu}
-            setExpanded={(path, expand) => setExpandedScope(cx, path, expand)}
+            setExpanded={(path, expand) =>
+              setExpandedScope(selectedFrame, path, expand)
+            }
             initiallyExpanded={initiallyExpanded}
             renderItemActions={this.renderWatchpointButton}
             shouldRenderTooltip={true}
@@ -267,8 +266,11 @@ class Scopes extends PureComponent {
 }
 
 const mapStateToProps = state => {
-  const cx = getThreadContext(state);
-  const selectedFrame = getSelectedFrame(state, cx.thread);
+  // This component doesn't need any prop when we are not paused
+  const selectedFrame = getSelectedFrame(state, getCurrentThread(state));
+  if (!selectedFrame) {
+    return {};
+  }
 
   const { scope: originalFrameScopes, pending: originalPending } =
     getOriginalFrameScope(state, selectedFrame) || {
@@ -283,14 +285,13 @@ const mapStateToProps = state => {
     };
 
   return {
-    cx,
     selectedFrame,
     mapScopesEnabled: isMapScopesEnabled(state),
     isLoading: generatedPending || originalPending,
-    why: getPauseReason(state, cx.thread),
+    why: getPauseReason(state, selectedFrame.thread),
     originalFrameScopes,
     generatedFrameScopes,
-    expandedScopes: getLastExpandedScopes(state, cx.thread),
+    expandedScopes: getLastExpandedScopes(state, selectedFrame.thread),
     isPaused: getIsCurrentThreadPaused(state),
   };
 };
