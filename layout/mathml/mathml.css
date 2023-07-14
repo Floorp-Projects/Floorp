@@ -328,3 +328,11 @@ mphantom {
     display: none;
   }
 }
+
+@media (-moz-mathml-core-mi) {
+  /* Implement MathML Core's automatic italic on mi.
+     https://w3c.github.io/mathml-core/#the-mathvariant-attribute */
+  mi {
+    text-transform: math-auto;
+  }
+}

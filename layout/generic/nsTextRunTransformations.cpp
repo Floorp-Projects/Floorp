@@ -10,9 +10,11 @@
 
 #include "GreekCasing.h"
 #include "IrishCasing.h"
+#include "MathMLTextRunFactory.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_mathml.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
@@ -350,6 +352,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
     if (i < length - 1 && NS_IS_SURROGATE_PAIR(ch, str[i + 1])) {
       ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
     }
+    const uint32_t originalCh = ch;
 
     // Skip case transform if we're masking current character.
     if (!maskPassword) {
@@ -720,6 +723,31 @@ bool nsCaseTransformTextRunFactory::TransformString(
           }
           break;
 
+        case StyleTextTransformCase::MathAuto:
+          // text-transform: math-auto is used for automatic italicization of
+          // single-char <mi> elements. However, some legacy cases (italic style
+          // fallback and <mi> with leading/trailing whitespace) are still
+          // handled in MathMLTextRunFactory.
+          if (length == 1) {
+            uint32_t ch2 =
+                MathMLTextRunFactory::MathVariant(ch, StyleMathVariant::Italic);
+            if (StaticPrefs::mathml_mathvariant_styling_fallback_disabled()) {
+              ch = ch2;
+            } else if (ch2 != ch) {
+              // Bug 930504. Some platforms do not have fonts for Mathematical
+              // Alphanumeric Symbols. Hence we only perform the transform if a
+              // character is actually available.
+              FontMatchType matchType;
+              RefPtr<gfxFont> mathFont =
+                  aTextRun->GetFontGroup()->FindFontForChar(
+                      ch2, 0, 0, intl::Script::COMMON, nullptr, &matchType);
+              if (mathFont) {
+                ch = ch2;
+              }
+            }
+          }
+          break;
+
         default:
           MOZ_ASSERT_UNREACHABLE("all cases should be handled");
           break;
@@ -793,6 +821,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
       }
 
       if (IS_IN_BMP(ch)) {
+        MOZ_ASSERT(IS_IN_BMP(originalCh));
         aConvertedString.Append(maskPassword ? mask : ch);
       } else {
         if (maskPassword) {
@@ -804,10 +833,12 @@ bool nsCaseTransformTextRunFactory::TransformString(
           aConvertedString.Append(L_SURROGATE(ch));
         }
         ++extraChars;
-        ++i;
-        ++aOffsetInTextRun;
-        // Skip the trailing surrogate.
-        aDeletedCharsArray.AppendElement(true);
+        if (!IS_IN_BMP(originalCh)) {
+          // Skip the trailing surrogate.
+          ++aOffsetInTextRun;
+          ++i;
+          aDeletedCharsArray.AppendElement(true);
+        }
       }
 
       while (extraChars-- > 0) {
