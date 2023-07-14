@@ -255,7 +255,6 @@ int GainControlImpl::ProcessCaptureAudio(AudioBuffer* audio,
   return AudioProcessing::kNoError;
 }
 
-
 // TODO(ajm): ensure this is called under kAdaptiveAnalog.
 int GainControlImpl::set_stream_analog_level(int level) {
   data_dumper_->DumpRaw("gain_control_set_stream_analog_level", 1, &level);
@@ -287,7 +286,6 @@ int GainControlImpl::set_mode(Mode mode) {
   return AudioProcessing::kNoError;
 }
 
-
 int GainControlImpl::set_analog_level_limits(int minimum, int maximum) {
   if (minimum < 0 || maximum > 65535 || maximum < minimum) {
     return AudioProcessing::kBadParameterError;
@@ -301,7 +299,6 @@ int GainControlImpl::set_analog_level_limits(int minimum, int maximum) {
   Initialize(*num_proc_channels_, *sample_rate_hz_);
   return AudioProcessing::kNoError;
 }
-
 
 int GainControlImpl::set_target_level_dbfs(int level) {
   if (level > 31 || level < 0) {

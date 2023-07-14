@@ -145,8 +145,7 @@ T& RtpFrameReferenceFinderImpl::GetRefFinderAs() {
 RtpFrameReferenceFinder::RtpFrameReferenceFinder()
     : RtpFrameReferenceFinder(0) {}
 
-RtpFrameReferenceFinder::RtpFrameReferenceFinder(
-    int64_t picture_id_offset)
+RtpFrameReferenceFinder::RtpFrameReferenceFinder(int64_t picture_id_offset)
     : picture_id_offset_(picture_id_offset),
       impl_(std::make_unique<internal::RtpFrameReferenceFinderImpl>()) {}
 

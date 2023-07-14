@@ -968,9 +968,7 @@ TEST(GoogCcScenario, FallbackToLossBasedBweWithoutPacketFeedback) {
   EXPECT_GE(client->target_rate().kbps(), 500);
 
   // Update the network to create high loss ratio
-  net->UpdateConfig([](NetworkSimulationConfig* c) {
-    c->loss_rate = 0.15;
-  });
+  net->UpdateConfig([](NetworkSimulationConfig* c) { c->loss_rate = 0.15; });
   s.RunFor(TimeDelta::Seconds(20));
 
   // Bandwidth decreases thanks to loss based bwe v0.
