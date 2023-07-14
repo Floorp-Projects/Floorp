@@ -554,7 +554,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
                       frame_stats.decode_end_time, metadata));
     }
 
-    if (frame_stats.prev_frame_rendered_time.IsFinite() &&
+    if (frame_stats.prev_frame_rendered_time.has_value() &&
         frame_stats.rendered_time.IsFinite()) {
       RTC_DCHECK(frame_stats.time_between_rendered_frames.has_value());
       stats->time_between_rendered_frames_ms.AddSample(
@@ -573,7 +573,7 @@ void DefaultVideoQualityAnalyzerFramesComparator::ProcessComparison(
         RTC_DCHECK(freeze_end_it != stream_last_freeze_end_time_.end());
         // TODO(bugs.webrtc.org/14995): rethink this metric for paused stream.
         stats->time_between_freezes_ms.AddSample(StatsSample(
-            frame_stats.prev_frame_rendered_time - freeze_end_it->second,
+            *frame_stats.prev_frame_rendered_time - freeze_end_it->second,
             frame_stats.rendered_time, metadata));
         freeze_end_it->second = frame_stats.rendered_time;
       }
