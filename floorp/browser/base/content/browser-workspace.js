@@ -811,6 +811,109 @@ const workspaceFunctions = {
       document.head.appendChild(Tag);
     },
   },
+
+  Backup: {
+    backupWorkspace() {
+      //backup workspace tabs url
+      let tabs = gBrowser.tabs;
+      let tabsURL = [];
+      for (let i = 0; i < tabs.length; i++) {
+        let tabURL = tabs[i].linkedBrowser.currentURI.spec;
+        tabsURL.push(tabURL);
+      }
+
+      let timeStamps = new Date().getTime();
+      let tabsURLString = tabsURL.join(",");
+      let workspaceState = Services.prefs.getStringPref(WORKSPACE_TABS_PREF);
+      let workspaceAll = Services.prefs.getStringPref(WORKSPACE_ALL_PREF);
+      let currentWorkspace = Services.prefs.getStringPref(WORKSPACE_CURRENT_PREF);
+
+      let backupDataObject = {
+        [timeStamps]: {
+          tabsURL: tabsURLString,
+          workspaceState: workspaceState,
+          workspaceAll: workspaceAll,
+          currentWorkspace: currentWorkspace,
+        },
+      };
+
+      let backupDataString = JSON.stringify(backupDataObject);
+      const file = FileUtils.getFile("ProfD", ["floorp-workspace-backup.json"]);
+      const converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"].
+                        createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+      converter.charset = "UTF-8";
+
+      if (file.exists()) {
+        backupDataString = "\r" + backupDataString;
+        const fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+          Ci.nsIFileInputStream
+        );
+        fstream.init(file, -1, 0, 0);
+        const inputStream = NetUtil.readInputStreamToString(fstream, fstream.available());
+        fstream.close();
+        let lines = inputStream.split("\r");
+        
+        //if backup data is more than 10, delete old data
+        if (lines.length > 9) {
+          lines.splice(0, 1);
+          let newBackupDataString = lines.join("\r");
+          const outputStream = FileUtils.openFileOutputStream(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND);
+          const data = converter.convertToByteArray(newBackupDataString);
+          file.remove(false);
+          outputStream.write(newBackupDataString, data.length);
+          outputStream.close();
+        }
+      }
+
+      //save backup data
+      const outputStream = FileUtils.openFileOutputStream(file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND);
+      const data = converter.convertToByteArray(backupDataString);
+      outputStream.write(backupDataString, data.length);
+      outputStream.close();
+    },
+
+    restoreWorkspace(lineNum) {
+      const file = FileUtils.getFile("ProfD", ["floorp-workspace-backup.json"]);
+      //get backup data via NetUtil.jsm
+      const fstream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(
+        Ci.nsIFileInputStream
+      );
+      fstream.init(file, -1, 0, 0);
+      const inputStream = NetUtil.readInputStreamToString(fstream, fstream.available());
+      fstream.close();
+
+      //read backup data line by line
+      let lines = inputStream.split("\r");
+      let targetLine = lines[lineNum];
+
+      //parse backup data
+      let backupDataObject = JSON.parse(targetLine);
+      let tabsURL = backupDataObject[Object.keys(backupDataObject)[0]].tabsURL.split(",");
+      let workspaceState = backupDataObject[Object.keys(backupDataObject)[0]].workspaceState;
+      let workspaceAll = backupDataObject[Object.keys(backupDataObject)[0]].workspaceAll;
+      let currentWorkspace = backupDataObject[Object.keys(backupDataObject)[0]].currentWorkspace;
+
+      //restore tabs
+      let tabs = gBrowser.tabs;
+      for(let i = 0; i < tabs.length; i++) {
+        gBrowser.tabs[i].remove();
+      }
+
+      for(let i = 0; i < tabsURL.length; i++) {
+        gBrowser.addTab(tabsURL[i], {
+          skipAnimation: true,
+          inBackground: true,
+          skipLoad: false,
+          triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        });
+      }
+
+      //restore workspace
+      Services.prefs.setStringPref(WORKSPACE_TABS_PREF, workspaceState);
+      Services.prefs.setStringPref(WORKSPACE_ALL_PREF, workspaceAll);
+      Services.prefs.setStringPref(WORKSPACE_CURRENT_PREF, currentWorkspace);
+    }
+  }
 };
 
 const setEvenyListeners = function() {
