@@ -55,25 +55,3 @@ Span<char16_t> nsHtml5OwningUTF16Buffer::TailAsSpan(int32_t aBufferSize) {
 void nsHtml5OwningUTF16Buffer::AdvanceEnd(int32_t aNumberOfCodeUnits) {
   setEnd(getEnd() + aNumberOfCodeUnits);
 }
-
-// Not using macros for AddRef and Release in order to be able to refcount on
-// and create on different threads.
-
-nsrefcnt nsHtml5OwningUTF16Buffer::AddRef() {
-  MOZ_ASSERT(int32_t(mRefCnt) >= 0, "Illegal refcount.");
-  ++mRefCnt;
-  NS_LOG_ADDREF(this, mRefCnt, "nsHtml5OwningUTF16Buffer", sizeof(*this));
-  return mRefCnt;
-}
-
-nsrefcnt nsHtml5OwningUTF16Buffer::Release() {
-  MOZ_ASSERT(0 != mRefCnt, "Release without AddRef.");
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsHtml5OwningUTF16Buffer");
-  if (mRefCnt == 0) {
-    mRefCnt = 1; /* stabilize */
-    delete this;
-    return 0;
-  }
-  return mRefCnt;
-}
