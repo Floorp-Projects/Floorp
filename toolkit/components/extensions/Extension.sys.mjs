@@ -512,6 +512,8 @@ var ExtensionAddonObserver = {
     // since only extensions have uuid's.
     lazy.ExtensionPermissions.removeAll(addon.id);
 
+    lazy.QuarantinedDomains.clearUserPref(addon.id);
+
     let uuid = UUIDMap.get(addon.id, false);
     if (!uuid) {
       return;
