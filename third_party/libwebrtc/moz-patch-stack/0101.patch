@@ -1,38 +1,81 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 17 May 2023 08:25:00 +0000
-Subject: Bug 1830945 - Do not lock in VideoCaptureDS::{Start|Stop}Capture.
- r=padenot
+Date: Tue, 16 May 2023 06:38:00 +0000
+Subject: Bug 1832804 - cherry-pick upstream webrtc commit a09331a603.
+ r=webrtc-reviewers,mjf
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Unclear what they are guarding.
+Upstream commit: https://webrtc.googlesource.com/src/+/a09331a6038bb6191c7662680d8928940463a099
+    Don't write TransmissionOffset when capture time is not set
 
-Differential Revision: https://phabricator.services.mozilla.com/D178279
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fcd48e81c9c2cb68ea2cb3d44b3574281be2154e
+    RTX padding packets sent before media packets can legitimately have no
+    timestamps set (they are 0). Writing the TransmissionOffset extension
+    with capture time 0 will overflow once current time exceeds ~3 minutes.
+
+    Bug: webrtc:15172
+    Change-Id: I4dd1f341802d45016549b330f0e08cd3a00cfa19
+    Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/305020
+    Reviewed-by: Erik Språng <sprang@webrtc.org>
+    Reviewed-by: Per Kjellander <perkj@webrtc.org>
+    Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
+    Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+    Cr-Commit-Position: refs/heads/main@{#40055}
+
+Differential Revision: https://phabricator.services.mozilla.com/D178007
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c303f3d267415184f3d023b022e4bd309d540fec
 ---
- modules/video_capture/windows/video_capture_ds.cc | 4 ----
- 1 file changed, 4 deletions(-)
+ modules/rtp_rtcp/source/rtp_sender_egress.cc  |  5 +++--
+ .../source/rtp_sender_egress_unittest.cc      | 20 +++++++++++++++++++
+ 2 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/windows/video_capture_ds.cc b/modules/video_capture/windows/video_capture_ds.cc
-index 8695f76245..b13ac074f8 100644
---- a/modules/video_capture/windows/video_capture_ds.cc
-+++ b/modules/video_capture/windows/video_capture_ds.cc
-@@ -122,8 +122,6 @@ int32_t VideoCaptureDS::Init(const char* deviceUniqueIdUTF8) {
+diff --git a/modules/rtp_rtcp/source/rtp_sender_egress.cc b/modules/rtp_rtcp/source/rtp_sender_egress.cc
+index 88f5d28c78..a9fa071379 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_egress.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_egress.cc
+@@ -209,8 +209,9 @@ void RtpSenderEgress::SendPacket(RtpPacketToSend* packet,
+   // In case of VideoTimingExtension, since it's present not in every packet,
+   // data after rtp header may be corrupted if these packets are protected by
+   // the FEC.
+-  TimeDelta diff = now - packet->capture_time();
+-  if (packet->HasExtension<TransmissionOffset>()) {
++  if (packet->HasExtension<TransmissionOffset>() &&
++      packet->capture_time() > Timestamp::Zero()) {
++    TimeDelta diff = now - packet->capture_time();
+     packet->SetExtension<TransmissionOffset>(kTimestampTicksPerMs * diff.ms());
+   }
+   if (packet->HasExtension<AbsoluteSendTime>()) {
+diff --git a/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
+index cc1c8feb8d..bfaffa1bdb 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_egress_unittest.cc
+@@ -268,6 +268,26 @@ TEST_F(RtpSenderEgressTest,
+   EXPECT_TRUE(transport_.last_packet()->options.included_in_allocation);
  }
  
- int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
--  MutexLock lock(&api_lock_);
--
-   if (capability != _requestedCapability) {
-     DisconnectGraph();
- 
-@@ -146,8 +144,6 @@ int32_t VideoCaptureDS::StartCapture(const VideoCaptureCapability& capability) {
- }
- 
- int32_t VideoCaptureDS::StopCapture() {
--  MutexLock lock(&api_lock_);
--
-   HRESULT hr = _mediaControl->StopWhenReady();
-   if (FAILED(hr)) {
-     RTC_LOG(LS_INFO) << "Failed to stop the capture graph. " << hr;
++TEST_F(RtpSenderEgressTest,
++       DoesntWriteTransmissionOffsetOnRtxPaddingBeforeMedia) {
++  header_extensions_.RegisterByUri(kTransmissionOffsetExtensionId,
++                                   TransmissionOffset::Uri());
++
++  // Prior to sending media, timestamps are 0.
++  std::unique_ptr<RtpPacketToSend> padding =
++      BuildRtpPacket(/*marker_bit=*/true, /*capture_time_ms=*/0);
++  padding->set_packet_type(RtpPacketMediaType::kPadding);
++  padding->SetSsrc(kRtxSsrc);
++  EXPECT_TRUE(padding->HasExtension<TransmissionOffset>());
++
++  std::unique_ptr<RtpSenderEgress> sender = CreateRtpSenderEgress();
++  sender->SendPacket(std::move(padding), PacedPacketInfo());
++
++  absl::optional<int32_t> offset =
++      transport_.last_packet()->packet.GetExtension<TransmissionOffset>();
++  EXPECT_EQ(offset, 0);
++}
++
+ TEST_F(RtpSenderEgressTest, OnSendSideDelayUpdated) {
+   StrictMock<MockSendSideDelayObserver> send_side_delay_observer;
+   RtpRtcpInterface::Configuration config = DefaultConfig();
 -- 
 2.34.1
 
