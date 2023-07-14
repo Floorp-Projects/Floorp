@@ -22,7 +22,7 @@ void ReportBlockData::SetReportBlock(uint32_t sender_ssrc,
   report_block_.sender_ssrc = sender_ssrc;
   report_block_.source_ssrc = report_block.source_ssrc();
   report_block_.fraction_lost = report_block.fraction_lost();
-  report_block_.packets_lost = report_block.cumulative_lost_signed();
+  report_block_.packets_lost = report_block.cumulative_lost();
   report_block_.extended_highest_sequence_number =
       report_block.extended_high_seq_num();
   report_block_.jitter = report_block.jitter();

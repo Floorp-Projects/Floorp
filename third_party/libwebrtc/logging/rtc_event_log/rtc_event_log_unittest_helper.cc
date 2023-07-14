@@ -1122,8 +1122,8 @@ void EventVerifier::VerifyReportBlock(
             logged_report_block.source_ssrc());
   EXPECT_EQ(original_report_block.fraction_lost(),
             logged_report_block.fraction_lost());
-  EXPECT_EQ(original_report_block.cumulative_lost_signed(),
-            logged_report_block.cumulative_lost_signed());
+  EXPECT_EQ(original_report_block.cumulative_lost(),
+            logged_report_block.cumulative_lost());
   EXPECT_EQ(original_report_block.extended_high_seq_num(),
             logged_report_block.extended_high_seq_num());
   EXPECT_EQ(original_report_block.jitter(), logged_report_block.jitter());
