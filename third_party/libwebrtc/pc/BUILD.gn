@@ -2834,9 +2834,9 @@ if (rtc_include_tests && !build_with_chromium) {
       "../rtc_base/synchronization:mutex",
       "../rtc_base/task_utils:repeating_task",
       "../rtc_base/third_party/sigslot",
+      "../test:frame_generator_capturer",
       "../test:scoped_key_value_config",
       "../test:test_support",
-      "../test:video_test_common",
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",

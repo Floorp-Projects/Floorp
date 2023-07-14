@@ -903,6 +903,7 @@ if (rtc_include_tests) {
       "../test:fake_video_codecs",
       "../test:field_trial",
       "../test:fileutils",
+      "../test:frame_generator_capturer",
       "../test:frame_utils",
       "../test:mock_frame_transformer",
       "../test:mock_transport",

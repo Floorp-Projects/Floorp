@@ -69,6 +69,7 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
     deps = [
       ":column_printer",
+      "..:frame_generator_capturer",
       "..:test_video_capturer",
       "../:fake_video_codecs",
       "../:fileutils",
