@@ -817,7 +817,7 @@ bool EventListenerManager::Listener::MatchesEventMessage(
 
 static bool IsDefaultPassiveWhenOnRoot(EventMessage aMessage) {
   if (aMessage == eTouchStart || aMessage == eTouchMove) {
-    return StaticPrefs::dom_event_default_to_passive_touch_listeners();
+    return true;
   }
   if (aMessage == eWheel || aMessage == eLegacyMouseLineOrPageScroll ||
       aMessage == eLegacyMousePixelScroll) {
