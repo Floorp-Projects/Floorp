@@ -77,12 +77,16 @@ void DataChannelController::OnChannelStateChanged(
     SctpDataChannel* channel,
     DataChannelInterface::DataState state) {
   RTC_DCHECK_RUN_ON(network_thread());
+
+  // Stash away the internal id here in case `OnSctpDataChannelClosed` ends up
+  // releasing the last reference to the channel.
+  const int channel_id = channel->internal_id();
+
   if (state == DataChannelInterface::DataState::kClosed)
     OnSctpDataChannelClosed(channel);
 
   signaling_thread()->PostTask(
-      SafeTask(signaling_safety_.flag(),
-               [this, channel_id = channel->internal_id(), state = state] {
+      SafeTask(signaling_safety_.flag(), [this, channel_id, state = state] {
                  pc_->OnSctpDataChannelStateChanged(channel_id, state);
                }));
 }
