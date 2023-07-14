@@ -29,12 +29,6 @@ class VideoCodecStatsImpl : public VideoCodecStats {
 
   Stream Aggregate(const std::vector<Frame>& frames) const override;
 
-  void LogMetrics(
-      MetricsLogger* logger,
-      const Stream& stream,
-      std::string test_case_name,
-      std::map<std::string, std::string> metadata = {}) const override;
-
   void AddFrame(const Frame& frame);
 
   // Returns raw pointers to previously added frame. If frame does not exist,

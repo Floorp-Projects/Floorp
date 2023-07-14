@@ -37,6 +37,7 @@
 #if defined(WEBRTC_ANDROID)
 #include "modules/video_coding/codecs/test/android_codec_factory_helper.h"
 #endif
+#include "rtc_base/logging.h"
 #include "test/gtest.h"
 #include "test/testsupport/file_utils.h"
 #include "test/testsupport/frame_reader.h"
@@ -462,11 +463,29 @@ std::unique_ptr<VideoCodecStats> RunEncodeDecodeTest(
   std::unique_ptr<TestRawVideoSource> video_source =
       CreateVideoSource(video_info, frame_settings, num_frames);
 
-  // TODO(webrtc:14852): On platforms where only encoder or decoder is
-  // available, substitute absent codec with software implementation.
   std::unique_ptr<TestEncoder> encoder =
       CreateEncoder(codec_type, codec_impl, frame_settings);
+  if (encoder == nullptr) {
+    return nullptr;
+  }
+
   std::unique_ptr<TestDecoder> decoder = CreateDecoder(codec_type, codec_impl);
+  if (decoder == nullptr) {
+    // If platform decoder is not available try built-in one.
+    if (codec_impl == "builtin") {
+      return nullptr;
+    }
+
+    decoder = CreateDecoder(codec_type, "builtin");
+    if (decoder == nullptr) {
+      return nullptr;
+    }
+  }
+
+  RTC_LOG(LS_INFO) << "Encoder implementation: "
+                   << encoder->encoder()->GetEncoderInfo().implementation_name;
+  RTC_LOG(LS_INFO) << "Decoder implementation: "
+                   << decoder->decoder()->GetDecoderInfo().implementation_name;
 
   VideoCodecTester::EncoderSettings encoder_settings;
   encoder_settings.pacing.mode =
@@ -509,6 +528,12 @@ std::unique_ptr<VideoCodecStats> RunEncodeTest(
 
   std::unique_ptr<TestEncoder> encoder =
       CreateEncoder(codec_type, codec_impl, frame_settings);
+  if (encoder == nullptr) {
+    return nullptr;
+  }
+
+  RTC_LOG(LS_INFO) << "Encoder implementation: "
+                   << encoder->encoder()->GetEncoderInfo().implementation_name;
 
   VideoCodecTester::EncoderSettings encoder_settings;
   encoder_settings.pacing.mode =
@@ -551,7 +576,7 @@ class SpatialQualityTest : public ::testing::TestWithParam<
   }
 };
 
-TEST_P(SpatialQualityTest, DISABLED_SpatialQuality) {
+TEST_P(SpatialQualityTest, SpatialQuality) {
   auto [codec_type, codec_impl, video_info, coding_settings] = GetParam();
   auto [width, height, framerate_fps, bitrate_kbps, psnr] = coding_settings;
 
@@ -571,13 +596,16 @@ TEST_P(SpatialQualityTest, DISABLED_SpatialQuality) {
       codec_type, codec_impl, video_info, frame_settings, num_frames,
       /*save_codec_input=*/false, /*save_codec_output=*/false);
 
-  std::vector<VideoCodecStats::Frame> frames = stats->Slice();
-  SetTargetRates(frame_settings, frames);
-  VideoCodecStats::Stream stream = stats->Aggregate(frames);
-  EXPECT_GE(stream.psnr.y.GetAverage(), psnr);
+  VideoCodecStats::Stream stream;
+  if (stats != nullptr) {
+    std::vector<VideoCodecStats::Frame> frames = stats->Slice();
+    SetTargetRates(frame_settings, frames);
+    stream = stats->Aggregate(frames);
+    EXPECT_GE(stream.psnr.y.GetAverage(), psnr);
+  }
 
-  stats->LogMetrics(
-      GetGlobalMetricsLogger(), stream,
+  stream.LogMetrics(
+      GetGlobalMetricsLogger(),
       ::testing::UnitTest::GetInstance()->current_test_info()->name(),
       /*metadata=*/
       {{"codec_type", codec_type},
@@ -625,7 +653,7 @@ class BitrateAdaptationTest
   }
 };
 
-TEST_P(BitrateAdaptationTest, DISABLED_BitrateAdaptation) {
+TEST_P(BitrateAdaptationTest, BitrateAdaptation) {
   auto [codec_type, codec_impl, video_info, bitrate_kbps] = GetParam();
 
   int duration_s = 10;  // Duration of fixed rate interval.
@@ -650,15 +678,18 @@ TEST_P(BitrateAdaptationTest, DISABLED_BitrateAdaptation) {
       codec_type, codec_impl, video_info, frame_settings, num_frames,
       /*save_codec_input=*/false, /*save_codec_output=*/false);
 
-  std::vector<VideoCodecStats::Frame> frames =
-      stats->Slice(VideoCodecStats::Filter{.first_frame = first_frame});
-  SetTargetRates(frame_settings, frames);
-  VideoCodecStats::Stream stream = stats->Aggregate(frames);
-  EXPECT_NEAR(stream.bitrate_mismatch_pct.GetAverage(), 0, 10);
-  EXPECT_NEAR(stream.framerate_mismatch_pct.GetAverage(), 0, 10);
+  VideoCodecStats::Stream stream;
+  if (stats != nullptr) {
+    std::vector<VideoCodecStats::Frame> frames =
+        stats->Slice(VideoCodecStats::Filter{.first_frame = first_frame});
+    SetTargetRates(frame_settings, frames);
+    stream = stats->Aggregate(frames);
+    EXPECT_NEAR(stream.bitrate_mismatch_pct.GetAverage(), 0, 10);
+    EXPECT_NEAR(stream.framerate_mismatch_pct.GetAverage(), 0, 10);
+  }
 
-  stats->LogMetrics(
-      GetGlobalMetricsLogger(), stream,
+  stream.LogMetrics(
+      GetGlobalMetricsLogger(),
       ::testing::UnitTest::GetInstance()->current_test_info()->name(),
       /*metadata=*/
       {{"codec_type", codec_type},
@@ -698,7 +729,7 @@ class FramerateAdaptationTest
   }
 };
 
-TEST_P(FramerateAdaptationTest, DISABLED_FramerateAdaptation) {
+TEST_P(FramerateAdaptationTest, FramerateAdaptation) {
   auto [codec_type, codec_impl, video_info, framerate_fps] = GetParam();
 
   int duration_s = 10;  // Duration of fixed rate interval.
@@ -724,15 +755,18 @@ TEST_P(FramerateAdaptationTest, DISABLED_FramerateAdaptation) {
       codec_type, codec_impl, video_info, frame_settings, num_frames,
       /*save_codec_input=*/false, /*save_codec_output=*/false);
 
-  std::vector<VideoCodecStats::Frame> frames =
-      stats->Slice(VideoCodecStats::Filter{.first_frame = first_frame});
-  SetTargetRates(frame_settings, frames);
-  VideoCodecStats::Stream stream = stats->Aggregate(frames);
-  EXPECT_NEAR(stream.bitrate_mismatch_pct.GetAverage(), 0, 10);
-  EXPECT_NEAR(stream.framerate_mismatch_pct.GetAverage(), 0, 10);
+  VideoCodecStats::Stream stream;
+  if (stats != nullptr) {
+    std::vector<VideoCodecStats::Frame> frames =
+        stats->Slice(VideoCodecStats::Filter{.first_frame = first_frame});
+    SetTargetRates(frame_settings, frames);
+    stream = stats->Aggregate(frames);
+    EXPECT_NEAR(stream.bitrate_mismatch_pct.GetAverage(), 0, 10);
+    EXPECT_NEAR(stream.framerate_mismatch_pct.GetAverage(), 0, 10);
+  }
 
-  stats->LogMetrics(
-      GetGlobalMetricsLogger(), stream,
+  stream.LogMetrics(
+      GetGlobalMetricsLogger(),
       ::testing::UnitTest::GetInstance()->current_test_info()->name(),
       /*metadata=*/
       {{"codec_type", codec_type},
