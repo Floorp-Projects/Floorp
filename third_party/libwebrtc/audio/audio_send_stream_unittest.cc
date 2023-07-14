@@ -30,6 +30,7 @@
 #include "modules/audio_processing/include/mock_audio_processing.h"
 #include "modules/rtp_rtcp/mocks/mock_rtcp_bandwidth_observer.h"
 #include "modules/rtp_rtcp/mocks/mock_rtp_rtcp.h"
+#include "modules/utility/maybe_worker_thread.h"
 #include "system_wrappers/include/clock.h"
 #include "test/gtest.h"
 #include "test/mock_audio_encoder.h"
@@ -154,6 +155,9 @@ struct ConfigHelper {
                 ? nullptr
                 : rtc::make_ref_counted<NiceMock<MockAudioProcessing>>()),
         bitrate_allocator_(&limit_observer_),
+        worker_queue_(field_trials,
+                      "ConfigHelper_worker_queue",
+                      time_controller_.GetTaskQueueFactory()),
         audio_encoder_(nullptr) {
     using ::testing::Invoke;
 
@@ -184,6 +188,8 @@ struct ConfigHelper {
   }
 
   std::unique_ptr<internal::AudioSendStream> CreateAudioSendStream() {
+    EXPECT_CALL(rtp_transport_, GetWorkerQueue())
+        .WillRepeatedly(Return(&worker_queue_));
     return std::unique_ptr<internal::AudioSendStream>(
         new internal::AudioSendStream(
             time_controller_.GetClock(), stream_config_, audio_state_,
@@ -313,6 +319,8 @@ struct ConfigHelper {
     }
   }
 
+  MaybeWorkerThread* worker() { return &worker_queue_; }
+
   test::ScopedKeyValueConfig field_trials;
 
  private:
@@ -328,6 +336,9 @@ struct ConfigHelper {
   ::testing::NiceMock<MockRtpRtcpInterface> rtp_rtcp_;
   ::testing::NiceMock<MockLimitObserver> limit_observer_;
   BitrateAllocator bitrate_allocator_;
+  // `worker_queue` is defined last to ensure all pending tasks are cancelled
+  // and deleted before any other members.
+  MaybeWorkerThread worker_queue_;
   std::unique_ptr<AudioEncoder> audio_encoder_;
 };
 
@@ -625,7 +636,8 @@ TEST(AudioSendStreamTest, DoesNotPassHigherBitrateThanMaxBitrate) {
     update.packet_loss_ratio = 0;
     update.round_trip_time = TimeDelta::Millis(50);
     update.bwe_period = TimeDelta::Millis(6000);
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -641,7 +653,8 @@ TEST(AudioSendStreamTest, SSBweTargetInRangeRespected) {
     BitrateAllocationUpdate update;
     update.target_bitrate =
         DataRate::BitsPerSec(helper.config().max_bitrate_bps - 5000);
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -657,7 +670,8 @@ TEST(AudioSendStreamTest, SSBweFieldTrialMinRespected) {
                                   Eq(DataRate::KilobitsPerSec(6)))));
     BitrateAllocationUpdate update;
     update.target_bitrate = DataRate::KilobitsPerSec(1);
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -673,7 +687,8 @@ TEST(AudioSendStreamTest, SSBweFieldTrialMaxRespected) {
                                   Eq(DataRate::KilobitsPerSec(64)))));
     BitrateAllocationUpdate update;
     update.target_bitrate = DataRate::KilobitsPerSec(128);
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -693,7 +708,8 @@ TEST(AudioSendStreamTest, SSBweWithOverhead) {
                     &BitrateAllocationUpdate::target_bitrate, Eq(bitrate))));
     BitrateAllocationUpdate update;
     update.target_bitrate = bitrate;
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -713,7 +729,8 @@ TEST(AudioSendStreamTest, SSBweWithOverheadMinRespected) {
                     &BitrateAllocationUpdate::target_bitrate, Eq(bitrate))));
     BitrateAllocationUpdate update;
     update.target_bitrate = DataRate::KilobitsPerSec(1);
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -733,7 +750,8 @@ TEST(AudioSendStreamTest, SSBweWithOverheadMaxRespected) {
                     &BitrateAllocationUpdate::target_bitrate, Eq(bitrate))));
     BitrateAllocationUpdate update;
     update.target_bitrate = DataRate::KilobitsPerSec(128);
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -751,7 +769,8 @@ TEST(AudioSendStreamTest, ProbingIntervalOnBitrateUpdated) {
     update.packet_loss_ratio = 0;
     update.round_trip_time = TimeDelta::Millis(50);
     update.bwe_period = TimeDelta::Millis(5000);
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
   }
 }
 
@@ -853,7 +872,8 @@ TEST(AudioSendStreamTest, AudioOverheadChanged) {
         DataRate::BitsPerSec(helper.config().max_bitrate_bps) +
         kMaxOverheadRate;
     EXPECT_CALL(*helper.channel_send(), OnBitrateAllocation);
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
 
     EXPECT_EQ(audio_overhead_per_packet_bytes,
               send_stream->TestOnlyGetPerPacketOverheadBytes());
@@ -861,7 +881,8 @@ TEST(AudioSendStreamTest, AudioOverheadChanged) {
     EXPECT_CALL(*helper.rtp_rtcp(), ExpectedPerPacketOverhead)
         .WillRepeatedly(Return(audio_overhead_per_packet_bytes + 20));
     EXPECT_CALL(*helper.channel_send(), OnBitrateAllocation);
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
 
     EXPECT_EQ(audio_overhead_per_packet_bytes + 20,
               send_stream->TestOnlyGetPerPacketOverheadBytes());
@@ -885,7 +906,8 @@ TEST(AudioSendStreamTest, OnAudioAndTransportOverheadChanged) {
         DataRate::BitsPerSec(helper.config().max_bitrate_bps) +
         kMaxOverheadRate;
     EXPECT_CALL(*helper.channel_send(), OnBitrateAllocation);
-    send_stream->OnBitrateUpdated(update);
+    helper.worker()->RunSynchronous(
+        [&] { send_stream->OnBitrateUpdated(update); });
 
     EXPECT_EQ(
         transport_overhead_per_packet_bytes + audio_overhead_per_packet_bytes,
