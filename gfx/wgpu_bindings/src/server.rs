@@ -11,7 +11,7 @@ use crate::{
 
 use nsstring::{nsACString, nsCString, nsString};
 
-use wgc::pipeline::CreateShaderModuleError;
+use wgc::{pipeline::CreateShaderModuleError, resource::BufferAccessError};
 use wgc::{gfx_select, id};
 
 use std::borrow::Cow;
@@ -373,7 +373,14 @@ pub extern "C" fn wgpu_server_buffer_unmap(
     mut error_buf: ErrorBuffer,
 ) {
     if let Err(e) = gfx_select!(buffer_id => global.buffer_unmap(buffer_id)) {
-        error_buf.init(e);
+        match e {
+            // NOTE: This is presumed by CTS test cases, and was even formally specified in the
+            // WebGPU spec. previously, but this doesn't seem formally specified now. :confused:
+            //
+            // TODO: upstream this; see <https://bugzilla.mozilla.org/show_bug.cgi?id=1842297>.
+            BufferAccessError::Invalid => (),
+            other => error_buf.init(other),
+        }
     }
 }
 
