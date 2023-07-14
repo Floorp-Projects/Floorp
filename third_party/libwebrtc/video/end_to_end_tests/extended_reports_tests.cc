@@ -39,7 +39,6 @@
 #include "test/gtest.h"
 #include "test/rtcp_packet_parser.h"
 #include "test/rtp_rtcp_observer.h"
-#include "test/video_test_constants.h"
 #include "video/config/video_encoder_config.h"
 
 namespace webrtc {
@@ -64,7 +63,7 @@ class RtcpXrObserver : public test::EndToEndTest {
                  bool expect_target_bitrate,
                  bool enable_zero_target_bitrate,
                  VideoEncoderConfig::ContentType content_type)
-      : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+      : EndToEndTest(test::CallTest::kDefaultTimeout),
         enable_rrtr_(enable_rrtr),
         expect_target_bitrate_(expect_target_bitrate),
         enable_zero_target_bitrate_(enable_zero_target_bitrate),
@@ -105,7 +104,7 @@ class RtcpXrObserver : public test::EndToEndTest {
     test::RtcpPacketParser parser;
     EXPECT_TRUE(parser.Parse(packet, length));
 
-    if (parser.sender_ssrc() == test::VideoTestConstants::kVideoSendSsrcs[1] &&
+    if (parser.sender_ssrc() == test::CallTest::kVideoSendSsrcs[1] &&
         enable_zero_target_bitrate_) {
       // Reduce bandwidth restriction to disable second stream after it was
       // enabled for some time.

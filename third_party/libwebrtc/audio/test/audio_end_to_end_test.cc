@@ -19,7 +19,6 @@
 #include "modules/audio_device/include/test_audio_device.h"
 #include "system_wrappers/include/sleep.h"
 #include "test/gtest.h"
-#include "test/video_test_constants.h"
 
 namespace webrtc {
 namespace test {
@@ -30,7 +29,7 @@ constexpr int kSampleRate = 48000;
 }  // namespace
 
 AudioEndToEndTest::AudioEndToEndTest()
-    : EndToEndTest(VideoTestConstants::kDefaultTimeout) {}
+    : EndToEndTest(CallTest::kDefaultTimeout) {}
 
 size_t AudioEndToEndTest::GetNumVideoStreams() const {
   return 0;
@@ -67,7 +66,7 @@ void AudioEndToEndTest::ModifyAudioConfigs(
   const webrtc::SdpAudioFormat kDefaultFormat("opus", 48000, 2,
                                               {{"stereo", "1"}});
   send_config->send_codec_spec = AudioSendStream::Config::SendCodecSpec(
-      test::VideoTestConstants::kAudioSendPayloadType, kDefaultFormat);
+      test::CallTest::kAudioSendPayloadType, kDefaultFormat);
   send_config->min_bitrate_bps = 32000;
   send_config->max_bitrate_bps = 32000;
 }

@@ -21,7 +21,6 @@
 #include "test/call_test.h"
 #include "test/gtest.h"
 #include "test/rtcp_packet_parser.h"
-#include "test/video_test_constants.h"
 
 namespace webrtc {
 class SsrcEndToEndTest : public test::CallTest {
@@ -38,14 +37,12 @@ class SsrcEndToEndTest : public test::CallTest {
 TEST_F(SsrcEndToEndTest, ReceiverUsesLocalSsrc) {
   class SyncRtcpObserver : public test::EndToEndTest {
    public:
-    SyncRtcpObserver()
-        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout) {}
+    SyncRtcpObserver() : EndToEndTest(kDefaultTimeout) {}
 
     Action OnReceiveRtcp(const uint8_t* packet, size_t length) override {
       test::RtcpPacketParser parser;
       EXPECT_TRUE(parser.Parse(packet, length));
-      EXPECT_EQ(test::VideoTestConstants::kReceiverLocalVideoSsrc,
-                parser.sender_ssrc());
+      EXPECT_EQ(kReceiverLocalVideoSsrc, parser.sender_ssrc());
       observation_complete_.Set();
 
       return SEND_PACKET;
@@ -67,8 +64,7 @@ TEST_F(SsrcEndToEndTest, UnknownRtpPacketTriggersUndemuxablePacketHandler) {
         : receiver_(receiver) {}
 
     bool Wait() {
-      return undemuxable_packet_handler_triggered_.Wait(
-          test::VideoTestConstants::kDefaultTimeout);
+      return undemuxable_packet_handler_triggered_.Wait(kDefaultTimeout);
     }
 
    private:
@@ -123,10 +119,8 @@ TEST_F(SsrcEndToEndTest, UnknownRtpPacketTriggersUndemuxablePacketHandler) {
         CreateMatchingReceiveConfigs(receive_transport.get());
 
         CreateVideoStreams();
-        CreateFrameGeneratorCapturer(
-            test::VideoTestConstants::kDefaultFramerate,
-            test::VideoTestConstants::kDefaultWidth,
-            test::VideoTestConstants::kDefaultHeight);
+        CreateFrameGeneratorCapturer(kDefaultFramerate, kDefaultWidth,
+                                     kDefaultHeight);
         Start();
 
         receiver_call_->DestroyVideoReceiveStream(video_receive_streams_[0]);
@@ -153,7 +147,7 @@ void SsrcEndToEndTest::TestSendsSetSsrcs(size_t num_ssrcs,
                   size_t num_ssrcs,
                   bool send_single_ssrc_first,
                   TaskQueueBase* task_queue)
-        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+        : EndToEndTest(kDefaultTimeout),
           num_ssrcs_(num_ssrcs),
           send_single_ssrc_first_(send_single_ssrc_first),
           ssrcs_to_observe_(num_ssrcs),
@@ -242,8 +236,7 @@ void SsrcEndToEndTest::TestSendsSetSsrcs(size_t num_ssrcs,
     VideoSendStream* send_stream_;
     VideoEncoderConfig video_encoder_config_all_streams_;
     TaskQueueBase* task_queue_;
-  } test(test::VideoTestConstants::kVideoSendSsrcs, num_ssrcs,
-         send_single_ssrc_first, task_queue());
+  } test(kVideoSendSsrcs, num_ssrcs, send_single_ssrc_first, task_queue());
 
   RunBaseTest(&test);
 }
@@ -253,22 +246,21 @@ TEST_F(SsrcEndToEndTest, SendsSetSsrc) {
 }
 
 TEST_F(SsrcEndToEndTest, SendsSetSimulcastSsrcs) {
-  TestSendsSetSsrcs(test::VideoTestConstants::kNumSimulcastStreams, false);
+  TestSendsSetSsrcs(kNumSimulcastStreams, false);
 }
 
 TEST_F(SsrcEndToEndTest, CanSwitchToUseAllSsrcs) {
-  TestSendsSetSsrcs(test::VideoTestConstants::kNumSimulcastStreams, true);
+  TestSendsSetSsrcs(kNumSimulcastStreams, true);
 }
 
 TEST_F(SsrcEndToEndTest, DISABLED_RedundantPayloadsTransmittedOnAllSsrcs) {
   class ObserveRedundantPayloads : public test::EndToEndTest {
    public:
     ObserveRedundantPayloads()
-        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
-          ssrcs_to_observe_(test::VideoTestConstants::kNumSimulcastStreams) {
-      for (size_t i = 0; i < test::VideoTestConstants::kNumSimulcastStreams;
-           ++i) {
-        registered_rtx_ssrc_[test::VideoTestConstants::kSendRtxSsrcs[i]] = true;
+        : EndToEndTest(kDefaultTimeout),
+          ssrcs_to_observe_(kNumSimulcastStreams) {
+      for (size_t i = 0; i < kNumSimulcastStreams; ++i) {
+        registered_rtx_ssrc_[kSendRtxSsrcs[i]] = true;
       }
     }
 
@@ -294,9 +286,7 @@ TEST_F(SsrcEndToEndTest, DISABLED_RedundantPayloadsTransmittedOnAllSsrcs) {
       return SEND_PACKET;
     }
 
-    size_t GetNumVideoStreams() const override {
-      return test::VideoTestConstants::kNumSimulcastStreams;
-    }
+    size_t GetNumVideoStreams() const override { return kNumSimulcastStreams; }
 
     void ModifyVideoConfigs(
         VideoSendStream::Config* send_config,
@@ -309,13 +299,10 @@ TEST_F(SsrcEndToEndTest, DISABLED_RedundantPayloadsTransmittedOnAllSsrcs) {
         layer.target_bitrate_bps = 15000;
         layer.max_bitrate_bps = 20000;
       }
-      send_config->rtp.rtx.payload_type =
-          test::VideoTestConstants::kSendRtxPayloadType;
+      send_config->rtp.rtx.payload_type = kSendRtxPayloadType;
 
-      for (size_t i = 0; i < test::VideoTestConstants::kNumSimulcastStreams;
-           ++i)
-        send_config->rtp.rtx.ssrcs.push_back(
-            test::VideoTestConstants::kSendRtxSsrcs[i]);
+      for (size_t i = 0; i < kNumSimulcastStreams; ++i)
+        send_config->rtp.rtx.ssrcs.push_back(kSendRtxSsrcs[i]);
 
       // Significantly higher than max bitrates for all video streams -> forcing
       // padding to trigger redundant padding on all RTX SSRCs.

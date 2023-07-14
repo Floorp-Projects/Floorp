@@ -18,7 +18,6 @@
 #include "test/field_trial.h"
 #include "test/gtest.h"
 #include "test/video_encoder_proxy_factory.h"
-#include "test/video_test_constants.h"
 #include "video/config/encoder_stream_factory.h"
 
 namespace webrtc {
@@ -120,7 +119,7 @@ class InitEncodeTest : public test::EndToEndTest,
   InitEncodeTest(const std::string& payload_name,
                  const std::vector<TestConfig>& configs,
                  const std::vector<Expectation>& expectations)
-      : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+      : EndToEndTest(test::CallTest::kDefaultTimeout),
         FakeEncoder(Clock::GetRealTimeClock()),
         encoder_factory_(this),
         payload_name_(payload_name),
@@ -148,8 +147,7 @@ class InitEncodeTest : public test::EndToEndTest,
     webrtc::VideoEncoder::EncoderInfo encoder_info;
     send_config->encoder_settings.encoder_factory = &encoder_factory_;
     send_config->rtp.payload_name = payload_name_;
-    send_config->rtp.payload_type =
-        test::VideoTestConstants::kVideoSendPayloadType;
+    send_config->rtp.payload_type = test::CallTest::kVideoSendPayloadType;
     const VideoCodecType codec_type = PayloadStringToCodecType(payload_name_);
     encoder_config->codec_type = codec_type;
     encoder_config->video_stream_factory =

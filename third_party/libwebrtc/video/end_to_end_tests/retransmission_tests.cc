@@ -26,7 +26,6 @@
 #include "test/field_trial.h"
 #include "test/gtest.h"
 #include "test/rtcp_packet_parser.h"
-#include "test/video_test_constants.h"
 
 namespace webrtc {
 namespace {
@@ -54,7 +53,7 @@ TEST_F(RetransmissionEndToEndTest, ReceivesAndRetransmitsNack) {
   class NackObserver : public test::EndToEndTest {
    public:
     NackObserver()
-        : EndToEndTest(test::VideoTestConstants::kLongTimeout),
+        : EndToEndTest(kLongTimeout),
           sent_rtp_packets_(0),
           packets_left_to_drop_(0),
           nacks_left_(kNumberOfNacksToObserve) {}
@@ -109,10 +108,8 @@ TEST_F(RetransmissionEndToEndTest, ReceivesAndRetransmitsNack) {
         VideoSendStream::Config* send_config,
         std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
-      send_config->rtp.nack.rtp_history_ms =
-          test::VideoTestConstants::kNackRtpHistoryMs;
-      (*receive_configs)[0].rtp.nack.rtp_history_ms =
-          test::VideoTestConstants::kNackRtpHistoryMs;
+      send_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
+      (*receive_configs)[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
     }
 
     void PerformTest() override {
@@ -136,7 +133,7 @@ TEST_F(RetransmissionEndToEndTest, ReceivesNackAndRetransmitsAudio) {
   class NackObserver : public test::EndToEndTest {
    public:
     NackObserver()
-        : EndToEndTest(test::VideoTestConstants::kLongTimeout),
+        : EndToEndTest(kLongTimeout),
           local_ssrc_(0),
           remote_ssrc_(0),
           receive_transport_(nullptr) {}
@@ -175,8 +172,7 @@ TEST_F(RetransmissionEndToEndTest, ReceivesNackAndRetransmitsAudio) {
     void ModifyAudioConfigs(AudioSendStream::Config* send_config,
                             std::vector<AudioReceiveStreamInterface::Config>*
                                 receive_configs) override {
-      (*receive_configs)[0].rtp.nack.rtp_history_ms =
-          test::VideoTestConstants::kNackRtpHistoryMs;
+      (*receive_configs)[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
       local_ssrc_ = (*receive_configs)[0].rtp.local_ssrc;
       remote_ssrc_ = (*receive_configs)[0].rtp.remote_ssrc;
       receive_transport_ = (*receive_configs)[0].rtcp_send_transport;
@@ -276,7 +272,7 @@ void RetransmissionEndToEndTest::ReceivesPliAndRecovers(int rtp_history_ms) {
                       public rtc::VideoSinkInterface<VideoFrame> {
    public:
     explicit PliObserver(int rtp_history_ms)
-        : EndToEndTest(test::VideoTestConstants::kLongTimeout),
+        : EndToEndTest(kLongTimeout),
           rtp_history_ms_(rtp_history_ms),
           nack_enabled_(rtp_history_ms > 0),
           highest_dropped_timestamp_(0),
@@ -366,11 +362,10 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
                                  public rtc::VideoSinkInterface<VideoFrame> {
    public:
     RetransmissionObserver(bool enable_rtx, bool enable_red)
-        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+        : EndToEndTest(kDefaultTimeout),
           payload_type_(GetPayloadType(false, enable_red)),
-          retransmission_ssrc_(
-              enable_rtx ? test::VideoTestConstants::kSendRtxSsrcs[0]
-                         : test::VideoTestConstants::kVideoSendSsrcs[0]),
+          retransmission_ssrc_(enable_rtx ? kSendRtxSsrcs[0]
+                                          : kVideoSendSsrcs[0]),
           retransmission_payload_type_(GetPayloadType(enable_rtx, enable_red)),
           encoder_factory_([]() { return VP8Encoder::Create(); }),
           marker_bits_observed_(0),
@@ -422,8 +417,7 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
         VideoSendStream::Config* send_config,
         std::vector<VideoReceiveStreamInterface::Config>* receive_configs,
         VideoEncoderConfig* encoder_config) override {
-      send_config->rtp.nack.rtp_history_ms =
-          test::VideoTestConstants::kNackRtpHistoryMs;
+      send_config->rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
 
       // Insert ourselves into the rendering pipeline.
       RTC_DCHECK(!orig_renderer_);
@@ -433,34 +427,27 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
       (*receive_configs)[0].enable_prerenderer_smoothing = false;
       (*receive_configs)[0].renderer = this;
 
-      (*receive_configs)[0].rtp.nack.rtp_history_ms =
-          test::VideoTestConstants::kNackRtpHistoryMs;
+      (*receive_configs)[0].rtp.nack.rtp_history_ms = kNackRtpHistoryMs;
 
-      if (payload_type_ == test::VideoTestConstants::kRedPayloadType) {
-        send_config->rtp.ulpfec.ulpfec_payload_type =
-            test::VideoTestConstants::kUlpfecPayloadType;
-        send_config->rtp.ulpfec.red_payload_type =
-            test::VideoTestConstants::kRedPayloadType;
-        if (retransmission_ssrc_ == test::VideoTestConstants::kSendRtxSsrcs[0])
-          send_config->rtp.ulpfec.red_rtx_payload_type =
-              test::VideoTestConstants::kRtxRedPayloadType;
+      if (payload_type_ == kRedPayloadType) {
+        send_config->rtp.ulpfec.ulpfec_payload_type = kUlpfecPayloadType;
+        send_config->rtp.ulpfec.red_payload_type = kRedPayloadType;
+        if (retransmission_ssrc_ == kSendRtxSsrcs[0])
+          send_config->rtp.ulpfec.red_rtx_payload_type = kRtxRedPayloadType;
         (*receive_configs)[0].rtp.ulpfec_payload_type =
             send_config->rtp.ulpfec.ulpfec_payload_type;
         (*receive_configs)[0].rtp.red_payload_type =
             send_config->rtp.ulpfec.red_payload_type;
       }
 
-      if (retransmission_ssrc_ == test::VideoTestConstants::kSendRtxSsrcs[0]) {
-        send_config->rtp.rtx.ssrcs.push_back(
-            test::VideoTestConstants::kSendRtxSsrcs[0]);
-        send_config->rtp.rtx.payload_type =
-            test::VideoTestConstants::kSendRtxPayloadType;
-        (*receive_configs)[0].rtp.rtx_ssrc =
-            test::VideoTestConstants::kSendRtxSsrcs[0];
-        (*receive_configs)[0].rtp.rtx_associated_payload_types
-            [(payload_type_ == test::VideoTestConstants::kRedPayloadType)
-                 ? test::VideoTestConstants::kRtxRedPayloadType
-                 : test::VideoTestConstants::kSendRtxPayloadType] =
+      if (retransmission_ssrc_ == kSendRtxSsrcs[0]) {
+        send_config->rtp.rtx.ssrcs.push_back(kSendRtxSsrcs[0]);
+        send_config->rtp.rtx.payload_type = kSendRtxPayloadType;
+        (*receive_configs)[0].rtp.rtx_ssrc = kSendRtxSsrcs[0];
+        (*receive_configs)[0]
+            .rtp.rtx_associated_payload_types[(payload_type_ == kRedPayloadType)
+                                                  ? kRtxRedPayloadType
+                                                  : kSendRtxPayloadType] =
             payload_type_;
       }
       // Configure encoding and decoding with VP8, since generic packetization
@@ -485,12 +472,12 @@ void RetransmissionEndToEndTest::DecodesRetransmittedFrame(bool enable_rtx,
     int GetPayloadType(bool use_rtx, bool use_fec) {
       if (use_fec) {
         if (use_rtx)
-          return test::VideoTestConstants::kRtxRedPayloadType;
-        return test::VideoTestConstants::kRedPayloadType;
+          return kRtxRedPayloadType;
+        return kRedPayloadType;
       }
       if (use_rtx)
-        return test::VideoTestConstants::kSendRtxPayloadType;
-      return test::VideoTestConstants::kFakeVideoSendPayloadType;
+        return kSendRtxPayloadType;
+      return kFakeVideoSendPayloadType;
     }
 
     Mutex mutex_;

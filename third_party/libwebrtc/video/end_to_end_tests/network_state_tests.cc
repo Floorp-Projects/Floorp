@@ -104,10 +104,8 @@ void NetworkStateEndToEndTest::VerifyNewVideoSendStreamsRespectNetworkState(
              GetVideoSendConfig()->encoder_settings.encoder_factory =
                  &encoder_factory;
              CreateVideoStreams();
-             CreateFrameGeneratorCapturer(
-                 test::VideoTestConstants::kDefaultFramerate,
-                 test::VideoTestConstants::kDefaultWidth,
-                 test::VideoTestConstants::kDefaultHeight);
+             CreateFrameGeneratorCapturer(kDefaultFramerate, kDefaultWidth,
+                                          kDefaultHeight);
 
              Start();
            });
@@ -133,9 +131,8 @@ void NetworkStateEndToEndTest::VerifyNewVideoReceiveStreamsRespectNetworkState(
     CreateSendConfig(1, 0, 0);
     CreateMatchingReceiveConfigs(transport);
     CreateVideoStreams();
-    CreateFrameGeneratorCapturer(test::VideoTestConstants::kDefaultFramerate,
-                                 test::VideoTestConstants::kDefaultWidth,
-                                 test::VideoTestConstants::kDefaultHeight);
+    CreateFrameGeneratorCapturer(kDefaultFramerate, kDefaultWidth,
+                                 kDefaultHeight);
     Start();
   });
 
@@ -161,7 +158,7 @@ TEST_F(NetworkStateEndToEndTest, RespectsNetworkState) {
   class NetworkStateTest : public test::EndToEndTest, public test::FakeEncoder {
    public:
     explicit NetworkStateTest(TaskQueueBase* task_queue)
-        : EndToEndTest(test::VideoTestConstants::kDefaultTimeout),
+        : EndToEndTest(kDefaultTimeout),
           FakeEncoder(Clock::GetRealTimeClock()),
           e2e_test_task_queue_(task_queue),
           task_queue_(CreateDefaultTaskQueueFactory()->CreateTaskQueue(
@@ -228,8 +225,7 @@ TEST_F(NetworkStateEndToEndTest, RespectsNetworkState) {
     }
 
     void PerformTest() override {
-      EXPECT_TRUE(
-          encoded_frames_.Wait(test::VideoTestConstants::kDefaultTimeout))
+      EXPECT_TRUE(encoded_frames_.Wait(kDefaultTimeout))
           << "No frames received by the encoder.";
 
       SendTask(task_queue_.get(), [this]() {
