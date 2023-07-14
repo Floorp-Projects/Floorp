@@ -690,7 +690,7 @@ index 1420aa6385..143a6eca41 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 216ced8d8e..f54c724cc4 100644
+index 4a6a0ab41c..61cd531edd 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -746,7 +746,7 @@ index 216ced8d8e..f54c724cc4 100644
      ]
    }
  
-@@ -377,6 +382,7 @@ rtc_library("audio_device_impl") {
+@@ -373,6 +378,7 @@ rtc_library("audio_device_impl") {
      ]
    }
  }
@@ -754,7 +754,7 @@ index 216ced8d8e..f54c724cc4 100644
  
  if (is_mac) {
    rtc_source_set("audio_device_impl_frameworks") {
-@@ -394,6 +400,7 @@ if (is_mac) {
+@@ -390,6 +396,7 @@ if (is_mac) {
    }
  }
  
@@ -762,7 +762,7 @@ index 216ced8d8e..f54c724cc4 100644
  rtc_source_set("mock_audio_device") {
    visibility = [ "*" ]
    testonly = true
-@@ -410,8 +417,10 @@ rtc_source_set("mock_audio_device") {
+@@ -406,8 +413,10 @@ rtc_source_set("mock_audio_device") {
      "../../test:test_support",
    ]
  }
@@ -774,7 +774,7 @@ index 216ced8d8e..f54c724cc4 100644
    rtc_library("audio_device_unittests") {
      testonly = true
  
-@@ -486,7 +495,7 @@ if (rtc_include_tests && !build_with_chromium) {
+@@ -477,7 +486,7 @@ if (rtc_include_tests && !build_with_chromium) {
    }
  }
  
