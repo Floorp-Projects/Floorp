@@ -41,8 +41,7 @@ static const size_t kMinValidCallTimeTimeInMilliseconds =
 static const double k2Pi = 6.28318530717959;
 #endif
 
-AudioDeviceBuffer::AudioDeviceBuffer(TaskQueueFactory* task_queue_factory,
-                                     bool create_detached)
+AudioDeviceBuffer::AudioDeviceBuffer(TaskQueueFactory* task_queue_factory)
     : task_queue_(task_queue_factory->CreateTaskQueue(
           kTimerQueueName,
           TaskQueueFactory::Priority::NORMAL)),
@@ -68,9 +67,6 @@ AudioDeviceBuffer::AudioDeviceBuffer(TaskQueueFactory* task_queue_factory,
   phase_ = 0.0;
   RTC_LOG(LS_WARNING) << "AUDIO_DEVICE_PLAYS_SINUS_TONE is defined!";
 #endif
-  if (create_detached) {
-    main_thread_checker_.Detach();
-  }
 }
 
 AudioDeviceBuffer::~AudioDeviceBuffer() {

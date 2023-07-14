@@ -78,11 +78,7 @@ class AudioDeviceBuffer {
     int16_t max_play_level = 0;
   };
 
-  // If `create_detached` is true, created buffer can be used on another
-  // thread compared to the one on which it was created. It's useful for
-  // testing.
-  explicit AudioDeviceBuffer(TaskQueueFactory* task_queue_factory,
-                             bool create_detached = false);
+  explicit AudioDeviceBuffer(TaskQueueFactory* task_queue_factory);
   virtual ~AudioDeviceBuffer();
 
   int32_t RegisterAudioCallback(AudioTransport* audio_callback);
