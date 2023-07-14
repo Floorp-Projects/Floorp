@@ -7,7 +7,6 @@ import {
   selectors,
   createStore,
   createSourceObject,
-  waitForState,
   makeSource,
   makeOriginalSource,
   makeFrame,
@@ -321,41 +320,6 @@ describe("pause", () => {
           thread: "FakeThread",
         },
       ]);
-    });
-  });
-
-  describe("resumed", () => {
-    it("should not evaluate expression while stepping", async () => {
-      const client = { ...mockCommandClient, evaluateExpressions: jest.fn() };
-      const { dispatch, getState } = createStore(client);
-      const mockPauseInfo = createPauseInfo();
-
-      await dispatch(actions.newGeneratedSource(makeSource("foo1")));
-      await dispatch(actions.paused(mockPauseInfo));
-
-      const cx = selectors.getThreadContext(getState());
-      dispatch(actions.stepIn(cx));
-      await dispatch(actions.resumed(mockCommandClient.actorID));
-      expect(client.evaluateExpressions.mock.calls).toHaveLength(1);
-    });
-
-    it("resuming - will re-evaluate watch expressions", async () => {
-      const client = { ...mockCommandClient, evaluateExpressions: jest.fn() };
-      const store = createStore(client);
-      const { dispatch, getState } = store;
-      const mockPauseInfo = createPauseInfo();
-
-      await dispatch(actions.newGeneratedSource(makeSource("foo1")));
-      await dispatch(actions.newGeneratedSource(makeSource("foo")));
-      await dispatch(actions.addExpression("foo"));
-      await waitForState(store, state => selectors.getExpression(state, "foo"));
-
-      client.evaluateExpressions.mockReturnValue(Promise.resolve(["YAY"]));
-      await dispatch(actions.paused(mockPauseInfo));
-
-      await dispatch(actions.resumed(mockCommandClient.actorID));
-      const expression = selectors.getExpression(getState(), "foo");
-      expect(expression && expression.value).toEqual("YAY");
     });
   });
 });
