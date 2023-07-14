@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    worker-type: b-win2012
+    worker-type: b-win2022
     worker:
         max-run-time: 10800
     run:
