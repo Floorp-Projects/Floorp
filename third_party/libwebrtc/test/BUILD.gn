@@ -126,6 +126,13 @@ rtc_library("test_video_capturer") {
   ]
 }
 
+rtc_library("frame_generator_capturer") {
+  visibility = [ "*" ]
+  testonly = true
+  sources = [ "frame_generator_capturer_tmp.h" ]
+  deps = [ ":video_test_common" ]
+}
+
 rtc_library("video_test_common") {
   visibility = [ "*" ]
   testonly = true
