@@ -606,6 +606,15 @@ class HardwareVideoEncoder implements VideoEncoder {
         Logging.d(TAG, "Sync frame generated");
       }
 
+      // Extract QP before releasing output buffer.
+      Integer qp = null;
+      if (isEncodingStatisticsEnabled) {
+        MediaFormat format = codec.getOutputFormat(index);
+        if (format != null && format.containsKey(MediaFormat.KEY_VIDEO_QP_AVERAGE)) {
+          qp = format.getInteger(MediaFormat.KEY_VIDEO_QP_AVERAGE);
+        }
+      }
+
       final ByteBuffer frameBuffer;
       final Runnable releaseCallback;
       if (isKeyFrame && configBuffer != null) {
@@ -639,15 +648,9 @@ class HardwareVideoEncoder implements VideoEncoder {
                                                           : EncodedImage.FrameType.VideoFrameDelta;
 
       EncodedImage.Builder builder = outputBuilders.poll();
-      builder.setBuffer(frameBuffer, releaseCallback).setFrameType(frameType);
-
-      if (isEncodingStatisticsEnabled) {
-        MediaFormat format = codec.getOutputFormat(index);
-        if (format != null && format.containsKey(MediaFormat.KEY_VIDEO_QP_AVERAGE)) {
-          int qp = format.getInteger(MediaFormat.KEY_VIDEO_QP_AVERAGE);
-          builder.setQp(qp);
-        }
-      }
+      builder.setBuffer(frameBuffer, releaseCallback);
+      builder.setFrameType(frameType);
+      builder.setQp(qp);
 
       EncodedImage encodedImage = builder.createEncodedImage();
       // TODO(mellem):  Set codec-specific info.
