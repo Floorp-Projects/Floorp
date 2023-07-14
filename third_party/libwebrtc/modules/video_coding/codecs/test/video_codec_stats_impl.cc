@@ -13,7 +13,7 @@
 #include <algorithm>
 
 #include "api/numerics/samples_stats_counter.h"
-#include "api/test/metrics/global_metrics_logger_and_exporter.h"
+#include "api/test/metrics/metrics_logger.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/time_utils.h"
 

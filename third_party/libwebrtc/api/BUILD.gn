@@ -1113,7 +1113,7 @@ if (rtc_include_tests) {
     ]
     deps = [
       ":video_codec_tester_api",
-      "../modules/video_coding:videocodec_test_impl",
+      "../modules/video_coding:video_codec_tester",
     ]
   }
 
