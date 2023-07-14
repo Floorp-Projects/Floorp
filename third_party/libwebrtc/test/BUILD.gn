@@ -1107,6 +1107,7 @@ rtc_library("test_common") {
     "../call:simulated_network",
     "../call:simulated_packet_receiver",
     "../call:video_stream_api",
+    "../modules/audio_device:audio_device_api",
     "../modules/audio_device:audio_device_impl",
     "../modules/audio_mixer:audio_mixer_impl",
     "../modules/rtp_rtcp",

@@ -26,6 +26,7 @@
 #include "api/units/time_delta.h"
 #include "api/video/video_bitrate_allocator_factory.h"
 #include "call/call.h"
+#include "modules/audio_device/include/audio_device.h"
 #include "modules/audio_device/include/test_audio_device.h"
 #include "test/encoder_settings.h"
 #include "test/fake_decoder.h"
@@ -271,8 +272,8 @@ class CallTest : public ::testing::Test, public RtpPacketSinkInterface {
   std::vector<RtpExtension> rtp_extensions_;
   rtc::scoped_refptr<AudioProcessing> apm_send_;
   rtc::scoped_refptr<AudioProcessing> apm_recv_;
-  rtc::scoped_refptr<TestAudioDeviceModule> fake_send_audio_device_;
-  rtc::scoped_refptr<TestAudioDeviceModule> fake_recv_audio_device_;
+  rtc::scoped_refptr<AudioDeviceModule> fake_send_audio_device_;
+  rtc::scoped_refptr<AudioDeviceModule> fake_recv_audio_device_;
 };
 
 class BaseTest : public RtpRtcpObserver {
@@ -290,9 +291,8 @@ class BaseTest : public RtpRtcpObserver {
 
   virtual std::unique_ptr<TestAudioDeviceModule::Capturer> CreateCapturer();
   virtual std::unique_ptr<TestAudioDeviceModule::Renderer> CreateRenderer();
-  virtual void OnFakeAudioDevicesCreated(
-      TestAudioDeviceModule* send_audio_device,
-      TestAudioDeviceModule* recv_audio_device);
+  virtual void OnFakeAudioDevicesCreated(AudioDeviceModule* send_audio_device,
+                                         AudioDeviceModule* recv_audio_device);
 
   virtual void ModifySenderBitrateConfig(BitrateConstraints* bitrate_config);
   virtual void ModifyReceiverBitrateConfig(BitrateConstraints* bitrate_config);

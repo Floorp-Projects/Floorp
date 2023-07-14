@@ -57,7 +57,8 @@ class AudioQualityTest : public AudioEndToEndTest {
       // Let the recording run for a small amount of time to check if it works.
       SleepMs(1000);
     } else {
-      AudioEndToEndTest::PerformTest();
+      // Sleep for whole audio duration which is 5.4 seconds.
+      SleepMs(5400);
     }
   }
 

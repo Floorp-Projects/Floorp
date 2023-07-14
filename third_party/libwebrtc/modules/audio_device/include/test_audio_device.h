@@ -82,7 +82,7 @@ class TestAudioDeviceModule : public AudioDeviceModule {
   // `renderer` is an object that receives audio data that would have been
   // played out. Can be nullptr if this device is never used for playing.
   // Use one of the Create... functions to get these instances.
-  static rtc::scoped_refptr<TestAudioDeviceModule> Create(
+  static rtc::scoped_refptr<AudioDeviceModule> Create(
       TaskQueueFactory* task_queue_factory,
       std::unique_ptr<Capturer> capturer,
       std::unique_ptr<Renderer> renderer,

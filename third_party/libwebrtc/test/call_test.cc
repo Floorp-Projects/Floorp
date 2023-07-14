@@ -22,6 +22,8 @@
 #include "call/fake_network_pipe.h"
 #include "call/packet_receiver.h"
 #include "call/simulated_network.h"
+#include "modules/audio_device/include/audio_device.h"
+#include "modules/audio_device/include/test_audio_device.h"
 #include "modules/audio_mixer/audio_mixer_impl.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
@@ -770,9 +772,9 @@ std::unique_ptr<TestAudioDeviceModule::Renderer> BaseTest::CreateRenderer() {
   return TestAudioDeviceModule::CreateDiscardRenderer(48000);
 }
 
-void BaseTest::OnFakeAudioDevicesCreated(
-    TestAudioDeviceModule* send_audio_device,
-    TestAudioDeviceModule* recv_audio_device) {}
+void BaseTest::OnFakeAudioDevicesCreated(AudioDeviceModule* send_audio_device,
+                                         AudioDeviceModule* recv_audio_device) {
+}
 
 void BaseTest::ModifySenderBitrateConfig(BitrateConstraints* bitrate_config) {}
 
