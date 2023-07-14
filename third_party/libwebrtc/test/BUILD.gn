@@ -1121,7 +1121,7 @@ rtc_library("test_common") {
     "../call:simulated_packet_receiver",
     "../call:video_stream_api",
     "../modules/audio_device:audio_device_api",
-    "../modules/audio_device:audio_device_impl",
+    "../modules/audio_device:test_audio_device_module",
     "../modules/audio_mixer:audio_mixer_impl",
     "../modules/rtp_rtcp",
     "../modules/rtp_rtcp:rtp_rtcp_format",
@@ -1295,7 +1295,7 @@ rtc_library("copy_to_file_audio_capturer") {
   deps = [
     "../api:array_view",
     "../common_audio",
-    "../modules/audio_device:audio_device_impl",
+    "../modules/audio_device:test_audio_device_module",
     "../rtc_base:buffer",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
@@ -1308,7 +1308,7 @@ rtc_library("copy_to_file_audio_capturer_unittest") {
     ":copy_to_file_audio_capturer",
     ":fileutils",
     ":test_support",
-    "../modules/audio_device:audio_device_impl",
+    "../modules/audio_device:test_audio_device_module",
   ]
 }
 

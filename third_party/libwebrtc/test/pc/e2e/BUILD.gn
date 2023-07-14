@@ -49,7 +49,7 @@ if (!build_with_chromium) {
       ]
       deps = [
         "../../../api/test/pclf:media_configuration",
-        "../../../modules/audio_device:audio_device_impl",
+        "../../../modules/audio_device:test_audio_device_module",
         "../../../rtc_base:swap_queue",
       ]
     }
@@ -107,7 +107,7 @@ if (!build_with_chromium) {
         "../../../api/video_codecs:builtin_video_encoder_factory",
         "../../../media:rtc_audio_video",
         "../../../media:rtc_media_engine_defaults",
-        "../../../modules/audio_device:audio_device_impl",
+        "../../../modules/audio_device:test_audio_device_module",
         "../../../modules/audio_processing/aec_dump",
         "../../../p2p:rtc_p2p",
         "../../../rtc_base:rtc_task_queue",
