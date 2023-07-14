@@ -42,6 +42,7 @@ extern const char* s_header_top;
 extern const char* s_header_bottom;
 extern const char* s_source_includes;
 extern const char* s_source_declarations;
+extern const char* s_simd_source_declarations;
 
 namespace wabt {
 
@@ -368,7 +369,9 @@ class CWriter {
                                   const std::string&);
   void WriteCallIndirectFuncDeclaration(const FuncDeclaration&,
                                         const std::string&);
-  void WriteFeatureMacros();
+  void ComputeSimdScope();
+  void WriteHeaderIncludes();
+  void WriteV128Decl();
   void WriteModuleInstance();
   void WriteGlobals();
   void WriteGlobal(const Global&, const std::string&);
@@ -484,6 +487,8 @@ class CWriter {
                                     size_t,
                                     size_t)>
       name_to_output_file_index_;
+
+  bool simd_used_in_header_;
 };
 
 // TODO: if WABT begins supporting debug names for labels,
@@ -1411,7 +1416,14 @@ std::string CWriter::GenerateHeaderGuard() const {
 void CWriter::WriteSourceTop() {
   Write(s_source_includes);
   Write(Newline(), "#include \"", header_name_, "\"", Newline());
-  Write(s_source_declarations);
+  Write(s_source_declarations, Newline());
+
+  if (module_->features_used.simd) {
+    if (!simd_used_in_header_) {
+      WriteV128Decl();
+    }
+    Write(s_simd_source_declarations);
+  }
 }
 
 void CWriter::WriteMultiCTop() {
@@ -1790,13 +1802,50 @@ void CWriter::WriteCallIndirectFuncDeclaration(const FuncDeclaration& decl,
   Write(")");
 }
 
-void CWriter::WriteFeatureMacros() {
-  if (options_.features->exceptions_enabled()) {
-    Write("#define WASM_RT_ENABLE_EXCEPTION_HANDLING", Newline(), Newline());
+static bool func_uses_simd(const FuncSignature& sig) {
+  return std::any_of(sig.param_types.begin(), sig.param_types.end(),
+                     [](auto x) { return x == Type::V128; }) ||
+         std::any_of(sig.result_types.begin(), sig.result_types.end(),
+                     [](auto x) { return x == Type::V128; });
+}
+
+void CWriter::ComputeSimdScope() {
+  simd_used_in_header_ =
+      module_->features_used.simd &&
+      (std::any_of(module_->globals.begin(), module_->globals.end(),
+                   [](const auto& x) { return x->type == Type::V128; }) ||
+       std::any_of(module_->imports.begin(), module_->imports.end(),
+                   [](const auto& x) {
+                     return x->kind() == ExternalKind::Func &&
+                            func_uses_simd(cast<FuncImport>(x)->func.decl.sig);
+                   }) ||
+       std::any_of(module_->exports.begin(), module_->exports.end(),
+                   [&](const auto& x) {
+                     return x->kind == ExternalKind::Func &&
+                            func_uses_simd(module_->GetFunc(x->var)->decl.sig);
+                   }));
+}
+
+void CWriter::WriteHeaderIncludes() {
+  Write("#include \"wasm-rt.h\"", Newline());
+
+  if (module_->features_used.exceptions) {
+    Write("#include \"wasm-rt-exceptions.h\"", Newline(), Newline());
   }
-  if (options_.features->simd_enabled()) {
-    Write("#define WASM_RT_ENABLE_SIMD", Newline(), Newline());
+
+  if (simd_used_in_header_) {
+    WriteV128Decl();
   }
+
+  Write(Newline());
+}
+
+void CWriter::WriteV128Decl() {
+  Write("#include <simde/wasm/simd128.h>", Newline(), Newline());
+  Write("#ifndef WASM_RT_SIMD_TYPE_DEFINED", Newline(),
+        "#define WASM_RT_SIMD_TYPE_DEFINED", Newline(),
+        "typedef simde_v128_t v128;", Newline(), "#endif", Newline(),
+        Newline());
 }
 
 void CWriter::WriteModuleInstance() {
@@ -2837,7 +2886,9 @@ void CWriter::WriteTryCatch(const TryExpr& tryexpr) {
   Write(CloseBrace(), Newline()); /* end of try-catch */
 
   ResetTypeStack(mark);
-  Write(LabelDecl(label_stack_.back().name));
+  assert(!label_stack_.empty());
+  assert(label_stack_.back().name == tryexpr.block.label);
+  Write(LabelDecl(GetLocalName(tryexpr.block.label, true)));
   PopLabel();
   PushTypes(tryexpr.block.decl.sig.result_types);
 }
@@ -2939,7 +2990,9 @@ void CWriter::WriteTryDelegate(const TryExpr& tryexpr) {
 
   PopTryCatch();
   ResetTypeStack(mark);
-  Write(LabelDecl(label_stack_.back().name));
+  assert(!label_stack_.empty());
+  assert(label_stack_.back().name == tryexpr.block.label);
+  Write(LabelDecl(GetLocalName(tryexpr.block.label, true)));
   PopLabel();
   PushTypes(tryexpr.block.decl.sig.result_types);
 }
@@ -5132,7 +5185,8 @@ void CWriter::WriteCHeader() {
   Write("#ifndef ", guard, Newline());
   Write("#define ", guard, Newline());
   Write(Newline());
-  WriteFeatureMacros();
+  ComputeSimdScope();
+  WriteHeaderIncludes();
   Write(s_header_top);
   Write(Newline());
   WriteModuleInstance();

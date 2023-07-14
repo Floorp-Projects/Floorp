@@ -100,7 +100,6 @@ static void ParseOptions(int argc, char** argv) {
                        ConvertBackslashToSlash(&s_infile);
                      });
   parser.Parse(argc, argv);
-  s_write_c_options.features = &s_features;
 
   bool any_non_supported_feature = false;
 #define WABT_FEATURE(variable, flag, default_, help)   \

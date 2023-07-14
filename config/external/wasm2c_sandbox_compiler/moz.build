@@ -66,6 +66,7 @@ HOST_SOURCES += [
     "/third_party/wasm2c/src/c-writer.cc",
     "/third_party/wasm2c/src/prebuilt/wasm2c_header_bottom.cc",
     "/third_party/wasm2c/src/prebuilt/wasm2c_header_top.cc",
+    "/third_party/wasm2c/src/prebuilt/wasm2c_simd_source_declarations.cc",
     "/third_party/wasm2c/src/prebuilt/wasm2c_source_declarations.cc",
     "/third_party/wasm2c/src/prebuilt/wasm2c_source_includes.cc",
     "/third_party/wasm2c/src/tools/wasm2c.cc",
