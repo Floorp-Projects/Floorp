@@ -105,8 +105,9 @@ void Event::InitPresContextData(nsPresContext* aPresContext) {
   // Get the explicit original target (if it's anonymous make it null)
   {
     nsCOMPtr<nsIContent> content = GetTargetFromFrame();
-    mExplicitOriginalTarget = content;
-    if (content && content->IsInNativeAnonymousSubtree()) {
+    if (content && !content->IsInNativeAnonymousSubtree()) {
+      mExplicitOriginalTarget = std::move(content);
+    } else {
       mExplicitOriginalTarget = nullptr;
     }
   }
