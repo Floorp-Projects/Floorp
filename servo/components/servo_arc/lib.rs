@@ -672,7 +672,7 @@ impl<H: PartialEq, T: PartialEq> PartialEq for HeaderSlice<H, T> {
 impl<H, T> Drop for HeaderSlice<H, T> {
     fn drop(&mut self) {
         unsafe {
-            let mut ptr = self.data.as_mut_ptr();
+            let mut ptr = self.data_mut();
             for _ in 0..self.len {
                 std::ptr::drop_in_place(ptr);
                 ptr = ptr.offset(1);
