@@ -211,7 +211,14 @@
 
 - name: Throw
   operands:
-    ins: Value
+    value: Value
+  alias_set: custom
+  possibly_calls: true
+
+- name: ThrowWithStack
+  operands:
+    value: Value
+    stack: Value
   alias_set: custom
   possibly_calls: true
 

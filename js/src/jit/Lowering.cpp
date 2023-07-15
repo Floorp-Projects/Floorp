@@ -5146,10 +5146,23 @@ void LIRGenerator::visitRest(MRest* ins) {
 }
 
 void LIRGenerator::visitThrow(MThrow* ins) {
-  MDefinition* value = ins->getOperand(0);
+  MDefinition* value = ins->value();
   MOZ_ASSERT(value->type() == MIRType::Value);
 
   LThrow* lir = new (alloc()) LThrow(useBoxAtStart(value));
+  add(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
+void LIRGenerator::visitThrowWithStack(MThrowWithStack* ins) {
+  MDefinition* value = ins->value();
+  MOZ_ASSERT(value->type() == MIRType::Value);
+
+  MDefinition* stack = ins->stack();
+  MOZ_ASSERT(stack->type() == MIRType::Value);
+
+  auto* lir =
+      new (alloc()) LThrowWithStack(useBoxAtStart(value), useBoxAtStart(stack));
   add(lir, ins);
   assignSafepoint(lir, ins);
 }

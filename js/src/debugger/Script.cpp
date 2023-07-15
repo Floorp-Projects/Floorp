@@ -1435,6 +1435,7 @@ static bool BytecodeIsEffectful(JSScript* script, size_t offset) {
     case JSOp::Coalesce:
     case JSOp::Try:
     case JSOp::Throw:
+    case JSOp::ThrowWithStack:
     case JSOp::Goto:
     case JSOp::TableSwitch:
     case JSOp::Case:
@@ -1607,6 +1608,7 @@ static bool BytecodeIsEffectful(JSScript* script, size_t offset) {
     case JSOp::PushVarEnv:
     case JSOp::GetBoundName:
     case JSOp::Exception:
+    case JSOp::ExceptionAndStack:
     case JSOp::IsGenClosing:
     case JSOp::FinalYieldRval:
     case JSOp::Resume:
