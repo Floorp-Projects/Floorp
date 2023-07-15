@@ -55,7 +55,6 @@ class nsIPrincipal;
 
 #ifdef XP_WIN
 #  include "WindowsLocationProvider.h"
-#  include "mozilla/WindowsVersion.h"
 #endif
 
 // Some limit to the number of get or watch geolocation requests
@@ -528,8 +527,7 @@ nsresult nsGeolocationService::Init() {
 #endif
 
 #ifdef XP_WIN
-  if (Preferences::GetBool("geo.provider.ms-windows-location", false) &&
-      IsWin8OrLater()) {
+  if (Preferences::GetBool("geo.provider.ms-windows-location", false)) {
     mProvider = new WindowsLocationProvider();
   }
 #endif
