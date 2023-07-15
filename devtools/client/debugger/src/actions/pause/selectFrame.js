@@ -25,8 +25,6 @@ export function selectFrame(cx, frame) {
 
     dispatch({
       type: "SELECT_FRAME",
-      cx,
-      thread: cx.thread,
       frame,
     });
 

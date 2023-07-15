@@ -9,6 +9,7 @@ import {
   hasSource,
   hasSourceActor,
   getCurrentlyFetchedTopFrame,
+  hasFrame,
 } from "../selectors";
 
 // Context encapsulates the main parameters of the current redux state, which
@@ -125,6 +126,14 @@ export function validateThreadFrames(state, thread, frames) {
   const newTopFrame = getCurrentlyFetchedTopFrame(state, newThread);
   if (newTopFrame?.id != frames[0].id) {
     throw new ContextError("Thread moved to another location");
+  }
+}
+
+export function validateFrame(state, frame) {
+  if (!hasFrame(state, frame)) {
+    throw new ContextError(
+      `Obsolete frame (frame '${frame.id}' no longer exists)`
+    );
   }
 }
 
