@@ -4,25 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIAlertsService.idl"
-#include "nsISupports.idl"
 #include "nsIObserver.idl"
-
-[scriptable, function, uuid(059f8305-4e2f-4d31-a9cb-5b918ee84773)]
-interface nsIUnknownWindowsTagListener : nsISupports
-{
-  /**
-   * Handle any launch URL associated to the given Windows-specific tag string.
-   * Usually, this will navigate to the launch URL in some manner.
-   *
-   * @param {AString} aWindowsTag the tag
-   * @param {AString} aLaunchURL associated launch URL, or null.
-   * @param {AString} aPrivilegedName associated alert name if this is a chrome
-   *                                  privileged alert, or null.
-   */
-  void handleUnknownWindowsTag(in AString aWindowsTag,
-                               in AString aLaunchURL,
-                               in AString aPrivilegedName);
-};
 
 [scriptable, uuid(e01c8066-fb4b-4304-b9c9-ab6ed4a8322c)]
 interface nsIWindowsAlertsService : nsIAlertsService
