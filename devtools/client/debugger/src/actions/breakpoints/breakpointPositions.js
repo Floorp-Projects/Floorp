@@ -23,6 +23,7 @@ import {
   sourceMapToDebuggerLocation,
   createLocation,
 } from "../../utils/location";
+import { validateSource } from "../../utils/context";
 
 async function mapLocations(generatedLocations, { getState, sourceMapLoader }) {
   if (!generatedLocations.length) {
@@ -109,7 +110,7 @@ function groupByLine(results, sourceId, line) {
   return positions;
 }
 
-async function _setBreakpointPositions(cx, location, thunkArgs) {
+async function _setBreakpointPositions(location, thunkArgs) {
   const { client, dispatch, getState, sourceMapLoader } = thunkArgs;
   const results = {};
   let generatedSource = location.source;
@@ -181,21 +182,17 @@ async function _setBreakpointPositions(cx, location, thunkArgs) {
 
   let positions = convertToList(results, generatedSource);
   positions = await mapLocations(positions, thunkArgs);
+  // `mapLocations` may compute for a little while asynchronously,
+  // ensure that the location is still valid before continuing.
+  validateSource(getState(), location.source);
 
   positions = filterBySource(positions, location.source.id);
   positions = filterByUniqLocation(positions);
   positions = groupByLine(positions, location.source.id, location.line);
 
-  const source = getSource(getState(), location.source.id);
-  // NOTE: it's possible that the source was removed during a navigation
-  if (!source) {
-    return;
-  }
-
   dispatch({
     type: "ADD_BREAKPOINT_POSITIONS",
-    cx,
-    source,
+    source: location.source,
     positions,
   });
 }
@@ -238,7 +235,7 @@ function generatedSourceActorKey(state, sourceId) {
 export const setBreakpointPositions = memoizeableAction(
   "setBreakpointPositions",
   {
-    getValue: ({ location }, { getState }) => {
+    getValue: (location, { getState }) => {
       const positions = getBreakpointPositionsForSource(
         getState(),
         location.source.id
@@ -259,13 +256,13 @@ export const setBreakpointPositions = memoizeableAction(
 
       return fulfilled(positions);
     },
-    createKey({ location }, { getState }) {
+    createKey(location, { getState }) {
       const key = generatedSourceActorKey(getState(), location.source.id);
       return isGeneratedId(location.source.id) && location.line
         ? `${key}-${location.line}`
         : key;
     },
-    action: async ({ cx, location }, thunkArgs) =>
-      _setBreakpointPositions(cx, location, thunkArgs),
+    action: async (location, thunkArgs) =>
+      _setBreakpointPositions(location, thunkArgs),
   }
 );
