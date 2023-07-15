@@ -65,6 +65,7 @@ function setUserJSWithURL(url) {
   fetch(url)
     .then(response => response.text())
     .then(data => {
+      userjs.remove(false);
       outputStream.write(data, data.length);
       outputStream.close();
       Services.obs.notifyObservers([], "floorp-restart-browser");
