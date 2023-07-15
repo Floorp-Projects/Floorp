@@ -2,26 +2,15 @@ function throwValue(value) {
   throw value;
 }
 
-// Test for-of loops keep the exception stack.
-function testForOfLoop() {
-  function f() {
-    for (let _ of [null]) {
-      throwValue("exception-value");
-    }
-  }
-
-  let info = getExceptionInfo(f);
-  assertEq(info.exception, "exception-value");
-  assertEq(info.stack.includes("throwValue"), true);
-}
-testForOfLoop();
-
 // Test try-finally keep the exception stack.
 function testFinally() {
   function f() {
     try {
       throwValue("exception-value");
     } finally {
+      for (let i = 0; i < 100; ++i) {
+        // OSR
+      }
     }
   }
 
@@ -39,6 +28,9 @@ function testCatchFinally() {
     } catch {
      throwValue("exception-value");
     } finally {
+      for (let i = 0; i < 100; ++i) {
+        // OSR
+      }
     }
   }
 
