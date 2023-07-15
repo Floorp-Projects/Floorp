@@ -36,7 +36,7 @@ interface nsIWindowsAlertsService : nsIAlertsService
    * @resolves {Object}
    *           Resolves with an Object, may contain the following optional
    *           properties if notification exists but wasn't registered with
-   *           the WindowsAlertService:
+   *           the WindowsAlertsService:
    *
    *           `launchUrl` {string} a fallback URL to open.
    *

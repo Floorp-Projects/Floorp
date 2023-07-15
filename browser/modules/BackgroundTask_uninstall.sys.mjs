@@ -39,7 +39,7 @@ function removeNotifications() {
   console.log("Removing Windows toast notifications.");
 
   if (!("nsIWindowsAlertsService" in Ci)) {
-    console.log("nsIWindowsAlertService not present.");
+    console.log("nsIWindowsAlertsService not present.");
     return;
   }
 
@@ -49,7 +49,7 @@ function removeNotifications() {
       .getService(Ci.nsIAlertsService)
       .QueryInterface(Ci.nsIWindowsAlertsService);
   } catch (e) {
-    console.error("Error retrieving nsIWindowsAlertService: " + e.message);
+    console.error("Error retrieving nsIWindowsAlertsService: " + e.message);
     return;
   }
 
