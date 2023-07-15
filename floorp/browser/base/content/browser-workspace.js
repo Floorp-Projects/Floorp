@@ -851,10 +851,6 @@ const workspaceFunctions = {
 
       let backupDataString = JSON.stringify(backupDataObject);
       const file = FileUtils.getFile("ProfD", ["floorp-workspace-backup.json"]);
-      const converter = Cc[
-        "@mozilla.org/intl/scriptableunicodeconverter"
-      ].createInstance(Ci.nsIScriptableUnicodeConverter);
-      converter.charset = "UTF-8";
 
       if (file.exists()) {
         backupDataString = "\r" + backupDataString;
@@ -879,7 +875,7 @@ const workspaceFunctions = {
               FileUtils.MODE_CREATE |
               FileUtils.MODE_APPEND
           );
-          const data = converter.convertToByteArray(newBackupDataString);
+          const data = new TextEncoder().encode(newBackupDataString);
           file.remove(false);
           outputStream.write(newBackupDataString, data.length);
           outputStream.close();
@@ -891,7 +887,7 @@ const workspaceFunctions = {
         file,
         FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND
       );
-      const data = converter.convertToByteArray(backupDataString);
+      const data = new TextEncoder().encode(backupDataString);
       outputStream.write(backupDataString, data.length);
       outputStream.close();
     },
@@ -991,11 +987,18 @@ startWorkspace = function () {
     }
   }
 
+  //use from about:prerferences
+  Services.obs.addObserver(workspaceFunctions.Backup.restoreWorkspace, "backupWorkspace");
+
   //run codes
-  if (typeof gBrowser !== "undefined") {
+  if (document.querySelector(".tabbrowser-tab[labeldirection]") !== null) {
+    window.setTimeout(
+      workspaceFunctions.Backup.backupWorkspace,
+      300
+    );
     window.setTimeout(
       workspaceFunctions.manageWorkspaceFunctions.initWorkspace,
-      700
+      500
     );
     window.setTimeout(
       workspaceFunctions.manageWorkspaceFunctions.setCurrentWorkspace,
