@@ -571,29 +571,26 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
 
     /// Tries to merge one node into another using the product, that is, perform `x` * `y`.
     pub fn try_product_in_place(&mut self, other: &mut Self) -> bool {
-        if let Ok(resolved) = other.resolve() {
-            if let Some(number) = resolved.as_number() {
-                if number == 1.0 {
-                    return true;
-                }
+        if let CalcNode::Leaf(left) = self {
+            if let CalcNode::Leaf(right) = other {
+                return left.try_product_in_place(right);
+            }
+        }
 
-                if self.is_product_distributive() {
-                    self.map(|v| v * number);
+        if let CalcNode::Leaf(left) = self {
+            if let Some(left) = left.as_number() {
+                if other.is_product_distributive() || left == 1.0 {
+                    other.map(|v| v * left);
+                    std::mem::swap(self, other);
                     return true;
                 }
             }
         }
 
-        if let Ok(resolved) = self.resolve() {
-            if let Some(number) = resolved.as_number() {
-                if number == 1.0 {
-                    std::mem::swap(self, other);
-                    return true;
-                }
-
-                if other.is_product_distributive() {
-                    other.map(|v| v * number);
-                    std::mem::swap(self, other);
+        if let CalcNode::Leaf(right) = other {
+            if let Some(right) = right.as_number() {
+                if self.is_product_distributive() || right == 1.0 {
+                    self.map(|v| v * right);
                     return true;
                 }
             }

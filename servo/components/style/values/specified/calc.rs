@@ -780,34 +780,45 @@ impl CalcNode {
                 Ok(&Token::Delim('*')) => {
                     let mut rhs = Self::parse_one(context, input, allowed_units)?;
 
-                    // We can unwrap here, becuase we start the function by adding a node to
-                    // the list.
-                    if !product.last_mut().unwrap().try_product_in_place(&mut rhs) {
-                        product.push(rhs);
+                    let last = product.last_mut().unwrap();
+
+                    if let Ok(value) = rhs.to_number() {
+                        if last.is_product_distributive() || value == 1.0 {
+                            last.map(|v| v * value);
+                            continue;
+                        }
                     }
+
+                    if let Ok(value) = last.to_number() {
+                        if value == 1.0 {
+                            std::mem::swap(last, &mut rhs);
+                            continue;
+                        }
+                        if rhs.is_product_distributive() {
+                            rhs.map(|v| v * value);
+                            std::mem::swap(last, &mut rhs);
+                            continue;
+                        }
+                    }
+
+                    product.push(rhs);
                 },
                 Ok(&Token::Delim('/')) => {
                     let rhs = Self::parse_one(context, input, allowed_units)?;
 
-                    fn try_division_in_place(left: &mut CalcNode, right: &CalcNode) -> bool {
-                        if let Ok(resolved) = right.resolve() {
-                            if let Some(number) = resolved.as_number() {
-                                if number != 1.0 && left.is_product_distributive() {
-                                    left.map(|l| l / number);
-                                    return true;
-                                }
-                            }
+                    if let (CalcNode::Leaf(left), Ok(right)) =
+                        (product.last_mut().unwrap(), rhs.to_number())
+                    {
+                        left.map(|l| l / right);
+                    } else {
+                        // Right hand side is not resolvable to a number right now, but it must
+                        // still resolve to a number eventually, so check it.
+                        if !rhs.unit().map_or(false, |n| n.is_empty()) {
+                            return Err(
+                                input.new_custom_error(StyleParseErrorKind::UnspecifiedError)
+                            );
                         }
-                        false
-                    }
 
-                    // The right hand side of a division *must* be a number, so if we can
-                    // already resolve it, then merge it with the last node on the product list.
-                    // We can unwrap here, becuase we start the function by adding a node to
-                    // the list.
-                    let merged = try_division_in_place(product.last_mut().unwrap(), &rhs);
-
-                    if !merged {
                         product.push(Self::Invert(Box::new(rhs)));
                     }
                 },
