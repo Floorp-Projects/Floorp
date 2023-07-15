@@ -90,7 +90,7 @@ export default class ColumnBreakpoint extends PureComponent {
     }
 
     if (columnBreakpoint.breakpoint) {
-      removeBreakpoint(cx, columnBreakpoint.breakpoint);
+      removeBreakpoint(columnBreakpoint.breakpoint);
     } else {
       addBreakpoint(cx, columnBreakpoint.location);
     }

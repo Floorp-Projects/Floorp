@@ -39,7 +39,7 @@ export function paused(pauseInfo) {
     // paused for any other reason.
     const hiddenBreakpoint = getHiddenBreakpoint(getState());
     if (hiddenBreakpoint) {
-      dispatch(removeBreakpoint(cx, hiddenBreakpoint));
+      dispatch(removeBreakpoint(hiddenBreakpoint));
     }
 
     // The THREAD_STATE's "paused" resource only passes the top level stack frame,
