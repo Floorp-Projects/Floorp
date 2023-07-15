@@ -172,14 +172,14 @@ AlertNotification::GetSource(nsAString& aSource) {
 }
 
 NS_IMETHODIMP
-AlertNotification::GetLaunchURL(nsAString& aLaunchURL) {
-  aLaunchURL = mLaunchURL;
+AlertNotification::GetOpaqueRelaunchData(nsAString& aOpaqueRelaunchData) {
+  aOpaqueRelaunchData = mOpaqueRelaunchData;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-AlertNotification::SetLaunchURL(const nsAString& aLaunchURL) {
-  mLaunchURL = aLaunchURL;
+AlertNotification::SetOpaqueRelaunchData(const nsAString& aOpaqueRelaunchData) {
+  mOpaqueRelaunchData = aOpaqueRelaunchData;
   return NS_OK;
 }
 

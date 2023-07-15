@@ -70,6 +70,16 @@ interface nsIAlertAction : nsISupports
    * On non-Windows, this field is ignored.
    */
   readonly attribute boolean windowsSystemActivationType;
+
+  /**
+   * On Windows, chrome-privileged notifications -- i.e., those with a
+   * non-actionable principal -- can have action-specific `opaqueRelaunchData`.
+   * This data will be provided to the application at relaunch and can trigger
+   * specific actions.
+   *
+   * On non-Windows, this field is ignored.
+   */
+  readonly attribute AString opaqueRelaunchData;
 };
 
 [scriptable, uuid(cf2e4cb6-4b8f-4eca-aea9-d51a8f9f7a50)]
@@ -203,10 +213,14 @@ interface nsIAlertNotification : nsISupports
   readonly attribute AString source;
 
   /**
-   * A URL to navigate to if the application is relaunched in to complete
-   * interaction with this alert.
+   * On Windows, chrome-privileged notifications -- i.e., those with a
+   * non-actionable principal -- can have `opaqueRelaunchData`.  This data will
+   * be provided to the application at relaunch and can trigger specific
+   * actions.
+   *
+   * On non-Windows, this field is ignored.
    */
-  attribute AString launchURL;
+  attribute AString opaqueRelaunchData;
 
   /**
    * Loads the image associated with this alert.

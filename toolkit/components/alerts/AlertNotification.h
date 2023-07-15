@@ -78,7 +78,7 @@ class AlertNotification final : public nsIAlertNotification {
   bool mSilent;
   nsTArray<uint32_t> mVibrate;
   nsTArray<RefPtr<nsIAlertAction>> mActions;
-  nsString mLaunchURL;
+  nsString mOpaqueRelaunchData;
 };
 
 }  // namespace mozilla

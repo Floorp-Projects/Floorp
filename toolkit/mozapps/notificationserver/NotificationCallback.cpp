@@ -102,9 +102,7 @@ mozilla::Maybe<ToastArgs> NotificationCallback::ParseToastArguments(
     } else if (key == kLaunchArgLogging) {
       gVerbose = value == L"verbose";
     } else if (key == kLaunchArgAction) {
-      // Remainder of args are from the Web Notification action, don't parse.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=1781929.
-      break;
+      parsedArgs.action = value;
     }
   }
 
@@ -136,6 +134,13 @@ NotificationCallback::BuildRunCommand(const ToastArgs& args) {
     childArgv.push_back(args.windowsTag.c_str());
   } else {
     NOTIFY_LOG(mozilla::LogLevel::Warning, (L"No windowsTag; invoking anyway"));
+  }
+
+  if (!args.action.empty()) {
+    childArgv.push_back(L"--notification-windowsAction");
+    childArgv.push_back(args.action.c_str());
+  } else {
+    NOTIFY_LOG(mozilla::LogLevel::Warning, (L"No action; invoking anyway"));
   }
 
   return {programPath,
