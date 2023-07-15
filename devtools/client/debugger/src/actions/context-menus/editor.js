@@ -109,7 +109,7 @@ export function showEditorGutterContextMenu(event, editor, location, lineText) {
 const continueToHereItem = (cx, location, isPaused, dispatch) => ({
   accesskey: L10N.getStr("editor.continueToHere.accesskey"),
   disabled: !isPaused,
-  click: () => dispatch(continueToHere(cx, location)),
+  click: () => dispatch(continueToHere(location)),
   id: "node-menu-continue-to-here",
   label: L10N.getStr("editor.continueToHere.label"),
 });

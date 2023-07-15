@@ -7,6 +7,7 @@ import {
   getSelectedFrame,
   getClosestBreakpointPosition,
   getBreakpoint,
+  getCurrentThread,
 } from "../../selectors";
 import { createLocation } from "../../utils/location";
 import { addHiddenBreakpoint } from "../breakpoints";
@@ -14,11 +15,12 @@ import { setBreakpointPositions } from "../breakpoints/breakpointPositions";
 
 import { resume } from "./commands";
 
-export function continueToHere(cx, location) {
+export function continueToHere(location) {
   return async function ({ dispatch, getState }) {
     const { line, column } = location;
+    const thread = getCurrentThread(getState());
     const selectedSource = getSelectedSource(getState());
-    const selectedFrame = getSelectedFrame(getState(), cx.thread);
+    const selectedFrame = getSelectedFrame(getState(), thread);
 
     if (!selectedFrame || !selectedSource) {
       return;
