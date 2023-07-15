@@ -138,7 +138,7 @@ function checkSelectedSource(cx, sourceId) {
     if (rawPendingUrl === source.url) {
       if (isPrettyURL(pendingUrl)) {
         const prettySource = await dispatch(togglePrettyPrint(cx, source.id));
-        dispatch(checkPendingBreakpoints(cx, prettySource, null));
+        dispatch(checkPendingBreakpoints(prettySource, null));
         return;
       }
 
@@ -159,7 +159,7 @@ function checkSelectedSource(cx, sourceId) {
   };
 }
 
-function checkPendingBreakpoints(cx, source, sourceActor) {
+function checkPendingBreakpoints(source, sourceActor) {
   return async ({ dispatch, getState }) => {
     const pendingBreakpoints = getPendingBreakpointsForSource(
       getState(),
@@ -172,9 +172,7 @@ function checkPendingBreakpoints(cx, source, sourceActor) {
 
     // load the source text if there is a pending breakpoint for it
     await dispatch(loadSourceText(source, sourceActor));
-    await dispatch(
-      setBreakableLines(cx, createLocation({ source, sourceActor }))
-    );
+    await dispatch(setBreakableLines(createLocation({ source, sourceActor })));
 
     await Promise.all(
       pendingBreakpoints.map(pendingBp => {
@@ -255,7 +253,7 @@ export function newOriginalSources(originalSourcesInfo) {
     await dispatch(checkNewSources(cx, sources));
 
     for (const source of sources) {
-      dispatch(checkPendingBreakpoints(cx, source, null));
+      dispatch(checkPendingBreakpoints(source, null));
     }
 
     return sources;
@@ -333,13 +331,12 @@ export function newGeneratedSources(sourceResources) {
         if (sourceActor.sourceObject.isHTML) {
           await dispatch(
             setBreakableLines(
-              cx,
               createLocation({ source: sourceActor.sourceObject, sourceActor })
             )
           );
         }
         dispatch(
-          checkPendingBreakpoints(cx, sourceActor.sourceObject, sourceActor)
+          checkPendingBreakpoints(sourceActor.sourceObject, sourceActor)
         );
       }
     })();

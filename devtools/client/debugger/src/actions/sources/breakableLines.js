@@ -23,10 +23,9 @@ function calculateBreakableLines(positions) {
 /**
  * Ensure that breakable lines for a given source are fetched.
  *
- * @param Object cx
  * @param Object location
  */
-export function setBreakableLines(cx, location) {
+export function setBreakableLines(location) {
   return async ({ getState, dispatch, client }) => {
     let breakableLines;
     if (isOriginalId(location.source.id)) {
@@ -45,8 +44,7 @@ export function setBreakableLines(cx, location) {
 
       dispatch({
         type: "SET_ORIGINAL_BREAKABLE_LINES",
-        cx,
-        sourceId: location.source.id,
+        source: location.source,
         breakableLines,
       });
     } else {
@@ -63,7 +61,7 @@ export function setBreakableLines(cx, location) {
       );
       dispatch({
         type: "SET_SOURCE_ACTOR_BREAKABLE_LINES",
-        sourceActorId: location.sourceActor.id,
+        sourceActor: location.sourceActor,
         breakableLines,
       });
     }

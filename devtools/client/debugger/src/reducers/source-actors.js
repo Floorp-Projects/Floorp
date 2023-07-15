@@ -61,7 +61,14 @@ export default function update(state = initialSourceActorsState(), action) {
     }
 
     case "SET_SOURCE_ACTOR_BREAKABLE_LINES":
-      return updateBreakableLines(state, action);
+      state.mutableBreakableLines.set(
+        action.sourceActor.id,
+        action.breakableLines
+      );
+
+      return {
+        ...state,
+      };
 
     case "CLEAR_SOURCE_ACTOR_MAP_URL":
       if (state.mutableSourceActorsWithSourceMap.delete(action.sourceActorId)) {
@@ -73,18 +80,4 @@ export default function update(state = initialSourceActorsState(), action) {
   }
 
   return state;
-}
-
-function updateBreakableLines(state, action) {
-  const { sourceActorId } = action;
-
-  // Ignore breakable lines for source actors that aren't/no longer registered
-  if (!state.mutableSourceActors.has(sourceActorId)) {
-    return state;
-  }
-
-  state.mutableBreakableLines.set(sourceActorId, action.breakableLines);
-  return {
-    ...state,
-  };
 }
