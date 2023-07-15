@@ -9,8 +9,3 @@ DIRS += ["targets/translator"]
 # Only build libEGL/libGLESv2 on Windows
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "windows":
     DIRS += ["targets/libEGL", "targets/libGLESv2"]
-
-if CONFIG["MOZ_ANGLE_RENDERER"] and CONFIG["MOZ_D3DCOMPILER_VISTA_DLL_PATH"]:
-    FINAL_TARGET_FILES += [
-        "%" + CONFIG["MOZ_D3DCOMPILER_VISTA_DLL_PATH"],
-    ]
