@@ -241,6 +241,12 @@ export function getTopFrame(state, thread) {
   return frames?.[0];
 }
 
+// getTopFrame wouldn't return the top frame if the frames are still being fetched
+export function getCurrentlyFetchedTopFrame(state, thread) {
+  const { frames } = getThreadPauseState(state.pause, thread);
+  return frames?.[0];
+}
+
 export function getSkipPausing(state) {
   return state.pause.skipPausing;
 }

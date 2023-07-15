@@ -8,6 +8,7 @@ import {
   getCurrentThread,
   hasSource,
   hasSourceActor,
+  getCurrentlyFetchedTopFrame,
 } from "../selectors";
 
 // Context encapsulates the main parameters of the current redux state, which
@@ -113,6 +114,17 @@ export function validateSourceActor(state, sourceActor) {
     throw new ContextError(
       `Obsolete source actor (source '${sourceActor.id}' no longer exists)`
     );
+  }
+}
+
+export function validateThreadFrames(state, thread, frames) {
+  const newThread = getCurrentThread(state);
+  if (thread != newThread) {
+    throw new ContextError("Selected thread has changed");
+  }
+  const newTopFrame = getCurrentlyFetchedTopFrame(state, newThread);
+  if (newTopFrame?.id != frames[0].id) {
+    throw new ContextError("Thread moved to another location");
   }
 }
 

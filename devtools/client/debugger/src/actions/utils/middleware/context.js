@@ -9,6 +9,7 @@ import {
   validateBreakpoint,
   validateSource,
   validateSourceActor,
+  validateThreadFrames,
 } from "../../../utils/context";
 
 function validateActionContext(getState, action) {
@@ -43,6 +44,9 @@ function context({ dispatch, getState }) {
     }
     if ("sourceActor" in action) {
       validateSourceActor(getState(), action.sourceActor);
+    }
+    if ("thread" in action && "frames" in action) {
+      validateThreadFrames(getState(), action.thread, action.frames);
     }
     return next(action);
   };

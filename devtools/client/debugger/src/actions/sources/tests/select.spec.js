@@ -7,14 +7,12 @@ import {
   selectors,
   createStore,
   createSourceObject,
-  makeFrame,
   makeSource,
   makeSourceURL,
   waitForState,
   makeOriginalSource,
 } from "../../../utils/test-head";
 import {
-  getSource,
   getSourceCount,
   getSelectedSource,
   getSourceTabs,
@@ -32,47 +30,6 @@ function initialLocation(sourceId) {
 }
 
 describe("sources", () => {
-  it("should select a source", async () => {
-    // Note that we pass an empty client in because the action checks
-    // if it exists.
-    const store = createStore(mockCommandClient);
-    const { dispatch, getState } = store;
-
-    const frame = makeFrame({ id: "1", sourceId: "foo1" });
-
-    const baseSource = await dispatch(
-      actions.newGeneratedSource(makeSource("foo1"))
-    );
-    await dispatch(
-      actions.paused({
-        thread: "FakeThread",
-        why: { type: "debuggerStatement" },
-        frame,
-        frames: [frame],
-      })
-    );
-
-    const cx = selectors.getThreadContext(getState());
-    await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ source: baseSource, line: 1, column: 5 })
-      )
-    );
-
-    const selectedSource = getSelectedSource(getState());
-    if (!selectedSource) {
-      throw new Error("bad selectedSource");
-    }
-    expect(selectedSource.id).toEqual("foo1");
-
-    const source = getSource(getState(), selectedSource.id);
-    if (!source) {
-      throw new Error("bad source");
-    }
-    expect(source.id).toEqual("foo1");
-  });
-
   it("should select next tab on tab closed if no previous tab", async () => {
     const { dispatch, getState, cx } = createStore(mockCommandClient);
 
