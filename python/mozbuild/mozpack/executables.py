@@ -91,11 +91,6 @@ def may_strip(path):
     """
     from buildconfig import substs
 
-    # Bug 1658632: clang-11-based strip complains about d3dcompiler_47.dll.
-    # It's not clear why this happens, but as a quick fix just avoid stripping
-    # this DLL. It's not from our build anyway.
-    if "d3dcompiler" in path:
-        return False
     return bool(substs.get("PKG_STRIP"))
 
 
