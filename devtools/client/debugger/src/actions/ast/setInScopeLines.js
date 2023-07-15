@@ -28,12 +28,10 @@ function getOutOfScopeLines(outOfScopeLocations) {
 }
 
 async function getInScopeLines(
-  cx,
   location,
+  sourceTextContent,
   { dispatch, getState, parserWorker }
 ) {
-  const sourceTextContent = getSourceTextContent(getState(), location);
-
   let locations = null;
   if (location.line && parserWorker.isLocationSupported(location)) {
     locations = await parserWorker.findOutOfScopeLocations(location);
@@ -66,7 +64,7 @@ async function getInScopeLines(
   return sourceLines.filter(i => i != undefined);
 }
 
-export function setInScopeLines(cx) {
+export function setInScopeLines() {
   return async thunkArgs => {
     const { getState, dispatch } = thunkArgs;
     const visibleFrame = getVisibleSelectedFrame(getState());
@@ -82,11 +80,10 @@ export function setInScopeLines(cx) {
       return;
     }
 
-    const lines = await getInScopeLines(cx, location, thunkArgs);
+    const lines = await getInScopeLines(location, sourceTextContent, thunkArgs);
 
     dispatch({
       type: "IN_SCOPE_LINES",
-      cx,
       location,
       lines,
     });

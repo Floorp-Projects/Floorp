@@ -207,7 +207,8 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
     }
 
     await dispatch(setSymbols(location));
-    dispatch(setInScopeLines(cx));
+    // /!\ we don't historicaly wait for this async action
+    dispatch(setInScopeLines());
 
     if (getIsCurrentThreadPaused(getState())) {
       await dispatch(mapDisplayNames(cx));
