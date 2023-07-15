@@ -80,7 +80,6 @@ function generateDefaults(overrides = {}, breakpointOverrides = {}) {
   const breakpoint = makeBreakpoint(breakpointOverrides);
   const selectedSource = createSourceObject("foo");
   return {
-    cx: {},
     disableBreakpoint: () => {},
     enableBreakpoint: () => {},
     openConditionalPanel: () => {},

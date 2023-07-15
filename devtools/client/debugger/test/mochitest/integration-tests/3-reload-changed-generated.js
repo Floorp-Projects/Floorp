@@ -99,7 +99,7 @@ addIntegrationTask(async function testReloadingChangedGeneratedSource(
     assertTextContentOnLine(dbg, 5, "funcC();");
 
     info("Switch to generated source and assert that the location is correct");
-    await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
+    await dbg.actions.jumpToMappedSelectedLocation();
     assertPausedAtSourceAndLine(
       dbg,
       findSource(dbg, "bundle-with-another-original.js").id,
@@ -109,7 +109,7 @@ addIntegrationTask(async function testReloadingChangedGeneratedSource(
     assertTextContentOnLine(dbg, 82, "funcC();");
 
     info("Switch back to original location before resuming");
-    await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
+    await dbg.actions.jumpToMappedSelectedLocation();
     await resume(dbg);
     await waitForPaused(dbg);
 

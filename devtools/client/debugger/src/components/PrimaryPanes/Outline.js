@@ -16,7 +16,6 @@ import {
   getSelectedSource,
   getSymbols,
   getCursorPosition,
-  getContext,
 } from "../../selectors";
 
 import OutlineFilter from "./OutlineFilter";
@@ -67,7 +66,6 @@ export class Outline extends Component {
     return {
       alphabetizeOutline: PropTypes.bool.isRequired,
       cursorPosition: PropTypes.object,
-      cx: PropTypes.object.isRequired,
       flashLineRange: PropTypes.func.isRequired,
       onAlphabetizeClick: PropTypes.func.isRequired,
       selectLocation: PropTypes.func.isRequired,
@@ -123,13 +121,12 @@ export class Outline extends Component {
   }
 
   selectItem(selectedItem) {
-    const { cx, selectedSource, selectLocation } = this.props;
+    const { selectedSource, selectLocation } = this.props;
     if (!selectedSource || !selectedItem) {
       return;
     }
 
     selectLocation(
-      cx,
       createLocation({
         source: selectedSource,
         line: selectedItem.location.start.line,
@@ -317,7 +314,6 @@ const mapStateToProps = state => {
   const symbols = getSymbols(state, getSelectedLocation(state));
 
   return {
-    cx: getContext(state),
     symbols,
     selectedSource,
     cursorPosition: getCursorPosition(state),

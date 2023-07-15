@@ -22,7 +22,6 @@ import {
   getSettledSourceTextContent,
   getSymbols,
   getTabs,
-  getContext,
   getBlackBoxRanges,
   getProjectDirectoryRoot,
 } from "../selectors";
@@ -68,7 +67,6 @@ export class QuickOpenModal extends Component {
   static get propTypes() {
     return {
       closeQuickOpen: PropTypes.func.isRequired,
-      cx: PropTypes.object.isRequired,
       displayedSources: PropTypes.array.isRequired,
       blackBoxRanges: PropTypes.object.isRequired,
       enabled: PropTypes.bool.isRequired,
@@ -311,11 +309,10 @@ export class QuickOpenModal extends Component {
   };
 
   gotoLocation = location => {
-    const { cx, selectSpecificLocation, selectedSource } = this.props;
+    const { selectSpecificLocation, selectedSource } = this.props;
 
     if (location != null) {
       selectSpecificLocation(
-        cx,
         createLocation({
           source: location.source || selectedSource,
           line: location.line,
@@ -498,7 +495,6 @@ function mapStateToProps(state) {
   const symbols = getSymbols(state, location);
 
   return {
-    cx: getContext(state),
     enabled: getQuickOpenEnabled(state),
     displayedSources,
     blackBoxRanges: getBlackBoxRanges(state),

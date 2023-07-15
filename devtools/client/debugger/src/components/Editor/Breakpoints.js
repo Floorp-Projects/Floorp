@@ -14,7 +14,6 @@ import actions from "../../actions";
 class Breakpoints extends Component {
   static get propTypes() {
     return {
-      cx: PropTypes.object,
       breakpoints: PropTypes.array,
       editor: PropTypes.object,
       selectedSource: PropTypes.object,
@@ -22,7 +21,6 @@ class Breakpoints extends Component {
   }
   render() {
     const {
-      cx,
       breakpoints,
       selectedSource,
       editor,
@@ -41,7 +39,6 @@ class Breakpoints extends Component {
         {breakpoints.map(bp => {
           return (
             <Breakpoint
-              cx={cx}
               key={makeBreakpointId(bp.location)}
               breakpoint={bp}
               selectedSource={selectedSource}

@@ -4,7 +4,6 @@
 
 import {
   getSelectedFrame,
-  getThreadContext,
   getCurrentThread,
   getIsCurrentThreadPaused,
   getIsPaused,
@@ -15,7 +14,6 @@ import { selectLocation } from "../sources";
 import { fetchScopes } from "./fetchScopes";
 import { fetchFrames } from "./fetchFrames";
 import { recordEvent } from "../../utils/telemetry";
-import assert from "../../utils/assert";
 import { validateFrame } from "../../utils/context";
 
 export function selectThread(thread) {
@@ -24,11 +22,6 @@ export function selectThread(thread) {
       return;
     }
     dispatch({ type: "SELECT_THREAD", thread });
-
-    // Get a new context now that the current thread has changed.
-    const threadcx = getThreadContext(getState());
-    // The following assertion may fail if thread doesn't exists and SELECT_THREAD did not update the thread.
-    assert(threadcx.thread == thread, "Thread mismatch");
 
     const selectedFrame = getSelectedFrame(getState(), thread);
 
@@ -44,9 +37,7 @@ export function selectThread(thread) {
     // (frames and scopes is supposed to be fetched on pause,
     // but if two threads pause concurrently, it might be cancelled)
     if (selectedFrame) {
-      serverRequests.push(
-        dispatch(selectLocation(threadcx, selectedFrame.location))
-      );
+      serverRequests.push(dispatch(selectLocation(selectedFrame.location)));
       serverRequests.push(dispatch(fetchFrames(thread)));
 
       serverRequests.push(dispatch(fetchScopes(selectedFrame)));

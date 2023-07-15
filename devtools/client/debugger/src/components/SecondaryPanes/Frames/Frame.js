@@ -72,7 +72,6 @@ export default class FrameComponent extends Component {
 
   static get propTypes() {
     return {
-      cx: PropTypes.object,
       disableContextMenu: PropTypes.bool.isRequired,
       displayFullUrl: PropTypes.bool.isRequired,
       frame: PropTypes.object.isRequired,
@@ -107,7 +106,7 @@ export default class FrameComponent extends Component {
       return;
     }
 
-    this.props.selectFrame(this.props.cx, frame);
+    this.props.selectFrame(frame);
   }
 
   onKeyUp(event, frame, selectedFrame) {
@@ -115,7 +114,7 @@ export default class FrameComponent extends Component {
       return;
     }
 
-    this.props.selectFrame(this.props.cx, frame);
+    this.props.selectFrame(frame);
   }
 
   render() {

@@ -31,7 +31,6 @@ import {
   getSourceByActorId,
   getPendingSelectedLocation,
   getPendingBreakpointsForSource,
-  getContext,
 } from "../../selectors";
 
 import { prefs } from "../../utils/prefs";
@@ -117,7 +116,7 @@ function loadSourceMap(sourceActor) {
 
 // If a request has been made to show this source, go ahead and
 // select it.
-function checkSelectedSource(cx, sourceId) {
+function checkSelectedSource(sourceId) {
   return async ({ dispatch, getState }) => {
     const state = getState();
     const pendingLocation = getPendingSelectedLocation(state);
@@ -137,14 +136,13 @@ function checkSelectedSource(cx, sourceId) {
 
     if (rawPendingUrl === source.url) {
       if (isPrettyURL(pendingUrl)) {
-        const prettySource = await dispatch(togglePrettyPrint(cx, source.id));
+        const prettySource = await dispatch(togglePrettyPrint(source.id));
         dispatch(checkPendingBreakpoints(prettySource, null));
         return;
       }
 
       await dispatch(
         selectLocation(
-          cx,
           createLocation({
             source,
             line:
@@ -228,8 +226,6 @@ export function newOriginalSources(originalSourcesInfo) {
       );
     }
 
-    const cx = getContext(state);
-
     // Add the original sources per the generated source actors that
     // they are primarily from.
     actors.forEach(sourceActor => {
@@ -249,7 +245,7 @@ export function newOriginalSources(originalSourcesInfo) {
       );
     }
 
-    await dispatch(checkNewSources(cx, sources));
+    await dispatch(checkNewSources(sources));
 
     for (const source of sources) {
       dispatch(checkPendingBreakpoints(source, null));
@@ -309,11 +305,10 @@ export function newGeneratedSources(sourceResources) {
 
     const newSources = Object.values(newSourcesObj);
 
-    const cx = getContext(getState());
     dispatch({ type: "ADD_SOURCES", sources: newSources });
     dispatch(insertSourceActors(newSourceActors));
 
-    await dispatch(checkNewSources(cx, newSources));
+    await dispatch(checkNewSources(newSources));
 
     (async () => {
       await dispatch(loadSourceMaps(newSourceActors));
@@ -344,10 +339,10 @@ export function newGeneratedSources(sourceResources) {
   };
 }
 
-function checkNewSources(cx, sources) {
+function checkNewSources(sources) {
   return async ({ dispatch, getState }) => {
     for (const source of sources) {
-      dispatch(checkSelectedSource(cx, source.id));
+      dispatch(checkSelectedSource(source.id));
     }
 
     await dispatch(restoreBlackBoxedSources(sources));

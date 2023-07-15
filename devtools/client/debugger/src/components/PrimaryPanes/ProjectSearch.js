@@ -51,7 +51,6 @@ export class ProjectSearch extends Component {
   static get propTypes() {
     return {
       clearSearch: PropTypes.func.isRequired,
-      cx: PropTypes.object.isRequired,
       doSearchForHighlight: PropTypes.func.isRequired,
       query: PropTypes.string.isRequired,
       results: PropTypes.array.isRequired,
@@ -94,7 +93,7 @@ export class ProjectSearch extends Component {
   }
 
   selectMatchItem = matchItem => {
-    this.props.selectSpecificLocation(this.props.cx, matchItem.location);
+    this.props.selectSpecificLocation(matchItem.location);
     this.props.doSearchForHighlight(
       this.state.inputValue,
       getEditor(),

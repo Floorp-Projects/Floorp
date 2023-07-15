@@ -20,7 +20,6 @@ function generateDefaults(overrides) {
       },
     },
     blackboxedRanges: {},
-    cx: {},
     breakpointActions: {},
     editorActions: {},
     breakpoints: matchingBreakpoints,

@@ -103,7 +103,7 @@ export function toggleSourceMapsEnabled(toggleValue) {
   };
 }
 
-export function showSource(cx, sourceId) {
+export function showSource(sourceId) {
   return ({ dispatch, getState }) => {
     const source = getSource(getState(), sourceId);
     if (!source) {
@@ -120,7 +120,7 @@ export function showSource(cx, sourceId) {
 
     dispatch(setPrimaryPaneTab("sources"));
 
-    dispatch(selectSource(cx, source));
+    dispatch(selectSource(source));
   };
 }
 

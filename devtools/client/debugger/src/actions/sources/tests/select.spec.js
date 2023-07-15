@@ -31,7 +31,7 @@ function initialLocation(sourceId) {
 
 describe("sources", () => {
   it("should select next tab on tab closed if no previous tab", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -40,19 +40,19 @@ describe("sources", () => {
     await dispatch(actions.newGeneratedSource(makeSource("baz.js")));
 
     // 3rd tab
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
 
     // 2nd tab
-    await dispatch(actions.selectLocation(cx, initialLocation("bar.js")));
+    await dispatch(actions.selectLocation(initialLocation("bar.js")));
 
     // 1st tab
-    await dispatch(actions.selectLocation(cx, initialLocation("baz.js")));
+    await dispatch(actions.selectLocation(initialLocation("baz.js")));
 
     // 3rd tab is reselected
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
 
     // closes the 1st tab, which should have no previous tab
-    await dispatch(actions.closeTab(cx, fooSource));
+    await dispatch(actions.closeTab(fooSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("bar.js");
@@ -60,9 +60,9 @@ describe("sources", () => {
   });
 
   it("should open a tab for the source", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
 
     const tabs = getSourceTabs(getState());
     expect(tabs).toHaveLength(1);
@@ -70,7 +70,7 @@ describe("sources", () => {
   });
 
   it("should select previous tab on tab closed", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
 
@@ -78,10 +78,10 @@ describe("sources", () => {
       actions.newGeneratedSource(makeSource("baz.js"))
     );
 
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
-    await dispatch(actions.selectLocation(cx, initialLocation("bar.js")));
-    await dispatch(actions.selectLocation(cx, initialLocation("baz.js")));
-    await dispatch(actions.closeTab(cx, bazSource));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
+    await dispatch(actions.selectLocation(initialLocation("bar.js")));
+    await dispatch(actions.selectLocation(initialLocation("baz.js")));
+    await dispatch(actions.closeTab(bazSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("bar.js");
@@ -89,7 +89,7 @@ describe("sources", () => {
   });
 
   it("should keep the selected source when other tab closed", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
 
     await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
     await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
@@ -98,17 +98,17 @@ describe("sources", () => {
     );
 
     // 3rd tab
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
 
     // 2nd tab
-    await dispatch(actions.selectLocation(cx, initialLocation("bar.js")));
+    await dispatch(actions.selectLocation(initialLocation("bar.js")));
 
     // 1st tab
-    await dispatch(actions.selectLocation(cx, initialLocation("baz.js")));
+    await dispatch(actions.selectLocation(initialLocation("baz.js")));
 
     // 3rd tab is reselected
-    await dispatch(actions.selectLocation(cx, initialLocation("foo.js")));
-    await dispatch(actions.closeTab(cx, bazSource));
+    await dispatch(actions.selectLocation(initialLocation("foo.js")));
+    await dispatch(actions.closeTab(bazSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("foo.js");
@@ -131,14 +131,14 @@ describe("sources", () => {
   });
 
   it("sets and clears selected location correctly", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
     const source = await dispatch(
       actions.newGeneratedSource(makeSource("testSource"))
     );
     const location = createLocation({ source });
 
     // set value
-    dispatch(actions.setSelectedLocation(cx, location));
+    dispatch(actions.setSelectedLocation(location));
     expect(getSelectedLocation(getState())).toEqual({
       ...location,
     });
@@ -170,7 +170,7 @@ describe("sources", () => {
 
   it("should keep the generated the viewing context", async () => {
     const store = createStore(mockCommandClient);
-    const { dispatch, getState, cx } = store;
+    const { dispatch, getState } = store;
     const baseSource = await dispatch(
       actions.newGeneratedSource(makeSource("base.js"))
     );
@@ -184,7 +184,7 @@ describe("sources", () => {
       line: 1,
       sourceActor,
     });
-    await dispatch(actions.selectLocation(cx, location));
+    await dispatch(actions.selectLocation(location));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe(baseSource.id);
@@ -192,7 +192,7 @@ describe("sources", () => {
   });
 
   it("should change the original the viewing context", async () => {
-    const { dispatch, getState, cx } = createStore(
+    const { dispatch, getState } = createStore(
       mockCommandClient,
       {},
       {
@@ -210,11 +210,10 @@ describe("sources", () => {
     const baseSources = await dispatch(
       actions.newOriginalSources([makeOriginalSource(baseGenSource)])
     );
-    await dispatch(actions.selectSource(cx, baseSources[0]));
+    await dispatch(actions.selectSource(baseSources[0]));
 
     await dispatch(
       actions.selectSpecificLocation(
-        cx,
         createLocation({
           source: baseSources[0],
           line: 1,

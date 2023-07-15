@@ -17,7 +17,7 @@ add_task(async function () {
 
   await clickElement(dbg, "blackbox");
   await waitForDispatch(dbg.store, "BLACKBOX_WHOLE_SOURCES");
-  await dbg.actions.stepIn(getThreadContext(dbg));
+  await dbg.actions.stepIn();
 
   // We should stop at this breakpoint, rather than the first executed script
   await selectSource(dbg, "long.js");

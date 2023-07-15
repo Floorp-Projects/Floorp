@@ -205,10 +205,9 @@ async function selectSource(dbg, url) {
   dump(`Selecting source: ${url}\n`);
   const line = 1;
   const source = findSource(dbg, url);
-  const cx = dbg.selectors.getContext(dbg.getState());
   // keepContext set to false allows to force selecting original/generated source
   // regardless if we were currently selecting the opposite type of source.
-  await dbg.actions.selectLocation(cx, createLocation({ source, line }), {
+  await dbg.actions.selectLocation(createLocation({ source, line }), {
     keepContext: false,
   });
   return waitForState(

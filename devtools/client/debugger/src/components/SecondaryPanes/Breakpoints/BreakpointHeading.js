@@ -15,17 +15,13 @@ import {
   getFileURL,
 } from "../../../utils/source";
 import { createLocation } from "../../../utils/location";
-import {
-  getContext,
-  getFirstSourceActorForGeneratedSource,
-} from "../../../selectors";
+import { getFirstSourceActorForGeneratedSource } from "../../../selectors";
 
 import SourceIcon from "../../shared/SourceIcon";
 
 class BreakpointHeading extends PureComponent {
   static get propTypes() {
     return {
-      cx: PropTypes.object.isRequired,
       sources: PropTypes.array.isRequired,
       source: PropTypes.object.isRequired,
       firstSourceActor: PropTypes.object,
@@ -39,7 +35,7 @@ class BreakpointHeading extends PureComponent {
   };
 
   render() {
-    const { cx, sources, source, selectSource } = this.props;
+    const { sources, source, selectSource } = this.props;
 
     const path = getDisplayPath(source, sources);
     const query = getSourceQueryString(source);
@@ -48,7 +44,7 @@ class BreakpointHeading extends PureComponent {
       <div
         className="breakpoint-heading"
         title={getFileURL(source, false)}
-        onClick={() => selectSource(cx, source)}
+        onClick={() => selectSource(source)}
         onContextMenu={this.onContextMenu}
       >
         <SourceIcon
@@ -74,7 +70,6 @@ class BreakpointHeading extends PureComponent {
 }
 
 const mapStateToProps = (state, { source }) => ({
-  cx: getContext(state),
   firstSourceActor: getFirstSourceActorForGeneratedSource(state, source.id),
 });
 

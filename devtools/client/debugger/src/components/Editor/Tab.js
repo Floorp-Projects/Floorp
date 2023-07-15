@@ -24,7 +24,6 @@ import {
   getSelectedLocation,
   getSourcesForTabs,
   isSourceBlackBoxed,
-  getContext,
 } from "../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
@@ -33,7 +32,6 @@ class Tab extends PureComponent {
   static get propTypes() {
     return {
       closeTab: PropTypes.func.isRequired,
-      cx: PropTypes.object.isRequired,
       onDragEnd: PropTypes.func.isRequired,
       onDragOver: PropTypes.func.isRequired,
       onDragStart: PropTypes.func.isRequired,
@@ -56,7 +54,6 @@ class Tab extends PureComponent {
 
   render() {
     const {
-      cx,
       selectSource,
       closeTab,
       source,
@@ -73,13 +70,13 @@ class Tab extends PureComponent {
 
     function onClickClose(e) {
       e.stopPropagation();
-      closeTab(cx, source);
+      closeTab(source);
     }
 
     function handleTabClick(e) {
       e.preventDefault();
       e.stopPropagation();
-      return selectSource(cx, source, sourceActor);
+      return selectSource(source, sourceActor);
     }
 
     const className = classnames("source-tab", {
@@ -102,7 +99,7 @@ class Tab extends PureComponent {
         data-source-id={sourceId}
         onClick={handleTabClick}
         // Accommodate middle click to close tab
-        onMouseUp={e => e.button === 1 && closeTab(cx, source)}
+        onMouseUp={e => e.button === 1 && closeTab(source)}
         onContextMenu={this.onContextMenu}
         title={getFileURL(source, false)}
       >
@@ -128,7 +125,6 @@ class Tab extends PureComponent {
 
 const mapStateToProps = (state, { source }) => {
   return {
-    cx: getContext(state),
     tabSources: getSourcesForTabs(state),
     isBlackBoxed: isSourceBlackBoxed(state, source),
     isActive: source.id === getSelectedLocation(state)?.source.id,

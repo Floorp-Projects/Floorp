@@ -18,7 +18,6 @@ import {
   getSelectedFrame,
   getSelectedSource,
   getCurrentThread,
-  getContext,
   isSourceMapIgnoreListEnabled,
   isSourceOnSourceMapIgnoreList,
   getBlackBoxRanges,
@@ -30,7 +29,6 @@ class Breakpoint extends PureComponent {
   static get propTypes() {
     return {
       breakpoint: PropTypes.object.isRequired,
-      cx: PropTypes.object.isRequired,
       disableBreakpoint: PropTypes.func.isRequired,
       editor: PropTypes.object.isRequired,
       enableBreakpoint: PropTypes.func.isRequired,
@@ -73,8 +71,8 @@ class Breakpoint extends PureComponent {
 
   selectBreakpoint = event => {
     event.preventDefault();
-    const { cx, selectSpecificLocation } = this.props;
-    selectSpecificLocation(cx, this.selectedLocation);
+    const { selectSpecificLocation } = this.props;
+    selectSpecificLocation(this.selectedLocation);
   };
 
   removeBreakpoint = event => {
@@ -199,7 +197,6 @@ const mapStateToProps = (state, props) => {
     isSourceMapIgnoreListEnabled(state) &&
     isSourceOnSourceMapIgnoreList(state, props.source);
   return {
-    cx: getContext(state),
     selectedSource: getSelectedSource(state),
     isBreakpointLineBlackboxed: isLineBlackboxed(
       blackboxedRangesForSource,

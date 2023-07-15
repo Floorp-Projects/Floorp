@@ -57,14 +57,13 @@ describe("ui", () => {
       getState(),
       base.id
     );
-    const cx = selectors.getThreadContext(getState());
-    //await dispatch(actions.selectSource(cx, base, sourceActor));
+    //await dispatch(actions.selectSource(base, sourceActor));
     const location = createLocation({
       source: base,
       line: 1,
       sourceActor,
     });
-    await dispatch(actions.selectLocation(cx, location));
+    await dispatch(actions.selectLocation(location));
 
     const range = { start: 3, end: 5, sourceId: base.id };
     dispatch(actions.highlightLineRange(range));
@@ -80,8 +79,7 @@ describe("ui", () => {
       getState(),
       base.id
     );
-    const cx = selectors.getThreadContext(getState());
-    await dispatch(actions.selectSource(cx, base, sourceActor));
+    await dispatch(actions.selectSource(base, sourceActor));
     const range = { start: 3, end: 5, sourceId: "2" };
     dispatch(actions.highlightLineRange(range));
     dispatch(actions.clearHighlightLineRange());

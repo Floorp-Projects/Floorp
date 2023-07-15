@@ -285,7 +285,7 @@ describe("ProjectSearch", () => {
     );
     component.instance().state.focusedItem = { ...testMatch };
     shortcuts.dispatch("Enter");
-    expect(selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
+    expect(selectSpecificLocation).toHaveBeenCalledWith({
       source: {
         id: "some-target/source42",
       },

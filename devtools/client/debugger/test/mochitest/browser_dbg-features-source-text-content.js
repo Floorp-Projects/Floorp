@@ -487,11 +487,9 @@ add_task(async function testFailingHtmlSource() {
   // Note that it is important to load the page *before* opening the page
   // so that the thread actor has to request the page content and will fail
   const source = findSource(dbg, "200-then-connection-reset.html");
-  await dbg.actions.selectLocation(
-    getContext(dbg),
-    createLocation({ source }),
-    { keepContext: false }
-  );
+  await dbg.actions.selectLocation(createLocation({ source }), {
+    keepContext: false,
+  });
 
   ok(
     getCM(dbg).getValue().includes("Could not load the source"),

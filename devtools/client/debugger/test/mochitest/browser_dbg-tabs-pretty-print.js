@@ -33,7 +33,7 @@ add_task(async function () {
 
   await selectSource(dbg, "math.min.js:formatted");
   const source = findSource(dbg, "math.min.js:formatted");
-  dbg.actions.showSource(getContext(dbg), source.id);
+  dbg.actions.showSource(source.id);
   const focusedTreeElement = findElementWithSelector(
     dbg,
     ".sources-list .focused .label"

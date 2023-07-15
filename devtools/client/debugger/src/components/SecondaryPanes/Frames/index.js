@@ -17,7 +17,6 @@ import {
   getSelectedFrame,
   getCurrentThreadFrames,
   getCurrentThread,
-  getThreadContext,
   getShouldSelectOriginalLocation,
 } from "../../../selectors";
 
@@ -36,7 +35,6 @@ class Frames extends Component {
 
   static get propTypes() {
     return {
-      cx: PropTypes.object,
       disableContextMenu: PropTypes.bool.isRequired,
       disableFrameTruncate: PropTypes.bool.isRequired,
       displayFullUrl: PropTypes.bool.isRequired,
@@ -92,7 +90,6 @@ class Frames extends Component {
 
   renderFrames(frames) {
     const {
-      cx,
       selectFrame,
       selectLocation,
       selectedFrame,
@@ -114,7 +111,6 @@ class Frames extends Component {
         {framesOrGroups.map(frameOrGroup =>
           frameOrGroup.id ? (
             <FrameComponent
-              cx={cx}
               frame={frameOrGroup}
               showFrameContextMenu={showFrameContextMenu}
               selectFrame={selectFrame}
@@ -129,7 +125,6 @@ class Frames extends Component {
             />
           ) : (
             <Group
-              cx={cx}
               group={frameOrGroup}
               showFrameContextMenu={showFrameContextMenu}
               selectFrame={selectFrame}
@@ -192,7 +187,6 @@ class Frames extends Component {
 Frames.contextTypes = { l10n: PropTypes.object };
 
 const mapStateToProps = state => ({
-  cx: getThreadContext(state),
   frames: getCurrentThreadFrames(state),
   frameworkGroupingOn: getFrameworkGroupingState(state),
   selectedFrame: getSelectedFrame(state, getCurrentThread(state)),

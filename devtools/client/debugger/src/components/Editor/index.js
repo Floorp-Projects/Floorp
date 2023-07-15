@@ -21,7 +21,6 @@ import {
   getConditionalPanelLocation,
   getSymbols,
   getIsCurrentThreadPaused,
-  getThreadContext,
   getSkipPausing,
   getInlinePreview,
   getBlackBoxRanges,
@@ -97,7 +96,6 @@ class Editor extends PureComponent {
       selectedSource: PropTypes.object,
       selectedSourceTextContent: PropTypes.object,
       selectedSourceIsBlackBoxed: PropTypes.bool,
-      cx: PropTypes.object.isRequired,
       closeTab: PropTypes.func.isRequired,
       toggleBreakpointAtLine: PropTypes.func.isRequired,
       conditionalPanelLocation: PropTypes.object,
@@ -240,11 +238,11 @@ class Editor extends PureComponent {
   }
 
   onCloseShortcutPress = e => {
-    const { cx, selectedSource } = this.props;
+    const { selectedSource } = this.props;
     if (selectedSource) {
       e.preventDefault();
       e.stopPropagation();
-      this.props.closeTab(cx, selectedSource, "shortcut");
+      this.props.closeTab(selectedSource, "shortcut");
     }
   };
 
@@ -482,7 +480,7 @@ class Editor extends PureComponent {
   };
 
   onClick(e) {
-    const { cx, selectedSource, updateCursorPosition, jumpToMappedLocation } =
+    const { selectedSource, updateCursorPosition, jumpToMappedLocation } =
       this.props;
 
     if (selectedSource) {
@@ -493,7 +491,7 @@ class Editor extends PureComponent {
       );
 
       if (e.metaKey && e.altKey) {
-        jumpToMappedLocation(cx, sourceLocation);
+        jumpToMappedLocation(sourceLocation);
       }
 
       updateCursorPosition(sourceLocation);
@@ -601,7 +599,6 @@ class Editor extends PureComponent {
 
   renderItems() {
     const {
-      cx,
       selectedSource,
       conditionalPanelLocation,
       isPaused,
@@ -622,7 +619,7 @@ class Editor extends PureComponent {
         <DebugLine />
         <HighlightLine />
         <EmptyLines editor={editor} />
-        <Breakpoints editor={editor} cx={cx} />
+        <Breakpoints editor={editor} />
         <Preview editor={editor} editorRef={this.$editorWrapper} />
         {highlightedLineRange ? (
           <HighlightLines editor={editor} range={highlightedLineRange} />
@@ -685,7 +682,6 @@ const mapStateToProps = state => {
   const selectedLocation = getSelectedLocation(state);
 
   return {
-    cx: getThreadContext(state),
     selectedLocation,
     selectedSource,
     selectedSourceTextContent: getSelectedSourceTextContent(state),

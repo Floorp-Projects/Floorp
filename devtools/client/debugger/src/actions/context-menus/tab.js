@@ -9,7 +9,6 @@ import {
   getSelectedLocation,
   getSourcesForTabs,
   isSourceBlackBoxed,
-  getContext,
   isSourceMapIgnoreListEnabled,
   isSourceOnSourceMapIgnoreList,
 } from "../../selectors";
@@ -35,7 +34,6 @@ export function showTabContextMenu(event, source) {
     const sourceId = source.id;
 
     const state = getState();
-    const cx = getContext(state);
     const tabSources = getSourcesForTabs(state);
     const isBlackBoxed = isSourceBlackBoxed(state, source);
     const isSourceOnIgnoreList =
@@ -58,14 +56,14 @@ export function showTabContextMenu(event, source) {
       {
         item: {
           ...tabMenuItems.closeTab,
-          click: () => dispatch(closeTab(cx, sourceTab)),
+          click: () => dispatch(closeTab(sourceTab)),
         },
       },
       {
         item: {
           ...tabMenuItems.closeOtherTabs,
           disabled: otherTabURLs.length === 0,
-          click: () => dispatch(closeTabs(cx, otherTabURLs)),
+          click: () => dispatch(closeTabs(otherTabURLs)),
         },
       },
       {
@@ -76,19 +74,14 @@ export function showTabContextMenu(event, source) {
             tabSources.some((t, i) => t.id === sourceId && tabCount - 1 === i),
           click: () => {
             const tabIndex = tabSources.findIndex(t => t.id == sourceId);
-            dispatch(
-              closeTabs(
-                cx,
-                tabURLs.filter((t, i) => i > tabIndex)
-              )
-            );
+            dispatch(closeTabs(tabURLs.filter((t, i) => i > tabIndex)));
           },
         },
       },
       {
         item: {
           ...tabMenuItems.closeAllTabs,
-          click: () => dispatch(closeTabs(cx, tabURLs)),
+          click: () => dispatch(closeTabs(tabURLs)),
         },
       },
       { item: { type: "separator" } },
@@ -115,7 +108,7 @@ export function showTabContextMenu(event, source) {
           ...tabMenuItems.showSource,
           // Source Tree only shows sources with URL
           disabled: !source.url,
-          click: () => dispatch(showSource(cx, sourceId)),
+          click: () => dispatch(showSource(sourceId)),
         },
       },
       {
@@ -132,7 +125,7 @@ export function showTabContextMenu(event, source) {
         item: {
           ...tabMenuItems.prettyPrint,
           disabled: isPretty(sourceTab),
-          click: () => dispatch(togglePrettyPrint(cx, sourceId)),
+          click: () => dispatch(togglePrettyPrint(sourceId)),
         },
       },
     ];

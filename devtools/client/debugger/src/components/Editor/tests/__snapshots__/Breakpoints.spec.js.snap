@@ -13,7 +13,6 @@ exports[`Breakpoints Component should render breakpoints with columns 1`] = `
         },
       }
     }
-    cx={Object {}}
     editor={
       Object {
         "codeMirror": Object {

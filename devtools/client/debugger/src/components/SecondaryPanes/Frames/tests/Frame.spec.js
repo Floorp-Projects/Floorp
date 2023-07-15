@@ -5,15 +5,10 @@
 import React from "react";
 import { shallow, mount } from "enzyme";
 import Frame from "../Frame.js";
-import {
-  makeMockFrame,
-  makeMockSource,
-  mockthreadcx,
-} from "../../../../utils/test-mockup";
+import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
 
 function frameProperties(frame, selectedFrame, overrides = {}) {
   return {
-    cx: mockthreadcx,
     frame,
     selectedFrame,
     copyStackTrace: jest.fn(),

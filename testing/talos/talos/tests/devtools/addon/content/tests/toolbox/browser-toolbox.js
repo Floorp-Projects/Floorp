@@ -97,8 +97,7 @@ module.exports = async function () {
       const source = await waitFor(() => findSource(dbg, testUrl));
 
       dump("Select this source\n");
-      const cx = dbg.selectors.getContext(dbg.store.getState());
-      dbg.actions.selectLocation(cx, createLocation({ source, line: 1 }));
+      dbg.actions.selectLocation(createLocation({ source, line: 1 }));
       await waitFor(() => {
         const source = dbg.selectors.getSelectedSource(dbg.store.getState());
         if (!source) {

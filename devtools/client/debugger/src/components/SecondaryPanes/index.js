@@ -20,7 +20,6 @@ import {
   getShouldPauseOnCaughtExceptions,
   getThreads,
   getCurrentThread,
-  getThreadContext,
   getPauseReason,
   getShouldBreakpointsPaneOpenOnPause,
   getSkipPausing,
@@ -75,7 +74,6 @@ class SecondaryPanes extends Component {
 
   static get propTypes() {
     return {
-      cx: PropTypes.object.isRequired,
       evaluateExpressionsForCurrentContext: PropTypes.func.isRequired,
       expressions: PropTypes.array.isRequired,
       hasFrames: PropTypes.bool.isRequired,
@@ -507,7 +505,6 @@ const mapStateToProps = state => {
   );
 
   return {
-    cx: getThreadContext(state),
     expressions: getExpressions(state),
     hasFrames: !!getTopFrame(state, thread),
     renderWhyPauseDelay: getRenderWhyPauseDelay(state, thread),
