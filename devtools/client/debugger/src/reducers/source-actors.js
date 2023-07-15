@@ -71,7 +71,9 @@ export default function update(state = initialSourceActorsState(), action) {
       };
 
     case "CLEAR_SOURCE_ACTOR_MAP_URL":
-      if (state.mutableSourceActorsWithSourceMap.delete(action.sourceActorId)) {
+      if (
+        state.mutableSourceActorsWithSourceMap.delete(action.sourceActor.id)
+      ) {
         return {
           ...state,
         };

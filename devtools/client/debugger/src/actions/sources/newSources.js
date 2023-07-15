@@ -36,15 +36,15 @@ import {
 
 import { prefs } from "../../utils/prefs";
 import sourceQueue from "../../utils/source-queue";
-import { validateNavigateContext, ContextError } from "../../utils/context";
+import { validateSourceActor, ContextError } from "../../utils/context";
 
-function loadSourceMaps(cx, sources) {
+function loadSourceMaps(sources) {
   return async function ({ dispatch }) {
     try {
       const sourceList = await Promise.all(
         sources.map(async sourceActor => {
           const originalSourcesInfo = await dispatch(
-            loadSourceMap(cx, sourceActor)
+            loadSourceMap(sourceActor)
           );
           originalSourcesInfo.forEach(
             sourcesInfo => (sourcesInfo.sourceActor = sourceActor)
@@ -69,7 +69,7 @@ function loadSourceMaps(cx, sources) {
  * @memberof actions/sources
  * @static
  */
-function loadSourceMap(cx, sourceActor) {
+function loadSourceMap(sourceActor) {
   return async function ({ dispatch, getState, sourceMapLoader }) {
     if (!prefs.clientSourceMapsEnabled || !sourceActor.sourceMapURL) {
       return [];
@@ -104,13 +104,13 @@ function loadSourceMap(cx, sourceActor) {
       // existing, enable it for pretty printing
       dispatch({
         type: "CLEAR_SOURCE_ACTOR_MAP_URL",
-        cx,
-        sourceActorId: sourceActor.id,
+        sourceActor,
       });
       return [];
     }
 
-    validateNavigateContext(getState(), cx);
+    // Before dispatching this action, ensure that the related sourceActor is still registered
+    validateSourceActor(getState(), sourceActor);
     return data;
   };
 }
@@ -317,7 +317,7 @@ export function newGeneratedSources(sourceResources) {
     await dispatch(checkNewSources(cx, newSources));
 
     (async () => {
-      await dispatch(loadSourceMaps(cx, newSourceActors));
+      await dispatch(loadSourceMaps(newSourceActors));
 
       // We would like to sync breakpoints after we are done
       // loading source maps as sometimes generated and original
