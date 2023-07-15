@@ -129,7 +129,6 @@ Preferences.addAll([
   { id: "general.smoothScroll", type: "bool" },
   { id: "widget.gtk.overlay-scrollbars.enabled", type: "bool", inverted: true },
   { id: "layout.spellcheckDefault", type: "int" },
-  { id: "accessibility.tabfocus", type: "int" },
 
   {
     id: "browser.preferences.defaultPerformanceSettings.enabled",
@@ -725,14 +724,6 @@ var gMainPane = {
     Preferences.addSyncFromPrefListener(
       document.getElementById("defaultFont"),
       element => FontBuilder.readFontSelection(element)
-    );
-    Preferences.addSyncFromPrefListener(
-      document.getElementById("useFullKeyboardNavigation"),
-      () => this.readUseFullKeyboardNavigation()
-    );
-    Preferences.addSyncToPrefListener(
-      document.getElementById("useFullKeyboardNavigation"),
-      () => this.writeUseFullKeyboardNavigation()
     );
     Preferences.addSyncFromPrefListener(
       document.getElementById("checkSpelling"),
@@ -2188,50 +2179,6 @@ var gMainPane = {
     );
 
     migrationWizardDialog.showModal();
-  },
-
-  /**
-   * Stores the original value of the tabfocus preference to enable proper
-   * restoration if unchanged (since we're mapping an int pref onto a checkbox).
-   */
-  _storedFullKeyboardNavigation: Preferences.get("accessibility.tabfocus"),
-
-  /**
-   * Returns true if any full keyboard nav is enabled and false otherwise, caching
-   * the current value to enable proper pref restoration if the checkbox is
-   * never changed.
-   *
-   * accessibility.tabfocus
-   * - an integer controlling the focusability of:
-   *     1  text controls
-   *     2  form elements
-   *     4  links
-   *     7  all of the above
-   */
-  readUseFullKeyboardNavigation() {
-    var pref = Preferences.get("accessibility.tabfocus");
-    this._storedFullKeyboardNavigation = pref.value;
-
-    return pref.value == 7;
-  },
-
-  /**
-   * Returns the value of the full keyboard nav preference represented by UI,
-   * preserving the preference's "hidden" value if the preference is
-   * unchanged and represents a value not strictly allowed in UI.
-   */
-  writeUseFullKeyboardNavigation() {
-    var checkbox = document.getElementById("useFullKeyboardNavigation");
-    if (checkbox.checked) {
-      return 7;
-    }
-    if (this._storedFullKeyboardNavigation != 7) {
-      // 1/2/4 values set via about:config should persist
-      return this._storedFullKeyboardNavigation;
-    }
-    // When the checkbox is unchecked, this pref shouldn't exist
-    // at all.
-    return undefined;
   },
 
   /**
