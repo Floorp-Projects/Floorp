@@ -46,11 +46,11 @@ export function paused(pauseInfo) {
     // we dispatch the PAUSED action with it so that we can right away
     // display it and update the UI to be paused.
     // But we then fetch all the other frames:
-    await dispatch(fetchFrames(cx));
+    await dispatch(fetchFrames(thread));
     // And map them to original source locations.
     // Note that this will wait for all related original sources to be loaded in the reducers.
     // So this step may pause for a little while.
-    await dispatch(mapFrames(cx));
+    await dispatch(mapFrames(thread));
 
     // If we paused on a particular frame, automatically select the related source
     // and highlight the paused line
