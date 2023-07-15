@@ -30,17 +30,3 @@ if CONFIG["WIN32_REDIST_DIR"] and CONFIG["COMPILE_ENVIRONMENT"]:
     for f in ["MSVC_C_RUNTIME_DLL", "MSVC_C_RUNTIME_1_DLL", "MSVC_CXX_RUNTIME_DLL"]:
         if CONFIG[f]:
             FINAL_TARGET_FILES += ["%%%s/%s" % (CONFIG["WIN32_REDIST_DIR"], CONFIG[f])]
-
-if CONFIG["WIN_UCRT_REDIST_DIR"] and CONFIG["COMPILE_ENVIRONMENT"]:
-    win7_ucrt_redists = [
-        "api-ms-win-core-file-l1-2-0.dll",
-        "api-ms-win-core-file-l2-1-0.dll",
-        "api-ms-win-core-localization-l1-2-0.dll",
-        "api-ms-win-core-processthreads-l1-1-1.dll",
-        "api-ms-win-core-synch-l1-2-0.dll",
-        "api-ms-win-core-timezone-l1-1-0.dll",
-        "api-ms-win-crt-*.dll",
-        "ucrtbase.dll",
-    ]
-    for f in win7_ucrt_redists:
-        FINAL_TARGET_FILES += ["%%%s/%s" % (CONFIG["WIN_UCRT_REDIST_DIR"], f)]

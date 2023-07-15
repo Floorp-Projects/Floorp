@@ -11,11 +11,6 @@ if CONFIG["ENABLE_TESTS"]:
         "gkrust-gtest",
     ]
 
-    if CONFIG["OS_ARCH"] == "WINNT":
-        UNIFIED_SOURCES += [
-            "TestUCRTDepends.cpp",
-        ]
-
 USE_LIBS += [
     "static:xul",
 ]

@@ -4,6 +4,5 @@ fi
 
 if [ -d "${VSPATH}" ]; then
     export WIN32_REDIST_DIR=${VSPATH}/VC/Redist/MSVC/14.29.30133/x64/Microsoft.VC142.CRT
-    export WIN_UCRT_REDIST_DIR="${VSPATH}/Windows Kits/10/Redist/10.0.19041.0/ucrt/DLLs/x64"
     export WINSYSROOT="${VSPATH}"
 fi
