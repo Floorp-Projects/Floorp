@@ -512,7 +512,7 @@ void MacroAssemblerX64::handleFailureWithHandlerTail(Label* profilerExitTail,
   movq(rsp, rax);
 
   // Call the handler.
-  using Fn = void (*)(ResumeFromException * rfe);
+  using Fn = void (*)(ResumeFromException* rfe);
   asMasm().setupUnalignedABICall(rcx);
   asMasm().passABIArg(rax);
   asMasm().callWithABI<Fn, HandleException>(
