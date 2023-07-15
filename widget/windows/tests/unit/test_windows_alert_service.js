@@ -56,6 +56,86 @@ function makeAlert(options) {
   return alert;
 }
 
+/**
+ * Take a `key1\nvalue1\n...` string encoding as used by the Windows native
+ * notification server DLL, and split it into an object, keeping `action\n...`
+ * intact.
+ *
+ * @param {string} t string encoding.
+ * @returns {object} an object with keys and values.
+ */
+function parseOneEncoded(t) {
+  var launch = {};
+
+  var lines = t.split("\n");
+  while (lines.length) {
+    var key = lines.shift();
+    var value;
+    if (key === "action") {
+      value = lines.join("\n");
+      lines = [];
+    } else {
+      value = lines.shift();
+    }
+    launch[key] = value;
+  }
+
+  return launch;
+}
+
+/**
+ * This complicated-looking function takes a (XML) string representation of a
+ * Windows alert (toast notification), parses it into XML, extracts and further
+ * parses internal data, and returns a simplified XML representation together
+ * with the parsed internals.
+ *
+ * Doing this lets us compare JSON objects rather than stringified-JSON further
+ * encoded as XML strings, which have lots of slashes and `&quot;` characters to
+ * contend with.
+ *
+ * @param {string} s XML string for Windows alert.
+
+ * @returns {Array} a pair of a simplified XML string and an object with
+ *                  `launch` and `actions` keys.
+ */
+function parseLaunchAndActions(s) {
+  var document = new DOMParser().parseFromString(s, "text/xml");
+  var root = document.documentElement;
+
+  var launchString = root.getAttribute("launch");
+  root.setAttribute("launch", "launch");
+  var launch = parseOneEncoded(launchString);
+
+  // `actions` is keyed by "content" attribute.
+  let actions = {};
+  for (var actionElement of root.querySelectorAll("action")) {
+    // `activationType="system"` is special.  Leave them alone.
+    let systemActivationType =
+      actionElement.getAttribute("activationType") === "system";
+
+    let action = {};
+    let names = [...actionElement.attributes].map(attribute => attribute.name);
+
+    for (var name of names) {
+      let value = actionElement.getAttribute(name);
+      if (name == "arguments" && !systemActivationType) {
+        action[name] = parseOneEncoded(value);
+      } else {
+        action[name] = value;
+      }
+
+      if (name != "content" && !systemActivationType) {
+        actionElement.removeAttribute(name);
+      }
+    }
+
+    let actionName = actionElement.getAttribute("content");
+    actions[actionName] = action;
+  }
+
+  return [new XMLSerializer().serializeToString(document), { launch, actions }];
+}
+
 function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
   let argumentString = (argument, launchUrl, privilegedName) => {
     // &#xA; is "\n".
@@ -83,13 +163,43 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     return s;
   };
 
-  let settingsAction = hostport => {
-    return isBackgroundTaskMode
-      ? ""
-      : `<action content="Notification settings" arguments="${argumentString(
-          "settings",
-          hostport
-        )}" placement="contextmenu"/>`;
+  let parsedArgumentString = (argument, launchUrl, privilegedName) =>
+    parseOneEncoded(
+      argumentString(argument, launchUrl, privilegedName).replaceAll(
+        "&#xA;",
+        "\n"
+      )
+    );
+
+  let settingsAction = isBackgroundTaskMode
+    ? ""
+    : `<action content="Notification settings"/>`;
+
+  let parsedSettingsAction = hostport => {
+    if (isBackgroundTaskMode) {
+      return [];
+    }
+    let content = "Notification settings";
+    return [
+      content,
+      {
+        content,
+        arguments: parsedArgumentString("settings", hostport),
+        placement: "contextmenu",
+      },
+    ];
+  };
+
+  let parsedSnoozeAction = hostport => {
+    let content = `Disable notifications from ${hostport}`;
+    return [
+      content,
+      {
+        content,
+        arguments: parsedArgumentString("snooze", hostport),
+        placement: "contextmenu",
+      },
+    ];
   };
 
   let alertsService = Cc["@mozilla.org/system-alerts-service;1"]
@@ -106,38 +216,76 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
   ];
 
   let alert = makeAlert({ name, title, text });
-  let expected = `<toast launch="${argumentString()}"><visual><binding template="ToastText03"><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction()}</actions></toast>`;
-  Assert.equal(
-    expected.replace("<actions></actions>", "<actions/>"),
-    alertsService.getXmlStringForWindowsAlert(alert),
+  let expected = `<toast launch="launch"><visual><binding template="ToastText03"><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}</actions></toast>`;
+  Assert.deepEqual(
+    [
+      expected.replace("<actions></actions>", "<actions/>"),
+      {
+        launch: parsedArgumentString(),
+        actions: Object.fromEntries(
+          [parsedSettingsAction()].filter(x => x.length)
+        ),
+      },
+    ],
+    parseLaunchAndActions(alertsService.getXmlStringForWindowsAlert(alert)),
     when
   );
 
   alert = makeAlert({ name, title, text, imageURL });
-  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction()}</actions></toast>`;
-  Assert.equal(
-    expected.replace("<actions></actions>", "<actions/>"),
-    alertsService.getXmlStringForWindowsAlert(alert),
+  expected = `<toast launch="launch"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}</actions></toast>`;
+  Assert.deepEqual(
+    [
+      expected.replace("<actions></actions>", "<actions/>"),
+      {
+        launch: parsedArgumentString(),
+        actions: Object.fromEntries(
+          [parsedSettingsAction()].filter(x => x.length)
+        ),
+      },
+    ],
+    parseLaunchAndActions(alertsService.getXmlStringForWindowsAlert(alert)),
     when
   );
 
   alert = makeAlert({ name, title, text, imageURL, requireInteraction: true });
-  expected = `<toast scenario="reminder" launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction()}</actions></toast>`;
-  Assert.equal(
-    expected.replace("<actions></actions>", "<actions/>"),
-    alertsService.getXmlStringForWindowsAlert(alert),
+  expected = `<toast scenario="reminder" launch="launch"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}</actions></toast>`;
+  Assert.deepEqual(
+    [
+      expected.replace("<actions></actions>", "<actions/>"),
+      {
+        launch: parsedArgumentString(),
+        actions: Object.fromEntries(
+          [parsedSettingsAction()].filter(x => x.length)
+        ),
+      },
+    ],
+    parseLaunchAndActions(alertsService.getXmlStringForWindowsAlert(alert)),
     when
   );
 
   alert = makeAlert({ name, title, text, imageURL, actions });
-  expected = `<toast launch="${argumentString()}"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction()}<action content="title1" arguments="${argumentString(
-    "action1"
-  )}"/><action content="title2" arguments="${argumentString(
-    "action2"
-  )}"/></actions></toast>`;
-  Assert.equal(
-    expected.replace("<actions></actions>", "<actions/>"),
-    alertsService.getXmlStringForWindowsAlert(alert),
+  expected = `<toast launch="launch"><visual><binding template="ToastImageAndText03"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}<action content="title1"/><action content="title2"/></actions></toast>`;
+  Assert.deepEqual(
+    [
+      expected.replace("<actions></actions>", "<actions/>"),
+      {
+        launch: parsedArgumentString(),
+        actions: Object.fromEntries(
+          [
+            parsedSettingsAction(),
+            [
+              "title1",
+              { content: "title1", arguments: parsedArgumentString("action1") },
+            ],
+            [
+              "title2",
+              { content: "title2", arguments: parsedArgumentString("action2") },
+            ],
+          ].filter(x => x.length)
+        ),
+      },
+    ],
+    parseLaunchAndActions(alertsService.getXmlStringForWindowsAlert(alert)),
     when
   );
 
@@ -163,21 +311,47 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     principal: systemPrincipal,
     actions: systemActions,
   });
-  let settingsActionWithPrivilegedName = isBackgroundTaskMode
-    ? ""
-    : `<action content="Notification settings" arguments="${argumentString(
-        "settings",
-        null,
-        name
-      )}" placement="contextmenu"/>`;
-  expected = `<toast launch="${argumentString(
-    null,
-    null,
-    name
-  )}"><visual><binding template="ToastGeneric"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsActionWithPrivilegedName}<action content="dismissTitle" arguments="dismiss" activationType="system"/><action content="snoozeTitle" arguments="snooze" activationType="system"/></actions></toast>`;
-  Assert.equal(
-    expected,
-    alertsService.getXmlStringForWindowsAlert(alert),
+  let parsedSettingsActionWithPrivilegedName = isBackgroundTaskMode
+    ? []
+    : [
+        "Notification settings",
+        {
+          content: "Notification settings",
+          arguments: parsedArgumentString("settings", null, name),
+          placement: "contextmenu",
+        },
+      ];
+
+  expected = `<toast launch="launch"><visual><binding template="ToastGeneric"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}<action content="dismissTitle" arguments="dismiss" activationType="system"/><action content="snoozeTitle" arguments="snooze" activationType="system"/></actions></toast>`;
+  Assert.deepEqual(
+    [
+      expected.replace("<actions></actions>", "<actions/>"),
+      {
+        launch: parsedArgumentString(null, null, name),
+        actions: Object.fromEntries(
+          [
+            parsedSettingsActionWithPrivilegedName,
+            [
+              "dismissTitle",
+              {
+                content: "dismissTitle",
+                arguments: "dismiss",
+                activationType: "system",
+              },
+            ],
+            [
+              "snoozeTitle",
+              {
+                content: "snoozeTitle",
+                arguments: "snooze",
+                activationType: "system",
+              },
+            ],
+          ].filter(x => x.length)
+        ),
+      },
+    ],
+    parseLaunchAndActions(alertsService.getXmlStringForWindowsAlert(alert)),
     when
   );
 
@@ -197,24 +371,41 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     actions: systemActions,
     principal,
   });
-  expected = `<toast launch="${argumentString(
-    null,
-    principaluri.hostPort
-  )}"><visual><binding template="ToastImageAndText04"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text><text id="3" placement="attribution">via example.com</text></binding></visual><actions><action content="Disable notifications from example.com" arguments="${argumentString(
-    "snooze",
-    principaluri.hostPort
-  )}" placement="contextmenu"/>${settingsAction(
-    principaluri.hostPort
-  )}<action content="dismissTitle" arguments="${argumentString(
-    "dismiss",
-    principaluri.hostPort
-  )}"/><action content="snoozeTitle" arguments="${argumentString(
-    "snooze",
-    principaluri.hostPort
-  )}"/></actions></toast>`;
-  Assert.equal(
-    expected,
-    alertsService.getXmlStringForWindowsAlert(alert),
+  expected = `<toast launch="launch"><visual><binding template="ToastImageAndText04"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text><text id="3" placement="attribution">via example.com</text></binding></visual><actions><action content="Disable notifications from example.com"/>${settingsAction}<action content="dismissTitle"/><action content="snoozeTitle"/></actions></toast>`;
+  Assert.deepEqual(
+    [
+      expected.replace("<actions></actions>", "<actions/>"),
+      {
+        launch: parsedArgumentString(null, principaluri.hostPort),
+        actions: Object.fromEntries(
+          [
+            parsedSnoozeAction(principaluri.hostPort),
+            parsedSettingsAction(principaluri.hostPort),
+            [
+              "dismissTitle",
+              {
+                content: "dismissTitle",
+                arguments: parsedArgumentString(
+                  "dismiss",
+                  principaluri.hostPort
+                ),
+              },
+            ],
+            [
+              "snoozeTitle",
+              {
+                content: "snoozeTitle",
+                arguments: parsedArgumentString(
+                  "snooze",
+                  principaluri.hostPort
+                ),
+              },
+            ],
+          ].filter(x => x.length)
+        ),
+      },
+    ],
+    parseLaunchAndActions(alertsService.getXmlStringForWindowsAlert(alert)),
     when
   );
 
@@ -227,21 +418,29 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     principal: systemPrincipal,
   });
   alert.launchURL = launchUrl;
-  let settingsActionWithLaunchUrl = isBackgroundTaskMode
-    ? ""
-    : `<action content="Notification settings" arguments="${argumentString(
-        "settings",
-        launchUrl,
-        name
-      )}" placement="contextmenu"/>`;
-  expected = `<toast launch="${argumentString(
-    null,
-    launchUrl,
-    name
-  )}"><visual><binding template="ToastGeneric"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsActionWithLaunchUrl}</actions></toast>`;
-  Assert.equal(
-    expected.replace("<actions></actions>", "<actions/>"),
-    alertsService.getXmlStringForWindowsAlert(alert),
+  let parsedSettingsActionWithLaunchUrl = isBackgroundTaskMode
+    ? []
+    : [
+        "Notification settings",
+        {
+          content: "Notification settings",
+          arguments: parsedArgumentString("settings", launchUrl, name),
+          placement: "contextmenu",
+        },
+      ];
+
+  expected = `<toast launch="launch"><visual><binding template="ToastGeneric"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}</actions></toast>`;
+  Assert.deepEqual(
+    [
+      expected.replace("<actions></actions>", "<actions/>"),
+      {
+        launch: parsedArgumentString(null, launchUrl, name),
+        actions: Object.fromEntries(
+          [parsedSettingsActionWithLaunchUrl].filter(x => x.length)
+        ),
+      },
+    ],
+    parseLaunchAndActions(alertsService.getXmlStringForWindowsAlert(alert)),
     when
   );
 }
