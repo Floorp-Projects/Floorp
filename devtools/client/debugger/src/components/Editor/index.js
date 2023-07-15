@@ -420,7 +420,6 @@ class Editor extends PureComponent {
 
   onGutterClick = (cm, line, gutter, ev) => {
     const {
-      cx,
       selectedSource,
       conditionalPanelLocation,
       closeConditionalPanel,
@@ -457,7 +456,6 @@ class Editor extends PureComponent {
 
     if (isCmd(ev)) {
       continueToHere(
-        cx,
         createLocation({
           line: sourceLine,
           column: undefined,

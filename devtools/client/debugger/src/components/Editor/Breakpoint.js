@@ -52,7 +52,6 @@ class Breakpoint extends PureComponent {
 
   onClick = event => {
     const {
-      cx,
       continueToHere,
       toggleBreakpointsAtLine,
       removeBreakpointsAtLine,
@@ -70,7 +69,7 @@ class Breakpoint extends PureComponent {
 
     const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
     if (event.metaKey) {
-      continueToHere(cx, selectedLocation);
+      continueToHere(selectedLocation);
       return;
     }
 
