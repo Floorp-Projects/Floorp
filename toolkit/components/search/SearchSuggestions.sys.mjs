@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { FormAutoCompleteResult } from "resource://gre/modules/FormAutoCompleteResult.sys.mjs";
-
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   FormAutoCompleteResult: "resource://gre/modules/FormAutoComplete.sys.mjs",
@@ -31,30 +29,12 @@ class SuggestAutoComplete {
   /**
    * Notifies the front end of new results.
    *
-   * @param {string} searchString
-   *   The user's query string.
-   * @param {Array} results
-   *   An array of results to the search.
-   * @param {object} formHistoryResult
+   * @param {FormAutoCompleteResult} result
    *   Any previous form history result.
    * @private
    */
-  onResultsReady(searchString, results, formHistoryResult) {
+  onResultsReady(result) {
     if (this.#listener) {
-      let result = new FormAutoCompleteResult(
-        searchString,
-        results.map(result => ({
-          value: result,
-          label: result,
-          // We supply the comments field so that autocomplete does not kick
-          // in the unescaping of the results for display which it uses for
-          // urls.
-          comment: result,
-          removable: true,
-        })),
-        formHistoryResult
-      );
-
       this.#listener.onSearchResult(this, result);
 
       // Null out listener to make sure we don't notify it twice
@@ -126,6 +106,8 @@ class SuggestAutoComplete {
    * implementation.
    */
   stopSearch() {
+    // Prevent reporting results of stopped search
+    this.#listener = null;
     this.#suggestionController.stop();
   }
 
@@ -170,19 +152,6 @@ class SuggestAutoComplete {
       Services.search.defaultEngine
     );
 
-    // If form history has results, add them to the list.
-    let finalResults = results.local.map(r => r.value);
-
-    // If there are remote matches, add them.
-    if (results.remote.length) {
-      // now put the history results above the suggestions
-      // We shouldn't show tail suggestions in their full-text form.
-      let nonTailEntries = results.remote.filter(
-        e => !e.matchPrefix && !e.tail
-      );
-      finalResults = finalResults.concat(nonTailEntries.map(e => e.value));
-    }
-
     // Bug 1822297: This re-uses the wrappers from Satchel, to avoid re-writing
     // our own nsIAutoCompleteSimpleResult implementation for now. However,
     // we should do that at some stage to remove the dependency on satchel.
@@ -190,15 +159,46 @@ class SuggestAutoComplete {
       formField: null,
       inputName: this.#suggestionController.formHistoryParam,
     });
-    let formHistoryResult = new lazy.FormAutoCompleteResult(
+    let formHistoryEntries = (results?.formHistoryResults ?? []).map(
+      historyEntry => ({
+        // We supply the comments field so that autocomplete does not kick
+        // in the unescaping of the results for display which it uses for
+        // urls.
+        comment: historyEntry.text,
+        ...historyEntry,
+      })
+    );
+    let autoCompleteResult = new lazy.FormAutoCompleteResult(
       client,
-      results.formHistoryResults,
+      formHistoryEntries,
       this.#suggestionController.formHistoryParam,
       searchString
     );
 
+    if (results?.remote?.length) {
+      // We shouldn't show tail suggestions in their full-text form.
+      // Suggestions are shown after form history results.
+      autoCompleteResult.fixedEntries = results.remote.reduce(
+        (results, item) => {
+          if (!item.matchPrefix && !item.tail) {
+            results.push({
+              value: item.value,
+              label: item.value,
+              // We supply the comments field so that autocomplete does not kick
+              // in the unescaping of the results for display which it uses for
+              // urls.
+              comment: item.value,
+            });
+          }
+
+          return results;
+        },
+        []
+      );
+    }
+
     // Notify the FE of our new results
-    this.onResultsReady(results.term, finalResults, formHistoryResult);
+    this.onResultsReady(autoCompleteResult);
   }
 
   QueryInterface = ChromeUtils.generateQI([
