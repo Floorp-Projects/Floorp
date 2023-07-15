@@ -862,12 +862,6 @@
     value: BoxedValue
   call_instruction: true
 
-- name: ThrowWithStack
-  operands:
-    value: BoxedValue
-    stack: BoxedValue
-  call_instruction: true
-
 - name: MinMaxI
   gen_boilerplate: false
 
@@ -3205,16 +3199,7 @@
   result_type: WordSized
   operands:
     generator: WordSized
-    value: BoxedValue
-  call_instruction: true
-  mir_op: true
-
-- name: AsyncReject
-  result_type: WordSized
-  operands:
-    generator: WordSized
-    reason: BoxedValue
-    stack: BoxedValue
+    valueOrReason: BoxedValue
   call_instruction: true
   mir_op: true
 

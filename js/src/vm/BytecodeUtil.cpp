@@ -919,14 +919,13 @@ bool BytecodeParser::parse() {
                 return false;
               }
             } else if (tn.kind() == TryNoteKind::Finally) {
-              // Three additional values will be on the stack at the beginning
-              // of the finally block: the exception/resume index, the exception
-              // stack, and the |throwing| value. For the benefit of the
-              // decompiler, point them at this Try.
+              // Two additional values will be on the stack at the beginning
+              // of the finally block: the exception/resume index, and the
+              // |throwing| value. For the benefit of the decompiler, point
+              // them at this Try.
               offsetStack[stackDepth].set(offset, 0);
               offsetStack[stackDepth + 1].set(offset, 1);
-              offsetStack[stackDepth + 2].set(offset, 2);
-              if (!addJump(catchOffset, stackDepth + 3, offsetStack, pc,
+              if (!addJump(catchOffset, stackDepth + 2, offsetStack, pc,
                            JumpKind::TryFinally)) {
                 return false;
               }
@@ -2096,19 +2095,13 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       case JSOp::Exception:
         return write("EXCEPTION");
 
-      case JSOp::ExceptionAndStack:
-        return write("EXCEPTION_AND_STACK");
-
       case JSOp::Try:
         // Used for the values live on entry to the finally block.
         // See TryNoteKind::Finally above.
         if (defIndex == 0) {
           return write("PC");
         }
-        if (defIndex == 1) {
-          return write("STACK");
-        }
-        MOZ_ASSERT(defIndex == 2);
+        MOZ_ASSERT(defIndex == 1);
         return write("THROWING");
 
       case JSOp::FunctionThis:
@@ -2210,7 +2203,6 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
 
       case JSOp::AsyncAwait:
       case JSOp::AsyncResolve:
-      case JSOp::AsyncReject:
         return write("PROMISE");
 
       case JSOp::CheckPrivateField:

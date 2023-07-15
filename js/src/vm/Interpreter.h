@@ -511,10 +511,6 @@ bool HandleClosingGeneratorReturn(JSContext* cx, AbstractFramePtr frame,
 
 bool ThrowOperation(JSContext* cx, HandleValue v);
 
-bool ThrowWithStackOperation(JSContext* cx, HandleValue v, HandleValue stack);
-
-bool GetPendingExceptionStack(JSContext* cx, MutableHandleValue vp);
-
 bool GetProperty(JSContext* cx, HandleValue value, Handle<PropertyName*> name,
                  MutableHandleValue vp);
 

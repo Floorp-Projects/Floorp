@@ -203,20 +203,7 @@ class MOZ_STACK_CLASS TryEmitter {
   TryEmitter(BytecodeEmitter* bce, Kind kind, ControlKind controlKind);
 
   [[nodiscard]] bool emitTry();
-
-  enum class ExceptionStack : bool {
-    /**
-     * Push only the pending exception value.
-     */
-    No,
-
-    /**
-     * Push the pending exception value and its stack.
-     */
-    Yes,
-  };
-
-  [[nodiscard]] bool emitCatch(ExceptionStack stack = ExceptionStack::No);
+  [[nodiscard]] bool emitCatch();
 
   // If `finallyPos` is specified, it's an offset of the finally block's
   // "{" character in the source code text, to improve line:column number in

@@ -4809,11 +4809,6 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitTry(TryNode* tryNode) {
     return false;
   }
 
-  // Push |exception_stack|.
-  if (!emit1(JSOp::Null)) {
-    return false;
-  }
-
   // Push |throwing|.
   if (!emit1(JSOp::False)) {
     return false;

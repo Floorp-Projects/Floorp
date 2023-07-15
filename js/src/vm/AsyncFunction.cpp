@@ -206,26 +206,16 @@ static bool AsyncFunctionResume(JSContext* cx,
 
 JSObject* js::AsyncFunctionResolve(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
-    HandleValue value) {
+    HandleValue valueOrReason, AsyncFunctionResolveKind resolveKind) {
   Rooted<PromiseObject*> promise(cx, generator->promise());
-  if (!AsyncFunctionReturned(cx, promise, value)) {
-    return nullptr;
-  }
-  return promise;
-}
-
-JSObject* js::AsyncFunctionReject(
-    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
-    HandleValue reason, HandleValue stack) {
-  MOZ_ASSERT(stack.isObjectOrNull());
-  Rooted<PromiseObject*> promise(cx, generator->promise());
-  Rooted<SavedFrame*> unwrappedRejectionStack(cx);
-  if (stack.isObject()) {
-    MOZ_ASSERT(stack.toObject().is<SavedFrame>());
-    unwrappedRejectionStack = &stack.toObject().as<SavedFrame>();
-  }
-  if (!AsyncFunctionThrown(cx, promise, reason, unwrappedRejectionStack)) {
-    return nullptr;
+  if (resolveKind == AsyncFunctionResolveKind::Fulfill) {
+    if (!AsyncFunctionReturned(cx, promise, valueOrReason)) {
+      return nullptr;
+    }
+  } else {
+    if (!AsyncFunctionThrown(cx, promise, valueOrReason)) {
+      return nullptr;
+    }
   }
   return promise;
 }

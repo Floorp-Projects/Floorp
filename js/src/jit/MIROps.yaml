@@ -211,14 +211,7 @@
 
 - name: Throw
   operands:
-    value: Value
-  alias_set: custom
-  possibly_calls: true
-
-- name: ThrowWithStack
-  operands:
-    value: Value
-    stack: Value
+    ins: Value
   alias_set: custom
   possibly_calls: true
 
@@ -2279,14 +2272,9 @@
 - name: AsyncResolve
   operands:
     generator: Object
-    value: Value
-  result_type: Object
-
-- name: AsyncReject
-  operands:
-    generator: Object
-    reason: Value
-    stack: Value
+    valueOrReason: Value
+  arguments:
+    resolveKind: AsyncFunctionResolveKind
   result_type: Object
 
 # Returns from this function to the previous caller; this looks like a regular

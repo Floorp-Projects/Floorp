@@ -713,10 +713,6 @@ AliasSet MThrow::getAliasSet() const {
   return AliasSet::Store(AliasSet::ExceptionState);
 }
 
-AliasSet MThrowWithStack::getAliasSet() const {
-  return AliasSet::Store(AliasSet::ExceptionState);
-}
-
 AliasSet MNewArrayDynamicLength::getAliasSet() const {
   return AliasSet::Store(AliasSet::ExceptionState);
 }

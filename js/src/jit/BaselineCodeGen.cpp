@@ -4553,19 +4553,6 @@ bool BaselineCodeGen<Handler>::emit_Throw() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_ThrowWithStack() {
-  // Keep value to throw in R0 and the stack in R1.
-  frame.popRegsAndSync(2);
-
-  prepareVMCall();
-  pushArg(R1);
-  pushArg(R0);
-
-  using Fn = bool (*)(JSContext*, HandleValue, HandleValue);
-  return callVM<Fn, js::ThrowWithStackOperation>();
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Try() {
   return true;
 }
@@ -4864,40 +4851,6 @@ bool BaselineCodeGen<Handler>::emit_Exception() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_ExceptionAndStack() {
-  // First call into the VM to store the exception stack.
-  {
-    prepareVMCall();
-
-    using Fn = bool (*)(JSContext*, MutableHandleValue);
-    if (!callVM<Fn, GetPendingExceptionStack>()) {
-      return false;
-    }
-
-    frame.push(R0);
-  }
-
-  // Now get the actual exception value and clear the exception state.
-  {
-    prepareVMCall();
-
-    using Fn = bool (*)(JSContext*, MutableHandleValue);
-    if (!callVM<Fn, GetAndClearException>()) {
-      return false;
-    }
-
-    frame.push(R0);
-  }
-
-  // Finally swap the stack and the exception.
-  frame.popRegsAndSync(2);
-  frame.push(R1);
-  frame.push(R0);
-
-  return true;
-}
-
-template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_Debugger() {
   prepareVMCall();
 
@@ -5104,41 +5057,18 @@ bool BaselineCodeGen<Handler>::emit_AsyncResolve() {
   masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
 
   prepareVMCall();
+  pushUint8BytecodeOperandArg(R2.scratchReg());
   pushArg(R1);
   pushArg(R0.scratchReg());
 
   using Fn = JSObject* (*)(JSContext*, Handle<AsyncFunctionGeneratorObject*>,
-                           HandleValue);
+                           HandleValue, AsyncFunctionResolveKind);
   if (!callVM<Fn, js::AsyncFunctionResolve>()) {
     return false;
   }
 
   masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
   frame.popn(2);
-  frame.push(R0);
-  return true;
-}
-
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_AsyncReject() {
-  frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(-3), R2);
-  masm.loadValue(frame.addressOfStackValue(-2), R1);
-  masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
-
-  prepareVMCall();
-  pushArg(R1);
-  pushArg(R2);
-  pushArg(R0.scratchReg());
-
-  using Fn = JSObject* (*)(JSContext*, Handle<AsyncFunctionGeneratorObject*>,
-                           HandleValue, HandleValue);
-  if (!callVM<Fn, js::AsyncFunctionReject>()) {
-    return false;
-  }
-
-  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
-  frame.popn(3);
   frame.push(R0);
   return true;
 }
