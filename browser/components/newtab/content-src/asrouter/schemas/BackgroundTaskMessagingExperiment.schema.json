@@ -59,6 +59,22 @@
               "type": "string",
               "format": "moz-url-format"
             },
+            "launch_action": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "The launch action to be performed when Firefox is launched."
+                },
+                "data": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": true
+            },
             "requireInteraction": {
               "type": "boolean",
               "description": "Whether the toast notification should remain active until the user clicks or dismisses it, rather than closing automatically."
@@ -92,6 +108,22 @@
                   "windowsSystemActivationType": {
                     "type": "boolean",
                     "description": "Whether to have Windows process the given `action`."
+                  },
+                  "launch_action": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "description": "The launch action to be performed when Firefox is launched."
+                      },
+                      "data": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ],
+                    "additionalProperties": true
                   }
                 },
                 "required": [

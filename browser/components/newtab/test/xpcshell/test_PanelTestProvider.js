@@ -25,7 +25,7 @@ add_task(async function test_PanelTestProvider() {
     whatsnew_panel_message: 7,
     spotlight: 3,
     pb_newtab: 2,
-    toast_notification: 2,
+    toast_notification: 3,
   };
 
   const EXPECTED_TOTAL_MESSAGE_COUNT = Object.values(
