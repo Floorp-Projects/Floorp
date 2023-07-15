@@ -577,6 +577,44 @@ const MESSAGES = () => [
     frequency: { lifetime: 3 },
   },
   {
+    id: "TEST_TOAST_NOTIFICATION2",
+    weight: 100,
+    template: "toast_notification",
+    content: {
+      title: "Launch action on toast click and on action button click",
+      body: "Body",
+      image_url:
+        "https://firefox-settings-attachments.cdn.mozilla.net/main-workspace/ms-images/a3c640c8-7594-4bb2-bc18-8b4744f3aaf2.gif",
+      launch_action: {
+        type: "OPEN_URL",
+        data: { args: "https://mozilla.org", where: "window" },
+      },
+      requireInteraction: true,
+      actions: [
+        {
+          action: "dismiss",
+          title: "Dismiss",
+          windowsSystemActivationType: true,
+        },
+        {
+          action: "snooze",
+          title: "Snooze",
+          windowsSystemActivationType: true,
+        },
+        {
+          action: "private",
+          title: "Private Window",
+          launch_action: { type: "OPEN_PRIVATE_BROWSER_WINDOW" },
+        },
+      ],
+      tag: "test_toast_notification",
+    },
+    groups: ["panel-test-provider"],
+    targeting: "!hasActiveEnterprisePolicies",
+    trigger: { id: "backgroundTaskMessage" },
+    frequency: { lifetime: 3 },
+  },
+  {
     id: "MR2022_BACKGROUND_UPDATE_TOAST_NOTIFICATION",
     weight: 100,
     template: "toast_notification",

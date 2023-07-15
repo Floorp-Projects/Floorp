@@ -102,12 +102,28 @@ const ToastNotification = {
             action.title
           );
         }
+        if (action.launch_action) {
+          action.opaqueRelaunchData = JSON.stringify(action.launch_action);
+          delete action.launch_action;
+        }
       }
       alert.actions = actions;
     }
 
-    if (content.launch_url) {
-      alert.launchURL = Services.urlFormatter.formatURL(content.launch_url);
+    // Populate `opaqueRelaunchData`, prefering `launch_action` if given,
+    // falling back to `launch_url` if given.
+    let relaunchAction = content.launch_action;
+    if (!relaunchAction && content.launch_url) {
+      relaunchAction = {
+        type: "OPEN_URL",
+        data: {
+          args: content.launch_url,
+          where: "tab",
+        },
+      };
+    }
+    if (relaunchAction) {
+      alert.opaqueRelaunchData = JSON.stringify(relaunchAction);
     }
 
     let shownPromise = lazy.PromiseUtils.defer();
