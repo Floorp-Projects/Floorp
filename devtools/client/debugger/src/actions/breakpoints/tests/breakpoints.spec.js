@@ -209,7 +209,7 @@ describe("breakpoints", () => {
     if (!bp) {
       throw new Error("no bp");
     }
-    await dispatch(actions.removeBreakpoint(cx, bp));
+    await dispatch(actions.removeBreakpoint(bp));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
   });
@@ -513,7 +513,7 @@ describe("breakpoints", () => {
 
     const breakpoint = selectors.getBreakpointsList(getState())[0];
 
-    await dispatch(actions.removeBreakpoint(cx, breakpoint));
+    await dispatch(actions.removeBreakpoint(breakpoint));
 
     const breakpointList = selectors.getPendingBreakpointList(getState());
     expect(breakpointList.length).toBe(0);

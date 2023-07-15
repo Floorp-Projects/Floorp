@@ -43,7 +43,7 @@ export function showEditorEditBreakpointContextMenu(event, breakpoint) {
       isSourceOnSourceMapIgnoreList(state, selectedSource);
 
     const items = [
-      removeBreakpointItem(cx, breakpoint, dispatch),
+      removeBreakpointItem(breakpoint, dispatch),
       toggleDisabledBreakpointItem(
         cx,
         breakpoint,
@@ -62,7 +62,7 @@ export function showEditorEditBreakpointContextMenu(event, breakpoint) {
 
     items.push(
       { type: "separator" },
-      removeBreakpointsOnLineItem(cx, selectedLocation, dispatch),
+      removeBreakpointsOnLineItem(selectedLocation, dispatch),
       breakpoint.disabled
         ? enableBreakpointsOnLineItem(
             cx,
@@ -123,12 +123,12 @@ const addBreakpointItem = (cx, location, dispatch) => ({
   accelerator: formatKeyShortcut(L10N.getStr("toggleBreakpoint.key")),
 });
 
-const removeBreakpointItem = (cx, breakpoint, dispatch) => ({
+const removeBreakpointItem = (breakpoint, dispatch) => ({
   id: "node-menu-remove-breakpoint",
   label: L10N.getStr("editor.removeBreakpoint"),
   accesskey: L10N.getStr("shortcuts.toggleBreakpoint.accesskey"),
   disabled: false,
-  click: () => dispatch(removeBreakpoint(cx, breakpoint)),
+  click: () => dispatch(removeBreakpoint(breakpoint)),
   accelerator: formatKeyShortcut(L10N.getStr("toggleBreakpoint.key")),
 });
 
@@ -249,7 +249,7 @@ const removeBreakpointsOnLineItem = (cx, location, dispatch) => ({
   accesskey: L10N.getStr("breakpointMenuItem.removeAllAtLine.accesskey"),
   disabled: false,
   click: () =>
-    dispatch(removeBreakpointsAtLine(cx, location.source.id, location.line)),
+    dispatch(removeBreakpointsAtLine(location.source.id, location.line)),
 });
 
 const enableBreakpointsOnLineItem = (

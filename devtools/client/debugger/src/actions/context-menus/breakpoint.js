@@ -126,7 +126,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       accesskey: deleteSelfKey,
       disabled: false,
       click: () => {
-        dispatch(removeBreakpoint(cx, breakpoint));
+        dispatch(removeBreakpoint(breakpoint));
       },
     };
 
@@ -143,7 +143,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       label: deleteOthersLabel,
       accesskey: deleteOthersKey,
       disabled: false,
-      click: () => dispatch(removeBreakpoints(cx, otherBreakpoints)),
+      click: () => dispatch(removeBreakpoints(otherBreakpoints)),
     };
 
     const enableSelfItem = {

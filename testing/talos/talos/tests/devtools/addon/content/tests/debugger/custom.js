@@ -155,12 +155,11 @@ async function testProjectSearch(dbg, tab) {
 }
 
 async function testPreview(dbg, tab, testFunction) {
-  const cx = dbg.selectors.getContext(dbg.getState());
   const pauseLocation = { line: 22, file: "App.js" };
 
   let test = runTest("custom.jsdebugger.preview.DAMP");
   await pauseDebugger(dbg, tab, testFunction, pauseLocation);
-  await hoverOnToken(dbg, cx, "window.hitBreakpoint", "window");
+  await hoverOnToken(dbg, "window.hitBreakpoint", "window");
   test.done();
 
   await removeBreakpoints(dbg);

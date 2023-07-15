@@ -105,9 +105,7 @@ export function syncPendingBreakpoint(cx, sourceId, pendingBreakpoint) {
       // breakpoint moved. If the old generated location still maps to an
       // original location then we don't want to add a breakpoint for it.
       if (isPendingBreakpointWithSourceMap) {
-        dispatch(
-          removeBreakpointAtGeneratedLocation(cx, sourceGeneratedLocation)
-        );
+        dispatch(removeBreakpointAtGeneratedLocation(sourceGeneratedLocation));
       }
       return null;
     }
@@ -121,9 +119,7 @@ export function syncPendingBreakpoint(cx, sourceId, pendingBreakpoint) {
     // breakpoint, remove any breakpoint associated with the old generated
     // location.
     if (!isSameLocation) {
-      dispatch(
-        removeBreakpointAtGeneratedLocation(cx, sourceGeneratedLocation)
-      );
+      dispatch(removeBreakpointAtGeneratedLocation(sourceGeneratedLocation));
     }
 
     return dispatch(

@@ -1279,7 +1279,7 @@ function removeBreakpoint(dbg, sourceId, line, column) {
     column,
   });
   const bp = getBreakpointForLocation(dbg, location);
-  return dbg.actions.removeBreakpoint(getContext(dbg), bp);
+  return dbg.actions.removeBreakpoint(bp);
 }
 
 /**

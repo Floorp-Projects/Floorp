@@ -315,8 +315,7 @@ async function removeBreakpoints(dbg, line, url) {
     dbg,
     state => dbg.selectors.getBreakpointCount(state) === 0
   );
-  const cx = dbg.selectors.getContext(dbg.getState());
-  await dbg.actions.removeBreakpoints(cx, breakpoints);
+  await dbg.actions.removeBreakpoints(breakpoints);
   return onBreakpointsCleared;
 }
 exports.removeBreakpoints = removeBreakpoints;
@@ -331,22 +330,20 @@ exports.pauseDebugger = pauseDebugger;
 
 async function resume(dbg) {
   const onResumed = waitForResumed(dbg);
-  const cx = dbg.selectors.getThreadContext(dbg.getState());
-  dbg.actions.resume(cx);
+  dbg.actions.resume();
   return onResumed;
 }
 exports.resume = resume;
 
 async function step(dbg, stepType) {
   const resumed = waitForResumed(dbg);
-  const cx = dbg.selectors.getThreadContext(dbg.getState());
-  dbg.actions[stepType](cx);
+  dbg.actions[stepType]();
   await resumed;
   return waitForPaused(dbg);
 }
 exports.step = step;
 
-async function hoverOnToken(dbg, cx, textToWaitFor, textToHover) {
+async function hoverOnToken(dbg, textToWaitFor, textToHover) {
   await waitForText(dbg, textToWaitFor);
   const tokenElement = [
     ...dbg.win.document.querySelectorAll(".CodeMirror span"),
