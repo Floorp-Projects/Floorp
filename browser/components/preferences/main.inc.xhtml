@@ -108,9 +108,6 @@
               />
     </hbox>
 
-    <checkbox  data-l10n-id="enable-floorp-workspace"
-               id="floorpWorkspace" preference="floorp.browser.workspace.tab.enabled"/>
-
     <checkbox  data-l10n-id="enable-tab-scroll-change"
                id="tabscroll" preference="toolkit.tabbox.switchByScrolling"/>
 
@@ -119,6 +116,15 @@
 
     <checkbox  data-l10n-id="enable-tab-scroll-wrap"
                id="tabscrollWrap" preference="floorp.tabscroll.wrap"/>
+
+    <hbox>
+      <checkbox data-l10n-id="enable-floorp-workspace" id="floorpWorkspace" preference="floorp.browser.workspace.tab.enabled"/> 
+      <spacer flex="1"/> 
+      <button id="floorpWorkspaceSettings"
+              is="highlightable-button"
+              class="accessory-button"
+              data-l10n-id="floorp-workspace-settings-button"/>
+    </hbox>
 
     <checkbox  data-l10n-id="enable-double-click-block"
                id="doubleClickClose" preference="browser.tabs.closeTabByDblclick"/>

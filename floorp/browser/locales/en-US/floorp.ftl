@@ -490,6 +490,14 @@ about-Peskyfox = Unclutter the new tab page. Remove Pocket. Restore compact mode
 Smoothfox-label = Yokoffing Smoothfox
 about-Smoothfox = Get Edge-like smooth scrolling on your favorite browser — or choose something more your style. 
 
+## Workspaces
+floorp-workspaces-title = { -brand-short-name } Workspaces
+workspaces-backup-discription = Backup & Restore your Workspaces
+
+workspaces-restore-service-title = Floorp Workspace Backup Service
+workspaces-restore-warning = Warning! Running this operation will cause the browser to freeze temporarily and restart automatically.
+floorp-workspace-settings-button = Backup Settings...
+
 ## Mouse Gesture
 mouse-gesture = Mouse Gesture
 mouse-gesture-description = Gesturefy must be installed to use mouse gestures with { -brand-short-name }.

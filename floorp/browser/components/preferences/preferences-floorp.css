@@ -644,7 +644,7 @@
     margin-left: auto;
   }
 
-  #backup-list {
+  .backup-list {
     padding: 0.5em;
     border: none !important;
     padding: 12px 16px;
@@ -655,12 +655,12 @@
     margin-top: 1em;
   }
 
-  #backup-list > richlistitem {
+  .backup-list > richlistitem {
     padding: 0.5em;
     border-bottom: 1px solid var(--in-content-border-color);
   }
 
-  #backuped-time-label {
+  .backuped-time-label {
     font-size: 1.25em;
     font-weight: bold;
   }

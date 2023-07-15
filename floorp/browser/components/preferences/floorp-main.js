@@ -91,6 +91,10 @@ window.addEventListener("pageshow", async function() {
     window.location.href = "about:preferences#userjs";
   });
 
+  document.getElementById("floorpWorkspaceSettings").addEventListener("click", function () {
+    window.location.href = "about:preferences#workspaces";
+  });
+
   document.getElementById("TabSleepSettings").addEventListener("click", function() {
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/tabsleep.xhtml",

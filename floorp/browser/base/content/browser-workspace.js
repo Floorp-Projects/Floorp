@@ -893,6 +893,17 @@ const workspaceFunctions = {
     },
 
     restoreWorkspace(lineNum) {
+      //check lineNum is number or Object. for about:preferences#workspaces
+      if (typeof lineNum === "object") {
+        lineNum = lineNum.wrappedJSObject.lineNum;
+      }
+
+      //hide all elements
+      let tagElem = document.createElement("style");
+      displayNoneCSS = ` * {display: none !important;}`;
+      tagElem.textContent = displayNoneCSS;
+      document.head.appendChild(tagElem);
+
       const file = FileUtils.getFile("ProfD", ["floorp-workspace-backup.json"]);
       //get backup data via NetUtil.jsm
       const fstream = Cc[
