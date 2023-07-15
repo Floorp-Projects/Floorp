@@ -5104,12 +5104,11 @@ bool BaselineCodeGen<Handler>::emit_AsyncResolve() {
   masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
 
   prepareVMCall();
-  pushUint8BytecodeOperandArg(R2.scratchReg());
   pushArg(R1);
   pushArg(R0.scratchReg());
 
   using Fn = JSObject* (*)(JSContext*, Handle<AsyncFunctionGeneratorObject*>,
-                           HandleValue, AsyncFunctionResolveKind);
+                           HandleValue);
   if (!callVM<Fn, js::AsyncFunctionResolve>()) {
     return false;
   }

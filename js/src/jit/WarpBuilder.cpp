@@ -2273,11 +2273,9 @@ bool WarpBuilder::build_FinalYieldRval(BytecodeLocation loc) {
 
 bool WarpBuilder::build_AsyncResolve(BytecodeLocation loc) {
   MDefinition* generator = current->pop();
-  MDefinition* valueOrReason = current->pop();
-  auto resolveKind = loc.getAsyncFunctionResolveKind();
+  MDefinition* value = current->pop();
 
-  MAsyncResolve* resolve =
-      MAsyncResolve::New(alloc(), generator, valueOrReason, resolveKind);
+  auto* resolve = MAsyncResolve::New(alloc(), generator, value);
   current->add(resolve);
   current->push(resolve);
   return resumeAfter(resolve, loc);

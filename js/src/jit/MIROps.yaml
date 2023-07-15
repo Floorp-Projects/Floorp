@@ -2279,9 +2279,7 @@
 - name: AsyncResolve
   operands:
     generator: Object
-    valueOrReason: Value
-  arguments:
-    resolveKind: AsyncFunctionResolveKind
+    value: Value
   result_type: Object
 
 - name: AsyncReject

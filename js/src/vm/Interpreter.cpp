@@ -3935,12 +3935,10 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
 
     CASE(AsyncResolve) {
       MOZ_ASSERT(REGS.stackDepth() >= 2);
-      auto resolveKind = AsyncFunctionResolveKind(GET_UINT8(REGS.pc));
       ReservedRooted<JSObject*> gen(&rootObject1, &REGS.sp[-1].toObject());
-      ReservedRooted<Value> valueOrReason(&rootValue0, REGS.sp[-2]);
-      JSObject* promise =
-          AsyncFunctionResolve(cx, gen.as<AsyncFunctionGeneratorObject>(),
-                               valueOrReason, resolveKind);
+      ReservedRooted<Value> value(&rootValue0, REGS.sp[-2]);
+      JSObject* promise = AsyncFunctionResolve(
+          cx, gen.as<AsyncFunctionGeneratorObject>(), value);
       if (!promise) {
         goto error;
       }
