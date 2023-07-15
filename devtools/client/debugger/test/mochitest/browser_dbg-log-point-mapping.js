@@ -22,11 +22,10 @@ add_task(async function () {
   await addBreakpoint(dbg, "test.js", 6);
   await waitForBreakpoint(dbg, "test.js", 6);
 
-  await dbg.actions.addBreakpoint(
-    getContext(dbg),
-    createLocation({ line: 5, source }),
-    { logValue: "`value: ${JSON.stringify(test)}`", requiresMapping: true }
-  );
+  await dbg.actions.addBreakpoint(createLocation({ line: 5, source }), {
+    logValue: "`value: ${JSON.stringify(test)}`",
+    requiresMapping: true,
+  });
   await waitForBreakpoint(dbg, "test.js", 5);
 
   invokeInTab("test");

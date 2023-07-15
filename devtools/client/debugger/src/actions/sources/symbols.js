@@ -15,7 +15,7 @@ async function doSetSymbols(
   location,
   { dispatch, getState, parserWorker }
 ) {
-  await dispatch(loadSourceText(cx, location.source, location.sourceActor));
+  await dispatch(loadSourceText(location.source, location.sourceActor));
 
   await dispatch({
     type: "SET_SYMBOLS",

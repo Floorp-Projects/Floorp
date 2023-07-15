@@ -27,11 +27,9 @@ add_task(async function () {
   await waitForBreakpoint(dbg, "script-switching-01.js", 7);
 
   info("Add another log breakpoint with static arguments");
-  await dbg.actions.addBreakpoint(
-    getContext(dbg),
-    createLocation({ line: 8, source }),
-    { logValue: "'a', 'b', 'c'" }
-  );
+  await dbg.actions.addBreakpoint(createLocation({ line: 8, source }), {
+    logValue: "'a', 'b', 'c'",
+  });
 
   invokeInTab("firstCall");
   await waitForPaused(dbg);
@@ -53,11 +51,9 @@ add_task(async function () {
   );
   await addBreakpoint(dbg, "script-switching-01.js", 8);
   await addBreakpoint(dbg, "script-switching-01.js", 7);
-  await dbg.actions.addBreakpoint(
-    getContext(dbg),
-    createLocation({ line: 7, source }),
-    { logValue: "'second call', secondCall()" }
-  );
+  await dbg.actions.addBreakpoint(createLocation({ line: 7, source }), {
+    logValue: "'second call', secondCall()",
+  });
 
   invokeInTab("firstCall");
   await waitForPaused(dbg);
@@ -77,11 +73,9 @@ add_task(async function () {
   info(
     "Set a log point throwing an exception and ensure the exception is displayed"
   );
-  await dbg.actions.addBreakpoint(
-    getContext(dbg),
-    createLocation({ line: 7, source }),
-    { logValue: "jsWithError(" }
-  );
+  await dbg.actions.addBreakpoint(createLocation({ line: 7, source }), {
+    logValue: "jsWithError(",
+  });
   invokeInTab("firstCall");
   await waitForPaused(dbg);
   // Exceptions in conditional breakpoint would not trigger a pause,

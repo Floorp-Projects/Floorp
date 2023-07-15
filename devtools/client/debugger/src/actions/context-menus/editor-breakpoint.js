@@ -9,7 +9,6 @@ import { formatKeyShortcut } from "../../utils/text";
 import { isLineBlackboxed } from "../../utils/source";
 
 import {
-  getThreadContext,
   getSelectedSource,
   getBlackBoxRanges,
   isSourceMapIgnoreListEnabled,
@@ -31,7 +30,6 @@ import { openConditionalPanel } from "../../actions/ui";
 export function showEditorEditBreakpointContextMenu(event, breakpoint) {
   return async ({ dispatch, getState }) => {
     const state = getState();
-    const cx = getThreadContext(state);
     const selectedSource = getSelectedSource(state);
     const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
     const blackboxedRanges = getBlackBoxRanges(state);
@@ -45,7 +43,6 @@ export function showEditorEditBreakpointContextMenu(event, breakpoint) {
     const items = [
       removeBreakpointItem(breakpoint, dispatch),
       toggleDisabledBreakpointItem(
-        cx,
         breakpoint,
         blackboxedRangesForSelectedSource,
         isSelectedSourceOnIgnoreList,
@@ -56,7 +53,7 @@ export function showEditorEditBreakpointContextMenu(event, breakpoint) {
     if (breakpoint.originalText.startsWith("debugger")) {
       items.push(
         { type: "separator" },
-        toggleDbgStatementItem(cx, selectedLocation, breakpoint, dispatch)
+        toggleDbgStatementItem(selectedLocation, breakpoint, dispatch)
       );
     }
 
@@ -65,13 +62,12 @@ export function showEditorEditBreakpointContextMenu(event, breakpoint) {
       removeBreakpointsOnLineItem(selectedLocation, dispatch),
       breakpoint.disabled
         ? enableBreakpointsOnLineItem(
-            cx,
             selectedLocation,
             blackboxedRangesForSelectedSource,
             isSelectedSourceOnIgnoreList,
             dispatch
           )
-        : disableBreakpointsOnLineItem(cx, selectedLocation, dispatch),
+        : disableBreakpointsOnLineItem(selectedLocation, dispatch),
       { type: "separator" }
     );
 
@@ -90,17 +86,15 @@ export function showEditorCreateBreakpointContextMenu(
   lineText
 ) {
   return async ({ dispatch, getState }) => {
-    const cx = getThreadContext(getState());
-
-    const items = createBreakpointItems(cx, location, lineText, dispatch);
+    const items = createBreakpointItems(location, lineText, dispatch);
 
     showMenu(event, items);
   };
 }
 
-export function createBreakpointItems(cx, location, lineText, dispatch) {
+export function createBreakpointItems(location, lineText, dispatch) {
   const items = [
-    addBreakpointItem(cx, location, dispatch),
+    addBreakpointItem(location, dispatch),
     addConditionalBreakpointItem(location, dispatch),
   ];
 
@@ -109,17 +103,17 @@ export function createBreakpointItems(cx, location, lineText, dispatch) {
   }
 
   if (lineText && lineText.startsWith("debugger")) {
-    items.push(toggleDbgStatementItem(cx, location, null, dispatch));
+    items.push(toggleDbgStatementItem(location, null, dispatch));
   }
   return items;
 }
 
-const addBreakpointItem = (cx, location, dispatch) => ({
+const addBreakpointItem = (location, dispatch) => ({
   id: "node-menu-add-breakpoint",
   label: L10N.getStr("editor.addBreakpoint"),
   accesskey: L10N.getStr("shortcuts.toggleBreakpoint.accesskey"),
   disabled: false,
-  click: () => dispatch(addBreakpoint(cx, location)),
+  click: () => dispatch(addBreakpoint(location)),
   accelerator: formatKeyShortcut(L10N.getStr("toggleBreakpoint.key")),
 });
 
@@ -187,7 +181,6 @@ const logPointItem = (breakpoint, location, dispatch) => {
 };
 
 const toggleDisabledBreakpointItem = (
-  cx,
   breakpoint,
   blackboxedRangesForSelectedSource,
   isSelectedSourceOnIgnoreList,
@@ -213,7 +206,7 @@ const toggleDisabledBreakpointItem = (
   };
 };
 
-const toggleDbgStatementItem = (cx, location, breakpoint, dispatch) => {
+const toggleDbgStatementItem = (location, breakpoint, dispatch) => {
   if (breakpoint && breakpoint.options.condition === "false") {
     return {
       disabled: false,
@@ -221,7 +214,7 @@ const toggleDbgStatementItem = (cx, location, breakpoint, dispatch) => {
       label: L10N.getStr("breakpointMenuItem.enabledbg.label"),
       click: () =>
         dispatch(
-          setBreakpointOptions(cx, location, {
+          setBreakpointOptions(location, {
             ...breakpoint.options,
             condition: null,
           })
@@ -235,7 +228,7 @@ const toggleDbgStatementItem = (cx, location, breakpoint, dispatch) => {
     label: L10N.getStr("breakpointMenuItem.disabledbg.label"),
     click: () =>
       dispatch(
-        setBreakpointOptions(cx, location, {
+        setBreakpointOptions(location, {
           condition: "false",
         })
       ),
@@ -243,7 +236,7 @@ const toggleDbgStatementItem = (cx, location, breakpoint, dispatch) => {
 };
 
 // ToDo: Only enable if there are more than one breakpoints on a line?
-const removeBreakpointsOnLineItem = (cx, location, dispatch) => ({
+const removeBreakpointsOnLineItem = (location, dispatch) => ({
   id: "node-menu-remove-breakpoints-on-line",
   label: L10N.getStr("breakpointMenuItem.removeAllAtLine.label"),
   accesskey: L10N.getStr("breakpointMenuItem.removeAllAtLine.accesskey"),
@@ -253,7 +246,6 @@ const removeBreakpointsOnLineItem = (cx, location, dispatch) => ({
 });
 
 const enableBreakpointsOnLineItem = (
-  cx,
   location,
   blackboxedRangesForSelectedSource,
   isSelectedSourceOnIgnoreList,
@@ -271,7 +263,7 @@ const enableBreakpointsOnLineItem = (
     dispatch(enableBreakpointsAtLine(location.source.id, location.line)),
 });
 
-const disableBreakpointsOnLineItem = (cx, location, dispatch) => ({
+const disableBreakpointsOnLineItem = (location, dispatch) => ({
   id: "node-menu-remove-breakpoints-on-line",
   label: L10N.getStr("breakpointMenuItem.disableAllAtLine.label"),
   accesskey: L10N.getStr("breakpointMenuItem.disableAllAtLine.accesskey"),

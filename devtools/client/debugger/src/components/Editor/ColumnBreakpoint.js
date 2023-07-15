@@ -42,7 +42,6 @@ export default class ColumnBreakpoint extends PureComponent {
   static get propTypes() {
     return {
       columnBreakpoint: PropTypes.object.isRequired,
-      cx: PropTypes.object.isRequired,
       source: PropTypes.object.isRequired,
     };
   }
@@ -76,7 +75,6 @@ export default class ColumnBreakpoint extends PureComponent {
     event.stopPropagation();
     event.preventDefault();
     const {
-      cx,
       columnBreakpoint,
       toggleDisabledBreakpoint,
       removeBreakpoint,
@@ -92,7 +90,7 @@ export default class ColumnBreakpoint extends PureComponent {
     if (columnBreakpoint.breakpoint) {
       removeBreakpoint(columnBreakpoint.breakpoint);
     } else {
-      addBreakpoint(cx, columnBreakpoint.location);
+      addBreakpoint(columnBreakpoint.location);
     }
   };
 

@@ -128,7 +128,6 @@ class SourceFooter extends PureComponent {
 
   blackBoxButton() {
     const {
-      cx,
       selectedSource,
       isSelectedSourceBlackBoxed,
       toggleBlackBox,
@@ -152,7 +151,7 @@ class SourceFooter extends PureComponent {
 
     return (
       <button
-        onClick={() => toggleBlackBox(cx, selectedSource)}
+        onClick={() => toggleBlackBox(selectedSource)}
         className={classnames("action", type, {
           active: sourceLoaded,
           blackboxed: isSelectedSourceBlackBoxed || isSourceOnIgnoreList,

@@ -55,7 +55,7 @@ describe("breakpoints", () => {
       )
     );
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(loc1));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
@@ -86,7 +86,7 @@ describe("breakpoints", () => {
       )
     );
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(loc1));
 
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
@@ -114,7 +114,7 @@ describe("breakpoints", () => {
       )
     );
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(loc1));
     const breakpoint = selectors.getBreakpoint(getState(), loc1);
     if (!breakpoint) {
       throw new Error("no breakpoint");
@@ -148,12 +148,12 @@ describe("breakpoints", () => {
       )
     );
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(loc1));
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
     const bp = selectors.getBreakpoint(getState(), loc1);
     expect(bp && bp.location).toEqual(loc1);
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
+    await dispatch(actions.addBreakpoint(loc1));
     expect(selectors.getBreakpointCount(getState())).toEqual(1);
   });
 
@@ -184,12 +184,7 @@ describe("breakpoints", () => {
       bSource.id
     );
 
-    await dispatch(
-      actions.loadGeneratedSourceText({
-        cx,
-        sourceActor: bSourceActor,
-      })
-    );
+    await dispatch(actions.loadGeneratedSourceText(bSourceActor));
 
     await dispatch(
       actions.selectLocation(
@@ -202,8 +197,8 @@ describe("breakpoints", () => {
       )
     );
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
-    await dispatch(actions.addBreakpoint(cx, loc2));
+    await dispatch(actions.addBreakpoint(loc1));
+    await dispatch(actions.addBreakpoint(loc2));
 
     const bp = selectors.getBreakpoint(getState(), loc1);
     if (!bp) {
@@ -215,9 +210,7 @@ describe("breakpoints", () => {
   });
 
   it("should disable a breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(
-      mockClient({ 5: [1], 6: [2] })
-    );
+    const { dispatch, getState } = createStore(mockClient({ 5: [1], 6: [2] }));
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
     aSource.url = "http://localhost:8000/examples/a";
@@ -225,12 +218,7 @@ describe("breakpoints", () => {
       getState(),
       aSource.id
     );
-    await dispatch(
-      actions.loadGeneratedSourceText({
-        cx,
-        sourceActor: aSourceActor,
-      })
-    );
+    await dispatch(actions.loadGeneratedSourceText(aSourceActor));
 
     const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
     bSource.url = "http://localhost:8000/examples/b";
@@ -238,12 +226,7 @@ describe("breakpoints", () => {
       getState(),
       bSource.id
     );
-    await dispatch(
-      actions.loadGeneratedSourceText({
-        cx,
-        sourceActor: bSourceActor,
-      })
-    );
+    await dispatch(actions.loadGeneratedSourceText(bSourceActor));
 
     const loc1 = createLocation({
       source: aSource,
@@ -256,8 +239,8 @@ describe("breakpoints", () => {
       line: 6,
       column: 2,
     });
-    await dispatch(actions.addBreakpoint(cx, loc1));
-    await dispatch(actions.addBreakpoint(cx, loc2));
+    await dispatch(actions.addBreakpoint(loc1));
+    await dispatch(actions.addBreakpoint(loc2));
 
     const breakpoint = selectors.getBreakpoint(getState(), loc1);
     if (!breakpoint) {
@@ -271,9 +254,7 @@ describe("breakpoints", () => {
   });
 
   it("should enable breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(
-      mockClient({ 5: [1], 6: [2] })
-    );
+    const { dispatch, getState } = createStore(mockClient({ 5: [1], 6: [2] }));
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
     aSource.url = "http://localhost:8000/examples/a";
@@ -286,14 +267,9 @@ describe("breakpoints", () => {
       getState(),
       aSource.id
     );
-    await dispatch(
-      actions.loadGeneratedSourceText({
-        cx,
-        sourceActor: aSourceActor,
-      })
-    );
+    await dispatch(actions.loadGeneratedSourceText(aSourceActor));
 
-    await dispatch(actions.addBreakpoint(cx, loc));
+    await dispatch(actions.addBreakpoint(loc));
     let bp = selectors.getBreakpoint(getState(), loc);
     if (!bp) {
       throw new Error("no breakpoint");
@@ -315,9 +291,7 @@ describe("breakpoints", () => {
   });
 
   it("should toggle all the breakpoints", async () => {
-    const { dispatch, getState, cx } = createStore(
-      mockClient({ 5: [1], 6: [2] })
-    );
+    const { dispatch, getState } = createStore(mockClient({ 5: [1], 6: [2] }));
 
     const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
     aSource.url = "http://localhost:8000/examples/a";
@@ -325,12 +299,7 @@ describe("breakpoints", () => {
       getState(),
       aSource.id
     );
-    await dispatch(
-      actions.loadGeneratedSourceText({
-        cx,
-        sourceActor: aSourceActor,
-      })
-    );
+    await dispatch(actions.loadGeneratedSourceText(aSourceActor));
 
     const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
     bSource.url = "http://localhost:8000/examples/b";
@@ -338,12 +307,7 @@ describe("breakpoints", () => {
       getState(),
       bSource.id
     );
-    await dispatch(
-      actions.loadGeneratedSourceText({
-        cx,
-        sourceActor: bSourceActor,
-      })
-    );
+    await dispatch(actions.loadGeneratedSourceText(bSourceActor));
 
     const loc1 = createLocation({
       source: aSource,
@@ -357,8 +321,8 @@ describe("breakpoints", () => {
       column: 2,
     });
 
-    await dispatch(actions.addBreakpoint(cx, loc1));
-    await dispatch(actions.addBreakpoint(cx, loc2));
+    await dispatch(actions.addBreakpoint(loc1));
+    await dispatch(actions.addBreakpoint(loc2));
 
     await dispatch(actions.toggleAllBreakpoints(true));
 
@@ -386,11 +350,11 @@ describe("breakpoints", () => {
     const getBp = () => selectors.getBreakpoint(getState(), loc);
     await dispatch(actions.selectLocation(cx, loc));
 
-    await dispatch(actions.toggleBreakpointAtLine(cx, 5));
+    await dispatch(actions.toggleBreakpointAtLine(5));
     const bp = getBp();
     expect(bp && !bp.disabled).toBe(true);
 
-    await dispatch(actions.toggleBreakpointAtLine(cx, 5));
+    await dispatch(actions.toggleBreakpointAtLine(5));
     expect(getBp()).toBe(undefined);
   });
 
@@ -406,7 +370,7 @@ describe("breakpoints", () => {
       actions.selectLocation(cx, createLocation({ source, line: 1 }))
     );
 
-    await dispatch(actions.toggleBreakpointAtLine(cx, 5));
+    await dispatch(actions.toggleBreakpointAtLine(5));
     let bp = getBp();
     expect(bp && !bp.disabled).toBe(true);
     bp = getBp();
@@ -419,7 +383,7 @@ describe("breakpoints", () => {
   });
 
   it("should set the breakpoint condition", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
+    const { dispatch, getState } = createStore(mockClient({ 5: [1] }));
 
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     source.url = "http://localhost:8000/examples/a";
@@ -432,15 +396,15 @@ describe("breakpoints", () => {
       getState(),
       source.id
     );
-    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
+    await dispatch(actions.loadGeneratedSourceText(sourceActor));
 
-    await dispatch(actions.addBreakpoint(cx, loc));
+    await dispatch(actions.addBreakpoint(loc));
 
     let bp = selectors.getBreakpoint(getState(), loc);
     expect(bp && bp.options.condition).toBe(undefined);
 
     await dispatch(
-      actions.setBreakpointOptions(cx, loc, {
+      actions.setBreakpointOptions(loc, {
         condition: "const foo = 0",
         getTextForLine: () => {},
       })
@@ -451,7 +415,7 @@ describe("breakpoints", () => {
   });
 
   it("should set the condition and enable a breakpoint", async () => {
-    const { dispatch, getState, cx } = createStore(mockClient({ 5: [1] }));
+    const { dispatch, getState } = createStore(mockClient({ 5: [1] }));
 
     const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     source.url = "http://localhost:8000/examples/a";
@@ -464,9 +428,9 @@ describe("breakpoints", () => {
       getState(),
       source.id
     );
-    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
+    await dispatch(actions.loadGeneratedSourceText(sourceActor));
 
-    await dispatch(actions.addBreakpoint(cx, loc));
+    await dispatch(actions.addBreakpoint(loc));
     let bp = selectors.getBreakpoint(getState(), loc);
     if (!bp) {
       throw new Error("no breakpoint");
@@ -478,7 +442,7 @@ describe("breakpoints", () => {
     expect(bp && bp.options.condition).toBe(undefined);
 
     await dispatch(
-      actions.setBreakpointOptions(cx, loc, {
+      actions.setBreakpointOptions(loc, {
         condition: "const foo = 0",
         getTextForLine: () => {},
       })
@@ -506,9 +470,9 @@ describe("breakpoints", () => {
       getState(),
       source.id
     );
-    await dispatch(actions.loadGeneratedSourceText({ cx, sourceActor }));
+    await dispatch(actions.loadGeneratedSourceText(sourceActor));
 
-    await dispatch(actions.addBreakpoint(cx, loc));
+    await dispatch(actions.addBreakpoint(loc));
     await dispatch(actions.togglePrettyPrint(cx, "a.js"));
 
     const breakpoint = selectors.getBreakpointsList(getState())[0];

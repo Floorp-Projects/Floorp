@@ -128,7 +128,7 @@ export function searchSources(cx, query) {
         getState(),
         source.id
       );
-      await dispatch(loadSourceText(cx, source, sourceActor));
+      await dispatch(loadSourceText(source, sourceActor));
       await dispatch(searchSource(cx, source, sourceActor, query));
     }
     dispatch(updateSearchStatus(cx, statusType.done));

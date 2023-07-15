@@ -89,12 +89,11 @@ export function showEditorGutterContextMenu(event, editor, location, lineText) {
       isSourceOnSourceMapIgnoreList(state, source);
 
     showMenu(event, [
-      ...createBreakpointItems(cx, location, lineText, dispatch),
+      ...createBreakpointItems(location, lineText, dispatch),
       { type: "separator" },
       continueToHereItem(cx, location, isPaused, dispatch),
       { type: "separator" },
       blackBoxLineMenuItem(
-        cx,
         source,
         editor,
         blackboxedRanges,
@@ -168,7 +167,6 @@ const showSourceMenuItem = (cx, selectedSource, dispatch) => ({
 });
 
 const blackBoxMenuItem = (
-  cx,
   selectedSource,
   blackboxedRanges,
   isSourceOnIgnoreList,
@@ -184,12 +182,11 @@ const blackBoxMenuItem = (
       ? L10N.getStr("ignoreContextItem.unignore.accesskey")
       : L10N.getStr("ignoreContextItem.ignore.accesskey"),
     disabled: isSourceOnIgnoreList || !shouldBlackbox(selectedSource),
-    click: () => dispatch(toggleBlackBox(cx, selectedSource)),
+    click: () => dispatch(toggleBlackBox(selectedSource)),
   };
 };
 
 const blackBoxLineMenuItem = (
-  cx,
   selectedSource,
   editor,
   blackboxedRanges,
@@ -253,7 +250,6 @@ const blackBoxLineMenuItem = (
 
       dispatch(
         toggleBlackBox(
-          cx,
           selectedSource,
           !selectedLineIsBlackBoxed,
           selectedLineIsBlackBoxed ? [blackboxRange] : [selectionRange]
@@ -264,7 +260,6 @@ const blackBoxLineMenuItem = (
 };
 
 const blackBoxLinesMenuItem = (
-  cx,
   selectedSource,
   editor,
   blackboxedRanges,
@@ -309,7 +304,6 @@ const blackBoxLinesMenuItem = (
 
       dispatch(
         toggleBlackBox(
-          cx,
           selectedSource,
           !selectedLinesAreBlackBoxed,
           selectedLinesAreBlackBoxed ? [blackboxRange] : [selectionRange]
@@ -390,13 +384,7 @@ function editorMenuItems({
     { type: "separator" },
     showSourceMenuItem(cx, source, dispatch),
     { type: "separator" },
-    blackBoxMenuItem(
-      cx,
-      source,
-      blackboxedRanges,
-      isSourceOnIgnoreList,
-      dispatch
-    )
+    blackBoxMenuItem(source, blackboxedRanges, isSourceOnIgnoreList, dispatch)
   );
 
   const startLine = toSourceLine(
@@ -430,7 +418,6 @@ function editorMenuItems({
 
     items.push(
       blackBoxSourceLinesMenuItem(
-        cx,
         source,
         editor,
         blackboxedRanges,

@@ -47,7 +47,6 @@ export function continueToHere(cx, location) {
     if (!getBreakpoint(getState(), pauseLocation)) {
       await dispatch(
         addHiddenBreakpoint(
-          cx,
           createLocation({
             source: selectedSource,
             line: pauseLocation.line,

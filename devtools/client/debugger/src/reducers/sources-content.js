@@ -43,14 +43,14 @@ export function initialSourcesContentState() {
 function update(state = initialSourcesContentState(), action) {
   switch (action.type) {
     case "LOAD_ORIGINAL_SOURCE_TEXT":
-      if (!action.sourceId) {
-        throw new Error("No source id found.");
+      if (!action.source) {
+        throw new Error("Missing source");
       }
       return updateSourceTextContent(state, action);
 
     case "LOAD_GENERATED_SOURCE_TEXT":
-      if (!action.sourceActorId) {
-        throw new Error("No source actor id found.");
+      if (!action.sourceActor) {
+        throw new Error("Missing source actor.");
       }
       return updateSourceTextContent(state, action);
 
@@ -89,22 +89,22 @@ function updateSourceTextContent(state, action) {
     });
   }
 
-  if (action.sourceId && action.sourceActorId) {
+  if (action.source && action.sourceActor) {
     throw new Error(
-      "Both the source id and the source actor should not exist at the same time"
+      "Both the source and the source actor should not exist at the same time"
     );
   }
 
-  if (action.sourceId) {
+  if (action.source) {
     state.mutableOriginalSourceTextContentMapBySourceId.set(
-      action.sourceId,
+      action.source.id,
       content
     );
   }
 
-  if (action.sourceActorId) {
+  if (action.sourceActor) {
     state.mutableGeneratedSourceTextContentMapBySourceActorId.set(
-      action.sourceActorId,
+      action.sourceActor.id,
       content
     );
   }

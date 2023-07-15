@@ -171,20 +171,20 @@ function checkPendingBreakpoints(cx, source, sourceActor) {
     }
 
     // load the source text if there is a pending breakpoint for it
-    await dispatch(loadSourceText(cx, source, sourceActor));
+    await dispatch(loadSourceText(source, sourceActor));
     await dispatch(
       setBreakableLines(cx, createLocation({ source, sourceActor }))
     );
 
     await Promise.all(
       pendingBreakpoints.map(pendingBp => {
-        return dispatch(syncPendingBreakpoint(cx, source.id, pendingBp));
+        return dispatch(syncPendingBreakpoint(source.id, pendingBp));
       })
     );
   };
 }
 
-function restoreBlackBoxedSources(cx, sources) {
+function restoreBlackBoxedSources(sources) {
   return async ({ dispatch, getState }) => {
     const currentRanges = getBlackBoxRanges(getState());
 
@@ -196,7 +196,7 @@ function restoreBlackBoxedSources(cx, sources) {
       const ranges = currentRanges[source.url];
       if (ranges) {
         // If the ranges is an empty then the whole source was blackboxed.
-        await dispatch(toggleBlackBox(cx, source, true, ranges));
+        await dispatch(toggleBlackBox(source, true, ranges));
       }
     }
 
@@ -360,7 +360,7 @@ function checkNewSources(cx, sources) {
       dispatch(checkSelectedSource(cx, source.id));
     }
 
-    await dispatch(restoreBlackBoxedSources(cx, sources));
+    await dispatch(restoreBlackBoxedSources(sources));
 
     return sources;
   };

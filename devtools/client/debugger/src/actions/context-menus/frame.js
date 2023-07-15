@@ -83,7 +83,7 @@ export function showFrameContextMenu(event, frame, cx, hideRestart = false) {
         : "ignoreContextItem.ignore";
       items.push(
         formatMenuElement(toggleBlackBoxL10nLabel, () =>
-          dispatch(toggleBlackBox(cx, source))
+          dispatch(toggleBlackBox(source))
         )
       );
     }
