@@ -5121,6 +5121,30 @@ bool BaselineCodeGen<Handler>::emit_AsyncResolve() {
 }
 
 template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_AsyncReject() {
+  frame.syncStack(0);
+  masm.loadValue(frame.addressOfStackValue(-3), R2);
+  masm.loadValue(frame.addressOfStackValue(-2), R1);
+  masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
+
+  prepareVMCall();
+  pushArg(R1);
+  pushArg(R2);
+  pushArg(R0.scratchReg());
+
+  using Fn = JSObject* (*)(JSContext*, Handle<AsyncFunctionGeneratorObject*>,
+                           HandleValue, HandleValue);
+  if (!callVM<Fn, js::AsyncFunctionReject>()) {
+    return false;
+  }
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, ReturnReg, R0);
+  frame.popn(3);
+  frame.push(R0);
+  return true;
+}
+
+template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_CheckObjCoercible() {
   frame.syncStack(0);
   masm.loadValue(frame.addressOfStackValue(-1), R0);

@@ -3209,6 +3209,15 @@
   call_instruction: true
   mir_op: true
 
+- name: AsyncReject
+  result_type: WordSized
+  operands:
+    generator: WordSized
+    reason: BoxedValue
+    stack: BoxedValue
+  call_instruction: true
+  mir_op: true
+
 - name: AsyncAwait
   result_type: WordSized
   operands:

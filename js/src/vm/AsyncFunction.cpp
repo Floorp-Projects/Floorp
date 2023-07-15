@@ -220,6 +220,22 @@ JSObject* js::AsyncFunctionResolve(
   return promise;
 }
 
+JSObject* js::AsyncFunctionReject(
+    JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
+    HandleValue reason, HandleValue stack) {
+  MOZ_ASSERT(stack.isObjectOrNull());
+  Rooted<PromiseObject*> promise(cx, generator->promise());
+  Rooted<SavedFrame*> unwrappedRejectionStack(cx);
+  if (stack.isObject()) {
+    MOZ_ASSERT(stack.toObject().is<SavedFrame>());
+    unwrappedRejectionStack = &stack.toObject().as<SavedFrame>();
+  }
+  if (!AsyncFunctionThrown(cx, promise, reason, unwrappedRejectionStack)) {
+    return nullptr;
+  }
+  return promise;
+}
+
 const JSClass AsyncFunctionGeneratorObject::class_ = {
     "AsyncFunctionGenerator",
     JSCLASS_HAS_RESERVED_SLOTS(AsyncFunctionGeneratorObject::RESERVED_SLOTS),
