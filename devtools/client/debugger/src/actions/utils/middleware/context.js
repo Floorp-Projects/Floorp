@@ -52,6 +52,9 @@ function context({ dispatch, getState }) {
     if ("frame" in action) {
       validateFrame(getState(), action.frame);
     }
+    if ("generatedSourceActor" in action) {
+      validateSourceActor(getState(), action.generatedSourceActor);
+    }
     return next(action);
   };
 }

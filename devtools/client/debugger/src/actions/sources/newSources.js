@@ -235,7 +235,6 @@ export function newOriginalSources(originalSourcesInfo) {
     actors.forEach(sourceActor => {
       dispatch({
         type: "ADD_ORIGINAL_SOURCES",
-        cx,
         originalSources: actorsSources[sourceActor.actor],
         generatedSourceActor: sourceActor,
       });
@@ -311,7 +310,7 @@ export function newGeneratedSources(sourceResources) {
     const newSources = Object.values(newSourcesObj);
 
     const cx = getContext(getState());
-    dispatch(addSources(cx, newSources));
+    dispatch({ type: "ADD_SOURCES", sources: newSources });
     dispatch(insertSourceActors(newSourceActors));
 
     await dispatch(checkNewSources(cx, newSources));
@@ -342,12 +341,6 @@ export function newGeneratedSources(sourceResources) {
     })();
 
     return resultIds.map(id => getSourceFromId(getState(), id));
-  };
-}
-
-function addSources(cx, sources) {
-  return ({ dispatch, getState }) => {
-    dispatch({ type: "ADD_SOURCES", cx, sources });
   };
 }
 
