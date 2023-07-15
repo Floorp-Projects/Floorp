@@ -474,8 +474,8 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
-  nsAutoString launchUrl;
-  MOZ_TRY(aAlert->GetLaunchURL(launchUrl));
+  nsAutoString opaqueRelaunchData;
+  MOZ_TRY(aAlert->GetOpaqueRelaunchData(opaqueRelaunchData));
 
   bool requireInteraction;
   MOZ_TRY(aAlert->GetRequireInteraction(&requireInteraction));
@@ -495,8 +495,8 @@ ToastNotification::ShowAlert(nsIAlertNotification* aAlert,
   NS_ENSURE_TRUE(mAumid.isSome(), NS_ERROR_UNEXPECTED);
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), aAlertListener, name, cookie, title, text, hostPort,
-      textClickable, requireInteraction, actions, isSystemPrincipal, launchUrl,
-      inPrivateBrowsing, isSilent);
+      textClickable, requireInteraction, actions, isSystemPrincipal,
+      opaqueRelaunchData, inPrivateBrowsing, isSilent);
   mActiveHandlers.InsertOrUpdate(name, RefPtr{handler});
 
   MOZ_LOG(sWASLog, LogLevel::Debug,
@@ -549,8 +549,8 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   nsAutoString hostPort;
   MOZ_TRY(aAlert->GetSource(hostPort));
 
-  nsAutoString launchUrl;
-  MOZ_TRY(aAlert->GetLaunchURL(launchUrl));
+  nsAutoString opaqueRelaunchData;
+  MOZ_TRY(aAlert->GetOpaqueRelaunchData(opaqueRelaunchData));
 
   bool requireInteraction;
   MOZ_TRY(aAlert->GetRequireInteraction(&requireInteraction));
@@ -569,7 +569,7 @@ ToastNotification::GetXmlStringForWindowsAlert(nsIAlertNotification* aAlert,
   RefPtr<ToastNotificationHandler> handler = new ToastNotificationHandler(
       this, mAumid.ref(), nullptr /* aAlertListener */, name, cookie, title,
       text, hostPort, textClickable, requireInteraction, actions,
-      isSystemPrincipal, launchUrl, inPrivateBrowsing, isSilent);
+      isSystemPrincipal, opaqueRelaunchData, inPrivateBrowsing, isSilent);
 
   // Usually, this will be empty during testing, making test output
   // deterministic.
@@ -602,8 +602,7 @@ RefPtr<ToastHandledPromise> ToastNotification::VerifyTagPresentOrFallback(
         MOZ_LOG(sWASLog, LogLevel::Debug,
                 ("External windowsTag '%s' is handled by handler [%p]",
                  NS_ConvertUTF16toUTF8(aWindowsTag).get(), handler.get()));
-        ToastHandledResolve handled{u""_ns, u""_ns};
-        return ToastHandledPromise::CreateAndResolve(handled, __func__);
+        return ToastHandledPromise::CreateAndResolve(true, __func__);
       }
     } else {
       MOZ_LOG(sWASLog, LogLevel::Debug,
@@ -611,7 +610,11 @@ RefPtr<ToastHandledPromise> ToastNotification::VerifyTagPresentOrFallback(
     }
   }
 
-  // Fallback handling
+  // Fallback handling is required.
+
+  MOZ_LOG(sWASLog, LogLevel::Debug,
+          ("External windowsTag '%s' is not handled",
+           NS_ConvertUTF16toUTF8(aWindowsTag).get()));
 
   RefPtr<ToastHandledPromise::Private> fallbackPromise =
       new ToastHandledPromise::Private(__func__);
@@ -624,38 +627,7 @@ RefPtr<ToastHandledPromise> ToastNotification::VerifyTagPresentOrFallback(
   // handling were no longer handled in a `WndProc` context.
   NS_DispatchBackgroundTask(NS_NewRunnableFunction(
       "VerifyTagPresentOrFallback fallback background task",
-      [fallbackPromise, aWindowsTag = nsString(aWindowsTag),
-       aAumid = nsString(mAumid.ref())]() {
-        MOZ_ASSERT(mscom::IsCOMInitializedOnCurrentThread());
-
-        bool foundTag;
-        nsAutoString launchUrl;
-        nsAutoString privilegedName;
-
-        nsresult rv = ToastNotificationHandler::
-            FindLaunchURLAndPrivilegedNameForWindowsTag(
-                aWindowsTag, aAumid, foundTag, launchUrl, privilegedName);
-
-        if (NS_FAILED(rv) || !foundTag) {
-          MOZ_LOG(sWASLog, LogLevel::Error,
-                  ("Failed to get launch URL and privileged name for "
-                   "notification tag '%s'",
-                   NS_ConvertUTF16toUTF8(aWindowsTag).get()));
-
-          fallbackPromise->Reject(false, __func__);
-          return;
-        }
-
-        MOZ_LOG(sWASLog, LogLevel::Debug,
-                ("Found launch URL '%s' and privileged name '%s' for "
-                 "windowsTag '%s'",
-                 NS_ConvertUTF16toUTF8(launchUrl).get(),
-                 NS_ConvertUTF16toUTF8(privilegedName).get(),
-                 NS_ConvertUTF16toUTF8(aWindowsTag).get()));
-
-        ToastHandledResolve handled{launchUrl, privilegedName};
-        fallbackPromise->Resolve(handled, __func__);
-      }));
+      [fallbackPromise]() { fallbackPromise->Resolve(false, __func__); }));
 
   return fallbackPromise;
 }
@@ -760,7 +732,7 @@ ToastNotification::HandleWindowsTag(const nsAString& aWindowsTag,
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [aWindowsTag = nsString(aWindowsTag),
-           promise](const ToastHandledResolve& aResolved) {
+           promise](const bool aTagWasHandled) {
             // We no longer need to query toast information from OS and can
             // allow the COM server to proceed (toast information is lost once
             // the COM server's `Activate` callback returns).
@@ -772,25 +744,15 @@ ToastNotification::HandleWindowsTag(const nsAString& aWindowsTag,
               return;
             }
 
-            // Resolve the DOM Promise with a JS object. Set `launchUrl` and/or
-            // `privilegedName` properties if fallback handling is necessary.
+            // Resolve the DOM Promise with a JS object. Set properties if
+            // fallback handling is necessary.
 
             JSContext* cx = js.cx();
             JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
 
-            auto setProperty = [&](const char* name, const nsString& value) {
-              JS::Rooted<JSString*> title(cx,
-                                          JS_NewUCStringCopyZ(cx, value.get()));
-              JS::Rooted<JS::Value> attVal(cx, JS::StringValue(title));
-              Unused << NS_WARN_IF(!JS_SetProperty(cx, obj, name, attVal));
-            };
-
-            if (!aResolved.launchUrl.IsEmpty()) {
-              setProperty("launchUrl", aResolved.launchUrl);
-            }
-            if (!aResolved.privilegedName.IsEmpty()) {
-              setProperty("privilegedName", aResolved.privilegedName);
-            }
+            JS::Rooted<JS::Value> attVal(cx, JS::BooleanValue(aTagWasHandled));
+            Unused << NS_WARN_IF(
+                !JS_SetProperty(cx, obj, "tagWasHandled", attVal));
 
             promise->MaybeResolve(obj);
           },

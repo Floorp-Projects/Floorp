@@ -48,8 +48,6 @@ namespace mozilla::widget::toastnotification {
 
 const wchar_t kLaunchArgProgram[] = L"program";
 const wchar_t kLaunchArgProfile[] = L"profile";
-const wchar_t kLaunchArgUrl[] = L"launchUrl";
-const wchar_t kLaunchArgPrivilegedName[] = L"privilegedName";
 const wchar_t kLaunchArgTag[] = L"windowsTag";
 const wchar_t kLaunchArgLogging[] = L"logging";
 const wchar_t kLaunchArgAction[] = L"action";

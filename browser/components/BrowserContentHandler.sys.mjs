@@ -17,6 +17,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
   ShellService: "resource:///modules/ShellService.sys.mjs",
+  SpecialMessageActions:
+    "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
   UpdatePing: "resource://gre/modules/UpdatePing.sys.mjs",
 });
 
@@ -1057,6 +1059,22 @@ nsDefaultCommandLineHandler.prototype = {
           break;
         }
 
+        // All notifications will invoke Firefox with an action.  Prior to Bug 1805514,
+        // this data was extracted from the Windows toast object directly (keyed by the
+        // notification ID) and not passed over the command line.  This is acceptable
+        // because the data passed is chrome-controlled, but if we implement the `actions`
+        // part of the DOM Web Notifications API, this will no longer be true:
+        // content-controlled data might transit over the command line.  This could lead
+        // to escaping bugs and overflows.  In the future, we intend to avoid any such
+        // issue by once again extracting all such data from the Windows toast object.
+        let notificationData = cmdLine.handleFlagWithParam(
+          "notification-windowsAction",
+          false
+        );
+        if (!notificationData) {
+          break;
+        }
+
         let alertService = lazy.gWindowsAlertsService;
         if (!alertService) {
           console.error("Windows alert service not available.");
@@ -1064,34 +1082,66 @@ nsDefaultCommandLineHandler.prototype = {
         }
 
         async function handleNotification() {
-          const { launchUrl, privilegedName } =
-            await alertService.handleWindowsTag(tag);
+          let { tagWasHandled } = await alertService.handleWindowsTag(tag);
 
-          // If `launchUrl` or `privilegedName` are provided, then the
-          // notification was from a prior instance of the application and we
-          // need to handled fallback behavior.
-          if (launchUrl || privilegedName) {
+          // If the tag was not handled via callback, then the notification was
+          // from a prior instance of the application and we need to handle
+          // fallback behavior.
+          if (!tagWasHandled) {
             console.info(
               `Completing Windows notification (tag=${JSON.stringify(
                 tag
-              )}, launchUrl=${JSON.stringify(
-                launchUrl
-              )}, privilegedName=${JSON.stringify(privilegedName)}))`
+              )}, notificationData=${notificationData})`
             );
+            try {
+              notificationData = JSON.parse(notificationData);
+            } catch (e) {
+              console.error(
+                `Completing Windows notification (tag=${JSON.stringify(
+                  tag
+                )}, failed to parse (notificationData=${notificationData})`
+              );
+            }
           }
 
-          if (privilegedName) {
+          // This is awkward: the relaunch data set by the caller is _wrapped_
+          // into a compound object that includes additional notification data,
+          // and everything is exchanged as strings.  Unwrap and parse here.
+          let opaqueRelaunchData = null;
+          if (notificationData?.opaqueRelaunchData) {
+            try {
+              opaqueRelaunchData = JSON.parse(
+                notificationData.opaqueRelaunchData
+              );
+            } catch (e) {
+              console.error(
+                `Completing Windows notification (tag=${JSON.stringify(
+                  tag
+                )}, failed to parse (opaqueRelaunchData=${
+                  notificationData.opaqueRelaunchData
+                })`
+              );
+            }
+          }
+
+          if (notificationData?.privilegedName) {
             Services.telemetry.setEventRecordingEnabled(
               "browser.launched_to_handle",
               true
             );
             Glean.browserLaunchedToHandle.systemNotification.record({
-              name: privilegedName,
+              name: notificationData.privilegedName,
             });
           }
 
-          if (launchUrl) {
-            let uri = resolveURIInternal(cmdLine, launchUrl);
+          // If we have an action in the notification data, this will be the
+          // window to perform the action in.
+          let winForAction;
+
+          if (notificationData?.launchUrl && !opaqueRelaunchData) {
+            // Unprivileged Web Notifications contain a launch URL and are handled
+            // slightly differently than privileged notifications with actions.
+            let uri = resolveURIInternal(cmdLine, notificationData.launchUrl);
             if (cmdLine.state != Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
               // Try to find an existing window and load our URI into the current
               // tab, new tab, or new window as prefs determine.
@@ -1113,7 +1163,35 @@ nsDefaultCommandLineHandler.prototype = {
           } else if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
             // No URL provided, but notification was interacted with while the
             // application was closed. Fall back to opening the browser without url.
-            openBrowserWindow(cmdLine, lazy.gSystemPrincipal);
+            winForAction = openBrowserWindow(cmdLine, lazy.gSystemPrincipal);
+            await new Promise(resolve => {
+              Services.obs.addObserver(function observe(subject) {
+                if (subject == winForAction) {
+                  Services.obs.removeObserver(
+                    observe,
+                    "browser-delayed-startup-finished"
+                  );
+                  resolve();
+                }
+              }, "browser-delayed-startup-finished");
+            });
+          } else {
+            // Relaunch in private windows only if we're in perma-private mode.
+            let allowPrivate =
+              lazy.PrivateBrowsingUtils.permanentPrivateBrowsing;
+            winForAction = lazy.BrowserWindowTracker.getTopWindow({
+              private: allowPrivate,
+            });
+          }
+
+          if (opaqueRelaunchData && winForAction) {
+            // Without dispatch, `OPEN_URL` with `where: "tab"` does not work on relaunch.
+            Services.tm.dispatchToMainThread(() => {
+              lazy.SpecialMessageActions.handleAction(
+                opaqueRelaunchData,
+                winForAction.gBrowser
+              );
+            });
           }
         }
 

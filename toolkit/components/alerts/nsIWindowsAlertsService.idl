@@ -20,10 +20,8 @@ interface nsIWindowsAlertsService : nsIAlertsService
    *           properties if notification exists but wasn't registered with
    *           the WindowsAlertsService:
    *
-   *           `launchUrl` {string} a fallback URL to open.
-   *
-   *           `privilegedName` {string} a privileged name assigned by the
-   *                            browser chrome.
+   *           `notificationData` {string} relaunch data, generally opaque to
+   *           the Windows notification server DLL, for this relaunch.
    *
    * @rejects `nsresult` when there was an error retrieving the notification.
    */
