@@ -73,7 +73,7 @@ add_task(async function testBlackBoxOnReload() {
 
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, source.id, 12);
-  await resumeAndWaitForPauseCounter(dbg);
+  await resume(dbg);
 
   info("Wait for reload to complete after resume");
   await onReloaded;
@@ -258,7 +258,7 @@ async function testBlackBoxSource(dbg, source) {
   info("assert the pause at the breakpoint set on line 8");
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, source.id, 8);
-  await resumeAndWaitForPauseCounter(dbg);
+  await resume(dbg);
 
   assertNotPaused(dbg);
 
@@ -326,7 +326,7 @@ async function testBlackBoxMultipleLines(dbg, source) {
   info("assert the pause at the debugger statement on line 2");
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, source.id, 2);
-  await resumeAndWaitForPauseCounter(dbg);
+  await resume(dbg);
 
   info(
     "The breakpoint set on line 8 should not get hit as its within the blackboxed range"
@@ -381,7 +381,7 @@ async function testBlackBoxMultipleLines(dbg, source) {
   // assert the pause at the breakpoint set on line 8
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, source.id, 8);
-  await resumeAndWaitForPauseCounter(dbg);
+  await resume(dbg);
 
   assertNotPaused(dbg);
 }
@@ -431,7 +431,7 @@ async function testBlackBoxSingleLine(dbg, source) {
   // assert the pause at the breakpoint set on line 8
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, source.id, 8);
-  await resumeAndWaitForPauseCounter(dbg);
+  await resume(dbg);
 
   assertNotPaused(dbg);
 
@@ -478,16 +478,6 @@ async function testBlackBoxSingleLine(dbg, source) {
   await resume(dbg);
 
   assertNotPaused(dbg);
-}
-
-// Resume and wait for the thread context's `pauseCounter` to get
-// updated.
-async function resumeAndWaitForPauseCounter(dbg) {
-  const prevThreadPauseCounter = dbg.selectors.getThreadContext().pauseCounter;
-  await resume(dbg);
-  return waitFor(
-    () => dbg.selectors.getThreadContext().pauseCounter > prevThreadPauseCounter
-  );
 }
 
 async function assertContextMenuDisabled(dbg, selector, shouldBeDisabled) {
