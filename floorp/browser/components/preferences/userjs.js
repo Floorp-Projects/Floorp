@@ -1,12 +1,9 @@
+/* eslint-disable no-undef */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* import-globals-from preferences.js */
-
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var { AppConstants } =  ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 let l10n = new Localization(["browser/floorp.ftl"], true);
@@ -33,7 +30,7 @@ const gUserjsPane = {
             let result = prompts.confirmEx(null, l10n.formatValueSync("userjs-prompt"), `${l10n.formatValueSync("apply-userjs-attention")}\n${l10n.formatValueSync("apply-userjs-attention2")}`, flags, "", null, "", null, check);
             if (result == 0) {
               if (!url){
-                OS.File.remove(userjs);
+                FileUtils.getFile("ProfD", ["user.js"]).remove(false) 
               } else {
                 setUserJSWithURL(url);
               }
@@ -43,11 +40,14 @@ const gUserjsPane = {
   },
 };
 
-let userjs = OS.Path.join(OS.Constants.Path.profileDir, "user.js");
+const userjs = FileUtils.getFile("ProfD", ["user.js"]);
+const outputStream = FileUtils.openFileOutputStream(
+  userjs,
+  FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND
+);
 function setUserJSWithURL(url){
-    fetch(url).then(response => response.text()).then(data => {
-        OS.File.writeAtomic(userjs, data, {
-            encoding: "utf-8"
-        });
+    fetch(url).then(response => response.text()).then(data => { 
+        outputStream.write(data, data.length);
+        outputStream.close();
     });
 }
