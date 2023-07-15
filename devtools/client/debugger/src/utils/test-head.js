@@ -180,6 +180,7 @@ function makeOriginalSource(source) {
     id: `${source.id}/originalSource`,
     url: `${source.url}-original`,
     sourceActor: {
+      id: `${source.id}-1-actor`,
       thread: "FakeThread",
     },
   };

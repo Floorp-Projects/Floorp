@@ -231,7 +231,7 @@ async function prettyPrintHtmlFile({
   return prettyPrintWorkerResult;
 }
 
-function createPrettySource(cx, source) {
+function createPrettySource(source, sourceActor) {
   return async ({ dispatch, sourceMapLoader, getState }) => {
     const url = getPrettyOriginalSourceURL(source);
     const id = generatedToOriginalId(source.id, url);
@@ -239,8 +239,8 @@ function createPrettySource(cx, source) {
 
     dispatch({
       type: "ADD_ORIGINAL_SOURCES",
-      cx,
       originalSources: [prettySource],
+      generatedSourceActor: sourceActor,
     });
     return prettySource;
   };
@@ -312,7 +312,9 @@ export function togglePrettyPrint(cx, sourceId) {
       return dispatch(selectPrettyLocation(cx, prettySource));
     }
 
-    const newPrettySource = await dispatch(createPrettySource(cx, source));
+    const newPrettySource = await dispatch(
+      createPrettySource(source, sourceActor)
+    );
 
     // Force loading the pretty source/original text.
     // This will end up calling prettyPrintSource() of this module, and
