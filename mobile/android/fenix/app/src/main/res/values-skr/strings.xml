@@ -297,51 +297,51 @@
     <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
     <string name="onboarding_home_enable_notifications_negative_button">ہݨ کائناں</string>
 
-    <!-- Juno first user onboarding flow experiment -->
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
     <!-- Title for set firefox as default browser screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_default_browser_title">%s کوں آپݨاں ون٘ڄݨ آلا براؤزر بݨاؤ</string>
+    <string name="juno_onboarding_default_browser_title" moz:RemovedIn="117" tools:ignore="UnusedResources">%s کوں آپݨاں ون٘ڄݨ آلا براؤزر بݨاؤ</string>
     <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_title_nimbus" tools:ignore="UnusedResources">فائرفوکس کوں آپݨاں ون٘ڄݨ آلا براؤزر بݨاؤ</string>
     <!-- Description for set firefox as default browser screen.
         The first parameter is the Firefox brand name.
         The second parameter is the string with key "juno_onboarding_default_browser_description_link_text". -->
-    <string name="juno_onboarding_default_browser_description">%1$s لوکاں کوں منافع  کنوں ودھ رکھیندا ہے تے  کراس سائٹ ٹریکراں کوں بلاک کر تے تہاݙی رازداری دا دفاع کریند ہے۔\n\nساݙے %2$s وچ ٻیا ڄاݨو۔</string>
+    <string name="juno_onboarding_default_browser_description" moz:RemovedIn="117" tools:ignore="UnusedResources">%1$s لوکاں کوں منافع  کنوں ودھ رکھیندا ہے تے  کراس سائٹ ٹریکراں کوں بلاک کر تے تہاݙی رازداری دا دفاع کریند ہے۔\n\nساݙے %2$s وچ ٻیا ڄاݨو۔</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" tools:ignore="UnusedResources">فائرفوکس لوکاں کوں منافع  کنوں ودھ رکھیندا ہے تے  کراس سائٹ ٹریکراں کوں بلاک کر تے تہاݙی رازداری دا دفاع کریند ہے۔\n\nساݙے رازداری نوٹس وچ ٻیا ڄاݨو۔</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
-    <string name="juno_onboarding_default_browser_description_link_text">رازداری نوٹس</string>
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">رازداری نوٹس</string>
     <!-- Text for the button to set firefox as default browser on the device -->
-    <string name="juno_onboarding_default_browser_positive_button">پہلوں مقرر براؤز تے طور تے سیٹ کرو</string>
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">پہلوں مقرر براؤز تے طور تے سیٹ کرو</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_default_browser_negative_button">ہݨ کائناں</string>
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ہݨ کائناں</string>
     <!-- Title for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_title">فون سیٹ کنوں لیپ ٹاپ تے ہاپ کرو تے ولدا واپس وی</string>
+    <string name="juno_onboarding_sign_in_title" tools:ignore="UnusedResources">فون سیٹ کنوں لیپ ٹاپ تے ہاپ کرو تے ولدا واپس وی</string>
     <!-- Description for sign in to sync screen. -->
-    <string name="juno_onboarding_sign_in_description">تساں آپݨیاں ٻیاں ݙیوائساں نال ٹیباں تے پاس ورڈ گھنو، جتھوں تساں چھوڑیا ہائی۔</string>
+    <string name="juno_onboarding_sign_in_description" tools:ignore="UnusedResources">تساں آپݨیاں ٻیاں ݙیوائساں نال ٹیباں تے پاس ورڈ گھنو، جتھوں تساں چھوڑیا ہائی۔</string>
     <!-- Text for the button to sign in to sync on the device -->
-    <string name="juno_onboarding_sign_in_positive_button">سائن ان</string>
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">سائن ان</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_sign_in_negative_button">ہݨ کائناں</string>
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ہݨ کائناں</string>
     <!-- Title for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_title">اطلاع نامے %s نال ودھیک کرݨ وچ تہاݙی مدد کریندن۔</string>
+    <string name="juno_onboarding_enable_notifications_title" moz:RemovedIn="117" tools:ignore="UnusedResources">اطلاع نامے %s نال ودھیک کرݨ وچ تہاݙی مدد کریندن۔</string>
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" tools:ignore="UnusedResources">اطلاع نامے فائرفوکس نال ودھیک کرݨ وچ تہاݙی مدد کریندن۔</string>
     <!-- Description for enable notification permission screen.
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="juno_onboarding_enable_notifications_description">ڈیوائساں دے درمیان ٹیباں بھیڄو، ڈاؤن لوڈ منیج کرو، تے %s کنوں ودھ کنوں ودھ فائدہ چاوݨ کیتے گُر گھنو۔</string>
+    <string name="juno_onboarding_enable_notifications_description" moz:RemovedIn="117" tools:ignore="UnusedResources">ڈیوائساں دے درمیان ٹیباں بھیڄو، ڈاؤن لوڈ منیج کرو، تے %s کنوں ودھ کنوں ودھ فائدہ چاوݨ کیتے گُر گھنو۔</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated   -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" tools:ignore="UnusedResources">ڈیوائساں دے درمیان ٹیباں بھیڄو، ڈاؤن لوڈ منیج کرو، تے فائرفوکس کنوں ودھ کنوں ودھ فائدہ چاوݨ کیتے گُر گھنو۔</string>
     <!-- Text for the button to request notification permission on the device -->
-    <string name="juno_onboarding_enable_notifications_positive_button">اطلاع نامے چالو کرو</string>
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">اطلاع نامے چالو کرو</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
-    <string name="juno_onboarding_enable_notifications_negative_button">ہݨ کائناں</string>
+    <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ہݨ کائناں</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
@@ -531,6 +531,11 @@
     <string name="preferences_open_links_in_apps_never">کݙاہیں نہ</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">ٻاہرلا ڈاؤن لوڈ منیجر</string>
+
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Gecko لاگ فعال کرو</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">تبدیلیاں لاگو کرݨ کیتے ایپ چھوڑیندے پئے ہو۔۔۔</string>
 
     <!-- Preference for add_ons -->
     <string name="preferences_addons">ایڈ ــ آن</string>
