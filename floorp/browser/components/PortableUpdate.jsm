@@ -136,7 +136,7 @@ const portableUpdateUtils = {
         });
         for (let entry of entries) {
             let entryPath =
-                isWin === "win" ?
+                isWin ?
                     String(entry).replaceAll("/", "\\") :
                     String(entry);
             try {
