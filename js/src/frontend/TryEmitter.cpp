@@ -94,7 +94,7 @@ bool TryEmitter::emitTryEnd() {
   return true;
 }
 
-bool TryEmitter::emitCatch() {
+bool TryEmitter::emitCatch(ExceptionStack stack) {
   MOZ_ASSERT(state_ == State::Try);
   if (!emitTryEnd()) {
     return false;
@@ -115,8 +115,14 @@ bool TryEmitter::emitCatch() {
     }
   }
 
-  if (!bce_->emit1(JSOp::Exception)) {
-    return false;
+  if (stack == ExceptionStack::No) {
+    if (!bce_->emit1(JSOp::Exception)) {
+      return false;
+    }
+  } else {
+    if (!bce_->emit1(JSOp::ExceptionAndStack)) {
+      return false;
+    }
   }
 
 #ifdef DEBUG
