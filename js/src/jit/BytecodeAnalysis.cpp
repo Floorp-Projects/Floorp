@@ -231,7 +231,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
                tn.kind() == TryNoteKind::Finally)) {
             uint32_t catchOrFinallyOffset = tn.start + tn.length;
             uint32_t targetDepth =
-                tn.kind() == TryNoteKind::Finally ? stackDepth + 3 : stackDepth;
+                tn.kind() == TryNoteKind::Finally ? stackDepth + 2 : stackDepth;
             BytecodeInfo& targetInfo = infos_[catchOrFinallyOffset];
             targetInfo.init(targetDepth);
             targetInfo.setJumpTarget(/* normallyReachable = */ false);
@@ -246,7 +246,6 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
 
 #ifdef DEBUG
       case JSOp::Exception:
-      case JSOp::ExceptionAndStack:
         // Sanity check: ops only emitted in catch blocks are never
         // normally reachable.
         MOZ_ASSERT(!normallyReachable);

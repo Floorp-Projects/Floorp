@@ -564,23 +564,17 @@ void MacroAssemblerX64::handleFailureWithHandlerTail(Label* profilerExitTail,
   loadPtr(Address(rsp, ResumeFromException::offsetOfStackPointer()), rsp);
   jmp(Operand(rax));
 
-  // If we found a finally block, this must be a baseline frame. Push three
-  // values expected by the finally block: the exception, the exception stack,
-  // and BooleanValue(true).
+  // If we found a finally block, this must be a baseline frame. Push two
+  // values expected by the finally block: the exception and BooleanValue(true).
   bind(&finally);
   ValueOperand exception = ValueOperand(rcx);
-  loadValue(Address(rsp, ResumeFromException::offsetOfException()), exception);
-
-  ValueOperand exceptionStack = ValueOperand(rdx);
-  loadValue(Address(rsp, ResumeFromException::offsetOfExceptionStack()),
-            exceptionStack);
+  loadValue(Address(esp, ResumeFromException::offsetOfException()), exception);
 
   loadPtr(Address(rsp, ResumeFromException::offsetOfTarget()), rax);
   loadPtr(Address(rsp, ResumeFromException::offsetOfFramePointer()), rbp);
   loadPtr(Address(rsp, ResumeFromException::offsetOfStackPointer()), rsp);
 
   pushValue(exception);
-  pushValue(exceptionStack);
   pushValue(BooleanValue(true));
   jmp(Operand(rax));
 

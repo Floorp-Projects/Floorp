@@ -133,10 +133,11 @@ struct ResumeFromException {
   // Also used by Wasm to send the exception object to the throw stub.
   JS::Value exception;
 
-  // Exception stack to push when resuming into a |finally| block.
-  JS::Value exceptionStack;
-
   BaselineBailoutInfo* bailoutInfo;
+
+#if defined(JS_CODEGEN_ARM64)
+  uint64_t padding_;
+#endif
 
   static size_t offsetOfFramePointer() {
     return offsetof(ResumeFromException, framePointer);
@@ -153,9 +154,6 @@ struct ResumeFromException {
   }
   static size_t offsetOfException() {
     return offsetof(ResumeFromException, exception);
-  }
-  static size_t offsetOfExceptionStack() {
-    return offsetof(ResumeFromException, exceptionStack);
   }
   static size_t offsetOfBailoutInfo() {
     return offsetof(ResumeFromException, bailoutInfo);

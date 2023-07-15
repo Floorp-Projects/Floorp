@@ -14939,14 +14939,6 @@ void CodeGenerator::visitThrow(LThrow* lir) {
   callVM<Fn, js::ThrowOperation>(lir);
 }
 
-void CodeGenerator::visitThrowWithStack(LThrowWithStack* lir) {
-  pushArg(ToValue(lir, LThrowWithStack::StackIndex));
-  pushArg(ToValue(lir, LThrowWithStack::ValueIndex));
-
-  using Fn = bool (*)(JSContext*, HandleValue, HandleValue);
-  callVM<Fn, js::ThrowWithStackOperation>(lir);
-}
-
 class OutOfLineTypeOfV : public OutOfLineCodeBase<CodeGenerator> {
   LTypeOfV* ins_;
 
@@ -17538,28 +17530,16 @@ void CodeGenerator::visitGenerator(LGenerator* lir) {
 
 void CodeGenerator::visitAsyncResolve(LAsyncResolve* lir) {
   Register generator = ToRegister(lir->generator());
-  ValueOperand value = ToValue(lir, LAsyncResolve::ValueIndex);
+  ValueOperand valueOrReason = ToValue(lir, LAsyncResolve::ValueOrReasonIndex);
+  AsyncFunctionResolveKind resolveKind = lir->mir()->resolveKind();
 
-  pushArg(value);
+  pushArg(Imm32(static_cast<int32_t>(resolveKind)));
+  pushArg(valueOrReason);
   pushArg(generator);
 
   using Fn = JSObject* (*)(JSContext*, Handle<AsyncFunctionGeneratorObject*>,
-                           HandleValue);
+                           HandleValue, AsyncFunctionResolveKind);
   callVM<Fn, js::AsyncFunctionResolve>(lir);
-}
-
-void CodeGenerator::visitAsyncReject(LAsyncReject* lir) {
-  Register generator = ToRegister(lir->generator());
-  ValueOperand reason = ToValue(lir, LAsyncReject::ReasonIndex);
-  ValueOperand stack = ToValue(lir, LAsyncReject::StackIndex);
-
-  pushArg(stack);
-  pushArg(reason);
-  pushArg(generator);
-
-  using Fn = JSObject* (*)(JSContext*, Handle<AsyncFunctionGeneratorObject*>,
-                           HandleValue, HandleValue);
-  callVM<Fn, js::AsyncFunctionReject>(lir);
 }
 
 void CodeGenerator::visitAsyncAwait(LAsyncAwait* lir) {

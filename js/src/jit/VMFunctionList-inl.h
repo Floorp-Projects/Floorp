@@ -59,7 +59,6 @@ namespace jit {
   _(ArrayJoin, js::jit::ArrayJoin)                                             \
   _(ArraySliceDense, js::ArraySliceDense)                                      \
   _(AsyncFunctionAwait, js::AsyncFunctionAwait)                                \
-  _(AsyncFunctionReject, js::AsyncFunctionReject)                              \
   _(AsyncFunctionResolve, js::AsyncFunctionResolve)                            \
   _(AtomicsAdd64, js::jit::AtomicsAdd64)                                       \
   _(AtomicsAnd64, js::jit::AtomicsAnd64)                                       \
@@ -190,7 +189,6 @@ namespace jit {
   _(GetIteratorWithIndices, js::GetIteratorWithIndices)                        \
   _(GetNonSyntacticGlobalThis, js::GetNonSyntacticGlobalThis)                  \
   _(GetOrCreateModuleMetaObject, js::GetOrCreateModuleMetaObject)              \
-  _(GetPendingExceptionStack, js::GetPendingExceptionStack)                    \
   _(GetPrototypeOf, js::jit::GetPrototypeOf)                                   \
   _(GetSparseElementHelper, js::GetSparseElementHelper)                        \
   _(GlobalDeclInstantiationFromIon, js::jit::GlobalDeclInstantiationFromIon)   \
@@ -321,7 +319,6 @@ namespace jit {
   _(ThrowOperation, js::ThrowOperation)                                        \
   _(ThrowRuntimeLexicalError, js::jit::ThrowRuntimeLexicalError)               \
   _(ThrowUninitializedThis, js::ThrowUninitializedThis)                        \
-  _(ThrowWithStackOperation, js::ThrowWithStackOperation)                      \
   _(ToBigInt, js::ToBigInt)                                                    \
   _(ToStringSlow, js::ToStringSlow<CanGC>)                                     \
   _(ValueToIterator, js::ValueToIterator)                                      \

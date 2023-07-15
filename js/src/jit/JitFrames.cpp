@@ -234,7 +234,6 @@ static void OnLeaveIonFrame(JSContext* cx, const InlineFrameIterator& frame,
   rfe->framePointer = frame.frame().fp();
   rfe->stackPointer = frame.frame().fp();
   rfe->exception = rval;
-  rfe->exceptionStack = NullValue();
 
   act->removeIonFrameRecovery(frame.frame().jsFrame());
   act->removeRematerializedFrame(frame.frame().fp());
@@ -326,14 +325,10 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
                                      tn->stackDepth);
 
         RootedValue exception(cx);
-        RootedValue exceptionStack(cx);
         if (!cx->getPendingException(&exception)) {
           exception = UndefinedValue();
-          exceptionStack = NullValue();
-        } else {
-          exceptionStack = ObjectOrNullValue(cx->getPendingExceptionStack());
         }
-        excInfo.setFinallyException(exception.get(), exceptionStack.get());
+        excInfo.setFinallyException(exception.get());
         cx->clearPendingException();
 
         if (ExceptionHandlerBailout(cx, frame, rfe, excInfo)) {
@@ -498,10 +493,6 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
         if (!cx->getPendingException(
                 MutableHandleValue::fromMarkedLocation(&rfe->exception))) {
           rfe->exception = UndefinedValue();
-          rfe->exceptionStack = NullValue();
-        } else {
-          rfe->exceptionStack =
-              ObjectOrNullValue(cx->getPendingExceptionStack());
         }
         cx->clearPendingException();
         return true;

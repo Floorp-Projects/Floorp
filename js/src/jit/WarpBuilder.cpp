@@ -2273,23 +2273,14 @@ bool WarpBuilder::build_FinalYieldRval(BytecodeLocation loc) {
 
 bool WarpBuilder::build_AsyncResolve(BytecodeLocation loc) {
   MDefinition* generator = current->pop();
-  MDefinition* value = current->pop();
+  MDefinition* valueOrReason = current->pop();
+  auto resolveKind = loc.getAsyncFunctionResolveKind();
 
-  auto* resolve = MAsyncResolve::New(alloc(), generator, value);
+  MAsyncResolve* resolve =
+      MAsyncResolve::New(alloc(), generator, valueOrReason, resolveKind);
   current->add(resolve);
   current->push(resolve);
   return resumeAfter(resolve, loc);
-}
-
-bool WarpBuilder::build_AsyncReject(BytecodeLocation loc) {
-  MDefinition* generator = current->pop();
-  MDefinition* stack = current->pop();
-  MDefinition* reason = current->pop();
-
-  auto* reject = MAsyncReject::New(alloc(), generator, reason, stack);
-  current->add(reject);
-  current->push(reject);
-  return resumeAfter(reject, loc);
 }
 
 bool WarpBuilder::build_ResumeKind(BytecodeLocation loc) {
@@ -3120,30 +3111,10 @@ bool WarpBuilder::build_Exception(BytecodeLocation) {
   MOZ_CRASH("Unreachable because we skip catch-blocks");
 }
 
-bool WarpBuilder::build_ExceptionAndStack(BytecodeLocation) {
-  MOZ_CRASH("Unreachable because we skip catch-blocks");
-}
-
 bool WarpBuilder::build_Throw(BytecodeLocation loc) {
   MDefinition* def = current->pop();
 
   MThrow* ins = MThrow::New(alloc(), def);
-  current->add(ins);
-  if (!resumeAfter(ins, loc)) {
-    return false;
-  }
-
-  // Terminate the block.
-  current->end(MUnreachable::New(alloc()));
-  setTerminatedBlock();
-  return true;
-}
-
-bool WarpBuilder::build_ThrowWithStack(BytecodeLocation loc) {
-  MDefinition* stack = current->pop();
-  MDefinition* value = current->pop();
-
-  auto* ins = MThrowWithStack::New(alloc(), value, stack);
   current->add(ins);
   if (!resumeAfter(ins, loc)) {
     return false;

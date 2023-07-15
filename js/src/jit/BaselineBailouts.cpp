@@ -835,9 +835,6 @@ bool BaselineStackBuilder::buildFinallyException() {
   if (!writeValue(excInfo_->finallyException(), "Exception")) {
     return false;
   }
-  if (!writeValue(excInfo_->finallyExceptionStack(), "ExceptionStack")) {
-    return false;
-  }
   if (!writeValue(BooleanValue(true), "throwing")) {
     return false;
   }
@@ -1279,10 +1276,10 @@ bool BaselineStackBuilder::validateFrame() {
 
   uint32_t expectedSlots = exprStackSlots();
   if (resumingInFinallyBlock()) {
-    // If we are resuming in a finally block, we push three extra values on the
-    // stack (the exception, the exception stack, and |throwing|), so the depth
-    // at the resume PC should be the depth at the fault PC plus three.
-    expectedSlots += 3;
+    // If we are resuming in a finally block, we push two extra values on the
+    // stack (the exception, and |throwing|), so the depth at the resume PC
+    // should be the depth at the fault PC plus two.
+    expectedSlots += 2;
   }
   return AssertBailoutStackDepth(cx_, script_, pc_, resumeMode(),
                                  expectedSlots);

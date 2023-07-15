@@ -5146,23 +5146,10 @@ void LIRGenerator::visitRest(MRest* ins) {
 }
 
 void LIRGenerator::visitThrow(MThrow* ins) {
-  MDefinition* value = ins->value();
+  MDefinition* value = ins->getOperand(0);
   MOZ_ASSERT(value->type() == MIRType::Value);
 
   LThrow* lir = new (alloc()) LThrow(useBoxAtStart(value));
-  add(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitThrowWithStack(MThrowWithStack* ins) {
-  MDefinition* value = ins->value();
-  MOZ_ASSERT(value->type() == MIRType::Value);
-
-  MDefinition* stack = ins->stack();
-  MOZ_ASSERT(stack->type() == MIRType::Value);
-
-  auto* lir =
-      new (alloc()) LThrowWithStack(useBoxAtStart(value), useBoxAtStart(stack));
   add(lir, ins);
   assignSafepoint(lir, ins);
 }
@@ -6115,15 +6102,7 @@ void LIRGenerator::visitGenerator(MGenerator* ins) {
 
 void LIRGenerator::visitAsyncResolve(MAsyncResolve* ins) {
   auto* lir = new (alloc()) LAsyncResolve(useRegisterAtStart(ins->generator()),
-                                          useBoxAtStart(ins->value()));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
-void LIRGenerator::visitAsyncReject(MAsyncReject* ins) {
-  auto* lir = new (alloc())
-      LAsyncReject(useRegisterAtStart(ins->generator()),
-                   useBoxAtStart(ins->reason()), useBoxAtStart(ins->stack()));
+                                          useBoxAtStart(ins->valueOrReason()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

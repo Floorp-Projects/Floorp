@@ -1380,14 +1380,6 @@ again:
     REGS.sp++->setObjectOrNull(obj); \
     cx->debugOnlyCheck(REGS.sp[-1]); \
   } while (0)
-#define PUSH_EXCEPTION_STACK_OR_NULL(obj)                                   \
-  do {                                                                      \
-    static_assert(std::is_convertible_v<decltype(obj), SavedFrame*>,        \
-                  "SavedFrame can be cross-compartment, so "                \
-                  "cx->debugOnlyCheck can't be called. Don't use this for " \
-                  "other object types.");                                   \
-    REGS.sp++->setObjectOrNull(obj);                                        \
-  } while (0)
 #ifdef ENABLE_RECORD_TUPLE
 #  define PUSH_EXTENDED_PRIMITIVE(obj)      \
     do {                                    \
@@ -3935,10 +3927,12 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
 
     CASE(AsyncResolve) {
       MOZ_ASSERT(REGS.stackDepth() >= 2);
+      auto resolveKind = AsyncFunctionResolveKind(GET_UINT8(REGS.pc));
       ReservedRooted<JSObject*> gen(&rootObject1, &REGS.sp[-1].toObject());
-      ReservedRooted<Value> value(&rootValue0, REGS.sp[-2]);
-      JSObject* promise = AsyncFunctionResolve(
-          cx, gen.as<AsyncFunctionGeneratorObject>(), value);
+      ReservedRooted<Value> valueOrReason(&rootValue0, REGS.sp[-2]);
+      JSObject* promise =
+          AsyncFunctionResolve(cx, gen.as<AsyncFunctionGeneratorObject>(),
+                               valueOrReason, resolveKind);
       if (!promise) {
         goto error;
       }
@@ -3947,22 +3941,6 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
       REGS.sp[-1].setObject(*promise);
     }
     END_CASE(AsyncResolve)
-
-    CASE(AsyncReject) {
-      MOZ_ASSERT(REGS.stackDepth() >= 3);
-      ReservedRooted<JSObject*> gen(&rootObject1, &REGS.sp[-1].toObject());
-      ReservedRooted<Value> stack(&rootValue0, REGS.sp[-2]);
-      ReservedRooted<Value> reason(&rootValue1, REGS.sp[-3]);
-      JSObject* promise = AsyncFunctionReject(
-          cx, gen.as<AsyncFunctionGeneratorObject>(), reason, stack);
-      if (!promise) {
-        goto error;
-      }
-
-      REGS.sp -= 2;
-      REGS.sp[-1].setObject(*promise);
-    }
-    END_CASE(AsyncReject)
 
     CASE(SetFunName) {
       MOZ_ASSERT(REGS.stackDepth() >= 2);
@@ -4231,17 +4209,6 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
     }
     END_CASE(Exception)
 
-    CASE(ExceptionAndStack) {
-      PUSH_NULL();
-      MutableHandleValue res = REGS.stackHandleAt(-1);
-      Rooted<SavedFrame*> stack(cx);
-      if (!GetAndClearExceptionAndStack(cx, res, &stack)) {
-        goto error;
-      }
-      PUSH_EXCEPTION_STACK_OR_NULL(stack);
-    }
-    END_CASE(ExceptionAndStack)
-
     CASE(Finally) { CHECK_BRANCH(); }
     END_CASE(Finally)
 
@@ -4250,17 +4217,6 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
       ReservedRooted<Value> v(&rootValue0);
       POP_COPY_TO(v);
       MOZ_ALWAYS_FALSE(ThrowOperation(cx, v));
-      /* let the code at error try to catch the exception. */
-      goto error;
-    }
-
-    CASE(ThrowWithStack) {
-      CHECK_BRANCH();
-      ReservedRooted<Value> v(&rootValue0);
-      ReservedRooted<Value> stack(&rootValue1);
-      POP_COPY_TO(stack);
-      POP_COPY_TO(v);
-      MOZ_ALWAYS_FALSE(ThrowWithStackOperation(cx, v, stack));
       /* let the code at error try to catch the exception. */
       goto error;
     }
@@ -4724,7 +4680,6 @@ error:
         goto return_continuation;
       }
       PUSH_COPY(exception);
-      PUSH_EXCEPTION_STACK_OR_NULL(cx->getPendingExceptionStack());
       PUSH_BOOLEAN(true);
       cx->clearPendingException();
     }
@@ -4765,28 +4720,6 @@ bool js::ThrowOperation(JSContext* cx, HandleValue v) {
   MOZ_ASSERT(!cx->isExceptionPending());
   cx->setPendingException(v, ShouldCaptureStack::Maybe);
   return false;
-}
-
-bool js::ThrowWithStackOperation(JSContext* cx, HandleValue v,
-                                 HandleValue stack) {
-  MOZ_ASSERT(!cx->isExceptionPending());
-  MOZ_ASSERT(stack.isObjectOrNull());
-
-  // Use a normal throw when no stack was recorded.
-  if (!stack.isObject()) {
-    return ThrowOperation(cx, v);
-  }
-
-  MOZ_ASSERT(stack.toObject().is<SavedFrame>());
-  Rooted<SavedFrame*> stackObj(cx, &stack.toObject().as<SavedFrame>());
-  cx->setPendingException(v, stackObj);
-  return false;
-}
-
-bool js::GetPendingExceptionStack(JSContext* cx, MutableHandleValue vp) {
-  MOZ_ASSERT(cx->isExceptionPending());
-  vp.setObjectOrNull(cx->getPendingExceptionStack());
-  return true;
 }
 
 bool js::GetProperty(JSContext* cx, HandleValue v, Handle<PropertyName*> name,

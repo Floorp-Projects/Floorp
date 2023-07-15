@@ -1806,7 +1806,8 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
       // 1.  `return <value>` fulfills and returns the async function's promise.
       Rooted<PromiseObject*> promise(cx, generator->promise());
       if (promise->state() == JS::PromiseState::Pending) {
-        if (!AsyncFunctionResolve(cx, generator, vp)) {
+        if (!AsyncFunctionResolve(cx, generator, vp,
+                                  AsyncFunctionResolveKind::Fulfill)) {
           return false;
         }
       }

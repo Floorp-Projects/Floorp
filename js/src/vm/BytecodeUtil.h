@@ -308,7 +308,6 @@ static inline bool BytecodeFallsThrough(JSOp op) {
     case JSOp::RetRval:
     case JSOp::FinalYieldRval:
     case JSOp::Throw:
-    case JSOp::ThrowWithStack:
     case JSOp::ThrowMsg:
     case JSOp::ThrowSetConst:
     case JSOp::TableSwitch:
