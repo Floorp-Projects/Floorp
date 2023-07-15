@@ -247,6 +247,16 @@ export function getCurrentlyFetchedTopFrame(state, thread) {
   return frames?.[0];
 }
 
+export function hasFrame(state, frame) {
+  // Don't use getFrames as it returns null when the frames are still loading
+  const { frames } = getThreadPauseState(state.pause, frame.thread);
+  if (!frames) {
+    return false;
+  }
+  // Compare IDs and not frame objects as they get cloned during mapping
+  return frames.some(f => f.id == frame.id);
+}
+
 export function getSkipPausing(state) {
   return state.pause.skipPausing;
 }

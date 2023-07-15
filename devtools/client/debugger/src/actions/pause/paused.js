@@ -27,7 +27,7 @@ export function paused(pauseInfo) {
   return async function ({ dispatch, getState }) {
     const { thread, frame, why } = pauseInfo;
 
-    dispatch({ type: "PAUSED", thread, why, frame });
+    dispatch({ type: "PAUSED", thread, why, topFrame: frame });
 
     // Get a context capturing the newly paused and selected thread.
     const cx = getThreadContext(getState());

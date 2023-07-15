@@ -288,7 +288,7 @@ class SmartTrace extends Component {
 
     return Frames({
       frames,
-      selectFrame: (cx, { generatedLocation }) => {
+      selectFrame: ({ generatedLocation }) => {
         const viewSource = onViewSourceInDebugger || onViewSource;
 
         viewSource({
