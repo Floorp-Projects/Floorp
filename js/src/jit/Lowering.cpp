@@ -6115,7 +6115,7 @@ void LIRGenerator::visitGenerator(MGenerator* ins) {
 
 void LIRGenerator::visitAsyncResolve(MAsyncResolve* ins) {
   auto* lir = new (alloc()) LAsyncResolve(useRegisterAtStart(ins->generator()),
-                                          useBoxAtStart(ins->valueOrReason()));
+                                          useBoxAtStart(ins->value()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

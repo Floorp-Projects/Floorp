@@ -206,16 +206,10 @@ static bool AsyncFunctionResume(JSContext* cx,
 
 JSObject* js::AsyncFunctionResolve(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
-    HandleValue valueOrReason, AsyncFunctionResolveKind resolveKind) {
+    HandleValue value) {
   Rooted<PromiseObject*> promise(cx, generator->promise());
-  if (resolveKind == AsyncFunctionResolveKind::Fulfill) {
-    if (!AsyncFunctionReturned(cx, promise, valueOrReason)) {
-      return nullptr;
-    }
-  } else {
-    if (!AsyncFunctionThrown(cx, promise, valueOrReason)) {
-      return nullptr;
-    }
+  if (!AsyncFunctionReturned(cx, promise, value)) {
+    return nullptr;
   }
   return promise;
 }
