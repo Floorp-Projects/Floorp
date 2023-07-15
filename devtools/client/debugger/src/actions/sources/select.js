@@ -211,7 +211,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
     dispatch(setInScopeLines());
 
     if (getIsCurrentThreadPaused(getState())) {
-      await dispatch(mapDisplayNames(cx));
+      await dispatch(mapDisplayNames());
     }
   };
 }
