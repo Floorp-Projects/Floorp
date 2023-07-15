@@ -163,7 +163,7 @@ function update(state = initialSourcesState(), action) {
 
     case "SET_ORIGINAL_BREAKABLE_LINES": {
       state.mutableOriginalBreakableLines.set(
-        action.sourceId,
+        action.source.id,
         action.breakableLines
       );
 
