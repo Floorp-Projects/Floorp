@@ -231,7 +231,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
                tn.kind() == TryNoteKind::Finally)) {
             uint32_t catchOrFinallyOffset = tn.start + tn.length;
             uint32_t targetDepth =
-                tn.kind() == TryNoteKind::Finally ? stackDepth + 2 : stackDepth;
+                tn.kind() == TryNoteKind::Finally ? stackDepth + 3 : stackDepth;
             BytecodeInfo& targetInfo = infos_[catchOrFinallyOffset];
             targetInfo.init(targetDepth);
             targetInfo.setJumpTarget(/* normallyReachable = */ false);
