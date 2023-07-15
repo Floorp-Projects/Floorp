@@ -203,7 +203,7 @@ async function testOpeningLargeMinifiedFile(dbg, tab) {
   await onSelected;
   fullTest.done();
 
-  dbg.actions.closeTabs(dbg.selectors.getContext(dbg.getState()), [file]);
+  dbg.actions.closeTabs([file]);
 
   await garbageCollect();
 }
@@ -212,7 +212,7 @@ async function testPrettyPrint(dbg) {
   // Close all existing tabs to have a clean state
   const state = dbg.getState();
   const tabURLs = dbg.selectors.getSourcesForTabs(state).map(t => t.url);
-  await dbg.actions.closeTabs(dbg.selectors.getContext(state), tabURLs);
+  await dbg.actions.closeTabs(tabURLs);
 
   // Disable source map so we can prettyprint main.js
   await dbg.actions.toggleSourceMapsEnabled(false);
@@ -243,10 +243,7 @@ async function testPrettyPrint(dbg) {
   test.done();
 
   await dbg.actions.toggleSourceMapsEnabled(true);
-  dbg.actions.closeTabs(dbg.selectors.getContext(dbg.getState()), [
-    fileUrl,
-    formattedFileUrl,
-  ]);
+  dbg.actions.closeTabs([fileUrl, formattedFileUrl]);
 
   await garbageCollect();
 }

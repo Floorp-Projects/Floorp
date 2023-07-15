@@ -12,7 +12,6 @@ import {
   getSourcesForTabs,
   getIsPaused,
   getCurrentThread,
-  getContext,
   getBlackBoxRanges,
 } from "../../selectors";
 import { isVisible } from "../../utils/ui";
@@ -60,7 +59,6 @@ class Tabs extends PureComponent {
 
   static get propTypes() {
     return {
-      cx: PropTypes.object.isRequired,
       endPanelCollapsed: PropTypes.bool.isRequired,
       horizontal: PropTypes.bool.isRequired,
       isPaused: PropTypes.bool.isRequired,
@@ -141,10 +139,10 @@ class Tabs extends PureComponent {
   }
 
   renderDropdownSource = source => {
-    const { cx, selectSource } = this.props;
+    const { selectSource } = this.props;
     const filename = getFilename(source);
 
-    const onClick = () => selectSource(cx, source);
+    const onClick = () => selectSource(source);
     return (
       <li key={source.id} onClick={onClick} title={getFileURL(source, false)}>
         <AccessibleImage
@@ -293,7 +291,6 @@ class Tabs extends PureComponent {
 
 const mapStateToProps = state => {
   return {
-    cx: getContext(state),
     selectedSource: getSelectedSource(state),
     tabSources: getSourcesForTabs(state),
     tabs: getSourceTabs(state),

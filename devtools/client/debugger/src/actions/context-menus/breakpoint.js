@@ -9,7 +9,6 @@ import { features } from "../../utils/prefs";
 import { formatKeyShortcut } from "../../utils/text";
 
 import {
-  getContext,
   getBreakpointsList,
   getSelectedSource,
   getBlackBoxRanges,
@@ -34,7 +33,6 @@ import { openConditionalPanel } from "../../actions/ui";
 export function showBreakpointContextMenu(event, breakpoint, source) {
   return async ({ dispatch, getState }) => {
     const state = getState();
-    const cx = getContext(state);
     const breakpoints = getBreakpointsList(state);
     const blackboxedRanges = getBlackBoxRanges(state);
     const blackboxedRangesForSource = blackboxedRanges[source.url];
@@ -254,7 +252,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       label: addConditionLabel,
       accesskey: addConditionKey,
       click: async () => {
-        await dispatch(selectSpecificLocation(cx, selectedLocation));
+        await dispatch(selectSpecificLocation(selectedLocation));
         await dispatch(openConditionalPanel(selectedLocation));
       },
       accelerator: formatKeyShortcut(
@@ -267,7 +265,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       label: editConditionLabel,
       accesskey: editConditionKey,
       click: async () => {
-        await dispatch(selectSpecificLocation(cx, selectedLocation));
+        await dispatch(selectSpecificLocation(selectedLocation));
         await dispatch(openConditionalPanel(selectedLocation));
       },
       accelerator: formatKeyShortcut(
@@ -281,7 +279,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       accesskey: L10N.getStr("editor.addLogPoint.accesskey"),
       disabled: false,
       click: async () => {
-        await dispatch(selectSpecificLocation(cx, selectedLocation));
+        await dispatch(selectSpecificLocation(selectedLocation));
         await dispatch(openConditionalPanel(selectedLocation, true));
       },
       accelerator: formatKeyShortcut(
@@ -295,7 +293,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       accesskey: L10N.getStr("editor.editLogPoint.accesskey"),
       disabled: false,
       click: async () => {
-        await dispatch(selectSpecificLocation(cx, selectedLocation));
+        await dispatch(selectSpecificLocation(selectedLocation));
         await dispatch(openConditionalPanel(selectedLocation, true));
       },
       accelerator: formatKeyShortcut(

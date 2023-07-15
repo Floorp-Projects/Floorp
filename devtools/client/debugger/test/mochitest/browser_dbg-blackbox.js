@@ -483,10 +483,10 @@ async function testBlackBoxSingleLine(dbg, source) {
 // Resume and wait for the thread context's `pauseCounter` to get
 // updated.
 async function resumeAndWaitForPauseCounter(dbg) {
-  const prevThreadPauseCounter = getThreadContext(dbg).pauseCounter;
+  const prevThreadPauseCounter = dbg.selectors.getThreadContext().pauseCounter;
   await resume(dbg);
   return waitFor(
-    () => getThreadContext(dbg).pauseCounter > prevThreadPauseCounter
+    () => dbg.selectors.getThreadContext().pauseCounter > prevThreadPauseCounter
   );
 }
 

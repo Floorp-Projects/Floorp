@@ -12,7 +12,6 @@ import {
   getSkipPausing,
   getCurrentThread,
   isTopFrameSelected,
-  getThreadContext,
   getIsCurrentThreadPaused,
   getIsThreadCurrentlyTracing,
   getJavascriptTracingLogMethod,
@@ -98,7 +97,6 @@ class CommandBar extends Component {
   static get propTypes() {
     return {
       breakOnNext: PropTypes.func.isRequired,
-      cx: PropTypes.object.isRequired,
       horizontal: PropTypes.bool.isRequired,
       isPaused: PropTypes.bool.isRequired,
       isTracingEnabled: PropTypes.bool.isRequired,
@@ -153,13 +151,12 @@ class CommandBar extends Component {
   }
 
   handleEvent(e, action) {
-    const { cx } = this.props;
     e.preventDefault();
     e.stopPropagation();
     if (action === "resume") {
       this.props.isPaused ? this.props.resume() : this.props.breakOnNext();
     } else {
-      this.props[action](cx);
+      this.props[action]();
     }
   }
 
@@ -414,7 +411,6 @@ CommandBar.contextTypes = {
 };
 
 const mapStateToProps = state => ({
-  cx: getThreadContext(state),
   isWaitingOnBreak: getIsWaitingOnBreak(state, getCurrentThread(state)),
   skipPausing: getSkipPausing(state),
   topFrameSelected: isTopFrameSelected(state, getCurrentThread(state)),

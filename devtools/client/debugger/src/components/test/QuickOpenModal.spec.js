@@ -9,7 +9,6 @@ import configureStore from "redux-mock-store";
 
 import { shallow, mount } from "enzyme";
 import { QuickOpenModal } from "../QuickOpenModal";
-import { mockcx } from "../../utils/test-mockup";
 import { getDisplayURL } from "../../utils/sources-tree/getURL";
 import { searchKeys } from "../../constants";
 
@@ -32,7 +31,6 @@ function generateModal(propOverrides, renderType = "shallow") {
     },
   });
   const props = {
-    cx: mockcx,
     enabled: false,
     query: "",
     searchType: "sources",
@@ -364,7 +362,7 @@ describe("QuickOpenModal", () => {
         key: "Enter",
       };
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
-      expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
+      expect(props.selectSpecificLocation).toHaveBeenCalledWith({
         column: 12,
         line: 34,
         source: {
@@ -391,7 +389,7 @@ describe("QuickOpenModal", () => {
         key: "Enter",
       };
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
-      expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
+      expect(props.selectSpecificLocation).toHaveBeenCalledWith({
         column: 12,
         line: 34,
         source: {
@@ -504,7 +502,7 @@ describe("QuickOpenModal", () => {
         key: "Enter",
       };
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
-      expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
+      expect(props.selectSpecificLocation).toHaveBeenCalledWith({
         column: undefined,
         line: 0,
         source: { id },
@@ -537,7 +535,7 @@ describe("QuickOpenModal", () => {
         key: "Enter",
       };
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
-      expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
+      expect(props.selectSpecificLocation).toHaveBeenCalledWith({
         column: undefined,
         line: 0,
         source: { id },
@@ -570,7 +568,7 @@ describe("QuickOpenModal", () => {
         key: "Enter",
       };
       wrapper.find("Connect(SearchInput)").simulate("keydown", event);
-      expect(props.selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
+      expect(props.selectSpecificLocation).toHaveBeenCalledWith({
         column: 4,
         line: 3,
         source: { id },

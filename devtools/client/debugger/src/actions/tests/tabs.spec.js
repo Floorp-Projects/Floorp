@@ -15,22 +15,22 @@ import { mockCommandClient } from "./helpers/mockCommandClient";
 
 describe("closing tabs", () => {
   it("closing a tab", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: fooSource, line: 1 }))
     );
-    dispatch(actions.closeTab(cx, fooSource));
+    dispatch(actions.closeTab(fooSource));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     expect(getSourceTabs(getState())).toHaveLength(0);
   });
 
   it("closing the inactive tab", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -39,12 +39,12 @@ describe("closing tabs", () => {
       actions.newGeneratedSource(makeSource("bar.js"))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: fooSource, line: 1 }))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: barSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: barSource, line: 1 }))
     );
-    dispatch(actions.closeTab(cx, fooSource));
+    dispatch(actions.closeTab(fooSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("bar.js");
@@ -52,22 +52,22 @@ describe("closing tabs", () => {
   });
 
   it("closing the only tab", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: fooSource, line: 1 }))
     );
-    dispatch(actions.closeTab(cx, fooSource));
+    dispatch(actions.closeTab(fooSource));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     expect(getSourceTabs(getState())).toHaveLength(0);
   });
 
   it("closing the active tab", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -76,12 +76,12 @@ describe("closing tabs", () => {
       actions.newGeneratedSource(makeSource("bar.js"))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: fooSource, line: 1 }))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: barSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: barSource, line: 1 }))
     );
-    await dispatch(actions.closeTab(cx, barSource));
+    await dispatch(actions.closeTab(barSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("foo.js");
@@ -89,7 +89,7 @@ describe("closing tabs", () => {
   });
 
   it("closing many inactive tabs", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -101,23 +101,20 @@ describe("closing tabs", () => {
       actions.newGeneratedSource(makeSource("bazz.js"))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: fooSource, line: 1 }))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: barSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: barSource, line: 1 }))
     );
     await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ source: bazzSource, line: 1 })
-      )
+      actions.selectLocation(createLocation({ source: bazzSource, line: 1 }))
     );
 
     const tabs = [
       "http://localhost:8000/examples/foo.js",
       "http://localhost:8000/examples/bar.js",
     ];
-    dispatch(actions.closeTabs(cx, tabs));
+    dispatch(actions.closeTabs(tabs));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("bazz.js");
@@ -125,7 +122,7 @@ describe("closing tabs", () => {
   });
 
   it("closing many tabs including the active tab", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -137,22 +134,19 @@ describe("closing tabs", () => {
       actions.newGeneratedSource(makeSource("bazz.js"))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: fooSource, line: 1 }))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: barSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: barSource, line: 1 }))
     );
     await dispatch(
-      actions.selectLocation(
-        cx,
-        createLocation({ source: bazzSource, line: 1 })
-      )
+      actions.selectLocation(createLocation({ source: bazzSource, line: 1 }))
     );
     const tabs = [
       "http://localhost:8000/examples/bar.js",
       "http://localhost:8000/examples/bazz.js",
     ];
-    await dispatch(actions.closeTabs(cx, tabs));
+    await dispatch(actions.closeTabs(tabs));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("foo.js");
@@ -160,7 +154,7 @@ describe("closing tabs", () => {
   });
 
   it("closing all the tabs", async () => {
-    const { dispatch, getState, cx } = createStore(mockCommandClient);
+    const { dispatch, getState } = createStore(mockCommandClient);
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo.js"))
@@ -169,13 +163,13 @@ describe("closing tabs", () => {
       actions.newGeneratedSource(makeSource("bar.js"))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: fooSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: fooSource, line: 1 }))
     );
     await dispatch(
-      actions.selectLocation(cx, createLocation({ source: barSource, line: 1 }))
+      actions.selectLocation(createLocation({ source: barSource, line: 1 }))
     );
     await dispatch(
-      actions.closeTabs(cx, [
+      actions.closeTabs([
         "http://localhost:8000/examples/foo.js",
         "http://localhost:8000/examples/bar.js",
       ])

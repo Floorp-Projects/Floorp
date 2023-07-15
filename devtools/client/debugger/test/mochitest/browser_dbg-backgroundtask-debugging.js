@@ -90,7 +90,6 @@ add_task(async function test_backgroundtask_debugger() {
     findElement,
     findElementWithSelector,
     getSelector,
-    getThreadContext,
     getVisibleSelectedFrameLine,
     isPaused,
     resume,

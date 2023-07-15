@@ -33,17 +33,14 @@ import {
   getIsCurrentThreadPaused,
   getSourceTextContent,
   tabExists,
-  getContext,
 } from "../../selectors";
 
 // This is only used by jest tests (and within this module)
 export const setSelectedLocation = (
-  cx,
   location,
   shouldSelectOriginalLocation
 ) => ({
   type: "SET_SELECTED_LOCATION",
-  cx,
   location,
   shouldSelectOriginalLocation,
 });
@@ -76,9 +73,8 @@ export function selectSourceURL(url, options) {
       return dispatch(setPendingSelectedLocation(url, options));
     }
 
-    const cx = getContext(getState());
     const location = createLocation({ ...options, source });
-    return dispatch(selectLocation(cx, location));
+    return dispatch(selectLocation(location));
   };
 }
 
@@ -87,20 +83,19 @@ export function selectSourceURL(url, options) {
  * Note that it ignores the currently selected source and will select
  * the precise generated/original source passed as argument.
  *
- * @param {Object} cx
  * @param {String} source
  *        The precise source to select.
  * @param {String} sourceActor
  *        The specific source actor of the source to
  *        select the source text. This is optional.
  */
-export function selectSource(cx, source, sourceActor) {
+export function selectSource(source, sourceActor) {
   return async ({ dispatch }) => {
     // `createLocation` requires a source object, but we may use selectSource to close the last tab,
     // where source will be null and the location will be an empty object.
     const location = source ? createLocation({ source, sourceActor }) : {};
 
-    return dispatch(selectSpecificLocation(cx, location));
+    return dispatch(selectSpecificLocation(location));
   };
 }
 
@@ -113,7 +108,6 @@ export function selectSource(cx, source, sourceActor) {
  * Note that by default, this may map your passed location to the original
  * or generated location based on the selected source state. (see keepContext)
  *
- * @param {Object} cx
  * @param {Object} location
  * @param {Object} options
  * @param {boolean} options.keepContext
@@ -121,7 +115,7 @@ export function selectSource(cx, source, sourceActor) {
  *        and select the generated or original location, even if we
  *        were currently selecting the other source type.
  */
-export function selectLocation(cx, location, { keepContext = true } = {}) {
+export function selectLocation(location, { keepContext = true } = {}) {
   return async thunkArgs => {
     const { dispatch, getState, client } = thunkArgs;
 
@@ -180,7 +174,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       dispatch(addTab(source, sourceActor));
     }
 
-    dispatch(setSelectedLocation(cx, location, shouldSelectOriginalLocation));
+    dispatch(setSelectedLocation(location, shouldSelectOriginalLocation));
 
     await dispatch(loadSourceText(source, sourceActor));
 
@@ -202,8 +196,8 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
       canPrettyPrintSource(getState(), location) &&
       isMinified(source, sourceTextContent)
     ) {
-      await dispatch(togglePrettyPrint(cx, loadedSource.id));
-      dispatch(closeTab(cx, loadedSource));
+      await dispatch(togglePrettyPrint(loadedSource.id));
+      dispatch(closeTab(loadedSource));
     }
 
     await dispatch(setSymbols(location));
@@ -221,13 +215,12 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
  * This will select the generated location even if the currently
  * select source is an original source. And the other way around.
  *
- * @param {Object} cx
  * @param {Object} location
  *        The location to select, object which includes enough
  *        information to specify a precise source, line and column.
  */
-export function selectSpecificLocation(cx, location) {
-  return selectLocation(cx, location, { keepContext: false });
+export function selectSpecificLocation(location) {
+  return selectLocation(location, { keepContext: false });
 }
 
 /**
@@ -238,7 +231,7 @@ export function selectSpecificLocation(cx, location) {
  * If the passed location is on an original source, select the
  * related location in the generated source.
  */
-export function jumpToMappedLocation(cx, location) {
+export function jumpToMappedLocation(location) {
   return async function (thunkArgs) {
     const { client, dispatch } = thunkArgs;
     if (!client) {
@@ -248,18 +241,18 @@ export function jumpToMappedLocation(cx, location) {
     // Map to either an original or a generated source location
     const pairedLocation = await getRelatedMapLocation(location, thunkArgs);
 
-    return dispatch(selectSpecificLocation(cx, pairedLocation));
+    return dispatch(selectSpecificLocation(pairedLocation));
   };
 }
 
 // This is only used by tests
-export function jumpToMappedSelectedLocation(cx) {
+export function jumpToMappedSelectedLocation() {
   return async function ({ dispatch, getState }) {
     const location = getSelectedLocation(getState());
     if (!location) {
       return;
     }
 
-    await dispatch(jumpToMappedLocation(cx, location));
+    await dispatch(jumpToMappedLocation(location));
   };
 }

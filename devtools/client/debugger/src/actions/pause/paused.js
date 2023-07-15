@@ -6,14 +6,13 @@ import {
   getHiddenBreakpoint,
   isEvaluatingExpression,
   getSelectedFrame,
-  getThreadContext,
 } from "../../selectors";
 
 import { mapFrames, fetchFrames } from ".";
 import { removeBreakpoint } from "../breakpoints";
 import { evaluateExpressions } from "../expressions";
 import { selectLocation } from "../sources";
-import assert from "../../utils/assert";
+import { validateSelectedFrame } from "../../utils/context";
 
 import { fetchScopes } from "./fetchScopes";
 
@@ -28,11 +27,6 @@ export function paused(pauseInfo) {
     const { thread, frame, why } = pauseInfo;
 
     dispatch({ type: "PAUSED", thread, why, topFrame: frame });
-
-    // Get a context capturing the newly paused and selected thread.
-    const cx = getThreadContext(getState());
-    // Note that this is a rethorical assertion as threadcx.thread is updated by PAUSED action
-    assert(cx.thread == thread, "Thread mismatch");
 
     // When we use "continue to here" feature we register an "hidden" breakpoint
     // that should be removed on the next paused, even if we didn't hit it and
@@ -56,7 +50,10 @@ export function paused(pauseInfo) {
     // and highlight the paused line
     const selectedFrame = getSelectedFrame(getState(), thread);
     if (selectedFrame) {
-      await dispatch(selectLocation(cx, selectedFrame.location));
+      await dispatch(selectLocation(selectedFrame.location));
+      // We might have resumed while opening the location.
+      // Prevent further computation if this happens.
+      validateSelectedFrame(getState(), selectedFrame);
 
       // Fetch the previews for variables visible in the currently selected paused stackframe
       await dispatch(fetchScopes(selectedFrame));

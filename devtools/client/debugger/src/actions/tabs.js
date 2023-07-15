@@ -44,7 +44,7 @@ export function moveTabBySourceId(sourceId, tabIndex) {
  * @memberof actions/tabs
  * @static
  */
-export function closeTab(cx, source, reason = "click") {
+export function closeTab(source, reason = "click") {
   return ({ dispatch, getState, client }) => {
     removeDocument(source.id);
 
@@ -52,7 +52,7 @@ export function closeTab(cx, source, reason = "click") {
     dispatch({ type: "CLOSE_TAB", source });
 
     const newSource = getNewSelectedSource(getState(), tabs);
-    dispatch(selectSource(cx, newSource));
+    dispatch(selectSource(newSource));
   };
 }
 
@@ -60,7 +60,7 @@ export function closeTab(cx, source, reason = "click") {
  * @memberof actions/tabs
  * @static
  */
-export function closeTabs(cx, urls) {
+export function closeTabs(urls) {
   return ({ dispatch, getState, client }) => {
     const sources = urls
       .map(url => getSourceByURL(getState(), url))
@@ -71,6 +71,6 @@ export function closeTabs(cx, urls) {
     dispatch({ type: "CLOSE_TABS", sources });
 
     const source = getNewSelectedSource(getState(), tabs);
-    dispatch(selectSource(cx, source));
+    dispatch(selectSource(source));
   };
 }

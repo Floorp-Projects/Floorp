@@ -40,7 +40,7 @@ add_task(async function () {
 
   // We can't used `stepIn` helper as this last step will resume
   // and the helper is expecting to pause again
-  await dbg.actions.stepIn(getThreadContext(dbg));
+  await dbg.actions.stepIn();
   assertNotPaused(dbg, "Stepping in two times resumes");
 
   info("Wait for reload to complete after resume");

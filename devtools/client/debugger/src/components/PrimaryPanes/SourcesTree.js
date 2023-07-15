@@ -16,7 +16,6 @@ import {
   getProjectDirectoryRootName,
   getSourcesTreeSources,
   getFocusedSourceItem,
-  getContext,
   getGeneratedSourceByURL,
   getHideIgnoredSources,
 } from "../../selectors";
@@ -108,7 +107,6 @@ class SourcesTree extends Component {
 
   static get propTypes() {
     return {
-      cx: PropTypes.object.isRequired,
       mainThreadHost: PropTypes.string.isRequired,
       expanded: PropTypes.object.isRequired,
       focusItem: PropTypes.func.isRequired,
@@ -159,7 +157,7 @@ class SourcesTree extends Component {
   }
 
   selectSourceItem = item => {
-    this.props.selectSource(this.props.cx, item.source, item.sourceActor);
+    this.props.selectSource(item.source, item.sourceActor);
   };
 
   onFocus = item => {
@@ -435,7 +433,6 @@ function getTreeLocation(state, location) {
 
 const mapStateToProps = state => {
   return {
-    cx: getContext(state),
     selectedTreeLocation: getTreeLocation(state, getSelectedLocation(state)),
     mainThreadHost: getMainThreadHost(state),
     expanded: getExpandedState(state),
