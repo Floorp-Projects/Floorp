@@ -1618,6 +1618,7 @@ static bool BytecodeIsEffectful(JSScript* script, size_t offset) {
     case JSOp::Generator:
     case JSOp::AsyncAwait:
     case JSOp::AsyncResolve:
+    case JSOp::AsyncReject:
     case JSOp::Finally:
     case JSOp::GetRval:
     case JSOp::ThrowMsg:

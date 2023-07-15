@@ -6120,6 +6120,14 @@ void LIRGenerator::visitAsyncResolve(MAsyncResolve* ins) {
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitAsyncReject(MAsyncReject* ins) {
+  auto* lir = new (alloc())
+      LAsyncReject(useRegisterAtStart(ins->generator()),
+                   useBoxAtStart(ins->reason()), useBoxAtStart(ins->stack()));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitAsyncAwait(MAsyncAwait* ins) {
   MOZ_ASSERT(ins->generator()->type() == MIRType::Object);
   auto* lir = new (alloc()) LAsyncAwait(useBoxAtStart(ins->value()),

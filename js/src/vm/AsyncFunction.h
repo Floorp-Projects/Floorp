@@ -119,9 +119,9 @@
 //   Goto BODY                       #
 //
 //   JumpTarget from try             #
-//   Exception                       # EXCEPTION
-//   GetAliasedVar ".generator"      # EXCEPTION .generator
-//   AsyncResolve 1                  # PROMISE
+//   ExceptionAndStack               # EXCEPTION STACK
+//   GetAliasedVar ".generator"      # EXCEPTION STACK .generator
+//   AsyncReject                     # PROMISE
 //   SetRval                         #
 //   GetAliasedVar ".generator"      # .generator
 //   FinalYieldRval                  #
@@ -132,9 +132,9 @@
 //   (body here)                     #
 //
 //   JumpTarget from try             #
-//   Exception                       # EXCEPTION
-//   GetAliasedVar ".generator"      # EXCEPTION .generator
-//   AsyncResolve 1                  # PROMISE
+//   ExceptionAndStack               # EXCEPTION STACK
+//   GetAliasedVar ".generator"      # EXCEPTION STACK .generator
+//   AsyncReject                     # PROMISE
 //   SetRval                         #
 //   GetAliasedVar ".generator"      # .generator
 //   FinalYieldRval                  #
@@ -296,6 +296,12 @@ JSObject* AsyncFunctionResolve(JSContext* cx,
                                Handle<AsyncFunctionGeneratorObject*> generator,
                                HandleValue valueOrReason,
                                AsyncFunctionResolveKind resolveKind);
+
+// Reject the async function's promise object with the given value and then
+// return the promise object.
+JSObject* AsyncFunctionReject(JSContext* cx,
+                              Handle<AsyncFunctionGeneratorObject*> generator,
+                              HandleValue reason, HandleValue stack);
 
 class AsyncFunctionGeneratorObject : public AbstractGeneratorObject {
  public:

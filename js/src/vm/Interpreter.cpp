@@ -3950,6 +3950,22 @@ bool MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER js::Interpret(JSContext* cx,
     }
     END_CASE(AsyncResolve)
 
+    CASE(AsyncReject) {
+      MOZ_ASSERT(REGS.stackDepth() >= 3);
+      ReservedRooted<JSObject*> gen(&rootObject1, &REGS.sp[-1].toObject());
+      ReservedRooted<Value> stack(&rootValue0, REGS.sp[-2]);
+      ReservedRooted<Value> reason(&rootValue1, REGS.sp[-3]);
+      JSObject* promise = AsyncFunctionReject(
+          cx, gen.as<AsyncFunctionGeneratorObject>(), reason, stack);
+      if (!promise) {
+        goto error;
+      }
+
+      REGS.sp -= 2;
+      REGS.sp[-1].setObject(*promise);
+    }
+    END_CASE(AsyncReject)
+
     CASE(SetFunName) {
       MOZ_ASSERT(REGS.stackDepth() >= 2);
       FunctionPrefixKind prefixKind = FunctionPrefixKind(GET_UINT8(REGS.pc));
