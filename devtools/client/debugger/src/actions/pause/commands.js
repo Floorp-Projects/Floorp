@@ -45,7 +45,7 @@ export function selectThread(thread) {
       serverRequests.push(
         dispatch(selectLocation(threadcx, selectedFrame.location))
       );
-      serverRequests.push(dispatch(fetchFrames(threadcx)));
+      serverRequests.push(dispatch(fetchFrames(thread)));
 
       serverRequests.push(dispatch(fetchScopes(selectedFrame)));
     }
