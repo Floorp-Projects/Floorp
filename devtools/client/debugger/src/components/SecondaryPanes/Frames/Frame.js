@@ -98,8 +98,8 @@ export default class FrameComponent extends Component {
     event.stopPropagation();
     event.preventDefault();
 
-    const { frame, cx } = this.props;
-    this.props.showFrameContextMenu(event, frame, cx);
+    const { frame } = this.props;
+    this.props.showFrameContextMenu(event, frame);
   }
 
   onMouseDown(e, frame, selectedFrame) {

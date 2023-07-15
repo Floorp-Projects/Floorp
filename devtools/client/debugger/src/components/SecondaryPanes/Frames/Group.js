@@ -65,9 +65,9 @@ export default class Group extends Component {
   }
 
   onContextMenu(event) {
-    const { group, cx } = this.props;
+    const { group } = this.props;
     const frame = group[0];
-    this.props.showFrameContextMenu(event, frame, cx, true);
+    this.props.showFrameContextMenu(event, frame, true);
   }
 
   toggleFrames = event => {
