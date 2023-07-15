@@ -33,7 +33,8 @@ class ToastNotificationHandler final
                            const nsAString& aMsg, const nsAString& aHostPort,
                            bool aClickable, bool aRequireInteraction,
                            const nsTArray<RefPtr<nsIAlertAction>>& aActions,
-                           bool aIsSystemPrincipal, const nsAString& aLaunchUrl,
+                           bool aIsSystemPrincipal,
+                           const nsAString& aOpaqueRelaunchData,
                            bool aInPrivateBrowsing, bool aIsSilent)
       : mBackend(backend),
         mAumid(aumid),
@@ -49,7 +50,7 @@ class ToastNotificationHandler final
         mInPrivateBrowsing(aInPrivateBrowsing),
         mActions(aActions.Clone()),
         mIsSystemPrincipal(aIsSystemPrincipal),
-        mLaunchUrl(aLaunchUrl),
+        mOpaqueRelaunchData(aOpaqueRelaunchData),
         mIsSilent(aIsSilent),
         mSentFinished(!aAlertListener) {}
 
@@ -62,15 +63,18 @@ class ToastNotificationHandler final
 
   void UnregisterHandler();
 
+  nsString ActionArgsJSONString(
+      const nsString& aAction,
+      const nsString& aOpaqueRelaunchData /* = u""_ns */);
   nsresult CreateToastXmlString(const nsAString& aImageURL, nsAString& aString);
 
   nsresult GetWindowsTag(nsAString& aWindowsTag);
   nsresult SetWindowsTag(const nsAString& aWindowsTag);
 
   // Exposed for consumption by `ToastNotification.cpp`.
-  static nsresult FindLaunchURLAndPrivilegedNameForWindowsTag(
+  static nsresult FindNotificationDataForWindowsTag(
       const nsAString& aWindowsTag, const nsAString& aAumid, bool& aFoundTag,
-      nsAString& aLaunchUrl, nsAString& aPrivilegedName);
+      nsAString& aNotificationData);
 
  protected:
   virtual ~ToastNotificationHandler();
@@ -117,7 +121,7 @@ class ToastNotificationHandler final
   bool mInPrivateBrowsing;
   nsTArray<RefPtr<nsIAlertAction>> mActions;
   bool mIsSystemPrincipal;
-  nsString mLaunchUrl;
+  nsString mOpaqueRelaunchData;
   bool mIsSilent;
   bool mSentFinished;
 
@@ -138,9 +142,6 @@ class ToastNotificationHandler final
   HRESULT OnFail(const ComPtr<IToastNotification>& notification,
                  const ComPtr<IToastFailedEventArgs>& aArgs);
 
-  static HRESULT GetLaunchArgumentValueForKey(
-      const ComPtr<IToastNotification> toast, const nsAString& key,
-      nsAString& value);
   static ComPtr<IToastNotification> FindNotificationByTag(
       const nsAString& aWindowsTag, const nsAString& aAumid);
 };

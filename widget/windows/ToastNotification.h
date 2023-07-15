@@ -17,11 +17,7 @@
 namespace mozilla {
 namespace widget {
 
-struct ToastHandledResolve {
-  const nsString launchUrl;
-  const nsString privilegedName;
-};
-using ToastHandledPromise = MozPromise<ToastHandledResolve, bool, true>;
+using ToastHandledPromise = MozPromise<bool, bool, true>;
 
 class ToastNotificationHandler;
 

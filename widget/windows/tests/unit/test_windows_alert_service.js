@@ -53,6 +53,9 @@ function makeAlert(options) {
   if (options.actions) {
     alert.actions = options.actions;
   }
+  if (options.opaqueRelaunchData) {
+    alert.opaqueRelaunchData = options.opaqueRelaunchData;
+  }
   return alert;
 }
 
@@ -118,6 +121,15 @@ function parseLaunchAndActions(s) {
 
     for (var name of names) {
       let value = actionElement.getAttribute(name);
+
+      // Here is where we parse stringified-JSON to simplify comparisons.
+      if (value.startsWith("{")) {
+        value = JSON.parse(value);
+        if ("opaqueRelaunchData" in value) {
+          value.opaqueRelaunchData = JSON.parse(value.opaqueRelaunchData);
+        }
+      }
+
       if (name == "arguments" && !systemActivationType) {
         action[name] = parseOneEncoded(value);
       } else {
@@ -136,8 +148,26 @@ function parseLaunchAndActions(s) {
   return [new XMLSerializer().serializeToString(document), { launch, actions }];
 }
 
+function escape(s) {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "&#xA;");
+}
+
+function unescape(s) {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&#xA;/g, "\n");
+}
+
 function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
-  let argumentString = (argument, launchUrl, privilegedName) => {
+  let argumentString = action => {
     // &#xA; is "\n".
     let s = ``;
     if (serverEnabled) {
@@ -148,28 +178,18 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     if (serverEnabled && profD) {
       s += `&#xA;profile&#xA;${profD.path}`;
     }
-    if (serverEnabled && launchUrl) {
-      s += `&#xA;launchUrl&#xA;${launchUrl}`;
-    }
-    if (serverEnabled && privilegedName) {
-      s += `&#xA;privilegedName&#xA;${privilegedName}`;
-    }
     if (serverEnabled) {
       s += "&#xA;windowsTag&#xA;";
     }
-    if (argument) {
-      s += `&#xA;action&#xA;${argument}`;
+    if (action) {
+      s += `&#xA;action&#xA;${escape(JSON.stringify(action))}`;
     }
+
     return s;
   };
 
-  let parsedArgumentString = (argument, launchUrl, privilegedName) =>
-    parseOneEncoded(
-      argumentString(argument, launchUrl, privilegedName).replaceAll(
-        "&#xA;",
-        "\n"
-      )
-    );
+  let parsedArgumentString = action =>
+    parseOneEncoded(unescape(argumentString(action)));
 
   let settingsAction = isBackgroundTaskMode
     ? ""
@@ -184,7 +204,16 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
       content,
       {
         content,
-        arguments: parsedArgumentString("settings", hostport),
+        arguments: parsedArgumentString(
+          Object.assign(
+            {
+              action: "settings",
+            },
+            hostport && {
+              launchUrl: hostport,
+            }
+          )
+        ),
         placement: "contextmenu",
       },
     ];
@@ -196,7 +225,16 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
       content,
       {
         content,
-        arguments: parsedArgumentString("snooze", hostport),
+        arguments: parsedArgumentString(
+          Object.assign(
+            {
+              action: "snooze",
+            },
+            hostport && {
+              launchUrl: hostport,
+            }
+          )
+        ),
         placement: "contextmenu",
       },
     ];
@@ -214,6 +252,7 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     { action: "action1", title: "title1", iconURL: "file:///iconURL1.png" },
     { action: "action2", title: "title2", iconURL: "file:///iconURL2.png" },
   ];
+  let opaqueRelaunchData = { foo: 1, bar: "two" };
 
   let alert = makeAlert({ name, title, text });
   let expected = `<toast launch="launch"><visual><binding template="ToastText03"><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}</actions></toast>`;
@@ -221,7 +260,7 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     [
       expected.replace("<actions></actions>", "<actions/>"),
       {
-        launch: parsedArgumentString(),
+        launch: parsedArgumentString({ action: "" }),
         actions: Object.fromEntries(
           [parsedSettingsAction()].filter(x => x.length)
         ),
@@ -237,7 +276,7 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     [
       expected.replace("<actions></actions>", "<actions/>"),
       {
-        launch: parsedArgumentString(),
+        launch: parsedArgumentString({ action: "" }),
         actions: Object.fromEntries(
           [parsedSettingsAction()].filter(x => x.length)
         ),
@@ -253,7 +292,7 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     [
       expected.replace("<actions></actions>", "<actions/>"),
       {
-        launch: parsedArgumentString(),
+        launch: parsedArgumentString({ action: "" }),
         actions: Object.fromEntries(
           [parsedSettingsAction()].filter(x => x.length)
         ),
@@ -269,17 +308,23 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     [
       expected.replace("<actions></actions>", "<actions/>"),
       {
-        launch: parsedArgumentString(),
+        launch: parsedArgumentString({ action: "" }),
         actions: Object.fromEntries(
           [
             parsedSettingsAction(),
             [
               "title1",
-              { content: "title1", arguments: parsedArgumentString("action1") },
+              {
+                content: "title1",
+                arguments: parsedArgumentString({ action: "action1" }),
+              },
             ],
             [
               "title2",
-              { content: "title2", arguments: parsedArgumentString("action2") },
+              {
+                content: "title2",
+                arguments: parsedArgumentString({ action: "action2" }),
+              },
             ],
           ].filter(x => x.length)
         ),
@@ -317,7 +362,10 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
         "Notification settings",
         {
           content: "Notification settings",
-          arguments: parsedArgumentString("settings", null, name),
+          arguments: parsedArgumentString({
+            action: "settings",
+            privilegedName: name,
+          }),
           placement: "contextmenu",
         },
       ];
@@ -327,7 +375,7 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     [
       expected.replace("<actions></actions>", "<actions/>"),
       {
-        launch: parsedArgumentString(null, null, name),
+        launch: parsedArgumentString({ action: "", privilegedName: name }),
         actions: Object.fromEntries(
           [
             parsedSettingsActionWithPrivilegedName,
@@ -376,7 +424,10 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     [
       expected.replace("<actions></actions>", "<actions/>"),
       {
-        launch: parsedArgumentString(null, principaluri.hostPort),
+        launch: parsedArgumentString({
+          action: "",
+          launchUrl: principaluri.hostPort,
+        }),
         actions: Object.fromEntries(
           [
             parsedSnoozeAction(principaluri.hostPort),
@@ -385,20 +436,20 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
               "dismissTitle",
               {
                 content: "dismissTitle",
-                arguments: parsedArgumentString(
-                  "dismiss",
-                  principaluri.hostPort
-                ),
+                arguments: parsedArgumentString({
+                  action: "dismiss",
+                  launchUrl: principaluri.hostPort,
+                }),
               },
             ],
             [
               "snoozeTitle",
               {
                 content: "snoozeTitle",
-                arguments: parsedArgumentString(
-                  "snooze",
-                  principaluri.hostPort
-                ),
+                arguments: parsedArgumentString({
+                  action: "snooze",
+                  launchUrl: principaluri.hostPort,
+                }),
               },
             ],
           ].filter(x => x.length)
@@ -409,34 +460,127 @@ function testAlert(when, { serverEnabled, profD, isBackgroundTaskMode } = {}) {
     when
   );
 
-  // Chrome privileged alerts can set a launch URL.
+  // Chrome privileged alerts can set `opaqueRelaunchData`.
   alert = makeAlert({
     name,
     title,
     text,
     imageURL,
     principal: systemPrincipal,
+    opaqueRelaunchData: JSON.stringify(opaqueRelaunchData),
   });
-  alert.launchURL = launchUrl;
-  let parsedSettingsActionWithLaunchUrl = isBackgroundTaskMode
-    ? []
-    : [
-        "Notification settings",
-        {
-          content: "Notification settings",
-          arguments: parsedArgumentString("settings", launchUrl, name),
-          placement: "contextmenu",
-        },
-      ];
-
   expected = `<toast launch="launch"><visual><binding template="ToastGeneric"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}</actions></toast>`;
   Assert.deepEqual(
     [
       expected.replace("<actions></actions>", "<actions/>"),
       {
-        launch: parsedArgumentString(null, launchUrl, name),
+        launch: parsedArgumentString({
+          action: "",
+          opaqueRelaunchData: JSON.stringify(opaqueRelaunchData),
+          privilegedName: name,
+        }),
         actions: Object.fromEntries(
-          [parsedSettingsActionWithLaunchUrl].filter(x => x.length)
+          [parsedSettingsActionWithPrivilegedName].filter(x => x.length)
+        ),
+      },
+    ],
+    parseLaunchAndActions(alertsService.getXmlStringForWindowsAlert(alert)),
+    when
+  );
+
+  // But content unprivileged alerts can't set `opaqueRelaunchData`.
+  alert = makeAlert({
+    name,
+    title,
+    text,
+    imageURL,
+    principal,
+    opaqueRelaunchData: JSON.stringify(opaqueRelaunchData),
+  });
+  expected = `<toast launch="launch"><visual><binding template="ToastImageAndText04"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text><text id="3" placement="attribution">via example.com</text></binding></visual><actions><action content="Disable notifications from example.com"/>${settingsAction}</actions></toast>`;
+  Assert.deepEqual(
+    [
+      expected.replace("<actions></actions>", "<actions/>"),
+      {
+        launch: parsedArgumentString({
+          action: "",
+          launchUrl: principaluri.hostPort,
+        }),
+        actions: Object.fromEntries(
+          [
+            parsedSnoozeAction(principaluri.hostPort),
+            parsedSettingsAction(principaluri.hostPort),
+          ].filter(x => x.length)
+        ),
+      },
+    ],
+    parseLaunchAndActions(alertsService.getXmlStringForWindowsAlert(alert)),
+    when
+  );
+
+  // Chrome privileged alerts can set action-specific relaunch parameters.
+  let systemRelaunchActions = [
+    {
+      action: "action1",
+      title: "title1",
+      opaqueRelaunchData: JSON.stringify({ json: "data1" }),
+    },
+    {
+      action: "action2",
+      title: "title2",
+      opaqueRelaunchData: JSON.stringify({ json: "data2" }),
+    },
+  ];
+  systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+  alert = makeAlert({
+    name,
+    title,
+    text,
+    imageURL,
+    principal: systemPrincipal,
+    actions: systemRelaunchActions,
+  });
+  expected = `<toast launch="launch"><visual><binding template="ToastGeneric"><image id="1" src="file:///image.png"/><text id="1">title</text><text id="2">text</text></binding></visual><actions>${settingsAction}<action content="title1"/><action content="title2"/></actions></toast>`;
+  Assert.deepEqual(
+    [
+      expected.replace("<actions></actions>", "<actions/>"),
+      {
+        launch: parsedArgumentString({ action: "", privilegedName: name }),
+        actions: Object.fromEntries(
+          [
+            parsedSettingsActionWithPrivilegedName,
+            [
+              "title1",
+              {
+                content: "title1",
+                arguments: parsedArgumentString(
+                  {
+                    action: "action1",
+                    opaqueRelaunchData: JSON.stringify({ json: "data1" }),
+                    privilegedName: name,
+                  },
+                  null,
+                  name
+                ),
+              },
+            ],
+
+            [
+              "title2",
+              {
+                content: "title2",
+                arguments: parsedArgumentString(
+                  {
+                    action: "action2",
+                    opaqueRelaunchData: JSON.stringify({ json: "data2" }),
+                    privilegedName: name,
+                  },
+                  null,
+                  name
+                ),
+              },
+            ],
+          ].filter(x => x.length)
         ),
       },
     ],
