@@ -99,6 +99,14 @@ export function validateBreakpoint(state, breakpoint) {
   }
 }
 
+export function validateSource(state, source) {
+  if (!hasSource(state, source.id)) {
+    throw new ContextError(
+      `Obsolete source (source '${source.id}' no longer exists)`
+    );
+  }
+}
+
 export function isValidThreadContext(state, cx) {
   const newcx = getThreadContext(state);
   return cx.thread == newcx.thread && cx.pauseCounter == newcx.pauseCounter;
