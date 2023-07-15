@@ -37,6 +37,7 @@ INotificationActivationCallback : public IUnknown {
 struct ToastArgs {
   std::wstring profile;
   std::wstring windowsTag;
+  std::wstring action;
 };
 
 class NotificationCallback final
