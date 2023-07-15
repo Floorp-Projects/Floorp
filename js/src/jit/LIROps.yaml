@@ -862,6 +862,12 @@
     value: BoxedValue
   call_instruction: true
 
+- name: ThrowWithStack
+  operands:
+    value: BoxedValue
+    stack: BoxedValue
+  call_instruction: true
+
 - name: MinMaxI
   gen_boilerplate: false
 

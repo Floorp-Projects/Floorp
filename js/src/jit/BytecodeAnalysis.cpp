@@ -246,6 +246,7 @@ bool BytecodeAnalysis::init(TempAllocator& alloc) {
 
 #ifdef DEBUG
       case JSOp::Exception:
+      case JSOp::ExceptionAndStack:
         // Sanity check: ops only emitted in catch blocks are never
         // normally reachable.
         MOZ_ASSERT(!normallyReachable);

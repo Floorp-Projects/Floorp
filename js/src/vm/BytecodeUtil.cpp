@@ -2095,6 +2095,9 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
       case JSOp::Exception:
         return write("EXCEPTION");
 
+      case JSOp::ExceptionAndStack:
+        return write("EXCEPTION_AND_STACK");
+
       case JSOp::Try:
         // Used for the values live on entry to the finally block.
         // See TryNoteKind::Finally above.
