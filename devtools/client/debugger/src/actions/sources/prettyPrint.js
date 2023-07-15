@@ -304,7 +304,7 @@ export function togglePrettyPrint(cx, sourceId) {
       source.id
     );
 
-    await dispatch(loadGeneratedSourceText({ cx, sourceActor }));
+    await dispatch(loadGeneratedSourceText(sourceActor));
 
     const url = getPrettySourceURL(source.url);
     const prettySource = getSourceByURL(getState(), url);
@@ -318,7 +318,7 @@ export function togglePrettyPrint(cx, sourceId) {
     // Force loading the pretty source/original text.
     // This will end up calling prettyPrintSource() of this module, and
     // more importantly, will populate the sourceMapLoader, which is used by selectPrettyLocation.
-    await dispatch(loadOriginalSourceText({ cx, source: newPrettySource }));
+    await dispatch(loadOriginalSourceText(newPrettySource));
     // Select the pretty/original source based on the location we may
     // have had against the minified/generated source.
     // This uses source map to map locations.
@@ -332,7 +332,7 @@ export function togglePrettyPrint(cx, sourceId) {
     // Update frames to the new pretty/original source (in case we were paused)
     await dispatch(mapFrames(threadcx));
     // Update breakpoints locations to the new pretty/original source
-    await dispatch(updateBreakpointsForNewPrettyPrintedSource(cx, sourceId));
+    await dispatch(updateBreakpointsForNewPrettyPrintedSource(sourceId));
 
     return newPrettySource;
   };

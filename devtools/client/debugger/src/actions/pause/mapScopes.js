@@ -8,7 +8,6 @@ import {
   getSelectedFrame,
   getGeneratedFrameScope,
   getOriginalFrameScope,
-  getThreadContext,
   getFirstSourceActorForGeneratedSource,
   getCurrentThread,
 } from "../../selectors";
@@ -128,9 +127,8 @@ export function mapScopes(selectedFrame, scopes) {
         // in scope and so only need a thread context. Assert that we are on the same thread
         // before retrieving a thread context.
         validateSelectedFrame(getState(), selectedFrame);
-        const threadCx = getThreadContext(getState());
 
-        return dispatch(getMappedScopes(threadCx, scopes, selectedFrame));
+        return dispatch(getMappedScopes(scopes, selectedFrame));
       })(),
     });
   };
@@ -139,14 +137,12 @@ export function mapScopes(selectedFrame, scopes) {
 /**
  * Get scopes mapped for a precise location.
  *
- * @param {Object} threadCx
- *        Context specific to a given thread.
  * @param {Promise} scopes
  *        Can be null. Result of Commands.js's client.getFrameScopes
  * @param {Objects locations
  *        Frame object, or custom object with 'location' and 'generatedLocation' attributes.
  */
-export function getMappedScopes(threadCx, scopes, locations) {
+export function getMappedScopes(scopes, locations) {
   return async function (thunkArgs) {
     const { getState, dispatch } = thunkArgs;
     const generatedSource = locations.generatedLocation.source;
@@ -164,7 +160,7 @@ export function getMappedScopes(threadCx, scopes, locations) {
     }
 
     // Load source text for the original source
-    await dispatch(loadOriginalSourceText({ cx: threadCx, source }));
+    await dispatch(loadOriginalSourceText(source));
 
     const generatedSourceActor = getFirstSourceActorForGeneratedSource(
       getState(),
@@ -172,12 +168,7 @@ export function getMappedScopes(threadCx, scopes, locations) {
     );
 
     // Also load source text for its corresponding generated source
-    await dispatch(
-      loadGeneratedSourceText({
-        cx: threadCx,
-        sourceActor: generatedSourceActor,
-      })
-    );
+    await dispatch(loadGeneratedSourceText(generatedSourceActor));
 
     try {
       const content =
@@ -205,9 +196,8 @@ export function getMappedScopes(threadCx, scopes, locations) {
  */
 export function getMappedScopesForLocation(location) {
   return async function (thunkArgs) {
-    const { dispatch, getState } = thunkArgs;
-    const threadCx = getThreadContext(getState());
+    const { dispatch } = thunkArgs;
     const mappedLocation = await getMappedLocation(location, thunkArgs);
-    return dispatch(getMappedScopes(threadCx, null, mappedLocation));
+    return dispatch(getMappedScopes(null, mappedLocation));
   };
 }

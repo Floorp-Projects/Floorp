@@ -78,50 +78,47 @@ async function loadOriginalSource(
   return result;
 }
 
-async function loadGeneratedSourceTextPromise(cx, sourceActor, thunkArgs) {
+async function loadGeneratedSourceTextPromise(sourceActor, thunkArgs) {
   const { dispatch, getState } = thunkArgs;
   const epoch = getSourcesEpoch(getState());
 
   await dispatch({
     type: "LOAD_GENERATED_SOURCE_TEXT",
-    sourceActorId: sourceActor.actor,
+    sourceActor,
     epoch,
     [PROMISE]: loadGeneratedSource(sourceActor, thunkArgs),
   });
 
   await onSourceTextContentAvailable(
-    cx,
     sourceActor.sourceObject,
     sourceActor,
     thunkArgs
   );
 }
 
-async function loadOriginalSourceTextPromise(cx, source, thunkArgs) {
+async function loadOriginalSourceTextPromise(source, thunkArgs) {
   const { dispatch, getState } = thunkArgs;
   const epoch = getSourcesEpoch(getState());
   await dispatch({
     type: "LOAD_ORIGINAL_SOURCE_TEXT",
-    sourceId: source.id,
+    source,
     epoch,
     [PROMISE]: loadOriginalSource(source, thunkArgs),
   });
 
-  await onSourceTextContentAvailable(cx, source, null, thunkArgs);
+  await onSourceTextContentAvailable(source, null, thunkArgs);
 }
 
 /**
  * Function called everytime a new original or generated source gets its text content
  * fetched from the server and registered in the reducer.
  *
- * @param {Object} cx
  * @param {Object} source
  * @param {Object} sourceActor (optional)
  *        If this is a generated source, we expect a precise source actor.
  * @param {Object} thunkArgs
  */
 async function onSourceTextContentAvailable(
-  cx,
   source,
   sourceActor,
   { dispatch, getState, parserWorker }
@@ -149,7 +146,6 @@ async function onSourceTextContentAvailable(
   for (const breakpoint of breakpoints) {
     await dispatch(
       addBreakpoint(
-        cx,
         breakpoint.location,
         breakpoint.options,
         breakpoint.disabled
@@ -169,7 +165,7 @@ async function onSourceTextContentAvailable(
 export const loadGeneratedSourceText = memoizeableAction(
   "loadGeneratedSourceText",
   {
-    getValue: ({ sourceActor }, { getState }) => {
+    getValue: (sourceActor, { getState }) => {
       if (!sourceActor) {
         return null;
       }
@@ -191,12 +187,12 @@ export const loadGeneratedSourceText = memoizeableAction(
       // propagate that error upward.
       return fulfilled(sourceTextContent);
     },
-    createKey: ({ sourceActor }, { getState }) => {
+    createKey: (sourceActor, { getState }) => {
       const epoch = getSourcesEpoch(getState());
       return `${epoch}:${sourceActor.actor}`;
     },
-    action: ({ cx, sourceActor }, thunkArgs) =>
-      loadGeneratedSourceTextPromise(cx, sourceActor, thunkArgs),
+    action: (sourceActor, thunkArgs) =>
+      loadGeneratedSourceTextPromise(sourceActor, thunkArgs),
   }
 );
 
@@ -208,7 +204,7 @@ export const loadGeneratedSourceText = memoizeableAction(
 export const loadOriginalSourceText = memoizeableAction(
   "loadOriginalSourceText",
   {
-    getValue: ({ source }, { getState }) => {
+    getValue: (source, { getState }) => {
       if (!source) {
         return null;
       }
@@ -228,22 +224,22 @@ export const loadOriginalSourceText = memoizeableAction(
       // propagate that error upward.
       return fulfilled(sourceTextContent);
     },
-    createKey: ({ source }, { getState }) => {
+    createKey: (source, { getState }) => {
       const epoch = getSourcesEpoch(getState());
       return `${epoch}:${source.id}`;
     },
-    action: ({ cx, source }, thunkArgs) =>
-      loadOriginalSourceTextPromise(cx, source, thunkArgs),
+    action: (source, thunkArgs) =>
+      loadOriginalSourceTextPromise(source, thunkArgs),
   }
 );
 
-export function loadSourceText(cx, source, sourceActor) {
+export function loadSourceText(source, sourceActor) {
   return async ({ dispatch, getState }) => {
     if (!source) {
       return null;
     }
     if (source.isOriginal) {
-      return dispatch(loadOriginalSourceText({ cx, source }));
+      return dispatch(loadOriginalSourceText(source));
     }
     if (!sourceActor) {
       sourceActor = getFirstSourceActorForGeneratedSource(
@@ -251,6 +247,6 @@ export function loadSourceText(cx, source, sourceActor) {
         source.id
       );
     }
-    return dispatch(loadGeneratedSourceText({ cx, sourceActor }));
+    return dispatch(loadGeneratedSourceText(sourceActor));
   };
 }

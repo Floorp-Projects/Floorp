@@ -15,7 +15,6 @@ import {
   getClosestBreakpoint,
   getConditionalPanelLocation,
   getLogPointStatus,
-  getContext,
 } from "../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
@@ -42,7 +41,6 @@ export class ConditionalPanel extends PureComponent {
     return {
       breakpoint: PropTypes.object,
       closeConditionalPanel: PropTypes.func.isRequired,
-      cx: PropTypes.object.isRequired,
       editor: PropTypes.object.isRequired,
       location: PropTypes.any.isRequired,
       log: PropTypes.bool.isRequired,
@@ -78,7 +76,7 @@ export class ConditionalPanel extends PureComponent {
   };
 
   setBreakpoint(value) {
-    const { cx, log, breakpoint } = this.props;
+    const { log, breakpoint } = this.props;
     // If breakpoint is `pending`, props will not contain a breakpoint.
     // If source is a URL without location, breakpoint will contain no generatedLocation.
     const location =
@@ -87,7 +85,7 @@ export class ConditionalPanel extends PureComponent {
         : this.props.location;
     const options = breakpoint ? breakpoint.options : {};
     const type = log ? "logValue" : "condition";
-    return this.props.setBreakpointOptions(cx, location, {
+    return this.props.setBreakpointOptions(location, {
       ...options,
       [type]: value,
     });
@@ -255,7 +253,6 @@ const mapStateToProps = state => {
   const breakpoint = getClosestBreakpoint(state, location);
 
   return {
-    cx: getContext(state),
     breakpoint,
     location,
     log: getLogPointStatus(state),

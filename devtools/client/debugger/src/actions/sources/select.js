@@ -182,7 +182,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
 
     dispatch(setSelectedLocation(cx, location, shouldSelectOriginalLocation));
 
-    await dispatch(loadSourceText(cx, source, sourceActor));
+    await dispatch(loadSourceText(source, sourceActor));
 
     await dispatch(setBreakableLines(cx, location));
 

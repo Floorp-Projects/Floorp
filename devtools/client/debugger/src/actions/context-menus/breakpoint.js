@@ -215,7 +215,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       disabled: false,
       click: () =>
         dispatch(
-          setBreakpointOptions(cx, selectedLocation, {
+          setBreakpointOptions(selectedLocation, {
             ...breakpoint.options,
             condition: null,
           })
@@ -228,7 +228,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       disabled: false,
       click: () =>
         dispatch(
-          setBreakpointOptions(cx, selectedLocation, {
+          setBreakpointOptions(selectedLocation, {
             ...breakpoint.options,
             condition: "false",
           })
@@ -242,7 +242,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       disabled: false,
       click: () =>
         dispatch(
-          setBreakpointOptions(cx, selectedLocation, {
+          setBreakpointOptions(selectedLocation, {
             ...breakpoint.options,
             condition: null,
           })
@@ -310,7 +310,7 @@ export function showBreakpointContextMenu(event, breakpoint, source) {
       disabled: false,
       click: () =>
         dispatch(
-          setBreakpointOptions(cx, selectedLocation, {
+          setBreakpointOptions(selectedLocation, {
             ...breakpoint.options,
             logValue: null,
           })

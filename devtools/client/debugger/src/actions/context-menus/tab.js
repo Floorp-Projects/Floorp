@@ -125,7 +125,7 @@ export function showTabContextMenu(event, source) {
             ? L10N.getStr("ignoreContextItem.unignore")
             : L10N.getStr("ignoreContextItem.ignore"),
           disabled: isSourceOnIgnoreList || !shouldBlackbox(source),
-          click: () => dispatch(toggleBlackBox(cx, source)),
+          click: () => dispatch(toggleBlackBox(source)),
         },
       },
       {

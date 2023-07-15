@@ -17,19 +17,19 @@ describe("blackbox", () => {
       blackBox: async () => true,
       getSourceActorBreakableLines: async () => [],
     });
-    const { dispatch, getState, cx } = store;
+    const { dispatch, getState } = store;
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo"))
     );
-    await dispatch(actions.toggleBlackBox(cx, fooSource));
+    await dispatch(actions.toggleBlackBox(fooSource));
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(true);
 
     let blackboxRanges = selectors.getBlackBoxRanges(getState());
     expect(blackboxRanges[fooSource.url]).toEqual([]);
 
-    await dispatch(actions.toggleBlackBox(cx, fooSource));
+    await dispatch(actions.toggleBlackBox(fooSource));
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(false);
 
@@ -42,7 +42,7 @@ describe("blackbox", () => {
       blackBox: async () => true,
       getSourceActorBreakableLines: async () => [],
     });
-    const { dispatch, getState, cx } = store;
+    const { dispatch, getState } = store;
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo"))
@@ -55,7 +55,7 @@ describe("blackbox", () => {
     expect(blackboxRanges[fooSource.url]).toEqual(undefined);
 
     // should blackbox the whole source
-    await dispatch(actions.toggleBlackBox(cx, fooSource, true, []));
+    await dispatch(actions.toggleBlackBox(fooSource, true, []));
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(true);
 
@@ -63,7 +63,7 @@ describe("blackbox", () => {
     expect(blackboxRanges[fooSource.url]).toEqual([]);
 
     // should unblackbox the whole source
-    await dispatch(actions.toggleBlackBox(cx, fooSource, false, []));
+    await dispatch(actions.toggleBlackBox(fooSource, false, []));
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(false);
 
@@ -76,7 +76,7 @@ describe("blackbox", () => {
       blackBox: async () => true,
       getSourceActorBreakableLines: async () => [],
     });
-    const { dispatch, getState, cx } = store;
+    const { dispatch, getState } = store;
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo"))
@@ -92,7 +92,7 @@ describe("blackbox", () => {
       end: { line: 7, column: 6 },
     };
 
-    await dispatch(actions.toggleBlackBox(cx, fooSource, true, [range1]));
+    await dispatch(actions.toggleBlackBox(fooSource, true, [range1]));
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(true);
 
@@ -100,7 +100,7 @@ describe("blackbox", () => {
     expect(blackboxRanges[fooSource.url]).toEqual([range1]);
 
     // add new blackbox lines in the second range
-    await dispatch(actions.toggleBlackBox(cx, fooSource, true, [range2]));
+    await dispatch(actions.toggleBlackBox(fooSource, true, [range2]));
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(true);
 
@@ -109,7 +109,7 @@ describe("blackbox", () => {
     expect(blackboxRanges[fooSource.url]).toEqual([range2, range1]);
 
     // un-blackbox lines in the first range
-    await dispatch(actions.toggleBlackBox(cx, fooSource, false, [range1]));
+    await dispatch(actions.toggleBlackBox(fooSource, false, [range1]));
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(true);
 
@@ -117,7 +117,7 @@ describe("blackbox", () => {
     expect(blackboxRanges[fooSource.url]).toEqual([range2]);
 
     // un-blackbox lines in the second range
-    await dispatch(actions.toggleBlackBox(cx, fooSource, false, [range2]));
+    await dispatch(actions.toggleBlackBox(fooSource, false, [range2]));
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(false);
 
@@ -130,7 +130,7 @@ describe("blackbox", () => {
       blackBox: async () => true,
       getSourceActorBreakableLines: async () => [],
     });
-    const { dispatch, getState, cx } = store;
+    const { dispatch, getState } = store;
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo"))
@@ -146,9 +146,7 @@ describe("blackbox", () => {
       end: { line: 7, column: 6 },
     };
 
-    await dispatch(
-      actions.toggleBlackBox(cx, fooSource, true, [range1, range2])
-    );
+    await dispatch(actions.toggleBlackBox(fooSource, true, [range1, range2]));
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(true);
 
@@ -157,7 +155,7 @@ describe("blackbox", () => {
     expect(blackboxRanges[fooSource.url]).toEqual([range2, range1]);
 
     // un-blackbox the whole source
-    await dispatch(actions.toggleBlackBox(cx, fooSource));
+    await dispatch(actions.toggleBlackBox(fooSource));
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(false);
 
@@ -224,7 +222,7 @@ describe("blackbox", () => {
       },
       loadInitialState()
     );
-    const { dispatch, getState, cx } = store;
+    const { dispatch, getState } = store;
 
     const fooSource = await dispatch(
       actions.newGeneratedSource(makeSource("foo"))
@@ -238,7 +236,7 @@ describe("blackbox", () => {
 
     //unblackbox the blackboxed line
     await dispatch(
-      actions.toggleBlackBox(cx, fooSource, false, mockFooSourceRange)
+      actions.toggleBlackBox(fooSource, false, mockFooSourceRange)
     );
 
     expect(selectors.isSourceBlackBoxed(getState(), fooSource)).toEqual(false);

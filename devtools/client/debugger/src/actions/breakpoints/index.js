@@ -34,9 +34,9 @@ export * from "./breakpointPositions";
 export * from "./modify";
 export * from "./syncBreakpoint";
 
-export function addHiddenBreakpoint(cx, location) {
+export function addHiddenBreakpoint(location) {
   return ({ dispatch }) => {
-    return dispatch(addBreakpoint(cx, location, { hidden: true }));
+    return dispatch(addBreakpoint(location, { hidden: true }));
   };
 }
 
@@ -169,10 +169,9 @@ export function removeBreakpointsInSource(source) {
  * non-pretty-printed (generated) source to the related pretty-printed
  * (original) source by querying the SourceMap service.
  *
- * @param {Objeect} cx
  * @param {String} sourceId - the generated source id
  */
-export function updateBreakpointsForNewPrettyPrintedSource(cx, sourceId) {
+export function updateBreakpointsForNewPrettyPrintedSource(sourceId) {
   return async thunkArgs => {
     const { dispatch, getState } = thunkArgs;
     if (isOriginalId(sourceId)) {
@@ -201,12 +200,12 @@ export function updateBreakpointsForNewPrettyPrintedSource(cx, sourceId) {
     }
 
     for (const bp of newBreakpoints) {
-      await dispatch(addBreakpoint(cx, bp.location, bp.options, bp.disabled));
+      await dispatch(addBreakpoint(bp.location, bp.options, bp.disabled));
     }
   };
 }
 
-export function toggleBreakpointAtLine(cx, line) {
+export function toggleBreakpointAtLine(line) {
   return ({ dispatch, getState }) => {
     const state = getState();
     const selectedSource = getSelectedSource(state);
@@ -221,7 +220,6 @@ export function toggleBreakpointAtLine(cx, line) {
     }
     return dispatch(
       addBreakpoint(
-        cx,
         createLocation({
           source: selectedSource,
           line,
@@ -231,12 +229,7 @@ export function toggleBreakpointAtLine(cx, line) {
   };
 }
 
-export function addBreakpointAtLine(
-  cx,
-  line,
-  shouldLog = false,
-  disabled = false
-) {
+export function addBreakpointAtLine(line, shouldLog = false, disabled = false) {
   return ({ dispatch, getState }) => {
     const state = getState();
     const source = getSelectedSource(state);
@@ -255,7 +248,7 @@ export function addBreakpointAtLine(
       options.logValue = "displayName";
     }
 
-    return dispatch(addBreakpoint(cx, breakpointLocation, options, disabled));
+    return dispatch(addBreakpoint(breakpointLocation, options, disabled));
   };
 }
 

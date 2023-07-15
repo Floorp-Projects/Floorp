@@ -7,6 +7,7 @@ import {
   getSelectedFrame,
   getCurrentThread,
   hasSource,
+  hasSourceActor,
 } from "../selectors";
 
 // Context encapsulates the main parameters of the current redux state, which
@@ -103,6 +104,14 @@ export function validateSource(state, source) {
   if (!hasSource(state, source.id)) {
     throw new ContextError(
       `Obsolete source (source '${source.id}' no longer exists)`
+    );
+  }
+}
+
+export function validateSourceActor(state, sourceActor) {
+  if (!hasSourceActor(state, sourceActor.id)) {
+    throw new ContextError(
+      `Obsolete source actor (source '${sourceActor.id}' no longer exists)`
     );
   }
 }

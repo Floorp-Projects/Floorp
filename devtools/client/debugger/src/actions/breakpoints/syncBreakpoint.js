@@ -41,7 +41,7 @@ async function findBreakpointPosition({ getState, dispatch }, location) {
 //   has changed, we need to make sure that only a single breakpoint is added
 //   to the reducer for the new location corresponding to the original location
 //   in the pending breakpoint.
-export function syncPendingBreakpoint(cx, sourceId, pendingBreakpoint) {
+export function syncPendingBreakpoint(sourceId, pendingBreakpoint) {
   return async thunkArgs => {
     const { getState, client, dispatch } = thunkArgs;
 
@@ -78,7 +78,6 @@ export function syncPendingBreakpoint(cx, sourceId, pendingBreakpoint) {
       );
       return dispatch(
         addBreakpoint(
-          cx,
           sourceGeneratedLocation,
           pendingBreakpoint.options,
           pendingBreakpoint.disabled,
@@ -123,7 +122,6 @@ export function syncPendingBreakpoint(cx, sourceId, pendingBreakpoint) {
 
     return dispatch(
       addBreakpoint(
-        cx,
         newGeneratedLocation,
         pendingBreakpoint.options,
         pendingBreakpoint.disabled

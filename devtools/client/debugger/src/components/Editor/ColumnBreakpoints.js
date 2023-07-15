@@ -10,7 +10,6 @@ import ColumnBreakpoint from "./ColumnBreakpoint";
 import {
   getSelectedSource,
   visibleColumnBreakpoints,
-  getContext,
   isSourceBlackBoxed,
 } from "../../selectors";
 import actions from "../../actions";
@@ -23,7 +22,6 @@ class ColumnBreakpoints extends Component {
   static get propTypes() {
     return {
       columnBreakpoints: PropTypes.array.isRequired,
-      cx: PropTypes.object.isRequired,
       editor: PropTypes.object.isRequired,
       selectedSource: PropTypes.object,
     };
@@ -31,7 +29,6 @@ class ColumnBreakpoints extends Component {
 
   render() {
     const {
-      cx,
       editor,
       columnBreakpoints,
       selectedSource,
@@ -50,7 +47,6 @@ class ColumnBreakpoints extends Component {
     editor.codeMirror.operation(() => {
       breakpoints = columnBreakpoints.map(breakpoint => (
         <ColumnBreakpoint
-          cx={cx}
           key={makeBreakpointId(breakpoint.location)}
           columnBreakpoint={breakpoint}
           editor={editor}
@@ -80,7 +76,6 @@ const mapStateToProps = state => {
     return {};
   }
   return {
-    cx: getContext(state),
     selectedSource,
     columnBreakpoints: visibleColumnBreakpoints(state),
   };

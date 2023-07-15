@@ -283,7 +283,7 @@ class Editor extends PureComponent {
       return;
     }
 
-    this.props.toggleBreakpointAtLine(this.props.cx, line);
+    this.props.toggleBreakpointAtLine(line);
   };
 
   onToggleConditionalPanel = e => {
@@ -468,7 +468,6 @@ class Editor extends PureComponent {
     }
 
     addBreakpointAtLine(
-      cx,
       sourceLine,
       ev.altKey,
       ev.shiftKey ||

@@ -17,7 +17,6 @@ breakpointSvg.innerHTML =
 class Breakpoint extends PureComponent {
   static get propTypes() {
     return {
-      cx: PropTypes.object.isRequired,
       breakpoint: PropTypes.object.isRequired,
       editor: PropTypes.object.isRequired,
       selectedSource: PropTypes.object,
@@ -76,7 +75,7 @@ class Breakpoint extends PureComponent {
     }
 
     if (event.shiftKey) {
-      toggleBreakpointsAtLine(cx, !breakpoint.disabled, selectedLocation.line);
+      toggleBreakpointsAtLine(!breakpoint.disabled, selectedLocation.line);
       return;
     }
 
