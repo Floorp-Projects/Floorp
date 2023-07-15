@@ -7,6 +7,7 @@ import {
   getThreadContext,
   getCurrentThread,
   getIsCurrentThreadPaused,
+  getIsPaused,
 } from "../../selectors";
 import { PROMISE } from "../utils/middleware/promise";
 import { evaluateExpressions } from "../expressions";
@@ -15,6 +16,7 @@ import { fetchScopes } from "./fetchScopes";
 import { fetchFrames } from "./fetchFrames";
 import { recordEvent } from "../../utils/telemetry";
 import assert from "../../utils/assert";
+import { validateFrame } from "../../utils/context";
 
 export function selectThread(thread) {
   return async ({ dispatch, getState, client }) => {
@@ -55,11 +57,9 @@ export function selectThread(thread) {
 }
 
 /**
- * Debugger commands like stepOver, stepIn, stepUp
+ * Debugger commands like stepOver, stepIn, stepOut, resume
  *
- * @param string $0.type
- * @memberof actions/pause
- * @static
+ * @param string type
  */
 export function command(type) {
   return async ({ dispatch, getState, client }) => {
@@ -82,8 +82,7 @@ export function command(type) {
 
 /**
  * StepIn
- * @memberof actions/pause
- * @static
+ *
  * @returns {Function} {@link command}
  */
 export function stepIn() {
@@ -97,8 +96,7 @@ export function stepIn() {
 
 /**
  * stepOver
- * @memberof actions/pause
- * @static
+ *
  * @returns {Function} {@link command}
  */
 export function stepOver() {
@@ -112,8 +110,7 @@ export function stepOver() {
 
 /**
  * stepOut
- * @memberof actions/pause
- * @static
+ *
  * @returns {Function} {@link command}
  */
 export function stepOut() {
@@ -127,8 +124,7 @@ export function stepOut() {
 
 /**
  * resume
- * @memberof actions/pause
- * @static
+ *
  * @returns {Function} {@link command}
  */
 export function resume() {
@@ -143,19 +139,18 @@ export function resume() {
 
 /**
  * restart frame
- * @memberof actions/pause
- * @static
  */
-export function restart(cx, frame) {
+export function restart(frame) {
   return async ({ dispatch, getState, client }) => {
-    if (!getIsCurrentThreadPaused(getState())) {
+    if (!getIsPaused(getState(), frame.thread)) {
       return null;
     }
+    validateFrame(getState(), frame);
     return dispatch({
       type: "COMMAND",
       command: "restart",
-      thread: cx.thread,
-      [PROMISE]: client.restart(cx.thread, frame.id),
+      thread: frame.thread,
+      [PROMISE]: client.restart(frame.thread, frame.id),
     });
   };
 }
