@@ -303,13 +303,16 @@ class MediaFormatReader::DecoderFactory {
 void MediaFormatReader::DecoderFactory::CreateDecoder(TrackType aTrack) {
   MOZ_ASSERT(aTrack == TrackInfo::kAudioTrack ||
              aTrack == TrackInfo::kVideoTrack);
-  RunStage(aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo);
+  Data& data = aTrack == TrackInfo::kAudioTrack ? mAudio : mVideo;
+  MOZ_DIAGNOSTIC_ASSERT_IF(mOwner->GetDecoderData(data.mTrack).IsEncrypted(),
+                           mOwner->mCDMProxy);
+  RunStage(data);
 }
 
 void MediaFormatReader::DecoderFactory::RunStage(Data& aData) {
   switch (aData.mStage) {
     case Stage::None: {
-      MOZ_ASSERT(!aData.mToken);
+      MOZ_DIAGNOSTIC_ASSERT(!aData.mToken);
       aData.mPolicy->Alloc()
           ->Then(
               mOwner->OwnerThread(), __func__,
@@ -329,15 +332,15 @@ void MediaFormatReader::DecoderFactory::RunStage(Data& aData) {
     }
 
     case Stage::WaitForToken: {
-      MOZ_ASSERT(!aData.mToken);
-      MOZ_ASSERT(aData.mTokenRequest.Exists());
+      MOZ_DIAGNOSTIC_ASSERT(!aData.mToken);
+      MOZ_DIAGNOSTIC_ASSERT(aData.mTokenRequest.Exists());
       break;
     }
 
     case Stage::CreateDecoder: {
-      MOZ_ASSERT(aData.mToken);
-      MOZ_ASSERT(!aData.mDecoder);
-      MOZ_ASSERT(!aData.mInitRequest.Exists());
+      MOZ_DIAGNOSTIC_ASSERT(aData.mToken);
+      MOZ_DIAGNOSTIC_ASSERT(!aData.mDecoder);
+      MOZ_DIAGNOSTIC_ASSERT(!aData.mInitRequest.Exists());
 
       DoCreateDecoder(aData);
       aData.mStage = Stage::WaitForInit;
@@ -345,8 +348,8 @@ void MediaFormatReader::DecoderFactory::RunStage(Data& aData) {
     }
 
     case Stage::WaitForInit: {
-      MOZ_ASSERT((aData.mDecoder && aData.mInitRequest.Exists()) ||
-                 aData.mLiveToken);
+      MOZ_DIAGNOSTIC_ASSERT((aData.mDecoder && aData.mInitRequest.Exists()) ||
+                            aData.mLiveToken);
       break;
     }
   }
@@ -359,7 +362,7 @@ void MediaFormatReader::DecoderFactory::DoCreateDecoder(Data& aData) {
 
   RefPtr<PDMFactory> platform = new PDMFactory();
   if (decoder.IsEncrypted()) {
-    MOZ_ASSERT(mOwner->mCDMProxy);
+    MOZ_DIAGNOSTIC_ASSERT(mOwner->mCDMProxy);
     platform->SetCDMProxy(mOwner->mCDMProxy);
   }
 
