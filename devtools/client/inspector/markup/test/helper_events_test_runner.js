@@ -77,7 +77,11 @@ async function checkEventsForNode(test, inspector) {
 
   // Click button to show tooltip
   info("Clicking evHolder");
-  evHolder.scrollIntoView();
+  evHolder.scrollIntoView({
+    block: "center",
+    inline: "end",
+    behavior: "instant",
+  });
   EventUtils.synthesizeMouseAtCenter(
     evHolder,
     {},
